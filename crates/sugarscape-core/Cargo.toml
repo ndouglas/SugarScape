@@ -1,0 +1,15 @@
+[package]
+name = "sugarscape-core"
+description = "Sugarscape (Epstein & Axtell, 1996) simulation core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rand.workspace = true
+rand_pcg.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
