@@ -7,6 +7,7 @@ pub mod agent;
 pub mod config;
 pub mod geometry;
 pub mod landscape;
+pub mod render;
 pub mod rng;
 pub mod rules;
 pub mod stats;
