@@ -37,7 +37,7 @@ pub struct World {
     /// Completed ticks.
     pub tick: u64,
     pub sites: Vec<Site>,
-    /// True once the capacities differ from the configured landscape.
+    /// True when capacities were supplied or painted rather than generated from the configured landscape.
     pub landscape_edited: bool,
     agents: BTreeMap<AgentId, Agent>,
     occupancy: Vec<Option<AgentId>>,

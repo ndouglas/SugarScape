@@ -64,10 +64,22 @@ impl Tags {
     }
 
     pub fn get(&self, i: u32) -> bool {
+        assert!(
+            i < self.len,
+            "tag index {} out of range [0, {})",
+            i,
+            self.len
+        );
         (self.bits >> i) & 1 == 1
     }
 
     pub fn set(&mut self, i: u32, value: bool) {
+        assert!(
+            i < self.len,
+            "tag index {} out of range [0, {})",
+            i,
+            self.len
+        );
         if value {
             self.bits |= 1 << i;
         } else {
@@ -207,5 +219,12 @@ mod tests {
         let red = blue.forced_to(Tribe::Red);
         assert_eq!(red.tribe(), Tribe::Red);
         assert_eq!(red.to_bit_string(), "01111");
+    }
+
+    #[test]
+    #[should_panic(expected = "tag index")]
+    fn set_panics_on_out_of_range_index() {
+        let mut t = Tags::new(0, 5);
+        t.set(5, true); // index 5 is out of range for len=5
     }
 }

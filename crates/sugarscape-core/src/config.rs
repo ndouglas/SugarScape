@@ -249,14 +249,14 @@ impl Config {
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
         let mut e = Errors::default();
         e.check(
-            (10..=500).contains(&self.width),
+            (5..=500).contains(&self.width),
             "width",
-            "must be between 10 and 500",
+            "must be between 5 and 500",
         );
         e.check(
-            (10..=500).contains(&self.height),
+            (5..=500).contains(&self.height),
             "height",
-            "must be between 10 and 500",
+            "must be between 5 and 500",
         );
         match self.landscape {
             LandscapeKind::TwoPeaks => e.check(
@@ -413,6 +413,25 @@ mod tests {
             ..Default::default()
         };
         assert!(fields(c.validate()).contains(&"landscape".to_string()));
+    }
+
+    #[test]
+    fn width_height_bounds_are_5_to_500() {
+        let c_too_small = Config {
+            landscape: LandscapeKind::Flat { capacity: 1.0 },
+            width: 4,
+            ..Default::default()
+        };
+        assert!(fields(c_too_small.validate()).contains(&"width".to_string()));
+        let c_valid = Config {
+            landscape: LandscapeKind::Flat { capacity: 1.0 },
+            width: 5,
+            height: 5,
+            population: 10,
+            vision: URange::new(1, 2),
+            ..Default::default()
+        };
+        c_valid.validate().unwrap();
     }
 
     #[test]

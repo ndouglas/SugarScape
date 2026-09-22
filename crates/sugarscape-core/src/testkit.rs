@@ -7,8 +7,6 @@ use crate::world::World;
 
 /// Every rule off, a flat zero-capacity landscape and no agents.
 pub fn blank_config(width: u32, height: u32) -> Config {
-    let width = width.max(10);
-    let height = height.max(10);
     Config {
         width,
         height,
