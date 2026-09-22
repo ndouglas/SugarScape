@@ -46,7 +46,6 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
 }
 
 /// Puts `sugar` on a site, raising its capacity to match if needed.
-#[allow(dead_code)]
 pub fn set_sugar(world: &mut World, x: u32, y: u32, sugar: f64) {
     let site = world.site_mut(Pos::new(x, y));
     site.capacity = site.capacity.max(sugar);

@@ -6,7 +6,6 @@ use crate::world::World;
 /// Growback rate for row `y` during tick `tick`. With seasons on, the north
 /// has summer while `tick mod 2γ < γ` (the book's footnote 33) and the other
 /// half has winter, growing at α/β per tick.
-#[allow(dead_code)] // Used in Task 5 (World::step)
 pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
     let base = config.growback.rate;
     let s = &config.seasons;
@@ -23,7 +22,6 @@ pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
     }
 }
 
-#[allow(dead_code)] // Used in Task 5 (World::step)
 pub(crate) fn apply(world: &mut World) {
     let instant = world.config.growback.instant;
     for i in 0..world.sites.len() {

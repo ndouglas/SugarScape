@@ -9,6 +9,7 @@ use crate::config::{Config, FieldError, Placement};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
 use crate::rng::{self, SimRng};
+use crate::rules;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DeathCause {
@@ -134,7 +135,6 @@ impl World {
         self.agents.values()
     }
 
-    #[allow(dead_code)]
     pub(crate) fn agent_ids(&self) -> Vec<AgentId> {
         self.agents.keys().copied().collect()
     }
@@ -188,7 +188,6 @@ impl World {
         Ok(id)
     }
 
-    #[allow(dead_code)]
     pub(crate) fn move_agent(&mut self, id: AgentId, to: Pos) {
         let from = self.agents[&id].pos;
         if from == to {
@@ -228,6 +227,44 @@ impl World {
             eat(a.tags.bits());
         }
         h
+    }
+
+    /// Removes an agent from play and records its death.
+    pub(crate) fn kill(&mut self, id: AgentId, cause: DeathCause) -> Option<Agent> {
+        let agent = self.agents.remove(&id)?;
+        let i = self.torus.index(agent.pos);
+        self.occupancy[i] = None;
+        self.events.deaths.push(Death {
+            id,
+            tribe: agent.tribe(),
+            cause,
+        });
+        Some(agent)
+    }
+
+    /// One tick: every living agent takes a turn in a fresh random order
+    /// (agents born or killed during the tick are skipped), then the
+    /// environment updates and everyone ages.
+    pub fn step(&mut self) {
+        self.events = TickEvents::default();
+        let mut order = self.agent_ids();
+        order.shuffle(&mut self.rng);
+        for id in order {
+            if self.agents.contains_key(&id) {
+                rules::agent_turn(self, id);
+            }
+        }
+        rules::growback::apply(self);
+        for agent in self.agents.values_mut() {
+            agent.age += 1;
+        }
+        self.tick += 1;
+    }
+
+    pub fn run(&mut self, ticks: u32) {
+        for _ in 0..ticks {
+            self.step();
+        }
     }
 }
 
@@ -315,5 +352,30 @@ mod tests {
         crate::testkit::spawn(&mut w, 2, 2);
         let clone = w.agent_at(Pos::new(2, 2)).unwrap().clone();
         assert!(w.insert_agent(clone).is_err());
+    }
+
+    #[test]
+    fn step_is_deterministic_for_a_seed() {
+        let mut a = World::new(Config::default(), 42).unwrap();
+        let mut b = World::new(Config::default(), 42).unwrap();
+        a.run(50);
+        b.run(50);
+        assert_eq!(a.tick, 50);
+        assert_eq!(a.fingerprint(), b.fingerprint());
+    }
+
+    #[test]
+    fn population_declines_toward_carrying_capacity() {
+        let mut w = World::new(Config::default(), 5).unwrap();
+        w.run(100);
+        assert!(
+            w.population() < 400 && w.population() > 100,
+            "got {}",
+            w.population()
+        );
+        for a in w.agents() {
+            assert!(a.sugar > 0.0);
+            assert_eq!(a.age, 100, "immortal first generation ages every tick");
+        }
     }
 }
