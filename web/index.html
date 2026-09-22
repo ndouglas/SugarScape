@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SugarScape Playground</title>
+  </head>
+  <body>
+    <div id="banner" class="banner" hidden></div>
+    <header id="toolbar"></header>
+    <main class="layout">
+      <section class="stage">
+        <div id="display" class="display"></div>
+        <canvas id="grid" aria-label="Sugarscape grid"></canvas>
+        <div id="tools"></div>
+      </section>
+      <aside class="panel">
+        <nav id="tabs" class="tabs" role="tablist"></nav>
+        <div id="panel-body" class="panel-body"></div>
+      </aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

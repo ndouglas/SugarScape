@@ -1,0 +1,26 @@
+{
+  "name": "sugarscape-web",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "vitest run",
+    "wasm": "wasm-pack build ../crates/sugarscape-wasm --target web --release --out-dir ../../web/src/wasm-pkg --out-name sugarscape",
+    "wasm:dev": "wasm-pack build ../crates/sugarscape-wasm --target web --dev --out-dir ../../web/src/wasm-pkg --out-name sugarscape",
+    "dev": "npm run wasm:dev && vite",
+    "build": "npm run wasm && tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "uplot": "^1.6.32"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  },
+  "private": "true"
+}
