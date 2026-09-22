@@ -9,6 +9,7 @@ pub mod edit;
 pub mod export;
 pub mod geometry;
 pub mod landscape;
+pub mod presets;
 pub mod render;
 pub mod rng;
 pub mod rules;
