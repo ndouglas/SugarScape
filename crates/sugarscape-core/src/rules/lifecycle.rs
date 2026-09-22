@@ -92,4 +92,41 @@ mod tests {
         metabolize(&mut w, id, 4.0);
         assert_eq!(w.site(crate::geometry::Pos::new(2, 2)).pollution, 0.0);
     }
+
+    #[test]
+    fn agents_older_than_max_age_die_only_with_lifespan_on() {
+        let mut w = blank_world(5, 5);
+        let id = spawn(&mut w, 2, 2);
+        w.agent_mut(id).unwrap().age = 101;
+        assert!(!check_death(&mut w, id), "immortal while lifespan is off");
+        w.config.lifespan.enabled = true;
+        assert!(check_death(&mut w, id));
+        assert_eq!(w.events().deaths[0].cause, DeathCause::OldAge);
+    }
+
+    #[test]
+    fn inheritance_splits_wealth_among_living_children() {
+        let mut w = blank_world(5, 5);
+        w.config.inheritance.enabled = true;
+        let parent = spawn(&mut w, 0, 0);
+        let c1 = spawn(&mut w, 1, 0);
+        let c2 = spawn(&mut w, 2, 0);
+        let c3 = spawn(&mut w, 3, 0);
+        w.agent_mut(parent).unwrap().children = vec![c1, c2, c3];
+        w.agent_mut(parent).unwrap().sugar = 9.0;
+        w.kill(c3, DeathCause::Starvation);
+        w.kill(parent, DeathCause::OldAge);
+        assert_eq!(w.agent(c1).unwrap().sugar, 14.5);
+        assert_eq!(w.agent(c2).unwrap().sugar, 14.5);
+    }
+
+    #[test]
+    fn no_inheritance_when_disabled() {
+        let mut w = blank_world(5, 5);
+        let parent = spawn(&mut w, 0, 0);
+        let child = spawn(&mut w, 1, 0);
+        w.agent_mut(parent).unwrap().children = vec![child];
+        w.kill(parent, DeathCause::OldAge);
+        assert_eq!(w.agent(child).unwrap().sugar, 10.0);
+    }
 }

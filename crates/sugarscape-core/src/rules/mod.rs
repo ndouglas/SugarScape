@@ -4,6 +4,7 @@ pub mod growback;
 pub mod lifecycle;
 pub mod movement;
 pub mod pollution;
+pub mod replacement;
 
 use crate::agent::AgentId;
 use crate::world::World;

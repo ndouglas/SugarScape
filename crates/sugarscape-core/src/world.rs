@@ -229,7 +229,8 @@ impl World {
         h
     }
 
-    /// Removes an agent from play and records its death.
+    /// Removes an agent from play and records its death. With rule I on, its
+    /// remaining sugar is split equally among its living children.
     pub(crate) fn kill(&mut self, id: AgentId, cause: DeathCause) -> Option<Agent> {
         let agent = self.agents.remove(&id)?;
         let i = self.torus.index(agent.pos);
@@ -239,7 +240,29 @@ impl World {
             tribe: agent.tribe(),
             cause,
         });
+        if self.config.inheritance.enabled {
+            self.bequeath(&agent);
+        }
         Some(agent)
+    }
+
+    fn bequeath(&mut self, agent: &Agent) {
+        if agent.sugar <= 0.0 {
+            return;
+        }
+        let heirs: Vec<AgentId> = agent
+            .children
+            .iter()
+            .copied()
+            .filter(|c| self.agents.contains_key(c))
+            .collect();
+        if heirs.is_empty() {
+            return;
+        }
+        let share = agent.sugar / heirs.len() as f64;
+        for heir in heirs {
+            self.agents.get_mut(&heir).expect("living heir").sugar += share;
+        }
     }
 
     /// One tick: every living agent takes a turn in a fresh random order
@@ -256,6 +279,7 @@ impl World {
         }
         rules::growback::apply(self);
         rules::pollution::diffuse(self);
+        rules::replacement::apply(self);
         for agent in self.agents.values_mut() {
             agent.age += 1;
         }
