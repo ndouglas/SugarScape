@@ -87,7 +87,7 @@ Per Appendix B: candidate sites in the four directions within vision; discard si
 - Fertile = age within the agent's fertility window **and** sugar ≥ initial endowment.
 - Default fertility windows (book): onset uniform in [12, 15] for both sexes; end uniform in [40, 50] for women, [50, 60] for men. All configurable.
 - Child endowment = ½ father's initial endowment + ½ mother's initial endowment, deducted from each parent.
-- Child genetics: each heritable trait (vision, metabolism, max age, fertility window) from a uniformly chosen parent.
+- Child genetics: vision, metabolism, max age and fertility onset each from a uniformly chosen parent. Fertility end is drawn from the child's own sex-specific range (the ranges differ by sex, so it cannot be inherited across sexes).
 - Child culture: for each tag, parents' common value if they agree, else a random parent's.
 - Child sex: uniform.
 - Child placement: a uniformly random empty von Neumann neighbor of either parent.
@@ -144,14 +144,14 @@ Color modes: culture/tribe, wealth, sex, age, vision. Layers: sugar, capacity, p
 
 - `Config::validate()` returns field-level errors; `Sim::new`/`set_config` surface them as `JsValue` errors; the UI shows them inline next to the offending control and keeps the previous valid config.
 - Edits outside the grid or onto occupied sites return errors; the UI ignores them.
-- A Rust panic hook (`console_error_panic_hook`) logs to console; the UI shows a "simulation crashed — reset" banner.
+- A Rust panic hook (`console_error_panic_hook`) logs to console; the UI shows a "simulation crashed" banner with a Reload button (a panic leaves the WASM instance unusable; reloading keeps any `#s=` share state).
 
 ## Testing
 
 - **Unit tests per rule** on small hand-built worlds (e.g. vision-2 agent picks nearer of two equal sites; combat skips a retaliation-vulnerable site; inheritance splits evenly; K flips exactly one tag per neighbor).
 - **Property tests** (`proptest`): at most one agent per site; site sugar ≤ capacity; no living agent with sugar ≤ 0 after the tick; population never negative; R keeps population constant.
 - **Determinism:** same seed + config ⇒ byte-identical world state hash after N ticks.
-- **Book-reproduction tests** (`#[ignore]`, run in CI nightly or manually): ({G₁},{M}) settles to a stable carrying capacity; R[60,100] Gini exceeds ~0.5; K converges toward single-tribe dominance.
+- **Book-reproduction tests** (`#[ignore]`, run explicitly in CI with `--ignored` in release mode, and manually): ({G₁},{M}) settles to a stable carrying capacity; R[60,100] Gini exceeds ~0.5; K converges toward single-tribe dominance.
 - **TypeScript:** `vitest` for URL encode/decode and config/form mapping; `tsc --noEmit`.
 
 ## Build and deploy
