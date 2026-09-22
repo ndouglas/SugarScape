@@ -10,6 +10,7 @@ use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
 use crate::rng::{self, SimRng};
 use crate::rules;
+use crate::stats::{Snapshot, Stats};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DeathCause {
@@ -45,6 +46,7 @@ pub struct World {
     pub(crate) rng: SimRng,
     next_id: AgentId,
     pub(crate) events: TickEvents,
+    pub stats: Stats,
 }
 
 impl World {
@@ -80,9 +82,11 @@ impl World {
             rng: rng::seeded(seed),
             next_id: 1,
             events: TickEvents::default(),
+            stats: Stats::default(),
             config,
         };
         world.populate();
+        world.stats.push(Snapshot::of(&world));
         Ok(world)
     }
 
@@ -284,6 +288,8 @@ impl World {
             agent.age += 1;
         }
         self.tick += 1;
+        let snapshot = Snapshot::of(self);
+        self.stats.push(snapshot);
     }
 
     pub fn run(&mut self, ticks: u32) {

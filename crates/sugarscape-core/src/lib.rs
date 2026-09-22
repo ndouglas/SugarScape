@@ -9,6 +9,7 @@ pub mod geometry;
 pub mod landscape;
 pub mod rng;
 pub mod rules;
+pub mod stats;
 pub mod world;
 
 #[cfg(test)]
