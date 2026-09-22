@@ -6,4 +6,9 @@
 pub mod agent;
 pub mod config;
 pub mod geometry;
+pub mod landscape;
 pub mod rng;
+pub mod world;
+
+#[cfg(test)]
+pub(crate) mod testkit;
