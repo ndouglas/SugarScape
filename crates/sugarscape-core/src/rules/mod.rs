@@ -1,5 +1,6 @@
 //! The rules of Appendix B, one module each.
 
+pub mod combat;
 pub mod culture;
 pub mod growback;
 pub mod lifecycle;
@@ -14,7 +15,11 @@ use crate::world::World;
 /// One agent's turn, in the book's order: move, metabolize, maybe die, then
 /// (if still alive) mate with each neighbor and spread culture to them.
 pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
-    let gathered = movement::act(world, id);
+    let gathered = if world.config.combat.enabled {
+        combat::act(world, id)
+    } else {
+        movement::act(world, id)
+    };
     lifecycle::metabolize(world, id, gathered);
     if lifecycle::check_death(world, id) {
         return;
