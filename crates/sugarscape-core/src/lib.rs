@@ -5,6 +5,8 @@
 
 pub mod agent;
 pub mod config;
+pub mod edit;
+pub mod export;
 pub mod geometry;
 pub mod landscape;
 pub mod render;

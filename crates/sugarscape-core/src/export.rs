@@ -1,0 +1,75 @@
+//! CSV exports of the statistics history and the current agents.
+
+use std::fmt::Write;
+
+use crate::stats::{Stats, SERIES};
+use crate::world::World;
+
+pub fn series_csv(stats: &Stats) -> String {
+    let mut out = String::from("tick");
+    for name in SERIES {
+        out.push(',');
+        out.push_str(name);
+    }
+    out.push('\n');
+    for s in stats.history() {
+        out.push_str(&s.tick.to_string());
+        for name in SERIES {
+            write!(out, ",{}", s.value(name).expect("known series")).unwrap();
+        }
+        out.push('\n');
+    }
+    out
+}
+
+pub fn agents_csv(world: &World) -> String {
+    let mut out =
+        String::from("id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags\n");
+    for a in world.agents() {
+        writeln!(
+            out,
+            "{},{},{},{:?},{},{},{},{},{},{},{:?},{}",
+            a.id,
+            a.pos.x,
+            a.pos.y,
+            a.sex,
+            a.age,
+            a.max_age,
+            a.vision,
+            a.metabolism,
+            a.sugar,
+            a.initial_sugar,
+            a.tribe(),
+            a.tags.to_bit_string()
+        )
+        .unwrap();
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Config;
+
+    #[test]
+    fn series_csv_has_a_header_and_a_row_per_tick() {
+        let mut w = World::new(Config::default(), 1).unwrap();
+        w.run(2);
+        let csv = series_csv(&w.stats);
+        let lines: Vec<&str> = csv.lines().collect();
+        assert_eq!(lines[0], "tick,population,gini,mean_wealth,mean_vision,mean_metabolism,blue_fraction,births,deaths");
+        assert_eq!(lines.len(), 4);
+        assert!(lines[1].starts_with("0,400,"));
+    }
+
+    #[test]
+    fn agents_csv_has_a_row_per_agent() {
+        let w = World::new(Config::default(), 1).unwrap();
+        let csv = agents_csv(&w);
+        assert_eq!(csv.lines().count(), 401);
+        assert!(csv.starts_with(
+            "id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags\n"
+        ));
+    }
+}
