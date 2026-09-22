@@ -3,10 +3,17 @@
 use crate::agent::AgentId;
 use crate::world::{DeathCause, World};
 
-/// Burns `metabolism` sugar. (Pollution formation is added with rule P.)
-pub(crate) fn metabolize(world: &mut World, id: AgentId, _gathered: f64) {
+/// Burns `metabolism` sugar. With rule P on, the agent's site gains
+/// production pollution α·gathered plus consumption pollution β·metabolism.
+pub(crate) fn metabolize(world: &mut World, id: AgentId, gathered: f64) {
     let agent = world.agent_mut(id).expect("live agent");
-    agent.sugar -= f64::from(agent.metabolism);
+    let burned = f64::from(agent.metabolism);
+    agent.sugar -= burned;
+    let pos = agent.pos;
+    let p = world.config.pollution;
+    if p.enabled {
+        world.site_mut(pos).pollution += p.production * gathered + p.consumption * burned;
+    }
 }
 
 /// Kills the agent if its sugar is at or below zero or, with lifespan on, it
@@ -60,5 +67,29 @@ mod tests {
         let id = spawn(&mut w, 2, 2);
         assert!(!check_death(&mut w, id));
         assert!(w.agent(id).is_some());
+    }
+
+    #[test]
+    fn gathering_and_metabolism_pollute_the_site_when_enabled() {
+        let mut w = blank_world(5, 5);
+        let id = spawn(&mut w, 2, 2);
+        w.agent_mut(id).unwrap().metabolism = 2;
+        w.config.pollution.enabled = true;
+        w.config.pollution.production = 0.5;
+        w.config.pollution.consumption = 3.0;
+        metabolize(&mut w, id, 4.0);
+        assert_eq!(
+            w.site(crate::geometry::Pos::new(2, 2)).pollution,
+            0.5 * 4.0 + 3.0 * 2.0
+        );
+    }
+
+    #[test]
+    fn no_pollution_when_disabled() {
+        let mut w = blank_world(5, 5);
+        let id = spawn(&mut w, 2, 2);
+        w.agent_mut(id).unwrap().metabolism = 2;
+        metabolize(&mut w, id, 4.0);
+        assert_eq!(w.site(crate::geometry::Pos::new(2, 2)).pollution, 0.0);
     }
 }

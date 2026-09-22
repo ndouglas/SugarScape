@@ -255,6 +255,7 @@ impl World {
             }
         }
         rules::growback::apply(self);
+        rules::pollution::diffuse(self);
         for agent in self.agents.values_mut() {
             agent.age += 1;
         }
