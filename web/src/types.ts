@@ -9,6 +9,8 @@ export type Placement =
   | { kind: 'block'; x: number; y: number; width: number; height: number }
   | { kind: 'tribes'; size: number };
 
+export interface ScheduledChange { tick: number; set: Record<string, unknown> }
+
 export interface Config {
   width: number;
   height: number;
@@ -21,7 +23,7 @@ export interface Config {
   tag_length: number;
   growback: { rate: number; instant: boolean };
   seasons: { enabled: boolean; winter_divisor: number; period: number };
-  pollution: { enabled: boolean; production: number; consumption: number };
+  pollution: { enabled: boolean; production: number; consumption: number; spice_pollutes: boolean };
   diffusion: { enabled: boolean; every: number };
   lifespan: { enabled: boolean; max_age: URange };
   replacement: { enabled: boolean };
@@ -29,6 +31,11 @@ export interface Config {
   inheritance: { enabled: boolean };
   culture: { enabled: boolean };
   combat: { enabled: boolean; unlimited: boolean; reward: number };
+  spice: { enabled: boolean; metabolism: URange; endowment: URange };
+  trade: { enabled: boolean };
+  credit: { enabled: boolean; duration: number; rate: number };
+  foresight: { enabled: boolean; range: URange };
+  schedule: ScheduledChange[];
 }
 
 export interface Preset { id: string; name: string; source: string; description: string; config: Config }
@@ -45,10 +52,22 @@ export interface Snapshot {
   blue_fraction: number;
   births: number;
   deaths: number;
+  mean_log_price: number;
+  sd_log_price: number;
+  trade_volume: number;
+  sugar_traded: number;
+  loans_made: number;
+  amount_lent: number;
+  defaults: number;
+  debt_outstanding: number;
+  mean_foresight: number;
+  mean_spice: number;
+  mean_spice_metabolism: number;
 }
 
-export interface SiteView { x: number; y: number; sugar: number; capacity: number; pollution: number }
+export interface SiteView { x: number; y: number; sugar: number; capacity: number; pollution: number; spice: number; spice_capacity: number }
 export interface LinkView { id: number; alive: boolean }
+export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; due: number; due_tick: number }
 export interface AgentView {
   id: number;
   x: number;
@@ -68,11 +87,16 @@ export interface AgentView {
   born: number;
   parents: LinkView[];
   children: LinkView[];
+  spice: number;
+  initial_spice: number;
+  spice_metabolism: number;
+  foresight: number;
+  loans: LoanView[];
 }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
-export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision';
-export type Layer = 'sugar' | 'capacity' | 'pollution';
+export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit';
+export type Layer = 'sugar' | 'capacity' | 'pollution' | 'spice' | 'spice_capacity';
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
 export function parseErrors(e: unknown): FieldError[] {

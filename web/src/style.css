@@ -73,6 +73,7 @@ button[aria-pressed='true'] { border-color: var(--accent); box-shadow: inset 0 0
 .rules .row input[type='range'] { flex: 1; }
 .rules .num { width: 5.5em; }
 .badge { font-size: 11px; background: var(--accent); color: var(--bg); padding: 1px 6px; border-radius: 99px; }
+.rules .schedule { margin: 0 0 6px; padding-left: 1.2em; font-size: 12px; }
 .error p { margin: 2px 0; }
 .charts { display: grid; gap: 12px; }
 .chart { margin: 0; }

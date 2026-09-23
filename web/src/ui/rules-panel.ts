@@ -13,7 +13,7 @@ export class RulesPanel {
   private general = h('div', { class: 'error' });
 
   constructor(private engine: Engine) {
-    this.el.append(this.presetSection(), this.general, ...GROUPS.map((g) => this.groupSection(g)));
+    this.el.append(this.presetSection(), this.scheduleSection(), this.general, ...GROUPS.map((g) => this.groupSection(g)));
     engine.on('reset', () => this.sync());
     engine.on('config', () => this.sync());
     // Painting changes the landscape, which counts as a modification.
@@ -72,6 +72,22 @@ export class RulesPanel {
       desc.textContent = p ? p.description : 'Custom configuration.';
     });
     return h('section', { class: 'presets' }, h('label', {}, 'Rule system ', badge), select, desc);
+  }
+
+  private scheduleSection(): HTMLElement {
+    const list = h('ul', { class: 'schedule' });
+    const clear = h('button', { onclick: () => this.commit((c) => (c.schedule = []), false) }, 'Clear schedule');
+    const section = h('section', { class: 'group' }, h('h3', {}, 'Schedule'), list, clear, this.errorSlot('schedule'));
+    this.syncers.push(() => {
+      const entries = [...this.engine.config.schedule].sort((a, b) => a.tick - b.tick);
+      section.hidden = entries.length === 0;
+      list.replaceChildren(
+        ...entries.flatMap((e) =>
+          Object.entries(e.set).map(([path, value]) => h('li', {}, `t = ${e.tick} · ${path} = ${JSON.stringify(value)}`)),
+        ),
+      );
+    });
+    return section;
   }
 
   private groupSection(group: (typeof GROUPS)[number]): HTMLElement {

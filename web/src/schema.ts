@@ -71,6 +71,7 @@ export const GROUPS: Group[] = [
     controls: [
       { kind: 'number', path: 'pollution.production', label: 'Per sugar gathered α', min: 0, max: 5, step: 0.1 },
       { kind: 'number', path: 'pollution.consumption', label: 'Per sugar eaten β', min: 0, max: 5, step: 0.1 },
+      { kind: 'toggle', path: 'pollution.spice_pollutes', label: 'Spice pollutes too' },
     ],
   },
   {
@@ -98,5 +99,25 @@ export const GROUPS: Group[] = [
       { kind: 'toggle', path: 'combat.unlimited', label: 'Unlimited reward (C∞)' },
       { kind: 'number', path: 'combat.reward', label: 'Reward cap α', min: 0, max: 50, step: 0.5 },
     ],
+  },
+  {
+    title: 'Spice', enable: 'spice.enabled',
+    note: 'A second good on mountains opposite the sugar. Changes apply to agents born from now on.',
+    controls: [
+      { kind: 'range', path: 'spice.metabolism', label: 'Spice metabolism', min: 0, max: 10 },
+      { kind: 'range', path: 'spice.endowment', label: 'Initial spice', min: 0, max: 500 },
+    ],
+  },
+  { title: 'Trade (T)', enable: 'trade.enabled', note: 'Needs spice.', controls: [] },
+  {
+    title: 'Credit (L)', enable: 'credit.enabled', note: 'Sugar loans for childbearing; needs sex.',
+    controls: [
+      { kind: 'number', path: 'credit.duration', label: 'Duration d (ticks)', min: 1, max: 50, step: 1 },
+      { kind: 'number', path: 'credit.rate', label: 'Interest r (% per tick)', min: 0, max: 100, step: 1 },
+    ],
+  },
+  {
+    title: 'Foresight', enable: 'foresight.enabled', note: 'Needs spice.',
+    controls: [{ kind: 'range', path: 'foresight.range', label: 'Foresight φ', min: 0, max: 20 }],
   },
 ];
