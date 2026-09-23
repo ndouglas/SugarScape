@@ -101,8 +101,9 @@ fn culture_drives_neighbors_toward_one_tribe() {
 #[ignore]
 fn trade_prices_cluster_near_one() {
     // Figure IV-3: prices bunch around the market-clearing level of 1.
-    // Observed (seeds 1..=3, mean ln price over t=500..1000): included in
-    // `means` below; well inside the bound.
+    // Observed (mean ln price over t=500..1000): seed 1 = 0.008676,
+    // seed 2 = 0.007983, seed 3 = 0.009746; mean = 0.008802 — far inside the
+    // bound, i.e. prices cluster tightly around ln 1 = 0.
     let config = presets::by_id("iv-3-trade").unwrap().config;
     let means: Vec<f64> = (1..=3)
         .map(|seed| {
@@ -119,6 +120,8 @@ fn trade_prices_cluster_near_one() {
 #[ignore]
 fn trade_raises_carrying_capacity() {
     // Figure IV-6: carrying capacity is higher with trade than without.
+    // Observed population at t=500 (seeds 1..=5): with trade = [56, 69, 62,
+    // 68, 56] (mean 62.2); without trade = [44, 68, 48, 50, 52] (mean 52.4).
     let with = presets::by_id("iv-3-trade").unwrap().config;
     let mut without = with.clone();
     without.trade.enabled = false;
