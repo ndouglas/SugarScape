@@ -34,7 +34,7 @@ type SeriesCache = (name: string) => Float64Array;
 
 export class ChartsPanel {
   readonly el = h('div', { class: 'charts' });
-  private plots: { name: string; plot: uPlot; update: (series: SeriesCache) => void }[] = [];
+  private plots: { name: string; plot: uPlot; update: (series: SeriesCache) => void; visible: () => boolean }[] = [];
   private visible = false;
   private last = 0;
   /** Tick drawn by the last refresh; null forces the next one. */
@@ -84,7 +84,9 @@ export class ChartsPanel {
       }
       return arr;
     };
-    this.plots.forEach((p) => p.update(series));
+    this.plots.forEach((p) => {
+      if (p.visible()) p.update(series);
+    });
   }
 
   private width(): number {
@@ -101,11 +103,13 @@ export class ChartsPanel {
     opts: Omit<uPlot.Options, 'width' | 'height'>,
     data: uPlot.AlignedData,
     update: (plot: uPlot, series: SeriesCache) => void,
+    container: HTMLElement = this.el,
+    visible: () => boolean = () => true,
   ): void {
     const figure = h('figure', { class: 'chart' }, h('figcaption', {}, title));
     const plot = new uPlot({ ...opts, width: this.width(), height: HEIGHT }, data, figure);
-    this.plots.push({ name: title, plot, update: (series) => update(plot, series) });
-    this.el.append(figure);
+    this.plots.push({ name: title, plot, update: (series) => update(plot, series), visible });
+    container.append(figure);
   }
 
   private build(): void {
@@ -116,7 +120,7 @@ export class ChartsPanel {
       { stroke: color('--muted'), grid: { stroke: color('--grid') }, ticks: { stroke: color('--grid') }, size: 44 },
     ];
 
-    for (const chart of TIME_CHARTS) {
+    const addTimeChart = (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => {
       this.add(
         chart.title,
         {
@@ -127,8 +131,12 @@ export class ChartsPanel {
         },
         [[], ...chart.lines.map(() => [])],
         (plot, series) => plot.setData([series('tick'), ...chart.lines.map((l) => series(l.key))]),
+        container,
+        visible,
       );
-    }
+    };
+
+    for (const chart of TIME_CHARTS) addTimeChart(chart);
 
     const xs = Array.from({ length: 101 }, (_, i) => i / 100);
     this.add(
@@ -163,6 +171,103 @@ export class ChartsPanel {
         const counts = hist.slice(1);
         plot.setData([counts.map((_, i) => (i + 0.5) * width), counts]);
       },
+    );
+
+    const economy = h('section', { class: 'economy' }, h('h3', {}, 'Economy'));
+    this.el.append(economy);
+    const econOn = () => this.engine.config.spice.enabled || this.engine.config.credit.enabled;
+    const syncSection = () => {
+      economy.hidden = !econOn();
+      this.drawnTick = null;
+    };
+    this.engine.on('reset', syncSection);
+    this.engine.on('config', syncSection);
+    syncSection();
+
+    this.add(
+      'Trade price (ln)',
+      {
+        scales: { x: { time: false }, y: {} },
+        axes,
+        legend: { show: true },
+        series: [
+          { label: 'Tick' },
+          { label: 'Mean', stroke: color('--c2'), width: 1.5 },
+          { label: '+SD', stroke: color('--muted'), width: 1, dash: [4, 4] },
+          { label: '-SD', stroke: color('--muted'), width: 1, dash: [4, 4] },
+        ],
+      },
+      [[], [], [], []],
+      (plot, series) => {
+        const m = series('mean_log_price');
+        const sd = series('sd_log_price');
+        plot.setData([series('tick'), m, m.map((v, i) => v + sd[i]), m.map((v, i) => v - sd[i])]);
+      },
+      economy,
+      econOn,
+    );
+
+    addTimeChart({ title: 'Trade volume', lines: [{ key: 'trade_volume', label: 'Volume', color: '--c1' }] }, economy, econOn);
+
+    this.add(
+      'Supply & demand',
+      {
+        scales: { x: { time: false, distr: 3 }, y: {} },
+        axes,
+        legend: { show: true },
+        series: [
+          { label: 'Price' },
+          { label: 'Demand', stroke: color('--c1'), width: 1.5 },
+          { label: 'Supply', stroke: color('--c2'), width: 1.5 },
+          { label: 'Equilibrium', stroke: color('--c3'), points: { show: true, size: 9 }, paths: () => null },
+          { label: 'Actual', stroke: color('--text'), points: { show: true, size: 9 }, paths: () => null },
+        ],
+      },
+      [[], [], [], [], []],
+      (plot) => {
+        const sd = this.engine.sim.supply_demand();
+        const n = sd[0];
+        const prices = Array.from(sd.subarray(1, 1 + n));
+        const demand = Array.from(sd.subarray(1 + n, 1 + 2 * n));
+        const supply = Array.from(sd.subarray(1 + 2 * n, 1 + 3 * n));
+        const [eqP, eqQ, actP, actQ] = Array.from(sd.subarray(1 + 3 * n));
+        const nearest = (p: number) =>
+          prices.reduce((best, q, i) => (Math.abs(Math.log(q / p)) < Math.abs(Math.log(prices[best] / p)) ? i : best), 0);
+        const point = (p: number, q: number) => {
+          const col: (number | null)[] = prices.map(() => null);
+          if (Number.isFinite(p) && Number.isFinite(q)) col[nearest(p)] = q;
+          return col;
+        };
+        plot.setData([prices, demand, supply, point(eqP, eqQ), point(actP, actQ)]);
+      },
+      economy,
+      econOn,
+    );
+
+    addTimeChart(
+      {
+        title: 'Loans',
+        lines: [
+          { key: 'loans_made', label: 'Loans made', color: '--c1' },
+          { key: 'defaults', label: 'Defaults', color: '--c2' },
+        ],
+      },
+      economy,
+      econOn,
+    );
+
+    addTimeChart({ title: 'Debt outstanding', lines: [{ key: 'debt_outstanding', label: 'Debt', color: '--c3' }] }, economy, econOn);
+
+    addTimeChart(
+      {
+        title: 'Spice & foresight',
+        lines: [
+          { key: 'mean_spice_metabolism', label: 'Spice metabolism', color: '--c1' },
+          { key: 'mean_foresight', label: 'Foresight', color: '--c3' },
+        ],
+      },
+      economy,
+      econOn,
     );
   }
 }
