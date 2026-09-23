@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::config::{Config, FieldError};
+use crate::world::World;
 use crate::{presets, stats};
 
 pub const MAX_X_VALUES: usize = 64;
@@ -380,13 +381,141 @@ impl Sweep {
     }
 }
 
+/// Writes non-finite numbers as JSON `null` and reads `null` back as NaN
+/// (Decision 5).
+mod nan_as_null {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(v: &f64, s: S) -> Result<S::Ok, S::Error> {
+        if v.is_finite() {
+            s.serialize_f64(*v)
+        } else {
+            s.serialize_none()
+        }
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<f64, D::Error> {
+        Ok(Option::<f64>::deserialize(d)?.unwrap_or(f64::NAN))
+    }
+}
+
+/// `nan_as_null` for each element.
+mod nan_as_null_vec {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(v: &[f64], s: S) -> Result<S::Ok, S::Error> {
+        s.collect_seq(v.iter().map(|x| x.is_finite().then_some(*x)))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<f64>, D::Error> {
+        Ok(Vec::<Option<f64>>::deserialize(d)?
+            .into_iter()
+            .map(|x| x.unwrap_or(f64::NAN))
+            .collect())
+    }
+}
+
+/// A run's metric: one value, or one per block for `timeseries`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum Outcome {
+    Scalar {
+        #[serde(with = "nan_as_null")]
+        value: f64,
+    },
+    Series {
+        #[serde(with = "nan_as_null_vec")]
+        values: Vec<f64>,
+    },
+}
+
+/// One finished run: `{ point, series, x, seed, value | values }`
+/// (series and x are indices, Decision 6).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct RunResult {
+    pub point: usize,
+    pub series: usize,
+    pub x: usize,
+    pub seed: u64,
+    #[serde(flatten)]
+    pub outcome: Outcome,
+}
+
+/// The mean of the finite values (summed in order from 0.0), or NaN when
+/// there are none.
+fn finite_mean(values: &[f64]) -> f64 {
+    let (sum, n) = values
+        .iter()
+        .filter(|v| v.is_finite())
+        .fold((0.0, 0usize), |(sum, n), v| (sum + v, n + 1));
+    if n == 0 {
+        f64::NAN
+    } else {
+        sum / n as f64
+    }
+}
+
+/// Blocks of `every` ticks as `(first, last)`: block k covers ticks
+/// `k·every + 1 ..= min((k + 1)·every, ticks)`. `every` must be ≥ 1.
+pub fn blocks(ticks: u32, every: u32) -> Vec<(u32, u32)> {
+    (0..ticks.div_ceil(every))
+        .map(|k| (k * every + 1, ((k + 1) * every).min(ticks)))
+        .collect()
+}
+
+/// `metric` over one run whose statistics history is `history`
+/// (`history[t]` is tick t's value for t = 0..=ticks). A population of 0
+/// needs no special case: its statistics simply continue.
+pub fn measure(metric: &Metric, ticks: u32, history: &[f64]) -> Outcome {
+    let window = |from: u32, to: u32| finite_mean(&history[from as usize..=to as usize]);
+    match metric {
+        Metric::Final { .. } => Outcome::Scalar {
+            value: history[ticks as usize],
+        },
+        Metric::WindowMean { from, to, .. } => Outcome::Scalar {
+            value: window(*from, to.unwrap_or(ticks)),
+        },
+        Metric::Timeseries { every, .. } => Outcome::Series {
+            values: blocks(ticks, *every)
+                .into_iter()
+                .map(|(first, last)| window(first, last))
+                .collect(),
+        },
+    }
+}
+
+/// Runs `point` and measures it. The point's config must be valid (take
+/// points from `Sweep::points`, or check `Sweep::config_for` first).
+pub fn run_point(sweep: &Sweep, point: &Point) -> RunResult {
+    let config = sweep
+        .config_for(point)
+        .unwrap_or_else(|e| panic!("point {} has an invalid config: {e:?}", point.index));
+    run_config(sweep, point, config)
+}
+
+fn run_config(sweep: &Sweep, point: &Point, config: Config) -> RunResult {
+    let mut world = World::new(config, point.seed).expect("sweep configs are validated");
+    world.run(sweep.ticks);
+    let history = world
+        .stats
+        .series(sweep.metric.series())
+        .expect("the metric's series is checked against every config");
+    RunResult {
+        point: point.index,
+        series: point.series,
+        x: point.x,
+        seed: point.seed,
+        outcome: measure(&sweep.metric, sweep.ticks, &history),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
 
     /// 2 series × 3 x values × 2 seeds on ii-2-unit with 50 agents. The CLI
-    /// and WASM tests use the same sweep.
+    /// and WASM tests keep their own copies.
     pub(crate) fn tiny() -> Value {
         json!({
             "name": "tiny",
@@ -688,5 +817,148 @@ mod tests {
             json!({ "label": "all", "values": [{ "at": 0 }] }),
         );
         assert_eq!(fields(single), Vec::<String>::new());
+    }
+
+    #[test]
+    fn metrics_read_the_history_by_tick() {
+        let history: Vec<f64> = (0..=10).map(f64::from).collect();
+        let scalar = |m: Metric| match measure(&m, 10, &history) {
+            Outcome::Scalar { value } => value,
+            other => panic!("{other:?}"),
+        };
+        let p = || "p".to_string();
+        assert_eq!(scalar(Metric::Final { series: p() }), 10.0);
+        assert_eq!(
+            scalar(Metric::WindowMean {
+                series: p(),
+                from: 4,
+                to: None
+            }),
+            7.0
+        );
+        assert_eq!(
+            scalar(Metric::WindowMean {
+                series: p(),
+                from: 4,
+                to: Some(6)
+            }),
+            5.0
+        );
+        assert_eq!(
+            scalar(Metric::WindowMean {
+                series: p(),
+                from: 0,
+                to: Some(0)
+            }),
+            0.0
+        );
+        assert_eq!(
+            measure(
+                &Metric::Timeseries {
+                    series: p(),
+                    every: 4
+                },
+                10,
+                &history
+            ),
+            Outcome::Series {
+                values: vec![2.5, 6.5, 9.5]
+            }
+        );
+        assert_eq!(blocks(10, 4), vec![(1, 4), (5, 8), (9, 10)]);
+        assert_eq!(blocks(10, 10), vec![(1, 10)]);
+        assert_eq!(blocks(3, 1), vec![(1, 1), (2, 2), (3, 3)]);
+    }
+
+    #[test]
+    fn nan_values_are_skipped_and_an_all_nan_block_is_nan() {
+        let mut history: Vec<f64> = (0..=10).map(f64::from).collect();
+        history[5] = f64::NAN;
+        let window = Metric::WindowMean {
+            series: "p".into(),
+            from: 4,
+            to: Some(6),
+        };
+        assert_eq!(
+            measure(&window, 10, &history),
+            Outcome::Scalar { value: 5.0 }
+        );
+        history[9] = f64::NAN;
+        history[10] = f64::NAN;
+        let Outcome::Series { values } = measure(
+            &Metric::Timeseries {
+                series: "p".into(),
+                every: 4,
+            },
+            10,
+            &history,
+        ) else {
+            panic!("series expected");
+        };
+        assert_eq!(&values[..2], &[2.5, 7.0]);
+        assert!(values[2].is_nan());
+    }
+
+    #[test]
+    fn run_results_write_nan_as_null() {
+        let run = RunResult {
+            point: 3,
+            series: 1,
+            x: 0,
+            seed: 7,
+            outcome: Outcome::Scalar { value: f64::NAN },
+        };
+        let json = serde_json::to_string(&run).unwrap();
+        assert_eq!(
+            json,
+            r#"{"point":3,"series":1,"x":0,"seed":7,"value":null}"#
+        );
+        let back: RunResult = serde_json::from_str(&json).unwrap();
+        assert!(matches!(back.outcome, Outcome::Scalar { value } if value.is_nan()));
+        let series = RunResult {
+            outcome: Outcome::Series {
+                values: vec![1.5, f64::NAN],
+            },
+            ..run
+        };
+        let json = serde_json::to_string(&series).unwrap();
+        assert_eq!(
+            json,
+            r#"{"point":3,"series":1,"x":0,"seed":7,"values":[1.5,null]}"#
+        );
+        let back: RunResult = serde_json::from_str(&json).unwrap();
+        let Outcome::Series { values } = back.outcome else {
+            panic!("series expected")
+        };
+        assert_eq!(values[0], 1.5);
+        assert!(values[1].is_nan());
+        let int: RunResult =
+            serde_json::from_str(r#"{"point":0,"series":0,"x":0,"seed":1,"value":224}"#).unwrap();
+        assert_eq!(int.outcome, Outcome::Scalar { value: 224.0 });
+    }
+
+    #[test]
+    fn run_point_measures_one_world() {
+        let s = sweep(tiny());
+        let point = s.point(7).unwrap();
+        let run = run_point(&s, &point);
+        assert_eq!((run.point, run.series, run.x, run.seed), (7, 1, 0, 6));
+        let mut w = World::new(s.config_for(&point).unwrap(), 6).unwrap();
+        w.run(20);
+        let pops = w.stats.series("population").unwrap();
+        let expected = pops[10..=20].iter().fold(0.0, |a, b| a + b) / 11.0;
+        assert_eq!(run.outcome, Outcome::Scalar { value: expected });
+    }
+
+    #[test]
+    fn an_empty_world_still_yields_a_value() {
+        let mut v = tiny();
+        v["set"] = json!({ "population": 0 });
+        v["metric"] = json!({ "kind": "final", "series": "population" });
+        let s = sweep(v);
+        assert_eq!(
+            run_point(&s, &s.point(0).unwrap()).outcome,
+            Outcome::Scalar { value: 0.0 }
+        );
     }
 }
