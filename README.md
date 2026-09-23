@@ -19,6 +19,12 @@ Chapter IV: spice and multicommodity movement, trade (T), credit (L), foresight,
 sugar-as-dirty-good pollution, scheduled rule changes, supply and demand, and
 trade/credit network overlays. See `docs/roadmap.md` for future work.
 
+Chapter V: immune and disease bit strings, immune response and transmission (E), a
+metabolic fee per carried disease, immune-genome inheritance with optional mutation,
+disease mutation, outbreaks of novel diseases (the McNeill scenario), Infect and Vaccinate
+tools, and a disease-network overlay. `vi-1-everything` runs every rule from Chapters II–V
+together.
+
 ### Notes
 
 - Painted landscapes and share links carry sugar capacities only; spice capacities always
@@ -29,6 +35,12 @@ trade/credit network overlays. See `docs/roadmap.md` for future work.
   so older share links to it load as a custom setup.
 - Switching spice on or off rebuilds the world; other rule changes apply to the running
   world without undoing scheduled changes that have already fired.
+- Switching disease on or off, and changing the number of diseases, their lengths or the
+  immune-string length, rebuilds the world; the fee, flips per tick ("medicine") and
+  mutation rates apply to the running world. Outbreaks are listed in the Schedule section.
+- `v-1-rid` reaches near-eradication rather than exactly zero infected: learning one disease
+  can overwrite the immune-string window that cured another, so a residue of about 1–3%
+  persists.
 
 ## Running locally
 

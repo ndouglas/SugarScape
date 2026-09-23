@@ -45,6 +45,7 @@ export class InspectPanel {
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
+      ...(this.engine.config.disease.enabled ? this.diseaseRows(a) : []),
       row('Born', `tick ${a.born}`),
       row('Parents', this.links(a.parents)),
       row('Children', this.links(a.children)),
@@ -56,6 +57,28 @@ export class InspectPanel {
                 : h('span', { class: 'hint' }, `#${l.counterparty.id}†`),
               ` ${fmt(l.due)} by t=${l.due_tick}`))))]
         : []),
+    ];
+  }
+
+  private diseaseRows(a: AgentView): HTMLElement[] {
+    const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const learned = [...a.immune].filter((bit, i) => bit !== a.immune_genome[i]).length;
+    return [
+      row('Immune string', h('span', {}, h('code', {}, a.immune), h('span', { class: 'hint' }, ` ${learned} bits learned`))),
+      row('Immune genome', h('code', {}, a.immune_genome)),
+      row(
+        'Diseases',
+        a.diseases.length === 0
+          ? h('span', { class: 'hint' }, 'none')
+          : h(
+              'span',
+              { class: 'links' },
+              ...a.diseases.map((d) =>
+                h('span', { title: 'Hamming distance to the closest window of the immune string' }, `#${d.id} `, h('code', {}, d.bits), ` (${d.distance})`),
+              ),
+            ),
+      ),
+      row('Infected by', a.infected_by ? this.links([a.infected_by]) : h('span', { class: 'hint' }, 'nobody')),
     ];
   }
 

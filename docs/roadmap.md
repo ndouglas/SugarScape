@@ -2,9 +2,13 @@
 
 Ideas beyond the current milestone, roughly in order of how much they add. Each item gets its own brainstorm → spec → plan cycle when picked up.
 
-## Milestone 3: Chapter V — disease (planned)
+## Milestone 3: Chapter V — disease (done)
 
-Disease and immune-system bit strings, immune response rule, disease transmission between neighbors, and the book's presets (society rids itself of disease / cannot rid itself of disease). Charts: fraction infected, mean immune-disease Hamming distance. Optional "sick network" overlay like the trade/credit networks.
+Immune and disease bit strings, immune response and transmission (E), metabolic symptoms,
+immune-genome inheritance, disease mutation, outbreaks, Infect/Vaccinate tools, a disease
+network overlay and the book's presets (V-1 near-eradication, V-2 endemic, the McNeill
+outbreak), plus `vi-1-everything`. See
+`docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md`.
 
 ## N-commodity generalization
 

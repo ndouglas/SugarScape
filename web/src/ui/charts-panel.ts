@@ -187,13 +187,17 @@ export class ChartsPanel {
       },
     );
 
-    // Market charts need spice; loan charts need credit; the section needs either.
+    // Market charts need spice; loan charts need credit; the section needs
+    // either. The disease section needs disease.
     const economy = h('section', { class: 'economy' }, h('h3', {}, 'Economy'));
-    this.el.append(economy);
+    const disease = h('section', { class: 'disease' }, h('h3', {}, 'Disease'));
+    this.el.append(economy, disease);
     const spiceOn = () => this.engine.config.spice.enabled;
     const creditOn = () => this.engine.config.credit.enabled;
+    const diseaseOn = () => this.engine.config.disease.enabled;
     const syncSection = () => {
       economy.hidden = !(spiceOn() || creditOn());
+      disease.hidden = !diseaseOn();
       for (const p of this.plots) p.figure.hidden = !p.visible();
       this.drawnTick = null;
     };
@@ -285,6 +289,19 @@ export class ChartsPanel {
       economy,
       spiceOn,
     );
+
+    addTimeChart(
+      { title: 'Infected', lines: [{ key: 'infected_fraction', label: 'Infected share', color: '--red' }], range: [0, 1] },
+      disease,
+      diseaseOn,
+    );
+    addTimeChart({ title: 'Diseases per agent', lines: [{ key: 'mean_diseases', label: 'Mean', color: '--c2' }] }, disease, diseaseOn);
+    addTimeChart(
+      { title: 'Diseases in circulation', lines: [{ key: 'diseases_in_circulation', label: 'Distinct diseases', color: '--c4' }] },
+      disease,
+      diseaseOn,
+    );
+    addTimeChart({ title: 'New infections', lines: [{ key: 'new_infections', label: 'Infections', color: '--c1' }] }, disease, diseaseOn);
 
     syncSection();
   }
