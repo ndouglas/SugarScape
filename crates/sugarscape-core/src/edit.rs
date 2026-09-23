@@ -1,10 +1,12 @@
 //! Interactive edits and inspection used by the playground UI.
 
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 use crate::agent::{Agent, AgentId, DiseaseId, Sex, Tribe};
 use crate::config::{Config, FieldError};
 use crate::geometry::Pos;
+use crate::rules;
 use crate::world::{LoanId, World};
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -50,6 +52,14 @@ pub struct LoanView {
     pub counterparty: LinkView,
     pub due: f64,
     pub due_tick: u64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DiseaseEntry {
+    pub id: DiseaseId,
+    pub bits: String,
+    /// Living agents carrying it.
+    pub carriers: u32,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -261,6 +271,93 @@ impl World {
     pub fn capacities(&self) -> Vec<f64> {
         self.sites.iter().map(|s| s.capacity).collect()
     }
+
+    fn disease_on(&self) -> Result<(), String> {
+        if self.config.disease.enabled {
+            Ok(())
+        } else {
+            Err("disease is off".into())
+        }
+    }
+
+    /// The master disease list with each disease's carriers.
+    pub fn disease_list(&self) -> Vec<DiseaseEntry> {
+        let mut carriers = vec![0u32; self.diseases.len()];
+        for a in self.agents() {
+            for &d in &a.diseases {
+                carriers[d as usize] += 1;
+            }
+        }
+        self.diseases
+            .iter()
+            .zip(carriers)
+            .enumerate()
+            .map(|(i, (d, carriers))| DiseaseEntry {
+                id: i as DiseaseId,
+                bits: d.to_bit_string(),
+                carriers,
+            })
+            .collect()
+    }
+
+    /// Infects the agent at (x, y) with listed `disease`, or — when `disease`
+    /// is negative — with a brand-new random disease (appended to the list even
+    /// if the agent resists it). No effect if the agent is immune or already
+    /// carries it. Returns whether it was infected.
+    pub fn infect(&mut self, x: u32, y: u32, disease: i64) -> Result<bool, String> {
+        self.disease_on()?;
+        let pos = self.checked_pos(x, y)?;
+        let id = self
+            .occupant(pos)
+            .ok_or_else(|| format!("no agent at ({x}, {y})"))?;
+        let d = if disease < 0 {
+            rules::disease::new_random(self)
+        } else {
+            DiseaseId::try_from(disease)
+                .ok()
+                .filter(|&d| (d as usize) < self.diseases.len())
+                .ok_or_else(|| format!("unknown disease {disease}"))?
+        };
+        Ok(rules::disease::infect(self, id, d))
+    }
+
+    /// Writes `disease` into the immune string of every agent within Euclidean
+    /// `radius` of (x, y) (wrapping), over its closest window, then cures any
+    /// carried disease the string now contains. The genome is untouched.
+    /// Returns how many agents were vaccinated.
+    pub fn vaccinate(
+        &mut self,
+        x: u32,
+        y: u32,
+        radius: u32,
+        disease: DiseaseId,
+    ) -> Result<u32, String> {
+        self.disease_on()?;
+        let center = self.checked_pos(x, y)?;
+        let d = *self
+            .diseases
+            .get(disease as usize)
+            .ok_or_else(|| format!("unknown disease {disease}"))?;
+        let r = radius as i32;
+        let mut ids = BTreeSet::new();
+        for dy in -r..=r {
+            for dx in -r..=r {
+                if dx * dx + dy * dy <= r * r {
+                    if let Some(id) = self.occupant(self.torus.offset(center, dx, dy)) {
+                        ids.insert(id);
+                    }
+                }
+            }
+        }
+        let mut vaccinated = 0;
+        for id in ids {
+            if self.agent_mut(id).expect("occupant").immune.imprint(&d) {
+                rules::disease::cure_immune(self, id);
+                vaccinated += 1;
+            }
+        }
+        Ok(vaccinated)
+    }
 }
 
 #[cfg(test)]
@@ -462,5 +559,68 @@ mod tests {
             .unwrap()
             .infected_by
             .is_none());
+    }
+
+    #[test]
+    fn infect_tool_gives_a_listed_or_new_disease() {
+        use crate::bits::Bits;
+        let mut w = blank_world(10, 10);
+        w.config.disease.enabled = true;
+        w.diseases = vec![Bits::parse("101").unwrap()];
+        let a = spawn(&mut w, 1, 1);
+        assert!(w.infect(1, 1, 0).unwrap());
+        assert!(!w.infect(1, 1, 0).unwrap(), "already carries it");
+        assert_eq!(w.agent(a).unwrap().diseases, vec![0]);
+        assert!(
+            w.agent(a).unwrap().infected_by.is_none(),
+            "a tool is not an infector"
+        );
+        w.infect(1, 1, -1).unwrap();
+        assert_eq!(w.diseases.len(), 2, "a new disease is appended");
+        assert_ne!(w.diseases[1], w.diseases[0]);
+        assert!(w.infect(1, 1, 7).is_err(), "unknown disease");
+        assert!(w.infect(5, 5, 0).is_err(), "no agent");
+        assert!(
+            w.events().infections.is_empty(),
+            "edits are not counted as infections"
+        );
+        w.config.disease.enabled = false;
+        assert_eq!(w.infect(1, 1, 0).unwrap_err(), "disease is off");
+    }
+
+    #[test]
+    fn vaccination_writes_the_disease_into_immune_strings_in_the_brush() {
+        use crate::bits::Bits;
+        let mut w = blank_world(10, 10);
+        w.config.disease.enabled = true;
+        w.diseases = vec![Bits::parse("111").unwrap()];
+        let near = spawn(&mut w, 5, 5);
+        let edge = spawn(&mut w, 5, 6);
+        let far = spawn(&mut w, 8, 8);
+        for id in [near, edge, far] {
+            w.agent_mut(id).unwrap().diseases = vec![0];
+        }
+        assert_eq!(w.vaccinate(5, 5, 1, 0).unwrap(), 2);
+        for id in [near, edge] {
+            let a = w.agent(id).unwrap();
+            assert!(a.diseases.is_empty(), "cured");
+            assert!(
+                a.immune.to_bit_string().starts_with("111"),
+                "leftmost closest window"
+            );
+            assert_eq!(
+                a.immune_genome.to_bit_string(),
+                "0".repeat(50),
+                "genome untouched"
+            );
+        }
+        assert_eq!(w.agent(far).unwrap().diseases, vec![0]);
+        assert!(w.vaccinate(5, 5, 1, 3).is_err(), "unknown disease");
+        let list = w.disease_list();
+        assert_eq!(list.len(), 1);
+        assert_eq!(
+            (list[0].id, list[0].bits.as_str(), list[0].carriers),
+            (0, "111", 1)
+        );
     }
 }
