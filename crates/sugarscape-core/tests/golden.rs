@@ -33,7 +33,9 @@ const GOLDEN: &[(&str, u64)] = &[
     ("v-1-rid", 0x51a57db11c232edb),
     ("v-2-endemic", 0x899e70cd17f1484a),
     ("v-mcneill", 0x81def3a081577ad9),
-    ("vi-1-everything", 0xb1651d2294218f48),
+    // Re-recorded when credit became per-good (N goods): vi-1-everything now
+    // lends and borrows spice as well as sugar. No other entry changed.
+    ("vi-1-everything", 0xd04f0968e3ac2c63),
 ];
 
 fn fingerprint(id: &str) -> u64 {

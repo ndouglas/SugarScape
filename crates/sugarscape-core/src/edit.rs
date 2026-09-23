@@ -511,7 +511,7 @@ mod tests {
         let a = spawn(&mut w, 1, 1);
         let b = spawn(&mut w, 2, 1);
         w.agent_mut(a).unwrap().foresight = 3;
-        w.originate_loan(a, b, 2.0);
+        w.originate_loan(a, b, 0, 2.0);
         let view = w.inspect(1, 1).unwrap().agent.unwrap();
         assert_eq!((view.spice, view.foresight), (10.0, 3));
         assert_eq!(view.loans.len(), 1);

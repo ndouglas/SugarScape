@@ -93,7 +93,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         children: Vec::new(),
         born: world.tick,
         foresight: 0,
-        income: 0.0,
+        income: [0.0; MAX_GOODS],
         immune_genome: Bits::default(),
         immune: Bits::default(),
         diseases: Vec::new(),

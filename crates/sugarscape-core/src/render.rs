@@ -247,7 +247,7 @@ mod tests {
         let a = spawn(&mut w, 4, 4);
         let b = spawn(&mut w, 5, 4);
         let c = spawn(&mut w, 6, 4);
-        w.originate_loan(a, b, 1.0);
+        w.originate_loan(a, b, 0, 1.0);
         let mut buf = Vec::new();
         render(&w, ColorMode::Credit, Layer::Spice, &mut buf);
         assert_eq!(pixel(&buf, &w, 1, 1)[..3], SPICE);

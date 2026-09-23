@@ -43,7 +43,7 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     };
     lifecycle::metabolize(world, id, harvest);
     if world.config.credit.enabled {
-        credit::record_income(world, id, harvest.gathered[0]);
+        credit::record_income(world, id, &harvest);
     }
     if lifecycle::check_death(world, id) {
         return;

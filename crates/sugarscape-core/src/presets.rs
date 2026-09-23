@@ -380,8 +380,9 @@ pub fn all() -> Vec<Preset> {
                 // string is unlikely to already be present, so each
                 // outbreak reliably takes hold.
                 //
-                // Measured (seeds 1-5, t=1000 population): 1741, 1787,
-                // 1746, 1764, 1773 - comfortably above the 50-agent bar.
+                // Measured (seeds 1-5, t=1000 population; re-measured when
+                // credit became per-good): 1832, 1767, 1800, 1790, 1752 -
+                // comfortably above the 50-agent bar.
                 // infected_fraction is 0.000 at every one of the
                 // t=200/500/800/1000 sampling points for every seed, but a
                 // finer-grained trace shows each outbreak does take hold

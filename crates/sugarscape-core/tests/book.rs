@@ -305,7 +305,7 @@ fn a_novel_disease_spreads_after_the_mcneill_outbreak() {
 fn everything_on_society_survives() {
     // Chapter VI's everything-on run; endowments chosen in presets.rs from
     // the measurements recorded there. Observed t=1000 populations (seeds
-    // 1..=3): 1741, 1787, 1746 (all far above the 50-agent bar; see
+    // 1..=3): 1832, 1767, 1800 (all far above the 50-agent bar; see
     // presets.rs's `vi-1-everything` comment for the full seeds 1..=5
     // history and why infected_fraction reads 0.000 at every sampled tick
     // despite each scheduled outbreak taking hold substantially -- disease

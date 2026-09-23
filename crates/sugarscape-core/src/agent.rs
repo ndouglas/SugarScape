@@ -158,9 +158,9 @@ pub struct Agent {
     pub born: u64,
     /// Book eq. 6's φ (0 while foresight is off).
     pub foresight: u32,
-    /// Sugar gathered minus sugar metabolism minus per-tick loan obligations,
-    /// this turn (credit's creditworthiness input).
-    pub income: f64,
+    /// Per good: gathered minus effective metabolism minus per-tick loan
+    /// obligations in that good, this turn (credit's creditworthiness input).
+    pub income: [f64; MAX_GOODS],
     /// Chapter V: the inherited, untrained immune string (empty while disease
     /// is off).
     pub immune_genome: Bits,
@@ -199,7 +199,7 @@ impl Agent {
             children: Vec::new(),
             born,
             foresight: 0,
-            income: 0.0,
+            income: [0.0; MAX_GOODS],
             immune_genome: Bits::default(),
             immune: Bits::default(),
             diseases: Vec::new(),

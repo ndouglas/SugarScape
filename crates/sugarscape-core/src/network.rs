@@ -101,8 +101,8 @@ mod tests {
             vec![(Pos::new(0, 0), Pos::new(1, 0))],
             "deduplicated"
         );
-        w.originate_loan(a, b, 1.0);
-        w.originate_loan(b, c, 1.0);
+        w.originate_loan(a, b, 0, 1.0);
+        w.originate_loan(b, c, 0, 1.0);
         let roles = credit_roles(&w);
         assert_eq!(roles[&a], CreditRole::Lender);
         assert_eq!(roles[&b], CreditRole::Both);

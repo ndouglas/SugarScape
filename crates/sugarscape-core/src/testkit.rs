@@ -68,7 +68,7 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         children: Vec::new(),
         born: 0,
         foresight: 0,
-        income: 0.0,
+        income: [0.0; MAX_GOODS],
         immune_genome: Bits::new(0, world.config.disease.immune_length),
         immune: Bits::new(0, world.config.disease.immune_length),
         diseases: Vec::new(),

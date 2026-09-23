@@ -49,13 +49,14 @@ pub struct Infection {
 
 pub type LoanId = u64;
 
-/// A sugar loan under rule L: `due` sugar owed at `due_tick`, written for
+/// A loan of good `good` under rule L: `due` of it owed at `due_tick`, written for
 /// `duration` ticks at `rate` percent per tick (the terms travel with it).
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
 pub struct Loan {
     pub id: LoanId,
     pub lender: AgentId,
     pub borrower: AgentId,
+    pub good: usize,
     pub principal: f64,
     pub due: f64,
     pub due_tick: u64,
@@ -280,22 +281,26 @@ impl World {
         self.loans.values()
     }
 
-    /// Records a loan of `principal` on the current credit terms (no transfer).
+    /// Records a loan of `principal` of `good` on the current credit terms
+    /// (no transfer).
     pub(crate) fn originate_loan(
         &mut self,
         lender: AgentId,
         borrower: AgentId,
+        good: usize,
         principal: f64,
     ) -> LoanId {
         let c = self.config.credit;
-        self.originate_loan_on(lender, borrower, principal, c.duration, c.rate)
+        self.originate_loan_on(lender, borrower, good, principal, c.duration, c.rate)
     }
 
-    /// Records a loan of `principal` for `duration` ticks at `rate` percent.
+    /// Records a loan of `principal` of `good` for `duration` ticks at `rate`
+    /// percent.
     pub(crate) fn originate_loan_on(
         &mut self,
         lender: AgentId,
         borrower: AgentId,
+        good: usize,
         principal: f64,
         duration: u32,
         rate: f64,
@@ -309,6 +314,7 @@ impl World {
                 id,
                 lender,
                 borrower,
+                good,
                 principal,
                 due: principal * factor,
                 due_tick: self.tick + u64::from(duration),
@@ -384,6 +390,9 @@ impl World {
             eat(l.due_tick);
             eat(u64::from(l.duration));
             eat(l.rate.to_bits());
+            if n >= 2 {
+                eat(l.good as u64);
+            }
         }
         h
     }
