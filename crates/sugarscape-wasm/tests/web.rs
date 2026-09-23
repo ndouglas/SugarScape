@@ -47,3 +47,21 @@ fn partial_config_exports_in_full() {
     assert!(full.contains(r#""landscape":{"kind":"#), "{full}");
     assert!(full.contains(r#""combat":"#), "{full}");
 }
+
+#[wasm_bindgen_test]
+fn trade_preset_exposes_networks_and_supply_demand() {
+    let presets = presets_json();
+    assert!(presets.contains("\"iv-3-trade\""));
+    let config = r#"{"population":200,"vision":{"min":1,"max":5},"metabolism":{"min":1,"max":5},
+        "endowment":{"min":25,"max":50},"spice":{"enabled":true,"metabolism":{"min":1,"max":5},
+        "endowment":{"min":25,"max":50}},"trade":{"enabled":true}}"#;
+    let mut sim = Sim::new(config, 1, None).unwrap();
+    sim.step(5);
+    let edges = sim.networks("trade").unwrap();
+    assert_eq!(edges.len() % 4, 0);
+    let sd = sim.supply_demand();
+    assert_eq!(sd[0] as usize, 41);
+    assert_eq!(sd.len(), 1 + 3 * 41 + 4);
+    assert!(sim.networks("gossip").is_err());
+    sim.render("credit", "spice").unwrap();
+}

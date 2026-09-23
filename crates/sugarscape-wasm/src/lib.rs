@@ -5,7 +5,7 @@ use sugarscape_core::config::{Config, FieldError};
 use sugarscape_core::edit::AgentOverrides;
 use sugarscape_core::render::{self, ColorMode, Layer};
 use sugarscape_core::world::World;
-use sugarscape_core::{export, presets, stats};
+use sugarscape_core::{export, network, presets, stats};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
@@ -172,5 +172,34 @@ impl Sim {
 
     pub fn export_agents_csv(&self) -> String {
         export::agents_csv(&self.world)
+    }
+
+    /// Edges as `[x1, y1, x2, y2, …]` for `"trade"` (this tick) or `"credit"` (outstanding).
+    pub fn networks(&self, kind: &str) -> Result<Vec<u32>, JsValue> {
+        let edges = match kind {
+            "trade" => network::trade_edges(&self.world),
+            "credit" => network::credit_edges(&self.world),
+            _ => return Err(edit_error(format!("unknown network {kind:?}"))),
+        };
+        Ok(edges
+            .into_iter()
+            .flat_map(|(a, b)| [a.x, a.y, b.x, b.y])
+            .collect())
+    }
+
+    /// `[n, prices(n), demand(n), supply(n), eq_price, eq_quantity, actual_price, actual_quantity]`.
+    pub fn supply_demand(&self) -> Vec<f64> {
+        let sd = stats::supply_demand(&self.world);
+        let mut out = vec![sd.prices.len() as f64];
+        out.extend(sd.prices);
+        out.extend(sd.demand);
+        out.extend(sd.supply);
+        out.extend([
+            sd.equilibrium_price,
+            sd.equilibrium_quantity,
+            sd.actual_price,
+            sd.actual_quantity,
+        ]);
+        out
     }
 }
