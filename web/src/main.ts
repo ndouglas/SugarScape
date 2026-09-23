@@ -3,6 +3,8 @@ import { Engine } from './engine';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
 import { GridView } from './ui/grid-view';
+import { RulesPanel } from './ui/rules-panel';
+import { Tabs } from './ui/tabs';
 import { buildToolbar } from './ui/toolbar';
 
 export function showBanner(message: string, action?: { label: string; run: () => void }): void {
@@ -22,6 +24,9 @@ async function main(): Promise<void> {
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
   document.querySelector('#toolbar')!.append(buildToolbar(engine));
   document.querySelector('#display')!.append(buildDisplay(engine));
+
+  const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
+  tabs.add('Rules', new RulesPanel(engine).el);
 
   let dirty = true;
   for (const event of ['reset', 'tick', 'config', 'display', 'select', 'edit'] as const) {
