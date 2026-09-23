@@ -25,6 +25,7 @@ export class Engine {
   stepsPerFrame = 1;
   colorMode: ColorMode = 'tribe';
   layer: Layer = 'sugar';
+  overlays: { trade: boolean; credit: boolean } = { trade: false, credit: false };
   selection: Selection | null = null;
   presetId: string | null;
   /** Painted or shared capacities, carried across resets that keep the landscape shape. */
@@ -153,9 +154,10 @@ export class Engine {
     return new Uint8ClampedArray(this.memory.buffer, ptr, this.sim.frame_len());
   }
 
-  setDisplay(d: { colorMode?: ColorMode; layer?: Layer }): void {
+  setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<{ trade: boolean; credit: boolean }> }): void {
     if (d.colorMode) this.colorMode = d.colorMode;
     if (d.layer) this.layer = d.layer;
+    if (d.overlays) Object.assign(this.overlays, d.overlays);
     this.emit('display');
   }
 

@@ -8,11 +8,14 @@ const MODES: [ColorMode, string][] = [
   ['sex', 'Sex'],
   ['age', 'Age'],
   ['vision', 'Vision'],
+  ['credit', 'Credit'],
 ];
 const LAYERS: [Layer, string][] = [
   ['sugar', 'Sugar'],
   ['capacity', 'Capacity'],
   ['pollution', 'Pollution'],
+  ['spice', 'Spice'],
+  ['spice_capacity', 'Spice capacity'],
 ];
 
 export function buildDisplay(engine: Engine): HTMLElement {
@@ -32,5 +35,17 @@ export function buildDisplay(engine: Engine): HTMLElement {
   };
   engine.on('display', sync);
   sync();
-  return h('div', { class: 'display-controls' }, h('label', {}, 'Agents ', mode), h('label', {}, 'Landscape ', layer));
+  const overlay = (kind: 'trade' | 'credit', label: string) => {
+    const box = h('input', { type: 'checkbox', onchange: () => engine.setDisplay({ overlays: { [kind]: box.checked } }) });
+    engine.on('display', () => (box.checked = engine.overlays[kind]));
+    return h('label', {}, box, ` ${label}`);
+  };
+  return h(
+    'div',
+    { class: 'display-controls' },
+    h('label', {}, 'Agents ', mode),
+    h('label', {}, 'Landscape ', layer),
+    overlay('trade', 'Trade network'),
+    overlay('credit', 'Credit network'),
+  );
 }

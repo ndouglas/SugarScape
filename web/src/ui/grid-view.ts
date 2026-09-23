@@ -1,4 +1,5 @@
 import type { Engine } from '../engine';
+import { wrappedSegments } from './overlay';
 
 const CELL = 12;
 
@@ -67,6 +68,24 @@ export class GridView {
     const ctx = this.ctx;
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.buffer, 0, 0, width * CELL, height * CELL);
+
+    for (const [kind, color] of [['trade', '--c3'], ['credit', '--c2']] as const) {
+      if (!this.engine.overlays[kind]) continue;
+      const e = this.engine.sim.networks(kind);
+      ctx.save();
+      ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue(color).trim() || '#fff';
+      ctx.globalAlpha = 0.8;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < e.length; i += 4) {
+        for (const [ax, ay, bx, by] of wrappedSegments(e[i], e[i + 1], e[i + 2], e[i + 3], width, height)) {
+          ctx.moveTo((ax + 0.5) * CELL, (ay + 0.5) * CELL);
+          ctx.lineTo((bx + 0.5) * CELL, (by + 0.5) * CELL);
+        }
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
 
     const accent = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
     const sel = this.engine.selection;
