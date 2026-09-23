@@ -41,6 +41,86 @@ pub enum LandscapeKind {
     },
 }
 
+/// How a good's copy of the book's two-peak map is turned (Decision 7): the
+/// value shown at (x, y) is the base map's value at `source(x, y)`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Transform {
+    #[serde(rename = "identity")]
+    Identity,
+    /// 90° clockwise: the north-east peak moves south-east.
+    #[serde(rename = "rotate_90")]
+    Rotate90,
+    #[serde(rename = "rotate_180")]
+    Rotate180,
+    #[serde(rename = "rotate_270")]
+    Rotate270,
+    /// Left↔right: Chapter IV's spice map.
+    #[serde(rename = "mirror_x")]
+    MirrorX,
+    /// North↔south.
+    #[serde(rename = "mirror_y")]
+    MirrorY,
+    #[serde(rename = "transpose")]
+    Transpose,
+    #[serde(rename = "anti_transpose")]
+    AntiTranspose,
+}
+
+impl Transform {
+    pub const ALL: [Transform; 8] = [
+        Transform::Identity,
+        Transform::Rotate90,
+        Transform::Rotate180,
+        Transform::Rotate270,
+        Transform::MirrorX,
+        Transform::MirrorY,
+        Transform::Transpose,
+        Transform::AntiTranspose,
+    ];
+
+    /// The base-map cell shown at (x, y) on a w×h map (w = h for the
+    /// two-peak map).
+    pub fn source(self, x: usize, y: usize, w: usize, h: usize) -> (usize, usize) {
+        match self {
+            Transform::Identity => (x, y),
+            Transform::Rotate90 => (y, h - 1 - x),
+            Transform::Rotate180 => (w - 1 - x, h - 1 - y),
+            Transform::Rotate270 => (w - 1 - y, x),
+            Transform::MirrorX => (w - 1 - x, y),
+            Transform::MirrorY => (x, h - 1 - y),
+            Transform::Transpose => (y, x),
+            Transform::AntiTranspose => (h - 1 - y, w - 1 - x),
+        }
+    }
+}
+
+/// One mountain of a `peaks` map: capacity ⌈height·(1 − d/radius)⌉ at torus
+/// distance d from (x, y), never below 0.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Peak {
+    pub x: u32,
+    pub y: u32,
+    pub radius: f64,
+    pub height: f64,
+}
+
+/// A good's capacity map.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Map {
+    /// The book's 50×50 two-peak map, turned by `transform`.
+    TwoPeaks {
+        transform: Transform,
+    },
+    /// The highest of 1–16 linear peaks at each site.
+    Peaks {
+        peaks: Vec<Peak>,
+    },
+    Flat {
+        capacity: f64,
+    },
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Placement {
