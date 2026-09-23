@@ -81,7 +81,7 @@ impl Sim {
     pub fn render(&mut self, color_mode: &str, layer: &str) -> Result<usize, JsValue> {
         let mode: ColorMode = color_mode.parse().map_err(edit_error)?;
         let layer: Layer = layer.parse().map_err(edit_error)?;
-        render::render(&self.world, mode, layer, &mut self.frame);
+        render::render(&self.world, mode, layer, &mut self.frame).map_err(edit_error)?;
         Ok(self.frame.as_ptr() as usize)
     }
 
