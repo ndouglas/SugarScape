@@ -3,7 +3,10 @@
 
 use serde::Serialize;
 
-use crate::config::{Config, Good, Outbreak, Placement, ScheduledChange, URange};
+use crate::config::{
+    Config, Good, Map, Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange, Transform,
+    URange, SPICE_COLOR,
+};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Preset {
@@ -75,6 +78,25 @@ fn market(c: &mut Config) {
 /// 50-bit immune strings (the `DiseaseRule` defaults).
 fn disease(c: &mut Config) {
     c.disease.enabled = true;
+}
+
+/// A further good with good 0's trait ranges, named `name` in `color` on `map`.
+fn another(c: &mut Config, name: &str, color: &str, map: Map) {
+    let like = c.goods[0].clone();
+    c.add_good(Good {
+        name: name.into(),
+        color: color.into(),
+        map,
+        ..like
+    });
+}
+
+/// Gives every good the same metabolism and endowment ranges.
+fn traits(c: &mut Config, metabolism: URange, endowment: URange) {
+    for g in &mut c.goods {
+        g.metabolism = metabolism;
+        g.endowment = endowment;
+    }
 }
 
 pub fn all() -> Vec<Preset> {
@@ -361,7 +383,9 @@ pub fn all() -> Vec<Preset> {
                 c.goods[0].endowment = URange::new(25, 50);
                 // With the endemic (25/10) disease load alone, this preset's
                 // own early population crash (sex + lifespan + spice + trade
-                // + credit together: t=0 400 -> t~100 ~130-230, before
+                // + credit together: t=0 400 -> a trough within t<=200 of
+                // 78-189, measured seeds 1-5 release as 115, 189, 78, 82,
+                // 167 -- re-measured after per-good credit -- before
                 // recovering to ~1750+ by t=1000) wipes out every carried
                 // disease by t~60-100, and with no remaining carriers
                 // disease can never return - infected_fraction stays 0.000
@@ -386,14 +410,17 @@ pub fn all() -> Vec<Preset> {
                 // infected_fraction is 0.000 at every one of the
                 // t=200/500/800/1000 sampling points for every seed, but a
                 // finer-grained trace shows each outbreak does take hold
-                // substantially before clearing again: peak
-                // infected_fraction in the 20 ticks after each outbreak
-                // (seeds 1-3) ranges 4.8%-16.8%, with 51-1155 new
-                // infections summed over that window, and it is fully
-                // cleared again by the next 50-150-tick-later sampling
-                // point. Disease vanishing between outbreaks (rather than
-                // persisting endemically, as in v-2-endemic) is an accepted
-                // property of this preset; only the outbreaks reseed it.
+                // substantially before clearing again. Re-measured (seeds
+                // 1-5, release, max infected_fraction within 50 ticks after
+                // each outbreak): t=150 -> 18.8%, 8.0%, 15.7%, 9.7%, 7.0%;
+                // t=400 -> 7.3%, 7.1%, 6.7%, 3.8%, 8.3%; t=650 -> 7.1%,
+                // 10.4%, 22.4%, 8.5%, 14.7% (seeds 1-5 respectively) --
+                // peaks range 3.8%-22.4% across every seed and outbreak,
+                // and it is fully cleared again by the next 50-150-tick-
+                // later sampling point. Disease vanishing between outbreaks
+                // (rather than persisting endemically, as in v-2-endemic)
+                // is an accepted property of this preset; only the
+                // outbreaks reseed it.
                 c.disease.outbreaks = vec![
                     Outbreak {
                         tick: 150,
@@ -413,6 +440,103 @@ pub fn all() -> Vec<Preset> {
                 ];
             },
         ),
+        preset(
+            "n-3-trade",
+            "({G₁}, {M, S, T}) with three goods",
+            "Chapter IV, footnote 7",
+            "Sugar, spice and salt on three turned copies of the two-peak map: neighbors barter over whichever pair they value most differently, and prices form for all three pairs.",
+            |c| {
+                market(c);
+                demography(c);
+                another(c, "salt", "#7fb3d5", Map::TwoPeaks { transform: Transform::Rotate90 });
+                // Measured (`measure_n_goods_presets`, release, seeds 1-5,
+                // t=1000 population, total trades over t=1..1000): tried in
+                // the brief's order (metabolism outer, endowment inner).
+                //   (1,5)/(25,50): [0, 0, 0, 0, 0], trades 61570
+                //   (1,5)/(50,100): [0, 0, 0, 0, 0], trades 109786
+                //   (1,5)/(15,40): [0, 209, 864, 0, 0], trades 709097
+                //   (1,4)/(25,50): [665, 0, 0, 0, 0], trades 606163
+                //   (1,4)/(50,100): [0, 0, 0, 0, 0], trades 139432
+                //   (1,4)/(15,40): [898, 0, 875, 888, 904], trades 1915884
+                //   (1,3)/(25,50): [0, 0, 635, 0, 0], trades 530979
+                //   (1,3)/(50,100): [0, 0, 0, 0, 0], trades 155457
+                //   (1,3)/(15,40): [858, 820, 838, 791, 760], trades 2722255
+                // Three goods, each with its own per-tick metabolism, split
+                // the market()-scale 200-agent population three ways over
+                // turned copies of the two-peak map; every combination with
+                // a (25,50) or (50,100) endowment starves out on at least
+                // one seed, and even (15,40) only survives once metabolism
+                // is down to its minimum range (1,3). (1,3)/(15,40) is the
+                // first combination in the required order whose five t=1000
+                // populations are all >=50 with trades > 0, so it is used.
+                traits(c, URange::new(1, 3), URange::new(15, 40));
+            },
+        ),
+        preset(
+            "n-4-peaks",
+            "({G₁}, {M, T}) with four goods",
+            "Chapter IV, footnote 7",
+            "Four goods, each on one peak near a different corner of the torus: agents must travel or trade to hold all four.",
+            |c| {
+                let corner = |x, y| Map::Peaks {
+                    peaks: vec![Peak { x, y, radius: 20.0, height: 4.0 }],
+                };
+                c.vision = URange::new(1, 10);
+                c.goods[0].map = corner(10, 10);
+                another(c, "spice", SPICE_COLOR, corner(39, 10));
+                another(c, "salt", "#7fb3d5", corner(10, 39));
+                another(c, "silk", "#8fcf6b", corner(39, 39));
+                c.trade.enabled = true;
+                // Measured (`measure_n_goods_presets`, release, seeds 1-5,
+                // t=1000 population, total trades over t=1..1000): tried in
+                // the brief's order (metabolism outer, endowment inner).
+                //   (1,3)/(25,50): [36, 41, 44, 38, 40], trades 237200
+                //   (1,3)/(50,100): [52, 50, 49, 50, 47], trades 531513
+                //   (1,2)/(25,50): [83, 95, 92, 94, 88], trades 685932
+                // Four goods, each on a single small peak near a different
+                // corner of the default 50x50 torus with default population
+                // 400, leave each corner's capacity scarce relative to
+                // demand; (1,3) metabolism starves the population below 50
+                // on at least one seed at both endowments tried (including
+                // one seed at only 47 with (50,100)). (1,2)/(25,50) is the
+                // first combination in the required order whose five t=1000
+                // populations are all >=50 with trades > 0, so it is used.
+                traits(c, URange::new(1, 2), URange::new(25, 50));
+            },
+        ),
+        preset(
+            "n-2-pollutants",
+            "({G₁, D₁}, {M, P}) with two pollutants",
+            "Appendix B, rule P",
+            "Sugar gives off smoke, which makes sugar sites less attractive; spice gives off runoff, which spoils spice sites. Both diffuse.",
+            |c| {
+                c.vision = URange::new(1, 10);
+                c.goods[0].metabolism = URange::new(1, 5);
+                c.goods[0].endowment = URange::new(25, 50);
+                spice(c, URange::new(1, 5), URange::new(25, 50));
+                // Measured (`measure_n_goods_presets`, release, seeds 1-5,
+                // t=1000 population; seed-1 mean pollution [smoke, runoff]
+                // at t=1000): tried in the brief's order.
+                //   k=1.0: [82, 86, 85, 86, 85], pollution [154.96, 161.48]
+                //   k=0.5: [80, 89, 86, 90, 82], pollution [77.03, 79.43]
+                //   k=0.25: [80, 91, 89, 88, 85], pollution [39.11, 40.73]
+                // k=1.0 is the first coefficient in the required order whose
+                // five t=1000 populations are all >=50 with nonzero mean
+                // pollution for both pollutants, so it is used.
+                let k = 1.0;
+                let pollutant = |name: &str, good: usize| Pollutant {
+                    name: name.into(),
+                    production: (0..2).map(|i| if i == good { k } else { 0.0 }).collect(),
+                    consumption: (0..2).map(|i| if i == good { k } else { 0.0 }).collect(),
+                    devalues: (0..2).map(|i| i == good).collect(),
+                };
+                c.pollution = Pollution {
+                    enabled: true,
+                    pollutants: vec![pollutant("smoke", 0), pollutant("runoff", 1)],
+                };
+                c.diffusion.enabled = true;
+            },
+        ),
     ]
 }
 
@@ -428,7 +552,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 23);
+        assert_eq!(presets.len(), 26);
         for p in presets {
             p.config
                 .validate()
@@ -504,5 +628,37 @@ mod tests {
             ),
             (0.0, 0.0)
         );
+    }
+
+    #[test]
+    fn n_goods_presets_have_their_goods_and_pollutants() {
+        let t = by_id("n-3-trade").unwrap().config;
+        let names: Vec<&str> = t.goods.iter().map(|g| g.name.as_str()).collect();
+        assert_eq!(names, ["sugar", "spice", "salt"]);
+        assert_eq!(
+            t.goods[2].map,
+            Map::TwoPeaks {
+                transform: Transform::Rotate90
+            }
+        );
+        assert!(t.trade.enabled && t.sex.enabled && t.lifespan.enabled);
+        let p = by_id("n-4-peaks").unwrap().config;
+        assert_eq!(p.goods.len(), 4);
+        assert!(p
+            .goods
+            .iter()
+            .all(|g| matches!(&g.map, Map::Peaks { peaks } if peaks.len() == 1)));
+        assert!(p.trade.enabled);
+        let q = by_id("n-2-pollutants").unwrap().config;
+        let names: Vec<&str> = q
+            .pollution
+            .pollutants
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect();
+        assert_eq!(names, ["smoke", "runoff"]);
+        assert_eq!(q.pollution.pollutants[0].devalues, vec![true, false]);
+        assert_eq!(q.pollution.pollutants[1].devalues, vec![false, true]);
+        assert!(q.pollution.enabled && q.diffusion.enabled);
     }
 }
