@@ -1,0 +1,15 @@
+[package]
+name = "sugarscape-cli"
+description = "Command-line runner for Sugarscape worlds and parameter sweeps"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "sugarscape"
+path = "src/main.rs"
+
+[dependencies]
+sugarscape-core = { path = "../sugarscape-core" }
+clap = { version = "4", features = ["derive"] }
+serde_json.workspace = true

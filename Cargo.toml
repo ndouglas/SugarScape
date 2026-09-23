@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/sugarscape-core", "crates/sugarscape-wasm"]
+members = ["crates/sugarscape-core", "crates/sugarscape-wasm", "crates/sugarscape-cli"]
 
 [workspace.package]
 version = "0.1.0"

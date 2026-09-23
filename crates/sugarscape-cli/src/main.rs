@@ -1,0 +1,180 @@
+//! `sugarscape`: run Sugarscape worlds and parameter sweeps from the command
+//! line (milestone 5). Exit codes: 0 success, 1 I/O error, 2 usage or
+//! validation error (printed as `field: message`, one per line).
+
+use std::path::{Path, PathBuf};
+use std::process::ExitCode;
+
+use clap::{Args, Parser, Subcommand};
+use sugarscape_core::config::{Config, FieldError};
+use sugarscape_core::sweep::{self, Sweep};
+use sugarscape_core::world::World;
+use sugarscape_core::{export, presets};
+
+#[derive(Debug, Parser)]
+#[command(
+    name = "sugarscape",
+    version,
+    about = "Run Sugarscape worlds and parameter sweeps"
+)]
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    /// List the presets (id, source, name).
+    Presets,
+    /// List the built-in sweeps (id, name).
+    Sweeps,
+    /// Run one world and write its statistics.
+    Run(RunArgs),
+}
+
+#[derive(Debug, Args)]
+#[group(required = true, multiple = false)]
+struct ConfigSource {
+    /// A preset id (see `sugarscape presets`).
+    #[arg(long, value_name = "ID")]
+    preset: Option<String>,
+    /// A config JSON file (current or pre-N-goods shape).
+    #[arg(long, value_name = "FILE")]
+    config: Option<PathBuf>,
+}
+
+#[derive(Debug, Args)]
+struct RunArgs {
+    #[command(flatten)]
+    source: ConfigSource,
+    #[arg(long, default_value_t = 1)]
+    seed: u64,
+    #[arg(long, default_value_t = 1000)]
+    ticks: u32,
+    /// Write the statistics history (one row per tick).
+    #[arg(long, value_name = "PATH")]
+    series_csv: Option<PathBuf>,
+    /// Write the agents alive at the end.
+    #[arg(long, value_name = "PATH")]
+    agents_csv: Option<PathBuf>,
+    /// Write the config as loaded (normalized JSON).
+    #[arg(long, value_name = "PATH")]
+    config_out: Option<PathBuf>,
+    /// Print the final world's fingerprint as 0x%016x.
+    #[arg(long)]
+    fingerprint: bool,
+}
+
+/// Why a command failed.
+#[derive(Debug)]
+enum Failure {
+    /// Exit code 1.
+    Io(String),
+    /// Exit code 2.
+    Invalid(Vec<FieldError>),
+}
+
+impl From<Vec<FieldError>> for Failure {
+    fn from(errors: Vec<FieldError>) -> Self {
+        Failure::Invalid(errors)
+    }
+}
+
+fn read(path: &Path) -> Result<String, Failure> {
+    std::fs::read_to_string(path)
+        .map_err(|e| Failure::Io(format!("cannot read {}: {e}", path.display())))
+}
+
+fn write(path: &Path, text: &str) -> Result<(), Failure> {
+    std::fs::write(path, text)
+        .map_err(|e| Failure::Io(format!("cannot write {}: {e}", path.display())))
+}
+
+fn main() -> ExitCode {
+    // Usage errors exit with 2 inside `parse`.
+    match run(Cli::parse()) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(Failure::Io(message)) => {
+            eprintln!("error: {message}");
+            ExitCode::from(1)
+        }
+        Err(Failure::Invalid(errors)) => {
+            for e in errors {
+                eprintln!("{}: {}", e.field, e.message);
+            }
+            ExitCode::from(2)
+        }
+    }
+}
+
+fn run(cli: Cli) -> Result<(), Failure> {
+    match cli.command {
+        Command::Presets => {
+            for p in presets::all() {
+                println!("{}\t{}\t{}", p.id, p.source, p.name);
+            }
+            Ok(())
+        }
+        Command::Sweeps => {
+            for b in sweep::builtins() {
+                println!("{}\t{}", b.id, Sweep::from_json(b.json)?.name);
+            }
+            Ok(())
+        }
+        Command::Run(args) => run_world(args),
+    }
+}
+
+fn run_world(args: RunArgs) -> Result<(), Failure> {
+    let config = match (&args.source.preset, &args.source.config) {
+        (Some(id), _) => presets::by_id(id).map(|p| p.config).ok_or_else(|| {
+            Failure::Invalid(vec![FieldError::new(
+                "preset",
+                format!("unknown preset {id:?} (see `sugarscape presets`)"),
+            )])
+        })?,
+        (None, Some(path)) => Config::from_json(&read(path)?)?,
+        (None, None) => unreachable!("clap requires --preset or --config"),
+    };
+    let mut world = World::new(config.clone(), args.seed)?;
+    world.run(args.ticks);
+    if let Some(path) = &args.series_csv {
+        write(path, &export::series_csv(&world))?;
+    }
+    if let Some(path) = &args.agents_csv {
+        write(path, &export::agents_csv(&world))?;
+    }
+    if let Some(path) = &args.config_out {
+        let json = serde_json::to_string_pretty(&config).expect("configs serialize");
+        write(path, &(json + "\n"))?;
+    }
+    if args.fingerprint {
+        println!("{:#018x}", world.fingerprint());
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::CommandFactory;
+
+    #[test]
+    fn the_command_line_is_well_formed() {
+        Cli::command().debug_assert();
+    }
+
+    #[test]
+    fn run_has_defaults_and_needs_exactly_one_source() {
+        let cli = Cli::try_parse_from(["sugarscape", "run", "--preset", "ii-2-unit"]).unwrap();
+        let Command::Run(args) = cli.command else {
+            panic!("run expected");
+        };
+        assert_eq!((args.seed, args.ticks, args.fingerprint), (1, 1000, false));
+        assert!(Cli::try_parse_from(["sugarscape", "run"]).is_err());
+        assert!(
+            Cli::try_parse_from(["sugarscape", "run", "--preset", "a", "--config", "b.json"])
+                .is_err()
+        );
+    }
+}
