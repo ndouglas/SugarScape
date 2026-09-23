@@ -16,6 +16,8 @@ export class RulesPanel {
     this.el.append(this.presetSection(), this.general, ...GROUPS.map((g) => this.groupSection(g)));
     engine.on('reset', () => this.sync());
     engine.on('config', () => this.sync());
+    // Painting changes the landscape, which counts as a modification.
+    engine.on('edit', () => this.sync());
     this.sync();
   }
 

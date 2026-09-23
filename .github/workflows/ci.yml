@@ -21,6 +21,10 @@ jobs:
       - run: cargo test -p sugarscape-core --release --test book -- --ignored
       - run: cargo build -p sugarscape-core --target wasm32-unknown-unknown
       - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          # Pinned: "latest" silently falls back to v0.9.1 when the release lookup
+          # fails, and v0.9.1 cannot read workspace-inherited Cargo.toml fields.
+          version: v0.15.0
       - run: wasm-pack test --node crates/sugarscape-wasm
 
   web:
@@ -35,6 +39,10 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
       - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          # Pinned: "latest" silently falls back to v0.9.1 when the release lookup
+          # fails, and v0.9.1 cannot read workspace-inherited Cargo.toml fields.
+          version: v0.15.0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
