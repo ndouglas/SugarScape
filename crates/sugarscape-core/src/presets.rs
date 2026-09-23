@@ -325,22 +325,53 @@ pub fn all() -> Vec<Preset> {
                 c.trade.enabled = true;
                 c.credit.enabled = true;
                 disease(c);
+                // Use V-2's endemic disease load (25 diseases, 10 per agent)
+                // rather than V-1's defaults: this preset showcases every
+                // rule together, so disease should persist, not be learned
+                // away the way V-1's "society rids itself" setup is designed
+                // to do.
+                c.disease.count = 25;
+                c.disease.initial = 10;
                 // demography()'s Chapter III endowment (50-100) is tuned for
                 // a single-good economy; iv-18-foresight found that with a
                 // second good (spice), fertility's "wealth >= initial
                 // endowment" bar becomes unreachable on both goods at once
-                // without trade. Here trade and credit are also on, but
-                // measurement shows 50-100 still collapses population to 0:
-                // at (50,100)/(50,100), t=1000 populations (seeds 1-5) were
-                // 0, 0, 0, 0, 402 (seed 5 alone survived, and only barely).
-                // The market()-scale endowment (25-50) used by the other
-                // trade presets keeps fertility reachable: t=1000 populations
-                // (seeds 1-5) were 1745, 1816, 1783, 1849, 1774 - comfortably
-                // above the 50-agent bar. A third range (15-40) was also
-                // measured for comparison and likewise survives easily:
-                // t=1000 populations (seeds 1-5) were 1808, 1832, 1797, 1828,
-                // 1835. 25-50, the first range in the required trial order
-                // that clears the bar, is used.
+                // without trade. Here trade and credit are also on, but with
+                // the endemic (25/10) disease load above, measurement at
+                // t=1000 (seeds 1-5) shows: 50-100 still collapses population
+                // to 0 for every seed; 25-50 keeps population healthy (1823,
+                // 1782, 1757, 1767, 1751); 15-40 also survives easily (1848,
+                // 1808, 1728, 1836, 1845). 25-50, the first range in the
+                // required trial order that clears the >=50-agent bar, is
+                // used.
+                //
+                // infected_fraction at t=250/500/1000 is 0.000 for every seed
+                // at all three endowment ranges (population is not the
+                // limiting factor here). Diagnostic run (seeds 1-2, 25-50):
+                // infected_fraction falls from ~1.0 at t=0 to 0 by t~60-70,
+                // and diseases_in_circulation reaches 0 by t=100 - i.e. every
+                // disease actually goes extinct, not merely diluted by
+                // population growth. This happens during this preset's own
+                // early population crash (t=0 400 -> t=50 ~200-223 ->
+                // t=100 ~129-226, before the later recovery to ~1750+ by
+                // t=1000): the population most exposed to disease is also the
+                // population dying fastest (starvation, disease fee, and
+                // finite lifespan together), so every disease is cured or
+                // dies with its carriers well before the population regrows,
+                // and with no remaining carriers disease can never return.
+                // v-2-endemic alone (no sex/lifespan, no crash) stays endemic
+                // at ~4-6% at the same tick range, so the extinction here is
+                // this preset's population dynamics, not the disease
+                // parameters. Switching from V-1's defaults (10 diseases, 4
+                // per agent) to V-2's (25/10) did not change this outcome:
+                // disease still reaches full extinction, if anything slightly
+                // earlier. Endowment and diseases-per-agent were the only
+                // levers specified for this fix; population stays >=50 at
+                // every range tried, so the "fall back to 6 diseases per
+                // agent" contingency does not apply here. Left as 25-50/25/10
+                // pending further guidance, since no prescribed lever fixes
+                // the extinction; see the task-13 fix report for the full
+                // measurement tables.
                 c.endowment = URange::new(25, 50);
                 c.spice.endowment = URange::new(25, 50);
             },

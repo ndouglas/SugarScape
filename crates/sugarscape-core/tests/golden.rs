@@ -31,7 +31,7 @@ const GOLDEN: &[(&str, u64)] = &[
     ("v-1-rid", 0xc78e4bf09c07a55f),
     ("v-2-endemic", 0x8c1f553686437f6b),
     ("v-mcneill", 0xe3f72305eb78fd69),
-    ("vi-1-everything", 0x573369f12f2f203),
+    ("vi-1-everything", 0xeb1cb6791c9d5cf8),
 ];
 
 fn fingerprint(id: &str) -> u64 {
