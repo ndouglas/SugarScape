@@ -227,11 +227,14 @@ pub fn all() -> Vec<Preset> {
             "iv-3-pollution",
             "({G₁, D₁}, {M, T, P})",
             "Animation IV-3",
-            "Sugar becomes a dirty good at t = 100, driving its price up; at t = 150 pollution stops and diffuses away.",
+            "Sugar becomes a dirty good at t = 100, driving its price up; at t = 150 agents stop polluting and the pollution already made diffuses away.",
             |c| {
                 market(c);
                 schedule(c, 100, "pollution.enabled", serde_json::json!(true));
-                schedule(c, 150, "pollution.enabled", serde_json::json!(false));
+                // Keep pollution on so what remains still repels agents while
+                // diffusion spreads it out (the book's Animation IV-3).
+                schedule(c, 150, "pollution.production", serde_json::json!(0.0));
+                schedule(c, 150, "pollution.consumption", serde_json::json!(0.0));
                 schedule(c, 150, "diffusion.enabled", serde_json::json!(true));
             },
         ),
@@ -305,5 +308,23 @@ mod tests {
         assert_eq!(ids.len(), presets.len());
         assert_eq!(by_id("ii-2-unit").unwrap().config, Config::default());
         assert!(by_id("nope").is_none());
+    }
+
+    #[test]
+    fn iv_3_pollution_stops_producing_but_keeps_its_pollution() {
+        let config = by_id("iv-3-pollution").unwrap().config;
+        let mut c = config.clone();
+        for change in &config.schedule {
+            c = c.apply_change(change).unwrap();
+        }
+        assert!(
+            c.pollution.enabled,
+            "existing pollution still repels agents"
+        );
+        assert!(c.diffusion.enabled);
+        assert_eq!(
+            (c.pollution.production, c.pollution.consumption),
+            (0.0, 0.0)
+        );
     }
 }

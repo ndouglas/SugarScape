@@ -116,7 +116,7 @@ Each executed exchange is one trade. The pair is recorded in this tick's trade n
 | `iv-1-spice` | ({G₁}, {M}) with spice | vision 1–10; sugar & spice metabolism 1–5; endowments 25–50 |
 | `iv-3-trade` | ({G₁}, {M, T}) | 200 immortal agents; vision 1–5; metabolisms 1–5; endowments 25–50 |
 | `iv-15-trade-sex` | ({G₁}, {M, S, T}) | as `iv-3-trade` + sex and lifespan 60–100 (finite lives, evolving preferences) |
-| `iv-3-pollution` | ({G₁, D₁}, {M, T, P}) scheduled | `iv-3-trade`; t=100: pollution on (sugar only); t=150: pollution off, diffusion on |
+| `iv-3-pollution` | ({G₁, D₁}, {M, T, P}) scheduled | `iv-3-trade`; t=100: pollution on (sugar only); t=150: production and consumption set to 0 (pollution stays on, so what remains still repels agents), diffusion on |
 | `iv-18-foresight` | ({G₁}, {M, S}) with spice + foresight | foresight 0–10; demography as `iii-2-sex`; sugar & spice endowments 25–50 (the book-scale 50–100 made the population go extinct under the two-good fertility requirement — sugar *and* spice each ≥ their own initial endowment, on largely anti-correlated terrain) |
 | `iv-5-credit` | ({G₁}, {M, S, L₁₀,₁₀}) sugar only | as `iii-2-sex` + credit (d = 10, r = 10) |
 
