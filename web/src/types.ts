@@ -2,7 +2,26 @@
 
 export interface URange { min: number; max: number }
 
-export type LandscapeKind = { kind: 'two_peaks' } | { kind: 'flat'; capacity: number };
+export type Transform =
+  | 'identity'
+  | 'rotate_90'
+  | 'rotate_180'
+  | 'rotate_270'
+  | 'mirror_x'
+  | 'mirror_y'
+  | 'transpose'
+  | 'anti_transpose';
+
+export interface Peak { x: number; y: number; radius: number; height: number }
+
+export type GoodMap =
+  | { kind: 'two_peaks'; transform: Transform }
+  | { kind: 'peaks'; peaks: Peak[] }
+  | { kind: 'flat'; capacity: number };
+
+export interface Good { name: string; color: string; map: GoodMap; metabolism: URange; endowment: URange }
+
+export interface Pollutant { name: string; production: number[]; consumption: number[]; devalues: boolean[] }
 
 export type Placement =
   | { kind: 'random' }
@@ -29,16 +48,14 @@ export interface DiseaseRule {
 export interface Config {
   width: number;
   height: number;
-  landscape: LandscapeKind;
   population: number;
   placement: Placement;
   vision: URange;
-  metabolism: URange;
-  endowment: URange;
   tag_length: number;
+  goods: Good[];
   growback: { rate: number; instant: boolean };
   seasons: { enabled: boolean; winter_divisor: number; period: number };
-  pollution: { enabled: boolean; production: number; consumption: number; spice_pollutes: boolean };
+  pollution: { enabled: boolean; pollutants: Pollutant[] };
   diffusion: { enabled: boolean; every: number };
   lifespan: { enabled: boolean; max_age: URange };
   replacement: { enabled: boolean };
@@ -46,7 +63,6 @@ export interface Config {
   inheritance: { enabled: boolean };
   culture: { enabled: boolean };
   combat: { enabled: boolean; unlimited: boolean; reward: number };
-  spice: { enabled: boolean; metabolism: URange; endowment: URange };
   trade: { enabled: boolean };
   credit: { enabled: boolean; duration: number; rate: number };
   foresight: { enabled: boolean; range: URange };
@@ -83,11 +99,14 @@ export interface Snapshot {
   mean_diseases: number;
   diseases_in_circulation: number;
   new_infections: number;
+  trade_pairs: number;
+  goods: { mean_holding: number; mean_metabolism: number; traded: number }[];
+  pollution: number[];
 }
 
-export interface SiteView { x: number; y: number; sugar: number; capacity: number; pollution: number; spice: number; spice_capacity: number }
+export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
-export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; due: number; due_tick: number }
+export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; good: number; due: number; due_tick: number }
 export interface DiseaseView { id: number; bits: string; distance: number }
 export interface DiseaseEntry { id: number; bits: string; carriers: number }
 export interface AgentView {
@@ -98,9 +117,9 @@ export interface AgentView {
   tribe: 'blue' | 'red';
   tags: string;
   vision: number;
-  metabolism: number;
-  sugar: number;
-  initial_sugar: number;
+  holdings: number[];
+  initial: number[];
+  metabolism: number[];
   age: number;
   max_age: number;
   fertile: boolean;
@@ -109,9 +128,6 @@ export interface AgentView {
   born: number;
   parents: LinkView[];
   children: LinkView[];
-  spice: number;
-  initial_spice: number;
-  spice_metabolism: number;
   foresight: number;
   loans: LoanView[];
   immune: string;
@@ -122,7 +138,7 @@ export interface AgentView {
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
 export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit' | 'disease';
-export type Layer = 'sugar' | 'capacity' | 'pollution' | 'spice' | 'spice_capacity';
+export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
 export function parseErrors(e: unknown): FieldError[] {

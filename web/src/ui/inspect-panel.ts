@@ -18,6 +18,10 @@ export class InspectPanel {
     if (visible) this.render();
   }
 
+  private goodName(i: number): string {
+    return this.engine.config.goods[i]?.name ?? `good ${i}`;
+  }
+
   private links(links: LinkView[]): HTMLElement {
     if (links.length === 0) return h('span', { class: 'hint' }, 'none');
     return h(
@@ -35,13 +39,11 @@ export class InspectPanel {
     const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     return [
       row('Agent', `#${a.id} · ${a.sex} · ${a.tribe}`),
-      row('Sugar', `${fmt(a.sugar)} (born with ${fmt(a.initial_sugar)})`),
-      ...(this.engine.config.spice.enabled
-        ? [row('Spice', `${fmt(a.spice)} (born with ${fmt(a.initial_spice)})`), row('Spice metabolism', String(a.spice_metabolism))]
-        : []),
+      ...a.holdings.map((held, i) =>
+        row(this.goodName(i), `${fmt(held)} (born with ${fmt(a.initial[i])}) · metabolism ${a.metabolism[i]}`),
+      ),
       ...(this.engine.config.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
-      row('Metabolism', String(a.metabolism)),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
@@ -55,7 +57,7 @@ export class InspectPanel {
               l.counterparty.alive
                 ? h('button', { class: 'link', onclick: () => this.engine.follow(l.counterparty.id) }, `#${l.counterparty.id}`)
                 : h('span', { class: 'hint' }, `#${l.counterparty.id}†`),
-              ` ${fmt(l.due)} by t=${l.due_tick}`))))]
+              ` ${fmt(l.due)} ${this.goodName(l.good)} by t=${l.due_tick}`))))]
         : []),
     ];
   }
@@ -98,9 +100,8 @@ export class InspectPanel {
         'table',
         {},
         row('Site', `(${site.x}, ${site.y})`),
-        row('Sugar', `${fmt(site.sugar)} / ${fmt(site.capacity)}`),
-        ...(this.engine.config.spice.enabled ? [row('Spice', `${fmt(site.spice)} / ${fmt(site.spice_capacity)}`)] : []),
-        row('Pollution', fmt(site.pollution)),
+        ...site.resources.map((r, i) => row(`${this.goodName(i)} here`, `${fmt(r)} / ${fmt(site.capacities[i])}`)),
+        ...site.pollution.map((p, k) => row(this.engine.config.pollution.pollutants[k]?.name ?? `pollutant ${k}`, fmt(p))),
         ...(agent && !gone ? this.agentRows(agent) : []),
       ),
     );

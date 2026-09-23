@@ -22,14 +22,6 @@ export const GROUPS: Group[] = [
     title: 'Setup',
     note: 'Changing these rebuilds the world.',
     controls: [
-      {
-        kind: 'select', path: 'landscape', label: 'Landscape', reset: true,
-        current: (c) => c.landscape.kind,
-        options: [
-          { value: 'two_peaks', label: 'Two sugar mountains (50×50)', apply: (c) => { c.landscape = { kind: 'two_peaks' }; c.width = 50; c.height = 50; } },
-          { value: 'flat', label: 'Flat', apply: (c) => { c.landscape = { kind: 'flat', capacity: 2 }; } },
-        ],
-      },
       { kind: 'number', path: 'width', label: 'Width', min: 10, max: 200, step: 1, reset: true },
       { kind: 'number', path: 'height', label: 'Height', min: 10, max: 200, step: 1, reset: true },
       { kind: 'number', path: 'population', label: 'Initial agents', min: 0, max: 4000, step: 10, reset: true },
@@ -47,12 +39,8 @@ export const GROUPS: Group[] = [
   },
   {
     title: 'New agents',
-    note: 'Initial and replacement agents draw traits uniformly from these ranges.',
-    controls: [
-      { kind: 'range', path: 'vision', label: 'Vision', min: 1, max: 25 },
-      { kind: 'range', path: 'metabolism', label: 'Metabolism', min: 0, max: 10 },
-      { kind: 'range', path: 'endowment', label: 'Initial sugar', min: 0, max: 500 },
-    ],
+    note: "Initial and replacement agents draw vision from this range; each good's metabolism and endowment ranges are in Goods.",
+    controls: [{ kind: 'range', path: 'vision', label: 'Vision', min: 1, max: 25 }],
   },
   {
     title: 'Growback (G)',
@@ -70,11 +58,8 @@ export const GROUPS: Group[] = [
   },
   {
     title: 'Pollution (P)', enable: 'pollution.enabled',
-    controls: [
-      { kind: 'number', path: 'pollution.production', label: 'Per sugar gathered α', min: 0, max: 5, step: 0.1 },
-      { kind: 'number', path: 'pollution.consumption', label: 'Per sugar eaten β', min: 0, max: 5, step: 0.1 },
-      { kind: 'toggle', path: 'pollution.spice_pollutes', label: 'Spice pollutes too' },
-    ],
+    note: 'Each pollutant forms from the goods agents gather and eat, and devalues the goods it marks when they choose sites.',
+    controls: [],
   },
   {
     title: 'Diffusion (D)', enable: 'diffusion.enabled',
@@ -97,29 +82,22 @@ export const GROUPS: Group[] = [
   { title: 'Culture (K)', enable: 'culture.enabled', controls: [] },
   {
     title: 'Combat (C)', enable: 'combat.enabled',
+    note: 'Needs exactly one good.',
     controls: [
       { kind: 'toggle', path: 'combat.unlimited', label: 'Unlimited reward (C∞)' },
       { kind: 'number', path: 'combat.reward', label: 'Reward cap α', min: 0, max: 50, step: 0.5 },
     ],
   },
+  { title: 'Trade (T)', enable: 'trade.enabled', note: 'Needs at least two goods.', controls: [] },
   {
-    title: 'Spice', enable: 'spice.enabled', enableResets: true,
-    note: 'A second good on mountains opposite the sugar. Turning spice on or off rebuilds the world; trait ranges apply to agents born from now on.',
-    controls: [
-      { kind: 'range', path: 'spice.metabolism', label: 'Spice metabolism', min: 0, max: 10 },
-      { kind: 'range', path: 'spice.endowment', label: 'Initial spice', min: 0, max: 500 },
-    ],
-  },
-  { title: 'Trade (T)', enable: 'trade.enabled', note: 'Needs spice.', controls: [] },
-  {
-    title: 'Credit (L)', enable: 'credit.enabled', note: 'Sugar loans for childbearing; needs sex.',
+    title: 'Credit (L)', enable: 'credit.enabled', note: 'Loans in every good, for childbearing; needs sex.',
     controls: [
       { kind: 'number', path: 'credit.duration', label: 'Duration d (ticks)', min: 1, max: 50, step: 1 },
       { kind: 'number', path: 'credit.rate', label: 'Interest r (% per tick)', min: 0, max: 100, step: 1 },
     ],
   },
   {
-    title: 'Foresight', enable: 'foresight.enabled', note: 'Needs spice.',
+    title: 'Foresight', enable: 'foresight.enabled', note: 'Needs at least two goods.',
     controls: [{ kind: 'range', path: 'foresight.range', label: 'Foresight φ', min: 0, max: 20 }],
   },
   {

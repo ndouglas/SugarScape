@@ -1,6 +1,7 @@
 import init, { Sim, presets_json } from './wasm-pkg/sugarscape.js';
 import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Preset } from './types';
 import { parseErrors } from './types';
+import { validLayer } from './layers';
 
 export type EngineEvent = 'reset' | 'tick' | 'config' | 'run' | 'select' | 'display' | 'edit';
 
@@ -8,7 +9,7 @@ export interface Selection { x: number; y: number; agentId: number | null }
 
 export interface PlaceOverrides { sex?: 'female' | 'male'; tribe?: 'blue' | 'red' }
 
-export interface InitialState { config: Config; seed: number; landscape?: Uint8Array }
+export interface InitialState { config: Config; seed: number; landscapes?: (Uint8Array | null)[] }
 
 export type Overlay = 'trade' | 'credit' | 'disease';
 
@@ -26,12 +27,12 @@ export class Engine {
   running = false;
   stepsPerFrame = 1;
   colorMode: ColorMode = 'tribe';
-  layer: Layer = 'sugar';
+  layer: Layer = 'resource:0';
   overlays: Record<Overlay, boolean> = { trade: false, credit: false, disease: false };
   selection: Selection | null = null;
   presetId: string | null;
-  /** Painted or shared capacities, carried across resets that keep the landscape shape. */
-  private customLandscape: Uint8Array | undefined;
+  /** Painted or shared maps per good (null = generated), kept across resets that keep that good's map. */
+  private customLandscapes: (Uint8Array | null)[];
   private listeners = new Map<EngineEvent, Set<() => void>>();
 
   /**
@@ -51,10 +52,10 @@ export class Engine {
     public sim: Sim,
     public baseConfig: Config,
     public seed: number,
-    landscape?: Uint8Array,
+    landscapes: (Uint8Array | null)[],
   ) {
     this.config = structuredClone(baseConfig);
-    this.customLandscape = landscape;
+    this.customLandscapes = landscapes;
     this.presetId = this.matchPreset();
   }
 
@@ -67,11 +68,11 @@ export class Engine {
     const seed = initial?.seed ?? randomSeed();
     let sim: Sim;
     try {
-      sim = new Sim(JSON.stringify(config), seed, initial?.landscape);
+      sim = new Sim(JSON.stringify(config), seed, initial?.landscapes ?? null);
     } catch (e) {
       throw new Error(parseErrors(e).map((x) => `${x.field}: ${x.message}`).join('; '));
     }
-    return new Engine(wasm.memory, presets, sim, normalized(sim), seed, initial?.landscape);
+    return new Engine(wasm.memory, presets, sim, normalized(sim), seed, initial?.landscapes ?? []);
   }
 
   on(event: EngineEvent, fn: () => void): () => void {
@@ -90,22 +91,28 @@ export class Engine {
   }
 
   /**
-   * Rebuilds the world, keeping a painted/shared landscape unless `config`
-   * changes the landscape kind or the grid size. On error the current world is
-   * kept and errors returned.
+   * Rebuilds the world, keeping each good's painted/shared map unless the
+   * grid size, the number of goods or that good's map changes. On error the
+   * current world is kept and errors returned.
    */
   reset(config: Config = this.baseConfig, seed: number = this.seed): FieldError[] | null {
-    const sameShape =
+    const same =
       config.width === this.baseConfig.width &&
       config.height === this.baseConfig.height &&
-      JSON.stringify(config.landscape) === JSON.stringify(this.baseConfig.landscape);
-    return this.rebuild(config, seed, sameShape ? this.customLandscape : undefined);
+      config.goods.length === this.baseConfig.goods.length;
+    // A changed number of goods drops every painted map: Sim needs one entry per good (or none).
+    const kept = same
+      ? this.customLandscapes
+          .slice(0, config.goods.length)
+          .map((l, i) => (JSON.stringify(config.goods[i]?.map) === JSON.stringify(this.baseConfig.goods[i]?.map) ? l : null))
+      : [];
+    return this.rebuild(config, seed, kept);
   }
 
-  private rebuild(config: Config, seed: number, landscape: Uint8Array | undefined): FieldError[] | null {
+  private rebuild(config: Config, seed: number, landscapes: (Uint8Array | null)[]): FieldError[] | null {
     let next: Sim;
     try {
-      next = new Sim(JSON.stringify(config), seed, landscape);
+      next = new Sim(JSON.stringify(config), seed, landscapes);
     } catch (e) {
       return parseErrors(e);
     }
@@ -113,11 +120,11 @@ export class Engine {
     this.sim = next;
     this.baseConfig = normalized(next);
     this.config = structuredClone(this.baseConfig);
-    this.customLandscape = landscape;
+    this.customLandscapes = landscapes;
     this.seed = seed;
     this.selection = null;
     this.presetId = this.matchPreset();
-    this.clearDiseaseDisplayIfDiseaseIsOff();
+    this.clampDisplay();
     this.emit('reset');
     return null;
   }
@@ -139,7 +146,7 @@ export class Engine {
     mutate(base);
     this.baseConfig = base;
     this.config = normalized(this.sim);
-    this.clearDiseaseDisplayIfDiseaseIsOff();
+    this.clampDisplay();
     this.emit('config');
     return null;
   }
@@ -147,7 +154,7 @@ export class Engine {
   loadPreset(id: string): FieldError[] | null {
     const preset = this.presets.find((p) => p.id === id);
     if (!preset) return [{ field: 'preset', message: `unknown preset ${id}` }];
-    const errors = this.rebuild(structuredClone(preset.config), this.seed, undefined);
+    const errors = this.rebuild(structuredClone(preset.config), this.seed, []);
     if (!errors) this.presetId = id;
     return errors;
   }
@@ -161,7 +168,7 @@ export class Engine {
   /** True when the base config differs from the last chosen preset or the landscape is custom. */
   isModified(): boolean {
     const preset = this.presets.find((p) => p.id === this.presetId);
-    return !preset || this.customLandscape !== undefined || JSON.stringify(preset.config) !== JSON.stringify(this.baseConfig);
+    return !preset || this.customLandscapes.some((l) => l !== null) || JSON.stringify(preset.config) !== JSON.stringify(this.baseConfig);
   }
 
   setRunning(on: boolean): void {
@@ -195,21 +202,26 @@ export class Engine {
   }
 
   /**
-   * When disease is off, a `disease` color mode or network overlay has
-   * nothing to show: fall back to tribe coloring and hide the overlay.
-   * Called whenever the config is (re)applied, so display state never
-   * outlives the rule it depicts.
+   * Keeps display state valid for the config: a layer the world lacks falls
+   * back to good 0's level, and with disease off the disease color mode and
+   * overlay fall back to tribe coloring / hidden.
    */
-  private clearDiseaseDisplayIfDiseaseIsOff(): void {
-    if (this.config.disease.enabled) return;
+  private clampDisplay(): void {
     let changed = false;
-    if (this.colorMode === 'disease') {
-      this.colorMode = 'tribe';
+    const layer = validLayer(this.layer, this.config);
+    if (layer !== this.layer) {
+      this.layer = layer;
       changed = true;
     }
-    if (this.overlays.disease) {
-      this.overlays.disease = false;
-      changed = true;
+    if (!this.config.disease.enabled) {
+      if (this.colorMode === 'disease') {
+        this.colorMode = 'tribe';
+        changed = true;
+      }
+      if (this.overlays.disease) {
+        this.overlays.disease = false;
+        changed = true;
+      }
     }
     if (changed) this.emit('display');
   }
@@ -249,11 +261,20 @@ export class Engine {
     return null;
   }
 
-  paint(x: number, y: number, radius: number, value: number): FieldError[] | null {
+  paint(x: number, y: number, radius: number, value: number, good = 0): FieldError[] | null {
     return this.edit(() => {
-      this.sim.paint_capacity(x, y, radius, value, 0);
-      this.customLandscape = this.sim.export_landscape(0);
+      this.sim.paint_capacity(x, y, radius, value, good);
+      const next = [...this.customLandscapes];
+      while (next.length <= good) next.push(null);
+      next[good] = this.sim.export_landscape(good);
+      this.customLandscapes = next;
     });
+  }
+
+  /** Each good's map where it differs from the generated one (for share links). */
+  editedLandscapes(): (Uint8Array | null)[] | undefined {
+    const maps = this.config.goods.map((_, i) => (this.sim.landscape_edited(i) ? this.sim.export_landscape(i) : null));
+    return maps.some((m) => m !== null) ? maps : undefined;
   }
 
   place(x: number, y: number, overrides: PlaceOverrides): FieldError[] | null {

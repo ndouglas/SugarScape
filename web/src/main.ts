@@ -48,8 +48,7 @@ async function main(): Promise<void> {
   const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.sim.tick()}`;
   const shareButton = h('button', {
     onclick: async () => {
-      const landscape = engine.sim.landscape_edited(0) ? engine.sim.export_landscape(0) : undefined;
-      const token = await encodeShare({ config: engine.baseConfig, seed: engine.seed, landscape });
+      const token = await encodeShare({ config: engine.baseConfig, seed: engine.seed, landscapes: engine.editedLandscapes() });
       history.replaceState(null, '', `#s=${token}`);
       try {
         await navigator.clipboard.writeText(location.href);

@@ -192,11 +192,11 @@ export class ChartsPanel {
     const economy = h('section', { class: 'economy' }, h('h3', {}, 'Economy'));
     const disease = h('section', { class: 'disease' }, h('h3', {}, 'Disease'));
     this.el.append(economy, disease);
-    const spiceOn = () => this.engine.config.spice.enabled;
+    const twoGoods = () => this.engine.config.goods.length >= 2;
     const creditOn = () => this.engine.config.credit.enabled;
     const diseaseOn = () => this.engine.config.disease.enabled;
     const syncSection = () => {
-      economy.hidden = !(spiceOn() || creditOn());
+      economy.hidden = !(twoGoods() || creditOn());
       disease.hidden = !diseaseOn();
       for (const p of this.plots) p.figure.hidden = !p.visible();
       this.drawnTick = null;
@@ -224,10 +224,10 @@ export class ChartsPanel {
         plot.setData([series('tick'), m, m.map((v, i) => v + sd[i]), m.map((v, i) => v - sd[i])]);
       },
       economy,
-      spiceOn,
+      twoGoods,
     );
 
-    addTimeChart({ title: 'Trade volume', lines: [{ key: 'trade_volume', label: 'Volume', color: '--c1' }] }, economy, spiceOn);
+    addTimeChart({ title: 'Trade volume', lines: [{ key: 'trade_volume', label: 'Volume', color: '--c1' }] }, economy, twoGoods);
 
     this.add(
       'Supply & demand',
@@ -261,7 +261,7 @@ export class ChartsPanel {
         plot.setData([prices, demand, supply, point(eqP, eqQ), point(actP, actQ)]);
       },
       economy,
-      spiceOn,
+      twoGoods,
     );
 
     addTimeChart(
@@ -287,7 +287,7 @@ export class ChartsPanel {
         ],
       },
       economy,
-      spiceOn,
+      twoGoods,
     );
 
     addTimeChart(

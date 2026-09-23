@@ -22,6 +22,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   let tool: Tool = 'inspect';
   let radius = 1;
   let value = 4;
+  let good = 0;
   let sex: '' | 'female' | 'male' = '';
   let tribe: '' | 'blue' | 'red' = '';
   /** Selected disease id; −1 is a new random disease (Infect only). */
@@ -42,6 +43,15 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
       if (brushed()) grid.brushRadius = radius;
     });
     return h('label', {}, `${label} `, input);
+  };
+  const goodPicker = () => {
+    const s = h('select', {}, ...engine.config.goods.map((g, i) => h('option', { value: String(i) }, g.name)));
+    s.value = String(good);
+    s.addEventListener('change', () => {
+      good = Number(s.value);
+      engine.setDisplay({ layer: `capacity:${good}` });
+    });
+    return h('label', {}, 'Good ', s);
   };
   const select = <T extends string>(label: string, values: [T, string][], set: (v: T) => void) => {
     const s = h('select', {}, ...values.map(([v, l]) => h('option', { value: v }, l)));
@@ -65,12 +75,15 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     tool = next;
     buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(TOOLS[i][0] === tool)));
     grid.brushRadius = brushed() ? radius : null;
-    if (tool === 'paint') engine.setDisplay({ layer: 'capacity' });
+    if (tool === 'paint') {
+      if (good >= engine.config.goods.length) good = 0;
+      engine.setDisplay({ layer: `capacity:${good}` });
+    }
     if (DISEASE_TOOLS.includes(tool)) engine.setDisplay({ colorMode: 'disease' });
     const pick = h('label', {}, 'Disease ', picker);
     options.replaceChildren(
       ...(tool === 'paint'
-        ? [number('Radius', 0, 10, () => radius, (v) => (radius = v)), number('Capacity', 0, 4, () => value, (v) => (value = v))]
+        ? [goodPicker(), number('Radius', 0, 10, () => radius, (v) => (radius = v)), number('Capacity', 0, 10, () => value, (v) => (value = v))]
         : tool === 'place'
           ? [
               select('Sex', [['', 'Random'], ['female', 'Female'], ['male', 'Male']], (v) => (sex = v)),
@@ -96,6 +109,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     });
     if (!on && DISEASE_TOOLS.includes(tool)) choose('inspect');
     else refreshPicker(true);
+    if (tool === 'paint') choose('paint');
   }
 
   grid.onCell = (x, y, kind) => {
@@ -107,7 +121,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
         }
         break;
       case 'paint':
-        engine.paint(x, y, radius, value);
+        engine.paint(x, y, radius, value, good);
         break;
       case 'place':
         if (kind === 'down') {
