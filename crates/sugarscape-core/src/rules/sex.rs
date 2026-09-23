@@ -9,7 +9,9 @@
 //! across sexes); each culture tag is the parents' shared value or, where they
 //! differ, a random parent's.
 //!
-//! With disease (E) on, the child's immune genome crosses over like the tags (then mutates per `disease.genome_mutation`); it starts untrained and healthy.
+//! With disease (E) on, the child's immune genome crosses over like the tags
+//! (then mutates per `disease.genome_mutation`); it starts untrained and
+//! healthy.
 
 use rand::seq::SliceRandom;
 use rand::Rng;

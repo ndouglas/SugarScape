@@ -41,6 +41,10 @@ together.
 - `v-1-rid` reaches near-eradication rather than exactly zero infected: learning one disease
   can overwrite the immune-string window that cured another, so a residue of about 1–3%
   persists.
+- The disease fee counts as metabolism everywhere metabolism is used, including consumption
+  pollution: sick agents pollute more than healthy ones when pollution is on.
+- `vi-1-everything`'s disease flares after each scheduled outbreak (t = 150, 400, 650) and
+  tends to die out again before the next one, rather than staying endemic.
 
 ## Running locally
 

@@ -308,14 +308,13 @@ pub fn all() -> Vec<Preset> {
                 disease(c);
                 // A 10-bit length (the top of disease.length's own 1-10
                 // range, but forced rather than left to chance) keeps the
-                // outbreak's disease genuinely novel: task-14's book test
-                // found that with the default 1-10 draw, a short length
-                // (1-3 bits) is very likely already a substring of most
-                // agents' 50-bit immune strings by pure chance, so the
-                // outbreak sometimes "infects" 5 agents who are immediately
-                // immune and nothing spreads. A 10-bit string is unlikely to
-                // already be present, so the outbreak reliably takes hold
-                // and is then transmitted onward.
+                // outbreak's disease genuinely novel: with the default 1-10
+                // draw, a short length (1-3 bits) is very likely already a
+                // substring of most agents' 50-bit immune strings by pure
+                // chance, so the outbreak sometimes "infects" 5 agents who
+                // are immediately immune and nothing spreads. A 10-bit
+                // string is unlikely to already be present, so the outbreak
+                // reliably takes hold and is then transmitted onward.
                 c.disease.outbreaks = vec![Outbreak {
                     tick: 300,
                     agents: 5,
@@ -327,7 +326,7 @@ pub fn all() -> Vec<Preset> {
             "vi-1-everything",
             "({G₁}, {M, S, I, K, T, L, E})",
             "Chapter VI",
-            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650 (as in the book's McNeill discussion).",
+            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650 (as in the book's McNeill discussion); disease flares after each outbreak and tends to die out again before the next one.",
             |c| {
                 demography(c);
                 c.inheritance.enabled = true;
@@ -357,61 +356,40 @@ pub fn all() -> Vec<Preset> {
                 // used.
                 c.endowment = URange::new(25, 50);
                 c.spice.endowment = URange::new(25, 50);
-                // Fix round 1 found that with the endemic (25/10) disease
-                // load alone, this preset's own early population crash (sex
-                // + lifespan + spice + trade + credit together: t=0 400 ->
-                // t~100 ~130-230, before recovering to ~1750+ by t=1000)
-                // wipes out every carried disease by t~60-100, and with no
-                // remaining carriers disease can never return -
-                // infected_fraction is 0.000 from then on. Fix round 2
-                // (this): scheduled outbreaks reseed a novel disease at
-                // t=150, 400 and 650, each offered to 20 agents (as in the
-                // book's McNeill discussion of new diseases meeting a
-                // settled society) - well after the crash and spaced through
-                // the growth/plateau phase.
+                // With the endemic (25/10) disease load alone, this preset's
+                // own early population crash (sex + lifespan + spice + trade
+                // + credit together: t=0 400 -> t~100 ~130-230, before
+                // recovering to ~1750+ by t=1000) wipes out every carried
+                // disease by t~60-100, and with no remaining carriers
+                // disease can never return - infected_fraction stays 0.000
+                // from then on. Scheduled outbreaks reseed a novel disease
+                // at t=150, 400 and 650, each offered to 20 agents (as in
+                // the book's McNeill discussion of new diseases meeting a
+                // settled society) - well after the crash and spaced
+                // through the growth/plateau phase.
                 //
-                // Measured (seeds 1-5, t=1000 population and infected_fraction
-                // at t=200/500/800/1000): population stays healthy (1810,
-                // 1770, 1760, 1776, 1737), well above the 50-agent bar.
-                // infected_fraction is 0.000 at all four sampled ticks for
-                // every seed: each outbreak's disease is a fresh random
-                // string (length 1-10, same as disease.length), and a large,
-                // rapidly-adapting population (per round 1) makes most
-                // agents already immune to short strings by chance (a 50-bit
-                // immune string is very likely to already contain any
-                // length-1 or length-2 pattern as a substring), so the takes
-                // are small and short-lived. A finer-grained diagnostic
-                // confirmed the outbreaks do fire and occasionally infect a
-                // few agents (e.g. one seed saw 9 new infections in the 10
-                // ticks after the t=150 outbreak, and a brief 0.5% blip
-                // shortly after the t=400 outbreak in another seed) but each
-                // spike is gone again within single-digit ticks, so it
-                // never survives to the 200/500/800/1000 sampling points.
-                // Per the controller's round-2 ruling this (infection
-                // vanishing between outbreaks) is an acceptable outcome.
+                // Each `Outbreak` pins `length: Some(10, 10)` rather than
+                // drawing from the default 1-10-bit `disease.length` range:
+                // a short string (1-3 bits) is very likely already a
+                // substring of most agents' 50-bit immune strings by pure
+                // chance in a large, rapidly-adapting population, so the
+                // outbreak's take would be small and short-lived. A 10-bit
+                // string is unlikely to already be present, so each
+                // outbreak reliably takes hold.
                 //
-                // Fix round 3 (task-14 review): each `Outbreak` below now
-                // pins `length: Some(10, 10)` instead of drawing from the
-                // default 1-10-bit `disease.length` range, so its disease is
-                // reliably novel rather than sometimes already a substring
-                // of most agents' immune strings by chance. Re-measured
-                // (seeds 1-5, t=1000 population): 1741, 1787, 1746, 1764,
-                // 1773 - still comfortably above the 50-agent bar (the
-                // change only affects the outbreak's own disease length, not
-                // endowment or the endemic 25/10 load). infected_fraction at
-                // t=200/500/800/1000 is still 0.000 for every seed - the
-                // sampling points are unchanged and still land well after
-                // each outbreak clears - but a finer-grained trace now shows
-                // each outbreak taking hold far more substantially than
-                // round 2's short-string draws: peak infected_fraction in
-                // the 20 ticks after each outbreak (seeds 1-3) ranges
-                // 4.8%-16.8%, with 51-1155 new infections summed over that
-                // window (vs. round 2's single-digit counts), and it is
-                // still fully cleared again by the next 50-150-tick-later
-                // sampling point. The controller's round-2 ruling (infection
-                // vanishing between outbreaks is an acceptable outcome for
-                // this preset) still applies; only the outbreaks' own
-                // severity changed, not the sampled headline numbers.
+                // Measured (seeds 1-5, t=1000 population): 1741, 1787,
+                // 1746, 1764, 1773 - comfortably above the 50-agent bar.
+                // infected_fraction is 0.000 at every one of the
+                // t=200/500/800/1000 sampling points for every seed, but a
+                // finer-grained trace shows each outbreak does take hold
+                // substantially before clearing again: peak
+                // infected_fraction in the 20 ticks after each outbreak
+                // (seeds 1-3) ranges 4.8%-16.8%, with 51-1155 new
+                // infections summed over that window, and it is fully
+                // cleared again by the next 50-150-tick-later sampling
+                // point. Disease vanishing between outbreaks (rather than
+                // persisting endemically, as in v-2-endemic) is an accepted
+                // property of this preset; only the outbreaks reseed it.
                 c.disease.outbreaks = vec![
                     Outbreak {
                         tick: 150,

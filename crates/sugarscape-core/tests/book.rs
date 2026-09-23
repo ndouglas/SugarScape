@@ -170,24 +170,23 @@ fn immune_learning_rids_the_society_of_disease() {
     // population itself settles near Chapter II's ~224 carrying capacity):
     // f[0] = 0.9475, 0.8975, 0.8850; f[1000] = 0.0300, 0.0090, 0.0142.
     //
-    // The brief's original assertions (`f.contains(&0.0)` and
-    // `f[1000] == 0.0`, i.e. the society becomes and then stays exactly
-    // disease-free) do not hold: run to 5000 ticks instead of 1000, the
-    // fraction never once touches 0.0 for any of the three seeds (minimum
-    // over t in 500..=5000 is 0.0090-0.0303 depending on seed) -- it settles
-    // into a low, stable endemic churn rather than eradication. A minimal
-    // unit case confirms why this is correct behavior, not a bug: training
-    // the immune string toward one disease can flip a bit inside the window
-    // that currently satisfies a *different*, already-cured disease,
-    // un-curing it (Appendix B's algorithm has no per-disease "memory" of a
-    // fixed window -- `closest_window` is recomputed fresh each call). With
-    // 10 diseases averaging 5.5 bits packed into a 50-bit string, some
-    // interference of this kind is unavoidable; it is the same mechanism the
-    // book credits for V-2's *stronger* endemic persistence with 25
-    // diseases, just weaker here. So the assertions below keep the book's
-    // real claim -- the immune response controls the outbreak, driving
-    // infection down by roughly two orders of magnitude -- without demanding
-    // literal, permanent eradication.
+    // Exact eradication (the fraction reaching `0.0` and staying there) does
+    // not hold: run to 5000 ticks instead of 1000, the fraction never once
+    // touches 0.0 for any of the three seeds (minimum over t in 500..=5000
+    // is 0.0090-0.0303 depending on seed) -- it settles into a low, stable
+    // endemic churn rather than eradication. A minimal unit case confirms
+    // why this is correct behavior, not a bug: training the immune string
+    // toward one disease can flip a bit inside the window that currently
+    // satisfies a *different*, already-cured disease, un-curing it
+    // (Appendix B's algorithm has no per-disease "memory" of a fixed window
+    // -- `closest_window` is recomputed fresh each call). With 10 diseases
+    // averaging 5.5 bits packed into a 50-bit string, some interference of
+    // this kind is unavoidable; it is the same mechanism the book credits
+    // for V-2's *stronger* endemic persistence with 25 diseases, just
+    // weaker here. So the assertions below keep the book's real claim --
+    // the immune response controls the outbreak, driving infection down by
+    // roughly two orders of magnitude -- without demanding literal,
+    // permanent eradication.
     let config = presets::by_id("v-1-rid").unwrap().config;
     for seed in 1..=3 {
         let w = run(config.clone(), seed, 1000);
@@ -209,16 +208,38 @@ fn immune_learning_rids_the_society_of_disease() {
 #[ignore]
 fn many_diseases_stay_endemic() {
     // Animation V-2: 25 diseases, 10 per agent — learning one immunity
-    // disturbs others, so the society cannot rid itself of disease.
-    // Observed infected share at t=1000 (seeds 1..=3): 0.0549, 0.0380,
-    // 0.0748 -- an order of magnitude above V-1's residual (0.009-0.030),
-    // consistent with the book's claim that more diseases make eradication
-    // harder, not just slower.
-    let config = presets::by_id("v-2-endemic").unwrap().config;
+    // disturbs others, so the society cannot rid itself of disease. That
+    // alone doesn't distinguish V-2 from V-1 (V-1's residual churn also
+    // keeps `share > 0.0` at t=1000), so this test also compares directly
+    // against V-1: V-2's mean `infected_fraction` over t in 500..=1000
+    // should exceed V-1's for the same seed.
+    //
+    // Observed per-seed means over t in 500..=1000 (seeds 1..=3):
+    //   seed 1: v1 = 0.022902, v2 = 0.045334 (v2/v1 = 1.98)
+    //   seed 2: v1 = 0.010603, v2 = 0.042674 (v2/v1 = 4.02)
+    //   seed 3: v1 = 0.017767, v2 = 0.078412 (v2/v1 = 4.41)
+    // Mean-of-means: v1 = 0.017091, v2 = 0.055473, ratio ~3.2x -- a
+    // consistent but modest multiple, not the "order of magnitude" the
+    // comment previously claimed (that number came from comparing a single
+    // t=1000 sample of V-2 against V-1's *whole* observed range rather than
+    // seed-matched means).
+    let v1 = presets::by_id("v-1-rid").unwrap().config;
+    let v2 = presets::by_id("v-2-endemic").unwrap().config;
     for seed in 1..=3 {
-        let w = run(config.clone(), seed, 1000);
-        let share = w.stats.latest().unwrap().infected_fraction;
+        let w1 = run(v1.clone(), seed, 1000);
+        let f1 = w1.stats.series("infected_fraction").unwrap();
+        let mean1 = f1[500..=1000].iter().sum::<f64>() / f1[500..=1000].len() as f64;
+
+        let w2 = run(v2.clone(), seed, 1000);
+        let f2 = w2.stats.series("infected_fraction").unwrap();
+        let mean2 = f2[500..=1000].iter().sum::<f64>() / f2[500..=1000].len() as f64;
+
+        let share = w2.stats.latest().unwrap().infected_fraction;
         assert!(share > 0.0, "seed {seed}: disease died out");
+        assert!(
+            mean2 > mean1,
+            "seed {seed}: v2 mean {mean2} does not exceed v1 mean {mean1}"
+        );
     }
 }
 
@@ -229,25 +250,23 @@ fn a_novel_disease_spreads_after_the_mcneill_outbreak() {
     // this reproducing society (demography + Animation V-1's disease
     // parameters) has already learned away everything it carries.
     //
-    // Fix round 1 (task-14 review): two problems with the original test.
-    // First, the brief's peak-concurrently-infected metric wasn't robust to
-    // same-tick self-cures of short diseases (see the round-1 report for
-    // the seed-3 trace that motivated switching to an event-count metric).
-    // Second, and more fundamentally, counting *all* `new_infections`
-    // (including the outbreak's own direct seeding, `infector: None`) could
-    // pass even when the novel disease reached nobody else -- seed 3 in
-    // particular showed the disease taking hold in exactly one of the 5
-    // seeded agents and never spreading further, which a raw
-    // `new_infections` count could not distinguish from real spread.
+    // A peak-concurrently-infected metric isn't robust to same-tick
+    // self-cures of short diseases, so this test instead counts discrete
+    // infection events. Counting *all* `new_infections` (including the
+    // outbreak's own direct seeding, `infector: None`) isn't specific
+    // enough either -- it could pass even when the novel disease reached
+    // nobody else (seed 3 shows the disease taking hold in exactly one of
+    // the 5 seeded agents and never spreading further, which a raw
+    // `new_infections` count could not distinguish from real spread).
     //
-    // This version fixes both: the outbreak's disease now has a fixed
+    // So the test counts only *transmissions* (`infector: Some(_)`, i.e.
+    // agent-to-agent spread) by stepping the world manually and summing
+    // `w.events().infections` per tick, with outbreak seeding itself
+    // excluded from both windows; and the outbreak's disease has a fixed
     // 10-bit length (`v-mcneill`'s `Outbreak.length` override in
     // presets.rs) instead of the default 1-10-bit draw, so it is unlikely
     // to already be a substring of an existing 50-bit immune string and
-    // reliably takes hold; and the test counts only *transmissions*
-    // (`infector: Some(_)`, i.e. agent-to-agent spread) by stepping the
-    // world manually and summing `w.events().infections` per tick, so
-    // outbreak seeding itself is excluded from both windows.
+    // reliably takes hold.
     //
     // Observed (seeds 1..=3): transmissions (infector: Some(_)) summed over
     // ticks [200,300) (before the outbreak) = 0, 0, 0; summed over ticks
@@ -285,14 +304,13 @@ fn a_novel_disease_spreads_after_the_mcneill_outbreak() {
 fn everything_on_society_survives() {
     // Chapter VI's everything-on run; endowments chosen in presets.rs from
     // the measurements recorded there. Observed t=1000 populations (seeds
-    // 1..=3, re-measured after the McNeill review's outbreak-length fix):
-    // 1741, 1787, 1746 (all far above the 50-agent bar; see presets.rs's
-    // `vi-1-everything` comment for the full seeds 1..=5 history, why
-    // infected_fraction reads 0.000 at every sampled tick despite each
-    // scheduled outbreak now taking hold much more substantially than
-    // before, and the accepted controller ruling that disease clearing
-    // between outbreaks is fine for this preset -- none of that is checked
-    // by this test, which is only about population survival).
+    // 1..=3): 1741, 1787, 1746 (all far above the 50-agent bar; see
+    // presets.rs's `vi-1-everything` comment for the full seeds 1..=5
+    // history and why infected_fraction reads 0.000 at every sampled tick
+    // despite each scheduled outbreak taking hold substantially -- disease
+    // clears fully between outbreaks for this preset, which is fine since
+    // none of that is checked by this test, which is only about population
+    // survival).
     let config = presets::by_id("vi-1-everything").unwrap().config;
     for seed in 1..=3 {
         let w = run(config.clone(), seed, 1000);

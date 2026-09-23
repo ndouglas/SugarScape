@@ -27,11 +27,13 @@ const GOLDEN: &[(&str, u64)] = &[
     ("iv-3-pollution", 0xa44cef03ce32f537),
     ("iv-18-foresight", 0x71bdcb5c44708373),
     ("iv-5-credit", 0xac5bbc30ed0fb306),
-    // Chapter V (disease on).
-    ("v-1-rid", 0xc78e4bf09c07a55f),
-    ("v-2-endemic", 0x8c1f553686437f6b),
-    ("v-mcneill", 0xe3f72305eb78fd69),
-    ("vi-1-everything", 0x54a84166f47ed9f1),
+    // Chapter V (disease on). Re-recorded when `fingerprint()` started
+    // hashing `immune_genome` too (previously only the trained `immune`
+    // string was hashed).
+    ("v-1-rid", 0x51a57db11c232edb),
+    ("v-2-endemic", 0x899e70cd17f1484a),
+    ("v-mcneill", 0x81def3a081577ad9),
+    ("vi-1-everything", 0xb1651d2294218f48),
 ];
 
 fn fingerprint(id: &str) -> u64 {

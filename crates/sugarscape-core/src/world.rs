@@ -349,6 +349,8 @@ impl World {
             if disease {
                 eat(u64::from(a.immune.len()));
                 eat(a.immune.bits());
+                eat(u64::from(a.immune_genome.len()));
+                eat(a.immune_genome.bits());
                 eat(a.diseases.len() as u64);
                 for &d in &a.diseases {
                     eat(u64::from(d));
