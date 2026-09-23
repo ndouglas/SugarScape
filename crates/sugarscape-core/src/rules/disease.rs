@@ -6,7 +6,8 @@ use crate::agent::{Agent, AgentId, DiseaseId};
 use crate::bits::Bits;
 use crate::config::{DiseaseRule, URange};
 use crate::rng::SimRng;
-use crate::world::World;
+use crate::world::{Infection, World};
+use rand::seq::SliceRandom;
 use rand::Rng;
 
 /// A random disease with its length drawn from `length`.
@@ -58,9 +59,10 @@ pub(crate) fn inherit_genome(a: &Bits, b: &Bits, mutation: f64, rng: &mut SimRng
     genome
 }
 
-/// Rule E for one agent's turn.
+/// Rule E for one agent's turn: immune response, then transmission.
 pub(crate) fn act(world: &mut World, id: AgentId) {
     respond(world, id);
+    transmit(world, id);
 }
 
 /// Appendix B's immune response: for each carried disease, up to
@@ -96,6 +98,64 @@ pub(crate) fn cure_immune(world: &mut World, id: AgentId) {
         .filter(|&d| !a.immune.contains(&world.diseases[d as usize]))
         .collect();
     world.agent_mut(id).expect("live agent").diseases = kept;
+}
+
+/// Appendix B's transmission: each von Neumann neighbor, in random order, is
+/// offered one of the agent's diseases chosen uniformly (mutated in one random
+/// bit with probability `disease_mutation`) and catches it unless it already
+/// carries it or is immune.
+pub(crate) fn transmit(world: &mut World, id: AgentId) {
+    let me = world.agent(id).expect("live agent");
+    if me.diseases.is_empty() {
+        return;
+    }
+    let (pos, carried) = (me.pos, me.diseases.clone());
+    let mutation = world.config.disease.disease_mutation;
+    let mut neighbors = world.torus.neighbors(pos);
+    neighbors.shuffle(&mut world.rng);
+    for q in neighbors {
+        let Some(other) = world.occupant(q) else {
+            continue;
+        };
+        let mut disease = *carried.choose(&mut world.rng).expect("carries a disease");
+        if mutation > 0.0 && world.rng.gen_bool(mutation) {
+            let mut variant = world.diseases[disease as usize];
+            let bit = world.rng.gen_range(0..variant.len());
+            variant.flip(bit);
+            disease = find_or_add(world, variant);
+        }
+        if infect(world, other, disease) {
+            world.agent_mut(other).expect("occupant").infected_by = Some(id);
+            world.events.infections.push(Infection {
+                infector: Some(id),
+                infected: other,
+                disease,
+            });
+        }
+    }
+}
+
+/// Gives `id` the disease unless it already carries it or it is a substring of
+/// its immune string. Returns whether the agent was infected.
+pub(crate) fn infect(world: &mut World, id: AgentId, disease: DiseaseId) -> bool {
+    let d = world.diseases[disease as usize];
+    let a = world.agent_mut(id).expect("live agent");
+    if a.diseases.contains(&disease) || a.immune.contains(&d) {
+        return false;
+    }
+    a.diseases.push(disease);
+    true
+}
+
+/// The id of `bits` in the disease list, appending it if it is new.
+pub(crate) fn find_or_add(world: &mut World, bits: Bits) -> DiseaseId {
+    match world.diseases.iter().position(|d| *d == bits) {
+        Some(i) => i as DiseaseId,
+        None => {
+            world.diseases.push(bits);
+            (world.diseases.len() - 1) as DiseaseId
+        }
+    }
 }
 
 #[cfg(test)]
@@ -213,5 +273,76 @@ mod tests {
         let id = patient(&mut w, 5, 5, "1011101001", vec![0]);
         w.step();
         assert_eq!(w.agent(id).unwrap().immune.to_bit_string(), "1011101001");
+    }
+
+    #[test]
+    fn transmission_skips_immune_and_already_infected_neighbors() {
+        let mut w = sick_world();
+        w.diseases = vec![b("11")];
+        let zeros = "0".repeat(50);
+        let me = patient(&mut w, 5, 5, &zeros, vec![0]);
+        let open = patient(&mut w, 5, 4, &zeros, vec![]);
+        let immune = patient(&mut w, 6, 5, &format!("11{}", "0".repeat(48)), vec![]);
+        let carrier = patient(&mut w, 4, 5, &zeros, vec![0]);
+        w.agent_mut(carrier).unwrap().infected_by = Some(999);
+        transmit(&mut w, me);
+        assert_eq!(w.agent(open).unwrap().diseases, vec![0]);
+        assert_eq!(w.agent(open).unwrap().infected_by, Some(me));
+        assert!(w.agent(immune).unwrap().diseases.is_empty());
+        assert_eq!(
+            w.agent(carrier).unwrap().infected_by,
+            Some(999),
+            "not reinfected"
+        );
+        assert_eq!(
+            w.events().infections,
+            vec![Infection {
+                infector: Some(me),
+                infected: open,
+                disease: 0
+            }]
+        );
+    }
+
+    #[test]
+    fn each_neighbor_is_offered_one_disease() {
+        let mut w = sick_world();
+        w.diseases = vec![b("1"), b("11")];
+        let zeros = "0".repeat(50);
+        let me = patient(&mut w, 5, 5, &zeros, vec![0, 1]);
+        let n = patient(&mut w, 5, 4, &zeros, vec![]);
+        transmit(&mut w, me);
+        assert_eq!(w.agent(n).unwrap().diseases.len(), 1);
+    }
+
+    #[test]
+    fn mutated_transmissions_append_distinct_variants() {
+        let mut w = sick_world();
+        w.config.disease.disease_mutation = 1.0;
+        w.diseases = vec![b("1111")];
+        let zeros = "0".repeat(50);
+        let me = patient(&mut w, 5, 5, &zeros, vec![0]);
+        let n = patient(&mut w, 5, 4, &zeros, vec![]);
+        transmit(&mut w, me);
+        assert_eq!(w.diseases.len(), 2, "a one-bit variant was appended");
+        assert_eq!(w.diseases[1].hamming(&w.diseases[0]), 1);
+        assert_eq!(w.agent(n).unwrap().diseases, vec![1]);
+        let variant = w.diseases[1];
+        assert_eq!(find_or_add(&mut w, variant), 1, "listed strings are reused");
+        assert_eq!(w.diseases.len(), 2);
+    }
+
+    #[test]
+    fn disease_spreads_to_neighbors_during_a_tick() {
+        let mut w = sick_world();
+        w.diseases = vec![b("1111111111")];
+        let zeros = "0".repeat(50);
+        let a = patient(&mut w, 5, 5, &zeros, vec![0]);
+        let n = patient(&mut w, 5, 6, &zeros, vec![]);
+        w.step();
+        // Whatever the turn order, one flip cannot cure a 10-bit disease.
+        assert_eq!(w.agent(n).unwrap().diseases, vec![0]);
+        assert_eq!(w.agent(n).unwrap().infected_by, Some(a));
+        assert_eq!(w.agent(a).unwrap().diseases, vec![0]);
     }
 }

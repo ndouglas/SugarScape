@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use rand::seq::SliceRandom;
 
-use crate::agent::{Agent, AgentId, Tribe};
+use crate::agent::{Agent, AgentId, DiseaseId, Tribe};
 use crate::bits::Bits;
 use crate::config::{Config, FieldError, Placement};
 use crate::geometry::{Pos, Torus};
@@ -37,6 +37,15 @@ pub struct Trade {
     pub sugar: f64,
 }
 
+/// One infection: `infector` gave `disease` to `infected` (`None` for an
+/// outbreak).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Infection {
+    pub infector: Option<AgentId>,
+    pub infected: AgentId,
+    pub disease: DiseaseId,
+}
+
 pub type LoanId = u64;
 
 /// A sugar loan under rule L: `due` sugar owed at `due_tick`, written for
@@ -62,6 +71,7 @@ pub struct TickEvents {
     pub loans_made: u32,
     pub amount_lent: f64,
     pub defaults: u32,
+    pub infections: Vec<Infection>,
 }
 
 pub struct World {
