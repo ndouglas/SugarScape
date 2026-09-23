@@ -29,6 +29,7 @@ const TIME_CHARTS: TimeChart[] = [
 
 const HEIGHT = 150;
 const REFRESH_MS = 250;
+const POLLUTANT_COLORS = ['--c1', '--c2', '--c3', '--c4'];
 
 /** Fetches `Sim.series(name)` at most once per refresh; shared across all charts' update closures. */
 type SeriesCache = (name: string) => Float64Array;
@@ -47,6 +48,15 @@ export class ChartsPanel {
   private last = 0;
   /** Tick drawn by the last refresh; null forces the next one. */
   private drawnTick: number | null = null;
+  private color!: (v: string) => string;
+  private axes!: uPlot.Axis[];
+  private addTimeChart!: (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => void;
+  private goodsSection = h('section', { class: 'goods' });
+  private pollutionSection = h('section', { class: 'pollution' });
+  /** Plots whose lines follow the goods and pollutants; rebuilt on reset and config. */
+  private dynamic = new Set<uPlot>();
+  /** Captions that name the traded pair (0, 1). */
+  private pairCaptions: { el: HTMLElement; title: string }[] = [];
 
   constructor(private engine: Engine) {
     this.build();
@@ -106,6 +116,33 @@ export class ChartsPanel {
     this.plots.forEach((p) => p.plot.setSize({ width: this.width(), height: HEIGHT }));
   }
 
+  private rebuildGoodsCharts(): void {
+    this.plots = this.plots.filter((p) => {
+      if (!this.dynamic.has(p.plot)) return true;
+      p.plot.destroy();
+      return false;
+    });
+    this.dynamic.clear();
+    this.goodsSection.replaceChildren(h('h3', {}, 'Goods'));
+    this.pollutionSection.replaceChildren(h('h3', {}, 'Pollution'));
+    const c = this.engine.config;
+    const perGood = (prefix: string) => c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
+    const before = this.plots.length;
+    this.addTimeChart({ title: 'Mean holdings', lines: perGood('mean_holding_') }, this.goodsSection);
+    this.addTimeChart({ title: 'Mean metabolism', lines: perGood('mean_metabolism_') }, this.goodsSection);
+    this.addTimeChart({ title: 'Units traded', lines: perGood('traded_') }, this.goodsSection, () => this.engine.config.trade.enabled);
+    this.addTimeChart(
+      {
+        title: 'Mean pollution',
+        lines: c.pollution.pollutants.map((p, k) => ({ key: `mean_pollution_${k}`, label: p.name, color: POLLUTANT_COLORS[k] })),
+      },
+      this.pollutionSection,
+      () => this.engine.config.pollution.enabled,
+    );
+    for (const p of this.plots.slice(before)) this.dynamic.add(p.plot);
+    this.resize();
+  }
+
   private add(
     title: string,
     opts: Omit<uPlot.Options, 'width' | 'height'>,
@@ -113,35 +150,37 @@ export class ChartsPanel {
     update: (plot: uPlot, series: SeriesCache) => void,
     container: HTMLElement = this.el,
     visible: () => boolean = () => true,
-  ): void {
-    const figure = h('figure', { class: 'chart' }, h('figcaption', {}, title));
+  ): HTMLElement {
+    const figcaption = h('figcaption', {}, title);
+    const figure = h('figure', { class: 'chart' }, figcaption);
     const plot = new uPlot({ ...opts, width: this.width(), height: HEIGHT }, data, figure);
     this.plots.push({ name: title, plot, figure, update: (series) => update(plot, series), visible });
     container.append(figure);
+    return figcaption;
   }
 
   private build(): void {
     const css = getComputedStyle(document.documentElement);
-    const color = (v: string) => css.getPropertyValue(v).trim() || '#888';
-    const axes: uPlot.Axis[] = [
-      { stroke: color('--muted'), grid: { stroke: color('--grid') }, ticks: { stroke: color('--grid') } },
+    this.color = (v: string) => (v.startsWith('#') ? v : css.getPropertyValue(v).trim() || '#888');
+    this.axes = [
+      { stroke: this.color('--muted'), grid: { stroke: this.color('--grid') }, ticks: { stroke: this.color('--grid') } },
       {
-        stroke: color('--muted'),
-        grid: { stroke: color('--grid') },
-        ticks: { stroke: color('--grid') },
+        stroke: this.color('--muted'),
+        grid: { stroke: this.color('--grid') },
+        ticks: { stroke: this.color('--grid') },
         size: 44,
         values: (_self, splits) => splits.map(compactNumber),
       },
     ];
 
-    const addTimeChart = (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => {
+    this.addTimeChart = (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => {
       this.add(
         chart.title,
         {
           scales: { x: { time: false }, y: chart.range ? { range: chart.range } : {} },
-          axes,
+          axes: this.axes,
           legend: { show: chart.lines.length > 1 },
-          series: [{ label: 'Tick' }, ...chart.lines.map((l) => ({ label: l.label, stroke: color(l.color), width: 1.5 }))],
+          series: [{ label: 'Tick' }, ...chart.lines.map((l) => ({ label: l.label, stroke: this.color(l.color), width: 1.5 }))],
         },
         [[], ...chart.lines.map(() => [])],
         (plot, series) => plot.setData([series('tick'), ...chart.lines.map((l) => series(l.key))]),
@@ -150,19 +189,19 @@ export class ChartsPanel {
       );
     };
 
-    for (const chart of TIME_CHARTS) addTimeChart(chart);
+    for (const chart of TIME_CHARTS) this.addTimeChart(chart);
 
     const xs = Array.from({ length: 101 }, (_, i) => i / 100);
     this.add(
       'Lorenz curve',
       {
         scales: { x: { time: false, range: [0, 1] }, y: { range: [0, 1] } },
-        axes,
+        axes: this.axes,
         legend: { show: false },
         series: [
           { label: 'Population share' },
-          { label: 'Equality', stroke: color('--muted'), dash: [4, 4], width: 1 },
-          { label: 'Wealth share', stroke: color('--c2'), width: 2 },
+          { label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 },
+          { label: 'Wealth share', stroke: this.color('--c2'), width: 2 },
         ],
       },
       [xs, xs, xs],
@@ -174,9 +213,9 @@ export class ChartsPanel {
       'Wealth distribution',
       {
         scales: { x: { time: false } },
-        axes,
+        axes: this.axes,
         legend: { show: false },
-        series: [{ label: 'Sugar' }, { label: 'Agents', fill: color('--c1'), stroke: color('--c1'), paths: bars, points: { show: false } }],
+        series: [{ label: 'Sugar' }, { label: 'Agents', fill: this.color('--c1'), stroke: this.color('--c1'), paths: bars, points: { show: false } }],
       },
       [[], []],
       (plot) => {
@@ -191,30 +230,37 @@ export class ChartsPanel {
     // either. The disease section needs disease.
     const economy = h('section', { class: 'economy' }, h('h3', {}, 'Economy'));
     const disease = h('section', { class: 'disease' }, h('h3', {}, 'Disease'));
-    this.el.append(economy, disease);
+    this.el.append(this.goodsSection, this.pollutionSection, economy, disease);
     const twoGoods = () => this.engine.config.goods.length >= 2;
     const creditOn = () => this.engine.config.credit.enabled;
     const diseaseOn = () => this.engine.config.disease.enabled;
     const syncSection = () => {
       economy.hidden = !(twoGoods() || creditOn());
       disease.hidden = !diseaseOn();
+      this.pollutionSection.hidden = !this.engine.config.pollution.enabled;
+      const g = this.engine.config.goods;
+      const pair = g.length >= 2 ? ` · ${g[0].name}/${g[1].name}` : '';
+      for (const p of this.pairCaptions) p.el.textContent = p.title + pair;
       for (const p of this.plots) p.figure.hidden = !p.visible();
       this.drawnTick = null;
     };
+    this.engine.on('reset', () => this.rebuildGoodsCharts());
+    this.engine.on('config', () => this.rebuildGoodsCharts());
+    this.rebuildGoodsCharts();
     this.engine.on('reset', syncSection);
     this.engine.on('config', syncSection);
 
-    this.add(
+    const priceCaption = this.add(
       'Trade price (ln)',
       {
         scales: { x: { time: false }, y: {} },
-        axes,
+        axes: this.axes,
         legend: { show: true },
         series: [
           { label: 'Tick' },
-          { label: 'Mean', stroke: color('--c2'), width: 1.5 },
-          { label: '+SD', stroke: color('--muted'), width: 1, dash: [4, 4] },
-          { label: '-SD', stroke: color('--muted'), width: 1, dash: [4, 4] },
+          { label: 'Mean', stroke: this.color('--c2'), width: 1.5 },
+          { label: '+SD', stroke: this.color('--muted'), width: 1, dash: [4, 4] },
+          { label: '-SD', stroke: this.color('--muted'), width: 1, dash: [4, 4] },
         ],
       },
       [[], [], [], []],
@@ -226,21 +272,22 @@ export class ChartsPanel {
       economy,
       twoGoods,
     );
+    this.pairCaptions.push({ el: priceCaption, title: 'Trade price (ln)' });
 
-    addTimeChart({ title: 'Trade volume', lines: [{ key: 'trade_volume', label: 'Volume', color: '--c1' }] }, economy, twoGoods);
+    this.addTimeChart({ title: 'Trade volume', lines: [{ key: 'trade_volume', label: 'Volume', color: '--c1' }] }, economy, twoGoods);
 
-    this.add(
+    const sdCaption = this.add(
       'Supply & demand',
       {
         scales: { x: { time: false, distr: 3 }, y: {} },
-        axes,
+        axes: this.axes,
         legend: { show: true },
         series: [
           { label: 'Price' },
-          { label: 'Demand', stroke: color('--c1'), width: 1.5 },
-          { label: 'Supply', stroke: color('--c2'), width: 1.5 },
-          { label: 'Equilibrium', stroke: color('--c3'), points: { show: true, size: 9 }, paths: () => null },
-          { label: 'Actual', stroke: color('--text'), points: { show: true, size: 9 }, paths: () => null },
+          { label: 'Demand', stroke: this.color('--c1'), width: 1.5 },
+          { label: 'Supply', stroke: this.color('--c2'), width: 1.5 },
+          { label: 'Equilibrium', stroke: this.color('--c3'), points: { show: true, size: 9 }, paths: () => null },
+          { label: 'Actual', stroke: this.color('--text'), points: { show: true, size: 9 }, paths: () => null },
         ],
       },
       [[], [], [], [], []],
@@ -263,8 +310,9 @@ export class ChartsPanel {
       economy,
       twoGoods,
     );
+    this.pairCaptions.push({ el: sdCaption, title: 'Supply & demand' });
 
-    addTimeChart(
+    this.addTimeChart(
       {
         title: 'Loans',
         lines: [
@@ -276,32 +324,22 @@ export class ChartsPanel {
       creditOn,
     );
 
-    addTimeChart({ title: 'Debt outstanding', lines: [{ key: 'debt_outstanding', label: 'Debt', color: '--c3' }] }, economy, creditOn);
+    this.addTimeChart({ title: 'Debt outstanding', lines: [{ key: 'debt_outstanding', label: 'Debt', color: '--c3' }] }, economy, creditOn);
 
-    addTimeChart(
-      {
-        title: 'Spice & foresight',
-        lines: [
-          { key: 'mean_spice_metabolism', label: 'Spice metabolism', color: '--c1' },
-          { key: 'mean_foresight', label: 'Foresight', color: '--c3' },
-        ],
-      },
-      economy,
-      twoGoods,
-    );
+    this.addTimeChart({ title: 'Foresight', lines: [{ key: 'mean_foresight', label: 'Foresight φ', color: '--c3' }] }, economy, () => this.engine.config.foresight.enabled);
 
-    addTimeChart(
+    this.addTimeChart(
       { title: 'Infected', lines: [{ key: 'infected_fraction', label: 'Infected share', color: '--red' }], range: [0, 1] },
       disease,
       diseaseOn,
     );
-    addTimeChart({ title: 'Diseases per agent', lines: [{ key: 'mean_diseases', label: 'Mean', color: '--c2' }] }, disease, diseaseOn);
-    addTimeChart(
+    this.addTimeChart({ title: 'Diseases per agent', lines: [{ key: 'mean_diseases', label: 'Mean', color: '--c2' }] }, disease, diseaseOn);
+    this.addTimeChart(
       { title: 'Diseases in circulation', lines: [{ key: 'diseases_in_circulation', label: 'Distinct diseases', color: '--c4' }] },
       disease,
       diseaseOn,
     );
-    addTimeChart({ title: 'New infections', lines: [{ key: 'new_infections', label: 'Infections', color: '--c1' }] }, disease, diseaseOn);
+    this.addTimeChart({ title: 'New infections', lines: [{ key: 'new_infections', label: 'Infections', color: '--c1' }] }, disease, diseaseOn);
 
     syncSection();
   }

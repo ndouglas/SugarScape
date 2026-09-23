@@ -76,8 +76,8 @@ button[aria-pressed='true'] { border-color: var(--accent); box-shadow: inset 0 0
 .rules .schedule { margin: 0 0 6px; padding-left: 1.2em; font-size: 12px; }
 .error p { margin: 2px 0; }
 .charts { display: grid; gap: 12px; }
-.charts .economy, .charts .disease { display: grid; gap: 12px; }
-.charts .economy h3, .charts .disease h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 8px 0 0; }
+.charts .economy, .charts .disease, .charts .goods, .charts .pollution { display: grid; gap: 12px; }
+.charts .economy h3, .charts .disease h3, .charts .goods h3, .charts .pollution h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 8px 0 0; }
 .chart { margin: 0; }
 .chart figcaption { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 .u-legend { font-size: 12px; color: var(--text); }
