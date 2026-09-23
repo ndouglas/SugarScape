@@ -30,17 +30,21 @@ const HEIGHT = 150;
 const REFRESH_MS = 250;
 
 /** Fetches `Sim.series(name)` at most once per refresh; shared across all charts' update closures. */
-type SeriesCache = (name: string) => number[];
+type SeriesCache = (name: string) => Float64Array;
 
 export class ChartsPanel {
   readonly el = h('div', { class: 'charts' });
   private plots: { name: string; plot: uPlot; update: (series: SeriesCache) => void }[] = [];
   private visible = false;
   private last = 0;
+  /** Tick drawn by the last refresh; null forces the next one. */
+  private drawnTick: number | null = null;
 
   constructor(private engine: Engine) {
     this.build();
-    engine.on('reset', () => this.refresh());
+    engine.on('reset', () => this.refresh(true));
+    // Edits change wealth without a tick; redraw on the next throttled refresh.
+    engine.on('edit', () => (this.drawnTick = null));
     new ResizeObserver(() => this.resize()).observe(this.el);
   }
 
@@ -48,7 +52,7 @@ export class ChartsPanel {
     this.visible = visible;
     if (visible) {
       this.resize();
-      this.refresh();
+      this.refresh(true);
     }
   }
 
@@ -61,14 +65,21 @@ export class ChartsPanel {
     return this.plots.map((p) => ({ name: p.name, canvas: p.plot.ctx.canvas }));
   }
 
-  private refresh(): void {
+  /** Redraws unless the tick is unchanged since the last draw (`force` overrides). */
+  private refresh(force = false): void {
     this.last = performance.now();
-    if (!this.visible) return;
-    const cache = new Map<string, number[]>();
+    if (!this.visible) {
+      this.drawnTick = null;
+      return;
+    }
+    const tick = this.engine.sim.tick();
+    if (!force && tick === this.drawnTick) return;
+    this.drawnTick = tick;
+    const cache = new Map<string, Float64Array>();
     const series: SeriesCache = (name) => {
       let arr = cache.get(name);
       if (!arr) {
-        arr = Array.from(this.engine.sim.series(name));
+        arr = this.engine.sim.series(name);
         cache.set(name, arr);
       }
       return arr;
@@ -133,7 +144,7 @@ export class ChartsPanel {
         ],
       },
       [xs, xs, xs],
-      (plot) => plot.setData([xs, xs, Array.from(this.engine.sim.lorenz(101))]),
+      (plot) => plot.setData([xs, xs, this.engine.sim.lorenz(101)]),
     );
 
     const bars = uPlot.paths.bars!({ size: [0.9, 64] });
@@ -147,7 +158,7 @@ export class ChartsPanel {
       },
       [[], []],
       (plot) => {
-        const hist = Array.from(this.engine.sim.wealth_hist(20));
+        const hist = this.engine.sim.wealth_hist(20);
         const width = hist[0];
         const counts = hist.slice(1);
         plot.setData([counts.map((_, i) => (i + 0.5) * width), counts]);
