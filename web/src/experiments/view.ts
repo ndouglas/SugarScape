@@ -1,6 +1,8 @@
 import { aggregate, builtin_sweeps, sweep_points } from '../wasm-pkg/sugarscape.js';
 import { parseErrors, type FieldError } from '../types';
 import { h } from '../ui/dom';
+import { SweepChart } from './chart';
+import { chartData } from './chart-data';
 import { FixedPanel } from './fixed-panel';
 import { poolSize, WorkerPool, type WorkerLike } from './pool';
 import { resultsTable } from './results-table';
@@ -38,6 +40,7 @@ export class ExperimentsView {
   private readonly cancelButton = h('button', { disabled: true, onclick: () => this.pool?.cancel() }, 'Cancel');
   private readonly bar = h('progress', { max: 1, value: 0 });
   private readonly status = h('span', { class: 'hint', role: 'status' });
+  private readonly chart = new SweepChart();
   private readonly table = h('div');
   private pool: WorkerPool | null = null;
   private shown: Shown | null = null;
@@ -58,7 +61,7 @@ export class ExperimentsView {
         this.editorSlot,
         h('div', { class: 'run-bar' }, this.runButton, this.cancelButton, this.bar, this.status),
       ),
-      h('section', { class: 'sweep-results' }, this.table),
+      h('section', { class: 'sweep-results' }, this.chart.el, this.table),
     );
     this.pick(this.picker.value);
   }
@@ -144,10 +147,12 @@ export class ExperimentsView {
   private showResults(): void {
     const shown = this.shown;
     if (!shown || shown.runs.length === 0) {
+      this.chart.clear();
       this.table.replaceChildren();
       return;
     }
     const summary = JSON.parse(aggregate(shown.spec, JSON.stringify(shown.runs))) as Summary;
+    this.chart.draw(chartData(shown.sweep, summary));
     this.table.replaceChildren(resultsTable(summary));
   }
 }
