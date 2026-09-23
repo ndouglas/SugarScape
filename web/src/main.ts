@@ -1,5 +1,6 @@
 import './style.css';
 import { Engine } from './engine';
+import { ChartsPanel } from './ui/charts-panel';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
 import { GridView } from './ui/grid-view';
@@ -27,6 +28,8 @@ async function main(): Promise<void> {
 
   const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
   tabs.add('Rules', new RulesPanel(engine).el);
+  const charts = new ChartsPanel(engine);
+  tabs.add('Charts', charts.el, (visible) => charts.setVisible(visible));
 
   let dirty = true;
   for (const event of ['reset', 'tick', 'config', 'display', 'select', 'edit'] as const) {
@@ -40,6 +43,7 @@ async function main(): Promise<void> {
         grid.draw();
         dirty = false;
       }
+      charts.maybeRefresh(performance.now());
     } catch (e) {
       // A Rust panic leaves the WASM instance unusable; reloading keeps any #s= share state.
       engine.running = false;
