@@ -1,10 +1,10 @@
-//! Agent movement rule M (Chapter II), with the pollution-modified welfare
-//! s / (1 + p) when pollution is on.
+//! Agent movement rule M (Chapter II): multicommodity M over n goods, with
+//! the pollution-modified welfare s / (1 + p) when pollution is on.
 
 use rand::seq::SliceRandom;
 
 use crate::agent::AgentId;
-use crate::config::Config;
+use crate::config::{Config, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::landscape::Site;
 use crate::rng::SimRng;
@@ -54,7 +54,7 @@ pub(crate) fn devaluation(config: &Config, site: &Site, good: usize) -> Option<f
 /// nothing visible is better. Returns the harvest.
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     if world.config.goods.len() >= 2 {
-        return act_two_goods(world, id);
+        return act_goods(world, id);
     }
     let agent = world.agent(id).expect("live agent");
     let (pos, vision) = (agent.pos, agent.vision);
@@ -80,24 +80,28 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     Harvest::of(&[gathered])
 }
 
-/// Multicommodity M: maximize (foresight) welfare after gathering. Pollution
-/// discounts a site's sugar (and spice, if it pollutes) by 1/(1 + p).
-fn act_two_goods(world: &mut World, id: AgentId) -> Harvest {
+/// Multicommodity M over n ≥ 2 goods: maximize (foresight) welfare after
+/// gathering. Pollution discounts each good by 1/(1 + Σ pₖ) over the
+/// pollutants that devalue it.
+fn act_goods(world: &mut World, id: AgentId) -> Harvest {
+    let n = world.config.goods.len();
     let fee = world.config.disease.active_fee();
     let a = world.agent(id).expect("live agent");
-    let (pos, vision, phi) = (a.pos, a.vision, a.foresight);
-    let (w1, w2) = (a.holdings[0], a.holdings[1]);
-    let (m1, m2) = (
-        a.effective_metabolism(0, fee),
-        a.effective_metabolism(1, fee),
-    );
+    let (pos, vision, phi, held) = (a.pos, a.vision, a.foresight, a.holdings);
+    let mets = a.effective_metabolisms(n, fee);
     let value = |w: &World, p: Pos| {
         let s = w.site(p);
-        let counted = |good: usize| match devaluation(&w.config, s, good) {
-            Some(d) => s.resource[good] * (1.0 / (1.0 + d)),
-            None => s.resource[good],
-        };
-        crate::econ::foresight_welfare(w1 + counted(0), w2 + counted(1), m1, m2, phi)
+        let after: [f64; MAX_GOODS] = std::array::from_fn(|i| {
+            if i >= n {
+                return 0.0;
+            }
+            let counted = match devaluation(&w.config, s, i) {
+                Some(d) => s.resource[i] * (1.0 / (1.0 + d)),
+                None => s.resource[i],
+            };
+            held[i] + counted
+        });
+        crate::econ::foresight_welfare_n(&after[..n], &mets[..n], phi)
     };
     let mut candidates = vec![(pos, 0, value(world, pos))];
     for (q, d) in world.torus.sight(pos, vision) {
@@ -108,18 +112,27 @@ fn act_two_goods(world: &mut World, id: AgentId) -> Harvest {
     let target = choose(&candidates, &mut world.rng);
     world.move_agent(id, target);
     let site = world.site_mut(target);
-    let harvest = Harvest::of(&[site.resource[0], site.resource[1]]);
-    site.resource[0] = 0.0;
-    site.resource[1] = 0.0;
+    let mut harvest = Harvest::default();
+    for (got, level) in harvest
+        .gathered
+        .iter_mut()
+        .zip(site.resource.iter_mut())
+        .take(n)
+    {
+        *got = *level;
+        *level = 0.0;
+    }
     let a = world.agent_mut(id).expect("live agent");
-    a.holdings[0] += harvest.gathered[0];
-    a.holdings[1] += harvest.gathered[1];
+    for (have, got) in a.holdings.iter_mut().zip(&harvest.gathered).take(n) {
+        *have += got;
+    }
     harvest
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::{Pollutant, Pollution};
     use crate::testkit::*;
 
     fn mover(w: &mut World, vision: u32) -> AgentId {
@@ -274,5 +287,58 @@ mod tests {
         };
         assert_eq!(target(false), Pos::new(5, 6));
         assert_eq!(target(true), Pos::new(6, 5));
+    }
+
+    #[test]
+    fn with_three_goods_agents_seek_the_scarcest_good() {
+        let mut w = blank_world(11, 11);
+        add_goods(&mut w.config, 3);
+        let id = mover(&mut w, 3);
+        {
+            let a = w.agent_mut(id).unwrap();
+            a.metabolism[..3].copy_from_slice(&[1, 1, 1]);
+            a.holdings[..3].copy_from_slice(&[30.0, 30.0, 2.0]);
+        }
+        set_resource(&mut w, 5, 7, 0, 4.0);
+        set_resource(&mut w, 7, 5, 1, 4.0);
+        set_resource(&mut w, 5, 3, 2, 2.0);
+        let h = act(&mut w, id);
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 3));
+        assert_eq!(h.gathered[..3], [0.0, 0.0, 2.0]);
+        assert_eq!(w.agent(id).unwrap().holdings[2], 4.0);
+        assert_eq!(w.site(Pos::new(5, 3)).resource[2], 0.0);
+    }
+
+    #[test]
+    fn a_pollutant_discounts_only_the_goods_it_devalues() {
+        let mut w = blank_world(11, 11);
+        add_goods(&mut w.config, 3);
+        let id = mover(&mut w, 3);
+        {
+            let a = w.agent_mut(id).unwrap();
+            a.metabolism[..3].copy_from_slice(&[1, 1, 1]);
+            a.holdings[..3].copy_from_slice(&[30.0, 30.0, 2.0]);
+        }
+        let pollutant = |name: &str, devalues: Vec<bool>| Pollutant {
+            name: name.into(),
+            production: vec![0.0; 3],
+            consumption: vec![0.0; 3],
+            devalues,
+        };
+        w.config.pollution = Pollution {
+            enabled: true,
+            pollutants: vec![
+                pollutant("smoke", vec![true, false, false]),
+                pollutant("runoff", vec![false, false, true]),
+            ],
+        };
+        // 2 of good 2 under runoff 3 counts as 2 · 1/4 = 0.5; 1 of good 2
+        // under smoke (which spares good 2) counts as 1.
+        set_resource(&mut w, 5, 3, 2, 2.0);
+        w.site_mut(Pos::new(5, 3)).pollution[1] = 3.0;
+        set_resource(&mut w, 5, 7, 2, 1.0);
+        w.site_mut(Pos::new(5, 7)).pollution[0] = 9.0;
+        act(&mut w, id);
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 7));
     }
 }

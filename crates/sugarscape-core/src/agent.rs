@@ -244,6 +244,17 @@ impl Agent {
     pub fn effective_metabolism(&self, good: usize, fee: f64) -> f64 {
         f64::from(self.metabolism[good]) + fee * self.diseases.len() as f64
     }
+
+    /// Per-good burn (effective metabolism) for goods `0..n`; slots ≥ n are 0.
+    pub fn effective_metabolisms(&self, n: usize, fee: f64) -> [f64; MAX_GOODS] {
+        std::array::from_fn(|i| {
+            if i < n {
+                self.effective_metabolism(i, fee)
+            } else {
+                0.0
+            }
+        })
+    }
 }
 
 #[cfg(test)]
@@ -371,6 +382,19 @@ mod tests {
             "good 2 draws after goods 0 and 1"
         );
         assert_eq!(b.metabolism[..2], a.metabolism[..2]);
+    }
+
+    #[test]
+    fn effective_metabolisms_covers_goods_below_n_and_zeroes_the_rest() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        let id = crate::testkit::spawn(&mut w, 1, 1);
+        let a = w.agent_mut(id).unwrap();
+        a.metabolism[..3].copy_from_slice(&[1, 2, 3]);
+        a.diseases = vec![0, 1];
+        let mets = a.effective_metabolisms(2, 0.5);
+        assert_eq!(mets[0], a.effective_metabolism(0, 0.5));
+        assert_eq!(mets[1], a.effective_metabolism(1, 0.5));
+        assert_eq!(mets[2], 0.0);
     }
 
     #[test]
