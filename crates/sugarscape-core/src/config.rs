@@ -4,6 +4,7 @@
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use crate::agent::Sex;
 
@@ -146,6 +147,24 @@ pub struct Foresight {
     pub range: URange,
 }
 
+/// Fields a schedule may not change (they shape the world's storage or setup).
+pub const STRUCTURAL_FIELDS: [&str; 6] = [
+    "width",
+    "height",
+    "tag_length",
+    "landscape",
+    "population",
+    "placement",
+];
+
+/// At the start of the tick when `World::tick == tick`, set each dotted config
+/// path in `set` to its value.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ScheduledChange {
+    pub tick: u64,
+    pub set: BTreeMap<String, serde_json::Value>,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
@@ -172,6 +191,7 @@ pub struct Config {
     pub trade: Toggle,
     pub credit: CreditRule,
     pub foresight: Foresight,
+    pub schedule: Vec<ScheduledChange>,
 }
 
 impl Default for Config {
@@ -240,6 +260,7 @@ impl Default for Config {
                 enabled: false,
                 range: URange::new(0, 10),
             },
+            schedule: Vec::new(),
         }
     }
 }
@@ -295,6 +316,12 @@ impl Config {
     }
 
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
+        self.validate_fields()?;
+        self.validate_schedule()
+    }
+
+    /// Everything except the schedule (renamed from the old `validate` body).
+    fn validate_fields(&self) -> Result<(), Vec<FieldError>> {
         let mut e = Errors::default();
         e.check(
             (5..=500).contains(&self.width),
@@ -424,6 +451,60 @@ impl Config {
         e.check(self.credit.duration >= 1, "credit.duration", "must be ≥ 1");
         e.non_negative(self.credit.rate, "credit.rate");
         e.finish()
+    }
+
+    fn validate_schedule(&self) -> Result<(), Vec<FieldError>> {
+        let mut entries: Vec<&ScheduledChange> = self.schedule.iter().collect();
+        entries.sort_by_key(|c| c.tick);
+        let mut patched = self.clone();
+        for change in entries {
+            if change.tick == 0 {
+                return Err(vec![FieldError::new(
+                    "schedule",
+                    "scheduled ticks start at 1",
+                )]);
+            }
+            patched = patched.apply_change(change).map_err(|e| vec![e])?;
+        }
+        Ok(())
+    }
+
+    /// A copy with one dotted `path` set to `value`.
+    pub fn with_path(&self, path: &str, value: &serde_json::Value) -> Result<Config, FieldError> {
+        let mut json = serde_json::to_value(self).expect("config serializes");
+        let mut slot = &mut json;
+        for key in path.split('.') {
+            slot = slot
+                .get_mut(key)
+                .ok_or_else(|| FieldError::new("schedule", format!("unknown field {path}")))?;
+        }
+        *slot = value.clone();
+        serde_json::from_value(json)
+            .map_err(|e| FieldError::new("schedule", format!("{path}: {e}")))
+    }
+
+    /// This config with every path in `change` set, checked for validity
+    /// (excluding the schedule itself).
+    pub fn apply_change(&self, change: &ScheduledChange) -> Result<Config, FieldError> {
+        let mut next = self.clone();
+        for (path, value) in &change.set {
+            let root = path.split('.').next().unwrap_or_default();
+            if STRUCTURAL_FIELDS.contains(&root) {
+                return Err(FieldError::new(
+                    "schedule",
+                    format!("{path} changes only on reset"),
+                ));
+            }
+            next = next.with_path(path, value)?;
+        }
+        next.validate_fields().map_err(|errs| {
+            let e = &errs[0];
+            FieldError::new(
+                "schedule",
+                format!("at t={}: {}: {}", change.tick, e.field, e.message),
+            )
+        })?;
+        Ok(next)
     }
 
     /// Fields that cannot change on a running world (they shape its storage).
@@ -600,5 +681,52 @@ mod tests {
             c.foresight.enabled = true;
         })
         .is_empty());
+    }
+
+    fn change(tick: u64, path: &str, value: serde_json::Value) -> ScheduledChange {
+        ScheduledChange {
+            tick,
+            set: [(path.to_string(), value)].into_iter().collect(),
+        }
+    }
+
+    #[test]
+    fn with_path_sets_nested_fields_and_rejects_unknown_ones() {
+        let c = Config::default();
+        let on = c
+            .with_path("pollution.enabled", &serde_json::json!(true))
+            .unwrap();
+        assert!(on.pollution.enabled);
+        assert_eq!(
+            c.with_path("pollution.nope", &serde_json::json!(1))
+                .unwrap_err()
+                .field,
+            "schedule"
+        );
+        assert_eq!(
+            c.with_path("pollution.enabled", &serde_json::json!("yes"))
+                .unwrap_err()
+                .field,
+            "schedule"
+        );
+    }
+
+    #[test]
+    fn schedule_entries_are_validated() {
+        let mut c = Config {
+            schedule: vec![change(50, "pollution.enabled", serde_json::json!(true))],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+        c.schedule = vec![change(0, "pollution.enabled", serde_json::json!(true))];
+        assert_eq!(fields(c.validate()), vec!["schedule"]);
+        c.schedule = vec![change(5, "width", serde_json::json!(60))];
+        assert_eq!(fields(c.validate()), vec!["schedule"]);
+        c.schedule = vec![change(5, "trade.enabled", serde_json::json!(true))];
+        assert_eq!(
+            fields(c.validate()),
+            vec!["schedule"],
+            "trade without spice is invalid"
+        );
     }
 }

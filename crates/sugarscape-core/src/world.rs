@@ -280,6 +280,7 @@ impl World {
     /// environment updates and everyone ages.
     pub fn step(&mut self) {
         self.events = TickEvents::default();
+        self.apply_schedule();
         let mut order = self.agent_ids();
         order.shuffle(&mut self.rng);
         for id in order {
@@ -301,6 +302,23 @@ impl World {
     pub fn run(&mut self, ticks: u32) {
         for _ in 0..ticks {
             self.step();
+        }
+    }
+
+    /// Applies scheduled changes due at the tick about to run. Entries were
+    /// validated with the config, so failures are impossible; they are ignored.
+    fn apply_schedule(&mut self) {
+        let due: Vec<_> = self
+            .config
+            .schedule
+            .iter()
+            .filter(|c| c.tick == self.tick)
+            .cloned()
+            .collect();
+        for change in due {
+            if let Ok(next) = self.config.apply_change(&change) {
+                self.config = next;
+            }
         }
     }
 }
@@ -414,5 +432,25 @@ mod tests {
             assert!(a.sugar > 0.0);
             assert_eq!(a.age, 100, "immortal first generation ages every tick");
         }
+    }
+
+    #[test]
+    fn scheduled_changes_apply_when_their_tick_is_reached() {
+        use crate::config::ScheduledChange;
+        let mut c = crate::testkit::blank_config(10, 10);
+        c.schedule = vec![ScheduledChange {
+            tick: 2,
+            set: [("pollution.enabled".to_string(), serde_json::json!(true))]
+                .into_iter()
+                .collect(),
+        }];
+        let mut w = World::new(c, 1).unwrap();
+        w.step(); // tick 0 → 1
+        assert!(!w.config.pollution.enabled);
+        w.step(); // tick 1 → 2
+        assert!(!w.config.pollution.enabled);
+        w.step(); // starts at tick 2: applied
+        assert!(w.config.pollution.enabled);
+        assert_eq!(w.config.schedule.len(), 1, "the schedule itself is kept");
     }
 }
