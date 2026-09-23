@@ -5,8 +5,8 @@
 //! A loan of P is creditworthy when income × d ≥ P × (1 + r/100 × d)
 //! (interpretation of the book's "credit-worthy for a loan written at terms
 //! specified by the lender"). At the due tick the borrower pays in full, or
-//! pays half its sugar and the remainder is re-lent on the same terms (a
-//! default). A dead borrower's loans are the lender's loss; a dead lender's
+//! pays half its sugar and the remainder is re-lent on the loan's own terms
+//! (a default). Each loan carries the duration and rate it was written on. A dead borrower's loans are the lender's loss; a dead lender's
 //! loans are cancelled unless inheritance (I) is on, when its living children
 //! split the claim (a child who is the borrower has its share forgiven).
 
@@ -30,12 +30,12 @@ pub(crate) fn lendable(a: &Agent) -> f64 {
     }
 }
 
+/// Σ(amount due / the loan's own duration) over `id`'s loans as borrower.
 fn obligations(world: &World, id: AgentId) -> f64 {
-    let d = f64::from(world.config.credit.duration);
     world
         .loans()
         .filter(|l| l.borrower == id)
-        .map(|l| l.due / d)
+        .map(|l| l.due / f64::from(l.duration))
         .sum()
 }
 
@@ -107,7 +107,13 @@ pub(crate) fn settle(world: &mut World) {
             .expect("lenders' loans die with them")
             .sugar += paid;
         if paid < loan.due {
-            world.originate_loan(loan.lender, loan.borrower, loan.due - paid);
+            world.originate_loan_on(
+                loan.lender,
+                loan.borrower,
+                loan.due - paid,
+                loan.duration,
+                loan.rate,
+            );
             world.events.defaults += 1;
         }
     }
@@ -207,6 +213,50 @@ mod tests {
         assert!((rolled.principal - 10.0).abs() < 1e-12, "12 due − 2 paid");
         assert_eq!(rolled.due_tick, due_tick + 10);
         assert_eq!(w.events().defaults, 1);
+    }
+
+    #[test]
+    fn paying_exactly_the_amount_due_would_starve_so_it_rolls_over() {
+        let mut w = credit_world();
+        let b = borrower(&mut w);
+        let l = lender(&mut w);
+        borrow(&mut w, b);
+        let loan = *w.loans().next().unwrap();
+        w.tick = loan.due_tick;
+        w.agent_mut(b).unwrap().sugar = loan.due;
+        settle(&mut w);
+        assert_eq!(w.agent(b).unwrap().sugar, loan.due / 2.0, "paid half");
+        let rolled = w.loans().next().expect("the rest rolls over");
+        assert!((rolled.principal - loan.due / 2.0).abs() < 1e-12);
+        assert_eq!((rolled.lender, rolled.borrower), (l, b));
+        assert_eq!(w.events().defaults, 1);
+    }
+
+    #[test]
+    fn loans_keep_the_terms_they_were_written_on() {
+        let mut w = credit_world();
+        let b = borrower(&mut w);
+        let l = lender(&mut w);
+        borrow(&mut w, b); // 6 at d = 10, r = 10 → 12 due
+        let loan = *w.loans().next().unwrap();
+        assert_eq!((loan.duration, loan.rate), (10, 10.0));
+        w.config.credit.duration = 5;
+        w.config.credit.rate = 0.0;
+        w.agent_mut(b).unwrap().metabolism = 0;
+        record_income(&mut w, b, 0.0);
+        assert!(
+            (w.agent(b).unwrap().income + 1.2).abs() < 1e-12,
+            "12 due over the loan's own 10 ticks"
+        );
+        w.tick = loan.due_tick;
+        w.agent_mut(b).unwrap().sugar = 4.0;
+        settle(&mut w);
+        let rolled = *w.loans().next().unwrap();
+        assert_eq!(rolled.lender, l);
+        assert!((rolled.principal - 10.0).abs() < 1e-12, "12 due − 2 paid");
+        assert_eq!((rolled.duration, rolled.rate), (10, 10.0));
+        assert!((rolled.due - 20.0).abs() < 1e-12, "10 × (1 + 0.1 × 10)");
+        assert_eq!(rolled.due_tick, loan.due_tick + 10);
     }
 
     #[test]

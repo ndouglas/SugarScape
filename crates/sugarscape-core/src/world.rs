@@ -38,7 +38,8 @@ pub struct Trade {
 
 pub type LoanId = u64;
 
-/// A sugar loan under rule L: `due` sugar owed at `due_tick`.
+/// A sugar loan under rule L: `due` sugar owed at `due_tick`, written for
+/// `duration` ticks at `rate` percent per tick (the terms travel with it).
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
 pub struct Loan {
     pub id: LoanId,
@@ -47,6 +48,8 @@ pub struct Loan {
     pub principal: f64,
     pub due: f64,
     pub due_tick: u64,
+    pub duration: u32,
+    pub rate: f64,
 }
 
 /// What happened during the current (or last completed) tick.
@@ -256,9 +259,21 @@ impl World {
         principal: f64,
     ) -> LoanId {
         let c = self.config.credit;
+        self.originate_loan_on(lender, borrower, principal, c.duration, c.rate)
+    }
+
+    /// Records a loan of `principal` for `duration` ticks at `rate` percent.
+    pub(crate) fn originate_loan_on(
+        &mut self,
+        lender: AgentId,
+        borrower: AgentId,
+        principal: f64,
+        duration: u32,
+        rate: f64,
+    ) -> LoanId {
         let id = self.next_loan_id;
         self.next_loan_id += 1;
-        let factor = 1.0 + c.rate / 100.0 * f64::from(c.duration);
+        let factor = 1.0 + rate / 100.0 * f64::from(duration);
         self.loans.insert(
             id,
             Loan {
@@ -267,7 +282,9 @@ impl World {
                 borrower,
                 principal,
                 due: principal * factor,
-                due_tick: self.tick + u64::from(c.duration),
+                due_tick: self.tick + u64::from(duration),
+                duration,
+                rate,
             },
         );
         id
@@ -315,6 +332,8 @@ impl World {
             eat(l.id);
             eat(l.due.to_bits());
             eat(l.due_tick);
+            eat(u64::from(l.duration));
+            eat(l.rate.to_bits());
         }
         h
     }
