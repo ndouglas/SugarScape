@@ -158,9 +158,51 @@ pub(crate) fn find_or_add(world: &mut World, bits: Bits) -> DiseaseId {
     }
 }
 
+/// A brand-new random disease: redrawn up to 100 times until it differs from
+/// every listed disease; if none does, the last draw's existing id is reused.
+pub(crate) fn new_random(world: &mut World) -> DiseaseId {
+    let length = world.config.disease.length;
+    let mut draw = random_disease(length, &mut world.rng);
+    for _ in 0..100 {
+        if !world.diseases.contains(&draw) {
+            break;
+        }
+        draw = random_disease(length, &mut world.rng);
+    }
+    find_or_add(world, draw)
+}
+
+/// Applies the outbreaks due at the tick about to run: each creates a new
+/// disease and offers it to `min(agents, population)` random living agents.
+pub(crate) fn outbreaks(world: &mut World) {
+    let due: Vec<u32> = world
+        .config
+        .disease
+        .outbreaks
+        .iter()
+        .filter(|o| o.tick == world.tick)
+        .map(|o| o.agents)
+        .collect();
+    for agents in due {
+        let disease = new_random(world);
+        let ids = world.agent_ids();
+        let k = (agents as usize).min(ids.len());
+        for i in rand::seq::index::sample(&mut world.rng, ids.len(), k).into_vec() {
+            if infect(world, ids[i], disease) {
+                world.events.infections.push(Infection {
+                    infector: None,
+                    infected: ids[i],
+                    disease,
+                });
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Outbreak;
     use crate::rng::seeded;
     use crate::testkit::*;
 
@@ -344,5 +386,69 @@ mod tests {
         assert_eq!(w.agent(n).unwrap().diseases, vec![0]);
         assert_eq!(w.agent(n).unwrap().infected_by, Some(a));
         assert_eq!(w.agent(a).unwrap().diseases, vec![0]);
+    }
+
+    #[test]
+    fn outbreaks_infect_random_agents_with_a_new_disease_at_their_tick() {
+        let mut w = sick_world();
+        w.config.disease.length = URange::new(8, 8);
+        w.config.disease.outbreaks = vec![Outbreak { tick: 2, agents: 3 }];
+        // Five agents two sites apart (no neighbors), with empty immune strings
+        // so no random disease can be resisted.
+        let ids: Vec<AgentId> = (0..5)
+            .map(|i| {
+                let id = spawn(&mut w, i * 2, 0);
+                w.agent_mut(id).unwrap().immune = Bits::default();
+                id
+            })
+            .collect();
+        w.step(); // tick 0
+        w.step(); // tick 1
+        assert!(w.diseases.is_empty());
+        w.step(); // starts at tick 2: the outbreak fires
+        assert_eq!(w.diseases.len(), 1);
+        let sick = ids
+            .iter()
+            .filter(|&&id| w.agent(id).unwrap().diseases == vec![0])
+            .count();
+        assert_eq!(sick, 3);
+        assert_eq!(w.events().infections.len(), 3);
+        assert!(w
+            .events()
+            .infections
+            .iter()
+            .all(|i| i.infector.is_none() && i.disease == 0));
+        w.step();
+        assert_eq!(w.diseases.len(), 1, "each outbreak fires once");
+    }
+
+    #[test]
+    fn outbreak_size_is_capped_by_the_population() {
+        let mut w = sick_world();
+        w.config.disease.outbreaks = vec![Outbreak {
+            tick: 0,
+            agents: 50,
+        }];
+        let a = spawn(&mut w, 0, 0);
+        let c = spawn(&mut w, 5, 5);
+        for id in [a, c] {
+            w.agent_mut(id).unwrap().immune = Bits::default();
+        }
+        w.step();
+        assert_eq!(w.events().infections.len(), 2);
+    }
+
+    #[test]
+    fn new_random_diseases_differ_from_the_list_when_possible() {
+        let mut w = sick_world();
+        w.config.disease.length = URange::new(1, 1);
+        w.diseases = vec![b("0")];
+        assert_eq!(new_random(&mut w), 1);
+        assert_eq!(w.diseases[1], b("1"));
+        assert!(
+            new_random(&mut w) <= 1,
+            "no distinct 1-bit string is left: reuse"
+        );
+        assert_eq!(w.diseases.len(), 2);
     }
 }

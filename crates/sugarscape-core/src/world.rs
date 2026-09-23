@@ -482,6 +482,9 @@ impl World {
     pub fn step(&mut self) {
         self.events = TickEvents::default();
         self.apply_schedule();
+        if self.config.disease.enabled {
+            rules::disease::outbreaks(self);
+        }
         let mut order = self.agent_ids();
         order.shuffle(&mut self.rng);
         for id in order {
