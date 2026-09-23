@@ -22,9 +22,9 @@ fn fertile_age(a: &Agent) -> bool {
 /// How much sugar `a` may lend now.
 pub(crate) fn lendable(a: &Agent) -> f64 {
     if a.age > a.fertility_end {
-        (a.sugar / 2.0).max(0.0)
-    } else if fertile_age(a) && a.sugar > a.initial_sugar {
-        a.sugar - a.initial_sugar
+        (a.holdings[0] / 2.0).max(0.0)
+    } else if fertile_age(a) && a.holdings[0] > a.initial[0] {
+        a.holdings[0] - a.initial[0]
     } else {
         0.0
     }
@@ -45,18 +45,18 @@ pub(crate) fn record_income(world: &mut World, id: AgentId, sugar_gathered: f64)
     let owed = obligations(world, id);
     let fee = world.config.disease.active_fee();
     let a = world.agent_mut(id).expect("live agent");
-    a.income = sugar_gathered - a.effective_metabolism(fee) - owed;
+    a.income = sugar_gathered - a.effective_metabolism(0, fee) - owed;
 }
 
 /// A borrower asks its neighbors, in random order, for its shortfall.
 pub(crate) fn borrow(world: &mut World, id: AgentId) {
     let c = world.config.credit;
     let me = world.agent(id).expect("live agent");
-    if !(fertile_age(me) && me.sugar < me.initial_sugar && me.income > 0.0) {
+    if !(fertile_age(me) && me.holdings[0] < me.initial[0] && me.income > 0.0) {
         return;
     }
     let d = f64::from(c.duration);
-    let mut need = me.initial_sugar - me.sugar;
+    let mut need = me.initial[0] - me.holdings[0];
     let mut capacity = me.income * d / (1.0 + c.rate / 100.0 * d);
     let mut neighbors = world.torus.neighbors(me.pos);
     neighbors.shuffle(&mut world.rng);
@@ -73,8 +73,8 @@ pub(crate) fn borrow(world: &mut World, id: AgentId) {
         if amount <= 0.0 {
             continue;
         }
-        world.agent_mut(lender).expect("lender").sugar -= amount;
-        world.agent_mut(id).expect("borrower").sugar += amount;
+        world.agent_mut(lender).expect("lender").holdings[0] -= amount;
+        world.agent_mut(id).expect("borrower").holdings[0] += amount;
         world.originate_loan(lender, id, amount);
         world.events.loans_made += 1;
         world.events.amount_lent += amount;
@@ -95,7 +95,7 @@ pub(crate) fn settle(world: &mut World) {
         let available = world
             .agent(loan.borrower)
             .expect("borrowers' loans die with them")
-            .sugar;
+            .holdings[0];
         // Paying in full must leave the borrower alive (sugar > 0); otherwise
         // it pays half and the rest rolls over.
         let paid = if available > loan.due {
@@ -103,11 +103,11 @@ pub(crate) fn settle(world: &mut World) {
         } else {
             available / 2.0
         };
-        world.agent_mut(loan.borrower).expect("borrower").sugar -= paid;
+        world.agent_mut(loan.borrower).expect("borrower").holdings[0] -= paid;
         world
             .agent_mut(loan.lender)
             .expect("lenders' loans die with them")
-            .sugar += paid;
+            .holdings[0] += paid;
         if paid < loan.due {
             world.originate_loan_on(
                 loan.lender,
@@ -140,7 +140,7 @@ mod tests {
     fn borrower(w: &mut World) -> AgentId {
         let id = spawn(w, 2, 2);
         let a = w.agent_mut(id).unwrap();
-        a.sugar = 4.0;
+        a.holdings[0] = 4.0;
         a.income = 5.0;
         id
     }
@@ -150,7 +150,7 @@ mod tests {
         let id = spawn(w, 2, 1);
         let a = w.agent_mut(id).unwrap();
         a.age = 70;
-        a.sugar = 40.0;
+        a.holdings[0] = 40.0;
         id
     }
 
@@ -160,7 +160,7 @@ mod tests {
         let old = lender(&mut w);
         assert_eq!(lendable(w.agent(old).unwrap()), 20.0);
         let young = spawn(&mut w, 0, 0); // fertile, sugar 10 = endowment 10
-        w.agent_mut(young).unwrap().sugar = 16.0;
+        w.agent_mut(young).unwrap().holdings[0] = 16.0;
         assert_eq!(lendable(w.agent(young).unwrap()), 6.0);
         w.agent_mut(young).unwrap().age = 5;
         assert_eq!(lendable(w.agent(young).unwrap()), 0.0, "too young to lend");
@@ -172,8 +172,12 @@ mod tests {
         let b = borrower(&mut w);
         let l = lender(&mut w);
         borrow(&mut w, b);
-        assert_eq!(w.agent(b).unwrap().sugar, 10.0, "borrowed its 6 shortfall");
-        assert_eq!(w.agent(l).unwrap().sugar, 34.0);
+        assert_eq!(
+            w.agent(b).unwrap().holdings[0],
+            10.0,
+            "borrowed its 6 shortfall"
+        );
+        assert_eq!(w.agent(l).unwrap().holdings[0], 34.0);
         let loan = *w.loans().next().unwrap();
         assert_eq!((loan.lender, loan.borrower, loan.principal), (l, b, 6.0));
         assert!((loan.due - 12.0).abs() < 1e-12, "6 × (1 + 0.1 × 10)");
@@ -188,7 +192,7 @@ mod tests {
         w.agent_mut(b).unwrap().income = 0.6; // 0.6 × 10 / 2 = 3 at most
         lender(&mut w);
         borrow(&mut w, b);
-        assert!((w.agent(b).unwrap().sugar - 7.0).abs() < 1e-12);
+        assert!((w.agent(b).unwrap().holdings[0] - 7.0).abs() < 1e-12);
     }
 
     #[test]
@@ -198,19 +202,19 @@ mod tests {
         let l = lender(&mut w);
         borrow(&mut w, b);
         w.tick += 10;
-        w.agent_mut(b).unwrap().sugar = 20.0;
+        w.agent_mut(b).unwrap().holdings[0] = 20.0;
         settle(&mut w);
-        assert_eq!(w.agent(b).unwrap().sugar, 8.0);
-        assert_eq!(w.agent(l).unwrap().sugar, 46.0);
+        assert_eq!(w.agent(b).unwrap().holdings[0], 8.0);
+        assert_eq!(w.agent(l).unwrap().holdings[0], 46.0);
         assert_eq!(w.loans().count(), 0);
 
         let b2 = spawn(&mut w, 0, 0);
-        w.agent_mut(b2).unwrap().sugar = 4.0;
+        w.agent_mut(b2).unwrap().holdings[0] = 4.0;
         let id = w.originate_loan(l, b2, 6.0);
         let due_tick = w.loans().find(|x| x.id == id).unwrap().due_tick;
         w.tick = due_tick;
         settle(&mut w);
-        assert_eq!(w.agent(b2).unwrap().sugar, 2.0, "paid half");
+        assert_eq!(w.agent(b2).unwrap().holdings[0], 2.0, "paid half");
         let rolled = w.loans().next().unwrap();
         assert!((rolled.principal - 10.0).abs() < 1e-12, "12 due − 2 paid");
         assert_eq!(rolled.due_tick, due_tick + 10);
@@ -225,9 +229,9 @@ mod tests {
         borrow(&mut w, b);
         let loan = *w.loans().next().unwrap();
         w.tick = loan.due_tick;
-        w.agent_mut(b).unwrap().sugar = loan.due;
+        w.agent_mut(b).unwrap().holdings[0] = loan.due;
         settle(&mut w);
-        assert_eq!(w.agent(b).unwrap().sugar, loan.due / 2.0, "paid half");
+        assert_eq!(w.agent(b).unwrap().holdings[0], loan.due / 2.0, "paid half");
         let rolled = w.loans().next().expect("the rest rolls over");
         assert!((rolled.principal - loan.due / 2.0).abs() < 1e-12);
         assert_eq!((rolled.lender, rolled.borrower), (l, b));
@@ -244,14 +248,14 @@ mod tests {
         assert_eq!((loan.duration, loan.rate), (10, 10.0));
         w.config.credit.duration = 5;
         w.config.credit.rate = 0.0;
-        w.agent_mut(b).unwrap().metabolism = 0;
+        w.agent_mut(b).unwrap().metabolism[0] = 0;
         record_income(&mut w, b, 0.0);
         assert!(
             (w.agent(b).unwrap().income + 1.2).abs() < 1e-12,
             "12 due over the loan's own 10 ticks"
         );
         w.tick = loan.due_tick;
-        w.agent_mut(b).unwrap().sugar = 4.0;
+        w.agent_mut(b).unwrap().holdings[0] = 4.0;
         settle(&mut w);
         let rolled = *w.loans().next().unwrap();
         assert_eq!(rolled.lender, l);
@@ -314,7 +318,7 @@ mod tests {
         let mut w = credit_world();
         let b = borrower(&mut w);
         let l = lender(&mut w);
-        w.agent_mut(b).unwrap().metabolism = 2;
+        w.agent_mut(b).unwrap().metabolism[0] = 2;
         w.originate_loan(l, b, 5.0); // due 10 over 10 ticks → 1 per tick
         record_income(&mut w, b, 6.0);
         assert!((w.agent(b).unwrap().income - 3.0).abs() < 1e-12);
@@ -328,7 +332,7 @@ mod tests {
         let b = borrower(&mut w);
         {
             let a = w.agent_mut(b).unwrap();
-            a.metabolism = 1;
+            a.metabolism[0] = 1;
             a.diseases = vec![0];
         }
         record_income(&mut w, b, 6.0);

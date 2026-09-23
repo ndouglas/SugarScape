@@ -13,13 +13,23 @@ pub mod sex;
 pub mod trade;
 
 use crate::agent::AgentId;
+use crate::config::MAX_GOODS;
 use crate::world::World;
 
 /// Resources an agent collected from its site this turn.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Harvest {
-    pub sugar: f64,
-    pub spice: f64,
+    /// Units of each good gathered (slots ≥ n are 0).
+    pub gathered: [f64; MAX_GOODS],
+}
+
+impl Harvest {
+    /// A harvest of `amounts`, in good order.
+    pub fn of(amounts: &[f64]) -> Self {
+        let mut gathered = [0.0; MAX_GOODS];
+        gathered[..amounts.len()].copy_from_slice(amounts);
+        Self { gathered }
+    }
 }
 
 /// One agent's turn, in the book's order: move, metabolize, maybe die, then
@@ -33,7 +43,7 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     };
     lifecycle::metabolize(world, id, harvest);
     if world.config.credit.enabled {
-        credit::record_income(world, id, harvest.sugar);
+        credit::record_income(world, id, harvest.gathered[0]);
     }
     if lifecycle::check_death(world, id) {
         return;

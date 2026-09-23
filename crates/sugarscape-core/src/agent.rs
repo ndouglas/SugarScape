@@ -4,8 +4,15 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::bits::Bits;
-use crate::config::Config;
+use crate::config::{Config, MAX_GOODS};
 use crate::geometry::Pos;
+
+/// An array holding `x` for good 0 and zero for every other good.
+pub(crate) fn in_slot_0<T: Copy + Default>(x: T) -> [T; MAX_GOODS] {
+    let mut out = [T::default(); MAX_GOODS];
+    out[0] = x;
+    out
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -131,11 +138,13 @@ pub struct Agent {
     pub id: AgentId,
     pub pos: Pos,
     pub vision: u32,
-    pub metabolism: u32,
-    pub sugar: f64,
-    /// Endowment at birth; the fertility threshold and the basis of a parent's
-    /// contribution to a child (half of it).
-    pub initial_sugar: f64,
+    /// Per-tick burn of each good (slots ≥ n are 0).
+    pub metabolism: [u32; MAX_GOODS],
+    /// Holdings of each good.
+    pub holdings: [f64; MAX_GOODS],
+    /// Endowment of each good at birth: the fertility threshold and the basis
+    /// of a parent's contribution to a child (half of it).
+    pub initial: [f64; MAX_GOODS],
     pub age: u32,
     /// Drawn from `lifespan.max_age` at birth; enforced only while lifespan is on.
     pub max_age: u32,
@@ -147,10 +156,6 @@ pub struct Agent {
     pub children: Vec<AgentId>,
     /// Tick of birth.
     pub born: u64,
-    /// Spice holdings and birth endowment (0 while spice is off).
-    pub spice: f64,
-    pub initial_spice: f64,
-    pub spice_metabolism: u32,
     /// Book eq. 6's φ (0 while foresight is off).
     pub foresight: u32,
     /// Sugar gathered minus sugar metabolism minus per-tick loan obligations,
@@ -181,9 +186,9 @@ impl Agent {
             id: 0,
             pos,
             vision: config.vision.sample(rng),
-            metabolism: config.metabolism.sample(rng),
-            sugar: endowment,
-            initial_sugar: endowment,
+            metabolism: in_slot_0(config.metabolism.sample(rng)),
+            holdings: in_slot_0(endowment),
+            initial: in_slot_0(endowment),
             age: 0,
             max_age: config.lifespan.max_age.sample(rng),
             sex,
@@ -193,9 +198,6 @@ impl Agent {
             parents: None,
             children: Vec::new(),
             born,
-            spice: 0.0,
-            initial_spice: 0.0,
-            spice_metabolism: 0,
             foresight: 0,
             income: 0.0,
             immune_genome: Bits::default(),
@@ -205,9 +207,9 @@ impl Agent {
         };
         if config.spice.enabled {
             let spice = f64::from(config.spice.endowment.sample(rng));
-            agent.spice = spice;
-            agent.initial_spice = spice;
-            agent.spice_metabolism = config.spice.metabolism.sample(rng);
+            agent.holdings[1] = spice;
+            agent.initial[1] = spice;
+            agent.metabolism[1] = config.spice.metabolism.sample(rng);
         }
         if config.foresight.enabled {
             agent.foresight = config.foresight.range.sample(rng);
@@ -228,18 +230,14 @@ impl Agent {
     /// (of spice too, when it was born with spice traits).
     pub fn is_fertile(&self) -> bool {
         (self.fertility_onset..=self.fertility_end).contains(&self.age)
-            && self.sugar >= self.initial_sugar
-            && (self.initial_spice <= 0.0 || self.spice >= self.initial_spice)
+            && self.holdings[0] >= self.initial[0]
+            && (self.initial[1] <= 0.0 || self.holdings[1] >= self.initial[1])
     }
 
-    /// Sugar burned per tick: metabolism plus `fee` per carried disease.
-    pub fn effective_metabolism(&self, fee: f64) -> f64 {
-        f64::from(self.metabolism) + fee * self.diseases.len() as f64
-    }
-
-    /// Spice burned per tick: spice metabolism plus `fee` per carried disease.
-    pub fn effective_spice_metabolism(&self, fee: f64) -> f64 {
-        f64::from(self.spice_metabolism) + fee * self.diseases.len() as f64
+    /// Units of `good` burned per tick: its metabolism plus `fee` per carried
+    /// disease.
+    pub fn effective_metabolism(&self, good: usize, fee: f64) -> f64 {
+        f64::from(self.metabolism[good]) + fee * self.diseases.len() as f64
     }
 }
 
@@ -295,17 +293,17 @@ mod tests {
         let a = Agent::random(&off, Pos::new(0, 0), 0, &mut seeded(4));
         let b = Agent::random(&Config::default(), Pos::new(0, 0), 0, &mut seeded(4));
         assert_eq!(a, b, "spice parameters don't matter while spice is off");
-        assert_eq!((a.spice, a.spice_metabolism, a.foresight), (0.0, 0, 0));
+        assert_eq!((a.holdings[1], a.metabolism[1], a.foresight), (0.0, 0, 0));
         let mut on = Config::default();
         on.spice.enabled = true;
         on.foresight.enabled = true;
         let c = Agent::random(&on, Pos::new(0, 0), 0, &mut seeded(4));
-        assert!((1..=4).contains(&c.spice_metabolism));
-        assert!((5.0..=25.0).contains(&c.spice) && c.spice == c.initial_spice);
+        assert!((1..=4).contains(&c.metabolism[1]));
+        assert!((5.0..=25.0).contains(&c.holdings[1]) && c.holdings[1] == c.initial[1]);
         assert!(c.foresight <= 10);
         assert_eq!(
-            (c.vision, c.metabolism, c.sugar),
-            (b.vision, b.metabolism, b.sugar),
+            (c.vision, c.metabolism[0], c.holdings[0]),
+            (b.vision, b.metabolism[0], b.holdings[0]),
             "new draws come after the existing ones"
         );
     }
@@ -315,10 +313,10 @@ mod tests {
         let mut w = crate::testkit::blank_world(5, 5);
         let id = crate::testkit::spawn(&mut w, 1, 1);
         let a = w.agent_mut(id).unwrap();
-        a.spice = 9.0;
+        a.holdings[1] = 9.0;
         assert!(!a.is_fertile(), "below its spice endowment");
-        a.initial_spice = 0.0;
-        a.spice = -1.0;
+        a.initial[1] = 0.0;
+        a.holdings[1] = -1.0;
         assert!(a.is_fertile(), "no spice endowment, no spice requirement");
     }
 
@@ -335,8 +333,8 @@ mod tests {
         assert_eq!(a.immune.len(), 50);
         assert_eq!(a.immune, a.immune_genome, "the phenotype starts untrained");
         assert_eq!(
-            (a.vision, a.metabolism, a.sugar, a.tags),
-            (off.vision, off.metabolism, off.sugar, off.tags),
+            (a.vision, a.metabolism, a.holdings[0], a.tags),
+            (off.vision, off.metabolism, off.holdings[0], off.tags),
             "the genome is drawn after the existing traits"
         );
         assert!(a.diseases.is_empty(), "diseases come from the world's list");

@@ -37,10 +37,10 @@ impl Holdings {
         let fee = world.config.disease.active_fee();
         let a = world.agent(id).expect("live agent");
         Self {
-            sugar: a.sugar,
-            spice: a.spice,
-            m1: a.effective_metabolism(fee),
-            m2: a.effective_spice_metabolism(fee),
+            sugar: a.holdings[0],
+            spice: a.holdings[1],
+            m1: a.effective_metabolism(0, fee),
+            m2: a.effective_metabolism(1, fee),
         }
     }
     fn welfare(&self, sugar: f64, spice: f64) -> f64 {
@@ -75,11 +75,11 @@ pub(crate) fn trade_pair(world: &mut World, a: AgentId, b: AgentId) {
             return;
         }
         let x = world.agent_mut(buyer).expect("buyer");
-        x.sugar = buy.0;
-        x.spice = buy.1;
+        x.holdings[0] = buy.0;
+        x.holdings[1] = buy.1;
         let y = world.agent_mut(seller).expect("seller");
-        y.sugar = sell.0;
-        y.spice = sell.1;
+        y.holdings[0] = sell.0;
+        y.holdings[1] = sell.1;
         world.events.trades.push(Trade {
             buyer,
             seller,
@@ -97,21 +97,21 @@ mod tests {
     fn trader(w: &mut World, x: u32, sugar: f64, spice: f64) -> AgentId {
         let id = spawn(w, x, 0);
         let a = w.agent_mut(id).unwrap();
-        a.sugar = sugar;
-        a.spice = spice;
-        a.metabolism = 1;
-        a.spice_metabolism = 1;
+        a.holdings[0] = sugar;
+        a.holdings[1] = spice;
+        a.metabolism[0] = 1;
+        a.metabolism[1] = 1;
         id
     }
 
     fn state(w: &World, id: AgentId) -> (f64, f64, f64, f64) {
         let a = w.agent(id).unwrap();
-        let (m1, m2) = (f64::from(a.metabolism), f64::from(a.spice_metabolism));
+        let (m1, m2) = (f64::from(a.metabolism[0]), f64::from(a.metabolism[1]));
         (
-            a.sugar,
-            a.spice,
-            welfare(a.sugar, a.spice, m1, m2),
-            mrs(a.sugar, a.spice, m1, m2),
+            a.holdings[0],
+            a.holdings[1],
+            welfare(a.holdings[0], a.holdings[1], m1, m2),
+            mrs(a.holdings[0], a.holdings[1], m1, m2),
         )
     }
 
@@ -168,7 +168,7 @@ mod tests {
         let a = trader(&mut w, 0, 100.0, 100.0);
         let b = trader(&mut w, 1, 100.0, 100.0);
         for id in [a, b] {
-            w.agent_mut(id).unwrap().spice_metabolism = 3;
+            w.agent_mut(id).unwrap().metabolism[1] = 3;
         }
         w.agent_mut(a).unwrap().diseases = vec![0, 1];
         trade_pair(&mut w, a, b);

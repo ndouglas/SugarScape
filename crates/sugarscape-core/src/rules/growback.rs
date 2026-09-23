@@ -30,16 +30,16 @@ pub(crate) fn apply(world: &mut World) {
     for i in 0..world.sites.len() {
         let rate = rate_at(&world.config, world.tick, world.torus.pos(i).y);
         let site = &mut world.sites[i];
-        site.sugar = if instant {
-            site.capacity
+        site.resource[0] = if instant {
+            site.capacity[0]
         } else {
-            (site.sugar + rate).min(site.capacity)
+            (site.resource[0] + rate).min(site.capacity[0])
         };
         if spice {
-            site.spice = if instant {
-                site.spice_capacity
+            site.resource[1] = if instant {
+                site.capacity[1]
             } else {
-                (site.spice + rate).min(site.spice_capacity)
+                (site.resource[1] + rate).min(site.capacity[1])
             };
         }
     }
@@ -53,7 +53,7 @@ mod tests {
 
     fn world_with_empty_site(capacity: f64) -> World {
         let mut w = blank_world(10, 10);
-        w.site_mut(Pos::new(3, 3)).capacity = capacity;
+        w.site_mut(Pos::new(3, 3)).capacity[0] = capacity;
         w
     }
 
@@ -61,11 +61,11 @@ mod tests {
     fn grows_by_rate_up_to_capacity() {
         let mut w = world_with_empty_site(3.0);
         apply(&mut w);
-        assert_eq!(w.site(Pos::new(3, 3)).sugar, 1.0);
+        assert_eq!(w.site(Pos::new(3, 3)).resource[0], 1.0);
         for _ in 0..5 {
             apply(&mut w);
         }
-        assert_eq!(w.site(Pos::new(3, 3)).sugar, 3.0);
+        assert_eq!(w.site(Pos::new(3, 3)).resource[0], 3.0);
     }
 
     #[test]
@@ -73,7 +73,7 @@ mod tests {
         let mut w = world_with_empty_site(4.0);
         w.config.growback.instant = true;
         apply(&mut w);
-        assert_eq!(w.site(Pos::new(3, 3)).sugar, 4.0);
+        assert_eq!(w.site(Pos::new(3, 3)).resource[0], 4.0);
     }
 
     #[test]
@@ -99,11 +99,11 @@ mod tests {
     #[test]
     fn spice_grows_back_only_when_enabled() {
         let mut w = world_with_empty_site(3.0);
-        w.site_mut(Pos::new(3, 3)).spice_capacity = 3.0;
+        w.site_mut(Pos::new(3, 3)).capacity[1] = 3.0;
         apply(&mut w);
-        assert_eq!(w.site(Pos::new(3, 3)).spice, 0.0);
+        assert_eq!(w.site(Pos::new(3, 3)).resource[1], 0.0);
         w.config.spice.enabled = true;
         apply(&mut w);
-        assert_eq!(w.site(Pos::new(3, 3)).spice, 1.0);
+        assert_eq!(w.site(Pos::new(3, 3)).resource[1], 1.0);
     }
 }

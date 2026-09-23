@@ -104,7 +104,7 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
             Sex::Female => FEMALE,
             Sex::Male => MALE,
         },
-        ColorMode::Wealth => lerp(COOL, HOT, a.sugar.max(0.0).ln_1p() / s.log_max_wealth),
+        ColorMode::Wealth => lerp(COOL, HOT, a.holdings[0].max(0.0).ln_1p() / s.log_max_wealth),
         ColorMode::Age => lerp(COOL, HOT, f64::from(a.age) / f64::from(a.max_age.max(1))),
         ColorMode::Vision => lerp(
             COOL,
@@ -127,30 +127,28 @@ pub fn render(world: &World, mode: ColorMode, layer: Layer, buf: &mut Vec<u8>) {
     let max_capacity = world
         .sites
         .iter()
-        .map(|s| s.capacity)
+        .map(|s| s.capacity[0])
         .fold(0.0, f64::max)
         .max(1.0);
     let max_pollution = world
         .sites
         .iter()
-        .map(|s| s.pollution)
+        .map(|s| s.pollution[0])
         .fold(0.0, f64::max)
         .max(1e-9);
     let max_spice_capacity = world
         .sites
         .iter()
-        .map(|s| s.spice_capacity)
+        .map(|s| s.capacity[1])
         .fold(0.0, f64::max)
         .max(1.0);
     for (i, site) in world.sites.iter().enumerate() {
         let rgb = match layer {
-            Layer::Sugar => lerp(BACKGROUND, SUGAR, site.sugar / max_capacity),
-            Layer::Capacity => lerp(BACKGROUND, SUGAR, site.capacity / max_capacity),
-            Layer::Pollution => lerp(BACKGROUND, POLLUTION, site.pollution / max_pollution),
-            Layer::Spice => lerp(BACKGROUND, SPICE, site.spice / max_spice_capacity),
-            Layer::SpiceCapacity => {
-                lerp(BACKGROUND, SPICE, site.spice_capacity / max_spice_capacity)
-            }
+            Layer::Sugar => lerp(BACKGROUND, SUGAR, site.resource[0] / max_capacity),
+            Layer::Capacity => lerp(BACKGROUND, SUGAR, site.capacity[0] / max_capacity),
+            Layer::Pollution => lerp(BACKGROUND, POLLUTION, site.pollution[0] / max_pollution),
+            Layer::Spice => lerp(BACKGROUND, SPICE, site.resource[1] / max_spice_capacity),
+            Layer::SpiceCapacity => lerp(BACKGROUND, SPICE, site.capacity[1] / max_spice_capacity),
         };
         buf[i * 4..i * 4 + 4].copy_from_slice(&[rgb[0], rgb[1], rgb[2], 255]);
     }
@@ -158,7 +156,7 @@ pub fn render(world: &World, mode: ColorMode, layer: Layer, buf: &mut Vec<u8>) {
     let scales = Scales {
         log_max_wealth: world
             .agents()
-            .map(|a| a.sugar)
+            .map(|a| a.holdings[0])
             .fold(0.0, f64::max)
             .ln_1p()
             .max(1e-9),
@@ -214,7 +212,7 @@ mod tests {
     #[test]
     fn pollution_layer_uses_pollution_color() {
         let mut w = blank_world(10, 10);
-        w.site_mut(Pos::new(3, 3)).pollution = 2.0;
+        w.site_mut(Pos::new(3, 3)).pollution[0] = 2.0;
         let mut buf = Vec::new();
         render(&w, ColorMode::Tribe, Layer::Pollution, &mut buf);
         assert_eq!(pixel(&buf, &w, 3, 3)[..3], POLLUTION);
@@ -244,8 +242,8 @@ mod tests {
     #[test]
     fn spice_layer_and_credit_colors() {
         let mut w = blank_world(10, 10);
-        w.site_mut(Pos::new(1, 1)).spice = 4.0;
-        w.site_mut(Pos::new(1, 1)).spice_capacity = 4.0;
+        w.site_mut(Pos::new(1, 1)).resource[1] = 4.0;
+        w.site_mut(Pos::new(1, 1)).capacity[1] = 4.0;
         let a = spawn(&mut w, 4, 4);
         let b = spawn(&mut w, 5, 4);
         let c = spawn(&mut w, 6, 4);

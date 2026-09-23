@@ -23,19 +23,19 @@ use crate::world::{DeathCause, World};
 
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let me = world.agent(id).expect("live agent");
-    let (pos, vision, tribe, wealth) = (me.pos, me.vision, me.tribe(), me.sugar);
+    let (pos, vision, tribe, wealth) = (me.pos, me.vision, me.tribe(), me.holdings[0]);
     let cap = if world.config.combat.unlimited {
         f64::INFINITY
     } else {
         world.config.combat.reward
     };
 
-    let mut candidates = vec![(pos, 0, world.site(pos).sugar)];
+    let mut candidates = vec![(pos, 0, world.site(pos).resource[0])];
     for (q, d) in world.torus.sight(pos, vision) {
-        let site_sugar = world.site(q).sugar;
+        let site_sugar = world.site(q).resource[0];
         let reward = match world.agent_at(q) {
-            Some(o) if o.tribe() == tribe || o.sugar >= wealth => continue,
-            Some(o) => site_sugar + cap.min(o.sugar),
+            Some(o) if o.tribe() == tribe || o.holdings[0] >= wealth => continue,
+            Some(o) => site_sugar + cap.min(o.holdings[0]),
             None => site_sugar,
         };
         if vulnerable(world, id, q, vision, tribe, wealth + reward) {
@@ -48,19 +48,16 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let mut loot = 0.0;
     if let Some(victim_id) = world.occupant(target).filter(|&v| v != id) {
         let victim = world.agent_mut(victim_id).expect("occupant");
-        loot = cap.min(victim.sugar);
-        victim.sugar -= loot;
+        loot = cap.min(victim.holdings[0]);
+        victim.holdings[0] -= loot;
         world.kill(victim_id, DeathCause::Combat);
     }
     world.move_agent(id, target);
     let site = world.site_mut(target);
-    let gathered = site.sugar;
-    site.sugar = 0.0;
-    world.agent_mut(id).expect("live agent").sugar += gathered + loot;
-    Harvest {
-        sugar: gathered,
-        spice: 0.0,
-    }
+    let gathered = site.resource[0];
+    site.resource[0] = 0.0;
+    world.agent_mut(id).expect("live agent").holdings[0] += gathered + loot;
+    Harvest::of(&[gathered])
 }
 
 /// Whether some other-tribe agent visible from `target` would be wealthier
@@ -76,7 +73,7 @@ fn vulnerable(
     world.torus.sight(target, vision).into_iter().any(|(q, _)| {
         world
             .agent_at(q)
-            .is_some_and(|o| o.id != attacker && o.tribe() != tribe && o.sugar > after)
+            .is_some_and(|o| o.id != attacker && o.tribe() != tribe && o.holdings[0] > after)
     })
 }
 
@@ -96,14 +93,14 @@ mod tests {
         let id = spawn(w, x, y);
         let a = w.agent_mut(id).unwrap();
         a.tags = Tags::new(u64::MAX, a.tags.len());
-        a.sugar = sugar;
+        a.holdings[0] = sugar;
         id
     }
 
     fn blue(w: &mut World, x: u32, y: u32, sugar: f64, vision: u32) -> AgentId {
         let id = spawn(w, x, y);
         let a = w.agent_mut(id).unwrap();
-        a.sugar = sugar;
+        a.holdings[0] = sugar;
         a.vision = vision;
         id
     }
@@ -115,9 +112,9 @@ mod tests {
         let victim = red(&mut w, 5, 7, 3.0);
         set_sugar(&mut w, 5, 7, 1.0);
         let gathered = act(&mut w, me);
-        assert_eq!(gathered.sugar, 1.0);
+        assert_eq!(gathered.gathered[0], 1.0);
         assert_eq!(w.agent(me).unwrap().pos, Pos::new(5, 7));
-        assert_eq!(w.agent(me).unwrap().sugar, 14.0);
+        assert_eq!(w.agent(me).unwrap().holdings[0], 14.0);
         assert!(w.agent(victim).is_none());
         assert_eq!(w.events().deaths[0].cause, DeathCause::Combat);
     }
@@ -130,7 +127,7 @@ mod tests {
         let me = blue(&mut w, 5, 5, 10.0, 2);
         red(&mut w, 5, 7, 3.0);
         act(&mut w, me);
-        assert_eq!(w.agent(me).unwrap().sugar, 12.0);
+        assert_eq!(w.agent(me).unwrap().holdings[0], 12.0);
     }
 
     #[test]
@@ -144,7 +141,7 @@ mod tests {
         let orphan = red(&mut w, 12, 12, 1.0);
         w.agent_mut(victim).unwrap().children = vec![orphan];
         act(&mut w, me);
-        assert_eq!(w.agent(orphan).unwrap().sugar, 2.0);
+        assert_eq!(w.agent(orphan).unwrap().holdings[0], 2.0);
     }
 
     #[test]
@@ -183,6 +180,6 @@ mod tests {
         set_sugar(&mut w, 7, 5, 2.0);
         act(&mut w, me);
         assert_eq!(w.agent(me).unwrap().pos, Pos::new(7, 5));
-        assert_eq!(w.agent(me).unwrap().sugar, 12.0);
+        assert_eq!(w.agent(me).unwrap().holdings[0], 12.0);
     }
 }

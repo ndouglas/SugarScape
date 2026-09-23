@@ -3,38 +3,29 @@
 //! The two-peak map is a transcription of the book's Figure II-1, as
 //! distributed with the NetLogo Sugarscape models.
 
-use crate::config::LandscapeKind;
+use crate::config::{LandscapeKind, MAX_GOODS, MAX_POLLUTANTS};
 
 const TWO_PEAKS: &str = include_str!("../assets/sugar-map.txt");
 
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Site {
-    pub sugar: f64,
-    pub capacity: f64,
-    pub pollution: f64,
-    pub spice: f64,
-    pub spice_capacity: f64,
+    /// Level of each good; slots ≥ n stay 0.
+    pub resource: [f64; MAX_GOODS],
+    /// Capacity of each good; slots ≥ n stay 0.
+    pub capacity: [f64; MAX_GOODS],
+    /// Level of each pollutant; slots ≥ m stay 0.
+    pub pollution: [f64; MAX_POLLUTANTS],
 }
 
 impl Site {
-    /// A site whose sugar starts at capacity (no spice).
-    pub fn full(capacity: f64) -> Self {
-        Self {
-            sugar: capacity,
-            capacity,
-            pollution: 0.0,
-            spice: 0.0,
-            spice_capacity: 0.0,
+    /// A site whose goods start at the given capacities (in good order).
+    pub fn full(capacities: &[f64]) -> Self {
+        let mut site = Self::default();
+        for (i, &c) in capacities.iter().enumerate() {
+            site.resource[i] = c;
+            site.capacity[i] = c;
         }
-    }
-
-    /// The same site with spice at `capacity`.
-    pub fn with_spice(self, capacity: f64) -> Self {
-        Self {
-            spice: capacity,
-            spice_capacity: capacity,
-            ..self
-        }
+        site
     }
 }
 

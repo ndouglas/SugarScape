@@ -2,7 +2,7 @@
 
 use crate::agent::{Agent, AgentId, Sex, Tags};
 use crate::bits::Bits;
-use crate::config::{Config, LandscapeKind, Placement, URange};
+use crate::config::{Config, LandscapeKind, Placement, URange, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::world::World;
 
@@ -30,9 +30,9 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         id: 0,
         pos: Pos::new(x, y),
         vision: 1,
-        metabolism: 0,
-        sugar: 10.0,
-        initial_sugar: 10.0,
+        metabolism: [0; MAX_GOODS],
+        holdings: [10.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        initial: [10.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         age: 20,
         max_age: 100,
         sex: Sex::Female,
@@ -42,9 +42,6 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         parents: None,
         children: Vec::new(),
         born: 0,
-        spice: 10.0,
-        initial_spice: 10.0,
-        spice_metabolism: 0,
         foresight: 0,
         income: 0.0,
         immune_genome: Bits::new(0, world.config.disease.immune_length),
@@ -55,9 +52,14 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
     world.insert_agent(agent).expect("test site is empty")
 }
 
+/// Puts `amount` of `good` on a site, raising its capacity to match if needed.
+pub fn set_resource(world: &mut World, x: u32, y: u32, good: usize, amount: f64) {
+    let site = world.site_mut(Pos::new(x, y));
+    site.capacity[good] = site.capacity[good].max(amount);
+    site.resource[good] = amount;
+}
+
 /// Puts `sugar` on a site, raising its capacity to match if needed.
 pub fn set_sugar(world: &mut World, x: u32, y: u32, sugar: f64) {
-    let site = world.site_mut(Pos::new(x, y));
-    site.capacity = site.capacity.max(sugar);
-    site.sugar = sugar;
+    set_resource(world, x, y, 0, sugar);
 }

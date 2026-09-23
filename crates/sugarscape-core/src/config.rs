@@ -8,6 +8,12 @@ use std::collections::BTreeMap;
 
 use crate::agent::Sex;
 
+/// Most goods a world can hold (Appendix A's n-vectors). Site and agent
+/// arrays have this many slots; only goods 0..n are used.
+pub const MAX_GOODS: usize = 8;
+/// Most pollutants (Appendix A's m-vectors); only 0..m are used.
+pub const MAX_POLLUTANTS: usize = 4;
+
 /// Inclusive integer range sampled uniformly.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct URange {

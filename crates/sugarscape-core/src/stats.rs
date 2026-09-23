@@ -91,9 +91,9 @@ impl Snapshot {
             tick: world.tick,
             population: n as u32,
             gini: gini(&w),
-            mean_wealth: mean(&|a| a.sugar),
+            mean_wealth: mean(&|a| a.holdings[0]),
             mean_vision: mean(&|a| f64::from(a.vision)),
-            mean_metabolism: mean(&|a| f64::from(a.metabolism)),
+            mean_metabolism: mean(&|a| f64::from(a.metabolism[0])),
             blue_fraction: mean(&|a| if a.tribe() == Tribe::Blue { 1.0 } else { 0.0 }),
             births: world.events().births,
             deaths: world.events().deaths.len() as u32,
@@ -106,8 +106,8 @@ impl Snapshot {
             defaults: events.defaults,
             debt_outstanding: world.loans().map(|l| l.due).sum(),
             mean_foresight: mean(&|a| f64::from(a.foresight)),
-            mean_spice: mean(&|a| a.spice),
-            mean_spice_metabolism: mean(&|a| f64::from(a.spice_metabolism)),
+            mean_spice: mean(&|a| a.holdings[1]),
+            mean_spice_metabolism: mean(&|a| f64::from(a.metabolism[1])),
             infected_fraction: mean(&|a| if a.diseases.is_empty() { 0.0 } else { 1.0 }),
             mean_diseases: mean(&|a| a.diseases.len() as f64),
             diseases_in_circulation: world
@@ -181,7 +181,7 @@ impl Stats {
 }
 
 pub fn wealths(world: &World) -> Vec<f64> {
-    world.agents().map(|a| a.sugar).collect()
+    world.agents().map(|a| a.holdings[0]).collect()
 }
 
 /// G = 2·Σ i·x₍ᵢ₎ / (n·Σx) − (n+1)/n over ascending wealth, i from 1.
@@ -256,11 +256,12 @@ pub fn supply_demand(world: &World) -> SupplyDemand {
     let fee = world.config.disease.active_fee();
     for a in world.agents() {
         let (m1, m2) = (
-            a.effective_metabolism(fee),
-            a.effective_spice_metabolism(fee),
+            a.effective_metabolism(0, fee),
+            a.effective_metabolism(1, fee),
         );
         for (k, &p) in prices.iter().enumerate() {
-            let excess = crate::econ::sugar_demand(p, a.sugar, a.spice, m1, m2) - a.sugar;
+            let excess =
+                crate::econ::sugar_demand(p, a.holdings[0], a.holdings[1], m1, m2) - a.holdings[0];
             if excess > 0.0 {
                 demand[k] += excess
             } else {
@@ -385,7 +386,12 @@ mod tests {
         for (x, sugar, spice) in [(0, 30.0, 10.0), (1, 10.0, 30.0)] {
             let id = spawn(&mut w, x, 0);
             let a = w.agent_mut(id).unwrap();
-            (a.sugar, a.spice, a.metabolism, a.spice_metabolism) = (sugar, spice, 1, 1);
+            (
+                a.holdings[0],
+                a.holdings[1],
+                a.metabolism[0],
+                a.metabolism[1],
+            ) = (sugar, spice, 1, 1);
         }
         let sd = supply_demand(&w);
         assert_eq!(sd.prices.len(), 41);
@@ -407,7 +413,12 @@ mod tests {
         for (x, sugar, spice) in [(0, 30.0, 10.0), (1, 10.0, 30.0)] {
             let id = spawn(&mut w, x, 0);
             let a = w.agent_mut(id).unwrap();
-            (a.sugar, a.spice, a.metabolism, a.spice_metabolism) = (sugar, spice, 1, 3);
+            (
+                a.holdings[0],
+                a.holdings[1],
+                a.metabolism[0],
+                a.metabolism[1],
+            ) = (sugar, spice, 1, 3);
         }
         let healthy = supply_demand(&w);
         for a in w.agent_ids() {

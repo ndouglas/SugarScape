@@ -16,7 +16,7 @@
 use rand::seq::SliceRandom;
 use rand::Rng;
 
-use crate::agent::{Agent, AgentId, Sex};
+use crate::agent::{in_slot_0, Agent, AgentId, Sex};
 use crate::bits::Bits;
 use crate::geometry::Pos;
 use crate::world::World;
@@ -69,15 +69,25 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
             tags.set(i, b.tags.get(i));
         }
     }
-    let (from_a, from_b) = (a.initial_sugar / 2.0, b.initial_sugar / 2.0);
-    let (from_a_spice, from_b_spice) = (a.initial_spice / 2.0, b.initial_spice / 2.0);
+    let (from_a, from_b) = (a.initial[0] / 2.0, b.initial[0] / 2.0);
+    let (from_a_spice, from_b_spice) = (a.initial[1] / 2.0, b.initial[1] / 2.0);
+    let holdings = [
+        from_a + from_b,
+        from_a_spice + from_b_spice,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+    ];
     let mut child = Agent {
         id: 0,
         pos: cradle,
         vision: pick(rng, a.vision, b.vision),
-        metabolism: pick(rng, a.metabolism, b.metabolism),
-        sugar: from_a + from_b,
-        initial_sugar: from_a + from_b,
+        metabolism: in_slot_0(pick(rng, a.metabolism[0], b.metabolism[0])),
+        holdings,
+        initial: holdings,
         age: 0,
         max_age: pick(rng, a.max_age, b.max_age),
         sex,
@@ -87,9 +97,6 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         parents: Some([a_id, b_id]),
         children: Vec::new(),
         born: world.tick,
-        spice: from_a_spice + from_b_spice,
-        initial_spice: from_a_spice + from_b_spice,
-        spice_metabolism: 0,
         foresight: 0,
         income: 0.0,
         immune_genome: Bits::default(),
@@ -98,7 +105,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         infected_by: None,
     };
     if world.config.spice.enabled {
-        child.spice_metabolism = pick(rng, a.spice_metabolism, b.spice_metabolism);
+        child.metabolism[1] = pick(rng, a.metabolism[1], b.metabolism[1]);
     }
     if world.config.foresight.enabled {
         child.foresight = pick(rng, a.foresight, b.foresight);
@@ -114,11 +121,11 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         child.immune = genome;
     }
     let pa = world.agent_mut(a_id).expect("parent");
-    pa.sugar -= from_a;
-    pa.spice -= from_a_spice;
+    pa.holdings[0] -= from_a;
+    pa.holdings[1] -= from_a_spice;
     let pb = world.agent_mut(b_id).expect("parent");
-    pb.sugar -= from_b;
-    pb.spice -= from_b_spice;
+    pb.holdings[0] -= from_b;
+    pb.holdings[1] -= from_b_spice;
     let child_id = world.insert_agent(child).expect("cradle was empty");
     world
         .agent_mut(a_id)
@@ -146,9 +153,9 @@ mod tests {
             let d = w.agent_mut(dad).unwrap();
             d.sex = Sex::Male;
             d.vision = 4;
-            d.metabolism = 3;
-            d.initial_sugar = 6.0;
-            d.sugar = 6.0;
+            d.metabolism[0] = 3;
+            d.initial[0] = 6.0;
+            d.holdings[0] = 6.0;
             d.tags = Tags::new(u64::MAX, d.tags.len());
         }
         (mom, dad)
@@ -163,13 +170,13 @@ mod tests {
         assert_eq!(w.events().births, 1);
         let child = w.agents().find(|a| a.parents.is_some()).unwrap().clone();
         assert_eq!(child.parents, Some([mom, dad]));
-        assert_eq!(child.initial_sugar, 5.0 + 3.0);
-        assert_eq!(child.sugar, 8.0);
+        assert_eq!(child.initial[0], 5.0 + 3.0);
+        assert_eq!(child.holdings[0], 8.0);
         assert_eq!(child.age, 0);
         assert!([1, 4].contains(&child.vision));
-        assert!([0, 3].contains(&child.metabolism));
-        assert_eq!(w.agent(mom).unwrap().sugar, 5.0);
-        assert_eq!(w.agent(dad).unwrap().sugar, 3.0);
+        assert!([0, 3].contains(&child.metabolism[0]));
+        assert_eq!(w.agent(mom).unwrap().holdings[0], 5.0);
+        assert_eq!(w.agent(dad).unwrap().holdings[0], 3.0);
         assert_eq!(w.agent(mom).unwrap().children, vec![child.id]);
         assert_eq!(w.agent(dad).unwrap().children, vec![child.id]);
         let near = |p: Pos| {
@@ -196,7 +203,7 @@ mod tests {
         act(&mut w, mom);
         assert_eq!(w.population(), 2);
         w.agent_mut(dad).unwrap().age = 20;
-        w.agent_mut(dad).unwrap().sugar = 5.0; // below its endowment of 6
+        w.agent_mut(dad).unwrap().holdings[0] = 5.0; // below its endowment of 6
         act(&mut w, mom);
         assert_eq!(w.population(), 2);
     }
@@ -234,19 +241,19 @@ mod tests {
         let (mom, dad) = couple(&mut w);
         for id in [mom, dad] {
             let a = w.agent_mut(id).unwrap();
-            a.spice = 8.0;
-            a.initial_spice = 8.0;
-            a.spice_metabolism = if id == mom { 2 } else { 3 };
+            a.holdings[1] = 8.0;
+            a.initial[1] = 8.0;
+            a.metabolism[1] = if id == mom { 2 } else { 3 };
         }
-        w.agent_mut(dad).unwrap().spice = 7.0; // below its spice endowment
+        w.agent_mut(dad).unwrap().holdings[1] = 7.0; // below its spice endowment
         act(&mut w, mom);
         assert_eq!(w.population(), 2, "infertile without enough spice");
-        w.agent_mut(dad).unwrap().spice = 8.0;
+        w.agent_mut(dad).unwrap().holdings[1] = 8.0;
         act(&mut w, mom);
         let child = w.agents().find(|a| a.parents.is_some()).unwrap().clone();
-        assert_eq!((child.spice, child.initial_spice), (8.0, 8.0));
-        assert!([2, 3].contains(&child.spice_metabolism));
-        assert_eq!(w.agent(mom).unwrap().spice, 4.0);
+        assert_eq!((child.holdings[1], child.initial[1]), (8.0, 8.0));
+        assert!([2, 3].contains(&child.metabolism[1]));
+        assert_eq!(w.agent(mom).unwrap().holdings[1], 4.0);
     }
 
     #[test]

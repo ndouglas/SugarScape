@@ -86,11 +86,11 @@ fn check(world: &World) -> Result<(), TestCaseError> {
         let pos = world.torus.pos(i);
         let site = world.site(pos);
         prop_assert!(
-            site.sugar <= site.capacity + 1e-9,
+            site.resource[0] <= site.capacity[0] + 1e-9,
             "sugar above capacity at {pos:?}"
         );
-        prop_assert!(site.sugar >= 0.0 && site.pollution >= 0.0);
-        prop_assert!(site.spice <= site.spice_capacity + 1e-9);
+        prop_assert!(site.resource[0] >= 0.0 && site.pollution[0] >= 0.0);
+        prop_assert!(site.resource[1] <= site.capacity[1] + 1e-9);
         if let Some(id) = world.occupant(pos) {
             occupied += 1;
             prop_assert_eq!(world.agent(id).map(|a| a.pos), Some(pos));
@@ -102,9 +102,19 @@ fn check(world: &World) -> Result<(), TestCaseError> {
         "one agent per site, all indexed"
     );
     for a in world.agents() {
-        prop_assert!(a.sugar > 0.0, "living agent {} has sugar {}", a.id, a.sugar);
+        prop_assert!(
+            a.holdings[0] > 0.0,
+            "living agent {} has sugar {}",
+            a.id,
+            a.holdings[0]
+        );
         if world.config.spice.enabled {
-            prop_assert!(a.spice > 0.0, "living agent {} has spice {}", a.id, a.spice);
+            prop_assert!(
+                a.holdings[1] > 0.0,
+                "living agent {} has spice {}",
+                a.id,
+                a.holdings[1]
+            );
         }
     }
     for l in world.loans() {

@@ -124,7 +124,7 @@ impl World {
             sites: caps
                 .into_iter()
                 .zip(spice)
-                .map(|(sugar, spice)| Site::full(sugar).with_spice(spice))
+                .map(|(sugar, spice)| Site::full(&[sugar, spice]))
                 .collect(),
             landscape_edited: capacities.is_some(),
             diseases: Vec::new(),
@@ -326,22 +326,22 @@ impl World {
         let disease = self.config.disease.enabled;
         eat(self.tick);
         for s in &self.sites {
-            eat(s.sugar.to_bits());
-            eat(s.capacity.to_bits());
-            eat(s.pollution.to_bits());
+            eat(s.resource[0].to_bits());
+            eat(s.capacity[0].to_bits());
+            eat(s.pollution[0].to_bits());
             if spice {
-                eat(s.spice.to_bits());
-                eat(s.spice_capacity.to_bits());
+                eat(s.resource[1].to_bits());
+                eat(s.capacity[1].to_bits());
             }
         }
         for a in self.agents.values() {
             eat(a.id);
             eat((u64::from(a.pos.x) << 32) | u64::from(a.pos.y));
-            eat(a.sugar.to_bits());
+            eat(a.holdings[0].to_bits());
             eat(u64::from(a.age));
             eat(a.tags.bits());
             if spice {
-                eat(a.spice.to_bits());
+                eat(a.holdings[1].to_bits());
             }
             if foresight {
                 eat(u64::from(a.foresight));
@@ -420,13 +420,13 @@ impl World {
             .filter(|c| self.agents.contains_key(c))
             .collect();
         let n = heirs.len() as f64;
-        let sugar = if agent.sugar > 0.0 {
-            agent.sugar / n
+        let sugar = if agent.holdings[0] > 0.0 {
+            agent.holdings[0] / n
         } else {
             0.0
         };
-        let spice = if agent.spice > 0.0 {
-            agent.spice / n
+        let spice = if agent.holdings[1] > 0.0 {
+            agent.holdings[1] / n
         } else {
             0.0
         };
@@ -435,8 +435,8 @@ impl World {
         }
         for heir in heirs {
             let h = self.agents.get_mut(&heir).expect("living heir");
-            h.sugar += sugar;
-            h.spice += spice;
+            h.holdings[0] += sugar;
+            h.holdings[1] += spice;
         }
     }
 
@@ -556,12 +556,12 @@ mod tests {
         for a in w.agents() {
             assert_eq!(w.occupant(a.pos), Some(a.id));
             assert!((1..=6).contains(&a.vision));
-            assert!((1..=4).contains(&a.metabolism));
-            assert!((5.0..=25.0).contains(&a.sugar));
-            assert_eq!(a.sugar, a.initial_sugar);
+            assert!((1..=4).contains(&a.metabolism[0]));
+            assert!((5.0..=25.0).contains(&a.holdings[0]));
+            assert_eq!(a.holdings[0], a.initial[0]);
         }
         assert_eq!(
-            w.site(Pos::new(37, 5)).sugar,
+            w.site(Pos::new(37, 5)).resource[0],
             4.0,
             "sugar starts at capacity"
         );
@@ -600,7 +600,7 @@ mod tests {
         assert_eq!(err[0].field, "landscape");
         let w = World::with_capacities(Config::default(), 1, Some(&[2.0; 2500])).unwrap();
         assert!(w.landscape_edited);
-        assert_eq!(w.site(Pos::new(0, 0)).capacity, 2.0);
+        assert_eq!(w.site(Pos::new(0, 0)).capacity[0], 2.0);
     }
 
     #[test]
@@ -640,7 +640,7 @@ mod tests {
             w.population()
         );
         for a in w.agents() {
-            assert!(a.sugar > 0.0);
+            assert!(a.holdings[0] > 0.0);
             assert_eq!(a.age, 100, "immortal first generation ages every tick");
         }
     }
@@ -710,5 +710,31 @@ mod tests {
         let on = w.fingerprint();
         w.diseases.push(crate::bits::Bits::parse("101").unwrap());
         assert_ne!(w.fingerprint(), on, "the disease list is hashed");
+    }
+
+    #[test]
+    fn goods_are_stored_in_per_good_slots() {
+        let mut c = Config::default();
+        c.spice.enabled = true;
+        let w = World::new(c, 1).unwrap();
+        assert_eq!(
+            w.site(Pos::new(37, 5)).capacity[0],
+            4.0,
+            "sugar's northeast peak"
+        );
+        assert_eq!(
+            w.site(Pos::new(12, 5)).capacity[1],
+            4.0,
+            "spice's northwest peak"
+        );
+        assert!(w
+            .sites
+            .iter()
+            .all(|s| s.resource[2..].iter().all(|&x| x == 0.0)));
+        for a in w.agents() {
+            assert_eq!(a.holdings[..2], a.initial[..2]);
+            assert!((1..=4).contains(&a.metabolism[1]));
+            assert!(a.holdings[2..].iter().all(|&x| x == 0.0));
+        }
     }
 }

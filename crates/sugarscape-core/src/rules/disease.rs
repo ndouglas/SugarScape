@@ -273,7 +273,10 @@ mod tests {
         let a = w.agent(id).unwrap();
         assert_eq!(a.immune.to_bit_string(), "1001101001");
         assert!(a.diseases.is_empty(), "cured");
-        assert_eq!(a.sugar, 9.0, "metabolism 0 plus a fee of 1 for one disease");
+        assert_eq!(
+            a.holdings[0], 9.0,
+            "metabolism 0 plus a fee of 1 for one disease"
+        );
     }
 
     #[test]

@@ -41,7 +41,7 @@ mod tests {
     fn each_death_is_replaced_by_a_fresh_agent_of_the_same_tribe() {
         let mut w = replacing_world();
         let id = spawn(&mut w, 2, 2);
-        w.agent_mut(id).unwrap().metabolism = 50;
+        w.agent_mut(id).unwrap().metabolism[0] = 50;
         w.step();
         assert!(w.agent(id).is_none());
         assert_eq!(w.population(), 1);
@@ -56,7 +56,7 @@ mod tests {
     fn no_replacement_when_disabled() {
         let mut w = blank_world(5, 5);
         let id = spawn(&mut w, 2, 2);
-        w.agent_mut(id).unwrap().metabolism = 50;
+        w.agent_mut(id).unwrap().metabolism[0] = 50;
         w.step();
         assert_eq!(w.population(), 0);
     }
@@ -67,7 +67,7 @@ mod tests {
         w.config.disease.enabled = true;
         w.diseases = vec![crate::bits::Bits::parse("1111111111").unwrap()];
         let id = spawn(&mut w, 2, 2);
-        w.agent_mut(id).unwrap().metabolism = 50;
+        w.agent_mut(id).unwrap().metabolism[0] = 50;
         w.step();
         let newcomer = w.agents().next().unwrap();
         assert_eq!(newcomer.immune.len(), 50);

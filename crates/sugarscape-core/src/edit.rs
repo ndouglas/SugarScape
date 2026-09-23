@@ -128,8 +128,8 @@ impl World {
                     continue;
                 }
                 let site = self.site_mut(self.torus.offset(center, dx, dy));
-                site.capacity = value;
-                site.sugar = site.sugar.min(value);
+                site.capacity[0] = value;
+                site.resource[0] = site.resource[0].min(value);
             }
         }
         self.landscape_edited = true;
@@ -143,11 +143,11 @@ impl World {
             agent.vision = v;
         }
         if let Some(m) = o.metabolism {
-            agent.metabolism = m;
+            agent.metabolism[0] = m;
         }
         if let Some(s) = o.sugar {
-            agent.sugar = s;
-            agent.initial_sugar = s;
+            agent.holdings[0] = s;
+            agent.initial[0] = s;
         }
         if let Some(sex) = o.sex {
             agent.sex = sex;
@@ -190,9 +190,9 @@ impl World {
             tribe: a.tribe(),
             tags: a.tags.to_bit_string(),
             vision: a.vision,
-            metabolism: a.metabolism,
-            sugar: a.sugar,
-            initial_sugar: a.initial_sugar,
+            metabolism: a.metabolism[0],
+            sugar: a.holdings[0],
+            initial_sugar: a.initial[0],
             age: a.age,
             max_age: a.max_age,
             fertile: a.is_fertile(),
@@ -204,9 +204,9 @@ impl World {
                 .map(|p| p.iter().map(|&id| link(id)).collect())
                 .unwrap_or_default(),
             children: a.children.iter().map(|&id| link(id)).collect(),
-            spice: a.spice,
-            initial_spice: a.initial_spice,
-            spice_metabolism: a.spice_metabolism,
+            spice: a.holdings[1],
+            initial_spice: a.initial[1],
+            spice_metabolism: a.metabolism[1],
             foresight: a.foresight,
             loans: self
                 .loans()
@@ -245,11 +245,11 @@ impl World {
             site: SiteView {
                 x,
                 y,
-                sugar: s.sugar,
-                capacity: s.capacity,
-                pollution: s.pollution,
-                spice: s.spice,
-                spice_capacity: s.spice_capacity,
+                sugar: s.resource[0],
+                capacity: s.capacity[0],
+                pollution: s.pollution[0],
+                spice: s.resource[1],
+                spice_capacity: s.capacity[1],
             },
             agent,
         })
@@ -269,7 +269,7 @@ impl World {
     }
 
     pub fn capacities(&self) -> Vec<f64> {
-        self.sites.iter().map(|s| s.capacity).collect()
+        self.sites.iter().map(|s| s.capacity[0]).collect()
     }
 
     fn disease_on(&self) -> Result<(), String> {
@@ -369,17 +369,17 @@ mod tests {
     fn painting_sets_capacity_in_a_disc_and_clamps_sugar() {
         let mut w = blank_world(20, 20);
         for i in 0..w.sites.len() {
-            w.sites[i].capacity = 4.0;
-            w.sites[i].sugar = 4.0;
+            w.sites[i].capacity[0] = 4.0;
+            w.sites[i].resource[0] = 4.0;
         }
         w.paint_capacity(10, 10, 1, 1.0).unwrap();
         assert!(w.landscape_edited);
         for p in [(10, 10), (10, 9), (11, 10), (9, 10), (10, 11)] {
             let s = w.site(Pos::new(p.0, p.1));
-            assert_eq!((s.capacity, s.sugar), (1.0, 1.0), "{p:?}");
+            assert_eq!((s.capacity[0], s.resource[0]), (1.0, 1.0), "{p:?}");
         }
         assert_eq!(
-            w.site(Pos::new(11, 11)).capacity,
+            w.site(Pos::new(11, 11)).capacity[0],
             4.0,
             "radius 1 disc excludes diagonals"
         );
@@ -414,11 +414,11 @@ mod tests {
         w.config.inheritance.enabled = true;
         let parent = spawn(&mut w, 1, 1);
         let child = spawn(&mut w, 2, 1);
-        w.agent_mut(parent).unwrap().sugar = 30.0;
+        w.agent_mut(parent).unwrap().holdings[0] = 30.0;
         w.agent_mut(parent).unwrap().children = vec![child];
-        let before = w.agent(child).unwrap().sugar;
+        let before = w.agent(child).unwrap().holdings[0];
         w.remove_agent(1, 1).unwrap();
-        assert_eq!(w.agent(child).unwrap().sugar, before);
+        assert_eq!(w.agent(child).unwrap().holdings[0], before);
         assert_eq!(w.occupant(Pos::new(1, 1)), None);
         assert!(w.events().deaths.is_empty());
     }
