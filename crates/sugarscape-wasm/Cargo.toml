@@ -13,6 +13,7 @@ sugarscape-core = { path = "../sugarscape-core" }
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
 serde_json.workspace = true
+js-sys = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

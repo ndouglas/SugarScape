@@ -7,6 +7,7 @@ use sugarscape_core::render::{self, ColorMode, Layer};
 use sugarscape_core::world::World;
 use sugarscape_core::{export, network, presets, stats};
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
 #[wasm_bindgen(start)]
 pub fn start() {
@@ -31,9 +32,39 @@ pub fn default_config_json() -> String {
     serde_json::to_string(&Config::default()).expect("config serializes")
 }
 
-#[wasm_bindgen]
-pub fn series_names_json() -> String {
-    serde_json::to_string(&stats::SERIES).expect("names serialize")
+/// Per-good landscapes from JS (Decision 16): null/undefined → none; a
+/// Uint8Array → good 0's (a pre-N-goods share link); an array → one entry per
+/// good, each a Uint8Array or null.
+fn landscapes_from_js(value: &JsValue) -> Result<Vec<Option<Vec<f64>>>, JsValue> {
+    let bytes = |v: &JsValue| -> Vec<f64> {
+        js_sys::Uint8Array::new(v)
+            .to_vec()
+            .into_iter()
+            .map(f64::from)
+            .collect()
+    };
+    if value.is_null() || value.is_undefined() {
+        return Ok(Vec::new());
+    }
+    if value.is_instance_of::<js_sys::Uint8Array>() {
+        return Ok(vec![Some(bytes(value))]);
+    }
+    if js_sys::Array::is_array(value) {
+        return Ok(js_sys::Array::from(value)
+            .iter()
+            .map(|v| {
+                if v.is_null() || v.is_undefined() {
+                    None
+                } else {
+                    Some(bytes(&v))
+                }
+            })
+            .collect());
+    }
+    Err(field_errors(vec![FieldError::new(
+        "landscape",
+        "expected null, a Uint8Array or an array of Uint8Array | null",
+    )]))
 }
 
 #[wasm_bindgen]
@@ -42,14 +73,25 @@ pub struct Sim {
     frame: Vec<u8>,
 }
 
+impl Sim {
+    fn good(&self, good: u32) -> Result<usize, JsValue> {
+        let g = good as usize;
+        if g < self.world.config.goods.len() {
+            Ok(g)
+        } else {
+            Err(edit_error(format!("there is no good {good}")))
+        }
+    }
+}
+
 #[wasm_bindgen]
 impl Sim {
     #[wasm_bindgen(constructor)]
-    pub fn new(config_json: &str, seed: u32, capacities: Option<Vec<u8>>) -> Result<Sim, JsValue> {
+    pub fn new(config_json: &str, seed: u32, landscapes: JsValue) -> Result<Sim, JsValue> {
         let config = Config::from_json(config_json).map_err(field_errors)?;
-        let caps: Option<Vec<f64>> = capacities.map(|c| c.into_iter().map(f64::from).collect());
-        let world = World::with_capacities(config, u64::from(seed), caps.as_deref())
-            .map_err(field_errors)?;
+        let landscapes = landscapes_from_js(&landscapes)?;
+        let world =
+            World::with_landscapes(config, u64::from(seed), &landscapes).map_err(field_errors)?;
         Ok(Sim {
             world,
             frame: Vec::new(),
@@ -125,9 +167,10 @@ impl Sim {
         y: u32,
         radius: u32,
         value: f64,
+        good: u32,
     ) -> Result<(), JsValue> {
         self.world
-            .paint_capacity(x, y, radius, value, 0)
+            .paint_capacity(x, y, radius, value, good as usize)
             .map_err(edit_error)
     }
 
@@ -153,17 +196,26 @@ impl Sim {
         serde_json::to_string(&self.world.config).expect("config serializes")
     }
 
-    /// Capacities rounded to bytes, row-major.
-    pub fn export_landscape(&self) -> Vec<u8> {
-        self.world
-            .capacities(0)
+    /// Good `good`'s capacities rounded to bytes, row-major.
+    pub fn export_landscape(&self, good: u32) -> Result<Vec<u8>, JsValue> {
+        let g = self.good(good)?;
+        Ok(self
+            .world
+            .capacities(g)
             .into_iter()
             .map(|c| c.round().clamp(0.0, 255.0) as u8)
-            .collect()
+            .collect())
     }
 
-    pub fn landscape_edited(&self) -> bool {
-        self.world.landscape_edited(0)
+    /// Whether good `good`'s capacities differ from its generated map.
+    pub fn landscape_edited(&self, good: u32) -> bool {
+        self.world.landscape_edited(good as usize)
+    }
+
+    /// JSON list of this world's series names (they depend on its goods and
+    /// pollutants).
+    pub fn series_names(&self) -> String {
+        serde_json::to_string(&stats::series_names(&self.world.config)).expect("names serialize")
     }
 
     pub fn export_series_csv(&self) -> String {

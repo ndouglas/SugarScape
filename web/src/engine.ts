@@ -251,8 +251,8 @@ export class Engine {
 
   paint(x: number, y: number, radius: number, value: number): FieldError[] | null {
     return this.edit(() => {
-      this.sim.paint_capacity(x, y, radius, value);
-      this.customLandscape = this.sim.export_landscape();
+      this.sim.paint_capacity(x, y, radius, value, 0);
+      this.customLandscape = this.sim.export_landscape(0);
     });
   }
 
