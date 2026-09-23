@@ -24,9 +24,16 @@ describe('share links', () => {
   });
 
   it('rejects garbage', async () => {
-    await expect(decodeShare('not-a-real-token')).rejects.toThrow();
+    await expect(decodeShare('not-a-real-token')).rejects.toThrow('not a SugarScape share link');
     const wrong = bytesToBase64Url(new TextEncoder().encode('{}'));
-    await expect(decodeShare(wrong)).rejects.toThrow();
+    await expect(decodeShare(wrong)).rejects.toThrow('not a SugarScape share link');
+  });
+
+  it('rejects a valid payload whose config is an array', async () => {
+    const json = new TextEncoder().encode(JSON.stringify({ v: 1, s: 1, c: [] }));
+    const compressed = new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    const token = bytesToBase64Url(new Uint8Array(await new Response(compressed).arrayBuffer()));
+    await expect(decodeShare(token)).rejects.toThrow('not a SugarScape share link');
   });
 
   it('base64url round-trips every padding length', () => {

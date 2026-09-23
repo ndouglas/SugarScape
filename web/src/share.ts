@@ -29,14 +29,24 @@ export async function encodeShare(state: ShareState): Promise<string> {
 }
 
 export async function decodeShare(token: string): Promise<ShareState> {
-  const json = await pipe(base64UrlToBytes(token), new DecompressionStream('deflate-raw'));
-  const wire = JSON.parse(new TextDecoder().decode(json)) as Partial<Wire>;
-  if (wire.v !== 1 || typeof wire.s !== 'number' || typeof wire.c !== 'object' || wire.c === null) {
+  try {
+    const json = await pipe(base64UrlToBytes(token), new DecompressionStream('deflate-raw'));
+    const wire = JSON.parse(new TextDecoder().decode(json)) as Partial<Wire>;
+    if (
+      wire.v !== 1 ||
+      typeof wire.s !== 'number' ||
+      typeof wire.c !== 'object' ||
+      wire.c === null ||
+      Array.isArray(wire.c)
+    ) {
+      throw new Error('not a SugarScape share link');
+    }
+    const state: ShareState = { config: wire.c, seed: wire.s >>> 0 };
+    if (wire.l) state.landscape = base64UrlToBytes(wire.l);
+    return state;
+  } catch {
     throw new Error('not a SugarScape share link');
   }
-  const state: ShareState = { config: wire.c, seed: wire.s >>> 0 };
-  if (wire.l) state.landscape = base64UrlToBytes(wire.l);
-  return state;
 }
 
 export function readHash(hash: string = location.hash): string | null {
