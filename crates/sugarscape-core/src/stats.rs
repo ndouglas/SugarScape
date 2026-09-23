@@ -78,7 +78,10 @@ impl Snapshot {
 
         // Calculate mean and sd of log prices from trades
         let events = world.events();
-        let logs: Vec<f64> = events.trades.iter().map(|t| t.price.ln()).collect();
+        // Chapter IV's price and quantity series are for the pair (0, 1).
+        let first_pair: Vec<&crate::world::Trade> =
+            events.trades.iter().filter(|t| t.goods == (0, 1)).collect();
+        let logs: Vec<f64> = first_pair.iter().map(|t| t.price.ln()).collect();
         let (mean_log_price, sd_log_price) = if logs.is_empty() {
             (0.0, 0.0)
         } else {
@@ -100,7 +103,7 @@ impl Snapshot {
             mean_log_price,
             sd_log_price,
             trade_volume: events.trades.len() as u32,
-            sugar_traded: events.trades.iter().map(|t| t.sugar).sum(),
+            sugar_traded: first_pair.iter().map(|t| t.amount).sum(),
             loans_made: events.loans_made,
             amount_lent: events.amount_lent,
             defaults: events.defaults,
@@ -279,12 +282,17 @@ pub fn supply_demand(world: &World) -> SupplyDemand {
             break;
         }
     }
-    let trades = &world.events().trades;
+    let trades: Vec<_> = world
+        .events()
+        .trades
+        .iter()
+        .filter(|t| t.goods == (0, 1))
+        .collect();
     let (actual_price, actual_quantity) = if trades.is_empty() {
         (f64::NAN, f64::NAN)
     } else {
         let m = trades.iter().map(|t| t.price.ln()).sum::<f64>() / trades.len() as f64;
-        (m.exp(), trades.iter().map(|t| t.sugar).sum())
+        (m.exp(), trades.iter().map(|t| t.amount).sum())
     };
     SupplyDemand {
         prices,
@@ -358,14 +366,16 @@ mod tests {
             Trade {
                 buyer: 1,
                 seller: 2,
+                goods: (0, 1),
                 price: 2.0,
-                sugar: 1.0,
+                amount: 1.0,
             },
             Trade {
                 buyer: 1,
                 seller: 2,
+                goods: (0, 1),
                 price: 0.5,
-                sugar: 2.0,
+                amount: 2.0,
             },
         ];
         w.events.loans_made = 3;
@@ -376,6 +386,29 @@ mod tests {
         for name in SERIES {
             assert!(s.value(name).is_some(), "{name}");
         }
+    }
+
+    #[test]
+    fn prices_come_from_the_first_pair_and_volume_from_every_pair() {
+        use crate::testkit::*;
+        use crate::world::Trade;
+        let mut w = blank_world(5, 5);
+        let t = |goods, price, amount| Trade {
+            buyer: 1,
+            seller: 2,
+            goods,
+            price,
+            amount,
+        };
+        w.events.trades = vec![
+            t((0, 1), 2.0, 1.0),
+            t((1, 2), 8.0, 1.0),
+            t((0, 1), 2.0, 3.0),
+        ];
+        let s = Snapshot::of(&w);
+        assert!((s.mean_log_price - 2f64.ln()).abs() < 1e-12);
+        assert_eq!(s.sd_log_price, 0.0);
+        assert_eq!((s.trade_volume, s.sugar_traded), (3, 4.0));
     }
 
     #[test]

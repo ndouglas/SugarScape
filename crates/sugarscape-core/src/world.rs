@@ -27,14 +27,15 @@ pub struct Death {
     pub cause: DeathCause,
 }
 
-/// One exchange under rule T: `buyer` received `sugar` sugar and paid
-/// `sugar × price` spice to `seller`.
+/// One exchange under rule T: `buyer` received `amount` units of good
+/// `goods.0` and paid `amount × price` units of good `goods.1` to `seller`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Trade {
     pub buyer: AgentId,
     pub seller: AgentId,
+    pub goods: (usize, usize),
     pub price: f64,
-    pub sugar: f64,
+    pub amount: f64,
 }
 
 /// One infection: `infector` gave `disease` to `infected` (`None` for an

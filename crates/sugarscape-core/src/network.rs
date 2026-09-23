@@ -84,14 +84,16 @@ mod tests {
             Trade {
                 buyer: a,
                 seller: b,
+                goods: (0, 1),
                 price: 1.0,
-                sugar: 1.0,
+                amount: 1.0,
             },
             Trade {
                 buyer: b,
                 seller: a,
+                goods: (0, 1),
                 price: 1.0,
-                sugar: 1.0,
+                amount: 1.0,
             },
         ];
         assert_eq!(
