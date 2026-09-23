@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Config } from './types';
 import { base64UrlToBytes, bytesToBase64Url, decodeShare, encodeShare, readHash } from './share';
+import { LEGACY_SHARE_TOKEN } from './legacy-share.fixture';
 
 const config = { width: 50, height: 50, population: 400, sex: { enabled: true } } as unknown as Config;
 
@@ -55,5 +56,15 @@ describe('share links', () => {
     expect(readHash('#s=abc_-1')).toBe('abc_-1');
     expect(readHash('#other')).toBeNull();
     expect(readHash('')).toBeNull();
+  });
+});
+
+describe('legacy share links', () => {
+  it('decodes a link made before N goods', async () => {
+    const state = await decodeShare(LEGACY_SHARE_TOKEN);
+    expect(state.seed).toBe(7);
+    const config = state.config as unknown as Record<string, { enabled?: boolean }>;
+    expect(config.spice?.enabled).toBe(true);
+    expect(state.landscape?.length).toBe(2500);
   });
 });

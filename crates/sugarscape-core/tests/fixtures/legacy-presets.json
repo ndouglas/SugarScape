@@ -1,0 +1,2865 @@
+{
+  "ii-1-instant": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": true,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "ii-2-unit": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "ii-5-wealth": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": true
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "ii-6-waves": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "height": 25,
+      "kind": "block",
+      "width": 25,
+      "x": 0,
+      "y": 25
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 10,
+      "min": 1
+    },
+    "width": 50
+  },
+  "ii-7-seasons": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": true,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "ii-8-pollution": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [
+      {
+        "set": {
+          "pollution.enabled": true
+        },
+        "tick": 50
+      },
+      {
+        "set": {
+          "diffusion.enabled": true
+        },
+        "tick": 100
+      }
+    ],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iii-11-combat-fixed": {
+    "combat": {
+      "enabled": true,
+      "reward": 2.0,
+      "unlimited": false
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "tribes",
+      "size": 20
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": true
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iii-12-collision": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "tribes",
+      "size": 20
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 10,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iii-14-combat-culture": {
+    "combat": {
+      "enabled": true,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": true
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "tribes",
+      "size": 20
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iii-2-sex": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 100,
+      "min": 50
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": true,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iii-4-inheritance": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 100,
+      "min": 50
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": true
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": true,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iii-6-culture": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": true
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iii-9-combat": {
+    "combat": {
+      "enabled": true,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "tribes",
+      "size": 20
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iv-1-spice": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 50,
+      "min": 25
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 5,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": true,
+      "endowment": {
+        "max": 50,
+        "min": 25
+      },
+      "metabolism": {
+        "max": 5,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 10,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iv-15-trade-sex": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 50,
+      "min": 25
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 5,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 200,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": true,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": true,
+      "endowment": {
+        "max": 50,
+        "min": 25
+      },
+      "metabolism": {
+        "max": 5,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": true
+    },
+    "vision": {
+      "max": 5,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iv-18-foresight": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 50,
+      "min": 25
+    },
+    "foresight": {
+      "enabled": true,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": true,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": true,
+      "endowment": {
+        "max": 50,
+        "min": 25
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iv-3-pollution": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 50,
+      "min": 25
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 5,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 200,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [
+      {
+        "set": {
+          "pollution.enabled": true
+        },
+        "tick": 100
+      },
+      {
+        "set": {
+          "pollution.production": 0.0
+        },
+        "tick": 150
+      },
+      {
+        "set": {
+          "pollution.consumption": 0.0
+        },
+        "tick": 150
+      },
+      {
+        "set": {
+          "diffusion.enabled": true
+        },
+        "tick": 150
+      }
+    ],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": true,
+      "endowment": {
+        "max": 50,
+        "min": 25
+      },
+      "metabolism": {
+        "max": 5,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": true
+    },
+    "vision": {
+      "max": 5,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iv-3-trade": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 50,
+      "min": 25
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 5,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 200,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": true,
+      "endowment": {
+        "max": 50,
+        "min": 25
+      },
+      "metabolism": {
+        "max": 5,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": true
+    },
+    "vision": {
+      "max": 5,
+      "min": 1
+    },
+    "width": 50
+  },
+  "iv-5-credit": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": true,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 100,
+      "min": 50
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": true,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "v-1-rid": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": true,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "v-2-endemic": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 25,
+      "disease_mutation": 0.0,
+      "enabled": true,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 10,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 25,
+      "min": 5
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "v-mcneill": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": true,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": [
+        {
+          "agents": 5,
+          "length": {
+            "max": 10,
+            "min": 10
+          },
+          "tick": 300
+        }
+      ]
+    },
+    "endowment": {
+      "max": 100,
+      "min": 50
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": true,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": false,
+      "endowment": {
+        "max": 25,
+        "min": 5
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": false
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  },
+  "vi-1-everything": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": true,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": true
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 25,
+      "disease_mutation": 0.0,
+      "enabled": true,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 10,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": [
+        {
+          "agents": 20,
+          "length": {
+            "max": 10,
+            "min": 10
+          },
+          "tick": 150
+        },
+        {
+          "agents": 20,
+          "length": {
+            "max": 10,
+            "min": 10
+          },
+          "tick": 400
+        },
+        {
+          "agents": 20,
+          "length": {
+            "max": 10,
+            "min": 10
+          },
+          "tick": 650
+        }
+      ]
+    },
+    "endowment": {
+      "max": 50,
+      "min": 25
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": true
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": true,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 4,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 400,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": true,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": true,
+      "endowment": {
+        "max": 50,
+        "min": 25
+      },
+      "metabolism": {
+        "max": 4,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": true
+    },
+    "vision": {
+      "max": 6,
+      "min": 1
+    },
+    "width": 50
+  }
+}

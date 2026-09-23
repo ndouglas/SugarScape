@@ -1,0 +1,151 @@
+{
+  "c": {
+    "combat": {
+      "enabled": false,
+      "reward": 2.0,
+      "unlimited": true
+    },
+    "credit": {
+      "duration": 10,
+      "enabled": false,
+      "rate": 10.0
+    },
+    "culture": {
+      "enabled": false
+    },
+    "diffusion": {
+      "enabled": false,
+      "every": 1
+    },
+    "disease": {
+      "count": 10,
+      "disease_mutation": 0.0,
+      "enabled": false,
+      "fee": 1.0,
+      "flips_per_tick": 1,
+      "genome_mutation": 0.0,
+      "immune_length": 50,
+      "initial": 4,
+      "length": {
+        "max": 10,
+        "min": 1
+      },
+      "outbreaks": []
+    },
+    "endowment": {
+      "max": 50,
+      "min": 25
+    },
+    "foresight": {
+      "enabled": false,
+      "range": {
+        "max": 10,
+        "min": 0
+      }
+    },
+    "growback": {
+      "instant": false,
+      "rate": 1.0
+    },
+    "height": 50,
+    "inheritance": {
+      "enabled": false
+    },
+    "landscape": {
+      "kind": "two_peaks"
+    },
+    "lifespan": {
+      "enabled": false,
+      "max_age": {
+        "max": 100,
+        "min": 60
+      }
+    },
+    "metabolism": {
+      "max": 5,
+      "min": 1
+    },
+    "placement": {
+      "kind": "random"
+    },
+    "pollution": {
+      "consumption": 1.0,
+      "enabled": false,
+      "production": 1.0,
+      "spice_pollutes": false
+    },
+    "population": 150,
+    "replacement": {
+      "enabled": false
+    },
+    "schedule": [
+      {
+        "set": {
+          "pollution.enabled": true
+        },
+        "tick": 100
+      },
+      {
+        "set": {
+          "pollution.production": 0.0
+        },
+        "tick": 150
+      },
+      {
+        "set": {
+          "pollution.consumption": 0.0
+        },
+        "tick": 150
+      },
+      {
+        "set": {
+          "diffusion.enabled": true
+        },
+        "tick": 150
+      }
+    ],
+    "seasons": {
+      "enabled": false,
+      "period": 50,
+      "winter_divisor": 8
+    },
+    "sex": {
+      "enabled": false,
+      "female_end": {
+        "max": 50,
+        "min": 40
+      },
+      "fertility_onset": {
+        "max": 15,
+        "min": 12
+      },
+      "male_end": {
+        "max": 60,
+        "min": 50
+      }
+    },
+    "spice": {
+      "enabled": true,
+      "endowment": {
+        "max": 50,
+        "min": 25
+      },
+      "metabolism": {
+        "max": 5,
+        "min": 1
+      }
+    },
+    "tag_length": 11,
+    "trade": {
+      "enabled": true
+    },
+    "vision": {
+      "max": 5,
+      "min": 1
+    },
+    "width": 50
+  },
+  "l": "AAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAgICAgICAgICAwMDAwMDAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQICAgICAgICAwMDAwMDAwMDAwICAgICAgAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQECAgICAgICAwMDAwMDAwMDAwMDAwMCAgICAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQICAgICAgMDAwMDAwMDAwMDAwMDAwMCAgIAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQECAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMCAgAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQICAgICAgMDAwMDAwMEBAQEAwMDAwMDAwICAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAgICAgIDAwMDAwMEBAQEBAQEBAMDAwMDAwIAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQICAgICAgMDAwMDBAQEBAQEBAQEBAMDAwMDAgAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAgICAgIDAwMDAwMEBAQEBAQEBAQEAwMDAwMDAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQECAgICAgMDAwMDBAQEBAQEBAQEBAQEAwMDAwMAAAAAAAAAAAAAAAABAQEBAQEBAQEBAgICAgICAwMDAwMEBAQEBAQEBAQEBAQDAwMDAwAAAAAAAAAAAAAAAQEBAQEBAQEBAQECAgICAgIDAwMDAwQEBAQEBAQEBAQEBAMDAwMDAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQICAgICAgMDAwMDBAQEBAQEBAQEBAQEAwMDAwMAAAAAAAAAAAABAQEBAQEBAQEBAQEBAgICAgICAwMDAwMDBAQEBAQEBAQEBAMDAwMDAwAAAAAAAAABAQEBAQEBAQEBAQEBAQICAgICAgIDAwMDAwMEBAQEBAQEBAQEAwMDAwMCAAAAAAABAQEBAQEBAQEBAQEBAQECAgICAgICAgMDAwMDAwMEBAQEBAQEBAMDAwMDAwIBAQEBAQEBAQEBAQEBAQEBAQEBAgICAgICAgICAwMDAwMDAwMDBAQEBAMDAwMDAwMCAgEBAQEBAQEBAQEBAQEBAQEBAQICAgICAgICAgICAwMDAwMDAwMDAwMDAwMDAwMDAwICAQEBAQEBAQEBAQEBAQEBAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMCAgIBAQEBAQEBAQEBAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAwMDAgICAgEBAQEBAQEBAgICAgICAgICAgICAgICAgICAgICAgIDAwMDAwMDAwMDAwMDAgICAgICAQEBAQEBAgICAgICAgICAgICAgICAgICAgICAgICAgICAwMDAwMDAwMDAgICAgICAgIBAQEBAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAQEBAQICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgEBAQECAgICAgICAgICAwMDAwMDAwMDAgICAgICAgICAgICAgICAgICAgICAgICAgIBAQEBAgICAgICAgICAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgICAgIBAQEBAQECAgICAgICAwMDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgICAgICAgEBAQEBAQEBAgICAgICAgMDAwMDAwMDAwMDAwMDAwMDAwICAgICAgICAgICAgIBAQEBAQEBAQEBAQECAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAgICAgICAgICAgICAQEBAQEBAQEBAQEBAQICAgICAgMDAwMDAwMEBAQEAwMDAwMDAwMDAgICAgICAgICAgEBAQEBAQEBAQEBAQEBAgICAgIDAwMDAwMEBAQEBAQEBAMDAwMDAwMCAgICAgICAgICAQEBAQEBAQEBAQEAAAACAgICAgMDAwMDBAQEBAQEBAQEBAMDAwMDAwICAgICAgICAQEBAQEBAQEBAQEBAAAAAAICAgIDAwMDAwMEBAQEBAQEBAQEAwMDAwMDAgICAgICAgIBAQEBAQEBAQEBAAAAAAAAAgICAgMDAwMDBAQEBAQEBAQEBAQEAwMDAwMCAgICAgIBAQEBAQEBAQEBAAAAAAAAAAACAgICAwMDAwMEBAQEBAQEBAQEBAQDAwMDAwICAgICAgEBAQEBAQEBAQEAAAAAAAAAAAICAgIDAwMDAwQEBAQEBAQEBAQEBAMDAwMDAgICAgICAQEBAQEBAQEBAAAAAAAAAAAAAgICAgMDAwMDBAQEBAQEBAQEBAQEAwMDAwMCAgICAgEBAQEBAQEBAQAAAAAAAAAAAAACAgICAwMDAwMDBAQEBAQEBAQEBAMDAwMDAwICAgICAQEBAQEBAQEAAAAAAAAAAAAAAAICAgICAwMDBAQEBAQEBAQEBAQEAwMDAwMCAgICAgIBAQEBAQEBAQAAAAAAAAAAAAAAAgICAgIDAwMEBAQEBAQEBAQEBAMDAwMDAwICAgICAQEBAQEBAQEAAAAAAAAAAAAAAAACAgICAgIDBAQEBAQEBAQEBAMDAwMDAwMCAgICAgIBAQEBAQEBAAAAAAAAAAAAAAAAAAICAgICAgMDBAQEBAQDAwMDAwMDAwMDAwICAgICAgEBAQEBAQEAAAAAAAAAAAAAAAAAAgICAgICAgMEBAQEBAMDAwMDAwMDAwMCAgICAgIBAQEBAQEBAQAAAAAAAAAAAAAAAAABAgICAgICAgMDBAMDAwMDAwMDAwMDAgICAgICAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAECAgICAgICAgIDAwMDAwMDAwMDAgICAgICAgIBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAQECAgICAgICAgICAwMDAwMDAgICAgICAgICAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAABAQECAgICAgICAgICAgICAgICAgICAgICAgEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAEBAQECAgICAgICAgICAgICAgICAgICAgIBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAQEBAQEBAgICAgICAgICAgICAgICAgIBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAABAQEBAQEBAQICAgICAgICAgICAgIBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAA",
+  "s": 7,
+  "v": 1
+}
