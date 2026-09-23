@@ -316,7 +316,7 @@ pub fn all() -> Vec<Preset> {
             "vi-1-everything",
             "({G₁}, {M, S, I, K, T, L, E})",
             "Chapter VI",
-            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease.",
+            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650 (as in the book's McNeill discussion).",
             |c| {
                 demography(c);
                 c.inheritance.enabled = true;
@@ -344,36 +344,54 @@ pub fn all() -> Vec<Preset> {
                 // 1808, 1728, 1836, 1845). 25-50, the first range in the
                 // required trial order that clears the >=50-agent bar, is
                 // used.
-                //
-                // infected_fraction at t=250/500/1000 is 0.000 for every seed
-                // at all three endowment ranges (population is not the
-                // limiting factor here). Diagnostic run (seeds 1-2, 25-50):
-                // infected_fraction falls from ~1.0 at t=0 to 0 by t~60-70,
-                // and diseases_in_circulation reaches 0 by t=100 - i.e. every
-                // disease actually goes extinct, not merely diluted by
-                // population growth. This happens during this preset's own
-                // early population crash (t=0 400 -> t=50 ~200-223 ->
-                // t=100 ~129-226, before the later recovery to ~1750+ by
-                // t=1000): the population most exposed to disease is also the
-                // population dying fastest (starvation, disease fee, and
-                // finite lifespan together), so every disease is cured or
-                // dies with its carriers well before the population regrows,
-                // and with no remaining carriers disease can never return.
-                // v-2-endemic alone (no sex/lifespan, no crash) stays endemic
-                // at ~4-6% at the same tick range, so the extinction here is
-                // this preset's population dynamics, not the disease
-                // parameters. Switching from V-1's defaults (10 diseases, 4
-                // per agent) to V-2's (25/10) did not change this outcome:
-                // disease still reaches full extinction, if anything slightly
-                // earlier. Endowment and diseases-per-agent were the only
-                // levers specified for this fix; population stays >=50 at
-                // every range tried, so the "fall back to 6 diseases per
-                // agent" contingency does not apply here. Left as 25-50/25/10
-                // pending further guidance, since no prescribed lever fixes
-                // the extinction; see the task-13 fix report for the full
-                // measurement tables.
                 c.endowment = URange::new(25, 50);
                 c.spice.endowment = URange::new(25, 50);
+                // Fix round 1 found that with the endemic (25/10) disease
+                // load alone, this preset's own early population crash (sex
+                // + lifespan + spice + trade + credit together: t=0 400 ->
+                // t~100 ~130-230, before recovering to ~1750+ by t=1000)
+                // wipes out every carried disease by t~60-100, and with no
+                // remaining carriers disease can never return -
+                // infected_fraction is 0.000 from then on. Fix round 2
+                // (this): scheduled outbreaks reseed a novel disease at
+                // t=150, 400 and 650, each offered to 20 agents (as in the
+                // book's McNeill discussion of new diseases meeting a
+                // settled society) - well after the crash and spaced through
+                // the growth/plateau phase.
+                //
+                // Measured (seeds 1-5, t=1000 population and infected_fraction
+                // at t=200/500/800/1000): population stays healthy (1810,
+                // 1770, 1760, 1776, 1737), well above the 50-agent bar.
+                // infected_fraction is 0.000 at all four sampled ticks for
+                // every seed: each outbreak's disease is a fresh random
+                // string (length 1-10, same as disease.length), and a large,
+                // rapidly-adapting population (per round 1) makes most
+                // agents already immune to short strings by chance (a 50-bit
+                // immune string is very likely to already contain any
+                // length-1 or length-2 pattern as a substring), so the takes
+                // are small and short-lived. A finer-grained diagnostic
+                // confirmed the outbreaks do fire and occasionally infect a
+                // few agents (e.g. one seed saw 9 new infections in the 10
+                // ticks after the t=150 outbreak, and a brief 0.5% blip
+                // shortly after the t=400 outbreak in another seed) but each
+                // spike is gone again within single-digit ticks, so it
+                // never survives to the 200/500/800/1000 sampling points.
+                // Per the controller's round-2 ruling this (infection
+                // vanishing between outbreaks) is an acceptable outcome.
+                c.disease.outbreaks = vec![
+                    Outbreak {
+                        tick: 150,
+                        agents: 20,
+                    },
+                    Outbreak {
+                        tick: 400,
+                        agents: 20,
+                    },
+                    Outbreak {
+                        tick: 650,
+                        agents: 20,
+                    },
+                ];
             },
         ),
     ]
