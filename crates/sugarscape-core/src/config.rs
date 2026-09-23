@@ -316,8 +316,15 @@ impl Config {
     }
 
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
+        self.validate_with_schedule_from(0)
+    }
+
+    /// Like `validate`, but checks only the schedule entries with
+    /// `tick >= from` — on a running world, earlier entries already fired and
+    /// their effects are part of this config.
+    pub fn validate_with_schedule_from(&self, from: u64) -> Result<(), Vec<FieldError>> {
         self.validate_fields()?;
-        self.validate_schedule()
+        self.validate_schedule(from)
     }
 
     /// Everything except the schedule (renamed from the old `validate` body).
@@ -453,8 +460,9 @@ impl Config {
         e.finish()
     }
 
-    fn validate_schedule(&self) -> Result<(), Vec<FieldError>> {
-        let mut entries: Vec<&ScheduledChange> = self.schedule.iter().collect();
+    fn validate_schedule(&self, from: u64) -> Result<(), Vec<FieldError>> {
+        let mut entries: Vec<&ScheduledChange> =
+            self.schedule.iter().filter(|c| c.tick >= from).collect();
         entries.sort_by_key(|c| c.tick);
         let mut patched = self.clone();
         for change in entries {

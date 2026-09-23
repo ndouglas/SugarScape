@@ -452,8 +452,10 @@ impl World {
         }
     }
 
-    /// Applies scheduled changes due at the tick about to run. Entries were
-    /// validated with the config, so failures are impossible; they are ignored.
+    /// Applies scheduled changes due at the tick about to run. Entries not yet
+    /// fired were validated against the config that reaches them (`World::new`
+    /// checks the whole schedule; `set_config` checks entries with
+    /// `tick >= self.tick`), so failures should not happen; any are ignored.
     fn apply_schedule(&mut self) {
         let due: Vec<_> = self
             .config

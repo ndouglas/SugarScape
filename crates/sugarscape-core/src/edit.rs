@@ -215,8 +215,9 @@ impl World {
 
     /// Swaps in a new config mid-run. Rule toggles and parameters take effect
     /// on the next tick; grid size, tag length and landscape need a reset.
+    /// Only schedule entries that have not fired yet are validated.
     pub fn set_config(&mut self, next: Config) -> Result<(), Vec<FieldError>> {
-        next.validate()?;
+        next.validate_with_schedule_from(self.tick)?;
         let structural = self.config.structural_changes(&next);
         if !structural.is_empty() {
             return Err(structural);
@@ -325,6 +326,38 @@ mod tests {
         bad.metabolism.min = 9;
         bad.metabolism.max = 1;
         assert_eq!(w.set_config(bad).unwrap_err()[0].field, "metabolism");
+    }
+
+    #[test]
+    fn set_config_ignores_schedule_entries_that_already_fired() {
+        use crate::config::ScheduledChange;
+        let mut c = blank_config(10, 10);
+        c.lifespan.enabled = true;
+        c.schedule = vec![ScheduledChange {
+            tick: 1,
+            set: [("replacement.enabled".to_string(), serde_json::json!(true))]
+                .into_iter()
+                .collect(),
+        }];
+        let mut w = World::new(c, 1).unwrap();
+        w.run(2);
+        assert!(w.config.replacement.enabled, "t=1 entry fired");
+        // Re-applying the t=1 entry to this config would enable replacement
+        // without lifespan, but that entry is in the past.
+        let mut next = w.config.clone();
+        next.replacement.enabled = false;
+        next.lifespan.enabled = false;
+        w.set_config(next).unwrap();
+        assert!(!w.config.lifespan.enabled);
+        // Entries still to come are validated.
+        let mut next = w.config.clone();
+        next.schedule.push(ScheduledChange {
+            tick: 5,
+            set: [("replacement.enabled".to_string(), serde_json::json!(true))]
+                .into_iter()
+                .collect(),
+        });
+        assert_eq!(w.set_config(next).unwrap_err()[0].field, "schedule");
     }
 
     #[test]
