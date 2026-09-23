@@ -72,10 +72,15 @@ impl World {
             Some(c) => c.to_vec(),
             None => landscape::capacities(&config.landscape, config.width, config.height),
         };
+        let spice = landscape::spice_capacities(&config.landscape, config.width, config.height);
         let mut world = World {
             torus,
             tick: 0,
-            sites: caps.into_iter().map(Site::full).collect(),
+            sites: caps
+                .into_iter()
+                .zip(spice)
+                .map(|(sugar, spice)| Site::full(sugar).with_spice(spice))
+                .collect(),
             landscape_edited: capacities.is_some(),
             agents: BTreeMap::new(),
             occupancy: vec![None; torus.len()],
@@ -217,11 +222,16 @@ impl World {
                 h = h.wrapping_mul(0x0100_0000_01b3);
             }
         };
+        let spice = self.config.spice.enabled;
         eat(self.tick);
         for s in &self.sites {
             eat(s.sugar.to_bits());
             eat(s.capacity.to_bits());
             eat(s.pollution.to_bits());
+            if spice {
+                eat(s.spice.to_bits());
+                eat(s.spice_capacity.to_bits());
+            }
         }
         for a in self.agents.values() {
             eat(a.id);

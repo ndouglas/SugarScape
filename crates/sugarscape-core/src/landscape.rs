@@ -12,15 +12,28 @@ pub struct Site {
     pub sugar: f64,
     pub capacity: f64,
     pub pollution: f64,
+    pub spice: f64,
+    pub spice_capacity: f64,
 }
 
 impl Site {
-    /// A site whose sugar starts at capacity.
+    /// A site whose sugar starts at capacity (no spice).
     pub fn full(capacity: f64) -> Self {
         Self {
             sugar: capacity,
             capacity,
             pollution: 0.0,
+            spice: 0.0,
+            spice_capacity: 0.0,
+        }
+    }
+
+    /// The same site with spice at `capacity`.
+    pub fn with_spice(self, capacity: f64) -> Self {
+        Self {
+            spice: capacity,
+            spice_capacity: capacity,
+            ..self
         }
     }
 }
@@ -34,6 +47,21 @@ pub fn capacities(kind: &LandscapeKind, width: u32, height: u32) -> Vec<f64> {
             .map(|t| t.parse::<f64>().expect("sugar map holds integers"))
             .collect(),
         LandscapeKind::Flat { capacity } => vec![capacity; (width * height) as usize],
+    }
+}
+
+/// Spice capacities: the two-peak sugar map mirrored left↔right, putting spice
+/// mountains in the northwest and southeast (the book's Figure IV-1).
+pub fn spice_capacities(kind: &LandscapeKind, width: u32, height: u32) -> Vec<f64> {
+    let sugar = capacities(kind, width, height);
+    match kind {
+        LandscapeKind::TwoPeaks => {
+            let (w, h) = (width as usize, height as usize);
+            (0..w * h)
+                .map(|i| sugar[(i / w) * w + (w - 1 - i % w)])
+                .collect()
+        }
+        LandscapeKind::Flat { .. } => sugar,
     }
 }
 
@@ -57,5 +85,23 @@ mod tests {
         let caps = capacities(&LandscapeKind::Flat { capacity: 2.5 }, 10, 12);
         assert_eq!(caps.len(), 120);
         assert!(caps.iter().all(|&c| c == 2.5));
+    }
+
+    #[test]
+    fn spice_map_mirrors_sugar_map_into_northwest_and_southeast() {
+        let sugar = capacities(&LandscapeKind::TwoPeaks, 50, 50);
+        let spice = spice_capacities(&LandscapeKind::TwoPeaks, 50, 50);
+        let at = |v: &[f64], x: usize, y: usize| v[y * 50 + x];
+        assert_eq!(at(&spice, 12, 5), 4.0, "northwest peak");
+        assert_eq!(at(&spice, 34, 40), 4.0, "southeast peak");
+        for y in 0..50 {
+            for x in 0..50 {
+                assert_eq!(at(&spice, x, y), at(&sugar, 49 - x, y));
+            }
+        }
+        assert_eq!(
+            spice_capacities(&LandscapeKind::Flat { capacity: 3.0 }, 5, 5),
+            vec![3.0; 25]
+        );
     }
 }

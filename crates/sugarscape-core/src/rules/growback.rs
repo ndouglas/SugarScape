@@ -26,6 +26,7 @@ pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
 
 pub(crate) fn apply(world: &mut World) {
     let instant = world.config.growback.instant;
+    let spice = world.config.spice.enabled;
     for i in 0..world.sites.len() {
         let rate = rate_at(&world.config, world.tick, world.torus.pos(i).y);
         let site = &mut world.sites[i];
@@ -34,6 +35,13 @@ pub(crate) fn apply(world: &mut World) {
         } else {
             (site.sugar + rate).min(site.capacity)
         };
+        if spice {
+            site.spice = if instant {
+                site.spice_capacity
+            } else {
+                (site.spice + rate).min(site.spice_capacity)
+            };
+        }
     }
 }
 
@@ -86,5 +94,16 @@ mod tests {
     fn without_seasons_rate_is_uniform() {
         let c = blank_config(10, 10);
         assert_eq!(rate_at(&c, 75, 9), 1.0);
+    }
+
+    #[test]
+    fn spice_grows_back_only_when_enabled() {
+        let mut w = world_with_empty_site(3.0);
+        w.site_mut(Pos::new(3, 3)).spice_capacity = 3.0;
+        apply(&mut w);
+        assert_eq!(w.site(Pos::new(3, 3)).spice, 0.0);
+        w.config.spice.enabled = true;
+        apply(&mut w);
+        assert_eq!(w.site(Pos::new(3, 3)).spice, 1.0);
     }
 }
