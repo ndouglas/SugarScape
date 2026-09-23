@@ -174,17 +174,39 @@ impl Sim {
         export::agents_csv(&self.world)
     }
 
-    /// Edges as `[x1, y1, x2, y2, …]` for `"trade"` (this tick) or `"credit"` (outstanding).
+    /// Edges as `[x1, y1, x2, y2, …]` for `"trade"` (this tick), `"credit"` (outstanding) or `"disease"` (infector → infected, this tick).
     pub fn networks(&self, kind: &str) -> Result<Vec<u32>, JsValue> {
         let edges = match kind {
             "trade" => network::trade_edges(&self.world),
             "credit" => network::credit_edges(&self.world),
+            "disease" => network::disease_edges(&self.world),
             _ => return Err(edit_error(format!("unknown network {kind:?}"))),
         };
         Ok(edges
             .into_iter()
             .flat_map(|(a, b)| [a.x, a.y, b.x, b.y])
             .collect())
+    }
+
+    /// JSON `[{ id, bits, carriers }]`.
+    pub fn disease_list(&self) -> String {
+        serde_json::to_string(&self.world.disease_list()).expect("list serializes")
+    }
+
+    /// Infects the agent at (x, y) with `disease` (−1 = a brand-new random
+    /// disease). Returns whether it was infected.
+    pub fn infect(&mut self, x: u32, y: u32, disease: i32) -> Result<bool, JsValue> {
+        self.world
+            .infect(x, y, i64::from(disease))
+            .map_err(edit_error)
+    }
+
+    /// Vaccinates every agent within `radius` of (x, y) against `disease`.
+    /// Returns how many agents were vaccinated.
+    pub fn vaccinate(&mut self, x: u32, y: u32, radius: u32, disease: u32) -> Result<u32, JsValue> {
+        self.world
+            .vaccinate(x, y, radius, disease)
+            .map_err(edit_error)
     }
 
     /// `[n, prices(n), demand(n), supply(n), eq_price, eq_quantity, actual_price, actual_quantity]`.

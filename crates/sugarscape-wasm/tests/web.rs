@@ -65,3 +65,34 @@ fn trade_preset_exposes_networks_and_supply_demand() {
     assert!(sim.networks("gossip").is_err());
     sim.render("credit", "spice").unwrap();
 }
+
+#[wasm_bindgen_test]
+fn disease_api_lists_infects_and_vaccinates() {
+    let mut off = Sim::new("{}", 1, None).unwrap();
+    assert!(off.infect(0, 0, -1).is_err(), "disease is off");
+
+    let mut sim = Sim::new(r#"{"disease":{"enabled":true}}"#, 1, None).unwrap();
+    let list: serde_json::Value = serde_json::from_str(&sim.disease_list()).unwrap();
+    assert_eq!(list.as_array().unwrap().len(), 10);
+    assert!(list[0]["bits"].is_string() && list[0]["carriers"].is_number());
+    let p = sim.locate(1.0).unwrap();
+    sim.infect(p[0], p[1], -1).unwrap();
+    let list: serde_json::Value = serde_json::from_str(&sim.disease_list()).unwrap();
+    assert_eq!(
+        list.as_array().unwrap().len(),
+        11,
+        "a new disease was appended"
+    );
+    assert_eq!(sim.vaccinate(p[0], p[1], 0, 10).unwrap(), 1);
+    let view: serde_json::Value = serde_json::from_str(&sim.inspect(p[0], p[1]).unwrap()).unwrap();
+    let carried = view["agent"]["diseases"].as_array().unwrap();
+    assert!(
+        carried.iter().all(|d| d["id"] != 10),
+        "vaccinated against #10"
+    );
+    assert!(sim.vaccinate(p[0], p[1], 0, 99).is_err());
+    sim.step(3);
+    assert_eq!(sim.networks("disease").unwrap().len() % 4, 0);
+    sim.render("disease", "sugar").unwrap();
+    assert_eq!(sim.series("new_infections").unwrap().len(), 4);
+}
