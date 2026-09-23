@@ -1,10 +1,11 @@
 import type { Engine } from '../engine';
+import { goodsEditorSignature, pollutionEditorSignature } from '../goods';
 import { errorsFor, getPath, setPath } from '../paths';
 import { GROUPS, type Control } from '../schema';
 import { scheduleLines } from '../schedule';
 import type { Config, FieldError, URange } from '../types';
 import { h } from './dom';
-import { goodsEditor, type Commit } from './goods-editor';
+import { goodsEditor, type Commit, type Editor } from './goods-editor';
 import { pollutionEditor } from './pollution-editor';
 
 /** Preset picker plus one section per rule, generated from GROUPS. */
@@ -12,6 +13,8 @@ export class RulesPanel {
   readonly el = h('div', { class: 'rules' });
   private errors: FieldError[] = [];
   private syncers: (() => void)[] = [];
+  /** The Goods editor's and Pollution table's syncers, which painting cannot affect. */
+  private editorSyncers: (() => void)[] = [];
   private errorSlots: { path: string; el: HTMLElement; withField: boolean }[] = [];
   private general = h('div', { class: 'error' });
 
@@ -20,7 +23,7 @@ export class RulesPanel {
     engine.on('reset', () => this.sync());
     engine.on('config', () => this.sync());
     // Painting changes the landscape, which counts as a modification.
-    engine.on('edit', () => this.sync());
+    engine.on('edit', () => this.sync(false));
     this.sync();
   }
 
@@ -37,8 +40,9 @@ export class RulesPanel {
     this.renderErrors();
   }
 
-  private sync(): void {
+  private sync(editors = true): void {
     this.syncers.forEach((s) => s());
+    if (editors) this.editorSyncers.forEach((s) => s());
   }
 
   private renderErrors(): void {
@@ -118,12 +122,27 @@ export class RulesPanel {
     );
   }
 
+  /**
+   * Rebuilds the Goods editor or Pollution table only when its structure changes; otherwise
+   * refreshes its values in place, so focus and half-typed input survive live and scheduled edits.
+   */
   private customEditor(kind: 'goods' | 'pollution'): HTMLElement[] {
     const holder = h('div');
     const commit: Commit = (mutate, reset) => this.commit(mutate, reset);
-    this.syncers.push(() =>
-      holder.replaceChildren(kind === 'goods' ? goodsEditor(this.engine.config, commit) : pollutionEditor(this.engine.config, commit)),
-    );
+    const [build, signature] = kind === 'goods' ? [goodsEditor, goodsEditorSignature] : [pollutionEditor, pollutionEditorSignature];
+    let built: string | null = null;
+    let current: Editor | null = null;
+    this.editorSyncers.push(() => {
+      const config = this.engine.config;
+      const next = signature(config);
+      if (current && next === built) {
+        current.sync(config);
+        return;
+      }
+      built = next;
+      current = build(config, commit);
+      holder.replaceChildren(current.el);
+    });
     return [holder, this.errorSlot(kind === 'goods' ? 'goods' : 'pollution.pollutants', true)];
   }
 

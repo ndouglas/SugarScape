@@ -1,6 +1,7 @@
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
+import { chartsSignature } from '../goods';
 import { h } from './dom';
 import { compactNumber } from './format';
 
@@ -53,7 +54,7 @@ export class ChartsPanel {
   private addTimeChart!: (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => void;
   private goodsSection = h('section', { class: 'goods' });
   private pollutionSection = h('section', { class: 'pollution' });
-  /** Plots whose lines follow the goods and pollutants; rebuilt on reset and config. */
+  /** Plots whose lines follow the goods and pollutants; rebuilt when `chartsSignature` changes. */
   private dynamic = new Set<uPlot>();
   /** Captions that name the traded pair (0, 1). */
   private pairCaptions: { el: HTMLElement; title: string }[] = [];
@@ -226,7 +227,7 @@ export class ChartsPanel {
       },
     );
 
-    // Market charts need spice; loan charts need credit; the section needs
+    // Market charts need two goods; loan charts need credit; the section needs
     // either. The disease section needs disease.
     const economy = h('section', { class: 'economy' }, h('h3', {}, 'Economy'));
     const disease = h('section', { class: 'disease' }, h('h3', {}, 'Disease'));
@@ -244,9 +245,17 @@ export class ChartsPanel {
       for (const p of this.plots) p.figure.hidden = !p.visible();
       this.drawnTick = null;
     };
-    this.engine.on('reset', () => this.rebuildGoodsCharts());
-    this.engine.on('config', () => this.rebuildGoodsCharts());
-    this.rebuildGoodsCharts();
+    // Rebuilt only when the goods' or pollutants' lines change, not on every config event.
+    let lines = '';
+    const syncGoodsCharts = () => {
+      const next = chartsSignature(this.engine.config);
+      if (next === lines) return;
+      lines = next;
+      this.rebuildGoodsCharts();
+    };
+    this.engine.on('reset', syncGoodsCharts);
+    this.engine.on('config', syncGoodsCharts);
+    syncGoodsCharts();
     this.engine.on('reset', syncSection);
     this.engine.on('config', syncSection);
 

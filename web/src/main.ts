@@ -58,7 +58,7 @@ async function main(): Promise<void> {
       }
       setTimeout(() => (shareButton.textContent = 'Share'), 2000);
     },
-    title: 'Copy a link to this setup (config, seed and painted landscape; hand-placed agents are not included)',
+    title: 'Copy a link to this setup (config, seed and the painted capacity of every good; hand-placed agents are not included)',
   }, 'Share');
   const menu = h(
     'details',

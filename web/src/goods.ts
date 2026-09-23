@@ -25,6 +25,43 @@ function unusedName(taken: string[], stem: string, from: number): string {
   return `${stem} ${k}`;
 }
 
+/** Whether `parts` is `pollution.pollutants.K.{production,consumption,devalues}…`. */
+function isCoefficients(parts: string[]): boolean {
+  return parts.length >= 4 && parts[0] === 'pollution' && parts[1] === 'pollutants' && ['production', 'consumption', 'devalues'].includes(parts[3]);
+}
+
+/** Whether `parts` sets a whole pollutant or a whole coefficient array, whose length is the number of goods. */
+function setsGoodColumns(parts: string[]): boolean {
+  return (parts.length === 3 && parts[0] === 'pollution' && parts[1] === 'pollutants') || (parts.length === 4 && isCoefficients(parts));
+}
+
+/** For a removed index: false if `parts[at]` names it, otherwise true, moving higher indices down one. */
+function shiftIndex(parts: string[], at: number, removed: number): boolean {
+  const seg = parts[at];
+  if (!/^\d+$/.test(seg)) return true;
+  const j = Number(seg);
+  if (j === removed) return false;
+  if (j > removed) parts[at] = String(j - 1);
+  return true;
+}
+
+/**
+ * Rewrites every scheduled path's segments with `keep` (mirrors `Config::retarget_schedule`),
+ * dropping the paths it rejects and then the changes left with none.
+ */
+function retargetSchedule(config: Config, keep: (parts: string[]) => boolean): void {
+  config.schedule = config.schedule
+    .map((change) => {
+      const set: Record<string, unknown> = {};
+      for (const [path, value] of Object.entries(change.set)) {
+        const parts = path.split('.');
+        if (keep(parts)) set[parts.join('.')] = value;
+      }
+      return { ...change, set };
+    })
+    .filter((change) => Object.keys(change.set).length > 0);
+}
+
 export function newPeak(config: Config): Peak {
   return {
     x: Math.floor(config.width / 2),
@@ -64,6 +101,7 @@ export function addGood(config: Config): void {
     p.devalues.push(false);
   }
   config.combat.enabled = false;
+  retargetSchedule(config, (parts) => !setsGoodColumns(parts));
 }
 
 /** Removes good `i` (never the last one) and its pollutant columns; trade and foresight switch off below two goods. */
@@ -79,6 +117,12 @@ export function removeGood(config: Config, i: number): void {
     config.trade.enabled = false;
     config.foresight.enabled = false;
   }
+  retargetSchedule(config, (parts) => {
+    if (parts.length >= 2 && parts[0] === 'goods') return shiftIndex(parts, 1, i);
+    if (setsGoodColumns(parts)) return false;
+    if (parts.length >= 5 && isCoefficients(parts)) return shiftIndex(parts, 4, i);
+    return true;
+  });
 }
 
 export function newPollutant(config: Config): Pollutant {
@@ -98,5 +142,29 @@ export function addPollutant(config: Config): void {
 
 export function removePollutant(config: Config, k: number): void {
   const list = config.pollution.pollutants;
-  if (list.length > 1 && k >= 0 && k < list.length) list.splice(k, 1);
+  if (list.length <= 1 || k < 0 || k >= list.length) return;
+  list.splice(k, 1);
+  retargetSchedule(config, (parts) =>
+    parts.length >= 3 && parts[0] === 'pollution' && parts[1] === 'pollutants' ? shiftIndex(parts, 2, k) : true,
+  );
+}
+
+/*
+ * Structure signatures: the UI rebuilds a view only when its signature changes,
+ * and otherwise updates values in place (so focus and half-typed input survive).
+ */
+
+/** The goods editor's structure: grid size (peak bounds), goods count, map kinds and peak counts. */
+export function goodsEditorSignature(config: Config): string {
+  return JSON.stringify([config.width, config.height, config.goods.map((g) => [g.map.kind, g.map.kind === 'peaks' ? g.map.peaks.length : 0])]);
+}
+
+/** The pollution table's structure: its goods columns (names, colors) and pollutant count. */
+export function pollutionEditorSignature(config: Config): string {
+  return JSON.stringify([config.goods.map((g) => [g.name, g.color]), config.pollution.pollutants.length]);
+}
+
+/** The per-good and per-pollutant charts' lines: goods' names and colors, pollutants' names. */
+export function chartsSignature(config: Config): string {
+  return JSON.stringify([config.goods.map((g) => [g.name, g.color]), config.pollution.pollutants.map((p) => p.name)]);
 }

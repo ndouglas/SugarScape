@@ -44,15 +44,25 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     });
     return h('label', {}, `${label} `, input);
   };
-  const goodPicker = () => {
-    const s = h('select', {}, ...engine.config.goods.map((g, i) => h('option', { value: String(i) }, g.name)));
-    s.value = String(good);
-    s.addEventListener('change', () => {
-      good = Number(s.value);
+  /** The paint tool's good picker, refilled only when the goods' names change. */
+  const goodSelect = h('select', {
+    onchange: () => {
+      good = Number(goodSelect.value);
       engine.setDisplay({ layer: `capacity:${good}` });
-    });
-    return h('label', {}, 'Good ', s);
-  };
+    },
+  });
+  const goodLabel = h('label', {}, 'Good ', goodSelect);
+  let goodNames = '';
+  function refreshGoods(): void {
+    const names = engine.config.goods.map((g) => g.name);
+    const signature = JSON.stringify(names);
+    if (good >= names.length) good = 0;
+    if (signature !== goodNames) {
+      goodNames = signature;
+      goodSelect.replaceChildren(...names.map((name, i) => h('option', { value: String(i) }, name)));
+    }
+    goodSelect.value = String(good);
+  }
   const select = <T extends string>(label: string, values: [T, string][], set: (v: T) => void) => {
     const s = h('select', {}, ...values.map(([v, l]) => h('option', { value: v }, l)));
     s.addEventListener('change', () => set(s.value as T));
@@ -76,14 +86,14 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(TOOLS[i][0] === tool)));
     grid.brushRadius = brushed() ? radius : null;
     if (tool === 'paint') {
-      if (good >= engine.config.goods.length) good = 0;
+      refreshGoods();
       engine.setDisplay({ layer: `capacity:${good}` });
     }
     if (DISEASE_TOOLS.includes(tool)) engine.setDisplay({ colorMode: 'disease' });
     const pick = h('label', {}, 'Disease ', picker);
     options.replaceChildren(
       ...(tool === 'paint'
-        ? [goodPicker(), number('Radius', 0, 10, () => radius, (v) => (radius = v)), number('Capacity', 0, 10, () => value, (v) => (value = v))]
+        ? [goodLabel, number('Radius', 0, 10, () => radius, (v) => (radius = v)), number('Capacity', 0, 10, () => value, (v) => (value = v))]
         : tool === 'place'
           ? [
               select('Sex', [['', 'Random'], ['female', 'Female'], ['male', 'Male']], (v) => (sex = v)),
@@ -109,7 +119,8 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     });
     if (!on && DISEASE_TOOLS.includes(tool)) choose('inspect');
     else refreshPicker(true);
-    if (tool === 'paint') choose('paint');
+    // Keeps the paint tool's layer and inputs; only the good list follows the config.
+    refreshGoods();
   }
 
   grid.onCell = (x, y, kind) => {
