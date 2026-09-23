@@ -1,15 +1,21 @@
 import type { Engine, PlaceOverrides } from '../engine';
+import { diseaseOptions } from './disease-picker';
 import { h } from './dom';
 import type { GridView } from './grid-view';
 
-type Tool = 'inspect' | 'paint' | 'place' | 'erase';
+type Tool = 'inspect' | 'paint' | 'place' | 'erase' | 'infect' | 'vaccinate';
 
 const TOOLS: [Tool, string][] = [
   ['inspect', 'Inspect'],
   ['paint', 'Paint capacity'],
   ['place', 'Place agent'],
   ['erase', 'Erase agent'],
+  ['infect', 'Infect'],
+  ['vaccinate', 'Vaccinate'],
 ];
+
+/** Tools that exist only while disease is on. */
+const DISEASE_TOOLS: Tool[] = ['infect', 'vaccinate'];
 
 /** Tool picker; routes grid clicks/drags to the active tool. Edit errors (e.g. occupied site) are ignored. */
 export function buildTools(engine: Engine, grid: GridView, onInspect: () => void): HTMLElement {
@@ -18,16 +24,22 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   let value = 4;
   let sex: '' | 'female' | 'male' = '';
   let tribe: '' | 'blue' | 'red' = '';
+  /** Selected disease id; −1 is a new random disease (Infect only). */
+  let disease = -1;
+  /** Length of the disease list the picker was last filled from. */
+  let known = -1;
+  const brushed = () => tool === 'paint' || tool === 'vaccinate';
 
   const buttons = TOOLS.map(([t, label]) => h('button', { onclick: () => choose(t) }, label));
   const options = h('div', { class: 'tool-options' });
+  const picker = h('select', { onchange: () => (disease = Number(picker.value)) });
 
   const number = (label: string, min: number, max: number, get: () => number, set: (v: number) => void) => {
     const input = h('input', { type: 'number', min, max, value: get(), class: 'num' });
     input.addEventListener('change', () => {
       set(Math.min(max, Math.max(min, Number(input.value))));
       input.value = String(get());
-      if (tool === 'paint') grid.brushRadius = radius;
+      if (brushed()) grid.brushRadius = radius;
     });
     return h('label', {}, `${label} `, input);
   };
@@ -37,11 +49,25 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     return h('label', {}, `${label} `, s);
   };
 
+  /** Refills the picker when the disease list has grown (outbreaks, mutations, Infect), or when forced. */
+  function refreshPicker(force = false): void {
+    if (!DISEASE_TOOLS.includes(tool) || !engine.config.disease.enabled) return;
+    const list = engine.diseaseList();
+    if (!force && list.length === known) return;
+    known = list.length;
+    picker.replaceChildren(...diseaseOptions(list, tool === 'infect').map(([v, l]) => h('option', { value: v }, l)));
+    const values = Array.from(picker.options, (o) => Number(o.value));
+    if (!values.includes(disease)) disease = values[0] ?? -1;
+    picker.value = String(disease);
+  }
+
   function choose(next: Tool): void {
     tool = next;
     buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(TOOLS[i][0] === tool)));
-    grid.brushRadius = tool === 'paint' ? radius : null;
+    grid.brushRadius = brushed() ? radius : null;
     if (tool === 'paint') engine.setDisplay({ layer: 'capacity' });
+    if (DISEASE_TOOLS.includes(tool)) engine.setDisplay({ colorMode: 'disease' });
+    const pick = h('label', {}, 'Disease ', picker);
     options.replaceChildren(
       ...(tool === 'paint'
         ? [number('Radius', 0, 10, () => radius, (v) => (radius = v)), number('Capacity', 0, 4, () => value, (v) => (value = v))]
@@ -50,11 +76,26 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
               select('Sex', [['', 'Random'], ['female', 'Female'], ['male', 'Male']], (v) => (sex = v)),
               select('Tribe', [['', 'Random'], ['blue', 'Blue'], ['red', 'Red']], (v) => (tribe = v)),
             ]
-          : tool === 'inspect'
-            ? [h('span', { class: 'hint' }, 'Click an agent or site.')]
-            : [h('span', { class: 'hint' }, 'Click or drag over agents to remove them.')]),
+          : tool === 'infect'
+            ? [pick, h('span', { class: 'hint' }, 'Click an agent to infect it.')]
+            : tool === 'vaccinate'
+              ? [number('Radius', 0, 10, () => radius, (v) => (radius = v)), pick]
+              : tool === 'inspect'
+                ? [h('span', { class: 'hint' }, 'Click an agent or site.')]
+                : [h('span', { class: 'hint' }, 'Click or drag over agents to remove them.')]),
     );
+    refreshPicker(true);
     grid.draw();
+  }
+
+  /** Hides the disease tools while disease is off (leaving them if one was active). */
+  function syncAvailability(): void {
+    const on = engine.config.disease.enabled;
+    buttons.forEach((b, i) => {
+      if (DISEASE_TOOLS.includes(TOOLS[i][0])) b.hidden = !on;
+    });
+    if (!on && DISEASE_TOOLS.includes(tool)) choose('inspect');
+    else refreshPicker(true);
   }
 
   grid.onCell = (x, y, kind) => {
@@ -79,9 +120,20 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
       case 'erase':
         engine.erase(x, y);
         break;
+      case 'infect':
+        if (kind === 'down') engine.infect(x, y, disease);
+        break;
+      case 'vaccinate':
+        engine.vaccinate(x, y, radius, disease);
+        break;
     }
   };
 
+  engine.on('reset', syncAvailability);
+  engine.on('config', syncAvailability);
+  engine.on('tick', () => refreshPicker());
+  engine.on('edit', () => refreshPicker());
   choose('inspect');
+  syncAvailability();
   return h('div', { class: 'tools' }, h('div', { class: 'tool-buttons' }, ...buttons), options);
 }

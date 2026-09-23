@@ -1,5 +1,5 @@
 import init, { Sim, presets_json } from './wasm-pkg/sugarscape.js';
-import type { ColorMode, Config, FieldError, Inspection, Layer, Preset } from './types';
+import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Preset } from './types';
 import { parseErrors } from './types';
 
 export type EngineEvent = 'reset' | 'tick' | 'config' | 'run' | 'select' | 'display' | 'edit';
@@ -9,6 +9,8 @@ export interface Selection { x: number; y: number; agentId: number | null }
 export interface PlaceOverrides { sex?: 'female' | 'male'; tribe?: 'blue' | 'red' }
 
 export interface InitialState { config: Config; seed: number; landscape?: Uint8Array }
+
+export type Overlay = 'trade' | 'credit' | 'disease';
 
 export function randomSeed(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0];
@@ -25,7 +27,7 @@ export class Engine {
   stepsPerFrame = 1;
   colorMode: ColorMode = 'tribe';
   layer: Layer = 'sugar';
-  overlays: { trade: boolean; credit: boolean } = { trade: false, credit: false };
+  overlays: Record<Overlay, boolean> = { trade: false, credit: false, disease: false };
   selection: Selection | null = null;
   presetId: string | null;
   /** Painted or shared capacities, carried across resets that keep the landscape shape. */
@@ -183,7 +185,7 @@ export class Engine {
     return new Uint8ClampedArray(this.memory.buffer, ptr, this.sim.frame_len());
   }
 
-  setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<{ trade: boolean; credit: boolean }> }): void {
+  setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<Record<Overlay, boolean>> }): void {
     if (d.colorMode) this.colorMode = d.colorMode;
     if (d.layer) this.layer = d.layer;
     if (d.overlays) Object.assign(this.overlays, d.overlays);
@@ -238,5 +240,18 @@ export class Engine {
 
   erase(x: number, y: number): FieldError[] | null {
     return this.edit(() => this.sim.remove_agent(x, y));
+  }
+
+  diseaseList(): DiseaseEntry[] {
+    return JSON.parse(this.sim.disease_list()) as DiseaseEntry[];
+  }
+
+  /** `disease` −1 infects with a brand-new random disease. */
+  infect(x: number, y: number, disease: number): FieldError[] | null {
+    return this.edit(() => void this.sim.infect(x, y, disease));
+  }
+
+  vaccinate(x: number, y: number, radius: number, disease: number): FieldError[] | null {
+    return this.edit(() => void this.sim.vaccinate(x, y, radius, disease));
   }
 }

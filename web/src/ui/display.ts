@@ -1,4 +1,4 @@
-import type { Engine } from '../engine';
+import type { Engine, Overlay } from '../engine';
 import type { ColorMode, Layer } from '../types';
 import { h } from './dom';
 
@@ -9,6 +9,7 @@ const MODES: [ColorMode, string][] = [
   ['age', 'Age'],
   ['vision', 'Vision'],
   ['credit', 'Credit'],
+  ['disease', 'Disease'],
 ];
 const LAYERS: [Layer, string][] = [
   ['sugar', 'Sugar'],
@@ -35,7 +36,7 @@ export function buildDisplay(engine: Engine): HTMLElement {
   };
   engine.on('display', sync);
   sync();
-  const overlay = (kind: 'trade' | 'credit', label: string) => {
+  const overlay = (kind: Overlay, label: string) => {
     const box = h('input', { type: 'checkbox', onchange: () => engine.setDisplay({ overlays: { [kind]: box.checked } }) });
     engine.on('display', () => (box.checked = engine.overlays[kind]));
     return h('label', {}, box, ` ${label}`);
@@ -47,5 +48,6 @@ export function buildDisplay(engine: Engine): HTMLElement {
     h('label', {}, 'Landscape ', layer),
     overlay('trade', 'Trade network'),
     overlay('credit', 'Credit network'),
+    overlay('disease', 'Disease network'),
   );
 }
