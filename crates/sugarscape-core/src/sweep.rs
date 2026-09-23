@@ -4,6 +4,8 @@
 
 use std::collections::BTreeMap;
 use std::fmt::Write;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::mpsc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -839,6 +841,55 @@ pub fn summary_csv(result: &SweepResult) -> String {
     out
 }
 
+/// Runs every point on `jobs` threads and collects the runs in point order,
+/// so the result is the same for any `jobs` (Decision 8). `jobs = 1` runs on
+/// this thread. `progress(done, point)` is called on this thread after each
+/// run, in completion order.
+pub fn run_all(
+    sweep: &Sweep,
+    jobs: usize,
+    mut progress: impl FnMut(usize, &Point),
+) -> Result<SweepResult, Vec<FieldError>> {
+    let (points, configs) = sweep.prepare()?;
+    let xs = sweep.x.values.len();
+    let config_of = |p: &Point| configs[p.series * xs + p.x].clone();
+    let mut slots: Vec<Option<RunResult>> = (0..points.len()).map(|_| None).collect();
+    let jobs = jobs.clamp(1, points.len());
+    if jobs == 1 {
+        for (done, point) in points.iter().enumerate() {
+            slots[point.index] = Some(run_config(sweep, point, config_of(point)));
+            progress(done + 1, point);
+        }
+    } else {
+        let next = AtomicUsize::new(0);
+        let (tx, rx) = mpsc::channel();
+        std::thread::scope(|scope| {
+            for _ in 0..jobs {
+                let tx = tx.clone();
+                let (next, points, config_of) = (&next, &points, &config_of);
+                scope.spawn(move || {
+                    while let Some(point) = points.get(next.fetch_add(1, Ordering::Relaxed)) {
+                        if tx.send(run_config(sweep, point, config_of(point))).is_err() {
+                            break;
+                        }
+                    }
+                });
+            }
+            drop(tx);
+            for (done, run) in rx.iter().enumerate() {
+                let index = run.point;
+                slots[index] = Some(run);
+                progress(done + 1, &points[index]);
+            }
+        });
+    }
+    let runs = slots
+        .into_iter()
+        .map(|r| r.expect("every point ran"))
+        .collect();
+    Ok(SweepResult::new(sweep.clone(), runs))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1479,5 +1530,33 @@ mod tests {
         let t = tiny_timeseries();
         assert!(check_runs(&t, &[series_run(0, &t, vec![1.0, 2.0, 3.0])]).is_ok());
         assert!(check_runs(&t, &[series_run(0, &t, vec![1.0, 2.0])]).is_err());
+    }
+
+    #[test]
+    fn run_all_is_the_same_for_any_number_of_threads() {
+        let s = sweep(tiny());
+        let mut seen = Vec::new();
+        let one = run_all(&s, 1, |done, p| seen.push((done, p.index))).unwrap();
+        assert_eq!(seen, (1..=12).zip(0..12).collect::<Vec<_>>());
+        let mut count = 0;
+        let four = run_all(&s, 4, |done, _| {
+            count += 1;
+            assert_eq!(done, count);
+        })
+        .unwrap();
+        assert_eq!(count, 12);
+        assert_eq!(four.to_json(), one.to_json());
+        assert!(!one.incomplete);
+        for (i, run) in one.runs.iter().enumerate() {
+            assert_eq!(run.point, i);
+            assert_eq!(*run, run_point(&s, &s.point(i).unwrap()));
+        }
+        assert_eq!(run_all(&s, 64, |_, _| {}).unwrap().to_json(), one.to_json());
+    }
+
+    #[test]
+    fn run_all_reports_invalid_sweeps() {
+        let e = run_all(&sweep(with(tiny(), "ticks", json!(0))), 2, |_, _| {}).unwrap_err();
+        assert!(e.iter().any(|e| e.field == "ticks"), "{e:?}");
     }
 }
