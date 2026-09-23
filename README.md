@@ -34,6 +34,11 @@ The book reproduction tests include a carrying-capacity check that reproduces th
 claim that the population stabilizes at approximately 224 agents on the default 50×50
 map (observed mean 224.8 across 5 seeds).
 
+## Deployment
+
+`.github/workflows/pages.yml` publishes `web/dist` to GitHub Pages after CI passes on `main`.
+In the repository settings, Pages must be set to Source: "GitHub Actions".
+
 ## Credits
 
 The 50×50 two-peak sugar map is a transcription of the book's Figure II-1 as distributed
