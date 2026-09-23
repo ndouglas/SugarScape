@@ -1,4 +1,4 @@
-//! Trade and credit networks (Animations IV-4 and IV-5).
+//! Trade, credit and disease networks (Animations IV-4, IV-5 and Chapter V).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -53,6 +53,21 @@ pub fn credit_edges(world: &World) -> Vec<(Pos, Pos)> {
     edges(world, world.loans().map(|l| (l.lender, l.borrower)))
 }
 
+/// Infector → infected pairs of living agents from this tick's transmissions
+/// (Chapter V's disease network; outbreaks have no infector).
+pub fn disease_edges(world: &World) -> Vec<(Pos, Pos)> {
+    let pairs: BTreeSet<(AgentId, AgentId)> = world
+        .events()
+        .infections
+        .iter()
+        .filter_map(|i| Some((i.infector?, i.infected)))
+        .collect();
+    pairs
+        .into_iter()
+        .filter_map(|(a, b)| Some((world.agent(a)?.pos, world.agent(b)?.pos)))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -91,5 +106,29 @@ mod tests {
         assert_eq!(roles[&b], CreditRole::Both);
         assert_eq!(roles[&c], CreditRole::Borrower);
         assert_eq!(credit_edges(&w).len(), 2);
+    }
+
+    #[test]
+    fn disease_edges_point_from_infector_to_infected() {
+        use crate::world::Infection;
+        let mut w = blank_world(5, 5);
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        let infection = |infector, infected| Infection {
+            infector,
+            infected,
+            disease: 0,
+        };
+        w.events.infections = vec![
+            infection(Some(a), b),
+            infection(Some(a), b),
+            infection(None, a),
+            infection(Some(b), 999),
+        ];
+        assert_eq!(
+            disease_edges(&w),
+            vec![(Pos::new(0, 0), Pos::new(1, 0))],
+            "deduplicated; outbreaks and dead agents dropped"
+        );
     }
 }

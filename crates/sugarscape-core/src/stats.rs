@@ -6,7 +6,7 @@ use serde::Serialize;
 use crate::agent::Tribe;
 use crate::world::World;
 
-pub const SERIES: [&str; 19] = [
+pub const SERIES: [&str; 23] = [
     "population",
     "gini",
     "mean_wealth",
@@ -26,6 +26,10 @@ pub const SERIES: [&str; 19] = [
     "mean_foresight",
     "mean_spice",
     "mean_spice_metabolism",
+    "infected_fraction",
+    "mean_diseases",
+    "diseases_in_circulation",
+    "new_infections",
 ];
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
@@ -51,6 +55,13 @@ pub struct Snapshot {
     pub mean_foresight: f64,
     pub mean_spice: f64,
     pub mean_spice_metabolism: f64,
+    /// Share of living agents carrying at least one disease.
+    pub infected_fraction: f64,
+    pub mean_diseases: f64,
+    /// Distinct diseases carried by anyone.
+    pub diseases_in_circulation: u32,
+    /// Infections this tick (transmissions and outbreaks).
+    pub new_infections: u32,
 }
 
 impl Snapshot {
@@ -97,6 +108,14 @@ impl Snapshot {
             mean_foresight: mean(&|a| f64::from(a.foresight)),
             mean_spice: mean(&|a| a.spice),
             mean_spice_metabolism: mean(&|a| f64::from(a.spice_metabolism)),
+            infected_fraction: mean(&|a| if a.diseases.is_empty() { 0.0 } else { 1.0 }),
+            mean_diseases: mean(&|a| a.diseases.len() as f64),
+            diseases_in_circulation: world
+                .agents()
+                .flat_map(|a| a.diseases.iter().copied())
+                .collect::<std::collections::BTreeSet<_>>()
+                .len() as u32,
+            new_infections: events.infections.len() as u32,
         }
     }
 
@@ -122,6 +141,10 @@ impl Snapshot {
             "mean_foresight" => self.mean_foresight,
             "mean_spice" => self.mean_spice,
             "mean_spice_metabolism" => self.mean_spice_metabolism,
+            "infected_fraction" => self.infected_fraction,
+            "mean_diseases" => self.mean_diseases,
+            "diseases_in_circulation" => f64::from(self.diseases_in_circulation),
+            "new_infections" => f64::from(self.new_infections),
             _ => return None,
         })
     }
@@ -392,5 +415,31 @@ mod tests {
         }
         let sick = supply_demand(&w);
         assert_ne!(healthy.demand, sick.demand, "weights (1, 3) became (3, 5)");
+    }
+
+    #[test]
+    fn disease_series_count_carriers_and_new_infections() {
+        use crate::testkit::*;
+        use crate::world::Infection;
+        let mut w = blank_world(5, 5);
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        spawn(&mut w, 2, 0);
+        spawn(&mut w, 3, 0);
+        w.agent_mut(a).unwrap().diseases = vec![0, 2];
+        w.agent_mut(b).unwrap().diseases = vec![2];
+        w.events.infections = vec![Infection {
+            infector: Some(a),
+            infected: b,
+            disease: 2,
+        }];
+        let s = Snapshot::of(&w);
+        assert_eq!(s.infected_fraction, 0.5);
+        assert_eq!(s.mean_diseases, 0.75);
+        assert_eq!(s.diseases_in_circulation, 2);
+        assert_eq!(s.new_infections, 1);
+        for name in SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
     }
 }
