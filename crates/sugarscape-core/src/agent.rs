@@ -181,12 +181,12 @@ impl Agent {
         } else {
             Sex::Male
         };
-        let endowment = f64::from(config.endowment.sample(rng));
+        let endowment = f64::from(config.goods[0].endowment.sample(rng));
         let mut agent = Self {
             id: 0,
             pos,
             vision: config.vision.sample(rng),
-            metabolism: in_slot_0(config.metabolism.sample(rng)),
+            metabolism: in_slot_0(config.goods[0].metabolism.sample(rng)),
             holdings: in_slot_0(endowment),
             initial: in_slot_0(endowment),
             age: 0,
@@ -205,11 +205,11 @@ impl Agent {
             diseases: Vec::new(),
             infected_by: None,
         };
-        if config.spice.enabled {
-            let spice = f64::from(config.spice.endowment.sample(rng));
-            agent.holdings[1] = spice;
-            agent.initial[1] = spice;
-            agent.metabolism[1] = config.spice.metabolism.sample(rng);
+        if let Some(second) = config.goods.get(1) {
+            let e = f64::from(second.endowment.sample(rng));
+            agent.holdings[1] = e;
+            agent.initial[1] = e;
+            agent.metabolism[1] = second.metabolism.sample(rng);
         }
         if config.foresight.enabled {
             agent.foresight = config.foresight.range.sample(rng);
@@ -285,17 +285,16 @@ mod tests {
     }
 
     #[test]
-    fn spice_and_foresight_are_drawn_only_when_enabled() {
-        use crate::config::{Config, URange};
+    fn a_second_good_and_foresight_are_drawn_only_when_configured() {
+        use crate::config::{Config, Good};
         use crate::rng::seeded;
-        let mut off = Config::default();
-        off.spice.metabolism = URange::new(3, 3);
-        let a = Agent::random(&off, Pos::new(0, 0), 0, &mut seeded(4));
-        let b = Agent::random(&Config::default(), Pos::new(0, 0), 0, &mut seeded(4));
-        assert_eq!(a, b, "spice parameters don't matter while spice is off");
-        assert_eq!((a.holdings[1], a.metabolism[1], a.foresight), (0.0, 0, 0));
+        let one = Agent::random(&Config::default(), Pos::new(0, 0), 0, &mut seeded(4));
+        assert_eq!(
+            (one.holdings[1], one.metabolism[1], one.foresight),
+            (0.0, 0, 0)
+        );
         let mut on = Config::default();
-        on.spice.enabled = true;
+        on.add_good(Good::spice());
         on.foresight.enabled = true;
         let c = Agent::random(&on, Pos::new(0, 0), 0, &mut seeded(4));
         assert!((1..=4).contains(&c.metabolism[1]));
@@ -303,7 +302,7 @@ mod tests {
         assert!(c.foresight <= 10);
         assert_eq!(
             (c.vision, c.metabolism[0], c.holdings[0]),
-            (b.vision, b.metabolism[0], b.holdings[0]),
+            (one.vision, one.metabolism[0], one.holdings[0]),
             "new draws come after the existing ones"
         );
     }

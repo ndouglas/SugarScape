@@ -4,7 +4,7 @@
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::agent::Sex;
 
@@ -29,16 +29,6 @@ impl URange {
     pub fn sample(&self, rng: &mut impl Rng) -> u32 {
         rng.gen_range(self.min..=self.max)
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum LandscapeKind {
-    /// The book's 50×50 map with sugar mountains in the northeast and southwest.
-    TwoPeaks,
-    Flat {
-        capacity: f64,
-    },
 }
 
 /// How a good's copy of the book's two-peak map is turned (Decision 7): the
@@ -153,15 +143,94 @@ pub struct Seasons {
     pub period: u32,
 }
 
-/// P_{α,β}: pollution += α·gathered + β·metabolized, on the agent's site.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+/// Colors of Chapter IV's goods (the renderer's `SUGAR` and `SPICE`).
+pub const SUGAR_COLOR: &str = "#f2c14e";
+pub const SPICE_COLOR: &str = "#e07a3f";
+
+/// `#rrggbb` (hex digits in either case) as RGB.
+pub fn parse_color(s: &str) -> Option<[u8; 3]> {
+    let hex = s.strip_prefix('#')?;
+    if hex.len() != 6 || !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+    let byte = |i: usize| u8::from_str_radix(&hex[i..i + 2], 16).ok();
+    Some([byte(0)?, byte(2)?, byte(4)?])
+}
+
+/// One commodity (Appendix A's n-vectors): its map, and the traits new agents
+/// draw for it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Good {
+    /// Display name (1–16 characters, unique).
+    pub name: String,
+    /// `#rrggbb`, used by layers, charts and the inspector.
+    pub color: String,
+    /// Capacity map (fixed at reset).
+    pub map: Map,
+    /// Per-tick burn drawn for new agents.
+    pub metabolism: URange,
+    /// Initial holding drawn for new agents.
+    pub endowment: URange,
+}
+
+impl Good {
+    /// Chapter II's sugar on the book's two-peak map.
+    pub fn sugar() -> Self {
+        Self {
+            name: "sugar".into(),
+            color: SUGAR_COLOR.into(),
+            map: Map::TwoPeaks {
+                transform: Transform::Identity,
+            },
+            metabolism: URange::new(1, 4),
+            endowment: URange::new(5, 25),
+        }
+    }
+
+    /// Chapter IV's spice on the mirrored two-peak map.
+    pub fn spice() -> Self {
+        Self {
+            name: "spice".into(),
+            color: SPICE_COLOR.into(),
+            map: Map::TwoPeaks {
+                transform: Transform::MirrorX,
+            },
+            ..Self::sugar()
+        }
+    }
+}
+
+/// One pollutant (Appendix B's rule P with n goods and m pollutants): it
+/// forms from each good gathered (Πₖᵢ, `production`) and burned (Χₖᵢ,
+/// `consumption`), and devalues the goods marked in `devalues` when agents
+/// choose sites.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Pollutant {
+    pub name: String,
+    pub production: Vec<f64>,
+    pub consumption: Vec<f64>,
+    pub devalues: Vec<bool>,
+}
+
+impl Pollutant {
+    /// The book's pollutant on `n` goods: α = β = 1 for good 0 only, which
+    /// is also the only good it devalues.
+    pub fn book(n: usize) -> Self {
+        let first = |v: f64| (0..n).map(|i| if i == 0 { v } else { 0.0 }).collect();
+        Self {
+            name: "pollution".into(),
+            production: first(1.0),
+            consumption: first(1.0),
+            devalues: (0..n).map(|i| i == 0).collect(),
+        }
+    }
+}
+
+/// Rule P with m pollutants; D_α diffuses each separately.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Pollution {
     pub enabled: bool,
-    pub production: f64,
-    pub consumption: f64,
-    /// Chapter IV makes sugar the only "dirty" good; set to pollute spice too.
-    #[serde(default)]
-    pub spice_pollutes: bool,
+    pub pollutants: Vec<Pollutant>,
 }
 
 /// D_α: every `every` ticks each site's pollution becomes its neighbors' mean.
@@ -206,14 +275,6 @@ pub struct CombatRule {
     pub enabled: bool,
     pub unlimited: bool,
     pub reward: f64,
-}
-
-/// Chapter IV's second commodity. When off, agents never draw spice traits.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct SpiceRule {
-    pub enabled: bool,
-    pub metabolism: URange,
-    pub endowment: URange,
 }
 
 /// L_{d,r}: sugar loans of `duration` (d) ticks at `rate` (r) percent simple
@@ -301,21 +362,12 @@ impl Default for DiseaseRule {
 }
 
 /// Fields a schedule may not change (they shape the world's storage or setup).
-pub const STRUCTURAL_FIELDS: [&str; 6] = [
-    "width",
-    "height",
-    "tag_length",
-    "landscape",
-    "population",
-    "placement",
-];
+pub const STRUCTURAL_FIELDS: [&str; 5] =
+    ["width", "height", "tag_length", "population", "placement"];
 
-/// Paths a schedule may not set because they switch a rule that shapes every
-/// agent's traits (spice, disease) or fix the disease list and immune strings;
-/// changing them needs a reset.
-pub const RESET_ONLY_PATHS: [&str; 9] = [
-    "spice",
-    "spice.enabled",
+/// Disease paths a schedule may not set (they fix the disease list and
+/// immune strings).
+pub const RESET_ONLY_PATHS: [&str; 7] = [
     "disease",
     "disease.enabled",
     "disease.count",
@@ -324,6 +376,22 @@ pub const RESET_ONLY_PATHS: [&str; 9] = [
     "disease.length.max",
     "disease.immune_length",
 ];
+
+/// Whether a schedule may not set `path` (Decision 5): the goods list, whole
+/// goods and their maps, the pollutant list, and `RESET_ONLY_PATHS`. A
+/// good's name, color and trait ranges, and a pollutant's name and
+/// coefficients, may be scheduled.
+fn reset_only(path: &str) -> bool {
+    let parts: Vec<&str> = path.split('.').collect();
+    matches!(
+        parts.as_slice(),
+        ["goods"]
+            | ["goods", _]
+            | ["goods", _, "map", ..]
+            | ["pollution"]
+            | ["pollution", "pollutants"]
+    ) || RESET_ONLY_PATHS.contains(&path)
+}
 
 /// At the start of the tick when `World::tick == tick`, set each dotted config
 /// path in `set` to its value.
@@ -338,13 +406,12 @@ pub struct ScheduledChange {
 pub struct Config {
     pub width: u32,
     pub height: u32,
-    pub landscape: LandscapeKind,
     pub population: u32,
     pub placement: Placement,
     pub vision: URange,
-    pub metabolism: URange,
-    pub endowment: URange,
     pub tag_length: u32,
+    /// Goods 0..n (1–8); good 0 always exists.
+    pub goods: Vec<Good>,
     pub growback: Growback,
     pub seasons: Seasons,
     pub pollution: Pollution,
@@ -355,7 +422,6 @@ pub struct Config {
     pub inheritance: Toggle,
     pub culture: Toggle,
     pub combat: CombatRule,
-    pub spice: SpiceRule,
     pub trade: Toggle,
     pub credit: CreditRule,
     pub foresight: Foresight,
@@ -370,13 +436,11 @@ impl Default for Config {
         Self {
             width: 50,
             height: 50,
-            landscape: LandscapeKind::TwoPeaks,
             population: 400,
             placement: Placement::Random,
             vision: URange::new(1, 6),
-            metabolism: URange::new(1, 4),
-            endowment: URange::new(5, 25),
             tag_length: 11,
+            goods: vec![Good::sugar()],
             growback: Growback {
                 rate: 1.0,
                 instant: false,
@@ -388,9 +452,7 @@ impl Default for Config {
             },
             pollution: Pollution {
                 enabled: false,
-                production: 1.0,
-                consumption: 1.0,
-                spice_pollutes: false,
+                pollutants: vec![Pollutant::book(1)],
             },
             diffusion: Diffusion {
                 enabled: false,
@@ -413,11 +475,6 @@ impl Default for Config {
                 enabled: false,
                 unlimited: true,
                 reward: 2.0,
-            },
-            spice: SpiceRule {
-                enabled: false,
-                metabolism: URange::new(1, 4),
-                endowment: URange::new(5, 25),
             },
             trade: Toggle { enabled: false },
             credit: CreditRule {
@@ -476,6 +533,11 @@ impl Errors {
         );
     }
 
+    fn name(&mut self, name: &str, field: &str) {
+        let len = name.chars().count();
+        self.check((1..=16).contains(&len), field, "must be 1–16 characters");
+    }
+
     fn finish(self) -> Result<(), Vec<FieldError>> {
         if self.0.is_empty() {
             Ok(())
@@ -487,10 +549,76 @@ impl Errors {
 
 impl Config {
     pub fn from_json(json: &str) -> Result<Self, Vec<FieldError>> {
-        let config: Config = serde_json::from_str(json)
+        let value: serde_json::Value = serde_json::from_str(json)
             .map_err(|e| vec![FieldError::new("config", e.to_string())])?;
+        let config = Self::from_value(value).map_err(|e| vec![e])?;
         config.validate()?;
         Ok(config)
+    }
+
+    /// Reads either config shape (Decision 2): a JSON object without a `goods`
+    /// key is a pre-N-goods config and is converted.
+    pub fn from_value(value: serde_json::Value) -> Result<Self, FieldError> {
+        if value.as_object().is_some_and(|o| !o.contains_key("goods")) {
+            return crate::legacy::convert(value);
+        }
+        serde_json::from_value(value).map_err(|e| FieldError::new("config", e.to_string()))
+    }
+
+    /// Appends `good`; every pollutant gets zero coefficients for it and does
+    /// not devalue it.
+    pub fn add_good(&mut self, good: Good) {
+        self.goods.push(good);
+        for p in &mut self.pollution.pollutants {
+            p.production.push(0.0);
+            p.consumption.push(0.0);
+            p.devalues.push(false);
+        }
+    }
+
+    /// Removes good `i` and its pollutant coefficients.
+    pub fn remove_good(&mut self, i: usize) {
+        self.goods.remove(i);
+        for p in &mut self.pollution.pollutants {
+            p.production.remove(i);
+            p.consumption.remove(i);
+            p.devalues.remove(i);
+        }
+    }
+
+    fn check_map(&self, map: &Map, field: &str, e: &mut Errors) {
+        match map {
+            Map::TwoPeaks { .. } => e.check(
+                self.width == 50 && self.height == 50,
+                field,
+                "the two-peak map is 50×50; set width and height to 50",
+            ),
+            Map::Peaks { peaks } => {
+                e.check(
+                    (1..=16).contains(&peaks.len()),
+                    field,
+                    "needs 1 to 16 peaks",
+                );
+                e.check(
+                    peaks.iter().all(|p| p.x < self.width && p.y < self.height),
+                    field,
+                    "peak centers must lie on the grid",
+                );
+                e.check(
+                    peaks.iter().all(|p| p.radius.is_finite() && p.radius > 0.0),
+                    field,
+                    "peak radius must be > 0",
+                );
+                e.check(
+                    peaks
+                        .iter()
+                        .all(|p| p.height.is_finite() && (0.0..=10.0).contains(&p.height)),
+                    field,
+                    "peak height must be between 0 and 10",
+                );
+            }
+            Map::Flat { capacity } => e.non_negative(*capacity, &format!("{field}.capacity")),
+        }
     }
 
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
@@ -518,14 +646,6 @@ impl Config {
             "height",
             "must be between 5 and 500",
         );
-        match self.landscape {
-            LandscapeKind::TwoPeaks => e.check(
-                self.width == 50 && self.height == 50,
-                "landscape",
-                "the two-peak map is 50×50; set width and height to 50",
-            ),
-            LandscapeKind::Flat { capacity } => e.non_negative(capacity, "landscape.capacity"),
-        }
         let pop = u64::from(self.population);
         match self.placement {
             Placement::Random => e.check(
@@ -574,8 +694,64 @@ impl Config {
             "vision.max",
             format!("must be ≤ {max_vision} (half the grid)"),
         );
-        e.range(self.metabolism, "metabolism");
-        e.range(self.endowment, "endowment");
+        let n = self.goods.len();
+        e.check(
+            (1..=MAX_GOODS).contains(&n),
+            "goods",
+            format!("must list 1 to {MAX_GOODS} goods"),
+        );
+        // Interim: the rules handle two goods until Task 12 removes this.
+        e.check(n <= 2, "goods", "at most two goods for now");
+        let mut names = BTreeSet::new();
+        for (i, g) in self.goods.iter().enumerate() {
+            let field = |f: &str| format!("goods.{i}.{f}");
+            e.name(&g.name, &field("name"));
+            e.check(
+                names.insert(g.name.as_str()),
+                &field("name"),
+                "another good has this name",
+            );
+            e.check(
+                parse_color(&g.color).is_some(),
+                &field("color"),
+                "must be a #rrggbb color",
+            );
+            e.range(g.metabolism, &field("metabolism"));
+            e.range(g.endowment, &field("endowment"));
+            self.check_map(&g.map, &field("map"), &mut e);
+        }
+        let m = self.pollution.pollutants.len();
+        e.check(
+            (1..=MAX_POLLUTANTS).contains(&m),
+            "pollution.pollutants",
+            format!("must list 1 to {MAX_POLLUTANTS} pollutants"),
+        );
+        let mut names = BTreeSet::new();
+        for (k, p) in self.pollution.pollutants.iter().enumerate() {
+            let field = |f: &str| format!("pollution.pollutants.{k}.{f}");
+            e.name(&p.name, &field("name"));
+            e.check(
+                names.insert(p.name.as_str()),
+                &field("name"),
+                "another pollutant has this name",
+            );
+            for (key, v) in [
+                ("production", &p.production),
+                ("consumption", &p.consumption),
+            ] {
+                e.check(v.len() == n, &field(key), "needs one coefficient per good");
+                e.check(
+                    v.iter().all(|x| x.is_finite() && *x >= 0.0),
+                    &field(key),
+                    "coefficients must be numbers ≥ 0",
+                );
+            }
+            e.check(
+                p.devalues.len() == n,
+                &field("devalues"),
+                "needs one entry per good",
+            );
+        }
         e.check(
             (1..=64).contains(&self.tag_length),
             "tag_length",
@@ -592,8 +768,6 @@ impl Config {
             "must be ≥ 1",
         );
         e.check(self.seasons.period >= 1, "seasons.period", "must be ≥ 1");
-        e.non_negative(self.pollution.production, "pollution.production");
-        e.non_negative(self.pollution.consumption, "pollution.consumption");
         e.check(self.diffusion.every >= 1, "diffusion.every", "must be ≥ 1");
         e.range(self.lifespan.max_age, "lifespan.max_age");
         e.range(self.sex.fertility_onset, "sex.fertility_onset");
@@ -610,28 +784,26 @@ impl Config {
             "replacement R[a,b] needs lifespan on (it supplies [a,b])",
         );
         e.non_negative(self.combat.reward, "combat.reward");
-        e.range(self.spice.metabolism, "spice.metabolism");
-        e.range(self.spice.endowment, "spice.endowment");
         e.range(self.foresight.range, "foresight.range");
-        e.check(
-            !self.trade.enabled || self.spice.enabled,
-            "trade.enabled",
-            "trade (T) needs spice on",
-        );
-        e.check(
-            !self.foresight.enabled || self.spice.enabled,
-            "foresight.enabled",
-            "foresight needs spice on",
-        );
         e.check(
             !self.credit.enabled || self.sex.enabled,
             "credit.enabled",
             "credit (L) needs sex (S) on",
         );
         e.check(
-            !(self.combat.enabled && self.spice.enabled),
+            !self.trade.enabled || n >= 2,
+            "trade.enabled",
+            "trade (T) needs at least two goods",
+        );
+        e.check(
+            !self.foresight.enabled || n >= 2,
+            "foresight.enabled",
+            "foresight needs at least two goods",
+        );
+        e.check(
+            !self.combat.enabled || n == 1,
             "combat.enabled",
-            "combat (C) and spice are mutually exclusive",
+            "combat (C) needs exactly one good",
         );
         e.check(self.credit.duration >= 1, "credit.duration", "must be ≥ 1");
         e.non_negative(self.credit.rate, "credit.rate");
@@ -728,7 +900,7 @@ impl Config {
         let mut next = self.clone();
         for (path, value) in &change.set {
             let root = path.split('.').next().unwrap_or_default();
-            if STRUCTURAL_FIELDS.contains(&root) || RESET_ONLY_PATHS.contains(&path.as_str()) {
+            if STRUCTURAL_FIELDS.contains(&root) || reset_only(path) {
                 return Err(FieldError::new(
                     "schedule",
                     format!("{path} changes only on reset"),
@@ -772,11 +944,17 @@ impl Config {
         if self.tag_length != next.tag_length {
             out.push(FieldError::new("tag_length", msg));
         }
-        if self.landscape != next.landscape {
-            out.push(FieldError::new("landscape", msg));
+        if self.goods.len() != next.goods.len() {
+            out.push(FieldError::new("goods", msg));
+        } else {
+            for (i, (a, b)) in self.goods.iter().zip(&next.goods).enumerate() {
+                if a.map != b.map {
+                    out.push(FieldError::new(format!("goods.{i}.map"), msg));
+                }
+            }
         }
-        if self.spice.enabled != next.spice.enabled {
-            out.push(FieldError::new("spice.enabled", msg));
+        if self.pollution.pollutants.len() != next.pollution.pollutants.len() {
+            out.push(FieldError::new("pollution.pollutants", msg));
         }
         let (a, b) = (&self.disease, &next.disease);
         if a.enabled != b.enabled {
@@ -812,8 +990,8 @@ mod tests {
         let c = Config::default();
         assert_eq!((c.width, c.height, c.population), (50, 50, 400));
         assert_eq!(c.vision, URange::new(1, 6));
-        assert_eq!(c.metabolism, URange::new(1, 4));
-        assert_eq!(c.endowment, URange::new(5, 25));
+        assert_eq!(c.goods[0].metabolism, URange::new(1, 4));
+        assert_eq!(c.goods[0].endowment, URange::new(5, 25));
         assert_eq!(c.tag_length, 11);
         assert_eq!(c.growback.rate, 1.0);
         c.validate().unwrap();
@@ -821,11 +999,9 @@ mod tests {
 
     #[test]
     fn rejects_inverted_ranges_with_field_names() {
-        let c = Config {
-            metabolism: URange::new(4, 1),
-            ..Default::default()
-        };
-        assert_eq!(fields(c.validate()), vec!["metabolism"]);
+        let mut c = Config::default();
+        c.goods[0].metabolism = URange::new(4, 1);
+        assert_eq!(fields(c.validate()), vec!["goods.0.metabolism"]);
     }
 
     #[test]
@@ -834,19 +1010,19 @@ mod tests {
             width: 40,
             ..Default::default()
         };
-        assert!(fields(c.validate()).contains(&"landscape".to_string()));
+        assert!(fields(c.validate()).contains(&"goods.0.map".to_string()));
     }
 
     #[test]
     fn width_height_bounds_are_5_to_500() {
         let c_too_small = Config {
-            landscape: LandscapeKind::Flat { capacity: 1.0 },
+            goods: flat_goods(1.0),
             width: 4,
             ..Default::default()
         };
         assert!(fields(c_too_small.validate()).contains(&"width".to_string()));
         let c_valid = Config {
-            landscape: LandscapeKind::Flat { capacity: 1.0 },
+            goods: flat_goods(1.0),
             width: 5,
             height: 5,
             population: 10,
@@ -891,7 +1067,8 @@ mod tests {
         let partial = Config::from_json(r#"{"population": 100}"#).unwrap();
         assert_eq!(partial.population, 100);
         assert_eq!(partial.width, 50);
-        assert!(json.contains(r#""landscape":{"kind":"two_peaks"}"#));
+        assert!(json.contains(r#""map":{"kind":"two_peaks","transform":"identity"}"#));
+        assert!(!json.contains("landscape") && !json.contains("spice"));
     }
 
     #[test]
@@ -908,33 +1085,19 @@ mod tests {
         assert!(a.structural_changes(&b).is_empty());
         b.tag_length = 5;
         assert_eq!(a.structural_changes(&b)[0].field, "tag_length");
-        let mut c = a.clone();
-        c.spice.enabled = true;
-        assert_eq!(
-            a.structural_changes(&c)[0].field,
-            "spice.enabled",
-            "spice switches only on reset"
-        );
-        c.spice.enabled = false;
-        c.spice.metabolism = URange::new(2, 3);
-        assert!(
-            a.structural_changes(&c).is_empty(),
-            "spice traits may change"
-        );
     }
 
     #[test]
     fn chapter_four_defaults_are_off_and_old_json_still_loads() {
         let c = Config::default();
-        assert!(!c.spice.enabled && !c.trade.enabled && !c.credit.enabled && !c.foresight.enabled);
-        assert_eq!(c.spice.metabolism, URange::new(1, 4));
-        assert_eq!(c.spice.endowment, URange::new(5, 25));
+        assert!(!c.trade.enabled && !c.credit.enabled && !c.foresight.enabled);
+        assert_eq!(c.goods.len(), 1);
         assert_eq!((c.credit.duration, c.credit.rate), (10, 10.0));
         assert_eq!(c.foresight.range, URange::new(0, 10));
-        assert!(!c.pollution.spice_pollutes);
         let old = r#"{"pollution":{"enabled":true,"production":1.0,"consumption":1.0}}"#;
         let loaded = Config::from_json(old).unwrap();
-        assert!(loaded.pollution.enabled && !loaded.pollution.spice_pollutes);
+        assert!(loaded.pollution.enabled);
+        assert_eq!(loaded.pollution.pollutants[0].devalues, vec![true]);
     }
 
     #[test]
@@ -944,24 +1107,9 @@ mod tests {
             f(&mut c);
             fields(c.validate())
         };
-        assert!(with(|c| c.trade.enabled = true).contains(&"trade.enabled".to_string()));
-        assert!(with(|c| c.foresight.enabled = true).contains(&"foresight.enabled".to_string()));
         assert!(with(|c| c.credit.enabled = true).contains(&"credit.enabled".to_string()));
-        assert!(with(|c| {
-            c.spice.enabled = true;
-            c.combat.enabled = true;
-        })
-        .contains(&"combat.enabled".to_string()));
         assert!(with(|c| c.credit.duration = 0).contains(&"credit.duration".to_string()));
         assert!(with(|c| c.credit.rate = -1.0).contains(&"credit.rate".to_string()));
-        assert!(with(|c| c.spice.metabolism = URange::new(3, 1))
-            .contains(&"spice.metabolism".to_string()));
-        assert!(with(|c| {
-            c.spice.enabled = true;
-            c.trade.enabled = true;
-            c.foresight.enabled = true;
-        })
-        .is_empty());
     }
 
     fn change(tick: u64, path: &str, value: serde_json::Value) -> ScheduledChange {
@@ -1007,37 +1155,8 @@ mod tests {
         assert_eq!(
             fields(c.validate()),
             vec!["schedule"],
-            "trade without spice is invalid"
+            "trade with one good is invalid"
         );
-    }
-
-    #[test]
-    fn schedule_may_not_switch_spice_or_edit_itself() {
-        let rejected = |path: &str, value: serde_json::Value| {
-            let c = Config {
-                schedule: vec![change(5, path, value)],
-                ..Default::default()
-            };
-            let errs = c.validate().unwrap_err();
-            assert_eq!(errs[0].field, "schedule", "{path}");
-            errs[0].message.clone()
-        };
-        let msg = rejected("spice.enabled", serde_json::json!(true));
-        assert!(msg.contains("only on reset"), "{msg}");
-        let spice = serde_json::to_value(Config::default().spice).unwrap();
-        rejected("spice", spice);
-        let msg = rejected("schedule", serde_json::json!([]));
-        assert!(msg.contains("schedule cannot change itself"), "{msg}");
-        // Spice traits for agents born later may still be scheduled.
-        let c = Config {
-            schedule: vec![change(
-                5,
-                "spice.metabolism",
-                serde_json::json!({"min": 1, "max": 2}),
-            )],
-            ..Default::default()
-        };
-        c.validate().unwrap();
     }
 
     #[test]
@@ -1251,5 +1370,358 @@ mod tests {
             let err = c.with_path(bad, &serde_json::json!(1)).unwrap_err();
             assert_eq!(err.message, format!("unknown field {bad}"));
         }
+    }
+
+    fn flat_goods(capacity: f64) -> Vec<Good> {
+        vec![Good {
+            map: Map::Flat { capacity },
+            ..Good::sugar()
+        }]
+    }
+
+    #[test]
+    fn default_has_one_good_and_the_books_pollutant() {
+        let c = Config::default();
+        assert_eq!(c.goods, vec![Good::sugar()]);
+        let g = &c.goods[0];
+        assert_eq!((g.name.as_str(), g.color.as_str()), ("sugar", SUGAR_COLOR));
+        assert_eq!(
+            g.map,
+            Map::TwoPeaks {
+                transform: Transform::Identity
+            }
+        );
+        assert_eq!(
+            (g.metabolism, g.endowment),
+            (URange::new(1, 4), URange::new(5, 25))
+        );
+        assert!(!c.pollution.enabled);
+        assert_eq!(
+            c.pollution.pollutants,
+            vec![Pollutant {
+                name: "pollution".into(),
+                production: vec![1.0],
+                consumption: vec![1.0],
+                devalues: vec![true],
+            }]
+        );
+        assert_eq!(
+            Good::spice().map,
+            Map::TwoPeaks {
+                transform: Transform::MirrorX
+            }
+        );
+    }
+
+    #[test]
+    fn legacy_json_converts_to_goods_pollutants_and_new_schedule_paths() {
+        let old = r#"{
+            "width": 20, "height": 20, "population": 50, "vision": {"min": 1, "max": 5},
+            "landscape": {"kind": "flat", "capacity": 3.0},
+            "metabolism": {"min": 2, "max": 3}, "endowment": {"min": 10, "max": 20},
+            "spice": {"enabled": true, "metabolism": {"min": 1, "max": 2}, "endowment": {"min": 5, "max": 6}},
+            "pollution": {"enabled": true, "production": 0.5, "consumption": 2.0, "spice_pollutes": true},
+            "schedule": [{"tick": 5, "set": {
+                "pollution.production": 0.0, "spice.metabolism.max": 4,
+                "endowment": {"min": 1, "max": 2}}}]
+        }"#;
+        let c = Config::from_json(old).unwrap();
+        assert_eq!(
+            c.goods,
+            vec![
+                Good {
+                    name: "sugar".into(),
+                    color: SUGAR_COLOR.into(),
+                    map: Map::Flat { capacity: 3.0 },
+                    metabolism: URange::new(2, 3),
+                    endowment: URange::new(10, 20),
+                },
+                Good {
+                    name: "spice".into(),
+                    color: SPICE_COLOR.into(),
+                    map: Map::Flat { capacity: 3.0 },
+                    metabolism: URange::new(1, 2),
+                    endowment: URange::new(5, 6),
+                },
+            ]
+        );
+        assert_eq!(
+            c.pollution,
+            Pollution {
+                enabled: true,
+                pollutants: vec![Pollutant {
+                    name: "pollution".into(),
+                    production: vec![0.5, 0.5],
+                    consumption: vec![2.0, 2.0],
+                    devalues: vec![true, true],
+                }],
+            }
+        );
+        let paths: Vec<&str> = c.schedule[0].set.keys().map(String::as_str).collect();
+        assert_eq!(
+            paths,
+            vec![
+                "goods.0.endowment",
+                "goods.1.metabolism.max",
+                "pollution.pollutants.0.production.0",
+                "pollution.pollutants.0.production.1",
+            ]
+        );
+
+        let spicy = Config::from_json(
+            r#"{"spice": {"enabled": true, "metabolism": {"min": 1, "max": 4}, "endowment": {"min": 5, "max": 25}},
+                "pollution": {"enabled": false, "production": 1.0, "consumption": 1.0},
+                "schedule": [{"tick": 3, "set": {"pollution.consumption": 0.0}}]}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            spicy.goods[1].map,
+            Map::TwoPeaks {
+                transform: Transform::MirrorX
+            }
+        );
+        let p = &spicy.pollution.pollutants[0];
+        assert_eq!(
+            (p.production.clone(), p.devalues.clone()),
+            (vec![1.0, 0.0], vec![true, false])
+        );
+        assert_eq!(
+            spicy.schedule[0].set.keys().collect::<Vec<_>>(),
+            vec!["pollution.pollutants.0.consumption.0"],
+            "only the polluting good"
+        );
+
+        assert_eq!(Config::from_json("{}").unwrap(), Config::default());
+        let dropped = Config::from_json(
+            r#"{"schedule": [{"tick": 3, "set": {"spice.metabolism": {"min": 1, "max": 2}}}]}"#,
+        )
+        .unwrap();
+        assert!(
+            dropped.schedule.is_empty(),
+            "spice traits can't matter without spice"
+        );
+        for path in ["pollution.spice_pollutes", "pollution"] {
+            let json = format!(r#"{{"schedule": [{{"tick": 3, "set": {{"{path}": true}}}}]}}"#);
+            assert_eq!(
+                Config::from_json(&json).unwrap_err()[0].field,
+                "schedule",
+                "{path}"
+            );
+        }
+        let bad = r#"{"schedule": [{"tick": 3, "set": {"spice.enabled": true}}]}"#;
+        assert_eq!(Config::from_json(bad).unwrap_err()[0].field, "schedule");
+    }
+
+    #[test]
+    fn goods_and_pollutants_are_validated() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        let has = |errs: Vec<String>, field: &str| errs.contains(&field.to_string());
+        assert!(has(with(&|c| c.goods.clear()), "goods"));
+        assert!(has(
+            with(&|c| c.goods[0].name = String::new()),
+            "goods.0.name"
+        ));
+        assert!(has(
+            with(&|c| c.goods[0].name = "x".repeat(17)),
+            "goods.0.name"
+        ));
+        assert!(has(
+            with(&|c| c.add_good(Good {
+                name: "sugar".into(),
+                ..Good::spice()
+            })),
+            "goods.1.name"
+        ));
+        assert!(has(
+            with(&|c| c.goods[0].color = "red".into()),
+            "goods.0.color"
+        ));
+        assert!(has(
+            with(&|c| c.goods[0].color = "#12345g".into()),
+            "goods.0.color"
+        ));
+        assert!(with(&|c| c.goods[0].color = "#A0b1C2".into()).is_empty());
+        assert!(has(
+            with(&|c| c.goods[0].metabolism = URange::new(3, 1)),
+            "goods.0.metabolism"
+        ));
+        assert!(has(
+            with(&|c| c.goods[0].endowment = URange::new(3, 1)),
+            "goods.0.endowment"
+        ));
+        let peaks = |p: Vec<Peak>| Map::Peaks { peaks: p };
+        let peak = |x, y, radius, height| Peak {
+            x,
+            y,
+            radius,
+            height,
+        };
+        assert!(has(
+            with(&|c| c.goods[0].map = peaks(vec![])),
+            "goods.0.map"
+        ));
+        assert!(has(
+            with(&|c| c.goods[0].map = peaks(vec![peak(50, 0, 5.0, 4.0)])),
+            "goods.0.map"
+        ));
+        assert!(has(
+            with(&|c| c.goods[0].map = peaks(vec![peak(0, 0, 0.0, 4.0)])),
+            "goods.0.map"
+        ));
+        assert!(has(
+            with(&|c| c.goods[0].map = peaks(vec![peak(0, 0, 5.0, 11.0)])),
+            "goods.0.map"
+        ));
+        assert!(with(&|c| c.goods[0].map = peaks(vec![peak(49, 49, 5.0, 10.0)])).is_empty());
+        assert!(has(
+            with(&|c| c.goods[0].map = Map::Flat { capacity: -1.0 }),
+            "goods.0.map.capacity"
+        ));
+        assert!(has(
+            with(&|c| c.pollution.pollutants.clear()),
+            "pollution.pollutants"
+        ));
+        assert!(has(
+            with(&|c| c.pollution.pollutants[0].production = vec![1.0, 1.0]),
+            "pollution.pollutants.0.production"
+        ));
+        assert!(has(
+            with(&|c| c.pollution.pollutants[0].consumption = vec![-1.0]),
+            "pollution.pollutants.0.consumption"
+        ));
+        assert!(has(
+            with(&|c| c.pollution.pollutants[0].devalues = vec![]),
+            "pollution.pollutants.0.devalues"
+        ));
+        assert!(has(
+            with(&|c| c.pollution.pollutants.push(Pollutant::book(1))),
+            "pollution.pollutants.1.name"
+        ));
+    }
+
+    #[test]
+    fn rule_dependencies_count_goods() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(&|c| c.trade.enabled = true).contains(&"trade.enabled".to_string()));
+        assert!(with(&|c| c.foresight.enabled = true).contains(&"foresight.enabled".to_string()));
+        assert!(with(&|c| {
+            c.add_good(Good::spice());
+            c.combat.enabled = true;
+        })
+        .contains(&"combat.enabled".to_string()));
+        assert!(with(&|c| {
+            c.add_good(Good::spice());
+            c.trade.enabled = true;
+            c.foresight.enabled = true;
+        })
+        .is_empty());
+    }
+
+    #[test]
+    fn add_and_remove_good_keep_pollutant_columns_in_step() {
+        let mut c = Config::default();
+        c.add_good(Good::spice());
+        let p = &c.pollution.pollutants[0];
+        assert_eq!(
+            (p.production.clone(), p.consumption.clone()),
+            (vec![1.0, 0.0], vec![1.0, 0.0])
+        );
+        assert_eq!(p.devalues, vec![true, false]);
+        c.remove_good(0);
+        assert_eq!(c.goods, vec![Good::spice()]);
+        assert_eq!(c.pollution.pollutants[0].production, vec![0.0]);
+        assert_eq!(c.pollution.pollutants[0].devalues, vec![false]);
+    }
+
+    #[test]
+    fn schedule_may_change_traits_and_coefficients_but_not_structure() {
+        let rejected = |path: &str, value: serde_json::Value| {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert_eq!(errs[0].field, "schedule", "{path}");
+            errs[0].message.clone()
+        };
+        let goods = serde_json::to_value(Config::default().goods).unwrap();
+        let good = serde_json::to_value(Good::sugar()).unwrap();
+        let pollution = serde_json::to_value(Config::default().pollution).unwrap();
+        for (path, value) in [
+            ("goods", goods),
+            ("goods.0", good),
+            (
+                "goods.0.map",
+                serde_json::json!({"kind": "flat", "capacity": 1.0}),
+            ),
+            ("goods.0.map.transform", serde_json::json!("rotate_90")),
+            ("pollution", pollution.clone()),
+            ("pollution.pollutants", pollution["pollutants"].clone()),
+        ] {
+            let msg = rejected(path, value);
+            assert!(msg.contains("only on reset"), "{path}: {msg}");
+        }
+        let msg = rejected("schedule", serde_json::json!([]));
+        assert!(msg.contains("schedule cannot change itself"), "{msg}");
+        let c = Config {
+            schedule: vec![
+                change(
+                    5,
+                    "goods.0.metabolism",
+                    serde_json::json!({"min": 1, "max": 2}),
+                ),
+                change(6, "goods.0.endowment.max", serde_json::json!(30)),
+                change(7, "goods.0.name", serde_json::json!("honey")),
+                change(8, "goods.0.color", serde_json::json!("#123456")),
+                change(
+                    9,
+                    "pollution.pollutants.0.production.0",
+                    serde_json::json!(0.0),
+                ),
+                change(
+                    9,
+                    "pollution.pollutants.0.devalues.0",
+                    serde_json::json!(false),
+                ),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+    }
+
+    #[test]
+    fn structural_changes_cover_goods_maps_and_pollutants() {
+        let a = Config::default();
+        let changed = |f: &dyn Fn(&mut Config)| {
+            let mut b = a.clone();
+            f(&mut b);
+            a.structural_changes(&b)
+                .into_iter()
+                .map(|e| e.field)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(changed(&|c| c.add_good(Good::spice())), vec!["goods"]);
+        assert_eq!(
+            changed(&|c| c.goods[0].map = Map::Flat { capacity: 1.0 }),
+            vec!["goods.0.map"]
+        );
+        assert_eq!(
+            changed(&|c| c.pollution.pollutants.push(Pollutant::book(1))),
+            vec!["pollution.pollutants"]
+        );
+        assert!(changed(&|c| {
+            c.goods[0].metabolism = URange::new(2, 3);
+            c.goods[0].name = "honey".into();
+            c.pollution.pollutants[0].production[0] = 0.0;
+        })
+        .is_empty());
     }
 }

@@ -104,7 +104,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         diseases: Vec::new(),
         infected_by: None,
     };
-    if world.config.spice.enabled {
+    if world.config.goods.len() >= 2 {
         child.metabolism[1] = pick(rng, a.metabolism[1], b.metabolism[1]);
     }
     if world.config.foresight.enabled {
@@ -237,7 +237,7 @@ mod tests {
     #[test]
     fn with_spice_fertility_needs_both_goods_and_children_get_both() {
         let mut w = blank_world(10, 10);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         let (mom, dad) = couple(&mut w);
         for id in [mom, dad] {
             let a = w.agent_mut(id).unwrap();

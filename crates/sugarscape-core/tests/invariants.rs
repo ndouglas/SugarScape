@@ -1,7 +1,7 @@
 //! Properties that must hold after every tick for any rule combination.
 
 use proptest::prelude::*;
-use sugarscape_core::config::{Config, Outbreak, URange};
+use sugarscape_core::config::{Config, Good, Outbreak, URange};
 use sugarscape_core::world::World;
 
 // The brief's `prop_map` builds `Config` by assigning fields one at a time
@@ -54,16 +54,18 @@ fn config_strategy() -> impl Strategy<Value = Config> {
                 c.combat.enabled = combat;
                 c.replacement.enabled = replacement && lifespan && !sex;
                 if sex {
-                    c.endowment.min = 50;
-                    c.endowment.max = 100;
+                    c.goods[0].endowment = URange::new(50, 100);
                 }
-                c.spice.enabled = spice && !combat;
-                c.trade.enabled = trade && c.spice.enabled;
-                c.foresight.enabled = foresight && c.spice.enabled;
+                if spice && !combat {
+                    c.add_good(Good {
+                        endowment: URange::new(25, 50),
+                        ..Good::spice()
+                    });
+                }
+                let two = c.goods.len() >= 2;
+                c.trade.enabled = trade && two;
+                c.foresight.enabled = foresight && two;
                 c.credit.enabled = credit && sex;
-                if c.spice.enabled {
-                    c.spice.endowment = URange::new(25, 50);
-                }
                 c.disease.enabled = disease;
                 if disease && mutate {
                     c.disease.genome_mutation = 0.02;
@@ -108,7 +110,7 @@ fn check(world: &World) -> Result<(), TestCaseError> {
             a.id,
             a.holdings[0]
         );
-        if world.config.spice.enabled {
+        if world.config.goods.len() >= 2 {
             prop_assert!(
                 a.holdings[1] > 0.0,
                 "living agent {} has spice {}",

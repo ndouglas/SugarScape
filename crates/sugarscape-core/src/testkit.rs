@@ -2,7 +2,7 @@
 
 use crate::agent::{Agent, AgentId, Sex, Tags};
 use crate::bits::Bits;
-use crate::config::{Config, LandscapeKind, Placement, URange, MAX_GOODS};
+use crate::config::{Config, Good, Map, Placement, URange, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::world::World;
 
@@ -11,11 +11,36 @@ pub fn blank_config(width: u32, height: u32) -> Config {
     Config {
         width,
         height,
-        landscape: LandscapeKind::Flat { capacity: 0.0 },
+        goods: vec![Good {
+            map: Map::Flat { capacity: 0.0 },
+            ..Good::sugar()
+        }],
         population: 0,
         placement: Placement::Random,
         vision: URange::new(1, 1),
         ..Config::default()
+    }
+}
+
+/// Appends flat zero-capacity goods until `config` has `n`, bypassing
+/// validation (so tests may use more goods than validation allows yet).
+/// Good 1 is spice; later goods are "good2", "good3", ….
+pub fn add_goods(config: &mut Config, n: usize) {
+    while config.goods.len() < n {
+        let i = config.goods.len();
+        let good = if i == 1 {
+            Good::spice()
+        } else {
+            Good {
+                name: format!("good{i}"),
+                color: "#7fb3d5".into(),
+                ..Good::sugar()
+            }
+        };
+        config.add_good(Good {
+            map: Map::Flat { capacity: 0.0 },
+            ..good
+        });
     }
 }
 

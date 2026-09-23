@@ -3,7 +3,7 @@
 
 use serde::Serialize;
 
-use crate::config::{Config, Outbreak, Placement, ScheduledChange, URange};
+use crate::config::{Config, Good, Outbreak, Placement, ScheduledChange, URange};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Preset {
@@ -41,7 +41,7 @@ fn tribes(c: &mut Config) {
 fn demography(c: &mut Config) {
     c.sex.enabled = true;
     c.lifespan.enabled = true;
-    c.endowment = URange::new(50, 100);
+    c.goods[0].endowment = URange::new(50, 100);
 }
 
 /// Schedule a single dotted-path change at `tick`.
@@ -52,15 +52,22 @@ fn schedule(c: &mut Config, tick: u64, path: &str, value: serde_json::Value) {
     });
 }
 
+/// Chapter IV's second good: spice on the two-peak map mirrored left↔right.
+fn spice(c: &mut Config, metabolism: URange, endowment: URange) {
+    c.add_good(Good {
+        metabolism,
+        endowment,
+        ..Good::spice()
+    });
+}
+
 /// Chapter IV's neoclassical market: 200 immortal agents, symmetric goods.
 fn market(c: &mut Config) {
     c.population = 200;
     c.vision = URange::new(1, 5);
-    c.metabolism = URange::new(1, 5);
-    c.endowment = URange::new(25, 50);
-    c.spice.enabled = true;
-    c.spice.metabolism = URange::new(1, 5);
-    c.spice.endowment = URange::new(25, 50);
+    c.goods[0].metabolism = URange::new(1, 5);
+    c.goods[0].endowment = URange::new(25, 50);
+    spice(c, URange::new(1, 5), URange::new(25, 50));
     c.trade.enabled = true;
 }
 
@@ -204,11 +211,9 @@ pub fn all() -> Vec<Preset> {
             "Two goods on opposite mountains: agents shuttle between sugar and spice to stay alive.",
             |c| {
                 c.vision = URange::new(1, 10);
-                c.metabolism = URange::new(1, 5);
-                c.endowment = URange::new(25, 50);
-                c.spice.enabled = true;
-                c.spice.metabolism = URange::new(1, 5);
-                c.spice.endowment = URange::new(25, 50);
+                c.goods[0].metabolism = URange::new(1, 5);
+                c.goods[0].endowment = URange::new(25, 50);
+                spice(c, URange::new(1, 5), URange::new(25, 50));
             },
         ),
         preset(
@@ -239,8 +244,8 @@ pub fn all() -> Vec<Preset> {
                 schedule(c, 100, "pollution.enabled", serde_json::json!(true));
                 // Keep pollution on so what remains still repels agents while
                 // diffusion spreads it out (the book's Animation IV-3).
-                schedule(c, 150, "pollution.production", serde_json::json!(0.0));
-                schedule(c, 150, "pollution.consumption", serde_json::json!(0.0));
+                schedule(c, 150, "pollution.pollutants.0.production.0", serde_json::json!(0.0));
+                schedule(c, 150, "pollution.pollutants.0.consumption.0", serde_json::json!(0.0));
                 schedule(c, 150, "diffusion.enabled", serde_json::json!(true));
             },
         ),
@@ -264,9 +269,8 @@ pub fn all() -> Vec<Preset> {
                 // population grows from 400 to ~600-700 by t=1000 and mean
                 // foresight still declines from a ~5 start (seeds 1-5:
                 // 4.87->4.74, 5.01->4.40, 4.86->3.23, 5.09->4.37, 4.82->1.29).
-                c.endowment = URange::new(25, 50);
-                c.spice.enabled = true;
-                c.spice.endowment = URange::new(25, 50);
+                c.goods[0].endowment = URange::new(25, 50);
+                spice(c, URange::new(1, 4), URange::new(25, 50));
                 c.foresight.enabled = true;
             },
         ),
@@ -331,7 +335,7 @@ pub fn all() -> Vec<Preset> {
                 demography(c);
                 c.inheritance.enabled = true;
                 c.culture.enabled = true;
-                c.spice.enabled = true;
+                spice(c, URange::new(1, 4), URange::new(25, 50));
                 c.trade.enabled = true;
                 c.credit.enabled = true;
                 disease(c);
@@ -354,8 +358,7 @@ pub fn all() -> Vec<Preset> {
                 // 1808, 1728, 1836, 1845). 25-50, the first range in the
                 // required trial order that clears the >=50-agent bar, is
                 // used.
-                c.endowment = URange::new(25, 50);
-                c.spice.endowment = URange::new(25, 50);
+                c.goods[0].endowment = URange::new(25, 50);
                 // With the endemic (25/10) disease load alone, this preset's
                 // own early population crash (sex + lifespan + spice + trade
                 // + credit together: t=0 400 -> t~100 ~130-230, before
@@ -469,7 +472,7 @@ mod tests {
         );
         let e = by_id("vi-1-everything").unwrap().config;
         assert!(
-            e.spice.enabled
+            e.goods.len() == 2
                 && e.sex.enabled
                 && e.lifespan.enabled
                 && e.inheritance.enabled
@@ -494,7 +497,10 @@ mod tests {
         );
         assert!(c.diffusion.enabled);
         assert_eq!(
-            (c.pollution.production, c.pollution.consumption),
+            (
+                c.pollution.pollutants[0].production[0],
+                c.pollution.pollutants[0].consumption[0]
+            ),
             (0.0, 0.0)
         );
     }

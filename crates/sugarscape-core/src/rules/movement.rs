@@ -4,7 +4,9 @@
 use rand::seq::SliceRandom;
 
 use crate::agent::AgentId;
+use crate::config::Config;
 use crate::geometry::Pos;
+use crate::landscape::Site;
 use crate::rng::SimRng;
 use crate::rules::Harvest;
 use crate::world::World;
@@ -30,23 +32,37 @@ pub(crate) fn choose(candidates: &[(Pos, u32, f64)], rng: &mut SimRng) -> Pos {
     *ties.choose(rng).expect("non-empty ties")
 }
 
+/// Σ pₖ, in pollutant order from 0.0, over the pollutants that devalue
+/// `good`; `None` when pollution is off or none does (the good then counts
+/// undiscounted).
+pub(crate) fn devaluation(config: &Config, site: &Site, good: usize) -> Option<f64> {
+    if !config.pollution.enabled {
+        return None;
+    }
+    let mut total = None;
+    for (k, p) in config.pollution.pollutants.iter().enumerate() {
+        if p.devalues[good] {
+            total = Some(total.unwrap_or(0.0) + site.pollution[k]);
+        }
+    }
+    total
+}
+
 /// Rule M: look along the four lattice directions as far as vision permits,
 /// go to the nearest unoccupied site of maximum welfare and collect its sugar.
 /// The agent's current site competes at distance 0, so it stays put when
 /// nothing visible is better. Returns the harvest.
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
-    if world.config.spice.enabled {
+    if world.config.goods.len() >= 2 {
         return act_two_goods(world, id);
     }
     let agent = world.agent(id).expect("live agent");
     let (pos, vision) = (agent.pos, agent.vision);
-    let polluted = world.config.pollution.enabled;
     let welfare = |w: &World, p: Pos| {
         let s = w.site(p);
-        if polluted {
-            s.resource[0] / (1.0 + s.pollution[0])
-        } else {
-            s.resource[0]
+        match devaluation(&w.config, s, 0) {
+            Some(d) => s.resource[0] / (1.0 + d),
+            None => s.resource[0],
         }
     };
     let mut candidates = vec![(pos, 0, welfare(world, pos))];
@@ -75,21 +91,13 @@ fn act_two_goods(world: &mut World, id: AgentId) -> Harvest {
         a.effective_metabolism(0, fee),
         a.effective_metabolism(1, fee),
     );
-    let pollution = world.config.pollution;
     let value = |w: &World, p: Pos| {
         let s = w.site(p);
-        let discount = if pollution.enabled {
-            1.0 / (1.0 + s.pollution[0])
-        } else {
-            1.0
+        let counted = |good: usize| match devaluation(&w.config, s, good) {
+            Some(d) => s.resource[good] * (1.0 / (1.0 + d)),
+            None => s.resource[good],
         };
-        let x1 = s.resource[0] * discount;
-        let x2 = if pollution.spice_pollutes {
-            s.resource[1] * discount
-        } else {
-            s.resource[1]
-        };
-        crate::econ::foresight_welfare(w1 + x1, w2 + x2, m1, m2, phi)
+        crate::econ::foresight_welfare(w1 + counted(0), w2 + counted(1), m1, m2, phi)
     };
     let mut candidates = vec![(pos, 0, value(world, pos))];
     for (q, d) in world.torus.sight(pos, vision) {
@@ -121,7 +129,7 @@ mod tests {
     }
 
     fn spicy(w: &mut World, vision: u32) -> AgentId {
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         let id = mover(w, vision);
         let a = w.agent_mut(id).unwrap();
         a.metabolism[0] = 1;

@@ -8,20 +8,22 @@ pub(crate) fn diffuse(world: &mut World) {
     if !d.enabled || !(world.tick + 1).is_multiple_of(u64::from(d.every)) {
         return;
     }
-    let next: Vec<f64> = (0..world.sites.len())
-        .map(|i| {
-            let p = world.torus.pos(i);
-            world
-                .torus
-                .neighbors(p)
-                .iter()
-                .map(|&q| world.site(q).pollution[0])
-                .sum::<f64>()
-                / 4.0
-        })
-        .collect();
-    for (site, p) in world.sites.iter_mut().zip(next) {
-        site.pollution[0] = p;
+    for k in 0..world.config.pollution.pollutants.len() {
+        let next: Vec<f64> = (0..world.sites.len())
+            .map(|i| {
+                let p = world.torus.pos(i);
+                world
+                    .torus
+                    .neighbors(p)
+                    .iter()
+                    .map(|&q| world.site(q).pollution[k])
+                    .sum::<f64>()
+                    / 4.0
+            })
+            .collect();
+        for (site, p) in world.sites.iter_mut().zip(next) {
+            site.pollution[k] = p;
+        }
     }
 }
 

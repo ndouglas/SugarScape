@@ -382,7 +382,7 @@ mod tests {
     fn symmetric_market_clears_near_one() {
         use crate::testkit::*;
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         for (x, sugar, spice) in [(0, 30.0, 10.0), (1, 10.0, 30.0)] {
             let id = spawn(&mut w, x, 0);
             let a = w.agent_mut(id).unwrap();
@@ -408,7 +408,7 @@ mod tests {
     fn supply_and_demand_use_effective_metabolism() {
         use crate::testkit::*;
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         w.config.disease.enabled = true;
         for (x, sugar, spice) in [(0, 30.0, 10.0), (1, 10.0, 30.0)] {
             let id = spawn(&mut w, x, 0);

@@ -1,38 +1,49 @@
 //! Metabolism (with pollution formation) and death.
 
 use crate::agent::AgentId;
+use crate::config::MAX_GOODS;
 use crate::rules::Harvest;
 use crate::world::{DeathCause, World};
 
-/// Burns sugar (and spice when it's on) at the effective metabolism (plus the
-/// disease fee per carried disease). With rule P on, the agent's site gains
-/// α·gathered + β·burned — sugar only, unless spice pollutes too.
+/// Burns each good at its effective metabolism (plus the disease fee per
+/// carried disease). With rule P on, each pollutant k on the agent's site
+/// gains Σᵢ Πₖᵢ·gatheredᵢ + Σᵢ Χₖᵢ·burnedᵢ (sums from 0.0 in good order).
 pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
-    let spice_on = world.config.spice.enabled;
+    let two = world.config.goods.len() >= 2;
     let fee = world.config.disease.active_fee();
     let agent = world.agent_mut(id).expect("live agent");
-    let burned = agent.effective_metabolism(0, fee);
-    agent.holdings[0] -= burned;
-    let burned_spice = if spice_on {
-        agent.effective_metabolism(1, fee)
-    } else {
-        0.0
-    };
-    if spice_on {
-        agent.holdings[1] -= burned_spice;
+    let mut burned = [0.0; MAX_GOODS];
+    burned[0] = agent.effective_metabolism(0, fee);
+    agent.holdings[0] -= burned[0];
+    if two {
+        burned[1] = agent.effective_metabolism(1, fee);
+        agent.holdings[1] -= burned[1];
     }
     let pos = agent.pos;
-    let p = world.config.pollution;
-    if p.enabled {
-        let (gathered, burned) = if p.spice_pollutes {
-            (
-                harvest.gathered[0] + harvest.gathered[1],
-                burned + burned_spice,
-            )
-        } else {
-            (harvest.gathered[0], burned)
-        };
-        world.site_mut(pos).pollution[0] += p.production * gathered + p.consumption * burned;
+    if world.config.pollution.enabled {
+        let added: Vec<f64> = world
+            .config
+            .pollution
+            .pollutants
+            .iter()
+            .map(|p| {
+                let produced = p
+                    .production
+                    .iter()
+                    .zip(&harvest.gathered)
+                    .fold(0.0, |sum, (c, g)| sum + c * g);
+                let consumed = p
+                    .consumption
+                    .iter()
+                    .zip(&burned)
+                    .fold(0.0, |sum, (c, b)| sum + c * b);
+                produced + consumed
+            })
+            .collect();
+        let site = world.site_mut(pos);
+        for (level, amount) in site.pollution.iter_mut().zip(added) {
+            *level += amount;
+        }
     }
 }
 
@@ -41,7 +52,7 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
 pub(crate) fn check_death(world: &mut World, id: AgentId) -> bool {
     let agent = world.agent(id).expect("live agent");
     let starving =
-        agent.holdings[0] <= 0.0 || (world.config.spice.enabled && agent.holdings[1] <= 0.0);
+        agent.holdings[0] <= 0.0 || (world.config.goods.len() >= 2 && agent.holdings[1] <= 0.0);
     let cause = if starving {
         Some(DeathCause::Starvation)
     } else if world.config.lifespan.enabled && agent.age > agent.max_age {
@@ -97,8 +108,8 @@ mod tests {
         let id = spawn(&mut w, 2, 2);
         w.agent_mut(id).unwrap().metabolism[0] = 2;
         w.config.pollution.enabled = true;
-        w.config.pollution.production = 0.5;
-        w.config.pollution.consumption = 3.0;
+        w.config.pollution.pollutants[0].production[0] = 0.5;
+        w.config.pollution.pollutants[0].consumption[0] = 3.0;
         metabolize(&mut w, id, crate::rules::Harvest::of(&[4.0, 0.0]));
         assert_eq!(
             w.site(crate::geometry::Pos::new(2, 2)).pollution[0],
@@ -167,7 +178,7 @@ mod tests {
     #[test]
     fn with_spice_agents_burn_both_and_die_of_either() {
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         let id = spawn(&mut w, 2, 2);
         w.agent_mut(id).unwrap().metabolism[1] = 10;
         metabolize(&mut w, id, crate::rules::Harvest::default());
@@ -178,12 +189,17 @@ mod tests {
     #[test]
     fn only_sugar_pollutes_unless_spice_pollutes() {
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         w.config.pollution.enabled = true;
         let id = spawn(&mut w, 2, 2);
         metabolize(&mut w, id, crate::rules::Harvest::of(&[1.0, 4.0]));
         assert_eq!(w.site(crate::geometry::Pos::new(2, 2)).pollution[0], 1.0);
-        w.config.pollution.spice_pollutes = true;
+        {
+            let p = &mut w.config.pollution.pollutants[0];
+            p.production[1] = 1.0;
+            p.consumption[1] = 1.0;
+            p.devalues[1] = true;
+        }
         metabolize(&mut w, id, crate::rules::Harvest::of(&[1.0, 4.0]));
         assert_eq!(
             w.site(crate::geometry::Pos::new(2, 2)).pollution[0],
@@ -194,7 +210,7 @@ mod tests {
     #[test]
     fn each_carried_disease_adds_the_fee_to_both_metabolisms() {
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         w.config.disease.enabled = true;
         w.config.disease.fee = 1.5;
         let id = spawn(&mut w, 2, 2);

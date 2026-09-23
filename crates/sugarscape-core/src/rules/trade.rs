@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn edgeworth_box_example_converges_without_crossing() {
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         let a = trader(&mut w, 0, 5.0, 8.0);
         let b = trader(&mut w, 1, 15.0, 2.0);
         let (_, _, wa0, _) = state(&w, a);
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn equal_valuations_do_not_trade() {
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         let a = trader(&mut w, 0, 10.0, 10.0);
         let b = trader(&mut w, 1, 20.0, 20.0);
         trade_pair(&mut w, a, b);
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn act_trades_with_neighbors_only() {
         let mut w = blank_world(10, 10);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         let a = trader(&mut w, 0, 5.0, 8.0);
         trader(&mut w, 5, 15.0, 2.0); // not adjacent
         act(&mut w, a);
@@ -164,7 +164,7 @@ mod tests {
         // 1/3. Two diseases at fee 1 make A's metabolisms (3, 5), MRS 3/5, so
         // A now values sugar more and buys it.
         let mut w = blank_world(5, 5);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         let a = trader(&mut w, 0, 100.0, 100.0);
         let b = trader(&mut w, 1, 100.0, 100.0);
         for id in [a, b] {

@@ -6,7 +6,7 @@ use rand::seq::SliceRandom;
 
 use crate::agent::{Agent, AgentId, DiseaseId, Tribe};
 use crate::bits::Bits;
-use crate::config::{Config, FieldError, Placement};
+use crate::config::{Config, FieldError, Placement, MAX_GOODS};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
 use crate::rng::{self, SimRng};
@@ -107,25 +107,35 @@ impl World {
     ) -> Result<Self, Vec<FieldError>> {
         config.validate()?;
         let torus = Torus::new(config.width, config.height);
-        let caps = match capacities {
+        let n = config.goods.len();
+        let mut maps: Vec<Vec<f64>> = config
+            .goods
+            .iter()
+            .map(|g| landscape::generate(&g.map, config.width, config.height))
+            .collect();
+        match capacities {
             Some(c) if c.len() != torus.len() => {
                 return Err(vec![FieldError::new(
                     "landscape",
                     format!("expected {} capacities, got {}", torus.len(), c.len()),
                 )])
             }
-            Some(c) => c.to_vec(),
-            None => landscape::capacities(&config.landscape, config.width, config.height),
-        };
-        let spice = landscape::spice_capacities(&config.landscape, config.width, config.height);
+            Some(c) => maps[0] = c.to_vec(),
+            None => {}
+        }
+        let sites = (0..torus.len())
+            .map(|s| {
+                let mut caps = [0.0; MAX_GOODS];
+                for (slot, map) in caps.iter_mut().zip(&maps) {
+                    *slot = map[s];
+                }
+                Site::full(&caps[..n])
+            })
+            .collect();
         let mut world = World {
             torus,
             tick: 0,
-            sites: caps
-                .into_iter()
-                .zip(spice)
-                .map(|(sugar, spice)| Site::full(&[sugar, spice]))
-                .collect(),
+            sites,
             landscape_edited: capacities.is_some(),
             diseases: Vec::new(),
             agents: BTreeMap::new(),
@@ -321,7 +331,8 @@ impl World {
                 h = h.wrapping_mul(0x0100_0000_01b3);
             }
         };
-        let spice = self.config.spice.enabled;
+        let n = self.config.goods.len();
+        let m = self.config.pollution.pollutants.len();
         let foresight = self.config.foresight.enabled;
         let disease = self.config.disease.enabled;
         eat(self.tick);
@@ -329,9 +340,12 @@ impl World {
             eat(s.resource[0].to_bits());
             eat(s.capacity[0].to_bits());
             eat(s.pollution[0].to_bits());
-            if spice {
-                eat(s.resource[1].to_bits());
-                eat(s.capacity[1].to_bits());
+            for i in 1..n {
+                eat(s.resource[i].to_bits());
+                eat(s.capacity[i].to_bits());
+            }
+            for k in 1..m {
+                eat(s.pollution[k].to_bits());
             }
         }
         for a in self.agents.values() {
@@ -340,8 +354,8 @@ impl World {
             eat(a.holdings[0].to_bits());
             eat(u64::from(a.age));
             eat(a.tags.bits());
-            if spice {
-                eat(a.holdings[1].to_bits());
+            for i in 1..n {
+                eat(a.holdings[i].to_bits());
             }
             if foresight {
                 eat(u64::from(a.foresight));
@@ -543,7 +557,7 @@ fn rect(x: u32, y: u32, width: u32, height: u32) -> Vec<Pos> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{Config, Placement};
+    use crate::config::{Config, Good, Placement};
 
     #[test]
     fn default_world_places_400_agents_on_distinct_sites() {
@@ -715,7 +729,7 @@ mod tests {
     #[test]
     fn goods_are_stored_in_per_good_slots() {
         let mut c = Config::default();
-        c.spice.enabled = true;
+        c.add_good(Good::spice());
         let w = World::new(c, 1).unwrap();
         assert_eq!(
             w.site(Pos::new(37, 5)).capacity[0],

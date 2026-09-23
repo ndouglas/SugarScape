@@ -26,7 +26,7 @@ pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
 
 pub(crate) fn apply(world: &mut World) {
     let instant = world.config.growback.instant;
-    let spice = world.config.spice.enabled;
+    let spice = world.config.goods.len() >= 2;
     for i in 0..world.sites.len() {
         let rate = rate_at(&world.config, world.tick, world.torus.pos(i).y);
         let site = &mut world.sites[i];
@@ -102,7 +102,7 @@ mod tests {
         w.site_mut(Pos::new(3, 3)).capacity[1] = 3.0;
         apply(&mut w);
         assert_eq!(w.site(Pos::new(3, 3)).resource[1], 0.0);
-        w.config.spice.enabled = true;
+        add_goods(&mut w.config, 2);
         apply(&mut w);
         assert_eq!(w.site(Pos::new(3, 3)).resource[1], 1.0);
     }

@@ -363,6 +363,7 @@ impl World {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::{Good, Map, URange};
     use crate::testkit::*;
 
     #[test]
@@ -452,19 +453,24 @@ mod tests {
         let errs = w.set_config(next).unwrap_err();
         assert_eq!(errs[0].field, "width");
         let mut bad = w.config.clone();
-        bad.metabolism.min = 9;
-        bad.metabolism.max = 1;
-        assert_eq!(w.set_config(bad).unwrap_err()[0].field, "metabolism");
+        bad.goods[0].metabolism = URange::new(9, 1);
+        assert_eq!(
+            w.set_config(bad).unwrap_err()[0].field,
+            "goods.0.metabolism"
+        );
     }
 
     #[test]
-    fn set_config_rejects_switching_spice_mid_run() {
+    fn set_config_rejects_adding_a_good_mid_run() {
         let mut w = blank_world(10, 10);
         let mut next = w.config.clone();
-        next.spice.enabled = true;
+        next.add_good(Good {
+            map: Map::Flat { capacity: 0.0 },
+            ..Good::spice()
+        });
         let errs = w.set_config(next).unwrap_err();
-        assert_eq!(errs[0].field, "spice.enabled");
-        assert!(!w.config.spice.enabled);
+        assert_eq!(errs[0].field, "goods");
+        assert_eq!(w.config.goods.len(), 1);
     }
 
     #[test]

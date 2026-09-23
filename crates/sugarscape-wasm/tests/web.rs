@@ -44,7 +44,7 @@ fn partial_config_exports_in_full() {
     let sim = Sim::new(r#"{"population": 100}"#, 1, None).unwrap();
     let full = sim.export_config();
     assert!(full.contains(r#""population":100"#), "{full}");
-    assert!(full.contains(r#""landscape":{"kind":"#), "{full}");
+    assert!(full.contains(r#""goods":[{"name":"sugar""#), "{full}");
     assert!(full.contains(r#""combat":"#), "{full}");
 }
 
