@@ -88,7 +88,7 @@ button[aria-pressed='true'] { border-color: var(--accent); box-shadow: inset 0 0
 .inspect table { border-collapse: collapse; width: 100%; }
 .inspect th { text-align: left; color: var(--muted); font-weight: normal; padding: 3px 10px 3px 0; white-space: nowrap; vertical-align: top; }
 .inspect td { padding: 3px 0; font-variant-numeric: tabular-nums; }
-.inspect code { font-size: 12px; letter-spacing: 0.08em; }
+.inspect code { font-size: 12px; letter-spacing: 0.08em; word-break: break-all; }
 .links { display: flex; flex-wrap: wrap; gap: 4px; }
 button.link { padding: 0 6px; font-size: 12px; }
 .menu { position: relative; }

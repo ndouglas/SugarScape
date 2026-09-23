@@ -117,6 +117,7 @@ export class Engine {
     this.seed = seed;
     this.selection = null;
     this.presetId = this.matchPreset();
+    this.clearDiseaseDisplayIfDiseaseIsOff();
     this.emit('reset');
     return null;
   }
@@ -138,6 +139,7 @@ export class Engine {
     mutate(base);
     this.baseConfig = base;
     this.config = normalized(this.sim);
+    this.clearDiseaseDisplayIfDiseaseIsOff();
     this.emit('config');
     return null;
   }
@@ -190,6 +192,26 @@ export class Engine {
     if (d.layer) this.layer = d.layer;
     if (d.overlays) Object.assign(this.overlays, d.overlays);
     this.emit('display');
+  }
+
+  /**
+   * When disease is off, a `disease` color mode or network overlay has
+   * nothing to show: fall back to tribe coloring and hide the overlay.
+   * Called whenever the config is (re)applied, so display state never
+   * outlives the rule it depicts.
+   */
+  private clearDiseaseDisplayIfDiseaseIsOff(): void {
+    if (this.config.disease.enabled) return;
+    let changed = false;
+    if (this.colorMode === 'disease') {
+      this.colorMode = 'tribe';
+      changed = true;
+    }
+    if (this.overlays.disease) {
+      this.overlays.disease = false;
+      changed = true;
+    }
+    if (changed) this.emit('display');
   }
 
   inspect(x: number, y: number): Inspection {

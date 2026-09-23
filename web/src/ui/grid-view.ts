@@ -69,7 +69,7 @@ export class GridView {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.buffer, 0, 0, width * CELL, height * CELL);
 
-    for (const [kind, color] of [['trade', '--c3'], ['credit', '--c2'], ['disease', '--red']] as const) {
+    for (const [kind, color] of [['trade', '--c3'], ['credit', '--c2'], ['disease', '--c4']] as const) {
       if (!this.engine.overlays[kind]) continue;
       const e = this.engine.sim.networks(kind);
       ctx.save();
