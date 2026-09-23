@@ -1,6 +1,7 @@
 import './style.css';
 import { downloadBlob, downloadText, canvasBlob } from './downloads';
 import { Engine } from './engine';
+import { ExperimentsView } from './experiments/view';
 import { decodeShare, encodeShare, readHash } from './share';
 import { ChartsPanel } from './ui/charts-panel';
 import { buildDisplay } from './ui/display';
@@ -36,6 +37,25 @@ async function main(): Promise<void> {
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
   document.querySelector('#toolbar')!.append(buildToolbar(engine));
   document.querySelector('#display')!.append(buildDisplay(engine));
+  const experiments = new ExperimentsView();
+  document.querySelector('#experiments')!.append(experiments.el);
+  const views = { playground: 'Playground', experiments: 'Experiments' } as const;
+  type View = keyof typeof views;
+  const viewButtons = (Object.keys(views) as View[]).map((view) =>
+    h('button', { 'data-view': view, onclick: () => showView(view) }, views[view]),
+  );
+  const showView = (view: View): void => {
+    // The playground's world is kept, paused, while Experiments is shown.
+    if (view === 'experiments') engine.setRunning(false);
+    document.body.dataset.view = view;
+    document.querySelector<HTMLElement>('#playground')!.hidden = view !== 'playground';
+    document.querySelector<HTMLElement>('#experiments')!.hidden = view !== 'experiments';
+    for (const b of viewButtons) b.setAttribute('aria-pressed', String(b.dataset.view === view));
+  };
+  document
+    .querySelector('.toolbar h1')!
+    .after(h('div', { class: 'view-switch', role: 'group', 'aria-label': 'View' }, ...viewButtons));
+  showView('playground');
 
   const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
   tabs.add('Rules', new RulesPanel(engine).el);

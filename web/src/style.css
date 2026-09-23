@@ -107,3 +107,38 @@ button.link { padding: 0 6px; font-size: 12px; }
 .pollution-table tr.pollutant th { padding-top: 8px; }
 .pollution-table .num { width: 4.5em; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; }
+.view-switch { display: flex; }
+.view-switch button { border-radius: 0; }
+.view-switch button:first-child { border-radius: 6px 0 0 6px; }
+.view-switch button:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
+body[data-view='experiments'] .toolbar .group,
+body[data-view='experiments'] .toolbar .readout,
+body[data-view='experiments'] .toolbar-end { display: none; }
+.experiments { padding: 16px; }
+.experiments-view { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 16px; align-items: start; }
+.sweep-setup { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; }
+.sweep-setup .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sweep-setup select { max-width: 100%; }
+.sweep-fixed h2 { font-size: 15px; margin: 0; }
+.sweep-fixed dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 6px 0; }
+.sweep-fixed dt { color: var(--muted); }
+.sweep-fixed dd { margin: 0; }
+.sweep-form { display: grid; gap: 6px; }
+.sweep-form fieldset { border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin: 0; display: grid; gap: 4px; }
+.sweep-form .control { display: grid; gap: 2px; }
+.sweep-form .row { display: flex; gap: 6px; align-items: center; }
+.sweep-form input[type='text'] { width: 100%; }
+.sweep-form .num { width: 7em; }
+.run-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.run-bar progress { flex: 1; min-width: 6em; }
+.sweep-results { display: grid; gap: 12px; min-width: 0; }
+.sweep-chart { margin: 0; }
+.sweep-table { font-size: 12px; overflow-x: auto; }
+.sweep-table table { border-collapse: collapse; }
+.sweep-table th, .sweep-table td { padding: 2px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: normal; }
+.sweep-table th:first-child, .sweep-table td:first-child { text-align: left; }
+.sweep-table th { color: var(--muted); }
+.sweep-outputs { display: flex; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 860px) {
+  .experiments-view { grid-template-columns: 1fr; }
+}

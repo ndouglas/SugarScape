@@ -93,4 +93,15 @@ describe('worker pool', () => {
     await expect(new WorkerPool(2, create).run('{}', 10, () => {})).rejects.toThrow('worker crashed');
     expect(workers.every((w) => w.terminated)).toBe(true);
   });
+
+  it('rejects and terminates its workers when onResult throws', async () => {
+    const { workers, create } = fakes();
+    const pool = new WorkerPool(2, create);
+    await expect(
+      pool.run('{}', 10, () => {
+        throw new Error('bad callback');
+      }),
+    ).rejects.toThrow('bad callback');
+    expect(workers.every((w) => w.terminated)).toBe(true);
+  });
 });

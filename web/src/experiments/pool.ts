@@ -65,7 +65,12 @@ export class WorkerPool {
             end(() => reject(new Error(message)));
             return;
           }
-          onResult(reply.run);
+          try {
+            onResult(reply.run);
+          } catch (e) {
+            end(() => reject(e instanceof Error ? e : new Error(String(e))));
+            return;
+          }
           finished += 1;
           if (finished === count) end(() => resolve('done'));
           else if (this.stop !== null) feed(w);
