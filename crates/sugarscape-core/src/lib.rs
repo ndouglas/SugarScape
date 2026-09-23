@@ -18,6 +18,7 @@ pub mod render;
 pub mod rng;
 pub mod rules;
 pub mod stats;
+pub mod sweep;
 pub mod world;
 
 #[cfg(test)]
