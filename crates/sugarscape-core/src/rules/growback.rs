@@ -26,20 +26,15 @@ pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
 
 pub(crate) fn apply(world: &mut World) {
     let instant = world.config.growback.instant;
-    let spice = world.config.goods.len() >= 2;
+    let n = world.config.goods.len();
     for i in 0..world.sites.len() {
         let rate = rate_at(&world.config, world.tick, world.torus.pos(i).y);
         let site = &mut world.sites[i];
-        site.resource[0] = if instant {
-            site.capacity[0]
-        } else {
-            (site.resource[0] + rate).min(site.capacity[0])
-        };
-        if spice {
-            site.resource[1] = if instant {
-                site.capacity[1]
+        for (level, &cap) in site.resource.iter_mut().zip(&site.capacity).take(n) {
+            *level = if instant {
+                cap
             } else {
-                (site.resource[1] + rate).min(site.capacity[1])
+                (*level + rate).min(cap)
             };
         }
     }
@@ -105,5 +100,17 @@ mod tests {
         add_goods(&mut w.config, 2);
         apply(&mut w);
         assert_eq!(w.site(Pos::new(3, 3)).resource[1], 1.0);
+    }
+
+    #[test]
+    fn every_good_grows_back() {
+        let mut w = world_with_empty_site(3.0);
+        add_goods(&mut w.config, 3);
+        w.site_mut(Pos::new(3, 3)).capacity[2] = 2.0;
+        apply(&mut w);
+        assert_eq!(w.site(Pos::new(3, 3)).resource[2], 1.0);
+        w.config.growback.instant = true;
+        apply(&mut w);
+        assert_eq!(w.site(Pos::new(3, 3)).resource[2], 2.0);
     }
 }

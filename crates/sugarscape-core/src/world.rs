@@ -433,24 +433,23 @@ impl World {
             .copied()
             .filter(|c| self.agents.contains_key(c))
             .collect();
-        let n = heirs.len() as f64;
-        let sugar = if agent.holdings[0] > 0.0 {
-            agent.holdings[0] / n
-        } else {
-            0.0
-        };
-        let spice = if agent.holdings[1] > 0.0 {
-            agent.holdings[1] / n
-        } else {
-            0.0
-        };
-        if heirs.is_empty() || (sugar == 0.0 && spice == 0.0) {
+        let n = self.config.goods.len();
+        let count = heirs.len() as f64;
+        let shares: [f64; crate::config::MAX_GOODS] = std::array::from_fn(|i| {
+            if i < n && agent.holdings[i] > 0.0 {
+                agent.holdings[i] / count
+            } else {
+                0.0
+            }
+        });
+        if heirs.is_empty() || shares.iter().all(|&s| s == 0.0) {
             return;
         }
         for heir in heirs {
             let h = self.agents.get_mut(&heir).expect("living heir");
-            h.holdings[0] += sugar;
-            h.holdings[1] += spice;
+            for (have, share) in h.holdings.iter_mut().zip(&shares).take(n) {
+                *have += share;
+            }
         }
     }
 

@@ -5,19 +5,22 @@ use crate::config::MAX_GOODS;
 use crate::rules::Harvest;
 use crate::world::{DeathCause, World};
 
-/// Burns each good at its effective metabolism (plus the disease fee per
+/// Burns each of the n goods at its effective metabolism (plus the disease fee per
 /// carried disease). With rule P on, each pollutant k on the agent's site
 /// gains Σᵢ Πₖᵢ·gatheredᵢ + Σᵢ Χₖᵢ·burnedᵢ (sums from 0.0 in good order).
 pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
-    let two = world.config.goods.len() >= 2;
+    let n = world.config.goods.len();
     let fee = world.config.disease.active_fee();
     let agent = world.agent_mut(id).expect("live agent");
-    let mut burned = [0.0; MAX_GOODS];
-    burned[0] = agent.effective_metabolism(0, fee);
-    agent.holdings[0] -= burned[0];
-    if two {
-        burned[1] = agent.effective_metabolism(1, fee);
-        agent.holdings[1] -= burned[1];
+    let burned: [f64; MAX_GOODS] = std::array::from_fn(|i| {
+        if i < n {
+            agent.effective_metabolism(i, fee)
+        } else {
+            0.0
+        }
+    });
+    for (have, burn) in agent.holdings.iter_mut().zip(&burned).take(n) {
+        *have -= burn;
     }
     let pos = agent.pos;
     if world.config.pollution.enabled {
@@ -47,12 +50,12 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
     }
 }
 
-/// Kills the agent if its sugar is at or below zero or, with lifespan on, it
+/// Kills the agent if any good is at or below zero or, with lifespan on, it
 /// has outlived its maximum age. Returns whether it died.
 pub(crate) fn check_death(world: &mut World, id: AgentId) -> bool {
     let agent = world.agent(id).expect("live agent");
-    let starving =
-        agent.holdings[0] <= 0.0 || (world.config.goods.len() >= 2 && agent.holdings[1] <= 0.0);
+    let n = world.config.goods.len();
+    let starving = agent.holdings[..n].iter().any(|&h| h <= 0.0);
     let cause = if starving {
         Some(DeathCause::Starvation)
     } else if world.config.lifespan.enabled && agent.age > agent.max_age {
@@ -166,6 +169,7 @@ mod tests {
     #[test]
     fn inheritance_splits_spice_too() {
         let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 2);
         w.config.inheritance.enabled = true;
         let parent = spawn(&mut w, 0, 0);
         let child = spawn(&mut w, 1, 0);
@@ -230,5 +234,61 @@ mod tests {
             6.0 - 1.0,
             "no fee while disease is off"
         );
+    }
+
+    #[test]
+    fn with_three_goods_agents_burn_every_good_and_die_of_any() {
+        let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 3);
+        let id = spawn(&mut w, 2, 2);
+        {
+            let a = w.agent_mut(id).unwrap();
+            a.holdings[2] = 5.0;
+            a.metabolism[2] = 2;
+        }
+        metabolize(&mut w, id, Harvest::default());
+        assert_eq!(w.agent(id).unwrap().holdings[2], 3.0);
+        assert!(!check_death(&mut w, id));
+        w.agent_mut(id).unwrap().metabolism[2] = 3;
+        metabolize(&mut w, id, Harvest::default());
+        assert!(check_death(&mut w, id), "out of good 2");
+    }
+
+    #[test]
+    fn consumption_pollution_counts_every_good_burned() {
+        let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 3);
+        w.config.pollution.enabled = true;
+        {
+            let p = &mut w.config.pollution.pollutants[0];
+            p.production = vec![0.0, 0.0, 2.0];
+            p.consumption = vec![0.0, 0.0, 3.0];
+        }
+        let id = spawn(&mut w, 2, 2);
+        {
+            let a = w.agent_mut(id).unwrap();
+            a.holdings[2] = 10.0;
+            a.metabolism[2] = 1;
+        }
+        metabolize(&mut w, id, Harvest::of(&[0.0, 0.0, 4.0]));
+        assert_eq!(
+            w.site(crate::geometry::Pos::new(2, 2)).pollution[0],
+            2.0 * 4.0 + 3.0 * 1.0
+        );
+    }
+
+    #[test]
+    fn inheritance_splits_every_good() {
+        let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 3);
+        w.config.inheritance.enabled = true;
+        let parent = spawn(&mut w, 0, 0);
+        let c1 = spawn(&mut w, 1, 0);
+        let c2 = spawn(&mut w, 2, 0);
+        w.agent_mut(parent).unwrap().children = vec![c1, c2];
+        w.agent_mut(parent).unwrap().holdings[2] = 6.0;
+        w.kill(parent, DeathCause::OldAge);
+        assert_eq!(w.agent(c1).unwrap().holdings[2], 3.0);
+        assert_eq!(w.agent(c2).unwrap().holdings[2], 3.0);
     }
 }
