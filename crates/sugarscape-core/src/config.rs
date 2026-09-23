@@ -706,11 +706,16 @@ impl Config {
     /// A copy with one dotted `path` set to `value`.
     pub fn with_path(&self, path: &str, value: &serde_json::Value) -> Result<Config, FieldError> {
         let mut json = serde_json::to_value(self).expect("config serializes");
+        let unknown = || FieldError::new("schedule", format!("unknown field {path}"));
         let mut slot = &mut json;
         for key in path.split('.') {
-            slot = slot
-                .get_mut(key)
-                .ok_or_else(|| FieldError::new("schedule", format!("unknown field {path}")))?;
+            slot = match slot {
+                serde_json::Value::Array(items) => {
+                    key.parse::<usize>().ok().and_then(|i| items.get_mut(i))
+                }
+                other => other.get_mut(key),
+            }
+            .ok_or_else(unknown)?;
         }
         *slot = value.clone();
         serde_json::from_value(json)
@@ -1211,5 +1216,40 @@ mod tests {
             }];
         })
         .is_empty());
+    }
+
+    #[test]
+    fn with_path_indexes_into_arrays() {
+        let mut c = Config::default();
+        c.disease.outbreaks = vec![
+            Outbreak {
+                tick: 5,
+                agents: 1,
+                length: None,
+            },
+            Outbreak {
+                tick: 9,
+                agents: 2,
+                length: None,
+            },
+        ];
+        let next = c
+            .with_path("disease.outbreaks.1.agents", &serde_json::json!(7))
+            .unwrap();
+        assert_eq!(
+            (
+                next.disease.outbreaks[0].agents,
+                next.disease.outbreaks[1].agents
+            ),
+            (1, 7)
+        );
+        for bad in [
+            "disease.outbreaks.2.agents",
+            "disease.outbreaks.x.agents",
+            "disease.outbreaks.-1",
+        ] {
+            let err = c.with_path(bad, &serde_json::json!(1)).unwrap_err();
+            assert_eq!(err.message, format!("unknown field {bad}"));
+        }
     }
 }
