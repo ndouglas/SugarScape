@@ -35,7 +35,14 @@ type SeriesCache = (name: string) => Float64Array;
 
 export class ChartsPanel {
   readonly el = h('div', { class: 'charts' });
-  private plots: { name: string; plot: uPlot; update: (series: SeriesCache) => void; visible: () => boolean }[] = [];
+  private plots: {
+    name: string;
+    plot: uPlot;
+    figure: HTMLElement;
+    update: (series: SeriesCache) => void;
+    /** Hidden (and not redrawn) while false. */
+    visible: () => boolean;
+  }[] = [];
   private visible = false;
   private last = 0;
   /** Tick drawn by the last refresh; null forces the next one. */
@@ -109,7 +116,7 @@ export class ChartsPanel {
   ): void {
     const figure = h('figure', { class: 'chart' }, h('figcaption', {}, title));
     const plot = new uPlot({ ...opts, width: this.width(), height: HEIGHT }, data, figure);
-    this.plots.push({ name: title, plot, update: (series) => update(plot, series), visible });
+    this.plots.push({ name: title, plot, figure, update: (series) => update(plot, series), visible });
     container.append(figure);
   }
 
@@ -180,16 +187,18 @@ export class ChartsPanel {
       },
     );
 
+    // Market charts need spice; loan charts need credit; the section needs either.
     const economy = h('section', { class: 'economy' }, h('h3', {}, 'Economy'));
     this.el.append(economy);
-    const econOn = () => this.engine.config.spice.enabled || this.engine.config.credit.enabled;
+    const spiceOn = () => this.engine.config.spice.enabled;
+    const creditOn = () => this.engine.config.credit.enabled;
     const syncSection = () => {
-      economy.hidden = !econOn();
+      economy.hidden = !(spiceOn() || creditOn());
+      for (const p of this.plots) p.figure.hidden = !p.visible();
       this.drawnTick = null;
     };
     this.engine.on('reset', syncSection);
     this.engine.on('config', syncSection);
-    syncSection();
 
     this.add(
       'Trade price (ln)',
@@ -211,10 +220,10 @@ export class ChartsPanel {
         plot.setData([series('tick'), m, m.map((v, i) => v + sd[i]), m.map((v, i) => v - sd[i])]);
       },
       economy,
-      econOn,
+      spiceOn,
     );
 
-    addTimeChart({ title: 'Trade volume', lines: [{ key: 'trade_volume', label: 'Volume', color: '--c1' }] }, economy, econOn);
+    addTimeChart({ title: 'Trade volume', lines: [{ key: 'trade_volume', label: 'Volume', color: '--c1' }] }, economy, spiceOn);
 
     this.add(
       'Supply & demand',
@@ -248,7 +257,7 @@ export class ChartsPanel {
         plot.setData([prices, demand, supply, point(eqP, eqQ), point(actP, actQ)]);
       },
       economy,
-      econOn,
+      spiceOn,
     );
 
     addTimeChart(
@@ -260,10 +269,10 @@ export class ChartsPanel {
         ],
       },
       economy,
-      econOn,
+      creditOn,
     );
 
-    addTimeChart({ title: 'Debt outstanding', lines: [{ key: 'debt_outstanding', label: 'Debt', color: '--c3' }] }, economy, econOn);
+    addTimeChart({ title: 'Debt outstanding', lines: [{ key: 'debt_outstanding', label: 'Debt', color: '--c3' }] }, economy, creditOn);
 
     addTimeChart(
       {
@@ -274,7 +283,9 @@ export class ChartsPanel {
         ],
       },
       economy,
-      econOn,
+      spiceOn,
     );
+
+    syncSection();
   }
 }
