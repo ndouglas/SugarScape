@@ -158,10 +158,10 @@ pub(crate) fn find_or_add(world: &mut World, bits: Bits) -> DiseaseId {
     }
 }
 
-/// A brand-new random disease: redrawn up to 100 times until it differs from
-/// every listed disease; if none does, the last draw's existing id is reused.
-pub(crate) fn new_random(world: &mut World) -> DiseaseId {
-    let length = world.config.disease.length;
+/// A brand-new random disease of the given `length`: redrawn up to 100 times
+/// until it differs from every listed disease; if none does, the last
+/// draw's existing id is reused.
+pub(crate) fn new_random_with_length(world: &mut World, length: URange) -> DiseaseId {
     let mut draw = random_disease(length, &mut world.rng);
     for _ in 0..100 {
         if !world.diseases.contains(&draw) {
@@ -172,19 +172,27 @@ pub(crate) fn new_random(world: &mut World) -> DiseaseId {
     find_or_add(world, draw)
 }
 
+/// A brand-new random disease drawn from `disease.length`.
+pub(crate) fn new_random(world: &mut World) -> DiseaseId {
+    new_random_with_length(world, world.config.disease.length)
+}
+
 /// Applies the outbreaks due at the tick about to run: each creates a new
-/// disease and offers it to `min(agents, population)` random living agents.
+/// disease — its length drawn from the outbreak's own `length` override if
+/// given, else from `disease.length` — and offers it to `min(agents,
+/// population)` random living agents.
 pub(crate) fn outbreaks(world: &mut World) {
-    let due: Vec<u32> = world
+    let due: Vec<(u32, Option<URange>)> = world
         .config
         .disease
         .outbreaks
         .iter()
         .filter(|o| o.tick == world.tick)
-        .map(|o| o.agents)
+        .map(|o| (o.agents, o.length))
         .collect();
-    for agents in due {
-        let disease = new_random(world);
+    for (agents, length) in due {
+        let length = length.unwrap_or(world.config.disease.length);
+        let disease = new_random_with_length(world, length);
         let ids = world.agent_ids();
         let k = (agents as usize).min(ids.len());
         for i in rand::seq::index::sample(&mut world.rng, ids.len(), k).into_vec() {
@@ -392,7 +400,11 @@ mod tests {
     fn outbreaks_infect_random_agents_with_a_new_disease_at_their_tick() {
         let mut w = sick_world();
         w.config.disease.length = URange::new(8, 8);
-        w.config.disease.outbreaks = vec![Outbreak { tick: 2, agents: 3 }];
+        w.config.disease.outbreaks = vec![Outbreak {
+            tick: 2,
+            agents: 3,
+            length: None,
+        }];
         // Five agents two sites apart (no neighbors), with empty immune strings
         // so no random disease can be resisted.
         let ids: Vec<AgentId> = (0..5)
@@ -428,6 +440,7 @@ mod tests {
         w.config.disease.outbreaks = vec![Outbreak {
             tick: 0,
             agents: 50,
+            length: None,
         }];
         let a = spawn(&mut w, 0, 0);
         let c = spawn(&mut w, 5, 5);
@@ -436,6 +449,26 @@ mod tests {
         }
         w.step();
         assert_eq!(w.events().infections.len(), 2);
+    }
+
+    #[test]
+    fn outbreak_length_override_sets_the_new_disease_s_length() {
+        let mut w = sick_world();
+        w.config.disease.length = URange::new(1, 1);
+        w.config.disease.outbreaks = vec![Outbreak {
+            tick: 0,
+            agents: 1,
+            length: Some(URange::new(10, 10)),
+        }];
+        let id = spawn(&mut w, 0, 0);
+        w.agent_mut(id).unwrap().immune = Bits::default();
+        w.step();
+        assert_eq!(w.diseases.len(), 1);
+        assert_eq!(
+            w.diseases[0].len(),
+            10,
+            "the override's length wins over disease.length"
+        );
     }
 
     #[test]

@@ -150,10 +150,15 @@ pub struct Foresight {
 /// A novel disease appearing mid-run (Chapter V's McNeill scenario): at the
 /// start of the tick when `World::tick == tick`, a brand-new random disease
 /// infects `agents` random living agents (all of them if there are fewer).
+/// The new disease's length is drawn from `length` if given, else from
+/// `disease.length` — a genuinely novel outbreak can be given a length the
+/// existing immune population is unlikely to already contain.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Outbreak {
     pub tick: u64,
     pub agents: u32,
+    #[serde(default)]
+    pub length: Option<URange>,
 }
 
 /// Rule E (Chapter V, Appendix B): immune response and disease transmission.
@@ -584,6 +589,14 @@ impl Config {
             "disease.outbreaks",
             "each outbreak needs tick ≥ 1 and at least 1 agent",
         );
+        e.check(
+            d.outbreaks.iter().all(|o| match o.length {
+                Some(l) => l.min >= 1 && l.max < d.immune_length && l.min <= l.max,
+                None => true,
+            }),
+            "disease.outbreaks",
+            "an outbreak's length override must be 1 ≤ min ≤ max < immune_length",
+        );
         e.finish()
     }
 
@@ -998,11 +1011,35 @@ mod tests {
             "disease.disease_mutation"
         ));
         assert!(has(
-            with(|d| d.outbreaks = vec![Outbreak { tick: 0, agents: 5 }]),
+            with(|d| d.outbreaks = vec![Outbreak {
+                tick: 0,
+                agents: 5,
+                length: None
+            }]),
             "disease.outbreaks"
         ));
         assert!(has(
-            with(|d| d.outbreaks = vec![Outbreak { tick: 3, agents: 0 }]),
+            with(|d| d.outbreaks = vec![Outbreak {
+                tick: 3,
+                agents: 0,
+                length: None
+            }]),
+            "disease.outbreaks"
+        ));
+        assert!(has(
+            with(|d| d.outbreaks = vec![Outbreak {
+                tick: 3,
+                agents: 5,
+                length: Some(URange::new(5, 3))
+            }]),
+            "disease.outbreaks"
+        ));
+        assert!(has(
+            with(|d| d.outbreaks = vec![Outbreak {
+                tick: 3,
+                agents: 5,
+                length: Some(URange::new(1, 50))
+            }]),
             "disease.outbreaks"
         ));
         assert!(with(|d| {
@@ -1012,6 +1049,7 @@ mod tests {
             d.outbreaks = vec![Outbreak {
                 tick: 300,
                 agents: 5,
+                length: Some(URange::new(10, 10)),
             }];
         })
         .is_empty());
@@ -1080,7 +1118,11 @@ mod tests {
             d.flips_per_tick = 3;
             d.genome_mutation = 0.1;
             d.disease_mutation = 0.1;
-            d.outbreaks = vec![Outbreak { tick: 9, agents: 1 }];
+            d.outbreaks = vec![Outbreak {
+                tick: 9,
+                agents: 1,
+                length: None,
+            }];
         })
         .is_empty());
     }

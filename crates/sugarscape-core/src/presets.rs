@@ -284,7 +284,7 @@ pub fn all() -> Vec<Preset> {
             "v-1-rid",
             "({G₁}, {M, E})",
             "Animation V-1",
-            "Immune systems learn the diseases their agents carry: the society rids itself of disease.",
+            "Immune systems learn the diseases their agents carry: near-eradication (a residue of ~1-3% persists because learning one disease can overwrite the window that cured another).",
             disease,
         ),
         preset(
@@ -306,9 +306,20 @@ pub fn all() -> Vec<Preset> {
             |c| {
                 demography(c);
                 disease(c);
+                // A 10-bit length (the top of disease.length's own 1-10
+                // range, but forced rather than left to chance) keeps the
+                // outbreak's disease genuinely novel: task-14's book test
+                // found that with the default 1-10 draw, a short length
+                // (1-3 bits) is very likely already a substring of most
+                // agents' 50-bit immune strings by pure chance, so the
+                // outbreak sometimes "infects" 5 agents who are immediately
+                // immune and nothing spreads. A 10-bit string is unlikely to
+                // already be present, so the outbreak reliably takes hold
+                // and is then transmitted onward.
                 c.disease.outbreaks = vec![Outbreak {
                     tick: 300,
                     agents: 5,
+                    length: Some(URange::new(10, 10)),
                 }];
             },
         ),
@@ -378,18 +389,44 @@ pub fn all() -> Vec<Preset> {
                 // never survives to the 200/500/800/1000 sampling points.
                 // Per the controller's round-2 ruling this (infection
                 // vanishing between outbreaks) is an acceptable outcome.
+                //
+                // Fix round 3 (task-14 review): each `Outbreak` below now
+                // pins `length: Some(10, 10)` instead of drawing from the
+                // default 1-10-bit `disease.length` range, so its disease is
+                // reliably novel rather than sometimes already a substring
+                // of most agents' immune strings by chance. Re-measured
+                // (seeds 1-5, t=1000 population): 1741, 1787, 1746, 1764,
+                // 1773 - still comfortably above the 50-agent bar (the
+                // change only affects the outbreak's own disease length, not
+                // endowment or the endemic 25/10 load). infected_fraction at
+                // t=200/500/800/1000 is still 0.000 for every seed - the
+                // sampling points are unchanged and still land well after
+                // each outbreak clears - but a finer-grained trace now shows
+                // each outbreak taking hold far more substantially than
+                // round 2's short-string draws: peak infected_fraction in
+                // the 20 ticks after each outbreak (seeds 1-3) ranges
+                // 4.8%-16.8%, with 51-1155 new infections summed over that
+                // window (vs. round 2's single-digit counts), and it is
+                // still fully cleared again by the next 50-150-tick-later
+                // sampling point. The controller's round-2 ruling (infection
+                // vanishing between outbreaks is an acceptable outcome for
+                // this preset) still applies; only the outbreaks' own
+                // severity changed, not the sampled headline numbers.
                 c.disease.outbreaks = vec![
                     Outbreak {
                         tick: 150,
                         agents: 20,
+                        length: Some(URange::new(10, 10)),
                     },
                     Outbreak {
                         tick: 400,
                         agents: 20,
+                        length: Some(URange::new(10, 10)),
                     },
                     Outbreak {
                         tick: 650,
                         agents: 20,
+                        length: Some(URange::new(10, 10)),
                     },
                 ];
             },
@@ -448,7 +485,8 @@ mod tests {
             m.disease.outbreaks,
             vec![Outbreak {
                 tick: 300,
-                agents: 5
+                agents: 5,
+                length: Some(URange::new(10, 10)),
             }]
         );
         let e = by_id("vi-1-everything").unwrap().config;

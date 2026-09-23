@@ -72,6 +72,7 @@ fn config_strategy() -> impl Strategy<Value = Config> {
                     c.disease.outbreaks = vec![Outbreak {
                         tick: 10,
                         agents: 5,
+                        length: None,
                     }];
                 }
                 c

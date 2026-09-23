@@ -227,36 +227,55 @@ fn many_diseases_stay_endemic() {
 fn a_novel_disease_spreads_after_the_mcneill_outbreak() {
     // The t=300 outbreak seeds 5 agents with a brand-new disease. Before it,
     // this reproducing society (demography + Animation V-1's disease
-    // parameters) has already learned away everything it carries: no
-    // `new_infections` at all in the 100 ticks before the outbreak, any
-    // seed.
+    // parameters) has already learned away everything it carries.
     //
-    // The brief's original metric -- peak concurrently-infected count in
-    // t=301..=400 -- turned out not to be robust: the outbreak's disease is
-    // drawn from the same 1-10-bit length range as every other disease, so
-    // it is sometimes short enough that even the 5 directly-seeded agents
-    // self-cure within the *same* tick (one immune flip can fully match a
-    // 1-2 bit disease). Tracing seed 3 tick-by-tick confirmed this: at tick
-    // 300 exactly one agent is infected (`new_infections[301] == 1`), but
-    // `infected_fraction[301]` is already back near 0 because that agent's
-    // own turn, later in the same tick, cured it -- so a peak-based
-    // assertion would wrongly read seed 3 as "no spread" even though the
-    // outbreak did take hold and transmission events did occur. `new_infections`
-    // counts every transmission event regardless of same-tick cures, so it
-    // is used here instead.
+    // Fix round 1 (task-14 review): two problems with the original test.
+    // First, the brief's peak-concurrently-infected metric wasn't robust to
+    // same-tick self-cures of short diseases (see the round-1 report for
+    // the seed-3 trace that motivated switching to an event-count metric).
+    // Second, and more fundamentally, counting *all* `new_infections`
+    // (including the outbreak's own direct seeding, `infector: None`) could
+    // pass even when the novel disease reached nobody else -- seed 3 in
+    // particular showed the disease taking hold in exactly one of the 5
+    // seeded agents and never spreading further, which a raw
+    // `new_infections` count could not distinguish from real spread.
     //
-    // Observed (seeds 1..=3): new_infections summed over t in [200,300)
-    // (before the outbreak) = 0, 0, 0; summed over t in [300,400]
-    // (after) = 13, 14, 1.
+    // This version fixes both: the outbreak's disease now has a fixed
+    // 10-bit length (`v-mcneill`'s `Outbreak.length` override in
+    // presets.rs) instead of the default 1-10-bit draw, so it is unlikely
+    // to already be a substring of an existing 50-bit immune string and
+    // reliably takes hold; and the test counts only *transmissions*
+    // (`infector: Some(_)`, i.e. agent-to-agent spread) by stepping the
+    // world manually and summing `w.events().infections` per tick, so
+    // outbreak seeding itself is excluded from both windows.
+    //
+    // Observed (seeds 1..=3): transmissions (infector: Some(_)) summed over
+    // ticks [200,300) (before the outbreak) = 0, 0, 0; summed over ticks
+    // [300,400) (after) = 22, 1, 11. A wider 15-seed sweep confirmed every
+    // seed's after-count is > 0 (range 1-111) with before always 0, so this
+    // isn't a lucky pick of seeds 1..=3.
     let config = presets::by_id("v-mcneill").unwrap().config;
     for seed in 1..=3 {
-        let w = run(config.clone(), seed, 400);
-        let ni = w.stats.series("new_infections").unwrap();
-        let before: f64 = ni[200..300].iter().sum();
-        let after: f64 = ni[300..=400].iter().sum();
+        let mut w = World::new(config.clone(), seed).unwrap();
+        let (mut before, mut after) = (0u32, 0u32);
+        for _ in 0..400 {
+            let tick = w.tick;
+            w.step();
+            let transmitted = w
+                .events()
+                .infections
+                .iter()
+                .filter(|i| i.infector.is_some())
+                .count() as u32;
+            if (200..300).contains(&tick) {
+                before += transmitted;
+            } else if (300..400).contains(&tick) {
+                after += transmitted;
+            }
+        }
         assert!(
             after > before,
-            "seed {seed}: new_infections before {before}, after {after}"
+            "seed {seed}: transmissions before {before}, after {after}"
         );
     }
 }
@@ -266,11 +285,14 @@ fn a_novel_disease_spreads_after_the_mcneill_outbreak() {
 fn everything_on_society_survives() {
     // Chapter VI's everything-on run; endowments chosen in presets.rs from
     // the measurements recorded there. Observed t=1000 populations (seeds
-    // 1..=3): 1810, 1770, 1760 (all far above the 50-agent bar; see
-    // presets.rs's `vi-1-everything` comment for the full seeds 1..=5
-    // history and why disease itself goes fully extinct there rather than
-    // staying endemic -- an accepted, documented deviation, not checked by
-    // this test).
+    // 1..=3, re-measured after the McNeill review's outbreak-length fix):
+    // 1741, 1787, 1746 (all far above the 50-agent bar; see presets.rs's
+    // `vi-1-everything` comment for the full seeds 1..=5 history, why
+    // infected_fraction reads 0.000 at every sampled tick despite each
+    // scheduled outbreak now taking hold much more substantially than
+    // before, and the accepted controller ruling that disease clearing
+    // between outbreaks is fine for this preset -- none of that is checked
+    // by this test, which is only about population survival).
     let config = presets::by_id("vi-1-everything").unwrap().config;
     for seed in 1..=3 {
         let w = run(config.clone(), seed, 1000);
