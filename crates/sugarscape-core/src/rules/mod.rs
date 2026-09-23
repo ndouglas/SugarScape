@@ -23,7 +23,8 @@ pub struct Harvest {
 }
 
 /// One agent's turn, in the book's order: move, metabolize, maybe die, then
-/// (if still alive) mate with each neighbor and spread culture to them.
+/// (if still alive) mate with each neighbor, spread culture to them, trade,
+/// borrow, and (rule E) train its immune system and pass on disease.
 pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     let harvest = if world.config.combat.enabled {
         combat::act(world, id)
@@ -48,5 +49,8 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     }
     if world.config.credit.enabled {
         credit::borrow(world, id);
+    }
+    if world.config.disease.enabled {
+        disease::act(world, id);
     }
 }
