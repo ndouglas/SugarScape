@@ -6,6 +6,7 @@ use rand::seq::SliceRandom;
 use crate::agent::AgentId;
 use crate::geometry::Pos;
 use crate::rng::SimRng;
+use crate::rules::Harvest;
 use crate::world::World;
 
 /// Picks among `(site, distance, value)` candidates: highest value, then
@@ -32,8 +33,11 @@ pub(crate) fn choose(candidates: &[(Pos, u32, f64)], rng: &mut SimRng) -> Pos {
 /// Rule M: look along the four lattice directions as far as vision permits,
 /// go to the nearest unoccupied site of maximum welfare and collect its sugar.
 /// The agent's current site competes at distance 0, so it stays put when
-/// nothing visible is better. Returns the sugar gathered.
-pub(crate) fn act(world: &mut World, id: AgentId) -> f64 {
+/// nothing visible is better. Returns the harvest.
+pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
+    if world.config.spice.enabled {
+        return act_two_goods(world, id);
+    }
     let agent = world.agent(id).expect("live agent");
     let (pos, vision) = (agent.pos, agent.vision);
     let polluted = world.config.pollution.enabled;
@@ -57,7 +61,54 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> f64 {
     let gathered = site.sugar;
     site.sugar = 0.0;
     world.agent_mut(id).expect("live agent").sugar += gathered;
-    gathered
+    Harvest {
+        sugar: gathered,
+        spice: 0.0,
+    }
+}
+
+/// Multicommodity M: maximize (foresight) welfare after gathering. Pollution
+/// discounts a site's sugar (and spice, if it pollutes) by 1/(1 + p).
+fn act_two_goods(world: &mut World, id: AgentId) -> Harvest {
+    let a = world.agent(id).expect("live agent");
+    let (pos, vision, phi) = (a.pos, a.vision, a.foresight);
+    let (w1, w2) = (a.sugar, a.spice);
+    let (m1, m2) = (f64::from(a.metabolism), f64::from(a.spice_metabolism));
+    let pollution = world.config.pollution;
+    let value = |w: &World, p: Pos| {
+        let s = w.site(p);
+        let discount = if pollution.enabled {
+            1.0 / (1.0 + s.pollution)
+        } else {
+            1.0
+        };
+        let x1 = s.sugar * discount;
+        let x2 = if pollution.spice_pollutes {
+            s.spice * discount
+        } else {
+            s.spice
+        };
+        crate::econ::foresight_welfare(w1 + x1, w2 + x2, m1, m2, phi)
+    };
+    let mut candidates = vec![(pos, 0, value(world, pos))];
+    for (q, d) in world.torus.sight(pos, vision) {
+        if !world.is_occupied(q) {
+            candidates.push((q, d, value(world, q)));
+        }
+    }
+    let target = choose(&candidates, &mut world.rng);
+    world.move_agent(id, target);
+    let site = world.site_mut(target);
+    let harvest = Harvest {
+        sugar: site.sugar,
+        spice: site.spice,
+    };
+    site.sugar = 0.0;
+    site.spice = 0.0;
+    let a = world.agent_mut(id).expect("live agent");
+    a.sugar += harvest.sugar;
+    a.spice += harvest.spice;
+    harvest
 }
 
 #[cfg(test)]
@@ -71,6 +122,15 @@ mod tests {
         id
     }
 
+    fn spicy(w: &mut World, vision: u32) -> AgentId {
+        w.config.spice.enabled = true;
+        let id = mover(w, vision);
+        let a = w.agent_mut(id).unwrap();
+        a.metabolism = 1;
+        a.spice_metabolism = 1;
+        id
+    }
+
     #[test]
     fn moves_to_the_richest_visible_site_and_gathers_it() {
         let mut w = blank_world(11, 11);
@@ -78,7 +138,7 @@ mod tests {
         set_sugar(&mut w, 5, 8, 3.0);
         set_sugar(&mut w, 7, 5, 2.0);
         let gathered = act(&mut w, id);
-        assert_eq!(gathered, 3.0);
+        assert_eq!(gathered.sugar, 3.0);
         assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 8));
         assert_eq!(w.agent(id).unwrap().sugar, 13.0);
         assert_eq!(w.site(Pos::new(5, 8)).sugar, 0.0);
@@ -147,5 +207,40 @@ mod tests {
             picks.insert(choose(&[a, b, c], &mut rng));
         }
         assert_eq!(picks.into_iter().collect::<Vec<_>>(), vec![b.0, c.0]);
+    }
+
+    #[test]
+    fn with_spice_agents_seek_the_good_they_lack() {
+        let mut w = blank_world(11, 11);
+        let id = spicy(&mut w, 3);
+        w.agent_mut(id).unwrap().sugar = 30.0;
+        w.agent_mut(id).unwrap().spice = 2.0;
+        set_sugar(&mut w, 5, 7, 4.0);
+        w.site_mut(Pos::new(7, 5)).spice = 2.0;
+        let h = act(&mut w, id);
+        assert_eq!(
+            w.agent(id).unwrap().pos,
+            Pos::new(7, 5),
+            "spice-poor agent picks spice"
+        );
+        assert_eq!(
+            h,
+            crate::rules::Harvest {
+                sugar: 0.0,
+                spice: 2.0
+            }
+        );
+        assert_eq!(w.agent(id).unwrap().spice, 4.0);
+    }
+
+    #[test]
+    fn with_spice_both_goods_are_gathered() {
+        let mut w = blank_world(11, 11);
+        let id = spicy(&mut w, 1);
+        set_sugar(&mut w, 5, 6, 2.0);
+        w.site_mut(Pos::new(5, 6)).spice = 3.0;
+        let h = act(&mut w, id);
+        assert_eq!((h.sugar, h.spice), (2.0, 3.0));
+        assert_eq!(w.site(Pos::new(5, 6)).spice, 0.0);
     }
 }

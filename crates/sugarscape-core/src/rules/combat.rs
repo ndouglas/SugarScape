@@ -18,10 +18,10 @@
 
 use crate::agent::{AgentId, Tribe};
 use crate::geometry::Pos;
-use crate::rules::movement::choose;
+use crate::rules::{movement::choose, Harvest};
 use crate::world::{DeathCause, World};
 
-pub(crate) fn act(world: &mut World, id: AgentId) -> f64 {
+pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let me = world.agent(id).expect("live agent");
     let (pos, vision, tribe, wealth) = (me.pos, me.vision, me.tribe(), me.sugar);
     let cap = if world.config.combat.unlimited {
@@ -57,7 +57,10 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> f64 {
     let gathered = site.sugar;
     site.sugar = 0.0;
     world.agent_mut(id).expect("live agent").sugar += gathered + loot;
-    gathered
+    Harvest {
+        sugar: gathered,
+        spice: 0.0,
+    }
 }
 
 /// Whether some other-tribe agent visible from `target` would be wealthier
@@ -112,7 +115,7 @@ mod tests {
         let victim = red(&mut w, 5, 7, 3.0);
         set_sugar(&mut w, 5, 7, 1.0);
         let gathered = act(&mut w, me);
-        assert_eq!(gathered, 1.0);
+        assert_eq!(gathered.sugar, 1.0);
         assert_eq!(w.agent(me).unwrap().pos, Pos::new(5, 7));
         assert_eq!(w.agent(me).unwrap().sugar, 14.0);
         assert!(w.agent(victim).is_none());

@@ -1,17 +1,32 @@
 //! Metabolism (with pollution formation) and death.
 
 use crate::agent::AgentId;
+use crate::rules::Harvest;
 use crate::world::{DeathCause, World};
 
-/// Burns `metabolism` sugar. With rule P on, the agent's site gains
-/// production pollution α·gathered plus consumption pollution β·metabolism.
-pub(crate) fn metabolize(world: &mut World, id: AgentId, gathered: f64) {
+/// Burns sugar (and spice when it's on). With rule P on, the agent's site
+/// gains α·gathered + β·burned — sugar only, unless spice pollutes too.
+pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
+    let spice_on = world.config.spice.enabled;
     let agent = world.agent_mut(id).expect("live agent");
     let burned = f64::from(agent.metabolism);
     agent.sugar -= burned;
+    let burned_spice = if spice_on {
+        f64::from(agent.spice_metabolism)
+    } else {
+        0.0
+    };
+    if spice_on {
+        agent.spice -= burned_spice;
+    }
     let pos = agent.pos;
     let p = world.config.pollution;
     if p.enabled {
+        let (gathered, burned) = if p.spice_pollutes {
+            (harvest.sugar + harvest.spice, burned + burned_spice)
+        } else {
+            (harvest.sugar, burned)
+        };
         world.site_mut(pos).pollution += p.production * gathered + p.consumption * burned;
     }
 }
@@ -20,7 +35,8 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, gathered: f64) {
 /// has outlived its maximum age. Returns whether it died.
 pub(crate) fn check_death(world: &mut World, id: AgentId) -> bool {
     let agent = world.agent(id).expect("live agent");
-    let cause = if agent.sugar <= 0.0 {
+    let starving = agent.sugar <= 0.0 || (world.config.spice.enabled && agent.spice <= 0.0);
+    let cause = if starving {
         Some(DeathCause::Starvation)
     } else if world.config.lifespan.enabled && agent.age > agent.max_age {
         Some(DeathCause::OldAge)
@@ -46,7 +62,14 @@ mod tests {
         let mut w = blank_world(5, 5);
         let id = spawn(&mut w, 2, 2);
         w.agent_mut(id).unwrap().metabolism = 3;
-        metabolize(&mut w, id, 0.0);
+        metabolize(
+            &mut w,
+            id,
+            crate::rules::Harvest {
+                sugar: 0.0,
+                spice: 0.0,
+            },
+        );
         assert_eq!(w.agent(id).unwrap().sugar, 7.0);
     }
 
@@ -77,7 +100,14 @@ mod tests {
         w.config.pollution.enabled = true;
         w.config.pollution.production = 0.5;
         w.config.pollution.consumption = 3.0;
-        metabolize(&mut w, id, 4.0);
+        metabolize(
+            &mut w,
+            id,
+            crate::rules::Harvest {
+                sugar: 4.0,
+                spice: 0.0,
+            },
+        );
         assert_eq!(
             w.site(crate::geometry::Pos::new(2, 2)).pollution,
             0.5 * 4.0 + 3.0 * 2.0
@@ -89,7 +119,14 @@ mod tests {
         let mut w = blank_world(5, 5);
         let id = spawn(&mut w, 2, 2);
         w.agent_mut(id).unwrap().metabolism = 2;
-        metabolize(&mut w, id, 4.0);
+        metabolize(
+            &mut w,
+            id,
+            crate::rules::Harvest {
+                sugar: 4.0,
+                spice: 0.0,
+            },
+        );
         assert_eq!(w.site(crate::geometry::Pos::new(2, 2)).pollution, 0.0);
     }
 
@@ -140,5 +177,43 @@ mod tests {
         w.agent_mut(parent).unwrap().spice = 6.0;
         w.kill(parent, DeathCause::OldAge);
         assert_eq!(w.agent(child).unwrap().spice, 16.0);
+    }
+
+    #[test]
+    fn with_spice_agents_burn_both_and_die_of_either() {
+        let mut w = blank_world(5, 5);
+        w.config.spice.enabled = true;
+        let id = spawn(&mut w, 2, 2);
+        w.agent_mut(id).unwrap().spice_metabolism = 10;
+        metabolize(&mut w, id, crate::rules::Harvest::default());
+        assert_eq!(w.agent(id).unwrap().spice, 0.0);
+        assert!(check_death(&mut w, id), "spice starvation");
+    }
+
+    #[test]
+    fn only_sugar_pollutes_unless_spice_pollutes() {
+        let mut w = blank_world(5, 5);
+        w.config.spice.enabled = true;
+        w.config.pollution.enabled = true;
+        let id = spawn(&mut w, 2, 2);
+        metabolize(
+            &mut w,
+            id,
+            crate::rules::Harvest {
+                sugar: 1.0,
+                spice: 4.0,
+            },
+        );
+        assert_eq!(w.site(crate::geometry::Pos::new(2, 2)).pollution, 1.0);
+        w.config.pollution.spice_pollutes = true;
+        metabolize(
+            &mut w,
+            id,
+            crate::rules::Harvest {
+                sugar: 1.0,
+                spice: 4.0,
+            },
+        );
+        assert_eq!(w.site(crate::geometry::Pos::new(2, 2)).pollution, 1.0 + 5.0);
     }
 }
