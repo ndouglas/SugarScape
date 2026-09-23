@@ -24,11 +24,11 @@ pub fn series_csv(stats: &Stats) -> String {
 
 pub fn agents_csv(world: &World) -> String {
     let mut out =
-        String::from("id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags\n");
+        String::from("id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight\n");
     for a in world.agents() {
         writeln!(
             out,
-            "{},{},{},{:?},{},{},{},{},{},{},{:?},{}",
+            "{},{},{},{:?},{},{},{},{},{},{},{:?},{},{},{},{},{}",
             a.id,
             a.pos.x,
             a.pos.y,
@@ -40,7 +40,11 @@ pub fn agents_csv(world: &World) -> String {
             a.sugar,
             a.initial_sugar,
             a.tribe(),
-            a.tags.to_bit_string()
+            a.tags.to_bit_string(),
+            a.spice,
+            a.initial_spice,
+            a.spice_metabolism,
+            a.foresight
         )
         .unwrap();
     }
@@ -69,7 +73,7 @@ mod tests {
         let csv = agents_csv(&w);
         assert_eq!(csv.lines().count(), 401);
         assert!(csv.starts_with(
-            "id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags\n"
+            "id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight\n"
         ));
     }
 }

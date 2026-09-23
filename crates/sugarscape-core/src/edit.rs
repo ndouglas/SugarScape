@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::agent::{Agent, AgentId, Sex, Tribe};
 use crate::config::{Config, FieldError};
 use crate::geometry::Pos;
-use crate::world::World;
+use crate::world::{LoanId, World};
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(default)]
@@ -24,12 +24,23 @@ pub struct SiteView {
     pub sugar: f64,
     pub capacity: f64,
     pub pollution: f64,
+    pub spice: f64,
+    pub spice_capacity: f64,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct LinkView {
     pub id: AgentId,
     pub alive: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct LoanView {
+    pub id: LoanId,
+    pub role: &'static str,
+    pub counterparty: LinkView,
+    pub due: f64,
+    pub due_tick: u64,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -52,6 +63,11 @@ pub struct AgentView {
     pub born: u64,
     pub parents: Vec<LinkView>,
     pub children: Vec<LinkView>,
+    pub spice: f64,
+    pub initial_spice: f64,
+    pub spice_metabolism: u32,
+    pub foresight: u32,
+    pub loans: Vec<LoanView>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -164,6 +180,24 @@ impl World {
                 .map(|p| p.iter().map(|&id| link(id)).collect())
                 .unwrap_or_default(),
             children: a.children.iter().map(|&id| link(id)).collect(),
+            spice: a.spice,
+            initial_spice: a.initial_spice,
+            spice_metabolism: a.spice_metabolism,
+            foresight: a.foresight,
+            loans: self
+                .loans()
+                .filter(|l| l.lender == a.id || l.borrower == a.id)
+                .map(|l| {
+                    let lender = l.lender == a.id;
+                    LoanView {
+                        id: l.id,
+                        role: if lender { "lender" } else { "borrower" },
+                        counterparty: link(if lender { l.borrower } else { l.lender }),
+                        due: l.due,
+                        due_tick: l.due_tick,
+                    }
+                })
+                .collect(),
         });
         Ok(Inspection {
             site: SiteView {
@@ -172,6 +206,8 @@ impl World {
                 sugar: s.sugar,
                 capacity: s.capacity,
                 pollution: s.pollution,
+                spice: s.spice,
+                spice_capacity: s.spice_capacity,
             },
             agent,
         })
@@ -289,5 +325,22 @@ mod tests {
         bad.metabolism.min = 9;
         bad.metabolism.max = 1;
         assert_eq!(w.set_config(bad).unwrap_err()[0].field, "metabolism");
+    }
+
+    #[test]
+    fn inspection_shows_spice_foresight_and_loans() {
+        let mut w = blank_world(10, 10);
+        let a = spawn(&mut w, 1, 1);
+        let b = spawn(&mut w, 2, 1);
+        w.agent_mut(a).unwrap().foresight = 3;
+        w.originate_loan(a, b, 2.0);
+        let view = w.inspect(1, 1).unwrap().agent.unwrap();
+        assert_eq!((view.spice, view.foresight), (10.0, 3));
+        assert_eq!(view.loans.len(), 1);
+        assert_eq!(view.loans[0].role, "lender");
+        assert_eq!(view.loans[0].counterparty.id, b);
+        let other = w.inspect(2, 1).unwrap().agent.unwrap();
+        assert_eq!(other.loans[0].role, "borrower");
+        assert_eq!(w.inspect(1, 1).unwrap().site.spice_capacity, 0.0);
     }
 }
