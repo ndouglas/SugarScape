@@ -30,6 +30,8 @@ enum Command {
     Sweeps,
     /// Run one world and write its statistics.
     Run(RunArgs),
+    /// Run a parameter sweep.
+    Sweep(SweepArgs),
 }
 
 #[derive(Debug, Args)]
@@ -63,6 +65,42 @@ struct RunArgs {
     /// Print the final world's fingerprint as 0x%016x.
     #[arg(long)]
     fingerprint: bool,
+}
+
+#[derive(Debug, Args)]
+#[group(required = true, multiple = false)]
+struct SweepSource {
+    /// A sweep JSON file.
+    #[arg(value_name = "FILE")]
+    file: Option<PathBuf>,
+    /// A built-in sweep id (see `sugarscape sweeps`).
+    #[arg(long, value_name = "NAME")]
+    builtin: Option<String>,
+}
+
+#[derive(Debug, Args)]
+struct SweepArgs {
+    #[command(flatten)]
+    source: SweepSource,
+    /// Worker threads (default: available parallelism).
+    #[arg(long, value_parser = clap::value_parser!(u32).range(1..=1024))]
+    jobs: Option<u32>,
+    /// Override the sweep's seed count.
+    #[arg(long, value_name = "N")]
+    seeds: Option<u32>,
+    /// Override the sweep's ticks (a window or block length must still fit).
+    #[arg(long, value_name = "N")]
+    ticks: Option<u32>,
+    /// Write the result JSON here instead of stdout.
+    #[arg(long, value_name = "PATH")]
+    out: Option<PathBuf>,
+    #[arg(long, value_name = "PATH")]
+    runs_csv: Option<PathBuf>,
+    #[arg(long, value_name = "PATH")]
+    summary_csv: Option<PathBuf>,
+    /// No progress on stderr.
+    #[arg(long)]
+    quiet: bool,
 }
 
 /// Why a command failed.
@@ -122,6 +160,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
             Ok(())
         }
         Command::Run(args) => run_world(args),
+        Command::Sweep(args) => run_sweep(args),
     }
 }
 
@@ -154,6 +193,52 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
     Ok(())
 }
 
+fn run_sweep(args: SweepArgs) -> Result<(), Failure> {
+    let mut sweep = match (&args.source.file, &args.source.builtin) {
+        (Some(path), _) => Sweep::from_json(&read(path)?)?,
+        (None, Some(id)) => sweep::builtin(id).ok_or_else(|| {
+            Failure::Invalid(vec![FieldError::new(
+                "builtin",
+                format!("unknown sweep {id:?} (see `sugarscape sweeps`)"),
+            )])
+        })?,
+        (None, None) => unreachable!("clap requires a file or --builtin"),
+    };
+    if let Some(n) = args.seeds {
+        sweep.seeds.count = n;
+    }
+    if let Some(t) = args.ticks {
+        sweep.ticks = t;
+    }
+    let jobs = args.jobs.map_or_else(
+        || std::thread::available_parallelism().map_or(1, |n| n.get()),
+        |j| j as usize,
+    );
+    let total = sweep.point_count();
+    let result = sweep::run_all(&sweep, jobs, |done, point| {
+        if !args.quiet {
+            eprintln!(
+                "[{done}/{total}] series={} x={} seed={}",
+                sweep.series_name(point.series),
+                sweep.x.values[point.x].at,
+                point.seed
+            );
+        }
+    })?;
+    let json = result.to_json();
+    match &args.out {
+        Some(path) => write(path, &json)?,
+        None => print!("{json}"),
+    }
+    if let Some(path) = &args.runs_csv {
+        write(path, &sweep::runs_csv(&result))?;
+    }
+    if let Some(path) = &args.summary_csv {
+        write(path, &sweep::summary_csv(&result))?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -176,5 +261,17 @@ mod tests {
             Cli::try_parse_from(["sugarscape", "run", "--preset", "a", "--config", "b.json"])
                 .is_err()
         );
+    }
+
+    #[test]
+    fn sweep_takes_a_file_or_a_builtin() {
+        assert!(Cli::try_parse_from(["sugarscape", "sweep", "s.json"]).is_ok());
+        assert!(Cli::try_parse_from(["sugarscape", "sweep", "--builtin", "fig-ii-5"]).is_ok());
+        assert!(Cli::try_parse_from(["sugarscape", "sweep"]).is_err());
+        assert!(
+            Cli::try_parse_from(["sugarscape", "sweep", "s.json", "--builtin", "fig-ii-5"])
+                .is_err()
+        );
+        assert!(Cli::try_parse_from(["sugarscape", "sweep", "s.json", "--jobs", "0"]).is_err());
     }
 }
