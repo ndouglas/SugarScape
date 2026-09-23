@@ -496,7 +496,7 @@ pub fn run_point(sweep: &Sweep, point: &Point) -> RunResult {
     run_config(sweep, point, config)
 }
 
-fn run_config(sweep: &Sweep, point: &Point, config: Config) -> RunResult {
+pub fn run_config(sweep: &Sweep, point: &Point, config: Config) -> RunResult {
     let mut world = World::new(config, point.seed).expect("sweep configs are validated");
     world.run(sweep.ticks);
     let history = world

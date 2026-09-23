@@ -1,6 +1,10 @@
 //! Run with `wasm-pack test --node crates/sugarscape-wasm`.
 
-use sugarscape_wasm::{presets_json, Sim};
+use sugarscape_core::sweep::{self as core_sweep, Sweep};
+use sugarscape_wasm::{
+    aggregate, builtin_sweeps, config_series_names, presets_json, run_point, sweep_csv,
+    sweep_points, sweep_result, Sim,
+};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
 
@@ -162,4 +166,103 @@ fn disease_api_lists_infects_and_vaccinates() {
     assert_eq!(sim.networks("disease").unwrap().len() % 4, 0);
     sim.render("disease", "sugar").unwrap();
     assert_eq!(sim.series("new_infections").unwrap().len(), 4);
+}
+
+/// The core's `tiny()` sweep: 2 series × 3 x values × 2 seeds, 20 ticks.
+const TINY: &str = r#"{
+  "name": "tiny",
+  "base": { "preset": "ii-2-unit" },
+  "set": { "population": 50 },
+  "x": { "path": "vision.max", "values": [2, 4, 6] },
+  "series": { "label": "Metabolism", "values": [
+    { "at": 1, "set": { "goods.0.metabolism": { "min": 1, "max": 1 } } },
+    { "at": 3, "name": "wide", "set": { "goods.0.metabolism": { "min": 1, "max": 5 } } }
+  ] },
+  "seeds": { "from": 5, "count": 2 },
+  "ticks": 20,
+  "metric": { "kind": "window_mean", "series": "population", "from": 10 }
+}"#;
+
+#[wasm_bindgen_test]
+fn sweep_points_lists_points_or_errors() {
+    let points: serde_json::Value = serde_json::from_str(&sweep_points(TINY).unwrap()).unwrap();
+    assert_eq!(points.as_array().unwrap().len(), 12);
+    assert_eq!(
+        points[7],
+        serde_json::json!({ "index": 7, "series": 1, "x": 0, "seed": 6 })
+    );
+    let err = sweep_points(&TINY.replace("\"ticks\": 20", "\"ticks\": 0")).unwrap_err();
+    assert!(err.as_string().unwrap().contains(r#""field":"ticks""#));
+    let err = sweep_points("{").unwrap_err();
+    assert!(err.as_string().unwrap().contains(r#""field":"sweep""#));
+}
+
+#[wasm_bindgen_test]
+fn run_point_and_aggregate_match_the_core_run_all() {
+    // Completion order does not matter: run the points backwards.
+    let runs: Vec<String> = (0..12u32)
+        .rev()
+        .map(|i| run_point(TINY, i).unwrap())
+        .collect();
+    let runs = format!("[{}]", runs.join(","));
+    let expected = core_sweep::run_all(&Sweep::from_json(TINY).unwrap(), 1, |_, _| {}).unwrap();
+    assert_eq!(sweep_result(TINY, &runs).unwrap(), expected.to_json());
+    assert_eq!(
+        aggregate(TINY, &runs).unwrap(),
+        serde_json::to_string(&expected.summary).unwrap()
+    );
+    assert_eq!(
+        sweep_csv(TINY, &runs, "runs").unwrap(),
+        core_sweep::runs_csv(&expected)
+    );
+    assert_eq!(
+        sweep_csv(TINY, &runs, "summary").unwrap(),
+        core_sweep::summary_csv(&expected)
+    );
+    assert!(sweep_csv(TINY, &runs, "other").is_err());
+    assert!(run_point(TINY, 12).is_err());
+}
+
+#[wasm_bindgen_test]
+fn partial_runs_aggregate_and_foreign_runs_are_rejected() {
+    let one = run_point(TINY, 3).unwrap();
+    let summary: serde_json::Value =
+        serde_json::from_str(&aggregate(TINY, &format!("[{one}]")).unwrap()).unwrap();
+    assert_eq!(summary["rows"].as_array().unwrap().len(), 6);
+    assert_eq!(summary["rows"][1]["n"], 1);
+    assert!(sweep_result(TINY, &format!("[{one}]"))
+        .unwrap()
+        .contains("\"incomplete\": true"));
+    let foreign = one.replace("\"seed\":6", "\"seed\":99");
+    let err = aggregate(TINY, &format!("[{foreign}]")).unwrap_err();
+    assert!(err.as_string().unwrap().contains("runs[0]"));
+    assert!(aggregate(TINY, "not json").is_err());
+}
+
+#[wasm_bindgen_test]
+fn builtins_and_series_names_are_listed() {
+    let list: serde_json::Value = serde_json::from_str(&builtin_sweeps()).unwrap();
+    let ids: Vec<&str> = list
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|b| b["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        ids,
+        [
+            "fig-ii-5",
+            "fig-iv-6",
+            "fig-iv-10-11",
+            "n-goods-carrying-capacity"
+        ]
+    );
+    assert!(list[0]["sweep"]["name"]
+        .as_str()
+        .unwrap()
+        .starts_with("Figure II-5"));
+    let names: Vec<String> = serde_json::from_str(&config_series_names("{}").unwrap()).unwrap();
+    assert!(names.iter().any(|n| n == "population"));
+    assert!(names.iter().any(|n| n == "mean_holding_0"));
+    assert!(config_series_names(r#"{"population": -1}"#).is_err());
 }

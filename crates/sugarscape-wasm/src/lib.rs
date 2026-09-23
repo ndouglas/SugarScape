@@ -4,8 +4,9 @@
 use sugarscape_core::config::{Config, FieldError};
 use sugarscape_core::edit::AgentOverrides;
 use sugarscape_core::render::{self, ColorMode, Layer};
+use sugarscape_core::sweep::{RunResult, Sweep, SweepResult};
 use sugarscape_core::world::World;
-use sugarscape_core::{export, network, presets, stats};
+use sugarscape_core::{export, network, presets, stats, sweep};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
@@ -30,6 +31,89 @@ pub fn presets_json() -> String {
 #[wasm_bindgen]
 pub fn default_config_json() -> String {
     serde_json::to_string(&Config::default()).expect("config serializes")
+}
+
+fn parse_sweep(spec: &str) -> Result<Sweep, JsValue> {
+    Sweep::from_json(spec).map_err(field_errors)
+}
+
+/// `runs` (a JSON array of `RunResult`), checked against `sweep`.
+fn parse_runs(sweep: &Sweep, runs: &str) -> Result<Vec<RunResult>, JsValue> {
+    let runs: Vec<RunResult> = serde_json::from_str(runs)
+        .map_err(|e| field_errors(vec![FieldError::new("runs", e.to_string())]))?;
+    sweep::check_runs(sweep, &runs).map_err(field_errors)?;
+    Ok(runs)
+}
+
+/// JSON `[{ index, series, x, seed }]`: every point of the sweep, after
+/// checking its shape and every cell's config.
+#[wasm_bindgen]
+pub fn sweep_points(spec: &str) -> Result<String, JsValue> {
+    let points = parse_sweep(spec)?.points().map_err(field_errors)?;
+    Ok(serde_json::to_string(&points).expect("points serialize"))
+}
+
+/// Runs point `index` of the sweep; returns its `RunResult` JSON.
+#[wasm_bindgen]
+pub fn run_point(spec: &str, index: u32) -> Result<String, JsValue> {
+    let sweep = parse_sweep(spec)?;
+    let point = sweep.point(index as usize).map_err(field_errors)?;
+    let config = sweep.config_for(&point).map_err(field_errors)?;
+    let run = sweep::run_config(&sweep, &point, config);
+    Ok(serde_json::to_string(&run).expect("runs serialize"))
+}
+
+/// The `Summary` JSON of `runs` (any order, possibly partial).
+#[wasm_bindgen]
+pub fn aggregate(spec: &str, runs: &str) -> Result<String, JsValue> {
+    let sweep = parse_sweep(spec)?;
+    let runs = parse_runs(&sweep, runs)?;
+    Ok(serde_json::to_string(&sweep::aggregate(&sweep, &runs)).expect("summaries serialize"))
+}
+
+/// JSON `[{ id, sweep }]`: the built-in sweep files as written.
+#[wasm_bindgen]
+pub fn builtin_sweeps() -> String {
+    let list: Vec<serde_json::Value> = sweep::builtins()
+        .iter()
+        .map(|b| {
+            let sweep: serde_json::Value =
+                serde_json::from_str(b.json).expect("built-in sweeps are JSON");
+            serde_json::json!({ "id": b.id, "sweep": sweep })
+        })
+        .collect();
+    serde_json::to_string(&list).expect("sweeps serialize")
+}
+
+/// JSON list of the statistics series a config (either shape) records.
+#[wasm_bindgen]
+pub fn config_series_names(config: &str) -> Result<String, JsValue> {
+    let config = Config::from_json(config).map_err(field_errors)?;
+    Ok(serde_json::to_string(&stats::series_names(&config)).expect("names serialize"))
+}
+
+/// The CLI's result file for `runs`, marked incomplete when points are missing.
+#[wasm_bindgen]
+pub fn sweep_result(spec: &str, runs: &str) -> Result<String, JsValue> {
+    let sweep = parse_sweep(spec)?;
+    let runs = parse_runs(&sweep, runs)?;
+    Ok(SweepResult::new(sweep, runs).to_json())
+}
+
+/// The CLI's runs CSV (`kind = "runs"`) or summary CSV (`"summary"`).
+#[wasm_bindgen]
+pub fn sweep_csv(spec: &str, runs: &str, kind: &str) -> Result<String, JsValue> {
+    let sweep = parse_sweep(spec)?;
+    let runs = parse_runs(&sweep, runs)?;
+    let result = SweepResult::new(sweep, runs);
+    match kind {
+        "runs" => Ok(sweep::runs_csv(&result)),
+        "summary" => Ok(sweep::summary_csv(&result)),
+        _ => Err(field_errors(vec![FieldError::new(
+            "kind",
+            format!("unknown CSV {kind:?} (expected runs or summary)"),
+        )])),
+    }
 }
 
 /// Per-good landscapes from JS (Decision 16): null/undefined → none; a
