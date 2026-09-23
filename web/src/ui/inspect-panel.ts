@@ -36,6 +36,10 @@ export class InspectPanel {
     return [
       row('Agent', `#${a.id} · ${a.sex} · ${a.tribe}`),
       row('Sugar', `${fmt(a.sugar)} (born with ${fmt(a.initial_sugar)})`),
+      ...(this.engine.config.spice.enabled
+        ? [row('Spice', `${fmt(a.spice)} (born with ${fmt(a.initial_spice)})`), row('Spice metabolism', String(a.spice_metabolism))]
+        : []),
+      ...(this.engine.config.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
       row('Metabolism', String(a.metabolism)),
       row('Age', `${a.age} / ${a.max_age}`),
@@ -44,6 +48,14 @@ export class InspectPanel {
       row('Born', `tick ${a.born}`),
       row('Parents', this.links(a.parents)),
       row('Children', this.links(a.children)),
+      ...(a.loans.length
+        ? [row('Loans', h('span', { class: 'links' }, ...a.loans.map((l) =>
+            h('span', {}, `${l.role === 'lender' ? 'lent to' : 'owes'} `,
+              l.counterparty.alive
+                ? h('button', { class: 'link', onclick: () => this.engine.follow(l.counterparty.id) }, `#${l.counterparty.id}`)
+                : h('span', { class: 'hint' }, `#${l.counterparty.id}†`),
+              ` ${fmt(l.due)} by t=${l.due_tick}`))))]
+        : []),
     ];
   }
 
@@ -64,6 +76,7 @@ export class InspectPanel {
         {},
         row('Site', `(${site.x}, ${site.y})`),
         row('Sugar', `${fmt(site.sugar)} / ${fmt(site.capacity)}`),
+        ...(this.engine.config.spice.enabled ? [row('Spice', `${fmt(site.spice)} / ${fmt(site.spice_capacity)}`)] : []),
         row('Pollution', fmt(site.pollution)),
         ...(agent && !gone ? this.agentRows(agent) : []),
       ),

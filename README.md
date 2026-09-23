@@ -15,6 +15,10 @@ animations. Where the book is ambiguous, the choice made is documented in the ru
 module (see `crates/sugarscape-core/src/rules/`) and in
 `docs/superpowers/specs/2026-09-22-sugarscape-wasm-playground-design.md`.
 
+Chapter IV: spice and multicommodity movement, trade (T), credit (L), foresight,
+sugar-as-dirty-good pollution, scheduled rule changes, supply and demand, and
+trade/credit network overlays. See `docs/roadmap.md` for future work.
+
 ## Running locally
 
 Requirements: Rust with the `wasm32-unknown-unknown` target, `wasm-pack`, Node 22+.
