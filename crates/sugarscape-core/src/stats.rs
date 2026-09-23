@@ -130,18 +130,6 @@ impl Snapshot {
                 traded: 0.0,
             })
             .collect();
-        // Ensure goods vector can accommodate any index in trades
-        let max_good = events.trades.iter().map(|t| t.goods.0.max(t.goods.1)).max();
-        if let Some(max_idx) = max_good {
-            while goods.len() <= max_idx {
-                let i = goods.len();
-                goods.push(GoodStats {
-                    mean_holding: mean(&|a| a.holdings[i]),
-                    mean_metabolism: mean(&|a| f64::from(a.metabolism[i])),
-                    traded: 0.0,
-                });
-            }
-        }
         for t in &events.trades {
             goods[t.goods.0].traded += t.amount;
             goods[t.goods.1].traded += t.amount * t.price;
@@ -509,6 +497,7 @@ mod tests {
         use crate::testkit::*;
         use crate::world::Trade;
         let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 2);
         w.events.trades = vec![
             Trade {
                 buyer: 1,
@@ -540,6 +529,7 @@ mod tests {
         use crate::testkit::*;
         use crate::world::Trade;
         let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 3);
         let t = |goods, price, amount| Trade {
             buyer: 1,
             seller: 2,
