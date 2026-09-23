@@ -1,7 +1,7 @@
 //! Properties that must hold after every tick for any rule combination.
 
 use proptest::prelude::*;
-use sugarscape_core::config::{Config, URange};
+use sugarscape_core::config::{Config, Outbreak, URange};
 use sugarscape_core::world::World;
 
 // The brief's `prop_map` builds `Config` by assigning fields one at a time
@@ -25,6 +25,7 @@ fn config_strategy() -> impl Strategy<Value = Config> {
             proptest::bool::ANY,
             proptest::bool::ANY,
         ),
+        (proptest::bool::ANY, proptest::bool::ANY),
     )
         .prop_map(
             |(
@@ -39,6 +40,7 @@ fn config_strategy() -> impl Strategy<Value = Config> {
                 combat,
                 replacement,
                 (spice, trade, credit, foresight),
+                (disease, mutate),
             )| {
                 let mut c = Config::default();
                 c.population = pop;
@@ -61,6 +63,16 @@ fn config_strategy() -> impl Strategy<Value = Config> {
                 c.credit.enabled = credit && sex;
                 if c.spice.enabled {
                     c.spice.endowment = URange::new(25, 50);
+                }
+                c.disease.enabled = disease;
+                if disease && mutate {
+                    c.disease.genome_mutation = 0.02;
+                    c.disease.disease_mutation = 0.1;
+                    c.disease.flips_per_tick = 2;
+                    c.disease.outbreaks = vec![Outbreak {
+                        tick: 10,
+                        agents: 5,
+                    }];
                 }
                 c
             },
@@ -97,6 +109,38 @@ fn check(world: &World) -> Result<(), TestCaseError> {
     for l in world.loans() {
         prop_assert!(world.agent(l.lender).is_some() && world.agent(l.borrower).is_some());
         prop_assert!(l.due > 0.0);
+    }
+    let d = &world.config.disease;
+    if !d.enabled {
+        prop_assert!(world.diseases.is_empty());
+    }
+    for a in world.agents() {
+        if !d.enabled {
+            prop_assert!(a.diseases.is_empty());
+            continue;
+        }
+        prop_assert_eq!(a.immune.len(), d.immune_length);
+        prop_assert_eq!(a.immune_genome.len(), d.immune_length);
+        let mut ids = a.diseases.clone();
+        ids.sort_unstable();
+        ids.dedup();
+        prop_assert_eq!(
+            ids.len(),
+            a.diseases.len(),
+            "agent {} carries a duplicate",
+            a.id
+        );
+        for &id in &a.diseases {
+            let Some(disease) = world.diseases.get(id as usize) else {
+                return Err(TestCaseError::fail(format!("invalid disease id {id}")));
+            };
+            prop_assert!(
+                !a.immune.contains(disease),
+                "agent {} carries disease {} it is immune to",
+                a.id,
+                id
+            );
+        }
     }
     Ok(())
 }
