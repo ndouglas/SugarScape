@@ -82,8 +82,6 @@ pub struct World {
     /// Completed ticks.
     pub tick: u64,
     pub sites: Vec<Site>,
-    /// True when capacities were supplied or painted rather than generated from the configured landscape.
-    pub landscape_edited: bool,
     /// Chapter V's master list of diseases; a disease's id is its index.
     pub diseases: Vec<Bits>,
     agents: BTreeMap<AgentId, Agent>,
@@ -101,29 +99,48 @@ impl World {
         Self::with_capacities(config, seed, None)
     }
 
-    /// Like `new`, but with explicit row-major capacities (a painted map).
+    /// Like `new`, with good 0's capacities supplied (a painted map from a
+    /// pre-N-goods share link).
     pub fn with_capacities(
         config: Config,
         seed: u64,
         capacities: Option<&[f64]>,
     ) -> Result<Self, Vec<FieldError>> {
+        Self::with_landscapes(config, seed, &[capacities.map(<[f64]>::to_vec)])
+    }
+
+    /// Like `new`, with each good's row-major capacities supplied, or
+    /// generated from its map where the entry is `None` or missing.
+    pub fn with_landscapes(
+        config: Config,
+        seed: u64,
+        landscapes: &[Option<Vec<f64>>],
+    ) -> Result<Self, Vec<FieldError>> {
         config.validate()?;
         let torus = Torus::new(config.width, config.height);
         let n = config.goods.len();
-        let mut maps: Vec<Vec<f64>> = config
-            .goods
-            .iter()
-            .map(|g| landscape::generate(&g.map, config.width, config.height))
-            .collect();
-        match capacities {
-            Some(c) if c.len() != torus.len() => {
-                return Err(vec![FieldError::new(
-                    "landscape",
-                    format!("expected {} capacities, got {}", torus.len(), c.len()),
-                )])
+        if landscapes.len() > n {
+            return Err(vec![FieldError::new(
+                "landscape",
+                format!("{} landscapes for {n} goods", landscapes.len()),
+            )]);
+        }
+        let mut maps = Vec::with_capacity(n);
+        for (i, good) in config.goods.iter().enumerate() {
+            match landscapes.get(i).and_then(Option::as_ref) {
+                Some(c) if c.len() != torus.len() => {
+                    return Err(vec![FieldError::new(
+                        "landscape",
+                        format!(
+                            "good {i}: expected {} capacities, got {}",
+                            torus.len(),
+                            c.len()
+                        ),
+                    )])
+                }
+                Some(c) => maps.push(c.clone()),
+                None => maps.push(landscape::generate(&good.map, config.width, config.height)),
             }
-            Some(c) => maps[0] = c.to_vec(),
-            None => {}
         }
         let sites = (0..torus.len())
             .map(|s| {
@@ -138,7 +155,6 @@ impl World {
             torus,
             tick: 0,
             sites,
-            landscape_edited: capacities.is_some(),
             diseases: Vec::new(),
             agents: BTreeMap::new(),
             occupancy: vec![None; torus.len()],
@@ -242,6 +258,20 @@ impl World {
             .filter(|&i| self.occupancy[i].is_none())
             .map(|i| self.torus.pos(i))
             .collect()
+    }
+
+    /// Good `good`'s capacities, row-major.
+    pub fn capacities(&self, good: usize) -> Vec<f64> {
+        self.sites.iter().map(|s| s.capacity[good]).collect()
+    }
+
+    /// Whether good `good`'s capacities differ from the map its config
+    /// generates (painted, or supplied by a share link).
+    pub fn landscape_edited(&self, good: usize) -> bool {
+        self.config.goods.get(good).is_some_and(|g| {
+            self.capacities(good)
+                != crate::landscape::generate(&g.map, self.config.width, self.config.height)
+        })
     }
 
     /// Adds `agent` at its position with a fresh id.
@@ -622,8 +652,26 @@ mod tests {
             .unwrap();
         assert_eq!(err[0].field, "landscape");
         let w = World::with_capacities(Config::default(), 1, Some(&[2.0; 2500])).unwrap();
-        assert!(w.landscape_edited);
+        assert!(w.landscape_edited(0));
         assert_eq!(w.site(Pos::new(0, 0)).capacity[0], 2.0);
+    }
+
+    #[test]
+    fn each_good_has_its_own_supplied_or_generated_landscape() {
+        let mut c = Config::default();
+        c.add_good(Good::spice());
+        let spice = vec![2.0; 2500];
+        let w = World::with_landscapes(c.clone(), 1, &[None, Some(spice.clone())]).unwrap();
+        assert_eq!(w.capacities(1), spice);
+        assert_eq!(
+            w.capacities(0),
+            landscape::generate(&c.goods[0].map, 50, 50)
+        );
+        assert!(!w.landscape_edited(0) && w.landscape_edited(1));
+        let too_many = World::with_landscapes(c.clone(), 1, &[None, None, None]);
+        assert_eq!(too_many.err().unwrap()[0].field, "landscape");
+        let short = World::with_landscapes(c, 1, &[Some(vec![1.0; 3])]);
+        assert_eq!(short.err().unwrap()[0].field, "landscape");
     }
 
     #[test]

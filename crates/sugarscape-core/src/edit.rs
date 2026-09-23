@@ -108,16 +108,20 @@ impl World {
         }
     }
 
-    /// Sets capacity to `value` on every site within Euclidean `radius` of
-    /// (x, y) (wrapping), clamping sugar to the new capacity.
+    /// Sets good `good`'s capacity to `value` on every site within Euclidean
+    /// `radius` of (x, y) (wrapping), clamping its level to the new capacity.
     pub fn paint_capacity(
         &mut self,
         x: u32,
         y: u32,
         radius: u32,
         value: f64,
+        good: usize,
     ) -> Result<(), String> {
         let center = self.checked_pos(x, y)?;
+        if good >= self.config.goods.len() {
+            return Err(format!("there is no good {good}"));
+        }
         if !(value.is_finite() && value >= 0.0) {
             return Err("capacity must be ≥ 0".into());
         }
@@ -128,11 +132,10 @@ impl World {
                     continue;
                 }
                 let site = self.site_mut(self.torus.offset(center, dx, dy));
-                site.capacity[0] = value;
-                site.resource[0] = site.resource[0].min(value);
+                site.capacity[good] = value;
+                site.resource[good] = site.resource[good].min(value);
             }
         }
-        self.landscape_edited = true;
         Ok(())
     }
 
@@ -268,10 +271,6 @@ impl World {
         Ok(())
     }
 
-    pub fn capacities(&self) -> Vec<f64> {
-        self.sites.iter().map(|s| s.capacity[0]).collect()
-    }
-
     fn disease_on(&self) -> Result<(), String> {
         if self.config.disease.enabled {
             Ok(())
@@ -367,14 +366,24 @@ mod tests {
     use crate::testkit::*;
 
     #[test]
+    fn painting_a_good_changes_only_that_good() {
+        let mut w = blank_world(20, 20);
+        add_goods(&mut w.config, 2);
+        w.paint_capacity(3, 3, 0, 2.0, 1).unwrap();
+        assert_eq!(w.site(Pos::new(3, 3)).capacity[..2], [0.0, 2.0]);
+        assert!(!w.landscape_edited(0) && w.landscape_edited(1));
+        assert!(w.paint_capacity(3, 3, 0, 2.0, 2).is_err(), "no good 2");
+    }
+
+    #[test]
     fn painting_sets_capacity_in_a_disc_and_clamps_sugar() {
         let mut w = blank_world(20, 20);
         for i in 0..w.sites.len() {
             w.sites[i].capacity[0] = 4.0;
             w.sites[i].resource[0] = 4.0;
         }
-        w.paint_capacity(10, 10, 1, 1.0).unwrap();
-        assert!(w.landscape_edited);
+        w.paint_capacity(10, 10, 1, 1.0, 0).unwrap();
+        assert!(w.landscape_edited(0));
         for p in [(10, 10), (10, 9), (11, 10), (9, 10), (10, 11)] {
             let s = w.site(Pos::new(p.0, p.1));
             assert_eq!((s.capacity[0], s.resource[0]), (1.0, 1.0), "{p:?}");
@@ -384,7 +393,7 @@ mod tests {
             4.0,
             "radius 1 disc excludes diagonals"
         );
-        assert!(w.paint_capacity(20, 0, 1, 1.0).is_err());
+        assert!(w.paint_capacity(20, 0, 1, 1.0, 0).is_err());
     }
 
     #[test]

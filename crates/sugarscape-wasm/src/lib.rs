@@ -127,7 +127,7 @@ impl Sim {
         value: f64,
     ) -> Result<(), JsValue> {
         self.world
-            .paint_capacity(x, y, radius, value)
+            .paint_capacity(x, y, radius, value, 0)
             .map_err(edit_error)
     }
 
@@ -156,14 +156,14 @@ impl Sim {
     /// Capacities rounded to bytes, row-major.
     pub fn export_landscape(&self) -> Vec<u8> {
         self.world
-            .capacities()
+            .capacities(0)
             .into_iter()
             .map(|c| c.round().clamp(0.0, 255.0) as u8)
             .collect()
     }
 
     pub fn landscape_edited(&self) -> bool {
-        self.world.landscape_edited
+        self.world.landscape_edited(0)
     }
 
     pub fn export_series_csv(&self) -> String {
