@@ -29,9 +29,12 @@ const TIME_CHARTS: TimeChart[] = [
 const HEIGHT = 150;
 const REFRESH_MS = 250;
 
+/** Fetches `Sim.series(name)` at most once per refresh; shared across all charts' update closures. */
+type SeriesCache = (name: string) => number[];
+
 export class ChartsPanel {
   readonly el = h('div', { class: 'charts' });
-  private plots: { name: string; plot: uPlot; update: () => void }[] = [];
+  private plots: { name: string; plot: uPlot; update: (series: SeriesCache) => void }[] = [];
   private visible = false;
   private last = 0;
 
@@ -60,7 +63,17 @@ export class ChartsPanel {
 
   private refresh(): void {
     this.last = performance.now();
-    if (this.visible) this.plots.forEach((p) => p.update());
+    if (!this.visible) return;
+    const cache = new Map<string, number[]>();
+    const series: SeriesCache = (name) => {
+      let arr = cache.get(name);
+      if (!arr) {
+        arr = Array.from(this.engine.sim.series(name));
+        cache.set(name, arr);
+      }
+      return arr;
+    };
+    this.plots.forEach((p) => p.update(series));
   }
 
   private width(): number {
@@ -72,10 +85,15 @@ export class ChartsPanel {
     this.plots.forEach((p) => p.plot.setSize({ width: this.width(), height: HEIGHT }));
   }
 
-  private add(title: string, opts: Omit<uPlot.Options, 'width' | 'height'>, data: uPlot.AlignedData, update: (plot: uPlot) => void): void {
+  private add(
+    title: string,
+    opts: Omit<uPlot.Options, 'width' | 'height'>,
+    data: uPlot.AlignedData,
+    update: (plot: uPlot, series: SeriesCache) => void,
+  ): void {
     const figure = h('figure', { class: 'chart' }, h('figcaption', {}, title));
     const plot = new uPlot({ ...opts, width: this.width(), height: HEIGHT }, data, figure);
-    this.plots.push({ name: title, plot, update: () => update(plot) });
+    this.plots.push({ name: title, plot, update: (series) => update(plot, series) });
     this.el.append(figure);
   }
 
@@ -86,7 +104,6 @@ export class ChartsPanel {
       { stroke: color('--muted'), grid: { stroke: color('--grid') }, ticks: { stroke: color('--grid') } },
       { stroke: color('--muted'), grid: { stroke: color('--grid') }, ticks: { stroke: color('--grid') }, size: 44 },
     ];
-    const series = (name: string) => Array.from(this.engine.sim.series(name));
 
     for (const chart of TIME_CHARTS) {
       this.add(
@@ -98,7 +115,7 @@ export class ChartsPanel {
           series: [{ label: 'Tick' }, ...chart.lines.map((l) => ({ label: l.label, stroke: color(l.color), width: 1.5 }))],
         },
         [[], ...chart.lines.map(() => [])],
-        (plot) => plot.setData([series('tick'), ...chart.lines.map((l) => series(l.key))]),
+        (plot, series) => plot.setData([series('tick'), ...chart.lines.map((l) => series(l.key))]),
       );
     }
 
