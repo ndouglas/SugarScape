@@ -11,6 +11,21 @@ export type Placement =
 
 export interface ScheduledChange { tick: number; set: Record<string, unknown> }
 
+export interface Outbreak { tick: number; agents: number; length?: URange | null }
+
+export interface DiseaseRule {
+  enabled: boolean;
+  count: number;
+  length: URange;
+  initial: number;
+  immune_length: number;
+  fee: number;
+  flips_per_tick: number;
+  genome_mutation: number;
+  disease_mutation: number;
+  outbreaks: Outbreak[];
+}
+
 export interface Config {
   width: number;
   height: number;
@@ -35,6 +50,7 @@ export interface Config {
   trade: { enabled: boolean };
   credit: { enabled: boolean; duration: number; rate: number };
   foresight: { enabled: boolean; range: URange };
+  disease: DiseaseRule;
   schedule: ScheduledChange[];
 }
 
@@ -63,11 +79,17 @@ export interface Snapshot {
   mean_foresight: number;
   mean_spice: number;
   mean_spice_metabolism: number;
+  infected_fraction: number;
+  mean_diseases: number;
+  diseases_in_circulation: number;
+  new_infections: number;
 }
 
 export interface SiteView { x: number; y: number; sugar: number; capacity: number; pollution: number; spice: number; spice_capacity: number }
 export interface LinkView { id: number; alive: boolean }
 export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; due: number; due_tick: number }
+export interface DiseaseView { id: number; bits: string; distance: number }
+export interface DiseaseEntry { id: number; bits: string; carriers: number }
 export interface AgentView {
   id: number;
   x: number;
@@ -92,10 +114,14 @@ export interface AgentView {
   spice_metabolism: number;
   foresight: number;
   loans: LoanView[];
+  immune: string;
+  immune_genome: string;
+  diseases: DiseaseView[];
+  infected_by: LinkView | null;
 }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
-export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit';
+export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit' | 'disease';
 export type Layer = 'sugar' | 'capacity' | 'pollution' | 'spice' | 'spice_capacity';
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

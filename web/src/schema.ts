@@ -122,4 +122,18 @@ export const GROUPS: Group[] = [
     title: 'Foresight', enable: 'foresight.enabled', note: 'Needs spice.',
     controls: [{ kind: 'range', path: 'foresight.range', label: 'Foresight φ', min: 0, max: 20 }],
   },
+  {
+    title: 'Disease (E)', enable: 'disease.enabled', enableResets: true,
+    note: 'Immune strings learn the diseases agents carry; each disease raises metabolism. Turning disease on or off, the disease list and the immune length rebuild the world; the rest applies to the running world.',
+    controls: [
+      { kind: 'number', path: 'disease.count', label: 'Diseases', min: 1, max: 100, step: 1, reset: true },
+      { kind: 'range', path: 'disease.length', label: 'Disease length', min: 1, max: 63, reset: true },
+      { kind: 'number', path: 'disease.immune_length', label: 'Immune length', min: 2, max: 64, step: 1, reset: true },
+      { kind: 'number', path: 'disease.initial', label: 'Diseases per new agent', min: 0, max: 100, step: 1 },
+      { kind: 'number', path: 'disease.fee', label: 'Metabolism per disease', min: 0, max: 5, step: 0.5 },
+      { kind: 'number', path: 'disease.flips_per_tick', label: 'Immune flips per tick (medicine)', min: 1, max: 10, step: 1 },
+      { kind: 'number', path: 'disease.genome_mutation', label: 'Genome mutation rate', min: 0, max: 0.1, step: 0.001 },
+      { kind: 'number', path: 'disease.disease_mutation', label: 'Disease mutation rate', min: 0, max: 1, step: 0.01 },
+    ],
+  },
 ];

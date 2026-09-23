@@ -1,6 +1,7 @@
 import type { Engine } from '../engine';
 import { errorsFor, getPath, setPath } from '../paths';
 import { GROUPS, type Control } from '../schema';
+import { scheduleLines } from '../schedule';
 import type { Config, FieldError, URange } from '../types';
 import { h } from './dom';
 
@@ -84,13 +85,11 @@ export class RulesPanel {
     const clear = h('button', { onclick: () => this.commit((c) => (c.schedule = []), false) }, 'Clear schedule');
     const section = h('section', { class: 'group' }, h('h3', {}, 'Schedule'), list, clear, this.errorSlot('schedule'));
     this.syncers.push(() => {
-      const entries = [...this.engine.config.schedule].sort((a, b) => a.tick - b.tick);
-      section.hidden = entries.length === 0;
-      list.replaceChildren(
-        ...entries.flatMap((e) =>
-          Object.entries(e.set).map(([path, value]) => h('li', {}, `t = ${e.tick} · ${path} = ${JSON.stringify(value)}`)),
-        ),
-      );
+      const lines = scheduleLines(this.engine.config);
+      section.hidden = lines.length === 0;
+      // Outbreaks are listed read-only; the button clears scheduled changes.
+      clear.hidden = this.engine.config.schedule.length === 0;
+      list.replaceChildren(...lines.map((line) => h('li', {}, line)));
     });
     return section;
   }
