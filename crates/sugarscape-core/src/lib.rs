@@ -5,6 +5,7 @@
 
 pub mod agent;
 pub mod config;
+pub mod econ;
 pub mod edit;
 pub mod export;
 pub mod geometry;
