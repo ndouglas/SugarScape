@@ -18,6 +18,7 @@ export class GridView {
     this.ctx = canvas.getContext('2d')!;
     this.bctx = this.buffer.getContext('2d')!;
     canvas.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return; // only the primary button uses tools
       canvas.setPointerCapture(e.pointerId);
       const c = this.cellAt(e);
       this.hover = c;
