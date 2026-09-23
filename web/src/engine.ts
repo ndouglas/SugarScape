@@ -32,14 +32,26 @@ export class Engine {
   private customLandscape: Uint8Array | undefined;
   private listeners = new Map<EngineEvent, Set<() => void>>();
 
+  /**
+   * The live config: what the running world uses now, including scheduled
+   * changes that have fired. The Rules panel shows this one.
+   */
+  config: Config;
+
+  /**
+   * @param baseConfig The setup as chosen (preset, share link, reset): what a
+   * reset rebuilds and a share link carries; preset matching and
+   * `isModified()` compare against it.
+   */
   private constructor(
     private memory: WebAssembly.Memory,
     readonly presets: Preset[],
     public sim: Sim,
-    public config: Config,
+    public baseConfig: Config,
     public seed: number,
     landscape?: Uint8Array,
   ) {
+    this.config = structuredClone(baseConfig);
     this.customLandscape = landscape;
     this.presetId = this.matchPreset();
   }
@@ -80,11 +92,11 @@ export class Engine {
    * changes the landscape kind or the grid size. On error the current world is
    * kept and errors returned.
    */
-  reset(config: Config = this.config, seed: number = this.seed): FieldError[] | null {
+  reset(config: Config = this.baseConfig, seed: number = this.seed): FieldError[] | null {
     const sameShape =
-      config.width === this.config.width &&
-      config.height === this.config.height &&
-      JSON.stringify(config.landscape) === JSON.stringify(this.config.landscape);
+      config.width === this.baseConfig.width &&
+      config.height === this.baseConfig.height &&
+      JSON.stringify(config.landscape) === JSON.stringify(this.baseConfig.landscape);
     return this.rebuild(config, seed, sameShape ? this.customLandscape : undefined);
   }
 
@@ -97,7 +109,8 @@ export class Engine {
     }
     this.sim.free();
     this.sim = next;
-    this.config = normalized(next);
+    this.baseConfig = normalized(next);
+    this.config = structuredClone(this.baseConfig);
     this.customLandscape = landscape;
     this.seed = seed;
     this.selection = null;
@@ -106,13 +119,22 @@ export class Engine {
     return null;
   }
 
-  /** Applies rule/parameter changes to the running world. */
-  applyConfig(config: Config): FieldError[] | null {
+  /**
+   * Applies a rule/parameter change to the running world: `mutate` edits a
+   * copy of the live config for the world and, on success, a copy of the base
+   * config too, so scheduled changes that already fired are not undone.
+   */
+  applyConfig(mutate: (c: Config) => void): FieldError[] | null {
+    const next = structuredClone(this.config);
+    mutate(next);
     try {
-      this.sim.set_config(JSON.stringify(config));
+      this.sim.set_config(JSON.stringify(next));
     } catch (e) {
       return parseErrors(e);
     }
+    const base = structuredClone(this.baseConfig);
+    mutate(base);
+    this.baseConfig = base;
     this.config = normalized(this.sim);
     this.emit('config');
     return null;
@@ -126,16 +148,16 @@ export class Engine {
     return errors;
   }
 
-  /** The preset whose config equals the current one, if any. */
+  /** The preset whose config equals the base config, if any. */
   private matchPreset(): string | null {
-    const json = JSON.stringify(this.config);
+    const json = JSON.stringify(this.baseConfig);
     return this.presets.find((p) => JSON.stringify(p.config) === json)?.id ?? null;
   }
 
-  /** True when the config differs from the last chosen preset or the landscape is custom. */
+  /** True when the base config differs from the last chosen preset or the landscape is custom. */
   isModified(): boolean {
     const preset = this.presets.find((p) => p.id === this.presetId);
-    return !preset || this.customLandscape !== undefined || JSON.stringify(preset.config) !== JSON.stringify(this.config);
+    return !preset || this.customLandscape !== undefined || JSON.stringify(preset.config) !== JSON.stringify(this.baseConfig);
   }
 
   setRunning(on: boolean): void {
@@ -144,7 +166,14 @@ export class Engine {
   }
 
   advance(n: number = this.stepsPerFrame): void {
+    const from = this.sim.tick();
     this.sim.step(n);
+    const to = this.sim.tick();
+    // An entry at tick t fires when the step from t to t + 1 starts.
+    if (this.baseConfig.schedule.some((c) => c.tick >= from && c.tick < to)) {
+      this.config = normalized(this.sim);
+      this.emit('config');
+    }
     this.emit('tick');
   }
 

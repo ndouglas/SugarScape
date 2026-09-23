@@ -49,7 +49,7 @@ async function main(): Promise<void> {
   const shareButton = h('button', {
     onclick: async () => {
       const landscape = engine.sim.landscape_edited() ? engine.sim.export_landscape() : undefined;
-      const token = await encodeShare({ config: engine.config, seed: engine.seed, landscape });
+      const token = await encodeShare({ config: engine.baseConfig, seed: engine.seed, landscape });
       history.replaceState(null, '', `#s=${token}`);
       try {
         await navigator.clipboard.writeText(location.href);

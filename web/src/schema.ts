@@ -11,6 +11,8 @@ export interface Group {
   title: string;
   /** Path of the boolean that switches this rule on (shown in the header). */
   enable?: string;
+  /** Switching the rule on or off rebuilds the world (reset) instead of editing it. */
+  enableResets?: boolean;
   note?: string;
   controls: Control[];
 }
@@ -101,8 +103,8 @@ export const GROUPS: Group[] = [
     ],
   },
   {
-    title: 'Spice', enable: 'spice.enabled',
-    note: 'A second good on mountains opposite the sugar. Changes apply to agents born from now on.',
+    title: 'Spice', enable: 'spice.enabled', enableResets: true,
+    note: 'A second good on mountains opposite the sugar. Turning spice on or off rebuilds the world; trait ranges apply to agents born from now on.',
     controls: [
       { kind: 'range', path: 'spice.metabolism', label: 'Spice metabolism', min: 0, max: 10 },
       { kind: 'range', path: 'spice.endowment', label: 'Initial spice', min: 0, max: 500 },

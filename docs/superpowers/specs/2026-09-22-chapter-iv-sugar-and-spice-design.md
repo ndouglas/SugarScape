@@ -34,7 +34,9 @@ All new blocks have `Default`s so existing configs and share links deserialize u
 | `pollution` | + `spice_pollutes: bool` | false |
 | `schedule` | `Vec<ScheduledChange { tick: u64, set: BTreeMap<String, serde_json::Value> }>` | empty |
 
-**Validation (new rules):** trade requires spice; foresight requires spice; credit requires sex; combat and spice are mutually exclusive (the book never combines them); `credit.duration ≥ 1`; `credit.rate` finite and ≥ 0; ranges min ≤ max. Each schedule entry: `tick ≥ 1`; every key must be a dot path to an existing config field; structural fields (`width`, `height`, `tag_length`, `landscape`, `population`, `placement`) are rejected; applying all of an entry's `set` values to a copy of the config must yield a valid config.
+**Validation (new rules):** trade requires spice; foresight requires spice; credit requires sex; combat and spice are mutually exclusive (the book never combines them); `credit.duration ≥ 1`; `credit.rate` finite and ≥ 0; ranges min ≤ max. Each schedule entry: `tick ≥ 1`; every key must be a dot path to an existing config field; structural fields (`width`, `height`, `tag_length`, `landscape`, `population`, `placement`) are rejected, as are `spice` / `spice.enabled` (reset-only, below) and any path under `schedule` (a schedule may not edit itself); applying all of an entry's `set` values to a copy of the config must yield a valid config. A new world validates the whole schedule; a mid-run config change (`set_config`) validates only entries with `tick ≥` the world's current tick, since earlier entries already fired and their effects are part of the live config.
+
+**Reset-only:** `spice.enabled` joins the fields a running world rejects ("changes only on reset"): switching spice on mid-run would starve agents born without spice, and switching it off would leave spice endowments nobody can meet.
 
 **Landscape:** spice capacities for `TwoPeaks` are the sugar map mirrored left↔right (spice mountains in the northwest and southeast, as in the book's Figure IV-1). `Flat { capacity }` uses the same capacity for spice. Sites gain `spice` and `spice_capacity`. Growback (rate, instant, seasons) applies to both goods identically.
 
@@ -92,7 +94,7 @@ Each executed exchange is one trade. The pair is recorded in this tick's trade n
 
 ## Extras
 
-- **Sex, inheritance, replacement with spice:** fertility requires sugar ≥ initial sugar **and** spice ≥ initial spice; each parent gives half of each birth endowment; child foresight is inherited from a random parent; inheritance splits both goods; replacements draw spice traits (and foresight) when enabled.
+- **Sex, inheritance, replacement with spice:** fertility requires sugar ≥ initial sugar **and**, for an agent born with spice traits (initial spice > 0), spice ≥ initial spice; each parent gives half of each birth endowment; child foresight is inherited from a random parent; inheritance splits both goods; replacements draw spice traits (and foresight) when enabled.
 - **Supply and demand (on demand):** over 41 log-spaced prices in [0.1, 10], aggregate demand `D(p) = Σ max(e, 0)` and supply `S(p) = Σ max(−e, 0)`; the equilibrium price is where `D − S` changes sign (log-linear interpolation) and the equilibrium quantity is `D` there. Reported with the tick's actual geometric-mean trade price and total sugar traded.
 - **Networks:** trade edges = pairs that traded this tick; credit edges = outstanding loans between living agents. Returned as agent positions.
 - **Credit color mode:** lender only (green), borrower only (red), both (yellow), neither (neutral gray).
@@ -124,9 +126,9 @@ Milestone-1 presets gain the schedules the book describes: `ii-8-pollution` → 
 
 ## UI
 
-- **Rules panel:** groups Spice, Trade, Credit, Foresight; "Spice pollutes" under Pollution; a read-only **Schedule** list ("t=100 · pollution.enabled = true") with a Clear button. New validation errors route to their controls.
+- **Rules panel:** groups Spice, Trade, Credit, Foresight; "Spice pollutes" under Pollution; a read-only **Schedule** list ("t=100 · pollution.enabled = true") with a Clear button. New validation errors route to their controls. The Spice switch rebuilds the world (reset), like the Setup controls. The panel shows the **live** config (including scheduled changes that have fired); the engine also keeps the **base** config (the setup as chosen by preset, share link or reset), which reset, share links, preset matching and the "modified" badge use. A mid-run edit is applied to both, so it never undoes a fired scheduled change; the live config is re-read after any tick range that crosses a scheduled entry.
 - **Display bar:** new layers and the credit color mode; "Trade network" and "Credit network" overlay checkboxes. Overlays draw lines between cell centers; an edge whose endpoints are more than half the grid apart on an axis is drawn as two segments across the torus edge.
-- **Charts:** an **Economy** group, shown when spice is on: mean log price with ±1 SD band, trade volume, supply & demand (curves + equilibrium point + actual point), loans (made, defaults, outstanding debt). The traits chart adds mean foresight and mean spice metabolism when their rules are on.
+- **Charts:** an **Economy** group, shown when spice or credit is on. With spice on: mean log price with ±1 SD band, trade volume, supply & demand (curves + equilibrium point + actual point), and a separate **Spice & foresight** chart (mean spice metabolism and mean foresight). With credit on: loans (made, defaults) and outstanding debt. Each chart is hidden while its rule is off.
 - **Inspector:** spice holdings/metabolism, foresight, loans with clickable counterparties.
 - **Exports:** series and agent CSVs include the new columns.
 

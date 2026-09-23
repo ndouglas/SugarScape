@@ -21,10 +21,15 @@ export class RulesPanel {
     this.sync();
   }
 
+  /** Reset-required changes rebuild from the base setup; others edit the running world. */
   private commit(mutate: (c: Config) => void, reset: boolean): void {
-    const next = structuredClone(this.engine.config);
-    mutate(next);
-    this.errors = (reset ? this.engine.reset(next) : this.engine.applyConfig(next)) ?? [];
+    if (reset) {
+      const next = structuredClone(this.engine.baseConfig);
+      mutate(next);
+      this.errors = this.engine.reset(next) ?? [];
+    } else {
+      this.errors = this.engine.applyConfig(mutate) ?? [];
+    }
     if (this.errors.length > 0) this.sync();
     this.renderErrors();
   }
@@ -96,7 +101,7 @@ export class RulesPanel {
       const path = group.enable;
       const box = h('input', {
         type: 'checkbox',
-        onchange: () => this.commit((c) => setPath(c, path, box.checked), false),
+        onchange: () => this.commit((c) => setPath(c, path, box.checked), group.enableResets === true),
       });
       this.syncers.push(() => (box.checked = getPath(this.engine.config, path) === true));
       header.replaceChildren(h('label', { class: 'switch' }, box, ` ${group.title}`));

@@ -9,7 +9,7 @@ export class InspectPanel {
   private visible = false;
 
   constructor(private engine: Engine) {
-    for (const event of ['select', 'tick', 'reset', 'edit'] as const) engine.on(event, () => this.render());
+    for (const event of ['select', 'tick', 'reset', 'config', 'edit'] as const) engine.on(event, () => this.render());
     this.render();
   }
 
