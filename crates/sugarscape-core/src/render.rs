@@ -24,6 +24,8 @@ pub const LENDER: Rgb = [0x3d, 0xd6, 0x6b];
 pub const BORROWER: Rgb = [0xff, 0x4d, 0x4d];
 pub const BOTH: Rgb = [0xff, 0xe0, 0x4d];
 pub const NEUTRAL: Rgb = [0x8a, 0x86, 0x7a];
+pub const SICK: Rgb = [0xff, 0x4d, 0x4d];
+pub const HEALTHY: Rgb = [0x3d, 0x7e, 0xff];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ColorMode {
@@ -33,6 +35,7 @@ pub enum ColorMode {
     Age,
     Vision,
     Credit,
+    Disease,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -54,6 +57,7 @@ impl FromStr for ColorMode {
             "age" => Self::Age,
             "vision" => Self::Vision,
             "credit" => Self::Credit,
+            "disease" => Self::Disease,
             _ => return Err(format!("unknown color mode {s:?}")),
         })
     }
@@ -108,6 +112,13 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
             (f64::from(a.vision) - s.vision_min) / s.vision_span,
         ),
         ColorMode::Credit => NEUTRAL,
+        ColorMode::Disease => {
+            if a.diseases.is_empty() {
+                HEALTHY
+            } else {
+                SICK
+            }
+        }
     }
 }
 
@@ -251,5 +262,18 @@ mod tests {
             Layer::SpiceCapacity
         );
         assert_eq!("credit".parse::<ColorMode>().unwrap(), ColorMode::Credit);
+    }
+
+    #[test]
+    fn disease_mode_colors_sick_and_healthy_agents() {
+        let mut w = blank_world(10, 10);
+        let sick = spawn(&mut w, 1, 1);
+        spawn(&mut w, 2, 2);
+        w.agent_mut(sick).unwrap().diseases = vec![0];
+        let mut buf = Vec::new();
+        render(&w, ColorMode::Disease, Layer::Sugar, &mut buf);
+        assert_eq!(pixel(&buf, &w, 1, 1)[..3], SICK);
+        assert_eq!(pixel(&buf, &w, 2, 2)[..3], HEALTHY);
+        assert_eq!("disease".parse::<ColorMode>().unwrap(), ColorMode::Disease);
     }
 }

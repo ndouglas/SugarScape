@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::agent::{Agent, AgentId, Sex, Tribe};
+use crate::agent::{Agent, AgentId, DiseaseId, Sex, Tribe};
 use crate::config::{Config, FieldError};
 use crate::geometry::Pos;
 use crate::world::{LoanId, World};
@@ -32,6 +32,15 @@ pub struct SiteView {
 pub struct LinkView {
     pub id: AgentId,
     pub alive: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DiseaseView {
+    pub id: DiseaseId,
+    pub bits: String,
+    /// Smallest Hamming distance between the disease and a window of the
+    /// agent's immune string.
+    pub distance: u32,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -68,6 +77,10 @@ pub struct AgentView {
     pub spice_metabolism: u32,
     pub foresight: u32,
     pub loans: Vec<LoanView>,
+    pub immune: String,
+    pub immune_genome: String,
+    pub diseases: Vec<DiseaseView>,
+    pub infected_by: Option<LinkView>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -199,6 +212,24 @@ impl World {
                     }
                 })
                 .collect(),
+            immune: a.immune.to_bit_string(),
+            immune_genome: a.immune_genome.to_bit_string(),
+            diseases: a
+                .diseases
+                .iter()
+                .map(|&id| {
+                    let d = self.diseases[id as usize];
+                    DiseaseView {
+                        id,
+                        bits: d.to_bit_string(),
+                        distance: a
+                            .immune
+                            .closest_window(&d)
+                            .map_or(d.len(), |(_, distance)| distance),
+                    }
+                })
+                .collect(),
+            infected_by: a.infected_by.map(link),
         });
         Ok(Inspection {
             site: SiteView {
@@ -401,5 +432,35 @@ mod tests {
             a.diseases.len() <= 1,
             "initial 4 is capped by the list's length"
         );
+    }
+
+    #[test]
+    fn inspection_shows_immune_strings_diseases_and_infector() {
+        use crate::bits::Bits;
+        let mut w = blank_world(10, 10);
+        w.config.disease.enabled = true;
+        w.diseases = vec![Bits::parse("111").unwrap()];
+        let a = spawn(&mut w, 1, 1);
+        let b = spawn(&mut w, 2, 1);
+        {
+            let x = w.agent_mut(a).unwrap();
+            x.immune = Bits::parse(&format!("0110{}", "0".repeat(46))).unwrap();
+            x.diseases = vec![0];
+            x.infected_by = Some(b);
+        }
+        let v = w.inspect(1, 1).unwrap().agent.unwrap();
+        assert_eq!(v.immune, format!("0110{}", "0".repeat(46)));
+        assert_eq!(v.immune_genome, "0".repeat(50));
+        assert_eq!(v.diseases.len(), 1);
+        let d = &v.diseases[0];
+        assert_eq!((d.id, d.bits.as_str(), d.distance), (0, "111", 1));
+        assert_eq!(v.infected_by.unwrap().id, b);
+        assert!(w
+            .inspect(2, 1)
+            .unwrap()
+            .agent
+            .unwrap()
+            .infected_by
+            .is_none());
     }
 }

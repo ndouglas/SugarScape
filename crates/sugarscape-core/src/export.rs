@@ -24,11 +24,11 @@ pub fn series_csv(stats: &Stats) -> String {
 
 pub fn agents_csv(world: &World) -> String {
     let mut out =
-        String::from("id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight\n");
+        String::from("id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight,immune,diseases\n");
     for a in world.agents() {
         writeln!(
             out,
-            "{},{},{},{:?},{},{},{},{},{},{},{:?},{},{},{},{},{}",
+            "{},{},{},{:?},{},{},{},{},{},{},{:?},{},{},{},{},{},{},{}",
             a.id,
             a.pos.x,
             a.pos.y,
@@ -44,7 +44,13 @@ pub fn agents_csv(world: &World) -> String {
             a.spice,
             a.initial_spice,
             a.spice_metabolism,
-            a.foresight
+            a.foresight,
+            a.immune.to_bit_string(),
+            a.diseases
+                .iter()
+                .map(|d| d.to_string())
+                .collect::<Vec<_>>()
+                .join(";")
         )
         .unwrap();
     }
@@ -73,7 +79,17 @@ mod tests {
         let csv = agents_csv(&w);
         assert_eq!(csv.lines().count(), 401);
         assert!(csv.starts_with(
-            "id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight\n"
+            "id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight,immune,diseases\n"
         ));
+    }
+
+    #[test]
+    fn agents_csv_lists_immune_strings_and_disease_ids() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        let id = crate::testkit::spawn(&mut w, 0, 0);
+        w.agent_mut(id).unwrap().diseases = vec![3, 7];
+        let csv = agents_csv(&w);
+        let row = csv.lines().nth(1).unwrap();
+        assert!(row.ends_with(&format!(",{},3;7", "0".repeat(50))), "{row}");
     }
 }
