@@ -496,6 +496,8 @@ pub fn run_point(sweep: &Sweep, point: &Point) -> RunResult {
     run_config(sweep, point, config)
 }
 
+/// Runs `point` with an already-built `config` and measures it. The config must be
+/// the point's valid config (e.g. from `Sweep::config_for`); an invalid config panics.
 pub fn run_config(sweep: &Sweep, point: &Point, config: Config) -> RunResult {
     let mut world = World::new(config, point.seed).expect("sweep configs are validated");
     world.run(sweep.ticks);
