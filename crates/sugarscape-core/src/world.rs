@@ -435,7 +435,7 @@ impl World {
             .collect();
         let n = self.config.goods.len();
         let count = heirs.len() as f64;
-        let shares: [f64; crate::config::MAX_GOODS] = std::array::from_fn(|i| {
+        let shares: [f64; MAX_GOODS] = std::array::from_fn(|i| {
             if i < n && agent.holdings[i] > 0.0 {
                 agent.holdings[i] / count
             } else {

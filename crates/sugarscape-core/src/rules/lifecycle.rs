@@ -1,7 +1,6 @@
 //! Metabolism (with pollution formation) and death.
 
 use crate::agent::AgentId;
-use crate::config::MAX_GOODS;
 use crate::rules::Harvest;
 use crate::world::{DeathCause, World};
 
@@ -12,13 +11,7 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
     let n = world.config.goods.len();
     let fee = world.config.disease.active_fee();
     let agent = world.agent_mut(id).expect("live agent");
-    let burned: [f64; MAX_GOODS] = std::array::from_fn(|i| {
-        if i < n {
-            agent.effective_metabolism(i, fee)
-        } else {
-            0.0
-        }
-    });
+    let burned = agent.effective_metabolisms(n, fee);
     for (have, burn) in agent.holdings.iter_mut().zip(&burned).take(n) {
         *have -= burn;
     }
