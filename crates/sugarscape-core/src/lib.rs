@@ -10,6 +10,7 @@ pub mod edit;
 pub mod export;
 pub mod geometry;
 pub mod landscape;
+pub mod network;
 pub mod presets;
 pub mod render;
 pub mod rng;

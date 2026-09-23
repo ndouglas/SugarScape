@@ -58,7 +58,7 @@ mod tests {
         w.run(2);
         let csv = series_csv(&w.stats);
         let lines: Vec<&str> = csv.lines().collect();
-        assert_eq!(lines[0], "tick,population,gini,mean_wealth,mean_vision,mean_metabolism,blue_fraction,births,deaths");
+        assert_eq!(lines[0], "tick,population,gini,mean_wealth,mean_vision,mean_metabolism,blue_fraction,births,deaths,mean_log_price,sd_log_price,trade_volume,sugar_traded,loans_made,amount_lent,defaults,debt_outstanding,mean_foresight,mean_spice,mean_spice_metabolism");
         assert_eq!(lines.len(), 4);
         assert!(lines[1].starts_with("0,400,"));
     }

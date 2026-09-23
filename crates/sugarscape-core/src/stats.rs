@@ -6,7 +6,7 @@ use serde::Serialize;
 use crate::agent::Tribe;
 use crate::world::World;
 
-pub const SERIES: [&str; 8] = [
+pub const SERIES: [&str; 19] = [
     "population",
     "gini",
     "mean_wealth",
@@ -15,6 +15,17 @@ pub const SERIES: [&str; 8] = [
     "blue_fraction",
     "births",
     "deaths",
+    "mean_log_price",
+    "sd_log_price",
+    "trade_volume",
+    "sugar_traded",
+    "loans_made",
+    "amount_lent",
+    "defaults",
+    "debt_outstanding",
+    "mean_foresight",
+    "mean_spice",
+    "mean_spice_metabolism",
 ];
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
@@ -29,6 +40,17 @@ pub struct Snapshot {
     /// Sexual births this tick; replacements (rule R) are not births.
     pub births: u32,
     pub deaths: u32,
+    pub mean_log_price: f64,
+    pub sd_log_price: f64,
+    pub trade_volume: u32,
+    pub sugar_traded: f64,
+    pub loans_made: u32,
+    pub amount_lent: f64,
+    pub defaults: u32,
+    pub debt_outstanding: f64,
+    pub mean_foresight: f64,
+    pub mean_spice: f64,
+    pub mean_spice_metabolism: f64,
 }
 
 impl Snapshot {
@@ -42,6 +64,18 @@ impl Snapshot {
             }
         };
         let w = wealths(world);
+
+        // Calculate mean and sd of log prices from trades
+        let events = world.events();
+        let logs: Vec<f64> = events.trades.iter().map(|t| t.price.ln()).collect();
+        let (mean_log_price, sd_log_price) = if logs.is_empty() {
+            (0.0, 0.0)
+        } else {
+            let m = logs.iter().sum::<f64>() / logs.len() as f64;
+            let var = logs.iter().map(|x| (x - m).powi(2)).sum::<f64>() / logs.len() as f64;
+            (m, var.sqrt())
+        };
+
         Self {
             tick: world.tick,
             population: n as u32,
@@ -52,6 +86,17 @@ impl Snapshot {
             blue_fraction: mean(&|a| if a.tribe() == Tribe::Blue { 1.0 } else { 0.0 }),
             births: world.events().births,
             deaths: world.events().deaths.len() as u32,
+            mean_log_price,
+            sd_log_price,
+            trade_volume: events.trades.len() as u32,
+            sugar_traded: events.trades.iter().map(|t| t.sugar).sum(),
+            loans_made: events.loans_made,
+            amount_lent: events.amount_lent,
+            defaults: events.defaults,
+            debt_outstanding: world.loans().map(|l| l.due).sum(),
+            mean_foresight: mean(&|a| f64::from(a.foresight)),
+            mean_spice: mean(&|a| a.spice),
+            mean_spice_metabolism: mean(&|a| f64::from(a.spice_metabolism)),
         }
     }
 
@@ -66,6 +111,17 @@ impl Snapshot {
             "blue_fraction" => self.blue_fraction,
             "births" => f64::from(self.births),
             "deaths" => f64::from(self.deaths),
+            "mean_log_price" => self.mean_log_price,
+            "sd_log_price" => self.sd_log_price,
+            "trade_volume" => f64::from(self.trade_volume),
+            "sugar_traded" => self.sugar_traded,
+            "loans_made" => f64::from(self.loans_made),
+            "amount_lent" => self.amount_lent,
+            "defaults" => f64::from(self.defaults),
+            "debt_outstanding" => self.debt_outstanding,
+            "mean_foresight" => self.mean_foresight,
+            "mean_spice" => self.mean_spice,
+            "mean_spice_metabolism" => self.mean_spice_metabolism,
             _ => return None,
         })
     }
@@ -154,6 +210,65 @@ pub fn histogram(values: &[f64], bins: usize) -> (f64, Vec<f64>) {
     (width, counts)
 }
 
+/// Aggregate sugar supply and demand over 41 log-spaced prices in [0.1, 10]
+/// (spice per sugar), the interpolated market-clearing point, and the tick's
+/// actual geometric-mean price and sugar traded (NaN where undefined).
+#[derive(Clone, Debug, PartialEq)]
+pub struct SupplyDemand {
+    pub prices: Vec<f64>,
+    pub demand: Vec<f64>,
+    pub supply: Vec<f64>,
+    pub equilibrium_price: f64,
+    pub equilibrium_quantity: f64,
+    pub actual_price: f64,
+    pub actual_quantity: f64,
+}
+
+pub fn supply_demand(world: &World) -> SupplyDemand {
+    let prices: Vec<f64> = (0..41)
+        .map(|k| 10f64.powf(-1.0 + k as f64 / 20.0))
+        .collect();
+    let mut demand = vec![0.0; prices.len()];
+    let mut supply = vec![0.0; prices.len()];
+    for a in world.agents() {
+        let (m1, m2) = (f64::from(a.metabolism), f64::from(a.spice_metabolism));
+        for (k, &p) in prices.iter().enumerate() {
+            let excess = crate::econ::sugar_demand(p, a.sugar, a.spice, m1, m2) - a.sugar;
+            if excess > 0.0 {
+                demand[k] += excess
+            } else {
+                supply[k] -= excess
+            }
+        }
+    }
+    let (mut equilibrium_price, mut equilibrium_quantity) = (f64::NAN, f64::NAN);
+    for k in 0..prices.len() - 1 {
+        let (e0, e1) = (demand[k] - supply[k], demand[k + 1] - supply[k + 1]);
+        if e0 >= 0.0 && e1 <= 0.0 && e0 != e1 {
+            let t = e0 / (e0 - e1);
+            equilibrium_price = (prices[k].ln() + t * (prices[k + 1].ln() - prices[k].ln())).exp();
+            equilibrium_quantity = demand[k] + t * (demand[k + 1] - demand[k]);
+            break;
+        }
+    }
+    let trades = &world.events().trades;
+    let (actual_price, actual_quantity) = if trades.is_empty() {
+        (f64::NAN, f64::NAN)
+    } else {
+        let m = trades.iter().map(|t| t.price.ln()).sum::<f64>() / trades.len() as f64;
+        (m.exp(), trades.iter().map(|t| t.sugar).sum())
+    };
+    SupplyDemand {
+        prices,
+        demand,
+        supply,
+        equilibrium_price,
+        equilibrium_quantity,
+        actual_price,
+        actual_quantity,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -204,5 +319,55 @@ mod tests {
         for name in SERIES {
             assert!(s.value(name).is_some(), "{name}");
         }
+    }
+
+    #[test]
+    fn trade_and_credit_series_come_from_the_tick_events() {
+        use crate::testkit::*;
+        use crate::world::Trade;
+        let mut w = blank_world(5, 5);
+        w.events.trades = vec![
+            Trade {
+                buyer: 1,
+                seller: 2,
+                price: 2.0,
+                sugar: 1.0,
+            },
+            Trade {
+                buyer: 1,
+                seller: 2,
+                price: 0.5,
+                sugar: 2.0,
+            },
+        ];
+        w.events.loans_made = 3;
+        let s = Snapshot::of(&w);
+        assert!(s.mean_log_price.abs() < 1e-12, "ln 2 and ln ½ average to 0");
+        assert!((s.sd_log_price - 2f64.ln()).abs() < 1e-12);
+        assert_eq!((s.trade_volume, s.sugar_traded, s.loans_made), (2, 3.0, 3));
+        for name in SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+    }
+
+    #[test]
+    fn symmetric_market_clears_near_one() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.spice.enabled = true;
+        for (x, sugar, spice) in [(0, 30.0, 10.0), (1, 10.0, 30.0)] {
+            let id = spawn(&mut w, x, 0);
+            let a = w.agent_mut(id).unwrap();
+            (a.sugar, a.spice, a.metabolism, a.spice_metabolism) = (sugar, spice, 1, 1);
+        }
+        let sd = supply_demand(&w);
+        assert_eq!(sd.prices.len(), 41);
+        assert!(
+            (sd.equilibrium_price - 1.0).abs() < 0.05,
+            "{}",
+            sd.equilibrium_price
+        );
+        assert!((sd.equilibrium_quantity - 10.0).abs() < 0.5);
+        assert!(sd.actual_price.is_nan(), "no trades this tick");
     }
 }
