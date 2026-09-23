@@ -96,3 +96,62 @@ fn culture_drives_neighbors_toward_one_tribe() {
         "homogeneity after 3000 ticks {end} (from {start})"
     );
 }
+
+#[test]
+#[ignore]
+fn trade_prices_cluster_near_one() {
+    // Figure IV-3: prices bunch around the market-clearing level of 1.
+    // Observed (seeds 1..=3, mean ln price over t=500..1000): included in
+    // `means` below; well inside the bound.
+    let config = presets::by_id("iv-3-trade").unwrap().config;
+    let means: Vec<f64> = (1..=3)
+        .map(|seed| {
+            let w = run(config.clone(), seed, 1000);
+            let s = w.stats.series("mean_log_price").unwrap();
+            s[500..].iter().sum::<f64>() / s[500..].len() as f64
+        })
+        .collect();
+    let mean = means.iter().sum::<f64>() / means.len() as f64;
+    assert!(mean.abs() < 0.25, "mean ln price {mean} ({means:?})");
+}
+
+#[test]
+#[ignore]
+fn trade_raises_carrying_capacity() {
+    // Figure IV-6: carrying capacity is higher with trade than without.
+    let with = presets::by_id("iv-3-trade").unwrap().config;
+    let mut without = with.clone();
+    without.trade.enabled = false;
+    let pop = |c: &Config| {
+        (1..=5)
+            .map(|s| run(c.clone(), s, 500).population() as f64)
+            .sum::<f64>()
+            / 5.0
+    };
+    let (p_with, p_without) = (pop(&with), pop(&without));
+    assert!(p_with > p_without, "with {p_with}, without {p_without}");
+}
+
+#[test]
+#[ignore]
+fn foresight_evolves_to_a_modest_nonzero_level() {
+    // Figure IV-18: some foresight is fit; large foresight is not.
+    //
+    // The preset's endowment was lowered from demography()'s Chapter III
+    // scale (50-100) to the market() scale (25-50) after measuring: at
+    // (50,100)/(50,100) with no trade, seeds 1..=3 all collapsed to
+    // population 0 by t~200 (fertility needs sugar AND spice each >= its own
+    // initial endowment simultaneously, and the two are anti-correlated
+    // across the map, so that bar was essentially unreachable; only ~1 birth
+    // happened in the first 55 ticks). At the lowered endowment, population
+    // grows instead (400 -> ~600-700 by t=1000) and mean foresight declines
+    // for every seed tried (1..=5): 4.87->4.74, 5.01->4.40, 4.86->3.23,
+    // 5.09->4.37, 4.82->1.29 (start = f[0], end = f[999]).
+    let config = presets::by_id("iv-18-foresight").unwrap().config;
+    for seed in 1..=3 {
+        let w = run(config.clone(), seed, 1000);
+        let f = w.stats.series("mean_foresight").unwrap();
+        let (start, end) = (f[0], *f.last().unwrap());
+        assert!(end > 0.1 && end < start, "seed {seed}: {start} → {end}");
+    }
+}

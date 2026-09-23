@@ -3,7 +3,7 @@
 
 use serde::Serialize;
 
-use crate::config::{Config, Placement, URange};
+use crate::config::{Config, Placement, ScheduledChange, URange};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Preset {
@@ -42,6 +42,26 @@ fn demography(c: &mut Config) {
     c.sex.enabled = true;
     c.lifespan.enabled = true;
     c.endowment = URange::new(50, 100);
+}
+
+/// Schedule a single dotted-path change at `tick`.
+fn schedule(c: &mut Config, tick: u64, path: &str, value: serde_json::Value) {
+    c.schedule.push(ScheduledChange {
+        tick,
+        set: [(path.to_string(), value)].into_iter().collect(),
+    });
+}
+
+/// Chapter IV's neoclassical market: 200 immortal agents, symmetric goods.
+fn market(c: &mut Config) {
+    c.population = 200;
+    c.vision = URange::new(1, 5);
+    c.metabolism = URange::new(1, 5);
+    c.endowment = URange::new(25, 50);
+    c.spice.enabled = true;
+    c.spice.metabolism = URange::new(1, 5);
+    c.spice.endowment = URange::new(25, 50);
+    c.trade.enabled = true;
 }
 
 pub fn all() -> Vec<Preset> {
@@ -96,10 +116,10 @@ pub fn all() -> Vec<Preset> {
             "ii-8-pollution",
             "({G₁, D₁}, {M, P₁₁})",
             "Animation II-8",
-            "Gathering and eating pollute; diffusion spreads it. (The book switches pollution on at t = 50 and diffusion at t = 100; toggle them yourself to replay that.)",
+            "Gathering and eating pollute from t = 50; diffusion spreads it from t = 100 (scheduled, as in the book).",
             |c| {
-                c.pollution.enabled = true;
-                c.diffusion.enabled = true;
+                schedule(c, 50, "pollution.enabled", serde_json::json!(true));
+                schedule(c, 100, "diffusion.enabled", serde_json::json!(true));
             },
         ),
         preset(
@@ -171,6 +191,86 @@ pub fn all() -> Vec<Preset> {
                 c.culture.enabled = true;
             },
         ),
+        preset(
+            "iv-1-spice",
+            "({G₁}, {M}) with spice",
+            "Animation IV-1",
+            "Two goods on opposite mountains: agents shuttle between sugar and spice to stay alive.",
+            |c| {
+                c.vision = URange::new(1, 10);
+                c.metabolism = URange::new(1, 5);
+                c.endowment = URange::new(25, 50);
+                c.spice.enabled = true;
+                c.spice.metabolism = URange::new(1, 5);
+                c.spice.endowment = URange::new(25, 50);
+            },
+        ),
+        preset(
+            "iv-3-trade",
+            "({G₁}, {M, T})",
+            "Figures IV-3 to IV-5",
+            "Bilateral barter between neighbors: prices converge toward the market-clearing level of 1.",
+            market,
+        ),
+        preset(
+            "iv-15-trade-sex",
+            "({G₁}, {M, S, T})",
+            "Figure IV-15",
+            "Finite lives and evolving preferences keep prices from settling.",
+            |c| {
+                market(c);
+                c.sex.enabled = true;
+                c.lifespan.enabled = true;
+            },
+        ),
+        preset(
+            "iv-3-pollution",
+            "({G₁, D₁}, {M, T, P})",
+            "Animation IV-3",
+            "Sugar becomes a dirty good at t = 100, driving its price up; at t = 150 pollution stops and diffuses away.",
+            |c| {
+                market(c);
+                schedule(c, 100, "pollution.enabled", serde_json::json!(true));
+                schedule(c, 150, "pollution.enabled", serde_json::json!(false));
+                schedule(c, 150, "diffusion.enabled", serde_json::json!(true));
+            },
+        ),
+        preset(
+            "iv-18-foresight",
+            "({G₁}, {M, S}) with foresight",
+            "Figure IV-18",
+            "Agents plan φ periods ahead; evolution keeps a modest, non-zero foresight.",
+            |c| {
+                demography(c);
+                // Demography's Chapter III endowment (50-100) is tuned for a
+                // single-good economy, where reaching "wealth >= initial
+                // endowment" (fertility) just needs sugar. With spice too,
+                // fertility needs BOTH sugar and spice simultaneously at that
+                // high a bar; the two resources are anti-correlated on the
+                // map, so agents almost never clear both at once. Measured:
+                // at (50,100)/(50,100) with no trade, seeds 1-3 all crashed
+                // to population 0 by t~200 (only ~1 birth in the first 55
+                // ticks). Matching the market()-scale endowment (25-50) used
+                // by the other Chapter IV presets keeps fertility reachable:
+                // population grows from 400 to ~600-700 by t=1000 and mean
+                // foresight still declines from a ~5 start (seeds 1-5:
+                // 4.87->4.74, 5.01->4.40, 4.86->3.23, 5.09->4.37, 4.82->1.29).
+                c.endowment = URange::new(25, 50);
+                c.spice.enabled = true;
+                c.spice.endowment = URange::new(25, 50);
+                c.foresight.enabled = true;
+            },
+        ),
+        preset(
+            "iv-5-credit",
+            "({G₁}, {M, S, L₁₀,₁₀})",
+            "Animation IV-5",
+            "Old agents lend to young ones for childbearing; lender–borrower hierarchies emerge.",
+            |c| {
+                demography(c);
+                c.credit.enabled = true;
+            },
+        ),
     ]
 }
 
@@ -186,7 +286,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 13);
+        assert_eq!(presets.len(), 19);
         for p in presets {
             p.config
                 .validate()

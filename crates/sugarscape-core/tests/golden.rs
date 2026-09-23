@@ -11,7 +11,8 @@ const GOLDEN: &[(&str, u64)] = &[
     ("ii-5-wealth", 0x47bb9f4000e59377),
     ("ii-6-waves", 0xc16aa48d70070a46),
     ("ii-7-seasons", 0x89e264519aec44ff),
-    ("ii-8-pollution", 0x6075506b6feb53e0),
+    // Chapter IV: now scheduled (pollution at t=50, diffusion at t=100).
+    ("ii-8-pollution", 0xfdd983512b708286),
     ("iii-2-sex", 0x99c33cc7e8ad705c),
     ("iii-4-inheritance", 0x1aa293d107d6b7fb),
     ("iii-6-culture", 0xf8973190b0435a81),
