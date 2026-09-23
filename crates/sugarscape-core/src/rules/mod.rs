@@ -8,6 +8,7 @@ pub mod movement;
 pub mod pollution;
 pub mod replacement;
 pub mod sex;
+pub mod trade;
 
 use crate::agent::AgentId;
 use crate::world::World;
@@ -36,5 +37,8 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     }
     if world.config.culture.enabled {
         culture::act(world, id);
+    }
+    if world.config.trade.enabled {
+        trade::act(world, id);
     }
 }

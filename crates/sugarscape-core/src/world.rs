@@ -26,11 +26,22 @@ pub struct Death {
     pub cause: DeathCause,
 }
 
+/// One exchange under rule T: `buyer` received `sugar` sugar and paid
+/// `sugar × price` spice to `seller`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Trade {
+    pub buyer: AgentId,
+    pub seller: AgentId,
+    pub price: f64,
+    pub sugar: f64,
+}
+
 /// What happened during the current (or last completed) tick.
 #[derive(Clone, Debug, Default)]
 pub struct TickEvents {
     pub births: u32,
     pub deaths: Vec<Death>,
+    pub trades: Vec<Trade>,
 }
 
 pub struct World {
