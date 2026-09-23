@@ -14,6 +14,11 @@ export function randomSeed(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0];
 }
 
+/** The config as Rust sees it: serde defaults filled in for any missing fields. */
+function normalized(sim: Sim): Config {
+  return JSON.parse(sim.export_config()) as Config;
+}
+
 /** Owns the WASM simulation and the playground's run/display/selection state. */
 export class Engine {
   running = false;
@@ -22,6 +27,8 @@ export class Engine {
   layer: Layer = 'sugar';
   selection: Selection | null = null;
   presetId: string | null;
+  /** Painted or shared capacities, carried across resets that keep the landscape shape. */
+  private customLandscape: Uint8Array | undefined;
   private listeners = new Map<EngineEvent, Set<() => void>>();
 
   private constructor(
@@ -30,7 +37,9 @@ export class Engine {
     public sim: Sim,
     public config: Config,
     public seed: number,
+    landscape?: Uint8Array,
   ) {
+    this.customLandscape = landscape;
     this.presetId = this.matchPreset();
   }
 
@@ -47,7 +56,7 @@ export class Engine {
     } catch (e) {
       throw new Error(parseErrors(e).map((x) => `${x.field}: ${x.message}`).join('; '));
     }
-    return new Engine(wasm.memory, presets, sim, config, seed);
+    return new Engine(wasm.memory, presets, sim, normalized(sim), seed, initial?.landscape);
   }
 
   on(event: EngineEvent, fn: () => void): () => void {
@@ -65,8 +74,20 @@ export class Engine {
     return { width: this.sim.width(), height: this.sim.height() };
   }
 
-  /** Rebuilds the world. On error the current world is kept and errors returned. */
-  reset(config: Config = this.config, seed: number = this.seed, landscape?: Uint8Array): FieldError[] | null {
+  /**
+   * Rebuilds the world, keeping a painted/shared landscape unless `config`
+   * changes the landscape kind or the grid size. On error the current world is
+   * kept and errors returned.
+   */
+  reset(config: Config = this.config, seed: number = this.seed): FieldError[] | null {
+    const sameShape =
+      config.width === this.config.width &&
+      config.height === this.config.height &&
+      JSON.stringify(config.landscape) === JSON.stringify(this.config.landscape);
+    return this.rebuild(config, seed, sameShape ? this.customLandscape : undefined);
+  }
+
+  private rebuild(config: Config, seed: number, landscape: Uint8Array | undefined): FieldError[] | null {
     let next: Sim;
     try {
       next = new Sim(JSON.stringify(config), seed, landscape);
@@ -75,7 +96,8 @@ export class Engine {
     }
     this.sim.free();
     this.sim = next;
-    this.config = config;
+    this.config = normalized(next);
+    this.customLandscape = landscape;
     this.seed = seed;
     this.selection = null;
     this.presetId = this.matchPreset();
@@ -90,7 +112,7 @@ export class Engine {
     } catch (e) {
       return parseErrors(e);
     }
-    this.config = config;
+    this.config = normalized(this.sim);
     this.emit('config');
     return null;
   }
@@ -98,7 +120,7 @@ export class Engine {
   loadPreset(id: string): FieldError[] | null {
     const preset = this.presets.find((p) => p.id === id);
     if (!preset) return [{ field: 'preset', message: `unknown preset ${id}` }];
-    const errors = this.reset(structuredClone(preset.config));
+    const errors = this.rebuild(structuredClone(preset.config), this.seed, undefined);
     if (!errors) this.presetId = id;
     return errors;
   }
@@ -109,10 +131,10 @@ export class Engine {
     return this.presets.find((p) => JSON.stringify(p.config) === json)?.id ?? null;
   }
 
-  /** True when the config differs from the last chosen preset. */
+  /** True when the config differs from the last chosen preset or the landscape is custom. */
   isModified(): boolean {
     const preset = this.presets.find((p) => p.id === this.presetId);
-    return !preset || JSON.stringify(preset.config) !== JSON.stringify(this.config);
+    return !preset || this.customLandscape !== undefined || JSON.stringify(preset.config) !== JSON.stringify(this.config);
   }
 
   setRunning(on: boolean): void {
@@ -173,7 +195,10 @@ export class Engine {
   }
 
   paint(x: number, y: number, radius: number, value: number): FieldError[] | null {
-    return this.edit(() => this.sim.paint_capacity(x, y, radius, value));
+    return this.edit(() => {
+      this.sim.paint_capacity(x, y, radius, value);
+      this.customLandscape = this.sim.export_landscape();
+    });
   }
 
   place(x: number, y: number, overrides: PlaceOverrides): FieldError[] | null {

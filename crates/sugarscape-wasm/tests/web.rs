@@ -37,3 +37,13 @@ fn painted_landscape_round_trips() {
 fn presets_are_listed() {
     assert!(presets_json().contains("ii-2-unit"));
 }
+
+#[wasm_bindgen_test]
+fn partial_config_exports_in_full() {
+    // The front end relies on this to normalize share-link configs.
+    let sim = Sim::new(r#"{"population": 100}"#, 1, None).unwrap();
+    let full = sim.export_config();
+    assert!(full.contains(r#""population":100"#), "{full}");
+    assert!(full.contains(r#""landscape":{"kind":"#), "{full}");
+    assert!(full.contains(r#""combat":"#), "{full}");
+}
