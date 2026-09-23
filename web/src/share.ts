@@ -15,9 +15,38 @@ export function base64UrlToBytes(text: string): Uint8Array {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 }
 
-async function pipe(bytes: Uint8Array, stream: CompressionStream | DecompressionStream): Promise<Uint8Array> {
-  const out = new Blob([new Uint8Array(bytes)]).stream().pipeThrough(stream);
+async function deflate(bytes: Uint8Array): Promise<Uint8Array> {
+  const out = new Blob([new Uint8Array(bytes)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
   return new Uint8Array(await new Response(out).arrayBuffer());
+}
+
+/** Upper bound on a decompressed share payload (guards against deflate bombs). */
+const MAX_DECODED_BYTES = 1024 * 1024;
+
+async function inflateCapped(bytes: Uint8Array): Promise<Uint8Array> {
+  const reader = new Blob([new Uint8Array(bytes)])
+    .stream()
+    .pipeThrough(new DecompressionStream('deflate-raw'))
+    .getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_DECODED_BYTES) {
+      await reader.cancel();
+      throw new Error('share payload too large');
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.byteLength;
+  }
+  return out;
 }
 
 /** base64url(deflate-raw(JSON)). */
@@ -25,12 +54,12 @@ export async function encodeShare(state: ShareState): Promise<string> {
   const wire: Wire = { v: 1, c: state.config, s: state.seed };
   if (state.landscape) wire.l = bytesToBase64Url(state.landscape);
   const json = new TextEncoder().encode(JSON.stringify(wire));
-  return bytesToBase64Url(await pipe(json, new CompressionStream('deflate-raw')));
+  return bytesToBase64Url(await deflate(json));
 }
 
 export async function decodeShare(token: string): Promise<ShareState> {
   try {
-    const json = await pipe(base64UrlToBytes(token), new DecompressionStream('deflate-raw'));
+    const json = await inflateCapped(base64UrlToBytes(token));
     const wire = JSON.parse(new TextDecoder().decode(json)) as Partial<Wire>;
     if (
       wire.v !== 1 ||

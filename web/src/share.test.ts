@@ -36,6 +36,14 @@ describe('share links', () => {
     await expect(decodeShare(token)).rejects.toThrow('not a SugarScape share link');
   });
 
+  it('rejects a payload that decompresses past the size cap', async () => {
+    const wire = JSON.stringify({ v: 1, s: 1, c: {}, l: 'A'.repeat(2 * 1024 * 1024) });
+    const compressed = new Blob([wire]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    const token = bytesToBase64Url(new Uint8Array(await new Response(compressed).arrayBuffer()));
+    expect(token.length).toBeLessThan(10_000);
+    await expect(decodeShare(token)).rejects.toThrow('not a SugarScape share link');
+  });
+
   it('base64url round-trips every padding length', () => {
     for (const n of [0, 1, 2, 3, 4, 5]) {
       const bytes = Uint8Array.from({ length: n }, (_, i) => 250 - i);
