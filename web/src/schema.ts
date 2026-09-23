@@ -15,6 +15,8 @@ export interface Group {
   enableResets?: boolean;
   note?: string;
   controls: Control[];
+  /** A hand-built editor shown after the controls. */
+  custom?: 'goods' | 'pollution';
 }
 
 export const GROUPS: Group[] = [
@@ -43,6 +45,12 @@ export const GROUPS: Group[] = [
     controls: [{ kind: 'range', path: 'vision', label: 'Vision', min: 1, max: 25 }],
   },
   {
+    title: 'Goods',
+    custom: 'goods',
+    note: 'Adding or removing a good or changing its map rebuilds the world; names, colors and trait ranges apply to the running world (traits to agents born from now on). Trade and foresight need two goods; combat needs one.',
+    controls: [],
+  },
+  {
     title: 'Growback (G)',
     controls: [
       { kind: 'number', path: 'growback.rate', label: 'Rate α', min: 0.1, max: 10, step: 0.1 },
@@ -58,7 +66,8 @@ export const GROUPS: Group[] = [
   },
   {
     title: 'Pollution (P)', enable: 'pollution.enabled',
-    note: 'Each pollutant forms from the goods agents gather and eat, and devalues the goods it marks when they choose sites.',
+    custom: 'pollution',
+    note: 'Each pollutant forms from what agents gather and eat of each good, and devalues the goods it marks when they choose sites. Adding or removing a pollutant rebuilds the world; coefficients apply live.',
     controls: [],
   },
   {

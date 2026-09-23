@@ -4,13 +4,15 @@ import { GROUPS, type Control } from '../schema';
 import { scheduleLines } from '../schedule';
 import type { Config, FieldError, URange } from '../types';
 import { h } from './dom';
+import { goodsEditor, type Commit } from './goods-editor';
+import { pollutionEditor } from './pollution-editor';
 
 /** Preset picker plus one section per rule, generated from GROUPS. */
 export class RulesPanel {
   readonly el = h('div', { class: 'rules' });
   private errors: FieldError[] = [];
   private syncers: (() => void)[] = [];
-  private errorSlots: { path: string; el: HTMLElement }[] = [];
+  private errorSlots: { path: string; el: HTMLElement; withField: boolean }[] = [];
   private general = h('div', { class: 'error' });
 
   constructor(private engine: Engine) {
@@ -44,15 +46,15 @@ export class RulesPanel {
     for (const slot of this.errorSlots) {
       const mine = errorsFor(this.errors, slot.path);
       mine.forEach((e) => claimed.add(e));
-      slot.el.replaceChildren(...mine.map((e) => h('p', {}, e.message)));
+      slot.el.replaceChildren(...mine.map((e) => h('p', {}, slot.withField ? `${e.field}: ${e.message}` : e.message)));
     }
     const rest = this.errors.filter((e) => !claimed.has(e));
     this.general.replaceChildren(...rest.map((e) => h('p', {}, `${e.field}: ${e.message}`)));
   }
 
-  private errorSlot(path: string): HTMLElement {
+  private errorSlot(path: string, withField = false): HTMLElement {
     const el = h('div', { class: 'error' });
-    this.errorSlots.push({ path, el });
+    this.errorSlots.push({ path, el, withField });
     return el;
   }
 
@@ -112,7 +114,17 @@ export class RulesPanel {
       group.enable ? this.errorSlot(group.enable) : null,
       group.note ? h('p', { class: 'hint' }, group.note) : null,
       ...group.controls.map((c) => this.control(c)),
+      ...(group.custom ? this.customEditor(group.custom) : []),
     );
+  }
+
+  private customEditor(kind: 'goods' | 'pollution'): HTMLElement[] {
+    const holder = h('div');
+    const commit: Commit = (mutate, reset) => this.commit(mutate, reset);
+    this.syncers.push(() =>
+      holder.replaceChildren(kind === 'goods' ? goodsEditor(this.engine.config, commit) : pollutionEditor(this.engine.config, commit)),
+    );
+    return [holder, this.errorSlot(kind === 'goods' ? 'goods' : 'pollution.pollutants', true)];
   }
 
   private control(c: Control): HTMLElement {

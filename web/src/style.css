@@ -96,3 +96,14 @@ button.link { padding: 0 6px; font-size: 12px; }
 .menu summary::-webkit-details-marker { display: none; }
 .menu-items { position: absolute; right: 0; top: calc(100% + 4px); display: grid; gap: 4px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; z-index: 10; min-width: 12em; }
 .menu-items button { text-align: left; }
+.goods .good { border-left: 3px solid var(--border); padding-left: 8px; margin: 8px 0; display: grid; gap: 4px; }
+.goods .name, .pollution-table .name { width: 9em; }
+.goods input[type='color'] { padding: 0; width: 2.2em; height: 1.8em; }
+.goods .peaks { display: grid; gap: 4px; }
+.goods .peak .num { width: 4.5em; }
+.pollution-table { overflow-x: auto; }
+.pollution-table table { border-collapse: collapse; font-size: 12px; margin-bottom: 6px; }
+.pollution-table th, .pollution-table td { padding: 2px 4px; text-align: left; font-weight: normal; }
+.pollution-table tr.pollutant th { padding-top: 8px; }
+.pollution-table .num { width: 4.5em; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; }
