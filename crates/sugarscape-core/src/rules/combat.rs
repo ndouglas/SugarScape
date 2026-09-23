@@ -9,7 +9,12 @@
 //! attacker's new wealth? The agent moves to the nearest maximum-reward site,
 //! collects the reward, and the former occupant is killed. The victim's sugar
 //! beyond the reward passes to its children if rule I is on.
-//! The current site competes at distance 0 (the agent may stay put).
+//! The current site competes at distance 0 (the agent may stay put);
+//! staying put is not subject to the retaliation filter.
+//!
+//! Equal-wealth targets are excluded: the book requires the predator to be
+//! "bigger than" its prey. Only the site's sugar counts as gathered for
+//! production pollution; loot taken from a victim does not.
 
 use crate::agent::{AgentId, Tribe};
 use crate::geometry::Pos;

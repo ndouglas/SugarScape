@@ -68,9 +68,10 @@ Agents act **asynchronously in a freshly shuffled random order** each tick (the 
    3. **Death check** — die if sugar ≤ 0 or age > max_age. On death, if I is on, split wealth equally among living children.
    4. **Sex (S)** — if fertile, iterate neighbors in random order; mate with each fertile opposite-sex neighbor where either party has an empty von Neumann neighbor site.
    5. **Culture (K)** — for each neighbor: pick a random tag index; set neighbor's tag to the agent's.
-3. **Environment** — growback (G_α or seasonal), pollution diffusion every α_D ticks, age all agents by 1.
+3. **Environment** — growback (G_α or seasonal; G∞ ignores seasons), pollution diffusion every α_D ticks.
 4. **Replacement** — if R is on, replace each agent that died this tick with a fresh random agent.
-5. **Stats** — append this tick's statistics.
+5. **Ageing** — age all agents by 1. Replacement runs before ageing, so replacements, like newborns, end their first tick at age 1.
+6. **Stats** — append this tick's statistics.
 
 ### Movement (M)
 
@@ -78,9 +79,10 @@ Look up to `vision` sites in each of the four lattice directions (torus wraparou
 
 ### Combat (C_α)
 
-Per Appendix B: candidate sites in the four directions within vision; discard sites occupied by own tribe; discard sites occupied by other-tribe agents wealthier than the attacker; reward = site sugar + (if occupied) min(α, occupant's sugar); discard sites vulnerable to retaliation; move to the nearest max-reward site; collect reward; the former occupant is killed (removed permanently). The victim's sugar beyond the reward is passed to its children if I is on, otherwise lost.
+Per Appendix B: candidate sites in the four directions within vision; discard sites occupied by own tribe; discard sites occupied by other-tribe agents at least as wealthy as the attacker; reward = site sugar + (if occupied) min(α, occupant's sugar); discard sites vulnerable to retaliation; move to the nearest max-reward site; collect reward; the former occupant is killed (removed permanently). The victim's sugar beyond the reward is passed to its children if I is on, otherwise lost.
 
 **Retaliation (interpretation):** a target site is vulnerable if any other-tribe agent within the attacker's vision *of the target site* has sugar greater than the attacker's post-attack wealth (attacker sugar + reward).
+Further interpretations: staying put (the current site, distance 0) is not subject to the retaliation filter; equal-wealth targets are excluded, since the book's text says the predator "must be bigger than" its prey; loot taken from a victim does not count toward production pollution (only the site's sugar does).
 
 ### Sex (S)
 

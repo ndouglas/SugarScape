@@ -26,6 +26,7 @@ pub struct Snapshot {
     pub mean_vision: f64,
     pub mean_metabolism: f64,
     pub blue_fraction: f64,
+    /// Sexual births this tick; replacements (rule R) are not births.
     pub births: u32,
     pub deaths: u32,
 }

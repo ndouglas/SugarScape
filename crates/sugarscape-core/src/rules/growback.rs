@@ -1,11 +1,13 @@
-//! G_α (growback) and S_{α,β,γ} (seasonal growback).
+//! G_α (growback) and S_{α,β,γ} (seasonal growback). G∞ (instant growback)
+//! refills every site to capacity and ignores seasons.
 
 use crate::config::Config;
 use crate::world::World;
 
 /// Growback rate for row `y` during tick `tick`. With seasons on, the north
 /// has summer while `tick mod 2γ < γ` (the book's footnote 33) and the other
-/// half has winter, growing at α/β per tick.
+/// half has winter, growing at α/β per tick. The north is rows
+/// `y < height / 2`, so with an odd height the extra row is in the south.
 pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
     let base = config.growback.rate;
     let s = &config.seasons;
