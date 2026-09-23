@@ -3,6 +3,7 @@
 //! module; see docs/superpowers/specs/2026-09-23-experiments-design.md.
 
 use std::collections::BTreeMap;
+use std::fmt::Write;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -509,6 +510,335 @@ fn run_config(sweep: &Sweep, point: &Point, config: Config) -> RunResult {
     }
 }
 
+/// One (series, x) cell of a scalar metric, over seeds (Decision 7).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ScalarRow {
+    pub series: usize,
+    pub series_name: String,
+    pub x: usize,
+    pub at: f64,
+    /// Runs with a finite value.
+    pub n: usize,
+    /// Runs whose value is NaN (excluded from the statistics).
+    pub nan: usize,
+    #[serde(with = "nan_as_null")]
+    pub mean: f64,
+    /// Sample standard deviation (n − 1); 0 when n = 1.
+    #[serde(with = "nan_as_null")]
+    pub sd: f64,
+    #[serde(with = "nan_as_null")]
+    pub min: f64,
+    #[serde(with = "nan_as_null")]
+    pub max: f64,
+}
+
+/// One block of one line of a `timeseries` metric, over seeds.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct BlockRow {
+    pub series: usize,
+    pub series_name: String,
+    /// The block's last tick.
+    pub t: u32,
+    pub n: usize,
+    #[serde(with = "nan_as_null")]
+    pub mean: f64,
+    #[serde(with = "nan_as_null")]
+    pub sd: f64,
+}
+
+/// Rows in series order, then x (or block) order; one per cell even when
+/// it has no runs yet.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "rows", rename_all = "snake_case")]
+pub enum Summary {
+    Scalar(Vec<ScalarRow>),
+    Timeseries(Vec<BlockRow>),
+}
+
+struct Moments {
+    n: usize,
+    mean: f64,
+    sd: f64,
+    min: f64,
+    max: f64,
+}
+
+/// Statistics of the finite values, summed in the given order.
+fn moments(values: &[f64]) -> Moments {
+    let finite: Vec<f64> = values.iter().copied().filter(|v| v.is_finite()).collect();
+    let n = finite.len();
+    if n == 0 {
+        return Moments {
+            n,
+            mean: f64::NAN,
+            sd: f64::NAN,
+            min: f64::NAN,
+            max: f64::NAN,
+        };
+    }
+    let mean = finite.iter().fold(0.0, |a, b| a + b) / n as f64;
+    let sd = if n == 1 {
+        0.0
+    } else {
+        (finite.iter().fold(0.0, |a, v| a + (v - mean).powi(2)) / (n - 1) as f64).sqrt()
+    };
+    Moments {
+        n,
+        mean,
+        sd,
+        min: finite.iter().copied().fold(f64::INFINITY, f64::min),
+        max: finite.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+    }
+}
+
+/// Summarizes `runs` (any order, possibly partial) per cell. Runs are
+/// sorted by point first, so the result does not depend on completion order.
+pub fn aggregate(sweep: &Sweep, runs: &[RunResult]) -> Summary {
+    let mut sorted: Vec<&RunResult> = runs.iter().collect();
+    sorted.sort_by_key(|r| r.point);
+    let cell = |series: usize, x: usize| {
+        sorted
+            .iter()
+            .filter(move |r| r.series == series && r.x == x)
+    };
+    match &sweep.metric {
+        Metric::Timeseries { every, .. } => {
+            let mut rows = Vec::new();
+            for series in 0..sweep.series_count() {
+                let series_name = sweep.series_name(series);
+                for (k, &(_, t)) in blocks(sweep.ticks, *every).iter().enumerate() {
+                    let values: Vec<f64> = cell(series, 0)
+                        .filter_map(|r| match &r.outcome {
+                            Outcome::Series { values } => values.get(k).copied(),
+                            Outcome::Scalar { .. } => None,
+                        })
+                        .collect();
+                    let m = moments(&values);
+                    rows.push(BlockRow {
+                        series,
+                        series_name: series_name.clone(),
+                        t,
+                        n: m.n,
+                        mean: m.mean,
+                        sd: m.sd,
+                    });
+                }
+            }
+            Summary::Timeseries(rows)
+        }
+        Metric::Final { .. } | Metric::WindowMean { .. } => {
+            let mut rows = Vec::new();
+            for series in 0..sweep.series_count() {
+                let series_name = sweep.series_name(series);
+                for (x, value) in sweep.x.values.iter().enumerate() {
+                    let values: Vec<f64> = cell(series, x)
+                        .filter_map(|r| match &r.outcome {
+                            Outcome::Scalar { value } => Some(*value),
+                            Outcome::Series { .. } => None,
+                        })
+                        .collect();
+                    let m = moments(&values);
+                    rows.push(ScalarRow {
+                        series,
+                        series_name: series_name.clone(),
+                        x,
+                        at: value.at,
+                        n: m.n,
+                        nan: values.len() - m.n,
+                        mean: m.mean,
+                        sd: m.sd,
+                        min: m.min,
+                        max: m.max,
+                    });
+                }
+            }
+            Summary::Scalar(rows)
+        }
+    }
+}
+
+/// Errors (field `runs[i]`) for runs that are not this sweep's: a point out
+/// of range, a series/x/seed that is not the point's, or the wrong kind or
+/// number of values for the metric.
+pub fn check_runs(sweep: &Sweep, runs: &[RunResult]) -> Result<(), Vec<FieldError>> {
+    sweep.check_shape()?;
+    let count = sweep.point_count();
+    let block_count = match &sweep.metric {
+        Metric::Timeseries { every, .. } => Some(blocks(sweep.ticks, *every).len()),
+        Metric::Final { .. } | Metric::WindowMean { .. } => None,
+    };
+    let errors: Vec<FieldError> = runs
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| {
+            let belongs = r.point < count && {
+                let p = sweep.point_at(r.point);
+                (p.series, p.x, p.seed) == (r.series, r.x, r.seed)
+            };
+            let shaped = match (&r.outcome, block_count) {
+                (Outcome::Scalar { .. }, None) => true,
+                (Outcome::Series { values }, Some(n)) => values.len() == n,
+                _ => false,
+            };
+            !(belongs && shaped)
+        })
+        .map(|(i, _)| {
+            FieldError::new(
+                format!("runs[{i}]"),
+                "does not match the sweep's points or metric",
+            )
+        })
+        .collect();
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
+    }
+}
+
+pub const RESULT_VERSION: u32 = 1;
+
+/// The result file: `{ version, sweep, runs, summary, incomplete? }`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SweepResult {
+    pub version: u32,
+    pub sweep: Sweep,
+    pub runs: Vec<RunResult>,
+    pub summary: Summary,
+    /// Written only when some points have no run (Decision 10).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub incomplete: bool,
+}
+
+impl SweepResult {
+    /// Sorts `runs` by point and summarizes them.
+    pub fn new(sweep: Sweep, mut runs: Vec<RunResult>) -> Self {
+        runs.sort_by_key(|r| r.point);
+        let summary = aggregate(&sweep, &runs);
+        let incomplete = runs.len() < sweep.point_count();
+        Self {
+            version: RESULT_VERSION,
+            sweep,
+            runs,
+            summary,
+            incomplete,
+        }
+    }
+
+    /// Pretty JSON with a trailing newline (the CLI's output and the
+    /// browser's download).
+    pub fn to_json(&self) -> String {
+        serde_json::to_string_pretty(self).expect("results serialize") + "\n"
+    }
+}
+
+/// A CSV number: shortest round-trip form; NaN is an empty field.
+fn csv_number(v: f64) -> String {
+    if v.is_finite() {
+        v.to_string()
+    } else {
+        String::new()
+    }
+}
+
+/// Quotes a field containing a comma, quote or newline.
+fn csv_text(s: &str) -> String {
+    if s.contains([',', '"', '\n']) {
+        format!("\"{}\"", s.replace('"', "\"\""))
+    } else {
+        s.to_string()
+    }
+}
+
+/// `series,x,seed,value` (x = the x value's `at`), or
+/// `series,x,seed,t,value` with one row per block.
+pub fn runs_csv(result: &SweepResult) -> String {
+    let sweep = &result.sweep;
+    let at = |x: usize| sweep.x.values[x].at;
+    let mut out = String::new();
+    match &sweep.metric {
+        Metric::Timeseries { every, .. } => {
+            out.push_str("series,x,seed,t,value\n");
+            let blocks = blocks(sweep.ticks, *every);
+            for r in &result.runs {
+                if let Outcome::Series { values } = &r.outcome {
+                    for (&(_, t), v) in blocks.iter().zip(values) {
+                        writeln!(
+                            out,
+                            "{},{},{},{},{}",
+                            r.series,
+                            at(r.x),
+                            r.seed,
+                            t,
+                            csv_number(*v)
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+        }
+        Metric::Final { .. } | Metric::WindowMean { .. } => {
+            out.push_str("series,x,seed,value\n");
+            for r in &result.runs {
+                if let Outcome::Scalar { value } = &r.outcome {
+                    writeln!(
+                        out,
+                        "{},{},{},{}",
+                        r.series,
+                        at(r.x),
+                        r.seed,
+                        csv_number(*value)
+                    )
+                    .unwrap();
+                }
+            }
+        }
+    }
+    out
+}
+
+/// `series,series_name,x,n,mean,sd,min,max` or `series,series_name,t,n,mean,sd`.
+pub fn summary_csv(result: &SweepResult) -> String {
+    let mut out = String::new();
+    match &result.summary {
+        Summary::Scalar(rows) => {
+            out.push_str("series,series_name,x,n,mean,sd,min,max\n");
+            for r in rows {
+                writeln!(
+                    out,
+                    "{},{},{},{},{},{},{},{}",
+                    r.series,
+                    csv_text(&r.series_name),
+                    r.at,
+                    r.n,
+                    csv_number(r.mean),
+                    csv_number(r.sd),
+                    csv_number(r.min),
+                    csv_number(r.max)
+                )
+                .unwrap();
+            }
+        }
+        Summary::Timeseries(rows) => {
+            out.push_str("series,series_name,t,n,mean,sd\n");
+            for r in rows {
+                writeln!(
+                    out,
+                    "{},{},{},{},{},{}",
+                    r.series,
+                    csv_text(&r.series_name),
+                    r.t,
+                    r.n,
+                    csv_number(r.mean),
+                    csv_number(r.sd)
+                )
+                .unwrap();
+            }
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -960,5 +1290,194 @@ mod tests {
             run_point(&s, &s.point(0).unwrap()).outcome,
             Outcome::Scalar { value: 0.0 }
         );
+    }
+
+    fn scalar_run(point: usize, s: &Sweep, value: f64) -> RunResult {
+        let p = s.point(point).unwrap();
+        RunResult {
+            point,
+            series: p.series,
+            x: p.x,
+            seed: p.seed,
+            outcome: Outcome::Scalar { value },
+        }
+    }
+
+    fn series_run(point: usize, s: &Sweep, values: Vec<f64>) -> RunResult {
+        RunResult {
+            outcome: Outcome::Series { values },
+            ..scalar_run(point, s, 0.0)
+        }
+    }
+
+    /// `tiny()` with one x value and 8-tick block means (blocks end 8, 16, 20).
+    fn tiny_timeseries() -> Sweep {
+        let mut v = tiny();
+        v["x"] = json!({ "label": "all", "values": [{ "at": 0, "set": {} }] });
+        v["metric"] = json!({ "kind": "timeseries", "series": "population", "every": 8 });
+        sweep(v)
+    }
+
+    #[test]
+    fn aggregation_summarizes_each_cell_over_seeds() {
+        let mut v = tiny();
+        v["seeds"]["count"] = json!(4);
+        let s = sweep(v);
+        // Cell (0, 0): 1, 2, 3, 4. Cell (0, 1): 5 and NaN. Cell (1, 2): 9.
+        let runs = vec![
+            scalar_run(3, &s, 4.0),
+            scalar_run(0, &s, 1.0),
+            scalar_run(2, &s, 3.0),
+            scalar_run(1, &s, 2.0),
+            scalar_run(4, &s, 5.0),
+            scalar_run(5, &s, f64::NAN),
+            scalar_run(20, &s, 9.0),
+        ];
+        let Summary::Scalar(rows) = aggregate(&s, &runs) else {
+            panic!("scalar expected");
+        };
+        assert_eq!(rows.len(), 6);
+        let r = &rows[0];
+        assert_eq!((r.series, r.x, r.at, r.n, r.nan), (0, 0, 2.0, 4, 0));
+        assert_eq!((r.mean, r.min, r.max), (2.5, 1.0, 4.0));
+        assert_eq!(r.sd, (5.0f64 / 3.0).sqrt());
+        let r = &rows[1];
+        assert_eq!(
+            (r.n, r.nan, r.mean, r.sd, r.min, r.max),
+            (1, 1, 5.0, 0.0, 5.0, 5.0)
+        );
+        assert!(rows[2].mean.is_nan() && rows[2].n == 0 && rows[2].nan == 0);
+        assert_eq!(
+            (rows[5].series_name.as_str(), rows[5].n, rows[5].mean),
+            ("wide", 1, 9.0)
+        );
+        let reversed: Vec<RunResult> = runs.iter().rev().cloned().collect();
+        assert_eq!(
+            serde_json::to_string(&aggregate(&s, &reversed)).unwrap(),
+            serde_json::to_string(&aggregate(&s, &runs)).unwrap()
+        );
+    }
+
+    #[test]
+    fn timeseries_aggregate_per_block() {
+        let s = tiny_timeseries();
+        let runs = vec![
+            series_run(0, &s, vec![1.0, 2.0, 3.0]),
+            series_run(1, &s, vec![3.0, 4.0, f64::NAN]),
+        ];
+        let Summary::Timeseries(rows) = aggregate(&s, &runs) else {
+            panic!("timeseries expected");
+        };
+        assert_eq!(rows.len(), 6);
+        assert_eq!(
+            (rows[0].t, rows[0].n, rows[0].mean, rows[0].sd),
+            (8, 2, 2.0, 2.0f64.sqrt())
+        );
+        assert_eq!(
+            (rows[2].t, rows[2].n, rows[2].mean, rows[2].sd),
+            (20, 1, 3.0, 0.0)
+        );
+        assert!(rows[3].mean.is_nan() && rows[3].n == 0 && rows[3].series_name == "wide");
+    }
+
+    #[test]
+    fn results_serialize_as_documented() {
+        let s = sweep(tiny());
+        let result = SweepResult::new(
+            s.clone(),
+            vec![scalar_run(1, &s, 2.0), scalar_run(0, &s, 1.0)],
+        );
+        assert!(result.incomplete);
+        assert_eq!(result.runs[0].point, 0);
+        let value: Value = serde_json::from_str(&result.to_json()).unwrap();
+        assert_eq!(value["version"], 1);
+        assert_eq!(value["incomplete"], true);
+        assert_eq!(value["summary"]["kind"], "scalar");
+        assert_eq!(
+            value["summary"]["rows"][0],
+            json!({ "series": 0, "series_name": "Metabolism = 1", "x": 0, "at": 2.0, "n": 2,
+                    "nan": 0, "mean": 1.5, "sd": 0.5f64.sqrt(), "min": 1.0, "max": 2.0 })
+        );
+        assert_eq!(value["summary"]["rows"][1]["mean"], Value::Null);
+        assert!(result.to_json().ends_with("}\n"));
+        let back: SweepResult = serde_json::from_str(&result.to_json()).unwrap();
+        assert_eq!(back.to_json(), result.to_json());
+        let complete = SweepResult::new(
+            s.clone(),
+            (0..12).map(|i| scalar_run(i, &s, i as f64)).collect(),
+        );
+        assert!(!complete.incomplete);
+        assert!(!complete.to_json().contains("incomplete"));
+    }
+
+    #[test]
+    fn scalar_csvs() {
+        let mut v = tiny();
+        v["seeds"]["count"] = json!(1);
+        v["series"]["values"][1]["name"] = json!("wide, \"5\"");
+        let s = sweep(v);
+        let runs = (0..6)
+            .map(|i| scalar_run(i, &s, if i == 1 { f64::NAN } else { i as f64 * 0.5 }))
+            .collect();
+        let result = SweepResult::new(s, runs);
+        assert_eq!(
+            runs_csv(&result),
+            "series,x,seed,value\n0,2,5,0\n0,4,5,\n0,6,5,1\n1,2,5,1.5\n1,4,5,2\n1,6,5,2.5\n"
+        );
+        assert_eq!(
+            summary_csv(&result),
+            "series,series_name,x,n,mean,sd,min,max\n\
+             0,Metabolism = 1,2,1,0,0,0,0\n\
+             0,Metabolism = 1,4,0,,,,\n\
+             0,Metabolism = 1,6,1,1,0,1,1\n\
+             1,\"wide, \"\"5\"\"\",2,1,1.5,0,1.5,1.5\n\
+             1,\"wide, \"\"5\"\"\",4,1,2,0,2,2\n\
+             1,\"wide, \"\"5\"\"\",6,1,2.5,0,2.5,2.5\n"
+        );
+    }
+
+    #[test]
+    fn timeseries_csvs() {
+        let mut s = tiny_timeseries();
+        s.seeds.count = 1;
+        let runs = vec![
+            series_run(0, &s, vec![1.0, 2.0, 3.0]),
+            series_run(1, &s, vec![4.0, f64::NAN, 6.0]),
+        ];
+        let result = SweepResult::new(s, runs);
+        assert_eq!(
+            runs_csv(&result),
+            "series,x,seed,t,value\n0,0,5,8,1\n0,0,5,16,2\n0,0,5,20,3\n1,0,5,8,4\n1,0,5,16,\n1,0,5,20,6\n"
+        );
+        assert_eq!(
+            summary_csv(&result),
+            "series,series_name,t,n,mean,sd\n0,Metabolism = 1,8,1,1,0\n0,Metabolism = 1,16,1,2,0\n\
+             0,Metabolism = 1,20,1,3,0\n1,wide,8,1,4,0\n1,wide,16,0,,\n1,wide,20,1,6,0\n"
+        );
+    }
+
+    #[test]
+    fn check_runs_rejects_runs_from_another_sweep() {
+        let s = sweep(tiny());
+        assert!(check_runs(&s, &[scalar_run(3, &s, 1.0)]).is_ok());
+        let mut wrong_seed = scalar_run(3, &s, 1.0);
+        wrong_seed.seed = 99;
+        let beyond = RunResult {
+            point: 12,
+            ..scalar_run(0, &s, 1.0)
+        };
+        let wrong_kind = series_run(1, &s, vec![1.0]);
+        let e = check_runs(
+            &s,
+            &[scalar_run(0, &s, 1.0), wrong_seed, beyond, wrong_kind],
+        )
+        .unwrap_err();
+        assert_eq!(
+            e.iter().map(|e| e.field.as_str()).collect::<Vec<_>>(),
+            ["runs[1]", "runs[2]", "runs[3]"]
+        );
+        let t = tiny_timeseries();
+        assert!(check_runs(&t, &[series_run(0, &t, vec![1.0, 2.0, 3.0])]).is_ok());
+        assert!(check_runs(&t, &[series_run(0, &t, vec![1.0, 2.0])]).is_err());
     }
 }
