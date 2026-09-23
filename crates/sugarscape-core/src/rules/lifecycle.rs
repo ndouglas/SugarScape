@@ -1,6 +1,7 @@
 //! Metabolism (with pollution formation) and death.
 
 use crate::agent::AgentId;
+use crate::config::MAX_POLLUTANTS;
 use crate::rules::Harvest;
 use crate::world::{DeathCause, World};
 
@@ -17,27 +18,24 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
     }
     let pos = agent.pos;
     if world.config.pollution.enabled {
-        let added: Vec<f64> = world
-            .config
-            .pollution
-            .pollutants
-            .iter()
-            .map(|p| {
-                let produced = p
-                    .production
-                    .iter()
-                    .zip(&harvest.gathered)
-                    .fold(0.0, |sum, (c, g)| sum + c * g);
-                let consumed = p
-                    .consumption
-                    .iter()
-                    .zip(&burned)
-                    .fold(0.0, |sum, (c, b)| sum + c * b);
-                produced + consumed
-            })
-            .collect();
+        let pollutants = &world.config.pollution.pollutants;
+        let m = pollutants.len();
+        let mut added = [0.0; MAX_POLLUTANTS];
+        for (amount, p) in added.iter_mut().zip(pollutants) {
+            let produced = p
+                .production
+                .iter()
+                .zip(&harvest.gathered)
+                .fold(0.0, |sum, (c, g)| sum + c * g);
+            let consumed = p
+                .consumption
+                .iter()
+                .zip(&burned)
+                .fold(0.0, |sum, (c, b)| sum + c * b);
+            *amount = produced + consumed;
+        }
         let site = world.site_mut(pos);
-        for (level, amount) in site.pollution.iter_mut().zip(added) {
+        for (level, amount) in site.pollution.iter_mut().zip(added).take(m) {
             *level += amount;
         }
     }

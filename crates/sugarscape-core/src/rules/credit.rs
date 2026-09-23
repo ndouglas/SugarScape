@@ -1,14 +1,18 @@
 //! Agent credit rule L_{d,r} (Chapter IV) in the n-commodity form of the
-//! book's footnote 55: each good is lent and borrowed separately. Lenders: agents too old to have children lend up to half their
-//! sugar; fertile agents lend sugar above their birth endowment. Borrowers:
-//! fertile agents short of their endowment with positive income this turn.
-//! A loan of P is creditworthy when income × d ≥ P × (1 + r/100 × d)
-//! (interpretation of the book's "credit-worthy for a loan written at terms
-//! specified by the lender"). At the due tick the borrower pays in full, or
-//! pays half its sugar and the remainder is re-lent on the loan's own terms
-//! (a default). Each loan carries the duration and rate it was written on. A dead borrower's loans are the lender's loss; a dead lender's
-//! loans are cancelled unless inheritance (I) is on, when its living children
-//! split the claim (a child who is the borrower has its share forgiven).
+//! book's footnote 55: each good is lent and borrowed separately, and every
+//! rule below applies good by good. Lenders: agents too old to have children
+//! lend up to half their holdings of a good; fertile agents lend what they
+//! hold above their birth endowment of it. Borrowers: fertile agents short of
+//! their endowment of a good with positive income in it this turn. A loan of
+//! P is creditworthy when income × d ≥ P × (1 + r/100 × d) (interpretation of
+//! the book's "credit-worthy for a loan written at terms specified by the
+//! lender"). At the due tick the borrower pays in full, or pays half its
+//! holdings of the loan's good and the remainder is re-lent on the loan's own
+//! terms (a default). Each loan carries its good and the duration and rate it
+//! was written on. A dead borrower's loans are the lender's loss; a dead
+//! lender's loans are cancelled unless inheritance (I) is on, when its living
+//! children split the claim (a child who is the borrower has its share
+//! forgiven).
 
 use rand::seq::SliceRandom;
 
@@ -55,14 +59,14 @@ pub(crate) fn record_income(world: &mut World, id: AgentId, harvest: &Harvest) {
         }
     });
     let a = world.agent_mut(id).expect("live agent");
-    let income: [f64; MAX_GOODS] = std::array::from_fn(|i| {
+    let burned = a.effective_metabolisms(n, fee);
+    a.income = std::array::from_fn(|i| {
         if i < n {
-            harvest.gathered[i] - a.effective_metabolism(i, fee) - owed[i]
+            harvest.gathered[i] - burned[i] - owed[i]
         } else {
             0.0
         }
     });
-    a.income = income;
 }
 
 /// A fertile-aged agent short of its birth endowment of some goods, with

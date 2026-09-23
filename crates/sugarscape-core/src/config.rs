@@ -393,6 +393,34 @@ fn reset_only(path: &str) -> bool {
     ) || RESET_ONLY_PATHS.contains(&path)
 }
 
+/// Whether `parts` is `pollution.pollutants.K.{production,consumption,devalues}…`.
+fn is_coefficients(parts: &[String]) -> bool {
+    parts.len() >= 4
+        && parts[0] == "pollution"
+        && parts[1] == "pollutants"
+        && matches!(parts[3].as_str(), "production" | "consumption" | "devalues")
+}
+
+/// Whether `parts` sets a whole pollutant or a whole coefficient array, whose
+/// length is the number of goods.
+fn sets_good_columns(parts: &[String]) -> bool {
+    (parts.len() == 3 && parts[0] == "pollution" && parts[1] == "pollutants")
+        || (parts.len() == 4 && is_coefficients(parts))
+}
+
+/// For a removed index `removed`: false if `segment` names it, otherwise
+/// true, moving higher indices down one.
+fn shift_index(segment: &mut String, removed: usize) -> bool {
+    match segment.parse::<usize>() {
+        Ok(j) if j == removed => false,
+        Ok(j) if j > removed => {
+            *segment = (j - 1).to_string();
+            true
+        }
+        _ => true,
+    }
+}
+
 /// At the start of the tick when `World::tick == tick`, set each dotted config
 /// path in `set` to its value.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -557,16 +585,28 @@ impl Config {
     }
 
     /// Reads either config shape (Decision 2): a JSON object without a `goods`
-    /// key is a pre-N-goods config and is converted.
+    /// key is a pre-N-goods config and is converted. A new-shape config
+    /// without a `pollution` block gets the book's pollutant on all its goods.
     pub fn from_value(value: serde_json::Value) -> Result<Self, FieldError> {
-        if value.as_object().is_some_and(|o| !o.contains_key("goods")) {
+        let Some(object) = value.as_object() else {
+            return serde_json::from_value(value)
+                .map_err(|e| FieldError::new("config", e.to_string()));
+        };
+        if !object.contains_key("goods") {
             return crate::legacy::convert(value);
         }
-        serde_json::from_value(value).map_err(|e| FieldError::new("config", e.to_string()))
+        let defaulted_pollution = !object.contains_key("pollution");
+        let mut config: Config =
+            serde_json::from_value(value).map_err(|e| FieldError::new("config", e.to_string()))?;
+        if defaulted_pollution {
+            config.pollution.pollutants = vec![Pollutant::book(config.goods.len())];
+        }
+        Ok(config)
     }
 
     /// Appends `good`; every pollutant gets zero coefficients for it and does
-    /// not devalue it.
+    /// not devalue it. Scheduled changes that set a whole pollutant or a
+    /// whole coefficient array (now one short) are dropped.
     pub fn add_good(&mut self, good: Good) {
         self.goods.push(good);
         for p in &mut self.pollution.pollutants {
@@ -574,9 +614,12 @@ impl Config {
             p.consumption.push(0.0);
             p.devalues.push(false);
         }
+        self.retarget_schedule(|parts| !sets_good_columns(parts));
     }
 
-    /// Removes good `i` and its pollutant coefficients.
+    /// Removes good `i` and its pollutant coefficients. Scheduled changes to
+    /// good `i`, its coefficients, or a whole pollutant or coefficient array
+    /// are dropped; later goods' paths move down one index.
     pub fn remove_good(&mut self, i: usize) {
         self.goods.remove(i);
         for p in &mut self.pollution.pollutants {
@@ -584,6 +627,40 @@ impl Config {
             p.consumption.remove(i);
             p.devalues.remove(i);
         }
+        self.retarget_schedule(|parts| match parts.len() {
+            n if n >= 2 && parts[0] == "goods" => shift_index(&mut parts[1], i),
+            _ if sets_good_columns(parts) => false,
+            n if n >= 5 && is_coefficients(parts) => shift_index(&mut parts[4], i),
+            _ => true,
+        });
+    }
+
+    /// Removes pollutant `k`. Scheduled changes to it are dropped; later
+    /// pollutants' paths move down one index.
+    pub fn remove_pollutant(&mut self, k: usize) {
+        self.pollution.pollutants.remove(k);
+        self.retarget_schedule(|parts| {
+            if parts.len() >= 3 && parts[0] == "pollution" && parts[1] == "pollutants" {
+                shift_index(&mut parts[2], k)
+            } else {
+                true
+            }
+        });
+    }
+
+    /// Rewrites every scheduled path's segments with `keep`, dropping the
+    /// paths it rejects and then the changes left with none.
+    fn retarget_schedule(&mut self, keep: impl Fn(&mut [String]) -> bool) {
+        for change in &mut self.schedule {
+            change.set = std::mem::take(&mut change.set)
+                .into_iter()
+                .filter_map(|(path, value)| {
+                    let mut parts: Vec<String> = path.split('.').map(String::from).collect();
+                    keep(&mut parts).then(|| (parts.join("."), value))
+                })
+                .collect();
+        }
+        self.schedule.retain(|c| !c.set.is_empty());
     }
 
     fn check_map(&self, map: &Map, field: &str, e: &mut Errors) {
@@ -1637,6 +1714,96 @@ mod tests {
         assert_eq!(c.goods, vec![Good::spice()]);
         assert_eq!(c.pollution.pollutants[0].production, vec![0.0]);
         assert_eq!(c.pollution.pollutants[0].devalues, vec![false]);
+    }
+
+    #[test]
+    fn new_shape_json_without_pollution_gets_the_books_pollutant_on_every_good() {
+        let mut two = Config::default();
+        two.add_good(Good::spice());
+        let mut value = serde_json::to_value(&two).unwrap();
+        value.as_object_mut().unwrap().remove("pollution");
+        let c = Config::from_json(&value.to_string()).unwrap();
+        assert_eq!(c.pollution.pollutants, vec![Pollutant::book(2)]);
+        assert!(!c.pollution.enabled);
+    }
+
+    #[test]
+    fn adding_and_removing_goods_retargets_the_schedule() {
+        let paths = |c: &Config| -> Vec<Vec<String>> {
+            c.schedule
+                .iter()
+                .map(|s| s.set.keys().cloned().collect())
+                .collect()
+        };
+        let v = serde_json::json!(0);
+        let mut c = Config::default();
+        c.add_good(Good::spice());
+        c.add_good(Good::spice());
+        c.schedule = vec![
+            change(5, "goods.0.name", v.clone()),
+            change(6, "goods.1.metabolism.max", v.clone()),
+            change(7, "goods.2.endowment", v.clone()),
+            change(8, "pollution.pollutants.0.production.1", v.clone()),
+            change(9, "pollution.pollutants.0.devalues.2", v.clone()),
+            change(10, "pollution.pollutants.0.consumption", v.clone()),
+            change(11, "pollution.pollutants.0.name", v.clone()),
+            change(12, "pollution.pollutants.0", v.clone()),
+            change(13, "trade.enabled", v.clone()),
+        ];
+        c.schedule[0].set.insert("goods.1.name".into(), v.clone());
+        c.remove_good(1);
+        assert_eq!(
+            paths(&c),
+            vec![
+                vec!["goods.0.name"],
+                vec!["goods.1.endowment"],
+                vec!["pollution.pollutants.0.devalues.1"],
+                vec!["pollution.pollutants.0.name"],
+                vec!["trade.enabled"],
+            ]
+        );
+        assert_eq!(
+            c.schedule.iter().map(|s| s.tick).collect::<Vec<_>>(),
+            vec![5, 7, 9, 11, 13]
+        );
+        c.schedule
+            .push(change(14, "pollution.pollutants.0.production", v.clone()));
+        c.schedule
+            .push(change(15, "pollution.pollutants.0.production.1", v.clone()));
+        c.add_good(Good::spice());
+        assert_eq!(
+            c.schedule.iter().map(|s| s.tick).collect::<Vec<_>>(),
+            vec![5, 7, 9, 11, 13, 15]
+        );
+    }
+
+    #[test]
+    fn removing_a_pollutant_retargets_the_schedule() {
+        let v = serde_json::json!(0);
+        let mut c = Config::default();
+        c.pollution.pollutants.push(Pollutant::book(1));
+        c.pollution.pollutants.push(Pollutant::book(1));
+        c.schedule = vec![
+            change(5, "pollution.pollutants.0.name", v.clone()),
+            change(6, "pollution.pollutants.1.production.0", v.clone()),
+            change(7, "pollution.pollutants.2.devalues", v.clone()),
+            change(8, "pollution.enabled", v.clone()),
+        ];
+        c.remove_pollutant(1);
+        assert_eq!(c.pollution.pollutants.len(), 2);
+        let paths: Vec<&str> = c
+            .schedule
+            .iter()
+            .flat_map(|s| s.set.keys().map(String::as_str))
+            .collect();
+        assert_eq!(
+            paths,
+            vec![
+                "pollution.pollutants.0.name",
+                "pollution.pollutants.1.devalues",
+                "pollution.enabled"
+            ]
+        );
     }
 
     #[test]

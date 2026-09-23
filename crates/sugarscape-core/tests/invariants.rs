@@ -23,7 +23,6 @@ fn config_strategy() -> impl Strategy<Value = Config> {
             proptest::bool::ANY,
             proptest::bool::ANY,
             proptest::bool::ANY,
-            proptest::bool::ANY,
         ),
         (
             proptest::bool::ANY,
@@ -44,7 +43,7 @@ fn config_strategy() -> impl Strategy<Value = Config> {
                 culture,
                 combat,
                 replacement,
-                (_spice, trade, credit, foresight),
+                (trade, credit, foresight),
                 (disease, mutate, goods, pollutants),
             )| {
                 let mut c = Config::default();

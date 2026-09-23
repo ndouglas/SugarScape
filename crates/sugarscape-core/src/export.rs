@@ -95,15 +95,11 @@ mod tests {
         let w = World::new(Config::default(), 1).unwrap();
         let csv = agents_csv(&w);
         assert_eq!(csv.lines().count(), 401);
-        assert!(
-            csv.ends_with(",holding_0,site_pollution_0\n")
-                || csv
-                    .lines()
-                    .next()
-                    .is_some_and(|h| h.ends_with(",holding_0,site_pollution_0"))
-        );
         let header = csv.lines().next().unwrap();
-        assert!(header.contains("foresight,immune,diseases,holding_0,site_pollution_0"));
+        assert!(
+            header.ends_with(",foresight,immune,diseases,holding_0,site_pollution_0"),
+            "{header}"
+        );
     }
 
     #[test]
