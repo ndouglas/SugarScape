@@ -41,6 +41,11 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         parents: None,
         children: Vec::new(),
         born: 0,
+        spice: 10.0,
+        initial_spice: 10.0,
+        spice_metabolism: 0,
+        foresight: 0,
+        income: 0.0,
     };
     world.insert_agent(agent).expect("test site is empty")
 }

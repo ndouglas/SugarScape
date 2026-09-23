@@ -143,6 +143,15 @@ pub struct Agent {
     pub children: Vec<AgentId>,
     /// Tick of birth.
     pub born: u64,
+    /// Spice holdings and birth endowment (0 while spice is off).
+    pub spice: f64,
+    pub initial_spice: f64,
+    pub spice_metabolism: u32,
+    /// Book eq. 6's φ (0 while foresight is off).
+    pub foresight: u32,
+    /// Sugar gathered minus sugar metabolism minus per-tick loan obligations,
+    /// this turn (credit's creditworthiness input).
+    pub income: f64,
 }
 
 impl Agent {
@@ -155,7 +164,7 @@ impl Agent {
             Sex::Male
         };
         let endowment = f64::from(config.endowment.sample(rng));
-        Self {
+        let mut agent = Self {
             id: 0,
             pos,
             vision: config.vision.sample(rng),
@@ -171,7 +180,22 @@ impl Agent {
             parents: None,
             children: Vec::new(),
             born,
+            spice: 0.0,
+            initial_spice: 0.0,
+            spice_metabolism: 0,
+            foresight: 0,
+            income: 0.0,
+        };
+        if config.spice.enabled {
+            let spice = f64::from(config.spice.endowment.sample(rng));
+            agent.spice = spice;
+            agent.initial_spice = spice;
+            agent.spice_metabolism = config.spice.metabolism.sample(rng);
         }
+        if config.foresight.enabled {
+            agent.foresight = config.foresight.range.sample(rng);
+        }
+        agent
     }
 
     pub fn tribe(&self) -> Tribe {
@@ -182,6 +206,7 @@ impl Agent {
     pub fn is_fertile(&self) -> bool {
         (self.fertility_onset..=self.fertility_end).contains(&self.age)
             && self.sugar >= self.initial_sugar
+            && self.spice >= self.initial_spice
     }
 }
 
@@ -226,5 +251,29 @@ mod tests {
     fn set_panics_on_out_of_range_index() {
         let mut t = Tags::new(0, 5);
         t.set(5, true); // index 5 is out of range for len=5
+    }
+
+    #[test]
+    fn spice_and_foresight_are_drawn_only_when_enabled() {
+        use crate::config::{Config, URange};
+        use crate::rng::seeded;
+        let mut off = Config::default();
+        off.spice.metabolism = URange::new(3, 3);
+        let a = Agent::random(&off, Pos::new(0, 0), 0, &mut seeded(4));
+        let b = Agent::random(&Config::default(), Pos::new(0, 0), 0, &mut seeded(4));
+        assert_eq!(a, b, "spice parameters don't matter while spice is off");
+        assert_eq!((a.spice, a.spice_metabolism, a.foresight), (0.0, 0, 0));
+        let mut on = Config::default();
+        on.spice.enabled = true;
+        on.foresight.enabled = true;
+        let c = Agent::random(&on, Pos::new(0, 0), 0, &mut seeded(4));
+        assert!((1..=4).contains(&c.spice_metabolism));
+        assert!((5.0..=25.0).contains(&c.spice) && c.spice == c.initial_spice);
+        assert!(c.foresight <= 10);
+        assert_eq!(
+            (c.vision, c.metabolism, c.sugar),
+            (b.vision, b.metabolism, b.sugar),
+            "new draws come after the existing ones"
+        );
     }
 }

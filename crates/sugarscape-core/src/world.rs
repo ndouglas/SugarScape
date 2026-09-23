@@ -223,6 +223,7 @@ impl World {
             }
         };
         let spice = self.config.spice.enabled;
+        let foresight = self.config.foresight.enabled;
         eat(self.tick);
         for s in &self.sites {
             eat(s.sugar.to_bits());
@@ -239,6 +240,12 @@ impl World {
             eat(a.sugar.to_bits());
             eat(u64::from(a.age));
             eat(a.tags.bits());
+            if spice {
+                eat(a.spice.to_bits());
+            }
+            if foresight {
+                eat(u64::from(a.foresight));
+            }
         }
         h
     }
@@ -267,21 +274,30 @@ impl World {
     }
 
     fn bequeath(&mut self, agent: &Agent) {
-        if agent.sugar <= 0.0 {
-            return;
-        }
         let heirs: Vec<AgentId> = agent
             .children
             .iter()
             .copied()
             .filter(|c| self.agents.contains_key(c))
             .collect();
-        if heirs.is_empty() {
+        let n = heirs.len() as f64;
+        let sugar = if agent.sugar > 0.0 {
+            agent.sugar / n
+        } else {
+            0.0
+        };
+        let spice = if agent.spice > 0.0 {
+            agent.spice / n
+        } else {
+            0.0
+        };
+        if heirs.is_empty() || (sugar == 0.0 && spice == 0.0) {
             return;
         }
-        let share = agent.sugar / heirs.len() as f64;
         for heir in heirs {
-            self.agents.get_mut(&heir).expect("living heir").sugar += share;
+            let h = self.agents.get_mut(&heir).expect("living heir");
+            h.sugar += sugar;
+            h.spice += spice;
         }
     }
 

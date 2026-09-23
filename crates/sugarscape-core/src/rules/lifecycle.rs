@@ -129,4 +129,16 @@ mod tests {
         w.kill(parent, DeathCause::OldAge);
         assert_eq!(w.agent(child).unwrap().sugar, 10.0);
     }
+
+    #[test]
+    fn inheritance_splits_spice_too() {
+        let mut w = blank_world(5, 5);
+        w.config.inheritance.enabled = true;
+        let parent = spawn(&mut w, 0, 0);
+        let child = spawn(&mut w, 1, 0);
+        w.agent_mut(parent).unwrap().children = vec![child];
+        w.agent_mut(parent).unwrap().spice = 6.0;
+        w.kill(parent, DeathCause::OldAge);
+        assert_eq!(w.agent(child).unwrap().spice, 16.0);
+    }
 }

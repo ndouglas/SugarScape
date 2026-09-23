@@ -65,7 +65,8 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         }
     }
     let (from_a, from_b) = (a.initial_sugar / 2.0, b.initial_sugar / 2.0);
-    let child = Agent {
+    let (from_a_spice, from_b_spice) = (a.initial_spice / 2.0, b.initial_spice / 2.0);
+    let mut child = Agent {
         id: 0,
         pos: cradle,
         vision: pick(rng, a.vision, b.vision),
@@ -81,9 +82,24 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         parents: Some([a_id, b_id]),
         children: Vec::new(),
         born: world.tick,
+        spice: from_a_spice + from_b_spice,
+        initial_spice: from_a_spice + from_b_spice,
+        spice_metabolism: 0,
+        foresight: 0,
+        income: 0.0,
     };
-    world.agent_mut(a_id).expect("parent").sugar -= from_a;
-    world.agent_mut(b_id).expect("parent").sugar -= from_b;
+    if world.config.spice.enabled {
+        child.spice_metabolism = pick(rng, a.spice_metabolism, b.spice_metabolism);
+    }
+    if world.config.foresight.enabled {
+        child.foresight = pick(rng, a.foresight, b.foresight);
+    }
+    let pa = world.agent_mut(a_id).expect("parent");
+    pa.sugar -= from_a;
+    pa.spice -= from_a_spice;
+    let pb = world.agent_mut(b_id).expect("parent");
+    pb.sugar -= from_b;
+    pb.spice -= from_b_spice;
     let child_id = world.insert_agent(child).expect("cradle was empty");
     world
         .agent_mut(a_id)
@@ -190,5 +206,27 @@ mod tests {
         let child = w.agents().find(|a| a.parents.is_some()).unwrap();
         assert!(child.tags.get(0) && child.tags.get(2));
         assert!((3..11).all(|i| !child.tags.get(i)));
+    }
+
+    #[test]
+    fn with_spice_fertility_needs_both_goods_and_children_get_both() {
+        let mut w = blank_world(10, 10);
+        w.config.spice.enabled = true;
+        let (mom, dad) = couple(&mut w);
+        for id in [mom, dad] {
+            let a = w.agent_mut(id).unwrap();
+            a.spice = 8.0;
+            a.initial_spice = 8.0;
+            a.spice_metabolism = if id == mom { 2 } else { 3 };
+        }
+        w.agent_mut(dad).unwrap().spice = 7.0; // below its spice endowment
+        act(&mut w, mom);
+        assert_eq!(w.population(), 2, "infertile without enough spice");
+        w.agent_mut(dad).unwrap().spice = 8.0;
+        act(&mut w, mom);
+        let child = w.agents().find(|a| a.parents.is_some()).unwrap().clone();
+        assert_eq!((child.spice, child.initial_spice), (8.0, 8.0));
+        assert!([2, 3].contains(&child.spice_metabolism));
+        assert_eq!(w.agent(mom).unwrap().spice, 4.0);
     }
 }
