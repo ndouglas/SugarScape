@@ -23,10 +23,20 @@ pub fn series_csv(world: &World) -> String {
 }
 
 pub fn agents_csv(world: &World) -> String {
-    let mut out =
-        String::from("id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight,immune,diseases\n");
+    let n = world.config.goods.len();
+    let m = world.config.pollution.pollutants.len();
+    let mut out = String::from(
+        "id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight,immune,diseases",
+    );
+    for i in 0..n {
+        write!(out, ",holding_{i}").unwrap();
+    }
+    for k in 0..m {
+        write!(out, ",site_pollution_{k}").unwrap();
+    }
+    out.push('\n');
     for a in world.agents() {
-        writeln!(
+        write!(
             out,
             "{},{},{},{:?},{},{},{},{},{},{},{:?},{},{},{},{},{},{},{}",
             a.id,
@@ -53,6 +63,13 @@ pub fn agents_csv(world: &World) -> String {
                 .join(";")
         )
         .unwrap();
+        for h in &a.holdings[..n] {
+            write!(out, ",{h}").unwrap();
+        }
+        for p in &world.site(a.pos).pollution[..m] {
+            write!(out, ",{p}").unwrap();
+        }
+        out.push('\n');
     }
     out
 }
@@ -78,9 +95,15 @@ mod tests {
         let w = World::new(Config::default(), 1).unwrap();
         let csv = agents_csv(&w);
         assert_eq!(csv.lines().count(), 401);
-        assert!(csv.starts_with(
-            "id,x,y,sex,age,max_age,vision,metabolism,sugar,initial_sugar,tribe,tags,spice,initial_spice,spice_metabolism,foresight,immune,diseases\n"
-        ));
+        assert!(
+            csv.ends_with(",holding_0,site_pollution_0\n")
+                || csv
+                    .lines()
+                    .next()
+                    .is_some_and(|h| h.ends_with(",holding_0,site_pollution_0"))
+        );
+        let header = csv.lines().next().unwrap();
+        assert!(header.contains("foresight,immune,diseases,holding_0,site_pollution_0"));
     }
 
     #[test]
@@ -90,6 +113,9 @@ mod tests {
         w.agent_mut(id).unwrap().diseases = vec![3, 7];
         let csv = agents_csv(&w);
         let row = csv.lines().nth(1).unwrap();
-        assert!(row.ends_with(&format!(",{},3;7", "0".repeat(50))), "{row}");
+        assert!(
+            row.ends_with(&format!(",{},3;7,10,0", "0".repeat(50))),
+            "{row}"
+        );
     }
 }

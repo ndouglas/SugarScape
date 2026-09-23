@@ -23,11 +23,12 @@ pub struct AgentOverrides {
 pub struct SiteView {
     pub x: u32,
     pub y: u32,
-    pub sugar: f64,
-    pub capacity: f64,
-    pub pollution: f64,
-    pub spice: f64,
-    pub spice_capacity: f64,
+    /// Level of each good.
+    pub resources: Vec<f64>,
+    /// Capacity of each good.
+    pub capacities: Vec<f64>,
+    /// Level of each pollutant.
+    pub pollution: Vec<f64>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -49,6 +50,7 @@ pub struct DiseaseView {
 pub struct LoanView {
     pub id: LoanId,
     pub role: &'static str,
+    pub good: usize,
     pub counterparty: LinkView,
     pub due: f64,
     pub due_tick: u64,
@@ -71,9 +73,10 @@ pub struct AgentView {
     pub tribe: Tribe,
     pub tags: String,
     pub vision: u32,
-    pub metabolism: u32,
-    pub sugar: f64,
-    pub initial_sugar: f64,
+    /// Holdings, birth endowment and metabolism of each good.
+    pub holdings: Vec<f64>,
+    pub initial: Vec<f64>,
+    pub metabolism: Vec<u32>,
     pub age: u32,
     pub max_age: u32,
     pub fertile: bool,
@@ -82,9 +85,6 @@ pub struct AgentView {
     pub born: u64,
     pub parents: Vec<LinkView>,
     pub children: Vec<LinkView>,
-    pub spice: f64,
-    pub initial_spice: f64,
-    pub spice_metabolism: u32,
     pub foresight: u32,
     pub loans: Vec<LoanView>,
     pub immune: String,
@@ -181,6 +181,10 @@ impl World {
     pub fn inspect(&self, x: u32, y: u32) -> Result<Inspection, String> {
         let pos = self.checked_pos(x, y)?;
         let s = self.site(pos);
+        let (n, m) = (
+            self.config.goods.len(),
+            self.config.pollution.pollutants.len(),
+        );
         let link = |id: AgentId| LinkView {
             id,
             alive: self.agent(id).is_some(),
@@ -193,9 +197,9 @@ impl World {
             tribe: a.tribe(),
             tags: a.tags.to_bit_string(),
             vision: a.vision,
-            metabolism: a.metabolism[0],
-            sugar: a.holdings[0],
-            initial_sugar: a.initial[0],
+            holdings: a.holdings[..n].to_vec(),
+            initial: a.initial[..n].to_vec(),
+            metabolism: a.metabolism[..n].to_vec(),
             age: a.age,
             max_age: a.max_age,
             fertile: a.is_fertile(),
@@ -207,9 +211,6 @@ impl World {
                 .map(|p| p.iter().map(|&id| link(id)).collect())
                 .unwrap_or_default(),
             children: a.children.iter().map(|&id| link(id)).collect(),
-            spice: a.holdings[1],
-            initial_spice: a.initial[1],
-            spice_metabolism: a.metabolism[1],
             foresight: a.foresight,
             loans: self
                 .loans()
@@ -219,6 +220,7 @@ impl World {
                     LoanView {
                         id: l.id,
                         role: if lender { "lender" } else { "borrower" },
+                        good: l.good,
                         counterparty: link(if lender { l.borrower } else { l.lender }),
                         due: l.due,
                         due_tick: l.due_tick,
@@ -248,11 +250,9 @@ impl World {
             site: SiteView {
                 x,
                 y,
-                sugar: s.resource[0],
-                capacity: s.capacity[0],
-                pollution: s.pollution[0],
-                spice: s.resource[1],
-                spice_capacity: s.capacity[1],
+                resources: s.resource[..n].to_vec(),
+                capacities: s.capacity[..n].to_vec(),
+                pollution: s.pollution[..m].to_vec(),
             },
             agent,
         })
@@ -515,20 +515,35 @@ mod tests {
     }
 
     #[test]
-    fn inspection_shows_spice_foresight_and_loans() {
+    fn inspection_shows_every_good_pollutant_and_loan() {
         let mut w = blank_world(10, 10);
+        add_goods(&mut w.config, 2);
         let a = spawn(&mut w, 1, 1);
         let b = spawn(&mut w, 2, 1);
-        w.agent_mut(a).unwrap().foresight = 3;
-        w.originate_loan(a, b, 0, 2.0);
+        {
+            let x = w.agent_mut(a).unwrap();
+            x.foresight = 3;
+            x.metabolism[1] = 2;
+        }
+        w.originate_loan(a, b, 1, 2.0);
         let view = w.inspect(1, 1).unwrap().agent.unwrap();
-        assert_eq!((view.spice, view.foresight), (10.0, 3));
+        assert_eq!(
+            (view.holdings.clone(), view.initial.clone()),
+            (vec![10.0, 10.0], vec![10.0, 10.0])
+        );
+        assert_eq!((view.metabolism.clone(), view.foresight), (vec![0, 2], 3));
         assert_eq!(view.loans.len(), 1);
-        assert_eq!(view.loans[0].role, "lender");
+        assert_eq!((view.loans[0].role, view.loans[0].good), ("lender", 1));
         assert_eq!(view.loans[0].counterparty.id, b);
         let other = w.inspect(2, 1).unwrap().agent.unwrap();
         assert_eq!(other.loans[0].role, "borrower");
-        assert_eq!(w.inspect(1, 1).unwrap().site.spice_capacity, 0.0);
+        w.site_mut(Pos::new(1, 1)).capacity[1] = 3.0;
+        let site = w.inspect(1, 1).unwrap().site;
+        assert_eq!(
+            (site.resources.clone(), site.capacities.clone()),
+            (vec![0.0, 0.0], vec![0.0, 3.0])
+        );
+        assert_eq!(site.pollution, vec![0.0]);
     }
 
     #[test]
