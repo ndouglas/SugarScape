@@ -3,7 +3,7 @@
 
 use serde::Serialize;
 
-use crate::config::{Config, Placement, ScheduledChange, URange};
+use crate::config::{Config, Outbreak, Placement, ScheduledChange, URange};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Preset {
@@ -62,6 +62,12 @@ fn market(c: &mut Config) {
     c.spice.metabolism = URange::new(1, 5);
     c.spice.endowment = URange::new(25, 50);
     c.trade.enabled = true;
+}
+
+/// Animation V-1's disease setup: 10 diseases of length 1–10, 4 per agent,
+/// 50-bit immune strings (the `DiseaseRule` defaults).
+fn disease(c: &mut Config) {
+    c.disease.enabled = true;
 }
 
 pub fn all() -> Vec<Preset> {
@@ -274,6 +280,71 @@ pub fn all() -> Vec<Preset> {
                 c.credit.enabled = true;
             },
         ),
+        preset(
+            "v-1-rid",
+            "({G₁}, {M, E})",
+            "Animation V-1",
+            "Immune systems learn the diseases their agents carry: the society rids itself of disease.",
+            disease,
+        ),
+        preset(
+            "v-2-endemic",
+            "({G₁}, {M, E}) with 25 diseases",
+            "Animation V-2",
+            "Too many diseases for one immune string: learning one immunity can overwrite another, and disease stays endemic.",
+            |c| {
+                disease(c);
+                c.disease.count = 25;
+                c.disease.initial = 10;
+            },
+        ),
+        preset(
+            "v-mcneill",
+            "({G₁}, {M, S, E}) + outbreak",
+            "Chapter V (after McNeill)",
+            "A reproducing society carrying its familiar diseases meets a novel one at t = 300, brought in by 5 agents.",
+            |c| {
+                demography(c);
+                disease(c);
+                c.disease.outbreaks = vec![Outbreak {
+                    tick: 300,
+                    agents: 5,
+                }];
+            },
+        ),
+        preset(
+            "vi-1-everything",
+            "({G₁}, {M, S, I, K, T, L, E})",
+            "Chapter VI",
+            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease.",
+            |c| {
+                demography(c);
+                c.inheritance.enabled = true;
+                c.culture.enabled = true;
+                c.spice.enabled = true;
+                c.trade.enabled = true;
+                c.credit.enabled = true;
+                disease(c);
+                // demography()'s Chapter III endowment (50-100) is tuned for
+                // a single-good economy; iv-18-foresight found that with a
+                // second good (spice), fertility's "wealth >= initial
+                // endowment" bar becomes unreachable on both goods at once
+                // without trade. Here trade and credit are also on, but
+                // measurement shows 50-100 still collapses population to 0:
+                // at (50,100)/(50,100), t=1000 populations (seeds 1-5) were
+                // 0, 0, 0, 0, 402 (seed 5 alone survived, and only barely).
+                // The market()-scale endowment (25-50) used by the other
+                // trade presets keeps fertility reachable: t=1000 populations
+                // (seeds 1-5) were 1745, 1816, 1783, 1849, 1774 - comfortably
+                // above the 50-agent bar. A third range (15-40) was also
+                // measured for comparison and likewise survives easily:
+                // t=1000 populations (seeds 1-5) were 1808, 1832, 1797, 1828,
+                // 1835. 25-50, the first range in the required trial order
+                // that clears the bar, is used.
+                c.endowment = URange::new(25, 50);
+                c.spice.endowment = URange::new(25, 50);
+            },
+        ),
     ]
 }
 
@@ -289,7 +360,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 19);
+        assert_eq!(presets.len(), 23);
         for p in presets {
             p.config
                 .validate()
@@ -308,6 +379,41 @@ mod tests {
         assert_eq!(ids.len(), presets.len());
         assert_eq!(by_id("ii-2-unit").unwrap().config, Config::default());
         assert!(by_id("nope").is_none());
+    }
+
+    #[test]
+    fn chapter_v_presets_use_the_books_disease_setups() {
+        let v1 = by_id("v-1-rid").unwrap().config;
+        let d = &v1.disease;
+        assert!(d.enabled);
+        assert_eq!(
+            (d.count, d.length, d.initial, d.immune_length),
+            (10, URange::new(1, 10), 4, 50)
+        );
+        assert!(!v1.sex.enabled, "Chapter II agents");
+        let v2 = by_id("v-2-endemic").unwrap().config.disease;
+        assert_eq!((v2.count, v2.initial), (25, 10));
+        let m = by_id("v-mcneill").unwrap().config;
+        assert!(m.sex.enabled && m.lifespan.enabled && m.disease.enabled);
+        assert_eq!(
+            m.disease.outbreaks,
+            vec![Outbreak {
+                tick: 300,
+                agents: 5
+            }]
+        );
+        let e = by_id("vi-1-everything").unwrap().config;
+        assert!(
+            e.spice.enabled
+                && e.sex.enabled
+                && e.lifespan.enabled
+                && e.inheritance.enabled
+                && e.culture.enabled
+                && e.trade.enabled
+                && e.credit.enabled
+                && e.disease.enabled
+        );
+        assert!(!e.combat.enabled && !e.replacement.enabled);
     }
 
     #[test]
