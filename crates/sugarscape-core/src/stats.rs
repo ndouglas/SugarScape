@@ -4,9 +4,10 @@
 use serde::Serialize;
 
 use crate::agent::Tribe;
+use crate::config::Config;
 use crate::world::World;
 
-pub const SERIES: [&str; 23] = [
+pub const SERIES: [&str; 24] = [
     "population",
     "gini",
     "mean_wealth",
@@ -30,7 +31,34 @@ pub const SERIES: [&str; 23] = [
     "mean_diseases",
     "diseases_in_circulation",
     "new_infections",
+    "trade_pairs",
 ];
+
+/// Per-good statistics for one tick.
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+pub struct GoodStats {
+    pub mean_holding: f64,
+    /// Mean genetic metabolism of the good (not counting disease fees).
+    pub mean_metabolism: f64,
+    /// Units exchanged this tick: `amount` where it was bought, `amount ×
+    /// price` where it paid.
+    pub traded: f64,
+}
+
+/// `SERIES`, then `mean_holding_I`, `mean_metabolism_I`, `traded_I` for
+/// each good, then `mean_pollution_K` for each pollutant.
+pub fn series_names(config: &Config) -> Vec<String> {
+    let mut names: Vec<String> = SERIES.iter().map(|s| s.to_string()).collect();
+    for i in 0..config.goods.len() {
+        names.push(format!("mean_holding_{i}"));
+        names.push(format!("mean_metabolism_{i}"));
+        names.push(format!("traded_{i}"));
+    }
+    for k in 0..config.pollution.pollutants.len() {
+        names.push(format!("mean_pollution_{k}"));
+    }
+    names
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct Snapshot {
@@ -62,6 +90,11 @@ pub struct Snapshot {
     pub diseases_in_circulation: u32,
     /// Infections this tick (transmissions and outbreaks).
     pub new_infections: u32,
+    /// Distinct pairs of goods exchanged this tick.
+    pub trade_pairs: u32,
+    pub goods: Vec<GoodStats>,
+    /// Mean level of each pollutant over all sites.
+    pub pollution: Vec<f64>,
 }
 
 impl Snapshot {
@@ -89,6 +122,40 @@ impl Snapshot {
             let var = logs.iter().map(|x| (x - m).powi(2)).sum::<f64>() / logs.len() as f64;
             (m, var.sqrt())
         };
+
+        let mut goods: Vec<GoodStats> = (0..world.config.goods.len())
+            .map(|i| GoodStats {
+                mean_holding: mean(&|a| a.holdings[i]),
+                mean_metabolism: mean(&|a| f64::from(a.metabolism[i])),
+                traded: 0.0,
+            })
+            .collect();
+        // Ensure goods vector can accommodate any index in trades
+        let max_good = events.trades.iter().map(|t| t.goods.0.max(t.goods.1)).max();
+        if let Some(max_idx) = max_good {
+            while goods.len() <= max_idx {
+                let i = goods.len();
+                goods.push(GoodStats {
+                    mean_holding: mean(&|a| a.holdings[i]),
+                    mean_metabolism: mean(&|a| f64::from(a.metabolism[i])),
+                    traded: 0.0,
+                });
+            }
+        }
+        for t in &events.trades {
+            goods[t.goods.0].traded += t.amount;
+            goods[t.goods.1].traded += t.amount * t.price;
+        }
+        let trade_pairs = events
+            .trades
+            .iter()
+            .map(|t| t.goods)
+            .collect::<std::collections::BTreeSet<_>>()
+            .len() as u32;
+        let sites = world.sites.len() as f64;
+        let pollution = (0..world.config.pollution.pollutants.len())
+            .map(|k| world.sites.iter().map(|s| s.pollution[k]).sum::<f64>() / sites)
+            .collect();
 
         Self {
             tick: world.tick,
@@ -119,6 +186,9 @@ impl Snapshot {
                 .collect::<std::collections::BTreeSet<_>>()
                 .len() as u32,
             new_infections: events.infections.len() as u32,
+            trade_pairs,
+            goods,
+            pollution,
         }
     }
 
@@ -148,7 +218,23 @@ impl Snapshot {
             "mean_diseases" => self.mean_diseases,
             "diseases_in_circulation" => f64::from(self.diseases_in_circulation),
             "new_infections" => f64::from(self.new_infections),
-            _ => return None,
+            "trade_pairs" => f64::from(self.trade_pairs),
+            _ => {
+                let index = |prefix: &str| name.strip_prefix(prefix)?.parse::<usize>().ok();
+                if let Some(i) = index("mean_holding_") {
+                    return self.goods.get(i).map(|g| g.mean_holding);
+                }
+                if let Some(i) = index("mean_metabolism_") {
+                    return self.goods.get(i).map(|g| g.mean_metabolism);
+                }
+                if let Some(i) = index("traded_") {
+                    return self.goods.get(i).map(|g| g.traded);
+                }
+                if let Some(k) = index("mean_pollution_") {
+                    return self.pollution.get(k).copied();
+                }
+                return None;
+            }
         })
     }
 }
@@ -173,13 +259,10 @@ impl Stats {
 
     /// The full history of one series (or `"tick"`), or `None` if unknown.
     pub fn series(&self, name: &str) -> Option<Vec<f64>> {
-        Snapshot::default().value(name)?;
-        Some(
-            self.history
-                .iter()
-                .map(|s| s.value(name).expect("known series"))
-                .collect(),
-        )
+        if self.history.is_empty() {
+            return Snapshot::default().value(name).map(|_| Vec::new());
+        }
+        self.history.iter().map(|s| s.value(name)).collect()
     }
 }
 
@@ -309,6 +392,66 @@ pub fn supply_demand(world: &World) -> SupplyDemand {
 mod tests {
     use super::*;
     use crate::config::Config;
+    use crate::config::Pollutant;
+
+    #[test]
+    fn per_good_and_per_pollutant_series() {
+        use crate::testkit::*;
+        use crate::world::Trade;
+        let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 3);
+        w.config.pollution.pollutants.push(Pollutant {
+            name: "runoff".into(),
+            production: vec![0.0; 3],
+            consumption: vec![0.0; 3],
+            devalues: vec![false; 3],
+        });
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        w.agent_mut(a).unwrap().holdings[2] = 4.0;
+        w.agent_mut(b).unwrap().metabolism[2] = 3;
+        w.sites[0].pollution[1] = 25.0;
+        let t = |goods, price, amount| Trade {
+            buyer: a,
+            seller: b,
+            goods,
+            price,
+            amount,
+        };
+        w.events.trades = vec![
+            t((0, 1), 2.0, 1.0),
+            t((1, 2), 0.5, 4.0),
+            t((1, 2), 0.5, 2.0),
+        ];
+        let s = Snapshot::of(&w);
+        assert_eq!(s.goods.len(), 3);
+        assert_eq!(
+            (s.goods[2].mean_holding, s.goods[2].mean_metabolism),
+            (2.0, 1.5)
+        );
+        assert_eq!(
+            s.goods.iter().map(|g| g.traded).collect::<Vec<_>>(),
+            vec![1.0, 2.0 + 4.0 + 2.0, 2.0 + 1.0],
+            "good j counts amount × price"
+        );
+        assert_eq!(s.trade_pairs, 2);
+        assert_eq!(s.pollution, vec![0.0, 1.0]);
+        assert_eq!(s.value("mean_holding_2"), Some(2.0));
+        assert_eq!(s.value("traded_1"), Some(8.0));
+        assert_eq!(s.value("mean_pollution_1"), Some(1.0));
+        assert_eq!(s.value("mean_holding_3"), None);
+        assert_eq!(s.value("mean_spice"), Some(10.0), "good 1, as before");
+        let names = series_names(&w.config);
+        assert_eq!(names.len(), SERIES.len() + 3 * 3 + 2);
+        assert_eq!(
+            &names[SERIES.len()..SERIES.len() + 3],
+            ["mean_holding_0", "mean_metabolism_0", "traded_0"]
+        );
+        assert_eq!(names.last().unwrap(), "mean_pollution_1");
+        for name in &names {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+    }
 
     #[test]
     fn gini_of_equal_wealth_is_zero_and_of_total_concentration_is_high() {
@@ -355,6 +498,10 @@ mod tests {
         for name in SERIES {
             assert!(s.value(name).is_some(), "{name}");
         }
+        assert!(
+            w.stats.series("mean_holding_0").is_some()
+                && w.stats.series("mean_holding_1").is_none()
+        );
     }
 
     #[test]

@@ -167,7 +167,7 @@ impl Sim {
     }
 
     pub fn export_series_csv(&self) -> String {
-        export::series_csv(&self.world.stats)
+        export::series_csv(&self.world)
     }
 
     pub fn export_agents_csv(&self) -> String {
