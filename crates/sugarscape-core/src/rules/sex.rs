@@ -8,6 +8,8 @@
 //! sex-specific range (the ranges differ by sex, so it cannot be inherited
 //! across sexes); each culture tag is the parents' shared value or, where they
 //! differ, a random parent's.
+//!
+//! With disease (E) on, the child's immune genome crosses over like the tags (then mutates per `disease.genome_mutation`); it starts untrained and healthy.
 
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -98,6 +100,16 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
     }
     if world.config.foresight.enabled {
         child.foresight = pick(rng, a.foresight, b.foresight);
+    }
+    if world.config.disease.enabled {
+        let genome = crate::rules::disease::inherit_genome(
+            &a.immune_genome,
+            &b.immune_genome,
+            world.config.disease.genome_mutation,
+            rng,
+        );
+        child.immune_genome = genome;
+        child.immune = genome;
     }
     let pa = world.agent_mut(a_id).expect("parent");
     pa.sugar -= from_a;
@@ -233,5 +245,28 @@ mod tests {
         assert_eq!((child.spice, child.initial_spice), (8.0, 8.0));
         assert!([2, 3].contains(&child.spice_metabolism));
         assert_eq!(w.agent(mom).unwrap().spice, 4.0);
+    }
+
+    #[test]
+    fn children_inherit_an_immune_genome_and_start_healthy() {
+        use crate::bits::Bits;
+        let mut w = blank_world(10, 10);
+        w.config.disease.enabled = true;
+        let (mom, dad) = couple(&mut w);
+        let genome = Bits::parse(&"10".repeat(25)).unwrap();
+        for id in [mom, dad] {
+            let a = w.agent_mut(id).unwrap();
+            a.immune_genome = genome;
+            a.immune = Bits::new(0, 50); // trained phenotypes are not inherited
+            a.diseases = vec![0];
+        }
+        act(&mut w, mom);
+        let child = w.agents().find(|a| a.parents.is_some()).unwrap();
+        assert_eq!(
+            child.immune_genome, genome,
+            "parents agree everywhere; no mutation"
+        );
+        assert_eq!(child.immune, genome, "the phenotype starts untrained");
+        assert!(child.diseases.is_empty() && child.infected_by.is_none());
     }
 }
