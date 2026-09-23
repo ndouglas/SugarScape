@@ -4,9 +4,11 @@ import { ChartsPanel } from './ui/charts-panel';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
 import { GridView } from './ui/grid-view';
+import { InspectPanel } from './ui/inspect-panel';
 import { RulesPanel } from './ui/rules-panel';
 import { Tabs } from './ui/tabs';
 import { buildToolbar } from './ui/toolbar';
+import { buildTools } from './ui/tools';
 
 export function showBanner(message: string, action?: { label: string; run: () => void }): void {
   const banner = document.querySelector<HTMLElement>('#banner')!;
@@ -30,6 +32,9 @@ async function main(): Promise<void> {
   tabs.add('Rules', new RulesPanel(engine).el);
   const charts = new ChartsPanel(engine);
   tabs.add('Charts', charts.el, (visible) => charts.setVisible(visible));
+  const inspect = new InspectPanel(engine);
+  tabs.add('Inspect', inspect.el, (visible) => inspect.setVisible(visible));
+  document.querySelector('#tools')!.append(buildTools(engine, grid, () => tabs.show('Inspect')));
 
   let dirty = true;
   for (const event of ['reset', 'tick', 'config', 'display', 'select', 'edit'] as const) {
