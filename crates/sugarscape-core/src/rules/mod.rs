@@ -1,6 +1,7 @@
 //! The rules of Appendix B, one module each.
 
 pub mod combat;
+pub mod credit;
 pub mod culture;
 pub mod growback;
 pub mod lifecycle;
@@ -29,6 +30,9 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
         movement::act(world, id)
     };
     lifecycle::metabolize(world, id, harvest);
+    if world.config.credit.enabled {
+        credit::record_income(world, id, harvest.sugar);
+    }
     if lifecycle::check_death(world, id) {
         return;
     }
@@ -40,5 +44,8 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     }
     if world.config.trade.enabled {
         trade::act(world, id);
+    }
+    if world.config.credit.enabled {
+        credit::borrow(world, id);
     }
 }

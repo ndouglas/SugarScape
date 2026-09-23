@@ -36,12 +36,28 @@ pub struct Trade {
     pub sugar: f64,
 }
 
+pub type LoanId = u64;
+
+/// A sugar loan under rule L: `due` sugar owed at `due_tick`.
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
+pub struct Loan {
+    pub id: LoanId,
+    pub lender: AgentId,
+    pub borrower: AgentId,
+    pub principal: f64,
+    pub due: f64,
+    pub due_tick: u64,
+}
+
 /// What happened during the current (or last completed) tick.
 #[derive(Clone, Debug, Default)]
 pub struct TickEvents {
     pub births: u32,
     pub deaths: Vec<Death>,
     pub trades: Vec<Trade>,
+    pub loans_made: u32,
+    pub amount_lent: f64,
+    pub defaults: u32,
 }
 
 pub struct World {
@@ -58,6 +74,8 @@ pub struct World {
     next_id: AgentId,
     pub(crate) events: TickEvents,
     pub stats: Stats,
+    loans: BTreeMap<LoanId, Loan>,
+    next_loan_id: LoanId,
 }
 
 impl World {
@@ -99,6 +117,8 @@ impl World {
             next_id: 1,
             events: TickEvents::default(),
             stats: Stats::default(),
+            loans: BTreeMap::new(),
+            next_loan_id: 1,
             config,
         };
         world.populate();
@@ -224,6 +244,39 @@ impl World {
         &self.events
     }
 
+    pub fn loans(&self) -> impl Iterator<Item = &Loan> {
+        self.loans.values()
+    }
+
+    /// Records a loan of `principal` on the current credit terms (no transfer).
+    pub(crate) fn originate_loan(
+        &mut self,
+        lender: AgentId,
+        borrower: AgentId,
+        principal: f64,
+    ) -> LoanId {
+        let c = self.config.credit;
+        let id = self.next_loan_id;
+        self.next_loan_id += 1;
+        let factor = 1.0 + c.rate / 100.0 * f64::from(c.duration);
+        self.loans.insert(
+            id,
+            Loan {
+                id,
+                lender,
+                borrower,
+                principal,
+                due: principal * factor,
+                due_tick: self.tick + u64::from(c.duration),
+            },
+        );
+        id
+    }
+
+    pub(crate) fn remove_loan(&mut self, id: LoanId) -> Option<Loan> {
+        self.loans.remove(&id)
+    }
+
     /// FNV-1a hash of the full dynamic state, for determinism checks.
     pub fn fingerprint(&self) -> u64 {
         let mut h: u64 = 0xcbf2_9ce4_8422_2325;
@@ -258,6 +311,11 @@ impl World {
                 eat(u64::from(a.foresight));
             }
         }
+        for l in self.loans.values() {
+            eat(l.id);
+            eat(l.due.to_bits());
+            eat(l.due_tick);
+        }
         h
     }
 
@@ -266,12 +324,25 @@ impl World {
         let agent = self.agents.remove(&id)?;
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
+        if !self.loans.is_empty() {
+            self.loans.retain(|_, l| l.lender != id && l.borrower != id);
+        }
         Some(agent)
     }
 
     /// Removes an agent from play and records its death. With rule I on, its
-    /// remaining sugar is split equally among its living children.
+    /// remaining sugar is split equally among its living children. A dead
+    /// lender's outstanding claims pass to its living children as well.
     pub(crate) fn kill(&mut self, id: AgentId, cause: DeathCause) -> Option<Agent> {
+        let claims: Vec<Loan> = if self.config.inheritance.enabled {
+            self.loans
+                .values()
+                .filter(|l| l.lender == id)
+                .copied()
+                .collect()
+        } else {
+            Vec::new()
+        };
         let agent = self.remove(id)?;
         self.events.deaths.push(Death {
             id,
@@ -280,6 +351,9 @@ impl World {
         });
         if self.config.inheritance.enabled {
             self.bequeath(&agent);
+        }
+        if !claims.is_empty() {
+            self.pass_on_claims(&agent, claims);
         }
         Some(agent)
     }
@@ -312,6 +386,39 @@ impl World {
         }
     }
 
+    /// Splits a dead lender's claims equally among its living children.
+    fn pass_on_claims(&mut self, lender: &Agent, claims: Vec<Loan>) {
+        let heirs: Vec<AgentId> = lender
+            .children
+            .iter()
+            .copied()
+            .filter(|c| self.agents.contains_key(c))
+            .collect();
+        if heirs.is_empty() {
+            return;
+        }
+        let n = heirs.len() as f64;
+        for claim in claims {
+            if !self.agents.contains_key(&claim.borrower) {
+                continue;
+            }
+            for &heir in &heirs {
+                let id = self.next_loan_id;
+                self.next_loan_id += 1;
+                self.loans.insert(
+                    id,
+                    Loan {
+                        id,
+                        lender: heir,
+                        principal: claim.principal / n,
+                        due: claim.due / n,
+                        ..claim
+                    },
+                );
+            }
+        }
+    }
+
     /// One tick: every living agent takes a turn in a fresh random order
     /// (agents born or killed during the tick are skipped), then the
     /// environment updates and everyone ages.
@@ -324,6 +431,9 @@ impl World {
             if self.agents.contains_key(&id) {
                 rules::agent_turn(self, id);
             }
+        }
+        if !self.loans.is_empty() {
+            rules::credit::settle(self);
         }
         rules::growback::apply(self);
         rules::pollution::diffuse(self);
