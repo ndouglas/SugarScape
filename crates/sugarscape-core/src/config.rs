@@ -72,6 +72,9 @@ pub struct Pollution {
     pub enabled: bool,
     pub production: f64,
     pub consumption: f64,
+    /// Chapter IV makes sugar the only "dirty" good; set to pollute spice too.
+    #[serde(default)]
+    pub spice_pollutes: bool,
 }
 
 /// D_α: every `every` ticks each site's pollution becomes its neighbors' mean.
@@ -118,6 +121,31 @@ pub struct CombatRule {
     pub reward: f64,
 }
 
+/// Chapter IV's second commodity. When off, agents never draw spice traits.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpiceRule {
+    pub enabled: bool,
+    pub metabolism: URange,
+    pub endowment: URange,
+}
+
+/// L_{d,r}: sugar loans of `duration` (d) ticks at `rate` (r) percent simple
+/// interest per tick.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct CreditRule {
+    pub enabled: bool,
+    pub duration: u32,
+    pub rate: f64,
+}
+
+/// Book eq. 6: agents value holdings as if `φ` periods of metabolism were
+/// already spent; `range` is φ's initial distribution.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Foresight {
+    pub enabled: bool,
+    pub range: URange,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
@@ -140,6 +168,10 @@ pub struct Config {
     pub inheritance: Toggle,
     pub culture: Toggle,
     pub combat: CombatRule,
+    pub spice: SpiceRule,
+    pub trade: Toggle,
+    pub credit: CreditRule,
+    pub foresight: Foresight,
 }
 
 impl Default for Config {
@@ -169,6 +201,7 @@ impl Default for Config {
                 enabled: false,
                 production: 1.0,
                 consumption: 1.0,
+                spice_pollutes: false,
             },
             diffusion: Diffusion {
                 enabled: false,
@@ -191,6 +224,21 @@ impl Default for Config {
                 enabled: false,
                 unlimited: true,
                 reward: 2.0,
+            },
+            spice: SpiceRule {
+                enabled: false,
+                metabolism: URange::new(1, 4),
+                endowment: URange::new(5, 25),
+            },
+            trade: Toggle { enabled: false },
+            credit: CreditRule {
+                enabled: false,
+                duration: 10,
+                rate: 10.0,
+            },
+            foresight: Foresight {
+                enabled: false,
+                range: URange::new(0, 10),
             },
         }
     }
@@ -350,6 +398,31 @@ impl Config {
             "replacement R[a,b] needs lifespan on (it supplies [a,b])",
         );
         e.non_negative(self.combat.reward, "combat.reward");
+        e.range(self.spice.metabolism, "spice.metabolism");
+        e.range(self.spice.endowment, "spice.endowment");
+        e.range(self.foresight.range, "foresight.range");
+        e.check(
+            !self.trade.enabled || self.spice.enabled,
+            "trade.enabled",
+            "trade (T) needs spice on",
+        );
+        e.check(
+            !self.foresight.enabled || self.spice.enabled,
+            "foresight.enabled",
+            "foresight needs spice on",
+        );
+        e.check(
+            !self.credit.enabled || self.sex.enabled,
+            "credit.enabled",
+            "credit (L) needs sex (S) on",
+        );
+        e.check(
+            !(self.combat.enabled && self.spice.enabled),
+            "combat.enabled",
+            "combat (C) and spice are mutually exclusive",
+        );
+        e.check(self.credit.duration >= 1, "credit.duration", "must be ≥ 1");
+        e.non_negative(self.credit.rate, "credit.rate");
         e.finish()
     }
 
@@ -486,5 +559,46 @@ mod tests {
         assert!(a.structural_changes(&b).is_empty());
         b.tag_length = 5;
         assert_eq!(a.structural_changes(&b)[0].field, "tag_length");
+    }
+
+    #[test]
+    fn chapter_four_defaults_are_off_and_old_json_still_loads() {
+        let c = Config::default();
+        assert!(!c.spice.enabled && !c.trade.enabled && !c.credit.enabled && !c.foresight.enabled);
+        assert_eq!(c.spice.metabolism, URange::new(1, 4));
+        assert_eq!(c.spice.endowment, URange::new(5, 25));
+        assert_eq!((c.credit.duration, c.credit.rate), (10, 10.0));
+        assert_eq!(c.foresight.range, URange::new(0, 10));
+        assert!(!c.pollution.spice_pollutes);
+        let old = r#"{"pollution":{"enabled":true,"production":1.0,"consumption":1.0}}"#;
+        let loaded = Config::from_json(old).unwrap();
+        assert!(loaded.pollution.enabled && !loaded.pollution.spice_pollutes);
+    }
+
+    #[test]
+    fn chapter_four_rule_dependencies_are_validated() {
+        let with = |f: fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(|c| c.trade.enabled = true).contains(&"trade.enabled".to_string()));
+        assert!(with(|c| c.foresight.enabled = true).contains(&"foresight.enabled".to_string()));
+        assert!(with(|c| c.credit.enabled = true).contains(&"credit.enabled".to_string()));
+        assert!(with(|c| {
+            c.spice.enabled = true;
+            c.combat.enabled = true;
+        })
+        .contains(&"combat.enabled".to_string()));
+        assert!(with(|c| c.credit.duration = 0).contains(&"credit.duration".to_string()));
+        assert!(with(|c| c.credit.rate = -1.0).contains(&"credit.rate".to_string()));
+        assert!(with(|c| c.spice.metabolism = URange::new(3, 1))
+            .contains(&"spice.metabolism".to_string()));
+        assert!(with(|c| {
+            c.spice.enabled = true;
+            c.trade.enabled = true;
+            c.foresight.enabled = true;
+        })
+        .is_empty());
     }
 }
