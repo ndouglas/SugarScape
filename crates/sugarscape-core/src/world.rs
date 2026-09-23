@@ -235,10 +235,16 @@ impl World {
 
     /// Removes an agent from play and records its death. With rule I on, its
     /// remaining sugar is split equally among its living children.
-    pub(crate) fn kill(&mut self, id: AgentId, cause: DeathCause) -> Option<Agent> {
+    /// Takes an agent off the grid with no death event and no inheritance.
+    pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
         let agent = self.agents.remove(&id)?;
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
+        Some(agent)
+    }
+
+    pub(crate) fn kill(&mut self, id: AgentId, cause: DeathCause) -> Option<Agent> {
+        let agent = self.remove(id)?;
         self.events.deaths.push(Death {
             id,
             tribe: agent.tribe(),

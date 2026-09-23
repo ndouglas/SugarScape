@@ -120,14 +120,14 @@ impl World {
         self.insert_agent(agent)
     }
 
-    /// Removes the agent at (x, y) without counting a death.
+    /// Removes the agent at (x, y) without counting a death or bequeathing
+    /// its sugar.
     pub fn remove_agent(&mut self, x: u32, y: u32) -> Result<(), String> {
         let pos = self.checked_pos(x, y)?;
         let id = self
             .occupant(pos)
             .ok_or_else(|| format!("no agent at ({x}, {y})"))?;
-        self.kill(id, crate::world::DeathCause::Starvation);
-        self.events.deaths.pop();
+        self.remove(id);
         Ok(())
     }
 
@@ -240,6 +240,21 @@ mod tests {
         assert_eq!(w.population(), 0);
         assert!(w.events().deaths.is_empty(), "removal is not a death");
         assert!(w.remove_agent(2, 3).is_err());
+    }
+
+    #[test]
+    fn erasing_a_parent_does_not_bequeath() {
+        let mut w = blank_world(10, 10);
+        w.config.inheritance.enabled = true;
+        let parent = spawn(&mut w, 1, 1);
+        let child = spawn(&mut w, 2, 1);
+        w.agent_mut(parent).unwrap().sugar = 30.0;
+        w.agent_mut(parent).unwrap().children = vec![child];
+        let before = w.agent(child).unwrap().sugar;
+        w.remove_agent(1, 1).unwrap();
+        assert_eq!(w.agent(child).unwrap().sugar, before);
+        assert_eq!(w.occupant(Pos::new(1, 1)), None);
+        assert!(w.events().deaths.is_empty());
     }
 
     #[test]
