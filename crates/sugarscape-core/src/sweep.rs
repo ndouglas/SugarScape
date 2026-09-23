@@ -890,6 +890,44 @@ pub fn run_all(
     Ok(SweepResult::new(sweep.clone(), runs))
 }
 
+/// A built-in sweep: `sweeps/<id>.json` at the repository root (Decision 11).
+pub struct Builtin {
+    pub id: &'static str,
+    pub json: &'static str,
+}
+
+const BUILTINS: [Builtin; 4] = [
+    Builtin {
+        id: "fig-ii-5",
+        json: include_str!("../../../sweeps/fig-ii-5.json"),
+    },
+    Builtin {
+        id: "fig-iv-6",
+        json: include_str!("../../../sweeps/fig-iv-6.json"),
+    },
+    Builtin {
+        id: "fig-iv-10-11",
+        json: include_str!("../../../sweeps/fig-iv-10-11.json"),
+    },
+    Builtin {
+        id: "n-goods-carrying-capacity",
+        json: include_str!("../../../sweeps/n-goods-carrying-capacity.json"),
+    },
+];
+
+/// The built-in sweeps, in display order.
+pub fn builtins() -> &'static [Builtin] {
+    &BUILTINS
+}
+
+/// Built-in sweep `id`, parsed.
+pub fn builtin(id: &str) -> Option<Sweep> {
+    BUILTINS
+        .iter()
+        .find(|b| b.id == id)
+        .map(|b| Sweep::from_json(b.json).expect("built-in sweeps parse"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1558,5 +1596,46 @@ mod tests {
     fn run_all_reports_invalid_sweeps() {
         let e = run_all(&sweep(with(tiny(), "ticks", json!(0))), 2, |_, _| {}).unwrap_err();
         assert!(e.iter().any(|e| e.field == "ticks"), "{e:?}");
+    }
+
+    #[test]
+    fn builtin_sweeps_parse_and_validate() {
+        let ids: Vec<&str> = builtins().iter().map(|b| b.id).collect();
+        assert_eq!(
+            ids,
+            [
+                "fig-ii-5",
+                "fig-iv-6",
+                "fig-iv-10-11",
+                "n-goods-carrying-capacity"
+            ]
+        );
+        for b in builtins() {
+            let s = builtin(b.id).unwrap();
+            let points = s.points().unwrap_or_else(|e| panic!("{}: {e:?}", b.id));
+            assert!(!points.is_empty());
+            assert!(
+                s.description.as_deref().is_some_and(|d| !d.is_empty()),
+                "{} needs a description",
+                b.id
+            );
+        }
+        assert!(builtin("nope").is_none());
+    }
+
+    #[test]
+    fn four_goods_with_trade_is_the_n_4_peaks_preset() {
+        let s = builtin("n-goods-carrying-capacity").unwrap();
+        let x = s.x.values.iter().position(|v| v.at == 4.0).unwrap();
+        let point = s
+            .points()
+            .unwrap()
+            .into_iter()
+            .find(|p| p.series == 1 && p.x == x)
+            .unwrap();
+        assert_eq!(
+            s.config_for(&point).unwrap(),
+            presets::by_id("n-4-peaks").unwrap().config
+        );
     }
 }

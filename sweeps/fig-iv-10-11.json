@@ -1,0 +1,17 @@
+{
+  "name": "Figures IV-10 and IV-11: price dispersion vs lifetime",
+  "description": "Figures IV-10 and IV-11: the standard deviation of ln(trade price) per tick, averaged over 50-tick blocks, in iv-3-trade with finite lives and replacement, for lifetimes 60–100 and 960–1000. Seeds 1–10. Measured (release, seeds 1–10): lifetimes 60–100 mean sd(ln price) 0.502 in the first block (t=50) and 0.444 in the last (t=1000); lifetimes 960–1000 mean sd(ln price) 0.502 in the first block and 0.138 in the last.",
+  "base": { "preset": "iv-3-trade" },
+  "set": { "lifespan.enabled": true, "replacement.enabled": true },
+  "x": { "label": "All runs", "values": [ { "at": 0, "set": {} } ] },
+  "series": {
+    "label": "Lifetimes",
+    "values": [
+      { "at": 60, "name": "Lifetimes 60–100", "set": { "lifespan.max_age": { "min": 60, "max": 100 } } },
+      { "at": 960, "name": "Lifetimes 960–1000", "set": { "lifespan.max_age": { "min": 960, "max": 1000 } } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 10 },
+  "ticks": 1000,
+  "metric": { "kind": "timeseries", "series": "sd_log_price", "every": 50 }
+}

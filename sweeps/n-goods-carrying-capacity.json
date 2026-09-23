@@ -1,0 +1,651 @@
+{
+  "name": "N goods: carrying capacity vs number of goods",
+  "description": "Carrying capacity (mean population over ticks 900–1000) against the number of goods, with and without trade: goods 1–4 are n-4-peaks' corner peaks, then tea at (25, 25) and wool at (25, 0), each with metabolism 1–2 and endowment 25–50. Two goods at least, since trade needs two. Seeds 1–10. Measured (release, seeds 1–10): no trade mean population 214.5 at 2 goods and 1.6 at 6 goods; trade mean population 232.1 at 2 goods and 5.5 at 6 goods. Ticks 300 and 500 do not satisfy the settlement rule (the 5-6 good, no-trade cells are still declining toward extinction); 1000 is the smallest that settles.",
+  "base": {
+    "preset": "n-4-peaks"
+  },
+  "x": {
+    "label": "Number of goods",
+    "values": [
+      {
+        "at": 2,
+        "set": {
+          "goods": [
+            {
+              "name": "sugar",
+              "color": "#f2c14e",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "spice",
+              "color": "#e07a3f",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            }
+          ],
+          "pollution.pollutants": [
+            {
+              "name": "pollution",
+              "production": [
+                1,
+                0
+              ],
+              "consumption": [
+                1,
+                0
+              ],
+              "devalues": [
+                true,
+                false
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "at": 3,
+        "set": {
+          "goods": [
+            {
+              "name": "sugar",
+              "color": "#f2c14e",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "spice",
+              "color": "#e07a3f",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "salt",
+              "color": "#7fb3d5",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 39,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            }
+          ],
+          "pollution.pollutants": [
+            {
+              "name": "pollution",
+              "production": [
+                1,
+                0,
+                0
+              ],
+              "consumption": [
+                1,
+                0,
+                0
+              ],
+              "devalues": [
+                true,
+                false,
+                false
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "at": 4,
+        "set": {
+          "goods": [
+            {
+              "name": "sugar",
+              "color": "#f2c14e",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "spice",
+              "color": "#e07a3f",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "salt",
+              "color": "#7fb3d5",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 39,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "silk",
+              "color": "#8fcf6b",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 39,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            }
+          ],
+          "pollution.pollutants": [
+            {
+              "name": "pollution",
+              "production": [
+                1,
+                0,
+                0,
+                0
+              ],
+              "consumption": [
+                1,
+                0,
+                0,
+                0
+              ],
+              "devalues": [
+                true,
+                false,
+                false,
+                false
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "at": 5,
+        "set": {
+          "goods": [
+            {
+              "name": "sugar",
+              "color": "#f2c14e",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "spice",
+              "color": "#e07a3f",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "salt",
+              "color": "#7fb3d5",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 39,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "silk",
+              "color": "#8fcf6b",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 39,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "tea",
+              "color": "#b07cc6",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 25,
+                    "y": 25,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            }
+          ],
+          "pollution.pollutants": [
+            {
+              "name": "pollution",
+              "production": [
+                1,
+                0,
+                0,
+                0,
+                0
+              ],
+              "consumption": [
+                1,
+                0,
+                0,
+                0,
+                0
+              ],
+              "devalues": [
+                true,
+                false,
+                false,
+                false,
+                false
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "at": 6,
+        "set": {
+          "goods": [
+            {
+              "name": "sugar",
+              "color": "#f2c14e",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "spice",
+              "color": "#e07a3f",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 10,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "salt",
+              "color": "#7fb3d5",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 10,
+                    "y": 39,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "silk",
+              "color": "#8fcf6b",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 39,
+                    "y": 39,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "tea",
+              "color": "#b07cc6",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 25,
+                    "y": 25,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            },
+            {
+              "name": "wool",
+              "color": "#c9c2b2",
+              "map": {
+                "kind": "peaks",
+                "peaks": [
+                  {
+                    "x": 25,
+                    "y": 0,
+                    "radius": 20,
+                    "height": 4
+                  }
+                ]
+              },
+              "metabolism": {
+                "min": 1,
+                "max": 2
+              },
+              "endowment": {
+                "min": 25,
+                "max": 50
+              }
+            }
+          ],
+          "pollution.pollutants": [
+            {
+              "name": "pollution",
+              "production": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "consumption": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "devalues": [
+                true,
+                false,
+                false,
+                false,
+                false,
+                false
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Trade",
+    "values": [
+      {
+        "at": 0,
+        "name": "No trade",
+        "set": {
+          "trade.enabled": false
+        }
+      },
+      {
+        "at": 1,
+        "name": "Trade",
+        "set": {
+          "trade.enabled": true
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "population",
+    "from": 900
+  }
+}

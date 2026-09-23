@@ -1,0 +1,28 @@
+{
+  "name": "Figure II-5: carrying capacity vs vision and metabolism",
+  "description": "Figure II-5: carrying capacity (mean population over ticks 200–300, after it has settled) against mean vision, one line per mean metabolism, starting from 500 agents under ({G₁}, {M}). A mean of m is the uniform range 1–(2m−1). Seeds 1–10; the book averages 10 runs per point. Measured (release, seeds 1–10): metabolism 1 mean population 438.7 at vision 1 and 485.9 at vision 6; metabolism 2 mean population 281.6 at vision 1 and 316.8 at vision 6; metabolism 3 mean population 191.0 at vision 1 and 250.1 at vision 6. Ticks 300, 500 and 1000 all satisfy the settlement rule for every cell; 300 is the smallest.",
+  "base": { "preset": "ii-2-unit" },
+  "set": { "population": 500 },
+  "x": {
+    "label": "Mean vision",
+    "values": [
+      { "at": 1, "set": { "vision": { "min": 1, "max": 1 } } },
+      { "at": 2, "set": { "vision": { "min": 1, "max": 3 } } },
+      { "at": 3, "set": { "vision": { "min": 1, "max": 5 } } },
+      { "at": 4, "set": { "vision": { "min": 1, "max": 7 } } },
+      { "at": 5, "set": { "vision": { "min": 1, "max": 9 } } },
+      { "at": 6, "set": { "vision": { "min": 1, "max": 11 } } }
+    ]
+  },
+  "series": {
+    "label": "Mean metabolism",
+    "values": [
+      { "at": 1, "set": { "goods.0.metabolism": { "min": 1, "max": 1 } } },
+      { "at": 2, "set": { "goods.0.metabolism": { "min": 1, "max": 3 } } },
+      { "at": 3, "set": { "goods.0.metabolism": { "min": 1, "max": 5 } } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 10 },
+  "ticks": 300,
+  "metric": { "kind": "window_mean", "series": "population", "from": 200 }
+}
