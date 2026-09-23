@@ -2,6 +2,7 @@
 //! Run with `cargo test -p sugarscape-core --release --test book -- --ignored`.
 
 use sugarscape_core::config::Config;
+use sugarscape_core::econ;
 use sugarscape_core::presets;
 use sugarscape_core::world::World;
 
@@ -321,4 +322,74 @@ fn everything_on_society_survives() {
             w.population()
         );
     }
+}
+
+/// Standard deviation across living agents of ln MRSᵢⱼ (disease is off in
+/// these presets, so effective metabolism is the genetic one).
+fn ln_mrs_spread(w: &World, i: usize, j: usize) -> f64 {
+    let n = w.config.goods.len();
+    let logs: Vec<f64> = w
+        .agents()
+        .filter_map(|a| {
+            let m: Vec<f64> = a.metabolism[..n].iter().map(|&x| f64::from(x)).collect();
+            let v = econ::mrs_n(&a.holdings[..n], &m, i, j);
+            (v.is_finite() && v > 0.0).then(|| v.ln())
+        })
+        .collect();
+    let mean = logs.iter().sum::<f64>() / logs.len() as f64;
+    (logs.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / logs.len() as f64).sqrt()
+}
+
+#[test]
+#[ignore]
+fn three_good_prices_converge_for_every_pair() {
+    // Figure IV-3's convergence, for all three pairs of n-3-trade: the
+    // cross-agent spread of ln MRS falls between t = 0 and t = 500.
+    //
+    // Measured (seeds 1..=3, spread t=0 -> t=500):
+    //   pair (0,1): 0.7898951184699168 -> 0.3884880219273956,
+    //               0.7415728996075175 -> 0.38667713146759825,
+    //               0.8035607017812939 -> 0.38456103313476303;
+    //               mean 0.7783429066195761 -> 0.38657539550991893
+    //   pair (0,2): 0.7511391518677588 -> 0.387069336034533,
+    //               0.7357535953045647 -> 0.38962091569367213,
+    //               0.7966919564715215 -> 0.3853639424901609;
+    //               mean 0.7611949012146151 -> 0.3873513980727887
+    //   pair (1,2): 0.7382552908175489 -> 0.060300877517813094,
+    //               0.7894167010665399 -> 0.06184785348854413,
+    //               0.7684318710067244 -> 0.06033760657036885;
+    //               mean 0.7653679542969377 -> 0.06082877919224203
+    // Every seed and every pair shows the spread roughly halving (or more),
+    // so this holds comfortably rather than by a lucky mean.
+    let config = presets::by_id("n-3-trade").unwrap().config;
+    for (i, j) in [(0, 1), (0, 2), (1, 2)] {
+        let (mut early, mut late) = (0.0, 0.0);
+        for seed in 1..=3 {
+            let mut w = World::new(config.clone(), seed).unwrap();
+            early += ln_mrs_spread(&w, i, j) / 3.0;
+            w.run(500);
+            late += ln_mrs_spread(&w, i, j) / 3.0;
+        }
+        assert!(late < early, "pair ({i}, {j}): spread {early} -> {late}");
+    }
+}
+
+#[test]
+#[ignore]
+fn three_good_trade_raises_carrying_capacity() {
+    // Figure IV-6 with three goods: more agents survive with trade.
+    // Measured t=500 populations: with trade (seeds 1..=5) = [826, 770, 837,
+    // 850, 571] (mean 770.8); without trade = [763, 667, 402, 762, 717]
+    // (mean 662.2).
+    let with = presets::by_id("n-3-trade").unwrap().config;
+    let mut without = with.clone();
+    without.trade.enabled = false;
+    let pop = |c: &Config| {
+        (1..=5)
+            .map(|s| run(c.clone(), s, 500).population() as f64)
+            .sum::<f64>()
+            / 5.0
+    };
+    let (p_with, p_without) = (pop(&with), pop(&without));
+    assert!(p_with > p_without, "with {p_with}, without {p_without}");
 }
