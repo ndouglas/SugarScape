@@ -1,5 +1,7 @@
 import './style.css';
+import { downloadBlob, downloadText, canvasBlob } from './downloads';
 import { Engine } from './engine';
+import { decodeShare, encodeShare, readHash } from './share';
 import { ChartsPanel } from './ui/charts-panel';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
@@ -23,7 +25,14 @@ export function showBanner(message: string, action?: { label: string; run: () =>
 }
 
 async function main(): Promise<void> {
-  const engine = await Engine.create();
+  let engine: Engine;
+  const token = readHash();
+  try {
+    engine = token ? await Engine.create(await decodeShare(token)) : await Engine.create();
+  } catch (e) {
+    showBanner(`That share link could not be loaded (${e instanceof Error ? e.message : String(e)}). Showing the default rule system.`);
+    engine = await Engine.create();
+  }
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
   document.querySelector('#toolbar')!.append(buildToolbar(engine));
   document.querySelector('#display')!.append(buildDisplay(engine));
@@ -35,6 +44,42 @@ async function main(): Promise<void> {
   const inspect = new InspectPanel(engine);
   tabs.add('Inspect', inspect.el, (visible) => inspect.setVisible(visible));
   document.querySelector('#tools')!.append(buildTools(engine, grid, () => tabs.show('Inspect')));
+
+  const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.sim.tick()}`;
+  const shareButton = h('button', {
+    onclick: async () => {
+      const landscape = engine.sim.landscape_edited() ? engine.sim.export_landscape() : undefined;
+      const token = await encodeShare({ config: engine.config, seed: engine.seed, landscape });
+      history.replaceState(null, '', `#s=${token}`);
+      try {
+        await navigator.clipboard.writeText(location.href);
+        shareButton.textContent = 'Link copied';
+      } catch {
+        shareButton.textContent = 'Link in address bar';
+      }
+      setTimeout(() => (shareButton.textContent = 'Share'), 2000);
+    },
+    title: 'Copy a link to this setup (config, seed and painted landscape; hand-placed agents are not included)',
+  }, 'Share');
+  const menu = h(
+    'details',
+    { class: 'menu' },
+    h('summary', {}, 'Export'),
+    h('div', { class: 'menu-items' },
+      h('button', { onclick: () => downloadText(`${slug()}-series.csv`, engine.sim.export_series_csv()) }, 'Statistics (CSV)'),
+      h('button', { onclick: () => downloadText(`${slug()}-agents.csv`, engine.sim.export_agents_csv()) }, 'Agents (CSV)'),
+      h('button', { onclick: async () => downloadBlob(`${slug()}-grid.png`, await grid.toPngBlob()) }, 'Grid (PNG)'),
+      h('button', {
+        onclick: async () => {
+          tabs.show('Charts');
+          for (const { name, canvas } of charts.canvases()) {
+            downloadBlob(`${slug()}-${name.toLowerCase().replace(/\W+/g, '-')}.png`, await canvasBlob(canvas));
+          }
+        },
+      }, 'Charts (PNG)'),
+    ),
+  );
+  document.querySelector('.toolbar-end')!.append(shareButton, menu);
 
   let dirty = true;
   for (const event of ['reset', 'tick', 'config', 'display', 'select', 'edit'] as const) {

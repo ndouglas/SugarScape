@@ -88,3 +88,8 @@ button[aria-pressed='true'] { border-color: var(--accent); box-shadow: inset 0 0
 .inspect code { font-size: 12px; letter-spacing: 0.08em; }
 .links { display: flex; flex-wrap: wrap; gap: 4px; }
 button.link { padding: 0 6px; font-size: 12px; }
+.menu { position: relative; }
+.menu summary { list-style: none; cursor: pointer; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; background: var(--surface); }
+.menu summary::-webkit-details-marker { display: none; }
+.menu-items { position: absolute; right: 0; top: calc(100% + 4px); display: grid; gap: 4px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; z-index: 10; min-width: 12em; }
+.menu-items button { text-align: left; }
