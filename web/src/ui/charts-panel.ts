@@ -2,6 +2,7 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { h } from './dom';
+import { compactNumber } from './format';
 
 interface Line { key: string; label: string; color: string }
 interface TimeChart { title: string; lines: Line[]; range?: [number, number] }
@@ -117,7 +118,13 @@ export class ChartsPanel {
     const color = (v: string) => css.getPropertyValue(v).trim() || '#888';
     const axes: uPlot.Axis[] = [
       { stroke: color('--muted'), grid: { stroke: color('--grid') }, ticks: { stroke: color('--grid') } },
-      { stroke: color('--muted'), grid: { stroke: color('--grid') }, ticks: { stroke: color('--grid') }, size: 44 },
+      {
+        stroke: color('--muted'),
+        grid: { stroke: color('--grid') },
+        ticks: { stroke: color('--grid') },
+        size: 44,
+        values: (_self, splits) => splits.map(compactNumber),
+      },
     ];
 
     const addTimeChart = (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => {
