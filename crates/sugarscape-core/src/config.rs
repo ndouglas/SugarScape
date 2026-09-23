@@ -147,6 +147,57 @@ pub struct Foresight {
     pub range: URange,
 }
 
+/// A novel disease appearing mid-run (Chapter V's McNeill scenario): at the
+/// start of the tick when `World::tick == tick`, a brand-new random disease
+/// infects `agents` random living agents (all of them if there are fewer).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Outbreak {
+    pub tick: u64,
+    pub agents: u32,
+}
+
+/// Rule E (Chapter V, Appendix B): immune response and disease transmission.
+/// The defaults are Animation V-1's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct DiseaseRule {
+    pub enabled: bool,
+    /// Size of the initial master list of diseases.
+    pub count: u32,
+    /// Disease string lengths.
+    pub length: URange,
+    /// Distinct random diseases given to each new (not newborn) agent.
+    pub initial: u32,
+    /// Immune string length (1–64).
+    pub immune_length: u32,
+    /// Extra metabolism of each good per carried disease.
+    pub fee: f64,
+    /// Immune bits flipped per carried disease per tick ("medicine").
+    pub flips_per_tick: u32,
+    /// Per-bit mutation probability of a child's immune genome.
+    pub genome_mutation: f64,
+    /// Probability that a transmitted disease mutates one random bit.
+    pub disease_mutation: f64,
+    pub outbreaks: Vec<Outbreak>,
+}
+
+impl Default for DiseaseRule {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            count: 10,
+            length: URange::new(1, 10),
+            initial: 4,
+            immune_length: 50,
+            fee: 1.0,
+            flips_per_tick: 1,
+            genome_mutation: 0.0,
+            disease_mutation: 0.0,
+            outbreaks: Vec::new(),
+        }
+    }
+}
+
 /// Fields a schedule may not change (they shape the world's storage or setup).
 pub const STRUCTURAL_FIELDS: [&str; 6] = [
     "width",
@@ -157,9 +208,20 @@ pub const STRUCTURAL_FIELDS: [&str; 6] = [
     "placement",
 ];
 
-/// Paths a schedule may not set because they switch spice on or off, which
-/// changes every agent's traits and so needs a reset.
-pub const RESET_ONLY_PATHS: [&str; 2] = ["spice", "spice.enabled"];
+/// Paths a schedule may not set because they switch a rule that shapes every
+/// agent's traits (spice, disease) or fix the disease list and immune strings;
+/// changing them needs a reset.
+pub const RESET_ONLY_PATHS: [&str; 9] = [
+    "spice",
+    "spice.enabled",
+    "disease",
+    "disease.enabled",
+    "disease.count",
+    "disease.length",
+    "disease.length.min",
+    "disease.length.max",
+    "disease.immune_length",
+];
 
 /// At the start of the tick when `World::tick == tick`, set each dotted config
 /// path in `set` to its value.
@@ -195,6 +257,7 @@ pub struct Config {
     pub trade: Toggle,
     pub credit: CreditRule,
     pub foresight: Foresight,
+    pub disease: DiseaseRule,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -264,6 +327,7 @@ impl Default for Config {
                 enabled: false,
                 range: URange::new(0, 10),
             },
+            disease: DiseaseRule::default(),
             schedule: Vec::new(),
         }
     }
@@ -300,6 +364,14 @@ impl Errors {
 
     fn non_negative(&mut self, v: f64, field: &str) {
         self.check(v.is_finite() && v >= 0.0, field, "must be a number ≥ 0");
+    }
+
+    fn probability(&mut self, v: f64, field: &str) {
+        self.check(
+            (0.0..=1.0).contains(&v),
+            field,
+            "must be a probability between 0 and 1",
+        );
     }
 
     fn finish(self) -> Result<(), Vec<FieldError>> {
@@ -461,6 +533,46 @@ impl Config {
         );
         e.check(self.credit.duration >= 1, "credit.duration", "must be ≥ 1");
         e.non_negative(self.credit.rate, "credit.rate");
+        let d = &self.disease;
+        e.check(
+            (1..=64).contains(&d.immune_length),
+            "disease.immune_length",
+            "must be between 1 and 64",
+        );
+        e.range(d.length, "disease.length");
+        e.check(
+            d.length.min >= 1,
+            "disease.length",
+            "diseases are at least 1 bit long",
+        );
+        e.check(
+            d.length.max < d.immune_length,
+            "disease.length",
+            "diseases must be shorter than the immune string",
+        );
+        e.check(
+            (1..=1000).contains(&d.count),
+            "disease.count",
+            "must be between 1 and 1000",
+        );
+        e.check(
+            d.initial <= d.count,
+            "disease.initial",
+            "cannot exceed the number of diseases",
+        );
+        e.non_negative(d.fee, "disease.fee");
+        e.check(
+            d.flips_per_tick >= 1,
+            "disease.flips_per_tick",
+            "must be ≥ 1",
+        );
+        e.probability(d.genome_mutation, "disease.genome_mutation");
+        e.probability(d.disease_mutation, "disease.disease_mutation");
+        e.check(
+            d.outbreaks.iter().all(|o| o.tick >= 1 && o.agents >= 1),
+            "disease.outbreaks",
+            "each outbreak needs tick ≥ 1 and at least 1 agent",
+        );
         e.finish()
     }
 
@@ -513,6 +625,12 @@ impl Config {
                     format!("{path}: the schedule cannot change itself"),
                 ));
             }
+            if path == "disease.outbreaks" || path.starts_with("disease.outbreaks.") {
+                return Err(FieldError::new(
+                    "schedule",
+                    format!("{path}: outbreaks are their own schedule"),
+                ));
+            }
             next = next.with_path(path, value)?;
         }
         next.validate_fields().map_err(|errs| {
@@ -526,7 +644,7 @@ impl Config {
     }
 
     /// Fields that cannot change on a running world (they shape its storage,
-    /// or — for spice — every agent's traits).
+    /// or — for spice and disease — every agent's traits and the disease list).
     pub fn structural_changes(&self, next: &Config) -> Vec<FieldError> {
         let mut out = Vec::new();
         let msg = "changes only on reset";
@@ -544,6 +662,19 @@ impl Config {
         }
         if self.spice.enabled != next.spice.enabled {
             out.push(FieldError::new("spice.enabled", msg));
+        }
+        let (a, b) = (&self.disease, &next.disease);
+        if a.enabled != b.enabled {
+            out.push(FieldError::new("disease.enabled", msg));
+        }
+        if a.count != b.count {
+            out.push(FieldError::new("disease.count", msg));
+        }
+        if a.length != b.length {
+            out.push(FieldError::new("disease.length", msg));
+        }
+        if a.immune_length != b.immune_length {
+            out.push(FieldError::new("disease.immune_length", msg));
         }
         out
     }
@@ -792,5 +923,154 @@ mod tests {
             ..Default::default()
         };
         c.validate().unwrap();
+    }
+
+    #[test]
+    fn disease_defaults_are_animation_v1_and_off() {
+        let d = Config::default().disease;
+        assert!(!d.enabled);
+        assert_eq!(
+            (d.count, d.length, d.initial, d.immune_length),
+            (10, URange::new(1, 10), 4, 50)
+        );
+        assert_eq!(
+            (
+                d.fee,
+                d.flips_per_tick,
+                d.genome_mutation,
+                d.disease_mutation
+            ),
+            (1.0, 1, 0.0, 0.0)
+        );
+        assert!(d.outbreaks.is_empty());
+        let partial = Config::from_json(r#"{"disease":{"enabled":true}}"#).unwrap();
+        assert!(partial.disease.enabled);
+        assert_eq!(partial.disease.count, 10, "missing disease fields default");
+    }
+
+    #[test]
+    fn disease_parameters_are_validated() {
+        let with = |f: fn(&mut DiseaseRule)| {
+            let mut c = Config::default();
+            f(&mut c.disease);
+            fields(c.validate())
+        };
+        let has = |errs: Vec<String>, field: &str| errs.contains(&field.to_string());
+        assert!(has(with(|d| d.immune_length = 0), "disease.immune_length"));
+        assert!(has(with(|d| d.immune_length = 65), "disease.immune_length"));
+        assert!(has(
+            with(|d| d.length = URange::new(0, 5)),
+            "disease.length"
+        ));
+        assert!(has(
+            with(|d| d.length = URange::new(6, 5)),
+            "disease.length"
+        ));
+        assert!(
+            has(with(|d| d.length = URange::new(1, 50)), "disease.length"),
+            "diseases must be shorter than the 50-bit immune string"
+        );
+        assert!(has(with(|d| d.count = 0), "disease.count"));
+        assert!(has(with(|d| d.count = 1001), "disease.count"));
+        assert!(has(with(|d| d.initial = 11), "disease.initial"));
+        assert!(has(with(|d| d.fee = -1.0), "disease.fee"));
+        assert!(has(
+            with(|d| d.flips_per_tick = 0),
+            "disease.flips_per_tick"
+        ));
+        assert!(has(
+            with(|d| d.genome_mutation = 1.5),
+            "disease.genome_mutation"
+        ));
+        assert!(has(
+            with(|d| d.disease_mutation = f64::NAN),
+            "disease.disease_mutation"
+        ));
+        assert!(has(
+            with(|d| d.outbreaks = vec![Outbreak { tick: 0, agents: 5 }]),
+            "disease.outbreaks"
+        ));
+        assert!(has(
+            with(|d| d.outbreaks = vec![Outbreak { tick: 3, agents: 0 }]),
+            "disease.outbreaks"
+        ));
+        assert!(with(|d| {
+            d.enabled = true;
+            d.genome_mutation = 0.01;
+            d.disease_mutation = 1.0;
+            d.outbreaks = vec![Outbreak {
+                tick: 300,
+                agents: 5,
+            }];
+        })
+        .is_empty());
+    }
+
+    #[test]
+    fn schedule_may_not_restructure_disease_or_set_outbreaks() {
+        let rejected = |path: &str, value: serde_json::Value| {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert_eq!(errs[0].field, "schedule", "{path}");
+            errs[0].message.clone()
+        };
+        for (path, value) in [
+            ("disease.enabled", serde_json::json!(true)),
+            ("disease.count", serde_json::json!(20)),
+            ("disease.immune_length", serde_json::json!(40)),
+            ("disease.length", serde_json::json!({"min": 1, "max": 5})),
+            ("disease.length.max", serde_json::json!(5)),
+        ] {
+            let msg = rejected(path, value);
+            assert!(msg.contains("only on reset"), "{path}: {msg}");
+        }
+        let disease = serde_json::to_value(Config::default().disease).unwrap();
+        rejected("disease", disease);
+        let msg = rejected("disease.outbreaks", serde_json::json!([]));
+        assert!(msg.contains("their own schedule"), "{msg}");
+        // Live knobs may be scheduled.
+        let c = Config {
+            schedule: vec![
+                change(5, "disease.fee", serde_json::json!(2.0)),
+                change(6, "disease.flips_per_tick", serde_json::json!(3)),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+    }
+
+    #[test]
+    fn disease_structure_changes_only_on_reset() {
+        let a = Config::default();
+        let changed = |f: fn(&mut DiseaseRule)| {
+            let mut b = a.clone();
+            f(&mut b.disease);
+            a.structural_changes(&b)
+                .into_iter()
+                .map(|e| e.field)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(changed(|d| d.enabled = true), vec!["disease.enabled"]);
+        assert_eq!(changed(|d| d.count = 20), vec!["disease.count"]);
+        assert_eq!(
+            changed(|d| d.length = URange::new(2, 8)),
+            vec!["disease.length"]
+        );
+        assert_eq!(
+            changed(|d| d.immune_length = 40),
+            vec!["disease.immune_length"]
+        );
+        assert!(changed(|d| {
+            d.initial = 2;
+            d.fee = 2.0;
+            d.flips_per_tick = 3;
+            d.genome_mutation = 0.1;
+            d.disease_mutation = 0.1;
+            d.outbreaks = vec![Outbreak { tick: 9, agents: 1 }];
+        })
+        .is_empty());
     }
 }
