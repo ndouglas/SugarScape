@@ -284,4 +284,33 @@ mod tests {
         }
         assert!(welfare3(&w, a) > wa && welfare3(&w, b) > wb);
     }
+
+    proptest::proptest! {
+        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(64))]
+        #[test]
+        fn trade_conserves_every_good_and_keeps_holdings_positive(
+            n in 2usize..=5,
+            a in proptest::collection::vec(0.5f64..60.0, 5),
+            b in proptest::collection::vec(0.5f64..60.0, 5),
+            ma in proptest::collection::vec(0u32..6, 5),
+            mb in proptest::collection::vec(0u32..6, 5),
+        ) {
+            let mut w = blank_world(5, 5);
+            add_goods(&mut w.config, n);
+            let x = spawn(&mut w, 0, 0);
+            let y = spawn(&mut w, 1, 0);
+            for (id, h, m) in [(x, &a, &ma), (y, &b, &mb)] {
+                let agent = w.agent_mut(id).unwrap();
+                agent.holdings[..n].copy_from_slice(&h[..n]);
+                agent.metabolism[..n].copy_from_slice(&m[..n]);
+            }
+            trade_pair(&mut w, x, y);
+            for i in 0..n {
+                let (hx, hy) = (w.agent(x).unwrap().holdings[i], w.agent(y).unwrap().holdings[i]);
+                let before = a[i] + b[i];
+                proptest::prop_assert!((hx + hy - before).abs() < 1e-6 * before.max(1.0), "good {}", i);
+                proptest::prop_assert!(hx > 0.0 && hy > 0.0);
+            }
+        }
+    }
 }

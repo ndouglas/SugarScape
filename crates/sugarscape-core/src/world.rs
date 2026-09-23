@@ -760,4 +760,48 @@ mod tests {
             assert!(a.holdings[2..].iter().all(|&x| x == 0.0));
         }
     }
+
+    #[test]
+    fn three_goods_and_two_pollutants_validate_and_run() {
+        use crate::config::{Good, Map, Pollutant, Transform, URange};
+        let mut c = Config::default();
+        c.add_good(Good::spice());
+        c.add_good(Good {
+            name: "salt".into(),
+            color: "#7fb3d5".into(),
+            map: Map::TwoPeaks {
+                transform: Transform::Rotate90,
+            },
+            ..Good::sugar()
+        });
+        // Light metabolisms and generous endowments so a three-good
+        // population is certain to survive 20 ticks.
+        for g in &mut c.goods {
+            g.metabolism = URange::new(1, 2);
+            g.endowment = URange::new(25, 50);
+        }
+        c.trade.enabled = true;
+        c.pollution.enabled = true;
+        c.pollution.pollutants.push(Pollutant {
+            name: "runoff".into(),
+            production: vec![0.0, 0.0, 1.0],
+            consumption: vec![0.0; 3],
+            devalues: vec![false, false, true],
+        });
+        let mut w = World::new(c, 1).unwrap();
+        w.run(20);
+        assert!(w.population() > 0);
+        assert_eq!(
+            w.site(Pos::new(44, 37)).capacity[2],
+            4.0,
+            "salt's south-east peak"
+        );
+        assert!(w.sites.iter().any(|s| s.pollution[1] > 0.0), "runoff forms");
+        let before = w.fingerprint();
+        w.sites[0].resource[2] += 1.0;
+        assert_ne!(w.fingerprint(), before, "good 2 is hashed");
+        let before = w.fingerprint();
+        w.sites[0].pollution[1] += 1.0;
+        assert_ne!(w.fingerprint(), before, "pollutant 1 is hashed");
+    }
 }

@@ -1,7 +1,7 @@
 //! Properties that must hold after every tick for any rule combination.
 
 use proptest::prelude::*;
-use sugarscape_core::config::{Config, Good, Outbreak, URange};
+use sugarscape_core::config::{Config, Good, Map, Outbreak, Pollutant, Transform, URange};
 use sugarscape_core::world::World;
 
 // The brief's `prop_map` builds `Config` by assigning fields one at a time
@@ -25,7 +25,12 @@ fn config_strategy() -> impl Strategy<Value = Config> {
             proptest::bool::ANY,
             proptest::bool::ANY,
         ),
-        (proptest::bool::ANY, proptest::bool::ANY),
+        (
+            proptest::bool::ANY,
+            proptest::bool::ANY,
+            1usize..=4,
+            1usize..=3,
+        ),
     )
         .prop_map(
             |(
@@ -39,8 +44,8 @@ fn config_strategy() -> impl Strategy<Value = Config> {
                 culture,
                 combat,
                 replacement,
-                (spice, trade, credit, foresight),
-                (disease, mutate),
+                (_spice, trade, credit, foresight),
+                (disease, mutate, goods, pollutants),
             )| {
                 let mut c = Config::default();
                 c.population = pop;
@@ -56,16 +61,36 @@ fn config_strategy() -> impl Strategy<Value = Config> {
                 if sex {
                     c.goods[0].endowment = URange::new(50, 100);
                 }
-                if spice && !combat {
-                    c.add_good(Good {
-                        endowment: URange::new(25, 50),
-                        ..Good::spice()
-                    });
+                if !combat {
+                    for i in 1..goods {
+                        c.add_good(Good {
+                            name: format!("good{i}"),
+                            map: Map::TwoPeaks {
+                                transform: Transform::ALL[i],
+                            },
+                            endowment: URange::new(25, 50),
+                            ..Good::spice()
+                        });
+                    }
                 }
-                let two = c.goods.len() >= 2;
-                c.trade.enabled = trade && two;
-                c.foresight.enabled = foresight && two;
+                let n = c.goods.len();
+                c.trade.enabled = trade && n >= 2;
+                c.foresight.enabled = foresight && n >= 2;
                 c.credit.enabled = credit && sex;
+                // Pollutant k comes from (and devalues) the goods i ≡ k mod m.
+                let dirty = |i: usize, k: usize| i % pollutants == k;
+                c.pollution.pollutants = (0..pollutants)
+                    .map(|k| Pollutant {
+                        name: format!("p{k}"),
+                        production: (0..n)
+                            .map(|i| if dirty(i, k) { 1.0 } else { 0.0 })
+                            .collect(),
+                        consumption: (0..n)
+                            .map(|i| if dirty(i, k) { 1.0 } else { 0.0 })
+                            .collect(),
+                        devalues: (0..n).map(|i| dirty(i, k)).collect(),
+                    })
+                    .collect();
                 c.disease.enabled = disease;
                 if disease && mutate {
                     c.disease.genome_mutation = 0.02;
@@ -83,16 +108,25 @@ fn config_strategy() -> impl Strategy<Value = Config> {
 }
 
 fn check(world: &World) -> Result<(), TestCaseError> {
+    let n = world.config.goods.len();
+    let m = world.config.pollution.pollutants.len();
     let mut occupied = 0;
     for i in 0..world.sites.len() {
         let pos = world.torus.pos(i);
         let site = world.site(pos);
-        prop_assert!(
-            site.resource[0] <= site.capacity[0] + 1e-9,
-            "sugar above capacity at {pos:?}"
-        );
-        prop_assert!(site.resource[0] >= 0.0 && site.pollution[0] >= 0.0);
-        prop_assert!(site.resource[1] <= site.capacity[1] + 1e-9);
+        for g in 0..n {
+            prop_assert!(
+                site.resource[g] <= site.capacity[g] + 1e-9,
+                "good {g} above capacity at {pos:?}"
+            );
+            prop_assert!(site.resource[g] >= 0.0);
+        }
+        for k in 0..m {
+            prop_assert!(
+                site.pollution[k] >= 0.0,
+                "pollutant {k} negative at {pos:?}"
+            );
+        }
         if let Some(id) = world.occupant(pos) {
             occupied += 1;
             prop_assert_eq!(world.agent(id).map(|a| a.pos), Some(pos));
@@ -104,18 +138,12 @@ fn check(world: &World) -> Result<(), TestCaseError> {
         "one agent per site, all indexed"
     );
     for a in world.agents() {
-        prop_assert!(
-            a.holdings[0] > 0.0,
-            "living agent {} has sugar {}",
-            a.id,
-            a.holdings[0]
-        );
-        if world.config.goods.len() >= 2 {
+        for g in 0..n {
             prop_assert!(
-                a.holdings[1] > 0.0,
-                "living agent {} has spice {}",
+                a.holdings[g] > 0.0,
+                "living agent {} has {} of good {g}",
                 a.id,
-                a.holdings[1]
+                a.holdings[g]
             );
         }
     }

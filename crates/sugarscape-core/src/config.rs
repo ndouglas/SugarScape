@@ -700,8 +700,6 @@ impl Config {
             "goods",
             format!("must list 1 to {MAX_GOODS} goods"),
         );
-        // Interim: the rules handle two goods until Task 12 removes this.
-        e.check(n <= 2, "goods", "at most two goods for now");
         let mut names = BTreeSet::new();
         for (i, g) in self.goods.iter().enumerate() {
             let field = |f: &str| format!("goods.{i}.{f}");
