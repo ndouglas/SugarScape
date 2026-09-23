@@ -181,6 +181,17 @@ pub struct DiseaseRule {
     pub outbreaks: Vec<Outbreak>,
 }
 
+impl DiseaseRule {
+    /// The per-disease metabolic fee in force: `fee` while disease is on, else 0.
+    pub fn active_fee(&self) -> f64 {
+        if self.enabled {
+            self.fee
+        } else {
+            0.0
+        }
+    }
+}
+
 impl Default for DiseaseRule {
     fn default() -> Self {
         Self {

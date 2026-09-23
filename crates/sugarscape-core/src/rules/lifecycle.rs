@@ -4,15 +4,17 @@ use crate::agent::AgentId;
 use crate::rules::Harvest;
 use crate::world::{DeathCause, World};
 
-/// Burns sugar (and spice when it's on). With rule P on, the agent's site
-/// gains α·gathered + β·burned — sugar only, unless spice pollutes too.
+/// Burns sugar (and spice when it's on) at the effective metabolism (plus the
+/// disease fee per carried disease). With rule P on, the agent's site gains
+/// α·gathered + β·burned — sugar only, unless spice pollutes too.
 pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
     let spice_on = world.config.spice.enabled;
+    let fee = world.config.disease.active_fee();
     let agent = world.agent_mut(id).expect("live agent");
-    let burned = f64::from(agent.metabolism);
+    let burned = agent.effective_metabolism(fee);
     agent.sugar -= burned;
     let burned_spice = if spice_on {
-        f64::from(agent.spice_metabolism)
+        agent.effective_spice_metabolism(fee)
     } else {
         0.0
     };
@@ -215,5 +217,30 @@ mod tests {
             },
         );
         assert_eq!(w.site(crate::geometry::Pos::new(2, 2)).pollution, 1.0 + 5.0);
+    }
+
+    #[test]
+    fn each_carried_disease_adds_the_fee_to_both_metabolisms() {
+        let mut w = blank_world(5, 5);
+        w.config.spice.enabled = true;
+        w.config.disease.enabled = true;
+        w.config.disease.fee = 1.5;
+        let id = spawn(&mut w, 2, 2);
+        {
+            let a = w.agent_mut(id).unwrap();
+            a.metabolism = 1;
+            a.spice_metabolism = 2;
+            a.diseases = vec![0, 3];
+        }
+        metabolize(&mut w, id, crate::rules::Harvest::default());
+        let a = w.agent(id).unwrap();
+        assert_eq!((a.sugar, a.spice), (10.0 - 4.0, 10.0 - 5.0));
+        w.config.disease.enabled = false;
+        metabolize(&mut w, id, crate::rules::Harvest::default());
+        assert_eq!(
+            w.agent(id).unwrap().sugar,
+            6.0 - 1.0,
+            "no fee while disease is off"
+        );
     }
 }

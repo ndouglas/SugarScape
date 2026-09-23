@@ -231,6 +231,16 @@ impl Agent {
             && self.sugar >= self.initial_sugar
             && (self.initial_spice <= 0.0 || self.spice >= self.initial_spice)
     }
+
+    /// Sugar burned per tick: metabolism plus `fee` per carried disease.
+    pub fn effective_metabolism(&self, fee: f64) -> f64 {
+        f64::from(self.metabolism) + fee * self.diseases.len() as f64
+    }
+
+    /// Spice burned per tick: spice metabolism plus `fee` per carried disease.
+    pub fn effective_spice_metabolism(&self, fee: f64) -> f64 {
+        f64::from(self.spice_metabolism) + fee * self.diseases.len() as f64
+    }
 }
 
 #[cfg(test)]

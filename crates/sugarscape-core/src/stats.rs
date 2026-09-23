@@ -230,8 +230,12 @@ pub fn supply_demand(world: &World) -> SupplyDemand {
         .collect();
     let mut demand = vec![0.0; prices.len()];
     let mut supply = vec![0.0; prices.len()];
+    let fee = world.config.disease.active_fee();
     for a in world.agents() {
-        let (m1, m2) = (f64::from(a.metabolism), f64::from(a.spice_metabolism));
+        let (m1, m2) = (
+            a.effective_metabolism(fee),
+            a.effective_spice_metabolism(fee),
+        );
         for (k, &p) in prices.iter().enumerate() {
             let excess = crate::econ::sugar_demand(p, a.sugar, a.spice, m1, m2) - a.sugar;
             if excess > 0.0 {
@@ -369,5 +373,24 @@ mod tests {
         );
         assert!((sd.equilibrium_quantity - 10.0).abs() < 0.5);
         assert!(sd.actual_price.is_nan(), "no trades this tick");
+    }
+
+    #[test]
+    fn supply_and_demand_use_effective_metabolism() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.spice.enabled = true;
+        w.config.disease.enabled = true;
+        for (x, sugar, spice) in [(0, 30.0, 10.0), (1, 10.0, 30.0)] {
+            let id = spawn(&mut w, x, 0);
+            let a = w.agent_mut(id).unwrap();
+            (a.sugar, a.spice, a.metabolism, a.spice_metabolism) = (sugar, spice, 1, 3);
+        }
+        let healthy = supply_demand(&w);
+        for a in w.agent_ids() {
+            w.agent_mut(a).unwrap().diseases = vec![0, 1];
+        }
+        let sick = supply_demand(&w);
+        assert_ne!(healthy.demand, sick.demand, "weights (1, 3) became (3, 5)");
     }
 }

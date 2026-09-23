@@ -39,11 +39,13 @@ fn obligations(world: &World, id: AgentId) -> f64 {
         .sum()
 }
 
-/// Sets `income` = sugar gathered − sugar metabolism − per-tick obligations.
+/// Sets `income` = sugar gathered − effective sugar metabolism − per-tick
+/// obligations.
 pub(crate) fn record_income(world: &mut World, id: AgentId, sugar_gathered: f64) {
     let owed = obligations(world, id);
+    let fee = world.config.disease.active_fee();
     let a = world.agent_mut(id).expect("live agent");
-    a.income = sugar_gathered - f64::from(a.metabolism) - owed;
+    a.income = sugar_gathered - a.effective_metabolism(fee) - owed;
 }
 
 /// A borrower asks its neighbors, in random order, for its shortfall.
@@ -316,5 +318,23 @@ mod tests {
         w.originate_loan(l, b, 5.0); // due 10 over 10 ticks → 1 per tick
         record_income(&mut w, b, 6.0);
         assert!((w.agent(b).unwrap().income - 3.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn income_counts_the_disease_fee() {
+        let mut w = credit_world();
+        w.config.disease.enabled = true;
+        w.config.disease.fee = 2.0;
+        let b = borrower(&mut w);
+        {
+            let a = w.agent_mut(b).unwrap();
+            a.metabolism = 1;
+            a.diseases = vec![0];
+        }
+        record_income(&mut w, b, 6.0);
+        assert!(
+            (w.agent(b).unwrap().income - 3.0).abs() < 1e-12,
+            "6 − (1 + 2)"
+        );
     }
 }

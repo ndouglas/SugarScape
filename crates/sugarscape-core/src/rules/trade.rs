@@ -34,12 +34,13 @@ struct Holdings {
 
 impl Holdings {
     fn of(world: &World, id: AgentId) -> Self {
+        let fee = world.config.disease.active_fee();
         let a = world.agent(id).expect("live agent");
         Self {
             sugar: a.sugar,
             spice: a.spice,
-            m1: f64::from(a.metabolism),
-            m2: f64::from(a.spice_metabolism),
+            m1: a.effective_metabolism(fee),
+            m2: a.effective_spice_metabolism(fee),
         }
     }
     fn welfare(&self, sugar: f64, spice: f64) -> f64 {
@@ -155,5 +156,29 @@ mod tests {
         trader(&mut w, 5, 15.0, 2.0); // not adjacent
         act(&mut w, a);
         assert!(w.events().trades.is_empty());
+    }
+
+    #[test]
+    fn disease_fees_change_valuations() {
+        // Both agents hold (100, 100) with metabolisms (1, 3): equal MRSs of
+        // 1/3. Two diseases at fee 1 make A's metabolisms (3, 5), MRS 3/5, so
+        // A now values sugar more and buys it.
+        let mut w = blank_world(5, 5);
+        w.config.spice.enabled = true;
+        let a = trader(&mut w, 0, 100.0, 100.0);
+        let b = trader(&mut w, 1, 100.0, 100.0);
+        for id in [a, b] {
+            w.agent_mut(id).unwrap().spice_metabolism = 3;
+        }
+        w.agent_mut(a).unwrap().diseases = vec![0, 1];
+        trade_pair(&mut w, a, b);
+        assert!(
+            w.events().trades.is_empty(),
+            "fees ignored while disease is off"
+        );
+        w.config.disease.enabled = true;
+        trade_pair(&mut w, a, b);
+        assert!(!w.events().trades.is_empty());
+        assert_eq!(w.events().trades[0].buyer, a);
     }
 }

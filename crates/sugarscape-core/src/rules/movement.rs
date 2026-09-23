@@ -70,10 +70,14 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
 /// Multicommodity M: maximize (foresight) welfare after gathering. Pollution
 /// discounts a site's sugar (and spice, if it pollutes) by 1/(1 + p).
 fn act_two_goods(world: &mut World, id: AgentId) -> Harvest {
+    let fee = world.config.disease.active_fee();
     let a = world.agent(id).expect("live agent");
     let (pos, vision, phi) = (a.pos, a.vision, a.foresight);
     let (w1, w2) = (a.sugar, a.spice);
-    let (m1, m2) = (f64::from(a.metabolism), f64::from(a.spice_metabolism));
+    let (m1, m2) = (
+        a.effective_metabolism(fee),
+        a.effective_spice_metabolism(fee),
+    );
     let pollution = world.config.pollution;
     let value = |w: &World, p: Pos| {
         let s = w.site(p);
@@ -242,5 +246,32 @@ mod tests {
         let h = act(&mut w, id);
         assert_eq!((h.sugar, h.spice), (2.0, 3.0));
         assert_eq!(w.site(Pos::new(5, 6)).spice, 0.0);
+    }
+
+    #[test]
+    fn disease_fees_shift_the_two_good_welfare_weights() {
+        // Holding 50 sugar and 5 spice with metabolisms (9, 1), welfare weights
+        // are 0.9/0.1 and 5 more sugar beats 5 more spice. Four diseases at a
+        // fee of 2 make the metabolisms (17, 9): weights 17/26 and 9/26, and
+        // the spice site wins.
+        let target = |sick: bool| {
+            let mut w = blank_world(11, 11);
+            let id = spicy(&mut w, 1);
+            {
+                let a = w.agent_mut(id).unwrap();
+                (a.sugar, a.spice, a.metabolism, a.spice_metabolism) = (50.0, 5.0, 9, 1);
+                if sick {
+                    a.diseases = vec![0, 1, 2, 3];
+                }
+            }
+            w.config.disease.enabled = true;
+            w.config.disease.fee = 2.0;
+            set_sugar(&mut w, 5, 6, 5.0);
+            w.site_mut(Pos::new(6, 5)).spice = 5.0;
+            act(&mut w, id);
+            w.agent(id).unwrap().pos
+        };
+        assert_eq!(target(false), Pos::new(5, 6));
+        assert_eq!(target(true), Pos::new(6, 5));
     }
 }
