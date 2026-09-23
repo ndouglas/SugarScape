@@ -19,6 +19,17 @@ Chapter IV: spice and multicommodity movement, trade (T), credit (L), foresight,
 sugar-as-dirty-good pollution, scheduled rule changes, supply and demand, and
 trade/credit network overlays. See `docs/roadmap.md` for future work.
 
+### Notes
+
+- Painted landscapes and share links carry sugar capacities only; spice capacities always
+  come from the configured landscape (the two-peak map mirrored, or the flat capacity).
+- Two-good runs use floating-point `powf`/`ln`, so results can differ slightly between the
+  native (test) build and the browser build. Share links reproduce a run browser to browser.
+- The `ii-8-pollution` preset is now scheduled (pollution at t = 50, diffusion at t = 100),
+  so older share links to it load as a custom setup.
+- Switching spice on or off rebuilds the world; other rule changes apply to the running
+  world without undoing scheduled changes that have already fired.
+
 ## Running locally
 
 Requirements: Rust with the `wasm32-unknown-unknown` target, `wasm-pack`, Node 22+.
