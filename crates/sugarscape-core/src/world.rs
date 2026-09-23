@@ -386,7 +386,8 @@ impl World {
         }
     }
 
-    /// Splits a dead lender's claims equally among its living children.
+    /// Splits a dead lender's claims equally among its living children; a
+    /// child who is the borrower has its own share forgiven.
     fn pass_on_claims(&mut self, lender: &Agent, claims: Vec<Loan>) {
         let heirs: Vec<AgentId> = lender
             .children
@@ -403,6 +404,10 @@ impl World {
                 continue;
             }
             for &heir in &heirs {
+                if heir == claim.borrower {
+                    // A claim on oneself is forgiven.
+                    continue;
+                }
                 let id = self.next_loan_id;
                 self.next_loan_id += 1;
                 self.loans.insert(

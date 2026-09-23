@@ -8,7 +8,7 @@
 //! pays half its sugar and the remainder is re-lent on the same terms (a
 //! default). A dead borrower's loans are the lender's loss; a dead lender's
 //! loans are cancelled unless inheritance (I) is on, when its living children
-//! split the claim.
+//! split the claim (a child who is the borrower has its share forgiven).
 
 use rand::seq::SliceRandom;
 
@@ -226,6 +226,35 @@ mod tests {
         w.kill(l, DeathCause::OldAge);
         let loan = w.loans().next().expect("claim passes to the child");
         assert_eq!((loan.lender, loan.borrower), (child, b));
+    }
+
+    #[test]
+    fn a_borrower_does_not_inherit_a_claim_on_itself() {
+        let mut w = credit_world();
+        w.config.inheritance.enabled = true;
+        let b = borrower(&mut w);
+        let l = lender(&mut w);
+        borrow(&mut w, b);
+        w.agent_mut(l).unwrap().children = vec![b];
+        w.kill(l, DeathCause::OldAge);
+        assert_eq!(w.loans().count(), 0, "the only heir is the borrower");
+
+        let mut w = credit_world();
+        w.config.inheritance.enabled = true;
+        let b = borrower(&mut w);
+        let l = lender(&mut w);
+        borrow(&mut w, b);
+        let due = w.loans().next().unwrap().due;
+        let sibling = spawn(&mut w, 4, 4);
+        w.agent_mut(l).unwrap().children = vec![b, sibling];
+        w.kill(l, DeathCause::OldAge);
+        let loans: Vec<_> = w.loans().copied().collect();
+        assert_eq!(loans.len(), 1);
+        assert_eq!((loans[0].lender, loans[0].borrower), (sibling, b));
+        assert!(
+            (loans[0].due - due / 2.0).abs() < 1e-12,
+            "the sibling's share"
+        );
     }
 
     #[test]

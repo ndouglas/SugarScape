@@ -87,7 +87,7 @@ Each executed exchange is one trade. The pair is recorded in this tick's trade n
 - **Creditworthiness (interpretation):** a loan of principal P is acceptable if `income × d ≥ P × (1 + r/100 × d)` (simple interest over the loan's life).
 - **Origination (during the borrower's turn):** a potential borrower asks each neighbor in random order; each potential lender lends `min(its available amount, remaining need, largest creditworthy P)`. A loan records lender, borrower, principal, amount due `P × (1 + r/100 × d)`, and due tick `now + d`.
 - **Settlement (step 3):** at the due tick, if the borrower's sugar ≥ amount due, it pays in full. Otherwise it pays half its sugar and a **new loan** (same terms, fresh due date) is originated for the remainder — counted as a default.
-- **Deaths:** borrower dies → loan cancelled (lender's loss). Lender dies → loan cancelled, unless inheritance (I) is on, in which case the claim is split equally among the lender's living children (one new loan per child, same due tick).
+- **Deaths:** borrower dies → loan cancelled (lender's loss). Lender dies → loan cancelled, unless inheritance (I) is on, in which case the claim is split equally among the lender's living children (one new loan per child, same terms and due tick; a child who is itself the borrower has its share forgiven, so no one owes itself).
 - `income` = sugar gathered this turn − sugar metabolism − Σ(amount due / d) over the agent's outstanding loans as borrower.
 
 ## Extras
