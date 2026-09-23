@@ -1,5 +1,5 @@
-//! Milestone-1 invariance: with every Chapter IV rule off, the milestone-1
-//! presets evolve exactly as they did before Chapter IV was added.
+//! Earlier runs are unchanged: with disease off, the milestone-1 and
+//! Chapter IV presets evolve exactly as they did before Chapter V was added.
 
 use sugarscape_core::presets;
 use sugarscape_core::world::World;
@@ -20,6 +20,13 @@ const GOLDEN: &[(&str, u64)] = &[
     ("iii-11-combat-fixed", 0x4c4958c1a3e160e0),
     ("iii-12-collision", 0xfec4ea6a61dd15fc),
     ("iii-14-combat-culture", 0xf9e3a9dd87cda8e),
+    // Chapter IV, recorded before any Chapter V change.
+    ("iv-1-spice", 0xd937df7102a3a4),
+    ("iv-3-trade", 0x6f14b0be4cd3b21e),
+    ("iv-15-trade-sex", 0xda2f681086c8729b),
+    ("iv-3-pollution", 0xa44cef03ce32f537),
+    ("iv-18-foresight", 0x71bdcb5c44708373),
+    ("iv-5-credit", 0xac5bbc30ed0fb306),
 ];
 
 fn fingerprint(id: &str) -> u64 {
@@ -30,10 +37,20 @@ fn fingerprint(id: &str) -> u64 {
 }
 
 #[test]
-fn milestone_one_presets_are_unchanged() {
-    assert!(!GOLDEN.is_empty(), "record the golden values first");
+fn earlier_presets_are_unchanged() {
     for &(id, expected) in GOLDEN {
         assert_eq!(fingerprint(id), expected, "preset {id} changed");
+    }
+}
+
+#[test]
+fn every_preset_has_a_golden_entry() {
+    for p in presets::all() {
+        assert!(
+            GOLDEN.iter().any(|&(id, _)| id == p.id),
+            "record a golden fingerprint for {} (run print_golden)",
+            p.id
+        );
     }
 }
 
