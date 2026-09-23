@@ -25,16 +25,25 @@ disease mutation, outbreaks of novel diseases (the McNeill scenario), Infect and
 tools, and a disease-network overlay. `vi-1-everything` runs every rule from Chapters II–V
 together.
 
+N goods (the book's own software, Chapter IV footnote 7): 1–8 goods and 1–4 pollutants.
+Welfare is the n-dimensional Cobb–Douglas, trade bargains over the pair of goods two
+neighbors value most differently, credit lends every good (footnote 55), and pollution
+follows Appendix B's matrices (each pollutant forms from the goods gathered and eaten and
+devalues the goods it marks). Each good has its own map: a turned copy of the two-peak map,
+a set of peaks, or flat. Presets `n-3-trade`, `n-4-peaks` and `n-2-pollutants` show them.
+
 ### Notes
 
-- Painted landscapes and share links carry sugar capacities only; spice capacities always
-  come from the configured landscape (the two-peak map mirrored, or the flat capacity).
+- Painted landscapes and share links carry a map for each good that differs from its
+  generated one. Share links and configs saved before N goods still load (sugar and spice
+  become goods 0 and 1; the pollution coefficients and scheduled paths are converted).
 - Two-good runs use floating-point `powf`/`ln`, so results can differ slightly between the
   native (test) build and the browser build. Share links reproduce a run browser to browser.
 - The `ii-8-pollution` preset is now scheduled (pollution at t = 50, diffusion at t = 100),
   so older share links to it load as a custom setup.
-- Switching spice on or off rebuilds the world; other rule changes apply to the running
-  world without undoing scheduled changes that have already fired.
+- Adding or removing a good or pollutant, or changing a good's map, rebuilds the world;
+  names, colors, trait ranges and pollution coefficients apply to the running world
+  without undoing scheduled changes that have already fired.
 - Switching disease on or off, and changing the number of diseases, their lengths or the
   immune-string length, rebuilds the world; the fee, flips per tick ("medicine") and
   mutation rates apply to the running world. Outbreaks are listed in the Schedule section.
@@ -45,6 +54,9 @@ together.
   pollution: sick agents pollute more than healthy ones when pollution is on.
 - `vi-1-everything`'s disease flares after each scheduled outbreak (t = 150, 400, 650) and
   tends to die out again before the next one, rather than staying endemic.
+- `vi-1-everything` changed with N goods: credit now lends spice as well as sugar.
+- Legacy links that set "spice pollutes too" with coefficients other than 1 can differ from
+  their old runs in the last bits (α·g₀ + α·g₁ is not always α·(g₀ + g₁) in floating point).
 
 ## Running locally
 

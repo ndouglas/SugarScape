@@ -10,9 +10,13 @@ network overlay and the book's presets (V-1 near-eradication, V-2 endemic, the M
 outbreak), plus `vi-1-everything`. See
 `docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md`.
 
-## N-commodity generalization
+## Milestone 4: N goods (done)
 
-Replace the explicit sugar + spice fields with a list of N goods, matching the book's own software ("in the Sugarscape software system the number of commodities, n, is a user adjustable parameter"). Welfare becomes the N-dimensional Cobb–Douglas `Π wᵢ^(mᵢ/m_T)`; trade becomes pairwise bargaining over a chosen good pair (or a round-robin over pairs); credit generalizes as in the book's footnote 55. Needs: per-good landscapes (map generators, not just two fixed maps), per-good pollution coefficients (the book's general `p = Δr`, `c = Χm` matrices from Appendix B), per-good charts and color layers. Constraint to keep: with N = 1 or 2 the runs must stay byte-identical to the explicit implementation, so existing presets, share links and book tests keep passing.
+Goods and pollutants as lists (1–8 and 1–4), n-dimensional welfare, pairwise trade (widest
+valuation gap first), per-good credit, per-good maps (two-peak transforms, peaks, flat),
+pollution matrices, per-good charts, layers, painting and inspector rows, and the
+`n-3-trade`, `n-4-peaks` and `n-2-pollutants` presets. Earlier presets run unchanged except
+`vi-1-everything`. See `docs/superpowers/specs/2026-09-23-n-goods-design.md`.
 
 ## Experiments and science
 
@@ -25,7 +29,7 @@ Replace the explicit sugar + spice fields with a list of N goods, matching the b
 
 - **More than two tribes**: the book's three-group tag scheme (Blue 0–3 zeros, Green 4–7, Red 8–11) and user-defined group rules.
 - **Alternative bargaining rules**: the book notes a random price in [MRS_A, MRS_B] gives qualitatively similar results — make the bargaining rule pluggable.
-- **Custom landscape generators**: procedural peaks, noise, images → capacity maps; per-good maps once N goods exist.
+- **Custom landscape generators**: noise and images → capacity maps (per-good two-peak transforms, peaks and flat maps exist).
 - **Observational agent trails**: Animation IV-1's "black tail" following one agent's trajectory.
 
 ## Playground and infrastructure
