@@ -37,7 +37,7 @@ async function main(): Promise<void> {
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
   document.querySelector('#toolbar')!.append(buildToolbar(engine));
   document.querySelector('#display')!.append(buildDisplay(engine));
-  const experiments = new ExperimentsView();
+  const experiments = new ExperimentsView(engine);
   document.querySelector('#experiments')!.append(experiments.el);
   const views = { playground: 'Playground', experiments: 'Experiments' } as const;
   type View = keyof typeof views;

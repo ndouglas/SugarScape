@@ -1,12 +1,16 @@
-import { aggregate, builtin_sweeps, sweep_points } from '../wasm-pkg/sugarscape.js';
-import { parseErrors, type FieldError } from '../types';
+import { aggregate, builtin_sweeps, config_series_names, sweep_points } from '../wasm-pkg/sugarscape.js';
+import type { Engine } from '../engine';
+import { parseErrors, type Config, type FieldError } from '../types';
 import { h } from '../ui/dom';
 import { SweepChart } from './chart';
 import { chartData } from './chart-data';
 import { FixedPanel } from './fixed-panel';
+import { defaultForm, numericPaths, type SweepForm } from './form';
+import { FormView } from './form-view';
+import { baseLabel } from './labels';
 import { poolSize, WorkerPool, type WorkerLike } from './pool';
 import { resultsTable } from './results-table';
-import type { BuiltinSweep, Point, RunResult, Summary, Sweep } from './types';
+import type { BuiltinSweep, Point, RunResult, Summary, Sweep, SweepBase } from './types';
 
 /** Each worker loads its own WASM instance (Decision 19). */
 const createWorker = (): WorkerLike => new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
@@ -23,13 +27,13 @@ export interface SweepEditor {
 }
 
 /** Runs on screen and the sweep they belong to (with its JSON, as sent to WASM). */
-interface Shown {
-  sweep: Sweep;
-  spec: string;
-  runs: RunResult[];
-}
+interface Shown { sweep: Sweep; spec: string; runs: RunResult[] }
 
-/** The Experiments view: pick a sweep, run it on workers, show the results. */
+// PF5: reuses `baseLabel` (Task 10, labels.ts) instead of re-implementing its preset/custom-config wording;
+// `baseLabel` reads only `sweep.base`, so a base alone (no full sweep yet) is cast to satisfy its signature.
+const baseNote = (base: SweepBase): string => baseLabel({ base } as unknown as Sweep);
+
+/** The Experiments view: pick or build a sweep, run it on workers, show the results. */
 export class ExperimentsView {
   readonly el: HTMLElement;
   private readonly builtins = JSON.parse(builtin_sweeps()) as BuiltinSweep[];
@@ -45,11 +49,12 @@ export class ExperimentsView {
   private pool: WorkerPool | null = null;
   private shown: Shown | null = null;
 
-  constructor() {
+  constructor(private readonly engine: Engine) {
     this.picker = h(
       'select',
       { 'aria-label': 'Sweep', onchange: () => this.pick(this.picker.value) },
       h('optgroup', { label: 'Built-in' }, ...this.builtins.map((b) => h('option', { value: `builtin:${b.id}` }, b.sweep.name))),
+      h('option', { value: 'current' }, 'From current world'),
     );
     this.el = h(
       'div',
@@ -67,8 +72,36 @@ export class ExperimentsView {
   }
 
   private pick(choice: string): void {
+    if (choice === 'current') {
+      const base = this.currentBase();
+      const painted = 'config' in base && this.engine.editedLandscapes() !== undefined;
+      const note = `${baseNote(base)} from the current world${painted ? ' (painted maps are not included)' : ''}, captured when chosen`;
+      this.setEditor(this.formView(defaultForm(), base, note));
+      return;
+    }
     const builtin = this.builtins.find((b) => choice === `builtin:${b.id}`);
     if (builtin) this.setEditor(new FixedPanel(builtin.sweep, () => this.validate()));
+  }
+
+  /** The current world as a base: its preset when unmodified, otherwise its config (Decision 17). */
+  private currentBase(): SweepBase {
+    const e = this.engine;
+    return e.presetId !== null && !e.isModified() ? { preset: e.presetId } : { config: structuredClone(e.baseConfig) };
+  }
+
+  private configOf(base: SweepBase): Config | null {
+    return 'preset' in base ? (this.engine.presets.find((p) => p.id === base.preset)?.config ?? null) : base.config;
+  }
+
+  private formView(form: SweepForm, base: SweepBase, note: string): FormView {
+    const config = this.configOf(base);
+    let names: string[] = [];
+    try {
+      if (config) names = JSON.parse(config_series_names(JSON.stringify(config))) as string[];
+    } catch {
+      names = [];
+    }
+    return new FormView(form, base, note, config ? numericPaths(config) : [], names, () => this.validate());
   }
 
   private setEditor(editor: SweepEditor): void {
