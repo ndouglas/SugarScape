@@ -18,6 +18,7 @@ use rand::Rng;
 
 use crate::agent::{in_slot_0, Agent, AgentId, Sex};
 use crate::bits::Bits;
+use crate::config::MAX_GOODS;
 use crate::geometry::Pos;
 use crate::world::World;
 
@@ -54,6 +55,7 @@ pub(crate) fn act(world: &mut World, id: AgentId) {
 }
 
 fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
+    let n = world.config.goods.len();
     let a = world.agent(a_id).expect("parent").clone();
     let b = world.agent(b_id).expect("parent").clone();
     let rng = &mut world.rng;
@@ -69,25 +71,18 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
             tags.set(i, b.tags.get(i));
         }
     }
-    let (from_a, from_b) = (a.initial[0] / 2.0, b.initial[0] / 2.0);
-    let (from_a_spice, from_b_spice) = (a.initial[1] / 2.0, b.initial[1] / 2.0);
-    let holdings = [
-        from_a + from_b,
-        from_a_spice + from_b_spice,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-    ];
+    let half = |x: &Agent| -> [f64; MAX_GOODS] {
+        std::array::from_fn(|i| if i < n { x.initial[i] / 2.0 } else { 0.0 })
+    };
+    let (from_a, from_b) = (half(&a), half(&b));
+    let endowment: [f64; MAX_GOODS] = std::array::from_fn(|i| from_a[i] + from_b[i]);
     let mut child = Agent {
         id: 0,
         pos: cradle,
         vision: pick(rng, a.vision, b.vision),
         metabolism: in_slot_0(pick(rng, a.metabolism[0], b.metabolism[0])),
-        holdings,
-        initial: holdings,
+        holdings: endowment,
+        initial: endowment,
         age: 0,
         max_age: pick(rng, a.max_age, b.max_age),
         sex,
@@ -104,8 +99,9 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         diseases: Vec::new(),
         infected_by: None,
     };
-    if world.config.goods.len() >= 2 {
-        child.metabolism[1] = pick(rng, a.metabolism[1], b.metabolism[1]);
+    // Goods 1..n pick where Chapter IV picked spice's metabolism.
+    for (i, m) in child.metabolism.iter_mut().enumerate().take(n).skip(1) {
+        *m = pick(rng, a.metabolism[i], b.metabolism[i]);
     }
     if world.config.foresight.enabled {
         child.foresight = pick(rng, a.foresight, b.foresight);
@@ -121,11 +117,13 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         child.immune = genome;
     }
     let pa = world.agent_mut(a_id).expect("parent");
-    pa.holdings[0] -= from_a;
-    pa.holdings[1] -= from_a_spice;
+    for (have, give) in pa.holdings.iter_mut().zip(&from_a).take(n) {
+        *have -= give;
+    }
     let pb = world.agent_mut(b_id).expect("parent");
-    pb.holdings[0] -= from_b;
-    pb.holdings[1] -= from_b_spice;
+    for (have, give) in pb.holdings.iter_mut().zip(&from_b).take(n) {
+        *have -= give;
+    }
     let child_id = world.insert_agent(child).expect("cradle was empty");
     world
         .agent_mut(a_id)
@@ -277,5 +275,24 @@ mod tests {
         );
         assert_eq!(child.immune, genome, "the phenotype starts untrained");
         assert!(child.diseases.is_empty() && child.infected_by.is_none());
+    }
+
+    #[test]
+    fn with_three_goods_children_get_every_good() {
+        let mut w = blank_world(10, 10);
+        add_goods(&mut w.config, 3);
+        let (mom, dad) = couple(&mut w);
+        for (id, amount, m) in [(mom, 6.0, 2), (dad, 4.0, 5)] {
+            let a = w.agent_mut(id).unwrap();
+            a.holdings[2] = amount;
+            a.initial[2] = amount;
+            a.metabolism[2] = m;
+        }
+        act(&mut w, mom);
+        let child = w.agents().find(|a| a.parents.is_some()).unwrap().clone();
+        assert_eq!((child.holdings[2], child.initial[2]), (5.0, 5.0));
+        assert!([2, 5].contains(&child.metabolism[2]));
+        assert_eq!(w.agent(mom).unwrap().holdings[2], 3.0);
+        assert_eq!(w.agent(dad).unwrap().holdings[2], 2.0);
     }
 }

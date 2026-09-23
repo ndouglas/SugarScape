@@ -205,11 +205,13 @@ impl Agent {
             diseases: Vec::new(),
             infected_by: None,
         };
-        if let Some(second) = config.goods.get(1) {
-            let e = f64::from(second.endowment.sample(rng));
-            agent.holdings[1] = e;
-            agent.initial[1] = e;
-            agent.metabolism[1] = second.metabolism.sample(rng);
+        // Goods 1..n draw where Chapter IV drew spice: after the tags,
+        // endowment then metabolism, in good order.
+        for (i, good) in config.goods.iter().enumerate().skip(1) {
+            let e = f64::from(good.endowment.sample(rng));
+            agent.holdings[i] = e;
+            agent.initial[i] = e;
+            agent.metabolism[i] = good.metabolism.sample(rng);
         }
         if config.foresight.enabled {
             agent.foresight = config.foresight.range.sample(rng);
@@ -226,12 +228,15 @@ impl Agent {
         self.tags.tribe()
     }
 
-    /// Of childbearing age and holding at least the endowment it was born with
-    /// (of spice too, when it was born with spice traits).
+    /// Of childbearing age and holding at least the endowment it was born
+    /// with of every good (goods it was born without are excepted).
     pub fn is_fertile(&self) -> bool {
         (self.fertility_onset..=self.fertility_end).contains(&self.age)
-            && self.holdings[0] >= self.initial[0]
-            && (self.initial[1] <= 0.0 || self.holdings[1] >= self.initial[1])
+            && self
+                .holdings
+                .iter()
+                .zip(&self.initial)
+                .all(|(&have, &born_with)| born_with <= 0.0 || have >= born_with)
     }
 
     /// Units of `good` burned per tick: its metabolism plus `fee` per carried
@@ -337,5 +342,46 @@ mod tests {
             "the genome is drawn after the existing traits"
         );
         assert!(a.diseases.is_empty(), "diseases come from the world's list");
+    }
+
+    #[test]
+    fn every_good_is_drawn_after_the_tags_in_good_order() {
+        use crate::config::{Config, Good, Map, URange};
+        use crate::rng::seeded;
+        let mut two = Config::default();
+        two.add_good(Good::spice());
+        let mut three = two.clone();
+        three.add_good(Good {
+            name: "salt".into(),
+            color: "#7fb3d5".into(),
+            map: Map::Flat { capacity: 1.0 },
+            metabolism: URange::new(7, 7),
+            endowment: URange::new(9, 9),
+        });
+        let a = Agent::random(&two, Pos::new(0, 0), 0, &mut seeded(4));
+        let b = Agent::random(&three, Pos::new(0, 0), 0, &mut seeded(4));
+        assert_eq!(
+            (b.metabolism[2], b.holdings[2], b.initial[2]),
+            (7, 9.0, 9.0)
+        );
+        assert_eq!((b.vision, b.tags, b.max_age), (a.vision, a.tags, a.max_age));
+        assert_eq!(
+            b.holdings[..2],
+            a.holdings[..2],
+            "good 2 draws after goods 0 and 1"
+        );
+        assert_eq!(b.metabolism[..2], a.metabolism[..2]);
+    }
+
+    #[test]
+    fn fertility_needs_every_good_the_agent_was_born_with() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        let id = crate::testkit::spawn(&mut w, 1, 1);
+        let a = w.agent_mut(id).unwrap();
+        a.initial[2] = 4.0;
+        a.holdings[2] = 3.0;
+        assert!(!a.is_fertile(), "short of good 2");
+        a.holdings[2] = 4.0;
+        assert!(a.is_fertile());
     }
 }
