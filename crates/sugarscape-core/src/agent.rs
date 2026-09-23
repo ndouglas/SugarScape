@@ -202,11 +202,12 @@ impl Agent {
         self.tags.tribe()
     }
 
-    /// Of childbearing age and holding at least the endowment it was born with.
+    /// Of childbearing age and holding at least the endowment it was born with
+    /// (of spice too, when it was born with spice traits).
     pub fn is_fertile(&self) -> bool {
         (self.fertility_onset..=self.fertility_end).contains(&self.age)
             && self.sugar >= self.initial_sugar
-            && self.spice >= self.initial_spice
+            && (self.initial_spice <= 0.0 || self.spice >= self.initial_spice)
     }
 }
 
@@ -275,5 +276,17 @@ mod tests {
             (b.vision, b.metabolism, b.sugar),
             "new draws come after the existing ones"
         );
+    }
+
+    #[test]
+    fn spice_counts_for_fertility_only_for_agents_with_spice_traits() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        let id = crate::testkit::spawn(&mut w, 1, 1);
+        let a = w.agent_mut(id).unwrap();
+        a.spice = 9.0;
+        assert!(!a.is_fertile(), "below its spice endowment");
+        a.initial_spice = 0.0;
+        a.spice = -1.0;
+        assert!(a.is_fertile(), "no spice endowment, no spice requirement");
     }
 }

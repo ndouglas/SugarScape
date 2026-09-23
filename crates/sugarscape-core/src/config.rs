@@ -157,6 +157,10 @@ pub const STRUCTURAL_FIELDS: [&str; 6] = [
     "placement",
 ];
 
+/// Paths a schedule may not set because they switch spice on or off, which
+/// changes every agent's traits and so needs a reset.
+pub const RESET_ONLY_PATHS: [&str; 2] = ["spice", "spice.enabled"];
+
 /// At the start of the tick when `World::tick == tick`, set each dotted config
 /// path in `set` to its value.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -497,10 +501,16 @@ impl Config {
         let mut next = self.clone();
         for (path, value) in &change.set {
             let root = path.split('.').next().unwrap_or_default();
-            if STRUCTURAL_FIELDS.contains(&root) {
+            if STRUCTURAL_FIELDS.contains(&root) || RESET_ONLY_PATHS.contains(&path.as_str()) {
                 return Err(FieldError::new(
                     "schedule",
                     format!("{path} changes only on reset"),
+                ));
+            }
+            if root == "schedule" {
+                return Err(FieldError::new(
+                    "schedule",
+                    format!("{path}: the schedule cannot change itself"),
                 ));
             }
             next = next.with_path(path, value)?;
@@ -515,7 +525,8 @@ impl Config {
         Ok(next)
     }
 
-    /// Fields that cannot change on a running world (they shape its storage).
+    /// Fields that cannot change on a running world (they shape its storage,
+    /// or — for spice — every agent's traits).
     pub fn structural_changes(&self, next: &Config) -> Vec<FieldError> {
         let mut out = Vec::new();
         let msg = "changes only on reset";
@@ -530,6 +541,9 @@ impl Config {
         }
         if self.landscape != next.landscape {
             out.push(FieldError::new("landscape", msg));
+        }
+        if self.spice.enabled != next.spice.enabled {
+            out.push(FieldError::new("spice.enabled", msg));
         }
         out
     }
@@ -648,6 +662,19 @@ mod tests {
         assert!(a.structural_changes(&b).is_empty());
         b.tag_length = 5;
         assert_eq!(a.structural_changes(&b)[0].field, "tag_length");
+        let mut c = a.clone();
+        c.spice.enabled = true;
+        assert_eq!(
+            a.structural_changes(&c)[0].field,
+            "spice.enabled",
+            "spice switches only on reset"
+        );
+        c.spice.enabled = false;
+        c.spice.metabolism = URange::new(2, 3);
+        assert!(
+            a.structural_changes(&c).is_empty(),
+            "spice traits may change"
+        );
     }
 
     #[test]
@@ -736,5 +763,34 @@ mod tests {
             vec!["schedule"],
             "trade without spice is invalid"
         );
+    }
+
+    #[test]
+    fn schedule_may_not_switch_spice_or_edit_itself() {
+        let rejected = |path: &str, value: serde_json::Value| {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert_eq!(errs[0].field, "schedule", "{path}");
+            errs[0].message.clone()
+        };
+        let msg = rejected("spice.enabled", serde_json::json!(true));
+        assert!(msg.contains("only on reset"), "{msg}");
+        let spice = serde_json::to_value(Config::default().spice).unwrap();
+        rejected("spice", spice);
+        let msg = rejected("schedule", serde_json::json!([]));
+        assert!(msg.contains("schedule cannot change itself"), "{msg}");
+        // Spice traits for agents born later may still be scheduled.
+        let c = Config {
+            schedule: vec![change(
+                5,
+                "spice.metabolism",
+                serde_json::json!({"min": 1, "max": 2}),
+            )],
+            ..Default::default()
+        };
+        c.validate().unwrap();
     }
 }

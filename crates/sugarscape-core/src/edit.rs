@@ -329,6 +329,16 @@ mod tests {
     }
 
     #[test]
+    fn set_config_rejects_switching_spice_mid_run() {
+        let mut w = blank_world(10, 10);
+        let mut next = w.config.clone();
+        next.spice.enabled = true;
+        let errs = w.set_config(next).unwrap_err();
+        assert_eq!(errs[0].field, "spice.enabled");
+        assert!(!w.config.spice.enabled);
+    }
+
+    #[test]
     fn set_config_ignores_schedule_entries_that_already_fired() {
         use crate::config::ScheduledChange;
         let mut c = blank_config(10, 10);
