@@ -23,6 +23,7 @@ export class RulesPanel {
     const next = structuredClone(this.engine.config);
     mutate(next);
     this.errors = (reset ? this.engine.reset(next) : this.engine.applyConfig(next)) ?? [];
+    if (this.errors.length > 0) this.sync();
     this.renderErrors();
   }
 
@@ -53,9 +54,11 @@ export class RulesPanel {
       {
         onchange: () => {
           this.errors = this.engine.loadPreset(select.value) ?? [];
+          if (this.errors.length > 0) this.sync();
           this.renderErrors();
         },
       },
+      h('option', { value: '', disabled: true }, 'Custom'),
       ...this.engine.presets.map((p) => h('option', { value: p.id }, `${p.name} — ${p.source}`)),
     );
     const badge = h('span', { class: 'badge' }, 'modified');

@@ -61,6 +61,7 @@ export class GridView {
     if (this.canvas.width !== width * CELL || this.canvas.height !== height * CELL) {
       this.canvas.width = width * CELL;
       this.canvas.height = height * CELL;
+      this.canvas.style.aspectRatio = `${width} / ${height}`;
     }
     const ctx = this.ctx;
     ctx.imageSmoothingEnabled = false;
