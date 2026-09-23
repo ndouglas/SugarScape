@@ -218,11 +218,12 @@ fn many_diseases_stay_endemic() {
     //   seed 1: v1 = 0.022902, v2 = 0.045334 (v2/v1 = 1.98)
     //   seed 2: v1 = 0.010603, v2 = 0.042674 (v2/v1 = 4.02)
     //   seed 3: v1 = 0.017767, v2 = 0.078412 (v2/v1 = 4.41)
-    // Mean-of-means: v1 = 0.017091, v2 = 0.055473, ratio ~3.2x -- a
-    // consistent but modest multiple, not the "order of magnitude" the
-    // comment previously claimed (that number came from comparing a single
-    // t=1000 sample of V-2 against V-1's *whole* observed range rather than
-    // seed-matched means).
+    // Mean-of-means: v1 = 0.017091, v2 = 0.055473, a ratio of ~3.2x.
+    //
+    // The contrast is real but noisy. Over seeds 1..=10, V-2 exceeds V-1 in
+    // 8 of 10: V-1 reaches exactly zero for seeds 4 and 7, but seeds 5
+    // (v1 0.0338 vs v2 0.0330) and 10 (v1 0.1173 vs v2 0.0186) invert.
+    // Seeds 1..=3 are the book-test seeds used throughout this file.
     let v1 = presets::by_id("v-1-rid").unwrap().config;
     let v2 = presets::by_id("v-2-endemic").unwrap().config;
     for seed in 1..=3 {
