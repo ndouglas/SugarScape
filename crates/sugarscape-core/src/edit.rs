@@ -133,6 +133,7 @@ impl World {
         if let Some(t) = o.tribe {
             agent.tags = agent.tags.forced_to(t);
         }
+        crate::rules::disease::endow(self, &mut agent);
         self.insert_agent(agent)
     }
 
@@ -385,5 +386,20 @@ mod tests {
         let other = w.inspect(2, 1).unwrap().agent.unwrap();
         assert_eq!(other.loans[0].role, "borrower");
         assert_eq!(w.inspect(1, 1).unwrap().site.spice_capacity, 0.0);
+    }
+
+    #[test]
+    fn placed_agents_get_immune_systems_when_disease_is_on() {
+        let mut w = blank_world(10, 10);
+        w.config.disease.enabled = true;
+        w.diseases = vec![crate::bits::Bits::parse("1111111111").unwrap()];
+        let id = w.place_agent(3, 3, &AgentOverrides::default()).unwrap();
+        let a = w.agent(id).unwrap();
+        assert_eq!(a.immune.len(), 50);
+        assert_eq!(a.immune, a.immune_genome);
+        assert!(
+            a.diseases.len() <= 1,
+            "initial 4 is capped by the list's length"
+        );
     }
 }

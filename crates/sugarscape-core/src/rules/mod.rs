@@ -3,6 +3,7 @@
 pub mod combat;
 pub mod credit;
 pub mod culture;
+pub mod disease;
 pub mod growback;
 pub mod lifecycle;
 pub mod movement;

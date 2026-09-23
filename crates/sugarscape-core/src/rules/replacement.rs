@@ -20,6 +20,7 @@ pub(crate) fn apply(world: &mut World) {
         };
         let mut agent = Agent::random(&world.config, pos, world.tick, &mut world.rng);
         agent.tags = agent.tags.forced_to(tribe);
+        crate::rules::disease::endow(world, &mut agent);
         world.insert_agent(agent).expect("chosen site is empty");
     }
 }
@@ -58,5 +59,22 @@ mod tests {
         w.agent_mut(id).unwrap().metabolism = 50;
         w.step();
         assert_eq!(w.population(), 0);
+    }
+
+    #[test]
+    fn replacements_get_immune_systems_when_disease_is_on() {
+        let mut w = replacing_world();
+        w.config.disease.enabled = true;
+        w.diseases = vec![crate::bits::Bits::parse("1111111111").unwrap()];
+        let id = spawn(&mut w, 2, 2);
+        w.agent_mut(id).unwrap().metabolism = 50;
+        w.step();
+        let newcomer = w.agents().next().unwrap();
+        assert_eq!(newcomer.immune.len(), 50);
+        assert_eq!(newcomer.immune, newcomer.immune_genome);
+        assert!(newcomer.diseases.len() <= 1);
+        if let Some(&d) = newcomer.diseases.first() {
+            assert!(!newcomer.immune.contains(&w.diseases[d as usize]));
+        }
     }
 }

@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use rand::seq::SliceRandom;
 
 use crate::agent::{Agent, AgentId, Tribe};
+use crate::bits::Bits;
 use crate::config::{Config, FieldError, Placement};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
@@ -71,6 +72,8 @@ pub struct World {
     pub sites: Vec<Site>,
     /// True when capacities were supplied or painted rather than generated from the configured landscape.
     pub landscape_edited: bool,
+    /// Chapter V's master list of diseases; a disease's id is its index.
+    pub diseases: Vec<Bits>,
     agents: BTreeMap<AgentId, Agent>,
     occupancy: Vec<Option<AgentId>>,
     pub(crate) rng: SimRng,
@@ -114,6 +117,7 @@ impl World {
                 .map(|(sugar, spice)| Site::full(sugar).with_spice(spice))
                 .collect(),
             landscape_edited: capacities.is_some(),
+            diseases: Vec::new(),
             agents: BTreeMap::new(),
             occupancy: vec![None; torus.len()],
             rng: rng::seeded(seed),
@@ -124,6 +128,9 @@ impl World {
             next_loan_id: 1,
             config,
         };
+        if world.config.disease.enabled {
+            world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
+        }
         world.populate();
         world.stats.push(Snapshot::of(&world));
         Ok(world)
@@ -160,6 +167,7 @@ impl World {
             if let Some(t) = tribe {
                 agent.tags = agent.tags.forced_to(t);
             }
+            rules::disease::endow(self, &mut agent);
             self.insert_agent(agent)
                 .expect("placement cells are distinct and empty");
         }
@@ -305,6 +313,7 @@ impl World {
         };
         let spice = self.config.spice.enabled;
         let foresight = self.config.foresight.enabled;
+        let disease = self.config.disease.enabled;
         eat(self.tick);
         for s in &self.sites {
             eat(s.sugar.to_bits());
@@ -326,6 +335,20 @@ impl World {
             }
             if foresight {
                 eat(u64::from(a.foresight));
+            }
+            if disease {
+                eat(u64::from(a.immune.len()));
+                eat(a.immune.bits());
+                eat(a.diseases.len() as u64);
+                for &d in &a.diseases {
+                    eat(u64::from(d));
+                }
+            }
+        }
+        if disease {
+            for d in &self.diseases {
+                eat(u64::from(d.len()));
+                eat(d.bits());
             }
         }
         for l in self.loans.values() {
@@ -625,5 +648,52 @@ mod tests {
         w.step(); // starts at tick 2: applied
         assert!(w.config.pollution.enabled);
         assert_eq!(w.config.schedule.len(), 1, "the schedule itself is kept");
+    }
+
+    #[test]
+    fn disease_worlds_draw_a_list_and_endow_agents() {
+        let mut c = Config::default();
+        c.disease.enabled = true;
+        let w = World::new(c, 1).unwrap();
+        assert_eq!(w.diseases.len(), 10);
+        assert!(w.diseases.iter().all(|d| (1..=10).contains(&d.len())));
+        let mut carried = 0;
+        for a in w.agents() {
+            assert_eq!(a.immune.len(), 50);
+            assert!(a.diseases.len() <= 4);
+            let mut ids = a.diseases.clone();
+            ids.sort_unstable();
+            ids.dedup();
+            assert_eq!(ids.len(), a.diseases.len(), "distinct diseases");
+            for &d in &a.diseases {
+                assert!(
+                    !a.immune.contains(&w.diseases[d as usize]),
+                    "never starts with a disease it is immune to"
+                );
+            }
+            carried += a.diseases.len();
+        }
+        assert!(carried > 0, "some agents start sick");
+        assert!(World::new(Config::default(), 1)
+            .unwrap()
+            .diseases
+            .is_empty());
+    }
+
+    #[test]
+    fn fingerprint_covers_disease_state_only_when_disease_is_on() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        let id = crate::testkit::spawn(&mut w, 1, 1);
+        let before = w.fingerprint();
+        w.agent_mut(id).unwrap().diseases.push(0);
+        w.agent_mut(id).unwrap().immune.flip(0);
+        assert_eq!(w.fingerprint(), before, "ignored while disease is off");
+        w.config.disease.enabled = true;
+        let on = w.fingerprint();
+        w.agent_mut(id).unwrap().immune.flip(1);
+        assert_ne!(w.fingerprint(), on, "immune strings are hashed");
+        let on = w.fingerprint();
+        w.diseases.push(crate::bits::Bits::parse("101").unwrap());
+        assert_ne!(w.fingerprint(), on, "the disease list is hashed");
     }
 }

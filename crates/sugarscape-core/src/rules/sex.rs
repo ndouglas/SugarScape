@@ -13,6 +13,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::agent::{Agent, AgentId, Sex};
+use crate::bits::Bits;
 use crate::geometry::Pos;
 use crate::world::World;
 
@@ -87,6 +88,10 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         spice_metabolism: 0,
         foresight: 0,
         income: 0.0,
+        immune_genome: Bits::default(),
+        immune: Bits::default(),
+        diseases: Vec::new(),
+        infected_by: None,
     };
     if world.config.spice.enabled {
         child.spice_metabolism = pick(rng, a.spice_metabolism, b.spice_metabolism);

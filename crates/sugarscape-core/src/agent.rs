@@ -3,6 +3,7 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
+use crate::bits::Bits;
 use crate::config::Config;
 use crate::geometry::Pos;
 
@@ -22,6 +23,9 @@ pub enum Tribe {
 }
 
 pub type AgentId = u64;
+
+/// An index into `World::diseases`.
+pub type DiseaseId = u32;
 
 /// A cultural tag string of `len` bits (1..=64); bit `i` is tag position `i`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -152,6 +156,15 @@ pub struct Agent {
     /// Sugar gathered minus sugar metabolism minus per-tick loan obligations,
     /// this turn (credit's creditworthiness input).
     pub income: f64,
+    /// Chapter V: the inherited, untrained immune string (empty while disease
+    /// is off).
+    pub immune_genome: Bits,
+    /// The trained immune string; starts as a copy of the genome.
+    pub immune: Bits,
+    /// Diseases currently carried: distinct indices into `World::diseases`.
+    pub diseases: Vec<DiseaseId>,
+    /// The agent that most recently infected this one.
+    pub infected_by: Option<AgentId>,
 }
 
 impl Agent {
@@ -185,6 +198,10 @@ impl Agent {
             spice_metabolism: 0,
             foresight: 0,
             income: 0.0,
+            immune_genome: Bits::default(),
+            immune: Bits::default(),
+            diseases: Vec::new(),
+            infected_by: None,
         };
         if config.spice.enabled {
             let spice = f64::from(config.spice.endowment.sample(rng));
@@ -194,6 +211,11 @@ impl Agent {
         }
         if config.foresight.enabled {
             agent.foresight = config.foresight.range.sample(rng);
+        }
+        if config.disease.enabled {
+            let genome = Bits::random(config.disease.immune_length, rng);
+            agent.immune_genome = genome;
+            agent.immune = genome;
         }
         agent
     }
@@ -288,5 +310,25 @@ mod tests {
         a.initial_spice = 0.0;
         a.spice = -1.0;
         assert!(a.is_fertile(), "no spice endowment, no spice requirement");
+    }
+
+    #[test]
+    fn immune_genomes_are_drawn_only_when_disease_is_on() {
+        use crate::config::Config;
+        use crate::rng::seeded;
+        let off = Agent::random(&Config::default(), Pos::new(0, 0), 0, &mut seeded(4));
+        assert!(off.immune.is_empty() && off.immune_genome.is_empty());
+        assert!(off.diseases.is_empty() && off.infected_by.is_none());
+        let mut on = Config::default();
+        on.disease.enabled = true;
+        let a = Agent::random(&on, Pos::new(0, 0), 0, &mut seeded(4));
+        assert_eq!(a.immune.len(), 50);
+        assert_eq!(a.immune, a.immune_genome, "the phenotype starts untrained");
+        assert_eq!(
+            (a.vision, a.metabolism, a.sugar, a.tags),
+            (off.vision, off.metabolism, off.sugar, off.tags),
+            "the genome is drawn after the existing traits"
+        );
+        assert!(a.diseases.is_empty(), "diseases come from the world's list");
     }
 }

@@ -1,6 +1,7 @@
 //! Builders for tiny hand-crafted worlds in unit tests.
 
 use crate::agent::{Agent, AgentId, Sex, Tags};
+use crate::bits::Bits;
 use crate::config::{Config, LandscapeKind, Placement, URange};
 use crate::geometry::Pos;
 use crate::world::World;
@@ -23,7 +24,7 @@ pub fn blank_world(width: u32, height: u32) -> World {
 }
 
 /// A fertile-aged female with vision 1, metabolism 0, 10 sugar (endowment 10),
-/// all-zero tags (Blue). Tweak fields through `world.agent_mut(id)`.
+/// all-zero tags (Blue) and all-zero immune strings, no diseases. Tweak fields through `world.agent_mut(id)`.
 pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
     let agent = Agent {
         id: 0,
@@ -46,6 +47,10 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         spice_metabolism: 0,
         foresight: 0,
         income: 0.0,
+        immune_genome: Bits::new(0, world.config.disease.immune_length),
+        immune: Bits::new(0, world.config.disease.immune_length),
+        diseases: Vec::new(),
+        infected_by: None,
     };
     world.insert_agent(agent).expect("test site is empty")
 }
