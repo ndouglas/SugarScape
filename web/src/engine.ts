@@ -14,7 +14,7 @@ import {
 } from './protocol';
 import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
-import { InlineTransport, type Transport } from './transport';
+import { InlineTransport, startWorker, type Transport } from './transport';
 import type { ColorMode, Config, FieldError, Layer, Preset, Snapshot } from './types';
 import init, { presets_json } from './wasm-pkg/sugarscape.js';
 
@@ -57,11 +57,21 @@ function writeFailure(result: Result): FieldError[] | null {
   return failure(result);
 }
 
-/** The page keeps its own WASM instance for presets and Experiments (Decision 10); for now the host runs on it too. */
+/**
+ * The simulation runs in a worker; the page keeps its own WASM instance for presets, Experiments
+ * and, if a module worker cannot start, the simulation itself (Decision 10).
+ */
 async function defaultDeps(): Promise<EngineDeps> {
   const wasm = await init();
   const presets = JSON.parse(presets_json()) as Preset[];
-  return { presets, transport: new InlineTransport(new SimHost(wasmSimModule(wasm.memory))) };
+  let transport: Transport;
+  try {
+    transport = await startWorker();
+  } catch (e) {
+    console.warn('The simulation worker could not start; simulating on the page instead.', e);
+    transport = new InlineTransport(new SimHost(wasmSimModule(wasm.memory)));
+  }
+  return { presets, transport };
 }
 
 /**

@@ -35,6 +35,8 @@ async function main(): Promise<void> {
     showBanner(`That share link could not be loaded (${e instanceof Error ? e.message : String(e)}). Showing the default rule system.`);
     engine = await Engine.create();
   }
+  // Browser checks drive the engine through this handle (Decision 14).
+  if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { sugarscape: { engine } });
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
   document.querySelector('#toolbar')!.append(buildToolbar(engine));
   document.querySelector('#display')!.append(buildDisplay(engine));

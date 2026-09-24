@@ -111,3 +111,32 @@ export class InlineTransport extends PortTransport {
     super(inlinePort(host));
   }
 }
+
+/** How long `startWorker` waits for `ready` before giving up (PF9): the production value. */
+const READY_TIMEOUT_MS = 10_000;
+
+/**
+ * Starts the simulation worker and waits until its WASM is ready; rejects if a module worker
+ * cannot start, its WASM fails to load, or it never answers within `timeoutMs` (PF9) — in every
+ * case the worker is terminated and the caller falls back to `InlineTransport` (Decision 10).
+ */
+export async function startWorker(
+  create: () => PortLike = () => new Worker(new URL('./sim-worker.ts', import.meta.url), { type: 'module' }),
+  timeoutMs = READY_TIMEOUT_MS,
+): Promise<Transport> {
+  const transport = new PortTransport(create());
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(new Error('the simulation worker did not answer ready in time')), timeoutMs);
+  });
+  try {
+    const { result } = await Promise.race([transport.request({ type: 'ready' }), timeout]);
+    if (!result.ok) throw new Error('fatal' in result ? result.fatal : 'the simulation worker did not start');
+    return transport;
+  } catch (e) {
+    transport.close();
+    throw e;
+  } finally {
+    clearTimeout(timer!);
+  }
+}

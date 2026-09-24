@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { fakeModule } from './fake-sim.fixture';
-import type { Command, DisplayState, WorldSnapshot } from './protocol';
+import type { Command, DisplayState, HostRequest, WorldSnapshot } from './protocol';
 import { SimHost } from './sim-host';
-import { InlineTransport, PortTransport, type PortLike } from './transport';
+import { InlineTransport, PortTransport, startWorker, type PortLike } from './transport';
 import type { Config } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
@@ -174,5 +174,50 @@ describe('PortTransport', () => {
     expect(fatal).toEqual([]); // closing on purpose is not the host dying
     const after = await t.request({ type: 'fingerprint' });
     expect(after.result).toEqual(reply.result);
+  });
+});
+
+describe('startWorker', () => {
+  it('resolves once the worker is ready and rejects when it cannot start', async () => {
+    const ready: PortLike = {
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+      postMessage: (m) => queueMicrotask(() => ready.onmessage?.({ data: { id: (m as HostRequest).id, result: { ok: true } } } as MessageEvent)),
+      terminate: () => {},
+    };
+    await expect(startWorker(() => ready)).resolves.toBeInstanceOf(PortTransport);
+    const broken: PortLike = {
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+      postMessage: () => queueMicrotask(() => broken.onerror?.({ message: 'import failed' } as ErrorEvent)),
+      terminate: () => {},
+    };
+    await expect(startWorker(() => broken)).rejects.toThrow('import failed');
+    const noWasm: PortLike = {
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+      postMessage: (m) =>
+        queueMicrotask(() => noWasm.onmessage?.({ data: { id: (m as HostRequest).id, result: { ok: false, fatal: 'WASM failed to load' } } } as MessageEvent)),
+      terminate: () => {},
+    };
+    await expect(startWorker(() => noWasm)).rejects.toThrow('WASM failed to load');
+  });
+
+  it('rejects and terminates the worker if it never answers ready within the timeout (PF9)', async () => {
+    let terminated = false;
+    const silent: PortLike = {
+      onmessage: null,
+      onerror: null,
+      onmessageerror: null,
+      postMessage: () => {},
+      terminate: () => {
+        terminated = true;
+      },
+    };
+    await expect(startWorker(() => silent, 10)).rejects.toThrow();
+    expect(terminated).toBe(true);
   });
 });
