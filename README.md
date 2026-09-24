@@ -94,6 +94,8 @@ Model extensions:
   object) is rejected, same as the goods and pollutant lists. Schedule subpaths instead, e.g.
   `culture.enabled` or a group's `name`/`color`; a whole group or its `zeros` range is
   reset-only too.
+- Above 400 loans, a Credit-tab node's colour (lender, borrower or both) reflects all of its
+  loans, including those left out of the drawing.
 
 ## Experiments
 

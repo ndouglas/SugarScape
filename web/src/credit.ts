@@ -120,3 +120,12 @@ export function creditHeader(layout: CreditLayout): string {
   const text = `${count(layout.agents, 'agent')} · ${count(layout.totalLoans, 'loan')} · ${count(layout.rows.length, 'level')}`;
   return layout.omitted > 0 ? `${text} · the ${layout.loans.length} largest loans drawn (${layout.omitted} omitted)` : text;
 }
+
+/**
+ * x positions for a row of `count` nodes spread evenly over `panelWidth`,
+ * widened (the graph then scrolls) so neighbours are at least `step` apart.
+ */
+export function rowPositions(count: number, panelWidth: number, step: number): { width: number; xs: number[] } {
+  const width = Math.max(panelWidth, (count + 1) * step);
+  return { width, xs: Array.from({ length: count }, (_, i) => ((i + 1) * width) / (count + 1)) };
+}

@@ -162,9 +162,12 @@ body[data-view='experiments'] .toolbar-end { display: none; }
 body[data-view='experiments'] .toolbar .chip { display: none; }
 .credit { display: grid; gap: 8px; }
 .credit .hint { margin: 0; }
-.credit-graph svg { display: block; width: 100%; height: auto; }
+.credit-graph { overflow-x: auto; }
+.credit-graph svg { display: block; }
 .credit-edges line { stroke: var(--muted); stroke-opacity: 0.6; stroke-width: 1; }
 .credit-node { stroke: var(--text); stroke-width: 0.5; cursor: pointer; }
+.credit-node:focus { outline: none; }
+.credit-node:focus-visible { stroke-width: 2.5; }
 .credit-node.lender { fill: var(--lender); }
 .credit-node.borrower { fill: var(--borrower); }
 .credit-node.both { fill: var(--both); }

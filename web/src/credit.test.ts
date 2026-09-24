@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { creditHeader, creditLayout, creditLevels, drawnLoans, type CreditGraph, type CreditLoan } from './credit';
+import { creditHeader, rowPositions, creditLayout, creditLevels, drawnLoans, type CreditGraph, type CreditLoan } from './credit';
 
 const loan = (lender: number, borrower: number, due = 1): CreditLoan => ({ lender, borrower, good: 0, due });
 const idsOf = (loans: CreditLoan[]) => [...new Set(loans.flatMap((l) => [l.lender, l.borrower]))].sort((a, b) => a - b);
@@ -53,5 +53,19 @@ describe('creditLayout', () => {
     const empty = creditLayout({ agents: [], loans: [] });
     expect(empty.rows).toEqual([]);
     expect(creditHeader(empty)).toBe('No outstanding loans.');
+  });
+});
+
+describe('rowPositions', () => {
+  it('spreads a row evenly across the panel when it fits', () => {
+    expect(rowPositions(3, 400, 20)).toEqual({ width: 400, xs: [100, 200, 300] });
+  });
+  it('widens past the panel so nodes keep the minimum spacing', () => {
+    const { width, xs } = rowPositions(50, 300, 20);
+    expect(width).toBe(51 * 20);
+    for (let i = 1; i < xs.length; i++) expect(xs[i] - xs[i - 1]).toBeGreaterThanOrEqual(20);
+  });
+  it('keeps the panel width for an empty row', () => {
+    expect(rowPositions(0, 300, 20)).toEqual({ width: 300, xs: [] });
   });
 });
