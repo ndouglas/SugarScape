@@ -414,7 +414,9 @@ describe('channelDefer', () => {
       defer(() => order.push(1));
       defer(() => order.push(2));
       defer(() => order.push(3));
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      // A fourth deferred callback: when it runs, every earlier one has (a MessagePort message
+      // is not ordered against a timer, so waiting on setTimeout would race).
+      await new Promise<void>((resolve) => defer(resolve));
       expect(order).toEqual([1, 2, 3]);
     } finally {
       spy.mockRestore();
