@@ -116,7 +116,20 @@ export const GROUPS: Group[] = [
       { kind: 'number', path: 'combat.reward', label: 'Reward cap α', min: 0, max: 50, step: 0.5 },
     ],
   },
-  { title: 'Trade (T)', enable: 'trade.enabled', note: 'Needs at least two goods.', controls: [] },
+  {
+    title: 'Trade (T)', enable: 'trade.enabled',
+    note: 'Needs at least two goods. The price rule applies to the running world and can be scheduled.',
+    controls: [
+      {
+        kind: 'select', path: 'trade.price', label: 'Price rule',
+        current: (c) => c.trade.price,
+        options: [
+          { value: 'geometric_mean', label: 'Geometric mean √(MRS_A·MRS_B) (book)', apply: (c) => { c.trade.price = 'geometric_mean'; } },
+          { value: 'random', label: 'Random between the two MRSs (note 15)', apply: (c) => { c.trade.price = 'random'; } },
+        ],
+      },
+    ],
+  },
   {
     title: 'Credit (L)', enable: 'credit.enabled', note: 'Loans in every good, for childbearing; needs sex.',
     controls: [

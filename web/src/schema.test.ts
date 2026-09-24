@@ -26,3 +26,18 @@ describe('culture', () => {
     expect(GROUPS.find((g) => g.enable === 'culture.enabled')?.custom).toBe('groups');
   });
 });
+
+describe('trade', () => {
+  it('offers the two price rules, applied live', () => {
+    const price = control('trade.price');
+    expect(price.kind).toBe('select');
+    if (price.kind !== 'select') return;
+    expect(price.options.map((o) => o.value)).toEqual(['geometric_mean', 'random']);
+    expect(price.reset).toBeUndefined();
+    const c = { trade: { enabled: true, price: 'geometric_mean' } } as unknown as Config;
+    price.options[1].apply(c);
+    expect(price.current(c)).toBe('random');
+    price.options[0].apply(c);
+    expect(c.trade.price).toBe('geometric_mean');
+  });
+});

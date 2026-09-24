@@ -12,6 +12,8 @@ export type Transform =
   | 'transpose'
   | 'anti_transpose';
 
+export type PriceRule = 'geometric_mean' | 'random';
+
 export interface Peak { x: number; y: number; radius: number; height: number }
 
 export type GoodMap =
@@ -66,7 +68,7 @@ export interface Config {
   inheritance: { enabled: boolean };
   culture: { enabled: boolean; groups: TagGroup[] };
   combat: { enabled: boolean; unlimited: boolean; reward: number };
-  trade: { enabled: boolean };
+  trade: { enabled: boolean; price: PriceRule };
   credit: { enabled: boolean; duration: number; rate: number };
   foresight: { enabled: boolean; range: URange };
   disease: DiseaseRule;
