@@ -12,13 +12,13 @@ const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', desc
 /** Lets queued microtasks and zero-delay timers run. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-/** An inline transport that runs `after(cmd)` right after each request is sent, and can rewrite replies. */
+/** An inline transport that runs `after(cmd, wants)` right after each request is sent, and can rewrite replies. */
 class HookedTransport extends InlineTransport {
-  after: ((cmd: Command) => void) | null = null;
+  after: ((cmd: Command, wants?: Wants) => void) | null = null;
   rewrite: ((cmd: Command, reply: HostReply) => HostReply) | null = null;
   override async request(cmd: Command, extra?: { wants?: Wants; frame?: ArrayBuffer }): Promise<HostReply> {
     const pending = super.request(cmd, extra);
-    this.after?.(cmd);
+    this.after?.(cmd, extra?.wants);
     const reply = await pending;
     return this.rewrite ? this.rewrite(cmd, reply) : reply;
   }
@@ -328,5 +328,110 @@ describe('Engine', () => {
     await settle();
     expect(sent).toEqual(['refresh']); // exactly one refresh brings it current
     expect(fresh.behind(groups, engine.tick)).toBe(false);
+  });
+
+  it("keeps wants().select current for a request sent before a new selection's own reply lands (T12 minor 3)", async () => {
+    const { engine, transport } = await setup();
+    await engine.select(2, 1);
+    let capturedWants: Wants | undefined;
+    transport.after = (cmd, wants) => {
+      if (cmd.type === 'inspect') void engine.refresh();
+      else if (cmd.type === 'refresh') capturedWants = wants;
+    };
+    await engine.select(0, 0);
+    transport.after = null;
+    expect(capturedWants?.select).toEqual({ x: 0, y: 0, agentId: null });
+  });
+
+  it("keeps wants().trail current for a request sent before follow's own reply lands (T12 minor 3)", async () => {
+    const { engine, transport } = await setup();
+    let capturedWants: Wants | undefined;
+    transport.after = (cmd, wants) => {
+      if (cmd.type === 'follow') void engine.refresh();
+      else if (cmd.type === 'refresh') capturedWants = wants;
+    };
+    await engine.followAgent(1);
+    transport.after = null;
+    expect(capturedWants?.trail).toBe(true);
+  });
+});
+
+describe('Engine at Max speed', () => {
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  /** A host on a fake clock (1 ms per reading) and a log of the commands the engine sends. */
+  async function maxSetup() {
+    let clock = 0;
+    const transport = new InlineTransport(new SimHost(fakeModule(), () => clock++));
+    const sent: string[] = [];
+    const request = transport.request.bind(transport);
+    transport.request = (cmd, extra) => {
+      sent.push(cmd.type);
+      return request(cmd, extra);
+    };
+    const engine = await Engine.create({ config, seed: 7 }, { presets, transport });
+    engine.setSpeed('max');
+    return { engine, sent };
+  }
+
+  it('runs until paused, handing each posted buffer back', async () => {
+    const { engine, sent } = await maxSetup();
+    let ticks = 0;
+    engine.on('tick', () => ticks++);
+    engine.setRunning(true);
+    await wait(30);
+    for (let i = 0; i < 3; i++) engine.pump();
+    expect(ticks).toBeGreaterThan(1);
+    expect(sent.filter((c) => c === 'frame').length).toBeGreaterThanOrEqual(ticks - 1);
+    engine.setRunning(false);
+    await wait(5);
+    const at = engine.tick;
+    await wait(20);
+    expect(engine.tick).toBe(at);
+    expect(sent.filter((c) => c === 'run')).toHaveLength(1);
+    expect(sent).toContain('stop');
+    expect(sent).not.toContain('step');
+  });
+
+  it('stops before a reset and starts again after it', async () => {
+    const { engine, sent } = await maxSetup();
+    engine.setRunning(true);
+    await wait(10);
+    expect(await engine.reset()).toBeNull();
+    const at = sent.lastIndexOf('reset');
+    expect(sent.lastIndexOf('stop', at)).toBeGreaterThan(sent.indexOf('run'));
+    expect(sent.indexOf('run', at)).toBeGreaterThan(at);
+    const t = engine.tick;
+    await wait(20);
+    expect(engine.tick).toBeGreaterThan(t);
+    engine.setRunning(false);
+  });
+
+  it('applies edits while running', async () => {
+    const { engine } = await maxSetup();
+    engine.setRunning(true);
+    await wait(5);
+    const edits: number[] = [];
+    engine.on('edit', () => edits.push(engine.population));
+    expect(await engine.place(0, 2, {})).toBeNull();
+    expect(edits).toEqual([2]);
+    const t = engine.tick;
+    await wait(20);
+    expect(engine.tick).toBeGreaterThan(t);
+    engine.setRunning(false);
+  });
+
+  it('leaves Max for a step speed', async () => {
+    const { engine, sent } = await maxSetup();
+    engine.setRunning(true);
+    await wait(5);
+    engine.setSpeed(5);
+    await wait(5);
+    expect(sent).toContain('stop');
+    const at = engine.tick;
+    engine.pump();
+    await wait(5);
+    expect(engine.tick).toBe(at + 5);
+    engine.setRunning(false);
   });
 });

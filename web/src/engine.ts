@@ -9,6 +9,7 @@ import {
   type PlaceOverrides,
   type Result,
   type Selected,
+  type SelectQuery,
   type Wants,
   type WorldSnapshot,
 } from './protocol';
@@ -34,6 +35,9 @@ export interface EngineDeps { presets: Preset[]; transport: Transport }
  * change state: a panel records what it received when the snapshot arrives.
  */
 export type WantsProvider = (now: number) => Wants;
+
+/** Ticks per animation frame, or 'max': the host steps flat out and posts about 30 snapshots a second. */
+export type Speed = number | 'max';
 
 /** While paused, extras a panel wants are fetched at most this often. */
 const REFRESH_MS = 250;
@@ -80,7 +84,7 @@ async function defaultDeps(): Promise<EngineDeps> {
  */
 export class Engine {
   running = false;
-  stepsPerFrame = 1;
+  speed: Speed = 1;
   colorMode: ColorMode = 'tribe';
   layer: Layer = 'resource:0';
   overlays: Record<Overlay, boolean> = { trade: false, credit: false, disease: false };
@@ -125,6 +129,18 @@ export class Engine {
   private sentUnder = new WeakMap<WorldSnapshot, number>();
   /** The generation of the request whose reply last set `selection`. */
   private selectedUnder = -1;
+  /**
+   * The selection `wants()` reports while an `inspect`/`select` issued after the confirmed
+   * `selection` hasn't had its own reply resolve yet (T12 minor 3): set the moment the request is
+   * sent, so a request sent before that reply lands (e.g. Max's `frame`) does not carry the stale
+   * selection and clobber the host's own patch. `undefined` means no override is pending.
+   */
+  private pendingSelect: SelectQuery | undefined;
+  /** Guards `pendingSelect` against a superseded inspect's own resolution clearing a newer one. */
+  private pendingSelectSeq = 0;
+  /** Same idea as `pendingSelect`, for `wants().trail` while a `follow`/`unfollow` is outstanding. */
+  private pendingTrail: boolean | undefined;
+  private pendingTrailSeq = 0;
   /** Each good's map where it differs from the generated one (share links; kept across resets). */
   private landscapes: (Uint8Array | null)[] = [];
   /** The frame on screen, and buffers free to lend to the host (Decision 6). */
@@ -136,6 +152,10 @@ export class Engine {
   private inFlight: Promise<void> | null = null;
   /** Writes that need a quiet world hold the frame loop while they run (Decision 8). */
   private holds = 0;
+  /** Whether the host's Max loop should be running (a `run` was sent and no `stop` since). */
+  private maxOn = false;
+  /** The pending `stop`, while one is. */
+  private stopping: Promise<void> | null = null;
   /**
    * The quiet writes (and Steps), one after another: each starts only once the one before has
    * settled, so it is built from the state that write left (two quick edits both take effect).
@@ -151,6 +171,7 @@ export class Engine {
     public seed: number,
   ) {
     transport.onFatal = (message) => this.crash(message);
+    transport.onPost = (s) => this.onPost(s);
   }
 
   /** Throws the core's errors (as an Error message) if `initial` is invalid. */
@@ -203,8 +224,12 @@ export class Engine {
   pump(now: number = performance.now()): void {
     if (this.crashed || this.inFlight || this.holds > 0) return;
     let next: Promise<void> | null = null;
-    if (this.running) next = this.stepNow(this.stepsPerFrame);
-    else if (now - this.lastRefresh >= REFRESH_MS && this.providersWant(now)) next = this.refresh();
+    if (this.running) {
+      // At Max the host runs its own loop (Decision 11).
+      if (this.speed !== 'max') next = this.stepNow(this.speed);
+    } else if (now - this.lastRefresh >= REFRESH_MS && this.providersWant(now)) {
+      next = this.refresh();
+    }
     if (next) this.inFlight = next.finally(() => (this.inFlight = null));
   }
 
@@ -274,10 +299,16 @@ export class Engine {
   setRunning(on: boolean): void {
     this.running = on;
     this.emit('run');
+    this.syncMax();
+  }
+
+  setSpeed(speed: Speed): void {
+    this.speed = speed;
+    this.syncMax();
   }
 
   /** Steps `n` ticks, after the frame loop's step and any queued write (and before later writes). */
-  advance(n: number = this.stepsPerFrame): Promise<void> {
+  advance(n = 1): Promise<void> {
     return this.quiet(() => this.stepNow(n));
   }
 
@@ -384,9 +415,14 @@ export class Engine {
   /** The engine's own wants (Decision 9) merged with every provider's. */
   private wants(now: number): Wants {
     const own: Wants = {};
+    // pendingSelect/pendingTrail (T12 minor 3) stand in for the confirmed selection/follow state
+    // while their own request's reply hasn't landed yet, so a request sent in that window (Max's
+    // `frame`, in particular) reports the new target instead of the one it is replacing.
+    const select = this.pendingSelect !== undefined ? this.pendingSelect : this.selection;
     // While a reset is outstanding the selection belongs to the old world.
-    if (this.selection && this.resetting === 0) own.select = { ...this.selection };
-    if (this.followedId !== null) own.trail = true;
+    if (select && this.resetting === 0) own.select = { ...select };
+    const trail = this.pendingTrail !== undefined ? this.pendingTrail : this.followedId !== null;
+    if (trail) own.trail = true;
     const networks = OVERLAYS.filter((k) => this.overlays[k]);
     if (networks.length > 0) own.networks = networks;
     return mergeWants([own, ...Array.from(this.providers, (p) => p(now))]);
@@ -479,12 +515,14 @@ export class Engine {
 
   /**
    * Runs `fn` after the writes queued before it and the frame loop's step have settled, holding
-   * the loop until `fn` finishes (Decision 8).
+   * the loop until `fn` finishes (Decision 8): Max is stopped (and its acknowledgement awaited)
+   * before `fn` runs, and restarts afterwards if still wanted (Decision 11).
    */
   private async quiet<T>(fn: () => Promise<T>): Promise<T> {
     this.holds++;
     const run = this.writes.then(async () => {
-      while (this.inFlight) await this.inFlight;
+      await this.stopMax();
+      await this.inFlight;
       return fn();
     });
     this.writes = run.catch(() => undefined);
@@ -492,7 +530,39 @@ export class Engine {
       return await run;
     } finally {
       this.holds--;
+      this.syncMax();
     }
+  }
+
+  /** Starts or stops the host's Max loop to match `running`, `speed`, holds and crashes. */
+  private syncMax(): void {
+    const want = this.running && this.speed === 'max' && this.holds === 0 && !this.crashed;
+    if (want && !this.maxOn) {
+      this.maxOn = true;
+      void this.send({ type: 'run' }, true);
+    } else if (!want && this.maxOn) {
+      void this.stopMax();
+    }
+  }
+
+  /** Stops the Max loop; resolves once the stop is acknowledged (so every earlier post has been handled). */
+  private stopMax(): Promise<void> {
+    if (!this.maxOn) return this.stopping ?? Promise.resolve();
+    this.maxOn = false;
+    this.stopping = this.send({ type: 'stop' }).then((result) => {
+      this.stopping = null;
+      if (!result.ok || !result.snapshot) return;
+      const events: EngineEvent[] = result.snapshot.config ? ['config', 'tick'] : ['tick'];
+      this.accept(result.snapshot, events);
+    });
+    return this.stopping;
+  }
+
+  /** A Max-speed snapshot: adopt it, then hand the displaced buffer straight back with fresh wants. */
+  private onPost(s: WorldSnapshot): void {
+    const events: EngineEvent[] = s.config ? ['config', 'tick'] : ['tick'];
+    this.accept(s, events);
+    if (this.maxOn) void this.send({ type: 'frame' }, true);
   }
 
   private keptLandscapes(config: Config): (Uint8Array | null)[] {
@@ -547,13 +617,26 @@ export class Engine {
   private async inspectTarget(target: { x: number; y: number } | { agentId: number }): Promise<void> {
     // Replies to requests already sent carry the old selection.
     this.selectionGen++;
+    // T12 minor 3: reflect this target in wants() immediately, so a request sent before this
+    // command's own reply lands does not carry the selection it is replacing.
+    const seq = ++this.pendingSelectSeq;
+    this.pendingSelect =
+      'agentId' in target
+        ? { x: this.selection?.x ?? 0, y: this.selection?.y ?? 0, agentId: target.agentId }
+        : { x: target.x, y: target.y, agentId: null };
     const result = await this.send({ type: 'inspect', target });
+    // Only clear it if a later inspect/select hasn't already replaced it with its own pending value.
+    if (this.pendingSelectSeq === seq) this.pendingSelect = undefined;
     // An agent that has died gives no inspection: the selection stays, the snapshot is still news.
     if (result.ok && result.snapshot) this.accept(result.snapshot, result.snapshot.inspection ? ['select'] : []);
   }
 
   private async follow(id: number | null): Promise<void> {
+    // T12 minor 3: same reasoning as inspectTarget, for the trail flag.
+    const seq = ++this.pendingTrailSeq;
+    this.pendingTrail = id !== null;
     const result = await this.send({ type: 'follow', id });
+    if (this.pendingTrailSeq === seq) this.pendingTrail = undefined;
     if (result.ok && result.snapshot) this.accept(result.snapshot, ['follow']);
   }
 
@@ -574,6 +657,7 @@ export class Engine {
   private crash(message: string): void {
     if (this.crashed) return;
     this.crashed = message;
+    this.maxOn = false;
     console.error(message);
     this.running = false;
     this.emit('run');

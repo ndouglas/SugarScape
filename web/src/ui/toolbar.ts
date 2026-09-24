@@ -1,15 +1,18 @@
-import { randomSeed, type Engine } from '../engine';
+import { randomSeed, type Engine, type Speed } from '../engine';
 import { h } from './dom';
 
-const SPEEDS = [1, 2, 5, 10, 25, 100];
+const SPEEDS: Speed[] = [1, 2, 5, 10, 25, 100, 'max'];
 
 export function buildToolbar(engine: Engine): HTMLElement {
   const play = h('button', { class: 'primary', onclick: () => engine.setRunning(!engine.running) });
   const step = h('button', { onclick: () => void engine.advance(1), title: 'Advance one tick' }, 'Step');
   const speed = h(
     'select',
-    { title: 'Ticks per frame', onchange: () => (engine.stepsPerFrame = Number(speed.value)) },
-    ...SPEEDS.map((s) => h('option', { value: String(s) }, `${s}×`)),
+    {
+      title: 'Ticks per frame; Max runs the simulation as fast as it goes and redraws about 30 times a second',
+      onchange: () => engine.setSpeed(speed.value === 'max' ? 'max' : Number(speed.value)),
+    },
+    ...SPEEDS.map((s) => h('option', { value: String(s) }, s === 'max' ? 'Max' : `${s}×`)),
   );
   const seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
   const reset = h('button', { onclick: () => void engine.reset(undefined, Number(seed.value) >>> 0) }, 'Reset');
