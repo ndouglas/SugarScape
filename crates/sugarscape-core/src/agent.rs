@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::bits::Bits;
 use crate::config::{group_of, Config, Group, MAX_GOODS};
 use crate::geometry::Pos;
+use crate::social::Social;
 
 /// An array holding `x` for good 0 and zero for every other good.
 pub(crate) fn in_slot_0<T: Copy + Default>(x: T) -> [T; MAX_GOODS] {
@@ -173,6 +174,9 @@ pub struct Agent {
     pub diseases: Vec<DiseaseId>,
     /// The agent that most recently infected this one.
     pub infected_by: Option<AgentId>,
+    /// Neighbor list and friends (observation only: never hashed, exported or
+    /// shared; see `social`).
+    pub social: Social,
 }
 
 impl Agent {
@@ -207,6 +211,7 @@ impl Agent {
             immune: Bits::default(),
             diseases: Vec::new(),
             infected_by: None,
+            social: Social::default(),
         };
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
         // endowment then metabolism, in good order.

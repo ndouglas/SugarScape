@@ -20,6 +20,7 @@ use crate::agent::{in_slot_0, Agent, AgentId, Sex};
 use crate::bits::Bits;
 use crate::config::MAX_GOODS;
 use crate::geometry::Pos;
+use crate::social::Social;
 use crate::world::World;
 
 pub(crate) fn act(world: &mut World, id: AgentId) {
@@ -98,6 +99,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         immune: Bits::default(),
         diseases: Vec::new(),
         infected_by: None,
+        social: Social::default(),
     };
     // Goods 1..n pick where Chapter IV picked spice's metabolism.
     for (i, m) in child.metabolism.iter_mut().enumerate().take(n).skip(1) {

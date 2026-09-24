@@ -17,6 +17,7 @@ pub mod presets;
 pub mod render;
 pub mod rng;
 pub mod rules;
+pub mod social;
 pub mod stats;
 pub mod sweep;
 pub mod world;

@@ -9,6 +9,7 @@ use crate::geometry::Pos;
 use crate::landscape::Site;
 use crate::rng::SimRng;
 use crate::rules::Harvest;
+use crate::social::Seen;
 use crate::world::World;
 
 /// Picks among `(site, distance, value)` candidates: highest value, then
@@ -58,6 +59,7 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     }
     let agent = world.agent(id).expect("live agent");
     let (pos, vision) = (agent.pos, agent.vision);
+    let (tags, mut social) = (agent.tags, agent.social);
     let welfare = |w: &World, p: Pos| {
         let s = w.site(p);
         match devaluation(&w.config, s, 0) {
@@ -73,10 +75,13 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     }
     let target = choose(&candidates, &mut world.rng);
     world.move_agent(id, target);
+    social.moved(world, Seen::at(world, target), tags);
     let site = world.site_mut(target);
     let gathered = site.resource[0];
     site.resource[0] = 0.0;
-    world.agent_mut(id).expect("live agent").holdings[0] += gathered;
+    let a = world.agent_mut(id).expect("live agent");
+    a.holdings[0] += gathered;
+    a.social = social;
     Harvest::of(&[gathered])
 }
 
@@ -88,6 +93,7 @@ fn act_goods(world: &mut World, id: AgentId) -> Harvest {
     let fee = world.config.disease.active_fee();
     let a = world.agent(id).expect("live agent");
     let (pos, vision, phi, held) = (a.pos, a.vision, a.foresight, a.holdings);
+    let (tags, mut social) = (a.tags, a.social);
     let mets = a.effective_metabolisms(n, fee);
     let value = |w: &World, p: Pos| {
         let s = w.site(p);
@@ -111,6 +117,7 @@ fn act_goods(world: &mut World, id: AgentId) -> Harvest {
     }
     let target = choose(&candidates, &mut world.rng);
     world.move_agent(id, target);
+    social.moved(world, Seen::at(world, target), tags);
     let site = world.site_mut(target);
     let mut harvest = Harvest::default();
     for (got, level) in harvest
@@ -126,6 +133,7 @@ fn act_goods(world: &mut World, id: AgentId) -> Harvest {
     for (have, got) in a.holdings.iter_mut().zip(&harvest.gathered).take(n) {
         *have += got;
     }
+    a.social = social;
     harvest
 }
 

@@ -4,6 +4,7 @@ use crate::agent::{Agent, AgentId, Sex, Tags};
 use crate::bits::Bits;
 use crate::config::{Config, Good, Map, Placement, URange, MAX_GOODS};
 use crate::geometry::Pos;
+use crate::social::Social;
 use crate::world::World;
 
 /// Every rule off, a flat zero-capacity landscape and no agents.
@@ -73,6 +74,7 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         immune: Bits::new(0, world.config.disease.immune_length),
         diseases: Vec::new(),
         infected_by: None,
+        social: Social::default(),
     };
     world.insert_agent(agent).expect("test site is empty")
 }

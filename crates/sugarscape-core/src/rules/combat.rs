@@ -21,12 +21,14 @@
 use crate::agent::AgentId;
 use crate::geometry::Pos;
 use crate::rules::{movement::choose, Harvest};
+use crate::social::Seen;
 use crate::world::{DeathCause, World};
 
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let me = world.agent(id).expect("live agent");
     let group = me.group(&world.config.culture.groups);
     let (pos, vision, wealth) = (me.pos, me.vision, me.holdings[0]);
+    let (tags, mut social) = (me.tags, me.social);
     let cap = if world.config.combat.unlimited {
         f64::INFINITY
     } else {
@@ -60,10 +62,13 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
         world.kill(victim_id, DeathCause::Combat);
     }
     world.move_agent(id, target);
+    social.moved(world, Seen::at(world, target), tags);
     let site = world.site_mut(target);
     let gathered = site.resource[0];
     site.resource[0] = 0.0;
-    world.agent_mut(id).expect("live agent").holdings[0] += gathered + loot;
+    let a = world.agent_mut(id).expect("live agent");
+    a.holdings[0] += gathered + loot;
+    a.social = social;
     Harvest::of(&[gathered])
 }
 
