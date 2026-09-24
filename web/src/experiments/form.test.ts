@@ -70,6 +70,14 @@ describe('sweep → form', () => {
     expect(sweepToForm(full)).toEqual(form);
   });
 
+  it('keeps the description', () => {
+    const described: SweepForm = { ...form, description: 'Why vision matters' };
+    const sweep = formToSweep(described, { preset: 'p' }).sweep!;
+    expect(sweep.description).toBe('Why vision matters');
+    expect(sweepToForm(sweep)).toEqual(described);
+    expect(formToSweep(form, { preset: 'p' }).sweep).not.toHaveProperty('description');
+  });
+
   it('round-trips a time series', () => {
     const ts: SweepForm = { ...form, x: { path: '', values: '' }, metric: { ...form.metric, kind: 'timeseries' } };
     expect(sweepToForm(formToSweep(ts, { preset: 'p' }).sweep!)).toEqual(ts);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { poolSize, WorkerPool, type PointReply, type PointRequest, type WorkerLike } from './pool';
+import { parseErrors } from '../types';
 import type { RunResult } from './types';
 
 /** Answers each request after a short, index-dependent delay (so replies arrive out of order). */
@@ -103,5 +104,13 @@ describe('worker pool', () => {
       }),
     ).rejects.toThrow('bad callback');
     expect(workers.every((w) => w.terminated)).toBe(true);
+  });
+});
+
+describe('worker errors', () => {
+  it('labels errors that are not field errors with the given field', () => {
+    expect(parseErrors(new Error('WASM failed to load'), 'worker')).toEqual([{ field: 'worker', message: 'WASM failed to load' }]);
+    expect(parseErrors('boom')).toEqual([{ field: 'config', message: 'boom' }]);
+    expect(parseErrors('[{"field":"ticks","message":"m"}]', 'worker')).toEqual([{ field: 'ticks', message: 'm' }]);
   });
 });

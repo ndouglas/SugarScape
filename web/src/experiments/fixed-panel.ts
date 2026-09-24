@@ -1,6 +1,6 @@
 import type { FieldError } from '../types';
 import { h } from '../ui/dom';
-import { axisLabel, baseLabel, metricLabel } from './labels';
+import { axisLabel, baseLabel, metricLabel, xLabel } from './labels';
 import type { Sweep } from './types';
 
 /** A sweep shown read-only except its seed count and ticks: the built-ins, and files the form cannot express. */
@@ -8,7 +8,7 @@ export class FixedPanel {
   readonly el: HTMLElement;
   private readonly seeds: HTMLInputElement;
   private readonly ticks: HTMLInputElement;
-  private readonly errors = h('div', { class: 'error' });
+  private readonly errors = h('div', { class: 'error', 'aria-live': 'polite' });
 
   constructor(
     private readonly base: Sweep,
@@ -28,7 +28,7 @@ export class FixedPanel {
         h('dt', {}, 'Base'),
         h('dd', {}, baseLabel(base)),
         h('dt', {}, 'x'),
-        h('dd', {}, `${axisLabel(base.x)}: ${base.x.values.length} values`),
+        h('dd', {}, xLabel(base)),
         h('dt', {}, 'Lines'),
         h('dd', {}, lines),
         h('dt', {}, 'Metric'),

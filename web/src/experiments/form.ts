@@ -6,6 +6,8 @@ export interface AxisForm { path: string; values: string }
 export interface MetricForm { kind: Metric['kind']; series: string; from: number; to: number | null; every: number }
 export interface SweepForm {
   name: string;
+  /** Kept as opened; the form does not edit it. */
+  description?: string;
   x: AxisForm;
   /** The second axis: one line per value. */
   series: AxisForm | null;
@@ -66,6 +68,7 @@ export function formToSweep(form: SweepForm, base: SweepBase): { sweep: Sweep | 
     metric,
   };
   if (series) sweep.series = series;
+  if (form.description !== undefined) sweep.description = form.description;
   return { sweep, errors: [] };
 }
 
@@ -99,6 +102,7 @@ export function sweepToForm(sweep: Sweep): SweepForm | null {
   if (!x || (sweep.series && !series)) return null;
   return {
     name: sweep.name,
+    ...(sweep.description === undefined ? {} : { description: sweep.description }),
     x,
     series,
     seeds: sweep.seeds.count,

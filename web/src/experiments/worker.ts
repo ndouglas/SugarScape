@@ -15,7 +15,8 @@ addEventListener('message', async (event: MessageEvent<PointRequest>) => {
     await ready;
     reply = { index, run: JSON.parse(run_point(spec, index)) as RunResult };
   } catch (e) {
-    reply = { index, errors: parseErrors(e) };
+    // Not a core field error (e.g. WASM failed to load): label it `worker`.
+    reply = { index, errors: parseErrors(e, 'worker') };
   }
   postMessage(reply);
 });

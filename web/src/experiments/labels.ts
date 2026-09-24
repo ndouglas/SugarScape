@@ -21,3 +21,8 @@ export function metricLabel(sweep: Sweep): string {
 export function baseLabel(sweep: Pick<Sweep, 'base'>): string {
   return 'preset' in sweep.base ? `preset ${sweep.base.preset}` : 'a custom config';
 }
+
+/** The read-only panel's x entry: the tick for a time series, else the axis and its size. */
+export function xLabel(sweep: Sweep): string {
+  return sweep.metric.kind === 'timeseries' ? 'tick' : `${axisLabel(sweep.x)}: ${sweep.x.values.length} values`;
+}

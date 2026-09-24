@@ -141,7 +141,7 @@ export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit'
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
-export function parseErrors(e: unknown): FieldError[] {
+export function parseErrors(e: unknown, field = 'config'): FieldError[] {
   const text = typeof e === 'string' ? e : e instanceof Error ? e.message : String(e);
   try {
     const parsed: unknown = JSON.parse(text);
@@ -149,5 +149,5 @@ export function parseErrors(e: unknown): FieldError[] {
   } catch {
     // not JSON
   }
-  return [{ field: 'config', message: text }];
+  return [{ field, message: text }];
 }

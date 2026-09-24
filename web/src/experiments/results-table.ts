@@ -1,5 +1,5 @@
 import { h } from '../ui/dom';
-import { fmt } from './format';
+import { fmt, scalarCells } from './format';
 import type { Summary } from './types';
 
 const cells = (tag: 'th' | 'td', values: string[]): HTMLTableCellElement[] => values.map((v) => h(tag, {}, v));
@@ -16,7 +16,7 @@ export function resultsTable(summary: Summary): HTMLElement {
             'tbody',
             {},
             ...summary.rows.map((r) =>
-              h('tr', {}, ...cells('td', [r.series_name, fmt(r.at), String(r.n), fmt(r.mean), fmt(r.sd), fmt(r.min), fmt(r.max)])),
+              h('tr', {}, ...cells('td', scalarCells(r))),
             ),
           ),
         )

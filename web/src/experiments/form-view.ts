@@ -44,13 +44,14 @@ export class FormView {
   }
 
   private errorSlot(key: string): HTMLElement {
-    const el = h('div', { class: 'error' });
+    const el = h('div', { class: 'error', 'aria-live': 'polite' });
     this.errorEls.set(key, el);
     return el;
   }
 
-  private control(label: string, key: string, ...inputs: HTMLElement[]): HTMLElement {
-    return h('div', { class: 'control' }, h('span', {}, label), h('div', { class: 'row' }, ...inputs), this.errorSlot(key));
+  /** A caption and its input in one <label> (so the input is named by the caption), then the control's errors. */
+  private control(label: string, key: string, input: HTMLElement): HTMLElement {
+    return h('div', { class: 'control' }, h('label', {}, h('span', {}, label), h('div', { class: 'row' }, input)), this.errorSlot(key));
   }
 
   private text(value: string, set: (v: string) => void, placeholder: string, list?: string): HTMLInputElement {

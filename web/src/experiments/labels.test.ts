@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Config } from '../types';
-import { axisLabel, baseLabel, metricLabel } from './labels';
+import { axisLabel, baseLabel, metricLabel, xLabel } from './labels';
 import type { Sweep } from './types';
 
 const sweep: Sweep = {
@@ -13,6 +13,12 @@ const sweep: Sweep = {
 };
 
 describe('labels', () => {
+  it('describes the x axis, which is the tick for a time series', () => {
+    expect(xLabel(sweep)).toBe('vision.max: 2 values');
+    const ts: Sweep = { ...sweep, x: { label: 'All runs', values: [{ at: 0, set: {} }] }, metric: { kind: 'timeseries', series: 'population', every: 5 } };
+    expect(xLabel(ts)).toBe('tick');
+  });
+
   it('labels axes', () => {
     expect(axisLabel({ path: 'vision.max', values: [] })).toBe('vision.max');
     expect(axisLabel({ label: 'Vision', path: 'vision.max', values: [] })).toBe('Vision');
