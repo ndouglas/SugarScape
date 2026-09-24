@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reproduce the book's indecomposability demonstration (the same society without and with trade, `vi-2-no-trade` / `vi-3-trade`, plus a presets-menu entry that opens them in Compare) and complete `vi-1-everything`'s views with the neighbor, friends and family networks, Lineage colors, and the age and cultural-tag histograms.
+**Goal:** Set up the book's indecomposability demonstration (the same society without and with trade, `vi-2-no-trade` / `vi-3-trade`, with Chapter IV's traits, plus a presets-menu entry that opens them in Compare, recording honestly that VI-3's curve is reproduced and VI-2's crash is not) and complete `vi-1-everything`'s eighteen views with the neighbor, friends and family networks, Lineage colors, the age and cultural-tag histograms, per-good wealth histograms and total-wealth Lorenz/Gini.
 
-**Architecture:** Each agent carries an observational, fixed-size `Social` record (its neighbor list and up to five friends) that the movement rules fill in right after they move the agent, reading only the occupancy grid and tags, never `World.rng` (crates/sugarscape-core/src/social.rs). `World::neighbor_edges/friend_edges/family_edges/lineage` and `stats::age_histogram/tag_histogram` read it; the renderer gains a `lineage` color mode. The WASM `Sim` exposes the new networks through `networks(kind)` and the histograms as `age_hist`/`tag_hist`; the host adds them to snapshots through `wants` exactly like `wealthHist`; the page adds three overlay checkboxes (drawn by the existing edge renderer, neighbors with a direction marker), a Lineage color mode, two charts (bars, or step outlines in Compare) and a Compare entry in the presets menu.
+**Architecture:** Each agent carries an observational, fixed-size `Social` record (its neighbor list and up to five friends) that the movement rules fill in right after they move the agent, reading only the occupancy grid and tags, never `World.rng` (crates/sugarscape-core/src/social.rs). `World::neighbor_edges/friend_edges/family_edges/lineage` read it; the renderer gains a `lineage` color mode. `stats` gains `age_histogram`, `tag_histogram`, `good_wealths`, `total_wealths` and a `gini_total` series (appended, recorded every tick); the sugar-only `gini`, `mean_wealth`, Lorenz curve and wealth histogram are untouched. The WASM `Sim` exposes the new networks through `networks(kind)` and the distributions as `age_hist`, `tag_hist`, `good_wealth_hist`, `lorenz_total`; the host adds them to snapshots through `wants` exactly like `wealthHist`; the page adds three overlay checkboxes (drawn by the existing edge renderer, neighbors with a direction marker), a Lineage color mode, the new charts (bars, or step outlines in Compare) and a Compare entry in the presets menu.
 
 **Tech Stack:** Rust core (`sugarscape-core`), `wasm-bindgen` (`sugarscape-wasm`), TypeScript + Vite + uPlot + Vitest. No new dependencies.
 
@@ -17,8 +17,9 @@
 - **Quiet when paused.** New data is fetched only while its view is shown and only when stale (7a's rules, ruling PF6): overlays through the engine's own wants (never a reason to refresh), histograms through the Charts panel's distributions provider.
 - **Determinism:** the bookkeeping never reads or advances `World.rng` and never changes the agent iteration order. Task 2's invariance test and the golden test pin it.
 - **Performance:** the bookkeeping runs on every move, so it allocates nothing (fixed-size arrays) and, with culture off, adds no agent lookup. Max-speed throughput on the 200 × 200 / 2 000-agent perf world may drop by at most ~10 % (Task 1 measures it with the CLI).
-- **Copy (verbatim):** checkboxes **Neighbor network**, **Friends network**, **Family network**; color mode **Lineage**; presets-menu entry **Indecomposability — VI-2 vs VI-3 (Compare)** under an optgroup **Compare**; preset ids `vi-2-no-trade`, `vi-3-trade`; chart titles **Age histogram** and **Cultural tags (% zeros by position)**.
-- **Names are binding across tasks** (each task's Interfaces block repeats the ones it uses): core `social::{Social, Seen, Lineage, MAX_FRIENDS}`, `Social::{neighbors, friends, moved}`, `Seen::at`, `Agent.social`, `World::{neighbor_edges, friend_edges, family_edges, lineage}`, `render::{ColorMode::Lineage, FOUNDER, FOUNDER_PARENT, BORN, BORN_PARENT}`, `stats::{age_histogram, tag_histogram}`; WASM `Sim::{age_hist, tag_hist}`, `networks("neighbors" | "friends" | "family")`; web `Overlay`, `OVERLAYS`, `noOverlays`, `overlayAvailable`, `AGE_BIN`, `Wants.ageHist/tagHist`, `WorldSnapshot.ageHist/tagHist`, `SimLike.age_hist/tag_hist`, `arrowHead`, `positionBars`, `positionSteps`, `showsAgeHist`, `showsTagHist`, `DistState`, `distributionsDue`, `distributionWants`, `COMPARE_PRESETS`, `ComparePreset`, `comparePresetStates`, `Toolbar.typedSeed`, `Engine.loadPreset(id, seed?)`.
+- **Sugar views unchanged.** `gini`, `mean_wealth`, the Lorenz curve and the wealth histogram keep their sugar-only meaning; `gini_total` is appended after `trade_pairs` in `SERIES`, so the only existing output that changes is the statistics CSV gaining one column (the export test's header is updated in Task 3). Series are looked up by name everywhere else (charts, sweeps, Experiments, share links carry no statistics).
+- **Copy (verbatim):** checkboxes **Neighbor network**, **Friends network**, **Family network**; color mode **Lineage**; presets-menu entry **Indecomposability — VI-2 vs VI-3 (Compare)** under an optgroup **Compare**; preset ids `vi-2-no-trade`, `vi-3-trade`; chart titles **Age histogram**, **Cultural tags (% zeros by position)**, **Gini coefficient (total wealth)**, **Lorenz curve (total wealth)** and **Wealth distribution · <good name>**; series name `gini_total`.
+- **Names are binding across tasks** (each task's Interfaces block repeats the ones it uses): core `social::{Social, Seen, Lineage, MAX_FRIENDS}`, `Social::{neighbors, friends, moved}`, `Seen::at`, `Agent.social`, `World::{neighbor_edges, friend_edges, family_edges, lineage}`, `render::{ColorMode::Lineage, FOUNDER, FOUNDER_PARENT, BORN, BORN_PARENT}`, `stats::{age_histogram, tag_histogram, good_wealths, total_wealths}`, `Snapshot.gini_total`; WASM `Sim::{age_hist, tag_hist, good_wealth_hist, lorenz_total}`, `networks("neighbors" | "friends" | "family")`; web `Overlay`, `OVERLAYS`, `noOverlays`, `overlayAvailable`, `AGE_BIN`, `Wants.ageHist/tagHist/lorenzTotal/goodWealthHists`, `WorldSnapshot.ageHist/tagHist/lorenzTotal/goodWealthHists`, `Snapshot.gini_total` (types.ts), `SimLike.age_hist/tag_hist/good_wealth_hist/lorenz_total`, `arrowHead`, `positionBars`, `positionSteps`, `showsAgeHist`, `showsTagHist`, `showsTotalWealth`, `showsGoodWealth`, `DistState`, `distributionsDue`, `distributionWants`, `COMPARE_PRESETS`, `ComparePreset`, `comparePresetStates`, `Toolbar.typedSeed`, `Engine.loadPreset(id, seed?)`.
 - Every commit message ends with a blank line and then `Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3`; the commit commands below pass it as a second `-m`. Stage **only** the files named in the task (`git add <paths>`, never `-A`/`.`).
 - Rust tasks finish with `cargo fmt --all && cargo clippy --all-targets -- -D warnings` before committing.
 - Web tasks run `(cd web && npm run build && npm test)`. The build regenerates `web/src/wasm-pkg` (gitignored) with `wasm-pack` and runs `tsc --noEmit` then `vite build`; Vitest imports that package (determinism.test.ts), so always build before testing. Single test files run with `(cd web && npx vitest run src/<file>.test.ts)`.
@@ -27,9 +28,9 @@
 
 ## Why this task order
 
-- **Core first (Tasks 1–3):** the bookkeeping inside the movement rules with its unit tests and the performance measurement (Task 1), the edge and lineage queries, the Lineage render mode and the fingerprint-invariance test (Task 2), then the two histograms (Task 3). Each is testable in Rust alone.
-- **WASM (Task 4)** exposes them; **host and protocol (Task 5)** carry them in snapshots; **the page (Task 6)** draws the overlays and Lineage colors; **charts (Task 7)** draw the histograms, in Compare too.
-- **Presets (Task 8)** come after the views so the measured calibration, golden entries and book-style test land together, and before **the Compare entry (Task 9)**, which needs them in `presets_json`.
+- **Core first (Tasks 1–3):** the bookkeeping inside the movement rules with its unit tests and the performance measurement (Task 1), the edge and lineage queries, the Lineage render mode and the fingerprint-invariance test (Task 2), then the distributions (Task 3: age and tag histograms, and the wealth views — per-good holdings, total wealth, `gini_total`). Each is testable in Rust alone. The wealth views ride along with the histograms through Tasks 3, 4, 5 and 7 because they travel exactly the same path (a core function, a WASM getter, a `wants` flag, a distribution chart).
+- **WASM (Task 4)** exposes them; **host and protocol (Task 5)** carry them in snapshots; **the page (Task 6)** draws the overlays and Lineage colors; **charts (Task 7)** draw the histograms and wealth views, in Compare too.
+- **Presets (Task 8)** come after the views so the fixed setup, the recorded measurement, golden entries and book-style test land together (and VI-1's description can name every view), and before **the Compare entry (Task 9)**, which needs them in `presets_json`.
 - **Docs and full verification (Task 10).**
 
 ## Decisions (where the spec leaves room)
@@ -47,13 +48,15 @@ These are binding; each is repeated in the task that implements it.
 9. **Tag histogram.** `stats::tag_histogram(world)`: for tag positions 0…L−1 (bit i is position i, as `Tags::to_bit_string` prints) the percentage of living agents with a 0 there; all zeros with nobody alive. Drawn at positions 1…L (the book numbers them from 1), y from 0 to 100.
 10. **Overlays on the wire.** `Overlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family'`, `OVERLAYS` in that order, and `noOverlays()` builds the all-off record (the three `Record<Overlay, boolean>` literals in tests and the two in the host and engine use it). `overlayAvailable(kind, config)`: disease needs disease, friends needs culture, family needs sex. `clampDisplay` turns an unavailable overlay off (as it already does for disease) and the display hides its checkbox. Networks travel as today: `wants.networks` from the engine's own wants (never a refresh trigger while paused), `Uint32Array` quadruples.
 11. **Drawing.** Neighbors: `--muted`, 1 px, alpha 0.7, with a filled arrowhead (4 px long, 4 px wide) whose tip stops half a cell short of the target's centre (outside its cell), drawn on the last segment `wrappedSegments` returns — the one that ends at the target — so a wrapped edge's marker is on the right side. Friends `--c1`, family `--accent`, 1.5 px, alpha 0.8, no marker. Edges crossing the torus edge are split exactly as the existing networks are. In Compare each grid draws its own world's networks (the display is already mirrored to B and B's host clamps it for B's rules).
-12. **Charts.** Two charts join the top section after **Wealth distribution**: **Age histogram** (`kind: 'age'`, shown while `lifespan.enabled`, x "Age") and **Cultural tags (% zeros by position)** (`kind: 'tags'`, shown while `culture.enabled`, x "Tag position", y 0–100). One world: bars; Compare: one step outline per world (A solid, B dashed), exactly like the wealth histogram. They are distributions: fetched with the Lorenz curve through the same provider rule, now the pure `distributionsDue(dist, tick, now, 250)` + `distributionWants(config)` in `series-data.ts` (testable without uPlot); a histogram the world stopped sending (lifetimes or culture turned off) is cleared, not kept.
-13. **VI-2 / VI-3 setup.** Both presets are built by one helper, `indecomposability(c, trade)`: 500 agents, Chapter III demography (`demography`: sex and lifespan on, lifetimes 60–100, fertility at its defaults 12–15 / 40–50 / 50–60), spice on Chapter IV's mirrored map, the calibrated vision, metabolism and endowment (equal for both goods), and `trade.enabled = trade` — nothing else differs (a unit test pins it). Vision and metabolism ranges are "not fixed by the text" like endowments and fertility ages (the book names only the landscape, the population, M and S), so the calibration may choose them; any choice applies to both presets.
-14. **Calibration** (Task 8). `measure_indecomposability` runs eight candidates (vision, metabolism, endowment), in a fixed order that starts from Chapter IV's own traits, on seeds 1–5 × up to 1 000 ticks, printing per run: the tick VI-2/VI-3 reached population 0 (if any), the population at t = 1000, the peak population ÷ 500, the number of population peaks and the widest spacing between consecutive peaks (`population_peaks`: the 21-tick centered moving average's local maxima that are the maximum within ±40 ticks, t ≥ 50). **Choose the first candidate in the list for which all five VI-2 runs reach 0 by t = 1000 and all five VI-3 runs are alive at t = 1000 with at least two peaks.** Planning measured the whole list (numbers in Task 8): only candidate 7 (vision 1–5, metabolism 1–2, endowment 65 for both goods) qualifies, and its neighbours at endowment 64 and 66 do not, so the separation is a knife edge; the preset comment and description say so. If a re-run prints different numbers, apply the same rule to them; if no candidate qualifies, stop and report BLOCKED with the table (the controller decides; do not try other candidates).
-15. **Book-style thresholds** come from the chosen candidate's measurements by fixed rules: `VI2_EXTINCT_BY` = the latest VI-2 extinction tick rounded up to a multiple of 50; `VI3_PEAK_FACTOR` = the smallest VI-3 peak ÷ 500 rounded down to a multiple of 0.05; `VI3_WIDEST_SPACING` = the smallest VI-3 widest spacing rounded down to a multiple of 10. With the planning numbers: 900, 1.25, 290. The book's "more than twice the initial population", "minima … at 700 agents" and "roughly 115 years" are not reproduced by these rules; per the spec the recorded measurements stand, and the descriptions say so.
+12. **Charts (age and tags).** Two charts join the top section after **Wealth distribution**: **Age histogram** (`kind: 'age'`, shown while `lifespan.enabled`, x "Age") and **Cultural tags (% zeros by position)** (`kind: 'tags'`, shown while `culture.enabled`, x "Tag position", y 0–100). One world: bars; Compare: one step outline per world (A solid, B dashed), exactly like the wealth histogram. They are distributions: fetched with the Lorenz curve through the same provider rule, now the pure `distributionsDue(dist, tick, now, 250)` + `distributionWants(config)` in `series-data.ts` (testable without uPlot); a histogram the world stopped sending (lifetimes or culture turned off) is cleared, not kept.
+13. **VI-2 / VI-3 setup (fixed, no search).** Both presets are built by one helper, `indecomposability(c, trade)`: 500 agents, Chapter III demography (`demography`: sex and lifespan on, lifetimes 60–100, fertility at its defaults 12–15 / 40–50 / 50–60), Chapter IV's traits (vision 1–10, metabolism 1–5 and endowment 25–50 for both sugar and spice, as `iv-1-spice`), spice on Chapter IV's mirrored map, and `trade.enabled = trade` — nothing else differs (a unit test pins it). No rule changes. (`demography` sets sugar's endowment to 50–100; the helper overrides it after, as `iv-18-foresight` does.)
+14. **The reproduction finding** (the spec's, recorded 2026-09-24). Every stated rule matches the book and Appendix B; with these settings `vi-3-trade` reproduces VI-3's curve on seeds 1–5 (a dip to 102–175 by t ≈ 100–150, recovery to 1.69–1.99 × 500, then fluctuation with minima near 700: 685–823 after t = 300), but `vi-2-no-trade` does the same (dip to 146–235, peak 1.75–1.89 ×, minima 721–736) and does **not** crash. Under these rules trade moves holdings toward each agent's metabolism ratio and does not raise fertility (the per-good fertility test). Task 8 measures and records the populations every 50 ticks in a code comment; both descriptions and the README say plainly that VI-3 reproduces the book's curve and that VI-2's crash is not reproduced under the book's stated rules, most likely because of unreported details of the original software.
+15. **Book-style thresholds** (VI-3 only; VI-2 is pinned by its golden entry). From Task 8's measurement by fixed rules: `VI3_TROUGH_BELOW` = the largest per-seed minimum population over t ≤ 150, plus 1, rounded up to a multiple of 25; `VI3_RECOVERY_FACTOR` = the smallest per-seed peak ÷ 500 rounded down to a multiple of 0.05. Planning measured largest trough 175 and smallest peak 1.69, giving 200 and 1.65. The test also requires survival to t = 1000.
 16. **The Compare entry.** A web-side table `COMPARE_PRESETS` (`id`, `label`, preset ids `a` and `b`) feeds an optgroup **Compare** at the end of the playground's (A's) preset select, option values `compare:<id>`; B's Rules panel (Compare's "Rules for: B") has no Compare entries. Choosing it: the select snaps back to the current preset; the seed is the seed box's typed value (`Toolbar.typedSeed()`, as Reset reads it); if Compare is on it is left keeping A first (as opening a session file does); then, `busy` and held, A rebuilds as `vi-2-no-trade` at that seed (`engine.loadPreset(a, seed)`, so A's preset badge shows it), the address-bar hash is cleared, and B is built from `vi-3-trade` at the same seed through the existing `buildCompare(state)` path — both at t = 0, settled by the lockstep coordinator, exactly as a `#c=` link opens. Failures show a notice.
-17. **VI-1's eighteen views.** `vi-1-everything`'s description gains where each view lives. Two of the book's views have close stand-ins rather than exact matches, and the description is worded to cover them: view 4 (spice wealth histogram) is the Mean holdings chart's spice line, and view 5 (Lorenz curve and Gini "for total wealth") uses sugar wealth, as the Lorenz chart always has. Its config is unchanged (golden entry unchanged).
+17. **VI-1's eighteen views.** `vi-1-everything`'s description lists all eighteen, in the book's order, and where each lives, with no stand-ins: 3 the sugar wealth histogram (Charts → Wealth distribution), 4 the spice wealth histogram (Charts → Goods → Wealth distribution · spice), 5 the total-wealth Lorenz curve and `gini_total` (Charts → Goods). Its config is unchanged (golden entry unchanged).
 18. **Performance measurement.** Before any change, build the CLI and keep the binary; afterwards run both on two JSON configs of the perf world (200 × 200, 2 000 agents, a noise sugar map; culture on and off), seven times each, compare the median `user` seconds: each must be ≤ 1.10 × the baseline, and the fingerprints must match (a behavior check). Planning measured +7 % (culture on, 1.27 → 1.36 s) and +5 % (off, 1.17 → 1.23 s); a first version that looked agents up again after the move cost +11 %, which is why the movers carry `social`.
+
+19. **Wealth views** (the spec's "Wealth views"). `stats::good_wealths(world, good)` = each living agent's holding of `good` (id order; `wealths` becomes `good_wealths(world, 0)`, same values); `stats::total_wealths(world)` = each agent's holdings of goods 0…n−1 summed in good order starting from good 0 (so with one good it is exactly `wealths`, and `gini_total == gini` bit for bit). `Snapshot.gini_total = gini(&total_wealths(world))`, appended to `SERIES` after `trade_pairs` (25 names), so it is in `series_names`, the statistics CSV, chart groups, sweeps and Experiments like every series. The per-good histograms use today's `stats::histogram(values, 20)`; WASM `good_wealth_hist(good, bins)` (a field error for a missing good) and `lorenz_total(points)`. The host answers `wants.goodWealthHists` with one histogram per good of the live config and `wants.lorenzTotal` with 101 points. Charts (Goods section, shown with two or more goods, `showsTotalWealth`): **Gini coefficient (total wealth)** (a time chart of `gini_total`, y 0–1), **Lorenz curve (total wealth)** (drawn like the Lorenz curve, with the equality line), and one **Wealth distribution · <good>** per good (eight table entries `goodWealth` 0–7, each shown while a world has that good, `showsGoodWealth(good)`; x "Holding", bars in the good's color; Compare: step outlines, A solid, B dashed). They are distributions fetched by the same provider rule as the Lorenz curve (`distributionWants` adds `lorenzTotal` and `goodWealthHists` with two or more goods). Stats are not hashed, so every fingerprint is unchanged (planning checked: golden, legacy and the web determinism tests stay green). The extra Gini per tick is one more sort of the population; it lands after Task 1's performance measurement and costs about as much as the existing `gini`.
 
 ## File Structure
 
@@ -67,26 +70,27 @@ crates/sugarscape-core/src/rules/sex.rs      MOD  newborns' Social::default() (1
 crates/sugarscape-core/src/testkit.rs        MOD  spawn's Social::default() (1)
 crates/sugarscape-core/src/render.rs         MOD  ColorMode::Lineage and its colors (2)
 crates/sugarscape-core/tests/invariants.rs   MOD  observing does not change a run (2)
-crates/sugarscape-core/src/stats.rs          MOD  age_histogram, tag_histogram (3)
-crates/sugarscape-wasm/src/lib.rs            MOD  networks kinds, age_hist, tag_hist (4)
+crates/sugarscape-core/src/stats.rs          MOD  age_histogram, tag_histogram, good_wealths, total_wealths, gini_total (3)
+crates/sugarscape-core/src/export.rs         MOD  the CSV header test gains gini_total (3)
+crates/sugarscape-wasm/src/lib.rs            MOD  networks kinds, age_hist, tag_hist, good_wealth_hist, lorenz_total (4)
 crates/sugarscape-wasm/tests/web.rs          MOD  (4)
-web/src/protocol.ts, protocol.test.ts        MOD  overlays, noOverlays, ageHist/tagHist (5)
+web/src/protocol.ts, protocol.test.ts        MOD  overlays, noOverlays, ageHist/tagHist/lorenzTotal/goodWealthHists (5)
 web/src/layers.ts, layers.test.ts            MOD  overlayAvailable, clampDisplay (5)
-web/src/types.ts                             MOD  ColorMode 'lineage' (5)
-web/src/sim-host.ts, sim-host.test.ts        MOD  AGE_BIN, histograms in snapshots (5)
-web/src/fake-sim.fixture.ts                  MOD  age_hist, tag_hist, sex/lifespan/culture (5)
+web/src/types.ts                             MOD  ColorMode 'lineage', Snapshot.gini_total (5)
+web/src/sim-host.ts, sim-host.test.ts        MOD  AGE_BIN, histograms and wealth views in snapshots (5)
+web/src/fake-sim.fixture.ts                  MOD  age_hist, tag_hist, good_wealth_hist, lorenz_total, sex/lifespan/culture (5)
 web/src/transport.test.ts                    MOD  noOverlays (5)
 web/src/engine.ts                            MOD  noOverlays (5); loadPreset seed (9)
 web/src/ui/display.ts                        MOD  Lineage mode, three checkboxes (6)
 web/src/ui/overlay.ts, overlay.test.ts       MOD  arrowHead (6)
 web/src/ui/grid-view.ts                      MOD  overlay styles, direction markers (6)
 web/src/determinism.test.ts                  MOD  Chapter VI views change nothing (6)
-web/src/ui/series-data.ts, series-data.test.ts MOD positionBars/Steps, distributions (7)
-web/src/ui/charts-panel.ts                   MOD  age and tag charts (7)
+web/src/ui/series-data.ts, series-data.test.ts MOD positionBars/Steps, visibility, distributions (7)
+web/src/ui/charts-panel.ts                   MOD  age, tag and wealth charts (7)
 web/src/engine.test.ts                       MOD  quiet when paused (7); loadPreset seed (9)
 crates/sugarscape-core/src/presets.rs        MOD  vi-2-no-trade, vi-3-trade, vi-1 description (8)
 crates/sugarscape-core/tests/golden.rs       MOD  two entries (8)
-crates/sugarscape-core/tests/book.rs         MOD  measurement and book-style test (8)
+crates/sugarscape-core/tests/book.rs         MOD  measurement print-out and VI-3 book-style test (8)
 web/src/compare-presets.ts, compare-presets.test.ts NEW (9)
 web/src/ui/rules-panel.ts                    MOD  Compare optgroup (9)
 web/src/ui/toolbar.ts                        MOD  typedSeed (9)
@@ -838,16 +842,16 @@ git commit -m "Add neighbor, friend and family networks and the Lineage color mo
 
 ---
 
-### Task 3: Age and cultural-tag histograms in the core
+### Task 3: Histograms and wealth views in the core
 
-*Mechanical (full code).* Browser (controller): nothing to check.
+*Mechanical (full code).* Browser (controller): Export → Statistics (CSV) on `ii-2-unit` has a `gini_total` column after `trade_pairs` equal to `gini` on every row; on `iv-1-spice` it differs.
 
 **Files:**
-- Modify: `crates/sugarscape-core/src/stats.rs`, `crates/sugarscape-core/tests/invariants.rs`
+- Modify: `crates/sugarscape-core/src/stats.rs`, `crates/sugarscape-core/src/export.rs`, `crates/sugarscape-core/tests/invariants.rs`
 
 **Interfaces:**
-- Consumes: `World::{agents, population, config}`, `Tags::get`.
-- Produces: `pub fn age_histogram(world: &World, bin: u32) -> Vec<f64>` (`(max_age.max + 1) / bin + 1` counts; panics on `bin == 0`), `pub fn tag_histogram(world: &World) -> Vec<f64>` (`tag_length` percentages, position 0 first).
+- Consumes: `World::{agents, population, config}`, `Tags::get`, `stats::{gini, histogram, lorenz, wealths}`, `testkit::{blank_world, spawn, add_goods}`.
+- Produces (Decisions 8, 9, 19): `pub fn age_histogram(world: &World, bin: u32) -> Vec<f64>` (`(max_age.max + 1) / bin + 1` counts; panics on `bin == 0`), `pub fn tag_histogram(world: &World) -> Vec<f64>` (`tag_length` percentages, position 0 first), `pub fn good_wealths(world: &World, good: usize) -> Vec<f64>`, `pub fn total_wealths(world: &World) -> Vec<f64>`, `Snapshot.gini_total: f64`, `SERIES: [&str; 25]` ending `"trade_pairs", "gini_total"`, `Snapshot::value("gini_total")`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -888,7 +892,44 @@ Append inside `stats.rs`'s `mod tests`:
         assert_eq!(h.len(), 11);
         assert_eq!((h[0], h[1], h[2], h[10]), (0.0, 50.0, 100.0, 50.0));
     }
+
+    #[test]
+    fn per_good_and_total_wealth() {
+        use crate::testkit::*;
+        let mut w = blank_world(10, 10);
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        w.agent_mut(a).unwrap().holdings[..3].copy_from_slice(&[1.0, 4.0, 2.0]);
+        w.agent_mut(b).unwrap().holdings[..3].copy_from_slice(&[3.0, 0.0, 9.0]);
+        assert_eq!(wealths(&w), vec![1.0, 3.0]);
+        assert_eq!(total_wealths(&w), vec![1.0, 3.0], "one good: sugar only");
+        add_goods(&mut w.config, 3);
+        assert_eq!(good_wealths(&w, 1), vec![4.0, 0.0]);
+        assert_eq!(good_wealths(&w, 2), vec![2.0, 9.0]);
+        assert_eq!(total_wealths(&w), vec![7.0, 12.0]);
+        assert_eq!(wealths(&w), vec![1.0, 3.0], "the sugar views are unchanged");
+    }
+
+    #[test]
+    fn gini_total_is_recorded_every_tick_and_equals_gini_with_one_good() {
+        let mut one = World::new(Config::default(), 3).unwrap();
+        one.run(5);
+        for s in one.stats.history() {
+            assert_eq!(s.gini_total, s.gini);
+        }
+        let mut c = Config::default();
+        c.add_good(crate::config::Good::spice());
+        let mut two = World::new(c, 3).unwrap();
+        two.run(5);
+        let s = two.stats.latest().unwrap();
+        assert_eq!(s.gini_total, gini(&total_wealths(&two)));
+        assert_ne!(s.gini_total, s.gini);
+        assert_eq!(two.stats.series("gini_total").unwrap().len(), 6);
+        assert_eq!(series_names(&two.config)[SERIES.len() - 1], "gini_total");
+    }
 ```
+In `crates/sugarscape-core/src/export.rs`'s test, change the expected header's `…,new_infections,trade_pairs,mean_holding_0,…` to `…,new_infections,trade_pairs,gini_total,mean_holding_0,…` (the only change to that string).
+
 In `tests/invariants.rs`'s `observing_networks_and_lineage_does_not_change_a_run`, rename it `observing_networks_lineage_and_histograms_does_not_change_a_run`, change `use sugarscape_core::presets;` to `use sugarscape_core::{presets, stats};`, and replace `assert!(edges + classes > 0);` with
 ```rust
             let hists =
@@ -899,7 +940,7 @@ In `tests/invariants.rs`'s `observing_networks_and_lineage_does_not_change_a_run
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `cargo test -p sugarscape-core --lib stats`
-Expected: FAIL to compile — `cannot find function age_histogram` / `tag_histogram`.
+Expected: FAIL to compile — `cannot find function age_histogram` / `tag_histogram` / `good_wealths` / `total_wealths`, no field `gini_total`.
 
 - [ ] **Step 3: Implement**
 
@@ -939,23 +980,59 @@ pub fn tag_histogram(world: &World) -> Vec<f64> {
         .collect()
 }
 ```
+Then the wealth views (Decision 19). Replace
+```rust
+pub fn wealths(world: &World) -> Vec<f64> {
+    world.agents().map(|a| a.holdings[0]).collect()
+}
+```
+with
+```rust
+pub fn wealths(world: &World) -> Vec<f64> {
+    good_wealths(world, 0)
+}
+
+/// Every living agent's holding of good `good`, in id order.
+pub fn good_wealths(world: &World, good: usize) -> Vec<f64> {
+    world.agents().map(|a| a.holdings[good]).collect()
+}
+
+/// Every living agent's total wealth: its holdings of all the world's goods
+/// summed in good order (the book never defines it for two goods; this is
+/// the natural reading of VI-1's "Lorenz curve and Gini coefficient for
+/// total wealth"). With one good it is `wealths`.
+pub fn total_wealths(world: &World) -> Vec<f64> {
+    let n = world.config.goods.len();
+    world
+        .agents()
+        .map(|a| a.holdings[1..n].iter().fold(a.holdings[0], |sum, h| sum + h))
+        .collect()
+}
+```
+Change `pub const SERIES: [&str; 24] = [` to `pub const SERIES: [&str; 25] = [` and add `"gini_total",` after `"trade_pairs",` at its end. In `struct Snapshot`, after `pub trade_pairs: u32,` add
+```rust
+    /// Gini coefficient of total wealth (every good's holdings summed);
+    /// equals `gini` in a one-good world.
+    pub gini_total: f64,
+```
+in `Snapshot::of`'s struct literal, after `trade_pairs,` add `gini_total: gini(&total_wealths(world)),`; and in `value`, after `"trade_pairs" => f64::from(self.trade_pairs),` add `"gini_total" => self.gini_total,`.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cargo test -p sugarscape-core`
-Expected: PASS.
+Run: `cargo test --workspace`
+Expected: PASS — including `golden` (statistics are not hashed: every fingerprint is unchanged), `legacy`, the CLI tests (its series CSV check counts rows only), and the existing `series_names` and "every SERIES name has a value" tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 cargo fmt --all && cargo clippy --all-targets -- -D warnings
-git add crates/sugarscape-core/src/stats.rs crates/sugarscape-core/tests/invariants.rs
-git commit -m "Add the age and cultural-tag histograms" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
+git add crates/sugarscape-core/src/stats.rs crates/sugarscape-core/src/export.rs crates/sugarscape-core/tests/invariants.rs
+git commit -m "Add the age, tag and per-good wealth histograms and the total-wealth Gini" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
 ```
 
 ---
 
-### Task 4: The new networks and histograms in WASM
+### Task 4: The new networks, histograms and wealth views in WASM
 
 *Mechanical (full code).* Browser (controller): nothing to check (the page does not ask for them yet).
 
@@ -964,8 +1041,8 @@ git commit -m "Add the age and cultural-tag histograms" -m "Claude-Session: http
 - Test: `crates/sugarscape-wasm/tests/web.rs`
 
 **Interfaces:**
-- Consumes: `World::{neighbor_edges, friend_edges, family_edges}` (Task 2), `stats::{age_histogram, tag_histogram}` (Task 3), `render` with `"lineage"` (Task 2).
-- Produces (`#[wasm_bindgen] impl Sim`): `networks(kind)` also accepts `"neighbors"`, `"friends"`, `"family"`; `pub fn age_hist(&self, bin: u32) -> Vec<f64>` → JS `Float64Array` `[bin, count₀, …]` (`bin` 0 is treated as 1); `pub fn tag_hist(&self) -> Vec<f64>` → percentages, position 0 first.
+- Consumes: `World::{neighbor_edges, friend_edges, family_edges}` (Task 2), `stats::{age_histogram, tag_histogram, good_wealths, total_wealths, histogram, lorenz}` (Task 3), `render` with `"lineage"` (Task 2), the existing private `Sim::good(u32) -> Result<usize, JsValue>`.
+- Produces (`#[wasm_bindgen] impl Sim`): `networks(kind)` also accepts `"neighbors"`, `"friends"`, `"family"`; `pub fn age_hist(&self, bin: u32) -> Vec<f64>` → JS `Float64Array` `[bin, count₀, …]` (`bin` 0 is treated as 1); `pub fn tag_hist(&self) -> Vec<f64>` → percentages, position 0 first; `pub fn good_wealth_hist(&self, good: u32, bins: usize) -> Result<Vec<f64>, JsValue>` → `[bin_width, counts…]` (a field error for a missing good); `pub fn lorenz_total(&self, points: usize) -> Vec<f64>`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -995,12 +1072,31 @@ fn chapter_vi_networks_histograms_and_lineage_colors() {
     assert!(tags.iter().all(|p| (0.0..=100.0).contains(p)));
     sim.render("lineage", "sugar").unwrap();
 }
+
+#[wasm_bindgen_test]
+fn per_good_wealth_histograms_and_the_total_wealth_lorenz_curve() {
+    let preset = sugarscape_core::presets::by_id("iv-1-spice").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(5);
+    assert_eq!(sim.good_wealth_hist(0, 20).unwrap(), sim.wealth_hist(20));
+    let spice = sim.good_wealth_hist(1, 20).unwrap();
+    assert_eq!(spice.len(), 21);
+    assert_eq!(spice[1..].iter().sum::<f64>(), f64::from(sim.population()));
+    assert!(sim.good_wealth_hist(2, 20).is_err(), "no good 2");
+    let total = sim.lorenz_total(101);
+    assert_eq!(total.len(), 101);
+    assert_eq!((total[0], total[100]), (0.0, 1.0));
+    assert_ne!(total, sim.lorenz(101), "spice counts too");
+    let one = Sim::new("{}", 1, JsValue::NULL).unwrap();
+    assert_eq!(one.lorenz_total(11), one.lorenz(11), "one good: the sugar curve");
+}
 ```
 
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `wasm-pack test --node crates/sugarscape-wasm`
-Expected: FAIL to compile — no method `age_hist`/`tag_hist` on `Sim`.
+Expected: FAIL to compile — no method `age_hist`/`tag_hist`/`good_wealth_hist`/`lorenz_total` on `Sim`.
 
 - [ ] **Step 3: Implement**
 
@@ -1029,6 +1125,19 @@ with
 ```
 and before `pub fn inspect(&self, x: u32, y: u32)` add:
 ```rust
+    /// `[bin_width, count_0, …, count_{bins-1}]` of good `good`'s holdings (the wealth
+    /// histogram's bins, for any good).
+    pub fn good_wealth_hist(&self, good: u32, bins: usize) -> Result<Vec<f64>, JsValue> {
+        let g = self.good(good)?;
+        let (width, counts) = stats::histogram(&stats::good_wealths(&self.world, g), bins.max(1));
+        Ok(std::iter::once(width).chain(counts).collect())
+    }
+
+    /// The Lorenz curve of total wealth (every good's holdings summed).
+    pub fn lorenz_total(&self, points: usize) -> Vec<f64> {
+        stats::lorenz(&stats::total_wealths(&self.world), points.max(2))
+    }
+
     /// `[bin, count_0, …]`: living agents' ages in `bin`-tick bins (`stats::age_histogram`).
     pub fn age_hist(&self, bin: u32) -> Vec<f64> {
         let bin = bin.max(1);
@@ -1048,19 +1157,19 @@ and before `pub fn inspect(&self, x: u32, y: u32)` add:
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `wasm-pack test --node crates/sugarscape-wasm`
-Expected: PASS (21 tests).
+Expected: PASS (22 tests).
 
 - [ ] **Step 5: Commit**
 
 ```bash
 cargo fmt --all && cargo clippy --all-targets -- -D warnings
 git add crates/sugarscape-wasm/src/lib.rs crates/sugarscape-wasm/tests/web.rs
-git commit -m "Expose the Chapter VI networks and histograms to JavaScript" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
+git commit -m "Expose the Chapter VI networks, histograms and wealth views to JavaScript" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
 ```
 
 ---
 
-### Task 5: Overlays, Lineage and histograms on the wire
+### Task 5: Overlays, Lineage, histograms and wealth views on the wire
 
 *Mechanical (full code).* Browser (controller): every existing overlay (trade on `iv-3-trade`, credit on `iv-5-credit`, disease on `v-2-endemic`) and color mode still works; turning disease off still unticks and hides the disease overlay.
 
@@ -1069,13 +1178,13 @@ git commit -m "Expose the Chapter VI networks and histograms to JavaScript" -m "
 - Test: `web/src/protocol.test.ts`, `web/src/layers.test.ts`, `web/src/sim-host.test.ts`, `web/src/transport.test.ts`
 
 **Interfaces:**
-- Consumes: WASM `Sim.age_hist(bin)`, `Sim.tag_hist()`, `networks("neighbors" | "friends" | "family")`, `render("lineage", …)` (Task 4).
+- Consumes: WASM `Sim.age_hist(bin)`, `Sim.tag_hist()`, `Sim.good_wealth_hist(good, bins)`, `Sim.lorenz_total(points)`, `networks("neighbors" | "friends" | "family")`, `render("lineage", …)` (Task 4); the `gini_total` field of `stats_latest()` (Task 3).
 - Produces:
-  - `protocol.ts`: `type Overlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family'`; `OVERLAYS` in that order; `function noOverlays(): Record<Overlay, boolean>`; `Wants.ageHist?: boolean`, `Wants.tagHist?: boolean` (flags merged by `mergeWants`); `WorldSnapshot.ageHist?: Float64Array` (`[bin, counts…]`), `WorldSnapshot.tagHist?: Float64Array` (percent per position).
+  - `protocol.ts`: `type Overlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family'`; `OVERLAYS` in that order; `function noOverlays(): Record<Overlay, boolean>`; `Wants.ageHist?`, `Wants.tagHist?`, `Wants.lorenzTotal?`, `Wants.goodWealthHists?` (booleans, merged by `mergeWants`); `WorldSnapshot.ageHist?: Float64Array` (`[bin, counts…]`), `WorldSnapshot.tagHist?: Float64Array` (percent per position), `WorldSnapshot.lorenzTotal?: Float64Array` (101 points), `WorldSnapshot.goodWealthHists?: Float64Array[]` (one `[binWidth, counts…]` per good, 20 bins).
   - `layers.ts`: `function overlayAvailable(kind: Overlay, config: Config): boolean`; `clampDisplay` turns unavailable overlays off.
-  - `types.ts`: `ColorMode` gains `'lineage'`.
-  - `sim-host.ts`: `export const AGE_BIN = 5`; `SimLike.age_hist(bin: number): Float64Array`, `SimLike.tag_hist(): Float64Array`.
-  - `fake-sim.fixture.ts`: `FakeConfig` gains `sex`, `lifespan`, `culture` (`{ enabled: boolean }`, default off); `age_hist(bin)` → `[bin, population, 0]`; `tag_hist()` → `[100, 0]`.
+  - `types.ts`: `ColorMode` gains `'lineage'`; `Snapshot` gains `gini_total: number`.
+  - `sim-host.ts`: `export const AGE_BIN = 5`; `SimLike.age_hist(bin: number): Float64Array`, `SimLike.tag_hist(): Float64Array`, `SimLike.good_wealth_hist(good: number, bins: number): Float64Array`, `SimLike.lorenz_total(points: number): Float64Array`.
+  - `fake-sim.fixture.ts`: `FakeConfig` gains `sex`, `lifespan`, `culture` (`{ enabled: boolean }`, default off); `age_hist(bin)` → `[bin, population, 0]`; `tag_hist()` → `[100, 0]`; `good_wealth_hist(good, bins)` → `bins + 1` values, the first `good + 1` (a field error past the last good); `lorenz_total(points)` → `points` values of 0.5.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1153,6 +1262,7 @@ In `web/src/protocol.test.ts`, in the first `mergeWants` test, make the second p
         select: { x: 9, y: 9, agentId: 3 },
         lorenz: true,
         ageHist: true,
+        goodWealthHists: true,
         networks: ['family', 'trade', 'disease', 'neighbors'],
         charts: { groups: [['population'], ['gini', 'births']], max: 2000 },
       },
@@ -1163,6 +1273,7 @@ and the expected result
       select: { x: 1, y: 2, agentId: null },
       lorenz: true,
       ageHist: true,
+      goodWealthHists: true,
       networks: ['trade', 'disease', 'neighbors', 'family'],
       charts: { groups: [['population'], ['gini', 'births']], max: 2000 },
     });
@@ -1182,11 +1293,13 @@ import {
   type WorldSnapshot,
 } from './protocol';
 ```
-change the sim-host import to `import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, serve, SimHost } from './sim-host';`, change the `display` constant's overlays to `overlays: noOverlays()`, and in `'adds extras only when wanted'`: add `'ageHist', 'tagHist',` after `'wealthHist',` in `keys`; in `all` set `networks: ['trade', 'neighbors', 'friends', 'family'],` and add `ageHist: true,` and `tagHist: true,` after `wealthHist: true,`; after `expect(full.wealthHist).toHaveLength(21);` add
+change the sim-host import to `import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, serve, SimHost } from './sim-host';`, change the `display` constant's overlays to `overlays: noOverlays()`, and in `'adds extras only when wanted'`: add `'ageHist', 'tagHist', 'lorenzTotal', 'goodWealthHists',` after `'wealthHist',` in `keys`; in `all` set `networks: ['trade', 'neighbors', 'friends', 'family'],` and add `ageHist: true,`, `tagHist: true,`, `lorenzTotal: true,` and `goodWealthHists: true,` after `wealthHist: true,`; after `expect(full.wealthHist).toHaveLength(21);` add
 ```ts
     expect(Object.keys(full.networks ?? {})).toEqual(['trade', 'neighbors', 'friends', 'family']);
     expect(full.ageHist).toEqual(Float64Array.of(AGE_BIN, 1, 0));
     expect(full.tagHist).toEqual(Float64Array.of(100, 0));
+    expect(full.lorenzTotal).toHaveLength(101);
+    expect(full.goodWealthHists?.map((h) => [h.length, h[0]])).toEqual([[21, 1]]); // one good, 20 bins
 ```
 In `web/src/transport.test.ts`: replace `import type { Command, DisplayState, HostRequest, WorldSnapshot } from './protocol';` with `import { noOverlays, type Command, type DisplayState, type HostRequest, type WorldSnapshot } from './protocol';` and the `display` constant's overlays with `overlays: noOverlays()`.
 
@@ -1212,16 +1325,31 @@ export function noOverlays(): Record<Overlay, boolean> {
   return Object.fromEntries(OVERLAYS.map((k) => [k, false])) as Record<Overlay, boolean>;
 }
 ```
-in `Wants`, after `wealthHist?: boolean;` add `ageHist?: boolean;` and `tagHist?: boolean;`; in `WorldSnapshot`, after `wealthHist?: Float64Array;` add
+in `Wants`, after `wealthHist?: boolean;` add `ageHist?: boolean;`, `tagHist?: boolean;`, `lorenzTotal?: boolean;` and `goodWealthHists?: boolean;` (one per line); in `WorldSnapshot`, after `wealthHist?: Float64Array;` add
 ```ts
   /** `[bin, count_0, …]`: living agents' ages in 5-tick bins (Animation III-1). */
   ageHist?: Float64Array;
   /** The percentage of agents with a 0 at each tag position, position 0 first (Animation III-7). */
   tagHist?: Float64Array;
+  /** The Lorenz curve of total wealth (every good's holdings summed), 101 points. */
+  lorenzTotal?: Float64Array;
+  /** Each good's wealth histogram `[binWidth, counts…]` (20 bins), in good order. */
+  goodWealthHists?: Float64Array[];
 ```
 and change `FLAGS` to
 ```ts
-const FLAGS = ['trail', 'lorenz', 'wealthHist', 'ageHist', 'tagHist', 'supplyDemand', 'creditGraph', 'diseaseList'] as const;
+const FLAGS = [
+  'trail',
+  'lorenz',
+  'wealthHist',
+  'ageHist',
+  'tagHist',
+  'lorenzTotal',
+  'goodWealthHists',
+  'supplyDemand',
+  'creditGraph',
+  'diseaseList',
+] as const;
 ```
 `web/src/layers.ts` — change the first import to `import { OVERLAYS, type DisplayState, type Overlay } from './protocol';` and replace `clampDisplay` (with its doc comment) by
 ```ts
@@ -1254,12 +1382,14 @@ export function clampDisplay(d: DisplayState, config: Config): DisplayState {
   return { colorMode, layer, overlays };
 }
 ```
-`web/src/types.ts` — `export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit' | 'disease' | 'lineage';`
+`web/src/types.ts` — `export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit' | 'disease' | 'lineage';`, and in `interface Snapshot` add `gini_total: number;` after `trade_pairs: number;`.
 
 `web/src/sim-host.ts` — add `noOverlays,` to the `./protocol` value imports (after `chartKey,`); in `SimLike`, after `wealth_hist(bins: number): Float64Array;` add
 ```ts
   age_hist(bin: number): Float64Array;
   tag_hist(): Float64Array;
+  good_wealth_hist(good: number, bins: number): Float64Array;
+  lorenz_total(points: number): Float64Array;
 ```
 before the `LOG_CAP` doc comment add
 ```ts
@@ -1271,7 +1401,10 @@ replace the `display` field's initializer with `{ colorMode: 'tribe', layer: 're
 ```ts
     if (wants.ageHist) s.ageHist = sim.age_hist(AGE_BIN);
     if (wants.tagHist) s.tagHist = sim.tag_hist();
+    if (wants.lorenzTotal) s.lorenzTotal = sim.lorenz_total(101);
+    if (wants.goodWealthHists) s.goodWealthHists = config.goods.map((_, i) => sim.good_wealth_hist(i, 20));
 ```
+(`config` is the live config `snapshot` already holds; arrays of `Float64Array` are structured-cloned, not transferred.)
 `web/src/fake-sim.fixture.ts` — in `FakeConfig` after `disease: { enabled: boolean };` add `sex: { enabled: boolean }; lifespan: { enabled: boolean }; culture: { enabled: boolean };` (one per line); in `normalize` after `disease: { enabled: false },` add `sex: { enabled: false }, lifespan: { enabled: false }, culture: { enabled: false },` (one per line); before `supply_demand()` add
 ```ts
   age_hist(bin: number): Float64Array {
@@ -1279,6 +1412,13 @@ replace the `display` field's initializer with `{ colorMode: 'tribe', layer: 're
   }
   tag_hist(): Float64Array {
     return Float64Array.of(100, 0);
+  }
+  good_wealth_hist(good: number, bins: number): Float64Array {
+    if (good >= this.config.goods.length) throw fieldError('edit', `there is no good ${good}`);
+    return Float64Array.from({ length: bins + 1 }, (_, i) => (i === 0 ? good + 1 : 0));
+  }
+  lorenz_total(points: number): Float64Array {
+    return new Float64Array(points).fill(0.5);
   }
 ```
 `web/src/engine.ts` — add `noOverlays,` to the `./protocol` imports (after `mergeWants,`) and replace `overlays: Record<Overlay, boolean> = { trade: false, credit: false, disease: false };` with `overlays: Record<Overlay, boolean> = noOverlays();`.
@@ -1292,7 +1432,7 @@ Expected: build succeeds; all tests PASS.
 
 ```bash
 git add web/src/protocol.ts web/src/protocol.test.ts web/src/layers.ts web/src/layers.test.ts web/src/types.ts web/src/sim-host.ts web/src/sim-host.test.ts web/src/fake-sim.fixture.ts web/src/transport.test.ts web/src/engine.ts
-git commit -m "Carry the Chapter VI networks, Lineage mode and histograms between host and page" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
+git commit -m "Carry the Chapter VI networks, Lineage mode, histograms and wealth views between host and page" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
 ```
 
 ---
@@ -1364,18 +1504,21 @@ describe('Chapter VI views', () => {
     return false;
   };
 
-  it('draw lineage colors and fetch networks and histograms without changing the run', async () => {
+  it('draw lineage colors and fetch networks, histograms and wealth views without changing the run', async () => {
     const plain = await create();
     await plain.advance(100);
     const watched = await create();
     watched.setDisplay({ colorMode: 'lineage', overlays: { neighbors: true, friends: true, family: true } });
-    watched.want(() => ({ ageHist: true, tagHist: true }));
+    watched.want(() => ({ ageHist: true, tagHist: true, lorenzTotal: true, goodWealthHists: true }));
     for (let i = 0; i < 10; i++) await watched.advance(10);
     expect(watched.networks('neighbors').length).toBeGreaterThan(0);
     expect(watched.networks('friends').length).toBeGreaterThan(0);
     expect(watched.networks('family').length).toBeGreaterThan(0);
     expect(watched.last?.ageHist?.[0]).toBe(5);
     expect(watched.last?.tagHist).toHaveLength(11);
+    expect(watched.last?.goodWealthHists).toHaveLength(2);
+    expect(watched.last?.lorenzTotal).toHaveLength(101);
+    expect(watched.latest!.gini_total).toBeGreaterThan(0);
     const frame = watched.frame()!;
     expect(has(frame, [0x5a, 0x5a, 0x5a])).toBe(true);
     expect(has(frame, [0x3d, 0xd6, 0x6b])).toBe(true);
@@ -1531,17 +1674,17 @@ git commit -m "Draw the neighbor, friends and family networks and Lineage colors
 
 ---
 
-### Task 7: The age and cultural-tag histograms in Charts
+### Task 7: The histograms and wealth views in Charts
 
-*Mechanical (full code).* Browser (controller): `iii-2-sex` — **Age histogram** appears after Wealth distribution (bars in 5-tick bins up to 105, shifting as the population ages) and **Cultural tags** does not; `iii-6-culture` — **Cultural tags (% zeros by position)** shows 11 bars at positions 1–11 (0–100 %) moving toward 0 or 100 while Age histogram is hidden; `vi-1-everything` shows both; turning lifespan off live hides the age chart; paused with both shown, the charts stop fetching after one catch-up (no worker messages) and a paint/erase while paused refreshes them once; Compare on `vi-1-everything` — both charts are two step outlines (A solid, B dashed) with "A · …"/"B · …" legends.
+*Mechanical (full code).* Browser (controller): `ii-2-unit` — the charts are exactly as before (no Goods-section wealth charts with one good); `iv-1-spice` — the Goods section shows **Gini coefficient (total wealth)**, **Lorenz curve (total wealth)** (with the equality line), and **Wealth distribution · sugar** and **· spice** (bars in each good's color); the top section's Gini, Lorenz and Wealth distribution are unchanged (sugar); `n-3-trade` adds **· salt**; removing a good hides its histogram; `iii-2-sex` — **Age histogram** appears after Wealth distribution (bars in 5-tick bins up to 105, shifting as the population ages) and **Cultural tags** does not; `iii-6-culture` — **Cultural tags (% zeros by position)** shows 11 bars at positions 1–11 (0–100 %) moving toward 0 or 100 while Age histogram is hidden; `vi-1-everything` shows both; turning lifespan off live hides the age chart; paused with both shown, the charts stop fetching after one catch-up (no worker messages) and a paint/erase while paused refreshes them once; Compare on `vi-1-everything` — the age, tag and per-good wealth histograms are two step outlines each (A solid, B dashed) with "A · …"/"B · …" legends, and the total-wealth Lorenz curve and Gini show both worlds.
 
 **Files:**
-- Modify: `web/src/ui/series-data.ts`, `web/src/ui/charts-panel.ts`
+- Modify: `web/src/ui/series-data.ts`, `web/src/ui/charts-panel.ts` (imports `MAX_GOODS` from `web/src/goods.ts`)
 - Test: `web/src/ui/series-data.test.ts`, `web/src/engine.test.ts`
 
 **Interfaces:**
-- Consumes: `Wants.ageHist/tagHist`, `WorldSnapshot.ageHist/tagHist` (Task 5), `barsData`, `histTable`, `overlayData`.
-- Produces (`series-data.ts`): `positionBars(pct: Float64Array | null | undefined): LineData` (x = 1…L); `positionSteps(pct): LineData` (edges 0.5…L + 0.5, values then 0); `showsAgeHist(c: Config): boolean`; `showsTagHist(c: Config): boolean`; `interface DistState { at: number; tick: number; stale: boolean }`; `distributionsDue(d: DistState, tick: number, now: number, every: number): boolean`; `distributionWants(c: Config): Wants`.
+- Consumes: `Wants.ageHist/tagHist/lorenzTotal/goodWealthHists`, `WorldSnapshot.ageHist/tagHist/lorenzTotal/goodWealthHists` (Task 5), the `gini_total` series (Task 3), `barsData`, `histTable`, `overlayData`, `MAX_GOODS` (goods.ts, 8).
+- Produces (`series-data.ts`): `positionBars(pct: Float64Array | null | undefined): LineData` (x = 1…L); `positionSteps(pct): LineData` (edges 0.5…L + 0.5, values then 0); `showsAgeHist(c: Config): boolean`; `showsTagHist(c: Config): boolean`; `showsTotalWealth(c: Config): boolean` (two or more goods); `showsGoodWealth(good: number): (c: Config) => boolean`; `interface DistState { at: number; tick: number; stale: boolean }`; `distributionsDue(d: DistState, tick: number, now: number, every: number): boolean`; `distributionWants(c: Config): Wants`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1561,7 +1704,9 @@ import {
   positionBars,
   positionSteps,
   showsAgeHist,
+  showsGoodWealth,
   showsTagHist,
+  showsTotalWealth,
   supplyDemandTable,
   type LineData,
 } from './series-data';
@@ -1583,6 +1728,8 @@ describe('Chapter VI histograms', () => {
       lorenz: true,
       wealthHist: true,
       supplyDemand: true,
+      lorenzTotal: true,
+      goodWealthHists: true,
       ageHist: true,
       tagHist: true,
     });
@@ -1608,6 +1755,17 @@ describe('Chapter VI histograms', () => {
     const ages = Float64Array.of(5, 3, 0, 2);
     expect(barsData(ages)).toEqual([[2.5, 7.5, 12.5], [3, 0, 2]]);
     expect(histTable(ages)).toEqual([[0, 5, 10, 15], [3, 0, 2, 0]]);
+  });
+});
+
+describe('wealth views', () => {
+  const goods = (n: number) => ({ goods: Array.from({ length: n }, () => ({})) }) as unknown as Config;
+
+  it("show total wealth and each good's histogram only with two or more goods", () => {
+    expect(showsTotalWealth(goods(1))).toBe(false);
+    expect(showsTotalWealth(goods(2))).toBe(true);
+    expect(showsGoodWealth(0)(goods(1))).toBe(false);
+    expect([0, 1, 2].map((g) => showsGoodWealth(g)(goods(2)))).toEqual([true, true, false]);
   });
 });
 ```
@@ -1655,7 +1813,7 @@ describe('Chapter VI views while paused', () => {
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `(cd web && npm run build)`
-Expected: FAIL in `tsc` — `distributionsDue`, `distributionWants`, `DistState`, `positionBars`, `positionSteps`, `showsAgeHist`, `showsTagHist` are not exported from `./series-data`.
+Expected: FAIL in `tsc` — `distributionsDue`, `distributionWants`, `DistState`, `positionBars`, `positionSteps`, `showsAgeHist`, `showsTagHist`, `showsTotalWealth`, `showsGoodWealth` are not exported from `./series-data`.
 
 - [ ] **Step 3: Implement**
 
@@ -1684,6 +1842,13 @@ export function positionSteps(pct: Float64Array | null | undefined): LineData {
 export const showsAgeHist = (c: Config): boolean => c.lifespan.enabled;
 /** The cultural tag histogram shows while culture is on (Animation III-7). */
 export const showsTagHist = (c: Config): boolean => c.culture.enabled;
+/** Total wealth (its Lorenz curve and Gini) shows with two or more goods (VI-1's "total wealth"). */
+export const showsTotalWealth = (c: Config): boolean => c.goods.length >= 2;
+/** Good `good`'s own wealth histogram shows with two or more goods, while the world has that good. */
+export const showsGoodWealth =
+  (good: number) =>
+  (c: Config): boolean =>
+    showsTotalWealth(c) && good < c.goods.length;
 
 /** A world's distributions as last received: when, at which tick, and whether an edit, reset or config change has made them stale. */
 export interface DistState { at: number; tick: number; stale: boolean }
@@ -1697,46 +1862,72 @@ export function distributionsDue(d: DistState, tick: number, now: number, every:
 }
 
 /**
- * The distributions a world's charts draw: the Lorenz curve and wealth histogram always, supply &
- * demand with two goods, the age histogram while lifetimes are finite, the tag histogram while
- * culture is on.
+ * The distributions a world's charts draw: the (sugar) Lorenz curve and wealth histogram always;
+ * with two or more goods supply & demand, the total-wealth Lorenz curve and each good's wealth
+ * histogram; the age histogram while lifetimes are finite; the tag histogram while culture is on.
  */
 export function distributionWants(c: Config): Wants {
   const out: Wants = { lorenz: true, wealthHist: true };
-  if (c.goods.length >= 2) out.supplyDemand = true;
+  if (showsTotalWealth(c)) Object.assign(out, { supplyDemand: true, lorenzTotal: true, goodWealthHists: true });
   if (showsAgeHist(c)) out.ageHist = true;
   if (showsTagHist(c)) out.tagHist = true;
   return out;
 }
 
 ```
-`web/src/ui/charts-panel.ts`:
-1. In the `./series-data` import add `distributionsDue,` and `distributionWants,` after `chartsBehind,`; `positionBars,`, `positionSteps,`, `showsAgeHist,`, `showsTagHist,` after `overlayData,`; and `type DistState,` before `type LineData,`.
-2. `type Kind = 'time' | 'band' | 'lorenz' | 'wealth' | 'age' | 'tags' | 'supplyDemand';`
-3. The `REFRESH_MS` doc becomes `/** The distributions (Lorenz curve, wealth, age and tag histograms, supply & demand) are fetched at most this often (per world). */`.
-4. Replace `X_LABEL` with
+`web/src/ui/charts-panel.ts` (Decisions 12 and 19):
+1. In the `./series-data` import add `distributionsDue,` and `distributionWants,` after `chartsBehind,`; `positionBars,`, `positionSteps,`, `showsAgeHist,`, `showsGoodWealth,`, `showsTagHist,`, `showsTotalWealth,` after `overlayData,`; and `type DistState,` before `type LineData,`. Before `import type { Config } from '../types';` add `import { MAX_GOODS } from '../goods';`.
+2. `type Kind = 'time' | 'band' | 'lorenz' | 'lorenzTotal' | 'wealth' | 'goodWealth' | 'age' | 'tags' | 'supplyDemand';`
+3. In `interface ChartDef`, after `pair?: boolean;` add
+```ts
+  /** A `goodWealth` chart's good: the caption names it. */
+  good?: number;
+```
+4. The `REFRESH_MS` doc becomes `/** The distributions (Lorenz curves, wealth, age and tag histograms, supply & demand) are fetched at most this often (per world). */`.
+5. Replace `X_LABEL` with
 ```ts
 const X_LABEL: Record<Kind, string> = {
   time: 'Tick',
   band: 'Tick',
   lorenz: 'Population share',
+  lorenzTotal: 'Population share',
   wealth: 'Sugar',
+  goodWealth: 'Holding',
   age: 'Age',
   tags: 'Tag position',
   supplyDemand: 'Price',
 };
 ```
-5. In `CHARTS`, after `{ title: 'Wealth distribution', kind: 'wealth', section: 'top' },` add
+6. In `CHARTS`, after `{ title: 'Wealth distribution', kind: 'wealth', section: 'top' },` add
 ```ts
   { title: 'Age histogram', kind: 'age', section: 'top', shown: showsAgeHist },
   { title: 'Cultural tags (% zeros by position)', kind: 'tags', section: 'top', shown: showsTagHist, range: [0, 100] },
 ```
-6. Replace `interface Dist { … }` and `freshDist` with
+and after the **Units traded** entry (end of the goods section) add
+```ts
+  {
+    title: 'Gini coefficient (total wealth)',
+    kind: 'time',
+    section: 'goods',
+    lines: fixed([{ key: 'gini_total', label: 'Gini', color: '--c2' }]),
+    range: [0, 1],
+    shown: showsTotalWealth,
+  },
+  { title: 'Lorenz curve (total wealth)', kind: 'lorenzTotal', section: 'goods', shown: showsTotalWealth },
+  // One per possible good; each shows while some world has that good (and two or more goods).
+  ...Array.from(
+    { length: MAX_GOODS },
+    (_, good): ChartDef => ({ title: 'Wealth distribution', kind: 'goodWealth', section: 'goods', good, shown: showsGoodWealth(good) }),
+  ),
+```
+7. Replace `interface Dist { … }` and `freshDist` with
 ```ts
 /** A world's latest distributions, and when (and at which tick) they arrived. */
 interface Dist extends DistState {
   lorenz: Float64Array | null;
+  lorenzTotal: Float64Array | null;
   wealthHist: Float64Array | null;
+  goodWealthHists: Float64Array[] | null;
   ageHist: Float64Array | null;
   tagHist: Float64Array | null;
   supplyDemand: Float64Array | null;
@@ -1745,7 +1936,9 @@ interface Dist extends DistState {
 
 const freshDist = (): Dist => ({
   lorenz: null,
+  lorenzTotal: null,
   wealthHist: null,
+  goodWealthHists: null,
   ageHist: null,
   tagHist: null,
   supplyDemand: null,
@@ -1755,7 +1948,7 @@ const freshDist = (): Dist => ({
   stale: true,
 });
 ```
-7. In `wants()`, replace
+8. In `wants()`, replace
 ```ts
     const d = this.dist[i];
     if ((d.stale || w.tick !== d.tick) && now - d.at >= REFRESH_MS) {
@@ -1770,7 +1963,7 @@ with
     if (distributionsDue(this.dist[i], w.tick, now, REFRESH_MS)) Object.assign(out, distributionWants(w.config));
     return out;
 ```
-8. In `receive()`, replace
+9. In `receive()`, replace
 ```ts
       // A world that drops to one good stops sending this: clear it, not keep the last curve.
       d.supplyDemand = s.supplyDemand ?? null;
@@ -1782,16 +1975,49 @@ with
       d.supplyDemand = s.supplyDemand ?? null;
       d.ageHist = s.ageHist ?? null;
       d.tagHist = s.tagHist ?? null;
+      d.lorenzTotal = s.lorenzTotal ?? null;
+      d.goodWealthHists = s.goodWealthHists ?? null;
 ```
-9. In `seriesFor()`, replace the `case 'wealth': return this.worlds.length > 1 ? … : …;` arm with
+10. In `sync()`, replace
 ```ts
+      p.caption.textContent = p.def.pair && goods ? `${p.def.title} · ${goods[0].name}/${goods[1].name}` : p.def.title;
+```
+with
+```ts
+      const good = p.def.good;
+      const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
+      p.caption.textContent =
+        p.def.pair && goods
+          ? `${p.def.title} · ${goods[0].name}/${goods[1].name}`
+          : named
+            ? `${p.def.title} · ${named.name}`
+            : p.def.title;
+```
+11. In `plotFor()`, change `: this.distData(def.kind);` to `: this.distData(def);`, and in `draw()` change `p.plot.setData(this.distData(p.def.kind));` to `p.plot.setData(this.distData(p.def));`.
+12. In `options()`, replace
+```ts
+    if (def.kind === 'lorenz') series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
+```
+with
+```ts
+    const lorenz = def.kind === 'lorenz' || def.kind === 'lorenzTotal';
+    if (lorenz) series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
+```
+and change both later `if (def.kind === 'lorenz')` (the `x.range` and `y.range` lines) to `if (lorenz)`.
+13. In `seriesFor()`, replace the `case 'lorenz':` arm and the `case 'wealth': return this.worlds.length > 1 ? … : …;` arm with
+```ts
+      case 'lorenz':
+      case 'lorenzTotal':
+        return [{ label: `${tag}Wealth share`, stroke: this.color('--c2'), width: 2, dash }];
+      case 'goodWealth':
+        return this.histSeries(`${tag}Agents`, c.goods[def.good!]?.color ?? '--c1', dash);
       case 'wealth':
       case 'age':
         return this.histSeries(`${tag}Agents`, '--c1', dash);
       case 'tags':
         return this.histSeries(`${tag}% zeros`, '--c4', dash);
 ```
-and add this method just before `/** One table as is; several on the union of their x values (Decision 11). */`:
+(`this.color` passes `#rrggbb` colors through) and add this method just before `/** One table as is; several on the union of their x values (Decision 11). */`:
 ```ts
   /** A histogram's series: bars for one world; in Compare a step outline per world (B dashed). */
   private histSeries(label: string, color: string, dash: number[] | undefined): uPlot.Series[] {
@@ -1802,14 +2028,34 @@ and add this method just before `/** One table as is; several on the union of th
   }
 
 ```
-10. In `distData()`, after the `case 'wealth':` arm add
+14. Replace `distData`'s head and its `case 'lorenz':` arm
+```ts
+  private distData(kind: Kind): uPlot.AlignedData {
+    switch (kind) {
+      case 'lorenz':
+        return [XS, XS, ...this.dist.map((d) => (d.lorenz ? Array.from(d.lorenz) : XS.map(() => null)))] as uPlot.AlignedData;
+```
+with
+```ts
+  private distData(def: ChartDef): uPlot.AlignedData {
+    const curve = (l: Float64Array | null) => (l ? Array.from(l) : XS.map(() => null));
+    const good = (d: Dist) => d.goodWealthHists?.[def.good!] ?? null;
+    switch (def.kind) {
+      case 'lorenz':
+        return [XS, XS, ...this.dist.map((d) => curve(d.lorenz))] as uPlot.AlignedData;
+      case 'lorenzTotal':
+        return [XS, XS, ...this.dist.map((d) => curve(d.lorenzTotal))] as uPlot.AlignedData;
+      case 'goodWealth':
+        return this.worlds.length > 1 ? overlayData(this.dist.map((d) => histTable(good(d)))) : barsData(good(this.dist[0]));
+```
+and after its `case 'wealth':` arm add
 ```ts
       case 'age':
         return this.worlds.length > 1 ? overlayData(this.dist.map((d) => histTable(d.ageHist))) : barsData(this.dist[0].ageHist);
       case 'tags':
         return this.worlds.length > 1 ? overlayData(this.dist.map((d) => positionSteps(d.tagHist))) : positionBars(this.dist[0].tagHist);
 ```
-(`twoGoods` stays: `SECTIONS` and `CHARTS` still use it.)
+(`twoGoods` stays: `SECTIONS` and `CHARTS` still use it. The plots are rebuilt only when a lines signature changes; the per-good charts have no lines, so adding or removing a good only shows or hides them in `sync`.)
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
@@ -1820,21 +2066,21 @@ Expected: build succeeds; all tests PASS.
 
 ```bash
 git add web/src/ui/series-data.ts web/src/ui/series-data.test.ts web/src/ui/charts-panel.ts web/src/engine.test.ts
-git commit -m "Chart the age and cultural-tag histograms, overlaid in Compare" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
+git commit -m "Chart the age, tag and per-good wealth histograms and total wealth, overlaid in Compare" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
 ```
 
 ---
 
-### Task 8: The VI-2 and VI-3 presets, measured
+### Task 8: The VI-2 and VI-3 presets, measured and recorded
 
-*Needs judgement: the settings and thresholds come from measurement (Decisions 13–15).* Browser (controller): the presets menu lists `({G₁}, {M, S}) with spice, no trade — Animation VI-2` and `({G₁}, {M, S, T}) with spice — Animation VI-3` after `vi-1-everything`, with their descriptions; at Max, VI-2 seed 1 dies out (population 0 by t ≈ 400) and VI-3 seed 1 survives past t = 1000; `vi-1-everything`'s description names where each view lives.
+*Needs judgement: the recorded populations, thresholds and descriptions come from the measurement (Decisions 13–15, 17).* Browser (controller): the presets menu lists `({G₁}, {M, S}) with spice, no trade — Animation VI-2` and `({G₁}, {M, S, T}) with spice — Animation VI-3` after `vi-1-everything`, with descriptions that say plainly VI-3 reproduces the book's curve and VI-2's crash is not reproduced; at Max, VI-3 seed 1 dips to about 130 by t ≈ 100, climbs to about 990 by t ≈ 250 and then fluctuates around 800 (VI-2 seed 1 looks much the same); `vi-1-everything`'s description lists the eighteen views and each is where it says.
 
 **Files:**
 - Modify: `crates/sugarscape-core/src/presets.rs`, `crates/sugarscape-core/tests/golden.rs`, `crates/sugarscape-core/tests/book.rs`
 
 **Interfaces:**
-- Consumes: `presets::{demography, spice}` helpers, `World::{step, population, stats}`.
-- Produces: presets `vi-2-no-trade` and `vi-3-trade` (listed after `vi-1-everything`), identical except `trade.enabled`; `book.rs`: `population_peaks(pop: &[f64]) -> Vec<usize>`, `widest_peak_spacing(peaks: &[usize]) -> usize`, `indecomposability_run(config: &Config, seed: u64) -> (Option<u64>, usize, f64, Vec<usize>)`, `#[ignore] measure_indecomposability`, `#[ignore] trade_decides_whether_the_society_survives`.
+- Consumes: `presets::{demography, spice}` helpers, `World::{run, stats}`, `book.rs`'s `run(config, seed, ticks)`.
+- Produces: presets `vi-2-no-trade` and `vi-3-trade` (listed after `vi-1-everything`), identical except `trade.enabled`; `book.rs`: `every_50(config: &Config, seed: u64) -> Vec<u32>`, `#[ignore] measure_indecomposability` (prints), `#[ignore] trade_society_dips_then_recovers_past_its_start`, constants `VI3_TROUGH_BELOW: f64`, `VI3_RECOVERY_FACTOR: f64`.
 
 - [ ] **Step 1: Write the failing preset test**
 
@@ -1846,7 +2092,12 @@ Append inside `presets.rs`'s `mod tests`:
         let mut trade = by_id("vi-3-trade").unwrap().config;
         assert!(!no_trade.trade.enabled && trade.trade.enabled);
         assert_eq!(no_trade.population, 500);
+        assert_eq!(no_trade.vision, URange::new(1, 10), "Chapter IV's traits");
         assert_eq!(no_trade.goods.len(), 2, "sugar and spice");
+        for g in &no_trade.goods {
+            assert_eq!((g.metabolism, g.endowment), (URange::new(1, 5), URange::new(25, 50)));
+        }
+        assert_eq!(no_trade.goods[1].map, by_id("iv-1-spice").unwrap().config.goods[1].map);
         assert!(no_trade.sex.enabled && no_trade.lifespan.enabled);
         assert_eq!(no_trade.lifespan.max_age, URange::new(60, 100));
         assert!(!no_trade.culture.enabled && !no_trade.credit.enabled && !no_trade.disease.enabled);
@@ -1859,230 +2110,178 @@ and in `every_preset_is_valid_and_runs` change `assert_eq!(presets.len(), 27);` 
 Run: `cargo test -p sugarscape-core --lib presets`
 Expected: FAIL — `by_id("vi-2-no-trade")` is `None` (unwrap on None), and 27 ≠ 29.
 
-- [ ] **Step 2: Add the presets with the planning measurement's values**
+- [ ] **Step 2: Add the presets** (Decision 13)
 
-In `presets.rs`, before `/// A further good with good 0's trait ranges…`, add (Decision 13; the comment is the calibration record — Step 4 checks every number in it):
+In `presets.rs`, before `/// A further good with good 0's trait ranges…`, add:
 ```rust
 /// Chapter VI's indecomposability society (animations VI-2 and VI-3): 500
-/// agents on Chapter IV's sugar and spice landscape under M and S with
-/// Chapter III's demography; `trade` switches rule T, the only difference.
+/// agents with Chapter IV's traits on its sugar and spice landscape under M
+/// and S with Chapter III's demography (lifetimes 60-100); `trade` switches
+/// rule T, the only difference.
 fn indecomposability(c: &mut Config, trade: bool) {
     c.population = 500;
     demography(c);
-    // The book fixes the population, the landscape and the rules; vision,
-    // metabolism and endowment (equal for both goods) were chosen by
-    // `measure_indecomposability` (release, seeds 1-5, up to t = 1000), in
-    // its order, as the first candidate whose five VI-2 runs all die out and
-    // whose five VI-3 runs all survive with at least two population peaks.
-    // Runs per candidate (VI-2 extinct / VI-3 alive at t = 1000):
-    //   vision 1-10, metabolism 1-5, endowment 25-50: 0/5, 5/5 (no crash)
-    //   vision 1-5,  metabolism 1-5, endowment 25-50: 0/5, 5/5 (no crash)
-    //   vision 1-5,  metabolism 1-5, endowment 50-100: 5/5, 0/5 (trade dies faster)
-    //   vision 1-5,  metabolism 1-6, endowment 30-60: 4/5, 4/5
-    //   vision 1-5,  metabolism 1-3, endowment 60:    4/5, 5/5
-    //   vision 1-5,  metabolism 1-2, endowment 64:    2/5, 4/5
-    //   vision 1-5,  metabolism 1-2, endowment 65:    5/5, 5/5  <- chosen
-    //   vision 1-5,  metabolism 1-2, endowment 66:    3/5, 2/5
-    // With a high endowment, fertility (holdings at least the endowment of
-    // both goods) is rare, and trade, which moves holdings toward the
-    // metabolism ratio rather than the endowments, makes it rarer still, so
-    // trade rescues the population only on a knife edge: at endowment 65,
-    // VI-2 dies out at t = 385, 900, 530, 445, 651 and VI-3 ends at 173,
-    // 181, 75, 106, 158 agents (seeds 1-5); 64 and 66 do not separate. Both
-    // boom to about 1.3-1.4 times 500 by t = 53 and then crash. The book's
-    // VI-3 recovery to twice the initial population, its minima at 700 and
-    // its 115-year waves are not reproduced by these rules.
-    c.vision = URange::new(1, 5);
-    c.goods[0].metabolism = URange::new(1, 2);
-    c.goods[0].endowment = URange::new(65, 65);
-    spice(c, URange::new(1, 2), URange::new(65, 65));
+    c.vision = URange::new(1, 10);
+    c.goods[0].metabolism = URange::new(1, 5);
+    c.goods[0].endowment = URange::new(25, 50);
+    spice(c, URange::new(1, 5), URange::new(25, 50));
     c.trade.enabled = trade;
 }
 
 ```
-and in `all()`, after the `vi-1-everything` preset and before `"n-3-trade"`, add:
+and in `all()`, after the `vi-1-everything` preset and before `"n-3-trade"`, add (descriptions final after Step 4):
 ```rust
         preset(
             "vi-2-no-trade",
             "({G₁}, {M, S}) with spice, no trade",
             "Animation VI-2",
-            "500 agents on the sugar and spice landscape move and reproduce but never trade: after an early baby boom the population collapses and dies out (measured, seeds 1–5: extinct at t = 385–900). Compare it with VI-3 from the presets menu.",
+            "500 agents with Chapter IV's traits move and reproduce on the sugar and spice landscape but never trade. The book's population crashes; here it does not: it dips to about 150–235 by t = 100–150, recovers to about 1.8 times its start and fluctuates around 800, like VI-3. Every stated rule matches the book, so the crash most likely depended on unreported details of the original software. Compare it with VI-3 from the presets menu.",
             |c| indecomposability(c, false),
         ),
         preset(
             "vi-3-trade",
             "({G₁}, {M, S, T}) with spice",
             "Animation VI-3",
-            "Everything as in VI-2, with trade on: the population collapses as fast but survives, recovering slowly (seeds 1–5: 75–181 agents at t = 1000). The book's recovery to twice the initial population and its 115-year waves are not reproduced by these rules.",
+            "Everything as in VI-2, with trade on. This reproduces the book's curve: the population dips to about 100–175 by t = 100–150, recovers to 1.7–2.0 times its initial 500, then fluctuates with minima near 700. (VI-2 without trade does the same here, unlike the book.)",
             |c| indecomposability(c, true),
         ),
 ```
 Run: `cargo test -p sugarscape-core --lib presets`
 Expected: PASS.
 
-- [ ] **Step 3: Add the measurement** (Decision 14)
+- [ ] **Step 3: Add the measurement print-out**
 
 Append to `crates/sugarscape-core/tests/book.rs`:
 ```rust
-/// Peaks of a population series: ticks t ≥ 50 (and at least 10 before the
-/// end) where the 21-tick centered moving average is at least every value
-/// within 40 ticks and above every value in the 40 ticks before (so a
-/// plateau counts once).
-fn population_peaks(pop: &[f64]) -> Vec<usize> {
-    let smooth: Vec<f64> = (0..pop.len())
-        .map(|i| {
-            let (lo, hi) = (i.saturating_sub(10), (i + 10).min(pop.len() - 1));
-            pop[lo..=hi].iter().sum::<f64>() / (hi - lo + 1) as f64
-        })
-        .collect();
-    (50..pop.len().saturating_sub(10))
-        .filter(|&t| {
-            let (lo, hi) = (t - 40, (t + 40).min(pop.len() - 1));
-            smooth[lo..=hi].iter().all(|&v| v <= smooth[t])
-                && smooth[lo..t].iter().all(|&v| v < smooth[t])
-        })
+/// Population every 50 ticks from t = 0 to 1000 (0 once extinct).
+fn every_50(config: &Config, seed: u64) -> Vec<u32> {
+    let pop = run(config.clone(), seed, 1000)
+        .stats
+        .series("population")
+        .unwrap();
+    (0..=1000)
+        .step_by(50)
+        .map(|t| pop.get(t).copied().unwrap_or(0.0) as u32)
         .collect()
 }
 
-/// The longest gap between consecutive peaks (0 with fewer than two).
-fn widest_peak_spacing(peaks: &[usize]) -> usize {
-    peaks.windows(2).map(|w| w[1] - w[0]).max().unwrap_or(0)
-}
-
-/// One VI-2 / VI-3 run: the tick the population reached 0 (if it did by
-/// t = 1000), the population at the end, its peak as a multiple of the
-/// initial 500, and its peaks.
-fn indecomposability_run(config: &Config, seed: u64) -> (Option<u64>, usize, f64, Vec<usize>) {
-    let mut w = World::new(config.clone(), seed).unwrap();
-    let mut extinct = None;
-    while w.tick < 1000 {
-        w.step();
-        if w.population() == 0 {
-            extinct = Some(w.tick);
-            break;
-        }
-    }
-    let pop = w.stats.series("population").unwrap();
-    let max = pop.iter().copied().fold(0.0, f64::max);
-    (extinct, w.population(), max / 500.0, population_peaks(&pop))
-}
-
-/// Calibration for `vi-2-no-trade` / `vi-3-trade`: each candidate (vision,
-/// metabolism of both goods, endowment of both goods) on seeds 1–5.
+/// Prints the populations recorded in presets.rs's `indecomposability` comment
+/// and the figures the thresholds below come from.
 #[test]
 #[ignore]
 fn measure_indecomposability() {
-    use sugarscape_core::config::URange;
-    let candidates = [
-        ((1, 10), (1, 5), (25, 50)),
-        ((1, 5), (1, 5), (25, 50)),
-        ((1, 5), (1, 5), (50, 100)),
-        ((1, 5), (1, 6), (30, 60)),
-        ((1, 5), (1, 3), (60, 60)),
-        ((1, 5), (1, 2), (64, 64)),
-        ((1, 5), (1, 2), (65, 65)),
-        ((1, 5), (1, 2), (66, 66)),
-    ];
-    for (vision, metabolism, endowment) in candidates {
-        println!("vision {vision:?}, metabolism {metabolism:?}, endowment {endowment:?}:");
-        for id in ["vi-2-no-trade", "vi-3-trade"] {
-            let mut c = presets::by_id(id).unwrap().config;
-            c.vision = URange::new(vision.0, vision.1);
-            for g in &mut c.goods {
-                g.metabolism = URange::new(metabolism.0, metabolism.1);
-                g.endowment = URange::new(endowment.0, endowment.1);
-            }
-            for seed in 1..=5 {
-                let (extinct, end, peak, peaks) = indecomposability_run(&c, seed);
-                println!(
-                    "  {id} seed {seed}: extinct at {extinct:?}, t=1000 population {end}, peak {peak:.2}x, {} peaks, widest spacing {}",
-                    peaks.len(),
-                    widest_peak_spacing(&peaks),
-                );
-            }
+    for id in ["vi-2-no-trade", "vi-3-trade"] {
+        let config = presets::by_id(id).unwrap().config;
+        for seed in 1..=5 {
+            let pop = run(config.clone(), seed, 1000)
+                .stats
+                .series("population")
+                .unwrap();
+            let trough = pop[..=150].iter().copied().fold(f64::MAX, f64::min);
+            let peak = pop.iter().copied().fold(0.0, f64::max);
+            let late_min = pop[300..].iter().copied().fold(f64::MAX, f64::min);
+            println!(
+                "{id} seed {seed}: every 50 ticks {:?}; trough by t=150 {trough}, peak {:.2}x, min after t=300 {late_min}",
+                every_50(&config, seed),
+                peak / 500.0,
+            );
         }
     }
 }
 ```
 
-- [ ] **Step 4: Measure and choose**
+- [ ] **Step 4: Measure and record** (Decision 14)
 
-Run: `cargo test -p sugarscape-core --release --test book -- --ignored --nocapture measure_indecomposability` (about a minute).
+Run: `cargo test -p sugarscape-core --release --test book -- --ignored --nocapture measure_indecomposability`
 Expected (planning run; the runs are deterministic, so these should reproduce exactly):
-
-| # | vision, metabolism, endowment | VI-2 extinct at (seeds 1–5) | VI-3 at t = 1000 | VI-3 peak × 500 | VI-3 peaks / widest spacing |
-|---|---|---|---|---|---|
-| 1 | 1–10, 1–5, 25–50 | none | 857, 793, 747, 860, 898 | 1.69–1.99 | 4–6 / 184–263 |
-| 2 | 1–5, 1–5, 25–50 | none | 692, 705, 680, 731, 680 | 1.42–1.65 | 3–5 / 178–305 |
-| 3 | 1–5, 1–5, 50–100 | 196, 181, 286, 196, 182 | all extinct (139–187) | — | — |
-| 4 | 1–5, 1–6, 30–60 | 299, 224, 420, 306, alive (375) | 566, **0** (202), 622, 527, 519 | — | — |
-| 5 | 1–5, 1–3, 60 | alive (220), 386, 794, 535, 509 | 235, 157, 192, 225, 258 | — | — |
-| 6 | 1–5, 1–2, 64 | 541, 356, alive ×3 | 156, 187, 189, 203, **0** (570) | — | — |
-| 7 | 1–5, 1–2, 65 | 385, 900, 530, 445, 651 | 173, 181, 75, 106, 158 | 1.31, 1.33, 1.31, 1.28, 1.34 | 3, 3, 3, 4, 4 / 709, 702, 571, 294, 521 |
-| 8 | 1–5, 1–2, 66 | 498, alive, 409, 347, alive | **0**, 18, **0**, **0**, 43 | — | — |
-
-Apply Decision 14's rule to the printed table: the first candidate with all five VI-2 runs extinct and all five VI-3 runs alive with at least two peaks. With the numbers above that is candidate 7, which Step 2 already uses — nothing to change. If the printed numbers differ, apply the same rule to them, put the chosen candidate in `indecomposability`, and rewrite its comment table and both descriptions with the printed numbers. If no candidate qualifies, stop and report BLOCKED with the printed table.
+```
+vi-2-no-trade seed 1: every 50 ticks [500, 250, 192, 383, 724, 933, 857, 814, 840, 845, 838, 866, 809, 744, 854, 910, 866, 872, 857, 827, 851]; trough by t=150 192, peak 1.89x, min after t=300 732
+vi-2-no-trade seed 2: every 50 ticks [500, 253, 191, 340, 623, 850, 782, 742, 745, 806, 856, 828, 828, 821, 814, 816, 842, 848, 870, 842, 815]; trough by t=150 189, peak 1.75x, min after t=300 726
+vi-2-no-trade seed 3: every 50 ticks [500, 261, 151, 253, 555, 809, 843, 791, 762, 752, 784, 867, 838, 809, 733, 769, 873, 886, 871, 893, 856]; trough by t=150 146, peak 1.81x, min after t=300 721
+vi-2-no-trade seed 4: every 50 ticks [500, 276, 244, 462, 812, 883, 796, 790, 756, 776, 890, 907, 865, 880, 885, 845, 810, 844, 880, 845, 781]; trough by t=150 235, peak 1.87x, min after t=300 734
+vi-2-no-trade seed 5: every 50 ticks [500, 270, 176, 300, 532, 767, 880, 808, 782, 796, 791, 745, 787, 866, 849, 784, 833, 877, 858, 864, 880]; trough by t=150 173, peak 1.78x, min after t=300 736
+vi-3-trade seed 1: every 50 ticks [500, 246, 130, 330, 746, 989, 890, 844, 832, 834, 829, 868, 879, 873, 844, 770, 785, 874, 838, 770, 857]; trough by t=150 129, peak 1.99x, min after t=300 753
+vi-3-trade seed 2: every 50 ticks [500, 291, 178, 385, 755, 926, 842, 807, 813, 811, 843, 856, 854, 824, 821, 829, 785, 760, 816, 768, 793]; trough by t=150 175, peak 1.86x, min after t=300 750
+vi-3-trade seed 3: every 50 ticks [500, 275, 121, 162, 346, 653, 821, 726, 706, 775, 767, 747, 742, 823, 829, 806, 787, 779, 735, 727, 747]; trough by t=150 111, peak 1.69x, min after t=300 685
+vi-3-trade seed 4: every 50 ticks [500, 280, 118, 145, 403, 836, 965, 901, 871, 888, 859, 881, 847, 850, 883, 912, 905, 854, 851, 856, 860]; trough by t=150 102, peak 1.96x, min after t=300 823
+vi-3-trade seed 5: every 50 ticks [500, 284, 124, 209, 485, 821, 880, 808, 785, 786, 791, 776, 838, 914, 890, 884, 876, 883, 900, 907, 898]; trough by t=150 115, peak 1.86x, min after t=300 771
+```
+Record them: in `indecomposability`, between `demography(c);` and `c.vision = …`, add a comment with the printed lists (one line per preset and seed, `every 50 ticks` values only) introduced by:
+```rust
+    // No calibration: Chapter IV's traits, as the spec fixes them. Measured
+    // (`measure_indecomposability`, release), population every 50 ticks
+    // from t = 0 to 1000, seeds 1-5:
+```
+and closed by:
+```rust
+    // VI-3 matches the book's curve (a dip by t ~ 100, recovery to 1.7-2.0x
+    // the initial 500, minima near 700); VI-2 does the same instead of
+    // crashing. Every stated rule (M, S, T, death, the landscape) matches the
+    // book and Appendix B, and no setting of 216 tried separated the two on
+    // all of seeds 1-5 except on a knife edge: under these rules trade moves
+    // holdings toward each agent's metabolism ratio but does not raise
+    // fertility. The crash most likely depended on unreported details of
+    // the original software.
+```
+If the printed numbers differ from the planning run, record the printed ones and make both descriptions' ranges (trough, peak factor) match them.
 
 - [ ] **Step 5: Golden entries**
 
 Run: `cargo test -p sugarscape-core --test golden -- --ignored --nocapture print_golden`. Check that the 27 earlier values equal their entries, then append to `GOLDEN` in `tests/golden.rs`, after the `iii-6-three-tribes` entry:
 ```rust
-    // Chapter VI: indecomposability.
-    ("vi-2-no-trade", 0xadfed5e8c7663a3e),
-    ("vi-3-trade", 0x8cffd7cb9a31bf83),
+    // Chapter VI: indecomposability (Chapter IV's traits, trade off / on).
+    // VI-2's book crash is not reproduced; this entry pins its run.
+    ("vi-2-no-trade", 0xd35c40bead68ed38),
+    ("vi-3-trade", 0x2a65351834fda082),
 ```
-(These are the planning values for candidate 7; if Step 4 chose another candidate, use the printed values.)
+(These are the planning values; use the printed ones if they differ.)
 
 - [ ] **Step 6: The book-style test** (Decision 15)
 
-Thresholds from the chosen candidate's VI-2/VI-3 rows: `VI2_EXTINCT_BY` = the latest VI-2 extinction tick rounded up to a multiple of 50; `VI3_PEAK_FACTOR` = the smallest VI-3 peak rounded down to a multiple of 0.05; `VI3_WIDEST_SPACING` = the smallest VI-3 widest spacing rounded down to a multiple of 10. For candidate 7: 900, 1.25, 290. Append to `book.rs`:
+Thresholds from the VI-3 lines of Step 4: `VI3_TROUGH_BELOW` = the largest `trough by t=150`, plus 1, rounded up to a multiple of 25; `VI3_RECOVERY_FACTOR` = the smallest `peak` rounded down to a multiple of 0.05. Planning: 175 → 200, 1.69 → 1.65. Append to `book.rs`:
 ```rust
-/// Chapter VI's thresholds, from `measure_indecomposability` (release, seeds
-/// 1–5; presets.rs records the measurements).
-const VI2_EXTINCT_BY: u32 = 900;
-const VI3_PEAK_FACTOR: f64 = 1.25;
-const VI3_WIDEST_SPACING: usize = 290;
+/// VI-3's thresholds, from `measure_indecomposability` (release, seeds 1–5;
+/// presets.rs records the populations): the largest trough by t = 150 was
+/// 175 and the smallest peak 1.69 × 500.
+const VI3_TROUGH_BELOW: f64 = 200.0;
+const VI3_RECOVERY_FACTOR: f64 = 1.65;
 
 #[test]
 #[ignore]
-fn trade_decides_whether_the_society_survives() {
-    // Animations VI-2 and VI-3: "In the first run there is no trading. This
-    // population crashes"; with trade on, "society pulls out of its
-    // demographic nose dive". The book's recovery to twice the initial
-    // population and 115-year waves are not reproduced (see presets.rs).
-    let no_trade = presets::by_id("vi-2-no-trade").unwrap().config;
-    let trade = presets::by_id("vi-3-trade").unwrap().config;
+fn trade_society_dips_then_recovers_past_its_start() {
+    // Animation VI-3: "Initially, the population declines … But society
+    // pulls out of its demographic nose dive and begins to grow. Indeed, it
+    // rises to a level more than twice that of the initial population."
+    // (VI-2's crash is not reproduced; its golden entry pins it.)
+    let config = presets::by_id("vi-3-trade").unwrap().config;
     for seed in 1..=5 {
-        let w = run(no_trade.clone(), seed, VI2_EXTINCT_BY);
-        assert_eq!(
-            w.population(),
-            0,
-            "VI-2 seed {seed}: still alive at t = {VI2_EXTINCT_BY}"
-        );
-        let (extinct, _, peak, peaks) = indecomposability_run(&trade, seed);
-        assert_eq!(extinct, None, "VI-3 seed {seed} died out");
-        assert!(peak >= VI3_PEAK_FACTOR, "VI-3 seed {seed}: peak {peak:.2}x");
+        let w = run(config.clone(), seed, 1000);
+        let pop = w.stats.series("population").unwrap();
+        let trough = pop[..=150].iter().copied().fold(f64::MAX, f64::min);
+        let peak = pop.iter().copied().fold(0.0, f64::max);
+        assert!(trough < VI3_TROUGH_BELOW, "seed {seed}: trough {trough}");
         assert!(
-            peaks.len() >= 2 && widest_peak_spacing(&peaks) >= VI3_WIDEST_SPACING,
-            "VI-3 seed {seed}: peaks {peaks:?}"
+            peak > VI3_RECOVERY_FACTOR * 500.0,
+            "seed {seed}: peak {peak}"
         );
+        assert!(w.population() > 0, "seed {seed} died out");
     }
 }
 ```
-Run: `cargo test -p sugarscape-core --release --test book -- --ignored trade_decides_whether_the_society_survives`
-Expected: PASS. (`measure_indecomposability` stays, `#[ignore]`d, as the calibration's record.)
+Run: `cargo test -p sugarscape-core --release --test book -- --ignored trade_society_dips_then_recovers_past_its_start`
+Expected: PASS. (`measure_indecomposability` stays, `#[ignore]`d, as the record's source.)
 
 - [ ] **Step 7: VI-1's eighteen views** (Decision 17)
 
 Replace `vi-1-everything`'s description string with:
 ```rust
-            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650; disease flares after each outbreak and tends to die out again before the next one. The book's eighteen views: Agents → Disease colors; the neighbor, family, friends, trade, credit and disease network overlays; Charts for population, wealth distribution, Lorenz curve and Gini (sugar wealth), mean holdings of sugar and spice, age histogram, cultural tags, trade price with its spread, trade volume and disease; and the Credit tab's lender–borrower hierarchy.",
+            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650; disease flares after each outbreak and tends to die out again before the next one. The book's eighteen views, in its order: (1) Agents → Disease colors; (2) the Neighbor network overlay; (3) Charts → Wealth distribution (sugar); (4) Charts → Goods → Wealth distribution · spice; (5) Charts → Goods → Lorenz curve and Gini coefficient (total wealth); (6) Charts → Population; (7) Charts → Age histogram; (8) the Family network overlay (with Agents → Lineage for the book's colors); (9) Charts → Cultural tags; (10) the Friends network overlay; (11) and (12) Charts → Economy → Trade price (its mean and ± SD band); (13) Charts → Economy → Trade volume; (14) the Trade network overlay; (15) the Credit network overlay; (16) the Credit tab's hierarchy; (17) Charts → Disease; (18) the Disease network overlay.",
 ```
 (The config is unchanged; its golden entry stays.)
 
 - [ ] **Step 8: Verify**
 
-Run: `cargo test -p sugarscape-core && wasm-pack test --node crates/sugarscape-wasm`
+Run: `cargo test --workspace && wasm-pack test --node crates/sugarscape-wasm`
 Expected: PASS (`every_preset_has_a_golden_entry` included).
 
 - [ ] **Step 9: Commit**
@@ -2090,14 +2289,14 @@ Expected: PASS (`every_preset_has_a_golden_entry` included).
 ```bash
 cargo fmt --all && cargo clippy --all-targets -- -D warnings
 git add crates/sugarscape-core/src/presets.rs crates/sugarscape-core/tests/golden.rs crates/sugarscape-core/tests/book.rs
-git commit -m "Add the measured VI-2 and VI-3 indecomposability presets" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
+git commit -m "Add the VI-2 and VI-3 indecomposability presets with their measured runs" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
 ```
 
 ---
 
 ### Task 9: The Compare entry in the presets menu
 
-*Mechanical (full code).* Browser (controller): type seed 3 in the seed box (don't press Reset), choose **Indecomposability — VI-2 vs VI-3 (Compare)** from the Rules tab's menu (under **Compare**): Compare opens with A `vi-2-no-trade` and B `vi-3-trade`, both headers `seed 3`, t = 0, the address bar has no hash; Play at Max — A dies out, B survives (population chart: A solid falling to 0, B dashed alive; the age histograms overlay as outlines); the menu shows A's preset again afterwards; choosing the entry while Compare is on replaces the pair (Compare is left keeping A first); B's "Rules for: B" menu has no Compare entries; every existing Compare scenario (the Compare button, `#c=` links, Keep A/B) still works.
+*Mechanical (full code).* Browser (controller): type seed 3 in the seed box (don't press Reset), choose **Indecomposability — VI-2 vs VI-3 (Compare)** from the Rules tab's menu (under **Compare**): Compare opens with A `vi-2-no-trade` and B `vi-3-trade`, both headers `seed 3`, t = 0, the address bar has no hash; Play at Max to t ≈ 1000 — both populations dip by t ≈ 100 and recover to roughly 1.7–2 × 500 (population chart: A solid, B dashed; A does not crash — the recorded finding), the age and per-good wealth histograms overlay as outlines; the menu shows A's preset again afterwards; choosing the entry while Compare is on replaces the pair (Compare is left keeping A first); B's "Rules for: B" menu has no Compare entries; every existing Compare scenario (the Compare button, `#c=` links, Keep A/B) still works.
 
 **Files:**
 - Create: `web/src/compare-presets.ts`, `web/src/compare-presets.test.ts`
@@ -2347,10 +2546,14 @@ git commit -m "Open VI-2 vs VI-3 in Compare from the presets menu" -m "Claude-Se
 After the paragraph that begins "Chapter V: immune and disease bit strings", add:
 ```markdown
 Chapter VI: the indecomposability demonstration and the emergent society's views. Presets
-`vi-2-no-trade` and `vi-3-trade` are one society — 500 agents on the sugar and spice landscape that
-move and reproduce — without and with trade, and the presets menu's **Indecomposability — VI-2 vs
-VI-3 (Compare)** opens them side by side in Compare at the seed box's seed. `vi-1-everything` offers
-the book's eighteen views (its description says where each lives). Three more overlays: **Neighbor
+`vi-2-no-trade` and `vi-3-trade` are one society — 500 agents with Chapter IV's traits on the sugar
+and spice landscape that move and reproduce — without and with trade, and the presets menu's
+**Indecomposability — VI-2 vs VI-3 (Compare)** opens them side by side in Compare at the seed box's
+seed. `vi-3-trade` reproduces the book's VI-3 curve (a dip by t ≈ 100, recovery to about twice the
+initial population, minima near 700), but `vi-2-no-trade` does the same instead of crashing as the
+book's does: every stated rule matches the book, so the crash most likely depended on unreported
+details of the original software (see Notes). `vi-1-everything` offers the book's eighteen views
+(its description says where each lives). Three more overlays: **Neighbor
 network** (Chapter II: each agent → the agents that were its von Neumann neighbors after its last
 move, with a direction marker; lists may be one-sided), **Friends network** (Chapter III: each agent →
 the up to five culturally closest neighbors it has met, never rechecked; with culture on) and
@@ -2358,18 +2561,27 @@ the up to five culturally closest neighbors it has met, never rechecked; with cu
 genealogy: founders grey (the book's black, lightened for the dark grid), founders with children red,
 the born green, born parents yellow. Charts gain the **Age histogram** (5-tick bins, while lifetimes
 are finite) and **Cultural tags** (the percentage of agents with a 0 at each tag position, while
-culture is on); in Compare both are drawn as outlines. Neighbor lists, friends and lineage are views
-only: they never change a run and are not exported or shared.
+culture is on). With two or more goods the Goods section adds each good's **Wealth distribution**
+and **total wealth** (every good's holdings summed): its **Lorenz curve** and **Gini coefficient**,
+also the new `gini_total` statistic (equal to `gini` with one good; the sugar-only `gini`,
+`mean_wealth`, Lorenz curve and wealth histogram are unchanged). In Compare the histograms are drawn
+as outlines. Neighbor lists, friends and lineage are views only: they never change a run and are not
+exported or shared.
 ```
 and in "### Notes" add (with Task 8's measured numbers if they differ):
 ```markdown
-- `vi-2-no-trade` and `vi-3-trade` were calibrated by measurement (vision 1–5, metabolism 1–2 and
-  endowment 65 for both goods; see `presets.rs`): without trade the population dies out on seeds
-  1–5 (t = 385–900), with trade it survives (75–181 agents at t = 1000). The separation is narrow
-  (endowments 64 and 66 do not separate), and the book's recovery to twice the initial population
-  and its 115-year waves are not reproduced by these rules.
-- In `vi-1-everything`, the book's spice wealth histogram is shown as the Mean holdings chart's
-  spice line, and the Lorenz curve and Gini coefficient use sugar wealth.
+- The book's VI-2 crash is not reproduced. M, S, T, death and the landscape were checked against the
+  text and Appendix B and match; with Chapter IV's traits `vi-3-trade` follows the book's VI-3 curve
+  on seeds 1–5 (dip to 100–175 by t ≈ 100–150, peak 1.7–2.0 × 500, minima near 700), and
+  `vi-2-no-trade` follows much the same curve (dip to 150–235, peak about 1.8 ×). Of 216
+  configurations tried (vision, metabolism, endowment, four fertility tests, trade before sex), none
+  made VI-2 die out and VI-3 survive on all of seeds 1–5 except on a knife edge: under these rules
+  trade moves holdings toward each agent's metabolism ratio and does not raise fertility. The
+  original software most likely had details the book does not report. `presets.rs` records the
+  measured populations.
+- Total wealth is the sum of an agent's holdings of every good, a reading of VI-1's "total wealth"
+  (the book does not define it for two goods). The statistics CSV gains a `gini_total` column after
+  `trade_pairs`.
 ```
 
 - [ ] **Step 2: Roadmap**
@@ -2378,11 +2590,13 @@ After the "## Milestone 7b" section add:
 ```markdown
 ## Milestone 8: Chapter VI — indecomposability and the emergent society (done)
 
-The indecomposability presets `vi-2-no-trade` / `vi-3-trade` (measured; the separation holds on
-seeds 1–5 but the book's recovery and long waves are not reproduced) with a presets-menu entry that
-opens them in Compare; the neighbor, friends and family network overlays, the Lineage color mode,
-and the age and cultural-tag histograms, so `vi-1-everything` offers the book's eighteen views. Runs
-are unchanged. See `docs/superpowers/specs/2026-09-24-chapter-vi-design.md`.
+The indecomposability presets `vi-2-no-trade` / `vi-3-trade` with Chapter IV's traits and a
+presets-menu entry that opens them in Compare: VI-3 reproduces the book's curve, but VI-2 does not
+crash — the book's stated rules do not produce the crash, which most likely depended on unreported
+details of the original software. The neighbor, friends and family network overlays, the Lineage
+color mode, the age and cultural-tag histograms, per-good wealth histograms and total-wealth Lorenz
+curve and Gini (`gini_total`), so `vi-1-everything` offers all eighteen of the book's views. Runs are
+unchanged. See `docs/superpowers/specs/2026-09-24-chapter-vi-design.md`.
 
 ## Next: Other artificial societies
 
@@ -2411,7 +2625,7 @@ wasm-pack test --node crates/sugarscape-wasm
 (cd web && npm run build && npm test)
 git diff main -- crates/sugarscape-core/tests/fixtures crates/sugarscape-core/tests/legacy.rs
 ```
-Expected: everything PASSES (the book suite includes `trade_decides_whether_the_society_survives`; `measure_indecomposability` just prints), and the last command prints nothing (legacy fixtures untouched). `git diff main -- crates/sugarscape-core/tests/golden.rs` shows only the two added entries and their comment.
+Expected: everything PASSES (the book suite includes `trade_society_dips_then_recovers_past_its_start`; `measure_indecomposability` just prints), and the last command prints nothing (legacy fixtures untouched). `git diff main -- crates/sugarscape-core/tests/golden.rs` shows only the two added entries and their comment.
 
 - [ ] **Step 4: Commit**
 
@@ -2420,7 +2634,7 @@ git add README.md docs/roadmap.md
 git commit -m "Document Chapter VI and plan other artificial societies" -m "Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3"
 ```
 
-The controller then runs the full puppeteer pass (implementers don't): every existing scenario (rules, tools, painting, image import, inspection, charts, share links, sessions, exports, disease, credit tab, groups, trails, Experiments, Compare with Keep A/B, recording, the worker determinism check `0x75b93943813545e4`); every scenario in Tasks 6, 7 and 9; the VI-2 vs VI-3 Compare entry at Max to t = 1000 (A extinct, B alive); each new overlay on `vi-1-everything` and on a Chapter III preset; Lineage colors; both histograms, also in Compare; and the performance check — a 200 × 200 world with 2 000 agents at **Max** for 20 s, once as set up and once with culture on and all three new overlays ticked, with a `PerformanceObserver({ type: 'longtask', buffered: true })`: no main-thread task over 50 ms and a grid redraw rate near 30 per second.
+The controller then runs the full puppeteer pass (implementers don't): every existing scenario (rules, tools, painting, image import, inspection, charts, share links, sessions, exports, disease, credit tab, groups, trails, Experiments, Compare with Keep A/B, recording, the worker determinism check `0x75b93943813545e4`); every scenario in Tasks 3 and 6–9; the VI-2 vs VI-3 Compare entry at Max to t = 1000 (both dip and recover; B follows the book's VI-3 curve); each new overlay on `vi-1-everything` and on a Chapter III preset; Lineage colors; the age, tag and per-good wealth histograms and the total-wealth Lorenz and Gini, also in Compare; each of `vi-1-everything`'s eighteen views where its description says; and the performance check — a 200 × 200 world with 2 000 agents at **Max** for 20 s, once as set up and once with culture on and all three new overlays ticked, with a `PerformanceObserver({ type: 'longtask', buffered: true })`: no main-thread task over 50 ms and a grid redraw rate near 30 per second.
 
 ---
 
@@ -2436,12 +2650,14 @@ The controller then runs the full puppeteer pass (implementers don't): every exi
 | WASM edge lists as quadruples; overlay list `trade … family` | 4, 5 |
 | Checkboxes with availability, direction marker, torus splitting, Compare per grid | 5, 6 |
 | `ageHist`/`tagHist` through `wants`, only when visible and stale; Compare step outlines | 5, 7 |
-| `vi-2-no-trade` / `vi-3-trade`, differ only in trade, measured calibration recorded | 8 |
+| `vi-2-no-trade` / `vi-3-trade` with Chapter IV's traits, differ only in trade, no rule change; the reproduction finding in descriptions, a code comment and the README | 8, 10 |
+| Per-good wealth histograms, total wealth, total-wealth Lorenz, `gini_total` (appended, every tick, = `gini` with one good); sugar views unchanged | 3, 4, 5, 7 |
 | Compare entry, seed box's seed, t = 0 lockstep | 9 |
 | VI-1 eighteen views in its description | 8 |
 | Golden unchanged + two new entries; fingerprint invariance test | 1, 2, 3, 8 |
 | Core unit tests listed in the spec | 1, 2, 3 |
-| Book-style test | 8 |
+| Book-style test (VI-3 dips, recovers, survives; VI-2 pinned by its golden entry) | 8 |
+| Stats tests: per-good histograms, total-wealth Lorenz, `gini_total` = `gini` with one good | 3, 4 |
 | Web tests: overlay wants, torus splitting, lineage colors, histogram visibility, paused quiet | 5, 6, 7 |
 | README, roadmap with "Other artificial societies" | 10 |
 | Max-speed performance | 1 (CLI), 10 (browser) |
