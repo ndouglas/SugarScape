@@ -15,6 +15,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "gifenc": "^1.0.3",
     "uplot": "^1.6.32"
   },
   "devDependencies": {
