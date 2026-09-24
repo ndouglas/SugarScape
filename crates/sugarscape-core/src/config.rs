@@ -1158,7 +1158,10 @@ impl Config {
         Ok(())
     }
 
-    /// A copy with one dotted `path` set to `value`.
+    /// A copy with one dotted `path` set to `value`. Setting `tag_length`
+    /// rebuilds the groups when they are the default for the old length
+    /// (custom groups are kept, and validation reports any mismatch;
+    /// Decision 7).
     pub fn with_path(&self, path: &str, value: &serde_json::Value) -> Result<Config, FieldError> {
         let mut json = serde_json::to_value(self).expect("config serializes");
         let unknown = || FieldError::new("schedule", format!("unknown field {path}"));
@@ -1173,8 +1176,12 @@ impl Config {
             .ok_or_else(unknown)?;
         }
         *slot = value.clone();
-        serde_json::from_value(json)
-            .map_err(|e| FieldError::new("schedule", format!("{path}: {e}")))
+        let mut next: Config = serde_json::from_value(json)
+            .map_err(|e| FieldError::new("schedule", format!("{path}: {e}")))?;
+        if path == "tag_length" && self.culture.groups == default_groups(self.tag_length) {
+            next.culture.groups = default_groups(next.tag_length);
+        }
+        Ok(next)
     }
 
     /// This config with every path in `change` set, checked for validity
@@ -1425,6 +1432,28 @@ mod tests {
                 .field,
             "schedule"
         );
+    }
+
+    #[test]
+    fn with_path_on_tag_length_rebuilds_default_groups() {
+        let c = Config::default();
+        assert_eq!(c.culture.groups, default_groups(11));
+        for l in [5, 7, 16] {
+            let next = c.with_path("tag_length", &serde_json::json!(l)).unwrap();
+            assert_eq!(next.tag_length, l);
+            assert_eq!(next.culture.groups, default_groups(l));
+            next.validate().unwrap();
+        }
+    }
+
+    #[test]
+    fn with_path_on_tag_length_keeps_custom_groups() {
+        let mut c = Config::default();
+        c.culture.groups = three_tribes(11);
+        let next = c.with_path("tag_length", &serde_json::json!(5)).unwrap();
+        assert_eq!(next.tag_length, 5);
+        assert_eq!(next.culture.groups, three_tribes(11));
+        assert!(next.validate().is_err());
     }
 
     #[test]

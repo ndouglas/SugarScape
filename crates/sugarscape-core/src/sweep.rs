@@ -1011,6 +1011,26 @@ mod tests {
     }
 
     #[test]
+    fn tag_length_sweeps_rebuild_the_default_groups() {
+        let s = sweep(json!({
+            "name": "tags",
+            "base": { "preset": "iii-6-culture" },
+            "x": { "path": "tag_length", "values": [5, 11] },
+            "seeds": { "from": 1, "count": 1 },
+            "ticks": 10,
+            "metric": { "kind": "final", "series": "population" }
+        }));
+        let points = s.points().unwrap();
+        for point in &points {
+            let config = s.config_for(point).unwrap();
+            assert_eq!(
+                config.culture.groups,
+                crate::config::default_groups(config.tag_length)
+            );
+        }
+    }
+
+    #[test]
     fn without_series_there_is_one_line_named_after_the_statistic() {
         let s = sweep(without(tiny(), "series"));
         assert_eq!(s.series_count(), 1);
