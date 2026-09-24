@@ -210,3 +210,27 @@ proptest! {
         prop_assert_eq!(a.fingerprint(), b.fingerprint());
     }
 }
+
+#[test]
+fn observing_networks_and_lineage_does_not_change_a_run() {
+    use sugarscape_core::presets;
+    for id in ["vi-1-everything", "iii-6-culture", "iii-14-combat-culture"] {
+        let config = presets::by_id(id).unwrap().config;
+        let mut watched = World::new(config.clone(), 3).unwrap();
+        let mut plain = World::new(config, 3).unwrap();
+        for _ in 0..60 {
+            watched.step();
+            plain.step();
+            let edges = watched.neighbor_edges().len()
+                + watched.friend_edges().len()
+                + watched.family_edges().len();
+            let ids: Vec<u64> = watched.agents().map(|a| a.id).collect();
+            let classes = ids
+                .iter()
+                .filter(|&&a| watched.lineage(a).is_some())
+                .count();
+            assert!(edges + classes > 0);
+        }
+        assert_eq!(watched.fingerprint(), plain.fingerprint(), "{id}");
+    }
+}

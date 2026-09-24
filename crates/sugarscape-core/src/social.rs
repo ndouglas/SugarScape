@@ -3,7 +3,7 @@
 //! (Animation III-8). Nothing here reads or advances `World.rng`, changes a
 //! rule's behavior, or is hashed, exported or shared (like trails).
 
-use crate::agent::{AgentId, Tags};
+use crate::agent::{Agent, AgentId, Tags};
 use crate::geometry::Pos;
 use crate::world::World;
 
@@ -130,6 +130,77 @@ impl Seen {
             }
         }
         seen
+    }
+}
+
+/// An agent's class in Animation III-5's genealogical view: "The initial
+/// population is colored black. When a member of this population has a
+/// child, the new parent is colored red, the child green. Agents who are both
+/// parents and children are colored yellow." Founders are agents without
+/// parents (the initial population, and agents placed or replaced later);
+/// a parent has had a child, living or dead.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Lineage {
+    Founder,
+    FounderParent,
+    Born,
+    BornParent,
+}
+
+impl Lineage {
+    pub fn of(agent: &Agent) -> Self {
+        match (agent.parents.is_some(), !agent.children.is_empty()) {
+            (false, false) => Self::Founder,
+            (false, true) => Self::FounderParent,
+            (true, false) => Self::Born,
+            (true, true) => Self::BornParent,
+        }
+    }
+}
+
+/// (from, to) positions: an edge from each living agent (in id order) to
+/// each living agent `targets` names for it, in that order.
+fn directed<'a, I>(world: &'a World, targets: impl Fn(&'a Agent) -> I) -> Vec<(Pos, Pos)>
+where
+    I: Iterator<Item = AgentId>,
+{
+    let mut out = Vec::new();
+    for a in world.agents() {
+        for t in targets(a) {
+            if let Some(b) = world.agent(t) {
+                out.push((a.pos, b.pos));
+            }
+        }
+    }
+    out
+}
+
+impl World {
+    /// Chapter II's neighbor connection network (Animation II-5): "lines
+    /// are drawn from each agent to all agents on its list". Directed, so it
+    /// may be asymmetric (note 29); living agents only.
+    pub fn neighbor_edges(&self) -> Vec<(Pos, Pos)> {
+        directed(self, |a| a.social.neighbors().iter().copied())
+    }
+
+    /// Chapter III's network of friends (Animation III-8): an edge from each
+    /// agent to each of its living friends; none while culture is off.
+    pub fn friend_edges(&self) -> Vec<(Pos, Pos)> {
+        if !self.config.culture.enabled {
+            return Vec::new();
+        }
+        directed(self, |a| a.social.friends().iter().map(|&(f, _)| f))
+    }
+
+    /// Animation III-5's genealogical network: "a line from every parent to
+    /// each of its children", both living.
+    pub fn family_edges(&self) -> Vec<(Pos, Pos)> {
+        directed(self, |a| a.children.iter().copied())
+    }
+
+    /// Agent `id`'s genealogical class, if it is alive.
+    pub fn lineage(&self, id: AgentId) -> Option<Lineage> {
+        self.agent(id).map(Lineage::of)
     }
 }
 
@@ -341,5 +412,109 @@ mod tests {
         // records the other after its own move.
         assert_eq!(social(&w, a).neighbors(), &[b]);
         assert_eq!(social(&w, b).neighbors(), &[a]);
+    }
+
+    #[test]
+    fn neighbor_edges_run_from_each_agent_to_the_living_agents_on_its_list() {
+        use crate::geometry::Pos;
+        let mut w = blank_world(10, 10);
+        let i = spawn(&mut w, 2, 2);
+        let k = spawn(&mut w, 2, 3);
+        spawn(&mut w, 3, 2);
+        record(&mut w, i);
+        assert_eq!(
+            w.neighbor_edges(),
+            vec![
+                (Pos::new(2, 2), Pos::new(2, 3)),
+                (Pos::new(2, 2), Pos::new(3, 2))
+            ],
+            "directed: the other two have not moved, so they list nobody"
+        );
+        w.remove_agent(3, 2).unwrap();
+        w.move_agent(k, Pos::new(7, 7));
+        assert_eq!(
+            w.neighbor_edges(),
+            vec![(Pos::new(2, 2), Pos::new(7, 7))],
+            "the edge follows k to its new site until i moves; the dead are dropped"
+        );
+    }
+
+    #[test]
+    fn friend_edges_need_culture_and_living_friends() {
+        use crate::geometry::Pos;
+        let mut w = blank_world(10, 10);
+        w.config.culture.enabled = true;
+        let me = spawn(&mut w, 5, 5);
+        spawn(&mut w, 5, 4);
+        spawn(&mut w, 5, 6);
+        record(&mut w, me);
+        assert_eq!(w.friend_edges().len(), 2);
+        w.remove_agent(5, 6).unwrap();
+        assert_eq!(w.friend_edges(), vec![(Pos::new(5, 5), Pos::new(5, 4))]);
+        w.config.culture.enabled = false;
+        assert!(w.friend_edges().is_empty(), "none while culture is off");
+    }
+
+    #[test]
+    fn family_edges_and_lineage_follow_parents_and_children() {
+        use crate::geometry::Pos;
+        let mut w = blank_world(10, 10);
+        let mum = spawn(&mut w, 1, 1);
+        let dad = spawn(&mut w, 3, 1);
+        let kid = spawn(&mut w, 5, 5);
+        let grandkid = spawn(&mut w, 7, 7);
+        w.agent_mut(kid).unwrap().parents = Some([mum, dad]);
+        w.agent_mut(grandkid).unwrap().parents = Some([kid, dad]);
+        w.agent_mut(mum).unwrap().children = vec![kid];
+        w.agent_mut(dad).unwrap().children = vec![kid, grandkid];
+        w.agent_mut(kid).unwrap().children = vec![grandkid];
+        let loner = spawn(&mut w, 9, 9);
+        assert_eq!(
+            w.family_edges(),
+            vec![
+                (Pos::new(1, 1), Pos::new(5, 5)),
+                (Pos::new(3, 1), Pos::new(5, 5)),
+                (Pos::new(3, 1), Pos::new(7, 7)),
+                (Pos::new(5, 5), Pos::new(7, 7)),
+            ]
+        );
+        assert_eq!(w.lineage(loner), Some(Lineage::Founder));
+        assert_eq!(w.lineage(mum), Some(Lineage::FounderParent));
+        assert_eq!(w.lineage(kid), Some(Lineage::BornParent));
+        assert_eq!(w.lineage(grandkid), Some(Lineage::Born));
+        w.remove_agent(7, 7).unwrap();
+        assert_eq!(w.family_edges().len(), 2, "edges to a dead child go");
+        assert_eq!(
+            w.lineage(kid),
+            Some(Lineage::BornParent),
+            "a dead child still makes a parent"
+        );
+        assert_eq!(w.lineage(grandkid), None);
+    }
+
+    #[test]
+    fn a_two_goods_world_move_still_records_the_neighbor_list() {
+        let mut w = blank_world(10, 10);
+        add_goods(&mut w.config, 2);
+        let a = spawn(&mut w, 5, 5);
+        spawn(&mut w, 5, 6);
+        w.step();
+        assert!(
+            !social(&w, a).neighbors().is_empty(),
+            "the mover records its neighbor after a spice-world move"
+        );
+    }
+
+    #[test]
+    fn a_combat_move_still_records_the_neighbor_list() {
+        let mut w = blank_world(10, 10);
+        w.config.combat.enabled = true;
+        let a = spawn(&mut w, 5, 5);
+        spawn(&mut w, 5, 6);
+        w.step();
+        assert!(
+            !social(&w, a).neighbors().is_empty(),
+            "the mover records its neighbor after a combat-rule move"
+        );
     }
 }

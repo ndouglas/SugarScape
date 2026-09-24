@@ -6,6 +6,7 @@ use std::str::FromStr;
 use crate::agent::{Agent, Sex};
 use crate::config::Group;
 use crate::network::CreditRole;
+use crate::social::Lineage;
 use crate::world::World;
 
 pub use crate::config::parse_color;
@@ -29,6 +30,12 @@ pub const BOTH: Rgb = [0xff, 0xe0, 0x4d];
 pub const NEUTRAL: Rgb = [0x8a, 0x86, 0x7a];
 pub const SICK: Rgb = [0xff, 0x4d, 0x4d];
 pub const HEALTHY: Rgb = [0x3d, 0x7e, 0xff];
+/// Animation III-5's lineage colors. The book's founders are black; the grid's
+/// background is always dark, so they are drawn dark grey.
+pub const FOUNDER: Rgb = [0x5a, 0x5a, 0x5a];
+pub const FOUNDER_PARENT: Rgb = [0xff, 0x4d, 0x4d];
+pub const BORN: Rgb = [0x3d, 0xd6, 0x6b];
+pub const BORN_PARENT: Rgb = [0xff, 0xe0, 0x4d];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ColorMode {
@@ -39,6 +46,7 @@ pub enum ColorMode {
     Vision,
     Credit,
     Disease,
+    Lineage,
 }
 
 /// A landscape layer: a good's level or capacity, or a pollutant's level.
@@ -60,6 +68,7 @@ impl FromStr for ColorMode {
             "vision" => Self::Vision,
             "credit" => Self::Credit,
             "disease" => Self::Disease,
+            "lineage" => Self::Lineage,
             _ => return Err(format!("unknown color mode {s:?}")),
         })
     }
@@ -138,6 +147,12 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
                 SICK
             }
         }
+        ColorMode::Lineage => match Lineage::of(a) {
+            Lineage::Founder => FOUNDER,
+            Lineage::FounderParent => FOUNDER_PARENT,
+            Lineage::Born => BORN,
+            Lineage::BornParent => BORN_PARENT,
+        },
     }
 }
 
@@ -384,5 +399,25 @@ mod tests {
         assert_eq!(pixel(&buf, &w, 1, 1)[..3], SICK);
         assert_eq!(pixel(&buf, &w, 2, 2)[..3], HEALTHY);
         assert_eq!("disease".parse::<ColorMode>().unwrap(), ColorMode::Disease);
+    }
+
+    #[test]
+    fn lineage_mode_colors_founders_parents_and_children() {
+        let mut w = blank_world(10, 10);
+        let founder = spawn(&mut w, 1, 1);
+        let parent = spawn(&mut w, 2, 2);
+        let child = spawn(&mut w, 3, 3);
+        let both = spawn(&mut w, 4, 4);
+        w.agent_mut(parent).unwrap().children = vec![child];
+        w.agent_mut(child).unwrap().parents = Some([parent, founder]);
+        w.agent_mut(both).unwrap().parents = Some([parent, founder]);
+        w.agent_mut(both).unwrap().children = vec![999];
+        let mut buf = Vec::new();
+        render(&w, ColorMode::Lineage, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(pixel(&buf, &w, 1, 1)[..3], FOUNDER);
+        assert_eq!(pixel(&buf, &w, 2, 2)[..3], FOUNDER_PARENT);
+        assert_eq!(pixel(&buf, &w, 3, 3)[..3], BORN);
+        assert_eq!(pixel(&buf, &w, 4, 4)[..3], BORN_PARENT);
+        assert_eq!("lineage".parse::<ColorMode>().unwrap(), ColorMode::Lineage);
     }
 }
