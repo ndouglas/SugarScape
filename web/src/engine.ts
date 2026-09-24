@@ -261,13 +261,26 @@ export class Engine {
     return null;
   }
 
+  /** Keeps good `good`'s current capacities as its custom map (share links, export, reset). */
+  private keepLandscape(good: number): void {
+    const next = [...this.customLandscapes];
+    while (next.length <= good) next.push(null);
+    next[good] = this.sim.export_landscape(good);
+    this.customLandscapes = next;
+  }
+
   paint(x: number, y: number, radius: number, value: number, good = 0): FieldError[] | null {
     return this.edit(() => {
       this.sim.paint_capacity(x, y, radius, value, good);
-      const next = [...this.customLandscapes];
-      while (next.length <= good) next.push(null);
-      next[good] = this.sim.export_landscape(good);
-      this.customLandscapes = next;
+      this.keepLandscape(good);
+    });
+  }
+
+  /** Replaces good `good`'s capacity map (one byte per site, 0–10). */
+  importLandscape(good: number, capacities: Uint8Array): FieldError[] | null {
+    return this.edit(() => {
+      this.sim.set_landscape(good, capacities);
+      this.keepLandscape(good);
     });
   }
 

@@ -1,7 +1,9 @@
 import type { Engine, PlaceOverrides } from '../engine';
+import { capacitiesFromPixels } from '../image';
 import { diseaseOptions } from './disease-picker';
 import { h } from './dom';
 import type { GridView } from './grid-view';
+import { readImagePixels } from './image-import';
 
 type Tool = 'inspect' | 'paint' | 'place' | 'erase' | 'infect' | 'vaccinate';
 
@@ -63,6 +65,36 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     }
     goodSelect.value = String(good);
   }
+
+  /** Image import (Decision 12): for the paint tool's good, max capacity 0–10, optionally inverted. */
+  let importMax = 4;
+  let invert = false;
+  const importStatus = h('span', { class: 'hint', 'aria-live': 'polite' });
+  const fileInput = h('input', { type: 'file', accept: 'image/*', hidden: true, 'aria-label': 'Image to import' });
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    try {
+      const { width, height } = engine.size();
+      const capacities = capacitiesFromPixels(await readImagePixels(file, width, height), importMax, invert);
+      const errors = engine.importLandscape(good, capacities);
+      importStatus.textContent = errors ? errors.map((e) => e.message).join('; ') : `Imported ${file.name}`;
+    } catch (e) {
+      importStatus.textContent = `Could not read ${file.name}: ${e instanceof Error ? e.message : String(e)}`;
+    }
+  });
+  const invertBox = h('input', { type: 'checkbox', onchange: () => (invert = invertBox.checked) });
+  const importControls = h(
+    'span',
+    { class: 'tool-options' },
+    h('button', { onclick: () => fileInput.click(), title: 'Set the good’s capacities from an image’s brightness' }, 'Import image…'),
+    fileInput,
+    number('Max', 0, 10, () => importMax, (v) => (importMax = Math.round(v))),
+    h('label', {}, invertBox, ' Invert'),
+    importStatus,
+  );
+
   const select = <T extends string>(label: string, values: [T, string][], set: (v: T) => void) => {
     const s = h('select', {}, ...values.map(([v, l]) => h('option', { value: v }, l)));
     s.addEventListener('change', () => set(s.value as T));
@@ -93,7 +125,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     const pick = h('label', {}, 'Disease ', picker);
     options.replaceChildren(
       ...(tool === 'paint'
-        ? [goodLabel, number('Radius', 0, 10, () => radius, (v) => (radius = v)), number('Capacity', 0, 10, () => value, (v) => (value = v))]
+        ? [goodLabel, number('Radius', 0, 10, () => radius, (v) => (radius = v)), number('Capacity', 0, 10, () => value, (v) => (value = v)), importControls]
         : tool === 'place'
           ? [
               select('Sex', [['', 'Random'], ['female', 'Female'], ['male', 'Male']], (v) => (sex = v)),
