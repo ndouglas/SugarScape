@@ -8,7 +8,7 @@ use std::ops::Range;
 use crate::config::Config;
 use crate::world::World;
 
-pub const SERIES: [&str; 24] = [
+pub const SERIES: [&str; 25] = [
     "population",
     "gini",
     "mean_wealth",
@@ -33,6 +33,7 @@ pub const SERIES: [&str; 24] = [
     "diseases_in_circulation",
     "new_infections",
     "trade_pairs",
+    "gini_total",
 ];
 
 /// Per-good statistics for one tick.
@@ -97,6 +98,9 @@ pub struct Snapshot {
     pub new_infections: u32,
     /// Distinct pairs of goods exchanged this tick.
     pub trade_pairs: u32,
+    /// Gini coefficient of total wealth (every good's holdings summed);
+    /// equals `gini` in a one-good world.
+    pub gini_total: f64,
     pub goods: Vec<GoodStats>,
     /// Mean level of each pollutant over all sites.
     pub pollution: Vec<f64>,
@@ -195,6 +199,7 @@ impl Snapshot {
                 .len() as u32,
             new_infections: events.infections.len() as u32,
             trade_pairs,
+            gini_total: gini(&total_wealths(world)),
             goods,
             pollution,
             groups: group_shares,
@@ -228,6 +233,7 @@ impl Snapshot {
             "diseases_in_circulation" => f64::from(self.diseases_in_circulation),
             "new_infections" => f64::from(self.new_infections),
             "trade_pairs" => f64::from(self.trade_pairs),
+            "gini_total" => self.gini_total,
             _ => {
                 let index = |prefix: &str| name.strip_prefix(prefix)?.parse::<usize>().ok();
                 if let Some(i) = index("mean_holding_") {
@@ -279,7 +285,28 @@ impl Stats {
 }
 
 pub fn wealths(world: &World) -> Vec<f64> {
-    world.agents().map(|a| a.holdings[0]).collect()
+    good_wealths(world, 0)
+}
+
+/// Every living agent's holding of good `good`, in id order.
+pub fn good_wealths(world: &World, good: usize) -> Vec<f64> {
+    world.agents().map(|a| a.holdings[good]).collect()
+}
+
+/// Every living agent's total wealth: its holdings of all the world's goods
+/// summed in good order (the book never defines it for two goods; this is
+/// the natural reading of VI-1's "Lorenz curve and Gini coefficient for
+/// total wealth"). With one good it is `wealths`.
+pub fn total_wealths(world: &World) -> Vec<f64> {
+    let n = world.config.goods.len();
+    world
+        .agents()
+        .map(|a| {
+            a.holdings[1..n]
+                .iter()
+                .fold(a.holdings[0], |sum, h| sum + h)
+        })
+        .collect()
 }
 
 /// G = 2·Σ i·x₍ᵢ₎ / (n·Σx) − (n+1)/n over ascending wealth, i from 1.
@@ -329,6 +356,46 @@ pub fn histogram(values: &[f64], bins: usize) -> (f64, Vec<f64>) {
         counts[i] += 1.0;
     }
     (width, counts)
+}
+
+/// Animation III-1's age histogram: living agents' ages in `bin`-tick bins
+/// from 0. The last bin reaches the largest configured maximum lifetime plus
+/// one (an agent dies at its first turn with age > its maximum, so it lives
+/// through the end-of-tick aging that makes it one older) and also holds any
+/// older agent. With nobody alive every count is 0.
+pub fn age_histogram(world: &World, bin: u32) -> Vec<f64> {
+    assert!(bin >= 1);
+    let bins = ((world.config.lifespan.max_age.max + 1) / bin + 1) as usize;
+    let mut counts = vec![0.0; bins];
+    for a in world.agents() {
+        counts[((a.age / bin) as usize).min(bins - 1)] += 1.0;
+    }
+    counts
+}
+
+/// Animation III-7's cultural tag histogram: "one bin for each tag position.
+/// The height of the bin gives the percentage of agents having a 0 at that
+/// position" (position 0 first). With nobody alive every bin is 0.
+pub fn tag_histogram(world: &World) -> Vec<f64> {
+    let mut zeros = vec![0u32; world.config.tag_length as usize];
+    for a in world.agents() {
+        for (i, z) in zeros.iter_mut().enumerate() {
+            if !a.tags.get(i as u32) {
+                *z += 1;
+            }
+        }
+    }
+    let n = world.population();
+    zeros
+        .into_iter()
+        .map(|z| {
+            if n == 0 {
+                0.0
+            } else {
+                100.0 * f64::from(z) / n as f64
+            }
+        })
+        .collect()
 }
 
 /// Largest-Triangle-Three-Buckets: at most `max` of `values`' points as
@@ -838,5 +905,84 @@ mod tests {
         );
         assert_eq!((keep[0], keep[keep.len() - 1]), (0, 4_999));
         assert!(keep.len() <= 100);
+    }
+
+    #[test]
+    fn age_histogram_bins_ages_up_to_the_largest_maximum_lifetime() {
+        use crate::testkit::*;
+        let mut w = blank_world(10, 10);
+        assert_eq!(
+            age_histogram(&w, 5),
+            vec![0.0; 21],
+            "(100 + 1) / 5 + 1 bins, all empty"
+        );
+        for (x, age) in [
+            (0, 0),
+            (1, 4),
+            (2, 5),
+            (3, 99),
+            (4, 100),
+            (5, 101),
+            (6, 250),
+        ] {
+            let id = spawn(&mut w, x, 0);
+            w.agent_mut(id).unwrap().age = age;
+        }
+        let h = age_histogram(&w, 5);
+        assert_eq!(h.len(), 21);
+        assert_eq!((h[0], h[1], h[19], h[20]), (2.0, 1.0, 1.0, 3.0));
+        assert_eq!(h.iter().sum::<f64>(), 7.0);
+        w.config.lifespan.max_age = crate::config::URange::new(60, 64);
+        assert_eq!(age_histogram(&w, 5).len(), 14, "(64 + 1) / 5 + 1");
+    }
+
+    #[test]
+    fn tag_histogram_is_the_percentage_of_zeros_at_each_position() {
+        use crate::agent::Tags;
+        use crate::testkit::*;
+        let mut w = blank_world(10, 10);
+        assert_eq!(tag_histogram(&w), vec![0.0; 11], "nobody alive");
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        w.agent_mut(a).unwrap().tags = Tags::new(0b000_0000_0011, 11);
+        w.agent_mut(b).unwrap().tags = Tags::new(0b100_0000_0001, 11);
+        let h = tag_histogram(&w);
+        assert_eq!(h.len(), 11);
+        assert_eq!((h[0], h[1], h[2], h[10]), (0.0, 50.0, 100.0, 50.0));
+    }
+
+    #[test]
+    fn per_good_and_total_wealth() {
+        use crate::testkit::*;
+        let mut w = blank_world(10, 10);
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        w.agent_mut(a).unwrap().holdings[..3].copy_from_slice(&[1.0, 4.0, 2.0]);
+        w.agent_mut(b).unwrap().holdings[..3].copy_from_slice(&[3.0, 0.0, 9.0]);
+        assert_eq!(wealths(&w), vec![1.0, 3.0]);
+        assert_eq!(total_wealths(&w), vec![1.0, 3.0], "one good: sugar only");
+        add_goods(&mut w.config, 3);
+        assert_eq!(good_wealths(&w, 1), vec![4.0, 0.0]);
+        assert_eq!(good_wealths(&w, 2), vec![2.0, 9.0]);
+        assert_eq!(total_wealths(&w), vec![7.0, 12.0]);
+        assert_eq!(wealths(&w), vec![1.0, 3.0], "the sugar views are unchanged");
+    }
+
+    #[test]
+    fn gini_total_is_recorded_every_tick_and_equals_gini_with_one_good() {
+        let mut one = World::new(Config::default(), 3).unwrap();
+        one.run(5);
+        for s in one.stats.history() {
+            assert_eq!(s.gini_total, s.gini);
+        }
+        let mut c = Config::default();
+        c.add_good(crate::config::Good::spice());
+        let mut two = World::new(c, 3).unwrap();
+        two.run(5);
+        let s = two.stats.latest().unwrap();
+        assert_eq!(s.gini_total, gini(&total_wealths(&two)));
+        assert_ne!(s.gini_total, s.gini);
+        assert_eq!(two.stats.series("gini_total").unwrap().len(), 6);
+        assert_eq!(series_names(&two.config)[SERIES.len() - 1], "gini_total");
     }
 }

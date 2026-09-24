@@ -85,7 +85,7 @@ mod tests {
         w.run(2);
         let csv = series_csv(&w);
         let lines: Vec<&str> = csv.lines().collect();
-        assert_eq!(lines[0], "tick,population,gini,mean_wealth,mean_vision,mean_metabolism,blue_fraction,births,deaths,mean_log_price,sd_log_price,trade_volume,sugar_traded,loans_made,amount_lent,defaults,debt_outstanding,mean_foresight,mean_spice,mean_spice_metabolism,infected_fraction,mean_diseases,diseases_in_circulation,new_infections,trade_pairs,mean_holding_0,mean_metabolism_0,traded_0,mean_pollution_0,group_share_0,group_share_1");
+        assert_eq!(lines[0], "tick,population,gini,mean_wealth,mean_vision,mean_metabolism,blue_fraction,births,deaths,mean_log_price,sd_log_price,trade_volume,sugar_traded,loans_made,amount_lent,defaults,debt_outstanding,mean_foresight,mean_spice,mean_spice_metabolism,infected_fraction,mean_diseases,diseases_in_circulation,new_infections,trade_pairs,gini_total,mean_holding_0,mean_metabolism_0,traded_0,mean_pollution_0,group_share_0,group_share_1");
         assert_eq!(lines.len(), 4);
         assert!(lines[1].starts_with("0,400,"));
     }

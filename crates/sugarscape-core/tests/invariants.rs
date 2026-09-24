@@ -212,8 +212,8 @@ proptest! {
 }
 
 #[test]
-fn observing_networks_and_lineage_does_not_change_a_run() {
-    use sugarscape_core::presets;
+fn observing_networks_lineage_and_histograms_does_not_change_a_run() {
+    use sugarscape_core::{presets, stats};
     for id in ["vi-1-everything", "iii-6-culture", "iii-14-combat-culture"] {
         let config = presets::by_id(id).unwrap().config;
         let mut watched = World::new(config.clone(), 3).unwrap();
@@ -229,7 +229,9 @@ fn observing_networks_and_lineage_does_not_change_a_run() {
                 .iter()
                 .filter(|&&a| watched.lineage(a).is_some())
                 .count();
-            assert!(edges + classes > 0);
+            let hists =
+                stats::age_histogram(&watched, 5).len() + stats::tag_histogram(&watched).len();
+            assert!(edges + classes + hists > 0);
         }
         assert_eq!(watched.fingerprint(), plain.fingerprint(), "{id}");
     }
