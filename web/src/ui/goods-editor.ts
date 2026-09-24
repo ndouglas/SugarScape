@@ -1,4 +1,4 @@
-import { MAX_GOODS, MAX_PEAKS, TRANSFORMS, addGood, defaultMap, newPeak, removeGood } from '../goods';
+import { MAX_GOODS, MAX_PEAKS, TRANSFORMS, addGood, clampSeed, defaultMap, newPeak, removeGood } from '../goods';
 import type { Config, Good, GoodMap, Peak, Transform, URange } from '../types';
 import { randomSeed } from '../engine';
 import { h } from './dom';
@@ -160,7 +160,7 @@ function mapDetails(config: Config, i: number, commit: Commit, syncs: Sync[]): H
         1,
         (v) =>
           setMap((m) => {
-            if (m.kind === 'noise') m.seed = v >>> 0;
+            if (m.kind === 'noise') m.seed = clampSeed(v);
           }),
       );
       seed.classList.add('seed');
@@ -196,7 +196,7 @@ function goodRow(config: Config, i: number, commit: Commit, syncs: Sync[]): HTML
     'div',
     { class: 'good' },
     h('div', { class: 'row' }, color, name, remove),
-    h('div', { class: 'control' }, h('label', {}, 'Map'), h('div', { class: 'row' }, kind, mapDetails(config, i, commit, syncs))),
+    h('div', { class: 'control' }, h('label', {}, 'Map'), h('div', { class: 'row map-row' }, kind, mapDetails(config, i, commit, syncs))),
     h('div', { class: 'control' }, h('label', {}, 'Metabolism'), range(syncs, (c) => c.goods[i].metabolism, 0, 10, (f) => edit((x) => f(x.metabolism)))),
     h('div', { class: 'control' }, h('label', {}, 'Initial endowment'), range(syncs, (c) => c.goods[i].endowment, 0, 500, (f) => edit((x) => f(x.endowment)))),
   );

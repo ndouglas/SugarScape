@@ -155,10 +155,13 @@ body[data-view='experiments'] .toolbar-end { display: none; }
 .tag-groups .name { width: 7em; }
 .tag-groups .num { width: 4em; }
 .tag-groups input[type='color'] { padding: 0; width: 2.2em; height: 1.8em; }
-.goods .noise { flex-wrap: wrap; }
+.goods .map-row { flex-wrap: wrap; }
+.goods .noise { flex-basis: 100%; flex-wrap: wrap; }
 .goods .noise .num { width: 4.5em; }
 .goods .noise .seed { width: 8.5em; }
-.chip { display: inline-flex; gap: 4px; align-items: center; border: 1px solid var(--border); border-radius: 99px; padding: 1px 4px 1px 10px; font-size: 12px; color: var(--muted); }
+.chip { display: inline-flex; flex: 0 1 auto; min-width: 0; max-width: 10em; overflow: hidden; gap: 4px; align-items: center; border: 1px solid var(--border); border-radius: 99px; padding: 1px 4px 1px 10px; font-size: 12px; color: var(--muted); }
+.chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip button { flex-shrink: 0; }
 body[data-view='experiments'] .toolbar .chip { display: none; }
 .credit { display: grid; gap: 8px; }
 .credit .hint { margin: 0; }

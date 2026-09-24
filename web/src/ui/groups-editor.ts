@@ -13,9 +13,13 @@ function groupRow(config: Config, k: number, commit: Commit, syncs: Sync[]): HTM
   bind(syncs, color, (c) => (color.value = c.culture.groups[k].color));
   color.addEventListener('change', () => live((c) => (c.culture.groups[k].color = color.value)));
   const end = (which: 'min' | 'max') =>
-    num(syncs, (c) => c.culture.groups[k].zeros[which], 0, config.tag_length, 1, (v) =>
+  {
+    const input = num(syncs, (c) => c.culture.groups[k].zeros[which], 0, config.tag_length, 1, (v) =>
       commit((c) => moveBoundary(c.culture.groups, k, which, v), true),
     );
+    input.setAttribute('aria-label', `Group ${k + 1} ${which === 'min' ? 'fewest' : 'most'} zeros`);
+    return input;
+  };
   const remove = h('button', {
     disabled: config.culture.groups.length <= 1,
     title: 'Remove this group (its zero counts join a neighbour; rebuilds the world)',

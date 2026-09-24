@@ -27,8 +27,10 @@ export function buildToolbar(engine: Engine): HTMLElement {
     chip.hidden = id === null;
     if (id === null) return;
     const alive = engine.sim.locate(id) !== undefined;
+    const text = `Following #${id}${alive ? '' : ' †'}`;
+    chip.title = text;
     chip.replaceChildren(
-      `Following #${id}${alive ? '' : ' †'}`,
+      h('span', { class: 'chip-text' }, text),
       h('button', { class: 'link', title: 'Stop following', 'aria-label': 'Stop following', onclick: () => engine.unfollow() }, '✕'),
     );
   };

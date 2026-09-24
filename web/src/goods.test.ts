@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Config, Good } from './types';
 import {
+  clampSeed,
   MAX_GOODS,
   MAX_POLLUTANTS,
   addGood,
@@ -171,5 +172,16 @@ describe('structure signatures', () => {
     const wide = goodsEditorSignature(c);
     addGood(c);
     expect(goodsEditorSignature(c)).not.toBe(wide);
+  });
+});
+
+describe('clampSeed', () => {
+  it('clamps to the u32 range instead of wrapping', () => {
+    expect(clampSeed(-1)).toBe(0);
+    expect(clampSeed(4294967296)).toBe(4294967295);
+    expect(clampSeed(1e12)).toBe(4294967295);
+    expect(clampSeed(42)).toBe(42);
+    expect(clampSeed(7.8)).toBe(7);
+    expect(clampSeed(Number.NaN)).toBe(0);
   });
 });

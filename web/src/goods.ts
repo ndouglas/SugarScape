@@ -172,3 +172,9 @@ export function pollutionEditorSignature(config: Config): string {
 export function chartsSignature(config: Config): string {
   return JSON.stringify([config.goods.map((g) => [g.name, g.color]), config.pollution.pollutants.map((p) => p.name)]);
 }
+
+/** A noise seed typed by hand, clamped (not wrapped) to 0..=4294967295. */
+export function clampSeed(v: number): number {
+  if (Number.isNaN(v)) return 0;
+  return Math.min(4294967295, Math.max(0, Math.floor(v)));
+}
