@@ -16,7 +16,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, type Transport } from './transport';
 import type { ColorMode, Config, FieldError, Layer, Preset, Snapshot } from './types';
-import init, { presets_json, type Sim } from './wasm-pkg/sugarscape.js';
+import init, { presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
 
@@ -365,14 +365,6 @@ export class Engine {
   /** The world's fingerprint as `0x…` (the golden tests' format). */
   fingerprint(): Promise<string> {
     return this.value({ type: 'fingerprint' });
-  }
-
-  /** @deprecated Temporary (Task 10 removes it): the page's `Sim`, for panels not yet on snapshots. */
-  get sim(): Sim {
-    if (!(this.transport instanceof InlineTransport)) throw new Error('the simulation is not on this page');
-    const sim = this.transport.host.currentSim();
-    if (!sim) throw new Error('no world yet');
-    return sim as unknown as Sim;
   }
 
   private displayState(): DisplayState {

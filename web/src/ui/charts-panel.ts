@@ -3,8 +3,10 @@ import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { chartsSignature } from '../goods';
 import { groupSharesSignature } from '../groups';
+import { CHART_POINTS, chartKey, type Wants, type WorldSnapshot } from '../protocol';
 import { h } from './dom';
 import { compactNumber } from './format';
+import { bandData, lineData } from './series-data';
 
 interface Line { key: string; label: string; color: string }
 interface TimeChart { title: string; lines: Line[]; range?: [number, number] }
@@ -29,11 +31,11 @@ const TIME_CHARTS: TimeChart[] = [
 ];
 
 const HEIGHT = 150;
+/** The Lorenz curve, wealth histogram and supply & demand are fetched at most this often. */
 const REFRESH_MS = 250;
 const POLLUTANT_COLORS = ['--c1', '--c2', '--c3', '--c4'];
-
-/** Fetches `Sim.series(name)` at most once per refresh; shared across all charts' update closures. */
-type SeriesCache = (name: string) => Float64Array;
+/** The Trade price chart's series: the mean and its ± SD band share one x axis. */
+const PRICE_GROUP = ['mean_log_price', 'sd_log_price'];
 
 export class ChartsPanel {
   readonly el = h('div', { class: 'charts' });
@@ -41,14 +43,17 @@ export class ChartsPanel {
     name: string;
     plot: uPlot;
     figure: HTMLElement;
-    update: (series: SeriesCache) => void;
+    /** The host chart group a time chart draws (Decision 4). */
+    group?: string[];
+    update: (s: WorldSnapshot) => void;
     /** Hidden (and not redrawn) while false. */
     visible: () => boolean;
   }[] = [];
   private visible = false;
-  private last = 0;
-  /** Tick drawn by the last refresh; null forces the next one. */
-  private drawnTick: number | null = null;
+  /** When, and at which tick, the distributions last arrived; `distStale` asks for them regardless of the tick. */
+  private distAt = -Infinity;
+  private distTick = -1;
+  private distStale = true;
   private color!: (v: string) => string;
   private axes!: uPlot.Axis[];
   private addTimeChart!: (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => void;
@@ -64,9 +69,10 @@ export class ChartsPanel {
 
   constructor(private engine: Engine) {
     this.build();
-    engine.on('reset', () => this.refresh(true));
-    // Edits change wealth without a tick; redraw on the next throttled refresh.
-    engine.on('edit', () => (this.drawnTick = null));
+    engine.want((now) => this.wants(now));
+    engine.on('snapshot', () => this.receive());
+    // Edits, resets and config changes move the distributions without a tick.
+    for (const event of ['edit', 'reset', 'config'] as const) engine.on(event, () => (this.distStale = true));
     new ResizeObserver(() => this.resize()).observe(this.el);
   }
 
@@ -74,41 +80,42 @@ export class ChartsPanel {
     this.visible = visible;
     if (visible) {
       this.resize();
-      this.refresh(true);
+      this.distStale = true;
+      void this.engine.refresh();
     }
-  }
-
-  /** Called every animation frame; redraws at most every REFRESH_MS while visible. */
-  maybeRefresh(now: number): void {
-    if (this.visible && now - this.last > REFRESH_MS) this.refresh();
   }
 
   canvases(): { name: string; canvas: HTMLCanvasElement }[] {
     return this.plots.map((p) => ({ name: p.name, canvas: p.plot.ctx.canvas }));
   }
 
-  /** Redraws unless the tick is unchanged since the last draw (`force` overrides). */
-  private refresh(force = false): void {
-    this.last = performance.now();
-    if (!this.visible) {
-      this.drawnTick = null;
-      return;
+  private twoGoods(): boolean {
+    return this.engine.config.goods.length >= 2;
+  }
+
+  /** The visible time charts' groups, and the distributions when due; nothing while the tab is hidden. */
+  private wants(now: number): Wants {
+    if (!this.visible) return {};
+    const groups = this.plots.flatMap((p) => (p.group && p.visible() ? [p.group] : []));
+    const w: Wants = { charts: { groups, max: CHART_POINTS } };
+    if ((this.distStale || this.engine.tick !== this.distTick) && now - this.distAt >= REFRESH_MS) {
+      w.lorenz = true;
+      w.wealthHist = true;
+      if (this.twoGoods()) w.supplyDemand = true;
     }
-    const tick = this.engine.sim.tick();
-    if (!force && tick === this.drawnTick) return;
-    this.drawnTick = tick;
-    const cache = new Map<string, Float64Array>();
-    const series: SeriesCache = (name) => {
-      let arr = cache.get(name);
-      if (!arr) {
-        arr = this.engine.sim.series(name);
-        cache.set(name, arr);
-      }
-      return arr;
-    };
-    this.plots.forEach((p) => {
-      if (p.visible()) p.update(series);
-    });
+    return w;
+  }
+
+  /** Draws whatever the latest snapshot brought. */
+  private receive(): void {
+    const s = this.engine.last;
+    if (!s) return;
+    if (s.lorenz) {
+      this.distTick = s.tick;
+      this.distAt = performance.now();
+      this.distStale = false;
+    }
+    for (const p of this.plots) if (p.visible()) p.update(s);
   }
 
   private width(): number {
@@ -166,14 +173,15 @@ export class ChartsPanel {
     title: string,
     opts: Omit<uPlot.Options, 'width' | 'height'>,
     data: uPlot.AlignedData,
-    update: (plot: uPlot, series: SeriesCache) => void,
+    update: (plot: uPlot, s: WorldSnapshot) => void,
     container: HTMLElement = this.el,
     visible: () => boolean = () => true,
+    group?: string[],
   ): HTMLElement {
     const figcaption = h('figcaption', {}, title);
     const figure = h('figure', { class: 'chart' }, figcaption);
     const plot = new uPlot({ ...opts, width: this.width(), height: HEIGHT }, data, figure);
-    this.plots.push({ name: title, plot, figure, update: (series) => update(plot, series), visible });
+    this.plots.push({ name: title, plot, figure, group, update: (s) => update(plot, s), visible });
     container.append(figure);
     return figcaption;
   }
@@ -193,6 +201,8 @@ export class ChartsPanel {
     ];
 
     this.addTimeChart = (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => {
+      const group = chart.lines.map((l) => l.key);
+      const key = chartKey(group);
       this.add(
         chart.title,
         {
@@ -202,9 +212,13 @@ export class ChartsPanel {
           series: [{ label: 'Tick' }, ...chart.lines.map((l) => ({ label: l.label, stroke: this.color(l.color), width: 1.5 }))],
         },
         [[], ...chart.lines.map(() => [])],
-        (plot, series) => plot.setData([series('tick'), ...chart.lines.map((l) => series(l.key))]),
+        (plot, s) => {
+          const g = s.charts?.[key];
+          if (g) plot.setData(lineData(g));
+        },
         container,
         visible,
+        group,
       );
     };
 
@@ -238,7 +252,9 @@ export class ChartsPanel {
         ],
       },
       [xs, xs, xs],
-      (plot) => plot.setData([xs, xs, this.engine.sim.lorenz(101)]),
+      (plot, s) => {
+        if (s.lorenz) plot.setData([xs, xs, s.lorenz]);
+      },
     );
 
     const bars = uPlot.paths.bars!({ size: [0.9, 64] });
@@ -251,8 +267,9 @@ export class ChartsPanel {
         series: [{ label: 'Sugar' }, { label: 'Agents', fill: this.color('--c1'), stroke: this.color('--c1'), paths: bars, points: { show: false } }],
       },
       [[], []],
-      (plot) => {
-        const hist = this.engine.sim.wealth_hist(20);
+      (plot, s) => {
+        const hist = s.wealthHist;
+        if (!hist) return;
         const width = hist[0];
         const counts = hist.slice(1);
         plot.setData([counts.map((_, i) => (i + 0.5) * width), counts]);
@@ -264,7 +281,7 @@ export class ChartsPanel {
     const economy = h('section', { class: 'economy' }, h('h3', {}, 'Economy'));
     const disease = h('section', { class: 'disease' }, h('h3', {}, 'Disease'));
     this.el.append(this.goodsSection, this.pollutionSection, economy, disease);
-    const twoGoods = () => this.engine.config.goods.length >= 2;
+    const twoGoods = () => this.twoGoods();
     const creditOn = () => this.engine.config.credit.enabled;
     const diseaseOn = () => this.engine.config.disease.enabled;
     const syncSection = () => {
@@ -275,7 +292,7 @@ export class ChartsPanel {
       const pair = g.length >= 2 ? ` · ${g[0].name}/${g[1].name}` : '';
       for (const p of this.pairCaptions) p.el.textContent = p.title + pair;
       for (const p of this.plots) p.figure.hidden = !p.visible();
-      this.drawnTick = null;
+      this.distStale = true;
     };
     // Rebuilt only when the goods' or pollutants' lines change, not on every config event.
     let lines = '';
@@ -291,6 +308,7 @@ export class ChartsPanel {
     this.engine.on('reset', syncSection);
     this.engine.on('config', syncSection);
 
+    const priceKey = chartKey(PRICE_GROUP);
     const priceCaption = this.add(
       'Trade price (ln)',
       {
@@ -305,13 +323,13 @@ export class ChartsPanel {
         ],
       },
       [[], [], [], []],
-      (plot, series) => {
-        const m = series('mean_log_price');
-        const sd = series('sd_log_price');
-        plot.setData([series('tick'), m, m.map((v, i) => v + sd[i]), m.map((v, i) => v - sd[i])]);
+      (plot, s) => {
+        const g = s.charts?.[priceKey];
+        if (g) plot.setData(bandData(g));
       },
       economy,
       twoGoods,
+      PRICE_GROUP,
     );
     this.pairCaptions.push({ el: priceCaption, title: 'Trade price (ln)' });
 
@@ -332,8 +350,9 @@ export class ChartsPanel {
         ],
       },
       [[], [], [], [], []],
-      (plot) => {
-        const sd = this.engine.sim.supply_demand();
+      (plot, s) => {
+        const sd = s.supplyDemand;
+        if (!sd) return;
         const n = sd[0];
         const prices = Array.from(sd.subarray(1, 1 + n));
         const demand = Array.from(sd.subarray(1 + n, 1 + 2 * n));

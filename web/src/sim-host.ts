@@ -106,11 +106,6 @@ export class SimHost {
     private now: () => number = () => performance.now(),
   ) {}
 
-  /** @deprecated Temporary (Task 10 removes it): the world, for `engine.sim` while panels migrate. */
-  currentSim(): SimLike | null {
-    return this.sim;
-  }
-
   handle(req: HostRequest): HostReply {
     let result: Result;
     if (this.dead) {

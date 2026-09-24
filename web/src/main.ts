@@ -109,6 +109,9 @@ async function main(): Promise<void> {
       h('button', {
         onclick: async () => {
           tabs.show('Charts');
+          await engine.refresh();
+          // Let the panel draw the fresh snapshot before the canvases are captured.
+          await new Promise((resolve) => requestAnimationFrame(resolve));
           for (const { name, canvas } of charts.canvases()) {
             downloadBlob(`${slug()}-${name.toLowerCase().replace(/\W+/g, '-')}.png`, await canvasBlob(canvas));
           }
@@ -128,7 +131,6 @@ async function main(): Promise<void> {
         grid.draw();
         dirty = false;
       }
-      charts.maybeRefresh(now);
     } catch (e) {
       // A Rust panic in the page's WASM leaves it unusable; reloading keeps any #s= share state.
       engine.setRunning(false);
