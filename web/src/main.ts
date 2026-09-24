@@ -2,16 +2,26 @@ import './style.css';
 import { askKeep, CompareView, compareShell, type Playground, type WorldName } from './compare/compare-view';
 import { copyWorld } from './compare/lockstep';
 import { canvasBlob, downloadBlob, downloadText } from './downloads';
-import { Engine } from './engine';
+import { Engine, type InitialState } from './engine';
 import { errorMessage } from './errors';
 import { ExperimentsView } from './experiments/view';
-import { LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
-import { decodeShare, decodeSweep, parseSessionFile, readHash, readSweepHash, sessionFileText } from './share';
+import { compareLink, LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
+import {
+  decodeCompare,
+  decodeShare,
+  decodeSweep,
+  parseSessionFile,
+  readCompareHash,
+  readHash,
+  readSweepHash,
+  sessionFileText,
+  type SessionFile,
+} from './share';
 import { ChartsPanel } from './ui/charts-panel';
 import { CreditPanel } from './ui/credit-panel';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
-import { buildExportMenu } from './ui/export-menu';
+import { buildExportMenu, type ExportWorld } from './ui/export-menu';
 import { GridView } from './ui/grid-view';
 import { InspectPanel } from './ui/inspect-panel';
 import { showNotice } from './ui/notice';
@@ -37,10 +47,19 @@ export function showBanner(message: string, action?: { label: string; run: () =>
 
 async function main(): Promise<void> {
   let engine: Engine;
+  /** A `#c=` link's B: Compare starts with it once the page is built. */
+  let startB: InitialState | null = null;
   const token = readHash();
+  const compareToken = readCompareHash();
   try {
-    // A link's session replays its edits as the world runs (Decision 2).
-    engine = token ? await Engine.create(await decodeShare(token)) : await Engine.create();
+    if (compareToken) {
+      const { a, b } = await decodeCompare(compareToken);
+      engine = await Engine.create(a);
+      startB = b;
+    } else {
+      // A link's session replays its edits as the world runs (Decision 2).
+      engine = token ? await Engine.create(await decodeShare(token)) : await Engine.create();
+    }
   } catch (e) {
     showBanner(`That share link could not be loaded (${errorMessage(e)}). Showing the default rule system.`);
     engine = await Engine.create();
@@ -120,37 +139,57 @@ async function main(): Promise<void> {
   });
   document.querySelector('#tools')!.append(tools.el);
 
-  const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.tick}`;
+  const slug = (e: Engine) => `sugarscape-${e.presetId ?? 'custom'}-seed${e.seed}-t${e.tick}`;
+  /** File stems for what covers both worlds in Compare (charts, the session). */
+  const stem = () => (compare ? `sugarscape-compare-t${engine.tick}` : slug(engine));
+  const worlds = (): ExportWorld[] => {
+    const c = compare;
+    return c
+      ? [
+          { label: 'A', engine, grid },
+          { label: 'B', engine: c.b, grid: c.gridB },
+        ]
+      : [{ label: '', engine, grid }];
+  };
   const exportMenu = buildExportMenu({
-    worlds: () => [{ label: '', engine, grid }],
-    slug: () => slug(),
+    worlds,
+    slug: (w) => (w.label ? `${slug(w.engine)}-${w.label}` : slug(w.engine)),
     charts: async () => {
+      const name = stem();
       tabs.show('Charts');
-      await engine.refresh();
-      // Let the panel draw the fresh snapshot before the canvases are captured.
+      // Both worlds' lines are drawn from fresh snapshots (Compare overlays B's on A's).
+      await Promise.all([engine.refresh(), compare?.b.refresh()]);
+      // Let the panel draw the fresh snapshots before the canvases are captured.
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      for (const { name, canvas } of charts.canvases()) {
-        downloadBlob(`${slug()}-${name.toLowerCase().replace(/\W+/g, '-')}.png`, await canvasBlob(canvas));
+      for (const chart of charts.canvases()) {
+        downloadBlob(`${name}-${chart.name.toLowerCase().replace(/\W+/g, '-')}.png`, await canvasBlob(chart.canvas));
       }
     },
     session: async () => {
-      const { state, full } = await shareable(engine);
+      const c = compare;
+      const name = stem();
+      const a = await shareable(engine);
+      let file: SessionFile = { kind: 'session', state: a.state };
+      let full = a.full;
+      if (c) {
+        const b = await shareable(c.b);
+        file = { kind: 'compare', state: { a: a.state, b: b.state } };
+        full ||= b.full;
+      }
       if (full) showNotice(LOG_FULL_NOTICE, 10_000);
-      downloadText(`${slug()}-session.json`, sessionFileText({ kind: 'session', state }), 'application/json');
+      downloadText(`${name}-session.json`, sessionFileText(file), 'application/json');
     },
   });
   const shareMenu = buildShareMenu({
-    link: () => sessionLink(engine),
+    link: () => (compare ? compareLink(engine, compare.b) : sessionLink(engine)),
     open: async (file) => {
       try {
         const opened = parseSessionFile(await file.text());
-        if (opened.kind !== 'session') throw new Error('it holds a comparison, which this page cannot open yet');
         if (busy) throw new Error('Compare is starting or ending; try again in a moment');
+        // A single session opens in the playground: Compare ends keeping A (Decision 12).
         if (compare) await leaveCompare('A');
-        const errors = await engine.open(opened.state);
-        if (errors) throw new Error(errors.map((x) => `${x.field}: ${x.message}`).join('; '));
-        // The address bar no longer describes this world.
-        history.replaceState(null, '', location.pathname + location.search);
+        if (busy || compare) throw new Error('Compare could not be left; try again in a moment');
+        await openFile(opened);
         showNotice(`Opened ${file.name}`);
       } catch (e) {
         showNotice(`${file.name} could not be opened (${errorMessage(e)})`, 10_000);
@@ -158,10 +197,22 @@ async function main(): Promise<void> {
     },
   });
   const record = buildRecordControl({
-    grids: () => [{ canvas: grid.canvas, cells: () => engine.size() }],
+    // In Compare each frame shows both grids side by side, tagged "A" and "B".
+    grids: () => {
+      const c = compare;
+      return c
+        ? [
+            { canvas: grid.canvas, cells: () => engine.size(), label: 'A' },
+            { canvas: c.gridB.canvas, cells: () => c.b.size(), label: 'B' },
+          ]
+        : [{ canvas: grid.canvas, cells: () => engine.size() }];
+    },
     tick: () => engine.tick,
     running: () => (compare?.lock ?? engine).running,
-    base: () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}`,
+    base: () => {
+      const c = compare;
+      return c ? `sugarscape-compare-seed${engine.seed}-vs-seed${c.b.seed}` : `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}`;
+    },
   });
   engine.on('run', () => record.sync());
   document.querySelector('.toolbar-end')!.append(record.el, shareMenu, exportMenu);
@@ -210,26 +261,43 @@ async function main(): Promise<void> {
     toolbar.hold(on);
     for (const el of [grid.canvas, compare?.gridB.canvas, tools.el, rules.el]) if (el) el.inert = on;
   };
-  /** Starts Compare with B a copy of A at its current tick (Decision 9). */
-  async function enterCompare(): Promise<void> {
+  /** Starts Compare with B built from `bState` (a link or file), or a copy of A at its current tick (Decision 9). */
+  async function enterCompare(bState?: InitialState): Promise<void> {
     if (compare || busy) return;
     busy = true;
     syncCompareButton();
-    engine.setRunning(false);
     hold(true);
+    try {
+      await buildCompare(bState);
+    } catch (e) {
+      showNotice(`Compare could not start (${errorMessage(e)})`, 10_000);
+    } finally {
+      busy = false;
+      hold(false);
+      syncCompareButton();
+    }
+  }
+  /** Enter's work, run while `busy` and held; on failure it is undone and the error rethrown. */
+  async function buildCompare(bState?: InitialState): Promise<void> {
+    engine.setRunning(false);
     const shell = compareShell();
     let b: Engine | null = null;
     try {
-      const { session, full, tick } = await engine.session();
-      if (full) throw new Error('A’s edit log is full (50 000 edits), so B cannot copy it exactly');
-      b = await copyWorld(session, tick, (s) => Engine.create(s), (at, of) => {
-        shell.progress.textContent = `Copying A… ${at} / ${of}`;
-      });
-      // Belt and braces: A must still be where B copied it from, with the same edits so far.
-      const [now, copy] = await Promise.all([engine.session(), b.session()]);
-      const upTo = (s: typeof now) => s.session.log.filter((e) => e.tick <= s.tick).length;
-      if (now.tick !== copy.tick || upTo(now) !== upTo(copy)) {
-        throw new Error(`A changed while it was copied (A at t = ${now.tick}, B at t = ${copy.tick})`);
+      if (bState) {
+        // Both worlds start at t = 0 and replay their logs; the coordinator aligns them if A has moved.
+        b = await Engine.create(bState);
+      } else {
+        const { session, full, tick } = await engine.session();
+        if (full) throw new Error('A’s edit log is full (50 000 edits), so B cannot copy it exactly');
+        b = await copyWorld(session, tick, (s) => Engine.create(s), (at, of) => {
+          shell.progress.textContent = `Copying A… ${at} / ${of}`;
+        });
+        // Belt and braces: A must still be where B copied it from, with the same edits so far.
+        const [now, copy] = await Promise.all([engine.session(), b.session()]);
+        const upTo = (s: typeof now) => s.session.log.filter((e) => e.tick <= s.tick).length;
+        if (now.tick !== copy.tick || upTo(now) !== upTo(copy)) {
+          throw new Error(`A changed while it was copied (A at t = ${now.tick}, B at t = ${copy.tick})`);
+        }
       }
       compare = new CompareView(playground, b, shell);
       // B's grid exists now: it stays inert with A's until the pair has settled.
@@ -240,7 +308,28 @@ async function main(): Promise<void> {
       b?.close();
       shell.figure.remove();
       delete document.body.dataset.compare;
-      showNotice(`Compare could not start (${errorMessage(e)})`, 10_000);
+      throw e;
+    }
+  }
+  /**
+   * Opens a session file outside Compare: A takes its (first) session; a comparison then enters
+   * Compare with its B. All of it runs `busy` and held, so no enter or leave can race it.
+   */
+  async function openFile(opened: SessionFile): Promise<void> {
+    busy = true;
+    syncCompareButton();
+    hold(true);
+    try {
+      engine.setRunning(false);
+      const errors = await engine.open(opened.kind === 'session' ? opened.state : opened.state.a);
+      if (errors) throw new Error(errors.map((x) => `${x.field}: ${x.message}`).join('; '));
+      // The address bar no longer describes this world.
+      history.replaceState(null, '', location.pathname + location.search);
+      if (opened.kind === 'compare') {
+        await buildCompare(opened.state.b).catch((e: unknown) => {
+          throw new Error(`Compare could not start: ${errorMessage(e)}; world A is open alone`);
+        });
+      }
     } finally {
       busy = false;
       hold(false);
@@ -296,6 +385,8 @@ async function main(): Promise<void> {
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
+  // A #c= link opens straight into Compare, both worlds at t = 0 replaying their logs.
+  if (startB) await enterCompare(startB);
 }
 
 main().catch((e) => showBanner(`Failed to start: ${errorMessage(e)}`));
