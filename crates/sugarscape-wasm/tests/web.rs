@@ -413,3 +413,51 @@ fn fingerprint_hex_keeps_leading_zeros() {
     assert_eq!(fingerprint_hex(0x0f14_b0be_4cd3_b21e), "0x0f14b0be4cd3b21e");
     assert_eq!(fingerprint_hex(u64::MAX), "0xffffffffffffffff");
 }
+
+#[wasm_bindgen_test]
+fn chapter_vi_networks_histograms_and_lineage_colors() {
+    let preset = sugarscape_core::presets::by_id("vi-1-everything").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    assert!(
+        sim.networks("neighbors").unwrap().is_empty(),
+        "nobody has moved yet"
+    );
+    sim.step(30);
+    for kind in ["neighbors", "friends", "family"] {
+        let edges = sim.networks(kind).unwrap();
+        assert!(!edges.is_empty(), "{kind}");
+        assert_eq!(edges.len() % 4, 0, "{kind}");
+    }
+    let ages = sim.age_hist(5);
+    assert_eq!(ages[0], 5.0);
+    assert_eq!(ages.len(), 1 + 21);
+    assert_eq!(ages[1..].iter().sum::<f64>(), f64::from(sim.population()));
+    let tags = sim.tag_hist();
+    assert_eq!(tags.len(), 11);
+    assert!(tags.iter().all(|p| (0.0..=100.0).contains(p)));
+    sim.render("lineage", "sugar").unwrap();
+}
+
+#[wasm_bindgen_test]
+fn per_good_wealth_histograms_and_the_total_wealth_lorenz_curve() {
+    let preset = sugarscape_core::presets::by_id("iv-1-spice").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(5);
+    assert_eq!(sim.good_wealth_hist(0, 20).unwrap(), sim.wealth_hist(20));
+    let spice = sim.good_wealth_hist(1, 20).unwrap();
+    assert_eq!(spice.len(), 21);
+    assert_eq!(spice[1..].iter().sum::<f64>(), f64::from(sim.population()));
+    assert!(sim.good_wealth_hist(2, 20).is_err(), "no good 2");
+    let total = sim.lorenz_total(101);
+    assert_eq!(total.len(), 101);
+    assert_eq!((total[0], total[100]), (0.0, 1.0));
+    assert_ne!(total, sim.lorenz(101), "spice counts too");
+    let one = Sim::new("{}", 1, JsValue::NULL).unwrap();
+    assert_eq!(
+        one.lorenz_total(11),
+        one.lorenz(11),
+        "one good: the sugar curve"
+    );
+}

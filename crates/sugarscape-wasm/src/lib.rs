@@ -289,6 +289,33 @@ impl Sim {
         std::iter::once(width).chain(counts).collect()
     }
 
+    /// `[bin_width, count_0, …, count_{bins-1}]` of good `good`'s holdings (the wealth
+    /// histogram's bins, for any good).
+    pub fn good_wealth_hist(&self, good: u32, bins: usize) -> Result<Vec<f64>, JsValue> {
+        let g = self.good(good)?;
+        let (width, counts) = stats::histogram(&stats::good_wealths(&self.world, g), bins.max(1));
+        Ok(std::iter::once(width).chain(counts).collect())
+    }
+
+    /// The Lorenz curve of total wealth (every good's holdings summed).
+    pub fn lorenz_total(&self, points: usize) -> Vec<f64> {
+        stats::lorenz(&stats::total_wealths(&self.world), points.max(2))
+    }
+
+    /// `[bin, count_0, …]`: living agents' ages in `bin`-tick bins (`stats::age_histogram`).
+    pub fn age_hist(&self, bin: u32) -> Vec<f64> {
+        let bin = bin.max(1);
+        std::iter::once(f64::from(bin))
+            .chain(stats::age_histogram(&self.world, bin))
+            .collect()
+    }
+
+    /// The percentage of living agents with a 0 at each tag position, position 0 first
+    /// (`stats::tag_histogram`).
+    pub fn tag_hist(&self) -> Vec<f64> {
+        stats::tag_histogram(&self.world)
+    }
+
     pub fn inspect(&self, x: u32, y: u32) -> Result<String, JsValue> {
         let inspection = self.world.inspect(x, y).map_err(edit_error)?;
         Ok(serde_json::to_string(&inspection).expect("inspection serializes"))
@@ -390,12 +417,17 @@ impl Sim {
         export::agents_csv(&self.world)
     }
 
-    /// Edges as `[x1, y1, x2, y2, …]` for `"trade"` (this tick), `"credit"` (outstanding) or `"disease"` (infector → infected, this tick).
+    /// Edges as `[x1, y1, x2, y2, …]` for `"trade"` (this tick), `"credit"` (outstanding),
+    /// `"disease"` (infector → infected, this tick), `"neighbors"` (agent → each agent on its
+    /// neighbor list), `"friends"` (agent → friend) or `"family"` (parent → child).
     pub fn networks(&self, kind: &str) -> Result<Vec<u32>, JsValue> {
         let edges = match kind {
             "trade" => network::trade_edges(&self.world),
             "credit" => network::credit_edges(&self.world),
             "disease" => network::disease_edges(&self.world),
+            "neighbors" => self.world.neighbor_edges(),
+            "friends" => self.world.friend_edges(),
+            "family" => self.world.family_edges(),
             _ => return Err(edit_error(format!("unknown network {kind:?}"))),
         };
         Ok(edges
