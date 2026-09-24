@@ -57,8 +57,8 @@ describe('sessions replay exactly', () => {
 
   /**
    * A Max run's pace depends on the machine, so waits here poll for progress instead of sleeping a
-   * fixed time (PF1): a generous cap still fails the test with a clear message if `e` ever gets
-   * stuck rather than hanging until Vitest's own timeout.
+   * fixed time: a generous cap still fails the test with a clear message if `e` ever gets stuck
+   * rather than hanging until Vitest's own timeout.
    */
   const PROGRESS_CAP_MS = 5000;
 
@@ -120,9 +120,9 @@ describe('sessions replay exactly', () => {
     async () => {
       const live = await create(5);
       expect(await live.paint(10, 10, 2, 0, 0)).toBeNull(); // tick 0
-      // Erase the agent just placed, before any tick runs: guaranteed present (fix round 1 — an
-      // agent placed and then left to a run may wander or die, so erasing it later is not
-      // deterministic under any seed).
+      // Erase the agent just placed, before any tick runs: guaranteed present (an agent placed
+      // and then left to a run may wander or die, so erasing it later is not deterministic under
+      // any seed).
       const eraseSpot = await emptySite(live, 3, 3);
       expect(await live.place(eraseSpot.x, eraseSpot.y, {})).toBeNull();
       expect(await live.erase(eraseSpot.x, eraseSpot.y)).toBeNull();
@@ -138,8 +138,8 @@ describe('sessions replay exactly', () => {
       await run(live, 'max');
       expect(await live.vaccinate(20, 20, 3, 0)).toBeNull();
       // Edits while Max runs land between batches: wait for real progress on each side (not a
-      // fixed sleep) so they land regardless of how fast Max runs on this machine (PF1). `place`
-      // stays out of this window (occupancy can't be checked race-free while Max keeps ticking);
+      // fixed sleep) so they land regardless of how fast Max runs on this machine. `place` stays
+      // out of this window (occupancy can't be checked race-free while Max keeps ticking);
       // `paint` never depends on occupancy, so it proves the same "lands mid-run" point safely.
       live.setSpeed('max');
       live.setRunning(true);
@@ -190,8 +190,8 @@ describe('sessions replay exactly', () => {
       const replayed = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
       replayed.setSpeed('max');
       replayed.setRunning(true);
-      // Run until replay is past the last logged tick, not for a fixed time (PF1): only then can
-      // every edit in the log have replayed.
+      // Run until replay is past the last logged tick, not for a fixed time: only then can every
+      // edit in the log have replayed.
       await waitForTickPast(replayed, lastLoggedTick);
       replayed.setRunning(false);
       // Waits for the Max stop to be answered.

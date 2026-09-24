@@ -65,6 +65,8 @@ export function buildRecordControl(source: RecordSource): RecordControl {
       showNotice(`Recording could not start (${errorMessage(e)})`, 10_000);
       return;
     }
+    // Sync at once: a start while paused must not count time until the first 500 ms tick.
+    recording.sync();
     timer = setInterval(() => {
       recording?.sync();
       show();

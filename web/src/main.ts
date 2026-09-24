@@ -3,7 +3,7 @@ import { askKeep, CompareView, compareShell, type Playground, type WorldName } f
 import { copyWorld } from './compare/lockstep';
 import { canvasBlob, downloadBlob, downloadText } from './downloads';
 import { Engine, type InitialState } from './engine';
-import { errorMessage } from './errors';
+import { errorMessage, fieldErrorsMessage } from './errors';
 import { ExperimentsView } from './experiments/view';
 import { compareLink, LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
 import {
@@ -66,6 +66,11 @@ async function main(): Promise<void> {
   }
   /** Compare mode's second world and its coordinator, while Compare is on. */
   let compare: CompareView | null = null;
+  // Declared here (not next to `hold`/`enterCompare` below) so the Compare button, wired to
+  // `toggleCompare` well before this function finishes its startup `await`s (e.g. a `#x=` link's
+  // `decodeSweep`), never reads `busy` in its temporal dead zone.
+  /** Compare is starting or ending: the toggle waits. */
+  let busy = false;
   // Browser checks drive the engines through this handle (7a Decision 14).
   if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { sugarscape: { engine, compare: () => compare } });
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
@@ -245,8 +250,6 @@ async function main(): Promise<void> {
     onCrash: crashed,
   };
 
-  /** Compare is starting or ending: the toggle waits. */
-  let busy = false;
   const syncCompareButton = () => {
     compareButton.setAttribute('aria-pressed', String(compare !== null));
     compareButton.disabled = busy;
@@ -300,6 +303,8 @@ async function main(): Promise<void> {
         }
       }
       compare = new CompareView(playground, b, shell);
+      // A stale [B] row (from before Compare started) must not survive under an open menu.
+      exportMenu.open = false;
       // B's grid exists now: it stays inert with A's until the pair has settled.
       hold(true);
       // The coordinator first brings both worlds to rest at one tick; only then may they run.
@@ -322,7 +327,7 @@ async function main(): Promise<void> {
     try {
       engine.setRunning(false);
       const errors = await engine.open(opened.kind === 'session' ? opened.state : opened.state.a);
-      if (errors) throw new Error(errors.map((x) => `${x.field}: ${x.message}`).join('; '));
+      if (errors) throw new Error(fieldErrorsMessage(errors));
       // The address bar no longer describes this world.
       history.replaceState(null, '', location.pathname + location.search);
       if (opened.kind === 'compare') {
@@ -340,6 +345,8 @@ async function main(): Promise<void> {
     const c = compare;
     if (!c || busy) return;
     compare = null;
+    // The [B] row must not survive under an open menu once B is gone.
+    exportMenu.open = false;
     busy = true;
     syncCompareButton();
     // Nothing may step, rebuild or edit the pair while it settles and is taken apart.

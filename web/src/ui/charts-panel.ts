@@ -302,7 +302,8 @@ export class ChartsPanel {
       const d = this.dist[i];
       d.lorenz = s.lorenz;
       d.wealthHist = s.wealthHist ?? d.wealthHist;
-      d.supplyDemand = s.supplyDemand ?? d.supplyDemand;
+      // A world that drops to one good stops sending this: clear it, not keep the last curve.
+      d.supplyDemand = s.supplyDemand ?? null;
       d.version++;
       d.tick = s.tick;
       d.at = performance.now();

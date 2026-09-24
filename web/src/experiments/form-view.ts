@@ -129,7 +129,7 @@ export class FormView {
       },
       ...names.map((n) => h('option', { value: n, selected: n === m.series }, n)),
     );
-    // PF2: `replaceChildren` (unlike `h`) rejects `null` children under TS, so nulls are filtered before the call.
+    // `replaceChildren` (unlike `h`) rejects `null` children under TS, so nulls are filtered before the call.
     const children: (HTMLElement | null)[] = [
       h('datalist', { id: PATH_LIST }, ...this.paths.map((p) => h('option', { value: p }))),
       this.control('Name', 'name', this.text(f.name, (v) => (f.name = v), 'Untitled sweep')),

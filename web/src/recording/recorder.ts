@@ -50,7 +50,7 @@ export function startRecording(
   if (format === 'gif') return new GifRecording(source, stamp, onLimit, onFail);
   const mime = webmSupport();
   if (!mime) throw new Error('this browser cannot record video');
-  return new WebmRecording(source, stamp, mime);
+  return new WebmRecording(source, stamp, mime, onFail);
 }
 
 /** Rounds up to an even number: H.264/MP4 and some encoders reject odd frame sizes. */
@@ -171,8 +171,15 @@ class WebmRecording extends BaseRecording {
   private readonly recorder: MediaRecorder;
   private readonly track: CanvasCaptureMediaStreamTrack;
   private readonly chunks: Blob[] = [];
+  /** Set once the recorder reports an error; `finish` throws it instead of returning a file. */
+  private failed: string | null = null;
 
-  constructor(source: RecordSource, stamp: boolean, private readonly type: { mime: string; ext: string }) {
+  constructor(
+    source: RecordSource,
+    stamp: boolean,
+    private readonly type: { mime: string; ext: string },
+    onFail?: (message: string) => void,
+  ) {
     super(source);
     this.composer = new Composer(source, stamp, false);
     const stream = this.composer.canvas.captureStream(0);
@@ -180,6 +187,15 @@ class WebmRecording extends BaseRecording {
     this.recorder = new MediaRecorder(stream, { mimeType: type.mime });
     this.recorder.ondataavailable = (e) => {
       if (e.data.size > 0) this.chunks.push(e.data);
+    };
+    // The encoder can fail and go `inactive` on its own (firing 'error' then 'stop'); `finish`
+    // must not then wait forever for a `stop()` that has nothing left to do (never-hang, matching
+    // the GIF path).
+    this.recorder.onerror = (e) => {
+      const message = (e as unknown as { error?: DOMException }).error?.message || 'the recorder failed';
+      if (this.failed !== null) return;
+      this.failed = message;
+      onFail?.(message);
     };
     this.recorder.start(1000);
     // The first frame, even while paused, so the file is never empty; the next sync pauses it.
@@ -197,11 +213,19 @@ class WebmRecording extends BaseRecording {
   }
 
   protected async finish(): Promise<{ blob: Blob; ext: string }> {
-    await new Promise<void>((resolve) => {
-      this.recorder.onstop = () => resolve();
-      this.recorder.stop();
-    });
-    this.track.stop();
+    try {
+      await new Promise<void>((resolve) => {
+        if (this.recorder.state === 'inactive') {
+          resolve();
+          return;
+        }
+        this.recorder.onstop = () => resolve();
+        this.recorder.stop();
+      });
+    } finally {
+      this.track.stop();
+    }
+    if (this.failed !== null) throw new Error(this.failed);
     return { blob: new Blob(this.chunks, { type: this.type.mime }), ext: this.type.ext };
   }
 }

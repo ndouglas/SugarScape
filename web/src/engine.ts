@@ -1,3 +1,4 @@
+import { fieldErrorsMessage } from './errors';
 import {
   chartKey,
   mergeWants,
@@ -481,7 +482,7 @@ export class Engine {
       const result = await this.send({ type: 'session' });
       if (!result.ok || !result.session) {
         const errors = failure(result) ?? [{ field: 'simulation', message: 'the simulation sent no session' }];
-        throw new Error(errors.map((e) => `${e.field}: ${e.message}`).join('; '));
+        throw new Error(fieldErrorsMessage(errors));
       }
       const { log, full, tick } = result.session;
       const { config, seed, landscapes } = this.origin;

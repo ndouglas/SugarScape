@@ -34,8 +34,53 @@ class StubWorker {
   }
 }
 
+/** Stands in for the capture track a recorded canvas's `captureStream()` hands out. */
+class StubTrack {
+  stopped = false;
+  requestFrame = vi.fn();
+  stop(): void {
+    this.stopped = true;
+  }
+}
+
+/** Stands in for `MediaRecorder`: the test drives `state`, `onstop` and `onerror` by hand. */
+class StubMediaRecorder {
+  static isTypeSupported = (): boolean => true;
+  static last: StubMediaRecorder;
+  state: 'inactive' | 'recording' | 'paused' = 'inactive';
+  ondataavailable: ((e: { data: Blob }) => void) | null = null;
+  onstop: (() => void) | null = null;
+  onerror: ((e: { error?: { message: string } }) => void) | null = null;
+  stopCalls = 0;
+  pauseCalls = 0;
+  resumeCalls = 0;
+
+  constructor(public stream: unknown, public opts: { mimeType: string }) {
+    StubMediaRecorder.last = this;
+  }
+
+  start(): void {
+    this.state = 'recording';
+  }
+
+  stop(): void {
+    this.stopCalls++;
+  }
+
+  pause(): void {
+    this.pauseCalls++;
+    this.state = 'paused';
+  }
+
+  resume(): void {
+    this.resumeCalls++;
+    this.state = 'recording';
+  }
+}
+
 /** Only what the recording's canvas and 2D context are asked for. */
 function stubCanvas() {
+  const track = new StubTrack();
   const canvas = {
     width: 0,
     height: 0,
@@ -47,6 +92,8 @@ function stubCanvas() {
       measureText: () => ({ width: 10 }),
       getImageData: (_x: number, _y: number, w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) }),
     }),
+    captureStream: () => ({ getVideoTracks: () => [track] }),
+    track,
   };
   return canvas;
 }
@@ -69,6 +116,7 @@ beforeEach(() => {
   canvases = [];
   vi.spyOn(performance, 'now').mockImplementation(() => now);
   vi.stubGlobal('Worker', StubWorker);
+  vi.stubGlobal('MediaRecorder', StubMediaRecorder);
   vi.stubGlobal('document', {
     documentElement: {},
     createElement: () => {
@@ -172,5 +220,49 @@ describe('GIF recording', () => {
     expect(onFail).not.toHaveBeenCalled();
     expect(worker.terminated).toBe(true);
     expect(vi.mocked(downloadBlob)).not.toHaveBeenCalled();
+  });
+});
+
+describe('WebM recording', () => {
+  it('downloads the file once the recorder stops, and always stops the capture track', async () => {
+    const r = startRecording('webm', source, true, () => {});
+    const rec = StubMediaRecorder.last;
+    const track = canvases[0].track;
+    rec.ondataavailable!({ data: new Blob(['abc']) });
+    tick = 42;
+    const stopped = r.stop();
+    expect(rec.stopCalls).toBe(1);
+    expect(track.stopped).toBe(false); // still waiting on the recorder's own onstop
+    rec.onstop!();
+    await stopped;
+    expect(track.stopped).toBe(true);
+    expect(vi.mocked(downloadBlob)).toHaveBeenCalledWith('sugarscape-test-seed1-t10-t42.webm', expect.any(Blob));
+  });
+
+  it('resolves the stop at once, and still stops the track, when the recorder already went inactive', async () => {
+    const onFail = vi.fn();
+    const r = startRecording('webm', source, false, () => {}, onFail);
+    const rec = StubMediaRecorder.last;
+    const track = canvases[0].track;
+    // An encoder error takes the browser's recorder inactive on its own: 'error' then 'stop', with
+    // nothing left for a later recorder.stop() to do — finish() must not wait for an onstop that
+    // will never come.
+    rec.onerror!({ error: { message: 'encoder crashed' } });
+    rec.state = 'inactive';
+    expect(onFail).toHaveBeenCalledWith('encoder crashed');
+    await expect(r.stop()).rejects.toThrow('encoder crashed');
+    expect(rec.stopCalls).toBe(0);
+    expect(track.stopped).toBe(true);
+    expect(vi.mocked(downloadBlob)).not.toHaveBeenCalled();
+  });
+
+  it('reports one onerror (with a default message if none is given) and never again', () => {
+    const onFail = vi.fn();
+    startRecording('webm', source, false, () => {}, onFail);
+    const rec: StubMediaRecorder = StubMediaRecorder.last;
+    rec.onerror!({});
+    expect(onFail).toHaveBeenCalledWith('the recorder failed');
+    rec.onerror!({ error: { message: 'a second failure' } });
+    expect(onFail).toHaveBeenCalledTimes(1);
   });
 });

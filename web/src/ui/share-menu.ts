@@ -1,7 +1,6 @@
+import { errorMessage } from '../errors';
 import { h } from './dom';
 import { showNotice } from './notice';
-
-const message = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 /**
  * Share: Copy link (the whole session, or a comparison) and Open session… (a session file).
@@ -29,7 +28,7 @@ export function buildShareMenu(opts: {
       if (notice) showNotice(notice, 10_000);
       setTimeout(() => (copy.textContent = 'Copy link'), 2000);
     } catch (e) {
-      showNotice(`Could not create the link (${message(e)})`, 10_000);
+      showNotice(`Could not create the link (${errorMessage(e)})`, 10_000);
     }
   });
   const file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, 'aria-label': 'Session file to open' });

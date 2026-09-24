@@ -1,4 +1,5 @@
 import type { Engine, InitialState, Speed } from '../engine';
+import { fieldErrorsMessage } from '../errors';
 import type { Session } from '../protocol';
 import type { FieldError } from '../types';
 
@@ -160,7 +161,7 @@ export class Lockstep {
     }
     this.emit('tick');
     const failed = errors.flatMap((e) => e ?? []);
-    if (failed.length > 0) throw new Error(`a world could not rewind: ${failed.map((e) => `${e.field}: ${e.message}`).join('; ')}`);
+    if (failed.length > 0) throw new Error(`a world could not rewind: ${fieldErrorsMessage(failed)}`);
   }
 
   /** Every world not at t = 0 replays its session (a few rounds, in case of races); throws if they still differ. */

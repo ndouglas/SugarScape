@@ -46,7 +46,7 @@ interface OpenedEntry { sweep: Sweep; result?: SweepResult; status?: string }
 /** The core checks for opened files and links. */
 const OPEN_CORE: OpenCore = { parseSweep: parse_sweep, aggregate };
 
-// PF5: reuses `baseLabel` (Task 10, labels.ts) instead of re-implementing its preset/custom-config wording.
+// Reuses `baseLabel` (labels.ts) instead of re-implementing its preset/custom-config wording.
 // `baseLabel` takes `Pick<Sweep, 'base'>`, so a base alone (no full sweep yet) needs no cast.
 const baseNote = (base: SweepBase): string => baseLabel({ base });
 

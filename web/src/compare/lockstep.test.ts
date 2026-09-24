@@ -184,7 +184,7 @@ describe('copyWorld', () => {
     const b = await copyWorld(session, tick, create, (at, of) => seen.push([at, of]));
     expect(b.tick).toBe(9);
     expect([b.population, a.population]).toEqual([2, 2]);
-    // The fake's fingerprint only counts ticks (PF2): check the replayed place itself — the agent
+    // The fake's fingerprint only counts ticks: check the replayed place itself — the agent
     // placed at (0, 2) at tick 3 stands there in both worlds, with the same id.
     await Promise.all([a.select(0, 2), b.select(0, 2)]);
     expect(b.selection).toEqual({ x: 0, y: 2, agentId: 2 });
