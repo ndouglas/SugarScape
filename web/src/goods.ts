@@ -71,9 +71,13 @@ export function newPeak(config: Config): Peak {
   };
 }
 
-/** A map of `kind`: the next unused two-peak transform (flat off the 50×50 grid), one central peak, or flat 2. */
-export function defaultMap(config: Config, kind: GoodMap['kind'] = 'two_peaks'): GoodMap {
+/**
+ * A map of `kind`: the next unused two-peak transform (flat off the 50×50 grid), one central peak,
+ * flat 2, or noise with `seed` (features about 8 cells across, 3 octaves, height 4).
+ */
+export function defaultMap(config: Config, kind: GoodMap['kind'] = 'two_peaks', seed = 1): GoodMap {
   if (kind === 'peaks') return { kind: 'peaks', peaks: [newPeak(config)] };
+  if (kind === 'noise') return { kind: 'noise', seed, scale: 8, octaves: 3, height: 4 };
   if (kind === 'flat' || config.width !== 50 || config.height !== 50) return { kind: 'flat', capacity: 2 };
   const used = new Set(config.goods.flatMap((g) => (g.map.kind === 'two_peaks' ? [g.map.transform] : [])));
   const transform = TRANSFORMS.map(([t]) => t).find((t) => !used.has(t)) ?? 'identity';

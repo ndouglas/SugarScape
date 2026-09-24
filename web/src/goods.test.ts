@@ -79,6 +79,12 @@ describe('goods', () => {
     expect(defaultMap(c)).toEqual({ kind: 'flat', capacity: 2 });
     expect(defaultMap(c, 'peaks')).toEqual({ kind: 'peaks', peaks: [{ x: 20, y: 25, radius: 10, height: 4 }] });
   });
+
+  it('builds a noise map with the given seed, in the core key order', () => {
+    const c = config();
+    expect(defaultMap(c, 'noise', 42)).toEqual({ kind: 'noise', seed: 42, scale: 8, octaves: 3, height: 4 });
+    expect(JSON.stringify(defaultMap(c, 'noise'))).toBe('{"kind":"noise","seed":1,"scale":8,"octaves":3,"height":4}');
+  });
 });
 
 describe('schedule retargeting', () => {

@@ -1,5 +1,6 @@
 import { MAX_GOODS, MAX_PEAKS, TRANSFORMS, addGood, defaultMap, newPeak, removeGood } from '../goods';
 import type { Config, Good, GoodMap, Peak, Transform, URange } from '../types';
+import { randomSeed } from '../engine';
 import { h } from './dom';
 
 export type Commit = (mutate: (c: Config) => void, reset: boolean) => void;
@@ -17,6 +18,7 @@ const KINDS: [GoodMap['kind'], string][] = [
   ['two_peaks', 'Two peaks (50×50)'],
   ['peaks', 'Peaks'],
   ['flat', 'Flat'],
+  ['noise', 'Noise'],
 ];
 
 /** Registers `show` to refresh `el` from each synced config, except a text-like input while it has focus. */
@@ -131,6 +133,47 @@ function mapDetails(config: Config, i: number, commit: Commit, syncs: Sync[]): H
       }, 'Add peak');
       return h('div', { class: 'peaks' }, ...rows, add);
     }
+    case 'noise': {
+      const field = (key: 'scale' | 'octaves' | 'height', min: number, max: number, step: number) =>
+        h('label', {}, `${key} `, num(
+          syncs,
+          (c) => {
+            const m = c.goods[i].map;
+            return m.kind === 'noise' ? m[key] : 0;
+          },
+          min,
+          max,
+          step,
+          (v) =>
+            setMap((m) => {
+              if (m.kind === 'noise') m[key] = v;
+            }),
+        ));
+      const seed = num(
+        syncs,
+        (c) => {
+          const m = c.goods[i].map;
+          return m.kind === 'noise' ? m.seed : 0;
+        },
+        0,
+        4294967295,
+        1,
+        (v) =>
+          setMap((m) => {
+            if (m.kind === 'noise') m.seed = v >>> 0;
+          }),
+      );
+      seed.classList.add('seed');
+      const reroll = h('button', {
+        title: 'New random seed (rebuilds the world)',
+        'aria-label': 'New random noise seed',
+        onclick: () =>
+          setMap((m) => {
+            if (m.kind === 'noise') m.seed = randomSeed();
+          }),
+      }, '🎲');
+      return h('div', { class: 'row noise' }, h('label', {}, 'seed ', seed), reroll, field('scale', 1, 100, 0.5), field('octaves', 1, 6, 1), field('height', 0, 10, 0.5));
+    }
   }
 }
 
@@ -145,7 +188,9 @@ function goodRow(config: Config, i: number, commit: Commit, syncs: Sync[]): HTML
   color.addEventListener('change', () => edit((x) => (x.color = color.value)));
   const kind = h('select', {}, ...KINDS.map(([v, l]) => h('option', { value: v }, l)));
   bind(syncs, kind, (c) => (kind.value = c.goods[i].map.kind));
-  kind.addEventListener('change', () => commit((c) => (c.goods[i].map = defaultMap(c, kind.value as GoodMap['kind'])), true));
+  kind.addEventListener('change', () =>
+    commit((c) => (c.goods[i].map = defaultMap(c, kind.value as GoodMap['kind'], randomSeed())), true),
+  );
   const remove = h('button', { disabled: count <= 1, title: 'Remove this good (rebuilds the world)', onclick: () => commit((c) => removeGood(c, i), true) }, 'Remove');
   return h(
     'div',

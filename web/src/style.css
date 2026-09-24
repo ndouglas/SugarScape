@@ -152,3 +152,6 @@ body[data-view='experiments'] .toolbar-end { display: none; }
 .tag-groups .name { width: 7em; }
 .tag-groups .num { width: 4em; }
 .tag-groups input[type='color'] { padding: 0; width: 2.2em; height: 1.8em; }
+.goods .noise { flex-wrap: wrap; }
+.goods .noise .num { width: 4.5em; }
+.goods .noise .seed { width: 8.5em; }
