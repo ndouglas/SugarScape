@@ -21,6 +21,7 @@ import { buildShareMenu } from './ui/share-menu';
 import { Tabs } from './ui/tabs';
 import { Toolbar } from './ui/toolbar';
 import { buildTools } from './ui/tools';
+import { WorldSlot } from './ui/world-slot';
 
 export function showBanner(message: string, action?: { label: string; run: () => void }): void {
   const banner = document.querySelector<HTMLElement>('#banner')!;
@@ -93,21 +94,31 @@ async function main(): Promise<void> {
   }
 
   const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
-  const rules = new RulesPanel(engine);
+  // Each tab holds A's panel, and B's beside it in Compare (Decision 10).
+  const rules = new WorldSlot(new RulesPanel(engine), 'switch', 'Rules for');
   tabs.add('Rules', rules.el);
   const charts = new ChartsPanel(engine);
   tabs.add('Charts', charts.el, (visible) => charts.setVisible(visible));
-  const inspect = new InspectPanel(engine);
+  const inspect = new WorldSlot(new InspectPanel(engine), 'label');
   tabs.add('Inspect', inspect.el, (visible) => inspect.setVisible(visible));
-  const credit = new CreditPanel(engine, () => tabs.show('Inspect'));
+  const credit = new WorldSlot(
+    new CreditPanel(engine, () => {
+      compare?.focus('A');
+      tabs.show('Inspect');
+    }),
+    'label',
+  );
   tabs.add('Credit', credit.el, (visible) => credit.setVisible(visible));
   // The Credit tab exists only while credit (L) is on in a world on screen.
   const syncCreditTab = (b: Engine | null) => tabs.setHidden('Credit', ![engine, b].some((e) => e?.config.credit.enabled));
   engine.on('reset', () => syncCreditTab(compare?.b ?? null));
   engine.on('config', () => syncCreditTab(compare?.b ?? null));
   syncCreditTab(null);
-  const tools = buildTools(engine, grid, () => tabs.show('Inspect'));
-  document.querySelector('#tools')!.append(tools);
+  const tools = buildTools({ engine, grid }, (world) => {
+    compare?.focus(world === engine ? 'A' : 'B');
+    tabs.show('Inspect');
+  });
+  document.querySelector('#tools')!.append(tools.el);
 
   const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.tick}`;
   const exportMenu = buildExportMenu({
@@ -171,6 +182,11 @@ async function main(): Promise<void> {
     engine,
     grid,
     toolbar,
+    tools,
+    tabs,
+    rules,
+    inspect,
+    credit,
     syncCreditTab,
     onRun: () => record.sync(),
     onFrame: () => (fresh = true),
@@ -184,13 +200,14 @@ async function main(): Promise<void> {
     compareButton.disabled = busy;
   };
   /**
-   * Locks A while B copies it: nothing on the page may run, step, rebuild or edit A (the toolbar
-   * is held; the grid, its tools and the Rules panel are inert), or B would stop being a copy.
-   * Opening a session file is refused while `busy`.
+   * Locks the worlds while B copies A, and while Compare is left: nothing on the page may run,
+   * step, rebuild or edit a world (the toolbar is held; the grids, the tools and the Rules tab —
+   * both worlds' panels — are inert), or B would stop being a copy / the pair would move while it
+   * settles. Opening a session file is refused while `busy`.
    */
-  const holdA = (on: boolean): void => {
+  const hold = (on: boolean): void => {
     toolbar.hold(on);
-    for (const el of [grid.canvas, tools, rules.el]) el.inert = on;
+    for (const el of [grid.canvas, compare?.gridB.canvas, tools.el, rules.el]) if (el) el.inert = on;
   };
   /** Starts Compare with B a copy of A at its current tick (Decision 9). */
   async function enterCompare(): Promise<void> {
@@ -198,7 +215,7 @@ async function main(): Promise<void> {
     busy = true;
     syncCompareButton();
     engine.setRunning(false);
-    holdA(true);
+    hold(true);
     const shell = compareShell();
     let b: Engine | null = null;
     try {
@@ -214,6 +231,8 @@ async function main(): Promise<void> {
         throw new Error(`A changed while it was copied (A at t = ${now.tick}, B at t = ${copy.tick})`);
       }
       compare = new CompareView(playground, b, shell);
+      // B's grid exists now: it stays inert with A's until the pair has settled.
+      hold(true);
       // The coordinator first brings both worlds to rest at one tick; only then may they run.
       await compare.lock.settled();
     } catch (e) {
@@ -223,7 +242,7 @@ async function main(): Promise<void> {
       showNotice(`Compare could not start (${errorMessage(e)})`, 10_000);
     } finally {
       busy = false;
-      holdA(false);
+      hold(false);
       syncCompareButton();
     }
   }
@@ -233,14 +252,16 @@ async function main(): Promise<void> {
     compare = null;
     busy = true;
     syncCompareButton();
-    // Nothing may step or rebuild the pair while it settles and is taken apart.
-    toolbar.hold(true);
+    // Nothing may step, rebuild or edit the pair while it settles and is taken apart.
+    hold(true);
+    // (`compare` is already null, so `hold` misses B's grid; its figure goes with Compare.)
+    c.gridB.canvas.inert = true;
     try {
       await c.leave(keep);
     } catch (e) {
       showNotice(`B could not be kept (${errorMessage(e)}); A stays in the playground`, 10_000);
     } finally {
-      toolbar.hold(false);
+      hold(false);
       busy = false;
       syncCompareButton();
     }

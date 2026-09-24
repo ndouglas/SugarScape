@@ -1,8 +1,14 @@
 import { randomSeed, type Engine } from '../engine';
+import { CreditPanel } from '../ui/credit-panel';
 import { h } from '../ui/dom';
 import { GridView } from '../ui/grid-view';
+import { InspectPanel } from '../ui/inspect-panel';
 import { showNotice } from '../ui/notice';
+import { RulesPanel } from '../ui/rules-panel';
+import type { Tabs } from '../ui/tabs';
 import { followChip, replayChip, type Toolbar } from '../ui/toolbar';
+import type { Tools } from '../ui/tools';
+import type { WorldSlot } from '../ui/world-slot';
 import { Lockstep } from './lockstep';
 
 export type WorldName = 'A' | 'B';
@@ -12,6 +18,11 @@ export interface Playground {
   engine: Engine;
   grid: GridView;
   toolbar: Toolbar;
+  tools: Tools;
+  tabs: Tabs;
+  rules: WorldSlot<RulesPanel>;
+  inspect: WorldSlot<InspectPanel>;
+  credit: WorldSlot<CreditPanel>;
   /** Shows the Credit tab while either world on screen has credit on. */
   syncCreditTab: (b: Engine | null) => void;
   /** The run state changed (recording follows it). */
@@ -86,6 +97,18 @@ export class CompareView {
       this.header(document.querySelector<HTMLElement>('#world-a .world-header')!, 'A', a);
       this.header(shell.header, 'B', b);
       p.toolbar.setCompare(this.lock, b);
+      // Each world has its own Rules, Inspect and Credit panels; tools act on the grid clicked (Decision 10).
+      this.offs.push(p.tools.attach({ engine: b, grid: this.gridB }));
+      p.rules.setB(new RulesPanel(b));
+      p.inspect.setB(new InspectPanel(b));
+      p.credit.setB(
+        new CreditPanel(b, () => {
+          this.focus('B');
+          p.tabs.show('Inspect');
+        }),
+      );
+      this.listen(p.grid.canvas, 'A');
+      this.listen(this.gridB.canvas, 'B');
       // One display for both worlds: A's, mirrored to B (Decision 10).
       const mirror = () => b.setDisplay({ colorMode: a.colorMode, layer: a.layer, overlays: { ...a.overlays } });
       mirror();
@@ -101,12 +124,14 @@ export class CompareView {
         this.lock.on('tick', p.onFrame),
       );
       p.syncCreditTab(b);
+      this.focus('A');
       p.onRun();
     } catch (e) {
       // Half-built: undo what is wired so far (the caller closes B and removes its figure).
       this.lock.dispose();
       for (const off of this.offs) off();
       p.toolbar.setCompare(null, null);
+      this.dropPanels();
       p.syncCreditTab(null);
       throw e;
     }
@@ -135,6 +160,7 @@ export class CompareView {
     for (const off of this.offs) off();
     a.setSpeed(this.lock.speed);
     p.toolbar.setCompare(null, null);
+    this.dropPanels();
     this.shell.figure.remove();
     delete document.body.dataset.compare;
     try {
@@ -145,6 +171,32 @@ export class CompareView {
       p.syncCreditTab(null);
       p.onRun();
     }
+  }
+
+  /** Inspect and Credit show the world last clicked; the disease picker and image import follow it. */
+  focus(world: WorldName): void {
+    this.p.inspect.show(world);
+    this.p.credit.show(world);
+    this.p.tools.focus(world === 'A' ? this.p.engine : this.b);
+  }
+
+  /** A pointerdown on a world's grid focuses that world. */
+  private listen(canvas: HTMLCanvasElement, world: WorldName): void {
+    const on = () => this.focus(world);
+    canvas.addEventListener('pointerdown', on);
+    this.offs.push(() => canvas.removeEventListener('pointerdown', on));
+  }
+
+  /**
+   * Back to A's panels alone. B's panels listen only to B, which is closed after this (or, after
+   * Keep B, holds a dead stub), so once dropped here nothing reaches them or it.
+   */
+  private dropPanels(): void {
+    const { p } = this;
+    p.rules.setB(null);
+    p.inspect.setB(null);
+    p.credit.setB(null);
+    p.tools.focus(p.engine);
   }
 
   /** "A · seed n · 🎲" and the world's follow and replay chips. */

@@ -3,7 +3,7 @@ import { capacitiesFromPixels } from '../image';
 import type { DiseaseEntry } from '../types';
 import { DiseaseListPoll, diseaseOptions } from './disease-picker';
 import { h } from './dom';
-import type { GridView } from './grid-view';
+import type { CellEvent, GridView } from './grid-view';
 import { readImagePixels } from './image-import';
 
 type Tool = 'inspect' | 'paint' | 'place' | 'erase' | 'infect' | 'vaccinate';
@@ -17,14 +17,29 @@ const TOOLS: [Tool, string][] = [
   ['vaccinate', 'Vaccinate'],
 ];
 
-/** Tools that exist only while disease is on. */
+/** Tools that exist only while disease is on (in some world on screen). */
 const DISEASE_TOOLS: Tool[] = ['infect', 'vaccinate'];
 
-/** The disease list is fetched at most this often while a disease tool is open. */
+/** A world's disease list is fetched at most this often while a disease tool is open. */
 const LIST_MS = 250;
 
-/** Tool picker; routes grid clicks/drags to the active tool. Edit errors (e.g. occupied site) are ignored. */
-export function buildTools(engine: Engine, grid: GridView, onInspect: () => void): HTMLElement {
+/** A grid and the world its clicks edit. */
+export interface ToolTarget { engine: Engine; grid: GridView }
+
+export interface Tools {
+  readonly el: HTMLElement;
+  /** Routes `target.grid`'s clicks to `target.engine` (Compare's B); returns the detach. */
+  attach(target: ToolTarget): () => void;
+  /** The world whose diseases the picker lists and whose map an image import sets (the grid last clicked). */
+  focus(engine: Engine): void;
+}
+
+/**
+ * Tool picker; routes each grid's clicks/drags to the active tool on that grid's world (Decision 10).
+ * Edit errors (e.g. an occupied site) are ignored. Display changes (the paint layer, the disease
+ * colours) and the paint tool's goods follow `primary`, whose display Compare mirrors to B.
+ */
+export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => void): Tools {
   let tool: Tool = 'inspect';
   let radius = 1;
   let value = 4;
@@ -35,10 +50,14 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   let disease = -1;
   /** Length of the disease list the picker was last filled from. */
   let known = -1;
-  /** The latest disease list the host sent (while a disease tool is open), and when to ask again. */
-  let diseases: DiseaseEntry[] = [];
-  const poll = new DiseaseListPoll(LIST_MS);
+  const targets: ToolTarget[] = [];
+  /** Each world's latest disease list (while a disease tool is open) and when to ask again. */
+  const lists = new Map<Engine, { diseases: DiseaseEntry[]; poll: DiseaseListPoll }>();
+  let focused = primary.engine;
+  const diseases = (): DiseaseEntry[] => lists.get(focused)?.diseases ?? [];
   const brushed = () => tool === 'paint' || tool === 'vaccinate';
+  const diseaseOn = () => targets.some((t) => t.engine.config.disease.enabled);
+  const grids = () => targets.map((t) => t.grid);
 
   const buttons = TOOLS.map(([t, label]) => h('button', { onclick: () => choose(t) }, label));
   const options = h('div', { class: 'tool-options' });
@@ -49,7 +68,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     input.addEventListener('change', () => {
       set(Math.min(max, Math.max(min, Number(input.value))));
       input.value = String(get());
-      if (brushed()) grid.brushRadius = radius;
+      if (brushed()) for (const g of grids()) g.brushRadius = radius;
     });
     return h('label', {}, `${label} `, input);
   };
@@ -57,13 +76,13 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   const goodSelect = h('select', {
     onchange: () => {
       good = Number(goodSelect.value);
-      engine.setDisplay({ layer: `capacity:${good}` });
+      primary.engine.setDisplay({ layer: `capacity:${good}` });
     },
   });
   const goodLabel = h('label', {}, 'Good ', goodSelect);
   let goodNames = '';
   function refreshGoods(): void {
-    const names = engine.config.goods.map((g) => g.name);
+    const names = primary.engine.config.goods.map((g) => g.name);
     const signature = JSON.stringify(names);
     if (good >= names.length) good = 0;
     if (signature !== goodNames) {
@@ -73,7 +92,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     goodSelect.value = String(good);
   }
 
-  /** Image import (Decision 12): for the paint tool's good, max capacity 0–10, optionally inverted. */
+  /** Image import (Decision 12 of milestone 6): for the paint tool's good, into the focused world. */
   let importMax = 4;
   let invert = false;
   const importStatus = h('span', { class: 'hint', 'aria-live': 'polite' });
@@ -82,6 +101,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     const file = fileInput.files?.[0];
     fileInput.value = '';
     if (!file) return;
+    const engine = focused;
     try {
       const { width, height } = engine.size();
       const capacities = capacitiesFromPixels(await readImagePixels(file, width, height), importMax, invert);
@@ -108,12 +128,13 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     return h('label', {}, `${label} `, s);
   };
 
-  /** Refills the picker when the disease list has grown (outbreaks, mutations, Infect), or when forced. */
+  /** Refills the picker when the focused world's disease list has grown, or when forced. */
   function refreshPicker(force = false): void {
-    if (!DISEASE_TOOLS.includes(tool) || !engine.config.disease.enabled) return;
-    if (!force && diseases.length === known) return;
-    known = diseases.length;
-    picker.replaceChildren(...diseaseOptions(diseases, tool === 'infect').map(([v, l]) => h('option', { value: v }, l)));
+    if (!DISEASE_TOOLS.includes(tool) || !diseaseOn()) return;
+    const list = diseases();
+    if (!force && list.length === known) return;
+    known = list.length;
+    picker.replaceChildren(...diseaseOptions(list, tool === 'infect').map(([v, l]) => h('option', { value: v }, l)));
     const values = Array.from(picker.options, (o) => Number(o.value));
     if (!values.includes(disease)) disease = values[0] ?? -1;
     picker.value = String(disease);
@@ -122,12 +143,12 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   function choose(next: Tool): void {
     tool = next;
     buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(TOOLS[i][0] === tool)));
-    grid.brushRadius = brushed() ? radius : null;
+    for (const g of grids()) g.brushRadius = brushed() ? radius : null;
     if (tool === 'paint') {
       refreshGoods();
-      engine.setDisplay({ layer: `capacity:${good}` });
+      primary.engine.setDisplay({ layer: `capacity:${good}` });
     }
-    if (DISEASE_TOOLS.includes(tool)) engine.setDisplay({ colorMode: 'disease' });
+    if (DISEASE_TOOLS.includes(tool)) primary.engine.setDisplay({ colorMode: 'disease' });
     const pick = h('label', {}, 'Disease ', picker);
     options.replaceChildren(
       ...(tool === 'paint'
@@ -147,16 +168,18 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     );
     refreshPicker(true);
     if (DISEASE_TOOLS.includes(tool)) {
-      // Fetch the list now, even while paused.
-      poll.expedite();
-      void engine.refresh();
+      // Fetch the lists now, even while paused.
+      for (const t of targets) {
+        lists.get(t.engine)?.poll.expedite();
+        void t.engine.refresh();
+      }
     }
-    grid.draw();
+    for (const g of grids()) g.draw();
   }
 
-  /** Hides the disease tools while disease is off (leaving them if one was active). */
+  /** Hides the disease tools while no world on screen has disease (leaving them if one was active). */
   function syncAvailability(): void {
-    const on = engine.config.disease.enabled;
+    const on = diseaseOn();
     buttons.forEach((b, i) => {
       if (DISEASE_TOOLS.includes(TOOLS[i][0])) b.hidden = !on;
     });
@@ -166,58 +189,89 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     refreshGoods();
   }
 
-  grid.onCell = (x, y, kind) => {
+  /** A grid's clicks and drags, on its own world. */
+  const route = (engine: Engine) => (x: number, y: number, kind: CellEvent) => {
     switch (tool) {
       case 'inspect':
         if (kind === 'down') {
-          engine.select(x, y);
-          onInspect();
+          void engine.select(x, y);
+          onInspect(engine);
         }
         break;
       case 'paint':
-        engine.paint(x, y, radius, value, good);
+        void engine.paint(x, y, radius, value, good);
         break;
       case 'place':
         if (kind === 'down') {
           const o: PlaceOverrides = {};
           if (sex) o.sex = sex;
           if (tribe) o.tribe = tribe;
-          engine.place(x, y, o);
+          void engine.place(x, y, o);
         }
         break;
       case 'erase':
-        engine.erase(x, y);
+        void engine.erase(x, y);
         break;
       case 'infect':
-        if (kind === 'down') engine.infect(x, y, disease);
+        if (kind === 'down') void engine.infect(x, y, disease);
         break;
       case 'vaccinate':
-        engine.vaccinate(x, y, radius, disease);
+        void engine.vaccinate(x, y, radius, disease);
         break;
     }
   };
 
-  engine.on('reset', syncAvailability);
-  engine.on('config', syncAvailability);
-  // A reset can change which diseases exist: drop the stale list and ask for a fresh one promptly.
-  engine.on('reset', () => {
-    poll.expedite();
-    diseases = [];
-    refreshPicker();
-  });
-  // Infect, Vaccinate and a rule change can change the list without a tick.
-  for (const event of ['edit', 'config'] as const) engine.on(event, () => poll.invalidate());
-  engine.want((now) =>
-    DISEASE_TOOLS.includes(tool) && engine.config.disease.enabled && poll.due(now, engine.tick) ? { diseaseList: true } : {},
-  );
-  engine.on('snapshot', () => {
-    const list = engine.last?.diseaseList;
-    if (!list) return;
-    diseases = list;
-    poll.received(performance.now(), engine.tick);
-    refreshPicker();
-  });
+  function focus(engine: Engine): void {
+    if (focused === engine) return;
+    focused = engine;
+    refreshPicker(true);
+  }
+
+  function attach(target: ToolTarget): () => void {
+    const { engine, grid } = target;
+    const entry = { diseases: [] as DiseaseEntry[], poll: new DiseaseListPoll(LIST_MS) };
+    targets.push(target);
+    lists.set(engine, entry);
+    grid.onCell = route(engine);
+    grid.brushRadius = brushed() ? radius : null;
+    const offs = [
+      engine.on('reset', syncAvailability),
+      engine.on('config', syncAvailability),
+      // A reset can change which diseases exist: drop the stale list and ask for a fresh one promptly.
+      engine.on('reset', () => {
+        entry.poll.expedite();
+        entry.diseases = [];
+        if (engine === focused) refreshPicker();
+      }),
+      // Infect, Vaccinate and a rule change can change the list without a tick.
+      engine.on('edit', () => entry.poll.invalidate()),
+      engine.on('config', () => entry.poll.invalidate()),
+      engine.want((now) =>
+        DISEASE_TOOLS.includes(tool) && engine.config.disease.enabled && entry.poll.due(now, engine.tick) ? { diseaseList: true } : {},
+      ),
+      engine.on('snapshot', () => {
+        const list = engine.last?.diseaseList;
+        if (!list) return;
+        entry.diseases = list;
+        entry.poll.received(performance.now(), engine.tick);
+        if (engine === focused) refreshPicker();
+      }),
+    ];
+    syncAvailability();
+    return () => {
+      for (const off of offs) off();
+      targets.splice(targets.indexOf(target), 1);
+      lists.delete(engine);
+      grid.onCell = null;
+      grid.brushRadius = null;
+      if (focused === engine) focus(primary.engine);
+      syncAvailability();
+    };
+  }
+
+  const el = h('div', { class: 'tools' }, h('div', { class: 'tool-buttons' }, ...buttons), options);
+  attach(primary);
   choose('inspect');
   syncAvailability();
-  return h('div', { class: 'tools' }, h('div', { class: 'tool-buttons' }, ...buttons), options);
+  return { el, attach, focus };
 }

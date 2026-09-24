@@ -197,3 +197,5 @@ dialog.keep { border: 1px solid var(--border); border-radius: 8px; background: v
 dialog.keep::backdrop { background: rgb(0 0 0 / 0.4); }
 dialog.keep p { margin: 0 0 12px; }
 dialog.keep .row { display: flex; gap: 8px; justify-content: flex-end; }
+.world-switch { display: flex; gap: 6px; align-items: center; margin: 0 0 10px; }
+.world-label { margin: 0 0 8px; font-weight: 600; color: var(--muted); }
