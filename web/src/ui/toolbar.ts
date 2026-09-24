@@ -85,6 +85,8 @@ export class Toolbar {
   private readonly resetButton: HTMLButtonElement;
   private readonly dice: HTMLButtonElement;
   private readonly readout = h('span', { class: 'readout' });
+  /** The follow and replay chips: their ✕ is held too (ending a replay edits the world). */
+  private readonly chips: HTMLElement;
   /** Hidden in Compare: the headers carry them. */
   private readonly singleOnly: HTMLElement[];
 
@@ -117,7 +119,8 @@ export class Toolbar {
       'Reset',
     );
     this.dice = h('button', { title: 'Random seed and reset', onclick: () => void engine.reset(undefined, randomSeed()) }, '🎲');
-    const chips = h('span', { class: 'chips' }, followChip(engine).el, replayChip(engine).el);
+    this.chips = h('span', { class: 'chips' }, followChip(engine).el, replayChip(engine).el);
+    const chips = this.chips;
     this.singleOnly = [seedLabel, this.dice, chips];
     this.el = h(
       'div',
@@ -155,9 +158,13 @@ export class Toolbar {
     this.tick();
   }
 
-  /** Disables the run controls while Compare copies A (A must stay at the tick B is copying). */
+  /**
+   * Disables the run controls, Reset, 🎲 and the chips' ✕ while Compare copies A (A must stay at
+   * the tick B is copying, with the same log) and while Compare is left.
+   */
   hold(on: boolean): void {
     this.held = on;
+    this.chips.inert = on;
     this.sync();
   }
 

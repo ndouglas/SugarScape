@@ -93,7 +93,8 @@ async function main(): Promise<void> {
   }
 
   const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
-  tabs.add('Rules', new RulesPanel(engine).el);
+  const rules = new RulesPanel(engine);
+  tabs.add('Rules', rules.el);
   const charts = new ChartsPanel(engine);
   tabs.add('Charts', charts.el, (visible) => charts.setVisible(visible));
   const inspect = new InspectPanel(engine);
@@ -105,7 +106,8 @@ async function main(): Promise<void> {
   engine.on('reset', () => syncCreditTab(compare?.b ?? null));
   engine.on('config', () => syncCreditTab(compare?.b ?? null));
   syncCreditTab(null);
-  document.querySelector('#tools')!.append(buildTools(engine, grid, () => tabs.show('Inspect')));
+  const tools = buildTools(engine, grid, () => tabs.show('Inspect'));
+  document.querySelector('#tools')!.append(tools);
 
   const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.tick}`;
   const exportMenu = buildExportMenu({
@@ -181,30 +183,47 @@ async function main(): Promise<void> {
     compareButton.setAttribute('aria-pressed', String(compare !== null));
     compareButton.disabled = busy;
   };
+  /**
+   * Locks A while B copies it: nothing on the page may run, step, rebuild or edit A (the toolbar
+   * is held; the grid, its tools and the Rules panel are inert), or B would stop being a copy.
+   * Opening a session file is refused while `busy`.
+   */
+  const holdA = (on: boolean): void => {
+    toolbar.hold(on);
+    for (const el of [grid.canvas, tools, rules.el]) el.inert = on;
+  };
   /** Starts Compare with B a copy of A at its current tick (Decision 9). */
   async function enterCompare(): Promise<void> {
     if (compare || busy) return;
     busy = true;
     syncCompareButton();
     engine.setRunning(false);
-    toolbar.hold(true);
+    holdA(true);
     const shell = compareShell();
+    let b: Engine | null = null;
     try {
       const { session, full, tick } = await engine.session();
       if (full) throw new Error('A’s edit log is full (50 000 edits), so B cannot copy it exactly');
-      const b = await copyWorld(session, tick, (s) => Engine.create(s), (at, of) => {
+      b = await copyWorld(session, tick, (s) => Engine.create(s), (at, of) => {
         shell.progress.textContent = `Copying A… ${at} / ${of}`;
       });
+      // Belt and braces: A must still be where B copied it from, with the same edits so far.
+      const [now, copy] = await Promise.all([engine.session(), b.session()]);
+      const upTo = (s: typeof now) => s.session.log.filter((e) => e.tick <= s.tick).length;
+      if (now.tick !== copy.tick || upTo(now) !== upTo(copy)) {
+        throw new Error(`A changed while it was copied (A at t = ${now.tick}, B at t = ${copy.tick})`);
+      }
       compare = new CompareView(playground, b, shell);
       // The coordinator first brings both worlds to rest at one tick; only then may they run.
       await compare.lock.settled();
     } catch (e) {
+      b?.close();
       shell.figure.remove();
       delete document.body.dataset.compare;
       showNotice(`Compare could not start (${errorMessage(e)})`, 10_000);
     } finally {
       busy = false;
-      toolbar.hold(false);
+      holdA(false);
       syncCompareButton();
     }
   }
@@ -214,11 +233,14 @@ async function main(): Promise<void> {
     compare = null;
     busy = true;
     syncCompareButton();
+    // Nothing may step or rebuild the pair while it settles and is taken apart.
+    toolbar.hold(true);
     try {
       await c.leave(keep);
     } catch (e) {
       showNotice(`B could not be kept (${errorMessage(e)}); A stays in the playground`, 10_000);
     } finally {
+      toolbar.hold(false);
       busy = false;
       syncCompareButton();
     }

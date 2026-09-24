@@ -68,6 +68,8 @@ export class CompareView {
   readonly lock: Lockstep;
   readonly gridB: GridView;
   private readonly offs: (() => void)[] = [];
+  /** The headers' 🎲 buttons, disabled while leaving. */
+  private readonly dice: HTMLButtonElement[] = [];
   private dirty = true;
 
   constructor(
@@ -80,25 +82,34 @@ export class CompareView {
     shell.canvas.hidden = false;
     this.gridB = new GridView(shell.canvas, b);
     this.lock = new Lockstep([a, b], a.speed);
-    this.header(document.querySelector<HTMLElement>('#world-a .world-header')!, 'A', a);
-    this.header(shell.header, 'B', b);
-    p.toolbar.setCompare(this.lock, b);
-    // One display for both worlds: A's, mirrored to B (Decision 10).
-    const mirror = () => b.setDisplay({ colorMode: a.colorMode, layer: a.layer, overlays: { ...a.overlays } });
-    mirror();
-    this.offs.push(
-      a.on('display', mirror),
-      b.on('snapshot', () => (this.dirty = true)),
-      b.on('display', () => (this.dirty = true)),
-      b.on('reset', () => p.syncCreditTab(b)),
-      b.on('config', () => p.syncCreditTab(b)),
-      b.on('crash', p.onCrash),
-      b.on('fork', () => showNotice('Replay ended in B — your edit starts a new branch')),
-      this.lock.on('run', p.onRun),
-      this.lock.on('tick', p.onFrame),
-    );
-    p.syncCreditTab(b);
-    p.onRun();
+    try {
+      this.header(document.querySelector<HTMLElement>('#world-a .world-header')!, 'A', a);
+      this.header(shell.header, 'B', b);
+      p.toolbar.setCompare(this.lock, b);
+      // One display for both worlds: A's, mirrored to B (Decision 10).
+      const mirror = () => b.setDisplay({ colorMode: a.colorMode, layer: a.layer, overlays: { ...a.overlays } });
+      mirror();
+      this.offs.push(
+        a.on('display', mirror),
+        b.on('snapshot', () => (this.dirty = true)),
+        b.on('display', () => (this.dirty = true)),
+        b.on('reset', () => p.syncCreditTab(b)),
+        b.on('config', () => p.syncCreditTab(b)),
+        b.on('crash', p.onCrash),
+        b.on('fork', () => showNotice('Replay ended in B — your edit starts a new branch')),
+        this.lock.on('run', p.onRun),
+        this.lock.on('tick', p.onFrame),
+      );
+      p.syncCreditTab(b);
+      p.onRun();
+    } catch (e) {
+      // Half-built: undo what is wired so far (the caller closes B and removes its figure).
+      this.lock.dispose();
+      for (const off of this.offs) off();
+      p.toolbar.setCompare(null, null);
+      p.syncCreditTab(null);
+      throw e;
+    }
   }
 
   /** Called every animation frame: redraws B's grid when it has news. */
@@ -115,6 +126,8 @@ export class CompareView {
   async leave(keep: WorldName): Promise<void> {
     const { p, b } = this;
     const a = p.engine;
+    // Nothing may rebuild a world while the pair settles.
+    for (const d of this.dice) d.disabled = true;
     this.lock.setRunning(false);
     await this.lock.settled();
     // Before takeWorld: its 'reset' would otherwise make the coordinator rewind the worlds.
@@ -141,17 +154,19 @@ export class CompareView {
     syncSeed();
     const follow = followChip(engine);
     const replay = replayChip(engine);
+    const dice = h(
+      'button',
+      {
+        title: `Random seed and rebuild ${name} (the other world rewinds to t = 0)`,
+        onclick: () => void engine.reset(undefined, randomSeed()),
+      },
+      '🎲',
+    );
+    this.dice.push(dice);
     el.replaceChildren(
       h('strong', {}, name),
       seed,
-      h(
-        'button',
-        {
-          title: `Random seed and rebuild ${name} (the other world rewinds to t = 0)`,
-          onclick: () => void engine.reset(undefined, randomSeed()),
-        },
-        '🎲',
-      ),
+      dice,
       follow.el,
       replay.el,
     );
