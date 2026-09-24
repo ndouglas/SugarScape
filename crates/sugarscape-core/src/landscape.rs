@@ -38,7 +38,8 @@ fn two_peaks() -> Vec<f64> {
 }
 
 /// Row-major capacities of `map` on a width×height torus (row 0 = north).
-/// `TwoPeaks` is only valid at 50×50 (enforced by `Config::validate`).
+/// `TwoPeaks` is only valid at 50×50 (enforced by `Config::validate`);
+/// `Noise` depends only on its own parameters.
 pub fn generate(map: &Map, width: u32, height: u32) -> Vec<f64> {
     let (w, h) = (width as usize, height as usize);
     match map {
@@ -55,6 +56,18 @@ pub fn generate(map: &Map, width: u32, height: u32) -> Vec<f64> {
             .map(|i| peak_capacity(peaks, i % w, i / w, w, h))
             .collect(),
         Map::Flat { capacity } => vec![*capacity; w * h],
+        Map::Noise {
+            seed,
+            scale,
+            octaves,
+            height,
+        } => (0..w * h)
+            .map(|i| {
+                let at = ((i % w) as f64, (i / w) as f64);
+                let v = noise_at(*seed, *scale, *octaves, (w, h), at);
+                (*height * v).round().clamp(0.0, *height)
+            })
+            .collect(),
     }
 }
 
@@ -76,6 +89,59 @@ fn peak_capacity(peaks: &[Peak], x: usize, y: usize, w: usize, h: usize) -> f64 
             }
         })
         .fold(0.0, f64::max)
+}
+
+/// SplitMix64's output function: a fixed integer hash (no RNG state).
+fn mix(z: u64) -> u64 {
+    let mut z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
+}
+
+/// The value in [0, 1) at lattice corner (i, j) of octave `octave`.
+fn corner(seed: u32, octave: u32, i: u64, j: u64) -> f64 {
+    let h = mix(mix(mix((u64::from(seed) << 32) | u64::from(octave)) ^ i) ^ j);
+    (h >> 11) as f64 / (1u64 << 53) as f64
+}
+
+/// Lattice cells of octave `octave` along a side of `cells` grid cells:
+/// max(1, round(cells · 2^octave / scale)) (Decision 10).
+fn period(cells: usize, scale: f64, octave: u32) -> u64 {
+    ((cells as f64 * f64::from(1u32 << octave) / scale).round() as u64).max(1)
+}
+
+fn smoothstep(t: f64) -> f64 {
+    t * t * (3.0 - 2.0 * t)
+}
+
+/// Fractal value noise in [0, 1] at (x, y) on a w×h torus. Cell x samples
+/// lattice coordinate x · period / w, and lattice indices wrap modulo the
+/// period, so x = w is exactly x = 0 and the map tiles seamlessly. Only
+/// integer hashing and + − × ÷ are used: identical on every platform.
+fn noise_at(
+    seed: u32,
+    scale: f64,
+    octaves: u32,
+    (w, h): (usize, usize),
+    (x, y): (f64, f64),
+) -> f64 {
+    let (mut sum, mut total, mut amplitude) = (0.0, 0.0, 1.0);
+    for o in 0..octaves {
+        let (px, py) = (period(w, scale, o), period(h, scale, o));
+        let (u, v) = (x * px as f64 / w as f64, y * py as f64 / h as f64);
+        let (fu, fv) = (u.floor(), v.floor());
+        let (tx, ty) = (smoothstep(u - fu), smoothstep(v - fv));
+        let (i0, j0) = (fu as u64 % px, fv as u64 % py);
+        let (i1, j1) = ((i0 + 1) % px, (j0 + 1) % py);
+        let c = |i, j| corner(seed, o, i, j);
+        let top = c(i0, j0) + (c(i1, j0) - c(i0, j0)) * tx;
+        let bottom = c(i0, j1) + (c(i1, j1) - c(i0, j1)) * tx;
+        sum += amplitude * (top + (bottom - top) * ty);
+        total += amplitude;
+        amplitude *= 0.5;
+    }
+    sum / total
 }
 
 #[cfg(test)]
@@ -210,5 +276,109 @@ mod tests {
             serde_json::to_string(&Transform::AntiTranspose).unwrap(),
             "\"anti_transpose\""
         );
+    }
+
+    fn noise(seed: u32, scale: f64, octaves: u32, height: f64) -> Map {
+        Map::Noise {
+            seed,
+            scale,
+            octaves,
+            height,
+        }
+    }
+
+    #[test]
+    fn noise_maps_are_in_range_deterministic_and_seeded() {
+        let caps = generate(&noise(7, 8.0, 3, 4.0), 50, 40);
+        assert_eq!(caps.len(), 2000);
+        assert!(caps
+            .iter()
+            .all(|&c| (0.0..=4.0).contains(&c) && c.fract() == 0.0));
+        assert!(caps.iter().any(|&c| c != caps[0]), "not flat");
+        assert_eq!(
+            caps,
+            generate(&noise(7, 8.0, 3, 4.0), 50, 40),
+            "no RNG state"
+        );
+        assert_ne!(
+            caps,
+            generate(&noise(8, 8.0, 3, 4.0), 50, 40),
+            "the seed matters"
+        );
+        assert!(generate(&noise(7, 8.0, 3, 0.0), 50, 40)
+            .iter()
+            .all(|&c| c == 0.0));
+        assert!(generate(&noise(7, 8.0, 3, 2.5), 50, 40)
+            .iter()
+            .all(|&c| (0.0..=2.5).contains(&c)));
+        for (w, h) in [(5, 5), (50, 50), (37, 11)] {
+            for octaves in 1..=6 {
+                for scale in [1.0, 3.5, 100.0] {
+                    for i in 0..w * h {
+                        let at = ((i % w) as f64, (i / w) as f64);
+                        let v = noise_at(3, scale, octaves, (w, h), at);
+                        assert!((0.0..=1.0).contains(&v), "{v} at {at:?}");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn noise_tiles_the_torus_seamlessly() {
+        let (w, h) = (50usize, 40usize);
+        for (seed, scale, octaves) in [(1, 10.0, 1), (2, 8.0, 2), (3, 20.0, 3)] {
+            let at =
+                |x: usize, y: usize| noise_at(seed, scale, octaves, (w, h), (x as f64, y as f64));
+            // The largest change between neighbouring cells: smoothstep's slope
+            // is at most 1.5 and corner values differ by less than 1, so octave
+            // o changes by at most 1.5 · period / cells per cell.
+            let bound = |cells: usize| {
+                let (mut sum, mut total, mut amplitude) = (0.0, 0.0, 1.0);
+                for o in 0..octaves {
+                    sum += amplitude * 1.5 * period(cells, scale, o) as f64 / cells as f64;
+                    total += amplitude;
+                    amplitude *= 0.5;
+                }
+                sum / total + 1e-12
+            };
+            let (bx, by) = (bound(w), bound(h));
+            for y in 0..h {
+                assert_eq!(at(w, y), at(0, y), "x = W is x = 0");
+                for x in 0..w {
+                    let step = (at((x + 1) % w, y) - at(x, y)).abs();
+                    assert!(
+                        step <= bx,
+                        "x {x} → {} at y {y}: {step} > {bx}",
+                        (x + 1) % w
+                    );
+                }
+            }
+            for x in 0..w {
+                assert_eq!(at(x, h), at(x, 0), "y = H is y = 0");
+                for y in 0..h {
+                    let step = (at(x, (y + 1) % h) - at(x, y)).abs();
+                    assert!(
+                        step <= by,
+                        "y {y} → {} at x {x}: {step} > {by}",
+                        (y + 1) % h
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn noise_maps_ignore_the_world_seed_and_round_trip_as_json() {
+        let mut c = crate::config::Config::default();
+        c.goods[0].map = noise(5, 6.0, 2, 4.0);
+        let a = crate::world::World::new(c.clone(), 1).unwrap();
+        let b = crate::world::World::new(c, 2).unwrap();
+        assert_eq!(a.capacities(0), b.capacities(0));
+        assert!(!a.landscape_edited(0));
+        let json = r#"{"kind":"noise","seed":7,"scale":8.0,"octaves":3,"height":4.0}"#;
+        let map: Map = serde_json::from_str(json).unwrap();
+        assert_eq!(map, noise(7, 8.0, 3, 4.0));
+        assert_eq!(serde_json::to_string(&map).unwrap(), json);
     }
 }

@@ -109,6 +109,16 @@ pub enum Map {
     Flat {
         capacity: f64,
     },
+    /// Seeded fractal value noise on the torus (Decision 10): octave 0's
+    /// features are about `scale` cells across, each further octave is twice
+    /// as fine at half the amplitude, and capacity is round(height · v) for
+    /// v in [0, 1]. Independent of the world's seed.
+    Noise {
+        seed: u32,
+        scale: f64,
+        octaves: u32,
+        height: f64,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -807,6 +817,28 @@ impl Config {
                 );
             }
             Map::Flat { capacity } => e.non_negative(*capacity, &format!("{field}.capacity")),
+            Map::Noise {
+                scale,
+                octaves,
+                height,
+                ..
+            } => {
+                e.check(
+                    (1.0..=100.0).contains(scale),
+                    &format!("{field}.scale"),
+                    "must be between 1 and 100 cells",
+                );
+                e.check(
+                    (1..=6).contains(octaves),
+                    &format!("{field}.octaves"),
+                    "must be between 1 and 6",
+                );
+                e.check(
+                    (0.0..=10.0).contains(height),
+                    &format!("{field}.height"),
+                    "must be between 0 and 10",
+                );
+            }
         }
     }
 
@@ -2346,5 +2378,45 @@ mod tests {
         two.validate().unwrap();
         let next = two.apply_change(&two.schedule[0]).unwrap();
         assert_eq!(next.trade.price, PriceRule::Random);
+    }
+
+    #[test]
+    fn noise_maps_are_validated_on_any_grid() {
+        let with = |map: Map| {
+            let c = Config {
+                width: 37,
+                height: 11,
+                population: 50,
+                vision: URange::new(1, 5),
+                goods: vec![Good {
+                    map,
+                    ..Good::sugar()
+                }],
+                ..Default::default()
+            };
+            fields(c.validate())
+        };
+        let noise = |scale, octaves, height| Map::Noise {
+            seed: 1,
+            scale,
+            octaves,
+            height,
+        };
+        assert!(with(noise(8.0, 3, 4.0)).is_empty());
+        assert!(with(noise(1.0, 1, 0.0)).is_empty());
+        assert!(with(noise(100.0, 6, 10.0)).is_empty());
+        for bad in [0.5, 101.0, f64::NAN, f64::INFINITY] {
+            assert_eq!(with(noise(bad, 3, 4.0)), vec!["goods.0.map.scale"], "{bad}");
+        }
+        for bad in [0, 7] {
+            assert_eq!(with(noise(8.0, bad, 4.0)), vec!["goods.0.map.octaves"]);
+        }
+        for bad in [-1.0, 10.5, f64::NAN] {
+            assert_eq!(
+                with(noise(8.0, 3, bad)),
+                vec!["goods.0.map.height"],
+                "{bad}"
+            );
+        }
     }
 }
