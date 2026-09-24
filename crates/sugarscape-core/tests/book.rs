@@ -4,6 +4,7 @@
 use sugarscape_core::config::Config;
 use sugarscape_core::econ;
 use sugarscape_core::presets;
+use sugarscape_core::sweep::{self, Summary, SweepResult};
 use sugarscape_core::world::World;
 
 fn run(config: Config, seed: u64, ticks: u32) -> World {
@@ -392,4 +393,78 @@ fn three_good_trade_raises_carrying_capacity() {
     };
     let (p_with, p_without) = (pop(&with), pop(&without));
     assert!(p_with > p_without, "with {p_with}, without {p_without}");
+}
+
+/// A built-in sweep at its recorded settings, on every core.
+fn run_builtin(id: &str) -> SweepResult {
+    let s = sweep::builtin(id).unwrap();
+    let jobs = std::thread::available_parallelism().map_or(1, |n| n.get());
+    sweep::run_all(&s, jobs, |_, _| {}).unwrap()
+}
+
+/// A scalar sweep's means as `[series][x]`.
+fn cell_means(result: &SweepResult) -> Vec<Vec<f64>> {
+    let Summary::Scalar(rows) = &result.summary else {
+        panic!("a scalar metric was expected");
+    };
+    let mut means = vec![vec![f64::NAN; result.sweep.x.values.len()]; result.sweep.series_count()];
+    for r in rows {
+        means[r.series][r.x] = r.mean;
+    }
+    means
+}
+
+#[test]
+#[ignore]
+fn fig_ii_5_carrying_capacity_rises_with_vision_and_falls_with_metabolism() {
+    // Figure II-5 at `sweeps/fig-ii-5.json`'s settings. Measured means
+    // (rows: mean metabolism 1, 2, 3; columns: mean vision 1–6):
+    // [[438.7, 454.2, 465.5, 476.4, 480.9, 485.9],
+    //  [281.6, 299.7, 304.7, 309.4, 310.1, 316.8],
+    //  [191.0, 207.1, 228.2, 239.1, 240.2, 250.1]]
+    let means = cell_means(&run_builtin("fig-ii-5"));
+    for (s, line) in means.iter().enumerate() {
+        assert!(
+            line[line.len() - 1] > line[0],
+            "metabolism line {s}: {line:?}"
+        );
+    }
+    for x in 0..means[0].len() {
+        let column: Vec<f64> = means.iter().map(|line| line[x]).collect();
+        assert!(
+            column.windows(2).all(|w| w[1] < w[0]),
+            "vision column {x}: {column:?}"
+        );
+    }
+}
+
+#[test]
+#[ignore]
+fn fig_iv_6_trade_raises_carrying_capacity_at_every_vision() {
+    // Figure IV-6 at `sweeps/fig-iv-6.json`'s settings (series 0 = no trade,
+    // 1 = trade). Measured means:
+    // [[33.8, 47.5, 54.5, 63.7, 68.3, 69.8],
+    //  [41.8, 54.6, 63.8, 71.7, 73.4, 76.6]]
+    let means = cell_means(&run_builtin("fig-iv-6"));
+    for (x, (&no_trade, &trade)) in means[0].iter().zip(&means[1]).enumerate() {
+        assert!(
+            trade > no_trade,
+            "vision {x}: trade {trade} vs no trade {no_trade}"
+        );
+    }
+}
+
+#[test]
+#[ignore]
+fn fig_iv_10_11_long_lives_end_with_less_price_dispersion() {
+    // Figures IV-10/IV-11 at `sweeps/fig-iv-10-11.json`'s settings (series 0 =
+    // lifetimes 60–100, 1 = 960–1000). Measured last-block means:
+    // short (60–100) = 0.444, long (960–1000) = 0.138.
+    let result = run_builtin("fig-iv-10-11");
+    let Summary::Timeseries(rows) = &result.summary else {
+        panic!("a timeseries metric was expected");
+    };
+    let last = |s: usize| rows.iter().rfind(|r| r.series == s).unwrap().mean;
+    let (short, long) = (last(0), last(1));
+    assert!(long < short, "lifetimes 60–100: {short}, 960–1000: {long}");
 }
