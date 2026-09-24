@@ -1,26 +1,51 @@
 import { describe, expect, it } from 'vitest';
 import type { Sweep } from './experiments/types';
 import { LEGACY_SHARE_TOKEN } from './legacy-share.fixture';
+import type { LogEntry } from './protocol';
 import {
   base64UrlToBytes,
   bytesToBase64Url,
+  decodeCompare,
+  decodeLog,
   decodeShare,
   decodeSweep,
+  encodeCompare,
+  encodeLog,
   encodeShare,
   encodeSweep,
+  parseSessionFile,
+  readCompareHash,
   readHash,
   readSweepHash,
+  sessionFileText,
 } from './share';
 import type { Config } from './types';
 
 const config = { width: 50, height: 50, population: 400, sex: { enabled: true } } as unknown as Config;
+
+/** A share token for any wire object (to test what the encoder would never write). */
+async function tokenOf(wire: unknown): Promise<string> {
+  const compressed = new Blob([JSON.stringify(wire)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+  return bytesToBase64Url(new Uint8Array(await new Response(compressed).arrayBuffer()));
+}
+
+const log: LogEntry[] = [
+  { tick: 0, cmd: { type: 'paint', x: 3, y: 4, radius: 1.5, value: 2, good: 1 } },
+  { tick: 0, cmd: { type: 'importLandscape', good: 0, capacities: Uint8Array.from({ length: 2500 }, (_, i) => i % 11) } },
+  { tick: 7, cmd: { type: 'place', x: 1, y: 2, overrides: {} } },
+  { tick: 7, cmd: { type: 'place', x: 2, y: 2, overrides: { sex: 'female', tribe: 'red' } } },
+  { tick: 12, cmd: { type: 'erase', x: 1, y: 2 } },
+  { tick: 40, cmd: { type: 'infect', x: 9, y: 9, disease: -1 } },
+  { tick: 41, cmd: { type: 'vaccinate', x: 9, y: 9, radius: 2, disease: 3 } },
+  { tick: 1000, cmd: { type: 'setConfig', config } },
+];
 
 describe('share links', () => {
   it('round-trips config and seed', async () => {
     const token = await encodeShare({ config, seed: 123456789 });
     expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
     const back = await decodeShare(token);
-    expect(back).toEqual({ config, seed: 123456789 });
+    expect(back).toEqual({ config, seed: 123456789, log: [] });
   });
 
   it('round-trips per-good painted landscapes', async () => {
@@ -37,7 +62,7 @@ describe('share links', () => {
   });
 
   it('rejects an unknown version', async () => {
-    const json = new TextEncoder().encode(JSON.stringify({ v: 3, s: 1, c: {} }));
+    const json = new TextEncoder().encode(JSON.stringify({ v: 4, s: 1, c: {} }));
     const compressed = new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
     const token = bytesToBase64Url(new Uint8Array(await new Response(compressed).arrayBuffer()));
     await expect(decodeShare(token)).rejects.toThrow('not a SugarScape share link');
@@ -57,10 +82,10 @@ describe('share links', () => {
   });
 
   it('rejects a payload that decompresses past the size cap', async () => {
-    const wire = JSON.stringify({ v: 1, s: 1, c: {}, l: 'A'.repeat(2 * 1024 * 1024) });
+    const wire = JSON.stringify({ v: 1, s: 1, c: {}, l: 'A'.repeat(17 * 1024 * 1024) });
     const compressed = new Blob([wire]).stream().pipeThrough(new CompressionStream('deflate-raw'));
     const token = bytesToBase64Url(new Uint8Array(await new Response(compressed).arrayBuffer()));
-    expect(token.length).toBeLessThan(10_000);
+    expect(token.length).toBeLessThan(40_000);
     await expect(decodeShare(token)).rejects.toThrow('not a SugarScape share link');
   });
 
@@ -115,5 +140,85 @@ describe('experiment links', () => {
     const playground = await encodeShare({ config, seed: 1 });
     await expect(decodeSweep(playground)).rejects.toThrow('not a SugarScape experiment link');
     await expect(decodeSweep('garbage')).rejects.toThrow('not a SugarScape experiment link');
+  });
+});
+
+describe('session links', () => {
+  it('round-trips an edit log of every kind', async () => {
+    const back = await decodeShare(await encodeShare({ config, seed: 5, log }));
+    expect(back).toEqual({ config, seed: 5, log });
+  });
+
+  it('writes entries compactly, with ticks as deltas', () => {
+    expect(encodeLog(log.slice(2, 5))).toEqual([
+      [7, 'a', 1, 2],
+      [0, 'a', 2, 2, { sex: 'female', tribe: 'red' }],
+      [5, 'x', 1, 2],
+    ]);
+    expect(decodeLog(encodeLog(log))).toEqual(log);
+  });
+
+  it('decodes links made before the edit log with an empty log', async () => {
+    expect(await decodeShare(await tokenOf({ v: 2, c: config, s: 9, g: [null] }))).toEqual({
+      config,
+      seed: 9,
+      landscapes: [null],
+      log: [],
+    });
+    expect((await decodeShare(LEGACY_SHARE_TOKEN)).log).toEqual([]);
+  });
+
+  it('rejects a malformed edit log', async () => {
+    const bad: unknown[] = [
+      [[0, 'q', 1]],
+      [[-1, 'x', 1, 1]],
+      [[0, 'x', 1.5, 1]],
+      [[0, 'p', 1, 1, -1, 2, 0]],
+      [[0, 'a', 1, 1, { sex: 'other' }]],
+      [[0, 'f', 1, 1, -2]],
+      [[0, 'i', 0, 7]],
+      [[0, 'c', []]],
+      'x',
+    ];
+    for (const e of bad) {
+      await expect(decodeShare(await tokenOf({ v: 3, c: config, s: 1, e }))).rejects.toThrow('not a SugarScape share link');
+    }
+  });
+});
+
+describe('compare links and session files', () => {
+  const b = { config: { ...config, population: 10 } as Config, seed: 6, landscapes: [null, new Uint8Array(2500).fill(3)], log: log.slice(0, 3) };
+
+  it('round-trips two sessions in a #c= link', async () => {
+    const token = await encodeCompare({ a: { config, seed: 5, log }, b });
+    expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
+    const back = await decodeCompare(token);
+    expect(back.a).toEqual({ config, seed: 5, log });
+    expect(back.b.seed).toBe(6);
+    expect(back.b.log).toEqual(b.log);
+    expect(back.b.landscapes?.[0]).toBeNull();
+    expect(Array.from(back.b.landscapes![1]!)).toEqual(Array.from(b.landscapes[1]!));
+    await expect(decodeCompare(await encodeShare({ config, seed: 1 }))).rejects.toThrow('not a SugarScape compare link');
+    await expect(decodeCompare('garbage')).rejects.toThrow('not a SugarScape compare link');
+  });
+
+  it('reads #c= apart from #s= and #x=', () => {
+    expect(readCompareHash('#c=ab_-9')).toBe('ab_-9');
+    expect(readCompareHash('#s=abc')).toBeNull();
+    expect(readHash('#c=abc')).toBeNull();
+    expect(readSweepHash('#c=abc')).toBeNull();
+  });
+
+  it('writes and reads session files of one world or two', () => {
+    expect(parseSessionFile(sessionFileText({ kind: 'session', state: { config, seed: 5, log } }))).toEqual({
+      kind: 'session',
+      state: { config, seed: 5, log },
+    });
+    const two = parseSessionFile(sessionFileText({ kind: 'compare', state: { a: { config, seed: 5, log }, b } }));
+    if (two.kind !== 'compare') throw new Error(two.kind);
+    expect(two.state.a.log).toEqual(log);
+    expect(two.state.b.seed).toBe(6);
+    expect(() => parseSessionFile('{"v":3}')).toThrow('not a SugarScape session file');
+    expect(() => parseSessionFile('nope')).toThrow('not a SugarScape session file');
   });
 });
