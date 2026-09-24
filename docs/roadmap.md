@@ -34,6 +34,13 @@ bargaining rule (geometric mean or a random price in [MRS_A, MRS_B]) with the me
 trails, and a layered credit-hierarchy tab. Earlier presets run unchanged. See
 `docs/superpowers/specs/2026-09-23-model-extensions-design.md`.
 
+## Milestone 7a: Worker simulation (done)
+
+The simulation runs in a Web Worker behind a command/snapshot protocol (with an on-page
+fallback), a Max speed runs it flat out, and charts draw downsampled history (LTTB, about
+2 000 points per line) while CSV exports keep every tick. Runs are unchanged. See
+`docs/superpowers/specs/2026-09-24-worker-simulation-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -51,7 +58,7 @@ trails, and a layered credit-hierarchy tab. Earlier presets run unchanged. See
 ## Playground and infrastructure
 
 - **Replayable edit log**: record hand edits (place/erase agents, paints, mid-run toggles) with their ticks so share links reproduce a whole session, not just its setup.
-- **Web Worker simulation**: move the sim off the main thread for large grids and high speeds; transfer frames via `SharedArrayBuffer` or transferables.
-- **Downsampled chart history**: cap per-series points (e.g. LTTB) so very long runs stay fast.
+- **Web Worker simulation**: done (Milestone 7a).
+- **Downsampled chart history**: done (Milestone 7a).
 - **Side-by-side comparison**: two worlds with different configs/seeds stepped in lockstep, charts overlaid.
 - **Recording**: export a run as an animated GIF/WebM of the grid.

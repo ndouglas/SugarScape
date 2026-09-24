@@ -122,6 +122,19 @@ partial results, which export marked incomplete. Exports: the result JSON (the C
 format), runs and summary CSVs and the chart as PNG. **Share link** copies a `#x=` link that
 opens the sweep (not its results).
 
+## How the playground runs
+
+The simulation runs in a Web Worker: the page sends it commands (steps, edits, rule changes)
+and draws the frame and statistics it sends back, so the page stays responsive on large grids
+and at high speeds. Where a module worker cannot start, the same code runs on the page. The
+speed menu's **Max** runs the simulation as fast as it goes and redraws about 30 times a
+second; the other speeds step a fixed number of ticks per frame, as before. A run does not
+depend on the speed: the same setup and seed give the same world at the same tick.
+
+Charts draw a downsampled history, with the tick on the x axis: Largest-Triangle-Three-Buckets
+keeps about 2 000 points of each line, so spikes and gaps survive on long runs. The full per-tick history stays with the
+simulation: Export → Statistics (CSV), share links and Experiments use all of it.
+
 ## Command line
 
 `crates/sugarscape-cli` builds a native `sugarscape` binary over the same core
@@ -159,7 +172,7 @@ Requirements: Rust with the `wasm32-unknown-unknown` target, `wasm-pack`, Node 2
     cargo test -p sugarscape-core                                   # unit + property tests
     cargo test -p sugarscape-core --release --test book -- --ignored # book reproductions
     wasm-pack test --node crates/sugarscape-wasm                    # bindings
-    cd web && npm test                                              # front-end logic
+    cd web && npm run build && npm test                             # front-end logic (build first: the engine tests load the real WASM package)
 
 The book reproduction tests include a carrying-capacity check that reproduces the book's
 claim that the population stabilizes at approximately 224 agents on the default 50×50
