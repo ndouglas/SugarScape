@@ -1,5 +1,6 @@
 import type { Engine, InitialState, Speed } from '../engine';
 import type { Session } from '../protocol';
+import type { FieldError } from '../types';
 
 /** At Max in Compare, the ticks per pair double while a pair takes at most this long… */
 export const FAST_MS = 25;
@@ -49,9 +50,18 @@ export class Lockstep {
         w.on('reset', () => {
           if (this.rewinding === 0) void this.realign();
         }),
+        // A dead world cannot keep step: stop, and Step/Reset do nothing from now on.
+        w.on('crash', () => {
+          if (this.running) this.setRunning(false);
+        }),
       );
     }
-    if (worlds[0].tick !== worlds[1].tick) void this.realign();
+    // Compared only once both are quiet: a step (or Max's run) still in flight would move a tick
+    // after the comparison and leave the worlds unequal for good. `session()` waits for that.
+    void this.guard(async () => {
+      await Promise.all(worlds.map((w) => (w.crashed ? null : w.session())));
+      if (worlds[0].tick !== worlds[1].tick) await this.align();
+    });
   }
 
   on(event: LockstepEvent, fn: () => void): () => void {
@@ -84,7 +94,7 @@ export class Lockstep {
       for (const w of this.worlds) w.pump(now);
       return;
     }
-    if (this.worlds.some((w) => w.crashed)) {
+    if (this.crashed()) {
       this.setRunning(false);
       return;
     }
@@ -95,12 +105,16 @@ export class Lockstep {
 
   /** Step: both worlds advance `n` ticks. */
   advance(n = 1): Promise<void> {
-    return this.exclusive(() => this.stepBoth(n, false));
+    return this.exclusive(async () => {
+      if (!this.crashed()) await this.stepBoth(n, false);
+    });
   }
 
-  /** Reset: both worlds rewind to t = 0, each replaying its log. */
+  /** Reset: both worlds rewind to t = 0, each replaying its log. Rejects if either replay fails. */
   reset(): Promise<void> {
-    return this.exclusive(() => this.rewind(this.worlds));
+    return this.exclusive(async () => {
+      if (!this.crashed()) await this.rewind(this.worlds);
+    });
   }
 
   /** Resolves once every step, rewind and realign queued so far has finished. */
@@ -131,24 +145,50 @@ export class Lockstep {
     return run.finally(() => this.holds--);
   }
 
+  private crashed(): boolean {
+    return this.worlds.some((w) => w.crashed);
+  }
+
+  /** Replays each of `worlds`' sessions; throws if a replay fails. */
   private async rewind(worlds: Engine[]): Promise<void> {
     this.rewinding++;
+    let errors: (FieldError[] | null)[];
     try {
-      await Promise.all(worlds.map((w) => w.replay()));
+      errors = await Promise.all(worlds.map((w) => w.replay()));
     } finally {
       this.rewinding--;
     }
     this.emit('tick');
+    const failed = errors.flatMap((e) => e ?? []);
+    if (failed.length > 0) throw new Error(`a world could not rewind: ${failed.map((e) => `${e.field}: ${e.message}`).join('; ')}`);
   }
 
-  /** After a rebuild: every world not at t = 0 replays its session (a few rounds, in case of races). */
+  /** Every world not at t = 0 replays its session (a few rounds, in case of races); throws if they still differ. */
+  private async align(): Promise<void> {
+    for (let round = 0; round < 3; round++) {
+      if (this.crashed()) return;
+      const behind = this.worlds.filter((w) => w.tick !== 0);
+      if (behind.length === 0) return;
+      await this.rewind(behind);
+    }
+    if (this.worlds.some((w) => w.tick !== 0)) {
+      throw new Error(`the worlds did not rewind together (ticks ${this.worlds.map((w) => w.tick).join(' and ')})`);
+    }
+  }
+
+  /** After a rebuild: every world not at t = 0 rewinds. */
   private realign(): Promise<void> {
-    return this.exclusive(async () => {
-      for (let round = 0; round < 3; round++) {
-        const behind = this.worlds.filter((w) => w.tick !== 0);
-        if (behind.length === 0) return;
-        await this.rewind(behind);
-      }
+    return this.guard(() => this.align());
+  }
+
+  /**
+   * Runs `fn` in turn with the other steps; if it fails, the worlds may no longer be in step, so
+   * the coordinator stops and says so rather than running them apart.
+   */
+  private guard(fn: () => Promise<void>): Promise<void> {
+    return this.exclusive(fn).catch((e: unknown) => {
+      console.warn('Compare stopped: the worlds could not be kept in step.', e);
+      if (this.running) this.setRunning(false);
     });
   }
 }

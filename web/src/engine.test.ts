@@ -808,6 +808,30 @@ describe('Engine handing over a world', () => {
     expect(a.engine.crashed).toBeNull();
   });
 
+  it('leaves the other engine holding nothing: closing or using it cannot touch the world it gave up', async () => {
+    const a = await setup();
+    const b = await setup();
+    await b.engine.advance(4);
+    await a.engine.takeWorld(b.engine);
+    b.engine.close();
+    await b.engine.advance(1);
+    expect(await b.engine.place(0, 2, {})).toEqual([{ field: 'simulation', message: 'This world now runs in another engine.' }]);
+    await a.engine.advance(1);
+    expect([a.engine.tick, b.module.sims[0].ticks]).toEqual([5, 5]);
+    expect(a.engine.crashed).toBeNull();
+  });
+
+  it('refuses to take over its own world or a dead one', async () => {
+    const a = await setup();
+    const b = await setup();
+    await expect(a.engine.takeWorld(a.engine)).rejects.toThrow('its own world');
+    b.engine.close();
+    await expect(a.engine.takeWorld(b.engine)).rejects.toThrow('no world to take over');
+    await a.engine.advance(1);
+    expect([a.engine.tick, a.module.sims[0].ticks]).toEqual([1, 1]);
+    expect(a.engine.crashed).toBeNull();
+  });
+
   it('close stops an engine for good, without a crash event', async () => {
     const { engine } = await setup();
     let crashes = 0;

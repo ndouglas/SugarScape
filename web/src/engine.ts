@@ -76,6 +76,16 @@ function writeFailure(result: Result): FieldError[] | null {
   return failure(result);
 }
 
+/** What an engine keeps after handing its world over: every request fails, and closing does nothing. */
+function deadTransport(message: string): Transport {
+  return {
+    onPost: null,
+    onFatal: null,
+    request: async () => ({ id: 0, result: { ok: false, fatal: message } }),
+    close: () => {},
+  };
+}
+
 /**
  * The simulation runs in a worker; the page keeps its own WASM instance for presets, Experiments
  * and, if a module worker cannot start, the simulation itself (Decision 10).
@@ -509,8 +519,15 @@ export class Engine {
    * this engine redraw from the events that follow.
    */
   async takeWorld(other: Engine): Promise<void> {
+    if (other === this) throw new Error('an engine cannot take over its own world');
+    const dead = () => {
+      if (other.crashed) throw new Error(`there is no world to take over: ${other.crashed}`);
+    };
+    dead();
     await this.quiet(() =>
       other.quiet(async () => {
+        // It may have died while the two were going quiet.
+        dead();
         const mine = this.transport;
         mine.onFatal = null;
         mine.onPost = null;
@@ -518,7 +535,11 @@ export class Engine {
         this.transport = other.transport;
         this.transport.onFatal = (message) => this.crash(message);
         this.transport.onPost = (s) => this.onPost(s);
+        // `other` lets go of the transport: its later requests fail, and closing it is harmless.
         other.crashed = 'This world now runs in another engine.';
+        other.transport = deadTransport(other.crashed);
+        other.running = false;
+        other.maxOn = false;
         this.seed = other.seed;
         this.presetId = other.presetId;
         this.baseConfig = other.baseConfig;

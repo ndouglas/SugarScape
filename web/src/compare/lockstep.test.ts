@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Engine, type InitialState, type Speed } from '../engine';
 import { fakeModule } from '../fake-sim.fixture';
 import type { LogEntry } from '../protocol';
@@ -17,7 +17,10 @@ const create = (initial: InitialState) =>
 async function pair(speed: Speed = 1, now?: () => number) {
   const a = await create({ config, seed: 1 });
   const b = await create({ config, seed: 2 });
-  return { a, b, lock: new Lockstep([a, b], speed, now) };
+  const lock = new Lockstep([a, b], speed, now);
+  // A new coordinator first waits for both worlds to go quiet and compares their ticks.
+  await lock.settled();
+  return { a, b, lock };
 }
 
 /** Runs `k` animation frames of the lockstep loop. */
@@ -108,6 +111,61 @@ describe('Lockstep', () => {
     const lock = new Lockstep([a, b], 1);
     await lock.settled();
     expect([a.tick, b.tick]).toEqual([0, 0]);
+  });
+});
+
+describe('Lockstep keeping step when things go wrong', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('compares ticks only once a world’s own step in flight has landed', async () => {
+    const a = await create({ config, seed: 1 });
+    const b = await create({ config, seed: 2 });
+    a.setSpeed(5);
+    a.setRunning(true);
+    a.pump(0); // A's own step of 5 is in flight while the coordinator is built
+    const lock = new Lockstep([a, b], 1);
+    await lock.settled();
+    await lock.advance(1);
+    expect(a.tick).toBe(b.tick);
+  });
+
+  it('compares ticks only once a world’s Max run has stopped', async () => {
+    const a = await create({ config, seed: 1 });
+    const b = await create({ config, seed: 2 });
+    a.setSpeed('max');
+    a.setRunning(true);
+    while (a.tick === 0) await settle();
+    const lock = new Lockstep([a, b], 1);
+    await lock.settled();
+    await lock.advance(1);
+    expect([a.tick, b.tick]).toEqual([1, 1]);
+  });
+
+  it('says so and stops when a world cannot rewind', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { a, b, lock } = await pair();
+    await lock.advance(3);
+    vi.spyOn(b, 'replay').mockResolvedValue([{ field: 'simulation', message: 'boom' }]);
+    await expect(lock.reset()).rejects.toThrow('boom');
+    lock.setRunning(true);
+    expect(await a.reset()).toBeNull(); // A is rebuilt; B cannot follow it back to t = 0
+    await lock.settled();
+    expect(lock.running).toBe(false);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][1])).toContain('boom');
+  });
+
+  it('stops when a world crashes, and Step and Reset then do nothing', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { a, b, lock } = await pair();
+    lock.setRunning(true);
+    await frames(lock, 2);
+    await b.paint(0, 0, 1, -1); // "panics": B crashes
+    expect(b.crashed).not.toBeNull();
+    expect(lock.running).toBe(false);
+    await lock.advance(3);
+    await lock.reset();
+    expect(a.tick).toBe(2);
   });
 });
 
