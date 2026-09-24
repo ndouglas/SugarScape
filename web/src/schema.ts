@@ -1,6 +1,14 @@
+import { defaultGroups, sameGroups } from './groups';
 import type { Config } from './types';
 
-interface Base { path: string; label: string; reset?: boolean; hint?: string }
+interface Base {
+  path: string;
+  label: string;
+  reset?: boolean;
+  hint?: string;
+  /** Called after the control sets its value on a copy of the config (`before` is the copy as it was). */
+  adjust?: (next: Config, before: Config) => void;
+}
 export type Control =
   | (Base & { kind: 'toggle' })
   | (Base & { kind: 'number'; min: number; max: number; step: number })
@@ -16,7 +24,7 @@ export interface Group {
   note?: string;
   controls: Control[];
   /** A hand-built editor shown after the controls. */
-  custom?: 'goods' | 'pollution';
+  custom?: 'goods' | 'pollution' | 'groups';
 }
 
 export const GROUPS: Group[] = [
@@ -36,7 +44,13 @@ export const GROUPS: Group[] = [
           { value: 'tribes', label: 'Two tribes in corners', apply: (c) => { c.placement = { kind: 'tribes', size: Math.floor(Math.min(c.width, c.height) * 0.4) }; } },
         ],
       },
-      { kind: 'number', path: 'tag_length', label: 'Tag length', min: 1, max: 64, step: 1, reset: true },
+      {
+        kind: 'number', path: 'tag_length', label: 'Tag length', min: 1, max: 64, step: 1, reset: true,
+        // Default groups follow the tag length; custom groups are kept (Decision 7).
+        adjust: (next, before) => {
+          if (sameGroups(before.culture.groups, defaultGroups(before.tag_length))) next.culture.groups = defaultGroups(next.tag_length);
+        },
+      },
     ],
   },
   {
@@ -88,7 +102,12 @@ export const GROUPS: Group[] = [
     ],
   },
   { title: 'Inheritance (I)', enable: 'inheritance.enabled', controls: [] },
-  { title: 'Culture (K)', enable: 'culture.enabled', controls: [] },
+  {
+    title: 'Culture (K)', enable: 'culture.enabled',
+    custom: 'groups',
+    note: 'An agent belongs to the first group whose range holds its number of zero tags. Combat, the Tribe colors and the Group shares chart use the groups even while culture is off. Adding or removing a group or changing a range rebuilds the world; names and colors apply live.',
+    controls: [],
+  },
   {
     title: 'Combat (C)', enable: 'combat.enabled',
     note: 'Needs exactly one good.',

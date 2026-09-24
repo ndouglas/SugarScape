@@ -38,7 +38,7 @@ export class InspectPanel {
   private agentRows(a: AgentView): HTMLElement[] {
     const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     return [
-      row('Agent', `#${a.id} · ${a.sex} · ${a.tribe}`),
+      row('Agent', `#${a.id} · ${a.sex} · ${this.engine.config.culture.groups[a.group]?.name ?? a.tribe}`),
       ...a.holdings.map((held, i) =>
         row(this.goodName(i), `${fmt(held)} (born with ${fmt(a.initial[i])}) · metabolism ${a.metabolism[i]}`),
       ),

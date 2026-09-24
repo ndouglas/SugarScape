@@ -148,3 +148,7 @@ body[data-view='experiments'] .toolbar-end { display: none; }
 @media (max-width: 860px) {
   .experiments-view { grid-template-columns: 1fr; }
 }
+.tag-groups { display: grid; gap: 4px; margin-top: 6px; }
+.tag-groups .name { width: 7em; }
+.tag-groups .num { width: 4em; }
+.tag-groups input[type='color'] { padding: 0; width: 2.2em; height: 1.8em; }

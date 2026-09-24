@@ -23,6 +23,9 @@ export interface Good { name: string; color: string; map: GoodMap; metabolism: U
 
 export interface Pollutant { name: string; production: number[]; consumption: number[]; devalues: boolean[] }
 
+/** A tag group (tribe): agents whose tags hold a number of zeros in `zeros`. */
+export interface TagGroup { name: string; color: string; zeros: URange }
+
 export type Placement =
   | { kind: 'random' }
   | { kind: 'block'; x: number; y: number; width: number; height: number }
@@ -61,7 +64,7 @@ export interface Config {
   replacement: { enabled: boolean };
   sex: { enabled: boolean; fertility_onset: URange; female_end: URange; male_end: URange };
   inheritance: { enabled: boolean };
-  culture: { enabled: boolean };
+  culture: { enabled: boolean; groups: TagGroup[] };
   combat: { enabled: boolean; unlimited: boolean; reward: number };
   trade: { enabled: boolean };
   credit: { enabled: boolean; duration: number; rate: number };
@@ -102,6 +105,7 @@ export interface Snapshot {
   trade_pairs: number;
   goods: { mean_holding: number; mean_metabolism: number; traded: number }[];
   pollution: number[];
+  groups: number[];
 }
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
@@ -115,6 +119,7 @@ export interface AgentView {
   y: number;
   sex: 'female' | 'male';
   tribe: 'blue' | 'red';
+  group: number;
   tags: string;
   vision: number;
   holdings: number[];

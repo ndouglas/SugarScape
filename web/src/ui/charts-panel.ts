@@ -2,6 +2,7 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { chartsSignature } from '../goods';
+import { groupSharesSignature } from '../groups';
 import { h } from './dom';
 import { compactNumber } from './format';
 
@@ -18,7 +19,6 @@ const TIME_CHARTS: TimeChart[] = [
       { key: 'mean_metabolism', label: 'Metabolism', color: '--c3' },
     ],
   },
-  { title: 'Blue share', lines: [{ key: 'blue_fraction', label: 'Blue', color: '--blue' }], range: [0, 1] },
   {
     title: 'Births and deaths',
     lines: [
@@ -56,6 +56,9 @@ export class ChartsPanel {
   private pollutionSection = h('section', { class: 'pollution' });
   /** Plots whose lines follow the goods and pollutants; rebuilt when `chartsSignature` changes. */
   private dynamic = new Set<uPlot>();
+  /** Holds the Group shares chart, whose lines follow `culture.groups`. */
+  private groupsSection = h('section', { class: 'group-shares' });
+  private groupPlots = new Set<uPlot>();
   /** Captions that name the traded pair (0, 1). */
   private pairCaptions: { el: HTMLElement; title: string }[] = [];
 
@@ -144,6 +147,21 @@ export class ChartsPanel {
     this.resize();
   }
 
+  private rebuildGroupChart(): void {
+    this.plots = this.plots.filter((p) => {
+      if (!this.groupPlots.has(p.plot)) return true;
+      p.plot.destroy();
+      return false;
+    });
+    this.groupPlots.clear();
+    this.groupsSection.replaceChildren();
+    const before = this.plots.length;
+    const lines = this.engine.config.culture.groups.map((g, k) => ({ key: `group_share_${k}`, label: g.name, color: g.color }));
+    this.addTimeChart({ title: 'Group shares', lines, range: [0, 1] }, this.groupsSection);
+    for (const p of this.plots.slice(before)) this.groupPlots.add(p.plot);
+    this.resize();
+  }
+
   private add(
     title: string,
     opts: Omit<uPlot.Options, 'width' | 'height'>,
@@ -190,7 +208,21 @@ export class ChartsPanel {
       );
     };
 
-    for (const chart of TIME_CHARTS) this.addTimeChart(chart);
+    for (const chart of TIME_CHARTS) {
+      this.addTimeChart(chart);
+      // Group shares sit where the Blue share chart was.
+      if (chart.title === 'Mean traits') this.el.append(this.groupsSection);
+    }
+    let groupLines = '';
+    const syncGroupChart = () => {
+      const next = groupSharesSignature(this.engine.config);
+      if (next === groupLines) return;
+      groupLines = next;
+      this.rebuildGroupChart();
+    };
+    this.engine.on('reset', syncGroupChart);
+    this.engine.on('config', syncGroupChart);
+    syncGroupChart();
 
     const xs = Array.from({ length: 101 }, (_, i) => i / 100);
     this.add(

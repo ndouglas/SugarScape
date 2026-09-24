@@ -1,12 +1,22 @@
 import type { Engine } from '../engine';
 import { goodsEditorSignature, pollutionEditorSignature } from '../goods';
+import { groupsEditorSignature } from '../groups';
 import { errorsFor, getPath, setPath } from '../paths';
-import { GROUPS, type Control } from '../schema';
+import { GROUPS, type Control, type Group } from '../schema';
 import { scheduleLines } from '../schedule';
 import type { Config, FieldError, URange } from '../types';
 import { h } from './dom';
 import { goodsEditor, type Commit, type Editor } from './goods-editor';
+import { groupsEditor } from './groups-editor';
 import { pollutionEditor } from './pollution-editor';
+
+type CustomEditor = NonNullable<Group['custom']>;
+
+const EDITORS: Record<CustomEditor, { build: (c: Config, commit: Commit) => Editor; signature: (c: Config) => string; errors: string }> = {
+  goods: { build: goodsEditor, signature: goodsEditorSignature, errors: 'goods' },
+  pollution: { build: pollutionEditor, signature: pollutionEditorSignature, errors: 'pollution.pollutants' },
+  groups: { build: groupsEditor, signature: groupsEditorSignature, errors: 'culture.groups' },
+};
 
 /** Preset picker plus one section per rule, generated from GROUPS. */
 export class RulesPanel {
@@ -123,13 +133,13 @@ export class RulesPanel {
   }
 
   /**
-   * Rebuilds the Goods editor or Pollution table only when its structure changes; otherwise
-   * refreshes its values in place, so focus and half-typed input survive live and scheduled edits.
+   * Rebuilds a custom editor only when its structure changes; otherwise refreshes its values in
+   * place, so focus and half-typed input survive live and scheduled edits.
    */
-  private customEditor(kind: 'goods' | 'pollution'): HTMLElement[] {
+  private customEditor(kind: CustomEditor): HTMLElement[] {
     const holder = h('div');
     const commit: Commit = (mutate, reset) => this.commit(mutate, reset);
-    const [build, signature] = kind === 'goods' ? [goodsEditor, goodsEditorSignature] : [pollutionEditor, pollutionEditorSignature];
+    const { build, signature, errors } = EDITORS[kind];
     let built: string | null = null;
     let current: Editor | null = null;
     this.editorSyncers.push(() => {
@@ -143,7 +153,7 @@ export class RulesPanel {
       current = build(config, commit);
       holder.replaceChildren(current.el);
     });
-    return [holder, this.errorSlot(kind === 'goods' ? 'goods' : 'pollution.pollutants', true)];
+    return [holder, this.errorSlot(errors, true)];
   }
 
   private control(c: Control): HTMLElement {
@@ -162,7 +172,12 @@ export class RulesPanel {
       case 'number': {
         const slider = h('input', { type: 'range', min: c.min, max: c.max, step: c.step });
         const num = h('input', { type: 'number', min: c.min, max: c.max, step: c.step, class: 'num' });
-        const apply = (v: string) => this.commit((cfg) => setPath(cfg, c.path, Number(v)), reset);
+        const apply = (v: string) =>
+          this.commit((cfg) => {
+            const before = structuredClone(cfg);
+            setPath(cfg, c.path, Number(v));
+            c.adjust?.(cfg, before);
+          }, reset);
         slider.addEventListener('input', () => (num.value = slider.value));
         slider.addEventListener('change', () => apply(slider.value));
         num.addEventListener('change', () => apply(num.value));
