@@ -3,6 +3,8 @@
 
 use serde::Serialize;
 
+use std::ops::Range;
+
 use crate::config::Config;
 use crate::world::World;
 
@@ -327,6 +329,98 @@ pub fn histogram(values: &[f64], bins: usize) -> (f64, Vec<f64>) {
         counts[i] += 1.0;
     }
     (width, counts)
+}
+
+/// Largest-Triangle-Three-Buckets: at most `max` of `values`' points as
+/// `(index, value)` — the index is the tick, since the history holds one
+/// snapshot per tick from 0 — chosen so the line keeps its shape. The first
+/// and last points are always kept, and `values.len() <= max` keeps every
+/// point. Non-finite values (NaN: no trades, no agents) are never a bucket's
+/// choice, but a bucket holding nothing else keeps its first index, so a gap
+/// stays a gap. `max < 3` keeps the two endpoints only.
+pub fn downsample(values: &[f64], max: usize) -> Vec<(u32, f64)> {
+    let n = values.len();
+    let point = |i: usize| (i as u32, values[i]);
+    if n <= max || n <= 2 {
+        return (0..n).map(point).collect();
+    }
+    if max < 3 {
+        return vec![point(0), point(n - 1)];
+    }
+    let buckets = max - 2;
+    // Bucket b holds indices start(b)..start(b + 1) of the interior 1..n - 1;
+    // each holds at least one, since n - 2 > buckets.
+    let start = |b: usize| 1 + b * (n - 2) / buckets;
+    let mut out = Vec::with_capacity(max);
+    out.push(point(0));
+    // The triangle's first corner: the last finite point kept.
+    let mut anchor = values[0].is_finite().then_some((0.0, values[0]));
+    for b in 0..buckets {
+        // Its third corner: the mean of the next bucket (the last point after the final one).
+        let next = if b + 1 < buckets {
+            start(b + 1)..start(b + 2)
+        } else {
+            n - 1..n
+        };
+        let third = finite_mean(values, next);
+        let mut best: Option<(usize, f64)> = None;
+        for (i, &y) in values.iter().enumerate().take(start(b + 1)).skip(start(b)) {
+            if !y.is_finite() {
+                continue;
+            }
+            let x = i as f64;
+            let area = match (anchor, third) {
+                (Some((ax, ay)), Some((cx, cy))) => {
+                    ((ax - cx) * (y - ay) - (ax - x) * (cy - ay)).abs()
+                }
+                (Some((_, ay)), None) => (y - ay).abs(),
+                (None, Some((_, cy))) => (y - cy).abs(),
+                (None, None) => 0.0,
+            };
+            if best.is_none_or(|(_, a)| area > a) {
+                best = Some((i, area));
+            }
+        }
+        match best {
+            Some((i, _)) => {
+                out.push(point(i));
+                anchor = Some((i as f64, values[i]));
+            }
+            // Nothing finite here: keep the gap.
+            None => out.push(point(start(b))),
+        }
+    }
+    out.push(point(n - 1));
+    out
+}
+
+/// The mean position of the finite values in `range`, or `None` if it has none.
+fn finite_mean(values: &[f64], range: Range<usize>) -> Option<(f64, f64)> {
+    let (mut sx, mut sy, mut k) = (0.0, 0.0, 0.0);
+    for (i, &y) in range.clone().zip(&values[range]) {
+        if y.is_finite() {
+            sx += i as f64;
+            sy += y;
+            k += 1.0;
+        }
+    }
+    if k > 0.0 {
+        Some((sx / k, sy / k))
+    } else {
+        None
+    }
+}
+
+/// The sorted union of each column's `downsample(column, max)` indices: one
+/// x axis on which every column keeps its own shape (a multi-line chart).
+pub fn downsample_union(columns: &[Vec<f64>], max: usize) -> Vec<usize> {
+    let mut keep: Vec<usize> = columns
+        .iter()
+        .flat_map(|c| downsample(c, max).into_iter().map(|(i, _)| i as usize))
+        .collect();
+    keep.sort_unstable();
+    keep.dedup();
+    keep
 }
 
 /// Aggregate sugar supply and demand over 41 log-spaced prices in [0.1, 10]
@@ -674,5 +768,75 @@ mod tests {
         for name in SERIES {
             assert!(s.value(name).is_some(), "{name}");
         }
+    }
+
+    #[test]
+    fn downsample_keeps_short_series_and_both_endpoints() {
+        let v: Vec<f64> = (0..10).map(f64::from).collect();
+        let all: Vec<(u32, f64)> = (0..10u32).map(|i| (i, f64::from(i))).collect();
+        assert_eq!(downsample(&v, 10), all);
+        assert_eq!(downsample(&v, 50), all);
+        assert_eq!(downsample(&v, 2), vec![(0, 0.0), (9, 9.0)]);
+        assert_eq!(downsample(&v, 0), vec![(0, 0.0), (9, 9.0)]);
+        assert!(downsample(&[], 5).is_empty());
+        assert_eq!(downsample(&[4.0], 0), vec![(0, 4.0)]);
+        let long: Vec<f64> = (0..10_000).map(|i| (f64::from(i) / 50.0).sin()).collect();
+        for max in [3, 7, 100, 2000] {
+            let d = downsample(&long, max);
+            assert_eq!(d.len(), max, "max {max}");
+            assert_eq!(d[0], (0, long[0]));
+            assert_eq!(d[max - 1], (9_999, long[9_999]));
+            assert!(d.windows(2).all(|w| w[0].0 < w[1].0), "indices ascend");
+            assert!(
+                d.iter().all(|&(i, y)| long[i as usize] == y),
+                "points are real"
+            );
+        }
+    }
+
+    #[test]
+    fn downsample_keeps_a_single_sharp_spike() {
+        let mut v = vec![1.0; 10_000];
+        v[4_321] = 50.0;
+        let d = downsample(&v, 100);
+        assert!(d.len() <= 100);
+        assert!(d.contains(&(4_321, 50.0)), "{d:?}");
+    }
+
+    #[test]
+    fn downsample_skips_nan_but_keeps_gaps() {
+        let v: Vec<f64> = (0..1000)
+            .map(|i: i32| {
+                if (400..600).contains(&i) {
+                    f64::NAN
+                } else {
+                    f64::from(i % 7)
+                }
+            })
+            .collect();
+        let d = downsample(&v, 50);
+        assert_eq!(d.len(), 50);
+        assert_eq!((d[0].0, d[49].0), (0, 999));
+        let nan: Vec<u32> = d.iter().filter(|p| p.1.is_nan()).map(|p| p.0).collect();
+        assert!(!nan.is_empty(), "the gap survives");
+        assert!(nan.iter().all(|i| (400..600).contains(i)), "{nan:?}");
+        assert!(d.iter().any(|p| p.0 < 400 && p.1.is_finite()));
+        assert!(d.iter().any(|p| p.0 >= 600 && p.1.is_finite()));
+    }
+
+    #[test]
+    fn downsample_union_keeps_each_columns_spike() {
+        let mut a = vec![0.0; 5_000];
+        let mut b = vec![0.0; 5_000];
+        a[1_000] = 9.0;
+        b[3_000] = -9.0;
+        let keep = downsample_union(&[a, b], 50);
+        assert!(keep.contains(&1_000) && keep.contains(&3_000), "{keep:?}");
+        assert!(
+            keep.windows(2).all(|w| w[0] < w[1]),
+            "sorted, no duplicates"
+        );
+        assert_eq!((keep[0], keep[keep.len() - 1]), (0, 4_999));
+        assert!(keep.len() <= 100);
     }
 }
