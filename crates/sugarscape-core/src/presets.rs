@@ -4,8 +4,8 @@
 use serde::Serialize;
 
 use crate::config::{
-    Config, Good, Map, Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange, Transform,
-    URange, SPICE_COLOR,
+    three_tribes, Config, Good, Map, Outbreak, Peak, Placement, Pollutant, Pollution,
+    ScheduledChange, Transform, URange, SPICE_COLOR,
 };
 
 #[derive(Clone, Debug, Serialize)]
@@ -180,6 +180,16 @@ pub fn all() -> Vec<Preset> {
             "Animations III-6/III-7",
             "Cultural transmission: tag-flipping converts spatially separated groups toward uniform tribes.",
             |c| c.culture.enabled = true,
+        ),
+        preset(
+            "iii-6-three-tribes",
+            "({G₁}, {M, K}) with three tribes",
+            "Chapter III, note 20",
+            "Cultural transmission with the book's three-group tag scheme: Blue 0–3 zeros, Green 4–7, Red 8–11. Watch the Group shares chart.",
+            |c| {
+                c.culture.enabled = true;
+                c.culture.groups = three_tribes(c.tag_length);
+            },
         ),
         preset(
             "iii-9-combat",
@@ -552,7 +562,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 26);
+        assert_eq!(presets.len(), 27);
         for p in presets {
             p.config
                 .validate()
@@ -660,5 +670,20 @@ mod tests {
         assert_eq!(q.pollution.pollutants[0].devalues, vec![true, false]);
         assert_eq!(q.pollution.pollutants[1].devalues, vec![false, true]);
         assert!(q.pollution.enabled && q.diffusion.enabled);
+    }
+
+    #[test]
+    fn three_tribes_is_the_culture_preset_with_the_books_groups() {
+        let three = by_id("iii-6-three-tribes").unwrap().config;
+        let mut culture = by_id("iii-6-culture").unwrap().config;
+        culture.culture.groups = three_tribes(11);
+        assert_eq!(three, culture);
+        let spans: Vec<(&str, u32, u32)> = three
+            .culture
+            .groups
+            .iter()
+            .map(|g| (g.name.as_str(), g.zeros.min, g.zeros.max))
+            .collect();
+        assert_eq!(spans, [("Blue", 0, 3), ("Green", 4, 7), ("Red", 8, 11)]);
     }
 }

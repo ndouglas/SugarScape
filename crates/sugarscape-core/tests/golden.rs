@@ -40,6 +40,9 @@ const GOLDEN: &[(&str, u64)] = &[
     ("n-3-trade", 0x2c2589dca0955ed7),
     ("n-4-peaks", 0x6e7eb172a4a8b78d),
     ("n-2-pollutants", 0xfbeefd604de77824),
+    // Model extensions: the culture preset with the book's three groups.
+    // Groups change no rule while combat is off, so it equals iii-6-culture.
+    ("iii-6-three-tribes", 0xf8973190b0435a81),
 ];
 
 fn fingerprint(id: &str) -> u64 {
