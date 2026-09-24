@@ -252,6 +252,80 @@ pub struct Toggle {
     pub enabled: bool,
 }
 
+/// Most tag groups a config may list.
+pub const MAX_GROUPS: usize = 8;
+/// The book's tribe colors (the renderer's `BLUE` and `RED`) and the third
+/// group's green (Chapter III, note 20).
+pub const BLUE_COLOR: &str = "#3d7eff";
+pub const RED_COLOR: &str = "#ff4d4d";
+pub const GREEN_COLOR: &str = "#3dd66b";
+
+/// A tag group (tribe): the agents whose tag strings hold a number of zeros
+/// in `zeros`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Group {
+    /// Display name (1–16 characters, unique).
+    pub name: String,
+    /// `#rrggbb`, used by the Tribe color mode and the group-share chart.
+    pub color: String,
+    pub zeros: URange,
+}
+
+impl Group {
+    pub fn new(name: &str, color: &str, min: u32, max: u32) -> Self {
+        Self {
+            name: name.into(),
+            color: color.into(),
+            zeros: URange::new(min, max),
+        }
+    }
+}
+
+/// Chapter III's two tribes on `tag_length`-bit tags: Blue when zeros
+/// outnumber ones (⌈(L+1)/2⌉..=L zeros), otherwise Red. Group 0 is Blue.
+pub fn default_groups(tag_length: u32) -> Vec<Group> {
+    // ⌊L/2⌋ + 1 = ⌈(L+1)/2⌉: the fewest zeros that outnumber the ones.
+    let blue_from = tag_length / 2 + 1;
+    vec![
+        Group::new("Blue", BLUE_COLOR, blue_from, tag_length),
+        Group::new("Red", RED_COLOR, 0, blue_from - 1),
+    ]
+}
+
+/// Chapter III note 20's three groups — Blue 0–3, Green 4–7, Red 8–11 zeros
+/// on 11-bit tags — generalized to `tag_length` ≥ 2 by cutting 0..=L into
+/// thirds at ⌊k(L+1)/3⌋.
+pub fn three_tribes(tag_length: u32) -> Vec<Group> {
+    assert!(tag_length >= 2, "three tribes need tags of at least 2 bits");
+    let cut = |k: u32| k * (tag_length + 1) / 3;
+    vec![
+        Group::new("Blue", BLUE_COLOR, 0, cut(1) - 1),
+        Group::new("Green", GREEN_COLOR, cut(1), cut(2) - 1),
+        Group::new("Red", RED_COLOR, cut(2), tag_length),
+    ]
+}
+
+/// The first group whose range holds `zeros`; 0 if none does (a validated
+/// config's groups cover every count).
+pub fn group_of(groups: &[Group], zeros: u32) -> usize {
+    groups
+        .iter()
+        .position(|g| (g.zeros.min..=g.zeros.max).contains(&zeros))
+        .unwrap_or(0)
+}
+
+/// K: cultural transmission, plus the tag groups that combat, the Tribe
+/// color mode and the group-share statistics read (whether or not K is on).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CultureRule {
+    pub enabled: bool,
+    /// An agent belongs to the first group whose `zeros` holds its tags'
+    /// number of zeros. When JSON omits it, `Config::from_value` fills in
+    /// `default_groups(tag_length)` (Decision 2).
+    #[serde(default)]
+    pub groups: Vec<Group>,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SexRule {
     pub enabled: bool,
@@ -378,9 +452,10 @@ pub const RESET_ONLY_PATHS: [&str; 7] = [
 ];
 
 /// Whether a schedule may not set `path` (Decision 5): the goods list, whole
-/// goods and their maps, the pollutant list, and `RESET_ONLY_PATHS`. A
-/// good's name, color and trait ranges, and a pollutant's name and
-/// coefficients, may be scheduled.
+/// goods and their maps, the pollutant list, the groups list, whole groups
+/// and their ranges, and `RESET_ONLY_PATHS`. A good's name, color and trait
+/// ranges, a pollutant's name and coefficients, and a group's name and color
+/// may be scheduled.
 fn reset_only(path: &str) -> bool {
     let parts: Vec<&str> = path.split('.').collect();
     matches!(
@@ -390,6 +465,10 @@ fn reset_only(path: &str) -> bool {
             | ["goods", _, "map", ..]
             | ["pollution"]
             | ["pollution", "pollutants"]
+            | ["culture"]
+            | ["culture", "groups"]
+            | ["culture", "groups", _]
+            | ["culture", "groups", _, "zeros", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
 }
 
@@ -448,7 +527,7 @@ pub struct Config {
     pub replacement: Toggle,
     pub sex: SexRule,
     pub inheritance: Toggle,
-    pub culture: Toggle,
+    pub culture: CultureRule,
     pub combat: CombatRule,
     pub trade: Toggle,
     pub credit: CreditRule,
@@ -498,7 +577,10 @@ impl Default for Config {
                 male_end: URange::new(50, 60),
             },
             inheritance: Toggle { enabled: false },
-            culture: Toggle { enabled: false },
+            culture: CultureRule {
+                enabled: false,
+                groups: default_groups(11),
+            },
             combat: CombatRule {
                 enabled: false,
                 unlimited: true,
@@ -586,7 +668,9 @@ impl Config {
 
     /// Reads either config shape (Decision 2): a JSON object without a `goods`
     /// key is a pre-N-goods config and is converted. A new-shape config
-    /// without a `pollution` block gets the book's pollutant on all its goods.
+    /// without a `pollution` block gets the book's pollutant on all its
+    /// goods. A new-shape config without `culture.groups` gets the two book
+    /// tribes for its `tag_length`.
     pub fn from_value(value: serde_json::Value) -> Result<Self, FieldError> {
         let Some(object) = value.as_object() else {
             return serde_json::from_value(value)
@@ -596,10 +680,16 @@ impl Config {
             return crate::legacy::convert(value);
         }
         let defaulted_pollution = !object.contains_key("pollution");
+        let defaulted_groups = object
+            .get("culture")
+            .is_none_or(|c| c.get("groups").is_none());
         let mut config: Config =
             serde_json::from_value(value).map_err(|e| FieldError::new("config", e.to_string()))?;
         if defaulted_pollution {
             config.pollution.pollutants = vec![Pollutant::book(config.goods.len())];
+        }
+        if defaulted_groups {
+            config.culture.groups = default_groups(config.tag_length);
         }
         Ok(config)
     }
@@ -696,6 +786,69 @@ impl Config {
             }
             Map::Flat { capacity } => e.non_negative(*capacity, &format!("{field}.capacity")),
         }
+    }
+
+    /// `culture.groups` (Decision 3): 1–8 groups with unique names and
+    /// `#rrggbb` colors whose zero ranges tile 0..=tag_length exactly once.
+    fn check_groups(&self, e: &mut Errors) {
+        let groups = &self.culture.groups;
+        let l = self.tag_length;
+        e.check(
+            (1..=MAX_GROUPS).contains(&groups.len()),
+            "culture.groups",
+            format!("must list 1 to {MAX_GROUPS} groups"),
+        );
+        let mut names = BTreeSet::new();
+        for (k, g) in groups.iter().enumerate() {
+            let field = |f: &str| format!("culture.groups.{k}.{f}");
+            e.name(&g.name, &field("name"));
+            e.check(
+                names.insert(g.name.as_str()),
+                &field("name"),
+                "another group has this name",
+            );
+            e.check(
+                parse_color(&g.color).is_some(),
+                &field("color"),
+                "must be a #rrggbb color",
+            );
+            e.range(g.zeros, &field("zeros"));
+            e.check(
+                g.zeros.max <= l,
+                &field("zeros"),
+                format!("must lie within 0–{l} (the tag length)"),
+            );
+        }
+        if !(1..=64).contains(&l) {
+            return; // `tag_length` reports itself
+        }
+        let mut hits = vec![0usize; l as usize + 1];
+        for g in groups {
+            for z in g.zeros.min..=g.zeros.max.min(l) {
+                hits[z as usize] += 1;
+            }
+        }
+        let counts = |want: fn(usize) -> bool| {
+            hits.iter()
+                .enumerate()
+                .filter(|&(_, &n)| want(n))
+                .map(|(z, _)| z.to_string())
+                .collect::<Vec<_>>()
+        };
+        let (gaps, overlaps) = (counts(|n| n == 0), counts(|n| n > 1));
+        e.check(
+            gaps.is_empty(),
+            "culture.groups",
+            format!("no group holds tags with {} zeros", gaps.join(", ")),
+        );
+        e.check(
+            overlaps.is_empty(),
+            "culture.groups",
+            format!(
+                "tags with {} zeros fall in more than one group",
+                overlaps.join(", ")
+            ),
+        );
     }
 
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
@@ -832,6 +985,7 @@ impl Config {
             "tag_length",
             "must be between 1 and 64",
         );
+        self.check_groups(&mut e);
         e.check(
             self.growback.rate.is_finite() && self.growback.rate > 0.0,
             "growback.rate",
@@ -1018,6 +1172,10 @@ impl Config {
         }
         if self.tag_length != next.tag_length {
             out.push(FieldError::new("tag_length", msg));
+        }
+        let ranges = |c: &Config| c.culture.groups.iter().map(|g| g.zeros).collect::<Vec<_>>();
+        if ranges(self) != ranges(next) {
+            out.push(FieldError::new("culture.groups", msg));
         }
         if self.goods.len() != next.goods.len() {
             out.push(FieldError::new("goods", msg));
@@ -1888,5 +2046,247 @@ mod tests {
             c.pollution.pollutants[0].production[0] = 0.0;
         })
         .is_empty());
+    }
+
+    /// `n` one-bits (the low `n` tag positions).
+    fn ones(n: u32) -> u64 {
+        if n == 64 {
+            u64::MAX
+        } else {
+            (1u64 << n) - 1
+        }
+    }
+
+    #[test]
+    fn default_groups_reproduce_the_two_tribe_rule() {
+        use crate::agent::{Tags, Tribe};
+        let tribe_index = |t: Tribe| match t {
+            Tribe::Blue => 0,
+            Tribe::Red => 1,
+        };
+        let groups = default_groups(11);
+        assert_eq!(
+            groups,
+            vec![
+                Group::new("Blue", BLUE_COLOR, 6, 11),
+                Group::new("Red", RED_COLOR, 0, 5)
+            ]
+        );
+        for bits in 0..1u64 << 11 {
+            let tags = Tags::new(bits, 11);
+            assert_eq!(
+                group_of(&groups, tags.zeros()),
+                tribe_index(tags.tribe()),
+                "{}",
+                tags.to_bit_string()
+            );
+        }
+        for len in 1..=64 {
+            let groups = default_groups(len);
+            for zeros in 0..=len {
+                let tags = Tags::new(ones(len - zeros), len);
+                assert_eq!(tags.zeros(), zeros);
+                assert_eq!(
+                    group_of(&groups, zeros),
+                    tribe_index(tags.tribe()),
+                    "L = {len}, {zeros} zeros"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn three_tribes_are_the_books_thirds() {
+        let spans = |g: Vec<Group>| -> Vec<(String, u32, u32)> {
+            g.into_iter()
+                .map(|g| (g.name, g.zeros.min, g.zeros.max))
+                .collect()
+        };
+        let s = |name: &str, min, max| (name.to_string(), min, max);
+        assert_eq!(
+            spans(three_tribes(11)),
+            vec![s("Blue", 0, 3), s("Green", 4, 7), s("Red", 8, 11)]
+        );
+        assert_eq!(
+            spans(three_tribes(2)),
+            vec![s("Blue", 0, 0), s("Green", 1, 1), s("Red", 2, 2)]
+        );
+        let groups = three_tribes(11);
+        assert_eq!(
+            [0, 3, 4, 7, 8, 11].map(|z| group_of(&groups, z)),
+            [0, 0, 1, 1, 2, 2]
+        );
+        let mut c = Config::default();
+        c.culture.groups = groups;
+        c.validate().unwrap();
+    }
+
+    #[test]
+    fn groups_are_validated() {
+        let with = |f: &dyn Fn(&mut Vec<Group>)| {
+            let mut c = Config::default();
+            f(&mut c.culture.groups);
+            c.validate().err().unwrap_or_default()
+        };
+        let has = |errs: &[FieldError], field: &str, text: &str| {
+            errs.iter()
+                .any(|e| e.field == field && e.message.contains(text))
+        };
+        assert!(with(&|_| {}).is_empty());
+        let gap = with(&|g| g[0].zeros.min = 7);
+        assert!(has(&gap, "culture.groups", "with 6 zeros"), "{gap:?}");
+        let overlap = with(&|g| g[1].zeros.max = 6);
+        assert!(
+            has(&overlap, "culture.groups", "more than one group"),
+            "{overlap:?}"
+        );
+        let outside = with(&|g| g[0].zeros.max = 12);
+        assert!(
+            has(&outside, "culture.groups.0.zeros", "0–11"),
+            "{outside:?}"
+        );
+        let inverted = with(&|g| g[0].zeros = URange::new(11, 6));
+        assert!(has(
+            &inverted,
+            "culture.groups.0.zeros",
+            "min must be ≤ max"
+        ));
+        assert!(has(&with(&|g| g.clear()), "culture.groups", "1 to 8"));
+        let nine = with(&|g| {
+            *g = (0..9)
+                .map(|k| Group::new(&format!("g{k}"), BLUE_COLOR, k, if k == 8 { 11 } else { k }))
+                .collect();
+        });
+        assert!(has(&nine, "culture.groups", "1 to 8"), "{nine:?}");
+        assert_eq!(
+            nine.len(),
+            1,
+            "nine groups that tile 0–11: only the count is wrong"
+        );
+        assert!(has(
+            &with(&|g| g[1].name = "Blue".into()),
+            "culture.groups.1.name",
+            "another group"
+        ));
+        assert!(has(
+            &with(&|g| g[0].name = String::new()),
+            "culture.groups.0.name",
+            "1–16"
+        ));
+        assert!(has(
+            &with(&|g| g[0].color = "blue".into()),
+            "culture.groups.0.color",
+            "#rrggbb"
+        ));
+        // A shorter tag length strands the default groups for 11 bits.
+        let short = Config {
+            tag_length: 5,
+            ..Config::default()
+        };
+        assert!(fields(short.validate()).contains(&"culture.groups.0.zeros".to_string()));
+        let fixed = Config {
+            tag_length: 5,
+            culture: CultureRule {
+                enabled: false,
+                groups: default_groups(5),
+            },
+            ..Config::default()
+        };
+        fixed.validate().unwrap();
+    }
+
+    #[test]
+    fn configs_without_groups_get_the_two_tribes_for_their_tag_length() {
+        assert_eq!(Config::default().culture.groups, default_groups(11));
+        // Pre-N-goods shape (no `goods` key): always the default.
+        let legacy =
+            Config::from_json(r#"{"tag_length": 5, "culture": {"enabled": true}}"#).unwrap();
+        assert_eq!(legacy.culture.groups, default_groups(5));
+        assert!(legacy.culture.enabled);
+        // New shape without `culture.groups`, and without `culture`.
+        let seven = Config {
+            tag_length: 7,
+            culture: CultureRule {
+                enabled: true,
+                groups: default_groups(7),
+            },
+            ..Config::default()
+        };
+        let mut value = serde_json::to_value(&seven).unwrap();
+        value["culture"].as_object_mut().unwrap().remove("groups");
+        assert_eq!(Config::from_json(&value.to_string()).unwrap(), seven);
+        value.as_object_mut().unwrap().remove("culture");
+        let c = Config::from_json(&value.to_string()).unwrap();
+        assert_eq!(
+            (c.culture.enabled, c.culture.groups),
+            (false, default_groups(7))
+        );
+        // Given groups are kept, in the core's key order.
+        let mut three = Config::default();
+        three.culture.groups = three_tribes(11);
+        let json = serde_json::to_string(&three).unwrap();
+        assert_eq!(Config::from_json(&json).unwrap(), three);
+        assert!(json.contains(
+            r##""groups":[{"name":"Blue","color":"#3d7eff","zeros":{"min":0,"max":3}}"##
+        ));
+        // An explicit empty list is not "missing".
+        let mut empty = serde_json::to_value(Config::default()).unwrap();
+        empty["culture"]["groups"] = serde_json::json!([]);
+        assert_eq!(
+            Config::from_json(&empty.to_string()).unwrap_err()[0].field,
+            "culture.groups"
+        );
+    }
+
+    #[test]
+    fn group_names_and_colors_are_live_but_ranges_change_only_on_reset() {
+        let live = Config {
+            schedule: vec![
+                change(5, "culture.groups.0.name", serde_json::json!("Azure")),
+                change(6, "culture.groups.1.color", serde_json::json!("#aa0000")),
+                change(7, "culture.enabled", serde_json::json!(true)),
+            ],
+            ..Default::default()
+        };
+        live.validate().unwrap();
+        for (path, value) in [
+            (
+                "culture",
+                serde_json::to_value(&Config::default().culture).unwrap(),
+            ),
+            ("culture.groups", serde_json::json!([])),
+            (
+                "culture.groups.0",
+                serde_json::to_value(&default_groups(11)[0]).unwrap(),
+            ),
+            (
+                "culture.groups.0.zeros",
+                serde_json::json!({"min": 6, "max": 11}),
+            ),
+            ("culture.groups.1.zeros.max", serde_json::json!(5)),
+        ] {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
+        let a = Config::default();
+        let mut b = a.clone();
+        b.culture.enabled = true;
+        b.culture.groups[0].name = "Azure".into();
+        b.culture.groups[1].color = "#aa0000".into();
+        assert!(a.structural_changes(&b).is_empty());
+        let mut moved = a.clone();
+        moved.culture.groups[0].zeros.min = 7;
+        moved.culture.groups[1].zeros.max = 6;
+        assert_eq!(a.structural_changes(&moved)[0].field, "culture.groups");
+        let mut one = a.clone();
+        one.culture.groups = vec![Group::new("All", BLUE_COLOR, 0, 11)];
+        assert_eq!(a.structural_changes(&one)[0].field, "culture.groups");
     }
 }

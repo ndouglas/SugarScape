@@ -9,9 +9,9 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 
 use crate::config::{
-    CombatRule, Config, CreditRule, Diffusion, DiseaseRule, FieldError, Foresight, Good, Growback,
-    Lifespan, Map, Placement, Pollutant, Pollution, ScheduledChange, Seasons, SexRule, Toggle,
-    Transform, URange, SPICE_COLOR, SUGAR_COLOR,
+    default_groups, CombatRule, Config, CreditRule, CultureRule, Diffusion, DiseaseRule,
+    FieldError, Foresight, Good, Growback, Lifespan, Map, Placement, Pollutant, Pollution,
+    ScheduledChange, Seasons, SexRule, Toggle, Transform, URange, SPICE_COLOR, SUGAR_COLOR,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -94,7 +94,9 @@ impl Default for LegacyConfig {
             replacement: c.replacement,
             sex: c.sex,
             inheritance: c.inheritance,
-            culture: c.culture,
+            culture: Toggle {
+                enabled: c.culture.enabled,
+            },
             combat: c.combat,
             spice: SpiceRule {
                 enabled: false,
@@ -186,7 +188,10 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         replacement: old.replacement,
         sex: old.sex,
         inheritance: old.inheritance,
-        culture: old.culture,
+        culture: CultureRule {
+            enabled: old.culture.enabled,
+            groups: default_groups(old.tag_length),
+        },
         combat: old.combat,
         trade: old.trade,
         credit: old.credit,
