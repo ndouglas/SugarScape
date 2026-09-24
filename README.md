@@ -132,8 +132,10 @@ second; the other speeds step a fixed number of ticks per frame, as before. A ru
 depend on the speed: the same setup and seed give the same world at the same tick.
 
 Charts draw a downsampled history, with the tick on the x axis: Largest-Triangle-Three-Buckets
-keeps about 2 000 points of each line, so spikes and gaps survive on long runs. The full per-tick history stays with the
-simulation: Export → Statistics (CSV), share links and Experiments use all of it.
+keeps about 2 000 points of each line, so spikes survive on long runs, and so do gaps
+(stretches with no value, such as no trades) longer than a bucket, about 1/2 000 of the run;
+shorter gaps are bridged. The full per-tick history stays with the simulation: Export →
+Statistics (CSV), share links and Experiments use all of it.
 
 ## Command line
 

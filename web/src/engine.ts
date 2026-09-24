@@ -127,18 +127,24 @@ export class Engine {
   private selectionGen = 0;
   /** The selection generation each received snapshot's request was sent under. */
   private sentUnder = new WeakMap<WorldSnapshot, number>();
+  /** Bumped by every `setDisplay`: a display the host clamped for an older choice is ignored. */
+  private displayGen = 0;
+  /** The display generation each received snapshot's request was sent under. */
+  private displayUnder = new WeakMap<WorldSnapshot, number>();
+  /** `setDisplay` requests sent and not yet answered. */
+  private displaysPending = 0;
   /** The generation of the request whose reply last set `selection`. */
   private selectedUnder = -1;
   /**
    * The selection `wants()` reports while an `inspect`/`select` issued after the confirmed
-   * `selection` hasn't had its own reply resolve yet (T12 minor 3): set the moment the request is
-   * sent, so a request sent before that reply lands (e.g. Max's `frame`) does not carry the stale
-   * selection and clobber the host's own patch. `undefined` means no override is pending; `null`
-   * means the override is "report no selection at all" — used for a pending site-only select
-   * (T13 minor 2), where the target may turn out to have an agent on it the host would track more
-   * precisely than the site alone, so a guess is omitted rather than sent and self-corrects once
-   * the reply lands (an agentId-based select always knows its target exactly, so it never needs
-   * this: see `inspectTarget`).
+   * `selection` hasn't had its own reply resolve yet: set the moment the request is sent, so a
+   * request sent before that reply lands (e.g. Max's `frame`) does not carry the stale selection
+   * and clobber the host's own patch. `undefined` means no override is pending; `null` means the
+   * override is "report no selection at all" — used for a pending site-only select, where the
+   * target may turn out to have an agent on it the host would track more precisely than the site
+   * alone, so a guess is omitted rather than sent and self-corrects once the reply lands (an
+   * agentId-based select always knows its target exactly, so it never needs this: see
+   * `inspectTarget`).
    */
   private pendingSelect: SelectQuery | null | undefined;
   /** Guards `pendingSelect` against a superseded inspect's own resolution clearing a newer one. */
@@ -166,7 +172,7 @@ export class Engine {
    * settled, so it is built from the state that write left (two quick edits both take effect).
    */
   private writes: Promise<unknown> = Promise.resolve();
-  /** Resets sent and not yet answered: requests sent meanwhile carry no selection (PF7). */
+  /** Resets sent and not yet answered: requests sent meanwhile carry no selection. */
   private resetting = 0;
   private lastRefresh = -Infinity;
 
@@ -283,7 +289,8 @@ export class Engine {
       const base = structuredClone(this.baseConfig);
       mutate(base);
       this.baseConfig = base;
-      this.accept(result.snapshot, ['config']);
+      // The reply carries the new config, so accepting it fires 'config'.
+      this.accept(result.snapshot);
       void this.refresh();
       return null;
     });
@@ -322,7 +329,12 @@ export class Engine {
     if (d.layer) this.layer = d.layer;
     if (d.overlays) this.overlays = { ...this.overlays, ...d.overlays };
     this.emit('display');
+    // Any reply to a request sent before this one carries the host's clamp of an older choice
+    // (a reset's, say): it must not overwrite this choice (see `adopt`).
+    this.displayGen++;
+    this.displaysPending++;
     void this.send({ type: 'setDisplay', display: this.displayState() }, true).then((result) => {
+      this.displaysPending--;
       if (result.ok && result.snapshot) this.accept(result.snapshot);
     });
   }
@@ -420,7 +432,7 @@ export class Engine {
   /** The engine's own wants (Decision 9) merged with every provider's. */
   private wants(now: number): Wants {
     const own: Wants = {};
-    // pendingSelect/pendingTrail (T12 minor 3) stand in for the confirmed selection/follow state
+    // pendingSelect/pendingTrail stand in for the confirmed selection/follow state
     // while their own request's reply hasn't landed yet, so a request sent in that window (Max's
     // `frame`, in particular) reports the new target instead of the one it is replacing.
     const select = this.pendingSelect !== undefined ? this.pendingSelect : this.selection;
@@ -441,12 +453,16 @@ export class Engine {
   private async send(cmd: Command, withFrame = false): Promise<Result> {
     if (this.crashed) return { ok: false, fatal: this.crashed };
     const gen = this.selectionGen;
+    const displayGen = this.displayGen;
     const reply = await this.transport.request(cmd, {
       wants: this.wants(performance.now()),
       frame: withFrame ? this.takeBuffer() : undefined,
     });
     for (const b of reply.spare ?? []) this.recycle(b);
-    if (reply.result.ok && reply.result.snapshot) this.sentUnder.set(reply.result.snapshot, gen);
+    if (reply.result.ok && reply.result.snapshot) {
+      this.sentUnder.set(reply.result.snapshot, gen);
+      this.displayUnder.set(reply.result.snapshot, displayGen);
+    }
     return reply.result;
   }
 
@@ -462,8 +478,11 @@ export class Engine {
     if (b.byteLength > 0 && b.byteLength === this.width * this.height * 4 && this.spare.length < MAX_SPARE) this.spare.push(b);
   }
 
-  /** Takes in a snapshot: counters, the frame, and whatever extras it carries. */
-  private adopt(s: WorldSnapshot): void {
+  /**
+   * Takes in a snapshot: counters, the frame, and whatever extras it carries. Returns whether it
+   * changed the display (the host clamped it to the config).
+   */
+  private adopt(s: WorldSnapshot): boolean {
     const { frame: _frame, ...rest } = s;
     this.last = rest;
     this.width = s.width;
@@ -480,12 +499,15 @@ export class Engine {
     if (s.config) this.config = s.config;
     // All null (nothing edited) is the same as none.
     if (s.editedLandscapes) this.landscapes = s.editedLandscapes.some((m) => m !== null) ? s.editedLandscapes : [];
-    if (s.display) {
+    // A clamp of a display chosen before the latest `setDisplay` is stale: the host clamps that
+    // newer choice itself when it gets to it, and says so in that reply if it has to.
+    const clamped = s.display !== undefined && this.displayUnder.get(s) === this.displayGen;
+    if (clamped && s.display) {
       this.colorMode = s.display.colorMode;
       this.layer = s.display.layer;
       this.overlays = { ...s.display.overlays };
     }
-    // Checked here, not when the reply arrives: a reset's reply may be adopted in between (PF7).
+    // Checked here, not when the reply arrives: a reset's reply may be adopted in between.
     const gen = this.sentUnder.get(s);
     if (s.inspection && gen === this.selectionGen) {
       this.selectedUnder = gen;
@@ -497,25 +519,30 @@ export class Engine {
     // The host sends every group afresh after a config change (its lines may have changed).
     if (s.config) this.charts.clear();
     for (const [key, group] of Object.entries(s.charts ?? {})) this.charts.set(key, group);
+    return clamped;
   }
 
-  /** Fires `events`, then `'display'` if the host clamped the display, then `'snapshot'`. */
-  private announce(s: WorldSnapshot, events: EngineEvent[]): void {
+  /**
+   * Fires `'config'` if the snapshot carries a config (except for a new world, which fires
+   * `'reset'` instead), then `events`, then `'display'` if the host clamped the display, then
+   * `'snapshot'`. This is the only place `'config'` fires: the host sends the config once, in
+   * whichever reply or post comes next after it changed (a scheduled change at Max may arrive in
+   * a paint's or a click's reply), so every command's reply is checked here.
+   */
+  private announce(s: WorldSnapshot, events: EngineEvent[], clamped: boolean): void {
+    if (s.config && !events.includes('reset')) this.emit('config');
     for (const e of events) this.emit(e);
-    if (s.display) this.emit('display');
+    if (clamped) this.emit('display');
     this.emit('snapshot');
   }
 
   private accept(s: WorldSnapshot, events: EngineEvent[] = []): void {
-    this.adopt(s);
-    this.announce(s, events);
+    this.announce(s, events, this.adopt(s));
   }
 
   private async stepNow(n: number): Promise<void> {
     const result = await this.send({ type: 'step', n }, true);
-    if (!result.ok || !result.snapshot) return;
-    const events: EngineEvent[] = result.snapshot.config ? ['config', 'tick'] : ['tick'];
-    this.accept(result.snapshot, events);
+    if (result.ok && result.snapshot) this.accept(result.snapshot, ['tick']);
   }
 
   /**
@@ -554,14 +581,12 @@ export class Engine {
   private stopMax(): Promise<void> {
     if (!this.maxOn) return this.stopping ?? Promise.resolve();
     this.maxOn = false;
-    // Captured by reference (T13 fix round 1, minor 1): Pause, Play, Pause in quick succession
+    // Captured by reference: Pause, Play, Pause in quick succession
     // starts a second stop while the first is still outstanding; the first's `.then` must not clear
     // the second's still-pending `this.stopping` out from under it.
     const stopping: Promise<void> = this.send({ type: 'stop' }).then((result) => {
       if (this.stopping === stopping) this.stopping = null;
-      if (!result.ok || !result.snapshot) return;
-      const events: EngineEvent[] = result.snapshot.config ? ['config', 'tick'] : ['tick'];
-      this.accept(result.snapshot, events);
+      if (result.ok && result.snapshot) this.accept(result.snapshot, ['tick']);
     });
     this.stopping = stopping;
     return stopping;
@@ -569,16 +594,18 @@ export class Engine {
 
   /** A Max-speed snapshot: adopt it, then hand the displaced buffer straight back with fresh wants. */
   private onPost(s: WorldSnapshot): void {
-    // Posts never go through send(), so they carry no sentUnder entry: adopt()'s PF7 generation
-    // check would otherwise always drop s.inspection, leaving the Inspect panel and the grid's
-    // selection frozen for as long as Max runs (Task 13 fix round 1, Important). Tag it with the
+    // Posts never go through send(), so they carry no sentUnder entry: adopt()'s selection
+    // generation check would otherwise always drop s.inspection, leaving the Inspect panel and the
+    // grid's selection frozen for as long as Max runs. Tag it with the
     // current generation before accepting — but only while no inspect/select is pending, so a post
     // that happens to be in flight under the same generation cannot win over that request's own
     // reply once it lands. (The trail and `followed`/`followedAlive` need no such fix: adopt() sets
     // them unconditionally from every snapshot, not gated by a generation.)
     if (this.pendingSelect === undefined) this.sentUnder.set(s, this.selectionGen);
-    const events: EngineEvent[] = s.config ? ['config', 'tick'] : ['tick'];
-    this.accept(s, events);
+    // Likewise for the display: a post made before the host took an outstanding `setDisplay`
+    // clamps the older choice.
+    if (this.displaysPending === 0) this.displayUnder.set(s, this.displayGen);
+    this.accept(s, ['tick']);
     if (this.maxOn) void this.send({ type: 'frame' }, true);
   }
 
@@ -600,7 +627,7 @@ export class Engine {
     presetId?: string,
   ): Promise<FieldError[] | null> {
     // Replies to requests sent before this carry the old world's selection; a selection made
-    // after it (a click while it is outstanding) is kept (PF7).
+    // after it (a click while it is outstanding) is kept.
     const gen = ++this.selectionGen;
     this.resetting++;
     let result: Result;
@@ -616,10 +643,10 @@ export class Engine {
       this.selection = null;
       this.inspection = null;
     }
-    this.adopt(result.snapshot);
+    const clamped = this.adopt(result.snapshot);
     this.baseConfig = structuredClone(this.config);
     this.presetId = presetId ?? this.matchPreset();
-    this.announce(result.snapshot, ['reset']);
+    this.announce(result.snapshot, ['reset'], clamped);
     // Panels' wants may have changed with the config (new chart lines, say).
     void this.refresh();
     return null;
@@ -634,13 +661,13 @@ export class Engine {
   private async inspectTarget(target: { x: number; y: number } | { agentId: number }): Promise<void> {
     // Replies to requests already sent carry the old selection.
     this.selectionGen++;
-    // T12 minor 3: reflect this target in wants() immediately, so a request sent before this
+    // Reflect this target in wants() immediately, so a request sent before this
     // command's own reply lands does not carry the selection it is replacing.
     const seq = ++this.pendingSelectSeq;
     this.pendingSelect =
       'agentId' in target
         ? { x: this.selection?.x ?? 0, y: this.selection?.y ?? 0, agentId: target.agentId }
-        : null; // site-only: which agent (if any) is there is not known until the reply (T13 minor 2)
+        : null; // site-only: which agent (if any) is there is not known until the reply
     const result = await this.send({ type: 'inspect', target });
     // Only clear it if a later inspect/select hasn't already replaced it with its own pending value.
     if (this.pendingSelectSeq === seq) this.pendingSelect = undefined;
@@ -649,7 +676,7 @@ export class Engine {
   }
 
   private async follow(id: number | null): Promise<void> {
-    // T12 minor 3: same reasoning as inspectTarget, for the trail flag.
+    // Same reasoning as inspectTarget, for the trail flag.
     const seq = ++this.pendingTrailSeq;
     this.pendingTrail = id !== null;
     const result = await this.send({ type: 'follow', id });

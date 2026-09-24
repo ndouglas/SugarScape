@@ -146,7 +146,7 @@ export class SimHost {
   }
 
   /**
-   * One Max-speed batch (Decision 11, PF3): steps for about `BATCH_MS`, but never past the next
+   * One Max-speed batch (Decision 11): steps for about `BATCH_MS`, but never past the next
    * post deadline while a buffer is free to post into, so posts land close to every `POST_MS`
    * instead of drifting toward 2 × BATCH_MS when POST_MS falls between two batch-lengths. With no
    * buffer pooled there is nothing to post regardless, so the deadline is not applied — capping it
@@ -234,7 +234,7 @@ export class SimHost {
       case 'follow': {
         if (cmd.id === null) sim.unfollow();
         else sim.follow(cmd.id);
-        // PF2: at send time the engine's own wants still describe the old follow state (it only
+        // At send time the engine's own wants still describe the old follow state (it only
         // learns the new one from this reply), so while Max is running the loop's own copy is
         // patched here too — or its posts would keep reporting the trail as it was before this.
         if (this.max) this.max.wants = { ...this.max.wants, trail: cmd.id !== null };
@@ -244,7 +244,7 @@ export class SimHost {
         const { target } = cmd;
         const at = 'agentId' in target ? sim.locate(target.agentId) : Uint32Array.of(target.x, target.y);
         const selected = at ? this.selectAt(sim, at[0], at[1]) : null;
-        // PF2: same reasoning as `follow` — the new selection is this command's own result, not
+        // Same reasoning as `follow`: the new selection is this command's own result, not
         // yet reflected in `wants.select`, so the loop's copy is patched from it directly.
         if (this.max) {
           this.max.wants = {
@@ -383,7 +383,7 @@ export class SimHost {
 
   /**
    * The groups with news (Decision 4); undefined when none has any. `throttle` applies the 4/s,
-   * 1 % bandwidth cap (PF6): without it, only a group truly unchanged since the last send is skipped.
+   * 1 % bandwidth cap: without it, only a group truly unchanged since the last send is skipped.
    */
   private charts(sim: SimLike, groups: string[][], max: number, throttle: boolean): Record<string, ChartGroup> | undefined {
     const length = sim.tick() + 1;

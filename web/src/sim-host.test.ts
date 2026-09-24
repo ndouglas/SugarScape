@@ -113,7 +113,7 @@ describe('SimHost', () => {
     expect(reset.charts?.[key]?.ticks).toEqual(Float64Array.of(0));
   });
 
-  it('only a refresh escapes the charts throttle; a step stays throttled like everything else (PF6)', () => {
+  it('only a refresh escapes the charts throttle; a step stays throttled like everything else', () => {
     let clock = 0;
     const t = start(() => clock);
     const charts = { groups: [['population']], max: 50 };
@@ -128,7 +128,7 @@ describe('SimHost', () => {
     expect(t.snap(t.send({ type: 'refresh' }, { wants: { charts } })).charts?.[key]).toBeDefined();
   });
 
-  it('throttles a paint command exactly like a step, so a drag cannot resend on every pointermove (PF6 round 2)', () => {
+  it('throttles a paint command exactly like a step, so a drag cannot resend on every pointermove', () => {
     let clock = 0;
     const t = start(() => clock);
     const charts = { groups: [['population']], max: 50 };
@@ -270,7 +270,7 @@ describe('SimHost at Max speed', () => {
     expect(post.config?.schedule).toHaveLength(1);
   });
 
-  it('updates the loop selection on inspect while running, so the next post carries it (PF2)', () => {
+  it('updates the loop selection on inspect while running, so the next post carries it', () => {
     let clock = 0;
     const t = start(() => clock++);
     t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
@@ -283,7 +283,7 @@ describe('SimHost at Max speed', () => {
     expect(post.inspection?.alive).toBe(true);
   });
 
-  it('caps a batch at the next post deadline (PF3): the posting batch is shorter than a full one', () => {
+  it('caps a batch at the next post deadline: the posting batch is shorter than a full one', () => {
     let clock = 0;
     const t = start(() => clock++);
     t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
@@ -346,7 +346,7 @@ describe('SimHost at Max speed', () => {
     expect(stop.spare).toBeUndefined();
   });
 
-  it('updates the loop selection on follow while running, so the next post carries the trail (PF2)', () => {
+  it('updates the loop selection on follow while running, so the next post carries the trail', () => {
     let clock = 0;
     const t = start(() => clock++);
     t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
@@ -358,23 +358,28 @@ describe('SimHost at Max speed', () => {
     expect(post.trail).toBeDefined();
   });
 
-  it('serve keeps posting between requests until stop', async () => {
+  it('serve keeps posting between requests until stop', () => {
     let clock = 0;
     const messages: HostMessage[] = [];
-    const handle = serve(new SimHost(fakeModule(), () => clock++), (m) => messages.push(m), (fn) => setTimeout(fn, 0));
-    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    // Deferred batches run only when the test says so.
+    const queue: (() => void)[] = [];
+    const flush = (batches: number) => {
+      for (let i = 0; i < batches; i++) queue.shift()?.();
+    };
+    const handle = serve(new SimHost(fakeModule(), () => clock++), (m) => messages.push(m), (fn) => queue.push(fn));
     const posts = () => messages.filter((m) => m.id === null).length;
     handle({ id: 1, cmd: { type: 'init', config, seed: 1, landscapes: [], display } });
     handle({ id: 2, cmd: { type: 'run' }, frame: new ArrayBuffer(48) });
-    await wait(20);
+    flush(20);
     expect(posts()).toBe(1); // one buffer: one post until it comes back
     handle({ id: 3, cmd: { type: 'frame' }, frame: new ArrayBuffer(48) });
-    await wait(20);
+    flush(20);
     expect(posts()).toBe(2);
     handle({ id: 4, cmd: { type: 'stop' } });
     const count = messages.length;
-    await wait(20);
+    flush(20);
     expect(messages.length).toBe(count);
+    expect(queue).toHaveLength(0); // the loop ended
   });
 });
 

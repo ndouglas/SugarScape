@@ -34,7 +34,7 @@ export class PortTransport implements Transport {
     port.onerror = (event) => this.fail(event.message || 'the simulation worker failed');
     // The channel cannot say which request this was for (its data never arrived), so every
     // request pending at the time is rejected — same as any other way the other side dies
-    // (Decision 7, PF9): nothing is ever left hanging.
+    // (Decision 7): nothing is ever left hanging.
     port.onmessageerror = () => this.fail('the simulation worker sent a message that could not be read');
   }
 
@@ -116,12 +116,12 @@ export class InlineTransport extends PortTransport {
   }
 }
 
-/** How long `startWorker` waits for `ready` before giving up (PF9): the production value. */
+/** How long `startWorker` waits for `ready` before giving up: the production value. */
 const READY_TIMEOUT_MS = 10_000;
 
 /**
  * Starts the simulation worker and waits until its WASM is ready; rejects if a module worker
- * cannot start, its WASM fails to load, or it never answers within `timeoutMs` (PF9) — in every
+ * cannot start, its WASM fails to load, or it never answers within `timeoutMs` — in every
  * case the worker is terminated and the caller falls back to `InlineTransport` (Decision 10).
  */
 export async function startWorker(

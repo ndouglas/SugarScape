@@ -206,7 +206,7 @@ describe('startWorker', () => {
     await expect(startWorker(() => noWasm)).rejects.toThrow('WASM failed to load');
   });
 
-  it('rejects and terminates the worker if it never answers ready within the timeout (PF9)', async () => {
+  it('rejects and terminates the worker if it never answers ready within the timeout', async () => {
     let terminated = false;
     const silent: PortLike = {
       onmessage: null,

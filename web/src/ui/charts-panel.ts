@@ -3,10 +3,10 @@ import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { chartsSignature } from '../goods';
 import { groupSharesSignature } from '../groups';
-import { CHART_POINTS, chartKey, type Wants, type WorldSnapshot } from '../protocol';
+import { CHART_POINTS, type ChartGroup, type Wants, type WorldSnapshot } from '../protocol';
 import { h } from './dom';
 import { compactNumber } from './format';
-import { bandData, ChartFreshness, lineData } from './series-data';
+import { bandData, chartsBehind, lineData, type LineData } from './series-data';
 
 interface Line { key: string; label: string; color: string }
 interface TimeChart { title: string; lines: Line[]; range?: [number, number] }
@@ -54,8 +54,6 @@ export class ChartsPanel {
   private distAt = -Infinity;
   private distTick = -1;
   private distStale = true;
-  /** Which chart groups the last snapshot brought up to date (Decision 4, PF6). */
-  private freshness = new ChartFreshness();
   private color!: (v: string) => string;
   private axes!: uPlot.Axis[];
   private addTimeChart!: (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => void;
@@ -75,18 +73,16 @@ export class ChartsPanel {
     engine.on('snapshot', () => this.receive());
     // Edits, resets and config changes move the distributions without a tick.
     for (const event of ['edit', 'reset', 'config'] as const) engine.on(event, () => (this.distStale = true));
-    // A reset or config change makes the host resend every group afresh; ask again too.
-    for (const event of ['reset', 'config'] as const) engine.on(event, () => this.freshness.reset());
     new ResizeObserver(() => this.resize()).observe(this.el);
   }
 
   setVisible(visible: boolean): void {
     this.visible = visible;
+    // Nothing is fetched here: the charts keep what they drew while hidden, `wants` asks for
+    // whatever has fallen behind since, and the frame loop sends that (and only that) while paused.
     if (visible) {
       this.resize();
-      this.distStale = true;
-      this.freshness.reset();
-      void this.engine.refresh();
+      this.receive();
     }
   }
 
@@ -99,14 +95,15 @@ export class ChartsPanel {
   }
 
   /**
-   * The visible time charts' groups (only while some are unfilled or behind the tick, so a paused,
-   * caught-up panel asks for nothing — PF6), and the distributions when due; nothing while hidden.
+   * The visible time charts' groups (only while the engine's copy of some group is missing or
+   * behind the tick, so a paused, caught-up panel asks for nothing), and the distributions when
+   * due; nothing while hidden.
    */
   private wants(now: number): Wants {
     if (!this.visible) return {};
     const groups = this.plots.flatMap((p) => (p.group && p.visible() ? [p.group] : []));
     const w: Wants = {};
-    if (this.freshness.behind(groups, this.engine.tick)) w.charts = { groups, max: CHART_POINTS };
+    if (chartsBehind(groups, this.engine.tick, (g) => this.engine.chartGroup(g))) w.charts = { groups, max: CHART_POINTS };
     if ((this.distStale || this.engine.tick !== this.distTick) && now - this.distAt >= REFRESH_MS) {
       w.lorenz = true;
       w.wealthHist = true;
@@ -119,7 +116,6 @@ export class ChartsPanel {
   private receive(): void {
     const s = this.engine.last;
     if (!s) return;
-    this.freshness.receive(s.charts);
     // Safe even though this clears distStale for whichever snapshot happens to carry lorenz, not
     // necessarily the one requested right after the edit that set it: the host answers requests
     // strictly in the order they were sent and computes lorenz fresh (no caching) from whatever
@@ -134,6 +130,21 @@ export class ChartsPanel {
     for (const p of this.plots) if (p.visible()) p.update(s);
   }
 
+  /**
+   * Draws a time chart from the engine's latest copy of its group (Decision 4), redrawing only
+   * when a new copy has arrived: the snapshot that brought it may be long gone (the chart was
+   * hidden, or rebuilt after a config change).
+   */
+  private groupDrawer(names: string[], data: (g: ChartGroup) => LineData): (plot: uPlot) => void {
+    let drawn: ChartGroup | undefined;
+    return (plot) => {
+      const g = this.engine.chartGroup(names);
+      if (!g || g === drawn) return;
+      drawn = g;
+      plot.setData(data(g));
+    };
+  }
+
   private width(): number {
     return Math.max(240, this.el.clientWidth - 4);
   }
@@ -144,7 +155,6 @@ export class ChartsPanel {
   }
 
   private rebuildGoodsCharts(): void {
-    this.freshness.reset();
     this.plots = this.plots.filter((p) => {
       if (!this.dynamic.has(p.plot)) return true;
       p.plot.destroy();
@@ -172,7 +182,6 @@ export class ChartsPanel {
   }
 
   private rebuildGroupChart(): void {
-    this.freshness.reset();
     this.plots = this.plots.filter((p) => {
       if (!this.groupPlots.has(p.plot)) return true;
       p.plot.destroy();
@@ -220,7 +229,6 @@ export class ChartsPanel {
 
     this.addTimeChart = (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => {
       const group = chart.lines.map((l) => l.key);
-      const key = chartKey(group);
       this.add(
         chart.title,
         {
@@ -230,10 +238,7 @@ export class ChartsPanel {
           series: [{ label: 'Tick' }, ...chart.lines.map((l) => ({ label: l.label, stroke: this.color(l.color), width: 1.5 }))],
         },
         [[], ...chart.lines.map(() => [])],
-        (plot, s) => {
-          const g = s.charts?.[key];
-          if (g) plot.setData(lineData(g));
-        },
+        this.groupDrawer(group, lineData),
         container,
         visible,
         group,
@@ -326,7 +331,6 @@ export class ChartsPanel {
     this.engine.on('reset', syncSection);
     this.engine.on('config', syncSection);
 
-    const priceKey = chartKey(PRICE_GROUP);
     const priceCaption = this.add(
       'Trade price (ln)',
       {
@@ -341,10 +345,7 @@ export class ChartsPanel {
         ],
       },
       [[], [], [], []],
-      (plot, s) => {
-        const g = s.charts?.[priceKey];
-        if (g) plot.setData(bandData(g));
-      },
+      this.groupDrawer(PRICE_GROUP, bandData),
       economy,
       twoGoods,
       PRICE_GROUP,

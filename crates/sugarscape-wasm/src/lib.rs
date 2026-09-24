@@ -23,6 +23,12 @@ fn edit_error(message: String) -> JsValue {
     field_errors(vec![FieldError::new("edit", message)])
 }
 
+/// A world fingerprint as `0x` and 16 hex digits, leading zeros kept, so every fingerprint has the
+/// same width as the golden tests' `0x…` literals.
+pub fn fingerprint_hex(fingerprint: u64) -> String {
+    format!("{fingerprint:#018x}")
+}
+
 #[wasm_bindgen]
 pub fn presets_json() -> String {
     serde_json::to_string(&presets::all()).expect("presets serialize")
@@ -268,9 +274,9 @@ impl Sim {
         Ok(out)
     }
 
-    /// `World::fingerprint` as `0x…` hex, the golden tests' format.
+    /// `World::fingerprint` as `0x…` hex, the golden tests' format (see [`fingerprint_hex`]).
     pub fn fingerprint(&self) -> String {
-        format!("{:#018x}", self.world.fingerprint())
+        fingerprint_hex(self.world.fingerprint())
     }
 
     pub fn lorenz(&self, points: usize) -> Vec<f64> {

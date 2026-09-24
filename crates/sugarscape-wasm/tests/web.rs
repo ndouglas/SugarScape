@@ -2,8 +2,8 @@
 
 use sugarscape_core::sweep::{self as core_sweep, Sweep};
 use sugarscape_wasm::{
-    aggregate, builtin_sweeps, config_series_names, parse_sweep, presets_json, run_point,
-    sweep_csv, sweep_points, sweep_result, Sim,
+    aggregate, builtin_sweeps, config_series_names, fingerprint_hex, parse_sweep, presets_json,
+    run_point, sweep_csv, sweep_points, sweep_result, Sim,
 };
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
@@ -407,17 +407,9 @@ fn fingerprint_matches_the_golden_entry() {
 }
 
 #[wasm_bindgen_test]
-fn fingerprint_preserves_leading_zeros() {
-    // iv-3-trade has a golden fingerprint with leading zeros
-    let preset = sugarscape_core::presets::by_id("iv-3-trade").unwrap();
-    let json = serde_json::to_string(&preset.config).unwrap();
-    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
-    sim.step(200);
-    let fp = sim.fingerprint();
-    assert_eq!(
-        fp.len(),
-        18,
-        "fingerprint should be 18 chars even with leading zeros"
-    );
-    assert!(fp.starts_with("0x"), "fingerprint should start with 0x");
+fn fingerprint_hex_keeps_leading_zeros() {
+    assert_eq!(fingerprint_hex(0xab), "0x00000000000000ab");
+    assert_eq!(fingerprint_hex(0), "0x0000000000000000");
+    assert_eq!(fingerprint_hex(0x0f14_b0be_4cd3_b21e), "0x0f14b0be4cd3b21e");
+    assert_eq!(fingerprint_hex(u64::MAX), "0xffffffffffffffff");
 }

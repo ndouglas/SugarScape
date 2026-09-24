@@ -1,7 +1,7 @@
 import type { Engine, PlaceOverrides } from '../engine';
 import { capacitiesFromPixels } from '../image';
 import type { DiseaseEntry } from '../types';
-import { diseaseOptions } from './disease-picker';
+import { DiseaseListPoll, diseaseOptions } from './disease-picker';
 import { h } from './dom';
 import type { GridView } from './grid-view';
 import { readImagePixels } from './image-import';
@@ -35,9 +35,9 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   let disease = -1;
   /** Length of the disease list the picker was last filled from. */
   let known = -1;
-  /** The latest disease list the host sent (while a disease tool is open) and when it came. */
+  /** The latest disease list the host sent (while a disease tool is open), and when to ask again. */
   let diseases: DiseaseEntry[] = [];
-  let listAt = -Infinity;
+  const poll = new DiseaseListPoll(LIST_MS);
   const brushed = () => tool === 'paint' || tool === 'vaccinate';
 
   const buttons = TOOLS.map(([t, label]) => h('button', { onclick: () => choose(t) }, label));
@@ -148,7 +148,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     refreshPicker(true);
     if (DISEASE_TOOLS.includes(tool)) {
       // Fetch the list now, even while paused.
-      listAt = -Infinity;
+      poll.expedite();
       void engine.refresh();
     }
     grid.draw();
@@ -201,18 +201,20 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   engine.on('config', syncAvailability);
   // A reset can change which diseases exist: drop the stale list and ask for a fresh one promptly.
   engine.on('reset', () => {
-    listAt = -Infinity;
+    poll.expedite();
     diseases = [];
     refreshPicker();
   });
+  // Infect, Vaccinate and a rule change can change the list without a tick.
+  for (const event of ['edit', 'config'] as const) engine.on(event, () => poll.invalidate());
   engine.want((now) =>
-    DISEASE_TOOLS.includes(tool) && engine.config.disease.enabled && now - listAt >= LIST_MS ? { diseaseList: true } : {},
+    DISEASE_TOOLS.includes(tool) && engine.config.disease.enabled && poll.due(now, engine.tick) ? { diseaseList: true } : {},
   );
   engine.on('snapshot', () => {
     const list = engine.last?.diseaseList;
     if (!list) return;
     diseases = list;
-    listAt = performance.now();
+    poll.received(performance.now(), engine.tick);
     refreshPicker();
   });
   choose('inspect');

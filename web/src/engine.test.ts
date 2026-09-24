@@ -1,11 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Engine, type EngineEvent } from './engine';
 import { fakeModule } from './fake-sim.fixture';
 import type { Command, HostReply, Wants } from './protocol';
 import { SimHost } from './sim-host';
 import { InlineTransport } from './transport';
 import type { Config, Preset } from './types';
-import { ChartFreshness } from './ui/series-data';
+import { DiseaseListPoll } from './ui/disease-picker';
+import { chartsBehind } from './ui/series-data';
 
 const config = { width: 4, height: 3 } as unknown as Config;
 const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', description: '', config }];
@@ -300,37 +301,142 @@ describe('Engine', () => {
     expect(engine.last?.diseaseList).toBeUndefined();
   });
 
-  it('a chart-group provider (PF6) asks again only once it is behind the tick; pump sends nothing while caught up', async () => {
+  it('fires config once for a config write and not at all for a reset', async () => {
+    const { engine } = await setup();
+    const seen: EngineEvent[] = [];
+    for (const event of ['config', 'reset'] as const) engine.on(event, () => seen.push(event));
+    expect(await engine.applyConfig((c) => void (c.population = 20))).toBeNull();
+    await settle();
+    expect(seen).toEqual(['config']);
+    expect(await engine.reset()).toBeNull();
+    await settle();
+    expect(seen).toEqual(['config', 'reset']);
+  });
+
+  it('keeps a display chosen while a reset is outstanding over the reset reply\'s clamp of the old one', async () => {
+    const withDisease = { ...config, disease: { enabled: true } } as unknown as Config;
+    const log: string[] = [];
+    const transport = new HookedTransport(new SimHost(fakeModule(log)));
+    const engine = await Engine.create({ config: withDisease, seed: 7 }, { presets, transport });
+    engine.setDisplay({ colorMode: 'disease' });
+    await settle();
+    // The reset turns disease off, so the host clamps the Disease colour mode to Tribe in its reply;
+    // the user picks Age before that reply arrives.
+    transport.after = (cmd) => {
+      if (cmd.type === 'reset') engine.setDisplay({ colorMode: 'age' });
+    };
+    expect(await engine.reset({ ...engine.baseConfig, disease: { ...engine.baseConfig.disease, enabled: false } })).toBeNull();
+    transport.after = null;
+    await settle();
+    expect(engine.colorMode).toBe('age');
+    // The host draws what the selectors show.
+    log.length = 0;
+    await engine.advance(1);
+    expect(log).toEqual(['render age resource:0']);
+  });
+
+  it('fetches the disease list while paused only when the world changed or the tool opened', async () => {
+    const { engine, transport } = await setup();
+    const sent: string[] = [];
+    transport.after = (cmd, wants) => {
+      if (wants?.diseaseList) sent.push(cmd.type);
+    };
+    // The disease tools' provider (tools.ts), without its rate limit: only what changed matters here.
+    const poll = new DiseaseListPoll(0);
+    engine.want((now) => (poll.due(now, engine.tick) ? { diseaseList: true } : {}));
+    engine.on('edit', () => poll.invalidate());
+    engine.on('snapshot', () => {
+      if (engine.last?.diseaseList) poll.received(performance.now(), engine.tick);
+    });
+    let now = performance.now();
+    const pumps = async (n: number) => {
+      for (let i = 0; i < n; i++) {
+        engine.pump((now += 1000));
+        await settle();
+      }
+    };
+    await pumps(5);
+    expect(sent).toEqual(['refresh']);
+    await engine.advance(1); // the Step's own request was sent before the tick moved
+    await pumps(5);
+    expect(sent).toEqual(['refresh', 'refresh']);
+    await engine.place(0, 2, {});
+    await pumps(5);
+    expect(sent).toEqual(['refresh', 'refresh', 'refresh']);
+  });
+
+  it('asks for a chart group only while its cached copy is behind the tick; pump sends nothing while caught up', async () => {
     const { engine, transport } = await setup();
     const sent: string[] = [];
     transport.after = (cmd) => sent.push(cmd.type);
-    const fresh = new ChartFreshness();
     const groups = [['population']];
-    engine.want(() => (fresh.behind(groups, engine.tick) ? { charts: { groups, max: 2000 } } : {}));
-    engine.on('snapshot', () => fresh.receive(engine.last?.charts));
+    // The Charts panel's provider: its visible groups, only while the engine's copy is behind.
+    let visible = true;
+    engine.want(() => (visible && chartsBehind(groups, engine.tick, (g) => engine.chartGroup(g)) ? { charts: { groups, max: 2000 } } : {}));
+    let now = performance.now();
+    const pumps = async (n: number) => {
+      for (let i = 0; i < n; i++) {
+        engine.pump((now += 1000));
+        await settle();
+      }
+    };
 
     // Paused, never seen: the first pump asks, and the reply catches the group up.
-    const base = performance.now();
-    engine.pump(base);
-    await settle();
+    await pumps(1);
     expect(sent).toEqual(['refresh']);
-    expect(fresh.behind(groups, engine.tick)).toBe(false);
+    // Caught up, still paused: later pumps ask nothing, even though the 250 ms gate would allow one.
+    await pumps(3);
+    expect(sent).toEqual(['refresh']);
 
-    // Caught up, still paused: later pumps ask nothing, even once the 250 ms gate would allow one.
-    engine.pump(base + 1000);
-    await settle();
-    expect(sent).toEqual(['refresh']); // no second request went out
-
-    // The tick moves without going through this provider's own request (e.g. another Step): behind again.
+    // The tick moves without this provider's own request (another Step): exactly one refresh catches up.
     await engine.advance(1);
     sent.length = 0;
-    engine.pump(base + 2000);
-    await settle();
-    expect(sent).toEqual(['refresh']); // exactly one refresh brings it current
-    expect(fresh.behind(groups, engine.tick)).toBe(false);
+    await pumps(3);
+    expect(sent).toEqual(['refresh']);
+    expect(Array.from(engine.chartGroup(['population'])!.ticks).at(-1)).toBe(1);
   });
 
-  it("keeps wants().select current for a request sent before a new selectAgent's own reply lands (T12 minor 3)", async () => {
+  it('catches the charts up once after the tab is shown again while paused, then goes quiet', async () => {
+    const { engine, transport } = await setup();
+    const groups = [['population']];
+    let visible = true;
+    engine.want(() => (visible && chartsBehind(groups, engine.tick, (g) => engine.chartGroup(g)) ? { charts: { groups, max: 2000 } } : {}));
+    let now = performance.now();
+    const pumps = async (n: number) => {
+      for (let i = 0; i < n; i++) {
+        engine.pump((now += 1000));
+        await settle();
+      }
+    };
+    await pumps(1);
+    const sent: string[] = [];
+    transport.after = (cmd) => sent.push(cmd.type);
+
+    // Hidden and shown again with nothing changed: the engine still holds every group, so nothing is sent.
+    visible = false;
+    await pumps(2);
+    visible = true;
+    await pumps(5);
+    expect(sent).toEqual([]);
+
+    // Hidden while the world moves on, then shown while paused: one refresh, then nothing.
+    visible = false;
+    await engine.advance(2);
+    await pumps(2);
+    sent.length = 0;
+    visible = true;
+    await pumps(5);
+    expect(sent).toEqual(['refresh']);
+    expect(Array.from(engine.chartGroup(['population'])!.ticks).at(-1)).toBe(2);
+
+    // Export → Charts (PNG) shows the tab and refreshes once explicitly; the pumps after it stay quiet.
+    sent.length = 0;
+    await engine.refresh();
+    await pumps(5);
+    expect(sent).toEqual(['refresh']);
+  });
+
+  it("keeps wants().select current for a request sent before a new selectAgent's own reply lands", async () => {
     const { engine, transport } = await setup();
     expect(await engine.place(0, 2, {})).toBeNull(); // a second agent, id 2, at (0, 2)
     await engine.selectAgent(1); // agent 1 starts at (1, 1)
@@ -341,11 +447,11 @@ describe('Engine', () => {
     };
     await engine.selectAgent(2);
     transport.after = null;
-    // agentId is exact immediately; x/y are only the previous selection's as a fallback (T13 minor 2).
+    // agentId is exact immediately; x/y are only the previous selection's as a fallback.
     expect(capturedWants?.select).toEqual({ x: 1, y: 1, agentId: 2 });
   });
 
-  it("omits a pending site-only select from wants rather than guessing wrong (T13 minor 2)", async () => {
+  it("omits a pending site-only select from wants rather than guessing wrong", async () => {
     const { engine, transport } = await setup();
     await engine.select(1, 1); // agent 1's site
     let capturedWants: Wants | undefined;
@@ -358,7 +464,7 @@ describe('Engine', () => {
     expect(capturedWants?.select).toBeUndefined();
   });
 
-  it("keeps wants().trail current for a request sent before follow's own reply lands (T12 minor 3)", async () => {
+  it("keeps wants().trail current for a request sent before follow's own reply lands", async () => {
     const { engine, transport } = await setup();
     let capturedWants: Wants | undefined;
     transport.after = (cmd, wants) => {
@@ -372,7 +478,11 @@ describe('Engine', () => {
 });
 
 describe('Engine at Max speed', () => {
-  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  // The host's batches are scheduled with zero-delay timers: fake timers make how many run
+  // (one per fake millisecond) independent of how busy the machine is.
+  beforeEach(() => void vi.useFakeTimers());
+  afterEach(() => void vi.useRealTimers());
+  const wait = (ms: number) => vi.advanceTimersByTimeAsync(ms);
 
   /** A host on a fake clock (1 ms per reading) and a log of the commands the engine sends. */
   async function maxSetup() {
@@ -450,7 +560,7 @@ describe('Engine at Max speed', () => {
     engine.setRunning(false);
   });
 
-  it("updates the Inspect panel's selection from posts, before stopping (fix round 1, Important)", async () => {
+  it("updates the Inspect panel's selection from posts, before stopping", async () => {
     const { engine } = await maxSetup();
     await engine.selectAgent(1); // agent 1 starts at (1, 1) and walks +1 x per tick
     const before = engine.inspection;
@@ -485,7 +595,7 @@ describe('Engine at Max speed', () => {
     await wait(5);
   });
 
-  it('gives exactly one stop and one run for two writes queued together (fix round 1, minor 3)', async () => {
+  it('gives exactly one stop and one run for two writes queued together', async () => {
     const { engine, sent } = await maxSetup();
     engine.setRunning(true);
     sent.length = 0;
@@ -498,7 +608,31 @@ describe('Engine at Max speed', () => {
     engine.setRunning(false);
   });
 
-  it('ends Max and emits crash on a fatal post (fix round 1, minor 3)', async () => {
+  it('fires config once when a scheduled change reaches the page in an edit reply rather than a post', async () => {
+    let clock = 0;
+    const transport = new InlineTransport(new SimHost(fakeModule(), () => clock++));
+    // Never hands a buffer back: after the first post the host has nothing to post into, so it
+    // keeps stepping unseen, and the next command's reply is the first to carry the config.
+    const request = transport.request.bind(transport);
+    transport.request = (cmd, extra) => request(cmd, cmd.type === 'frame' ? { ...extra, frame: undefined } : extra);
+    const scheduled = { ...config, schedule: [{ tick: 100, set: {} }] } as unknown as Config;
+    const engine = await Engine.create({ config: scheduled, seed: 7 }, { presets, transport });
+    let configs = 0;
+    engine.on('config', () => configs++);
+    engine.setSpeed('max');
+    engine.setRunning(true);
+    await wait(50);
+    expect(engine.tick).toBeLessThan(100); // only the first post arrived, before the change fired
+    expect(configs).toBe(0);
+    expect(await engine.paint(0, 0, 1, 3)).toBeNull();
+    expect(engine.tick).toBeGreaterThan(100);
+    expect(configs).toBe(1);
+    engine.setRunning(false);
+    await wait(5);
+    expect(configs).toBe(1);
+  });
+
+  it('ends Max and emits crash on a fatal post', async () => {
     const module = fakeModule();
     let clock = 0;
     const transport = new InlineTransport(new SimHost(module, () => clock++));
@@ -515,14 +649,9 @@ describe('Engine at Max speed', () => {
     };
     const crashes: string[] = [];
     engine.on('crash', () => crashes.push(engine.crashed ?? ''));
-    vi.useFakeTimers();
-    try {
-      engine.setSpeed('max');
-      engine.setRunning(true);
-      await vi.advanceTimersByTimeAsync(10);
-    } finally {
-      vi.useRealTimers();
-    }
+    engine.setSpeed('max');
+    engine.setRunning(true);
+    await wait(10);
     expect(crashes).toHaveLength(1);
     expect(engine.crashed).toContain('boom');
     expect(engine.running).toBe(false);

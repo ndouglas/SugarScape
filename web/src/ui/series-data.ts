@@ -1,4 +1,4 @@
-import { chartKey, type ChartGroup } from '../protocol';
+import type { ChartGroup } from '../protocol';
 
 /** uPlot data: x values, then one array per line (null is a gap). */
 export type LineData = [number[], ...(number | null)[][]];
@@ -19,30 +19,14 @@ export function bandData(g: ChartGroup): LineData {
 }
 
 /**
- * Tracks each chart group's last known tick, so a panel asks for a group again only when it is
- * unfilled or behind the current tick (Decision 4, PF6) — not on every poll while paused.
+ * True when some group in `groups` is missing from `cached` (the engine's latest group per key) or
+ * its last tick is behind `tick`. A panel asks for its groups only then (Decision 4): a paused
+ * panel whose groups are caught up asks for nothing, even after it is hidden and shown again,
+ * since the host sends a group only once its history has grown.
  */
-export class ChartFreshness {
-  private ticks = new Map<string, number>();
-
-  /** Marks every group unfilled: call on a rebuild, a reset, a config change, or the tab opening. */
-  reset(): void {
-    this.ticks.clear();
-  }
-
-  /** Records the last tick each group in a snapshot's `charts` reached. */
-  receive(charts: Record<string, ChartGroup> | undefined): void {
-    for (const [key, g] of Object.entries(charts ?? {})) {
-      const last = g.ticks.at(-1);
-      if (last !== undefined) this.ticks.set(key, last);
-    }
-  }
-
-  /** True when some group in `groups` has never arrived, or its last tick is behind `tick`. */
-  behind(groups: string[][], tick: number): boolean {
-    return groups.some((g) => {
-      const last = this.ticks.get(chartKey(g));
-      return last === undefined || last < tick;
-    });
-  }
+export function chartsBehind(groups: string[][], tick: number, cached: (names: string[]) => ChartGroup | undefined): boolean {
+  return groups.some((g) => {
+    const last = cached(g)?.ticks.at(-1);
+    return last === undefined || last < tick;
+  });
 }
