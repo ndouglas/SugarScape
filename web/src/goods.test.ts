@@ -6,7 +6,6 @@ import {
   MAX_POLLUTANTS,
   addGood,
   addPollutant,
-  chartsSignature,
   defaultMap,
   goodsEditorSignature,
   pollutionEditorSignature,
@@ -142,7 +141,7 @@ describe('schedule retargeting', () => {
 describe('structure signatures', () => {
   it('change with structure, not with values', () => {
     const c = config();
-    const all = () => [goodsEditorSignature(c), pollutionEditorSignature(c), chartsSignature(c)];
+    const all = () => [goodsEditorSignature(c), pollutionEditorSignature(c)];
     const before = all();
     c.goods[0].metabolism.max = 9;
     c.goods[0].endowment.min = 1;
@@ -153,12 +152,10 @@ describe('structure signatures', () => {
     c.goods[0].name = 'honey';
     expect(goodsEditorSignature(c)).toBe(before[0]);
     expect(pollutionEditorSignature(c)).not.toBe(before[1]);
-    expect(chartsSignature(c)).not.toBe(before[2]);
 
     const named = all();
     c.pollution.pollutants[0].name = 'smog';
-    expect(all().slice(0, 2)).toEqual(named.slice(0, 2));
-    expect(chartsSignature(c)).not.toBe(named[2]);
+    expect(all()).toEqual(named);
 
     const g = goodsEditorSignature(c);
     c.goods[0].map = { kind: 'peaks', peaks: [{ x: 1, y: 1, radius: 1, height: 1 }] };

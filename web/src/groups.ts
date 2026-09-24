@@ -82,8 +82,3 @@ export function moveBoundary(groups: TagGroup[], k: number, end: 'min' | 'max', 
 export function groupsEditorSignature(config: Config): string {
   return JSON.stringify([config.tag_length, config.culture.groups.map((g) => [g.zeros.min, g.zeros.max])]);
 }
-
-/** The Group shares chart's lines: each group's name and color. */
-export function groupSharesSignature(config: Config): string {
-  return JSON.stringify(config.culture.groups.map((g) => [g.name, g.color]));
-}

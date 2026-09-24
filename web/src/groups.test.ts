@@ -5,7 +5,6 @@ import {
   addGroup,
   canAddGroup,
   defaultGroups,
-  groupSharesSignature,
   groupsEditorSignature,
   moveBoundary,
   removeGroup,
@@ -85,10 +84,8 @@ describe('groups table', () => {
   it('rebuilds the table only when the tag length or a range changes', () => {
     const c = config(defaultGroups(11));
     const before = groupsEditorSignature(c);
-    const charts = groupSharesSignature(c);
     c.culture.groups[0].name = 'Azure';
     expect(groupsEditorSignature(c)).toBe(before);
-    expect(groupSharesSignature(c)).not.toBe(charts);
     moveBoundary(c.culture.groups, 0, 'min', 7);
     expect(groupsEditorSignature(c)).not.toBe(before);
     expect(groupsEditorSignature(config(defaultGroups(11), 12))).not.toBe(groupsEditorSignature(config(defaultGroups(11))));

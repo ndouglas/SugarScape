@@ -184,6 +184,7 @@ async function main(): Promise<void> {
     toolbar,
     tools,
     tabs,
+    charts,
     rules,
     inspect,
     credit,

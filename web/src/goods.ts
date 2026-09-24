@@ -168,11 +168,6 @@ export function pollutionEditorSignature(config: Config): string {
   return JSON.stringify([config.goods.map((g) => [g.name, g.color]), config.pollution.pollutants.length]);
 }
 
-/** The per-good and per-pollutant charts' lines: goods' names and colors, pollutants' names. */
-export function chartsSignature(config: Config): string {
-  return JSON.stringify([config.goods.map((g) => [g.name, g.color]), config.pollution.pollutants.map((p) => p.name)]);
-}
-
 /** A noise seed typed by hand, clamped (not wrapped) to 0..=4294967295. */
 export function clampSeed(v: number): number {
   if (Number.isNaN(v)) return 0;
