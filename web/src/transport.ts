@@ -48,7 +48,9 @@ export class PortTransport implements Transport {
     });
   }
 
+  /** Stops talking to the port; any request still pending resolves fatal instead of hanging forever. */
   close(): void {
+    this.settle('the transport was closed');
     this.port.terminate();
   }
 
@@ -64,25 +66,42 @@ export class PortTransport implements Transport {
     if (!message.result.ok && 'fatal' in message.result) this.fail(message.result.fatal);
   }
 
-  private fail(message: string): void {
+  /** Marks the transport dead and settles every pending request as fatal; a no-op once already dead. */
+  private settle(message: string): void {
     if (this.dead) return;
     this.dead = message;
     for (const [id, resolve] of this.pending) resolve({ id, result: { ok: false, fatal: message } });
     this.pending.clear();
-    this.onFatal?.(message);
+  }
+
+  /** The other side died: settles pending requests (see `settle`) and reports it once, for the crash banner. */
+  private fail(message: string): void {
+    const already = this.dead !== null;
+    this.settle(message);
+    if (!already) this.onFatal?.(message);
   }
 }
 
-/** A worker stand-in on this thread: messages go both ways asynchronously and in order. */
+/**
+ * A worker stand-in on this thread: messages go both ways asynchronously, in order, and through
+ * `structuredClone(message, { transfer })` exactly like `postMessage` — lent buffers are detached
+ * on the sending side and arrive as fresh, usable buffers on the other, not shared by reference.
+ */
 function inlinePort(host: SimHost): PortLike {
   const port: PortLike = {
     onmessage: null,
     onerror: null,
     onmessageerror: null,
-    postMessage: (message) => queueMicrotask(() => handle(message as HostRequest)),
+    postMessage: (message, transfer) => {
+      const cloned = structuredClone(message, { transfer });
+      queueMicrotask(() => handle(cloned as HostRequest));
+    },
     terminate: () => {},
   };
-  const handle = serve(host, (message) => queueMicrotask(() => port.onmessage?.({ data: message } as MessageEvent)));
+  const handle = serve(host, (message, transfer) => {
+    const cloned = structuredClone(message, { transfer });
+    queueMicrotask(() => port.onmessage?.({ data: cloned } as MessageEvent));
+  });
   return port;
 }
 

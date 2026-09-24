@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fakeModule } from './fake-sim.fixture';
-import type { Command, DisplayState } from './protocol';
+import type { Command, DisplayState, WorldSnapshot } from './protocol';
 import { SimHost } from './sim-host';
 import { InlineTransport, PortTransport, type PortLike } from './transport';
 import type { Config } from './types';
@@ -36,6 +36,20 @@ describe('InlineTransport', () => {
     expect(r.result).toEqual({ ok: false, fatal: 'The simulation stopped: unreachable executed' });
     expect((await t.request({ type: 'fingerprint' })).result).toEqual(r.result);
     expect(fatal).toEqual(['The simulation stopped: unreachable executed']);
+  });
+
+  it('emulates postMessage transfer: a lent frame is detached on send and both sides see a real, usable buffer', async () => {
+    const t = new InlineTransport(new SimHost(fakeModule()));
+    await t.request(init);
+    const buf = new ArrayBuffer(48); // 4 x 3 x 4 bytes, matching the world rendered above
+    const pending = t.request({ type: 'refresh' }, { frame: buf });
+    // postMessage detaches the transferred buffer synchronously, before the reply is even queued.
+    expect(buf.byteLength).toBe(0);
+    const reply = await pending;
+    const snapshot = reply.result.ok ? reply.result.snapshot : undefined;
+    expect(snapshot?.frame).toBeInstanceOf(ArrayBuffer);
+    expect(snapshot?.frame).not.toBe(buf);
+    expect(snapshot?.frame?.byteLength).toBe(48);
   });
 });
 
@@ -98,5 +112,67 @@ describe('PortTransport', () => {
     expect(fatal).toEqual(['the host panicked']);
     expect((await t.request({ type: 'fingerprint' })).result).toEqual({ ok: false, fatal: 'the host panicked' });
     expect(fatal).toEqual(['the host panicked']);
+  });
+
+  it('routes an unsolicited post to onPost, leaving pending requests untouched', async () => {
+    const port = fakePort();
+    const t = new PortTransport(port);
+    const posts: WorldSnapshot[] = [];
+    t.onPost = (s) => posts.push(s);
+    const pending = t.request({ type: 'ready' });
+    const snapshot = {
+      width: 1,
+      height: 1,
+      tick: 5,
+      population: 0,
+      latest: { tick: 5, population: 0 },
+      followed: null,
+      followedAlive: false,
+    } as WorldSnapshot;
+    port.onmessage?.({ data: { id: null, post: snapshot } } as MessageEvent);
+    expect(posts).toEqual([snapshot]);
+    port.onmessage?.({ data: { id: 1, result: { ok: true } } } as MessageEvent);
+    expect((await pending).result).toEqual({ ok: true });
+  });
+
+  it('passes a lent frame in the transfer list given to postMessage', () => {
+    const port = fakePort();
+    let transferred: Transferable[] | undefined;
+    port.postMessage = (_message, transfer) => {
+      transferred = transfer;
+    };
+    const t = new PortTransport(port);
+    const buf = new ArrayBuffer(8);
+    void t.request({ type: 'refresh' }, { frame: buf });
+    expect(transferred).toEqual([buf]);
+  });
+
+  it('ignores a reply for an id that was never requested', async () => {
+    const port = fakePort();
+    const t = new PortTransport(port);
+    const pending = t.request({ type: 'ready' });
+    expect(() => port.onmessage?.({ data: { id: 999, result: { ok: true } } } as MessageEvent)).not.toThrow();
+    port.onmessage?.({ data: { id: 1, result: { ok: true, value: 'real' } } } as MessageEvent);
+    expect((await pending).result).toEqual({ ok: true, value: 'real' });
+  });
+
+  it('close settles any still-pending request instead of leaving it hanging, and is not treated as a crash', async () => {
+    const port = fakePort();
+    let terminated = false;
+    port.terminate = () => {
+      terminated = true;
+    };
+    const t = new PortTransport(port);
+    const fatal: string[] = [];
+    t.onFatal = (message) => fatal.push(message);
+    const pending = t.request({ type: 'ready' });
+    t.close();
+    expect(terminated).toBe(true);
+    const reply = await pending;
+    expect(reply.result.ok).toBe(false);
+    expect(reply.result).toMatchObject({ fatal: expect.any(String) });
+    expect(fatal).toEqual([]); // closing on purpose is not the host dying
+    const after = await t.request({ type: 'fingerprint' });
+    expect(after.result).toEqual(reply.result);
   });
 });
