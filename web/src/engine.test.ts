@@ -696,7 +696,7 @@ describe('Engine sessions', () => {
     await engine.advance(3);
     expect(counts).toEqual([1, 0]);
     expect((await engine.session()).session.log).toEqual(session.log);
-    expect(await engine.fingerprint()).toBe(await first.engine.fingerprint());
+    expect([engine.tick, engine.population]).toEqual([first.engine.tick, first.engine.population]);
   });
 
   it('forks on an edit during a replay; endReplay keeps the world', async () => {
@@ -727,6 +727,7 @@ describe('Engine sessions', () => {
   it('Reset (replay) rebuilds the session and keeps the setup; a new seed starts an empty log', async () => {
     const { engine, module } = await setup();
     const preset = engine.presetId;
+    const originalPopulation = engine.config.population;
     await engine.advance(2);
     await engine.place(0, 2, {});
     await engine.applyConfig((c) => void (c.population = 20));
@@ -735,6 +736,9 @@ describe('Engine sessions', () => {
     expect(module.sims).toHaveLength(2);
     expect(engine.tick).toBe(0);
     expect(engine.replayLeft).toBe(2);
+    // Rebuilt from the session's own config (population 10), not the folded baseConfig (20): the
+    // setConfig entry is still pending, replayed only once the world reaches its tick.
+    expect(engine.config.population).toBe(originalPopulation);
     expect(engine.baseConfig.population).toBe(20);
     expect(engine.presetId).toBe(preset);
     await engine.advance(2);

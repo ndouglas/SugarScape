@@ -465,7 +465,8 @@ export class Engine {
       }
       const { log, full, tick } = result.session;
       const { config, seed, landscapes } = this.origin;
-      return { session: { config: structuredClone(config), seed, landscapes, log }, full, tick };
+      const session: Session = { config: structuredClone(config), seed, landscapes: landscapes.map((l) => (l ? l.slice() : null)), log };
+      return { session, full, tick };
     });
   }
 
