@@ -290,3 +290,15 @@ fn parse_sweep_writes_axes_in_full_or_returns_field_errors() {
         .unwrap();
     assert!(err.contains(r#""field":"ticks""#), "{err}");
 }
+
+#[wasm_bindgen_test]
+fn set_landscape_replaces_a_goods_capacities() {
+    let mut sim = Sim::new("{}", 1, JsValue::NULL).unwrap();
+    let caps: Vec<u8> = (0..2500).map(|i| (i % 11) as u8).collect();
+    sim.set_landscape(0, &caps).unwrap();
+    assert!(sim.landscape_edited(0));
+    assert_eq!(sim.export_landscape(0).unwrap(), caps);
+    assert!(sim.set_landscape(0, &caps[..10]).is_err());
+    assert!(sim.set_landscape(0, &[11; 2500]).is_err());
+    assert!(sim.set_landscape(1, &caps).is_err());
+}

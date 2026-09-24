@@ -268,6 +268,14 @@ impl Sim {
             .map_err(edit_error)
     }
 
+    /// Replaces good `good`'s capacities with `capacities` (row-major bytes,
+    /// each 0–10): an imported image. The good then counts as painted.
+    pub fn set_landscape(&mut self, good: u32, capacities: &[u8]) -> Result<(), JsValue> {
+        let g = self.good(good)?;
+        let caps: Vec<f64> = capacities.iter().map(|&c| f64::from(c)).collect();
+        self.world.set_capacities(g, &caps).map_err(edit_error)
+    }
+
     pub fn place_agent(&mut self, x: u32, y: u32, overrides_json: &str) -> Result<f64, JsValue> {
         let overrides: AgentOverrides =
             serde_json::from_str(overrides_json).map_err(|e| edit_error(e.to_string()))?;

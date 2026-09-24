@@ -141,6 +141,31 @@ impl World {
         Ok(())
     }
 
+    /// Replaces good `good`'s capacities with `capacities` (row-major, one per
+    /// site, each 0–10 — an imported image), clamping each site's level to its
+    /// new capacity as painting does. The good then counts as edited
+    /// (`landscape_edited`), so share links, export and reset keep it.
+    pub fn set_capacities(&mut self, good: usize, capacities: &[f64]) -> Result<(), String> {
+        if good >= self.config.goods.len() {
+            return Err(format!("there is no good {good}"));
+        }
+        if capacities.len() != self.sites.len() {
+            return Err(format!(
+                "expected {} capacities, got {}",
+                self.sites.len(),
+                capacities.len()
+            ));
+        }
+        if let Some(bad) = capacities.iter().find(|c| !(0.0..=10.0).contains(*c)) {
+            return Err(format!("capacities must be between 0 and 10 (got {bad})"));
+        }
+        for (site, &c) in self.sites.iter_mut().zip(capacities) {
+            site.capacity[good] = c;
+            site.resource[good] = site.resource[good].min(c);
+        }
+        Ok(())
+    }
+
     pub fn place_agent(&mut self, x: u32, y: u32, o: &AgentOverrides) -> Result<AgentId, String> {
         let pos = self.checked_pos(x, y)?;
         let mut agent = Agent::random(&self.config, pos, self.tick, &mut self.rng);
@@ -667,5 +692,33 @@ mod tests {
             (list[0].id, list[0].bits.as_str(), list[0].carriers),
             (0, "111", 1)
         );
+    }
+
+    #[test]
+    fn set_capacities_replaces_a_goods_map_and_clamps_levels() {
+        let mut w = blank_world(5, 5);
+        add_goods(&mut w.config, 2);
+        for s in &mut w.sites {
+            s.capacity[1] = 5.0;
+            s.resource[1] = 5.0;
+        }
+        w.sites[0].resource[1] = 0.0;
+        let caps: Vec<f64> = (0..25).map(|i| f64::from(i % 3)).collect();
+        w.set_capacities(1, &caps).unwrap();
+        assert_eq!(w.capacities(1), caps);
+        let levels: Vec<f64> = w.sites.iter().map(|s| s.resource[1]).collect();
+        assert_eq!(levels, caps, "levels above the new capacity are clamped");
+        assert!(w.landscape_edited(1) && !w.landscape_edited(0));
+        let err = |r: Result<(), String>| r.unwrap_err();
+        assert_eq!(err(w.set_capacities(2, &caps)), "there is no good 2");
+        assert_eq!(
+            err(w.set_capacities(1, &caps[..24])),
+            "expected 25 capacities, got 24"
+        );
+        for bad in [10.5, -1.0, f64::NAN, f64::INFINITY] {
+            let e = err(w.set_capacities(1, &[bad; 25]));
+            assert!(e.starts_with("capacities must be between 0 and 10"), "{e}");
+        }
+        assert_eq!(w.capacities(1), caps, "a rejected call changes nothing");
     }
 }
