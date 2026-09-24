@@ -1,6 +1,6 @@
 // The playground's simulation worker: its own WASM instance and one SimHost, answering in order.
 import type { HostMessage, HostRequest } from './protocol';
-import { serve, SimHost } from './sim-host';
+import { channelDefer, serve, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import init from './wasm-pkg/sugarscape.js';
 
@@ -16,7 +16,7 @@ addEventListener('message', (event: MessageEvent<HostRequest>) => {
 
 init().then(
   (wasm) => {
-    handle = serve(new SimHost(wasmSimModule(wasm.memory)), post);
+    handle = serve(new SimHost(wasmSimModule(wasm.memory)), post, channelDefer());
     for (const req of queue.splice(0)) handle(req);
   },
   (e: unknown) => {

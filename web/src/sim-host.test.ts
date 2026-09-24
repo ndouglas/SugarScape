@@ -219,10 +219,115 @@ describe('SimHost', () => {
   });
 });
 
+describe('SimHost at Max speed', () => {
+  it('steps in batches and posts about every 33 ms while it holds a free buffer', () => {
+    let clock = 0;
+    const t = start(() => clock++); // each reading of the clock is 1 ms later
+    const a = new ArrayBuffer(48);
+    const b = new ArrayBuffer(48);
+    const run = t.send({ type: 'run' }, { frame: a });
+    expect(run.result).toEqual({ ok: true });
+    expect(run.spare).toBeUndefined();
+    expect(t.host.running).toBe(true);
+    const posts: WorldSnapshot[] = [];
+    for (let i = 0; i < 6; i++) {
+      const post = t.host.batch();
+      if (post) posts.push(post);
+    }
+    expect(posts).toHaveLength(1);
+    expect(posts[0].frame).toBe(a);
+    expect(posts[0].tick).toBeGreaterThan(16);
+    t.send({ type: 'frame' }, { frame: b });
+    expect(t.host.batch()?.frame).toBe(b);
+  });
+
+  it('handles commands between batches and answers stop with the last frame and the unused buffers', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    const a = new ArrayBuffer(48);
+    const b = new ArrayBuffer(48);
+    t.send({ type: 'run' }, { frame: a });
+    t.send({ type: 'frame' }, { frame: b });
+    expect(t.host.batch()).toBeNull();
+    expect(t.snap(t.send({ type: 'place', x: 0, y: 2, overrides: {} })).population).toBe(2);
+    const stop = t.send({ type: 'stop' });
+    expect(t.host.running).toBe(false);
+    expect(t.snap(stop).frame).toBe(b);
+    expect(stop.spare).toHaveLength(1);
+    expect(stop.spare?.[0]).toBe(a);
+    expect(t.host.batch()).toBeNull();
+    const late = new ArrayBuffer(48);
+    expect(t.send({ type: 'frame' }, { frame: late }).spare?.[0]).toBe(late);
+  });
+
+  it('reports a scheduled change in the next post', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'setConfig', config: { ...config, schedule: [{ tick: 3, set: {} }] } });
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    let post: WorldSnapshot | null = null;
+    while (!post) post = t.host.batch();
+    expect(post.config?.schedule).toHaveLength(1);
+  });
+
+  it('updates the loop selection on inspect while running, so the next post carries it (PF2)', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    // No `wants` on this request: at send time the engine's own wants still describe whatever
+    // selection existed before the inspect (none, here) — only the reply says what was selected.
+    t.send({ type: 'inspect', target: { x: 1, y: 1 } });
+    let post: WorldSnapshot | null = null;
+    while (!post) post = t.host.batch();
+    expect(post.inspection?.agentId).toBe(1);
+    expect(post.inspection?.alive).toBe(true);
+  });
+
+  it('caps a batch at the next post deadline (PF3): the posting batch is shorter than a full one', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    const tickNow = (): number => t.snap(t.send({ type: 'refresh' })).tick;
+    let prevTick = tickNow();
+    const deltas: number[] = [];
+    let post: WorldSnapshot | null = null;
+    for (let i = 0; i < 4 && !post; i++) {
+      post = t.host.batch();
+      const tick = tickNow();
+      deltas.push(tick - prevTick);
+      prevTick = tick;
+    }
+    expect(post).not.toBeNull();
+    // Every batch before the last ran the full BATCH_MS; the one that posts is capped short by
+    // min(start + BATCH_MS, posted + POST_MS), landing the post near POST_MS instead of a whole
+    // extra BATCH_MS late.
+    expect(deltas[deltas.length - 1]).toBeLessThan(deltas[0]);
+  });
+
+  it('serve keeps posting between requests until stop', async () => {
+    let clock = 0;
+    const messages: HostMessage[] = [];
+    const handle = serve(new SimHost(fakeModule(), () => clock++), (m) => messages.push(m), (fn) => setTimeout(fn, 0));
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const posts = () => messages.filter((m) => m.id === null).length;
+    handle({ id: 1, cmd: { type: 'init', config, seed: 1, landscapes: [], display } });
+    handle({ id: 2, cmd: { type: 'run' }, frame: new ArrayBuffer(48) });
+    await wait(20);
+    expect(posts()).toBe(1); // one buffer: one post until it comes back
+    handle({ id: 3, cmd: { type: 'frame' }, frame: new ArrayBuffer(48) });
+    await wait(20);
+    expect(posts()).toBe(2);
+    handle({ id: 4, cmd: { type: 'stop' } });
+    const count = messages.length;
+    await wait(20);
+    expect(messages.length).toBe(count);
+  });
+});
+
 describe('serve', () => {
   it('answers each request in order and lists its buffers for transfer', () => {
     const sent: [HostMessage, Transferable[]][] = [];
-    const handle = serve(new SimHost(fakeModule()), (m, t) => sent.push([m, t]));
+    const handle = serve(new SimHost(fakeModule()), (m, t) => sent.push([m, t]), () => {});
     const frame = new ArrayBuffer(48);
     handle({ id: 1, cmd: { type: 'init', config, seed: 1, landscapes: [], display }, frame });
     handle({ id: 2, cmd: { type: 'fingerprint' } });

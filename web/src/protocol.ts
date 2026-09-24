@@ -83,7 +83,10 @@ export type Command =
   | { type: 'inspect'; target: { x: number; y: number } | { agentId: number } }
   | { type: 'seriesCsv' }
   | { type: 'agentsCsv' }
-  | { type: 'fingerprint' };
+  | { type: 'fingerprint' }
+  | { type: 'run' }
+  | { type: 'stop' }
+  | { type: 'frame' };
 
 export interface HostRequest { id: number; cmd: Command; wants?: Wants; frame?: ArrayBuffer }
 

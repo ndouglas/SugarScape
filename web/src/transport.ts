@@ -98,10 +98,14 @@ function inlinePort(host: SimHost): PortLike {
     },
     terminate: () => {},
   };
-  const handle = serve(host, (message, transfer) => {
-    const cloned = structuredClone(message, { transfer });
-    queueMicrotask(() => port.onmessage?.({ data: cloned } as MessageEvent));
-  });
+  const handle = serve(
+    host,
+    (message, transfer) => {
+      const cloned = structuredClone(message, { transfer });
+      queueMicrotask(() => port.onmessage?.({ data: cloned } as MessageEvent));
+    },
+    (fn) => setTimeout(fn, 0),
+  );
   return port;
 }
 

@@ -68,6 +68,11 @@ export const CHART_MS = 250;
 /** …or once its history has grown by more than this fraction. */
 export const CHART_GROWTH = 0.01;
 
+/** Max speed: a batch steps for about this long… */
+export const BATCH_MS = 16;
+/** …and a snapshot is posted about this often (while the host holds a free buffer). */
+export const POST_MS = 33;
+
 const NO_WORLD = JSON.stringify([{ field: 'world', message: 'no world yet' }]);
 
 /**
@@ -100,36 +105,69 @@ export class SimHost {
   private dead: string | null = null;
   /** When, and at which history length, each chart group was last sent. */
   private sent = new Map<string, { at: number; length: number }>();
+  /** Max speed: the wants to answer with, the buffers to post frames in, when it last posted; null when not running. */
+  private max: { wants: Wants; pool: ArrayBuffer[]; posted: number } | null = null;
 
   constructor(
     private module: SimModule,
     private now: () => number = () => performance.now(),
   ) {}
 
+  get running(): boolean {
+    return this.max !== null;
+  }
+
   handle(req: HostRequest): HostReply {
+    if (this.max && req.wants) this.max.wants = req.wants;
+    const spare: ArrayBuffer[] = [];
     let result: Result;
     if (this.dead) {
       result = { ok: false, fatal: this.dead };
     } else {
       try {
-        result = this.apply(req);
+        result = this.apply(req, spare);
       } catch (e) {
         // The core throws field errors as JSON strings; anything else is a panic or a bug.
         result = typeof e === 'string' ? { ok: false, errors: parseErrors(e) } : { ok: false, fatal: this.fail(e) };
       }
     }
-    // A lent buffer the snapshot did not use goes straight back.
-    const used = result.ok && result.snapshot?.frame === req.frame;
-    return req.frame && !used ? { id: req.id, result, spare: [req.frame] } : { id: req.id, result };
+    // A lent buffer the snapshot did not use and the Max loop did not keep goes straight back.
+    const frame = req.frame;
+    const used = result.ok && result.snapshot?.frame === frame;
+    if (frame && !used && !this.max?.pool.includes(frame)) spare.push(frame);
+    return spare.length > 0 ? { id: req.id, result, spare } : { id: req.id, result };
   }
 
   /** Stops the host for good; returns the message every later command gets. */
   fail(e: unknown): string {
+    this.max = null;
     this.dead = `The simulation stopped: ${e instanceof Error ? e.message : String(e)}`;
     return this.dead;
   }
 
-  private apply(req: HostRequest): Result {
+  /**
+   * One Max-speed batch (Decision 11, PF3): steps for about `BATCH_MS`, but never past the next
+   * post deadline, so posts land close to every `POST_MS` instead of drifting toward 2 × BATCH_MS
+   * when POST_MS falls between two batch-lengths. Returns a snapshot to post, or null.
+   */
+  batch(): WorldSnapshot | null {
+    const max = this.max;
+    const sim = this.sim;
+    if (!max || !sim || this.dead) return null;
+    const start = this.now();
+    const cap = Math.min(start + BATCH_MS, max.posted + POST_MS);
+    const from = sim.tick();
+    do sim.step(1);
+    while (this.now() < cap);
+    this.fired(from, sim.tick());
+    const now = this.now();
+    const frame = now - max.posted >= POST_MS ? max.pool.pop() : undefined;
+    if (!frame) return null;
+    max.posted = now;
+    return this.snapshot(sim, max.wants, frame);
+  }
+
+  private apply(req: HostRequest, spare: ArrayBuffer[]): Result {
     const { cmd, frame } = req;
     const wants = req.wants ?? {};
     if (cmd.type === 'ready') return { ok: true };
@@ -187,14 +225,28 @@ export class SimHost {
       case 'vaccinate':
         sim.vaccinate(cmd.x, cmd.y, cmd.radius, cmd.disease);
         return this.reply(sim, wants, frame);
-      case 'follow':
+      case 'follow': {
         if (cmd.id === null) sim.unfollow();
         else sim.follow(cmd.id);
+        // PF2: at send time the engine's own wants still describe the old follow state (it only
+        // learns the new one from this reply), so while Max is running the loop's own copy is
+        // patched here too — or its posts would keep reporting the trail as it was before this.
+        if (this.max) this.max.wants = { ...this.max.wants, trail: cmd.id !== null };
         return this.reply(sim, { ...wants, trail: cmd.id !== null }, frame);
+      }
       case 'inspect': {
         const { target } = cmd;
         const at = 'agentId' in target ? sim.locate(target.agentId) : Uint32Array.of(target.x, target.y);
-        return this.reply(sim, wants, frame, at ? this.selectAt(sim, at[0], at[1]) : null);
+        const selected = at ? this.selectAt(sim, at[0], at[1]) : null;
+        // PF2: same reasoning as `follow` — the new selection is this command's own result, not
+        // yet reflected in `wants.select`, so the loop's copy is patched from it directly.
+        if (this.max) {
+          this.max.wants = {
+            ...this.max.wants,
+            select: selected ? { x: selected.x, y: selected.y, agentId: selected.agentId } : undefined,
+          };
+        }
+        return this.reply(sim, wants, frame, selected);
       }
       case 'seriesCsv':
         return { ok: true, value: sim.export_series_csv() };
@@ -202,6 +254,20 @@ export class SimHost {
         return { ok: true, value: sim.export_agents_csv() };
       case 'fingerprint':
         return { ok: true, value: sim.fingerprint() };
+      case 'run':
+        this.max = { wants, pool: frame ? [frame] : [], posted: this.now() };
+        return { ok: true };
+      case 'frame':
+        if (this.max && frame) this.max.pool.push(frame);
+        return { ok: true };
+      case 'stop': {
+        const max = this.max;
+        this.max = null;
+        if (!max) return this.reply(sim, wants);
+        const last = max.pool.pop();
+        spare.push(...max.pool);
+        return this.reply(sim, max.wants, last);
+      }
     }
   }
 
@@ -327,10 +393,48 @@ export class SimHost {
   }
 }
 
-/** Wires a host to a message channel: each request is answered in order, its buffers transferred. */
-export function serve(host: SimHost, send: (message: HostMessage, transfer: Transferable[]) => void): (req: HostRequest) => void {
+/**
+ * Wires a host to a message channel: each request is answered in order, its buffers transferred;
+ * while Max runs, batches are scheduled with `defer` so queued requests are handled between them.
+ */
+export function serve(
+  host: SimHost,
+  send: (message: HostMessage, transfer: Transferable[]) => void,
+  defer: (fn: () => void) => void,
+): (req: HostRequest) => void {
+  let looping = false;
+  const loop = (): void => {
+    if (!host.running) {
+      looping = false;
+      return;
+    }
+    let message: HostMessage | null = null;
+    try {
+      const post = host.batch();
+      if (post) message = { id: null, post };
+    } catch (e) {
+      message = { id: null, fatal: host.fail(e) };
+    }
+    if (message) send(message, transfers(message));
+    defer(loop);
+  };
   return (req) => {
     const reply = host.handle(req);
     send(reply, transfers(reply));
+    if (host.running && !looping) {
+      looping = true;
+      defer(loop);
+    }
+  };
+}
+
+/** Runs `fn` as a new task without `setTimeout`'s 4 ms clamp; messages already queued run first or between. */
+export function channelDefer(): (fn: () => void) => void {
+  const channel = new MessageChannel();
+  const queue: (() => void)[] = [];
+  channel.port1.onmessage = () => queue.shift()?.();
+  return (fn) => {
+    queue.push(fn);
+    channel.port2.postMessage(null);
   };
 }
