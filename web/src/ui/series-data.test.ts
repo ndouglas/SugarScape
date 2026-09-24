@@ -1,6 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { chartKey } from '../protocol';
-import { bandData, barsData, chartsBehind, emptyTable, histTable, lineData, overlayData, supplyDemandTable, type LineData } from './series-data';
+import type { Config } from '../types';
+import {
+  bandData,
+  barsData,
+  chartsBehind,
+  distributionsDue,
+  distributionWants,
+  emptyTable,
+  histTable,
+  lineData,
+  overlayData,
+  positionBars,
+  positionSteps,
+  showsAgeHist,
+  showsGoodWealth,
+  showsTagHist,
+  showsTotalWealth,
+  supplyDemandTable,
+  type LineData,
+} from './series-data';
 
 const group = { ticks: Float64Array.of(0, 5, 9), columns: [Float64Array.of(1, NaN, 3), Float64Array.of(0.5, 0.5, NaN)] };
 
@@ -85,5 +104,61 @@ describe('two worlds on one axis', () => {
       [null, null, null],
     ]);
     expect(supplyDemandTable(undefined)).toEqual([[], [], [], [], []]);
+  });
+});
+
+describe('Chapter VI histograms', () => {
+  const config = (goods: number, lifespan: boolean, culture: boolean) =>
+    ({ goods: Array.from({ length: goods }, () => ({})), lifespan: { enabled: lifespan }, culture: { enabled: culture } }) as unknown as Config;
+
+  it('shows the age histogram while lifetimes are finite and the tag histogram while culture is on', () => {
+    expect([showsAgeHist(config(1, true, false)), showsTagHist(config(1, true, false))]).toEqual([true, false]);
+    expect([showsAgeHist(config(1, false, true)), showsTagHist(config(1, false, true))]).toEqual([false, true]);
+  });
+
+  it('asks for the distributions each world draws', () => {
+    expect(distributionWants(config(1, false, false))).toEqual({ lorenz: true, wealthHist: true });
+    expect(distributionWants(config(2, true, true))).toEqual({
+      lorenz: true,
+      wealthHist: true,
+      supplyDemand: true,
+      lorenzTotal: true,
+      goodWealthHists: true,
+      ageHist: true,
+      tagHist: true,
+    });
+  });
+
+  it('fetches distributions again only once the tick moved or they went stale, at most every 250 ms', () => {
+    const d = { at: 1000, tick: 7, stale: false };
+    expect(distributionsDue(d, 7, 5000, 250)).toBe(false); // paused and caught up
+    expect(distributionsDue(d, 8, 1100, 250)).toBe(false); // too soon
+    expect(distributionsDue(d, 8, 1250, 250)).toBe(true);
+    expect(distributionsDue({ ...d, stale: true }, 7, 1250, 250)).toBe(true);
+  });
+
+  it('draws the tag histogram as bars at positions 1…L or as a step outline around them', () => {
+    const pct = Float64Array.of(49, 100, 0);
+    expect(positionBars(pct)).toEqual([[1, 2, 3], [49, 100, 0]]);
+    expect(positionSteps(pct)).toEqual([[0.5, 1.5, 2.5, 3.5], [49, 100, 0, 0]]);
+    expect(positionBars(null)).toEqual([[], []]);
+    expect(positionSteps(undefined)).toEqual([[], []]);
+  });
+
+  it('draws the age histogram like the wealth histogram ([bin, counts…])', () => {
+    const ages = Float64Array.of(5, 3, 0, 2);
+    expect(barsData(ages)).toEqual([[2.5, 7.5, 12.5], [3, 0, 2]]);
+    expect(histTable(ages)).toEqual([[0, 5, 10, 15], [3, 0, 2, 0]]);
+  });
+});
+
+describe('wealth views', () => {
+  const goods = (n: number) => ({ goods: Array.from({ length: n }, () => ({})) }) as unknown as Config;
+
+  it("show total wealth and each good's histogram only with two or more goods", () => {
+    expect(showsTotalWealth(goods(1))).toBe(false);
+    expect(showsTotalWealth(goods(2))).toBe(true);
+    expect(showsGoodWealth(0)(goods(1))).toBe(false);
+    expect([0, 1, 2].map((g) => showsGoodWealth(g)(goods(2)))).toEqual([true, true, false]);
   });
 });

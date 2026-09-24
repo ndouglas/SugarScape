@@ -1,4 +1,5 @@
-import type { ChartGroup } from '../protocol';
+import type { ChartGroup, Wants } from '../protocol';
+import type { Config } from '../types';
 
 /** uPlot data: x values, then one array per line (null is a gap). */
 export type LineData = [number[], ...(number | null)[][]];
@@ -73,6 +74,56 @@ export function histTable(hist: Float64Array | null | undefined): LineData {
   const width = hist[0];
   const counts = Array.from(hist.subarray(1));
   return [Array.from({ length: counts.length + 1 }, (_, k) => k * width), [...counts, 0]];
+}
+
+/** The tag histogram (percent with a 0 at each position, position 0 first) as bars at positions 1…L. */
+export function positionBars(pct: Float64Array | null | undefined): LineData {
+  if (!pct) return [[], []];
+  const values = Array.from(pct);
+  return [values.map((_, i) => i + 1), values];
+}
+
+/** The tag histogram as a step outline: each position's bar from p − ½ to p + ½, closed at the right. */
+export function positionSteps(pct: Float64Array | null | undefined): LineData {
+  if (!pct) return [[], []];
+  const values = Array.from(pct);
+  return [Array.from({ length: values.length + 1 }, (_, k) => k + 0.5), [...values, 0]];
+}
+
+/** The age histogram shows while lifetimes are finite (Animation III-1). */
+export const showsAgeHist = (c: Config): boolean => c.lifespan.enabled;
+/** The cultural tag histogram shows while culture is on (Animation III-7). */
+export const showsTagHist = (c: Config): boolean => c.culture.enabled;
+/** Total wealth (its Lorenz curve and Gini) shows with two or more goods (VI-1's "total wealth"). */
+export const showsTotalWealth = (c: Config): boolean => c.goods.length >= 2;
+/** Good `good`'s own wealth histogram shows with two or more goods, while the world has that good. */
+export const showsGoodWealth =
+  (good: number) =>
+  (c: Config): boolean =>
+    showsTotalWealth(c) && good < c.goods.length;
+
+/** A world's distributions as last received: when, at which tick, and whether an edit, reset or config change has made them stale. */
+export interface DistState { at: number; tick: number; stale: boolean }
+
+/**
+ * Whether a world's distributions are fetched again: only once the tick moved or they went stale,
+ * and at most every `every` ms — so a paused, caught-up Charts tab asks for nothing (7a's rule).
+ */
+export function distributionsDue(d: DistState, tick: number, now: number, every: number): boolean {
+  return (d.stale || tick !== d.tick) && now - d.at >= every;
+}
+
+/**
+ * The distributions a world's charts draw: the (sugar) Lorenz curve and wealth histogram always;
+ * with two or more goods supply & demand, the total-wealth Lorenz curve and each good's wealth
+ * histogram; the age histogram while lifetimes are finite; the tag histogram while culture is on.
+ */
+export function distributionWants(c: Config): Wants {
+  const out: Wants = { lorenz: true, wealthHist: true };
+  if (showsTotalWealth(c)) Object.assign(out, { supplyDemand: true, lorenzTotal: true, goodWealthHists: true });
+  if (showsAgeHist(c)) out.ageHist = true;
+  if (showsTagHist(c)) out.tagHist = true;
+  return out;
 }
 
 /**

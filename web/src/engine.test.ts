@@ -6,7 +6,7 @@ import { SimHost } from './sim-host';
 import { InlineTransport } from './transport';
 import type { Config, Preset } from './types';
 import { DiseaseListPoll } from './ui/disease-picker';
-import { chartsBehind } from './ui/series-data';
+import { chartsBehind, distributionsDue, distributionWants, type DistState } from './ui/series-data';
 
 const config = { width: 4, height: 3 } as unknown as Config;
 const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', description: '', config }];
@@ -841,5 +841,43 @@ describe('Engine handing over a world', () => {
     await engine.advance(1);
     expect(engine.tick).toBe(0);
     expect(crashes).toBe(0);
+  });
+});
+
+describe('Chapter VI views while paused', () => {
+  it('fetch the networks and histograms once, then send nothing while caught up', async () => {
+    const transport = new HookedTransport(new SimHost(fakeModule()));
+    const chapterVi = { width: 4, height: 3, sex: { enabled: true }, lifespan: { enabled: true }, culture: { enabled: true } } as unknown as Config;
+    const engine = await Engine.create({ config: chapterVi, seed: 7 }, { presets, transport });
+    // The Charts panel's distributions provider (ui/charts-panel.ts), with its receive step.
+    const dist: DistState = { at: -Infinity, tick: -1, stale: true };
+    engine.want((now) => (distributionsDue(dist, engine.tick, now, 250) ? distributionWants(engine.config) : {}));
+    engine.on('snapshot', () => {
+      const s = engine.last;
+      if (s?.lorenz) Object.assign(dist, { at: performance.now(), tick: s.tick, stale: false });
+    });
+    const sent: string[] = [];
+    transport.after = (cmd) => sent.push(cmd.type);
+    let now = performance.now();
+    const pumps = async (n: number) => {
+      for (let i = 0; i < n; i++) {
+        engine.pump((now += 1000));
+        await settle();
+      }
+    };
+
+    await pumps(1);
+    expect(sent).toEqual(['refresh']);
+    expect(engine.last?.ageHist).toEqual(Float64Array.of(5, 1, 0));
+    expect(engine.last?.tagHist).toEqual(Float64Array.of(100, 0));
+
+    engine.setDisplay({ colorMode: 'lineage', overlays: { neighbors: true, friends: true, family: true } });
+    await settle();
+    expect(Object.keys(engine.last?.networks ?? {})).toEqual(['neighbors', 'friends', 'family']);
+    expect(engine.colorMode).toBe('lineage');
+
+    // Paused and caught up, with three overlays and both histograms shown: nothing more is sent.
+    await pumps(5);
+    expect(sent).toEqual(['refresh', 'setDisplay']);
   });
 });

@@ -1,6 +1,7 @@
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
+import { MAX_GOODS } from '../goods';
 import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
 import type { Config } from '../types';
 import { h } from './dom';
@@ -9,17 +10,26 @@ import {
   bandData,
   barsData,
   chartsBehind,
+  distributionsDue,
+  distributionWants,
   emptyTable,
   histTable,
   lineData,
   overlayData,
+  positionBars,
+  positionSteps,
+  showsAgeHist,
+  showsGoodWealth,
+  showsTagHist,
+  showsTotalWealth,
   supplyDemandTable,
+  type DistState,
   type LineData,
 } from './series-data';
 
 interface Line { key: string; label: string; color: string }
 type Section = 'top' | 'goods' | 'pollution' | 'economy' | 'disease';
-type Kind = 'time' | 'band' | 'lorenz' | 'wealth' | 'supplyDemand';
+type Kind = 'time' | 'band' | 'lorenz' | 'lorenzTotal' | 'wealth' | 'goodWealth' | 'age' | 'tags' | 'supplyDemand';
 
 /** One chart: its lines follow a world's config; it shows when its section and `shown` hold for either world. */
 interface ChartDef {
@@ -31,10 +41,12 @@ interface ChartDef {
   shown?: (c: Config) => boolean;
   /** The caption names the traded pair (goods 0 and 1). */
   pair?: boolean;
+  /** A `goodWealth` chart's good: the caption names it. */
+  good?: number;
 }
 
 const HEIGHT = 150;
-/** The Lorenz curve, wealth histogram and supply & demand are fetched at most this often (per world). */
+/** The distributions (Lorenz curves, wealth, age and tag histograms, supply & demand) are fetched at most this often (per world). */
 const REFRESH_MS = 250;
 const POLLUTANT_COLORS = ['--c1', '--c2', '--c3', '--c4'];
 /** The Trade price chart's series: the mean and its ± SD band share one x axis. */
@@ -43,9 +55,18 @@ const LABELS = ['A', 'B'];
 /** B's lines are dashed; A's are solid (Decision 11). */
 const B_DASH = [6, 4];
 const XS = Array.from({ length: 101 }, (_, i) => i / 100);
-const X_LABEL: Record<Kind, string> = { time: 'Tick', band: 'Tick', lorenz: 'Population share', wealth: 'Sugar', supplyDemand: 'Price' };
+const X_LABEL: Record<Kind, string> = {
+  time: 'Tick',
+  band: 'Tick',
+  lorenz: 'Population share',
+  lorenzTotal: 'Population share',
+  wealth: 'Sugar',
+  goodWealth: 'Holding',
+  age: 'Age',
+  tags: 'Tag position',
+  supplyDemand: 'Price',
+};
 
-const twoGoods = (c: Config) => c.goods.length >= 2;
 const fixed = (lines: Line[]) => () => lines;
 const perGood = (prefix: string) => (c: Config): Line[] =>
   c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
@@ -55,7 +76,7 @@ const SECTIONS: { id: Section; title?: string; shown: (c: Config) => boolean }[]
   { id: 'goods', title: 'Goods', shown: () => true },
   { id: 'pollution', title: 'Pollution', shown: (c) => c.pollution.enabled },
   // Market charts need two goods; loan charts need credit; the section needs either.
-  { id: 'economy', title: 'Economy', shown: (c) => twoGoods(c) || c.credit.enabled },
+  { id: 'economy', title: 'Economy', shown: (c) => showsTotalWealth(c) || c.credit.enabled },
   { id: 'disease', title: 'Disease', shown: (c) => c.disease.enabled },
 ];
 
@@ -90,9 +111,25 @@ const CHARTS: ChartDef[] = [
   },
   { title: 'Lorenz curve', kind: 'lorenz', section: 'top' },
   { title: 'Wealth distribution', kind: 'wealth', section: 'top' },
+  { title: 'Age histogram', kind: 'age', section: 'top', shown: showsAgeHist },
+  { title: 'Cultural tags (% zeros by position)', kind: 'tags', section: 'top', shown: showsTagHist, range: [0, 100] },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },
   { title: 'Units traded', kind: 'time', section: 'goods', lines: perGood('traded_'), shown: (c) => c.trade.enabled },
+  {
+    title: 'Gini coefficient (total wealth)',
+    kind: 'time',
+    section: 'goods',
+    lines: fixed([{ key: 'gini_total', label: 'Gini', color: '--c2' }]),
+    range: [0, 1],
+    shown: showsTotalWealth,
+  },
+  { title: 'Lorenz curve (total wealth)', kind: 'lorenzTotal', section: 'goods', shown: showsTotalWealth },
+  // One per possible good; each shows while some world has that good (and two or more goods).
+  ...Array.from(
+    { length: MAX_GOODS },
+    (_, good): ChartDef => ({ title: 'Wealth distribution', kind: 'goodWealth', section: 'goods', good, shown: showsGoodWealth(good) }),
+  ),
   {
     title: 'Mean pollution',
     kind: 'time',
@@ -100,9 +137,9 @@ const CHARTS: ChartDef[] = [
     lines: (c) => c.pollution.pollutants.map((p, k) => ({ key: `mean_pollution_${k}`, label: p.name, color: POLLUTANT_COLORS[k] })),
     shown: (c) => c.pollution.enabled,
   },
-  { title: 'Trade price (ln)', kind: 'band', section: 'economy', shown: twoGoods, pair: true },
-  { title: 'Trade volume', kind: 'time', section: 'economy', lines: fixed([{ key: 'trade_volume', label: 'Volume', color: '--c1' }]), shown: twoGoods },
-  { title: 'Supply & demand', kind: 'supplyDemand', section: 'economy', shown: twoGoods, pair: true },
+  { title: 'Trade price (ln)', kind: 'band', section: 'economy', shown: showsTotalWealth, pair: true },
+  { title: 'Trade volume', kind: 'time', section: 'economy', lines: fixed([{ key: 'trade_volume', label: 'Volume', color: '--c1' }]), shown: showsTotalWealth },
+  { title: 'Supply & demand', kind: 'supplyDemand', section: 'economy', shown: showsTotalWealth, pair: true },
   {
     title: 'Loans',
     kind: 'time',
@@ -180,17 +217,30 @@ interface Plot {
 }
 
 /** A world's latest distributions, and when (and at which tick) they arrived. */
-interface Dist {
+interface Dist extends DistState {
   lorenz: Float64Array | null;
+  lorenzTotal: Float64Array | null;
   wealthHist: Float64Array | null;
+  goodWealthHists: Float64Array[] | null;
+  ageHist: Float64Array | null;
+  tagHist: Float64Array | null;
   supplyDemand: Float64Array | null;
   version: number;
-  at: number;
-  tick: number;
-  stale: boolean;
 }
 
-const freshDist = (): Dist => ({ lorenz: null, wealthHist: null, supplyDemand: null, version: 0, at: -Infinity, tick: -1, stale: true });
+const freshDist = (): Dist => ({
+  lorenz: null,
+  lorenzTotal: null,
+  wealthHist: null,
+  goodWealthHists: null,
+  ageHist: null,
+  tagHist: null,
+  supplyDemand: null,
+  version: 0,
+  at: -Infinity,
+  tick: -1,
+  stale: true,
+});
 
 /**
  * The Charts tab (Decision 11): one list of charts drawn for `worlds` — the playground's engine, and
@@ -283,12 +333,7 @@ export class ChartsPanel {
     const groups = this.plots.filter((p) => !p.figure.hidden && p.groups[i].length > 0).map((p) => p.groups[i]);
     const out: Wants = {};
     if (groups.length > 0 && chartsBehind(groups, w.tick, (g) => w.chartGroup(g))) out.charts = { groups, max: CHART_POINTS };
-    const d = this.dist[i];
-    if ((d.stale || w.tick !== d.tick) && now - d.at >= REFRESH_MS) {
-      out.lorenz = true;
-      out.wealthHist = true;
-      if (twoGoods(w.config)) out.supplyDemand = true;
-    }
+    if (distributionsDue(this.dist[i], w.tick, now, REFRESH_MS)) Object.assign(out, distributionWants(w.config));
     return out;
   }
 
@@ -302,8 +347,13 @@ export class ChartsPanel {
       const d = this.dist[i];
       d.lorenz = s.lorenz;
       d.wealthHist = s.wealthHist ?? d.wealthHist;
-      // A world that drops to one good stops sending this: clear it, not keep the last curve.
+      // A world that drops to one good (or turns lifetimes or culture off) stops sending these:
+      // clear them, not keep the last one.
       d.supplyDemand = s.supplyDemand ?? null;
+      d.ageHist = s.ageHist ?? null;
+      d.tagHist = s.tagHist ?? null;
+      d.lorenzTotal = s.lorenzTotal ?? null;
+      d.goodWealthHists = s.goodWealthHists ?? null;
       d.version++;
       d.tick = s.tick;
       d.at = performance.now();
@@ -327,10 +377,17 @@ export class ChartsPanel {
       const el = this.sections.get(s.id);
       if (el) el.hidden = !configs.some((c) => s.shown(c));
     }
-    const goods = configs.find(twoGoods)?.goods;
+    const goods = configs.find(showsTotalWealth)?.goods;
     for (const p of this.plots) {
       p.figure.hidden = !this.shown(p.def);
-      p.caption.textContent = p.def.pair && goods ? `${p.def.title} · ${goods[0].name}/${goods[1].name}` : p.def.title;
+      const good = p.def.good;
+      const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
+      p.caption.textContent =
+        p.def.pair && goods
+          ? `${p.def.title} · ${goods[0].name}/${goods[1].name}`
+          : named
+            ? `${p.def.title} · ${named.name}`
+            : p.def.title;
     }
     for (const d of this.dist) d.stale = true;
   }
@@ -354,7 +411,7 @@ export class ChartsPanel {
     const figure = h('figure', { class: 'chart' }, caption);
     const groups = this.worlds.map((w) => groupOf(def, w.config));
     const counts = groups.map((g) => (def.kind === 'band' ? 3 : g.length));
-    const data = def.kind === 'time' || def.kind === 'band' ? this.merge(counts.map(emptyTable)) : this.distData(def.kind);
+    const data = def.kind === 'time' || def.kind === 'band' ? this.merge(counts.map(emptyTable)) : this.distData(def);
     const plot = new uPlot({ ...this.options(def), width: this.width(), height: HEIGHT }, data, figure);
     this.plots.push({ def, plot, figure, caption, groups, counts, drawn: this.worlds.map(() => undefined), drawnDist: '' });
     return figure;
@@ -363,13 +420,14 @@ export class ChartsPanel {
   private options(def: ChartDef): Omit<uPlot.Options, 'width' | 'height'> {
     const multi = this.worlds.length > 1;
     const series: uPlot.Series[] = [{ label: X_LABEL[def.kind] }];
-    if (def.kind === 'lorenz') series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
+    const lorenz = def.kind === 'lorenz' || def.kind === 'lorenzTotal';
+    if (lorenz) series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
     this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.config, multi ? `${LABELS[i]} · ` : '', i === 1)));
     const x: uPlot.Scale = { time: false };
-    if (def.kind === 'lorenz') x.range = [0, 1];
+    if (lorenz) x.range = [0, 1];
     if (def.kind === 'supplyDemand') x.distr = 3;
     const y: uPlot.Scale = {};
-    if (def.kind === 'lorenz') y.range = [0, 1];
+    if (lorenz) y.range = [0, 1];
     else if (def.range) y.range = def.range;
     const lines = def.kind === 'time' ? def.lines!(this.engine.config).length : 0;
     const legend = multi || def.kind === 'band' || def.kind === 'supplyDemand' || lines > 1;
@@ -391,11 +449,15 @@ export class ChartsPanel {
         ];
       }
       case 'lorenz':
+      case 'lorenzTotal':
         return [{ label: `${tag}Wealth share`, stroke: this.color('--c2'), width: 2, dash }];
+      case 'goodWealth':
+        return this.histSeries(`${tag}Agents`, c.goods[def.good!]?.color ?? '--c1', dash);
       case 'wealth':
-        return this.worlds.length > 1
-          ? [{ label: `${tag}Agents`, stroke: this.color('--c1'), width: 1.5, dash, paths: uPlot.paths.stepped!({ align: 1 }), points: { show: false } }]
-          : [{ label: 'Agents', fill: this.color('--c1'), stroke: this.color('--c1'), paths: uPlot.paths.bars!({ size: [0.9, 64] }), points: { show: false } }];
+      case 'age':
+        return this.histSeries(`${tag}Agents`, '--c1', dash);
+      case 'tags':
+        return this.histSeries(`${tag}% zeros`, '--c4', dash);
       case 'supplyDemand': {
         const fill = b ? this.color('--surface') : undefined;
         return [
@@ -408,17 +470,35 @@ export class ChartsPanel {
     }
   }
 
+  /** A histogram's series: bars for one world; in Compare a step outline per world (B dashed). */
+  private histSeries(label: string, color: string, dash: number[] | undefined): uPlot.Series[] {
+    const c = this.color(color);
+    return this.worlds.length > 1
+      ? [{ label, stroke: c, width: 1.5, dash, paths: uPlot.paths.stepped!({ align: 1 }), points: { show: false } }]
+      : [{ label, fill: c, stroke: c, paths: uPlot.paths.bars!({ size: [0.9, 64] }), points: { show: false } }];
+  }
+
   /** One table as is; several on the union of their x values (Decision 11). */
   private merge(tables: LineData[]): uPlot.AlignedData {
     return tables.length === 1 ? tables[0] : overlayData(tables);
   }
 
-  private distData(kind: Kind): uPlot.AlignedData {
-    switch (kind) {
+  private distData(def: ChartDef): uPlot.AlignedData {
+    const curve = (l: Float64Array | null) => (l ? Array.from(l) : XS.map(() => null));
+    const good = (d: Dist) => d.goodWealthHists?.[def.good!] ?? null;
+    switch (def.kind) {
       case 'lorenz':
-        return [XS, XS, ...this.dist.map((d) => (d.lorenz ? Array.from(d.lorenz) : XS.map(() => null)))] as uPlot.AlignedData;
+        return [XS, XS, ...this.dist.map((d) => curve(d.lorenz))] as uPlot.AlignedData;
+      case 'lorenzTotal':
+        return [XS, XS, ...this.dist.map((d) => curve(d.lorenzTotal))] as uPlot.AlignedData;
+      case 'goodWealth':
+        return this.worlds.length > 1 ? overlayData(this.dist.map((d) => histTable(good(d)))) : barsData(good(this.dist[0]));
       case 'wealth':
         return this.worlds.length > 1 ? overlayData(this.dist.map((d) => histTable(d.wealthHist))) : barsData(this.dist[0].wealthHist);
+      case 'age':
+        return this.worlds.length > 1 ? overlayData(this.dist.map((d) => histTable(d.ageHist))) : barsData(this.dist[0].ageHist);
+      case 'tags':
+        return this.worlds.length > 1 ? overlayData(this.dist.map((d) => positionSteps(d.tagHist))) : positionBars(this.dist[0].tagHist);
       default:
         return this.merge(this.dist.map((d) => supplyDemandTable(d.supplyDemand)));
     }
@@ -442,7 +522,7 @@ export class ChartsPanel {
     const version = this.dist.map((d) => d.version).join();
     if (version === p.drawnDist) return;
     p.drawnDist = version;
-    p.plot.setData(this.distData(p.def.kind));
+    p.plot.setData(this.distData(p.def));
   }
 
   private width(): number {
