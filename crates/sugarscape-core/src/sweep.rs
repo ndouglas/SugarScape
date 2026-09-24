@@ -19,6 +19,8 @@ pub const MAX_SERIES_VALUES: usize = 16;
 pub const MAX_SEEDS: u32 = 100;
 pub const MAX_TICKS: u32 = 100_000;
 pub const MAX_POINTS: usize = 10_000;
+/// At most this many blocks per `timeseries` run: ceil(ticks / every).
+pub const MAX_BLOCKS: u32 = 2_000;
 
 /// Where every run's config starts: a preset, or a config in either shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -110,7 +112,7 @@ pub struct Seeds {
 
 /// What each run is summarized by, over one statistics series.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Metric {
     /// The value at the last tick.
     Final { series: String },
@@ -256,6 +258,11 @@ impl Sweep {
                     (1..=self.ticks).contains(every),
                     "metric.every",
                     "must be 1 to ticks".into(),
+                );
+                check(
+                    *every == 0 || self.ticks.div_ceil(*every) <= MAX_BLOCKS,
+                    "metric.every",
+                    format!("at most {MAX_BLOCKS} blocks (ticks / every, rounded up)"),
                 );
                 check(
                     self.x.values.len() == 1,
@@ -663,7 +670,7 @@ pub fn aggregate(sweep: &Sweep, runs: &[RunResult]) -> Summary {
 
 /// Errors (field `runs[i]`) for runs that are not this sweep's: a point out
 /// of range, a series/x/seed that is not the point's, or the wrong kind or
-/// number of values for the metric.
+/// number of values for the metric, or a second run of a point.
 pub fn check_runs(sweep: &Sweep, runs: &[RunResult]) -> Result<(), Vec<FieldError>> {
     sweep.check_shape()?;
     let count = sweep.point_count();
@@ -671,7 +678,8 @@ pub fn check_runs(sweep: &Sweep, runs: &[RunResult]) -> Result<(), Vec<FieldErro
         Metric::Timeseries { every, .. } => Some(blocks(sweep.ticks, *every).len()),
         Metric::Final { .. } | Metric::WindowMean { .. } => None,
     };
-    let errors: Vec<FieldError> = runs
+    let mut seen = vec![false; count];
+    let mut errors: Vec<FieldError> = runs
         .iter()
         .enumerate()
         .filter(|(_, r)| {
@@ -693,6 +701,14 @@ pub fn check_runs(sweep: &Sweep, runs: &[RunResult]) -> Result<(), Vec<FieldErro
             )
         })
         .collect();
+    for (i, r) in runs.iter().enumerate() {
+        if r.point < count && std::mem::replace(&mut seen[r.point], true) {
+            errors.push(FieldError::new(
+                format!("runs[{i}]"),
+                format!("a second run of point {}", r.point),
+            ));
+        }
+    }
     if errors.is_empty() {
         Ok(())
     } else {
@@ -1052,6 +1068,15 @@ mod tests {
     }
 
     #[test]
+    fn unknown_metric_and_base_fields_are_parse_errors() {
+        let metric = json!({ "kind": "window_mean", "series": "population", "from": 5, "too": 6 });
+        let err = Sweep::from_json(&with(tiny(), "metric", metric).to_string()).unwrap_err();
+        assert!(err[0].message.contains("unknown field `too`"), "{err:?}");
+        let base = json!({ "preset": "ii-2-unit", "extra": 1 });
+        assert!(Sweep::from_json(&with(tiny(), "base", base).to_string()).is_err());
+    }
+
+    #[test]
     fn configs_apply_set_then_series_then_x() {
         let mut v = tiny();
         v["set"] = json!({ "population": 50, "vision.max": 3, "growback.rate": 2.0 });
@@ -1237,7 +1262,14 @@ mod tests {
             "x",
             json!({ "label": "all", "values": [{ "at": 0 }] }),
         );
-        assert_eq!(fields(single), Vec::<String>::new());
+        assert_eq!(fields(single.clone()), Vec::<String>::new());
+        // At most 2000 blocks: ceil(ticks / every).
+        let mut blocks_ok = with(single.clone(), "ticks", json!(4000));
+        blocks_ok["metric"]["every"] = json!(2);
+        assert_eq!(fields(blocks_ok), Vec::<String>::new());
+        let mut too_many = with(single, "ticks", json!(4001));
+        too_many["metric"]["every"] = json!(2);
+        has(too_many, "metric.every");
     }
 
     #[test]
@@ -1570,6 +1602,23 @@ mod tests {
         let t = tiny_timeseries();
         assert!(check_runs(&t, &[series_run(0, &t, vec![1.0, 2.0, 3.0])]).is_ok());
         assert!(check_runs(&t, &[series_run(0, &t, vec![1.0, 2.0])]).is_err());
+    }
+
+    #[test]
+    fn check_runs_rejects_duplicate_points() {
+        let s = sweep(tiny());
+        let e = check_runs(
+            &s,
+            &[
+                scalar_run(3, &s, 1.0),
+                scalar_run(0, &s, 1.0),
+                scalar_run(3, &s, 2.0),
+            ],
+        )
+        .unwrap_err();
+        assert_eq!(e.len(), 1, "{e:?}");
+        assert_eq!(e[0].field, "runs[2]");
+        assert!(e[0].message.contains("point 3"), "{e:?}");
     }
 
     #[test]

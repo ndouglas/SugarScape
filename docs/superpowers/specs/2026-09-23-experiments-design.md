@@ -41,6 +41,7 @@ Turn the playground into an instrument: parameter sweeps (a grid of config value
 - **Points:** every (series value, x value, seed) — series-major, then x, then seed; a point's index is its position in that order. With no `series`, there is one implicit series.
 - **Config for a point:** start from `base` (a preset's config or `Config::from_value(config)`), apply `set`, then the series value's `set`, then the x value's `set`, each via `Config::with_path` in key order, then `validate()`. Errors are reported with field `x[i].set.<path>` / `series[j].set.<path>` / `set.<path>` / `base`, plus validation errors prefixed with the point (`point 12 (x=3, series=1): <field>: <message>`).
 - **Limits:** 1–64 x values, 1–16 series values, `seeds.count` 1–100, `ticks` 1–100 000, at most 10 000 points.
+  `timeseries` metrics produce at most 2000 blocks.
 - **Metrics** (over one statistics series, which must be in `stats::series_names(config)` for every point's config):
   - `final` — the value at the last tick;
   - `window_mean { from, to? }` — mean over ticks `from..=to` (default: last tick); `from ≤ to ≤ ticks`;
