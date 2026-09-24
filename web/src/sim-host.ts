@@ -156,7 +156,8 @@ export class SimHost {
         const from = sim.tick();
         sim.step(cmd.n);
         this.fired(from, sim.tick());
-        return this.reply(sim, wants, frame);
+        // Only the running loop's own steps are bandwidth-throttled; an explicit ask always wins.
+        return this.reply(sim, wants, frame, undefined, true);
       }
       case 'refresh':
         return this.reply(sim, wants, frame);
@@ -206,12 +207,22 @@ export class SimHost {
     if (this.config?.schedule.some((c) => c.tick >= from && c.tick < to)) this.configDue = true;
   }
 
-  private reply(sim: SimLike, wants: Wants, frame?: ArrayBuffer, selected?: Selected | null): Result {
-    return { ok: true, snapshot: this.snapshot(sim, wants, frame, selected) };
+  /**
+   * `throttleCharts` bounds chart resends to at most 4/s (or 1 % of history) — but only for the
+   * running loop's own steps; every other command (a paused refresh among them) always wins.
+   */
+  private reply(sim: SimLike, wants: Wants, frame?: ArrayBuffer, selected?: Selected | null, throttleCharts = false): Result {
+    return { ok: true, snapshot: this.snapshot(sim, wants, frame, selected, throttleCharts) };
   }
 
   /** `selected` is an `inspect` command's answer; it replaces `wants.select`. */
-  private snapshot(sim: SimLike, wants: Wants, frame: ArrayBuffer | undefined, selected?: Selected | null): WorldSnapshot {
+  private snapshot(
+    sim: SimLike,
+    wants: Wants,
+    frame: ArrayBuffer | undefined,
+    selected?: Selected | null,
+    throttleCharts = false,
+  ): WorldSnapshot {
     const id = sim.followed();
     const s: WorldSnapshot = {
       width: sim.width(),
@@ -251,7 +262,7 @@ export class SimHost {
       s.networks = networks;
     }
     if (wants.charts) {
-      const charts = this.charts(sim, wants.charts.groups, wants.charts.max);
+      const charts = this.charts(sim, wants.charts.groups, wants.charts.max, throttleCharts);
       if (charts) s.charts = charts;
     }
     if (wants.lorenz) s.lorenz = sim.lorenz(101);
@@ -285,15 +296,20 @@ export class SimHost {
     return { x, y, agentId: q.agentId, alive: at !== undefined, view: JSON.parse(sim.inspect(x, y)) as Inspection };
   }
 
-  /** The groups with news (Decision 4); undefined when none has any. */
-  private charts(sim: SimLike, groups: string[][], max: number): Record<string, ChartGroup> | undefined {
+  /**
+   * The groups with news (Decision 4); undefined when none has any. `throttle` applies the 4/s,
+   * 1 % bandwidth cap (PF6): without it, only a group truly unchanged since the last send is skipped.
+   */
+  private charts(sim: SimLike, groups: string[][], max: number, throttle: boolean): Record<string, ChartGroup> | undefined {
     const length = sim.tick() + 1;
     const now = this.now();
     let out: Record<string, ChartGroup> | undefined;
     for (const names of groups) {
       const key = chartKey(names);
       const last = this.sent.get(key);
-      if (last && (length === last.length || (now - last.at < CHART_MS && length <= last.length * (1 + CHART_GROWTH)))) continue;
+      const unchanged = last && length === last.length;
+      const withinBudget = throttle && last && now - last.at < CHART_MS && length <= last.length * (1 + CHART_GROWTH);
+      if (unchanged || withinBudget) continue;
       const flat = optional(() => sim.series_group(JSON.stringify(names), max));
       if (!flat) continue;
       const n = flat[0];

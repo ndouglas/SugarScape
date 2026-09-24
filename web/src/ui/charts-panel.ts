@@ -6,7 +6,7 @@ import { groupSharesSignature } from '../groups';
 import { CHART_POINTS, chartKey, type Wants, type WorldSnapshot } from '../protocol';
 import { h } from './dom';
 import { compactNumber } from './format';
-import { bandData, lineData } from './series-data';
+import { bandData, ChartFreshness, lineData } from './series-data';
 
 interface Line { key: string; label: string; color: string }
 interface TimeChart { title: string; lines: Line[]; range?: [number, number] }
@@ -54,6 +54,8 @@ export class ChartsPanel {
   private distAt = -Infinity;
   private distTick = -1;
   private distStale = true;
+  /** Which chart groups the last snapshot brought up to date (Decision 4, PF6). */
+  private freshness = new ChartFreshness();
   private color!: (v: string) => string;
   private axes!: uPlot.Axis[];
   private addTimeChart!: (chart: TimeChart, container?: HTMLElement, visible?: () => boolean) => void;
@@ -73,6 +75,8 @@ export class ChartsPanel {
     engine.on('snapshot', () => this.receive());
     // Edits, resets and config changes move the distributions without a tick.
     for (const event of ['edit', 'reset', 'config'] as const) engine.on(event, () => (this.distStale = true));
+    // A reset or config change makes the host resend every group afresh; ask again too.
+    for (const event of ['reset', 'config'] as const) engine.on(event, () => this.freshness.reset());
     new ResizeObserver(() => this.resize()).observe(this.el);
   }
 
@@ -81,6 +85,7 @@ export class ChartsPanel {
     if (visible) {
       this.resize();
       this.distStale = true;
+      this.freshness.reset();
       void this.engine.refresh();
     }
   }
@@ -93,11 +98,15 @@ export class ChartsPanel {
     return this.engine.config.goods.length >= 2;
   }
 
-  /** The visible time charts' groups, and the distributions when due; nothing while the tab is hidden. */
+  /**
+   * The visible time charts' groups (only while some are unfilled or behind the tick, so a paused,
+   * caught-up panel asks for nothing — PF6), and the distributions when due; nothing while hidden.
+   */
   private wants(now: number): Wants {
     if (!this.visible) return {};
     const groups = this.plots.flatMap((p) => (p.group && p.visible() ? [p.group] : []));
-    const w: Wants = { charts: { groups, max: CHART_POINTS } };
+    const w: Wants = {};
+    if (this.freshness.behind(groups, this.engine.tick)) w.charts = { groups, max: CHART_POINTS };
     if ((this.distStale || this.engine.tick !== this.distTick) && now - this.distAt >= REFRESH_MS) {
       w.lorenz = true;
       w.wealthHist = true;
@@ -110,6 +119,13 @@ export class ChartsPanel {
   private receive(): void {
     const s = this.engine.last;
     if (!s) return;
+    this.freshness.receive(s.charts);
+    // Safe even though this clears distStale for whichever snapshot happens to carry lorenz, not
+    // necessarily the one requested right after the edit that set it: the host answers requests
+    // strictly in the order they were sent and computes lorenz fresh (no caching) from whatever
+    // world state exists at that moment, so no reply that arrives after an edit's own reply can
+    // carry pre-edit data — the edit is always applied to the host's world before anything sent
+    // after it is even processed.
     if (s.lorenz) {
       this.distTick = s.tick;
       this.distAt = performance.now();
@@ -128,6 +144,7 @@ export class ChartsPanel {
   }
 
   private rebuildGoodsCharts(): void {
+    this.freshness.reset();
     this.plots = this.plots.filter((p) => {
       if (!this.dynamic.has(p.plot)) return true;
       p.plot.destroy();
@@ -155,6 +172,7 @@ export class ChartsPanel {
   }
 
   private rebuildGroupChart(): void {
+    this.freshness.reset();
     this.plots = this.plots.filter((p) => {
       if (!this.groupPlots.has(p.plot)) return true;
       p.plot.destroy();

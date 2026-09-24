@@ -113,6 +113,20 @@ describe('SimHost', () => {
     expect(reset.charts?.[key]?.ticks).toEqual(Float64Array.of(0));
   });
 
+  it('only throttles the running loop\'s own steps: any other command sends a group as soon as it has grown at all (PF6)', () => {
+    let clock = 0;
+    const t = start(() => clock);
+    const charts = { groups: [['population']], max: 50 };
+    const key = 'population';
+    t.send({ type: 'step', n: 999 }, { wants: { charts } }); // history: 1000 ticks, sent now
+    clock = 10;
+    // A further step this soon, with this little growth, is throttled (same numbers as above).
+    expect(t.snap(t.send({ type: 'step', n: 1 }, { wants: { charts } })).charts?.[key]).toBeUndefined();
+    // But a refresh — not part of the step loop — is not: it sees the one extra tick and sends it,
+    // even though it is just as soon and just as small a change (the paused panel must not stall).
+    expect(t.snap(t.send({ type: 'refresh' }, { wants: { charts } })).charts?.[key]).toBeDefined();
+  });
+
   it('leaves out extras the world cannot give instead of failing the command', () => {
     const t = start();
     const s = t.snap(

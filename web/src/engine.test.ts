@@ -5,6 +5,7 @@ import type { Command, HostReply, Wants } from './protocol';
 import { SimHost } from './sim-host';
 import { InlineTransport } from './transport';
 import type { Config, Preset } from './types';
+import { ChartFreshness } from './ui/series-data';
 
 const config = { width: 4, height: 3 } as unknown as Config;
 const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', description: '', config }];
@@ -297,5 +298,35 @@ describe('Engine', () => {
     stop();
     await engine.refresh();
     expect(engine.last?.diseaseList).toBeUndefined();
+  });
+
+  it('a chart-group provider (PF6) asks again only once it is behind the tick; pump sends nothing while caught up', async () => {
+    const { engine, transport } = await setup();
+    const sent: string[] = [];
+    transport.after = (cmd) => sent.push(cmd.type);
+    const fresh = new ChartFreshness();
+    const groups = [['population']];
+    engine.want(() => (fresh.behind(groups, engine.tick) ? { charts: { groups, max: 2000 } } : {}));
+    engine.on('snapshot', () => fresh.receive(engine.last?.charts));
+
+    // Paused, never seen: the first pump asks, and the reply catches the group up.
+    const base = performance.now();
+    engine.pump(base);
+    await settle();
+    expect(sent).toEqual(['refresh']);
+    expect(fresh.behind(groups, engine.tick)).toBe(false);
+
+    // Caught up, still paused: later pumps ask nothing, even once the 250 ms gate would allow one.
+    engine.pump(base + 1000);
+    await settle();
+    expect(sent).toEqual(['refresh']); // no second request went out
+
+    // The tick moves without going through this provider's own request (e.g. another Step): behind again.
+    await engine.advance(1);
+    sent.length = 0;
+    engine.pump(base + 2000);
+    await settle();
+    expect(sent).toEqual(['refresh']); // exactly one refresh brings it current
+    expect(fresh.behind(groups, engine.tick)).toBe(false);
   });
 });
