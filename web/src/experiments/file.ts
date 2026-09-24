@@ -1,3 +1,4 @@
+import { parseErrors } from '../types';
 import type { Sweep, SweepResult } from './types';
 
 export type Opened = { kind: 'sweep'; sweep: Sweep } | { kind: 'result'; result: SweepResult } | { kind: 'error'; message: string };
@@ -14,6 +15,33 @@ export function classifyFile(json: unknown): Opened {
   }
   if ('base' in json && 'x' in json && 'metric' in json) return { kind: 'sweep', sweep: json as unknown as Sweep };
   return { kind: 'error', message: 'expected a sweep (with base, x and metric) or a sweep result' };
+}
+
+/** The core calls `readOpened` needs (the WASM functions of the same names; tests pass fakes). */
+export interface OpenCore {
+  /** The sweep in full form, or throws JSON field errors. */
+  parseSweep(spec: string): string;
+  /** The runs' summary, or throws JSON field errors when they are not the sweep's. */
+  aggregate(spec: string, runs: string): string;
+}
+
+/**
+ * What an opened file or link payload is, checked by the core before anything
+ * is shown: a sweep (in full form) or a result whose runs belong to its sweep.
+ */
+export function readOpened(json: unknown, core: OpenCore): Opened {
+  const opened = classifyFile(json);
+  if (opened.kind === 'error') return opened;
+  try {
+    const raw = opened.kind === 'sweep' ? opened.sweep : opened.result.sweep;
+    const spec = core.parseSweep(JSON.stringify(raw));
+    const sweep = JSON.parse(spec) as Sweep;
+    if (opened.kind === 'sweep') return { kind: 'sweep', sweep };
+    core.aggregate(spec, JSON.stringify(opened.result.runs));
+    return { kind: 'result', result: { ...opened.result, sweep } };
+  } catch (e) {
+    return { kind: 'error', message: parseErrors(e, 'file').map((f) => `${f.field}: ${f.message}`).join('; ') };
+  }
 }
 
 /** A file-name stem for a sweep. */

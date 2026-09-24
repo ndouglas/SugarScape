@@ -2,6 +2,7 @@ import {
   aggregate,
   builtin_sweeps,
   config_series_names,
+  parse_sweep,
   sweep_csv,
   sweep_points,
   sweep_result,
@@ -13,7 +14,7 @@ import { parseErrors, type Config, type FieldError } from '../types';
 import { h } from '../ui/dom';
 import { SweepChart } from './chart';
 import { chartData } from './chart-data';
-import { classifyFile, slug } from './file';
+import { readOpened, slug, type OpenCore } from './file';
 import { FixedPanel } from './fixed-panel';
 import { defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
 import { FormView } from './form-view';
@@ -39,6 +40,12 @@ export interface SweepEditor {
 /** Runs on screen and the sweep they belong to (with its JSON, as sent to WASM). */
 interface Shown { sweep: Sweep; spec: string; runs: RunResult[] }
 
+/** The sweep behind the picker's "Opened: …" entry, with the result file's runs when one was opened. */
+interface OpenedEntry { sweep: Sweep; result?: SweepResult; status?: string }
+
+/** The core checks for opened files and links. */
+const OPEN_CORE: OpenCore = { parseSweep: parse_sweep, aggregate };
+
 // PF5: reuses `baseLabel` (Task 10, labels.ts) instead of re-implementing its preset/custom-config wording.
 // `baseLabel` takes `Pick<Sweep, 'base'>`, so a base alone (no full sweep yet) needs no cast.
 const baseNote = (base: SweepBase): string => baseLabel({ base });
@@ -51,17 +58,21 @@ export class ExperimentsView {
   private readonly builtins = JSON.parse(builtin_sweeps()) as BuiltinSweep[];
   private readonly picker: HTMLSelectElement;
   private readonly fileInput: HTMLInputElement;
-  private readonly editorSlot = h('div', { class: 'sweep-editor' });
+  /** A fieldset so that disabling it (while running) disables every control in the editor. */
+  private readonly editorSlot = h('fieldset', { class: 'sweep-editor' });
   private editor: SweepEditor | null = null;
   private readonly runButton = h('button', { class: 'primary', onclick: () => void this.run() }, 'Run');
   private readonly cancelButton = h('button', { disabled: true, onclick: () => this.pool?.cancel() }, 'Cancel');
-  private readonly bar = h('progress', { max: 1, value: 0 });
+  private readonly openButton: HTMLButtonElement;
+  private readonly bar = h('progress', { max: 1, value: 0, 'aria-label': 'Sweep progress' });
   private readonly status = h('span', { class: 'hint', role: 'status' });
   private readonly chart = new SweepChart();
   private readonly table = h('div');
   private readonly outputs: HTMLButtonElement[];
+  private readonly outputsEl: HTMLElement;
   private pool: WorkerPool | null = null;
   private shown: Shown | null = null;
+  private opened: OpenedEntry | null = null;
 
   constructor(private readonly engine: Engine) {
     this.picker = h(
@@ -76,12 +87,18 @@ export class ExperimentsView {
       hidden: true,
       onchange: () => void this.openFile(),
     });
+    this.openButton = h(
+      'button',
+      { onclick: () => this.fileInput.click(), title: 'Open a sweep or a result file (JSON)' },
+      'Open file…',
+    );
     this.outputs = [
       h('button', { onclick: () => this.download('result') }, 'Result (JSON)'),
       h('button', { onclick: () => this.download('runs') }, 'Runs (CSV)'),
       h('button', { onclick: () => this.download('summary') }, 'Summary (CSV)'),
       h('button', { onclick: () => void this.downloadChart() }, 'Chart (PNG)'),
     ];
+    this.outputsEl = h('div', { class: 'sweep-outputs', hidden: true }, ...this.outputs);
     this.el = h(
       'div',
       { class: 'experiments-view' },
@@ -91,8 +108,8 @@ export class ExperimentsView {
         h(
           'div',
           { class: 'row' },
-          h('label', {}, 'Sweep ', this.picker),
-          h('button', { onclick: () => this.fileInput.click(), title: 'Open a sweep or a result file (JSON)' }, 'Open file…'),
+          h('label', { class: 'sweep-picker' }, 'Sweep ', this.picker),
+          this.openButton,
           this.fileInput,
         ),
         this.editorSlot,
@@ -103,20 +120,67 @@ export class ExperimentsView {
           h('button', { onclick: () => void this.share(), title: 'Copy a link that opens this sweep (not its results)' }, 'Share link'),
         ),
       ),
-      h('section', { class: 'sweep-results' }, this.chart.el, this.table, h('div', { class: 'sweep-outputs' }, ...this.outputs)),
+      h('section', { class: 'sweep-results' }, this.chart.el, this.table, this.outputsEl),
     );
     this.pick(this.picker.value);
     this.showResults();
   }
 
-  /** Opens a sweep from a link or a file for editing, without running it. */
+  /**
+   * Opens a sweep from a link for editing, without running it. The core checks
+   * it first; an invalid sweep throws and leaves the view unchanged.
+   */
   openSweep(sweep: Sweep): void {
-    this.markOpened(sweep.name);
-    const form = sweepToForm(sweep);
-    this.setEditor(form ? this.formView(form, sweep.base, baseNote(sweep.base)) : new FixedPanel(sweep, () => this.validate()));
+    const opened = readOpened(sweep, OPEN_CORE);
+    if (opened.kind === 'error') throw new Error(opened.message);
+    if (opened.kind !== 'sweep') throw new Error('expected a sweep');
+    this.showOpened({ sweep: opened.sweep });
   }
 
+  /**
+   * Makes `entry` the picker's "Opened: …" entry and shows it. If showing it
+   * fails, the previous entry, editor and results are put back and the error rethrown.
+   */
+  private showOpened(entry: OpenedEntry): void {
+    const before = {
+      opened: this.opened,
+      option: this.picker.querySelector('option[value="opened"]'),
+      value: this.picker.value,
+      editor: this.editor,
+      shown: this.shown,
+    };
+    try {
+      this.opened = entry;
+      this.markOpened(entry.sweep.name);
+      this.pick('opened');
+    } catch (e) {
+      this.opened = before.opened;
+      this.picker.querySelector('option[value="opened"]')?.remove();
+      if (before.option) this.picker.prepend(before.option);
+      this.picker.value = before.value;
+      this.shown = before.shown;
+      if (before.editor) this.setEditor(before.editor);
+      else this.editorSlot.replaceChildren();
+      this.showResults();
+      throw e;
+    }
+  }
+
+  /** Shows the chosen sweep in the editor; results on screen are cleared (an opened result file's are restored). */
   private pick(choice: string): void {
+    this.shown = null;
+    if (choice === 'opened') {
+      const entry = this.opened;
+      if (!entry) return;
+      const { sweep, result } = entry;
+      if (result) this.shown = { sweep: result.sweep, spec: JSON.stringify(result.sweep), runs: result.runs };
+      const form = result ? null : sweepToForm(sweep);
+      this.setEditor(form ? this.formView(form, sweep.base, baseNote(sweep.base)) : new FixedPanel(sweep, () => this.validate()));
+      this.showResults();
+      if (entry.status) this.status.textContent = entry.status;
+      return;
+    }
+    this.showResults();
     if (choice === 'current') {
       const base = this.currentBase();
       const painted = 'config' in base && this.engine.editedLandscapes() !== undefined;
@@ -128,7 +192,7 @@ export class ExperimentsView {
     if (builtin) this.setEditor(new FixedPanel(builtin.sweep, () => this.validate()));
   }
 
-  /** Adds (or replaces) the picker entry for an opened link or file, and selects it. */
+  /** Adds (or replaces) the picker entry for an opened link or file, and selects it (without `pick`). */
   private markOpened(name: string): void {
     this.picker.querySelector('option[value="opened"]')?.remove();
     this.picker.prepend(h('option', { value: 'opened' }, `Opened: ${name}`));
@@ -226,6 +290,8 @@ export class ExperimentsView {
     this.runButton.disabled = on;
     this.cancelButton.disabled = !on;
     this.picker.disabled = on;
+    this.editorSlot.disabled = on;
+    this.openButton.disabled = on;
   }
 
   /** Re-aggregates the runs on screen with the core and redraws them; exports need at least one run. */
@@ -233,6 +299,7 @@ export class ExperimentsView {
     const shown = this.shown;
     const empty = !shown || shown.runs.length === 0;
     for (const b of this.outputs) b.disabled = empty;
+    this.outputsEl.hidden = empty;
     if (!shown || empty) {
       this.chart.clear();
       this.table.replaceChildren();
@@ -243,35 +310,37 @@ export class ExperimentsView {
     this.table.replaceChildren(resultsTable(summary));
   }
 
+  /**
+   * Opens a sweep or a result file. The core checks it (a result's runs
+   * included) before anything changes; on any error the view is left as it
+   * was and the error is shown. A result's summary is recomputed from its runs (Decision 20).
+   */
   private async openFile(): Promise<void> {
     const file = this.fileInput.files?.[0];
     this.fileInput.value = '';
     if (!file || this.pool) return;
-    let json: unknown;
     try {
-      json = JSON.parse(await file.text());
-    } catch {
-      this.status.textContent = `${file.name} is not JSON`;
-      return;
-    }
-    const opened = classifyFile(json);
-    if (opened.kind === 'error') this.status.textContent = `${file.name}: ${opened.message}`;
-    else if (opened.kind === 'sweep') this.openSweep(opened.sweep);
-    else this.openResult(opened.result, file.name);
-  }
-
-  /** Shows a result file's runs without running them; the summary is recomputed from the runs (Decision 20). */
-  private openResult(result: SweepResult, file: string): void {
-    this.markOpened(result.sweep.name);
-    this.setEditor(new FixedPanel(result.sweep, () => this.validate()));
-    this.shown = { sweep: result.sweep, spec: JSON.stringify(result.sweep), runs: result.runs };
-    try {
-      this.showResults();
-      this.status.textContent = `${file}: ${result.runs.length} runs${result.incomplete ? ' (incomplete)' : ''}`;
+      let json: unknown;
+      try {
+        json = JSON.parse(await file.text());
+      } catch {
+        this.status.textContent = `${file.name} is not JSON`;
+        return;
+      }
+      const opened = readOpened(json, OPEN_CORE);
+      if (opened.kind === 'error') {
+        this.status.textContent = `${file.name}: ${opened.message}`;
+        return;
+      }
+      if (opened.kind === 'sweep') {
+        this.showOpened({ sweep: opened.sweep });
+        return;
+      }
+      const { result } = opened;
+      const status = `${file.name}: ${result.runs.length} runs${result.incomplete ? ' (incomplete)' : ''}`;
+      this.showOpened({ sweep: result.sweep, result, status });
     } catch (e) {
-      this.shown = null;
-      this.showResults();
-      this.status.textContent = `${file}: ${messages(parseErrors(e))}`;
+      this.status.textContent = `${file.name} could not be opened: ${messages(parseErrors(e, 'file'))}`;
     }
   }
 
