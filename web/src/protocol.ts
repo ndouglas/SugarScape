@@ -1,0 +1,133 @@
+// Messages between the engine (page) and the SimHost (simulation worker, or the page as a fallback).
+import type { CreditGraph } from './credit';
+import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Snapshot } from './types';
+
+export type Overlay = 'trade' | 'credit' | 'disease';
+export const OVERLAYS: Overlay[] = ['trade', 'credit', 'disease'];
+
+export interface PlaceOverrides { sex?: 'female' | 'male'; tribe?: 'blue' | 'red' }
+
+/** How the host renders frames and which network overlays are drawn. */
+export interface DisplayState { colorMode: ColorMode; layer: Layer; overlays: Record<Overlay, boolean> }
+
+/** The selection to report on: a site, or an agent (tracked while it lives; x, y are its last known site). */
+export interface SelectQuery { x: number; y: number; agentId: number | null }
+
+/** The selected site as the host last saw it; `alive` is false once a selected agent has died (or none was selected). */
+export interface Selected { x: number; y: number; agentId: number | null; alive: boolean; view: Inspection }
+
+/** Several series downsampled onto one tick axis: `columns[k][i]` is series k at `ticks[i]` (NaN = no value). */
+export interface ChartGroup { ticks: Float64Array; columns: Float64Array[] }
+
+/** Points per line in a chart group. */
+export const CHART_POINTS = 2000;
+
+/** What a snapshot should carry besides the always-present fields (Decision 2). */
+export interface Wants {
+  select?: SelectQuery;
+  trail?: boolean;
+  networks?: Overlay[];
+  charts?: { groups: string[][]; max: number };
+  lorenz?: boolean;
+  wealthHist?: boolean;
+  supplyDemand?: boolean;
+  creditGraph?: boolean;
+  diseaseList?: boolean;
+}
+
+export interface WorldSnapshot {
+  /** RGBA pixels, when the request lent a buffer (transferred back). */
+  frame?: ArrayBuffer;
+  width: number;
+  height: number;
+  tick: number;
+  population: number;
+  latest: Snapshot;
+  /** The followed agent's id (alive or not), or null. */
+  followed: number | null;
+  followedAlive: boolean;
+  /** The normalized live config: after init, reset, setConfig and a scheduled change. */
+  config?: Config;
+  /** Each good's map where it differs from the generated one: after init, reset, setConfig, paint and import. */
+  editedLandscapes?: (Uint8Array | null)[];
+  /** The display, when the host had to clamp it to the config. */
+  display?: DisplayState;
+  /** The selection (from `wants.select` or an `inspect` command); null when an inspect by id found no agent. */
+  inspection?: Selected | null;
+  trail?: Uint32Array;
+  networks?: Partial<Record<Overlay, Uint32Array>>;
+  /** Chart groups, by `chartKey`, that have news since they were last sent. */
+  charts?: Record<string, ChartGroup>;
+  lorenz?: Float64Array;
+  wealthHist?: Float64Array;
+  supplyDemand?: Float64Array;
+  creditGraph?: CreditGraph;
+  diseaseList?: DiseaseEntry[];
+}
+
+export type Command =
+  | { type: 'ready' }
+  | { type: 'init'; config: Config; seed: number; landscapes: (Uint8Array | null)[]; display: DisplayState }
+  | { type: 'reset'; config: Config; seed: number; landscapes: (Uint8Array | null)[] }
+  | { type: 'setConfig'; config: Config }
+  | { type: 'step'; n: number }
+  | { type: 'refresh' }
+  | { type: 'setDisplay'; display: DisplayState }
+  | { type: 'paint'; x: number; y: number; radius: number; value: number; good: number }
+  | { type: 'importLandscape'; good: number; capacities: Uint8Array }
+  | { type: 'place'; x: number; y: number; overrides: PlaceOverrides }
+  | { type: 'erase'; x: number; y: number }
+  | { type: 'infect'; x: number; y: number; disease: number }
+  | { type: 'vaccinate'; x: number; y: number; radius: number; disease: number }
+  | { type: 'follow'; id: number | null }
+  | { type: 'inspect'; target: { x: number; y: number } | { agentId: number } }
+  | { type: 'seriesCsv' }
+  | { type: 'agentsCsv' }
+  | { type: 'fingerprint' };
+
+export interface HostRequest { id: number; cmd: Command; wants?: Wants; frame?: ArrayBuffer }
+
+export type Result =
+  | { ok: true; snapshot?: WorldSnapshot; value?: string }
+  | { ok: false; errors: FieldError[] }
+  | { ok: false; fatal: string };
+
+export interface HostReply { id: number; result: Result; spare?: ArrayBuffer[] }
+
+/** A reply, or something the host sends on its own: a Max-speed snapshot, or news that it died. */
+export type HostMessage = HostReply | { id: null; post: WorldSnapshot } | { id: null; fatal: string };
+
+export function chartKey(names: string[]): string {
+  return names.join('|');
+}
+
+const FLAGS = ['trail', 'lorenz', 'wealthHist', 'supplyDemand', 'creditGraph', 'diseaseList'] as const;
+
+/** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */
+export function mergeWants(parts: Wants[]): Wants {
+  const out: Wants = {};
+  const networks = new Set<Overlay>();
+  const groups = new Map<string, string[]>();
+  let max = 0;
+  for (const w of parts) {
+    if (w.select && !out.select) out.select = w.select;
+    for (const flag of FLAGS) if (w[flag]) out[flag] = true;
+    w.networks?.forEach((k) => networks.add(k));
+    if (w.charts) {
+      max = Math.max(max, w.charts.max);
+      for (const g of w.charts.groups) groups.set(chartKey(g), g);
+    }
+  }
+  if (networks.size > 0) out.networks = OVERLAYS.filter((k) => networks.has(k));
+  if (groups.size > 0) out.charts = { groups: [...groups.values()], max };
+  return out;
+}
+
+/** The buffers a message carries, to transfer rather than copy. */
+export function transfers(m: HostRequest | HostMessage): ArrayBuffer[] {
+  if ('cmd' in m) return m.frame ? [m.frame] : [];
+  if (m.id === null) return 'post' in m && m.post.frame ? [m.post.frame] : [];
+  const out = [...(m.spare ?? [])];
+  if (m.result.ok && m.result.snapshot?.frame) out.push(m.result.snapshot.frame);
+  return out;
+}
