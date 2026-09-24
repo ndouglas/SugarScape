@@ -11,13 +11,15 @@ const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', desc
 /** Lets queued microtasks and zero-delay timers run. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-/** An inline transport that runs `after(cmd)` right after each request is sent. */
+/** An inline transport that runs `after(cmd)` right after each request is sent, and can rewrite replies. */
 class HookedTransport extends InlineTransport {
   after: ((cmd: Command) => void) | null = null;
-  override request(cmd: Command, extra?: { wants?: Wants; frame?: ArrayBuffer }): Promise<HostReply> {
-    const reply = super.request(cmd, extra);
+  rewrite: ((cmd: Command, reply: HostReply) => HostReply) | null = null;
+  override async request(cmd: Command, extra?: { wants?: Wants; frame?: ArrayBuffer }): Promise<HostReply> {
+    const pending = super.request(cmd, extra);
     this.after?.(cmd);
-    return reply;
+    const reply = await pending;
+    return this.rewrite ? this.rewrite(cmd, reply) : reply;
   }
 }
 
@@ -155,6 +157,77 @@ describe('Engine', () => {
     await engine.refresh();
     expect(engine.last?.charts).toBeUndefined();
     expect(engine.chartGroup(['population'])).toBe(group);
+  });
+
+  it('builds each queued config write on the one before it', async () => {
+    const { engine } = await setup();
+    const first = engine.applyConfig((c) => void (c.population = 20));
+    const second = engine.applyConfig((c) => void (c.population += 1));
+    expect(await first).toBeNull();
+    expect(await second).toBeNull();
+    expect(engine.config.population).toBe(21);
+    expect(engine.baseConfig.population).toBe(21);
+  });
+
+  it('builds a reset-requiring change on a config write still in flight', async () => {
+    const { engine, module } = await setup();
+    const live = engine.applyConfig((c) => void (c.population = 20));
+    const rebuilt = engine.resetWith((c) => void (c.height = 5));
+    expect(await live).toBeNull();
+    expect(await rebuilt).toBeNull();
+    expect(module.sims).toHaveLength(2);
+    expect(engine.baseConfig.population).toBe(20);
+    expect(engine.baseConfig.height).toBe(5);
+    expect(engine.size()).toEqual({ width: 4, height: 5 });
+  });
+
+  it('sends a write issued during a Step only after its reply', async () => {
+    const { engine, transport } = await setup();
+    const sentAt: number[] = [];
+    transport.after = (cmd) => {
+      if (cmd.type === 'setConfig') sentAt.push(engine.tick);
+    };
+    const step = engine.advance(1);
+    const write = engine.applyConfig((c) => void (c.population = 20));
+    await step;
+    expect(await write).toBeNull();
+    expect(sentAt).toEqual([1]);
+  });
+
+  it('keeps the selection and still takes the snapshot when a selected agent is gone', async () => {
+    const { engine } = await setup();
+    await engine.select(1, 1);
+    await engine.place(0, 2, {});
+    const seen: EngineEvent[] = [];
+    for (const event of ['select', 'snapshot'] as const) engine.on(event, () => seen.push(event));
+    await engine.selectAgent(99);
+    expect(seen).toEqual(['snapshot']);
+    expect(engine.selection).toEqual({ x: 1, y: 1, agentId: 1 });
+    await engine.selectAgent(2);
+    expect(seen).toEqual(['snapshot', 'select', 'snapshot']);
+    expect(engine.selection).toEqual({ x: 0, y: 2, agentId: 2 });
+  });
+
+  it('keeps a selection made while a reset is outstanding', async () => {
+    const { engine, transport } = await setup();
+    await engine.select(1, 1);
+    let click: Promise<void> | null = null;
+    transport.after = (cmd) => {
+      if (cmd.type === 'reset') click = engine.select(0, 2);
+    };
+    expect(await engine.reset()).toBeNull();
+    transport.after = null;
+    await click;
+    expect(click).not.toBeNull();
+    expect(engine.selection).toEqual({ x: 0, y: 2, agentId: null });
+  });
+
+  it('fails a config write or reset whose reply has no snapshot', async () => {
+    const { engine, transport } = await setup();
+    transport.rewrite = (cmd, reply) => (cmd.type === 'setConfig' || cmd.type === 'reset' ? { ...reply, result: { ok: true } } : reply);
+    const missing = [{ field: 'simulation', message: 'the simulation sent no snapshot' }];
+    expect(await engine.applyConfig((c) => void (c.population = 20))).toEqual(missing);
+    expect(await engine.reset()).toEqual(missing);
   });
 
   it('stops for good after a panic', async () => {

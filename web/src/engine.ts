@@ -52,6 +52,12 @@ function failure(result: Result): FieldError[] | null {
   return 'errors' in result ? result.errors : [{ field: 'simulation', message: result.fatal }];
 }
 
+/** A write that must change the world failed, or (a host bug) succeeded without a snapshot. */
+function writeFailure(result: Result): FieldError[] | null {
+  if (result.ok && !result.snapshot) return [{ field: 'simulation', message: 'the simulation sent no snapshot' }];
+  return failure(result);
+}
+
 /** The page keeps its own WASM instance for presets and Experiments (Decision 10); for now the host runs on it too. */
 async function defaultDeps(): Promise<EngineDeps> {
   const wasm = await init();
@@ -108,6 +114,8 @@ export class Engine {
   private selectionGen = 0;
   /** The selection generation each received snapshot's request was sent under. */
   private sentUnder = new WeakMap<WorldSnapshot, number>();
+  /** The generation of the request whose reply last set `selection`. */
+  private selectedUnder = -1;
   /** Each good's map where it differs from the generated one (share links; kept across resets). */
   private landscapes: (Uint8Array | null)[] = [];
   /** The frame on screen, and buffers free to lend to the host (Decision 6). */
@@ -119,6 +127,13 @@ export class Engine {
   private inFlight: Promise<void> | null = null;
   /** Writes that need a quiet world hold the frame loop while they run (Decision 8). */
   private holds = 0;
+  /**
+   * The quiet writes (and Steps), one after another: each starts only once the one before has
+   * settled, so it is built from the state that write left (two quick edits both take effect).
+   */
+  private writes: Promise<unknown> = Promise.resolve();
+  /** Resets sent and not yet answered: requests sent meanwhile carry no selection (PF7). */
+  private resetting = 0;
   private lastRefresh = -Infinity;
 
   private constructor(
@@ -195,8 +210,24 @@ export class Engine {
    * Rebuilds the world, keeping each good's painted/shared map unless the grid size, the number
    * of goods or that good's map changes. On error the current world is kept and errors returned.
    */
-  reset(config: Config = this.baseConfig, seed: number = this.seed): Promise<FieldError[] | null> {
-    return this.quiet(() => this.rebuild(config, seed, this.keptLandscapes(config)));
+  reset(config?: Config, seed?: number): Promise<FieldError[] | null> {
+    // The defaults are read when the reset runs, after any write queued before it.
+    return this.quiet(() => {
+      const next = config ?? this.baseConfig;
+      return this.rebuild(next, seed ?? this.seed, this.keptLandscapes(next));
+    });
+  }
+
+  /**
+   * A reset to the base config as changed by `mutate` (a reset-requiring rule edit), built when it
+   * runs so that an earlier change still in flight is kept.
+   */
+  resetWith(mutate: (c: Config) => void, seed?: number): Promise<FieldError[] | null> {
+    return this.quiet(() => {
+      const next = structuredClone(this.baseConfig);
+      mutate(next);
+      return this.rebuild(next, seed ?? this.seed, this.keptLandscapes(next));
+    });
   }
 
   /**
@@ -209,7 +240,7 @@ export class Engine {
       const next = structuredClone(this.config);
       mutate(next);
       const result = await this.send({ type: 'setConfig', config: next }, true);
-      if (!result.ok || !result.snapshot) return failure(result);
+      if (!result.ok || !result.snapshot) return writeFailure(result);
       const base = structuredClone(this.baseConfig);
       mutate(base);
       this.baseConfig = base;
@@ -236,8 +267,9 @@ export class Engine {
     this.emit('run');
   }
 
+  /** Steps `n` ticks, after the frame loop's step and any queued write (and before later writes). */
   advance(n: number = this.stepsPerFrame): Promise<void> {
-    return this.stepNow(n);
+    return this.quiet(() => this.stepNow(n));
   }
 
   setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<Record<Overlay, boolean>> }): void {
@@ -366,7 +398,8 @@ export class Engine {
   /** The engine's own wants (Decision 9) merged with every provider's. */
   private wants(now: number): Wants {
     const own: Wants = {};
-    if (this.selection) own.select = { ...this.selection };
+    // While a reset is outstanding the selection belongs to the old world.
+    if (this.selection && this.resetting === 0) own.select = { ...this.selection };
     if (this.followedId !== null) own.trail = true;
     const networks = OVERLAYS.filter((k) => this.overlays[k]);
     if (networks.length > 0) own.networks = networks;
@@ -426,8 +459,9 @@ export class Engine {
       this.overlays = { ...s.display.overlays };
     }
     // Checked here, not when the reply arrives: a reset's reply may be adopted in between (PF7).
-    const current = this.sentUnder.get(s) === this.selectionGen;
-    if (s.inspection && current) {
+    const gen = this.sentUnder.get(s);
+    if (s.inspection && gen === this.selectionGen) {
+      this.selectedUnder = gen;
       this.inspection = s.inspection;
       this.selection = { x: s.inspection.x, y: s.inspection.y, agentId: s.inspection.agentId };
     }
@@ -457,12 +491,19 @@ export class Engine {
     this.accept(result.snapshot, events);
   }
 
-  /** Runs `fn` once the frame loop's step has settled, holding the loop until `fn` finishes (Decision 8). */
+  /**
+   * Runs `fn` after the writes queued before it and the frame loop's step have settled, holding
+   * the loop until `fn` finishes (Decision 8).
+   */
   private async quiet<T>(fn: () => Promise<T>): Promise<T> {
     this.holds++;
+    const run = this.writes.then(async () => {
+      while (this.inFlight) await this.inFlight;
+      return fn();
+    });
+    this.writes = run.catch(() => undefined);
     try {
-      await this.inFlight;
-      return await fn();
+      return await run;
     } finally {
       this.holds--;
     }
@@ -485,12 +526,23 @@ export class Engine {
     landscapes: (Uint8Array | null)[],
     presetId?: string,
   ): Promise<FieldError[] | null> {
-    const result = await this.send({ type: 'reset', config, seed, landscapes }, true);
-    if (!result.ok || !result.snapshot) return failure(result);
+    // Replies to requests sent before this carry the old world's selection; a selection made
+    // after it (a click while it is outstanding) is kept (PF7).
+    const gen = ++this.selectionGen;
+    this.resetting++;
+    let result: Result;
+    try {
+      result = await this.send({ type: 'reset', config, seed, landscapes }, true);
+    } finally {
+      this.resetting--;
+    }
+    if (!result.ok || !result.snapshot) return writeFailure(result);
     this.seed = seed;
-    this.selectionGen++;
-    this.selection = null;
-    this.inspection = null;
+    // Unless a selection made after the reset was sent has already arrived.
+    if (this.selectedUnder < gen) {
+      this.selection = null;
+      this.inspection = null;
+    }
     this.adopt(result.snapshot);
     this.baseConfig = structuredClone(this.config);
     this.presetId = presetId ?? this.matchPreset();
@@ -510,7 +562,8 @@ export class Engine {
     // Replies to requests already sent carry the old selection.
     this.selectionGen++;
     const result = await this.send({ type: 'inspect', target });
-    if (result.ok && result.snapshot?.inspection) this.accept(result.snapshot, ['select']);
+    // An agent that has died gives no inspection: the selection stays, the snapshot is still news.
+    if (result.ok && result.snapshot) this.accept(result.snapshot, result.snapshot.inspection ? ['select'] : []);
   }
 
   private async follow(id: number | null): Promise<void> {

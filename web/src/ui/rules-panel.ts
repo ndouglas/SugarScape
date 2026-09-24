@@ -37,12 +37,13 @@ export class RulesPanel {
     this.sync();
   }
 
-  /** Reset-required changes rebuild from the base setup; others edit the running world. */
+  /**
+   * Reset-required changes rebuild from the base setup; others edit the running world. The engine
+   * applies `mutate` when the write runs, so a quick second edit builds on the first.
+   */
   private async commit(mutate: (c: Config) => void, reset: boolean): Promise<void> {
     if (reset) {
-      const next = structuredClone(this.engine.baseConfig);
-      mutate(next);
-      this.errors = (await this.engine.reset(next)) ?? [];
+      this.errors = (await this.engine.resetWith(mutate)) ?? [];
     } else {
       this.errors = (await this.engine.applyConfig(mutate)) ?? [];
     }

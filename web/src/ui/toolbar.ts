@@ -12,10 +12,10 @@ export function buildToolbar(engine: Engine): HTMLElement {
     ...SPEEDS.map((s) => h('option', { value: String(s) }, `${s}×`)),
   );
   const seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
-  const reset = h('button', { onclick: () => void engine.reset(engine.baseConfig, Number(seed.value) >>> 0) }, 'Reset');
+  const reset = h('button', { onclick: () => void engine.reset(undefined, Number(seed.value) >>> 0) }, 'Reset');
   const dice = h(
     'button',
-    { title: 'Random seed and reset', onclick: () => void engine.reset(engine.baseConfig, randomSeed()) },
+    { title: 'Random seed and reset', onclick: () => void engine.reset(undefined, randomSeed()) },
     '🎲',
   );
   const readout = h('span', { class: 'readout' });
