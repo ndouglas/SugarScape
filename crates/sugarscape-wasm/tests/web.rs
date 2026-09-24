@@ -302,3 +302,26 @@ fn set_landscape_replaces_a_goods_capacities() {
     assert!(sim.set_landscape(0, &[11; 2500]).is_err());
     assert!(sim.set_landscape(1, &caps).is_err());
 }
+
+#[wasm_bindgen_test]
+fn following_an_agent_records_its_trail() {
+    let mut sim = Sim::new("{}", 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.followed(), -1.0);
+    assert!(sim.trail().is_empty());
+    let config = sim.export_config();
+    sim.follow(1.0);
+    assert_eq!(sim.followed(), 1.0);
+    assert_eq!(sim.trail(), sim.locate(1.0).unwrap());
+    for _ in 0..3 {
+        sim.step(1);
+        if let Some(at) = sim.locate(1.0) {
+            let trail = sim.trail();
+            assert_eq!(&trail[trail.len() - 2..], &at[..], "newest last");
+        }
+    }
+    assert!(sim.trail().len() >= 2 && sim.trail().len().is_multiple_of(2));
+    assert_eq!(sim.export_config(), config, "trails are not config");
+    sim.unfollow();
+    assert_eq!(sim.followed(), -1.0);
+    assert!(sim.trail().is_empty());
+}

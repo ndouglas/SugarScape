@@ -49,6 +49,9 @@ pub struct Infection {
 
 pub type LoanId = u64;
 
+/// Most positions a trail keeps; the oldest are dropped first.
+pub const TRAIL_LEN: usize = 500;
+
 /// A loan of good `good` under rule L: `due` of it owed at `due_tick`, written for
 /// `duration` ticks at `rate` percent per tick (the terms travel with it).
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
@@ -92,6 +95,11 @@ pub struct World {
     pub stats: Stats,
     loans: BTreeMap<LoanId, Loan>,
     next_loan_id: LoanId,
+    /// The agent whose trail is recorded (observation only: never hashed,
+    /// exported or put in configs).
+    followed: Option<AgentId>,
+    /// Its positions after each tick, oldest first.
+    trail: Vec<Pos>,
 }
 
 impl World {
@@ -165,6 +173,8 @@ impl World {
             loans: BTreeMap::new(),
             next_loan_id: 1,
             config,
+            followed: None,
+            trail: Vec::new(),
         };
         if world.config.disease.enabled {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
@@ -559,12 +569,46 @@ impl World {
         self.tick += 1;
         let snapshot = Snapshot::of(self);
         self.stats.push(snapshot);
+        self.record_trail();
     }
 
     pub fn run(&mut self, ticks: u32) {
         for _ in 0..ticks {
             self.step();
         }
+    }
+
+    /// Follows agent `id` from now on (a fresh trail that records its current
+    /// position at once, then its position at the end of every tick), or
+    /// stops following with `None` (the trail is cleared). A followed agent
+    /// that dies leaves its trail as it was.
+    pub fn follow(&mut self, id: Option<AgentId>) {
+        self.followed = id;
+        self.trail.clear();
+        self.record_trail();
+    }
+
+    pub fn followed(&self) -> Option<AgentId> {
+        self.followed
+    }
+
+    /// The followed agent's positions, oldest first (at most `TRAIL_LEN`).
+    pub fn trail(&self) -> &[Pos] {
+        &self.trail
+    }
+
+    fn record_trail(&mut self) {
+        let Some(pos) = self
+            .followed
+            .and_then(|id| self.agents.get(&id))
+            .map(|a| a.pos)
+        else {
+            return;
+        };
+        if self.trail.len() == TRAIL_LEN {
+            self.trail.remove(0);
+        }
+        self.trail.push(pos);
     }
 
     /// Applies scheduled changes due at the tick about to run. Entries not yet
@@ -851,5 +895,44 @@ mod tests {
         let before = w.fingerprint();
         w.sites[0].pollution[1] += 1.0;
         assert_ne!(w.fingerprint(), before, "pollutant 1 is hashed");
+    }
+
+    #[test]
+    fn a_followed_agent_leaves_a_capped_trail_that_is_not_hashed() {
+        let mut w = crate::testkit::blank_world(10, 10);
+        let id = crate::testkit::spawn(&mut w, 2, 3);
+        let mut twin = crate::testkit::blank_world(10, 10);
+        crate::testkit::spawn(&mut twin, 2, 3);
+        assert_eq!((w.followed(), w.trail().len()), (None, 0));
+        w.follow(Some(id));
+        assert_eq!(w.followed(), Some(id));
+        assert_eq!(w.trail(), &[Pos::new(2, 3)], "the current position at once");
+        w.run(3);
+        twin.run(3);
+        assert_eq!(w.trail().len(), 4);
+        assert_eq!(*w.trail().last().unwrap(), w.agent(id).unwrap().pos);
+        assert_eq!(
+            w.fingerprint(),
+            twin.fingerprint(),
+            "trails are not simulation state"
+        );
+        w.run(TRAIL_LEN as u32);
+        assert_eq!(
+            w.trail().len(),
+            TRAIL_LEN,
+            "the oldest positions are dropped"
+        );
+        assert_eq!(*w.trail().last().unwrap(), w.agent(id).unwrap().pos);
+        // Death: the trail stops growing and stays until `follow` is called.
+        let before = w.trail().to_vec();
+        let pos = w.agent(id).unwrap().pos;
+        w.remove_agent(pos.x, pos.y).unwrap();
+        w.run(2);
+        assert_eq!(w.trail(), &before[..]);
+        assert_eq!(w.followed(), Some(id));
+        w.follow(None);
+        assert_eq!((w.followed(), w.trail().len()), (None, 0));
+        w.follow(Some(999));
+        assert!(w.trail().is_empty(), "nobody alive to record");
     }
 }

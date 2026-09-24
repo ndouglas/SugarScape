@@ -255,6 +255,25 @@ impl Sim {
         self.world.locate(id as u64).map(|p| vec![p.x, p.y])
     }
 
+    /// Records agent `id`'s trail from now on (`World::follow`).
+    pub fn follow(&mut self, id: f64) {
+        self.world.follow(Some(id as u64));
+    }
+
+    pub fn unfollow(&mut self) {
+        self.world.follow(None);
+    }
+
+    /// The followed agent's trail as `[x0, y0, x1, y1, …]`, oldest first.
+    pub fn trail(&self) -> Vec<u32> {
+        self.world.trail().iter().flat_map(|p| [p.x, p.y]).collect()
+    }
+
+    /// The followed agent's id, or −1 when none is followed.
+    pub fn followed(&self) -> f64 {
+        self.world.followed().map_or(-1.0, |id| id as f64)
+    }
+
     pub fn paint_capacity(
         &mut self,
         x: u32,
