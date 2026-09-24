@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DiseaseListPoll, diseaseOptions } from './disease-picker';
+import { DiseaseListPoll, diseaseOptions, PickerWorldGate } from './disease-picker';
 
 const list = [
   { id: 0, bits: '101', carriers: 4 },
@@ -47,5 +47,26 @@ describe('DiseaseListPoll', () => {
     poll.received(0, 5);
     poll.expedite();
     expect(poll.due(1, 5)).toBe(true);
+  });
+});
+
+describe('PickerWorldGate', () => {
+  it('lets presses and drags on the listed world edit', () => {
+    const gate = new PickerWorldGate();
+    expect(gate.allows('down', true)).toBe(true);
+    expect(gate.allows('drag', true)).toBe(true);
+  });
+  it('makes a press on the other world only a switch, drag included; the next press acts', () => {
+    const gate = new PickerWorldGate();
+    expect(gate.allows('down', false)).toBe(false);
+    // The press switched the picker, so the gesture's drags now report the world as listed.
+    expect(gate.allows('drag', true)).toBe(false);
+    expect(gate.allows('down', true)).toBe(true);
+    expect(gate.allows('drag', true)).toBe(true);
+  });
+  it('ignores a drag that wanders onto the other world', () => {
+    const gate = new PickerWorldGate();
+    expect(gate.allows('down', true)).toBe(true);
+    expect(gate.allows('drag', false)).toBe(false);
   });
 });

@@ -40,3 +40,19 @@ export class DiseaseListPoll {
     this.stale = false;
   }
 }
+
+/**
+ * Infect and Vaccinate on a grid whose world the picker is not listing (Compare): disease ids index
+ * each world's own list, so a press there only switches the picker to that world and its gesture
+ * (the drag included) edits nothing; the next press acts. A drag that wanders onto the other grid
+ * edits nothing either.
+ */
+export class PickerWorldGate {
+  private switching = false;
+
+  /** Whether this press or drag may edit; `listed`: its grid's world is the one the picker lists. */
+  allows(kind: 'down' | 'drag', listed: boolean): boolean {
+    if (kind === 'down') this.switching = !listed;
+    return listed && !this.switching;
+  }
+}

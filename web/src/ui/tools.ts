@@ -1,7 +1,7 @@
 import type { Engine, PlaceOverrides } from '../engine';
 import { capacitiesFromPixels } from '../image';
 import type { DiseaseEntry } from '../types';
-import { DiseaseListPoll, diseaseOptions } from './disease-picker';
+import { DiseaseListPoll, diseaseOptions, PickerWorldGate } from './disease-picker';
 import { h } from './dom';
 import type { CellEvent, GridView } from './grid-view';
 import { readImagePixels } from './image-import';
@@ -54,6 +54,7 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
   /** Each world's latest disease list (while a disease tool is open) and when to ask again. */
   const lists = new Map<Engine, { diseases: DiseaseEntry[]; poll: DiseaseListPoll }>();
   let focused = primary.engine;
+  const gate = new PickerWorldGate();
   const diseases = (): DiseaseEntry[] => lists.get(focused)?.diseases ?? [];
   const brushed = () => tool === 'paint' || tool === 'vaccinate';
   const diseaseOn = () => targets.some((t) => t.engine.config.disease.enabled);
@@ -191,6 +192,12 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
 
   /** A grid's clicks and drags, on its own world. */
   const route = (engine: Engine) => (x: number, y: number, kind: CellEvent) => {
+    // The picker's disease id belongs to the focused world's list, and a grid's own pointerdown runs
+    // before Compare's focus listener: a press on the other grid only switches the picker to its world.
+    if (DISEASE_TOOLS.includes(tool) && !gate.allows(kind, engine === focused)) {
+      if (kind === 'down') focus(engine);
+      return;
+    }
     switch (tool) {
       case 'inspect':
         if (kind === 'down') {

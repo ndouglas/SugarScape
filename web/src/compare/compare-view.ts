@@ -82,6 +82,8 @@ export class CompareView {
   /** The headers' 🎲 buttons, disabled while leaving. */
   private readonly dice: HTMLButtonElement[] = [];
   private dirty = true;
+  /** The world last clicked (Inspect, Credit and the disease picker follow it). */
+  private focused: WorldName = 'A';
 
   constructor(
     private readonly p: Playground,
@@ -118,6 +120,7 @@ export class CompareView {
         b.on('display', () => (this.dirty = true)),
         b.on('reset', () => p.syncCreditTab(b)),
         b.on('config', () => p.syncCreditTab(b)),
+        ...[a, b].flatMap((e) => [e.on('reset', () => this.syncCredit()), e.on('config', () => this.syncCredit())]),
         b.on('crash', p.onCrash),
         b.on('fork', () => showNotice('Replay ended in B — your edit starts a new branch')),
         this.lock.on('run', p.onRun),
@@ -175,9 +178,17 @@ export class CompareView {
 
   /** Inspect and Credit show the world last clicked; the disease picker and image import follow it. */
   focus(world: WorldName): void {
+    this.focused = world;
     this.p.inspect.show(world);
-    this.p.credit.show(world);
+    this.syncCredit();
     this.p.tools.focus(world === 'A' ? this.p.engine : this.b);
+  }
+
+  /** Credit shows the focused world, or the other one while only it has credit on (the tab is there for it). */
+  private syncCredit(): void {
+    const on = (w: WorldName) => (w === 'A' ? this.p.engine : this.b).config.credit.enabled;
+    const other: WorldName = this.focused === 'A' ? 'B' : 'A';
+    this.p.credit.show(!on(this.focused) && on(other) ? other : this.focused);
   }
 
   /** A pointerdown on a world's grid focuses that world. */
