@@ -270,7 +270,7 @@ impl Sim {
 
     /// `World::fingerprint` as `0x…` hex, the golden tests' format.
     pub fn fingerprint(&self) -> String {
-        format!("{:#x}", self.world.fingerprint())
+        format!("{:#018x}", self.world.fingerprint())
     }
 
     pub fn lorenz(&self, points: usize) -> Vec<f64> {

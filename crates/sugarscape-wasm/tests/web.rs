@@ -397,5 +397,27 @@ fn fingerprint_matches_the_golden_entry() {
     let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
     sim.step(200);
     // crates/sugarscape-core/tests/golden.rs
-    assert_eq!(sim.fingerprint(), "0x75b93943813545e4");
+    let fp = sim.fingerprint();
+    assert_eq!(fp, "0x75b93943813545e4");
+    assert_eq!(
+        fp.len(),
+        18,
+        "fingerprint should be 18 chars (0x + 16 hex digits)"
+    );
+}
+
+#[wasm_bindgen_test]
+fn fingerprint_preserves_leading_zeros() {
+    // iv-3-trade has a golden fingerprint with leading zeros
+    let preset = sugarscape_core::presets::by_id("iv-3-trade").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    let fp = sim.fingerprint();
+    assert_eq!(
+        fp.len(),
+        18,
+        "fingerprint should be 18 chars even with leading zeros"
+    );
+    assert!(fp.starts_with("0x"), "fingerprint should start with 0x");
 }
