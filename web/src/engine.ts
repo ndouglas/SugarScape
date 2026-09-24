@@ -1,3 +1,4 @@
+import type { CreditGraph } from './credit';
 import init, { Sim, presets_json } from './wasm-pkg/sugarscape.js';
 import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Preset } from './types';
 import { parseErrors } from './types';
@@ -323,6 +324,11 @@ export class Engine {
 
   diseaseList(): DiseaseEntry[] {
     return JSON.parse(this.sim.disease_list()) as DiseaseEntry[];
+  }
+
+  /** The outstanding loans and the agents in them. */
+  creditGraph(): CreditGraph {
+    return JSON.parse(this.sim.credit_graph()) as CreditGraph;
   }
 
   /** `disease` −1 infects with a brand-new random disease. */

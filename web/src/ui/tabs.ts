@@ -22,4 +22,15 @@ export class Tabs {
       e.onShow?.(on);
     }
   }
+
+  /** Hides or shows a tab's button; hiding the selected tab selects the first visible one. */
+  setHidden(label: string, hidden: boolean): void {
+    const entry = this.entries.find((e) => e.label === label);
+    if (!entry) return;
+    entry.button.hidden = hidden;
+    if (hidden && entry.button.getAttribute('aria-selected') === 'true') {
+      const first = this.entries.find((e) => !e.button.hidden);
+      if (first) this.show(first.label);
+    }
+  }
 }

@@ -4,6 +4,7 @@ import { Engine } from './engine';
 import { ExperimentsView } from './experiments/view';
 import { decodeShare, decodeSweep, encodeShare, readHash, readSweepHash } from './share';
 import { ChartsPanel } from './ui/charts-panel';
+import { CreditPanel } from './ui/credit-panel';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
 import { GridView } from './ui/grid-view';
@@ -73,6 +74,13 @@ async function main(): Promise<void> {
   tabs.add('Charts', charts.el, (visible) => charts.setVisible(visible));
   const inspect = new InspectPanel(engine);
   tabs.add('Inspect', inspect.el, (visible) => inspect.setVisible(visible));
+  const credit = new CreditPanel(engine, () => tabs.show('Inspect'));
+  tabs.add('Credit', credit.el, (visible) => credit.setVisible(visible));
+  // The Credit tab exists only while credit (L) is on.
+  const syncCreditTab = () => tabs.setHidden('Credit', !engine.config.credit.enabled);
+  engine.on('reset', syncCreditTab);
+  engine.on('config', syncCreditTab);
+  syncCreditTab();
   document.querySelector('#tools')!.append(buildTools(engine, grid, () => tabs.show('Inspect')));
 
   const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.sim.tick()}`;
@@ -122,7 +130,9 @@ async function main(): Promise<void> {
         grid.draw();
         dirty = false;
       }
-      charts.maybeRefresh(performance.now());
+      const now = performance.now();
+      charts.maybeRefresh(now);
+      credit.maybeRefresh(now);
     } catch (e) {
       // A Rust panic leaves the WASM instance unusable; reloading keeps any #s= share state.
       engine.running = false;

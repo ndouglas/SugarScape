@@ -10,6 +10,9 @@
   --error: #b3261e;
   --blue: #3d7eff;
   --red: #ff4d4d;
+  --lender: #3dd66b;
+  --borrower: #ff4d4d;
+  --both: #ffe04d;
   --c1: #2f6fdb;
   --c2: #c7461a;
   --c3: #2f9e6e;
@@ -157,3 +160,11 @@ body[data-view='experiments'] .toolbar-end { display: none; }
 .goods .noise .seed { width: 8.5em; }
 .chip { display: inline-flex; gap: 4px; align-items: center; border: 1px solid var(--border); border-radius: 99px; padding: 1px 4px 1px 10px; font-size: 12px; color: var(--muted); }
 body[data-view='experiments'] .toolbar .chip { display: none; }
+.credit { display: grid; gap: 8px; }
+.credit .hint { margin: 0; }
+.credit-graph svg { display: block; width: 100%; height: auto; }
+.credit-edges line { stroke: var(--muted); stroke-opacity: 0.6; stroke-width: 1; }
+.credit-node { stroke: var(--text); stroke-width: 0.5; cursor: pointer; }
+.credit-node.lender { fill: var(--lender); }
+.credit-node.borrower { fill: var(--borrower); }
+.credit-node.both { fill: var(--both); }
