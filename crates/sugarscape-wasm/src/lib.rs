@@ -361,6 +361,12 @@ impl Sim {
             .collect())
     }
 
+    /// JSON `{ agents: [{ id, role }], loans: [{ lender, borrower, good, due }] }`
+    /// over the outstanding loans.
+    pub fn credit_graph(&self) -> String {
+        serde_json::to_string(&network::credit_graph(&self.world)).expect("graph serializes")
+    }
+
     /// JSON `[{ id, bits, carriers }]`.
     pub fn disease_list(&self) -> String {
         serde_json::to_string(&self.world.disease_list()).expect("list serializes")

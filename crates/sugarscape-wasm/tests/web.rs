@@ -325,3 +325,29 @@ fn following_an_agent_records_its_trail() {
     assert_eq!(sim.followed(), -1.0);
     assert!(sim.trail().is_empty());
 }
+
+#[wasm_bindgen_test]
+fn credit_graph_lists_the_outstanding_loans() {
+    let config = serde_json::to_string(
+        &sugarscape_core::presets::by_id("iv-5-credit")
+            .unwrap()
+            .config,
+    )
+    .unwrap();
+    let mut sim = Sim::new(&config, 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.credit_graph(), r#"{"agents":[],"loans":[]}"#);
+    // Measured natively: seed 1 has 9 loans outstanding at t = 20 and 15 at t = 50.
+    sim.step(50);
+    let graph: serde_json::Value = serde_json::from_str(&sim.credit_graph()).unwrap();
+    let loans = graph["loans"].as_array().unwrap();
+    assert!(!loans.is_empty());
+    let agents = graph["agents"].as_array().unwrap();
+    let ids: Vec<u64> = agents.iter().map(|a| a["id"].as_u64().unwrap()).collect();
+    for l in loans {
+        assert!(ids.contains(&l["lender"].as_u64().unwrap()));
+        assert!(ids.contains(&l["borrower"].as_u64().unwrap()));
+    }
+    assert!(agents
+        .iter()
+        .all(|a| ["lender", "borrower", "both"].contains(&a["role"].as_str().unwrap())));
+}

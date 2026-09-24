@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::agent::AgentId;
 use crate::geometry::Pos;
 use crate::world::World;
+use serde::Serialize;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CreditRole {
@@ -30,6 +31,58 @@ pub fn credit_roles(world: &World) -> BTreeMap<AgentId, CreditRole> {
             (a.id, role)
         })
         .collect()
+}
+
+/// An agent taking part in an outstanding loan, with its role.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct CreditNode {
+    pub id: AgentId,
+    /// `"lender"`, `"borrower"` or `"both"`.
+    pub role: &'static str,
+}
+
+/// An outstanding loan: `due` of good `good` owed by `borrower` to `lender`.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct CreditLink {
+    pub lender: AgentId,
+    pub borrower: AgentId,
+    pub good: usize,
+    pub due: f64,
+}
+
+/// The lender → borrower graph of Animation IV-5 (Decision 15).
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+pub struct CreditGraph {
+    /// Agents in some outstanding loan, by id.
+    pub agents: Vec<CreditNode>,
+    /// Outstanding loans, in loan order.
+    pub loans: Vec<CreditLink>,
+}
+
+/// The outstanding loans and the agents taking part in them.
+pub fn credit_graph(world: &World) -> CreditGraph {
+    let agents = credit_roles(world)
+        .into_iter()
+        .filter_map(|(id, role)| {
+            let role = match role {
+                CreditRole::Lender => "lender",
+                CreditRole::Borrower => "borrower",
+                CreditRole::Both => "both",
+                CreditRole::None => return None,
+            };
+            Some(CreditNode { id, role })
+        })
+        .collect();
+    let loans = world
+        .loans()
+        .map(|l| CreditLink {
+            lender: l.lender,
+            borrower: l.borrower,
+            good: l.good,
+            due: l.due,
+        })
+        .collect();
+    CreditGraph { agents, loans }
 }
 
 fn edges(world: &World, pairs: impl Iterator<Item = (AgentId, AgentId)>) -> Vec<(Pos, Pos)> {
@@ -132,5 +185,28 @@ mod tests {
             vec![(Pos::new(0, 0), Pos::new(1, 0))],
             "deduplicated; outbreaks and dead agents dropped"
         );
+    }
+
+    #[test]
+    fn the_credit_graph_lists_loans_and_the_agents_in_them() {
+        let mut w = blank_world(5, 5);
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        let c = spawn(&mut w, 2, 0);
+        spawn(&mut w, 3, 0); // no loans: left out
+        assert_eq!(credit_graph(&w), CreditGraph::default());
+        w.originate_loan(b, c, 0, 2.0);
+        w.originate_loan(a, b, 0, 1.0);
+        let g = credit_graph(&w);
+        let roles: Vec<(AgentId, &str)> = g.agents.iter().map(|n| (n.id, n.role)).collect();
+        assert_eq!(roles, [(a, "lender"), (b, "both"), (c, "borrower")]);
+        let pairs: Vec<(AgentId, AgentId)> =
+            g.loans.iter().map(|l| (l.lender, l.borrower)).collect();
+        assert_eq!(pairs, [(b, c), (a, b)], "loan order");
+        assert_eq!(g.loans[0].good, 0);
+        assert!(g.loans[0].due > 2.0, "due includes interest");
+        let json = serde_json::to_value(&g).unwrap();
+        assert_eq!(json["agents"][1]["role"], "both");
+        assert!(json["loans"][0]["due"].is_number());
     }
 }
