@@ -326,6 +326,25 @@ pub struct CultureRule {
     pub groups: Vec<Group>,
 }
 
+/// How rule T prices an exchange (Decision 8).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PriceRule {
+    /// The book's p = √(MRS_A · MRS_B).
+    #[default]
+    GeometricMean,
+    /// Chapter IV note 15: p drawn uniformly from [MRS_A, MRS_B].
+    Random,
+}
+
+/// T: trade between neighbors, priced by `price`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TradeRule {
+    pub enabled: bool,
+    #[serde(default)]
+    pub price: PriceRule,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SexRule {
     pub enabled: bool,
@@ -529,7 +548,7 @@ pub struct Config {
     pub inheritance: Toggle,
     pub culture: CultureRule,
     pub combat: CombatRule,
-    pub trade: Toggle,
+    pub trade: TradeRule,
     pub credit: CreditRule,
     pub foresight: Foresight,
     pub disease: DiseaseRule,
@@ -586,7 +605,10 @@ impl Default for Config {
                 unlimited: true,
                 reward: 2.0,
             },
-            trade: Toggle { enabled: false },
+            trade: TradeRule {
+                enabled: false,
+                price: PriceRule::GeometricMean,
+            },
             credit: CreditRule {
                 enabled: false,
                 duration: 10,
@@ -2288,5 +2310,41 @@ mod tests {
         let mut one = a.clone();
         one.culture.groups = vec![Group::new("All", BLUE_COLOR, 0, 11)];
         assert_eq!(a.structural_changes(&one)[0].field, "culture.groups");
+    }
+
+    #[test]
+    fn the_price_rule_defaults_to_the_geometric_mean_and_may_be_scheduled() {
+        let c = Config::default();
+        assert_eq!(c.trade.price, PriceRule::GeometricMean);
+        let json = serde_json::to_string(&c).unwrap();
+        assert!(
+            json.contains(r#""trade":{"enabled":false,"price":"geometric_mean"}"#),
+            "{json}"
+        );
+        let mut value = serde_json::to_value(&c).unwrap();
+        value["trade"] = serde_json::json!({"enabled": false});
+        assert_eq!(
+            Config::from_json(&value.to_string()).unwrap().trade.price,
+            PriceRule::GeometricMean
+        );
+        value["trade"] = serde_json::json!({"enabled": false, "price": "random"});
+        assert_eq!(
+            Config::from_json(&value.to_string()).unwrap().trade.price,
+            PriceRule::Random
+        );
+        value["trade"] = serde_json::json!({"enabled": false, "price": "haggle"});
+        assert_eq!(
+            Config::from_json(&value.to_string()).unwrap_err()[0].field,
+            "config"
+        );
+        let legacy = Config::from_json(r#"{"trade": {"enabled": false}}"#).unwrap();
+        assert_eq!(legacy.trade.price, PriceRule::GeometricMean);
+        let mut two = Config::default();
+        two.add_good(Good::spice());
+        two.trade.enabled = true;
+        two.schedule = vec![change(5, "trade.price", serde_json::json!("random"))];
+        two.validate().unwrap();
+        let next = two.apply_change(&two.schedule[0]).unwrap();
+        assert_eq!(next.trade.price, PriceRule::Random);
     }
 }

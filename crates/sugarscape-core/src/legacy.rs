@@ -11,7 +11,8 @@ use serde::Deserialize;
 use crate::config::{
     default_groups, CombatRule, Config, CreditRule, CultureRule, Diffusion, DiseaseRule,
     FieldError, Foresight, Good, Growback, Lifespan, Map, Placement, Pollutant, Pollution,
-    ScheduledChange, Seasons, SexRule, Toggle, Transform, URange, SPICE_COLOR, SUGAR_COLOR,
+    PriceRule, ScheduledChange, Seasons, SexRule, Toggle, TradeRule, Transform, URange,
+    SPICE_COLOR, SUGAR_COLOR,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -103,7 +104,9 @@ impl Default for LegacyConfig {
                 metabolism: URange::new(1, 4),
                 endowment: URange::new(5, 25),
             },
-            trade: c.trade,
+            trade: Toggle {
+                enabled: c.trade.enabled,
+            },
             credit: c.credit,
             foresight: c.foresight,
             disease: c.disease,
@@ -193,7 +196,10 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
             groups: default_groups(old.tag_length),
         },
         combat: old.combat,
-        trade: old.trade,
+        trade: TradeRule {
+            enabled: old.trade.enabled,
+            price: PriceRule::GeometricMean,
+        },
         credit: old.credit,
         foresight: old.foresight,
         disease: old.disease,
