@@ -1,8 +1,18 @@
-import type { Engine } from '../engine';
-import { wrappedSegments } from './overlay';
+import type { Engine, Overlay } from '../engine';
+import { arrowHead, wrappedSegments } from './overlay';
 import { trailSegments } from './trail';
 
 const CELL = 12;
+
+/** How each overlay's edges are drawn: a color token, and a direction marker for directed networks. */
+const OVERLAY_STYLE: Record<Overlay, { color: string; directed?: true; width: number; alpha: number }> = {
+  trade: { color: '--c3', width: 1.5, alpha: 0.8 },
+  credit: { color: '--c2', width: 1.5, alpha: 0.8 },
+  disease: { color: '--c4', width: 1.5, alpha: 0.8 },
+  neighbors: { color: '--muted', directed: true, width: 1, alpha: 0.7 },
+  friends: { color: '--c1', width: 1.5, alpha: 0.8 },
+  family: { color: '--accent', width: 1.5, alpha: 0.8 },
+};
 
 export type CellEvent = 'down' | 'drag';
 
@@ -72,21 +82,35 @@ export class GridView {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.buffer, 0, 0, width * CELL, height * CELL);
 
-    for (const [kind, color] of [['trade', '--c3'], ['credit', '--c2'], ['disease', '--c4']] as const) {
+    for (const [kind, style] of Object.entries(OVERLAY_STYLE) as [Overlay, (typeof OVERLAY_STYLE)[Overlay]][]) {
       if (!this.engine.overlays[kind]) continue;
       const e = this.engine.networks(kind);
+      const color = getComputedStyle(this.canvas).getPropertyValue(style.color).trim() || '#fff';
       ctx.save();
-      ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue(color).trim() || '#fff';
-      ctx.globalAlpha = 0.8;
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = style.alpha;
+      ctx.lineWidth = style.width;
       ctx.beginPath();
+      const heads = new Path2D();
       for (let i = 0; i < e.length; i += 4) {
-        for (const [ax, ay, bx, by] of wrappedSegments(e[i], e[i + 1], e[i + 2], e[i + 3], width, height)) {
+        const segments = wrappedSegments(e[i], e[i + 1], e[i + 2], e[i + 3], width, height);
+        for (const [ax, ay, bx, by] of segments) {
           ctx.moveTo((ax + 0.5) * CELL, (ay + 0.5) * CELL);
           ctx.lineTo((bx + 0.5) * CELL, (by + 0.5) * CELL);
         }
+        if (!style.directed) continue;
+        // The last segment ends at the target: the marker sits just outside its cell.
+        const [ax, ay, bx, by] = segments[segments.length - 1];
+        const head = arrowHead((ax + 0.5) * CELL, (ay + 0.5) * CELL, (bx + 0.5) * CELL, (by + 0.5) * CELL, 4, CELL / 2);
+        if (!head) continue;
+        heads.moveTo(head[0], head[1]);
+        heads.lineTo(head[2], head[3]);
+        heads.lineTo(head[4], head[5]);
+        heads.closePath();
       }
       ctx.stroke();
+      if (style.directed) ctx.fill(heads);
       ctx.restore();
     }
 

@@ -50,6 +50,37 @@ describe('determinism through the engine', () => {
   });
 });
 
+describe('Chapter VI views', () => {
+  const everything = presets.find((p) => p.id === 'vi-1-everything')!;
+  const create = () => Engine.create({ config: structuredClone(everything.config), seed: 1 }, { presets, transport: inline() });
+  /** crates/sugarscape-core/src/render.rs: FOUNDER (dark grey) and BORN (green). */
+  const has = (frame: Uint8ClampedArray, rgb: [number, number, number]) => {
+    for (let i = 0; i < frame.length; i += 4) if (frame[i] === rgb[0] && frame[i + 1] === rgb[1] && frame[i + 2] === rgb[2]) return true;
+    return false;
+  };
+
+  it('draw lineage colors and fetch networks, histograms and wealth views without changing the run', async () => {
+    const plain = await create();
+    await plain.advance(100);
+    const watched = await create();
+    watched.setDisplay({ colorMode: 'lineage', overlays: { neighbors: true, friends: true, family: true } });
+    watched.want(() => ({ ageHist: true, tagHist: true, lorenzTotal: true, goodWealthHists: true }));
+    for (let i = 0; i < 10; i++) await watched.advance(10);
+    expect(watched.networks('neighbors').length).toBeGreaterThan(0);
+    expect(watched.networks('friends').length).toBeGreaterThan(0);
+    expect(watched.networks('family').length).toBeGreaterThan(0);
+    expect(watched.last?.ageHist?.[0]).toBe(5);
+    expect(watched.last?.tagHist).toHaveLength(11);
+    expect(watched.last?.goodWealthHists).toHaveLength(2);
+    expect(watched.last?.lorenzTotal).toHaveLength(101);
+    expect(watched.latest!.gini_total).toBeGreaterThan(0);
+    const frame = watched.frame()!;
+    expect(has(frame, [0x5a, 0x5a, 0x5a])).toBe(true);
+    expect(has(frame, [0x3d, 0xd6, 0x6b])).toBe(true);
+    expect(await watched.fingerprint()).toBe(await plain.fingerprint());
+  });
+});
+
 describe('sessions replay exactly', () => {
   const endemic = presets.find((p) => p.id === 'v-2-endemic')!;
   const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
