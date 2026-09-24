@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { DisplayState } from './protocol';
+import { noOverlays, type DisplayState } from './protocol';
 import type { Config } from './types';
-import { clampDisplay, layerOptions, validLayer } from './layers';
+import { clampDisplay, layerOptions, overlayAvailable, validLayer } from './layers';
 
 const config = {
   goods: [{ name: 'sugar' }, { name: 'salt' }],
@@ -27,19 +27,39 @@ describe('layers', () => {
 });
 
 describe('clampDisplay', () => {
-  const display: DisplayState = { colorMode: 'disease', layer: 'pollution:0', overlays: { trade: true, credit: false, disease: true } };
-  const withDisease = (enabled: boolean) => ({ ...config, disease: { enabled } }) as unknown as Config;
+  const rules = (on: boolean) =>
+    ({ ...config, disease: { enabled: on }, culture: { enabled: on }, sex: { enabled: on } }) as unknown as Config;
+  const display: DisplayState = {
+    colorMode: 'disease',
+    layer: 'pollution:0',
+    overlays: { ...noOverlays(), trade: true, disease: true, neighbors: true, friends: true, family: true },
+  };
 
   it('keeps a valid display as the same object', () => {
-    expect(clampDisplay(display, withDisease(true))).toBe(display);
+    expect(clampDisplay(display, rules(true))).toBe(display);
   });
 
-  it('drops the disease mode and overlay while disease is off, and a layer the world lacks', () => {
-    expect(clampDisplay(display, withDisease(false))).toEqual({
+  it('drops the disease mode and every overlay the world cannot show, and a layer the world lacks', () => {
+    expect(clampDisplay(display, rules(false))).toEqual({
       colorMode: 'tribe',
       layer: 'pollution:0',
-      overlays: { trade: true, credit: false, disease: false },
+      overlays: { ...noOverlays(), trade: true, neighbors: true },
     });
-    expect(clampDisplay({ ...display, layer: 'capacity:2' }, withDisease(true)).layer).toBe('resource:0');
+    expect(clampDisplay({ ...display, layer: 'capacity:2' }, rules(true)).layer).toBe('resource:0');
+  });
+
+  it('keeps the Lineage color mode in any world', () => {
+    expect(clampDisplay({ ...display, colorMode: 'lineage' }, rules(false)).colorMode).toBe('lineage');
+  });
+
+  it('offers the neighbor network always, friends with culture and family with sex', () => {
+    const only = (culture: boolean, sex: boolean) =>
+      ({ ...config, disease: { enabled: false }, culture: { enabled: culture }, sex: { enabled: sex } }) as unknown as Config;
+    expect(overlayAvailable('neighbors', only(false, false))).toBe(true);
+    expect(overlayAvailable('friends', only(false, true))).toBe(false);
+    expect(overlayAvailable('friends', only(true, false))).toBe(true);
+    expect(overlayAvailable('family', only(true, false))).toBe(false);
+    expect(overlayAvailable('family', only(false, true))).toBe(true);
+    expect(overlayAvailable('disease', only(true, true))).toBe(false);
   });
 });

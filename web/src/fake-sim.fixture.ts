@@ -11,6 +11,9 @@ interface FakeConfig {
   goods: { name: string }[];
   pollution: { enabled: boolean; pollutants: { name: string }[] };
   disease: { enabled: boolean };
+  sex: { enabled: boolean };
+  lifespan: { enabled: boolean };
+  culture: { enabled: boolean };
 }
 
 /** The core fills in missing fields; so does the fake (enough for the host and `clampDisplay`). */
@@ -23,6 +26,9 @@ function normalize(c: Partial<FakeConfig>): FakeConfig {
     goods: [{ name: 'sugar' }],
     pollution: { enabled: false, pollutants: [] },
     disease: { enabled: false },
+    sex: { enabled: false },
+    lifespan: { enabled: false },
+    culture: { enabled: false },
     ...c,
   };
 }
@@ -89,6 +95,19 @@ export class FakeSim implements SimLike {
   }
   wealth_hist(bins: number): Float64Array {
     return new Float64Array(bins + 1);
+  }
+  age_hist(bin: number): Float64Array {
+    return Float64Array.of(bin, this.agents.size, 0);
+  }
+  tag_hist(): Float64Array {
+    return Float64Array.of(100, 0);
+  }
+  good_wealth_hist(good: number, bins: number): Float64Array {
+    if (good >= this.config.goods.length) throw fieldError('edit', `there is no good ${good}`);
+    return Float64Array.from({ length: bins + 1 }, (_, i) => (i === 0 ? good + 1 : 0));
+  }
+  lorenz_total(points: number): Float64Array {
+    return new Float64Array(points).fill(0.5);
   }
   supply_demand(): Float64Array {
     return Float64Array.of(0, NaN, NaN, NaN, NaN);

@@ -2,8 +2,13 @@
 import type { CreditGraph } from './credit';
 import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Snapshot } from './types';
 
-export type Overlay = 'trade' | 'credit' | 'disease';
-export const OVERLAYS: Overlay[] = ['trade', 'credit', 'disease'];
+export type Overlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family';
+export const OVERLAYS: Overlay[] = ['trade', 'credit', 'disease', 'neighbors', 'friends', 'family'];
+
+/** Every overlay off (a fresh object each call). */
+export function noOverlays(): Record<Overlay, boolean> {
+  return Object.fromEntries(OVERLAYS.map((k) => [k, false])) as Record<Overlay, boolean>;
+}
 
 export interface PlaceOverrides { sex?: 'female' | 'male'; tribe?: 'blue' | 'red' }
 
@@ -30,6 +35,10 @@ export interface Wants {
   charts?: { groups: string[][]; max: number };
   lorenz?: boolean;
   wealthHist?: boolean;
+  ageHist?: boolean;
+  tagHist?: boolean;
+  lorenzTotal?: boolean;
+  goodWealthHists?: boolean;
   supplyDemand?: boolean;
   creditGraph?: boolean;
   diseaseList?: boolean;
@@ -60,6 +69,14 @@ export interface WorldSnapshot {
   charts?: Record<string, ChartGroup>;
   lorenz?: Float64Array;
   wealthHist?: Float64Array;
+  /** `[bin, count_0, …]`: living agents' ages in 5-tick bins (Animation III-1). */
+  ageHist?: Float64Array;
+  /** The percentage of agents with a 0 at each tag position, position 0 first (Animation III-7). */
+  tagHist?: Float64Array;
+  /** The Lorenz curve of total wealth (every good's holdings summed), 101 points. */
+  lorenzTotal?: Float64Array;
+  /** Each good's wealth histogram `[binWidth, counts…]` (20 bins), in good order. */
+  goodWealthHists?: Float64Array[];
   supplyDemand?: Float64Array;
   creditGraph?: CreditGraph;
   diseaseList?: DiseaseEntry[];
@@ -128,7 +145,18 @@ export function chartKey(names: string[]): string {
   return names.join('|');
 }
 
-const FLAGS = ['trail', 'lorenz', 'wealthHist', 'supplyDemand', 'creditGraph', 'diseaseList'] as const;
+const FLAGS = [
+  'trail',
+  'lorenz',
+  'wealthHist',
+  'ageHist',
+  'tagHist',
+  'lorenzTotal',
+  'goodWealthHists',
+  'supplyDemand',
+  'creditGraph',
+  'diseaseList',
+] as const;
 
 /** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */
 export function mergeWants(parts: Wants[]): Wants {

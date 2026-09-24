@@ -106,6 +106,7 @@ export interface Snapshot {
   diseases_in_circulation: number;
   new_infections: number;
   trade_pairs: number;
+  gini_total: number;
   goods: { mean_holding: number; mean_metabolism: number; traded: number }[];
   pollution: number[];
   groups: number[];
@@ -145,7 +146,7 @@ export interface AgentView {
 }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
-export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit' | 'disease';
+export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit' | 'disease' | 'lineage';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

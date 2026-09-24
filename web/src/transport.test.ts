@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { fakeModule } from './fake-sim.fixture';
-import type { Command, DisplayState, HostRequest, WorldSnapshot } from './protocol';
+import { noOverlays, type Command, type DisplayState, type HostRequest, type WorldSnapshot } from './protocol';
 import { SimHost } from './sim-host';
 import { InlineTransport, PortTransport, startWorker, type PortLike } from './transport';
 import type { Config } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
-const display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: { trade: false, credit: false, disease: false } };
+const display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
 const init: Command = { type: 'init', config, seed: 1, landscapes: [], display };
 
 function fakePort(): PortLike {

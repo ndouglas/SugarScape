@@ -2,6 +2,7 @@ import { fieldErrorsMessage } from './errors';
 import {
   chartKey,
   mergeWants,
+  noOverlays,
   OVERLAYS,
   type ChartGroup,
   type Command,
@@ -123,7 +124,7 @@ export class Engine {
   speed: Speed = 1;
   colorMode: ColorMode = 'tribe';
   layer: Layer = 'resource:0';
-  overlays: Record<Overlay, boolean> = { trade: false, credit: false, disease: false };
+  overlays: Record<Overlay, boolean> = noOverlays();
   selection: Selection | null = null;
   /** The selected site (and agent) as of the latest snapshot. */
   inspection: Selected | null = null;

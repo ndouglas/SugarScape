@@ -9,7 +9,9 @@ describe('mergeWants', () => {
       {
         select: { x: 9, y: 9, agentId: 3 },
         lorenz: true,
-        networks: ['trade', 'disease'],
+        ageHist: true,
+        goodWealthHists: true,
+        networks: ['family', 'trade', 'disease', 'neighbors'],
         charts: { groups: [['population'], ['gini', 'births']], max: 2000 },
       },
       {},
@@ -17,7 +19,9 @@ describe('mergeWants', () => {
     expect(merged).toEqual({
       select: { x: 1, y: 2, agentId: null },
       lorenz: true,
-      networks: ['trade', 'disease'],
+      ageHist: true,
+      goodWealthHists: true,
+      networks: ['trade', 'disease', 'neighbors', 'family'],
       charts: { groups: [['population'], ['gini', 'births']], max: 2000 },
     });
   });

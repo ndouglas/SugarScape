@@ -2,6 +2,7 @@ import type { CreditGraph } from './credit';
 import { clampDisplay } from './layers';
 import {
   chartKey,
+  noOverlays,
   transfers,
   type ChartGroup,
   type DisplayState,
@@ -32,6 +33,10 @@ export interface SimLike {
   series_group(namesJson: string, max: number): Float64Array;
   lorenz(points: number): Float64Array;
   wealth_hist(bins: number): Float64Array;
+  age_hist(bin: number): Float64Array;
+  tag_hist(): Float64Array;
+  good_wealth_hist(good: number, bins: number): Float64Array;
+  lorenz_total(points: number): Float64Array;
   supply_demand(): Float64Array;
   inspect(x: number, y: number): string;
   locate(id: number): Uint32Array | undefined;
@@ -75,6 +80,9 @@ export const BATCH_MS = 16;
 /** …and a snapshot is posted about this often (while the host holds a free buffer). */
 export const POST_MS = 33;
 
+/** Animation III-1's age histogram bins are this many ticks wide. */
+export const AGE_BIN = 5;
+
 /** The edit log holds at most this many entries; past it, edits still apply but are not recorded (Decision 1). */
 export const LOG_CAP = 50_000;
 
@@ -101,7 +109,7 @@ function optional<T>(get: () => T): T | undefined {
 export class SimHost {
   private sim: SimLike | null = null;
   private config: Config | null = null;
-  private display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: { trade: false, credit: false, disease: false } };
+  private display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
   /** The next snapshot carries the config: after init, reset, setConfig or a scheduled change. */
   private configDue = false;
   /** The next snapshot carries the edited landscapes: after init, reset, setConfig, paint or import. */
@@ -453,6 +461,10 @@ export class SimHost {
     }
     if (wants.lorenz) s.lorenz = sim.lorenz(101);
     if (wants.wealthHist) s.wealthHist = sim.wealth_hist(20);
+    if (wants.ageHist) s.ageHist = sim.age_hist(AGE_BIN);
+    if (wants.tagHist) s.tagHist = sim.tag_hist();
+    if (wants.lorenzTotal) s.lorenzTotal = sim.lorenz_total(101);
+    if (wants.goodWealthHists) s.goodWealthHists = config.goods.map((_, i) => sim.good_wealth_hist(i, 20));
     if (wants.supplyDemand) s.supplyDemand = sim.supply_demand();
     if (wants.creditGraph) s.creditGraph = JSON.parse(sim.credit_graph()) as CreditGraph;
     if (wants.diseaseList) s.diseaseList = JSON.parse(sim.disease_list()) as DiseaseEntry[];

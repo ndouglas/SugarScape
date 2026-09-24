@@ -1,11 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fakeModule } from './fake-sim.fixture';
-import type { Command, DisplayState, EditCommand, HostMessage, HostReply, LogEntry, SessionLog, Wants, WorldSnapshot } from './protocol';
-import { BATCH_MS, channelDefer, LOG_CAP, serve, SimHost } from './sim-host';
+import {
+  noOverlays,
+  type Command,
+  type DisplayState,
+  type EditCommand,
+  type HostMessage,
+  type HostReply,
+  type LogEntry,
+  type SessionLog,
+  type Wants,
+  type WorldSnapshot,
+} from './protocol';
+import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, serve, SimHost } from './sim-host';
 import type { Config } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
-const display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: { trade: false, credit: false, disease: false } };
+const display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
 
 /** A host with a world (`init` already answered); `send` numbers requests. */
 function start(clock?: () => number) {
@@ -65,17 +76,22 @@ describe('SimHost', () => {
     const bare = t.snap(t.send({ type: 'step', n: 1 }));
     expect(bare.tick).toBe(1);
     const keys = [
-      'inspection', 'trail', 'networks', 'charts', 'lorenz', 'wealthHist', 'supplyDemand',
+      'inspection', 'trail', 'networks', 'charts', 'lorenz', 'wealthHist',
+      'ageHist', 'tagHist', 'lorenzTotal', 'goodWealthHists', 'supplyDemand',
       'creditGraph', 'diseaseList', 'config', 'editedLandscapes', 'display', 'frame',
     ] as const;
     for (const key of keys) expect(bare[key], key).toBeUndefined();
     const all: Wants = {
       select: { x: 0, y: 0, agentId: null },
       trail: true,
-      networks: ['trade'],
+      networks: ['trade', 'neighbors', 'friends', 'family'],
       charts: { groups: [['population']], max: 10 },
       lorenz: true,
       wealthHist: true,
+      ageHist: true,
+      tagHist: true,
+      lorenzTotal: true,
+      goodWealthHists: true,
       supplyDemand: true,
       creditGraph: true,
       diseaseList: true,
@@ -87,6 +103,11 @@ describe('SimHost', () => {
     expect(Object.keys(full.charts ?? {})).toEqual(['population']);
     expect(full.lorenz).toHaveLength(101);
     expect(full.wealthHist).toHaveLength(21);
+    expect(Object.keys(full.networks ?? {})).toEqual(['trade', 'neighbors', 'friends', 'family']);
+    expect(full.ageHist).toEqual(Float64Array.of(AGE_BIN, 1, 0));
+    expect(full.tagHist).toEqual(Float64Array.of(100, 0));
+    expect(full.lorenzTotal).toHaveLength(101);
+    expect(full.goodWealthHists?.map((h) => [h.length, h[0]])).toEqual([[21, 1]]); // one good, 20 bins
     expect(full.supplyDemand).toHaveLength(5);
     expect(full.creditGraph).toEqual({ agents: [], loans: [] });
     expect(full.diseaseList).toEqual([{ id: 0, bits: '01', carriers: 2 }]);
