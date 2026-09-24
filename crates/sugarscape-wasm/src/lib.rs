@@ -236,6 +236,43 @@ impl Sim {
             .ok_or_else(|| edit_error(format!("unknown series {name:?}")))
     }
 
+    /// Series `name` cut to at most `max` points (`stats::downsample`) as
+    /// `[tick, value, tick, value, …]`.
+    pub fn series_downsampled(&self, name: &str, max: u32) -> Result<Vec<f64>, JsValue> {
+        let values = self.series(name)?;
+        let ticks = self.world.stats.series("tick").unwrap_or_default();
+        Ok(stats::downsample(&values, max as usize)
+            .into_iter()
+            .flat_map(|(i, v)| [ticks[i as usize], v])
+            .collect())
+    }
+
+    /// Several series on one x axis (`stats::downsample_union`: each keeps
+    /// at most `max` points of its own shape) as `[n, ticks (n), then n
+    /// values per name]`. `names_json` is a JSON array of series names.
+    pub fn series_group(&self, names_json: &str, max: u32) -> Result<Vec<f64>, JsValue> {
+        let names: Vec<String> =
+            serde_json::from_str(names_json).map_err(|e| edit_error(e.to_string()))?;
+        let columns = names
+            .iter()
+            .map(|name| self.series(name))
+            .collect::<Result<Vec<_>, _>>()?;
+        let ticks = self.world.stats.series("tick").unwrap_or_default();
+        let keep = stats::downsample_union(&columns, max as usize);
+        let mut out = Vec::with_capacity(1 + keep.len() * (1 + columns.len()));
+        out.push(keep.len() as f64);
+        out.extend(keep.iter().map(|&i| ticks[i]));
+        for column in &columns {
+            out.extend(keep.iter().map(|&i| column[i]));
+        }
+        Ok(out)
+    }
+
+    /// `World::fingerprint` as `0x…` hex, the golden tests' format.
+    pub fn fingerprint(&self) -> String {
+        format!("{:#x}", self.world.fingerprint())
+    }
+
     pub fn lorenz(&self, points: usize) -> Vec<f64> {
         stats::lorenz(&stats::wealths(&self.world), points.max(2))
     }

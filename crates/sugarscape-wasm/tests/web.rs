@@ -351,3 +351,51 @@ fn credit_graph_lists_the_outstanding_loans() {
         .iter()
         .all(|a| ["lender", "borrower", "both"].contains(&a["role"].as_str().unwrap())));
 }
+
+#[wasm_bindgen_test]
+fn series_downsampled_pairs_ticks_and_values() {
+    let mut sim = Sim::new("{}", 1, JsValue::NULL).unwrap();
+    sim.step(50);
+    let pop = sim.series("population").unwrap();
+    let all = sim.series_downsampled("population", 100).unwrap();
+    assert_eq!(all.len(), 2 * 51);
+    for (i, (pair, p)) in all.chunks(2).zip(&pop).enumerate() {
+        assert_eq!(pair, [i as f64, *p]);
+    }
+    let few = sim.series_downsampled("population", 10).unwrap();
+    assert_eq!(few.len(), 2 * 10);
+    assert_eq!((few[0], few[18]), (0.0, 50.0));
+    assert!(few.chunks(2).all(|p| pop[p[0] as usize] == p[1]));
+    assert!(sim.series_downsampled("nope", 10).is_err());
+}
+
+#[wasm_bindgen_test]
+fn series_group_shares_one_tick_axis() {
+    let mut sim = Sim::new("{}", 1, JsValue::NULL).unwrap();
+    sim.step(300);
+    let g = sim.series_group(r#"["population","gini"]"#, 20).unwrap();
+    let n = g[0] as usize;
+    assert!((20..=40).contains(&n), "{n}");
+    assert_eq!(g.len(), 1 + 3 * n);
+    let ticks = &g[1..1 + n];
+    assert_eq!((ticks[0], ticks[n - 1]), (0.0, 300.0));
+    assert!(ticks.windows(2).all(|w| w[0] < w[1]));
+    let pop = sim.series("population").unwrap();
+    let gini = sim.series("gini").unwrap();
+    for (k, &t) in ticks.iter().enumerate() {
+        assert_eq!(g[1 + n + k], pop[t as usize]);
+        assert_eq!(g[1 + 2 * n + k], gini[t as usize]);
+    }
+    assert!(sim.series_group(r#"["population","nope"]"#, 20).is_err());
+    assert!(sim.series_group("not json", 20).is_err());
+}
+
+#[wasm_bindgen_test]
+fn fingerprint_matches_the_golden_entry() {
+    let preset = sugarscape_core::presets::by_id("ii-2-unit").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0x75b93943813545e4");
+}
