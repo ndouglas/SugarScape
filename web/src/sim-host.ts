@@ -156,11 +156,14 @@ export class SimHost {
         const from = sim.tick();
         sim.step(cmd.n);
         this.fired(from, sim.tick());
-        // Only the running loop's own steps are bandwidth-throttled; an explicit ask always wins.
-        return this.reply(sim, wants, frame, undefined, true);
+        return this.reply(sim, wants, frame);
       }
       case 'refresh':
-        return this.reply(sim, wants, frame);
+        // The only command exempt from the charts throttle: it is already paced client-side by
+        // REFRESH_MS (Engine.pump), and it is the only path the paused catch-up needs. Every other
+        // command — including drag-driven ones like paint, which carry no debounce of their own —
+        // stays throttled, or a drag would resend full chart groups on nearly every pointermove.
+        return this.reply(sim, wants, frame, undefined, false);
       case 'setDisplay':
         this.display = cmd.display;
         return this.reply(sim, wants, frame);
@@ -208,10 +211,11 @@ export class SimHost {
   }
 
   /**
-   * `throttleCharts` bounds chart resends to at most 4/s (or 1 % of history) — but only for the
-   * running loop's own steps; every other command (a paused refresh among them) always wins.
+   * `throttleCharts` bounds chart resends to at most 4/s (or 1 % of history): true (the default)
+   * for every command except `refresh` (see its case above), so an undebounced drag (paint, erase,
+   * vaccinate, …) cannot resend full chart groups on every pointermove.
    */
-  private reply(sim: SimLike, wants: Wants, frame?: ArrayBuffer, selected?: Selected | null, throttleCharts = false): Result {
+  private reply(sim: SimLike, wants: Wants, frame?: ArrayBuffer, selected?: Selected | null, throttleCharts = true): Result {
     return { ok: true, snapshot: this.snapshot(sim, wants, frame, selected, throttleCharts) };
   }
 
@@ -221,7 +225,7 @@ export class SimHost {
     wants: Wants,
     frame: ArrayBuffer | undefined,
     selected?: Selected | null,
-    throttleCharts = false,
+    throttleCharts = true,
   ): WorldSnapshot {
     const id = sim.followed();
     const s: WorldSnapshot = {

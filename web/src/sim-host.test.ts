@@ -113,7 +113,7 @@ describe('SimHost', () => {
     expect(reset.charts?.[key]?.ticks).toEqual(Float64Array.of(0));
   });
 
-  it('only throttles the running loop\'s own steps: any other command sends a group as soon as it has grown at all (PF6)', () => {
+  it('only a refresh escapes the charts throttle; a step stays throttled like everything else (PF6)', () => {
     let clock = 0;
     const t = start(() => clock);
     const charts = { groups: [['population']], max: 50 };
@@ -122,8 +122,25 @@ describe('SimHost', () => {
     clock = 10;
     // A further step this soon, with this little growth, is throttled (same numbers as above).
     expect(t.snap(t.send({ type: 'step', n: 1 }, { wants: { charts } })).charts?.[key]).toBeUndefined();
-    // But a refresh — not part of the step loop — is not: it sees the one extra tick and sends it,
-    // even though it is just as soon and just as small a change (the paused panel must not stall).
+    // But a refresh is not: it sees the one extra tick and sends it, even though it is just as soon
+    // and just as small a change — it is the only path the paused catch-up needs, and it is already
+    // paced client-side by REFRESH_MS (Engine.pump), so the panel must not stall waiting for it.
+    expect(t.snap(t.send({ type: 'refresh' }, { wants: { charts } })).charts?.[key]).toBeDefined();
+  });
+
+  it('throttles a paint command exactly like a step, so a drag cannot resend on every pointermove (PF6 round 2)', () => {
+    let clock = 0;
+    const t = start(() => clock);
+    const charts = { groups: [['population']], max: 50 };
+    const key = 'population';
+    t.send({ type: 'step', n: 999 }, { wants: { charts } }); // history: 1000 ticks, sent now
+    clock = 10;
+    t.send({ type: 'step', n: 1 }); // one more tick, but this step does not ask for charts
+    // Paint tools send a command on every pointermove with no debounce: this one arrives 10 ms
+    // after the last send, with 0.1 % more history — it must not resend the group.
+    const paint = { type: 'paint' as const, x: 0, y: 0, radius: 1, value: 3, good: 0 };
+    expect(t.snap(t.send(paint, { wants: { charts } })).charts?.[key]).toBeUndefined();
+    // A refresh in the same window still gets it.
     expect(t.snap(t.send({ type: 'refresh' }, { wants: { charts } })).charts?.[key]).toBeDefined();
   });
 
