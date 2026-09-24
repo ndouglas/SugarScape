@@ -52,6 +52,7 @@ fn presets_and_sweeps_are_listed() {
         "fig-iv-6",
         "fig-iv-10-11",
         "n-goods-carrying-capacity",
+        "bargaining-rules",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),

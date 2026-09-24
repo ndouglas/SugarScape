@@ -254,7 +254,8 @@ fn builtins_and_series_names_are_listed() {
             "fig-ii-5",
             "fig-iv-6",
             "fig-iv-10-11",
-            "n-goods-carrying-capacity"
+            "n-goods-carrying-capacity",
+            "bargaining-rules"
         ]
     );
     assert!(list[0]["sweep"]["name"]

@@ -914,7 +914,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 4] = [
+const BUILTINS: [Builtin; 5] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -930,6 +930,10 @@ const BUILTINS: [Builtin; 4] = [
     Builtin {
         id: "n-goods-carrying-capacity",
         json: include_str!("../../../sweeps/n-goods-carrying-capacity.json"),
+    },
+    Builtin {
+        id: "bargaining-rules",
+        json: include_str!("../../../sweeps/bargaining-rules.json"),
     },
 ];
 
@@ -1658,7 +1662,8 @@ mod tests {
                 "fig-ii-5",
                 "fig-iv-6",
                 "fig-iv-10-11",
-                "n-goods-carrying-capacity"
+                "n-goods-carrying-capacity",
+                "bargaining-rules"
             ]
         );
         for b in builtins() {

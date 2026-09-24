@@ -1,0 +1,26 @@
+{
+  "name": "Bargaining rules: carrying capacity under two price rules",
+  "description": "Chapter IV note 15: carrying capacity (mean population over ticks 200–300) against mean vision in iv-3-trade's ({G₁}, {M, T}) market, priced by the book's geometric mean √(MRS_A·MRS_B) and by a price drawn uniformly from [MRS_A, MRS_B]. A mean of m is the uniform range 1–(2m−1). Seeds 1–10. Measured (release, seeds 1–10): geometric mean 41.8 at vision 1 and 76.6 at vision 6; random 41.7 and 75.5; the largest (|d| + 2 se) relative to the geometric-mean line is 0.190, so the book test's tolerance is τ = 0.20 of the geometric-mean line.",
+  "base": { "preset": "iv-3-trade" },
+  "x": {
+    "label": "Mean vision",
+    "values": [
+      { "at": 1, "set": { "vision": { "min": 1, "max": 1 } } },
+      { "at": 2, "set": { "vision": { "min": 1, "max": 3 } } },
+      { "at": 3, "set": { "vision": { "min": 1, "max": 5 } } },
+      { "at": 4, "set": { "vision": { "min": 1, "max": 7 } } },
+      { "at": 5, "set": { "vision": { "min": 1, "max": 9 } } },
+      { "at": 6, "set": { "vision": { "min": 1, "max": 11 } } }
+    ]
+  },
+  "series": {
+    "label": "Price rule",
+    "values": [
+      { "at": 0, "name": "Geometric mean", "set": { "trade.price": "geometric_mean" } },
+      { "at": 1, "name": "Random in [MRS_A, MRS_B]", "set": { "trade.price": "random" } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 10 },
+  "ticks": 300,
+  "metric": { "kind": "window_mean", "series": "population", "from": 200 }
+}
