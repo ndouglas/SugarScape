@@ -5,9 +5,11 @@ import {
   transfers,
   type ChartGroup,
   type DisplayState,
+  type EditCommand,
   type HostMessage,
   type HostReply,
   type HostRequest,
+  type LogEntry,
   type Overlay,
   type Result,
   type SelectQuery,
@@ -73,6 +75,9 @@ export const BATCH_MS = 16;
 /** …and a snapshot is posted about this often (while the host holds a free buffer). */
 export const POST_MS = 33;
 
+/** The edit log holds at most this many entries; past it, edits still apply but are not recorded (Decision 1). */
+export const LOG_CAP = 50_000;
+
 const NO_WORLD = JSON.stringify([{ field: 'world', message: 'no world yet' }]);
 
 /**
@@ -107,6 +112,17 @@ export class SimHost {
   private sent = new Map<string, { at: number; length: number }>();
   /** Max speed: the wants to answer with, the buffers to post frames in, when it last posted; null when not running. */
   private max: { wants: Wants; pool: ArrayBuffer[]; posted: number } | null = null;
+  /** Edits applied to this world since it was built, with their ticks: the session's log (Decision 1). */
+  private log: LogEntry[] = [];
+  /** Set once the log reached LOG_CAP: later edits apply but are not recorded. */
+  private logFull = false;
+  /** A session's entries still to replay: `pending[cursor…]`, in log order (Decision 2). */
+  private pending: LogEntry[] = [];
+  private cursor = 0;
+  /** The `replayLeft` last sent; -1 sends it with the next snapshot. */
+  private replaySent = -1;
+  /** The next snapshot says a page edit dropped the pending entries (Decision 3). */
+  private forkDue = false;
 
   constructor(
     private module: SimModule,
@@ -160,10 +176,9 @@ export class SimHost {
     if (!max || !sim || this.dead) return null;
     const start = this.now();
     const cap = max.pool.length > 0 ? Math.min(start + BATCH_MS, max.posted + POST_MS) : start + BATCH_MS;
-    const from = sim.tick();
-    do sim.step(1);
+    // One tick at a time, applying any edit due at each (Decision 2).
+    do this.advance(sim, 1);
     while (this.now() < cap);
-    this.fired(from, sim.tick());
     const now = this.now();
     const frame = now - max.posted >= POST_MS ? max.pool.pop() : undefined;
     if (!frame) return null;
@@ -178,13 +193,21 @@ export class SimHost {
     // init, reset and setConfig keep Max running on the (possibly new) world if it was running;
     // in practice the engine quiesces (sends `stop`) before any of them, so this doesn't happen.
     if (cmd.type === 'init' || cmd.type === 'reset') {
-      // Built before the old world is freed: a bad config keeps the world.
+      // Built before the old world is freed: a bad config keeps the world (and its log).
       const next = this.module.create(JSON.stringify(cmd.config), cmd.seed, cmd.landscapes);
       this.sim?.free();
       this.sim = next;
       if (cmd.type === 'init') this.display = cmd.display;
       this.configDue = true;
       this.landscapesDue = true;
+      // A new world starts a new log; a session's log is replayed into it (Decision 2).
+      this.log = [];
+      this.logFull = false;
+      this.pending = cmd.log ?? [];
+      this.cursor = 0;
+      this.replaySent = -1;
+      this.forkDue = false;
+      this.replayDue(next);
       // The engine clears its selection on a new world.
       return this.reply(next, { ...wants, select: undefined }, frame);
     }
@@ -192,16 +215,19 @@ export class SimHost {
     if (!sim) throw NO_WORLD;
     switch (cmd.type) {
       case 'setConfig':
-        sim.set_config(JSON.stringify(cmd.config));
-        this.configDue = true;
-        this.landscapesDue = true;
+      case 'paint':
+      case 'importLandscape':
+      case 'place':
+      case 'erase':
+      case 'infect':
+      case 'vaccinate':
+        this.edit(sim, cmd);
+        // Only an edit that succeeded branches a replay (Decision 3).
+        this.fork();
         return this.reply(sim, wants, frame);
-      case 'step': {
-        const from = sim.tick();
-        sim.step(cmd.n);
-        this.fired(from, sim.tick());
+      case 'step':
+        this.advance(sim, cmd.n);
         return this.reply(sim, wants, frame);
-      }
       case 'refresh':
         // The only command exempt from the charts throttle: it is already paced client-side by
         // REFRESH_MS (Engine.pump), and it is the only path the paused catch-up needs. Every other
@@ -210,26 +236,6 @@ export class SimHost {
         return this.reply(sim, wants, frame, undefined, false);
       case 'setDisplay':
         this.display = cmd.display;
-        return this.reply(sim, wants, frame);
-      case 'paint':
-        sim.paint_capacity(cmd.x, cmd.y, cmd.radius, cmd.value, cmd.good);
-        this.landscapesDue = true;
-        return this.reply(sim, wants, frame);
-      case 'importLandscape':
-        sim.set_landscape(cmd.good, cmd.capacities);
-        this.landscapesDue = true;
-        return this.reply(sim, wants, frame);
-      case 'place':
-        sim.place_agent(cmd.x, cmd.y, JSON.stringify(cmd.overrides));
-        return this.reply(sim, wants, frame);
-      case 'erase':
-        sim.remove_agent(cmd.x, cmd.y);
-        return this.reply(sim, wants, frame);
-      case 'infect':
-        sim.infect(cmd.x, cmd.y, cmd.disease);
-        return this.reply(sim, wants, frame);
-      case 'vaccinate':
-        sim.vaccinate(cmd.x, cmd.y, cmd.radius, cmd.disease);
         return this.reply(sim, wants, frame);
       case 'follow': {
         if (cmd.id === null) sim.unfollow();
@@ -260,6 +266,16 @@ export class SimHost {
         return { ok: true, value: sim.export_agents_csv() };
       case 'fingerprint':
         return { ok: true, value: sim.fingerprint() };
+      case 'session':
+        // Applied entries, then those still to replay: a link made mid-replay carries the whole session.
+        return {
+          ok: true,
+          session: { log: [...this.log, ...this.pending.slice(this.cursor)], full: this.logFull, tick: sim.tick() },
+        };
+      case 'endReplay':
+        this.pending = [];
+        this.cursor = 0;
+        return this.reply(sim, wants, frame);
       case 'run':
         // A second `run` while already running keeps the pooled buffers (and adds this one, if
         // any) instead of replacing the pool and losing them; `handle` has already applied this
@@ -283,6 +299,82 @@ export class SimHost {
         spare.push(...max.pool);
         return this.reply(sim, max.wants, last);
       }
+    }
+  }
+
+  /** Applies a world-changing command and records it with the tick (Decision 1); throws the core's field errors. */
+  private edit(sim: SimLike, cmd: EditCommand): void {
+    switch (cmd.type) {
+      case 'setConfig':
+        sim.set_config(JSON.stringify(cmd.config));
+        this.configDue = true;
+        this.landscapesDue = true;
+        break;
+      case 'paint':
+        sim.paint_capacity(cmd.x, cmd.y, cmd.radius, cmd.value, cmd.good);
+        this.landscapesDue = true;
+        break;
+      case 'importLandscape':
+        sim.set_landscape(cmd.good, cmd.capacities);
+        this.landscapesDue = true;
+        break;
+      case 'place':
+        sim.place_agent(cmd.x, cmd.y, JSON.stringify(cmd.overrides));
+        break;
+      case 'erase':
+        sim.remove_agent(cmd.x, cmd.y);
+        break;
+      case 'infect':
+        sim.infect(cmd.x, cmd.y, cmd.disease);
+        break;
+      case 'vaccinate':
+        sim.vaccinate(cmd.x, cmd.y, cmd.radius, cmd.disease);
+        break;
+    }
+    if (this.log.length < LOG_CAP) this.log.push({ tick: sim.tick(), cmd });
+    else this.logFull = true;
+  }
+
+  /** A page edit while entries are pending drops them: the session branches here (Decision 3). */
+  private fork(): void {
+    if (this.cursor >= this.pending.length) return;
+    this.pending = [];
+    this.cursor = 0;
+    this.forkDue = true;
+  }
+
+  /** Applies every pending entry whose tick has been reached, in log order (Decision 2). */
+  private replayDue(sim: SimLike): void {
+    const tick = sim.tick();
+    while (this.cursor < this.pending.length && this.pending[this.cursor].tick <= tick) {
+      const { cmd } = this.pending[this.cursor++];
+      try {
+        this.edit(sim, cmd);
+      } catch (e) {
+        // An entry the world rejects (only a hand-made link has one) is skipped; a panic is fatal.
+        if (typeof e !== 'string') throw e;
+      }
+    }
+    if (this.pending.length > 0 && this.cursor >= this.pending.length) {
+      this.pending = [];
+      this.cursor = 0;
+    }
+  }
+
+  /**
+   * Steps `n` ticks. While entries are pending it stops at each entry's tick and applies it
+   * (`step(k)` is the same world as k single steps, so it steps straight there).
+   */
+  private advance(sim: SimLike, n: number): void {
+    let left = n;
+    while (left > 0) {
+      const next = this.pending[this.cursor]?.tick;
+      const k = next === undefined ? left : Math.min(left, Math.max(1, next - sim.tick()));
+      const from = sim.tick();
+      sim.step(k);
+      this.fired(from, sim.tick());
+      this.replayDue(sim);
+      left -= k;
     }
   }
 
@@ -318,6 +410,15 @@ export class SimHost {
       followed: id < 0 ? null : id,
       followedAlive: id >= 0 && sim.locate(id) !== undefined,
     };
+    const left = this.pending.length - this.cursor;
+    if (left !== this.replaySent) {
+      s.replayLeft = left;
+      this.replaySent = left;
+    }
+    if (this.forkDue) {
+      s.forked = true;
+      this.forkDue = false;
+    }
     let config = this.config;
     if (this.configDue || !config) {
       config = JSON.parse(sim.export_config()) as Config;

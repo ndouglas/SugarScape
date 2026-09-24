@@ -63,12 +63,16 @@ export interface WorldSnapshot {
   supplyDemand?: Float64Array;
   creditGraph?: CreditGraph;
   diseaseList?: DiseaseEntry[];
+  /** Edits still to replay: after every init and reset, and whenever it changes. */
+  replayLeft?: number;
+  /** A page edit just dropped the edits still to replay (the session branched here). */
+  forked?: true;
 }
 
 export type Command =
   | { type: 'ready' }
-  | { type: 'init'; config: Config; seed: number; landscapes: (Uint8Array | null)[]; display: DisplayState }
-  | { type: 'reset'; config: Config; seed: number; landscapes: (Uint8Array | null)[] }
+  | { type: 'init'; config: Config; seed: number; landscapes: (Uint8Array | null)[]; display: DisplayState; log?: LogEntry[] }
+  | { type: 'reset'; config: Config; seed: number; landscapes: (Uint8Array | null)[]; log?: LogEntry[] }
   | { type: 'setConfig'; config: Config }
   | { type: 'step'; n: number }
   | { type: 'refresh' }
@@ -84,14 +88,34 @@ export type Command =
   | { type: 'seriesCsv' }
   | { type: 'agentsCsv' }
   | { type: 'fingerprint' }
+  | { type: 'session' }
+  | { type: 'endReplay' }
   | { type: 'run' }
   | { type: 'stop' }
   | { type: 'frame' };
 
+/** The commands that change the world: logged with the tick they were applied at, and replayed (Decision 1). */
+export type EditCommand = Extract<
+  Command,
+  { type: 'setConfig' | 'paint' | 'importLandscape' | 'place' | 'erase' | 'infect' | 'vaccinate' }
+>;
+
+/** One edit of a session: applied after tick `tick` was computed, before tick + 1 is. */
+export interface LogEntry { tick: number; cmd: EditCommand }
+
+/** What a world was built from and every edit since: replaying it rebuilds the world exactly. */
+export interface Session { config: Config; seed: number; landscapes: (Uint8Array | null)[]; log: LogEntry[] }
+
+/**
+ * The `session` command's answer: the log (the entries applied so far, then those still to
+ * replay), whether it overflowed `LOG_CAP`, and the tick when it was taken.
+ */
+export interface SessionLog { log: LogEntry[]; full: boolean; tick: number }
+
 export interface HostRequest { id: number; cmd: Command; wants?: Wants; frame?: ArrayBuffer }
 
 export type Result =
-  | { ok: true; snapshot?: WorldSnapshot; value?: string }
+  | { ok: true; snapshot?: WorldSnapshot; value?: string; session?: SessionLog }
   | { ok: false; errors: FieldError[] }
   | { ok: false; fatal: string };
 

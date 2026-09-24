@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fakeModule } from './fake-sim.fixture';
-import type { Command, DisplayState, HostMessage, HostReply, Wants, WorldSnapshot } from './protocol';
-import { BATCH_MS, channelDefer, serve, SimHost } from './sim-host';
+import type { Command, DisplayState, EditCommand, HostMessage, HostReply, LogEntry, SessionLog, Wants, WorldSnapshot } from './protocol';
+import { BATCH_MS, channelDefer, LOG_CAP, serve, SimHost } from './sim-host';
 import type { Config } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
@@ -394,6 +394,158 @@ describe('serve', () => {
     expect(sent[0][1]).toHaveLength(1);
     expect(sent[0][1][0]).toBe(frame);
     expect((sent[1][0] as HostReply).result).toEqual({ ok: true, value: '0x0' });
+  });
+});
+
+describe('SimHost edit log and replay', () => {
+  const place = (x: number, y: number): EditCommand => ({ type: 'place', x, y, overrides: {} });
+  const paint: EditCommand = { type: 'paint', x: 0, y: 0, radius: 1, value: 3, good: 0 };
+  const session = (t: ReturnType<typeof start>): SessionLog => {
+    const r = t.send({ type: 'session' }).result;
+    if (!r.ok || !r.session) throw new Error(JSON.stringify(r));
+    return r.session;
+  };
+
+  it('logs world-changing commands that succeed, with the tick they were applied at', () => {
+    const t = start();
+    t.send({ type: 'step', n: 2 });
+    t.send(place(0, 2));
+    expect(t.send({ type: 'erase', x: 3, y: 2 }).result.ok).toBe(false); // nobody there: not logged
+    t.send({ type: 'follow', id: 1 });
+    t.send({ type: 'inspect', target: { x: 1, y: 1 } });
+    t.send({ type: 'setDisplay', display });
+    t.send({ type: 'step', n: 1 });
+    t.send(paint);
+    t.send({ type: 'importLandscape', good: 0, capacities: new Uint8Array(12) });
+    t.send({ type: 'infect', x: 0, y: 2, disease: -1 });
+    t.send({ type: 'vaccinate', x: 0, y: 2, radius: 1, disease: 0 });
+    t.send({ type: 'setConfig', config });
+    t.send({ type: 'refresh' });
+    t.send({ type: 'seriesCsv' });
+    const s = session(t);
+    expect(s.full).toBe(false);
+    expect(s.tick).toBe(3);
+    expect(s.log.map((e) => [e.tick, e.cmd.type])).toEqual([
+      [2, 'place'],
+      [3, 'paint'],
+      [3, 'importLandscape'],
+      [3, 'infect'],
+      [3, 'vaccinate'],
+      [3, 'setConfig'],
+    ]);
+    expect(s.log[5].cmd).toEqual({ type: 'setConfig', config });
+  });
+
+  it('starts an empty log with every new world', () => {
+    const t = start();
+    t.send(place(0, 2));
+    t.send({ type: 'reset', config, seed: 2, landscapes: [] });
+    expect(session(t).log).toEqual([]);
+  });
+
+  it(
+    `stops recording past ${LOG_CAP} entries and says so`,
+    () => {
+      const t = start();
+      const infect: Command = { type: 'infect', x: 0, y: 0, disease: -1 };
+      for (let i = 0; i < LOG_CAP; i++) t.send(infect);
+      expect(session(t).full).toBe(false);
+      t.send(infect);
+      const s = session(t);
+      expect(s.full).toBe(true);
+      expect(s.log).toHaveLength(LOG_CAP);
+    },
+    20_000,
+  );
+
+  it('replays tick-0 entries at once and later ones inside a step, stopping at each entry’s tick', () => {
+    const t = start();
+    const log: LogEntry[] = [
+      { tick: 0, cmd: paint },
+      { tick: 3, cmd: place(0, 2) },
+      { tick: 3, cmd: { type: 'erase', x: 0, y: 2 } },
+      { tick: 5, cmd: place(0, 0) },
+    ];
+    const built = t.snap(t.send({ type: 'reset', config, seed: 1, landscapes: [], log }));
+    expect(built.replayLeft).toBe(3);
+    expect(built.editedLandscapes).toEqual([new Uint8Array(12).fill(7)]); // painted at tick 0
+    const sim = t.module.sims.at(-1)!;
+    expect(t.snap(t.send({ type: 'step', n: 2 })).replayLeft).toBeUndefined(); // unchanged
+    expect(sim.stepCalls).toBe(1);
+    expect(t.snap(t.send({ type: 'step', n: 2 }))).toMatchObject({ tick: 4, population: 1, replayLeft: 1 });
+    expect(sim.stepCalls).toBe(3); // 2 → 3, apply both entries at 3, 3 → 4
+    expect(t.log.filter((line) => line.startsWith('place'))).toHaveLength(1);
+    expect(t.snap(t.send({ type: 'step', n: 10 }))).toMatchObject({ tick: 14, population: 2, replayLeft: 0 });
+    expect(sim.stepCalls).toBe(5); // 4 → 5, apply, 5 → 14
+    expect(session(t).log).toEqual(log); // re-logged identically
+  });
+
+  it('replays inside Max batches', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    const log: LogEntry[] = [{ tick: 4, cmd: place(0, 2) }];
+    t.send({ type: 'reset', config, seed: 1, landscapes: [], log });
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    let post: WorldSnapshot | null = null;
+    while (!post) post = t.host.batch();
+    expect(post.tick).toBeGreaterThan(4);
+    expect(post).toMatchObject({ population: 2, replayLeft: 0 });
+    t.send({ type: 'stop' });
+    expect(session(t).log).toEqual(log);
+  });
+
+  it('forks: a page edit that succeeds while entries are pending drops them, then is applied and logged', () => {
+    const t = start();
+    const log: LogEntry[] = [
+      { tick: 1, cmd: place(0, 2) },
+      { tick: 5, cmd: { type: 'erase', x: 0, y: 2 } },
+    ];
+    t.send({ type: 'reset', config, seed: 1, landscapes: [], log });
+    expect(t.snap(t.send({ type: 'step', n: 2 })).replayLeft).toBe(1);
+    expect(t.send({ type: 'erase', x: 3, y: 0 }).result.ok).toBe(false); // failed: no fork
+    expect(session(t).log.map((e) => e.tick)).toEqual([1, 5]);
+    expect(t.snap(t.send(paint))).toMatchObject({ forked: true, replayLeft: 0 });
+    const later = t.snap(t.send({ type: 'step', n: 5 }));
+    expect(later.forked).toBeUndefined();
+    expect(later.population).toBe(2); // the erase at 5 was dropped
+    expect(session(t).log.map((e) => [e.tick, e.cmd.type])).toEqual([
+      [1, 'place'],
+      [2, 'paint'],
+    ]);
+  });
+
+  it('endReplay drops the pending entries and keeps the world', () => {
+    const t = start();
+    t.send({ type: 'reset', config, seed: 1, landscapes: [], log: [{ tick: 2, cmd: place(0, 2) }] });
+    const s = t.snap(t.send({ type: 'endReplay' }));
+    expect(s).toMatchObject({ tick: 0, replayLeft: 0 });
+    expect(s.forked).toBeUndefined();
+    expect(t.snap(t.send({ type: 'step', n: 3 })).population).toBe(1);
+    expect(session(t).log).toEqual([]);
+  });
+
+  it('includes pending entries in the session, after the applied ones', () => {
+    const t = start();
+    const log: LogEntry[] = [
+      { tick: 1, cmd: place(0, 2) },
+      { tick: 9, cmd: { type: 'erase', x: 0, y: 2 } },
+    ];
+    t.send({ type: 'reset', config, seed: 1, landscapes: [], log });
+    t.send({ type: 'step', n: 3 });
+    expect(session(t)).toEqual({ log, full: false, tick: 3 });
+  });
+
+  it('skips a replayed entry the world rejects, but a panic is still fatal', () => {
+    const t = start();
+    const log: LogEntry[] = [
+      { tick: 0, cmd: { type: 'erase', x: 3, y: 2 } },
+      { tick: 0, cmd: place(0, 2) },
+    ];
+    expect(t.snap(t.send({ type: 'reset', config, seed: 1, landscapes: [], log }))).toMatchObject({ population: 2, replayLeft: 0 });
+    expect(session(t).log.map((e) => e.cmd.type)).toEqual(['place']);
+    const panic: LogEntry[] = [{ tick: 0, cmd: { ...paint, value: -1 } as EditCommand }];
+    const r = t.send({ type: 'reset', config, seed: 1, landscapes: [], log: panic });
+    expect(r.result).toEqual({ ok: false, fatal: 'The simulation stopped: unreachable executed' });
   });
 });
 
