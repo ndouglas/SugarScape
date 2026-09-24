@@ -1,4 +1,4 @@
-import { creditHeader, creditLayout, rowPositions } from '../credit';
+import { creditHeader, creditLayout, rowPositions, type CreditGraph } from '../credit';
 import type { Engine } from '../engine';
 import { h } from './dom';
 
@@ -22,32 +22,40 @@ export class CreditPanel {
   private header = h('p', { class: 'hint' });
   private graph = h('div', { class: 'credit-graph' });
   private visible = false;
-  private last = 0;
+  private last = -Infinity;
   /** Tick and panel width of the last drawing; null forces the next refresh to redraw. */
   private drawn: { tick: number; width: number } | null = null;
 
   constructor(private engine: Engine, private onSelect: () => void) {
     this.el.append(this.header, this.graph);
-    engine.on('reset', () => {
-      this.drawn = null;
-      this.refresh();
+    engine.want((now) => (this.visible && now - this.last >= REFRESH_MS && this.changed() ? { creditGraph: true } : {}));
+    engine.on('snapshot', () => {
+      const graph = engine.last?.creditGraph;
+      if (graph) this.draw(graph);
     });
-    // Edits and config changes can change loans without a tick.
-    engine.on('edit', () => (this.drawn = null));
-    engine.on('config', () => (this.drawn = null));
+    // Resets, edits and config changes can change loans without a tick.
+    for (const event of ['reset', 'edit', 'config'] as const) engine.on(event, () => (this.drawn = null));
   }
 
   setVisible(visible: boolean): void {
     this.visible = visible;
-    if (visible) this.refresh();
+    if (visible) {
+      this.drawn = null;
+      this.last = -Infinity;
+      void this.engine.refresh();
+    }
   }
 
-  /** Called every animation frame; redraws at most every REFRESH_MS while visible. */
-  maybeRefresh(now: number): void {
-    if (this.visible && now - this.last >= REFRESH_MS) this.refresh();
+  private panelWidth(): number {
+    return Math.max(240, this.graph.clientWidth || 360);
   }
 
-  private refresh(): void {
+  /** Whether the tick or the panel width moved since the last drawing (or nothing is drawn). */
+  private changed(): boolean {
+    return !this.drawn || this.drawn.tick !== this.engine.tick || this.drawn.width !== this.panelWidth();
+  }
+
+  private draw(graph: CreditGraph): void {
     this.last = performance.now();
     if (!this.visible) {
       this.drawn = null;
@@ -55,11 +63,10 @@ export class CreditPanel {
     }
     // Redrawing replaces every node, so skip it while nothing changed:
     // otherwise a click's mousedown and mouseup land on different elements.
-    const tick = this.engine.sim.tick();
-    const panelWidth = Math.max(240, this.graph.clientWidth || 360);
-    if (this.drawn && this.drawn.tick === tick && this.drawn.width === panelWidth) return;
-    this.drawn = { tick, width: panelWidth };
-    const layout = creditLayout(this.engine.creditGraph());
+    if (!this.changed()) return;
+    const panelWidth = this.panelWidth();
+    this.drawn = { tick: this.engine.tick, width: panelWidth };
+    const layout = creditLayout(graph);
     const summary = creditHeader(layout);
     this.header.textContent = summary;
     if (layout.rows.length === 0) {

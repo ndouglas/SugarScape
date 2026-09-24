@@ -274,4 +274,28 @@ describe('Engine', () => {
     await engine.selectAgent(1); // no longer alive: nothing changes
     expect(engine.selection).toEqual({ x: 1, y: 1, agentId: 1 });
   });
+
+  it('returns exports as values', async () => {
+    const { engine } = await setup();
+    await engine.advance(3);
+    expect(await engine.seriesCsv()).toBe('tick,population\n3,1\n');
+    expect(await engine.agentsCsv()).toBe('id\n1\n');
+    expect(await engine.fingerprint()).toBe('0x3');
+  });
+
+  it('carries what providers want, and refreshes while paused only for them', async () => {
+    const { engine } = await setup();
+    const before = engine.last;
+    engine.pump(1000);
+    await settle();
+    expect(engine.last).toBe(before);
+    const stop = engine.want(() => ({ diseaseList: true, creditGraph: true }));
+    engine.pump(2000);
+    await settle();
+    expect(engine.last?.diseaseList).toEqual([{ id: 0, bits: '01', carriers: 2 }]);
+    expect(engine.last?.creditGraph).toEqual({ agents: [], loans: [] });
+    stop();
+    await engine.refresh();
+    expect(engine.last?.diseaseList).toBeUndefined();
+  });
 });

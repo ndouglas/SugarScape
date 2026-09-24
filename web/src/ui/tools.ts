@@ -1,5 +1,6 @@
 import type { Engine, PlaceOverrides } from '../engine';
 import { capacitiesFromPixels } from '../image';
+import type { DiseaseEntry } from '../types';
 import { diseaseOptions } from './disease-picker';
 import { h } from './dom';
 import type { GridView } from './grid-view';
@@ -19,6 +20,9 @@ const TOOLS: [Tool, string][] = [
 /** Tools that exist only while disease is on. */
 const DISEASE_TOOLS: Tool[] = ['infect', 'vaccinate'];
 
+/** The disease list is fetched at most this often while a disease tool is open. */
+const LIST_MS = 250;
+
 /** Tool picker; routes grid clicks/drags to the active tool. Edit errors (e.g. occupied site) are ignored. */
 export function buildTools(engine: Engine, grid: GridView, onInspect: () => void): HTMLElement {
   let tool: Tool = 'inspect';
@@ -31,6 +35,9 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   let disease = -1;
   /** Length of the disease list the picker was last filled from. */
   let known = -1;
+  /** The latest disease list the host sent (while a disease tool is open) and when it came. */
+  let diseases: DiseaseEntry[] = [];
+  let listAt = -Infinity;
   const brushed = () => tool === 'paint' || tool === 'vaccinate';
 
   const buttons = TOOLS.map(([t, label]) => h('button', { onclick: () => choose(t) }, label));
@@ -104,10 +111,9 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
   /** Refills the picker when the disease list has grown (outbreaks, mutations, Infect), or when forced. */
   function refreshPicker(force = false): void {
     if (!DISEASE_TOOLS.includes(tool) || !engine.config.disease.enabled) return;
-    const list = engine.diseaseList();
-    if (!force && list.length === known) return;
-    known = list.length;
-    picker.replaceChildren(...diseaseOptions(list, tool === 'infect').map(([v, l]) => h('option', { value: v }, l)));
+    if (!force && diseases.length === known) return;
+    known = diseases.length;
+    picker.replaceChildren(...diseaseOptions(diseases, tool === 'infect').map(([v, l]) => h('option', { value: v }, l)));
     const values = Array.from(picker.options, (o) => Number(o.value));
     if (!values.includes(disease)) disease = values[0] ?? -1;
     picker.value = String(disease);
@@ -140,6 +146,11 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
                 : [h('span', { class: 'hint' }, 'Click or drag over agents to remove them.')]),
     );
     refreshPicker(true);
+    if (DISEASE_TOOLS.includes(tool)) {
+      // Fetch the list now, even while paused.
+      listAt = -Infinity;
+      void engine.refresh();
+    }
     grid.draw();
   }
 
@@ -188,8 +199,22 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
 
   engine.on('reset', syncAvailability);
   engine.on('config', syncAvailability);
-  engine.on('tick', () => refreshPicker());
-  engine.on('edit', () => refreshPicker());
+  // A reset can change which diseases exist: drop the stale list and ask for a fresh one promptly.
+  engine.on('reset', () => {
+    listAt = -Infinity;
+    diseases = [];
+    refreshPicker();
+  });
+  engine.want((now) =>
+    DISEASE_TOOLS.includes(tool) && engine.config.disease.enabled && now - listAt >= LIST_MS ? { diseaseList: true } : {},
+  );
+  engine.on('snapshot', () => {
+    const list = engine.last?.diseaseList;
+    if (!list) return;
+    diseases = list;
+    listAt = performance.now();
+    refreshPicker();
+  });
   choose('inspect');
   syncAvailability();
   return h('div', { class: 'tools' }, h('div', { class: 'tool-buttons' }, ...buttons), options);

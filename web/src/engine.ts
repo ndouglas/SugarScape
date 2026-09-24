@@ -1,4 +1,3 @@
-import type { CreditGraph } from './credit';
 import {
   chartKey,
   mergeWants,
@@ -16,7 +15,7 @@ import {
 import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, type Transport } from './transport';
-import type { ColorMode, Config, DiseaseEntry, FieldError, Layer, Preset, Snapshot } from './types';
+import type { ColorMode, Config, FieldError, Layer, Preset, Snapshot } from './types';
 import init, { presets_json, type Sim } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -374,16 +373,6 @@ export class Engine {
     const sim = this.transport.host.currentSim();
     if (!sim) throw new Error('no world yet');
     return sim as unknown as Sim;
-  }
-
-  /** @deprecated Temporary (Task 9 moves the disease tools to a provider). */
-  diseaseList(): DiseaseEntry[] {
-    return JSON.parse(this.sim.disease_list()) as DiseaseEntry[];
-  }
-
-  /** @deprecated Temporary (Task 9 moves the Credit tab to a provider). */
-  creditGraph(): CreditGraph {
-    return JSON.parse(this.sim.credit_graph()) as CreditGraph;
   }
 
   private displayState(): DisplayState {

@@ -103,8 +103,8 @@ async function main(): Promise<void> {
     { class: 'menu' },
     h('summary', {}, 'Export'),
     h('div', { class: 'menu-items' },
-      h('button', { onclick: () => downloadText(`${slug()}-series.csv`, engine.sim.export_series_csv()) }, 'Statistics (CSV)'),
-      h('button', { onclick: () => downloadText(`${slug()}-agents.csv`, engine.sim.export_agents_csv()) }, 'Agents (CSV)'),
+      h('button', { onclick: async () => downloadText(`${slug()}-series.csv`, await engine.seriesCsv()) }, 'Statistics (CSV)'),
+      h('button', { onclick: async () => downloadText(`${slug()}-agents.csv`, await engine.agentsCsv()) }, 'Agents (CSV)'),
       h('button', { onclick: async () => downloadBlob(`${slug()}-grid.png`, await grid.toPngBlob()) }, 'Grid (PNG)'),
       h('button', {
         onclick: async () => {
@@ -129,7 +129,6 @@ async function main(): Promise<void> {
         dirty = false;
       }
       charts.maybeRefresh(now);
-      credit.maybeRefresh(now);
     } catch (e) {
       // A Rust panic in the page's WASM leaves it unusable; reloading keeps any #s= share state.
       engine.setRunning(false);
