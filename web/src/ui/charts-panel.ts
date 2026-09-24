@@ -18,11 +18,13 @@ import {
   overlayData,
   positionBars,
   positionSteps,
+  shownCharts,
   showsAgeHist,
   showsGoodWealth,
   showsTagHist,
   showsTotalWealth,
   supplyDemandTable,
+  twoGoods,
   type DistState,
   type LineData,
 } from './series-data';
@@ -76,7 +78,7 @@ const SECTIONS: { id: Section; title?: string; shown: (c: Config) => boolean }[]
   { id: 'goods', title: 'Goods', shown: () => true },
   { id: 'pollution', title: 'Pollution', shown: (c) => c.pollution.enabled },
   // Market charts need two goods; loan charts need credit; the section needs either.
-  { id: 'economy', title: 'Economy', shown: (c) => showsTotalWealth(c) || c.credit.enabled },
+  { id: 'economy', title: 'Economy', shown: (c) => twoGoods(c) || c.credit.enabled },
   { id: 'disease', title: 'Disease', shown: (c) => c.disease.enabled },
 ];
 
@@ -137,9 +139,9 @@ const CHARTS: ChartDef[] = [
     lines: (c) => c.pollution.pollutants.map((p, k) => ({ key: `mean_pollution_${k}`, label: p.name, color: POLLUTANT_COLORS[k] })),
     shown: (c) => c.pollution.enabled,
   },
-  { title: 'Trade price (ln)', kind: 'band', section: 'economy', shown: showsTotalWealth, pair: true },
-  { title: 'Trade volume', kind: 'time', section: 'economy', lines: fixed([{ key: 'trade_volume', label: 'Volume', color: '--c1' }]), shown: showsTotalWealth },
-  { title: 'Supply & demand', kind: 'supplyDemand', section: 'economy', shown: showsTotalWealth, pair: true },
+  { title: 'Trade price (ln)', kind: 'band', section: 'economy', shown: twoGoods, pair: true },
+  { title: 'Trade volume', kind: 'time', section: 'economy', lines: fixed([{ key: 'trade_volume', label: 'Volume', color: '--c1' }]), shown: twoGoods },
+  { title: 'Supply & demand', kind: 'supplyDemand', section: 'economy', shown: twoGoods, pair: true },
   {
     title: 'Loans',
     kind: 'time',
@@ -302,8 +304,14 @@ export class ChartsPanel {
     this.redraw();
   }
 
+  /** The charts on show, each under the caption the user sees (not its title: several charts, like the per-good wealth histograms, share one). */
   canvases(): { name: string; canvas: HTMLCanvasElement }[] {
-    return this.plots.map((p) => ({ name: p.def.title, canvas: p.plot.ctx.canvas }));
+    const charts = this.plots.map((p) => ({
+      name: p.caption.textContent ?? p.def.title,
+      hidden: !!p.figure.hidden,
+      canvas: p.plot.ctx.canvas,
+    }));
+    return shownCharts(charts);
   }
 
   /** World `i`'s provider and listeners; returns their removal. */
@@ -377,7 +385,7 @@ export class ChartsPanel {
       const el = this.sections.get(s.id);
       if (el) el.hidden = !configs.some((c) => s.shown(c));
     }
-    const goods = configs.find(showsTotalWealth)?.goods;
+    const goods = configs.find(twoGoods)?.goods;
     for (const p of this.plots) {
       p.figure.hidden = !this.shown(p.def);
       const good = p.def.good;

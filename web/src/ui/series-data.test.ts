@@ -13,11 +13,13 @@ import {
   overlayData,
   positionBars,
   positionSteps,
+  shownCharts,
   showsAgeHist,
   showsGoodWealth,
   showsTagHist,
   showsTotalWealth,
   supplyDemandTable,
+  twoGoods,
   type LineData,
 } from './series-data';
 
@@ -160,5 +162,27 @@ describe('wealth views', () => {
     expect(showsTotalWealth(goods(2))).toBe(true);
     expect(showsGoodWealth(0)(goods(1))).toBe(false);
     expect([0, 1, 2].map((g) => showsGoodWealth(g)(goods(2)))).toEqual([true, true, false]);
+  });
+
+  it('twoGoods and showsTotalWealth read the same world the same way, under their own names', () => {
+    expect(twoGoods(goods(1))).toBe(false);
+    expect(twoGoods(goods(2))).toBe(true);
+    expect(twoGoods).toBe(showsTotalWealth);
+  });
+});
+
+describe('shownCharts', () => {
+  it('keeps only the charts on show, in order, each under its own caption', () => {
+    const charts = [
+      { name: 'Wealth distribution · sugar', hidden: false },
+      { name: 'Wealth distribution · spice', hidden: false },
+      { name: 'Wealth distribution · salt', hidden: true },
+      { name: 'Age histogram', hidden: true },
+      { name: 'Cultural tags (% zeros by position)', hidden: false },
+    ];
+    const shown = shownCharts(charts);
+    expect(shown.map((c) => c.name)).toEqual(['Wealth distribution · sugar', 'Wealth distribution · spice', 'Cultural tags (% zeros by position)']);
+    // Distinct captions (not the shared 'Wealth distribution' title) keep every exported file name unique.
+    expect(new Set(shown.map((c) => c.name)).size).toBe(shown.length);
   });
 });

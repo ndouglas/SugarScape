@@ -94,8 +94,10 @@ export function positionSteps(pct: Float64Array | null | undefined): LineData {
 export const showsAgeHist = (c: Config): boolean => c.lifespan.enabled;
 /** The cultural tag histogram shows while culture is on (Animation III-7). */
 export const showsTagHist = (c: Config): boolean => c.culture.enabled;
+/** A world has a market: trade, and the Economy section's charts, need two or more goods. */
+export const twoGoods = (c: Config): boolean => c.goods.length >= 2;
 /** Total wealth (its Lorenz curve and Gini) shows with two or more goods (VI-1's "total wealth"). */
-export const showsTotalWealth = (c: Config): boolean => c.goods.length >= 2;
+export const showsTotalWealth = twoGoods;
 /** Good `good`'s own wealth histogram shows with two or more goods, while the world has that good. */
 export const showsGoodWealth =
   (good: number) =>
@@ -120,10 +122,23 @@ export function distributionsDue(d: DistState, tick: number, now: number, every:
  */
 export function distributionWants(c: Config): Wants {
   const out: Wants = { lorenz: true, wealthHist: true };
-  if (showsTotalWealth(c)) Object.assign(out, { supplyDemand: true, lorenzTotal: true, goodWealthHists: true });
+  if (twoGoods(c)) out.supplyDemand = true;
+  if (showsTotalWealth(c)) Object.assign(out, { lorenzTotal: true, goodWealthHists: true });
   if (showsAgeHist(c)) out.ageHist = true;
   if (showsTagHist(c)) out.tagHist = true;
   return out;
+}
+
+/** One chart, named by its caption (not its shared title — several charts, like the per-good wealth histograms, share a title but not a caption), and whether it is on show. */
+export interface NamedChart { name: string; hidden: boolean }
+
+/**
+ * The charts Export → Charts writes, in order: only the ones on show, each under its caption. Used
+ * by `ChartsPanel.canvases()`, which cannot itself be unit-tested (it needs the DOM its plots and
+ * captions live in); this pure slice of its logic can.
+ */
+export function shownCharts<T extends NamedChart>(charts: T[]): T[] {
+  return charts.filter((c) => !c.hidden);
 }
 
 /**
