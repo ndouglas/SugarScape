@@ -58,6 +58,53 @@ a set of peaks, or flat. Presets `n-3-trade`, `n-4-peaks` and `n-2-pollutants` s
 - Legacy links that set "spice pollutes too" with coefficients other than 1 can differ from
   their old runs in the last bits (α·g₀ + α·g₁ is not always α·(g₀ + g₁) in floating point).
 
+## Experiments
+
+The header's **Experiments** switch replaces the grid with a sweep runner (the playground's
+world is paused and kept). A sweep runs every combination of config values × seeds for a
+number of ticks and summarizes each run by one statistic: its value at the last tick, its
+mean over a window of ticks, or its means over blocks of ticks. The chart shows one line per
+value of the second axis: the mean over seeds, with a ±1 sd band; hovering shows mean, sd,
+range and the number of runs.
+
+- **Built-in sweeps** (`sweeps/`): `fig-ii-5` (carrying capacity vs vision, one line per
+  metabolism), `fig-iv-6` (with and without trade), `fig-iv-10-11` (price dispersion over
+  time for short and long lifetimes) and `n-goods-carrying-capacity`. Each file's description
+  records its measured settings; in the browser only seeds and ticks can be changed.
+- **From current world**: a config path (the input suggests every number and on/off setting),
+  values as `1, 2, 3`, `true, false` or `from:to:step`, an optional second axis, seeds, ticks
+  and the metric.
+- **Open file…**: a sweep, or a result from the CLI or an earlier export, which is shown
+  without running.
+
+Runs are spread over Web Workers (one per core, less one). Cancel stops them and keeps the
+partial results, which export marked incomplete. Exports: the result JSON (the CLI's
+format), runs and summary CSVs and the chart as PNG. **Share link** copies a `#x=` link that
+opens the sweep (not its results).
+
+## Command line
+
+`crates/sugarscape-cli` builds a native `sugarscape` binary over the same core
+(`cargo install --path crates/sugarscape-cli`, or `cargo run --release -p sugarscape-cli -- …`):
+
+    sugarscape presets                                  # preset ids
+    sugarscape sweeps                                   # built-in sweeps
+    sugarscape run --preset ii-5-wealth --seed 7 --ticks 1000 --series-csv series.csv
+    sugarscape run --config my-config.json --agents-csv agents.csv --fingerprint
+    sugarscape sweep --builtin fig-ii-5 --out fig-ii-5.json --summary-csv fig-ii-5.csv
+    sugarscape sweep my-sweep.json --jobs 4 --seeds 3 --ticks 300 --runs-csv runs.csv
+
+`run` defaults to seed 1 and 1000 ticks; `--config-out` writes the config it ran and
+`--fingerprint` prints the final world's fingerprint. `sweep` uses every core unless `--jobs`
+says otherwise, prints the result JSON unless `--out` is given, and reports progress on
+stderr unless `--quiet`. Exit codes: 0 success, 1 I/O error, 2 usage or validation error
+(printed as `field: message`, one per line).
+
+A run is a function of its config and seed, so a sweep's output files are byte-identical for
+any `--jobs` (and in the browser, for any number of workers). Native and browser builds can
+differ in the last bits of `powf`/`ln`, so runs with trade or several goods can give slightly
+different numbers in the CLI and in the Experiments view.
+
 ## Running locally
 
 Requirements: Rust with the `wasm32-unknown-unknown` target, `wasm-pack`, Node 22+.
@@ -68,6 +115,7 @@ Requirements: Rust with the `wasm32-unknown-unknown` target, `wasm-pack`, Node 2
 
 ## Tests
 
+    cargo test                                                      # whole workspace, incl. the CLI
     cargo test -p sugarscape-core                                   # unit + property tests
     cargo test -p sugarscape-core --release --test book -- --ignored # book reproductions
     wasm-pack test --node crates/sugarscape-wasm                    # bindings

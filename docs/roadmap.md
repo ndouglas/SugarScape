@@ -18,10 +18,18 @@ pollution matrices, per-good charts, layers, painting and inspector rows, and th
 `n-3-trade`, `n-4-peaks` and `n-2-pollutants` presets. Earlier presets run unchanged except
 `vi-1-everything`. See `docs/superpowers/specs/2026-09-23-n-goods-design.md`.
 
+## Milestone 5: Experiments (done)
+
+Parameter sweeps (config values × seeds, each run summarized by one statistic) in the core,
+a native `sugarscape` CLI (`presets`, `sweeps`, `run`, `sweep`) and a browser Experiments
+view on a Web Worker pool, with measured built-in sweeps for Figures II-5, IV-6 and
+IV-10/11 and for carrying capacity vs the number of goods. See
+`docs/superpowers/specs/2026-09-23-experiments-design.md`.
+
 ## Experiments and science
 
-- **Parameter sweeps / batch runs**: reproduce the book's parametric figures (Fig. II-5 carrying capacity vs. vision and metabolism; Fig. IV-6 carrying capacity with and without trade). A headless runner (native CLI over `sugarscape-core`, or a Web Worker pool in the browser) that runs a grid of configs × seeds and plots summary curves.
-- **Headless CLI**: `sugarscape run --preset ii-5-wealth --seed 7 --ticks 1000 --csv out.csv` for scripted experiments and notebooks.
+- **Parameter sweeps / batch runs**: done (Milestone 5).
+- **Headless CLI**: done (Milestone 5).
 - **Chapter VI "artificial history" presets**: the book's culminating combined rule systems, and its flocking / group-formation asides (Animation VI-8).
 - **Credit hierarchy view**: the book's layered lender → borrower tree (Animation IV-5, second half), beyond the spatial overlay.
 
