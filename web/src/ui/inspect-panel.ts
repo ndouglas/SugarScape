@@ -97,15 +97,17 @@ export class InspectPanel {
   private render(): void {
     if (!this.visible) return;
     const sel = this.engine.selection;
-    if (!sel) {
+    const shown = this.engine.inspection;
+    if (!sel || !shown) {
       this.el.replaceChildren(h('p', { class: 'hint' }, 'Choose the Inspect tool and click an agent or site.'));
       return;
     }
-    const gone = sel.agentId !== null && !this.engine.sim.locate(sel.agentId);
-    const { site, agent } = this.engine.inspect(sel.x, sel.y);
+    // The host tracks a selected agent while it lives (Decision 3).
+    const gone = shown.agentId !== null && !shown.alive;
+    const { site, agent } = shown.view;
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     this.el.replaceChildren(
-      ...(gone ? [h('p', { class: 'error' }, `Agent #${sel.agentId} has died.`)] : []),
+      ...(gone ? [h('p', { class: 'error' }, `Agent #${shown.agentId} has died.`)] : []),
       h(
         'table',
         {},

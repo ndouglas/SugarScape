@@ -241,4 +241,37 @@ describe('Engine', () => {
     expect(engine.running).toBe(false);
     expect(await engine.place(0, 2, {})).toEqual([{ field: 'simulation', message }]);
   });
+
+  it('follows an agent and keeps its trail', async () => {
+    const { engine } = await setup();
+    await engine.followAgent(1);
+    expect(engine.followed()).toBe(1);
+    expect(engine.followedAlive()).toBe(true);
+    expect(Array.from(engine.trail())).toEqual([1, 1]);
+    await engine.advance(1);
+    expect(Array.from(engine.trail())).toEqual([2, 1]);
+    await engine.erase(2, 1);
+    expect(engine.followedAlive()).toBe(false);
+    await engine.unfollow();
+    expect(engine.followed()).toBeNull();
+    expect(engine.trail()).toHaveLength(0);
+  });
+
+  it('fetches the networks of the overlays that are on', async () => {
+    const { engine } = await setup();
+    expect(engine.networks('trade')).toHaveLength(0);
+    engine.setDisplay({ overlays: { trade: true } });
+    await settle();
+    expect(Array.from(engine.networks('trade'))).toEqual([0, 0, 1, 1]);
+  });
+
+  it('keeps a selected agent that died selected, as gone', async () => {
+    const { engine } = await setup();
+    await engine.selectAgent(1);
+    expect(engine.selection).toEqual({ x: 1, y: 1, agentId: 1 });
+    await engine.erase(1, 1);
+    expect(engine.inspection).toMatchObject({ agentId: 1, alive: false });
+    await engine.selectAgent(1); // no longer alive: nothing changes
+    expect(engine.selection).toEqual({ x: 1, y: 1, agentId: 1 });
+  });
 });

@@ -16,7 +16,7 @@ import {
 import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, type Transport } from './transport';
-import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Preset, Snapshot } from './types';
+import type { ColorMode, Config, DiseaseEntry, FieldError, Layer, Preset, Snapshot } from './types';
 import init, { presets_json, type Sim } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -374,11 +374,6 @@ export class Engine {
     const sim = this.transport.host.currentSim();
     if (!sim) throw new Error('no world yet');
     return sim as unknown as Sim;
-  }
-
-  /** @deprecated Temporary (Task 8 moves the Inspect panel to `inspection`). */
-  inspect(x: number, y: number): Inspection {
-    return JSON.parse(this.sim.inspect(x, y)) as Inspection;
   }
 
   /** @deprecated Temporary (Task 9 moves the disease tools to a provider). */

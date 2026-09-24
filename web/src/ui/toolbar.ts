@@ -26,7 +26,7 @@ export function buildToolbar(engine: Engine): HTMLElement {
     const id = engine.followed();
     chip.hidden = id === null;
     if (id === null) return;
-    const alive = engine.sim.locate(id) !== undefined;
+    const alive = engine.followedAlive();
     const text = `Following #${id}${alive ? '' : ' †'}`;
     chip.title = text;
     chip.replaceChildren(

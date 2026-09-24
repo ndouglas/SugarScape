@@ -74,7 +74,7 @@ export class GridView {
 
     for (const [kind, color] of [['trade', '--c3'], ['credit', '--c2'], ['disease', '--c4']] as const) {
       if (!this.engine.overlays[kind]) continue;
-      const e = this.engine.sim.networks(kind);
+      const e = this.engine.networks(kind);
       ctx.save();
       ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue(color).trim() || '#fff';
       ctx.globalAlpha = 0.8;
