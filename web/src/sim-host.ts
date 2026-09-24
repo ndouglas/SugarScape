@@ -2,8 +2,10 @@ import type { CreditGraph } from './credit';
 import { clampDisplay } from './layers';
 import {
   chartKey,
+  transfers,
   type ChartGroup,
   type DisplayState,
+  type HostMessage,
   type HostReply,
   type HostRequest,
   type Overlay,
@@ -303,4 +305,12 @@ export class SimHost {
     }
     return out;
   }
+}
+
+/** Wires a host to a message channel: each request is answered in order, its buffers transferred. */
+export function serve(host: SimHost, send: (message: HostMessage, transfer: Transferable[]) => void): (req: HostRequest) => void {
+  return (req) => {
+    const reply = host.handle(req);
+    send(reply, transfers(reply));
+  };
 }

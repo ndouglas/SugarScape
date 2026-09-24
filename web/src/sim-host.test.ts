@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fakeModule } from './fake-sim.fixture';
-import type { Command, DisplayState, HostReply, Wants, WorldSnapshot } from './protocol';
-import { SimHost } from './sim-host';
+import type { Command, DisplayState, HostMessage, HostReply, Wants, WorldSnapshot } from './protocol';
+import { serve, SimHost } from './sim-host';
 import type { Config } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
@@ -185,5 +185,19 @@ describe('SimHost', () => {
     expect(t.send({ type: 'seriesCsv' }).result).toEqual({ ok: true, value: 'tick,population\n26,1\n' });
     expect(t.send({ type: 'agentsCsv' }).result).toEqual({ ok: true, value: 'id\n1\n' });
     expect(t.send({ type: 'fingerprint' }).result).toEqual({ ok: true, value: '0x1a' });
+  });
+});
+
+describe('serve', () => {
+  it('answers each request in order and lists its buffers for transfer', () => {
+    const sent: [HostMessage, Transferable[]][] = [];
+    const handle = serve(new SimHost(fakeModule()), (m, t) => sent.push([m, t]));
+    const frame = new ArrayBuffer(48);
+    handle({ id: 1, cmd: { type: 'init', config, seed: 1, landscapes: [], display }, frame });
+    handle({ id: 2, cmd: { type: 'fingerprint' } });
+    expect(sent.map(([m]) => m.id)).toEqual([1, 2]);
+    expect(sent[0][1]).toHaveLength(1);
+    expect(sent[0][1][0]).toBe(frame);
+    expect((sent[1][0] as HostReply).result).toEqual({ ok: true, value: '0x0' });
   });
 });
