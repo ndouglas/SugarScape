@@ -468,3 +468,54 @@ fn fig_iv_10_11_long_lives_end_with_less_price_dispersion() {
     let (short, long) = (last(0), last(1));
     assert!(long < short, "lifetimes 60–100: {short}, 960–1000: {long}");
 }
+
+#[test]
+#[ignore]
+fn bargaining_rules_give_similar_carrying_capacities() {
+    // Chapter IV note 15: with a price drawn from [MRS_A, MRS_B], "the
+    // qualitative character of the results … is insensitive to this change".
+    // At `sweeps/bargaining-rules.json`'s settings (series 0 = geometric
+    // mean, 1 = random), the two lines' mean carrying capacities differ by
+    // less than TOLERANCE × the geometric-mean line at every mean vision.
+    // TOLERANCE is the τ measured and recorded in the sweep's description
+    // (model extensions plan, Task 7). Measured means (release, seeds
+    // 1..=10): [[41.8, 54.6, 63.8, 71.7, 73.4, 76.6],
+    // [41.7, 57.8, 63.2, 69.4, 74.1, 75.5]].
+    const TOLERANCE: f64 = 0.20;
+    let means = cell_means(&run_builtin("bargaining-rules"));
+    for (x, (&geometric, &random)) in means[0].iter().zip(&means[1]).enumerate() {
+        assert!(
+            (random - geometric).abs() < TOLERANCE * geometric,
+            "vision {x}: geometric mean {geometric}, random {random}"
+        );
+    }
+}
+
+#[test]
+#[ignore]
+fn three_tribes_start_with_every_group_present() {
+    // Chapter III note 20's three groups on 11-bit tags: with uniformly random
+    // tags about 11% of agents are Blue (0–3 zeros), 77% Green (4–7) and 11%
+    // Red (8–11). Measured at t = 0, seed 1: members per group = [46, 313,
+    // 41].
+    let config = presets::by_id("iii-6-three-tribes").unwrap().config;
+    let groups = config.culture.groups.clone();
+    let names: Vec<&str> = groups.iter().map(|g| g.name.as_str()).collect();
+    assert_eq!(names, ["Blue", "Green", "Red"]);
+    let mut w = World::new(config, 1).unwrap();
+    let mut members = vec![0; groups.len()];
+    for a in w.agents() {
+        members[a.group(&groups)] += 1;
+    }
+    assert!(
+        members.iter().all(|&m| m > 0),
+        "members per group at t = 0: {members:?}"
+    );
+    let shares = &w.stats.latest().unwrap().groups;
+    assert!(
+        (shares.iter().sum::<f64>() - 1.0).abs() < 1e-12,
+        "{shares:?}"
+    );
+    w.run(500);
+    assert!(w.population() > 0);
+}
