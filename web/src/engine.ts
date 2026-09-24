@@ -491,10 +491,16 @@ export class Engine {
     return this.quiet(() => this.rebuild(state.config, state.seed, state.landscapes ?? [], { log: state.log ?? [] }));
   }
 
-  /** Drops the edits still to replay, keeping the world as it is. */
-  async endReplay(): Promise<void> {
-    const result = await this.send({ type: 'endReplay' });
-    if (result.ok && result.snapshot) this.accept(result.snapshot);
+  /**
+   * Drops the edits still to replay, keeping the world as it is. Queued behind any write already
+   * pending — Reset (replay) then the chip's ✕ in quick succession — so a `replay()` still queued
+   * cannot reach the host after this and re-arm the replay it was meant to end.
+   */
+  endReplay(): Promise<void> {
+    return this.quiet(async () => {
+      const result = await this.send({ type: 'endReplay' });
+      if (result.ok && result.snapshot) this.accept(result.snapshot);
+    });
   }
 
   private displayState(): DisplayState {

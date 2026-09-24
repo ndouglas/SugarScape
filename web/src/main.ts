@@ -1,15 +1,19 @@
 import './style.css';
-import { downloadBlob, downloadText, canvasBlob } from './downloads';
+import { canvasBlob, downloadBlob, downloadText } from './downloads';
 import { Engine } from './engine';
 import { ExperimentsView } from './experiments/view';
-import { decodeShare, decodeSweep, encodeShare, readHash, readSweepHash } from './share';
+import { LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
+import { decodeShare, decodeSweep, parseSessionFile, readHash, readSweepHash, sessionFileText } from './share';
 import { ChartsPanel } from './ui/charts-panel';
 import { CreditPanel } from './ui/credit-panel';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
+import { buildExportMenu } from './ui/export-menu';
 import { GridView } from './ui/grid-view';
 import { InspectPanel } from './ui/inspect-panel';
+import { showNotice } from './ui/notice';
 import { RulesPanel } from './ui/rules-panel';
+import { buildShareMenu } from './ui/share-menu';
 import { Tabs } from './ui/tabs';
 import { buildToolbar } from './ui/toolbar';
 import { buildTools } from './ui/tools';
@@ -26,16 +30,19 @@ export function showBanner(message: string, action?: { label: string; run: () =>
   banner.hidden = false;
 }
 
+const message = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+
 async function main(): Promise<void> {
   let engine: Engine;
   const token = readHash();
   try {
+    // A link's session replays its edits as the world runs (Decision 2).
     engine = token ? await Engine.create(await decodeShare(token)) : await Engine.create();
   } catch (e) {
-    showBanner(`That share link could not be loaded (${e instanceof Error ? e.message : String(e)}). Showing the default rule system.`);
+    showBanner(`That share link could not be loaded (${message(e)}). Showing the default rule system.`);
     engine = await Engine.create();
   }
-  // Browser checks drive the engine through this handle (Decision 14).
+  // Browser checks drive the engine through this handle (7a Decision 14).
   if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { sugarscape: { engine } });
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
   document.querySelector('#toolbar')!.append(buildToolbar(engine));
@@ -66,7 +73,7 @@ async function main(): Promise<void> {
       experiments.openSweep(await decodeSweep(sweepToken));
       showView('experiments');
     } catch (e) {
-      showBanner(`That experiment link could not be loaded (${e instanceof Error ? e.message : String(e)}).`);
+      showBanner(`That experiment link could not be loaded (${message(e)}).`);
     }
   }
 
@@ -86,44 +93,44 @@ async function main(): Promise<void> {
   document.querySelector('#tools')!.append(buildTools(engine, grid, () => tabs.show('Inspect')));
 
   const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.tick}`;
-  const shareButton = h('button', {
-    onclick: async () => {
-      const token = await encodeShare({ config: engine.baseConfig, seed: engine.seed, landscapes: engine.editedLandscapes() });
-      history.replaceState(null, '', `#s=${token}`);
-      try {
-        await navigator.clipboard.writeText(location.href);
-        shareButton.textContent = 'Link copied';
-      } catch {
-        shareButton.textContent = 'Link in address bar';
+  const exportMenu = buildExportMenu({
+    worlds: () => [{ label: '', engine, grid }],
+    slug: () => slug(),
+    charts: async () => {
+      tabs.show('Charts');
+      await engine.refresh();
+      // Let the panel draw the fresh snapshot before the canvases are captured.
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      for (const { name, canvas } of charts.canvases()) {
+        downloadBlob(`${slug()}-${name.toLowerCase().replace(/\W+/g, '-')}.png`, await canvasBlob(canvas));
       }
-      setTimeout(() => (shareButton.textContent = 'Share'), 2000);
     },
-    title: 'Copy a link to this setup (config, seed and the painted capacity of every good; hand-placed agents are not included)',
-  }, 'Share');
-  const menu = h(
-    'details',
-    { class: 'menu' },
-    h('summary', {}, 'Export'),
-    h('div', { class: 'menu-items' },
-      h('button', { onclick: async () => downloadText(`${slug()}-series.csv`, await engine.seriesCsv()) }, 'Statistics (CSV)'),
-      h('button', { onclick: async () => downloadText(`${slug()}-agents.csv`, await engine.agentsCsv()) }, 'Agents (CSV)'),
-      h('button', { onclick: async () => downloadBlob(`${slug()}-grid.png`, await grid.toPngBlob()) }, 'Grid (PNG)'),
-      h('button', {
-        onclick: async () => {
-          tabs.show('Charts');
-          await engine.refresh();
-          // Let the panel draw the fresh snapshot before the canvases are captured.
-          await new Promise((resolve) => requestAnimationFrame(resolve));
-          for (const { name, canvas } of charts.canvases()) {
-            downloadBlob(`${slug()}-${name.toLowerCase().replace(/\W+/g, '-')}.png`, await canvasBlob(canvas));
-          }
-        },
-      }, 'Charts (PNG)'),
-    ),
-  );
-  document.querySelector('.toolbar-end')!.append(shareButton, menu);
+    session: async () => {
+      const { state, full } = await shareable(engine);
+      if (full) showNotice(LOG_FULL_NOTICE, 10_000);
+      downloadText(`${slug()}-session.json`, sessionFileText({ kind: 'session', state }), 'application/json');
+    },
+  });
+  const shareMenu = buildShareMenu({
+    link: () => sessionLink(engine),
+    open: async (file) => {
+      try {
+        const opened = parseSessionFile(await file.text());
+        if (opened.kind !== 'session') throw new Error('it holds a comparison, which this page cannot open yet');
+        const errors = await engine.open(opened.state);
+        if (errors) throw new Error(errors.map((x) => `${x.field}: ${x.message}`).join('; '));
+        // The address bar no longer describes this world.
+        history.replaceState(null, '', location.pathname + location.search);
+        showNotice(`Opened ${file.name}`);
+      } catch (e) {
+        showNotice(`${file.name} could not be opened (${message(e)})`, 10_000);
+      }
+    },
+  });
+  document.querySelector('.toolbar-end')!.append(shareMenu, exportMenu);
 
   engine.on('crash', () => showBanner('The simulation crashed.', { label: 'Reload', run: () => location.reload() }));
+  engine.on('fork', () => showNotice('Replay ended — your edit starts a new branch'));
   let dirty = true;
   for (const event of ['snapshot', 'display'] as const) engine.on(event, () => (dirty = true));
   const loop = (now: number) => {
@@ -145,4 +152,4 @@ async function main(): Promise<void> {
   requestAnimationFrame(loop);
 }
 
-main().catch((e) => showBanner(`Failed to start: ${e instanceof Error ? e.message : String(e)}`));
+main().catch((e) => showBanner(`Failed to start: ${message(e)}`));

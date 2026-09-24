@@ -759,4 +759,30 @@ describe('Engine sessions', () => {
     expect([engine.tick, engine.seed, engine.population, engine.replayLeft]).toEqual([0, 3, 2, 0]);
     expect((await engine.session()).session.log).toEqual(log);
   });
+
+  it("endReplay queued behind a still-pending replay() cannot be raced into re-arming it (Reset then ✕ quickly)", async () => {
+    const log: LogEntry[] = [
+      { tick: 1, cmd: { type: 'place', x: 0, y: 2, overrides: {} } },
+      { tick: 2, cmd: { type: 'erase', x: 0, y: 2 } },
+    ];
+    const engine = await Engine.create({ config, seed: 7, log }, deps());
+    await engine.advance(1);
+    expect(engine.replayLeft).toBe(1);
+    const counts: number[] = [];
+    engine.on('replay', () => counts.push(engine.replayLeft));
+    // Reset (same seed) re-arms the full log; the chip's ✕ fires right after, before replay()
+    // has resolved. Without queuing endReplay behind it, ✕'s endReplay could reach the host
+    // first and then replay()'s own reset would re-arm the replay underneath it.
+    const replaying = engine.replay();
+    const ending = engine.endReplay();
+    await Promise.all([replaying, ending]);
+    expect(engine.replayLeft).toBe(0);
+    expect(engine.tick).toBe(0);
+    expect(engine.population).toBe(1);
+    await engine.advance(5);
+    expect(engine.replayLeft).toBe(0);
+    expect(engine.population).toBe(1);
+    expect(counts.every((n) => n === 0 || n === 2)).toBe(true);
+    expect(counts.at(-1)).toBe(0);
+  });
 });

@@ -3,6 +3,52 @@ import { h } from './dom';
 
 const SPEEDS: Speed[] = [1, 2, 5, 10, 25, 100, 'max'];
 
+/** A chip and the removal of its listeners. */
+export interface Chip { el: HTMLElement; off: () => void }
+
+/** "Following #id ✕" while `engine` draws an agent's trail; † once it has died. */
+export function followChip(engine: Engine): Chip {
+  const el = h('span', { class: 'chip' });
+  const sync = () => {
+    const id = engine.followed();
+    el.hidden = id === null;
+    if (id === null) return;
+    const alive = engine.followedAlive();
+    const text = `Following #${id}${alive ? '' : ' †'}`;
+    el.title = text;
+    el.replaceChildren(
+      h('span', { class: 'chip-text' }, text),
+      h('button', { class: 'link', title: 'Stop following', 'aria-label': 'Stop following', onclick: () => engine.unfollow() }, '✕'),
+    );
+  };
+  const offs = (['follow', 'reset', 'tick', 'edit'] as const).map((event) => engine.on(event, sync));
+  sync();
+  return { el, off: () => offs.forEach((off) => off()) };
+}
+
+/** "Replaying · N edits left ✕" while `engine` has edits to replay; ✕ keeps the world and drops the rest. */
+export function replayChip(engine: Engine): Chip {
+  const el = h('span', { class: 'chip replay-chip' });
+  const sync = () => {
+    const left = engine.replayLeft;
+    el.hidden = left === 0;
+    if (left === 0) return;
+    const text = `Replaying · ${left} edit${left === 1 ? '' : 's'} left`;
+    el.title = text;
+    el.replaceChildren(
+      h('span', { class: 'chip-text' }, text),
+      h(
+        'button',
+        { class: 'link', title: 'Stop replaying (keep the world as it is)', 'aria-label': 'Stop replaying', onclick: () => void engine.endReplay() },
+        '✕',
+      ),
+    );
+  };
+  const offs = (['replay', 'reset'] as const).map((event) => engine.on(event, sync));
+  sync();
+  return { el, off: () => offs.forEach((off) => off()) };
+}
+
 export function buildToolbar(engine: Engine): HTMLElement {
   const play = h('button', { class: 'primary', onclick: () => engine.setRunning(!engine.running) });
   const step = h('button', { onclick: () => void engine.advance(1), title: 'Advance one tick' }, 'Step');
@@ -15,30 +61,24 @@ export function buildToolbar(engine: Engine): HTMLElement {
     ...SPEEDS.map((s) => h('option', { value: String(s) }, s === 'max' ? 'Max' : `${s}×`)),
   );
   const seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
-  const reset = h('button', { onclick: () => void engine.reset(undefined, Number(seed.value) >>> 0) }, 'Reset');
+  const reset = h(
+    'button',
+    {
+      title: 'Rebuild this world and replay its edits; with another seed typed, build a new world',
+      onclick: () => {
+        const s = Number(seed.value) >>> 0;
+        // The same seed rewinds and replays the session; another seed builds a new world (Decision 4).
+        void (s === engine.seed ? engine.replay() : engine.reset(undefined, s));
+      },
+    },
+    'Reset',
+  );
   const dice = h(
     'button',
     { title: 'Random seed and reset', onclick: () => void engine.reset(undefined, randomSeed()) },
     '🎲',
   );
   const readout = h('span', { class: 'readout' });
-
-  /** "Following #id ✕" while an agent's trail is drawn; † once it has died. */
-  const chip = h('span', { class: 'chip' });
-  const syncFollow = () => {
-    const id = engine.followed();
-    chip.hidden = id === null;
-    if (id === null) return;
-    const alive = engine.followedAlive();
-    const text = `Following #${id}${alive ? '' : ' †'}`;
-    chip.title = text;
-    chip.replaceChildren(
-      h('span', { class: 'chip-text' }, text),
-      h('button', { class: 'link', title: 'Stop following', 'aria-label': 'Stop following', onclick: () => engine.unfollow() }, '✕'),
-    );
-  };
-  for (const event of ['follow', 'reset', 'tick', 'edit'] as const) engine.on(event, syncFollow);
-  syncFollow();
 
   const sync = () => {
     play.textContent = engine.running ? 'Pause' : 'Play';
@@ -65,7 +105,8 @@ export function buildToolbar(engine: Engine): HTMLElement {
     h('div', { class: 'group' }, play, step, speed),
     h('div', { class: 'group' }, h('label', {}, 'Seed ', seed), reset, dice),
     readout,
-    chip,
+    followChip(engine).el,
+    replayChip(engine).el,
     h('div', { class: 'toolbar-end' }),
   );
 }

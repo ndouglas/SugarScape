@@ -174,3 +174,8 @@ body[data-view='experiments'] .toolbar .chip { display: none; }
 .credit-node.lender { fill: var(--lender); }
 .credit-node.borrower { fill: var(--borrower); }
 .credit-node.both { fill: var(--both); }
+.notice { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 20; display: flex; gap: 10px; align-items: center; max-width: min(92vw, 44em); padding: 8px 12px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.18); }
+.notice button { flex-shrink: 0; }
+.replay-chip { max-width: 17em; }
+.menu-row { display: flex; gap: 6px; align-items: center; }
+.menu-row span { flex: 1; }
