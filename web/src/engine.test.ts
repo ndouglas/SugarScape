@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Engine, type EngineEvent } from './engine';
 import { fakeModule } from './fake-sim.fixture';
 import type { Command, HostReply, Wants } from './protocol';
@@ -330,17 +330,32 @@ describe('Engine', () => {
     expect(fresh.behind(groups, engine.tick)).toBe(false);
   });
 
-  it("keeps wants().select current for a request sent before a new selection's own reply lands (T12 minor 3)", async () => {
+  it("keeps wants().select current for a request sent before a new selectAgent's own reply lands (T12 minor 3)", async () => {
     const { engine, transport } = await setup();
-    await engine.select(2, 1);
+    expect(await engine.place(0, 2, {})).toBeNull(); // a second agent, id 2, at (0, 2)
+    await engine.selectAgent(1); // agent 1 starts at (1, 1)
     let capturedWants: Wants | undefined;
     transport.after = (cmd, wants) => {
       if (cmd.type === 'inspect') void engine.refresh();
       else if (cmd.type === 'refresh') capturedWants = wants;
     };
-    await engine.select(0, 0);
+    await engine.selectAgent(2);
     transport.after = null;
-    expect(capturedWants?.select).toEqual({ x: 0, y: 0, agentId: null });
+    // agentId is exact immediately; x/y are only the previous selection's as a fallback (T13 minor 2).
+    expect(capturedWants?.select).toEqual({ x: 1, y: 1, agentId: 2 });
+  });
+
+  it("omits a pending site-only select from wants rather than guessing wrong (T13 minor 2)", async () => {
+    const { engine, transport } = await setup();
+    await engine.select(1, 1); // agent 1's site
+    let capturedWants: Wants | undefined;
+    transport.after = (cmd, wants) => {
+      if (cmd.type === 'inspect') void engine.refresh();
+      else if (cmd.type === 'refresh') capturedWants = wants;
+    };
+    await engine.select(2, 1); // an empty site; still pending when the refresh goes out
+    transport.after = null;
+    expect(capturedWants?.select).toBeUndefined();
   });
 
   it("keeps wants().trail current for a request sent before follow's own reply lands (T12 minor 3)", async () => {
@@ -433,5 +448,83 @@ describe('Engine at Max speed', () => {
     await wait(5);
     expect(engine.tick).toBe(at + 5);
     engine.setRunning(false);
+  });
+
+  it("updates the Inspect panel's selection from posts, before stopping (fix round 1, Important)", async () => {
+    const { engine } = await maxSetup();
+    await engine.selectAgent(1); // agent 1 starts at (1, 1) and walks +1 x per tick
+    const before = engine.inspection;
+    expect(before?.x).toBe(1);
+    // A post (not just the final `stop`, which goes through send() and always updates it) must be
+    // what moves this while Max is still running.
+    let changedWhileRunning = false;
+    engine.on('snapshot', () => {
+      if (engine.running && engine.inspection !== before) changedWhileRunning = true;
+    });
+    engine.setRunning(true);
+    await wait(30);
+    expect(changedWhileRunning).toBe(true);
+    expect(engine.selection).toEqual({ x: (1 + engine.tick) % 4, y: 1, agentId: 1 });
+    engine.setRunning(false);
+    await wait(5);
+  });
+
+  it('keeps a followed trail updating from posts too, before stopping (no regression: not gated the same way)', async () => {
+    const { engine } = await maxSetup();
+    await engine.followAgent(1);
+    const before = engine.trail();
+    let changedWhileRunning = false;
+    engine.on('snapshot', () => {
+      if (engine.running && engine.trail() !== before) changedWhileRunning = true;
+    });
+    engine.setRunning(true);
+    await wait(30);
+    expect(changedWhileRunning).toBe(true);
+    expect(Array.from(engine.trail())).toEqual([(1 + engine.tick) % 4, 1]);
+    engine.setRunning(false);
+    await wait(5);
+  });
+
+  it('gives exactly one stop and one run for two writes queued together (fix round 1, minor 3)', async () => {
+    const { engine, sent } = await maxSetup();
+    engine.setRunning(true);
+    sent.length = 0;
+    const first = engine.applyConfig((c) => void (c.population = 2));
+    const second = engine.applyConfig((c) => void (c.population = 3));
+    expect(await first).toBeNull();
+    expect(await second).toBeNull();
+    expect(sent.filter((c) => c === 'stop')).toHaveLength(1);
+    expect(sent.filter((c) => c === 'run')).toHaveLength(1);
+    engine.setRunning(false);
+  });
+
+  it('ends Max and emits crash on a fatal post (fix round 1, minor 3)', async () => {
+    const module = fakeModule();
+    let clock = 0;
+    const transport = new InlineTransport(new SimHost(module, () => clock++));
+    const engine = await Engine.create({ config, seed: 7 }, { presets, transport });
+    const sim = module.sims[0];
+    const realStep = sim.step.bind(sim);
+    let calls = 0;
+    // Panics inside a batch, not a request: exercises the `{ id: null, fatal }` post path (as
+    // opposed to a request-reply fatal, already covered by 'stops for good after a panic').
+    sim.step = (n: number) => {
+      calls++;
+      if (calls > 2) throw new Error('boom');
+      realStep(n);
+    };
+    const crashes: string[] = [];
+    engine.on('crash', () => crashes.push(engine.crashed ?? ''));
+    vi.useFakeTimers();
+    try {
+      engine.setSpeed('max');
+      engine.setRunning(true);
+      await vi.advanceTimersByTimeAsync(10);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(crashes).toHaveLength(1);
+    expect(engine.crashed).toContain('boom');
+    expect(engine.running).toBe(false);
   });
 });

@@ -133,9 +133,14 @@ export class Engine {
    * The selection `wants()` reports while an `inspect`/`select` issued after the confirmed
    * `selection` hasn't had its own reply resolve yet (T12 minor 3): set the moment the request is
    * sent, so a request sent before that reply lands (e.g. Max's `frame`) does not carry the stale
-   * selection and clobber the host's own patch. `undefined` means no override is pending.
+   * selection and clobber the host's own patch. `undefined` means no override is pending; `null`
+   * means the override is "report no selection at all" — used for a pending site-only select
+   * (T13 minor 2), where the target may turn out to have an agent on it the host would track more
+   * precisely than the site alone, so a guess is omitted rather than sent and self-corrects once
+   * the reply lands (an agentId-based select always knows its target exactly, so it never needs
+   * this: see `inspectTarget`).
    */
-  private pendingSelect: SelectQuery | undefined;
+  private pendingSelect: SelectQuery | null | undefined;
   /** Guards `pendingSelect` against a superseded inspect's own resolution clearing a newer one. */
   private pendingSelectSeq = 0;
   /** Same idea as `pendingSelect`, for `wants().trail` while a `follow`/`unfollow` is outstanding. */
@@ -549,17 +554,29 @@ export class Engine {
   private stopMax(): Promise<void> {
     if (!this.maxOn) return this.stopping ?? Promise.resolve();
     this.maxOn = false;
-    this.stopping = this.send({ type: 'stop' }).then((result) => {
-      this.stopping = null;
+    // Captured by reference (T13 fix round 1, minor 1): Pause, Play, Pause in quick succession
+    // starts a second stop while the first is still outstanding; the first's `.then` must not clear
+    // the second's still-pending `this.stopping` out from under it.
+    const stopping: Promise<void> = this.send({ type: 'stop' }).then((result) => {
+      if (this.stopping === stopping) this.stopping = null;
       if (!result.ok || !result.snapshot) return;
       const events: EngineEvent[] = result.snapshot.config ? ['config', 'tick'] : ['tick'];
       this.accept(result.snapshot, events);
     });
-    return this.stopping;
+    this.stopping = stopping;
+    return stopping;
   }
 
   /** A Max-speed snapshot: adopt it, then hand the displaced buffer straight back with fresh wants. */
   private onPost(s: WorldSnapshot): void {
+    // Posts never go through send(), so they carry no sentUnder entry: adopt()'s PF7 generation
+    // check would otherwise always drop s.inspection, leaving the Inspect panel and the grid's
+    // selection frozen for as long as Max runs (Task 13 fix round 1, Important). Tag it with the
+    // current generation before accepting — but only while no inspect/select is pending, so a post
+    // that happens to be in flight under the same generation cannot win over that request's own
+    // reply once it lands. (The trail and `followed`/`followedAlive` need no such fix: adopt() sets
+    // them unconditionally from every snapshot, not gated by a generation.)
+    if (this.pendingSelect === undefined) this.sentUnder.set(s, this.selectionGen);
     const events: EngineEvent[] = s.config ? ['config', 'tick'] : ['tick'];
     this.accept(s, events);
     if (this.maxOn) void this.send({ type: 'frame' }, true);
@@ -623,7 +640,7 @@ export class Engine {
     this.pendingSelect =
       'agentId' in target
         ? { x: this.selection?.x ?? 0, y: this.selection?.y ?? 0, agentId: target.agentId }
-        : { x: target.x, y: target.y, agentId: null };
+        : null; // site-only: which agent (if any) is there is not known until the reply (T13 minor 2)
     const result = await this.send({ type: 'inspect', target });
     // Only clear it if a later inspect/select hasn't already replaced it with its own pending value.
     if (this.pendingSelectSeq === seq) this.pendingSelect = undefined;
