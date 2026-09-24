@@ -786,3 +786,36 @@ describe('Engine sessions', () => {
     expect(counts.at(-1)).toBe(0);
   });
 });
+
+describe('Engine handing over a world', () => {
+  it('takes over another engine’s world: its transport, session and state', async () => {
+    const a = await setup();
+    const b = await setup();
+    await b.engine.advance(4);
+    expect(await b.engine.place(0, 2, {})).toBeNull();
+    await b.engine.select(0, 2);
+    const seen: EngineEvent[] = [];
+    for (const e of ['reset', 'select', 'snapshot'] as const) a.engine.on(e, () => seen.push(e));
+    await a.engine.takeWorld(b.engine);
+    expect(seen).toEqual(['reset', 'select', 'snapshot']);
+    expect([a.engine.tick, a.engine.population]).toEqual([4, 2]);
+    expect(a.engine.selection).toEqual({ x: 0, y: 2, agentId: 2 });
+    await a.engine.advance(1);
+    expect(b.module.sims[0].ticks).toBe(5);
+    expect(a.module.sims[0].ticks).toBe(0);
+    expect((await a.engine.session()).session.log.map((e) => e.cmd.type)).toEqual(['place']);
+    expect(b.engine.crashed).not.toBeNull();
+    expect(a.engine.crashed).toBeNull();
+  });
+
+  it('close stops an engine for good, without a crash event', async () => {
+    const { engine } = await setup();
+    let crashes = 0;
+    engine.on('crash', () => crashes++);
+    engine.close();
+    expect(engine.crashed).not.toBeNull();
+    await engine.advance(1);
+    expect(engine.tick).toBe(0);
+    expect(crashes).toBe(0);
+  });
+});

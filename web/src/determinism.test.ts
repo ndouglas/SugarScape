@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { copyWorld } from './compare/lockstep';
 import { Engine, type Speed } from './engine';
 import type { Overlay } from './protocol';
 import { SimHost } from './sim-host';
@@ -204,4 +205,20 @@ describe('sessions replay exactly', () => {
     },
     20_000,
   );
+  it('copies a world for Compare: B reaches A’s tick with A’s fingerprint', async () => {
+    const a = await create(9);
+    await a.advance(5);
+    const spot = await emptySite(a, 3, 3);
+    expect(await a.place(spot.x, spot.y, {})).toBeNull();
+    expect(await a.infect(spot.x, spot.y, -1)).toBeNull();
+    await a.advance(20);
+    expect(await a.paint(8, 8, 2, 1, 0)).toBeNull();
+    await a.advance(15);
+    const { session, tick } = await a.session();
+    expect(session.log.map((e) => e.cmd.type)).toEqual(['place', 'infect', 'paint']);
+    const b = await copyWorld(session, tick, (s) => Engine.create(s, { presets, transport: inline() }));
+    expect(b.tick).toBe(tick);
+    expect(await b.fingerprint()).toBe(await a.fingerprint());
+    expect((await b.session()).session.log).toEqual(session.log);
+  });
 });

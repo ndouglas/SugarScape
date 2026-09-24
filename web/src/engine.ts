@@ -503,6 +503,76 @@ export class Engine {
     });
   }
 
+  /**
+   * Takes over `other`'s world — its transport (worker), session and state — as Compare's
+   * "Keep B" does (Decision 8). Both must be paused; `other` is dead afterwards. Panels bound to
+   * this engine redraw from the events that follow.
+   */
+  async takeWorld(other: Engine): Promise<void> {
+    await this.quiet(() =>
+      other.quiet(async () => {
+        const mine = this.transport;
+        mine.onFatal = null;
+        mine.onPost = null;
+        mine.close();
+        this.transport = other.transport;
+        this.transport.onFatal = (message) => this.crash(message);
+        this.transport.onPost = (s) => this.onPost(s);
+        other.crashed = 'This world now runs in another engine.';
+        this.seed = other.seed;
+        this.presetId = other.presetId;
+        this.baseConfig = other.baseConfig;
+        this.config = other.config;
+        this.tick = other.tick;
+        this.population = other.population;
+        this.latest = other.latest;
+        this.last = other.last;
+        this.width = other.width;
+        this.height = other.height;
+        this.followedId = other.followedId;
+        this.followedLive = other.followedLive;
+        this.trailCells = other.trailCells;
+        this.edges = { ...other.edges };
+        this.charts = new Map(other.charts);
+        this.landscapes = other.landscapes;
+        this.shown = other.shown;
+        this.spare = [...other.spare];
+        this.selection = other.selection;
+        this.inspection = other.inspection;
+        this.replayLeft = other.replayLeft;
+        this.origin = other.origin;
+        this.colorMode = other.colorMode;
+        this.layer = other.layer;
+        this.overlays = { ...other.overlays };
+        // Announced below, not by the next snapshot.
+        this.replayMoved = false;
+        // An inspect or follow still outstanding was sent to the old world: its reply must not
+        // clear (or be mistaken for) anything in this one.
+        this.pendingSelect = undefined;
+        this.pendingSelectSeq++;
+        this.pendingTrail = undefined;
+        this.pendingTrailSeq++;
+        // Nothing sent before this belongs to the new world.
+        this.selectionGen++;
+        this.displayGen++;
+        this.lastRefresh = -Infinity;
+      }),
+    );
+    for (const event of ['reset', 'follow', 'display', 'replay'] as const) this.emit(event);
+    if (this.inspection) this.emit('select');
+    this.emit('snapshot');
+  }
+
+  /** Stops this engine for good and closes its transport (Compare's "Keep A" discards B this way). */
+  close(): void {
+    this.crashed ??= 'This world was closed.';
+    this.running = false;
+    this.maxOn = false;
+    this.transport.onFatal = null;
+    this.transport.onPost = null;
+    this.transport.close();
+  }
+
   private displayState(): DisplayState {
     return { colorMode: this.colorMode, layer: this.layer, overlays: { ...this.overlays } };
   }
