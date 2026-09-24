@@ -5,11 +5,13 @@ import {
   type ChartGroup,
   type Command,
   type DisplayState,
+  type LogEntry,
   type Overlay,
   type PlaceOverrides,
   type Result,
   type Selected,
   type SelectQuery,
+  type Session,
   type Wants,
   type WorldSnapshot,
 } from './protocol';
@@ -21,11 +23,24 @@ import init, { presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
 
-export type EngineEvent = 'reset' | 'tick' | 'config' | 'run' | 'select' | 'display' | 'edit' | 'follow' | 'snapshot' | 'crash';
+export type EngineEvent =
+  | 'reset'
+  | 'tick'
+  | 'config'
+  | 'run'
+  | 'select'
+  | 'display'
+  | 'edit'
+  | 'follow'
+  | 'snapshot'
+  | 'crash'
+  | 'replay'
+  | 'fork';
 
 export interface Selection { x: number; y: number; agentId: number | null }
 
-export interface InitialState { config: Config; seed: number; landscapes?: (Uint8Array | null)[] }
+/** A world to build: its setup, starting maps and (a session's) edits to replay. */
+export interface InitialState { config: Config; seed: number; landscapes?: (Uint8Array | null)[]; log?: LogEntry[] }
 
 /** What an engine runs on: the presets and a transport to a SimHost (tests pass fakes). */
 export interface EngineDeps { presets: Preset[]; transport: Transport }
@@ -112,6 +127,12 @@ export class Engine {
   last: WorldSnapshot | null = null;
   /** Why the simulation stopped for good, or null. */
   crashed: string | null = null;
+  /** Edits still to replay (the toolbar's chip counts them down). */
+  replayLeft = 0;
+  /** What the world was last built from: a session's config, seed and starting maps (Decision 4). */
+  private origin!: { config: Config; seed: number; landscapes: (Uint8Array | null)[] };
+  /** `replayLeft` changed in the snapshot being adopted: announce 'replay'. */
+  private replayMoved = false;
   private width = 0;
   private height = 0;
   private followedId: number | null = null;
@@ -192,12 +213,18 @@ export class Engine {
     const engine = new Engine(transport, presets, initial?.seed ?? randomSeed());
     const config = initial?.config ?? structuredClone(fallback.config);
     const landscapes = initial?.landscapes ?? [];
-    const result = await engine.send({ type: 'init', config, seed: engine.seed, landscapes, display: engine.displayState() }, true);
+    const log = initial?.log ?? [];
+    const result = await engine.send(
+      { type: 'init', config, seed: engine.seed, landscapes, display: engine.displayState(), log },
+      true,
+    );
     if (!result.ok || !result.snapshot) {
       transport.close();
       throw new Error((failure(result) ?? []).map((x) => `${x.field}: ${x.message}`).join('; '));
     }
+    engine.origin = { config, seed: engine.seed, landscapes };
     engine.adopt(result.snapshot);
+    engine.replayMoved = false;
     engine.baseConfig = structuredClone(engine.config);
     engine.presetId = engine.matchPreset();
     return engine;
@@ -299,7 +326,7 @@ export class Engine {
   async loadPreset(id: string): Promise<FieldError[] | null> {
     const preset = this.presets.find((p) => p.id === id);
     if (!preset) return [{ field: 'preset', message: `unknown preset ${id}` }];
-    return this.quiet(() => this.rebuild(structuredClone(preset.config), this.seed, [], id));
+    return this.quiet(() => this.rebuild(structuredClone(preset.config), this.seed, [], { presetId: id }));
   }
 
   /** True when the base config differs from the last chosen preset or a landscape is custom. */
@@ -425,6 +452,50 @@ export class Engine {
     return this.value({ type: 'fingerprint' });
   }
 
+  /**
+   * The world's session — the config, seed and starting maps it was built from, and its edit log
+   * (including edits still to replay) — whether the log overflowed, and the tick (Decision 4).
+   */
+  session(): Promise<{ session: Session; full: boolean; tick: number }> {
+    return this.quiet(async () => {
+      const result = await this.send({ type: 'session' });
+      if (!result.ok || !result.session) {
+        const errors = failure(result) ?? [{ field: 'simulation', message: 'the simulation sent no session' }];
+        throw new Error(errors.map((e) => `${e.field}: ${e.message}`).join('; '));
+      }
+      const { log, full, tick } = result.session;
+      const { config, seed, landscapes } = this.origin;
+      return { session: { config: structuredClone(config), seed, landscapes, log }, full, tick };
+    });
+  }
+
+  /**
+   * Reset with the same seed: rebuilds the session's world and replays its log from the start,
+   * keeping the setup (base config and preset). With a full log it is a plain reset (Decision 4).
+   */
+  replay(): Promise<FieldError[] | null> {
+    return this.quiet(async () => {
+      const result = await this.send({ type: 'session' });
+      if (!result.ok) return failure(result);
+      if (!result.session || result.session.full) {
+        return this.rebuild(this.baseConfig, this.seed, this.keptLandscapes(this.baseConfig));
+      }
+      const { config, seed, landscapes } = this.origin;
+      return this.rebuild(config, seed, landscapes, { log: result.session.log, keepSetup: true });
+    });
+  }
+
+  /** Builds a session opened on this page (a session file) and replays its log. */
+  open(state: InitialState): Promise<FieldError[] | null> {
+    return this.quiet(() => this.rebuild(state.config, state.seed, state.landscapes ?? [], { log: state.log ?? [] }));
+  }
+
+  /** Drops the edits still to replay, keeping the world as it is. */
+  async endReplay(): Promise<void> {
+    const result = await this.send({ type: 'endReplay' });
+    if (result.ok && result.snapshot) this.accept(result.snapshot);
+  }
+
   private displayState(): DisplayState {
     return { colorMode: this.colorMode, layer: this.layer, overlays: { ...this.overlays } };
   }
@@ -490,6 +561,10 @@ export class Engine {
     this.tick = s.tick;
     this.population = s.population;
     this.latest = s.latest;
+    if (s.replayLeft !== undefined && s.replayLeft !== this.replayLeft) {
+      this.replayLeft = s.replayLeft;
+      this.replayMoved = true;
+    }
     this.followedId = s.followed;
     this.followedLive = s.followedAlive;
     if (s.frame) {
@@ -524,14 +599,20 @@ export class Engine {
 
   /**
    * Fires `'config'` if the snapshot carries a config (except for a new world, which fires
-   * `'reset'` instead), then `events`, then `'display'` if the host clamped the display, then
-   * `'snapshot'`. This is the only place `'config'` fires: the host sends the config once, in
-   * whichever reply or post comes next after it changed (a scheduled change at Max may arrive in
-   * a paint's or a click's reply), so every command's reply is checked here.
+   * `'reset'` instead), then `events`, then `'replay'` if `replayLeft` moved and `'fork'` if the
+   * session branched, then `'display'` if the host clamped the display, then `'snapshot'`. This is
+   * the only place `'config'` fires: the host sends the config once, in whichever reply or post
+   * comes next after it changed (a scheduled change at Max may arrive in a paint's or a click's
+   * reply), so every command's reply is checked here.
    */
   private announce(s: WorldSnapshot, events: EngineEvent[], clamped: boolean): void {
     if (s.config && !events.includes('reset')) this.emit('config');
     for (const e of events) this.emit(e);
+    if (this.replayMoved) {
+      this.replayMoved = false;
+      this.emit('replay');
+    }
+    if (s.forked) this.emit('fork');
     if (clamped) this.emit('display');
     this.emit('snapshot');
   }
@@ -620,11 +701,15 @@ export class Engine {
       : [];
   }
 
+  /**
+   * Builds a new world. `log` is replayed into it (a session); `keepSetup` keeps the base config
+   * and preset (a replay rewinds the same setup rather than choosing a new one — Decision 4).
+   */
   private async rebuild(
     config: Config,
     seed: number,
     landscapes: (Uint8Array | null)[],
-    presetId?: string,
+    opts: { presetId?: string; log?: LogEntry[]; keepSetup?: boolean } = {},
   ): Promise<FieldError[] | null> {
     // Replies to requests sent before this carry the old world's selection; a selection made
     // after it (a click while it is outstanding) is kept.
@@ -632,20 +717,23 @@ export class Engine {
     this.resetting++;
     let result: Result;
     try {
-      result = await this.send({ type: 'reset', config, seed, landscapes }, true);
+      result = await this.send({ type: 'reset', config, seed, landscapes, log: opts.log }, true);
     } finally {
       this.resetting--;
     }
     if (!result.ok || !result.snapshot) return writeFailure(result);
     this.seed = seed;
+    this.origin = { config, seed, landscapes };
     // Unless a selection made after the reset was sent has already arrived.
     if (this.selectedUnder < gen) {
       this.selection = null;
       this.inspection = null;
     }
     const clamped = this.adopt(result.snapshot);
-    this.baseConfig = structuredClone(this.config);
-    this.presetId = presetId ?? this.matchPreset();
+    if (!opts.keepSetup) {
+      this.baseConfig = structuredClone(this.config);
+      this.presetId = opts.presetId ?? this.matchPreset();
+    }
     this.announce(result.snapshot, ['reset'], clamped);
     // Panels' wants may have changed with the config (new chart lines, say).
     void this.refresh();

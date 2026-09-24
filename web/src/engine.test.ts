@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Engine, type EngineEvent } from './engine';
 import { fakeModule } from './fake-sim.fixture';
-import type { Command, HostReply, Wants } from './protocol';
+import type { Command, HostReply, LogEntry, Wants } from './protocol';
 import { SimHost } from './sim-host';
 import { InlineTransport } from './transport';
 import type { Config, Preset } from './types';
@@ -655,5 +655,104 @@ describe('Engine at Max speed', () => {
     expect(crashes).toHaveLength(1);
     expect(engine.crashed).toContain('boom');
     expect(engine.running).toBe(false);
+  });
+});
+
+describe('Engine sessions', () => {
+  const deps = () => ({ presets, transport: new InlineTransport(new SimHost(fakeModule())) });
+
+  it('logs edits with their ticks and returns the session it was built from', async () => {
+    const { engine } = await setup();
+    await engine.advance(2);
+    expect(await engine.place(0, 2, {})).toBeNull();
+    expect(await engine.erase(3, 2)).not.toBeNull(); // failed: not logged
+    await engine.advance(1);
+    expect(await engine.applyConfig((c) => void (c.population = 20))).toBeNull();
+    const { session, full, tick } = await engine.session();
+    expect(full).toBe(false);
+    expect(tick).toBe(3);
+    expect(session.config).toEqual(config);
+    expect(session.seed).toBe(7);
+    expect(session.landscapes).toEqual([]);
+    expect(session.log.map((e) => [e.tick, e.cmd.type])).toEqual([
+      [2, 'place'],
+      [3, 'setConfig'],
+    ]);
+  });
+
+  it('replays a session on a new engine: counts down and shares back the same log', async () => {
+    const first = await setup();
+    await first.engine.advance(2);
+    await first.engine.place(0, 2, {});
+    await first.engine.advance(3);
+    await first.engine.paint(0, 0, 1, 3);
+    const { session } = await first.engine.session();
+    const engine = await Engine.create(session, deps());
+    expect(engine.replayLeft).toBe(2);
+    const counts: number[] = [];
+    engine.on('replay', () => counts.push(engine.replayLeft));
+    await engine.advance(2);
+    expect(engine.population).toBe(2);
+    await engine.advance(3);
+    expect(counts).toEqual([1, 0]);
+    expect((await engine.session()).session.log).toEqual(session.log);
+    expect(await engine.fingerprint()).toBe(await first.engine.fingerprint());
+  });
+
+  it('forks on an edit during a replay; endReplay keeps the world', async () => {
+    const log: LogEntry[] = [
+      { tick: 3, cmd: { type: 'place', x: 0, y: 2, overrides: {} } },
+      { tick: 5, cmd: { type: 'erase', x: 0, y: 2 } },
+    ];
+    const a = await Engine.create({ config, seed: 7, log }, deps());
+    const events: EngineEvent[] = [];
+    a.on('fork', () => events.push('fork'));
+    await a.advance(1);
+    expect(await a.paint(0, 0, 1, 3)).toBeNull();
+    expect(events).toEqual(['fork']);
+    expect(a.replayLeft).toBe(0);
+    expect((await a.session()).session.log.map((e) => e.cmd.type)).toEqual(['paint']);
+
+    const b = await Engine.create({ config, seed: 7, log }, deps());
+    await b.advance(3);
+    expect(b.replayLeft).toBe(1);
+    await b.endReplay();
+    expect(b.replayLeft).toBe(0);
+    expect(b.population).toBe(2);
+    await b.advance(3);
+    expect(b.population).toBe(2);
+    expect((await b.session()).session.log).toHaveLength(1);
+  });
+
+  it('Reset (replay) rebuilds the session and keeps the setup; a new seed starts an empty log', async () => {
+    const { engine, module } = await setup();
+    const preset = engine.presetId;
+    await engine.advance(2);
+    await engine.place(0, 2, {});
+    await engine.applyConfig((c) => void (c.population = 20));
+    await engine.advance(3);
+    expect(await engine.replay()).toBeNull();
+    expect(module.sims).toHaveLength(2);
+    expect(engine.tick).toBe(0);
+    expect(engine.replayLeft).toBe(2);
+    expect(engine.baseConfig.population).toBe(20);
+    expect(engine.presetId).toBe(preset);
+    await engine.advance(2);
+    expect(engine.population).toBe(2);
+    expect(engine.config.population).toBe(20);
+    expect(await engine.reset(undefined, 99)).toBeNull();
+    expect(engine.replayLeft).toBe(0);
+    const fresh = await engine.session();
+    expect(fresh.session.log).toEqual([]);
+    expect(fresh.session.seed).toBe(99);
+  });
+
+  it('opens a session on the running page', async () => {
+    const { engine } = await setup();
+    await engine.advance(4);
+    const log: LogEntry[] = [{ tick: 0, cmd: { type: 'place', x: 0, y: 2, overrides: {} } }];
+    expect(await engine.open({ config, seed: 3, log })).toBeNull();
+    expect([engine.tick, engine.seed, engine.population, engine.replayLeft]).toEqual([0, 3, 2, 0]);
+    expect((await engine.session()).session.log).toEqual(log);
   });
 });
