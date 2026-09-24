@@ -32,6 +32,34 @@ follows Appendix B's matrices (each pollutant forms from the goods gathered and 
 devalues the goods it marks). Each good has its own map: a turned copy of the two-peak map,
 a set of peaks, or flat. Presets `n-3-trade`, `n-4-peaks` and `n-2-pollutants` show them.
 
+Model extensions:
+
+- **Tag groups (tribes).** The Culture section lists the groups: an agent belongs to the first
+  group whose range holds the number of zeros in its tags. The default is the book's two tribes
+  (Blue when zeros outnumber ones, else Red); "Three tribes (book)" gives Chapter III note 20's
+  Blue 0–3, Green 4–7 and Red 8–11 zeros, and groups can be added, removed, renamed and
+  recolored. Combat treats every other group as an enemy, the Tribe color mode uses each group's
+  color, and the Group shares chart and `group_share_K` statistics follow them. Preset
+  `iii-6-three-tribes` runs culture with three tribes.
+- **Bargaining rule.** Trade's Price rule is the book's geometric mean √(MRS_A·MRS_B) or, as
+  Chapter IV note 15 suggests, a price drawn uniformly from [MRS_A, MRS_B]. The built-in sweep
+  `bargaining-rules` compares their carrying capacities; its description records the measured
+  settings and the tolerance within which they agree.
+- **Noise maps and image import.** A good's map can be seeded fractal noise (seed, scale in
+  cells, octaves, height), which tiles the torus seamlessly and is identical on every platform.
+  The paint tool's "Import image…" sets the selected good's capacities from an image's
+  brightness (max capacity 0–10, optionally inverted); transparent pixels (alpha < 128) import
+  as capacity 0 whether or not Invert is on. Like painted maps, imported maps travel with share
+  links and survive resets.
+- **Agent trails.** Inspect an agent and press **Follow** to draw its last 500 positions on the
+  grid (Animation IV-1's tail), fading with age and broken where it wraps around the torus. The
+  toolbar chip stops following. Trails are views only: they never change a run and are not
+  exported or shared.
+- **Credit hierarchy.** With credit on, the **Credit** tab draws Animation IV-5's lender →
+  borrower hierarchy: one row per level (pure lenders on top; loans that close a cycle are
+  ignored), lenders green, borrowers red, both yellow. Clicking an agent inspects it. Above 400
+  loans only the 400 largest are drawn.
+
 ### Notes
 
 - Painted landscapes and share links carry a map for each good that differs from its
@@ -57,6 +85,15 @@ a set of peaks, or flat. Presets `n-3-trade`, `n-4-peaks` and `n-2-pollutants` s
 - `vi-1-everything` changed with N goods: credit now lends spice as well as sugar.
 - Legacy links that set "spice pollutes too" with coefficients other than 1 can differ from
   their old runs in the last bits (α·g₀ + α·g₁ is not always α·(g₀ + g₁) in floating point).
+- With custom tag groups, `blue_fraction` is the share of group 0. The corner "Two tribes"
+  placement, replacement's same-tribe newcomers, the Place tool's Tribe choice and the agents
+  CSV `tribe` column still use the book's two-tribe rule (Blue when zeros outnumber ones).
+- Changing the tag length rebuilds the default groups; custom groups are kept and must still
+  cover every zero count, or the world is not rebuilt and the Culture section explains why.
+- `culture` is reset-only as a whole: a schedule entry that sets `culture` itself (as an
+  object) is rejected, same as the goods and pollutant lists. Schedule subpaths instead, e.g.
+  `culture.enabled` or a group's `name`/`color`; a whole group or its `zeros` range is
+  reset-only too.
 
 ## Experiments
 
@@ -69,8 +106,9 @@ range and the number of runs.
 
 - **Built-in sweeps** (`sweeps/`): `fig-ii-5` (carrying capacity vs vision, one line per
   metabolism), `fig-iv-6` (with and without trade), `fig-iv-10-11` (price dispersion over
-  time for short and long lifetimes) and `n-goods-carrying-capacity`. Each file's description
-  records its measured settings; in the browser only seeds and ticks can be changed.
+  time for short and long lifetimes), `n-goods-carrying-capacity` and `bargaining-rules`
+  (carrying capacity vs vision under the two price rules). Each file's description records
+  its measured settings; in the browser only seeds and ticks can be changed.
 - **From current world**: a config path (the input suggests every number and on/off setting),
   values as `1, 2, 3`, `true, false` or `from:to:step`, an optional second axis, seeds, ticks
   and the metric.

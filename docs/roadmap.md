@@ -26,19 +26,27 @@ view on a Web Worker pool, with measured built-in sweeps for Figures II-5, IV-6 
 IV-10/11 and for carrying capacity vs the number of goods. See
 `docs/superpowers/specs/2026-09-23-experiments-design.md`.
 
+## Milestone 6: Model extensions (done)
+
+User-defined tag groups with the book's three-tribe scheme (`iii-6-three-tribes`), a pluggable
+bargaining rule (geometric mean or a random price in [MRS_A, MRS_B]) with the measured
+`bargaining-rules` sweep, seeded fractal-noise maps and image import for landscapes, agent
+trails, and a layered credit-hierarchy tab. Earlier presets run unchanged. See
+`docs/superpowers/specs/2026-09-23-model-extensions-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
 - **Headless CLI**: done (Milestone 5).
 - **Chapter VI "artificial history" presets**: the book's culminating combined rule systems, and its flocking / group-formation asides (Animation VI-8).
-- **Credit hierarchy view**: the book's layered lender → borrower tree (Animation IV-5, second half), beyond the spatial overlay.
+- **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions
 
-- **More than two tribes**: the book's three-group tag scheme (Blue 0–3 zeros, Green 4–7, Red 8–11) and user-defined group rules.
-- **Alternative bargaining rules**: the book notes a random price in [MRS_A, MRS_B] gives qualitatively similar results — make the bargaining rule pluggable.
-- **Custom landscape generators**: noise and images → capacity maps (per-good two-peak transforms, peaks and flat maps exist).
-- **Observational agent trails**: Animation IV-1's "black tail" following one agent's trajectory.
+- **More than two tribes**: done (Milestone 6).
+- **Alternative bargaining rules**: done (Milestone 6).
+- **Custom landscape generators**: done (Milestone 6: noise maps and image import).
+- **Observational agent trails**: done (Milestone 6).
 
 ## Playground and infrastructure
 
