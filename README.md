@@ -137,6 +137,43 @@ keeps about 2 000 points of each line, so spikes survive on long runs, and so do
 shorter gaps are bridged. The full per-tick history stays with the simulation: Export →
 Statistics (CSV), share links and Experiments use all of it.
 
+## Sessions and share links
+
+The playground records every edit you make — painting, image imports, placing and erasing
+agents, infections, vaccinations and live rule changes — with the tick it happened at. **Share →
+Copy link** carries the whole session: the setup, the painted maps it started from and that
+edit log. Opening the link rebuilds the world and replays each edit at its tick as the world
+runs (a chip counts down the edits left), so it reaches exactly the same world at the same tick,
+at any speed. Editing during a replay starts a new branch from there; the chip's ✕ ends the
+replay and keeps the world. **Reset** with the same seed rewinds and replays the session; a new
+seed, 🎲, a preset or a rule change that needs a reset starts a new session. Very long sessions
+still make a link (the page says when it is long); **Export → Session (JSON)** saves the same
+content as a file and **Share → Open session…** loads it. After 50 000 edits recording stops and
+links carry the setup and painted maps only. Links from earlier versions still open.
+
+## Compare
+
+**Compare** runs a copy of the current world beside it, each in its own worker: B starts as an
+exact copy of A at the current tick, and both step in lockstep (Play, Step, the speeds and Max
+act on both; ticks always match). Each grid has its own seed and 🎲; the Rules tab's **Rules
+for: A | B** switch applies changes to one world, tools act on the grid you click (an infection
+or vaccination press on the other grid switches the disease picker to that world without acting;
+the next press does), and Inspect and Credit show the world you clicked last. While B is being
+copied from A, A is locked against edits. A rebuilt world (🎲, a preset, a reset-requiring
+change) rewinds the other to t = 0 so the two stay comparable. Charts overlay A (solid) and B
+(dashed). Exports ask which world; Share makes a link that opens straight into Compare. Leaving
+asks which world to keep.
+
+## Recording
+
+**● Record** records the grid as drawn (overlays, trails, selection) as WebM video or an
+animated GIF, optionally stamped with the tick. Cells are 8 px (smaller for grids over 135
+cells, keeping the frame within 1080 px, with even width and height); in Compare both grids are
+recorded side by side. Recording pauses while the world is paused. GIFs are sampled at about 15
+frames a second, encoded off the page in a worker, and stop — with a notice — at 900 frames or
+if encoding fails. Files are named after the setup and the ticks they cover, e.g.
+`sugarscape-ii-2-unit-seed7-t0-t800.webm`.
+
 ## Command line
 
 `crates/sugarscape-cli` builds a native `sugarscape` binary over the same core
