@@ -4,7 +4,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::bits::Bits;
-use crate::config::{Config, MAX_GOODS};
+use crate::config::{group_of, Config, Group, MAX_GOODS};
 use crate::geometry::Pos;
 
 /// An array holding `x` for good 0 and zero for every other good.
@@ -21,7 +21,10 @@ pub enum Sex {
     Male,
 }
 
-/// Group membership (Chapter III): Blue when zeros outnumber ones on the tag string.
+/// The book's two tribes (Chapter III): Blue when zeros outnumber ones on the
+/// tag string. Used where the rule is inherently two-tribe (corner placement,
+/// replacement, the Place tool); `culture.groups` generalizes it and, with
+/// its defaults, agrees with it (group 0 is Blue).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Tribe {
@@ -226,6 +229,11 @@ impl Agent {
 
     pub fn tribe(&self) -> Tribe {
         self.tags.tribe()
+    }
+
+    /// Index of the agent's tag group in `groups` (`config::group_of`).
+    pub fn group(&self, groups: &[Group]) -> usize {
+        group_of(groups, self.tags.zeros())
     }
 
     /// Of childbearing age and holding at least the endowment it was born

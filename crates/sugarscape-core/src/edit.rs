@@ -71,6 +71,8 @@ pub struct AgentView {
     pub y: u32,
     pub sex: Sex,
     pub tribe: Tribe,
+    /// Index of the agent's group in `culture.groups`.
+    pub group: usize,
     pub tags: String,
     pub vision: u32,
     /// Holdings, birth endowment and metabolism of each good.
@@ -195,6 +197,7 @@ impl World {
             y: a.pos.y,
             sex: a.sex,
             tribe: a.tribe(),
+            group: a.group(&self.config.culture.groups),
             tags: a.tags.to_bit_string(),
             vision: a.vision,
             holdings: a.holdings[..n].to_vec(),
@@ -589,6 +592,18 @@ mod tests {
             .unwrap()
             .infected_by
             .is_none());
+    }
+
+    #[test]
+    fn inspection_gives_the_agents_group() {
+        let mut w = blank_world(5, 5);
+        let id = spawn(&mut w, 1, 1); // all zeros: Blue (6–11 zeros)
+        let group = |w: &World| w.inspect(1, 1).unwrap().agent.unwrap().group;
+        assert_eq!(group(&w), 0);
+        w.agent_mut(id).unwrap().tags = crate::agent::Tags::new(u64::MAX, 11);
+        assert_eq!(group(&w), 1, "no zeros: Red");
+        w.config.culture.groups = crate::config::three_tribes(11);
+        assert_eq!(group(&w), 0, "no zeros: Blue (0–3)");
     }
 
     #[test]

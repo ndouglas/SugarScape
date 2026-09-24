@@ -3,7 +3,8 @@
 
 use std::str::FromStr;
 
-use crate::agent::{Agent, Sex, Tribe};
+use crate::agent::{Agent, Sex};
+use crate::config::Group;
 use crate::network::CreditRole;
 use crate::world::World;
 
@@ -102,18 +103,22 @@ pub fn lerp(a: Rgb, b: Rgb, t: f64) -> Rgb {
     })
 }
 
-struct Scales {
+struct Scales<'a> {
     log_max_wealth: f64,
     vision_min: f64,
     vision_span: f64,
+    /// The config's groups and their parsed colors (Tribe mode).
+    groups: &'a [Group],
+    group_colors: Vec<Rgb>,
 }
 
 fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
     match mode {
-        ColorMode::Tribe => match a.tribe() {
-            Tribe::Blue => BLUE,
-            Tribe::Red => RED,
-        },
+        ColorMode::Tribe => s
+            .group_colors
+            .get(a.group(s.groups))
+            .copied()
+            .unwrap_or(NEUTRAL),
         ColorMode::Sex => match a.sex {
             Sex::Female => FEMALE,
             Sex::Male => MALE,
@@ -186,6 +191,7 @@ pub fn render(
         buf[i * 4..i * 4 + 4].copy_from_slice(&[rgb[0], rgb[1], rgb[2], 255]);
     }
     let v = world.config.vision;
+    let groups = &world.config.culture.groups;
     let scales = Scales {
         log_max_wealth: world
             .agents()
@@ -195,6 +201,11 @@ pub fn render(
             .max(1e-9),
         vision_min: f64::from(v.min),
         vision_span: f64::from(v.max.saturating_sub(v.min).max(1)),
+        groups,
+        group_colors: groups
+            .iter()
+            .map(|g| parse_color(&g.color).unwrap_or(NEUTRAL))
+            .collect(),
     };
     let roles = if mode == ColorMode::Credit {
         crate::network::credit_roles(world)
@@ -338,6 +349,28 @@ mod tests {
             Layer::Capacity(1)
         );
         assert_eq!("credit".parse::<ColorMode>().unwrap(), ColorMode::Credit);
+    }
+
+    #[test]
+    fn tribe_mode_uses_each_groups_color() {
+        let mut w = blank_world(10, 10);
+        let red = spawn(&mut w, 4, 4);
+        w.agent_mut(red).unwrap().tags = crate::agent::Tags::new(u64::MAX, 11);
+        let mut buf = Vec::new();
+        render(&w, ColorMode::Tribe, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(
+            pixel(&buf, &w, 4, 4)[..3],
+            RED,
+            "the default groups keep the book's colors"
+        );
+        w.config.culture.groups = crate::config::three_tribes(11);
+        w.config.culture.groups[0].color = "#102030".into();
+        render(&w, ColorMode::Tribe, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(
+            pixel(&buf, &w, 4, 4)[..3],
+            [0x10, 0x20, 0x30],
+            "no zeros: group 0"
+        );
     }
 
     #[test]

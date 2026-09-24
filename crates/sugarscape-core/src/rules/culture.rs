@@ -1,6 +1,6 @@
 //! Agent culture rule K: for each neighbor, pick a random tag position; if
 //! the neighbor disagrees there, flip the neighbor's tag to match the agent's.
-//! Group membership (Blue/Red) is derived from tags (`Tags::tribe`).
+//! Group membership is derived from tags by `culture.groups` (`Agent::group`).
 
 use rand::seq::SliceRandom;
 use rand::Rng;

@@ -3,7 +3,6 @@
 
 use serde::Serialize;
 
-use crate::agent::Tribe;
 use crate::config::Config;
 use crate::world::World;
 
@@ -46,7 +45,8 @@ pub struct GoodStats {
 }
 
 /// `SERIES`, then `mean_holding_I`, `mean_metabolism_I`, `traded_I` for
-/// each good, then `mean_pollution_K` for each pollutant.
+/// each good, then `mean_pollution_K` for each pollutant, then
+/// `group_share_K` for each group.
 pub fn series_names(config: &Config) -> Vec<String> {
     let mut names: Vec<String> = SERIES.iter().map(|s| s.to_string()).collect();
     for i in 0..config.goods.len() {
@@ -56,6 +56,9 @@ pub fn series_names(config: &Config) -> Vec<String> {
     }
     for k in 0..config.pollution.pollutants.len() {
         names.push(format!("mean_pollution_{k}"));
+    }
+    for k in 0..config.culture.groups.len() {
+        names.push(format!("group_share_{k}"));
     }
     names
 }
@@ -95,6 +98,9 @@ pub struct Snapshot {
     pub goods: Vec<GoodStats>,
     /// Mean level of each pollutant over all sites.
     pub pollution: Vec<f64>,
+    /// Share of living agents in each group (`culture.groups`); 0 with no
+    /// agents.
+    pub groups: Vec<f64>,
 }
 
 impl Snapshot {
@@ -144,6 +150,17 @@ impl Snapshot {
         let pollution = (0..world.config.pollution.pollutants.len())
             .map(|k| world.sites.iter().map(|s| s.pollution[k]).sum::<f64>() / sites)
             .collect();
+        let groups = &world.config.culture.groups;
+        let mut members = vec![0usize; groups.len()];
+        for a in world.agents() {
+            if let Some(m) = members.get_mut(a.group(groups)) {
+                *m += 1;
+            }
+        }
+        let group_shares = members
+            .iter()
+            .map(|&m| if n == 0 { 0.0 } else { m as f64 / n as f64 })
+            .collect();
 
         Self {
             tick: world.tick,
@@ -152,7 +169,8 @@ impl Snapshot {
             mean_wealth: mean(&|a| a.holdings[0]),
             mean_vision: mean(&|a| f64::from(a.vision)),
             mean_metabolism: mean(&|a| f64::from(a.metabolism[0])),
-            blue_fraction: mean(&|a| if a.tribe() == Tribe::Blue { 1.0 } else { 0.0 }),
+            // Group 0 is Blue under the default groups (Decision 6).
+            blue_fraction: mean(&|a| if a.group(groups) == 0 { 1.0 } else { 0.0 }),
             births: world.events().births,
             deaths: world.events().deaths.len() as u32,
             mean_log_price,
@@ -177,6 +195,7 @@ impl Snapshot {
             trade_pairs,
             goods,
             pollution,
+            groups: group_shares,
         }
     }
 
@@ -220,6 +239,9 @@ impl Snapshot {
                 }
                 if let Some(k) = index("mean_pollution_") {
                     return self.pollution.get(k).copied();
+                }
+                if let Some(k) = index("group_share_") {
+                    return self.groups.get(k).copied();
                 }
                 return None;
             }
@@ -430,12 +452,13 @@ mod tests {
         assert_eq!(s.value("mean_holding_3"), None);
         assert_eq!(s.value("mean_spice"), Some(10.0), "good 1, as before");
         let names = series_names(&w.config);
-        assert_eq!(names.len(), SERIES.len() + 3 * 3 + 2);
+        assert_eq!(names.len(), SERIES.len() + 3 * 3 + 2 + 2);
         assert_eq!(
             &names[SERIES.len()..SERIES.len() + 3],
             ["mean_holding_0", "mean_metabolism_0", "traded_0"]
         );
-        assert_eq!(names.last().unwrap(), "mean_pollution_1");
+        assert_eq!(names[names.len() - 3], "mean_pollution_1");
+        assert_eq!(names.last().unwrap(), "group_share_1");
         for name in &names {
             assert!(s.value(name).is_some(), "{name}");
         }
@@ -596,6 +619,35 @@ mod tests {
         }
         let sick = supply_demand(&w);
         assert_ne!(healthy.demand, sick.demand, "weights (1, 3) became (3, 5)");
+    }
+
+    #[test]
+    fn group_shares_follow_the_configured_groups() {
+        use crate::agent::Tags;
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.culture.groups = crate::config::three_tribes(11);
+        for (x, bits) in [(0, 0u64), (1, 0), (2, 0b111_1111), (3, u64::MAX)] {
+            let id = spawn(&mut w, x, 0);
+            w.agent_mut(id).unwrap().tags = Tags::new(bits, 11);
+        }
+        // Zeros 11, 11 (Red 8–11), 4 (Green 4–7), 0 (Blue 0–3).
+        let s = Snapshot::of(&w);
+        assert_eq!(s.groups, vec![0.25, 0.25, 0.5]);
+        assert_eq!(s.blue_fraction, 0.25, "the share of group 0");
+        assert_eq!(s.value("group_share_2"), Some(0.5));
+        assert_eq!(s.value("group_share_3"), None);
+        let names = series_names(&w.config);
+        assert_eq!(
+            &names[names.len() - 3..],
+            ["group_share_0", "group_share_1", "group_share_2"]
+        );
+        w.config.culture.groups = crate::config::default_groups(11);
+        let s = Snapshot::of(&w);
+        assert_eq!(s.groups, vec![0.5, 0.5]);
+        assert_eq!(s.blue_fraction, 0.5, "Blue: zeros outnumber ones");
+        let empty = Snapshot::of(&blank_world(5, 5));
+        assert_eq!(empty.groups, vec![0.0, 0.0]);
     }
 
     #[test]
