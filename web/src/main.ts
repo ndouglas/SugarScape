@@ -83,7 +83,7 @@ async function main(): Promise<void> {
   syncCreditTab();
   document.querySelector('#tools')!.append(buildTools(engine, grid, () => tabs.show('Inspect')));
 
-  const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.sim.tick()}`;
+  const slug = () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}-t${engine.tick}`;
   const shareButton = h('button', {
     onclick: async () => {
       const token = await encodeShare({ config: engine.baseConfig, seed: engine.seed, landscapes: engine.editedLandscapes() });
@@ -118,24 +118,21 @@ async function main(): Promise<void> {
   );
   document.querySelector('.toolbar-end')!.append(shareButton, menu);
 
+  engine.on('crash', () => showBanner('The simulation crashed.', { label: 'Reload', run: () => location.reload() }));
   let dirty = true;
-  for (const event of ['reset', 'tick', 'config', 'display', 'select', 'edit', 'follow'] as const) {
-    engine.on(event, () => (dirty = true));
-  }
-  const loop = () => {
+  for (const event of ['snapshot', 'display'] as const) engine.on(event, () => (dirty = true));
+  const loop = (now: number) => {
     try {
-      if (engine.running) engine.advance();
+      engine.pump(now);
       if (dirty) {
-        engine.trackSelection();
         grid.draw();
         dirty = false;
       }
-      const now = performance.now();
       charts.maybeRefresh(now);
       credit.maybeRefresh(now);
     } catch (e) {
-      // A Rust panic leaves the WASM instance unusable; reloading keeps any #s= share state.
-      engine.running = false;
+      // A Rust panic in the page's WASM leaves it unusable; reloading keeps any #s= share state.
+      engine.setRunning(false);
       console.error(e);
       showBanner('The simulation crashed.', { label: 'Reload', run: () => location.reload() });
       return;

@@ -38,13 +38,13 @@ export class RulesPanel {
   }
 
   /** Reset-required changes rebuild from the base setup; others edit the running world. */
-  private commit(mutate: (c: Config) => void, reset: boolean): void {
+  private async commit(mutate: (c: Config) => void, reset: boolean): Promise<void> {
     if (reset) {
       const next = structuredClone(this.engine.baseConfig);
       mutate(next);
-      this.errors = this.engine.reset(next) ?? [];
+      this.errors = (await this.engine.reset(next)) ?? [];
     } else {
-      this.errors = this.engine.applyConfig(mutate) ?? [];
+      this.errors = (await this.engine.applyConfig(mutate)) ?? [];
     }
     if (this.errors.length > 0) this.sync();
     this.renderErrors();
@@ -76,8 +76,8 @@ export class RulesPanel {
     const select = h(
       'select',
       {
-        onchange: () => {
-          this.errors = this.engine.loadPreset(select.value) ?? [];
+        onchange: async () => {
+          this.errors = (await this.engine.loadPreset(select.value)) ?? [];
           if (this.errors.length > 0) this.sync();
           this.renderErrors();
         },

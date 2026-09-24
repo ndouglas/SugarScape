@@ -55,7 +55,9 @@ export class GridView {
       this.buffer.width = width;
       this.buffer.height = height;
     }
-    this.bctx.putImageData(new ImageData(this.engine.frame(), width, height), 0, 0);
+    const frame = this.engine.frame();
+    // Until the reply that resized the grid brings a frame of the new size, the old one is not drawn.
+    if (frame && frame.length === width * height * 4) this.bctx.putImageData(new ImageData(frame, width, height), 0, 0);
     return { width, height };
   }
 

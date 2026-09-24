@@ -78,7 +78,7 @@ export function buildTools(engine: Engine, grid: GridView, onInspect: () => void
     try {
       const { width, height } = engine.size();
       const capacities = capacitiesFromPixels(await readImagePixels(file, width, height), importMax, invert);
-      const errors = engine.importLandscape(good, capacities);
+      const errors = await engine.importLandscape(good, capacities);
       importStatus.textContent = errors ? errors.map((e) => e.message).join('; ') : `Imported ${file.name}`;
     } catch (e) {
       importStatus.textContent = `Could not read ${file.name}: ${e instanceof Error ? e.message : String(e)}`;
