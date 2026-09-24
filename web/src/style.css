@@ -179,3 +179,6 @@ body[data-view='experiments'] .toolbar .chip { display: none; }
 .replay-chip { max-width: 17em; }
 .menu-row { display: flex; gap: 6px; align-items: center; }
 .menu-row span { flex: 1; }
+.record { display: inline-flex; }
+.record-stop { color: var(--error); font-variant-numeric: tabular-nums; }
+.menu-items label { display: flex; gap: 6px; align-items: center; padding: 2px 4px; }

@@ -1,10 +1,9 @@
 import { randomSeed, type Engine, type Speed } from '../engine';
+import { errorMessage } from '../errors';
 import { h } from './dom';
 import { showNotice } from './notice';
 
 const SPEEDS: Speed[] = [1, 2, 5, 10, 25, 100, 'max'];
-
-const message = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 /** A chip and the removal of its listeners. */
 export interface Chip { el: HTMLElement; off: () => void }
@@ -45,7 +44,7 @@ export function followChip(engine: Engine): Chip {
 export function replayChip(engine: Engine): Chip {
   const text = h('span', { class: 'chip-text' });
   const endReplay = () => {
-    engine.endReplay().catch((e) => showNotice(`Could not stop replaying (${message(e)})`, 10_000));
+    engine.endReplay().catch((e) => showNotice(`Could not stop replaying (${errorMessage(e)})`, 10_000));
   };
   const button = h(
     'button',

@@ -1,6 +1,7 @@
 import './style.css';
 import { canvasBlob, downloadBlob, downloadText } from './downloads';
 import { Engine } from './engine';
+import { errorMessage } from './errors';
 import { ExperimentsView } from './experiments/view';
 import { LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
 import { decodeShare, decodeSweep, parseSessionFile, readHash, readSweepHash, sessionFileText } from './share';
@@ -11,6 +12,7 @@ import { h } from './ui/dom';
 import { buildExportMenu } from './ui/export-menu';
 import { GridView } from './ui/grid-view';
 import { InspectPanel } from './ui/inspect-panel';
+import { buildRecordControl } from './ui/record-control';
 import { showNotice } from './ui/notice';
 import { RulesPanel } from './ui/rules-panel';
 import { buildShareMenu } from './ui/share-menu';
@@ -30,8 +32,6 @@ export function showBanner(message: string, action?: { label: string; run: () =>
   banner.hidden = false;
 }
 
-const message = (e: unknown): string => (e instanceof Error ? e.message : String(e));
-
 async function main(): Promise<void> {
   let engine: Engine;
   const token = readHash();
@@ -39,7 +39,7 @@ async function main(): Promise<void> {
     // A link's session replays its edits as the world runs (Decision 2).
     engine = token ? await Engine.create(await decodeShare(token)) : await Engine.create();
   } catch (e) {
-    showBanner(`That share link could not be loaded (${message(e)}). Showing the default rule system.`);
+    showBanner(`That share link could not be loaded (${errorMessage(e)}). Showing the default rule system.`);
     engine = await Engine.create();
   }
   // Browser checks drive the engine through this handle (7a Decision 14).
@@ -73,7 +73,7 @@ async function main(): Promise<void> {
       experiments.openSweep(await decodeSweep(sweepToken));
       showView('experiments');
     } catch (e) {
-      showBanner(`That experiment link could not be loaded (${message(e)}).`);
+      showBanner(`That experiment link could not be loaded (${errorMessage(e)}).`);
     }
   }
 
@@ -123,22 +123,36 @@ async function main(): Promise<void> {
         history.replaceState(null, '', location.pathname + location.search);
         showNotice(`Opened ${file.name}`);
       } catch (e) {
-        showNotice(`${file.name} could not be opened (${message(e)})`, 10_000);
+        showNotice(`${file.name} could not be opened (${errorMessage(e)})`, 10_000);
       }
     },
   });
-  document.querySelector('.toolbar-end')!.append(shareMenu, exportMenu);
+  const record = buildRecordControl({
+    grids: () => [{ canvas: grid.canvas, cells: () => engine.size() }],
+    tick: () => engine.tick,
+    running: () => engine.running,
+    base: () => `sugarscape-${engine.presetId ?? 'custom'}-seed${engine.seed}`,
+  });
+  engine.on('run', () => record.sync());
+  document.querySelector('.toolbar-end')!.append(record.el, shareMenu, exportMenu);
 
   engine.on('crash', () => showBanner('The simulation crashed.', { label: 'Reload', run: () => location.reload() }));
   engine.on('fork', () => showNotice('Replay ended — your edit starts a new branch'));
   let dirty = true;
+  /** A snapshot arrived since the last frame: once drawn, the recording captures it (Decision 13). */
+  let fresh = false;
   for (const event of ['snapshot', 'display'] as const) engine.on(event, () => (dirty = true));
+  engine.on('snapshot', () => (fresh = true));
   const loop = (now: number) => {
     try {
       engine.pump(now);
       if (dirty) {
         grid.draw();
         dirty = false;
+      }
+      if (fresh) {
+        fresh = false;
+        record.capture();
       }
     } catch (e) {
       // A Rust panic in the page's WASM leaves it unusable; reloading keeps any #s= share state.
@@ -152,4 +166,4 @@ async function main(): Promise<void> {
   requestAnimationFrame(loop);
 }
 
-main().catch((e) => showBanner(`Failed to start: ${message(e)}`));
+main().catch((e) => showBanner(`Failed to start: ${errorMessage(e)}`));
