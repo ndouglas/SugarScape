@@ -93,36 +93,66 @@ describe('sessions replay exactly', () => {
     while (e.tick < tick) await e.advance(Math.min(250, tick - e.tick));
   }
 
+  /**
+   * The first unoccupied site at or after (`x`, `y`), scanning row-major and wrapping once around
+   * the grid: deterministic under a fixed seed since it only runs while `e` isn't at Max (no tick
+   * elapses between sites while scanning, so occupancy cannot change mid-scan). Used so `place`
+   * always lands on an empty site instead of failing "site is occupied" depending on the seed.
+   */
+  async function emptySite(e: Engine, x: number, y: number): Promise<{ x: number; y: number }> {
+    const { width, height } = e.size();
+    let cx = x;
+    let cy = y;
+    for (let n = 0; n < width * height; n++) {
+      await e.select(cx, cy);
+      if (e.inspection?.agentId == null) return { x: cx, y: cy };
+      if (++cx >= width) {
+        cx = 0;
+        cy = (cy + 1) % height;
+      }
+    }
+    throw new Error(`no empty site found scanning the whole grid from (${x}, ${y})`);
+  }
+
   it(
     'replays a session recorded at mixed speeds, through a share link, to the same world at the same tick',
     async () => {
       const live = await create(5);
       expect(await live.paint(10, 10, 2, 0, 0)).toBeNull(); // tick 0
+      // Erase the agent just placed, before any tick runs: guaranteed present (fix round 1 — an
+      // agent placed and then left to a run may wander or die, so erasing it later is not
+      // deterministic under any seed).
+      const eraseSpot = await emptySite(live, 3, 3);
+      expect(await live.place(eraseSpot.x, eraseSpot.y, {})).toBeNull();
+      expect(await live.erase(eraseSpot.x, eraseSpot.y)).toBeNull();
       await run(live, 1);
-      await live.place(3, 3, {}); // may be occupied: then there is an agent to infect anyway
-      expect(await live.infect(3, 3, -1)).toBeNull();
+      // Same trick for infect: place fresh (a guaranteed-empty site), then infect it immediately.
+      const infectSpot = await emptySite(live, 3, 3);
+      expect(await live.place(infectSpot.x, infectSpot.y, {})).toBeNull();
+      expect(await live.infect(infectSpot.x, infectSpot.y, -1)).toBeNull();
       await run(live, 25);
-      await live.erase(3, 3);
-      await live.place(0, 0, { sex: 'female' });
+      const femaleSpot = await emptySite(live, 0, 0);
+      expect(await live.place(femaleSpot.x, femaleSpot.y, { sex: 'female' })).toBeNull();
       expect(await live.applyConfig((c) => void (c.growback.rate = 2))).toBeNull();
       await run(live, 'max');
-      await live.vaccinate(20, 20, 3, 0);
+      expect(await live.vaccinate(20, 20, 3, 0)).toBeNull();
       // Edits while Max runs land between batches: wait for real progress on each side (not a
-      // fixed sleep) so they land regardless of how fast Max runs on this machine (PF1).
+      // fixed sleep) so they land regardless of how fast Max runs on this machine (PF1). `place`
+      // stays out of this window (occupancy can't be checked race-free while Max keeps ticking);
+      // `paint` never depends on occupancy, so it proves the same "lands mid-run" point safely.
       live.setSpeed('max');
       live.setRunning(true);
       await waitForTickPast(live, live.tick);
-      await live.place(1, 1, {});
-      await live.paint(30, 30, 1, 4, 0);
+      expect(await live.paint(30, 30, 1, 4, 0)).toBeNull();
       await waitForTickPast(live, live.tick);
       live.setRunning(false);
       await run(live, 100, 2);
       const { session, full, tick } = await live.session();
       expect(full).toBe(false);
-      // Places and erases may meet an occupied or empty site (then they are not logged); these always land:
-      // the paint at 0, the infection, the live change and the paint during Max, at four different ticks.
-      expect(session.log.length).toBeGreaterThanOrEqual(4);
-      expect(new Set(session.log.map((e) => e.tick)).size).toBeGreaterThanOrEqual(4);
+      // Every edit above is asserted to succeed, so all nine are logged, spread across five
+      // distinct ticks (0, after the first run, after the second, at the Max stop and mid-Max).
+      expect(session.log.length).toBe(9);
+      expect(new Set(session.log.map((e) => e.tick)).size).toBe(5);
       const expected = await live.fingerprint();
 
       const replayed = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
@@ -146,15 +176,17 @@ describe('sessions replay exactly', () => {
     async () => {
       const live = await create(8);
       await live.advance(2);
-      await live.place(4, 4, {});
-      await live.infect(4, 4, -1);
+      const spot = await emptySite(live, 4, 4);
+      expect(await live.place(spot.x, spot.y, {})).toBeNull();
+      expect(await live.infect(spot.x, spot.y, -1)).toBeNull();
       await live.advance(3);
-      await live.paint(12, 30, 3, 1, 0);
-      await live.applyConfig((c) => void (c.growback.rate = 3));
+      expect(await live.paint(12, 30, 3, 1, 0)).toBeNull();
+      expect(await live.applyConfig((c) => void (c.growback.rate = 3))).toBeNull();
       await live.advance(4);
       const { session } = await live.session();
       const lastLoggedTick = session.log[session.log.length - 1].tick;
-      const replayed = await Engine.create(session, { presets, transport: inline() });
+      // The wire round trip (encode/decode a share link) is proven together with the Max replay.
+      const replayed = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
       replayed.setSpeed('max');
       replayed.setRunning(true);
       // Run until replay is past the last logged tick, not for a fixed time (PF1): only then can
