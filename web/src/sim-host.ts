@@ -147,15 +147,19 @@ export class SimHost {
 
   /**
    * One Max-speed batch (Decision 11, PF3): steps for about `BATCH_MS`, but never past the next
-   * post deadline, so posts land close to every `POST_MS` instead of drifting toward 2 × BATCH_MS
-   * when POST_MS falls between two batch-lengths. Returns a snapshot to post, or null.
+   * post deadline while a buffer is free to post into, so posts land close to every `POST_MS`
+   * instead of drifting toward 2 × BATCH_MS when POST_MS falls between two batch-lengths. With no
+   * buffer pooled there is nothing to post regardless, so the deadline is not applied — capping it
+   * anyway would leave `posted` unmoved while every batch (and its deferred round trip) stepped
+   * just one tick, throttling Max to roughly the scheduler's minimum delay. Returns a snapshot to
+   * post, or null.
    */
   batch(): WorldSnapshot | null {
     const max = this.max;
     const sim = this.sim;
     if (!max || !sim || this.dead) return null;
     const start = this.now();
-    const cap = Math.min(start + BATCH_MS, max.posted + POST_MS);
+    const cap = max.pool.length > 0 ? Math.min(start + BATCH_MS, max.posted + POST_MS) : start + BATCH_MS;
     const from = sim.tick();
     do sim.step(1);
     while (this.now() < cap);
@@ -171,6 +175,8 @@ export class SimHost {
     const { cmd, frame } = req;
     const wants = req.wants ?? {};
     if (cmd.type === 'ready') return { ok: true };
+    // init, reset and setConfig keep Max running on the (possibly new) world if it was running;
+    // in practice the engine quiesces (sends `stop`) before any of them, so this doesn't happen.
     if (cmd.type === 'init' || cmd.type === 'reset') {
       // Built before the old world is freed: a bad config keeps the world.
       const next = this.module.create(JSON.stringify(cmd.config), cmd.seed, cmd.landscapes);
@@ -255,7 +261,14 @@ export class SimHost {
       case 'fingerprint':
         return { ok: true, value: sim.fingerprint() };
       case 'run':
-        this.max = { wants, pool: frame ? [frame] : [], posted: this.now() };
+        // A second `run` while already running keeps the pooled buffers (and adds this one, if
+        // any) instead of replacing the pool and losing them; `handle` has already applied this
+        // request's `wants` to the loop, same as any other command.
+        if (this.max) {
+          if (frame) this.max.pool.push(frame);
+        } else {
+          this.max = { wants, pool: frame ? [frame] : [], posted: this.now() };
+        }
         return { ok: true };
       case 'frame':
         if (this.max && frame) this.max.pool.push(frame);
@@ -264,7 +277,9 @@ export class SimHost {
         const max = this.max;
         this.max = null;
         if (!max) return this.reply(sim, wants);
-        const last = max.pool.pop();
+        // A pooled buffer is preferred; with none pooled, the buffer this `stop` itself just lent
+        // (if any) is used instead of being left unrendered and handed straight back as spare.
+        const last = max.pool.pop() ?? frame;
         spare.push(...max.pool);
         return this.reply(sim, max.wants, last);
       }

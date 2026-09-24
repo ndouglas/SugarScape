@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { fakeModule } from './fake-sim.fixture';
 import type { Command, DisplayState, HostMessage, HostReply, Wants, WorldSnapshot } from './protocol';
-import { serve, SimHost } from './sim-host';
+import { BATCH_MS, channelDefer, serve, SimHost } from './sim-host';
 import type { Config } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
@@ -304,6 +304,60 @@ describe('SimHost at Max speed', () => {
     expect(deltas[deltas.length - 1]).toBeLessThan(deltas[0]);
   });
 
+  it('keeps stepping full batches while no buffer is free, even long past the post deadline', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    let post: WorldSnapshot | null = null;
+    while (!post) post = t.host.batch(); // uses the only buffer
+    const tickNow = (): number => t.snap(t.send({ type: 'refresh' })).tick;
+    // No buffer is pooled now; a few more batches push the clock well past `posted + POST_MS`
+    // without ever returning one. If the deadline cap applied regardless of a free buffer, each of
+    // these would step only a single tick once past the (unreachable) deadline.
+    for (let i = 0; i < 3; i++) t.host.batch();
+    const before = tickNow();
+    t.host.batch();
+    const after = tickNow();
+    expect(after - before).toBeGreaterThan(BATCH_MS / 2);
+  });
+
+  it('keeps the pooled buffers when run is sent again while already running', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    const a = new ArrayBuffer(48);
+    const b = new ArrayBuffer(48);
+    t.send({ type: 'run' }, { frame: a });
+    const run2 = t.send({ type: 'run' }, { frame: b });
+    expect(run2.spare).toBeUndefined(); // neither buffer bounced back
+    const stop = t.send({ type: 'stop' });
+    const kept = new Set([t.snap(stop).frame, ...(stop.spare ?? [])]);
+    expect(kept).toEqual(new Set([a, b]));
+  });
+
+  it('answers stop with the buffer it was just lent when nothing was pooled', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    let post: WorldSnapshot | null = null;
+    while (!post) post = t.host.batch(); // empties the pool
+    const b = new ArrayBuffer(48);
+    const stop = t.send({ type: 'stop' }, { frame: b });
+    expect(t.snap(stop).frame).toBe(b);
+    expect(stop.spare).toBeUndefined();
+  });
+
+  it('updates the loop selection on follow while running, so the next post carries the trail (PF2)', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    // No `wants` on this request either, same reasoning as the inspect case above.
+    t.send({ type: 'follow', id: 1 });
+    let post: WorldSnapshot | null = null;
+    while (!post) post = t.host.batch();
+    expect(post.followed).toBe(1);
+    expect(post.trail).toBeDefined();
+  });
+
   it('serve keeps posting between requests until stop', async () => {
     let clock = 0;
     const messages: HostMessage[] = [];
@@ -335,5 +389,34 @@ describe('serve', () => {
     expect(sent[0][1]).toHaveLength(1);
     expect(sent[0][1][0]).toBe(frame);
     expect((sent[1][0] as HostReply).result).toEqual({ ok: true, value: '0x0' });
+  });
+});
+
+describe('channelDefer', () => {
+  it('runs deferred callbacks in FIFO order', async () => {
+    // Captures the MessageChannel channelDefer creates internally so its ports can be closed
+    // afterwards (Node keeps the process alive while a MessagePort is open).
+    const RealMessageChannel = globalThis.MessageChannel;
+    const channels: MessageChannel[] = [];
+    const spy = vi.spyOn(globalThis, 'MessageChannel').mockImplementation(function (this: unknown) {
+      const channel = new RealMessageChannel();
+      channels.push(channel);
+      return channel;
+    } as unknown as typeof MessageChannel);
+    try {
+      const defer = channelDefer();
+      const order: number[] = [];
+      defer(() => order.push(1));
+      defer(() => order.push(2));
+      defer(() => order.push(3));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(order).toEqual([1, 2, 3]);
+    } finally {
+      spy.mockRestore();
+      for (const channel of channels) {
+        channel.port1.close();
+        channel.port2.close();
+      }
+    }
   });
 });
