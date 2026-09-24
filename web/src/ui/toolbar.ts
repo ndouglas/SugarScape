@@ -1,4 +1,5 @@
-import { randomSeed, type Engine, type Speed } from '../engine';
+import type { Lockstep } from '../compare/lockstep';
+import { randomSeed, type Engine, type RunControls, type Speed } from '../engine';
 import { errorMessage } from '../errors';
 import { h } from './dom';
 import { showNotice } from './notice';
@@ -65,64 +66,126 @@ export function replayChip(engine: Engine): Chip {
   return { el, off: () => offs.forEach((off) => off()) };
 }
 
-export function buildToolbar(engine: Engine): HTMLElement {
-  const play = h('button', { class: 'primary', onclick: () => engine.setRunning(!engine.running) });
-  const step = h('button', { onclick: () => void engine.advance(1), title: 'Advance one tick' }, 'Step');
-  const speed = h(
-    'select',
-    {
-      title: 'Ticks per frame; Max runs the simulation as fast as it goes and redraws about 30 times a second',
-      onchange: () => engine.setSpeed(speed.value === 'max' ? 'max' : Number(speed.value)),
-    },
-    ...SPEEDS.map((s) => h('option', { value: String(s) }, s === 'max' ? 'Max' : `${s}×`)),
-  );
-  const seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
-  const reset = h(
-    'button',
-    {
-      title: 'Rebuild this world and replay its edits; with another seed typed, build a new world',
-      onclick: () => {
-        const s = Number(seed.value) >>> 0;
-        // The same seed rewinds and replays the session; another seed builds a new world (Decision 4).
-        void (s === engine.seed ? engine.replay() : engine.reset(undefined, s));
+/**
+ * Play, Step, speed, seed, Reset and 🎲, the readout and the world's chips. In Compare (Decision 10)
+ * Play/Step/speed/Reset drive the lockstep, the seed box, 🎲 and chips move to the grid headers,
+ * and the readout shows both populations.
+ */
+export class Toolbar {
+  readonly el: HTMLElement;
+  private controls: RunControls;
+  private lock: Lockstep | null = null;
+  private b: Engine | null = null;
+  private offs: (() => void)[] = [];
+  private held = false;
+  private readonly play: HTMLButtonElement;
+  private readonly step: HTMLButtonElement;
+  private readonly speed: HTMLSelectElement;
+  private readonly seed: HTMLInputElement;
+  private readonly resetButton: HTMLButtonElement;
+  private readonly dice: HTMLButtonElement;
+  private readonly readout = h('span', { class: 'readout' });
+  /** Hidden in Compare: the headers carry them. */
+  private readonly singleOnly: HTMLElement[];
+
+  constructor(private readonly engine: Engine) {
+    this.controls = engine;
+    this.play = h('button', { class: 'primary', onclick: () => this.controls.setRunning(!this.controls.running) });
+    this.step = h(
+      'button',
+      {
+        onclick: () => {
+          this.controls.advance(1).catch((e) => showNotice(`Could not step (${errorMessage(e)})`, 10_000));
+        },
+        title: 'Advance one tick',
       },
-    },
-    'Reset',
-  );
-  const dice = h(
-    'button',
-    { title: 'Random seed and reset', onclick: () => void engine.reset(undefined, randomSeed()) },
-    '🎲',
-  );
-  const readout = h('span', { class: 'readout' });
+      'Step',
+    );
+    this.speed = h(
+      'select',
+      {
+        title: 'Ticks per frame; Max runs the simulation as fast as it goes and redraws about 30 times a second',
+        onchange: () => this.controls.setSpeed(this.speed.value === 'max' ? 'max' : Number(this.speed.value)),
+      },
+      ...SPEEDS.map((s) => h('option', { value: String(s) }, s === 'max' ? 'Max' : `${s}×`)),
+    );
+    this.seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
+    const seedLabel = h('label', {}, 'Seed ', this.seed);
+    this.resetButton = h(
+      'button',
+      { title: 'Rebuild this world and replay its edits; with another seed typed, build a new world', onclick: () => this.reset() },
+      'Reset',
+    );
+    this.dice = h('button', { title: 'Random seed and reset', onclick: () => void engine.reset(undefined, randomSeed()) }, '🎲');
+    const chips = h('span', { class: 'chips' }, followChip(engine).el, replayChip(engine).el);
+    this.singleOnly = [seedLabel, this.dice, chips];
+    this.el = h(
+      'div',
+      { class: 'toolbar' },
+      h('h1', {}, 'SugarScape'),
+      h('div', { class: 'group' }, this.play, this.step, this.speed),
+      h('div', { class: 'group' }, seedLabel, this.resetButton, this.dice),
+      this.readout,
+      chips,
+      h('div', { class: 'toolbar-end' }),
+    );
+    engine.on('run', () => this.sync());
+    engine.on('reset', () => {
+      this.sync();
+      this.tick();
+    });
+    engine.on('tick', () => this.tick());
+    engine.on('edit', () => this.tick());
+    this.sync();
+    this.tick();
+  }
 
-  const sync = () => {
-    play.textContent = engine.running ? 'Pause' : 'Play';
-    step.disabled = engine.running;
-    seed.value = String(engine.seed);
-  };
-  const tick = () => {
-    readout.textContent = `t = ${engine.tick} · ${engine.population} agents`;
-  };
-  engine.on('run', sync);
-  engine.on('reset', () => {
-    sync();
-    tick();
-  });
-  engine.on('tick', tick);
-  engine.on('edit', tick);
-  sync();
-  tick();
+  /** Compare on (`lock` and `b`) or off (nulls). */
+  setCompare(lock: Lockstep | null, b: Engine | null): void {
+    for (const off of this.offs) off();
+    this.offs = [];
+    this.lock = lock;
+    this.b = b;
+    this.controls = lock ?? this.engine;
+    if (lock) this.offs.push(lock.on('run', () => this.sync()));
+    if (b) for (const event of ['tick', 'edit', 'reset'] as const) this.offs.push(b.on(event, () => this.tick()));
+    for (const el of this.singleOnly) el.hidden = lock !== null;
+    this.speed.value = String(this.controls.speed);
+    this.sync();
+    this.tick();
+  }
 
-  return h(
-    'div',
-    { class: 'toolbar' },
-    h('h1', {}, 'SugarScape'),
-    h('div', { class: 'group' }, play, step, speed),
-    h('div', { class: 'group' }, h('label', {}, 'Seed ', seed), reset, dice),
-    readout,
-    followChip(engine).el,
-    replayChip(engine).el,
-    h('div', { class: 'toolbar-end' }),
-  );
+  /** Disables the run controls while Compare copies A (A must stay at the tick B is copying). */
+  hold(on: boolean): void {
+    this.held = on;
+    this.sync();
+  }
+
+  private reset(): void {
+    if (this.lock) {
+      // A world that cannot rewind stops the comparison's Reset; say so rather than fail silently.
+      this.lock.reset().catch((e) => showNotice(`Could not reset (${errorMessage(e)})`, 10_000));
+      return;
+    }
+    const s = Number(this.seed.value) >>> 0;
+    // The same seed rewinds and replays the session; another seed builds a new world (Decision 4).
+    void (s === this.engine.seed ? this.engine.replay() : this.engine.reset(undefined, s));
+  }
+
+  private sync(): void {
+    this.play.textContent = this.controls.running ? 'Pause' : 'Play';
+    this.play.disabled = this.held;
+    this.step.disabled = this.held || this.controls.running;
+    this.speed.disabled = this.held;
+    this.resetButton.disabled = this.held;
+    this.dice.disabled = this.held;
+    this.seed.value = String(this.engine.seed);
+  }
+
+  private tick(): void {
+    const a = this.engine;
+    this.readout.textContent = this.b
+      ? `t = ${a.tick} · A ${a.population} · B ${this.b.population} agents`
+      : `t = ${a.tick} · ${a.population} agents`;
+  }
 }

@@ -182,3 +182,18 @@ body[data-view='experiments'] .toolbar .chip { display: none; }
 .record { display: inline-flex; }
 .record-stop { color: var(--error); font-variant-numeric: tabular-nums; }
 .menu-items label { display: flex; gap: 6px; align-items: center; padding: 2px 4px; }
+.grids { display: grid; gap: 12px; min-width: 0; }
+body[data-compare] .grids { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.world { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.world-header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 28px; }
+.world-header .chip { max-width: 14em; }
+body[data-compare] #grid { max-width: 100%; }
+.grid-b { width: 100%; aspect-ratio: 1; image-rendering: pixelated; border-radius: 6px; touch-action: none; cursor: crosshair; }
+.copy-progress { margin: 0; padding: 24px 0; text-align: center; font-variant-numeric: tabular-nums; }
+.chips { display: contents; }
+.compare-toggle { margin-left: -8px; }
+body[data-view='experiments'] .compare-toggle { display: none; }
+dialog.keep { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); padding: 16px 18px; }
+dialog.keep::backdrop { background: rgb(0 0 0 / 0.4); }
+dialog.keep p { margin: 0 0 12px; }
+dialog.keep .row { display: flex; gap: 8px; justify-content: flex-end; }

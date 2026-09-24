@@ -54,6 +54,16 @@ export type WantsProvider = (now: number) => Wants;
 /** Ticks per animation frame, or 'max': the host steps flat out and posts about 30 snapshots a second. */
 export type Speed = number | 'max';
 
+/** What the toolbar's Play, Step and speed drive: one engine, or Compare's lockstep (Decision 9). */
+export interface RunControls {
+  readonly running: boolean;
+  readonly speed: Speed;
+  setRunning(on: boolean): void;
+  setSpeed(speed: Speed): void;
+  advance(n?: number): Promise<void>;
+  on(event: 'run', fn: () => void): () => void;
+}
+
 /** While paused, extras a panel wants are fetched at most this often. */
 const REFRESH_MS = 250;
 /** Frame buffers kept for reuse besides the one on screen. */
