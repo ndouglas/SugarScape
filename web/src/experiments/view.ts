@@ -1,16 +1,26 @@
-import { aggregate, builtin_sweeps, config_series_names, sweep_points } from '../wasm-pkg/sugarscape.js';
+import {
+  aggregate,
+  builtin_sweeps,
+  config_series_names,
+  sweep_csv,
+  sweep_points,
+  sweep_result,
+} from '../wasm-pkg/sugarscape.js';
+import { canvasBlob, downloadBlob, downloadText } from '../downloads';
 import type { Engine } from '../engine';
+import { encodeSweep } from '../share';
 import { parseErrors, type Config, type FieldError } from '../types';
 import { h } from '../ui/dom';
 import { SweepChart } from './chart';
 import { chartData } from './chart-data';
+import { classifyFile, slug } from './file';
 import { FixedPanel } from './fixed-panel';
-import { defaultForm, numericPaths, type SweepForm } from './form';
+import { defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
 import { FormView } from './form-view';
 import { baseLabel } from './labels';
 import { poolSize, WorkerPool, type WorkerLike } from './pool';
 import { resultsTable } from './results-table';
-import type { BuiltinSweep, Point, RunResult, Summary, Sweep, SweepBase } from './types';
+import type { BuiltinSweep, Point, RunResult, Summary, Sweep, SweepBase, SweepResult } from './types';
 
 /** Each worker loads its own WASM instance (Decision 19). */
 const createWorker = (): WorkerLike => new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
@@ -29,15 +39,18 @@ export interface SweepEditor {
 /** Runs on screen and the sweep they belong to (with its JSON, as sent to WASM). */
 interface Shown { sweep: Sweep; spec: string; runs: RunResult[] }
 
-// PF5: reuses `baseLabel` (Task 10, labels.ts) instead of re-implementing its preset/custom-config wording;
-// `baseLabel` reads only `sweep.base`, so a base alone (no full sweep yet) is cast to satisfy its signature.
-const baseNote = (base: SweepBase): string => baseLabel({ base } as unknown as Sweep);
+// PF5: reuses `baseLabel` (Task 10, labels.ts) instead of re-implementing its preset/custom-config wording.
+// `baseLabel` takes `Pick<Sweep, 'base'>`, so a base alone (no full sweep yet) needs no cast.
+const baseNote = (base: SweepBase): string => baseLabel({ base });
 
-/** The Experiments view: pick or build a sweep, run it on workers, show the results. */
+const messages = (errors: FieldError[]): string => errors.map((e) => `${e.field}: ${e.message}`).join('; ');
+
+/** The Experiments view: pick, build or open a sweep, run it on workers, show and export the results. */
 export class ExperimentsView {
   readonly el: HTMLElement;
   private readonly builtins = JSON.parse(builtin_sweeps()) as BuiltinSweep[];
   private readonly picker: HTMLSelectElement;
+  private readonly fileInput: HTMLInputElement;
   private readonly editorSlot = h('div', { class: 'sweep-editor' });
   private editor: SweepEditor | null = null;
   private readonly runButton = h('button', { class: 'primary', onclick: () => void this.run() }, 'Run');
@@ -46,6 +59,7 @@ export class ExperimentsView {
   private readonly status = h('span', { class: 'hint', role: 'status' });
   private readonly chart = new SweepChart();
   private readonly table = h('div');
+  private readonly outputs: HTMLButtonElement[];
   private pool: WorkerPool | null = null;
   private shown: Shown | null = null;
 
@@ -56,19 +70,50 @@ export class ExperimentsView {
       h('optgroup', { label: 'Built-in' }, ...this.builtins.map((b) => h('option', { value: `builtin:${b.id}` }, b.sweep.name))),
       h('option', { value: 'current' }, 'From current world'),
     );
+    this.fileInput = h('input', {
+      type: 'file',
+      accept: '.json,application/json',
+      hidden: true,
+      onchange: () => void this.openFile(),
+    });
+    this.outputs = [
+      h('button', { onclick: () => this.download('result') }, 'Result (JSON)'),
+      h('button', { onclick: () => this.download('runs') }, 'Runs (CSV)'),
+      h('button', { onclick: () => this.download('summary') }, 'Summary (CSV)'),
+      h('button', { onclick: () => void this.downloadChart() }, 'Chart (PNG)'),
+    ];
     this.el = h(
       'div',
       { class: 'experiments-view' },
       h(
         'section',
         { class: 'sweep-setup' },
-        h('div', { class: 'row' }, h('label', {}, 'Sweep ', this.picker)),
+        h(
+          'div',
+          { class: 'row' },
+          h('label', {}, 'Sweep ', this.picker),
+          h('button', { onclick: () => this.fileInput.click(), title: 'Open a sweep or a result file (JSON)' }, 'Open file…'),
+          this.fileInput,
+        ),
         this.editorSlot,
         h('div', { class: 'run-bar' }, this.runButton, this.cancelButton, this.bar, this.status),
+        h(
+          'div',
+          { class: 'row' },
+          h('button', { onclick: () => void this.share(), title: 'Copy a link that opens this sweep (not its results)' }, 'Share link'),
+        ),
       ),
-      h('section', { class: 'sweep-results' }, this.chart.el, this.table),
+      h('section', { class: 'sweep-results' }, this.chart.el, this.table, h('div', { class: 'sweep-outputs' }, ...this.outputs)),
     );
     this.pick(this.picker.value);
+    this.showResults();
+  }
+
+  /** Opens a sweep from a link or a file for editing, without running it. */
+  openSweep(sweep: Sweep): void {
+    this.markOpened(sweep.name);
+    const form = sweepToForm(sweep);
+    this.setEditor(form ? this.formView(form, sweep.base, baseNote(sweep.base)) : new FixedPanel(sweep, () => this.validate()));
   }
 
   private pick(choice: string): void {
@@ -81,6 +126,13 @@ export class ExperimentsView {
     }
     const builtin = this.builtins.find((b) => choice === `builtin:${b.id}`);
     if (builtin) this.setEditor(new FixedPanel(builtin.sweep, () => this.validate()));
+  }
+
+  /** Adds (or replaces) the picker entry for an opened link or file, and selects it. */
+  private markOpened(name: string): void {
+    this.picker.querySelector('option[value="opened"]')?.remove();
+    this.picker.prepend(h('option', { value: 'opened' }, `Opened: ${name}`));
+    this.picker.value = 'opened';
   }
 
   /** The current world as a base: its preset when unmodified, otherwise its config (Decision 17). */
@@ -176,10 +228,12 @@ export class ExperimentsView {
     this.picker.disabled = on;
   }
 
-  /** Re-aggregates the runs on screen with the core and redraws them. */
+  /** Re-aggregates the runs on screen with the core and redraws them; exports need at least one run. */
   private showResults(): void {
     const shown = this.shown;
-    if (!shown || shown.runs.length === 0) {
+    const empty = !shown || shown.runs.length === 0;
+    for (const b of this.outputs) b.disabled = empty;
+    if (!shown || empty) {
       this.chart.clear();
       this.table.replaceChildren();
       return;
@@ -187,5 +241,71 @@ export class ExperimentsView {
     const summary = JSON.parse(aggregate(shown.spec, JSON.stringify(shown.runs))) as Summary;
     this.chart.draw(chartData(shown.sweep, summary));
     this.table.replaceChildren(resultsTable(summary));
+  }
+
+  private async openFile(): Promise<void> {
+    const file = this.fileInput.files?.[0];
+    this.fileInput.value = '';
+    if (!file || this.pool) return;
+    let json: unknown;
+    try {
+      json = JSON.parse(await file.text());
+    } catch {
+      this.status.textContent = `${file.name} is not JSON`;
+      return;
+    }
+    const opened = classifyFile(json);
+    if (opened.kind === 'error') this.status.textContent = `${file.name}: ${opened.message}`;
+    else if (opened.kind === 'sweep') this.openSweep(opened.sweep);
+    else this.openResult(opened.result, file.name);
+  }
+
+  /** Shows a result file's runs without running them; the summary is recomputed from the runs (Decision 20). */
+  private openResult(result: SweepResult, file: string): void {
+    this.markOpened(result.sweep.name);
+    this.setEditor(new FixedPanel(result.sweep, () => this.validate()));
+    this.shown = { sweep: result.sweep, spec: JSON.stringify(result.sweep), runs: result.runs };
+    try {
+      this.showResults();
+      this.status.textContent = `${file}: ${result.runs.length} runs${result.incomplete ? ' (incomplete)' : ''}`;
+    } catch (e) {
+      this.shown = null;
+      this.showResults();
+      this.status.textContent = `${file}: ${messages(parseErrors(e))}`;
+    }
+  }
+
+  private download(kind: 'result' | 'runs' | 'summary'): void {
+    const shown = this.shown;
+    if (!shown) return;
+    const runs = JSON.stringify(shown.runs);
+    const name = slug(shown.sweep.name);
+    try {
+      if (kind === 'result') downloadText(`${name}-result.json`, sweep_result(shown.spec, runs), 'application/json');
+      else downloadText(`${name}-${kind}.csv`, sweep_csv(shown.spec, runs, kind));
+    } catch (e) {
+      this.status.textContent = messages(parseErrors(e));
+    }
+  }
+
+  private async downloadChart(): Promise<void> {
+    const canvas = this.chart.canvas();
+    if (this.shown && canvas) downloadBlob(`${slug(this.shown.sweep.name)}-chart.png`, await canvasBlob(canvas));
+  }
+
+  /** Puts a `#x=` link to the edited sweep (not its results) in the address bar and the clipboard. */
+  private async share(): Promise<void> {
+    const sweep = this.editor?.sweep() ?? null;
+    if (!sweep) {
+      this.status.textContent = 'Fix the sweep before sharing it';
+      return;
+    }
+    history.replaceState(null, '', `#x=${await encodeSweep(sweep)}`);
+    try {
+      await navigator.clipboard.writeText(location.href);
+      this.status.textContent = 'Link copied';
+    } catch {
+      this.status.textContent = 'Link in the address bar';
+    }
   }
 }

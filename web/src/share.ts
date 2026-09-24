@@ -1,3 +1,5 @@
+import { classifyFile } from './experiments/file';
+import type { Sweep } from './experiments/types';
 import type { Config } from './types';
 
 /** `landscapes[i]` is good i's painted map, or null where it is generated. */
@@ -88,4 +90,24 @@ export async function decodeShare(token: string): Promise<ShareState> {
 
 export function readHash(hash: string = location.hash): string | null {
   return /^#s=([A-Za-z0-9_-]+)$/.exec(hash)?.[1] ?? null;
+}
+
+/** `#x=` links (Decision 22): base64url(deflate-raw(sweep JSON)). */
+export async function encodeSweep(sweep: Sweep): Promise<string> {
+  return bytesToBase64Url(await deflate(new TextEncoder().encode(JSON.stringify(sweep))));
+}
+
+export async function decodeSweep(token: string): Promise<Sweep> {
+  try {
+    const json = JSON.parse(new TextDecoder().decode(await inflateCapped(base64UrlToBytes(token)))) as unknown;
+    const opened = classifyFile(json);
+    if (opened.kind !== 'sweep') throw new Error(opened.kind);
+    return opened.sweep;
+  } catch {
+    throw new Error('not a SugarScape experiment link');
+  }
+}
+
+export function readSweepHash(hash: string = location.hash): string | null {
+  return /^#x=([A-Za-z0-9_-]+)$/.exec(hash)?.[1] ?? null;
 }

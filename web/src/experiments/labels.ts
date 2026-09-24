@@ -18,6 +18,6 @@ export function metricLabel(sweep: Sweep): string {
   }
 }
 
-export function baseLabel(sweep: Sweep): string {
+export function baseLabel(sweep: Pick<Sweep, 'base'>): string {
   return 'preset' in sweep.base ? `preset ${sweep.base.preset}` : 'a custom config';
 }

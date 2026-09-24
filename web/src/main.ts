@@ -2,7 +2,7 @@ import './style.css';
 import { downloadBlob, downloadText, canvasBlob } from './downloads';
 import { Engine } from './engine';
 import { ExperimentsView } from './experiments/view';
-import { decodeShare, encodeShare, readHash } from './share';
+import { decodeShare, decodeSweep, encodeShare, readHash, readSweepHash } from './share';
 import { ChartsPanel } from './ui/charts-panel';
 import { buildDisplay } from './ui/display';
 import { h } from './ui/dom';
@@ -56,6 +56,16 @@ async function main(): Promise<void> {
     .querySelector('.toolbar h1')!
     .after(h('div', { class: 'view-switch', role: 'group', 'aria-label': 'View' }, ...viewButtons));
   showView('playground');
+
+  const sweepToken = readSweepHash();
+  if (sweepToken) {
+    try {
+      experiments.openSweep(await decodeSweep(sweepToken));
+      showView('experiments');
+    } catch (e) {
+      showBanner(`That experiment link could not be loaded (${e instanceof Error ? e.message : String(e)}).`);
+    }
+  }
 
   const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
   tabs.add('Rules', new RulesPanel(engine).el);

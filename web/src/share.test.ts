@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import type { Config } from './types';
-import { base64UrlToBytes, bytesToBase64Url, decodeShare, encodeShare, readHash } from './share';
+import type { Sweep } from './experiments/types';
 import { LEGACY_SHARE_TOKEN } from './legacy-share.fixture';
+import {
+  base64UrlToBytes,
+  bytesToBase64Url,
+  decodeShare,
+  decodeSweep,
+  encodeShare,
+  encodeSweep,
+  readHash,
+  readSweepHash,
+} from './share';
+import type { Config } from './types';
 
 const config = { width: 50, height: 50, population: 400, sex: { enabled: true } } as unknown as Config;
 
@@ -76,5 +86,34 @@ describe('legacy share links', () => {
     expect(config.spice?.enabled).toBe(true);
     expect(state.landscapes?.length).toBe(1);
     expect(state.landscapes?.[0]?.length).toBe(2500);
+  });
+});
+
+describe('experiment links', () => {
+  const sweep: Sweep = {
+    name: 'Vision',
+    base: { preset: 'ii-2-unit' },
+    x: { path: 'vision.max', values: [1, 2, 3] },
+    seeds: { from: 1, count: 2 },
+    ticks: 100,
+    metric: { kind: 'final', series: 'population' },
+  };
+
+  it('round-trips a sweep', async () => {
+    const token = await encodeSweep(sweep);
+    expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(await decodeSweep(token)).toEqual(sweep);
+  });
+
+  it('reads the #x= hash, and #s= stays the playground', () => {
+    expect(readSweepHash('#x=ab_-9')).toBe('ab_-9');
+    expect(readSweepHash('#s=abc')).toBeNull();
+    expect(readHash('#x=abc')).toBeNull();
+  });
+
+  it('rejects playground links and garbage', async () => {
+    const playground = await encodeShare({ config, seed: 1 });
+    await expect(decodeSweep(playground)).rejects.toThrow('not a SugarScape experiment link');
+    await expect(decodeSweep('garbage')).rejects.toThrow('not a SugarScape experiment link');
   });
 });
