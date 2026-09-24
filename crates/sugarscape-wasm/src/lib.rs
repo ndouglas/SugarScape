@@ -33,8 +33,18 @@ pub fn default_config_json() -> String {
     serde_json::to_string(&Config::default()).expect("config serializes")
 }
 
-fn parse_sweep(spec: &str) -> Result<Sweep, JsValue> {
+fn read_sweep(spec: &str) -> Result<Sweep, JsValue> {
     Sweep::from_json(spec).map_err(field_errors)
+}
+
+/// The sweep in full form (axes written as `{ label, values }`) after
+/// parsing it and checking its shape; builds no config. For opening files
+/// and links before anything is shown.
+#[wasm_bindgen]
+pub fn parse_sweep(spec: &str) -> Result<String, JsValue> {
+    let sweep = read_sweep(spec)?;
+    sweep.check_shape().map_err(field_errors)?;
+    Ok(serde_json::to_string(&sweep).expect("sweeps serialize"))
 }
 
 /// `runs` (a JSON array of `RunResult`), checked against `sweep`.
@@ -49,14 +59,14 @@ fn parse_runs(sweep: &Sweep, runs: &str) -> Result<Vec<RunResult>, JsValue> {
 /// checking its shape and every cell's config.
 #[wasm_bindgen]
 pub fn sweep_points(spec: &str) -> Result<String, JsValue> {
-    let points = parse_sweep(spec)?.points().map_err(field_errors)?;
+    let points = read_sweep(spec)?.points().map_err(field_errors)?;
     Ok(serde_json::to_string(&points).expect("points serialize"))
 }
 
 /// Runs point `index` of the sweep; returns its `RunResult` JSON.
 #[wasm_bindgen]
 pub fn run_point(spec: &str, index: u32) -> Result<String, JsValue> {
-    let sweep = parse_sweep(spec)?;
+    let sweep = read_sweep(spec)?;
     let point = sweep.point(index as usize).map_err(field_errors)?;
     let config = sweep.config_for(&point).map_err(field_errors)?;
     let run = sweep::run_config(&sweep, &point, config);
@@ -66,7 +76,7 @@ pub fn run_point(spec: &str, index: u32) -> Result<String, JsValue> {
 /// The `Summary` JSON of `runs` (any order, possibly partial).
 #[wasm_bindgen]
 pub fn aggregate(spec: &str, runs: &str) -> Result<String, JsValue> {
-    let sweep = parse_sweep(spec)?;
+    let sweep = read_sweep(spec)?;
     let runs = parse_runs(&sweep, runs)?;
     Ok(serde_json::to_string(&sweep::aggregate(&sweep, &runs)).expect("summaries serialize"))
 }
@@ -95,7 +105,7 @@ pub fn config_series_names(config: &str) -> Result<String, JsValue> {
 /// The CLI's result file for `runs`, marked incomplete when points are missing.
 #[wasm_bindgen]
 pub fn sweep_result(spec: &str, runs: &str) -> Result<String, JsValue> {
-    let sweep = parse_sweep(spec)?;
+    let sweep = read_sweep(spec)?;
     let runs = parse_runs(&sweep, runs)?;
     Ok(SweepResult::new(sweep, runs).to_json())
 }
@@ -103,7 +113,7 @@ pub fn sweep_result(spec: &str, runs: &str) -> Result<String, JsValue> {
 /// The CLI's runs CSV (`kind = "runs"`) or summary CSV (`"summary"`).
 #[wasm_bindgen]
 pub fn sweep_csv(spec: &str, runs: &str, kind: &str) -> Result<String, JsValue> {
-    let sweep = parse_sweep(spec)?;
+    let sweep = read_sweep(spec)?;
     let runs = parse_runs(&sweep, runs)?;
     let result = SweepResult::new(sweep, runs);
     match kind {

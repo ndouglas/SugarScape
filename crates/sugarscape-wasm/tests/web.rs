@@ -2,8 +2,8 @@
 
 use sugarscape_core::sweep::{self as core_sweep, Sweep};
 use sugarscape_wasm::{
-    aggregate, builtin_sweeps, config_series_names, presets_json, run_point, sweep_csv,
-    sweep_points, sweep_result, Sim,
+    aggregate, builtin_sweeps, config_series_names, parse_sweep, presets_json, run_point,
+    sweep_csv, sweep_points, sweep_result, Sim,
 };
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
@@ -265,4 +265,27 @@ fn builtins_and_series_names_are_listed() {
     assert!(names.iter().any(|n| n == "population"));
     assert!(names.iter().any(|n| n == "mean_holding_0"));
     assert!(config_series_names(r#"{"population": -1}"#).is_err());
+}
+
+#[wasm_bindgen_test]
+fn parse_sweep_writes_axes_in_full_or_returns_field_errors() {
+    let full: serde_json::Value = serde_json::from_str(&parse_sweep(TINY).unwrap()).unwrap();
+    assert_eq!(full["x"]["label"], "vision.max");
+    assert_eq!(
+        full["x"]["values"][1],
+        serde_json::json!({ "at": 4.0, "set": { "vision.max": 4 } })
+    );
+    assert!(full["x"].get("path").is_none());
+    // Full form parses back to the same sweep.
+    assert_eq!(
+        Sweep::from_json(&full.to_string()).unwrap(),
+        Sweep::from_json(TINY).unwrap()
+    );
+    let err = parse_sweep("{").unwrap_err().as_string().unwrap();
+    assert!(err.contains(r#""field":"sweep""#), "{err}");
+    let err = parse_sweep(&TINY.replace("\"ticks\": 20", "\"ticks\": 0"))
+        .unwrap_err()
+        .as_string()
+        .unwrap();
+    assert!(err.contains(r#""field":"ticks""#), "{err}");
 }
