@@ -1,5 +1,6 @@
 import type { Engine } from '../engine';
 import { wrappedSegments } from './overlay';
+import { trailSegments } from './trail';
 
 const CELL = 12;
 
@@ -84,6 +85,21 @@ export class GridView {
         }
       }
       ctx.stroke();
+      ctx.restore();
+    }
+
+    if (this.engine.followed() !== null) {
+      ctx.save();
+      ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue('--text').trim() || '#000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      for (const s of trailSegments(this.engine.trail(), width, height)) {
+        ctx.globalAlpha = s.alpha;
+        ctx.beginPath();
+        ctx.moveTo((s.x1 + 0.5) * CELL, (s.y1 + 0.5) * CELL);
+        ctx.lineTo((s.x2 + 0.5) * CELL, (s.y2 + 0.5) * CELL);
+        ctx.stroke();
+      }
       ctx.restore();
     }
 

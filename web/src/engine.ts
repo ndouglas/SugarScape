@@ -3,7 +3,7 @@ import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Pr
 import { parseErrors } from './types';
 import { validLayer } from './layers';
 
-export type EngineEvent = 'reset' | 'tick' | 'config' | 'run' | 'select' | 'display' | 'edit';
+export type EngineEvent = 'reset' | 'tick' | 'config' | 'run' | 'select' | 'display' | 'edit' | 'follow';
 
 export interface Selection { x: number; y: number; agentId: number | null }
 
@@ -235,9 +235,32 @@ export class Engine {
     this.emit('select');
   }
 
-  follow(id: number): void {
+  /** Selects agent `id` if it is alive. */
+  selectAgent(id: number): void {
     const p = this.sim.locate(id);
     if (p) this.select(p[0], p[1]);
+  }
+
+  /** Records and draws agent `id`'s trail from now on (a new trail replaces any other; reset clears it). */
+  followAgent(id: number): void {
+    this.sim.follow(id);
+    this.emit('follow');
+  }
+
+  unfollow(): void {
+    this.sim.unfollow();
+    this.emit('follow');
+  }
+
+  /** The followed agent's id (alive or not), or null. */
+  followed(): number | null {
+    const id = this.sim.followed();
+    return id < 0 ? null : id;
+  }
+
+  /** The followed agent's trail as `[x0, y0, x1, y1, …]`, oldest first. */
+  trail(): Uint32Array {
+    return this.sim.trail();
   }
 
   /** Keeps the selection on a followed agent as it moves. */

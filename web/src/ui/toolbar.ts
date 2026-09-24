@@ -20,6 +20,21 @@ export function buildToolbar(engine: Engine): HTMLElement {
   );
   const readout = h('span', { class: 'readout' });
 
+  /** "Following #id ✕" while an agent's trail is drawn; † once it has died. */
+  const chip = h('span', { class: 'chip' });
+  const syncFollow = () => {
+    const id = engine.followed();
+    chip.hidden = id === null;
+    if (id === null) return;
+    const alive = engine.sim.locate(id) !== undefined;
+    chip.replaceChildren(
+      `Following #${id}${alive ? '' : ' †'}`,
+      h('button', { class: 'link', title: 'Stop following', 'aria-label': 'Stop following', onclick: () => engine.unfollow() }, '✕'),
+    );
+  };
+  for (const event of ['follow', 'reset', 'tick', 'edit'] as const) engine.on(event, syncFollow);
+  syncFollow();
+
   const sync = () => {
     play.textContent = engine.running ? 'Pause' : 'Play';
     step.disabled = engine.running;
@@ -45,6 +60,7 @@ export function buildToolbar(engine: Engine): HTMLElement {
     h('div', { class: 'group' }, play, step, speed),
     h('div', { class: 'group' }, h('label', {}, 'Seed ', seed), reset, dice),
     readout,
+    chip,
     h('div', { class: 'toolbar-end' }),
   );
 }

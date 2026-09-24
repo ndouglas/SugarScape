@@ -9,7 +9,7 @@ export class InspectPanel {
   private visible = false;
 
   constructor(private engine: Engine) {
-    for (const event of ['select', 'tick', 'reset', 'config', 'edit'] as const) engine.on(event, () => this.render());
+    for (const event of ['select', 'tick', 'reset', 'config', 'edit', 'follow'] as const) engine.on(event, () => this.render());
     this.render();
   }
 
@@ -29,16 +29,26 @@ export class InspectPanel {
       { class: 'links' },
       ...links.map((l) =>
         l.alive
-          ? h('button', { class: 'link', onclick: () => this.engine.follow(l.id) }, `#${l.id}`)
+          ? h('button', { class: 'link', onclick: () => this.engine.selectAgent(l.id) }, `#${l.id}`)
           : h('span', { class: 'hint', title: 'deceased' }, `#${l.id}†`),
       ),
     );
   }
 
+  private followButton(id: number): HTMLElement {
+    const following = this.engine.followed() === id;
+    return h('button', {
+      class: 'link',
+      disabled: following,
+      title: 'Draw this agent’s trail on the grid',
+      onclick: () => this.engine.followAgent(id),
+    }, following ? 'Following' : 'Follow');
+  }
+
   private agentRows(a: AgentView): HTMLElement[] {
     const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     return [
-      row('Agent', `#${a.id} · ${a.sex} · ${this.engine.config.culture.groups[a.group]?.name ?? a.tribe}`),
+      row('Agent', h('span', {}, `#${a.id} · ${a.sex} · ${this.engine.config.culture.groups[a.group]?.name ?? a.tribe} `, this.followButton(a.id))),
       ...a.holdings.map((held, i) =>
         row(this.goodName(i), `${fmt(held)} (born with ${fmt(a.initial[i])}) · metabolism ${a.metabolism[i]}`),
       ),
@@ -55,7 +65,7 @@ export class InspectPanel {
         ? [row('Loans', h('span', { class: 'links' }, ...a.loans.map((l) =>
             h('span', {}, `${l.role === 'lender' ? 'lent to' : 'owes'} `,
               l.counterparty.alive
-                ? h('button', { class: 'link', onclick: () => this.engine.follow(l.counterparty.id) }, `#${l.counterparty.id}`)
+                ? h('button', { class: 'link', onclick: () => this.engine.selectAgent(l.counterparty.id) }, `#${l.counterparty.id}`)
                 : h('span', { class: 'hint' }, `#${l.counterparty.id}†`),
               ` ${fmt(l.due)} ${this.goodName(l.good)} by t=${l.due_tick}`))))]
         : []),

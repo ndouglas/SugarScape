@@ -111,7 +111,7 @@ async function main(): Promise<void> {
   document.querySelector('.toolbar-end')!.append(shareButton, menu);
 
   let dirty = true;
-  for (const event of ['reset', 'tick', 'config', 'display', 'select', 'edit'] as const) {
+  for (const event of ['reset', 'tick', 'config', 'display', 'select', 'edit', 'follow'] as const) {
     engine.on(event, () => (dirty = true));
   }
   const loop = () => {
