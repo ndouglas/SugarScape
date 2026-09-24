@@ -2,6 +2,9 @@ import { downloadBlob, downloadText } from '../downloads';
 import type { Engine } from '../engine';
 import { h } from './dom';
 import type { GridView } from './grid-view';
+import { showNotice } from './notice';
+
+const message = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 /** A world the Export menu exports from; `label` ('A', 'B') is empty outside Compare. */
 export interface ExportWorld { label: string; engine: Engine; grid: GridView }
@@ -43,7 +46,7 @@ export function buildExportMenu(opts: ExportOptions): HTMLElement {
         'button',
         {
           title: 'The whole session — setup, painted maps and every edit — as a file; Share → Open session… loads it',
-          onclick: () => void opts.session(),
+          onclick: () => opts.session().catch((e) => showNotice(`Could not build the session file (${message(e)})`, 10_000)),
         },
         'Session (JSON)',
       ),

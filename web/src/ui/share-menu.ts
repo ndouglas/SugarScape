@@ -1,6 +1,8 @@
 import { h } from './dom';
 import { showNotice } from './notice';
 
+const message = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+
 /**
  * Share: Copy link (the whole session, or a comparison) and Open session… (a session file).
  * A long link is still copied, with a notice (Decision 6).
@@ -15,16 +17,20 @@ export function buildShareMenu(opts: {
     'Copy link',
   );
   copy.addEventListener('click', async () => {
-    const { hash, notice } = await opts.link();
-    history.replaceState(null, '', hash);
     try {
-      await navigator.clipboard.writeText(location.href);
-      copy.textContent = 'Link copied';
-    } catch {
-      copy.textContent = 'Link in address bar';
+      const { hash, notice } = await opts.link();
+      history.replaceState(null, '', hash);
+      try {
+        await navigator.clipboard.writeText(location.href);
+        copy.textContent = 'Link copied';
+      } catch {
+        copy.textContent = 'Link in address bar';
+      }
+      if (notice) showNotice(notice, 10_000);
+      setTimeout(() => (copy.textContent = 'Copy link'), 2000);
+    } catch (e) {
+      showNotice(`Could not create the link (${message(e)})`, 10_000);
     }
-    if (notice) showNotice(notice, 10_000);
-    setTimeout(() => (copy.textContent = 'Copy link'), 2000);
   });
   const file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, 'aria-label': 'Session file to open' });
   file.addEventListener('change', async () => {

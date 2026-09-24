@@ -1,48 +1,65 @@
 import { randomSeed, type Engine, type Speed } from '../engine';
 import { h } from './dom';
+import { showNotice } from './notice';
 
 const SPEEDS: Speed[] = [1, 2, 5, 10, 25, 100, 'max'];
+
+const message = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 /** A chip and the removal of its listeners. */
 export interface Chip { el: HTMLElement; off: () => void }
 
-/** "Following #id ✕" while `engine` draws an agent's trail; † once it has died. */
+/**
+ * "Following #id ✕" while `engine` draws an agent's trail; † once it has died. The text span and
+ * ✕ button are built once and only updated in place: rebuilding them on every sync (which fires
+ * on every 'tick') would swap out the ✕ button mid-click, silently dropping the click.
+ */
 export function followChip(engine: Engine): Chip {
-  const el = h('span', { class: 'chip' });
+  const text = h('span', { class: 'chip-text' });
+  const button = h(
+    'button',
+    { class: 'link', title: 'Stop following', 'aria-label': 'Stop following', onclick: () => engine.unfollow() },
+    '✕',
+  );
+  const el = h('span', { class: 'chip' }, text, button);
   const sync = () => {
     const id = engine.followed();
     el.hidden = id === null;
     if (id === null) return;
     const alive = engine.followedAlive();
-    const text = `Following #${id}${alive ? '' : ' †'}`;
-    el.title = text;
-    el.replaceChildren(
-      h('span', { class: 'chip-text' }, text),
-      h('button', { class: 'link', title: 'Stop following', 'aria-label': 'Stop following', onclick: () => engine.unfollow() }, '✕'),
-    );
+    const label = `Following #${id}${alive ? '' : ' †'}`;
+    el.title = label;
+    text.textContent = label;
   };
   const offs = (['follow', 'reset', 'tick', 'edit'] as const).map((event) => engine.on(event, sync));
   sync();
   return { el, off: () => offs.forEach((off) => off()) };
 }
 
-/** "Replaying · N edits left ✕" while `engine` has edits to replay; ✕ keeps the world and drops the rest. */
+/**
+ * "Replaying · N edits left ✕" while `engine` has edits to replay; ✕ keeps the world and drops the
+ * rest. The text span and ✕ button are built once and only updated in place (see `followChip`):
+ * during a replayed paint drag, 'replay' fires every frame, and rebuilding the button each time
+ * could swap it out between a human's mousedown and mouseup, dropping the click.
+ */
 export function replayChip(engine: Engine): Chip {
-  const el = h('span', { class: 'chip replay-chip' });
+  const text = h('span', { class: 'chip-text' });
+  const endReplay = () => {
+    engine.endReplay().catch((e) => showNotice(`Could not stop replaying (${message(e)})`, 10_000));
+  };
+  const button = h(
+    'button',
+    { class: 'link', title: 'Stop replaying (keep the world as it is)', 'aria-label': 'Stop replaying', onclick: endReplay },
+    '✕',
+  );
+  const el = h('span', { class: 'chip replay-chip' }, text, button);
   const sync = () => {
     const left = engine.replayLeft;
     el.hidden = left === 0;
     if (left === 0) return;
-    const text = `Replaying · ${left} edit${left === 1 ? '' : 's'} left`;
-    el.title = text;
-    el.replaceChildren(
-      h('span', { class: 'chip-text' }, text),
-      h(
-        'button',
-        { class: 'link', title: 'Stop replaying (keep the world as it is)', 'aria-label': 'Stop replaying', onclick: () => void engine.endReplay() },
-        '✕',
-      ),
-    );
+    const label = `Replaying · ${left} edit${left === 1 ? '' : 's'} left`;
+    el.title = label;
+    text.textContent = label;
   };
   const offs = (['replay', 'reset'] as const).map((event) => engine.on(event, sync));
   sync();
