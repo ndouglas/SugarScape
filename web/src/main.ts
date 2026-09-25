@@ -2,6 +2,7 @@ import './style.css';
 import { askKeep, CompareView, compareShell, type Playground, type WorldName } from './compare/compare-view';
 import { copyWorld } from './compare/lockstep';
 import { COMPARE_PRESETS, comparePresetStates } from './compare-presets';
+import { worldViews } from './recording/frames';
 import { canvasBlob, downloadBlob, downloadText } from './downloads';
 import { Engine, type InitialState } from './engine';
 import { errorMessage, fieldErrorsMessage } from './errors';
@@ -225,15 +226,14 @@ async function main(): Promise<void> {
     },
   });
   const record = buildRecordControl({
-    // In Compare each frame shows both grids side by side, tagged "A" and "B".
+    // In Compare each frame shows both worlds side by side, tagged "A" and "B"; Ring World records
+    // its ring beside its space–time diagram.
     grids: () => {
       const c = compare;
-      return c
-        ? [
-            { canvas: grid.canvas, cells: () => engine.size(), label: 'A' },
-            { canvas: c.gridB.canvas, cells: () => c.b.size(), label: 'B' },
-          ]
-        : [{ canvas: grid.canvas, cells: () => engine.size() }];
+      const a = { model: engine.model, grid: grid.canvas, ring: ringView.canvas, size: () => engine.size() };
+      if (!c) return worldViews(a);
+      const b = { model: c.b.model, grid: c.gridB.canvas, ring: c.ringB.canvas, size: () => c.b.size() };
+      return [...worldViews(a, 'A'), ...worldViews(b, 'B')];
     },
     tick: () => engine.tick,
     running: () => (compare?.lock ?? engine).running,

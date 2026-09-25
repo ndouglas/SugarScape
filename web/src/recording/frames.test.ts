@@ -9,6 +9,7 @@ import {
   pickMime,
   recordingName,
   Stopwatch,
+  worldViews,
 } from './frames';
 
 describe('frameLayout', () => {
@@ -113,5 +114,20 @@ describe('GifSampler', () => {
     expect(gifDelay(66.7)).toBe(70);
     expect(gifDelay(134)).toBe(130);
     expect(gifDelay(5)).toBe(20);
+  });
+});
+
+describe('worldViews', () => {
+  const size = () => ({ width: 150, height: 150 });
+  it("records a grid alone, or Ring World's ring beside its space–time diagram", () => {
+    const sugar = worldViews({ model: 'sugarscape', grid: 'grid', ring: 'ring', size: () => ({ width: 50, height: 50 }) }, 'A');
+    expect(sugar.map((v) => [v.canvas, v.cells(), v.label])).toEqual([['grid', { width: 50, height: 50 }, 'A']]);
+    const ring = worldViews({ model: 'ring', grid: 'grid', ring: 'ring', size }, 'B');
+    expect(ring.map((v) => [v.canvas, v.cells(), v.label])).toEqual([
+      ['ring', { width: 150, height: 150 }, 'B'],
+      ['grid', { width: 150, height: 150 }, undefined],
+    ]);
+    // Side by side at 3 px a cell, so the frame stays within 1080 px.
+    expect(frameLayout(ring.map((v) => v.cells()))).toMatchObject({ width: 904, height: 450, scale: 3 });
   });
 });

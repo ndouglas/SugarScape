@@ -1,5 +1,7 @@
 // The pure parts of recording (Decisions 13 and 14): frame layout, codec choice, names and timing.
 
+import type { ModelKind } from '../types';
+
 /** A recorded cell is this many pixels… */
 export const MIN_CELL_PX = 8;
 /** …unless that would make the frame's long side longer than this. */
@@ -17,6 +19,24 @@ export const MIMES = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/w
 
 export interface Rect { x: number; y: number; width: number; height: number }
 export interface FrameLayout { width: number; height: number; scale: number; rects: Rect[] }
+
+/** A view a recording draws: its canvas, its size in cells, and the world's tag in Compare. */
+export interface WorldView<C> { canvas: C; cells: () => { width: number; height: number }; label?: string }
+
+/**
+ * The views a recording shows for one world (milestone 9's Decision 16): its grid; for Ring
+ * World its ring first (a square as tall as the space–time diagram) and the diagram beside it.
+ * `label` tags the world's first view.
+ */
+export function worldViews<C>(
+  world: { model: ModelKind; grid: C; ring: C; size: () => { width: number; height: number } },
+  label?: string,
+): WorldView<C>[] {
+  const grid: WorldView<C> = { canvas: world.grid, cells: world.size };
+  if (world.model !== 'ring') return [{ ...grid, label }];
+  const side = () => world.size().height;
+  return [{ canvas: world.ring, cells: () => ({ width: side(), height: side() }), label }, grid];
+}
 
 /**
  * Where each grid goes in a recorded frame: side by side, top-aligned, `scale` pixels per cell —
