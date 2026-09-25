@@ -26,6 +26,7 @@ pub mod schema;
 pub mod social;
 pub mod stats;
 pub mod sweep;
+pub mod tags;
 pub mod world;
 
 #[cfg(test)]
