@@ -628,9 +628,11 @@ impl From<Preset> for ModelPreset {
     }
 }
 
-/// Every model's presets: the sugarscape's (`all`) first.
+/// Every model's presets: the sugarscape's (`all`), then Schelling's.
 pub fn catalog() -> Vec<ModelPreset> {
-    all().into_iter().map(ModelPreset::from).collect()
+    let mut out: Vec<ModelPreset> = all().into_iter().map(ModelPreset::from).collect();
+    out.extend(crate::schelling::presets());
+    out
 }
 
 /// The preset `id` of any model.

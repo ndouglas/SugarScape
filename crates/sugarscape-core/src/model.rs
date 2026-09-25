@@ -7,20 +7,35 @@ use serde::{Serialize, Serializer};
 
 use crate::config::{Config, FieldError};
 use crate::render::{self, ColorMode, Layer};
+use crate::schelling::{SchellingConfig, SchellingWorld};
+use crate::schema::Param;
 use crate::world::World;
-use crate::{export, stats};
+use crate::{export, schelling, stats};
 
 /// Which model a config or world is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelKind {
     Sugarscape,
+    Schelling,
 }
 
 impl ModelKind {
+    pub const ALL: [ModelKind; 2] = [ModelKind::Sugarscape, ModelKind::Schelling];
+
     pub fn as_str(self) -> &'static str {
         match self {
             ModelKind::Sugarscape => "sugarscape",
+            ModelKind::Schelling => "schelling",
+        }
+    }
+
+    /// The Rules panel's fields; empty for the sugarscape, whose panel is
+    /// hand-built.
+    pub fn schema(self) -> Vec<Param> {
+        match self {
+            ModelKind::Sugarscape => Vec::new(),
+            ModelKind::Schelling => schelling::schema(),
         }
     }
 }
@@ -29,9 +44,20 @@ impl ModelKind {
 /// every model but the sugarscape carries `"model": "<kind>"`, and an object
 /// without a `model` key (every config, link, session and sweep written
 /// before milestone 9) is a sugarscape config.
+// Configs are cloned rarely (never per tick), so the sugarscape's larger
+// variant is not boxed.
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum ModelConfig {
     Sugarscape(Config),
+    Schelling(SchellingConfig),
+}
+
+/// Another model's config on the wire: its fields and `"model": "<kind>"`.
+#[derive(Serialize)]
+#[serde(tag = "model", rename_all = "snake_case")]
+enum Tagged<'a> {
+    Schelling(&'a SchellingConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -45,6 +71,7 @@ impl Serialize for ModelConfig {
         match self {
             // Untagged, so sugarscape configs serialize exactly as before.
             ModelConfig::Sugarscape(c) => c.serialize(s),
+            ModelConfig::Schelling(c) => Tagged::Schelling(c).serialize(s),
         }
     }
 }
@@ -53,6 +80,7 @@ impl ModelConfig {
     pub fn kind(&self) -> ModelKind {
         match self {
             ModelConfig::Sugarscape(_) => ModelKind::Sugarscape,
+            ModelConfig::Schelling(_) => ModelKind::Schelling,
         }
     }
 
@@ -60,6 +88,7 @@ impl ModelConfig {
     pub fn sugarscape(&self) -> Option<&Config> {
         match self {
             ModelConfig::Sugarscape(c) => Some(c),
+            _ => None,
         }
     }
 
@@ -74,7 +103,8 @@ impl ModelConfig {
 
     /// Reads a config of any model by its `model` key: absent or
     /// `"sugarscape"` is a sugarscape config in either shape
-    /// (`Config::from_value`).
+    /// (`Config::from_value`); another model's missing fields take its
+    /// defaults, and unknown fields are errors.
     pub fn from_value(mut value: serde_json::Value) -> Result<Self, FieldError> {
         let tag = match value.as_object_mut().and_then(|o| o.remove("model")) {
             None => "sugarscape".to_string(),
@@ -88,9 +118,12 @@ impl ModelConfig {
         };
         match tag.as_str() {
             "sugarscape" => Config::from_value(value).map(ModelConfig::Sugarscape),
+            "schelling" => serde_json::from_value(value)
+                .map(ModelConfig::Schelling)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
-                format!("unknown model {tag:?} (expected sugarscape)"),
+                format!("unknown model {tag:?} (expected sugarscape or schelling)"),
             )),
         }
     }
@@ -98,6 +131,7 @@ impl ModelConfig {
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
         match self {
             ModelConfig::Sugarscape(c) => c.validate(),
+            ModelConfig::Schelling(c) => c.validate(),
         }
     }
 
@@ -106,6 +140,7 @@ impl ModelConfig {
     pub fn with_path(&self, path: &str, value: &serde_json::Value) -> Result<Self, FieldError> {
         match self {
             ModelConfig::Sugarscape(c) => c.with_path(path, value).map(ModelConfig::Sugarscape),
+            ModelConfig::Schelling(c) => set_path(c, path, value).map(ModelConfig::Schelling),
         }
     }
 
@@ -113,8 +148,26 @@ impl ModelConfig {
     pub fn series_names(&self) -> Vec<String> {
         match self {
             ModelConfig::Sugarscape(c) => stats::series_names(c),
+            ModelConfig::Schelling(_) => schelling::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
+}
+
+/// `config` with the dotted `path` set to `value` (through its JSON, like
+/// `Config::with_path`; the error field is `schedule`, as there).
+fn set_path<T: Serialize + serde::de::DeserializeOwned>(
+    config: &T,
+    path: &str,
+    value: &serde_json::Value,
+) -> Result<T, FieldError> {
+    let mut json = serde_json::to_value(config).expect("config serializes");
+    let unknown = || FieldError::new("schedule", format!("unknown field {path}"));
+    let mut slot = &mut json;
+    for key in path.split('.') {
+        slot = slot.get_mut(key).ok_or_else(unknown)?;
+    }
+    *slot = value.clone();
+    serde_json::from_value(json).map_err(|e| FieldError::new("schedule", format!("{path}: {e}")))
 }
 
 /// What the host, sweeps and the CLI need from a running model. `run` is
@@ -152,6 +205,18 @@ pub trait Model {
     /// Applies a changed config to the running world; fields that change
     /// only on reset are refused.
     fn set_config(&mut self, next: ModelConfig) -> Result<(), Vec<FieldError>>;
+}
+
+/// The error for handing a world another model's config.
+pub(crate) fn wrong_model(want: ModelKind, got: &ModelConfig) -> Vec<FieldError> {
+    vec![FieldError::new(
+        "model",
+        format!(
+            "a {} world cannot take a {} config",
+            want.as_str(),
+            got.kind().as_str()
+        ),
+    )]
 }
 
 impl Model for World {
@@ -217,6 +282,7 @@ impl Model for World {
     fn set_config(&mut self, next: ModelConfig) -> Result<(), Vec<FieldError>> {
         match next {
             ModelConfig::Sugarscape(c) => World::set_config(self, c),
+            other => Err(wrong_model(ModelKind::Sugarscape, &other)),
         }
     }
 }
@@ -225,6 +291,7 @@ impl Model for World {
 /// credit graph …) go through `sugarscape()`/`sugarscape_mut()`.
 pub enum ModelWorld {
     Sugarscape(Box<World>),
+    Schelling(Box<SchellingWorld>),
 }
 
 impl ModelWorld {
@@ -243,36 +310,44 @@ impl ModelWorld {
             ModelConfig::Sugarscape(c) => {
                 ModelWorld::Sugarscape(Box::new(World::with_landscapes(c, seed, landscapes)?))
             }
+            ModelConfig::Schelling(c) => {
+                ModelWorld::Schelling(Box::new(SchellingWorld::new(c, seed)?))
+            }
         })
     }
 
     pub fn kind(&self) -> ModelKind {
         match self {
             ModelWorld::Sugarscape(_) => ModelKind::Sugarscape,
+            ModelWorld::Schelling(_) => ModelKind::Schelling,
         }
     }
 
     pub fn model(&self) -> &dyn Model {
         match self {
             ModelWorld::Sugarscape(w) => w.as_ref(),
+            ModelWorld::Schelling(w) => w.as_ref(),
         }
     }
 
     pub fn model_mut(&mut self) -> &mut dyn Model {
         match self {
             ModelWorld::Sugarscape(w) => w.as_mut(),
+            ModelWorld::Schelling(w) => w.as_mut(),
         }
     }
 
     pub fn sugarscape(&self) -> Option<&World> {
         match self {
             ModelWorld::Sugarscape(w) => Some(w),
+            _ => None,
         }
     }
 
     pub fn sugarscape_mut(&mut self) -> Option<&mut World> {
         match self {
             ModelWorld::Sugarscape(w) => Some(w),
+            _ => None,
         }
     }
 }
@@ -302,6 +377,57 @@ mod tests {
             serde_json::to_string(&c).unwrap()
         );
         assert!(!serde_json::to_string(&model).unwrap().contains("\"model\""));
+    }
+
+    #[test]
+    fn schelling_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(r#"{"model": "schelling", "population": 100}"#).unwrap();
+        assert_eq!(c.kind(), ModelKind::Schelling);
+        let ModelConfig::Schelling(s) = &c else {
+            unreachable!()
+        };
+        assert_eq!(
+            (s.population, s.width),
+            (100, 50),
+            "missing fields take the defaults"
+        );
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(json["model"], "schelling");
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        let e = ModelConfig::from_json(r#"{"model": "schelling", "vision": 3}"#).unwrap_err();
+        assert!(e[0].message.contains("vision"), "{e:?}");
+        let e =
+            ModelConfig::from_json(r#"{"model": "schelling", "population": 2500}"#).unwrap_err();
+        assert_eq!(e[0].field, "population");
+    }
+
+    #[test]
+    fn with_path_sets_another_models_fields() {
+        let c = ModelConfig::Schelling(SchellingConfig::default());
+        let next = c.with_path("preference.max", &json!(0.5)).unwrap();
+        let ModelConfig::Schelling(s) = &next else {
+            unreachable!()
+        };
+        assert_eq!((s.preference.min, s.preference.max), (0.25, 0.5));
+        assert_eq!(
+            c.with_path("vision.max", &json!(3)).unwrap_err().message,
+            "unknown field vision.max"
+        );
+        assert!(c.with_path("model", &json!("sugarscape")).is_err());
+        assert!(c.with_path("population", &json!("many")).is_err());
+    }
+
+    #[test]
+    fn a_world_refuses_another_models_config() {
+        let mut any = ModelWorld::new(ModelConfig::from(Config::default()), 1).unwrap();
+        let e = any
+            .model_mut()
+            .set_config(ModelConfig::Schelling(SchellingConfig::default()))
+            .unwrap_err();
+        assert_eq!(e[0].field, "model");
+        let mut s = ModelWorld::new(ModelConfig::Schelling(SchellingConfig::default()), 1).unwrap();
+        assert!(s.model_mut().set_config(Config::default().into()).is_err());
+        assert!(s.sugarscape().is_none());
     }
 
     #[test]

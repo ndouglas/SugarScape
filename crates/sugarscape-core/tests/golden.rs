@@ -51,7 +51,12 @@ const GOLDEN: &[(&str, u64)] = &[
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
-const MODEL_GOLDEN: &[(&str, u64)] = &[];
+const MODEL_GOLDEN: &[(&str, u64)] = &[
+    ("vi-4-schelling-25", 0x7a7072c3433f5f6f),
+    ("vi-5-schelling-25-residence", 0x9abe1c25e873debd),
+    ("vi-6-schelling-50-residence", 0x637412f7af91f684),
+    ("vi-7-schelling-mixed", 0x79346d2a338108cf),
+];
 
 fn fingerprint(id: &str) -> u64 {
     let preset = presets::by_id(id).unwrap_or_else(|| panic!("unknown preset {id}"));

@@ -3,6 +3,7 @@
 
 use sugarscape_core::config::Config;
 use sugarscape_core::econ;
+use sugarscape_core::model::ModelWorld;
 use sugarscape_core::presets;
 use sugarscape_core::sweep::{self, Summary, SweepResult};
 use sugarscape_core::world::World;
@@ -582,4 +583,103 @@ fn three_tribes_start_with_every_group_present() {
     );
     w.run(500);
     assert!(w.population() > 0);
+}
+
+/// Any model's preset `id` run `ticks` ticks from `seed`: its series `name`.
+fn model_series(id: &str, seed: u64, ticks: u32, name: &str) -> Vec<f64> {
+    let mut w = ModelWorld::new(presets::find(id).unwrap().config, seed).unwrap();
+    w.model_mut().run(ticks);
+    w.model().series(name).unwrap()
+}
+
+/// Mean segregation over ticks 500–1000 of a 1000-tick run.
+fn late_segregation(id: &str, seed: u64) -> f64 {
+    let seg = model_series(id, seed, 1000, "segregation");
+    seg[500..=1000].iter().sum::<f64>() / 501.0
+}
+
+/// Prints the figures the Schelling thresholds below come from.
+#[test]
+#[ignore]
+fn measure_schelling() {
+    for seed in 1..=5 {
+        let seg = model_series("vi-4-schelling-25", seed, 200, "segregation");
+        let quiet = model_series("vi-4-schelling-25", seed, 200, "quiet");
+        let first = quiet.iter().position(|&q| q == 1.0);
+        println!(
+            "vi-4 seed {seed}: segregation at t=0 {:.3}, first quiet tick {first:?}, segregation then {:.3}",
+            seg[0],
+            first.map_or(f64::NAN, |t| seg[t])
+        );
+    }
+    for id in [
+        "vi-5-schelling-25-residence",
+        "vi-6-schelling-50-residence",
+        "vi-7-schelling-mixed",
+    ] {
+        let late: Vec<String> = (1..=5)
+            .map(|s| format!("{:.4}", late_segregation(id, s)))
+            .collect();
+        println!("{id}: late segregation (t=500–1000) seeds 1–5 {late:?}");
+    }
+}
+
+/// From `measure_schelling` (release, seeds 1–5, recorded 2026-09-25): VI-4
+/// first went quiet at t = 2–3 with segregation rising from 0.489–0.509 to
+/// 0.618–0.639 (gains 0.122–0.150); late segregation was VI-5 0.756–0.763,
+/// VI-6 0.943–0.950, VI-7 0.924–0.944 (per-seed VI-6 − VI-5 0.184–0.193).
+/// Each threshold is the measured extreme rounded toward failing less
+/// (quiet-by: twice the latest first quiet tick, up to a multiple of 10;
+/// the others down to a multiple of 0.05).
+const VI4_QUIET_BY: usize = 10;
+const VI4_GAIN: f64 = 0.10;
+const VI6_OVER_VI5: f64 = 0.15;
+const VI7_AT_LEAST: f64 = 0.90;
+
+#[test]
+#[ignore]
+fn schelling_25_percent_settles_into_a_more_segregated_pattern() {
+    // Animation VI-4: "This process repeats until all agents are satisfied …
+    // Notice that the final configuration is significantly less random—more
+    // segregated—than the initial one."
+    for seed in 1..=5 {
+        let seg = model_series("vi-4-schelling-25", seed, 200, "segregation");
+        let quiet = model_series("vi-4-schelling-25", seed, 200, "quiet");
+        let first = quiet.iter().position(|&q| q == 1.0);
+        let t = first.unwrap_or_else(|| panic!("seed {seed} never went quiet"));
+        assert!(t <= VI4_QUIET_BY, "seed {seed}: first quiet at t = {t}");
+        assert!(
+            seg[t] - seg[0] >= VI4_GAIN,
+            "seed {seed}: {} → {}",
+            seg[0],
+            seg[t]
+        );
+        assert!(
+            quiet[t..].iter().all(|&q| q == 1.0),
+            "seed {seed}: moved again after t = {t}"
+        );
+    }
+}
+
+#[test]
+#[ignore]
+fn schelling_50_percent_is_far_more_segregated_and_mixed_stays_high() {
+    // VI-6: "a high degree of segregation results, far higher than in the
+    // previous runs"; VI-7: "Adding this degree of tolerance is not
+    // sufficient to generate desegregation—indeed, a highly segregated
+    // pattern endures."
+    for seed in 1..=5 {
+        let vi5 = late_segregation("vi-5-schelling-25-residence", seed);
+        let vi6 = late_segregation("vi-6-schelling-50-residence", seed);
+        let vi7 = late_segregation("vi-7-schelling-mixed", seed);
+        assert!(
+            vi6 - vi5 >= VI6_OVER_VI5,
+            "seed {seed}: VI-5 {vi5}, VI-6 {vi6}"
+        );
+        assert!(vi7 >= VI7_AT_LEAST, "seed {seed}: VI-7 {vi7}");
+        assert!(
+            (vi7 - vi6).abs() < (vi7 - vi5).abs(),
+            "seed {seed}: VI-5 {vi5}, VI-6 {vi6}, VI-7 {vi7}"
+        );
+    }
 }

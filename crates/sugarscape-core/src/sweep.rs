@@ -315,13 +315,15 @@ impl Sweep {
 
     /// The points and each (series, x) cell's config, indexed
     /// `series · nx + x`. Errors are deduplicated across cells (Decision 3).
+    /// The base is resolved once (a preset base looks through the catalog).
     fn prepare(&self) -> Result<(Vec<Point>, Vec<ModelConfig>), Vec<FieldError>> {
         self.check_shape()?;
+        let base = self.base_config()?;
         let mut configs = Vec::new();
         let mut errors: Vec<FieldError> = Vec::new();
         for series in 0..self.series_count() {
             for x in 0..self.x.values.len() {
-                match self.config_at(series, x) {
+                match self.config_at(&base, series, x) {
                     Ok(config) => configs.push(config),
                     Err(errs) => {
                         for e in errs {
@@ -343,7 +345,7 @@ impl Sweep {
     /// The config `point` runs (it depends on the series and x value only).
     /// `point` must come from this sweep (`points` or `point`).
     pub fn config_for(&self, point: &Point) -> Result<ModelConfig, Vec<FieldError>> {
-        self.config_at(point.series, point.x)
+        self.config_at(&self.base_config()?, point.series, point.x)
     }
 
     fn base_config(&self) -> Result<ModelConfig, Vec<FieldError>> {
@@ -356,10 +358,16 @@ impl Sweep {
         }
     }
 
-    /// `base`, then `set`, then the series value's `set`, then the x value's
-    /// `set` (each in key order), then `validate` and the metric's series.
-    fn config_at(&self, series: usize, x: usize) -> Result<ModelConfig, Vec<FieldError>> {
-        let mut config = self.base_config()?;
+    /// `base` (this sweep's resolved base config), then `set`, then the
+    /// series value's `set`, then the x value's `set` (each in key order),
+    /// then `validate` and the metric's series.
+    fn config_at(
+        &self,
+        base: &ModelConfig,
+        series: usize,
+        x: usize,
+    ) -> Result<ModelConfig, Vec<FieldError>> {
+        let mut config = base.clone();
         let mut layers = vec![("set".to_string(), &self.set)];
         if let Some(axis) = &self.series {
             layers.push((format!("series[{series}].set"), &axis.values[series].set));
