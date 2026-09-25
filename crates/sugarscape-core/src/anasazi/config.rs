@@ -381,7 +381,7 @@ pub fn schema() -> Vec<Param> {
             Live,
         )
         .with_help(
-            "With “One harvest s.d.” on, this also set soil quality, drawn once at the start: a later change moves only the yearly harvests.",
+            "With “One harvest s.d.” on, this also sets soil quality, but only once, at the start: a later change moves only the yearly harvests.",
         ),
         Param::integer(
             "Valley",
