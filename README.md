@@ -213,10 +213,11 @@ parent's.
   1050–1130 against a record of 156, 94 in the 1140s–60s dip (133), 180 in 1180–1265 (172), then
   59 in 1300 and 22 in 1350 where the record falls to 0 — the shape of JASSS Figure 10, including
   its failure to empty the valley.
-- `lhv-published-defaults` (the ODD's defaults): about 1 050 households at the plateaus, five times
-  the record, as JASSS Figure 2.
+- `lhv-published-defaults` (the ODD's defaults): about 1 050 households at the plateaus, about five
+  times the record's peak (216 households in 1269), as JASSS Figure 2.
 - `lhv-documented` (the text, with the calibrated values): 41 and 80 households at the plateaus and
-  7 of 15 runs empty by 1350 — the written model does not reproduce the published curve.
+  7 of 15 runs empty by 1350 — the written model does not reproduce the published curve. Turning
+  the fresh endowment back on alone brings its mean fit to 1 169 811, 1.27 times the replication's.
 - **Replication vs documented — Anasazi (Compare)** opens the two side by side.
 
 The valley is drawn by **Occupation** (farms green, homes yellow), **Zones** or this year's
@@ -247,7 +248,7 @@ range and the number of runs.
   (carrying capacity vs vision under the two price rules), `schelling-tipping` (segregation vs
   a fixed Schelling preference), `lhv-calibration` (the Long House Valley's fit vs the harvest
   adjustment: best at 0.56, as JASSS finds) and `lhv-quirks` (the fit with each replication quirk
-  turned off: only the fresh endowment matters much). Each file's description records its measured settings; in the
+  turned off: the fresh endowment matters most by far, 4.7×; fission needing a free farm is next, 1.34×). Each file's description records its measured settings; in the
   browser only seeds and ticks can be changed.
 - **From current world**: a config path (the input suggests every number and on/off setting),
   values as `1, 2, 3`, `true, false` or `from:to:step`, an optional second axis, seeds, ticks
@@ -375,4 +376,7 @@ with the NetLogo Sugarscape models.
 
 The Long House Valley data (`data/anasazi/`) are Marco Janssen's *Artificial Anasazi* v1.1.0,
 CoMSES Computational Model Library, doi:10.25937/krp4-g724, under the GPL-2.0 (see
-`data/anasazi/NOTICE`, `LICENSE` and `CITATION.cff` there).
+`data/anasazi/NOTICE`, `LICENSE` and `CITATION.cff` there). They are compiled into the page's
+WASM, so the web build also serves those three files at `anasazi-data/NOTICE`,
+`anasazi-data/LICENSE` and `anasazi-data/CITATION.cff` beside the page, and the Rules panel of an
+Artificial Anasazi world credits the data and links the notice.
