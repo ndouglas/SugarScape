@@ -1,0 +1,16 @@
+[package]
+name = "survey"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Not a member of the repository's workspace.
+[workspace]
+
+[dependencies]
+sugarscape-core = { path = "../crates/sugarscape-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3

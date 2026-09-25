@@ -1,0 +1,838 @@
+# Model survey: do the presets and sweeps show what they claim?
+
+A one-off statistical audit of every preset (29) and built-in sweep (5), run on 2026-09-25 against the model
+as of `e77e038` plus the N-goods sweep fix. Milestone 9 (Schelling, Ring World), merged to `main` since, is not
+covered. Spec: `docs/superpowers/specs/2026-09-24-model-survey-design.md`. Raw numbers:
+`survey/out/results.json`; triage notes: `survey/out/triage.md`.
+
+## Summary
+
+156 claims: **125 hold, 11 weak, 15 fail, 5 untestable**, and no check crashed.
+
+| source | Holds | Weak | Fails | Untestable |
+|---|---|---|---|---|
+| Book | 26 | 4 | 4 | 0 |
+| App (descriptions) | 80 | 4 | 7 | 5 |
+| Comment ("Measured" figures) | 19 | 3 | 4 | 0 |
+
+**No failure traced to a bug in the rules.** Rule-level results reproduce, most at p < 10⁻⁵ over 20
+seeds: carrying capacity, selection on vision and metabolism, pollution, local cultural convergence,
+disease learning, price convergence, and the N-goods and sweep results. Trade raising carrying capacity
+(Figure IV-6) holds on every seed at every vision when compared seed by seed. Two qualifications: wealth
+skew is strong (Gini 0.23 → 0.48, p < 10⁻¹¹), but the book's "Gini above ~0.5" holds only because "about"
+widens the bound to 0.45 (median 0.479, IQR 0.473–0.482); and two presets are broken as configured (item
+1). The shaky parts are:
+
+1. **Two "wave" presets can't do what they describe.** II-6 (diagonal waves) and III-12 (colliding waves)
+   place their agent blocks on top of a sugar peak, so the agents stay put: 0/20 seeds show propagation or
+   contact. The same placement probably explains why III-9's two combat tribes rarely meet (median 5
+   kills in 500 ticks).
+2. **Some descriptions misstate the model.** v-mcneill's society carries no disease when the novel one
+   arrives. n-4-peaks has 128 sites growing all four goods, so agents needn't travel or trade. IV-18's
+   foresight often doesn't fall. And a few ranges are too tight or too strong: "~1–3% residue",
+   "minima near 700" (about 750), and "agents shuttle" (about half do, on a threshold the check chose).
+3. **Chapter VI's book results don't reproduce.** This is already documented: VI-2 doesn't crash, VI-3
+   doesn't exceed twice its start, and trade makes no difference. Also partly unreproduced: single-tribe
+   dominance (III-6; the mountains often split) and foresight being selected down (IV-18).
+4. **Every "Measured" comment is accurate.** Its 7 misses are the check's fault. Two (iv-3, v-2) judged
+   20 seeds against values recorded for seeds 1–3. Five (the sweeps) judged each of the same 10 seeds
+   against ±10% of those seeds' mean. Rerun on their own seeds, every recorded figure reproduces exactly
+   (the model is deterministic per seed).
+
+## Triage list (suggested fixes, most important first)
+
+**Preset setup (the preset can't show its own description)**
+1. `ii-6-waves`: move the block off the peak (e.g. into the NW badlands) so a gradient drives the wave,
+   then re-survey `ii-6.*`. Confirm against the book's Animation II-6 setup, which no repo file records.
+2. `iii-12-collision` (and check `iii-9-combat`, `iii-11-combat-fixed`, `iii-14-combat-culture`, which share
+   `Placement::Tribes`): place the tribes where they must move toward each other, then re-survey.
+
+**Descriptions (the model is right, the text isn't)**
+3. `v-mcneill`: drop "carrying its familiar diseases"; say the society has learned away its diseases by
+   t = 300 and "5 agents are exposed" (each is already immune with probability ≈ 4%, so all 5 are infected
+   on about 80% of seeds, 16/20 observed).
+4. `n-4-peaks`: say the four peaks overlap near the wrapped corner, where agents can hold all four
+   without travelling.
+5. `iv-18-foresight`: foresight drifts down only weakly (4.98 → 4.41 by t = 1000; paired p = 0.027) and
+   is above 5.0, the initial draw's mean, on 8/20 seeds at t = 2000. Soften "keeps a modest foresight".
+6. Loosen overstated figures: `iv-1-spice` (about half the agents shuttle), `v-1-rid` (the residue ranges
+   from near 0% to over 3% by seed), `vi-3-trade` (minima near 750), `vi-1-everything` (flares follow most
+   outbreaks, 15/20 seeds after all three), and `iv-15-trade-sex` (mention that 3/20 seeds go extinct by
+   t = 1000).
+
+**Book results not reproduced (document, or investigate)**
+7. VI-2/VI-3 crash, doubling and ~115-tick period: already documented; nothing new beyond this
+   session's overlap experiment, which showed that separating sugar and spice further doesn't produce the
+   crash either.
+8. III-6 single-tribe dominance: holds locally, but globally on only half the seeds. Worth a sentence in
+   `iii-6-culture`'s description.
+
+**Sweeps**
+9. `fig-iv-6`: nothing to fix. Its Weak verdict came from the survey's unpaired test; compared seed by
+   seed, trade wins on all 10 seeds at every vision (paired Wilcoxon p ≤ 0.002). The gain narrows with
+   vision (+8 at vision 1, +5 at 6), which the description could mention.
+10. The per-cell "Measured" figures in the sweep descriptions are exact means, which is fine. Nothing to
+    change; a future survey should compare means, not individual seeds (see Method).
+
+**Old book tests**: `tests/book.rs` still passes CI on 1–5 seeds. Several of its claims hold at 20 seeds
+(e.g. `carrying_capacity_is_near_224`, `trade_raises_carrying_capacity` via fig-iv-6). Its foresight
+test's claim does not: at 20 seeds foresight isn't reliably selected down (`iv-18.falls`), whatever
+`foresight_evolves_to_a_modest_nonzero_level` shows on its own few seeds.
+
+## Method
+
+- **Seeds** 1–20 per condition. Sweep claims use each sweep file's own seeds and ticks (10 seeds), and
+  say so in the claim.
+- **Range**: holds when ≥ 80% of seeds fall in the range (weak at 50–80%); "about" widens each bound by 10%.
+- **Comparison**: one-sided Mann–Whitney U (exact without ties for n ≤ 20), holds at p < 0.01; weak
+  when the medians point the right way but p ≥ 0.01.
+- **Equivalence**: Welch TOST at α = 0.05, margin 10% of the pooled mean unless stated; fails when a
+  two-sided Mann–Whitney gives p < 0.01.
+- Thresholds were fixed before each claim first ran, and none was changed. Three checks were corrected
+  after their first run because they had bugs; each is described in a comment beside the check.
+  - `iv-3-pollution.stops` read the series one tick early. A change scheduled for tick T first shows in
+    series index T + 1, as `World::step` confirms. First result: Fails 0/20; now Holds.
+  - `vi-3.book-period`'s period finder returned the smallest lag (20) on every seed. First result: Fails
+    0/20; still Fails.
+  - The three sweep settlement claims (`fig-ii-5.settled`, `fig-iv-6.settled`,
+    `n-goods-carrying-capacity.settled-1000`) panicked on the first run, giving Error. They now Hold.
+- **Known weaknesses.**
+  - Comment claims that record a mean (or specific seeds' values) were judged seed by seed. Every such
+    miss was checked by rerunning the recorded seeds, and all reproduce exactly.
+  - Comparisons use the unpaired Mann–Whitney even where the same seeds run under both settings. That
+    can only make a verdict more cautious, never produce a false Holds. The three Weak comparisons were
+    rechecked with a paired Wilcoxon: fig-iv-6 then holds, vi-3 and iv-18 stay Weak (see triage).
+  - The spec's bootstrap intervals and per-claim `kind` field were not implemented: each verdict line
+    reports medians and IQRs, and the kind is evident from the judge used.
+- **Rerun**: `cd survey && cargo run --release -- --only <id prefix>` (the full survey's checks took
+  191 s in total, plus the build).
+- Claims were written by four parallel authors (Chapters III, IV, V, and VI plus the sweeps) from one
+  brief; Chapter II and all triage are the controller's. Book claims not quoted in a repo file are marked
+  "from memory" in their citation.
+
+## Summary table
+
+| item | claim | source | verdict | cause |
+|---|---|---|---|---|
+| ii-1-instant | `ii-1.settle` | App | Holds |  |
+| ii-1-instant | `ii-1.starve-metabolism` | App | Holds |  |
+| ii-1-instant | `ii-1.starve-vision` | App | Holds |  |
+| ii-1-instant | `ii-1.static` | Book | Holds |  |
+| ii-2-unit | `ii-2.capacity` | Book | Holds |  |
+| ii-2-unit | `ii-2.on-mountains` | App | Holds |  |
+| ii-2-unit | `ii-2.continuous` | App | Holds |  |
+| ii-5-wealth | `ii-5.gini` | Book | Holds |  |
+| ii-5-wealth | `ii-5.skewed` | App | Holds |  |
+| ii-5-wealth | `ii-5.emerges` | App | Holds |  |
+| ii-6-waves | `ii-6.propagates` | App | Fails | setup |
+| ii-6-waves | `ii-6.waves` | App | Untestable | — |
+| ii-7-seasons | `ii-7.migrants-see-further` | App | Holds |  |
+| ii-7-seasons | `ii-7.hibernators-burn-less` | App | Holds |  |
+| ii-8-pollution | `ii-8.onset` | App | Holds |  |
+| ii-8-pollution | `ii-8.diffusion` | App | Holds |  |
+| ii-8-pollution | `ii-8.lowers-capacity` | Book | Holds |  |
+| iii-2-sex | `iii-2.stable` | App | Holds |  |
+| iii-2-sex | `iii-2.persists` | App | Holds |  |
+| iii-2-sex | `iii-2.generations` | App | Holds |  |
+| iii-2-sex | `iii-2.vision-rises` | Book | Holds |  |
+| iii-2-sex | `iii-2.metabolism-falls` | Book | Holds |  |
+| iii-4-inheritance | `iii-4.passes-wealth` | App | Holds |  |
+| iii-4-inheritance | `iii-4.raises-gini` | Book | Holds |  |
+| iii-6-culture | `iii-6.toward-uniform` | App | Holds |  |
+| iii-6-culture | `iii-6.one-tribe` | Book | Weak | book |
+| iii-6-culture | `iii-6.homogeneity-measured` | Comment | Holds |  |
+| iii-6-three-tribes | `iii-6-three.scheme` | App | Holds |  |
+| iii-6-three-tribes | `iii-6-three.shares-move` | App | Holds |  |
+| iii-6-three-tribes | `iii-6-three.green-start` | Comment | Holds |  |
+| iii-9-combat | `iii-9.fighting` | App | Holds |  |
+| iii-9-combat | `iii-9.whole-wealth` | App | Holds |  |
+| iii-11-combat-fixed | `iii-11.held-at-400` | App | Holds |  |
+| iii-11-combat-fixed | `iii-11.reward-2` | App | Holds |  |
+| iii-11-combat-fixed | `iii-11.prolonged-fronts` | App | Holds |  |
+| iii-12-collision | `iii-12.combat-off` | App | Holds |  |
+| iii-12-collision | `iii-12.high-vision` | App | Holds |  |
+| iii-12-collision | `iii-12.toward-center` | App | Fails | setup |
+| iii-12-collision | `iii-12.interpenetrate` | App | Fails | setup |
+| iii-14-combat-culture | `iii-14.conquest` | App | Holds |  |
+| iii-14-combat-culture | `iii-14.conversion` | App | Holds |  |
+| iii-14-combat-culture | `iii-14.together` | App | Untestable | — |
+| iv-1-spice | `iv-1.opposite-mountains` | App | Holds |  |
+| iv-1-spice | `iv-1.spice-nw-se` | Book | Holds |  |
+| iv-1-spice | `iv-1.shuttle` | App | Fails | check (threshold) |
+| iv-1-spice | `iv-1.stay-alive` | App | Holds |  |
+| iv-3-trade | `iv-3.prices-near-one` | Book | Holds |  |
+| iv-3-trade | `iv-3.converge` | App | Holds |  |
+| iv-3-trade | `iv-3.market-clearing` | App | Holds |  |
+| iv-3-trade | `iv-3.measured-ln-price` | Comment | Fails | check |
+| iv-15-trade-sex | `iv-15.prices-unsettled` | App | Holds |  |
+| iv-15-trade-sex | `iv-15.mean-price-wanders` | App | Fails | check |
+| iv-15-trade-sex | `iv-15.preferences-evolve` | App | Holds |  |
+| iv-15-trade-sex | `iv-15.dispersion-level` | Book | Fails | book (low confidence) |
+| iv-3-pollution | `iv-3-pollution.onset` | App | Holds |  |
+| iv-3-pollution | `iv-3-pollution.price-up` | App | Holds |  |
+| iv-3-pollution | `iv-3-pollution.stops` | App | Holds |  |
+| iv-3-pollution | `iv-3-pollution.diffuses` | App | Holds |  |
+| iv-18-foresight | `iv-18.nonzero` | Book | Holds |  |
+| iv-18-foresight | `iv-18.falls` | Book | Weak | book |
+| iv-18-foresight | `iv-18.modest-kept` | App | Weak | description |
+| iv-18-foresight | `iv-18.plan-ahead` | App | Untestable | — |
+| iv-18-foresight | `iv-18.measured-population` | Comment | Holds |  |
+| iv-5-credit | `iv-5.lenders-older` | App | Holds |  |
+| iv-5-credit | `iv-5.lenders-old` | App | Holds |  |
+| iv-5-credit | `iv-5.for-childbearing` | App | Holds |  |
+| iv-5-credit | `iv-5.hierarchy` | App | Holds |  |
+| v-1-rid | `v-1.learn` | App | Holds |  |
+| v-1-rid | `v-1.residue` | App | Weak | description |
+| v-1-rid | `v-1.overwrite` | App | Holds |  |
+| v-1-rid | `v-1.near-eradication` | Book | Holds |  |
+| v-1-rid | `v-1.saturated-start` | Book | Holds |  |
+| v-1-rid | `v-1.never-zero` | Comment | Holds |  |
+| v-2-endemic | `v-2.endemic` | Book | Holds |  |
+| v-2-endemic | `v-2.exceeds-v1` | App | Holds |  |
+| v-2-endemic | `v-2.overwrite` | App | Holds |  |
+| v-2-endemic | `v-2.measured-level` | Comment | Fails | check |
+| v-mcneill | `v-mcneill.reproducing` | App | Holds |  |
+| v-mcneill | `v-mcneill.familiar` | App | Fails | description |
+| v-mcneill | `v-mcneill.five-agents` | App | Holds |  |
+| v-mcneill | `v-mcneill.spreads` | Book | Holds |  |
+| v-mcneill | `v-mcneill.before-zero` | Comment | Holds |  |
+| v-mcneill | `v-mcneill.after-count` | Comment | Holds |  |
+| vi-1-everything | `vi-1.every-rule-acts` | App | Holds |  |
+| vi-1-everything | `vi-1.flares` | App | Weak | description |
+| vi-1-everything | `vi-1.dies-out` | App | Holds |  |
+| vi-1-everything | `vi-1.network-views` | App | Holds |  |
+| vi-1-everything | `vi-1.chart-views` | App | Untestable | — |
+| vi-1-everything | `vi-1.survives` | Book | Holds |  |
+| vi-1-everything | `vi-1.measured-t1000` | Comment | Holds |  |
+| vi-1-everything | `vi-1.measured-trough` | Comment | Holds |  |
+| vi-2-no-trade | `vi-2.never-trades` | App | Holds |  |
+| vi-2-no-trade | `vi-2.no-crash` | App | Holds |  |
+| vi-2-no-trade | `vi-2.dip` | App | Holds |  |
+| vi-2-no-trade | `vi-2.dip-timing` | App | Holds |  |
+| vi-2-no-trade | `vi-2.recovers` | App | Holds |  |
+| vi-2-no-trade | `vi-2.around-800` | App | Holds |  |
+| vi-2-no-trade | `vi-2.like-vi-3` | App | Holds |  |
+| vi-2-no-trade | `vi-2.book-crash` | Book | Fails | book |
+| vi-2-no-trade | `vi-2.measured-t1000` | Comment | Holds |  |
+| vi-3-trade | `vi-3.trades` | App | Holds |  |
+| vi-3-trade | `vi-3.dip` | App | Holds |  |
+| vi-3-trade | `vi-3.dip-timing` | App | Holds |  |
+| vi-3-trade | `vi-3.recovers` | App | Holds |  |
+| vi-3-trade | `vi-3.minima-near-700` | App | Weak | description |
+| vi-3-trade | `vi-3.same-as-vi-2` | App | Holds |  |
+| vi-3-trade | `vi-3.book-twice` | Book | Fails | book |
+| vi-3-trade | `vi-3.book-period` | Book | Fails | book (metric crude) |
+| vi-3-trade | `vi-3.book-trade-raises` | Book | Weak | book |
+| vi-3-trade | `vi-3.measured-t1000` | Comment | Holds |  |
+| n-3-trade | `n-3.turned-copies` | App | Holds |  |
+| n-3-trade | `n-3.all-pairs-trade` | App | Holds |  |
+| n-3-trade | `n-3.widest-gap` | App | Untestable | — |
+| n-3-trade | `n-3.prices-converge` | Book | Holds |  |
+| n-3-trade | `n-3.trade-raises` | Book | Holds |  |
+| n-3-trade | `n-3.measured-t1000` | Comment | Holds |  |
+| n-4-peaks | `n-4.corners` | App | Holds |  |
+| n-4-peaks | `n-4.no-site-has-all` | App | Fails | description |
+| n-4-peaks | `n-4.trades` | App | Holds |  |
+| n-4-peaks | `n-4.measured-t1000` | Comment | Holds |  |
+| n-2-pollutants | `n-2.both-pollute` | App | Holds |  |
+| n-2-pollutants | `n-2.smoke-repels` | App | Holds |  |
+| n-2-pollutants | `n-2.runoff-repels` | App | Holds |  |
+| n-2-pollutants | `n-2.smoke-diffuses` | App | Holds |  |
+| n-2-pollutants | `n-2.runoff-diffuses` | App | Holds |  |
+| n-2-pollutants | `n-2.measured-t1000` | Comment | Holds |  |
+| n-2-pollutants | `n-2.measured-pollution` | Comment | Holds |  |
+| fig-ii-5 | `fig-ii-5.vision-raises` | Book | Holds |  |
+| fig-ii-5 | `fig-ii-5.metabolism-lowers` | Book | Holds |  |
+| fig-ii-5 | `fig-ii-5.settled` | App | Holds |  |
+| fig-ii-5 | `fig-ii-5.measured-m1-v1` | Comment | Holds |  |
+| fig-ii-5 | `fig-ii-5.measured-m3-v6` | Comment | Holds |  |
+| fig-iv-6 | `fig-iv-6.trade-raises` | Book | Weak | check (unpaired test) |
+| fig-iv-6 | `fig-iv-6.vision-raises` | Book | Holds |  |
+| fig-iv-6 | `fig-iv-6.settled` | App | Holds |  |
+| fig-iv-6 | `fig-iv-6.measured-no-trade-v1` | Comment | Weak | check |
+| fig-iv-6 | `fig-iv-6.measured-trade-v6` | Comment | Holds |  |
+| fig-iv-10-11 | `fig-iv-10-11.long-lives-less-dispersion` | Book | Holds |  |
+| fig-iv-10-11 | `fig-iv-10-11.long-lives-converge` | Book | Holds |  |
+| fig-iv-10-11 | `fig-iv-10-11.short-lives-persist` | Book | Holds |  |
+| fig-iv-10-11 | `fig-iv-10-11.measured-short-last` | Comment | Holds |  |
+| fig-iv-10-11 | `fig-iv-10-11.measured-long-last` | Comment | Weak | check |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.shared-sites` | App | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.four-is-n-4-peaks` | App | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.two-goods-low` | App | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.shared-peak-2` | App | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.shared-peak-6` | App | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.settled-1000` | App | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.still-falling-500` | App | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.trade-raises` | Book | Holds |  |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.measured-no-trade-2` | Comment | Fails | check |
+| n-goods-carrying-capacity | `n-goods-carrying-capacity.measured-trade-3` | Comment | Holds |  |
+| bargaining-rules | `bargaining-rules.similar` | Book | Holds |  |
+| bargaining-rules | `bargaining-rules.vision-raises` | Book | Holds |  |
+| bargaining-rules | `bargaining-rules.measured-geometric-v1` | Comment | Fails | check |
+| bargaining-rules | `bargaining-rules.measured-random-v6` | Comment | Weak | check |
+
+## Claims by item
+
+### ii-1-instant
+
+- **`ii-1.settle`**: Holds. *App*: presets.rs ii-1-instant description
+  - Claim: agents climb to the best ridge they can see and settle
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [0.9000, 1.0000]
+- **`ii-1.starve-metabolism`**: Holds. *App*: presets.rs ii-1-instant description
+  - Claim: the poorly endowed starve (higher metabolism among the dead)
+  - Measured: dead metabolism median 3.3252 (IQR 3.2852–3.3787); survivor metabolism median 2.0382 (IQR 1.9979–2.0714); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`ii-1.starve-vision`**: Holds. *App*: presets.rs ii-1-instant description
+  - Claim: the poorly endowed starve (lower vision among the dead)
+  - Measured: survivor vision median 3.7531 (IQR 3.7377–3.7791); dead vision median 3.0352 (IQR 2.9847–3.1002); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`ii-1.static`**: Holds. *Book*: book, from memory: Animation II-1 reaches a static configuration
+  - Claim: once settled, nobody else dies (deaths over t = 101..=200 are 0)
+  - Measured: median 0.0000 (IQR 0.0000–0.0000); 20/20 in [0.0000, 0.0000]
+### ii-2-unit
+
+- **`ii-2.capacity`**: Holds. *Book*: tests/book.rs quoting Chapter II: "a carrying capacity of approximately 224 is eventually reached"; presets.rs: "near 224"
+  - Claim: population falls to a carrying capacity near 224 (mean over t = 400..=500)
+  - Measured: median 228.0000 (IQR 222.0000–235.9233); 20/20 in [201.6000, 246.4000]
+- **`ii-2.on-mountains`**: Holds. *App*: presets.rs ii-2-unit description
+  - Claim: hiving on the two sugar mountains (≥ 80% of agents on sites of capacity ≥ 2 at t = 500)
+  - Measured: median 0.9463 (IQR 0.9384–0.9594); 20/20 in [0.8000, 1.0000]
+- **`ii-2.continuous`**: Holds. *App*: presets.rs ii-2-unit description
+  - Claim: continuous hiving (at most half the agents stay put over t = 490..500)
+  - Measured: median 0.0796 (IQR 0.0706–0.0829); 20/20 in [0.0000, 0.5000]
+### ii-5-wealth
+
+- **`ii-5.gini`**: Holds. *Book*: docs/superpowers/specs/2026-09-22-sugarscape-wasm-playground-design.md: "R[60,100] Gini exceeds ~0.5"
+  - Claim: the Gini coefficient exceeds about 0.5 (t = 500)
+  - Measured: median 0.4788 (IQR 0.4729–0.4824); 20/20 in [0.4500, 1.1000]
+- **`ii-5.skewed`**: Holds. *App*: presets.rs ii-5-wealth description
+  - Claim: a skewed wealth distribution emerges (sample skewness ≥ 1 at t = 500)
+  - Measured: median 1.2649 (IQR 1.1931–1.3245); 20/20 in [1.0000, inf]
+- **`ii-5.emerges`**: Holds. *App*: presets.rs ii-5-wealth description
+  - Claim: the skew emerges (Gini at t = 500 exceeds Gini at t = 0)
+  - Measured: Gini t=500 median 0.4788 (IQR 0.4729–0.4824); Gini t=0 median 0.2305 (IQR 0.2253–0.2377); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+### ii-6-waves
+
+- **`ii-6.propagates`**: Fails (setup). *App*: presets.rs ii-6-waves description
+  - Claim: a block in the southwest propagates northeast (≥ 20% of agents in the NE quadrant x ≥ 25, y < 25 at t = 200)
+  - Measured: median 0.0336 (IQR 0.0222–0.0425); 0/20 in [0.2000, 1.0000]
+- **`ii-6.waves`**: Untestable (—). *App*: presets.rs ii-6-waves description
+  - Claim: collective waves no individual can move in
+  - Note: a visual claim about wave fronts; no agreed metric distinguishes a wave from a drift, so only propagation (ii-6.propagates) is checked
+### ii-7-seasons
+
+- **`ii-7.migrants-see-further`**: Holds. *App*: presets.rs ii-7-seasons description
+  - Claim: high-vision agents migrate (migrators have higher mean vision than hibernators)
+  - Measured: migrator vision median 4.0596 (IQR 4.0052–4.0897); hibernator vision median 2.2083 (IQR 1.9853–2.5429); one-sided Mann–Whitney p = 3.40e-8; n = 20 vs 20
+- **`ii-7.hibernators-burn-less`**: Holds. *App*: presets.rs ii-7-seasons description
+  - Claim: low-metabolism agents hibernate (hibernators have lower mean metabolism than migrators)
+  - Measured: migrator metabolism median 1.4460 (IQR 1.4036–1.4734); hibernator metabolism median 1.3079 (IQR 1.2599–1.3700); one-sided Mann–Whitney p = 2.28e-4; n = 20 vs 20
+### ii-8-pollution
+
+- **`ii-8.onset`**: Holds. *App*: presets.rs ii-8-pollution description
+  - Claim: pollution starts at t = 50 (zero through t = 49, positive at t = 60)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`ii-8.diffusion`**: Holds. *App*: presets.rs ii-8-pollution description
+  - Claim: diffusion spreads pollution from t = 100 (site pollution less uneven at t = 110 than t = 99)
+  - Measured: CV t=99 median 0.6623 (IQR 0.6589–0.6662); CV t=110 median 0.5478 (IQR 0.5453–0.5496); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`ii-8.lowers-capacity`**: Holds. *Book*: book, from memory: Animation II-8, pollution makes the landscape less habitable
+  - Claim: carrying capacity is lower with pollution than ii-2-unit (mean population t = 400..=500)
+  - Measured: ii-2-unit median 228.0000 (IQR 222.0000–235.9233); ii-8-pollution median 177.4653 (IQR 168.7500–181.4455); one-sided Mann–Whitney p = 3.38e-8; n = 20 vs 20
+### iii-2-sex
+
+- **`iii-2.stable`**: Holds. *App*: presets.rs iii-2-sex description; bound from tests/book.rs sexual_reproduction_sustains_a_population
+  - Claim: a roughly stable population (max/min population over t = 300..=600 at most 1.6)
+  - Measured: median 1.2429 (IQR 1.2234–1.2931); 20/20 in [1.0000, 1.6000]
+- **`iii-2.persists`**: Holds. *App*: presets.rs iii-2-sex description ("a roughly stable population"); bound from tests/book.rs sexual_reproduction_sustains_a_population
+  - Claim: the population persists (minimum population over t = 300..=600 above 100)
+  - Measured: median 333.5000 (IQR 324.0000–344.5000); 20/20 in [100.0000, inf]
+- **`iii-2.generations`**: Holds. *App*: presets.rs iii-2-sex description
+  - Claim: made of many generations (at least 3 distinct generations alive at t = 600; founders are generation 0)
+  - Measured: median 10.0000 (IQR 10.0000–11.0000); 20/20 in [3.0000, inf]
+- **`iii-2.vision-rises`**: Holds. *Book*: book, from memory: Chapter III, sexual reproduction; selection raises mean vision
+  - Claim: mean vision at t = 500 exceeds mean vision at t = 0
+  - Measured: vision t=500 median 5.2355 (IQR 5.1227–5.4013); vision t=0 median 3.4787 (IQR 3.4400–3.5425); one-sided Mann–Whitney p = 3.40e-8; n = 20 vs 20
+- **`iii-2.metabolism-falls`**: Holds. *Book*: book, from memory: Chapter III, sexual reproduction; selection lowers mean metabolism
+  - Claim: mean metabolism at t = 500 is below mean metabolism at t = 0
+  - Measured: metabolism t=0 median 2.5263 (IQR 2.4656–2.5656); metabolism t=500 median 1.0000 (IQR 1.0000–1.0000); one-sided Mann–Whitney p = 3.99e-9; n = 20 vs 20
+### iii-4-inheritance
+
+- **`iii-4.passes-wealth`**: Holds. *App*: presets.rs iii-4-inheritance description
+  - Claim: inheritance passes wealth to children (a child's one-tick sugar gain in the tick a parent dies, mean over t = 1..=300, is higher in iii-4-inheritance than in iii-2-sex)
+  - Measured: iii-4-inheritance median 86.7906 (IQR 83.4433–95.8891); iii-2-sex median 0.6820 (IQR 0.5917–0.7393); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`iii-4.raises-gini`**: Holds. *Book*: book, from memory: Animation III-4, inheritance increases inequality; presets.rs: "compare the Gini coefficient with and without it"
+  - Claim: the Gini coefficient is higher with inheritance than without (mean Gini over t = 400..=500, iii-4-inheritance vs iii-2-sex)
+  - Measured: iii-4-inheritance median 0.4094 (IQR 0.3999–0.4241); iii-2-sex median 0.1631 (IQR 0.1567–0.1695); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+### iii-6-culture
+
+- **`iii-6.toward-uniform`**: Holds. *App*: presets.rs iii-6-culture description
+  - Claim: tag-flipping converts groups toward uniform tribes (share of adjacent agent pairs in the same tribe is higher at t = 3000 than at t = 0)
+  - Measured: homogeneity t=3000 median 1.0000 (IQR 0.9760–1.0000); homogeneity t=0 median 0.4824 (IQR 0.4684–0.5227); one-sided Mann–Whitney p = 2.25e-8; n = 20 vs 20
+- **`iii-6.one-tribe`**: Weak (book). *Book*: docs/superpowers/specs/2026-09-22-sugarscape-wasm-playground-design.md: "K converges toward single-tribe dominance"; tests/book.rs: "the book: after ~2700 ticks"
+  - Claim: single-tribe dominance (the larger tribe holds ≥ 90% of agents at t = 3000)
+  - Measured: median 0.8496 (IQR 0.5337–0.9744); 10/20 in [0.9000, 1.0000]
+- **`iii-6.homogeneity-measured`**: Holds. *Comment*: tests/book.rs culture_drives_neighbors_toward_one_tribe: observed means 0.465 -> 0.973 (seeds 1-5), asserts end > 0.9
+  - Claim: local homogeneity at t = 3000 exceeds 0.9
+  - Measured: median 1.0000 (IQR 0.9760–1.0000); 17/20 in [0.9000, 1.0000]
+### iii-6-three-tribes
+
+- **`iii-6-three.scheme`**: Holds. *App*: presets.rs iii-6-three-tribes description
+  - Claim: groups are Blue 0–3 zeros, Green 4–7, Red 8–11
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`iii-6-three.shares-move`**: Holds. *App*: presets.rs iii-6-three-tribes description ("Watch the Group shares chart")
+  - Claim: the group shares change visibly (some group's share moves by ≥ 0.1 between t = 0 and t = 3000)
+  - Measured: median 0.2105 (IQR 0.1930–0.2446); 20/20 in [0.1000, 1.0000]
+- **`iii-6-three.green-start`**: Holds. *Comment*: tests/book.rs three_tribes_start_with_every_group_present: "about 11% ... Blue, 77% Green and 11% Red"
+  - Claim: about 77% of agents are Green at t = 0
+  - Measured: median 0.7737 (IQR 0.7650–0.7906); 20/20 in [0.6930, 0.8470]
+### iii-9-combat
+
+- **`iii-9.fighting`**: Holds. *App*: presets.rs iii-9-combat description
+  - Claim: combat between two tribes happens (at least one combat death over t = 1..=500)
+  - Measured: median 5.0000 (IQR 3.0000–20.2500); 20/20 in [1.0000, inf]
+- **`iii-9.whole-wealth`**: Holds. *App*: presets.rs iii-9-combat description
+  - Claim: the winner accumulates its victims' whole wealth (≥ 95% of combat victims holding ≥ 10 sugar are matched to an other-tribe survivor whose one-tick gain covers the victim's sugar less both metabolisms; t = 1..=500)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [0.9500, 1.0000]
+### iii-11-combat-fixed
+
+- **`iii-11.held-at-400`**: Holds. *App*: presets.rs iii-11-combat-fixed description
+  - Claim: population held at 400 by replacement (population is 400 at every tick t = 0..=500)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`iii-11.reward-2`**: Holds. *App*: presets.rs iii-11-combat-fixed description
+  - Claim: fixed reward of 2 per kill (over t = 1..=300 combat deaths occur, and no surviving agent gains more than 2 + the 4-sugar maximum site in one tick)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`iii-11.prolonged-fronts`**: Holds. *App*: presets.rs iii-11-combat-fixed description
+  - Claim: prolonged battle fronts (at t = 500 both tribes hold ≥ 10% of agents and there were ≥ 10 combat deaths over t = 401..=500)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+### iii-12-collision
+
+- **`iii-12.combat-off`**: Holds. *App*: presets.rs iii-12-collision description
+  - Claim: combat off, and no combat deaths over t = 1..=100
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`iii-12.high-vision`**: Holds. *App*: presets.rs iii-12-collision description
+  - Claim: high-vision agents (mean vision at t = 0 higher than iii-9-combat's)
+  - Measured: iii-12-collision median 5.5175 (IQR 5.4550–5.6319); iii-9-combat median 3.5000 (IQR 3.4644–3.5306); one-sided Mann–Whitney p = 3.40e-8; n = 20 vs 20
+- **`iii-12.toward-center`**: Fails (setup). *App*: presets.rs iii-12-collision description
+  - Claim: the blocks propagate toward the center (minimum over t = 1..=100 of agents' mean torus distance to the grid center is ≤ 75% of its t = 0 value)
+  - Measured: median 0.7898 (IQR 0.7804–0.7950); 0/20 in [0.0000, 0.7500]
+- **`iii-12.interpenetrate`**: Fails (setup). *App*: presets.rs iii-12-collision description
+  - Claim: the tribes interpenetrate (maximum over t = 1..=100 of the share of adjacent agent pairs that are Blue–Red is ≥ 0.2)
+  - Measured: median 0.0000 (IQR 0.0000–0.0000); 0/20 in [0.2000, 1.0000]
+### iii-14-combat-culture
+
+- **`iii-14.conquest`**: Holds. *App*: presets.rs iii-14-combat-culture description
+  - Claim: conquest (at least one combat death over t = 1..=500)
+  - Measured: median 352.5000 (IQR 345.7500–356.2500); 20/20 in [1.0000, inf]
+- **`iii-14.conversion`**: Holds. *App*: presets.rs iii-14-combat-culture description
+  - Claim: conversion (at least one agent changes tribe over t = 1..=500)
+  - Measured: median 78.0000 (IQR 72.2500–82.0000); 20/20 in [1.0000, inf]
+- **`iii-14.together`**: Untestable (—). *App*: presets.rs iii-14-combat-culture description
+  - Claim: conquest and conversion together, as distinct from iii-9-combat
+  - Note: "together" names no outcome beyond both processes occurring (iii-14.conquest, iii-14.conversion); the description states no result of their interaction to compare with iii-9-combat
+### iv-1-spice
+
+- **`iv-1.opposite-mountains`**: Holds. *App*: presets.rs iv-1-spice description
+  - Claim: two goods on opposite mountains (Pearson correlation of sugar and spice capacity over sites < 0)
+  - Measured: median -0.5664 (IQR -0.5664–-0.5664); 20/20 in [-1.0000, -0.0000]
+- **`iv-1.spice-nw-se`**: Holds. *Book*: docs/superpowers/specs/2026-09-22-chapter-iv-sugar-and-spice-design.md: "spice mountains in the northwest and southeast, as in the book's Figure IV-1"
+  - Claim: spice mountains lie in the northwest and southeast (more than half of total spice capacity in the NW and SE quadrants, row 0 = north)
+  - Measured: median 0.7456 (IQR 0.7456–0.7456); 20/20 in [0.5000, 1.0000]
+- **`iv-1.shuttle`**: Fails (check (threshold)). *App*: presets.rs iv-1-spice description
+  - Claim: agents shuttle between sugar and spice (a majority, ≥ 50%, of agents alive over t = 100..=200 switch between sugar-dominated and spice-dominated sites at least twice)
+  - Measured: median 0.4929 (IQR 0.4722–0.5182); 9/20 in [0.5000, 1.0000]
+- **`iv-1.stay-alive`**: Holds. *App*: presets.rs iv-1-spice description
+  - Claim: agents stay alive (population at t = 500 is positive)
+  - Measured: median 125.5000 (IQR 121.2500–126.7500); 20/20 in [1.0000, inf]
+### iv-3-trade
+
+- **`iv-3.prices-near-one`**: Holds. *Book*: docs/superpowers/specs/2026-09-22-chapter-iv-sugar-and-spice-design.md: "trade price clusters near 1 (mean mean_log_price over ticks 500–1000 of iv-3-trade … within ±0.25)"; tests/book.rs trade_prices_cluster_near_one (Figure IV-3)
+  - Claim: prices cluster near 1: mean ln price over trading ticks t = 500..=1000 within ±0.25
+  - Measured: median 0.0063 (IQR -0.0035–0.0088); 20/20 in [-0.2500, 0.2500]
+- **`iv-3.converge`**: Holds. *App*: presets.rs iv-3-trade description
+  - Claim: prices converge (mean sd of ln price over trading ticks is lower at t = 950..=1000 than at t = 1..=50)
+  - Measured: sd t=1..50 median 0.4549 (IQR 0.4480–0.4665); sd t=950..1000 median 0.0261 (IQR 0.0230–0.0342); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`iv-3.market-clearing`**: Holds. *App*: presets.rs iv-3-trade description
+  - Claim: the market-clearing level is 1 (supply-and-demand equilibrium price at t = 1000 within e^±0.25, the spec's ±0.25 band on ln price)
+  - Measured: median 1.0050 (IQR 0.9932–1.0156); 20/20 in [0.7788, 1.2840]
+- **`iv-3.measured-ln-price`**: Fails (check). *Comment*: tests/book.rs trade_prices_cluster_near_one: "Observed (mean ln price over t=500..1000): seed 1 = 0.008676, seed 2 = 0.007983, seed 3 = 0.009746"
+  - Claim: mean of mean_log_price over t = 500..=1000 (all ticks, as the test measures it) is about 0.0080–0.0097
+  - Measured: median 0.0063 (IQR -0.0035–0.0088); 7/20 in [0.0072, 0.0107]
+### iv-15-trade-sex
+
+- **`iv-15.prices-unsettled`**: Holds. *App*: presets.rs iv-15-trade-sex description
+  - Claim: finite lives and evolving preferences keep prices from settling (mean sd of ln price over trading ticks t = 950..=1000 is higher than in iv-3-trade)
+  - Measured: iv-15-trade-sex median 0.2926 (IQR 0.2690–0.3019); iv-3-trade median 0.0261 (IQR 0.0230–0.0342); one-sided Mann–Whitney p = 6.29e-11; n = 17 vs 20
+- **`iv-15.mean-price-wanders`**: Fails (check). *App*: presets.rs iv-15-trade-sex description
+  - Claim: prices do not settle (the tick-to-tick sd of mean ln price over trading ticks t = 500..=1000 is higher than in iv-3-trade)
+  - Measured: iv-15-trade-sex median 0.0233 (IQR 0.0222–0.0241); iv-3-trade median 0.0445 (IQR 0.0349–0.0651); one-sided Mann–Whitney p = 1.00e0; n = 17 vs 20
+- **`iv-15.preferences-evolve`**: Holds. *App*: presets.rs iv-15-trade-sex description
+  - Claim: preferences evolve (metabolisms, which set the welfare weights, are selected: mean sugar + spice metabolism is lower at t = 1000 than at t = 0)
+  - Measured: t=0 median 5.9850 (IQR 5.8850–6.0612); t=1000 median 2.0000 (IQR 2.0000–2.0000); one-sided Mann–Whitney p = 3.58e-8; n = 20 vs 17
+- **`iv-15.dispersion-level`**: Fails (book (low confidence)). *Book*: book, from memory: Figure IV-15, the sd of ln price under ({G₁}, {M, S, T}) fluctuates without declining
+  - Claim: price dispersion does not decline (mean sd of ln price over trading ticks is equivalent at t = 100..=200 and t = 900..=1000, margin 10% of the pooled mean)
+  - Measured: sd t=100..200 median 0.1544 (IQR 0.1276–0.2165); sd t=900..1000 median 0.2924 (IQR 0.2693–0.3019); TOST p = 1.00e0 (margin 0.0226); two-sided Mann–Whitney p = 6.36e-6; n = 20 vs 17
+### iv-3-pollution
+
+- **`iv-3-pollution.onset`**: Holds. *App*: presets.rs iv-3-pollution description
+  - Claim: sugar becomes a dirty good at t = 100 (mean pollution zero through t = 99, positive at t = 110)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`iv-3-pollution.price-up`**: Holds. *App*: presets.rs iv-3-pollution description
+  - Claim: pollution drives sugar's price up (mean ln price over trading ticks t = 101..=150 is higher than in iv-3-trade, which is identical until t = 100)
+  - Measured: iv-3-pollution median 0.1539 (IQR 0.1224–0.1864); iv-3-trade median -0.0099 (IQR -0.0323–0.0138); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`iv-3-pollution.stops`**: Holds. *App*: presets.rs iv-3-pollution description
+  - Claim: at t = 150 agents stop polluting (mean pollution never rises between consecutive ticks over series index 151..=300, the first tick run under the t = 150 change onward; tolerance 1e-9 relative)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`iv-3-pollution.diffuses`**: Holds. *App*: presets.rs iv-3-pollution description
+  - Claim: the pollution already made diffuses away (site pollution is less uneven, by coefficient of variation, at t = 200 than at t = 149)
+  - Measured: CV t=149 median 1.1004 (IQR 1.0345–1.1613); CV t=200 median 0.5775 (IQR 0.5445–0.5958); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+### iv-18-foresight
+
+- **`iv-18.nonzero`**: Holds. *Book*: docs/superpowers/specs/2026-09-22-chapter-iv-sugar-and-spice-design.md: "mean foresight in iv-18-foresight stays above 0"; tests/book.rs foresight_evolves_to_a_modest_nonzero_level (end > 0.1)
+  - Claim: mean foresight stays above 0 (> 0.1, the book test's bound, at t = 1000)
+  - Measured: median 4.4126 (IQR 3.3619–5.2359); 20/20 in [0.1000, inf]
+- **`iv-18.falls`**: Weak (book). *Book*: docs/superpowers/specs/2026-09-22-chapter-iv-sugar-and-spice-design.md: "falls below its initial mean"; tests/book.rs (Figure IV-18: "large foresight is not [fit]")
+  - Claim: mean foresight falls below its initial mean (t = 1000 lower than t = 0)
+  - Measured: t=0 median 4.9775 (IQR 4.8625–5.0688); t=1000 median 4.4126 (IQR 3.3619–5.2359); one-sided Mann–Whitney p = 1.32e-1; n = 20 vs 20
+- **`iv-18.modest-kept`**: Weak (description). *App*: presets.rs iv-18-foresight description
+  - Claim: evolution keeps a modest, non-zero foresight (mean foresight at t = 2000 in [0.1, 5]: above the book test's 0.1, at most the initial 0–10 draw's mean of 5)
+  - Measured: median 4.8622 (IQR 3.0810–5.8311); 12/20 in [0.1000, 5.0000]
+- **`iv-18.plan-ahead`**: Untestable (—). *App*: presets.rs iv-18-foresight description
+  - Claim: agents plan φ periods ahead
+  - Note: a statement of the movement rule itself; the survey does not audit rule implementations line by line (spec, Out of scope)
+- **`iv-18.measured-population`**: Holds. *Comment*: presets.rs iv-18-foresight comment: "population grows from 400 to ~600-700 by t=1000"
+  - Claim: population at t = 1000 is about 600–700
+  - Measured: median 678.0000 (IQR 647.7500–716.2500); 20/20 in [540.0000, 770.0000]
+### iv-5-credit
+
+- **`iv-5.lenders-older`**: Holds. *App*: presets.rs iv-5-credit description
+  - Claim: old agents lend to young ones (over outstanding loans at t = 500, mean lender age exceeds mean borrower age)
+  - Measured: lender age median 55.6644 (IQR 54.1423–59.0894); borrower age median 37.6452 (IQR 36.8783–38.1569); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`iv-5.lenders-old`**: Holds. *App*: presets.rs iv-5-credit description
+  - Claim: old agents lend (a majority, ≥ 50%, of outstanding loans at t = 500 have a lender past its fertility end)
+  - Measured: median 0.6602 (IQR 0.6157–0.6994); 20/20 in [0.5000, 1.0000]
+- **`iv-5.for-childbearing`**: Holds. *App*: presets.rs iv-5-credit description
+  - Claim: loans are for childbearing (≥ 80% of loans originated over t = 401..=500, rollovers included, go to borrowers of childbearing age: onset ≤ age ≤ end + 1, the +1 for ageing after credit within a tick)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [0.8000, 1.0000]
+- **`iv-5.hierarchy`**: Holds. *App*: presets.rs iv-5-credit description; book, from memory: Animation IV-5 shows agents who are both lenders and borrowers
+  - Claim: lender–borrower hierarchies emerge (at t = 500 some agent is both a lender and a borrower, i.e. a chain of at least two loans)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+### v-1-rid
+
+- **`v-1.learn`**: Holds. *App*: presets.rs v-1-rid description
+  - Claim: immune systems learn the diseases their agents carry (infected fraction at t = 1000 is below that at t = 0)
+  - Measured: infected t=0 median 0.9075 (IQR 0.8725–0.9487); infected t=1000 median 0.0181 (IQR 0.0080–0.0324); one-sided Mann–Whitney p = 3.39e-8; n = 20 vs 20
+- **`v-1.residue`**: Weak (description). *App*: presets.rs v-1-rid description: "a residue of ~1-3% persists"; README.md: "about 1–3%"
+  - Claim: a residue of ~1–3% infected persists (mean infected_fraction over t = 500..=1000 in about [0.01, 0.03])
+  - Measured: median 0.0179 (IQR 0.0089–0.0331); 10/20 in [0.0090, 0.0330]
+- **`v-1.overwrite`**: Holds. *App*: presets.rs v-1-rid description
+  - Claim: learning one disease can overwrite the window that cured another (at least one immunity lost by a surviving agent over t = 0..200)
+  - Measured: median 345.0000 (IQR 282.7500–563.2500); 20/20 in [1.0000, inf]
+- **`v-1.near-eradication`**: Holds. *Book*: docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md (Animation V-1: "the immune response drives near-eradication"); tests/book.rs immune_learning_rids_the_society_of_disease asserts f[1000] < 0.05
+  - Claim: the immune response drives near-eradication (infected_fraction at t = 1000 below 0.05)
+  - Measured: median 0.0181 (IQR 0.0080–0.0324); 18/20 in [0.0000, 0.0500]
+- **`v-1.saturated-start`**: Holds. *Book*: tests/book.rs immune_learning_rids_the_society_of_disease: "drives the population from near-saturation", asserts f[0] > 0.8
+  - Claim: infection starts near saturation (infected_fraction at t = 0 above 0.8)
+  - Measured: median 0.9075 (IQR 0.8725–0.9487); 17/20 in [0.8000, 1.0000]
+- **`v-1.never-zero`**: Holds. *Comment*: tests/book.rs immune_learning_rids_the_society_of_disease: "the fraction never once touches 0.0 ... (minimum over t in 500..=5000 is 0.0090-0.0303 depending on seed)"
+  - Claim: infection never reaches zero (minimum infected_fraction over t = 500..=5000 above 0)
+  - Measured: median 0.0143 (IQR 0.0079–0.0256); 18/20 in [0.0000, 1.0000]
+### v-2-endemic
+
+- **`v-2.endemic`**: Holds. *Book*: docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md (Animation V-2: endemic disease; "v-2-endemic still has infected agents at t = 1000"); tests/book.rs many_diseases_stay_endemic; presets.rs: "disease stays endemic"
+  - Claim: disease stays endemic (infected_fraction above 0 at every tick of t = 500..=1000)
+  - Measured: median 0.0323 (IQR 0.0230–0.0403); 20/20 in [0.0000, 1.0000]
+- **`v-2.exceeds-v1`**: Holds. *App*: presets.rs v-2-endemic ("disease stays endemic") against v-1-rid ("near-eradication"); tests/book.rs many_diseases_stay_endemic asserts mean2 > mean1
+  - Claim: V-2 carries more disease than V-1 (mean infected_fraction over t = 500..=1000)
+  - Measured: V-2 median 0.0417 (IQR 0.0259–0.0561); V-1 median 0.0179 (IQR 0.0089–0.0331); one-sided Mann–Whitney p = 1.07e-3; n = 20 vs 20
+- **`v-2.overwrite`**: Holds. *App*: presets.rs v-2-endemic description
+  - Claim: learning one immunity can overwrite another (at least one immunity lost by a surviving agent over t = 0..200)
+  - Measured: median 1781.0000 (IQR 1508.2500–2080.7500); 20/20 in [1.0000, inf]
+- **`v-2.measured-level`**: Fails (check). *Comment*: tests/book.rs many_diseases_stay_endemic: V-2 means over t in 500..=1000 of 0.045334, 0.042674, 0.078412 (seeds 1-3)
+  - Claim: mean infected_fraction over t = 500..=1000 within the recorded 0.0427–0.0784
+  - Measured: median 0.0417 (IQR 0.0259–0.0561); 9/20 in [0.0427, 0.0784]
+### v-mcneill
+
+- **`v-mcneill.reproducing`**: Holds. *App*: presets.rs v-mcneill description
+  - Claim: a reproducing society (at least one birth over t = 1..=300)
+  - Measured: median 1210.5000 (IQR 1172.0000–1269.7500); 20/20 in [1.0000, inf]
+- **`v-mcneill.familiar`**: Fails (description). *App*: presets.rs v-mcneill description
+  - Claim: carrying its familiar diseases when the novel one arrives (diseases_in_circulation at t = 300, before the outbreak, at least 1)
+  - Measured: median 0.0000 (IQR 0.0000–0.0000); 0/20 in [1.0000, inf]
+- **`v-mcneill.five-agents`**: Holds. *App*: presets.rs v-mcneill description
+  - Claim: a novel disease at t = 300, brought in by 5 agents (exactly 5 outbreak infections, infector None, in the step starting at t = 300)
+  - Measured: median 5.0000 (IQR 5.0000–5.0000); 16/20 in [5.0000, 5.0000]
+- **`v-mcneill.spreads`**: Holds. *Book*: docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md: "v-mcneill transmissions (agent-to-agent spread, excluding the outbreak's own seeding) rise after the t = 300 outbreak"; tests/book.rs a_novel_disease_spreads_after_the_mcneill_outbreak
+  - Claim: transmissions over steps t = 300..400 exceed those over t = 200..300
+  - Measured: after median 13.5000 (IQR 4.2500–23.2500); before median 0.0000 (IQR 0.0000–0.0000); one-sided Mann–Whitney p = 3.98e-9; n = 20 vs 20
+- **`v-mcneill.before-zero`**: Holds. *Comment*: tests/book.rs a_novel_disease_spreads_after_the_mcneill_outbreak: "A wider 15-seed sweep confirmed every seed's after-count is > 0 (range 1-111) with before always 0"
+  - Claim: no transmissions over steps t = 200..300 (the society has learned away what it carries)
+  - Measured: median 0.0000 (IQR 0.0000–0.0000); 20/20 in [0.0000, 0.0000]
+- **`v-mcneill.after-count`**: Holds. *Comment*: tests/book.rs a_novel_disease_spreads_after_the_mcneill_outbreak: "every seed's after-count is > 0 (range 1-111)"
+  - Claim: transmissions over steps t = 300..400 within the recorded 1–111
+  - Measured: median 13.5000 (IQR 4.2500–23.2500); 20/20 in [1.0000, 111.0000]
+### vi-1-everything
+
+- **`vi-1.every-rule-acts`**: Holds. *App*: presets.rs vi-1-everything description
+  - Claim: every rule at once: births, trades, loans and disease transmissions (infections with an infector) each occur at least once over t = 1..=1000 (4 of 4 per seed)
+  - Measured: median 4.0000 (IQR 4.0000–4.0000); 20/20 in [4.0000, 4.0000]
+- **`vi-1.flares`**: Weak (description). *App*: presets.rs vi-1-everything description
+  - Claim: disease flares after each outbreak (t = 150, 400, 650): within 50 ticks the infected count exceeds the 20 agents seeded, after all 3 outbreaks (share of outbreaks = 1 per seed)
+  - Measured: median 1.0000 (IQR 0.9167–1.0000); 15/20 in [1.0000, 1.0000]
+- **`vi-1.dies-out`**: Holds. *App*: presets.rs vi-1-everything description
+  - Claim: disease tends to die out again before the next outbreak: no agent infected at t = 399 and t = 649 for at least half of those two outbreaks (share ≥ 0.5 per seed)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [0.5000, 1.0000]
+- **`vi-1.network-views`**: Holds. *App*: presets.rs vi-1-everything description (views 2, 8, 10, 14, 15, 18)
+  - Claim: the six network overlays have something to show: neighbor, friends, family, trade, credit and disease edges each non-empty at some tick in t = 151..=200 (6 of 6 per seed)
+  - Measured: median 6.0000 (IQR 6.0000–6.0000); 20/20 in [6.0000, 6.0000]
+- **`vi-1.chart-views`**: Untestable (—). *App*: presets.rs vi-1-everything description
+  - Claim: the eighteen views live under the named Charts, Agents and Credit tab menus
+  - Note: where each view lives in the web page's menus is UI, not observable through sugarscape_core; only the network data behind the overlays is checked (vi-1.network-views)
+- **`vi-1.survives`**: Holds. *Book*: tests/book.rs everything_on_society_survives (Chapter VI's everything-on run)
+  - Claim: the everything-on society survives: population ≥ 50 at t = 1000
+  - Measured: median 1770.5000 (IQR 1751.5000–1792.5000); 20/20 in [50.0000, inf]
+- **`vi-1.measured-t1000`**: Holds. *Comment*: presets.rs vi-1-everything comment: t=1000 population 1832, 1767, 1800, 1790, 1752 (seeds 1-5)
+  - Claim: population at t = 1000 about 1752–1832
+  - Measured: median 1770.5000 (IQR 1751.5000–1792.5000); 20/20 in [1576.8000, 2015.2000]
+- **`vi-1.measured-trough`**: Holds. *Comment*: presets.rs vi-1-everything comment: "t=0 400 -> a trough within t<=200 of 78-189"
+  - Claim: early crash: minimum population over t = 0..=200 about 78–189
+  - Measured: median 120.5000 (IQR 81.0000–162.5000); 17/20 in [70.2000, 207.9000]
+### vi-2-no-trade
+
+- **`vi-2.never-trades`**: Holds. *App*: presets.rs vi-2-no-trade description
+  - Claim: the agents never trade (total exchanges over t = 1..=1000 = 0)
+  - Measured: median 0.0000 (IQR 0.0000–0.0000); 20/20 in [0.0000, 0.0000]
+- **`vi-2.no-crash`**: Holds. *App*: presets.rs vi-2-no-trade description
+  - Claim: here the population does not crash: population at t = 1000 is at least half its initial 500
+  - Measured: median 836.5000 (IQR 792.2500–857.7500); 20/20 in [250.0000, inf]
+- **`vi-2.dip`**: Holds. *App*: presets.rs vi-2-no-trade description
+  - Claim: it dips to about 150–235 (minimum population over t = 0..=150)
+  - Measured: median 173.5000 (IQR 162.2500–189.7500); 17/20 in [135.0000, 258.5000]
+- **`vi-2.dip-timing`**: Holds. *App*: presets.rs vi-2-no-trade description
+  - Claim: the dip comes by t = 100–150 (tick of the minimum population over t = 0..=300, about 100–150)
+  - Measured: median 102.0000 (IQR 101.0000–102.0000); 19/20 in [90.0000, 165.0000]
+- **`vi-2.recovers`**: Holds. *App*: presets.rs vi-2-no-trade description
+  - Claim: recovers to about 1.8 times its start (peak population over t = 0..=1000 / 500)
+  - Measured: median 1.8030 (IQR 1.7640–1.8420); 20/20 in [1.6200, 1.9800]
+- **`vi-2.around-800`**: Holds. *App*: presets.rs vi-2-no-trade description
+  - Claim: fluctuates around 800 (mean population over t = 300..=1000, about 800)
+  - Measured: median 809.4700 (IQR 800.8238–825.7568); 20/20 in [720.0000, 880.0000]
+- **`vi-2.like-vi-3`**: Holds. *App*: presets.rs vi-2-no-trade description
+  - Claim: like VI-3: mean population over t = 300..=1000 equivalent to vi-3-trade's (margin 10% of the pooled mean)
+  - Measured: vi-2 median 809.4700 (IQR 800.8238–825.7568); vi-3 median 825.7696 (IQR 807.4800–840.4151); TOST p = 4.73e-11 (margin 81.9150); two-sided Mann–Whitney p = 3.27e-1; n = 20 vs 20
+- **`vi-2.book-crash`**: Fails (book). *Book*: docs/superpowers/specs/2026-09-24-chapter-vi-design.md quoting Animation VI-2: "This population crashes"
+  - Claim: without trade the population crashes: population at t = 1000 below half its initial 500
+  - Measured: median 836.5000 (IQR 792.2500–857.7500); 0/20 in [0.0000, 250.0000]
+- **`vi-2.measured-t1000`**: Holds. *Comment*: presets.rs indecomposability comment: vi-2-no-trade t=1000 populations 851, 815, 856, 781, 880 (seeds 1-5)
+  - Claim: population at t = 1000 about 781–880
+  - Measured: median 836.5000 (IQR 792.2500–857.7500); 20/20 in [702.9000, 968.0000]
+### vi-3-trade
+
+- **`vi-3.trades`**: Holds. *App*: presets.rs vi-3-trade description
+  - Claim: trade is on: at least one exchange over t = 1..=1000
+  - Measured: median 225786.5000 (IQR 217627.2500–234999.5000); 20/20 in [1.0000, inf]
+- **`vi-3.dip`**: Holds. *App*: presets.rs vi-3-trade description
+  - Claim: the population dips to about 100–175 (minimum population over t = 0..=150)
+  - Measured: median 123.0000 (IQR 110.2500–156.5000); 18/20 in [90.0000, 192.5000]
+- **`vi-3.dip-timing`**: Holds. *App*: presets.rs vi-3-trade description
+  - Claim: the dip comes by t = 100–150 (tick of the minimum population over t = 0..=300, about 100–150)
+  - Measured: median 102.0000 (IQR 101.7500–103.0000); 20/20 in [90.0000, 165.0000]
+- **`vi-3.recovers`**: Holds. *App*: presets.rs vi-3-trade description
+  - Claim: recovers to 1.7–2.0 times its initial 500 (peak population over t = 0..=1000 / 500)
+  - Measured: median 1.8270 (IQR 1.7715–1.9180); 18/20 in [1.7000, 2.0000]
+- **`vi-3.minima-near-700`**: Weak (description). *App*: presets.rs vi-3-trade description
+  - Claim: then fluctuates with minima near 700 (minimum population over t = 300..=1000, about 700)
+  - Measured: median 751.0000 (IQR 736.0000–766.5000); 15/20 in [630.0000, 770.0000]
+- **`vi-3.same-as-vi-2`**: Holds. *App*: presets.rs vi-3-trade description: "VI-2 without trade does the same here"
+  - Claim: VI-2 does the same: peak population factor equivalent between vi-3-trade and vi-2-no-trade (margin 10% of the pooled mean)
+  - Measured: vi-3 median 1.8270 (IQR 1.7715–1.9180); vi-2 median 1.8030 (IQR 1.7640–1.8420); TOST p = 5.48e-7 (margin 0.1825); two-sided Mann–Whitney p = 3.58e-1; n = 20 vs 20
+- **`vi-3.book-twice`**: Fails (book). *Book*: docs/superpowers/specs/2026-09-24-chapter-vi-design.md quoting Animation VI-3: "to a level more than twice that of the initial population"
+  - Claim: the population rises to more than twice its initial 500 (peak over t = 0..=1000 > 1000)
+  - Measured: median 913.5000 (IQR 885.7500–959.0000); 1/20 in [1000.0000, inf]
+- **`vi-3.book-period`**: Fails (book (metric crude)). *Book*: docs/superpowers/specs/2026-09-24-chapter-vi-design.md quoting Animation VI-3: peaks "roughly 115 years" apart
+  - Claim: sustained oscillations with peaks roughly 115 ticks apart (population over t = 300..=1000: past the first lag in 20..=300 where its autocorrelation turns negative, the lag with the highest autocorrelation, about 115)
+  - Measured: median 184.0000 (IQR 155.5000–285.7500); 0/20 in [103.5000, 126.5000]
+- **`vi-3.book-trade-raises`**: Weak (book). *Book*: docs/superpowers/specs/2026-09-24-chapter-vi-design.md: VI-2 "crashes"; VI-3 with trade recovers past twice its start
+  - Claim: trade raises the population: mean over t = 300..=1000 higher in vi-3-trade than vi-2-no-trade
+  - Measured: vi-3 median 825.7696 (IQR 807.4800–840.4151); vi-2 median 809.4700 (IQR 800.8238–825.7568); one-sided Mann–Whitney p = 1.64e-1; n = 20 vs 20
+- **`vi-3.measured-t1000`**: Holds. *Comment*: presets.rs indecomposability comment: vi-3-trade t=1000 populations 857, 793, 747, 860, 898 (seeds 1-5)
+  - Claim: population at t = 1000 about 747–898
+  - Measured: median 832.5000 (IQR 792.2500–871.5000); 20/20 in [672.3000, 987.8000]
+### n-3-trade
+
+- **`n-3.turned-copies`**: Holds. *App*: presets.rs n-3-trade description
+  - Claim: three turned copies of the two-peak map: every good's capacities are a rearrangement of sugar's and no two goods share a map (1 per seed)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`n-3.all-pairs-trade`**: Holds. *App*: presets.rs n-3-trade description
+  - Claim: prices form for all three pairs: each of (sugar, spice), (sugar, salt), (spice, salt) trades at least once over t = 1..=1000 (3 pairs per seed)
+  - Measured: median 3.0000 (IQR 3.0000–3.0000); 20/20 in [3.0000, 3.0000]
+- **`n-3.widest-gap`**: Untestable (—). *App*: presets.rs n-3-trade description
+  - Claim: neighbors barter over whichever pair they value most differently
+  - Note: the pair choice depends on each encounter's pre-trade MRSs, which the public API does not expose (trade events carry only post-choice exchanges); the rule is covered by core unit tests
+- **`n-3.prices-converge`**: Holds. *Book*: tests/book.rs three_good_prices_converge_for_every_pair (Figure IV-3's convergence for all three pairs)
+  - Claim: prices converge for every pair: the worst pair's ratio of cross-agent sd(ln MRS) at t = 500 to t = 0 is below 1
+  - Measured: median 0.5153 (IQR 0.4916–0.5285); 19/19 in [0.0000, 1.0000]
+- **`n-3.trade-raises`**: Holds. *Book*: tests/book.rs three_good_trade_raises_carrying_capacity (Figure IV-6 with three goods); docs/superpowers/specs/2026-09-23-n-goods-design.md
+  - Claim: with three goods, more agents survive with trade: population at t = 500 higher than the same preset with trade off
+  - Measured: trade median 834.0000 (IQR 815.0000–853.0000); no trade median 733.0000 (IQR 666.7500–762.2500); one-sided Mann–Whitney p = 9.02e-6; n = 20 vs 20
+- **`n-3.measured-t1000`**: Holds. *Comment*: presets.rs n-3-trade comment: (1,3)/(15,40) t=1000 populations [858, 820, 838, 791, 760]
+  - Claim: population at t = 1000 about 760–858
+  - Measured: median 851.5000 (IQR 832.0000–872.7500); 19/20 in [684.0000, 943.8000]
+### n-4-peaks
+
+- **`n-4.corners`**: Holds. *App*: presets.rs n-4-peaks description
+  - Claim: four goods, each on one peak near a different corner: the four goods' highest-capacity sites lie in four different quadrants (1 per seed)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000]
+- **`n-4.no-site-has-all`**: Fails (description). *App*: presets.rs n-4-peaks description
+  - Claim: agents must travel or trade to hold all four: no site has positive capacity for all four goods (count of such sites = 0)
+  - Measured: median 128.0000 (IQR 128.0000–128.0000); 0/20 in [0.0000, 0.0000]
+- **`n-4.trades`**: Holds. *App*: presets.rs n-4-peaks description
+  - Claim: agents trade: at least one exchange over t = 1..=1000
+  - Measured: median 135590.5000 (IQR 130281.7500–141601.2500); 20/20 in [1.0000, inf]
+- **`n-4.measured-t1000`**: Holds. *Comment*: presets.rs n-4-peaks comment: (1,2)/(25,50) t=1000 populations [83, 95, 92, 94, 88]
+  - Claim: population at t = 1000 about 83–95
+  - Measured: median 88.0000 (IQR 83.0000–94.0000); 19/20 in [74.7000, 104.5000]
+### n-2-pollutants
+
+- **`n-2.both-pollute`**: Holds. *App*: presets.rs n-2-pollutants description
+  - Claim: sugar gives off smoke and spice gives off runoff: both mean pollution levels positive at t = 1000 (smaller of the two > 0)
+  - Measured: median 159.5400 (IQR 152.4789–167.4072); 20/20 in [0.0000, inf]
+- **`n-2.smoke-repels`**: Holds. *App*: presets.rs n-2-pollutants description
+  - Claim: smoke makes sugar sites less attractive: at t = 500 the ratio (mean smoke on occupied sites / mean smoke on all sites) is lower than with no pollutant devaluing any good
+  - Measured: no devaluing median 1.5230 (IQR 1.4959–1.5379); preset median 1.1036 (IQR 1.0940–1.1203); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`n-2.runoff-repels`**: Holds. *App*: presets.rs n-2-pollutants description
+  - Claim: runoff spoils spice sites: at t = 500 the ratio (mean runoff on occupied sites / mean runoff on all sites) is lower than with no pollutant devaluing any good
+  - Measured: no devaluing median 1.5086 (IQR 1.4909–1.5298); preset median 1.1048 (IQR 1.0945–1.1164); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`n-2.smoke-diffuses`**: Holds. *App*: presets.rs n-2-pollutants description
+  - Claim: both diffuse (smoke): coefficient of variation of site smoke at t = 500 lower than with diffusion off
+  - Measured: no diffusion median 0.5392 (IQR 0.5365–0.5422); preset median 0.1902 (IQR 0.1854–0.1949); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`n-2.runoff-diffuses`**: Holds. *App*: presets.rs n-2-pollutants description
+  - Claim: both diffuse (runoff): coefficient of variation of site runoff at t = 500 lower than with diffusion off
+  - Measured: no diffusion median 0.5391 (IQR 0.5355–0.5416); preset median 0.1912 (IQR 0.1872–0.1930); one-sided Mann–Whitney p = 7.25e-12; n = 20 vs 20
+- **`n-2.measured-t1000`**: Holds. *Comment*: presets.rs n-2-pollutants comment: k=1.0 t=1000 populations [82, 86, 85, 86, 85]
+  - Claim: population at t = 1000 about 82–86
+  - Measured: median 85.0000 (IQR 79.7500–88.5000); 18/20 in [73.8000, 94.6000]
+- **`n-2.measured-pollution`**: Holds. *Comment*: presets.rs n-2-pollutants comment: seed-1 mean pollution [smoke, runoff] at t=1000 [154.96, 161.48]
+  - Claim: mean of the two mean pollution levels at t = 1000 about 154.96–161.48
+  - Measured: median 163.7262 (IQR 156.6696–169.0456); 19/20 in [139.4640, 177.6280]
+### fig-ii-5
+
+- **`fig-ii-5.vision-raises`**: Holds. *Book*: docs/superpowers/specs/2026-09-23-experiments-design.md and tests/book.rs fig_ii_5_carrying_capacity_rises_with_vision_and_falls_with_metabolism
+  - Claim: carrying capacity rises with vision: on every metabolism line, mean population over t = 200..=300 at mean vision 6 exceeds vision 1 (sweep's own seeds 1–10)
+  - Measured: [Mean metabolism = 1: Holds] last x median 486.0000 (IQR 485.0000–487.0000); first x median 439.0000 (IQR 435.2500–443.5000); one-sided Mann–Whitney p = 8.64e-5; n = 10 vs 10 [Mean metabolism = 2: Holds] last x median 313.6535 (IQR 309.6188–324.7500); first x median 280.6535 (IQR 276.9158–283.2277); one-sided Mann–Whitney p = 1.08e-5; n = 10 vs 10 [Mean metabolism = 3: Holds] last x median 248.8069 (IQR 244.9975–253.5842); first x median 190.4059 (IQR 184.2970–195.5941); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-ii-5.metabolism-lowers`**: Holds. *Book*: docs/superpowers/specs/2026-09-23-experiments-design.md and tests/book.rs fig_ii_5_carrying_capacity_rises_with_vision_and_falls_with_metabolism
+  - Claim: carrying capacity falls with metabolism: at every mean vision, metabolism 1 > 2 and 2 > 3 (sweep's own seeds 1–10)
+  - Measured: [vision 1 m1 > m2: Holds] lower metabolism median 439.0000 (IQR 435.2500–443.5000); higher metabolism median 280.6535 (IQR 276.9158–283.2277); one-sided Mann–Whitney p = 9.03e-5; n = 10 vs 10 [vision 1 m2 > m3: Holds] lower metabolism median 280.6535 (IQR 276.9158–283.2277); higher metabolism median 190.4059 (IQR 184.2970–195.5941); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10 [vision 2 m1 > m2: Holds] lower metabolism median 456.0000 (IQR 450.5000–457.7500); higher metabolism median 299.0594 (IQR 293.5322–307.1436); one-sided Mann–Whitney p = 9.09e-5; n = 10 vs 10 [vision 2 m2 > m3: Holds] lower metabolism median 299.0594 (IQR 293.5322–307.1436); higher metabolism median 205.5842 (IQR 203.9381–211.3069); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10 [vision 3 m1 > m2: Holds] lower metabolism median 466.0000 (IQR 464.0000–468.5000); higher metabolism median 303.2327 (IQR 299.7252–309.9728); one-sided Mann–Whitney p = 9.03e-5; n = 10 vs 10 [vision 3 m2 > m3: Holds] lower metabolism median 303.2327 (IQR 299.7252–309.9728); higher metabolism median 227.2030 (IQR 224.8243–230.8465); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10 [vision 4 m1 > m2: Holds] lower metabolism median 476.0000 (IQR 473.2500–478.7500); higher metabolism median 309.8119 (IQR 305.4926–312.2772); one-sided Mann–Whitney p = 9.03e-5; n = 10 vs 10 [vision 4 m2 > m3: Holds] lower metabolism median 309.8119 (IQR 305.4926–312.2772); higher metabolism median 239.8564 (IQR 233.6510–245.2847); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10 [vision 5 m1 > m2: Holds] lower metabolism median 482.0000 (IQR 478.2500–482.7500); higher metabolism median 311.8861 (IQR 303.2351–317.6238); one-sided Mann–Whitney p = 8.68e-5; n = 10 vs 10 [vision 5 m2 > m3: Holds] lower metabolism median 311.8861 (IQR 303.2351–317.6238); higher metabolism median 240.5693 (IQR 238.7748–244.4629); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10 [vision 6 m1 > m2: Holds] lower metabolism median 486.0000 (IQR 485.0000–487.0000); higher metabolism median 313.6535 (IQR 309.6188–324.7500); one-sided Mann–Whitney p = 8.73e-5; n = 10 vs 10 [vision 6 m2 > m3: Holds] lower metabolism median 313.6535 (IQR 309.6188–324.7500); higher metabolism median 248.8069 (IQR 244.9975–253.5842); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-ii-5.settled`**: Holds. *App*: sweeps/fig-ii-5.json description
+  - Claim: ticks 300, 500 and 1000 all satisfy the settlement rule for every cell (per cell, worst over T of max(\|B(T−100)−B(T)\|, \|B(T−50)−B(T)\|) / max(3, 0.05·B(T)) ≤ 1, B = mean 50-tick block population; the judge counts cells, 18)
+  - Measured: median 0.1250 (IQR 0.0000–0.2206); 18/18 in [0.0000, 1.0000]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-ii-5.measured-m1-v1`**: Holds. *Comment*: sweeps/fig-ii-5.json description, Measured: metabolism 1 mean population 438.7 at vision 1
+  - Claim: metabolism 1, vision 1 cell about 438.7
+  - Measured: median 439.0000 (IQR 435.2500–443.5000); 10/10 in [394.8300, 482.5700]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-ii-5.measured-m3-v6`**: Holds. *Comment*: sweeps/fig-ii-5.json description, Measured: metabolism 3 mean population 250.1 at vision 6
+  - Claim: metabolism 3, vision 6 cell about 250.1
+  - Measured: median 248.8069 (IQR 244.9975–253.5842); 10/10 in [225.0900, 275.1100]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+### fig-iv-6
+
+- **`fig-iv-6.trade-raises`**: Weak (check (unpaired test)). *Book*: docs/superpowers/specs/2026-09-23-experiments-design.md ("the trade line lies above the no-trade line at every x") and tests/book.rs fig_iv_6_trade_raises_carrying_capacity_at_every_vision
+  - Claim: trade raises carrying capacity at every mean vision (sweep's own seeds 1–10)
+  - Measured: [x = 1: Holds] trade median 42.4356 (IQR 35.5569–47.9678); no trade median 32.0891 (IQR 31.4876–37.2500); one-sided Mann–Whitney p = 3.42e-3; n = 10 vs 10 [x = 2: Weak] trade median 56.5495 (IQR 49.0000–60.2104); no trade median 45.9703 (IQR 41.7525–52.4604); one-sided Mann–Whitney p = 2.16e-2; n = 10 vs 10 [x = 3: Holds] trade median 62.1584 (IQR 60.3416–68.5767); no trade median 54.0594 (IQR 50.4950–55.8267); one-sided Mann–Whitney p = 7.52e-4; n = 10 vs 10 [x = 4: Holds] trade median 71.0000 (IQR 65.9010–77.0000); no trade median 63.5248 (IQR 59.7995–67.9455); one-sided Mann–Whitney p = 5.60e-3; n = 10 vs 10 [x = 5: Weak] trade median 73.9653 (IQR 69.7500–76.1485); no trade median 68.7970 (IQR 66.8688–70.8045); one-sided Mann–Whitney p = 3.48e-2; n = 10 vs 10 [x = 6: Weak] trade median 78.6584 (IQR 72.3465–80.0000); no trade median 72.0000 (IQR 63.7748–73.7500); one-sided Mann–Whitney p = 4.43e-2; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-6.vision-raises`**: Holds. *Book*: book, from memory: Figure IV-6, carrying capacity rises with mean vision with and without trade
+  - Claim: on both lines, carrying capacity at mean vision 6 exceeds vision 1 (sweep's own seeds 1–10)
+  - Measured: [No trade: Holds] last x median 72.0000 (IQR 63.7748–73.7500); first x median 32.0891 (IQR 31.4876–37.2500); one-sided Mann–Whitney p = 9.03e-5; n = 10 vs 10 [Trade: Holds] last x median 78.6584 (IQR 72.3465–80.0000); first x median 42.4356 (IQR 35.5569–47.9678); one-sided Mann–Whitney p = 9.09e-5; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-6.settled`**: Holds. *App*: sweeps/fig-iv-6.json description
+  - Claim: ticks 300, 500 and 1000 all satisfy the settlement rule for every cell (settlement ratio ≤ 1 as in fig-ii-5.settled; the judge counts cells, 12)
+  - Measured: median 0.4982 (IQR 0.3195–0.6422); 12/12 in [0.0000, 1.0000]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-6.measured-no-trade-v1`**: Weak (check). *Comment*: sweeps/fig-iv-6.json description, Measured: no trade mean population 33.8 at vision 1
+  - Claim: no-trade, vision 1 cell about 33.8
+  - Measured: median 32.0891 (IQR 31.4876–37.2500); 5/10 in [30.4200, 37.1800]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-6.measured-trade-v6`**: Holds. *Comment*: sweeps/fig-iv-6.json description, Measured: trade mean population 76.6 at vision 6
+  - Claim: trade, vision 6 cell about 76.6
+  - Measured: median 78.6584 (IQR 72.3465–80.0000); 8/10 in [68.9400, 84.2600]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+### fig-iv-10-11
+
+- **`fig-iv-10-11.long-lives-less-dispersion`**: Holds. *Book*: docs/superpowers/specs/2026-09-23-experiments-design.md and tests/book.rs fig_iv_10_11_long_lives_end_with_less_price_dispersion
+  - Claim: the long-lifetime series ends with lower sd(ln price) than the short one (last block, t = 951..=1000; sweep's own seeds 1–10)
+  - Measured: lifetimes 60–100 median 0.4458 (IQR 0.4232–0.4602); lifetimes 960–1000 median 0.1353 (IQR 0.1305–0.1424); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-10-11.long-lives-converge`**: Holds. *Book*: book, from memory: Figure IV-11, with lifetimes 960–1000 the price dispersion falls over time
+  - Claim: with lifetimes 960–1000, sd(ln price) in the last block is lower than in the first (t = 1..=50; sweep's own seeds 1–10)
+  - Measured: first block median 0.4958 (IQR 0.4711–0.5256); last block median 0.1353 (IQR 0.1305–0.1424); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-10-11.short-lives-persist`**: Holds. *Book*: book, from memory: Figure IV-10, with lifetimes 60–100 price dispersion persists instead of converging
+  - Claim: with lifetimes 60–100, the last block's sd(ln price) is at least half the first block's (ratio ≥ 0.5; sweep's own seeds 1–10)
+  - Measured: median 0.8999 (IQR 0.8103–0.9373); 10/10 in [0.5000, inf]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-10-11.measured-short-last`**: Holds. *Comment*: sweeps/fig-iv-10-11.json description, Measured: lifetimes 60–100 mean sd(ln price) 0.444 in the last block
+  - Claim: lifetimes 60–100, last block sd(ln price) about 0.444
+  - Measured: median 0.4458 (IQR 0.4232–0.4602); 8/10 in [0.3996, 0.4884]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`fig-iv-10-11.measured-long-last`**: Weak (check). *Comment*: sweeps/fig-iv-10-11.json description, Measured: lifetimes 960–1000 mean sd(ln price) 0.138 in the last block
+  - Claim: lifetimes 960–1000, last block sd(ln price) about 0.138
+  - Measured: median 0.1353 (IQR 0.1305–0.1424); 6/10 in [0.1242, 0.1518]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+### n-goods-carrying-capacity
+
+- **`n-goods-carrying-capacity.shared-sites`**: Holds. *App*: sweeps/n-goods-carrying-capacity.json description
+  - Claim: some sites grow every good at every n: per number of goods (2–6), the count of sites with positive capacity for every good is ≥ 1 (the judge counts the 5 values of n)
+  - Measured: median 128.0000 (IQR 90.0000–151.0000); 5/5 in [1.0000, inf]
+- **`n-goods-carrying-capacity.four-is-n-4-peaks`**: Holds. *App*: sweeps/n-goods-carrying-capacity.json description
+  - Claim: 4 goods is exactly n-4-peaks: the trade line's 4-good config and n-4-peaks give identical fingerprints after 100 ticks, per seed (sweep's seeds 1–10)
+  - Measured: median 1.0000 (IQR 1.0000–1.0000); 10/10 in [1.0000, 1.0000]
+  - Note: configs equal: true
+- **`n-goods-carrying-capacity.two-goods-low`**: Holds. *App*: sweeps/n-goods-carrying-capacity.json description
+  - Claim: at 2 goods the peaks share only weak sites, so that point is low: on both lines the 3-good cell exceeds the 2-good cell (sweep's own seeds 1–10)
+  - Measured: [No trade: Holds] 3 goods median 73.0644 (IQR 70.2500–74.7500); 2 goods median 25.0248 (IQR 23.2500–28.9208); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10 [Trade: Holds] 3 goods median 98.6782 (IQR 95.7500–100.9059); 2 goods median 76.0000 (IQR 70.0000–86.0396); one-sided Mann–Whitney p = 9.03e-5; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`n-goods-carrying-capacity.shared-peak-2`**: Holds. *App*: sweeps/n-goods-carrying-capacity.json description
+  - Claim: with every good on one shared peak (all at (10, 10)), mean population over t = 900..=1000 at 2 goods is about 257, trade or not (both lines pooled, 2 × survey seeds)
+  - Measured: median 259.6584 (IQR 251.7500–262.2500); 40/40 in [231.3000, 282.7000]
+- **`n-goods-carrying-capacity.shared-peak-6`**: Holds. *App*: sweeps/n-goods-carrying-capacity.json description
+  - Claim: with every good on one shared peak (all at (10, 10)), mean population over t = 900..=1000 at 6 goods is about 246, trade or not (both lines pooled, 2 × survey seeds)
+  - Measured: median 246.5000 (IQR 242.9084–252.3985); 39/40 in [221.4000, 270.6000]
+- **`n-goods-carrying-capacity.settled-1000`**: Holds. *App*: sweeps/n-goods-carrying-capacity.json description
+  - Claim: 1000 ticks satisfies the settlement rule for every cell (settlement ratio at T = 1000 ≤ 1 as in fig-ii-5.settled; the judge counts cells, 10)
+  - Measured: median 0.0919 (IQR 0.0532–0.1268); 10/10 in [0.0000, 1.0000]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`n-goods-carrying-capacity.still-falling-500`**: Holds. *App*: sweeps/n-goods-carrying-capacity.json description
+  - Claim: the 4-good, no-trade cell is still falling at 500: its 50-tick block mean population ending at t = 400 exceeds the one ending at t = 500 (sweep's own seeds 1–10)
+  - Measured: B(400) median 83.4600 (IQR 81.0800–84.2350); B(500) median 78.7200 (IQR 75.4300–80.8200); one-sided Mann–Whitney p = 7.34e-3; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`n-goods-carrying-capacity.trade-raises`**: Holds. *Book*: book, from memory: Figure IV-6, trade raises carrying capacity (here for 2–6 goods)
+  - Claim: trade raises carrying capacity at every number of goods (sweep's own seeds 1–10)
+  - Measured: [x = 2: Holds] trade median 76.0000 (IQR 70.0000–86.0396); no trade median 25.0248 (IQR 23.2500–28.9208); one-sided Mann–Whitney p = 9.03e-5; n = 10 vs 10 [x = 3: Holds] trade median 98.6782 (IQR 95.7500–100.9059); no trade median 73.0644 (IQR 70.2500–74.7500); one-sided Mann–Whitney p = 5.41e-6; n = 10 vs 10 [x = 4: Holds] trade median 87.0000 (IQR 83.0000–93.5000); no trade median 73.0000 (IQR 71.0347–77.1040); one-sided Mann–Whitney p = 2.50e-4; n = 10 vs 10 [x = 5: Holds] trade median 82.5000 (IQR 81.1139–83.0000); no trade median 60.5594 (IQR 56.5421–65.5000); one-sided Mann–Whitney p = 8.83e-5; n = 10 vs 10 [x = 6: Holds] trade median 85.7426 (IQR 83.0000–87.7525); no trade median 40.5594 (IQR 40.0000–46.8465); one-sided Mann–Whitney p = 8.78e-5; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`n-goods-carrying-capacity.measured-no-trade-2`**: Fails (check). *Comment*: sweeps/n-goods-carrying-capacity.json description, Measured: no trade mean population 25.8 at 2 goods
+  - Claim: no-trade, 2-good cell about 25.8
+  - Measured: median 25.0248 (IQR 23.2500–28.9208); 4/10 in [23.2200, 28.3800]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`n-goods-carrying-capacity.measured-trade-3`**: Holds. *Comment*: sweeps/n-goods-carrying-capacity.json description, Measured: trade mean population 99.6 at 3 goods
+  - Claim: trade, 3-good cell about 99.6
+  - Measured: median 98.6782 (IQR 95.7500–100.9059); 9/10 in [89.6400, 109.5600]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+### bargaining-rules
+
+- **`bargaining-rules.similar`**: Holds. *Book*: tests/book.rs bargaining_rules_give_similar_carrying_capacities quoting Chapter IV note 15 ("insensitive to this change"); sweeps/bargaining-rules.json (τ = 0.20)
+  - Claim: the two price rules give equivalent carrying capacities at every mean vision (TOST, margin 0.20 × the geometric-mean cell's mean; sweep's own seeds 1–10)
+  - Measured: [vision 1: Holds] geometric median 42.4356 (IQR 35.5569–47.9678); random median 40.3960 (IQR 37.0668–47.6089); TOST p = 5.92e-3 (margin 8.3554); two-sided Mann–Whitney p = 8.53e-1; n = 10 vs 10 [vision 2: Holds] geometric median 56.5495 (IQR 49.0000–60.2104); random median 56.9950 (IQR 51.1782–62.7376); TOST p = 2.28e-2 (margin 10.9194); two-sided Mann–Whitney p = 6.31e-1; n = 10 vs 10 [vision 3: Holds] geometric median 62.1584 (IQR 60.3416–68.5767); random median 64.0000 (IQR 56.4183–69.6906); TOST p = 1.97e-4 (margin 12.7691); two-sided Mann–Whitney p = 9.12e-1; n = 10 vs 10 [vision 4: Holds] geometric median 71.0000 (IQR 65.9010–77.0000); random median 71.5842 (IQR 63.7525–72.6832); TOST p = 4.62e-4 (margin 14.3380); two-sided Mann–Whitney p = 7.33e-1; n = 10 vs 10 [vision 5: Holds] geometric median 73.9653 (IQR 69.7500–76.1485); random median 75.0198 (IQR 68.8985–77.7327); TOST p = 9.78e-6 (margin 14.6865); two-sided Mann–Whitney p = 7.39e-1; n = 10 vs 10 [vision 6: Holds] geometric median 78.6584 (IQR 72.3465–80.0000); random median 76.7624 (IQR 73.8812–79.8713); TOST p = 5.53e-4 (margin 15.3285); two-sided Mann–Whitney p = 6.76e-1; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`bargaining-rules.vision-raises`**: Holds. *Book*: book, from memory: Chapter IV note 15, the qualitative character (carrying capacity rising with vision, Figure IV-6) survives the random price rule
+  - Claim: under both price rules, carrying capacity at mean vision 6 exceeds vision 1 (sweep's own seeds 1–10)
+  - Measured: [Geometric mean: Holds] last x median 78.6584 (IQR 72.3465–80.0000); first x median 42.4356 (IQR 35.5569–47.9678); one-sided Mann–Whitney p = 9.09e-5; n = 10 vs 10 [Random in [MRS_A, MRS_B]: Holds] last x median 76.7624 (IQR 73.8812–79.8713); first x median 40.3960 (IQR 37.0668–47.6089); one-sided Mann–Whitney p = 9.09e-5; n = 10 vs 10
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`bargaining-rules.measured-geometric-v1`**: Fails (check). *Comment*: sweeps/bargaining-rules.json description, Measured: geometric mean 41.8 at vision 1
+  - Claim: geometric-mean, vision 1 cell about 41.8
+  - Measured: median 42.4356 (IQR 35.5569–47.9678); 3/10 in [37.6200, 45.9800]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+- **`bargaining-rules.measured-random-v6`**: Weak (check). *Comment*: sweeps/bargaining-rules.json description, Measured: random 75.5 at vision 6
+  - Claim: random-price, vision 6 cell about 75.5
+  - Measured: median 76.7624 (IQR 73.8812–79.8713); 7/10 in [67.9500, 83.0500]
+  - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
+
