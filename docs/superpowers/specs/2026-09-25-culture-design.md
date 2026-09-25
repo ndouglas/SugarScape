@@ -10,7 +10,7 @@
 
 Two phases in one milestone:
 
-- **A.** Axelrod's model as a seventh model kind, `culture`, a full citizen of the playground (worker engine, Max speed, timeline, links, Compare, recording, Experiments, the CLI and the survey), with the paper's runs as presets, the docking paper's and later literature's departures as named switches, and the claims of Axelrod, AAEC, CMV and KETS measured over 20 seeds.
+- **A.** Axelrod's model as an eighth model kind, `culture`, a full citizen of the playground (worker engine, Max speed, timeline, links, Compare, recording, Experiments, the CLI and the survey), with the paper's runs as presets, the docking paper's and later literature's departures as named switches, and the claims of Axelrod, AAEC, CMV and KETS measured over 20 seeds.
 - **B.** Axelrod's rule as an alternative culture rule inside the Sugarscape, so AAEC's mobility experiment runs in the real Sugarscape.
 
 ## Non-negotiable constraints
@@ -43,6 +43,20 @@ Two phases in one milestone:
 - **CMV:** an order–disorder transition at a critical number of traits q_c: below it one culture spans the lattice as it grows; above it the lattice fragments. Axelrod's "large territories have fewer regions" should then hold only for q < q_c.
 - **KETS:** drift at rate r below about 1/T (T the relaxation time) drives a finite lattice to one culture; above it, disorder persists.
 
+## Measured in planning
+
+20 seeds unless stated; the survey reproduces each.
+
+- Table 2 (10 seeds in the sweep, 20 in the survey): 1.1, 3.5–5.2, 22–23 regions at five features; 1.0, 1.0, 1.6–1.8 at ten; 1.0, 1.0, 1.0–1.1 at fifteen.
+- The sample setup over 1 000 seeds: mean 4.33, median 4, 10 % one region, 18 % above six (the paper: 3.2, 3, 14 %, 10 %). Picking one of four directions and skipping off-map ones (edge sites acting less) gives a median of 3 but a mean of 4.1 — not adopted.
+- Neighborhoods over the nine cultures: 4.05, 2.11, 1.40 (the paper 3.4, 2.5, 1.5); soup 1.02.
+- Territory (bounded; 10 seeds): 9.8, 17.7, 22.0, 23.9, 23.0, 18.2, 15.9, 10.2 regions at 5, 8, 10, 12, 15, 20, 25, 30 a side; 50 × 50: 4.9; 100 × 100 (8 seeds): 2.25. Torus: 6.8, 9.1, 6.7, 6.7, 5.1, 4.7, 3.9, 3.4.
+- Time to stability: 9 090 events per site at 32 × 32, 24 500 at 50 × 50 (the paper: 10 036, 25 900). Zones settle a median 3.6 times sooner than stability at 50 × 50.
+- Docking: 20 × 20 random vs sweep medians 16.5 vs 11 (p = 0.01; AAEC 16.25 vs 9.23); neighbor changes 4.90 vs 5.15 (no difference); soup 1 culture in 19 of 20 runs at 15 traits, 1.65 at 30 (AAEC: 1.0, 1.4); cultures equal regions at stability in every run.
+- Castellano: at 15 traits regions fall from 20 × 20 to 30 × 30 (medians 16.5 → 9); at 25 they rise (207 → 424); the transition lies between 20 and 25 traits for five features.
+- Klemm: after 20 000 ticks on the 12 × 12, 15-trait lattice, medians of 17 cultures without drift, 5 at 10⁻⁴ per event, 55 at 10⁻².
+- Mobility (the docked Sugarscape, 20 000 ticks): 4.4 ± 1.4 cultures at 15 traits (3 of 20 runs settled) and 5.7 ± 1.6 at 30 (7 of 20), against AAEC's 1.1 ± 0.3 and 2.2 ± 1.2. Narrower mountains are worse (radius 20: 23.5; radius 12: 58.7).
+
 ## Architecture
 
 - **Phase A:** model kind `culture` ("Axelrod Culture"): `ModelKind::Culture`, `ModelConfig::Culture(CultureConfig)` tagged `"model": "culture"`, a `CultureWorld` implementing `Model`, schema, `SERIES`, presets and golden entries — the same wiring as tags. Code in `crates/sugarscape-core/src/culture/` (`config.rs`, `world.rs`, `stats.rs` for regions, zones and bonds, `presets.rs`, `mod.rs`). The WASM crate's source is unchanged.
@@ -52,7 +66,7 @@ Two phases in one milestone:
 
 | Field | Default | Apply | Meaning |
 |---|---|---|---|
-| `width`, `height` | 10, 10 | reset | 2–200 |
+| `width`, `height` | 10, 10 | reset | 1–200, at least 2 sites (the paper's 6 × 1 dialects strip) |
 | `features` | 5 | reset | F, 1–32 |
 | `traits` | 10 | reset | q, 2–255 |
 | `neighborhood` | `von_neumann` | reset | `von_neumann` (4), `moore` (8), `diamond` (12: Moore plus the four sites two away in the cardinal directions), `soup` (every other site) |
@@ -76,8 +90,8 @@ Two phases in one milestone:
 - `zones`: connected sets through neighboring pairs that share at least one feature.
 - `cultures`: distinct cultures (AAEC's surrogate).
 - `largest_region`: the largest region's share of the sites.
-- `mean_similarity`: the mean shared share over neighboring pairs (over sampled pairs in `soup`: each site with one random other).
-- `active_bonds`.
+- `mean_similarity`: the mean shared share over neighboring pairs (`soup`: exact, Σ over (feature, trait) of n(n − 1)/2 ÷ (N(N − 1)/2 · F)).
+- `active_bonds` (`soup`: the (feature, trait) values held by two or more distinct cultures).
 - `changes`: traits changed this tick.
 - `stable_at`: the tick the world became stable, else the current tick (like civil's `extinction`, so a capped sweep reads the cap).
 
@@ -88,7 +102,7 @@ Two phases in one milestone:
 - **Similarity:** Axelrod's Fig. 1: sites neutral, lanes shaded as above (identical: white).
 - **Zones:** sites colored by zone; lanes black where nothing is shared.
 - **Inspect:** any cell maps to its site (a lane to the pair): the site's traits, its region's and zone's sizes, each neighbor's shared features; a lane shows the pair's shared features. `locate` returns nothing (sites do not move; the page hides Follow).
-- **Charts:** Regions, zones and cultures (log scale, Fig. 3); Largest region; Mean similarity; Active bonds; Changes. The time axis reads "Events per site".
+- **Charts:** Regions, zones and cultures (Fig. 3); Largest region; Mean similarity; Active bonds; Changes. The time axis reads "Events per site".
 
 ## Phase A: presets
 
@@ -114,17 +128,19 @@ All metrics are final `regions` unless stated, runs stop when stable, and each b
 - `ac-territory`: width = height from 2 to 50, series `bounded` / `torus`, F 5, q 15.
 - `ac-activation`: width from 5 to 30, series `random` / `sweep`.
 - `ac-traits-transition`: q from 5 to 40 at two sizes (20 × 20 and 50 × 50): CMV's transition; whether regions fall or rise with size depends on q.
-- `ac-drift`: drift from 0 to 10⁻³, metric final `cultures` after a fixed number of ticks (never stable).
+- `ac-drift`: drift from 0 to 10⁻², metric final `cultures` after a fixed number of ticks (never stable).
+
+Sweeps read a world that stopped on its own at its last values for the ticks it did not run.
 
 ## Phase B: Axelrod's rule in the Sugarscape
 
-- **Config:** `culture.rule`: `flip` (the book's rule K; default) or `axelrod`; `culture.features` [5], `culture.traits` [15]; `culture.stop_when_settled` [false]. Read only under `axelrod`; absent in JSON → defaults.
+- **Config:** `culture.rule`: `flip` (the book's rule K; default) or `axelrod`; `culture.features` [5], `culture.traits` [15]; `culture.stop_when_settled` [false]. Read only under `axelrod`; absent in JSON → defaults. `rule`, `features`, `traits` are reset-only; the fields always serialize (older configs lack them and read as `flip`); agents carry traits whenever `culture.rule` is `axelrod`, whether or not K is on.
 - **Agents:** under `axelrod` an agent carries F traits, drawn uniformly after every existing draw of `Agent::new` and only when the rule is on. A child takes each feature from a random parent; a replacement newcomer draws fresh traits (AAEC's agents neither reproduce nor die; our reading).
 - **Rule:** at rule K's place in the agent's turn, the agent picks one uniformly random occupied von Neumann neighbor (none: nothing) and runs one Axelrod event in which the agent changes. Tags and groups are untouched.
 - **Statistics** (only under `axelrod`): `distinct_cultures`; `settled` (1 when every two distinct cultures among living agents share no feature — AAEC's global criterion — else 0).
 - **Stop:** with `stop_when_settled`, `World` is finished at the first settled tick; `Model::finished()` returns it and `run` stops.
 - **Fingerprint:** traits hashed only under `axelrod`.
-- **Page:** the Culture (K) section gains Rule, Features, Traits and Stop when settled; a **Culture** color mode (agents colored by Axelrod culture) and a Distinct cultures chart, shown only under `axelrod`.
+- **Page:** the Culture (K) section gains Rule, Features, Traits and Stop when settled; a **Culture** color mode (agents colored by Axelrod culture; always listed, agents gray under `flip`) and a Distinct cultures chart, shown only under `axelrod`.
 - **Map:** AAEC's "single (Gaussian) sugar mountain" is the existing single cone peak centered on 50 × 50, radius 35, height 4 (AAEC give neither height nor width).
 - **Presets:** `dock-mobility-15` — 50 × 50, 100 agents, vision 5–10, metabolism 0 (nobody starves, as AAEC's agents never die), growback 1, movement on, Axelrod F 5 q 15, stop when settled; `dock-mobility-30` — q 30. Sweep `dock-mobility`: q ∈ {5, 10, 15, 30}, final `distinct_cultures`.
 

@@ -140,7 +140,7 @@ Model extensions:
 ## Other artificial societies
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
-**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation** and **Spatial Games**.
+**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games** and **Axelrod Culture**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -505,6 +505,68 @@ running world. Credit: Martin A. Nowak and Robert M. May, "Evolutionary games an
 computer simulations," *PNAS* 90 (1993), 7716–7718; and Martin A. Nowak, Sebastian Bonhoeffer and
 Robert M. May, "Spatial games and the maintenance of cooperation," *PNAS* 91 (1994), 4877–4881. See
 `docs/superpowers/specs/2026-09-25-spatial-games-design.md`.
+
+### Axelrod culture (Axelrod 1997, and its docking with Sugarscape)
+
+A lattice of sites, each with F cultural features that take one of q traits (the paper's 10 × 10,
+five features of ten traits, four neighbors, edges bounded). An event picks a random site and a
+random neighbor; with probability equal to the share of features they have in common, the site
+copies one feature on which they differ. Similar neighbors grow more similar; neighbors with nothing
+in common never interact, so the lattice freezes into stable **regions** — contiguous sites with
+identical cultures — once every two neighbors are identical or share nothing. A tick is one event
+per site, the paper's time unit.
+
+Axelrod's claims mostly reproduce (20 seeds unless stated): more features mean fewer regions and
+more traits more (Table 2: 1.1 / 3.5 / 22.0 regions at five features); wider neighborhoods fewer
+(4.05, 2.11, 1.40 with 4, 8 and 12 neighbors, against 3.4, 2.5, 1.5); the territory's surprising
+curve (Fig. 2) — 21 regions at 12 × 12, 4.9 at 50 × 50, 2.25 at 100 × 100 — and a torus's earlier,
+lower peak; time to stability of 9 090 and 24 500 events per site at 32 × 32 and 50 × 50 (the
+paper: 10 036 and 25 900); and zones settling long before regions. The sample setup is a little
+more diverse than reported: over 1 000 seeds a mean of 4.3 regions and a median of 4, with 18 %
+above six (the paper: 3.2, 3 and 10 %).
+
+The docking paper (Axtell, Axelrod, Epstein and Cohen 1996) made the Sugarscape reproduce this
+model and found two places where two readings of the same prose diverge; both are switches here.
+**Activation**: Axelrod picks a random site each event, the Sugarscape shuffled sweeps; at 20 × 20
+that alone gave 16.25 vs 9.23 regions (measured: medians 16.5 vs 11). **Who changes**: the original
+Sugarscape changed the neighbor, not the active site, caught two months into the docking — measured,
+it makes no difference at 10 × 10. Their **soup** (any two sites can meet) leaves about one culture,
+as they found. Later work supplies two more: Castellano, Marsili and Vespignani (2000) found a
+transition in the number of traits, and indeed Axelrod's "large territories have fewer regions"
+holds only below it — at 25 traits regions grow with the territory (207 at 20 × 20, 424 at 30 × 30);
+he happened to use 15. And Klemm et al. (2003): any **drift** — here one random trait change in
+10 000 events — melts the frozen borders toward one culture.
+
+The page draws each site as a block with lanes between neighbors: **Culture** colors each culture
+and shades the lanes by what neighbors share (a region reads as one blob), **Similarity** is the
+paper's Fig. 1 (only the lanes), **Zones** colors the cultural zones. Inspect a site for its traits,
+region, zone and each neighbor's shared features, or a lane for its pair. Charts: Regions, zones and
+cultures; Largest region; Mean similarity; Active bonds (pairs that can still interact — zero means
+stable); Changes. A run stops when stable. Presets: `ac-sample-run`, `ac-many-regions`,
+`ac-large-territory` (100 × 100: about 10⁹ events, a long run), `ac-torus`,
+`ac-random-activation-20`, `ac-sweep-activation`, `ac-neighbor-changes`, `ac-soup`, `ac-drift`.
+**Compare** entry: "Literal vs Sugarscape activation, 20 × 20 — Axelrod Culture (Compare)". Built-in
+sweeps: `ac-table-2`, `ac-neighborhoods`, `ac-territory`, `ac-activation`, `ac-traits-transition`,
+`ac-drift`.
+
+**In the Sugarscape**, the Culture (K) rule can be Axelrod's: agents carry features of several
+traits and, after moving and eating, copy from one random neighbor as above (the book's rule flips
+their neighbors' tags instead); the Culture color mode draws them, a Distinct cultures chart counts
+them, and "Stop when cultures settle" ends a run once every two agents are identical or share
+nothing. The docking paper's mobility experiment is `dock-mobility-15` and `dock-mobility-30`: 100
+mobile agents with vision 5–10 on one sugar mountain. They report 1.1 ± 0.3 and 2.2 ± 1.2 cultures,
+every run settling; measured, 4.4 ± 1.4 and 5.7 ± 1.6, and most runs never settle — a few stragglers
+that rarely meet anyone keep second and third cultures alive. Mobility does collapse diversity (the
+fixed lattice keeps about 20), as they say; their numbers do not reproduce with the Sugarscape's
+stated movement rule, and their mountain's shape is not given. Sweep: `dock-mobility`.
+
+Credit: Robert Axelrod, "The Dissemination of Culture: A Model with Local Convergence and Global
+Polarization," *Journal of Conflict Resolution* 41 (1997), 203–226; Robert Axtell, Robert Axelrod,
+Joshua M. Epstein and Michael D. Cohen, "Aligning Simulation Models: A Case Study and Results,"
+*Computational and Mathematical Organization Theory* 1 (1996), 123–141; Claudio Castellano, Matteo
+Marsili and Alessandro Vespignani, *Physical Review Letters* 85 (2000), 3536; Konstantin Klemm,
+Víctor M. Eguíluz, Raúl Toral and Maxi San Miguel, *Physical Review E* 67 (2003), 045101. See
+`docs/superpowers/specs/2026-09-25-culture-design.md`.
 
 ## Experiments
 

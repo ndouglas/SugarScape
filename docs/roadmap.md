@@ -112,6 +112,16 @@ three decimals; Huberman and Glance's "always all D" holds only above b = 1.8, a
 the random arrays' r_c ≈ 9 depends on an unreported starting mix. See
 `docs/superpowers/specs/2026-09-25-spatial-games-design.md`.
 
+## Milestone 14: Axelrod's culture model and its docking (done)
+
+Axelrod's dissemination of culture (1997) as an eighth model kind, with Axtell, Axelrod, Epstein and
+Cohen's docking departures (activation, who changes, soup) and Castellano et al.'s and Klemm et al.'s
+results as switches and sweeps, and Axelrod's rule as a Sugarscape culture rule running the docking's
+mobility experiment. Table 2, the neighborhoods, the territory curve, the torus, the time to stability
+and the docking's activation gap reproduce; the sample setup is a little more diverse than reported;
+Axelrod's size result holds only below Castellano's transition; and the docked mobility experiment's
+near-single culture does not reproduce. See `docs/superpowers/specs/2026-09-25-culture-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -121,6 +131,7 @@ the random arrays' r_c ≈ 9 depends on an unreported starting mix. See
 - **Nowak–May spatial games**: done (Milestone 13).
 - **Epstein's civil violence**: done (Milestone 11).
 - **Tag-based cooperation** (Riolo, Cohen & Axelrod 2001): done (Milestone 12).
+- **Axelrod's culture model and its docking with Sugarscape**: done (Milestone 14).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions
