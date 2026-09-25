@@ -718,6 +718,21 @@ describe('SimHost keyframes', () => {
     expect(host.keyframeTicks()).toEqual([0]);
   });
 
+  it('keeps at most MAX_KEYFRAMES through many live edits on a long run', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    let id = 2;
+    host.handle({ id: id++, cmd: { type: 'step', n: 60_000 } });
+    // Each edit is a branch (it resets the interval); editing every 50 ticks must not pile them up.
+    for (let i = 0; i < 400; i++) {
+      host.handle({ id: id++, cmd: { type: 'step', n: 50 } });
+      host.handle({ id: id++, cmd: { type: 'place', x: 0, y: 0, overrides: {} } });
+      host.handle({ id: id++, cmd: { type: 'erase', x: 0, y: 0 } });
+    }
+    expect(host.keyframeTicks().length).toBeLessThanOrEqual(MAX_KEYFRAMES);
+    expect(host.keyframeTicks()[0]).toBe(0);
+  });
+
   it('resets the doubled interval on a branch, so a fresh branch near t = 0 keeps 50-tick spacing', () => {
     const host = new SimHost(fakeModule());
     init(host);

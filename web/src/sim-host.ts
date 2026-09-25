@@ -263,7 +263,9 @@ export class SimHost {
     }
     this.keyframes.push({ tick, applied: this.log.length, cp });
     this.keyframes.sort((a, b) => a.tick - b.tick);
-    if (this.keyframes.length > MAX_KEYFRAMES) {
+    // A branch resets the interval while older, sparser keyframes stay, so one doubling may not be
+    // enough: keep doubling until the count fits (tick 0 always survives, so this ends).
+    while (this.keyframes.length > MAX_KEYFRAMES) {
       this.every *= 2;
       this.dropKeyframes((t) => t % this.every === 0);
     }
