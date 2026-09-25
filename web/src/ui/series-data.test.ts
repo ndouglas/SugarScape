@@ -10,6 +10,7 @@ import {
   emptyTable,
   histTable,
   lineData,
+  MODEL_CHARTS,
   overlayData,
   positionBars,
   positionSteps,
@@ -20,7 +21,9 @@ import {
   showsTotalWealth,
   supplyDemandTable,
   showsForModel,
+  timeAxisLabel,
   twoGoods,
+  worldLines,
   type LineData,
 } from './series-data';
 
@@ -193,5 +196,26 @@ describe('model charts', () => {
     expect(showsForModel('schelling', ['schelling'])).toBe(true);
     expect(showsForModel('sugarscape', ['schelling'])).toBe(false);
     expect(showsForModel('ring', ['sugarscape', 'ring'])).toBe(true);
+  });
+});
+
+describe('the anasazi’s charts', () => {
+  it('count years: a group’s ticks move by the start year', () => {
+    expect(lineData(group, 800)[0]).toEqual([800, 805, 809]);
+    expect(timeAxisLabel('anasazi')).toBe('Year');
+    expect(timeAxisLabel('schelling')).toBe('Tick');
+  });
+
+  it('draw households against the historical record, which Compare draws once', () => {
+    expect(MODEL_CHARTS.anasazi.map((c) => c.title)).toEqual([
+      'Households vs historical',
+      'Carrying capacity',
+      'Fit',
+      'Mean stored corn',
+      'Births, moves and departures',
+    ]);
+    const lines = MODEL_CHARTS.anasazi[0].lines;
+    expect(worldLines(lines, 0).map((l) => l.key)).toEqual(['households', 'historical']);
+    expect(worldLines(lines, 1).map((l) => l.key)).toEqual(['households']);
   });
 });

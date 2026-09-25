@@ -7,9 +7,9 @@ export type LineData = [number[], ...(number | null)[][]];
 /** NaN (no trades, no agents) is a gap in the line. */
 const gap = (v: number): number | null => (Number.isNaN(v) ? null : v);
 
-/** A time chart's data: the group's ticks as x, then one line per series. */
-export function lineData(g: ChartGroup): LineData {
-  return [Array.from(g.ticks), ...g.columns.map((c) => Array.from(c, gap))];
+/** A time chart's data: the group's ticks (plus `offset`: the anasazi's start year) as x, then one line per series. */
+export function lineData(g: ChartGroup, offset = 0): LineData {
+  return [Array.from(g.ticks, (t) => t + offset), ...g.columns.map((c) => Array.from(c, gap))];
 }
 
 /** The Trade price chart (`[mean_log_price, sd_log_price]`): the mean, mean + SD and mean − SD. */
@@ -104,8 +104,12 @@ export const showsGoodWealth =
   (c: Config): boolean =>
     showsTotalWealth(c) && good < c.goods.length;
 
-/** A line of a time chart: its series, legend label and color (a CSS variable or `#rrggbb`). */
-export interface ChartLine { key: string; label: string; color: string }
+/**
+ * A line of a time chart: its series, legend label and color (a CSS variable or `#rrggbb`). A
+ * `reference` line (the anasazi's historical record) is the same for every world, so Compare draws
+ * it once, from A.
+ */
+export interface ChartLine { key: string; label: string; color: string; reference?: true }
 
 /** A time chart of another model: its title, lines and y range. */
 export interface ModelChart { title: string; lines: ChartLine[]; range?: [number, number] }
@@ -113,7 +117,8 @@ export interface ModelChart { title: string; lines: ChartLine[]; range?: [number
 /**
  * The other models' charts (Decision 13), each a time chart of the model's own series:
  * Schelling's segregation, share unsatisfied, moves and Red share; Ring World's flocks, flock
- * size (mean and largest) and distance moved.
+ * size (mean and largest) and distance moved; the anasazi's households against the historical
+ * record, carrying capacity, fit, stored corn, and births, moves and departures.
  */
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
@@ -133,8 +138,37 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     },
     { title: 'Distance moved', lines: [{ key: 'mean_distance', label: 'Sites per agent', color: '--c4' }] },
   ],
-  anasazi: [],
+  anasazi: [
+    {
+      title: 'Households vs historical',
+      lines: [
+        { key: 'households', label: 'Simulated', color: '--c1' },
+        { key: 'historical', label: 'Historical estimate', color: '--muted', reference: true },
+      ],
+    },
+    { title: 'Carrying capacity', lines: [{ key: 'capacity', label: 'Plots that feed a household', color: '--c3' }] },
+    { title: 'Fit', lines: [{ key: 'fit', label: 'Sum of squared differences', color: '--c2' }] },
+    { title: 'Mean stored corn', lines: [{ key: 'mean_corn', label: 'kg per household', color: '--c4' }] },
+    {
+      title: 'Births, moves and departures',
+      lines: [
+        { key: 'births', label: 'Births', color: '--c3' },
+        { key: 'moves', label: 'Moves', color: '--c1' },
+        { key: 'departures', label: 'Departures', color: '--red' },
+      ],
+    },
+  ],
 };
+
+/** A model's time charts count calendar years (the anasazi's) or ticks. */
+export function timeAxisLabel(model: ModelKind): string {
+  return model === 'anasazi' ? 'Year' : 'Tick';
+}
+
+/** A world's lines of a chart: every line for A (world 0), all but the reference lines for B. */
+export function worldLines(lines: ChartLine[], world: number): ChartLine[] {
+  return world === 0 ? lines : lines.filter((l) => !l.reference);
+}
 
 /** A chart of `chartModel` shows while some world on screen runs that model (Compare pairs one model). */
 export function showsForModel(chartModel: ModelKind, worlds: ModelKind[]): boolean {

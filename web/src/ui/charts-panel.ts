@@ -3,6 +3,7 @@ import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
 import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
+import { calendarYear } from '../models';
 import type { Config, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
@@ -26,7 +27,9 @@ import {
   showsTagHist,
   showsTotalWealth,
   supplyDemandTable,
+  timeAxisLabel,
   twoGoods,
+  worldLines,
   type ChartLine,
   type DistState,
   type LineData,
@@ -208,10 +211,13 @@ const CHARTS: ChartDef[] = [
   ),
 ];
 
-/** The host chart group a chart draws for a world (7a Decision 4); none for the distributions. */
-function groupOf(def: ChartDef, c: Config): string[] {
+/**
+ * The host chart group a chart draws for world `i` (7a Decision 4); none for the distributions.
+ * B leaves out reference lines (A draws them).
+ */
+function groupOf(def: ChartDef, c: Config, i: number): string[] {
   if (def.kind === 'band') return PRICE_GROUP;
-  return def.kind === 'time' ? def.lines!(c).map((l) => l.key) : [];
+  return def.kind === 'time' ? worldLines(def.lines!(c), i).map((l) => l.key) : [];
 }
 
 interface Plot {
@@ -432,7 +438,7 @@ export class ChartsPanel {
   private plotFor(def: ChartDef): HTMLElement {
     const caption = h('figcaption', {}, def.title);
     const figure = h('figure', { class: 'chart' }, caption);
-    const groups = this.worlds.map((w) => groupOf(def, w.sugar));
+    const groups = this.worlds.map((w, i) => groupOf(def, w.sugar, i));
     const counts = groups.map((g) => (def.kind === 'band' ? 3 : g.length));
     const data = def.kind === 'time' || def.kind === 'band' ? this.merge(counts.map(emptyTable)) : this.distData(def);
     const plot = new uPlot({ ...this.options(def), width: this.width(), height: HEIGHT }, data, figure);
@@ -442,7 +448,7 @@ export class ChartsPanel {
 
   private options(def: ChartDef): Omit<uPlot.Options, 'width' | 'height'> {
     const multi = this.worlds.length > 1;
-    const series: uPlot.Series[] = [{ label: X_LABEL[def.kind] }];
+    const series: uPlot.Series[] = [{ label: def.model ? timeAxisLabel(def.model) : X_LABEL[def.kind] }];
     const lorenz = def.kind === 'lorenz' || def.kind === 'lorenzTotal';
     if (lorenz) series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
     this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.sugar, multi ? `${LABELS[i]} · ` : '', i === 1)));
@@ -462,7 +468,7 @@ export class ChartsPanel {
     const dash = b ? B_DASH : undefined;
     switch (def.kind) {
       case 'time':
-        return def.lines!(c).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash }));
+        return worldLines(def.lines!(c), b ? 1 : 0).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash }));
       case 'band': {
         const sd = b ? [2, 3] : [4, 4];
         return [
@@ -539,7 +545,9 @@ export class ChartsPanel {
       if (groups.every((g, i) => g === p.drawn[i])) return;
       p.drawn = groups;
       const band = p.def.kind === 'band';
-      p.plot.setData(this.merge(groups.map((g, i) => (g ? (band ? bandData(g) : lineData(g)) : emptyTable(p.counts[i])))));
+      // The anasazi's time charts count years from each world's start year.
+      const offset = (i: number) => (p.def.model ? (calendarYear(this.worlds[i].config, 0) ?? 0) : 0);
+      p.plot.setData(this.merge(groups.map((g, i) => (g ? (band ? bandData(g) : lineData(g, offset(i))) : emptyTable(p.counts[i])))));
       return;
     }
     const version = this.dist.map((d) => d.version).join();
