@@ -1,0 +1,36 @@
+import { describe, expect, it } from 'vitest';
+import type { ModelConfig } from './types';
+import { readoutText, settlementRadius, settlements } from './valley';
+
+describe('the valley overlays', () => {
+  it('reads settlements as triples', () => {
+    const state = { water: new Uint32Array(0), links: new Uint32Array(0), settlements: Uint32Array.of(3, 4, 2, 10, 11, 9) };
+    expect(settlements(state)).toEqual([
+      { x: 3, y: 4, households: 2 },
+      { x: 10, y: 11, households: 9 },
+    ]);
+  });
+
+  it('sizes a settlement by the square root of its households, at most 1.5 cells', () => {
+    expect(settlementRadius(1, 10)).toBeCloseTo(5);
+    expect(settlementRadius(4, 10)).toBeCloseTo(7);
+    expect(settlementRadius(1000, 10)).toBe(15);
+  });
+});
+
+describe('the readout', () => {
+  const valley = { model: 'anasazi', start_year: 800 } as ModelConfig;
+  const sugar = {} as ModelConfig;
+
+  it('shows the anasazi’s calendar year and households', () => {
+    expect(readoutText({ config: valley, tick: 342, population: 213 }, null)).toBe('AD 1142 · 213 households');
+    expect(readoutText({ config: valley, tick: 342, population: 213 }, { config: valley, tick: 342, population: 190 })).toBe(
+      'AD 1142 · A 213 · B 190 households',
+    );
+  });
+
+  it('shows other models’ ticks and agents as before', () => {
+    expect(readoutText({ config: sugar, tick: 5, population: 40 }, null)).toBe('t = 5 · 40 agents');
+    expect(readoutText({ config: sugar, tick: 5, population: 40 }, { config: sugar, tick: 5, population: 38 })).toBe('t = 5 · A 40 · B 38 agents');
+  });
+});

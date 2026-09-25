@@ -20,7 +20,7 @@ export class AdaptiveBatch {
   }
 }
 
-export type LockstepEvent = 'run' | 'tick';
+export type LockstepEvent = 'run' | 'tick' | 'finished';
 
 /**
  * Steps two worlds together (Decision 9): each step sends `advance n` to both and waits for both
@@ -104,7 +104,11 @@ export class Lockstep {
       return;
     }
     if (this.crashed() || this.left() === 0) {
+      // Play pressed with no ticks left (the pair's end year already reached): say so, the way a
+      // single world does on Play or Step, rather than quietly doing nothing.
+      const finished = !this.crashed() && this.left() === 0;
       this.setRunning(false);
+      if (finished) this.emit('finished');
       return;
     }
     const max = this.speed === 'max';
@@ -115,7 +119,13 @@ export class Lockstep {
   /** Step: both worlds advance `n` ticks (fewer if one would pass its end year). */
   advance(n = 1): Promise<void> {
     return this.exclusive(async () => {
-      if (!this.crashed() && this.left() > 0) await this.stepBoth(n, false);
+      if (this.crashed()) return;
+      // Step pressed with no ticks left: say so instead of a silent no-op (see `pump`).
+      if (this.left() === 0) {
+        this.emit('finished');
+        return;
+      }
+      await this.stepBoth(n, false);
     });
   }
 

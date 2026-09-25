@@ -4,7 +4,7 @@ import { copyWorld } from './compare/lockstep';
 import { COMPARE_PRESETS, comparePresetStates } from './compare-presets';
 import { worldViews } from './recording/frames';
 import { canvasBlob, downloadBlob, downloadText } from './downloads';
-import { Engine, FULL_NOTICE, type InitialState } from './engine';
+import { Engine, finishedNotice, FULL_NOTICE, type InitialState } from './engine';
 import { errorMessage, fieldErrorsMessage } from './errors';
 import { ExperimentsView } from './experiments/view';
 import { compareLink, LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
@@ -251,6 +251,8 @@ async function main(): Promise<void> {
   engine.on('fork', () => showNotice(`Replay ended${compare ? ' in A' : ''} — your edit starts a new branch`));
   // In Compare both worlds reach the cap together; A's engine says so for the pair.
   engine.on('full', () => showNotice(FULL_NOTICE, 10_000));
+  // The anasazi stops at its end year (in Compare, A's says so for the pair unless B ends first).
+  engine.on('finished', () => showNotice(finishedNotice(engine.config, engine.tick), 10_000));
 
   let dirty = true;
   /** A snapshot arrived since the last frame (Compare: a lockstep pair): once drawn, the recording captures it. */

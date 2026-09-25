@@ -1,6 +1,7 @@
 import type { Lockstep } from '../compare/lockstep';
 import { randomSeed, type Engine, type RunControls, type Speed } from '../engine';
 import { errorMessage } from '../errors';
+import { readoutText } from '../valley';
 import { h } from './dom';
 import { showNotice } from './notice';
 
@@ -195,9 +196,6 @@ export class Toolbar {
   }
 
   private tick(): void {
-    const a = this.engine;
-    this.readout.textContent = this.b
-      ? `t = ${a.tick} · A ${a.population} · B ${this.b.population} agents`
-      : `t = ${a.tick} · ${a.population} agents`;
+    this.readout.textContent = readoutText(this.engine, this.b);
   }
 }

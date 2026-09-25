@@ -135,6 +135,32 @@ describe('Lockstep', () => {
     expect(replays).not.toHaveBeenCalled();
   });
 
+  it('says so again, without stepping further, if Play or Step is pressed after the pair’s end year', async () => {
+    const valley = (end: number) =>
+      ({ model: 'anasazi', width: 4, height: 3, start_year: 800, end_year: 800 + end, finish: end }) as unknown as Config;
+    const a = await create({ config: valley(3), seed: 1 });
+    const b = await create({ config: valley(3), seed: 2 });
+    const lock = new Lockstep([a, b], 4);
+    await lock.settled();
+    const finished: number[] = [];
+    lock.on('finished', () => finished.push(a.tick));
+    lock.setRunning(true);
+    await frames(lock, 2); // reaches the end year: the worlds' own 'finished' fires, not the lockstep's
+    expect([a.tick, b.tick]).toEqual([3, 3]);
+    expect(lock.running).toBe(false);
+    expect(finished).toEqual([]);
+
+    lock.setRunning(true); // Play again, with no ticks left
+    await frames(lock, 1);
+    expect(finished).toEqual([3]);
+    expect(lock.running).toBe(false);
+    expect([a.tick, b.tick]).toEqual([3, 3]);
+
+    await lock.advance(1); // Step, with no ticks left
+    expect(finished).toEqual([3, 3]);
+    expect([a.tick, b.tick]).toEqual([3, 3]);
+  });
+
   it('realigns worlds that start at different ticks', async () => {
     const a = await create({ config, seed: 1 });
     const b = await create({ config, seed: 2 });

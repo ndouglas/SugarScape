@@ -1,4 +1,5 @@
-import { randomSeed, type Engine } from '../engine';
+import { finishedNotice, randomSeed, type Engine } from '../engine';
+import { ticksLeft } from '../models';
 import type { ChartsPanel } from '../ui/charts-panel';
 import { CreditPanel } from '../ui/credit-panel';
 import type { Display } from '../ui/display';
@@ -142,6 +143,13 @@ export class CompareView {
         ...[a, b].flatMap((e) => [e.on('reset', () => this.syncCredit()), e.on('config', () => this.syncCredit())]),
         b.on('crash', p.onCrash),
         b.on('fork', () => showNotice('Replay ended in B — your edit starts a new branch')),
+        // A says when the pair reaches its end year; B speaks only when its end year comes first.
+        b.on('finished', () => {
+          if (ticksLeft(b.config, 0) < ticksLeft(a.config, 0)) showNotice(`B: ${finishedNotice(b.config, b.tick)}`, 10_000);
+        }),
+        // The pair has no ticks left: Play or Step would otherwise no-op silently (a's own
+        // 'finished' fired only when the pair first reached it, not on a later press).
+        this.lock.on('finished', () => showNotice(finishedNotice(a.config, a.tick), 10_000)),
         this.lock.on('run', p.onRun),
         this.lock.on('tick', p.onFrame),
       );

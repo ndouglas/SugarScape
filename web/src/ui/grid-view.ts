@@ -1,5 +1,6 @@
 import type { Engine } from '../engine';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
+import { SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
 import { arrowHead, wrappedSegments } from './overlay';
 import { trailSegments } from './trail';
 
@@ -116,6 +117,8 @@ export class GridView {
       ctx.restore();
     }
 
+    this.drawValley(width, height);
+
     if (this.engine.followed() !== null) {
       ctx.save();
       ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue('--text').trim() || '#000';
@@ -151,6 +154,52 @@ export class GridView {
       ctx.stroke();
       ctx.restore();
     }
+  }
+
+  /**
+   * The anasazi's overlays (milestone 10), those that are on: water sources as small blue squares,
+   * each household's farm–home link as a faint line, and settlements as yellow dots sized by their
+   * households.
+   */
+  private drawValley(width: number, height: number): void {
+    const valley = this.engine.valley;
+    if (this.engine.model !== 'anasazi' || !valley) return;
+    const on = this.engine.overlays;
+    const ctx = this.ctx;
+    ctx.save();
+    if (on.water) {
+      ctx.fillStyle = WATER_COLOR;
+      ctx.globalAlpha = 0.8;
+      const w = valley.water;
+      for (let i = 0; i + 1 < w.length; i += 2) ctx.fillRect((w[i] + 0.25) * CELL, (w[i + 1] + 0.25) * CELL, CELL / 2, CELL / 2);
+    }
+    if (on.links) {
+      ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue('--text').trim() || '#fff';
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      const l = valley.links;
+      for (let i = 0; i + 3 < l.length; i += 4) {
+        for (const [ax, ay, bx, by] of wrappedSegments(l[i], l[i + 1], l[i + 2], l[i + 3], width, height)) {
+          ctx.moveTo((ax + 0.5) * CELL, (ay + 0.5) * CELL);
+          ctx.lineTo((bx + 0.5) * CELL, (by + 0.5) * CELL);
+        }
+      }
+      ctx.stroke();
+    }
+    if (on.settlements) {
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = SETTLEMENT_COLOR;
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      for (const s of settlements(valley)) {
+        ctx.beginPath();
+        ctx.arc((s.x + 0.5) * CELL, (s.y + 0.5) * CELL, settlementRadius(s.households, CELL), 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 
   /** The grid without overlays, scaled up, as a PNG. */
