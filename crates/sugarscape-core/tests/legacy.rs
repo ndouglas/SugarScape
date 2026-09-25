@@ -41,9 +41,18 @@ fn legacy_preset_configs_load_as_the_presets() {
         23,
         "the presets that existed before N goods"
     );
+    // Presets deliberately changed since: the old config still loads, and
+    // differs from today's preset only in the named field.
+    // ii-6-waves: moved to the book's full 20×20 block (the model survey).
+    let changed_placement = ["ii-6-waves"];
     for (id, json) in fixtures {
         let preset = presets::by_id(&id).unwrap_or_else(|| panic!("preset {id} disappeared"));
-        let loaded = Config::from_json(&json.to_string()).unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        let mut loaded =
+            Config::from_json(&json.to_string()).unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        if changed_placement.contains(&id.as_str()) {
+            assert_ne!(loaded.placement, preset.config.placement, "{id}");
+            loaded.placement = preset.config.placement.clone();
+        }
         assert_eq!(loaded, preset.config, "{id}");
     }
 }

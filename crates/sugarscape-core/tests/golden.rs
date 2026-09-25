@@ -10,7 +10,8 @@ const GOLDEN: &[(&str, u64)] = &[
     ("ii-1-instant", 0x63d4454975b85fc),
     ("ii-2-unit", 0x75b93943813545e4),
     ("ii-5-wealth", 0x47bb9f4000e59377),
-    ("ii-6-waves", 0xc16aa48d70070a46),
+    // Moved to the book's full 20×20 block by the model survey's follow-up.
+    ("ii-6-waves", 0x4420b1eab9f8692f),
     ("ii-7-seasons", 0x89e264519aec44ff),
     // Chapter IV: now scheduled (pollution at t=50, diffusion at t=100).
     ("ii-8-pollution", 0xfdd983512b708286),

@@ -166,13 +166,18 @@ pub fn all() -> Vec<Preset> {
             "ii-6-waves",
             "Diagonal waves",
             "Animation II-6",
-            "A block of high-vision agents in the southwest propagates northeast in collective waves no individual can move in.",
+            "A full 20×20 block of agents with vision up to 10 starts in the southwest corner, as in the book, and bursts outward as a ring. The book's waves then travel northeast; here they don't: the survivors settle on the southwest mountain.",
             |c| {
+                // The book's first frame: a 20×20 block in the bottom-left
+                // corner, otherwise as Animation II-2 (400 agents, so full).
+                // Surveyed (docs/survey/2026-09-24-model-survey.md): the
+                // ring of the book's second frame appears by t ≈ 8, but no
+                // northeasterly waves follow on any seed.
                 c.placement = Placement::Block {
                     x: 0,
-                    y: 25,
-                    width: 25,
-                    height: 25,
+                    y: 30,
+                    width: 20,
+                    height: 20,
                 };
                 c.vision = URange::new(1, 10);
             },
@@ -256,7 +261,7 @@ pub fn all() -> Vec<Preset> {
             "iii-12-collision",
             "Colliding waves",
             "Animation III-12",
-            "Opposed blocks of high-vision Blues and Reds propagate toward the center and interpenetrate (combat off).",
+            "Opposed blocks of Blues and Reds with vision up to 10 start in the southwest and northeast corners, as in the book (combat off). In the book they travel toward the center in waves that collide; here each tribe settles on its own mountain and they never meet.",
             |c| {
                 tribes(c);
                 c.vision = URange::new(1, 10);
@@ -818,5 +823,21 @@ mod tests {
             .map(|g| (g.name.as_str(), g.zeros.min, g.zeros.max))
             .collect();
         assert_eq!(spans, [("Blue", 0, 3), ("Green", 4, 7), ("Red", 8, 11)]);
+    }
+
+    #[test]
+    fn waves_start_from_the_books_full_southwest_block() {
+        // Animation II-6's first frame: a 20×20 block in the bottom-left
+        // corner, "in all other respects … exactly as in animation II-2"
+        // (400 agents, so the block is full), with vision up to 10.
+        let c = by_id("ii-6-waves").unwrap().config;
+        assert_eq!(
+            c.placement,
+            Placement::Block { x: 0, y: 30, width: 20, height: 20 }
+        );
+        assert_eq!((c.population, c.vision), (400, URange::new(1, 10)));
+        let w = World::new(c, 1).unwrap();
+        assert!(w.agents().all(|a| a.pos.x < 20 && a.pos.y >= 30));
+        assert_eq!(w.population(), 400);
     }
 }
