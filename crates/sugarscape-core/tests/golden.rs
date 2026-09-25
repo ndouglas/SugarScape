@@ -93,6 +93,15 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("eh-clones-only", 0x1bd933620c915c0e),
     ("eh-no-exact-clones", 0xafe94d6c0bb3b8ab),
     ("rca-adopt-p1", 0xc3f75d53d237a89),
+    ("ac-sample-run", 0xeb302b62eb20f85d),
+    ("ac-many-regions", 0xcfca4ee65fe3946c),
+    ("ac-large-territory", 0xbe6a116733f7121),
+    ("ac-torus", 0x8a21fc496bea71c3),
+    ("ac-random-activation-20", 0xf0c8269aa3a3f7d2),
+    ("ac-sweep-activation", 0x986f6c9a01898253),
+    ("ac-neighbor-changes", 0xb12313a2dedfda7e),
+    ("ac-soup", 0xe15b8cab349e25fa),
+    ("ac-drift", 0xf254ab408f46810f),
 ];
 
 fn fingerprint(id: &str) -> u64 {
