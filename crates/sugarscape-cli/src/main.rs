@@ -178,6 +178,10 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
     let mut world = ModelWorld::new(config.clone(), args.seed)?;
     world.model_mut().run(args.ticks);
     let world = world.model();
+    if world.finished() && world.tick() < u64::from(args.ticks) {
+        // The anasazi stops at its end year.
+        eprintln!("finished at tick {} (its end year)", world.tick());
+    }
     if let Some(path) = &args.series_csv {
         write(path, &world.series_csv())?;
     }

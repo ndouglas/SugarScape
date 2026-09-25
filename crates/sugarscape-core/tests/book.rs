@@ -780,3 +780,206 @@ fn ring_world_megagroup_breaks_up() {
         );
     }
 }
+
+/// Seeds 1–15 of anasazi preset `id` run to its end year (AD 1350): each
+/// seed's households per year from AD 800, and its final fit.
+fn lhv_runs(id: &str) -> Vec<(Vec<f64>, f64)> {
+    (1..=15)
+        .map(|seed| {
+            let households = model_series(id, seed, 550, "households");
+            let fit = *model_series(id, seed, 550, "fit").last().unwrap();
+            (households, fit)
+        })
+        .collect()
+}
+
+/// The mean over every seed and the years `from..=to` of `runs`' households.
+fn lhv_mean(runs: &[(Vec<f64>, f64)], from: usize, to: usize) -> f64 {
+    let values: Vec<f64> = runs
+        .iter()
+        .flat_map(|(h, _)| h[from - 800..=to - 800].iter().copied())
+        .collect();
+    values.iter().sum::<f64>() / values.len() as f64
+}
+
+fn lhv_fit(runs: &[(Vec<f64>, f64)]) -> f64 {
+    runs.iter().map(|(_, f)| f).sum::<f64>() / runs.len() as f64
+}
+
+/// Prints the figures the Long House Valley thresholds below come from:
+/// mean households over seeds 1–15 in JASSS Figure 10's phases — the first
+/// plateau (1050–1130), the dip (1140–1170), the second plateau
+/// (1180–1265), the fall (1300) and the end (1350) — and the mean fit.
+#[test]
+#[ignore]
+fn measure_long_house_valley() {
+    for id in ["lhv-published", "lhv-published-defaults", "lhv-documented"] {
+        let runs = lhv_runs(id);
+        let fits: Vec<f64> = runs.iter().map(|(_, f)| *f).collect();
+        let (lo, hi) = fits
+            .iter()
+            .fold((f64::MAX, 0.0f64), |(a, b), &f| (a.min(f), b.max(f)));
+        println!(
+            "{id}: first plateau {:.1}, dip {:.1}, second plateau {:.1}, 1300 {:.1}, 1350 {:.1}; fit mean {:.0} (seeds {lo:.0}–{hi:.0}); seeds with no households at 1350: {}",
+            lhv_mean(&runs, 1050, 1130),
+            lhv_mean(&runs, 1140, 1170),
+            lhv_mean(&runs, 1180, 1265),
+            lhv_mean(&runs, 1300, 1300),
+            lhv_mean(&runs, 1350, 1350),
+            lhv_fit(&runs),
+            runs.iter().filter(|(h, _)| h[550] == 0.0).count()
+        );
+    }
+}
+
+/// From `measure_long_house_valley` (release, seeds 1–15, recorded
+/// 2026-09-25). `lhv-published`: first plateau 171.6, dip 93.6, second
+/// plateau 180.1, 58.7 in 1300 and 21.9 in 1350 (no seed died out); mean fit
+/// 922 516 (seeds 739 610–2 134 300). `lhv-published-defaults`: 1045.7,
+/// 864.0, 1045.4, 481.5 and 384.9. Levels may be 20% either side of the
+/// measurement (rounded outward to a multiple of 10), ratios 0.1 above it
+/// (rounded up to a multiple of 0.05), the end level down to a quarter
+/// (rounded down to a multiple of 5) and the fit up by 30% (rounded up to a
+/// multiple of 100 000).
+const LHV_FIRST: (f64, f64) = (130.0, 210.0);
+const LHV_SECOND: (f64, f64) = (140.0, 220.0);
+const LHV_DIP_AT_MOST: f64 = 0.65;
+const LHV_FALL_AT_MOST: f64 = 0.45;
+const LHV_END_AT_LEAST: f64 = 5.0;
+const LHV_FIT_AT_MOST: f64 = 1_200_000.0;
+const DEFAULTS_FIRST: (f64, f64) = (830.0, 1260.0);
+const DEFAULTS_SECOND: (f64, f64) = (830.0, 1260.0);
+const DEFAULTS_DIP_AT_MOST: f64 = 0.95;
+const DEFAULTS_FALL_AT_MOST: f64 = 0.6;
+const DEFAULTS_END_AT_LEAST: f64 = 95.0;
+
+/// JASSS Figure 10's shape (the calibrated replication, Table 4's values;
+/// the spec's Figure 4 target has the same shape from Axtell's values):
+/// a rise to a plateau near the carrying capacity by 1050–1130, a dip in
+/// 1140–1170, a second plateau in 1180–1265, a fall after about 1270 — and,
+/// as in every one of Janssen's runs (¶4.13), households still there after
+/// the historical abandonment around 1300.
+fn assert_lhv_shape(
+    id: &str,
+    first: (f64, f64),
+    second: (f64, f64),
+    dip: f64,
+    fall: f64,
+    end: f64,
+) -> Vec<(Vec<f64>, f64)> {
+    let runs = lhv_runs(id);
+    let p1 = lhv_mean(&runs, 1050, 1130);
+    let p2 = lhv_mean(&runs, 1180, 1265);
+    assert!(
+        (first.0..=first.1).contains(&p1),
+        "{id}: first plateau {p1}"
+    );
+    assert!(
+        (second.0..=second.1).contains(&p2),
+        "{id}: second plateau {p2}"
+    );
+    let d = lhv_mean(&runs, 1140, 1170);
+    assert!(d <= dip * p1, "{id}: dip {d} against {p1}");
+    let late = lhv_mean(&runs, 1300, 1300);
+    assert!(late <= fall * p2, "{id}: 1300 {late} against {p2}");
+    let last = lhv_mean(&runs, 1350, 1350);
+    assert!(last >= end, "{id}: 1350 {last}");
+    runs
+}
+
+#[test]
+#[ignore]
+fn lhv_published_follows_the_calibrated_replication() {
+    let runs = assert_lhv_shape(
+        "lhv-published",
+        LHV_FIRST,
+        LHV_SECOND,
+        LHV_DIP_AT_MOST,
+        LHV_FALL_AT_MOST,
+        LHV_END_AT_LEAST,
+    );
+    assert!(
+        lhv_fit(&runs) <= LHV_FIT_AT_MOST,
+        "mean fit {}",
+        lhv_fit(&runs)
+    );
+}
+
+#[test]
+#[ignore]
+fn lhv_published_defaults_follow_figure_2() {
+    // JASSS Figure 2: about 1 050 households by about 1030, tracking the
+    // carrying capacity, a dip around 1130–1170, and 400–500 by 1350.
+    assert_lhv_shape(
+        "lhv-published-defaults",
+        DEFAULTS_FIRST,
+        DEFAULTS_SECOND,
+        DEFAULTS_DIP_AT_MOST,
+        DEFAULTS_FALL_AT_MOST,
+        DEFAULTS_END_AT_LEAST,
+    );
+}
+
+#[test]
+#[ignore]
+fn lhv_documented_runs_to_the_end_year() {
+    // Measured, not judged (the spec asks only for sanity): first plateau
+    // 41.0, second 79.6, mean fit 4 296 013, and 7 of 15 seeds with no
+    // households left in 1350.
+    for (households, fit) in lhv_runs("lhv-documented") {
+        assert_eq!(households.len(), 551, "AD 800 to 1350");
+        assert!(fit.is_finite() && fit > 0.0);
+    }
+}
+
+#[test]
+#[ignore]
+fn lhv_calibration_is_best_near_the_published_harvest_adjustment() {
+    // `sweeps/lhv-calibration.json` (seeds 1–15). Measured mean fit: 0.50
+    // 5 384 804, 0.52 3 980 724, 0.54 1 766 489, 0.56 922 516, 0.58 1 570 688,
+    // 0.60 2 124 817, 0.62 4 073 957 — best at 0.56, as JASSS ¶4.11 (best at
+    // 0.54–0.56). The ends must be at least twice the best (measured 5.8× and
+    // 4.4×).
+    let result = run_builtin("lhv-calibration");
+    let line = &cell_means(&result)[0];
+    let xs: Vec<f64> = result.sweep.x.values.iter().map(|v| v.at).collect();
+    let best = (0..line.len())
+        .min_by(|&a, &b| line[a].total_cmp(&line[b]))
+        .unwrap();
+    assert!(
+        [0.54, 0.56].contains(&xs[best]),
+        "best at {}: {line:?}",
+        xs[best]
+    );
+    assert!(
+        line[0] >= 2.0 * line[best] && line[line.len() - 1] >= 2.0 * line[best],
+        "{line:?}"
+    );
+}
+
+#[test]
+#[ignore]
+fn lhv_quirks_the_fresh_endowment_carries_the_fit() {
+    // `sweeps/lhv-quirks.json` (seeds 1–15). Measured mean fit with each
+    // quirk off alone: none 922 516; age before death 919 196; farm water
+    // check 1 034 221; uplands class 966 794; wrap 858 177; initial corn
+    // 975 073; fresh endowment 4 328 619; free farm 1 233 239; initial
+    // eligibility 864 268; occupancy leak 924 814; one harvest s.d. 922 516
+    // (the presets set both s.d.s to 0.4, so it changes nothing); all off
+    // 4 296 013. Only the fresh endowment moves the fit by more than half.
+    let result = run_builtin("lhv-quirks");
+    let fits: Vec<f64> = cell_means(&result).iter().map(|line| line[0]).collect();
+    let none = fits[0];
+    assert_eq!(
+        fits[10], none,
+        "one harvest s.d. changes nothing at equal s.d.s"
+    );
+    for (k, &fit) in fits.iter().enumerate().skip(1) {
+        let fresh_or_all = k == 6 || k == 11;
+        assert_eq!(
+            fit >= 2.0 * none,
+            fresh_or_all,
+            "series {k}: {fit} against {none}"
+        );
+    }
+}

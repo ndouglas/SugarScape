@@ -1,0 +1,9 @@
+{
+  "name": "Long House Valley calibration: fit against the harvest adjustment",
+  "description": "Janssen's calibration (JASSS ¶4.4, ¶4.11) along its steepest axis: the fit — the sum over AD 800–1350 of the squared difference between simulated and historical households — against the harvest adjustment, on lhv-published (Table 4's other values, every replication quirk on), averaged over 15 seeds as JASSS averages 15 runs. JASSS finds the best fit at 0.54–0.56. Measured (release, seeds 1–15, recorded 2026-09-25): mean fit 5 384 804 at 0.50, 3 980 724 at 0.52, 1 766 489 at 0.54, 922 516 at 0.56, 1 570 688 at 0.58, 2 124 817 at 0.60 and 4 073 957 at 0.62 — best at 0.56.",
+  "base": { "preset": "lhv-published" },
+  "x": { "label": "Harvest adjustment", "path": "harvest_adjustment", "values": [0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62] },
+  "seeds": { "from": 1, "count": 15 },
+  "ticks": 550,
+  "metric": { "kind": "final", "series": "fit" }
+}

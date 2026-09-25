@@ -54,6 +54,8 @@ fn presets_and_sweeps_are_listed() {
         "n-goods-carrying-capacity",
         "bargaining-rules",
         "schelling-tipping",
+        "lhv-calibration",
+        "lhv-quirks",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -329,4 +331,53 @@ fn the_tipping_sweep_runs_on_the_command_line() {
     assert!(out.status.success(), "{}", stderr(&out));
     let result: sugarscape_core::sweep::SweepResult = serde_json::from_str(&stdout(&out)).unwrap();
     assert_eq!(result.runs.len(), 13);
+}
+
+#[test]
+fn the_anasazi_runs_to_its_end_year_on_the_command_line() {
+    // tests/golden.rs, MODEL_GOLDEN: lhv-published after 200 ticks from seed 1.
+    let out = sugarscape(&[
+        "run",
+        "--preset",
+        "lhv-published",
+        "--ticks",
+        "200",
+        "--fingerprint",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stdout(&out), "0x3b357e6f0cc5f74a\n");
+    let series = scratch("anasazi").join("lhv-series.csv");
+    let out = sugarscape(&[
+        "run",
+        "--preset",
+        "lhv-published",
+        "--ticks",
+        "1000",
+        "--series-csv",
+        path(&series),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 550 (its end year)\n");
+    let csv = read(&series);
+    assert!(csv.starts_with("tick,households,historical,fit,capacity,"));
+    assert_eq!(csv.lines().count(), 552, "a header and AD 800 to 1350");
+    let out = sugarscape(&[
+        "sweep",
+        "--builtin",
+        "lhv-quirks",
+        "--quiet",
+        "--seeds",
+        "1",
+        "--ticks",
+        "50",
+        "--jobs",
+        "2",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let result: sugarscape_core::sweep::SweepResult = serde_json::from_str(&stdout(&out)).unwrap();
+    assert_eq!(
+        result.runs.len(),
+        12,
+        "none, each of ten quirks and all off"
+    );
 }

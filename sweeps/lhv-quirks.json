@@ -1,0 +1,26 @@
+{
+  "name": "Long House Valley: what each replication quirk does to the fit",
+  "description": "What each of the published replication's departures from the written model does to its fit (the sum over AD 800–1350 of squared differences from the historical households): lhv-published with one quirk turned off at a time, none, or all (the documented model), over 15 seeds. Measured (release, seeds 1–15, recorded 2026-09-25): mean fit 922 516 with none off; 919 196 without ageing before the death check, 1 034 221 with the farm water check, 966 794 with the uplands PDSI, 858 177 without wrapping, 975 073 with one initial corn draw, 4 328 619 with the documented endowment, 1 233 239 with fission tried without a free farm, 864 268 with adjusted initial farms, 924 814 without the occupancy leak, 922 516 with two harvest s.d.s (equal in this preset, so nothing changes) and 4 296 013 with all off. Only the fresh endowment matters by more than a third: under the ODD's rule a new household starts with a third of its parent's corn and most do not survive.",
+  "base": { "preset": "lhv-published" },
+  "x": { "label": "Harvest adjustment", "path": "harvest_adjustment", "values": [0.56] },
+  "series": {
+    "label": "Quirk turned off",
+    "values": [
+      { "at": 0, "name": "None off (the published replication)", "set": {} },
+      { "at": 1, "name": "Age before the death check off", "set": { "quirks.age_before_death_check": false } },
+      { "at": 2, "name": "No water check for farms off", "set": { "quirks.no_farm_water_check": false } },
+      { "at": 3, "name": "Arable Uplands in one PDSI class off", "set": { "quirks.uplands_single_class": false } },
+      { "at": 4, "name": "Wrap the map’s edges off", "set": { "quirks.wrap_edges": false } },
+      { "at": 5, "name": "Initial corn in every slot off", "set": { "quirks.initial_corn_per_slot": false } },
+      { "at": 6, "name": "Fresh corn for new households off", "set": { "quirks.fission_fresh_endowment": false } },
+      { "at": 7, "name": "Fission needs a free farm off", "set": { "quirks.fission_needs_free_farm": false } },
+      { "at": 8, "name": "First farms ignore the harvest adjustment off", "set": { "quirks.initial_eligibility_ignores_adjustment": false } },
+      { "at": 9, "name": "Vacated homes stay occupied off", "set": { "quirks.occupancy_leak": false } },
+      { "at": 10, "name": "One harvest s.d. off", "set": { "quirks.single_harvest_variance": false } },
+      { "at": 11, "name": "All off (the documented model)", "set": { "quirks": { "age_before_death_check": false, "no_farm_water_check": false, "uplands_single_class": false, "wrap_edges": false, "initial_corn_per_slot": false, "fission_fresh_endowment": false, "fission_needs_free_farm": false, "initial_eligibility_ignores_adjustment": false, "occupancy_leak": false, "single_harvest_variance": false } } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 15 },
+  "ticks": 550,
+  "metric": { "kind": "final", "series": "fit" }
+}
