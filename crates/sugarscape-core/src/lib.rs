@@ -25,6 +25,7 @@ pub mod rules;
 pub mod schelling;
 pub mod schema;
 pub mod social;
+pub mod spatial;
 pub mod stats;
 pub mod sweep;
 pub mod world;
