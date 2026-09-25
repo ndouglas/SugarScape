@@ -1,6 +1,6 @@
 import type { Engine } from '../engine';
-import { isRingView, isSugarView, isValleyView } from '../models';
-import type { AgentView, AnasaziInspection, LinkView, RingInspection, SchellingInspection } from '../types';
+import { isCivilView, isRingView, isSugarView, isValleyView } from '../models';
+import type { AgentView, AnasaziInspection, CivilInspection, LinkView, RingInspection, SchellingInspection } from '../types';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -113,6 +113,27 @@ export class InspectPanel {
     ];
   }
 
+  /** A civil violence site — its cop, the agents jailed there, and the free agent's state and grievance. */
+  private civilRows(view: CivilInspection, gone: boolean): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const { site, agent, cop, jailed } = view;
+    const rows = [
+      row('Site', `(${site.x}, ${site.y})`),
+      row('Cop here', cop ? `#${cop.id}` : 'none'),
+      row('Jailed here', jailed.length === 0 ? 'none' : jailed.map((j) => `#${j.id} (${j.state})`).join(', ')),
+    ];
+    if (!agent || gone) return rows;
+    return [
+      ...rows,
+      row('Agent', `#${agent.id} · ${agent.state}${agent.group ? ` · ${agent.group}` : ''}`),
+      row('Hardship / risk aversion', `${fmt(agent.hardship)} / ${fmt(agent.risk_aversion)}`),
+      row('Grievance', fmt(agent.grievance)),
+      row('Arrest probability (N)', `${percent(agent.arrest_probability)} (N = ${fmt(agent.net_risk)})`),
+      ...(agent.state === 'jailed' ? [row('Jail left', agent.jail_left !== null ? `${agent.jail_left} ticks` : 'for life')] : []),
+      ...(agent.age !== null ? [row('Age', agent.death_age !== null ? `${agent.age} / ${agent.death_age}` : String(agent.age))] : []),
+    ];
+  }
+
   /** Ring World's site and its agent (Decision 13). */
   private ringRows(view: RingInspection, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -169,14 +190,20 @@ export class InspectPanel {
     const view = shown.view;
     if (!isSugarView(view)) {
       // A Schelling agent that reached its maximum residence has left the landscape; a household
-      // dies or leaves the valley.
-      const left = isValleyView(view) ? `Household #${shown.agentId} is gone: it died or left the valley.` : `Agent #${shown.agentId} has left.`;
+      // dies or leaves the valley; a civil agent dies, is released, or (Model II) is killed.
+      const left = isValleyView(view)
+        ? `Household #${shown.agentId} is gone: it died or left the valley.`
+        : isCivilView(view)
+          ? `Agent #${shown.agentId} is gone: it died or was released.`
+          : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
       const rows = isRingView(view)
         ? this.ringRows(view, gone)
         : isValleyView(view)
           ? this.valleyRows(view, gone)
-          : this.schellingRows(view, gone);
+          : isCivilView(view)
+            ? this.civilRows(view, gone)
+            : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

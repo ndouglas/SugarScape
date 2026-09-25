@@ -1076,6 +1076,7 @@ describe('Engine with other models', () => {
     const e = await make(valley);
     expect(finishedNotice(e.config, 10)).toBe('This run has reached its end year (AD 810) — Reset to run it again');
     expect(finishedNotice(ring, 10)).toBe('This run has reached its end year — Reset to run it again');
+    expect(finishedNotice({ model: 'civil' } as unknown as ModelConfig, 94)).toBe('A group has died out at t = 94 — Reset to run it again');
     let ends = 0;
     e.on('finished', () => ends++);
     e.setSpeed(4);

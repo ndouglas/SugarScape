@@ -4,7 +4,7 @@ import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
 import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
 import { calendarYear } from '../models';
-import type { Config, ModelKind } from '../types';
+import type { Config, ModelConfig, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
 import {
@@ -52,6 +52,8 @@ interface ChartDef {
   lines?: (c: Config) => Line[];
   range?: [number, number];
   shown?: (c: Config) => boolean;
+  /** Another model's chart: whether it shows for a world's config (civil Model II's groups and kills). */
+  modelShown?: (c: ModelConfig) => boolean;
   /** The caption names the traded pair (goods 0 and 1). */
   pair?: boolean;
   /** A `goodWealth` chart's good: the caption names it. */
@@ -208,7 +210,7 @@ const CHARTS: ChartDef[] = [
   },
   // The other models' time charts (Decision 13), in the top section.
   ...(Object.entries(MODEL_CHARTS) as [ModelKind, (typeof MODEL_CHARTS)['ring']][]).flatMap(([model, charts]) =>
-    charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), range: c.range })),
+    charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), range: c.range, modelShown: c.shown })),
   ),
 ];
 
@@ -346,7 +348,7 @@ export class ChartsPanel {
   private shown(def: ChartDef): boolean {
     const model = def.model ?? 'sugarscape';
     if (!showsForModel(model, this.worlds.map((w) => w.model))) return false;
-    if (model !== 'sugarscape') return true;
+    if (model !== 'sugarscape') return !def.modelShown || this.worlds.some((w) => w.model === model && def.modelShown!(w.config));
     const section = SECTIONS.find((s) => s.id === def.section)!;
     return this.worlds.some((w) => w.model === 'sugarscape' && section.shown(w.sugar) && (def.shown?.(w.sugar) ?? true));
   }

@@ -1,5 +1,5 @@
 import type { ChartGroup, Wants } from '../protocol';
-import type { Config, ModelKind } from '../types';
+import type { Config, ModelConfig, ModelKind } from '../types';
 
 /** uPlot data: x values, then one array per line (null is a gap). */
 export type LineData = [number[], ...(number | null)[][]];
@@ -111,14 +111,19 @@ export const showsGoodWealth =
  */
 export interface ChartLine { key: string; label: string; color: string; reference?: true }
 
-/** A time chart of another model: its title, lines and y range. */
-export interface ModelChart { title: string; lines: ChartLine[]; range?: [number, number] }
+/** A time chart of another model: its title, lines and y range, and (civil Model II's) when it shows. */
+export interface ModelChart { title: string; lines: ChartLine[]; range?: [number, number]; shown?: (c: ModelConfig) => boolean }
+
+/** A civil config of Model II (its groups and kills have charts). */
+export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant === 'ethnic';
 
 /**
  * The other models' charts (Decision 13), each a time chart of the model's own series:
  * Schelling's segregation, share unsatisfied, moves and Red share; Ring World's flocks, flock
  * size (mean and largest) and distance moved; the anasazi's households against the historical
- * record, carrying capacity, fit, stored corn, and births, moves and departures.
+ * record, carrying capacity, fit, stored corn, and births, moves and departures; civil violence's
+ * actives, quiet and jailed, legitimacy, cops, tension, outbursts, and in Model II its groups and
+ * kills.
  */
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
@@ -157,6 +162,31 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
         { key: 'departures', label: 'Departures', color: '--red' },
       ],
     },
+  ],
+  civil: [
+    {
+      title: 'Actives, quiet and jailed',
+      lines: [
+        { key: 'active', label: 'Active', color: '--red' },
+        { key: 'quiet', label: 'Quiet', color: '--blue' },
+        { key: 'jailed', label: 'Jailed', color: '--muted' },
+      ],
+    },
+    { title: 'Legitimacy', lines: [{ key: 'legitimacy', label: 'L', color: '--c2' }], range: [0, 1] },
+    { title: 'Cops', lines: [{ key: 'cops', label: 'Cops', color: '--c3' }] },
+    { title: 'Tension', lines: [{ key: 'tension', label: 'Mean G × quiet share ÷ mean R', color: '--c4' }] },
+    { title: 'Outbursts', lines: [{ key: 'outbursts', label: 'Outbursts ended', color: '--c1' }] },
+    { title: 'Wait between outbursts', lines: [{ key: 'mean_wait', label: 'Mean (ticks)', color: '--c2' }] },
+    { title: 'Activation per outburst', lines: [{ key: 'mean_activation', label: 'Mean total actives', color: '--c3' }] },
+    {
+      title: 'Groups',
+      lines: [
+        { key: 'blue', label: 'Blue', color: '--blue' },
+        { key: 'green', label: 'Green', color: '--lender' },
+      ],
+      shown: isEthnic,
+    },
+    { title: 'Killed', lines: [{ key: 'killed', label: 'Killed this tick', color: '--red' }], shown: isEthnic },
   ],
 };
 

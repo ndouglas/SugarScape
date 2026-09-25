@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chartKey } from '../protocol';
-import type { Config } from '../types';
+import type { Config, ModelConfig } from '../types';
 import {
   bandData,
   barsData,
@@ -9,6 +9,7 @@ import {
   distributionWants,
   emptyTable,
   histTable,
+  isEthnic,
   lineData,
   MODEL_CHARTS,
   overlayData,
@@ -223,5 +224,26 @@ describe('the anasazi’s charts', () => {
     const lines = MODEL_CHARTS.anasazi[0].lines;
     expect(worldLines(lines, 0).map((l) => l.key)).toEqual(['households', 'historical']);
     expect(worldLines(lines, 1).map((l) => l.key)).toEqual(['households']);
+  });
+});
+
+describe('civil charts', () => {
+  it('show Model II’s groups and kills only in Model II', () => {
+    const ethnic = { model: 'civil', variant: 'ethnic' } as unknown as ModelConfig;
+    const rebellion = { model: 'civil', variant: 'rebellion' } as unknown as ModelConfig;
+    expect([isEthnic(ethnic), isEthnic(rebellion)]).toEqual([true, false]);
+    const conditional = MODEL_CHARTS.civil.filter((c) => c.shown).map((c) => c.title);
+    expect(conditional).toEqual(['Groups', 'Killed']);
+    expect(MODEL_CHARTS.civil.map((c) => c.title)).toEqual([
+      'Actives, quiet and jailed',
+      'Legitimacy',
+      'Cops',
+      'Tension',
+      'Outbursts',
+      'Wait between outbursts',
+      'Activation per outburst',
+      'Groups',
+      'Killed',
+    ]);
   });
 });

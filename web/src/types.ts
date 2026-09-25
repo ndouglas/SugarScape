@@ -76,8 +76,8 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-/** The models the playground runs (milestones 9 and 10). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi';
+/** The models the playground runs (milestones 9–11). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -137,12 +137,47 @@ export interface AnasaziConfig {
   quirks: Quirks;
 }
 
+/** NetLogo Rebellion's departures from the paper (all off: the paper's rules). */
+export interface CivilQuirks {
+  floor_ratio: boolean;
+  active_counts_twice: boolean;
+  cop_moves_to_arrest: boolean;
+  jailed_stay: boolean;
+  netlogo_jail_term: boolean;
+}
+
+/** A numeric live field moving linearly from its value when tick `start` begins to `to` when tick `end` begins. */
+export interface CivilRamp { path: string; start: number; end: number; to: number }
+
+/** Epstein's civil violence (milestone 11): Model I (`rebellion`) or Model II (`ethnic`). */
+export interface CivilConfig {
+  model: 'civil';
+  variant: 'rebellion' | 'ethnic';
+  width: number;
+  height: number;
+  agent_density: number;
+  cop_density: number;
+  legitimacy: number;
+  threshold: number;
+  k: number;
+  vision: { agent: number; cop: number };
+  movement: boolean;
+  jail: { max: number; infinite: boolean };
+  clone_probability: number;
+  max_age: number;
+  stop_at_extinction: boolean;
+  outburst_threshold: number;
+  quirks: CivilQuirks;
+  schedule: ScheduledChange[];
+  ramps: CivilRamp[];
+}
+
 /**
  * A config of any model. A sugarscape `Config` carries no `model` key (every config, link, session
  * and sweep written before milestone 9 is one); the others carry theirs. Narrow with `isSugar` /
  * `modelOf` (models.ts).
  */
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -159,6 +194,8 @@ export interface Param {
   group: string;
   /** A one-line explanation shown under the control (the anasazi's quirks). */
   help?: string;
+  /** Shown only while the string field `path` equals `equals` (Model II's population fields). */
+  show_if?: { path: string; equals: string };
 }
 
 export interface FieldError { field: string; message: string }
@@ -227,8 +264,30 @@ export interface AnasaziStats {
   departures: number;
 }
 
+export interface CivilStats {
+  tick: number;
+  population: number;
+  active: number;
+  quiet: number;
+  jailed: number;
+  cops: number;
+  legitimacy: number;
+  mean_grievance: number;
+  tension: number;
+  outbursts: number;
+  /** Null until an outburst has followed another. */
+  mean_wait: number | null;
+  /** Null until an outburst has ended. */
+  mean_activation: number | null;
+  blue: number;
+  green: number;
+  killed: number;
+  /** The tick a group was first gone (Model II), else the current tick. */
+  extinction: number;
+}
+
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -308,12 +367,32 @@ export interface HouseholdView {
   home: [number, number];
 }
 export interface AnasaziInspection { site: ValleyCellView; agent: HouseholdView | null }
+
+/** A civil agent: its state, H, R, G, the arrest probability it estimates here, N = R·P, and in Model II its group and age. */
+export interface CitizenView {
+  id: number;
+  state: 'quiet' | 'active' | 'jailed';
+  hardship: number;
+  risk_aversion: number;
+  grievance: number;
+  arrest_probability: number;
+  net_risk: number;
+  /** Ticks of jail left; null while free or for a term that never ends. */
+  jail_left: number | null;
+  jail_life: boolean;
+  group: 'blue' | 'green' | null;
+  age: number | null;
+  death_age: number | null;
+}
+/** A civil site: its free agent, its cop, and the agents jailed after arrest here. */
+export interface CivilInspection { site: { x: number; y: number }; agent: CitizenView | null; cop: { id: number } | null; jailed: CitizenView[] }
+
 /** What a world of any model says about a site. */
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
- * `occupation`, `zones`, `yield`.
+ * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`.
  */
 export type ColorMode =
   | 'tribe'
@@ -329,7 +408,10 @@ export type ColorMode =
   | 'preference'
   | 'occupation'
   | 'zones'
-  | 'yield';
+  | 'yield'
+  | 'action'
+  | 'grievance'
+  | 'group';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

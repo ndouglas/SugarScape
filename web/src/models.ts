@@ -1,8 +1,9 @@
-// Which model a config is (milestones 9 and 10), and what each model offers the page.
+// Which model a config is (milestones 9–11), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   AnasaziInspection,
   AnyInspection,
+  CivilInspection,
   ColorMode,
   Config,
   Inspection,
@@ -12,7 +13,7 @@ import type {
   RingInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -20,12 +21,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   schelling: 'Schelling',
   ring: 'Ring World',
   anasazi: 'Artificial Anasazi',
+  civil: 'Civil Violence',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' ? tag : 'sugarscape';
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' ? tag : 'sugarscape';
 }
 
 export function isSugar(c: ModelConfig): c is Config {
@@ -45,6 +47,11 @@ export function isRingView(v: AnyInspection): v is RingInspection {
 /** A Long House Valley cell's inspection (it names its zone). */
 export function isValleyView(v: AnyInspection): v is AnasaziInspection {
   return 'zone' in v.site;
+}
+
+/** A civil violence site's inspection (it lists the agents jailed after arrest there). */
+export function isCivilView(v: AnyInspection): v is CivilInspection {
+  return 'jailed' in v;
 }
 
 /** The calendar year a world of `c` is in at `tick` (the anasazi's), or null for a model without one. */
@@ -93,6 +100,12 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['zones', 'Zones'],
     ['yield', 'Yield'],
   ],
+  // The paper's two screens (Fig. 1) and Model II's groups (all Blue in Model I).
+  civil: [
+    ['action', 'Action'],
+    ['grievance', 'Grievance'],
+    ['group', 'Group'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -101,4 +114,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   schelling: [],
   ring: [],
   anasazi: VALLEY_OVERLAYS,
+  civil: [],
 };

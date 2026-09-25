@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   calendarYear,
   COLOR_MODES,
+  isCivilView,
   isRingView,
   isSugar,
   isSugarView,
@@ -90,5 +91,28 @@ describe('the anasazi model', () => {
     const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the civil model', () => {
+  it('is read by its tag, and its inspections by their jailed list', () => {
+    const civil = { model: 'civil', variant: 'rebellion' } as unknown as ModelConfig;
+    expect(modelOf(civil)).toBe('civil');
+    expect(isSugar(civil)).toBe(false);
+    const site = { site: { x: 1, y: 2 }, agent: null, cop: null, jailed: [] } as unknown as AnyInspection;
+    const schelling = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
+    expect([site, schelling].map(isCivilView)).toEqual([true, false]);
+    expect(isRingView(site) || isSugarView(site) || isValleyView(site)).toBe(false);
+  });
+
+  it('offers the paper’s two screens and its groups, and no overlays', () => {
+    expect(COLOR_MODES.civil).toEqual([
+      ['action', 'Action'],
+      ['grievance', 'Grievance'],
+      ['group', 'Group'],
+    ]);
+    expect(MODEL_OVERLAYS.civil).toEqual([]);
+    expect(ticksLeft({ model: 'civil' } as unknown as ModelConfig, 5)).toBe(Infinity);
+    expect(calendarYear({ model: 'civil' } as unknown as ModelConfig, 5)).toBeNull();
   });
 });

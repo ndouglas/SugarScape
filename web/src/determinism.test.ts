@@ -8,7 +8,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { AnasaziStats, Preset, Snapshot } from './types';
+import type { AnasaziStats, CivilStats, Preset, Snapshot } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -265,6 +265,14 @@ describe('other models through the engine', () => {
     ['vi-7-schelling-mixed', '0x79346d2a338108cf'],
     ['vi-8-ring-world', '0x1c341361c466db90'],
     ['vi-9-ring-megagroup', '0x430d0c3b19b6e58e'],
+    ['cv-run-1-no-movement', '0x49637b8b34864721'],
+    ['cv-run-2-punctuated', '0x7888f03e0d511f6d'],
+    ['cv-run-3-salami', '0x51664e9ecc568140'],
+    ['cv-run-4-one-jump', '0xc8ad285446786559'],
+    ['cv-run-5-cop-reductions', '0x5713c0cafe4898dc'],
+    ['cv-run-6-coexistence', '0x1ce4fc6300e993ee'],
+    ['cv-run-8-nasty-regime', '0x5ce734d905ba0c5d'],
+    ['cv-netlogo', '0x87a92345c017b0ae'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -343,6 +351,23 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('civil violence through the engine', () => {
+  it('stops run 7 when a group is gone, once', async () => {
+    const run7 = presets.find((p) => p.id === 'cv-run-7-cleansing')!;
+    const e = await Engine.create({ config: structuredClone(run7.config), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'grievance' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1000);
+    const s = e.latest as CivilStats;
+    expect([e.finished, ends, s.extinction]).toEqual([true, 1, e.tick]);
+    expect(e.tick).toBeLessThan(1000);
+    expect(Math.min(s.blue, s.green)).toBe(0);
+    await e.advance(10);
+    expect(s.extinction).toBe(e.tick);
   });
 });
 
