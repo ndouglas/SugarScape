@@ -2,13 +2,15 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { copyWorld } from './compare/lockstep';
 import { Engine, type Speed } from './engine';
+import { modelOf } from './models';
 import type { Overlay } from './protocol';
 import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type { Preset, Snapshot } from './types';
-import { initSync, presets_json } from './wasm-pkg/sugarscape.js';
+import { MODEL_CHARTS } from './ui/series-data';
+import { config_series_names, initSync, presets_json } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
 const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
@@ -270,5 +272,15 @@ describe('other models through the engine', () => {
     for (const n of [1, 9, 40, 150]) await e.advance(n);
     expect(e.tick).toBe(200);
     expect(await e.fingerprint()).toBe(golden);
+  });
+});
+
+describe('model charts', () => {
+  it('draw only series their model records', () => {
+    for (const [model, charts] of Object.entries(MODEL_CHARTS)) {
+      const preset = presets.find((p) => modelOf(p.config) === model)!;
+      const names = JSON.parse(config_series_names(JSON.stringify(preset.config))) as string[];
+      for (const c of charts) for (const line of c.lines) expect(names, `${model}: ${c.title}`).toContain(line.key);
+    }
   });
 });

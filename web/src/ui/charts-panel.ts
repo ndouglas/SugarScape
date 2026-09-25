@@ -3,7 +3,7 @@ import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
 import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
-import type { Config } from '../types';
+import type { Config, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
 import {
@@ -15,29 +15,36 @@ import {
   emptyTable,
   histTable,
   lineData,
+  MODEL_CHARTS,
   overlayData,
   positionBars,
   positionSteps,
   shownCharts,
   showsAgeHist,
+  showsForModel,
   showsGoodWealth,
   showsTagHist,
   showsTotalWealth,
   supplyDemandTable,
   twoGoods,
+  type ChartLine,
   type DistState,
   type LineData,
 } from './series-data';
 
-interface Line { key: string; label: string; color: string }
+type Line = ChartLine;
 type Section = 'top' | 'goods' | 'pollution' | 'economy' | 'disease';
 type Kind = 'time' | 'band' | 'lorenz' | 'lorenzTotal' | 'wealth' | 'goodWealth' | 'age' | 'tags' | 'supplyDemand';
 
-/** One chart: its lines follow a world's config; it shows when its section and `shown` hold for either world. */
+/**
+ * One chart: its lines follow a world's config; it shows when a world on screen runs its model
+ * (default the sugarscape) and, for a sugarscape chart, its section and `shown` hold for that world.
+ */
 interface ChartDef {
   title: string;
   kind: Kind;
   section: Section;
+  model?: ModelKind;
   lines?: (c: Config) => Line[];
   range?: [number, number];
   shown?: (c: Config) => boolean;
@@ -195,6 +202,10 @@ const CHARTS: ChartDef[] = [
     lines: fixed([{ key: 'new_infections', label: 'Infections', color: '--c1' }]),
     shown: (c) => c.disease.enabled,
   },
+  // The other models' time charts (Decision 13), in the top section.
+  ...(Object.entries(MODEL_CHARTS) as [ModelKind, (typeof MODEL_CHARTS)['ring']][]).flatMap(([model, charts]) =>
+    charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), range: c.range })),
+  ),
 ];
 
 /** The host chart group a chart draws for a world (7a Decision 4); none for the distributions. */
@@ -326,8 +337,11 @@ export class ChartsPanel {
   }
 
   private shown(def: ChartDef): boolean {
+    const model = def.model ?? 'sugarscape';
+    if (!showsForModel(model, this.worlds.map((w) => w.model))) return false;
+    if (model !== 'sugarscape') return true;
     const section = SECTIONS.find((s) => s.id === def.section)!;
-    return this.worlds.some((w) => section.shown(w.sugar) && (def.shown?.(w.sugar) ?? true));
+    return this.worlds.some((w) => w.model === 'sugarscape' && section.shown(w.sugar) && (def.shown?.(w.sugar) ?? true));
   }
 
   /**
@@ -341,7 +355,8 @@ export class ChartsPanel {
     const groups = this.plots.filter((p) => !p.figure.hidden && p.groups[i].length > 0).map((p) => p.groups[i]);
     const out: Wants = {};
     if (groups.length > 0 && chartsBehind(groups, w.tick, (g) => w.chartGroup(g))) out.charts = { groups, max: CHART_POINTS };
-    if (distributionsDue(this.dist[i], w.tick, now, REFRESH_MS)) Object.assign(out, distributionWants(w.sugar));
+    // Distributions exist only in a sugarscape.
+    if (w.model === 'sugarscape' && distributionsDue(this.dist[i], w.tick, now, REFRESH_MS)) Object.assign(out, distributionWants(w.sugar));
     return out;
   }
 
@@ -375,12 +390,12 @@ export class ChartsPanel {
    * shows the charts and sections either world would show and names the traded pair.
    */
   private sync(): void {
-    const signature = JSON.stringify(this.worlds.map((w) => CHARTS.map((d) => d.lines?.(w.sugar) ?? null)));
+    const signature = JSON.stringify(this.worlds.map((w) => [w.model, CHARTS.map((d) => d.lines?.(w.sugar) ?? null)]));
     if (signature !== this.built) {
       this.built = signature;
       this.build();
     }
-    const configs = this.worlds.map((w) => w.sugar);
+    const configs = this.worlds.filter((w) => w.model === 'sugarscape').map((w) => w.sugar);
     for (const s of SECTIONS) {
       const el = this.sections.get(s.id);
       if (el) el.hidden = !configs.some((c) => s.shown(c));

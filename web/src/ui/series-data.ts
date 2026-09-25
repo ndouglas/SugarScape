@@ -1,5 +1,5 @@
 import type { ChartGroup, Wants } from '../protocol';
-import type { Config } from '../types';
+import type { Config, ModelKind } from '../types';
 
 /** uPlot data: x values, then one array per line (null is a gap). */
 export type LineData = [number[], ...(number | null)[][]];
@@ -103,6 +103,42 @@ export const showsGoodWealth =
   (good: number) =>
   (c: Config): boolean =>
     showsTotalWealth(c) && good < c.goods.length;
+
+/** A line of a time chart: its series, legend label and color (a CSS variable or `#rrggbb`). */
+export interface ChartLine { key: string; label: string; color: string }
+
+/** A time chart of another model: its title, lines and y range. */
+export interface ModelChart { title: string; lines: ChartLine[]; range?: [number, number] }
+
+/**
+ * The other models' charts (Decision 13), each a time chart of the model's own series:
+ * Schelling's segregation, share unsatisfied, moves and Red share; Ring World's flocks, flock
+ * size (mean and largest) and distance moved.
+ */
+export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
+  schelling: [
+    { title: 'Segregation', lines: [{ key: 'segregation', label: 'Like neighbors (mean share)', color: '--c2' }], range: [0, 1] },
+    { title: 'Unsatisfied', lines: [{ key: 'unsatisfied', label: 'Unsatisfied share', color: '--red' }], range: [0, 1] },
+    { title: 'Moves', lines: [{ key: 'moves', label: 'Agents moved', color: '--c1' }] },
+    { title: 'Red share', lines: [{ key: 'red_share', label: 'Red', color: '--red' }], range: [0, 1] },
+  ],
+  ring: [
+    { title: 'Flocks', lines: [{ key: 'flocks', label: 'Flocks', color: '--c1' }] },
+    {
+      title: 'Flock size',
+      lines: [
+        { key: 'mean_flock', label: 'Mean', color: '--c2' },
+        { key: 'largest_flock', label: 'Largest', color: '--c3' },
+      ],
+    },
+    { title: 'Distance moved', lines: [{ key: 'mean_distance', label: 'Sites per agent', color: '--c4' }] },
+  ],
+};
+
+/** A chart of `chartModel` shows while some world on screen runs that model (Compare pairs one model). */
+export function showsForModel(chartModel: ModelKind, worlds: ModelKind[]): boolean {
+  return worlds.includes(chartModel);
+}
 
 /** A world's distributions as last received: when, at which tick, and whether an edit, reset or config change has made them stale. */
 export interface DistState { at: number; tick: number; stale: boolean }

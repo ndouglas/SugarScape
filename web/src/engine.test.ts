@@ -957,4 +957,41 @@ describe('Engine with other models', () => {
     expect(await e.reset(ring)).toBeNull();
     expect(resets.at(-1)).toMatchObject({ type: 'reset', landscapes: [] });
   });
+
+  it('asks only its own model’s chart groups, never sugarscape distributions; a paused, caught-up Charts page sends nothing', async () => {
+    const transport = new HookedTransport(new SimHost(fakeModule()));
+    const e = await make(schelling, transport);
+    expect(e.model).toBe('schelling');
+    // The Charts panel's provider (ui/charts-panel.ts): its own model's groups, and distributions
+    // only in a sugarscape (the host silently drops them otherwise, so a model-blind provider would
+    // never catch up and would refresh every 250 ms even while paused).
+    const groups = [['population']];
+    const dist: DistState = { at: -Infinity, tick: -1, stale: true };
+    e.on('snapshot', () => {
+      const s = e.last;
+      if (s?.lorenz) Object.assign(dist, { at: performance.now(), tick: s.tick, stale: false });
+    });
+    e.want((now) => {
+      const out: Wants = {};
+      if (chartsBehind(groups, e.tick, (g) => e.chartGroup(g))) out.charts = { groups, max: 2000 };
+      if (e.model === 'sugarscape' && distributionsDue(dist, e.tick, now, 250)) Object.assign(out, distributionWants(e.sugar));
+      return out;
+    });
+    const sent: string[] = [];
+    transport.after = (cmd) => sent.push(cmd.type);
+    let now = performance.now();
+    const pumps = async (n: number) => {
+      for (let i = 0; i < n; i++) {
+        e.pump((now += 1000));
+        await settle();
+      }
+    };
+    // One refresh catches the chart group up.
+    await pumps(1);
+    expect(sent).toEqual(['refresh']);
+    // Paused and caught up: no repeated refresh, and no sugarscape distributions ever asked for.
+    sent.length = 0;
+    await pumps(5);
+    expect(sent).toEqual([]);
+  });
 });

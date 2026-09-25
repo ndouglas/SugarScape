@@ -19,6 +19,7 @@ import {
   showsTagHist,
   showsTotalWealth,
   supplyDemandTable,
+  showsForModel,
   twoGoods,
   type LineData,
 } from './series-data';
@@ -184,5 +185,13 @@ describe('shownCharts', () => {
     expect(shown.map((c) => c.name)).toEqual(['Wealth distribution · sugar', 'Wealth distribution · spice', 'Cultural tags (% zeros by position)']);
     // Distinct captions (not the shared 'Wealth distribution' title) keep every exported file name unique.
     expect(new Set(shown.map((c) => c.name)).size).toBe(shown.length);
+  });
+});
+
+describe('model charts', () => {
+  it('shows a model’s charts while some world on screen runs it', () => {
+    expect(showsForModel('schelling', ['schelling'])).toBe(true);
+    expect(showsForModel('sugarscape', ['schelling'])).toBe(false);
+    expect(showsForModel('ring', ['sugarscape', 'ring'])).toBe(true);
   });
 });
