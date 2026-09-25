@@ -192,6 +192,8 @@ describe('Lockstep seek and stops', () => {
     expect(lock.running).toBe(false);
     expect(stopped).toBe(1);
     expect(lock.lastStop).toBe('Stopped at tick 20');
+    lock.setRunning(true);
+    expect(lock.lastStop).toBeNull();
   });
 
   it('clears the worlds’ own rules, so neither host stops alone', async () => {

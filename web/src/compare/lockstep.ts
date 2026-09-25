@@ -104,6 +104,7 @@ export class Lockstep {
 
   setRunning(on: boolean): void {
     this.running = on;
+    if (on) this.lastStop = null;
     this.emit('run');
   }
 
