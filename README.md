@@ -25,6 +25,29 @@ disease mutation, outbreaks of novel diseases (the McNeill scenario), Infect and
 tools, and a disease-network overlay. `vi-1-everything` runs every rule from Chapters II–V
 together.
 
+Chapter VI: the indecomposability demonstration and the emergent society's views. Presets
+`vi-2-no-trade` and `vi-3-trade` are one society — 500 agents with Chapter IV's traits on the sugar
+and spice landscape that move and reproduce — without and with trade, and the presets menu's
+**Indecomposability — VI-2 vs VI-3 (Compare)** opens them side by side in Compare at the seed box's
+seed. `vi-3-trade` reproduces the book's VI-3 curve (a dip by t ≈ 100, recovery to about twice the
+initial population, minima near 700), but `vi-2-no-trade` does the same instead of crashing as the
+book's does: every stated rule matches the book, so the crash most likely depended on unreported
+details of the original software (see Notes). `vi-1-everything` offers the book's eighteen views
+(its description says where each lives). Three more overlays: **Neighbor
+network** (Chapter II: each agent → the agents that were its von Neumann neighbors after its last
+move, with a direction marker; lists may be one-sided), **Friends network** (Chapter III: each agent →
+the up to five culturally closest neighbors it has met, never rechecked; with culture on) and
+**Family network** (parent → child; with sex on). The **Lineage** color mode shows Animation III-5's
+genealogy: founders grey (the book's black, lightened for the dark grid), founders with children red,
+the born green, born parents yellow. Charts gain the **Age histogram** (5-tick bins, while lifetimes
+are finite) and **Cultural tags** (the percentage of agents with a 0 at each tag position, while
+culture is on). With two or more goods the Goods section adds each good's **Wealth distribution**
+and **total wealth** (every good's holdings summed): its **Lorenz curve** and **Gini coefficient**,
+also the new `gini_total` statistic (equal to `gini` with one good; the sugar-only `gini`,
+`mean_wealth`, Lorenz curve and wealth histogram are unchanged). In Compare the histograms are drawn
+as outlines. Neighbor lists, friends and lineage are views only: they never change a run and are not
+exported or shared.
+
 N goods (the book's own software, Chapter IV footnote 7): 1–8 goods and 1–4 pollutants.
 Welfare is the n-dimensional Cobb–Douglas, trade bargains over the pair of goods two
 neighbors value most differently, credit lends every good (footnote 55), and pollution
@@ -96,6 +119,18 @@ Model extensions:
   reset-only too.
 - Above 400 loans, a Credit-tab node's colour (lender, borrower or both) reflects all of its
   loans, including those left out of the drawing.
+- The book's VI-2 crash is not reproduced. M, S, T, death and the landscape were checked against the
+  text and Appendix B and match; with Chapter IV's traits `vi-3-trade` follows the book's VI-3 curve
+  on seeds 1–5 (dip to 100–175 by t ≈ 100–150, peak 1.7–2.0 × 500, minima near 700), and
+  `vi-2-no-trade` follows much the same curve (dip to 150–235, peak about 1.8 ×). Of 216
+  configurations tried (vision, metabolism, endowment, four fertility tests, trade before sex), none
+  made VI-2 die out and VI-3 survive on all of seeds 1–5 except on a knife edge: under these rules
+  trade moves holdings toward each agent's metabolism ratio and does not raise fertility. The
+  original software most likely had details the book does not report. `presets.rs` records the
+  measured populations.
+- Total wealth is the sum of an agent's holdings of every good, a reading of VI-1's "total wealth"
+  (the book does not define it for two goods). The statistics CSV gains a `gini_total` column after
+  `trade_pairs`.
 
 ## Experiments
 

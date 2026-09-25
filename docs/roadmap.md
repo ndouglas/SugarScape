@@ -48,11 +48,32 @@ speed), a side-by-side Compare mode (two worlds in lockstep with per-world rules
 charts), and recording the grid as WebM or GIF. Runs are unchanged. See
 `docs/superpowers/specs/2026-09-24-sessions-compare-recording-design.md`.
 
+## Milestone 8: Chapter VI — indecomposability and the emergent society (done)
+
+The indecomposability presets `vi-2-no-trade` / `vi-3-trade` with Chapter IV's traits and a
+presets-menu entry that opens them in Compare: VI-3 reproduces the book's curve, but VI-2 does not
+crash — the book's stated rules do not produce the crash, which most likely depended on unreported
+details of the original software. The neighbor, friends and family network overlays, the Lineage
+color mode, the age and cultural-tag histograms, per-good wealth histograms and total-wealth Lorenz
+curve and Gini (`gini_total`), so `vi-1-everything` offers all eighteen of the book's views. Runs are
+unchanged. See `docs/superpowers/specs/2026-09-24-chapter-vi-design.md`.
+
+## Next: Other artificial societies
+
+Chapter VI's other model kinds, each its own world type beside the sugarscape:
+
+- **Schelling segregation variant** (animations VI-4 to VI-7): a 50 × 50 torus, 2 000 Red/Blue
+  agents, von Neumann neighbors, preferences 25 % / 50 % / uniform 25–50 %, random acceptable
+  relocation, residence 80–100 with random-color replacement.
+- **Ring World** (VI-8, VI-9): a 150-site ring, capacity 4 growing back at 1, initial sugar uniform
+  0–4, 40 agents, vision 15–30 looking counterclockwise, moving to the nearest maximum-sugar
+  unoccupied site, in random order, and a megagroup start.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
 - **Headless CLI**: done (Milestone 5).
-- **Chapter VI "artificial history" presets**: the book's culminating combined rule systems, and its flocking / group-formation asides (Animation VI-8).
+- **Chapter VI "artificial history" presets**: done (Milestone 8); the flocking / group-formation aside (Animation VI-8) moves to *Other artificial societies*.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions
