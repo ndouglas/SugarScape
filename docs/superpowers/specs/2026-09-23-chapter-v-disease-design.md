@@ -51,7 +51,7 @@ New block `disease` (all defaults from the book's Animation V-1):
 
 1. Apply scheduled changes; **apply due outbreaks**.
 2. For each agent in shuffled order: move → metabolize (effective metabolism) → [credit income] → death check → S → K → T → L-borrow → **E (immune response, then transmission)**.
-3. Settle loans; growback; diffusion; replacement; ageing; stats.
+3. Settle loans; growback; diffusion; replacement; aging; stats.
 
 ## Tools and API
 

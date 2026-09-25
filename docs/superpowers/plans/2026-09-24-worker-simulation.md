@@ -27,7 +27,7 @@ Bottom-up so every layer is tested before anything consumes it, and so the app n
 
 - **Core then WASM (Tasks 1–2):** LTTB and the grouped variant are pure functions with property-style tests; the WASM getters (`series_downsampled`, `series_group`, `fingerprint`) are the host's only new needs from Rust. Doing them first means the regenerated `Sim` type already satisfies `SimLike` when Task 6 needs it.
 - **Protocol, host, transports (Tasks 3–5):** plain TypeScript tested with a fake `Sim` in Node (Vitest cannot start a worker, and the host must not depend on WASM to be tested). Nothing in the app imports them yet.
-- **Engine swap (Task 6):** the one cross-cutting step. It runs the new host on the page through `InlineTransport` (same thread, same WASM instance as today, so behaviour is easiest to compare), converts every write to a promise, adds the frame loop's `pump`, and updates only the call sites that the new types force (writes whose errors are shown, the frame loop, the readout). A temporary `engine.sim` getter plus deprecated `inspect`, `diseaseList` and `creditGraph` keep the remaining panels working unchanged.
+- **Engine swap (Task 6):** the one cross-cutting step. It runs the new host on the page through `InlineTransport` (same thread, same WASM instance as today, so behavior is easiest to compare), converts every write to a promise, adds the frame loop's `pump`, and updates only the call sites that the new types force (writes whose errors are shown, the frame loop, the readout). A temporary `engine.sim` getter plus deprecated `inspect`, `diseaseList` and `creditGraph` keep the remaining panels working unchanged.
 - **Determinism (Task 7):** as soon as the real engine path exists, a Vitest run with the real WASM pins the golden fingerprint, before any further refactor.
 - **Call-site migration (Tasks 8–10):** selection/inspection/follow/overlays, then edits/disease list/credit/exports, then charts on downsampled groups — each leaves the app working, and Task 10 deletes the hatch (a `grep` proves no `engine.sim` remains).
 - **Worker (Task 11):** only now does the host move threads; nothing above the transport changes. The controller runs every scenario and the determinism check through the worker here.
@@ -1747,7 +1747,7 @@ git commit -m "Add the page and port transports to the simulation host" -m "Clau
 
 ### Task 6: The engine on a transport
 
-*Needs judgement (full code given; the point is the ordering of awaits, adoption and events — read the Migration map first).* The host still runs on the page (`InlineTransport`), so this task changes the engine's shape, not where the simulation runs.
+*Needs judgment (full code given; the point is the ordering of awaits, adoption and events — read the Migration map first).* The host still runs on the page (`InlineTransport`), so this task changes the engine's shape, not where the simulation runs.
 
 Browser (controller): every playground scenario — Play/Pause/Step and each speed, Reset and 🎲, preset change, rule edits (live and reset-requiring, including an invalid value showing its error), painting and image import, place/erase/infect/vaccinate, Inspect and Follow, overlays, Charts, Credit tab, Share + reload, all four exports, the Experiments switch.
 
@@ -2685,7 +2685,7 @@ Append inside `describe('Engine', …)` in `web/src/engine.test.ts`:
 - [ ] **Step 2: Run the tests**
 
 Run: `(cd web && npx vitest run src/engine.test.ts)`
-Expected: `11 passed` — the engine already provides these (Task 6); they pin the behaviour the panels now rely on. If any fails, fix the engine (not the test) before moving on.
+Expected: `11 passed` — the engine already provides these (Task 6); they pin the behavior the panels now rely on. If any fails, fix the engine (not the test) before moving on.
 
 - [ ] **Step 3: Move the panels onto snapshots**
 
@@ -2779,7 +2779,7 @@ Append inside `describe('Engine', …)` in `web/src/engine.test.ts`:
 - [ ] **Step 2: Run the tests**
 
 Run: `(cd web && npx vitest run src/engine.test.ts)`
-Expected: `13 passed` (engine behaviour from Task 6, pinned before the panels depend on it).
+Expected: `13 passed` (engine behavior from Task 6, pinned before the panels depend on it).
 
 - [ ] **Step 3: The disease picker**
 
@@ -2903,7 +2903,7 @@ git commit -m "Fetch the disease list, credit graph and exports from the host" -
 
 ### Task 10: Charts on downsampled history; the hatch goes
 
-*Needs judgement (full code given; check each chart still appears under the same conditions).* Browser (controller): Charts tab on `ii-2-unit` (every time chart moves with real ticks on x; Lorenz and wealth histogram update ~4×/s and after a paint while paused), `iv-3-trade` (Trade price line with its ±SD band; gaps where no trade happened; supply & demand), `iv-5-credit` (loans, debt), `v-2-endemic` (disease section), `n-3-trade` (goods section follows the goods), `iii-6-three-tribes` (Group shares), a config change that adds a good (charts rebuild and fill at once, paused too), a run of 20 000+ ticks (charts stay smooth; x axis reaches the current tick), Export → Charts (PNG).
+*Needs judgment (full code given; check each chart still appears under the same conditions).* Browser (controller): Charts tab on `ii-2-unit` (every time chart moves with real ticks on x; Lorenz and wealth histogram update ~4×/s and after a paint while paused), `iv-3-trade` (Trade price line with its ±SD band; gaps where no trade happened; supply & demand), `iv-5-credit` (loans, debt), `v-2-endemic` (disease section), `n-3-trade` (goods section follows the goods), `iii-6-three-tribes` (Group shares), a config change that adds a good (charts rebuild and fill at once, paused too), a run of 20 000+ ticks (charts stay smooth; x axis reaches the current tick), Export → Charts (PNG).
 
 **Files:**
 - Create: `web/src/ui/series-data.ts`, `web/src/ui/series-data.test.ts`
@@ -3832,7 +3832,7 @@ git commit -m "Run the simulation flat out in the host at Max speed" -m "Claude-
 
 ### Task 13: Max speed in the engine and the speed menu
 
-*Needs judgement (full code given; the quiesce ordering is the point).* Browser (controller): choose **Max** on `ii-2-unit` and on a 200 × 200 world with 2 000 agents (Setup section) — the grid redraws smoothly, the readout climbs fast, the page stays responsive (open tabs, hover charts); Pause stops at once; Reset, 🎲, a preset change and a reset-requiring rule change while at Max rebuild and carry on at Max; a live rule change and painting apply while at Max; switching from Max to 5× and back; switching to Experiments pauses; a Charts/Credit/Inspect tab keeps updating at Max.
+*Needs judgment (full code given; the quiesce ordering is the point).* Browser (controller): choose **Max** on `ii-2-unit` and on a 200 × 200 world with 2 000 agents (Setup section) — the grid redraws smoothly, the readout climbs fast, the page stays responsive (open tabs, hover charts); Pause stops at once; Reset, 🎲, a preset change and a reset-requiring rule change while at Max rebuild and carry on at Max; a live rule change and painting apply while at Max; switching from Max to 5× and back; switching to Experiments pauses; a Charts/Credit/Inspect tab keeps updating at Max.
 
 **Files:**
 - Modify: `web/src/engine.ts`, `web/src/engine.test.ts`, `web/src/ui/toolbar.ts`
@@ -4145,7 +4145,7 @@ git commit -m "Document the worker simulation, Max speed and chart downsampling"
 | Spec requirement | Task |
 |---|---|
 | No simulation change; golden and legacy unedited and green | Global Constraints; every task's verification; 7 (golden fingerprint through the engine with the real WASM, however ticks are split); 11/14 (through the worker, controller); 14 (`git diff main -- crates/sugarscape-core/tests/`) |
-| Same behaviour; step-per-frame speeds keep meaning and determinism | 6 (engine API kept; `advance(n)` = `step(n)`), 7, 13 (`pump` steps `speed` ticks per frame) |
+| Same behavior; step-per-frame speeds keep meaning and determinism | 6 (engine API kept; `advance(n)` = `step(n)`), 7, 13 (`pump` steps `speed` ticks per frame) |
 | No COOP/COEP, no SharedArrayBuffer | 5, 11 (transferable `ArrayBuffer`s only) |
 | `sim-host.ts`: holds a `Sim`, one message at a time, `{ ok, snapshot? } \| { ok: false, errors }` | 4 (plus `fatal`, Decision 7), 5 (`serve`), 12 (Max) |
 | `sim-worker.ts`: module worker loading WASM | 11 (Vite `worker.format: 'es'` already set) |

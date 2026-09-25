@@ -36,7 +36,7 @@ describe('modelOf', () => {
     expect([sugar, ring, schelling].map(isRingView)).toEqual([false, true, false]);
   });
 
-  it('offers each model its color modes, Schelling first Colour, Ring World none', () => {
+  it('offers each model its color modes, Schelling first Color, Ring World none', () => {
     expect(COLOR_MODES.sugarscape[0][0]).toBe('tribe');
     expect(COLOR_MODES.schelling.map(([m]) => m)).toEqual(['color', 'satisfaction', 'preference']);
     expect(COLOR_MODES.ring).toEqual([]);

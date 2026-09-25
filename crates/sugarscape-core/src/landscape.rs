@@ -330,7 +330,7 @@ mod tests {
         for (seed, scale, octaves) in [(1, 10.0, 1), (2, 8.0, 2), (3, 20.0, 3)] {
             let at =
                 |x: usize, y: usize| noise_at(seed, scale, octaves, (w, h), (x as f64, y as f64));
-            // The largest change between neighbouring cells: smoothstep's slope
+            // The largest change between neighboring cells: smoothstep's slope
             // is at most 1.5 and corner values differ by less than 1, so octave
             // o changes by at most 1.5 · period / cells per cell.
             let bound = |cells: usize| {

@@ -30,7 +30,7 @@ Add two new model kinds beside the sugarscape — the book's Schelling segregati
 - **Satisfaction:** over the four von Neumann neighbor sites that are occupied; with no neighbors an agent is satisfied.
 - **Step:** agents act in a random order. An unsatisfied agent collects every unoccupied site at which it would be satisfied (evaluated as if it stood there, not counting its current site as a neighbor), picks one uniformly at random and moves there; with none it stays. Then ages increase by 1; with residence on, an agent whose age reaches its maximum is removed and replaced by a new agent (random color, preference, residence) placed on a random unoccupied site that satisfies it, or a random unoccupied site if none does. Population is constant.
 - **Statistics:** `unsatisfied` (share of agents unsatisfied), `segregation` (mean share of like neighbors over agents with at least one neighbor), `moves` (agents that moved this tick), `red_share`, `quiet` (1 when no agent moved this tick, else 0), `population`.
-- **Render modes:** Colour (Red/Blue), Satisfaction (unsatisfied agents highlighted), Preference (shade by threshold); empty sites dark.
+- **Render modes:** Color (Red/Blue), Satisfaction (unsatisfied agents highlighted), Preference (shade by threshold); empty sites dark.
 - **Presets:** `vi-4-schelling-25`, `vi-5-schelling-25-residence`, `vi-6-schelling-50-residence`, `vi-7-schelling-mixed` (the book's settings above).
 
 ## Ring World (animations VI-8, VI-9)

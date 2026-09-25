@@ -466,7 +466,7 @@ export class ChartsPanel {
     return { scales: { x, y }, axes, legend: { show: legend }, series };
   }
 
-  /** One world's series: labelled "A · …"/"B · …" in Compare, B dashed and its points hollow. */
+  /** One world's series: labeled "A · …"/"B · …" in Compare, B dashed and its points hollow. */
   private seriesFor(def: ChartDef, c: Config, tag: string, b: boolean): uPlot.Series[] {
     const dash = b ? B_DASH : undefined;
     switch (def.kind) {

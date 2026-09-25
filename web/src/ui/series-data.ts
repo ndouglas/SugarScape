@@ -60,7 +60,7 @@ export function emptyTable(lines: number): LineData {
   return [[], ...Array.from({ length: lines }, () => [])] as LineData;
 }
 
-/** The wealth histogram `[binWidth, counts…]` as bars: bin centres and counts. */
+/** The wealth histogram `[binWidth, counts…]` as bars: bin centers and counts. */
 export function barsData(hist: Float64Array | null | undefined): LineData {
   if (!hist) return [[], []];
   const width = hist[0];

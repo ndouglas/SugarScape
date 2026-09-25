@@ -37,7 +37,7 @@ export interface Tools {
 /**
  * Tool picker; routes each grid's clicks/drags to the active tool on that grid's world (Decision 10).
  * Edit errors (e.g. an occupied site) are ignored. Display changes (the paint layer, the disease
- * colours) and the paint tool's goods follow `primary`, whose display Compare mirrors to B.
+ * colors) and the paint tool's goods follow `primary`, whose display Compare mirrors to B.
  */
 export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => void): Tools {
   let tool: Tool = 'inspect';

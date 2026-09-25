@@ -78,7 +78,7 @@ describe('worker pool', () => {
       runs.push(run);
       if (runs.length === 4) pool.cancel();
     });
-    expect(outcome).toBe('cancelled');
+    expect(outcome).toBe('canceled');
     expect(runs).toHaveLength(4);
     expect(workers.every((w) => w.terminated)).toBe(true);
   });

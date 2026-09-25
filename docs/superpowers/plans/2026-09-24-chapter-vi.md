@@ -43,11 +43,11 @@ These are binding; each is repeated in the task that implements it.
 4. **The friend rule** (Chapter III and notes 25–28). Each neighbor on the new list is met in that order. Already a friend: nothing happens (the stored distance is never rechecked, note 28). Fewer than five friends: it is added. Otherwise it replaces the friend with the largest stored distance if strictly closer; among equally far friends the earliest-added is replaced; ties keep existing friends. The newcomer joins the end, so the list stays in order of addition. The distance is the Hamming distance between the mover's tags (after its move, before K runs this turn) and the neighbor's tags at that moment. A friend who dies is dropped: lazily, when the list is full and a new neighbor is met (the only time a free slot matters), and `friend_edges` skips the dead — the same lists as dropping friends the moment they die, without scanning every agent on each death.
 5. **Culture toggled live.** Friends are maintained only while `culture.enabled` is true at the moment of the move. With culture off, a moving agent's friends are cleared and nothing is compared; `World::friend_edges()` is empty whenever culture is off. Turning culture on again (live, or by a schedule entry) starts from whatever lists survive: empty for every agent that moved while culture was off; a toggle off and on again while paused keeps them. Neighbor lists are recorded whatever the rules.
 6. **Edges.** `(from, to)` position pairs over living agents only, `from` in agent-id order: neighbors agent → each agent on its list (an edge follows the neighbor to its current site until the lister moves again; asymmetric by design, note 29); friends agent → friend; family parent → child (both living). Nothing is de-duplicated (the network is directed).
-7. **Lineage.** Founder = no parents (the initial population and any agent placed by the Place tool or by replacement); parent = has had a child (`children` non-empty; a dead child still counts, as in the book's coloring). Colors: founder non-parent `#5a5a5a` (the book's black; the grid background is always the dark `BACKGROUND`, so it is always drawn dark grey), founder parent `#ff4d4d`, born non-parent `#3dd66b`, born parent `#ffe04d` (the red/green/yellow of the credit view). The Lineage mode is available in every world (without sex everyone is a grey founder) and is never clamped.
+7. **Lineage.** Founder = no parents (the initial population and any agent placed by the Place tool or by replacement); parent = has had a child (`children` non-empty; a dead child still counts, as in the book's coloring). Colors: founder non-parent `#5a5a5a` (the book's black; the grid background is always the dark `BACKGROUND`, so it is always drawn dark gray), founder parent `#ff4d4d`, born non-parent `#3dd66b`, born parent `#ffe04d` (the red/green/yellow of the credit view). The Lineage mode is available in every world (without sex everyone is a gray founder) and is never clamped.
 8. **Age histogram.** `stats::age_histogram(world, bin)`: `(max_age.max + 1) / bin + 1` bins of width `bin` from 0, where `max_age.max` is the config's largest maximum lifetime. An agent dies at its first turn with age > its maximum, so it lives through the end-of-tick aging that makes it one older: the last bin reaches `max_age.max + 1`, and any older agent (a lowered maximum) is counted there too. The host asks for 5-tick bins (`AGE_BIN = 5`); WASM returns `[bin, count₀, …]`, the wealth histogram's shape, so the existing `barsData`/`histTable` draw it. Nobody alive: all zeros.
 9. **Tag histogram.** `stats::tag_histogram(world)`: for tag positions 0…L−1 (bit i is position i, as `Tags::to_bit_string` prints) the percentage of living agents with a 0 there; all zeros with nobody alive. Drawn at positions 1…L (the book numbers them from 1), y from 0 to 100.
 10. **Overlays on the wire.** `Overlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family'`, `OVERLAYS` in that order, and `noOverlays()` builds the all-off record (the three `Record<Overlay, boolean>` literals in tests and the two in the host and engine use it). `overlayAvailable(kind, config)`: disease needs disease, friends needs culture, family needs sex. `clampDisplay` turns an unavailable overlay off (as it already does for disease) and the display hides its checkbox. Networks travel as today: `wants.networks` from the engine's own wants (never a refresh trigger while paused), `Uint32Array` quadruples.
-11. **Drawing.** Neighbors: `--muted`, 1 px, alpha 0.7, with a filled arrowhead (4 px long, 4 px wide) whose tip stops half a cell short of the target's centre (outside its cell), drawn on the last segment `wrappedSegments` returns — the one that ends at the target — so a wrapped edge's marker is on the right side. Friends `--c1`, family `--accent`, 1.5 px, alpha 0.8, no marker. Edges crossing the torus edge are split exactly as the existing networks are. In Compare each grid draws its own world's networks (the display is already mirrored to B and B's host clamps it for B's rules).
+11. **Drawing.** Neighbors: `--muted`, 1 px, alpha 0.7, with a filled arrowhead (4 px long, 4 px wide) whose tip stops half a cell short of the target's center (outside its cell), drawn on the last segment `wrappedSegments` returns — the one that ends at the target — so a wrapped edge's marker is on the right side. Friends `--c1`, family `--accent`, 1.5 px, alpha 0.8, no marker. Edges crossing the torus edge are split exactly as the existing networks are. In Compare each grid draws its own world's networks (the display is already mirrored to B and B's host clamps it for B's rules).
 12. **Charts (age and tags).** Two charts join the top section after **Wealth distribution**: **Age histogram** (`kind: 'age'`, shown while `lifespan.enabled`, x "Age") and **Cultural tags (% zeros by position)** (`kind: 'tags'`, shown while `culture.enabled`, x "Tag position", y 0–100). One world: bars; Compare: one step outline per world (A solid, B dashed), exactly like the wealth histogram. They are distributions: fetched with the Lorenz curve through the same provider rule, now the pure `distributionsDue(dist, tick, now, 250)` + `distributionWants(config)` in `series-data.ts` (testable without uPlot); a histogram the world stopped sending (lifetimes or culture turned off) is cleared, not kept.
 13. **VI-2 / VI-3 setup (fixed, no search).** Both presets are built by one helper, `indecomposability(c, trade)`: 500 agents, Chapter III demography (`demography`: sex and lifespan on, lifetimes 60–100, fertility at its defaults 12–15 / 40–50 / 50–60), Chapter IV's traits (vision 1–10, metabolism 1–5 and endowment 25–50 for both sugar and spice, as `iv-1-spice`), spice on Chapter IV's mirrored map, and `trade.enabled = trade` — nothing else differs (a unit test pins it). No rule changes. (`demography` sets sugar's endowment to 50–100; the helper overrides it after, as `iv-18-foresight` does.)
 14. **The reproduction finding** (the spec's, recorded 2026-09-24). Every stated rule matches the book and Appendix B; with these settings `vi-3-trade` reproduces VI-3's curve on seeds 1–5 (a dip to 102–175 by t ≈ 100–150, recovery to 1.69–1.99 × 500, then fluctuation with minima near 700: 685–823 after t = 300), but `vi-2-no-trade` does the same (dip to 146–235, peak 1.75–1.89 ×, minima 721–736) and does **not** crash. Under these rules trade moves holdings toward each agent's metabolism ratio and does not raise fertility (the per-good fertility test). Task 8 measures and records the populations every 50 ticks in a code comment; both descriptions and the README say plainly that VI-3 reproduces the book's curve and that VI-2's crash is not reproduced under the book's stated rules, most likely because of unreported details of the original software.
@@ -811,7 +811,7 @@ impl World {
 In `render.rs`: after `use crate::network::CreditRole;` add `use crate::social::Lineage;`; after `pub const HEALTHY: …;` add
 ```rust
 /// Animation III-5's lineage colors. The book's founders are black; the grid's
-/// background is always dark, so they are drawn dark grey.
+/// background is always dark, so they are drawn dark gray.
 pub const FOUNDER: Rgb = [0x5a, 0x5a, 0x5a];
 pub const FOUNDER_PARENT: Rgb = [0xff, 0x4d, 0x4d];
 pub const BORN: Rgb = [0x3d, 0xd6, 0x6b];
@@ -1439,7 +1439,7 @@ git commit -m "Carry the Chapter VI networks, Lineage mode, histograms and wealt
 
 ### Task 6: The three network overlays and Lineage colors on the page
 
-*Mechanical (full code).* Browser (controller): on `vi-1-everything` run 30 ticks, tick **Neighbor network** (thin lines, one arrowhead per edge just outside the target's cell; edges crossing the torus edge are drawn as two halves, the arrowhead on the target's half), **Friends network** and **Family network**; on `ii-2-unit` only Neighbor network is offered (Friends and Family hidden), on `iii-6-culture` Friends appears, on `iii-2-sex` Family appears; turning culture off live on `iii-6-culture` unticks and hides Friends; Agents → **Lineage** on `iii-2-sex`: grey founders at t = 0, then red new parents, green children and later yellow born parents; in Compare (`iii-2-sex`, Compare, then culture on in B) each grid draws its own world's networks; paused with the overlays on, DevTools' network/worker messages stay quiet.
+*Mechanical (full code).* Browser (controller): on `vi-1-everything` run 30 ticks, tick **Neighbor network** (thin lines, one arrowhead per edge just outside the target's cell; edges crossing the torus edge are drawn as two halves, the arrowhead on the target's half), **Friends network** and **Family network**; on `ii-2-unit` only Neighbor network is offered (Friends and Family hidden), on `iii-6-culture` Friends appears, on `iii-2-sex` Family appears; turning culture off live on `iii-6-culture` unticks and hides Friends; Agents → **Lineage** on `iii-2-sex`: gray founders at t = 0, then red new parents, green children and later yellow born parents; in Compare (`iii-2-sex`, Compare, then culture on in B) each grid draws its own world's networks; paused with the overlays on, DevTools' network/worker messages stay quiet.
 
 **Files:**
 - Modify: `web/src/ui/display.ts`, `web/src/ui/overlay.ts`, `web/src/ui/grid-view.ts`
@@ -1498,7 +1498,7 @@ In `web/src/determinism.test.ts`, insert before `describe('sessions replay exact
 describe('Chapter VI views', () => {
   const everything = presets.find((p) => p.id === 'vi-1-everything')!;
   const create = () => Engine.create({ config: structuredClone(everything.config), seed: 1 }, { presets, transport: inline() });
-  /** crates/sugarscape-core/src/render.rs: FOUNDER (dark grey) and BORN (green). */
+  /** crates/sugarscape-core/src/render.rs: FOUNDER (dark gray) and BORN (green). */
   const has = (frame: Uint8ClampedArray, rgb: [number, number, number]) => {
     for (let i = 0; i < frame.length; i += 4) if (frame[i] === rgb[0] && frame[i + 1] === rgb[1] && frame[i + 2] === rgb[2]) return true;
     return false;
@@ -1663,7 +1663,7 @@ and replace the `overlay` helper and the returned element with (Decision 10):
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `(cd web && npm run build && npm test)`
-Expected: build succeeds; all tests PASS (the determinism test shows the lineage frame has grey founders and green children, and the watched run's fingerprint equals the plain one's).
+Expected: build succeeds; all tests PASS (the determinism test shows the lineage frame has gray founders and green children, and the watched run's fingerprint equals the plain one's).
 
 - [ ] **Step 5: Commit**
 
@@ -2073,7 +2073,7 @@ git commit -m "Chart the age, tag and per-good wealth histograms and total wealt
 
 ### Task 8: The VI-2 and VI-3 presets, measured and recorded
 
-*Needs judgement: the recorded populations, thresholds and descriptions come from the measurement (Decisions 13–15, 17).* Browser (controller): the presets menu lists `({G₁}, {M, S}) with spice, no trade — Animation VI-2` and `({G₁}, {M, S, T}) with spice — Animation VI-3` after `vi-1-everything`, with descriptions that say plainly VI-3 reproduces the book's curve and VI-2's crash is not reproduced; at Max, VI-3 seed 1 dips to about 130 by t ≈ 100, climbs to about 990 by t ≈ 250 and then fluctuates around 800 (VI-2 seed 1 looks much the same); `vi-1-everything`'s description lists the eighteen views and each is where it says.
+*Needs judgment: the recorded populations, thresholds and descriptions come from the measurement (Decisions 13–15, 17).* Browser (controller): the presets menu lists `({G₁}, {M, S}) with spice, no trade — Animation VI-2` and `({G₁}, {M, S, T}) with spice — Animation VI-3` after `vi-1-everything`, with descriptions that say plainly VI-3 reproduces the book's curve and VI-2's crash is not reproduced; at Max, VI-3 seed 1 dips to about 130 by t ≈ 100, climbs to about 990 by t ≈ 250 and then fluctuates around 800 (VI-2 seed 1 looks much the same); `vi-1-everything`'s description lists the eighteen views and each is where it says.
 
 **Files:**
 - Modify: `crates/sugarscape-core/src/presets.rs`, `crates/sugarscape-core/tests/golden.rs`, `crates/sugarscape-core/tests/book.rs`
@@ -2532,7 +2532,7 @@ git commit -m "Open VI-2 vs VI-3 in Compare from the presets menu" -m "Claude-Se
 
 ### Task 10: README, roadmap and full verification
 
-*Needs judgement (prose).* Browser (controller): the full pass below.
+*Needs judgment (prose).* Browser (controller): the full pass below.
 
 **Files:**
 - Modify: `README.md`, `docs/roadmap.md`
@@ -2558,7 +2558,7 @@ network** (Chapter II: each agent → the agents that were its von Neumann neigh
 move, with a direction marker; lists may be one-sided), **Friends network** (Chapter III: each agent →
 the up to five culturally closest neighbors it has met, never rechecked; with culture on) and
 **Family network** (parent → child; with sex on). The **Lineage** color mode shows Animation III-5's
-genealogy: founders grey (the book's black, lightened for the dark grid), founders with children red,
+genealogy: founders gray (the book's black, lightened for the dark grid), founders with children red,
 the born green, born parents yellow. Charts gain the **Age histogram** (5-tick bins, while lifetimes
 are finite) and **Cultural tags** (the percentage of agents with a 0 at each tag position, while
 culture is on). With two or more goods the Goods section adds each good's **Wealth distribution**

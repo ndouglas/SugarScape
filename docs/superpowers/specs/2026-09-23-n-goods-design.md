@@ -95,7 +95,7 @@ Existing series keep their names and meanings: `mean_wealth`, `gini`, `mean_meta
 - **Pollution group:** enable toggle plus a table — one row per pollutant, columns per good for production, consumption and a "devalues" checkbox; add/remove pollutant (1–4).
 - **Display:** the Landscape selector lists resource and capacity per good (by name) and each pollutant.
 - **Paint tool:** a good picker.
-- **Charts:** a Goods section (holdings, metabolism, traded — one line per good in its color) and a Pollution chart (one line per pollutant). Price and supply-and-demand charts are labelled with the pair ("sugar/spice").
+- **Charts:** a Goods section (holdings, metabolism, traded — one line per good in its color) and a Pollution chart (one line per pollutant). Price and supply-and-demand charts are labeled with the pair ("sugar/spice").
 - **Inspector:** per-good site and agent rows; loans show their good.
 - **Share links:** carry per-good painted maps only for goods whose map differs from the generated one; legacy links decode through the conversion.
 

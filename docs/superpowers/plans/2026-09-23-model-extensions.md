@@ -1136,7 +1136,7 @@ describe('book groups (mirroring config::default_groups and config::three_tribes
 });
 
 describe('groups table', () => {
-  it('moves the neighbouring end with a range end, so the ranges still tile', () => {
+  it('moves the neighboring end with a range end, so the ranges still tile', () => {
     const c = config(threeTribes(11));
     moveBoundary(c.culture.groups, 0, 'max', 5);
     expect(ranges(c)).toEqual([[0, 5], [6, 7], [8, 11]]);
@@ -1145,7 +1145,7 @@ describe('groups table', () => {
     expect(tiles(c)).toBe(true);
   });
 
-  it('adds a group by splitting the widest and removes one into its neighbour', () => {
+  it('adds a group by splitting the widest and removes one into its neighbor', () => {
     const c = config(defaultGroups(11));
     addGroup(c);
     expect(ranges(c)).toEqual([[6, 8], [0, 5], [9, 11]]);
@@ -1368,7 +1368,7 @@ function groupRow(config: Config, k: number, commit: Commit, syncs: Sync[]): HTM
     );
   const remove = h('button', {
     disabled: config.culture.groups.length <= 1,
-    title: 'Remove this group (its zero counts join a neighbour; rebuilds the world)',
+    title: 'Remove this group (its zero counts join a neighbor; rebuilds the world)',
     'aria-label': `Remove group ${k + 1}`,
     onclick: () => commit((c) => removeGroup(c, k), true),
   }, '×');
@@ -1852,7 +1852,7 @@ git commit -m "Choose the trade price rule in the Rules panel" -m "Claude-Sessio
 
 ### Task 7: The `bargaining-rules` sweep, measured
 
-*Needs judgement: ticks, seeds and the book test's tolerance come from measurement, by the rules below only.*
+*Needs judgment: ticks, seeds and the book test's tolerance come from measurement, by the rules below only.*
 
 **Files:**
 - Create: `sweeps/bargaining-rules.json`
@@ -2119,7 +2119,7 @@ Append inside `mod tests` in `crates/sugarscape-core/src/landscape.rs`:
         let (w, h) = (50usize, 40usize);
         for (seed, scale, octaves) in [(1, 10.0, 1), (2, 8.0, 2), (3, 20.0, 3)] {
             let at = |x: usize, y: usize| noise_at(seed, scale, octaves, (w, h), (x as f64, y as f64));
-            // The largest change between neighbouring cells: smoothstep's slope
+            // The largest change between neighboring cells: smoothstep's slope
             // is at most 1.5 and corner values differ by less than 1, so octave
             // o changes by at most 1.5 · period / cells per cell.
             let bound = |cells: usize| {
@@ -3576,7 +3576,7 @@ git commit -m "Show the credit hierarchy in a Credit tab" -m "Claude-Session: ht
 
 ### Task 16: Book-style tests
 
-*Needs judgement: the tolerance and the recorded numbers come from Task 7's measurement.*
+*Needs judgment: the tolerance and the recorded numbers come from Task 7's measurement.*
 
 **Files:**
 - Modify: `crates/sugarscape-core/tests/book.rs`

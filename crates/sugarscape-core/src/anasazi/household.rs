@@ -1,5 +1,5 @@
 //! A household (§1.1: five persons, one farm plot, one residence) and the
-//! documented rules that concern only its own corn: storage ageing and
+//! documented rules that concern only its own corn: storage aging and
 //! consumption (ODD p.4–5, §3.5), the expected harvest (§3.7) and the
 //! fission endowment (§3.10).
 

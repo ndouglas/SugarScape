@@ -31,7 +31,7 @@ pub const NEUTRAL: Rgb = [0x8a, 0x86, 0x7a];
 pub const SICK: Rgb = [0xff, 0x4d, 0x4d];
 pub const HEALTHY: Rgb = [0x3d, 0x7e, 0xff];
 /// Animation III-5's lineage colors. The book's founders are black; the grid's
-/// background is always dark, so they are drawn dark grey.
+/// background is always dark, so they are drawn dark gray.
 pub const FOUNDER: Rgb = [0x5a, 0x5a, 0x5a];
 pub const FOUNDER_PARENT: Rgb = [0xff, 0x4d, 0x4d];
 pub const BORN: Rgb = [0x3d, 0xd6, 0x6b];

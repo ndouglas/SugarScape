@@ -11,7 +11,7 @@ Move the playground's simulation off the main thread into a Web Worker, and keep
 ## Non-negotiable constraints
 
 - **No simulation change.** Golden and legacy tests stay unedited and green; the worker runs the same `Sim`.
-- **Same behaviour.** Every existing feature (rules, tools, painting, inspection, charts, share links, exports, disease, credit, groups, trails, Experiments) works as before; step-per-frame speeds keep their meaning and determinism.
+- **Same behavior.** Every existing feature (rules, tools, painting, inspection, charts, share links, exports, disease, credit, groups, trails, Experiments) works as before; step-per-frame speeds keep their meaning and determinism.
 - **Deploys as today:** no COOP/COEP headers, no SharedArrayBuffer.
 
 ## Architecture

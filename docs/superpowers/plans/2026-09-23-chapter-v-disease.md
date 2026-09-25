@@ -15,7 +15,7 @@
 - **Earlier runs are unchanged:** with disease off, every existing preset (milestone 1 and Chapter IV) must produce the same `World::fingerprint()` after 200 ticks (seed 1) as before this milestone (`tests/golden.rs`, Task 1). New RNG draws (disease list, immune genomes, initial infections, mutation, transmission choices) happen only when `disease.enabled`; new per-turn steps are skipped when off; `fingerprint()` hashes disease state only when disease is on. The metabolic fee is `0.0` while disease is off (`DiseaseRule::active_fee`), and `m + 0.0 == m` exactly, so effective metabolism is byte-identical to the old metabolism.
 - Determinism: all randomness through `World.rng`; iterate only `Vec`/`BTreeMap`/`BTreeSet`.
 - Lattice: `y = 0` is north; torus; four directions only.
-- Tick order: 1. apply scheduled changes, then **apply due outbreaks**. 2. For each agent in shuffled order: move (M or C) → metabolize (effective metabolism) → [credit income] → death check → S → K → T → L-borrow → **E (immune response, then transmission)**. 3. Settle due loans; growback; diffusion; replacement; ageing; stats.
+- Tick order: 1. apply scheduled changes, then **apply due outbreaks**. 2. For each agent in shuffled order: move (M or C) → metabolize (effective metabolism) → [credit income] → death check → S → K → T → L-borrow → **E (immune response, then transmission)**. 3. Settle due loans; growback; diffusion; replacement; aging; stats.
 - Bit strings print position 0 first (as culture tags do): `Bits::parse("10011").get(0) == true`.
 - JS seeds are `u32`; errors crossing into JS are JSON `[{field, message}]`.
 - Every commit message ends with a blank line and then:

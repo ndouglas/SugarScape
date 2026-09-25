@@ -10,7 +10,7 @@
 //! holdings of the loan's good and the remainder is re-lent on the loan's own
 //! terms (a default). Each loan carries its good and the duration and rate it
 //! was written on. A dead borrower's loans are the lender's loss; a dead
-//! lender's loans are cancelled unless inheritance (I) is on, when its living
+//! lender's loans are canceled unless inheritance (I) is on, when its living
 //! children split the claim (a child who is the borrower has its share
 //! forgiven).
 

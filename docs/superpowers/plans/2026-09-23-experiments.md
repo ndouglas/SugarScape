@@ -43,7 +43,7 @@ These are binding for this plan; each is also stated in the task that implements
 7. **Summary JSON** is `{ "kind": "scalar" | "timeseries", "rows": [...] }`. Scalar rows: `series, series_name, x, at, n, nan, mean, sd, min, max`; block rows: `series, series_name, t, n, mean, sd`. Every cell (and every block) gets a row even with `n = 0` (statistics NaN), so partial results chart with a stable shape. `aggregate` sorts runs by point first. With no `series` axis, the single line is named after the metric's statistics series (e.g. `population`).
 8. **`run_all(sweep, jobs, progress) -> Result<SweepResult, Vec<FieldError>>`** (the spec's signature had no error or progress): `progress(done, &point)` runs on the calling thread after each run, in completion order. `jobs = 1` runs on the calling thread without spawning (so it also works on wasm32); otherwise `std::thread::scope` workers pull indices from an `AtomicUsize` and send results over an `mpsc` channel. No rayon: a shared counter over ≤ 10 000 coarse runs needs nothing more.
 9. **`run_point(&Sweep, &Point) -> RunResult`** panics if the point's config is invalid; callers validate first (`points`, or `point` + `config_for`). Helpers beyond the spec: `Sweep::{from_json, series_count, point_count, series_name, check_shape, point}`, `measure`, `blocks`, `check_runs`, `SweepResult::{new, to_json}`.
-10. **`SweepResult.incomplete`** (written only when true) marks results with fewer runs than points (a cancelled browser sweep). `SweepResult::new` sorts runs and recomputes the summary. `to_json` is pretty JSON plus a trailing newline — the CLI's `--out`/stdout and the browser's download are the same function.
+10. **`SweepResult.incomplete`** (written only when true) marks results with fewer runs than points (a canceled browser sweep). `SweepResult::new` sorts runs and recomputes the summary. `to_json` is pretty JSON plus a trailing newline — the CLI's `--out`/stdout and the browser's download are the same function.
 11. **Built-in sweep files live at the repository root, `sweeps/<id>.json`**, embedded with `include_str!("../../../sweeps/<id>.json")`; `builtins()` lists `[fig-ii-5, fig-iv-6, fig-iv-10-11, n-goods-carrying-capacity]`.
 12. **Mean-trait axes.** "Mean vision m" and "mean metabolism m" are the uniform integer ranges `1..=(2m − 1)` (mean m).
 13. **`n-goods-carrying-capacity` sweeps 2–6 goods, not 1–6**: trade needs two goods (`validate`), so the trade line cannot have an x = 1 point. The goods are `n-4-peaks`'s four corner-peak goods, then `tea` at (25, 25) and `wool` at (25, 0), all with `n-4-peaks`'s traits (metabolism 1–2, endowment 25–50); each x value sets `goods` and `pollution.pollutants` (the book pollutant for n goods). With trade at x = 4 the config equals the `n-4-peaks` preset (tested).
@@ -1736,7 +1736,7 @@ git commit -m "Run sweeps on threads with results in point order" -m "Claude-Ses
 ---
 ### Task 5: Built-in sweeps, measured
 
-*Needs judgement: ticks, windows and seed counts come from measurement.*
+*Needs judgment: ticks, windows and seed counts come from measurement.*
 
 **Files:**
 - Create: `sweeps/fig-ii-5.json`, `sweeps/fig-iv-6.json`, `sweeps/fig-iv-10-11.json`, `sweeps/n-goods-carrying-capacity.json`
@@ -2856,7 +2856,7 @@ git commit -m "Expose sweep points, runs, aggregation and exports to WASM" -m "C
 - Consumes: the WASM export `run_point` (Task 8), `init` (the wasm-bindgen default export, as `engine.ts` uses it), `parseErrors` and `FieldError` from `web/src/types.ts`.
 - Produces:
   - `experiments/types.ts`: `AxisValue`, `Axis`, `ShorthandAxis`, `SweepBase`, `Metric`, `Sweep`, `Point`, `RunResult`, `ScalarRow`, `BlockRow`, `Summary`, `SweepResult`, `BuiltinSweep` (mirrors of the core's JSON).
-  - `experiments/pool.ts`: `interface PointRequest { spec: string; index: number }`, `type PointReply = { index; run: RunResult } | { index; errors: FieldError[] }`, `interface WorkerLike { onmessage; onerror; postMessage(message: unknown): void; terminate(): void }`, `function poolSize(hardwareConcurrency: number | undefined): number`, `type PoolOutcome = 'done' | 'cancelled'`, `class WorkerPool { constructor(size: number, create: () => WorkerLike); run(spec: string, count: number, onResult: (run: RunResult) => void): Promise<PoolOutcome>; cancel(): void }`.
+  - `experiments/pool.ts`: `interface PointRequest { spec: string; index: number }`, `type PointReply = { index; run: RunResult } | { index; errors: FieldError[] }`, `interface WorkerLike { onmessage; onerror; postMessage(message: unknown): void; terminate(): void }`, `function poolSize(hardwareConcurrency: number | undefined): number`, `type PoolOutcome = 'done' | 'canceled'`, `class WorkerPool { constructor(size: number, create: () => WorkerLike); run(spec: string, count: number, onResult: (run: RunResult) => void): Promise<PoolOutcome>; cancel(): void }`.
   - `experiments/worker.ts`: a module worker answering each `PointRequest` with a `PointReply`.
 
 - [ ] **Step 1: Types**
@@ -2988,7 +2988,7 @@ describe('worker pool', () => {
       runs.push(run);
       if (runs.length === 4) pool.cancel();
     });
-    expect(outcome).toBe('cancelled');
+    expect(outcome).toBe('canceled');
     expect(runs).toHaveLength(4);
     expect(workers.every((w) => w.terminated)).toBe(true);
   });
@@ -3026,16 +3026,16 @@ export function poolSize(hardwareConcurrency: number | undefined): number {
   return Math.max(1, (hardwareConcurrency ?? 2) - 1);
 }
 
-export type PoolOutcome = 'done' | 'cancelled';
+export type PoolOutcome = 'done' | 'canceled';
 
 /**
  * Runs a sweep's points on workers, one point per worker at a time, handing
  * out indices in order. Workers are created per run and terminated when it
- * ends, fails or is cancelled.
+ * ends, fails or is canceled.
  */
 export class WorkerPool {
   private workers: WorkerLike[] = [];
-  /** Ends the current run as cancelled; null when no run is active. */
+  /** Ends the current run as canceled; null when no run is active. */
   private stop: (() => void) | null = null;
 
   constructor(
@@ -3057,7 +3057,7 @@ export class WorkerPool {
         this.stop = null;
         settle();
       };
-      this.stop = () => end(() => resolve('cancelled'));
+      this.stop = () => end(() => resolve('canceled'));
       const feed = (w: WorkerLike) => {
         if (next < count) {
           const request: PointRequest = { spec, index: next++ };
@@ -3143,7 +3143,7 @@ git commit -m "Add the sweep worker pool and module worker" -m "Claude-Session: 
 
 ### Task 10: The Experiments view shell
 
-*Needs judgement (layout); the code is complete.*
+*Needs judgment (layout); the code is complete.*
 
 **Files:**
 - Create: `web/src/experiments/labels.ts`, `web/src/experiments/labels.test.ts`, `web/src/experiments/fixed-panel.ts`, `web/src/experiments/results-table.ts`, `web/src/experiments/view.ts`
@@ -3453,7 +3453,7 @@ export class ExperimentsView {
         dirty = true;
       });
       this.status.textContent =
-        outcome === 'done' ? `${count} runs done` : `Cancelled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
+        outcome === 'done' ? `${count} runs done` : `Canceled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
     } catch (e) {
       this.status.textContent = `The sweep failed: ${e instanceof Error ? e.message : String(e)}`;
     } finally {
@@ -4350,7 +4350,7 @@ git commit -m "Parse sweep value lists and convert between form and sweep" -m "C
 ---
 ### Task 13: The sweep form and "From current world"
 
-*Needs judgement (form layout); the code is complete.*
+*Needs judgment (form layout); the code is complete.*
 
 **Files:**
 - Create: `web/src/experiments/form-view.ts`
@@ -4684,7 +4684,7 @@ export class ExperimentsView {
         dirty = true;
       });
       this.status.textContent =
-        outcome === 'done' ? `${count} runs done` : `Cancelled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
+        outcome === 'done' ? `${count} runs done` : `Canceled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
     } catch (e) {
       this.status.textContent = `The sweep failed: ${e instanceof Error ? e.message : String(e)}`;
     } finally {
@@ -5114,7 +5114,7 @@ export class ExperimentsView {
         dirty = true;
       });
       this.status.textContent =
-        outcome === 'done' ? `${count} runs done` : `Cancelled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
+        outcome === 'done' ? `${count} runs done` : `Canceled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
     } catch (e) {
       this.status.textContent = `The sweep failed: ${e instanceof Error ? e.message : String(e)}`;
     } finally {
@@ -5247,7 +5247,7 @@ git commit -m "Export sweep results, share sweeps as #x= links and open result f
 
 ### Task 15: Book-style sweep tests
 
-*Needs judgement: the orderings are the book's claims; the recorded numbers come from measurement.*
+*Needs judgment: the orderings are the book's claims; the recorded numbers come from measurement.*
 
 **Files:**
 - Modify: `crates/sugarscape-core/tests/book.rs`
@@ -5493,5 +5493,5 @@ git commit -m "Document the CLI and the Experiments view" -m "Claude-Session: ht
 4. **The four WASM functions** do not cover the form's statistic list or the browser's CSV/result exports without re-implementing the core's writers in TypeScript (against "one implementation"); three more functions are added (Decision 16).
 5. **The validation-error format** `point 12 (x=3, series=1): …` does not say whether x/series are indices or `at` values, which field carries it, or which seed's point is named; resolved in Decision 3 (indices, field `points`, first point of the cell).
 6. **JSON cannot hold NaN**; NaN run values and statistics are written as `null` (Decision 5). The spec's runs CSV for time series (`one row per block with t`) does not give the column order; it is `series,x,seed,t,value` (Decision 6).
-7. **Browser-cancelled results** need a way to be "marked incomplete" in the exported file; `SweepResult` gains an `incomplete` flag written only when true (Decision 10).
+7. **Browser-canceled results** need a way to be "marked incomplete" in the exported file; `SweepResult` gains an `incomplete` flag written only when true (Decision 10).
 8. "Output files are byte-identical for any `--jobs`" holds for `--out` and the CSVs; the stderr progress lines are in completion order and are not.

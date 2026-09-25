@@ -326,7 +326,7 @@ describe('Engine', () => {
     const engine = await Engine.create({ config: withDisease, seed: 7 }, { presets, transport });
     engine.setDisplay({ colorMode: 'disease' });
     await settle();
-    // The reset turns disease off, so the host clamps the Disease colour mode to Tribe in its reply;
+    // The reset turns disease off, so the host clamps the Disease color mode to Tribe in its reply;
     // the user picks Age before that reply arrives.
     transport.after = (cmd) => {
       if (cmd.type === 'reset') engine.setDisplay({ colorMode: 'age' });

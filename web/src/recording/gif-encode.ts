@@ -6,7 +6,7 @@ export type GifRequest = { type: 'frame'; rgba: ArrayBuffer; width: number; heig
 /** GIF worker → page: a frame was encoded (`frames` so far), the finished file (transferred), or a failure. */
 export type GifReply = { type: 'ack'; frames: number } | { type: 'done'; bytes: ArrayBuffer } | { type: 'error'; message: string };
 
-/** An animated GIF built a frame at a time, each with its own 256-colour palette (Decision 14). */
+/** An animated GIF built a frame at a time, each with its own 256-color palette (Decision 14). */
 export class GifBuilder {
   frames = 0;
   private readonly gif = GIFEncoder();

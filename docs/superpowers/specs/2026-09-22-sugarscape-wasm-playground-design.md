@@ -70,7 +70,7 @@ Agents act **asynchronously in a freshly shuffled random order** each tick (the 
    5. **Culture (K)** — for each neighbor: pick a random tag index; set neighbor's tag to the agent's.
 3. **Environment** — growback (G_α or seasonal; G∞ ignores seasons), pollution diffusion every α_D ticks.
 4. **Replacement** — if R is on, replace each agent that died this tick with a fresh random agent.
-5. **Ageing** — age all agents by 1. Replacement runs before ageing, so replacements, like newborns, end their first tick at age 1.
+5. **Aging** — age all agents by 1. Replacement runs before aging, so replacements, like newborns, end their first tick at age 1.
 6. **Stats** — append this tick's statistics.
 
 ### Movement (M)

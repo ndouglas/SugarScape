@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * The Long House Valley data compiled into the WASM are GPL-2.0: serve their
- * notice, licence and citation beside the page as `anasazi-data/<file>`,
+ * notice, license and citation beside the page as `anasazi-data/<file>`,
  * copied from `data/anasazi/` (the Rules panel links the notice).
  */
 function anasaziNotice(): Plugin {

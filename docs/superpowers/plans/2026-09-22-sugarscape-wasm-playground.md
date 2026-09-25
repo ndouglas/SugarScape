@@ -2270,7 +2270,7 @@ In `world.rs`, replace `kill` and add `bequeath`:
     }
 ```
 
-In `World::step`, immediately **before** the ageing loop add:
+In `World::step`, immediately **before** the aging loop add:
 ```rust
         rules::replacement::apply(self);
 ```

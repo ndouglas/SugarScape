@@ -16,7 +16,7 @@ export function siteAngle(i: number, sites: number): number {
   return -Math.PI / 2 - (2 * Math.PI * i) / sites;
 }
 
-/** The site whose angle is nearest the direction (dx, dy) from the centre (canvas coordinates). */
+/** The site whose angle is nearest the direction (dx, dy) from the center (canvas coordinates). */
 export function siteAt(dx: number, dy: number, sites: number): number {
   const turns = (-Math.PI / 2 - Math.atan2(dy, dx)) / (2 * Math.PI);
   const i = Math.round((((turns % 1) + 1) % 1) * sites);

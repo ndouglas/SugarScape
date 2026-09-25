@@ -22,7 +22,7 @@ function groupRow(config: Config, k: number, commit: Commit, syncs: Sync[]): HTM
   };
   const remove = h('button', {
     disabled: config.culture.groups.length <= 1,
-    title: 'Remove this group (its zero counts join a neighbour; rebuilds the world)',
+    title: 'Remove this group (its zero counts join a neighbor; rebuilds the world)',
     'aria-label': `Remove group ${k + 1}`,
     onclick: () => commit((c) => removeGroup(c, k), true),
   }, '×');

@@ -5,7 +5,7 @@ Sources and how they are cited:
 - **JASSS**: Janssen, M.A. (2009), "Understanding Artificial Anasazi", *JASSS* 12(4) 13, https://jasss.soc.surrey.ac.uk/12/4/13.html. Cited as *JASSS ¶x.y*, *Table n* or *Fig n*.
 - **DATA**: my own analysis of the files in `aa/code/*.txt`, with the counts computed by me.
 - **LAYOUT**: facts about file layout, units and indexing taken from `lhv.nlogo` (NetLogo 5.0.3 save, "NetLogo 4.0.2" per the papers). Only data formats are described. Where the ODD/paper is ambiguous or silent, a single line says "ODD ambiguous; the replication does X". Nothing below translates the procedures.
-- Licensing: the archive is GPL-2.0 (`CITATION.cff`, `LICENSE`). The `.nlogo` Info tab also includes a BSD licence (Brookings/NuTech/Metascape) for the original Ascape model. The **data files** carry the archive's GPL-2.0, which is something to think about before bundling them in an MIT repo (see §7, D-1).
+- Licensing: the archive is GPL-2.0 (`CITATION.cff`, `LICENSE`). The `.nlogo` Info tab also includes a BSD license (Brookings/NuTech/Metascape) for the original Ascape model. The **data files** carry the archive's GPL-2.0, which is something to think about before bundling them in an MIT repo (see §7, D-1).
 
 ---
 
@@ -44,7 +44,7 @@ There are 7 named zones (ODD p.1; JASSS ¶2.5) plus an "Empty" code outside the 
 
 ### 1.5 Settlement
 - A settlement is a residence cell that may hold several households (ODD p.2 top). The simulated settlement is just a count per cell.
-- Historical settlements (`settlements.txt`) are **observational data only**. They are used to build the target household curve (§5.6), not as agents with behaviour.
+- Historical settlements (`settlements.txt`) are **observational data only**. They are used to build the target household curve (§5.6), not as agents with behavior.
 
 ---
 
@@ -112,7 +112,7 @@ From ODD p.3 Table 2. JASSS Table 2 (¶2.10) matches except where noted.
 
 Agents are updated in random order (ODD p.2 "Stochasticity").
 
-- ODD ambiguous on the ordering of ageing; the replication increments age **during step 1** (before the death check), not at step 9. The death test is `age > deathAge` after that increment.
+- ODD ambiguous on the ordering of aging; the replication increments age **during step 1** (before the death check), not at step 9. The death test is `age > deathAge` after that increment.
 - ODD ambiguous on which year's PDSI and water apply. In the replication, the yields for step Y use the PDSI of year Y. The water flags used for relocation in step Y are the ones computed at the end of step Y−1 (year 800 uses year 800's flags, computed at setup). In effect, water lags one year.
 - The replication runs the steps for years 800, 801, …, 1350 inclusive (551 steps) and stops after 1350.
 
@@ -141,7 +141,7 @@ PDSI classes (the JASSS ¶2.11 interval notation matches ODD p.4's IF rules exac
 - **H0 = BY · (1 + n(0, σahv))**, drawn independently per household per year, using the BY of the household's farm cell.
 - ODD silent on negative harvest (possible when n < −1; about 0.6% of draws at σ = 0.4). The replication does not clamp it. A negative H0 is stored in S0 and ends up *increasing* the unmet need. A spec should probably clamp H0 ≥ 0 and record that as a deviation.
 
-### 3.5 Storage ageing and consumption (ODD p.4–5; JASSS ¶2.13)
+### 3.5 Storage aging and consumption (ODD p.4–5; JASSS ¶2.13)
 Every year:
 1. Discard the unused `S-2`. Shift the slots: `S-2 ← S-1`, `S-1 ← S0`, `S0 ← H0`.
 2. Set NNR = 800. Consume **oldest first**: take from S-2, then S-1, then S0. Each slot is drawn down by min(slot, NNR), and NNR is reduced by the same amount.
@@ -197,7 +197,7 @@ Choice rules:
 - The child starts at **age 0**, "immediately with 3 children that require 160 kg corn per year" each. In practice it is an ordinary 5-person, 800 kg household (ODD p.2 "Interaction").
 - The child finds a farm with the farm rule, searching from the **parent's farm**, and a residence with the settlement rule. If no farm is available it does not establish.
 - ODD ambiguous; the replication only attempts fission when at least one candidate farm exists.
-- Replication artefact, not to copy: the child's actual endowment in the replication is fcs/(1−fcs) × three fresh U[2000,2400] draws, not fcs × the parent's stock. So corn is not conserved. Follow the ODD (see §7, A-12).
+- Replication artifact, not to copy: the child's actual endowment in the replication is fcs/(1−fcs) × three fresh U[2000,2400] draws, not fcs × the parent's stock. So corn is not conserved. Follow the ODD (see §7, A-12).
 
 ### 3.11 Water source update (ODD p.2 step 8; JASSS ¶2.9)
 - "Update water sources based on input data." The data and rules are in §5.5.
@@ -210,7 +210,7 @@ Choice rules:
 - Corn ~ U[2000, 2400] kg. ODD ambiguous (total or per slot); the replication fills **each of the three stock slots** with an independent U[2000,2400] draw, so the total is about 6.6 t. Two of those slots survive the first shift.
 - Soil quality per cell is drawn once (§3.3).
 - Positions: ODD silent. The replication gives each initial household a uniform-random reference cell, then applies the farm rule (nearest candidate farm to that cell) and the settlement rule.
-- ODD silent; the replication applies the initial farm eligibility with BY = y·q, **without Ha** (see §7, A-13). That artefact is not worth copying.
+- ODD silent; the replication applies the initial farm eligibility with BY = y·q, **without Ha** (see §7, A-13). That artifact is not worth copying.
 - Randomness: cell quality, initial ages, corn and positions, the yearly harvest noise, fission draws, update order and distance tie-breaks (ODD p.2 "Stochasticity").
 
 ---
@@ -329,7 +329,7 @@ All files are whitespace-separated numbers with no line structure. Read them as 
 
 ## 6. Outputs, observables and fit
 - Main output: the number of households each year, compared with the historical households (ODD p.5–6, Fig 2a–c; JASSS ¶3.2–3.5).
-- **Carrying capacity** each year: the number of cells with BY ≥ nutrition need, i.e. potential farm plots (JASSS ¶3.3, Fig 2 caption). It depends only on Ha, HV (via q) and the PDSI/zone data, not on agent behaviour (¶4.1, ¶4.5).
+- **Carrying capacity** each year: the number of cells with BY ≥ nutrition need, i.e. potential farm plots (JASSS ¶3.3, Fig 2 caption). It depends only on Ha, HV (via q) and the PDSI/zone data, not on agent behavior (¶4.1, ¶4.5).
   - ODD silent; the replication counts it with the previous step's BY (a one-year lag) and without the water/occupancy filters.
 - Fit metrics (JASSS ¶4.6), summed over years:
   - L1 = Σ|hist − sim|;
@@ -353,7 +353,7 @@ All files are whitespace-separated numbers with no line structure. Read them as 
 
 ### A. Model-rule ambiguities (the ODD/JASSS text vs the replication)
 - **A-1 Variance.** Harvest "variance" parameters are standard deviations. The ODD lists separate spatial and annual values; JASSS and the replication use one parameter (§2.1).
-- **A-2 Ageing position.** The schedule puts ageing at step 9, but the replication ages at step 1, so the death check sees the incremented age (§3.1). With deathAge 38 and `age > deathAge`, a household's last year is age 38.
+- **A-2 Aging position.** The schedule puts aging at step 9, but the replication ages at step 1, so the death check sees the incremented age (§3.1). With deathAge 38 and `age > deathAge`, a household's last year is age 38.
 - **A-3 Farm water criterion.** The ODD and JASSS ¶2.14 require farm candidates within 1 mile of water; the replication does not check this (§3.8). The spec must choose. The ODD text is the documented rule, but the published calibration was produced without it.
 - **A-4 `environment.txt`.** The ODD describes per-cell zone and water data. The actual file is per-year × 5-zone (PDSI, hydro, unknown) records for 382–1499 (§5.4). The hydro ≤ 0 residence filter appears in neither the ODD nor JASSS.
 - **A-5 Water rules not in data.** The alluvium/stream periods, the 8 fixed stream cells and the type semantics (1 and 4 ignored) come from the replication, not from any input file or the ODD (§5.5). "Water source" and "within 1 mile of water" are otherwise undefined.
@@ -370,7 +370,7 @@ All files are whitespace-separated numbers with no line structure. Read them as 
 - **A-16 Fission age bounds.** The ODD Table 2 "Max household age for fission 30" matches JASSS's "End of Fertility Age". The ODD text says only "older than the minimum". Axtell's paper says fission happens when "a daughter reaches the age of 15" (JASSS note 1), while the model uses 16 and strict >.
 - **A-17 Monthly vs annual.** Axtell 2002 describes monthly consumption (13.33 kg/person/month). The ODD and the replication are annual (JASSS note 1). 160 kg × 5 = 800 kg is equivalent over a year.
 - **A-18 Move vs stay when there is no farm.** A mover with no candidate farm leaves the valley even if it still has stock (ODD p.5 implied; replication).
-- **A-19 Occupancy bookkeeping (replication artefact).** The replication never releases a vacated residence cell when a household moves, and double-counts a new one. Once a cell has been settled, it is effectively excluded from farm candidacy for good (only a death decrements the count). The spec should implement correct counts and expect a slightly higher carrying capacity than the replication.
+- **A-19 Occupancy bookkeeping (replication artifact).** The replication never releases a vacated residence cell when a household moves, and double-counts a new one. Once a cell has been settled, it is effectively excluded from farm candidacy for good (only a death decrements the count). The spec should implement correct counts and expect a slightly higher carrying capacity than the replication.
 - **A-20 Ascape ambiguity.** JASSS ¶2.1 says it was "not clear which version of the original code was used", and that the replication was verified by eyeballing it against Ascape. The Axtell 2002 figures are therefore not an exact reproduction target. The ODD's Fig 2c and JASSS Fig 4 are the realistic targets.
 - **A-21 File name.** The ODD calls it `settlement.txt`; the actual file is `settlements.txt`. The ODD also says "800 and 1400" in its Purpose section, while the period is 800–1350 (Table 2).
 
@@ -388,6 +388,6 @@ None are strictly blocking. The ODD alone, however, is **insufficient to reprodu
 - the water-source rules (A-5);
 - the hydro residence filter (A-4);
 - the PDSI zone→series mapping and the Dunes/Uplands handling (A-6);
-- the grid↔metre conversion (A-8).
+- the grid↔meter conversion (A-8).
 
-Each of these is stated above as the replication's behaviour. The spec must adopt them as documented facts (or deliberate deviations) and validate against JASSS Fig 2 (defaults) and Fig 4 (calibrated), comparing shapes and levels.
+Each of these is stated above as the replication's behavior. The spec must adopt them as documented facts (or deliberate deviations) and validate against JASSS Fig 2 (defaults) and Fig 4 (calibrated), comparing shapes and levels.

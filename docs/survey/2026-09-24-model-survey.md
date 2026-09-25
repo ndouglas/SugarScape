@@ -52,7 +52,7 @@ widens the bound to 0.45 (median 0.479, IQR 0.473–0.482); and two presets are 
    t = 300 and "5 agents are exposed" (each is already immune with probability ≈ 4%, so all 5 are infected
    on about 80% of seeds, 16/20 observed).
 4. `n-4-peaks`: say the four peaks overlap near the wrapped corner, where agents can hold all four
-   without travelling.
+   without traveling.
 5. `iv-18-foresight`: foresight drifts down only weakly (4.98 → 4.41 by t = 1000; paired p = 0.027) and
    is above 5.0, the initial draw's mean, on 8/20 seeds at t = 2000. Soften "keeps a modest foresight".
 6. Loosen overstated figures: `iv-1-spice` (about half the agents shuttle), `v-1-rid` (the residue ranges
@@ -509,7 +509,7 @@ test's claim does not: at 20 seeds foresight isn't reliably selected down (`iv-1
   - Claim: old agents lend (a majority, ≥ 50%, of outstanding loans at t = 500 have a lender past its fertility end)
   - Measured: median 0.6602 (IQR 0.6157–0.6994); 20/20 in [0.5000, 1.0000]
 - **`iv-5.for-childbearing`**: Holds. *App*: presets.rs iv-5-credit description
-  - Claim: loans are for childbearing (≥ 80% of loans originated over t = 401..=500, rollovers included, go to borrowers of childbearing age: onset ≤ age ≤ end + 1, the +1 for ageing after credit within a tick)
+  - Claim: loans are for childbearing (≥ 80% of loans originated over t = 401..=500, rollovers included, go to borrowers of childbearing age: onset ≤ age ≤ end + 1, the +1 for aging after credit within a tick)
   - Measured: median 1.0000 (IQR 1.0000–1.0000); 20/20 in [0.8000, 1.0000]
 - **`iv-5.hierarchy`**: Holds. *App*: presets.rs iv-5-credit description; book, from memory: Animation IV-5 shows agents who are both lenders and borrowers
   - Claim: lender–borrower hierarchies emerge (at t = 500 some agent is both a lender and a borrower, i.e. a chain of at least two loans)

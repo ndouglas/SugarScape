@@ -38,7 +38,7 @@ network** (Chapter II: each agent → the agents that were its von Neumann neigh
 move, with a direction marker; lists may be one-sided), **Friends network** (Chapter III: each agent →
 the up to five culturally closest neighbors it has met, never rechecked; with culture on) and
 **Family network** (parent → child; with sex on). The **Lineage** color mode shows Animation III-5's
-genealogy: founders grey (the book's black, lightened for the dark grid), founders with children red,
+genealogy: founders gray (the book's black, lightened for the dark grid), founders with children red,
 the born green, born parents yellow. Charts gain the **Age histogram** (5-tick bins, while lifetimes
 are finite) and **Cultural tags** (the percentage of agents with a 0 at each tag position, while
 culture is on). With two or more goods the Goods section adds each good's **Wealth distribution**
@@ -122,7 +122,7 @@ Model extensions:
   object) is rejected, same as the goods and pollutant lists. Schedule subpaths instead, e.g.
   `culture.enabled` or a group's `name`/`color`; a whole group or its `zeros` range is
   reset-only too.
-- Above 400 loans, a Credit-tab node's colour (lender, borrower or both) reflects all of its
+- Above 400 loans, a Credit-tab node's color (lender, borrower or both) reflects all of its
   loans, including those left out of the drawing.
 - The book's VI-2 crash is not reproduced. M, S, T, death and the landscape were checked against the
   text and Appendix B and match; with Chapter IV's traits `vi-3-trade` follows the book's VI-3 curve
@@ -166,7 +166,7 @@ neighbors (over agents with neighbors).
 - `vi-6-schelling-50-residence`: 50 %: about 0.95.
 - `vi-7-schelling-mixed`: preferences 25–50 %: about 0.93, close to VI-6.
 
-Agents are drawn by **Colour**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
+Agents are drawn by **Color**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
 the charts are Segregation, Unsatisfied, Moves and Red share; Inspect shows an agent's color,
 preference, alike neighbors and residence. The built-in sweep `schelling-tipping` asks the book's
 "how little racism is enough to tip a society": with every agent wanting the same share, from 0 to

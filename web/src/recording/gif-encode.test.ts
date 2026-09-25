@@ -6,7 +6,7 @@ function countFrames(b: Uint8Array): number {
   let i = 6; // "GIF89a"
   const packed = b[i + 4];
   i += 7; // logical screen descriptor
-  if (packed & 0x80) i += 3 * 2 ** ((packed & 7) + 1); // global colour table
+  if (packed & 0x80) i += 3 * 2 ** ((packed & 7) + 1); // global color table
   const skipSubBlocks = () => {
     while (b[i] !== 0) i += b[i] + 1;
     i++;
@@ -21,7 +21,7 @@ function countFrames(b: Uint8Array): number {
     } else if (kind === 0x2c) {
       const flags = b[i + 8];
       i += 9; // image descriptor
-      if (flags & 0x80) i += 3 * 2 ** ((flags & 7) + 1); // local colour table
+      if (flags & 0x80) i += 3 * 2 ** ((flags & 7) + 1); // local color table
       i++; // LZW minimum code size
       skipSubBlocks();
       frames++;

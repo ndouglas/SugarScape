@@ -123,7 +123,7 @@ export function creditHeader(layout: CreditLayout): string {
 
 /**
  * x positions for a row of `count` nodes spread evenly over `panelWidth`,
- * widened (the graph then scrolls) so neighbours are at least `step` apart.
+ * widened (the graph then scrolls) so neighbors are at least `step` apart.
  */
 export function rowPositions(count: number, panelWidth: number, step: number): { width: number; xs: number[] } {
   const width = Math.max(panelWidth, (count + 1) * step);

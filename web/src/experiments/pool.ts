@@ -17,16 +17,16 @@ export function poolSize(hardwareConcurrency: number | undefined): number {
   return Math.max(1, (hardwareConcurrency ?? 2) - 1);
 }
 
-export type PoolOutcome = 'done' | 'cancelled';
+export type PoolOutcome = 'done' | 'canceled';
 
 /**
  * Runs a sweep's points on workers, one point per worker at a time, handing
  * out indices in order. Workers are created per run and terminated when it
- * ends, fails or is cancelled.
+ * ends, fails or is canceled.
  */
 export class WorkerPool {
   private workers: WorkerLike[] = [];
-  /** Ends the current run as cancelled; null when no run is active. */
+  /** Ends the current run as canceled; null when no run is active. */
   private stop: (() => void) | null = null;
 
   constructor(
@@ -48,7 +48,7 @@ export class WorkerPool {
         this.stop = null;
         settle();
       };
-      this.stop = () => end(() => resolve('cancelled'));
+      this.stop = () => end(() => resolve('canceled'));
       const feed = (w: WorkerLike) => {
         if (next < count) {
           const request: PointRequest = { spec, index: next++ };

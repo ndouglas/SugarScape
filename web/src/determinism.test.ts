@@ -55,7 +55,7 @@ describe('determinism through the engine', () => {
 describe('Chapter VI views', () => {
   const everything = presets.find((p) => p.id === 'vi-1-everything')!;
   const create = () => Engine.create({ config: structuredClone(everything.config), seed: 1 }, { presets, transport: inline() });
-  /** crates/sugarscape-core/src/render.rs: FOUNDER (dark grey) and BORN (green). */
+  /** crates/sugarscape-core/src/render.rs: FOUNDER (dark gray) and BORN (green). */
   const has = (frame: Uint8ClampedArray, rgb: [number, number, number]) => {
     for (let i = 0; i < frame.length; i += 4) if (frame[i] === rgb[0] && frame[i + 1] === rgb[1] && frame[i + 2] === rgb[2]) return true;
     return false;

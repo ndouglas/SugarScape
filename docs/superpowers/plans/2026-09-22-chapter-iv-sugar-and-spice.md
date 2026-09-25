@@ -15,7 +15,7 @@
 - **Milestone-1 invariance:** with `spice`, `trade`, `credit`, `foresight` off and an empty `schedule`, every existing preset must produce the same `World::fingerprint()` after 200 ticks (seed 1) as before this milestone (`tests/golden.rs`, Task 1). New RNG draws happen only when their rule is on; new per-turn steps are skipped when off; `fingerprint()` hashes new state only when its rule is on.
 - Determinism: all randomness through `World.rng`; iterate only `Vec`/`BTreeMap`.
 - Lattice: `y = 0` is north; torus; four directions only.
-- Rule order inside an agent's turn: move (M or C) → metabolize → [credit income] → death check → S → K → T → L-borrow. After all turns: settle due loans (whenever loans exist), then growback, diffusion, replacement, ageing, stats. Scheduled changes apply at the start of `step()` when `entry.tick == world.tick` (completed ticks).
+- Rule order inside an agent's turn: move (M or C) → metabolize → [credit income] → death check → S → K → T → L-borrow. After all turns: settle due loans (whenever loans exist), then growback, diffusion, replacement, aging, stats. Scheduled changes apply at the start of `step()` when `entry.tick == world.tick` (completed ticks).
 - JS seeds are `u32`; errors crossing into JS are JSON `[{field, message}]`.
 - Every commit message ends with a blank line and then `Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3`.
 - Rust tasks end with `cargo fmt --all` and `cargo clippy --all-targets -- -D warnings` clean and `cargo test -p sugarscape-core` passing (including `tests/golden.rs`). Web tasks end with `cd web && npm run build && npm test` passing.
@@ -1221,7 +1221,7 @@ pub(crate) fn trade_pair(world: &mut World, a: AgentId, b: AgentId) {
 //! specified by the lender"). At the due tick the borrower pays in full, or
 //! pays half its sugar and the remainder is re-lent on the same terms (a
 //! default). A dead borrower's loans are the lender's loss; a dead lender's
-//! loans are cancelled unless inheritance (I) is on, when its living children
+//! loans are canceled unless inheritance (I) is on, when its living children
 //! split the claim.
 
 use rand::seq::SliceRandom;

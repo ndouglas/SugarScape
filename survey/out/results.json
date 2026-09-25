@@ -719,7 +719,7 @@
     "item": "iv-5-credit",
     "source": "App",
     "citation": "presets.rs iv-5-credit description",
-    "text": "loans are for childbearing (≥ 80% of loans originated over t = 401..=500, rollovers included, go to borrowers of childbearing age: onset ≤ age ≤ end + 1, the +1 for ageing after credit within a tick)",
+    "text": "loans are for childbearing (≥ 80% of loans originated over t = 401..=500, rollovers included, go to borrowers of childbearing age: onset ≤ age ≤ end + 1, the +1 for aging after credit within a tick)",
     "verdict": "Holds",
     "measured": "median 1.0000 (IQR 1.0000–1.0000); 20/20 in [0.8000, 1.0000]",
     "detail": "",

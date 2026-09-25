@@ -563,7 +563,7 @@ impl AnasaziWorld {
         }
         // 8: water for the year just simulated, used from next year on.
         self.update_water();
-        // 9: ageing, unless it came first (A-2).
+        // 9: aging, unless it came first (A-2).
         if !self.config.quirks.age_before_death_check {
             for h in self.households.values_mut() {
                 h.age += 1;
@@ -1228,7 +1228,7 @@ mod tests {
             w.households.contains_key(&2),
             "38 is not older than 38 until it ages"
         );
-        assert_eq!(w.households[&2].age, 39, "ageing comes last");
+        assert_eq!(w.households[&2].age, 39, "aging comes last");
         w.step();
         assert!(!w.households.contains_key(&2), "39 > 38");
         assert!(w.households.contains_key(&3));

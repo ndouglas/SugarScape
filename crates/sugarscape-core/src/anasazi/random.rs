@@ -1,5 +1,5 @@
 //! Normal draws that are bit-for-bit the same on every platform. `f64::ln`
-//! calls the platform's maths library, which may differ in the last bit
+//! calls the platform's math library, which may differ in the last bit
 //! between a native build and wasm32; the harvest noise feeds every
 //! fingerprint, so the logarithm here uses only IEEE-exact arithmetic.
 

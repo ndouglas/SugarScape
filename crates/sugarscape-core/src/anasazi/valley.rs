@@ -246,7 +246,7 @@ fn tokens(name: &str, text: &str, record: usize, expected: usize) -> Result<Vec<
     Ok(values)
 }
 
-/// The cell of a point `n` metres north and `e` metres east in the data's
+/// The cell of a point `n` meters north and `e` meters east in the data's
 /// coordinates (§5.5's water conversion, A-8: 93.5 m per cell), or `None`
 /// off the grid.
 fn water_cell(n: f64, e: f64) -> Option<(u32, u32)> {
@@ -317,7 +317,7 @@ impl Valley {
             .0
             .iter()
             .filter_map(|r| {
-                // id, metres north, metres east, type, start, end
+                // id, meters north, meters east, type, start, end
                 water_cell(r[1], r[2]).map(|(x, y)| WaterPoint {
                     x,
                     y,

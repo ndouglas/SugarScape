@@ -430,7 +430,7 @@ pub fn claims() -> Vec<Claim> {
             item: "iv-5-credit",
             source: Source::App,
             citation: "presets.rs iv-5-credit description",
-            text: "loans are for childbearing (≥ 80% of loans originated over t = 401..=500, rollovers included, go to borrowers of childbearing age: onset ≤ age ≤ end + 1, the +1 for ageing after credit within a tick)",
+            text: "loans are for childbearing (≥ 80% of loans originated over t = 401..=500, rollovers included, go to borrowers of childbearing age: onset ≤ age ≤ end + 1, the +1 for aging after credit within a tick)",
             check: |s| {
                 let r = each_seed(&preset("iv-5-credit"), s, |mut w| {
                     w.run(400);

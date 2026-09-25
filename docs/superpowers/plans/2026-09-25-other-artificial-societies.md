@@ -17,7 +17,7 @@
 - **One engine path.** Host, engine, replay, Compare, sweeps and the CLI stay single-path over "a model with a config and named series"; no per-model copies of that machinery.
 - **Deterministic and portable.** Each model is a function of (config, seed); golden entries pin every new preset. The WASM build must give the same fingerprints as the native build: never sample a `usize` range from the RNG (wasm32's `usize` is 32 bits, so `gen_range(0..n_usize)` draws differently there) — sample `u32` (Decision 9).
 - **Performance:** Schelling's "every acceptable site" must stay cheap: a 50 × 50 / 2 000-agent tick well under 1 ms and a 200 × 200 / 32 000-agent tick under 10 ms in release (Decision 9 records the measurement that ruled out the naive scan).
-- **Copy (verbatim):** presets-menu optgroups **Sugarscape**, **Schelling**, **Ring World** (then the existing **Compare**); Schelling color modes **Colour**, **Satisfaction**, **Preference**; chart titles **Segregation**, **Unsatisfied**, **Moves**, **Red share**, **Flocks**, **Flock size**, **Distance moved**; preset ids `vi-4-schelling-25`, `vi-5-schelling-25-residence`, `vi-6-schelling-50-residence`, `vi-7-schelling-mixed`, `vi-8-ring-world`, `vi-9-ring-megagroup`; built-in sweep id `schelling-tipping`; series `unsatisfied`, `segregation`, `moves`, `red_share`, `quiet`, `population` (Schelling) and `flocks`, `mean_flock`, `largest_flock`, `mean_distance`, `population` (Ring World), in those orders.
+- **Copy (verbatim):** presets-menu optgroups **Sugarscape**, **Schelling**, **Ring World** (then the existing **Compare**); Schelling color modes **Color**, **Satisfaction**, **Preference**; chart titles **Segregation**, **Unsatisfied**, **Moves**, **Red share**, **Flocks**, **Flock size**, **Distance moved**; preset ids `vi-4-schelling-25`, `vi-5-schelling-25-residence`, `vi-6-schelling-50-residence`, `vi-7-schelling-mixed`, `vi-8-ring-world`, `vi-9-ring-megagroup`; built-in sweep id `schelling-tipping`; series `unsatisfied`, `segregation`, `moves`, `red_share`, `quiet`, `population` (Schelling) and `flocks`, `mean_flock`, `largest_flock`, `mean_distance`, `population` (Ring World), in those orders.
 - **Names are binding across tasks** (each task's Interfaces block repeats the ones it uses): core `model::{ModelKind, ModelConfig, Model, ModelWorld, wrong_model}`, `ModelKind::{ALL, as_str, schema}`, `ModelConfig::{kind, sugarscape, from_json, from_value, validate, with_path, series_names}`, `ModelWorld::{new, with_landscapes, kind, model, model_mut, sugarscape, sugarscape_mut, ring}`, `stats::{Series, Stats<S>}`, `export::history_csv`, `presets::{ModelPreset, catalog, find}`, `schema::{Param, ParamKind, Apply, Choice}`, `schelling::{SchellingConfig, FRange, Residence, SchellingWorld, SchellingSnapshot, SchellingMode, Resident, SERIES, satisfied, schema, presets}`, `ring::{RingConfig, Start, RingWorld, RingSnapshot, Walker, HISTORY, AGENT, SERIES, flocks, schema, presets}`; WASM `presets_json` (catalog), `model_schemas_json`, `Sim::{model_kind, ring_sugar, ring_agents}`; web `ModelKind`, `ModelConfig`, `SchellingConfig`, `RingConfig`, `FRange`, `Param`, `ModelStats`, `SchellingStats`, `RingStats`, `AnyInspection`, `SchellingInspection`, `RingInspection` (types.ts), `MODELS`, `MODEL_LABELS`, `modelOf`, `isSugar`, `isSugarView`, `isRingView`, `presetModel`, `presetGroups`, `COLOR_MODES` (models.ts), `Wants.ring`, `RingState`, `WorldSnapshot.ring` (protocol.ts), `SimLike.{ring_sugar, ring_agents}`, `Engine.{model, sugar, ring, schemas, applyModelConfig, resetModelWith}`, `EngineDeps.schemas`, `groupParams`, `paramEdit`, `paramInput`, `ParamInput` (schema-form.ts), `SchemaPanel`, `RulesOptions`, `RING_HISTORY`, `siteAngle`, `siteAt`, `sugarShade` (ring.ts), `RingView`, `MODEL_CHARTS`, `ModelChart`, `ChartLine`, `showsForModel` (series-data.ts), `percent` (ui/format.ts), `defaultForm(model)`, `worldViews`, `WorldView`.
 - Every commit message ends with a blank line and then `Claude-Session: https://claude.ai/code/session_01Kq7NyxbMrkNsPfAhnsVcK3`; the commit commands below pass it as a second `-m`. Stage **only** the files named in the task (`git add <paths>`, never `-A`/`.`).
 - Rust tasks finish with `cargo fmt --all && cargo clippy --all-targets -- -D warnings` before committing. Code in this plan is shown `rustfmt`-formatted where it matters; run `cargo fmt` anyway.
@@ -781,7 +781,7 @@ git commit -m "Add the model tag, the Model trait and ModelWorld over the sugars
 
 ### Task 2: The Schelling model in the core
 
-*Needs judgement: the implementation is given in full, but Step 7's golden values and Step 8's thresholds come from runs (Decisions 9, 17, 18); if a measurement differs, apply the fixed rules and record what you measured.* Browser (controller): nothing to check (not reachable from the page yet).
+*Needs judgment: the implementation is given in full, but Step 7's golden values and Step 8's thresholds come from runs (Decisions 9, 17, 18); if a measurement differs, apply the fixed rules and record what you measured.* Browser (controller): nothing to check (not reachable from the page yet).
 
 The book (Chapter VI, "A Variant of Schelling's Segregation Model"): "every agent is a member of one or another group (here either Red or Blue) and has a fixed preference for like-colored neighbors. Here, a preference is simply a minimum percentage … The agent computes the fraction of neighbors who are its own color; If this number is greater than or equal to its preference the agent is considered satisfied … we use the von Neumann neighborhood; he moves agents to the nearest satisfactory site, whereas our agents simply select an acceptable site at random; his landscape has a finite boundary, whereas ours is a torus. As a first example of this model we randomly populate a 50 × 50 lattice (2500 sites) with 2000 Red and Blue agents in approximately equal numbers … Each agent wishes at least 25 percent of its neighbors to be of its own color" (VI-4); "all agents are given a randomly assigned maximum lifetime between 80 and 100 time periods. Once an agent reaches its maximum age it is removed and the population is kept constant by replacing it with a new agent of random color. This agent is placed at a randomly selected position satisfying its preference for neighbors" (VI-5; note 11: "maximum lifetime" is "the point at which an agent decides to move to another landscape altogether; maximum residence duration is an equivalent notion"); "giving all agents the preference that at least 50 percent of their neighbors be of their own color" (VI-6); "we distribute agent preferences for like neighbors uniformly between 25 percent and 50 percent" (VI-7).
 
@@ -2593,7 +2593,7 @@ git commit -m "Add the book's Schelling segregation variant as a model kind" -m 
 
 ### Task 3: Ring World in the core
 
-*Needs judgement: the implementation is given in full; Step 6's golden values and Step 7's thresholds come from runs (Decisions 10, 17, 18).* Browser (controller): nothing to check (not reachable from the page yet).
+*Needs judgment: the implementation is given in full; Step 6's golden values and Step 7's thresholds come from runs (Decisions 10, 17, 18).* Browser (controller): nothing to check (not reachable from the page yet).
 
 The book (Chapter VI, "Ring World"): "the landscape is a circle of sugar sites … agents search only in the counterclockwise direction on the sugar ring. Each agent has vision randomly chosen from some range (15 to 30 in the animations here). Subject to these strictures, the agent rule is: Inspect all unoccupied sites within your vision, select the nearest site with maximum sugar, go there and eat the sugar. As for the ring, there are 150 sites. Initially, the sugar level is distributed randomly between values of 0 and 4, and 40 agents are distributed randomly around the ring. The rule for the sites is that sugar grows back at unit rate to a capacity value, which is 4 … There is no death, birth, combat, cultural transmission, disease, or trade; no attention is paid to sugar accumulation. Each agent moves once each time period; agents are called in random order" (VI-8); "What if we start with all agents in one megagroup (of 40)? Will they disaggregate into like-sized cliques? The answer is 'yes'" (VI-9).
 
@@ -4283,7 +4283,7 @@ git commit -m "Run any model in the WASM Sim; expose schemas and Ring World's st
 
 ### Task 5: `ModelConfig` on the page — types, protocol, host, engine and links
 
-*Needs judgement (full code given; the point is that every sugarscape path is unchanged — Decisions 6 and 7 — and that the sugarscape panels only ever read `Engine.sugar`).* Browser (controller): regression only — every existing scenario (presets, Reset, 🎲, rule edits, painting, overlays, share links incl. the legacy link, session files, Compare, Experiments, recording) works as before; the presets menu lists the six new presets (ungrouped until Task 6) — do not choose them yet.
+*Needs judgment (full code given; the point is that every sugarscape path is unchanged — Decisions 6 and 7 — and that the sugarscape panels only ever read `Engine.sugar`).* Browser (controller): regression only — every existing scenario (presets, Reset, 🎲, rule edits, painting, overlays, share links incl. the legacy link, session files, Compare, Experiments, recording) works as before; the presets menu lists the six new presets (ungrouped until Task 6) — do not choose them yet.
 
 **Files:**
 - Create: `web/src/models.ts`, `web/src/models.test.ts`
@@ -4332,7 +4332,7 @@ describe('modelOf', () => {
     expect([sugar, ring, schelling].map(isRingView)).toEqual([false, true, false]);
   });
 
-  it('offers each model its color modes, Schelling first Colour, Ring World none', () => {
+  it('offers each model its color modes, Schelling first Color, Ring World none', () => {
     expect(COLOR_MODES.sugarscape[0][0]).toBe('tribe');
     expect(COLOR_MODES.schelling.map(([m]) => m)).toEqual(['color', 'satisfaction', 'preference']);
     expect(COLOR_MODES.ring).toEqual([]);
@@ -4712,7 +4712,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['lineage', 'Lineage'],
   ],
   schelling: [
-    ['color', 'Colour'],
+    ['color', 'Color'],
     ['satisfaction', 'Satisfaction'],
     ['preference', 'Preference'],
   ],
@@ -5050,7 +5050,7 @@ git commit -m "Carry model-tagged configs through the page's engine, host and li
 
 ### Task 6: Presets by model, the schema-driven Rules panel and one model per Compare
 
-*Needs judgement (full code given; check the panel reads well for both models and that choosing another model while comparing leaves Compare cleanly).* Browser (controller), `/?debug`: the Rules tab's menu shows optgroups **Sugarscape** (the 29 presets), **Schelling** (4), **Ring World** (2), **Compare** (1); choosing `vi-4-schelling-25` rebuilds the world as Schelling (the grid shows Red/Blue agents — the Agents menu is fixed in Task 7, so the frame may use the clamped mode), the sugarscape sections disappear and **Setup** (Width, Height, Agents), **Preference** and **Residence** appear with "Changing these rebuilds the world."; changing Agents to 1000 rebuilds with 1000 agents and marks the preset **modified**; `vi-8-ring-world` shows Setup, Agents and Sugar ("These apply to the running world."); changing Growback to 2 while running does not reset t and a share link made afterwards replays it; `ii-2-unit` brings the sugarscape panel back unchanged; in Compare on `vi-4-schelling-25` (Compare button), B's "Rules for: B" menu lists only Schelling presets, and choosing `vi-8-ring-world` in A's menu leaves Compare keeping A and loads Ring World; a `#c=` link whose worlds are of different models shows the "could not be loaded" banner.
+*Needs judgment (full code given; check the panel reads well for both models and that choosing another model while comparing leaves Compare cleanly).* Browser (controller), `/?debug`: the Rules tab's menu shows optgroups **Sugarscape** (the 29 presets), **Schelling** (4), **Ring World** (2), **Compare** (1); choosing `vi-4-schelling-25` rebuilds the world as Schelling (the grid shows Red/Blue agents — the Agents menu is fixed in Task 7, so the frame may use the clamped mode), the sugarscape sections disappear and **Setup** (Width, Height, Agents), **Preference** and **Residence** appear with "Changing these rebuilds the world."; changing Agents to 1000 rebuilds with 1000 agents and marks the preset **modified**; `vi-8-ring-world` shows Setup, Agents and Sugar ("These apply to the running world."); changing Growback to 2 while running does not reset t and a share link made afterwards replays it; `ii-2-unit` brings the sugarscape panel back unchanged; in Compare on `vi-4-schelling-25` (Compare button), B's "Rules for: B" menu lists only Schelling presets, and choosing `vi-8-ring-world` in A's menu leaves Compare keeping A and loads Ring World; a `#c=` link whose worlds are of different models shows the "could not be loaded" banner.
 
 **Files:**
 - Create: `web/src/schema-form.ts`, `web/src/schema-form.test.ts`, `web/src/ui/schema-panel.ts`
@@ -5460,7 +5460,7 @@ git commit -m "Group presets by model, build other models' Rules panel from thei
 
 ### Task 7: Views — the display per model, the ring and its space–time diagram
 
-*Needs judgement (full code given; the ring view is DOM-only, so the controller's pass is its test beyond the geometry).* Browser (controller), `/?debug`: on `vi-4-schelling-25` the display shows only **Agents** with **Colour**, **Satisfaction** (satisfied agents dimmed, the unsatisfied yellow — none once quiet at t ≈ 3) and **Preference** (all one shade at 25 %; a spread on `vi-7-schelling-mixed`), no Landscape menu and no overlay checkboxes; on `vi-8-ring-world` the display row is empty, the ring (dark square, sugar band, blue agent dots, site 0 at the top) sits above the space–time diagram (rows filling from the bottom, blue diagonal streaks of moving flocks after a few hundred ticks at Max); clicking the ring selects a site (outlined in accent on the ring, boxed on the diagram's bottom row) and shows Inspect; `vi-9-ring-megagroup` starts as one blue bar that breaks up; back on `ii-2-unit` the display is exactly as before (Tribe mode, Landscape menu, overlays); in Compare on `vi-8-ring-world` B's figure has its own ring and diagram.
+*Needs judgment (full code given; the ring view is DOM-only, so the controller's pass is its test beyond the geometry).* Browser (controller), `/?debug`: on `vi-4-schelling-25` the display shows only **Agents** with **Color**, **Satisfaction** (satisfied agents dimmed, the unsatisfied yellow — none once quiet at t ≈ 3) and **Preference** (all one shade at 25 %; a spread on `vi-7-schelling-mixed`), no Landscape menu and no overlay checkboxes; on `vi-8-ring-world` the display row is empty, the ring (dark square, sugar band, blue agent dots, site 0 at the top) sits above the space–time diagram (rows filling from the bottom, blue diagonal streaks of moving flocks after a few hundred ticks at Max); clicking the ring selects a site (outlined in accent on the ring, boxed on the diagram's bottom row) and shows Inspect; `vi-9-ring-megagroup` starts as one blue bar that breaks up; back on `ii-2-unit` the display is exactly as before (Tribe mode, Landscape menu, overlays); in Compare on `vi-8-ring-world` B's figure has its own ring and diagram.
 
 **Files:**
 - Create: `web/src/ring.ts`, `web/src/ring.test.ts`, `web/src/ui/ring-view.ts`
@@ -5531,7 +5531,7 @@ export function siteAngle(i: number, sites: number): number {
   return -Math.PI / 2 - (2 * Math.PI * i) / sites;
 }
 
-/** The site whose angle is nearest the direction (dx, dy) from the centre (canvas coordinates). */
+/** The site whose angle is nearest the direction (dx, dy) from the center (canvas coordinates). */
 export function siteAt(dx: number, dy: number, sites: number): number {
   const turns = (-Math.PI / 2 - Math.atan2(dy, dx)) / (2 * Math.PI);
   const i = Math.round((((turns % 1) + 1) % 1) * sites);
@@ -6044,7 +6044,7 @@ git commit -m "Inspect Schelling and Ring World sites; offer only Inspect outsid
 
 ### Task 10: Experiments, the CLI and the `schelling-tipping` sweep
 
-*Needs judgement: the sweep's settings come from Decision 15's measurement; re-run it if the model changed.* Browser (controller): Experiments lists **Schelling tipping: segregation against preference** last among the built-ins; running it (65 runs, a second or two) draws a staircase from ≈ 0.50 at 0 to ≈ 0.93 at 0.55–0.6 matching the description's figures, and its exports work; with `vi-4-schelling-25` in the playground, **From current world** defaults to x `population` `1000:2400:200`, statistic `segregation` (final), 200 ticks, the path box suggests `width`, `height`, `population`, `preference.min`, … and never `model`, and the statistic menu lists Schelling's series; on `vi-8-ring-world` it defaults to x `agents`, statistic `flocks`; a sweep over a Schelling base shares as a `#x=` link and reopens; `ii-2-unit`'s defaults are unchanged.
+*Needs judgment: the sweep's settings come from Decision 15's measurement; re-run it if the model changed.* Browser (controller): Experiments lists **Schelling tipping: segregation against preference** last among the built-ins; running it (65 runs, a second or two) draws a staircase from ≈ 0.50 at 0 to ≈ 0.93 at 0.55–0.6 matching the description's figures, and its exports work; with `vi-4-schelling-25` in the playground, **From current world** defaults to x `population` `1000:2400:200`, statistic `segregation` (final), 200 ticks, the path box suggests `width`, `height`, `population`, `preference.min`, … and never `model`, and the statistic menu lists Schelling's series; on `vi-8-ring-world` it defaults to x `agents`, statistic `flocks`; a sweep over a Schelling base shares as a `#x=` link and reopens; `ii-2-unit`'s defaults are unchanged.
 
 **Files:**
 - Create: `sweeps/schelling-tipping.json`
@@ -6395,7 +6395,7 @@ git commit -m "Record Ring World's ring beside its space–time diagram" -m "Cla
 
 ### Task 12: README, roadmap and full verification
 
-*Needs judgement (prose).* Browser (controller): the full pass below.
+*Needs judgment (prose).* Browser (controller): the full pass below.
 
 **Files:**
 - Modify: `README.md`, `docs/roadmap.md`
@@ -6438,7 +6438,7 @@ In `README.md`:
   - `vi-6-schelling-50-residence`: 50 %: about 0.95.
   - `vi-7-schelling-mixed`: preferences 25–50 %: about 0.93, close to VI-6.
 
-  Agents are drawn by **Colour**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
+  Agents are drawn by **Color**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
   the charts are Segregation, Unsatisfied, Moves and Red share; Inspect shows an agent's color,
   preference, alike neighbors and residence. The built-in sweep `schelling-tipping` asks the book's
   "how little racism is enough to tip a society": with every agent wanting the same share, from 0 to

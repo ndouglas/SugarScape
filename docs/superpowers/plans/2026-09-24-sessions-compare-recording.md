@@ -47,10 +47,10 @@ These are binding; each is repeated in the task that implements it.
 8. **Compare engines.** A stays the page's `Engine` object for the whole time (every panel is bound to it); B is a second `Engine` from `Engine.create(state)` with its own worker. "Keep A" calls `b.close()`. "Keep B" calls `a.takeWorld(b)`: with both quiet, A closes its own transport, adopts B's transport (rebinding `onFatal`/`onPost`) and copies B's state (seed, configs, preset, counters, last snapshot, frames, charts cache, selection, follow/trail, overlays, edited maps, origin, `replayLeft`, display), marks B dead, then emits `'reset'`, `'follow'`, `'display'`, `'replay'`, `'select'` (if something is selected) and `'snapshot'` so every panel redraws from B's world.
 9. **Lockstep.** In Compare neither engine runs itself (`running` stays false). `Lockstep.pump(now)` (called by the frame loop instead of `engine.pump`) sends `advance(n)` to both and waits for both (`Promise.all`) before the next pair; paused, it calls both engines' `pump` so panels still refresh. `n` = the speed for 1×…100×; at Max `AdaptiveBatch`: start at 1, double when the pair took ≤ `FAST_MS` (25 ms), halve when > `SLOW_MS` (40 ms), clamp to [1, `MAX_BATCH` = 10 000]. Step and Reset (both worlds `replay()`) run exclusively after the pair in flight. A `'reset'` event the coordinator did not cause (🎲, a preset or reset-requiring change on one world) triggers `realign`: after the pair in flight, every world whose tick is not 0 replays (up to three rounds); a coordinator started with unequal ticks realigns at once. It emits `'run'` and `'tick'` (after each pair and each rewind). Entering Compare pauses A and holds the toolbar until B exists; if A's log is full, Compare does not start (a notice explains why). B is built by `copyWorld(session, T, create, progress)`: A's session with its log truncated to ticks ≤ T (A's pending entries beyond T are not copied, as specified), then advanced to T in `AdaptiveBatch`-sized requests with the progress line "Copying A… t / T".
 10. **Compare UI.** `#grids` holds figure A (header + `#grid`) and figure B. Each header: the world's label, `seed <n>`, 🎲 (rebuilds that world with a random seed; the other rewinds), and that world's follow and replay chips (the toolbar's chips, seed box and 🎲 hide in Compare; Play/Step/speed/Reset drive the `Lockstep`; the readout shows `t = T · A n · B m agents`). One display for both worlds: A's display controls act on A and are mirrored to B on every A `'display'` event. Rules, Inspect and Credit are separate panel instances per world behind `WorldSlot`s: Rules shows the "Rules for: A | B" switch; Inspect and Credit show the world last clicked (pointerdown on its grid, or a Credit/Inspect link in its panel) under a "World A"/"World B" label. Tools route each grid's clicks to that grid's world (`Tools.attach`); the disease picker lists, and image import writes to, the focused world; the paint tool's good list and display changes use A. The Credit tab shows while either world has credit on. Switching to Experiments pauses the lockstep.
-11. **Charts for two worlds.** `ChartsPanel` becomes table-driven (one `CHARTS` list of chart definitions whose lines are functions of a config) and draws `worlds` = `[A]` or `[A, B]` (`setCompare(b)`). It registers one wants provider and its listeners per world (B's removed on leave) and keeps per-world distribution state. Each plot's series are A's then B's (B dashed `[6, 4]`, ±SD `[2, 3]`, hollow points), labelled "A · <series>" / "B · <series>" (legends always shown in Compare). Multi-world data use `overlayData(tables)`: the sorted union of the tables' x values, each line `undefined` where its table has no point (uPlot draws through `undefined`) and `null` where the data has a gap (uPlot breaks the line) — so two worlds' different downsampled ticks and price grids share one axis. The wealth histogram in Compare is two step outlines (`histTable` = bin edges → counts, `paths.stepped({ align: 1 })`); single-world keeps bars. A chart (and its section) shows when it would show for either world. Plots are rebuilt only when the lines signature of any world changes or Compare starts/ends (the same effect as 7a's goods/group rebuilds).
+11. **Charts for two worlds.** `ChartsPanel` becomes table-driven (one `CHARTS` list of chart definitions whose lines are functions of a config) and draws `worlds` = `[A]` or `[A, B]` (`setCompare(b)`). It registers one wants provider and its listeners per world (B's removed on leave) and keeps per-world distribution state. Each plot's series are A's then B's (B dashed `[6, 4]`, ±SD `[2, 3]`, hollow points), labeled "A · <series>" / "B · <series>" (legends always shown in Compare). Multi-world data use `overlayData(tables)`: the sorted union of the tables' x values, each line `undefined` where its table has no point (uPlot draws through `undefined`) and `null` where the data has a gap (uPlot breaks the line) — so two worlds' different downsampled ticks and price grids share one axis. The wealth histogram in Compare is two step outlines (`histTable` = bin edges → counts, `paths.stepped({ align: 1 })`); single-world keeps bars. A chart (and its section) shows when it would show for either world. Plots are rebuilt only when the lines signature of any world changes or Compare starts/ends (the same effect as 7a's goods/group rebuilds).
 12. **Exports in Compare.** Statistics (CSV), Agents (CSV) and Grid (PNG) become rows "Statistics (CSV) [A] [B]" (the menu is rebuilt each time it opens); file stems gain `-A`/`-B`. Charts (PNG) exports the overlaid canvases. Session (JSON) exports the comparison. Opening a session file while comparing first leaves Compare keeping A.
-13. **Recording frames.** `frameLayout(grids)` places the grids side by side (4 px gap), top-aligned, at `scale` = clamp(floor((1080 − gaps) / Σwidth), floor(1080 / max height)) to [1, 8] px per cell. The recording canvas keeps the size computed at start; a later layout of a different size (a grid resized by a reset) is scaled to fit, centred. Each grid's canvas **as drawn** (overlays, trail, selection) is copied with `imageSmoothingEnabled = false`; Compare draws "A"/"B" tags; the stamp draws `t = <tick>` bottom-left. A frame is captured once per displayed snapshot: in single mode after a frame loop draw that followed an engine `'snapshot'`; in Compare after each lockstep pair (`'tick'`). Recording follows the run state (the controls' `'run'` event and a 500 ms timer call `sync()`); a reset just continues. The first frame is captured when recording starts, so the file is never empty.
-14. **WebM and GIF.** WebM: `captureStream(0)`, `track.requestFrame()` per captured frame, `MediaRecorder` with the first supported MIME of the spec's list (extension `webm`, or `mp4` for `video/mp4`), `start(1000)`, `pause()`/`resume()` with the world; `webmSupport()` null disables the WebM item. GIF: frames sampled on *recorded* time (a `Stopwatch` that excludes pauses) at `1000/15 − 2` ms spacing (the 2 ms absorbs 60 Hz jitter); each frame is held until the next is taken so its delay is the recorded time between them (`gifDelay` rounds to 10 ms, minimum 20 ms; the last frame gets 1000/15); frames are `getImageData` RGBA buffers transferred to `gif-worker.ts`, which runs `GifBuilder` (`quantize` 256 colours + `applyPalette` + `writeFrame` with a per-frame palette) and acknowledges each frame; while 3 frames are unacknowledged capture skips (bounded memory; the next frame's delay spans the gap); at 900 frames recording stops with a notice; stopping shows "Finishing GIF… k / n" until the worker returns the file. Names: `<base>-t<from>-t<to>.<ext>` with base `sugarscape-<preset|custom>-seed<seed>` (Compare: `sugarscape-compare-seed<a>-vs-seed<b>`). The ● Record control sits in the toolbar's end group, before Share.
+13. **Recording frames.** `frameLayout(grids)` places the grids side by side (4 px gap), top-aligned, at `scale` = clamp(floor((1080 − gaps) / Σwidth), floor(1080 / max height)) to [1, 8] px per cell. The recording canvas keeps the size computed at start; a later layout of a different size (a grid resized by a reset) is scaled to fit, centered. Each grid's canvas **as drawn** (overlays, trail, selection) is copied with `imageSmoothingEnabled = false`; Compare draws "A"/"B" tags; the stamp draws `t = <tick>` bottom-left. A frame is captured once per displayed snapshot: in single mode after a frame loop draw that followed an engine `'snapshot'`; in Compare after each lockstep pair (`'tick'`). Recording follows the run state (the controls' `'run'` event and a 500 ms timer call `sync()`); a reset just continues. The first frame is captured when recording starts, so the file is never empty.
+14. **WebM and GIF.** WebM: `captureStream(0)`, `track.requestFrame()` per captured frame, `MediaRecorder` with the first supported MIME of the spec's list (extension `webm`, or `mp4` for `video/mp4`), `start(1000)`, `pause()`/`resume()` with the world; `webmSupport()` null disables the WebM item. GIF: frames sampled on *recorded* time (a `Stopwatch` that excludes pauses) at `1000/15 − 2` ms spacing (the 2 ms absorbs 60 Hz jitter); each frame is held until the next is taken so its delay is the recorded time between them (`gifDelay` rounds to 10 ms, minimum 20 ms; the last frame gets 1000/15); frames are `getImageData` RGBA buffers transferred to `gif-worker.ts`, which runs `GifBuilder` (`quantize` 256 colors + `applyPalette` + `writeFrame` with a per-frame palette) and acknowledges each frame; while 3 frames are unacknowledged capture skips (bounded memory; the next frame's delay spans the gap); at 900 frames recording stops with a notice; stopping shows "Finishing GIF… k / n" until the worker returns the file. Names: `<base>-t<from>-t<to>.<ext>` with base `sugarscape-<preset|custom>-seed<seed>` (Compare: `sugarscape-compare-seed<a>-vs-seed<b>`). The ● Record control sits in the toolbar's end group, before Share.
 15. **`gifenc` typing.** The package ships no types: `web/src/gifenc.d.ts` declares the three functions used (`GIFEncoder`, `quantize`, `applyPalette`). Vitest imports it (verified: named imports resolve through Vitest's CJS interop) and Vite bundles it into the ES worker (verified).
 16. **Determinism tests** run in Vitest with the real WASM exactly like 7a's (`initSync` + `node:fs`), on `v-2-endemic` (so infections and vaccinations are real edits), over `InlineTransport`, including a Max run (real timers).
 
@@ -88,7 +88,7 @@ README.md, docs/roadmap.md               MOD  (14)
 ---
 ### Task 1: The edit log and replay in the host
 
-*Mechanical (full code).* Browser: nothing to check (the engine does not ask for sessions yet; behaviour is unchanged).
+*Mechanical (full code).* Browser: nothing to check (the engine does not ask for sessions yet; behavior is unchanged).
 
 **Files:**
 - Modify: `web/src/protocol.ts`
@@ -1010,7 +1010,7 @@ git commit -m "Carry the edit log in share links; add compare links and session 
 
 ### Task 3: Sessions in the engine
 
-*Needs judgement (full code given; the point is which rebuilds keep the setup and which start a new log — Decision 4).* Browser (controller): regression only — Reset, 🎲, a preset change and a reset-requiring rule change still rebuild as before (the toolbar does not call `replay()` until Task 5); every existing share link still opens.
+*Needs judgment (full code given; the point is which rebuilds keep the setup and which start a new log — Decision 4).* Browser (controller): regression only — Reset, 🎲, a preset change and a reset-requiring rule change still rebuild as before (the toolbar does not call `replay()` until Task 5); every existing share link still opens.
 
 **Files:**
 - Modify: `web/src/engine.ts`
@@ -1452,7 +1452,7 @@ git commit -m "Prove sessions replay exactly through a share link, at mixed spee
 ---
 ### Task 5: Replay in the page — chip, fork notice, replaying Reset, Share menu and session files
 
-*Needs judgement (full code given; check the Share flow and notices read well).* Browser (controller), `/?debug`:
+*Needs judgment (full code given; check the Share flow and notices read well).* Browser (controller), `/?debug`:
 - On `ii-2-unit`: paint (drag), place, erase, a live rule change (e.g. growback rate), each at a different tick while playing at 5× → Share → **Copy link** → open the copied URL in a new tab: the toolbar shows "Replaying · N edits left ✕" and counts down while playing; once it disappears, pause and step both tabs to the same tick: `await window.sugarscape.engine.fingerprint()` is equal in both.
 - In the replaying tab, paint before the chip reaches 0: notice "Replay ended — your edit starts a new branch", the chip disappears. Reload and instead click the chip's ✕: the chip disappears, the world stays as it is.
 - Reset with the seed box unchanged: the world rewinds to t = 0 and the chip reappears with the full count; type another seed + Reset, 🎲, a preset change, a reset-requiring change (e.g. Width): no chip.
@@ -2390,7 +2390,7 @@ function countFrames(b: Uint8Array): number {
   let i = 6; // "GIF89a"
   const packed = b[i + 4];
   i += 7; // logical screen descriptor
-  if (packed & 0x80) i += 3 * 2 ** ((packed & 7) + 1); // global colour table
+  if (packed & 0x80) i += 3 * 2 ** ((packed & 7) + 1); // global color table
   const skipSubBlocks = () => {
     while (b[i] !== 0) i += b[i] + 1;
     i++;
@@ -2405,7 +2405,7 @@ function countFrames(b: Uint8Array): number {
     } else if (kind === 0x2c) {
       const flags = b[i + 8];
       i += 9; // image descriptor
-      if (flags & 0x80) i += 3 * 2 ** ((flags & 7) + 1); // local colour table
+      if (flags & 0x80) i += 3 * 2 ** ((flags & 7) + 1); // local color table
       i++; // LZW minimum code size
       skipSubBlocks();
       frames++;
@@ -2449,7 +2449,7 @@ export type GifRequest = { type: 'frame'; rgba: ArrayBuffer; width: number; heig
 /** GIF worker → page: a frame was encoded (`frames` so far), or the finished file (transferred). */
 export type GifReply = { type: 'ack'; frames: number } | { type: 'done'; bytes: ArrayBuffer };
 
-/** An animated GIF built a frame at a time, each with its own 256-colour palette (Decision 14). */
+/** An animated GIF built a frame at a time, each with its own 256-color palette (Decision 14). */
 export class GifBuilder {
   frames = 0;
   private readonly gif = GIFEncoder();
@@ -2511,7 +2511,7 @@ git commit -m "Add a GIF encoder worker on gifenc" -m "Claude-Session: https://c
 
 ### Task 8: Recording the grid — WebM and GIF, and the ● Record control
 
-*Needs judgement (full code given; the recorder is DOM-only, so the controller's browser pass is its test).* Browser (controller), on `ii-2-unit` at 5×:
+*Needs judgment (full code given; the recorder is DOM-only, so the controller's browser pass is its test).* Browser (controller), on `ii-2-unit` at 5×:
 - ● Record → WebM (stamp on): the button becomes "■ 0:00" and counts; pause the world → the clock stops; play → it continues; Reset during the recording → it continues; click ■ → downloads `sugarscape-ii-2-unit-seed<s>-t<from>-t<to>.webm` (or `.mp4`), non-empty, type `video/webm` (MIME from `MediaRecorder.isTypeSupported`); it plays, with `t = <tick>` bottom-left; with the stamp off, no text.
 - ● Record → GIF at **Max** for 10 s: a `PerformanceObserver({ type: 'longtask', buffered: true })` records no main-thread task over 50 ms; ■ shows "Finishing GIF… k / n" then downloads `….gif` starting `GIF89a` whose frame count is about 15 per recorded second (parse or open it).
 - A GIF left recording at 1× for over 60 s stops by itself at 900 frames with the notice "The GIF reached 900 frames, so recording stopped." and downloads.
@@ -2956,7 +2956,7 @@ git commit -m "Record the grid as WebM or GIF" -m "Claude-Session: https://claud
 ---
 ### Task 9: The lockstep coordinator, B's copy, and handing a world between engines
 
-*Needs judgement (full code given; the point is that ticks stay equal through steps, adaptive Max, Reset and one world rebuilding — Decision 9 — and that "Keep B" moves a live world — Decision 8).* Browser: nothing to check (nothing in the page uses it until Task 10).
+*Needs judgment (full code given; the point is that ticks stay equal through steps, adaptive Max, Reset and one world rebuilding — Decision 9 — and that "Keep B" moves a live world — Decision 8).* Browser: nothing to check (nothing in the page uses it until Task 10).
 
 **Files:**
 - Create: `web/src/compare/lockstep.ts`
@@ -3451,7 +3451,7 @@ git commit -m "Add the lockstep coordinator, B's copy and handing a world betwee
 
 ### Task 10: Compare mode — toggle, B's copy, grid headers, lockstep toolbar, Keep A / Keep B
 
-*Needs judgement (full code given; watch the order of teardown in `leave` and that A stays paused while B is copied).* In this task B's grid does not take tool clicks yet, and Rules/Inspect/Credit/Charts still show A (Tasks 11–12). Browser (controller), `/?debug`:
+*Needs judgment (full code given; watch the order of teardown in `leave` and that A stays paused while B is copied).* In this task B's grid does not take tool clicks yet, and Rules/Inspect/Credit/Charts still show A (Tasks 11–12). Browser (controller), `/?debug`:
 - On `ii-2-unit`, play to t ≈ 300 with a paint and a placed agent along the way; click **Compare**: A pauses, the toolbar's run controls are disabled, "Copying A… t / 300" counts up in B's place, then B's grid appears identical to A's; `await sugarscape.compare().b.fingerprint() === await sugarscape.engine.fingerprint()`.
 - Each grid has a header "A · seed n · 🎲" / "B · seed n · 🎲"; the toolbar's seed box, 🎲 and chips are hidden; the readout reads `t = T · A n · B m agents`.
 - Play at 5×, 100× and Max: both ticks stay equal (readout) and both grids animate; at Max the readout climbs fast and no long task > 50 ms (PerformanceObserver); Pause and Step (Step advances both by 1).
@@ -4077,7 +4077,7 @@ git commit -m "Add Compare: B copied from A, stepped in lockstep, with Keep A / 
 ---
 ### Task 11: Editing in Compare — Rules for A | B, per-world Inspect and Credit, tools per grid
 
-*Needs judgement (full code given; the tools rewrite must keep every single-world behaviour).* Browser (controller), `/?debug`:
+*Needs judgment (full code given; the tools rewrite must keep every single-world behavior).* Browser (controller), `/?debug`:
 - Single mode first (regression): every tool on `ii-2-unit`, `v-2-endemic` (Infect/Vaccinate picker fills and grows, also paused) and `n-3-trade` (paint good picker, image import); Inspect, Follow, Credit tab on `iv-5-credit` — all as before; the Rules tab shows no switch and Inspect no label.
 - In Compare on `v-2-endemic`: the Rules tab shows "Rules for: A | B"; with B selected, a live change (growback rate) applies to B only and the worlds diverge (fingerprints differ) while ticks stay equal; a reset-requiring change on B (Width) rebuilds B and rewinds A to t = 0; a preset change on B does the same.
 - Paint on B's grid changes only B; Place/Erase/Infect/Vaccinate on each grid edit that grid's world; Inspect on B's grid shows "World B" and B's site; clicking A's grid switches Inspect back to "World A"; the disease picker lists the clicked world's diseases.
@@ -4203,7 +4203,7 @@ export interface Tools {
 /**
  * Tool picker; routes each grid's clicks/drags to the active tool on that grid's world (Decision 10).
  * Edit errors (e.g. an occupied site) are ignored. Display changes (the paint layer, the disease
- * colours) and the paint tool's goods follow `primary`, whose display Compare mirrors to B.
+ * colors) and the paint tool's goods follow `primary`, whose display Compare mirrors to B.
  */
 export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => void): Tools {
   let tool: Tool = 'inspect';
@@ -4579,7 +4579,7 @@ git commit -m "Edit each world in Compare: Rules for A | B, per-world Inspect an
 
 ### Task 12: Overlaid charts for two worlds
 
-*Needs judgement (the Charts panel is rewritten table-driven; full code given — check each chart still appears under the same conditions and draws the same data in single mode).* Browser (controller):
+*Needs judgment (the Charts panel is rewritten table-driven; full code given — check each chart still appears under the same conditions and draws the same data in single mode).* Browser (controller):
 - Single mode (regression, as 7a Task 10): Charts on `ii-2-unit` (time charts with real ticks; Lorenz and wealth bars update ~4×/s and after a paint while paused), `iv-3-trade` (price band with gaps, supply & demand), `iv-5-credit` (loans, debt), `v-2-endemic` (disease section), `n-3-trade` (goods section follows the goods), `iii-6-three-tribes` (group shares), a live change that adds a good (charts rebuild and fill at once, paused too), a 20 000-tick run (smooth, x reaches the tick), Export → Charts (PNG).
 - Compare on `ii-2-unit`, B diverged by 🎲: every time chart shows A solid and B dashed, legends "A · Agents" / "B · Agents"; Lorenz shows equality plus both curves; the wealth histogram shows two step outlines; the lines keep up at Max.
 - Compare on `iv-3-trade` vs B with Trade off (Rules for B): the Economy charts still show (A has two goods), A's lines draw and B's price lines have gaps/are flat; supply & demand overlays both markets on the log price axis.
@@ -4686,7 +4686,7 @@ export function emptyTable(lines: number): LineData {
   return [[], ...Array.from({ length: lines }, () => [])] as LineData;
 }
 
-/** The wealth histogram `[binWidth, counts…]` as bars: bin centres and counts. */
+/** The wealth histogram `[binWidth, counts…]` as bars: bin centers and counts. */
 export function barsData(hist: Float64Array | null | undefined): LineData {
   if (!hist) return [[], []];
   const width = hist[0];
@@ -5110,7 +5110,7 @@ export class ChartsPanel {
     return { scales: { x, y }, axes: this.axes, legend: { show: legend }, series };
   }
 
-  /** One world's series: labelled "A · …"/"B · …" in Compare, B dashed and its points hollow. */
+  /** One world's series: labeled "A · …"/"B · …" in Compare, B dashed and its points hollow. */
   private seriesFor(def: ChartDef, c: Config, tag: string, b: boolean): uPlot.Series[] {
     const dash = b ? B_DASH : undefined;
     switch (def.kind) {
@@ -5217,7 +5217,7 @@ git commit -m "Overlay both worlds' charts in Compare" -m "Claude-Session: https
 ---
 ### Task 13: Compare's exports, links and files, and recording both grids
 
-*Needs judgement (full code given; the page's final wiring).* Browser (controller), `/?debug`, in Compare on `ii-2-unit` with B diverged by 🎲:
+*Needs judgment (full code given; the page's final wiring).* Browser (controller), `/?debug`, in Compare on `ii-2-unit` with B diverged by 🎲:
 - Export shows rows "Statistics (CSV) [A] [B]", "Agents (CSV) [A] [B]", "Grid (PNG) [A] [B]": each button downloads that world's file (`…-A-series.csv`, `…-B-grid.png`, …) with that world's data; Charts (PNG) downloads the overlaid charts as `sugarscape-compare-t<T>-<chart>.png`; Session (JSON) downloads `sugarscape-compare-t<T>-session.json` holding `"sugarscape":"compare"`.
 - Share → Copy link gives a `#c=` URL; opening it in a new tab goes straight into Compare with both worlds at t = 0, each replaying its log (per-header chips count down); played to the original tick, both fingerprints (`sugarscape.engine`, `sugarscape.compare().b`) equal the original tab's.
 - Share → Open session… with the comparison file (from single mode or from Compare) opens Compare with both worlds; with a single-world session file while comparing, Compare ends keeping A and the session opens.
@@ -5685,12 +5685,12 @@ git commit -m "Document sessions, Compare and recording" -m "Claude-Session: htt
 | B from A's session truncated at T, advanced to T with "Copying A… t / T"; B's fingerprint = A's | 9 (`copyWorld`, FakeSim and real-WASM tests), 10 (progress) |
 | Lockstep: step n to both, wait for both; speeds; adaptive Max (25/40 ms, 1…10 000) | 9 (Decision 9; tests) |
 | Rebuilds: Reset rewinds both; one world rebuilt rewinds the other | 9 (tests), 10 (headers' 🎲, toolbar Reset) |
-| Headers (label, seed, 🎲); Rules for: A \| B; tools per grid; Inspect/Credit show last-clicked world, labelled | 10, 11 (Decision 10) |
+| Headers (label, seed, 🎲); Rules for: A \| B; tools per grid; Inspect/Credit show last-clicked world, labeled | 10, 11 (Decision 10) |
 | Charts overlaid A solid / B dashed, legends "A · …"/"B · …"; Lorenz and S&D overlay; wealth as step outlines; a chart shows if either world shows it | 12 (Decision 11) |
 | Export: CSV and Grid PNG ask A or B; Charts PNG overlaid | 5 (menu), 13 (Decision 12) |
 | Experiments pauses both | 10 (`showView`) |
 | ● Record menu (WebM \| GIF, stamp on), ■ m:ss, stop downloads `…-t<from>-t<to>.<ext>` | 6 (names, clock), 8 (control) |
-| Frames: grid as drawn, integer scale ≥ 8 px capped at 1080 px, nearest-neighbour, stamp, side by side in Compare with labels, one frame per displayed snapshot, pauses with the world, reset continues | 6 (`frameLayout`), 8 (Decision 13), 13 (Compare) |
+| Frames: grid as drawn, integer scale ≥ 8 px capped at 1080 px, nearest-neighbor, stamp, side by side in Compare with labels, one frame per displayed snapshot, pauses with the world, reset continues | 6 (`frameLayout`), 8 (Decision 13), 13 (Compare) |
 | WebM: `captureStream(0)` + `requestFrame()`, MIME order, pause/resume | 6 (`pickMime`), 8 (Decision 14) |
 | GIF: ~15 fps, worker with `gifenc` (quantize + palette per frame), 900 cap with notice, progress while finishing | 6 (`GifSampler`), 7 (`GifBuilder`, worker; GIF89a frame-count test), 8 |
 | Tests: host, determinism, share, comparison, recording | 1; 4, 9; 2, 5; 9; 6, 7 |

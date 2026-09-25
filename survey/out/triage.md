@@ -19,7 +19,7 @@ Holds). Each change is described in a comment beside the check.
 |---|---|---|---|
 | ii-6.propagates | Fails | setup | Independently confirmed (CLI, seed 1, NW/NE/SW/SE counts): t=0 0/0/400/0, t=100 14/4/177/18, t=400 11/17/168/17. The block (x 0–24, y 25–49) starts on the SW sugar peak (15, 40); half starve by t=50, the rest stay. No gradient, no wave. |
 | ii-6.waves | Untestable | — | Visual wave-front claim with no agreed metric; moot while ii-6.propagates fails. |
-| iii-12.toward-center | Fails | setup | Same cause as ii-6. `Placement::Tribes` (world.rs) puts Blues on the SW peak and Reds on the NE peak (x 30–49, y 0–19; peak (37, 5)). Mean distance to centre never below ~79% of the start. |
+| iii-12.toward-center | Fails | setup | Same cause as ii-6. `Placement::Tribes` (world.rs) puts Blues on the SW peak and Reds on the NE peak (x 30–49, y 0–19; peak (37, 5)). Mean distance to center never below ~79% of the start. |
 | iii-12.interpenetrate | Fails | setup | Same. No Blue–Red adjacency in t=1..100 on any seed. Likely also why iii-9 has few combat deaths (median 5 in 500 ticks): the tribes rarely meet. |
 | iii-6.one-tribe | Weak | book | Local homogeneity reaches ~1.0, but the larger tribe holds ≥ 90% of agents at t=3000 on only 10/20 seeds (median 0.85). The two mountains often settle on different tribes, as tests/book.rs already notes. |
 | iii-14.together | Untestable | — | "Conquest and conversion together" names no outcome beyond both happening (both hold separately). |

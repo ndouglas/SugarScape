@@ -48,7 +48,7 @@ describe('book groups (mirroring config::default_groups and config::three_tribes
 });
 
 describe('groups table', () => {
-  it('moves the neighbouring end with a range end, so the ranges still tile', () => {
+  it('moves the neighboring end with a range end, so the ranges still tile', () => {
     const c = config(threeTribes(11));
     moveBoundary(c.culture.groups, 0, 'max', 5);
     expect(ranges(c)).toEqual([[0, 5], [6, 7], [8, 11]]);
@@ -57,7 +57,7 @@ describe('groups table', () => {
     expect(tiles(c)).toBe(true);
   });
 
-  it('adds a group by splitting the widest and removes one into its neighbour', () => {
+  it('adds a group by splitting the widest and removes one into its neighbor', () => {
     const c = config(defaultGroups(11));
     addGroup(c);
     expect(ranges(c)).toEqual([[6, 8], [0, 5], [9, 11]]);

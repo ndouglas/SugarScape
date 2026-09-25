@@ -81,7 +81,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['lineage', 'Lineage'],
   ],
   schelling: [
-    ['color', 'Colour'],
+    ['color', 'Color'],
     ['satisfaction', 'Satisfaction'],
     ['preference', 'Preference'],
   ],

@@ -275,7 +275,7 @@ export class ExperimentsView {
         dirty = true;
       });
       this.status.textContent =
-        outcome === 'done' ? `${count} runs done` : `Cancelled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
+        outcome === 'done' ? `${count} runs done` : `Canceled after ${shown.runs.length} of ${count} runs: the results are incomplete`;
     } catch (e) {
       this.status.textContent = `The sweep failed: ${e instanceof Error ? e.message : String(e)}`;
     } finally {

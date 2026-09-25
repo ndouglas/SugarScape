@@ -7,7 +7,7 @@ const ROW = 56;
 const PAD = 14;
 const RADIUS = 5;
 const REFRESH_MS = 500;
-/** Minimum gap between neighbouring nodes; wider rows scroll horizontally. */
+/** Minimum gap between neighboring nodes; wider rows scroll horizontally. */
 const GAP = 10;
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}): SVGElementTagNameMap[K] {
