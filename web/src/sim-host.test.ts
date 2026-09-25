@@ -891,15 +891,41 @@ describe('SimHost stop rules', () => {
   });
 
   it('ends the Max loop on the tick a rule fires', () => {
+    // Models the engine: exactly one buffer lent at `run`, and one handed back with `frame` after
+    // every post (engine.ts's onPost), so the buffer is never the reason a firing rule can't post.
     let t = 0;
     const { host, sim } = setup(() => (t += 1));
     send(host, { type: 'setStops', stops: { tick: 90 } });
     host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
     let post: WorldSnapshot | null = null;
-    for (let i = 0; i < 1000 && host.running; i++) post = host.batch() ?? post;
+    for (let i = 0; i < 1000 && host.running; i++) {
+      const p = host.batch();
+      if (p) {
+        post = p;
+        host.handle({ id: ++id, cmd: { type: 'frame' }, frame: new ArrayBuffer(8 * 3 * 4) });
+      }
+    }
     expect(host.running).toBe(false);
     expect(sim().ticks).toBe(90);
     expect(post?.stopped).toBe('Stopped at tick 90');
+  });
+
+  it('still posts periodically at Max while a rule is pending, well before it fires', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 100_000 } });
+    host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    let posts = 0;
+    for (let i = 0; i < 20 && posts < 2; i++) {
+      const p = host.batch();
+      if (p) {
+        posts++;
+        host.handle({ id: ++id, cmd: { type: 'frame' }, frame: new ArrayBuffer(8 * 3 * 4) });
+      }
+    }
+    expect(posts).toBeGreaterThanOrEqual(2);
+    expect(sim().ticks).toBeLessThan(100_000);
+    expect(host.running).toBe(true);
   });
 
   it('does not fire during a seek', () => {
@@ -922,6 +948,33 @@ describe('SimHost stop rules', () => {
     const post = host.batch();
     expect(post?.stopped).toBe('Stopped at tick 20');
     expect(host.running).toBe(false);
+  });
+
+  it('clears a pending stop after Pause, so the next Play at Max steps again', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 20 } });
+    host.handle({ id: ++id, cmd: { type: 'run' } }); // no buffer lent: the rule fires with none free
+    for (let i = 0; i < 100; i++) host.batch();
+    expect(sim().ticks).toBe(20);
+    expect(host.running).toBe(true); // stopPending, waiting on a buffer
+    send(host, { type: 'stop' });
+    expect(host.running).toBe(false);
+    host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    for (let i = 0; i < 5; i++) host.batch();
+    expect(sim().ticks).toBeGreaterThan(20);
+  });
+
+  it('re-evaluates a rule’s truth after a replayed edit, so it does not fire on the edit’s own effect', () => {
+    const { host, sim } = setup();
+    // One agent: population > 1 is false until the replayed place at tick 5 makes it true — the
+    // live equivalent (setStops, step to 5, then place) does not fire either (see above).
+    const log: LogEntry[] = [{ tick: 5, cmd: { type: 'place', x: 3, y: 1, overrides: {} } }];
+    send(host, { type: 'reset', config: { width: 8, height: 3 } as never, seed: 1, landscapes: [], log });
+    send(host, { type: 'setStops', stops: { when: { series: 'population', op: '>', value: 1 } } });
+    const r = send(host, { type: 'step', n: 20 });
+    expect(r.snapshot?.stopped).toBeUndefined();
+    expect(sim().ticks).toBe(20);
   });
 });
 

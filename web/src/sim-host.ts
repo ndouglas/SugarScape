@@ -262,12 +262,15 @@ export class SimHost {
     return v !== undefined && (when.op === '<' ? v < when.value : v > when.value);
   }
 
-  /** After a tick from `from`: the reason a rule fires, or null. Keeps the condition's last truth. */
+  /**
+   * After a tick from `from`, before any edit due at that tick is replayed in: the reason a rule
+   * fires, or null. Compares against `held` as it stood before this tick (the caller re-evaluates
+   * `held` from the post-replay state afterwards).
+   */
   private checkStops(sim: SimLike, from: number): string | null {
     const tick = sim.tick();
     const now = this.condition(sim);
     const fired = now && !this.held;
-    this.held = now;
     const at = this.stops.tick;
     if (at !== undefined && from < at && tick >= at) return `Stopped at tick ${tick}`;
     if (fired) {
@@ -310,12 +313,7 @@ export class SimHost {
       return this.snapshot(sim, max.wants, last);
     }
     const now = this.now();
-    // While a stop rule is pending, an in-between post never spends the last pooled buffer: it
-    // stays in reserve so the tick the rule fires on can always be posted, whatever the timing of
-    // buffers coming back from the page. A spare buffer beyond that one still posts normally.
-    const rules = this.stops.tick !== undefined || this.stops.when !== undefined;
-    const hold = rules && max.pool.length <= 1;
-    const frame = !hold && now - max.posted >= POST_MS ? max.pool.pop() : undefined;
+    const frame = now - max.posted >= POST_MS ? max.pool.pop() : undefined;
     if (!frame) return null;
     max.posted = now;
     return this.snapshot(sim, max.wants, frame);
@@ -348,6 +346,7 @@ export class SimHost {
       this.seekableSent = null;
       this.replayDue(next);
       this.held = this.condition(next);
+      this.stopPending = false;
       this.dropKeyframes(() => false);
       this.every = KEYFRAME_EVERY;
       this.noKeyframes = false;
@@ -434,6 +433,7 @@ export class SimHost {
           if (frame) this.max.pool.push(frame);
         } else {
           this.max = { wants, pool: frame ? [frame] : [], posted: this.now() };
+          this.stopPending = false;
         }
         return { ok: true };
       case 'frame':
@@ -442,6 +442,7 @@ export class SimHost {
       case 'stop': {
         const max = this.max;
         this.max = null;
+        this.stopPending = false;
         if (!max) return this.reply(sim, wants);
         // A pooled buffer is preferred; with none pooled, the buffer this `stop` itself just lent
         // (if any) is used instead of being left unrendered and handed straight back as spare.
@@ -456,12 +457,14 @@ export class SimHost {
         this.replaySent = -1;
         this.reachedSent = -1;
         this.seekableSent = null;
+        this.stopPending = false;
         // Every chart group's history changed: send them afresh.
         this.sent.clear();
         return this.reply(this.sim!, wants, frame);
       case 'setStops':
         this.stops = cmd.stops;
         this.held = this.condition(sim);
+        this.stopPending = false;
         return this.reply(sim, wants, frame);
     }
   }
@@ -546,16 +549,18 @@ export class SimHost {
       if (rules && at !== undefined && tick < at) k = Math.min(k, at - tick);
       sim.step(k);
       this.fired(tick, sim.tick());
+      // The rule sees this tick's own result, before any edit due at this tick is replayed in;
+      // `held` is then re-evaluated from the post-replay state, for the next tick's comparison
+      // (truth is re-evaluated after every edit, live or replayed alike).
+      const reason = rules ? this.checkStops(sim, tick) : null;
       this.replayDue(sim);
       this.keyframe(sim);
       this.reached = Math.max(this.reached, sim.tick());
       left -= k;
-      if (rules) {
-        const reason = this.checkStops(sim, tick);
-        if (reason) {
-          this.stoppedDue = reason;
-          return true;
-        }
+      if (rules) this.held = this.condition(sim);
+      if (reason) {
+        this.stoppedDue = reason;
+        return true;
       }
     }
     return false;
