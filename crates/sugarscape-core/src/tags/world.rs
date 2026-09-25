@@ -502,7 +502,7 @@ impl Model for TagsWorld {
         buf.clear();
         buf.resize(BINS * HISTORY * 4, 0);
         let blank = HISTORY - self.history.len();
-        for (y, px) in buf.chunks_exact_mut(BINS * 4).enumerate() {
+        for (y, px) in buf.as_chunks_mut::<{ BINS * 4 }>().0.iter_mut().enumerate() {
             let row = y.checked_sub(blank).map(|r| &self.history[r]);
             for (x, p) in px.as_chunks_mut::<4>().0.iter_mut().enumerate() {
                 let rgb = row.map_or(BACKGROUND, |r| self.color(&r[x], mode));
