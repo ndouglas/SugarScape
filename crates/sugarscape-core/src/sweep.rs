@@ -540,10 +540,17 @@ pub fn run_point(sweep: &Sweep, point: &Point) -> RunResult {
 pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResult {
     let mut world = ModelWorld::new(config, point.seed).expect("sweep configs are validated");
     world.model_mut().run(sweep.ticks);
-    let history = world
+    let mut history = world
         .model()
         .series(sweep.metric.series())
         .expect("the metric's series is checked against every config");
+    // A world that stopped on its own (Axelrod's culture once stable) holds
+    // its last state: the ticks it did not run repeat its last values.
+    if world.model().finished() {
+        if let Some(&last) = history.last() {
+            history.resize((sweep.ticks as usize + 1).max(history.len()), last);
+        }
+    }
     RunResult {
         point: point.index,
         series: point.series,
@@ -946,7 +953,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 20] = [
+const BUILTINS: [Builtin; 27] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1026,6 +1033,34 @@ const BUILTINS: [Builtin; 20] = [
     Builtin {
         id: "rca-population",
         json: include_str!("../../../sweeps/rca-population.json"),
+    },
+    Builtin {
+        id: "ac-table-2",
+        json: include_str!("../../../sweeps/ac-table-2.json"),
+    },
+    Builtin {
+        id: "ac-neighborhoods",
+        json: include_str!("../../../sweeps/ac-neighborhoods.json"),
+    },
+    Builtin {
+        id: "ac-territory",
+        json: include_str!("../../../sweeps/ac-territory.json"),
+    },
+    Builtin {
+        id: "ac-activation",
+        json: include_str!("../../../sweeps/ac-activation.json"),
+    },
+    Builtin {
+        id: "ac-traits-transition",
+        json: include_str!("../../../sweeps/ac-traits-transition.json"),
+    },
+    Builtin {
+        id: "ac-drift",
+        json: include_str!("../../../sweeps/ac-drift.json"),
+    },
+    Builtin {
+        id: "dock-mobility",
+        json: include_str!("../../../sweeps/dock-mobility.json"),
     },
 ];
 
@@ -1812,7 +1847,14 @@ mod tests {
                 "rca-pairings",
                 "rca-cost",
                 "rca-clones",
-                "rca-population"
+                "rca-population",
+                "ac-table-2",
+                "ac-neighborhoods",
+                "ac-territory",
+                "ac-activation",
+                "ac-traits-transition",
+                "ac-drift",
+                "dock-mobility"
             ]
         );
         for b in builtins() {

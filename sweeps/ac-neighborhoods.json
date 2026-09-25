@@ -1,0 +1,68 @@
+{
+  "name": "Axelrod culture: range of interaction",
+  "description": "Axelrod 1997's range of interaction: 4, 8 and 12 neighbors, and Axtell et al. 1996's 'soup' (any site), on 10 × 10 with 5 features. The paper (averaged over its nine cultures): 3.4, 2.5 and 1.5 regions. Measured (release, seeds 1–10, recorded 2026-09-25): with 10 traits 3.5, 1.9, 1.8 and 1.2; with 15 traits 22.0, 9.8, 4.2 and 1.2. Wider interaction, fewer regions; soup leaves about one culture (Axtell et al.: 1.0 at 15 traits).",
+  "base": {
+    "preset": "ac-sample-run"
+  },
+  "x": {
+    "label": "Neighbors",
+    "values": [
+      {
+        "at": 4,
+        "name": "4",
+        "set": {
+          "neighborhood": "von_neumann"
+        }
+      },
+      {
+        "at": 8,
+        "name": "8",
+        "set": {
+          "neighborhood": "moore"
+        }
+      },
+      {
+        "at": 12,
+        "name": "12",
+        "set": {
+          "neighborhood": "diamond"
+        }
+      },
+      {
+        "at": 16,
+        "name": "Anyone (soup)",
+        "set": {
+          "neighborhood": "soup"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Traits per feature (q)",
+    "values": [
+      {
+        "at": 0,
+        "name": "10 traits",
+        "set": {
+          "traits": 10
+        }
+      },
+      {
+        "at": 1,
+        "name": "15 traits",
+        "set": {
+          "traits": 15
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "regions"
+  }
+}

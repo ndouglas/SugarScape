@@ -1,0 +1,51 @@
+{
+  "name": "Axelrod culture: features and traits (Table 2)",
+  "description": "Table 2 of Axelrod 1997: stable regions on a 10 × 10 lattice (four neighbors) for 5, 10 and 15 features × 5, 10 and 15 traits, each run to stability. The paper (10 runs each): 1.0, 3.2, 20.0 with 5 features; 1.0, 1.0, 1.4 with 10; 1.0, 1.0, 1.2 with 15. Measured (release, seeds 1–10, recorded 2026-09-25): 1.1, 3.5, 22.0; 1.0, 1.0, 1.6; 1.0, 1.0, 1.0. More features mean fewer regions and more traits more, as the paper says.",
+  "base": {
+    "preset": "ac-sample-run"
+  },
+  "x": {
+    "label": "Traits per feature (q)",
+    "path": "traits",
+    "values": [
+      5,
+      10,
+      15
+    ]
+  },
+  "series": {
+    "label": "Features (F)",
+    "values": [
+      {
+        "at": 0,
+        "name": "5 features",
+        "set": {
+          "features": 5
+        }
+      },
+      {
+        "at": 1,
+        "name": "10 features",
+        "set": {
+          "features": 10
+        }
+      },
+      {
+        "at": 2,
+        "name": "15 features",
+        "set": {
+          "features": 15
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "regions"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "name": "Axelrod culture: traits and territory (Castellano et al.)",
+  "description": "Castellano, Marsili and Vespignani 2000: an order–disorder transition in the number of traits. Stable regions against traits (5 features, four neighbors) at 10 × 10, 20 × 20 and 30 × 30. Below the transition regions fall as the territory grows (Axelrod's 'large territories have fewer regions'); above it they grow with it. Measured (release, seeds 1–5, recorded 2026-09-25): at 15 traits 17.4, 20.0 and 11.6; at 20 traits 39, 97 and 94; at 25 traits 59, 191 and 301; at 40 traits 72, 286 and 664. Axelrod's size result holds only below about 20 traits; he happened to use 15.",
+  "base": {
+    "preset": "ac-many-regions"
+  },
+  "x": {
+    "label": "Traits per feature (q)",
+    "path": "traits",
+    "values": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30,
+      40
+    ]
+  },
+  "series": {
+    "label": "Territory",
+    "values": [
+      {
+        "at": 10,
+        "name": "10 × 10",
+        "set": {
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "at": 20,
+        "name": "20 × 20",
+        "set": {
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "at": 30,
+        "name": "30 × 30",
+        "set": {
+          "width": 30,
+          "height": 30
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "regions"
+  }
+}

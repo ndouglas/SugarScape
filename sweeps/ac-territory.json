@@ -1,0 +1,104 @@
+{
+  "name": "Axelrod culture: size of the territory (Fig. 2)",
+  "description": "Axelrod 1997's Fig. 2: stable regions against the territory's width, 5 features of 15 traits, four neighbors, bounded or wrapping. The paper: a rise to about 23 at 12 × 12, then a fall to about 6 at 50 × 50 and 2 at 100 × 100; on a torus 'the peak occurs earlier … and is not as high'. Measured (release, seeds 1–10, recorded 2026-09-25): bounded 9.8 at 5 × 5, 22.0 at 10 × 10, 23.9 at 12 × 12, 23.0 at 15 × 15, then 18.2, 15.9 and 10.2 at 20, 25 and 30; torus 6.8, 9.1 (8 × 8), 6.7, 6.7, 5.1, 4.7, 3.9 and 3.4. Both reproduce (the survey carries 50 × 50: 5.7).",
+  "base": {
+    "preset": "ac-many-regions"
+  },
+  "x": {
+    "label": "Width of territory",
+    "values": [
+      {
+        "at": 5,
+        "name": "5 × 5",
+        "set": {
+          "width": 5,
+          "height": 5
+        }
+      },
+      {
+        "at": 8,
+        "name": "8 × 8",
+        "set": {
+          "width": 8,
+          "height": 8
+        }
+      },
+      {
+        "at": 10,
+        "name": "10 × 10",
+        "set": {
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "at": 12,
+        "name": "12 × 12",
+        "set": {
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "at": 15,
+        "name": "15 × 15",
+        "set": {
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "at": 20,
+        "name": "20 × 20",
+        "set": {
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "at": 25,
+        "name": "25 × 25",
+        "set": {
+          "width": 25,
+          "height": 25
+        }
+      },
+      {
+        "at": 30,
+        "name": "30 × 30",
+        "set": {
+          "width": 30,
+          "height": 30
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Edges",
+    "values": [
+      {
+        "at": 0,
+        "name": "Bounded (paper)",
+        "set": {
+          "boundary": "bounded"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Torus",
+        "set": {
+          "boundary": "torus"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "regions"
+  }
+}
