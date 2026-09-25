@@ -309,6 +309,22 @@ describe('sweeps over other models', () => {
     const wrongSeries = JSON.stringify({ ...spec, metric: { kind: 'final', series: 'gini' } });
     expect(() => sweep_points(wrongSeries)).toThrow('no statistics series');
   });
+
+  it('refuse an anasazi sweep longer than the valley’s years, so no worker aborts', () => {
+    const valley = {
+      name: 'Valley',
+      base: { preset: 'lhv-published' },
+      x: { path: 'harvest_adjustment', values: [0.56] },
+      seeds: { from: 1, count: 1 },
+      ticks: 551,
+      metric: { kind: 'final', series: 'fit' },
+    };
+    const json = JSON.stringify(valley);
+    // The Experiments view shows these errors (sweep_points) before it starts any worker.
+    expect(() => sweep_points(json)).toThrow('must be ≤ 550');
+    expect(() => run_point(json, 0)).toThrow('must be ≤ 550');
+    expect(JSON.parse(sweep_points(JSON.stringify({ ...valley, ticks: 550 })))).toHaveLength(1);
+  });
 });
 
 describe('the anasazi through the engine', () => {

@@ -1,8 +1,24 @@
 import type { Engine } from '../engine';
 import { errorsFor } from '../paths';
-import { groupParams, paramEdit, paramInput, type ParamInput } from '../schema-form';
+import { describedBy, groupParams, paramEdit, paramInput, type ParamInput } from '../schema-form';
 import type { FieldError, ModelKind, Param } from '../types';
 import { h } from './dom';
+
+/**
+ * The anasazi's data credit: the valley's files are GPL-2.0 and compiled into the WASM, so the page
+ * links their notice, which the build serves beside it (vite.config.ts; relative, for Pages).
+ */
+function valleyCredit(): HTMLElement {
+  return h(
+    'p',
+    { class: 'hint data-credit' },
+    'Valley data: Janssen, Artificial Anasazi v1.1.0 (CoMSES, doi:10.25937/krp4-g724), GPL-2.0 — ',
+    h('a', { href: 'anasazi-data/NOTICE', target: '_blank', rel: 'noopener' }, 'notice'),
+  );
+}
+
+/** Numbers each panel so its controls' ids are unique on the page. */
+let panels = 0;
 
 /** A section's note: whether its fields apply to the world as it runs or rebuild it. */
 function note(params: Param[]): string {
@@ -18,7 +34,9 @@ export class SchemaPanel {
   readonly el = h('div', { class: 'schema' });
   private model: ModelKind | null = null;
   private syncers: (() => void)[] = [];
-  private slots: { path: string; el: HTMLElement }[] = [];
+  /** Each field's error slot, and the inputs its help and errors describe. */
+  private slots: { path: string; el: HTMLElement; inputs: HTMLElement[]; ids: { help: string | null; error: string } }[] = [];
+  private readonly idPrefix = `schema-${++panels}`;
   private general = h('div', { class: 'error' });
   private errors: FieldError[] = [];
 
@@ -39,7 +57,7 @@ export class SchemaPanel {
     const sections = groupParams(this.engine.schemas[model] ?? []).map(({ group, params }) =>
       h('section', { class: 'group' }, h('h3', {}, group), h('p', { class: 'hint' }, note(params)), ...params.map((p) => this.control(p))),
     );
-    this.el.replaceChildren(this.general, ...sections);
+    this.el.replaceChildren(...(model === 'anasazi' ? [valleyCredit()] : []), this.general, ...sections);
     this.renderErrors();
   }
 
@@ -57,21 +75,30 @@ export class SchemaPanel {
       const mine = errorsFor(this.errors, slot.path);
       mine.forEach((e) => claimed.add(e));
       slot.el.replaceChildren(...mine.map((e) => h('p', {}, e.message)));
+      const described = describedBy(slot.ids, mine.length > 0);
+      for (const input of slot.inputs) {
+        if (described) input.setAttribute('aria-describedby', described);
+        else input.removeAttribute('aria-describedby');
+      }
     }
     const rest = this.errors.filter((e) => !claimed.has(e));
     this.general.replaceChildren(...rest.map((e) => h('p', {}, `${e.field}: ${e.message}`)));
   }
 
   private control(p: Param): HTMLElement {
-    const slot = h('div', { class: 'error' });
-    this.slots.push({ path: p.path, el: slot });
+    const id = `${this.idPrefix}-${p.path.replace(/[^A-Za-z0-9_-]/g, '-')}`;
+    const ids = { help: p.help ? `${id}-help` : null, error: `${id}-error` };
+    const slot = h('div', { class: 'error', id: ids.error });
+    const inputs: HTMLElement[] = [];
+    this.slots.push({ path: p.path, el: slot, inputs, ids });
     // A field's one-line explanation (the anasazi's quirks cite the extraction).
-    const help = p.help ? h('p', { class: 'hint help' }, p.help) : null;
+    const help = p.help ? h('p', { class: 'hint help', id: ids.help }, p.help) : null;
     const current = () => paramInput(p, this.engine.config);
     const bounds = { min: p.min, max: p.max, step: p.step };
     switch (p.kind) {
       case 'bool': {
         const box = h('input', { type: 'checkbox', onchange: () => void this.commit(p, box.checked) });
+        inputs.push(box);
         this.syncers.push(() => (box.checked = current() === true));
         return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${p.label}`), help, slot);
       }
@@ -81,6 +108,7 @@ export class SchemaPanel {
           { onchange: () => void this.commit(p, select.value) },
           ...(p.choices ?? []).map((c) => h('option', { value: c.value }, c.label)),
         );
+        inputs.push(select);
         this.syncers.push(() => (select.value = String(current())));
         return h('div', { class: 'control' }, h('label', {}, p.label), select, help, slot);
       }
@@ -88,6 +116,7 @@ export class SchemaPanel {
         const lo = h('input', { type: 'number', class: 'num', ...bounds });
         const hi = h('input', { type: 'number', class: 'num', ...bounds });
         const apply = (edited: 'min' | 'max') => void this.commit(p, { min: lo.value, max: hi.value, edited });
+        inputs.push(lo, hi);
         lo.addEventListener('change', () => apply('min'));
         hi.addEventListener('change', () => apply('max'));
         this.syncers.push(() => {
@@ -107,6 +136,7 @@ export class SchemaPanel {
       default: {
         const slider = h('input', { type: 'range', ...bounds });
         const num = h('input', { type: 'number', class: 'num', ...bounds });
+        inputs.push(slider, num);
         slider.addEventListener('input', () => (num.value = slider.value));
         slider.addEventListener('change', () => void this.commit(p, slider.value));
         num.addEventListener('change', () => void this.commit(p, num.value));

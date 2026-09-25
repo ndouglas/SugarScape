@@ -1,7 +1,8 @@
 // The Long House Valley's page-side overlays and readout (milestone 10).
-import { calendarYear } from './models';
+import { calendarYear, modelOf } from './models';
 import type { ValleyOverlay, ValleyState } from './protocol';
-import type { ModelConfig, ValleyCellView } from './types';
+import type { AnasaziConfig, ModelConfig, ValleyCellView } from './types';
+import { wrappedSegments } from './ui/overlay';
 
 /** The Display panel's checkboxes for the valley's overlays, in order. */
 export const VALLEY_OVERLAY_LABELS: [ValleyOverlay, string][] = [
@@ -25,6 +26,24 @@ export function settlements(state: ValleyState): { x: number; y: number; househo
   const s = state.settlements;
   for (let i = 0; i + 2 < s.length; i += 3) out.push({ x: s[i], y: s[i + 1], households: s[i + 2] });
   return out;
+}
+
+/**
+ * The segments that draw a farm–home link from (ax, ay) to (bx, by) on a `width` × `height` map:
+ * split across the edges when the world measures distance around them (`quirks.wrap_edges`, on
+ * unless a config says otherwise, as in the core), else one straight segment.
+ */
+export function linkSegments(
+  config: ModelConfig,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  width: number,
+  height: number,
+): [number, number, number, number][] {
+  const wraps = modelOf(config) === 'anasazi' && (config as AnasaziConfig).quirks?.wrap_edges !== false;
+  return wraps ? wrappedSegments(ax, ay, bx, by, width, height) : [[ax, ay, bx, by]];
 }
 
 /** A world for the toolbar's readout. */

@@ -1,6 +1,6 @@
 import type { Engine } from '../engine';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
-import { SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
+import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
 import { arrowHead, wrappedSegments } from './overlay';
 import { trailSegments } from './trail';
 
@@ -179,8 +179,9 @@ export class GridView {
       ctx.lineWidth = 1;
       ctx.beginPath();
       const l = valley.links;
+      const config = this.engine.config;
       for (let i = 0; i + 3 < l.length; i += 4) {
-        for (const [ax, ay, bx, by] of wrappedSegments(l[i], l[i + 1], l[i + 2], l[i + 3], width, height)) {
+        for (const [ax, ay, bx, by] of linkSegments(config, l[i], l[i + 1], l[i + 2], l[i + 3], width, height)) {
           ctx.moveTo((ax + 0.5) * CELL, (ay + 0.5) * CELL);
           ctx.lineTo((bx + 0.5) * CELL, (by + 0.5) * CELL);
         }

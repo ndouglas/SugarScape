@@ -24,6 +24,7 @@ import {
   timeAxisLabel,
   twoGoods,
   worldLines,
+  yearTickLabels,
   type LineData,
 } from './series-data';
 
@@ -204,6 +205,11 @@ describe('the anasazi’s charts', () => {
     expect(lineData(group, 800)[0]).toEqual([800, 805, 809]);
     expect(timeAxisLabel('anasazi')).toBe('Year');
     expect(timeAxisLabel('schelling')).toBe('Tick');
+  });
+
+  it('label the year axis without digit grouping', () => {
+    expect(yearTickLabels([800, 1000, 1350])).toEqual(['800', '1000', '1350']);
+    expect(yearTickLabels([1000.5, 1000.1 + 0.2])).toEqual(['1000.5', '1000.3']);
   });
 
   it('draw households against the historical record, which Compare draws once', () => {

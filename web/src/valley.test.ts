@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ModelConfig } from './types';
-import { PDSI_CLASSES, readoutText, settlementRadius, settlements, waterText } from './valley';
+import { linkSegments, PDSI_CLASSES, readoutText, settlementRadius, settlements, waterText } from './valley';
 
 describe('the valley overlays', () => {
   it('reads settlements as triples', () => {
@@ -15,6 +15,22 @@ describe('the valley overlays', () => {
     expect(settlementRadius(1, 10)).toBeCloseTo(5);
     expect(settlementRadius(4, 10)).toBeCloseTo(7);
     expect(settlementRadius(1000, 10)).toBe(15);
+  });
+});
+
+describe('farm–home links', () => {
+  const valley = (wrap_edges: boolean) => ({ model: 'anasazi', quirks: { wrap_edges } }) as ModelConfig;
+
+  it('wrap across the map’s edges only when the world wraps', () => {
+    expect(linkSegments(valley(true), 1, 5, 78, 5, 80, 120)).toEqual([
+      [1, 5, -2, 5],
+      [81, 5, 78, 5],
+    ]);
+    expect(linkSegments(valley(false), 1, 5, 78, 5, 80, 120)).toEqual([[1, 5, 78, 5]]);
+  });
+
+  it('keep a short link as one segment either way', () => {
+    for (const wrap of [true, false]) expect(linkSegments(valley(wrap), 3, 4, 5, 6, 80, 120)).toEqual([[3, 4, 5, 6]]);
   });
 });
 

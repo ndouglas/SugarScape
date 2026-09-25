@@ -73,6 +73,7 @@ button[aria-pressed='true'] { border-color: var(--accent); box-shadow: inset 0 0
 .rules .presets select { width: 100%; margin-top: 4px; }
 .rules .control { display: grid; gap: 2px; margin: 6px 0; }
 .rules .control .help { margin: 0; font-size: 12px; }
+.rules .data-credit { margin: 0 0 8px; font-size: 12px; }
 .rules .row { display: flex; gap: 8px; align-items: center; }
 .rules .row input[type='range'] { flex: 1; }
 .rules .num { width: 5.5em; }
@@ -125,8 +126,9 @@ body[data-view='experiments'] .toolbar-end { display: none; }
 .sweep-setup > * { min-width: 0; }
 .sweep-setup .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sweep-setup select { max-width: 100%; }
-.sweep-picker { display: flex; flex: 1; gap: 6px; align-items: center; min-width: 0; }
-.sweep-picker select { width: 100%; min-width: 0; }
+/* The "Sweep" text stays on one line (the panel's overflow-wrap would break it beside a long name); the select shrinks instead. */
+.sweep-picker { display: flex; flex: 1; gap: 6px; align-items: center; min-width: 0; white-space: nowrap; }
+.sweep-picker select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .sweep-editor { border: 0; padding: 0; margin: 0; min-width: 0; }
 .sweep-fixed h2 { font-size: 15px; margin: 0; }
 .sweep-fixed dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 6px 0; }

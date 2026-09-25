@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupParams, paramEdit, paramInput } from './schema-form';
+import { describedBy, groupParams, paramEdit, paramInput } from './schema-form';
 import type { AnasaziConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
 
 const ring = (): RingConfig => ({
@@ -74,5 +74,13 @@ describe('the schema form', () => {
     expect(paramInput(leak, c)).toBe(true);
     paramEdit(leak, false)(c);
     expect(c.quirks).toEqual({ occupancy_leak: false, wrap_edges: true });
+  });
+
+  it('describes a control by its help, and by its error while one shows', () => {
+    const ids = { help: 'f-help', error: 'f-error' };
+    expect(describedBy(ids, false)).toBe('f-help');
+    expect(describedBy(ids, true)).toBe('f-help f-error');
+    expect(describedBy({ help: null, error: 'g-error' }, true)).toBe('g-error');
+    expect(describedBy({ help: null, error: 'g-error' }, false)).toBeNull();
   });
 });

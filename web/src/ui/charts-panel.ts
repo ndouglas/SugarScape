@@ -30,6 +30,7 @@ import {
   timeAxisLabel,
   twoGoods,
   worldLines,
+  yearTickLabels,
   type ChartLine,
   type DistState,
   type LineData,
@@ -460,7 +461,9 @@ export class ChartsPanel {
     else if (def.range) y.range = def.range;
     const lines = def.kind === 'time' ? def.lines!(this.engine.sugar).length : 0;
     const legend = multi || def.kind === 'band' || def.kind === 'supplyDemand' || lines > 1;
-    return { scales: { x, y }, axes: this.axes, legend: { show: legend }, series };
+    // The anasazi's x axis counts calendar years: no digit grouping ("1000", not "1,000").
+    const axes = def.model === 'anasazi' ? [{ ...this.axes[0], values: (_self: uPlot, splits: number[]) => yearTickLabels(splits) }, this.axes[1]] : this.axes;
+    return { scales: { x, y }, axes, legend: { show: legend }, series };
   }
 
   /** One world's series: labelled "A · …"/"B · …" in Compare, B dashed and its points hollow. */

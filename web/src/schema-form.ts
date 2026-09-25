@@ -61,3 +61,12 @@ export function paramInput(p: Param, config: ModelConfig): ParamInput {
   if (p.kind === 'bool') return v === true;
   return String(v);
 }
+
+/**
+ * The ids a control's `aria-describedby` names: its help (when it has one) and its error slot while
+ * that shows an error, so a screen reader reads both with the control.
+ */
+export function describedBy(ids: { help: string | null; error: string }, hasError: boolean): string | null {
+  const list = [ids.help, hasError ? ids.error : null].filter((id): id is string => id !== null);
+  return list.length > 0 ? list.join(' ') : null;
+}

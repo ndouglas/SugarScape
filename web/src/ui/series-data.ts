@@ -165,6 +165,11 @@ export function timeAxisLabel(model: ModelKind): string {
   return model === 'anasazi' ? 'Year' : 'Tick';
 }
 
+/** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */
+export function yearTickLabels(splits: number[]): string[] {
+  return splits.map((v) => String(Number(v.toFixed(3))));
+}
+
 /** A world's lines of a chart: every line for A (world 0), all but the reference lines for B. */
 export function worldLines(lines: ChartLine[], world: number): ChartLine[] {
   return world === 0 ? lines : lines.filter((l) => !l.reference);
