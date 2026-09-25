@@ -1,6 +1,7 @@
 import type { Engine } from '../engine';
 import { isRingView, isSugarView, isValleyView } from '../models';
-import type { AgentView, LinkView, RingInspection, SchellingInspection } from '../types';
+import type { AgentView, AnasaziInspection, LinkView, RingInspection, SchellingInspection } from '../types';
+import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
 
@@ -123,6 +124,38 @@ export class InspectPanel {
     ];
   }
 
+  /**
+   * A Long House Valley cell — its zone, this year's PDSI class and yields, water, and who farms
+   * and lives there — and the household shown there (its farmer, else its first resident).
+   */
+  private valleyRows(view: AnasaziInspection, gone: boolean): HTMLElement[] {
+    const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const kg = (n: number) => `${Math.round(n)} kg`;
+    const alive = (ids: number[]) => this.links(ids.map((id) => ({ id, alive: true })));
+    const cell = (xy: [number, number]) =>
+      h('button', { class: 'link', onclick: () => this.engine.select(xy[0], xy[1]) }, `(${xy[0]}, ${xy[1]})`);
+    const s = view.site;
+    const rows = [
+      row('Cell', `(${s.x}, ${s.y}) · ${s.zone_name}`),
+      row('PDSI', `${fmt(s.pdsi)} · class ${PDSI_CLASSES[s.pdsi_class]}`),
+      row('Yield', `${kg(s.base_yield)} this year (zone ${kg(s.zone_yield)} × soil ${s.quality.toFixed(2)} × adjustment)`),
+      row('Water', waterText(s)),
+      row('Homes', s.habitable ? 'allowed this year' : 'not allowed this year (hydrology)'),
+      row('Farmed by', s.farmed_by === null ? h('span', { class: 'hint' }, 'nobody') : alive([s.farmed_by])),
+      row('Residents', alive(s.residents)),
+    ];
+    const a = view.agent;
+    if (!a || gone) return rows;
+    return [
+      ...rows,
+      row('Household', `#${a.id} · age ${a.age}`),
+      row('Corn', `${kg(a.stock)} (${a.corn.map((c) => Math.round(c)).join(' / ')}, newest first)`),
+      row('Harvest', `${kg(a.harvest)} this year · expects ${kg(a.expected)} next`),
+      row('Farm', cell(a.farm)),
+      row('Home', cell(a.home)),
+    ];
+  }
+
   private render(): void {
     if (!this.visible) return;
     const sel = this.engine.selection;
@@ -135,9 +168,15 @@ export class InspectPanel {
     const gone = shown.agentId !== null && !shown.alive;
     const view = shown.view;
     if (!isSugarView(view)) {
-      // A Schelling agent that reached its maximum residence has left the landscape.
-      const note = gone ? [h('p', { class: 'error' }, `Agent #${shown.agentId} has left.`)] : [];
-      const rows = isRingView(view) ? this.ringRows(view, gone) : isValleyView(view) ? [] : this.schellingRows(view, gone);
+      // A Schelling agent that reached its maximum residence has left the landscape; a household
+      // dies or leaves the valley.
+      const left = isValleyView(view) ? `Household #${shown.agentId} is gone: it died or left the valley.` : `Agent #${shown.agentId} has left.`;
+      const note = gone ? [h('p', { class: 'error' }, left)] : [];
+      const rows = isRingView(view)
+        ? this.ringRows(view, gone)
+        : isValleyView(view)
+          ? this.valleyRows(view, gone)
+          : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

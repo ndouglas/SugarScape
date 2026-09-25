@@ -1,7 +1,7 @@
 // The Long House Valley's page-side overlays and readout (milestone 10).
 import { calendarYear } from './models';
 import type { ValleyOverlay, ValleyState } from './protocol';
-import type { ModelConfig } from './types';
+import type { ModelConfig, ValleyCellView } from './types';
 
 /** The Display panel's checkboxes for the valley's overlays, in order. */
 export const VALLEY_OVERLAY_LABELS: [ValleyOverlay, string][] = [
@@ -39,4 +39,13 @@ export function readoutText(a: ReadoutWorld, b: ReadoutWorld | null): string {
   const when = year === null ? `t = ${a.tick}` : `AD ${year}`;
   const noun = year === null ? 'agents' : 'households';
   return b ? `${when} · A ${a.population} · B ${b.population} ${noun}` : `${when} · ${a.population} ${noun}`;
+}
+
+/** The five PDSI classes of the yield table (JASSS ¶2.11), driest first. */
+export const PDSI_CLASSES = ['(−∞, −3]', '(−3, −1]', '(−1, 1)', '[1, 3)', '[3, ∞)'];
+
+/** Where a cell stands with water: a source itself, within the mile farms need, or beyond it. */
+export function waterText(site: Pick<ValleyCellView, 'water' | 'water_near'>): string {
+  if (site.water) return 'a water source';
+  return site.water_near ? 'within a mile of water' : 'more than a mile from water';
 }

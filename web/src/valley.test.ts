@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ModelConfig } from './types';
-import { readoutText, settlementRadius, settlements } from './valley';
+import { PDSI_CLASSES, readoutText, settlementRadius, settlements, waterText } from './valley';
 
 describe('the valley overlays', () => {
   it('reads settlements as triples', () => {
@@ -32,5 +32,14 @@ describe('the readout', () => {
   it('shows other models’ ticks and agents as before', () => {
     expect(readoutText({ config: sugar, tick: 5, population: 40 }, null)).toBe('t = 5 · 40 agents');
     expect(readoutText({ config: sugar, tick: 5, population: 40 }, { config: sugar, tick: 5, population: 38 })).toBe('t = 5 · A 40 · B 38 agents');
+  });
+});
+
+describe('a valley cell in Inspect', () => {
+  it('names its PDSI class and where it stands with water', () => {
+    expect(PDSI_CLASSES[4]).toBe('[3, ∞)');
+    expect(waterText({ water: true, water_near: true })).toBe('a water source');
+    expect(waterText({ water: false, water_near: true })).toBe('within a mile of water');
+    expect(waterText({ water: false, water_near: false })).toBe('more than a mile from water');
   });
 });
