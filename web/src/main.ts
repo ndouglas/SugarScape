@@ -253,6 +253,8 @@ async function main(): Promise<void> {
   engine.on('full', () => showNotice(FULL_NOTICE, 10_000));
   // The anasazi stops at its end year (in Compare, A's says so for the pair unless B ends first).
   engine.on('finished', () => showNotice(finishedNotice(engine.config, engine.tick), 10_000));
+  // A stop rule paused the run by itself (outside Compare, where the lockstep says so instead).
+  engine.on('stopped', () => showNotice(engine.lastStop ?? 'Stopped', 10_000));
 
   let dirty = true;
   /** A snapshot arrived since the last frame (Compare: a lockstep pair): once drawn, the recording captures it. */

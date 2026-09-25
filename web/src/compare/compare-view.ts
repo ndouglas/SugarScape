@@ -150,6 +150,8 @@ export class CompareView {
         // The pair has no ticks left: Play or Step would otherwise no-op silently (a's own
         // 'finished' fired only when the pair first reached it, not on a later press).
         this.lock.on('finished', () => showNotice(finishedNotice(a.config, a.tick), 10_000)),
+        // The tick rule paused the pair (Compare supports no condition rule: Decision 9).
+        this.lock.on('stopped', () => showNotice(this.lock.lastStop ?? 'Stopped', 10_000)),
         this.lock.on('run', p.onRun),
         this.lock.on('tick', p.onFrame),
       );

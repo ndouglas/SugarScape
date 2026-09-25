@@ -4,6 +4,7 @@ import { errorMessage } from '../errors';
 import { readoutText } from '../valley';
 import { h } from './dom';
 import { showNotice } from './notice';
+import { StopControl } from './stop-control';
 import { Timeline } from './timeline';
 
 /** Below 1×, speeds are ticks a second: 1/60 of a tick per frame is one a second. */
@@ -99,9 +100,11 @@ export class Toolbar {
   /** Hidden in Compare: the headers carry them. */
   private readonly singleOnly: HTMLElement[];
   private readonly timeline = new Timeline((e) => showNotice(`Could not go to that tick (${errorMessage(e)})`, 10_000));
+  private readonly stopControl: StopControl;
 
   constructor(private readonly engine: Engine) {
     this.controls = engine;
+    this.stopControl = new StopControl(engine);
     this.play = h('button', { class: 'primary', onclick: () => this.controls.setRunning(!this.controls.running) });
     this.step = h(
       'button',
@@ -139,6 +142,7 @@ export class Toolbar {
       h('h1', {}, 'SugarScape'),
       h('div', { class: 'group' }, this.play, this.step, this.speed),
       this.timeline.el,
+      this.stopControl.el,
       h('div', { class: 'group' }, seedLabel, this.resetButton, this.dice),
       this.readout,
       chips,
@@ -165,6 +169,7 @@ export class Toolbar {
     this.b = b;
     this.controls = lock ?? this.engine;
     this.timeline.bind(this.controls);
+    this.stopControl.bind(this.controls);
     if (lock) {
       this.offs.push(lock.on('run', () => this.sync()));
       this.offs.push(lock.on('tick', () => this.timeline.sync()));
@@ -217,6 +222,7 @@ export class Toolbar {
     this.seed.value = String(this.engine.seed);
     this.timeline.held = this.held;
     this.timeline.sync();
+    this.stopControl.el.inert = this.held;
   }
 
   private tick(): void {
