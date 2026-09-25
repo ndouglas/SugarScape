@@ -11,7 +11,7 @@ Hunger (the droop) is 1 − sugar / 6, clamped: a display choice, not a rule.
 import math
 from dataclasses import dataclass
 
-HEIGHT_PER_SUGAR = 0.12
+HEIGHT_PER_SUGAR = 0.7
 SPAWN_FRAMES = 12
 POOF_FRAMES = 14
 CROUCH, LAND = 0.15, 0.85
