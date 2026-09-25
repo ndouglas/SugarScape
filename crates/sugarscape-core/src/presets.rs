@@ -100,8 +100,9 @@ fn indecomposability(c: &mut Config, trade: bool) {
     //   vi-3-trade seed 3: [500, 275, 121, 162, 346, 653, 821, 726, 706, 775, 767, 747, 742, 823, 829, 806, 787, 779, 735, 727, 747]
     //   vi-3-trade seed 4: [500, 280, 118, 145, 403, 836, 965, 901, 871, 888, 859, 881, 847, 850, 883, 912, 905, 854, 851, 856, 860]
     //   vi-3-trade seed 5: [500, 284, 124, 209, 485, 821, 880, 808, 785, 786, 791, 776, 838, 914, 890, 884, 876, 883, 900, 907, 898]
-    // VI-3 matches the book's curve (a dip by t ~ 100, recovery to 1.7-2.0x
-    // the initial 500, minima near 700); VI-2 does the same instead of
+    // VI-3 follows the book's curve (a dip by t ~ 100, recovery to 1.7-2.0x
+    // the initial 500, minima near 700; the book's ~115-year period between
+    // peaks isn't measured here); VI-2 does the same instead of
     // crashing. Every stated rule (M, S, T, death, the landscape) matches the
     // book and Appendix B, and no setting of 216 tried separated the two on
     // all of seeds 1-5 except on a knife edge: under these rules trade moves
@@ -496,7 +497,7 @@ pub fn all() -> Vec<Preset> {
             "vi-3-trade",
             "({G₁}, {M, S, T}) with spice",
             "Animation VI-3",
-            "Everything as in VI-2, with trade on. This reproduces the book's curve: the population dips to about 100–175 by t = 100–150, recovers to 1.7–2.0 times its initial 500, then fluctuates with minima near 700. (VI-2 without trade does the same here, unlike the book.)",
+            "Everything as in VI-2, with trade on. This follows the book's curve: the population dips to about 100–175 by t = 100–150, recovers to 1.7–2.0 times its initial 500, then fluctuates with minima near 700. (VI-2 without trade does the same here, unlike the book.)",
             |c| indecomposability(c, true),
         ),
         preset(

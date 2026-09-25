@@ -120,6 +120,7 @@ impl Snapshot {
             }
         };
         let w = wealths(world);
+        let gini_value = gini(&w);
 
         // Calculate mean and sd of log prices from trades
         let events = world.events();
@@ -171,7 +172,7 @@ impl Snapshot {
         Self {
             tick: world.tick,
             population: n as u32,
-            gini: gini(&w),
+            gini: gini_value,
             mean_wealth: mean(&|a| a.holdings[0]),
             mean_vision: mean(&|a| f64::from(a.vision)),
             mean_metabolism: mean(&|a| f64::from(a.metabolism[0])),
@@ -199,7 +200,11 @@ impl Snapshot {
                 .len() as u32,
             new_infections: events.infections.len() as u32,
             trade_pairs,
-            gini_total: gini(&total_wealths(world)),
+            gini_total: if world.config.goods.len() == 1 {
+                gini_value
+            } else {
+                gini(&total_wealths(world))
+            },
             goods,
             pollution,
             groups: group_shares,

@@ -51,7 +51,7 @@ charts), and recording the grid as WebM or GIF. Runs are unchanged. See
 ## Milestone 8: Chapter VI — indecomposability and the emergent society (done)
 
 The indecomposability presets `vi-2-no-trade` / `vi-3-trade` with Chapter IV's traits and a
-presets-menu entry that opens them in Compare: VI-3 reproduces the book's curve, but VI-2 does not
+presets-menu entry that opens them in Compare: VI-3 follows the book's curve, but VI-2 does not
 crash — the book's stated rules do not produce the crash, which most likely depended on unreported
 details of the original software. The neighbor, friends and family network overlays, the Lineage
 color mode, the age and cultural-tag histograms, per-good wealth histograms and total-wealth Lorenz

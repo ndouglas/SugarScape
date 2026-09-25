@@ -1,7 +1,7 @@
 import type { Engine, Overlay } from '../engine';
 import type { ColorMode, Layer } from '../types';
 import { h } from './dom';
-import { layerOptions, overlayAvailable } from '../layers';
+import { layerOptions, overlayAvailableAny } from '../layers';
 
 const MODES: [ColorMode, string][] = [
   ['tribe', 'Tribe'],
@@ -23,7 +23,14 @@ const OVERLAY_LABELS: [Overlay, string][] = [
   ['friends', 'Friends network'],
   ['family', 'Family network'],
 ];
-export function buildDisplay(engine: Engine): HTMLElement {
+/** The display controls' element, and (Decision 10) which worlds' configs its checkboxes offer for. */
+export interface Display {
+  el: HTMLElement;
+  /** Compare on (a checkbox shows while either A's or B's config allows it) or off (A's alone). */
+  setCompare(b: Engine | null): void;
+}
+
+export function buildDisplay(engine: Engine): Display {
   const mode = h(
     'select',
     { onchange: () => engine.setDisplay({ colorMode: mode.value as ColorMode }) },
@@ -43,22 +50,38 @@ export function buildDisplay(engine: Engine): HTMLElement {
   engine.on('reset', refill);
   engine.on('config', refill);
   refill();
-  /** A checkbox per overlay; Friends and Family show only while culture and sex are on (and Disease while disease is). */
+  let b: Engine | null = null;
+  const configs = () => (b ? [engine.config, b.config] : [engine.config]);
+  /** A checkbox per overlay; Friends, Family and Disease show while either world on screen allows them. */
   const overlay = (kind: Overlay, label: string) => {
     const box = h('input', { type: 'checkbox', onchange: () => engine.setDisplay({ overlays: { [kind]: box.checked } }) });
     const el = h('label', {}, box, ` ${label}`);
-    const show = () => (el.hidden = !overlayAvailable(kind, engine.config));
+    const show = () => (el.hidden = !overlayAvailableAny(kind, configs()));
     engine.on('display', () => (box.checked = engine.overlays[kind]));
     engine.on('reset', show);
     engine.on('config', show);
     show();
-    return el;
+    return { el, show };
   };
-  return h(
+  const overlays = OVERLAY_LABELS.map(([kind, label]) => overlay(kind, label));
+  const el = h(
     'div',
     { class: 'display-controls' },
     h('label', {}, 'Agents ', mode),
     h('label', {}, 'Landscape ', layer),
-    ...OVERLAY_LABELS.map(([kind, label]) => overlay(kind, label)),
+    ...overlays.map((o) => o.el),
   );
+  let offB: (() => void)[] = [];
+  const setCompare = (newB: Engine | null): void => {
+    for (const off of offB) off();
+    offB = [];
+    b = newB;
+    if (b) {
+      const other = b;
+      const show = () => overlays.forEach((o) => o.show());
+      offB = [other.on('reset', show), other.on('config', show)];
+    }
+    overlays.forEach((o) => o.show());
+  };
+  return { el, setCompare };
 }

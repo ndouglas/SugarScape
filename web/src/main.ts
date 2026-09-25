@@ -77,7 +77,8 @@ async function main(): Promise<void> {
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
   const toolbar = new Toolbar(engine);
   document.querySelector('#toolbar')!.append(toolbar.el);
-  document.querySelector('#display')!.append(buildDisplay(engine));
+  const display = buildDisplay(engine);
+  document.querySelector('#display')!.append(display.el);
   const experiments = new ExperimentsView(engine);
   document.querySelector('#experiments')!.append(experiments.el);
   const views = { playground: 'Playground', experiments: 'Experiments' } as const;
@@ -246,6 +247,7 @@ async function main(): Promise<void> {
     tools,
     tabs,
     charts,
+    display,
     rules,
     inspect,
     credit,
@@ -394,7 +396,7 @@ async function main(): Promise<void> {
     hold(true);
     try {
       engine.setRunning(false);
-      const errors = await engine.loadPreset(entry.a, states.a.seed);
+      const errors = await engine.loadPreset(entry.a, states.aSeed);
       if (errors) throw new Error(fieldErrorsMessage(errors));
       // The address bar no longer describes this world.
       history.replaceState(null, '', location.pathname + location.search);

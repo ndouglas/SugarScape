@@ -29,6 +29,15 @@ export function overlayAvailable(kind: Overlay, config: Config): boolean {
 }
 
 /**
+ * Whether an overlay's checkbox should be offered given every world on screen (Compare: A's and
+ * B's `config`s) — available if any one of them would show it. Each world still only draws what
+ * its own config allows (`clampDisplay` per world).
+ */
+export function overlayAvailableAny(kind: Overlay, configs: Config[]): boolean {
+  return configs.some((c) => overlayAvailable(kind, c));
+}
+
+/**
  * `d` kept valid for `config` (the host applies it to every snapshot): a layer the world lacks falls
  * back to good 0's level; with disease off the Disease color mode falls back to Tribe; an overlay
  * the world cannot show (`overlayAvailable`) is turned off. Returns `d` itself when nothing changes.

@@ -29,7 +29,7 @@ Chapter VI: the indecomposability demonstration and the emergent society's views
 `vi-2-no-trade` and `vi-3-trade` are one society — 500 agents with Chapter IV's traits on the sugar
 and spice landscape that move and reproduce — without and with trade, and the presets menu's
 **Indecomposability — VI-2 vs VI-3 (Compare)** opens them side by side in Compare at the seed box's
-seed. `vi-3-trade` reproduces the book's VI-3 curve (a dip by t ≈ 100, recovery to about twice the
+seed. `vi-3-trade` follows the book's VI-3 curve (a dip by t ≈ 100, recovery to about 1.7–2.0 times the
 initial population, minima near 700), but `vi-2-no-trade` does the same instead of crashing as the
 book's does: every stated rule matches the book, so the crash most likely depended on unreported
 details of the original software (see Notes). `vi-1-everything` offers the book's eighteen views

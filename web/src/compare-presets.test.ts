@@ -17,15 +17,14 @@ describe('compare presets', () => {
     expect(entry).toMatchObject({ a: 'vi-2-no-trade', b: 'vi-3-trade', label: 'Indecomposability — VI-2 vs VI-3 (Compare)' });
   });
 
-  it('builds both worlds from copies of the two presets at one seed', () => {
+  it('gives A its seed and builds B from a copy of its preset at the same seed', () => {
     const presets = [preset('vi-2-no-trade', false), preset('vi-3-trade', true)];
     const states = comparePresetStates(presets, entry, 42)!;
-    expect(states.a.seed).toBe(42);
+    expect(states.aSeed).toBe(42);
     expect(states.b.seed).toBe(42);
-    expect(states.a.config.trade.enabled).toBe(false);
     expect(states.b.config.trade.enabled).toBe(true);
-    states.a.config.trade.enabled = true;
-    expect(presets[0].config.trade.enabled).toBe(false);
+    states.b.config.trade.enabled = false;
+    expect(presets[1].config.trade.enabled).toBe(true);
   });
 
   it('is null when a preset is missing', () => {

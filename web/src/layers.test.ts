@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { noOverlays, type DisplayState } from './protocol';
 import type { Config } from './types';
-import { clampDisplay, layerOptions, overlayAvailable, validLayer } from './layers';
+import { clampDisplay, layerOptions, overlayAvailable, overlayAvailableAny, validLayer } from './layers';
 
 const config = {
   goods: [{ name: 'sugar' }, { name: 'salt' }],
@@ -61,5 +61,18 @@ describe('clampDisplay', () => {
     expect(overlayAvailable('family', only(true, false))).toBe(false);
     expect(overlayAvailable('family', only(false, true))).toBe(true);
     expect(overlayAvailable('disease', only(true, true))).toBe(false);
+  });
+
+  it('offers a Compare checkbox when either world would show it, and hides it only when neither would', () => {
+    const only = (culture: boolean, sex: boolean) =>
+      ({ ...config, disease: { enabled: false }, culture: { enabled: culture }, sex: { enabled: sex } }) as unknown as Config;
+    const a = only(true, false);
+    const b = only(false, true);
+    expect(overlayAvailableAny('friends', [a])).toBe(true);
+    expect(overlayAvailableAny('friends', [b])).toBe(false);
+    expect(overlayAvailableAny('friends', [a, b])).toBe(true);
+    expect(overlayAvailableAny('family', [a, b])).toBe(true);
+    expect(overlayAvailableAny('family', [a])).toBe(false);
+    expect(overlayAvailableAny('disease', [only(true, true), only(true, true)])).toBe(false);
   });
 });

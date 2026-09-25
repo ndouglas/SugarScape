@@ -1,6 +1,7 @@
 import { randomSeed, type Engine } from '../engine';
 import type { ChartsPanel } from '../ui/charts-panel';
 import { CreditPanel } from '../ui/credit-panel';
+import type { Display } from '../ui/display';
 import { h } from '../ui/dom';
 import { GridView } from '../ui/grid-view';
 import { InspectPanel } from '../ui/inspect-panel';
@@ -22,6 +23,7 @@ export interface Playground {
   tools: Tools;
   tabs: Tabs;
   charts: ChartsPanel;
+  display: Display;
   rules: WorldSlot<RulesPanel>;
   inspect: WorldSlot<InspectPanel>;
   credit: WorldSlot<CreditPanel>;
@@ -102,6 +104,7 @@ export class CompareView {
       this.header(shell.header, 'B', b);
       p.toolbar.setCompare(this.lock, b);
       p.charts.setCompare(b);
+      p.display.setCompare(b);
       // Each world has its own Rules, Inspect and Credit panels; tools act on the grid clicked (Decision 10).
       this.offs.push(p.tools.attach({ engine: b, grid: this.gridB }));
       p.rules.setB(new RulesPanel(b));
@@ -138,6 +141,7 @@ export class CompareView {
       for (const off of this.offs) off();
       p.toolbar.setCompare(null, null);
       p.charts.setCompare(null);
+      p.display.setCompare(null);
       this.dropPanels();
       p.syncCreditTab(null);
       throw e;
@@ -168,6 +172,7 @@ export class CompareView {
     a.setSpeed(this.lock.speed);
     p.toolbar.setCompare(null, null);
     p.charts.setCompare(null);
+    p.display.setCompare(null);
     this.dropPanels();
     this.shell.figure.remove();
     delete document.body.dataset.compare;
