@@ -9,6 +9,9 @@ import { AdaptiveBatch, copyWorld, Lockstep, MAX_BATCH } from './lockstep';
 
 const config = { width: 4, height: 3 } as unknown as Config;
 const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', description: '', config }];
+/** A valley config that ends after `end` years. */
+const valley = (end: number) =>
+  ({ model: 'anasazi', width: 4, height: 3, start_year: 800, end_year: 800 + end, finish: end }) as unknown as Config;
 /** Lets queued microtasks and zero-delay timers run. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 const create = (initial: InitialState) =>
@@ -105,8 +108,6 @@ describe('Lockstep', () => {
   });
 
   it('never steps a world past the first end year, so the pair stays in step', async () => {
-    const valley = (end: number) =>
-      ({ model: 'anasazi', width: 4, height: 3, start_year: 800, end_year: 800 + end, finish: end }) as unknown as Config;
     const a = await create({ config: valley(10), seed: 1 });
     const b = await create({ config: valley(20), seed: 2 });
     const lock = new Lockstep([a, b], 4);
@@ -136,8 +137,6 @@ describe('Lockstep', () => {
   });
 
   it('says so again, without stepping further, if Play or Step is pressed after the pair’s end year', async () => {
-    const valley = (end: number) =>
-      ({ model: 'anasazi', width: 4, height: 3, start_year: 800, end_year: 800 + end, finish: end }) as unknown as Config;
     const a = await create({ config: valley(3), seed: 1 });
     const b = await create({ config: valley(3), seed: 2 });
     const lock = new Lockstep([a, b], 4);
