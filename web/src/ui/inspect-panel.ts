@@ -1,3 +1,4 @@
+import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
 import { isCivilView, isRingView, isSugarView, isValleyView } from '../models';
 import type { AgentView, AnasaziInspection, CivilInspection, LinkView, RingInspection, SchellingInspection } from '../types';
@@ -113,25 +114,16 @@ export class InspectPanel {
     ];
   }
 
-  /** A civil violence site — its cop, the agents jailed there, and the free agent's state and grievance. */
-  private civilRows(view: CivilInspection, gone: boolean): HTMLElement[] {
+  /** A civil site: its cop, the agent shown there (followed into jail), and others jailed after arrest here. */
+  private civilRows(view: CivilInspection, followed: number | null, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
-    const { site, agent, cop, jailed } = view;
-    const rows = [
-      row('Site', `(${site.x}, ${site.y})`),
-      row('Cop here', cop ? `#${cop.id}` : 'none'),
-      row('Jailed here', jailed.length === 0 ? 'none' : jailed.map((j) => `#${j.id} (${j.state})`).join(', ')),
-    ];
-    if (!agent || gone) return rows;
-    return [
-      ...rows,
-      row('Agent', `#${agent.id} · ${agent.state}${agent.group ? ` · ${agent.group}` : ''}`),
-      row('Hardship / risk aversion', `${fmt(agent.hardship)} / ${fmt(agent.risk_aversion)}`),
-      row('Grievance', fmt(agent.grievance)),
-      row('Arrest probability (N)', `${percent(agent.arrest_probability)} (N = ${fmt(agent.net_risk)})`),
-      ...(agent.state === 'jailed' ? [row('Jail left', agent.jail_left !== null ? `${agent.jail_left} ticks` : 'for life')] : []),
-      ...(agent.age !== null ? [row('Age', agent.death_age !== null ? `${agent.age} / ${agent.death_age}` : String(agent.age))] : []),
-    ];
+    const rows = [row('Site', `(${view.site.x}, ${view.site.y})`)];
+    if (view.cop) rows.push(row('Cop', `#${view.cop.id}`));
+    const a = gone ? null : shownCitizen(view, followed);
+    if (a) rows.push(...citizenRows(a).map(([k, v]) => row(k, v)));
+    const others = view.jailed.filter((j) => j.id !== a?.id).length;
+    if (others > 0) rows.push(row('Jailed here', `${others} arrested on this site`));
+    return rows;
   }
 
   /** Ring World's site and its agent (Decision 13). */
@@ -194,7 +186,7 @@ export class InspectPanel {
       const left = isValleyView(view)
         ? `Household #${shown.agentId} is gone: it died or left the valley.`
         : isCivilView(view)
-          ? `Agent #${shown.agentId} is gone: it died or was released.`
+          ? `Agent #${shown.agentId} is gone: killed, or dead of old age.`
           : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
       const rows = isRingView(view)
@@ -202,7 +194,7 @@ export class InspectPanel {
         : isValleyView(view)
           ? this.valleyRows(view, gone)
           : isCivilView(view)
-            ? this.civilRows(view, gone)
+            ? this.civilRows(view, shown.agentId, gone)
             : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
