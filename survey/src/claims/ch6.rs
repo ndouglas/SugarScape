@@ -22,6 +22,17 @@ use crate::stats;
 
 // ---------------------------------------------------------------- helpers
 
+/// The Sugarscape config of a sweep point (every built-in sweep surveyed here
+/// is a Sugarscape sweep; `config_for` returns a `ModelConfig` since the
+/// Schelling and Ring World models were added).
+fn sugarscape_config(s: &Sweep, p: &sweep::Point) -> Config {
+    s.config_for(p)
+        .expect("a valid config")
+        .sugarscape()
+        .expect("a Sugarscape sweep")
+        .clone()
+}
+
 /// A per-process cache of one computation per seed list.
 struct Memo<T>(Mutex<Vec<(Vec<u64>, Arc<T>)>>);
 
@@ -392,7 +403,7 @@ fn builtin_blocks(id: &'static str, ticks: u32) -> &'static Vec<Vec<Vec<Vec<f64>
                 (0..s.x.values.len())
                     .map(|x| {
                         let p = points.iter().find(|p| p.series == series && p.x == x).unwrap();
-                        let c = s.config_for(p).expect("a valid config");
+                        let c = sugarscape_config(&s, p);
                         each_seed(&c, &seeds, |mut w| {
                             w.run(ticks);
                             match sweep::measure(&metric, ticks, &series_of(&w)) {
@@ -496,7 +507,7 @@ fn shared_peak(n_index: usize, trade: usize) -> Config {
         .into_iter()
         .find(|p| p.x == n_index && p.series == trade)
         .unwrap();
-    let mut c = s.config_for(&point).unwrap();
+    let mut c = sugarscape_config(&s, &point);
     for g in &mut c.goods {
         g.map = Map::Peaks { peaks: vec![Peak { x: 10, y: 10, radius: 20.0, height: 4.0 }] };
     }
@@ -1150,7 +1161,7 @@ pub fn claims() -> Vec<Claim> {
                     .into_iter()
                     .filter(|p| p.series == 0 && p.seed == s.seeds.from)
                     .map(|p| {
-                        let c = s.config_for(&p).unwrap();
+                        let c = sugarscape_config(&s, &p);
                         let n = c.goods.len();
                         let w = World::new(c, p.seed).unwrap();
                         w.sites.iter().filter(|site| (0..n).all(|g| site.capacity[g] > 0.0)).count() as f64
@@ -1168,7 +1179,7 @@ pub fn claims() -> Vec<Claim> {
             check: |_| {
                 let s = sweep::builtin("n-goods-carrying-capacity").unwrap();
                 let point = s.points().unwrap().into_iter().find(|p| p.series == 1 && p.x == 2).unwrap();
-                let c = s.config_for(&point).unwrap();
+                let c = sugarscape_config(&s, &point);
                 let seeds: Vec<u64> = (s.seeds.from..s.seeds.from + u64::from(s.seeds.count)).collect();
                 let fp = |c: &Config| {
                     each_seed(c, &seeds, |mut w| {
