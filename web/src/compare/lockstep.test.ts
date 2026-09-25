@@ -170,6 +170,41 @@ describe('Lockstep', () => {
   });
 });
 
+describe('Lockstep seek and stops', () => {
+  it('seeks both worlds to one tick', async () => {
+    const { a, b, lock } = await pair(5);
+    await lock.advance(80);
+    expect(lock.reached).toBe(80);
+    await lock.seek(33);
+    expect([a.tick, b.tick]).toEqual([33, 33]);
+    await lock.seek(80);
+    expect([a.tick, b.tick]).toEqual([80, 80]);
+  });
+
+  it('stops both at tick N and ignores a condition', async () => {
+    const { a, b, lock } = await pair(7);
+    lock.setStops({ tick: 20, when: { series: 'population', op: '<', value: 99 } });
+    let stopped = 0;
+    lock.on('stopped', () => stopped++);
+    lock.setRunning(true);
+    await frames(lock, 10);
+    expect([a.tick, b.tick]).toEqual([20, 20]);
+    expect(lock.running).toBe(false);
+    expect(stopped).toBe(1);
+    expect(lock.lastStop).toBe('Stopped at tick 20');
+  });
+
+  it('clears the worlds’ own rules, so neither host stops alone', async () => {
+    const a = await create({ config, seed: 1 });
+    a.setStops({ tick: 3 });
+    const b = await create({ config, seed: 2 });
+    const lock = new Lockstep([a, b], 5);
+    await lock.settled();
+    await lock.advance(10);
+    expect([a.tick, b.tick]).toEqual([10, 10]);
+  });
+});
+
 describe('Lockstep below 1×', () => {
   it('steps both worlds one tick at a time by the clock', async () => {
     const { a, b, lock } = await pair(1 / 60); // a tick a second
