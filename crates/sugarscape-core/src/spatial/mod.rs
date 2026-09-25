@@ -1,4 +1,4 @@
-//! Spatial games (milestone 12): the spatial Prisoner's Dilemma of Nowak &
+//! Spatial games (milestone 13): the spatial Prisoner's Dilemma of Nowak &
 //! May, "Evolutionary games and spatial chaos", Nature 359 (1992), with the
 //! asynchronous updating of Huberman & Glance (PNAS 90, 1993) and the
 //! probabilistic winning, continuous time, irregular arrays and cubes of

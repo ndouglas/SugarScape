@@ -1,0 +1,53 @@
+{
+  "name": "Tags: population size and the tie rule",
+  "description": "Edmonds & Hales 2003 report that with 200 agents 'the donations rates vanished', without saying under which rules. The donation rate over 30 000 generations against the number of agents, under each tie rule. Measured (release, seeds 1–10, recorded 2026-09-25), coin flip / current agent / opponent: 50 agents 74.0% under every rule; 100: 73.6–73.7%; 200: 73.3 / 59.2 / 73.4% (2 of 10 runs with ties to the current agent never cooperate, about 1%); 400: 41.3 / 51.8 / 71.9% (4 and 3 of 10 runs never cooperate). Larger populations sometimes never form a dominant cluster; when one forms, cooperation is as high as at 100.",
+  "base": {
+    "preset": "rca-literal"
+  },
+  "x": {
+    "label": "Agents",
+    "path": "agents",
+    "values": [
+      50,
+      100,
+      200,
+      400
+    ]
+  },
+  "series": {
+    "label": "Equal scores",
+    "values": [
+      {
+        "at": 0,
+        "name": "Coin flip (literal)",
+        "set": {
+          "tie_rule": "random"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Current agent wins (the paper’s tables)",
+        "set": {
+          "tie_rule": "current"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Opponent wins",
+        "set": {
+          "tie_rule": "other"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 30000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "donation_rate",
+    "from": 0
+  }
+}

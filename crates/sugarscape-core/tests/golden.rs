@@ -84,6 +84,15 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("nbm-continuous", 0x186717b420e5af31),
     ("nbm-random-array", 0xcf2c74041806d530),
     ("nbm-cube", 0x96baab61504e7923),
+    ("rca-published", 0x1c83900b9b9f0b94),
+    ("rca-literal", 0x8cc0a69cf4d14caa),
+    ("rca-published-p2", 0x3f91b546c9734d3d),
+    ("rca-literal-p2", 0x54380d2809b3fd62),
+    ("rca-strict", 0x7b729c41a4436372),
+    ("rs-no-forced-clones", 0x9dffef2174ca7415),
+    ("eh-clones-only", 0x1bd933620c915c0e),
+    ("eh-no-exact-clones", 0xafe94d6c0bb3b8ab),
+    ("rca-adopt-p1", 0xc3f75d53d237a89),
 ];
 
 fn fingerprint(id: &str) -> u64 {

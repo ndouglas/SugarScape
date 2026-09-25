@@ -1,4 +1,4 @@
-# SugarScape Milestone 12 — Spatial games (Nowak–May and its critics) — Design
+# SugarScape Milestone 13 — Spatial games (Nowak–May and its critics) — Design
 
 **Date:** 2026-09-25
 **Builds on:** the milestone 1–11 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds and milestone 11's conventions (portable math, named switches for unstated choices, measured descriptions).

@@ -1,4 +1,4 @@
-//! The spatial games (milestone 12) against Nowak & May 1992, Huberman &
+//! The spatial games (milestone 13) against Nowak & May 1992, Huberman &
 //! Glance 1993 and Nowak, Bonhoeffer & May 1994. The kaleidoscope's exact
 //! claims run with the other tests; the statistical claims run over seeds
 //! 1–20 in release: `cargo test -p sugarscape-core --release --test spatial

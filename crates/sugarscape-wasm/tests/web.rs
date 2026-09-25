@@ -266,7 +266,11 @@ fn builtins_and_series_names_are_listed() {
             "hg-async",
             "nbm-grid-discrete",
             "nbm-grid-continuous",
-            "nbm-radius"
+            "nbm-radius",
+            "rca-pairings",
+            "rca-cost",
+            "rca-clones",
+            "rca-population"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -659,6 +663,22 @@ fn spatial_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "spatial");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn tags_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the Gaussian
+    // mutations use the anasazi's portable normal draw.
+    for (id, fp) in [
+        ("rca-published", "0x1c83900b9b9f0b94"),
+        ("eh-no-exact-clones", "0xafe94d6c0bb3b8ab"),
+        ("rca-adopt-p1", "0x0c3f75d53d237a89"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "tags");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

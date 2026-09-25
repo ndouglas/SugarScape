@@ -206,6 +206,8 @@ body[data-compare] #grid { max-width: 100%; }
 body[data-model='ring'] #grid, body[data-model='ring'] .grid-b { max-width: min(100%, 36vh); }
 /* The valley is 80 × 120: narrower, so it stays within the viewport's height. */
 body[data-model='anasazi'] #grid, body[data-model='anasazi'] .grid-b { max-width: min(100%, 54vh); }
+/* The tag × generation diagram is twice as tall as it is wide. */
+body[data-model='tags'] #grid, body[data-model='tags'] .grid-b { max-width: min(100%, 36vh); }
 .copy-progress { margin: 0; padding: 24px 0; text-align: center; font-variant-numeric: tabular-nums; }
 .chips { display: contents; }
 .compare-toggle { margin-left: -8px; }

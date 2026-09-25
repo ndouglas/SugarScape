@@ -44,6 +44,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'nbm-discrete',
     b: 'nbm-continuous',
   },
+  {
+    id: 'rca-published-vs-literal-p2',
+    label: 'Published vs literal ties at P = 2 — Tag Cooperation (Compare)',
+    a: 'rca-published-p2',
+    b: 'rca-literal-p2',
+  },
 ];
 
 /**

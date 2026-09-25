@@ -13,8 +13,9 @@ use crate::ring::{RingConfig, RingWorld};
 use crate::schelling::{SchellingConfig, SchellingWorld};
 use crate::schema::Param;
 use crate::spatial::{SpatialConfig, SpatialWorld};
+use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
-use crate::{anasazi, civil, export, ring, schelling, spatial, stats};
+use crate::{anasazi, civil, export, ring, schelling, spatial, stats, tags};
 
 /// Which model a config or world is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -26,16 +27,18 @@ pub enum ModelKind {
     Anasazi,
     Civil,
     Spatial,
+    Tags,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 6] = [
+    pub const ALL: [ModelKind; 7] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
         ModelKind::Anasazi,
         ModelKind::Civil,
         ModelKind::Spatial,
+        ModelKind::Tags,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -46,6 +49,7 @@ impl ModelKind {
             ModelKind::Anasazi => "anasazi",
             ModelKind::Civil => "civil",
             ModelKind::Spatial => "spatial",
+            ModelKind::Tags => "tags",
         }
     }
 
@@ -59,6 +63,7 @@ impl ModelKind {
             ModelKind::Anasazi => anasazi::schema(),
             ModelKind::Civil => civil::schema(),
             ModelKind::Spatial => spatial::schema(),
+            ModelKind::Tags => tags::schema(),
         }
     }
 }
@@ -78,6 +83,7 @@ pub enum ModelConfig {
     Anasazi(AnasaziConfig),
     Civil(CivilConfig),
     Spatial(SpatialConfig),
+    Tags(TagsConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -89,6 +95,7 @@ enum Tagged<'a> {
     Anasazi(&'a AnasaziConfig),
     Civil(&'a CivilConfig),
     Spatial(&'a SpatialConfig),
+    Tags(&'a TagsConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -107,6 +114,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Anasazi(c) => Tagged::Anasazi(c).serialize(s),
             ModelConfig::Civil(c) => Tagged::Civil(c).serialize(s),
             ModelConfig::Spatial(c) => Tagged::Spatial(c).serialize(s),
+            ModelConfig::Tags(c) => Tagged::Tags(c).serialize(s),
         }
     }
 }
@@ -120,6 +128,7 @@ impl ModelConfig {
             ModelConfig::Anasazi(_) => ModelKind::Anasazi,
             ModelConfig::Civil(_) => ModelKind::Civil,
             ModelConfig::Spatial(_) => ModelKind::Spatial,
+            ModelConfig::Tags(_) => ModelKind::Tags,
         }
     }
 
@@ -172,10 +181,13 @@ impl ModelConfig {
             "spatial" => serde_json::from_value(value)
                 .map(ModelConfig::Spatial)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "tags" => serde_json::from_value(value)
+                .map(ModelConfig::Tags)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil or spatial)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial or tags)"
                 ),
             )),
         }
@@ -189,6 +201,7 @@ impl ModelConfig {
             ModelConfig::Anasazi(c) => c.validate(),
             ModelConfig::Civil(c) => c.validate(),
             ModelConfig::Spatial(c) => c.validate(),
+            ModelConfig::Tags(c) => c.validate(),
         }
     }
 
@@ -202,6 +215,7 @@ impl ModelConfig {
             ModelConfig::Anasazi(c) => set_path(c, path, value).map(ModelConfig::Anasazi),
             ModelConfig::Civil(c) => set_path(c, path, value).map(ModelConfig::Civil),
             ModelConfig::Spatial(c) => set_path(c, path, value).map(ModelConfig::Spatial),
+            ModelConfig::Tags(c) => set_path(c, path, value).map(ModelConfig::Tags),
         }
     }
 
@@ -210,6 +224,7 @@ impl ModelConfig {
     pub fn max_ticks(&self) -> Option<u32> {
         match self {
             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
+            ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
             ModelConfig::Sugarscape(_)
             | ModelConfig::Schelling(_)
             | ModelConfig::Ring(_)
@@ -227,6 +242,7 @@ impl ModelConfig {
             ModelConfig::Anasazi(_) => anasazi::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Civil(_) => civil::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Spatial(_) => spatial::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Tags(_) => tags::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -387,6 +403,7 @@ pub enum ModelWorld {
     Anasazi(Box<AnasaziWorld>),
     Civil(Box<CivilWorld>),
     Spatial(Box<SpatialWorld>),
+    Tags(Box<TagsWorld>),
 }
 
 impl ModelWorld {
@@ -412,6 +429,7 @@ impl ModelWorld {
             ModelConfig::Anasazi(c) => ModelWorld::Anasazi(Box::new(AnasaziWorld::new(c, seed)?)),
             ModelConfig::Civil(c) => ModelWorld::Civil(Box::new(CivilWorld::new(c, seed)?)),
             ModelConfig::Spatial(c) => ModelWorld::Spatial(Box::new(SpatialWorld::new(c, seed)?)),
+            ModelConfig::Tags(c) => ModelWorld::Tags(Box::new(TagsWorld::new(c, seed)?)),
         })
     }
 
@@ -423,6 +441,7 @@ impl ModelWorld {
             ModelWorld::Anasazi(_) => ModelKind::Anasazi,
             ModelWorld::Civil(_) => ModelKind::Civil,
             ModelWorld::Spatial(_) => ModelKind::Spatial,
+            ModelWorld::Tags(_) => ModelKind::Tags,
         }
     }
 
@@ -434,6 +453,7 @@ impl ModelWorld {
             ModelWorld::Anasazi(w) => w.as_ref(),
             ModelWorld::Civil(w) => w.as_ref(),
             ModelWorld::Spatial(w) => w.as_ref(),
+            ModelWorld::Tags(w) => w.as_ref(),
         }
     }
 
@@ -445,6 +465,7 @@ impl ModelWorld {
             ModelWorld::Anasazi(w) => w.as_mut(),
             ModelWorld::Civil(w) => w.as_mut(),
             ModelWorld::Spatial(w) => w.as_mut(),
+            ModelWorld::Tags(w) => w.as_mut(),
         }
     }
 
@@ -524,6 +545,7 @@ impl ModelWorld {
             ModelWorld::Anasazi(w) => copy_without_history!(Anasazi, w),
             ModelWorld::Civil(w) => copy_without_history!(Civil, w),
             ModelWorld::Spatial(w) => copy_without_history!(Spatial, w),
+            ModelWorld::Tags(w) => copy_without_history!(Tags, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -545,6 +567,7 @@ impl ModelWorld {
             (ModelWorld::Anasazi(live), ModelWorld::Anasazi(kept)) => restore_into!(live, kept),
             (ModelWorld::Civil(live), ModelWorld::Civil(kept)) => restore_into!(live, kept),
             (ModelWorld::Spatial(live), ModelWorld::Spatial(kept)) => restore_into!(live, kept),
+            (ModelWorld::Tags(live), ModelWorld::Tags(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -743,6 +766,33 @@ mod tests {
     }
 
     #[test]
+    fn tags_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(r#"{"model": "tags", "tie_rule": "current"}"#).unwrap();
+        assert_eq!(c.kind(), ModelKind::Tags);
+        let ModelConfig::Tags(t) = &c else {
+            unreachable!()
+        };
+        assert_eq!(t.tie_rule, crate::tags::TieRule::Current);
+        assert_eq!(
+            (t.agents, t.pairings),
+            (100, 3),
+            "missing fields take the defaults"
+        );
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(json["model"], "tags");
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["donation_rate", "mean_tolerance"]);
+        assert_eq!(c.max_ticks(), Some(30_000));
+        let forever = c.with_path("end", &json!(0)).unwrap();
+        assert_eq!(forever.max_ticks(), None);
+        let e = ModelConfig::from_json(r#"{"model": "tags", "cost": -1}"#).unwrap_err();
+        assert_eq!(e[0].field, "cost");
+        let w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Tags);
+        assert_eq!(w.model().size(), (100, 200));
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -771,7 +821,8 @@ mod tests {
                 "ring",
                 "anasazi",
                 "civil",
-                "spatial"
+                "spatial",
+                "tags"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

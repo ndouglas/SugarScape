@@ -206,11 +206,32 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       ],
     },
   ],
+  tags: [
+    { title: 'Donation rate', lines: [{ key: 'donation_rate', label: 'Donations per pairing', color: '--c1' }], range: [0, 1] },
+    {
+      title: 'Tolerance',
+      lines: [
+        { key: 'mean_tolerance', label: 'Mean', color: '--c2' },
+        { key: 'cluster_tolerance', label: 'Dominant cluster', color: '--c3' },
+      ],
+    },
+    {
+      title: 'Clusters',
+      lines: [
+        { key: 'cluster_share', label: 'Cluster share', color: '--c1' },
+        { key: 'relatedness', label: 'Relatedness', color: '--c4' },
+        { key: 'zero_tolerance_share', label: 'Zero tolerance', color: '--red' },
+      ],
+      range: [0, 1],
+    },
+    { title: 'Distinct tags', lines: [{ key: 'distinct_tags', label: 'Distinct tags', color: '--c2' }] },
+    { title: 'Takeovers', lines: [{ key: 'takeovers', label: 'Dominant clusters replaced', color: '--c3' }] },
+  ],
 };
 
 /** A model's time charts count calendar years (the anasazi's) or ticks. */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

@@ -6,7 +6,7 @@ use rand::Rng;
 
 use crate::rng::SimRng;
 
-/// The portable logarithm (moved to `crate::portable` in milestone 12).
+/// The portable logarithm (moved to `crate::portable` in milestone 13).
 pub use crate::portable::ln;
 
 /// A standard normal draw (Marsaglia's polar method): pairs `(u, v)`

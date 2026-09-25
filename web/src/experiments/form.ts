@@ -47,6 +47,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'final', series: 'fit' },
     };
   }
+  if (model === 'tags') {
+    // Table 1's axis (the built-in rca-pairings): the donation rate over the whole run.
+    return { ...form, x: { path: 'pairings', values: '1:4:1' }, ticks: 3000, metric: { ...form.metric, kind: 'window_mean', series: 'donation_rate', from: 0 } };
+  }
   if (model === 'civil') {
     // The Finding's axis (the built-in cv-ratio-rules): outbursts against legitimacy.
     return { ...form, x: { path: 'legitimacy', values: '0.6:0.95:0.05' }, ticks: 1000, metric: { ...form.metric, kind: 'final', series: 'outbursts' } };

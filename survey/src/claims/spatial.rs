@@ -1,4 +1,4 @@
-//! The spatial games (milestone 12): Nowak & May 1992, Huberman & Glance
+//! The spatial games (milestone 13): Nowak & May 1992, Huberman & Glance
 //! 1993 and Nowak, Bonhoeffer & May 1994, each claim in its paper's words.
 
 use sugarscape_core::model::{ModelConfig, ModelWorld};

@@ -138,6 +138,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('tags')).toMatchObject({
+      x: { path: 'pairings', values: '1:4:1' },
+      ticks: 3000,
+      metric: { kind: 'window_mean', series: 'donation_rate', from: 0 },
+    });
     expect(defaultForm('civil')).toMatchObject({
       x: { path: 'legitimacy', values: '0.6:0.95:0.05' },
       ticks: 1000,

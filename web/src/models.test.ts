@@ -8,6 +8,7 @@ import {
   isSpatialView,
   isSugar,
   isSugarView,
+  isTagsView,
   isValleyView,
   MODEL_OVERLAYS,
   modelOf,
@@ -93,6 +94,37 @@ describe('the anasazi model', () => {
     const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the tags model', () => {
+  const tags = (end: number) => ({ model: 'tags', end }) as unknown as ModelConfig;
+
+  it('is read by its tag, and its inspections by their generation', () => {
+    expect(modelOf(tags(30000))).toBe('tags');
+    expect(isSugar(tags(30000))).toBe(false);
+    const cell = { site: { x: 1, y: 2 }, generation: 5, agents: [], agent: null } as unknown as AnyInspection;
+    const above = { site: { x: 1, y: 2 }, generation: null, agents: [], agent: null } as unknown as AnyInspection;
+    const civil = { site: { x: 1, y: 2 }, agent: null, cop: null, jailed: [] } as unknown as AnyInspection;
+    expect([cell, above, civil].map(isTagsView)).toEqual([true, true, false]);
+    expect(isRingView(cell) || isSugarView(cell) || isValleyView(cell) || isCivilView(cell)).toBe(false);
+  });
+
+  it('offers its diagram’s three shadings and no overlays', () => {
+    expect(COLOR_MODES.tags).toEqual([
+      ['count', 'Count'],
+      ['tolerance', 'Tolerance'],
+      ['clones', 'Clones'],
+    ]);
+    expect(MODEL_OVERLAYS.tags).toEqual([]);
+    expect(calendarYear(tags(30000), 5)).toBeNull();
+    expect(finishesUnpredictably(tags(30000))).toBe(false);
+  });
+
+  it('counts down to its last generation, or never with none', () => {
+    expect(ticksLeft(tags(30000), 29990)).toBe(10);
+    expect(ticksLeft(tags(30000), 30005)).toBe(0);
+    expect(ticksLeft(tags(0), 5)).toBe(Infinity);
   });
 });
 

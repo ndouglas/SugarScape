@@ -4,7 +4,7 @@
 //! results feed a fingerprint use these instead, built from IEEE-exact
 //! `+ − × ÷` (and `sqrt`) only. Milestones 10 and 11 wrote them for the
 //! anasazi's harvest noise and civil violence's arrest probability;
-//! milestone 12 gathered them here for the spatial games' probabilistic
+//! milestone 13 gathered them here for the spatial games' probabilistic
 //! winning.
 
 use std::f64::consts::LN_2;

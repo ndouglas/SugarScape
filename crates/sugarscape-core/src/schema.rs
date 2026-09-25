@@ -186,7 +186,15 @@ pub(crate) fn check_schema(
             .unwrap_or_else(|| panic!("{} is not in the config", p.path));
         let changed: Value = match p.kind {
             ParamKind::Integer => json!(at.as_u64().unwrap() + 1),
-            ParamKind::Number => json!(at.as_f64().unwrap() + p.step.unwrap()),
+            // Up a step, or down one from the top of the range.
+            ParamKind::Number => {
+                let (v, step) = (at.as_f64().unwrap(), p.step.unwrap());
+                json!(if v + step <= p.max.unwrap() {
+                    v + step
+                } else {
+                    v - step
+                })
+            }
             ParamKind::Range => {
                 let (lo, hi) = (at["min"].as_f64().unwrap(), at["max"].as_f64().unwrap());
                 assert!(lo <= hi, "{}", p.path);

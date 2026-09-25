@@ -76,8 +76,8 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-/** The models the playground runs (milestones 9–12). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial';
+/** The models the playground runs (milestones 9–13). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -172,7 +172,7 @@ export interface CivilConfig {
   ramps: CivilRamp[];
 }
 
-/** Nowak & May's spatial Prisoner's Dilemma and its variants (milestone 12). */
+/** Nowak & May's spatial Prisoner's Dilemma and its variants (milestone 13). */
 export interface SpatialConfig {
   model: 'spatial';
   lattice: 'square' | 'cube' | 'random';
@@ -198,7 +198,30 @@ export interface SpatialConfig {
  * and sweep written before milestone 9 is one); the others carry theirs. Narrow with `isSugar` /
  * `modelOf` (models.ts).
  */
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | SpatialConfig;
+/**
+ * Riolo, Cohen & Axelrod's tag-based donation (milestone 12), with Edmonds & Hales' and Roberts &
+ * Sherratt's departures as switches. A tick is a generation.
+ */
+export interface TagsConfig {
+  model: 'tags';
+  agents: number;
+  pairings: number;
+  cost: number;
+  benefit: number;
+  initial_tolerance: 'uniform' | { fixed: number };
+  tag_mutation: number;
+  tolerance_mutation: number;
+  tolerance_sd: number;
+  /** The last generation (0: never). */
+  end: number;
+  tie_rule: 'random' | 'current' | 'other';
+  donation_test: 'at_most' | 'below';
+  tolerance_floor: number;
+  tag_noise: number;
+  selection: 'tournament' | 'adopt';
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -319,8 +342,22 @@ export interface SpatialStats {
   players: number;
 }
 
+
+export interface TagsStats {
+  tick: number;
+  population: number;
+  donation_rate: number;
+  mean_tolerance: number;
+  cluster_share: number;
+  relatedness: number;
+  cluster_tolerance: number;
+  zero_tolerance_share: number;
+  distinct_tags: number;
+  takeovers: number;
+}
+
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | SpatialStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -436,12 +473,34 @@ export interface PlayerView {
 /** A spatial cell (in a cube, of the slice on screen); no player on an empty cell of a random array. */
 export interface SpatialInspection { site: { x: number; y: number; z: number }; agent: PlayerView | null }
 
+/** An agent of the current generation: its traits, and this generation's score and donations. */
+export interface TaggerView { id: number; parent: number; tag: number; tolerance: number; score: number; given: number; received: number }
+/**
+ * A cell of the tag × generation diagram: its generation (null above the first) and tag bin, what
+ * that bin held, and its agents when it is the current generation. `agent` is always null: agents
+ * live one generation, so there is nobody to follow.
+ */
+export interface TagsInspection {
+  site: { x: number; y: number };
+  generation: number | null;
+  from: number;
+  to: number;
+  count: number;
+  distinct: number;
+  tolerance: { min: number; mean: number; max: number } | null;
+  given: number;
+  received: number;
+  agents: TaggerView[];
+  agent: null;
+}
+
 /** What a world of any model says about a site. */
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | SpatialInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
- * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`.
+ * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`, or (tags)
+ * `count`, `tolerance`, `clones`.
  */
 export type ColorMode =
   | 'tribe'
@@ -463,7 +522,10 @@ export type ColorMode =
   | 'group'
   | 'change'
   | 'strategy'
-  | 'payoff';
+  | 'payoff'
+  | 'count'
+  | 'tolerance'
+  | 'clones';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

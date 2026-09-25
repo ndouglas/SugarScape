@@ -1,0 +1,56 @@
+{
+  "name": "Tags: pairings per generation and the tie rule",
+  "description": "Table 1 of Riolo, Cohen & Axelrod 2001 and Table 7 of Edmonds & Hales 2003: the donation rate over 30 000 generations against pairings per agent, under each reading of who wins a tie. Measured (release, seeds 1–5, recorded 2026-09-25), coin flip / current agent / opponent: P = 1: 5.0 / 2.1 / 6.0%; P = 2: 44.0 / 2.0 / 50.3%; from P = 3 the rules agree (73.4–73.7, 76.8, 78.6–78.7, 79.1–79.2, 79.3%). The paper's jump between 2 and 3 pairings (4.3% to 73.6%) appears only when ties go to the current agent.",
+  "base": {
+    "preset": "rca-literal"
+  },
+  "x": {
+    "label": "Pairings per agent (P)",
+    "path": "pairings",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      10
+    ]
+  },
+  "series": {
+    "label": "Equal scores",
+    "values": [
+      {
+        "at": 0,
+        "name": "Coin flip (literal)",
+        "set": {
+          "tie_rule": "random"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Current agent wins (the paper’s tables)",
+        "set": {
+          "tie_rule": "current"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Opponent wins",
+        "set": {
+          "tie_rule": "other"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 30000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "donation_rate",
+    "from": 0
+  }
+}

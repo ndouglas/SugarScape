@@ -390,12 +390,18 @@ impl Sweep {
                 .collect::<Vec<_>>()
         })?;
         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
-            return Err(vec![FieldError::new(
-                "ticks",
-                format!(
-                    "must be ≤ {max}: the Long House Valley stops at its end year, \
+            let why = match config.kind() {
+                crate::model::ModelKind::Tags => {
+                    format!("the tags model stops at its last generation, {max} in this config")
+                }
+                _ => format!(
+                    "the Long House Valley stops at its end year, \
                      {max} ticks after its start year in this config"
                 ),
+            };
+            return Err(vec![FieldError::new(
+                "ticks",
+                format!("must be ≤ {max}: {why}"),
             )]);
         }
         let name = self.metric.series();
@@ -940,7 +946,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 16] = [
+const BUILTINS: [Builtin; 20] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1004,6 +1010,22 @@ const BUILTINS: [Builtin; 16] = [
     Builtin {
         id: "nbm-radius",
         json: include_str!("../../../sweeps/nbm-radius.json"),
+    },
+    Builtin {
+        id: "rca-pairings",
+        json: include_str!("../../../sweeps/rca-pairings.json"),
+    },
+    Builtin {
+        id: "rca-cost",
+        json: include_str!("../../../sweeps/rca-cost.json"),
+    },
+    Builtin {
+        id: "rca-clones",
+        json: include_str!("../../../sweeps/rca-clones.json"),
+    },
+    Builtin {
+        id: "rca-population",
+        json: include_str!("../../../sweeps/rca-population.json"),
     },
 ];
 
@@ -1755,6 +1777,17 @@ mod tests {
     }
 
     #[test]
+    fn a_tags_sweep_past_the_last_generation_names_the_tags_model() {
+        let mut s = builtin("rca-pairings").unwrap();
+        s.ticks = 30_001;
+        let e = s.points().unwrap_err();
+        assert_eq!(e[0].field, "ticks");
+        assert!(e[0].message.starts_with("must be ≤ 30000"), "{e:?}");
+        assert!(e[0].message.contains("last generation"), "{e:?}");
+        assert!(!e[0].message.contains("Long House Valley"), "{e:?}");
+    }
+
+    #[test]
     fn builtin_sweeps_parse_and_validate() {
         let ids: Vec<&str> = builtins().iter().map(|b| b.id).collect();
         assert_eq!(
@@ -1775,7 +1808,11 @@ mod tests {
                 "hg-async",
                 "nbm-grid-discrete",
                 "nbm-grid-continuous",
-                "nbm-radius"
+                "nbm-radius",
+                "rca-pairings",
+                "rca-cost",
+                "rca-clones",
+                "rca-population"
             ]
         );
         for b in builtins() {

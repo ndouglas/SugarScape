@@ -1,4 +1,4 @@
-// The spatial games' pure page helpers (milestone 12): a cube's slices; Inspect's rows (Task 5).
+// The spatial games' pure page helpers (milestone 13): a cube's slices; Inspect's rows (Task 5).
 import type { Layer, PlayerView, SpatialConfig } from './types';
 
 /** A cube's z-slices for the Slice menu; none for a square or random lattice. */

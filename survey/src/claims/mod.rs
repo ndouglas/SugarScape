@@ -5,6 +5,7 @@ mod ch5;
 mod ch6;
 mod civil;
 mod spatial;
+mod tags;
 
 use crate::claim::Claim;
 
@@ -17,6 +18,7 @@ pub fn all() -> Vec<Claim> {
         ch6::claims(),
         civil::claims(),
         spatial::claims(),
+        tags::claims(),
     ]
     .into_iter()
     .flatten()
