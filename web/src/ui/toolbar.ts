@@ -129,6 +129,7 @@ export class Toolbar {
       },
       ...SPEEDS.map((s) => h('option', { value: String(s) }, speedLabel(s))),
     );
+    this.speed.value = String(engine.speed);
     this.rate = h('span', { class: 'rate', title: 'Measured ticks per second' });
     this.seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
     const seedLabel = h('label', {}, 'Seed ', this.seed);
