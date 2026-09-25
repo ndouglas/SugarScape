@@ -220,7 +220,7 @@ pub fn all() -> Vec<Preset> {
             "iii-6-culture",
             "({G₁}, {M, K})",
             "Animations III-6/III-7",
-            "Cultural transmission: tag-flipping converts spatially separated groups toward uniform tribes.",
+            "Cultural transmission: tag-flipping makes neighbors alike, so each sugar mountain becomes one tribe. On about half of runs the two mountains settle on different tribes.",
             |c| c.culture.enabled = true,
         ),
         preset(
@@ -282,7 +282,7 @@ pub fn all() -> Vec<Preset> {
             "iv-1-spice",
             "({G₁}, {M}) with spice",
             "Animation IV-1",
-            "Two goods on opposite mountains: agents shuttle between sugar and spice to stay alive.",
+            "Two goods on opposite mountains: to stay alive, about half the agents shuttle back and forth between sugar and spice.",
             |c| {
                 c.vision = URange::new(1, 10);
                 c.goods[0].metabolism = URange::new(1, 5);
@@ -301,7 +301,7 @@ pub fn all() -> Vec<Preset> {
             "iv-15-trade-sex",
             "({G₁}, {M, S, T})",
             "Figure IV-15",
-            "Finite lives and evolving preferences keep prices from settling.",
+            "Finite lives and evolving preferences keep prices from settling: their dispersion grows over time. Some runs die out (3 of 20 by t = 1000).",
             |c| {
                 market(c);
                 c.sex.enabled = true;
@@ -327,7 +327,7 @@ pub fn all() -> Vec<Preset> {
             "iv-18-foresight",
             "({G₁}, {M, S}) with foresight",
             "Figure IV-18",
-            "Agents plan φ periods ahead; evolution keeps a modest, non-zero foresight.",
+            "Agents plan φ periods ahead. Mean foresight starts near 5 and drifts down only slightly (to about 4.4 by t = 1000); it is not reliably selected down.",
             |c| {
                 demography(c);
                 // Demography's Chapter III endowment (50-100) is tuned for a
@@ -362,7 +362,7 @@ pub fn all() -> Vec<Preset> {
             "v-1-rid",
             "({G₁}, {M, E})",
             "Animation V-1",
-            "Immune systems learn the diseases their agents carry: near-eradication (a residue of ~1-3% persists because learning one disease can overwrite the window that cured another).",
+            "Immune systems learn the diseases their agents carry: near-eradication. A small residue persists, typically 1–3% but from near 0 to above 3% depending on the run, because learning one disease can overwrite the window that cured another.",
             disease,
         ),
         preset(
@@ -380,7 +380,7 @@ pub fn all() -> Vec<Preset> {
             "v-mcneill",
             "({G₁}, {M, S, E}) + outbreak",
             "Chapter V (after McNeill)",
-            "A reproducing society carrying its familiar diseases meets a novel one at t = 300, brought in by 5 agents.",
+            "A reproducing society that has learned away its familiar diseases by t = 300 meets a novel one, given to 5 agents (each already immune with probability about 4%).",
             |c| {
                 demography(c);
                 disease(c);
@@ -404,7 +404,7 @@ pub fn all() -> Vec<Preset> {
             "vi-1-everything",
             "({G₁}, {M, S, I, K, T, L, E})",
             "Chapter VI",
-            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650; disease flares after each outbreak and tends to die out again before the next one. The book's eighteen views, in its order: (1) Agents → Disease colors; (2) the Neighbor network overlay; (3) Charts → Wealth distribution (sugar); (4) Charts → Goods → Wealth distribution · spice; (5) Charts → Goods → Lorenz curve and Gini coefficient (total wealth); (6) Charts → Population; (7) Charts → Age histogram; (8) the Family network overlay (with Agents → Lineage for the book's colors); (9) Charts → Cultural tags; (10) the Friends network overlay; (11) and (12) Charts → Economy → Trade price (its mean and ± SD band); (13) Charts → Economy → Trade volume; (14) the Trade network overlay; (15) the Credit network overlay; (16) the Credit tab's hierarchy; (17) Charts → Disease; (18) the Disease network overlay.",
+            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650; disease flares after the outbreaks (after all three on about three runs in four) and tends to die out again before the next one. The book's eighteen views, in its order: (1) Agents → Disease colors; (2) the Neighbor network overlay; (3) Charts → Wealth distribution (sugar); (4) Charts → Goods → Wealth distribution · spice; (5) Charts → Goods → Lorenz curve and Gini coefficient (total wealth); (6) Charts → Population; (7) Charts → Age histogram; (8) the Family network overlay (with Agents → Lineage for the book's colors); (9) Charts → Cultural tags; (10) the Friends network overlay; (11) and (12) Charts → Economy → Trade price (its mean and ± SD band); (13) Charts → Economy → Trade volume; (14) the Trade network overlay; (15) the Credit network overlay; (16) the Credit tab's hierarchy; (17) Charts → Disease; (18) the Disease network overlay.",
             |c| {
                 demography(c);
                 c.inheritance.enabled = true;
@@ -503,7 +503,7 @@ pub fn all() -> Vec<Preset> {
             "vi-3-trade",
             "({G₁}, {M, S, T}) with spice",
             "Animation VI-3",
-            "Everything as in VI-2, with trade on. This follows the book's curve: the population dips to about 100–175 by t = 100–150, recovers to 1.7–2.0 times its initial 500, then fluctuates with minima near 700. (VI-2 without trade does the same here, unlike the book.)",
+            "Everything as in VI-2, with trade on. This follows the book's curve: the population dips to about 100–175 by t = 100–150, recovers to 1.7–2.0 times its initial 500, then fluctuates with minima near 750. (VI-2 without trade does the same here, unlike the book.)",
             |c| indecomposability(c, true),
         ),
         preset(
@@ -542,7 +542,7 @@ pub fn all() -> Vec<Preset> {
             "n-4-peaks",
             "({G₁}, {M, T}) with four goods",
             "Chapter IV, footnote 7",
-            "Four goods, each on one peak near a different corner of the torus: agents must travel or trade to hold all four.",
+            "Four goods, each on one peak near a different corner of the torus. The peaks overlap near the wrapped corner, where agents can hold all four; elsewhere they must travel or trade.",
             |c| {
                 let corner = |x, y| Map::Peaks {
                     peaks: vec![Peak { x, y, radius: 20.0, height: 4.0 }],
