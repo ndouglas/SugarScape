@@ -16,6 +16,7 @@ import {
   type Result,
   type SelectQuery,
   type Selected,
+  type StopRules,
   type Wants,
   type WorldSnapshot,
 } from './protocol';
@@ -176,6 +177,15 @@ export class SimHost {
   private reached = 0;
   private reachedSent = -1;
   private seekableSent: boolean | null = null;
+  private stops: StopRules = {};
+  /** Whether the stop condition held after the last tick (it fires only on becoming true). */
+  private held = false;
+  /** Why a rule stopped the run, for the next snapshot. */
+  private stoppedDue: string | null = null;
+  /** Seeks step without firing rules. */
+  private seeking = false;
+  /** A rule fired in `batch()` with no buffer free to post the stop into: skip stepping next time. */
+  private stopPending = false;
 
   constructor(
     private module: SimModule,
@@ -245,6 +255,28 @@ export class SimHost {
     }
   }
 
+  private condition(sim: SimLike): boolean {
+    const when = this.stops.when;
+    if (!when) return false;
+    const v = sim.latest_value(when.series);
+    return v !== undefined && (when.op === '<' ? v < when.value : v > when.value);
+  }
+
+  /** After a tick from `from`: the reason a rule fires, or null. Keeps the condition's last truth. */
+  private checkStops(sim: SimLike, from: number): string | null {
+    const tick = sim.tick();
+    const now = this.condition(sim);
+    const fired = now && !this.held;
+    this.held = now;
+    const at = this.stops.tick;
+    if (at !== undefined && from < at && tick >= at) return `Stopped at tick ${tick}`;
+    if (fired) {
+      const w = this.stops.when!;
+      return `Stopped at tick ${tick}: ${w.series} ${w.op} ${w.value}`;
+    }
+    return null;
+  }
+
   /**
    * One Max-speed batch (Decision 11): steps for about `BATCH_MS`, but never past the next
    * post deadline while a buffer is free to post into, so posts land close to every `POST_MS`
@@ -262,16 +294,28 @@ export class SimHost {
     const start = this.now();
     const cap = max.pool.length > 0 ? Math.min(start + BATCH_MS, max.posted + POST_MS) : start + BATCH_MS;
     // One tick at a time, applying any edit due at each (Decision 2).
-    do this.advance(sim, 1);
-    while (this.now() < cap && sim.tick() < MAX_TICKS && !sim.finished());
-    if (sim.tick() >= MAX_TICKS || sim.finished()) {
+    let stopped = this.stopPending;
+    if (!stopped) {
+      do stopped = this.advance(sim, 1);
+      while (!stopped && this.now() < cap && sim.tick() < MAX_TICKS && !sim.finished());
+    }
+    if (stopped || sim.tick() >= MAX_TICKS || sim.finished()) {
       const last = max.pool.pop();
-      if (!last) return null;
+      if (!last) {
+        this.stopPending = stopped;
+        return null;
+      }
+      this.stopPending = false;
       this.max = null;
       return this.snapshot(sim, max.wants, last);
     }
     const now = this.now();
-    const frame = now - max.posted >= POST_MS ? max.pool.pop() : undefined;
+    // While a stop rule is pending, an in-between post never spends the last pooled buffer: it
+    // stays in reserve so the tick the rule fires on can always be posted, whatever the timing of
+    // buffers coming back from the page. A spare buffer beyond that one still posts normally.
+    const rules = this.stops.tick !== undefined || this.stops.when !== undefined;
+    const hold = rules && max.pool.length <= 1;
+    const frame = !hold && now - max.posted >= POST_MS ? max.pool.pop() : undefined;
     if (!frame) return null;
     max.posted = now;
     return this.snapshot(sim, max.wants, frame);
@@ -303,6 +347,7 @@ export class SimHost {
       this.reachedSent = -1;
       this.seekableSent = null;
       this.replayDue(next);
+      this.held = this.condition(next);
       this.dropKeyframes(() => false);
       this.every = KEYFRAME_EVERY;
       this.noKeyframes = false;
@@ -322,6 +367,7 @@ export class SimHost {
       case 'infect':
       case 'vaccinate':
         this.edit(sim, cmd);
+        this.held = this.condition(sim);
         // Only an edit that succeeded branches a replay (Decision 3).
         this.fork();
         // A page edit starts a new branch here: the old future's keyframes and end go.
@@ -413,6 +459,10 @@ export class SimHost {
         // Every chart group's history changed: send them afresh.
         this.sent.clear();
         return this.reply(this.sim!, wants, frame);
+      case 'setStops':
+        this.stops = cmd.stops;
+        this.held = this.condition(sim);
+        return this.reply(sim, wants, frame);
     }
   }
 
@@ -477,23 +527,38 @@ export class SimHost {
 
   /**
    * Steps `n` ticks, or up to `MAX_TICKS`. While entries are pending it stops at each entry's tick
-   * and applies it (`step(k)` is the same world as k single steps, so it steps straight there).
+   * and applies it (`step(k)` is the same world as k single steps, so it steps straight there); it
+   * likewise never steps past a stop rule's tick, or past a single tick while a condition rule is
+   * set, so a rule fires on the exact tick it becomes true. Returns true if a stop rule ended it
+   * early (its reason is in `stoppedDue`).
    */
-  private advance(sim: SimLike, n: number): void {
+  private advance(sim: SimLike, n: number): boolean {
     let left = Math.min(n, MAX_TICKS - sim.tick());
+    const rules = !this.seeking && (this.stops.tick !== undefined || this.stops.when !== undefined);
     while (left > 0) {
       const tick = sim.tick();
       const next = this.pending[this.cursor]?.tick;
       let k = next === undefined ? left : Math.min(left, Math.max(1, next - tick));
       // Stop at the next keyframe tick too (`step(k)` is the same world as k single steps).
       if (!this.noKeyframes) k = Math.min(k, this.every - (tick % this.every));
+      if (rules && this.stops.when) k = 1;
+      const at = this.stops.tick;
+      if (rules && at !== undefined && tick < at) k = Math.min(k, at - tick);
       sim.step(k);
       this.fired(tick, sim.tick());
       this.replayDue(sim);
       this.keyframe(sim);
-      left -= k;
       this.reached = Math.max(this.reached, sim.tick());
+      left -= k;
+      if (rules) {
+        const reason = this.checkStops(sim, tick);
+        if (reason) {
+          this.stoppedDue = reason;
+          return true;
+        }
+      }
     }
+    return false;
   }
 
   /**
@@ -501,38 +566,44 @@ export class SimHost {
    * keyframe at or before it (or rebuilding the world) and replaying the log from there.
    */
   private seek(sim: SimLike, tick: number): void {
-    if (this.logFull) throw seekError('this session’s log is full, so it can no longer be rebuilt exactly');
-    if (!Number.isInteger(tick) || tick < 0 || tick > this.reached) {
-      throw seekError(`tick ${tick} is not between 0 and ${this.reached}`);
+    this.seeking = true;
+    try {
+      if (this.logFull) throw seekError('this session’s log is full, so it can no longer be rebuilt exactly');
+      if (!Number.isInteger(tick) || tick < 0 || tick > this.reached) {
+        throw seekError(`tick ${tick} is not between 0 and ${this.reached}`);
+      }
+      const now = sim.tick();
+      if (tick >= now) {
+        this.advance(sim, tick - now);
+        return;
+      }
+      const all = [...this.log, ...this.pending.slice(this.cursor)];
+      const followed = sim.followed();
+      const kf = this.keyframes.filter((k) => k.tick <= tick).at(-1);
+      let world = sim;
+      let applied = 0;
+      if (kf) {
+        sim.restore(kf.cp);
+        applied = kf.applied;
+      } else {
+        const setup = this.setup!;
+        world = this.module.create(JSON.stringify(setup.config), setup.seed, setup.landscapes);
+        sim.free();
+        this.sim = world;
+      }
+      this.log = all.slice(0, applied);
+      this.pending = all.slice(applied);
+      this.cursor = 0;
+      if (world.followed() !== followed) {
+        if (followed < 0) world.unfollow();
+        else world.follow(followed);
+      }
+      this.replayDue(world);
+      this.advance(world, tick - world.tick());
+    } finally {
+      this.seeking = false;
+      this.held = this.condition(this.sim!);
     }
-    const now = sim.tick();
-    if (tick >= now) {
-      this.advance(sim, tick - now);
-      return;
-    }
-    const all = [...this.log, ...this.pending.slice(this.cursor)];
-    const followed = sim.followed();
-    const kf = this.keyframes.filter((k) => k.tick <= tick).at(-1);
-    let world = sim;
-    let applied = 0;
-    if (kf) {
-      sim.restore(kf.cp);
-      applied = kf.applied;
-    } else {
-      const setup = this.setup!;
-      world = this.module.create(JSON.stringify(setup.config), setup.seed, setup.landscapes);
-      sim.free();
-      this.sim = world;
-    }
-    this.log = all.slice(0, applied);
-    this.pending = all.slice(applied);
-    this.cursor = 0;
-    if (world.followed() !== followed) {
-      if (followed < 0) world.unfollow();
-      else world.follow(followed);
-    }
-    this.replayDue(world);
-    this.advance(world, tick - world.tick());
   }
 
   /** An entry at tick t fires when the step from t to t + 1 starts. */
@@ -577,6 +648,10 @@ export class SimHost {
     if (this.forkDue) {
       s.forked = true;
       this.forkDue = false;
+    }
+    if (this.stoppedDue) {
+      s.stopped = this.stoppedDue;
+      this.stoppedDue = null;
     }
     if (this.reached !== this.reachedSent) {
       s.reached = this.reached;

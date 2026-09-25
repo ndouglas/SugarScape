@@ -848,6 +848,83 @@ describe('SimHost seek', () => {
   });
 });
 
+describe('SimHost stop rules', () => {
+  const display = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() } as const;
+  let id = 0;
+  const send = (host: SimHost, cmd: Command) => host.handle({ id: ++id, cmd }).result as { ok: true; snapshot?: WorldSnapshot };
+  const setup = (now?: () => number) => {
+    const module = fakeModule();
+    const host = new SimHost(module, now);
+    send(host, { type: 'init', config: { width: 8, height: 3 } as never, seed: 1, landscapes: [], display });
+    return { host, sim: () => module.sims.at(-1)! };
+  };
+
+  it('stops a step at tick N and says so', () => {
+    const { host, sim } = setup();
+    send(host, { type: 'setStops', stops: { tick: 37 } });
+    const r = send(host, { type: 'step', n: 100 });
+    expect(sim().ticks).toBe(37);
+    expect(r.snapshot?.stopped).toBe('Stopped at tick 37');
+    // Past N the rule is spent: the next step runs in full.
+    expect(send(host, { type: 'step', n: 10 }).snapshot?.stopped).toBeUndefined();
+    expect(sim().ticks).toBe(47);
+  });
+
+  it('fires a condition only when it becomes true', () => {
+    const { host, sim } = setup();
+    // One agent: population > 1 is false; place two more at tick 5 → true.
+    send(host, { type: 'setStops', stops: { when: { series: 'population', op: '>', value: 1 } } });
+    send(host, { type: 'step', n: 5 });
+    send(host, { type: 'place', x: 3, y: 1, overrides: {} });
+    // Already true after the edit: re-evaluated, so stepping does not fire.
+    const r = send(host, { type: 'step', n: 20 });
+    expect(r.snapshot?.stopped).toBeUndefined();
+    expect(sim().ticks).toBe(25);
+  });
+
+  it('fires on a false → true transition at the exact tick', () => {
+    const { host, sim } = setup();
+    send(host, { type: 'setStops', stops: { when: { series: 'tick', op: '>', value: 41 } } });
+    const r = send(host, { type: 'step', n: 100 });
+    expect(sim().ticks).toBe(42);
+    expect(r.snapshot?.stopped).toBe('Stopped at tick 42: tick > 41');
+  });
+
+  it('ends the Max loop on the tick a rule fires', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 90 } });
+    host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    let post: WorldSnapshot | null = null;
+    for (let i = 0; i < 1000 && host.running; i++) post = host.batch() ?? post;
+    expect(host.running).toBe(false);
+    expect(sim().ticks).toBe(90);
+    expect(post?.stopped).toBe('Stopped at tick 90');
+  });
+
+  it('does not fire during a seek', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 100 });
+    send(host, { type: 'setStops', stops: { tick: 50 } });
+    send(host, { type: 'seek', tick: 10 });
+    const r = send(host, { type: 'seek', tick: 80 });
+    expect(r.snapshot?.stopped).toBeUndefined();
+  });
+
+  it('ends Max on the stop tick even with no buffer free when the rule fires', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 20 } });
+    host.handle({ id: ++id, cmd: { type: 'run' } }); // no buffer lent
+    for (let i = 0; i < 100; i++) host.batch();
+    expect(sim().ticks).toBe(20);
+    host.handle({ id: ++id, cmd: { type: 'frame' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    const post = host.batch();
+    expect(post?.stopped).toBe('Stopped at tick 20');
+    expect(host.running).toBe(false);
+  });
+});
+
 describe('channelDefer', () => {
   it('runs deferred callbacks in FIFO order', async () => {
     // Captures the MessageChannel channelDefer creates internally so its ports can be closed
