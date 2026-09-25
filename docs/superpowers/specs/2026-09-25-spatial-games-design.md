@@ -54,7 +54,7 @@ Add the spatial Prisoner's Dilemma as a sixth model kind covering the whole 1992
 ## Rules
 
 - **Neighbourhoods** (precomputed tables per site, like civil's `View`): square Moore/von Neumann; cube Moore (26) / von Neumann (6); random arrays: all other players within Euclidean distance ≤ r (on the torus with `periodic`). Fixed boundaries drop off-lattice neighbours ("players at the boundaries simply have fewer neighbours").
-- **Scores:** A_i = Σ over neighbours j of π(s_i, s_j) + a · π(s_i, s_i), with π(C,C) = 1, π(D,C) = b, π(C,D) = 0, π(D,D) = ε. Computed exactly as sums of these terms in a fixed order.
+- **Scores:** A_i = Σ over neighbours j of π(s_i, s_j) + a · π(s_i, s_i), with π(C,C) = 1, π(D,C) = b, π(C,D) = 0, π(D,D) = ε. Computed in closed form (plan Decision 3): a cooperator with k cooperating neighbours scores k + a; a defector scores k·b + (n − k)·ε + a·ε (n its neighbours) — exact for integer k.
 - **Candidates for site i:** i and its neighbours.
 - **Deterministic winning:** the candidates with the highest score; if they all share one strategy, the site takes it; if both strategies are among them, the site keeps its strategy.
 - **Probabilistic winning (Eq. 1):** P(C) = Σ_c A_c^m s_c / Σ_c A_c^m over the candidates; one uniform draw decides. A_c^m is computed as exp_neg(m · (ln A_c − ln A_max)) (A_max the largest candidate score; terms with A_c = 0 contribute 0 for m > 0); m = 0 gives every candidate weight 1 (0^0 = 1: the paper's "random drift"); if every weight is 0 (all scores 0 with m > 0) the site keeps its strategy.
@@ -67,7 +67,7 @@ Add the spatial Prisoner's Dilemma as a sixth model kind covering the whole 1992
 1. **Ties** (NM92 silent): C/D ties for the highest score occur only when both are 0 or when b sits exactly on a threshold ratio; the owner keeps its site.
 2. **Eq. 1 with all-zero scores** (0/0): the site keeps its strategy. **m = 0:** 0^0 = 1.
 3. **Asynchronous sampling:** with replacement (HG93's "chosen at random"); one generation = N microsteps.
-4. **NBM94 Figs. 1–2 initial condition** (not stated): random, 10 % D (NM92's Fig. 1 choice); the sweeps say so.
+4. **NBM94 Figs. 1–2 initial condition** (not stated): random, **50 % D** (plan Decision 10). Their m = 0 row is pure drift, which keeps its start, and it shows roughly even colours; a 10 % start would leave it ~90 % blue. `nbm-random-array` starts from 50 % too. The presets and sweeps say so.
 5. **Random arrays:** the occupied cells are drawn once at setup (exactly round(occupancy × cells), uniformly); self-interaction included; distance measured between cell centres.
 6. **3D:** no source detail; the cube uses the 26-neighbour Moore analogue with self-interaction; b and the start are chosen by measurement and stated.
 7. **Hexagonal lattices:** not implemented (NM92 gives no numbers).
@@ -81,7 +81,7 @@ Add the spatial Prisoner's Dilemma as a sixth model kind covering the whole 1992
 - **Colour modes:** **Change** (NM92's scheme: blue C→C, red D→D, yellow C→D, green D→C; the default), **Strategy** (blue C, red D), **Payoff** (low → high heat). Empty base cells (random arrays) dark.
 - **Cube:** the frame is one z-slice, chosen by a **Slice** selector (the layer menu, `slice:<z>`); the run is unaffected.
 - **Inspect:** the site's strategy (and previous), score, and each candidate's strategy and score with the winner marked (deterministic) or P(C) (probabilistic); cube: the cell in the current slice.
-- **Charts:** **Cooperators** (`fraction_c`), **Changes** (`changed`, and `c_to_d`/`d_to_c`), **Payoffs** (`mean_payoff_c`, `mean_payoff_d`).
+- **Charts:** **Cooperators** (`fraction_c`), **Changes** (`changed`), **Switches** (`c_to_d`, `d_to_c`; split from Changes because they are counts), **Payoffs** (`mean_payoff_c`, `mean_payoff_d`).
 
 ## Presets
 
@@ -94,16 +94,17 @@ Add the spatial Prisoner's Dilemma as a sixth model kind covering the whole 1992
 | `nm-no-self` | 200², fixed, 10 % D, a = 0, b = 1.62 | NM92 text |
 | `nm-four-neighbors` | 200², fixed, von Neumann, 10 % D, b = 1.8 | NM92 text |
 | `hg-async-kaleidoscope` | the kaleidoscope, asynchronous | HG93 Fig. 1 |
-| `nbm-probabilistic` | 80², periodic, 10 % D, m = 1, b = 1.35 | NBM94 Fig. 1 |
-| `nbm-continuous` | 80², periodic, 10 % D, asynchronous, b = 1.71 | NBM94 Fig. 2 |
-| `nbm-random-array` | 200² at 5 %, r = 5, 10 % D, b = 1.6 | NBM94 text |
-| `nbm-cube` | 30³, periodic, Moore, b and start by measurement | NBM94 text |
+| `nbm-probabilistic` | 80², periodic, 50 % D, m = 1, b = 1.35 | NBM94 Fig. 1 |
+| `nbm-discrete` | 80², periodic, 50 % D, deterministic, b = 1.71 | NBM94 Fig. 1 (added for the second Compare entry) |
+| `nbm-continuous` | 80², periodic, 50 % D, asynchronous, b = 1.71 | NBM94 Fig. 2 |
+| `nbm-random-array` | 200² at 5 %, r = 5, 50 % D, b = 1.6 | NBM94 text |
+| `nbm-cube` | 30³, periodic, Moore, b = 1.6, 10 % D (by measurement) | NBM94 text |
 
-**Compare entries:** "Synchronous vs asynchronous — Spatial Games (Compare)" (`nm-3-kaleidoscope` vs `hg-async-kaleidoscope`) and "Discrete vs continuous time — Spatial Games (Compare)" (80², b = 1.71, synchronous vs asynchronous).
+**Compare entries:** "Synchronous vs asynchronous — Spatial Games (Compare)" (`nm-3-kaleidoscope` vs `hg-async-kaleidoscope`) and "Discrete vs continuous time — Spatial Games (Compare)" (`nbm-discrete` vs `nbm-continuous`: 80², 50 % D, b = 1.71, synchronous vs asynchronous; `nbm-discrete` was added as a preset for this entry).
 
 ## Experiments and CLI
 
-- `nbm-grid-discrete`, `nbm-grid-continuous`: base 80² periodic 10 % D; x = b over NBM94's ten columns (including 1.77); series = m over ∞, 100, 20, 10, 1, 0.5, 0; metric final `fraction_c` at 200; seeds by measurement.
+- `nbm-grid-discrete`, `nbm-grid-continuous`: base 80² periodic 50 % D; x = b over NBM94's ten columns (including 1.77); series = m over ∞, 100, 20, 10, 1, 0.5, 0; metric final `fraction_c` at 200; seeds by measurement.
 - `nm-universal`: base `nm-1b-chaos`; x = initial D fraction 0.05 … 0.95; metric window mean of `fraction_c` late in the run.
 - `nbm-radius`: base `nbm-random-array`; x = r 2 … 11; series = a few b values; metric final `fraction_c`.
 - `sugarscape presets | run | sweep` accept `spatial`.
@@ -116,7 +117,7 @@ Add the spatial Prisoner's Dilemma as a sixth model kind covering the whole 1992
 
 ## Page
 
-- A **Spatial Games** presets group; the schema panel in groups **Game** (b, ε, a), **Lattice** (geometry, size, neighbourhood, edges, occupancy and radius shown only for random arrays), **Update** (update, winning, m shown only when probabilistic), **Start** (start, defectors shown only for random); the three colour modes; the Slice selector for cubes; the three charts; Inspect; the two Compare entries; `defaultForm('spatial')` (x = b, final `fraction_c`).
+- A **Spatial Games** presets group; the schema panel in groups **Game** (b, ε, a), **Lattice** (geometry, size, neighbourhood, edges, occupancy and radius shown only for random arrays), **Update** (update, winning, m shown only when probabilistic), **Start** (start, defectors shown only for random); the three colour modes; the Slice selector for cubes; the four charts; Inspect; the two Compare entries; `defaultForm('spatial')` (x = b, final `fraction_c`).
 - Keyframes, the timeline, stop rules, share links, sessions, recording and Compare work unchanged (asynchronous and probabilistic runs draw from the world's seeded RNG and replay exactly).
 
 ## Testing

@@ -140,7 +140,7 @@ Model extensions:
 ## Other artificial societies
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
-**Artificial Anasazi** and **Civil Violence**.
+**Artificial Anasazi**, **Civil Violence** and **Spatial Games**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -324,6 +324,119 @@ or a live edit to it, is overwritten by the ramp on the next tick of its window.
 Joshua M. Epstein, "Modeling civil violence: An agent-based computational approach," *PNAS* 99
 suppl. 3 (2002), 7243–7250, and NetLogo *Rebellion* (Wilensky, 2004). See
 `docs/superpowers/specs/2026-09-25-civil-violence-design.md`.
+
+### Spatial games (Nowak & May 1992, and its critics)
+
+Nowak and May's spatial Prisoner's Dilemma: every site of a lattice holds a player who either
+cooperates (C) or defects (D) and plays the game with its eight neighbors and with itself. Two
+cooperators get 1 each; a defector against a cooperator gets the temptation b (b > 1) and the
+cooperator 0; two defectors get ε (0 in the paper). A player's score is the sum over those games.
+Each generation every site is taken over by the highest-scoring player among its previous owner and
+its neighbors, all at once. The lattice's edges are fixed (edge players simply have fewer
+neighbors) or periodic; a four-neighbor (von Neumann) lattice and play without self-interaction
+(a = 0) are the paper's variants. There is no randomness once the start is drawn.
+
+Huberman and Glance (1993) replaced the synchronous generation with asynchronous updating: one
+player at a time, chosen at random, is rescored from the current strategies and replaced by the
+best in its neighborhood, N such microsteps a generation. Nowak, Bonhoeffer and May (1994) answered
+with probabilistic winning, their Eq. 1 — a site becomes C with probability Σ A_i^m s_i / Σ A_i^m over
+itself and its neighbors (s_i = 1 for C), so m → ∞ is the deterministic rule, m = 1 "proportional
+winning" and m = 0 "random drift" — in both discrete and continuous time (continuous time is Huberman
+and Glance's asynchronous updating), and with irregular arrays (a share of a grid's cells occupied at
+random, each player playing everyone within radius r) and three-dimensional lattices (a cube with
+26 neighbors, viewed one z-slice at a time).
+
+The papers leave several things open; the choices made here are stated here and in the module docs.
+A tie for the highest score between a C and a D (only when both score 0, or when b sits exactly on a
+threshold ratio) leaves the owner its strategy. Eq. 1 with every candidate scoring 0 (0/0) also
+keeps the strategy, and m = 0 counts every candidate once (0^0 = 1). Asynchronous updating picks
+players with replacement. NBM94 never state the start of their Figs. 1–2; their arena presets start
+from 50 % defectors at random, because their m = 0 row, pure drift that keeps its start, shows
+roughly even colors (a 10 % start would leave it ~90 % blue), and the random array starts there too.
+A random array's cells are drawn once at setup, with self-interaction and distances between cell
+centers. The cube, for which NBM94 give no detail, uses b = 1.6 and 10 % defectors, chosen by
+measurement. Hexagonal lattices, which NM92 describe only qualitatively, are not implemented. Every
+power in Eq. 1 goes through the crate's portable ln and exp, so runs are identical natively and in
+the browser.
+
+What reproduces, measured (release, seeds 1–20 unless noted):
+
+- **The kaleidoscope** (`nm-3-kaleidoscope`: one defector at the center of a 99 × 99 lattice of
+  cooperators, b = 1.9) reproduces exactly: the pattern is four-fold symmetric at t = 30, 217, 219
+  and 221 and at every generation checked, and it reaches the edges at t = 49, as NM92 say.
+- **Spatial chaos settles at 12 ln 2 − 8** (0.31777): on 400 × 400 from 40 % defectors
+  (`nm-2a-universal`) the mean f_C over t = 201–300 is 0.3179 ± 0.0005, the constant to three
+  decimals. On 200 × 200 every seed settles at 0.318–0.323 from 5 %, 30 % and 60 % defectors, and
+  from 80 % so do 19 of 20 (seed 12 ends all C).
+- **The cluster thresholds** hold exactly on hand-built worlds: a 6 × 6 D block grows at b = 1.85
+  and shrinks at 1.75, a 2 × 2 D cluster grows at 1.85, and a 2 × 2 C cluster grows at 1.95 and not at
+  2.05.
+- Fig. 1a's static network (`nm-1a-static`, b = 1.77): f_C 0.737–0.748 at t = 200, inside the paper's
+  "usually between 0.7 and 0.95", with 3 % of sites still blinking. Without self-interaction
+  (`nm-no-self`, b = 1.62): 0.301–0.305 against the paper's ~0.299.
+- **NBM94's regimes** (the sweeps below, 80 × 80 periodic, 50 % defectors, 5 seeds): all C near
+  b = 1, all D approaching 2 and coexistence between, for every m and in both discrete and continuous
+  time; continuous time removes only the 1.8 < b < 2 chaos (at b = 1.9, deterministic, all D in 20 of
+  20 seeds in continuous time, still chaotic in 16 of 20 in discrete time) and helps C at m = 1 (0.86
+  at b = 1.35 against 0.30 in discrete time).
+- **r_c ≈ 9** (`nbm-random-array`, b = 1.6, 50 % defectors): all D in 0, 10 and 20 of 20 seeds at
+  r = 5, 9 and 11.
+- The cube (`nbm-cube`) is "similar to the two-dimensional" lattice, as NBM94 say: coexistence for
+  b from 1.1 to 1.8, all but all D at 1.9; at b = 1.6, f_C 0.331–0.342 over t = 101–200 with a quarter
+  of the cube changing every generation.
+
+What does not, or only partly:
+
+- **Four neighbors** (`nm-four-neighbors`, b = 1.8): 0.379–0.382 over t = 501–1000 (the survey's
+  0.380), the same at every b in (5/3, 2), against the paper's ~0.374 — close, but not within 0.005.
+- **Huberman and Glance's "always".** Their kaleidoscope with asynchronous updating
+  (`hg-async-kaleidoscope`, b = 1.9) is all D at t = 56–149 (mean 101), "within a hundred generations
+  or so," as they say. But they never state b, and their claim that "as long as there is at least one
+  defector in the initial state … the matrix always evolved rapidly into a state of overall defection"
+  holds only above b = 1.8: at b = 1.7 the lone defector dies out (f_C 0.974–0.999), and across NBM94's
+  b values it takes over only at 1.9 and 2.01 (f_C 0 and 0.04; 0.61 at 1.55, 0.99–1.00 elsewhere).
+- **"C cannot persist" at m = 1 without self-interaction** (NBM94): C is gone (f_C ≤ 0.007) at
+  b = 1.13 and 1.35, but at b = 1.05 it keeps 0.16–0.33. (Deterministic winning without
+  self-interaction keeps C, 0.85–0.95, as they say.)
+- **r_c depends on an unreported start.** From 50 % defectors r_c ≈ 9 reproduces; from NM92's 10 %
+  no radius up to 11 ends all D (f_C above 0.3). NBM94 do not report their start, so their r_c is a
+  property of it as much as of b.
+- NBM94's figure captions list nine b values and omit 1.77, which both figures show; the sweeps
+  include it. The figure's m = 1 discrete thumbnails show scattered C at b = 1.9 and 2.01 where these
+  runs are all D (0 from 1.9; 0.002 at 1.77). In discrete time at b = 1.9 two of 20 seeds end all C
+  and two nearly all D, a small-lattice collapse the paper does not mention.
+
+The survey measures 13 of these claims: 10 hold and 3 fail (four neighbors, m = 1 without
+self-interaction, and Huberman and Glance's "always").
+
+Five built-in sweeps: `nm-universal` varies the starting defectors from 5 % to 95 % at b = 1.9
+(0.320–0.321 from 5 % to 80 %, 0.21 from 90 %, 0 from 95 %: "almost all starting proportions" holds
+up to 80 %); `hg-async` runs the kaleidoscope at NBM94's ten b values, synchronous and asynchronous
+(asynchronous 0.99–1.00 for b ≤ 1.42 and at 1.71–1.77, 0.61 at 1.55, 0 at 1.9 and 0.04 at 2.01;
+synchronous 1.00 through 1.77, 0.34 at 1.9, 0.91 at 2.01); `nbm-grid-discrete` and
+`nbm-grid-continuous` are NBM94's Figs. 1 and 2 as numbers, the final f_C for their ten b values
+(1.77 included) and seven values of m (in discrete time m = ∞ gives 0.99 at 1.05, 0.88–0.94 from 1.13
+to 1.77, 0.30 at 1.9 and 0 at 2.01, and m = 0 gives 0.56 at every b; in continuous time m = ∞ gives
+0.59–0.99 up to 1.77 and 0 at 1.9 and 2.01, and C persists to 2.01 at m = 1, 0.02, and m = 0.5, 0.23);
+and `nbm-radius` runs the random array's radius from 2 to 11 from 10 % and from 50 % defectors (from
+50 %, 0.27–0.58 up to r = 9 and 0 at 10 and 11; from 10 %, 0.73–0.86 at every radius).
+
+Players are drawn by **Change** (NM92's colors: blue C after C, red D after D, yellow D after C,
+green C after D; the default), **Strategy** (blue C, red D) or **Payoff** (low to high heat), with a
+random array's empty cells dark. A cube shows one z-slice, chosen by the **Slice** menu (in place of
+Landscape); the slice changes only the view, not the run. Inspect shows a player's strategy now and
+before, its score, and its candidates summarized (the C and D counts and best scores) with the
+winner (deterministic) or P(C) (probabilistic). Charts: **Cooperators**, **Changes** (the share of
+players that switched), **Switches** (C to D and D to C, as counts) and **Payoffs** (the mean score
+of C and of D). **Compare** entries: "Synchronous vs asynchronous — Spatial Games (Compare)" (the
+kaleidoscope and Huberman and Glance's asynchronous twin) and "Discrete vs continuous time — Spatial
+Games (Compare)" (`nbm-discrete` and `nbm-continuous`: 80 × 80, 50 % defectors, b = 1.71; f_C
+0.86–0.92 against 0.71–0.73 at t = 200). b, ε, a, the update, the winning rule and m apply to the
+running world. Credit: Martin A. Nowak and Robert M. May, "Evolutionary games and spatial chaos,"
+*Nature* 359 (1992), 826–829; Bernardo A. Huberman and Natalie S. Glance, "Evolutionary games and
+computer simulations," *PNAS* 90 (1993), 7716–7718; and Martin A. Nowak, Sebastian Bonhoeffer and
+Robert M. May, "Spatial games and the maintenance of cooperation," *PNAS* 91 (1994), 4877–4881. See
+`docs/superpowers/specs/2026-09-25-spatial-games-design.md`.
 
 ## Experiments
 
