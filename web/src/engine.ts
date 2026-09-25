@@ -70,8 +70,31 @@ export interface EngineDeps { presets: Preset[]; schemas?: Partial<Record<ModelK
  */
 export type WantsProvider = (now: number) => Wants;
 
-/** Ticks per animation frame, or 'max': the host steps flat out and posts about 30 snapshots a second. */
+/**
+ * Ticks per animation frame, or 'max': the host steps flat out and posts about 30 snapshots a
+ * second. Below 1 it is a fraction of a tick per frame, paced by the clock rather than by frames
+ * (so 1/60 is one tick a second however fast the display refreshes).
+ */
 export type Speed = number | 'max';
+
+/** The frame rate a speed below 1 is a fraction of. */
+const NOMINAL_FPS = 60;
+
+/**
+ * Paces a speed below 1: `due` says whether a tick is due at `now`. It keeps to the schedule
+ * across frames that land a little late, but never saves up ticks (after a pause, say).
+ */
+export class SlowPacer {
+  private next = -Infinity;
+
+  due(speed: number, now: number): boolean {
+    if (now < this.next) return false;
+    const interval = 1000 / (NOMINAL_FPS * speed);
+    // A frame a little late keeps the schedule; one a whole interval late starts it afresh.
+    this.next = (now - this.next < interval ? this.next : now) + interval;
+    return true;
+  }
+}
 
 /** What the toolbar's Play, Step and speed drive: one engine, or Compare's lockstep (Decision 9). */
 export interface RunControls {
@@ -158,6 +181,7 @@ async function defaultDeps(): Promise<EngineDeps> {
 export class Engine {
   running = false;
   speed: Speed = 1;
+  private readonly slow = new SlowPacer();
   colorMode: ColorMode = 'tribe';
   layer: Layer = 'resource:0';
   overlays: Record<Overlay, boolean> = noOverlays();
@@ -354,8 +378,8 @@ export class Engine {
     if (this.crashed || this.inFlight || this.holds > 0) return;
     let next: Promise<void> | null = null;
     if (this.running) {
-      // At Max the host runs its own loop (Decision 11).
-      if (this.speed !== 'max') next = this.stepNow(this.speed);
+      // At Max the host runs its own loop (Decision 11); below 1× a frame steps only when a tick is due.
+      if (this.speed !== 'max' && (this.speed >= 1 || this.slow.due(this.speed, now))) next = this.stepNow(Math.max(1, this.speed));
     } else if (now - this.lastRefresh >= REFRESH_MS && this.providersWant(now)) {
       next = this.refresh();
     }

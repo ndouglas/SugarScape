@@ -1,4 +1,4 @@
-import type { Engine, InitialState, Speed } from '../engine';
+import { SlowPacer, type Engine, type InitialState, type Speed } from '../engine';
 import { fieldErrorsMessage } from '../errors';
 import type { Session } from '../protocol';
 import type { FieldError } from '../types';
@@ -37,6 +37,7 @@ export class Lockstep {
   /** Replays the coordinator started itself: their 'reset' events are not rebuilds. */
   private rewinding = 0;
   private readonly batch = new AdaptiveBatch();
+  private readonly slow = new SlowPacer();
   private readonly listeners = new Map<LockstepEvent, Set<() => void>>();
   private offs: (() => void)[] = [];
 
@@ -111,9 +112,11 @@ export class Lockstep {
       if (finished) this.emit('finished');
       return;
     }
-    const max = this.speed === 'max';
-    const n = max ? this.batch.n : (this.speed as number);
-    this.inFlight = this.stepBoth(n, max).finally(() => (this.inFlight = null));
+    const speed = this.speed;
+    // Below 1× a frame steps only when a tick is due.
+    if (speed !== 'max' && speed < 1 && !this.slow.due(speed, now)) return;
+    const n = speed === 'max' ? this.batch.n : Math.max(1, speed);
+    this.inFlight = this.stepBoth(n, speed === 'max').finally(() => (this.inFlight = null));
   }
 
   /** Step: both worlds advance `n` ticks (fewer if one would pass its end year). */

@@ -65,6 +65,24 @@ describe('Engine', () => {
     expect(engine.tick).toBe(2);
   });
 
+  it('steps one tick at a time by the clock below 1×', async () => {
+    const { engine, module } = await setup();
+    engine.setSpeed(2 / 60); // two ticks a second
+    engine.setRunning(true);
+    for (const now of [0, 100, 400, 499, 500, 520, 1000]) {
+      engine.pump(now);
+      await settle();
+    }
+    expect(module.sims[0].stepCalls).toBe(3);
+    expect(engine.tick).toBe(3);
+    // A long gap (a hidden tab) steps once, not the ticks it missed.
+    engine.pump(10_000);
+    await settle();
+    engine.pump(10_010);
+    await settle();
+    expect(engine.tick).toBe(4);
+  });
+
   it('holds the frame loop while a reset waits for the step in flight', async () => {
     const { engine, module } = await setup();
     engine.setRunning(true);

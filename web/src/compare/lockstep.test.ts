@@ -170,6 +170,19 @@ describe('Lockstep', () => {
   });
 });
 
+describe('Lockstep below 1×', () => {
+  it('steps both worlds one tick at a time by the clock', async () => {
+    const { a, b, lock } = await pair(1 / 60); // a tick a second
+    lock.setRunning(true);
+    for (const now of [0, 500, 999, 1000, 1500]) {
+      lock.pump(now);
+      await settle();
+    }
+    expect([a.tick, b.tick]).toEqual([2, 2]);
+    lock.setRunning(false);
+  });
+});
+
 describe('Lockstep keeping step when things go wrong', () => {
   afterEach(() => vi.restoreAllMocks());
 

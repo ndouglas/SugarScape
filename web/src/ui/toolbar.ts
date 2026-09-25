@@ -5,7 +5,14 @@ import { readoutText } from '../valley';
 import { h } from './dom';
 import { showNotice } from './notice';
 
-const SPEEDS: Speed[] = [1, 2, 5, 10, 25, 100, 'max'];
+/** Below 1×, speeds are ticks a second: 1/60 of a tick per frame is one a second. */
+const PER_SECOND = [1, 2, 5, 10, 20, 30];
+const SPEEDS: Speed[] = [...PER_SECOND.map((n) => n / 60), 1, 2, 5, 10, 25, 100, 'max'];
+
+function speedLabel(s: Speed): string {
+  if (s === 'max') return 'Max';
+  return s < 1 ? `${Math.round(s * 60)}/s` : `${s}×`;
+}
 
 /** A chip and the removal of its listeners. */
 export interface Chip { el: HTMLElement; off: () => void }
@@ -107,10 +114,11 @@ export class Toolbar {
     this.speed = h(
       'select',
       {
-        title: 'Ticks per frame; Max runs the simulation as fast as it goes and redraws about 30 times a second',
+        title:
+          'Ticks a second (n/s) or ticks per frame (n×); Max runs the simulation as fast as it goes and redraws about 30 times a second',
         onchange: () => this.controls.setSpeed(this.speed.value === 'max' ? 'max' : Number(this.speed.value)),
       },
-      ...SPEEDS.map((s) => h('option', { value: String(s) }, s === 'max' ? 'Max' : `${s}×`)),
+      ...SPEEDS.map((s) => h('option', { value: String(s) }, speedLabel(s))),
     );
     this.seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
     const seedLabel = h('label', {}, 'Seed ', this.seed);
