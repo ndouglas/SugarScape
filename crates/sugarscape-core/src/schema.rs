@@ -49,6 +49,9 @@ pub struct Param {
     pub apply: Apply,
     /// The panel section it is shown in.
     pub group: &'static str,
+    /// A one-line explanation shown under the control (milestone 10).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub help: Option<&'static str>,
 }
 
 impl Param {
@@ -69,7 +72,14 @@ impl Param {
             choices: Vec::new(),
             apply,
             group,
+            help: None,
         }
+    }
+
+    /// The same field with a one-line explanation.
+    pub fn with_help(mut self, help: &'static str) -> Self {
+        self.help = Some(help);
+        self
     }
 
     fn bounded(mut self, min: f64, max: f64, step: f64) -> Self {

@@ -6,4 +6,10 @@
 //! (cited below as §n, A-n, D-n). The model is written from those
 //! descriptions; the NetLogo code was read only for data layouts.
 
+pub mod config;
+pub mod household;
+pub mod random;
 pub mod valley;
+
+pub use config::{schema, AnasaziConfig, CornRange, Quirks};
+pub use household::Household;
