@@ -1,0 +1,25 @@
+Artificial Anasazi data files
+=============================
+
+Map.txt, adjustedPDSI.txt, environment.txt, water.txt and settlements.txt in
+this directory are copied unmodified from:
+
+  Marco Janssen, "Artificial Anasazi" (version 1.1.0), CoMSES Computational
+  Model Library, 2013. https://doi.org/10.25937/krp4-g724
+
+They are licensed under the GNU General Public License, version 2
+(GPL-2.0): see LICENSE in this directory, and CITATION.cff for how to cite
+the package. They are separate from this repository's code, which is
+MIT-licensed (see the LICENSE file at the repository root); the MIT licence
+does not apply to them.
+
+historical.txt is derived from settlements.txt (the archaeological household
+estimate per year, AD 800–1350, as described in
+docs/superpowers/specs/2026-09-25-anasazi-extraction.md §5.6) and is
+distributed under the same GPL-2.0 terms.
+
+The simulation code that reads these files
+(crates/sugarscape-core/src/anasazi/) was written from the model's published
+descriptions (Janssen's ODD of the NetLogo implementation, 2013, and
+Janssen, "Understanding Artificial Anasazi", JASSS 12(4) 13, 2009), not from
+the package's NetLogo source.

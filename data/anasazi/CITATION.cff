@@ -1,0 +1,24 @@
+abstract: Replication of the well known Artificial Anasazi model that simulates the
+  population dynamics between 800 and 1350 in the Long House Valley in Arizona. See
+  also Marco A. Janssen (2009) Understanding Artificial Anasazi, Journal of Artificial
+  Societies and Social Simulation 12 (4) 13 http://jasss.soc.surrey.ac.uk
+authors:
+- affiliation: School of Sustainability
+  email: marco.janssen@asu.edu
+  family-names: Janssen
+  given-names: Marco
+  orcid: https://orcid.org/0000-0002-1240-9052
+cff-version: 1.2.0
+date-released: '2013-04-27'
+doi: 10.25937/krp4-g724
+keywords:
+- archaeology
+- population dynamics
+- southwest
+- us
+license: GPL-2.0
+message: If you use this software, please cite it using the metadata from this file.
+title: Artificial Anasazi
+type: software
+url: https://doi.org/10.25937/krp4-g724
+version: 1.1.0
