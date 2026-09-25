@@ -1,34 +1,13 @@
-//! Normal draws that are bit-for-bit the same on every platform. `f64::ln`
-//! calls the platform's math library, which may differ in the last bit
-//! between a native build and wasm32; the harvest noise feeds every
-//! fingerprint, so the logarithm here uses only IEEE-exact arithmetic.
+//! Normal draws that are bit-for-bit the same on every platform: the
+//! harvest noise feeds every fingerprint, so its logarithm is
+//! `crate::portable::ln`, not the platform's `f64::ln`.
 
 use rand::Rng;
 
 use crate::rng::SimRng;
 
-/// The natural logarithm of a positive, finite, normal `x` from `+ − × ÷`
-/// only: `x = m · 2^e` with `m` in `[√½, √2)`, and
-/// `ln m = 2 atanh t`, `t = (m − 1)/(m + 1)`, summed as a series (`|t| ≤
-/// 0.1716`, so 20 terms are far below one ulp).
-pub fn ln(x: f64) -> f64 {
-    debug_assert!(x.is_normal() && x > 0.0, "ln of {x}");
-    let bits = x.to_bits();
-    let mut e = ((bits >> 52) & 0x7ff) as i64 - 1023;
-    let mut m = f64::from_bits((bits & 0x000f_ffff_ffff_ffff) | 0x3ff0_0000_0000_0000);
-    if m > std::f64::consts::SQRT_2 {
-        m *= 0.5;
-        e += 1;
-    }
-    let t = (m - 1.0) / (m + 1.0);
-    let t2 = t * t;
-    // Horner's rule over 1 + t²/3 + t⁴/5 + … + t³⁸/39.
-    let mut series = 0.0;
-    for k in (0..20).rev() {
-        series = series * t2 + 1.0 / f64::from(2 * k + 1);
-    }
-    e as f64 * std::f64::consts::LN_2 + 2.0 * t * series
-}
+/// The portable logarithm (moved to `crate::portable` in milestone 12).
+pub use crate::portable::ln;
 
 /// A standard normal draw (Marsaglia's polar method): pairs `(u, v)`
 /// uniform in `(−1, 1)²` until `0 < s = u² + v² < 1`, then
@@ -52,33 +31,6 @@ pub fn normal(rng: &mut SimRng) -> f64 {
 mod tests {
     use super::*;
     use crate::rng;
-
-    #[test]
-    fn ln_matches_the_library_to_a_few_ulps() {
-        let mut r = rng::seeded(7);
-        let mut xs: Vec<f64> = (0..20_000)
-            .map(|_| r.gen::<f64>())
-            .filter(|&x| x > 0.0)
-            .collect();
-        xs.extend([
-            1.0,
-            0.5,
-            2.0,
-            1e-300,
-            1e300,
-            std::f64::consts::E,
-            1.0 + 1e-12,
-            0.999_999,
-        ]);
-        for x in xs {
-            let (ours, std) = (ln(x), x.ln());
-            assert!(
-                (ours - std).abs() <= 4.0 * f64::EPSILON * std.abs().max(1e-300),
-                "{x}: {ours} vs {std}"
-            );
-        }
-        assert_eq!(ln(1.0), 0.0);
-    }
 
     #[test]
     fn normal_draws_have_mean_0_and_sd_1() {

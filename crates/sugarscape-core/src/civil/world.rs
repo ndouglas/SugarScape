@@ -9,12 +9,12 @@ use rand::Rng;
 use serde::Serialize;
 
 use super::config::{CivilConfig, Variant};
-use super::math::exp_neg;
 use super::stats::{CivilSnapshot, Outbursts, SERIES};
 use crate::config::FieldError;
 use crate::export;
 use crate::geometry::{Pos, Torus};
 use crate::model::{wrong_model, Model, ModelConfig, ModelKind};
+use crate::portable::exp_neg;
 use crate::render::{lerp, Rgb, BACKGROUND, BLUE, LENDER, RED};
 use crate::rng::{self, SimRng};
 use crate::stats::Stats;

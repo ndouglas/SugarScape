@@ -7,15 +7,14 @@
 //! docs/superpowers/specs/2026-09-25-civil-violence-design.md.
 
 mod config;
-mod math;
 mod presets;
 mod stats;
 mod world;
 
+pub use crate::portable::exp_neg;
 pub use config::{
     is_live, schema, CivilConfig, Jail, Quirks, Ramp, Variant, Vision, LIVE, RAMPABLE,
 };
-pub use math::exp_neg;
 pub use presets::presets;
 pub use stats::{CivilSnapshot, Outbursts, SERIES};
 pub use world::{
