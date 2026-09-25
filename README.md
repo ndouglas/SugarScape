@@ -516,9 +516,10 @@ in common never interact, so the lattice freezes into stable **regions** — con
 identical cultures — once every two neighbors are identical or share nothing. A tick is one event
 per site, the paper's time unit.
 
-Axelrod's claims mostly reproduce (20 seeds unless stated): more features mean fewer regions and
-more traits more (Table 2: 1.1 / 3.5 / 22.0 regions at five features); wider neighborhoods fewer
-(4.05, 2.11, 1.40 with 4, 8 and 12 neighbors, against 3.4, 2.5, 1.5); the territory's surprising
+Axelrod's claims mostly reproduce (means over 20 seeds unless stated): more features mean fewer
+regions and more traits more (Table 2, 10 seeds as in the paper: 1.1 / 3.5 / 22.0 regions at five
+features); wider neighborhoods fewer
+(4.05, 2.11, 1.40 with 4, 8 and 12 neighbors averaged over the nine cultures, against 3.4, 2.5, 1.5); the territory's surprising
 curve (Fig. 2) — 21 regions at 12 × 12, 4.9 at 50 × 50, 2.25 at 100 × 100 — and a torus's earlier,
 lower peak; time to stability of 9 090 and 24 500 events per site at 32 × 32 and 50 × 50 (the
 paper: 10 036 and 25 900); and zones settling long before regions. The sample setup is a little
@@ -533,7 +534,8 @@ Sugarscape changed the neighbor, not the active site, caught two months into the
 it makes no difference at 10 × 10. Their **soup** (any two sites can meet) leaves about one culture,
 as they found. Later work supplies two more: Castellano, Marsili and Vespignani (2000) found a
 transition in the number of traits, and indeed Axelrod's "large territories have fewer regions"
-holds only below it — at 25 traits regions grow with the territory (207 at 20 × 20, 424 at 30 × 30);
+holds only below it — at 25 traits regions grow with the territory (medians over 20 seeds: 207 at
+20 × 20, 424 at 30 × 30);
 he happened to use 15. And Klemm et al. (2003): any **drift** — here one random trait change in
 10 000 events — melts the frozen borders toward one culture.
 

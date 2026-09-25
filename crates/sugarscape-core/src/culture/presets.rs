@@ -70,17 +70,22 @@ pub fn presets() -> Vec<ModelPreset> {
             "ac-random-activation-20",
             "20 × 20, a random site each event",
             AAEC,
-            "Five features of 15 traits on 20 × 20 with Axelrod's activation: each event a random site, with replacement. Axtell et al. 1996 found Axelrod's 16.25 regions here, where the Sugarscape's shuffled sweeps gave 9.23. Measured (20 seeds): a median of 16.5 regions. Open 'Literal vs Sugarscape activation' in the presets menu to run both.",
-            |c| many(c, 20),
+            "Five features of 15 traits on 20 × 20 with Axelrod's activation: each event a random site, with replacement. Axtell et al. 1996 found Axelrod's 16.25 regions here, where the Sugarscape's shuffled sweeps gave 9.23. Measured (20 seeds): a median of 16.5 regions. It runs on past stability (the Stable at chart holds the tick), so that 'Literal vs Sugarscape activation' in the presets menu shows both worlds' final counts.",
+            |c| {
+                many(c, 20);
+                // Compare pairs stop when either world finishes; run on so both settle.
+                c.stop_when_stable = false;
+            },
         ),
         preset(
             "ac-sweep-activation",
             "20 × 20, shuffled sweeps (Sugarscape)",
             AAEC,
-            "The same 20 × 20 lattice activated as the Sugarscape does it: each tick one shuffled pass over every site. Axtell et al. 1996: 9.23 regions, against Axelrod's 16.25 — the discrepancy their docking traced to this one detail. Measured (20 seeds): a median of 11, fewer than with random activation (one-sided p = 0.01).",
+            "The same 20 × 20 lattice activated as the Sugarscape does it: each tick one shuffled pass over every site. Axtell et al. 1996: 9.23 regions, against Axelrod's 16.25 — the discrepancy their docking traced to this one detail. Measured (20 seeds): a median of 11, fewer than with random activation (one-sided p = 0.01). Like its partner it runs on past stability.",
             |c| {
                 many(c, 20);
                 c.activation = Activation::Sweep;
+                c.stop_when_stable = false;
             },
         ),
         preset(
@@ -139,11 +144,18 @@ mod tests {
                     ..many(12)
                 },
             ),
-            ("ac-random-activation-20", many(20)),
+            (
+                "ac-random-activation-20",
+                CultureConfig {
+                    stop_when_stable: false,
+                    ..many(20)
+                },
+            ),
             (
                 "ac-sweep-activation",
                 CultureConfig {
                     activation: Activation::Sweep,
+                    stop_when_stable: false,
                     ..many(20)
                 },
             ),

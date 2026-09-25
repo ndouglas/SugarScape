@@ -482,6 +482,20 @@ describe('the culture model through the engine', () => {
     expect(e.inspection!.agentId).toBeNull();
   });
 
+  it('runs the activation Compare pair until both lattices are stable, not just the first', async () => {
+    const make = (id: string) =>
+      Engine.create({ config: structuredClone(presets.find((p) => p.id === id)!.config), seed: 1 }, { presets, transport: inline() });
+    const [a, b] = [await make('ac-random-activation-20'), await make('ac-sweep-activation')];
+    const lock = new Lockstep([a, b], 'max', () => 0);
+    await lock.settled();
+    await lock.advance(6000);
+    expect([a.tick, b.tick]).toEqual([6000, 6000]);
+    const [sa, sb] = [a.latest as CultureStats, b.latest as CultureStats];
+    expect(sa.stable_at).toBeLessThan(6000);
+    expect(sb.stable_at).toBeLessThan(6000);
+    expect(sa.stable_at).not.toBe(sb.stable_at);
+  });
+
   it('reproduces the docking presets’ golden fingerprints in the Sugarscape', async () => {
     // crates/sugarscape-core/tests/golden.rs, GOLDEN.
     for (const [id, golden] of [

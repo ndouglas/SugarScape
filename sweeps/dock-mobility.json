@@ -1,6 +1,6 @@
 {
   "name": "Docking: Axelrod's culture on the move",
-  "description": "Axtell et al. 1996's mobility experiment in the Sugarscape: 100 agents with vision 5–10 on one sugar mountain move, eat and then run Axelrod's culture rule with one neighbor; metric: distinct cultures after 20 000 ticks, against the traits per feature (5 features). They report 1.1 ± 0.3 cultures at 15 traits and 2.2 ± 1.2 at 30, every run reaching their global stop. Measured (release, seeds 1–5, recorded 2026-09-25): 3.0, 3.6, 3.2 and 4.8 at 5, 10, 15 and 30 traits. Mobility collapses diversity (the fixed 10 × 10 lattice: about 20) and more traits leave more, but not to their level: a few stragglers keep second and third cultures alive, and most runs never settle.",
+  "description": "Axtell et al. 1996's mobility experiment in the Sugarscape: 100 agents with vision 5–10 on one sugar mountain move, eat and then run Axelrod's culture rule with one neighbor; metric: distinct cultures after 20 000 ticks, against the traits per feature (5 features). They report 1.1 ± 0.3 cultures at 15 traits and 2.2 ± 1.2 at 30, every run reaching their global stop. Measured (release, seeds 1–5, recorded 2026-09-25): 3.0, 3.6, 3.2 and 4.8 at 5, 10, 15 and 30 traits. Mobility collapses diversity (the fixed 10 × 10 lattice: about 20), and 30 traits leave the most, as they found (5 to 15 traits are within noise of each other), but not to their level: a few stragglers keep second and third cultures alive, and most runs never settle.",
   "base": {
     "preset": "dock-mobility-15"
   },

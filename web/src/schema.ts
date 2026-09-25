@@ -117,7 +117,7 @@ export const GROUPS: Group[] = [
       },
       { kind: 'number', path: 'culture.features', label: 'Axelrod features', min: 1, max: 32, step: 1, reset: true },
       { kind: 'number', path: 'culture.traits', label: 'Axelrod traits per feature', min: 2, max: 255, step: 1, reset: true },
-      { kind: 'toggle', path: 'culture.stop_when_settled', label: 'Stop when cultures settle (Axelrod)' },
+      { kind: 'toggle', path: 'culture.stop_when_settled', label: 'Stop when cultures settle (Axelrod; with births, a child can unsettle them)' },
     ],
   },
   {

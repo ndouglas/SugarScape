@@ -776,6 +776,11 @@ impl Model for CultureWorld {
     fn finished(&self) -> bool {
         self.is_finished()
     }
+
+    /// Stable without drift: no trait can ever change again.
+    fn holds_when_finished(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]

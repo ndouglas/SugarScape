@@ -324,6 +324,13 @@ pub trait Model {
     fn finished(&self) -> bool {
         false
     }
+    /// Whether a finished world's state is permanent, so that the ticks it did
+    /// not run would repeat its last values (Axelrod's stable lattice; a
+    /// Sugarscape whose Axelrod cultures settled). Sweeps read such a world at
+    /// its last values; any other world that stopped reads NaN past its end.
+    fn holds_when_finished(&self) -> bool {
+        false
+    }
 }
 
 /// The error for handing a world another model's config.
@@ -411,6 +418,10 @@ impl Model for World {
 
     fn finished(&self) -> bool {
         self.is_finished()
+    }
+
+    fn holds_when_finished(&self) -> bool {
+        true
     }
 }
 

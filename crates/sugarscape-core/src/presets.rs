@@ -893,6 +893,27 @@ mod tests {
     }
 
     #[test]
+    fn only_axelrods_rule_at_work_among_two_or_more_agents_can_settle() {
+        // Rule K off: nothing is settling, so nothing stops.
+        let mut off = by_id("dock-mobility-15").unwrap().config;
+        off.population = 2;
+        off.culture.enabled = false;
+        let mut w = crate::world::World::new(off, 3).unwrap();
+        let ids: Vec<_> = w.agents().map(|a| a.id).collect();
+        w.agent_mut(ids[0]).unwrap().culture = vec![1, 1, 1, 1, 1];
+        w.agent_mut(ids[1]).unwrap().culture = vec![2, 2, 2, 2, 2];
+        w.run(3);
+        assert_eq!(w.tick, 3);
+        assert!(!w.is_finished());
+        // An empty world has no cultures to settle.
+        let mut empty = by_id("dock-mobility-15").unwrap().config;
+        empty.population = 0;
+        let mut e = crate::world::World::new(empty, 1).unwrap();
+        e.run(3);
+        assert_eq!((e.tick, e.is_finished()), (3, false));
+    }
+
+    #[test]
     fn three_tribes_is_the_culture_preset_with_the_books_groups() {
         let three = by_id("iii-6-three-tribes").unwrap().config;
         let mut culture = by_id("iii-6-culture").unwrap().config;

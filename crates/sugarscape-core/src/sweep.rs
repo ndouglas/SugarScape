@@ -544,9 +544,10 @@ pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResul
         .model()
         .series(sweep.metric.series())
         .expect("the metric's series is checked against every config");
-    // A world that stopped on its own (Axelrod's culture once stable) holds
-    // its last state: the ticks it did not run repeat its last values.
-    if world.model().finished() {
+    // A world that stopped on its own for good (Axelrod's culture once stable,
+    // a Sugarscape whose cultures settled) holds its last state: the ticks it
+    // did not run repeat its last values. Any other stopped world reads NaN.
+    if world.model().finished() && world.model().holds_when_finished() {
         if let Some(&last) = history.last() {
             history.resize((sweep.ticks as usize + 1).max(history.len()), last);
         }
@@ -1563,6 +1564,53 @@ mod tests {
         let pops = w.stats.series("population").unwrap();
         let expected = pops[10..=20].iter().fold(0.0, |a, b| a + b) / 11.0;
         assert_eq!(run.outcome, Outcome::Scalar { value: expected });
+    }
+
+    #[test]
+    fn only_worlds_whose_stop_is_permanent_are_read_past_it() {
+        let run = |base: &str, ticks: u32, metric: serde_json::Value| {
+            let s = Sweep::from_json(
+                &json!({
+                    "name": "stop",
+                    "base": { "preset": base },
+                    "x": { "path": "stop_at_extinction", "values": [true] },
+                    "seeds": { "from": 1, "count": 1 },
+                    "ticks": ticks,
+                    "metric": metric
+                })
+                .to_string()
+                .replace(
+                    "stop_at_extinction",
+                    if base.starts_with("cv") {
+                        "stop_at_extinction"
+                    } else {
+                        "stop_when_stable"
+                    },
+                ),
+            )
+            .unwrap();
+            run_point(&s, &s.point(0).unwrap()).outcome
+        };
+        // Civil violence stopping at extinction: a run that stopped is not read past its end.
+        let civil = run(
+            "cv-run-7-cleansing",
+            3000,
+            json!({ "kind": "final", "series": "blue" }),
+        );
+        assert!(
+            matches!(civil, Outcome::Scalar { value } if value.is_nan()),
+            "{civil:?}"
+        );
+        // Axelrod's culture, once stable, holds its state: its final value is read.
+        let culture = run(
+            "ac-sample-run",
+            20_000,
+            json!({ "kind": "final", "series": "regions" }),
+        );
+        assert!(
+            matches!(culture, Outcome::Scalar { value } if value >= 1.0),
+            "{culture:?}"
+        );
     }
 
     #[test]

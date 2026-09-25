@@ -589,10 +589,13 @@ impl World {
         }
     }
 
-    /// Whether the run has stopped: Axelrod's culture rule with
-    /// `stop_when_settled`, and the latest tick settled (milestone 14).
+    /// Whether the run has stopped: Axelrod's culture rule at work (K on)
+    /// with `stop_when_settled`, at least two agents, and the latest tick
+    /// settled (milestone 14).
     pub fn is_finished(&self) -> bool {
         self.config.culture.stop_when_settled
+            && self.config.culture.axelrod()
+            && self.population() >= 2
             && self
                 .stats
                 .latest()
