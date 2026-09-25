@@ -26,15 +26,20 @@ const HELP: [string, string][] = [
 
 const TYPING = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
 
-/** The shortcut a key press means, or null (typing in a field, a modifier held, another key). */
+/**
+ * The shortcut a key press means, or null (typing in a field, a modifier held, another key, or
+ * an element that already handled the key — e.g. an SVG node's own Space/Enter activation).
+ */
 export function shortcutFor(e: {
   key: string;
   ctrlKey: boolean;
   altKey: boolean;
   metaKey: boolean;
   target: { tagName?: string; isContentEditable?: boolean } | null;
+  defaultPrevented?: boolean;
 }): Shortcut | null {
   if (e.ctrlKey || e.altKey || e.metaKey) return null;
+  if (e.defaultPrevented) return null;
   const t = e.target;
   if (t && (TYPING.has(t.tagName ?? '') || t.isContentEditable)) return null;
   return KEYS[e.key] ?? null;
@@ -63,7 +68,17 @@ export function installShortcuts(toolbar: Toolbar): () => void {
       card.hidden = true;
       return;
     }
-    const s = shortcutFor({ key: e.key, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey, target: e.target as HTMLElement | null });
+    // An element that already handled the key (e.g. a credit node's Space/Enter select) calls
+    // preventDefault() but not stopPropagation(); the bubbled event must not also fire a shortcut.
+    if (e.defaultPrevented) return;
+    const s = shortcutFor({
+      key: e.key,
+      ctrlKey: e.ctrlKey,
+      altKey: e.altKey,
+      metaKey: e.metaKey,
+      target: e.target as HTMLElement | null,
+      defaultPrevented: e.defaultPrevented,
+    });
     if (!s) return;
     e.preventDefault();
     if (s === 'help') card.hidden = !card.hidden;

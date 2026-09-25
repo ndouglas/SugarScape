@@ -31,6 +31,9 @@ describe('shortcutFor', () => {
     expect(shortcutFor(key('r', undefined, { ctrlKey: true }))).toBeNull();
     expect(shortcutFor(key('ArrowLeft', undefined, { altKey: true }))).toBeNull();
   });
+  it('leaves a key another element already handled alone', () => {
+    expect(shortcutFor(key(' ', { tagName: 'circle' }, { defaultPrevented: true }))).toBeNull();
+  });
 });
 
 describe('nextSpeed', () => {
