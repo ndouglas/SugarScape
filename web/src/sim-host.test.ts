@@ -718,6 +718,19 @@ describe('SimHost keyframes', () => {
     expect(host.keyframeTicks()).toEqual([0]);
   });
 
+  it('resets the doubled interval on a branch, so a fresh branch near t = 0 keeps 50-tick spacing', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    // Thins and doubles `every` at least once.
+    host.handle({ id: 2, cmd: { type: 'step', n: KEYFRAME_EVERY * MAX_KEYFRAMES } });
+    host.handle({ id: 3, cmd: { type: 'seek', tick: 0 } });
+    // A page edit at (near) t = 0 branches: without the reset, `every` would stay doubled and only
+    // every other 50-tick mark would get a keyframe.
+    host.handle({ id: 4, cmd: { type: 'place', x: 0, y: 0, overrides: {} } });
+    host.handle({ id: 5, cmd: { type: 'step', n: 175 } });
+    expect(host.keyframeTicks()).toEqual([0, 50, 100, 150]);
+  });
+
   it('keeps none for a model without keyframes', () => {
     const host = new SimHost(fakeModule([], { keyframes: false }));
     init(host);
@@ -806,6 +819,22 @@ describe('SimHost seek', () => {
     expect(r.snapshot.reached).toBe(70);
     expect(host.keyframeTicks().every((t) => t <= 70)).toBe(true);
     expect((send(host, { type: 'seek', tick: 71 }) as { ok: false; errors: FieldError[] }).errors[0].field).toBe('seek');
+  });
+
+  it('branches on ending a replay too: keyframes and reached past the current tick go, so a later seek cannot restore the old branch', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 60 });
+    send(host, place(5));
+    send(host, { type: 'step', n: 140 });
+    send(host, { type: 'seek', tick: 20 });
+    const ended = send(host, { type: 'endReplay' }) as { ok: true; snapshot: WorldSnapshot };
+    expect(ended.snapshot.reached).toBe(20);
+    expect(host.keyframeTicks().every((t) => t <= 20)).toBe(true);
+    send(host, { type: 'step', n: 130 });
+    send(host, { type: 'seek', tick: 120 });
+    // The placed agent (at tick 60, now beyond the branch point) must not reappear: this matches a
+    // fresh run to 120 with no edits at all, exactly what the kept session (an empty log) implies.
+    expect(fp(host)).toBe(straight([], 120));
   });
 
   it('keeps a keyframe taken before a same-tick edit valid', () => {
@@ -963,6 +992,21 @@ describe('SimHost stop rules', () => {
     host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
     for (let i = 0; i < 5; i++) host.batch();
     expect(sim().ticks).toBeGreaterThan(20);
+  });
+
+  it('ends Max when setStops arrives while a fired rule is waiting on a buffer, so the world stays at the reported tick', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 20 } });
+    host.handle({ id: ++id, cmd: { type: 'run' } }); // no buffer lent: the rule fires with none free
+    for (let i = 0; i < 100; i++) host.batch();
+    expect(sim().ticks).toBe(20);
+    expect(host.running).toBe(true); // stopPending, waiting on a buffer
+    const r = host.handle({ id: ++id, cmd: { type: 'setStops', stops: {} } });
+    expect(host.running).toBe(false);
+    expect(sim().ticks).toBe(20); // not a tick further, even though Max was still nominally running
+    expect((r.result as { ok: true; snapshot?: WorldSnapshot }).snapshot?.stopped).toBe('Stopped at tick 20');
+    expect(host.batch()).toBeNull(); // Max has already ended: nothing left to step
   });
 
   it('re-evaluates a rule’s truth after a replayed edit, so it does not fire on the edit’s own effect', () => {

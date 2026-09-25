@@ -74,6 +74,22 @@ describe('determinism through the engine', () => {
     expect(await e.fingerprint()).toBe(want);
   });
 
+  it('shares a session ended mid-replay: the branch dropped by endReplay stays dropped through a share link', async () => {
+    const e = await engine();
+    await e.advance(60);
+    await e.place(3, 3, {});
+    await e.advance(140);
+    await e.seek(20);
+    await e.endReplay(); // drops the place at 60 and everything reached past tick 20
+    await e.advance(130);
+    await e.seek(120);
+    const { session } = await e.session();
+    expect(session.log).toEqual([]);
+    const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await opened.advance(120);
+    expect(await opened.fingerprint()).toBe(await e.fingerprint());
+  });
+
   it('shares a session taken after a seek back', async () => {
     const e = await engine();
     await e.advance(50);

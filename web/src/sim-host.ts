@@ -238,6 +238,20 @@ export class SimHost {
     this.keyframes = kept;
   }
 
+  /**
+   * A branch here (a page edit, or ending a replay): keyframes and the reached end past this
+   * point describe a world this branch no longer contains, so they go. Every kept keyframe's tick
+   * is already a multiple of `every` (itself a multiple of KEYFRAME_EVERY, however much it has
+   * doubled), hence of KEYFRAME_EVERY — so resetting the interval to KEYFRAME_EVERY here keeps
+   * every kept keyframe valid for `keyframe()`'s `t % every === 0` thinning rule, and lets later
+   * captures on this branch resume at the normal 50-tick spacing instead of a stale, doubled one.
+   */
+  private branch(sim: SimLike): void {
+    this.dropKeyframes((t) => t <= sim.tick());
+    this.every = KEYFRAME_EVERY;
+    this.reached = sim.tick();
+  }
+
   /** Takes a keyframe if one is due at the world's tick (and none is held there yet). */
   private keyframe(sim: SimLike): void {
     const tick = sim.tick();
@@ -370,8 +384,7 @@ export class SimHost {
         // Only an edit that succeeded branches a replay (Decision 3).
         this.fork();
         // A page edit starts a new branch here: the old future's keyframes and end go.
-        this.dropKeyframes((t) => t <= sim.tick());
-        this.reached = sim.tick();
+        this.branch(sim);
         return this.reply(sim, wants, frame);
       case 'step':
         if (sim.tick() >= MAX_TICKS) throw FULL;
@@ -422,8 +435,11 @@ export class SimHost {
           session: { log: [...this.log, ...this.pending.slice(this.cursor)], full: this.logFull, tick: sim.tick() },
         };
       case 'endReplay':
+        // Ending a replay is a branch too (Decision 3, same as a page edit): the dropped future's
+        // keyframes and end must not survive to mislead a later seek (see `branch`).
         this.pending = [];
         this.cursor = 0;
+        this.branch(sim);
         return this.reply(sim, wants, frame);
       case 'run':
         // A second `run` while already running keeps the pooled buffers (and adds this one, if
@@ -461,11 +477,24 @@ export class SimHost {
         // Every chart group's history changed: send them afresh.
         this.sent.clear();
         return this.reply(this.sim!, wants, frame);
-      case 'setStops':
+      case 'setStops': {
+        const wasPending = this.stopPending;
         this.stops = cmd.stops;
         this.held = this.condition(sim);
         this.stopPending = false;
+        const max = this.max;
+        // A fired rule was waiting on a free buffer to post its stop (Decision 11's `stopPending`):
+        // the world hasn't moved since, but Max is still nominally running and would otherwise keep
+        // stepping past the reported tick before a `stop` from the engine (sent once it sees this
+        // reply's `stopped`) catches up. End it here instead, same as `stop`, so the world stays put.
+        if (wasPending && max) {
+          this.max = null;
+          const last = max.pool.pop() ?? frame;
+          spare.push(...max.pool);
+          return this.reply(sim, max.wants, last);
+        }
         return this.reply(sim, wants, frame);
+      }
     }
   }
 

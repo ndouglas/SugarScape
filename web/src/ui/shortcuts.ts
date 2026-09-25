@@ -54,8 +54,13 @@ export function nextSpeed(speeds: Speed[], current: Speed, dir: -1 | 1): Speed {
   return [...speeds].reverse().find((s) => rank(s) < r) ?? speeds[0];
 }
 
-/** Listens for the shortcuts on the document; returns the removal. */
-export function installShortcuts(toolbar: Toolbar): () => void {
+/**
+ * Listens for the shortcuts on the document; returns the removal. `isActive` says whether the
+ * playground is the view showing now — while Experiments is showing instead, its (hidden)
+ * playground must not be driven by a key meant for the chart underneath, so every key here
+ * (including `?` and Escape for the card, which lists the playground's own keys) is ignored.
+ */
+export function installShortcuts(toolbar: Toolbar, isActive: () => boolean = () => true): () => void {
   const card = h(
     'div',
     { class: 'shortcuts-card', role: 'dialog', 'aria-label': 'Keyboard shortcuts', hidden: true },
@@ -64,6 +69,7 @@ export function installShortcuts(toolbar: Toolbar): () => void {
   );
   document.body.append(card);
   const onKey = (e: KeyboardEvent): void => {
+    if (!isActive()) return;
     if (e.key === 'Escape' && !card.hidden) {
       card.hidden = true;
       return;

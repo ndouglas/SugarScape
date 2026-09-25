@@ -7,6 +7,8 @@ import { h } from './dom';
 export class SeekQueue {
   private busy: Promise<void> | null = null;
   private next: number | null = null;
+  /** The tick the in-flight `seek` call was sent for, or null between requests. */
+  private inFlight: number | null = null;
 
   constructor(
     private readonly seek: (tick: number) => Promise<unknown>,
@@ -18,6 +20,15 @@ export class SeekQueue {
     if (!this.busy) this.busy = this.drain();
   }
 
+  /**
+   * The tick a seek is in flight for, or (if a further request has arrived since) queued to
+   * follow it next; null once the queue is idle. `back()` steps from here while it isn't null, so
+   * a held key isn't reading a `tick` the host hasn't caught up to yet (Decision: see timeline.ts).
+   */
+  get pending(): number | null {
+    return this.next ?? this.inFlight;
+  }
+
   /** Resolves once every request so far has been sent and answered. */
   async settled(): Promise<void> {
     while (this.busy) await this.busy;
@@ -27,11 +38,13 @@ export class SeekQueue {
     while (this.next !== null) {
       const t = this.next;
       this.next = null;
+      this.inFlight = t;
       try {
         await this.seek(t);
       } catch (e) {
         this.onError(e);
       }
+      this.inFlight = null;
     }
     this.busy = null;
   }
@@ -63,6 +76,7 @@ export class Timeline {
     this.slider = h('input', { type: 'range', min: 0, max: 0, step: 1, class: 'timeline', 'aria-label': 'Tick' });
     this.slider.addEventListener('pointerdown', () => (this.dragging = true));
     this.slider.addEventListener('pointerup', () => (this.dragging = false));
+    this.slider.addEventListener('pointercancel', () => (this.dragging = false));
     this.slider.addEventListener('input', () => {
       if (this.controls?.running) this.controls.setRunning(false);
       this.queue.request(Number(this.slider.value));
@@ -77,9 +91,14 @@ export class Timeline {
 
   back(): void {
     const c = this.controls;
-    if (!c || this.held || !c.seekable || c.tick === 0) return;
+    if (!c || this.held || !c.seekable) return;
+    // While a seek is in flight (or queued to follow one), `c.tick` hasn't caught up to it yet:
+    // step from that pending target instead, or holding ← would move back only about one tick per
+    // two round trips.
+    const from = this.queue.pending ?? c.tick;
+    if (from <= 0) return;
     if (c.running) c.setRunning(false);
-    this.queue.request(c.tick - 1);
+    this.queue.request(from - 1);
   }
 
   sync(): void {
@@ -92,6 +111,6 @@ export class Timeline {
     this.slider.disabled = this.held || !c.seekable;
     this.slider.title = why || `Tick ${c.tick} of ${c.reached} — drag to go back and forth`;
     this.backButton.disabled = this.held || !c.seekable || c.tick === 0;
-    if (why) this.backButton.title = why;
+    this.backButton.title = why || 'Back one tick (←)';
   }
 }

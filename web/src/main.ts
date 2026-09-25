@@ -89,7 +89,7 @@ async function main(): Promise<void> {
   syncModel();
   const toolbar = new Toolbar(engine);
   document.querySelector('#toolbar')!.append(toolbar.el);
-  installShortcuts(toolbar);
+  installShortcuts(toolbar, () => document.body.dataset.view === 'playground');
   const display = buildDisplay(engine);
   document.querySelector('#display')!.append(display.el);
   const experiments = new ExperimentsView(engine);

@@ -23,6 +23,24 @@ describe('SeekQueue', () => {
     expect(sent).toEqual([10, 40]);
   });
 
+  it('exposes the tick a seek is in flight for, or the newest one queued to follow it, clearing once idle', async () => {
+    const gates: (() => void)[] = [];
+    const q = new SeekQueue(() => new Promise<void>((resolve) => gates.push(resolve)));
+    expect(q.pending).toBeNull();
+    q.request(10);
+    expect(q.pending).toBe(10); // in flight
+    q.request(20);
+    q.request(30);
+    expect(q.pending).toBe(30); // queued to follow the in-flight seek, ahead of the stale 20
+    gates.shift()!();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(q.pending).toBe(30); // now itself in flight
+    gates.shift()!();
+    await q.settled();
+    expect(q.pending).toBeNull();
+  });
+
   it('keeps going after a failed seek', async () => {
     const sent: number[] = [];
     const q = new SeekQueue(async (t) => {

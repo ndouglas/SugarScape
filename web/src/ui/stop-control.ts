@@ -41,14 +41,20 @@ export class StopControl {
     for (const el of [this.series, this.op]) el.addEventListener('change', () => this.apply());
     this.el = h('div', { class: 'group stop-control', title: 'Pause by itself at a tick, or when a series crosses a value' }, 'Stop at ', this.tick, this.when, this.error);
     this.fillSeries();
-    // A new model has other series: its rules go.
-    engine.on('reset', () => {
+    // A new model has other series: its rules go. A sugarscape's own series follow its config too
+    // (per-good, per-pollutant, per-group), so the list is rebuilt on every reset and config change,
+    // not only a model-kind change; the current selection is kept if it still exists there.
+    const resync = () => {
       if (engine.model !== this.model) {
         this.model = engine.model;
         this.fillSeries();
         this.clear();
+      } else {
+        this.fillSeries();
       }
-    });
+    };
+    engine.on('reset', resync);
+    engine.on('config', resync);
   }
 
   bind(controls: RunControls): void {
@@ -73,9 +79,19 @@ export class StopControl {
     this.controls.setStops(rules);
   }
 
+  /** Rebuilds the series options, keeping the current selection if it still exists there; if it
+   * doesn't, the condition can no longer describe it, so its value is cleared and the rules reapplied. */
   private fillSeries(): void {
+    const had = this.series.value;
     const names = seriesNames(this.engine);
     this.series.replaceChildren(...names.map((n) => h('option', { value: n }, n)));
+    if (!had) return;
+    if (names.includes(had)) {
+      this.series.value = had;
+    } else {
+      this.value.value = '';
+      this.apply();
+    }
   }
 }
 
