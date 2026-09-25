@@ -8,7 +8,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { Preset, Snapshot } from './types';
+import type { AnasaziStats, Preset, Snapshot } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -310,3 +310,23 @@ describe('sweeps over other models', () => {
     expect(() => sweep_points(wrongSeries)).toThrow('no statistics series');
   });
 });
+
+describe('the anasazi through the engine', () => {
+  const lhv = presets.find((p) => p.id === 'lhv-published')!;
+
+  it('reproduces the golden lhv-published fingerprint and stops at AD 1350', async () => {
+    const e = await Engine.create({ config: structuredClone(lhv.config), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'zones', overlays: { water: true, settlements: true, links: true } });
+    await e.advance(200);
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    expect(await e.fingerprint()).toBe('0x3b357e6f0cc5f74a');
+    expect((e.latest as AnasaziStats).year).toBe(1000);
+    expect(e.valley?.links.length).toBe(4 * e.population);
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1000);
+    expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
+    expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+

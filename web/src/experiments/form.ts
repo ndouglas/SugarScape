@@ -38,6 +38,15 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
   if (model === 'ring') {
     return { ...form, x: { path: 'agents', values: '10:70:10' }, metric: { ...form.metric, series: 'flocks' } };
   }
+  if (model === 'anasazi') {
+    // The calibration's axis (JASSS ¶4.11), over a whole run to AD 1350.
+    return {
+      ...form,
+      x: { path: 'harvest_adjustment', values: '0.5:0.62:0.02' },
+      ticks: 550,
+      metric: { ...form.metric, kind: 'final', series: 'fit' },
+    };
+  }
   return form;
 }
 

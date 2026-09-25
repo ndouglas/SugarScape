@@ -133,6 +133,11 @@ describe('sweeps over other models', () => {
     expect(defaultForm().x.path).toBe('vision.max');
     expect(defaultForm('schelling')).toMatchObject({ x: { path: 'population' }, metric: { kind: 'final', series: 'segregation' } });
     expect(defaultForm('ring')).toMatchObject({ x: { path: 'agents' }, metric: { series: 'flocks' } });
+    expect(defaultForm('anasazi')).toMatchObject({
+      x: { path: 'harvest_adjustment', values: '0.5:0.62:0.02' },
+      ticks: 550,
+      metric: { kind: 'final', series: 'fit' },
+    });
   });
 
   it('suggest a Schelling config’s own paths, never its model tag', () => {
