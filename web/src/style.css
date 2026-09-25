@@ -49,6 +49,7 @@ button[aria-pressed='true'] { border-color: var(--accent); box-shadow: inset 0 0
 .toolbar .group { display: flex; gap: 6px; align-items: center; }
 .toolbar .seed { width: 9em; }
 .toolbar .readout { color: var(--muted); font-variant-numeric: tabular-nums; }
+.rate { font-variant-numeric: tabular-nums; min-width: 5.5rem; color: var(--muted); }
 .timeline-group { flex: 1 1 12rem; min-width: 8rem; }
 .timeline { flex: 1; min-width: 6rem; }
 .stop-control input { width: 5rem; }

@@ -3,6 +3,7 @@ import { randomSeed, type Engine, type RunControls, type Speed } from '../engine
 import { errorMessage } from '../errors';
 import { readoutText } from '../valley';
 import { h } from './dom';
+import { RateMeter } from './rate';
 import { showNotice } from './notice';
 import { StopControl } from './stop-control';
 import { Timeline } from './timeline';
@@ -101,6 +102,8 @@ export class Toolbar {
   private readonly singleOnly: HTMLElement[];
   private readonly timeline = new Timeline((e) => showNotice(`Could not go to that tick (${errorMessage(e)})`, 10_000));
   private readonly stopControl: StopControl;
+  private readonly rate: HTMLElement;
+  private readonly meter = new RateMeter();
 
   constructor(private readonly engine: Engine) {
     this.controls = engine;
@@ -125,6 +128,7 @@ export class Toolbar {
       },
       ...SPEEDS.map((s) => h('option', { value: String(s) }, speedLabel(s))),
     );
+    this.rate = h('span', { class: 'rate', title: 'Measured ticks per second' });
     this.seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
     const seedLabel = h('label', {}, 'Seed ', this.seed);
     this.resetButton = h(
@@ -140,7 +144,7 @@ export class Toolbar {
       'div',
       { class: 'toolbar' },
       h('h1', {}, 'SugarScape'),
-      h('div', { class: 'group' }, this.play, this.step, this.speed),
+      h('div', { class: 'group' }, this.play, this.step, this.speed, this.rate),
       this.timeline.el,
       this.stopControl.el,
       h('div', { class: 'group' }, seedLabel, this.resetButton, this.dice),
@@ -157,6 +161,17 @@ export class Toolbar {
     engine.on('tick', () => this.tick());
     engine.on('edit', () => this.tick());
     engine.on('snapshot', () => this.timeline.sync());
+    setInterval(() => {
+      if (!this.controls.running) {
+        this.meter.reset();
+        this.rate.hidden = true;
+        return;
+      }
+      this.meter.sample(performance.now(), this.controls.tick);
+      const r = this.meter.rate();
+      this.rate.hidden = r === null;
+      if (r !== null) this.rate.textContent = `${r < 10 ? r.toFixed(1) : Math.round(r).toLocaleString()} t/s`;
+    }, 250);
     this.sync();
     this.tick();
   }
@@ -170,6 +185,7 @@ export class Toolbar {
     this.controls = lock ?? this.engine;
     this.timeline.bind(this.controls);
     this.stopControl.bind(this.controls);
+    this.meter.reset();
     if (lock) {
       this.offs.push(lock.on('run', () => this.sync()));
       this.offs.push(lock.on('tick', () => this.timeline.sync()));
