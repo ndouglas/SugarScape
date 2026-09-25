@@ -10,7 +10,7 @@ import {
 import { canvasBlob, downloadBlob, downloadText } from '../downloads';
 import type { Engine } from '../engine';
 import { encodeSweep } from '../share';
-import { parseErrors, type Config, type FieldError } from '../types';
+import { parseErrors, type FieldError, type ModelConfig } from '../types';
 import { h } from '../ui/dom';
 import { SweepChart } from './chart';
 import { chartData } from './chart-data';
@@ -205,7 +205,7 @@ export class ExperimentsView {
     return e.presetId !== null && !e.isModified() ? { preset: e.presetId } : { config: structuredClone(e.baseConfig) };
   }
 
-  private configOf(base: SweepBase): Config | null {
+  private configOf(base: SweepBase): ModelConfig | null {
     return 'preset' in base ? (this.engine.presets.find((p) => p.id === base.preset)?.config ?? null) : base.config;
   }
 

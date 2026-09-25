@@ -1,5 +1,6 @@
-import { OVERLAYS, type DisplayState, type Overlay } from './protocol';
-import type { Config, Layer } from './types';
+import { COLOR_MODES, isSugar, modelOf } from './models';
+import { noOverlays, OVERLAYS, type DisplayState, type Overlay } from './protocol';
+import type { Config, Layer, ModelConfig } from './types';
 
 /** The Landscape selector: each good's level and capacity (by name), then each pollutant. */
 export function layerOptions(config: Config): [Layer, string][] {
@@ -38,13 +39,22 @@ export function overlayAvailableAny(kind: Overlay, configs: Config[]): boolean {
 }
 
 /**
- * `d` kept valid for `config` (the host applies it to every snapshot): a layer the world lacks falls
- * back to good 0's level; with disease off the Disease color mode falls back to Tribe; an overlay
- * the world cannot show (`overlayAvailable`) is turned off. Returns `d` itself when nothing changes.
+ * `d` kept valid for `config` (the host applies it to every snapshot). In a sugarscape: a layer the
+ * world lacks falls back to good 0's level; another model's color mode, or Disease with disease off,
+ * falls back to Tribe; an overlay the world cannot show (`overlayAvailable`) is turned off. In
+ * another model: a color mode it lacks falls back to its first, every overlay is off and the layer
+ * is kept (unused). Returns `d` itself when nothing changes.
  */
-export function clampDisplay(d: DisplayState, config: Config): DisplayState {
+export function clampDisplay(d: DisplayState, config: ModelConfig): DisplayState {
+  if (!isSugar(config)) {
+    const modes = COLOR_MODES[modelOf(config)].map(([m]) => m);
+    const colorMode = modes.length === 0 || modes.includes(d.colorMode) ? d.colorMode : modes[0];
+    if (colorMode === d.colorMode && !OVERLAYS.some((k) => d.overlays[k])) return d;
+    return { colorMode, layer: d.layer, overlays: noOverlays() };
+  }
   const layer = validLayer(d.layer, config);
-  const colorMode = !config.disease.enabled && d.colorMode === 'disease' ? 'tribe' : d.colorMode;
+  const sugarMode = COLOR_MODES.sugarscape.some(([m]) => m === d.colorMode);
+  const colorMode = !sugarMode || (!config.disease.enabled && d.colorMode === 'disease') ? 'tribe' : d.colorMode;
   const off = OVERLAYS.filter((k) => d.overlays[k] && !overlayAvailable(k, config));
   if (layer === d.layer && colorMode === d.colorMode && off.length === 0) return d;
   const overlays = { ...d.overlays };

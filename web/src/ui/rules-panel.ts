@@ -117,10 +117,10 @@ export class RulesPanel {
     const clear = h('button', { onclick: () => this.commit((c) => (c.schedule = []), false) }, 'Clear schedule');
     const section = h('section', { class: 'group' }, h('h3', {}, 'Schedule'), list, clear, this.errorSlot('schedule'));
     this.syncers.push(() => {
-      const lines = scheduleLines(this.engine.config);
+      const lines = scheduleLines(this.engine.sugar);
       section.hidden = lines.length === 0;
       // Outbreaks are listed read-only; the button clears scheduled changes.
-      clear.hidden = this.engine.config.schedule.length === 0;
+      clear.hidden = this.engine.sugar.schedule.length === 0;
       list.replaceChildren(...lines.map((line) => h('li', {}, line)));
     });
     return section;
@@ -134,7 +134,7 @@ export class RulesPanel {
         type: 'checkbox',
         onchange: () => this.commit((c) => setPath(c, path, box.checked), group.enableResets === true),
       });
-      this.syncers.push(() => (box.checked = getPath(this.engine.config, path) === true));
+      this.syncers.push(() => (box.checked = getPath(this.engine.sugar, path) === true));
       header.replaceChildren(h('label', { class: 'switch' }, box, ` ${group.title}`));
     }
     return h(
@@ -159,7 +159,7 @@ export class RulesPanel {
     let built: string | null = null;
     let current: Editor | null = null;
     this.editorSyncers.push(() => {
-      const config = this.engine.config;
+      const config = this.engine.sugar;
       const next = signature(config);
       if (current && next === built) {
         current.sync(config);
@@ -182,7 +182,7 @@ export class RulesPanel {
           type: 'checkbox',
           onchange: () => this.commit((cfg) => setPath(cfg, c.path, box.checked), reset),
         });
-        this.syncers.push(() => (box.checked = getPath(this.engine.config, c.path) === true));
+        this.syncers.push(() => (box.checked = getPath(this.engine.sugar, c.path) === true));
         return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${c.label}`), this.errorSlot(c.path));
       }
       case 'number': {
@@ -198,7 +198,7 @@ export class RulesPanel {
         slider.addEventListener('change', () => apply(slider.value));
         num.addEventListener('change', () => apply(num.value));
         this.syncers.push(() => {
-          const v = String(getPath(this.engine.config, c.path));
+          const v = String(getPath(this.engine.sugar, c.path));
           slider.value = v;
           num.value = v;
         });
@@ -212,7 +212,7 @@ export class RulesPanel {
         lo.addEventListener('change', apply);
         hi.addEventListener('change', apply);
         this.syncers.push(() => {
-          const r = getPath(this.engine.config, c.path) as URange;
+          const r = getPath(this.engine.sugar, c.path) as URange;
           lo.value = String(r.min);
           hi.value = String(r.max);
         });
@@ -229,7 +229,7 @@ export class RulesPanel {
           },
           ...c.options.map((o) => h('option', { value: o.value }, o.label)),
         );
-        this.syncers.push(() => (select.value = c.current(this.engine.config)));
+        this.syncers.push(() => (select.value = c.current(this.engine.sugar)));
         return wrap(select);
       }
     }

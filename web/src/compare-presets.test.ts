@@ -22,9 +22,10 @@ describe('compare presets', () => {
     const states = comparePresetStates(presets, entry, 42)!;
     expect(states.aSeed).toBe(42);
     expect(states.b.seed).toBe(42);
-    expect(states.b.config.trade.enabled).toBe(true);
-    states.b.config.trade.enabled = false;
-    expect(presets[1].config.trade.enabled).toBe(true);
+    const b = states.b.config as Config;
+    expect(b.trade.enabled).toBe(true);
+    b.trade.enabled = false;
+    expect((presets[1].config as Config).trade.enabled).toBe(true);
   });
 
   it('is null when a preset is missing', () => {

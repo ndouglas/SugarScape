@@ -196,7 +196,10 @@ export class CompareView {
 
   /** Credit shows the focused world, or the other one while only it has credit on (the tab is there for it). */
   private syncCredit(): void {
-    const on = (w: WorldName) => (w === 'A' ? this.p.engine : this.b).config.credit.enabled;
+    const on = (w: WorldName) => {
+      const e = w === 'A' ? this.p.engine : this.b;
+      return e.model === 'sugarscape' && e.sugar.credit.enabled;
+    };
     const other: WorldName = this.focused === 'A' ? 'B' : 'A';
     this.p.credit.show(!on(this.focused) && on(other) ? other : this.focused);
   }

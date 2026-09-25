@@ -43,7 +43,7 @@ export function buildDisplay(engine: Engine): Display {
   };
   /** Goods and pollutants (and their names) change on reset and config. */
   const refill = () => {
-    layer.replaceChildren(...layerOptions(engine.config).map(([v, l]) => h('option', { value: v }, l)));
+    layer.replaceChildren(...layerOptions(engine.sugar).map(([v, l]) => h('option', { value: v }, l)));
     sync();
   };
   engine.on('display', sync);
@@ -51,7 +51,7 @@ export function buildDisplay(engine: Engine): Display {
   engine.on('config', refill);
   refill();
   let b: Engine | null = null;
-  const configs = () => (b ? [engine.config, b.config] : [engine.config]);
+  const configs = () => (b ? [engine.sugar, b.sugar] : [engine.sugar]);
   /** A checkbox per overlay; Friends, Family and Disease show while either world on screen allows them. */
   const overlay = (kind: Overlay, label: string) => {
     const box = h('input', { type: 'checkbox', onchange: () => engine.setDisplay({ overlays: { [kind]: box.checked } }) });

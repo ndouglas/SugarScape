@@ -19,7 +19,8 @@ import {
   readSweepHash,
   sessionFileText,
 } from './share';
-import type { Config } from './types';
+import { modelOf } from './models';
+import type { Config, SchellingConfig } from './types';
 
 const config = { width: 50, height: 50, population: 400, sex: { enabled: true } } as unknown as Config;
 
@@ -220,5 +221,23 @@ describe('compare links and session files', () => {
     expect(two.state.b.seed).toBe(6);
     expect(() => parseSessionFile('{"v":3}')).toThrow('not a SugarScape session file');
     expect(() => parseSessionFile('nope')).toThrow('not a SugarScape session file');
+  });
+});
+
+describe('models in links', () => {
+  it('opens a link made before milestone 9 as a sugarscape', async () => {
+    const opened = await decodeShare(LEGACY_SHARE_TOKEN);
+    expect(modelOf(opened.config)).toBe('sugarscape');
+  });
+
+  it('carries another model’s tagged config through a link, a compare link and a session file', async () => {
+    const schelling = { model: 'schelling', width: 50, height: 50, population: 2000 } as SchellingConfig;
+    const back = await decodeShare(await encodeShare({ config: schelling, seed: 3 }));
+    expect(back.config).toEqual(schelling);
+    expect(modelOf(back.config)).toBe('schelling');
+    const pair = await decodeCompare(await encodeCompare({ a: { config: schelling, seed: 1 }, b: { config: schelling, seed: 2 } }));
+    expect(modelOf(pair.b.config)).toBe('schelling');
+    const file = parseSessionFile(sessionFileText({ kind: 'session', state: { config: schelling, seed: 4 } }));
+    expect(file.kind === 'session' && modelOf(file.state.config)).toBe('schelling');
   });
 });

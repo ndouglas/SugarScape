@@ -1,5 +1,6 @@
 import type { CreditGraph } from './credit';
 import { clampDisplay } from './layers';
+import { isSugar, modelOf } from './models';
 import {
   chartKey,
   noOverlays,
@@ -18,7 +19,7 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { parseErrors, type Config, type DiseaseEntry, type Inspection, type Snapshot } from './types';
+import { parseErrors, type AnyInspection, type DiseaseEntry, type ModelConfig, type ModelStats } from './types';
 
 /** The part of the WASM `Sim` a host uses. The real class satisfies it; tests pass `FakeSim`. */
 export interface SimLike {
@@ -59,6 +60,8 @@ export interface SimLike {
   networks(kind: string): Uint32Array;
   credit_graph(): string;
   disease_list(): string;
+  ring_sugar(): Float64Array;
+  ring_agents(): Uint32Array;
   fingerprint(): string;
   free(): void;
 }
@@ -108,7 +111,7 @@ function optional<T>(get: () => T): T | undefined {
  */
 export class SimHost {
   private sim: SimLike | null = null;
-  private config: Config | null = null;
+  private config: ModelConfig | null = null;
   private display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
   /** The next snapshot carries the config: after init, reset, setConfig or a scheduled change. */
   private configDue = false;
@@ -388,7 +391,8 @@ export class SimHost {
 
   /** An entry at tick t fires when the step from t to t + 1 starts. */
   private fired(from: number, to: number): void {
-    if (this.config?.schedule.some((c) => c.tick >= from && c.tick < to)) this.configDue = true;
+    const config = this.config;
+    if (config && isSugar(config) && config.schedule.some((c) => c.tick >= from && c.tick < to)) this.configDue = true;
   }
 
   /**
@@ -414,7 +418,7 @@ export class SimHost {
       height: sim.height(),
       tick: sim.tick(),
       population: sim.population(),
-      latest: JSON.parse(sim.stats_latest()) as Snapshot,
+      latest: JSON.parse(sim.stats_latest()) as ModelStats,
       followed: id < 0 ? null : id,
       followedAlive: id >= 0 && sim.locate(id) !== undefined,
     };
@@ -429,15 +433,17 @@ export class SimHost {
     }
     let config = this.config;
     if (this.configDue || !config) {
-      config = JSON.parse(sim.export_config()) as Config;
+      config = JSON.parse(sim.export_config()) as ModelConfig;
       this.config = config;
       s.config = config;
       this.configDue = false;
       // Chart lines follow the config: send every group afresh.
       this.sent.clear();
     }
+    const sugar = isSugar(config) ? config : null;
     if (this.landscapesDue) {
-      s.editedLandscapes = config.goods.map((_, i) => (sim.landscape_edited(i) ? sim.export_landscape(i) : null));
+      // Only a sugarscape has maps.
+      s.editedLandscapes = sugar ? sugar.goods.map((_, i) => (sim.landscape_edited(i) ? sim.export_landscape(i) : null)) : [];
       this.landscapesDue = false;
     }
     const display = clampDisplay(this.display, config);
@@ -449,22 +455,25 @@ export class SimHost {
     const select = wants.select;
     if (selected !== undefined) s.inspection = selected;
     else if (select) s.inspection = optional(() => this.track(sim, select));
+    if (wants.charts) {
+      const charts = this.charts(sim, wants.charts.groups, wants.charts.max, throttleCharts);
+      if (charts) s.charts = charts;
+    }
+    if (wants.ring && modelOf(config) === 'ring') s.ring = { sugar: sim.ring_sugar(), agents: sim.ring_agents() };
+    // The rest exist only in a sugarscape (Decision 7): a wish for them in another model is ignored.
+    if (!sugar) return s;
     if (wants.trail) s.trail = sim.trail();
     if (wants.networks) {
       const networks: Partial<Record<Overlay, Uint32Array>> = {};
       for (const kind of wants.networks) networks[kind] = sim.networks(kind);
       s.networks = networks;
     }
-    if (wants.charts) {
-      const charts = this.charts(sim, wants.charts.groups, wants.charts.max, throttleCharts);
-      if (charts) s.charts = charts;
-    }
     if (wants.lorenz) s.lorenz = sim.lorenz(101);
     if (wants.wealthHist) s.wealthHist = sim.wealth_hist(20);
     if (wants.ageHist) s.ageHist = sim.age_hist(AGE_BIN);
     if (wants.tagHist) s.tagHist = sim.tag_hist();
     if (wants.lorenzTotal) s.lorenzTotal = sim.lorenz_total(101);
-    if (wants.goodWealthHists) s.goodWealthHists = config.goods.map((_, i) => sim.good_wealth_hist(i, 20));
+    if (wants.goodWealthHists) s.goodWealthHists = sugar.goods.map((_, i) => sim.good_wealth_hist(i, 20));
     if (wants.supplyDemand) s.supplyDemand = sim.supply_demand();
     if (wants.creditGraph) s.creditGraph = JSON.parse(sim.credit_graph()) as CreditGraph;
     if (wants.diseaseList) s.diseaseList = JSON.parse(sim.disease_list()) as DiseaseEntry[];
@@ -481,7 +490,7 @@ export class SimHost {
   }
 
   private selectAt(sim: SimLike, x: number, y: number): Selected {
-    const view = JSON.parse(sim.inspect(x, y)) as Inspection;
+    const view = JSON.parse(sim.inspect(x, y)) as AnyInspection;
     const agentId = view.agent?.id ?? null;
     return { x, y, agentId, alive: agentId !== null, view };
   }
@@ -491,7 +500,7 @@ export class SimHost {
     const at = q.agentId === null ? undefined : sim.locate(q.agentId);
     const x = at ? at[0] : q.x;
     const y = at ? at[1] : q.y;
-    return { x, y, agentId: q.agentId, alive: at !== undefined, view: JSON.parse(sim.inspect(x, y)) as Inspection };
+    return { x, y, agentId: q.agentId, alive: at !== undefined, view: JSON.parse(sim.inspect(x, y)) as AnyInspection };
   }
 
   /**

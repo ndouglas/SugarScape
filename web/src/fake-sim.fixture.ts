@@ -4,6 +4,8 @@ import type { SimLike, SimModule } from './sim-host';
 const fieldError = (field: string, message: string): string => JSON.stringify([{ field, message }]);
 
 interface FakeConfig {
+  /** Absent for a sugarscape; `'ring'` also answers `ring_sugar`/`ring_agents`. */
+  model?: 'schelling' | 'ring';
   width: number;
   height: number;
   population: number;
@@ -194,6 +196,12 @@ export class FakeSim implements SimLike {
   }
   disease_list(): string {
     return '[{"id":0,"bits":"01","carriers":2}]';
+  }
+  ring_sugar(): Float64Array {
+    return this.config.model === 'ring' ? new Float64Array(this.config.width).fill(2) : new Float64Array(0);
+  }
+  ring_agents(): Uint32Array {
+    return this.config.model === 'ring' ? Uint32Array.from(this.agents.values(), (p) => p[0]) : new Uint32Array(0);
   }
   fingerprint(): string {
     return `0x${this.ticks.toString(16)}`;

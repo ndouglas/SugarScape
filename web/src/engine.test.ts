@@ -4,7 +4,8 @@ import { fakeModule } from './fake-sim.fixture';
 import type { Command, HostReply, LogEntry, Wants } from './protocol';
 import { SimHost } from './sim-host';
 import { InlineTransport } from './transport';
-import type { Config, Preset } from './types';
+import { isSugar } from './models';
+import type { Config, ModelConfig, Preset, RingConfig } from './types';
 import { DiseaseListPoll } from './ui/disease-picker';
 import { chartsBehind, distributionsDue, distributionWants, type DistState } from './ui/series-data';
 
@@ -12,6 +13,11 @@ const config = { width: 4, height: 3 } as unknown as Config;
 const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', description: '', config }];
 /** Lets queued microtasks and zero-delay timers run. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+/** A config the test knows is a sugarscape's. */
+const sugar = (c: ModelConfig): Config => {
+  if (!isSugar(c)) throw new Error('not a sugarscape config');
+  return c;
+};
 
 /** An inline transport that runs `after(cmd, wants)` right after each request is sent, and can rewrite replies. */
 class HookedTransport extends InlineTransport {
@@ -40,7 +46,7 @@ describe('Engine', () => {
     expect(engine.population).toBe(1);
     expect(engine.size()).toEqual({ width: 4, height: 3 });
     expect(engine.frame()).toHaveLength(48);
-    expect(engine.config.width).toBe(4);
+    expect(sugar(engine.config).width).toBe(4);
     expect(engine.baseConfig).toEqual(engine.config);
     expect(engine.seed).toBe(7);
   });
@@ -89,12 +95,12 @@ describe('Engine', () => {
   it("resolves writes with the core's errors", async () => {
     const { engine } = await setup();
     expect(await engine.applyConfig((c) => void (c.population = 5000))).toEqual([{ field: 'population', message: 'too many' }]);
-    expect(engine.baseConfig.population).toBe(10);
+    expect(sugar(engine.baseConfig).population).toBe(10);
     expect(await engine.reset({ ...engine.baseConfig, population: 5000 })).toEqual([{ field: 'population', message: 'too many' }]);
     expect(await engine.erase(3, 2)).toEqual([{ field: 'edit', message: 'no agent at (3, 2)' }]);
     expect(await engine.applyConfig((c) => void (c.population = 20))).toBeNull();
-    expect(engine.config.population).toBe(20);
-    expect(engine.baseConfig.population).toBe(20);
+    expect(sugar(engine.config).population).toBe(20);
+    expect(sugar(engine.baseConfig).population).toBe(20);
   });
 
   it('ping-pongs two frame buffers', async () => {
@@ -167,8 +173,8 @@ describe('Engine', () => {
     const second = engine.applyConfig((c) => void (c.population += 1));
     expect(await first).toBeNull();
     expect(await second).toBeNull();
-    expect(engine.config.population).toBe(21);
-    expect(engine.baseConfig.population).toBe(21);
+    expect(sugar(engine.config).population).toBe(21);
+    expect(sugar(engine.baseConfig).population).toBe(21);
   });
 
   it('builds a reset-requiring change on a config write still in flight', async () => {
@@ -178,8 +184,8 @@ describe('Engine', () => {
     expect(await live).toBeNull();
     expect(await rebuilt).toBeNull();
     expect(module.sims).toHaveLength(2);
-    expect(engine.baseConfig.population).toBe(20);
-    expect(engine.baseConfig.height).toBe(5);
+    expect(sugar(engine.baseConfig).population).toBe(20);
+    expect(sugar(engine.baseConfig).height).toBe(5);
     expect(engine.size()).toEqual({ width: 4, height: 5 });
   });
 
@@ -325,7 +331,8 @@ describe('Engine', () => {
     transport.after = (cmd) => {
       if (cmd.type === 'reset') engine.setDisplay({ colorMode: 'age' });
     };
-    expect(await engine.reset({ ...engine.baseConfig, disease: { ...engine.baseConfig.disease, enabled: false } })).toBeNull();
+    const base = sugar(engine.baseConfig);
+    expect(await engine.reset({ ...base, disease: { ...base.disease, enabled: false } })).toBeNull();
     transport.after = null;
     await settle();
     expect(engine.colorMode).toBe('age');
@@ -727,7 +734,7 @@ describe('Engine sessions', () => {
   it('Reset (replay) rebuilds the session and keeps the setup; a new seed starts an empty log', async () => {
     const { engine, module } = await setup();
     const preset = engine.presetId;
-    const originalPopulation = engine.config.population;
+    const originalPopulation = sugar(engine.config).population;
     await engine.advance(2);
     await engine.place(0, 2, {});
     await engine.applyConfig((c) => void (c.population = 20));
@@ -738,12 +745,12 @@ describe('Engine sessions', () => {
     expect(engine.replayLeft).toBe(2);
     // Rebuilt from the session's own config (population 10), not the folded baseConfig (20): the
     // setConfig entry is still pending, replayed only once the world reaches its tick.
-    expect(engine.config.population).toBe(originalPopulation);
-    expect(engine.baseConfig.population).toBe(20);
+    expect(sugar(engine.config).population).toBe(originalPopulation);
+    expect(sugar(engine.baseConfig).population).toBe(20);
     expect(engine.presetId).toBe(preset);
     await engine.advance(2);
     expect(engine.population).toBe(2);
-    expect(engine.config.population).toBe(20);
+    expect(sugar(engine.config).population).toBe(20);
     expect(await engine.reset(undefined, 99)).toBeNull();
     expect(engine.replayLeft).toBe(0);
     const fresh = await engine.session();
@@ -851,7 +858,7 @@ describe('Chapter VI views while paused', () => {
     const engine = await Engine.create({ config: chapterVi, seed: 7 }, { presets, transport });
     // The Charts panel's distributions provider (ui/charts-panel.ts), with its receive step.
     const dist: DistState = { at: -Infinity, tick: -1, stale: true };
-    engine.want((now) => (distributionsDue(dist, engine.tick, now, 250) ? distributionWants(engine.config) : {}));
+    engine.want((now) => (distributionsDue(dist, engine.tick, now, 250) ? distributionWants(engine.sugar) : {}));
     engine.on('snapshot', () => {
       const s = engine.last;
       if (s?.lorenz) Object.assign(dist, { at: performance.now(), tick: s.tick, stale: false });
@@ -889,5 +896,65 @@ describe('Engine.loadPreset', () => {
     expect(engine.seed).toBe(42);
     expect(engine.presetId).toBe('ii-2-unit');
     expect(module.sims.at(-1)!.seed).toBe(42);
+  });
+});
+
+describe('Engine with other models', () => {
+  const schelling = { model: 'schelling', width: 6, height: 4 } as unknown as ModelConfig;
+  const ring = { model: 'ring', width: 5, height: 3 } as unknown as ModelConfig;
+  const models: Preset[] = [
+    ...presets,
+    { id: 'vi-4', name: 'Schelling', source: 'VI-4', description: '', config: schelling },
+    { id: 'vi-8', name: 'Ring', source: 'VI-8', description: '', config: ring },
+  ];
+  const make = (config: ModelConfig, transport = new HookedTransport(new SimHost(fakeModule()))) =>
+    Engine.create({ config, seed: 1 }, { presets: models, transport });
+
+  it('knows its model and keeps the last sugarscape config for the sugarscape panels', async () => {
+    const e = await make(config);
+    expect(e.model).toBe('sugarscape');
+    expect(e.sugar).toBe(e.config);
+    const before = e.sugar;
+    expect(await e.loadPreset('vi-4')).toBeNull();
+    expect(e.presetId).toBe('vi-4');
+    expect(e.model).toBe('schelling');
+    expect(e.sugar).toBe(before);
+  });
+
+  it('refuses sugarscape rule edits in another model and applies its own', async () => {
+    const e = await make(ring);
+    const refused = [{ field: 'config', message: 'this world is a ring world, not a sugarscape' }];
+    expect(await e.applyConfig((c) => void (c.population = 5))).toEqual(refused);
+    expect(await e.resetWith((c) => void (c.population = 5))).toEqual(refused);
+    expect(await e.applyModelConfig((c) => void ((c as RingConfig).growback = 2))).toBeNull();
+    expect((e.config as RingConfig).growback).toBe(2);
+    expect((e.baseConfig as RingConfig).growback).toBe(2);
+    expect(await e.resetModelWith((c) => void ((c as RingConfig).sites = 7))).toBeNull();
+    expect(e.size().width).toBe(5);
+  });
+
+  it('asks for the ring with every request in Ring World and never for overlays; other models drop it', async () => {
+    const transport = new HookedTransport(new SimHost(fakeModule()));
+    const sent: Wants[] = [];
+    transport.after = (_cmd, wants) => sent.push(wants ?? {});
+    const e = await make(ring, transport);
+    e.setDisplay({ overlays: { trade: true } });
+    await e.advance(1);
+    expect(sent.at(-1)).toMatchObject({ ring: true });
+    expect(sent.at(-1)?.networks).toBeUndefined();
+    expect(e.ring?.agents).toHaveLength(1);
+    expect(await e.loadPreset('ii-2-unit')).toBeNull();
+    expect(e.ring).toBeNull();
+  });
+
+  it('drops painted maps when a reset changes the model', async () => {
+    const transport = new HookedTransport(new SimHost(fakeModule()));
+    const resets: Command[] = [];
+    transport.after = (cmd) => void (cmd.type === 'reset' && resets.push(cmd));
+    const e = await make(config, transport);
+    await e.paint(0, 0, 1, 3);
+    expect(e.editedLandscapes()).toBeDefined();
+    expect(await e.reset(ring)).toBeNull();
+    expect(resets.at(-1)).toMatchObject({ type: 'reset', landscapes: [] });
   });
 });

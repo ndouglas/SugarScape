@@ -1,6 +1,6 @@
 // Messages between the engine (page) and the SimHost (simulation worker, or the page as a fallback).
 import type { CreditGraph } from './credit';
-import type { ColorMode, Config, DiseaseEntry, FieldError, Inspection, Layer, Snapshot } from './types';
+import type { AnyInspection, ColorMode, DiseaseEntry, FieldError, Layer, ModelConfig, ModelStats } from './types';
 
 export type Overlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family';
 export const OVERLAYS: Overlay[] = ['trade', 'credit', 'disease', 'neighbors', 'friends', 'family'];
@@ -19,7 +19,7 @@ export interface DisplayState { colorMode: ColorMode; layer: Layer; overlays: Re
 export interface SelectQuery { x: number; y: number; agentId: number | null }
 
 /** The selected site as the host last saw it; `alive` is false once a selected agent has died (or none was selected). */
-export interface Selected { x: number; y: number; agentId: number | null; alive: boolean; view: Inspection }
+export interface Selected { x: number; y: number; agentId: number | null; alive: boolean; view: AnyInspection }
 
 /** Several series downsampled onto one tick axis: `columns[k][i]` is series k at `ticks[i]` (NaN = no value). */
 export interface ChartGroup { ticks: Float64Array; columns: Float64Array[] }
@@ -42,7 +42,12 @@ export interface Wants {
   supplyDemand?: boolean;
   creditGraph?: boolean;
   diseaseList?: boolean;
+  /** Ring World's sugar per site and agents' sites (the ring view). */
+  ring?: boolean;
 }
+
+/** Ring World's state for the ring view: sugar per site (site 0 first) and each agent's site. */
+export interface RingState { sugar: Float64Array; agents: Uint32Array }
 
 export interface WorldSnapshot {
   /** RGBA pixels, when the request lent a buffer (transferred back). */
@@ -51,12 +56,12 @@ export interface WorldSnapshot {
   height: number;
   tick: number;
   population: number;
-  latest: Snapshot;
+  latest: ModelStats;
   /** The followed agent's id (alive or not), or null. */
   followed: number | null;
   followedAlive: boolean;
   /** The normalized live config: after init, reset, setConfig and a scheduled change. */
-  config?: Config;
+  config?: ModelConfig;
   /** Each good's map where it differs from the generated one: after init, reset, setConfig, paint and import. */
   editedLandscapes?: (Uint8Array | null)[];
   /** The display, when the host had to clamp it to the config. */
@@ -80,6 +85,7 @@ export interface WorldSnapshot {
   supplyDemand?: Float64Array;
   creditGraph?: CreditGraph;
   diseaseList?: DiseaseEntry[];
+  ring?: RingState;
   /** Edits still to replay: after every init and reset, and whenever it changes. */
   replayLeft?: number;
   /** A page edit just dropped the edits still to replay (the session branched here). */
@@ -88,9 +94,9 @@ export interface WorldSnapshot {
 
 export type Command =
   | { type: 'ready' }
-  | { type: 'init'; config: Config; seed: number; landscapes: (Uint8Array | null)[]; display: DisplayState; log?: LogEntry[] }
-  | { type: 'reset'; config: Config; seed: number; landscapes: (Uint8Array | null)[]; log?: LogEntry[] }
-  | { type: 'setConfig'; config: Config }
+  | { type: 'init'; config: ModelConfig; seed: number; landscapes: (Uint8Array | null)[]; display: DisplayState; log?: LogEntry[] }
+  | { type: 'reset'; config: ModelConfig; seed: number; landscapes: (Uint8Array | null)[]; log?: LogEntry[] }
+  | { type: 'setConfig'; config: ModelConfig }
   | { type: 'step'; n: number }
   | { type: 'refresh' }
   | { type: 'setDisplay'; display: DisplayState }
@@ -121,7 +127,7 @@ export type EditCommand = Extract<
 export interface LogEntry { tick: number; cmd: EditCommand }
 
 /** What a world was built from and every edit since: replaying it rebuilds the world exactly. */
-export interface Session { config: Config; seed: number; landscapes: (Uint8Array | null)[]; log: LogEntry[] }
+export interface Session { config: ModelConfig; seed: number; landscapes: (Uint8Array | null)[]; log: LogEntry[] }
 
 /**
  * The `session` command's answer: the log (the entries applied so far, then those still to
@@ -156,6 +162,7 @@ const FLAGS = [
   'supplyDemand',
   'creditGraph',
   'diseaseList',
+  'ring',
 ] as const;
 
 /** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */

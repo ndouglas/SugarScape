@@ -13,7 +13,7 @@ import {
   type WorldSnapshot,
 } from './protocol';
 import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, serve, SimHost } from './sim-host';
-import type { Config } from './types';
+import type { Config, ModelConfig } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
 const display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
@@ -53,7 +53,7 @@ describe('SimHost', () => {
     const s = (reply.result as { snapshot: WorldSnapshot }).snapshot;
     expect(s).toMatchObject({ width: 4, height: 3, tick: 0, population: 1, followed: null, followedAlive: false, editedLandscapes: [null] });
     expect(s.latest).toEqual({ tick: 0, population: 1 });
-    expect(s.config?.goods).toHaveLength(1);
+    expect((s.config as Config).goods).toHaveLength(1);
     expect(s.frame).toBe(frame);
   });
 
@@ -224,7 +224,7 @@ describe('SimHost', () => {
     const t = start();
     t.send({ type: 'setConfig', config: { ...config, schedule: [{ tick: 5, set: {} }] } });
     expect(t.snap(t.send({ type: 'step', n: 4 })).config).toBeUndefined(); // ticks 0–3 started
-    expect(t.snap(t.send({ type: 'step', n: 2 })).config?.schedule).toHaveLength(1); // the step from 5 started
+    expect((t.snap(t.send({ type: 'step', n: 2 })).config as Config).schedule).toHaveLength(1); // the step from 5 started
     expect(t.snap(t.send({ type: 'paint', x: 0, y: 0, radius: 1, value: 3, good: 0 })).editedLandscapes).toEqual([
       new Uint8Array(12).fill(7),
     ]);
@@ -237,6 +237,49 @@ describe('SimHost', () => {
     expect(t.send({ type: 'seriesCsv' }).result).toEqual({ ok: true, value: 'tick,population\n26,1\n' });
     expect(t.send({ type: 'agentsCsv' }).result).toEqual({ ok: true, value: 'id\n1\n' });
     expect(t.send({ type: 'fingerprint' }).result).toEqual({ ok: true, value: '0x1a' });
+  });
+});
+
+describe('SimHost with another model', () => {
+  /** A host whose world is a fake of `model`. */
+  function other(model: 'schelling' | 'ring') {
+    const host = new SimHost(fakeModule());
+    const config = { model, width: 6, height: 4 } as unknown as ModelConfig;
+    let id = 0;
+    const send = (cmd: Command, wants?: Wants): WorldSnapshot => {
+      const reply = host.handle({ id: ++id, cmd, wants });
+      if (!reply.result.ok || !reply.result.snapshot) throw new Error(JSON.stringify(reply.result));
+      return reply.result.snapshot;
+    };
+    const init = send({ type: 'init', config, seed: 1, landscapes: [], display });
+    return { init, send };
+  }
+
+  it('clamps the display to the model and sends no maps', () => {
+    const { init } = other('schelling');
+    expect(init.display).toEqual({ colorMode: 'color', layer: 'resource:0', overlays: noOverlays() });
+    expect(init.editedLandscapes).toEqual([]);
+  });
+
+  it('answers only the wishes the model can: charts and the ring, never sugarscape extras', () => {
+    const { send } = other('ring');
+    const s = send({ type: 'step', n: 2 }, {
+      ring: true,
+      trail: true,
+      networks: ['trade'],
+      lorenz: true,
+      diseaseList: true,
+      charts: { groups: [['population']], max: 10 },
+    });
+    expect(s.ring?.sugar).toHaveLength(6);
+    expect(Array.from(s.ring!.agents)).toEqual([3]);
+    expect(s.charts).toBeDefined();
+    for (const key of ['trail', 'networks', 'lorenz', 'diseaseList'] as const) expect(s[key]).toBeUndefined();
+  });
+
+  it('sends the ring only for Ring World', () => {
+    const { send } = other('schelling');
+    expect(send({ type: 'refresh' }, { ring: true }).ring).toBeUndefined();
   });
 });
 
@@ -288,7 +331,7 @@ describe('SimHost at Max speed', () => {
     t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
     let post: WorldSnapshot | null = null;
     while (!post) post = t.host.batch();
-    expect(post.config?.schedule).toHaveLength(1);
+    expect((post.config as Config).schedule).toHaveLength(1);
   });
 
   it('updates the loop selection on inspect while running, so the next post carries it', () => {

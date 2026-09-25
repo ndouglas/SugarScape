@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { noOverlays, type DisplayState } from './protocol';
-import type { Config } from './types';
+import type { Config, RingConfig, SchellingConfig } from './types';
 import { clampDisplay, layerOptions, overlayAvailable, overlayAvailableAny, validLayer } from './layers';
 
 const config = {
@@ -46,6 +46,18 @@ describe('clampDisplay', () => {
       overlays: { ...noOverlays(), trade: true, neighbors: true },
     });
     expect(clampDisplay({ ...display, layer: 'capacity:2' }, rules(true)).layer).toBe('resource:0');
+  });
+
+  it('clamps to the model: Schelling offers its own modes and no overlays; a sugarscape falls back to Tribe', () => {
+    const schelling = { model: 'schelling' } as SchellingConfig;
+    const clamped = clampDisplay(display, schelling);
+    expect(clamped).toEqual({ colorMode: 'color', layer: 'pollution:0', overlays: noOverlays() });
+    const satisfaction: DisplayState = { ...clamped, colorMode: 'satisfaction' };
+    expect(clampDisplay(satisfaction, schelling)).toBe(satisfaction);
+    expect(clampDisplay(satisfaction, rules(true)).colorMode).toBe('tribe');
+    // Ring World draws no color modes: the mode is kept for the next sugarscape (and clamped there).
+    const ring = { model: 'ring' } as RingConfig;
+    expect(clampDisplay(display, ring)).toEqual({ ...display, overlays: noOverlays() });
   });
 
   it('keeps the Lineage color mode in any world', () => {

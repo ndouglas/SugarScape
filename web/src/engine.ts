@@ -11,17 +11,19 @@ import {
   type Overlay,
   type PlaceOverrides,
   type Result,
+  type RingState,
   type Selected,
   type SelectQuery,
   type Session,
   type Wants,
   type WorldSnapshot,
 } from './protocol';
+import { isSugar, modelOf } from './models';
 import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { ColorMode, Config, FieldError, Layer, Preset, Snapshot } from './types';
-import init, { presets_json } from './wasm-pkg/sugarscape.js';
+import type { ColorMode, Config, FieldError, Layer, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
 
@@ -42,10 +44,13 @@ export type EngineEvent =
 export interface Selection { x: number; y: number; agentId: number | null }
 
 /** A world to build: its setup, starting maps and (a session's) edits to replay. */
-export interface InitialState { config: Config; seed: number; landscapes?: (Uint8Array | null)[]; log?: LogEntry[] }
+export interface InitialState { config: ModelConfig; seed: number; landscapes?: (Uint8Array | null)[]; log?: LogEntry[] }
 
-/** What an engine runs on: the presets and a transport to a SimHost (tests pass fakes). */
-export interface EngineDeps { presets: Preset[]; transport: Transport }
+/**
+ * What an engine runs on: the presets (every model's), each non-sugarscape model's Rules-panel
+ * schema, and a transport to a SimHost (tests pass fakes).
+ */
+export interface EngineDeps { presets: Preset[]; schemas?: Partial<Record<ModelKind, Param[]>>; transport: Transport }
 
 /**
  * What a panel needs in the next snapshot. It is called before every request, so it must not
@@ -71,6 +76,24 @@ const REFRESH_MS = 250;
 /** Frame buffers kept for reuse besides the one on screen. */
 const MAX_SPARE = 4;
 const NO_CELLS: Uint32Array = new Uint32Array(0);
+
+/** A sugarscape Rules-panel edit, refused (thrown) on another model's config. */
+function sugarOnly(mutate: (c: Config) => void): (c: ModelConfig) => void {
+  return (c) => {
+    if (!isSugar(c)) throw new Error(`this world is a ${modelOf(c)} world, not a sugarscape`);
+    mutate(c);
+  };
+}
+
+/** Runs `mutate` on `c`; a throw (an unknown path, the wrong model) becomes a field error. */
+function tryMutate(mutate: (c: ModelConfig) => void, c: ModelConfig): FieldError[] | null {
+  try {
+    mutate(c);
+    return null;
+  } catch (e) {
+    return [{ field: 'config', message: e instanceof Error ? e.message : String(e) }];
+  }
+}
 
 export function randomSeed(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0];
@@ -105,6 +128,7 @@ function deadTransport(message: string): Transport {
 async function defaultDeps(): Promise<EngineDeps> {
   const wasm = await init();
   const presets = JSON.parse(presets_json()) as Preset[];
+  const schemas = JSON.parse(model_schemas_json()) as Partial<Record<ModelKind, Param[]>>;
   let transport: Transport;
   try {
     transport = await startWorker();
@@ -112,7 +136,7 @@ async function defaultDeps(): Promise<EngineDeps> {
     console.warn('The simulation worker could not start; simulating on the page instead.', e);
     transport = new InlineTransport(new SimHost(wasmSimModule(wasm.memory)));
   }
-  return { presets, transport };
+  return { presets, schemas, transport };
 }
 
 /**
@@ -133,15 +157,17 @@ export class Engine {
    * The setup as chosen (preset, share link, reset): what a reset rebuilds and a share link
    * carries; preset matching and `isModified()` compare against it.
    */
-  baseConfig!: Config;
+  baseConfig!: ModelConfig;
   /**
    * The live config: what the running world uses now, including scheduled changes that have
    * fired. The Rules panel shows this one.
    */
-  config!: Config;
+  config!: ModelConfig;
   tick = 0;
   population = 0;
-  latest: Snapshot | null = null;
+  latest: ModelStats | null = null;
+  /** Ring World's sugar and agents as of the latest snapshot (the ring view); null in other models. */
+  ring: RingState | null = null;
   /**
    * The latest snapshot; its extras are there only when something wanted them. Its frame is left
    * out: that buffer is lent back to the host later (read frames through `frame()`).
@@ -152,7 +178,7 @@ export class Engine {
   /** Edits still to replay (the toolbar's chip counts them down). */
   replayLeft = 0;
   /** What the world was last built from: a session's config, seed and starting maps (Decision 4). */
-  private origin!: { config: Config; seed: number; landscapes: (Uint8Array | null)[] };
+  private origin!: { config: ModelConfig; seed: number; landscapes: (Uint8Array | null)[] };
   /** `replayLeft` changed in the snapshot being adopted: announce 'replay'. */
   private replayMoved = false;
   private width = 0;
@@ -218,10 +244,13 @@ export class Engine {
   /** Resets sent and not yet answered: requests sent meanwhile carry no selection. */
   private resetting = 0;
   private lastRefresh = -Infinity;
+  /** The config the sugarscape panels show while another model runs: the last sugarscape config seen. */
+  private lastSugar!: Config;
 
   private constructor(
     private transport: Transport,
     readonly presets: Preset[],
+    readonly schemas: Partial<Record<ModelKind, Param[]>>,
     public seed: number,
   ) {
     transport.onFatal = (message) => this.crash(message);
@@ -230,10 +259,15 @@ export class Engine {
 
   /** Throws the core's errors (as an Error message) if `initial` is invalid. */
   static async create(initial?: InitialState, deps?: EngineDeps): Promise<Engine> {
-    const { presets, transport } = deps ?? (await defaultDeps());
+    const { presets, schemas = {}, transport } = deps ?? (await defaultDeps());
     const fallback = presets.find((p) => p.id === 'ii-2-unit') ?? presets[0];
-    const engine = new Engine(transport, presets, initial?.seed ?? randomSeed());
+    const engine = new Engine(transport, presets, schemas, initial?.seed ?? randomSeed());
+    const firstSugar = presets.map((p) => p.config).find(isSugar);
+    if (!firstSugar) throw new Error('no sugarscape preset');
+    engine.lastSugar = structuredClone(firstSugar);
     const config = initial?.config ?? structuredClone(fallback.config);
+    // Until the init snapshot brings the normalized config, `wants()` reads the model from this one.
+    engine.config = config;
     const landscapes = initial?.landscapes ?? [];
     const log = initial?.log ?? [];
     const result = await engine.send(
@@ -250,6 +284,20 @@ export class Engine {
     engine.baseConfig = structuredClone(engine.config);
     engine.presetId = engine.matchPreset();
     return engine;
+  }
+
+  /** The model of the world running now. */
+  get model(): ModelKind {
+    return modelOf(this.config);
+  }
+
+  /**
+   * The config the sugarscape panels (Rules, Display, tools, Inspect, Credit, Charts) read: the
+   * live config while the world is a sugarscape, otherwise the last sugarscape config this engine
+   * ran (those panels are hidden then, Decision 6). Never write through it.
+   */
+  get sugar(): Config {
+    return isSugar(this.config) ? this.config : this.lastSugar;
   }
 
   on(event: EngineEvent, fn: () => void): () => void {
@@ -304,7 +352,7 @@ export class Engine {
    * Rebuilds the world, keeping each good's painted/shared map unless the grid size, the number
    * of goods or that good's map changes. On error the current world is kept and errors returned.
    */
-  reset(config?: Config, seed?: number): Promise<FieldError[] | null> {
+  reset(config?: ModelConfig, seed?: number): Promise<FieldError[] | null> {
     // The defaults are read when the reset runs, after any write queued before it.
     return this.quiet(() => {
       const next = config ?? this.baseConfig;
@@ -314,12 +362,19 @@ export class Engine {
 
   /**
    * A reset to the base config as changed by `mutate` (a reset-requiring rule edit), built when it
-   * runs so that an earlier change still in flight is kept.
+   * runs so that an earlier change still in flight is kept. The sugarscape Rules panel's; it fails
+   * when the world is another model.
    */
   resetWith(mutate: (c: Config) => void, seed?: number): Promise<FieldError[] | null> {
+    return this.resetModelWith(sugarOnly(mutate), seed);
+  }
+
+  /** `resetWith` for a config of any model (the schema-driven Rules panel's). */
+  resetModelWith(mutate: (c: ModelConfig) => void, seed?: number): Promise<FieldError[] | null> {
     return this.quiet(() => {
       const next = structuredClone(this.baseConfig);
-      mutate(next);
+      const refused = tryMutate(mutate, next);
+      if (refused) return Promise.resolve(refused);
       return this.rebuild(next, seed ?? this.seed, this.keptLandscapes(next));
     });
   }
@@ -327,12 +382,19 @@ export class Engine {
   /**
    * Applies a rule/parameter change to the running world: `mutate` edits a copy of the live
    * config for the world and, on success, a copy of the base config too, so scheduled changes
-   * that already fired are not undone.
+   * that already fired are not undone. The sugarscape Rules panel's; it fails when the world is
+   * another model.
    */
   applyConfig(mutate: (c: Config) => void): Promise<FieldError[] | null> {
+    return this.applyModelConfig(sugarOnly(mutate));
+  }
+
+  /** `applyConfig` for a config of any model (the schema-driven Rules panel's live fields). */
+  applyModelConfig(mutate: (c: ModelConfig) => void): Promise<FieldError[] | null> {
     return this.quiet(async () => {
       const next = structuredClone(this.config);
-      mutate(next);
+      const refused = tryMutate(mutate, next);
+      if (refused) return refused;
       const result = await this.send({ type: 'setConfig', config: next }, true);
       if (!result.ok || !result.snapshot) return writeFailure(result);
       const base = structuredClone(this.baseConfig);
@@ -557,6 +619,8 @@ export class Engine {
         this.presetId = other.presetId;
         this.baseConfig = other.baseConfig;
         this.config = other.config;
+        this.lastSugar = other.lastSugar;
+        this.ring = other.ring;
         this.tick = other.tick;
         this.population = other.population;
         this.latest = other.latest;
@@ -622,8 +686,10 @@ export class Engine {
     if (select && this.resetting === 0) own.select = { ...select };
     const trail = this.pendingTrail !== undefined ? this.pendingTrail : this.followedId !== null;
     if (trail) own.trail = true;
-    const networks = OVERLAYS.filter((k) => this.overlays[k]);
+    // Overlays exist only in a sugarscape; the ring view needs Ring World's state with every snapshot.
+    const networks = this.model === 'sugarscape' ? OVERLAYS.filter((k) => this.overlays[k]) : [];
     if (networks.length > 0) own.networks = networks;
+    if (this.model === 'ring') own.ring = true;
     return mergeWants([own, ...Array.from(this.providers, (p) => p(now))]);
   }
 
@@ -682,7 +748,12 @@ export class Engine {
       if (this.shown) this.recycle(this.shown);
       this.shown = s.frame;
     }
-    if (s.config) this.config = s.config;
+    if (s.config) {
+      this.config = s.config;
+      if (isSugar(s.config)) this.lastSugar = s.config;
+    }
+    // A world of another model has no ring; Ring World sends its state with every snapshot.
+    this.ring = s.ring ?? (this.model === 'ring' ? this.ring : null);
     // All null (nothing edited) is the same as none.
     if (s.editedLandscapes) this.landscapes = s.editedLandscapes.some((m) => m !== null) ? s.editedLandscapes : [];
     // A clamp of a display chosen before the latest `setDisplay` is stale: the host clamps that
@@ -801,8 +872,10 @@ export class Engine {
     if (this.maxOn) void this.send({ type: 'frame' }, true);
   }
 
-  private keptLandscapes(config: Config): (Uint8Array | null)[] {
+  private keptLandscapes(config: ModelConfig): (Uint8Array | null)[] {
     const base = this.baseConfig;
+    // Only a sugarscape has maps, and only a sugarscape's maps carry over.
+    if (!isSugar(config) || !isSugar(base)) return [];
     const same = config.width === base.width && config.height === base.height && config.goods.length === base.goods.length;
     // A changed number of goods drops every painted map: Sim needs one entry per good (or none).
     return same
@@ -817,7 +890,7 @@ export class Engine {
    * and preset (a replay rewinds the same setup rather than choosing a new one — Decision 4).
    */
   private async rebuild(
-    config: Config,
+    config: ModelConfig,
     seed: number,
     landscapes: (Uint8Array | null)[],
     opts: { presetId?: string; log?: LogEntry[]; keepSetup?: boolean } = {},

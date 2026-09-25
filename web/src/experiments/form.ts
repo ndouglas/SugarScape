@@ -1,4 +1,4 @@
-import type { Config, FieldError } from '../types';
+import type { FieldError, ModelConfig } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -140,7 +140,7 @@ export function controlFor(field: string): string {
 }
 
 /** Dotted paths of every number or boolean in a config (the path input's suggestions). */
-export function numericPaths(config: Config): string[] {
+export function numericPaths(config: ModelConfig): string[] {
   const out: string[] = [];
   const walk = (value: unknown, path: string) => {
     if (path === 'schedule' || path === 'disease.outbreaks') return;

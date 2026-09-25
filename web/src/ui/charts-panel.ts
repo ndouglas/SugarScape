@@ -327,7 +327,7 @@ export class ChartsPanel {
 
   private shown(def: ChartDef): boolean {
     const section = SECTIONS.find((s) => s.id === def.section)!;
-    return this.worlds.some((w) => section.shown(w.config) && (def.shown?.(w.config) ?? true));
+    return this.worlds.some((w) => section.shown(w.sugar) && (def.shown?.(w.sugar) ?? true));
   }
 
   /**
@@ -341,7 +341,7 @@ export class ChartsPanel {
     const groups = this.plots.filter((p) => !p.figure.hidden && p.groups[i].length > 0).map((p) => p.groups[i]);
     const out: Wants = {};
     if (groups.length > 0 && chartsBehind(groups, w.tick, (g) => w.chartGroup(g))) out.charts = { groups, max: CHART_POINTS };
-    if (distributionsDue(this.dist[i], w.tick, now, REFRESH_MS)) Object.assign(out, distributionWants(w.config));
+    if (distributionsDue(this.dist[i], w.tick, now, REFRESH_MS)) Object.assign(out, distributionWants(w.sugar));
     return out;
   }
 
@@ -375,12 +375,12 @@ export class ChartsPanel {
    * shows the charts and sections either world would show and names the traded pair.
    */
   private sync(): void {
-    const signature = JSON.stringify(this.worlds.map((w) => CHARTS.map((d) => d.lines?.(w.config) ?? null)));
+    const signature = JSON.stringify(this.worlds.map((w) => CHARTS.map((d) => d.lines?.(w.sugar) ?? null)));
     if (signature !== this.built) {
       this.built = signature;
       this.build();
     }
-    const configs = this.worlds.map((w) => w.config);
+    const configs = this.worlds.map((w) => w.sugar);
     for (const s of SECTIONS) {
       const el = this.sections.get(s.id);
       if (el) el.hidden = !configs.some((c) => s.shown(c));
@@ -417,7 +417,7 @@ export class ChartsPanel {
   private plotFor(def: ChartDef): HTMLElement {
     const caption = h('figcaption', {}, def.title);
     const figure = h('figure', { class: 'chart' }, caption);
-    const groups = this.worlds.map((w) => groupOf(def, w.config));
+    const groups = this.worlds.map((w) => groupOf(def, w.sugar));
     const counts = groups.map((g) => (def.kind === 'band' ? 3 : g.length));
     const data = def.kind === 'time' || def.kind === 'band' ? this.merge(counts.map(emptyTable)) : this.distData(def);
     const plot = new uPlot({ ...this.options(def), width: this.width(), height: HEIGHT }, data, figure);
@@ -430,14 +430,14 @@ export class ChartsPanel {
     const series: uPlot.Series[] = [{ label: X_LABEL[def.kind] }];
     const lorenz = def.kind === 'lorenz' || def.kind === 'lorenzTotal';
     if (lorenz) series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
-    this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.config, multi ? `${LABELS[i]} · ` : '', i === 1)));
+    this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.sugar, multi ? `${LABELS[i]} · ` : '', i === 1)));
     const x: uPlot.Scale = { time: false };
     if (lorenz) x.range = [0, 1];
     if (def.kind === 'supplyDemand') x.distr = 3;
     const y: uPlot.Scale = {};
     if (lorenz) y.range = [0, 1];
     else if (def.range) y.range = def.range;
-    const lines = def.kind === 'time' ? def.lines!(this.engine.config).length : 0;
+    const lines = def.kind === 'time' ? def.lines!(this.engine.sugar).length : 0;
     const legend = multi || def.kind === 'band' || def.kind === 'supplyDemand' || lines > 1;
     return { scales: { x, y }, axes: this.axes, legend: { show: legend }, series };
   }

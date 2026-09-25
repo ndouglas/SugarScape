@@ -76,7 +76,54 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-export interface Preset { id: string; name: string; source: string; description: string; config: Config }
+/** The models the playground runs (milestone 9). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring';
+
+/** A fraction range (Schelling's preferences). */
+export interface FRange { min: number; max: number }
+
+/** The book's Schelling variant (animations VI-4 to VI-7). */
+export interface SchellingConfig {
+  model: 'schelling';
+  width: number;
+  height: number;
+  population: number;
+  preference: FRange;
+  residence: { enabled: boolean; min: number; max: number };
+}
+
+/** Ring World (animations VI-8 and VI-9). */
+export interface RingConfig {
+  model: 'ring';
+  sites: number;
+  agents: number;
+  vision: URange;
+  capacity: number;
+  growback: number;
+  start: 'random' | 'megagroup';
+}
+
+/**
+ * A config of any model. A sugarscape `Config` carries no `model` key (every config, link, session
+ * and sweep written before milestone 9 is one); the others carry theirs. Narrow with `isSugar` /
+ * `modelOf` (models.ts).
+ */
+export type ModelConfig = Config | SchellingConfig | RingConfig;
+
+export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
+
+/** One field of a model's Rules panel (the core's `schema::Param`). */
+export interface Param {
+  path: string;
+  label: string;
+  kind: 'integer' | 'number' | 'range' | 'bool' | 'choice';
+  min?: number;
+  max?: number;
+  step?: number;
+  choices?: { value: string; label: string }[];
+  apply: 'live' | 'reset';
+  group: string;
+}
 
 export interface FieldError { field: string; message: string }
 
@@ -112,6 +159,28 @@ export interface Snapshot {
   groups: number[];
 }
 
+export interface SchellingStats {
+  tick: number;
+  population: number;
+  unsatisfied: number;
+  segregation: number;
+  moves: number;
+  red_share: number;
+  quiet: number;
+}
+
+export interface RingStats {
+  tick: number;
+  population: number;
+  flocks: number;
+  mean_flock: number;
+  largest_flock: number;
+  mean_distance: number;
+}
+
+/** The latest statistics of a world of any model. */
+export type ModelStats = Snapshot | SchellingStats | RingStats;
+
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
 export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; good: number; due: number; due_tick: number }
@@ -146,7 +215,36 @@ export interface AgentView {
 }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
-export type ColorMode = 'tribe' | 'wealth' | 'sex' | 'age' | 'vision' | 'credit' | 'disease' | 'lineage';
+export interface SchellingAgentView {
+  id: number;
+  color: 'red' | 'blue';
+  preference: number;
+  satisfied: boolean;
+  /** Like-colored and all occupied von Neumann neighbors. */
+  like: number;
+  neighbors: number;
+  age: number;
+  /** The age at which it leaves; null with residence off. */
+  residence: number | null;
+}
+export interface SchellingInspection { site: { x: number; y: number }; agent: SchellingAgentView | null }
+export interface RingInspection { site: { x: number; sugar: number; capacity: number }; agent: { id: number; vision: number } | null }
+/** What a world of any model says about a site. */
+export type AnyInspection = Inspection | SchellingInspection | RingInspection;
+
+/** A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`. */
+export type ColorMode =
+  | 'tribe'
+  | 'wealth'
+  | 'sex'
+  | 'age'
+  | 'vision'
+  | 'credit'
+  | 'disease'
+  | 'lineage'
+  | 'color'
+  | 'satisfaction'
+  | 'preference';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

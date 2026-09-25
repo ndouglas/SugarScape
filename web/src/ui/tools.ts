@@ -57,7 +57,7 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
   const gate = new PickerWorldGate();
   const diseases = (): DiseaseEntry[] => lists.get(focused)?.diseases ?? [];
   const brushed = () => tool === 'paint' || tool === 'vaccinate';
-  const diseaseOn = () => targets.some((t) => t.engine.config.disease.enabled);
+  const diseaseOn = () => targets.some((t) => t.engine.model === 'sugarscape' && t.engine.sugar.disease.enabled);
   const grids = () => targets.map((t) => t.grid);
 
   const buttons = TOOLS.map(([t, label]) => h('button', { onclick: () => choose(t) }, label));
@@ -83,7 +83,7 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
   const goodLabel = h('label', {}, 'Good ', goodSelect);
   let goodNames = '';
   function refreshGoods(): void {
-    const names = primary.engine.config.goods.map((g) => g.name);
+    const names = primary.engine.sugar.goods.map((g) => g.name);
     const signature = JSON.stringify(names);
     if (good >= names.length) good = 0;
     if (signature !== goodNames) {
@@ -254,7 +254,9 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
       engine.on('edit', () => entry.poll.invalidate()),
       engine.on('config', () => entry.poll.invalidate()),
       engine.want((now) =>
-        DISEASE_TOOLS.includes(tool) && engine.config.disease.enabled && entry.poll.due(now, engine.tick) ? { diseaseList: true } : {},
+        DISEASE_TOOLS.includes(tool) && engine.model === 'sugarscape' && engine.sugar.disease.enabled && entry.poll.due(now, engine.tick)
+          ? { diseaseList: true }
+          : {},
       ),
       engine.on('snapshot', () => {
         const list = engine.last?.diseaseList;

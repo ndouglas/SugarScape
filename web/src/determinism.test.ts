@@ -7,7 +7,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { Preset } from './types';
+import type { Preset, Snapshot } from './types';
 import { initSync, presets_json } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
@@ -73,7 +73,7 @@ describe('Chapter VI views', () => {
     expect(watched.last?.tagHist).toHaveLength(11);
     expect(watched.last?.goodWealthHists).toHaveLength(2);
     expect(watched.last?.lorenzTotal).toHaveLength(101);
-    expect(watched.latest!.gini_total).toBeGreaterThan(0);
+    expect((watched.latest as Snapshot).gini_total).toBeGreaterThan(0);
     const frame = watched.frame()!;
     expect(has(frame, [0x5a, 0x5a, 0x5a])).toBe(true);
     expect(has(frame, [0x3d, 0xd6, 0x6b])).toBe(true);
@@ -251,5 +251,24 @@ describe('sessions replay exactly', () => {
     expect(b.tick).toBe(tick);
     expect(await b.fingerprint()).toBe(await a.fingerprint());
     expect((await b.session()).session.log).toEqual(session.log);
+  });
+});
+
+describe('other models through the engine', () => {
+  /** crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: each preset after 200 ticks from seed 1. */
+  const GOLDEN_MODELS: [string, string][] = [
+    ['vi-4-schelling-25', '0x7a7072c3433f5f6f'],
+    ['vi-8-ring-world', '0x1c341361c466db90'],
+  ];
+
+  it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
+    const preset = presets.find((p) => p.id === id)!;
+    const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });
+    // Sugarscape-only wishes are ignored; charts, the ring and inspection change nothing.
+    e.want(() => ({ charts: { groups: [['population']], max: 50 }, lorenz: true, networks: ['trade'] }));
+    await e.select(3, 3);
+    for (const n of [1, 9, 40, 150]) await e.advance(n);
+    expect(e.tick).toBe(200);
+    expect(await e.fingerprint()).toBe(golden);
   });
 });

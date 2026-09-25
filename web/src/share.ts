@@ -1,13 +1,13 @@
 import { classifyFile } from './experiments/file';
 import type { Sweep } from './experiments/types';
 import type { EditCommand, LogEntry, PlaceOverrides } from './protocol';
-import type { Config } from './types';
+import type { ModelConfig } from './types';
 
 /**
  * `landscapes[i]` is good i's painted map (null: generated) — the starting maps — and `log` the
  * edits to replay (Decision 5). Decoding always sets `log` (empty for links made before it).
  */
-export interface ShareState { config: Config; seed: number; landscapes?: (Uint8Array | null)[]; log?: LogEntry[] }
+export interface ShareState { config: ModelConfig; seed: number; landscapes?: (Uint8Array | null)[]; log?: LogEntry[] }
 
 /** Two sessions side by side: a `#c=` link or a comparison file (Decision 6). */
 export interface CompareState { a: ShareState; b: ShareState }
@@ -16,7 +16,7 @@ export interface CompareState { a: ShareState; b: ShareState }
 export type SessionFile = { kind: 'session'; state: ShareState } | { kind: 'compare'; state: CompareState };
 
 /** v1: before N goods (`l` = sugar's map). v2: `g` = one entry per good. v3: `e` = the edit log. */
-interface Wire { v: 1 | 2 | 3; c: Config; s: number; l?: string; g?: (string | null)[]; e?: unknown[][] }
+interface Wire { v: 1 | 2 | 3; c: ModelConfig; s: number; l?: string; g?: (string | null)[]; e?: unknown[][] }
 
 export function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = '';
@@ -131,7 +131,7 @@ function decodeCommand(code: unknown, a: unknown[]): EditCommand {
     case 'v':
       return { type: 'vaccinate', x: int(a[0]), y: int(a[1]), radius: finite(a[2], 0), disease: int(a[3]) };
     case 'c':
-      return isObject(a[0]) ? { type: 'setConfig', config: a[0] as unknown as Config } : bad();
+      return isObject(a[0]) ? { type: 'setConfig', config: a[0] as unknown as ModelConfig } : bad();
     default:
       return bad();
   }
@@ -160,8 +160,9 @@ function fromWire(value: unknown): ShareState {
   if (!isObject(value)) bad();
   const { v, c, s, l, g, e } = value;
   if ((v !== 1 && v !== 2 && v !== 3) || typeof s !== 'number' || !isObject(c)) bad();
-  // A v1 config is in the pre-N-goods shape; the WASM side converts it.
-  const state: ShareState = { config: c as unknown as Config, seed: s >>> 0, log: [] };
+  // A v1 config is in the pre-N-goods shape; the WASM side converts it. A config without a
+  // `model` key is a sugarscape's (every link made before milestone 9).
+  const state: ShareState = { config: c as unknown as ModelConfig, seed: s >>> 0, log: [] };
   if (v === 1 && typeof l === 'string') state.landscapes = [base64UrlToBytes(l)];
   if (v !== 1 && Array.isArray(g)) state.landscapes = g.map((x) => (typeof x === 'string' ? base64UrlToBytes(x) : null));
   if (v === 3 && e !== undefined) state.log = decodeLog(e);

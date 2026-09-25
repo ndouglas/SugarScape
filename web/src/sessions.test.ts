@@ -51,7 +51,7 @@ describe('sessionLink', () => {
     expect(notice).toBe(LOG_FULL_NOTICE);
     const back = await decodeShare(hash.slice(3));
     expect(back.log).toEqual([]);
-    expect(back.config.population).toBe(99);
+    expect((back.config as Config).population).toBe(99);
     expect(back.landscapes).toEqual(painted);
   });
 });

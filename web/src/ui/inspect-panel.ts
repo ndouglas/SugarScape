@@ -1,4 +1,5 @@
 import type { Engine } from '../engine';
+import { isSugarView } from '../models';
 import type { AgentView, LinkView } from '../types';
 import { h } from './dom';
 
@@ -19,7 +20,7 @@ export class InspectPanel {
   }
 
   private goodName(i: number): string {
-    return this.engine.config.goods[i]?.name ?? `good ${i}`;
+    return this.engine.sugar.goods[i]?.name ?? `good ${i}`;
   }
 
   private links(links: LinkView[]): HTMLElement {
@@ -48,16 +49,16 @@ export class InspectPanel {
   private agentRows(a: AgentView): HTMLElement[] {
     const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     return [
-      row('Agent', h('span', {}, `#${a.id} · ${a.sex} · ${this.engine.config.culture.groups[a.group]?.name ?? a.tribe} `, this.followButton(a.id))),
+      row('Agent', h('span', {}, `#${a.id} · ${a.sex} · ${this.engine.sugar.culture.groups[a.group]?.name ?? a.tribe} `, this.followButton(a.id))),
       ...a.holdings.map((held, i) =>
         row(this.goodName(i), `${fmt(held)} (born with ${fmt(a.initial[i])}) · metabolism ${a.metabolism[i]}`),
       ),
-      ...(this.engine.config.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
+      ...(this.engine.sugar.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
-      ...(this.engine.config.disease.enabled ? this.diseaseRows(a) : []),
+      ...(this.engine.sugar.disease.enabled ? this.diseaseRows(a) : []),
       row('Born', `tick ${a.born}`),
       row('Parents', this.links(a.parents)),
       row('Children', this.links(a.children)),
@@ -104,6 +105,8 @@ export class InspectPanel {
     }
     // The host tracks a selected agent while it lives (Decision 3).
     const gone = shown.agentId !== null && !shown.alive;
+    // Only a sugarscape's inspection has these rows; the other models' are added with their Inspect rows.
+    if (!isSugarView(shown.view)) return;
     const { site, agent } = shown.view;
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     this.el.replaceChildren(
@@ -113,7 +116,7 @@ export class InspectPanel {
         {},
         row('Site', `(${site.x}, ${site.y})`),
         ...site.resources.map((r, i) => row(`${this.goodName(i)} here`, `${fmt(r)} / ${fmt(site.capacities[i])}`)),
-        ...site.pollution.map((p, k) => row(this.engine.config.pollution.pollutants[k]?.name ?? `pollutant ${k}`, fmt(p))),
+        ...site.pollution.map((p, k) => row(this.engine.sugar.pollution.pollutants[k]?.name ?? `pollutant ${k}`, fmt(p))),
         ...(agent && !gone ? this.agentRows(agent) : []),
       ),
     );

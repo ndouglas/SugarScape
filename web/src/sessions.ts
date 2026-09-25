@@ -1,6 +1,6 @@
 import type { Session } from './protocol';
 import { encodeCompare, encodeShare, type ShareState } from './share';
-import type { Config } from './types';
+import type { ModelConfig } from './types';
 
 /** Links longer than this still work in browsers, but some apps cut them (Decision 6). */
 export const LONG_LINK = 32_000;
@@ -11,7 +11,7 @@ export const LOG_FULL_NOTICE =
 
 /** What a link or session file is made from; an `Engine` is one. */
 export interface SessionSource {
-  baseConfig: Config;
+  baseConfig: ModelConfig;
   seed: number;
   editedLandscapes(): (Uint8Array | null)[] | undefined;
   session(): Promise<{ session: Session; full: boolean; tick: number }>;

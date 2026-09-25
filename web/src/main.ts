@@ -140,7 +140,8 @@ async function main(): Promise<void> {
   );
   tabs.add('Credit', credit.el, (visible) => credit.setVisible(visible));
   // The Credit tab exists only while credit (L) is on in a world on screen.
-  const syncCreditTab = (b: Engine | null) => tabs.setHidden('Credit', ![engine, b].some((e) => e?.config.credit.enabled));
+  const syncCreditTab = (b: Engine | null) =>
+    tabs.setHidden('Credit', ![engine, b].some((e) => e && e.model === 'sugarscape' && e.sugar.credit.enabled));
   engine.on('reset', () => syncCreditTab(compare?.b ?? null));
   engine.on('config', () => syncCreditTab(compare?.b ?? null));
   syncCreditTab(null);

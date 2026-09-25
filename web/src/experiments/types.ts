@@ -1,12 +1,13 @@
 // Mirrors of the sweep JSON shapes in sugarscape-core's `sweep` module.
-import type { Config } from '../types';
+import type { ModelConfig } from '../types';
 
 export interface AxisValue { at: number; name?: string; set: Record<string, unknown> }
 /** The full form (what the core writes). */
 export interface Axis { label: string; values: AxisValue[] }
 /** The shorthand: value i sets `path` and sits at the value itself (numbers) or at i. */
 export interface ShorthandAxis { label?: string; path: string; values: unknown[] }
-export type SweepBase = { preset: string } | { config: Config };
+/** A preset of any model, or a config of any model. */
+export type SweepBase = { preset: string } | { config: ModelConfig };
 export type Metric =
   | { kind: 'final'; series: string }
   | { kind: 'window_mean'; series: string; from: number; to?: number }
