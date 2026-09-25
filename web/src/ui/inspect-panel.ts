@@ -1,7 +1,17 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
 import { isCivilView, isRingView, isSpatialView, isSugarView, isValleyView } from '../models';
-import type { AgentView, AnasaziInspection, CivilInspection, LinkView, RingInspection, SchellingInspection, SpatialInspection } from '../types';
+import { playerRows } from '../spatial';
+import type {
+  AgentView,
+  AnasaziInspection,
+  CivilInspection,
+  LinkView,
+  RingInspection,
+  SchellingInspection,
+  SpatialConfig,
+  SpatialInspection,
+} from '../types';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -114,10 +124,14 @@ export class InspectPanel {
     ];
   }
 
-  /** A spatial cell (Task 5 fills in the player's rows). */
-  private spatialRows(view: SpatialInspection, _gone: boolean): HTMLElement[] {
+  /** A spatial cell and its player: strategy, score, its neighborhood's best of each kind and what it becomes. */
+  private spatialRows(view: SpatialInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
-    return [row('Cell', `(${view.site.x}, ${view.site.y}, ${view.site.z})`)];
+    const { x, y, z } = view.site;
+    const cube = (this.engine.config as SpatialConfig).lattice === 'cube';
+    const rows = [row('Cell', cube ? `(${x}, ${y}, z = ${z})` : `(${x}, ${y})`)];
+    if (!view.agent) return [...rows, row('Player', 'none (an empty cell)')];
+    return [...rows, ...playerRows(view.agent).map(([k, v]) => row(k, v))];
   }
 
   /** A civil site: its cop, the agent shown there (followed into jail), and others jailed after arrest here. */
@@ -202,7 +216,7 @@ export class InspectPanel {
           : isCivilView(view)
             ? this.civilRows(view, shown.agentId, gone)
             : isSpatialView(view)
-              ? this.spatialRows(view, gone)
+              ? this.spatialRows(view)
               : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;

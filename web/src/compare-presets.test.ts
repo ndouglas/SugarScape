@@ -52,4 +52,10 @@ describe('compare presets', () => {
       'Ethnic cleansing vs peacekeepers — Civil Violence (Compare)',
     ]);
   });
+
+  it('pairs the spatial games the debate compared', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['nm-sync-vs-async', 'nm-3-kaleidoscope', 'hg-async-kaleidoscope', 'Synchronous vs asynchronous — Spatial Games (Compare)']);
+    expect(ids).toContainEqual(['nbm-discrete-vs-continuous', 'nbm-discrete', 'nbm-continuous', 'Discrete vs continuous time — Spatial Games (Compare)']);
+  });
 });

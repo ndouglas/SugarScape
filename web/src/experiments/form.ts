@@ -51,6 +51,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
     // The Finding's axis (the built-in cv-ratio-rules): outbursts against legitimacy.
     return { ...form, x: { path: 'legitimacy', values: '0.6:0.95:0.05' }, ticks: 1000, metric: { ...form.metric, kind: 'final', series: 'outbursts' } };
   }
+  if (model === 'spatial') {
+    // NBM94's axis: cooperators against the temptation b.
+    return { ...form, x: { path: 'b', values: '1.05:2.05:0.05' }, ticks: 200, metric: { ...form.metric, kind: 'final', series: 'fraction_c' } };
+  }
   return form;
 }
 

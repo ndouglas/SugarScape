@@ -144,6 +144,11 @@ describe('sweeps over other models', () => {
       seeds: 3,
       metric: { kind: 'final', series: 'outbursts' },
     });
+    expect(defaultForm('spatial')).toMatchObject({
+      x: { path: 'b', values: '1.05:2.05:0.05' },
+      ticks: 200,
+      metric: { kind: 'final', series: 'fraction_c' },
+    });
   });
 
   it('suggest a Schelling config’s own paths, never its model tag', () => {

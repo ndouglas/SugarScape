@@ -32,6 +32,18 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'cv-run-7-cleansing',
     b: 'cv-safe-havens',
   },
+  {
+    id: 'nm-sync-vs-async',
+    label: 'Synchronous vs asynchronous — Spatial Games (Compare)',
+    a: 'nm-3-kaleidoscope',
+    b: 'hg-async-kaleidoscope',
+  },
+  {
+    id: 'nbm-discrete-vs-continuous',
+    label: 'Discrete vs continuous time — Spatial Games (Compare)',
+    a: 'nbm-discrete',
+    b: 'nbm-continuous',
+  },
 ];
 
 /**
