@@ -390,12 +390,18 @@ impl Sweep {
                 .collect::<Vec<_>>()
         })?;
         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
-            return Err(vec![FieldError::new(
-                "ticks",
-                format!(
-                    "must be ≤ {max}: the Long House Valley stops at its end year, \
+            let why = match config.kind() {
+                crate::model::ModelKind::Tags => {
+                    format!("the tags model stops at its last generation, {max} in this config")
+                }
+                _ => format!(
+                    "the Long House Valley stops at its end year, \
                      {max} ticks after its start year in this config"
                 ),
+            };
+            return Err(vec![FieldError::new(
+                "ticks",
+                format!("must be ≤ {max}: {why}"),
             )]);
         }
         let name = self.metric.series();
@@ -1748,6 +1754,17 @@ mod tests {
     fn run_all_reports_invalid_sweeps() {
         let e = run_all(&sweep(with(tiny(), "ticks", json!(0))), 2, |_, _| {}).unwrap_err();
         assert!(e.iter().any(|e| e.field == "ticks"), "{e:?}");
+    }
+
+    #[test]
+    fn a_tags_sweep_past_the_last_generation_names_the_tags_model() {
+        let mut s = builtin("rca-pairings").unwrap();
+        s.ticks = 30_001;
+        let e = s.points().unwrap_err();
+        assert_eq!(e[0].field, "ticks");
+        assert!(e[0].message.starts_with("must be ≤ 30000"), "{e:?}");
+        assert!(e[0].message.contains("last generation"), "{e:?}");
+        assert!(!e[0].message.contains("Long House Valley"), "{e:?}");
     }
 
     #[test]

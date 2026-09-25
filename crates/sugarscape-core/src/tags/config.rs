@@ -228,7 +228,7 @@ pub fn schema() -> Vec<Param> {
             ],
             Live,
         )
-        .with_help("The paper’s learning variant; “in proportion” is normalized by this generation’s score range (our reading)."),
+        .with_help("The paper’s learning variant: adopt with probability (better score − own) ÷ (b + c), the most one donation can move two scores apart. The paper gives no scale; this one reproduces its 49% at one pairing."),
     ]
 }
 
@@ -304,6 +304,17 @@ mod tests {
                 "tag_noise"
             ]
         );
+    }
+
+    #[test]
+    fn the_selection_help_names_the_scale_the_world_uses() {
+        let help = schema()
+            .into_iter()
+            .find(|p| p.path == "selection")
+            .and_then(|p| p.help)
+            .unwrap();
+        assert!(help.contains("b + c"), "{help}");
+        assert!(!help.contains("range"), "{help}");
     }
 
     #[test]

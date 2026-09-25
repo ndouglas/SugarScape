@@ -370,7 +370,8 @@ What does not reproduce (20 seeds × 30 000 generations): the paper's picture of
 continually rising and being invaded. Takeovers are rare — a median of 29 per run, where its
 Fig. 1 shows two in 500 generations — and dominant clusters hold 86 % of the agents (the paper:
 75–80 %), are 91 % one exact tag when they take over (79 %) and 96 % ten generations later (97 %),
-and their mean tolerance rises from 0.010 to 0.015, not 0.027. Edmonds & Hales' "with 200 agents
+and their mean tolerance drifts up, as the paper says, but further: from 0.010 when they take
+over to 0.039 in their last dominant generation (the paper: 0.027). Edmonds & Hales' "with 200 agents
 the donation rates vanished" is partly true: with ties to the current agent 3 of 20 runs never
 cooperate, and the rest do, at 74 %.
 

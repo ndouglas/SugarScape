@@ -48,6 +48,44 @@ fn mean(v: &[f64]) -> f64 {
     }
 }
 
+/// A dominant cluster's life: the generation it took over and its last
+/// dominant generation before the next takeover (or the run's end).
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Span {
+    start: usize,
+    end: usize,
+}
+
+impl Span {
+    /// Whether it was still the dominant cluster `n` generations after taking over.
+    fn lasts(&self, n: usize) -> bool {
+        self.end >= self.start + n
+    }
+}
+
+/// The dominant clusters that took over after generation `after`. Every
+/// dominant generation between two takeovers belongs to the first cluster
+/// (a dominant cluster far from it would itself be a takeover), so a cluster
+/// ends at its last generation above half, which may be long before the
+/// invader's takeover.
+fn spans(share: &[f64], takeovers: &[f64], after: usize) -> Vec<Span> {
+    let starts: Vec<usize> = (after + 1..takeovers.len())
+        .filter(|&t| takeovers[t] > takeovers[t - 1])
+        .collect();
+    starts
+        .iter()
+        .enumerate()
+        .map(|(i, &start)| {
+            let next = starts.get(i + 1).copied().unwrap_or(share.len());
+            let end = (start..next)
+                .rev()
+                .find(|&t| share[t] > 0.5)
+                .unwrap_or(start);
+            Span { start, end }
+        })
+        .collect()
+}
+
 fn summarize(w: &ModelWorld) -> Run {
     let s = |name: &str| w.model().series(name).expect("a tags series");
     let (donation, share, related, tolerance, takeovers) = (
@@ -57,9 +95,8 @@ fn summarize(w: &ModelWorld) -> Run {
         s("cluster_tolerance"),
         s("takeovers"),
     );
-    let starts: Vec<usize> = (TRANSIENT + 1..takeovers.len())
-        .filter(|&t| takeovers[t] > takeovers[t - 1])
-        .collect();
+    let spans = spans(&share, &takeovers, TRANSIENT);
+    let starts: Vec<usize> = spans.iter().map(|s| s.start).collect();
     let at = |v: &[f64], ts: &[usize]| {
         mean(
             &ts.iter()
@@ -67,8 +104,14 @@ fn summarize(w: &ModelWorld) -> Run {
                 .collect::<Vec<_>>(),
         )
     };
-    let later: Vec<usize> = starts.iter().map(|t| t + 10).collect();
-    let ends: Vec<usize> = starts.windows(2).map(|p| p[1] - 1).collect();
+    // Only clusters still dominant ten generations on; only clusters that ended
+    // (were replaced), at their last dominant generation.
+    let later: Vec<usize> = spans
+        .iter()
+        .filter(|s| s.lasts(10))
+        .map(|s| s.start + 10)
+        .collect();
+    let ends: Vec<usize> = spans.windows(2).map(|p| p[0].end).collect();
     Run {
         donation: mean(&donation),
         first: donation[0],
@@ -449,4 +492,28 @@ pub fn claims() -> Vec<Claim> {
             },
         },
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_cluster_ends_at_its_last_dominant_generation_not_before_the_next_takeover() {
+        // Generations 0–11. Takeovers at 2 and 9; the first cluster is dominant
+        // at 2–5, loses dominance at 6–8 while the invader grows, then 9 takes over.
+        let share = [0.3, 0.3, 0.6, 0.8, 0.8, 0.7, 0.4, 0.4, 0.45, 0.6, 0.7, 0.7];
+        let takeovers = [0., 0., 1., 1., 1., 1., 1., 1., 1., 2., 2., 2.];
+        let s = spans(&share, &takeovers, 0);
+        assert_eq!(
+            s,
+            vec![Span { start: 2, end: 5 }, Span { start: 9, end: 11 }]
+        );
+        assert!(!s[1].lasts(10), "the run ends before generation 19");
+        assert!(Span { start: 2, end: 12 }.lasts(10));
+        assert!(
+            spans(&share, &takeovers, 5).iter().all(|s| s.start > 5),
+            "the transient is skipped"
+        );
+    }
 }

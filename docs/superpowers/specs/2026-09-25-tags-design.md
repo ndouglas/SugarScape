@@ -56,7 +56,7 @@ E&H measured (30 runs × 30 000 generations; to be confirmed by our survey): wit
 - Table 2 under `current`: c = 0.5 → 26 %, 0.6 → 2.2 % (paper 24.7, 2.2); under `random` c = 0.5 → 45 % (E&H 45.9).
 - `below` 1.4 % (E&H report 0.0 %); floor −10⁻⁶ 1.4 % (R&S 1.48 %); tag noise 1.4 % (E&H 1.5–1.9 %); tolerance fixed at 0: 0.0 % under `current`, 75.3 % under `random` (E&H 0.0, 75.3).
 - 200 agents under `current`: 3 of 20 runs never cooperate; the rest ≈ 74 %.
-- Clusters: a median of 29 takeovers per run (Fig. 1 implies ≈ 120); share 0.86 while dominant (0.75–0.80); relatedness 0.91 at takeover and 0.96 ten generations later (0.79, 0.97); cluster tolerance 0.010 → 0.015 (0.010 → 0.027).
+- Clusters: a median of 29 takeovers per run (Fig. 1 implies ≈ 120); share 0.86 while dominant (0.75–0.80); relatedness 0.91 at takeover and 0.96 ten generations later (0.79, 0.97); cluster tolerance 0.010 at takeover → 0.039 in the cluster's last dominant generation (0.010 → 0.027). (Planning first reported 0.015, measured the generation before the next takeover — by then usually the invader; the final review caught it.)
 - Adoption at P = 1: 48.8 % scaled by b + c (paper 49 %), 7 % scaled by the score range.
 
 ## Architecture
