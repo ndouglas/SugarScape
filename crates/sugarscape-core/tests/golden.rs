@@ -58,6 +58,9 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("vi-7-schelling-mixed", 0x79346d2a338108cf),
     ("vi-8-ring-world", 0x1c341361c466db90),
     ("vi-9-ring-megagroup", 0x430d0c3b19b6e58e),
+    ("lhv-published", 0x3b357e6f0cc5f74a),
+    ("lhv-published-defaults", 0x7cdec8b85b1f909a),
+    ("lhv-documented", 0x33ffb6476e824b0),
 ];
 
 fn fingerprint(id: &str) -> u64 {

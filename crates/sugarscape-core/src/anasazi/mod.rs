@@ -10,6 +10,8 @@ pub mod config;
 pub mod household;
 pub mod random;
 pub mod valley;
+pub mod world;
 
-pub use config::{schema, AnasaziConfig, CornRange, Quirks};
+pub use config::{presets, schema, AnasaziConfig, CornRange, Quirks};
 pub use household::Household;
+pub use world::{AnasaziInspection, AnasaziMode, AnasaziSnapshot, AnasaziWorld, SERIES};

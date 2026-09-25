@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::anasazi::valley::{FIRST_YEAR, LAST_YEAR};
 use crate::config::FieldError;
+use crate::model::ModelConfig;
+use crate::presets::ModelPreset;
 use crate::schema::{Apply, Param};
 
 /// A range of kilograms, `[min, max]`.
@@ -456,6 +458,50 @@ const QUIRKS: [(&str, &str, &str); 10] = [
     ),
 ];
 
+fn preset(
+    id: &'static str,
+    name: &'static str,
+    source: &'static str,
+    description: &'static str,
+    config: AnasaziConfig,
+) -> ModelPreset {
+    ModelPreset {
+        id,
+        name,
+        source,
+        description,
+        config: ModelConfig::Anasazi(config),
+    }
+}
+
+/// The published replication (calibrated and with the ODD's defaults) and
+/// the documented model.
+pub fn presets() -> Vec<ModelPreset> {
+    vec![
+        preset(
+            "lhv-published",
+            "Long House Valley: the published replication",
+            "Janssen (2009), Table 4 and Figure 10",
+            "Janssen's 2009 NetLogo replication of Artificial Anasazi (itself an approximation of Axtell et al. 2002) with JASSS Table 4's best fit — death age 38, fission until 34 with probability 0.155, harvest adjustment 0.56 (Table 4's, not the NetLogo slider's 0.54) and harvest s.d. 0.4 — and every replication quirk on. Households climb to the valley's carrying capacity (about 190 plots), dip with it in the 1140s–1160s, climb again and fall after 1270, but, as in all of Janssen's runs, do not vanish in 1300. Measured over seeds 1–15: 172 households in 1050–1130 (the record: 156), 94 in 1140–1170 (133), 180 in 1180–1265 (172), 59 in 1300 and 22 in 1350 (0); mean fit (the sum of squared differences from the record) 922 516.",
+            AnasaziConfig::calibrated(Quirks::ALL),
+        ),
+        preset(
+            "lhv-published-defaults",
+            "Long House Valley: the replication with the original defaults",
+            "Janssen (2009), Figure 2",
+            "The replication with the ODD's defaults (harvest adjustment 1, harvest s.d. 0.1, death and fertility end 30, fission 0.125) and every quirk on: with the full harvest about 1 050 plots can feed a household, and households fill them — five times the archaeological record, as in JASSS Figure 2. Measured over seeds 1–15: 1 046 households in 1050–1130, 864 in 1140–1170, 1 045 in 1180–1265, 482 in 1300 and 385 in 1350.",
+            AnasaziConfig::table_2(Quirks::ALL),
+        ),
+        preset(
+            "lhv-documented",
+            "Long House Valley: the documented model",
+            "Janssen's ODD (2013) with Table 4's values",
+            "The model as the ODD and JASSS describe it — every replication quirk off, with Table 4's calibrated values and the rules the text leaves undefined taken from the replication — does not reproduce the published curve: a new household gets a third of its parent's corn rather than a fresh store, so few new households survive. Measured over seeds 1–15: 41 households in 1050–1130, 80 in 1180–1265, 7 of 15 runs with none left by 1350; mean fit 4 296 013, 4.7 times the replication's. Turning the fresh endowment back on alone restores the fit (see the lhv-quirks experiment).",
+            AnasaziConfig::calibrated(Quirks::NONE),
+        ),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -495,6 +541,33 @@ mod tests {
         );
         assert_eq!(cal.quirks, Quirks::ALL);
         assert_eq!(AnasaziConfig::calibrated(Quirks::NONE).quirks, Quirks::NONE);
+    }
+
+    #[test]
+    fn the_presets_are_the_published_and_documented_models() {
+        let ps = presets();
+        let ids: Vec<&str> = ps.iter().map(|p| p.id).collect();
+        assert_eq!(
+            ids,
+            ["lhv-published", "lhv-published-defaults", "lhv-documented"]
+        );
+        let config = |k: usize| match &ps[k].config {
+            ModelConfig::Anasazi(c) => c.clone(),
+            _ => unreachable!(),
+        };
+        assert_eq!(config(0), AnasaziConfig::default());
+        assert_eq!(config(1), AnasaziConfig::table_2(Quirks::ALL));
+        assert_eq!(
+            config(2),
+            AnasaziConfig {
+                quirks: Quirks::NONE,
+                ..config(0)
+            }
+        );
+        for p in &ps {
+            // Each description records what it was measured to do (Decision 21).
+            assert!(p.description.contains("seeds 1–15"), "{}", p.id);
+        }
     }
 
     #[test]
