@@ -634,12 +634,13 @@ impl From<Preset> for ModelPreset {
 }
 
 /// Every model's presets: the sugarscape's (`all`), then Schelling's, Ring
-/// World's and the anasazi's.
+/// World's, the anasazi's and civil violence's.
 pub fn catalog() -> Vec<ModelPreset> {
     let mut out: Vec<ModelPreset> = all().into_iter().map(ModelPreset::from).collect();
     out.extend(crate::schelling::presets());
     out.extend(crate::ring::presets());
     out.extend(crate::anasazi::presets());
+    out.extend(crate::civil::presets());
     out
 }
 

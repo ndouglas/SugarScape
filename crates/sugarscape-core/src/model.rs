@@ -6,13 +6,14 @@
 use serde::{Serialize, Serializer};
 
 use crate::anasazi::{AnasaziConfig, AnasaziWorld};
+use crate::civil::{CivilConfig, CivilWorld};
 use crate::config::{Config, FieldError};
 use crate::render::{self, ColorMode, Layer};
 use crate::ring::{RingConfig, RingWorld};
 use crate::schelling::{SchellingConfig, SchellingWorld};
 use crate::schema::Param;
 use crate::world::World;
-use crate::{anasazi, export, ring, schelling, stats};
+use crate::{anasazi, civil, export, ring, schelling, stats};
 
 /// Which model a config or world is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -22,14 +23,16 @@ pub enum ModelKind {
     Schelling,
     Ring,
     Anasazi,
+    Civil,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 4] = [
+    pub const ALL: [ModelKind; 5] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
         ModelKind::Anasazi,
+        ModelKind::Civil,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -38,6 +41,7 @@ impl ModelKind {
             ModelKind::Schelling => "schelling",
             ModelKind::Ring => "ring",
             ModelKind::Anasazi => "anasazi",
+            ModelKind::Civil => "civil",
         }
     }
 
@@ -49,6 +53,7 @@ impl ModelKind {
             ModelKind::Schelling => schelling::schema(),
             ModelKind::Ring => ring::schema(),
             ModelKind::Anasazi => anasazi::schema(),
+            ModelKind::Civil => civil::schema(),
         }
     }
 }
@@ -66,6 +71,7 @@ pub enum ModelConfig {
     Schelling(SchellingConfig),
     Ring(RingConfig),
     Anasazi(AnasaziConfig),
+    Civil(CivilConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -75,6 +81,7 @@ enum Tagged<'a> {
     Schelling(&'a SchellingConfig),
     Ring(&'a RingConfig),
     Anasazi(&'a AnasaziConfig),
+    Civil(&'a CivilConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -91,6 +98,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Schelling(c) => Tagged::Schelling(c).serialize(s),
             ModelConfig::Ring(c) => Tagged::Ring(c).serialize(s),
             ModelConfig::Anasazi(c) => Tagged::Anasazi(c).serialize(s),
+            ModelConfig::Civil(c) => Tagged::Civil(c).serialize(s),
         }
     }
 }
@@ -102,6 +110,7 @@ impl ModelConfig {
             ModelConfig::Schelling(_) => ModelKind::Schelling,
             ModelConfig::Ring(_) => ModelKind::Ring,
             ModelConfig::Anasazi(_) => ModelKind::Anasazi,
+            ModelConfig::Civil(_) => ModelKind::Civil,
         }
     }
 
@@ -148,9 +157,14 @@ impl ModelConfig {
             "anasazi" => serde_json::from_value(value)
                 .map(ModelConfig::Anasazi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "civil" => serde_json::from_value(value)
+                .map(ModelConfig::Civil)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
-                format!("unknown model {tag:?} (expected sugarscape, schelling, ring or anasazi)"),
+                format!(
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi or civil)"
+                ),
             )),
         }
     }
@@ -161,6 +175,7 @@ impl ModelConfig {
             ModelConfig::Schelling(c) => c.validate(),
             ModelConfig::Ring(c) => c.validate(),
             ModelConfig::Anasazi(c) => c.validate(),
+            ModelConfig::Civil(c) => c.validate(),
         }
     }
 
@@ -172,6 +187,7 @@ impl ModelConfig {
             ModelConfig::Schelling(c) => set_path(c, path, value).map(ModelConfig::Schelling),
             ModelConfig::Ring(c) => set_path(c, path, value).map(ModelConfig::Ring),
             ModelConfig::Anasazi(c) => set_path(c, path, value).map(ModelConfig::Anasazi),
+            ModelConfig::Civil(c) => set_path(c, path, value).map(ModelConfig::Civil),
         }
     }
 
@@ -180,7 +196,10 @@ impl ModelConfig {
     pub fn max_ticks(&self) -> Option<u32> {
         match self {
             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
-            ModelConfig::Sugarscape(_) | ModelConfig::Schelling(_) | ModelConfig::Ring(_) => None,
+            ModelConfig::Sugarscape(_)
+            | ModelConfig::Schelling(_)
+            | ModelConfig::Ring(_)
+            | ModelConfig::Civil(_) => None,
         }
     }
 
@@ -191,6 +210,7 @@ impl ModelConfig {
             ModelConfig::Schelling(_) => schelling::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Ring(_) => ring::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Anasazi(_) => anasazi::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Civil(_) => civil::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -341,6 +361,7 @@ pub enum ModelWorld {
     Schelling(Box<SchellingWorld>),
     Ring(Box<RingWorld>),
     Anasazi(Box<AnasaziWorld>),
+    Civil(Box<CivilWorld>),
 }
 
 impl ModelWorld {
@@ -364,6 +385,7 @@ impl ModelWorld {
             }
             ModelConfig::Ring(c) => ModelWorld::Ring(Box::new(RingWorld::new(c, seed)?)),
             ModelConfig::Anasazi(c) => ModelWorld::Anasazi(Box::new(AnasaziWorld::new(c, seed)?)),
+            ModelConfig::Civil(c) => ModelWorld::Civil(Box::new(CivilWorld::new(c, seed)?)),
         })
     }
 
@@ -373,6 +395,7 @@ impl ModelWorld {
             ModelWorld::Schelling(_) => ModelKind::Schelling,
             ModelWorld::Ring(_) => ModelKind::Ring,
             ModelWorld::Anasazi(_) => ModelKind::Anasazi,
+            ModelWorld::Civil(_) => ModelKind::Civil,
         }
     }
 
@@ -382,6 +405,7 @@ impl ModelWorld {
             ModelWorld::Schelling(w) => w.as_ref(),
             ModelWorld::Ring(w) => w.as_ref(),
             ModelWorld::Anasazi(w) => w.as_ref(),
+            ModelWorld::Civil(w) => w.as_ref(),
         }
     }
 
@@ -391,6 +415,7 @@ impl ModelWorld {
             ModelWorld::Schelling(w) => w.as_mut(),
             ModelWorld::Ring(w) => w.as_mut(),
             ModelWorld::Anasazi(w) => w.as_mut(),
+            ModelWorld::Civil(w) => w.as_mut(),
         }
     }
 
@@ -555,6 +580,39 @@ mod tests {
     }
 
     #[test]
+    fn civil_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "civil", "variant": "ethnic", "quirks": {"floor_ratio": true}}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Civil);
+        let ModelConfig::Civil(v) = &c else {
+            unreachable!()
+        };
+        assert!(v.quirks.floor_ratio && !v.quirks.jailed_stay);
+        assert_eq!(
+            (v.width, v.legitimacy),
+            (40, 0.82),
+            "missing fields take the defaults"
+        );
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(json["model"], "civil");
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..3], ["population", "active", "quiet"]);
+        assert_eq!(c.max_ticks(), None);
+        let next = c.with_path("vision.cop", &json!(3.0)).unwrap();
+        let ModelConfig::Civil(n) = &next else {
+            unreachable!()
+        };
+        assert_eq!(n.vision.cop, 3.0);
+        let e = ModelConfig::from_json(r#"{"model": "civil", "legitimacy": 2}"#).unwrap_err();
+        assert_eq!(e[0].field, "legitimacy");
+        let w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Civil);
+        assert_eq!(w.model().size(), (40, 40));
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -575,7 +633,10 @@ mod tests {
     #[test]
     fn every_kind_names_itself_and_only_other_models_have_schemas() {
         let names: Vec<&str> = ModelKind::ALL.iter().map(|k| k.as_str()).collect();
-        assert_eq!(names, ["sugarscape", "schelling", "ring", "anasazi"]);
+        assert_eq!(
+            names,
+            ["sugarscape", "schelling", "ring", "anasazi", "civil"]
+        );
         assert!(ModelKind::Sugarscape.schema().is_empty());
         for kind in &ModelKind::ALL[1..] {
             assert!(!kind.schema().is_empty(), "{kind:?}");

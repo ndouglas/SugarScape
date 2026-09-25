@@ -62,6 +62,16 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("lhv-published", 0x3b357e6f0cc5f74a),
     ("lhv-published-defaults", 0x7cdec8b85b1f909a),
     ("lhv-documented", 0x33ffb6476e824b0),
+    ("cv-run-1-no-movement", 0x49637b8b34864721),
+    ("cv-run-2-punctuated", 0x7888f03e0d511f6d),
+    ("cv-run-3-salami", 0x51664e9ecc568140),
+    ("cv-run-4-one-jump", 0xc8ad285446786559),
+    ("cv-run-5-cop-reductions", 0x5713c0cafe4898dc),
+    ("cv-run-6-coexistence", 0x1ce4fc6300e993ee),
+    ("cv-run-7-cleansing", 0x11e4a982d405341),
+    ("cv-run-8-nasty-regime", 0x5ce734d905ba0c5d),
+    ("cv-safe-havens", 0x4259235e1ab53504),
+    ("cv-netlogo", 0x87a92345c017b0ae),
 ];
 
 fn fingerprint(id: &str) -> u64 {

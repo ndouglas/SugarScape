@@ -52,6 +52,17 @@ pub struct Param {
     /// A one-line explanation shown under the control (milestone 10).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub help: Option<&'static str>,
+    /// Shown only while another field has a value (milestone 11: Model II's
+    /// population fields).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_if: Option<ShowIf>,
+}
+
+/// A condition on the config: the field at `path` (a string) equals `equals`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub struct ShowIf {
+    pub path: &'static str,
+    pub equals: &'static str,
 }
 
 impl Param {
@@ -73,12 +84,19 @@ impl Param {
             apply,
             group,
             help: None,
+            show_if: None,
         }
     }
 
     /// The same field with a one-line explanation.
     pub fn with_help(mut self, help: &'static str) -> Self {
         self.help = Some(help);
+        self
+    }
+
+    /// The same field, shown only while the string field `path` is `equals`.
+    pub fn shown_if(mut self, path: &'static str, equals: &'static str) -> Self {
+        self.show_if = Some(ShowIf { path, equals });
         self
     }
 
