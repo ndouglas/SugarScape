@@ -37,6 +37,12 @@ Add Epstein's civil violence model — both Model I (rebellion) and Model II (in
 - **Model I results:** deceptive behavior; free assembly catalyzes outbursts; punctuated equilibrium (Figs. 3, 4); waiting times between outbursts above 50 actives with mean 60, s.d. 55 (Fig. 5), truncated at 30 and logged, slope −0.07; total activation per outburst mean 708, s.d. 230 (Fig. 7); tension Ḡ·B̄/R̄ builds before outbursts (Fig. 8); legitimacy 0.9 → 0.2 "in small increments (of a percent per cycle)" gives no spike and a smoothly rising jail population (Fig. 9), while 0.9 → 0.7 "in one jump" at t = 77 gives "an explosion of actives" and a jailed population that exceeds the first run's (Fig. 10); walking cops down "does 'tip' society into rebellion" (Fig. 11).
 - **Model II:** two groups, blue and green; "'going active' means killing an agent of the other ethnic group … indiscriminant"; "agents clone offspring onto unoccupied neighboring sites with probability p each period. Offspring inherit the parent's ethnic identity and grievance"; "a random death age from U(0, max_age)"; cops "arrest — evenhandedly — red agents within their vision". Results: high L and no cops gives peaceful coexistence (Fig. 12); L = 0.8 and no cops gives ethnic cleansing and genocide, "Over a large number of runs (n = 30), genocide is always observed. The victor is random" (Fig. 13); peacekeepers deployed at t = 50 "to random unoccupied sites" typically give safe havens (Fig. 14); cop density 0.04 from the start gives "a stable, but nasty, regime", and withdrawing the cops reverts to genocide; cop densities 0 to 0.1 by 0.002, 50 runs each, capped at 15 000 cycles: mean time to genocide rises with density, and so does its s.d. (Figs. 15–17).
 
+## Finding: the stated arrest rule gives no rebellion
+
+Found while planning (a dry run of this spec's rules, Run 2's inputs, 3 seeds × 3 000 ticks): with the paper's P = 1 − exp(−k·C/A), Run 2 never has an outburst — at most 34 actives, no tick above 50. At L = 0.82, G = 0.18·H ≤ 0.18, and even a crowd outnumbering the cops three to one faces P = 1 − e^(−2.3/3) ≈ 0.54, so R·P swamps G for almost every agent. With ⌊C/A⌋ (NetLogo *Rebellion*'s change; its Info tab: "Without this change, the model does not exhibit punctuated equilibrium") P is ≈ 0 once actives outnumber the cops in view and ≈ 0.9 otherwise, and Run 2 shows the paper's punctuated equilibrium: ~114 outbursts per 3 000 ticks, mean total activation ~830 (paper 708 ± 230), mean wait ~20 ticks (paper 60 ± 55). Epstein's Ascape code may have divided integers; the paper does not say.
+
+**Decision (user, 2026-09-25):** the config default stays the paper's literal rule; the Model I presets turn on `floor_ratio` (only that switch) and their descriptions say why, with the measurement; NetLogo's double count is its own switch, `active_counts_twice`, used only by `cv-netlogo`; the built-in sweep `cv-ratio-rules` shows the dependence; the survey first checks whether plausible ordering or vision changes rescue the literal rule before recording it as unreproduced. Showing where a paper's stated rules fail to produce its results is part of this project's purpose: the README says so plainly.
+
 ## Architecture
 
 - **Model kind** `civil` ("Civil Violence"): `ModelKind::Civil`, `ModelConfig::Civil(CivilConfig)` tagged `"model": "civil"`, a `CivilWorld` implementing `Model`, a schema for the Rules panel, `SERIES`, presets and golden entries — the same wiring as Schelling, Ring World and the anasazi. Code lives in `crates/sugarscape-core/src/civil/` (`config.rs`, `world.rs`, `stats.rs` for the outburst bookkeeping, `mod.rs` for the schema and presets' helpers).
@@ -60,7 +66,8 @@ Add Epstein's civil violence model — both Model I (rebellion) and Model II (in
 | `max_age` | 200 | live | Model II only (≥ 1) |
 | `stop_at_extinction` | false | live | Model II: `finished()` once a group is gone |
 | `outburst_threshold` | 50 | live | actives above which an outburst is under way |
-| `quirks.floor_ratio` | false | live | NetLogo's `floor(C / A)` with A counting an active self twice |
+| `quirks.floor_ratio` | false | live | NetLogo's `floor(C / A)`: P = 1 − exp(−k·⌊C/A⌋) (see Finding) |
+| `quirks.active_counts_twice` | false | live | NetLogo's A = 1 + actives in vision *including the agent itself*, so an already-active agent counts twice |
 | `quirks.cop_moves_to_arrest` | false | live | the arresting cop steps onto the arrested agent's site |
 | `quirks.jailed_stay` | false | live | jailed agents keep their site, which counts as empty; released agents may share a site |
 | `quirks.netlogo_jail_term` | false | live | term = uniform integer in 0..J_max−1 (NetLogo's `random`) |
@@ -80,7 +87,7 @@ Cops first, then agents, each on a uniformly random empty site (NetLogo's order)
 1. Apply schedule entries for this tick, then ramps.
 2. Collect every free agent and every cop in one list and shuffle it. For each in turn (skipping any killed or arrested earlier this tick):
    - **Move (rule M):** if a cop, or an agent with `movement` on, move to a uniformly random empty site within vision; stay if there is none. The own site is not a candidate.
-   - **Agent (rule A):** G = H(1 − L); C = cops within `vision.agent`; A = 1 + active free agents within vision (not counting itself); P = 1 − exp(−k·C/A); N = R·P; active iff G − N > T. With `floor_ratio`, A = (1 if active else 0) + 1 + other active agents in vision, counting an already-active agent twice as NetLogo does, and P = 1 − exp(−k·⌊C/A⌋).
+   - **Agent (rule A):** G = H(1 − L); C = cops within `vision.agent`; A = 1 + active free agents within vision (not counting itself); P = 1 − exp(−k·C/A); N = R·P; active iff G − N > T. With `active_counts_twice`, an already-active agent adds 1 more to A (NetLogo); with `floor_ratio`, P = 1 − exp(−k·⌊C/A⌋).
    - **Model II, if active:** kill one uniformly random free agent of the other group within `vision.agent`, if any; it is removed at once.
    - **Cop (rule C):** among active free agents within `vision.cop`, arrest one uniformly at random, if any: it becomes quiet and jailed with term ⌈U(0, J_max)⌉ ticks (1..=J_max), or J uniform in 0..J_max−1 with `netlogo_jail_term`, or never released when `jail.infinite`. It leaves the lattice unless `jailed_stay`. With `cop_moves_to_arrest` the cop moves onto the arrest site (vacated, or shared with the jailed agent under `jailed_stay`).
 3. **Jail:** every jailed agent's term counts down by 1; an agent whose remaining term is 0 is released at the end of the tick, in id order. Without `jailed_stay` it is placed on a uniformly random empty site within `vision.agent` of its arrest site, or a uniformly random empty site anywhere if none (never released if the lattice is full; it waits). With `jailed_stay` it simply becomes free where it is. A term drawn as 0 (NetLogo quirk) releases at the end of the arresting tick.
@@ -105,7 +112,7 @@ Cops first, then agents, each on a uniformly random empty site (NetLogo's order)
 
 ## Presets
 
-Descriptions state the Table 2 inputs and what the survey measured; the mapping of runs to figures is our reading (the paper does not tie runs to figures).
+Descriptions state the Table 2 inputs and what the survey measured; the mapping of runs to figures is our reading (the paper does not tie runs to figures). Runs 1–5 set `quirks.floor_ratio` (see Finding); runs 6–8 and the Model II scenarios keep the literal rule (with no cops it never matters; with cops the survey reports both).
 
 | Preset | Setup | Paper |
 |---|---|---|
@@ -119,7 +126,7 @@ Descriptions state the Table 2 inputs and what the survey measured; the mapping 
 | `cv-run-8-nasty-regime` | Run 8 (ethnic) | "stable, but nasty" |
 | `cv-safe-havens` | Run 7; schedule `cop_density` at t = 50 (density chosen by measurement, stated) | Fig. 14 |
 | `cv-peacekeepers-withdrawn` | Run 8; schedule `cop_density` 0 at a measured tick, `stop_at_extinction` | reversion to genocide |
-| `cv-netlogo` | NetLogo's defaults (70 % agents, 4 % cops, vision 7, L 0.82, J_max 30) and all four quirks | NetLogo *Rebellion* |
+| `cv-netlogo` | NetLogo's defaults (70 % agents, 4 % cops, vision 7, L 0.82, J_max 30) and all five quirks | NetLogo *Rebellion* |
 
 **Compare entries:** "Salami tactics vs one jump — runs 3 and 4" and "Ethnic cleansing vs safe havens — run 7 and peacekeepers".
 
@@ -127,11 +134,12 @@ Descriptions state the Table 2 inputs and what the survey measured; the mapping 
 
 - `sugarscape presets | run | sweep` accept `civil`; sweep `set` paths and metric series are validated against the civil config and `SERIES`.
 - **`cv-peacekeeping`** (Figs. 15–16): base `cv-run-7-cleansing`, x = `cop_density` from 0 to 0.1, metric final `extinction`, with steps, a tick cap and seeds chosen by measurement to fit a browser run, recorded in its description.
+- **`cv-ratio-rules`**: base `cv-run-2-punctuated`, series: the literal rule, `floor_ratio`, `floor_ratio` + `active_counts_twice`; x = `legitimacy` over a measured range; metric final `outbursts` — the Finding as a chart.
 - **`cv-jail-waits`**: base `cv-run-2-punctuated`, x = `jail.max`, metric final `mean_wait` — the paper's open conjecture that longer terms raise the mean wait; the description records what was measured.
 
 ## Survey
 
-A `civil` claims module in `survey/`, with judges over 20 seeds: Run 2's actives are punctuated (quiet stretches and outbursts above 50; `mean_wait` and `mean_activation` reported against 60 ± 55 and 708 ± 230); run 4's peak actives exceed run 3's and its final jailed count exceeds run 3's; run 5 tips (actives jump during the cop ramp); run 6 keeps both groups alive with few kills; run 7 reaches extinction in every seed with the victor split; peacekeepers delay extinction relative to run 7; run 8's groups coexist with ongoing kills. Claims that fail are reported as unreproduced and the descriptions say so.
+A `civil` claims module in `survey/`, with judges over 20 seeds: Run 2's actives are punctuated (quiet stretches and outbursts above 50; `mean_wait` and `mean_activation` reported against 60 ± 55 and 708 ± 230); run 4's peak actives exceed run 3's and its final jailed count exceeds run 3's; run 5 tips (actives jump during the cop ramp); run 6 keeps both groups alive with few kills; run 7 reaches extinction in every seed with the victor split; peacekeepers delay extinction relative to run 7; run 8's groups coexist with ongoing kills. Claims that fail are reported as unreproduced and the descriptions say so. The literal-rule check: Run 2 without `floor_ratio` under each of (a) the rules as specified, (b) agents deciding before moving, (c) von Neumann vision of radius ⌊v⌋ (the paper's "north, south, east, and west"), (d) cops acting after all agents — the claim "the stated rule gives no outbursts" stands only if none of them produces outbursts above 50.
 
 ## Page
 
