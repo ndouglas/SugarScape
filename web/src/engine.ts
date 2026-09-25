@@ -826,8 +826,9 @@ export class Engine {
     }
     this.trailCells = s.trail ?? (s.followed === null ? NO_CELLS : this.trailCells);
     if (s.networks) Object.assign(this.edges, s.networks);
-    // The host sends every group afresh after a config change (its lines may have changed).
-    if (s.config) this.charts.clear();
+    // The host sends every group afresh after a config change (its lines may have changed),
+    // except when a civil schedule entry or ramp only moved values.
+    if (s.config && !s.sameCharts) this.charts.clear();
     for (const [key, group] of Object.entries(s.charts ?? {})) this.charts.set(key, group);
     return clamped;
   }

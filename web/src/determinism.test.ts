@@ -8,7 +8,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { AnasaziStats, CivilStats, Preset, Snapshot } from './types';
+import type { AnasaziStats, CivilConfig, CivilStats, Preset, Snapshot } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -368,6 +368,65 @@ describe('civil violence through the engine', () => {
     expect(Math.min(s.blue, s.green)).toBe(0);
     await e.advance(10);
     expect(s.extinction).toBe(e.tick);
+  });
+});
+
+describe('civil violence’s schedule and ramps reach the page', () => {
+  const preset = (id: string) => presets.find((p) => p.id === id)!;
+  const create = (id: string) => Engine.create({ config: structuredClone(preset(id).config), seed: 1 }, { presets, transport: inline() });
+  const legitimacy = (e: Engine) => (e.config as CivilConfig).legitimacy;
+
+  it('shows one jump’s legitimacy after t = 77 and keeps it through an unrelated live edit', async () => {
+    const e = await create('cv-run-4-one-jump');
+    await e.advance(80);
+    expect(legitimacy(e)).toBe(0.7);
+    expect(await e.applyModelConfig((c) => void ((c as CivilConfig).quirks.jailed_stay = true))).toBeNull();
+    expect(legitimacy(e)).toBe(0.7);
+    await e.advance(1);
+    expect((e.latest as CivilStats).legitimacy).toBe(0.7);
+    expect(legitimacy(e)).toBe(0.7);
+  });
+
+  it('shows salami tactics’ ramped legitimacy mid-ramp', async () => {
+    const e = await create('cv-run-3-salami');
+    e.want(() => ({ charts: { groups: [['legitimacy']], max: 2000 } }));
+    await e.advance(100);
+    // The step from t = 99 moved it last: 0.9 − 0.7 × 22 / 70.
+    expect(legitimacy(e)).toBeCloseTo(0.68, 12);
+    expect(legitimacy(e)).toBe((e.latest as CivilStats).legitimacy);
+    // Within the charts throttle, a ramped change keeps the group the page has.
+    await e.advance(1);
+    expect([e.last?.config !== undefined, e.last?.charts]).toEqual([true, undefined]);
+    expect(e.chartGroup(['legitimacy'])?.ticks).toHaveLength(101);
+    await e.advance(4);
+    expect(legitimacy(e)).toBeCloseTo(0.63, 12);
+  });
+
+  it('keeps a same-value live edit mid-ramp from changing the run (cop reductions)', async () => {
+    const plain = await create('cv-run-5-cop-reductions');
+    await plain.advance(150);
+    const live = await create('cv-run-5-cop-reductions');
+    await live.advance(100);
+    // Sets threshold to the value it already has: with the live config right, the cops stay as the ramp left them.
+    expect(await live.applyModelConfig((c) => void ((c as CivilConfig).threshold = (c as CivilConfig).threshold))).toBeNull();
+    await live.advance(50);
+    expect(await live.fingerprint()).toBe(await plain.fingerprint());
+  });
+
+  it('replays one jump with a live edit after t = 77 through a share link to the same world', async () => {
+    const live = await create('cv-run-4-one-jump');
+    await live.advance(80);
+    expect(await live.applyModelConfig((c) => void ((c as CivilConfig).quirks.active_counts_twice = true))).toBeNull();
+    await live.advance(40);
+    const expected = await live.fingerprint();
+    const { session, tick } = await live.session();
+    expect(session.log).toHaveLength(1);
+    expect((session.log[0].cmd as { config: CivilConfig }).config.legitimacy).toBe(0.7);
+    const replayed = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await replayed.advance(tick);
+    expect(replayed.replayLeft).toBe(0);
+    expect(await replayed.fingerprint()).toBe(expected);
+    expect([legitimacy(replayed), (replayed.latest as CivilStats).legitimacy]).toEqual([0.7, 0.7]);
   });
 });
 

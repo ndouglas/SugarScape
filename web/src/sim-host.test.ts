@@ -302,6 +302,32 @@ describe('SimHost with another model', () => {
     expect([again.tick, again.finished]).toEqual([3, true]);
   });
 
+  it('sends a civil config after each tick a schedule entry or ramp changed it, keeping the chart groups', () => {
+    const host = new SimHost(fakeModule(), () => 0);
+    const ramps = [{ path: 'legitimacy', start: 1005, end: 1007, to: 0 }];
+    const config = { model: 'civil', width: 6, height: 4, schedule: [{ tick: 1000, set: {} }], ramps } as unknown as ModelConfig;
+    let id = 0;
+    const charts = { groups: [['population']], max: 10 };
+    const send = (cmd: Command): WorldSnapshot => {
+      const reply = host.handle({ id: ++id, cmd, wants: { charts } });
+      if (!reply.result.ok || !reply.result.snapshot) throw new Error(JSON.stringify(reply.result));
+      return reply.result.snapshot;
+    };
+    send({ type: 'init', config, seed: 1, landscapes: [], display });
+    const step = (n: number) => {
+      const s = send({ type: 'step', n });
+      return [s.tick, s.config !== undefined, s.sameCharts ?? false, s.charts !== undefined];
+    };
+    expect(step(1000)).toEqual([1000, false, false, true]); // ticks 0–999 started
+    expect(step(1)).toEqual([1001, true, true, false]); // the entry at 1000; the group waits for the throttle
+    expect(step(5)).toEqual([1006, false, false, false]); // ticks 1001–1005: 1005 only records the ramp's base
+    expect(step(1)).toEqual([1007, true, true, false]); // tick 1006 moved it
+    expect(step(1)).toEqual([1008, true, true, false]); // tick 1007 moved it (the ramp's end)
+    expect(step(1)).toEqual([1009, false, false, false]);
+    const edited = send({ type: 'setConfig', config });
+    expect([edited.config !== undefined, edited.sameCharts, edited.charts !== undefined]).toEqual([true, undefined, true]);
+  });
+
   it('ends Max when the world is finished, posting the world there', () => {
     let clock = 0;
     const host = new SimHost(fakeModule(), () => clock++);

@@ -6,9 +6,11 @@ const fieldError = (field: string, message: string): string => JSON.stringify([{
 interface FakeConfig {
   /**
    * Absent for a sugarscape; `'ring'` also answers `ring_sugar`/`ring_agents`, `'anasazi'` the
-   * `anasazi_*` overlays.
+   * `anasazi_*` overlays; `'civil'` carries `ramps`.
    */
-  model?: 'schelling' | 'ring' | 'anasazi';
+  model?: 'schelling' | 'ring' | 'anasazi' | 'civil';
+  /** Civil violence's ramps (the host watches their ticks). */
+  ramps?: { path: string; start: number; end: number; to: number }[];
   /** The tick at which the world is finished (it steps no further); none by default. */
   finish?: number;
   width: number;

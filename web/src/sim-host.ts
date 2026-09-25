@@ -19,7 +19,7 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { parseErrors, type AnyInspection, type DiseaseEntry, type ModelConfig, type ModelStats } from './types';
+import { parseErrors, type AnyInspection, type CivilConfig, type DiseaseEntry, type ModelConfig, type ModelStats } from './types';
 
 /** The part of the WASM `Sim` a host uses. The real class satisfies it; tests pass `FakeSim`. */
 export interface SimLike {
@@ -126,8 +126,14 @@ export class SimHost {
   private sim: SimLike | null = null;
   private config: ModelConfig | null = null;
   private display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
-  /** The next snapshot carries the config: after init, reset, setConfig or a scheduled change. */
+  /** The next snapshot carries the config: after init, reset, setConfig or a scheduled (or ramped) change. */
   private configDue = false;
+  /**
+   * The config's chart lines may have changed, so every chart group is sent afresh with it: after
+   * init, reset, setConfig or a sugarscape scheduled change. A civil schedule entry or ramp moves
+   * only values (its charts follow the variant, which only a reset changes), so it leaves this unset.
+   */
+  private chartsDue = false;
   /** The next snapshot carries the edited landscapes: after init, reset, setConfig, paint or import. */
   private landscapesDue = false;
   /** Set by a panic: every later command is answered with it. */
@@ -230,6 +236,7 @@ export class SimHost {
       this.sim = next;
       if (cmd.type === 'init') this.display = cmd.display;
       this.configDue = true;
+      this.chartsDue = true;
       this.landscapesDue = true;
       // A new world starts a new log; a session's log is replayed into it (Decision 2).
       this.log = [];
@@ -340,6 +347,7 @@ export class SimHost {
       case 'setConfig':
         sim.set_config(JSON.stringify(cmd.config));
         this.configDue = true;
+        this.chartsDue = true;
         this.landscapesDue = true;
         break;
       case 'paint':
@@ -410,10 +418,27 @@ export class SimHost {
     }
   }
 
-  /** An entry at tick t fires when the step from t to t + 1 starts. */
+  /**
+   * Marks the config for sending when stepping from tick `from` to `to` changed it: the world
+   * applies an entry at tick t when the step from t to t + 1 starts (both models), and a civil ramp
+   * moves its field at the start of each tick t with start < t ≤ end. Worked out from the config's
+   * schedule and ramps (they change only on reset), so it costs nothing per tick and depends only
+   * on the ticks stepped, never on how they were split into requests.
+   */
   private fired(from: number, to: number): void {
     const config = this.config;
-    if (config && isSugar(config) && config.schedule.some((c) => c.tick >= from && c.tick < to)) this.configDue = true;
+    if (!config) return;
+    const entry = (c: { tick: number }) => c.tick >= from && c.tick < to;
+    if (isSugar(config)) {
+      if (config.schedule.some(entry)) {
+        this.configDue = true;
+        this.chartsDue = true;
+      }
+    } else if (modelOf(config) === 'civil') {
+      const civil = config as CivilConfig;
+      // Some tick t in [from, to) is in (start, end].
+      if (civil.schedule.some(entry) || civil.ramps.some((r) => r.start + 1 < to && r.end >= from)) this.configDue = true;
+    }
   }
 
   /**
@@ -459,8 +484,10 @@ export class SimHost {
       this.config = config;
       s.config = config;
       this.configDue = false;
-      // Chart lines follow the config: send every group afresh.
-      this.sent.clear();
+      // Chart lines follow the config: send every group afresh, unless only values moved.
+      if (this.chartsDue) this.sent.clear();
+      else s.sameCharts = true;
+      this.chartsDue = false;
     }
     const sugar = isSugar(config) ? config : null;
     if (this.landscapesDue) {

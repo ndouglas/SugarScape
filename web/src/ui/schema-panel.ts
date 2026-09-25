@@ -18,6 +18,14 @@ function valleyCredit(): HTMLElement {
   );
 }
 
+/**
+ * Whether the user is on `el`: a sync leaves it alone, so a ramp (which sends the config with
+ * every snapshot while it runs) cannot overwrite a half-typed number or a slider being dragged.
+ */
+function focused(el: HTMLElement): boolean {
+  return document.activeElement === el;
+}
+
 /** Numbers each panel so its controls' ids are unique on the page. */
 let panels = 0;
 
@@ -69,7 +77,7 @@ export class SchemaPanel {
   /** Civil violence's schedule and ramps, read-only (they travel in links and sessions). */
   private schedule(): HTMLElement {
     const list = h('ul', { class: 'hint' });
-    const section = h('section', { class: 'group' }, h('h3', {}, 'Schedule'), h('p', { class: 'hint' }, 'Set by the preset; these change the running world at their ticks.'), list);
+    const section = h('section', { class: 'group' }, h('h3', {}, 'Schedule'), h('p', { class: 'hint' }, 'Set by the preset; these change the running world at their ticks. While a ramp runs, its field follows the ramp: a change to it (or a scheduled one) lasts only until the next tick.'), list);
     this.syncers.push(() => {
       const lines = scheduleLines(this.engine.config as CivilConfig);
       section.hidden = lines.length === 0;
@@ -144,8 +152,8 @@ export class SchemaPanel {
         hi.addEventListener('change', () => apply('max'));
         this.syncers.push(() => {
           const r = current() as { min: string; max: string };
-          lo.value = r.min;
-          hi.value = r.max;
+          if (!focused(lo)) lo.value = r.min;
+          if (!focused(hi)) hi.value = r.max;
         });
         return h(
           'div',
@@ -165,8 +173,8 @@ export class SchemaPanel {
         num.addEventListener('change', () => void this.commit(p, num.value));
         this.syncers.push(() => {
           const v = String(current());
-          slider.value = v;
-          num.value = v;
+          if (!focused(slider)) slider.value = v;
+          if (!focused(num)) num.value = v;
         });
         return h('div', { class: 'control' }, h('label', {}, p.label), h('div', { class: 'row' }, slider, num), help, slot);
       }

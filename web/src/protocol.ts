@@ -74,8 +74,13 @@ export interface WorldSnapshot {
   /** The followed agent's id (alive or not), or null. */
   followed: number | null;
   followedAlive: boolean;
-  /** The normalized live config: after init, reset, setConfig and a scheduled change. */
+  /** The normalized live config: after init, reset, setConfig and a scheduled (or, in civil violence, ramped) change. */
   config?: ModelConfig;
+  /**
+   * With `config`: only values moved (a civil schedule entry or ramp), so the chart lines are the
+   * same and the chart groups are not sent afresh; the page keeps the ones it has.
+   */
+  sameCharts?: true;
   /** Each good's map where it differs from the generated one: after init, reset, setConfig, paint and import. */
   editedLandscapes?: (Uint8Array | null)[];
   /** The display, when the host had to clamp it to the config. */
