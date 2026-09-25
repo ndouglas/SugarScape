@@ -408,6 +408,10 @@ impl Model for World {
             other => Err(wrong_model(ModelKind::Sugarscape, &other)),
         }
     }
+
+    fn finished(&self) -> bool {
+        self.is_finished()
+    }
 }
 
 /// A world of any model. Sugarscape-only calls (painting, networks, the

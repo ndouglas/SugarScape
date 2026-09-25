@@ -174,6 +174,9 @@ pub struct Agent {
     pub diseases: Vec<DiseaseId>,
     /// The agent that most recently infected this one.
     pub infected_by: Option<AgentId>,
+    /// Axelrod culture rule (milestone 14): F traits, empty unless
+    /// `culture.rule` is `axelrod`.
+    pub culture: Vec<u8>,
     /// Neighbor list and friends (observation only: never hashed, exported or
     /// shared; see `social`).
     pub social: Social,
@@ -211,6 +214,7 @@ impl Agent {
             immune: Bits::default(),
             diseases: Vec::new(),
             infected_by: None,
+            culture: Vec::new(),
             social: Social::default(),
         };
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
@@ -228,6 +232,14 @@ impl Agent {
             let genome = Bits::random(config.disease.immune_length, rng);
             agent.immune_genome = genome;
             agent.immune = genome;
+        }
+        // Drawn last, and only under Axelrod's rule, so every other run's
+        // random stream is unchanged.
+        if config.culture.rule == crate::config::CultureKind::Axelrod {
+            let q = config.culture.traits;
+            agent.culture = (0..config.culture.features)
+                .map(|_| rng.gen_range(0..q) as u8)
+                .collect();
         }
         agent
     }

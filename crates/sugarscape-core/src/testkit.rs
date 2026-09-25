@@ -74,6 +74,7 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         immune: Bits::new(0, world.config.disease.immune_length),
         diseases: Vec::new(),
         infected_by: None,
+        culture: Vec::new(),
         social: Social::default(),
     };
     world.insert_agent(agent).expect("test site is empty")

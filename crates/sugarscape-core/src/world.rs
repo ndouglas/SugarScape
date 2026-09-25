@@ -383,6 +383,7 @@ impl World {
         let m = self.config.pollution.pollutants.len();
         let foresight = self.config.foresight.enabled;
         let disease = self.config.disease.enabled;
+        let axelrod = self.config.culture.rule == crate::config::CultureKind::Axelrod;
         eat(self.tick);
         for s in &self.sites {
             eat(s.resource[0].to_bits());
@@ -407,6 +408,12 @@ impl World {
             }
             if foresight {
                 eat(u64::from(a.foresight));
+            }
+            if axelrod {
+                eat(a.culture.len() as u64);
+                for &t in &a.culture {
+                    eat(u64::from(t));
+                }
             }
             if disease {
                 eat(u64::from(a.immune.len()));
@@ -575,8 +582,22 @@ impl World {
 
     pub fn run(&mut self, ticks: u32) {
         for _ in 0..ticks {
+            if self.is_finished() {
+                break;
+            }
             self.step();
         }
+    }
+
+    /// Whether the run has stopped: Axelrod's culture rule with
+    /// `stop_when_settled`, and the latest tick settled (milestone 14).
+    pub fn is_finished(&self) -> bool {
+        self.config.culture.stop_when_settled
+            && self
+                .stats
+                .latest()
+                .and_then(|s| s.axelrod)
+                .is_some_and(|a| a.settled)
     }
 
     /// Follows agent `id` from now on (a fresh trail that records its current
