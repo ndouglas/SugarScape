@@ -261,7 +261,12 @@ fn builtins_and_series_names_are_listed() {
             "lhv-quirks",
             "cv-ratio-rules",
             "cv-peacekeeping",
-            "cv-jail-waits"
+            "cv-jail-waits",
+            "nm-universal",
+            "hg-async",
+            "nbm-grid-discrete",
+            "nbm-grid-continuous",
+            "nbm-radius"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -638,6 +643,22 @@ fn civil_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "civil");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn spatial_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: Eq. 1's powers
+    // are the same bits here as natively.
+    for (id, fp) in [
+        ("nbm-probabilistic", "0x79a048f606d28d74"),
+        ("hg-async-kaleidoscope", "0xef13c172a34a980d"),
+        ("nbm-random-array", "0xcf2c74041806d530"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "spatial");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

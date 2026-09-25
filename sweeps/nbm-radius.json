@@ -1,0 +1,16 @@
+{
+  "name": "Spatial games: random arrays by interaction radius (NBM94)",
+  "description": "NBM94's random arrays at b = 1.6 (5% of 200 × 200 occupied): the final f_C at t = 300 for interaction radii 2–11, from 10% and from 50% defectors. The paper: all D once r passes r_c ~ 9. Measured (release, seeds 1–10, recorded 2026-09-25): from 50%, 0.27–0.58 up to r = 9 and 0 at 10 and 11 — the threshold reproduces; from 10%, 0.73–0.86 at every radius — no threshold. NBM94 do not state the start, so their r_c is a property of an unreported initial condition as much as of b.",
+  "base": { "preset": "nbm-random-array" },
+  "x": { "label": "Interaction radius (cells)", "path": "radius", "values": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+  "series": {
+    "label": "Defectors at the start",
+    "values": [
+      { "at": 0.1, "name": "10% defectors", "set": { "defectors": 0.1 } },
+      { "at": 0.5, "name": "50% defectors", "set": { "defectors": 0.5 } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 10 },
+  "ticks": 300,
+  "metric": { "kind": "final", "series": "fraction_c" }
+}

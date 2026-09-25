@@ -59,6 +59,11 @@ fn presets_and_sweeps_are_listed() {
         "cv-ratio-rules",
         "cv-peacekeeping",
         "cv-jail-waits",
+        "nm-universal",
+        "hg-async",
+        "nbm-grid-discrete",
+        "nbm-grid-continuous",
+        "nbm-radius",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),

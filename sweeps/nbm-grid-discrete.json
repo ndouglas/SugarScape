@@ -1,0 +1,21 @@
+{
+  "name": "Spatial games: NBM94's Fig. 1 — cooperators by b and m, discrete time",
+  "description": "NBM94's Fig. 1 as numbers: the final fraction of cooperators at t = 200 on an 80 × 80 periodic lattice (eight neighbors and self, 50% defectors), for their ten b values — including 1.77, which the figure shows but its caption omits — and seven values of m, in discrete time. The paper: all C near b = 1, all D approaching 2, coexistence between, for every m; D \"fares somewhat better\" as m falls from ∞, and the band of coexistence \"again widens\" below m = 1. Measured (release, seeds 1–5, recorded 2026-09-25): m = ∞: 0.99 at 1.05, 0.88–0.94 from 1.13 to 1.77, 0.30 at 1.9 (the chaos), 0 at 2.01; m = 10: all D from 1.71; m = 1: 0.30 at 1.35, 0.002 at 1.77 and 0 from 1.9; m = 0.5: C persists to 2.01 (0.11); m = 0: 0.56 at every b (drift). The regimes reproduce; where the figure's m = 1 row still shows scattered C at 1.9 and 2.01, these runs are all D.",
+  "base": { "preset": "nbm-probabilistic" },
+  "x": { "label": "Temptation (b)", "path": "b", "values": [1.05, 1.13, 1.16, 1.35, 1.42, 1.55, 1.71, 1.77, 1.9, 2.01] },
+  "series": {
+    "label": "Winning",
+    "values": [
+      { "at": 0, "name": "m = ∞ (highest score wins)", "set": { "winning": "deterministic" } },
+      { "at": 100, "name": "m = 100", "set": { "winning": "probabilistic", "m": 100 } },
+      { "at": 20, "name": "m = 20", "set": { "winning": "probabilistic", "m": 20 } },
+      { "at": 10, "name": "m = 10", "set": { "winning": "probabilistic", "m": 10 } },
+      { "at": 1, "name": "m = 1 (proportional)", "set": { "winning": "probabilistic", "m": 1 } },
+      { "at": 0.5, "name": "m = 0.5", "set": { "winning": "probabilistic", "m": 0.5 } },
+      { "at": -1, "name": "m = 0 (random drift)", "set": { "winning": "probabilistic", "m": 0 } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 5 },
+  "ticks": 200,
+  "metric": { "kind": "final", "series": "fraction_c" }
+}

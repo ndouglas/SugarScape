@@ -940,7 +940,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 11] = [
+const BUILTINS: [Builtin; 16] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -984,6 +984,26 @@ const BUILTINS: [Builtin; 11] = [
     Builtin {
         id: "cv-jail-waits",
         json: include_str!("../../../sweeps/cv-jail-waits.json"),
+    },
+    Builtin {
+        id: "nm-universal",
+        json: include_str!("../../../sweeps/nm-universal.json"),
+    },
+    Builtin {
+        id: "hg-async",
+        json: include_str!("../../../sweeps/hg-async.json"),
+    },
+    Builtin {
+        id: "nbm-grid-discrete",
+        json: include_str!("../../../sweeps/nbm-grid-discrete.json"),
+    },
+    Builtin {
+        id: "nbm-grid-continuous",
+        json: include_str!("../../../sweeps/nbm-grid-continuous.json"),
+    },
+    Builtin {
+        id: "nbm-radius",
+        json: include_str!("../../../sweeps/nbm-radius.json"),
     },
 ];
 
@@ -1750,7 +1770,12 @@ mod tests {
                 "lhv-quirks",
                 "cv-ratio-rules",
                 "cv-peacekeeping",
-                "cv-jail-waits"
+                "cv-jail-waits",
+                "nm-universal",
+                "hg-async",
+                "nbm-grid-discrete",
+                "nbm-grid-continuous",
+                "nbm-radius"
             ]
         );
         for b in builtins() {

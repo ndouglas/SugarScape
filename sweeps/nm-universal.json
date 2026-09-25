@@ -1,0 +1,9 @@
+{
+  "name": "Spatial games: 0.318 from any start? (NM92 Fig. 2a)",
+  "description": "NM92's claim that spatial chaos settles at f_C ≈ 0.318 (12 log 2 − 8) \"for almost all starting proportions\": b = 1.9 on 200 × 200 with fixed edges, the starting fraction of defectors from 5% to 95%, the mean f_C over t = 301–400. Measured (release, seeds 1–3, recorded 2026-09-25): 0.320–0.321 from 5% to 80% defectors; 0.21 from 90% (some runs end all C or all D) and 0 from 95% (defectors win outright). Over 20 seeds from 80%, one ended all C.",
+  "base": { "preset": "nm-1b-chaos" },
+  "x": { "label": "Defectors at the start", "path": "defectors", "values": [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95] },
+  "seeds": { "from": 1, "count": 3 },
+  "ticks": 400,
+  "metric": { "kind": "window_mean", "series": "fraction_c", "from": 301 }
+}

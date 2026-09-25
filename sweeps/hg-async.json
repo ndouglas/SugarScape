@@ -1,0 +1,16 @@
+{
+  "name": "Spatial games: does one defector take over when updates are asynchronous? (HG93)",
+  "description": "HG93's claim that with asynchronous updating one defector always takes over: NM92's kaleidoscope start (99 × 99, one defector) at NBM94's ten b values, synchronous and asynchronous, the final f_C at t = 300. Measured (release, seeds 1–10, recorded 2026-09-25): asynchronous: 0.99–1.00 C for b ≤ 1.42 and at 1.71–1.77, 0.61 at 1.55, 0 at 1.9 and 0.04 at 2.01; synchronous: 1.00 through 1.77, 0.34 at 1.9, 0.91 at 2.01. The takeover HG93 report happens only above b = 1.8: their synchronous picture matches NM92's Fig. 3, so they ran in that range, but they never state b, and below 1.8 the lone defector dies out.",
+  "base": { "preset": "hg-async-kaleidoscope" },
+  "x": { "label": "Temptation (b)", "path": "b", "values": [1.05, 1.13, 1.16, 1.35, 1.42, 1.55, 1.71, 1.77, 1.9, 2.01] },
+  "series": {
+    "label": "Update",
+    "values": [
+      { "at": 0, "name": "Synchronous (NM92)", "set": { "update": "synchronous" } },
+      { "at": 1, "name": "Asynchronous (HG93)", "set": { "update": "asynchronous" } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 10 },
+  "ticks": 300,
+  "metric": { "kind": "final", "series": "fraction_c" }
+}
