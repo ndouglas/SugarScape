@@ -1,5 +1,6 @@
 //! Runs a config over seeds on a thread pool.
 
+use std::panic::AssertUnwindSafe;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 
@@ -14,14 +15,17 @@ pub fn preset(id: &str) -> Config {
 }
 
 /// Builds a world per seed and hands it to `f`, which steps and measures it.
-/// Results come back in seed order.
+/// Results come back in seed order. A panic in `f` is re-raised on the
+/// calling thread with its own message (a scoped thread's panic would
+/// otherwise surface only as "a scoped thread panicked").
 pub fn each_seed<T: Send>(
     config: &Config,
     seeds: &[u64],
     f: impl Fn(World) -> T + Sync,
 ) -> Vec<T> {
     let next = AtomicUsize::new(0);
-    let slots: Vec<Mutex<Option<T>>> = seeds.iter().map(|_| Mutex::new(None)).collect();
+    type Slot<T> = Mutex<Option<std::thread::Result<T>>>;
+    let slots: Vec<Slot<T>> = seeds.iter().map(|_| Mutex::new(None)).collect();
     let threads = std::thread::available_parallelism()
         .map_or(4, |n| n.get())
         .min(seeds.len().max(1));
@@ -32,14 +36,19 @@ pub fn each_seed<T: Send>(
                 if i >= seeds.len() {
                     break;
                 }
-                let w = World::new(config.clone(), seeds[i]).expect("a valid config");
-                *slots[i].lock().unwrap() = Some(f(w));
+                let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                    f(World::new(config.clone(), seeds[i]).expect("a valid config"))
+                }));
+                *slots[i].lock().unwrap() = Some(result);
             });
         }
     });
     slots
         .into_iter()
-        .map(|m| m.into_inner().unwrap().expect("every seed ran"))
+        .map(|m| match m.into_inner().unwrap().expect("every seed ran") {
+            Ok(v) => v,
+            Err(payload) => std::panic::resume_unwind(payload),
+        })
         .collect()
 }
 
@@ -86,5 +95,24 @@ mod tests {
         let again = after(&c, &[2], 5, |w| series(w, "population"));
         assert_eq!(again[0], pops[1].1, "seed 2 is deterministic and in slot 1");
         assert_eq!(window_mean(&[1.0, 2.0, 3.0, 4.0], 1, 2), 2.5);
+    }
+
+    #[test]
+    fn a_panic_in_a_seed_keeps_its_message() {
+        let c = preset("ii-2-unit");
+        let err = std::panic::catch_unwind(|| {
+            each_seed(&c, &[1, 2, 3], |w| {
+                if w.population() > 0 {
+                    panic!("empty population on seed")
+                }
+            })
+        })
+        .unwrap_err();
+        let msg = err
+            .downcast_ref::<String>()
+            .cloned()
+            .or_else(|| err.downcast_ref::<&str>().map(|s| s.to_string()))
+            .unwrap_or_default();
+        assert!(msg.contains("empty population on seed"), "{msg:?}");
     }
 }
