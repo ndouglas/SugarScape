@@ -673,3 +673,23 @@ fn the_other_anasazi_presets_match_their_native_golden_entries() {
         assert_eq!(sim.fingerprint(), golden, "{id}");
     }
 }
+
+#[wasm_bindgen_test]
+fn checkpoint_restores_the_same_world() {
+    let config = sugarscape_core::presets::find("ii-2-unit").unwrap().config;
+    let json = serde_json::to_string(&config).unwrap();
+    let mut straight = Sim::new(&json, 1, JsValue::UNDEFINED).unwrap();
+    straight.step(30);
+    let mut sim = Sim::new(&json, 1, JsValue::UNDEFINED).unwrap();
+    sim.step(10);
+    let cp = sim.checkpoint().unwrap();
+    sim.step(7);
+    sim.restore(&cp).unwrap();
+    assert_eq!(sim.tick(), 10.0);
+    sim.step(20);
+    assert_eq!(sim.fingerprint(), straight.fingerprint());
+    assert_eq!(
+        sim.latest_value("population"),
+        Some(f64::from(sim.population()))
+    );
+}

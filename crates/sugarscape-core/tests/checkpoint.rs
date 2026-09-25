@@ -75,3 +75,25 @@ fn restore_refuses_another_models_checkpoint() {
     let cp = ring.checkpoint().unwrap();
     assert!(sugar.restore(&cp).is_err());
 }
+
+#[test]
+fn latest_value_is_the_last_element_of_every_series() {
+    for &id in IDS {
+        let mut w = world(id);
+        w.model_mut().run(12);
+        let m = w.model();
+        let mut names = m.series_names();
+        names.push("tick".into());
+        for name in names {
+            let last = m.series(&name).and_then(|v| v.last().copied());
+            let got = m.latest_value(&name);
+            // NaN (an undefined statistic) compares by bits.
+            assert_eq!(
+                got.map(f64::to_bits),
+                last.map(f64::to_bits),
+                "{id}: {name}"
+            );
+        }
+        assert_eq!(m.latest_value("no-such-series"), None, "{id}");
+    }
+}

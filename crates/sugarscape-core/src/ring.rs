@@ -492,6 +492,10 @@ impl Model for RingWorld {
         self.stats.series(name)
     }
 
+    fn latest_value(&self, name: &str) -> Option<f64> {
+        self.stats.latest().and_then(|s| s.value(name))
+    }
+
     fn series_csv(&self) -> String {
         export::history_csv(&self.series_names(), self.stats.history())
     }

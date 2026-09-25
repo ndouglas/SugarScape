@@ -236,6 +236,10 @@ pub trait Model {
     fn series_names(&self) -> Vec<String>;
     /// The full history of series `name` (or `"tick"`), or `None` if unknown.
     fn series(&self, name: &str) -> Option<Vec<f64>>;
+    /// The latest value of series `name` (or `"tick"`), or `None` if unknown or there is no history yet.
+    fn latest_value(&self, name: &str) -> Option<f64> {
+        self.series(name).and_then(|v| v.last().copied())
+    }
     /// The statistics history as CSV (`tick`, then `series_names`).
     fn series_csv(&self) -> String;
     /// The agents alive now as CSV.
@@ -307,6 +311,10 @@ impl Model for World {
 
     fn series(&self, name: &str) -> Option<Vec<f64>> {
         self.stats.series(name)
+    }
+
+    fn latest_value(&self, name: &str) -> Option<f64> {
+        self.stats.latest().and_then(|s| s.value(name))
     }
 
     fn series_csv(&self) -> String {
