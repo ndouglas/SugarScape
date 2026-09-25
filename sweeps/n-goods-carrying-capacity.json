@@ -1,6 +1,6 @@
 {
   "name": "N goods: carrying capacity vs number of goods",
-  "description": "Carrying capacity (mean population over ticks 900–1000) against the number of goods, with and without trade: goods 1–4 are n-4-peaks' corner peaks, then tea at (25, 25) and wool at (25, 0), each with metabolism 1–2 and endowment 25–50. Two goods at least, since trade needs two. Seeds 1–10. Measured (release, seeds 1–10): no trade mean population 214.5 at 2 goods and 1.6 at 6 goods; trade mean population 232.1 at 2 goods and 5.5 at 6 goods. Ticks 300 and 500 do not satisfy the settlement rule (the 5-6 good, no-trade cells are still declining toward extinction); 1000 is the smallest that settles.",
+  "description": "Carrying capacity (mean population over ticks 900–1000) against the number of goods, with and without trade. Each good is one peak (radius 20, height 4) with metabolism 1–2 and endowment 25–50; the n peaks sit evenly spaced on a ring of radius 10.5√2 about the torus corner (−0.5, −0.5), so some sites grow every good at every n, and 4 goods is exactly n-4-peaks. Two goods at least, since trade needs two. Spacing matters more than the count: at 2 goods the peaks sit opposite each other and share only weak sites, so that point is low, and with every good on one shared peak the population falls only from about 257 to 246 over 2–6 goods, trade or not (seeds 1–5). Seeds 1–10. Measured (release, seeds 1–10): no trade mean population 25.8 at 2 goods, 72.9 at 3 and 43.5 at 6; trade 76.4 at 2 goods, 99.6 at 3 and 85.6 at 6. Ticks 300 and 500 do not satisfy the settlement rule (the 4-good, no-trade cell is still falling at 500); 1000 is the smallest that settles.",
   "base": {
     "preset": "n-4-peaks"
   },
@@ -42,7 +42,7 @@
                 "peaks": [
                   {
                     "x": 39,
-                    "y": 10,
+                    "y": 39,
                     "radius": 20,
                     "height": 4
                   }
@@ -111,8 +111,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 39,
-                    "y": 10,
+                    "x": 35,
+                    "y": 3,
                     "radius": 20,
                     "height": 4
                   }
@@ -134,8 +134,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 10,
-                    "y": 39,
+                    "x": 3,
+                    "y": 35,
                     "radius": 20,
                     "height": 4
                   }
@@ -329,8 +329,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 39,
-                    "y": 10,
+                    "x": 43,
+                    "y": 13,
                     "radius": 20,
                     "height": 4
                   }
@@ -352,8 +352,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 10,
-                    "y": 39,
+                    "x": 35,
+                    "y": 47,
                     "radius": 20,
                     "height": 4
                   }
@@ -375,8 +375,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 39,
-                    "y": 39,
+                    "x": 47,
+                    "y": 35,
                     "radius": 20,
                     "height": 4
                   }
@@ -398,8 +398,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 25,
-                    "y": 25,
+                    "x": 13,
+                    "y": 43,
                     "radius": 20,
                     "height": 4
                   }
@@ -477,8 +477,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 39,
-                    "y": 10,
+                    "x": 46,
+                    "y": 14,
                     "radius": 20,
                     "height": 4
                   }
@@ -500,8 +500,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 10,
-                    "y": 39,
+                    "x": 35,
+                    "y": 3,
                     "radius": 20,
                     "height": 4
                   }
@@ -546,8 +546,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 25,
-                    "y": 25,
+                    "x": 3,
+                    "y": 35,
                     "radius": 20,
                     "height": 4
                   }
@@ -569,8 +569,8 @@
                 "kind": "peaks",
                 "peaks": [
                   {
-                    "x": 25,
-                    "y": 0,
+                    "x": 14,
+                    "y": 46,
                     "radius": 20,
                     "height": 4
                   }
