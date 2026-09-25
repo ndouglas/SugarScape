@@ -4,6 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::geometry::offsets;
 use crate::config::{FieldError, ScheduledChange};
 use crate::model::ModelConfig;
 use crate::schema::{Apply, Param};
@@ -184,7 +185,49 @@ impl SpatialConfig {
                 "radius",
                 "must be at least 1 and less than half the grid's smaller side",
             );
+            // The schema's own maximum: kept here too so a raw JSON or CLI
+            // config cannot skip it (a huge radius also feeds the budget
+            // check below, which clamps it before calling `offsets`).
+            check(self.radius <= 20.0, "radius", "must be at most 20");
         }
+        // Neighbor storage: a world holds one CSR neighbor list entry per
+        // (player, neighbor) pair. Bound players × neighbors-a-player so a
+        // config that passes every other check cannot still exhaust memory
+        // (e.g. a 1000 × 1000 random array at full occupancy and radius 20
+        // needs ~1.26e9 entries). The radius fed to `offsets` here is
+        // clamped to the schema's maximum so this estimate itself cannot
+        // blow up on a wild out-of-range value.
+        let cells = match self.lattice {
+            Lattice::Cube => f64::from(self.width).powi(3),
+            Lattice::Square | Lattice::Random => f64::from(self.width) * f64::from(self.height),
+        };
+        let players = if self.lattice == Lattice::Random {
+            (self.occupancy * cells).round().max(1.0)
+        } else {
+            cells
+        };
+        let neighbors_per_player = if self.lattice == Lattice::Random {
+            let probe = SpatialConfig {
+                radius: self.radius.clamp(0.0, 20.0),
+                ..self.clone()
+            };
+            offsets(&probe).len() as f64
+        } else {
+            offsets(self).len() as f64
+        };
+        check(
+            players * neighbors_per_player <= 20_000_000.0,
+            if self.lattice == Lattice::Random {
+                "radius"
+            } else {
+                "width"
+            },
+            if self.lattice == Lattice::Random {
+                "too many neighbor pairs: players × neighbors must stay under 20 million — lower the radius or the occupancy"
+            } else {
+                "the lattice is too large"
+            },
+        );
         check(
             self.b.is_finite() && self.b > 0.0 && self.b <= 10.0,
             "b",
@@ -412,6 +455,43 @@ mod tests {
                 .unwrap();
             assert_eq!(bad.validate().unwrap_err()[0].field, field);
         }
+    }
+
+    #[test]
+    fn random_arrays_are_bounded_by_a_neighbor_pair_budget() {
+        let full = SpatialConfig {
+            lattice: Lattice::Random,
+            width: 1000,
+            height: 1000,
+            occupancy: 1.0,
+            radius: 20.0,
+            ..Default::default()
+        };
+        assert_eq!(
+            fields(&full),
+            ["radius"],
+            "1e6 players × ~1256 neighbors is far past the budget"
+        );
+        let mut past_the_cap = full.clone();
+        past_the_cap.radius = 21.0;
+        assert!(fields(&past_the_cap).contains(&"radius".to_string()));
+        let default_random = SpatialConfig {
+            lattice: Lattice::Random,
+            ..Default::default()
+        };
+        assert!(
+            default_random.validate().is_ok(),
+            "the default random array (200², 5%, r = 5) stays well under budget"
+        );
+        let big_square = SpatialConfig {
+            width: 1000,
+            height: 1000,
+            ..Default::default()
+        };
+        assert!(
+            big_square.validate().is_ok(),
+            "a 1000 × 1000 Moore square is 8e6 pairs, under budget"
+        );
     }
 
     #[test]
