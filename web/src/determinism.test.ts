@@ -242,6 +242,34 @@ describe('sessions replay exactly', () => {
   );
 
   it(
+    'shares a session recorded at mixed speeds, seeked back and branched with a new edit, through a share link',
+    async () => {
+      const live = await create(6);
+      await run(live, 1);
+      await run(live, 5, 6);
+      const midTick = live.tick;
+      await run(live, 2, 8);
+      expect(live.tick).toBeGreaterThan(midTick);
+      // Seek back into the run just made, then branch it with a fresh edit: what follows here
+      // differs from what `live` logged the first time past `midTick`.
+      expect(await live.seek(midTick)).toBeNull();
+      const spot = await emptySite(live, 3, 3);
+      expect(await live.place(spot.x, spot.y, {})).toBeNull();
+      await run(live, 3, 5);
+      await run(live, 'max');
+      const finalTick = live.tick;
+      const expected = await live.fingerprint();
+
+      const { session } = await live.session();
+      const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+      await reach(opened, finalTick);
+      expect(opened.tick).toBe(finalTick);
+      expect(await opened.fingerprint()).toBe(expected);
+    },
+    20_000,
+  );
+
+  it(
     'replays at Max to the same world as the live run',
     async () => {
       const live = await create(8);

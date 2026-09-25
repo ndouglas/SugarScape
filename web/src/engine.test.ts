@@ -540,6 +540,28 @@ describe('Engine', () => {
     expect(engine.running).toBe(false);
     expect(stopped).toBe(1);
     expect(engine.lastStop).toBe('Stopped at tick 3');
+    // A stale reason must not linger once the run resumes.
+    engine.setRunning(true);
+    expect(engine.lastStop).toBeNull();
+  });
+
+  it('reflects a one-shot field carried on the setStops reply, while paused', async () => {
+    // The host attaches one-shot fields (reached, config, forked, stopped, …) to whichever
+    // reply goes out next, which may be setStops's own — e.g. a rule fires with no free buffer
+    // at Max, and the engine's next request happens to be setStops. Rewriting this reply
+    // stands in for that race, without depending on its exact timing.
+    const { engine, transport } = await setup();
+    let stopped = 0;
+    engine.on('stopped', () => stopped++);
+    transport.rewrite = (cmd, reply) => {
+      if (cmd.type !== 'setStops' || !reply.result.ok || !reply.result.snapshot) return reply;
+      return { ...reply, result: { ...reply.result, snapshot: { ...reply.result.snapshot, reached: 999, stopped: 'Stopped at tick 999' } } };
+    };
+    engine.setStops({ tick: 5 });
+    await settle();
+    expect(engine.reached).toBe(999);
+    expect(engine.lastStop).toBe('Stopped at tick 999');
+    expect(stopped).toBe(1);
   });
 });
 

@@ -486,6 +486,7 @@ export class Engine {
 
   setRunning(on: boolean): void {
     this.running = on;
+    if (on) this.lastStop = null;
     this.emit('run');
     this.syncMax();
   }
@@ -515,7 +516,9 @@ export class Engine {
   /** Sets the rules that stop a run by itself; they hold until changed. */
   setStops(stops: StopRules): void {
     this.stops = structuredClone(stops);
-    void this.send({ type: 'setStops', stops: this.stops });
+    void this.send({ type: 'setStops', stops: this.stops }).then((r) => {
+      if (r.ok && r.snapshot) this.accept(r.snapshot);
+    });
   }
 
   setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<Record<Overlay, boolean>> }): void {
