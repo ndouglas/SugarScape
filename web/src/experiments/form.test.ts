@@ -138,6 +138,12 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('civil')).toMatchObject({
+      x: { path: 'legitimacy', values: '0.6:0.95:0.05' },
+      ticks: 1000,
+      seeds: 3,
+      metric: { kind: 'final', series: 'outbursts' },
+    });
   });
 
   it('suggest a Schelling config’s own paths, never its model tag', () => {

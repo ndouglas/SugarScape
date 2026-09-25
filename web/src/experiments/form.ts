@@ -47,6 +47,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'final', series: 'fit' },
     };
   }
+  if (model === 'civil') {
+    // The Finding's axis (the built-in cv-ratio-rules): outbursts against legitimacy.
+    return { ...form, x: { path: 'legitimacy', values: '0.6:0.95:0.05' }, ticks: 1000, metric: { ...form.metric, kind: 'final', series: 'outbursts' } };
+  }
   return form;
 }
 
