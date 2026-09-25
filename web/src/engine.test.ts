@@ -881,3 +881,13 @@ describe('Chapter VI views while paused', () => {
     expect(sent).toEqual(['refresh', 'setDisplay']);
   });
 });
+
+describe('Engine.loadPreset', () => {
+  it('loads a preset with a given seed', async () => {
+    const { engine, module } = await setup();
+    await engine.loadPreset('ii-2-unit', 42);
+    expect(engine.seed).toBe(42);
+    expect(engine.presetId).toBe('ii-2-unit');
+    expect(module.sims.at(-1)!.seed).toBe(42);
+  });
+});

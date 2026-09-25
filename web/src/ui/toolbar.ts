@@ -174,9 +174,14 @@ export class Toolbar {
       this.lock.reset().catch((e) => showNotice(`Could not reset (${errorMessage(e)})`, 10_000));
       return;
     }
-    const s = Number(this.seed.value) >>> 0;
+    const s = this.typedSeed();
     // The same seed rewinds and replays the session; another seed builds a new world (Decision 4).
     void (s === this.engine.seed ? this.engine.replay() : this.engine.reset(undefined, s));
+  }
+
+  /** The seed in the seed box (typed, not yet applied), as an unsigned 32-bit integer. */
+  typedSeed(): number {
+    return Number(this.seed.value) >>> 0;
   }
 
   private sync(): void {

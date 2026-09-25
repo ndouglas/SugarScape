@@ -1,6 +1,7 @@
 import './style.css';
 import { askKeep, CompareView, compareShell, type Playground, type WorldName } from './compare/compare-view';
 import { copyWorld } from './compare/lockstep';
+import { COMPARE_PRESETS, comparePresetStates } from './compare-presets';
 import { canvasBlob, downloadBlob, downloadText } from './downloads';
 import { Engine, type InitialState } from './engine';
 import { errorMessage, fieldErrorsMessage } from './errors';
@@ -119,7 +120,11 @@ async function main(): Promise<void> {
 
   const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
   // Each tab holds A's panel, and B's beside it in Compare (Decision 10).
-  const rules = new WorldSlot(new RulesPanel(engine), 'switch', 'Rules for');
+  const rules = new WorldSlot(
+    new RulesPanel(engine, (id) => void openComparePreset(id)),
+    'switch',
+    'Rules for',
+  );
   tabs.add('Rules', rules.el);
   const charts = new ChartsPanel(engine);
   tabs.add('Charts', charts.el, (visible) => charts.setVisible(visible));
@@ -360,6 +365,45 @@ async function main(): Promise<void> {
     } finally {
       hold(false);
       busy = false;
+      syncCompareButton();
+    }
+  }
+  /**
+   * A Compare entry of the presets menu: A rebuilds as the entry's first preset and B as its second,
+   * both with the seed box's seed, and Compare starts at t = 0 in lockstep (as a `#c=` link does).
+   * If Compare is on it is left first, keeping A.
+   */
+  async function openComparePreset(id: string): Promise<void> {
+    const entry = COMPARE_PRESETS.find((c) => c.id === id);
+    const states = entry && comparePresetStates(engine.presets, entry, toolbar.typedSeed());
+    if (!entry || !states) {
+      showNotice(`The comparison ${id} is not available`, 10_000);
+      return;
+    }
+    if (busy) {
+      showNotice('Compare is starting or ending; try again in a moment');
+      return;
+    }
+    if (compare) await leaveCompare('A');
+    if (busy || compare) {
+      showNotice('Compare could not be left; try again in a moment');
+      return;
+    }
+    busy = true;
+    syncCompareButton();
+    hold(true);
+    try {
+      engine.setRunning(false);
+      const errors = await engine.loadPreset(entry.a, states.a.seed);
+      if (errors) throw new Error(fieldErrorsMessage(errors));
+      // The address bar no longer describes this world.
+      history.replaceState(null, '', location.pathname + location.search);
+      await buildCompare(states.b);
+    } catch (e) {
+      showNotice(`Compare could not start (${errorMessage(e)})`, 10_000);
+    } finally {
+      busy = false;
+      hold(false);
       syncCompareButton();
     }
   }

@@ -345,10 +345,11 @@ export class Engine {
     });
   }
 
-  async loadPreset(id: string): Promise<FieldError[] | null> {
+  /** Rebuilds the world as preset `id`, at `seed` (default: the world's seed). */
+  async loadPreset(id: string, seed?: number): Promise<FieldError[] | null> {
     const preset = this.presets.find((p) => p.id === id);
     if (!preset) return [{ field: 'preset', message: `unknown preset ${id}` }];
-    return this.quiet(() => this.rebuild(structuredClone(preset.config), this.seed, [], { presetId: id }));
+    return this.quiet(() => this.rebuild(structuredClone(preset.config), seed ?? this.seed, [], { presetId: id }));
   }
 
   /** True when the base config differs from the last chosen preset or a landscape is custom. */

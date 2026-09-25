@@ -1,3 +1,4 @@
+import { COMPARE_PRESETS } from '../compare-presets';
 import type { Engine } from '../engine';
 import { goodsEditorSignature, pollutionEditorSignature } from '../goods';
 import { groupsEditorSignature } from '../groups';
@@ -28,7 +29,11 @@ export class RulesPanel {
   private errorSlots: { path: string; el: HTMLElement; withField: boolean }[] = [];
   private general = h('div', { class: 'error' });
 
-  constructor(private engine: Engine) {
+  /** `onCompare` (A's panel only) makes the Compare entries of the presets menu work: it gets the entry's id. */
+  constructor(
+    private engine: Engine,
+    private onCompare?: (id: string) => void,
+  ) {
     this.el.append(this.presetSection(), this.scheduleSection(), this.general, ...GROUPS.map((g) => this.groupSection(g)));
     engine.on('reset', () => this.sync());
     engine.on('config', () => this.sync());
@@ -78,6 +83,13 @@ export class RulesPanel {
       'select',
       {
         onchange: async () => {
+          const compare = COMPARE_PRESETS.find((c) => `compare:${c.id}` === select.value);
+          if (compare) {
+            // Not a rule system of this world: the menu goes back to showing the current one.
+            this.sync();
+            this.onCompare?.(compare.id);
+            return;
+          }
           this.errors = (await this.engine.loadPreset(select.value)) ?? [];
           if (this.errors.length > 0) this.sync();
           this.renderErrors();
@@ -85,6 +97,9 @@ export class RulesPanel {
       },
       h('option', { value: '', disabled: true }, 'Custom'),
       ...this.engine.presets.map((p) => h('option', { value: p.id }, `${p.name} — ${p.source}`)),
+      this.onCompare
+        ? h('optgroup', { label: 'Compare' }, ...COMPARE_PRESETS.map((c) => h('option', { value: `compare:${c.id}` }, c.label)))
+        : null,
     );
     const badge = h('span', { class: 'badge' }, 'modified');
     const desc = h('p', { class: 'hint' });
