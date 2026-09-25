@@ -63,6 +63,10 @@ pub fn series_names(config: &Config) -> Vec<String> {
     for k in 0..config.culture.groups.len() {
         names.push(format!("group_share_{k}"));
     }
+    if config.culture.rule == crate::config::CultureKind::Axelrod {
+        names.push("distinct_cultures".into());
+        names.push("settled".into());
+    }
     names
 }
 
@@ -107,6 +111,16 @@ pub struct Snapshot {
     /// Share of living agents in each group (`culture.groups`); 0 with no
     /// agents.
     pub groups: Vec<f64>,
+    /// Under Axelrod's rule: distinct cultures among living agents, and
+    /// whether every two share nothing (1) or not (0). Absent otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub axelrod: Option<AxelrodStats>,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct AxelrodStats {
+    pub distinct_cultures: u32,
+    pub settled: bool,
 }
 
 impl Snapshot {
@@ -208,6 +222,17 @@ impl Snapshot {
             goods,
             pollution,
             groups: group_shares,
+            axelrod: (world.config.culture.rule == crate::config::CultureKind::Axelrod).then(
+                || {
+                    let cultures: Vec<&[u8]> =
+                        world.agents().map(|a| a.culture.as_slice()).collect();
+                    let (distinct_cultures, settled) = crate::culture::settle(&cultures);
+                    AxelrodStats {
+                        distinct_cultures,
+                        settled,
+                    }
+                },
+            ),
         }
     }
 
@@ -255,6 +280,13 @@ impl Snapshot {
                 }
                 if let Some(k) = index("group_share_") {
                     return self.groups.get(k).copied();
+                }
+                if let Some(a) = self.axelrod {
+                    match name {
+                        "distinct_cultures" => return Some(f64::from(a.distinct_cultures)),
+                        "settled" => return Some(f64::from(u8::from(a.settled))),
+                        _ => {}
+                    }
                 }
                 return None;
             }

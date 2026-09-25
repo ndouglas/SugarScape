@@ -50,6 +50,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'rca-published-p2',
     b: 'rca-literal-p2',
   },
+  {
+    id: 'ac-random-vs-sweep-20',
+    label: 'Literal vs Sugarscape activation, 20 × 20 — Axelrod Culture (Compare)',
+    a: 'ac-random-activation-20',
+    b: 'ac-sweep-activation',
+  },
 ];
 
 /**

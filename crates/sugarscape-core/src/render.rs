@@ -47,6 +47,8 @@ pub enum ColorMode {
     Credit,
     Disease,
     Lineage,
+    /// Axelrod's culture (milestone 14): a color per culture.
+    Culture,
 }
 
 /// A landscape layer: a good's level or capacity, or a pollutant's level.
@@ -68,6 +70,7 @@ impl FromStr for ColorMode {
             "vision" => Self::Vision,
             "credit" => Self::Credit,
             "disease" => Self::Disease,
+            "culture" => Self::Culture,
             "lineage" => Self::Lineage,
             _ => return Err(format!("unknown color mode {s:?}")),
         })
@@ -147,6 +150,8 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
                 SICK
             }
         }
+        ColorMode::Culture if a.culture.is_empty() => NEUTRAL,
+        ColorMode::Culture => crate::culture::culture_color(&a.culture),
         ColorMode::Lineage => match Lineage::of(a) {
             Lineage::Founder => FOUNDER,
             Lineage::FounderParent => FOUNDER_PARENT,

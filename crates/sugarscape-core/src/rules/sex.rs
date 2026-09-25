@@ -99,6 +99,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         immune: Bits::default(),
         diseases: Vec::new(),
         infected_by: None,
+        culture: Vec::new(),
         social: Social::default(),
     };
     // Goods 1..n pick where Chapter IV picked spice's metabolism.
@@ -117,6 +118,16 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         );
         child.immune_genome = genome;
         child.immune = genome;
+    }
+    // Axelrod's traits: each feature from a random parent (our reading;
+    // Axtell et al.'s agents never reproduce).
+    if world.config.culture.rule == crate::config::CultureKind::Axelrod {
+        child.culture = a
+            .culture
+            .iter()
+            .zip(&b.culture)
+            .map(|(&x, &y)| if rng.gen_bool(0.5) { x } else { y })
+            .collect();
     }
     let pa = world.agent_mut(a_id).expect("parent");
     for (have, give) in pa.holdings.iter_mut().zip(&from_a).take(n) {

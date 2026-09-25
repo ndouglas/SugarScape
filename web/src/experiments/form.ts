@@ -47,6 +47,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'final', series: 'fit' },
     };
   }
+  if (model === 'culture') {
+    // Table 2's axis (the built-in ac-table-2): stable regions against traits per feature.
+    return { ...form, x: { path: 'traits', values: '5:15:5' }, ticks: 20000, metric: { ...form.metric, kind: 'final', series: 'regions' } };
+  }
   if (model === 'tags') {
     // Table 1's axis (the built-in rca-pairings): the donation rate over the whole run.
     return { ...form, x: { path: 'pairings', values: '1:4:1' }, ticks: 3000, metric: { ...form.metric, kind: 'window_mean', series: 'donation_rate', from: 0 } };

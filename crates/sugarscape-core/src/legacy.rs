@@ -9,9 +9,9 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 
 use crate::config::{
-    default_groups, CombatRule, Config, CreditRule, CultureRule, Diffusion, DiseaseRule,
-    FieldError, Foresight, Good, Growback, Lifespan, Map, Placement, Pollutant, Pollution,
-    PriceRule, ScheduledChange, Seasons, SexRule, Toggle, TradeRule, Transform, URange,
+    default_groups, CombatRule, Config, CreditRule, CultureKind, CultureRule, Diffusion,
+    DiseaseRule, FieldError, Foresight, Good, Growback, Lifespan, Map, Placement, Pollutant,
+    Pollution, PriceRule, ScheduledChange, Seasons, SexRule, Toggle, TradeRule, Transform, URange,
     SPICE_COLOR, SUGAR_COLOR,
 };
 
@@ -194,6 +194,10 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         culture: CultureRule {
             enabled: old.culture.enabled,
             groups: default_groups(old.tag_length),
+            rule: CultureKind::Flip,
+            features: 5,
+            traits: 15,
+            stop_when_settled: false,
         },
         combat: old.combat,
         trade: TradeRule {
