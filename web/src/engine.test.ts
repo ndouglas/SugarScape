@@ -1150,6 +1150,12 @@ describe('Engine with other models', () => {
     expect(finishedNotice(e.config, 10)).toBe('This run has reached its end year (AD 810) — Reset to run it again');
     expect(finishedNotice(ring, 10)).toBe('This run has reached its end year — Reset to run it again');
     expect(finishedNotice({ model: 'civil' } as unknown as ModelConfig, 94)).toBe('A group has died out at t = 94 — Reset to run it again');
+    expect(finishedNotice({ model: 'culture' } as unknown as ModelConfig, 812)).toBe(
+      'The lattice is stable at t = 812: no two neighbors can interact — Reset to run it again',
+    );
+    expect(finishedNotice({ culture: { rule: 'axelrod' } } as unknown as ModelConfig, 1500)).toBe(
+      'The cultures have settled at t = 1500: every two share all or nothing — Reset to run it again',
+    );
     expect(finishedNotice({ model: 'tags' } as unknown as ModelConfig, 30000)).toBe(
       'This run has reached its last generation (30000) — Reset to run it again',
     );

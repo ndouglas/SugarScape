@@ -8,7 +8,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { AnasaziStats, CivilConfig, CivilStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
+import type { AnasaziStats, CivilConfig, CivilStats, CultureInspection, CultureStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -374,6 +374,14 @@ describe('other models through the engine', () => {
     ['eh-clones-only', '0x1bd933620c915c0e'],
     ['eh-no-exact-clones', '0xafe94d6c0bb3b8ab'],
     ['rca-adopt-p1', '0x0c3f75d53d237a89'],
+    ['ac-sample-run', '0xeb302b62eb20f85d'],
+    ['ac-many-regions', '0xcfca4ee65fe3946c'],
+    ['ac-torus', '0x8a21fc496bea71c3'],
+    ['ac-random-activation-20', '0xf0c8269aa3a3f7d2'],
+    ['ac-sweep-activation', '0x986f6c9a01898253'],
+    ['ac-neighbor-changes', '0xb12313a2dedfda7e'],
+    ['ac-soup', '0xe15b8cab349e25fa'],
+    ['ac-drift', '0xf254ab408f46810f'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -452,6 +460,41 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the culture model through the engine', () => {
+  it('stops once, at the tick the lattice becomes stable, and inspects sites and lanes', async () => {
+    const sample = presets.find((p) => p.id === 'ac-sample-run')!;
+    const e = await Engine.create({ config: structuredClone(sample.config), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'similarity' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(100_000);
+    const s = e.latest as CultureStats;
+    expect([e.finished, ends, s.stable_at, s.active_bonds]).toEqual([true, 1, e.tick, 0]);
+    expect(s.regions).toBe(s.zones);
+    await e.select(0, 0);
+    const site = e.inspection!.view as CultureInspection;
+    expect([site.kind, site.a.traits.length, site.neighbors.length]).toEqual(['site', 5, 2]);
+    await e.select(2, 0);
+    expect((e.inspection!.view as CultureInspection).kind).toBe('lane');
+    expect(e.inspection!.agentId).toBeNull();
+  });
+
+  it('reproduces the docking presets’ golden fingerprints in the Sugarscape', async () => {
+    // crates/sugarscape-core/tests/golden.rs, GOLDEN.
+    for (const [id, golden] of [
+      ['dock-mobility-15', '0x9d0a2ced876f00d2'],
+      ['dock-mobility-30', '0x10a0c00c27c1660d'],
+    ]) {
+      const preset = presets.find((p) => p.id === id)!;
+      const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });
+      e.setDisplay({ colorMode: 'culture' });
+      await e.advance(200);
+      expect(await e.fingerprint()).toBe(golden);
+      expect((e.latest as Snapshot).axelrod?.distinct_cultures).toBeGreaterThan(0);
+    }
   });
 });
 

@@ -67,7 +67,11 @@ export interface Config {
   replacement: { enabled: boolean };
   sex: { enabled: boolean; fertility_onset: URange; female_end: URange; male_end: URange };
   inheritance: { enabled: boolean };
-  culture: { enabled: boolean; groups: TagGroup[] };
+  /**
+   * Rule K. `rule`, `features`, `traits` and `stop_when_settled` are milestone 14's Axelrod option
+   * (absent from older configs: the book's `flip`).
+   */
+  culture: { enabled: boolean; groups: TagGroup[]; rule?: 'flip' | 'axelrod'; features?: number; traits?: number; stop_when_settled?: boolean };
   combat: { enabled: boolean; unlimited: boolean; reward: number };
   trade: { enabled: boolean; price: PriceRule };
   credit: { enabled: boolean; duration: number; rate: number };
@@ -77,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -221,7 +225,25 @@ export interface TagsConfig {
   selection: 'tournament' | 'adopt';
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig;
+/**
+ * Axelrod's culture model (milestone 14): sites with F features of q traits copying a neighbor's
+ * trait with probability equal to their similarity, with Axtell et al.'s and later departures.
+ */
+export interface CultureConfig {
+  model: 'culture';
+  width: number;
+  height: number;
+  features: number;
+  traits: number;
+  neighborhood: 'von_neumann' | 'moore' | 'diamond' | 'soup';
+  boundary: 'bounded' | 'torus';
+  activation: 'random' | 'sweep';
+  changes: 'active' | 'neighbor';
+  drift: number;
+  stop_when_stable: boolean;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -274,6 +296,8 @@ export interface Snapshot {
   goods: { mean_holding: number; mean_metabolism: number; traded: number }[];
   pollution: number[];
   groups: number[];
+  /** Under Axelrod's culture rule (milestone 14). */
+  axelrod?: { distinct_cultures: number; settled: boolean };
 }
 
 export interface SchellingStats {
@@ -357,7 +381,19 @@ export interface TagsStats {
 }
 
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats;
+export interface CultureStats {
+  tick: number;
+  regions: number;
+  zones: number;
+  cultures: number;
+  largest_region: number;
+  mean_similarity: number;
+  active_bonds: number;
+  changes: number;
+  stable_at: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -495,7 +531,23 @@ export interface TagsInspection {
 }
 
 /** What a world of any model says about a site. */
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection;
+/** A culture site: its position, traits, and the sizes of its region and zone. */
+export interface CultureSiteView { x: number; y: number; traits: number[]; region_size: number; zone_size: number }
+/**
+ * A cell of the culture frame: a site (with what each neighbor shares) or a lane between two sites
+ * (with what they share). `agent` is always null: sites do not move.
+ */
+export interface CultureInspection {
+  site: { x: number; y: number };
+  kind: 'site' | 'lane';
+  a: CultureSiteView;
+  b: CultureSiteView | null;
+  shared: number | null;
+  neighbors: { x: number; y: number; shared: number }[];
+  agent: null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -525,7 +577,10 @@ export type ColorMode =
   | 'payoff'
   | 'count'
   | 'tolerance'
-  | 'clones';
+  | 'clones'
+  | 'culture'
+  | 'similarity'
+  | 'zones';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

@@ -227,11 +227,25 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     { title: 'Distinct tags', lines: [{ key: 'distinct_tags', label: 'Distinct tags', color: '--c2' }] },
     { title: 'Takeovers', lines: [{ key: 'takeovers', label: 'Dominant clusters replaced', color: '--c3' }] },
   ],
+  culture: [
+    {
+      title: 'Regions, zones and cultures',
+      lines: [
+        { key: 'regions', label: 'Regions', color: '--c1' },
+        { key: 'zones', label: 'Zones', color: '--c3' },
+        { key: 'cultures', label: 'Cultures', color: '--c2' },
+      ],
+    },
+    { title: 'Largest region', lines: [{ key: 'largest_region', label: 'Share of sites', color: '--c4' }], range: [0, 1] },
+    { title: 'Mean similarity', lines: [{ key: 'mean_similarity', label: 'Features shared by neighbors', color: '--c2' }], range: [0, 1] },
+    { title: 'Active bonds', lines: [{ key: 'active_bonds', label: 'Pairs that can still interact', color: '--red' }] },
+    { title: 'Changes', lines: [{ key: 'changes', label: 'Traits changed this tick', color: '--c3' }] },
+  ],
 };
 
 /** A model's time charts count calendar years (the anasazi's) or ticks. */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

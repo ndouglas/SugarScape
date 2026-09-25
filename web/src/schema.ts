@@ -105,8 +105,20 @@ export const GROUPS: Group[] = [
   {
     title: 'Culture (K)', enable: 'culture.enabled',
     custom: 'groups',
-    note: 'An agent belongs to the first group whose range holds its number of zero tags. Combat, the Tribe colors and the Group shares chart use the groups even while culture is off. Adding or removing a group or changing a range rebuilds the world; names and colors apply live.',
-    controls: [],
+    note: 'An agent belongs to the first group whose range holds its number of zero tags. Combat, the Tribe colors and the Group shares chart use the groups even while culture is off. Adding or removing a group or changing a range rebuilds the world; names and colors apply live. Axelrod\u2019s rule (Axtell et al. 1996\u2019s docking) gives agents features of several traits instead; the Culture color mode draws them.',
+    controls: [
+      {
+        kind: 'select', path: 'culture.rule', label: 'Rule', reset: true,
+        current: (c) => c.culture.rule ?? 'flip',
+        options: [
+          { value: 'flip', label: 'Flip a neighbor\u2019s tag (book)', apply: (c) => { c.culture.rule = 'flip'; } },
+          { value: 'axelrod', label: 'Axelrod: copy from a similar neighbor', apply: (c) => { c.culture.rule = 'axelrod'; } },
+        ],
+      },
+      { kind: 'number', path: 'culture.features', label: 'Axelrod features', min: 1, max: 32, step: 1, reset: true },
+      { kind: 'number', path: 'culture.traits', label: 'Axelrod traits per feature', min: 2, max: 255, step: 1, reset: true },
+      { kind: 'toggle', path: 'culture.stop_when_settled', label: 'Stop when cultures settle (Axelrod)' },
+    ],
   },
   {
     title: 'Combat (C)', enable: 'combat.enabled',

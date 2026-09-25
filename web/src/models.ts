@@ -5,6 +5,8 @@ import type {
   AnyInspection,
   CivilConfig,
   CivilInspection,
+  CultureConfig,
+  CultureInspection,
   ColorMode,
   Config,
   Inspection,
@@ -17,7 +19,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -28,12 +30,15 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   civil: 'Civil Violence',
   spatial: 'Spatial Games',
   tags: 'Tag Cooperation',
+  culture: 'Axelrod Culture',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' ? tag : 'sugarscape';
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture'
+    ? tag
+    : 'sugarscape';
 }
 
 export function isSugar(c: ModelConfig): c is Config {
@@ -70,6 +75,11 @@ export function isTagsView(v: AnyInspection): v is TagsInspection {
   return 'generation' in v;
 }
 
+/** A cell of the culture frame (it says whether it is a site or a lane). */
+export function isCultureView(v: AnyInspection): v is CultureInspection {
+  return 'kind' in v && 'neighbors' in v;
+}
+
 /** The calendar year a world of `c` is in at `tick` (the anasazi's), or null for a model without one. */
 export function calendarYear(c: ModelConfig, tick: number): number | null {
   return 'model' in c && c.model === 'anasazi' ? c.start_year + tick : null;
@@ -91,7 +101,10 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
  * time, so neither world runs past the tick at which the other finished.
  */
 export function finishesUnpredictably(c: ModelConfig): boolean {
-  return modelOf(c) === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
+  const model = modelOf(c);
+  if (model === 'culture') return (c as CultureConfig).stop_when_stable && (c as CultureConfig).drift === 0;
+  if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
+  return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
 
 export function presetModel(p: Preset): ModelKind {
@@ -116,6 +129,8 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['credit', 'Credit'],
     ['disease', 'Disease'],
     ['lineage', 'Lineage'],
+    // Axelrod's culture rule (milestone 14); agents are gray under the book's rule.
+    ['culture', 'Culture'],
   ],
   schelling: [
     ['color', 'Color'],
@@ -148,6 +163,12 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['tolerance', 'Tolerance'],
     ['clones', 'Clones'],
   ],
+  // Each culture its color; the paper's Fig. 1 (lanes by similarity); cultural zones.
+  culture: [
+    ['culture', 'Culture'],
+    ['similarity', 'Similarity'],
+    ['zones', 'Zones'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -159,4 +180,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   civil: [],
   spatial: [],
   tags: [],
+  culture: [],
 };

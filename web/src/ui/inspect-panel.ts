@@ -1,11 +1,13 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
-import { isCivilView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isCultureView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AnasaziInspection,
   CivilInspection,
+  CultureInspection,
+  CultureSiteView,
   LinkView,
   RingInspection,
   SchellingInspection,
@@ -147,6 +149,25 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A culture site (its traits, region, zone and what each neighbor shares) or a lane between two sites. */
+  private cultureRows(view: CultureInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const site = (s: CultureSiteView) => `(${s.x}, ${s.y}) · ${s.traits.join(' ')}`;
+    const where = (s: CultureSiteView) => `region of ${s.region_size} · zone of ${s.zone_size}`;
+    if (view.kind === 'lane' && view.b) {
+      const f = view.a.traits.length;
+      return [
+        row('Between', `${site(view.a)} and ${site(view.b)}`),
+        row('Shared', `${view.shared} of ${f} features${view.shared === f ? ' (identical)' : view.shared === 0 ? ' (cannot interact)' : ''}`),
+      ];
+    }
+    return [
+      row('Site', site(view.a)),
+      row('Belongs to', where(view.a)),
+      ...view.neighbors.map((n) => row(`(${n.x}, ${n.y})`, `shares ${n.shared} of ${view.a.traits.length}`)),
+    ];
+  }
+
   /**
    * A cell of the tags diagram: its generation and tag bin, what the bin held, and in the current
    * generation its agents (the first 12).
@@ -234,7 +255,9 @@ export class InspectPanel {
           ? `Agent #${shown.agentId} is gone: killed, or dead of old age.`
           : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
-      const rows = isTagsView(view)
+      const rows = isCultureView(view)
+        ? this.cultureRows(view)
+        : isTagsView(view)
         ? this.tagsRows(view)
         : isRingView(view)
           ? this.ringRows(view, gone)
