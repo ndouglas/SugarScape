@@ -139,8 +139,8 @@ Model extensions:
 
 ## Other artificial societies
 
-The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World** and
-**Artificial Anasazi**.
+The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
+**Artificial Anasazi** and **Civil Violence**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -232,6 +232,91 @@ come unmodified from *Artificial Anasazi* v1.1.0 (Janssen, CoMSES,
 [doi:10.25937/krp4-g724](https://doi.org/10.25937/krp4-g724)) and are GPL-2.0, separate from this
 repository's MIT code (see `data/anasazi/NOTICE`). See
 `docs/superpowers/specs/2026-09-25-anasazi-design.md` and its source extraction.
+
+### Civil violence (Epstein 2002)
+
+Model I is generalized rebellion against a central authority, on a 40 × 40 torus of agents and
+cops. Each agent draws a hardship H and a risk aversion R once from U(0,1) and computes a
+grievance G = H(1 − L) against a legitimacy L set for the whole run; a cop counts the active
+agents within its vision and arrests one at random (rule C), giving it a jail term drawn from
+U(0, J_max); an agent estimates its arrest risk from the cops and actives it can see and goes
+active when its grievance exceeds that risk plus a threshold T (rule A); everyone, cops included,
+moves to a random empty site within its own vision each turn (rule M). Agents and cops act once
+each per tick, in random order.
+
+Model II turns the same rules on two groups, Blue and Green, instead of on a central authority:
+going active means killing a random member of the other group within vision rather than merely
+showing color, cops arrest either group's actives evenhandedly, and the population itself
+changes — each free agent clones onto an empty neighboring site with probability 0.05 a tick (the
+child keeping its parent's group and hardship, drawing its own R), and every agent dies at a
+random age fixed at birth (up to 200 ticks).
+
+The paper leaves several things unstated; the choices made here are named in the Rules panel:
+vision is Euclidean (never specified; NetLogo Rebellion's `in-radius` agrees), a jail term is a
+whole number of ticks from 1 to J_max (an arrest always costs at least a tick), a released agent
+reappears on a random empty site near where it was arrested (or anywhere on the lattice if none is
+free nearby), and a Model II clone lands on one of its parent's eight Moore neighbors.
+
+**The Finding.** The paper's stated arrest rule, P = 1 − exp(−k·C/A), does not produce the paper's
+own punctuated equilibrium at the paper's own Run 2 inputs: over 20 seeds of 3 000 ticks it gives
+zero outbursts above 50 actives in every seed (peaks of 13–34 actives). At L = 0.82 the grievance
+ceiling is only 0.18, and even a crowd that outnumbers the cops three to one faces P ≈ 0.54 under
+the literal formula — enough to suppress nearly everyone. Only NetLogo Rebellion's departure,
+rounding C/A down before applying the formula, produces the pattern: 101–122 outbursts, peaks of
+290–368. Checks run during planning that vary the ordering (agents deciding before moving: peaks
+11–15), the schedule (cops acting after all agents: peaks 14–21) and the vision shape (reading the
+paper's "north, south, east, and west" as a Sugarscape cross of 4·⌊v⌋ sites: mean actives ~40 at
+every tick, constant unrest and never calm) all fail to rescue the literal rule. Because of this,
+every Model I preset here rounds C/A down and says so in its description; the built-in sweep
+`cv-ratio-rules` charts outbursts against legitimacy under the literal rule, the rounded-down rule
+and NetLogo's further departure of counting an already-active agent twice, at Run 2's other inputs.
+
+What else does and does not reproduce, measured over 20 seeds each:
+
+- Run 2's shape reproduces (mean total activation 779 against the paper's 708 ± 230) but its
+  timing does not: the mean wait between outbursts is 22 ticks, a third of the paper's 60 ± 55.
+- Runs 3 and 4 (salami tactics vs. one jump): the jump's peak beats salami's in 17 of 20 seeds as
+  the paper predicts, but its jail ends larger only in 7 of 20 — the explosion reproduces, the
+  larger jail mostly does not.
+- Run 5 (cop reductions) tips every one of 20 seeds into rebellion, as the paper's text says a
+  marginal cut in cops does.
+- Run 6 (coexistence) never kills in any of 20 seeds; Run 7 (cleansing) reaches genocide in all
+  20, the victor about even (Blue 12, Green 8).
+- Run 8's text calls its outcome "a stable, but nasty, regime," but measured, one group is gone in
+  every one of 20 seeds (t = 75–882) — the paper's own Fig. 15 shows the same rapid genocide it
+  describes in words. Peacekeepers deployed at t = 50 (`cv-safe-havens`) don't produce safe havens
+  either: genocide in all 20 seeds, only delayed by denser forces.
+- The paper's own worked example gives outburst sizes "60, 100, 120, 95, and 80" summing to "500"
+  and averaging "100"; they sum to 455 and average 91. The test suite uses 455.
+
+NetLogo Rebellion (Wilensky, 2004) departs from the paper's text in five ways, each its own switch
+(all off by default, all on in `cv-netlogo`): C/A rounded down before the arrest formula, above
+(`floor_ratio`); an already-active agent counting itself twice toward A
+(`active_counts_twice`); the arresting cop stepping onto the vacated site (`cop_moves_to_arrest`);
+a jailed agent keeping its site instead of leaving the lattice (`jailed_stay`); and a jail term
+drawn as a whole number from 0 to J_max − 1, so a term of 0 releases immediately
+(`netlogo_jail_term`). `cv-netlogo` runs NetLogo's own defaults (70 % agents, 4 % cops, vision 7,
+L = 0.82, J_max = 30) with all five on: 93–109 outbursts, mean total activation 1107, mean wait 23
+ticks over 20 seeds.
+
+Three built-in sweeps: `cv-ratio-rules` (above); `cv-peacekeeping` reruns Run 7 with cops from the
+start at densities 0–0.1 for 3 000 ticks (Figs. 15–17): genocide in all 220 runs, mean time to
+extinction rising with density (94 ticks with no cops, 106–119 at 0.01–0.03, 156–196 at 0.04–0.07,
+223–263 at 0.08–0.1) and its spread widening too (s.d. 42 up to 142–326, longest 1596 at density
+0.08) — the rise and the widening reproduce, the paper's long delays past 15 000 cycles do not;
+`cv-jail-waits` asks the paper's open conjecture whether a longer jail term raises the mean wait
+between outbursts, and it does, from 3.5 ticks at J_max = 10 to 40.4 at 60 (about 0.66–0.74 ×
+J_max from 15 up; at J_max = 5 no outburst ever ends, so no wait is measured).
+
+The grid is drawn by **Action** (quiet agents blue, active red, cops black; in Model II quiet
+agents show their group's color) or **Grievance** (shaded by G), and in Model II also **Group**;
+charts split **Actives, quiet and jailed**, **Legitimacy** and **Cops** onto their own axes (Figs.
+9–11), plus **Tension** (Fig. 8), **Outbursts**, **Wait between outbursts** and **Activation per
+outburst**, and Model II's **Groups** and **Killed**. **Compare** entries: "Salami tactics vs one
+jump — runs 3 and 4" and "Ethnic cleansing vs safe havens — run 7 and peacekeepers." Credit:
+Joshua M. Epstein, "Modeling civil violence: An agent-based computational approach," *PNAS* 99
+suppl. 3 (2002), 7243–7250, and NetLogo *Rebellion* (Wilensky, 2004). See
+`docs/superpowers/specs/2026-09-25-civil-violence-design.md`.
 
 ## Experiments
 

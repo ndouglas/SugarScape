@@ -77,6 +77,15 @@ year, the historical record on its chart, a replication-vs-documented Compare en
 measured `lhv-calibration` and `lhv-quirks` sweeps. Earlier models are unchanged. See
 `docs/superpowers/specs/2026-09-25-anasazi-design.md`.
 
+## Milestone 11: Civil violence (done)
+
+Epstein's civil violence (2002), Models I and II, as a fifth model kind, with NetLogo Rebellion's five
+departures as switches and the paper's runs as presets. The paper's stated arrest rule gives Model I no
+rebellion at its own inputs; only NetLogo's rounded-down C/A reproduces its punctuated equilibrium, so the
+Model I presets round down and say so (the sweep `cv-ratio-rules` shows it). The salami-tactics, cop-reduction,
+coexistence and cleansing results reproduce; the mean wait is a third of the paper's, and Run 8's stable
+regime and the safe havens do not reproduce. See `docs/superpowers/specs/2026-09-25-civil-violence-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -84,7 +93,7 @@ measured `lhv-calibration` and `lhv-quirks` sweeps. Earlier models are unchanged
 - **Chapter VI "artificial history" presets**: done (Milestone 8); the flocking / group-formation aside (Animation VI-8) is Ring World (Milestone 9).
 - **Artificial Anasazi** (Chapter VI's "Computational Archaeology"): done (Milestone 10).
 - **Nowak–May spatial games**: a candidate model kind (spatial Prisoner's Dilemma on a lattice).
-- **Epstein's civil violence**: a candidate model kind (agents, cops and legitimacy).
+- **Epstein's civil violence**: done (Milestone 11).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

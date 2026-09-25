@@ -107,12 +107,14 @@ Cops first, then agents, each on a uniformly random empty site (NetLogo's order)
 
 - **Color modes:** **Action** (the paper's left screen): quiet agents blue, active red, cops black, empty sand; in Model II quiet agents are drawn in their group's color (blue or green) and actives red. **Grievance** (the right screen): agents shaded from pale to dark red by G, cops black, empty sand. **Group** (Model II): blue or green, cops black. Jailed agents are not drawn (with `jailed_stay` the site shows its free occupant or cop, else empty).
 - **Inspect:** an agent's id, H, R, G, estimated P and N at its site now, state (quiet / active / jailed with remaining term), and in Model II its group, age and death age; or a cop.
-- **Charts:** Actives and jailed (with legitimacy × 1000 and cops on a second axis) — Figs. 9–11; Actives and tension — Fig. 8; Outbursts (count, mean wait, mean activation); Groups (blue, green, kills) — Model II only.
+- **Charts:** Actives, quiet and jailed, Legitimacy and Cops — Figs. 9–11; Actives and tension — Fig. 8; Outbursts (count, mean wait, mean activation); Groups (blue, green, kills) — Model II only.
 - **Agents CSV:** id, x, y, state, jail term, H, R, G, group, age, death age.
 
 ## Presets
 
 Descriptions state the Table 2 inputs and what the survey measured; the mapping of runs to figures is our reading (the paper does not tie runs to figures). Runs 1–5 set `quirks.floor_ratio` (see Finding); runs 6–8 and the Model II scenarios keep the literal rule (with no cops it never matters; with cops the survey reports both).
+
+The spec originally called for `cv-peacekeepers-withdrawn` (Run 8 with cops withdrawn at a measured tick, expecting reversion to genocide). Measured, Run 8 never stabilizes: one group is already gone by t ≤ 882 in 20 of 20 seeds, so there is no stable regime to withdraw cops from. That preset is dropped.
 
 | Preset | Setup | Paper |
 |---|---|---|
@@ -125,7 +127,6 @@ Descriptions state the Table 2 inputs and what the survey measured; the mapping 
 | `cv-run-7-cleansing` | Run 7 (ethnic), `stop_at_extinction` | Fig. 13 |
 | `cv-run-8-nasty-regime` | Run 8 (ethnic) | "stable, but nasty" |
 | `cv-safe-havens` | Run 7; schedule `cop_density` at t = 50 (density chosen by measurement, stated) | Fig. 14 |
-| `cv-peacekeepers-withdrawn` | Run 8; schedule `cop_density` 0 at a measured tick, `stop_at_extinction` | reversion to genocide |
 | `cv-netlogo` | NetLogo's defaults (70 % agents, 4 % cops, vision 7, L 0.82, J_max 30) and all five quirks | NetLogo *Rebellion* |
 
 **Compare entries:** "Salami tactics vs one jump — runs 3 and 4" and "Ethnic cleansing vs safe havens — run 7 and peacekeepers".
@@ -139,7 +140,7 @@ Descriptions state the Table 2 inputs and what the survey measured; the mapping 
 
 ## Survey
 
-A `civil` claims module in `survey/`, with judges over 20 seeds: Run 2's actives are punctuated (quiet stretches and outbursts above 50; `mean_wait` and `mean_activation` reported against 60 ± 55 and 708 ± 230); run 4's peak actives exceed run 3's and its final jailed count exceeds run 3's; run 5 tips (actives jump during the cop ramp); run 6 keeps both groups alive with few kills; run 7 reaches extinction in every seed with the victor split; peacekeepers delay extinction relative to run 7; run 8's groups coexist with ongoing kills. Claims that fail are reported as unreproduced and the descriptions say so. The literal-rule check: Run 2 without `floor_ratio` under each of (a) the rules as specified, (b) agents deciding before moving, (c) von Neumann vision of radius ⌊v⌋ (the paper's "north, south, east, and west"), (d) cops acting after all agents — the claim "the stated rule gives no outbursts" stands only if none of them produces outbursts above 50.
+A `civil` claims module in `survey/`, with judges over 20 seeds: Run 2's actives are punctuated (quiet stretches and outbursts above 50; `mean_wait` and `mean_activation` reported against 60 ± 55 and 708 ± 230); run 4's peak actives exceed run 3's and its final jailed count exceeds run 3's; run 5 tips (actives jump during the cop ramp); run 6 keeps both groups alive with few kills; run 7 reaches extinction in every seed with the victor split; peacekeepers delay extinction relative to run 7; run 8's groups coexist with ongoing kills. Claims that fail are reported as unreproduced and the descriptions say so. The literal-rule check: Run 2 without `floor_ratio` under each of (a) the rules as specified, (b) agents deciding before moving, (c) von Neumann vision of radius ⌊v⌋ (the paper's "north, south, east, and west"), (d) cops acting after all agents — the claim "the stated rule gives no outbursts" stands only if none of them produces outbursts above 50. These rescue checks were run during planning (Run 2, seeds 1–5, 3000 ticks), before this spec's Finding was written: (a) as specified, peaks 13–34; (b) agents deciding before moving, peaks 11–15; (d) cops acting after all agents, peaks 14–21; (c) the paper's "north, south, east, and west" read as a Sugarscape cross of 4·⌊v⌋ sites, mean actives ~40 at every tick — constant unrest, never calm, not punctuated. None of the four produces an outburst above 50, so the claim stands.
 
 ## Page
 
