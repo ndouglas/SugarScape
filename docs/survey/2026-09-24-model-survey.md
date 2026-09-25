@@ -15,10 +15,13 @@ covered. Spec: `docs/superpowers/specs/2026-09-24-model-survey-design.md`. Raw n
 | App (descriptions) | 80 | 4 | 7 | 5 |
 | Comment ("Measured" figures) | 19 | 3 | 4 | 0 |
 
-**No failure traced to a model bug.** Every rule-level result checked (carrying capacity, wealth skew,
-selection on vision and metabolism, pollution, culture, disease learning, trade raising carrying capacity,
-price convergence, the N-goods and sweep results) reproduces, most at p < 10⁻⁵ over 20 seeds. The shaky
-parts are elsewhere:
+**No failure traced to a bug in the rules.** Rule-level results reproduce, most at p < 10⁻⁵ over 20
+seeds: carrying capacity, selection on vision and metabolism, pollution, local cultural convergence,
+disease learning, price convergence, and the N-goods and sweep results. Trade raising carrying capacity
+(Figure IV-6) holds on every seed at every vision when compared seed by seed. Two qualifications: wealth
+skew is strong (Gini 0.23 → 0.48, p < 10⁻¹¹), but the book's "Gini above ~0.5" holds only because "about"
+widens the bound to 0.45 (median 0.479, IQR 0.473–0.482); and two presets are broken as configured (item
+1). The shaky parts are:
 
 1. **Two "wave" presets can't do what they describe.** II-6 (diagonal waves) and III-12 (colliding waves)
    place their agent blocks on top of a sugar peak, so the agents stay put: 0/20 seeds show propagation or
@@ -26,14 +29,15 @@ parts are elsewhere:
    kills in 500 ticks).
 2. **Some descriptions misstate the model.** v-mcneill's society carries no disease when the novel one
    arrives. n-4-peaks has 128 sites growing all four goods, so agents needn't travel or trade. IV-18's
-   foresight often doesn't fall. And a few ranges are too tight or too strong: "agents shuttle" (about
-   half do), "~1–3% residue", "minima near 700" (about 750).
+   foresight often doesn't fall. And a few ranges are too tight or too strong: "~1–3% residue",
+   "minima near 700" (about 750), and "agents shuttle" (about half do, on a threshold the check chose).
 3. **Chapter VI's book results don't reproduce.** This is already documented: VI-2 doesn't crash, VI-3
    doesn't exceed twice its start, and trade makes no difference. Also partly unreproduced: single-tribe
    dominance (III-6; the mountains often split) and foresight being selected down (IV-18).
-4. **Every "Measured" comment is accurate.** The 7 misses among them come from judging 20 fresh seeds
-   against figures recorded for 3–10 specific seeds. Rerun on their own seeds, every figure reproduces
-   exactly (the model is deterministic per seed).
+4. **Every "Measured" comment is accurate.** Its 7 misses are the check's fault. Two (iv-3, v-2) judged
+   20 seeds against values recorded for seeds 1–3. Five (the sweeps) judged each of the same 10 seeds
+   against ±10% of those seeds' mean. Rerun on their own seeds, every recorded figure reproduces exactly
+   (the model is deterministic per seed).
 
 ## Triage list (suggested fixes, most important first)
 
@@ -49,8 +53,8 @@ parts are elsewhere:
    on about 80% of seeds, 16/20 observed).
 4. `n-4-peaks`: say the four peaks overlap near the wrapped corner, where agents can hold all four
    without travelling.
-5. `iv-18-foresight`: foresight drifts down only weakly (4.98 → 4.41 by t = 1000, p = 0.13) and stays
-   above its start on 8/20 seeds at t = 2000. Soften "keeps a modest foresight".
+5. `iv-18-foresight`: foresight drifts down only weakly (4.98 → 4.41 by t = 1000; paired p = 0.027) and
+   is above 5.0, the initial draw's mean, on 8/20 seeds at t = 2000. Soften "keeps a modest foresight".
 6. Loosen overstated figures: `iv-1-spice` (about half the agents shuttle), `v-1-rid` (the residue ranges
    from near 0% to over 3% by seed), `vi-3-trade` (minima near 750), `vi-1-everything` (flares follow most
    outbreaks, 15/20 seeds after all three), and `iv-15-trade-sex` (mention that 3/20 seeds go extinct by
@@ -64,9 +68,9 @@ parts are elsewhere:
    `iii-6-culture`'s description.
 
 **Sweeps**
-9. `fig-iv-6` at 10 seeds is under-powered at high vision. At 20 seeds trade raises carrying capacity at
-   visions 1–5 (p ≤ 0.008) and borderline at 6 (p = 0.013). Either raise the seed count or describe the
-   narrowing gain.
+9. `fig-iv-6`: nothing to fix. Its Weak verdict came from the survey's unpaired test; compared seed by
+   seed, trade wins on all 10 seeds at every vision (paired Wilcoxon p ≤ 0.002). The gain narrows with
+   vision (+8 at vision 1, +5 at 6), which the description could mention.
 10. The per-cell "Measured" figures in the sweep descriptions are exact means, which is fine. Nothing to
     change; a future survey should compare means, not individual seeds (see Method).
 
@@ -84,11 +88,22 @@ test's claim does not: at 20 seeds foresight isn't reliably selected down (`iv-1
   when the medians point the right way but p ≥ 0.01.
 - **Equivalence**: Welch TOST at α = 0.05, margin 10% of the pooled mean unless stated; fails when a
   two-sided Mann–Whitney gives p < 0.01.
-- Thresholds were fixed before each claim first ran. One check was corrected after its first run because
-  it had a bug: `iv-3-pollution.stops` read the series one tick early, since a change scheduled for tick T
-  first shows in series index T + 1, as `World::step` confirms. No threshold was changed.
-- **Known weakness**: comment claims that record a mean (or specific seeds' values) were judged seed by
-  seed. Every such miss was checked by rerunning the recorded seeds, and all reproduce exactly.
+- Thresholds were fixed before each claim first ran, and none was changed. Three checks were corrected
+  after their first run because they had bugs; each is described in a comment beside the check.
+  - `iv-3-pollution.stops` read the series one tick early. A change scheduled for tick T first shows in
+    series index T + 1, as `World::step` confirms. First result: Fails 0/20; now Holds.
+  - `vi-3.book-period`'s period finder returned the smallest lag (20) on every seed. First result: Fails
+    0/20; still Fails.
+  - The three sweep settlement claims (`fig-ii-5.settled`, `fig-iv-6.settled`,
+    `n-goods-carrying-capacity.settled-1000`) panicked on the first run, giving Error. They now Hold.
+- **Known weaknesses.**
+  - Comment claims that record a mean (or specific seeds' values) were judged seed by seed. Every such
+    miss was checked by rerunning the recorded seeds, and all reproduce exactly.
+  - Comparisons use the unpaired Mann–Whitney even where the same seeds run under both settings. That
+    can only make a verdict more cautious, never produce a false Holds. The three Weak comparisons were
+    rechecked with a paired Wilcoxon: fig-iv-6 then holds, vi-3 and iv-18 stay Weak (see triage).
+  - The spec's bootstrap intervals and per-claim `kind` field were not implemented: each verdict line
+    reports medians and IQRs, and the kind is evident from the judge used.
 - **Rerun**: `cd survey && cargo run --release -- --only <id prefix>` (the full survey's checks took
   191 s in total, plus the build).
 - Claims were written by four parallel authors (Chapters III, IV, V, and VI plus the sweeps) from one
@@ -143,7 +158,7 @@ test's claim does not: at 20 seeds foresight isn't reliably selected down (`iv-1
 | iii-14-combat-culture | `iii-14.together` | App | Untestable | — |
 | iv-1-spice | `iv-1.opposite-mountains` | App | Holds |  |
 | iv-1-spice | `iv-1.spice-nw-se` | Book | Holds |  |
-| iv-1-spice | `iv-1.shuttle` | App | Fails | description |
+| iv-1-spice | `iv-1.shuttle` | App | Fails | check (threshold) |
 | iv-1-spice | `iv-1.stay-alive` | App | Holds |  |
 | iv-3-trade | `iv-3.prices-near-one` | Book | Holds |  |
 | iv-3-trade | `iv-3.converge` | App | Holds |  |
@@ -231,7 +246,7 @@ test's claim does not: at 20 seeds foresight isn't reliably selected down (`iv-1
 | fig-ii-5 | `fig-ii-5.settled` | App | Holds |  |
 | fig-ii-5 | `fig-ii-5.measured-m1-v1` | Comment | Holds |  |
 | fig-ii-5 | `fig-ii-5.measured-m3-v6` | Comment | Holds |  |
-| fig-iv-6 | `fig-iv-6.trade-raises` | Book | Weak | power |
+| fig-iv-6 | `fig-iv-6.trade-raises` | Book | Weak | check (unpaired test) |
 | fig-iv-6 | `fig-iv-6.vision-raises` | Book | Holds |  |
 | fig-iv-6 | `fig-iv-6.settled` | App | Holds |  |
 | fig-iv-6 | `fig-iv-6.measured-no-trade-v1` | Comment | Weak | check |
@@ -420,7 +435,7 @@ test's claim does not: at 20 seeds foresight isn't reliably selected down (`iv-1
 - **`iv-1.spice-nw-se`**: Holds. *Book*: docs/superpowers/specs/2026-09-22-chapter-iv-sugar-and-spice-design.md: "spice mountains in the northwest and southeast, as in the book's Figure IV-1"
   - Claim: spice mountains lie in the northwest and southeast (more than half of total spice capacity in the NW and SE quadrants, row 0 = north)
   - Measured: median 0.7456 (IQR 0.7456–0.7456); 20/20 in [0.5000, 1.0000]
-- **`iv-1.shuttle`**: Fails (description). *App*: presets.rs iv-1-spice description
+- **`iv-1.shuttle`**: Fails (check (threshold)). *App*: presets.rs iv-1-spice description
   - Claim: agents shuttle between sugar and spice (a majority, ≥ 50%, of agents alive over t = 100..=200 switch between sugar-dominated and spice-dominated sites at least twice)
   - Measured: median 0.4929 (IQR 0.4722–0.5182); 9/20 in [0.5000, 1.0000]
 - **`iv-1.stay-alive`**: Holds. *App*: presets.rs iv-1-spice description
@@ -721,7 +736,7 @@ test's claim does not: at 20 seeds foresight isn't reliably selected down (`iv-1
   - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
 ### fig-iv-6
 
-- **`fig-iv-6.trade-raises`**: Weak (power). *Book*: docs/superpowers/specs/2026-09-23-experiments-design.md ("the trade line lies above the no-trade line at every x") and tests/book.rs fig_iv_6_trade_raises_carrying_capacity_at_every_vision
+- **`fig-iv-6.trade-raises`**: Weak (check (unpaired test)). *Book*: docs/superpowers/specs/2026-09-23-experiments-design.md ("the trade line lies above the no-trade line at every x") and tests/book.rs fig_iv_6_trade_raises_carrying_capacity_at_every_vision
   - Claim: trade raises carrying capacity at every mean vision (sweep's own seeds 1–10)
   - Measured: [x = 1: Holds] trade median 42.4356 (IQR 35.5569–47.9678); no trade median 32.0891 (IQR 31.4876–37.2500); one-sided Mann–Whitney p = 3.42e-3; n = 10 vs 10 [x = 2: Weak] trade median 56.5495 (IQR 49.0000–60.2104); no trade median 45.9703 (IQR 41.7525–52.4604); one-sided Mann–Whitney p = 2.16e-2; n = 10 vs 10 [x = 3: Holds] trade median 62.1584 (IQR 60.3416–68.5767); no trade median 54.0594 (IQR 50.4950–55.8267); one-sided Mann–Whitney p = 7.52e-4; n = 10 vs 10 [x = 4: Holds] trade median 71.0000 (IQR 65.9010–77.0000); no trade median 63.5248 (IQR 59.7995–67.9455); one-sided Mann–Whitney p = 5.60e-3; n = 10 vs 10 [x = 5: Weak] trade median 73.9653 (IQR 69.7500–76.1485); no trade median 68.7970 (IQR 66.8688–70.8045); one-sided Mann–Whitney p = 3.48e-2; n = 10 vs 10 [x = 6: Weak] trade median 78.6584 (IQR 72.3465–80.0000); no trade median 72.0000 (IQR 63.7748–73.7500); one-sided Mann–Whitney p = 4.43e-2; n = 10 vs 10
   - Note: the sweep file's own seeds 1–10 and ticks, not the survey's seeds
