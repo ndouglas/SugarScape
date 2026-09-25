@@ -56,6 +56,9 @@ fn presets_and_sweeps_are_listed() {
         "schelling-tipping",
         "lhv-calibration",
         "lhv-quirks",
+        "cv-ratio-rules",
+        "cv-peacekeeping",
+        "cv-jail-waits",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -396,5 +399,16 @@ fn the_anasazi_runs_to_its_end_year_on_the_command_line() {
         result.runs.len(),
         12,
         "none, each of ten quirks and all off"
+    );
+}
+
+#[test]
+fn a_civil_run_stops_when_a_group_is_gone() {
+    let out = sugarscape(&["run", "--preset", "cv-run-7-cleansing", "--ticks", "1000"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let err = stderr(&out);
+    assert!(
+        err.starts_with("finished at tick ") && err.ends_with(" (a group has died out)\n"),
+        "{err}"
     );
 }

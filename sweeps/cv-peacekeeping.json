@@ -1,0 +1,15 @@
+{
+  "name": "Civil violence: peacekeepers and the time to genocide (Figs. 15–16)",
+  "description": "Run 7 (Model II, L = 0.8) with cops from the start at densities 0–0.1, run for 3000 ticks without stopping; metric: the tick at which a group was gone (3000 if neither was). The paper (Figs. 15–17, densities 0–0.1 by 0.002, 50 runs each, capped at 15 000): rapid genocide at every density, a mean time that rises with density, a spread that rises too, and some runs past 15 000 from 0.08 up. Measured (release, seeds 1–20, recorded 2026-09-25): genocide in all 220 runs; mean 94 ticks with no cops, 106–119 at 0.01–0.03, 156–196 at 0.04–0.07 and 223–263 at 0.08–0.1; s.d. from 42 to 142–326; the longest 1596 ticks (0.08). The rise and the widening reproduce; the long delays do not.",
+  "base": { "preset": "cv-run-7-cleansing" },
+  "x": { "label": "Initial cop density", "path": "cop_density", "values": [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1] },
+  "series": {
+    "label": "Runs",
+    "values": [
+      { "at": 0, "name": "Ticks until a group is gone (the cap if none is)", "set": { "stop_at_extinction": false } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 3000,
+  "metric": { "kind": "final", "series": "extinction" }
+}

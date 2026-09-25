@@ -258,7 +258,10 @@ fn builtins_and_series_names_are_listed() {
             "bargaining-rules",
             "schelling-tipping",
             "lhv-calibration",
-            "lhv-quirks"
+            "lhv-quirks",
+            "cv-ratio-rules",
+            "cv-peacekeeping",
+            "cv-jail-waits"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -622,6 +625,22 @@ fn an_anasazi_sim_matches_the_native_golden_entry_and_finishes() {
     assert!(sim
         .export_agents_csv()
         .starts_with("id,farm_x,farm_y,home_x,home_y,"));
+}
+
+#[wasm_bindgen_test]
+fn civil_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the arrest
+    // probability's exponential is the same bits here as natively.
+    for (id, fp) in [
+        ("cv-run-2-punctuated", "0x7888f03e0d511f6d"),
+        ("cv-run-8-nasty-regime", "0x5ce734d905ba0c5d"),
+        ("cv-netlogo", "0x87a92345c017b0ae"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "civil");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
 }
 
 #[wasm_bindgen_test]

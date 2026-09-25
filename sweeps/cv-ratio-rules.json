@@ -1,0 +1,17 @@
+{
+  "name": "Civil violence: the arrest rule decides whether anyone rebels",
+  "description": "Run 2 (vision 7, J_max = 30, cops 0.04) at legitimacy 0.6–0.95 under three arrest rules: the paper's P = 1 − exp(−k·C/A); C/A rounded down (NetLogo's Rebellion); and rounded down with an already-active agent counted twice (NetLogo's A). Metric: outbursts above 50 actives in 1000 ticks. Measured (release, seeds 1–5, recorded 2026-09-25): the paper's rule gives 6.2 at L = 0.6, 2.0 at 0.65, fewer than 0.5 at 0.7–0.75 and none from 0.8; rounded down, 47–50 from 0.6 to 0.75, 43 at 0.8, 27 at 0.85 and none from 0.9; counting an active agent twice as well changes little (25.4–51.4 where rounding alone gives 26.8–50). The paper's stated rule cannot produce its own punctuated equilibrium at its own inputs.",
+  "base": { "preset": "cv-run-2-punctuated" },
+  "x": { "label": "Legitimacy (L)", "path": "legitimacy", "values": [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95] },
+  "series": {
+    "label": "Arrest rule",
+    "values": [
+      { "at": 0, "name": "The paper’s: P = 1 − exp(−k·C/A)", "set": { "quirks.floor_ratio": false } },
+      { "at": 1, "name": "C/A rounded down (NetLogo)", "set": {} },
+      { "at": 2, "name": "Rounded down, an active agent counted twice (NetLogo)", "set": { "quirks.active_counts_twice": true } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 5 },
+  "ticks": 1000,
+  "metric": { "kind": "final", "series": "outbursts" }
+}

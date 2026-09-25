@@ -1,0 +1,9 @@
+{
+  "name": "Civil violence: jail terms and the wait between outbursts",
+  "description": "Run 2 (C/A rounded down) with the longest jail term from 5 to 60 ticks; metric: the mean wait between outbursts over 2000 ticks — the paper's open question whether longer terms raise it. Measured (release, seeds 1–5, recorded 2026-09-25): 3.5 ticks at J_max = 10, 11.0 at 15, 14.8 at 20, 21.2 at 30, 28.1 at 40, 33.2 at 50 and 40.4 at 60, 0.66–0.74 × J_max from 15 up. At 5 no outburst ever ends: about 320 agents stay active throughout, so no wait is measured.",
+  "base": { "preset": "cv-run-2-punctuated" },
+  "x": { "label": "Longest jail term (ticks)", "path": "jail.max", "values": [5, 10, 15, 20, 30, 40, 50, 60] },
+  "seeds": { "from": 1, "count": 5 },
+  "ticks": 2000,
+  "metric": { "kind": "final", "series": "mean_wait" }
+}

@@ -7,7 +7,7 @@ use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand};
 use sugarscape_core::config::FieldError;
-use sugarscape_core::model::{ModelConfig, ModelWorld};
+use sugarscape_core::model::{ModelConfig, ModelKind, ModelWorld};
 use sugarscape_core::presets;
 use sugarscape_core::sweep::{self, Sweep};
 
@@ -179,8 +179,12 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
     world.model_mut().run(args.ticks);
     let world = world.model();
     if world.finished() && world.tick() < u64::from(args.ticks) {
-        // The anasazi stops at its end year.
-        eprintln!("finished at tick {} (its end year)", world.tick());
+        // The anasazi stops at its end year; civil violence when a group is gone.
+        let why = match config.kind() {
+            ModelKind::Civil => "a group has died out",
+            _ => "its end year",
+        };
+        eprintln!("finished at tick {} ({why})", world.tick());
     }
     if let Some(path) = &args.series_csv {
         write(path, &world.series_csv())?;
