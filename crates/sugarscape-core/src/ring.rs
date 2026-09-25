@@ -467,7 +467,7 @@ impl Model for RingWorld {
         let blank = HISTORY - self.history.len();
         for (y, px) in buf.chunks_exact_mut(n * 4).enumerate() {
             let row = y.checked_sub(blank).map(|r| &self.history[r]);
-            for (x, p) in px.chunks_exact_mut(4).enumerate() {
+            for (x, p) in px.as_chunks_mut::<4>().0.iter_mut().enumerate() {
                 let rgb = match row.map(|r| r[x]) {
                     None => BACKGROUND,
                     Some(None) => AGENT,
@@ -761,14 +761,23 @@ mod tests {
         assert_eq!(buf.len(), 150 * 150 * 4);
         assert_eq!(&buf[..3], &BACKGROUND, "rows before t = 0 are dark");
         let bottom = &buf[149 * 150 * 4..];
-        let agents = bottom.chunks_exact(4).filter(|p| p[..3] == AGENT).count();
+        let agents = bottom
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .filter(|p| p[..3] == AGENT)
+            .count();
         assert_eq!(agents, 40, "the current tick is the bottom row");
         w.run(200);
         assert_eq!(w.history.len(), HISTORY);
         w.render("", "", &mut buf).unwrap();
         let top = &buf[..150 * 4];
         assert_eq!(
-            top.chunks_exact(4).filter(|p| p[..3] == AGENT).count(),
+            top.as_chunks::<4>()
+                .0
+                .iter()
+                .filter(|p| p[..3] == AGENT)
+                .count(),
             40,
             "full: no dark rows"
         );
