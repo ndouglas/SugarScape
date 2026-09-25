@@ -119,6 +119,7 @@ export const MAX_TICKS = 1_000_000;
 
 const NO_WORLD = JSON.stringify([{ field: 'world', message: 'no world yet' }]);
 const FULL = JSON.stringify([{ field: 'tick', message: 'this world has reached 1,000,000 ticks, the most its history holds here' }]);
+const seekError = (message: string) => JSON.stringify([{ field: 'seek', message }]);
 
 /**
  * An extra the world cannot give — a chart line or a selected site that a config change just
@@ -169,6 +170,12 @@ export class SimHost {
   private every = KEYFRAME_EVERY;
   /** The world gave no keyframe (a model without them): stop asking. */
   private noKeyframes = false;
+  /** What the world was built from (the `init`/`reset` command), to rebuild it for a seek. */
+  private setup: { config: ModelConfig; seed: number; landscapes: (Uint8Array | null)[] } | null = null;
+  /** The furthest tick on this branch; the `reached`/`seekable` last sent (-1: send with the next snapshot). */
+  private reached = 0;
+  private reachedSent = -1;
+  private seekableSent: boolean | null = null;
 
   constructor(
     private module: SimModule,
@@ -291,11 +298,16 @@ export class SimHost {
       this.cursor = 0;
       this.replaySent = -1;
       this.forkDue = false;
+      this.setup = { config: cmd.config, seed: cmd.seed, landscapes: cmd.landscapes };
+      this.reached = 0;
+      this.reachedSent = -1;
+      this.seekableSent = null;
       this.replayDue(next);
       this.dropKeyframes(() => false);
       this.every = KEYFRAME_EVERY;
       this.noKeyframes = false;
       this.keyframe(next);
+      this.reached = next.tick();
       // The engine clears its selection on a new world.
       return this.reply(next, { ...wants, select: undefined }, frame);
     }
@@ -312,6 +324,9 @@ export class SimHost {
         this.edit(sim, cmd);
         // Only an edit that succeeded branches a replay (Decision 3).
         this.fork();
+        // A page edit starts a new branch here: the old future's keyframes and end go.
+        this.dropKeyframes((t) => t <= sim.tick());
+        this.reached = sim.tick();
         return this.reply(sim, wants, frame);
       case 'step':
         if (sim.tick() >= MAX_TICKS) throw FULL;
@@ -388,6 +403,16 @@ export class SimHost {
         spare.push(...max.pool);
         return this.reply(sim, max.wants, last);
       }
+      case 'seek':
+        this.seek(sim, cmd.tick);
+        this.configDue = true;
+        this.landscapesDue = true;
+        this.replaySent = -1;
+        this.reachedSent = -1;
+        this.seekableSent = null;
+        // Every chart group's history changed: send them afresh.
+        this.sent.clear();
+        return this.reply(this.sim!, wants, frame);
     }
   }
 
@@ -467,7 +492,47 @@ export class SimHost {
       this.replayDue(sim);
       this.keyframe(sim);
       left -= k;
+      this.reached = Math.max(this.reached, sim.tick());
     }
+  }
+
+  /**
+   * Moves the world to `tick` (≤ `reached`): forward by stepping; back by restoring the nearest
+   * keyframe at or before it (or rebuilding the world) and replaying the log from there.
+   */
+  private seek(sim: SimLike, tick: number): void {
+    if (this.logFull) throw seekError('this session’s log is full, so it can no longer be rebuilt exactly');
+    if (!Number.isInteger(tick) || tick < 0 || tick > this.reached) {
+      throw seekError(`tick ${tick} is not between 0 and ${this.reached}`);
+    }
+    const now = sim.tick();
+    if (tick >= now) {
+      this.advance(sim, tick - now);
+      return;
+    }
+    const all = [...this.log, ...this.pending.slice(this.cursor)];
+    const followed = sim.followed();
+    const kf = this.keyframes.filter((k) => k.tick <= tick).at(-1);
+    let world = sim;
+    let applied = 0;
+    if (kf) {
+      sim.restore(kf.cp);
+      applied = kf.applied;
+    } else {
+      const setup = this.setup!;
+      world = this.module.create(JSON.stringify(setup.config), setup.seed, setup.landscapes);
+      sim.free();
+      this.sim = world;
+    }
+    this.log = all.slice(0, applied);
+    this.pending = all.slice(applied);
+    this.cursor = 0;
+    if (world.followed() !== followed) {
+      if (followed < 0) world.unfollow();
+      else world.follow(followed);
+    }
+    this.replayDue(world);
+    this.advance(world, tick - world.tick());
   }
 
   /** An entry at tick t fires when the step from t to t + 1 starts. */
@@ -512,6 +577,15 @@ export class SimHost {
     if (this.forkDue) {
       s.forked = true;
       this.forkDue = false;
+    }
+    if (this.reached !== this.reachedSent) {
+      s.reached = this.reached;
+      this.reachedSent = this.reached;
+    }
+    const seekable = !this.logFull;
+    if (seekable !== this.seekableSent) {
+      s.seekable = seekable;
+      this.seekableSent = seekable;
     }
     let config = this.config;
     if (this.configDue || !config) {

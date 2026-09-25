@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fakeModule } from './fake-sim.fixture';
+import { fakeModule, FakeSim } from './fake-sim.fixture';
 import {
   noOverlays,
   type Command,
@@ -13,7 +13,7 @@ import {
   type WorldSnapshot,
 } from './protocol';
 import { AGE_BIN, BATCH_MS, channelDefer, KEYFRAME_EVERY, LOG_CAP, MAX_KEYFRAMES, MAX_TICKS, serve, SimHost } from './sim-host';
-import type { Config, ModelConfig } from './types';
+import type { Config, FieldError, ModelConfig } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
 const display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
@@ -723,6 +723,128 @@ describe('SimHost keyframes', () => {
     init(host);
     host.handle({ id: 2, cmd: { type: 'step', n: 120 } });
     expect(host.keyframeTicks()).toEqual([]);
+  });
+});
+
+describe('SimHost seek', () => {
+  const display = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() } as const;
+  let id = 0;
+  const send = (host: SimHost, cmd: Command) => host.handle({ id: ++id, cmd }).result;
+  const setup = (opts: { keyframes?: boolean } = {}) => {
+    const module = fakeModule([], opts);
+    const host = new SimHost(module);
+    send(host, { type: 'init', config: { width: 8, height: 3 } as never, seed: 1, landscapes: [], display });
+    return { host, module, sim: () => module.sims.at(-1)! };
+  };
+  const fp = (host: SimHost) => (send(host, { type: 'fingerprint' }) as { value: string }).value;
+  const place = (x: number): Command => ({ type: 'place', x, y: 0, overrides: {} });
+
+  /** A reference run: the same edits at the same ticks, straight through to `to`. */
+  function straight(edits: [number, Command][], to: number): string {
+    const { host } = setup();
+    for (const [t, cmd] of edits) {
+      send(host, { type: 'step', n: t - (host as unknown as { sim: FakeSim }).sim.ticks });
+      send(host, cmd);
+    }
+    send(host, { type: 'step', n: to - (host as unknown as { sim: FakeSim }).sim.ticks });
+    return fp(host);
+  }
+
+  it('seeks back through keyframes and edits (before, at and after the target) to the straight run', () => {
+    const edits: [number, Command][] = [[30, place(2)], [50, place(3)], [120, place(4)]];
+    const { host, sim } = setup();
+    for (const [t, cmd] of edits) {
+      send(host, { type: 'step', n: t - sim().ticks });
+      send(host, cmd);
+    }
+    send(host, { type: 'step', n: 200 - sim().ticks });
+    for (const target of [130, 120, 51, 50, 49, 0, 175]) {
+      const r = send(host, { type: 'seek', tick: target });
+      expect(r.ok).toBe(true);
+      expect(sim().ticks).toBe(target);
+      expect(fp(host)).toBe(straight(edits.filter(([t]) => t <= target), target));
+    }
+  });
+
+  it('restores a keyframe rather than rebuilding when one is at or before the target', () => {
+    const { host, module, sim } = setup();
+    send(host, { type: 'step', n: 180 });
+    send(host, { type: 'seek', tick: 120 });
+    expect(module.sims.length).toBe(1);
+    expect(sim().restores).toBe(1);
+  });
+
+  it('rebuilds from the setup when the model has no keyframes', () => {
+    const { host, module } = setup({ keyframes: false });
+    send(host, { type: 'place', x: 2, y: 0, overrides: {} });
+    send(host, { type: 'step', n: 80 });
+    const before = fp(host);
+    send(host, { type: 'seek', tick: 10 });
+    send(host, { type: 'seek', tick: 80 });
+    expect(module.sims.length).toBe(2);
+    expect(fp(host)).toBe(before);
+  });
+
+  it('replays the later edits after seeking back, and reports them pending', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 60 });
+    send(host, place(5));
+    send(host, { type: 'step', n: 40 });
+    const end = fp(host);
+    const r = send(host, { type: 'seek', tick: 20 }) as { ok: true; snapshot: WorldSnapshot };
+    expect(r.snapshot.replayLeft).toBe(1);
+    expect(r.snapshot.reached).toBe(100);
+    send(host, { type: 'step', n: 80 });
+    expect(fp(host)).toBe(end);
+  });
+
+  it('branches on a page edit: pending entries and later keyframes go, reached drops', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 200 });
+    send(host, { type: 'seek', tick: 70 });
+    const r = send(host, place(6)) as { ok: true; snapshot: WorldSnapshot };
+    expect(r.snapshot.reached).toBe(70);
+    expect(host.keyframeTicks().every((t) => t <= 70)).toBe(true);
+    expect((send(host, { type: 'seek', tick: 71 }) as { ok: false; errors: FieldError[] }).errors[0].field).toBe('seek');
+  });
+
+  it('keeps a keyframe taken before a same-tick edit valid', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 50 }); // keyframe at 50 taken with no edits
+    send(host, place(7)); // an edit at tick 50, after the keyframe
+    send(host, { type: 'step', n: 30 });
+    const end = fp(host);
+    send(host, { type: 'seek', tick: 50 });
+    send(host, { type: 'seek', tick: 80 });
+    expect(fp(host)).toBe(end);
+  });
+
+  it('keeps the followed agent followed', () => {
+    const { host, sim } = setup();
+    send(host, { type: 'follow', id: 1 });
+    send(host, { type: 'step', n: 120 });
+    send(host, { type: 'seek', tick: 10 });
+    expect(sim().followed()).toBe(1);
+  });
+
+  it('refuses a seek past reached, a negative or fractional tick, and any seek with a full log', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 10 });
+    for (const tick of [11, -1, 2.5]) {
+      const r = send(host, { type: 'seek', tick }) as { ok: false; errors: FieldError[] };
+      expect(r.ok).toBe(false);
+      expect(r.errors[0].field).toBe('seek');
+    }
+    (host as unknown as { logFull: boolean }).logFull = true;
+    expect(send(host, { type: 'seek', tick: 5 }).ok).toBe(false);
+  });
+
+  it('sends reached and seekable', () => {
+    const { host } = setup();
+    const r = send(host, { type: 'step', n: 10 }) as { ok: true; snapshot: WorldSnapshot };
+    expect(r.snapshot.reached).toBe(10);
+    const init = send(host, { type: 'refresh' }) as { ok: true; snapshot: WorldSnapshot };
+    expect(init.snapshot.reached).toBeUndefined(); // unchanged: not resent
   });
 });
 

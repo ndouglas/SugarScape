@@ -107,6 +107,10 @@ export interface WorldSnapshot {
   replayLeft?: number;
   /** A page edit just dropped the edits still to replay (the session branched here). */
   forked?: true;
+  /** The furthest tick on this world's branch (the timeline's end): after init, reset, seek and on change. */
+  reached?: number;
+  /** Whether `seek` can rebuild this world exactly (false once the log is full): with `reached`. */
+  seekable?: boolean;
 }
 
 export type Command =
@@ -132,7 +136,8 @@ export type Command =
   | { type: 'endReplay' }
   | { type: 'run' }
   | { type: 'stop' }
-  | { type: 'frame' };
+  | { type: 'frame' }
+  | { type: 'seek'; tick: number };
 
 /** The commands that change the world: logged with the tick they were applied at, and replayed (Decision 1). */
 export type EditCommand = Extract<
