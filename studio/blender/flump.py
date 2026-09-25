@@ -18,7 +18,6 @@ class FlumpRig:
     root: object
     body: object
     eyes: object
-    parts: list
 
 
 def _sphere(name, radius, location, scale, material, parent, collection, segments=32):
@@ -47,17 +46,11 @@ def _empty(name, parent, collection, location=(0, 0, 0)):
 
 def build_flump(name, color, collection=None):
     collection = collection or bpy.context.scene.collection
-    parts = []
     root = _empty(name, None, collection)
     size = _empty(f"{name}.size", root, collection)
     size.scale = (SIZE,) * 3
     yarn = materials.knit(color)
-
-    def sphere(*args, **kwargs):
-        obj = _sphere(*args, **kwargs)
-        parts.append(obj)
-        return obj
-
+    sphere = _sphere
     body = sphere(f"{name}.body", 0.4, (0, 0, 0.38), (1, 0.95, 0.9), yarn, size, collection)
     sub = body.modifiers.new("smooth", "SUBSURF")
     sub.levels = sub.render_levels = 1
@@ -73,7 +66,7 @@ def build_flump(name, color, collection=None):
         eye = sphere(f"{name}.eye", 0.09, (side * 0.12, 0, 0), (0.72, 0.5, 1.35), ink, eyes, collection, segments=24)
         # The highlight's scale undoes the eye's, so it stays round.
         sphere(f"{name}.shine", 0.026, (-0.028, -0.07, 0.035), (1 / 0.72, 1 / 0.5, 1 / 1.35), shine, eye, collection, segments=12)
-    return FlumpRig(root, body, eyes, [root, size, eyes, *parts])
+    return FlumpRig(root, body, eyes)
 
 
 def crowd_prototypes():
@@ -95,11 +88,18 @@ def crowd_instance(name, collection):
     return e
 
 
-def apply(obj, pose, parts=()):
-    """Poses a rig's root or a crowd instance; hides `parts` with it."""
-    for o in (obj, *parts):
-        o.hide_render = not pose.visible
+def stow(obj):
+    """Hides an object (and its children) by shrinking it away under the
+    board. Toggling `hide_render` mid-animation changes the set of objects
+    between motion-blur steps, which crashes or hangs Eevee."""
+    obj.scale = (1e-4, 1e-4, 1e-4)
+    obj.location = (0, 0, -20)
+
+
+def apply(obj, pose):
+    """Poses a rig's root or a crowd instance."""
     if not pose.visible:
+        stow(obj)
         return
     obj.location = (pose.x, pose.y, pose.z)
     obj.rotation_euler = (0, 0, pose.yaw)

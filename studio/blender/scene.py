@@ -19,6 +19,9 @@ def reset(scene, preview):
     for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj)
     scene.render.engine = "BLENDER_EEVEE"
+    # The frame handler edits scene data while rendering: without the lock,
+    # Blender can deadlock mid-animation.
+    scene.render.use_lock_interface = True
     scene.render.fps = 30
     scene.render.resolution_x, scene.render.resolution_y = (960, 540) if preview else (1920, 1080)
     scene.render.resolution_percentage = 100
@@ -75,10 +78,25 @@ def _agents(beat, d, tracks, timing, corners):
             p = animate.pose(t, timing, frame, corners, w, h)
             if beat.closeup:
                 rig = RIGS[id_]
-                flump.apply(rig.root, p, rig.parts)
+                flump.apply(rig.root, p)
                 rig.eyes.scale = (1, 1, animate.blink(id_, frame) * (1 - 0.4 * p.hunger))
             else:
                 flump.apply(instances[id_], p)
+
+    return update
+
+
+def _title_card():
+    """A beat with no shot: a felt tabletop and one Flump, blinking at the
+    viewer. Nothing is simulated, so it does nothing else."""
+    bpy.ops.mesh.primitive_plane_add(size=1)
+    felt = bpy.context.active_object
+    felt.scale = (16, 10, 1)
+    felt.data.materials.append(materials.felt())
+    rig = flump.build_flump("host", "cream")
+
+    def update(frame):
+        rig.eyes.scale = (1, 1, animate.blink(7, frame))
 
     return update
 
@@ -100,6 +118,7 @@ def build_beat(beat, d, preview):
         updaters.append(_agents(beat, d, tracks, timing, corners))
         materials.lights_and_world(scene, max(d.width, d.height))
     else:
+        updaters.append(_title_card())
         materials.lights_and_world(scene, 12)
     camera_obj, update_camera = add_camera(scene, beat)
     screen = overlays.Screen(camera_obj)

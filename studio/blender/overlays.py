@@ -10,7 +10,7 @@ import bmesh
 import bpy
 
 import animate
-from blender import materials
+from blender import flump, materials
 
 FONT = pathlib.Path(__file__).resolve().parent.parent / "fonts" / "Baloo2.ttf"
 CREAM, INK = (1.0, 0.96, 0.88), (0.06, 0.05, 0.04)
@@ -135,9 +135,11 @@ def belly(beat, d, ctx):
     def update(frame):
         for id_, (holder, back, fill) in meters.items():
             p = _pose(ctx, d, id_, frame)
-            for o in (holder, back, fill):
-                o.hide_render = not p.visible
+            if not p.visible:
+                flump.stow(holder)
+                continue
             level = min(max(p.sugar / 20, 0.0), 1.0)
+            holder.scale = (1, 1, 1)
             holder.location = (p.x, p.y, p.z + 1.0)
             fill.scale.x = max(level, 0.002) * 0.56
             fill.location.x = -0.28 + fill.scale.x / 2
@@ -174,10 +176,9 @@ def sight(beat, d, ctx):
                 used += 1
                 x, y = animate.cell_center(cx, cy, d.width, d.height)
                 o.location = (x, y, animate.cell_height(ctx.corners, cx, cy, d.width) + 0.15)
-                o.scale = (shown,) * 3
-                o.hide_render = shown <= 0.01
+                o.scale = (max(shown, 1e-4),) * 3
         for o in pool[used:]:
-            o.hide_render = True
+            flump.stow(o)
 
     return update
 
@@ -197,10 +198,11 @@ def labels(beat, d, ctx):
     def update(frame):
         for id_, holder in items:
             p = _pose(ctx, d, id_, frame)
+            if not p.visible:
+                flump.stow(holder)
+                continue
             holder.location = (p.x, p.y, p.z + 1.3)
             holder.scale = (0.6,) * 3
-            for o in (holder, *holder.children):
-                o.hide_render = not p.visible
             direction = ctx.camera.matrix_world.translation - holder.location
             holder.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
 
@@ -242,11 +244,12 @@ def stacks(beat, d, ctx):
     def update(frame):
         for id_, c in columns.items():
             p = _pose(ctx, d, id_, frame)
-            c.hide_render = not p.visible
-            if p.visible:
-                height = max(p.sugar * 0.05, 0.01)
-                c.scale.z = height
-                c.location = (p.x, p.y, p.z + 0.85 * p.sz + height / 2)
+            if not p.visible:
+                flump.stow(c)
+                continue
+            height = max(p.sugar * 0.05, 0.01)
+            c.scale = (0.3, 0.3, height)
+            c.location = (p.x, p.y, p.z + 0.85 * p.sz + height / 2)
 
     return update
 
