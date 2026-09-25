@@ -79,6 +79,7 @@ pub struct TickEvents {
     pub infections: Vec<Infection>,
 }
 
+#[derive(Clone)]
 pub struct World {
     pub config: Config,
     pub torus: Torus,

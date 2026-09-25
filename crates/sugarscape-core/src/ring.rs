@@ -229,6 +229,7 @@ pub fn flocks(sites: &[u32], n: u32) -> Vec<u32> {
     out
 }
 
+#[derive(Clone)]
 pub struct RingWorld {
     pub config: RingConfig,
     /// Completed ticks.

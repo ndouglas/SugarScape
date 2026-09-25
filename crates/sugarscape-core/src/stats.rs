@@ -313,6 +313,11 @@ impl<S: Series + Default> Stats<S> {
         }
         self.history.iter().map(|s| s.value(name)).collect()
     }
+
+    /// Keeps the first `len` snapshots (a restored keyframe's history: ticks 0 to its tick).
+    pub fn truncate(&mut self, len: usize) {
+        self.history.truncate(len);
+    }
 }
 
 pub fn wealths(world: &World) -> Vec<f64> {

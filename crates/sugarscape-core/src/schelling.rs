@@ -287,6 +287,7 @@ fn acceptable_classes(preference: f64) -> [bool; CLASSES] {
     out
 }
 
+#[derive(Clone)]
 pub struct SchellingWorld {
     pub config: SchellingConfig,
     pub torus: Torus,

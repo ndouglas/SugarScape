@@ -225,6 +225,7 @@ fn water_distances(water: &[bool], wrap: bool) -> Vec<u32> {
     out
 }
 
+#[derive(Clone)]
 pub struct AnasaziWorld {
     pub config: AnasaziConfig,
     /// Completed ticks (years since the start year).
