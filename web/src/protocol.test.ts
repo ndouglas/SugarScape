@@ -29,6 +29,10 @@ describe('mergeWants', () => {
   it('is empty when nothing is wanted', () => {
     expect(mergeWants([{}, {}])).toEqual({});
   });
+
+  it('ORs the valley flag like the ring’s', () => {
+    expect(mergeWants([{ valley: true }, { ring: false }])).toEqual({ valley: true });
+  });
 });
 
 describe('chartKey', () => {

@@ -242,9 +242,9 @@ describe('SimHost', () => {
 
 describe('SimHost with another model', () => {
   /** A host whose world is a fake of `model`. */
-  function other(model: 'schelling' | 'ring') {
+  function other(model: 'schelling' | 'ring' | 'anasazi', finish?: number) {
     const host = new SimHost(fakeModule());
-    const config = { model, width: 6, height: 4 } as unknown as ModelConfig;
+    const config = { model, width: 6, height: 4, finish } as unknown as ModelConfig;
     let id = 0;
     const send = (cmd: Command, wants?: Wants): WorldSnapshot => {
       const reply = host.handle({ id: ++id, cmd, wants });
@@ -280,6 +280,38 @@ describe('SimHost with another model', () => {
   it('sends the ring only for Ring World', () => {
     const { send } = other('schelling');
     expect(send({ type: 'refresh' }, { ring: true }).ring).toBeUndefined();
+  });
+
+  it('sends the valley’s overlays only for the anasazi, and only when wanted', () => {
+    const { send } = other('anasazi');
+    const s = send({ type: 'step', n: 1 }, { valley: true });
+    expect(Array.from(s.valley!.water)).toEqual([0, 0, 2, 1]);
+    expect(Array.from(s.valley!.settlements)).toEqual([2, 0, 1]);
+    expect(Array.from(s.valley!.links)).toEqual([2, 1, 2, 0]);
+    expect(send({ type: 'refresh' }).valley).toBeUndefined();
+    expect(other('ring').send({ type: 'refresh' }, { valley: true }).valley).toBeUndefined();
+  });
+
+  it('says when the world is finished, and a step there changes nothing', () => {
+    const { init, send } = other('anasazi', 3);
+    expect(init.finished).toBeUndefined();
+    expect(send({ type: 'step', n: 2 }).finished).toBeUndefined();
+    const end = send({ type: 'step', n: 5 });
+    expect([end.tick, end.finished]).toEqual([3, true]);
+    const again = send({ type: 'step', n: 1 });
+    expect([again.tick, again.finished]).toEqual([3, true]);
+  });
+
+  it('ends Max when the world is finished, posting the world there', () => {
+    let clock = 0;
+    const host = new SimHost(fakeModule(), () => clock++);
+    const config = { model: 'anasazi', width: 6, height: 4, finish: 5 } as unknown as ModelConfig;
+    host.handle({ id: 1, cmd: { type: 'init', config, seed: 1, landscapes: [], display } });
+    host.handle({ id: 2, cmd: { type: 'run' }, frame: new ArrayBuffer(96) });
+    let post: WorldSnapshot | null = null;
+    for (let i = 0; i < 10 && !post; i++) post = host.batch();
+    expect([post?.tick, post?.finished]).toEqual([5, true]);
+    expect(host.running).toBe(false);
   });
 });
 

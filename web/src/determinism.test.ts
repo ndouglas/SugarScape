@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { copyWorld } from './compare/lockstep';
 import { Engine, type Speed } from './engine';
 import { modelOf } from './models';
-import type { Overlay } from './protocol';
+import type { NetworkOverlay } from './protocol';
 import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
@@ -45,7 +45,7 @@ describe('determinism through the engine', () => {
     const e = await engine();
     e.setDisplay({ colorMode: 'wealth', overlays: { trade: true } });
     await e.select(10, 10);
-    const networks: Overlay[] = ['trade', 'credit'];
+    const networks: NetworkOverlay[] = ['trade', 'credit'];
     e.want(() => ({ charts: { groups: [['population', 'gini']], max: 50 }, lorenz: true, wealthHist: true, networks }));
     for (let i = 0; i < 20; i++) await e.advance(10);
     expect(await e.fingerprint()).toBe(GOLDEN);

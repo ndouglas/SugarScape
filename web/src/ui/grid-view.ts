@@ -1,11 +1,12 @@
-import type { Engine, Overlay } from '../engine';
+import type { Engine } from '../engine';
+import { NETWORKS, type NetworkOverlay } from '../protocol';
 import { arrowHead, wrappedSegments } from './overlay';
 import { trailSegments } from './trail';
 
 const CELL = 12;
 
-/** How each overlay's edges are drawn: a color token, and a direction marker for directed networks. */
-const OVERLAY_STYLE: Record<Overlay, { color: string; directed?: true; width: number; alpha: number }> = {
+/** How each network's edges are drawn: a color token, and a direction marker for directed networks. */
+const OVERLAY_STYLE: Record<NetworkOverlay, { color: string; directed?: true; width: number; alpha: number }> = {
   trade: { color: '--c3', width: 1.5, alpha: 0.8 },
   credit: { color: '--c2', width: 1.5, alpha: 0.8 },
   disease: { color: '--c4', width: 1.5, alpha: 0.8 },
@@ -82,7 +83,8 @@ export class GridView {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.buffer, 0, 0, width * CELL, height * CELL);
 
-    for (const [kind, style] of Object.entries(OVERLAY_STYLE) as [Overlay, (typeof OVERLAY_STYLE)[Overlay]][]) {
+    for (const kind of NETWORKS) {
+      const style = OVERLAY_STYLE[kind];
       if (!this.engine.overlays[kind]) continue;
       const e = this.engine.networks(kind);
       const color = getComputedStyle(this.canvas).getPropertyValue(style.color).trim() || '#fff';

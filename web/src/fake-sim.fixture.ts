@@ -4,8 +4,13 @@ import type { SimLike, SimModule } from './sim-host';
 const fieldError = (field: string, message: string): string => JSON.stringify([{ field, message }]);
 
 interface FakeConfig {
-  /** Absent for a sugarscape; `'ring'` also answers `ring_sugar`/`ring_agents`. */
-  model?: 'schelling' | 'ring';
+  /**
+   * Absent for a sugarscape; `'ring'` also answers `ring_sugar`/`ring_agents`, `'anasazi'` the
+   * `anasazi_*` overlays.
+   */
+  model?: 'schelling' | 'ring' | 'anasazi';
+  /** The tick at which the world is finished (it steps no further); none by default. */
+  finish?: number;
   width: number;
   height: number;
   population: number;
@@ -59,9 +64,10 @@ export class FakeSim implements SimLike {
 
   step(n: number): void {
     this.stepCalls++;
-    this.ticks += n;
+    const before = this.ticks;
+    this.ticks = Math.min(this.ticks + n, this.config.finish ?? Infinity);
     const a = this.agents.get(1);
-    if (a) a[0] = (a[0] + n) % this.config.width;
+    if (a) a[0] = (a[0] + this.ticks - before) % this.config.width;
   }
   tick(): number {
     return this.ticks;
@@ -202,6 +208,20 @@ export class FakeSim implements SimLike {
   }
   ring_agents(): Uint32Array {
     return this.config.model === 'ring' ? Uint32Array.from(this.agents.values(), (p) => p[0]) : new Uint32Array(0);
+  }
+  anasazi_water(): Uint32Array {
+    return this.config.model === 'anasazi' ? Uint32Array.of(0, 0, 2, 1) : new Uint32Array(0);
+  }
+  anasazi_settlements(): Uint32Array {
+    const a = this.agents.get(1);
+    return this.config.model === 'anasazi' && a ? Uint32Array.of(a[0], 0, 1) : new Uint32Array(0);
+  }
+  anasazi_links(): Uint32Array {
+    const a = this.agents.get(1);
+    return this.config.model === 'anasazi' && a ? Uint32Array.of(a[0], a[1], a[0], 0) : new Uint32Array(0);
+  }
+  finished(): boolean {
+    return this.config.finish !== undefined && this.ticks >= this.config.finish;
   }
   fingerprint(): string {
     return `0x${this.ticks.toString(16)}`;

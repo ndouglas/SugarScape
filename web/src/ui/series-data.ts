@@ -133,6 +133,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     },
     { title: 'Distance moved', lines: [{ key: 'mean_distance', label: 'Sites per agent', color: '--c4' }] },
   ],
+  anasazi: [],
 };
 
 /** A chart of `chartModel` shows while some world on screen runs that model (Compare pairs one model). */

@@ -1,5 +1,5 @@
 import type { Engine } from '../engine';
-import { isRingView, isSugarView } from '../models';
+import { isRingView, isSugarView, isValleyView } from '../models';
 import type { AgentView, LinkView, RingInspection, SchellingInspection } from '../types';
 import { h } from './dom';
 import { percent } from './format';
@@ -137,7 +137,7 @@ export class InspectPanel {
     if (!isSugarView(view)) {
       // A Schelling agent that reached its maximum residence has left the landscape.
       const note = gone ? [h('p', { class: 'error' }, `Agent #${shown.agentId} has left.`)] : [];
-      const rows = isRingView(view) ? this.ringRows(view, gone) : this.schellingRows(view, gone);
+      const rows = isRingView(view) ? this.ringRows(view, gone) : isValleyView(view) ? [] : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

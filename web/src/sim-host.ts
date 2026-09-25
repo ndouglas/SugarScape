@@ -12,7 +12,7 @@ import {
   type HostReply,
   type HostRequest,
   type LogEntry,
-  type Overlay,
+  type NetworkOverlay,
   type Result,
   type SelectQuery,
   type Selected,
@@ -62,6 +62,11 @@ export interface SimLike {
   disease_list(): string;
   ring_sugar(): Float64Array;
   ring_agents(): Uint32Array;
+  anasazi_water(): Uint32Array;
+  anasazi_settlements(): Uint32Array;
+  anasazi_links(): Uint32Array;
+  /** Whether the world has run its course (the anasazi's end year): stepping it does nothing. */
+  finished(): boolean;
   fingerprint(): string;
   free(): void;
 }
@@ -186,9 +191,9 @@ export class SimHost {
    * instead of drifting toward 2 × BATCH_MS when POST_MS falls between two batch-lengths. With no
    * buffer pooled there is nothing to post regardless, so the deadline is not applied — capping it
    * anyway would leave `posted` unmoved while every batch (and its deferred round trip) stepped
-   * just one tick, throttling Max to roughly the scheduler's minimum delay. At `MAX_TICKS` the
-   * loop ends, posting the world there as soon as it holds a free buffer. Returns a snapshot to
-   * post, or null.
+   * just one tick, throttling Max to roughly the scheduler's minimum delay. At `MAX_TICKS`, or
+   * once the world is finished (the anasazi's end year), the loop ends, posting the world there as
+   * soon as it holds a free buffer. Returns a snapshot to post, or null.
    */
   batch(): WorldSnapshot | null {
     const max = this.max;
@@ -198,8 +203,8 @@ export class SimHost {
     const cap = max.pool.length > 0 ? Math.min(start + BATCH_MS, max.posted + POST_MS) : start + BATCH_MS;
     // One tick at a time, applying any edit due at each (Decision 2).
     do this.advance(sim, 1);
-    while (this.now() < cap && sim.tick() < MAX_TICKS);
-    if (sim.tick() >= MAX_TICKS) {
+    while (this.now() < cap && sim.tick() < MAX_TICKS && !sim.finished());
+    if (sim.tick() >= MAX_TICKS || sim.finished()) {
       const last = max.pool.pop();
       if (!last) return null;
       this.max = null;
@@ -438,6 +443,7 @@ export class SimHost {
       followed: id < 0 ? null : id,
       followedAlive: id >= 0 && sim.locate(id) !== undefined,
     };
+    if (sim.finished()) s.finished = true;
     const left = this.pending.length - this.cursor;
     if (left !== this.replaySent) {
       s.replayLeft = left;
@@ -476,11 +482,14 @@ export class SimHost {
       if (charts) s.charts = charts;
     }
     if (wants.ring && modelOf(config) === 'ring') s.ring = { sugar: sim.ring_sugar(), agents: sim.ring_agents() };
+    if (wants.valley && modelOf(config) === 'anasazi') {
+      s.valley = { water: sim.anasazi_water(), settlements: sim.anasazi_settlements(), links: sim.anasazi_links() };
+    }
     // The rest exist only in a sugarscape (Decision 7): a wish for them in another model is ignored.
     if (!sugar) return s;
     if (wants.trail) s.trail = sim.trail();
     if (wants.networks) {
-      const networks: Partial<Record<Overlay, Uint32Array>> = {};
+      const networks: Partial<Record<NetworkOverlay, Uint32Array>> = {};
       for (const kind of wants.networks) networks[kind] = sim.networks(kind);
       s.networks = networks;
     }

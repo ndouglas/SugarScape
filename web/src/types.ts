@@ -76,8 +76,8 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-/** The models the playground runs (milestone 9). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring';
+/** The models the playground runs (milestones 9 and 10). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -103,12 +103,46 @@ export interface RingConfig {
   start: 'random' | 'megagroup';
 }
 
+/** The published replication's departures from the written Artificial Anasazi (all on: the replication). */
+export interface Quirks {
+  age_before_death_check: boolean;
+  no_farm_water_check: boolean;
+  uplands_single_class: boolean;
+  wrap_edges: boolean;
+  initial_corn_per_slot: boolean;
+  fission_fresh_endowment: boolean;
+  fission_needs_free_farm: boolean;
+  initial_eligibility_ignores_adjustment: boolean;
+  occupancy_leak: boolean;
+  single_harvest_variance: boolean;
+}
+
+/** Artificial Anasazi, the Long House Valley (milestone 10). A tick is a year from `start_year`. */
+export interface AnasaziConfig {
+  model: 'anasazi';
+  start_year: number;
+  end_year: number;
+  initial_households: number;
+  initial_corn: FRange;
+  need: number;
+  fertility_start: number;
+  fertility_end: number;
+  death_age: number;
+  fission_probability: number;
+  child_endowment: number;
+  storage_years: number;
+  harvest_adjustment: number;
+  spatial_sd: number;
+  annual_sd: number;
+  quirks: Quirks;
+}
+
 /**
  * A config of any model. A sugarscape `Config` carries no `model` key (every config, link, session
  * and sweep written before milestone 9 is one); the others carry theirs. Narrow with `isSugar` /
  * `modelOf` (models.ts).
  */
-export type ModelConfig = Config | SchellingConfig | RingConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -123,6 +157,8 @@ export interface Param {
   choices?: { value: string; label: string }[];
   apply: 'live' | 'reset';
   group: string;
+  /** A one-line explanation shown under the control (the anasazi's quirks). */
+  help?: string;
 }
 
 export interface FieldError { field: string; message: string }
@@ -178,8 +214,21 @@ export interface RingStats {
   mean_distance: number;
 }
 
+export interface AnasaziStats {
+  tick: number;
+  year: number;
+  households: number;
+  historical: number;
+  fit: number;
+  capacity: number;
+  mean_corn: number;
+  births: number;
+  moves: number;
+  departures: number;
+}
+
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -229,10 +278,43 @@ export interface SchellingAgentView {
 }
 export interface SchellingInspection { site: { x: number; y: number }; agent: SchellingAgentView | null }
 export interface RingInspection { site: { x: number; sugar: number; capacity: number }; agent: { id: number; vision: number } | null }
+/** A Long House Valley cell: its zone, this year's PDSI class and yields, water and occupants. */
+export interface ValleyCellView {
+  x: number;
+  y: number;
+  zone: string;
+  zone_name: string;
+  pdsi: number;
+  /** 0 (≤ −3) to 4 (≥ 3). */
+  pdsi_class: number;
+  zone_yield: number;
+  quality: number;
+  base_yield: number;
+  water: boolean;
+  water_near: boolean;
+  habitable: boolean;
+  farmed_by: number | null;
+  residents: number[];
+}
+export interface HouseholdView {
+  id: number;
+  age: number;
+  /** Newest first. */
+  corn: number[];
+  stock: number;
+  harvest: number;
+  expected: number;
+  farm: [number, number];
+  home: [number, number];
+}
+export interface AnasaziInspection { site: ValleyCellView; agent: HouseholdView | null }
 /** What a world of any model says about a site. */
-export type AnyInspection = Inspection | SchellingInspection | RingInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection;
 
-/** A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`. */
+/**
+ * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
+ * `occupation`, `zones`, `yield`.
+ */
 export type ColorMode =
   | 'tribe'
   | 'wealth'
@@ -244,7 +326,10 @@ export type ColorMode =
   | 'lineage'
   | 'color'
   | 'satisfaction'
-  | 'preference';
+  | 'preference'
+  | 'occupation'
+  | 'zones'
+  | 'yield';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { noOverlays, type DisplayState } from './protocol';
-import type { Config, RingConfig, SchellingConfig } from './types';
+import type { AnasaziConfig, Config, RingConfig, SchellingConfig } from './types';
 import { clampDisplay, layerOptions, overlayAvailable, overlayAvailableAny, validLayer } from './layers';
 
 const config = {
@@ -86,5 +86,16 @@ describe('clampDisplay', () => {
     expect(overlayAvailableAny('family', [a, b])).toBe(true);
     expect(overlayAvailableAny('family', [a])).toBe(false);
     expect(overlayAvailableAny('disease', [only(true, true), only(true, true)])).toBe(false);
+  });
+
+  it('keeps the valley’s overlays in the anasazi and turns off everything else; a sugarscape turns them off', () => {
+    const valley = { model: 'anasazi' } as AnasaziConfig;
+    const on: DisplayState = { ...display, overlays: { ...display.overlays, water: true, links: true } };
+    const clamped = clampDisplay(on, valley);
+    expect(clamped).toEqual({ colorMode: 'occupation', layer: 'pollution:0', overlays: { ...noOverlays(), water: true, links: true } });
+    expect(clampDisplay(clamped, valley)).toBe(clamped);
+    expect(overlayAvailable('water', rules(true))).toBe(false);
+    const back = clampDisplay({ ...clamped, colorMode: 'tribe' }, rules(true));
+    expect([back.overlays.water, back.overlays.links]).toEqual([false, false]);
   });
 });

@@ -2,8 +2,8 @@ import { fieldErrorsMessage } from './errors';
 import {
   chartKey,
   mergeWants,
+  NETWORKS,
   noOverlays,
-  OVERLAYS,
   type ChartGroup,
   type Command,
   type DisplayState,
@@ -15,10 +15,11 @@ import {
   type Selected,
   type SelectQuery,
   type Session,
+  type ValleyState,
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { isSugar, modelOf } from './models';
+import { calendarYear, isSugar, modelOf, ticksLeft } from './models';
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
@@ -40,10 +41,17 @@ export type EngineEvent =
   | 'crash'
   | 'replay'
   | 'fork'
-  | 'full';
+  | 'full'
+  | 'finished';
 
 /** What the page says when a world reaches `MAX_TICKS` (the engine pauses and fires 'full'). */
 export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its history holds here — export its data, or Reset to start again';
+
+/** What the page says when a world has run its course (the engine pauses and fires 'finished'). */
+export function finishedNotice(config: ModelConfig, tick: number): string {
+  const year = calendarYear(config, tick);
+  return `This run has reached its end year${year === null ? '' : ` (AD ${year})`} — Reset to run it again`;
+}
 
 export interface Selection { x: number; y: number; agentId: number | null }
 
@@ -172,6 +180,10 @@ export class Engine {
   latest: ModelStats | null = null;
   /** Ring World's sugar and agents as of the latest snapshot (the ring view); null in other models. */
   ring: RingState | null = null;
+  /** The anasazi's water, settlements and links as of the latest snapshot; null in other models. */
+  valley: ValleyState | null = null;
+  /** The world has run its course (the anasazi's end year) as of the latest snapshot. */
+  finished = false;
   /**
    * The latest snapshot; its extras are there only when something wanted them. Its frame is left
    * out: that buffer is lent back to the host later (read frames through `frame()`).
@@ -293,6 +305,11 @@ export class Engine {
   /** The model of the world running now. */
   get model(): ModelKind {
     return modelOf(this.config);
+  }
+
+  /** Ticks until the world is finished (the anasazi's end year); Infinity for a model that never finishes. */
+  get ticksLeft(): number {
+    return ticksLeft(this.config, this.tick);
   }
 
   /**
@@ -625,6 +642,8 @@ export class Engine {
         this.config = other.config;
         this.lastSugar = other.lastSugar;
         this.ring = other.ring;
+        this.valley = other.valley;
+        this.finished = other.finished;
         this.tick = other.tick;
         this.population = other.population;
         this.latest = other.latest;
@@ -690,10 +709,12 @@ export class Engine {
     if (select && this.resetting === 0) own.select = { ...select };
     const trail = this.pendingTrail !== undefined ? this.pendingTrail : this.followedId !== null;
     if (trail) own.trail = true;
-    // Overlays exist only in a sugarscape; the ring view needs Ring World's state with every snapshot.
-    const networks = this.model === 'sugarscape' ? OVERLAYS.filter((k) => this.overlays[k]) : [];
+    // Networks exist only in a sugarscape; the ring view needs Ring World's state with every
+    // snapshot, and the valley's overlays the anasazi's.
+    const networks = this.model === 'sugarscape' ? NETWORKS.filter((k) => this.overlays[k]) : [];
     if (networks.length > 0) own.networks = networks;
     if (this.model === 'ring') own.ring = true;
+    if (this.model === 'anasazi') own.valley = true;
     return mergeWants([own, ...Array.from(this.providers, (p) => p(now))]);
   }
 
@@ -756,8 +777,11 @@ export class Engine {
       this.config = s.config;
       if (isSugar(s.config)) this.lastSugar = s.config;
     }
-    // A world of another model has no ring; Ring World sends its state with every snapshot.
+    // A world of another model has no ring; Ring World sends its state with every snapshot (and
+    // the anasazi its valley's).
     this.ring = s.ring ?? (this.model === 'ring' ? this.ring : null);
+    this.valley = s.valley ?? (this.model === 'anasazi' ? this.valley : null);
+    this.finished = s.finished === true;
     // All null (nothing edited) is the same as none.
     if (s.editedLandscapes) this.landscapes = s.editedLandscapes.some((m) => m !== null) ? s.editedLandscapes : [];
     // A clamp of a display chosen before the latest `setDisplay` is stale: the host clamps that
@@ -810,14 +834,22 @@ export class Engine {
   private async stepNow(n: number): Promise<void> {
     const result = await this.send({ type: 'step', n }, true);
     if (result.ok && result.snapshot) this.accept(result.snapshot, ['tick']);
-    // A step to the cap, or one refused there.
-    if (this.tick >= MAX_TICKS && !this.crashed) this.full();
+    // A step to the cap, or one refused there; a step to the end year, or one after it.
+    if (this.crashed) return;
+    if (this.tick >= MAX_TICKS) this.full();
+    else if (this.finished) this.finish();
   }
 
   /** The world is at `MAX_TICKS`: pause and say so. */
   private full(): void {
     if (this.running) this.setRunning(false);
     this.emit('full');
+  }
+
+  /** The world has run its course: pause and say so. */
+  private finish(): void {
+    if (this.running) this.setRunning(false);
+    this.emit('finished');
   }
 
   /**
@@ -881,8 +913,9 @@ export class Engine {
     // clamps the older choice.
     if (this.displaysPending === 0) this.displayUnder.set(s, this.displayGen);
     this.accept(s, ['tick']);
-    // The host's Max loop ends at the cap, with this post.
+    // The host's Max loop ends at the cap, or when the world is finished, with this post.
     if (s.tick >= MAX_TICKS) this.full();
+    else if (s.finished) this.finish();
     if (this.maxOn) void this.send({ type: 'frame' }, true);
   }
 

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Engine, FULL_NOTICE, type EngineEvent } from './engine';
+import { Engine, finishedNotice, FULL_NOTICE, type EngineEvent } from './engine';
 import { fakeModule } from './fake-sim.fixture';
 import type { Command, HostReply, LogEntry, Wants } from './protocol';
 import { MAX_TICKS, SimHost } from './sim-host';
@@ -941,6 +941,8 @@ describe('Engine.loadPreset', () => {
 describe('Engine with other models', () => {
   const schelling = { model: 'schelling', width: 6, height: 4 } as unknown as ModelConfig;
   const ring = { model: 'ring', width: 5, height: 3 } as unknown as ModelConfig;
+  /** A valley of 6 × 4 cells finishing at tick 10 (AD 800 to 810). */
+  const valley = { model: 'anasazi', width: 6, height: 4, start_year: 800, end_year: 810, finish: 10 } as unknown as ModelConfig;
   const models: Preset[] = [
     ...presets,
     { id: 'vi-4', name: 'Schelling', source: 'VI-4', description: '', config: schelling },
@@ -1032,5 +1034,60 @@ describe('Engine with other models', () => {
     sent.length = 0;
     await pumps(5);
     expect(sent).toEqual([]);
+  });
+
+  it('asks for the valley with every request in the anasazi, and drops it in another model', async () => {
+    const transport = new HookedTransport(new SimHost(fakeModule()));
+    const sent: Wants[] = [];
+    transport.after = (_cmd, wants) => sent.push(wants ?? {});
+    const e = await make(valley, transport);
+    e.setDisplay({ overlays: { trade: true, water: true } });
+    await e.advance(1);
+    expect(sent.at(-1)).toMatchObject({ valley: true });
+    expect(sent.at(-1)?.networks).toBeUndefined();
+    expect(e.overlays.water).toBe(true);
+    expect(e.overlays.trade).toBe(false);
+    expect(Array.from(e.valley!.water)).toEqual([0, 0, 2, 1]);
+    expect(e.ticksLeft).toBe(9);
+    expect(await e.loadPreset('ii-2-unit')).toBeNull();
+    expect(e.valley).toBeNull();
+    expect(e.ticksLeft).toBe(Infinity);
+  });
+
+  it('pauses at the end year and says so, again on a step there', async () => {
+    const e = await make(valley);
+    expect(finishedNotice(e.config, 10)).toBe('This run has reached its end year (AD 810) — Reset to run it again');
+    expect(finishedNotice(ring, 10)).toBe('This run has reached its end year — Reset to run it again');
+    let ends = 0;
+    e.on('finished', () => ends++);
+    e.setSpeed(4);
+    e.setRunning(true);
+    for (let i = 0; i < 4; i++) {
+      e.pump(i);
+      await settle();
+    }
+    expect([e.tick, e.finished, e.running, ends]).toEqual([10, true, false, 1]);
+    await e.advance(1);
+    expect([e.tick, ends]).toEqual([10, 2]);
+    expect(await e.reset()).toBeNull();
+    expect([e.tick, e.finished]).toEqual([0, false]);
+  });
+});
+
+describe('Engine at the end year at Max', () => {
+  beforeEach(() => void vi.useFakeTimers());
+  afterEach(() => void vi.useRealTimers());
+
+  it('pauses when the host’s Max loop ends at the end year', async () => {
+    let clock = 0;
+    const transport = new InlineTransport(new SimHost(fakeModule(), () => clock++));
+    const config = { model: 'anasazi', width: 6, height: 4, start_year: 800, end_year: 850, finish: 50 } as unknown as ModelConfig;
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    e.setSpeed('max');
+    e.setRunning(true);
+    await vi.advanceTimersByTimeAsync(60);
+    expect([e.tick, e.running, ends]).toEqual([50, false, 1]);
   });
 });

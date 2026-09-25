@@ -1,5 +1,5 @@
-import { COLOR_MODES, isSugar, modelOf } from './models';
-import { noOverlays, OVERLAYS, type DisplayState, type Overlay } from './protocol';
+import { COLOR_MODES, isSugar, MODEL_OVERLAYS, modelOf } from './models';
+import { OVERLAYS, type DisplayState, type Overlay } from './protocol';
 import type { Config, Layer, ModelConfig } from './types';
 
 /** The Landscape selector: each good's level and capacity (by name), then each pollutant. */
@@ -15,7 +15,10 @@ export function validLayer(layer: Layer, config: Config): Layer {
   return layerOptions(config).some(([l]) => l === layer) ? layer : 'resource:0';
 }
 
-/** Whether an overlay can show anything in a world with `config`: disease, friends and family need their rules. */
+/**
+ * Whether an overlay can show anything in a sugarscape with `config`: disease, friends and family
+ * need their rules; the anasazi's overlays never show in a sugarscape.
+ */
 export function overlayAvailable(kind: Overlay, config: Config): boolean {
   switch (kind) {
     case 'disease':
@@ -24,6 +27,10 @@ export function overlayAvailable(kind: Overlay, config: Config): boolean {
       return config.culture.enabled;
     case 'family':
       return config.sex.enabled;
+    case 'water':
+    case 'settlements':
+    case 'links':
+      return false;
     default:
       return true;
   }
@@ -42,15 +49,19 @@ export function overlayAvailableAny(kind: Overlay, configs: Config[]): boolean {
  * `d` kept valid for `config` (the host applies it to every snapshot). In a sugarscape: a layer the
  * world lacks falls back to good 0's level; another model's color mode, or Disease with disease off,
  * falls back to Tribe; an overlay the world cannot show (`overlayAvailable`) is turned off. In
- * another model: a color mode it lacks falls back to its first, every overlay is off and the layer
- * is kept (unused). Returns `d` itself when nothing changes.
+ * another model: a color mode it lacks falls back to its first, an overlay it does not draw
+ * (`MODEL_OVERLAYS`) is off and the layer is kept (unused). Returns `d` itself when nothing changes.
  */
 export function clampDisplay(d: DisplayState, config: ModelConfig): DisplayState {
   if (!isSugar(config)) {
-    const modes = COLOR_MODES[modelOf(config)].map(([m]) => m);
+    const model = modelOf(config);
+    const modes = COLOR_MODES[model].map(([m]) => m);
     const colorMode = modes.length === 0 || modes.includes(d.colorMode) ? d.colorMode : modes[0];
-    if (colorMode === d.colorMode && !OVERLAYS.some((k) => d.overlays[k])) return d;
-    return { colorMode, layer: d.layer, overlays: noOverlays() };
+    const off = OVERLAYS.filter((k) => d.overlays[k] && !MODEL_OVERLAYS[model].includes(k));
+    if (colorMode === d.colorMode && off.length === 0) return d;
+    const overlays = { ...d.overlays };
+    for (const k of off) overlays[k] = false;
+    return { colorMode, layer: d.layer, overlays };
   }
   const layer = validLayer(d.layer, config);
   const sugarMode = COLOR_MODES.sugarscape.some(([m]) => m === d.colorMode);

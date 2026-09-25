@@ -2,8 +2,14 @@
 import type { CreditGraph } from './credit';
 import type { AnyInspection, ColorMode, DiseaseEntry, FieldError, Layer, ModelConfig, ModelStats } from './types';
 
-export type Overlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family';
-export const OVERLAYS: Overlay[] = ['trade', 'credit', 'disease', 'neighbors', 'friends', 'family'];
+/** The sugarscape's network overlays (edges the host sends in `networks`). */
+export type NetworkOverlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family';
+export const NETWORKS: NetworkOverlay[] = ['trade', 'credit', 'disease', 'neighbors', 'friends', 'family'];
+/** The anasazi's overlays, drawn from `WorldSnapshot.valley` (milestone 10). */
+export type ValleyOverlay = 'water' | 'settlements' | 'links';
+export const VALLEY_OVERLAYS: ValleyOverlay[] = ['water', 'settlements', 'links'];
+export type Overlay = NetworkOverlay | ValleyOverlay;
+export const OVERLAYS: Overlay[] = [...NETWORKS, ...VALLEY_OVERLAYS];
 
 /** Every overlay off (a fresh object each call). */
 export function noOverlays(): Record<Overlay, boolean> {
@@ -12,7 +18,7 @@ export function noOverlays(): Record<Overlay, boolean> {
 
 export interface PlaceOverrides { sex?: 'female' | 'male'; tribe?: 'blue' | 'red' }
 
-/** How the host renders frames and which network overlays are drawn. */
+/** How the host renders frames and which overlays are drawn. */
 export interface DisplayState { colorMode: ColorMode; layer: Layer; overlays: Record<Overlay, boolean> }
 
 /** The selection to report on: a site, or an agent (tracked while it lives; x, y are its last known site). */
@@ -31,7 +37,7 @@ export const CHART_POINTS = 2000;
 export interface Wants {
   select?: SelectQuery;
   trail?: boolean;
-  networks?: Overlay[];
+  networks?: NetworkOverlay[];
   charts?: { groups: string[][]; max: number };
   lorenz?: boolean;
   wealthHist?: boolean;
@@ -44,10 +50,18 @@ export interface Wants {
   diseaseList?: boolean;
   /** Ring World's sugar per site and agents' sites (the ring view). */
   ring?: boolean;
+  /** The anasazi's water, settlements and farm–home links (its overlays). */
+  valley?: boolean;
 }
 
 /** Ring World's state for the ring view: sugar per site (site 0 first) and each agent's site. */
 export interface RingState { sugar: Float64Array; agents: Uint32Array }
+
+/**
+ * The Long House Valley's overlays: water sources `[x, y, …]`, inhabited cells `[x, y,
+ * households, …]` and each household's farm and home `[fx, fy, hx, hy, …]`.
+ */
+export interface ValleyState { water: Uint32Array; settlements: Uint32Array; links: Uint32Array }
 
 export interface WorldSnapshot {
   /** RGBA pixels, when the request lent a buffer (transferred back). */
@@ -69,7 +83,7 @@ export interface WorldSnapshot {
   /** The selection (from `wants.select` or an `inspect` command); null when an inspect by id found no agent. */
   inspection?: Selected | null;
   trail?: Uint32Array;
-  networks?: Partial<Record<Overlay, Uint32Array>>;
+  networks?: Partial<Record<NetworkOverlay, Uint32Array>>;
   /** Chart groups, by `chartKey`, that have news since they were last sent. */
   charts?: Record<string, ChartGroup>;
   lorenz?: Float64Array;
@@ -86,6 +100,9 @@ export interface WorldSnapshot {
   creditGraph?: CreditGraph;
   diseaseList?: DiseaseEntry[];
   ring?: RingState;
+  valley?: ValleyState;
+  /** The world has run its course (the anasazi's end year): stepping it does nothing more. */
+  finished?: true;
   /** Edits still to replay: after every init and reset, and whenever it changes. */
   replayLeft?: number;
   /** A page edit just dropped the edits still to replay (the session branched here). */
@@ -163,12 +180,13 @@ const FLAGS = [
   'creditGraph',
   'diseaseList',
   'ring',
+  'valley',
 ] as const;
 
 /** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */
 export function mergeWants(parts: Wants[]): Wants {
   const out: Wants = {};
-  const networks = new Set<Overlay>();
+  const networks = new Set<NetworkOverlay>();
   const groups = new Map<string, string[]>();
   let max = 0;
   for (const w of parts) {
@@ -180,7 +198,7 @@ export function mergeWants(parts: Wants[]): Wants {
       for (const g of w.charts.groups) groups.set(chartKey(g), g);
     }
   }
-  if (networks.size > 0) out.networks = OVERLAYS.filter((k) => networks.has(k));
+  if (networks.size > 0) out.networks = NETWORKS.filter((k) => networks.has(k));
   if (groups.size > 0) out.charts = { groups: [...groups.values()], max };
   return out;
 }

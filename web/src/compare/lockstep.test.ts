@@ -104,6 +104,21 @@ describe('Lockstep', () => {
     expect([a.tick, b.tick, b.seed]).toEqual([0, 0, 9]);
   });
 
+  it('never steps a world past the first end year, so the pair stays in step', async () => {
+    const valley = (end: number) =>
+      ({ model: 'anasazi', width: 4, height: 3, start_year: 800, end_year: 800 + end, finish: end }) as unknown as Config;
+    const a = await create({ config: valley(10), seed: 1 });
+    const b = await create({ config: valley(20), seed: 2 });
+    const lock = new Lockstep([a, b], 4);
+    await lock.settled();
+    lock.setRunning(true);
+    await frames(lock, 5);
+    expect([a.tick, b.tick]).toEqual([10, 10]);
+    expect(lock.running).toBe(false);
+    await lock.advance(3);
+    expect([a.tick, b.tick]).toEqual([10, 10]);
+  });
+
   it('stops both worlds together at the tick cap, without realigning', async () => {
     const { a, b, lock } = await pair('max', () => 0);
     await lock.advance(MAX_TICKS - 20);

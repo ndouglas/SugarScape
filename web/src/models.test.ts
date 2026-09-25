@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { COLOR_MODES, isRingView, isSugar, isSugarView, modelOf, presetGroups } from './models';
+import {
+  calendarYear,
+  COLOR_MODES,
+  isRingView,
+  isSugar,
+  isSugarView,
+  isValleyView,
+  MODEL_OVERLAYS,
+  modelOf,
+  presetGroups,
+  ticksLeft,
+} from './models';
 import type { AnyInspection, Config, ModelConfig, Preset } from './types';
 
 describe('modelOf', () => {
@@ -40,5 +51,44 @@ describe('presetGroups', () => {
       ['Sugarscape', ['ii-2', 'ii-3']],
       ['Ring World', ['ring-1', 'ring-2']],
     ]);
+  });
+});
+
+describe('the anasazi model', () => {
+  const valley = { model: 'anasazi', start_year: 800, end_year: 1350 } as ModelConfig;
+
+  it('is read by its tag, and its inspections by their zone', () => {
+    expect(modelOf(valley)).toBe('anasazi');
+    expect(isSugar(valley)).toBe(false);
+    const cell = { site: { x: 1, y: 2, zone: 'north', zone_name: 'North Valley Floor' }, agent: null } as unknown as AnyInspection;
+    const schelling = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
+    expect([cell, schelling].map(isValleyView)).toEqual([true, false]);
+    expect(isRingView(cell) || isSugarView(cell)).toBe(false);
+  });
+
+  it('offers Occupation first, then Zones and Yield, and the valley’s three overlays', () => {
+    expect(COLOR_MODES.anasazi).toEqual([
+      ['occupation', 'Occupation'],
+      ['zones', 'Zones'],
+      ['yield', 'Yield'],
+    ]);
+    expect(MODEL_OVERLAYS.anasazi).toEqual(['water', 'settlements', 'links']);
+    expect(MODEL_OVERLAYS.sugarscape).not.toContain('water');
+    expect(MODEL_OVERLAYS.ring).toEqual([]);
+  });
+
+  it('counts years from its start year and ticks until its end year', () => {
+    expect(calendarYear(valley, 342)).toBe(1142);
+    expect(ticksLeft(valley, 540)).toBe(10);
+    expect(ticksLeft(valley, 550)).toBe(0);
+    const ring = { model: 'ring' } as ModelConfig;
+    expect(calendarYear(ring, 5)).toBeNull();
+    expect(ticksLeft(ring, 5)).toBe(Infinity);
+  });
+
+  it('groups its presets under Artificial Anasazi, last', () => {
+    const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
+    const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
+    expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
   });
 });

@@ -59,6 +59,10 @@ export class Lockstep {
         w.on('full', () => {
           if (this.running) this.setRunning(false);
         }),
+        // A world at its end year steps no further: pause (steps are capped so neither overshoots).
+        w.on('finished', () => {
+          if (this.running) this.setRunning(false);
+        }),
       );
     }
     // Compared only once both are quiet: a step (or Max's run) still in flight would move a tick
@@ -99,7 +103,7 @@ export class Lockstep {
       for (const w of this.worlds) w.pump(now);
       return;
     }
-    if (this.crashed()) {
+    if (this.crashed() || this.left() === 0) {
       this.setRunning(false);
       return;
     }
@@ -108,10 +112,10 @@ export class Lockstep {
     this.inFlight = this.stepBoth(n, max).finally(() => (this.inFlight = null));
   }
 
-  /** Step: both worlds advance `n` ticks. */
+  /** Step: both worlds advance `n` ticks (fewer if one would pass its end year). */
   advance(n = 1): Promise<void> {
     return this.exclusive(async () => {
-      if (!this.crashed()) await this.stepBoth(n, false);
+      if (!this.crashed() && this.left() > 0) await this.stepBoth(n, false);
     });
   }
 
@@ -133,9 +137,16 @@ export class Lockstep {
     this.listeners.clear();
   }
 
+  /** Ticks until the first world is finished (Infinity if neither ever is). */
+  private left(): number {
+    return Math.min(...this.worlds.map((w) => w.ticksLeft));
+  }
+
   private async stepBoth(n: number, adapt: boolean): Promise<void> {
     const start = this.now();
-    await Promise.all(this.worlds.map((w) => w.advance(n)));
+    // A world stops at its end year, so neither may step past the first end: they stay in step.
+    const k = Math.min(n, this.left());
+    await Promise.all(this.worlds.map((w) => w.advance(k)));
     if (adapt) this.batch.update(this.now() - start);
     this.emit('tick');
   }
