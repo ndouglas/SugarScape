@@ -1,7 +1,8 @@
 import type { Engine } from '../engine';
-import { isSugarView } from '../models';
-import type { AgentView, LinkView } from '../types';
+import { isRingView, isSugarView } from '../models';
+import type { AgentView, LinkView, RingInspection, SchellingInspection } from '../types';
 import { h } from './dom';
+import { percent } from './format';
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
@@ -95,6 +96,33 @@ export class InspectPanel {
     ];
   }
 
+  /** Schelling's site and agent: color, preference, satisfaction and residence (Decision 13). */
+  private schellingRows(view: SchellingInspection, gone: boolean): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const a = view.agent;
+    const rows = [row('Site', `(${view.site.x}, ${view.site.y})`)];
+    if (!a || gone) return rows;
+    const alike = a.neighbors === 0 ? 'no neighbors' : `${a.like} of ${a.neighbors} neighbors alike`;
+    return [
+      ...rows,
+      row('Agent', `#${a.id} · ${a.color === 'red' ? 'Red' : 'Blue'}`),
+      row('Preference', `at least ${percent(a.preference)} alike`),
+      row('Satisfied', `${a.satisfied ? 'yes' : 'no'} (${alike})`),
+      row('Residence', a.residence === null ? `age ${a.age} (no maximum)` : `age ${a.age} of ${a.residence}`),
+    ];
+  }
+
+  /** Ring World's site and its agent (Decision 13). */
+  private ringRows(view: RingInspection, gone: boolean): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const a = view.agent;
+    return [
+      row('Site', `#${view.site.x}`),
+      row('Sugar', `${fmt(view.site.sugar)} / ${view.site.capacity}`),
+      ...(a && !gone ? [row('Agent', `#${a.id}`), row('Vision', `${a.vision} sites`)] : []),
+    ];
+  }
+
   private render(): void {
     if (!this.visible) return;
     const sel = this.engine.selection;
@@ -105,9 +133,15 @@ export class InspectPanel {
     }
     // The host tracks a selected agent while it lives (Decision 3).
     const gone = shown.agentId !== null && !shown.alive;
-    // Only a sugarscape's inspection has these rows; the other models' are added with their Inspect rows.
-    if (!isSugarView(shown.view)) return;
-    const { site, agent } = shown.view;
+    const view = shown.view;
+    if (!isSugarView(view)) {
+      // A Schelling agent that reached its maximum residence has left the landscape.
+      const note = gone ? [h('p', { class: 'error' }, `Agent #${shown.agentId} has left.`)] : [];
+      const rows = isRingView(view) ? this.ringRows(view, gone) : this.schellingRows(view, gone);
+      this.el.replaceChildren(...note, h('table', {}, ...rows));
+      return;
+    }
+    const { site, agent } = view;
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     this.el.replaceChildren(
       ...(gone ? [h('p', { class: 'error' }, `Agent #${shown.agentId} has died.`)] : []),

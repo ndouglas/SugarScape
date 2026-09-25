@@ -17,3 +17,9 @@ export function compactNumber(n: number): string {
   const text = Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(1);
   return sign + text + suffix;
 }
+
+/** A fraction as a percentage to one decimal, without a trailing ".0": 0.25 -> "25%", 0.4137 -> "41.4%". */
+export function percent(fraction: number): string {
+  const p = Math.round(fraction * 1000) / 10;
+  return `${Number.isInteger(p) ? p : p.toFixed(1)}%`;
+}

@@ -178,13 +178,19 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
     for (const g of grids()) g.draw();
   }
 
-  /** Hides the disease tools while no world on screen has disease (leaving them if one was active). */
+  /**
+   * Shows only Inspect while no world on screen is a sugarscape (the other models have no editing
+   * tools, Decision 13), and hides the disease tools while no world on screen has disease (leaving
+   * a tool that went away for Inspect).
+   */
   function syncAvailability(): void {
+    const sugar = targets.some((t) => t.engine.model === 'sugarscape');
     const on = diseaseOn();
     buttons.forEach((b, i) => {
-      if (DISEASE_TOOLS.includes(TOOLS[i][0])) b.hidden = !on;
+      const t = TOOLS[i][0];
+      b.hidden = t !== 'inspect' && (!sugar || (DISEASE_TOOLS.includes(t) && !on));
     });
-    if (!on && DISEASE_TOOLS.includes(tool)) choose('inspect');
+    if (tool !== 'inspect' && (!sugar || (!on && DISEASE_TOOLS.includes(tool)))) choose('inspect');
     else refreshPicker(true);
     // Keeps the paint tool's layer and inputs; only the good list follows the config.
     refreshGoods();

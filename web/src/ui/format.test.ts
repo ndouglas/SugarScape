@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compactNumber } from './format';
+import { compactNumber, percent } from './format';
 
 describe('compactNumber', () => {
   it('leaves small magnitudes unchanged', () => {
@@ -16,5 +16,14 @@ describe('compactNumber', () => {
 
   it('preserves the sign', () => {
     expect(compactNumber(-1234)).toBe('-1.2k');
+  });
+});
+
+describe('percent', () => {
+  it('writes whole percentages plainly and others to one decimal', () => {
+    expect(percent(0.25)).toBe('25%');
+    expect(percent(0.3)).toBe('30%');
+    expect(percent(0.4137)).toBe('41.4%');
+    expect(percent(1)).toBe('100%');
   });
 });
