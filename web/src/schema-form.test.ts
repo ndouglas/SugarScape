@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describedBy, groupParams, paramEdit, paramInput } from './schema-form';
+import { describedBy, groupParams, paramEdit, paramInput, paramShown } from './schema-form';
 import type { AnasaziConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
 
 const ring = (): RingConfig => ({
@@ -82,5 +82,14 @@ describe('the schema form', () => {
     expect(describedBy(ids, true)).toBe('f-help f-error');
     expect(describedBy({ help: null, error: 'g-error' }, true)).toBe('g-error');
     expect(describedBy({ help: null, error: 'g-error' }, false)).toBeNull();
+  });
+
+  it('shows a field with show_if only while its condition holds', () => {
+    const p = { path: 'max_age', label: 'Longest life', kind: 'integer', apply: 'live', group: 'Population', show_if: { path: 'variant', equals: 'ethnic' } } as Param;
+    const always = { ...p, show_if: undefined } as Param;
+    const ethnic = { model: 'civil', variant: 'ethnic' } as unknown as ModelConfig;
+    const rebellion = { model: 'civil', variant: 'rebellion' } as unknown as ModelConfig;
+    expect([paramShown(p, ethnic), paramShown(p, rebellion)]).toEqual([true, false]);
+    expect(paramShown(always, rebellion)).toBe(true);
   });
 });

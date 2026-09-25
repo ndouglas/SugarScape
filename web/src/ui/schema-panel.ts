@@ -1,7 +1,8 @@
+import { scheduleLines } from '../civil';
 import type { Engine } from '../engine';
 import { errorsFor } from '../paths';
-import { describedBy, groupParams, paramEdit, paramInput, type ParamInput } from '../schema-form';
-import type { FieldError, ModelKind, Param } from '../types';
+import { describedBy, groupParams, paramEdit, paramInput, paramShown, type ParamInput } from '../schema-form';
+import type { CivilConfig, FieldError, ModelKind, Param } from '../types';
 import { h } from './dom';
 
 /**
@@ -54,11 +55,27 @@ export class SchemaPanel {
     this.syncers = [];
     this.slots = [];
     this.errors = [];
-    const sections = groupParams(this.engine.schemas[model] ?? []).map(({ group, params }) =>
-      h('section', { class: 'group' }, h('h3', {}, group), h('p', { class: 'hint' }, note(params)), ...params.map((p) => this.control(p))),
-    );
-    this.el.replaceChildren(...(model === 'anasazi' ? [valleyCredit()] : []), this.general, ...sections);
+    const sections = groupParams(this.engine.schemas[model] ?? []).map(({ group, params }) => {
+      const section = h('section', { class: 'group' }, h('h3', {}, group), h('p', { class: 'hint' }, note(params)), ...params.map((p) => this.control(p)));
+      if (params.every((p) => p.show_if)) this.syncers.push(() => (section.hidden = !params.some((p) => paramShown(p, this.engine.config))));
+      return section;
+    });
+    const extra = model === 'anasazi' ? [valleyCredit()] : [];
+    const schedule = model === 'civil' ? [this.schedule()] : [];
+    this.el.replaceChildren(...extra, this.general, ...sections, ...schedule);
     this.renderErrors();
+  }
+
+  /** Civil violence's schedule and ramps, read-only (they travel in links and sessions). */
+  private schedule(): HTMLElement {
+    const list = h('ul', { class: 'hint' });
+    const section = h('section', { class: 'group' }, h('h3', {}, 'Schedule'), h('p', { class: 'hint' }, 'Set by the preset; these change the running world at their ticks.'), list);
+    this.syncers.push(() => {
+      const lines = scheduleLines(this.engine.config as CivilConfig);
+      section.hidden = lines.length === 0;
+      list.replaceChildren(...lines.map((l) => h('li', {}, l)));
+    });
+    return section;
   }
 
   private async commit(p: Param, input: ParamInput): Promise<void> {
@@ -86,6 +103,12 @@ export class SchemaPanel {
   }
 
   private control(p: Param): HTMLElement {
+    const el = this.controlBody(p);
+    if (p.show_if) this.syncers.push(() => (el.hidden = !paramShown(p, this.engine.config)));
+    return el;
+  }
+
+  private controlBody(p: Param): HTMLElement {
     const id = `${this.idPrefix}-${p.path.replace(/[^A-Za-z0-9_-]/g, '-')}`;
     const ids = { help: p.help ? `${id}-help` : null, error: `${id}-error` };
     const slot = h('div', { class: 'error', id: ids.error });

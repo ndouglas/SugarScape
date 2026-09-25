@@ -20,6 +20,18 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'lhv-published',
     b: 'lhv-documented',
   },
+  {
+    id: 'cv-salami-vs-jump',
+    label: 'Salami tactics vs one jump — Civil Violence (Compare)',
+    a: 'cv-run-3-salami',
+    b: 'cv-run-4-one-jump',
+  },
+  {
+    id: 'cv-cleansing-vs-peacekeepers',
+    label: 'Ethnic cleansing vs peacekeepers — Civil Violence (Compare)',
+    a: 'cv-run-7-cleansing',
+    b: 'cv-safe-havens',
+  },
 ];
 
 /**

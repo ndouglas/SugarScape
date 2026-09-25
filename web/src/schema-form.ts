@@ -51,6 +51,11 @@ export function paramEdit(p: Param, input: ParamInput): (c: ModelConfig) => void
   };
 }
 
+/** Whether a field shows in `config`: always, or while its `show_if` field equals its value. */
+export function paramShown(p: Param, config: ModelConfig): boolean {
+  return !p.show_if || getPath(config, p.show_if.path) === p.show_if.equals;
+}
+
 /** The control's current value in `config`, as its input shows it. */
 export function paramInput(p: Param, config: ModelConfig): ParamInput {
   const v = getPath(config, p.path);

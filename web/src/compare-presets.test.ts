@@ -41,4 +41,15 @@ describe('compare presets', () => {
     const states = comparePresetStates([valley('lhv-published'), valley('lhv-documented')], lhv, 9)!;
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
+
+  it('pairs the civil runs the paper compares', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['cv-salami-vs-jump', 'cv-run-3-salami', 'cv-run-4-one-jump', 'Salami tactics vs one jump — Civil Violence (Compare)']);
+    expect(ids).toContainEqual([
+      'cv-cleansing-vs-peacekeepers',
+      'cv-run-7-cleansing',
+      'cv-safe-havens',
+      'Ethnic cleansing vs peacekeepers — Civil Violence (Compare)',
+    ]);
+  });
 });
