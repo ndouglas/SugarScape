@@ -49,7 +49,9 @@ as outlines. Neighbor lists, friends and lineage are views only: they never chan
 exported or shared.
 
 Chapter VI's other artificial societies — the book's Schelling segregation variant and Ring World —
-run as their own model kinds beside the sugarscape (see [Other artificial societies](#other-artificial-societies)).
+and Artificial Anasazi, the Long House Valley model that Chapter VI's "Computational Archaeology"
+anticipates, run as their own model kinds beside the sugarscape (see
+[Other artificial societies](#other-artificial-societies)).
 
 N goods (the book's own software, Chapter IV footnote 7): 1–8 goods and 1–4 pollutants.
 Welfare is the n-dimensional Cobb–Douglas, trade bargains over the pair of goods two
@@ -137,7 +139,8 @@ Model extensions:
 
 ## Other artificial societies
 
-The presets menu groups its presets by model: **Sugarscape**, **Schelling** and **Ring World**.
+The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World** and
+**Artificial Anasazi**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -182,6 +185,53 @@ diagram of the last 150 ticks (the current tick at the bottom), which the simula
 tick shows even at Max. Capacity and growback apply to the running world. Charts: Flocks, Flock
 size (mean and largest) and Distance moved; recordings show the ring beside the diagram.
 
+### Artificial Anasazi: the Long House Valley, AD 800–1350
+
+Households of five farm maize in the Long House Valley in northeastern Arizona on an 80 × 120
+grid of hectare cells, one tick a year from AD 800 to 1350, against the archaeological record of
+how many households lived there. Each year a household harvests its plot's base yield (the zone's
+yield for that year's Palmer drought index × its soil quality × the harvest adjustment) with some
+noise, stores corn for up to two years and eats the oldest first; one that cannot eat its 800 kg or
+is too old is removed; one that expects too little next year moves to the nearest free plot that can
+feed it (and a home nearby, closest to water), or leaves the valley; and a household of
+childbearing age splits off a new one with some probability. The model is written from Janssen's
+ODD of his NetLogo replication (2013) and "Understanding Artificial Anasazi" (*JASSS* 12(4) 13,
+2009), which replicates Axtell et al. (2002) only approximately — so these presets reproduce
+Janssen's replication, not the original model.
+
+The written description leaves several things undefined, which are taken from the replication in
+every preset: which cells are water and when, the hydrology that keeps homes off the valley floors,
+which drought series each zone follows (the Dunes always yield 855 kg), the data's 93.5 m grid for
+water points, random tie-breaks and unclamped negative harvests. Ten places where the replication
+departs from the text are **Replication quirks** in the Rules panel, each with a one-line
+explanation (all on in the published presets, all off in `lhv-documented`); the most important is
+that the replication gives a new household a fresh store of corn instead of a third of its
+parent's.
+
+- `lhv-published` (JASSS Table 4's calibration: death age 38, fission until 34 with probability
+  0.155, harvest adjustment 0.56, harvest s.d. 0.4): measured over seeds 1–15, 172 households in
+  1050–1130 against a record of 156, 94 in the 1140s–60s dip (133), 180 in 1180–1265 (172), then
+  59 in 1300 and 22 in 1350 where the record falls to 0 — the shape of JASSS Figure 10, including
+  its failure to empty the valley.
+- `lhv-published-defaults` (the ODD's defaults): about 1 050 households at the plateaus, five times
+  the record, as JASSS Figure 2.
+- `lhv-documented` (the text, with the calibrated values): 41 and 80 households at the plateaus and
+  7 of 15 runs empty by 1350 — the written model does not reproduce the published curve.
+- **Replication vs documented — Anasazi (Compare)** opens the two side by side.
+
+The valley is drawn by **Occupation** (farms green, homes yellow), **Zones** or this year's
+**Yield**, with **Water sources**, **Settlements** (dots sized by households) and **Farm–home
+links** as overlays; the toolbar shows the year (`AD 1142`) and the run pauses at the end year with
+a notice. Inspect shows a cell's zone, PDSI class, yields, soil and water, and its household's age,
+corn, harvest and expectation. Charts: Households vs historical (the record as a reference line),
+Carrying capacity (plots that can feed a household this year), Fit (the running sum of squared
+differences from the record), Mean stored corn, and Births, moves and departures. The harvest
+adjustment and yearly harvest s.d. apply to the running world. The data files in `data/anasazi/`
+come unmodified from *Artificial Anasazi* v1.1.0 (Janssen, CoMSES,
+[doi:10.25937/krp4-g724](https://doi.org/10.25937/krp4-g724)) and are GPL-2.0, separate from this
+repository's MIT code (see `data/anasazi/NOTICE`). See
+`docs/superpowers/specs/2026-09-25-anasazi-design.md` and its source extraction.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's
@@ -194,8 +244,10 @@ range and the number of runs.
 - **Built-in sweeps** (`sweeps/`): `fig-ii-5` (carrying capacity vs vision, one line per
   metabolism), `fig-iv-6` (with and without trade), `fig-iv-10-11` (price dispersion over
   time for short and long lifetimes), `n-goods-carrying-capacity`, `bargaining-rules`
-  (carrying capacity vs vision under the two price rules) and `schelling-tipping` (segregation vs
-  a fixed Schelling preference). Each file's description records its measured settings; in the
+  (carrying capacity vs vision under the two price rules), `schelling-tipping` (segregation vs
+  a fixed Schelling preference), `lhv-calibration` (the Long House Valley's fit vs the harvest
+  adjustment: best at 0.56, as JASSS finds) and `lhv-quirks` (the fit with each replication quirk
+  turned off: only the fresh endowment matters much). Each file's description records its measured settings; in the
   browser only seeds and ticks can be changed.
 - **From current world**: a config path (the input suggests every number and on/off setting),
   values as `1, 2, 3`, `true, false` or `from:to:step`, an optional second axis, seeds, ticks
@@ -275,10 +327,12 @@ if encoding fails. Files are named after the setup and the ticks they cover, e.g
     sugarscape run --preset ii-5-wealth --seed 7 --ticks 1000 --series-csv series.csv
     sugarscape run --config my-config.json --agents-csv agents.csv --fingerprint
     sugarscape run --preset vi-8-ring-world --ticks 500 --series-csv ring.csv       # any model
+    sugarscape run --preset lhv-published --ticks 550 --series-csv lhv.csv          # AD 800–1350
     sugarscape sweep --builtin fig-ii-5 --out fig-ii-5.json --summary-csv fig-ii-5.csv
     sugarscape sweep my-sweep.json --jobs 4 --seeds 3 --ticks 300 --runs-csv runs.csv
 
-`run` runs a preset or config of any model; it defaults to seed 1 and 1000 ticks; `--config-out` writes the config it ran and
+`run` runs a preset or config of any model; it defaults to seed 1 and 1000 ticks (an anasazi run
+stops at its end year and says so on stderr); `--config-out` writes the config it ran and
 `--fingerprint` prints the final world's fingerprint. `sweep` uses every core unless `--jobs`
 says otherwise, prints the result JSON unless `--out` is given, and reports progress on
 stderr unless `--quiet`. Exit codes: 0 success, 1 I/O error, 2 usage or validation error
@@ -318,3 +372,7 @@ In the repository settings, Pages must be set to Source: "GitHub Actions".
 
 The 50×50 two-peak sugar map is a transcription of the book's Figure II-1 as distributed
 with the NetLogo Sugarscape models.
+
+The Long House Valley data (`data/anasazi/`) are Marco Janssen's *Artificial Anasazi* v1.1.0,
+CoMSES Computational Model Library, doi:10.25937/krp4-g724, under the GPL-2.0 (see
+`data/anasazi/NOTICE`, `LICENSE` and `CITATION.cff` there).

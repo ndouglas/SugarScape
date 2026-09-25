@@ -67,11 +67,24 @@ reuse: every speed, links, Compare, recording, Experiments (with the measured `s
 sweep) and the CLI. Sugarscape runs, configs and links are unchanged. See
 `docs/superpowers/specs/2026-09-25-other-artificial-societies-design.md`.
 
+## Milestone 10: Artificial Anasazi (done)
+
+The Long House Valley, AD 800–1350, as a fourth model kind, written from Janssen's ODD and JASSS
+paper with the published replication's ten departures as named switches: its data bundled under
+GPL-2.0, the published, default and documented presets (the published one follows JASSS Figure 10;
+the documented model does not reproduce it), the valley's views, overlays, year readout and end
+year, the historical record on its chart, a replication-vs-documented Compare entry and the
+measured `lhv-calibration` and `lhv-quirks` sweeps. Earlier models are unchanged. See
+`docs/superpowers/specs/2026-09-25-anasazi-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
 - **Headless CLI**: done (Milestone 5).
 - **Chapter VI "artificial history" presets**: done (Milestone 8); the flocking / group-formation aside (Animation VI-8) is Ring World (Milestone 9).
+- **Artificial Anasazi** (Chapter VI's "Computational Archaeology"): done (Milestone 10).
+- **Nowak–May spatial games**: a candidate model kind (spatial Prisoner's Dilemma on a lattice).
+- **Epstein's civil violence**: a candidate model kind (agents, cops and legitimacy).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions
