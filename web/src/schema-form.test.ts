@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { groupParams, paramEdit, paramInput } from './schema-form';
-import type { ModelConfig, Param, RingConfig, SchellingConfig } from './types';
+import type { AnasaziConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
 
 const ring = (): RingConfig => ({
   model: 'ring',
@@ -66,5 +66,13 @@ describe('the schema form', () => {
     expect(paramInput(param({ path: 'vision', kind: 'range' }), c)).toEqual({ min: '15', max: '30' });
     expect(paramInput(param({ path: 'start', kind: 'choice' }), c)).toBe('random');
     expect(paramInput(param({ path: 'growback', kind: 'number' }), c)).toBe('1');
+  });
+
+  it('reads and writes the anasazi’s quirks by their dotted paths', () => {
+    const c = { model: 'anasazi', quirks: { occupancy_leak: true, wrap_edges: true } } as unknown as AnasaziConfig;
+    const leak = param({ path: 'quirks.occupancy_leak', kind: 'bool', help: 'A household that moves… (A-19).' });
+    expect(paramInput(leak, c)).toBe(true);
+    paramEdit(leak, false)(c);
+    expect(c.quirks).toEqual({ occupancy_leak: false, wrap_edges: true });
   });
 });

@@ -65,13 +65,15 @@ export class SchemaPanel {
   private control(p: Param): HTMLElement {
     const slot = h('div', { class: 'error' });
     this.slots.push({ path: p.path, el: slot });
+    // A field's one-line explanation (the anasazi's quirks cite the extraction).
+    const help = p.help ? h('p', { class: 'hint help' }, p.help) : null;
     const current = () => paramInput(p, this.engine.config);
     const bounds = { min: p.min, max: p.max, step: p.step };
     switch (p.kind) {
       case 'bool': {
         const box = h('input', { type: 'checkbox', onchange: () => void this.commit(p, box.checked) });
         this.syncers.push(() => (box.checked = current() === true));
-        return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${p.label}`), slot);
+        return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${p.label}`), help, slot);
       }
       case 'choice': {
         const select = h(
@@ -80,7 +82,7 @@ export class SchemaPanel {
           ...(p.choices ?? []).map((c) => h('option', { value: c.value }, c.label)),
         );
         this.syncers.push(() => (select.value = String(current())));
-        return h('div', { class: 'control' }, h('label', {}, p.label), select, slot);
+        return h('div', { class: 'control' }, h('label', {}, p.label), select, help, slot);
       }
       case 'range': {
         const lo = h('input', { type: 'number', class: 'num', ...bounds });
@@ -93,7 +95,14 @@ export class SchemaPanel {
           lo.value = r.min;
           hi.value = r.max;
         });
-        return h('div', { class: 'control' }, h('label', {}, p.label), h('div', { class: 'row' }, lo, h('span', { class: 'hint' }, 'to'), hi), slot);
+        return h(
+          'div',
+          { class: 'control' },
+          h('label', {}, p.label),
+          h('div', { class: 'row' }, lo, h('span', { class: 'hint' }, 'to'), hi),
+          help,
+          slot,
+        );
       }
       default: {
         const slider = h('input', { type: 'range', ...bounds });
@@ -106,7 +115,7 @@ export class SchemaPanel {
           slider.value = v;
           num.value = v;
         });
-        return h('div', { class: 'control' }, h('label', {}, p.label), h('div', { class: 'row' }, slider, num), slot);
+        return h('div', { class: 'control' }, h('label', {}, p.label), h('div', { class: 'row' }, slider, num), help, slot);
       }
     }
   }

@@ -14,6 +14,12 @@ export interface ComparePreset {
 
 export const COMPARE_PRESETS: ComparePreset[] = [
   { id: 'vi-2-vs-vi-3', label: 'Indecomposability — VI-2 vs VI-3 (Compare)', a: 'vi-2-no-trade', b: 'vi-3-trade' },
+  {
+    id: 'lhv-published-vs-documented',
+    label: 'Replication vs documented — Anasazi (Compare)',
+    a: 'lhv-published',
+    b: 'lhv-documented',
+  },
 ];
 
 /**

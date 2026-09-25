@@ -33,4 +33,12 @@ describe('compare presets', () => {
     const ring: Preset = { ...preset('vi-3-trade', true), config: { model: 'ring' } as unknown as Config };
     expect(comparePresetStates([preset('vi-2-no-trade', false), ring], entry, 1)).toBeNull();
   });
+
+  it('opens the published Anasazi replication as A and the documented model as B', () => {
+    const lhv = COMPARE_PRESETS.find((c) => c.id === 'lhv-published-vs-documented')!;
+    expect(lhv).toMatchObject({ a: 'lhv-published', b: 'lhv-documented', label: 'Replication vs documented — Anasazi (Compare)' });
+    const valley = (id: string): Preset => ({ id, name: id, source: '', description: '', config: { model: 'anasazi' } as unknown as Config });
+    const states = comparePresetStates([valley('lhv-published'), valley('lhv-documented')], lhv, 9)!;
+    expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
+  });
 });
