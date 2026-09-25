@@ -32,6 +32,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'cv-run-7-cleansing',
     b: 'cv-safe-havens',
   },
+  {
+    id: 'rca-published-vs-literal-p2',
+    label: 'Published vs literal ties at P = 2 — Tag Cooperation (Compare)',
+    a: 'rca-published-p2',
+    b: 'rca-literal-p2',
+  },
 ];
 
 /**

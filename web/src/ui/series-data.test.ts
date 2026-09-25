@@ -227,6 +227,14 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('tags charts', () => {
+  it('chart donation, tolerance, clusters, tags and takeovers against the generation', () => {
+    expect(MODEL_CHARTS.tags.map((c) => c.title)).toEqual(['Donation rate', 'Tolerance', 'Clusters', 'Distinct tags', 'Takeovers']);
+    expect(MODEL_CHARTS.tags.every((c) => !c.shown)).toBe(true);
+    expect([timeAxisLabel('tags'), timeAxisLabel('civil'), timeAxisLabel('anasazi')]).toEqual(['Generation', 'Tick', 'Year']);
+  });
+});
+
 describe('civil charts', () => {
   it('show Model II’s groups and kills only in Model II', () => {
     const ethnic = { model: 'civil', variant: 'ethnic' } as unknown as ModelConfig;

@@ -77,7 +77,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–11). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'tags';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -177,7 +177,30 @@ export interface CivilConfig {
  * and sweep written before milestone 9 is one); the others carry theirs. Narrow with `isSugar` /
  * `modelOf` (models.ts).
  */
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig;
+/**
+ * Riolo, Cohen & Axelrod's tag-based donation (milestone 12), with Edmonds & Hales' and Roberts &
+ * Sherratt's departures as switches. A tick is a generation.
+ */
+export interface TagsConfig {
+  model: 'tags';
+  agents: number;
+  pairings: number;
+  cost: number;
+  benefit: number;
+  initial_tolerance: 'uniform' | { fixed: number };
+  tag_mutation: number;
+  tolerance_mutation: number;
+  tolerance_sd: number;
+  /** The last generation (0: never). */
+  end: number;
+  tie_rule: 'random' | 'current' | 'other';
+  donation_test: 'at_most' | 'below';
+  tolerance_floor: number;
+  tag_noise: number;
+  selection: 'tournament' | 'adopt';
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -286,8 +309,21 @@ export interface CivilStats {
   extinction: number;
 }
 
+export interface TagsStats {
+  tick: number;
+  population: number;
+  donation_rate: number;
+  mean_tolerance: number;
+  cluster_share: number;
+  relatedness: number;
+  cluster_tolerance: number;
+  zero_tolerance_share: number;
+  distinct_tags: number;
+  takeovers: number;
+}
+
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -387,12 +423,34 @@ export interface CitizenView {
 /** A civil site: its free agent, its cop, and the agents jailed after arrest here. */
 export interface CivilInspection { site: { x: number; y: number }; agent: CitizenView | null; cop: { id: number } | null; jailed: CitizenView[] }
 
+/** An agent of the current generation: its traits, and this generation's score and donations. */
+export interface TaggerView { id: number; parent: number; tag: number; tolerance: number; score: number; given: number; received: number }
+/**
+ * A cell of the tag × generation diagram: its generation (null above the first) and tag bin, what
+ * that bin held, and its agents when it is the current generation. `agent` is always null: agents
+ * live one generation, so there is nobody to follow.
+ */
+export interface TagsInspection {
+  site: { x: number; y: number };
+  generation: number | null;
+  from: number;
+  to: number;
+  count: number;
+  distinct: number;
+  tolerance: { min: number; mean: number; max: number } | null;
+  given: number;
+  received: number;
+  agents: TaggerView[];
+  agent: null;
+}
+
 /** What a world of any model says about a site. */
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
- * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`.
+ * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`, or (tags)
+ * `count`, `tolerance`, `clones`.
  */
 export type ColorMode =
   | 'tribe'
@@ -411,7 +469,10 @@ export type ColorMode =
   | 'yield'
   | 'action'
   | 'grievance'
-  | 'group';
+  | 'group'
+  | 'count'
+  | 'tolerance'
+  | 'clones';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

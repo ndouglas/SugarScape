@@ -1,7 +1,7 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
-import { isCivilView, isRingView, isSugarView, isValleyView } from '../models';
-import type { AgentView, AnasaziInspection, CivilInspection, LinkView, RingInspection, SchellingInspection } from '../types';
+import { isCivilView, isRingView, isSugarView, isTagsView, isValleyView } from '../models';
+import type { AgentView, AnasaziInspection, CivilInspection, LinkView, RingInspection, SchellingInspection, TagsInspection } from '../types';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -126,6 +126,30 @@ export class InspectPanel {
     return rows;
   }
 
+  /**
+   * A cell of the tags diagram: its generation and tag bin, what the bin held, and in the current
+   * generation its agents (the first 12).
+   */
+  private tagsRows(view: TagsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const tags = `${view.from.toFixed(2)}–${view.to.toFixed(2)}`;
+    if (view.generation === null) return [row('Tags', tags), row('Generation', 'before the first')];
+    const rows = [row('Generation', String(view.generation)), row('Tags', tags)];
+    const t = view.tolerance;
+    if (view.count === 0 || !t) return [...rows, row('Agents', 'none')];
+    rows.push(
+      row('Agents', `${view.count} with ${view.distinct} distinct ${view.distinct === 1 ? 'tag' : 'tags'}`),
+      row('Tolerance', `${t.min.toFixed(4)} – ${t.max.toFixed(4)} (mean ${t.mean.toFixed(4)})`),
+      row('Donations', `${view.given} made · ${view.received} received`),
+    );
+    const shown = view.agents.slice(0, 12);
+    for (const a of shown) {
+      rows.push(row(`#${a.id}`, `tag ${a.tag.toFixed(4)} · tolerance ${a.tolerance.toFixed(4)} · score ${fmt(a.score)} · from #${a.parent}`));
+    }
+    if (view.agents.length > shown.length) rows.push(row('', `and ${view.agents.length - shown.length} more`));
+    return rows;
+  }
+
   /** Ring World's site and its agent (Decision 13). */
   private ringRows(view: RingInspection, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -189,13 +213,15 @@ export class InspectPanel {
           ? `Agent #${shown.agentId} is gone: killed, or dead of old age.`
           : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
-      const rows = isRingView(view)
-        ? this.ringRows(view, gone)
-        : isValleyView(view)
-          ? this.valleyRows(view, gone)
-          : isCivilView(view)
-            ? this.civilRows(view, shown.agentId, gone)
-            : this.schellingRows(view, gone);
+      const rows = isTagsView(view)
+        ? this.tagsRows(view)
+        : isRingView(view)
+          ? this.ringRows(view, gone)
+          : isValleyView(view)
+            ? this.valleyRows(view, gone)
+            : isCivilView(view)
+              ? this.civilRows(view, shown.agentId, gone)
+              : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

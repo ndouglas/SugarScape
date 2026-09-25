@@ -42,6 +42,16 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs the published and literal tie rules at two pairings', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual([
+      'rca-published-vs-literal-p2',
+      'rca-published-p2',
+      'rca-literal-p2',
+      'Published vs literal ties at P = 2 — Tag Cooperation (Compare)',
+    ]);
+  });
+
   it('pairs the civil runs the paper compares', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['cv-salami-vs-jump', 'cv-run-3-salami', 'cv-run-4-one-jump', 'Salami tactics vs one jump — Civil Violence (Compare)']);

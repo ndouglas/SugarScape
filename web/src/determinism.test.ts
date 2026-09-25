@@ -8,7 +8,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { AnasaziStats, CivilConfig, CivilStats, Preset, Snapshot } from './types';
+import type { AnasaziStats, CivilConfig, CivilStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -353,6 +353,15 @@ describe('other models through the engine', () => {
     ['cv-run-6-coexistence', '0x1ce4fc6300e993ee'],
     ['cv-run-8-nasty-regime', '0x5ce734d905ba0c5d'],
     ['cv-netlogo', '0x87a92345c017b0ae'],
+    ['rca-published', '0x1c83900b9b9f0b94'],
+    ['rca-literal', '0x8cc0a69cf4d14caa'],
+    ['rca-published-p2', '0x3f91b546c9734d3d'],
+    ['rca-literal-p2', '0x54380d2809b3fd62'],
+    ['rca-strict', '0x7b729c41a4436372'],
+    ['rs-no-forced-clones', '0x9dffef2174ca7415'],
+    ['eh-clones-only', '0x1bd933620c915c0e'],
+    ['eh-no-exact-clones', '0xafe94d6c0bb3b8ab'],
+    ['rca-adopt-p1', '0x0c3f75d53d237a89'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -431,6 +440,32 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the tags model through the engine', () => {
+  const published = presets.find((p) => p.id === 'rca-published')!;
+
+  it('stops at its last generation, once, and shows the newest row’s agents', async () => {
+    const config = { ...structuredClone(published.config as TagsConfig), end: 60 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'tolerance' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(100);
+    expect([e.tick, e.finished, ends]).toEqual([60, true, 1]);
+    const s = e.latest as TagsStats;
+    expect(s.donation_rate).toBeGreaterThan(0);
+    expect(s.cluster_share).toBeGreaterThan(0);
+    let found: TagsInspection | null = null;
+    for (let x = 0; x < 100 && !found; x++) {
+      await e.select(x, 199);
+      const v = e.inspection!.view as TagsInspection;
+      if (v.count > 0) found = v;
+    }
+    expect(found!.generation).toBe(60);
+    expect(found!.agents).toHaveLength(found!.count);
+    expect(e.inspection!.agentId).toBeNull();
   });
 });
 

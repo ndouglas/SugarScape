@@ -1,4 +1,4 @@
-// Which model a config is (milestones 9–11), and what each model offers the page.
+// Which model a config is (milestones 9–12), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   AnasaziInspection,
@@ -12,9 +12,11 @@ import type {
   ModelKind,
   Preset,
   RingInspection,
+  TagsConfig,
+  TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -23,12 +25,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   ring: 'Ring World',
   anasazi: 'Artificial Anasazi',
   civil: 'Civil Violence',
+  tags: 'Tag Cooperation',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' ? tag : 'sugarscape';
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'tags' ? tag : 'sugarscape';
 }
 
 export function isSugar(c: ModelConfig): c is Config {
@@ -55,14 +58,24 @@ export function isCivilView(v: AnyInspection): v is CivilInspection {
   return 'jailed' in v;
 }
 
+/** A cell of the tags model's diagram (it names its generation). */
+export function isTagsView(v: AnyInspection): v is TagsInspection {
+  return 'generation' in v;
+}
+
 /** The calendar year a world of `c` is in at `tick` (the anasazi's), or null for a model without one. */
 export function calendarYear(c: ModelConfig, tick: number): number | null {
   return 'model' in c && c.model === 'anasazi' ? c.start_year + tick : null;
 }
 
-/** Ticks until a world of `c` at `tick` is finished (the anasazi's end year); Infinity for a model that never finishes. */
+/**
+ * Ticks until a world of `c` at `tick` is finished (the anasazi's end year, the tags model's last
+ * generation); Infinity for a model that never finishes.
+ */
 export function ticksLeft(c: ModelConfig, tick: number): number {
-  return 'model' in c && c.model === 'anasazi' ? Math.max(0, c.end_year - c.start_year - tick) : Infinity;
+  if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
+  if (modelOf(c) === 'tags' && (c as TagsConfig).end > 0) return Math.max(0, (c as TagsConfig).end - tick);
+  return Infinity;
 }
 
 /**
@@ -116,6 +129,12 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['grievance', 'Grievance'],
     ['group', 'Group'],
   ],
+  // The diagram's three shadings of each tag bin.
+  tags: [
+    ['count', 'Count'],
+    ['tolerance', 'Tolerance'],
+    ['clones', 'Clones'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -125,4 +144,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   ring: [],
   anasazi: VALLEY_OVERLAYS,
   civil: [],
+  tags: [],
 };
