@@ -500,6 +500,47 @@ describe('Engine', () => {
     transport.after = null;
     expect(capturedWants?.trail).toBe(true);
   });
+
+  it('seeks back and forward, keeping the selection and resending charts', async () => {
+    const { engine } = await setup();
+    await engine.select(1, 1);
+    await engine.advance(120);
+    expect(engine.reached).toBe(120);
+    expect(engine.seekable).toBe(true);
+    let configs = 0;
+    engine.on('config', () => configs++);
+    expect(await engine.seek(30)).toBeNull();
+    expect(engine.tick).toBe(30);
+    expect(engine.reached).toBe(120);
+    expect(engine.selection).not.toBeNull();
+    expect(configs).toBe(1);
+    await engine.seek(120);
+    expect(engine.tick).toBe(120);
+  });
+
+  it('returns the host’s errors for a refused seek', async () => {
+    const { engine } = await setup();
+    await engine.advance(5);
+    const errors = await engine.seek(6);
+    expect(errors?.[0].field).toBe('seek');
+  });
+
+  it('pauses and fires stopped when a stop rule fires', async () => {
+    const { engine } = await setup();
+    engine.setStops({ tick: 3 });
+    engine.setSpeed(2);
+    engine.setRunning(true);
+    let stopped = 0;
+    engine.on('stopped', () => stopped++);
+    for (let i = 0; i < 5; i++) {
+      engine.pump(i);
+      await settle();
+    }
+    expect(engine.tick).toBe(3);
+    expect(engine.running).toBe(false);
+    expect(stopped).toBe(1);
+    expect(engine.lastStop).toBe('Stopped at tick 3');
+  });
 });
 
 describe('Engine at Max speed', () => {
@@ -696,6 +737,16 @@ describe('Engine at Max speed', () => {
     expect(crashes).toHaveLength(1);
     expect(engine.crashed).toContain('boom');
     expect(engine.running).toBe(false);
+  });
+
+  it('pauses on a stop rule at Max', async () => {
+    const { engine } = await maxSetup();
+    engine.setStops({ tick: 40 });
+    engine.setSpeed('max');
+    engine.setRunning(true);
+    while (engine.running) await wait(5);
+    expect(engine.tick).toBe(40);
+    expect(engine.lastStop).toBe('Stopped at tick 40');
   });
 });
 

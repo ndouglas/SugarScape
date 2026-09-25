@@ -50,6 +50,42 @@ describe('determinism through the engine', () => {
     for (let i = 0; i < 20; i++) await e.advance(10);
     expect(await e.fingerprint()).toBe(GOLDEN);
   });
+
+  it('seeks through keyframes to the golden world, with edits on both sides of the target', async () => {
+    const reference = await engine();
+    await reference.advance(60);
+    await reference.place(3, 3, {});
+    await reference.advance(140);
+    const want = await reference.fingerprint();
+
+    const e = await engine();
+    await e.advance(60);
+    await e.place(3, 3, {});
+    await e.advance(240);
+    for (const t of [200, 61, 60, 59, 0]) {
+      await e.seek(t);
+      expect(e.tick).toBe(t);
+    }
+    await e.seek(0);
+    await e.advance(200); // replays the edit at 60
+    expect(await e.fingerprint()).toBe(want);
+    await e.seek(150);
+    await e.seek(200);
+    expect(await e.fingerprint()).toBe(want);
+  });
+
+  it('shares a session taken after a seek back', async () => {
+    const e = await engine();
+    await e.advance(50);
+    await e.place(4, 4, {});
+    await e.advance(100);
+    await e.seek(20);
+    const { session } = await e.session();
+    const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await opened.advance(150);
+    await e.advance(130);
+    expect(await opened.fingerprint()).toBe(await e.fingerprint());
+  });
 });
 
 describe('Chapter VI views', () => {

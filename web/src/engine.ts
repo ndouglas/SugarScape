@@ -15,6 +15,7 @@ import {
   type Selected,
   type SelectQuery,
   type Session,
+  type StopRules,
   type ValleyState,
   type Wants,
   type WorldSnapshot,
@@ -42,7 +43,8 @@ export type EngineEvent =
   | 'replay'
   | 'fork'
   | 'full'
-  | 'finished';
+  | 'finished'
+  | 'stopped';
 
 /** What the page says when a world reaches `MAX_TICKS` (the engine pauses and fires 'full'). */
 export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its history holds here — export its data, or Reset to start again';
@@ -100,10 +102,18 @@ export class SlowPacer {
 export interface RunControls {
   readonly running: boolean;
   readonly speed: Speed;
+  readonly tick: number;
+  readonly reached: number;
+  readonly seekable: boolean;
+  /** Whether a condition rule (`StopRules.when`) is supported (false in Compare). */
+  readonly conditionStops: boolean;
+  readonly lastStop: string | null;
   setRunning(on: boolean): void;
   setSpeed(speed: Speed): void;
   advance(n?: number): Promise<void>;
-  on(event: 'run', fn: () => void): () => void;
+  seek(tick: number): Promise<unknown>;
+  setStops(stops: StopRules): void;
+  on(event: 'run' | 'tick' | 'stopped', fn: () => void): () => void;
 }
 
 /** While paused, extras a panel wants are fetched at most this often. */
@@ -217,6 +227,15 @@ export class Engine {
   crashed: string | null = null;
   /** Edits still to replay (the toolbar's chip counts them down). */
   replayLeft = 0;
+  /** The furthest tick on this world's branch (the timeline's end). */
+  reached = 0;
+  /** Whether the world can seek (false once its log is full). */
+  seekable = true;
+  /** The stop rules sent to the host (kept across resets). */
+  stops: StopRules = {};
+  /** Why the run last stopped by itself, or null. */
+  lastStop: string | null = null;
+  readonly conditionStops = true;
   /** What the world was last built from: a session's config, seed and starting maps (Decision 4). */
   private origin!: { config: ModelConfig; seed: number; landscapes: (Uint8Array | null)[] };
   /** `replayLeft` changed in the snapshot being adopted: announce 'replay'. */
@@ -481,6 +500,24 @@ export class Engine {
     return this.quiet(() => this.stepNow(n));
   }
 
+  /** Moves the world to `tick` on its branch (0 … `reached`); null, or the host's errors. */
+  seek(tick: number): Promise<FieldError[] | null> {
+    return this.quiet(async () => {
+      const result = await this.send({ type: 'seek', tick }, true);
+      if (!result.ok || !result.snapshot) return writeFailure(result);
+      // The reply carries the config (fires 'config') and every chart group afresh.
+      this.charts.clear();
+      this.accept(result.snapshot, ['tick']);
+      return null;
+    });
+  }
+
+  /** Sets the rules that stop a run by itself; they hold until changed. */
+  setStops(stops: StopRules): void {
+    this.stops = structuredClone(stops);
+    void this.send({ type: 'setStops', stops: this.stops });
+  }
+
   setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<Record<Overlay, boolean>> }): void {
     if (d.colorMode) this.colorMode = d.colorMode;
     if (d.layer) this.layer = d.layer;
@@ -685,6 +722,9 @@ export class Engine {
         this.selection = other.selection;
         this.inspection = other.inspection;
         this.replayLeft = other.replayLeft;
+        this.reached = other.reached;
+        this.seekable = other.seekable;
+        this.lastStop = other.lastStop;
         this.origin = other.origin;
         this.colorMode = other.colorMode;
         this.layer = other.layer;
@@ -703,6 +743,7 @@ export class Engine {
         this.lastRefresh = -Infinity;
       }),
     );
+    this.setStops(this.stops);
     for (const event of ['reset', 'follow', 'display', 'replay'] as const) this.emit(event);
     if (this.inspection) this.emit('select');
     this.emit('snapshot');
@@ -791,6 +832,9 @@ export class Engine {
       this.replayLeft = s.replayLeft;
       this.replayMoved = true;
     }
+    if (s.reached !== undefined) this.reached = s.reached;
+    if (s.seekable !== undefined) this.seekable = s.seekable;
+    if (s.stopped) this.lastStop = s.stopped;
     this.followedId = s.followed;
     this.followedLive = s.followedAlive;
     if (s.frame) {
@@ -853,6 +897,10 @@ export class Engine {
 
   private accept(s: WorldSnapshot, events: EngineEvent[] = []): void {
     this.announce(s, events, this.adopt(s));
+    if (s.stopped) {
+      if (this.running) this.setRunning(false);
+      this.emit('stopped');
+    }
   }
 
   private async stepNow(n: number): Promise<void> {
