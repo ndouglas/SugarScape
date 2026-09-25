@@ -1,0 +1,84 @@
+{
+  "name": "Tags: cooperation needs identical tags to donate",
+  "description": "Cooperation needs identical tags to be forced to donate. At 3 pairings, under each tie rule: the paper's rules; donating only when |Δtag| < tolerance (Edmonds & Hales 2003); a tolerance floor of −10⁻⁶ (Roberts & Sherratt 2002); every tolerance fixed at 0; and Gaussian tag noise of 10⁻⁶ so no two tags are equal. Measured (release, seeds 1–5, recorded 2026-09-25), coin flip / current agent / opponent: the paper 73.7 / 73.4 / 73.6%; strict 3.9 / 1.4 / 4.9%; floor 3.9 / 1.4 / 4.9%; tolerance 0: 75.3 / 0.0 / 75.3%; tag noise 4.0 / 1.4 / 4.8%.",
+  "base": {
+    "preset": "rca-literal"
+  },
+  "x": {
+    "label": "Variant",
+    "values": [
+      {
+        "at": 0,
+        "name": "The paper",
+        "set": {}
+      },
+      {
+        "at": 1,
+        "name": "|Δtag| < tolerance",
+        "set": {
+          "donation_test": "below"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Tolerance floor −10⁻⁶",
+        "set": {
+          "tolerance_floor": -1e-06
+        }
+      },
+      {
+        "at": 3,
+        "name": "Tolerance fixed at 0",
+        "set": {
+          "initial_tolerance": {
+            "fixed": 0.0
+          },
+          "tolerance_mutation": 0.0
+        }
+      },
+      {
+        "at": 4,
+        "name": "Tag noise 10⁻⁶",
+        "set": {
+          "tag_noise": 1e-06
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Equal scores",
+    "values": [
+      {
+        "at": 0,
+        "name": "Coin flip (literal)",
+        "set": {
+          "tie_rule": "random"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Current agent wins (the paper’s tables)",
+        "set": {
+          "tie_rule": "current"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Opponent wins",
+        "set": {
+          "tie_rule": "other"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 30000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "donation_rate",
+    "from": 0
+  }
+}

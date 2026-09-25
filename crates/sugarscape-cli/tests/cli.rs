@@ -59,6 +59,10 @@ fn presets_and_sweeps_are_listed() {
         "cv-ratio-rules",
         "cv-peacekeeping",
         "cv-jail-waits",
+        "rca-pairings",
+        "rca-cost",
+        "rca-clones",
+        "rca-population",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -399,6 +403,23 @@ fn the_anasazi_runs_to_its_end_year_on_the_command_line() {
         result.runs.len(),
         12,
         "none, each of ten quirks and all off"
+    );
+}
+
+#[test]
+fn a_tags_run_stops_at_its_last_generation() {
+    let out = sugarscape(&[
+        "run",
+        "--preset",
+        "rca-published",
+        "--ticks",
+        "40000",
+        "--fingerprint",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(
+        stderr(&out),
+        "finished at tick 30000 (its last generation)\n"
     );
 }
 

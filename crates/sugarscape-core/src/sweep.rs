@@ -940,7 +940,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 11] = [
+const BUILTINS: [Builtin; 15] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -984,6 +984,22 @@ const BUILTINS: [Builtin; 11] = [
     Builtin {
         id: "cv-jail-waits",
         json: include_str!("../../../sweeps/cv-jail-waits.json"),
+    },
+    Builtin {
+        id: "rca-pairings",
+        json: include_str!("../../../sweeps/rca-pairings.json"),
+    },
+    Builtin {
+        id: "rca-cost",
+        json: include_str!("../../../sweeps/rca-cost.json"),
+    },
+    Builtin {
+        id: "rca-clones",
+        json: include_str!("../../../sweeps/rca-clones.json"),
+    },
+    Builtin {
+        id: "rca-population",
+        json: include_str!("../../../sweeps/rca-population.json"),
     },
 ];
 
@@ -1750,7 +1766,11 @@ mod tests {
                 "lhv-quirks",
                 "cv-ratio-rules",
                 "cv-peacekeeping",
-                "cv-jail-waits"
+                "cv-jail-waits",
+                "rca-pairings",
+                "rca-cost",
+                "rca-clones",
+                "rca-population"
             ]
         );
         for b in builtins() {
