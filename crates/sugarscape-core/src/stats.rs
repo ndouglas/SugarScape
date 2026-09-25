@@ -448,7 +448,7 @@ pub fn downsample(values: &[f64], max: usize) -> Vec<(u32, f64)> {
     let buckets = max - 2;
     // Bucket b holds indices start(b)..start(b + 1) of the interior 1..n - 1;
     // each holds at least one, since n - 2 > buckets.
-    let start = |b: usize| 1 + b * (n - 2) / buckets;
+    let start = |b: usize| bucket_start(b, n, buckets);
     let mut out = Vec::with_capacity(max);
     out.push(point(0));
     // The triangle's first corner: the last finite point kept.
@@ -490,6 +490,13 @@ pub fn downsample(values: &[f64], max: usize) -> Vec<(u32, f64)> {
     }
     out.push(point(n - 1));
     out
+}
+
+/// Where LTTB bucket `b` of `buckets` begins in an `n`-point series: the
+/// interior 1..n - 1 split evenly. The product is taken in u64, since
+/// `b * (n - 2)` overflows wasm32's 32-bit `usize` past about 2.15 M points.
+fn bucket_start(b: usize, n: usize, buckets: usize) -> usize {
+    1 + (b as u64 * (n as u64 - 2) / buckets as u64) as usize
 }
 
 /// The mean position of the finite values in `range`, or `None` if it has none.
@@ -889,6 +896,26 @@ mod tests {
                 d.iter().all(|&(i, y)| long[i as usize] == y),
                 "points are real"
             );
+        }
+    }
+
+    #[test]
+    fn bucket_bounds_do_not_overflow_32_bits() {
+        // A 3 M-tick history cut to 2000 points: b * (n - 2) passes u32::MAX,
+        // which wrapped (then panicked) on wasm32.
+        let (n, buckets) = (3_000_000usize, 1998usize);
+        assert!((buckets as u64 - 1) * (n as u64 - 2) > u64::from(u32::MAX));
+        assert_eq!(bucket_start(0, n, buckets), 1);
+        assert_eq!(bucket_start(buckets, n, buckets), n - 1);
+        assert_eq!(
+            bucket_start(buckets - 1, n, buckets),
+            1 + 1997 * 2_999_998 / 1998
+        );
+        let mut last = 0;
+        for b in 0..=buckets {
+            let s = bucket_start(b, n, buckets);
+            assert!(s > last && s < n);
+            last = s;
         }
     }
 

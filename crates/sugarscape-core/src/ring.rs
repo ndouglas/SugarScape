@@ -532,6 +532,11 @@ impl Model for RingWorld {
 /// world; the rest rebuild it.
 pub fn schema() -> Vec<Param> {
     use Apply::{Live, Reset};
+    // UI limits, narrower than `validate()` on purpose (performance): the
+    // panel offers agents up to 999, vision 1–100, capacity 1–20 and growback
+    // 0.1–10, while configs from files and links may use `validate()`'s full
+    // range (agents below sites, vision up to sites − 1, capacity 1–100, any
+    // growback > 0).
     vec![
         Param::integer("Setup", "sites", "Sites", (10, 1000), Reset),
         Param::integer("Setup", "agents", "Agents", (1, 999), Reset),

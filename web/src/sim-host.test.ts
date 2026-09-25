@@ -12,7 +12,7 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, serve, SimHost } from './sim-host';
+import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, MAX_TICKS, serve, SimHost } from './sim-host';
 import type { Config, ModelConfig } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
@@ -444,6 +444,47 @@ describe('SimHost at Max speed', () => {
     flush(20);
     expect(messages.length).toBe(count);
     expect(queue).toHaveLength(0); // the loop ended
+  });
+});
+
+describe('SimHost at MAX_TICKS', () => {
+  const FULL = { ok: false, errors: [{ field: 'tick', message: 'this world has reached 1,000,000 ticks, the most its history holds here' }] };
+
+  it('steps no further than the cap, and answers a step there with a field error', () => {
+    const t = start();
+    expect(t.snap(t.send({ type: 'step', n: MAX_TICKS - 2 })).tick).toBe(MAX_TICKS - 2);
+    expect(t.snap(t.send({ type: 'step', n: 10 })).tick).toBe(MAX_TICKS);
+    expect(t.send({ type: 'step', n: 1 }).result).toEqual(FULL);
+    expect(t.snap(t.send({ type: 'refresh' })).tick).toBe(MAX_TICKS);
+  });
+
+  it('ends Max at the cap, posting the world there', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'step', n: MAX_TICKS - 3 });
+    t.send({ type: 'run' }, { frame: new ArrayBuffer(48) });
+    let post: WorldSnapshot | null = null;
+    for (let i = 0; i < 10 && !post; i++) post = t.host.batch();
+    expect(post?.tick).toBe(MAX_TICKS);
+    expect(post?.frame).toBeDefined();
+    expect(t.host.running).toBe(false);
+    expect(t.host.batch()).toBeNull();
+    expect(t.snap(t.send({ type: 'stop' })).tick).toBe(MAX_TICKS);
+  });
+
+  it('holds Max at the cap until a buffer is free to post the last frame in', () => {
+    let clock = 0;
+    const t = start(() => clock++);
+    t.send({ type: 'step', n: MAX_TICKS - 3 });
+    t.send({ type: 'run' });
+    expect(t.host.batch()).toBeNull();
+    expect(t.host.running).toBe(true);
+    const b = new ArrayBuffer(48);
+    t.send({ type: 'frame' }, { frame: b });
+    const post = t.host.batch();
+    expect(post?.frame).toBe(b);
+    expect(post?.tick).toBe(MAX_TICKS);
+    expect(t.host.running).toBe(false);
   });
 });
 

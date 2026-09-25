@@ -85,9 +85,9 @@ export class SchemaPanel {
       case 'range': {
         const lo = h('input', { type: 'number', class: 'num', ...bounds });
         const hi = h('input', { type: 'number', class: 'num', ...bounds });
-        const apply = () => void this.commit(p, { min: lo.value, max: hi.value });
-        lo.addEventListener('change', apply);
-        hi.addEventListener('change', apply);
+        const apply = (edited: 'min' | 'max') => void this.commit(p, { min: lo.value, max: hi.value, edited });
+        lo.addEventListener('change', () => apply('min'));
+        hi.addEventListener('change', () => apply('max'));
         this.syncers.push(() => {
           const r = current() as { min: string; max: string };
           lo.value = r.min;

@@ -55,6 +55,10 @@ export class Lockstep {
         w.on('crash', () => {
           if (this.running) this.setRunning(false);
         }),
+        // Both reach the cap on the same step (they are in step, and each host stops there): pause.
+        w.on('full', () => {
+          if (this.running) this.setRunning(false);
+        }),
       );
     }
     // Compared only once both are quiet: a step (or Max's run) still in flight would move a tick

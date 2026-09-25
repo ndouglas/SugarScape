@@ -37,6 +37,26 @@ describe('the schema form', () => {
     expect(s.residence).toEqual({ enabled: true, min: 10, max: 20 });
   });
 
+  it('keeps a range in order: min raised past max raises max, max lowered past min lowers min', () => {
+    const pref = param({ path: 'preference', kind: 'range', step: 0.05 });
+    const s = { model: 'schelling', preference: { min: 0.25, max: 0.25 } } as SchellingConfig;
+    paramEdit(pref, { min: '0.5', max: '0.25', edited: 'min' })(s);
+    expect(s.preference).toEqual({ min: 0.5, max: 0.5 });
+    paramEdit(pref, { min: '0.5', max: '0.1', edited: 'max' })(s);
+    expect(s.preference).toEqual({ min: 0.1, max: 0.1 });
+    const c = ring();
+    const vision = param({ path: 'vision', kind: 'range', step: 1 });
+    paramEdit(vision, { min: '40', max: '30', edited: 'min' })(c);
+    expect(c.vision).toEqual({ min: 40, max: 40 });
+    paramEdit(vision, { min: '40', max: '5', edited: 'max' })(c);
+    expect(c.vision).toEqual({ min: 5, max: 5 });
+    // An ordered edit, or one with no edited end, is written as typed.
+    paramEdit(vision, { min: '2', max: '9', edited: 'min' })(c);
+    expect(c.vision).toEqual({ min: 2, max: 9 });
+    paramEdit(vision, { min: '9', max: '2' })(c);
+    expect(c.vision).toEqual({ min: 9, max: 2 });
+  });
+
   it('refuses a path the config does not have', () => {
     expect(() => paramEdit(param({ path: 'vision.maxx', kind: 'integer' }), '3')(ring())).toThrow('unknown field vision.maxx');
   });

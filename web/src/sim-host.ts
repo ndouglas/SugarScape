@@ -89,7 +89,15 @@ export const AGE_BIN = 5;
 /** The edit log holds at most this many entries; past it, edits still apply but are not recorded (Decision 1). */
 export const LOG_CAP = 50_000;
 
+/**
+ * The page's worlds stop at this tick, whatever the model: their statistics history (one entry per
+ * tick, kept whole) must fit in the WASM heap. Max ends there and a step answers `FULL`. The
+ * native CLI is not capped.
+ */
+export const MAX_TICKS = 1_000_000;
+
 const NO_WORLD = JSON.stringify([{ field: 'world', message: 'no world yet' }]);
+const FULL = JSON.stringify([{ field: 'tick', message: 'this world has reached 1,000,000 ticks, the most its history holds here' }]);
 
 /**
  * An extra the world cannot give — a chart line or a selected site that a config change just
@@ -178,7 +186,8 @@ export class SimHost {
    * instead of drifting toward 2 × BATCH_MS when POST_MS falls between two batch-lengths. With no
    * buffer pooled there is nothing to post regardless, so the deadline is not applied — capping it
    * anyway would leave `posted` unmoved while every batch (and its deferred round trip) stepped
-   * just one tick, throttling Max to roughly the scheduler's minimum delay. Returns a snapshot to
+   * just one tick, throttling Max to roughly the scheduler's minimum delay. At `MAX_TICKS` the
+   * loop ends, posting the world there as soon as it holds a free buffer. Returns a snapshot to
    * post, or null.
    */
   batch(): WorldSnapshot | null {
@@ -189,7 +198,13 @@ export class SimHost {
     const cap = max.pool.length > 0 ? Math.min(start + BATCH_MS, max.posted + POST_MS) : start + BATCH_MS;
     // One tick at a time, applying any edit due at each (Decision 2).
     do this.advance(sim, 1);
-    while (this.now() < cap);
+    while (this.now() < cap && sim.tick() < MAX_TICKS);
+    if (sim.tick() >= MAX_TICKS) {
+      const last = max.pool.pop();
+      if (!last) return null;
+      this.max = null;
+      return this.snapshot(sim, max.wants, last);
+    }
     const now = this.now();
     const frame = now - max.posted >= POST_MS ? max.pool.pop() : undefined;
     if (!frame) return null;
@@ -237,6 +252,7 @@ export class SimHost {
         this.fork();
         return this.reply(sim, wants, frame);
       case 'step':
+        if (sim.tick() >= MAX_TICKS) throw FULL;
         this.advance(sim, cmd.n);
         return this.reply(sim, wants, frame);
       case 'refresh':
@@ -373,11 +389,11 @@ export class SimHost {
   }
 
   /**
-   * Steps `n` ticks. While entries are pending it stops at each entry's tick and applies it
-   * (`step(k)` is the same world as k single steps, so it steps straight there).
+   * Steps `n` ticks, or up to `MAX_TICKS`. While entries are pending it stops at each entry's tick
+   * and applies it (`step(k)` is the same world as k single steps, so it steps straight there).
    */
   private advance(sim: SimLike, n: number): void {
-    let left = n;
+    let left = Math.min(n, MAX_TICKS - sim.tick());
     while (left > 0) {
       const next = this.pending[this.cursor]?.tick;
       const k = next === undefined ? left : Math.min(left, Math.max(1, next - sim.tick()));

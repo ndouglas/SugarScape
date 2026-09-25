@@ -742,6 +742,10 @@ impl Model for SchellingWorld {
 /// preference and residence when they are created).
 pub fn schema() -> Vec<Param> {
     use Apply::Reset;
+    // UI limits, narrower than `validate()` on purpose (performance): the
+    // panel offers width and height 5–200 and residence 1–1000 ticks, while
+    // configs from files and links may use `validate()`'s full range (width
+    // and height 5–500, any population below width × height, residence ≥ 1).
     vec![
         Param::integer("Setup", "width", "Width", (5, 200), Reset),
         Param::integer("Setup", "height", "Height", (5, 200), Reset),

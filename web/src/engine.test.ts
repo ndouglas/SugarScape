@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Engine, type EngineEvent } from './engine';
+import { Engine, FULL_NOTICE, type EngineEvent } from './engine';
 import { fakeModule } from './fake-sim.fixture';
 import type { Command, HostReply, LogEntry, Wants } from './protocol';
-import { SimHost } from './sim-host';
+import { MAX_TICKS, SimHost } from './sim-host';
 import { InlineTransport } from './transport';
 import { isSugar } from './models';
 import type { Config, ModelConfig, Preset, RingConfig } from './types';
@@ -639,6 +639,22 @@ describe('Engine at Max speed', () => {
     expect(configs).toBe(1);
   });
 
+  it('pauses at the tick cap when Max reaches it, and says so', async () => {
+    const { engine, sent } = await maxSetup();
+    await engine.advance(MAX_TICKS - 20);
+    let fulls = 0;
+    engine.on('full', () => fulls++);
+    engine.setRunning(true);
+    await wait(60);
+    expect(engine.tick).toBe(MAX_TICKS);
+    expect(engine.running).toBe(false);
+    expect(fulls).toBe(1);
+    expect(sent.filter((c) => c === 'run')).toHaveLength(1);
+    const at = sent.length;
+    await wait(20);
+    expect(sent.slice(at).filter((c) => c === 'run' || c === 'frame')).toEqual([]);
+  });
+
   it('ends Max and emits crash on a fatal post', async () => {
     const module = fakeModule();
     let clock = 0;
@@ -662,6 +678,29 @@ describe('Engine at Max speed', () => {
     expect(crashes).toHaveLength(1);
     expect(engine.crashed).toContain('boom');
     expect(engine.running).toBe(false);
+  });
+});
+
+describe('Engine at the tick cap', () => {
+  it('pauses when a step reaches the cap, and says so again when a step is refused there', async () => {
+    const { engine } = await setup();
+    expect(FULL_NOTICE).toBe('This world has reached 1,000,000 ticks, the most its history holds here — export its data, or Reset to start again');
+    await engine.advance(MAX_TICKS - 7);
+    let fulls = 0;
+    engine.on('full', () => fulls++);
+    engine.setSpeed(5);
+    engine.setRunning(true);
+    for (let i = 0; i < 4; i++) {
+      engine.pump(i);
+      await settle();
+    }
+    expect(engine.tick).toBe(MAX_TICKS);
+    expect(engine.running).toBe(false);
+    expect(fulls).toBe(1);
+    await engine.advance(1);
+    expect(engine.tick).toBe(MAX_TICKS);
+    expect(engine.crashed).toBeNull();
+    expect(fulls).toBe(2);
   });
 });
 

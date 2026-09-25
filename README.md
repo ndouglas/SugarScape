@@ -216,7 +216,10 @@ and draws the frame and statistics it sends back, so the page stays responsive o
 and at high speeds. Where a module worker cannot start, the same code runs on the page. The
 speed menu's **Max** runs the simulation as fast as it goes and redraws about 30 times a
 second; the other speeds step a fixed number of ticks per frame, as before. A run does not
-depend on the speed: the same setup and seed give the same world at the same tick.
+depend on the speed: the same setup and seed give the same world at the same tick. The
+page's worlds stop at 1 000 000 ticks, whatever the model, so the whole history fits in memory:
+the world pauses there and says so (export its data, or Reset). The command-line tool has no
+such limit.
 
 Charts draw a downsampled history, with the tick on the x axis: Largest-Triangle-Three-Buckets
 keeps about 2 000 points of each line, so spikes survive on long runs, and so do gaps

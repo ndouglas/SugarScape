@@ -19,7 +19,7 @@ import {
   type WorldSnapshot,
 } from './protocol';
 import { isSugar, modelOf } from './models';
-import { SimHost } from './sim-host';
+import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
 import type { ColorMode, Config, FieldError, Layer, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
@@ -39,7 +39,11 @@ export type EngineEvent =
   | 'snapshot'
   | 'crash'
   | 'replay'
-  | 'fork';
+  | 'fork'
+  | 'full';
+
+/** What the page says when a world reaches `MAX_TICKS` (the engine pauses and fires 'full'). */
+export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its history holds here — export its data, or Reset to start again';
 
 export interface Selection { x: number; y: number; agentId: number | null }
 
@@ -806,6 +810,14 @@ export class Engine {
   private async stepNow(n: number): Promise<void> {
     const result = await this.send({ type: 'step', n }, true);
     if (result.ok && result.snapshot) this.accept(result.snapshot, ['tick']);
+    // A step to the cap, or one refused there.
+    if (this.tick >= MAX_TICKS && !this.crashed) this.full();
+  }
+
+  /** The world is at `MAX_TICKS`: pause and say so. */
+  private full(): void {
+    if (this.running) this.setRunning(false);
+    this.emit('full');
   }
 
   /**
@@ -869,6 +881,8 @@ export class Engine {
     // clamps the older choice.
     if (this.displaysPending === 0) this.displayUnder.set(s, this.displayGen);
     this.accept(s, ['tick']);
+    // The host's Max loop ends at the cap, with this post.
+    if (s.tick >= MAX_TICKS) this.full();
     if (this.maxOn) void this.send({ type: 'frame' }, true);
   }
 

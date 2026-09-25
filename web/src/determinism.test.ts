@@ -260,7 +260,11 @@ describe('other models through the engine', () => {
   /** crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: each preset after 200 ticks from seed 1. */
   const GOLDEN_MODELS: [string, string][] = [
     ['vi-4-schelling-25', '0x7a7072c3433f5f6f'],
+    ['vi-5-schelling-25-residence', '0x9abe1c25e873debd'],
+    ['vi-6-schelling-50-residence', '0x637412f7af91f684'],
+    ['vi-7-schelling-mixed', '0x79346d2a338108cf'],
     ['vi-8-ring-world', '0x1c341361c466db90'],
+    ['vi-9-ring-megagroup', '0x430d0c3b19b6e58e'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {

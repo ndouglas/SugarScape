@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Engine, type InitialState, type Speed } from '../engine';
 import { fakeModule } from '../fake-sim.fixture';
 import type { LogEntry } from '../protocol';
-import { SimHost } from '../sim-host';
+import { MAX_TICKS, SimHost } from '../sim-host';
 import { InlineTransport } from '../transport';
 import type { Config, Preset } from '../types';
 import { AdaptiveBatch, copyWorld, Lockstep, MAX_BATCH } from './lockstep';
@@ -102,6 +102,22 @@ describe('Lockstep', () => {
     expect(await b.reset(undefined, 9)).toBeNull();
     await lock.settled();
     expect([a.tick, b.tick, b.seed]).toEqual([0, 0, 9]);
+  });
+
+  it('stops both worlds together at the tick cap, without realigning', async () => {
+    const { a, b, lock } = await pair('max', () => 0);
+    await lock.advance(MAX_TICKS - 20);
+    const replays = vi.spyOn(a, 'replay');
+    lock.setRunning(true);
+    await frames(lock, 8);
+    expect([a.tick, b.tick]).toEqual([MAX_TICKS, MAX_TICKS]);
+    expect(lock.running).toBe(false);
+    await lock.advance(1);
+    lock.setRunning(true);
+    await frames(lock, 2);
+    expect([a.tick, b.tick]).toEqual([MAX_TICKS, MAX_TICKS]);
+    expect(lock.running).toBe(false);
+    expect(replays).not.toHaveBeenCalled();
   });
 
   it('realigns worlds that start at different ticks', async () => {
