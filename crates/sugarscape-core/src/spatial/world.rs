@@ -5,6 +5,7 @@
 
 use std::cell::Cell;
 use std::fmt::Write;
+use std::sync::Arc;
 
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -102,12 +103,16 @@ fn letter(c: bool) -> &'static str {
 #[derive(Clone)]
 pub struct SpatialWorld {
     pub config: SpatialConfig,
-    pub geometry: Geometry,
+    /// Fixed once built, so keyframes share it.
+    pub geometry: Arc<Geometry>,
     /// Completed generations.
     pub tick: u64,
     /// Each player's strategy (true: C), now and a generation ago.
     coop: Vec<bool>,
     previous: Vec<bool>,
+    /// How many of each player's neighbors cooperate, for `coop`: rebuilt
+    /// by `rescore_all`, kept current by an asynchronous microstep.
+    cooperating: Vec<u32>,
     /// Each player's score against its neighbors and itself, for `coop`.
     scores: Vec<f64>,
     rng: SimRng,
@@ -138,9 +143,10 @@ impl SpatialWorld {
             config,
             previous: coop.clone(),
             scores: vec![0.0; n],
+            cooperating: vec![0; n],
             coop,
             view_z: Cell::new(geometry.dims.2 / 2),
-            geometry,
+            geometry: Arc::new(geometry),
             tick: 0,
             rng,
             stats: Stats::default(),
@@ -163,17 +169,26 @@ impl SpatialWorld {
     /// itself. A cooperator with k cooperating neighbors scores k + a; a
     /// defector scores k·b + (n − k)·ε + a·ε.
     pub fn score(&self, i: usize) -> f64 {
-        let nb = self.geometry.neighbors(i);
-        let k = nb.iter().filter(|&&j| self.coop[j as usize]).count() as f64;
+        let n = self.geometry.neighbors(i).len() as f64;
+        let k = f64::from(self.cooperating[i]);
         let c = &self.config;
         if self.coop[i] {
             k + c.self_weight
         } else {
-            k * c.b + (nb.len() as f64 - k) * c.epsilon + c.self_weight * c.epsilon
+            k * c.b + (n - k) * c.epsilon + c.self_weight * c.epsilon
         }
     }
 
+    /// Player `i`'s cooperating neighbors, counted afresh.
+    fn count_cooperating(&self, i: usize) -> u32 {
+        let nb = self.geometry.neighbors(i);
+        nb.iter().filter(|&&j| self.coop[j as usize]).count() as u32
+    }
+
     fn rescore_all(&mut self) {
+        self.cooperating = (0..self.players())
+            .map(|i| self.count_cooperating(i))
+            .collect();
         self.scores = (0..self.players()).map(|i| self.score(i)).collect();
     }
 
@@ -276,7 +291,20 @@ impl SpatialWorld {
     /// rescored from the current strategies, and `i` takes its new strategy
     /// at once.
     fn microstep(&mut self, i: usize) {
-        self.coop[i] = self.next_strategy(i, |w, j| w.score(j));
+        let next = self.next_strategy(i, |w, j| w.score(j));
+        if next != self.coop[i] {
+            self.coop[i] = next;
+            // Neighbor lists are symmetric: i is a neighbor of each of its
+            // neighbors, once.
+            for &j in self.geometry.neighbors(i) {
+                let k = &mut self.cooperating[j as usize];
+                if next {
+                    *k += 1;
+                } else {
+                    *k -= 1;
+                }
+            }
+        }
     }
 
     pub fn run(&mut self, ticks: u32) {
@@ -721,6 +749,38 @@ mod tests {
         // (3, 0) scores 2 with its C neighbor (4, 0) and itself: it stays C.
         w.microstep(right);
         assert!(w.coop[right], "rescored after the left site fell");
+    }
+
+    #[test]
+    fn asynchronous_counts_of_cooperating_neighbors_match_a_recount() {
+        let mut w = SpatialWorld::new(
+            SpatialConfig {
+                lattice: Lattice::Random,
+                width: 40,
+                height: 40,
+                occupancy: 0.6,
+                radius: 3.5,
+                defectors: 0.4,
+                update: Update::Asynchronous,
+                winning: Winning::Probabilistic,
+                m: 2.0,
+                ..Default::default()
+            },
+            11,
+        )
+        .unwrap();
+        let n = w.players() as u32;
+        let mut flips = 0;
+        for _ in 0..5 * n {
+            let i = w.rng.gen_range(0..n) as usize;
+            let was = w.coop[i];
+            w.microstep(i);
+            flips += usize::from(was != w.coop[i]);
+        }
+        assert!(flips > 100, "the microsteps flip sites ({flips})");
+        for i in 0..w.players() {
+            assert_eq!(w.cooperating[i], w.count_cooperating(i), "player {i}");
+        }
     }
 
     #[test]
