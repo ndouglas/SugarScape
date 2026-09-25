@@ -229,6 +229,7 @@ pub fn flocks(sites: &[u32], n: u32) -> Vec<u32> {
     out
 }
 
+#[derive(Clone)]
 pub struct RingWorld {
     pub config: RingConfig,
     /// Completed ticks.
@@ -489,6 +490,10 @@ impl Model for RingWorld {
 
     fn series(&self, name: &str) -> Option<Vec<f64>> {
         self.stats.series(name)
+    }
+
+    fn latest_value(&self, name: &str) -> Option<f64> {
+        self.stats.latest().and_then(|s| s.value(name))
     }
 
     fn series_csv(&self) -> String {

@@ -256,6 +256,10 @@ pub trait Model {
     fn series_names(&self) -> Vec<String>;
     /// The full history of series `name` (or `"tick"`), or `None` if unknown.
     fn series(&self, name: &str) -> Option<Vec<f64>>;
+    /// The latest value of series `name` (or `"tick"`), or `None` if unknown or there is no history yet.
+    fn latest_value(&self, name: &str) -> Option<f64> {
+        self.series(name).and_then(|v| v.last().copied())
+    }
     /// The statistics history as CSV (`tick`, then `series_names`).
     fn series_csv(&self) -> String;
     /// The agents alive now as CSV.
@@ -327,6 +331,10 @@ impl Model for World {
 
     fn series(&self, name: &str) -> Option<Vec<f64>> {
         self.stats.series(name)
+    }
+
+    fn latest_value(&self, name: &str) -> Option<f64> {
+        self.stats.latest().and_then(|s| s.value(name))
     }
 
     fn series_csv(&self) -> String {
@@ -445,6 +453,78 @@ impl ModelWorld {
             ModelWorld::Anasazi(w) => Some(w),
             _ => None,
         }
+    }
+}
+
+/// A copy of a world's state without its statistics history (a keyframe):
+/// about one copy of the current state, however long the run.
+pub struct Checkpoint {
+    world: ModelWorld,
+    tick: u64,
+}
+
+impl Checkpoint {
+    /// The tick the copy was taken at.
+    pub fn tick(&self) -> u64 {
+        self.tick
+    }
+}
+
+/// Moves `$w`'s history out, clones it, and moves the history back.
+macro_rules! copy_without_history {
+    ($variant:ident, $w:expr) => {{
+        let stats = std::mem::take(&mut $w.stats);
+        let copy = (**$w).clone();
+        $w.stats = stats;
+        ModelWorld::$variant(Box::new(copy))
+    }};
+}
+
+/// Replaces `$live` by a copy of `$kept`, giving it `$live`'s history cut to `$kept`'s tick.
+macro_rules! restore_into {
+    ($live:expr, $kept:expr) => {{
+        let mut stats = std::mem::take(&mut $live.stats);
+        stats.truncate($kept.tick as usize + 1);
+        let mut next = (**$kept).clone();
+        next.stats = stats;
+        **$live = next;
+    }};
+}
+
+impl ModelWorld {
+    /// A keyframe of this world, or `None` for a model without them.
+    #[allow(unreachable_patterns)]
+    pub fn checkpoint(&mut self) -> Option<Checkpoint> {
+        let tick = self.model().tick();
+        let world = match self {
+            ModelWorld::Sugarscape(w) => copy_without_history!(Sugarscape, w),
+            ModelWorld::Schelling(w) => copy_without_history!(Schelling, w),
+            ModelWorld::Ring(w) => copy_without_history!(Ring, w),
+            ModelWorld::Anasazi(w) => copy_without_history!(Anasazi, w),
+            ModelWorld::Civil(w) => copy_without_history!(Civil, w),
+            _ => return None,
+        };
+        Some(Checkpoint { world, tick })
+    }
+
+    /// Returns this world to `cp`, keeping its statistics history up to `cp`'s tick. The world
+    /// must have reached that tick (its history must hold it) and be of the same model.
+    #[allow(unreachable_patterns)]
+    pub fn restore(&mut self, cp: &Checkpoint) -> Result<(), String> {
+        if self.model().tick() < cp.tick {
+            return Err(format!("this world has not reached tick {}", cp.tick));
+        }
+        match (self, &cp.world) {
+            (ModelWorld::Sugarscape(live), ModelWorld::Sugarscape(kept)) => {
+                restore_into!(live, kept)
+            }
+            (ModelWorld::Schelling(live), ModelWorld::Schelling(kept)) => restore_into!(live, kept),
+            (ModelWorld::Ring(live), ModelWorld::Ring(kept)) => restore_into!(live, kept),
+            (ModelWorld::Anasazi(live), ModelWorld::Anasazi(kept)) => restore_into!(live, kept),
+            (ModelWorld::Civil(live), ModelWorld::Civil(kept)) => restore_into!(live, kept),
+            _ => return Err("the keyframe is of another model".into()),
+        }
+        Ok(())
     }
 }
 

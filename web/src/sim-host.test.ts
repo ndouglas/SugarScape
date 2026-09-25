@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fakeModule } from './fake-sim.fixture';
+import { fakeModule, FakeSim } from './fake-sim.fixture';
 import {
   noOverlays,
   type Command,
@@ -12,8 +12,8 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, MAX_TICKS, serve, SimHost } from './sim-host';
-import type { Config, ModelConfig } from './types';
+import { AGE_BIN, BATCH_MS, channelDefer, KEYFRAME_EVERY, LOG_CAP, MAX_KEYFRAMES, MAX_TICKS, serve, SimHost } from './sim-host';
+import type { Config, FieldError, ModelConfig } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
 const display: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
@@ -236,7 +236,7 @@ describe('SimHost', () => {
     t.send({ type: 'step', n: 26 });
     expect(t.send({ type: 'seriesCsv' }).result).toEqual({ ok: true, value: 'tick,population\n26,1\n' });
     expect(t.send({ type: 'agentsCsv' }).result).toEqual({ ok: true, value: 'id\n1\n' });
-    expect(t.send({ type: 'fingerprint' }).result).toEqual({ ok: true, value: '0x1a' });
+    expect(t.send({ type: 'fingerprint' }).result).toEqual({ ok: true, value: '0x1a|1@3,1|10' });
   });
 });
 
@@ -556,7 +556,7 @@ describe('serve', () => {
     expect(sent.map(([m]) => m.id)).toEqual([1, 2]);
     expect(sent[0][1]).toHaveLength(1);
     expect(sent[0][1][0]).toBe(frame);
-    expect((sent[1][0] as HostReply).result).toEqual({ ok: true, value: '0x0' });
+    expect((sent[1][0] as HostReply).result).toEqual({ ok: true, value: '0x0|1@1,1|10' });
   });
 });
 
@@ -709,6 +709,357 @@ describe('SimHost edit log and replay', () => {
     const panic: LogEntry[] = [{ tick: 0, cmd: { ...paint, value: -1 } as EditCommand }];
     const r = t.send({ type: 'reset', config, seed: 1, landscapes: [], log: panic });
     expect(r.result).toEqual({ ok: false, fatal: 'The simulation stopped: unreachable executed' });
+  });
+});
+
+describe('SimHost keyframes', () => {
+  const init = (host: SimHost) =>
+    host.handle({ id: 1, cmd: { type: 'init', config: { width: 4, height: 3 } as never, seed: 1, landscapes: [], display: { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() } } });
+
+  it('keeps one at t = 0 and one every KEYFRAME_EVERY ticks', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: 175 } });
+    expect(host.keyframeTicks()).toEqual([0, 50, 100, 150]);
+  });
+
+  it('thins to every other one and doubles the interval past MAX_KEYFRAMES', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: KEYFRAME_EVERY * MAX_KEYFRAMES } });
+    const ticks = host.keyframeTicks();
+    expect(ticks.length).toBeLessThanOrEqual(MAX_KEYFRAMES);
+    expect(ticks.every((t) => t % (2 * KEYFRAME_EVERY) === 0)).toBe(true);
+    expect(ticks.at(-1)).toBe(KEYFRAME_EVERY * MAX_KEYFRAMES);
+  });
+
+  it('frees thinned keyframes, and all of them on reset', () => {
+    const log: string[] = [];
+    const host = new SimHost(fakeModule(log));
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: KEYFRAME_EVERY * MAX_KEYFRAMES } });
+    const freed = log.filter((l) => l === 'free checkpoint').length;
+    expect(freed).toBeGreaterThan(0);
+    host.handle({ id: 3, cmd: { type: 'reset', config: { width: 4, height: 3 } as never, seed: 2, landscapes: [] } });
+    expect(host.keyframeTicks()).toEqual([0]);
+  });
+
+  it('keeps at most MAX_KEYFRAMES through many live edits on a long run', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    let id = 2;
+    host.handle({ id: id++, cmd: { type: 'step', n: 60_000 } });
+    // Each edit is a branch (it resets the interval); editing every 50 ticks must not pile them up.
+    for (let i = 0; i < 400; i++) {
+      host.handle({ id: id++, cmd: { type: 'step', n: 50 } });
+      host.handle({ id: id++, cmd: { type: 'place', x: 0, y: 0, overrides: {} } });
+      host.handle({ id: id++, cmd: { type: 'erase', x: 0, y: 0 } });
+    }
+    expect(host.keyframeTicks().length).toBeLessThanOrEqual(MAX_KEYFRAMES);
+    expect(host.keyframeTicks()[0]).toBe(0);
+  });
+
+  it('resets the doubled interval on a branch, so a fresh branch near t = 0 keeps 50-tick spacing', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    // Thins and doubles `every` at least once.
+    host.handle({ id: 2, cmd: { type: 'step', n: KEYFRAME_EVERY * MAX_KEYFRAMES } });
+    host.handle({ id: 3, cmd: { type: 'seek', tick: 0 } });
+    // A page edit at (near) t = 0 branches: without the reset, `every` would stay doubled and only
+    // every other 50-tick mark would get a keyframe.
+    host.handle({ id: 4, cmd: { type: 'place', x: 0, y: 0, overrides: {} } });
+    host.handle({ id: 5, cmd: { type: 'step', n: 175 } });
+    expect(host.keyframeTicks()).toEqual([0, 50, 100, 150]);
+  });
+
+  it('keeps none for a model without keyframes', () => {
+    const host = new SimHost(fakeModule([], { keyframes: false }));
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: 120 } });
+    expect(host.keyframeTicks()).toEqual([]);
+  });
+});
+
+describe('SimHost seek', () => {
+  const display = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() } as const;
+  let id = 0;
+  const send = (host: SimHost, cmd: Command) => host.handle({ id: ++id, cmd }).result;
+  const setup = (opts: { keyframes?: boolean } = {}) => {
+    const module = fakeModule([], opts);
+    const host = new SimHost(module);
+    send(host, { type: 'init', config: { width: 8, height: 3 } as never, seed: 1, landscapes: [], display });
+    return { host, module, sim: () => module.sims.at(-1)! };
+  };
+  const fp = (host: SimHost) => (send(host, { type: 'fingerprint' }) as { value: string }).value;
+  const place = (x: number): Command => ({ type: 'place', x, y: 0, overrides: {} });
+
+  /** A reference run: the same edits at the same ticks, straight through to `to`. */
+  function straight(edits: [number, Command][], to: number): string {
+    const { host } = setup();
+    for (const [t, cmd] of edits) {
+      send(host, { type: 'step', n: t - (host as unknown as { sim: FakeSim }).sim.ticks });
+      send(host, cmd);
+    }
+    send(host, { type: 'step', n: to - (host as unknown as { sim: FakeSim }).sim.ticks });
+    return fp(host);
+  }
+
+  it('seeks back through keyframes and edits (before, at and after the target) to the straight run', () => {
+    const edits: [number, Command][] = [[30, place(2)], [50, place(3)], [120, place(4)]];
+    const { host, sim } = setup();
+    for (const [t, cmd] of edits) {
+      send(host, { type: 'step', n: t - sim().ticks });
+      send(host, cmd);
+    }
+    send(host, { type: 'step', n: 200 - sim().ticks });
+    for (const target of [130, 120, 51, 50, 49, 0, 175]) {
+      const r = send(host, { type: 'seek', tick: target });
+      expect(r.ok).toBe(true);
+      expect(sim().ticks).toBe(target);
+      expect(fp(host)).toBe(straight(edits.filter(([t]) => t <= target), target));
+    }
+  });
+
+  it('restores a keyframe rather than rebuilding when one is at or before the target', () => {
+    const { host, module, sim } = setup();
+    send(host, { type: 'step', n: 180 });
+    send(host, { type: 'seek', tick: 120 });
+    expect(module.sims.length).toBe(1);
+    expect(sim().restores).toBe(1);
+  });
+
+  it('rebuilds from the setup when the model has no keyframes', () => {
+    const { host, module } = setup({ keyframes: false });
+    send(host, { type: 'place', x: 2, y: 0, overrides: {} });
+    send(host, { type: 'step', n: 80 });
+    const before = fp(host);
+    send(host, { type: 'seek', tick: 10 });
+    send(host, { type: 'seek', tick: 80 });
+    expect(module.sims.length).toBe(2);
+    expect(fp(host)).toBe(before);
+  });
+
+  it('replays the later edits after seeking back, and reports them pending', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 60 });
+    send(host, place(5));
+    send(host, { type: 'step', n: 40 });
+    const end = fp(host);
+    const r = send(host, { type: 'seek', tick: 20 }) as { ok: true; snapshot: WorldSnapshot };
+    expect(r.snapshot.replayLeft).toBe(1);
+    expect(r.snapshot.reached).toBe(100);
+    send(host, { type: 'step', n: 80 });
+    expect(fp(host)).toBe(end);
+  });
+
+  it('branches on a page edit: pending entries and later keyframes go, reached drops', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 200 });
+    send(host, { type: 'seek', tick: 70 });
+    const r = send(host, place(6)) as { ok: true; snapshot: WorldSnapshot };
+    expect(r.snapshot.reached).toBe(70);
+    expect(host.keyframeTicks().every((t) => t <= 70)).toBe(true);
+    expect((send(host, { type: 'seek', tick: 71 }) as { ok: false; errors: FieldError[] }).errors[0].field).toBe('seek');
+  });
+
+  it('branches on ending a replay too: keyframes and reached past the current tick go, so a later seek cannot restore the old branch', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 60 });
+    send(host, place(5));
+    send(host, { type: 'step', n: 140 });
+    send(host, { type: 'seek', tick: 20 });
+    const ended = send(host, { type: 'endReplay' }) as { ok: true; snapshot: WorldSnapshot };
+    expect(ended.snapshot.reached).toBe(20);
+    expect(host.keyframeTicks().every((t) => t <= 20)).toBe(true);
+    send(host, { type: 'step', n: 130 });
+    send(host, { type: 'seek', tick: 120 });
+    // The placed agent (at tick 60, now beyond the branch point) must not reappear: this matches a
+    // fresh run to 120 with no edits at all, exactly what the kept session (an empty log) implies.
+    expect(fp(host)).toBe(straight([], 120));
+  });
+
+  it('keeps a keyframe taken before a same-tick edit valid', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 50 }); // keyframe at 50 taken with no edits
+    send(host, place(7)); // an edit at tick 50, after the keyframe
+    send(host, { type: 'step', n: 30 });
+    const end = fp(host);
+    send(host, { type: 'seek', tick: 50 });
+    send(host, { type: 'seek', tick: 80 });
+    expect(fp(host)).toBe(end);
+  });
+
+  it('keeps the followed agent followed', () => {
+    const { host, sim } = setup();
+    send(host, { type: 'follow', id: 1 });
+    send(host, { type: 'step', n: 120 });
+    send(host, { type: 'seek', tick: 10 });
+    expect(sim().followed()).toBe(1);
+  });
+
+  it('refuses a seek past reached, a negative or fractional tick, and any seek with a full log', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 10 });
+    for (const tick of [11, -1, 2.5]) {
+      const r = send(host, { type: 'seek', tick }) as { ok: false; errors: FieldError[] };
+      expect(r.ok).toBe(false);
+      expect(r.errors[0].field).toBe('seek');
+    }
+    (host as unknown as { logFull: boolean }).logFull = true;
+    expect(send(host, { type: 'seek', tick: 5 }).ok).toBe(false);
+  });
+
+  it('sends reached and seekable', () => {
+    const { host } = setup();
+    const r = send(host, { type: 'step', n: 10 }) as { ok: true; snapshot: WorldSnapshot };
+    expect(r.snapshot.reached).toBe(10);
+    const init = send(host, { type: 'refresh' }) as { ok: true; snapshot: WorldSnapshot };
+    expect(init.snapshot.reached).toBeUndefined(); // unchanged: not resent
+  });
+});
+
+describe('SimHost stop rules', () => {
+  const display = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() } as const;
+  let id = 0;
+  const send = (host: SimHost, cmd: Command) => host.handle({ id: ++id, cmd }).result as { ok: true; snapshot?: WorldSnapshot };
+  const setup = (now?: () => number) => {
+    const module = fakeModule();
+    const host = new SimHost(module, now);
+    send(host, { type: 'init', config: { width: 8, height: 3 } as never, seed: 1, landscapes: [], display });
+    return { host, sim: () => module.sims.at(-1)! };
+  };
+
+  it('stops a step at tick N and says so', () => {
+    const { host, sim } = setup();
+    send(host, { type: 'setStops', stops: { tick: 37 } });
+    const r = send(host, { type: 'step', n: 100 });
+    expect(sim().ticks).toBe(37);
+    expect(r.snapshot?.stopped).toBe('Stopped at tick 37');
+    // Past N the rule is spent: the next step runs in full.
+    expect(send(host, { type: 'step', n: 10 }).snapshot?.stopped).toBeUndefined();
+    expect(sim().ticks).toBe(47);
+  });
+
+  it('fires a condition only when it becomes true', () => {
+    const { host, sim } = setup();
+    // One agent: population > 1 is false; place two more at tick 5 → true.
+    send(host, { type: 'setStops', stops: { when: { series: 'population', op: '>', value: 1 } } });
+    send(host, { type: 'step', n: 5 });
+    send(host, { type: 'place', x: 3, y: 1, overrides: {} });
+    // Already true after the edit: re-evaluated, so stepping does not fire.
+    const r = send(host, { type: 'step', n: 20 });
+    expect(r.snapshot?.stopped).toBeUndefined();
+    expect(sim().ticks).toBe(25);
+  });
+
+  it('fires on a false → true transition at the exact tick', () => {
+    const { host, sim } = setup();
+    send(host, { type: 'setStops', stops: { when: { series: 'tick', op: '>', value: 41 } } });
+    const r = send(host, { type: 'step', n: 100 });
+    expect(sim().ticks).toBe(42);
+    expect(r.snapshot?.stopped).toBe('Stopped at tick 42: tick > 41');
+  });
+
+  it('ends the Max loop on the tick a rule fires', () => {
+    // Models the engine: exactly one buffer lent at `run`, and one handed back with `frame` after
+    // every post (engine.ts's onPost), so the buffer is never the reason a firing rule can't post.
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 90 } });
+    host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    let post: WorldSnapshot | null = null;
+    for (let i = 0; i < 1000 && host.running; i++) {
+      const p = host.batch();
+      if (p) {
+        post = p;
+        host.handle({ id: ++id, cmd: { type: 'frame' }, frame: new ArrayBuffer(8 * 3 * 4) });
+      }
+    }
+    expect(host.running).toBe(false);
+    expect(sim().ticks).toBe(90);
+    expect(post?.stopped).toBe('Stopped at tick 90');
+  });
+
+  it('still posts periodically at Max while a rule is pending, well before it fires', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 100_000 } });
+    host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    let posts = 0;
+    for (let i = 0; i < 20 && posts < 2; i++) {
+      const p = host.batch();
+      if (p) {
+        posts++;
+        host.handle({ id: ++id, cmd: { type: 'frame' }, frame: new ArrayBuffer(8 * 3 * 4) });
+      }
+    }
+    expect(posts).toBeGreaterThanOrEqual(2);
+    expect(sim().ticks).toBeLessThan(100_000);
+    expect(host.running).toBe(true);
+  });
+
+  it('does not fire during a seek', () => {
+    const { host } = setup();
+    send(host, { type: 'step', n: 100 });
+    send(host, { type: 'setStops', stops: { tick: 50 } });
+    send(host, { type: 'seek', tick: 10 });
+    const r = send(host, { type: 'seek', tick: 80 });
+    expect(r.snapshot?.stopped).toBeUndefined();
+  });
+
+  it('ends Max on the stop tick even with no buffer free when the rule fires', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 20 } });
+    host.handle({ id: ++id, cmd: { type: 'run' } }); // no buffer lent
+    for (let i = 0; i < 100; i++) host.batch();
+    expect(sim().ticks).toBe(20);
+    host.handle({ id: ++id, cmd: { type: 'frame' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    const post = host.batch();
+    expect(post?.stopped).toBe('Stopped at tick 20');
+    expect(host.running).toBe(false);
+  });
+
+  it('clears a pending stop after Pause, so the next Play at Max steps again', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 20 } });
+    host.handle({ id: ++id, cmd: { type: 'run' } }); // no buffer lent: the rule fires with none free
+    for (let i = 0; i < 100; i++) host.batch();
+    expect(sim().ticks).toBe(20);
+    expect(host.running).toBe(true); // stopPending, waiting on a buffer
+    send(host, { type: 'stop' });
+    expect(host.running).toBe(false);
+    host.handle({ id: ++id, cmd: { type: 'run' }, frame: new ArrayBuffer(8 * 3 * 4) });
+    for (let i = 0; i < 5; i++) host.batch();
+    expect(sim().ticks).toBeGreaterThan(20);
+  });
+
+  it('ends Max when setStops arrives while a fired rule is waiting on a buffer, so the world stays at the reported tick', () => {
+    let t = 0;
+    const { host, sim } = setup(() => (t += 1));
+    send(host, { type: 'setStops', stops: { tick: 20 } });
+    host.handle({ id: ++id, cmd: { type: 'run' } }); // no buffer lent: the rule fires with none free
+    for (let i = 0; i < 100; i++) host.batch();
+    expect(sim().ticks).toBe(20);
+    expect(host.running).toBe(true); // stopPending, waiting on a buffer
+    const r = host.handle({ id: ++id, cmd: { type: 'setStops', stops: {} } });
+    expect(host.running).toBe(false);
+    expect(sim().ticks).toBe(20); // not a tick further, even though Max was still nominally running
+    expect((r.result as { ok: true; snapshot?: WorldSnapshot }).snapshot?.stopped).toBe('Stopped at tick 20');
+    expect(host.batch()).toBeNull(); // Max has already ended: nothing left to step
+  });
+
+  it('re-evaluates a rule’s truth after a replayed edit, so it does not fire on the edit’s own effect', () => {
+    const { host, sim } = setup();
+    // One agent: population > 1 is false until the replayed place at tick 5 makes it true — the
+    // live equivalent (setStops, step to 5, then place) does not fire either (see above).
+    const log: LogEntry[] = [{ tick: 5, cmd: { type: 'place', x: 3, y: 1, overrides: {} } }];
+    send(host, { type: 'reset', config: { width: 8, height: 3 } as never, seed: 1, landscapes: [], log });
+    send(host, { type: 'setStops', stops: { when: { series: 'population', op: '>', value: 1 } } });
+    const r = send(host, { type: 'step', n: 20 });
+    expect(r.snapshot?.stopped).toBeUndefined();
+    expect(sim().ticks).toBe(20);
   });
 });
 

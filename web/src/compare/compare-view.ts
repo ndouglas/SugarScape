@@ -160,6 +160,8 @@ export class CompareView {
             10_000,
           ),
         ),
+        // The tick rule paused the pair (Compare supports no condition rule: Decision 9).
+        this.lock.on('stopped', () => showNotice(this.lock.lastStop ?? 'Stopped', 10_000)),
         this.lock.on('run', p.onRun),
         this.lock.on('tick', p.onFrame),
       );

@@ -3,6 +3,19 @@ import type { SimLike, SimModule } from './sim-host';
 
 const fieldError = (field: string, message: string): string => JSON.stringify([{ field, message }]);
 
+/** A fake keyframe: copies of the state a restore puts back. */
+export class FakeCheckpoint {
+  constructor(
+    readonly ticks: number,
+    readonly agents: Map<number, [number, number]>,
+    readonly config: FakeConfig,
+    private log: string[],
+  ) {}
+  free(): void {
+    this.log.push('free checkpoint');
+  }
+}
+
 interface FakeConfig {
   /**
    * Absent for a sugarscape; `'ring'` also answers `ring_sugar`/`ring_agents`, `'anasazi'` the
@@ -52,6 +65,9 @@ export class FakeSim implements SimLike {
   stepCalls = 0;
   config: FakeConfig;
   agents = new Map<number, [number, number]>([[1, [1, 1]]]);
+  /** Whether `checkpoint()` gives a keyframe; set false for a model without them. */
+  keyframes = true;
+  restores = 0;
   private edited: boolean[];
   private followedId = -1;
 
@@ -226,7 +242,25 @@ export class FakeSim implements SimLike {
     return this.config.finish !== undefined && this.ticks >= this.config.finish;
   }
   fingerprint(): string {
-    return `0x${this.ticks.toString(16)}`;
+    const agents = [...this.agents].map(([id, p]) => `${id}@${p[0]},${p[1]}`).join(';');
+    return `0x${this.ticks.toString(16)}|${agents}|${this.config.population}`;
+  }
+  checkpoint(): FakeCheckpoint | undefined {
+    if (!this.keyframes) return undefined;
+    const agents = new Map([...this.agents].map(([id, p]) => [id, [p[0], p[1]] as [number, number]]));
+    return new FakeCheckpoint(this.ticks, agents, structuredClone(this.config), this.log);
+  }
+  restore(cp: FakeCheckpoint): void {
+    if (cp.ticks > this.ticks) throw fieldError('tick', `this world has not reached tick ${cp.ticks}`);
+    this.restores++;
+    this.ticks = cp.ticks;
+    this.agents = new Map([...cp.agents].map(([id, p]) => [id, [p[0], p[1]] as [number, number]]));
+    this.config = structuredClone(cp.config);
+  }
+  latest_value(name: string): number | undefined {
+    if (name === 'population') return this.agents.size;
+    if (name === 'tick') return this.ticks;
+    return undefined;
   }
   free(): void {
     this.log.push('free');
@@ -234,7 +268,7 @@ export class FakeSim implements SimLike {
 }
 
 /** A module whose worlds are `FakeSim`s (all kept in `sims`, newest last). */
-export function fakeModule(log: string[] = []): SimModule & { sims: FakeSim[] } {
+export function fakeModule(log: string[] = [], opts: { keyframes?: boolean } = {}): SimModule & { sims: FakeSim[] } {
   const sims: FakeSim[] = [];
   return {
     sims,
@@ -242,6 +276,7 @@ export function fakeModule(log: string[] = []): SimModule & { sims: FakeSim[] } 
       const config = JSON.parse(configJson) as Partial<FakeConfig>;
       if ((config.population ?? 0) > 1000) throw fieldError('population', 'too many');
       const sim = new FakeSim(config, seed, log);
+      sim.keyframes = opts.keyframes ?? true;
       sims.push(sim);
       log.push(`create ${seed}`);
       return sim;

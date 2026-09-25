@@ -225,6 +225,7 @@ fn water_distances(water: &[bool], wrap: bool) -> Vec<u32> {
     out
 }
 
+#[derive(Clone)]
 pub struct AnasaziWorld {
     pub config: AnasaziConfig,
     /// Completed ticks (years since the start year).
@@ -920,6 +921,10 @@ impl Model for AnasaziWorld {
 
     fn series(&self, name: &str) -> Option<Vec<f64>> {
         self.stats.series(name)
+    }
+
+    fn latest_value(&self, name: &str) -> Option<f64> {
+        self.stats.latest().and_then(|s| s.value(name))
     }
 
     fn series_csv(&self) -> String {

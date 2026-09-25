@@ -196,6 +196,10 @@ pub struct Sim {
     frame: Vec<u8>,
 }
 
+/// A keyframe of a `Sim`'s world (`ModelWorld::checkpoint`): the host keeps a few and frees them.
+#[wasm_bindgen]
+pub struct Checkpoint(sugarscape_core::model::Checkpoint);
+
 const NO_CREDIT_GRAPH: &str = r#"{"agents":[],"loans":[]}"#;
 
 impl Sim {
@@ -301,6 +305,21 @@ impl Sim {
         self.model()
             .series(name)
             .ok_or_else(|| edit_error(format!("unknown series {name:?}")))
+    }
+
+    /// The latest value of series `name` (or `"tick"`), or `undefined`.
+    pub fn latest_value(&self, name: &str) -> Option<f64> {
+        self.model().latest_value(name)
+    }
+
+    /// A keyframe of the world now, or `undefined` for a model without them.
+    pub fn checkpoint(&mut self) -> Option<Checkpoint> {
+        self.world.checkpoint().map(Checkpoint)
+    }
+
+    /// Returns the world to `cp` (see `ModelWorld::restore`); throws a field error if it cannot.
+    pub fn restore(&mut self, cp: &Checkpoint) -> Result<(), JsValue> {
+        self.world.restore(&cp.0).map_err(edit_error)
     }
 
     /// Series `name` cut to at most `max` points (`stats::downsample`) as

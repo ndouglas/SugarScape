@@ -18,6 +18,12 @@ export function noOverlays(): Record<Overlay, boolean> {
 
 export interface PlaceOverrides { sex?: 'female' | 'male'; tribe?: 'blue' | 'red' }
 
+/** When a run stops by itself: at a tick, and/or when a series becomes less or greater than a value. */
+export interface StopRules {
+  tick?: number;
+  when?: { series: string; op: '<' | '>'; value: number };
+}
+
 /** How the host renders frames and which overlays are drawn. */
 export interface DisplayState { colorMode: ColorMode; layer: Layer; overlays: Record<Overlay, boolean> }
 
@@ -112,6 +118,12 @@ export interface WorldSnapshot {
   replayLeft?: number;
   /** A page edit just dropped the edits still to replay (the session branched here). */
   forked?: true;
+  /** The furthest tick on this world's branch (the timeline's end): after init, reset, seek and on change. */
+  reached?: number;
+  /** Whether `seek` can rebuild this world exactly (false once the log is full): with `reached`. */
+  seekable?: boolean;
+  /** Why the run just stopped by itself (a stop rule fired): once. */
+  stopped?: string;
 }
 
 export type Command =
@@ -137,7 +149,9 @@ export type Command =
   | { type: 'endReplay' }
   | { type: 'run' }
   | { type: 'stop' }
-  | { type: 'frame' };
+  | { type: 'frame' }
+  | { type: 'seek'; tick: number }
+  | { type: 'setStops'; stops: StopRules };
 
 /** The commands that change the world: logged with the tick they were applied at, and replayed (Decision 1). */
 export type EditCommand = Extract<

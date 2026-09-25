@@ -3,11 +3,15 @@ import { randomSeed, type Engine, type RunControls, type Speed } from '../engine
 import { errorMessage } from '../errors';
 import { readoutText } from '../valley';
 import { h } from './dom';
+import { RateMeter } from './rate';
 import { showNotice } from './notice';
+import { nextSpeed, type Shortcut } from './shortcuts';
+import { StopControl } from './stop-control';
+import { Timeline } from './timeline';
 
 /** Below 1×, speeds are ticks a second: 1/60 of a tick per frame is one a second. */
 const PER_SECOND = [1, 2, 5, 10, 20, 30];
-const SPEEDS: Speed[] = [...PER_SECOND.map((n) => n / 60), 1, 2, 5, 10, 25, 100, 'max'];
+export const SPEEDS: Speed[] = [...PER_SECOND.map((n) => n / 60), 1, 2, 5, 10, 25, 100, 'max'];
 
 function speedLabel(s: Speed): string {
   if (s === 'max') return 'Max';
@@ -97,9 +101,14 @@ export class Toolbar {
   private readonly chips: HTMLElement;
   /** Hidden in Compare: the headers carry them. */
   private readonly singleOnly: HTMLElement[];
+  private readonly timeline = new Timeline((e) => showNotice(`Could not go to that tick (${errorMessage(e)})`, 10_000));
+  private readonly stopControl: StopControl;
+  private readonly rate: HTMLElement;
+  private readonly meter = new RateMeter();
 
   constructor(private readonly engine: Engine) {
     this.controls = engine;
+    this.stopControl = new StopControl(engine);
     this.play = h('button', { class: 'primary', onclick: () => this.controls.setRunning(!this.controls.running) });
     this.step = h(
       'button',
@@ -120,6 +129,7 @@ export class Toolbar {
       },
       ...SPEEDS.map((s) => h('option', { value: String(s) }, speedLabel(s))),
     );
+    this.rate = h('span', { class: 'rate', title: 'Measured ticks per second' });
     this.seed = h('input', { type: 'number', min: 0, max: 4294967295, class: 'seed', title: 'Seed' });
     const seedLabel = h('label', {}, 'Seed ', this.seed);
     this.resetButton = h(
@@ -134,13 +144,16 @@ export class Toolbar {
     this.el = h(
       'div',
       { class: 'toolbar' },
-      h('h1', {}, 'SugarScape'),
-      h('div', { class: 'group' }, this.play, this.step, this.speed),
+      h('h1', { title: 'Press ? for keyboard shortcuts' }, 'SugarScape'),
+      h('div', { class: 'group' }, this.play, this.step, this.speed, this.rate),
+      this.timeline.el,
+      this.stopControl.el,
       h('div', { class: 'group' }, seedLabel, this.resetButton, this.dice),
       this.readout,
       chips,
       h('div', { class: 'toolbar-end' }),
     );
+    this.timeline.bind(engine);
     engine.on('run', () => this.sync());
     engine.on('reset', () => {
       this.sync();
@@ -148,6 +161,18 @@ export class Toolbar {
     });
     engine.on('tick', () => this.tick());
     engine.on('edit', () => this.tick());
+    engine.on('snapshot', () => this.timeline.sync());
+    setInterval(() => {
+      if (!this.controls.running) {
+        this.meter.reset();
+        this.rate.hidden = true;
+        return;
+      }
+      this.meter.sample(performance.now(), this.controls.tick);
+      const r = this.meter.rate();
+      this.rate.hidden = r === null;
+      if (r !== null) this.rate.textContent = `${r < 10 ? r.toFixed(1) : Math.round(r).toLocaleString()} t/s`;
+    }, 250);
     this.sync();
     this.tick();
   }
@@ -159,7 +184,13 @@ export class Toolbar {
     this.lock = lock;
     this.b = b;
     this.controls = lock ?? this.engine;
-    if (lock) this.offs.push(lock.on('run', () => this.sync()));
+    this.timeline.bind(this.controls);
+    this.stopControl.bind(this.controls);
+    this.meter.reset();
+    if (lock) {
+      this.offs.push(lock.on('run', () => this.sync()));
+      this.offs.push(lock.on('tick', () => this.timeline.sync()));
+    }
     if (b) for (const event of ['tick', 'edit', 'reset'] as const) this.offs.push(b.on(event, () => this.tick()));
     for (const el of this.singleOnly) el.hidden = lock !== null;
     this.speed.value = String(this.controls.speed);
@@ -175,6 +206,38 @@ export class Toolbar {
     this.held = on;
     this.chips.inert = on;
     this.sync();
+  }
+
+  /** Steps the current controls back one tick (⟲1); for shortcuts (Task 11). */
+  back(): void {
+    this.timeline.back();
+  }
+
+  /** A keyboard shortcut (ui/shortcuts.ts): does what its button does, and nothing while held. */
+  shortcut(s: Exclude<Shortcut, 'help'>): void {
+    if (this.held) return;
+    const c = this.controls;
+    switch (s) {
+      case 'play':
+        c.setRunning(!c.running);
+        break;
+      case 'step':
+        if (!c.running) this.step.click();
+        break;
+      case 'back':
+        this.timeline.back();
+        break;
+      case 'slower':
+      case 'faster': {
+        const next = nextSpeed(SPEEDS, c.speed, s === 'faster' ? 1 : -1);
+        c.setSpeed(next);
+        this.speed.value = String(next);
+        break;
+      }
+      case 'reset':
+        this.reset();
+        break;
+    }
   }
 
   private reset(): void {
@@ -201,9 +264,13 @@ export class Toolbar {
     this.resetButton.disabled = this.held;
     this.dice.disabled = this.held;
     this.seed.value = String(this.engine.seed);
+    this.timeline.held = this.held;
+    this.timeline.sync();
+    this.stopControl.el.inert = this.held;
   }
 
   private tick(): void {
     this.readout.textContent = readoutText(this.engine, this.b);
+    this.timeline.sync();
   }
 }

@@ -306,7 +306,7 @@ describe('Engine', () => {
     await engine.advance(3);
     expect(await engine.seriesCsv()).toBe('tick,population\n3,1\n');
     expect(await engine.agentsCsv()).toBe('id\n1\n');
-    expect(await engine.fingerprint()).toBe('0x3');
+    expect(await engine.fingerprint()).toBe('0x3|1@0,1|10');
   });
 
   it('carries what providers want, and refreshes while paused only for them', async () => {
@@ -499,6 +499,69 @@ describe('Engine', () => {
     await engine.followAgent(1);
     transport.after = null;
     expect(capturedWants?.trail).toBe(true);
+  });
+
+  it('seeks back and forward, keeping the selection and resending charts', async () => {
+    const { engine } = await setup();
+    await engine.select(1, 1);
+    await engine.advance(120);
+    expect(engine.reached).toBe(120);
+    expect(engine.seekable).toBe(true);
+    let configs = 0;
+    engine.on('config', () => configs++);
+    expect(await engine.seek(30)).toBeNull();
+    expect(engine.tick).toBe(30);
+    expect(engine.reached).toBe(120);
+    expect(engine.selection).not.toBeNull();
+    expect(configs).toBe(1);
+    await engine.seek(120);
+    expect(engine.tick).toBe(120);
+  });
+
+  it('returns the host’s errors for a refused seek', async () => {
+    const { engine } = await setup();
+    await engine.advance(5);
+    const errors = await engine.seek(6);
+    expect(errors?.[0].field).toBe('seek');
+  });
+
+  it('pauses and fires stopped when a stop rule fires', async () => {
+    const { engine } = await setup();
+    engine.setStops({ tick: 3 });
+    engine.setSpeed(2);
+    engine.setRunning(true);
+    let stopped = 0;
+    engine.on('stopped', () => stopped++);
+    for (let i = 0; i < 5; i++) {
+      engine.pump(i);
+      await settle();
+    }
+    expect(engine.tick).toBe(3);
+    expect(engine.running).toBe(false);
+    expect(stopped).toBe(1);
+    expect(engine.lastStop).toBe('Stopped at tick 3');
+    // A stale reason must not linger once the run resumes.
+    engine.setRunning(true);
+    expect(engine.lastStop).toBeNull();
+  });
+
+  it('reflects a one-shot field carried on the setStops reply, while paused', async () => {
+    // The host attaches one-shot fields (reached, config, forked, stopped, …) to whichever
+    // reply goes out next, which may be setStops's own — e.g. a rule fires with no free buffer
+    // at Max, and the engine's next request happens to be setStops. Rewriting this reply
+    // stands in for that race, without depending on its exact timing.
+    const { engine, transport } = await setup();
+    let stopped = 0;
+    engine.on('stopped', () => stopped++);
+    transport.rewrite = (cmd, reply) => {
+      if (cmd.type !== 'setStops' || !reply.result.ok || !reply.result.snapshot) return reply;
+      return { ...reply, result: { ...reply.result, snapshot: { ...reply.result.snapshot, reached: 999, stopped: 'Stopped at tick 999' } } };
+    };
+    engine.setStops({ tick: 5 });
+    await settle();
+    expect(engine.reached).toBe(999);
+    expect(engine.lastStop).toBe('Stopped at tick 999');
+    expect(stopped).toBe(1);
   });
 });
 
@@ -696,6 +759,16 @@ describe('Engine at Max speed', () => {
     expect(crashes).toHaveLength(1);
     expect(engine.crashed).toContain('boom');
     expect(engine.running).toBe(false);
+  });
+
+  it('pauses on a stop rule at Max', async () => {
+    const { engine } = await maxSetup();
+    engine.setStops({ tick: 40 });
+    engine.setSpeed('max');
+    engine.setRunning(true);
+    while (engine.running) await wait(5);
+    expect(engine.tick).toBe(40);
+    expect(engine.lastStop).toBe('Stopped at tick 40');
   });
 });
 

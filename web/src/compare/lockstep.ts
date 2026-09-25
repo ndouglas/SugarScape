@@ -1,7 +1,7 @@
 import { SlowPacer, type Engine, type InitialState, type Speed } from '../engine';
 import { fieldErrorsMessage } from '../errors';
 import { finishesUnpredictably } from '../models';
-import type { Session } from '../protocol';
+import type { Session, StopRules } from '../protocol';
 import type { FieldError } from '../types';
 
 /** At Max in Compare, the ticks per pair double while a pair takes at most this long… */
@@ -21,7 +21,7 @@ export class AdaptiveBatch {
   }
 }
 
-export type LockstepEvent = 'run' | 'tick' | 'finished';
+export type LockstepEvent = 'run' | 'tick' | 'finished' | 'stopped';
 
 /**
  * Steps two worlds together (Decision 9): each step sends `advance n` to both and waits for both
@@ -34,6 +34,8 @@ export type LockstepEvent = 'run' | 'tick' | 'finished';
  */
 export class Lockstep {
   running = false;
+  readonly conditionStops = false;
+  lastStop: string | null = null;
   private inFlight: Promise<void> | null = null;
   /** Steps, rewinds and realigns run one after another, each after the loop's pair settles. */
   private chain: Promise<unknown> = Promise.resolve();
@@ -44,6 +46,18 @@ export class Lockstep {
   private readonly slow = new SlowPacer();
   private readonly listeners = new Map<LockstepEvent, Set<() => void>>();
   private offs: (() => void)[] = [];
+  /** Only the tick rule applies in Compare (Decision: conditions are single-world). */
+  private stopAt: number | undefined;
+
+  get tick(): number {
+    return this.worlds[0].tick;
+  }
+  get reached(): number {
+    return Math.min(...this.worlds.map((w) => w.reached));
+  }
+  get seekable(): boolean {
+    return this.worlds.every((w) => w.seekable);
+  }
 
   constructor(
     readonly worlds: [Engine, Engine],
@@ -52,6 +66,7 @@ export class Lockstep {
   ) {
     for (const w of worlds) {
       w.setRunning(false);
+      w.setStops({});
       this.offs.push(
         w.on('reset', () => {
           if (this.rewinding === 0) void this.realign();
@@ -93,11 +108,27 @@ export class Lockstep {
 
   setRunning(on: boolean): void {
     this.running = on;
+    if (on) this.lastStop = null;
     this.emit('run');
   }
 
   setSpeed(speed: Speed): void {
     this.speed = speed;
+  }
+
+  setStops(stops: StopRules): void {
+    this.stopAt = stops.tick;
+  }
+
+  /** Both worlds to `tick`; throws if either refuses. */
+  seek(tick: number): Promise<void> {
+    return this.exclusive(async () => {
+      if (this.crashed()) return;
+      const errors = await Promise.all(this.worlds.map((w) => w.seek(tick)));
+      this.emit('tick');
+      const failed = errors.flatMap((e) => e ?? []);
+      if (failed.length > 0) throw new Error(`a world could not seek: ${fieldErrorsMessage(failed)}`);
+    });
   }
 
   /** Called every animation frame instead of the engines' own pump. */
@@ -120,7 +151,18 @@ export class Lockstep {
     // Below 1× a frame steps only when a tick is due.
     if (speed !== 'max' && speed < 1 && !this.slow.due(speed, now)) return;
     const n = speed === 'max' ? this.batch.n : Math.max(1, speed);
-    this.inFlight = this.stepBoth(n, speed === 'max').finally(() => (this.inFlight = null));
+    const at = this.stopAt;
+    const tick = this.tick;
+    const capped = at !== undefined && tick < at ? Math.min(n, at - tick) : n;
+    this.inFlight = this.stepBoth(capped, speed === 'max')
+      .then(() => {
+        if (at !== undefined && tick < at && this.tick >= at) {
+          this.lastStop = `Stopped at tick ${this.tick}`;
+          this.setRunning(false);
+          this.emit('stopped');
+        }
+      })
+      .finally(() => (this.inFlight = null));
   }
 
   /** Step: both worlds advance `n` ticks (fewer if one finishes first). */

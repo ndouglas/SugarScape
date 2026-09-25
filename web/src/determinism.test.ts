@@ -50,6 +50,58 @@ describe('determinism through the engine', () => {
     for (let i = 0; i < 20; i++) await e.advance(10);
     expect(await e.fingerprint()).toBe(GOLDEN);
   });
+
+  it('seeks through keyframes to the golden world, with edits on both sides of the target', async () => {
+    const reference = await engine();
+    await reference.advance(60);
+    await reference.place(3, 3, {});
+    await reference.advance(140);
+    const want = await reference.fingerprint();
+
+    const e = await engine();
+    await e.advance(60);
+    await e.place(3, 3, {});
+    await e.advance(240);
+    for (const t of [200, 61, 60, 59, 0]) {
+      await e.seek(t);
+      expect(e.tick).toBe(t);
+    }
+    await e.seek(0);
+    await e.advance(200); // replays the edit at 60
+    expect(await e.fingerprint()).toBe(want);
+    await e.seek(150);
+    await e.seek(200);
+    expect(await e.fingerprint()).toBe(want);
+  });
+
+  it('shares a session ended mid-replay: the branch dropped by endReplay stays dropped through a share link', async () => {
+    const e = await engine();
+    await e.advance(60);
+    await e.place(3, 3, {});
+    await e.advance(140);
+    await e.seek(20);
+    await e.endReplay(); // drops the place at 60 and everything reached past tick 20
+    await e.advance(130);
+    await e.seek(120);
+    const { session } = await e.session();
+    expect(session.log).toEqual([]);
+    const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await opened.advance(120);
+    expect(await opened.fingerprint()).toBe(await e.fingerprint());
+  });
+
+  it('shares a session taken after a seek back', async () => {
+    const e = await engine();
+    await e.advance(50);
+    await e.place(4, 4, {});
+    await e.advance(100);
+    await e.seek(20);
+    const { session } = await e.session();
+    const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await opened.advance(150);
+    await e.advance(130);
+    expect(await opened.fingerprint()).toBe(await e.fingerprint());
+  });
 });
 
 describe('Chapter VI views', () => {
@@ -201,6 +253,34 @@ describe('sessions replay exactly', () => {
       expect(live.tick).toBe(0);
       await reach(live, tick);
       expect(await live.fingerprint()).toBe(expected);
+    },
+    20_000,
+  );
+
+  it(
+    'shares a session recorded at mixed speeds, seeked back and branched with a new edit, through a share link',
+    async () => {
+      const live = await create(6);
+      await run(live, 1);
+      await run(live, 5, 6);
+      const midTick = live.tick;
+      await run(live, 2, 8);
+      expect(live.tick).toBeGreaterThan(midTick);
+      // Seek back into the run just made, then branch it with a fresh edit: what follows here
+      // differs from what `live` logged the first time past `midTick`.
+      expect(await live.seek(midTick)).toBeNull();
+      const spot = await emptySite(live, 3, 3);
+      expect(await live.place(spot.x, spot.y, {})).toBeNull();
+      await run(live, 3, 5);
+      await run(live, 'max');
+      const finalTick = live.tick;
+      const expected = await live.fingerprint();
+
+      const { session } = await live.session();
+      const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+      await reach(opened, finalTick);
+      expect(opened.tick).toBe(finalTick);
+      expect(await opened.fingerprint()).toBe(expected);
     },
     20_000,
   );

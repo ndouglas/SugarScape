@@ -104,6 +104,7 @@ pub fn sight(radius: f64) -> Vec<(i32, i32)> {
 
 /// What each site sees at one vision radius: its own index, then the sites
 /// at `sight(radius)`'s offsets, for every site (computed once per radius).
+#[derive(Clone)]
 struct View {
     radius: f64,
     stride: usize,
@@ -177,6 +178,8 @@ pub struct CitizenView {
     pub death_age: Option<u32>,
 }
 
+/// Cloned for keyframes (`ModelWorld::checkpoint`).
+#[derive(Clone)]
 pub struct CivilWorld {
     pub config: CivilConfig,
     pub torus: Torus,

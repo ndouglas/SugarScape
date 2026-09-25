@@ -77,6 +77,13 @@ year, the historical record on its chart, a replication-vs-documented Compare en
 measured `lhv-calibration` and `lhv-quirks` sweeps. Earlier models are unchanged. See
 `docs/superpowers/specs/2026-09-25-anasazi-design.md`.
 
+## Playground controls (done)
+
+Step back and a timeline slider (keyframes in the worker, replay of the edit log), stop rules (at a
+tick, or when a series crosses a value, on the exact tick at every speed), a measured ticks-per-second
+readout, and keyboard shortcuts. Runs are unchanged. See
+`docs/superpowers/specs/2026-09-25-playground-controls-design.md`.
+
 ## Milestone 11: Civil violence (done)
 
 Epstein's civil violence (2002), Models I and II, as a fifth model kind, with NetLogo Rebellion's five
@@ -110,3 +117,4 @@ regime and the safe havens do not reproduce. See `docs/superpowers/specs/2026-09
 - **Downsampled chart history**: done (Milestone 7a).
 - **Side-by-side comparison**: done (Milestone 7b).
 - **Recording**: done (Milestone 7b).
+- **Step back / timeline, stop rules, shortcuts**: done (Playground controls).
