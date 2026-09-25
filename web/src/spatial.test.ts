@@ -50,4 +50,12 @@ describe('playerRows', () => {
     expect(playerRows(player({ next: null, p_c: 0.25 }))[3]).toEqual(['Next generation', 'cooperates with probability 25%']);
     expect(playerRows(player({ next: null, p_c: null }))[3]).toEqual(['Next generation', 'keeps its strategy (every score is 0)']);
   });
+
+  it('says the next strategy assumes the player is chosen now under asynchronous updating', () => {
+    expect(playerRows(player({}), true)[3]).toEqual(['Next generation', 'defects (if chosen now)']);
+    expect(playerRows(player({ next: null, p_c: 0.25 }), true)[3]).toEqual([
+      'Next generation',
+      'cooperates with probability 25% (if chosen now)',
+    ]);
+  });
 });

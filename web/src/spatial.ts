@@ -15,8 +15,12 @@ export function middleSlice(c: SpatialConfig): Layer {
 const num = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 const verb = (s: 'C' | 'D', past = false) => (s === 'C' ? (past ? 'cooperated' : 'cooperates') : past ? 'defected' : 'defects');
 
-/** A player's Inspect rows: its strategy (and last generation's), score, its candidates by kind, and its next strategy. */
-export function playerRows(a: PlayerView): [string, string][] {
+/**
+ * A player's Inspect rows: its strategy (and last generation's), score, its candidates by kind, and its next strategy.
+ * The next strategy comes from this generation's scores: under asynchronous updating it holds only if the player is
+ * chosen now, before any neighbor changes, so the row says so.
+ */
+export function playerRows(a: PlayerView, asynchronous = false): [string, string][] {
   const kind = (s: 'C' | 'D') => a.candidates.filter((c) => c.strategy === s);
   const best = (s: 'C' | 'D') => Math.max(...kind(s).map((c) => c.score));
   const part = (s: 'C' | 'D') => (kind(s).length === 0 ? `no ${s}` : `${kind(s).length} ${s} (best ${num(best(s))})`);
@@ -30,6 +34,6 @@ export function playerRows(a: PlayerView): [string, string][] {
     ['Player', `#${a.id} · ${verb(a.strategy)} (${verb(a.previous, true)} last generation)`],
     ['Score', num(a.score)],
     ['Neighborhood', `${part('C')}, ${part('D')}, itself included`],
-    ['Next generation', next],
+    ['Next generation', asynchronous ? `${next} (if chosen now)` : next],
   ];
 }

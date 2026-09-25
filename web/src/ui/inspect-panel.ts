@@ -128,10 +128,10 @@ export class InspectPanel {
   private spatialRows(view: SpatialInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     const { x, y, z } = view.site;
-    const cube = (this.engine.config as SpatialConfig).lattice === 'cube';
-    const rows = [row('Cell', cube ? `(${x}, ${y}, z = ${z})` : `(${x}, ${y})`)];
+    const config = this.engine.config as SpatialConfig;
+    const rows = [row('Cell', config.lattice === 'cube' ? `(${x}, ${y}, z = ${z})` : `(${x}, ${y})`)];
     if (!view.agent) return [...rows, row('Player', 'none (an empty cell)')];
-    return [...rows, ...playerRows(view.agent).map(([k, v]) => row(k, v))];
+    return [...rows, ...playerRows(view.agent, config.update === 'asynchronous').map(([k, v]) => row(k, v))];
   }
 
   /** A civil site: its cop, the agent shown there (followed into jail), and others jailed after arrest here. */
