@@ -1,4 +1,4 @@
-import type { FieldError, ModelConfig } from '../types';
+import type { FieldError, ModelConfig, ModelKind } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -22,8 +22,9 @@ export const MAX_SERIES_VALUES = 16;
 /** A time series' single x value: the chart's x axis is the tick (Decisions 4 and 18). */
 export const TIMESERIES_X: Axis = { label: 'All runs', values: [{ at: 0, set: {} }] };
 
-export function defaultForm(): SweepForm {
-  return {
+/** A new sweep's form for a base of `model`: an axis and a statistic that model has (Decision 14). */
+export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
+  const form: SweepForm = {
     name: 'Untitled sweep',
     x: { path: 'vision.max', values: '1:6:1' },
     series: null,
@@ -31,6 +32,13 @@ export function defaultForm(): SweepForm {
     ticks: 500,
     metric: { kind: 'window_mean', series: 'population', from: 400, to: null, every: 25 },
   };
+  if (model === 'schelling') {
+    return { ...form, x: { path: 'population', values: '1000:2400:200' }, ticks: 200, metric: { ...form.metric, kind: 'final', series: 'segregation' } };
+  }
+  if (model === 'ring') {
+    return { ...form, x: { path: 'agents', values: '10:70:10' }, metric: { ...form.metric, series: 'flocks' } };
+  }
+  return form;
 }
 
 const isScalar = (v: unknown): v is AxisScalar => typeof v === 'number' || typeof v === 'boolean';

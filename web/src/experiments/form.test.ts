@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Config } from '../types';
-import { controlFor, formToSweep, numericPaths, sweepToForm, TIMESERIES_X, type SweepForm } from './form';
+import type { Config, SchellingConfig } from '../types';
+import { controlFor, defaultForm, formToSweep, numericPaths, sweepToForm, TIMESERIES_X, type SweepForm } from './form';
 import type { Sweep } from './types';
 
 // every = round(ticks / 20) and from = ticks − 100: what sweepToForm fills in for unused metric fields.
@@ -125,5 +125,36 @@ describe('path suggestions', () => {
       'goods.0.metabolism.max',
       'disease.enabled',
     ]);
+  });
+});
+
+describe('sweeps over other models', () => {
+  it('start from an axis and a statistic the base’s model has', () => {
+    expect(defaultForm().x.path).toBe('vision.max');
+    expect(defaultForm('schelling')).toMatchObject({ x: { path: 'population' }, metric: { kind: 'final', series: 'segregation' } });
+    expect(defaultForm('ring')).toMatchObject({ x: { path: 'agents' }, metric: { series: 'flocks' } });
+  });
+
+  it('suggest a Schelling config’s own paths, never its model tag', () => {
+    const schelling: SchellingConfig = {
+      model: 'schelling',
+      width: 50,
+      height: 50,
+      population: 2000,
+      preference: { min: 0.25, max: 0.25 },
+      residence: { enabled: false, min: 80, max: 100 },
+    };
+    expect(numericPaths(schelling)).toEqual([
+      'width',
+      'height',
+      'population',
+      'preference.min',
+      'preference.max',
+      'residence.enabled',
+      'residence.min',
+      'residence.max',
+    ]);
+    const { sweep } = formToSweep(defaultForm('schelling'), { config: schelling });
+    expect(sweep!.base).toEqual({ config: schelling });
   });
 });

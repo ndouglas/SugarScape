@@ -558,6 +558,22 @@ fn bargaining_rules_give_similar_carrying_capacities() {
 
 #[test]
 #[ignore]
+fn schelling_tipping_rises_in_steps() {
+    // At `sweeps/schelling-tipping.json`'s settings (seeds 1–5): mean final
+    // segregation 0.498 color-blind, rising in steps to 0.934 at 60%. The
+    // test needs the rise (the measured 0.436, rounded down to a multiple of
+    // 0.05) and no step down between neighboring preferences.
+    const RISE: f64 = 0.40;
+    let means = cell_means(&run_builtin("schelling-tipping"));
+    let line = &means[0];
+    assert!(line[line.len() - 1] - line[0] >= RISE, "{line:?}");
+    for pair in line.windows(2) {
+        assert!(pair[1] >= pair[0] - 1e-9, "segregation fell: {line:?}");
+    }
+}
+
+#[test]
+#[ignore]
 fn three_tribes_start_with_every_group_present() {
     // Chapter III note 20's three groups on 11-bit tags: with uniformly random
     // tags about 11% of agents are Blue (0–3 zeros), 77% Green (4–7) and 11%

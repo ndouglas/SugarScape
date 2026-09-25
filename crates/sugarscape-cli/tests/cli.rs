@@ -53,6 +53,7 @@ fn presets_and_sweeps_are_listed() {
         "fig-iv-10-11",
         "n-goods-carrying-capacity",
         "bargaining-rules",
+        "schelling-tipping",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -247,4 +248,85 @@ fn sweep_errors_have_exit_codes() {
             .code(),
         Some(2)
     );
+}
+
+#[test]
+fn every_model_runs_from_a_preset_or_its_written_config() {
+    let out = sugarscape(&["presets"]);
+    let list = stdout(&out);
+    for line in [
+        "vi-4-schelling-25\tAnimation VI-4\t",
+        "vi-9-ring-megagroup\tAnimation VI-9\t",
+    ] {
+        assert!(list.lines().any(|l| l.starts_with(line)), "{list}");
+    }
+    let dir = scratch("models");
+    // tests/golden.rs, MODEL_GOLDEN: each preset after 200 ticks from seed 1.
+    for (id, golden, header) in [
+        (
+            "vi-4-schelling-25",
+            "0x7a7072c3433f5f6f",
+            "tick,unsatisfied,segregation,",
+        ),
+        (
+            "vi-8-ring-world",
+            "0x1c341361c466db90",
+            "tick,flocks,mean_flock,",
+        ),
+    ] {
+        let (series, agents, config) = (
+            dir.join(format!("{id}-series.csv")),
+            dir.join(format!("{id}-agents.csv")),
+            dir.join(format!("{id}-config.json")),
+        );
+        let out = sugarscape(&[
+            "run",
+            "--preset",
+            id,
+            "--ticks",
+            "200",
+            "--fingerprint",
+            "--series-csv",
+            path(&series),
+            "--agents-csv",
+            path(&agents),
+            "--config-out",
+            path(&config),
+        ]);
+        assert!(out.status.success(), "{}", stderr(&out));
+        assert_eq!(stdout(&out), format!("{golden}\n"));
+        assert!(read(&series).starts_with(header), "{id}");
+        assert_eq!(read(&series).lines().count(), 202);
+        assert!(read(&agents).starts_with("id,"));
+        let again = sugarscape(&[
+            "run",
+            "--config",
+            path(&config),
+            "--ticks",
+            "200",
+            "--fingerprint",
+        ]);
+        assert_eq!(
+            stdout(&again),
+            format!("{golden}\n"),
+            "{id}: the written config reproduces the run"
+        );
+    }
+}
+
+#[test]
+fn the_tipping_sweep_runs_on_the_command_line() {
+    let out = sugarscape(&[
+        "sweep",
+        "--builtin",
+        "schelling-tipping",
+        "--quiet",
+        "--seeds",
+        "1",
+        "--jobs",
+        "2",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let result: sugarscape_core::sweep::SweepResult = serde_json::from_str(&stdout(&out)).unwrap();
+    assert_eq!(result.runs.len(), 13);
 }

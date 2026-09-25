@@ -10,7 +10,7 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type { Preset, Snapshot } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
-import { config_series_names, initSync, presets_json } from './wasm-pkg/sugarscape.js';
+import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
 const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
@@ -282,5 +282,27 @@ describe('model charts', () => {
       const names = JSON.parse(config_series_names(JSON.stringify(preset.config))) as string[];
       for (const c of charts) for (const line of c.lines) expect(names, `${model}: ${c.title}`).toContain(line.key);
     }
+  });
+});
+
+describe('sweeps over other models', () => {
+  const spec = {
+    name: 'Schelling population',
+    base: { preset: 'vi-4-schelling-25' },
+    x: { path: 'population', values: [500, 1500] },
+    seeds: { from: 1, count: 1 },
+    ticks: 10,
+    metric: { kind: 'final', series: 'segregation' },
+  };
+
+  it('run over a Schelling base, its paths and statistics checked against Schelling', () => {
+    const json = JSON.stringify(spec);
+    expect(JSON.parse(sweep_points(json))).toHaveLength(2);
+    const run = JSON.parse(run_point(json, 1)) as { value: number };
+    expect(run.value).toBeGreaterThan(0.5);
+    const wrongPath = JSON.stringify({ ...spec, x: { path: 'vision.max', values: [1] } });
+    expect(() => sweep_points(wrongPath)).toThrow('unknown field vision.max');
+    const wrongSeries = JSON.stringify({ ...spec, metric: { kind: 'final', series: 'gini' } });
+    expect(() => sweep_points(wrongSeries)).toThrow('no statistics series');
   });
 });

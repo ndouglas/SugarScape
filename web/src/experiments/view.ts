@@ -185,7 +185,7 @@ export class ExperimentsView {
       const base = this.currentBase();
       const painted = 'config' in base && this.engine.editedLandscapes() !== undefined;
       const note = `${baseNote(base)} from the current world${painted ? ' (painted maps are not included)' : ''}, captured when chosen`;
-      this.setEditor(this.formView(defaultForm(), base, note));
+      this.setEditor(this.formView(defaultForm(this.engine.model), base, note));
       return;
     }
     const builtin = this.builtins.find((b) => choice === `builtin:${b.id}`);
