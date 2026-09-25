@@ -262,28 +262,54 @@ impl Snapshot {
     }
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct Stats {
-    history: Vec<Snapshot>,
+/// One tick's statistics of any model: its tick and its series by name.
+pub trait Series {
+    fn tick(&self) -> u64;
+    /// Series `name` (or `"tick"`), or `None` if the model has no such series.
+    fn value(&self, name: &str) -> Option<f64>;
 }
 
-impl Stats {
-    pub fn push(&mut self, s: Snapshot) {
+impl Series for Snapshot {
+    fn tick(&self) -> u64 {
+        self.tick
+    }
+
+    fn value(&self, name: &str) -> Option<f64> {
+        Snapshot::value(self, name)
+    }
+}
+
+/// A model's statistics history, one snapshot per tick from 0.
+#[derive(Clone, Debug)]
+pub struct Stats<S = Snapshot> {
+    history: Vec<S>,
+}
+
+impl<S> Default for Stats<S> {
+    fn default() -> Self {
+        Self {
+            history: Vec::new(),
+        }
+    }
+}
+
+impl<S: Series + Default> Stats<S> {
+    pub fn push(&mut self, s: S) {
         self.history.push(s);
     }
 
-    pub fn latest(&self) -> Option<&Snapshot> {
+    pub fn latest(&self) -> Option<&S> {
         self.history.last()
     }
 
-    pub fn history(&self) -> &[Snapshot] {
+    pub fn history(&self) -> &[S] {
         &self.history
     }
 
     /// The full history of one series (or `"tick"`), or `None` if unknown.
     pub fn series(&self, name: &str) -> Option<Vec<f64>> {
         if self.history.is_empty() {
-            return Snapshot::default().value(name).map(|_| Vec::new());
+            return S::default().value(name).map(|_| Vec::new());
         }
         self.history.iter().map(|s| s.value(name)).collect()
     }

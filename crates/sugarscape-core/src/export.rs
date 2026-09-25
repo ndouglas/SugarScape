@@ -2,19 +2,27 @@
 
 use std::fmt::Write;
 
+use crate::stats::Series;
 use crate::world::World;
 
 pub fn series_csv(world: &World) -> String {
-    let names = crate::stats::series_names(&world.config);
+    history_csv(
+        &crate::stats::series_names(&world.config),
+        world.stats.history(),
+    )
+}
+
+/// Any model's statistics CSV: `tick`, then `names`, one row per snapshot.
+pub fn history_csv<S: Series>(names: &[String], history: &[S]) -> String {
     let mut out = String::from("tick");
-    for name in &names {
+    for name in names {
         out.push(',');
         out.push_str(name);
     }
     out.push('\n');
-    for s in world.stats.history() {
-        out.push_str(&s.tick.to_string());
-        for name in &names {
+    for s in history {
+        out.push_str(&s.tick().to_string());
+        for name in names {
             write!(out, ",{}", s.value(name).expect("known series")).unwrap();
         }
         out.push('\n');

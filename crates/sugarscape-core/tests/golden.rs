@@ -1,6 +1,7 @@
 //! Earlier runs are unchanged: with disease off, the milestone-1 and
 //! Chapter IV presets evolve exactly as they did before Chapter V was added.
 
+use sugarscape_core::model::ModelWorld;
 use sugarscape_core::presets;
 use sugarscape_core::world::World;
 
@@ -49,6 +50,9 @@ const GOLDEN: &[(&str, u64)] = &[
     ("vi-3-trade", 0x2a65351834fda082),
 ];
 
+/// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
+const MODEL_GOLDEN: &[(&str, u64)] = &[];
+
 fn fingerprint(id: &str) -> u64 {
     let preset = presets::by_id(id).unwrap_or_else(|| panic!("unknown preset {id}"));
     let mut world = World::new(preset.config, 1).unwrap();
@@ -74,11 +78,45 @@ fn every_preset_has_a_golden_entry() {
     }
 }
 
-/// Prints `GOLDEN` entries: `cargo test -p sugarscape-core --test golden -- --ignored --nocapture`.
+/// Any model's preset `id` after 200 ticks from seed 1.
+fn model_fingerprint(id: &str) -> u64 {
+    let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
+    let mut world = ModelWorld::new(preset.config, 1).unwrap();
+    world.model_mut().run(200);
+    world.model().fingerprint()
+}
+
+#[test]
+fn other_models_are_unchanged() {
+    for &(id, expected) in MODEL_GOLDEN {
+        assert_eq!(model_fingerprint(id), expected, "preset {id} changed");
+    }
+}
+
+#[test]
+fn every_model_preset_has_a_golden_entry() {
+    for p in presets::catalog() {
+        assert!(
+            GOLDEN.iter().chain(MODEL_GOLDEN).any(|&(id, _)| id == p.id),
+            "record a golden fingerprint for {} (run print_golden)",
+            p.id
+        );
+    }
+}
+
+/// Prints `GOLDEN` entries, then `MODEL_GOLDEN`'s:
+/// `cargo test -p sugarscape-core --test golden -- --ignored --nocapture`.
 #[test]
 #[ignore]
 fn print_golden() {
     for p in presets::all() {
         println!("    (\"{}\", {:#x}),", p.id, fingerprint(p.id));
+    }
+    println!("MODEL_GOLDEN:");
+    for p in presets::catalog()
+        .iter()
+        .filter(|p| p.config.sugarscape().is_none())
+    {
+        println!("    (\"{}\", {:#x}),", p.id, model_fingerprint(p.id));
     }
 }

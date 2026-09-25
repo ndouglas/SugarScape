@@ -6,10 +6,10 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand};
-use sugarscape_core::config::{Config, FieldError};
+use sugarscape_core::config::FieldError;
+use sugarscape_core::model::{ModelConfig, ModelWorld};
+use sugarscape_core::presets;
 use sugarscape_core::sweep::{self, Sweep};
-use sugarscape_core::world::World;
-use sugarscape_core::{export, presets};
 
 #[derive(Debug, Parser)]
 #[command(
@@ -24,7 +24,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// List the presets (id, source, name).
+    /// List the presets of every model (id, source, name).
     Presets,
     /// List the built-in sweeps (id, name).
     Sweeps,
@@ -40,7 +40,7 @@ struct ConfigSource {
     /// A preset id (see `sugarscape presets`).
     #[arg(long, value_name = "ID")]
     preset: Option<String>,
-    /// A config JSON file (current or pre-N-goods shape).
+    /// A config JSON file of any model (a sugarscape config in the current or pre-N-goods shape).
     #[arg(long, value_name = "FILE")]
     config: Option<PathBuf>,
 }
@@ -148,7 +148,7 @@ fn main() -> ExitCode {
 fn run(cli: Cli) -> Result<(), Failure> {
     match cli.command {
         Command::Presets => {
-            for p in presets::all() {
+            for p in presets::catalog() {
                 println!("{}\t{}\t{}", p.id, p.source, p.name);
             }
             Ok(())
@@ -166,22 +166,23 @@ fn run(cli: Cli) -> Result<(), Failure> {
 
 fn run_world(args: RunArgs) -> Result<(), Failure> {
     let config = match (&args.source.preset, &args.source.config) {
-        (Some(id), _) => presets::by_id(id).map(|p| p.config).ok_or_else(|| {
+        (Some(id), _) => presets::find(id).map(|p| p.config).ok_or_else(|| {
             Failure::Invalid(vec![FieldError::new(
                 "preset",
                 format!("unknown preset {id:?} (see `sugarscape presets`)"),
             )])
         })?,
-        (None, Some(path)) => Config::from_json(&read(path)?)?,
+        (None, Some(path)) => ModelConfig::from_json(&read(path)?)?,
         (None, None) => unreachable!("clap requires --preset or --config"),
     };
-    let mut world = World::new(config.clone(), args.seed)?;
-    world.run(args.ticks);
+    let mut world = ModelWorld::new(config.clone(), args.seed)?;
+    world.model_mut().run(args.ticks);
+    let world = world.model();
     if let Some(path) = &args.series_csv {
-        write(path, &export::series_csv(&world))?;
+        write(path, &world.series_csv())?;
     }
     if let Some(path) = &args.agents_csv {
-        write(path, &export::agents_csv(&world))?;
+        write(path, &world.agents_csv())?;
     }
     if let Some(path) = &args.config_out {
         let json = serde_json::to_string_pretty(&config).expect("configs serialize");

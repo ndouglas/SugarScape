@@ -10,9 +10,9 @@ use std::sync::mpsc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::config::{Config, FieldError};
-use crate::world::World;
-use crate::{presets, stats};
+use crate::config::FieldError;
+use crate::model::{ModelConfig, ModelWorld};
+use crate::presets;
 
 pub const MAX_X_VALUES: usize = 64;
 pub const MAX_SERIES_VALUES: usize = 16;
@@ -22,7 +22,8 @@ pub const MAX_POINTS: usize = 10_000;
 /// At most this many blocks per `timeseries` run: ceil(ticks / every).
 pub const MAX_BLOCKS: u32 = 2_000;
 
-/// Where every run's config starts: a preset, or a config in either shape.
+/// Where every run's config starts: a preset of any model, or a config of any
+/// model (a sugarscape config in either shape).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Base {
@@ -314,7 +315,7 @@ impl Sweep {
 
     /// The points and each (series, x) cell's config, indexed
     /// `series · nx + x`. Errors are deduplicated across cells (Decision 3).
-    fn prepare(&self) -> Result<(Vec<Point>, Vec<Config>), Vec<FieldError>> {
+    fn prepare(&self) -> Result<(Vec<Point>, Vec<ModelConfig>), Vec<FieldError>> {
         self.check_shape()?;
         let mut configs = Vec::new();
         let mut errors: Vec<FieldError> = Vec::new();
@@ -341,23 +342,23 @@ impl Sweep {
 
     /// The config `point` runs (it depends on the series and x value only).
     /// `point` must come from this sweep (`points` or `point`).
-    pub fn config_for(&self, point: &Point) -> Result<Config, Vec<FieldError>> {
+    pub fn config_for(&self, point: &Point) -> Result<ModelConfig, Vec<FieldError>> {
         self.config_at(point.series, point.x)
     }
 
-    fn base_config(&self) -> Result<Config, Vec<FieldError>> {
+    fn base_config(&self) -> Result<ModelConfig, Vec<FieldError>> {
         match &self.base {
-            Base::Preset(id) => presets::by_id(id)
+            Base::Preset(id) => presets::find(id)
                 .map(|p| p.config)
                 .ok_or_else(|| vec![FieldError::new("base", format!("unknown preset {id:?}"))]),
-            Base::Config(value) => Config::from_value(value.clone())
+            Base::Config(value) => ModelConfig::from_value(value.clone())
                 .map_err(|e| vec![FieldError::new("base", e.message)]),
         }
     }
 
     /// `base`, then `set`, then the series value's `set`, then the x value's
     /// `set` (each in key order), then `validate` and the metric's series.
-    fn config_at(&self, series: usize, x: usize) -> Result<Config, Vec<FieldError>> {
+    fn config_at(&self, series: usize, x: usize) -> Result<ModelConfig, Vec<FieldError>> {
         let mut config = self.base_config()?;
         let mut layers = vec![("set".to_string(), &self.set)];
         if let Some(axis) = &self.series {
@@ -381,7 +382,7 @@ impl Sweep {
                 .collect::<Vec<_>>()
         })?;
         let name = self.metric.series();
-        if !stats::series_names(&config).iter().any(|n| n == name) {
+        if !config.series_names().iter().any(|n| n == name) {
             return Err(vec![FieldError::new(
                 "metric.series",
                 format!("{prefix}: no statistics series {name:?} in this config"),
@@ -505,11 +506,11 @@ pub fn run_point(sweep: &Sweep, point: &Point) -> RunResult {
 
 /// Runs `point` with an already-built `config` and measures it. The config must be
 /// the point's valid config (e.g. from `Sweep::config_for`); an invalid config panics.
-pub fn run_config(sweep: &Sweep, point: &Point, config: Config) -> RunResult {
-    let mut world = World::new(config, point.seed).expect("sweep configs are validated");
-    world.run(sweep.ticks);
+pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResult {
+    let mut world = ModelWorld::new(config, point.seed).expect("sweep configs are validated");
+    world.model_mut().run(sweep.ticks);
     let history = world
-        .stats
+        .model()
         .series(sweep.metric.series())
         .expect("the metric's series is checked against every config");
     RunResult {
@@ -953,6 +954,8 @@ pub fn builtin(id: &str) -> Option<Sweep> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
+    use crate::world::World;
     use serde_json::json;
 
     /// 2 series × 3 x values × 2 seeds on ii-2-unit with 50 agents. The CLI
@@ -975,6 +978,15 @@ mod tests {
 
     pub(crate) fn sweep(value: Value) -> Sweep {
         serde_json::from_value(value).unwrap()
+    }
+
+    /// Point `point`'s config, which must be a sugarscape config.
+    fn sugarscape(s: &Sweep, point: &Point) -> Config {
+        s.config_for(point)
+            .unwrap()
+            .sugarscape()
+            .cloned()
+            .expect("a sugarscape config")
     }
 
     fn with(mut value: Value, key: &str, v: Value) -> Value {
@@ -1022,7 +1034,7 @@ mod tests {
         }));
         let points = s.points().unwrap();
         for point in &points {
-            let config = s.config_for(point).unwrap();
+            let config = sugarscape(&s, point);
             assert_eq!(
                 config.culture.groups,
                 crate::config::default_groups(config.tag_length)
@@ -1107,7 +1119,7 @@ mod tests {
         v["series"]["values"][1]["set"]["population"] = json!(60);
         v["series"]["values"][1]["set"]["growback.rate"] = json!(3.0);
         let s = sweep(v);
-        let first = s.config_for(&s.point(0).unwrap()).unwrap();
+        let first = sugarscape(&s, &s.point(0).unwrap());
         assert_eq!(
             (first.population, first.vision.min, first.vision.max),
             (50, 1, 2)
@@ -1116,7 +1128,7 @@ mod tests {
             (first.goods[0].metabolism.max, first.growback.rate),
             (1, 2.0)
         );
-        let last = s.config_for(&s.point(11).unwrap()).unwrap();
+        let last = sugarscape(&s, &s.point(11).unwrap());
         assert_eq!((last.population, last.vision.max), (60, 6));
         assert_eq!((last.goods[0].metabolism.max, last.growback.rate), (5, 3.0));
     }
@@ -1129,7 +1141,7 @@ mod tests {
             json!({ "config": { "population": 100 } }),
         );
         let s = sweep(legacy);
-        let config = s.config_for(&s.point(0).unwrap()).unwrap();
+        let config = sugarscape(&s, &s.point(0).unwrap());
         assert_eq!((config.population, config.goods.len()), (100, 1));
         let bad = sweep(with(tiny(), "base", json!({ "config": { "goods": 7 } })));
         assert_eq!(bad.points().unwrap_err()[0].field, "base");
@@ -1420,7 +1432,7 @@ mod tests {
         let point = s.point(7).unwrap();
         let run = run_point(&s, &point);
         assert_eq!((run.point, run.series, run.x, run.seed), (7, 1, 0, 6));
-        let mut w = World::new(s.config_for(&point).unwrap(), 6).unwrap();
+        let mut w = World::new(sugarscape(&s, &point), 6).unwrap();
         w.run(20);
         let pops = w.stats.series("population").unwrap();
         let expected = pops[10..=20].iter().fold(0.0, |a, b| a + b) / 11.0;
@@ -1710,7 +1722,7 @@ mod tests {
             .find(|p| p.series == 1 && p.x == x)
             .unwrap();
         assert_eq!(
-            s.config_for(&point).unwrap(),
+            sugarscape(&s, &point),
             presets::by_id("n-4-peaks").unwrap().config
         );
     }

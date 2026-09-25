@@ -7,6 +7,7 @@ use crate::config::{
     three_tribes, Config, Good, Map, Outbreak, Peak, Placement, Pollutant, Pollution,
     ScheduledChange, Transform, URange, SPICE_COLOR,
 };
+use crate::model::ModelConfig;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Preset {
@@ -604,6 +605,39 @@ pub fn by_id(id: &str) -> Option<Preset> {
     all().into_iter().find(|p| p.id == id)
 }
 
+/// A preset of any model: what the page's presets menu, sweeps and the CLI
+/// list. A sugarscape preset's config serializes exactly as its `Preset`'s.
+#[derive(Clone, Debug, Serialize)]
+pub struct ModelPreset {
+    pub id: &'static str,
+    pub name: &'static str,
+    pub source: &'static str,
+    pub description: &'static str,
+    pub config: ModelConfig,
+}
+
+impl From<Preset> for ModelPreset {
+    fn from(p: Preset) -> Self {
+        ModelPreset {
+            id: p.id,
+            name: p.name,
+            source: p.source,
+            description: p.description,
+            config: p.config.into(),
+        }
+    }
+}
+
+/// Every model's presets: the sugarscape's (`all`) first.
+pub fn catalog() -> Vec<ModelPreset> {
+    all().into_iter().map(ModelPreset::from).collect()
+}
+
+/// The preset `id` of any model.
+pub fn find(id: &str) -> Option<ModelPreset> {
+    catalog().into_iter().find(|p| p.id == id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -645,6 +679,25 @@ mod tests {
             let mut w = World::new(p.config.clone(), 1).unwrap();
             w.run(20);
         }
+    }
+
+    #[test]
+    fn the_catalog_lists_every_sugarscape_preset_first_unchanged() {
+        let catalog = catalog();
+        let sugarscape = all();
+        for (p, q) in sugarscape.iter().zip(&catalog) {
+            assert_eq!(p.id, q.id);
+            assert_eq!(q.config.sugarscape(), Some(&p.config));
+            assert_eq!(
+                serde_json::to_string(p).unwrap(),
+                serde_json::to_string(q).unwrap()
+            );
+        }
+        assert_eq!(
+            find("iv-3-trade").unwrap().config,
+            by_id("iv-3-trade").unwrap().config.into()
+        );
+        assert!(find("nope").is_none());
     }
 
     #[test]
