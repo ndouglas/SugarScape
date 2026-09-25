@@ -4,6 +4,7 @@ import { errorMessage } from '../errors';
 import { readoutText } from '../valley';
 import { h } from './dom';
 import { showNotice } from './notice';
+import { Timeline } from './timeline';
 
 /** Below 1×, speeds are ticks a second: 1/60 of a tick per frame is one a second. */
 const PER_SECOND = [1, 2, 5, 10, 20, 30];
@@ -97,6 +98,7 @@ export class Toolbar {
   private readonly chips: HTMLElement;
   /** Hidden in Compare: the headers carry them. */
   private readonly singleOnly: HTMLElement[];
+  private readonly timeline = new Timeline((e) => showNotice(`Could not go to that tick (${errorMessage(e)})`, 10_000));
 
   constructor(private readonly engine: Engine) {
     this.controls = engine;
@@ -136,11 +138,13 @@ export class Toolbar {
       { class: 'toolbar' },
       h('h1', {}, 'SugarScape'),
       h('div', { class: 'group' }, this.play, this.step, this.speed),
+      this.timeline.el,
       h('div', { class: 'group' }, seedLabel, this.resetButton, this.dice),
       this.readout,
       chips,
       h('div', { class: 'toolbar-end' }),
     );
+    this.timeline.bind(engine);
     engine.on('run', () => this.sync());
     engine.on('reset', () => {
       this.sync();
@@ -148,6 +152,7 @@ export class Toolbar {
     });
     engine.on('tick', () => this.tick());
     engine.on('edit', () => this.tick());
+    engine.on('snapshot', () => this.timeline.sync());
     this.sync();
     this.tick();
   }
@@ -159,7 +164,11 @@ export class Toolbar {
     this.lock = lock;
     this.b = b;
     this.controls = lock ?? this.engine;
-    if (lock) this.offs.push(lock.on('run', () => this.sync()));
+    this.timeline.bind(this.controls);
+    if (lock) {
+      this.offs.push(lock.on('run', () => this.sync()));
+      this.offs.push(lock.on('tick', () => this.timeline.sync()));
+    }
     if (b) for (const event of ['tick', 'edit', 'reset'] as const) this.offs.push(b.on(event, () => this.tick()));
     for (const el of this.singleOnly) el.hidden = lock !== null;
     this.speed.value = String(this.controls.speed);
@@ -175,6 +184,11 @@ export class Toolbar {
     this.held = on;
     this.chips.inert = on;
     this.sync();
+  }
+
+  /** Steps the current controls back one tick (⟲1); for shortcuts (Task 11). */
+  back(): void {
+    this.timeline.back();
   }
 
   private reset(): void {
@@ -201,9 +215,12 @@ export class Toolbar {
     this.resetButton.disabled = this.held;
     this.dice.disabled = this.held;
     this.seed.value = String(this.engine.seed);
+    this.timeline.held = this.held;
+    this.timeline.sync();
   }
 
   private tick(): void {
     this.readout.textContent = readoutText(this.engine, this.b);
+    this.timeline.sync();
   }
 }
