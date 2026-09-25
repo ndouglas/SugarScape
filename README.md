@@ -267,12 +267,44 @@ opens the sweep (not its results).
 The simulation runs in a Web Worker: the page sends it commands (steps, edits, rule changes)
 and draws the frame and statistics it sends back, so the page stays responsive on large grids
 and at high speeds. Where a module worker cannot start, the same code runs on the page. The
-speed menu's **Max** runs the simulation as fast as it goes and redraws about 30 times a
-second; the other speeds step a fixed number of ticks per frame, as before. A run does not
-depend on the speed: the same setup and seed give the same world at the same tick. The
-page's worlds stop at 1 000 000 ticks, whatever the model, so the whole history fits in memory:
-the world pauses there and says so (export its data, or Reset). The command-line tool has no
-such limit.
+speed menu runs 1/s, 2/s, 5/s, 10/s, 20/s and 30/s below one tick a frame, then 1×, 2×, 5×,
+10×, 25× and 100× ticks a frame, and **Max**, which runs the simulation as fast as it goes and
+redraws about 30 times a second. A run does not depend on the speed: the same setup and seed
+give the same world at the same tick. The page's worlds stop at 1 000 000 ticks, whatever the
+model, so the whole history fits in memory: the world pauses there and says so (export its
+data, or Reset). The command-line tool has no such limit.
+
+The toolbar's **⟲1** steps back a tick, and a slider ranges over 0 to the furthest tick this
+branch has reached; dragging it or pressing ⟲1 moves the world to that exact tick, with the
+grid, charts and Inspect showing what they showed then. Playing on replays the same recorded
+future until you make an edit, which drops it and starts a new branch from there. Seeking is
+disabled, with a tooltip saying why, once the edit log is full and can no longer rebuild the
+session exactly; in Compare, seeking moves both worlds together and the slider's end is the
+smaller of the two worlds' reached ticks.
+
+A **Stop at** control beside Play holds two independent, optional rules — at a tick, and/or
+when a chosen series crosses `<` or `>` a value — checked after every tick at every speed, Max
+included, so a run stops on the exact tick with a notice naming the rule. A rule fires only on
+becoming true, not while it is already true, so a condition already met when Play starts does
+not stop the first tick. Rules persist across seeks and resets and are cleared when a new model
+kind loads (its series differ); they are not part of links or sessions. In Compare only the
+tick rule applies — the condition rule is disabled there, since the two worlds could cross it
+on different ticks.
+
+Beside the speed menu, a **t/s** readout shows the measured ticks per second while a run plays
+(hidden while paused); in Compare it counts lockstep pairs.
+
+Keyboard shortcuts act on whatever Play and Step drive — one world, or Compare's lockstep — and
+are ignored while typing in a field or with Ctrl, Alt or Meta held:
+
+| Key | Action |
+| --- | --- |
+| Space | Play / Pause |
+| → | Step one tick |
+| ← | Back one tick |
+| `[` / `]` | Slower / faster |
+| R | Reset |
+| ? | Show / hide a card listing these |
 
 Charts draw a downsampled history, with the tick on the x axis: Largest-Triangle-Three-Buckets
 keeps about 2 000 points of each line, so spikes survive on long runs, and so do gaps
