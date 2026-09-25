@@ -84,6 +84,8 @@ export class FakeSim implements SimLike {
     this.stepCalls++;
     const before = this.ticks;
     this.ticks = Math.min(this.ticks + n, this.config.finish ?? Infinity);
+    // Like the core: an entry at tick t applies (top-level paths only) when the step from t starts.
+    for (const c of this.config.schedule) if (c.tick >= before && c.tick < this.ticks) Object.assign(this.config, c.set);
     const a = this.agents.get(1);
     if (a) a[0] = (a[0] + this.ticks - before) % this.config.width;
   }

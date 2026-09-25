@@ -652,7 +652,7 @@ export class SimHost {
 
   /**
    * Marks the config for sending when stepping from tick `from` to `to` changed it: the world
-   * applies an entry at tick t when the step from t to t + 1 starts (both models), and a civil ramp
+   * applies an entry at tick t when the step from t to t + 1 starts (every model), and a civil ramp
    * moves its field at the start of each tick t with start < t ≤ end. Worked out from the config's
    * schedule and ramps (they change only on reset), so it costs nothing per tick and depends only
    * on the ticks stepped, never on how they were split into requests.
@@ -666,10 +666,11 @@ export class SimHost {
         this.configDue = true;
         this.chartsDue = true;
       }
-    } else if (modelOf(config) === 'civil') {
-      const civil = config as CivilConfig;
-      // Some tick t in [from, to) is in (start, end].
-      if (civil.schedule.some(entry) || civil.ramps.some((r) => r.start + 1 < to && r.end >= from)) this.configDue = true;
+    } else {
+      // Any other model's schedule (civil, spatial, …), and civil's ramps: some tick t in [from, to)
+      // is in (start, end].
+      const { schedule, ramps } = config as Partial<Pick<CivilConfig, 'schedule' | 'ramps'>>;
+      if (schedule?.some(entry) || ramps?.some((r) => r.start + 1 < to && r.end >= from)) this.configDue = true;
     }
   }
 

@@ -328,6 +328,22 @@ describe('SimHost with another model', () => {
     expect([edited.config !== undefined, edited.sameCharts, edited.charts !== undefined]).toEqual([true, undefined, true]);
   });
 
+  it('sends a spatial config after the tick a scheduled b changed it', () => {
+    const host = new SimHost(fakeModule(), () => 0);
+    const config = { model: 'spatial', width: 6, height: 4, b: 1.9, schedule: [{ tick: 3, set: { b: 1.5 } }] } as unknown as ModelConfig;
+    let id = 0;
+    const send = (cmd: Command): WorldSnapshot => {
+      const reply = host.handle({ id: ++id, cmd });
+      if (!reply.result.ok || !reply.result.snapshot) throw new Error(JSON.stringify(reply.result));
+      return reply.result.snapshot;
+    };
+    send({ type: 'init', config, seed: 1, landscapes: [], display });
+    expect(send({ type: 'step', n: 3 }).config).toBeUndefined(); // ticks 0–2 started
+    const fired = send({ type: 'step', n: 1 }); // the step from 3 started
+    expect((fired.config as { b: number } | undefined)?.b).toBe(1.5);
+    expect(send({ type: 'step', n: 1 }).config).toBeUndefined();
+  });
+
   it('ends Max when the world is finished, posting the world there', () => {
     let clock = 0;
     const host = new SimHost(fakeModule(), () => clock++);
