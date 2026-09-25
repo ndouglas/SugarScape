@@ -35,7 +35,7 @@ fn kaleidoscope(c: &mut SpatialConfig) {
     c.b = 1.9;
 }
 
-/// NBM94's arena: 80 × 80, periodic, 10% defectors.
+/// NBM94's arena: 80 × 80, periodic, 50% defectors.
 fn nbm_arena(c: &mut SpatialConfig) {
     c.width = 80;
     c.height = 80;

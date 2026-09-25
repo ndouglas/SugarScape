@@ -4,7 +4,7 @@
 use sugarscape_core::model::ModelWorld;
 use sugarscape_core::presets;
 
-/// One preset per model kind.
+/// One preset per model kind, and a second for the spatial games' asynchronous updating.
 const IDS: &[&str] = &[
     "vi-1-everything",
     "vi-4-schelling-25",
@@ -12,6 +12,7 @@ const IDS: &[&str] = &[
     "lhv-published",
     "cv-run-8-nasty-regime",
     "nbm-probabilistic",
+    "hg-async-kaleidoscope",
 ];
 
 fn world(id: &str) -> ModelWorld {

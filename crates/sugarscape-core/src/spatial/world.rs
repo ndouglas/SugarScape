@@ -246,7 +246,9 @@ impl SpatialWorld {
                 0.0
             } else {
                 // A^m / max^m, from portable arithmetic.
-                exp_neg(m * (ln(a) - ln(max)))
+                // Clamped: ln is good to a few ulps, so a score a hair
+                // below the max can give ln(a) > ln(max).
+                exp_neg((m * (ln(a) - ln(max))).min(0.0))
             }
         };
         if m > 0.0 && max == 0.0 {

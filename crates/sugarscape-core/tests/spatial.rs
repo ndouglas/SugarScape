@@ -88,9 +88,7 @@ fn the_kaleidoscope_keeps_its_symmetry_and_reaches_the_boundary_at_49() {
         if reached.is_none() && edge(&w) {
             reached = Some(t);
         }
-        if [30, 217, 219, 221].contains(&t) {
-            assert!(four_fold(&w), "t = {t}");
-        }
+        assert!(four_fold(&w), "t = {t}");
     }
     assert_eq!(reached, Some(49));
 }
