@@ -5,6 +5,7 @@ import {
   finishesUnpredictably,
   isCivilView,
   isRingView,
+  isSpatialView,
   isSugar,
   isSugarView,
   isValleyView,
@@ -124,5 +125,24 @@ describe('the civil model', () => {
     expect(finishesUnpredictably(civil('rebellion', true))).toBe(false);
     const valley = { model: 'anasazi', start_year: 800, end_year: 1350 } as unknown as ModelConfig;
     expect(finishesUnpredictably(valley)).toBe(false);
+  });
+});
+
+describe('the spatial model', () => {
+  it('is read by its tag, and its inspections by their z', () => {
+    const c = { model: 'spatial', lattice: 'square' } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('spatial');
+    const cell = { site: { x: 1, y: 2, z: 0 }, agent: null } as unknown as AnyInspection;
+    const schelling = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
+    expect([cell, schelling].map(isSpatialView)).toEqual([true, false]);
+  });
+
+  it('offers the papers’ four-color change view first', () => {
+    expect(COLOR_MODES.spatial).toEqual([
+      ['change', 'Change'],
+      ['strategy', 'Strategy'],
+      ['payoff', 'Payoff'],
+    ]);
+    expect(MODEL_OVERLAYS.spatial).toEqual([]);
   });
 });

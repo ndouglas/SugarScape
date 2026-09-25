@@ -123,7 +123,7 @@ export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant
  * size (mean and largest) and distance moved; the anasazi's households against the historical
  * record, carrying capacity, fit, stored corn, and births, moves and departures; civil violence's
  * actives, quiet and jailed, legitimacy, cops, tension, outbursts, and in Model II its groups and
- * kills.
+ * kills; the spatial games' cooperators, changes, switches and payoffs.
  */
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
@@ -187,6 +187,24 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       shown: isEthnic,
     },
     { title: 'Killed', lines: [{ key: 'killed', label: 'Killed this tick', color: '--red' }], shown: isEthnic },
+  ],
+  spatial: [
+    { title: 'Cooperators', lines: [{ key: 'fraction_c', label: 'Share C', color: '--blue' }], range: [0, 1] },
+    { title: 'Changes', lines: [{ key: 'changed', label: 'Share that switched', color: '--c4' }], range: [0, 1] },
+    {
+      title: 'Switches',
+      lines: [
+        { key: 'c_to_d', label: 'C → D', color: '--both' },
+        { key: 'd_to_c', label: 'D → C', color: '--lender' },
+      ],
+    },
+    {
+      title: 'Payoffs',
+      lines: [
+        { key: 'mean_payoff_c', label: 'Mean C', color: '--blue' },
+        { key: 'mean_payoff_d', label: 'Mean D', color: '--red' },
+      ],
+    },
   ],
 };
 

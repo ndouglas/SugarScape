@@ -247,3 +247,9 @@ describe('civil charts', () => {
     ]);
   });
 });
+
+describe('the spatial games’ charts', () => {
+  it('charts the spatial games’ cooperators, changes, switches and payoffs', () => {
+    expect(MODEL_CHARTS.spatial.map((c) => c.title)).toEqual(['Cooperators', 'Changes', 'Switches', 'Payoffs']);
+  });
+});

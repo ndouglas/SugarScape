@@ -1,7 +1,8 @@
 import type { Engine, Overlay } from '../engine';
 import { layerOptions, overlayAvailableAny } from '../layers';
 import { COLOR_MODES } from '../models';
-import type { ColorMode, Layer, ModelKind } from '../types';
+import { middleSlice, sliceOptions } from '../spatial';
+import type { ColorMode, Layer, ModelKind, SpatialConfig } from '../types';
 import { VALLEY_OVERLAY_LABELS } from '../valley';
 import { h } from './dom';
 
@@ -24,14 +25,16 @@ export interface Display {
 /**
  * The Agents and Landscape menus and the overlay checkboxes, for the model on screen (Decision 12):
  * a sugarscape offers all of them; Schelling only its three color modes; Ring World none; the
- * anasazi its three modes (as "Valley") and its water, settlement and link overlays.
+ * anasazi its three modes (as "Valley") and its water, settlement and link overlays; the spatial
+ * games their three modes and, in a cube, the Slice menu.
  */
 export function buildDisplay(engine: Engine): Display {
   const mode = h('select', { onchange: () => engine.setDisplay({ colorMode: mode.value as ColorMode }) });
   const layer = h('select', { onchange: () => engine.setDisplay({ layer: layer.value as Layer }) });
   const modeName = h('span', {}, 'Agents ');
   const modeLabel = h('label', {}, modeName, mode);
-  const layerLabel = h('label', {}, 'Landscape ', layer);
+  const layerName = h('span', {}, 'Landscape ');
+  const layerLabel = h('label', {}, layerName, layer);
   const sync = () => {
     mode.value = engine.colorMode;
     layer.value = engine.layer;
@@ -46,9 +49,14 @@ export function buildDisplay(engine: Engine): Display {
       mode.replaceChildren(...modes.map(([v, l]) => h('option', { value: v }, l)));
       modeLabel.hidden = modes.length === 0;
       modeName.textContent = model === 'anasazi' ? 'Valley ' : 'Agents ';
-      layerLabel.hidden = model !== 'sugarscape';
     }
-    layer.replaceChildren(...layerOptions(engine.sugar).map(([v, l]) => h('option', { value: v }, l)));
+    // A cube's view is one z-slice (the Slice menu); a sugarscape's landscape layers otherwise.
+    const slices = model === 'spatial' ? sliceOptions(engine.config as SpatialConfig) : [];
+    layerName.textContent = slices.length > 0 ? 'Slice ' : 'Landscape ';
+    layerLabel.hidden = model !== 'sugarscape' && slices.length === 0;
+    const options = model === 'sugarscape' ? layerOptions(engine.sugar) : slices;
+    layer.replaceChildren(...options.map(([v, l]) => h('option', { value: v }, l)));
+    if (slices.length > 0 && !slices.some(([v]) => v === engine.layer)) engine.setDisplay({ layer: middleSlice(engine.config as SpatialConfig) });
     sync();
   };
   engine.on('display', sync);

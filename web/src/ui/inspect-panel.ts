@@ -1,7 +1,7 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
-import { isCivilView, isRingView, isSugarView, isValleyView } from '../models';
-import type { AgentView, AnasaziInspection, CivilInspection, LinkView, RingInspection, SchellingInspection } from '../types';
+import { isCivilView, isRingView, isSpatialView, isSugarView, isValleyView } from '../models';
+import type { AgentView, AnasaziInspection, CivilInspection, LinkView, RingInspection, SchellingInspection, SpatialInspection } from '../types';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -114,6 +114,12 @@ export class InspectPanel {
     ];
   }
 
+  /** A spatial cell (Task 5 fills in the player's rows). */
+  private spatialRows(view: SpatialInspection, _gone: boolean): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    return [row('Cell', `(${view.site.x}, ${view.site.y}, ${view.site.z})`)];
+  }
+
   /** A civil site: its cop, the agent shown there (followed into jail), and others jailed after arrest here. */
   private civilRows(view: CivilInspection, followed: number | null, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -195,7 +201,9 @@ export class InspectPanel {
           ? this.valleyRows(view, gone)
           : isCivilView(view)
             ? this.civilRows(view, shown.agentId, gone)
-            : this.schellingRows(view, gone);
+            : isSpatialView(view)
+              ? this.spatialRows(view, gone)
+              : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

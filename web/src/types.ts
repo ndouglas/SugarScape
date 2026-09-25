@@ -76,8 +76,8 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-/** The models the playground runs (milestones 9–11). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil';
+/** The models the playground runs (milestones 9–12). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -172,12 +172,33 @@ export interface CivilConfig {
   ramps: CivilRamp[];
 }
 
+/** Nowak & May's spatial Prisoner's Dilemma and its variants (milestone 12). */
+export interface SpatialConfig {
+  model: 'spatial';
+  lattice: 'square' | 'cube' | 'random';
+  width: number;
+  height: number;
+  neighborhood: 'moore' | 'von_neumann';
+  boundary: 'fixed' | 'periodic';
+  occupancy: number;
+  radius: number;
+  b: number;
+  epsilon: number;
+  self_weight: number;
+  update: 'synchronous' | 'asynchronous';
+  winning: 'deterministic' | 'probabilistic';
+  m: number;
+  start: 'random' | 'single_defector';
+  defectors: number;
+  schedule: ScheduledChange[];
+}
+
 /**
  * A config of any model. A sugarscape `Config` carries no `model` key (every config, link, session
  * and sweep written before milestone 9 is one); the others carry theirs. Narrow with `isSugar` /
  * `modelOf` (models.ts).
  */
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | SpatialConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -286,8 +307,20 @@ export interface CivilStats {
   extinction: number;
 }
 
+export interface SpatialStats {
+  tick: number;
+  fraction_c: number;
+  changed: number;
+  c_to_d: number;
+  d_to_c: number;
+  /** Null with no player of that strategy. */
+  mean_payoff_c: number | null;
+  mean_payoff_d: number | null;
+  players: number;
+}
+
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | SpatialStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -387,8 +420,24 @@ export interface CitizenView {
 /** A civil site: its free agent, its cop, and the agents jailed after arrest here. */
 export interface CivilInspection { site: { x: number; y: number }; agent: CitizenView | null; cop: { id: number } | null; jailed: CitizenView[] }
 
+export interface SpatialCandidate { x: number; y: number; z: number; strategy: 'C' | 'D'; score: number }
+/** A spatial player: its strategy now and a generation ago, its score, and who could take its site (itself first). */
+export interface PlayerView {
+  id: number;
+  strategy: 'C' | 'D';
+  previous: 'C' | 'D';
+  score: number;
+  candidates: SpatialCandidate[];
+  /** The next strategy under deterministic winning; null when winning is probabilistic. */
+  next: 'C' | 'D' | null;
+  /** Eq. 1's P(C) under probabilistic winning (null when deterministic, or when every score is 0). */
+  p_c: number | null;
+}
+/** A spatial cell (in a cube, of the slice on screen); no player on an empty cell of a random array. */
+export interface SpatialInspection { site: { x: number; y: number; z: number }; agent: PlayerView | null }
+
 /** What a world of any model says about a site. */
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | SpatialInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -411,8 +460,11 @@ export type ColorMode =
   | 'yield'
   | 'action'
   | 'grievance'
-  | 'group';
-export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}`;
+  | 'group'
+  | 'change'
+  | 'strategy'
+  | 'payoff';
+export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
 export function parseErrors(e: unknown, field = 'config'): FieldError[] {
