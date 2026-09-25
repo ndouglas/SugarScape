@@ -700,6 +700,7 @@ if encoding fails. Files are named after the setup and the ticks they cover, e.g
     sugarscape run --preset lhv-published --ticks 550 --series-csv lhv.csv          # AD 800–1350
     sugarscape sweep --builtin fig-ii-5 --out fig-ii-5.json --summary-csv fig-ii-5.csv
     sugarscape sweep my-sweep.json --jobs 4 --seeds 3 --ticks 300 --runs-csv runs.csv
+    sugarscape shot beat.json --out beat.frames.json    # a frame dump for the Flump studio
 
 `run` runs a preset or config of any model; it defaults to seed 1 and 1000 ticks (an anasazi run
 stops at its end year and says so on stderr); `--config-out` writes the config it ran and
@@ -707,6 +708,14 @@ stops at its end year and says so on stderr); `--config-out` writes the config i
 says otherwise, prints the result JSON unless `--out` is given, and reports progress on
 stderr unless `--quiet`. Exit codes: 0 success, 1 I/O error, 2 usage or validation error
 (printed as `field: message`, one per line).
+
+`shot` runs a shot file — `preset` or `config`, `seed` (default 1), `ticks`, `set` (config
+paths to override, e.g. `"goods.0.map"`), `empty` (start every site with no sugar) and `place`
+(agents placed by hand at a tick with a given vision, metabolism and sugar) — and writes every
+tick of the run as JSON: each agent (`[id, x, y, sugar, age, vision, metabolism]`), the sugar at
+every site, deaths with their cause, births, the placed agents' ids and the statistics series.
+Frame t is the world after t ticks and after that tick's placements. Sugarscape only; see
+`studio/README.md`.
 
 A run is a function of its config and seed, so a sweep's output files are byte-identical for
 any `--jobs` (and in the browser, for any number of workers). Native and browser builds can

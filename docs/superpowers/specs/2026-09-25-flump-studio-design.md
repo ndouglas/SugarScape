@@ -53,7 +53,10 @@ One JSON file per beat:
 ```
 
 - Exactly one of `preset` or `config` (a full config, as `--config` takes).
-- `set`: optional config-path overrides, applied with `ModelConfig::with_path` in key order.
+- `set`: optional config-path overrides (e.g. `"goods.0.map"`), applied with `Config::with_path` in
+  sorted key order and validated once at the end.
+- `empty`: optional, default false: start every site with no sugar (sites otherwise start full);
+  growback then runs by its rule.
 - `place`: agents placed before the given tick runs, through `World::place_agent` with
   `AgentOverrides` (vision, metabolism, sugar; sex and tribe as the struct allows). A placement on an
   occupied site or outside the grid is an error.
@@ -70,7 +73,8 @@ One JSON file per beat:
 One JSON document:
 
 - **Header:** `format` (`1`), `model`, `seed`, `ticks`, `width`, `height`, `capacity` (flat, per site,
-  row-major, good 0), and `config` (the resolved config, so the dump reproduces itself).
+  row-major, good 0), `placed` (the placed agents' ids, in `place` order), and `config` (the
+  resolved config, so the dump reproduces itself).
 - **`frames`:** ticks + 1 entries, tick 0 (after placements at tick 0) first. Each has:
   - `tick`
   - `agents`: `[[id, x, y, sugar, age, vision, metabolism], …]`, sorted by id
@@ -101,12 +105,16 @@ Trades, infections, loans and tags are left out until an episode needs them.
 ## Part 2: the Blender studio (Python, `studio/`)
 
 Targets **Blender 5.2 LTS** (installed: 5.2.2). Only Blender's bundled Python and modules inside
-Blender; `pytest` for the pure-Python tests outside it.
+Blender; stdlib `unittest` for the pure-Python tests outside it (pytest is not installed).
+
+Animation is not keyframed: one frame-change handler sets every object from pure functions of the
+frame (Blender 5.2 has no `Action.fcurves`, and the handler also runs at motion blur's subframes).
 
 ### Modules
 
 - `flump.py`: builds a Flump from primitives (no armature): a subdivided round body, four nubbin
-  limbs, eyes, blush. Shape keys for squash, stretch, a hungry droop and blinks. Canned actions:
+  limbs, eyes, blush. Squash, stretch, droop and blinks are scales on the Flump's parts, computed per
+  frame. Canned motions:
   **spawn** (pop and land), **hop** (arc, stretch in flight, squash on landing), **eat**, **look** (eyes
   turn toward a target), **poof** (collapse into a burst of felt-fluff particles).
 - `materials.py`: knit yarn, felt, gumdrop, and the lighting rig.
@@ -121,8 +129,9 @@ Blender; `pytest` for the pure-Python tests outside it.
 - `camera.py`: named moves (push-in, pull-back, orbit, hold) with ease-in/ease-out.
 - `overlays.py`: felt-block stat displays fed by the dump's `stats` (histogram bars, a dial or bar for
   a mean).
-- `cut.py`: assembles rendered beats in the video sequencer with captions (fade in/out) and
-  cross-dissolves, and writes H.264 MP4 (`yuv420p`).
+- `cut.py`: joins rendered beats with ffmpeg's `xfade` cross-dissolves and writes H.264 MP4
+  (`yuv420p`); captions are rendered into each beat in Blender, since the installed ffmpeg has no
+  `drawtext`.
 - `render.py`: the entry point run inside Blender: `blender -b -P studio/render.py -- <episode> <beat>
   [--preview]`. Builds the beat's scene, saves `<beat>.blend` beside the render so it can be opened
   and tweaked by hand, and renders it.
@@ -146,7 +155,7 @@ Eevee, 1920 × 1080, 30 fps, motion blur on. Preview: 960 × 540, low samples.
 
 ### Tests
 
-- `pytest` for `dump.py` and the planning in `animate.py` and `camera.py` (tick-to-frame mapping,
+- `unittest` for `dump.py` and the planning in `animate.py` and `camera.py` (tick-to-frame mapping,
   a hop per move, a poof at a death's frame, easing endpoints).
 - Smoke test: each beat of the pilot renders one preview frame headless without error.
 - The final MP4's frame count equals the beats' total duration × 30 (less the dissolve overlaps).
