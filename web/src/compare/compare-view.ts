@@ -6,6 +6,7 @@ import { h } from '../ui/dom';
 import { GridView } from '../ui/grid-view';
 import { InspectPanel } from '../ui/inspect-panel';
 import { showNotice } from '../ui/notice';
+import { RingView } from '../ui/ring-view';
 import { RulesPanel } from '../ui/rules-panel';
 import type { Tabs } from '../ui/tabs';
 import { followChip, replayChip, type Toolbar } from '../ui/toolbar';
@@ -24,6 +25,8 @@ export interface Playground {
   tabs: Tabs;
   charts: ChartsPanel;
   display: Display;
+  /** A's ring view (Ring World). */
+  ringView: RingView;
   rules: WorldSlot<RulesPanel>;
   inspect: WorldSlot<InspectPanel>;
   credit: WorldSlot<CreditPanel>;
@@ -36,18 +39,19 @@ export interface Playground {
   onCrash: () => void;
 }
 
-/** B's figure: its header, and the copy's progress until its grid can be shown. */
-export interface CompareShell { figure: HTMLElement; header: HTMLElement; progress: HTMLElement; canvas: HTMLCanvasElement }
+/** B's figure: its header, and the copy's progress until its grid (and, for Ring World, its ring) can be shown. */
+export interface CompareShell { figure: HTMLElement; header: HTMLElement; progress: HTMLElement; canvas: HTMLCanvasElement; ring: HTMLCanvasElement }
 
 /** Puts B's figure beside A's (the grid area splits at once) with "Copying A…" in it. */
 export function compareShell(): CompareShell {
   const header = h('header', { class: 'world-header' });
   const progress = h('p', { class: 'hint copy-progress', role: 'status' }, 'Copying A…');
   const canvas = h('canvas', { class: 'grid-b', 'aria-label': 'Sugarscape grid B', hidden: true });
-  const figure = h('figure', { class: 'world', id: 'world-b' }, header, progress, canvas);
+  const ring = h('canvas', { class: 'ring-view', 'aria-label': 'Ring World’s ring B', hidden: true });
+  const figure = h('figure', { class: 'world', id: 'world-b' }, header, progress, ring, canvas);
   document.querySelector('#grids')!.append(figure);
   document.body.dataset.compare = 'on';
-  return { figure, header, progress, canvas };
+  return { figure, header, progress, canvas, ring };
 }
 
 /** Asks which world stays when leaving Compare; null (Cancel, Escape) stays in Compare. */
@@ -82,6 +86,7 @@ export function askKeep(): Promise<WorldName | null> {
 export class CompareView {
   readonly lock: Lockstep;
   readonly gridB: GridView;
+  readonly ringB: RingView;
   private readonly offs: (() => void)[] = [];
   /** The headers' 🎲 buttons, disabled while leaving. */
   private readonly dice: HTMLButtonElement[] = [];
@@ -98,6 +103,14 @@ export class CompareView {
     shell.progress.remove();
     shell.canvas.hidden = false;
     this.gridB = new GridView(shell.canvas, b);
+    this.ringB = new RingView(shell.ring, b);
+    // Both worlds run one model (Decision 11): B shows its ring exactly when A does.
+    shell.ring.hidden = b.model !== 'ring';
+    this.ringB.onSite = (site) => {
+      void b.select(site, b.size().height - 1);
+      this.focus('B');
+      p.tabs.show('Inspect');
+    };
     this.lock = new Lockstep([a, b], a.speed);
     try {
       this.header(document.querySelector<HTMLElement>('#world-a .world-header')!, 'A', a);
@@ -152,6 +165,7 @@ export class CompareView {
   draw(): void {
     if (!this.dirty) return;
     this.gridB.draw();
+    this.ringB.draw();
     this.dirty = false;
   }
 

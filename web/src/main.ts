@@ -27,6 +27,7 @@ import { GridView } from './ui/grid-view';
 import { InspectPanel } from './ui/inspect-panel';
 import { showNotice } from './ui/notice';
 import { buildRecordControl } from './ui/record-control';
+import { RingView } from './ui/ring-view';
 import { RulesPanel } from './ui/rules-panel';
 import { buildShareMenu } from './ui/share-menu';
 import { Tabs } from './ui/tabs';
@@ -75,6 +76,15 @@ async function main(): Promise<void> {
   // Browser checks drive the engines through this handle (7a Decision 14).
   if (new URLSearchParams(location.search).has('debug')) Object.assign(window, { sugarscape: { engine, compare: () => compare } });
   const grid = new GridView(document.querySelector<HTMLCanvasElement>('#grid')!, engine);
+  // Ring World's ring, above its space–time diagram (the grid) — Decision 12.
+  const ringView = new RingView(document.querySelector<HTMLCanvasElement>('#ring')!, engine);
+  /** The page follows the model on screen: `data-model` for the layout, the ring view for Ring World. */
+  const syncModel = () => {
+    document.body.dataset.model = engine.model;
+    ringView.canvas.hidden = engine.model !== 'ring';
+  };
+  engine.on('reset', syncModel);
+  syncModel();
   const toolbar = new Toolbar(engine);
   document.querySelector('#toolbar')!.append(toolbar.el);
   const display = buildDisplay(engine);
@@ -150,6 +160,12 @@ async function main(): Promise<void> {
     tabs.show('Inspect');
   });
   document.querySelector('#tools')!.append(tools.el);
+  // A click on the ring inspects that site now (the diagram's bottom row is the current tick).
+  ringView.onSite = (site) => {
+    void engine.select(site, engine.size().height - 1);
+    compare?.focus('A');
+    tabs.show('Inspect');
+  };
 
   const slug = (e: Engine) => `sugarscape-${e.presetId ?? 'custom'}-seed${e.seed}-t${e.tick}`;
   /** File stems for what covers both worlds in Compare (charts, the session). */
@@ -249,6 +265,7 @@ async function main(): Promise<void> {
     tabs,
     charts,
     display,
+    ringView,
     rules,
     inspect,
     credit,
@@ -435,6 +452,7 @@ async function main(): Promise<void> {
       (compare?.lock ?? engine).pump(now);
       if (dirty) {
         grid.draw();
+        ringView.draw();
         dirty = false;
       }
       compare?.draw();

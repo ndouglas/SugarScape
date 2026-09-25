@@ -189,6 +189,9 @@ body[data-compare] .grids { grid-template-columns: repeat(2, minmax(0, 1fr)); al
 .world-header .chip { max-width: 14em; }
 body[data-compare] #grid { max-width: 100%; }
 .grid-b { width: 100%; aspect-ratio: 1; image-rendering: pixelated; border-radius: 6px; touch-action: none; cursor: crosshair; }
+/* Ring World: the ring above its space–time diagram, both smaller so the pair fits. */
+.ring-view { width: 100%; max-width: min(100%, 46vh); aspect-ratio: 1; align-self: center; border-radius: 6px; touch-action: none; cursor: crosshair; }
+body[data-model='ring'] #grid, body[data-model='ring'] .grid-b { max-width: min(100%, 36vh); }
 .copy-progress { margin: 0; padding: 24px 0; text-align: center; font-variant-numeric: tabular-nums; }
 .chips { display: contents; }
 .compare-toggle { margin-left: -8px; }

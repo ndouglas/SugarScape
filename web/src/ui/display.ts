@@ -1,18 +1,8 @@
 import type { Engine, Overlay } from '../engine';
-import type { ColorMode, Layer } from '../types';
-import { h } from './dom';
 import { layerOptions, overlayAvailableAny } from '../layers';
-
-const MODES: [ColorMode, string][] = [
-  ['tribe', 'Tribe'],
-  ['wealth', 'Wealth'],
-  ['sex', 'Sex'],
-  ['age', 'Age'],
-  ['vision', 'Vision'],
-  ['credit', 'Credit'],
-  ['disease', 'Disease'],
-  ['lineage', 'Lineage'],
-];
+import { COLOR_MODES } from '../models';
+import type { ColorMode, Layer, ModelKind } from '../types';
+import { h } from './dom';
 
 /** The overlay checkboxes, in order (Chapter VI's three networks after the others). */
 const OVERLAY_LABELS: [Overlay, string][] = [
@@ -30,19 +20,30 @@ export interface Display {
   setCompare(b: Engine | null): void;
 }
 
+/**
+ * The Agents and Landscape menus and the overlay checkboxes, for the model on screen (Decision 12):
+ * a sugarscape offers all of them; Schelling only its three color modes; Ring World none.
+ */
 export function buildDisplay(engine: Engine): Display {
-  const mode = h(
-    'select',
-    { onchange: () => engine.setDisplay({ colorMode: mode.value as ColorMode }) },
-    ...MODES.map(([v, l]) => h('option', { value: v }, l)),
-  );
+  const mode = h('select', { onchange: () => engine.setDisplay({ colorMode: mode.value as ColorMode }) });
   const layer = h('select', { onchange: () => engine.setDisplay({ layer: layer.value as Layer }) });
+  const modeLabel = h('label', {}, 'Agents ', mode);
+  const layerLabel = h('label', {}, 'Landscape ', layer);
   const sync = () => {
     mode.value = engine.colorMode;
     layer.value = engine.layer;
   };
-  /** Goods and pollutants (and their names) change on reset and config. */
+  let shownModel: ModelKind | null = null;
+  /** The model's color modes (when the model changed), and the goods and pollutants (and their names), which change on reset and config. */
   const refill = () => {
+    const model = engine.model;
+    if (model !== shownModel) {
+      shownModel = model;
+      const modes = COLOR_MODES[model];
+      mode.replaceChildren(...modes.map(([v, l]) => h('option', { value: v }, l)));
+      modeLabel.hidden = modes.length === 0;
+      layerLabel.hidden = model !== 'sugarscape';
+    }
     layer.replaceChildren(...layerOptions(engine.sugar).map(([v, l]) => h('option', { value: v }, l)));
     sync();
   };
@@ -52,11 +53,11 @@ export function buildDisplay(engine: Engine): Display {
   refill();
   let b: Engine | null = null;
   const configs = () => (b ? [engine.sugar, b.sugar] : [engine.sugar]);
-  /** A checkbox per overlay; Friends, Family and Disease show while either world on screen allows them. */
+  /** A checkbox per overlay (sugarscape only); Friends, Family and Disease show while either world on screen allows them. */
   const overlay = (kind: Overlay, label: string) => {
     const box = h('input', { type: 'checkbox', onchange: () => engine.setDisplay({ overlays: { [kind]: box.checked } }) });
     const el = h('label', {}, box, ` ${label}`);
-    const show = () => (el.hidden = !overlayAvailableAny(kind, configs()));
+    const show = () => (el.hidden = engine.model !== 'sugarscape' || !overlayAvailableAny(kind, configs()));
     engine.on('display', () => (box.checked = engine.overlays[kind]));
     engine.on('reset', show);
     engine.on('config', show);
@@ -64,13 +65,7 @@ export function buildDisplay(engine: Engine): Display {
     return { el, show };
   };
   const overlays = OVERLAY_LABELS.map(([kind, label]) => overlay(kind, label));
-  const el = h(
-    'div',
-    { class: 'display-controls' },
-    h('label', {}, 'Agents ', mode),
-    h('label', {}, 'Landscape ', layer),
-    ...overlays.map((o) => o.el),
-  );
+  const el = h('div', { class: 'display-controls' }, modeLabel, layerLabel, ...overlays.map((o) => o.el));
   let offB: (() => void)[] = [];
   const setCompare = (newB: Engine | null): void => {
     for (const off of offB) off();
