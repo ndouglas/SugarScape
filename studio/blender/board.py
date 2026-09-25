@@ -7,7 +7,7 @@ import bpy
 import animate
 from blender import materials
 
-GUMDROP_SIZE = 0.8
+GUMDROP_SIZE = 0.45
 
 
 def felt_board(d):
@@ -102,7 +102,7 @@ def sugar(d, corners, timing):
     mod.node_group = _instancer_tree(_gumdrop_prototype())
 
     def update(frame):
-        levels = animate.levels_at(d, timing.tick_at(frame))
+        levels = animate.levels_at(d, timing.tick_at(frame), timing.hop)
         mesh.attributes["level"].data.foreach_set("value", levels)
         mesh.update()
 

@@ -5,7 +5,7 @@ import math
 import bpy
 
 YARN = {
-    "cream": (0.93, 0.86, 0.72),
+    "cream": (1.0, 0.9, 0.74),
     "coral": (0.95, 0.45, 0.38),
     "teal": (0.25, 0.62, 0.62),
     "lilac": (0.66, 0.55, 0.85),
@@ -24,10 +24,10 @@ def _principled(name):
 
 
 def _bump(nt, p, scale, strength, wave=True):
-    """A fine knit (wave bands plus noise) or felt (noise only) bump."""
+    """A knit (rows of stitches plus fuzz) or felt (fuzz only) bump."""
     coord = nt.nodes.new("ShaderNodeTexCoord")
     noise = nt.nodes.new("ShaderNodeTexNoise")
-    noise.inputs["Scale"].default_value = scale * 3
+    noise.inputs["Scale"].default_value = scale * 6
     nt.links.new(coord.outputs["Object"], noise.inputs["Vector"])
     height = noise.outputs["Fac"]
     if wave:
@@ -35,7 +35,7 @@ def _bump(nt, p, scale, strength, wave=True):
         w.wave_type = "BANDS"
         w.bands_direction = "Z"
         w.inputs["Scale"].default_value = scale
-        w.inputs["Distortion"].default_value = 3.0
+        w.inputs["Distortion"].default_value = 0.6
         nt.links.new(coord.outputs["Object"], w.inputs["Vector"])
         add = nt.nodes.new("ShaderNodeMath")
         add.operation = "ADD"
@@ -56,7 +56,7 @@ def knit(color_name):
         p.inputs["Sheen Weight"].default_value = 0.6
         p.inputs["Sheen Roughness"].default_value = 0.35
         p.inputs["Subsurface Weight"].default_value = 0.12
-        _bump(nt, p, scale=28, strength=0.35)
+        _bump(nt, p, scale=9, strength=0.6)
     return m
 
 
@@ -71,13 +71,21 @@ def felt():
 
 
 def gumdrop():
+    """Sugar-frosted: a translucent amber body under a rough, sparkly coat."""
     m, nt, p, fresh = _principled("gumdrop")
     if fresh:
-        p.inputs["Base Color"].default_value = (1.0, 0.72, 0.18, 1)
-        p.inputs["Roughness"].default_value = 0.18
-        p.inputs["Subsurface Weight"].default_value = 0.5
+        p.inputs["Base Color"].default_value = (1.0, 0.62, 0.12, 1)
+        p.inputs["Roughness"].default_value = 0.55
+        p.inputs["Subsurface Weight"].default_value = 0.6
         p.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.2)
-        p.inputs["Coat Weight"].default_value = 1.0
+        p.inputs["Sheen Weight"].default_value = 0.4
+        p.inputs["Sheen Tint"].default_value = (1.0, 0.95, 0.85, 1)
+        crystals = nt.nodes.new("ShaderNodeTexVoronoi")
+        crystals.inputs["Scale"].default_value = 60
+        bump = nt.nodes.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = 0.35
+        nt.links.new(crystals.outputs["Distance"], bump.inputs["Height"])
+        nt.links.new(bump.outputs["Normal"], p.inputs["Normal"])
     return m
 
 

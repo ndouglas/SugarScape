@@ -10,6 +10,26 @@ WIDE_EYE, WIDE_AT = (0, -56, 30), (0, -2, 0)
 
 BEATS = [
     Beat(
+        "crowd",
+        "Now: 400 Flumps.",
+        9.0,
+        shot="crowd",
+        ticks_per_second=8,
+        lead_in=1.0,
+        camera=(Move(0, 9, (0, -38, 22), (0, 0, 0), WIDE_EYE, WIDE_AT, orbit=0.35),),
+    ),
+    Beat(
+        "meet",
+        "This is a Flump.",
+        5.0,
+        shot="meet",
+        closeup=True,
+        ticks_per_second=0.3,
+        lead_in=0.8,
+        focus=(0,),
+        camera=(Move(0, 5, (-0.9, -4.6, 2.6), (-0.5, -0.5, 1.2), (-0.2, -4.0, 2.4), (0.0, -0.4, 1.2), lens0=50, lens1=55),),
+    ),
+    Beat(
         "landscape",
         "Sugar grows in some places… but not others.",
         6.0,

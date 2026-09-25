@@ -54,7 +54,8 @@ class BoardTest(unittest.TestCase):
 
 class PoseTest(unittest.TestCase):
     corners = animate.corner_heights([0.0] * 64, 8, 8)
-    timing = animate.Timing(ticks_per_second=1, lead_in=1.0)
+    # Half a second a tick: shorter than HOP_SECONDS, so a hop fills its tick.
+    timing = animate.Timing(ticks_per_second=2, lead_in=1.0)
 
     def at(self, t, frame):
         return animate.pose(t, self.timing, frame, self.corners, 8, 8)
@@ -74,6 +75,23 @@ class PoseTest(unittest.TestCase):
         self.assertAlmostEqual(mid.sx * mid.sy * mid.sz, 1, places=6)
         landed = self.at(t, self.timing.frame(1))
         self.assertEqual((landed.x, landed.y), animate.cell_center(4, 2, 8, 8))
+
+    def test_slow_ticks_stand_still_then_hop_quickly_at_the_end(self):
+        slow = animate.Timing(ticks_per_second=0.25, lead_in=1.0)  # 4 s a tick
+        t = track(0, [(2, 2), (4, 2)])
+        standing = animate.pose(t, slow, slow.frame(0.5), self.corners, 8, 8)
+        self.assertEqual((standing.x, standing.y, standing.sz), (*animate.cell_center(2, 2, 8, 8), 1.0))
+        hop_start = slow.frame(1) - animate.HOP_SECONDS * slow.fps
+        airborne = animate.pose(t, slow, hop_start + 0.5 * animate.HOP_SECONDS * slow.fps, self.corners, 8, 8)
+        self.assertGreater(airborne.z, 0.3)
+
+    def test_eaten_sugar_snaps_when_a_slow_hop_lands(self):
+        d = dump.load(FIXTURE)
+        before, after = d.frames[0].sugar, d.frames[1].sugar
+        i = next(i for i, (a, b) in enumerate(zip(before, after)) if b < a)
+        hop = 0.25  # the hop takes the last quarter of the tick
+        self.assertEqual(animate.levels_at(d, 0.9, hop)[i], before[i])
+        self.assertEqual(animate.levels_at(d, 0.97, hop)[i], after[i])
 
     def test_wrap_move_shrinks_instead_of_gliding(self):
         t = track(0, [(0, 3), (7, 3)])

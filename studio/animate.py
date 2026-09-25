@@ -11,10 +11,13 @@ Hunger (the droop) is 1 − sugar / 6, clamped: a display choice, not a rule.
 import math
 from dataclasses import dataclass
 
-HEIGHT_PER_SUGAR = 0.7
+HEIGHT_PER_SUGAR = 0.45
 SPAWN_FRAMES = 12
 POOF_FRAMES = 14
 CROUCH, LAND = 0.15, 0.85
+# The longest a hop takes: when a tick lasts longer, a Flump stands until
+# the hop's start, so slow close-ups show it idle between moves.
+HOP_SECONDS = 0.6
 
 
 @dataclass(frozen=True)
@@ -29,6 +32,11 @@ class Timing:
         """The (fractional) frame at which `tick` is reached; frames start at 1."""
         seconds = self.lead_in + (tick - self.start_tick) / self.ticks_per_second
         return 1 + seconds * self.fps
+
+    @property
+    def hop(self):
+        """The share of each tick's interval the hop takes (at its end)."""
+        return min(1.0, HOP_SECONDS * self.ticks_per_second)
 
     def tick_at(self, frame):
         seconds = (frame - 1) / self.fps - self.lead_in
@@ -59,16 +67,18 @@ def cell_center(x, y, w, h):
     return (x - w / 2 + 0.5, h / 2 - y - 0.5)
 
 
-def levels_at(d, tick):
+def levels_at(d, tick, hop=1.0):
     """Every site's sugar at a fractional tick: growback rises linearly
-    through the tick; eaten sugar vanishes at the landing."""
+    through the tick; eaten sugar vanishes at the landing of a hop that
+    takes the last `hop` of the tick."""
     tick = min(max(tick, 0), d.ticks)
     lo = int(math.floor(tick))
     if lo >= d.ticks:
         return list(d.frames[d.ticks].sugar)
     a = tick - lo
+    landed = a >= 1 - hop * (1 - LAND)
     before, after = d.frames[lo].sugar, d.frames[lo + 1].sugar
-    return [(b if a >= LAND else s) if b < s else s + (b - s) * a for s, b in zip(before, after)]
+    return [(b if landed else s) if b < s else s + (b - s) * a for s, b in zip(before, after)]
 
 
 @dataclass(frozen=True)
@@ -141,7 +151,8 @@ def pose(track, timing, frame, corners, w, h):
     x, y, z = x0, y0, z0
     sx = sy = sz = 1.0
     yaw = _yaw(track, k, w, h)
-    if here != there:
+    a = (a - (1 - timing.hop)) / timing.hop  # the hop's own phase; < 0 before it
+    if here != there and a >= 0:
         if abs(there[0] - here[0]) > w / 2 or abs(there[1] - here[1]) > h / 2:
             # A torus wrap: shrink away here and grow back there.
             sx = sy = sz = abs(1 - 2 * a)
