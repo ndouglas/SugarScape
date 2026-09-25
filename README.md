@@ -417,7 +417,7 @@ synchronous 1.00 through 1.77, 0.34 at 1.9, 0.91 at 2.01); `nbm-grid-discrete` a
 `nbm-grid-continuous` are NBM94's Figs. 1 and 2 as numbers, the final f_C for their ten b values
 (1.77 included) and seven values of m (in discrete time m = ∞ gives 0.99 at 1.05, 0.88–0.94 from 1.13
 to 1.77, 0.30 at 1.9 and 0 at 2.01, and m = 0 gives 0.56 at every b; in continuous time m = ∞ gives
-0.59–0.99 up to 1.77 and 0 at 1.9 and 2.01, and C persists to 2.01 at m = 1, 0.02, and m = 0.5, 0.23);
+0.59–0.99 up to 1.77, 0 at 1.9 and ≈ 0 at 2.01, and C persists to 2.01 at m = 1, 0.02, and m = 0.5, 0.23);
 and `nbm-radius` runs the random array's radius from 2 to 11 from 10 % and from 50 % defectors (from
 50 %, 0.27–0.58 up to r = 9 and 0 at 10 and 11; from 10 %, 0.73–0.86 at every radius).
 

@@ -1,6 +1,6 @@
 {
   "name": "Spatial games: NBM94's Fig. 2 — cooperators by b and m, continuous time",
-  "description": "NBM94's Fig. 2: the same grid in continuous time (one random site at a time, N a generation). The paper: qualitatively like discrete time, except that the 1.8 < b < 2 chaos becomes all D and, at m = 1, C does better. Measured (release, seeds 1–5, recorded 2026-09-25): m = ∞: 0.59–0.99 from 1.05 to 1.77, 0 at 1.9 and 2.01; m = 1: 0.86 at 1.35 (discrete: 0.30) and C persisting to 2.01 (0.02); m = 0.5: 0.23 at 2.01. Both claims reproduce.",
+  "description": "NBM94's Fig. 2: the same grid in continuous time (one random site at a time, N a generation). The paper: qualitatively like discrete time, except that the 1.8 < b < 2 chaos becomes all D and, at m = 1, C does better. Measured (release, seeds 1–5, recorded 2026-09-25): m = ∞: 0.59–0.99 from 1.05 to 1.77, 0 at 1.9 and ≈ 0 at 2.01; m = 1: 0.86 at 1.35 (discrete: 0.30) and C persisting to 2.01 (0.02); m = 0.5: 0.23 at 2.01. Both claims reproduce.",
   "base": { "preset": "nbm-probabilistic" },
   "x": { "label": "Temptation (b)", "path": "b", "values": [1.05, 1.13, 1.16, 1.35, 1.42, 1.55, 1.71, 1.77, 1.9, 2.01] },
   "series": {
