@@ -12,6 +12,7 @@ pub mod culture;
 pub mod econ;
 pub mod edit;
 pub mod export;
+pub mod frames;
 pub mod geometry;
 pub mod landscape;
 mod legacy;
