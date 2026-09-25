@@ -6,6 +6,7 @@
 pub mod agent;
 pub mod anasazi;
 pub mod bits;
+pub mod civil;
 pub mod config;
 pub mod econ;
 pub mod edit;
