@@ -31,6 +31,7 @@ import { buildRecordControl } from './ui/record-control';
 import { RingView } from './ui/ring-view';
 import { RulesPanel } from './ui/rules-panel';
 import { buildShareMenu } from './ui/share-menu';
+import { installShortcuts } from './ui/shortcuts';
 import { Tabs } from './ui/tabs';
 import { Toolbar } from './ui/toolbar';
 import { buildTools } from './ui/tools';
@@ -88,6 +89,7 @@ async function main(): Promise<void> {
   syncModel();
   const toolbar = new Toolbar(engine);
   document.querySelector('#toolbar')!.append(toolbar.el);
+  installShortcuts(toolbar);
   const display = buildDisplay(engine);
   document.querySelector('#display')!.append(display.el);
   const experiments = new ExperimentsView(engine);

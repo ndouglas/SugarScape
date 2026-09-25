@@ -5,12 +5,13 @@ import { readoutText } from '../valley';
 import { h } from './dom';
 import { RateMeter } from './rate';
 import { showNotice } from './notice';
+import { nextSpeed, type Shortcut } from './shortcuts';
 import { StopControl } from './stop-control';
 import { Timeline } from './timeline';
 
 /** Below 1×, speeds are ticks a second: 1/60 of a tick per frame is one a second. */
 const PER_SECOND = [1, 2, 5, 10, 20, 30];
-const SPEEDS: Speed[] = [...PER_SECOND.map((n) => n / 60), 1, 2, 5, 10, 25, 100, 'max'];
+export const SPEEDS: Speed[] = [...PER_SECOND.map((n) => n / 60), 1, 2, 5, 10, 25, 100, 'max'];
 
 function speedLabel(s: Speed): string {
   if (s === 'max') return 'Max';
@@ -143,7 +144,7 @@ export class Toolbar {
     this.el = h(
       'div',
       { class: 'toolbar' },
-      h('h1', {}, 'SugarScape'),
+      h('h1', { title: 'Press ? for keyboard shortcuts' }, 'SugarScape'),
       h('div', { class: 'group' }, this.play, this.step, this.speed, this.rate),
       this.timeline.el,
       this.stopControl.el,
@@ -210,6 +211,33 @@ export class Toolbar {
   /** Steps the current controls back one tick (⟲1); for shortcuts (Task 11). */
   back(): void {
     this.timeline.back();
+  }
+
+  /** A keyboard shortcut (ui/shortcuts.ts): does what its button does, and nothing while held. */
+  shortcut(s: Exclude<Shortcut, 'help'>): void {
+    if (this.held) return;
+    const c = this.controls;
+    switch (s) {
+      case 'play':
+        c.setRunning(!c.running);
+        break;
+      case 'step':
+        if (!c.running) this.step.click();
+        break;
+      case 'back':
+        this.timeline.back();
+        break;
+      case 'slower':
+      case 'faster': {
+        const next = nextSpeed(SPEEDS, c.speed, s === 'faster' ? 1 : -1);
+        c.setSpeed(next);
+        this.speed.value = String(next);
+        break;
+      }
+      case 'reset':
+        this.reset();
+        break;
+    }
   }
 
   private reset(): void {
