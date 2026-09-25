@@ -1,5 +1,6 @@
 import { SlowPacer, type Engine, type InitialState, type Speed } from '../engine';
 import { fieldErrorsMessage } from '../errors';
+import { finishesUnpredictably } from '../models';
 import type { Session } from '../protocol';
 import type { FieldError } from '../types';
 
@@ -25,7 +26,10 @@ export type LockstepEvent = 'run' | 'tick' | 'finished';
 /**
  * Steps two worlds together (Decision 9): each step sends `advance n` to both and waits for both
  * replies before the next, so their ticks are always equal. The worlds never run on their own
- * meanwhile. When one world is rebuilt (a 'reset' the coordinator did not cause), every world not at
+ * meanwhile. Neither runs past the tick at which the other finished: a known end (the anasazi's
+ * end year) caps each step, and a pair where a world can finish unpredictably (civil Model II
+ * stopping at extinction) is stepped one tick per request. Once either world is finished, Play and
+ * Step step neither and say so. When one world is rebuilt (a 'reset' the coordinator did not cause), every world not at
  * t = 0 rewinds by replaying its session.
  */
 export class Lockstep {
@@ -60,7 +64,7 @@ export class Lockstep {
         w.on('full', () => {
           if (this.running) this.setRunning(false);
         }),
-        // A world at its end year steps no further: pause (steps are capped so neither overshoots).
+        // A finished world steps no further: pause (steps are capped so neither overshoots).
         w.on('finished', () => {
           if (this.running) this.setRunning(false);
         }),
@@ -105,7 +109,7 @@ export class Lockstep {
       return;
     }
     if (this.crashed() || this.left() === 0) {
-      // Play pressed with no ticks left (the pair's end year already reached): say so, the way a
+      // Play pressed with no ticks left (a world of the pair already finished): say so, the way a
       // single world does on Play or Step, rather than quietly doing nothing.
       const finished = !this.crashed() && this.left() === 0;
       this.setRunning(false);
@@ -119,7 +123,7 @@ export class Lockstep {
     this.inFlight = this.stepBoth(n, speed === 'max').finally(() => (this.inFlight = null));
   }
 
-  /** Step: both worlds advance `n` ticks (fewer if one would pass its end year). */
+  /** Step: both worlds advance `n` ticks (fewer if one finishes first). */
   advance(n = 1): Promise<void> {
     return this.exclusive(async () => {
       if (this.crashed()) return;
@@ -150,16 +154,26 @@ export class Lockstep {
     this.listeners.clear();
   }
 
-  /** Ticks until the first world is finished (Infinity if neither ever is). */
+  /** The world that has finished (0 for A, 1 for B; A when both have), or -1: whose notice the pair shows. */
+  finishedWorld(): number {
+    return this.worlds.findIndex((w) => w.finished);
+  }
+
+  /** Ticks until the first world is finished as far as is known: 0 once one is, Infinity if neither's end is known. */
   private left(): number {
-    return Math.min(...this.worlds.map((w) => w.ticksLeft));
+    return Math.min(...this.worlds.map((w) => (w.finished ? 0 : w.ticksLeft)));
   }
 
   private async stepBoth(n: number, adapt: boolean): Promise<void> {
     const start = this.now();
-    // A world stops at its end year, so neither may step past the first end: they stay in step.
+    // A world stops when it finishes, so neither may step past the first end: they stay in step.
     const k = Math.min(n, this.left());
-    await Promise.all(this.worlds.map((w) => w.advance(k)));
+    if (this.worlds.some((w) => finishesUnpredictably(w.config))) {
+      // Nobody knows when it will finish: one tick per request, stopping on the tick one finishes.
+      for (let i = 0; i < k && this.left() > 0 && !this.crashed(); i++) await Promise.all(this.worlds.map((w) => w.advance(1)));
+    } else {
+      await Promise.all(this.worlds.map((w) => w.advance(k)));
+    }
     if (adapt) this.batch.update(this.now() - start);
     this.emit('tick');
   }

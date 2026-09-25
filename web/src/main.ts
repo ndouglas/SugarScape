@@ -6,6 +6,7 @@ import { worldViews } from './recording/frames';
 import { canvasBlob, downloadBlob, downloadText } from './downloads';
 import { Engine, finishedNotice, FULL_NOTICE, type InitialState } from './engine';
 import { errorMessage, fieldErrorsMessage } from './errors';
+import { finishesUnpredictably } from './models';
 import { ExperimentsView } from './experiments/view';
 import { compareLink, LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
 import {
@@ -251,8 +252,13 @@ async function main(): Promise<void> {
   engine.on('fork', () => showNotice(`Replay ended${compare ? ' in A' : ''} — your edit starts a new branch`));
   // In Compare both worlds reach the cap together; A's engine says so for the pair.
   engine.on('full', () => showNotice(FULL_NOTICE, 10_000));
-  // The anasazi stops at its end year (in Compare, A's says so for the pair unless B ends first).
-  engine.on('finished', () => showNotice(finishedNotice(engine.config, engine.tick), 10_000));
+  // A world that has run its course stops (the anasazi's end year, civil Model II's extinction). In
+  // Compare, A's speaks for the pair when their end is known in advance, and names A when it died
+  // out on its own (B's speaks only when B finished and A did not: see CompareView).
+  engine.on('finished', () => {
+    const who = compare && finishesUnpredictably(engine.config) ? 'A: ' : '';
+    showNotice(`${who}${finishedNotice(engine.config, engine.tick)}`, 10_000);
+  });
 
   let dirty = true;
   /** A snapshot arrived since the last frame (Compare: a lockstep pair): once drawn, the recording captures it. */

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   calendarYear,
   COLOR_MODES,
+  finishesUnpredictably,
   isCivilView,
   isRingView,
   isSugar,
@@ -114,5 +115,14 @@ describe('the civil model', () => {
     expect(MODEL_OVERLAYS.civil).toEqual([]);
     expect(ticksLeft({ model: 'civil' } as unknown as ModelConfig, 5)).toBe(Infinity);
     expect(calendarYear({ model: 'civil' } as unknown as ModelConfig, 5)).toBeNull();
+  });
+
+  it('can finish unpredictably only as Model II stopping at extinction', () => {
+    const civil = (variant: string, stop_at_extinction: boolean) => ({ model: 'civil', variant, stop_at_extinction }) as unknown as ModelConfig;
+    expect(finishesUnpredictably(civil('ethnic', true))).toBe(true);
+    expect(finishesUnpredictably(civil('ethnic', false))).toBe(false);
+    expect(finishesUnpredictably(civil('rebellion', true))).toBe(false);
+    const valley = { model: 'anasazi', start_year: 800, end_year: 1350 } as unknown as ModelConfig;
+    expect(finishesUnpredictably(valley)).toBe(false);
   });
 });

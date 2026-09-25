@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { copyWorld } from './compare/lockstep';
+import { copyWorld, Lockstep } from './compare/lockstep';
 import { Engine, type Speed } from './engine';
 import { modelOf } from './models';
 import type { NetworkOverlay } from './protocol';
@@ -368,6 +368,25 @@ describe('civil violence through the engine', () => {
     expect(Math.min(s.blue, s.green)).toBe(0);
     await e.advance(10);
     expect(s.extinction).toBe(e.tick);
+  });
+
+  it('keeps ethnic cleansing and peacekeepers in step in Compare until one dies out', async () => {
+    const make = (id: string) =>
+      Engine.create({ config: structuredClone(presets.find((p) => p.id === id)!.config), seed: 1 }, { presets, transport: inline() });
+    const [a, b] = [await make('cv-run-7-cleansing'), await make('cv-safe-havens')];
+    const lock = new Lockstep([a, b], 'max', () => 0); // batches double each frame
+    await lock.settled();
+    lock.setRunning(true);
+    for (let i = 0; i < 200 && lock.running; i++) {
+      lock.pump(i);
+      await lock.settled();
+    }
+    expect(lock.running).toBe(false);
+    expect(a.tick).toBe(b.tick);
+    expect(lock.finishedWorld()).not.toBe(-1);
+    const [ended, other] = lock.finishedWorld() === 0 ? [a, b] : [b, a];
+    expect((ended.latest as CivilStats).extinction).toBe(ended.tick);
+    expect(other.tick).toBe(ended.tick);
   });
 });
 

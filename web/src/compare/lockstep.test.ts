@@ -12,6 +12,9 @@ const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', desc
 /** A valley config that ends after `end` years. */
 const valley = (end: number) =>
   ({ model: 'anasazi', width: 4, height: 3, start_year: 800, end_year: 800 + end, finish: end }) as unknown as Config;
+/** A civil Model II config that stops at extinction, which (in the fake) comes at `finish`, if given. */
+const ethnic = (finish?: number) =>
+  ({ model: 'civil', variant: 'ethnic', stop_at_extinction: true, width: 4, height: 3, schedule: [], ramps: [], finish }) as unknown as Config;
 /** Lets queued microtasks and zero-delay timers run. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 const create = (initial: InitialState) =>
@@ -158,6 +161,52 @@ describe('Lockstep', () => {
     await lock.advance(1); // Step, with no ticks left
     expect(finished).toEqual([3, 3]);
     expect([a.tick, b.tick]).toEqual([3, 3]);
+  });
+
+  it('keeps a pair in step at Max when a civil world dies out mid-run, and will not step it further', async () => {
+    const a = await create({ config: ethnic(6), seed: 1 });
+    const b = await create({ config: ethnic(), seed: 2 });
+    const lock = new Lockstep([a, b], 'max', () => 0); // batches of 1, 2, 4 would pass 6
+    await lock.settled();
+    const finished: number[] = [];
+    lock.on('finished', () => finished.push(a.tick));
+    lock.setRunning(true);
+    await frames(lock, 8);
+    expect([a.tick, b.tick, a.finished, b.finished]).toEqual([6, 6, true, false]);
+    expect(lock.running).toBe(false);
+    expect(lock.finishedWorld()).toBe(0);
+
+    lock.setRunning(true); // Play again: says so, steps neither
+    await frames(lock, 2);
+    expect([a.tick, b.tick, lock.running]).toEqual([6, 6, false]);
+    expect(finished).toEqual([6]);
+    await lock.advance(3); // Step: the same
+    expect([a.tick, b.tick]).toEqual([6, 6]);
+    expect(finished).toEqual([6, 6]);
+  });
+
+  it('names B as the world that finished when B dies out first', async () => {
+    const a = await create({ config: ethnic(), seed: 1 });
+    const b = await create({ config: ethnic(5), seed: 2 });
+    const lock = new Lockstep([a, b], 4);
+    await lock.settled();
+    expect(lock.finishedWorld()).toBe(-1);
+    lock.setRunning(true);
+    await frames(lock, 4);
+    expect([a.tick, b.tick, lock.running, lock.finishedWorld()]).toEqual([5, 5, false, 1]);
+  });
+
+  it('steps a pair that may finish unpredictably one tick per request', async () => {
+    const a = await create({ config: ethnic(), seed: 1 });
+    const b = await create({ config: ethnic(4), seed: 2 });
+    const lock = new Lockstep([a, b], 1);
+    await lock.settled();
+    const sizes: number[] = [];
+    const step = a.advance.bind(a);
+    a.advance = (n?: number) => (sizes.push(n ?? 1), step(n));
+    await lock.advance(10);
+    expect([a.tick, b.tick]).toEqual([4, 4]);
+    expect(sizes).toEqual([1, 1, 1, 1]);
   });
 
   it('realigns worlds that start at different ticks', async () => {

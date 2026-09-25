@@ -3,6 +3,7 @@ import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   AnasaziInspection,
   AnyInspection,
+  CivilConfig,
   CivilInspection,
   ColorMode,
   Config,
@@ -62,6 +63,15 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
 /** Ticks until a world of `c` at `tick` is finished (the anasazi's end year); Infinity for a model that never finishes. */
 export function ticksLeft(c: ModelConfig, tick: number): number {
   return 'model' in c && c.model === 'anasazi' ? Math.max(0, c.end_year - c.start_year - tick) : Infinity;
+}
+
+/**
+ * Whether a world of `c` can finish at a tick nobody knows in advance: civil Model II stopping when
+ * a group dies out (its `ticksLeft` is Infinity until then). Compare steps such a pair one tick at a
+ * time, so neither world runs past the tick at which the other finished.
+ */
+export function finishesUnpredictably(c: ModelConfig): boolean {
+  return modelOf(c) === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
 
 export function presetModel(p: Preset): ModelKind {
