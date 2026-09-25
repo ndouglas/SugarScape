@@ -93,6 +93,16 @@ Model I presets round down and say so (the sweep `cv-ratio-rules` shows it). The
 coexistence and cleansing results reproduce; the mean wait is a third of the paper's, and Run 8's stable
 regime and the safe havens do not reproduce. See `docs/superpowers/specs/2026-09-25-civil-violence-design.md`.
 
+## Milestone 12: Tag-based cooperation (done)
+
+Riolo, Cohen & Axelrod's tag-based donation (Nature 2001) as a sixth model kind, with Edmonds &
+Hales' (JASSS 2003) and Roberts & Sherratt's (Nature 2002) departures as switches and the paper's
+runs as presets. The paper's tables reproduce only with an unstated tie rule (the current agent
+wins); read literally, two pairings give 42 % donation, not 4.3 %. Under any tie rule cooperation
+rests on forced donation between identical tags: the strict test, a floor below zero or tag noise
+collapse it, and tolerance fixed at zero raises it. The paper's cycle of clusters rising and being
+invaded is far slower than it describes. See `docs/superpowers/specs/2026-09-25-tags-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -101,6 +111,7 @@ regime and the safe havens do not reproduce. See `docs/superpowers/specs/2026-09
 - **Artificial Anasazi** (Chapter VI's "Computational Archaeology"): done (Milestone 10).
 - **Nowak–May spatial games**: a candidate model kind (spatial Prisoner's Dilemma on a lattice).
 - **Epstein's civil violence**: done (Milestone 11).
+- **Tag-based cooperation** (Riolo, Cohen & Axelrod 2001): done (Milestone 12).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

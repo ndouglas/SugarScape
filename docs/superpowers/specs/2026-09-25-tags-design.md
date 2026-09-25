@@ -48,6 +48,17 @@ E&H measured (30 runs × 30 000 generations; to be confirmed by our survey): wit
 
 **Decision (user, 2026-09-25):** the config default is the literal reading (coin-flip ties, ≤, floor 0, no noise); presets that reproduce the paper's tables set `tie_rule: current` and say why; every departure is its own switch; built-in sweeps show each dependence; the survey measures all of it over 20 seeds and states what holds.
 
+## Measured in planning
+
+20 seeds × 30 000 generations (the survey reproduces each):
+
+- Table 1 under `current`: P = 1, 2, 3, 10 → 2.1, 2.0 (median), 73.7, 79.3 % (paper 2.1, 4.3, 73.6, 79.2); under `random` P = 2 → 42 %, under `other` 49 % (E&H 42.6, 49.6).
+- Table 2 under `current`: c = 0.5 → 26 %, 0.6 → 2.2 % (paper 24.7, 2.2); under `random` c = 0.5 → 45 % (E&H 45.9).
+- `below` 1.4 % (E&H report 0.0 %); floor −10⁻⁶ 1.4 % (R&S 1.48 %); tag noise 1.4 % (E&H 1.5–1.9 %); tolerance fixed at 0: 0.0 % under `current`, 75.3 % under `random` (E&H 0.0, 75.3).
+- 200 agents under `current`: 3 of 20 runs never cooperate; the rest ≈ 74 %.
+- Clusters: a median of 29 takeovers per run (Fig. 1 implies ≈ 120); share 0.86 while dominant (0.75–0.80); relatedness 0.91 at takeover and 0.96 ten generations later (0.79, 0.97); cluster tolerance 0.010 → 0.015 (0.010 → 0.027).
+- Adoption at P = 1: 48.8 % scaled by b + c (paper 49 %), 7 % scaled by the score range.
+
 ## Architecture
 
 - **Model kind** `tags` ("Tag Cooperation"): `ModelKind::Tags`, `ModelConfig::Tags(TagsConfig)` tagged `"model": "tags"`, a `TagsWorld` implementing `Model`, a schema for the Rules panel, `SERIES`, presets and golden entries — the same wiring as civil violence. Code in `crates/sugarscape-core/src/tags/` (`config.rs`, `world.rs`, `stats.rs` for clusters and takeovers, `presets.rs`, `mod.rs`). The wasm crate's source is unchanged.
@@ -70,7 +81,7 @@ E&H measured (30 runs × 30 000 generations; to be confirmed by our survey): wit
 | `donation_test` | `at_most` | live | `at_most` (≤, the paper) or `below` (<, E&H) |
 | `tolerance_floor` | 0 | live | mutated tolerance is clamped to ≥ this (R&S: −10⁻⁶) |
 | `tag_noise` | 0 | live | s.d. of Gaussian noise added to every offspring's tag, then clamped to [0, 1] (E&H: 10⁻⁶) |
-| `selection` | `tournament` | live | `tournament` (the paper) or `adopt` (the paper's proportional variant) |
+| `selection` | `tournament` | live | `tournament` (the paper) or `adopt` (the paper's proportional variant, scaled by b + c) |
 
 Validation: probabilities in [0, 1]; s.d.s, costs, benefits ≥ 0; `tolerance_floor` ≤ 0; `agents` ≥ 2. E&H's zero-tolerance runs are `initial_tolerance: { fixed: 0 }` with `tolerance_mutation: 0` — no extra switch.
 
@@ -80,15 +91,14 @@ N agents with id, tag U[0, 1] and tolerance per `initial_tolerance`; scores 0.
 
 ## Step (one generation)
 
-1. **Scores** reset to 0.
-2. **Pairing:** for each agent in id order, P times: draw a recipient uniformly from the other N − 1 agents (with replacement across draws; "P others" read as never itself). The donor donates when the test passes (`at_most`: |τ_A − τ_B| ≤ T_A; `below`: < T_A): donor −c, recipient +b. Count pairings and donations. Tags do not change within a generation, so order does not matter.
-3. **Selection** builds the next generation all at once from this generation's scores. For each agent a in id order, draw b uniformly from the other N − 1:
-   - `tournament`: the higher score gives the offspring; on a tie, `random` flips a coin, `current` picks a, `other` picks b. The offspring copies the winner's tag and tolerance.
-   - `adopt`: a keeps its traits, or takes b's with probability (s_b − s_a) / (s_max − s_min) when s_b > s_a (s_max, s_min over this generation; no adoption when they are equal). The paper says only "proportional to how much better"; this normalization is our reading, stated in the preset.
-4. **Mutation**, independently for each new agent: with `tag_mutation` a fresh U[0, 1] tag; then `tag_noise` (if > 0) adds N(0, s.d.) and clamps to [0, 1]; with `tolerance_mutation` add N(0, `tolerance_sd`); then clamp tolerance to ≥ `tolerance_floor`. Under `adopt`, mutation applies to every agent each generation, as it does to every offspring under `tournament`.
-5. **Statistics** are recorded for the generation just played (its donations with its traits), and the diagram gains a row.
+Generation 0 is played at setup: agents get their tags and tolerances, then play step 3 below (pairing), and tick 0 records it. Each later tick:
 
-New agents get fresh ids so the inspector and CSV can tell lineages apart; each records its parent's id.
+1. **Selection** builds the next generation all at once from the current generation's scores. A score is `received · b − given · c`, from the generation's counts, so equal counts give bit-identical scores. For each agent a in id order, draw b uniformly from the other N − 1:
+   - `tournament`: the higher score gives the offspring; on a tie, `random` flips a coin, `current` picks a, `other` picks b. The offspring copies the winner's tag and tolerance.
+   - `adopt`: a takes b's traits with probability (s_b − s_a) / (b + c) when s_b > s_a (capped at 1), else keeps its own. The paper says only "proportional to how much better"; b + c — the most one donation can move two scores apart — reproduces its 49 % at one pairing (planning measured 48.8 %), where the generation's range of scores, the reading this spec first chose, gives 7 %.
+2. **Mutation**, independently for each new agent: with `tag_mutation` a fresh U[0, 1) tag; then `tag_noise` (if > 0) adds N(0, s.d.) and clamps to [0, 1]; then with `tolerance_mutation` add N(0, `tolerance_sd`) and raise to at least `tolerance_floor`. Under `adopt`, mutation applies to every agent each generation.
+3. **Pairing:** scores reset; for each agent in id order, P times: draw a recipient uniformly from the other N − 1 agents (with replacement across draws; "P others" read as never itself). The donor donates when the test passes (`at_most`: |τ_A − τ_B| ≤ T_A; `below`: < T_A). Count pairings and donations.
+4. **Statistics** are recorded for this generation, and the diagram gains a row.
 
 ## Statistics
 
@@ -108,8 +118,9 @@ New agents get fresh ids so the inspector and CSV can tell lineages apart; each 
 
 - **Diagram:** 100 columns (tag bins of width 0.01, the last closed) × 200 rows, newest generation at the bottom, scrolling up. Each row stores its bins' count, mean tolerance, zero-tolerance count, donations given and received, so any row can be inspected; the history travels in keyframes (`copy_without_history` / `restore_into` as Ring World's).
 - **Color modes:** **Count** (dark to bright by agents in the bin, on a square-root scale so single agents show); **Tolerance** (mean tolerance of the bin, 0 to 0.05 clamped, empty bins dark); **Clones** (the bin's share of zero-tolerance agents).
-- **Inspect:** a row and column: its generation, tag range, count, distinct tags, tolerance min / mean / max, donations given and received; for the newest row also the agents (id, parent, tag, tolerance, score). `locate` returns nothing (agents live one generation) and the page hides Follow.
-- **Charts:** Donation rate (Fig. 1a); Tolerance: mean and cluster (Fig. 1b); Clusters: share, relatedness, zero-tolerance share; Tags: distinct tags and takeovers.
+- **Inspect:** a row and column: its generation, tag range, count, distinct tags, tolerance min / mean / max, donations given and received; for the newest row also the agents (id, parent, tag, tolerance, score). `locate` returns nothing (agents live one generation) and the page hides Follow. The inspection's `agent` is always null (the host's selection finds nobody to follow).
+- **Charts:** Donation rate (Fig. 1a); Tolerance: mean and cluster (Fig. 1b); Clusters: share, relatedness, zero-tolerance share; Distinct tags; Takeovers — against the generation.
+- `initial_tolerance` is not on the Rules panel (its `fixed` form is no panel kind).
 - **Agents CSV:** id, parent, tag, tolerance, score.
 
 ## Presets
@@ -120,13 +131,15 @@ Descriptions state the setup and what the survey measured.
 |---|---|---|
 | `rca-published` | paper defaults, `tie_rule: current` | Fig. 1, Tables 1–2 |
 | `rca-literal` | paper defaults (coin-flip ties) | E&H Table 7a |
+| `rca-published-p2` | `rca-published` with P = 2 | Table 1 |
+| `rca-literal-p2` | `rca-literal` with P = 2 | E&H Table 7 |
 | `rca-strict` | `rca-published` with `donation_test: below` | E&H Tables 9–10 |
 | `rs-no-forced-clones` | `rca-published` with `tolerance_floor: -1e-6` | R&S |
 | `eh-clones-only` | `rca-literal` with tolerance fixed at 0 | E&H Tables 11–12 |
 | `eh-no-exact-clones` | `rca-published` with `tag_noise: 1e-6` | E&H Tables 13–14 |
 | `rca-adopt-p1` | `selection: adopt`, P = 1 | RCA p. 442 |
 
-**Compare entry:** "Published vs literal ties at P = 2 — Tag Cooperation (Compare)": `rca-published` and `rca-literal`, both P = 2.
+**Compare entry:** "Published vs literal ties at P = 2 — Tag Cooperation (Compare)": `rca-published-p2` and `rca-literal-p2`.
 
 ## Experiments and CLI
 

@@ -140,7 +140,7 @@ Model extensions:
 ## Other artificial societies
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
-**Artificial Anasazi** and **Civil Violence**.
+**Artificial Anasazi**, **Civil Violence** and **Tag Cooperation**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -324,6 +324,73 @@ or a live edit to it, is overwritten by the ramp on the next tick of its window.
 Joshua M. Epstein, "Modeling civil violence: An agent-based computational approach," *PNAS* 99
 suppl. 3 (2002), 7243–7250, and NetLogo *Rebellion* (Wilensky, 2004). See
 `docs/superpowers/specs/2026-09-25-civil-violence-design.md`.
+
+### Tag cooperation (Riolo, Cohen & Axelrod 2001)
+
+100 agents each carry a tag and a tolerance, both drawn from [0, 1]. Each generation every agent
+meets P = 3 others at random and donates to each (cost c = 0.1 to itself, benefit b = 1 to the
+other) when the other's tag lies within its tolerance of its own: |τ_A − τ_B| ≤ T_A. Then each
+agent faces a random other and the higher score has the offspring, which inherits its tag and
+tolerance; with probability 0.1 the offspring's tag is redrawn, and with probability 0.1 its
+tolerance gets Gaussian noise (s.d. 0.01), floored at 0. There is no space and no memory — pairs
+rarely meet twice and nobody knows what anyone did before — yet the paper finds 73.6 % of
+pairings end in a donation, through clusters of similar tags that rise, are invaded by less
+tolerant mutants and are replaced.
+
+**The published tables depend on a rule the paper does not state.** "Giving an offspring to the one
+with the higher score" says nothing about equal scores. Read literally — a coin flip — the model
+gives 42 % donation at two pairings where the paper reports 4.3 %, and 45 % at cost 0.5 where it
+reports 24.7 %; only "the current agent wins ties" reproduces the paper, as Edmonds & Hales (2003)
+found. And under any tie rule, cooperation exists only because agents with *identical* tags must
+donate to each other (≤ with T ≥ 0): donating only when |Δtag| < T, letting tolerance fall to
+−10⁻⁶ (Roberts & Sherratt 2002) or adding 10⁻⁶ of noise to every tag each collapse donation to
+1–5 %, while fixing every tolerance at zero *raises* it to 75 %. The tolerance mechanism the paper
+credits does none of the work. The config default is the literal rule (coin-flip ties); the
+presets that reproduce the paper set `tie_rule: current` and say so.
+
+The Rules panel's **Replications** section holds the switches: `tie_rule` (coin flip, current
+agent, opponent — Edmonds & Hales' "no bias", "selected bias" and "random bias"), `donation_test`
+(≤ or <), `tolerance_floor`, `tag_noise` and `selection` — a tournament, or the paper's learning
+variant, adopting a better agent's traits with probability (s_other − s_self) / (b + c). The
+paper gives that probability no scale; b + c, the most one donation can move two scores apart,
+reproduces its 49 % at one pairing, where the generation's range of scores gives 7 %.
+`initial_tolerance` (`"uniform"` or `{ "fixed": x }`) is set by presets, files and links.
+
+- `rca-published`: the paper's setup, ties to the current agent: 73.7 % donation (the paper: 73.6 %).
+- `rca-literal`: ties by coin flip: 73.7 % at P = 3, the same as published.
+- `rca-published-p2` / `rca-literal-p2`: at P = 2, 2.0 % vs 42 % (the paper: 4.3 %).
+- `rca-strict`: donate only when |Δtag| < T: 1.4 % (Edmonds & Hales report 0.0 %).
+- `rs-no-forced-clones`: tolerance floor −10⁻⁶: 1.4 % (Roberts & Sherratt: 1.48 %).
+- `eh-clones-only`: tolerance fixed at 0 with coin-flip ties: 75.3 %; with ties to the current
+  agent the same setup gives 0 %, because no agent can ever have two offspring.
+- `eh-no-exact-clones`: tag noise 10⁻⁶ on every offspring: 1.4 %.
+- `rca-adopt-p1`: the adoption variant with one pairing: 48.8 % (the paper: 49 %).
+
+What does not reproduce (20 seeds × 30 000 generations): the paper's picture of clusters
+continually rising and being invaded. Takeovers are rare — a median of 29 per run, where its
+Fig. 1 shows two in 500 generations — and dominant clusters hold 86 % of the agents (the paper:
+75–80 %), are 91 % one exact tag when they take over (79 %) and 96 % ten generations later (97 %),
+and their mean tolerance rises from 0.010 to 0.015, not 0.027. Edmonds & Hales' "with 200 agents
+the donation rates vanished" is partly true: with ties to the current agent 3 of 20 runs never
+cooperate, and the rest do, at 74 %.
+
+The page draws a tag × generation diagram — 100 columns of tags 0.01 wide, the last 200
+generations, the newest at the bottom (Edmonds & Hales' Fig. 4) — shaded by **Count**,
+**Tolerance** (the mean, 0 to 0.05) or **Clones** (the share with tolerance 0). Inspect shows a
+cell's generation, tags, agents, tolerances and donations, and in the newest row each agent; agents
+live one generation, so there is nothing to follow. The charts are Donation rate, Tolerance,
+Clusters, Distinct tags and Takeovers, against the generation. A cluster is our definition (the
+paper gives none): the agents within 0.01 of the most common exact tag, dominant above half the
+population; a takeover is a new dominant cluster more than 0.01 from the last. A run stops at
+generation 30 000 (`end`; 0 for never). **Compare** entry: "Published vs literal ties at P = 2 —
+Tag Cooperation (Compare)". Four built-in sweeps: `rca-pairings` (Table 1 under each tie rule),
+`rca-cost` (Table 2), `rca-clones` (the paper against the four ways of taking forced donation
+between identical tags away) and `rca-population` (50 to 400 agents). Credit: Rick L. Riolo,
+Michael D. Cohen and Robert Axelrod, "Evolution of cooperation without reciprocity," *Nature* 414
+(2001), 441–443; Bruce Edmonds and David Hales, "Replication, Replication and Replication: Some
+Hard Lessons from Model Alignment," *JASSS* 6(4) 11 (2003); Gilbert Roberts and Thomas N. Sherratt,
+"Does similarity breed cooperation?", *Nature* 418 (2002), 499–500. See
+`docs/superpowers/specs/2026-09-25-tags-design.md`.
 
 ## Experiments
 
