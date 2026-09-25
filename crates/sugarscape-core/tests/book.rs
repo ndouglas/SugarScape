@@ -395,6 +395,70 @@ fn three_good_trade_raises_carrying_capacity() {
     assert!(p_with > p_without, "with {p_with}, without {p_without}");
 }
 
+/// Population every 50 ticks from t = 0 to 1000 (0 once extinct).
+fn every_50(config: &Config, seed: u64) -> Vec<u32> {
+    let pop = run(config.clone(), seed, 1000)
+        .stats
+        .series("population")
+        .unwrap();
+    (0..=1000)
+        .step_by(50)
+        .map(|t| pop.get(t).copied().unwrap_or(0.0) as u32)
+        .collect()
+}
+
+/// Prints the populations recorded in presets.rs's `indecomposability` comment
+/// and the figures the thresholds below come from.
+#[test]
+#[ignore]
+fn measure_indecomposability() {
+    for id in ["vi-2-no-trade", "vi-3-trade"] {
+        let config = presets::by_id(id).unwrap().config;
+        for seed in 1..=5 {
+            let pop = run(config.clone(), seed, 1000)
+                .stats
+                .series("population")
+                .unwrap();
+            let trough = pop[..=150].iter().copied().fold(f64::MAX, f64::min);
+            let peak = pop.iter().copied().fold(0.0, f64::max);
+            let late_min = pop[300..].iter().copied().fold(f64::MAX, f64::min);
+            println!(
+                "{id} seed {seed}: every 50 ticks {:?}; trough by t=150 {trough}, peak {:.2}x, min after t=300 {late_min}",
+                every_50(&config, seed),
+                peak / 500.0,
+            );
+        }
+    }
+}
+
+/// VI-3's thresholds, from `measure_indecomposability` (release, seeds 1–5;
+/// presets.rs records the populations): the largest trough by t = 150 was
+/// 175 and the smallest peak 1.69 × 500.
+const VI3_TROUGH_BELOW: f64 = 200.0;
+const VI3_RECOVERY_FACTOR: f64 = 1.65;
+
+#[test]
+#[ignore]
+fn trade_society_dips_then_recovers_past_its_start() {
+    // Animation VI-3: "Initially, the population declines … But society
+    // pulls out of its demographic nose dive and begins to grow. Indeed, it
+    // rises to a level more than twice that of the initial population."
+    // (VI-2's crash is not reproduced; its golden entry pins it.)
+    let config = presets::by_id("vi-3-trade").unwrap().config;
+    for seed in 1..=5 {
+        let w = run(config.clone(), seed, 1000);
+        let pop = w.stats.series("population").unwrap();
+        let trough = pop[..=150].iter().copied().fold(f64::MAX, f64::min);
+        let peak = pop.iter().copied().fold(0.0, f64::max);
+        assert!(trough < VI3_TROUGH_BELOW, "seed {seed}: trough {trough}");
+        assert!(
+            peak > VI3_RECOVERY_FACTOR * 500.0,
+            "seed {seed}: peak {peak}"
+        );
+        assert!(w.population() > 0, "seed {seed} died out");
+    }
+}
+
 /// A built-in sweep at its recorded settings, on every core.
 fn run_builtin(id: &str) -> SweepResult {
     let s = sweep::builtin(id).unwrap();

@@ -43,6 +43,10 @@ const GOLDEN: &[(&str, u64)] = &[
     // Model extensions: the culture preset with the book's three groups.
     // Groups change no rule while combat is off, so it equals iii-6-culture.
     ("iii-6-three-tribes", 0xf8973190b0435a81),
+    // Chapter VI: indecomposability (Chapter IV's traits, trade off / on).
+    // VI-2's book crash is not reproduced; this entry pins its run.
+    ("vi-2-no-trade", 0xd35c40bead68ed38),
+    ("vi-3-trade", 0x2a65351834fda082),
 ];
 
 fn fingerprint(id: &str) -> u64 {

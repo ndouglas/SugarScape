@@ -80,6 +80,41 @@ fn disease(c: &mut Config) {
     c.disease.enabled = true;
 }
 
+/// Chapter VI's indecomposability society (animations VI-2 and VI-3): 500
+/// agents with Chapter IV's traits on its sugar and spice landscape under M
+/// and S with Chapter III's demography (lifetimes 60-100); `trade` switches
+/// rule T, the only difference.
+fn indecomposability(c: &mut Config, trade: bool) {
+    c.population = 500;
+    demography(c);
+    // No calibration: Chapter IV's traits, as the spec fixes them. Measured
+    // (`measure_indecomposability`, release), population every 50 ticks
+    // from t = 0 to 1000, seeds 1-5:
+    //   vi-2-no-trade seed 1: [500, 250, 192, 383, 724, 933, 857, 814, 840, 845, 838, 866, 809, 744, 854, 910, 866, 872, 857, 827, 851]
+    //   vi-2-no-trade seed 2: [500, 253, 191, 340, 623, 850, 782, 742, 745, 806, 856, 828, 828, 821, 814, 816, 842, 848, 870, 842, 815]
+    //   vi-2-no-trade seed 3: [500, 261, 151, 253, 555, 809, 843, 791, 762, 752, 784, 867, 838, 809, 733, 769, 873, 886, 871, 893, 856]
+    //   vi-2-no-trade seed 4: [500, 276, 244, 462, 812, 883, 796, 790, 756, 776, 890, 907, 865, 880, 885, 845, 810, 844, 880, 845, 781]
+    //   vi-2-no-trade seed 5: [500, 270, 176, 300, 532, 767, 880, 808, 782, 796, 791, 745, 787, 866, 849, 784, 833, 877, 858, 864, 880]
+    //   vi-3-trade seed 1: [500, 246, 130, 330, 746, 989, 890, 844, 832, 834, 829, 868, 879, 873, 844, 770, 785, 874, 838, 770, 857]
+    //   vi-3-trade seed 2: [500, 291, 178, 385, 755, 926, 842, 807, 813, 811, 843, 856, 854, 824, 821, 829, 785, 760, 816, 768, 793]
+    //   vi-3-trade seed 3: [500, 275, 121, 162, 346, 653, 821, 726, 706, 775, 767, 747, 742, 823, 829, 806, 787, 779, 735, 727, 747]
+    //   vi-3-trade seed 4: [500, 280, 118, 145, 403, 836, 965, 901, 871, 888, 859, 881, 847, 850, 883, 912, 905, 854, 851, 856, 860]
+    //   vi-3-trade seed 5: [500, 284, 124, 209, 485, 821, 880, 808, 785, 786, 791, 776, 838, 914, 890, 884, 876, 883, 900, 907, 898]
+    // VI-3 matches the book's curve (a dip by t ~ 100, recovery to 1.7-2.0x
+    // the initial 500, minima near 700); VI-2 does the same instead of
+    // crashing. Every stated rule (M, S, T, death, the landscape) matches the
+    // book and Appendix B, and no setting of 216 tried separated the two on
+    // all of seeds 1-5 except on a knife edge: under these rules trade moves
+    // holdings toward each agent's metabolism ratio but does not raise
+    // fertility. The crash most likely depended on unreported details of
+    // the original software.
+    c.vision = URange::new(1, 10);
+    c.goods[0].metabolism = URange::new(1, 5);
+    c.goods[0].endowment = URange::new(25, 50);
+    spice(c, URange::new(1, 5), URange::new(25, 50));
+    c.trade.enabled = trade;
+}
+
 /// A further good with good 0's trait ranges, named `name` in `color` on `map`.
 fn another(c: &mut Config, name: &str, color: &str, map: Map) {
     let like = c.goods[0].clone();
@@ -362,7 +397,7 @@ pub fn all() -> Vec<Preset> {
             "vi-1-everything",
             "({G₁}, {M, S, I, K, T, L, E})",
             "Chapter VI",
-            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650 (as in the book's McNeill discussion); disease flares after each outbreak and tends to die out again before the next one.",
+            "Every rule at once: spice, sex, finite lives, inheritance, culture, trade, credit and disease, with new diseases arriving by outbreak at t = 150, 400 and 650; disease flares after each outbreak and tends to die out again before the next one. The book's eighteen views, in its order: (1) Agents → Disease colors; (2) the Neighbor network overlay; (3) Charts → Wealth distribution (sugar); (4) Charts → Goods → Wealth distribution · spice; (5) Charts → Goods → Lorenz curve and Gini coefficient (total wealth); (6) Charts → Population; (7) Charts → Age histogram; (8) the Family network overlay (with Agents → Lineage for the book's colors); (9) Charts → Cultural tags; (10) the Friends network overlay; (11) and (12) Charts → Economy → Trade price (its mean and ± SD band); (13) Charts → Economy → Trade volume; (14) the Trade network overlay; (15) the Credit network overlay; (16) the Credit tab's hierarchy; (17) Charts → Disease; (18) the Disease network overlay.",
             |c| {
                 demography(c);
                 c.inheritance.enabled = true;
@@ -449,6 +484,20 @@ pub fn all() -> Vec<Preset> {
                     },
                 ];
             },
+        ),
+        preset(
+            "vi-2-no-trade",
+            "({G₁}, {M, S}) with spice, no trade",
+            "Animation VI-2",
+            "500 agents with Chapter IV's traits move and reproduce on the sugar and spice landscape but never trade. The book's population crashes; here it does not: it dips to about 150–235 by t = 100–150, recovers to about 1.8 times its start and fluctuates around 800, like VI-3. Every stated rule matches the book, so the crash most likely depended on unreported details of the original software. Compare it with VI-3 from the presets menu.",
+            |c| indecomposability(c, false),
+        ),
+        preset(
+            "vi-3-trade",
+            "({G₁}, {M, S, T}) with spice",
+            "Animation VI-3",
+            "Everything as in VI-2, with trade on. This reproduces the book's curve: the population dips to about 100–175 by t = 100–150, recovers to 1.7–2.0 times its initial 500, then fluctuates with minima near 700. (VI-2 without trade does the same here, unlike the book.)",
+            |c| indecomposability(c, true),
         ),
         preset(
             "n-3-trade",
@@ -560,9 +609,34 @@ mod tests {
     use crate::world::World;
 
     #[test]
+    fn indecomposability_presets_differ_only_in_trade() {
+        let no_trade = by_id("vi-2-no-trade").unwrap().config;
+        let mut trade = by_id("vi-3-trade").unwrap().config;
+        assert!(!no_trade.trade.enabled && trade.trade.enabled);
+        assert_eq!(no_trade.population, 500);
+        assert_eq!(no_trade.vision, URange::new(1, 10), "Chapter IV's traits");
+        assert_eq!(no_trade.goods.len(), 2, "sugar and spice");
+        for g in &no_trade.goods {
+            assert_eq!(
+                (g.metabolism, g.endowment),
+                (URange::new(1, 5), URange::new(25, 50))
+            );
+        }
+        assert_eq!(
+            no_trade.goods[1].map,
+            by_id("iv-1-spice").unwrap().config.goods[1].map
+        );
+        assert!(no_trade.sex.enabled && no_trade.lifespan.enabled);
+        assert_eq!(no_trade.lifespan.max_age, URange::new(60, 100));
+        assert!(!no_trade.culture.enabled && !no_trade.credit.enabled && !no_trade.disease.enabled);
+        trade.trade.enabled = false;
+        assert_eq!(trade, no_trade);
+    }
+
+    #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 27);
+        assert_eq!(presets.len(), 29);
         for p in presets {
             p.config
                 .validate()
