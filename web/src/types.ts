@@ -146,7 +146,7 @@ export interface CivilQuirks {
   netlogo_jail_term: boolean;
 }
 
-/** A numeric live field moving linearly from its value when tick `start` begins to `to` when tick `end` begins. */
+/** A numeric live field moving linearly from its value when tick `start` begins to `to` when tick `end` begins; while it runs, a scheduled or live change to that field lasts only until its next tick. */
 export interface CivilRamp { path: string; start: number; end: number; to: number }
 
 /** Epstein's civil violence (milestone 11): Model I (`rebellion`) or Model II (`ethnic`). */

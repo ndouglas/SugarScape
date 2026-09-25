@@ -530,6 +530,12 @@ impl CivilWorld {
     /// Every jailed agent's term counts down by one; those at 0 are
     /// released in index order — near where they were arrested, or where
     /// they stand with `jailed_stay`.
+    ///
+    /// This runs at the end of every tick, the arresting one included (as
+    /// NetLogo's `go` does), so a term of n drawn at tick t frees the agent
+    /// at the end of tick t + n − 1: a term of 1 releases it at the end of
+    /// the tick it was arrested, before it acts again, and it is never
+    /// counted as jailed (so terms 0 and 1 behave the same).
     fn serve_terms(&mut self) {
         for i in 0..self.agents.len() {
             let a = &mut self.agents[i];
@@ -539,6 +545,7 @@ impl CivilWorld {
             let Some(Term::Ticks(left)) = a.jail else {
                 continue;
             };
+            // The arresting tick counts: a term of 1 ends here, the tick it began.
             let left = left.saturating_sub(1);
             a.jail = Some(Term::Ticks(left));
             if left == 0 {
@@ -621,9 +628,13 @@ impl CivilWorld {
             .flat_map(|c| c.set.clone())
             .collect();
         for (path, value) in due {
-            if let Ok(ModelConfig::Civil(next)) =
-                ModelConfig::Civil(self.config.clone()).with_path(&path, &value)
-            {
+            // Validation checks each entry as if set, so this cannot fail.
+            let next = ModelConfig::Civil(self.config.clone()).with_path(&path, &value);
+            debug_assert!(
+                matches!(next, Ok(ModelConfig::Civil(_))),
+                "a validated schedule entry failed to apply: {path} = {value}"
+            );
+            if let Ok(ModelConfig::Civil(next)) = next {
                 self.config = next;
             }
         }

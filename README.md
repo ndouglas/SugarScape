@@ -251,11 +251,15 @@ changes — each free agent clones onto an empty neighboring site with probabili
 child keeping its parent's group and hardship, drawing its own R), and every agent dies at a
 random age fixed at birth (up to 200 ticks).
 
-The paper leaves several things unstated; the choices made here are named in the Rules panel:
-vision is Euclidean (never specified; NetLogo Rebellion's `in-radius` agrees), a jail term is a
-whole number of ticks from 1 to J_max (an arrest always costs at least a tick), a released agent
-reappears on a random empty site near where it was arrested (or anywhere on the lattice if none is
-free nearby), and a Model II clone lands on one of its parent's eight Moore neighbors.
+The paper leaves several things unstated; the choices made here are stated here and in the
+module docs (the Rules panel's help for vision names the first): vision is Euclidean (never
+specified; NetLogo Rebellion's `in-radius` agrees), a jail term is a whole number of ticks from 1
+to J_max, counted down at the end of every tick including the arresting one (as NetLogo does), so
+an agent arrested at tick t with a term of n is freed at the end of tick t + n − 1 (a term of 1
+releases it at the end of the very tick it was arrested, before it acts again, and it is never
+counted as jailed), a released agent reappears on a random empty site near where it was arrested
+(or anywhere on the lattice if none is free nearby), and a Model II clone lands on one of its
+parent's eight Moore neighbors.
 
 **The Finding.** The paper's stated arrest rule, P = 1 − exp(−k·C/A), does not produce the paper's
 own punctuated equilibrium at the paper's own Run 2 inputs: over 20 seeds of 3 000 ticks it gives
@@ -308,12 +312,15 @@ extinction rising with density (94 ticks with no cops, 106–119 at 0.01–0.03,
 between outbursts, and it does, from 3.5 ticks at J_max = 10 to 40.4 at 60 (about 0.66–0.74 ×
 J_max from 15 up; at J_max = 5 no outburst ever ends, so no wait is measured).
 
-The grid is drawn by **Action** (quiet agents blue, active red, cops black; in Model II quiet
-agents show their group's color) or **Grievance** (shaded by G), and in Model II also **Group**;
-charts split **Actives, quiet and jailed**, **Legitimacy** and **Cops** onto their own axes (Figs.
-9–11), plus **Tension** (Fig. 8), **Outbursts**, **Wait between outbursts** and **Activation per
-outburst**, and Model II's **Groups** and **Killed**. **Compare** entries: "Salami tactics vs one
-jump — runs 3 and 4" and "Ethnic cleansing vs safe havens — run 7 and peacekeepers." Credit:
+The grid is drawn by **Action** (quiet agents blue, active red, cops light gray — the paper's
+black, lightened for the dark grid; in Model II quiet agents show their group's color) or
+**Grievance** (shaded by G), and in Model II also **Group**; charts split **Actives, quiet and
+jailed**, **Legitimacy** and **Cops** onto their own axes (Figs. 9–11), plus **Tension** (Fig. 8),
+**Outbursts**, **Wait between outbursts** and **Activation per outburst**, and Model II's
+**Groups** and **Killed**. **Compare** entries: "Salami tactics vs one jump — Civil Violence
+(Compare)" and "Ethnic cleansing vs peacekeepers — Civil Violence (Compare)." Scheduled and ramped
+values show in the Rules panel as they take effect; a schedule entry on a field a ramp is moving,
+or a live edit to it, is overwritten by the ramp on the next tick of its window. Credit:
 Joshua M. Epstein, "Modeling civil violence: An agent-based computational approach," *PNAS* 99
 suppl. 3 (2002), 7243–7250, and NetLogo *Rebellion* (Wilensky, 2004). See
 `docs/superpowers/specs/2026-09-25-civil-violence-design.md`.

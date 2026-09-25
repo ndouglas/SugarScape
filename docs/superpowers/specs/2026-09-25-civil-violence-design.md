@@ -75,7 +75,7 @@ Found while planning (a dry run of this spec's rules, Run 2's inputs, 3 seeds ×
 | `ramps` | `[]` | — | `[{ path, start, end, to }]`: a numeric live field moves linearly from its value at `start` to `to` at `end` |
 
 - **Validation:** schedule and ramp paths must name live fields (reset fields, `schedule`, `ramps` and `variant` are rejected); ramp paths must be numeric fields; `start < end`; values are validated as if set directly. Overlapping ramps on the same path are rejected.
-- **Ramps:** before tick t runs, for every ramp with start < t ≤ end the field is set to v_start + (to − v_start)·(t − start)/(end − start), where v_start is the field's value when tick `start + 1` begins (recorded on first application, part of the fingerprinted state). Schedule entries at the same tick apply before ramps. Scheduled and ramped values show in `config()` like any live change.
+- **Ramps:** before tick t runs, for every ramp with start < t ≤ end the field is set to v_start + (to − v_start)·(t − start)/(end − start), where v_start is the field's value when tick `start` begins, after that tick's schedule entries (recorded then, part of the fingerprinted state); values move for ticks start < t ≤ end. Schedule entries at the same tick apply before ramps. Scheduled and ramped values show in `config()` like any live change. A schedule entry on a path a ramp is moving, or a live edit to a ramped field, is overwritten by the ramp on the next tick of its window (documented, not rejected).
 - **Live `cop_density`:** the world adds cops on uniformly random empty sites (free of agents and cops; with `jailed_stay`, a jailed agent's site counts as empty) or removes uniformly random cops until the count matches.
 
 ## Setup
@@ -105,7 +105,7 @@ Cops first, then agents, each on a uniformly random empty site (NetLogo's order)
 
 ## Views
 
-- **Color modes:** **Action** (the paper's left screen): quiet agents blue, active red, cops black, empty sand; in Model II quiet agents are drawn in their group's color (blue or green) and actives red. **Grievance** (the right screen): agents shaded from pale to dark red by G, cops black, empty sand. **Group** (Model II): blue or green, cops black. Jailed agents are not drawn (with `jailed_stay` the site shows its free occupant or cop, else empty).
+- **Color modes:** **Action** (the paper's left screen): quiet agents blue, active red, cops light gray (`#e6e6e6`, the paper's black lightened for the dark grid), empty sites the dark background; in Model II quiet agents are drawn in their group's color (blue or green) and actives red. **Grievance** (the right screen): agents shaded from pale to dark red by G, cops light gray, empty sites dark. **Group** (Model II): blue or green, cops light gray. Jailed agents are not drawn (with `jailed_stay` the site shows its free occupant or cop, else empty).
 - **Inspect:** an agent's id, H, R, G, estimated P and N at its site now, state (quiet / active / jailed with remaining term), and in Model II its group, age and death age; or a cop.
 - **Charts:** Actives, quiet and jailed, Legitimacy and Cops — Figs. 9–11; Actives and tension — Fig. 8; Outbursts (count, mean wait, mean activation); Groups (blue, green, kills) — Model II only.
 - **Agents CSV:** id, x, y, state, jail term, H, R, G, group, age, death age.
@@ -129,7 +129,7 @@ The spec originally called for `cv-peacekeepers-withdrawn` (Run 8 with cops with
 | `cv-safe-havens` | Run 7; schedule `cop_density` at t = 50 (density chosen by measurement, stated) | Fig. 14 |
 | `cv-netlogo` | NetLogo's defaults (70 % agents, 4 % cops, vision 7, L 0.82, J_max 30) and all five quirks | NetLogo *Rebellion* |
 
-**Compare entries:** "Salami tactics vs one jump — runs 3 and 4" and "Ethnic cleansing vs safe havens — run 7 and peacekeepers".
+**Compare entries:** "Salami tactics vs one jump — Civil Violence (Compare)" and "Ethnic cleansing vs peacekeepers — Civil Violence (Compare)" (the presets menu's labels).
 
 ## Experiments and CLI
 

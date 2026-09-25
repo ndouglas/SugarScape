@@ -81,7 +81,9 @@ impl Quirks {
 }
 
 /// A numeric live field moving linearly from its value when tick `start`
-/// begins to `to` when tick `end` begins.
+/// begins to `to` when tick `end` begins. While it runs (ticks
+/// start < t ≤ end) it sets the field every tick, so a schedule entry on the
+/// same path, or a live edit to it, lasts only until the ramp's next tick.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Ramp {
