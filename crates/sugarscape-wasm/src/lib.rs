@@ -3,10 +3,10 @@
 
 use sugarscape_core::config::{Config, FieldError};
 use sugarscape_core::edit::AgentOverrides;
-use sugarscape_core::render::{self, ColorMode, Layer};
+use sugarscape_core::model::{Model, ModelConfig, ModelKind, ModelWorld};
 use sugarscape_core::sweep::{RunResult, Sweep, SweepResult};
 use sugarscape_core::world::World;
-use sugarscape_core::{export, network, presets, stats, sweep};
+use sugarscape_core::{network, presets, stats, sweep};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
@@ -29,9 +29,26 @@ pub fn fingerprint_hex(fingerprint: u64) -> String {
     format!("{fingerprint:#018x}")
 }
 
+/// JSON list of every model's presets (`presets::catalog`): the
+/// sugarscape's first, each exactly as before milestone 9.
 #[wasm_bindgen]
 pub fn presets_json() -> String {
-    serde_json::to_string(&presets::all()).expect("presets serialize")
+    serde_json::to_string(&presets::catalog()).expect("presets serialize")
+}
+
+/// JSON `{ <model>: [param, …] }`: the Rules panel's fields of every model
+/// that has a schema (every model but the sugarscape).
+#[wasm_bindgen]
+pub fn model_schemas_json() -> String {
+    let schemas: serde_json::Map<String, serde_json::Value> = ModelKind::ALL
+        .iter()
+        .filter(|k| !k.schema().is_empty())
+        .map(|k| {
+            let schema = serde_json::to_value(k.schema()).expect("schemas serialize");
+            (k.as_str().to_string(), schema)
+        })
+        .collect();
+    serde_json::to_string(&schemas).expect("schemas serialize")
 }
 
 #[wasm_bindgen]
@@ -101,11 +118,11 @@ pub fn builtin_sweeps() -> String {
     serde_json::to_string(&list).expect("sweeps serialize")
 }
 
-/// JSON list of the statistics series a config (either shape) records.
+/// JSON list of the statistics series a config of any model records.
 #[wasm_bindgen]
 pub fn config_series_names(config: &str) -> Result<String, JsValue> {
-    let config = Config::from_json(config).map_err(field_errors)?;
-    Ok(serde_json::to_string(&stats::series_names(&config)).expect("names serialize"))
+    let config = ModelConfig::from_json(config).map_err(field_errors)?;
+    Ok(serde_json::to_string(&config.series_names()).expect("names serialize"))
 }
 
 /// The CLI's result file for `runs`, marked incomplete when points are missing.
@@ -167,64 +184,102 @@ fn landscapes_from_js(value: &JsValue) -> Result<Vec<Option<Vec<f64>>>, JsValue>
     )]))
 }
 
+/// One world of any model (Decision 5): the sugarscape-only calls (maps,
+/// editing, trails, networks, the credit graph, the disease list and the
+/// wealth views) answer empty (or, for edits, a field error) for the other
+/// models, and `ring_sugar`/`ring_agents` answer empty for every model but
+/// Ring World.
 #[wasm_bindgen]
 pub struct Sim {
-    world: World,
+    world: ModelWorld,
     frame: Vec<u8>,
 }
 
+const NO_CREDIT_GRAPH: &str = r#"{"agents":[],"loans":[]}"#;
+
 impl Sim {
+    fn model(&self) -> &dyn Model {
+        self.world.model()
+    }
+
+    fn sugar(&self) -> Option<&World> {
+        self.world.sugarscape()
+    }
+
+    /// The sugarscape world, for an edit; a field error for other models.
+    fn sugar_mut(&mut self) -> Result<&mut World, JsValue> {
+        self.world
+            .sugarscape_mut()
+            .ok_or_else(|| edit_error("this world is not a sugarscape".into()))
+    }
+
     fn good(&self, good: u32) -> Result<usize, JsValue> {
         let g = good as usize;
-        if g < self.world.config.goods.len() {
-            Ok(g)
-        } else {
-            Err(edit_error(format!("there is no good {good}")))
+        match self.sugar() {
+            Some(w) if g < w.config.goods.len() => Ok(g),
+            _ => Err(edit_error(format!("there is no good {good}"))),
         }
+    }
+
+    /// `f` of the sugarscape world, or `empty` for other models.
+    fn sugar_or<T>(&self, empty: T, f: impl FnOnce(&World) -> T) -> T {
+        self.sugar().map_or(empty, f)
     }
 }
 
 #[wasm_bindgen]
 impl Sim {
+    /// A world of the config's model (a sugarscape config without a `model`
+    /// key, in either shape). `landscapes` are the sugarscape's painted maps;
+    /// other models ignore them.
     #[wasm_bindgen(constructor)]
     pub fn new(config_json: &str, seed: u32, landscapes: JsValue) -> Result<Sim, JsValue> {
-        let config = Config::from_json(config_json).map_err(field_errors)?;
+        let config = ModelConfig::from_json(config_json).map_err(field_errors)?;
         let landscapes = landscapes_from_js(&landscapes)?;
-        let world =
-            World::with_landscapes(config, u64::from(seed), &landscapes).map_err(field_errors)?;
+        let world = ModelWorld::with_landscapes(config, u64::from(seed), &landscapes)
+            .map_err(field_errors)?;
         Ok(Sim {
             world,
             frame: Vec::new(),
         })
     }
 
+    /// `"sugarscape"`, `"schelling"` or `"ring"`.
+    pub fn model_kind(&self) -> String {
+        self.world.kind().as_str().to_string()
+    }
+
     pub fn step(&mut self, n: u32) {
-        self.world.run(n);
+        self.world.model_mut().run(n);
     }
 
     pub fn tick(&self) -> f64 {
-        self.world.tick as f64
+        self.model().tick() as f64
     }
 
+    /// The frame's width in cells (Ring World: its sites).
     pub fn width(&self) -> u32 {
-        self.world.torus.width
+        self.model().size().0
     }
 
+    /// The frame's height in cells (Ring World: the space–time diagram's rows).
     pub fn height(&self) -> u32 {
-        self.world.torus.height
+        self.model().size().1
     }
 
     pub fn population(&self) -> u32 {
-        self.world.population() as u32
+        self.model().population() as u32
     }
 
     /// Renders into the internal frame and returns a pointer into WASM memory.
     /// Re-create any JS view after each call: memory may have grown.
     pub fn render(&mut self, color_mode: &str, layer: &str) -> Result<usize, JsValue> {
-        let mode: ColorMode = color_mode.parse().map_err(edit_error)?;
-        let layer: Layer = layer.parse().map_err(edit_error)?;
-        render::render(&self.world, mode, layer, &mut self.frame).map_err(edit_error)?;
-        Ok(self.frame.as_ptr() as usize)
+        let Sim { world, frame } = self;
+        world
+            .model()
+            .render(color_mode, layer, frame)
+            .map_err(edit_error)?;
+        Ok(frame.as_ptr() as usize)
     }
 
     pub fn frame_len(&self) -> usize {
@@ -232,12 +287,11 @@ impl Sim {
     }
 
     pub fn stats_latest(&self) -> String {
-        serde_json::to_string(&self.world.stats.latest()).expect("snapshot serializes")
+        self.model().latest_json()
     }
 
     pub fn series(&self, name: &str) -> Result<Vec<f64>, JsValue> {
-        self.world
-            .stats
+        self.model()
             .series(name)
             .ok_or_else(|| edit_error(format!("unknown series {name:?}")))
     }
@@ -246,7 +300,7 @@ impl Sim {
     /// `[tick, value, tick, value, …]`.
     pub fn series_downsampled(&self, name: &str, max: u32) -> Result<Vec<f64>, JsValue> {
         let values = self.series(name)?;
-        let ticks = self.world.stats.series("tick").unwrap_or_default();
+        let ticks = self.model().series("tick").unwrap_or_default();
         Ok(stats::downsample(&values, max as usize)
             .into_iter()
             .flat_map(|(i, v)| [ticks[i as usize], v])
@@ -263,7 +317,7 @@ impl Sim {
             .iter()
             .map(|name| self.series(name))
             .collect::<Result<Vec<_>, _>>()?;
-        let ticks = self.world.stats.series("tick").unwrap_or_default();
+        let ticks = self.model().series("tick").unwrap_or_default();
         let keep = stats::downsample_union(&columns, max as usize);
         let mut out = Vec::with_capacity(1 + keep.len() * (1 + columns.len()));
         out.push(keep.len() as f64);
@@ -274,74 +328,92 @@ impl Sim {
         Ok(out)
     }
 
-    /// `World::fingerprint` as `0x…` hex, the golden tests' format (see [`fingerprint_hex`]).
+    /// The model's fingerprint as `0x…` hex, the golden tests' format (see [`fingerprint_hex`]).
     pub fn fingerprint(&self) -> String {
-        fingerprint_hex(self.world.fingerprint())
+        fingerprint_hex(self.model().fingerprint())
     }
 
     pub fn lorenz(&self, points: usize) -> Vec<f64> {
-        stats::lorenz(&stats::wealths(&self.world), points.max(2))
+        self.sugar_or(Vec::new(), |w| {
+            stats::lorenz(&stats::wealths(w), points.max(2))
+        })
     }
 
     /// `[bin_width, count_0, …, count_{bins-1}]`.
     pub fn wealth_hist(&self, bins: usize) -> Vec<f64> {
-        let (width, counts) = stats::histogram(&stats::wealths(&self.world), bins.max(1));
-        std::iter::once(width).chain(counts).collect()
+        self.sugar_or(Vec::new(), |w| {
+            let (width, counts) = stats::histogram(&stats::wealths(w), bins.max(1));
+            std::iter::once(width).chain(counts).collect()
+        })
     }
 
     /// `[bin_width, count_0, …, count_{bins-1}]` of good `good`'s holdings (the wealth
     /// histogram's bins, for any good).
     pub fn good_wealth_hist(&self, good: u32, bins: usize) -> Result<Vec<f64>, JsValue> {
         let g = self.good(good)?;
-        let (width, counts) = stats::histogram(&stats::good_wealths(&self.world, g), bins.max(1));
+        let w = self.sugar().expect("goods exist only in a sugarscape");
+        let (width, counts) = stats::histogram(&stats::good_wealths(w, g), bins.max(1));
         Ok(std::iter::once(width).chain(counts).collect())
     }
 
     /// The Lorenz curve of total wealth (every good's holdings summed).
     pub fn lorenz_total(&self, points: usize) -> Vec<f64> {
-        stats::lorenz(&stats::total_wealths(&self.world), points.max(2))
+        self.sugar_or(Vec::new(), |w| {
+            stats::lorenz(&stats::total_wealths(w), points.max(2))
+        })
     }
 
     /// `[bin, count_0, …]`: living agents' ages in `bin`-tick bins (`stats::age_histogram`).
     pub fn age_hist(&self, bin: u32) -> Vec<f64> {
         let bin = bin.max(1);
-        std::iter::once(f64::from(bin))
-            .chain(stats::age_histogram(&self.world, bin))
-            .collect()
+        self.sugar_or(Vec::new(), |w| {
+            std::iter::once(f64::from(bin))
+                .chain(stats::age_histogram(w, bin))
+                .collect()
+        })
     }
 
     /// The percentage of living agents with a 0 at each tag position, position 0 first
     /// (`stats::tag_histogram`).
     pub fn tag_hist(&self) -> Vec<f64> {
-        stats::tag_histogram(&self.world)
+        self.sugar_or(Vec::new(), stats::tag_histogram)
     }
 
+    /// The site (x, y) and its agent, in the model's own JSON shape (Ring
+    /// World: site `x`, whatever `y`).
     pub fn inspect(&self, x: u32, y: u32) -> Result<String, JsValue> {
-        let inspection = self.world.inspect(x, y).map_err(edit_error)?;
-        Ok(serde_json::to_string(&inspection).expect("inspection serializes"))
+        self.model().inspect_json(x, y).map_err(edit_error)
     }
 
     pub fn locate(&self, id: f64) -> Option<Vec<u32>> {
-        self.world.locate(id as u64).map(|p| vec![p.x, p.y])
+        self.model().locate(id as u64).map(|(x, y)| vec![x, y])
     }
 
-    /// Records agent `id`'s trail from now on (`World::follow`).
+    /// Records agent `id`'s trail from now on (`World::follow`; sugarscape only).
     pub fn follow(&mut self, id: f64) {
-        self.world.follow(Some(id as u64));
+        if let Some(w) = self.world.sugarscape_mut() {
+            w.follow(Some(id as u64));
+        }
     }
 
     pub fn unfollow(&mut self) {
-        self.world.follow(None);
+        if let Some(w) = self.world.sugarscape_mut() {
+            w.follow(None);
+        }
     }
 
     /// The followed agent's trail as `[x0, y0, x1, y1, …]`, oldest first.
     pub fn trail(&self) -> Vec<u32> {
-        self.world.trail().iter().flat_map(|p| [p.x, p.y]).collect()
+        self.sugar_or(Vec::new(), |w| {
+            w.trail().iter().flat_map(|p| [p.x, p.y]).collect()
+        })
     }
 
     /// The followed agent's id, or −1 when none is followed.
     pub fn followed(&self) -> f64 {
-        self.world.followed().map_or(-1.0, |id| id as f64)
+        self.sugar()
+            .and_then(World::followed)
+            .map_or(-1.0, |id| id as f64)
     }
 
     pub fn paint_capacity(
@@ -352,7 +424,7 @@ impl Sim {
         value: f64,
         good: u32,
     ) -> Result<(), JsValue> {
-        self.world
+        self.sugar_mut()?
             .paint_capacity(x, y, radius, value, good as usize)
             .map_err(edit_error)
     }
@@ -362,37 +434,43 @@ impl Sim {
     pub fn set_landscape(&mut self, good: u32, capacities: &[u8]) -> Result<(), JsValue> {
         let g = self.good(good)?;
         let caps: Vec<f64> = capacities.iter().map(|&c| f64::from(c)).collect();
-        self.world.set_capacities(g, &caps).map_err(edit_error)
+        self.sugar_mut()?
+            .set_capacities(g, &caps)
+            .map_err(edit_error)
     }
 
     pub fn place_agent(&mut self, x: u32, y: u32, overrides_json: &str) -> Result<f64, JsValue> {
         let overrides: AgentOverrides =
             serde_json::from_str(overrides_json).map_err(|e| edit_error(e.to_string()))?;
-        self.world
+        self.sugar_mut()?
             .place_agent(x, y, &overrides)
             .map(|id| id as f64)
             .map_err(edit_error)
     }
 
     pub fn remove_agent(&mut self, x: u32, y: u32) -> Result<(), JsValue> {
-        self.world.remove_agent(x, y).map_err(edit_error)
+        self.sugar_mut()?.remove_agent(x, y).map_err(edit_error)
     }
 
+    /// Applies a changed config of the world's model to the running world.
     pub fn set_config(&mut self, json: &str) -> Result<(), JsValue> {
-        let config = Config::from_json(json).map_err(field_errors)?;
-        self.world.set_config(config).map_err(field_errors)
+        let config = ModelConfig::from_json(json).map_err(field_errors)?;
+        self.world
+            .model_mut()
+            .set_config(config)
+            .map_err(field_errors)
     }
 
+    /// The live config, tagged with its model unless it is a sugarscape's.
     pub fn export_config(&self) -> String {
-        serde_json::to_string(&self.world.config).expect("config serializes")
+        serde_json::to_string(&self.model().config()).expect("config serializes")
     }
 
     /// Good `good`'s capacities rounded to bytes, row-major.
     pub fn export_landscape(&self, good: u32) -> Result<Vec<u8>, JsValue> {
         let g = self.good(good)?;
-        Ok(self
-            .world
-            .capacities(g)
+        let w = self.sugar().expect("goods exist only in a sugarscape");
+        Ok(w.capacities(g)
             .into_iter()
             .map(|c| c.round().clamp(0.0, 255.0) as u8)
             .collect())
@@ -400,34 +478,38 @@ impl Sim {
 
     /// Whether good `good`'s capacities differ from its generated map.
     pub fn landscape_edited(&self, good: u32) -> bool {
-        self.world.landscape_edited(good as usize)
+        self.sugar_or(false, |w| w.landscape_edited(good as usize))
     }
 
-    /// JSON list of this world's series names (they depend on its goods and
-    /// pollutants).
+    /// JSON list of this world's series names (a sugarscape's depend on its
+    /// goods, pollutants and groups).
     pub fn series_names(&self) -> String {
-        serde_json::to_string(&stats::series_names(&self.world.config)).expect("names serialize")
+        serde_json::to_string(&self.model().series_names()).expect("names serialize")
     }
 
     pub fn export_series_csv(&self) -> String {
-        export::series_csv(&self.world)
+        self.model().series_csv()
     }
 
     pub fn export_agents_csv(&self) -> String {
-        export::agents_csv(&self.world)
+        self.model().agents_csv()
     }
 
     /// Edges as `[x1, y1, x2, y2, …]` for `"trade"` (this tick), `"credit"` (outstanding),
     /// `"disease"` (infector → infected, this tick), `"neighbors"` (agent → each agent on its
-    /// neighbor list), `"friends"` (agent → friend) or `"family"` (parent → child).
+    /// neighbor list), `"friends"` (agent → friend) or `"family"` (parent → child); none in
+    /// other models.
     pub fn networks(&self, kind: &str) -> Result<Vec<u32>, JsValue> {
+        let Some(w) = self.sugar() else {
+            return Ok(Vec::new());
+        };
         let edges = match kind {
-            "trade" => network::trade_edges(&self.world),
-            "credit" => network::credit_edges(&self.world),
-            "disease" => network::disease_edges(&self.world),
-            "neighbors" => self.world.neighbor_edges(),
-            "friends" => self.world.friend_edges(),
-            "family" => self.world.family_edges(),
+            "trade" => network::trade_edges(w),
+            "credit" => network::credit_edges(w),
+            "disease" => network::disease_edges(w),
+            "neighbors" => w.neighbor_edges(),
+            "friends" => w.friend_edges(),
+            "family" => w.family_edges(),
             _ => return Err(edit_error(format!("unknown network {kind:?}"))),
         };
         Ok(edges
@@ -439,18 +521,22 @@ impl Sim {
     /// JSON `{ agents: [{ id, role }], loans: [{ lender, borrower, good, due }] }`
     /// over the outstanding loans.
     pub fn credit_graph(&self) -> String {
-        serde_json::to_string(&network::credit_graph(&self.world)).expect("graph serializes")
+        self.sugar_or(NO_CREDIT_GRAPH.into(), |w| {
+            serde_json::to_string(&network::credit_graph(w)).expect("graph serializes")
+        })
     }
 
     /// JSON `[{ id, bits, carriers }]`.
     pub fn disease_list(&self) -> String {
-        serde_json::to_string(&self.world.disease_list()).expect("list serializes")
+        self.sugar_or("[]".into(), |w| {
+            serde_json::to_string(&w.disease_list()).expect("list serializes")
+        })
     }
 
     /// Infects the agent at (x, y) with `disease` (−1 = a brand-new random
     /// disease). Returns whether it was infected.
     pub fn infect(&mut self, x: u32, y: u32, disease: i32) -> Result<bool, JsValue> {
-        self.world
+        self.sugar_mut()?
             .infect(x, y, i64::from(disease))
             .map_err(edit_error)
     }
@@ -458,24 +544,36 @@ impl Sim {
     /// Vaccinates every agent within `radius` of (x, y) against `disease`.
     /// Returns how many agents were vaccinated.
     pub fn vaccinate(&mut self, x: u32, y: u32, radius: u32, disease: u32) -> Result<u32, JsValue> {
-        self.world
+        self.sugar_mut()?
             .vaccinate(x, y, radius, disease)
             .map_err(edit_error)
     }
 
     /// `[n, prices(n), demand(n), supply(n), eq_price, eq_quantity, actual_price, actual_quantity]`.
     pub fn supply_demand(&self) -> Vec<f64> {
-        let sd = stats::supply_demand(&self.world);
-        let mut out = vec![sd.prices.len() as f64];
-        out.extend(sd.prices);
-        out.extend(sd.demand);
-        out.extend(sd.supply);
-        out.extend([
-            sd.equilibrium_price,
-            sd.equilibrium_quantity,
-            sd.actual_price,
-            sd.actual_quantity,
-        ]);
-        out
+        self.sugar_or(Vec::new(), |w| {
+            let sd = stats::supply_demand(w);
+            let mut out = vec![sd.prices.len() as f64];
+            out.extend(sd.prices);
+            out.extend(sd.demand);
+            out.extend(sd.supply);
+            out.extend([
+                sd.equilibrium_price,
+                sd.equilibrium_quantity,
+                sd.actual_price,
+                sd.actual_quantity,
+            ]);
+            out
+        })
+    }
+
+    /// Ring World's sugar per site, site 0 first (empty for other models).
+    pub fn ring_sugar(&self) -> Vec<f64> {
+        self.world.ring().map_or(Vec::new(), |r| r.sugar().to_vec())
+    }
+
+    /// Ring World's agents' sites, in id order (empty for other models).
+    pub fn ring_agents(&self) -> Vec<u32> {
+        self.world.ring().map_or(Vec::new(), |r| r.agent_sites())
     }
 }

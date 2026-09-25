@@ -2,8 +2,8 @@
 
 use sugarscape_core::sweep::{self as core_sweep, Sweep};
 use sugarscape_wasm::{
-    aggregate, builtin_sweeps, config_series_names, fingerprint_hex, parse_sweep, presets_json,
-    run_point, sweep_csv, sweep_points, sweep_result, Sim,
+    aggregate, builtin_sweeps, config_series_names, fingerprint_hex, model_schemas_json,
+    parse_sweep, presets_json, run_point, sweep_csv, sweep_points, sweep_result, Sim,
 };
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
@@ -460,4 +460,131 @@ fn per_good_wealth_histograms_and_the_total_wealth_lorenz_curve() {
         one.lorenz(11),
         "one good: the sugar curve"
     );
+}
+
+/// Preset `id`'s config JSON (any model).
+fn preset_json(id: &str) -> String {
+    serde_json::to_string(&sugarscape_core::presets::find(id).unwrap().config).unwrap()
+}
+
+#[wasm_bindgen_test]
+fn presets_list_every_model_with_sugarscape_configs_untagged() {
+    let list: Vec<serde_json::Value> = serde_json::from_str(&presets_json()).unwrap();
+    let model = |id: &str| {
+        let p = list.iter().find(|p| p["id"] == id).unwrap();
+        p["config"]
+            .get("model")
+            .and_then(|m| m.as_str())
+            .map(String::from)
+    };
+    assert_eq!(model("ii-2-unit"), None);
+    assert_eq!(model("vi-4-schelling-25").as_deref(), Some("schelling"));
+    assert_eq!(model("vi-9-ring-megagroup").as_deref(), Some("ring"));
+    let first = &list[0];
+    let direct = serde_json::to_value(&sugarscape_core::presets::all()[0]).unwrap();
+    assert_eq!(first, &direct, "sugarscape presets serialize as before");
+}
+
+#[wasm_bindgen_test]
+fn schemas_are_listed_for_the_other_models() {
+    let schemas: serde_json::Value = serde_json::from_str(&model_schemas_json()).unwrap();
+    assert!(schemas.get("sugarscape").is_none());
+    let schelling = schemas["schelling"].as_array().unwrap();
+    assert!(schelling
+        .iter()
+        .any(|p| p["path"] == "preference" && p["kind"] == "range" && p["apply"] == "reset"));
+    let ring = schemas["ring"].as_array().unwrap();
+    let growback = ring.iter().find(|p| p["path"] == "growback").unwrap();
+    assert_eq!(
+        (growback["kind"].as_str(), growback["apply"].as_str()),
+        (Some("number"), Some("live"))
+    );
+    let start = ring.iter().find(|p| p["path"] == "start").unwrap();
+    assert_eq!(start["choices"][1]["value"], "megagroup");
+    assert!(start.get("min").is_none());
+}
+
+#[wasm_bindgen_test]
+fn a_schelling_sim_runs_renders_and_inspects() {
+    let mut sim = Sim::new(&preset_json("vi-4-schelling-25"), 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.model_kind(), "schelling");
+    assert_eq!(
+        (sim.width(), sim.height(), sim.population()),
+        (50, 50, 2000)
+    );
+    sim.render("satisfaction", "resource:0").unwrap();
+    assert_eq!(sim.frame_len(), 50 * 50 * 4);
+    assert!(sim.render("tribe", "resource:0").is_err());
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    assert_eq!(sim.fingerprint(), "0x7a7072c3433f5f6f");
+    let latest: serde_json::Value = serde_json::from_str(&sim.stats_latest()).unwrap();
+    assert_eq!(
+        (latest["tick"].as_u64(), latest["quiet"].as_u64()),
+        (Some(200), Some(1))
+    );
+    let names: Vec<String> = serde_json::from_str(&sim.series_names()).unwrap();
+    assert_eq!(names[..2], ["unsatisfied", "segregation"]);
+    assert_eq!(sim.series("segregation").unwrap().len(), 201);
+    let view: serde_json::Value = serde_json::from_str(&sim.inspect(0, 0).unwrap()).unwrap();
+    assert_eq!(view["site"]["x"], 0);
+    let config: serde_json::Value = serde_json::from_str(&sim.export_config()).unwrap();
+    assert_eq!(config["model"], "schelling");
+    assert!(sim
+        .export_series_csv()
+        .starts_with("tick,unsatisfied,segregation,"));
+    assert!(sim.export_agents_csv().starts_with("id,x,y,color,"));
+}
+
+#[wasm_bindgen_test]
+fn sugarscape_only_calls_are_empty_or_refused_in_other_models() {
+    let mut sim = Sim::new(&preset_json("vi-8-ring-world"), 1, JsValue::NULL).unwrap();
+    assert!(sim.lorenz(101).is_empty() && sim.wealth_hist(20).is_empty());
+    assert!(sim.age_hist(5).is_empty() && sim.tag_hist().is_empty());
+    assert!(sim.lorenz_total(101).is_empty() && sim.supply_demand().is_empty());
+    assert!(sim.good_wealth_hist(0, 20).is_err());
+    assert!(sim.networks("trade").unwrap().is_empty());
+    assert_eq!(sim.credit_graph(), r#"{"agents":[],"loans":[]}"#);
+    assert_eq!(sim.disease_list(), "[]");
+    assert!(!sim.landscape_edited(0) && sim.export_landscape(0).is_err());
+    assert!(sim.paint_capacity(0, 0, 1, 1.0, 0).is_err());
+    assert!(sim.place_agent(0, 0, "{}").is_err());
+    assert!(sim.remove_agent(0, 0).is_err());
+    sim.follow(1.0);
+    assert_eq!((sim.followed(), sim.trail().len()), (-1.0, 0));
+}
+
+#[wasm_bindgen_test]
+fn a_ring_sim_draws_its_space_time_diagram_and_reports_its_ring() {
+    let mut sim = Sim::new(&preset_json("vi-8-ring-world"), 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.model_kind(), "ring");
+    assert_eq!((sim.width(), sim.height()), (150, 150));
+    assert_eq!((sim.ring_sugar().len(), sim.ring_agents().len()), (150, 40));
+    sim.render("", "").unwrap();
+    assert_eq!(sim.frame_len(), 150 * 150 * 4);
+    sim.step(200);
+    assert_eq!(sim.fingerprint(), "0x1c341361c466db90");
+    let site = sim.ring_agents()[0];
+    let view: serde_json::Value = serde_json::from_str(&sim.inspect(site, 7).unwrap()).unwrap();
+    assert_eq!(view["agent"]["id"], 1);
+    assert_eq!(sim.locate(1.0), Some(vec![site, 149]));
+    assert!(sim.inspect(150, 0).is_err());
+    // Capacity and growback apply live; the ring's size does not.
+    let mut config: serde_json::Value = serde_json::from_str(&sim.export_config()).unwrap();
+    config["growback"] = serde_json::json!(2.0);
+    sim.set_config(&config.to_string()).unwrap();
+    config["sites"] = serde_json::json!(200);
+    let err = sim
+        .set_config(&config.to_string())
+        .unwrap_err()
+        .as_string()
+        .unwrap();
+    assert!(err.contains(r#""field":"sites""#), "{err}");
+    assert!(Sim::new(&preset_json("ii-2-unit"), 1, JsValue::NULL)
+        .unwrap()
+        .ring_sugar()
+        .is_empty());
+    let names: Vec<String> =
+        serde_json::from_str(&config_series_names(r#"{"model":"ring"}"#).unwrap()).unwrap();
+    assert_eq!(names[0], "flocks");
 }

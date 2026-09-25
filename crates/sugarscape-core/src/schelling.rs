@@ -22,18 +22,41 @@ use crate::stats::{Series, Stats};
 
 /// A fraction range `[min, max]` (preferences).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
 pub struct FRange {
     pub min: f64,
     pub max: f64,
 }
 
+impl Default for FRange {
+    /// The default preference, VI-4's 25%.
+    fn default() -> Self {
+        FRange {
+            min: 0.25,
+            max: 0.25,
+        }
+    }
+}
+
 /// Note 11's "maximum lifetime", read as a maximum residence: each agent
 /// leaves after a whole number of ticks drawn from `[min, max]`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
 pub struct Residence {
     pub enabled: bool,
     pub min: u32,
     pub max: u32,
+}
+
+impl Default for Residence {
+    /// Off, with VI-5's 80–100 range ready if it is turned on.
+    fn default() -> Self {
+        Residence {
+            enabled: false,
+            min: 80,
+            max: 100,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1209,6 +1232,37 @@ mod tests {
         crate::schema::check_schema(&schema(), &config, || {
             crate::model::ModelWorld::new(config.clone(), 1).unwrap()
         });
+    }
+
+    #[test]
+    fn f_range_denies_unknown_fields_and_takes_defaults_when_partial() {
+        let partial: FRange = serde_json::from_str(r#"{"min": 0.1}"#).unwrap();
+        assert_eq!(
+            partial,
+            FRange {
+                min: 0.1,
+                max: 0.25
+            },
+            "max takes the default"
+        );
+        let err = serde_json::from_str::<FRange>(r#"{"min": 0.1, "mzx": 0.9}"#).unwrap_err();
+        assert!(err.to_string().contains("mzx"), "{err}");
+    }
+
+    #[test]
+    fn residence_denies_unknown_fields_and_takes_defaults_when_partial() {
+        let partial: Residence = serde_json::from_str(r#"{"enabled": true}"#).unwrap();
+        assert_eq!(
+            partial,
+            Residence {
+                enabled: true,
+                min: 80,
+                max: 100
+            },
+            "min and max take their defaults"
+        );
+        let err = serde_json::from_str::<Residence>(r#"{"enable": true}"#).unwrap_err();
+        assert!(err.to_string().contains("enable"), "{err}");
     }
 
     #[test]
