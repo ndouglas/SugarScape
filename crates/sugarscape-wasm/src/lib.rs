@@ -187,8 +187,9 @@ fn landscapes_from_js(value: &JsValue) -> Result<Vec<Option<Vec<f64>>>, JsValue>
 /// One world of any model (Decision 5): the sugarscape-only calls (maps,
 /// editing, trails, networks, the credit graph, the disease list and the
 /// wealth views) answer empty (or, for edits, a field error) for the other
-/// models, and `ring_sugar`/`ring_agents` answer empty for every model but
-/// Ring World.
+/// models, `ring_sugar`/`ring_agents` answer empty for every model but
+/// Ring World, and the `anasazi_*` overlays for every model but the
+/// anasazi.
 #[wasm_bindgen]
 pub struct Sim {
     world: ModelWorld,
@@ -244,7 +245,7 @@ impl Sim {
         })
     }
 
-    /// `"sugarscape"`, `"schelling"` or `"ring"`.
+    /// `"sugarscape"`, `"schelling"`, `"ring"` or `"anasazi"`.
     pub fn model_kind(&self) -> String {
         self.world.kind().as_str().to_string()
     }
@@ -255,6 +256,12 @@ impl Sim {
 
     pub fn tick(&self) -> f64 {
         self.model().tick() as f64
+    }
+
+    /// Whether the world has run its course (the anasazi's end year);
+    /// stepping it then does nothing.
+    pub fn finished(&self) -> bool {
+        self.model().finished()
     }
 
     /// The frame's width in cells (Ring World: its sites).
@@ -575,5 +582,22 @@ impl Sim {
     /// Ring World's agents' sites, in id order (empty for other models).
     pub fn ring_agents(&self) -> Vec<u32> {
         self.world.ring().map_or(Vec::new(), |r| r.agent_sites())
+    }
+
+    /// The anasazi's water sources now, `[x, y, …]` (empty for other models).
+    pub fn anasazi_water(&self) -> Vec<u32> {
+        self.world.anasazi().map_or(Vec::new(), |a| a.water_xy())
+    }
+
+    /// The anasazi's inhabited cells, `[x, y, households, …]`.
+    pub fn anasazi_settlements(&self) -> Vec<u32> {
+        self.world
+            .anasazi()
+            .map_or(Vec::new(), |a| a.settlements_xy())
+    }
+
+    /// The anasazi's farm–home links, `[farm x, farm y, home x, home y, …]`.
+    pub fn anasazi_links(&self) -> Vec<u32> {
+        self.world.anasazi().map_or(Vec::new(), |a| a.links_xy())
     }
 }

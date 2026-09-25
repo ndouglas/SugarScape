@@ -591,3 +591,68 @@ fn a_ring_sim_draws_its_space_time_diagram_and_reports_its_ring() {
         serde_json::from_str(&config_series_names(r#"{"model":"ring"}"#).unwrap()).unwrap();
     assert_eq!(names[0], "flocks");
 }
+
+#[wasm_bindgen_test]
+fn an_anasazi_sim_matches_the_native_golden_entry_and_finishes() {
+    let mut sim = Sim::new(&preset_json("lhv-published"), 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.model_kind(), "anasazi");
+    assert_eq!((sim.width(), sim.height(), sim.population()), (80, 120, 14));
+    for mode in ["occupation", "zones", "yield"] {
+        sim.render(mode, "resource:0").unwrap();
+    }
+    assert_eq!(sim.frame_len(), 80 * 120 * 4);
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the harvest
+    // noise's logarithm is the same bits here as natively.
+    assert_eq!(sim.fingerprint(), "0x3b357e6f0cc5f74a");
+    let latest: serde_json::Value = serde_json::from_str(&sim.stats_latest()).unwrap();
+    assert_eq!(
+        (latest["tick"].as_u64(), latest["year"].as_u64()),
+        (Some(200), Some(1000))
+    );
+    assert!(!sim.finished());
+    sim.step(1000);
+    assert!(sim.finished());
+    assert_eq!(sim.tick(), 550.0);
+    sim.step(1);
+    assert_eq!(sim.tick(), 550.0, "a finished world does not step");
+    assert!(sim
+        .export_series_csv()
+        .starts_with("tick,households,historical,fit,"));
+    assert!(sim
+        .export_agents_csv()
+        .starts_with("id,farm_x,farm_y,home_x,home_y,"));
+}
+
+#[wasm_bindgen_test]
+fn anasazi_overlays_and_inspection() {
+    let sim = Sim::new(&preset_json("lhv-published-defaults"), 2, JsValue::NULL).unwrap();
+    let n = sim.population() as usize;
+    let settlements = sim.anasazi_settlements();
+    assert_eq!(
+        settlements.chunks(3).map(|s| s[2] as usize).sum::<usize>(),
+        n
+    );
+    let links = sim.anasazi_links();
+    assert_eq!(links.len(), 4 * n);
+    assert!(!sim.anasazi_water().is_empty());
+    let (fx, fy) = (links[0], links[1]);
+    let view: serde_json::Value = serde_json::from_str(&sim.inspect(fx, fy).unwrap()).unwrap();
+    assert_eq!(view["site"]["farmed_by"], view["agent"]["id"]);
+    assert_eq!(view["agent"]["farm"], serde_json::json!([fx, fy]));
+    let schemas: serde_json::Value = serde_json::from_str(&model_schemas_json()).unwrap();
+    let quirk = schemas["anasazi"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["path"] == "quirks.occupancy_leak")
+        .unwrap();
+    assert_eq!(
+        (quirk["group"].as_str(), quirk["apply"].as_str()),
+        (Some("Replication quirks"), Some("reset"))
+    );
+    assert!(quirk["help"].as_str().unwrap().contains("(A-19)"));
+    let ring = Sim::new(&preset_json("vi-8-ring-world"), 1, JsValue::NULL).unwrap();
+    assert!(ring.anasazi_water().is_empty() && ring.anasazi_links().is_empty());
+    assert!(!ring.finished());
+}
