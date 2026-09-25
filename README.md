@@ -48,6 +48,9 @@ also the new `gini_total` statistic (equal to `gini` with one good; the sugar-on
 as outlines. Neighbor lists, friends and lineage are views only: they never change a run and are not
 exported or shared.
 
+Chapter VI's other artificial societies — the book's Schelling segregation variant and Ring World —
+run as their own model kinds beside the sugarscape (see [Other artificial societies](#other-artificial-societies)).
+
 N goods (the book's own software, Chapter IV footnote 7): 1–8 goods and 1–4 pollutants.
 Welfare is the n-dimensional Cobb–Douglas, trade bargains over the pair of goods two
 neighbors value most differently, credit lends every good (footnote 55), and pollution
@@ -132,6 +135,53 @@ Model extensions:
   (the book does not define it for two goods). The statistics CSV gains a `gini_total` column after
   `trade_pairs`.
 
+## Other artificial societies
+
+The presets menu groups its presets by model: **Sugarscape**, **Schelling** and **Ring World**.
+Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
+(Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
+model. A config without a `model` key is a sugarscape config, so every older config, link, session
+file and sweep reads as before. The other models' Rules panels are built from their parameter
+schemas (each section says whether its fields rebuild the world or apply as it runs, and live
+changes replay from links); they have no editing tools, overlays, trails or Credit tab. Compare
+pairs two worlds of one model: choosing another model's preset while comparing leaves Compare
+keeping A. See `docs/superpowers/specs/2026-09-25-other-artificial-societies-design.md`.
+
+### Schelling segregation (animations VI-4 to VI-7)
+
+The book's variant of Schelling's model: 2 000 Red and Blue agents on a 50 × 50 torus, each
+wanting at least a share of its von Neumann neighbors to be its own color (an agent with no
+neighbors is satisfied). Agents act in random order; an unsatisfied one moves to a site chosen at
+random among every empty site where it would be satisfied (its own site not counted as a
+neighbor), or stays. With a maximum residence an agent leaves when it reaches it, and a newcomer of
+random color takes a random site where it is satisfied. Segregation is the mean share of like
+neighbors (over agents with neighbors).
+
+- `vi-4-schelling-25`: 25 %. Nobody moves after 2–3 ticks; segregation rises from about 0.50 to 0.63.
+- `vi-5-schelling-25-residence`: 25 %, residence 80–100 ticks. It never settles; segregation
+  climbs to about 0.76, above VI-4's (the book calls the two comparable).
+- `vi-6-schelling-50-residence`: 50 %: about 0.95.
+- `vi-7-schelling-mixed`: preferences 25–50 %: about 0.93, close to VI-6.
+
+Agents are drawn by **Colour**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
+the charts are Segregation, Unsatisfied, Moves and Red share; Inspect shows an agent's color,
+preference, alike neighbors and residence. The built-in sweep `schelling-tipping` asks the book's
+"how little racism is enough to tip a society": with every agent wanting the same share, from 0 to
+60 %, segregation rises in steps (about 0.50, 0.63, 0.73, 0.83 and 0.93), because with four
+neighbors only the shares 1/4, 1/3, 1/2 and 2/3 can matter.
+
+### Ring World (animations VI-8 and VI-9)
+
+40 sugar harvesters with vision 15–30 on a ring of 150 sites (sugar 0–4, growing back 1 a tick)
+look only counterclockwise, move to the nearest richest empty site they see and eat it. Started
+scattered (`vi-8-ring-world`) they fall from 20–25 flocks of about 2 into 7–8 flocks of 5–6 that
+tread around the ring; started as one group of 40 (`vi-9-ring-megagroup`) they break up into as
+many. A flock is a run of agents at most one empty site apart (the book does not define one). The
+page draws the ring — sugar shaded, agents as blue dots, site 0 at the top — above a space–time
+diagram of the last 150 ticks (the current tick at the bottom), which the simulation keeps, so every
+tick shows even at Max. Capacity and growback apply to the running world. Charts: Flocks, Flock
+size (mean and largest) and Distance moved; recordings show the ring beside the diagram.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's
@@ -143,12 +193,14 @@ range and the number of runs.
 
 - **Built-in sweeps** (`sweeps/`): `fig-ii-5` (carrying capacity vs vision, one line per
   metabolism), `fig-iv-6` (with and without trade), `fig-iv-10-11` (price dispersion over
-  time for short and long lifetimes), `n-goods-carrying-capacity` and `bargaining-rules`
-  (carrying capacity vs vision under the two price rules). Each file's description records
-  its measured settings; in the browser only seeds and ticks can be changed.
+  time for short and long lifetimes), `n-goods-carrying-capacity`, `bargaining-rules`
+  (carrying capacity vs vision under the two price rules) and `schelling-tipping` (segregation vs
+  a fixed Schelling preference). Each file's description records its measured settings; in the
+  browser only seeds and ticks can be changed.
 - **From current world**: a config path (the input suggests every number and on/off setting),
   values as `1, 2, 3`, `true, false` or `from:to:step`, an optional second axis, seeds, ticks
-  and the metric.
+  and the metric. The path suggestions, statistics and starting axis follow the current world's
+  model.
 - **Open file…**: a sweep, or a result from the CLI or an earlier export, which is shown
   without running.
 
@@ -204,7 +256,8 @@ asks which world to keep.
 **● Record** records the grid as drawn (overlays, trails, selection) as WebM video or an
 animated GIF, optionally stamped with the tick. Cells are 8 px (smaller for grids over 135
 cells, keeping the frame within 1080 px, with even width and height); in Compare both grids are
-recorded side by side. Recording pauses while the world is paused. GIFs are sampled at about 15
+recorded side by side. Ring World records its ring beside its space–time diagram. Recording pauses
+while the world is paused. GIFs are sampled at about 15
 frames a second, encoded off the page in a worker, and stop — with a notice — at 900 frames or
 if encoding fails. Files are named after the setup and the ticks they cover, e.g.
 `sugarscape-ii-2-unit-seed7-t0-t800.webm`.
@@ -218,10 +271,11 @@ if encoding fails. Files are named after the setup and the ticks they cover, e.g
     sugarscape sweeps                                   # built-in sweeps
     sugarscape run --preset ii-5-wealth --seed 7 --ticks 1000 --series-csv series.csv
     sugarscape run --config my-config.json --agents-csv agents.csv --fingerprint
+    sugarscape run --preset vi-8-ring-world --ticks 500 --series-csv ring.csv       # any model
     sugarscape sweep --builtin fig-ii-5 --out fig-ii-5.json --summary-csv fig-ii-5.csv
     sugarscape sweep my-sweep.json --jobs 4 --seeds 3 --ticks 300 --runs-csv runs.csv
 
-`run` defaults to seed 1 and 1000 ticks; `--config-out` writes the config it ran and
+`run` runs a preset or config of any model; it defaults to seed 1 and 1000 ticks; `--config-out` writes the config it ran and
 `--fingerprint` prints the final world's fingerprint. `sweep` uses every core unless `--jobs`
 says otherwise, prints the result JSON unless `--out` is given, and reports progress on
 stderr unless `--quiet`. Exit codes: 0 success, 1 I/O error, 2 usage or validation error

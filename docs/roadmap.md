@@ -58,22 +58,20 @@ color mode, the age and cultural-tag histograms, per-good wealth histograms and 
 curve and Gini (`gini_total`), so `vi-1-everything` offers all eighteen of the book's views. Runs are
 unchanged. See `docs/superpowers/specs/2026-09-24-chapter-vi-design.md`.
 
-## Next: Other artificial societies
+## Milestone 9: Other artificial societies (done)
 
-Chapter VI's other model kinds, each its own world type beside the sugarscape:
-
-- **Schelling segregation variant** (animations VI-4 to VI-7): a 50 × 50 torus, 2 000 Red/Blue
-  agents, von Neumann neighbors, preferences 25 % / 50 % / uniform 25–50 %, random acceptable
-  relocation, residence 80–100 with random-color replacement.
-- **Ring World** (VI-8, VI-9): a 150-site ring, capacity 4 growing back at 1, initial sugar uniform
-  0–4, 40 agents, vision 15–30 looking counterclockwise, moving to the nearest maximum-sugar
-  unoccupied site, in random order, and a megagroup start.
+Chapter VI's Schelling segregation variant (VI-4 to VI-7, with random acceptable relocation and a
+maximum residence) and Ring World (VI-8, VI-9, with its ring view and space–time diagram) as model
+kinds beside the sugarscape, on a model-tagged config and a `Model` trait that later models can
+reuse: every speed, links, Compare, recording, Experiments (with the measured `schelling-tipping`
+sweep) and the CLI. Sugarscape runs, configs and links are unchanged. See
+`docs/superpowers/specs/2026-09-25-other-artificial-societies-design.md`.
 
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
 - **Headless CLI**: done (Milestone 5).
-- **Chapter VI "artificial history" presets**: done (Milestone 8); the flocking / group-formation aside (Animation VI-8) moves to *Other artificial societies*.
+- **Chapter VI "artificial history" presets**: done (Milestone 8); the flocking / group-formation aside (Animation VI-8) is Ring World (Milestone 9).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions
