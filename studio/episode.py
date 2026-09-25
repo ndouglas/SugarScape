@@ -13,8 +13,9 @@ FPS = 30
 @dataclass(frozen=True)
 class Beat:
     """One beat: its caption, length, shot, pacing, camera moves (`camera.Move`s),
-    whether its Flumps are close-up rigs, overlay names, and `focus` — indexes
-    into the dump's `placed` that overlays follow."""
+    whether its Flumps are close-up rigs, overlay names, `focus` — indexes
+    into the dump's `placed` that overlays follow — and the caption's height
+    (−1 bottom, 1 top of the frame)."""
 
     name: str
     caption: str
@@ -27,6 +28,7 @@ class Beat:
     closeup: bool = False
     overlays: tuple = ()
     focus: tuple = ()
+    caption_y: float = -0.8
 
     @property
     def frames(self):

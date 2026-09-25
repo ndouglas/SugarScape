@@ -1,12 +1,14 @@
 """Builds one beat's scene and drives it with a single frame-change handler."""
 
+from types import SimpleNamespace
+
 import bpy
 from mathutils import Vector
 
 import animate
 import camera as cam
 import dump as dump_mod
-from blender import board, flump, materials
+from blender import board, flump, materials, overlays
 
 UPDATERS = []
 # The close-up rigs by agent id, for overlays.
@@ -32,7 +34,9 @@ def reset(scene, preview):
 
 def add_camera(scene, beat):
     data = bpy.data.cameras.new("camera")
-    data.dof.use_dof = True
+    # Toy-like depth of field in close-ups; wide shots stay sharp, and so do
+    # their screen-space displays.
+    data.dof.use_dof = beat.closeup
     data.dof.aperture_fstop = 4.0
     obj = bpy.data.objects.new("camera", data)
     scene.collection.objects.link(obj)
@@ -98,7 +102,12 @@ def build_beat(beat, d, preview):
     else:
         materials.lights_and_world(scene, 12)
     camera_obj, update_camera = add_camera(scene, beat)
-    updaters.append(update_camera)
+    screen = overlays.Screen(camera_obj)
+    # The camera and its screen anchors move first; overlays read them.
+    updaters[:0] = [update_camera, screen.update]
+    ctx = SimpleNamespace(camera=camera_obj, screen=screen, timing=timing, tracks=tracks, corners=corners, rigs=RIGS)
+    for name in beat.overlays:
+        updaters.append(overlays.BUILDERS[name](beat, d, ctx))
     return updaters
 
 
