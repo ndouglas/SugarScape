@@ -306,7 +306,7 @@ describe('Engine', () => {
     await engine.advance(3);
     expect(await engine.seriesCsv()).toBe('tick,population\n3,1\n');
     expect(await engine.agentsCsv()).toBe('id\n1\n');
-    expect(await engine.fingerprint()).toBe('0x3');
+    expect(await engine.fingerprint()).toBe('0x3|1@0,1|10');
   });
 
   it('carries what providers want, and refreshes while paused only for them', async () => {

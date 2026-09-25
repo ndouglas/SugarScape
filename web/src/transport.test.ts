@@ -24,7 +24,7 @@ describe('InlineTransport', () => {
     expect(ra.id).toBeLessThan(rb.id);
     expect(order).toEqual([ra.id, rb.id]);
     expect(ra.result.ok).toBe(true);
-    expect(rb.result).toEqual({ ok: true, value: '0x0' });
+    expect(rb.result).toEqual({ ok: true, value: '0x0|1@1,1|10' });
   });
 
   it('reports a fatal reply once and answers later requests as fatal', async () => {

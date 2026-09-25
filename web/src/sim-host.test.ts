@@ -12,7 +12,7 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { AGE_BIN, BATCH_MS, channelDefer, LOG_CAP, MAX_TICKS, serve, SimHost } from './sim-host';
+import { AGE_BIN, BATCH_MS, channelDefer, KEYFRAME_EVERY, LOG_CAP, MAX_KEYFRAMES, MAX_TICKS, serve, SimHost } from './sim-host';
 import type { Config, ModelConfig } from './types';
 
 const config = { width: 4, height: 3 } as unknown as Config;
@@ -236,7 +236,7 @@ describe('SimHost', () => {
     t.send({ type: 'step', n: 26 });
     expect(t.send({ type: 'seriesCsv' }).result).toEqual({ ok: true, value: 'tick,population\n26,1\n' });
     expect(t.send({ type: 'agentsCsv' }).result).toEqual({ ok: true, value: 'id\n1\n' });
-    expect(t.send({ type: 'fingerprint' }).result).toEqual({ ok: true, value: '0x1a' });
+    expect(t.send({ type: 'fingerprint' }).result).toEqual({ ok: true, value: '0x1a|1@3,1|10' });
   });
 });
 
@@ -530,7 +530,7 @@ describe('serve', () => {
     expect(sent.map(([m]) => m.id)).toEqual([1, 2]);
     expect(sent[0][1]).toHaveLength(1);
     expect(sent[0][1][0]).toBe(frame);
-    expect((sent[1][0] as HostReply).result).toEqual({ ok: true, value: '0x0' });
+    expect((sent[1][0] as HostReply).result).toEqual({ ok: true, value: '0x0|1@1,1|10' });
   });
 });
 
@@ -683,6 +683,46 @@ describe('SimHost edit log and replay', () => {
     const panic: LogEntry[] = [{ tick: 0, cmd: { ...paint, value: -1 } as EditCommand }];
     const r = t.send({ type: 'reset', config, seed: 1, landscapes: [], log: panic });
     expect(r.result).toEqual({ ok: false, fatal: 'The simulation stopped: unreachable executed' });
+  });
+});
+
+describe('SimHost keyframes', () => {
+  const init = (host: SimHost) =>
+    host.handle({ id: 1, cmd: { type: 'init', config: { width: 4, height: 3 } as never, seed: 1, landscapes: [], display: { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() } } });
+
+  it('keeps one at t = 0 and one every KEYFRAME_EVERY ticks', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: 175 } });
+    expect(host.keyframeTicks()).toEqual([0, 50, 100, 150]);
+  });
+
+  it('thins to every other one and doubles the interval past MAX_KEYFRAMES', () => {
+    const host = new SimHost(fakeModule());
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: KEYFRAME_EVERY * MAX_KEYFRAMES } });
+    const ticks = host.keyframeTicks();
+    expect(ticks.length).toBeLessThanOrEqual(MAX_KEYFRAMES);
+    expect(ticks.every((t) => t % (2 * KEYFRAME_EVERY) === 0)).toBe(true);
+    expect(ticks.at(-1)).toBe(KEYFRAME_EVERY * MAX_KEYFRAMES);
+  });
+
+  it('frees thinned keyframes, and all of them on reset', () => {
+    const log: string[] = [];
+    const host = new SimHost(fakeModule(log));
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: KEYFRAME_EVERY * MAX_KEYFRAMES } });
+    const freed = log.filter((l) => l === 'free checkpoint').length;
+    expect(freed).toBeGreaterThan(0);
+    host.handle({ id: 3, cmd: { type: 'reset', config: { width: 4, height: 3 } as never, seed: 2, landscapes: [] } });
+    expect(host.keyframeTicks()).toEqual([0]);
+  });
+
+  it('keeps none for a model without keyframes', () => {
+    const host = new SimHost(fakeModule([], { keyframes: false }));
+    init(host);
+    host.handle({ id: 2, cmd: { type: 'step', n: 120 } });
+    expect(host.keyframeTicks()).toEqual([]);
   });
 });
 

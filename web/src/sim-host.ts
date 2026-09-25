@@ -21,6 +21,11 @@ import {
 } from './protocol';
 import { parseErrors, type AnyInspection, type DiseaseEntry, type ModelConfig, type ModelStats } from './types';
 
+/** A keyframe the host holds (the WASM `Checkpoint`); freed when dropped. */
+export interface CheckpointLike {
+  free(): void;
+}
+
 /** The part of the WASM `Sim` a host uses. The real class satisfies it; tests pass `FakeSim`. */
 export interface SimLike {
   step(n: number): void;
@@ -68,6 +73,12 @@ export interface SimLike {
   /** Whether the world has run its course (the anasazi's end year): stepping it does nothing. */
   finished(): boolean;
   fingerprint(): string;
+  /** A keyframe of the world now, or undefined for a model without them. */
+  checkpoint(): CheckpointLike | undefined;
+  /** Returns the world to a keyframe taken from it (throws a field error if it cannot). */
+  restore(cp: CheckpointLike): void;
+  /** The latest value of series `name` (or `'tick'`), or undefined. */
+  latest_value(name: string): number | undefined;
   free(): void;
 }
 
@@ -93,6 +104,11 @@ export const AGE_BIN = 5;
 
 /** The edit log holds at most this many entries; past it, edits still apply but are not recorded (Decision 1). */
 export const LOG_CAP = 50_000;
+
+/** The host keeps a keyframe every this many ticks at first… */
+export const KEYFRAME_EVERY = 50;
+/** …and at most this many: past it, every other one goes and the interval doubles. */
+export const MAX_KEYFRAMES = 32;
 
 /**
  * The page's worlds stop at this tick, whatever the model: their statistics history (one entry per
@@ -147,6 +163,12 @@ export class SimHost {
   private replaySent = -1;
   /** The next snapshot says a page edit dropped the pending entries (Decision 3). */
   private forkDue = false;
+  /** Keyframes of this world, oldest first: the tick, how many log entries were applied then, the copy. */
+  private keyframes: { tick: number; applied: number; cp: CheckpointLike }[] = [];
+  /** Keyframes are taken every this many ticks (doubling as they thin out). */
+  private every = KEYFRAME_EVERY;
+  /** The world gave no keyframe (a model without them): stop asking. */
+  private noKeyframes = false;
 
   constructor(
     private module: SimModule,
@@ -183,6 +205,37 @@ export class SimHost {
     this.max = null;
     this.dead = `The simulation stopped: ${e instanceof Error ? e.message : String(e)}`;
     return this.dead;
+  }
+
+  /** The keyframes' ticks (tests). */
+  keyframeTicks(): number[] {
+    return this.keyframes.map((k) => k.tick);
+  }
+
+  private dropKeyframes(keep: (tick: number) => boolean): void {
+    const kept = [];
+    for (const k of this.keyframes) {
+      if (keep(k.tick)) kept.push(k);
+      else k.cp.free();
+    }
+    this.keyframes = kept;
+  }
+
+  /** Takes a keyframe if one is due at the world's tick (and none is held there yet). */
+  private keyframe(sim: SimLike): void {
+    const tick = sim.tick();
+    if (this.noKeyframes || tick % this.every !== 0 || this.keyframes.some((k) => k.tick === tick)) return;
+    const cp = sim.checkpoint();
+    if (!cp) {
+      this.noKeyframes = true;
+      return;
+    }
+    this.keyframes.push({ tick, applied: this.log.length, cp });
+    this.keyframes.sort((a, b) => a.tick - b.tick);
+    if (this.keyframes.length > MAX_KEYFRAMES) {
+      this.every *= 2;
+      this.dropKeyframes((t) => t % this.every === 0);
+    }
   }
 
   /**
@@ -239,6 +292,10 @@ export class SimHost {
       this.replaySent = -1;
       this.forkDue = false;
       this.replayDue(next);
+      this.dropKeyframes(() => false);
+      this.every = KEYFRAME_EVERY;
+      this.noKeyframes = false;
+      this.keyframe(next);
       // The engine clears its selection on a new world.
       return this.reply(next, { ...wants, select: undefined }, frame);
     }
@@ -400,12 +457,15 @@ export class SimHost {
   private advance(sim: SimLike, n: number): void {
     let left = Math.min(n, MAX_TICKS - sim.tick());
     while (left > 0) {
+      const tick = sim.tick();
       const next = this.pending[this.cursor]?.tick;
-      const k = next === undefined ? left : Math.min(left, Math.max(1, next - sim.tick()));
-      const from = sim.tick();
+      let k = next === undefined ? left : Math.min(left, Math.max(1, next - tick));
+      // Stop at the next keyframe tick too (`step(k)` is the same world as k single steps).
+      if (!this.noKeyframes) k = Math.min(k, this.every - (tick % this.every));
       sim.step(k);
-      this.fired(from, sim.tick());
+      this.fired(tick, sim.tick());
       this.replayDue(sim);
+      this.keyframe(sim);
       left -= k;
     }
   }
