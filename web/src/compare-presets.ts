@@ -1,4 +1,5 @@
 import type { InitialState } from './engine';
+import { presetModel } from './models';
 import type { Preset } from './types';
 
 /** A presets-menu entry that opens Compare with two presets side by side at one seed. */
@@ -16,7 +17,8 @@ export const COMPARE_PRESETS: ComparePreset[] = [
 ];
 
 /**
- * A's seed and B's setup: the entry's two presets at `seed`, or null if either preset is missing.
+ * A's seed and B's setup: the entry's two presets at `seed`, or null if either preset is missing or
+ * they are of different models (Compare pairs one model).
  * A is loaded by id (`Engine.loadPreset`), which needs no copied config, so only B's (for
  * `buildCompare`) is returned.
  */
@@ -27,6 +29,6 @@ export function comparePresetStates(
 ): { aSeed: number; b: InitialState } | null {
   const a = presets.find((p) => p.id === entry.a);
   const b = presets.find((p) => p.id === entry.b);
-  if (!a || !b) return null;
+  if (!a || !b || presetModel(a) !== presetModel(b)) return null;
   return { aSeed: seed, b: { config: structuredClone(b.config), seed } };
 }

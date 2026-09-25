@@ -2,6 +2,7 @@ import { COMPARE_PRESETS } from '../compare-presets';
 import type { Engine } from '../engine';
 import { goodsEditorSignature, pollutionEditorSignature } from '../goods';
 import { groupsEditorSignature } from '../groups';
+import { presetGroups, presetModel } from '../models';
 import { errorsFor, getPath, setPath } from '../paths';
 import { GROUPS, type Control, type Group } from '../schema';
 import { scheduleLines } from '../schedule';
@@ -10,6 +11,7 @@ import { h } from './dom';
 import { goodsEditor, type Commit, type Editor } from './goods-editor';
 import { groupsEditor } from './groups-editor';
 import { pollutionEditor } from './pollution-editor';
+import { SchemaPanel } from './schema-panel';
 
 type CustomEditor = NonNullable<Group['custom']>;
 
@@ -19,22 +21,43 @@ const EDITORS: Record<CustomEditor, { build: (c: Config, commit: Commit) => Edit
   groups: { build: groupsEditor, signature: groupsEditorSignature, errors: 'culture.groups' },
 };
 
-/** Preset picker plus one section per rule, generated from GROUPS. */
+export interface RulesOptions {
+  /** A's panel: the presets menu's Compare entries work, getting the entry's id. */
+  onCompare?: (id: string) => void;
+  /**
+   * A's panel: runs before another model's preset loads; resolving false cancels it (Compare pairs
+   * one model, so it is left first — Decision 11).
+   */
+  beforeModelChange?: () => Promise<boolean>;
+  /** B's panel in Compare: the menu offers only its world's model's presets. */
+  sameModelOnly?: boolean;
+}
+
+/**
+ * The preset picker (grouped by model), then the sugarscape's sections (one per rule, from GROUPS)
+ * or, for another model, its schema-driven panel.
+ */
 export class RulesPanel {
   readonly el = h('div', { class: 'rules' });
   private errors: FieldError[] = [];
+  /** The preset picker's syncer (every model). */
+  private presetSync: () => void = () => {};
+  /** The sugarscape sections' syncers. */
   private syncers: (() => void)[] = [];
   /** The Goods editor's and Pollution table's syncers, which painting cannot affect. */
   private editorSyncers: (() => void)[] = [];
   private errorSlots: { path: string; el: HTMLElement; withField: boolean }[] = [];
   private general = h('div', { class: 'error' });
+  private readonly sugarBody: HTMLElement;
+  private readonly schema: SchemaPanel;
 
-  /** `onCompare` (A's panel only) makes the Compare entries of the presets menu work: it gets the entry's id. */
   constructor(
     private engine: Engine,
-    private onCompare?: (id: string) => void,
+    private opts: RulesOptions = {},
   ) {
-    this.el.append(this.presetSection(), this.scheduleSection(), this.general, ...GROUPS.map((g) => this.groupSection(g)));
+    this.sugarBody = h('div', {}, this.scheduleSection(), this.general, ...GROUPS.map((g) => this.groupSection(g)));
+    this.schema = new SchemaPanel(engine);
+    this.el.append(this.presetSection(), this.sugarBody, this.schema.el);
     engine.on('reset', () => this.sync());
     engine.on('config', () => this.sync());
     // Painting changes the landscape, which counts as a modification.
@@ -57,6 +80,14 @@ export class RulesPanel {
   }
 
   private sync(editors = true): void {
+    this.presetSync();
+    const sugar = this.engine.model === 'sugarscape';
+    this.sugarBody.hidden = !sugar;
+    this.schema.el.hidden = sugar;
+    if (!sugar) {
+      this.schema.sync();
+      return;
+    }
     this.syncers.forEach((s) => s());
     if (editors) this.editorSyncers.forEach((s) => s());
   }
@@ -87,7 +118,13 @@ export class RulesPanel {
           if (compare) {
             // Not a rule system of this world: the menu goes back to showing the current one.
             this.sync();
-            this.onCompare?.(compare.id);
+            this.opts.onCompare?.(compare.id);
+            return;
+          }
+          const preset = this.engine.presets.find((p) => p.id === select.value);
+          const leaving = preset !== undefined && presetModel(preset) !== this.engine.model;
+          if (leaving && this.opts.beforeModelChange && !(await this.opts.beforeModelChange())) {
+            this.sync();
             return;
           }
           this.errors = (await this.engine.loadPreset(select.value)) ?? [];
@@ -96,19 +133,21 @@ export class RulesPanel {
         },
       },
       h('option', { value: '', disabled: true }, 'Custom'),
-      ...this.engine.presets.map((p) => h('option', { value: p.id }, `${p.name} — ${p.source}`)),
-      this.onCompare
+      ...presetGroups(this.engine.presets)
+        .filter((g) => !this.opts.sameModelOnly || g.model === this.engine.model)
+        .map((g) => h('optgroup', { label: g.label }, ...g.presets.map((p) => h('option', { value: p.id }, `${p.name} — ${p.source}`)))),
+      this.opts.onCompare
         ? h('optgroup', { label: 'Compare' }, ...COMPARE_PRESETS.map((c) => h('option', { value: `compare:${c.id}` }, c.label)))
         : null,
     );
     const badge = h('span', { class: 'badge' }, 'modified');
     const desc = h('p', { class: 'hint' });
-    this.syncers.push(() => {
+    this.presetSync = () => {
       const p = this.engine.presets.find((x) => x.id === this.engine.presetId);
       select.value = p?.id ?? '';
       badge.hidden = !this.engine.isModified();
       desc.textContent = p ? p.description : 'Custom configuration.';
-    });
+    };
     return h('section', { class: 'presets' }, h('label', {}, 'Rule system ', badge), select, desc);
   }
 

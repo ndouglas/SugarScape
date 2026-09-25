@@ -28,7 +28,9 @@ describe('compare presets', () => {
     expect((presets[1].config as Config).trade.enabled).toBe(true);
   });
 
-  it('is null when a preset is missing', () => {
+  it('is null when a preset is missing or the two are of different models', () => {
     expect(comparePresetStates([preset('vi-2-no-trade', false)], entry, 1)).toBeNull();
+    const ring: Preset = { ...preset('vi-3-trade', true), config: { model: 'ring' } as unknown as Config };
+    expect(comparePresetStates([preset('vi-2-no-trade', false), ring], entry, 1)).toBeNull();
   });
 });

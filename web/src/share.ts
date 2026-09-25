@@ -1,4 +1,5 @@
 import { classifyFile } from './experiments/file';
+import { modelOf } from './models';
 import type { Sweep } from './experiments/types';
 import type { EditCommand, LogEntry, PlaceOverrides } from './protocol';
 import type { ModelConfig } from './types';
@@ -191,11 +192,16 @@ export async function encodeCompare(state: CompareState): Promise<string> {
   return packJson({ v: 3, a: toWire(state.a), b: toWire(state.b) });
 }
 
+/** Both worlds of a comparison run one model (Decision 11). */
+function samePair(a: ShareState, b: ShareState): CompareState {
+  return modelOf(a.config) === modelOf(b.config) ? { a, b } : bad();
+}
+
 export async function decodeCompare(token: string): Promise<CompareState> {
   try {
     const json = await unpackJson(token);
     if (!isObject(json) || json.v !== 3) bad();
-    return { a: fromWire(json.a), b: fromWire(json.b) };
+    return samePair(fromWire(json.a), fromWire(json.b));
   } catch {
     throw new Error('not a SugarScape compare link');
   }
@@ -215,7 +221,7 @@ export function parseSessionFile(text: string): SessionFile {
   try {
     const json = JSON.parse(text) as unknown;
     if (isObject(json) && json.sugarscape === 'session') return { kind: 'session', state: fromWire(json) };
-    if (isObject(json) && json.sugarscape === 'compare') return { kind: 'compare', state: { a: fromWire(json.a), b: fromWire(json.b) } };
+    if (isObject(json) && json.sugarscape === 'compare') return { kind: 'compare', state: samePair(fromWire(json.a), fromWire(json.b)) };
   } catch {
     // Falls through to the error below.
   }

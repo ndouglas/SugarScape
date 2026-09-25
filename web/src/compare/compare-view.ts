@@ -107,7 +107,7 @@ export class CompareView {
       p.display.setCompare(b);
       // Each world has its own Rules, Inspect and Credit panels; tools act on the grid clicked (Decision 10).
       this.offs.push(p.tools.attach({ engine: b, grid: this.gridB }));
-      p.rules.setB(new RulesPanel(b));
+      p.rules.setB(new RulesPanel(b, { sameModelOnly: true }));
       p.inspect.setB(new InspectPanel(b));
       p.credit.setB(
         new CreditPanel(b, () => {

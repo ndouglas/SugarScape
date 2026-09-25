@@ -240,4 +240,11 @@ describe('models in links', () => {
     const file = parseSessionFile(sessionFileText({ kind: 'session', state: { config: schelling, seed: 4 } }));
     expect(file.kind === 'session' && modelOf(file.state.config)).toBe('schelling');
   });
+
+  it('refuses a comparison of two models (a link or a file)', async () => {
+    const schelling = { model: 'schelling' } as SchellingConfig;
+    const mixed = { a: { config, seed: 1 }, b: { config: schelling, seed: 1 } };
+    await expect(decodeCompare(await encodeCompare(mixed))).rejects.toThrow('not a SugarScape compare link');
+    expect(() => parseSessionFile(sessionFileText({ kind: 'compare', state: mixed }))).toThrow('not a SugarScape session file');
+  });
 });

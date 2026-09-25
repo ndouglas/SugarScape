@@ -122,7 +122,7 @@ async function main(): Promise<void> {
   const tabs = new Tabs(document.querySelector('#tabs')!, document.querySelector('#panel-body')!);
   // Each tab holds A's panel, and B's beside it in Compare (Decision 10).
   const rules = new WorldSlot(
-    new RulesPanel(engine, (id) => void openComparePreset(id)),
+    new RulesPanel(engine, { onCompare: (id) => void openComparePreset(id), beforeModelChange: leaveCompareForModel }),
     'switch',
     'Rules for',
   );
@@ -409,6 +409,19 @@ async function main(): Promise<void> {
       hold(false);
       syncCompareButton();
     }
+  }
+  /**
+   * Before A loads another model's preset: Compare pairs one model, so it is left keeping A first
+   * (Decision 11). Resolves whether the preset may load.
+   */
+  async function leaveCompareForModel(): Promise<boolean> {
+    if (!compare) return true;
+    if (busy) {
+      showNotice('Compare is starting or ending; try again in a moment');
+      return false;
+    }
+    await leaveCompare('A');
+    return compare === null;
   }
   async function toggleCompare(): Promise<void> {
     if (busy) return;
