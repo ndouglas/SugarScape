@@ -652,7 +652,24 @@ fn anasazi_overlays_and_inspection() {
         (Some("Replication quirks"), Some("reset"))
     );
     assert!(quirk["help"].as_str().unwrap().contains("(A-19)"));
-    let ring = Sim::new(&preset_json("vi-8-ring-world"), 1, JsValue::NULL).unwrap();
-    assert!(ring.anasazi_water().is_empty() && ring.anasazi_links().is_empty());
-    assert!(!ring.finished());
+    for other in ["vi-8-ring-world", "ii-2-unit", "vi-4-schelling-25"] {
+        let sim = Sim::new(&preset_json(other), 1, JsValue::NULL).unwrap();
+        assert!(sim.anasazi_water().is_empty(), "{other}");
+        assert!(sim.anasazi_settlements().is_empty(), "{other}");
+        assert!(sim.anasazi_links().is_empty(), "{other}");
+        assert!(!sim.finished(), "{other}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn the_other_anasazi_presets_match_their_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN (200 ticks from seed 1).
+    for (id, golden) in [
+        ("lhv-published-defaults", "0x7cdec8b85b1f909a"),
+        ("lhv-documented", "0x033ffb6476e824b0"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), golden, "{id}");
+    }
 }

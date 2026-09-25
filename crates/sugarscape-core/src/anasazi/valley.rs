@@ -306,12 +306,16 @@ impl Valley {
             years * ENV_RECORD,
         )?;
         let hydro = env
-            .chunks_exact(ENV_RECORD)
+            .as_chunks::<ENV_RECORD>()
+            .0
+            .iter()
             .map(|r| [r[1], r[4], r[7], r[10], r[13]])
             .collect();
         let points = tokens("water.txt", water, WATER_RECORD, 108 * WATER_RECORD)?;
         let water = points
-            .chunks_exact(WATER_RECORD)
+            .as_chunks::<WATER_RECORD>()
+            .0
+            .iter()
             .filter_map(|r| {
                 // id, metres north, metres east, type, start, end
                 water_cell(r[1], r[2]).map(|(x, y)| WaterPoint {
@@ -332,7 +336,9 @@ impl Valley {
         let historical = (FIRST_YEAR..=LAST_YEAR)
             .map(|year| {
                 sites
-                    .chunks_exact(SITE_RECORD)
+                    .as_chunks::<SITE_RECORD>()
+                    .0
+                    .iter()
                     // Field 6 is the type: only habitations (1) count.
                     .filter(|r| r[6] == 1.0)
                     .map(|r| {

@@ -145,6 +145,11 @@ impl Default for AnasaziConfig {
     }
 }
 
+/// The most initial corn a household may start with (kg): far above any
+/// store the model reaches, and small enough that a draw, or a fresh
+/// endowment's `fcs / (1 − fcs)` times one, stays finite.
+const MAX_CORN: f64 = 1_000_000.0;
+
 impl AnasaziConfig {
     /// The ODD's defaults (Table 2; the "Dean et al. 2000" set, §2.1).
     pub fn table_2(quirks: Quirks) -> Self {
@@ -220,9 +225,9 @@ impl AnasaziConfig {
         );
         let corn = self.initial_corn;
         check(
-            corn.min.is_finite() && corn.max.is_finite() && 0.0 <= corn.min && corn.min <= corn.max,
+            0.0 <= corn.min && corn.min <= corn.max && corn.max <= MAX_CORN,
             "initial_corn",
-            "must be a range of kilograms with 0 ≤ min ≤ max".into(),
+            "must be a range of kilograms with 0 ≤ min ≤ max ≤ 1 000 000".into(),
         );
         check(
             self.need.is_finite() && self.need > 0.0,
@@ -374,6 +379,9 @@ pub fn schema() -> Vec<Param> {
             "Harvest s.d. (each year)",
             (0.0, 1.0, 0.01),
             Live,
+        )
+        .with_help(
+            "With “One harvest s.d.” on, this also set soil quality, drawn once at the start: a later change moves only the yearly harvests.",
         ),
         Param::integer(
             "Valley",
@@ -454,7 +462,7 @@ const QUIRKS: [(&str, &str, &str); 10] = [
     (
         "quirks.single_harvest_variance",
         "One harvest s.d.",
-        "The yearly harvest s.d. also sets soil quality; the soil quality s.d. is ignored (A-1).",
+        "The yearly harvest s.d. also sets soil quality, drawn once at the start from its value then; the soil quality s.d. is ignored (A-1).",
     ),
 ];
 
@@ -651,6 +659,24 @@ mod tests {
             ..AnasaziConfig::default()
         };
         assert_eq!(e.validate().unwrap_err()[0].field, "end_year");
+    }
+
+    #[test]
+    fn initial_corn_is_bounded() {
+        let corn = |min: f64, max: f64| AnasaziConfig {
+            initial_corn: CornRange { min, max },
+            ..AnasaziConfig::default()
+        };
+        assert!(corn(0.0, 1_000_000.0).validate().is_ok());
+        for bad in [
+            corn(0.0, 1_000_001.0),
+            corn(0.0, f64::MAX),
+            corn(0.0, f64::INFINITY),
+            corn(f64::NAN, 10.0),
+            corn(-1.0, 10.0),
+        ] {
+            assert_eq!(bad.validate().unwrap_err()[0].field, "initial_corn");
+        }
     }
 
     #[test]

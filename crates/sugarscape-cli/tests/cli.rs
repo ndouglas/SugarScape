@@ -232,6 +232,23 @@ fn sweep_errors_have_exit_codes() {
     let out = sugarscape(&["sweep", "--builtin", "nope"]);
     assert_eq!(out.status.code(), Some(2));
     assert!(stderr(&out).starts_with("builtin: unknown sweep \"nope\""));
+    // The valley stops at AD 1350, 550 years in.
+    let out = sugarscape(&[
+        "sweep",
+        "--builtin",
+        "lhv-calibration",
+        "--seeds",
+        "1",
+        "--ticks",
+        "551",
+        "--quiet",
+    ]);
+    assert_eq!(out.status.code(), Some(2), "{}", stderr(&out));
+    assert!(
+        stderr(&out).starts_with("ticks: must be ≤ 550"),
+        "{}",
+        stderr(&out)
+    );
     let broken = dir.join("broken.json");
     std::fs::write(&broken, "{").unwrap();
     let out = sugarscape(&["sweep", path(&broken)]);

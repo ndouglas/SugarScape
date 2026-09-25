@@ -389,6 +389,15 @@ impl Sweep {
                 .map(|e| FieldError::new("points", format!("{prefix}: {}: {}", e.field, e.message)))
                 .collect::<Vec<_>>()
         })?;
+        if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
+            return Err(vec![FieldError::new(
+                "ticks",
+                format!(
+                    "must be ≤ {max}: the Long House Valley stops at its end year, \
+                     {max} ticks after its start year in this config"
+                ),
+            )]);
+        }
         let name = self.metric.series();
         if !config.series_names().iter().any(|n| n == name) {
             return Err(vec![FieldError::new(
@@ -485,11 +494,19 @@ pub fn blocks(ticks: u32, every: u32) -> Vec<(u32, u32)> {
 /// `metric` over one run whose statistics history is `history`
 /// (`history[t]` is tick t's value for t = 0..=ticks). A population of 0
 /// needs no special case: its statistics simply continue.
+/// Ticks past the end of `history` (a world that stopped early) are NaN, so
+/// they never abort a run: a window reaching past the end averages what
+/// there is, and one wholly past it is NaN.
 pub fn measure(metric: &Metric, ticks: u32, history: &[f64]) -> Outcome {
-    let window = |from: u32, to: u32| finite_mean(&history[from as usize..=to as usize]);
+    let window = |from: u32, to: u32| {
+        let to = (to as usize).min(history.len().saturating_sub(1));
+        history
+            .get(from as usize..=to)
+            .map_or(f64::NAN, finite_mean)
+    };
     match metric {
         Metric::Final { .. } => Outcome::Scalar {
-            value: history[ticks as usize],
+            value: history.get(ticks as usize).copied().unwrap_or(f64::NAN),
         },
         Metric::WindowMean { from, to, .. } => Outcome::Scalar {
             value: window(*from, to.unwrap_or(ticks)),
@@ -1732,6 +1749,67 @@ mod tests {
             );
         }
         assert!(builtin("nope").is_none());
+    }
+
+    #[test]
+    fn anasazi_sweeps_stop_at_the_valleys_last_year() {
+        let mut s = builtin("lhv-calibration").unwrap();
+        s.ticks = 550;
+        assert!(s.points().is_ok());
+        s.ticks = 551;
+        let e = s.points().unwrap_err();
+        assert_eq!(e.len(), 1, "one error across the x values: {e:?}");
+        assert_eq!(e[0].field, "ticks");
+        assert!(e[0].message.contains("≤ 550"), "{}", e[0].message);
+        assert!(run_all(&s, 1, |_, _| {}).is_err());
+        let point = Point {
+            index: 0,
+            series: 0,
+            x: 0,
+            seed: 1,
+        };
+        assert_eq!(s.config_for(&point).unwrap_err()[0].field, "ticks");
+        // A later start year leaves fewer years to run.
+        let mut late = builtin("lhv-calibration").unwrap();
+        late.set.insert("start_year".into(), json!(900));
+        let e = late.points().unwrap_err();
+        assert!(e[0].message.contains("≤ 450"), "{e:?}");
+        late.ticks = 450;
+        assert!(late.points().is_ok());
+    }
+
+    #[test]
+    fn measure_is_nan_past_the_end_of_a_short_history() {
+        let history = [1.0, 2.0, 3.0];
+        let fin = |ticks| measure(&Metric::Final { series: "x".into() }, ticks, &history);
+        assert_eq!(fin(2), Outcome::Scalar { value: 3.0 });
+        assert!(matches!(fin(5), Outcome::Scalar { value } if value.is_nan()));
+        let window = |from, ticks| {
+            measure(
+                &Metric::WindowMean {
+                    series: "x".into(),
+                    from,
+                    to: None,
+                },
+                ticks,
+                &history,
+            )
+        };
+        assert_eq!(window(1, 9), Outcome::Scalar { value: 2.5 });
+        assert!(matches!(window(4, 9), Outcome::Scalar { value } if value.is_nan()));
+        let series = measure(
+            &Metric::Timeseries {
+                series: "x".into(),
+                every: 2,
+            },
+            6,
+            &history,
+        );
+        let Outcome::Series { values } = series else {
+            panic!("a timeseries")
+        };
+        assert_eq!(values[0], 2.5);
+        assert!(values[1..].iter().all(|v| v.is_nan()));
     }
 
     #[test]

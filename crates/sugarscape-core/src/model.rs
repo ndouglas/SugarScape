@@ -175,6 +175,15 @@ impl ModelConfig {
         }
     }
 
+    /// The most ticks a world with this config can run, when it stops on
+    /// its own (the anasazi at its end year); `None` when it runs forever.
+    pub fn max_ticks(&self) -> Option<u32> {
+        match self {
+            ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
+            ModelConfig::Sugarscape(_) | ModelConfig::Schelling(_) | ModelConfig::Ring(_) => None,
+        }
+    }
+
     /// The statistics series a world with this config records.
     pub fn series_names(&self) -> Vec<String> {
         match self {

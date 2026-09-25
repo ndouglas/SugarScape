@@ -345,7 +345,7 @@ impl AnasaziWorld {
         };
         self.settle(home);
         self.next_id += 1;
-        let expected = corn.iter().sum();
+        let expected = expected_harvest(&corn, 0.0);
         self.households.insert(
             id,
             Household {
@@ -691,7 +691,7 @@ impl AnasaziWorld {
         } else {
             split_endowment(&mut parent.corn, fraction)
         };
-        let expected = corn.iter().sum();
+        let expected = expected_harvest(&corn, 0.0);
         self.households.insert(
             child_id,
             Household {
@@ -903,9 +903,9 @@ impl Model for AnasaziWorld {
         }
         buf.clear();
         buf.resize(CELLS * 4, 0);
-        for (i, px) in buf.chunks_exact_mut(4).enumerate() {
-            let rgb = self.color(i, mode, &homes);
-            px.copy_from_slice(&[rgb[0], rgb[1], rgb[2], 255]);
+        for (i, px) in buf.as_chunks_mut::<4>().0.iter_mut().enumerate() {
+            let [r, g, b] = self.color(i, mode, &homes);
+            *px = [r, g, b, 255];
         }
         Ok(())
     }
@@ -1327,6 +1327,11 @@ mod tests {
         let total: f64 = w.households.values().map(Household::stock).sum();
         assert!((total - 1230.0).abs() < 1e-9, "corn is conserved: {total}");
         assert!((child.stock() - 0.33 * 1230.0).abs() < 1e-9);
+        assert_eq!(
+            child.expected,
+            expected_harvest(&child.corn, 0.0),
+            "a new household expects what anyone would: no harvest yet"
+        );
     }
 
     #[test]
@@ -1410,6 +1415,7 @@ mod tests {
                 "{:?}",
                 h.corn
             );
+            assert_eq!(h.expected, h.corn[0] + h.corn[1], "the oldest slot spoils");
         }
     }
 
