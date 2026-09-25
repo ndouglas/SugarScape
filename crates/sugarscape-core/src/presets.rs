@@ -833,7 +833,12 @@ mod tests {
         let c = by_id("ii-6-waves").unwrap().config;
         assert_eq!(
             c.placement,
-            Placement::Block { x: 0, y: 30, width: 20, height: 20 }
+            Placement::Block {
+                x: 0,
+                y: 30,
+                width: 20,
+                height: 20
+            }
         );
         assert_eq!((c.population, c.vision), (400, URange::new(1, 10)));
         let w = World::new(c, 1).unwrap();

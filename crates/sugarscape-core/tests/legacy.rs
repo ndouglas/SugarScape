@@ -51,7 +51,7 @@ fn legacy_preset_configs_load_as_the_presets() {
             Config::from_json(&json.to_string()).unwrap_or_else(|e| panic!("{id}: {e:?}"));
         if changed_placement.contains(&id.as_str()) {
             assert_ne!(loaded.placement, preset.config.placement, "{id}");
-            loaded.placement = preset.config.placement.clone();
+            loaded.placement = preset.config.placement;
         }
         assert_eq!(loaded, preset.config, "{id}");
     }
