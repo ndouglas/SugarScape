@@ -16,6 +16,7 @@ pub mod model;
 pub mod network;
 pub mod presets;
 pub mod render;
+pub mod ring;
 pub mod rng;
 pub mod rules;
 pub mod schelling;

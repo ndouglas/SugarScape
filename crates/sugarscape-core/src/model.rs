@@ -7,10 +7,11 @@ use serde::{Serialize, Serializer};
 
 use crate::config::{Config, FieldError};
 use crate::render::{self, ColorMode, Layer};
+use crate::ring::{RingConfig, RingWorld};
 use crate::schelling::{SchellingConfig, SchellingWorld};
 use crate::schema::Param;
 use crate::world::World;
-use crate::{export, schelling, stats};
+use crate::{export, ring, schelling, stats};
 
 /// Which model a config or world is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -18,15 +19,17 @@ use crate::{export, schelling, stats};
 pub enum ModelKind {
     Sugarscape,
     Schelling,
+    Ring,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 2] = [ModelKind::Sugarscape, ModelKind::Schelling];
+    pub const ALL: [ModelKind; 3] = [ModelKind::Sugarscape, ModelKind::Schelling, ModelKind::Ring];
 
     pub fn as_str(self) -> &'static str {
         match self {
             ModelKind::Sugarscape => "sugarscape",
             ModelKind::Schelling => "schelling",
+            ModelKind::Ring => "ring",
         }
     }
 
@@ -36,6 +39,7 @@ impl ModelKind {
         match self {
             ModelKind::Sugarscape => Vec::new(),
             ModelKind::Schelling => schelling::schema(),
+            ModelKind::Ring => ring::schema(),
         }
     }
 }
@@ -51,6 +55,7 @@ impl ModelKind {
 pub enum ModelConfig {
     Sugarscape(Config),
     Schelling(SchellingConfig),
+    Ring(RingConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -58,6 +63,7 @@ pub enum ModelConfig {
 #[serde(tag = "model", rename_all = "snake_case")]
 enum Tagged<'a> {
     Schelling(&'a SchellingConfig),
+    Ring(&'a RingConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -72,6 +78,7 @@ impl Serialize for ModelConfig {
             // Untagged, so sugarscape configs serialize exactly as before.
             ModelConfig::Sugarscape(c) => c.serialize(s),
             ModelConfig::Schelling(c) => Tagged::Schelling(c).serialize(s),
+            ModelConfig::Ring(c) => Tagged::Ring(c).serialize(s),
         }
     }
 }
@@ -81,6 +88,7 @@ impl ModelConfig {
         match self {
             ModelConfig::Sugarscape(_) => ModelKind::Sugarscape,
             ModelConfig::Schelling(_) => ModelKind::Schelling,
+            ModelConfig::Ring(_) => ModelKind::Ring,
         }
     }
 
@@ -121,9 +129,12 @@ impl ModelConfig {
             "schelling" => serde_json::from_value(value)
                 .map(ModelConfig::Schelling)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "ring" => serde_json::from_value(value)
+                .map(ModelConfig::Ring)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
-                format!("unknown model {tag:?} (expected sugarscape or schelling)"),
+                format!("unknown model {tag:?} (expected sugarscape, schelling or ring)"),
             )),
         }
     }
@@ -132,6 +143,7 @@ impl ModelConfig {
         match self {
             ModelConfig::Sugarscape(c) => c.validate(),
             ModelConfig::Schelling(c) => c.validate(),
+            ModelConfig::Ring(c) => c.validate(),
         }
     }
 
@@ -141,6 +153,7 @@ impl ModelConfig {
         match self {
             ModelConfig::Sugarscape(c) => c.with_path(path, value).map(ModelConfig::Sugarscape),
             ModelConfig::Schelling(c) => set_path(c, path, value).map(ModelConfig::Schelling),
+            ModelConfig::Ring(c) => set_path(c, path, value).map(ModelConfig::Ring),
         }
     }
 
@@ -149,6 +162,7 @@ impl ModelConfig {
         match self {
             ModelConfig::Sugarscape(c) => stats::series_names(c),
             ModelConfig::Schelling(_) => schelling::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Ring(_) => ring::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -292,6 +306,7 @@ impl Model for World {
 pub enum ModelWorld {
     Sugarscape(Box<World>),
     Schelling(Box<SchellingWorld>),
+    Ring(Box<RingWorld>),
 }
 
 impl ModelWorld {
@@ -313,6 +328,7 @@ impl ModelWorld {
             ModelConfig::Schelling(c) => {
                 ModelWorld::Schelling(Box::new(SchellingWorld::new(c, seed)?))
             }
+            ModelConfig::Ring(c) => ModelWorld::Ring(Box::new(RingWorld::new(c, seed)?)),
         })
     }
 
@@ -320,6 +336,7 @@ impl ModelWorld {
         match self {
             ModelWorld::Sugarscape(_) => ModelKind::Sugarscape,
             ModelWorld::Schelling(_) => ModelKind::Schelling,
+            ModelWorld::Ring(_) => ModelKind::Ring,
         }
     }
 
@@ -327,6 +344,7 @@ impl ModelWorld {
         match self {
             ModelWorld::Sugarscape(w) => w.as_ref(),
             ModelWorld::Schelling(w) => w.as_ref(),
+            ModelWorld::Ring(w) => w.as_ref(),
         }
     }
 
@@ -334,6 +352,7 @@ impl ModelWorld {
         match self {
             ModelWorld::Sugarscape(w) => w.as_mut(),
             ModelWorld::Schelling(w) => w.as_mut(),
+            ModelWorld::Ring(w) => w.as_mut(),
         }
     }
 
@@ -347,6 +366,13 @@ impl ModelWorld {
     pub fn sugarscape_mut(&mut self) -> Option<&mut World> {
         match self {
             ModelWorld::Sugarscape(w) => Some(w),
+            _ => None,
+        }
+    }
+
+    pub fn ring(&self) -> Option<&RingWorld> {
+        match self {
+            ModelWorld::Ring(w) => Some(w),
             _ => None,
         }
     }
@@ -428,6 +454,38 @@ mod tests {
         let mut s = ModelWorld::new(ModelConfig::Schelling(SchellingConfig::default()), 1).unwrap();
         assert!(s.model_mut().set_config(Config::default().into()).is_err());
         assert!(s.sugarscape().is_none());
+    }
+
+    #[test]
+    fn ring_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(r#"{"model": "ring", "start": "megagroup"}"#).unwrap();
+        assert_eq!(c.kind(), ModelKind::Ring);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["sites"].as_u64()),
+            (Some("ring"), Some(150))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(
+            c.series_names(),
+            [
+                "flocks",
+                "mean_flock",
+                "largest_flock",
+                "mean_distance",
+                "population"
+            ]
+        );
+        let e = ModelConfig::from_json(r#"{"model": "ring", "start": "clumps"}"#).unwrap_err();
+        assert_eq!(e[0].field, "config");
+    }
+
+    #[test]
+    fn every_kind_names_itself_and_only_other_models_have_schemas() {
+        let names: Vec<&str> = ModelKind::ALL.iter().map(|k| k.as_str()).collect();
+        assert_eq!(names, ["sugarscape", "schelling", "ring"]);
+        assert!(ModelKind::Sugarscape.schema().is_empty());
+        assert!(!ModelKind::Schelling.schema().is_empty() && !ModelKind::Ring.schema().is_empty());
     }
 
     #[test]

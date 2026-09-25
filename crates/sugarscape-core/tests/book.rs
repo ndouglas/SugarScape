@@ -683,3 +683,84 @@ fn schelling_50_percent_is_far_more_segregated_and_mixed_stays_high() {
         );
     }
 }
+
+/// The mean of `values` over ticks 500–1000.
+fn late_mean(values: &[f64]) -> f64 {
+    values[500..=1000].iter().sum::<f64>() / 501.0
+}
+
+/// Prints the figures the Ring World thresholds below come from.
+#[test]
+#[ignore]
+fn measure_ring_world() {
+    for id in ["vi-8-ring-world", "vi-9-ring-megagroup"] {
+        for seed in 1..=5 {
+            let flocks = model_series(id, seed, 1000, "flocks");
+            let size = model_series(id, seed, 1000, "mean_flock");
+            let largest = model_series(id, seed, 1000, "largest_flock");
+            println!(
+                "{id} seed {seed}: t=0 {} flocks of {:.2}; t=500–1000 mean {:.2} flocks of {:.2}, largest ever {}",
+                flocks[0],
+                size[0],
+                late_mean(&flocks),
+                late_mean(&size),
+                largest[500..].iter().copied().fold(0.0, f64::max)
+            );
+        }
+    }
+}
+
+/// From `measure_ring_world` (release, seeds 1–5, recorded 2026-09-25):
+/// VI-8 starts as 20–25 flocks of 1.60–2.00 agents and settles to 6.75–8.16
+/// flocks of 5.06–6.09 (growth 2.66–3.30×); VI-9 starts as 1 flock of 40
+/// and settles to 6.94–7.78 flocks, the largest never above 14 after
+/// t = 500. Counts are rounded down to a whole number, factors down to a
+/// multiple of 0.5 and the cap up to a multiple of 5.
+const RING_LATE_FLOCKS_AT_LEAST: f64 = 6.0;
+const RING_FLOCK_GROWTH: f64 = 2.5;
+const RING_MEGAGROUP_LARGEST_AT_MOST: f64 = 15.0;
+
+#[test]
+#[ignore]
+fn ring_world_agents_cluster_into_several_flocks() {
+    // Animation VI-8: "Remarkably, the agents cluster into groups. Often they
+    // separate into groups of comparable size!"
+    for seed in 1..=5 {
+        let flocks = model_series("vi-8-ring-world", seed, 1000, "flocks");
+        let size = model_series("vi-8-ring-world", seed, 1000, "mean_flock");
+        assert!(
+            late_mean(&flocks) >= RING_LATE_FLOCKS_AT_LEAST,
+            "seed {seed}: {}",
+            late_mean(&flocks)
+        );
+        assert!(
+            late_mean(&size) >= RING_FLOCK_GROWTH * size[0],
+            "seed {seed}: flocks of {} at t = 0, {} late",
+            size[0],
+            late_mean(&size)
+        );
+    }
+}
+
+#[test]
+#[ignore]
+fn ring_world_megagroup_breaks_up() {
+    // Animation VI-9: "What if we start with all agents in one megagroup (of
+    // 40)? Will they disaggregate into like-sized cliques? The answer is
+    // 'yes'."
+    for seed in 1..=5 {
+        let flocks = model_series("vi-9-ring-megagroup", seed, 1000, "flocks");
+        let largest = model_series("vi-9-ring-megagroup", seed, 1000, "largest_flock");
+        assert_eq!(flocks[0], 1.0, "seed {seed} starts as one flock");
+        assert!(
+            late_mean(&flocks) >= RING_LATE_FLOCKS_AT_LEAST,
+            "seed {seed}: {}",
+            late_mean(&flocks)
+        );
+        let most = largest[500..].iter().copied().fold(0.0, f64::max);
+        assert!(
+            most <= RING_MEGAGROUP_LARGEST_AT_MOST,
+            "seed {seed}: a flock of {most}"
+        );
+    }
+}
