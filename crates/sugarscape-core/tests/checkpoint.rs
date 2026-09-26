@@ -67,6 +67,71 @@ fn restore_then_run_equals_a_straight_run() {
     }
 }
 
+/// Inspect at every cell of an image world's frame.
+fn inspect_all(w: &ModelWorld) -> Vec<String> {
+    let m = w.model();
+    let (width, height) = m.size();
+    let mut out = Vec::new();
+    for y in 0..height {
+        for x in 0..width {
+            out.push(m.inspect_json(x, y).unwrap());
+        }
+    }
+    out
+}
+
+/// Image keyframes leave out the private records (the next generation
+/// rebuilds them) but keep what Inspect shows of them, so a restored world
+/// inspects, and runs on, as the straight run does.
+#[test]
+fn an_image_world_restored_without_its_records_inspects_and_runs_on_unchanged() {
+    for id in ["ns-fig-4b", "ns-fig-3-n20"] {
+        let mut straight = world(id);
+        straight.model_mut().run(20);
+        let at_keyframe = inspect_all(&straight);
+        assert!(
+            at_keyframe
+                .iter()
+                .any(|v| v.contains("\"mean_view\":") && !v.contains("\"mean_view\":null")),
+            "{id}: some agent has been seen"
+        );
+
+        let mut w = world(id);
+        w.model_mut().run(20);
+        let cp = w.checkpoint().unwrap();
+        w.model_mut().run(7);
+        w.restore(&cp).unwrap();
+        assert_eq!(inspect_all(&w), at_keyframe, "{id}: at the keyframe");
+        assert_eq!(
+            w.model().fingerprint(),
+            straight.model().fingerprint(),
+            "{id}"
+        );
+
+        let cp = w.checkpoint().unwrap();
+        w.restore(&cp).unwrap();
+        assert_eq!(
+            inspect_all(&w),
+            at_keyframe,
+            "{id}: a restored world's keyframe"
+        );
+
+        straight.model_mut().run(30);
+        w.model_mut().run(30);
+        assert_eq!(
+            w.model().fingerprint(),
+            straight.model().fingerprint(),
+            "{id}"
+        );
+        assert_eq!(all_series(&w), all_series(&straight), "{id}");
+        assert_eq!(
+            inspect_all(&w),
+            inspect_all(&straight),
+            "{id}: after running on"
+        );
+    }
+}
+
 #[test]
 fn a_checkpoint_leaves_the_live_world_untouched() {
     for &id in IDS {

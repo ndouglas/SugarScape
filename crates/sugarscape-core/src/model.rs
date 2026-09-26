@@ -721,7 +721,8 @@ impl ModelWorld {
             ModelWorld::Opinions(w) => copy_without_history!(Opinions, w),
             ModelWorld::Structure(w) => copy_without_history!(Structure, w),
             ModelWorld::Dpd(w) => copy_without_history!(Dpd, w),
-            ModelWorld::Image(w) => copy_without_history!(Image, w),
+            // Without its private records, which the next generation rebuilds.
+            ModelWorld::Image(w) => ModelWorld::Image(Box::new(w.keyframe())),
             _ => return None,
         };
         Some(Checkpoint { world, tick })

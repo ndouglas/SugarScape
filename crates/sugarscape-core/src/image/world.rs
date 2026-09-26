@@ -116,6 +116,10 @@ pub struct ImageWorld {
     /// whether it has seen i act.
     views: Vec<i16>,
     marks: Vec<u8>,
+    /// A keyframe's stand-in for the records (which the next generation
+    /// rebuilds anyway): each member's count of sightings and the sum of
+    /// their records, all Inspect reads of them. Empty in a playing world.
+    seen: Vec<(u32, f64)>,
     /// The q strategies' tallies, one per group (empty without them).
     tallies: Vec<Tallies>,
     /// Helps and rounds in the generation that last played.
@@ -162,6 +166,7 @@ impl ImageWorld {
             allowed: Arc::new(allowed),
             views: Vec::new(),
             marks: Vec::new(),
+            seen: Vec::new(),
             tallies: Vec::new(),
             helps: 0,
             rounds_played: 0,
@@ -247,6 +252,26 @@ impl ImageWorld {
         !self.views.is_empty()
     }
 
+    /// A copy of this world for a keyframe: everything but its statistics
+    /// history and its private records, which take g·n²·3 bytes (60 MB at
+    /// 80 groups of 500) and are rebuilt when the next generation starts.
+    /// What Inspect reads of them is kept instead (g·n entries), so a
+    /// restored world inspects as the live one did.
+    pub fn keyframe(&mut self) -> ImageWorld {
+        let seen = if self.private() {
+            (0..self.agents.len()).map(|i| self.sightings(i)).collect()
+        } else {
+            self.seen.clone()
+        };
+        let stats = std::mem::take(&mut self.stats);
+        let views = std::mem::take(&mut self.views);
+        let marks = std::mem::take(&mut self.marks);
+        let mut copy = self.clone();
+        (self.stats, self.views, self.marks) = (stats, views, marks);
+        copy.seen = seen;
+        copy
+    }
+
     /// One generation: offspring of the last (after the first), then play.
     pub fn step(&mut self) {
         self.apply_schedule();
@@ -297,6 +322,7 @@ impl ImageWorld {
         let (g, n) = (self.config.groups as usize, self.n());
         self.views.clear();
         self.marks.clear();
+        self.seen.clear();
         if private {
             self.views.resize(g * n * n, 0);
             self.marks.resize(g * n * n, GOOD);
@@ -609,9 +635,9 @@ impl ImageWorld {
         }
     }
 
-    /// Member `i`'s record among the others in its group: how many have
-    /// seen it act, and their mean record of its score.
-    fn known(&self, i: usize) -> (u32, Option<f64>) {
+    /// How many of the others in member `i`'s group have seen it act, and
+    /// the sum of their records of its score.
+    fn sightings(&self, i: usize) -> (u32, f64) {
         let n = self.n();
         let (g, s) = (i / n, i % n);
         let (mut count, mut sum) = (0u32, 0.0);
@@ -622,7 +648,19 @@ impl ImageWorld {
                 sum += f64::from(self.views[at]);
             }
         }
-        (count, (count > 0).then(|| sum / f64::from(count)))
+        (count, sum)
+    }
+
+    /// Member `i`'s record among the others in its group: how many have
+    /// seen it act, and their mean record of its score; none without
+    /// private records.
+    fn known(&self, i: usize) -> Option<(u32, Option<f64>)> {
+        let (count, sum) = if self.private() {
+            self.sightings(i)
+        } else {
+            *self.seen.get(i)?
+        };
+        Some((count, (count > 0).then(|| sum / f64::from(count))))
     }
 
     pub fn inspect(&self, x: u32, y: u32) -> Result<ImageInspection, String> {
@@ -633,11 +671,9 @@ impl ImageWorld {
         let (group, index) = self.at(x, y);
         let agent = index.map(|i| {
             let a = &self.agents[i];
-            let (known, mean_view) = if self.private() {
-                let (k, m) = self.known(i);
-                (Some(k), m)
-            } else {
-                (None, None)
+            let (known, mean_view) = match self.known(i) {
+                Some((k, m)) => (Some(k), m),
+                None => (None, None),
             };
             AgentView {
                 id: a.id,
@@ -1379,19 +1415,42 @@ mod tests {
             |c| c.perception_error = 0.05,
             |c| c.rounds_kind = RoundsKind::Random,
             |c| c.offset = Offset::None,
-            |c| c.records = Records::Tally,
+            |c| c.records = Records::Score,
             |c| c.clamp = 3,
         ];
         for edit in edits {
             edit(&mut w.config);
             w.run(10);
         }
-        let kept = w.clone();
-        let mut back = kept.clone();
+        let kept = w.keyframe();
+        assert!(kept.views.is_empty() && kept.marks.is_empty());
+        assert!(w.private(), "the live world keeps its records");
+        let inspect_all = |w: &ImageWorld| {
+            let (width, height) = Model::size(w);
+            let mut out = Vec::new();
+            for y in 0..height {
+                for x in 0..width {
+                    out.push(w.inspect_json(x, y).unwrap());
+                }
+            }
+            out
+        };
+        assert_eq!(inspect_all(&kept), inspect_all(&w));
+        let again = kept.clone().keyframe();
+        assert_eq!(
+            inspect_all(&again),
+            inspect_all(&w),
+            "a keyframe of a keyframe"
+        );
+        let mut back = kept;
         back.run(20);
-        let mut again = kept;
-        again.run(20);
-        assert_eq!(back.fingerprint(), again.fingerprint());
+        w.run(20);
+        assert_eq!(back.fingerprint(), w.fingerprint());
+        assert_eq!(inspect_all(&back), inspect_all(&w));
+        assert!(
+            back.seen.is_empty(),
+            "the next generation drops the stand-in"
+        );
     }
 
     #[test]
