@@ -82,7 +82,7 @@ Random draws follow this order, so runs are deterministic. Strategies start with
 
 ## Statistics
 
-`SERIES`: `mean_boldness`, `mean_vengefulness` (levels ÷ 7), `mean_payoff`, `defections`, `punishments`, `metapunishments` (this generation's counts), `established`, `collapsed` (0/1, G&I's regions on the new generation's means), and under `groups` `strong_boldness`, `weak_boldness`, `strong_vengefulness`, `weak_vengefulness` (0 without groups), and `copied_equal` (1 when every payoff tied and the `all_equal` reading applied).
+`SERIES`: `mean_boldness`, `mean_vengefulness` (levels ÷ 7), `mean_payoff`, `defections`, `punishments`, `metapunishments` (this generation's counts), `established`, `collapsed` (0/1, G&I's regions on the means of the generation that played), and under `groups` `strong_boldness`, `weak_boldness`, `strong_vengefulness`, `weak_vengefulness` (0 without groups), and `copied_equal` (1 when every payoff tied and the `all_equal` reading applied).
 
 ## Views
 
