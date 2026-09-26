@@ -751,11 +751,43 @@ mod tests {
 
     #[test]
     fn table_1s_arithmetic() {
-        // Lee: one defection (3), punished once (−9), hurt 36 times (−36),
-        // punishing 9 defections (−18): −60.
+        // A hand-built world: agent 0 always defects; agents 1 and 2 have
+        // full vengefulness (7/7), so `chance(vengefulness / 7)` always
+        // succeeds and every noticed defection is punished. Table 1's
+        // arithmetic then follows from the counts each agent actually
+        // recorded: T and P for the defector, H (every round, since it is
+        // hurt whether or not it notices) and E (once per punishment) for
+        // the punishers.
         let c = NormsConfig::default();
-        let lee = c.temptation + c.punishment + 36.0 * c.hurt + 9.0 * c.enforcement;
-        assert_eq!(lee, -60.0);
+        let mut w = world(|c| {
+            c.agents = 3;
+            c.mutation = 0.0;
+        });
+        set(&mut w, &[(7, 7), (0, 7), (0, 7)]);
+        w.step();
+        let p = w.played();
+        assert_eq!(
+            p[0].defections, c.rounds,
+            "boldness 7/7 defects every round"
+        );
+        assert_eq!(
+            p[0].punished,
+            p[1].punishments + p[2].punishments,
+            "every seen defection is punished (vengefulness 7/7)"
+        );
+        assert_eq!(
+            p[0].payoff,
+            f64::from(p[0].defections) * c.temptation + f64::from(p[0].punished) * c.punishment,
+            "T per defection, P per punishment"
+        );
+        for punisher in [1, 2] {
+            assert_eq!(
+                p[punisher].payoff,
+                f64::from(p[0].defections) * c.hurt
+                    + f64::from(p[punisher].punishments) * c.enforcement,
+                "H per round hurt, E per punishment"
+            );
+        }
     }
 
     #[test]
@@ -765,18 +797,30 @@ mod tests {
             c.mutation = 0.0;
             c.metanorms = true;
         });
-        // Agent 0 always defects; 1 never punishes; 2 and 3 always punish.
-        set(&mut w, &[(7, 0), (0, 0), (0, 7), (0, 7)]);
+        // Agent 0 always defects, and — critically for this test — has full
+        // vengefulness (7/7): if the metapunishment loop's `k != i` exclusion
+        // were ever dropped, the defector would deterministically metapunish
+        // (or be metapunished) whenever it were wrongly admitted as a
+        // witness of its own defection, instead of a boldness-0 defector
+        // whose vengefulness-0 would mask the bug. Agent 1 never punishes;
+        // 2 and 3 always punish.
+        set(&mut w, &[(7, 7), (0, 0), (0, 7), (0, 7)]);
         w.step();
         let p = w.played();
-        assert_eq!(p[0].metapunished, 0, "the defector is not metapunished");
-        assert!(p[1].metapunished > 0, "the non-punisher is");
+        assert_eq!(
+            p[0].metapunished, 0,
+            "the defector is excluded as its own witness (k != i)"
+        );
+        assert!(p[1].metapunished > 0, "the non-punisher is metapunished");
         assert_eq!(
             p[2].metapunished + p[3].metapunished,
             0,
-            "punishers are not"
+            "punishers are not metapunished"
         );
-        assert_eq!(p[0].metapunishments, 0, "the defector does not metapunish");
+        assert_eq!(
+            p[0].metapunishments, 0,
+            "the defector is excluded as its own metapunisher (k != i)"
+        );
         assert_eq!(
             p[2].metapunishments + p[3].metapunishments,
             p[1].metapunished
@@ -785,7 +829,7 @@ mod tests {
             c.agents = 4;
             c.mutation = 0.0;
         });
-        set(&mut off, &[(7, 0), (0, 0), (0, 7), (0, 7)]);
+        set(&mut off, &[(7, 7), (0, 0), (0, 7), (0, 7)]);
         off.step();
         assert_eq!(off.played()[1].metapunished, 0);
     }
@@ -804,6 +848,46 @@ mod tests {
         let count = |k| parents.iter().filter(|&&p| p == k).count();
         assert_eq!((count(0), count(1), count(4)), (2, 1, 0));
         assert_eq!(parents.len(), 5);
+    }
+
+    #[test]
+    fn ranked_refill_removes_the_worst_and_duplicates_the_best() {
+        // Average selection on [10, 10, 0, -20] (mean 0) copies the three
+        // payoffs at or above the mean twice each: six offspring for a
+        // population of four. Ranked refill must remove two of them, and
+        // remove agent 2's copies (payoff 0, the worst that still
+        // qualified) rather than agent 0's or agent 1's (payoff 10 each).
+        let mut more = world(|c| {
+            c.agents = 4;
+            c.selection = Selection::Average;
+            c.refill = Refill::Ranked;
+        });
+        for (a, p) in more.agents.iter_mut().zip([10.0, 10.0, 0.0, -20.0]) {
+            a.payoff = p;
+        }
+        assert_eq!(
+            more.select(&[0, 1, 2, 3]),
+            [0, 0, 1, 1],
+            "the worst qualifying parent's copies are removed first"
+        );
+
+        // Axelrod selection on the same payoffs (mean 0, s.d. ≈ 12.2) is
+        // within one s.d. of the mean for agents 0–2, so each gets exactly
+        // one offspring: three for a population of four. Ranked refill must
+        // duplicate one, and duplicate the best (agent 1, payoff 10) rather
+        // than agent 0 or agent 2.
+        let mut fewer = world(|c| {
+            c.agents = 4;
+            c.refill = Refill::Ranked;
+        });
+        for (a, p) in fewer.agents.iter_mut().zip([10.0, 10.0, 0.0, -20.0]) {
+            a.payoff = p;
+        }
+        assert_eq!(
+            fewer.select(&[0, 1, 2, 3]),
+            [2, 0, 1, 1],
+            "the best surviving parent is duplicated to make up the rest"
+        );
     }
 
     #[test]
