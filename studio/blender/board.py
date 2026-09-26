@@ -5,6 +5,7 @@ import bmesh
 import bpy
 
 import animate
+import seasons
 from blender import materials
 
 GUMDROP_SIZE = 0.45
@@ -34,6 +35,60 @@ def felt_board(d):
     sub.levels = sub.render_levels = 2
     bpy.context.scene.collection.objects.link(obj)
     return obj, corners
+
+
+def seasonal_felt(felt, d, timing):
+    """Frosts the winter half of the board: the felt's material becomes a mix
+    of felt and frost, per hemisphere, by the object's y (north is +y);
+    returns an updater that sets each hemisphere's frost for a frame."""
+    mat = bpy.data.materials.new("felt-seasons")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    grass = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    snow = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    for p, color, rough, sheen in ((grass, (0.30, 0.50, 0.26), 1.0, 0.8), (snow, (0.80, 0.87, 0.95), 0.55, 1.0)):
+        p.inputs["Base Color"].default_value = (*color, 1)
+        p.inputs["Roughness"].default_value = rough
+        p.inputs["Sheen Weight"].default_value = sheen
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(grass.outputs[0], mix.inputs[1])
+    nt.links.new(snow.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    # factor = south + (north − south) · [y > equator]
+    coord, xyz = nt.nodes.new("ShaderNodeTexCoord"), nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(coord.outputs["Object"], xyz.inputs[0])
+    north = nt.nodes.new("ShaderNodeMath")
+    north.operation = "GREATER_THAN"
+    north.inputs[1].default_value = d.height / 2 - d.height // 2  # the equator's board y
+    nt.links.new(xyz.outputs["Y"], north.inputs[0])
+    frost_n, frost_s = nt.nodes.new("ShaderNodeValue"), nt.nodes.new("ShaderNodeValue")
+    diff = nt.nodes.new("ShaderNodeMath")
+    diff.operation = "SUBTRACT"
+    nt.links.new(frost_n.outputs[0], diff.inputs[0])
+    nt.links.new(frost_s.outputs[0], diff.inputs[1])
+    scaled = nt.nodes.new("ShaderNodeMath")
+    scaled.operation = "MULTIPLY"
+    nt.links.new(diff.outputs[0], scaled.inputs[0])
+    nt.links.new(north.outputs[0], scaled.inputs[1])
+    factor = nt.nodes.new("ShaderNodeMath")
+    factor.operation = "ADD"
+    nt.links.new(scaled.outputs[0], factor.inputs[0])
+    nt.links.new(frost_s.outputs[0], factor.inputs[1])
+    nt.links.new(factor.outputs[0], mix.inputs[0])
+    felt.data.materials.clear()
+    felt.data.materials.append(mat)
+    period = d.config["seasons"]["period"]
+
+    def update(frame):
+        # The step from frame k − 1 to k grows sugar with the season at tick
+        # k − 1, which is floor(tick) between those frames: frost follows it.
+        tick = timing.tick_at(frame)
+        frost_n.outputs[0].default_value = seasons.frost(True, tick, period)
+        frost_s.outputs[0].default_value = seasons.frost(False, tick, period)
+
+    return update
 
 
 def _gumdrop_prototype():
