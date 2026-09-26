@@ -138,9 +138,9 @@ impl NormsConfig {
             "must be between 2 and 200",
         );
         check(
-            (1..=100).contains(&self.rounds),
+            (1..=20).contains(&self.rounds),
             "rounds",
-            "must be between 1 and 100",
+            "must be between 1 and 20",
         );
         for (field, v) in [
             ("temptation", self.temptation),
@@ -167,6 +167,11 @@ impl NormsConfig {
                 (2..=200).contains(&self.groups.strong) && (2..=200).contains(&self.groups.weak),
                 "groups",
                 "each group must have between 2 and 200 agents",
+            );
+            check(
+                self.groups.strong + self.groups.weak <= 200,
+                "groups",
+                "the two groups together must have at most 200 agents",
             );
         }
         if e.is_empty() {
@@ -203,9 +208,9 @@ pub fn schema() -> Vec<Param> {
             .with_help("Axelrod: 20."),
         Param::bool("Population", "groups.enabled", "Two groups (dominance)", Reset)
             .with_help("Axelrod: 20 whites less hurt by punishment (P = −3) and 10 blacks (P = −9); selection within each group."),
-        Param::integer("Population", "groups.strong", "Strong group", (2, 200), Reset)
+        Param::integer("Population", "groups.strong", "Strong group", (2, 198), Reset)
             .shown_if("groups.enabled", "true"),
-        Param::integer("Population", "groups.weak", "Weak group", (2, 200), Reset)
+        Param::integer("Population", "groups.weak", "Weak group", (2, 198), Reset)
             .shown_if("groups.enabled", "true"),
         Param::integer("Population", "stop_at", "Stop at generation", (0, 10_000_000), Live)
             .with_help("Axelrod ran 100 generations; Galán & Izquierdo up to 10⁶. 0: never."),
@@ -239,7 +244,7 @@ pub fn schema() -> Vec<Param> {
             Live,
         )
         .shown_if("groups.enabled", "true"),
-        Param::integer("Evolution", "rounds", "Rounds per generation", (1, 100), Live)
+        Param::integer("Evolution", "rounds", "Rounds per generation", (1, 20), Live)
             .with_help("Axelrod: four opportunities to defect each."),
         Param::number("Evolution", "mutation", "Mutation per bit", (0.0, 1.0, 0.001), Live)
             .with_help("Axelrod: 0.01. Galán & Izquierdo: at 0.001 the metanorm collapses faster."),
@@ -339,6 +344,30 @@ mod tests {
         assert_eq!(
             fields,
             ["agents", "rounds", "temptation", "mutation", "groups"]
+        );
+    }
+
+    #[test]
+    fn validation_caps_the_metanorms_stall_paths() {
+        // 400 agents x 100 rounds is O(rounds*n^3) per generation, about 3.9s
+        // natively; both must stay small enough for the UI not to stall.
+        let bad = NormsConfig {
+            rounds: 21,
+            groups: GroupsConfig {
+                enabled: true,
+                strong: 150,
+                weak: 150,
+                ..GroupsConfig::default()
+            },
+            ..NormsConfig::default()
+        };
+        let errors = bad.validate().unwrap_err();
+        let fields: Vec<String> = errors.iter().map(|e| e.field.clone()).collect();
+        assert_eq!(fields, ["rounds", "groups"]);
+        assert_eq!(errors[0].message, "must be between 1 and 20");
+        assert_eq!(
+            errors[1].message,
+            "the two groups together must have at most 200 agents"
         );
     }
 
