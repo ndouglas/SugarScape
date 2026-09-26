@@ -1,0 +1,48 @@
+{
+  "name": "Emergence of Classes: population and the way out of fractiousness (Fig. 5)",
+  "description": "Axtell, Epstein and Young's Fig. 5: the same transition time against the number of agents at m = 10. Measured (release, seeds 1–10, recorded 2026-09-25): at ε = 0.05, 1060, 3460 and 36 700 periods at N = 10, 20, 30, and every run capped at 100 000 from N = 40; at ε = 0.1, 168, 161, 362, 694 and 16 600 at N = 10, 20, 30, 40, 60. Steep growth with N, as the paper says.",
+  "base": {
+    "preset": "aey-transition"
+  },
+  "x": {
+    "label": "Agents (N)",
+    "path": "agents",
+    "values": [
+      10,
+      20,
+      30,
+      40,
+      60
+    ]
+  },
+  "series": {
+    "label": "Noise",
+    "values": [
+      {
+        "at": 0,
+        "name": "ε = 0.05",
+        "set": {
+          "noise": 0.05,
+          "stop_at_equity": false
+        }
+      },
+      {
+        "at": 1,
+        "name": "ε = 0.1",
+        "set": {
+          "noise": 0.1,
+          "stop_at_equity": false
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "equity_at"
+  }
+}

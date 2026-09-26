@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -243,7 +243,26 @@ export interface CultureConfig {
   stop_when_stable: boolean;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig;
+/**
+ * Axtell, Epstein and Young's bargaining society (milestone 15): agents best-reply to their memory of
+ * opponents' demands in the Nash demand game, with Poza et al.'s departures.
+ */
+export interface ClassesConfig {
+  model: 'classes';
+  agents: number;
+  memory: number;
+  noise: number;
+  tags: boolean;
+  tag_memory: 'per_tag' | 'shared';
+  decision: 'expected' | 'mode';
+  low: number;
+  start: 'random' | 'fractious' | 'progressive' | 'classes';
+  interaction: 'random' | 'lattice';
+  lattice: { width: number; height: number; neighborhood: 'moore' | 'von_neumann'; layout: 'random' | 'four_zones' | 'two_zones' };
+  stop_at_equity: boolean;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -393,7 +412,26 @@ export interface CultureStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats;
+export interface ClassesStats {
+  tick: number;
+  mean_payoff: number;
+  m_share: number;
+  outcome_mm: number;
+  outcome_hl: number;
+  outcome_fail: number;
+  outcome_waste: number;
+  /** 0 mixed, 1 equity, 2 fractious, 3 classes, 4 equity between types only, 5 equity above and division below. */
+  regime: number;
+  segregated: number;
+  equity_at: number;
+  first_attractor: number;
+  payoff_dark: number;
+  payoff_light: number;
+  payoff_inter: number;
+  realized_noise: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -547,7 +585,22 @@ export interface CultureInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection;
+/** An agent whose memory plots at an inspected simplex point. */
+export interface BargainerView { id: number; tag: 'dark' | 'light' | null; memory: [number, number, number]; last_demand: 'L' | 'M' | 'H' | null; mean_payoff: number }
+/**
+ * A point of a memory simplex: which simplex, the mix of L, M and H remembered there, the best reply,
+ * and the agents there. `agent` is always null: agents have no place to follow.
+ */
+export interface ClassesInspection {
+  site: { x: number; y: number };
+  simplex: 'one' | 'intra' | 'inter' | null;
+  mix: [number, number, number] | null;
+  best_reply: 'L' | 'M' | 'H' | null;
+  agents: BargainerView[];
+  agent: null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -580,7 +633,9 @@ export type ColorMode =
   | 'clones'
   | 'culture'
   | 'similarity'
-  | 'zones';
+  | 'zones'
+  | 'best_reply'
+  | 'payoff';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

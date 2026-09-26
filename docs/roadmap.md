@@ -122,6 +122,15 @@ and the docking's activation gap reproduce; the sample setup is a little more di
 Axelrod's size result holds only below Castellano's transition; and the docked mobility experiment's
 near-single culture does not reproduce. See `docs/superpowers/specs/2026-09-25-culture-design.md`.
 
+## Milestone 15: The Emergence of Classes (done)
+
+Axtell, Epstein and Young's bargaining society (2000) as a ninth model kind, with Poza et al.'s
+departures (the mode rule, the low demand, growing memories, a lattice) as switches and sweeps. The
+error rate, the way to equity and the growth of transition times with memory and population
+reproduce; the persistent fractious state and the transition times' magnitude do not; and, as Poza
+et al. found, classes never emerge under the paper's rule at its parameters — they do under the mode
+rule, and persist once planted. See `docs/superpowers/specs/2026-09-25-classes-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -132,6 +141,7 @@ near-single culture does not reproduce. See `docs/superpowers/specs/2026-09-25-c
 - **Epstein's civil violence**: done (Milestone 11).
 - **Tag-based cooperation** (Riolo, Cohen & Axelrod 2001): done (Milestone 12).
 - **Axelrod's culture model and its docking with Sugarscape**: done (Milestone 14).
+- **Axtell, Epstein & Young's emergence of classes**: done (Milestone 15).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

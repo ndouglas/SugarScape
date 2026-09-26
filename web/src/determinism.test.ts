@@ -8,7 +8,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { AnasaziStats, CivilConfig, CivilStats, CultureInspection, CultureStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
+import type { AnasaziStats, CivilConfig, CivilStats, ClassesConfig, ClassesInspection, ClassesStats, CultureInspection, CultureStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -382,6 +382,14 @@ describe('other models through the engine', () => {
     ['ac-neighbor-changes', '0xb12313a2dedfda7e'],
     ['ac-soup', '0xe15b8cab349e25fa'],
     ['ac-drift', '0xf254ab408f46810f'],
+    ['aey-equity', '0x6aa634df2b9c3944'],
+    ['aey-fractious', '0xd6b378e369c0066e'],
+    ['aey-tags', '0x1455ea172db78c68'],
+    ['aey-classes', '0xe2a0783a5fc6734c'],
+    ['pvplh-small-tags', '0x03ca181d96a1c667'],
+    ['pvplh-mode', '0xb90f0d0cab7966b9'],
+    ['pvplh-progressive', '0xca60c420d61a7ffc'],
+    ['pvplh-lattice', '0x7975f5afc2d06c10'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -460,6 +468,29 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the classes model through the engine', () => {
+  it('stops once at equity and inspects a simplex point', async () => {
+    const t = presets.find((p) => p.id === 'aey-transition')!;
+    const e = await Engine.create({ config: structuredClone(t.config as ClassesConfig), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'payoff' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as ClassesStats;
+    expect([e.finished, ends, s.equity_at]).toEqual([true, 1, e.tick]);
+    // Everyone remembering mostly M sits near the M vertex, bottom left.
+    let found: ClassesInspection | null = null;
+    for (let x = 0; x < 30 && !found; x++) {
+      await e.select(x, 104);
+      const v = e.inspection!.view as ClassesInspection;
+      if (v.agents.length > 0) found = v;
+    }
+    expect(found!.simplex).toBe('one');
+    expect(found!.best_reply).toBe('M');
+    expect(e.inspection!.agentId).toBeNull();
   });
 });
 

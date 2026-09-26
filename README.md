@@ -140,7 +140,7 @@ Model extensions:
 ## Other artificial societies
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
-**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games** and **Axelrod Culture**.
+**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture** and **Emergence of Classes**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -569,6 +569,56 @@ Joshua M. Epstein and Michael D. Cohen, "Aligning Simulation Models: A Case Stud
 Marsili and Alessandro Vespignani, *Physical Review Letters* 85 (2000), 3536; Konstantin Klemm,
 Víctor M. Eguíluz, Raúl Toral and Maxi San Miguel, *Physical Review E* 67 (2003), 045101. See
 `docs/superpowers/specs/2026-09-25-culture-design.md`.
+
+### Emergence of Classes (Axtell, Epstein & Young 2000)
+
+A bargaining society. Each period, N/2 pairs drawn at random play the Nash demand game: each
+demands L, M or H (30, 50 or 70 percent of a pie) and both get their demands if they fit in 100,
+else nothing. Every agent remembers its last m opponents' demands and, with probability 1 − ε,
+makes the demand with the highest expected payoff against them (ties at random); otherwise a random
+one. The defaults are the paper's Fig. 2: 100 agents, memory 10, ε = 0.2, random memories. With
+**Two tags** the agents come in two types marked by a meaningless tag, and each best-replies to what
+the opponent's type did — a memory per tag, as Poza et al. read AEY (**Tagged memory** switches to
+one shared memory). The **Regime** chart reads the best-reply regions agents sit in, as AEY's
+pictures do: equity (everyone's best reply is M), fractious (no one's is), and with tags classes
+(equity within types, one type demanding H of the other), equity between types only, or "equity
+above, division below". The stop, like AEY's transition target, waits for every agent to hold at
+least (1 − ε)·m M's.
+
+What reproduces (20 seeds unless stated): the realized error rate is 2ε/3 (0.1335 against the
+paper's 0.1333); a random start reaches equity, by period 14 (median); transition times from a
+fractious start grow steeply with memory and population. What does not: **the fractious state of
+Fig. 3 is never reached from a random start, and started fractious it does not persist** (the paper:
+over 10⁹ periods) — it lasts 1 to 10 periods, paying about 18 rather than a quarter of the pie, and
+every run reaches equity by period 53; the transition times are about two orders of
+magnitude below Fig. 4's (a median of 600 periods at m = 13, ε = 0.1, against "in excess of 10⁵");
+and **with tags at AEY's parameters, classes and "equity above, division below" never appear**
+(0 of 20), confirming Poza, Villafáñez, Pajares, López-Paredes and Hernández (2011) — nor at the
+smaller society (20 agents, memory 5, ε = 0.05) where they report seeing it. Planted, a class
+system does persist (18 of 20 at 20 000 periods).
+
+Poza et al.'s departures are switches: **Decision** — best-reply to the most frequent remembered
+demand, under which segregation appears in 10 of 20 runs and half the runs reach the fractious state
+first; **Low demand** (5–45; a higher L slows the way to equity, as they found); **Memories start**
+empty and growing (they report a longer transition; measured, no difference); and **Who meets whom**
+— a torus of lattice neighbors, tags laid out at random, in four zones or in two (with tags at
+random, 12 of 20 runs reach classes or equity between types without equity within).
+
+The view is the paper's memory simplex: H at the top, M at the lower left, L at the lower right,
+each agent a dot at its memory's mix, the background shaded by the best reply there (**Best reply**)
+or the dots by their last payoff (**Payoff**). With tags, two simplexes: memories of one's own type
+and of the other. Inspect a point for its mix, best reply and the agents there. Charts: Mean payoff;
+Outcomes (M–M, H–L, failures, waste); M in memory; Regime; with tags Payoffs by tag and Inter-type
+advantage. Presets: `aey-equity`, `aey-fractious`, `aey-transition` (stops at equity), `aey-tags`,
+`aey-classes`, `pvplh-small-tags`, `pvplh-mode`, `pvplh-progressive`, `pvplh-lattice`. **Compare**
+entry: "AEY’s rule vs the mode rule, with tags — Emergence of Classes (Compare)". Built-in sweeps:
+`aey-memory`, `aey-population`, `aey-first-attractor`, `aey-tag-regimes`, `pvplh-payoffs`.
+
+Credit: Robert Axtell, Joshua M. Epstein and H. Peyton Young, "The Emergence of Classes in a
+Multi-Agent Bargaining Model," in S. Durlauf and H. P. Young (eds.), *Social Dynamics* (MIT Press,
+2001); David J. Poza, Félix A. Villafáñez, Javier Pajares, Adolfo López-Paredes and Cesáreo
+Hernández, "New Insights on the Emergence of Classes Model," *Discrete Dynamics in Nature and
+Society* 2011, 915279. See `docs/superpowers/specs/2026-09-25-classes-design.md`.
 
 ## Experiments
 

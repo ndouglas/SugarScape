@@ -105,6 +105,15 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("ac-neighbor-changes", 0xb12313a2dedfda7e),
     ("ac-soup", 0xe15b8cab349e25fa),
     ("ac-drift", 0xf254ab408f46810f),
+    ("aey-equity", 0x6aa634df2b9c3944),
+    ("aey-fractious", 0xd6b378e369c0066e),
+    ("aey-transition", 0x38563aa17c61868d),
+    ("aey-tags", 0x1455ea172db78c68),
+    ("aey-classes", 0xe2a0783a5fc6734c),
+    ("pvplh-small-tags", 0x3ca181d96a1c667),
+    ("pvplh-mode", 0xb90f0d0cab7966b9),
+    ("pvplh-progressive", 0xca60c420d61a7ffc),
+    ("pvplh-lattice", 0x7975f5afc2d06c10),
 ];
 
 fn fingerprint(id: &str) -> u64 {

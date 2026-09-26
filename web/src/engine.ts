@@ -53,6 +53,7 @@ export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its
 export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
   if (modelOf(config) === 'tags') return `This run has reached its last generation (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'classes') return `Equity reached at t = ${tick}: every agent remembers mostly M — Reset to run it again`;
   if (modelOf(config) === 'culture') return `The lattice is stable at t = ${tick}: no two neighbors can interact — Reset to run it again`;
   if (modelOf(config) === 'sugarscape') return `The cultures have settled at t = ${tick}: every two share all or nothing — Reset to run it again`;
   const year = calendarYear(config, tick);

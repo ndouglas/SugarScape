@@ -7,6 +7,7 @@ pub mod agent;
 pub mod anasazi;
 pub mod bits;
 pub mod civil;
+pub mod classes;
 pub mod config;
 pub mod culture;
 pub mod econ;

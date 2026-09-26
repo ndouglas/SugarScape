@@ -1,0 +1,48 @@
+{
+  "name": "Emergence of Classes: memory and the way out of fractiousness (Fig. 4)",
+  "description": "Axtell, Epstein and Young's Fig. 4: from a fractious start (every memory half H, half L), 10 agents; the metric is the first period at which every agent holds at least (1 − ε)·m M's (their transition target), capped at 100 000. They report exponential growth with memory — over 10⁵ periods at m = 13. Measured (release, seeds 1–10, recorded 2026-09-25): at ε = 0.05, 992, 391, 1060, 49 500 (one run capped) and 21 900 periods at m = 6, 8, 10, 12, 14; at ε = 0.1, 228, 416, 168, 1420, 1506. It grows, unevenly (at ε = 0.05 every memory from 6 to 14 must be all M; at ε = 0.1 rounding makes m = 6 and 8 demand an all-M memory too), and two orders of magnitude below the paper's.",
+  "base": {
+    "preset": "aey-transition"
+  },
+  "x": {
+    "label": "Memory (m)",
+    "path": "memory",
+    "values": [
+      6,
+      8,
+      10,
+      12,
+      14
+    ]
+  },
+  "series": {
+    "label": "Noise",
+    "values": [
+      {
+        "at": 0,
+        "name": "ε = 0.05",
+        "set": {
+          "noise": 0.05,
+          "stop_at_equity": false
+        }
+      },
+      {
+        "at": 1,
+        "name": "ε = 0.1",
+        "set": {
+          "noise": 0.1,
+          "stop_at_equity": false
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "equity_at"
+  }
+}

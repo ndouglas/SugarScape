@@ -1,11 +1,12 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
-import { isCivilView, isCultureView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isClassesView, isCultureView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AnasaziInspection,
   CivilInspection,
+  ClassesInspection,
   CultureInspection,
   CultureSiteView,
   LinkView,
@@ -149,6 +150,23 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A point of a memory simplex: its mix, the best reply there, and the agents whose memory plots there. */
+  private classesRows(view: ClassesInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (!view.simplex || !view.mix) return [row('Point', 'outside the simplexes')];
+    const [l, m, hi] = view.mix.map((p) => `${Math.round(p * 100)}%`);
+    const name = { one: 'Memories', intra: 'Memories of their own tag', inter: 'Memories of the other tag' }[view.simplex];
+    const rows = [row('Simplex', name), row('Remembered', `L ${l} · M ${m} · H ${hi}`), row('Best reply', view.best_reply ?? '')];
+    if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+    const shown = view.agents.slice(0, 12);
+    for (const a of shown) {
+      const tag = a.tag ? ` · ${a.tag}` : '';
+      rows.push(row(`#${a.id}`, `L ${a.memory[0]} · M ${a.memory[1]} · H ${a.memory[2]}${tag} · last ${a.last_demand ?? '–'} · payoff ${fmt(a.mean_payoff)}`));
+    }
+    if (view.agents.length > shown.length) rows.push(row('', `and ${view.agents.length - shown.length} more`));
+    return rows;
+  }
+
   /** A culture site (its traits, region, zone and what each neighbor shares) or a lane between two sites. */
   private cultureRows(view: CultureInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -255,7 +273,9 @@ export class InspectPanel {
           ? `Agent #${shown.agentId} is gone: killed, or dead of old age.`
           : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
-      const rows = isCultureView(view)
+      const rows = isClassesView(view)
+        ? this.classesRows(view)
+        : isCultureView(view)
         ? this.cultureRows(view)
         : isTagsView(view)
         ? this.tagsRows(view)

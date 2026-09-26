@@ -1,0 +1,45 @@
+{
+  "name": "Emergence of Classes: which regime comes first",
+  "description": "Poza et al. 2011's Figs. 4–5: which regime a random start reaches first — equity (1) or fractiousness (2); the mean minus 1 is the share of runs fractious first. Measured (release, seeds 1–20, 3000 periods, recorded 2026-09-25): under AEY's rule every run reaches equity first at every size (N = 10, 20, 50, 100, m = 10, ε = 0.2); under the mode rule 55–60 % reach the fractious state first.",
+  "base": {
+    "preset": "aey-equity"
+  },
+  "x": {
+    "label": "Agents (N)",
+    "path": "agents",
+    "values": [
+      10,
+      20,
+      50,
+      100
+    ]
+  },
+  "series": {
+    "label": "Decision",
+    "values": [
+      {
+        "at": 0,
+        "name": "Expected payoff (AEY)",
+        "set": {
+          "decision": "expected"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Mode (Poza et al.)",
+        "set": {
+          "decision": "mode"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 3000,
+  "metric": {
+    "kind": "final",
+    "series": "first_attractor"
+  }
+}

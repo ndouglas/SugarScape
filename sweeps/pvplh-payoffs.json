@@ -1,0 +1,49 @@
+{
+  "name": "Emergence of Classes: the low demand and the way to equity (Poza et al.)",
+  "description": "Poza et al. 2011's Fig. 7: the transition time from a fractious start against the low demand L (H = 100 − L), with 10 and 20 agents, m = 10, ε = 0.1. They report that a higher L slows the way to equity. Measured (release, seeds 1–10, recorded 2026-09-25): with 10 agents 39, 86, 150, 168, 150 and 465 periods at L = 5, 15, 25, 30, 35, 45; with 20 agents 105, 111, 152, 161, 166 and 33 600 (one run capped). A higher L slows it, sharply near 45.",
+  "base": {
+    "preset": "aey-transition"
+  },
+  "x": {
+    "label": "Low demand (L)",
+    "path": "low",
+    "values": [
+      5,
+      15,
+      25,
+      30,
+      35,
+      45
+    ]
+  },
+  "series": {
+    "label": "Agents",
+    "values": [
+      {
+        "at": 0,
+        "name": "10 agents",
+        "set": {
+          "agents": 10,
+          "stop_at_equity": false
+        }
+      },
+      {
+        "at": 1,
+        "name": "20 agents",
+        "set": {
+          "agents": 20,
+          "stop_at_equity": false
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "equity_at"
+  }
+}

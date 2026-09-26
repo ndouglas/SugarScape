@@ -56,6 +56,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'ac-random-activation-20',
     b: 'ac-sweep-activation',
   },
+  {
+    id: 'aey-tags-vs-mode',
+    label: 'AEY’s rule vs the mode rule, with tags — Emergence of Classes (Compare)',
+    a: 'aey-tags',
+    b: 'pvplh-mode',
+  },
 ];
 
 /**

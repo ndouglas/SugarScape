@@ -5,6 +5,8 @@ import type {
   AnyInspection,
   CivilConfig,
   CivilInspection,
+  ClassesConfig,
+  ClassesInspection,
   CultureConfig,
   CultureInspection,
   ColorMode,
@@ -19,7 +21,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -31,12 +33,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   spatial: 'Spatial Games',
   tags: 'Tag Cooperation',
   culture: 'Axelrod Culture',
+  classes: 'Emergence of Classes',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes'
     ? tag
     : 'sugarscape';
 }
@@ -75,6 +78,11 @@ export function isTagsView(v: AnyInspection): v is TagsInspection {
   return 'generation' in v;
 }
 
+/** A point of the classes model's memory simplexes (it names its simplex). */
+export function isClassesView(v: AnyInspection): v is ClassesInspection {
+  return 'simplex' in v && 'mix' in v;
+}
+
 /** A cell of the culture frame (it says whether it is a site or a lane). */
 export function isCultureView(v: AnyInspection): v is CultureInspection {
   return 'kind' in v && 'neighbors' in v;
@@ -103,6 +111,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
 export function finishesUnpredictably(c: ModelConfig): boolean {
   const model = modelOf(c);
   if (model === 'culture') return (c as CultureConfig).stop_when_stable && (c as CultureConfig).drift === 0;
+  if (model === 'classes') return (c as ClassesConfig).stop_at_equity;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -169,6 +178,11 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['similarity', 'Similarity'],
     ['zones', 'Zones'],
   ],
+  // The memory simplexes shaded by best reply (AEY's figures), or the agents colored by payoff.
+  classes: [
+    ['best_reply', 'Best reply'],
+    ['payoff', 'Payoff'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -181,4 +195,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   spatial: [],
   tags: [],
   culture: [],
+  classes: [],
 };
