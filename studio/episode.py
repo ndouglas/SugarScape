@@ -44,9 +44,14 @@ def episode_dir(name):
     return ROOT / "episodes" / name
 
 
+def load_module(name, module):
+    """An episode's own module, e.g. its `beats` or `claims`."""
+    path = episode_dir(name) / f"{module}.py"
+    spec = importlib.util.spec_from_file_location(f"episodes.{name}.{module}", path)
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    return loaded
+
+
 def load_episode(name):
-    path = episode_dir(name) / "beats.py"
-    spec = importlib.util.spec_from_file_location(f"episodes.{name}.beats", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return list(module.BEATS)
+    return list(load_module(name, "beats").BEATS)
