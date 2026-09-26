@@ -125,13 +125,18 @@ def sting_score(tune, name):
 
 
 def cue_times(cues, beat_names, frames, dissolve=12, fps=30):
-    """Each cue (beat name, sting) as (sting, seconds into the cut): the
-    moment its beat begins — after the dissolves before it — plus CUE_DELAY."""
+    """Each cue (beat name, sting[, seconds into the beat]) as (sting, seconds
+    into the cut): the moment its beat begins — after the dissolves before
+    it — plus its own offset, or CUE_DELAY."""
     starts, elapsed = {}, 0
-    for i, (name, n) in enumerate(zip(beat_names, frames)):
+    for name, n in zip(beat_names, frames):
         starts[name] = elapsed / fps
         elapsed += n - dissolve
-    return [(sting, round(starts[beat] + CUE_DELAY, 3)) for beat, sting in cues if beat in starts]
+    out = []
+    for beat, sting, *offset in cues:
+        if beat in starts:
+            out.append((sting, round(starts[beat] + (offset[0] if offset else CUE_DELAY), 3)))
+    return out
 
 
 def sting_mix_command(track, stings, out):
