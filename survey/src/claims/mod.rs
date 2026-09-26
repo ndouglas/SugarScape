@@ -8,6 +8,7 @@ mod classes;
 mod culture;
 mod dpd;
 mod ethno;
+mod norms;
 mod opinions;
 mod spatial;
 mod structure;
@@ -27,6 +28,7 @@ pub fn all() -> Vec<Claim> {
         culture::claims(),
         dpd::claims(),
         ethno::claims(),
+        norms::claims(),
         opinions::claims(),
         spatial::claims(),
         structure::claims(),
