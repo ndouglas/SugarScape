@@ -141,8 +141,8 @@ Model extensions:
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
-**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**
-and **Demographic PD**.
+**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
+**Demographic PD** and **Norms and Metanorms**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -985,6 +985,54 @@ Social Science* (Princeton, 2006), chapter 9 and its appendix; and Andreas Radax
 "Replication of the Demographic Prisoner's Dilemma," MPRA 14419 (2009), published as "Prospects and
 Pitfalls of Statistical Testing: Insights from Replicating the Demographic Prisoner's Dilemma,"
 *JASSS* 13(4) 1 (2010). See `docs/superpowers/specs/2026-09-26-demographic-pd-design.md`.
+
+### Norms and Metanorms (Axelrod 1986; Galán & Izquierdo 2005)
+
+Twenty agents, each with a boldness and a vengefulness (eight levels, 0/7 to 7/7). Four times a
+generation each gets a chance to defect, seen by each of the others with a random chance S: it
+defects when S is below its boldness, gaining 3 and costing everyone else 1. Whoever sees it punishes
+with probability equal to their vengefulness — the defector loses 9, the punisher 2. With
+**Metanorms**, whoever sees a defection and lets it pass can be seen and punished for that too (the
+same −9 and −2, the same vengefulness). Then the more successful breed: one standard deviation above
+the mean payoff, two offspring; one below, none; each bit mutates at 1 %.
+
+Axelrod's claims hold at his horizon (100 seeds, generation 100): the norms game ends spread across
+his three outcomes and the norm is rarely established (4 runs); metanorms establish it in 92; and his
+dominance variant (20 strong agents punished less, 10 weak) behaves as he says — without metanorms
+both groups end bold, with them the weak group is kept from being bold (and so is the strong one).
+Galán and Izquierdo re-implemented it and ran it longer. Their results reproduce: the norms game
+collapses in every run by 1 000 generations; metanorms decay — 92 runs established at 100
+generations, 52 established and 43 collapsed by 10⁵, 8 of 10 collapsed at 10⁶; the norm collapses far
+sooner with a mutation rate of 0.001, with meta-payoffs a tenth as large, or under any of their three
+other selection rules (random tournament, roulette wheel, above-the-mean); and it holds everywhere
+with a temptation of 10.
+
+Axelrod left two things unstated, and both are switches. **When every payoff ties** (so there is no
+standard deviation), Galán and Izquierdo give everyone two offspring and remove a random half; they
+warn this 'can alter the long-term results significantly'. It does: giving everyone one offspring
+instead keeps the metanorm — 92 of 100 runs established at 10⁵, 3 collapsed. And **how the offspring
+are brought back to 20** ('For convenience, the number of offspring is adjusted') is not a
+convenience: removing the worst parents' copies first and copying the best collapses all 50 runs by
+10⁵, against 20 with random removal. Whether Axelrod's metanorm lasts depends on details his paper
+does not give.
+
+The view is the papers' boldness–vengefulness plane — boldness to the right, vengefulness up, each
+strategy a cell shaded by how many agents hold it, Galán and Izquierdo's norm-established (green) and
+norm-collapsed (red) corners outlined, the population's mean over the last 200 generations as a trail —
+and a strip of the agents: boldness and vengefulness bars and a payoff swatch, the strong group first
+under dominance. Color modes: **Agents**, **Payoff**, **Group**. Inspect a strategy for the agents
+holding it, or an agent for its bits, payoff, events and parent (and Follow it). Charts: Boldness and
+vengefulness; Events; Mean payoff; Norm state; By group. Presets: `ax-norms`, `ax-metanorms`,
+`ax-dominance`, `ax-dominance-metanorms` (100 generations), `gi-metanorms-long`, `gi-low-mutation`,
+`gi-mild-metanorms`, `gi-temptation-10`, `gi-tournament` (20 000). **Compare** entry: "Axelrod’s
+selection vs a random tournament — Norms and Metanorms (Compare)". Built-in sweeps: `norms-horizon`,
+`norms-mutation`, `norms-meta-payoffs`, `norms-temptation`, `norms-selection`, `norms-readings`,
+`norms-dominance`.
+
+Credit: Robert Axelrod, "An Evolutionary Approach to Norms," *American Political Science Review*
+80(4) (1986), 1095–1111; José Manuel Galán and Luis R. Izquierdo, "Appearances Can Be Deceiving:
+Lessons Learned Re-Implementing Axelrod's 'Evolutionary Approach to Norms'," *JASSS* 8(3) 2 (2005).
+See `docs/superpowers/specs/2026-09-26-norms-design.md`.
 
 ## Experiments
 

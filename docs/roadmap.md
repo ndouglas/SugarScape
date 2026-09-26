@@ -175,6 +175,16 @@ payoffs never converge to pure defection, footnote 27's monopoly comes in 1 run 
 "equivalence" is exact only when metabolism is charged per game. See
 `docs/superpowers/specs/2026-09-26-demographic-pd-design.md`.
 
+## Milestone 20: Norms and Metanorms (done)
+
+Axelrod's norms and metanorms games (1986) as a model kind, with his dominance variant, Galán and
+Izquierdo's departures (run length, mutation, meta-payoffs, temptation, three other selection rules) and
+their readings of what Axelrod left unstated as switches. Axelrod's 100-generation results and dominance
+claims reproduce; so do Galán and Izquierdo's reversals — metanorms usually collapse by 10⁶ generations,
+and sooner under milder meta-payoffs, lower mutation or any other selection rule. The unstated details
+decide the result: ties kept, the metanorm holds; a ranked refill, it collapses in every run. See
+`docs/superpowers/specs/2026-09-26-norms-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -190,6 +200,7 @@ payoffs never converge to pure defection, footnote 27's monopoly comes in 1 run 
 - **Hegselmann & Krause's bounded confidence**: done (Milestone 17).
 - **Cohen, Riolo & Axelrod's social structure**: done (Milestone 18).
 - **Epstein's demographic Prisoner's Dilemma** (and Radax & Rengs' replication): done (Milestone 19).
+- **Axelrod's norms and metanorms** (and Galán & Izquierdo's re-implementation): done (Milestone 20).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

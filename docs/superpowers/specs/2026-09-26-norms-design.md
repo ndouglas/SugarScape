@@ -32,6 +32,15 @@ Axelrod's norms and metanorms games — 20 agents evolving boldness and vengeful
 - Metanorms (Fig. 5): "Even though after 100 generations the norm is almost always established, as time goes by … the norm usually collapses." Mutation 0.001 (Fig. 7): collapse "much more quickly" and more stable. ME = −0.2, MP = −0.9 (Fig. 9): "the norm quickly collapses and such state is sustained in the long term. Axelrod's conclusions are reversed." T = 10 (Fig. 11): "the norm is clearly established in almost all runs" (the norm-established ESS is bᵢ = 11/169, vᵢ = 1).
 - Other selection rules (Fig. 12): **random tournament** (pick two at random, copy the higher payoff, ties at random, 20 times), **roulette wheel** (probability ∝ payoff − the generation's minimum; all equal → tournament), **average** (≥ mean twice, else eliminated; refill randomly). "If, for instance, random tournament is chosen, the states where the norm has collapsed are quickly reached."
 
+## Measured in planning
+
+100 seeds at generation 100; 50 seeds for long runs unless stated; the survey reproduces each.
+
+- Axelrod Fig. 2 (norms, generation 100): low boldness with vengefulness ≥ 3/7 in 35, both low in 31, high boldness with low vengefulness in 27; established 4, collapsed 19. Fig. 4 (metanorms): established 92, collapsed 0.
+- Dominance (generation 100): without metanorms boldness 0.94 (strong) and 0.86 (weak), vengefulness 0.01 and 0.03; with metanorms boldness 0.06 and 0.02, vengefulness 0.93 and 0.90.
+- G&I, 100 seeds, established / collapsed at 100, 10³, 10⁴, 10⁵ generations: norms 0.04/0.19, 0/0.99, 0/0.99, 0/1.00; metanorms 0.92/0, 0.84/0.01, 0.81/0.07, 0.52/0.43; mutation 0.001 0.93/0, 0.57/0.12, 0.11/0.83, 0/1.00; meta-payoffs ÷ 10 0.06/0.12, 0/0.92, 0/1.00, 0/1.00; T = 10 1.00/0 throughout; tournament 0.50/0.01, 0.08/0.80, 0/0.98, 0/0.98; roulette 0.73/0, 0.61/0.23, 0.06/0.88, 0.01/0.93; above-the-mean 0.92/0, 0.72/0.18, 0.09/0.90, 0/1.00. At 10⁶ (20 seeds): metanorms established 0.10, collapsed 0.90.
+- Readings (metanorms, 100 seeds at 10⁵): ties drift (G&I) 0.52/0.43; ties kept 0.92/0.03; ranked refill 0/1.00; ranked refill with ties kept 0/0.99.
+
 ## Architecture
 
 Model kind `norms` ("Norms and Metanorms"): `ModelKind::Norms`, `ModelConfig::Norms(NormsConfig)` tagged `"model": "norms"`, a `NormsWorld` implementing `Model`, schema, `SERIES`, presets and golden entries — the same wiring as the other models. Code in `crates/sugarscape-core/src/norms/` (`config.rs`, `world.rs` for the game and evolution, `stats.rs`, `view.rs`, `presets.rs`, `mod.rs`).
@@ -67,16 +76,18 @@ Model kind `norms` ("Norms and Metanorms"): `ModelKind::Norms`, `ModelConfig::No
 3. **Refill** (`axelrod` and `average`) to n: `random` — remove uniformly random offspring while above n, duplicate uniformly random offspring while below; `ranked` — remove offspring of the lowest-payoff parents first (ties by index), duplicate those of the highest first.
 4. **Mutation:** each bit of each offspring flips with probability `mutation`. The new generation's strategies replace the old; payoffs reset.
 
+Each period plays the current generation, records it, and breeds the next: the statistics, the plane, the strip and Inspect describe the generation that just played (period 0: the starting population, no play). The fingerprint covers the next generation.
+
 Random draws follow this order, so runs are deterministic. Strategies start with uniform random bits.
 
 ## Statistics
 
-`SERIES`: `mean_boldness`, `mean_vengefulness` (levels ÷ 7), `mean_payoff`, `defections`, `punishments`, `metapunishments` (this generation's counts), `established`, `collapsed` (0/1, G&I's regions on the new generation's means), and under `groups` `strong_boldness`, `weak_boldness`, `strong_vengefulness`, `weak_vengefulness` (0 without groups).
+`SERIES`: `mean_boldness`, `mean_vengefulness` (levels ÷ 7), `mean_payoff`, `defections`, `punishments`, `metapunishments` (this generation's counts), `established`, `collapsed` (0/1, G&I's regions on the new generation's means), `copied_equal` (1 when every payoff tied and the `all_equal` reading applied), and under `groups` `strong_boldness`, `weak_boldness`, `strong_vengefulness`, `weak_vengefulness` (0 without groups).
 
 ## Views
 
 - **B–V plane** (left): 8 × 8 levels, 12 cells each (96 × 96); boldness right, vengefulness up; each cell shaded by the number of agents holding that strategy; G&I's regions outlined (established top-left, collapsed bottom-right); the mean (B, V) of the last 200 generations as a fading trail.
-- **Agent strip** (right, 6 cells gap): one row per agent (4 cells tall), bars for B and V and this generation's defections, times punished, punishments given and metapunishments given as tick counts; under `groups` the strong group first, a gap, then the weak.
+- **Agent strip** (right, 6 cells gap): one row per agent (4 cells tall): a boldness bar (red), a vengefulness bar (blue) and a payoff (or, under **Group**, group) swatch; the strong group first, a gap, then the weak. The event counts are in Inspect and the Events chart. The frame is 166 cells wide (the 96-cell plane, a 6-cell gap, a 64-cell strip).
 - **Color modes:** **Agents** (density), **Payoff** (plane cells and rows by this generation's payoff), **Group** (listed only under `groups`).
 - **Inspect:** a plane cell — its (B, V) and agents; a strip row — the agent's bits, B, V, payoff, event counts and parent. `locate` returns an agent's strip row; Follow available.
 - **Charts:** Boldness and vengefulness; Events (defections, punishments, metapunishments); Mean payoff; Norm state (`established`, `collapsed`); By group (under `groups`). Time axis: Generations.
@@ -107,7 +118,7 @@ Seeds and horizons measured to fit a browser run and recorded in each descriptio
 - `norms-selection`: metanorms, collapse share per selection rule.
 - `norms-readings`: metanorms, `refill` × `all_equal`.
 - `norms-dominance`: each group's boldness, series norms/metanorms.
-The CLI names the stop `(its last generation)`.
+The CLI names the stop `(its last generation)`. A run stopped at `stop_at` holds its values (`holds_when_finished`), so a sweep over `stop_at` reads each run at its stop; the built-in sweeps use `stop_at` as their horizon.
 
 ## Survey
 
@@ -124,7 +135,7 @@ The presets menu gains a **Norms and Metanorms** group and the Compare entry; th
 
 - **Golden/legacy:** existing entries untouched; new entries for every `norms` preset.
 - **Core unit:** defection iff S < B; observation and punishment probabilities at 0 and 1; Table 1's payoff arithmetic on a hand-built world; metanorms only on non-punishers and never by the defector or the non-punisher; each selection rule (the s.d. boundaries, the all-equal case both ways, average, tournament ties, roulette's shift and all-equal fallback); refill both ways; mutation at 0 and 1; groups (selection within groups, group sizes kept, the strong P); statistics and regions; the view and Inspect; keyframes; live and reset fields; degenerate configs (2 agents, 1 round, mutation 0 and 1).
-- **Web:** schema groups, charts, the Compare entry, a sweep over a `norms` base, determinism through the engine.
+- **Web:** schema groups, charts, the Compare entry, a sweep over a `norms` base, determinism through the engine (the five `gi-*` presets in the golden list; the `ax-*` presets stop at 100, before its 200 ticks, and `ax-metanorms` is run to its stop and inspected).
 - **Browser (controller):** every preset's view and charts, Inspect, the stop, Compare, recording, Experiments, every existing scenario.
 
 ## Docs
