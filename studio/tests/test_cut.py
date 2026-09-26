@@ -1,3 +1,5 @@
+import pathlib
+import tempfile
 import unittest
 
 import cut
@@ -40,6 +42,33 @@ class CutTest(unittest.TestCase):
     def test_a_single_captioned_beat_maps_its_overlay(self):
         argv = cut.command(["a"], [90], "o.mp4", captions=["a/caption.png"])
         self.assertEqual(argv[argv.index("-map") + 1], "[b0]")
+
+
+class FolderCheckTest(unittest.TestCase):
+    def folder(self, root, name, count, caption=False):
+        f = root / name
+        f.mkdir()
+        for i in range(1, count + 1):
+            (f / f"{i:04d}.png").write_bytes(b"")
+        if caption:
+            (f / "caption.png").write_bytes(b"")
+        return str(f)
+
+    def test_matching_folders_pass(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = pathlib.Path(t)
+            a = self.folder(root, "01", 3, caption=True)
+            self.assertEqual(cut.check_folders([a], [3], [f"{a}/caption.png"]), [])
+
+    def test_short_long_and_uncaptioned_beats_are_named(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = pathlib.Path(t)
+            short, long_, bare = (self.folder(root, "01", 2), self.folder(root, "02", 4), self.folder(root, "03", 3))
+            problems = cut.check_folders([short, long_, bare], [3, 3, 3], [None, None, f"{bare}/caption.png"])
+            self.assertEqual(len(problems), 3)
+            self.assertIn("01", problems[0])
+            self.assertIn("02", problems[1])
+            self.assertIn("caption", problems[2])
 
 
 if __name__ == "__main__":

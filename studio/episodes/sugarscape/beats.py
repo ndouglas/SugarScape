@@ -98,6 +98,9 @@ BEATS = [
         shot="crowd",
         ticks_per_second=10,
         lead_in=1.0,
+        # Selection happens here, in the die-off (sight 3.48 → 3.73, hunger
+        # 2.52 → 1.88 by tick 80 on seed 18); the gather beat holds the result.
+        overlays=("dials",),
         camera=(Move(0, 9, (0, -38, 22), (0, 0, 0), WIDE_EYE, WIDE_AT, orbit=0.35),),
     ),
     Beat(

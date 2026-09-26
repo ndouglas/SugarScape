@@ -31,7 +31,8 @@ def run(argv, quiet=False):
 
 
 def blender(*args):
-    run([BLENDER, "-b", "--factory-startup", "-P", STUDIO / "render.py", "--", *args], quiet=True)
+    # Without --python-exit-code, Blender exits 0 when the script raises.
+    run([BLENDER, "-b", "--factory-startup", "--python-exit-code", "1", "-P", STUDIO / "render.py", "--", *args], quiet=True)
 
 
 def main():
@@ -66,7 +67,10 @@ def main():
     folders = [out / kind / f"{i:02d}" for i in range(1, len(beats) + 1)]
     captions = [str(f / "caption.png") if b.caption else None for f, b in zip(folders, beats)]
     frames = [b.frames for b in beats]
-    movie = out / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
+    problems = cut.check_folders([str(f) for f in folders], frames, captions)
+    if problems:
+        sys.exit("cannot cut:\n  " + "\n  ".join(problems))
+    movie =out / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
     run(cut.command([str(f) for f in folders], frames, str(movie), captions, DISSOLVE))
     probe = subprocess.run(
         ["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",

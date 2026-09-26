@@ -109,6 +109,19 @@ class PoseTest(unittest.TestCase):
         self.assertTrue(self.at(t, self.timing.frame(3.4)).visible)
         self.assertFalse(self.at(t, self.timing.frame(3.5) + animate.POOF_FRAMES + 1).visible)
 
+    def test_fast_beats_never_show_a_flump_outside_its_life(self):
+        # At 40 ticks a second a tick is 0.75 frames: a fixed-length spawn
+        # or poof would show Flumps for many ticks before birth or after death.
+        fast = animate.Timing(ticks_per_second=40, lead_in=1.0)
+        t = track(10, [(1, 1), (1, 1)], death=12)
+        tick_frames = fast.fps / fast.ticks_per_second
+        for frame10 in range(0, 1000):
+            frame = frame10 / 10
+            p = animate.pose(t, fast, frame, self.corners, 8, 8)
+            if p.visible:
+                self.assertGreaterEqual(frame, fast.frame(10) - tick_frames - 1e-9, frame)
+                self.assertLessEqual(frame, fast.frame(12) + 1e-9, frame)
+
     def test_single_frame_track_poses(self):
         t = track(0, [(5, 5)], death=1)
         self.assertTrue(self.at(t, self.timing.frame(0.2)).visible)

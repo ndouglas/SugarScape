@@ -11,6 +11,8 @@ import dump as dump_mod
 from blender import board, flump, materials, overlays
 
 UPDATERS = []
+# The first exception the frame handler raised, if any.
+ERRORS = []
 # The close-up rigs by agent id, for overlays.
 RIGS = {}
 
@@ -131,12 +133,21 @@ def build_beat(beat, d, preview):
 
 
 def install(updaters):
+    """Registers the one frame-change handler. Blender prints a handler's
+    exceptions and renders on with stale poses, so the first one is kept
+    in ERRORS for render.py to fail on."""
     UPDATERS[:] = updaters
+    ERRORS.clear()
 
     def on_frame(scene, depsgraph=None):
         frame = scene.frame_current + scene.frame_subframe
-        for update in UPDATERS:
-            update(frame)
+        try:
+            for update in UPDATERS:
+                update(frame)
+        except Exception as e:
+            if not ERRORS:
+                ERRORS.append(f"frame {frame}: {e!r}")
+            raise
 
     bpy.app.handlers.frame_change_pre.clear()
     bpy.app.handlers.frame_change_pre.append(on_frame)

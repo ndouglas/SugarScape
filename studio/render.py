@@ -49,6 +49,8 @@ def main(argv):
     else:
         s.render.filepath = str(folder / "####")
         bpy.ops.render.render(animation=True)
+    if scene.ERRORS:
+        raise RuntimeError(f"the frame handler failed, so frames may be wrong: {scene.ERRORS[0]}")
 
 
 main(sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else [])

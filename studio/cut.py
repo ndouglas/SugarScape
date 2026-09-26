@@ -1,7 +1,25 @@
 """The final cut: beats' PNG sequences, each with its caption laid over it
 and faded in and out, joined with cross-dissolves by ffmpeg."""
 
+import pathlib
+
 CAPTION_IN, CAPTION_RAMP, CAPTION_OUT = 0.3, 0.4, 0.5
+
+
+def check_folders(folders, frames, captions):
+    """What would make the cut wrong: a beat folder without exactly its
+    frames 0001…NNNN.png, or a captioned beat without its caption.png.
+    (ffmpeg would absorb a short or long beat into the dissolves unnoticed.)"""
+    problems = []
+    for folder, count, caption in zip(folders, frames, captions):
+        f = pathlib.Path(folder)
+        found = sorted(p.name for p in f.glob("[0-9][0-9][0-9][0-9].png"))
+        want = [f"{i:04d}.png" for i in range(1, count + 1)]
+        if found != want:
+            problems.append(f"{f.name}: {len(found)} frames, expected {count} (0001–{count:04d}.png)")
+        if caption is not None and not pathlib.Path(caption).exists():
+            problems.append(f"{f.name}: missing caption {caption}")
+    return problems
 
 
 def total_frames(frames, dissolve):

@@ -34,6 +34,21 @@ class Timing:
         return 1 + seconds * self.fps
 
     @property
+    def tick_frames(self):
+        """How many frames one tick lasts."""
+        return self.fps / self.ticks_per_second
+
+    @property
+    def spawn_frames(self):
+        """A spawn lasts at most a tick, so a Flump never shows before its time."""
+        return min(SPAWN_FRAMES, self.tick_frames)
+
+    @property
+    def poof_frames(self):
+        """A poof ends as its death's tick is reached, lasting at most a tick."""
+        return min(POOF_FRAMES, self.tick_frames)
+
+    @property
     def hop(self):
         """The share of each tick's interval the hop takes (at its end)."""
         return min(1.0, HOP_SECONDS * self.ticks_per_second)
@@ -128,14 +143,14 @@ def _yaw(track, k, w, h):
 
 
 def _poof_start(track, timing):
-    return timing.frame(track.death - 0.5)
+    return timing.frame(track.death) - timing.poof_frames
 
 
 def pose(track, timing, frame, corners, w, h):
     born = timing.frame(track.first)
-    if frame < born - SPAWN_FRAMES:
+    if frame < born - timing.spawn_frames:
         return HIDDEN
-    if track.death is not None and frame > _poof_start(track, timing) + POOF_FRAMES:
+    if track.death is not None and frame > timing.frame(track.death):
         return HIDDEN
     tick = timing.tick_at(frame)
     last = len(track.cells) - 1
@@ -173,12 +188,12 @@ def pose(track, timing, frame, corners, w, h):
             sx, sy, sz = _squash(1 - 0.2 * math.sin(math.pi * (a - LAND) / (1 - LAND)))
             yaw = _yaw(track, k + 1, w, h)
     if frame < born:
-        u = 1 - (born - frame) / SPAWN_FRAMES
+        u = 1 - (born - frame) / timing.spawn_frames
         z += 1.5 * (1 - smoothstep(u))
         grow = smoothstep(u) * (1 + 0.15 * math.sin(math.pi * u))
         sx, sy, sz = sx * grow, sy * grow, sz * grow
     if track.death is not None and frame >= _poof_start(track, timing):
-        u = (frame - _poof_start(track, timing)) / POOF_FRAMES
+        u = (frame - _poof_start(track, timing)) / timing.poof_frames
         s = (1 + 0.15 * math.sin(math.pi * min(u * 2, 1))) * (1 - smoothstep(u))
         sx, sy, sz = sx * s, sy * s, sz * s
     sz *= 1 - 0.12 * hunger
