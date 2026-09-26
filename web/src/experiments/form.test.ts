@@ -154,6 +154,11 @@ describe('sweeps over other models', () => {
       ticks: 200,
       metric: { kind: 'final', series: 'fraction_c' },
     });
+    expect(defaultForm('ethno')).toMatchObject({
+      x: { path: 'cost', values: '0.005:0.03:0.0025' },
+      ticks: 2000,
+      metric: { kind: 'window_mean', series: 'ethnocentric', from: 1901, to: null },
+    });
   });
 
   it('suggest a Schelling config’s own paths, never its model tag', () => {

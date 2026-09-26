@@ -50,6 +50,24 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'rca-published-p2',
     b: 'rca-literal-p2',
   },
+  {
+    id: 'ha-four-vs-five',
+    label: 'Four colors vs five (the Java’s draw) — Ethnocentrism (Compare)',
+    a: 'ha-standard',
+    b: 'ha-java-five-colors',
+  },
+  {
+    id: 'ha-adjacent-vs-anywhere',
+    label: 'Next to the parent vs anywhere — Ethnocentrism (Compare)',
+    a: 'ha-standard',
+    b: 'jansson-offspring-anywhere',
+  },
+  {
+    id: 'ha-tags-vs-kin',
+    label: 'Tags vs kin — Ethnocentrism (Compare)',
+    a: 'ha-standard',
+    b: 'jansson-kin',
+  },
 ];
 
 /**

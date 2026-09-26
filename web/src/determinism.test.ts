@@ -1,16 +1,32 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
+import { defaultForm, formToSweep } from './experiments/form';
 import { Engine, type Speed } from './engine';
-import { modelOf } from './models';
+import { isEthnoView, modelOf } from './models';
 import type { NetworkOverlay } from './protocol';
+import { paramShown } from './schema-form';
 import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { AnasaziStats, CivilConfig, CivilStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
+import type {
+  AnasaziStats,
+  CivilConfig,
+  CivilStats,
+  EthnoConfig,
+  EthnoInspection,
+  EthnoStats,
+  Param,
+  Preset,
+  Snapshot,
+  TagsConfig,
+  TagsInspection,
+  TagsStats,
+} from './types';
 import { MODEL_CHARTS } from './ui/series-data';
-import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
+import { config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
 const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
@@ -374,6 +390,22 @@ describe('other models through the engine', () => {
     ['eh-clones-only', '0x1bd933620c915c0e'],
     ['eh-no-exact-clones', '0xafe94d6c0bb3b8ab'],
     ['rca-adopt-p1', '0x0c3f75d53d237a89'],
+    ['ha-standard', '0xf07433e56417f07c'],
+    ['ha-figure-1', '0x843632b62ddf7a6b'],
+    ['ha-appendix-mutation', '0xae8c7eda9113dae8'],
+    ['ha-appendix-double-play', '0xac2c2167fec9c326'],
+    ['ha-java-five-colors', '0xdc78c1e27b9ab453'],
+    ['ha-java-archive', '0xde2cff652c758fe7'],
+    ['ha-egoist-start', '0xabfdf5c9e1ccdb45'],
+    ['ha-cost-2', '0x41ba53998a8ee613'],
+    ['ha-cost-2-blind', '0x699aa05497139005'],
+    ['ha-misperception', '0x5567187174fd1c15'],
+    ['ha-each-color', '0x9ad570c3ea183419'],
+    ['jansson-offspring-anywhere', '0xcad22f8e7abafbfe'],
+    ['jansson-tag-mutation-30', '0xf9dbf338238a8f1b'],
+    ['jansson-kin', '0x265998639eacfbd0'],
+    ['jansson-kin-fixed', '0x3fac090571612879'],
+    ['hks-no-ethnocentrics', '0xbe867e7210bad2d2'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -478,6 +510,85 @@ describe('the tags model through the engine', () => {
     expect(found!.generation).toBe(60);
     expect(found!.agents).toHaveLength(found!.count);
     expect(e.inspection!.agentId).toBeNull();
+  });
+});
+
+describe('the ethnocentrism model through the engine', () => {
+  const preset = (id: string) => presets.find((p) => p.id === id)!;
+  const create = (id: string, edit: (c: EthnoConfig) => void = () => {}) => {
+    const config = structuredClone(preset(id).config) as EthnoConfig;
+    edit(config);
+    return Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+  };
+  const schema = (JSON.parse(model_schemas_json()) as Record<string, Param[]>).ethno;
+  const field = (path: string) => schema.find((p) => p.path === path)!;
+
+  it('builds a Rules panel without `allowed`, with a nullable tag mutation and the kin fields shown only with kin strategies', () => {
+    expect(schema.some((p) => p.path === 'allowed')).toBe(false);
+    expect(schema.filter((p) => p.nullable).map((p) => p.path)).toEqual(['tag_mutation']);
+    expect(field('misperception').show_if).toEqual({ path: 'discrimination', equals: 'same_other' });
+    for (const path of ['kin_basis', 'kin_mutation']) {
+      const p = field(path);
+      expect([paramShown(p, preset('jansson-kin').config), paramShown(p, preset('ha-standard').config)]).toEqual([true, false]);
+    }
+  });
+
+  it('keeps a restricted `allowed` through live edits, resets and a share link', async () => {
+    const e = await create('hks-no-ethnocentrics');
+    const allowed = () => (e.config as EthnoConfig).allowed;
+    expect(allowed()).toEqual(['H', 'S', 'T']);
+    await e.advance(20);
+    expect(await e.applyModelConfig((c) => void ((c as EthnoConfig).cost = 0.012))).toBeNull();
+    expect(allowed()).toEqual(['H', 'S', 'T']);
+    expect(await e.resetModelWith((c) => void ((c as EthnoConfig).colors = 3))).toBeNull();
+    expect(allowed()).toEqual(['H', 'S', 'T']);
+    await e.advance(60);
+    expect(await e.applyModelConfig((c) => void ((c as EthnoConfig).tag_mutation = 0.3))).toBeNull();
+    await e.advance(20);
+    expect(await e.applyModelConfig((c) => void ((c as EthnoConfig).tag_mutation = null))).toBeNull();
+    expect((e.config as EthnoConfig).tag_mutation).toBeNull();
+    await e.advance(20);
+    expect((e.latest as EthnoStats).ethnocentric).toBe(0);
+    const { session, tick } = await e.session();
+    const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await opened.advance(tick);
+    expect((opened.config as EthnoConfig).allowed).toEqual(['H', 'S', 'T']);
+    expect(await opened.fingerprint()).toBe(await e.fingerprint());
+  });
+
+  it('stops at its last period, once, and inspects agents and empty sites', async () => {
+    const e = await create('jansson-kin', (c) => (c.end = 300));
+    e.setDisplay({ colorMode: 'ptr' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(400);
+    expect([e.tick, e.finished, ends]).toEqual([300, true, 1]);
+    expect((e.latest as EthnoStats).population).toBeGreaterThan(0);
+    const seen = { agent: 0, empty: 0 };
+    for (let x = 0; x < 50; x++) {
+      await e.select(x, 25);
+      const v = e.inspection!.view;
+      expect(isEthnoView(v, e.model)).toBe(true);
+      const a = (v as EthnoInspection).agent;
+      if (a) {
+        seen.agent++;
+        expect(e.inspection!.agentId).toBe(a.id);
+        expect(a.neighbors.length).toBeLessThanOrEqual(4);
+      } else seen.empty++;
+    }
+    expect(seen.agent).toBeGreaterThan(0);
+    expect(seen.empty).toBeGreaterThan(0);
+  });
+
+  it('opens its three Compare entries and sweeps its default form', () => {
+    for (const id of ['ha-four-vs-five', 'ha-adjacent-vs-anywhere', 'ha-tags-vs-kin']) {
+      const entry = COMPARE_PRESETS.find((c) => c.id === id)!;
+      expect(comparePresetStates(presets, entry, 1), id).not.toBeNull();
+    }
+    const { sweep, errors } = formToSweep(defaultForm('ethno'), { preset: 'ha-standard' });
+    expect(errors).toEqual([]);
+    // Eleven costs × the form's three seeds (the built-in ha-cost runs ten).
+    expect(JSON.parse(sweep_points(JSON.stringify(sweep)))).toHaveLength(33);
   });
 });
 

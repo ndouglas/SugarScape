@@ -68,4 +68,11 @@ describe('compare presets', () => {
     expect(ids).toContainEqual(['nm-sync-vs-async', 'nm-3-kaleidoscope', 'hg-async-kaleidoscope', 'Synchronous vs asynchronous — Spatial Games (Compare)']);
     expect(ids).toContainEqual(['nbm-discrete-vs-continuous', 'nbm-discrete', 'nbm-continuous', 'Discrete vs continuous time — Spatial Games (Compare)']);
   });
+
+  it('pairs the ethnocentrism runs the sources disagree on', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['ha-four-vs-five', 'ha-standard', 'ha-java-five-colors', 'Four colors vs five (the Java’s draw) — Ethnocentrism (Compare)']);
+    expect(ids).toContainEqual(['ha-adjacent-vs-anywhere', 'ha-standard', 'jansson-offspring-anywhere', 'Next to the parent vs anywhere — Ethnocentrism (Compare)']);
+    expect(ids).toContainEqual(['ha-tags-vs-kin', 'ha-standard', 'jansson-kin', 'Tags vs kin — Ethnocentrism (Compare)']);
+  });
 });

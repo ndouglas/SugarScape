@@ -59,6 +59,15 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
     // NBM94's axis: cooperators against the temptation b.
     return { ...form, x: { path: 'b', values: '1.05:2.05:0.05' }, ticks: 200, metric: { ...form.metric, kind: 'final', series: 'fraction_c' } };
   }
+  if (model === 'ethno') {
+    // HA06's summary (the mean over the last 100 of 2,000 periods) against the cost of helping (the built-in ha-cost).
+    return {
+      ...form,
+      x: { path: 'cost', values: '0.005:0.03:0.0025' },
+      ticks: 2000,
+      metric: { ...form.metric, kind: 'window_mean', series: 'ethnocentric', from: 1901, to: null },
+    };
+  }
   return form;
 }
 
