@@ -674,7 +674,7 @@ impl Model for ClassesWorld {
         }
         for a in &self.agents {
             eat(a.tag);
-            eat(a.last_demand.map_or(9, |d| d));
+            eat(a.last_demand.unwrap_or(9));
             for mem in &a.memory {
                 eat(mem.len() as u8);
                 for b in mem.bytes() {

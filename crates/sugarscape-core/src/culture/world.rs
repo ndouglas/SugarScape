@@ -655,7 +655,7 @@ impl Model for CultureWorld {
             h ^= u64::from(b);
             h = h.wrapping_mul(0x0100_0000_01b3);
         }
-        for b in self.stable_at.map_or(u64::MAX, |t| t).to_le_bytes() {
+        for b in self.stable_at.unwrap_or(u64::MAX).to_le_bytes() {
             h ^= u64::from(b);
             h = h.wrapping_mul(0x0100_0000_01b3);
         }
