@@ -1001,11 +1001,11 @@ his three outcomes and the norm is rarely established (4 runs); metanorms establ
 dominance variant (20 strong agents punished less, 10 weak) behaves as he says — without metanorms
 both groups end bold, with them the weak group is kept from being bold (and so is the strong one).
 Galán and Izquierdo re-implemented it and ran it longer. Their results reproduce: the norms game
-collapses in every run by 1 000 generations; metanorms decay — 92 runs established at 100
-generations, 52 established and 43 collapsed by 10⁵, 8 of 10 collapsed at 10⁶; the norm collapses far
-sooner with a mutation rate of 0.001, with meta-payoffs a tenth as large, or under any of their three
-other selection rules (random tournament, roulette wheel, above-the-mean); and it holds everywhere
-with a temptation of 10.
+collapses in 99 of 100 runs by 1 000 generations; metanorms decay — 92 runs established at 100
+generations, 52 established and 43 collapsed by 10⁵, and at 10⁶ generations 18 of 20 runs had
+collapsed (8 of 10 in the survey's own run); the norm collapses far sooner with a mutation rate of
+0.001, with meta-payoffs a tenth as large, or under any of their three other selection rules (random
+tournament, roulette wheel, above-the-mean); and it holds everywhere with a temptation of 10.
 
 Axelrod left two things unstated, and both are switches. **When every payoff ties** (so there is no
 standard deviation), Galán and Izquierdo give everyone two offspring and remove a random half; they
