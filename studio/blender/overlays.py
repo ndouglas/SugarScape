@@ -90,10 +90,11 @@ def ball(name, radius, material, parent=None):
     return obj
 
 
-def caption_scene(body, y, preview):
+def caption_scene(body, y, preview, title=False):
     """A scene holding only the caption — rounded cream text over a soft dark
     shadow — on a transparent film, rendered once per beat and laid over the
-    beat by the cut (which fades it), so depth of field never blurs it."""
+    beat by the cut (which fades it), so depth of field never blurs it. A
+    title caption is larger, over a dark scrim that dims the whole frame."""
     scene = bpy.context.scene
     for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj)
@@ -113,8 +114,13 @@ def caption_scene(body, y, preview):
     anchor = bpy.data.objects.new("caption", None)
     anchor.location = (0, y * 9 / 16, 0)
     scene.collection.objects.link(anchor)
-    text("caption-shadow", body, 0.085, materials.fading("caption-ink", INK, 1.0), anchor, location=(0.005, -0.006, -0.01))
-    text("caption", body, 0.085, materials.fading("caption", CREAM, 1.0), anchor)
+    size = 0.105 if title else 0.085
+    if title:
+        scrim = materials.fading("scrim", INK, 1.0)
+        scrim.node_tree.nodes["Mix"].inputs[0].default_value = 0.62
+        box("scrim", scrim, None, location=(0, 0, -1), scale=(2.4, 1.4, 0.01))
+    text("caption-shadow", body, size, materials.fading("caption-ink", INK, 1.0), anchor, location=(0.005, -0.006, -0.01))
+    text("caption", body, size, materials.fading("caption", CREAM, 1.0), anchor)
 
 
 def _pose(ctx, d, id_, frame):
@@ -284,7 +290,7 @@ def histogram(beat, d, ctx):
     bins = 12
     last = sorted(a.sugar for a in d.frames[-1].agents.values())
     top = last[int(0.99 * (len(last) - 1))] if last else 1.0
-    anchor = ctx.screen.anchor("histogram", 0.62, -0.45)
+    anchor = ctx.screen.anchor("histogram", 0.62, -0.55)
     _card("histogram-card", anchor, (0, 0.17, -0.01), (0.6, 0.5, 0.002))
     width = 0.5 / bins
     bars = [
@@ -307,7 +313,54 @@ def histogram(beat, d, ctx):
     return update
 
 
+GROUPS = (("poorest half", "teal", 0.5), ("middle 40%", "cream", 0.4), ("richest 10%", "coral", 0.1))
+
+
+def wealth(beat, d, ctx):
+    """Who holds the sugar: the Flumps split into the poorest half, the
+    middle 40 % and the richest tenth, and beneath them the same groups'
+    shares of all the sugar, from the frame shown."""
+    anchor = ctx.screen.anchor("wealth", 0.62, 0.6)
+    _card("wealth-card", anchor, (0, 0.01, -0.01), (0.6, 0.4, 0.002))
+    ink = materials.fading("wealth-ink", CREAM, 1.6)
+    text("wealth-title", "who holds the sugar", 0.04, ink, anchor, location=(0, 0.165, 0))
+    left, width = -0.14, 0.4
+    x = left
+    # Name the two ends; the middle's label would collide with the narrow top tenth's.
+    for (name, _, share), align in zip(GROUPS, ("CENTER", None, "RIGHT")):
+        if align:
+            at = x + share * width / 2 if align == "CENTER" else left + width
+            text(f"wealth-label-{name}", name, 0.024, ink, anchor, location=(at, 0.108, 0), align=align)
+        x += share * width
+    rows = {}
+    for row, y in (("Flumps", 0.06), ("sugar", -0.03)):
+        text(f"wealth-{row}", row, 0.035, ink, anchor, location=(left - 0.02, y - 0.01, 0), align="RIGHT")
+        rows[row] = [
+            box(f"wealth-{row}-{name}", materials.knit(color), anchor, location=(0, y, 0), scale=(0.01, 0.06, 0.004))
+            for name, color, _ in GROUPS
+        ]
+    readout = text("wealth-readout", "", 0.032, ink, anchor, location=(0, -0.12, 0))
+
+    def lay(bars, fractions):
+        x = left
+        for bar, f in zip(bars, fractions):
+            bar.scale.x = max(f * width, 0.002)
+            bar.location.x = x + bar.scale.x / 2
+            x += f * width
+
+    lay(rows["Flumps"], [g[2] for g in GROUPS])
+
+    def update(frame):
+        f = d.frames[min(int(round(ctx.timing.tick_at(frame))), d.ticks)]
+        poor, middle, rich = animate.shares([a.sugar for a in f.agents.values()])
+        lay(rows["sugar"], (poor, middle, rich))
+        readout.data.body = f"richest 10%: {rich:.0%} of the sugar  ·  poorest half: {poor:.0%}"
+
+    return update
+
+
 BUILDERS = {
+    "wealth": wealth,
     "belly": belly,
     "sight": sight,
     "labels": labels,

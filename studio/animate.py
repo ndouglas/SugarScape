@@ -215,6 +215,18 @@ def sight_cells(x, y, vision, w, h):
     return [[((x + dx * k) % w, (y + dy * k) % h) for k in range(1, vision + 1)] for dx, dy in steps]
 
 
+def shares(values):
+    """The shares of all the sugar held by the poorest half, the middle 40 %
+    and the richest tenth (by rank; with no sugar, the fair shares)."""
+    ranked = sorted(values)
+    total = sum(ranked)
+    if not ranked or total <= 0:
+        return (0.5, 0.4, 0.1)
+    n = len(ranked)
+    half, ninety = round(n * 0.5), round(n * 0.9)
+    return (sum(ranked[:half]) / total, sum(ranked[half:ninety]) / total, sum(ranked[ninety:]) / total)
+
+
 def histogram(values, bins, top):
     counts = [0] * bins
     for v in values:

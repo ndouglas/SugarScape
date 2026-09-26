@@ -148,6 +148,18 @@ class HelpersTest(unittest.TestCase):
         self.assertEqual(s, [(0, 1), (0, 2)])
         self.assertEqual(w, [(4, 0), (3, 0)])
 
+    def test_shares_split_the_sugar_by_rank(self):
+        # Ten Flumps: the poorest five hold 1 each, the next four 2, the richest 11.
+        values = [1] * 5 + [2] * 4 + [11]
+        poor, middle, rich = animate.shares(values)
+        self.assertAlmostEqual(poor, 5 / 24)
+        self.assertAlmostEqual(middle, 8 / 24)
+        self.assertAlmostEqual(rich, 11 / 24)
+
+    def test_shares_of_nothing_are_equal(self):
+        self.assertEqual(animate.shares([0, 0, 0, 0]), (0.5, 0.4, 0.1))
+        self.assertEqual(animate.shares([]), (0.5, 0.4, 0.1))
+
     def test_histogram_bins_and_clamps(self):
         self.assertEqual(animate.histogram([0, 1, 4.9, 5, 9.9, 100], 2, 10), [3, 3])
 

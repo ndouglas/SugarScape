@@ -27,6 +27,7 @@ Typical seed: 18.
 | gini500 | 0.479 | 0.456 | 0.492 |
 | mean_over_median | 1.473 | 1.319 | 1.633 |
 | top10_share | 0.303 | 0.291 | 0.319 |
+| bottom50_share | 0.161 | 0.147 | 0.175 |
 
 Typical seed: 11.
 
@@ -36,3 +37,4 @@ Typical seed: 11.
 - holds: survivors crowd the hills (beats 7–8) — 92% of survivors on hill sites, which are 31% of the board.
 - holds: sight up, hunger down (beat 8 dials) — in 20 of 20 seeds.
 - holds: some are rich (beat 9) — Gini 0.23 → 0.48; mean holding 1.47 × the median.
+- holds: some have much more than others (question beat) — the richest tenth hold 30% of the sugar, the poorest half 16%.

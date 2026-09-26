@@ -35,7 +35,7 @@ def main(argv):
     folder.mkdir(parents=True, exist_ok=True)
     s = bpy.context.scene
     if args.caption:
-        overlays.caption_scene(beat.caption, beat.caption_y, args.preview)
+        overlays.caption_scene(beat.caption, beat.caption_y, args.preview, title=beat.title)
         s.render.filepath = str(folder / "caption.png")
         bpy.ops.render.render(write_still=True)
         return
