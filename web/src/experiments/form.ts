@@ -47,6 +47,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'final', series: 'fit' },
     };
   }
+  if (model === 'structure') {
+    // The paper's dial (the built-in cra-dial): Table 2's mean payoff against random substitution.
+    return { ...form, x: { path: 'substitution', values: '0:1:0.1' }, ticks: 2500, metric: { ...form.metric, kind: 'window_mean', series: 'mean_payoff', from: 1501, to: null } };
+  }
   if (model === 'opinions') {
     // Fig. 3's axis (the built-in hk-diagonal): surviving opinions against confidence.
     return { ...form, x: { path: 'epsilon', values: '0.05:0.3:0.05' }, ticks: 1000, metric: { ...form.metric, kind: 'final', series: 'clusters' } };

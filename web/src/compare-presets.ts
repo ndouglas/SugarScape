@@ -86,6 +86,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'hk-polarisation',
     b: 'hk-serial',
   },
+  {
+    id: 'cra-rwr-vs-frn',
+    label: 'Random mixing vs fixed random neighbors — Social Structure (Compare)',
+    a: 'cra-rwr',
+    b: 'cra-frn',
+  },
 ];
 
 /**

@@ -1150,6 +1150,7 @@ describe('Engine with other models', () => {
     expect(finishedNotice(e.config, 10)).toBe('This run has reached its end year (AD 810) — Reset to run it again');
     expect(finishedNotice(ring, 10)).toBe('This run has reached its end year — Reset to run it again');
     expect(finishedNotice({ model: 'civil' } as unknown as ModelConfig, 94)).toBe('A group has died out at t = 94 — Reset to run it again');
+    expect(finishedNotice({ model: 'structure' } as unknown as ModelConfig, 2500)).toBe('This run has reached its last period (2500) — Reset to run it again');
     expect(finishedNotice({ model: 'opinions' } as unknown as ModelConfig, 8)).toBe(
       'Stable at t = 8: no opinion moves any more — Reset, or change confidence or updating, to run it again',
     );

@@ -147,6 +147,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('structure')).toMatchObject({
+      x: { path: 'substitution', values: '0:1:0.1' },
+      ticks: 2500,
+      metric: { kind: 'window_mean', series: 'mean_payoff', from: 1501 },
+    });
     expect(defaultForm('opinions')).toMatchObject({
       x: { path: 'epsilon', values: '0.05:0.3:0.05' },
       ticks: 1000,

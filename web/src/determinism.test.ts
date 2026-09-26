@@ -26,6 +26,9 @@ import type {
   OpinionsConfig,
   OpinionsInspection,
   OpinionsStats,
+  StructureConfig,
+  StructureInspection,
+  StructureStats,
   Param,
   Preset,
   Snapshot,
@@ -431,6 +434,15 @@ describe('other models through the engine', () => {
     ['jansson-kin-fixed', '0x3fac090571612879'],
     ['hks-no-ethnocentrics', '0xbe867e7210bad2d2'],
     ['hk-lattice', '0xe33359f120b204d9'],
+    ['cra-rwr', '0xc7f45f59d9b25490'],
+    ['cra-2dk', '0x3b8c19aab4aae805'],
+    ['cra-frne', '0xdf2fc96965742a81'],
+    ['cra-frn', '0x924d4b2fe686ae18'],
+    ['cra-ffr-01', '0x424eda2182150e01'],
+    ['cra-ffr-03', '0xbc09206184dc7003'],
+    ['cra-ffr-05', '0xf9573021f9848025'],
+    ['cra-random-start', '0x1871afd34df774a9'],
+    ['cra-copy-noise', '0xd8871da3505ee758'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -509,6 +521,25 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the social-structure model through the engine', () => {
+  it('stops at its last period and inspects an agent and its partners', async () => {
+    const r = presets.find((p) => p.id === 'cra-2dk')!;
+    const config = { ...structuredClone(r.config as StructureConfig), stop_at: 30 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'strategy' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as StructureStats;
+    expect([e.finished, ends, e.tick, s.tick]).toEqual([true, 1, 30, 30]);
+    // The torus: every agent played its four neighbors twice.
+    await e.select(1, 1);
+    const v = e.inspection!.view as StructureInspection;
+    expect(v.block).toEqual({ x: 0, y: 0 });
+    expect(v.agent!.partners.map((p) => p.games)).toEqual([2, 2, 2, 2]);
   });
 });
 

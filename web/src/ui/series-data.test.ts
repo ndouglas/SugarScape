@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('social-structure charts', () => {
+  it('chart payoff, cooperation, strategy, high cooperation and copying over periods', () => {
+    expect(MODEL_CHARTS.structure.map((c) => c.title)).toEqual(['Mean payoff', 'Cooperation', 'Strategy', 'High cooperation', 'Copying']);
+    expect(timeAxisLabel('structure')).toBe('Periods');
+  });
+});
+
 describe('bounded-confidence charts', () => {
   it('chart clusters, camps, the center, splits and change over periods', () => {
     expect(MODEL_CHARTS.opinions.map((c) => c.title)).toEqual(['Clusters', 'Largest camps', 'Mean and median', 'Splits', 'Change']);

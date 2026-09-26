@@ -1,7 +1,7 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
-import { isCivilView, isClassesView, isCultureView, isEthnoView, isOpinionsView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isClassesView, isCultureView, isEthnoView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -9,6 +9,7 @@ import type {
   CivilInspection,
   ClassesInspection,
   OpinionsInspection,
+  StructureInspection,
   CultureInspection,
   CultureSiteView,
   EthnoConfig,
@@ -168,6 +169,27 @@ export class InspectPanel {
   }
 
   /** A cell of the opinion × time diagram (its period, opinion and the agents passing) or of the lattice. */
+  private structureRows(view: StructureInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const names = { tft: 'near Tit-for-Tat', alld: 'near Always Defect', allc: 'near Always Cooperate', other: 'mixed' };
+    const strategy = (a: { y: number; p: number; q: number; class: keyof typeof names }) =>
+      `y ${fmt(a.y)} · p ${fmt(a.p)} · q ${fmt(a.q)} (${names[a.class]})`;
+    if (view.agent) {
+      const a = view.agent;
+      const rows = [row('Agent', `#${a.id}`), row('Strategy', strategy(a)), row('Payoff per move', fmt(a.score)), row('Copied', a.copied === null ? 'no one' : `#${a.copied}`)];
+      for (const p of a.partners) rows.push(row(`Played #${p.id}`, `${p.games}× · p ${fmt(p.p)} · payoff ${fmt(p.score)}`));
+      return rows;
+    }
+    if (view.plane) {
+      const rows = [row('Point', `p ${fmt(view.plane[0])} · q ${fmt(view.plane[1])}`)];
+      if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+      for (const a of view.agents.slice(0, 12)) rows.push(row(`#${a.id}`, `${strategy(a)} · payoff ${fmt(a.score)}`));
+      if (view.agents.length > 12) rows.push(row('', `and ${view.agents.length - 12} more`));
+      return rows;
+    }
+    return [row('Point', 'between the agents and the plane')];
+  }
+
   private opinionsRows(view: OpinionsInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     const rows: HTMLElement[] = [];
@@ -311,6 +333,8 @@ export class InspectPanel {
       // First: an empty ethnocentrism site is shaped like an empty Schelling site.
       const rows = isEthnoView(view, this.engine.model)
         ? this.ethnoSiteRows(view, gone)
+        : isStructureView(view)
+          ? this.structureRows(view)
         : isOpinionsView(view)
           ? this.opinionsRows(view)
         : isClassesView(view)

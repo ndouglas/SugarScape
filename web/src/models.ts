@@ -11,6 +11,8 @@ import type {
   CultureInspection,
   OpinionsConfig,
   OpinionsInspection,
+  StructureConfig,
+  StructureInspection,
   ColorMode,
   Config,
   EthnoConfig,
@@ -25,7 +27,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -40,12 +42,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   classes: 'Emergence of Classes',
   ethno: 'Ethnocentrism',
   opinions: 'Bounded Confidence',
+  structure: 'Social Structure',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure'
     ? tag
     : 'sugarscape';
 }
@@ -90,6 +93,11 @@ export function isClassesView(v: AnyInspection): v is ClassesInspection {
 }
 
 /** A cell of the bounded-confidence frame (it names its period and lattice site). */
+/** A cell of the social-structure frame (it names its block cell and plane point). */
+export function isStructureView(v: AnyInspection): v is StructureInspection {
+  return 'block' in v && 'plane' in v;
+}
+
 export function isOpinionsView(v: AnyInspection): v is OpinionsInspection {
   return 'period' in v && 'lattice_site' in v;
 }
@@ -121,6 +129,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
   if (modelOf(c) === 'tags' && (c as TagsConfig).end > 0) return Math.max(0, (c as TagsConfig).end - tick);
   if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
+  if (modelOf(c) === 'structure' && (c as StructureConfig).stop_at > 0) return Math.max(0, (c as StructureConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -217,6 +226,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['start', 'Start'],
     ['opinion', 'Opinion'],
   ],
+  // Friendliness first (the paper's p); provocability is 1 − q.
+  structure: [
+    ['friendliness', 'Friendliness'],
+    ['provocability', 'Provocability'],
+    ['payoff', 'Payoff'],
+    ['strategy', 'Strategy'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -232,4 +248,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   classes: [],
   ethno: [],
   opinions: [],
+  structure: [],
 };
