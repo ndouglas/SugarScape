@@ -1,8 +1,8 @@
-# SugarScape Milestone 14 — Ethnocentrism (Hammond & Axelrod and its critics) — Design
+# SugarScape Milestone 16 — Ethnocentrism (Hammond & Axelrod and its critics) — Design
 
 **Date:** 2026-09-25
-**Milestone number:** 14 if it lands before the `culture` worktree's model; otherwise renumbered at merge.
-**Builds on:** the milestone 1–13 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds and milestone 11's conventions (portable math, named switches for unstated choices, measured descriptions).
+**Milestone number:** 16 (Axelrod's culture model and the Emergence of Classes landed first as 14 and 15).
+**Builds on:** the milestone 1–15 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds and milestone 11's conventions (portable math, named switches for unstated choices, measured descriptions).
 **Sources:**
 - **HA06:** Hammond & Axelrod, "The Evolution of Ethnocentrism", *J. Conflict Resolution* 50(6) (2006) 926–936 (the user supplied the PDF).
 - **HA-Java:** the authors' archived Java/Ascape code (`EthnoModelCode.zip`, package `edu.brook.ethnoadd`, "last updated July 17, 2003", via the Wayback Machine from `umich.edu/~axe/Shared_Files/Axelrod.Hammond/`) and its documentation memo (7/16/03).
@@ -16,7 +16,7 @@ Not available: Hammond & Axelrod 2006, *Theor. Pop. Biol.* 69 (the companion pap
 
 ## Goal
 
-Add Hammond and Axelrod's ethnocentrism model as an eighth model kind (after the tags model and the spatial games), with the variants HA06 claim in the text and the critics' variants as named switches — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey), with each source's claims measured, including where the paper, its appendix and its code disagree.
+Add Hammond and Axelrod's ethnocentrism model as a tenth model kind (after the tags model, the spatial games, Axelrod's culture model and the Emergence of Classes), with the variants HA06 claim in the text and the critics' variants as named switches — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey), with each source's claims measured, including where the paper, its appendix and its code disagree.
 
 ## Non-negotiable constraints
 

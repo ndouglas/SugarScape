@@ -4,6 +4,8 @@ import {
   COLOR_MODES,
   finishesUnpredictably,
   isCivilView,
+  isClassesView,
+  isCultureView,
   isEthnoView,
   isRingView,
   isSpatialView,
@@ -95,6 +97,57 @@ describe('the anasazi model', () => {
     const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the classes model', () => {
+  it('is read by its tag, and its inspections by their simplex and mix', () => {
+    const c = { model: 'classes', stop_at_equity: false } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('classes');
+    const point = { site: { x: 1, y: 2 }, simplex: 'one', mix: [0.2, 0.5, 0.3], best_reply: 'M', agents: [], agent: null } as unknown as AnyInspection;
+    const culture = { site: { x: 1, y: 2 }, kind: 'site', a: {}, b: null, shared: null, neighbors: [], agent: null } as unknown as AnyInspection;
+    expect([point, culture].map(isClassesView)).toEqual([true, false]);
+    expect(isCultureView(point) || isTagsView(point) || isSugarView(point)).toBe(false);
+  });
+
+  it('offers the paper’s shading and payoffs, no overlays, and stops unpredictably only at equity', () => {
+    expect(COLOR_MODES.classes).toEqual([
+      ['best_reply', 'Best reply'],
+      ['payoff', 'Payoff'],
+    ]);
+    expect(MODEL_OVERLAYS.classes).toEqual([]);
+    const c = (stop_at_equity: boolean) => ({ model: 'classes', stop_at_equity }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(true)), finishesUnpredictably(c(false))]).toEqual([true, false]);
+    expect(ticksLeft(c(true), 5)).toBe(Infinity);
+  });
+});
+
+describe('the culture model', () => {
+  const culture = (stop_when_stable: boolean, drift: number) => ({ model: 'culture', stop_when_stable, drift }) as unknown as ModelConfig;
+
+  it('is read by its tag, and its inspections by their kind and neighbors', () => {
+    expect(modelOf(culture(true, 0))).toBe('culture');
+    const site = { site: { x: 1, y: 2 }, kind: 'site', a: {}, b: null, shared: null, neighbors: [], agent: null } as unknown as AnyInspection;
+    const tags = { site: { x: 1, y: 2 }, generation: 5, agents: [], agent: null } as unknown as AnyInspection;
+    expect([site, tags].map(isCultureView)).toEqual([true, false]);
+    expect(isRingView(site) || isSugarView(site) || isValleyView(site) || isCivilView(site) || isTagsView(site)).toBe(false);
+  });
+
+  it('offers its three shadings and no overlays, and stops unpredictably only without drift', () => {
+    expect(COLOR_MODES.culture).toEqual([
+      ['culture', 'Culture'],
+      ['similarity', 'Similarity'],
+      ['zones', 'Zones'],
+    ]);
+    expect(MODEL_OVERLAYS.culture).toEqual([]);
+    expect(ticksLeft(culture(true, 0), 5)).toBe(Infinity);
+    expect([finishesUnpredictably(culture(true, 0)), finishesUnpredictably(culture(true, 0.01)), finishesUnpredictably(culture(false, 0))]).toEqual([true, false, false]);
+  });
+
+  it('lets a sugarscape stop when its Axelrod cultures settle', () => {
+    const sugar = (rule: string, stop: boolean) => ({ culture: { enabled: true, groups: [], rule, stop_when_settled: stop } }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(sugar('axelrod', true)), finishesUnpredictably(sugar('axelrod', false)), finishesUnpredictably(sugar('flip', true))]).toEqual([true, false, false]);
+    expect(COLOR_MODES.sugarscape.map(([m]) => m)).toContain('culture');
   });
 });
 

@@ -545,10 +545,18 @@ pub fn run_point(sweep: &Sweep, point: &Point) -> RunResult {
 pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResult {
     let mut world = ModelWorld::new(config, point.seed).expect("sweep configs are validated");
     world.model_mut().run(sweep.ticks);
-    let history = world
+    let mut history = world
         .model()
         .series(sweep.metric.series())
         .expect("the metric's series is checked against every config");
+    // A world that stopped on its own for good (Axelrod's culture once stable,
+    // a Sugarscape whose cultures settled) holds its last state: the ticks it
+    // did not run repeat its last values. Any other stopped world reads NaN.
+    if world.model().finished() && world.model().holds_when_finished() {
+        if let Some(&last) = history.last() {
+            history.resize((sweep.ticks as usize + 1).max(history.len()), last);
+        }
+    }
     RunResult {
         point: point.index,
         series: point.series,
@@ -951,7 +959,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 27] = [
+const BUILTINS: [Builtin; 39] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1031,6 +1039,54 @@ const BUILTINS: [Builtin; 27] = [
     Builtin {
         id: "rca-population",
         json: include_str!("../../../sweeps/rca-population.json"),
+    },
+    Builtin {
+        id: "ac-table-2",
+        json: include_str!("../../../sweeps/ac-table-2.json"),
+    },
+    Builtin {
+        id: "ac-neighborhoods",
+        json: include_str!("../../../sweeps/ac-neighborhoods.json"),
+    },
+    Builtin {
+        id: "ac-territory",
+        json: include_str!("../../../sweeps/ac-territory.json"),
+    },
+    Builtin {
+        id: "ac-activation",
+        json: include_str!("../../../sweeps/ac-activation.json"),
+    },
+    Builtin {
+        id: "ac-traits-transition",
+        json: include_str!("../../../sweeps/ac-traits-transition.json"),
+    },
+    Builtin {
+        id: "ac-drift",
+        json: include_str!("../../../sweeps/ac-drift.json"),
+    },
+    Builtin {
+        id: "dock-mobility",
+        json: include_str!("../../../sweeps/dock-mobility.json"),
+    },
+    Builtin {
+        id: "aey-memory",
+        json: include_str!("../../../sweeps/aey-memory.json"),
+    },
+    Builtin {
+        id: "aey-population",
+        json: include_str!("../../../sweeps/aey-population.json"),
+    },
+    Builtin {
+        id: "aey-first-attractor",
+        json: include_str!("../../../sweeps/aey-first-attractor.json"),
+    },
+    Builtin {
+        id: "aey-tag-regimes",
+        json: include_str!("../../../sweeps/aey-tag-regimes.json"),
+    },
+    Builtin {
+        id: "pvplh-payoffs",
+        json: include_str!("../../../sweeps/pvplh-payoffs.json"),
     },
     Builtin {
         id: "ha-cost",
@@ -1564,6 +1620,53 @@ mod tests {
     }
 
     #[test]
+    fn only_worlds_whose_stop_is_permanent_are_read_past_it() {
+        let run = |base: &str, ticks: u32, metric: serde_json::Value| {
+            let s = Sweep::from_json(
+                &json!({
+                    "name": "stop",
+                    "base": { "preset": base },
+                    "x": { "path": "stop_at_extinction", "values": [true] },
+                    "seeds": { "from": 1, "count": 1 },
+                    "ticks": ticks,
+                    "metric": metric
+                })
+                .to_string()
+                .replace(
+                    "stop_at_extinction",
+                    if base.starts_with("cv") {
+                        "stop_at_extinction"
+                    } else {
+                        "stop_when_stable"
+                    },
+                ),
+            )
+            .unwrap();
+            run_point(&s, &s.point(0).unwrap()).outcome
+        };
+        // Civil violence stopping at extinction: a run that stopped is not read past its end.
+        let civil = run(
+            "cv-run-7-cleansing",
+            3000,
+            json!({ "kind": "final", "series": "blue" }),
+        );
+        assert!(
+            matches!(civil, Outcome::Scalar { value } if value.is_nan()),
+            "{civil:?}"
+        );
+        // Axelrod's culture, once stable, holds its state: its final value is read.
+        let culture = run(
+            "ac-sample-run",
+            20_000,
+            json!({ "kind": "final", "series": "regions" }),
+        );
+        assert!(
+            matches!(culture, Outcome::Scalar { value } if value >= 1.0),
+            "{culture:?}"
+        );
+    }
+
+    #[test]
     fn an_empty_world_still_yields_a_value() {
         let mut v = tiny();
         v["set"] = json!({ "population": 0 });
@@ -1856,6 +1959,18 @@ mod tests {
                 "rca-cost",
                 "rca-clones",
                 "rca-population",
+                "ac-table-2",
+                "ac-neighborhoods",
+                "ac-territory",
+                "ac-activation",
+                "ac-traits-transition",
+                "ac-drift",
+                "dock-mobility",
+                "aey-memory",
+                "aey-population",
+                "aey-first-attractor",
+                "aey-tag-regimes",
+                "pvplh-payoffs",
                 "ha-cost",
                 "ha-colors",
                 "ha-mutation",

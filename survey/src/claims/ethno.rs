@@ -1,4 +1,4 @@
-//! The ethnocentrism model (milestone 14): Hammond & Axelrod 2006 (its
+//! The ethnocentrism model (milestone 16): Hammond & Axelrod 2006 (its
 //! text, its appendix and its archived code), Hartshorn, Kaznatcheev &
 //! Shultz 2013 and Jansson 2013, each claim in its source's words. A run is
 //! summarized by the mean of each series over its last 100 periods (HA06's

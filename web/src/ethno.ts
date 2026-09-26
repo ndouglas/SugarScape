@@ -1,4 +1,4 @@
-// The ethnocentrism model's pure page helpers (milestone 14): Inspect's rows.
+// The ethnocentrism model's pure page helpers (milestone 16): Inspect's rows.
 import type { EthnoAgentView, EthnoStrategy } from './types';
 
 /** Each strategy's name and what it does. */

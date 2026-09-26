@@ -227,6 +227,26 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('classes charts', () => {
+  it('chart payoffs, outcomes, memory and the regime, and per-tag payoffs only with tags', () => {
+    expect(MODEL_CHARTS.classes.map((c) => c.title)).toEqual(['Mean payoff', 'Outcomes', 'M in memory', 'Regime', 'Payoffs by tag', 'Inter-type advantage']);
+    const tagged = { model: 'classes', tags: true } as unknown as ModelConfig;
+    const plain = { model: 'classes', tags: false } as unknown as ModelConfig;
+    expect(MODEL_CHARTS.classes.filter((c) => c.shown).map((c) => [c.shown!(tagged), c.shown!(plain)])).toEqual([
+      [true, false],
+      [true, false],
+    ]);
+    expect(timeAxisLabel('classes')).toBe('Periods');
+  });
+});
+
+describe('culture charts', () => {
+  it('chart regions, zones and cultures, the largest region, similarity, bonds and changes against events per site', () => {
+    expect(MODEL_CHARTS.culture.map((c) => c.title)).toEqual(['Regions, zones and cultures', 'Largest region', 'Mean similarity', 'Active bonds', 'Changes']);
+    expect(timeAxisLabel('culture')).toBe('Events per site');
+  });
+});
+
 describe('tags charts', () => {
   it('chart donation, tolerance, clusters, tags and takeovers against the generation', () => {
     expect(MODEL_CHARTS.tags.map((c) => c.title)).toEqual(['Donation rate', 'Tolerance', 'Clusters', 'Distinct tags', 'Takeovers']);

@@ -1,4 +1,4 @@
-//! Ethnocentrism (milestone 14): Hammond & Axelrod, "The Evolution of
+//! Ethnocentrism (milestone 16): Hammond & Axelrod, "The Evolution of
 //! Ethnocentrism", J. Conflict Resolution 50 (2006), with its appendix's
 //! and its archived code's departures, and the variants of Hartshorn,
 //! Kaznatcheev & Shultz (JASSS 2013) and Jansson (JASSS 2013), as named

@@ -140,7 +140,8 @@ Model extensions:
 ## Other artificial societies
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
-**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games** and **Ethnocentrism**.
+**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
+**Emergence of Classes** and **Ethnocentrism**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -505,6 +506,120 @@ running world. Credit: Martin A. Nowak and Robert M. May, "Evolutionary games an
 computer simulations," *PNAS* 90 (1993), 7716–7718; and Martin A. Nowak, Sebastian Bonhoeffer and
 Robert M. May, "Spatial games and the maintenance of cooperation," *PNAS* 91 (1994), 4877–4881. See
 `docs/superpowers/specs/2026-09-25-spatial-games-design.md`.
+
+### Axelrod culture (Axelrod 1997, and its docking with Sugarscape)
+
+A lattice of sites, each with F cultural features that take one of q traits (the paper's 10 × 10,
+five features of ten traits, four neighbors, edges bounded). An event picks a random site and a
+random neighbor; with probability equal to the share of features they have in common, the site
+copies one feature on which they differ. Similar neighbors grow more similar; neighbors with nothing
+in common never interact, so the lattice freezes into stable **regions** — contiguous sites with
+identical cultures — once every two neighbors are identical or share nothing. A tick is one event
+per site, the paper's time unit.
+
+Axelrod's claims mostly reproduce (means over 20 seeds unless stated): more features mean fewer
+regions and more traits more (Table 2, 10 seeds as in the paper: 1.1 / 3.5 / 22.0 regions at five
+features); wider neighborhoods fewer
+(4.05, 2.11, 1.40 with 4, 8 and 12 neighbors averaged over the nine cultures, against 3.4, 2.5, 1.5); the territory's surprising
+curve (Fig. 2) — 21 regions at 12 × 12, 4.9 at 50 × 50, 2.25 at 100 × 100 — and a torus's earlier,
+lower peak; time to stability of 9 090 and 24 500 events per site at 32 × 32 and 50 × 50 (the
+paper: 10 036 and 25 900); and zones settling long before regions. The sample setup is a little
+more diverse than reported: over 1 000 seeds a mean of 4.3 regions and a median of 4, with 18 %
+above six (the paper: 3.2, 3 and 10 %).
+
+The docking paper (Axtell, Axelrod, Epstein and Cohen 1996) made the Sugarscape reproduce this
+model and found two places where two readings of the same prose diverge; both are switches here.
+**Activation**: Axelrod picks a random site each event, the Sugarscape shuffled sweeps; at 20 × 20
+that alone gave 16.25 vs 9.23 regions (measured: medians 16.5 vs 11). **Who changes**: the original
+Sugarscape changed the neighbor, not the active site, caught two months into the docking — measured,
+it makes no difference at 10 × 10. Their **soup** (any two sites can meet) leaves about one culture,
+as they found. Later work supplies two more: Castellano, Marsili and Vespignani (2000) found a
+transition in the number of traits, and indeed Axelrod's "large territories have fewer regions"
+holds only below it — at 25 traits regions grow with the territory (medians over 20 seeds: 207 at
+20 × 20, 424 at 30 × 30);
+he happened to use 15. And Klemm et al. (2003): any **drift** — here one random trait change in
+10 000 events — melts the frozen borders toward one culture.
+
+The page draws each site as a block with lanes between neighbors: **Culture** colors each culture
+and shades the lanes by what neighbors share (a region reads as one blob), **Similarity** is the
+paper's Fig. 1 (only the lanes), **Zones** colors the cultural zones. Inspect a site for its traits,
+region, zone and each neighbor's shared features, or a lane for its pair. Charts: Regions, zones and
+cultures; Largest region; Mean similarity; Active bonds (pairs that can still interact — zero means
+stable); Changes. A run stops when stable. Presets: `ac-sample-run`, `ac-many-regions`,
+`ac-large-territory` (100 × 100: about 10⁹ events, a long run), `ac-torus`,
+`ac-random-activation-20`, `ac-sweep-activation`, `ac-neighbor-changes`, `ac-soup`, `ac-drift`.
+**Compare** entry: "Literal vs Sugarscape activation, 20 × 20 — Axelrod Culture (Compare)". Built-in
+sweeps: `ac-table-2`, `ac-neighborhoods`, `ac-territory`, `ac-activation`, `ac-traits-transition`,
+`ac-drift`.
+
+**In the Sugarscape**, the Culture (K) rule can be Axelrod's: agents carry features of several
+traits and, after moving and eating, copy from one random neighbor as above (the book's rule flips
+their neighbors' tags instead); the Culture color mode draws them, a Distinct cultures chart counts
+them, and "Stop when cultures settle" ends a run once every two agents are identical or share
+nothing. The docking paper's mobility experiment is `dock-mobility-15` and `dock-mobility-30`: 100
+mobile agents with vision 5–10 on one sugar mountain. They report 1.1 ± 0.3 and 2.2 ± 1.2 cultures,
+every run settling; measured, 4.4 ± 1.4 and 5.7 ± 1.6, and most runs never settle — a few stragglers
+that rarely meet anyone keep second and third cultures alive. Mobility does collapse diversity (the
+fixed lattice keeps about 20), as they say; their numbers do not reproduce with the Sugarscape's
+stated movement rule, and their mountain's shape is not given. Sweep: `dock-mobility`.
+
+Credit: Robert Axelrod, "The Dissemination of Culture: A Model with Local Convergence and Global
+Polarization," *Journal of Conflict Resolution* 41 (1997), 203–226; Robert Axtell, Robert Axelrod,
+Joshua M. Epstein and Michael D. Cohen, "Aligning Simulation Models: A Case Study and Results,"
+*Computational and Mathematical Organization Theory* 1 (1996), 123–141; Claudio Castellano, Matteo
+Marsili and Alessandro Vespignani, *Physical Review Letters* 85 (2000), 3536; Konstantin Klemm,
+Víctor M. Eguíluz, Raúl Toral and Maxi San Miguel, *Physical Review E* 67 (2003), 045101. See
+`docs/superpowers/specs/2026-09-25-culture-design.md`.
+
+### Emergence of Classes (Axtell, Epstein & Young 2000)
+
+A bargaining society. Each period, N/2 pairs drawn at random play the Nash demand game: each
+demands L, M or H (30, 50 or 70 percent of a pie) and both get their demands if they fit in 100,
+else nothing. Every agent remembers its last m opponents' demands and, with probability 1 − ε,
+makes the demand with the highest expected payoff against them (ties at random); otherwise a random
+one. The defaults are the paper's Fig. 2: 100 agents, memory 10, ε = 0.2, random memories. With
+**Two tags** the agents come in two types marked by a meaningless tag, and each best-replies to what
+the opponent's type did — a memory per tag, as Poza et al. read AEY (**Tagged memory** switches to
+one shared memory). The **Regime** chart reads the best-reply regions agents sit in, as AEY's
+pictures do: equity (everyone's best reply is M), fractious (no one's is), and with tags classes
+(equity within types, one type demanding H of the other), equity between types only, or "equity
+above, division below". The stop, like AEY's transition target, waits for every agent to hold at
+least (1 − ε)·m M's.
+
+What reproduces (20 seeds unless stated): the realized error rate is 2ε/3 (0.1335 against the
+paper's 0.1333); a random start reaches equity, by period 14 (median); transition times from a
+fractious start grow steeply with memory and population. What does not: **the fractious state of
+Fig. 3 is never reached from a random start, and started fractious it does not persist** (the paper:
+over 10⁹ periods) — it lasts 1 to 10 periods, paying about 18 rather than a quarter of the pie, and
+every run reaches equity by period 53; the transition times are about two orders of
+magnitude below Fig. 4's (a median of 600 periods at m = 13, ε = 0.1, against "in excess of 10⁵");
+and **with tags at AEY's parameters, classes and "equity above, division below" never appear**
+(0 of 20), confirming Poza, Villafáñez, Pajares, López-Paredes and Hernández (2011) — nor at the
+smaller society (20 agents, memory 5, ε = 0.05) where they report seeing it. Planted, a class
+system does persist (18 of 20 at 20 000 periods).
+
+Poza et al.'s departures are switches: **Decision** — best-reply to the most frequent remembered
+demand, under which segregation appears in 10 of 20 runs and half the runs reach the fractious state
+first; **Low demand** (5–45; a higher L slows the way to equity, as they found); **Memories start**
+empty and growing (they report a longer transition; measured, no difference); and **Who meets whom**
+— a torus of lattice neighbors, tags laid out at random, in four zones or in two (with tags at
+random, 12 of 20 runs reach classes or equity between types without equity within).
+
+The view is the paper's memory simplex: H at the top, M at the lower left, L at the lower right,
+each agent a dot at its memory's mix, the background shaded by the best reply there (**Best reply**)
+or the dots by their last payoff (**Payoff**). With tags, two simplexes: memories of one's own type
+and of the other. Inspect a point for its mix, best reply and the agents there. Charts: Mean payoff;
+Outcomes (M–M, H–L, failures, waste); M in memory; Regime; with tags Payoffs by tag and Inter-type
+advantage. Presets: `aey-equity`, `aey-fractious`, `aey-transition` (stops at equity), `aey-tags`,
+`aey-classes`, `pvplh-small-tags`, `pvplh-mode`, `pvplh-progressive`, `pvplh-lattice`. **Compare**
+entry: "AEY’s rule vs the mode rule, with tags — Emergence of Classes (Compare)". Built-in sweeps:
+`aey-memory`, `aey-population`, `aey-first-attractor`, `aey-tag-regimes`, `pvplh-payoffs`.
+
+Credit: Robert Axtell, Joshua M. Epstein and H. Peyton Young, "The Emergence of Classes in a
+Multi-Agent Bargaining Model," in S. Durlauf and H. P. Young (eds.), *Social Dynamics* (MIT Press,
+2001); David J. Poza, Félix A. Villafáñez, Javier Pajares, Adolfo López-Paredes and Cesáreo
+Hernández, "New Insights on the Emergence of Classes Model," *Discrete Dynamics in Nature and
+Society* 2011, 915279. See `docs/superpowers/specs/2026-09-25-classes-design.md`.
 
 ### Ethnocentrism (Hammond & Axelrod 2006, and its critics)
 

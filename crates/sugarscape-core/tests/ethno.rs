@@ -1,4 +1,4 @@
-//! The ethnocentrism model (milestone 14) against Hammond & Axelrod 2006
+//! The ethnocentrism model (milestone 16) against Hammond & Axelrod 2006
 //! (HA06), its appendix and archived code, Hartshorn, Kaznatcheev & Shultz
 //! 2013 (HKS13) and Jansson 2013 (J13). Every claim runs over seeds 1–10
 //! (HKS13's Study 1 over 50) in release: `cargo test -p sugarscape-core

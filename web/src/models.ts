@@ -5,6 +5,10 @@ import type {
   AnyInspection,
   CivilConfig,
   CivilInspection,
+  ClassesConfig,
+  ClassesInspection,
+  CultureConfig,
+  CultureInspection,
   ColorMode,
   Config,
   EthnoConfig,
@@ -19,7 +23,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'ethno'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -30,13 +34,17 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   civil: 'Civil Violence',
   spatial: 'Spatial Games',
   tags: 'Tag Cooperation',
+  culture: 'Axelrod Culture',
+  classes: 'Emergence of Classes',
   ethno: 'Ethnocentrism',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'ethno' ? tag : 'sugarscape';
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno'
+    ? tag
+    : 'sugarscape';
 }
 
 export function isSugar(c: ModelConfig): c is Config {
@@ -73,6 +81,16 @@ export function isTagsView(v: AnyInspection): v is TagsInspection {
   return 'generation' in v;
 }
 
+/** A point of the classes model's memory simplexes (it names its simplex). */
+export function isClassesView(v: AnyInspection): v is ClassesInspection {
+  return 'simplex' in v && 'mix' in v;
+}
+
+/** A cell of the culture frame (it says whether it is a site or a lane). */
+export function isCultureView(v: AnyInspection): v is CultureInspection {
+  return 'kind' in v && 'neighbors' in v;
+}
+
 /**
  * An ethnocentrism site's inspection (its agent names a kin marker). An empty one
  * (`{ site: { x, y }, agent: null }`) is exactly an empty Schelling site, so the world's model
@@ -104,7 +122,11 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
  * time, so neither world runs past the tick at which the other finished.
  */
 export function finishesUnpredictably(c: ModelConfig): boolean {
-  return modelOf(c) === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
+  const model = modelOf(c);
+  if (model === 'culture') return (c as CultureConfig).stop_when_stable && (c as CultureConfig).drift === 0;
+  if (model === 'classes') return (c as ClassesConfig).stop_at_equity;
+  if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
+  return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
 
 export function presetModel(p: Preset): ModelKind {
@@ -129,6 +151,8 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['credit', 'Credit'],
     ['disease', 'Disease'],
     ['lineage', 'Lineage'],
+    // Axelrod's culture rule (milestone 14); agents are gray under the book's rule.
+    ['culture', 'Culture'],
   ],
   schelling: [
     ['color', 'Color'],
@@ -161,6 +185,17 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['tolerance', 'Tolerance'],
     ['clones', 'Clones'],
   ],
+  // Each culture its color; the paper's Fig. 1 (lanes by similarity); cultural zones.
+  culture: [
+    ['culture', 'Culture'],
+    ['similarity', 'Similarity'],
+    ['zones', 'Zones'],
+  ],
+  // The memory simplexes shaded by best reply (AEY's figures), or the agents colored by payoff.
+  classes: [
+    ['best_reply', 'Best reply'],
+    ['payoff', 'Payoff'],
+  ],
   // Strategy first (the paper's question); the core's mode names.
   ethno: [
     ['strategy', 'Strategy'],
@@ -179,5 +214,7 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   civil: [],
   spatial: [],
   tags: [],
+  culture: [],
+  classes: [],
   ethno: [],
 };

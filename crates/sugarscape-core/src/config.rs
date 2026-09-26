@@ -324,8 +324,31 @@ pub fn group_of(groups: &[Group], zeros: u32) -> usize {
         .unwrap_or(0)
 }
 
+/// Which cultural transmission rule K runs.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CultureKind {
+    /// The book's: an agent flips a random tag of each neighbor to its own.
+    #[default]
+    Flip,
+    /// Axelrod's (1997), as docked by Axtell et al. (1996): an agent copies a
+    /// feature from one random neighbor with probability equal to their
+    /// similarity (milestone 14).
+    Axelrod,
+}
+
+fn five() -> u32 {
+    5
+}
+
+fn fifteen() -> u32 {
+    15
+}
+
 /// K: cultural transmission, plus the tag groups that combat, the Tribe
 /// color mode and the group-share statistics read (whether or not K is on).
+/// Configs written before milestone 14 have no Axelrod fields; they read
+/// as the book's rule.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CultureRule {
     pub enabled: bool,
@@ -334,6 +357,25 @@ pub struct CultureRule {
     /// `default_groups(tag_length)` (Decision 2).
     #[serde(default)]
     pub groups: Vec<Group>,
+    #[serde(default)]
+    pub rule: CultureKind,
+    /// Axelrod's F: features per agent.
+    #[serde(default = "five")]
+    pub features: u32,
+    /// Axelrod's q: traits per feature.
+    #[serde(default = "fifteen")]
+    pub traits: u32,
+    /// Under `axelrod`, stop once every two agents' cultures are identical or
+    /// share nothing (Axtell et al.'s global criterion).
+    #[serde(default)]
+    pub stop_when_settled: bool,
+}
+
+impl CultureRule {
+    /// Whether rule K is on and Axelrod's.
+    pub fn axelrod(&self) -> bool {
+        self.enabled && self.rule == CultureKind::Axelrod
+    }
 }
 
 /// How rule T prices an exchange (Decision 8).
@@ -470,7 +512,10 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
 
 /// Disease paths a schedule may not set (they fix the disease list and
 /// immune strings).
-pub const RESET_ONLY_PATHS: [&str; 7] = [
+pub const RESET_ONLY_PATHS: [&str; 10] = [
+    "culture.rule",
+    "culture.features",
+    "culture.traits",
     "disease",
     "disease.enabled",
     "disease.count",
@@ -609,6 +654,10 @@ impl Default for Config {
             culture: CultureRule {
                 enabled: false,
                 groups: default_groups(11),
+                rule: CultureKind::Flip,
+                features: 5,
+                traits: 15,
+                stop_when_settled: false,
             },
             combat: CombatRule {
                 enabled: false,
@@ -930,6 +979,16 @@ impl Config {
             "height",
             "must be between 5 and 500",
         );
+        e.check(
+            (1..=32).contains(&self.culture.features),
+            "culture.features",
+            "must be between 1 and 32",
+        );
+        e.check(
+            (2..=255).contains(&self.culture.traits),
+            "culture.traits",
+            "must be between 2 and 255",
+        );
         let pop = u64::from(self.population);
         match self.placement {
             Placement::Random => e.check(
@@ -1233,6 +1292,12 @@ impl Config {
         }
         if self.tag_length != next.tag_length {
             out.push(FieldError::new("tag_length", msg));
+        }
+        let (ca, cb) = (&self.culture, &next.culture);
+        let axelrod =
+            |c: &CultureRule| (c.rule == CultureKind::Axelrod).then_some((c.features, c.traits));
+        if axelrod(ca) != axelrod(cb) {
+            out.push(FieldError::new("culture.rule", msg));
         }
         let ranges = |c: &Config| c.culture.groups.iter().map(|g| g.zeros).collect::<Vec<_>>();
         if ranges(self) != ranges(next) {
@@ -2272,6 +2337,7 @@ mod tests {
             culture: CultureRule {
                 enabled: false,
                 groups: default_groups(5),
+                ..Config::default().culture
             },
             ..Config::default()
         };
@@ -2292,6 +2358,7 @@ mod tests {
             culture: CultureRule {
                 enabled: true,
                 groups: default_groups(7),
+                ..Config::default().culture
             },
             ..Config::default()
         };

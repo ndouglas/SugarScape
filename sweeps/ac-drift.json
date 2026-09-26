@@ -1,0 +1,56 @@
+{
+  "name": "Axelrod culture: cultural drift (Klemm et al.)",
+  "description": "Klemm, Eguíluz, Toral and San Miguel 2003: cultural drift (per event, a random trait on a random feature) on the 12 × 12, 15-trait lattice; metric: distinct cultures after 20 000 ticks. Small drift lets the lattice keep reorganizing until one culture dominates; heavy drift keeps it disordered. Measured (release, seeds 1–5, recorded 2026-09-25): 26.2 with no drift (stable), 18.8 at 10⁻⁵, 4.8 at 10⁻⁴, 5.0 at 10⁻³ and 55.4 at 10⁻² — the paper's multicultural outcome survives only without noise or with a lot of it.",
+  "base": {
+    "preset": "ac-many-regions"
+  },
+  "x": {
+    "label": "Drift per event",
+    "values": [
+      {
+        "at": 0,
+        "name": "0",
+        "set": {
+          "drift": 0
+        }
+      },
+      {
+        "at": 1e-05,
+        "name": "1e-05",
+        "set": {
+          "drift": 1e-05
+        }
+      },
+      {
+        "at": 0.0001,
+        "name": "0.0001",
+        "set": {
+          "drift": 0.0001
+        }
+      },
+      {
+        "at": 0.001,
+        "name": "0.001",
+        "set": {
+          "drift": 0.001
+        }
+      },
+      {
+        "at": 0.01,
+        "name": "0.01",
+        "set": {
+          "drift": 0.01
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "cultures"
+  }
+}

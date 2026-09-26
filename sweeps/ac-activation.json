@@ -1,0 +1,64 @@
+{
+  "name": "Axelrod culture: activation, the docking discrepancy",
+  "description": "Axtell et al. 1996's docking discrepancy: 5 features of 15 traits, with each event picking a random site (Axelrod) or with each tick one shuffled sweep over every site (the Sugarscape). They found the two alike at 5 × 5 and 10 × 10 but 16.25 vs 9.23 regions at 20 × 20. Measured (release, seeds 1–10, recorded 2026-09-25): 22.0 vs 23.4 at 10 × 10, 23.0 vs 26.5 at 15 × 15, 18.2 vs 11.0 at 20 × 20 — the gap appears at 20 × 20, as they found.",
+  "base": {
+    "preset": "ac-many-regions"
+  },
+  "x": {
+    "label": "Width of territory",
+    "values": [
+      {
+        "at": 10,
+        "name": "10 × 10",
+        "set": {
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "at": 15,
+        "name": "15 × 15",
+        "set": {
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "at": 20,
+        "name": "20 × 20",
+        "set": {
+          "width": 20,
+          "height": 20
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Activation",
+    "values": [
+      {
+        "at": 0,
+        "name": "A random site each event (paper)",
+        "set": {
+          "activation": "random"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Shuffled sweeps (Sugarscape)",
+        "set": {
+          "activation": "sweep"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "regions"
+  }
+}

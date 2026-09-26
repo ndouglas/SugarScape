@@ -180,10 +180,15 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
     let world = world.model();
     if world.finished() && world.tick() < u64::from(args.ticks) {
         // The anasazi stops at its end year; civil violence when a group is gone;
-        // the tags model at its last generation; ethnocentrism at its last period.
+        // the tags model at its last generation; Axelrod's culture once stable,
+        // a sugarscape under his rule once its cultures settle; ethnocentrism at its
+        // last period.
         let why = match config.kind() {
             ModelKind::Civil => "a group has died out",
             ModelKind::Tags => "its last generation",
+            ModelKind::Culture => "the lattice is stable",
+            ModelKind::Classes => "equity reached",
+            ModelKind::Sugarscape => "the cultures have settled",
             ModelKind::Ethno => "its last period",
             _ => "its end year",
         };

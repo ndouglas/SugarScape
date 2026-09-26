@@ -128,6 +128,13 @@ const CHARTS: ChartDef[] = [
   { title: 'Wealth distribution', kind: 'wealth', section: 'top' },
   { title: 'Age histogram', kind: 'age', section: 'top', shown: showsAgeHist },
   { title: 'Cultural tags (% zeros by position)', kind: 'tags', section: 'top', shown: showsTagHist, range: [0, 100] },
+  {
+    title: 'Distinct cultures',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'distinct_cultures', label: 'Axelrod cultures', color: '--c3' }]),
+    shown: (c) => c.culture.rule === 'axelrod',
+  },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },
   { title: 'Units traded', kind: 'time', section: 'goods', lines: perGood('traded_'), shown: (c) => c.trade.enabled },

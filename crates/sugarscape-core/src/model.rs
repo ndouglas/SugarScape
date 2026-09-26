@@ -7,7 +7,9 @@ use serde::{Serialize, Serializer};
 
 use crate::anasazi::{AnasaziConfig, AnasaziWorld};
 use crate::civil::{CivilConfig, CivilWorld};
+use crate::classes::{ClassesConfig, ClassesWorld};
 use crate::config::{Config, FieldError};
+use crate::culture::{CultureConfig, CultureWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::ring::{RingConfig, RingWorld};
@@ -16,7 +18,9 @@ use crate::schema::Param;
 use crate::spatial::{SpatialConfig, SpatialWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
-use crate::{anasazi, civil, ethno, export, ring, schelling, spatial, stats, tags};
+use crate::{
+    anasazi, civil, classes, culture, ethno, export, ring, schelling, spatial, stats, tags,
+};
 
 /// Which model a config or world is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -29,11 +33,13 @@ pub enum ModelKind {
     Civil,
     Spatial,
     Tags,
+    Culture,
+    Classes,
     Ethno,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 8] = [
+    pub const ALL: [ModelKind; 10] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -41,6 +47,8 @@ impl ModelKind {
         ModelKind::Civil,
         ModelKind::Spatial,
         ModelKind::Tags,
+        ModelKind::Culture,
+        ModelKind::Classes,
         ModelKind::Ethno,
     ];
 
@@ -53,6 +61,8 @@ impl ModelKind {
             ModelKind::Civil => "civil",
             ModelKind::Spatial => "spatial",
             ModelKind::Tags => "tags",
+            ModelKind::Culture => "culture",
+            ModelKind::Classes => "classes",
             ModelKind::Ethno => "ethno",
         }
     }
@@ -68,6 +78,8 @@ impl ModelKind {
             ModelKind::Civil => civil::schema(),
             ModelKind::Spatial => spatial::schema(),
             ModelKind::Tags => tags::schema(),
+            ModelKind::Culture => culture::schema(),
+            ModelKind::Classes => classes::schema(),
             ModelKind::Ethno => ethno::schema(),
         }
     }
@@ -89,6 +101,8 @@ pub enum ModelConfig {
     Civil(CivilConfig),
     Spatial(SpatialConfig),
     Tags(TagsConfig),
+    Culture(CultureConfig),
+    Classes(ClassesConfig),
     Ethno(EthnoConfig),
 }
 
@@ -102,6 +116,8 @@ enum Tagged<'a> {
     Civil(&'a CivilConfig),
     Spatial(&'a SpatialConfig),
     Tags(&'a TagsConfig),
+    Culture(&'a CultureConfig),
+    Classes(&'a ClassesConfig),
     Ethno(&'a EthnoConfig),
 }
 
@@ -122,6 +138,8 @@ impl Serialize for ModelConfig {
             ModelConfig::Civil(c) => Tagged::Civil(c).serialize(s),
             ModelConfig::Spatial(c) => Tagged::Spatial(c).serialize(s),
             ModelConfig::Tags(c) => Tagged::Tags(c).serialize(s),
+            ModelConfig::Culture(c) => Tagged::Culture(c).serialize(s),
+            ModelConfig::Classes(c) => Tagged::Classes(c).serialize(s),
             ModelConfig::Ethno(c) => Tagged::Ethno(c).serialize(s),
         }
     }
@@ -137,6 +155,8 @@ impl ModelConfig {
             ModelConfig::Civil(_) => ModelKind::Civil,
             ModelConfig::Spatial(_) => ModelKind::Spatial,
             ModelConfig::Tags(_) => ModelKind::Tags,
+            ModelConfig::Culture(_) => ModelKind::Culture,
+            ModelConfig::Classes(_) => ModelKind::Classes,
             ModelConfig::Ethno(_) => ModelKind::Ethno,
         }
     }
@@ -193,13 +213,19 @@ impl ModelConfig {
             "tags" => serde_json::from_value(value)
                 .map(ModelConfig::Tags)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "culture" => serde_json::from_value(value)
+                .map(ModelConfig::Culture)
+                .map_err(|e| FieldError::new("config", e.to_string())),
+            "classes" => serde_json::from_value(value)
+                .map(ModelConfig::Classes)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "ethno" => serde_json::from_value(value)
                 .map(ModelConfig::Ethno)
                 .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags or ethno)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes or ethno)"
                 ),
             )),
         }
@@ -214,6 +240,8 @@ impl ModelConfig {
             ModelConfig::Civil(c) => c.validate(),
             ModelConfig::Spatial(c) => c.validate(),
             ModelConfig::Tags(c) => c.validate(),
+            ModelConfig::Culture(c) => c.validate(),
+            ModelConfig::Classes(c) => c.validate(),
             ModelConfig::Ethno(c) => c.validate(),
         }
     }
@@ -229,6 +257,8 @@ impl ModelConfig {
             ModelConfig::Civil(c) => set_path(c, path, value).map(ModelConfig::Civil),
             ModelConfig::Spatial(c) => set_path(c, path, value).map(ModelConfig::Spatial),
             ModelConfig::Tags(c) => set_path(c, path, value).map(ModelConfig::Tags),
+            ModelConfig::Culture(c) => set_path(c, path, value).map(ModelConfig::Culture),
+            ModelConfig::Classes(c) => set_path(c, path, value).map(ModelConfig::Classes),
             ModelConfig::Ethno(c) => set_path(c, path, value).map(ModelConfig::Ethno),
         }
     }
@@ -244,7 +274,9 @@ impl ModelConfig {
             | ModelConfig::Schelling(_)
             | ModelConfig::Ring(_)
             | ModelConfig::Civil(_)
-            | ModelConfig::Spatial(_) => None,
+            | ModelConfig::Spatial(_)
+            | ModelConfig::Culture(_)
+            | ModelConfig::Classes(_) => None,
         }
     }
 
@@ -258,6 +290,8 @@ impl ModelConfig {
             ModelConfig::Civil(_) => civil::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Spatial(_) => spatial::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Tags(_) => tags::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Culture(_) => culture::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Classes(_) => classes::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Ethno(_) => ethno::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
@@ -322,6 +356,13 @@ pub trait Model {
     /// Whether the world has run its course (the anasazi's end year):
     /// `run` then does nothing. Other models never finish.
     fn finished(&self) -> bool {
+        false
+    }
+    /// Whether a finished world's state is permanent, so that the ticks it did
+    /// not run would repeat its last values (Axelrod's stable lattice; a
+    /// Sugarscape whose Axelrod cultures settled). Sweeps read such a world at
+    /// its last values; any other world that stopped reads NaN past its end.
+    fn holds_when_finished(&self) -> bool {
         false
     }
 }
@@ -408,6 +449,14 @@ impl Model for World {
             other => Err(wrong_model(ModelKind::Sugarscape, &other)),
         }
     }
+
+    fn finished(&self) -> bool {
+        self.is_finished()
+    }
+
+    fn holds_when_finished(&self) -> bool {
+        true
+    }
 }
 
 /// A world of any model. Sugarscape-only calls (painting, networks, the
@@ -420,6 +469,8 @@ pub enum ModelWorld {
     Civil(Box<CivilWorld>),
     Spatial(Box<SpatialWorld>),
     Tags(Box<TagsWorld>),
+    Culture(Box<CultureWorld>),
+    Classes(Box<ClassesWorld>),
     Ethno(Box<EthnoWorld>),
 }
 
@@ -447,6 +498,8 @@ impl ModelWorld {
             ModelConfig::Civil(c) => ModelWorld::Civil(Box::new(CivilWorld::new(c, seed)?)),
             ModelConfig::Spatial(c) => ModelWorld::Spatial(Box::new(SpatialWorld::new(c, seed)?)),
             ModelConfig::Tags(c) => ModelWorld::Tags(Box::new(TagsWorld::new(c, seed)?)),
+            ModelConfig::Culture(c) => ModelWorld::Culture(Box::new(CultureWorld::new(c, seed)?)),
+            ModelConfig::Classes(c) => ModelWorld::Classes(Box::new(ClassesWorld::new(c, seed)?)),
             ModelConfig::Ethno(c) => ModelWorld::Ethno(Box::new(EthnoWorld::new(c, seed)?)),
         })
     }
@@ -460,6 +513,8 @@ impl ModelWorld {
             ModelWorld::Civil(_) => ModelKind::Civil,
             ModelWorld::Spatial(_) => ModelKind::Spatial,
             ModelWorld::Tags(_) => ModelKind::Tags,
+            ModelWorld::Culture(_) => ModelKind::Culture,
+            ModelWorld::Classes(_) => ModelKind::Classes,
             ModelWorld::Ethno(_) => ModelKind::Ethno,
         }
     }
@@ -473,6 +528,8 @@ impl ModelWorld {
             ModelWorld::Civil(w) => w.as_ref(),
             ModelWorld::Spatial(w) => w.as_ref(),
             ModelWorld::Tags(w) => w.as_ref(),
+            ModelWorld::Culture(w) => w.as_ref(),
+            ModelWorld::Classes(w) => w.as_ref(),
             ModelWorld::Ethno(w) => w.as_ref(),
         }
     }
@@ -486,6 +543,8 @@ impl ModelWorld {
             ModelWorld::Civil(w) => w.as_mut(),
             ModelWorld::Spatial(w) => w.as_mut(),
             ModelWorld::Tags(w) => w.as_mut(),
+            ModelWorld::Culture(w) => w.as_mut(),
+            ModelWorld::Classes(w) => w.as_mut(),
             ModelWorld::Ethno(w) => w.as_mut(),
         }
     }
@@ -567,6 +626,8 @@ impl ModelWorld {
             ModelWorld::Civil(w) => copy_without_history!(Civil, w),
             ModelWorld::Spatial(w) => copy_without_history!(Spatial, w),
             ModelWorld::Tags(w) => copy_without_history!(Tags, w),
+            ModelWorld::Culture(w) => copy_without_history!(Culture, w),
+            ModelWorld::Classes(w) => copy_without_history!(Classes, w),
             ModelWorld::Ethno(w) => copy_without_history!(Ethno, w),
             _ => return None,
         };
@@ -590,6 +651,8 @@ impl ModelWorld {
             (ModelWorld::Civil(live), ModelWorld::Civil(kept)) => restore_into!(live, kept),
             (ModelWorld::Spatial(live), ModelWorld::Spatial(kept)) => restore_into!(live, kept),
             (ModelWorld::Tags(live), ModelWorld::Tags(kept)) => restore_into!(live, kept),
+            (ModelWorld::Culture(live), ModelWorld::Culture(kept)) => restore_into!(live, kept),
+            (ModelWorld::Classes(live), ModelWorld::Classes(kept)) => restore_into!(live, kept),
             (ModelWorld::Ethno(live), ModelWorld::Ethno(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
@@ -874,6 +937,8 @@ mod tests {
                 "civil",
                 "spatial",
                 "tags",
+                "culture",
+                "classes",
                 "ethno"
             ]
         );

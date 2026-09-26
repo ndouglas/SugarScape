@@ -1,12 +1,15 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
-import { isCivilView, isEthnoView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isClassesView, isCultureView, isEthnoView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AnasaziInspection,
   CivilInspection,
+  ClassesInspection,
+  CultureInspection,
+  CultureSiteView,
   EthnoConfig,
   EthnoInspection,
   LinkView,
@@ -163,6 +166,42 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A point of a memory simplex: its mix, the best reply there, and the agents whose memory plots there. */
+  private classesRows(view: ClassesInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (!view.simplex || !view.mix) return [row('Point', 'outside the simplexes')];
+    const [l, m, hi] = view.mix.map((p) => `${Math.round(p * 100)}%`);
+    const name = { one: 'Memories', intra: 'Memories of their own tag', inter: 'Memories of the other tag' }[view.simplex];
+    const rows = [row('Simplex', name), row('Remembered', `L ${l} · M ${m} · H ${hi}`), row('Best reply', view.best_reply ?? '')];
+    if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+    const shown = view.agents.slice(0, 12);
+    for (const a of shown) {
+      const tag = a.tag ? ` · ${a.tag}` : '';
+      rows.push(row(`#${a.id}`, `L ${a.memory[0]} · M ${a.memory[1]} · H ${a.memory[2]}${tag} · last ${a.last_demand ?? '–'} · payoff ${fmt(a.mean_payoff)}`));
+    }
+    if (view.agents.length > shown.length) rows.push(row('', `and ${view.agents.length - shown.length} more`));
+    return rows;
+  }
+
+  /** A culture site (its traits, region, zone and what each neighbor shares) or a lane between two sites. */
+  private cultureRows(view: CultureInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const site = (s: CultureSiteView) => `(${s.x}, ${s.y}) · ${s.traits.join(' ')}`;
+    const where = (s: CultureSiteView) => `region of ${s.region_size} · zone of ${s.zone_size}`;
+    if (view.kind === 'lane' && view.b) {
+      const f = view.a.traits.length;
+      return [
+        row('Between', `${site(view.a)} and ${site(view.b)}`),
+        row('Shared', `${view.shared} of ${f} features${view.shared === f ? ' (identical)' : view.shared === 0 ? ' (cannot interact)' : ''}`),
+      ];
+    }
+    return [
+      row('Site', site(view.a)),
+      row('Belongs to', where(view.a)),
+      ...view.neighbors.map((n) => row(`(${n.x}, ${n.y})`, `shares ${n.shared} of ${view.a.traits.length}`)),
+    ];
+  }
+
   /**
    * A cell of the tags diagram: its generation and tag bin, what the bin held, and in the current
    * generation its agents (the first 12).
@@ -255,17 +294,21 @@ export class InspectPanel {
       // First: an empty ethnocentrism site is shaped like an empty Schelling site.
       const rows = isEthnoView(view, this.engine.model)
         ? this.ethnoSiteRows(view, gone)
-        : isTagsView(view)
-          ? this.tagsRows(view)
-          : isRingView(view)
-            ? this.ringRows(view, gone)
-            : isValleyView(view)
-              ? this.valleyRows(view, gone)
-              : isCivilView(view)
-                ? this.civilRows(view, shown.agentId, gone)
-                : isSpatialView(view)
-                  ? this.spatialRows(view)
-                  : this.schellingRows(view, gone);
+        : isClassesView(view)
+          ? this.classesRows(view)
+          : isCultureView(view)
+            ? this.cultureRows(view)
+            : isTagsView(view)
+              ? this.tagsRows(view)
+              : isRingView(view)
+                ? this.ringRows(view, gone)
+                : isValleyView(view)
+                  ? this.valleyRows(view, gone)
+                  : isCivilView(view)
+                    ? this.civilRows(view, shown.agentId, gone)
+                    : isSpatialView(view)
+                      ? this.spatialRows(view)
+                      : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

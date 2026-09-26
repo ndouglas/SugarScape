@@ -49,6 +49,9 @@ const GOLDEN: &[(&str, u64)] = &[
     // VI-2's book crash is not reproduced; this entry pins its run.
     ("vi-2-no-trade", 0xd35c40bead68ed38),
     ("vi-3-trade", 0x2a65351834fda082),
+    // Milestone 14: Axelrod's culture rule in the Sugarscape (the docking).
+    ("dock-mobility-15", 0x9d0a2ced876f00d2),
+    ("dock-mobility-30", 0x10a0c00c27c1660d),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
@@ -93,6 +96,24 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("eh-clones-only", 0x1bd933620c915c0e),
     ("eh-no-exact-clones", 0xafe94d6c0bb3b8ab),
     ("rca-adopt-p1", 0xc3f75d53d237a89),
+    ("ac-sample-run", 0xeb302b62eb20f85d),
+    ("ac-many-regions", 0xcfca4ee65fe3946c),
+    ("ac-large-territory", 0xbe6a116733f7121),
+    ("ac-torus", 0x8a21fc496bea71c3),
+    ("ac-random-activation-20", 0xf0c8269aa3a3f7d2),
+    ("ac-sweep-activation", 0x986f6c9a01898253),
+    ("ac-neighbor-changes", 0xb12313a2dedfda7e),
+    ("ac-soup", 0xe15b8cab349e25fa),
+    ("ac-drift", 0xf254ab408f46810f),
+    ("aey-equity", 0x6aa634df2b9c3944),
+    ("aey-fractious", 0xd6b378e369c0066e),
+    ("aey-transition", 0x38563aa17c61868d),
+    ("aey-tags", 0x1455ea172db78c68),
+    ("aey-classes", 0xe2a0783a5fc6734c),
+    ("pvplh-small-tags", 0x3ca181d96a1c667),
+    ("pvplh-mode", 0xb90f0d0cab7966b9),
+    ("pvplh-progressive", 0xca60c420d61a7ffc),
+    ("pvplh-lattice", 0x7975f5afc2d06c10),
     ("ha-standard", 0xf07433e56417f07c),
     ("ha-figure-1", 0x843632b62ddf7a6b),
     ("ha-appendix-mutation", 0xae8c7eda9113dae8),

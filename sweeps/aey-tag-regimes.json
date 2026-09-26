@@ -1,0 +1,68 @@
+{
+  "name": "Emergence of Classes: do classes emerge?",
+  "description": "Do classes emerge? The tag society from random starts; the metric is the share of periods (over 5000) spent segregated: in classes, or with equity above and division below. AEY show both in Figs. 8–9 at N = 100, m = 20, ε = 0.2; Poza et al. 2011 found 'segregation never emerged' with AEY's rule. Measured (release, seeds 1–20, recorded 2026-09-25): under AEY's rule 0 % at every setting (N 20 m 5 ε 0.05; N 20 m 10 ε 0.1; AEY's own); under the mode rule 34 %, 54 % and 49 %.",
+  "base": {
+    "preset": "aey-tags"
+  },
+  "x": {
+    "label": "Population and memory",
+    "values": [
+      {
+        "at": 0,
+        "name": "N 20, m 5, ε 0.05",
+        "set": {
+          "agents": 20,
+          "memory": 5,
+          "noise": 0.05
+        }
+      },
+      {
+        "at": 1,
+        "name": "N 20, m 10, ε 0.1",
+        "set": {
+          "agents": 20,
+          "memory": 10,
+          "noise": 0.1
+        }
+      },
+      {
+        "at": 2,
+        "name": "N 100, m 20, ε 0.2 (AEY)",
+        "set": {
+          "agents": 100,
+          "memory": 20,
+          "noise": 0.2
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Decision",
+    "values": [
+      {
+        "at": 0,
+        "name": "Expected payoff (AEY)",
+        "set": {
+          "decision": "expected"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Mode (Poza et al.)",
+        "set": {
+          "decision": "mode"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "segregated",
+    "from": 1
+  }
+}

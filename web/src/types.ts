@@ -67,7 +67,11 @@ export interface Config {
   replacement: { enabled: boolean };
   sex: { enabled: boolean; fertility_onset: URange; female_end: URange; male_end: URange };
   inheritance: { enabled: boolean };
-  culture: { enabled: boolean; groups: TagGroup[] };
+  /**
+   * Rule K. `rule`, `features`, `traits` and `stop_when_settled` are milestone 14's Axelrod option
+   * (absent from older configs: the book's `flip`).
+   */
+  culture: { enabled: boolean; groups: TagGroup[]; rule?: 'flip' | 'axelrod'; features?: number; traits?: number; stop_when_settled?: boolean };
   combat: { enabled: boolean; unlimited: boolean; reward: number };
   trade: { enabled: boolean; price: PriceRule };
   credit: { enabled: boolean; duration: number; rate: number };
@@ -77,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'ethno';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -224,7 +228,7 @@ export interface TagsConfig {
 /** A strategy as Inspect and `allowed` name it (`allowed` lists only E, H, S and T). */
 export type EthnoStrategy = 'E' | 'H' | 'S' | 'T' | 'kin' | 'nonkin' | 'mixed';
 
-/** Hammond & Axelrod's ethnocentrism model and its critics' variants (milestone 14). A tick is a period. */
+/** Hammond & Axelrod's ethnocentrism model and its critics' variants (milestone 16). A tick is a period. */
 export interface EthnoConfig {
   model: 'ethno';
   width: number;
@@ -252,7 +256,45 @@ export interface EthnoConfig {
   schedule: ScheduledChange[];
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | EthnoConfig;
+
+/**
+ * Axelrod's culture model (milestone 14): sites with F features of q traits copying a neighbor's
+ * trait with probability equal to their similarity, with Axtell et al.'s and later departures.
+ */
+export interface CultureConfig {
+  model: 'culture';
+  width: number;
+  height: number;
+  features: number;
+  traits: number;
+  neighborhood: 'von_neumann' | 'moore' | 'diamond' | 'soup';
+  boundary: 'bounded' | 'torus';
+  activation: 'random' | 'sweep';
+  changes: 'active' | 'neighbor';
+  drift: number;
+  stop_when_stable: boolean;
+}
+
+/**
+ * Axtell, Epstein and Young's bargaining society (milestone 15): agents best-reply to their memory of
+ * opponents' demands in the Nash demand game, with Poza et al.'s departures.
+ */
+export interface ClassesConfig {
+  model: 'classes';
+  agents: number;
+  memory: number;
+  noise: number;
+  tags: boolean;
+  tag_memory: 'per_tag' | 'shared';
+  decision: 'expected' | 'mode';
+  low: number;
+  start: 'random' | 'fractious' | 'progressive' | 'classes';
+  interaction: 'random' | 'lattice';
+  lattice: { width: number; height: number; neighborhood: 'moore' | 'von_neumann'; layout: 'random' | 'four_zones' | 'two_zones' };
+  stop_at_equity: boolean;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -309,6 +351,8 @@ export interface Snapshot {
   goods: { mean_holding: number; mean_metabolism: number; traded: number }[];
   pollution: number[];
   groups: number[];
+  /** Under Axelrod's culture rule (milestone 14). */
+  axelrod?: { distinct_cultures: number; settled: boolean };
 }
 
 export interface SchellingStats {
@@ -411,7 +455,38 @@ export interface EthnoStats {
 }
 
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | EthnoStats;
+export interface CultureStats {
+  tick: number;
+  regions: number;
+  zones: number;
+  cultures: number;
+  largest_region: number;
+  mean_similarity: number;
+  active_bonds: number;
+  changes: number;
+  stable_at: number;
+}
+
+export interface ClassesStats {
+  tick: number;
+  mean_payoff: number;
+  m_share: number;
+  outcome_mm: number;
+  outcome_hl: number;
+  outcome_fail: number;
+  outcome_waste: number;
+  /** 0 mixed, 1 equity, 2 fractious, 3 classes, 4 equity between types only, 5 equity above and division below. */
+  regime: number;
+  segregated: number;
+  equity_at: number;
+  first_attractor: number;
+  payoff_dark: number;
+  payoff_light: number;
+  payoff_inter: number;
+  realized_noise: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -571,15 +646,38 @@ export interface EthnoAgentView {
 export interface EthnoInspection { site: { x: number; y: number }; agent: EthnoAgentView | null }
 
 /** What a world of any model says about a site. */
-export type AnyInspection =
-  | Inspection
-  | SchellingInspection
-  | RingInspection
-  | AnasaziInspection
-  | CivilInspection
-  | TagsInspection
-  | SpatialInspection
-  | EthnoInspection;
+/** A culture site: its position, traits, and the sizes of its region and zone. */
+export interface CultureSiteView { x: number; y: number; traits: number[]; region_size: number; zone_size: number }
+/**
+ * A cell of the culture frame: a site (with what each neighbor shares) or a lane between two sites
+ * (with what they share). `agent` is always null: sites do not move.
+ */
+export interface CultureInspection {
+  site: { x: number; y: number };
+  kind: 'site' | 'lane';
+  a: CultureSiteView;
+  b: CultureSiteView | null;
+  shared: number | null;
+  neighbors: { x: number; y: number; shared: number }[];
+  agent: null;
+}
+
+/** An agent whose memory plots at an inspected simplex point. */
+export interface BargainerView { id: number; tag: 'dark' | 'light' | null; memory: [number, number, number]; last_demand: 'L' | 'M' | 'H' | null; mean_payoff: number }
+/**
+ * A point of a memory simplex: which simplex, the mix of L, M and H remembered there, the best reply,
+ * and the agents there. `agent` is always null: agents have no place to follow.
+ */
+export interface ClassesInspection {
+  site: { x: number; y: number };
+  simplex: 'one' | 'intra' | 'inter' | null;
+  mix: [number, number, number] | null;
+  best_reply: 'L' | 'M' | 'H' | null;
+  agents: BargainerView[];
+  agent: null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -611,7 +709,12 @@ export type ColorMode =
   | 'tolerance'
   | 'clones'
   | 'tag'
-  | 'ptr';
+  | 'ptr'
+  | 'culture'
+  | 'similarity'
+  | 'zones'
+  | 'best_reply'
+  | 'payoff';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

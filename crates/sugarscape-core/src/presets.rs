@@ -4,7 +4,7 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, Good, Map, Outbreak, Peak, Placement, Pollutant, Pollution,
+    three_tribes, Config, CultureKind, Good, Map, Outbreak, Peak, Placement, Pollutant, Pollution,
     ScheduledChange, Transform, URange, SPICE_COLOR,
 };
 use crate::model::ModelConfig;
@@ -603,7 +603,45 @@ pub fn all() -> Vec<Preset> {
                 c.diffusion.enabled = true;
             },
         ),
+        preset(
+            "dock-mobility-15",
+            "Docking: Axelrod's culture on the move, 15 traits",
+            "Axtell, Axelrod, Epstein & Cohen 1996, §4.3.1",
+            "Axtell, Axelrod, Epstein and Cohen's mobility experiment (1996): 100 agents with vision 5–10 on one sugar mountain in the middle of the 50 × 50 torus move to the richest site they see, eat, then run Axelrod's culture rule (5 features of 15 traits) with one random neighbor; nobody starves. The run stops once every two agents' cultures are identical or share nothing. They report 1.1 ± 0.3 cultures over 10 runs, all of which stopped; their mountain's shape is not given (here: one cone of radius 35, height 4). Measured (20 seeds, 20 000 ticks): 4.4 ± 1.4 cultures, and 17 of 20 runs never stop — one culture takes almost everyone, but a few stragglers that rarely meet anyone keep second and third cultures alive. Mobility still collapses diversity (the fixed 10 × 10 lattice keeps about 20), as they say; their numbers do not reproduce.",
+            |c| docking(c, 15),
+        ),
+        preset(
+            "dock-mobility-30",
+            "Docking: Axelrod's culture on the move, 30 traits",
+            "Axtell, Axelrod, Epstein & Cohen 1996, §4.3.1",
+            "The mobility experiment with 30 traits per feature. Axtell et al. 1996: 2.2 ± 1.2 cultures, more than with 15 traits. Measured (20 seeds, 20 000 ticks): 5.7 ± 1.6, and 13 of 20 runs never stop — more than with 15 traits, as they found, but well above their count.",
+            |c| docking(c, 30),
+        ),
     ]
+}
+
+/// Axtell et al.'s mobility experiment: 100 agents with vision 5–10 on one
+/// sugar mountain in the middle of the 50 × 50 torus, moving, eating and
+/// then running Axelrod's culture rule (5 features of `traits` traits) with
+/// one neighbor, until every two cultures are identical or share nothing.
+/// Nobody starves (metabolism 0): Axtell et al.'s agents never die.
+fn docking(c: &mut Config, traits: u32) {
+    c.population = 100;
+    c.vision = URange::new(5, 10);
+    c.goods[0].map = Map::Peaks {
+        peaks: vec![Peak {
+            x: 25,
+            y: 25,
+            radius: 35.0,
+            height: 4.0,
+        }],
+    };
+    c.goods[0].metabolism = URange::new(0, 0);
+    c.culture.enabled = true;
+    c.culture.rule = CultureKind::Axelrod;
+    c.culture.features = 5;
+    c.culture.traits = traits;
+    c.culture.stop_when_settled = true;
 }
 
 pub fn by_id(id: &str) -> Option<Preset> {
@@ -643,6 +681,8 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::anasazi::presets());
     out.extend(crate::civil::presets());
     out.extend(crate::tags::presets());
+    out.extend(crate::culture::presets());
+    out.extend(crate::classes::presets());
     out.extend(crate::spatial::presets());
     out.extend(crate::ethno::presets());
     out
@@ -686,7 +726,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 29);
+        assert_eq!(presets.len(), 31);
         for p in presets {
             p.config
                 .validate()
@@ -813,6 +853,67 @@ mod tests {
         assert_eq!(q.pollution.pollutants[0].devalues, vec![true, false]);
         assert_eq!(q.pollution.pollutants[1].devalues, vec![false, true]);
         assert!(q.pollution.enabled && q.diffusion.enabled);
+    }
+
+    #[test]
+    fn the_docking_presets_run_axelrods_rule_on_one_mountain_and_stop_when_settled() {
+        use crate::config::CultureKind;
+        for (id, q) in [("dock-mobility-15", 15), ("dock-mobility-30", 30)] {
+            let c = by_id(id).unwrap().config;
+            assert_eq!((c.population, c.vision), (100, URange::new(5, 10)), "{id}");
+            assert!(
+                c.culture.enabled
+                    && c.culture.rule == CultureKind::Axelrod
+                    && c.culture.stop_when_settled
+            );
+            assert_eq!((c.culture.features, c.culture.traits), (5, q));
+            assert_eq!(c.goods[0].metabolism, URange::new(0, 0));
+            assert!(matches!(&c.goods[0].map, Map::Peaks { peaks } if peaks.len() == 1));
+            let w = crate::world::World::new(c, 1).unwrap();
+            assert!(w
+                .agents()
+                .all(|a| a.culture.len() == 5 && a.culture.iter().all(|&t| u32::from(t) < q)));
+        }
+    }
+
+    #[test]
+    fn a_settled_sugarscape_stops() {
+        let mut c = by_id("dock-mobility-15").unwrap().config;
+        c.population = 2;
+        let mut w = crate::world::World::new(c, 3).unwrap();
+        let ids: Vec<_> = w.agents().map(|a| a.id).collect();
+        w.agent_mut(ids[0]).unwrap().culture = vec![1, 1, 1, 1, 1];
+        w.agent_mut(ids[1]).unwrap().culture = vec![2, 2, 2, 2, 2];
+        w.run(1);
+        let s = w.stats.latest().unwrap().axelrod.unwrap();
+        assert_eq!((s.distinct_cultures, s.settled), (2, true));
+        assert!(w.is_finished());
+        let tick = w.tick;
+        w.run(10);
+        assert_eq!(w.tick, tick, "a finished world does not step");
+        let flip = crate::world::World::new(Config::default(), 1).unwrap();
+        assert!(flip.stats.latest().unwrap().axelrod.is_none() && !flip.is_finished());
+    }
+
+    #[test]
+    fn only_axelrods_rule_at_work_among_two_or_more_agents_can_settle() {
+        // Rule K off: nothing is settling, so nothing stops.
+        let mut off = by_id("dock-mobility-15").unwrap().config;
+        off.population = 2;
+        off.culture.enabled = false;
+        let mut w = crate::world::World::new(off, 3).unwrap();
+        let ids: Vec<_> = w.agents().map(|a| a.id).collect();
+        w.agent_mut(ids[0]).unwrap().culture = vec![1, 1, 1, 1, 1];
+        w.agent_mut(ids[1]).unwrap().culture = vec![2, 2, 2, 2, 2];
+        w.run(3);
+        assert_eq!(w.tick, 3);
+        assert!(!w.is_finished());
+        // An empty world has no cultures to settle.
+        let mut empty = by_id("dock-mobility-15").unwrap().config;
+        empty.population = 0;
+        let mut e = crate::world::World::new(empty, 1).unwrap();
+        e.run(3);
+        assert_eq!((e.tick, e.is_finished()), (3, false));
     }
 
     #[test]

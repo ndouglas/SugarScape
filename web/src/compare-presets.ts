@@ -51,6 +51,18 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     b: 'rca-literal-p2',
   },
   {
+    id: 'ac-random-vs-sweep-20',
+    label: 'Literal vs Sugarscape activation, 20 × 20 — Axelrod Culture (Compare)',
+    a: 'ac-random-activation-20',
+    b: 'ac-sweep-activation',
+  },
+  {
+    id: 'aey-tags-vs-mode',
+    label: 'AEY’s rule vs the mode rule, with tags — Emergence of Classes (Compare)',
+    a: 'aey-tags',
+    b: 'pvplh-mode',
+  },
+  {
     id: 'ha-four-vs-five',
     label: 'Four colors vs five (the Java’s draw) — Ethnocentrism (Compare)',
     a: 'ha-standard',

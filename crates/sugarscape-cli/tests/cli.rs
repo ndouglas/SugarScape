@@ -68,6 +68,18 @@ fn presets_and_sweeps_are_listed() {
         "rca-cost",
         "rca-clones",
         "rca-population",
+        "ac-table-2",
+        "ac-neighborhoods",
+        "ac-territory",
+        "ac-activation",
+        "ac-traits-transition",
+        "ac-drift",
+        "dock-mobility",
+        "aey-memory",
+        "aey-population",
+        "aey-first-attractor",
+        "aey-tag-regimes",
+        "pvplh-payoffs",
         "ha-cost",
         "ha-colors",
         "ha-mutation",
@@ -415,6 +427,28 @@ fn the_anasazi_runs_to_its_end_year_on_the_command_line() {
         result.runs.len(),
         12,
         "none, each of ten quirks and all off"
+    );
+}
+
+#[test]
+fn a_classes_run_stops_at_equity() {
+    let out = sugarscape(&["run", "--preset", "aey-transition", "--ticks", "1000000"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let err = stderr(&out);
+    assert!(
+        err.starts_with("finished at tick ") && err.ends_with(" (equity reached)\n"),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_culture_run_stops_when_the_lattice_is_stable() {
+    let out = sugarscape(&["run", "--preset", "ac-sample-run", "--ticks", "100000"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let err = stderr(&out);
+    assert!(
+        err.starts_with("finished at tick ") && err.ends_with(" (the lattice is stable)\n"),
+        "{err}"
     );
 }
 

@@ -15,6 +15,11 @@ import type {
   AnasaziStats,
   CivilConfig,
   CivilStats,
+  ClassesConfig,
+  ClassesInspection,
+  ClassesStats,
+  CultureInspection,
+  CultureStats,
   EthnoConfig,
   EthnoInspection,
   EthnoStats,
@@ -390,6 +395,22 @@ describe('other models through the engine', () => {
     ['eh-clones-only', '0x1bd933620c915c0e'],
     ['eh-no-exact-clones', '0xafe94d6c0bb3b8ab'],
     ['rca-adopt-p1', '0x0c3f75d53d237a89'],
+    ['ac-sample-run', '0xeb302b62eb20f85d'],
+    ['ac-many-regions', '0xcfca4ee65fe3946c'],
+    ['ac-torus', '0x8a21fc496bea71c3'],
+    ['ac-random-activation-20', '0xf0c8269aa3a3f7d2'],
+    ['ac-sweep-activation', '0x986f6c9a01898253'],
+    ['ac-neighbor-changes', '0xb12313a2dedfda7e'],
+    ['ac-soup', '0xe15b8cab349e25fa'],
+    ['ac-drift', '0xf254ab408f46810f'],
+    ['aey-equity', '0x6aa634df2b9c3944'],
+    ['aey-fractious', '0xd6b378e369c0066e'],
+    ['aey-tags', '0x1455ea172db78c68'],
+    ['aey-classes', '0xe2a0783a5fc6734c'],
+    ['pvplh-small-tags', '0x03ca181d96a1c667'],
+    ['pvplh-mode', '0xb90f0d0cab7966b9'],
+    ['pvplh-progressive', '0xca60c420d61a7ffc'],
+    ['pvplh-lattice', '0x7975f5afc2d06c10'],
     ['ha-standard', '0xf07433e56417f07c'],
     ['ha-figure-1', '0x843632b62ddf7a6b'],
     ['ha-appendix-mutation', '0xae8c7eda9113dae8'],
@@ -484,6 +505,78 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the classes model through the engine', () => {
+  it('stops once at equity and inspects a simplex point', async () => {
+    const t = presets.find((p) => p.id === 'aey-transition')!;
+    const e = await Engine.create({ config: structuredClone(t.config as ClassesConfig), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'payoff' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as ClassesStats;
+    expect([e.finished, ends, s.equity_at]).toEqual([true, 1, e.tick]);
+    // Everyone remembering mostly M sits near the M vertex, bottom left.
+    let found: ClassesInspection | null = null;
+    for (let x = 0; x < 30 && !found; x++) {
+      await e.select(x, 104);
+      const v = e.inspection!.view as ClassesInspection;
+      if (v.agents.length > 0) found = v;
+    }
+    expect(found!.simplex).toBe('one');
+    expect(found!.best_reply).toBe('M');
+    expect(e.inspection!.agentId).toBeNull();
+  });
+});
+
+describe('the culture model through the engine', () => {
+  it('stops once, at the tick the lattice becomes stable, and inspects sites and lanes', async () => {
+    const sample = presets.find((p) => p.id === 'ac-sample-run')!;
+    const e = await Engine.create({ config: structuredClone(sample.config), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'similarity' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(100_000);
+    const s = e.latest as CultureStats;
+    expect([e.finished, ends, s.stable_at, s.active_bonds]).toEqual([true, 1, e.tick, 0]);
+    expect(s.regions).toBe(s.zones);
+    await e.select(0, 0);
+    const site = e.inspection!.view as CultureInspection;
+    expect([site.kind, site.a.traits.length, site.neighbors.length]).toEqual(['site', 5, 2]);
+    await e.select(2, 0);
+    expect((e.inspection!.view as CultureInspection).kind).toBe('lane');
+    expect(e.inspection!.agentId).toBeNull();
+  });
+
+  it('runs the activation Compare pair until both lattices are stable, not just the first', async () => {
+    const make = (id: string) =>
+      Engine.create({ config: structuredClone(presets.find((p) => p.id === id)!.config), seed: 1 }, { presets, transport: inline() });
+    const [a, b] = [await make('ac-random-activation-20'), await make('ac-sweep-activation')];
+    const lock = new Lockstep([a, b], 'max', () => 0);
+    await lock.settled();
+    await lock.advance(6000);
+    expect([a.tick, b.tick]).toEqual([6000, 6000]);
+    const [sa, sb] = [a.latest as CultureStats, b.latest as CultureStats];
+    expect(sa.stable_at).toBeLessThan(6000);
+    expect(sb.stable_at).toBeLessThan(6000);
+    expect(sa.stable_at).not.toBe(sb.stable_at);
+  });
+
+  it('reproduces the docking presets’ golden fingerprints in the Sugarscape', async () => {
+    // crates/sugarscape-core/tests/golden.rs, GOLDEN.
+    for (const [id, golden] of [
+      ['dock-mobility-15', '0x9d0a2ced876f00d2'],
+      ['dock-mobility-30', '0x10a0c00c27c1660d'],
+    ]) {
+      const preset = presets.find((p) => p.id === id)!;
+      const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });
+      e.setDisplay({ colorMode: 'culture' });
+      await e.advance(200);
+      expect(await e.fingerprint()).toBe(golden);
+      expect((e.latest as Snapshot).axelrod?.distinct_cultures).toBeGreaterThan(0);
+    }
   });
 });
 
