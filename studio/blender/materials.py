@@ -10,7 +10,13 @@ YARN = {
     "teal": (0.25, 0.62, 0.62),
     "lilac": (0.66, 0.55, 0.85),
     "butter": (0.98, 0.82, 0.40),
+    "blue": (0.28, 0.45, 0.92),
+    "red": (0.88, 0.26, 0.24),
 }
+# Crowds and families wear these; Blue and Red are kept for the book's two
+# tribes, by group index (0 Blue, 1 Red).
+CROWD_YARN = ("cream", "coral", "teal", "lilac", "butter")
+TRIBE_YARN = ("blue", "red")
 
 
 def _principled(name):

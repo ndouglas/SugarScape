@@ -12,7 +12,9 @@ import bpy
 
 import animate
 import dump as dump_mod
+import lineage
 import seasons
+import tribes
 from blender import flump, materials
 
 FONT = pathlib.Path(__file__).resolve().parent.parent / "fonts" / "Baloo2.ttf"
@@ -136,15 +138,17 @@ def _turn_to_camera(obj, ctx):
 
 
 def belly(beat, d, ctx):
-    """A meter floating over each focus Flump: a dark case, a glowing gold
-    fill for its sugar (full at 20) and the count beside it."""
+    """A meter floating over each focus Flump (or every Flump, with params
+    belly="all"): a dark case, a glowing gold fill for its sugar (full at
+    params belly_full, default 20) and the count beside it."""
     meters = {}
+    full = beat.params.get("belly_full", 20)
+    ids = list(ctx.tracks) if beat.params.get("belly") == "all" else [d.placed[i] for i in beat.focus]
     # Bright emission washes out toward white under AgX; a deep orange at
     # modest strength stays gold.
     gold = materials.fading("belly-gold", (1.0, 0.38, 0.0), 0.9)
     cream = materials.fading("belly-ink", (1.0, 0.97, 0.9), 4.0)
-    for i in beat.focus:
-        id_ = d.placed[i]
+    for id_ in ids:
         holder = bpy.data.objects.new(f"belly{id_}", None)
         bpy.context.scene.collection.objects.link(holder)
         # The holder turns to face the camera, so its local +Z points at the lens.
@@ -159,7 +163,7 @@ def belly(beat, d, ctx):
             if not p.visible:
                 flump.stow(holder)
                 continue
-            level = min(max(p.sugar / 20, 0.0), 1.0)
+            level = min(max(p.sugar / full, 0.0), 1.0)
             holder.scale = (1, 1, 1)
             holder.location = (p.x, p.y, p.z + 1.05)
             _turn_to_camera(holder, ctx)
@@ -271,7 +275,9 @@ def dials(beat, d, ctx):
 
 
 def stacks(beat, d, ctx):
-    """A column of sugar over every Flump, as tall as its wealth."""
+    """A column of sugar over every Flump, as tall as its wealth (params
+    stack_scale: height per unit of sugar, default 0.012)."""
+    per = beat.params.get("stack_scale", 0.012)
     sugar = materials.gumdrop()
     columns = {id_: box(f"stack{id_}", sugar, None, scale=(0.2, 0.2, 0.01)) for id_ in ctx.tracks}
 
@@ -281,7 +287,7 @@ def stacks(beat, d, ctx):
             if not p.visible:
                 flump.stow(c)
                 continue
-            height = max(p.sugar * 0.012, 0.01)
+            height = max(p.sugar * per, 0.01)
             c.scale = (0.2, 0.2, height)
             c.location = (p.x, p.y, p.z + 0.85 * p.sz + height / 2)
 
@@ -545,8 +551,97 @@ def bars(beat, d, ctx):
     return lambda frame: None
 
 
+def bequests(beat, d, ctx):
+    """Sugar flowing from each Flump who dies with some to each child alive to
+    inherit it (rule I; nothing without inheritance): glowing gumdrops arc
+    from the parent to its heirs as it poofs, one per heir, each carrying an
+    equal share."""
+    flows = []
+    gold = materials.gumdrop()
+    for tick, parent, held, heirs in lineage.bequests(d):
+        if parent not in ctx.tracks:
+            continue  # not alive during this beat
+        start = ctx.timing.frame(tick) - ctx.timing.poof_frames
+        home = ctx.tracks[parent].cells[-1]
+        for heir in (h for h in heirs if h in ctx.tracks):
+            obj = ball(f"bequest-{parent}-{heir}", 0.16, gold)
+            flows.append((start, home, heir, obj))
+
+    def update(frame):
+        for start, home, heir, obj in flows:
+            u = (frame - start) / BEQUEST_FRAMES
+            if not 0 <= u <= 1:
+                flump.stow(obj)
+                continue
+            x0, y0 = animate.cell_center(*home, d.width, d.height)
+            z0 = animate.cell_height(ctx.corners, *home, d.width) + 0.6
+            p = _pose(ctx, d, heir, frame)
+            e = animate.smoothstep(u)
+            obj.location = (x0 + (p.x - x0) * e, y0 + (p.y - y0) * e, z0 + (p.z + 0.6 - z0) * e + 1.2 * math.sin(math.pi * u))
+            s = 1 - 0.6 * u
+            obj.scale = (s, s, s)
+
+    return update
+
+
+BEQUEST_FRAMES = 24
+
+
+def traits(beat, d, ctx):
+    """Each focus Flump's cultural tags (its eleven traits) on a dark pill
+    over it, updated as they flip; the text is its tribe's color."""
+    items = []
+    inks = [materials.fading(f"traits-{c}", materials.YARN[c], 3.0) for c in materials.TRIBE_YARN]
+    for i in beat.focus:
+        id_ = d.placed[i]
+        holder = bpy.data.objects.new(f"traits{id_}", None)
+        bpy.context.scene.collection.objects.link(holder)
+        _card(f"traits{id_}-pill", holder, (0, 0, -0.03), (2.3, 0.5, 0.02))
+        labels = [text(f"traits{id_}-{g}", "", 0.34, ink, holder) for g, ink in enumerate(inks)]
+        items.append((id_, holder, labels))
+
+    def update(frame):
+        k = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
+        for id_, holder, labels in items:
+            p = _pose(ctx, d, id_, frame)
+            if not p.visible or id_ not in d.frames[k].tags:
+                flump.stow(holder)
+                continue
+            holder.location = (p.x, p.y, p.z + 1.2)
+            holder.scale = (0.6,) * 3
+            _turn_to_camera(holder, ctx)
+            group = d.frames[k].groups[id_]
+            for g, label in enumerate(labels):
+                label.data.body = d.frames[k].tags[id_] if g == group else ""
+
+    return update
+
+
+def alike(beat, d, ctx):
+    """Top right: how alike neighbors are (the share of adjacent pairs in
+    the same tribe) and each tribe's share, at the tick shown."""
+    anchor = ctx.screen.anchor("alike", 0.66, 0.78)
+    _card("alike-card", anchor, (0, 0, -0.01), (0.62, 0.24, 0.002))
+    top = text("alike-top", "", 0.052, materials.fading("alike-ink", CREAM, 1.6), anchor,
+               location=(-0.28, 0.035, 0), align="LEFT")
+    blue = text("alike-blue", "", 0.052, materials.fading("alike-blue", materials.YARN["blue"], 3.0), anchor,
+                location=(-0.28, -0.065, 0), align="LEFT")
+    red = text("alike-red", "", 0.052, materials.fading("alike-red", materials.YARN["red"], 3.0), anchor,
+               location=(0.02, -0.065, 0), align="LEFT")
+
+    def update(frame):
+        f = d.frames[min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)]
+        top.data.body = f"neighbors alike: {tribes.neighbors_alike(f, d.width, d.height):.0%}"
+        n = max(len(f.groups), 1)
+        share = sum(g == 0 for g in f.groups.values()) / n
+        blue.data.body = f"Blue {share:.0%}"
+        red.data.body = f"Red {1 - share:.0%}"
+
+    return update
+
+
 # The overlays drawn in screen space (on `Screen` anchors).
-SCREEN = {"season-card", "counter", "hills", "survival", "bars", "dials", "histogram", "wealth"}
+SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth"}
 
 BUILDERS = {
     "season-card": season_card,
@@ -556,6 +651,9 @@ BUILDERS = {
     "survival": bars,
     "bars": bars,
     "hills": hills,
+    "bequests": bequests,
+    "traits": traits,
+    "alike": alike,
     "wealth": wealth,
     "belly": belly,
     "sight": sight,

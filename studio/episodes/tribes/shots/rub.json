@@ -1,0 +1,49 @@
+{
+ "preset": "iii-6-culture",
+ "ticks": 24,
+ "seed": 14,
+ "set": {
+  "width": 8,
+  "height": 8,
+  "population": 0,
+  "vision.max": 4,
+  "goods.0.map": {
+   "kind": "flat",
+   "capacity": 3
+  }
+ },
+ "place": [
+  {
+   "x": 4,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 10,
+   "tribe": "blue"
+  },
+  {
+   "x": 3,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 10,
+   "tribe": "red"
+  },
+  {
+   "x": 5,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 10,
+   "tribe": "red"
+  },
+  {
+   "x": 4,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 10,
+   "tribe": "red"
+  }
+ ]
+}
