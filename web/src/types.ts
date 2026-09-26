@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -396,7 +396,36 @@ export interface NormsConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig;
+/**
+ * Deffuant et al.'s relative agreement (milestone 22): random pairs meet and move each other's
+ * opinions and uncertainties; extremists, three bounded-confidence rules, networks, and the readings
+ * the papers leave open (Meadows and Cliff's, the 2013 reply's, eq. 11's window) as switches.
+ */
+export interface AgreementConfig {
+  model: 'agreement';
+  agents: number;
+  rule: 'ra' | 'bc' | 'bc_averaging' | 'bc_variance';
+  window: 'influencer' | 'listener';
+  mu: number;
+  alpha: number;
+  uncertainty: number;
+  extremists: number;
+  extremist_uncertainty: number;
+  delta: number;
+  placement: 'drawn' | 'bounds' | 'band';
+  band: number;
+  extreme_margin: number;
+  pair_update: 'simultaneous' | 'sequential' | 'one_way';
+  network: 'all' | 'lattice' | 'small_world' | 'scale_free';
+  lattice: { width: number; height: number; neighborhood: 'moore' | 'von_neumann' };
+  small_world: { substrate: 'ring' | 'grid'; degree: number; rewire: number };
+  scale_free: { links: number };
+  pairing: 'edge' | 'node';
+  stop_when_stable: boolean;
+  stop_at: number;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -651,7 +680,28 @@ export interface NormsStats {
   copied_equal: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats;
+export interface AgreementStats {
+  tick: number;
+  /** DAWF's indicator: the squared shares of moderates turned extremist at each end, summed. */
+  y: number;
+  p_plus: number;
+  p_minus: number;
+  /** 0 central, 1 both extremes, 2 single extreme, 3 intermediate. */
+  outcome: number;
+  clusters: number;
+  major: number;
+  isolated: number;
+  largest: number;
+  second: number;
+  dispersion: number;
+  unmoved: number;
+  mean_opinion: number;
+  mean_uncertainty: number;
+  max_change: number;
+  stable_at: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -922,7 +972,31 @@ export interface NormsInspection {
   agent: NormAgentView | null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection;
+/** An agent at an inspected cell: its opinion and uncertainty there, where it started, and its meetings. */
+export interface AgreementAgent {
+  id: number;
+  role: 'plus' | 'minus' | 'moderate';
+  start: number;
+  opinion: number;
+  uncertainty: number;
+  degree: number;
+  meetings: number;
+  moves: number;
+}
+/**
+ * A cell of the opinion × time diagram, the start-against-now panel or the torus, and the agents
+ * there. `agent` is always null: a clicked cell is read again each period.
+ */
+export interface AgreementInspection {
+  site: { x: number; y: number };
+  panel: 'diagram' | 'scatter' | 'torus' | null;
+  period: number | null;
+  opinion: number | null;
+  agents: AgreementAgent[];
+  agent: null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -967,7 +1041,9 @@ export type ColorMode =
   | 'provocability'
   | 'strategy'
   | 'surrounded'
-  | 'agents';
+  | 'agents'
+  | 'uncertainty'
+  | 'role';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

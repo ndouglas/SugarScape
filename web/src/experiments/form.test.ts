@@ -147,6 +147,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('agreement')).toMatchObject({
+      x: { path: 'uncertainty', values: '0.2:2:0.2' },
+      ticks: 20000,
+      metric: { kind: 'final', series: 'y' },
+    });
     expect(defaultForm('norms')).toMatchObject({
       x: { path: 'stop_at', values: '100,1000,10000' },
       ticks: 10000,

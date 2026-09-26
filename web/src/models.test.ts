@@ -3,6 +3,7 @@ import {
   calendarYear,
   COLOR_MODES,
   finishesUnpredictably,
+  isAgreementView,
   isCivilView,
   isClassesView,
   isOpinionsView,
@@ -101,6 +102,29 @@ describe('the anasazi model', () => {
     const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the relative agreement model', () => {
+  it('is read by its tag, and its inspections by their panel', () => {
+    const c = { model: 'agreement', stop_at: 200 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('agreement');
+    const cell = { site: { x: 1, y: 2 }, panel: 'diagram', period: 0, opinion: 0.5, agents: [], agent: null } as unknown as AnyInspection;
+    const hk = { site: { x: 1, y: 2 }, period: 0, opinion: 0.5, lattice_site: null, agents: [], agent: null } as unknown as AnyInspection;
+    expect([cell, hk].map(isAgreementView)).toEqual([true, false]);
+    expect([isOpinionsView(cell), isNormsView(cell)]).toEqual([false, false]);
+  });
+
+  it('colors three ways, has no overlays, and stops at its period or unpredictably when stable', () => {
+    expect(COLOR_MODES.agreement).toEqual([
+      ['uncertainty', 'Uncertainty'],
+      ['role', 'Role'],
+      ['start', 'Start'],
+    ]);
+    expect(MODEL_OVERLAYS.agreement).toEqual([]);
+    const c = (stop_when_stable: boolean, stop_at: number) => ({ model: 'agreement', stop_when_stable, stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(false, 200)), ticksLeft(c(false, 200), 40)]).toEqual([false, 160]);
+    expect([finishesUnpredictably(c(true, 20000)), ticksLeft(c(true, 20000), 40), ticksLeft(c(true, 0), 40)]).toEqual([true, 19960, Infinity]);
   });
 });
 

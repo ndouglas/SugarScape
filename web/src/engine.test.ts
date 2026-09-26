@@ -114,7 +114,7 @@ describe('Engine', () => {
     const { engine } = await setup();
     expect(await engine.applyConfig((c) => void (c.population = 5000))).toEqual([{ field: 'population', message: 'too many' }]);
     expect(sugar(engine.baseConfig).population).toBe(10);
-    expect(await engine.reset({ ...engine.baseConfig, population: 5000 })).toEqual([{ field: 'population', message: 'too many' }]);
+    expect(await engine.reset({ ...sugar(engine.baseConfig), population: 5000 })).toEqual([{ field: 'population', message: 'too many' }]);
     expect(await engine.erase(3, 2)).toEqual([{ field: 'edit', message: 'no agent at (3, 2)' }]);
     expect(await engine.applyConfig((c) => void (c.population = 20))).toBeNull();
     expect(sugar(engine.config).population).toBe(20);
@@ -1151,6 +1151,10 @@ describe('Engine with other models', () => {
     expect(finishedNotice(ring, 10)).toBe('This run has reached its end year — Reset to run it again');
     expect(finishedNotice({ model: 'civil' } as unknown as ModelConfig, 94)).toBe('A group has died out at t = 94 — Reset to run it again');
     expect(finishedNotice({ model: 'norms' } as unknown as ModelConfig, 100)).toBe('This run has reached its last generation (100) — Reset to run it again');
+    expect(finishedNotice({ model: 'agreement', stop_at: 200 } as unknown as ModelConfig, 200)).toBe('This run has reached its last period (200) — Reset to run it again');
+    expect(finishedNotice({ model: 'agreement', stop_at: 20000 } as unknown as ModelConfig, 376)).toBe(
+      'Stable at t = 376: no opinion or uncertainty moves any more — Reset, or change the rule, to run it again',
+    );
     expect(finishedNotice({ model: 'structure' } as unknown as ModelConfig, 2500)).toBe('This run has reached its last period (2500) — Reset to run it again');
     expect(finishedNotice({ model: 'opinions' } as unknown as ModelConfig, 8)).toBe(
       'Stable at t = 8: no opinion moves any more — Reset, or change confidence or updating, to run it again',

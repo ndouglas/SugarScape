@@ -2,10 +2,11 @@ import { citizenRows, shownCitizen } from '../civil';
 import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
-import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
+  AgreementInspection,
   AnasaziInspection,
   CivilInspection,
   ClassesInspection,
@@ -235,6 +236,29 @@ export class InspectPanel {
     return [row('Point', 'between the agents and the plane')];
   }
 
+  /** A cell of relative agreement's diagram, start-against-now panel or torus, and the agents there. */
+  private agreementRows(view: AgreementInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (view.panel === null) return [row('Point', 'between the panels')];
+    const panel = { diagram: 'Opinion × time', scatter: 'Start against now', torus: 'Lattice' }[view.panel];
+    const rows = [row('Panel', panel)];
+    if (view.period !== null) rows.push(row('Period', String(view.period)));
+    if (view.opinion !== null) rows.push(row('Opinion', fmt(view.opinion)));
+    if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+    const role = { plus: 'extremist (+1)', minus: 'extremist (−1)', moderate: 'moderate' };
+    const shown = view.agents.slice(0, 12);
+    for (const a of shown) {
+      rows.push(
+        row(
+          `#${a.id}`,
+          `${fmt(a.opinion)} ± ${fmt(a.uncertainty)} · ${role[a.role]} · started ${fmt(a.start)} · ${a.degree} neighbors · moved in ${a.moves} of ${a.meetings} meetings`,
+        ),
+      );
+    }
+    if (view.agents.length > shown.length) rows.push(row('', `and ${view.agents.length - shown.length} more`));
+    return rows;
+  }
+
   /** A cell of the opinion × time diagram (its period, opinion and the agents passing) or of the lattice. */
   private opinionsRows(view: OpinionsInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -383,6 +407,8 @@ export class InspectPanel {
           ? this.dpdSiteRows(view, gone)
           : isNormsView(view)
             ? this.normsRows(view)
+          : isAgreementView(view)
+            ? this.agreementRows(view)
           : isStructureView(view)
             ? this.structureRows(view)
             : isOpinionsView(view)

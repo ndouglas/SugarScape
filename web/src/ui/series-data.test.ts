@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('relative agreement charts', () => {
+  it('chart convergence, clusters, dispersion, opinion and uncertainty, and change over periods', () => {
+    expect(MODEL_CHARTS.agreement.map((c) => c.title)).toEqual(['Convergence', 'Clusters', 'Dispersion', 'Opinion and uncertainty', 'Change']);
+    expect(timeAxisLabel('agreement')).toBe('Periods');
+  });
+});
+
 describe('norms charts', () => {
   it('chart boldness and vengefulness, events, payoff, the norm state and (with groups) each group', () => {
     expect(MODEL_CHARTS.norms.map((c) => c.title)).toEqual(['Boldness and vengefulness', 'Events', 'Mean payoff', 'Norm state', 'By group']);

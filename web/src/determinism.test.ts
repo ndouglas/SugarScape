@@ -12,6 +12,9 @@ import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
+  AgreementConfig,
+  AgreementInspection,
+  AgreementStats,
   AnasaziStats,
   CivilConfig,
   CivilStats,
@@ -468,6 +471,16 @@ describe('other models through the engine', () => {
     ['gi-mild-metanorms', '0xb7435abcb67c192b'],
     ['gi-temptation-10', '0xa191ff11a4f9ee68'],
     ['gi-tournament', '0x95ea76458cee1a46'],
+    // Relative agreement presets still running at period 200 on seed 1 (the others settle sooner).
+    ['dnaw-lattice', '0x60f9414e1157482d'],
+    ['dnaw-lattice-clusters', '0x459f1c2e1f67651b'],
+    ['ra-central', '0xcd795ff8a5bd9e44'],
+    ['ra-literal', '0x2a130dc7026094f7'],
+    ['ra-deffuant-2013', '0x4b9cf5817bc155d6'],
+    ['ra-bc-extremists', '0xc304b87400a0bb46'],
+    ['ad-moore', '0xd39d77107d873634'],
+    ['ad-small-world', '0xd29498f3ac055d5d'],
+    ['w-scale-free', '0xed9e58b01a7987d8'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -624,6 +637,36 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the relative agreement model through the engine', () => {
+  it('stops once when stable, matches the native golden entry and inspects a column and a dot', async () => {
+    const r = presets.find((p) => p.id === 'ra-single')!;
+    const e = await Engine.create({ config: structuredClone(r.config as AgreementConfig), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'role' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as AgreementStats;
+    // Fig. 7's stated parameters: both extremes (outcome 1), not the figure's single extreme.
+    expect([e.finished, ends, e.tick, s.stable_at, s.outcome]).toEqual([true, 1, 71, 71, 1]);
+    // crates/sugarscape-core/tests/golden.rs: ra-single stops at period 71 of its 200.
+    expect(await e.fingerprint()).toBe('0x769843f421a9f63e');
+    await e.select(0, 100);
+    const v = e.inspection!.view as AgreementInspection;
+    expect([v.panel, v.period, v.opinion]).toEqual(['diagram', 0, 0]);
+    expect(e.inspection!.agentId).toBeNull();
+    await e.select(249 + 100, 100);
+    expect((e.inspection!.view as AgreementInspection).panel).toBe('scatter');
+  });
+
+  it('stops at Meadows and Cliff’s horizon', async () => {
+    const r = presets.find((p) => p.id === 'ra-meadows-cliff')!;
+    const e = await Engine.create({ config: structuredClone(r.config as AgreementConfig), seed: 1 }, { presets, transport: inline() });
+    await e.advance(1_000_000);
+    const s = e.latest as AgreementStats;
+    expect([e.finished, e.tick, s.y]).toEqual([true, 200, 0]);
   });
 });
 

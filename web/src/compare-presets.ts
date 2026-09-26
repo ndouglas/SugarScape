@@ -122,6 +122,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'gi-metanorms-long',
     b: 'gi-tournament',
   },
+  {
+    id: 'ra-meadows-cliff-vs-reply',
+    label: 'Meadows and Cliff vs Deffuant et al.’s reply — Relative Agreement (Compare)',
+    a: 'ra-meadows-cliff',
+    b: 'ra-deffuant-2013',
+  },
 ];
 
 /**

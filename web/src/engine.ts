@@ -24,7 +24,7 @@ import { calendarYear, isSugar, modelOf, ticksLeft } from './models';
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { ColorMode, Config, FieldError, Layer, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import type { AgreementConfig, ColorMode, Config, FieldError, Layer, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
 import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -61,6 +61,12 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'ethno' || modelOf(config) === 'structure') return `This run has reached its last period (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'dpd') return `This run has reached its last cycle (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'norms') return `This run has reached its last generation (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'agreement') {
+    const stop = (config as AgreementConfig).stop_at;
+    return stop > 0 && tick >= stop
+      ? `This run has reached its last period (${tick}) — Reset to run it again`
+      : `Stable at t = ${tick}: no opinion or uncertainty moves any more — Reset, or change the rule, to run it again`;
+  }
   const year = calendarYear(config, tick);
   return `This run has reached its end year${year === null ? '' : ` (AD ${year})`} — Reset to run it again`;
 }

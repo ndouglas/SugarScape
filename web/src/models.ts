@@ -1,6 +1,8 @@
 // Which model a config is (milestones 9–17), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  AgreementConfig,
+  AgreementInspection,
   AnasaziInspection,
   AnyInspection,
   CivilConfig,
@@ -31,7 +33,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -49,12 +51,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   structure: 'Social Structure',
   dpd: 'Demographic PD',
   norms: 'Norms and Metanorms',
+  agreement: 'Relative Agreement',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement'
     ? tag
     : 'sugarscape';
 }
@@ -131,6 +134,11 @@ export function isNormsView(v: AnyInspection): v is NormsInspection {
   return 'level' in v && 'agents' in v;
 }
 
+/** A cell of the relative agreement frame (it names its panel). */
+export function isAgreementView(v: AnyInspection): v is AgreementInspection {
+  return 'panel' in v && 'agents' in v;
+}
+
 export function isDpdView(v: AnyInspection, model: ModelKind): v is DpdInspection {
   return model === 'dpd' && (v.agent === null || 'surrounded' in v.agent);
 }
@@ -152,6 +160,8 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'structure' && (c as StructureConfig).stop_at > 0) return Math.max(0, (c as StructureConfig).stop_at - tick);
   if (modelOf(c) === 'dpd' && (c as DpdConfig).end > 0) return Math.max(0, (c as DpdConfig).end - tick);
   if (modelOf(c) === 'norms' && (c as NormsConfig).stop_at > 0) return Math.max(0, (c as NormsConfig).stop_at - tick);
+  // Relative agreement's stop_at is its horizon, or a cap on a run that stops when stable.
+  if (modelOf(c) === 'agreement' && (c as AgreementConfig).stop_at > 0) return Math.max(0, (c as AgreementConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -165,6 +175,7 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   if (model === 'culture') return (c as CultureConfig).stop_when_stable && (c as CultureConfig).drift === 0;
   if (model === 'classes') return (c as ClassesConfig).stop_at_equity;
   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
+  if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -268,6 +279,12 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['payoff', 'Payoff'],
     ['group', 'Group'],
   ],
+  // Confident red to uncertain green (DAWF's figures); the initial extremists; the start.
+  agreement: [
+    ['uncertainty', 'Uncertainty'],
+    ['role', 'Role'],
+    ['start', 'Start'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -286,4 +303,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   structure: [],
   dpd: [],
   norms: [],
+  agreement: [],
 };
