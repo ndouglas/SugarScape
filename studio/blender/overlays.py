@@ -12,6 +12,7 @@ import bpy
 
 import animate
 import dump as dump_mod
+import lineage
 import seasons
 from blender import flump, materials
 
@@ -136,15 +137,17 @@ def _turn_to_camera(obj, ctx):
 
 
 def belly(beat, d, ctx):
-    """A meter floating over each focus Flump: a dark case, a glowing gold
-    fill for its sugar (full at 20) and the count beside it."""
+    """A meter floating over each focus Flump (or every Flump, with params
+    belly="all"): a dark case, a glowing gold fill for its sugar (full at
+    params belly_full, default 20) and the count beside it."""
     meters = {}
+    full = beat.params.get("belly_full", 20)
+    ids = list(ctx.tracks) if beat.params.get("belly") == "all" else [d.placed[i] for i in beat.focus]
     # Bright emission washes out toward white under AgX; a deep orange at
     # modest strength stays gold.
     gold = materials.fading("belly-gold", (1.0, 0.38, 0.0), 0.9)
     cream = materials.fading("belly-ink", (1.0, 0.97, 0.9), 4.0)
-    for i in beat.focus:
-        id_ = d.placed[i]
+    for id_ in ids:
         holder = bpy.data.objects.new(f"belly{id_}", None)
         bpy.context.scene.collection.objects.link(holder)
         # The holder turns to face the camera, so its local +Z points at the lens.
@@ -159,7 +162,7 @@ def belly(beat, d, ctx):
             if not p.visible:
                 flump.stow(holder)
                 continue
-            level = min(max(p.sugar / 20, 0.0), 1.0)
+            level = min(max(p.sugar / full, 0.0), 1.0)
             holder.scale = (1, 1, 1)
             holder.location = (p.x, p.y, p.z + 1.05)
             _turn_to_camera(holder, ctx)
@@ -271,7 +274,9 @@ def dials(beat, d, ctx):
 
 
 def stacks(beat, d, ctx):
-    """A column of sugar over every Flump, as tall as its wealth."""
+    """A column of sugar over every Flump, as tall as its wealth (params
+    stack_scale: height per unit of sugar, default 0.012)."""
+    per = beat.params.get("stack_scale", 0.012)
     sugar = materials.gumdrop()
     columns = {id_: box(f"stack{id_}", sugar, None, scale=(0.2, 0.2, 0.01)) for id_ in ctx.tracks}
 
@@ -281,7 +286,7 @@ def stacks(beat, d, ctx):
             if not p.visible:
                 flump.stow(c)
                 continue
-            height = max(p.sugar * 0.012, 0.01)
+            height = max(p.sugar * per, 0.01)
             c.scale = (0.2, 0.2, height)
             c.location = (p.x, p.y, p.z + 0.85 * p.sz + height / 2)
 
@@ -545,6 +550,42 @@ def bars(beat, d, ctx):
     return lambda frame: None
 
 
+def bequests(beat, d, ctx):
+    """Sugar flowing from each Flump who dies with some to each child alive to
+    inherit it (rule I; nothing without inheritance): glowing gumdrops arc
+    from the parent to its heirs as it poofs, one per heir, each carrying an
+    equal share."""
+    flows = []
+    gold = materials.gumdrop()
+    for tick, parent, held, heirs in lineage.bequests(d):
+        if parent not in ctx.tracks:
+            continue  # not alive during this beat
+        start = ctx.timing.frame(tick) - ctx.timing.poof_frames
+        home = ctx.tracks[parent].cells[-1]
+        for heir in (h for h in heirs if h in ctx.tracks):
+            obj = ball(f"bequest-{parent}-{heir}", 0.16, gold)
+            flows.append((start, home, heir, obj))
+
+    def update(frame):
+        for start, home, heir, obj in flows:
+            u = (frame - start) / BEQUEST_FRAMES
+            if not 0 <= u <= 1:
+                flump.stow(obj)
+                continue
+            x0, y0 = animate.cell_center(*home, d.width, d.height)
+            z0 = animate.cell_height(ctx.corners, *home, d.width) + 0.6
+            p = _pose(ctx, d, heir, frame)
+            e = animate.smoothstep(u)
+            obj.location = (x0 + (p.x - x0) * e, y0 + (p.y - y0) * e, z0 + (p.z + 0.6 - z0) * e + 1.2 * math.sin(math.pi * u))
+            s = 1 - 0.6 * u
+            obj.scale = (s, s, s)
+
+    return update
+
+
+BEQUEST_FRAMES = 24
+
+
 # The overlays drawn in screen space (on `Screen` anchors).
 SCREEN = {"season-card", "counter", "hills", "survival", "bars", "dials", "histogram", "wealth"}
 
@@ -556,6 +597,7 @@ BUILDERS = {
     "survival": bars,
     "bars": bars,
     "hills": hills,
+    "bequests": bequests,
     "wealth": wealth,
     "belly": belly,
     "sight": sight,

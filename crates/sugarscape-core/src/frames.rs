@@ -56,6 +56,8 @@ pub struct Place {
     pub metabolism: Option<u32>,
     #[serde(default)]
     pub sugar: Option<f64>,
+    #[serde(default)]
+    pub sex: Option<Sex>,
 }
 
 fn first_seed() -> u64 {
@@ -203,6 +205,7 @@ fn place(
             vision: p.vision,
             metabolism: p.metabolism,
             sugar: p.sugar,
+            sex: p.sex,
             ..AgentOverrides::default()
         };
         let id = world
@@ -306,6 +309,14 @@ mod tests {
         assert_eq!(d.stats["population"].len(), 13);
         assert_eq!(d.frames[0].agents.len(), 400);
         assert_eq!(d.frames[0].born.len(), 400);
+    }
+
+    #[test]
+    fn a_placement_can_set_its_sex() {
+        let d = run(r#"{"preset": "iii-2-sex", "ticks": 1, "set": {"population": 0},
+            "place": [{"x": 1, "y": 1, "sex": "female"}, {"x": 2, "y": 1, "sex": "male"}]}"#);
+        assert_eq!(d.frames[0].births[0].1, Sex::Female);
+        assert_eq!(d.frames[0].births[1].1, Sex::Male);
     }
 
     #[test]

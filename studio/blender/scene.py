@@ -8,6 +8,7 @@ from mathutils import Vector
 import animate
 import camera as cam
 import dump as dump_mod
+import lineage
 from blender import board, flump, materials, overlays
 
 UPDATERS = []
@@ -61,20 +62,23 @@ def add_camera(scene, beat):
 
 def _agents(beat, d, tracks, timing, corners):
     """Flumps for every agent — full rigs in close-ups (placed agents take the
-    yarn colors in order), collection instances in crowds — and their updater."""
+    yarn colors in order), collection instances in crowds — and their updater.
+    With params colors="family", a Flump wears its family line's color (its
+    mother's, back to a founding mother)."""
     w, h = d.width, d.height
     colors = list(materials.YARN)
     RIGS.clear()
     instances = {}
+    family = lineage.families(d) if beat.params.get("colors") == "family" else {}
+    order = {id_: i for i, id_ in enumerate(d.placed)}
     if beat.closeup:
-        order = {id_: i for i, id_ in enumerate(d.placed)}
         for id_ in tracks:
-            color = colors[order.get(id_, id_) % len(colors)]
-            RIGS[id_] = flump.build_flump(f"flump{id_}", color)
+            key = family.get(id_, id_)
+            RIGS[id_] = flump.build_flump(f"flump{id_}", colors[order.get(key, key) % len(colors)])
     else:
         protos = flump.crowd_prototypes()
         for id_ in tracks:
-            instances[id_] = flump.crowd_instance(f"flump{id_}", protos[id_ % len(protos)])
+            instances[id_] = flump.crowd_instance(f"flump{id_}", protos[family.get(id_, id_) % len(protos)])
 
     def update(frame):
         for id_, t in tracks.items():
@@ -121,7 +125,10 @@ def build_beat(beat, d, preview, compare=None, measured=None):
             updaters.append(board.sooty_felt(felt, d, timing))
         _, update_sugar = board.sugar(d, corners, timing)
         updaters.append(update_sugar)
-        tracks = dump_mod.tracks(d)
+        # Only the Flumps alive during this beat's ticks get objects: a long
+        # run with births can have many thousands over its whole length.
+        first, last = timing.tick_at(1), timing.tick_at(beat.frames + 1)
+        tracks = {i: t for i, t in dump_mod.tracks(d).items() if animate.alive_in(t, first, last)}
         updaters.append(_agents(beat, d, tracks, timing, corners))
         materials.lights_and_world(scene, max(d.width, d.height))
     else:

@@ -224,6 +224,13 @@ def pose(track, timing, frame, corners, w, h):
     return Pose(x, y, z, sx, sy, sz, yaw, True, sugar, hunger)
 
 
+def alive_in(track, first, last):
+    """Whether any of a Flump's life — its spawn in the tick before its
+    birth through its poof in the tick it dies — falls within ticks first..last."""
+    gone = track.death if track.death is not None else math.inf
+    return track.first - 1 <= last and gone >= first
+
+
 def blink(agent_id, frame):
     """Eye height: 1 open; a 6-frame blink every 3–6 s, phased by id."""
     period = 90 + (agent_id * 37) % 90

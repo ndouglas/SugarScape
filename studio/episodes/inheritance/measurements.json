@@ -1,0 +1,25 @@
+{
+  "medians": {
+    "children": 14280.5,
+    "children_plain": 3564.0,
+    "gini": 0.3761242611766473,
+    "gini_plain": 0.16281309797528165,
+    "max_gen": 59.5,
+    "max_gen_plain": 60.0,
+    "metabolism": 1.0,
+    "metabolism_plain": 1.0,
+    "persist": 0.21890546420559065,
+    "persist_plain": 0.0417770713440299,
+    "poor_rise": 0.15402885632465624,
+    "poor_rise_plain": 0.23016746791931203,
+    "pop": 1363.505988023952,
+    "pop_plain": 371.59780439121755,
+    "rich_stay": 0.37179854014576386,
+    "rich_stay_plain": 0.2766217639975918,
+    "top10": 0.30592372568644116,
+    "top10_plain": 0.161212435832229,
+    "vision": 5.296309236437556,
+    "vision_plain": 5.666407183460661
+  },
+  "seeds": 20
+}

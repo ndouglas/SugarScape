@@ -153,6 +153,17 @@ class PoseTest(unittest.TestCase):
         self.assertGreater(empty.hunger, 0.9)
 
 
+class WindowTest(unittest.TestCase):
+    def test_a_track_is_kept_if_its_life_touches_the_window(self):
+        t = track(10, [(0, 0)] * 5, death=15)  # alive 10..14, dies in tick 15
+        self.assertTrue(animate.alive_in(t, 0, 10))
+        self.assertTrue(animate.alive_in(t, 15, 30))  # its poof plays in tick 15
+        self.assertFalse(animate.alive_in(t, 16.5, 30))
+        self.assertFalse(animate.alive_in(t, 0, 8.5))  # its spawn starts in tick 9
+        survivor = track(10, [(0, 0)] * 5)
+        self.assertTrue(animate.alive_in(survivor, 100, 200))
+
+
 class HelpersTest(unittest.TestCase):
     def test_blink_is_mostly_open_and_deterministic(self):
         values = [animate.blink(7, f) for f in range(600)]
