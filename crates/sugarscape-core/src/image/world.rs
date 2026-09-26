@@ -471,7 +471,9 @@ impl ImageWorld {
                 Records::Score => old,
                 Records::Tally => i32::from(self.views[row + d]),
             };
-            self.views[row + d] = self.moved(from, saw) as i16;
+            // Saturated: unbounded scores with random rounds can pass i16.
+            let next = self.moved(from, saw);
+            self.views[row + d] = next.clamp(i16::MIN.into(), i16::MAX.into()) as i16;
             self.marks[row + d] = judge(&self.marks, row, saw);
         }
     }
@@ -1047,6 +1049,27 @@ mod tests {
         });
         w.interact(0, 0, 1);
         assert_eq!(records_of(&w, 0).len(), 1);
+    }
+
+    #[test]
+    fn records_saturate_at_the_ends_of_their_range() {
+        let mut w = world(1, 2, Strategy::K(-5), |c| {
+            c.information = Information::Observers;
+            c.clamp = 0;
+        });
+        // 1's record of 0 at the top: 0 helps, and the record stays there.
+        w.views[2] = i16::MAX;
+        w.interact(0, 0, 1);
+        assert_eq!(w.agents[1].received, 1);
+        assert_eq!(w.views[2], i16::MAX);
+        // 0's record of 1 at the bottom: 1 (reading 0's score as 0) refuses,
+        // and the record stays there.
+        w.agents[1].strategy = Strategy::K(6);
+        w.views[2] = 0;
+        w.views[1] = i16::MIN;
+        w.interact(0, 1, 0);
+        assert_eq!(w.agents[0].received, 0);
+        assert_eq!(w.views[1], i16::MIN);
     }
 
     #[test]
