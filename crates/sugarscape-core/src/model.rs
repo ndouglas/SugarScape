@@ -8,6 +8,7 @@ use serde::{Serialize, Serializer};
 use crate::anasazi::{AnasaziConfig, AnasaziWorld};
 use crate::civil::{CivilConfig, CivilWorld};
 use crate::config::{Config, FieldError};
+use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::ring::{RingConfig, RingWorld};
 use crate::schelling::{SchellingConfig, SchellingWorld};
@@ -15,7 +16,7 @@ use crate::schema::Param;
 use crate::spatial::{SpatialConfig, SpatialWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
-use crate::{anasazi, civil, export, ring, schelling, spatial, stats, tags};
+use crate::{anasazi, civil, ethno, export, ring, schelling, spatial, stats, tags};
 
 /// Which model a config or world is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -28,10 +29,11 @@ pub enum ModelKind {
     Civil,
     Spatial,
     Tags,
+    Ethno,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 7] = [
+    pub const ALL: [ModelKind; 8] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -39,6 +41,7 @@ impl ModelKind {
         ModelKind::Civil,
         ModelKind::Spatial,
         ModelKind::Tags,
+        ModelKind::Ethno,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -50,6 +53,7 @@ impl ModelKind {
             ModelKind::Civil => "civil",
             ModelKind::Spatial => "spatial",
             ModelKind::Tags => "tags",
+            ModelKind::Ethno => "ethno",
         }
     }
 
@@ -64,6 +68,7 @@ impl ModelKind {
             ModelKind::Civil => civil::schema(),
             ModelKind::Spatial => spatial::schema(),
             ModelKind::Tags => tags::schema(),
+            ModelKind::Ethno => ethno::schema(),
         }
     }
 }
@@ -84,6 +89,7 @@ pub enum ModelConfig {
     Civil(CivilConfig),
     Spatial(SpatialConfig),
     Tags(TagsConfig),
+    Ethno(EthnoConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -96,6 +102,7 @@ enum Tagged<'a> {
     Civil(&'a CivilConfig),
     Spatial(&'a SpatialConfig),
     Tags(&'a TagsConfig),
+    Ethno(&'a EthnoConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -115,6 +122,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Civil(c) => Tagged::Civil(c).serialize(s),
             ModelConfig::Spatial(c) => Tagged::Spatial(c).serialize(s),
             ModelConfig::Tags(c) => Tagged::Tags(c).serialize(s),
+            ModelConfig::Ethno(c) => Tagged::Ethno(c).serialize(s),
         }
     }
 }
@@ -129,6 +137,7 @@ impl ModelConfig {
             ModelConfig::Civil(_) => ModelKind::Civil,
             ModelConfig::Spatial(_) => ModelKind::Spatial,
             ModelConfig::Tags(_) => ModelKind::Tags,
+            ModelConfig::Ethno(_) => ModelKind::Ethno,
         }
     }
 
@@ -184,10 +193,13 @@ impl ModelConfig {
             "tags" => serde_json::from_value(value)
                 .map(ModelConfig::Tags)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "ethno" => serde_json::from_value(value)
+                .map(ModelConfig::Ethno)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial or tags)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags or ethno)"
                 ),
             )),
         }
@@ -202,6 +214,7 @@ impl ModelConfig {
             ModelConfig::Civil(c) => c.validate(),
             ModelConfig::Spatial(c) => c.validate(),
             ModelConfig::Tags(c) => c.validate(),
+            ModelConfig::Ethno(c) => c.validate(),
         }
     }
 
@@ -216,6 +229,7 @@ impl ModelConfig {
             ModelConfig::Civil(c) => set_path(c, path, value).map(ModelConfig::Civil),
             ModelConfig::Spatial(c) => set_path(c, path, value).map(ModelConfig::Spatial),
             ModelConfig::Tags(c) => set_path(c, path, value).map(ModelConfig::Tags),
+            ModelConfig::Ethno(c) => set_path(c, path, value).map(ModelConfig::Ethno),
         }
     }
 
@@ -225,6 +239,7 @@ impl ModelConfig {
         match self {
             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
             ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
+            ModelConfig::Ethno(c) => (c.end > 0).then_some(c.end),
             ModelConfig::Sugarscape(_)
             | ModelConfig::Schelling(_)
             | ModelConfig::Ring(_)
@@ -243,6 +258,7 @@ impl ModelConfig {
             ModelConfig::Civil(_) => civil::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Spatial(_) => spatial::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Tags(_) => tags::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Ethno(_) => ethno::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -404,6 +420,7 @@ pub enum ModelWorld {
     Civil(Box<CivilWorld>),
     Spatial(Box<SpatialWorld>),
     Tags(Box<TagsWorld>),
+    Ethno(Box<EthnoWorld>),
 }
 
 impl ModelWorld {
@@ -430,6 +447,7 @@ impl ModelWorld {
             ModelConfig::Civil(c) => ModelWorld::Civil(Box::new(CivilWorld::new(c, seed)?)),
             ModelConfig::Spatial(c) => ModelWorld::Spatial(Box::new(SpatialWorld::new(c, seed)?)),
             ModelConfig::Tags(c) => ModelWorld::Tags(Box::new(TagsWorld::new(c, seed)?)),
+            ModelConfig::Ethno(c) => ModelWorld::Ethno(Box::new(EthnoWorld::new(c, seed)?)),
         })
     }
 
@@ -442,6 +460,7 @@ impl ModelWorld {
             ModelWorld::Civil(_) => ModelKind::Civil,
             ModelWorld::Spatial(_) => ModelKind::Spatial,
             ModelWorld::Tags(_) => ModelKind::Tags,
+            ModelWorld::Ethno(_) => ModelKind::Ethno,
         }
     }
 
@@ -454,6 +473,7 @@ impl ModelWorld {
             ModelWorld::Civil(w) => w.as_ref(),
             ModelWorld::Spatial(w) => w.as_ref(),
             ModelWorld::Tags(w) => w.as_ref(),
+            ModelWorld::Ethno(w) => w.as_ref(),
         }
     }
 
@@ -466,6 +486,7 @@ impl ModelWorld {
             ModelWorld::Civil(w) => w.as_mut(),
             ModelWorld::Spatial(w) => w.as_mut(),
             ModelWorld::Tags(w) => w.as_mut(),
+            ModelWorld::Ethno(w) => w.as_mut(),
         }
     }
 
@@ -546,6 +567,7 @@ impl ModelWorld {
             ModelWorld::Civil(w) => copy_without_history!(Civil, w),
             ModelWorld::Spatial(w) => copy_without_history!(Spatial, w),
             ModelWorld::Tags(w) => copy_without_history!(Tags, w),
+            ModelWorld::Ethno(w) => copy_without_history!(Ethno, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -568,6 +590,7 @@ impl ModelWorld {
             (ModelWorld::Civil(live), ModelWorld::Civil(kept)) => restore_into!(live, kept),
             (ModelWorld::Spatial(live), ModelWorld::Spatial(kept)) => restore_into!(live, kept),
             (ModelWorld::Tags(live), ModelWorld::Tags(kept)) => restore_into!(live, kept),
+            (ModelWorld::Ethno(live), ModelWorld::Ethno(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -793,6 +816,34 @@ mod tests {
     }
 
     #[test]
+    fn ethno_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "ethno", "colors": 5, "allowed": ["H", "S", "T"]}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Ethno);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(json["model"], "ethno");
+        assert_eq!(json["tag_mutation"], serde_json::Value::Null);
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["population", "ethnocentric"]);
+        assert_eq!(c.max_ticks(), Some(2000));
+        let next = c.with_path("tag_mutation", &json!(0.3)).unwrap();
+        let ModelConfig::Ethno(e) = &next else {
+            unreachable!()
+        };
+        assert_eq!(e.tag_mutation, Some(0.3));
+        let e = ModelConfig::from_json(r#"{"model": "ethno", "cost": -1}"#).unwrap_err();
+        assert_eq!(e[0].field, "cost");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!((w.kind(), w.model().size()), (ModelKind::Ethno, (50, 50)));
+        let cp = w.checkpoint().expect("ethno worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -822,7 +873,8 @@ mod tests {
                 "anasazi",
                 "civil",
                 "spatial",
-                "tags"
+                "tags",
+                "ethno"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

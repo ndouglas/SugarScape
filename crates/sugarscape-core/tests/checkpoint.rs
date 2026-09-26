@@ -13,6 +13,7 @@ const IDS: &[&str] = &[
     "cv-run-8-nasty-regime",
     "nbm-probabilistic",
     "hg-async-kaleidoscope",
+    "jansson-kin",
 ];
 
 fn world(id: &str) -> ModelWorld {

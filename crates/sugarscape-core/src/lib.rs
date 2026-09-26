@@ -10,6 +10,7 @@ pub mod civil;
 pub mod config;
 pub mod econ;
 pub mod edit;
+pub mod ethno;
 pub mod export;
 pub mod geometry;
 pub mod landscape;

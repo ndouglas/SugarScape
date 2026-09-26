@@ -394,6 +394,11 @@ impl Sweep {
                 crate::model::ModelKind::Tags => {
                     format!("the tags model stops at its last generation, {max} in this config")
                 }
+                crate::model::ModelKind::Ethno => {
+                    format!(
+                        "the ethnocentrism model stops at its last period, {max} in this config"
+                    )
+                }
                 _ => format!(
                     "the Long House Valley stops at its end year, \
                      {max} ticks after its start year in this config"

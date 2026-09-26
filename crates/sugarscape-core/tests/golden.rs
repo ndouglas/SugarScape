@@ -93,6 +93,22 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("eh-clones-only", 0x1bd933620c915c0e),
     ("eh-no-exact-clones", 0xafe94d6c0bb3b8ab),
     ("rca-adopt-p1", 0xc3f75d53d237a89),
+    ("ha-standard", 0xf07433e56417f07c),
+    ("ha-figure-1", 0x843632b62ddf7a6b),
+    ("ha-appendix-mutation", 0xae8c7eda9113dae8),
+    ("ha-appendix-double-play", 0xac2c2167fec9c326),
+    ("ha-java-five-colors", 0xdc78c1e27b9ab453),
+    ("ha-java-archive", 0xde2cff652c758fe7),
+    ("ha-egoist-start", 0xabfdf5c9e1ccdb45),
+    ("ha-cost-2", 0x41ba53998a8ee613),
+    ("ha-cost-2-blind", 0x699aa05497139005),
+    ("ha-misperception", 0x5567187174fd1c15),
+    ("ha-each-color", 0x9ad570c3ea183419),
+    ("jansson-offspring-anywhere", 0xcad22f8e7abafbfe),
+    ("jansson-tag-mutation-30", 0xf9dbf338238a8f1b),
+    ("jansson-kin", 0x265998639eacfbd0),
+    ("jansson-kin-fixed", 0x3fac090571612879),
+    ("hks-no-ethnocentrics", 0xbe867e7210bad2d2),
 ];
 
 fn fingerprint(id: &str) -> u64 {
