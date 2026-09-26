@@ -13,6 +13,10 @@ Outputs go to `studio/out/<episode>/` (ignored by git): `dumps/`, `beats/NN/` (P
 beat's `.blend`), and `<episode>.mp4`. The `.blend` files open at the frame they were saved on;
 the animation is driven by a handler installed at render time, so scrubbing them shows nothing.
 
+Render times on an M1 Max (Blender 5.2, Eevee): the pilot's 19 beats (2,889 frames after dissolves,
+96 s) took about 3 hours at final quality (1920 × 1080, 96 samples), and about 30 minutes as a
+preview. The final encodes at CRF 21, so the pilot is 52 MB (Bluesky takes up to 100 MB).
+
 ## Music
 
 The build lays a soundtrack under the cut, trimmed to the video and faded in and out:
