@@ -1025,22 +1025,23 @@ over 10⁵–10⁶, so these runs are 10–100 times shorter):
   negatives over −1 … −5 gives 0.338.
 - **Fig. 2's endless cycles** (`ns-fig-2`: m 300, mutation 0.001): 172 collapses of cooperation (k ≤ 0
   falling from at least 90 % to at most 10 %) and 167 recoveries in 10⁶ generations (seeds 1–10 ×
-  10⁵), 12–24 per seed; the unconditional cooperators (k ≤ −4) hold 68 % of the population over the 50
-  generations before a collapse against 8 % in cooperative phases, as NS98 describe. Cooperative
-  strategies hold 67 % of the time.
+  10⁵), 12–24 per seed; the unconditional cooperators (k ≤ −4) hold 68 % of the population over the 51
+  generations up to a collapse's last cooperative generation against 8 % in cooperative phases, as NS98
+  describe. Cooperative strategies hold 67 % of the time.
 - **Fig. 3's group-size effect, with each observer's own tally** (`ns-fig-3-n20`, `-n50`, `-n100`: ten
   observers, m = 10n): cooperative strategies 86 %, 44 % and 20 % of generations 1,001–20,000 at n =
-  20, 50 and 100, against NS98's 90 %, 47 % and 18 % (to 100,000 at n = 20: 91 %).
+  20, 50 and 100, against NS98's 90 %, 47 % and 18 % (to 100,000 at n = 20: 91 %). The survey holds the
+  fall with n and grades each size Weak, its seeds too noisy to pin the percentage.
 - **Fig. 4a** (`ns-fig-4a`, AND strategies): 53 % of interactions cooperative (NS98 55 %) over
-  generations 1,001–50,000, with (k 0, h 1) the most frequent strategy (22 %).
+  generations 1,001–50,000, with (k 0, h 1) the most frequent strategy (22 %; Weak in the survey).
 - **The Methods' thresholds**: discriminators are stable against defectors above (bq + c)/(bq − c) =
   1.2222 rounds ("about 1.2"), and only when q > c/b; with cooperators, defectors win below c(2 −
   w)/(bwq) (0.1222 at w = 0.9).
 - **Leimar and Hammerstein's Fig. 1a**: h = 1 invades a population of k = 0 (`lh-fig-1a`: 37 % by
   generation 50, fixed by 150 in every run; faster than their 80 % at 150). **Fig. 2a** (one group, AND
-  strategies, c 0.25): help in 37 % of rounds (they report 39 %), (k 0, h 1) the most frequent (38 %).
-  **Fig. 3's help rates**: 52 % (45 %) without and 17 % (15 %) with q strategies over generations
-  1,001–3,000 (to 10,000: 47 % and 15 %).
+  strategies, c 0.25): help in 37 % of rounds (they report 39 %), (k 0, h 1) the most frequent (38 %;
+  Weak in the survey). **Fig. 3b's help rate** with q strategies: 17 % (15 %) over generations
+  1,001–3,000 (to 10,000: 15 %; Weak in the survey, which also judges the q share below).
 - **Standing** (Fig. 4): it invades binary discriminators (`lh-fig-4a`: 69 % by generation 500, 98 % by
   1,000) and still does with perception errors (`lh-fig-4b`: 35 % and 75 %, seeds 1–5), and from a
   uniform start dominates with cooperators beside it (`lh-fig-4c`, seeds 1–3, generations 1,001–1,500:
@@ -1072,14 +1073,17 @@ What does not, or only partly:
   payoff gap turns positive only at 0.16. The Methods' rounds, in which everyone plays once, are not
   random pairs.
 - **Leimar and Hammerstein's island model does not undo image scoring here.** Fig. 2b (`lh-fig-2b`: p
-  0.9, execution errors 0.02): help in 44 % of rounds over generations 1,001–5,000 (to 20,000: 34 %,
+  0.9, execution errors 0.02): help in 44 % of rounds over generations 1,001–5,000 (to 20,000: 35 %,
   runs from 2 % to 54 %) against their 9 %; Fig. 2c (p 0.5): 15 % against 2 %. Help is not even
   monotone in gene flow (the sweep `lh-gene-flow`: 27 % in isolated groups, p = 1; 50 % at p = 0.8),
-  and below c = 0.25 the island model helps more than one group (`lh-cost`).
+  and at c 0.1–0.25 the island model helps more than one group (`lh-cost`: 50 % against 44 % at c =
+  0.1), though at c = 0.05 one group helps more (58 % against 53 %).
 - **Fig. 1b's invasion is ten times slower**: h = 1 invades (k 0, h 1) with execution errors 0.05, but
-  holds 1.8 % by generation 150, 13 % by 500 and 42 % by 1,000 (`lh-fig-1b`). **Fig. 3b's q
-  strategies** hold 26 % of the population over generations 1,001–3,000 (18 % to 10,000), against their
-  12 %.
+  holds 1.8 % by generation 150, 13 % by 500 and 42 % by 1,000 (`lh-fig-1b`). **Fig. 3a's help rate**
+  (`lh-fig-3a`: c 0.1, u₀ 5, p 0.5, execution errors 0.02) is 52 % over generations 1,001–3,000 against
+  their 45 %, outside the survey's 5-point margin, and the survey fails it (to 10,000: 47 %). **Fig.
+  3b's q strategies** hold 26 % of the population over generations 1,001–3,000 (18 % to 10,000),
+  against their 12 %.
 - **The offset lowers cooperation.** Without it (`ns-no-offset`) some k ≤ 0 wins Fig. 1 in 63 runs of
   100 (k = 0 in 10) against 40, and Fig. 2's cooperative strategies hold 78 % of the time against 67 %:
   adding c to both players weakens selection, and cooperation loses by it.

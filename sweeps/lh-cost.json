@@ -1,6 +1,6 @@
 {
   "name": "Image scoring: help against the cost of helping, one group or islands (LH01)",
-  "description": "LH01: image scoring \"does very badly\" when c/b = 0.5 and needs a small cost to persist when drift is limited. AND strategies, m = 500, execution errors 0.02, mutation 0.001; help rate over generations 1,001–5,000, one group of 100 against 100 groups with p = 0.9. Measured (release, seeds 1–10, recorded 2026-09-26) — one group: c 0.05: 58%; 0.1: 44%; 0.15: 42%; 0.25: 35%; 0.35: 9%; 0.5: 6%. Islands: 53%, 50%, 51%, 44%, 2.2%, 2.1%. Both collapse above c = 0.25 (the islands to the 2% that execution errors give); below it the island model helps more, not less, than one group.",
+  "description": "LH01: image scoring \"does very badly\" when c/b = 0.5 and needs a small cost to persist when drift is limited. AND strategies, m = 500, execution errors 0.02, mutation 0.001; help rate over generations 1,001–5,000, one group of 100 against 100 groups with p = 0.9. Measured (release, seeds 1–10, recorded 2026-09-26) — one group: c 0.05: 58%; 0.1: 44%; 0.15: 42%; 0.25: 35%; 0.35: 9%; 0.5: 6%. Islands: 53%, 50%, 51%, 44%, 2.2%, 2.1%. Both collapse above c = 0.25 (the islands to the 2% that execution errors give); from c = 0.1 to 0.25 the island model helps more, not less, than one group, while at c = 0.05 one group helps more (58% against 53%).",
   "base": {
     "preset": "lh-fig-2b"
   },

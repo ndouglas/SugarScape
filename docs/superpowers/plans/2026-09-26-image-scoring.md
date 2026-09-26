@@ -68,13 +68,13 @@ Binding once the plan is written. Every rule below was implemented in the scratc
 3. **The spec misreads FAIR23:** it adds the offset; its donor (with visibility < 1) reads the recipient's own record of itself.
 4. **Fig. 1's k = 0 fixation is a minority outcome:** 20 of 100 runs (median generation 56); defection wins 60.
 5. **"About 2 interactions per lifetime" does not suffice:** at m = n cooperative strategies hold 18% of the time; half needs m = 2n.
-6. **LH01's drift argument does not reproduce:** Fig. 2b 44% help (LH01 9%), 2c 15% (2%); help is not monotone in gene flow (isolated groups 27%, p = 0.8 50%); below c = 0.25 islands help more than one group.
+6. **LH01's drift argument does not reproduce:** Fig. 2b 44% help (LH01 9%), 2c 15% (2%); help is not monotone in gene flow (isolated groups 27%, p = 0.8 50%); at c 0.1–0.25 islands help more than one group (at c = 0.05 one group helps more: 58% against 53%).
 7. **LH01 Fig. 1b's invasion is about ten times slower** (h = 1 at 1.8% by generation 150, 42% by 1,000).
 8. **Fig. 4c/4d's most frequent strategy is cooperative OR, not the defector** ((k 3, h 4) and (k 2, h 5); (6, −5) second and third); help 78% and 85% against 70% and 80%.
 9. **Own-score strategies help 0.19%,** not < 0.1% — the mutation floor.
 10. **The offset lowers cooperation:** Fig. 1 some k ≤ 0 fixes 40/100 with it, 63/100 without; Fig. 2 67% against 78%.
 11. **The Methods' x_min (0.123 over five rounds) is below the simulated 0.16** — its rounds (everyone plays once) are not random pairs.
-12. **Reproduced:** Fig. 2's cycles (172 collapses and 167 recoveries in 10⁶ generations; k ≤ −4 at 68% before a collapse against 8% in cooperative phases), Fig. 3 (with tallies), Fig. 4a, "about 1.2 rounds" and q > c/b, LH01 Figs. 1a, 2a, 3 (help), 4a–c, and the standing condition's failure at Fig. 4b's parameters.
+12. **Reproduced:** Fig. 2's cycles (172 collapses and 167 recoveries in 10⁶ generations; k ≤ −4 at 68% before a collapse against 8% in cooperative phases), Fig. 3 (with tallies), Fig. 4a, "about 1.2 rounds" and q > c/b, LH01 Figs. 1a, 2a, 3b (help), 4a–c, and the standing condition's failure at Fig. 4b's parameters.
 
 
 23. **The kind on the page.** `ModelKind` gains `'image'`, labelled **Image Scoring**, and `MODELS` ends with it — after `'dpd'`, not straight after `'ethno'` (the brief's wording dates from when ethnocentrism was last; the presets menu follows the Rust catalog, which ends with the image presets). `ColorMode` gains `'score'` (`strategy` and `payoff` exist); `COLOR_MODES.image` is Strategy, Score, Payoff (the core's names); `MODEL_OVERLAYS.image = []`. `finishedNotice` shares tags' "last generation" text; `ticksLeft` counts to `end`.
@@ -3442,7 +3442,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ns-fig-2",
             "Fig. 2: cycles under mutation",
             NS98,
-            "Fig. 1 with m = 300 and mutation 0.001 (uniform over k): \"endless cycles\", with k = −4 or −5 drifting in and letting defectors back. Measured (seeds 1–10, 10⁵ generations each): 172 collapses of cooperation (k ≤ 0 falling from at least 90% to at most 10%) and 167 recoveries, 1.7 per 10,000 generations; k ≤ −4 averages 8% of cooperative populations but 68% over the 50 generations before a collapse; cooperative strategies 67% of the time. Reproduced.",
+            "Fig. 1 with m = 300 and mutation 0.001 (uniform over k): \"endless cycles\", with k = −4 or −5 drifting in and letting defectors back. Measured (seeds 1–10, 10⁵ generations each): 172 collapses of cooperation (k ≤ 0 falling from at least 90% to at most 10%) and 167 recoveries, 1.7 per 10,000 generations; k ≤ −4 averages 8% of cooperative populations but 68% over the 51 generations up to a collapse's last cooperative generation; cooperative strategies 67% of the time. Reproduced.",
             |c| {
                 c.rounds = 300;
                 c.mutation = 0.001;
@@ -3568,7 +3568,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "lh-fig-2b",
             "Fig. 2b: island model, p = 0.9",
             LH01,
-            "LH01 Fig. 2b: the island model (100 groups, p = 0.9) with execution errors 0.02. LH01: with drift limited, image scoring fades — help in 9% of rounds over 10⁵ generations. Measured (seeds 1–10, generations 1,001–5,000): 44% (to 20,000: 34%, runs from 2% to 54%; 10,001–50,000: 31%). Not reproduced: cooperative AND strategies persist in most runs.",
+            "LH01 Fig. 2b: the island model (100 groups, p = 0.9) with execution errors 0.02. LH01: with drift limited, image scoring fades — help in 9% of rounds over 10⁵ generations. Measured (seeds 1–10, generations 1,001–5,000): 44% (to 20,000: 35%, runs from 2% to 54%; 10,001–50,000: 31%). Not reproduced: cooperative AND strategies persist in most runs.",
             |c| {
                 island(c);
                 c.strategies = vec![Class::And];
@@ -5030,7 +5030,7 @@ Create `sweeps/lh-cost.json`:
 ```json
 {
   "name": "Image scoring: help against the cost of helping, one group or islands (LH01)",
-  "description": "LH01: image scoring \"does very badly\" when c/b = 0.5 and needs a small cost to persist when drift is limited. AND strategies, m = 500, execution errors 0.02, mutation 0.001; help rate over generations 1,001–5,000, one group of 100 against 100 groups with p = 0.9. Measured (release, seeds 1–10, recorded 2026-09-26) — one group: c 0.05: 58%; 0.1: 44%; 0.15: 42%; 0.25: 35%; 0.35: 9%; 0.5: 6%. Islands: 53%, 50%, 51%, 44%, 2.2%, 2.1%. Both collapse above c = 0.25 (the islands to the 2% that execution errors give); below it the island model helps more, not less, than one group.",
+  "description": "LH01: image scoring \"does very badly\" when c/b = 0.5 and needs a small cost to persist when drift is limited. AND strategies, m = 500, execution errors 0.02, mutation 0.001; help rate over generations 1,001–5,000, one group of 100 against 100 groups with p = 0.9. Measured (release, seeds 1–10, recorded 2026-09-26) — one group: c 0.05: 58%; 0.1: 44%; 0.15: 42%; 0.25: 35%; 0.35: 9%; 0.5: 6%. Islands: 53%, 50%, 51%, 44%, 2.2%, 2.1%. Both collapse above c = 0.25 (the islands to the 2% that execution errors give); from c = 0.1 to 0.25 the island model helps more, not less, than one group, while at c = 0.05 one group helps more (58% against 53%).",
   "base": {
     "preset": "lh-fig-2b"
   },
@@ -7513,7 +7513,7 @@ The presets menu's groups end "**Demographic PD** and **Image Scoring**"; the Im
 +  payoff gap turns positive only at 0.16. The Methods' rounds, in which everyone plays once, are not
 +  random pairs.
 +- **Leimar and Hammerstein's island model does not undo image scoring here.** Fig. 2b (`lh-fig-2b`: p
-+  0.9, execution errors 0.02): help in 44 % of rounds over generations 1,001–5,000 (to 20,000: 34 %,
++  0.9, execution errors 0.02): help in 44 % of rounds over generations 1,001–5,000 (to 20,000: 35 %,
 +  runs from 2 % to 54 %) against their 9 %; Fig. 2c (p 0.5): 15 % against 2 %. Help is not even
 +  monotone in gene flow (the sweep `lh-gene-flow`: 27 % in isolated groups, p = 1; 50 % at p = 0.8),
 +  and below c = 0.25 the island model helps more than one group (`lh-cost`).

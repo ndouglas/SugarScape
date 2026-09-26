@@ -65,7 +65,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ns-fig-2",
             "Fig. 2: cycles under mutation",
             NS98,
-            "Fig. 1 with m = 300 and mutation 0.001 (uniform over k): \"endless cycles\", with k = −4 or −5 drifting in and letting defectors back. Measured (seeds 1–10, 10⁵ generations each): 172 collapses of cooperation (k ≤ 0 falling from at least 90% to at most 10%) and 167 recoveries, 1.7 per 10,000 generations; k ≤ −4 averages 8% of cooperative populations but 68% over the 50 generations before a collapse; cooperative strategies 67% of the time. Reproduced.",
+            "Fig. 1 with m = 300 and mutation 0.001 (uniform over k): \"endless cycles\", with k = −4 or −5 drifting in and letting defectors back. Measured (seeds 1–10, 10⁵ generations each): 172 collapses of cooperation (k ≤ 0 falling from at least 90% to at most 10%) and 167 recoveries, 1.7 per 10,000 generations; k ≤ −4 averages 8% of cooperative populations but 68% over the 51 generations up to a collapse's last cooperative generation; cooperative strategies 67% of the time. Reproduced.",
             |c| {
                 c.rounds = 300;
                 c.mutation = 0.001;
@@ -191,7 +191,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "lh-fig-2b",
             "Fig. 2b: island model, p = 0.9",
             LH01,
-            "LH01 Fig. 2b: the island model (100 groups, p = 0.9) with execution errors 0.02. LH01: with drift limited, image scoring fades — help in 9% of rounds over 10⁵ generations. Measured (seeds 1–10, generations 1,001–5,000): 44% (to 20,000: 34%, runs from 2% to 54%; 10,001–50,000: 31%). Not reproduced: cooperative AND strategies persist in most runs.",
+            "LH01 Fig. 2b: the island model (100 groups, p = 0.9) with execution errors 0.02. LH01: with drift limited, image scoring fades — help in 9% of rounds over 10⁵ generations. Measured (seeds 1–10, generations 1,001–5,000): 44% (to 20,000: 35%, runs from 2% to 54%; 10,001–50,000: 31%). Not reproduced: cooperative AND strategies persist in most runs.",
             |c| {
                 island(c);
                 c.strategies = vec![Class::And];
