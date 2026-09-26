@@ -814,7 +814,8 @@ What does not, or only partly:
 - **Radax and Rengs' factorial**, repeated over the six switches (their random-number library
   excluded): no setting reproduces Run 1 and one of 64 reproduces Run 2 (removal at once, death on the
   agent's own turn, a full shuffle: 785 / 110), none both. They found 1 of 128 for Run 1 (a
-  synchronous setting they set aside) and 7 for Run 2; none of their seven fits here, and their best
+  synchronous setting they set aside) and 7 for Run 2; six of their seven were run here (the
+  random-number library column is dropped), and none reproduces Table 2 (0/6); their best
   (`dpd-rr-best`: 780 / 97 in Repast) gives 703 / 164. The same switches in two implementations give
   different models; their pseudo-code fixes details the text does not (neighbors played in random
   order, deaths checked after all games, "age ≥ maximum").
