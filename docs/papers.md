@@ -26,7 +26,7 @@ read online or from another copy; add it when found. Scanned PDFs (no text layer
 | 16 | `ethno` | `ethnocentrism/hammond-axelrod-2006-jcr-evolution-of-ethnocentrism.pdf` | the appendix's 5 % mutation is a slip; color-blind cooperation does not reproduce |
 | 17 | `opinions` | `bounded-confidence/hegselmann-krause-2002-…` | Fig. 2b's two camps are the exception; the lattice claim holds |
 | 18 | `structure` | `social-structure/cohen-riolo-axelrod-2001-role-of-social-structure.pdf` | reproduces closely; the unstated threshold is 2.3; only the Appendix's noise rule keeps FRNE above 2DK |
-| 19 | `dpd` | `demographic-pd/epstein-1998-zones-of-cooperation-in-demographic-pd.pdf` (the working paper); Epstein 2006, *Generative Social Science*, ch. 9 (the published rule, Tables 9.1 and 9.3), and Radax & Rengs 2009 MPRA 14419 / 2010 JASSS 13(4) 1 (*not in `papers/`*) | Tables 1 and 2 do not reproduce under the published rule; only unstated readings (founders with no wealth, the working paper's rule) come close; the metabolism "equivalence" holds only per game |
+| 19 | `dpd` | `demographic-pd/epstein-1998-zones-of-cooperation-in-demographic-pd.pdf` (the working paper), `demographic-pd/epstein-2006-generative-social-science.pdf` (ch. 9: the published rule, Tables 9.1 and 9.3), `demographic-pd/radax-rengs-2009-mpra-replication-of-the-demographic-prisoners-dilemma.pdf` (published as JASSS 13(4) 1, 2010) | Tables 1 and 2 do not reproduce under the published rule; only unstated readings (founders with no wealth, the working paper's rule) come close; the metabolism "equivalence" holds only per game |
 
 ## Queue
 
