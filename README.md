@@ -554,7 +554,8 @@ What reproduces, measured (release, seeds 1–10, periods 1,901–2,000 unless n
   82.8 / 79.8), h (immigration 0.5) and m ("run length 2,000", read as 4,000 periods since the
   standard is already 2,000: 77.1 / 75.9 against 77.3 / 74.4).
 - **A lattice of egoists** with no immigration becomes "just as dominant" (`ha-egoist-start`): 78.6 %
-  ethnocentric, though slowly — 7 % at period 100, 70 % at 500, after the population falls to 786.
+  ethnocentric, though slowly — 7 % at period 100, the population dipping to 786 at period 200, and
+  70 % at 500.
 - **Misperception 10 %** (`ha-misperception`): 71.7 % ethnocentric, "more than two-thirds".
 - **Hartshorn, Kaznatcheev and Shultz (2013)** reproduce almost exactly, over their 50 worlds of
   1,000 cycles: final shares 7.7 % selfish, 2.6 % traitorous, 72.4 % ethnocentric and 17.3 %
@@ -582,7 +583,7 @@ What does not, or only partly:
   24.5 %. Only a harsher game does — cost 3 %, 12.7 % (or the benefit halved, 11.6 %) — and then
   seeing agents fall to 29.8 % (17.7 %), far below 56 %. And blind agents cooperate *more* than seeing
   ones whenever helping is cheap (81.2 % against 76.0 % at the standard cost, 89.0 against 78.5 at
-  0.5 %): seeing color helps cooperation only above a cost of about 1.25 %.
+  0.5 %): seeing color helps cooperation only somewhere between a cost of 1 % and 1.5 %.
 - **Ethnocentrics take over later than Table 1 l says.** After 500 periods 57.3 % are ethnocentric,
   not 73.9 %; the last-100 mean is 70.3 % by period 1,000 and 72.4 % by 1,500. Hartshorn, Kaznatcheev
   and Shultz's "around 300 cycles" holds for the median world (282) but worlds range from 21 to 596:

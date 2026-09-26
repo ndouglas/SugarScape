@@ -154,7 +154,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "hks-no-ethnocentrics",
             "No ethnocentrics (H, S, T)",
             HKS13,
-            "HKS13 Study 2: immigrants and mutations may produce only humanitarian, selfish and traitorous strategies (a disallowed immigrant is redrawn, a disallowed mutation ignored). HKS13 Table 3: 1,368 humanitarians, 115 selfish, 150 traitors — the one subset where traitors beat the selfish. Measured: 84.7% humanitarian, 7.0% selfish, 8.4% traitorous (1,384, 114, 136 agents) — reproduced; humanitarians do as well without ethnocentrics as ethnocentrics do with them.",
+            "HKS13 Study 2: immigrants and mutations may produce only humanitarian, selfish and traitorous strategies (a disallowed immigrant is redrawn, a disallowed mutation ignored). HKS13 Table 3: 1,368 humanitarians, 115 selfish, 150 traitors — the one subset where traitors beat the selfish. Measured: 84.7% humanitarian, 7.0% selfish, 8.4% traitorous (1,384, 114, 136 agents) — reproduced; humanitarians reach 84.7% here against the standard case's 75.9% ethnocentrics (1,384 against 1,184 agents in HKS13's Study 2 counts).",
             |c| {
                 c.allowed = vec![
                     Strategy::Humanitarian,
