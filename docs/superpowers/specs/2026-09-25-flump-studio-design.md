@@ -129,12 +129,14 @@ frame (Blender 5.2 has no `Action.fcurves`, and the handler also runs at motion 
 - `camera.py`: named moves (push-in, pull-back, orbit, hold) with ease-in/ease-out.
 - `overlays.py`: felt-block stat displays fed by the dump's `stats` (histogram bars, a dial or bar for
   a mean).
-- `cut.py`: joins rendered beats with ffmpeg's `xfade` cross-dissolves and writes H.264 MP4
-  (`yuv420p`); captions are rendered into each beat in Blender, since the installed ffmpeg has no
-  `drawtext`.
+- `cut.py`: lays each beat's caption over it (ffmpeg `overlay`, faded in and out), joins the beats
+  with `xfade` cross-dissolves and writes H.264 MP4 (`yuv420p`). The installed ffmpeg has no
+  `drawtext`, so captions are rendered by Blender, once per beat, as transparent PNGs; kept out of
+  the beat's scene, they are never hidden by scenery or blurred by depth of field, and changing one
+  needs only a re-cut.
 - `render.py`: the entry point run inside Blender: `blender -b -P studio/render.py -- <episode> <beat>
-  [--preview]`. Builds the beat's scene, saves `<beat>.blend` beside the render so it can be opened
-  and tweaked by hand, and renders it.
+  [--preview] [--still F | --caption]`. Builds the beat's scene, saves `<beat>.blend` beside the
+  render so it can be opened and tweaked by hand, and renders it (or one frame, or the caption).
 - `build` (a script): for an episode, runs `sugarscape shot` for each beat, renders each beat and runs
   the cut. `--preview` renders 960 × 540 with low sampling; `--beat N` renders one beat.
 
@@ -151,7 +153,10 @@ the final MP4.
 
 ### Rendering
 
-Eevee, 1920 × 1080, 30 fps, motion blur on. Preview: 960 × 540, low samples.
+Eevee, 1920 × 1080, 30 fps, motion blur on (shutter 0.3); depth of field in close-ups only. Preview:
+960 × 540, low samples. The handler edits scene data while rendering, so the interface is locked
+during renders, and objects are hidden by shrinking them away under the board, never by toggling
+`hide_render`: both of those hung or crashed Eevee mid-animation.
 
 ### Tests
 

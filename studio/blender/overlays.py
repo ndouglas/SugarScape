@@ -152,7 +152,7 @@ def sight(beat, d, ctx):
     row (north, east, south, west) before each hop and gone as it lands."""
     id_ = d.placed[beat.focus[0]]
     t = ctx.tracks[id_]
-    glow = materials.fading("sight", (1.0, 0.93, 0.55), 3.0)
+    glow = materials.fading("sight", (1.0, 0.55, 0.08), 2.5)
     rows = [
         animate.sight_cells(x, y, d.frames[t.first + k].agents[id_].vision, d.width, d.height)
         for k, (x, y) in enumerate(t.cells)
@@ -175,7 +175,7 @@ def sight(beat, d, ctx):
                 o = pool[used]
                 used += 1
                 x, y = animate.cell_center(cx, cy, d.width, d.height)
-                o.location = (x, y, animate.cell_height(ctx.corners, cx, cy, d.width) + 0.15)
+                o.location = (x, y, animate.cell_height(ctx.corners, cx, cy, d.width) + 0.6)
                 o.scale = (max(shown, 1e-4),) * 3
         for o in pool[used:]:
             flump.stow(o)
@@ -201,12 +201,17 @@ def labels(beat, d, ctx):
             if not p.visible:
                 flump.stow(holder)
                 continue
-            holder.location = (p.x, p.y, p.z + 1.3)
+            holder.location = (p.x, p.y, p.z + 1.15)
             holder.scale = (0.6,) * 3
             direction = ctx.camera.matrix_world.translation - holder.location
             holder.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
 
     return update
+
+
+def _card(name, parent, location, scale):
+    """A dark felt card behind a screen-space display, so it reads on any shot."""
+    return box(name, materials.matte("card", (0.05, 0.04, 0.035)), parent, location=location, scale=scale)
 
 
 def _gauge(screen, name, color, x, y):
@@ -220,6 +225,8 @@ def _gauge(screen, name, color, x, y):
 def dials(beat, d, ctx):
     """Two gauges at the top right: the population's mean sight and hunger."""
     rows = [("mean_vision", "sight", 6.0, "teal", 0.78), ("mean_metabolism", "hunger", 4.0, "coral", 0.56)]
+    card = ctx.screen.anchor("dials-card", 0.66, 0.7)
+    _card("dials-card-box", card, (0, 0, -0.01), (0.6, 0.3, 0.002))
     parts = []
     for key, title, top, color, y in rows:
         fill, label = _gauge(ctx.screen, title, color, 0.66, y)
@@ -239,7 +246,7 @@ def dials(beat, d, ctx):
 def stacks(beat, d, ctx):
     """A column of sugar over every Flump, as tall as its wealth."""
     sugar = materials.gumdrop()
-    columns = {id_: box(f"stack{id_}", sugar, None, scale=(0.3, 0.3, 0.01)) for id_ in ctx.tracks}
+    columns = {id_: box(f"stack{id_}", sugar, None, scale=(0.2, 0.2, 0.01)) for id_ in ctx.tracks}
 
     def update(frame):
         for id_, c in columns.items():
@@ -247,8 +254,8 @@ def stacks(beat, d, ctx):
             if not p.visible:
                 flump.stow(c)
                 continue
-            height = max(p.sugar * 0.05, 0.01)
-            c.scale = (0.3, 0.3, height)
+            height = max(p.sugar * 0.012, 0.01)
+            c.scale = (0.2, 0.2, height)
             c.location = (p.x, p.y, p.z + 0.85 * p.sz + height / 2)
 
     return update
@@ -260,19 +267,22 @@ def histogram(beat, d, ctx):
     last = sorted(a.sugar for a in d.frames[-1].agents.values())
     top = last[int(0.99 * (len(last) - 1))] if last else 1.0
     anchor = ctx.screen.anchor("histogram", 0.62, -0.45)
+    _card("histogram-card", anchor, (0, 0.17, -0.01), (0.6, 0.5, 0.002))
     width = 0.5 / bins
     bars = [
         box(f"bar{i}", materials.knit("butter"), anchor, location=(-0.25 + (i + 0.5) * width, 0, 0), scale=(width * 0.85, 0.01, 0.004))
         for i in range(bins)
     ]
-    text("histogram-title", "sugar held →", 0.04, materials.fading("hist-ink", CREAM, 1.2), anchor, location=(0, -0.05, 0))
+    ink = materials.fading("hist-ink", CREAM, 1.2)
+    text("histogram-title", "how many Flumps hold how much sugar", 0.035, ink, anchor, location=(0, 0.38, 0))
+    text("histogram-axis", "little  →  lots", 0.035, ink, anchor, location=(0, -0.045, 0))
 
     def update(frame):
         f = d.frames[min(int(round(ctx.timing.tick_at(frame))), d.ticks)]
         counts = animate.histogram([a.sugar for a in f.agents.values()], bins, top)
         most = max(max(counts), 1)
         for b, n in zip(bars, counts):
-            height = max(n / most * 0.4, 0.004)
+            height = max(n / most * 0.32, 0.004)
             b.scale.y = height
             b.location.y = height / 2
 

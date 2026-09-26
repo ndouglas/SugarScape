@@ -55,6 +55,9 @@ def main():
     extra = ["--preview"] if args.preview else []
     if not args.skip_render:
         for i in chosen:
+            # A beat's old frames would outlast a shorter re-render and join the cut.
+            for old in (out / kind / f"{i:02d}").glob("[0-9][0-9][0-9][0-9].png"):
+                old.unlink()
             blender(args.episode, i, *extra)
             if beats[i - 1].caption:
                 blender(args.episode, i, "--caption", *extra)
