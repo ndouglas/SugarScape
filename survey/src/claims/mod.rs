@@ -6,6 +6,7 @@ mod ch6;
 mod civil;
 mod classes;
 mod culture;
+mod dpd;
 mod ethno;
 mod spatial;
 mod tags;
@@ -22,6 +23,7 @@ pub fn all() -> Vec<Claim> {
         civil::claims(),
         classes::claims(),
         culture::claims(),
+        dpd::claims(),
         ethno::claims(),
         spatial::claims(),
         tags::claims(),
