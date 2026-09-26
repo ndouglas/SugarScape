@@ -1,6 +1,6 @@
 {
   "name": "Bounded Confidence: a bias leaning with opinion (Fig. 17)",
-  "description": "Hegselmann and Krause's Fig. 17: confidence of total ε that leans with one's opinion, the bias m from 0 to 1 in 26 steps; the metric is the final range of opinions (0 at consensus, 1 with camps at both ends). They report sharper polarization with m, camps at 0 and 1 at m = 1, and at ε = 0.6 a consensus that breaks near m ≈ 0.4. Measured (release, 625 random opinions, seeds 1–20, recorded 2026-09-25): at ε = 0.6 the range is 0 up to m = 0.40 and grows from 0.44 (0.05) to 0.51 at 0.60 and 0.99 at 1; at ε = 0.2 and 0.4 it grows steadily with m to 0.99. It reproduces.",
+  "description": "Hegselmann and Krause's Fig. 17: confidence of total ε that leans with one's opinion, the bias m from 0 to 1 in 26 steps; the metric is the final range of opinions (0 at consensus, 1 with camps at both ends). They report sharper polarization with m, camps at 0 and 1 at m = 1, and at ε = 0.6 a consensus that breaks near m ≈ 0.4. Measured (release, 625 random opinions, seeds 1–20, recorded 2026-09-25): at ε = 0.6 the range is 0 up to m = 0.40 and is 0.05 at m = 0.44, 0.51 at 0.60 and 0.99 at 1; at ε = 0.2 and 0.4 it grows steadily with m to 0.99. It reproduces.",
   "base": {
     "preset": "hk-bias"
   },

@@ -649,8 +649,8 @@ says "m ≈ 0.4" — and takes longer before it breaks.
 Two of the paper's claims have no figure, so they are switches here. **Updating**: "none of the
 results … depends crucially on simultaneous updating", without saying which serial order — each
 agent once per period in random order, or n random draws. Measured, the phases keep their places
-under both, and serial updating leaves slightly more opinions at small ε (9 against 8 at ε = 0.05),
-as the paper says. **Who listens to whom**: on a torus where agents hear only their neighbors,
+under both, and serial updating leaves slightly more opinions at small ε (at ε = 0.05, 8.4 with a
+shuffled order and 9.0 with random draws against 7.9, 50 runs), as the paper says. **Who listens to whom**: on a torus where agents hear only their neighbors,
 "polarization … disappears". Measured on a 25 × 25 torus, it does: one big camp with dozens of
 stranded local minorities, settling only after thousands of periods; a second camp of a fifth of
 the agents in 9 of 200 lattice runs (ε 0.1–0.3, both neighborhoods) against 57 of 100 among

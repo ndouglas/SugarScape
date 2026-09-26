@@ -15,7 +15,7 @@
 - **Existing runs unchanged:** every existing `GOLDEN` and `MODEL_GOLDEN` entry and legacy fixture stays green and unedited (`MODEL_GOLDEN` gains thirteen `hk-*` entries).
 - **One engine path; deterministic; portable:** native and WASM fingerprints identical (verified in planning by `wasm-pack test` and the web determinism test).
 - **Literal defaults, named departures, honest descriptions.**
-- **Copy (verbatim):** model label **Bounded Confidence**; preset ids `hk-plurality`, `hk-polarisation`, `hk-consensus`, `hk-regular-50`, `hk-regular-plurality`, `hk-regular-consensus`, `hk-asym-a`, `hk-asym-b`, `hk-asym-c`, `hk-one-sided`, `hk-bias`, `hk-serial`, `hk-lattice`; Compare entry **Simultaneous vs serial updating — Bounded Confidence (Compare)** (id `hk-simultaneous-vs-serial`); color modes **Start**, **Opinion**; schema groups **Population**, **Confidence**, **Updating**, **Lattice**; charts **Clusters**, **Largest camps**, **Mean and median**, **Splits**, **Change**; time axis **Periods**; sweeps `hk-diagonal`, `hk-asymmetry`, `hk-bias`, `hk-updating`, `hk-lattice`, `hk-population`; series `clusters, largest, second, mean_opinion, median_opinion, range, splits, one_sided_splits, max_change, stable_at`; notice `Stable at t = 8: no opinion moves any more — Reset to run it again`; CLI `(stable)`.
+- **Copy (verbatim):** model label **Bounded Confidence**; preset ids `hk-plurality`, `hk-polarisation`, `hk-consensus`, `hk-regular-50`, `hk-regular-plurality`, `hk-regular-consensus`, `hk-asym-a`, `hk-asym-b`, `hk-asym-c`, `hk-one-sided`, `hk-bias`, `hk-serial`, `hk-lattice`; Compare entry **Simultaneous vs serial updating — Bounded Confidence (Compare)** (id `hk-simultaneous-vs-serial`); color modes **Start**, **Opinion**; schema groups **Population**, **Confidence**, **Updating**, **Lattice**; charts **Clusters**, **Largest camps**, **Mean and median**, **Splits**, **Change**; time axis **Periods**; sweeps `hk-diagonal`, `hk-asymmetry`, `hk-bias`, `hk-updating`, `hk-lattice`, `hk-population`; series `clusters, largest, second, mean_opinion, median_opinion, range, splits, one_sided_splits, max_change, stable_at`; notice `Stable at t = 8: no opinion moves any more — Reset, or change confidence or updating, to run it again`; CLI `(stable)`.
 - Every commit message ends with a blank line and `Claude-Session: https://claude.ai/code/session_01Rt9P4zfGCkP3zL1H71NZcE`. Stage only the task's files; never `.claude/`.
 - Rust: `cargo fmt --all && cargo clippy --all-targets -- -D warnings`. In `survey/`, format only `survey/src/claims/opinions.rs` (`rustfmt --edition 2021`); its `ch6.rs` clippy warnings are not ours.
 - Web: `(cd web && npm run build && npm test)`.
@@ -2736,7 +2736,7 @@ index e501531..a24ae76 100644
      expect(finishedNotice(e.config, 10)).toBe('This run has reached its end year (AD 810) — Reset to run it again');
      expect(finishedNotice(ring, 10)).toBe('This run has reached its end year — Reset to run it again');
      expect(finishedNotice({ model: 'civil' } as unknown as ModelConfig, 94)).toBe('A group has died out at t = 94 — Reset to run it again');
-+    expect(finishedNotice({ model: 'opinions' } as unknown as ModelConfig, 8)).toBe('Stable at t = 8: no opinion moves any more — Reset to run it again');
++    expect(finishedNotice({ model: 'opinions' } as unknown as ModelConfig, 8)).toBe('Stable at t = 8: no opinion moves any more — Reset, or change confidence or updating, to run it again');
      expect(finishedNotice({ model: 'classes' } as unknown as ModelConfig, 640)).toBe(
        'Equity reached at t = 640: every agent remembers mostly M — Reset to run it again',
      );
@@ -2996,7 +2996,7 @@ index a1e3ee9..5f724b2 100644
    if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
    if (modelOf(config) === 'tags') return `This run has reached its last generation (${tick}) — Reset to run it again`;
    if (modelOf(config) === 'classes') return `Equity reached at t = ${tick}: every agent remembers mostly M — Reset to run it again`;
-+  if (modelOf(config) === 'opinions') return `Stable at t = ${tick}: no opinion moves any more — Reset to run it again`;
++  if (modelOf(config) === 'opinions') return `Stable at t = ${tick}: no opinion moves any more — Reset, or change confidence or updating, to run it again`;
    if (modelOf(config) === 'culture') return `The lattice is stable at t = ${tick}: no two neighbors can interact — Reset to run it again`;
    if (modelOf(config) === 'sugarscape') return `The cultures have settled at t = ${tick}: every two share all or nothing — Reset to run it again`;
    const year = calendarYear(config, tick);
