@@ -159,7 +159,7 @@ Cohen, Riolo and Axelrod's adaptive agents playing short iterated Prisoner's Dil
 structures (2001) as a new model kind, with the paper's substitution dial live and its two readings of
 its own method as switches. Table 2, Fig. 1, the crucial p–q region, the partner regression, notes 1
 and 5 and Table A1 all reproduce closely; the unstated high-cooperation threshold is recovered as 2.3;
-the two starts are equivalent, and of the two noise rules only the Appendix's matches Table 2 (the
+the two starts are equivalent, and of the two noise rules the Appendix's matches Table 2 more closely (the
 other overshoots every fixed structure and erases FRNE's edge over 2DK). See
 `docs/superpowers/specs/2026-09-26-social-structure-design.md`.
 
