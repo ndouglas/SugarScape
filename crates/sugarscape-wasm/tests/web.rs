@@ -300,7 +300,11 @@ fn builtins_and_series_names_are_listed() {
             "cra-dial",
             "cra-threshold",
             "cra-noise",
-            "cra-population"
+            "cra-population",
+            "dpd-payoffs",
+            "dpd-mutation",
+            "dpd-metabolism",
+            "dpd-max-age"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -788,6 +792,35 @@ fn ethno_sims_match_the_native_golden_entries() {
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }
+}
+
+#[wasm_bindgen_test]
+fn dpd_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: wealth sums and
+    // the swap shuffle's draws are the same bits here as natively.
+    for (id, fp) in [
+        ("dpd-run-1", "0x3d64b053fbfee4f6"),
+        ("dpd-run-5", "0x2f5ae2bdc6bd257a"),
+        ("dpd-rr-best", "0xe8fdc4ce027dd236"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "dpd");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn dpd_with_a_full_shuffle_matches_the_native_fingerprint() {
+    // No preset uses `shuffle: full`; `dpd::world::tests::
+    // run_1_with_a_full_shuffle_reaches_the_pinned_fingerprint` pins the
+    // same config and value natively.
+    let mut config: serde_json::Value = serde_json::from_str(&preset_json("dpd-run-1")).unwrap();
+    config["shuffle"] = serde_json::json!("full");
+    let mut sim = Sim::new(&config.to_string(), 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.model_kind(), "dpd");
+    sim.step(200);
+    assert_eq!(sim.fingerprint(), "0x97c2897b93c3c7e4");
 }
 
 #[wasm_bindgen_test]

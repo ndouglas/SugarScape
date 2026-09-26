@@ -1,7 +1,8 @@
 import { citizenRows, shownCitizen } from '../civil';
+import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
-import { isCivilView, isClassesView, isCultureView, isEthnoView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -12,6 +13,7 @@ import type {
   StructureInspection,
   CultureInspection,
   CultureSiteView,
+  DpdInspection,
   EthnoConfig,
   EthnoInspection,
   LinkView,
@@ -154,6 +156,19 @@ export class InspectPanel {
     if (!view.agent) return [...rows, row('Agent', 'none (an empty site)')];
     const kin = (this.engine.config as EthnoConfig).kin_strategies;
     return [...rows, ...ethnoRows(view.agent, kin).map(([k, v]) => row(k, v))];
+  }
+
+  /**
+   * A demographic PD site and its agent: strategy, wealth, age, whether surrounded, this cycle's
+   * payoffs, and its neighbors with what a game between them pays. An agent that died leaves the
+   * site's rows alone.
+   */
+  private dpdSiteRows(view: DpdInspection, gone: boolean): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const rows = [row('Site', `(${view.site.x}, ${view.site.y})`)];
+    if (gone) return rows;
+    if (!view.agent) return [...rows, row('Agent', 'none (an empty site)')];
+    return [...rows, ...dpdRows(view.agent).map(([k, v]) => row(k, v))];
   }
 
   /** A civil site: its cop, the agent shown there (followed into jail), and others jailed after arrest here. */
@@ -328,32 +343,34 @@ export class InspectPanel {
         ? `Household #${shown.agentId} is gone: it died or left the valley.`
         : isCivilView(view)
           ? `Agent #${shown.agentId} is gone: killed, or dead of old age.`
-          : isEthnoView(view, this.engine.model)
+          : isEthnoView(view, this.engine.model) || isDpdView(view, this.engine.model)
             ? `Agent #${shown.agentId} has died.`
             : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
-      // First: an empty ethnocentrism site is shaped like an empty Schelling site.
+      // First: an empty ethnocentrism or demographic PD site is shaped like an empty Schelling site.
       const rows = isEthnoView(view, this.engine.model)
         ? this.ethnoSiteRows(view, gone)
-        : isStructureView(view)
-          ? this.structureRows(view)
-        : isOpinionsView(view)
-          ? this.opinionsRows(view)
-        : isClassesView(view)
-          ? this.classesRows(view)
-          : isCultureView(view)
-            ? this.cultureRows(view)
-            : isTagsView(view)
-              ? this.tagsRows(view)
-              : isRingView(view)
-                ? this.ringRows(view, gone)
-                : isValleyView(view)
-                  ? this.valleyRows(view, gone)
-                  : isCivilView(view)
-                    ? this.civilRows(view, shown.agentId, gone)
-                    : isSpatialView(view)
-                      ? this.spatialRows(view)
-                      : this.schellingRows(view, gone);
+        : isDpdView(view, this.engine.model)
+          ? this.dpdSiteRows(view, gone)
+          : isStructureView(view)
+            ? this.structureRows(view)
+            : isOpinionsView(view)
+              ? this.opinionsRows(view)
+              : isClassesView(view)
+                ? this.classesRows(view)
+                : isCultureView(view)
+                  ? this.cultureRows(view)
+                  : isTagsView(view)
+                    ? this.tagsRows(view)
+                    : isRingView(view)
+                      ? this.ringRows(view, gone)
+                      : isValleyView(view)
+                        ? this.valleyRows(view, gone)
+                        : isCivilView(view)
+                          ? this.civilRows(view, shown.agentId, gone)
+                          : isSpatialView(view)
+                            ? this.spatialRows(view)
+                            : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

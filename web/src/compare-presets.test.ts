@@ -100,4 +100,14 @@ describe('compare presets', () => {
     expect(ids).toContainEqual(['ha-adjacent-vs-anywhere', 'ha-standard', 'jansson-offspring-anywhere', 'Next to the parent vs anywhere — Ethnocentrism (Compare)']);
     expect(ids).toContainEqual(['ha-tags-vs-kin', 'ha-standard', 'jansson-kin', 'Tags vs kin — Ethnocentrism (Compare)']);
   });
+
+  it('pairs the demographic PD runs the sources and readings disagree on', () => {
+    const ids = COMPARE_PRESETS.filter((c) => c.id.startsWith('dpd-')).map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toEqual([
+      ['dpd-wp-vs-published', 'dpd-run-1', 'dpd-working-paper', 'Working paper vs published rule — Demographic PD (Compare)'],
+      ['dpd-negative-vs-metabolism', 'dpd-run-2', 'dpd-metabolism', 'Negative payoffs vs shifted with metabolism — Demographic PD (Compare)'],
+      ['dpd-space-vs-soup', 'dpd-run-1', 'dpd-soup', 'Space vs soup — Demographic PD (Compare)'],
+      ['dpd-published-vs-closest', 'dpd-run-1', 'dpd-closest', 'Published rule vs closest reading — Demographic PD (Compare)'],
+    ]);
+  });
 });

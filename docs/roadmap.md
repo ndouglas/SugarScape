@@ -163,6 +163,18 @@ the two starts are equivalent, and of the two noise rules the Appendix's matches
 other overshoots every fixed structure and erases FRNE's edge over 2DK). See
 `docs/superpowers/specs/2026-09-26-social-structure-design.md`.
 
+## Milestone 19: The demographic Prisoner's Dilemma (done)
+
+Epstein's demographic Prisoner's Dilemma (1998) as a thirteenth model kind, with the working paper's rule,
+Radax and Rengs' six unstated timing choices, soup, metabolism and the coordination game as switches and
+presets. Cooperation dominates and soup runs to pure defection, as Epstein says, but Tables 1 and 2 are
+rejected (729 / 171 cooperators and defectors against 779 / 121) under every timing setting but one of 64
+for Run 2; they reproduce together only with the working paper's rule, founders with no wealth and newborns
+acting at once, none of which the published text says. Run 4 dies out instead of cycling, the shifted
+payoffs never converge to pure defection, footnote 27's monopoly comes in 1 run of 30, and the metabolism
+"equivalence" is exact only when metabolism is charged per game. See
+`docs/superpowers/specs/2026-09-26-demographic-pd-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -177,6 +189,7 @@ other overshoots every fixed structure and erases FRNE's edge over 2DK). See
 - **Hammond–Axelrod ethnocentrism** (and Hartshorn, Kaznatcheev & Shultz's and Jansson's critiques): done (Milestone 16).
 - **Hegselmann & Krause's bounded confidence**: done (Milestone 17).
 - **Cohen, Riolo & Axelrod's social structure**: done (Milestone 18).
+- **Epstein's demographic Prisoner's Dilemma** (and Radax & Rengs' replication): done (Milestone 19).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

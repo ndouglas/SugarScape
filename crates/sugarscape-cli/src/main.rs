@@ -209,7 +209,8 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
         // The anasazi stops at its end year; civil violence when a group is gone;
         // the tags model at its last generation; Axelrod's culture and bounded
         // confidence once stable, a sugarscape under his rule once its cultures
-        // settle; ethnocentrism at its last period.
+        // settle; ethnocentrism at its last period; the demographic PD at its
+        // last cycle.
         let why = match config.kind() {
             ModelKind::Civil => "a group has died out",
             ModelKind::Tags => "its last generation",
@@ -219,6 +220,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Structure => "its last period",
             ModelKind::Sugarscape => "the cultures have settled",
             ModelKind::Ethno => "its last period",
+            ModelKind::Dpd => "its last cycle",
             _ => "its end year",
         };
         eprintln!("finished at tick {} ({why})", world.tick());

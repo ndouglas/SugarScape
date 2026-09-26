@@ -399,6 +399,9 @@ impl Sweep {
                         "the ethnocentrism model stops at its last period, {max} in this config"
                     )
                 }
+                crate::model::ModelKind::Dpd => {
+                    format!("the demographic PD stops at its last cycle, {max} in this config")
+                }
                 _ => format!(
                     "the Long House Valley stops at its end year, \
                      {max} ticks after its start year in this config"
@@ -959,7 +962,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 50] = [
+const BUILTINS: [Builtin; 54] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1159,6 +1162,22 @@ const BUILTINS: [Builtin; 50] = [
     Builtin {
         id: "cra-population",
         json: include_str!("../../../sweeps/cra-population.json"),
+    },
+    Builtin {
+        id: "dpd-payoffs",
+        json: include_str!("../../../sweeps/dpd-payoffs.json"),
+    },
+    Builtin {
+        id: "dpd-mutation",
+        json: include_str!("../../../sweeps/dpd-mutation.json"),
+    },
+    Builtin {
+        id: "dpd-metabolism",
+        json: include_str!("../../../sweeps/dpd-metabolism.json"),
+    },
+    Builtin {
+        id: "dpd-max-age",
+        json: include_str!("../../../sweeps/dpd-max-age.json"),
     },
 ];
 
@@ -2032,7 +2051,11 @@ mod tests {
                 "cra-dial",
                 "cra-threshold",
                 "cra-noise",
-                "cra-population"
+                "cra-population",
+                "dpd-payoffs",
+                "dpd-mutation",
+                "dpd-metabolism",
+                "dpd-max-age"
             ]
         );
         for b in builtins() {

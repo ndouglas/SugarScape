@@ -98,6 +98,10 @@ fn presets_and_sweeps_are_listed() {
         "cra-threshold",
         "cra-noise",
         "cra-population",
+        "dpd-payoffs",
+        "dpd-mutation",
+        "dpd-metabolism",
+        "dpd-max-age",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),

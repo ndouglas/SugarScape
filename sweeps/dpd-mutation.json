@@ -1,0 +1,9 @@
+{
+  "name": "Demographic PD: cooperation against mutation (Epstein's Run 5)",
+  "description": "Epstein's Run 5: Run 2 with a 50% chance that an offspring takes the other strategy, and cooperation persists (at 25%, \"cooperators averaging around 350 and defectors around 400\"). Cooperators at cycle 500 against the mutation rate. Measured (release, seeds 1–30, recorded 2026-09-26): 0: 695; 5%: 551; 10%: 512; 20%: 446; 30%: 386; 40%: 342; 50%: 268 (the lowest run 0). Cooperation falls steadily with mutation but persists; at 25% the means over cycles 1,001–2,000 are 420 cooperators and 393 defectors.",
+  "base": {"preset": "dpd-run-2"},
+  "x": {"label": "Mutation rate", "path": "mutation", "values": [0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]},
+  "seeds": {"from": 1, "count": 30},
+  "ticks": 500,
+  "metric": {"kind": "final", "series": "cooperators"}
+}

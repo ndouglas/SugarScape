@@ -84,6 +84,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'window_mean', series: 'ethnocentric', from: 1901, to: null },
     };
   }
+  if (model === 'dpd') {
+    // Table 9.3's axis at T = 6: cooperators after 500 cycles against the reward R (R = 1 dies out).
+    return { ...form, x: { path: 'r', values: '1:5:1' }, ticks: 500, metric: { ...form.metric, kind: 'final', series: 'cooperators' } };
+  }
   return form;
 }
 

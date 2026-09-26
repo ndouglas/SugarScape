@@ -4,7 +4,7 @@ import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
 import { defaultForm, formToSweep } from './experiments/form';
 import { Engine, type Speed } from './engine';
-import { isEthnoView, modelOf } from './models';
+import { isDpdView, isEthnoView, modelOf } from './models';
 import type { NetworkOverlay } from './protocol';
 import { paramShown } from './schema-form';
 import { SimHost } from './sim-host';
@@ -20,6 +20,9 @@ import type {
   ClassesStats,
   CultureInspection,
   CultureStats,
+  DpdConfig,
+  DpdInspection,
+  DpdStats,
   EthnoConfig,
   EthnoInspection,
   EthnoStats,
@@ -444,6 +447,19 @@ describe('other models through the engine', () => {
     ['cra-ffr-05', '0xf9573021f9848025'],
     ['cra-random-start', '0x1871afd34df774a9'],
     ['cra-copy-noise', '0xd8871da3505ee758'],
+    ['dpd-run-1', '0x3d64b053fbfee4f6'],
+    ['dpd-run-2', '0xe0198124ac5f4789'],
+    ['dpd-run-3', '0x1c819cc85b7bb351'],
+    ['dpd-run-4', '0xe6b5d66dee22ce07'],
+    ['dpd-run-5', '0x2f5ae2bdc6bd257a'],
+    ['dpd-working-paper', '0xaba834120f15810b'],
+    ['dpd-closest', '0xd1c7475297f9864c'],
+    ['dpd-soup', '0x0db64ad16a49146b'],
+    ['dpd-shifted', '0x39b59d546b2bb2e8'],
+    ['dpd-metabolism', '0x7b580a83419a3ea4'],
+    ['dpd-footnote-27', '0xd1adeadce6881068'],
+    ['dpd-rr-best', '0xe8fdc4ce027dd236'],
+    ['dpd-coordination', '0x47f8c68504a9157a'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -779,6 +795,111 @@ describe('the ethnocentrism model through the engine', () => {
     expect(errors).toEqual([]);
     // Eleven costs × the form's three seeds (the built-in ha-cost runs ten).
     expect(JSON.parse(sweep_points(JSON.stringify(sweep)))).toHaveLength(33);
+  });
+});
+
+describe('the demographic PD through the engine', () => {
+  const preset = (id: string) => presets.find((p) => p.id === id)!;
+  const dpdPresets = presets.filter((p) => modelOf(p.config) === 'dpd');
+  const create = (id: string, edit: (c: DpdConfig) => void = () => {}) => {
+    const config = structuredClone(preset(id).config) as DpdConfig;
+    edit(config);
+    return Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+  };
+  const schema = (JSON.parse(model_schemas_json()) as Record<string, Param[]>).dpd;
+  const field = (path: string) => schema.find((p) => p.path === path)!;
+
+  it('builds a Rules panel in the spec’s groups, with negative payoffs on the sliders and the play rule only in space', () => {
+    expect([...new Set(schema.map((p) => p.group))]).toEqual(['Game', 'Population', 'Evolution', 'Timing', 'Interaction', 'Run']);
+    for (const path of ['t', 'r', 'p', 's']) expect([field(path).min, field(path).max]).toEqual([-20, 20]);
+    expect(field('play').show_if).toEqual({ path: 'pairing', equals: 'space' });
+    expect([paramShown(field('play'), preset('dpd-run-1').config), paramShown(field('play'), preset('dpd-soup').config)]).toEqual([true, false]);
+    // Every preset's numbers sit on their sliders (the coordination game's −3, footnote 27's 16, max age 1,000).
+    expect(dpdPresets).toHaveLength(13);
+    for (const p of dpdPresets) {
+      for (const f of schema.filter((f) => f.kind === 'number' || f.kind === 'integer')) {
+        const v = (p.config as unknown as Record<string, number>)[f.path];
+        expect(v, `${p.id}: ${f.path}`).toBeGreaterThanOrEqual(f.min!);
+        expect(v, `${p.id}: ${f.path}`).toBeLessThanOrEqual(f.max!);
+      }
+    }
+  });
+
+  it('takes live edits of the payoffs and the pairing, and replays them through keyframes and a share link', async () => {
+    const e = await create('dpd-rr-best');
+    await e.advance(40);
+    expect(await e.applyModelConfig((c) => void ((c as DpdConfig).s = -3))).toBeNull();
+    await e.advance(40);
+    expect(await e.applyModelConfig((c) => void ((c as DpdConfig).pairing = 'soup'))).toBeNull();
+    await e.advance(20);
+    const want = await e.fingerprint();
+    expect(e.tick).toBe(100);
+    await e.seek(30);
+    await e.seek(100);
+    expect(await e.fingerprint()).toBe(want);
+    const { session, tick } = await e.session();
+    const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await opened.advance(tick);
+    expect((opened.config as DpdConfig).pairing).toBe('soup');
+    expect(await opened.fingerprint()).toBe(want);
+    const errors = await e.applyModelConfig((c) => void ((c as DpdConfig).mutation = 2));
+    expect(errors?.map((f) => f.field)).toEqual(['mutation']);
+  });
+
+  it('stops at its last cycle, once, and inspects agents, surrounded cooperators and empty sites', async () => {
+    const e = await create('dpd-run-1', (c) => (c.end = 120));
+    e.setDisplay({ colorMode: 'surrounded' });
+    // At the start 100 agents hold 900 sites: an empty one is an empty demographic PD site.
+    const empties: number[] = [];
+    for (let x = 0; x < 30; x++) {
+      await e.select(x, 0);
+      const v = e.inspection!.view;
+      expect(isDpdView(v, e.model)).toBe(true);
+      if ((v as DpdInspection).agent === null) empties.push(x);
+    }
+    expect(empties.length).toBeGreaterThan(20);
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(200);
+    expect([e.tick, e.finished, ends]).toEqual([120, true, 1]);
+    const stats = e.latest as DpdStats;
+    expect(stats.cooperators + stats.defectors).toBe(stats.population);
+    const seen = { agent: 0, surrounded: 0, empty: 0 };
+    for (let y = 0; y < 30; y++) {
+      for (let x = 0; x < 30; x += 3) {
+        await e.select(x, y);
+        const v = e.inspection!.view;
+        expect(isDpdView(v, e.model)).toBe(true);
+        const a = (v as DpdInspection).agent;
+        if (!a) {
+          seen.empty++;
+          continue;
+        }
+        seen.agent++;
+        expect(e.inspection!.agentId).toBe(a.id);
+        expect(a.neighbors.length).toBeLessThanOrEqual(4);
+        if (a.surrounded) {
+          seen.surrounded++;
+          expect(a.strategy).toBe('C');
+          expect(a.neighbors.map((n) => n.strategy)).toEqual(['C', 'C', 'C', 'C']);
+        }
+      }
+    }
+    expect(seen.agent).toBeGreaterThan(0);
+    expect(seen.surrounded).toBeGreaterThan(0);
+    // By then the lattice is all but full (Run 1 holds about 900 agents).
+    expect(seen.agent).toBeGreaterThan(290);
+  });
+
+  it('opens its four Compare entries and sweeps its default form', () => {
+    for (const id of ['dpd-wp-vs-published', 'dpd-negative-vs-metabolism', 'dpd-space-vs-soup', 'dpd-published-vs-closest']) {
+      const entry = COMPARE_PRESETS.find((c) => c.id === id)!;
+      expect(comparePresetStates(presets, entry, 1), id).not.toBeNull();
+    }
+    const { sweep, errors } = formToSweep(defaultForm('dpd'), { preset: 'dpd-run-1' });
+    expect(errors).toEqual([]);
+    // Five rewards × the form's three seeds.
+    expect(JSON.parse(sweep_points(JSON.stringify(sweep)))).toHaveLength(15);
   });
 });
 

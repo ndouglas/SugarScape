@@ -141,7 +141,8 @@ Model extensions:
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
-**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence** and **Social Structure**.
+**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**
+and **Demographic PD**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -863,6 +864,127 @@ Built-in sweeps: `cra-table-2`, `cra-dial`, `cra-threshold`, `cra-noise`, `cra-p
 Credit: Michael D. Cohen, Rick L. Riolo and Robert Axelrod, "The Role of Social Structure in the
 Maintenance of Cooperative Regimes," *Rationality and Society* 13(1) (2001), 5–32. See
 `docs/superpowers/specs/2026-09-26-social-structure-design.md`.
+
+### Demographic Prisoner's Dilemma (Epstein 1998, and its replication)
+
+Epstein's demographic Prisoner's Dilemma: 100 agents on a 30 × 30 torus, each with a fixed strategy,
+cooperate or defect, and a wealth of 6. In a random order each agent in turn moves to a random
+unoccupied site within its vision (one site, von Neumann), plays the Prisoner's Dilemma with each
+neighbor (T 6, R 5, P −5, S −6; both players are paid), has an offspring on a free neighboring site
+once its wealth reaches 11 (giving it 6 from its own wealth; the offspring keeps the strategy), and
+dies when its wealth goes negative. After every cycle N/2 random pairs of agents swap places in the
+list. Cooperators find each other, clone into zones of cooperation, and dominate: the published tables
+give 779 cooperators and 121 defectors after 500 cycles (Table 9.2, Run 1), and 784 and 99 with a
+maximum age of 100 (Table 9.4, Run 2).
+
+**The working paper and the published text disagree** on the rule, and the sources leave much open;
+each choice is a switch or a preset. The 1997 working paper moves to "a random site within your
+vision" and plays "a random neighbor", once; the 1998 article and *Generative Social Science* (2006)
+move to an unoccupied site and play each neighbor (`play`, `dpd-working-paper`). The prose never gives
+the initial agents' wealth or states the cloning threshold as a number to reach: the defaults take
+the 2006 CD's `Initial Wealth = 6` and `Fission Wealth = 11` ("exceeds 10"). Radax and Rengs (2009)
+list six more choices the text leaves open and the defaults read literally: death as wealth goes
+negative, even on another agent's turn (`death_timing`), removal at once (`removal`), the endowment
+taken from the parent (`endowment_from`), every newborn's age random up to the maximum (`newborn_age`),
+asynchronous updating (`updating`) and Epstein's swaps (`shuffle`). No source says whether a newborn
+acts in the cycle it is born (`newborns_act`: next cycle), or whether metabolism, "a fixed decrement to
+accumulated payoff per cycle", is charged per cycle or, as another sentence says, "after every
+interaction" (`metabolism_per`: per cycle). Soup (`pairing: soup`) pairs each agent with a random
+other agent and places moves and offspring anywhere.
+
+What reproduces, measured (release, seeds 1–30, Epstein's 30 runs; each run's count at cycle 500
+unless noted; t is Radax and Rengs' two-sample test against the source's mean and s.d., |t| < 2.0017
+to pass):
+
+- **Cooperation dominates.** Run 1: 729 ± 17 cooperators against 171 ± 17 defectors; Run 2: 695 ± 29
+  against 196 ± 28. The ratio stabilizes from about cycle 30, as Epstein says.
+- **Soup runs to pure defection** (`dpd-soup`): the last cooperator dies by cycle 8 on average (4–14)
+  in 29 of 30 runs; the defectors then kill one another, leaving one agent or nobody.
+- **Run 5's cooperation persists through 10,000 cycles** (`dpd-run-5`, 50 % mutation) in 27 of 30
+  runs (the other three populations die out entirely): 260 cooperators against 295 defectors over
+  cycles 5,001–10,000. At 25 % mutation the means over cycles 1,001–2,000 are 420 and 393 (Epstein:
+  "around 350 and … around 400").
+- **Table 9.3's pattern**: cooperators dominate when R is near T and die out as R falls, at the same R
+  in every row (R ≤ 3 at T = 10, R ≤ 2 at T = 7–9, R = 1 at T ≤ 6).
+- **The metabolism equivalence, charged per game.** The payoffs shifted up by 6 with a metabolism of 6
+  charged after every game are Run 2 exactly, run for run (`metabolism_per: interaction`); more
+  metabolism does mean more cooperators, from 414 at 1 to 661 at 5 per cycle.
+
+What does not, or only partly:
+
+- **Tables 1 and 2.** Both counts are rejected in both runs: 729 / 171 against 779 / 121 (t = 11.9 and
+  −11.8), and 695 / 196 against 784 / 99 (t = 11.8 and −14.1) — 50–90 fewer cooperators and 50–100
+  more defectors than Epstein's. By cycle 50 the ratio is 4.3 to 1, not "approximately 5 to 1".
+- **Radax and Rengs' factorial**, repeated over the six switches (their random-number library
+  excluded): no setting reproduces Run 1 and one of 64 reproduces Run 2 (removal at once, death on the
+  agent's own turn, a full shuffle: 785 / 110), none both. They found 1 of 128 for Run 1 (a
+  synchronous setting they set aside) and 7 for Run 2; six of their seven were run here (the
+  random-number library column is dropped), and none reproduces Table 2 (0/6); their best
+  (`dpd-rr-best`: 780 / 97 in Repast) gives 703 / 164. The same switches in two implementations give
+  different models; their pseudo-code fixes details the text does not (neighbors played in random
+  order, deaths checked after all games, "age ≥ maximum").
+- **What does reproduce both tables** is three choices no source settles: the working paper's one
+  random neighbor a turn, initial agents with no wealth, and newborns acting at once (`dpd-closest`):
+  786 / 114 (t = −1.5) and 792 / 101 (t = −1.2). Of 512 combinations of those three choices with the six
+  switches, 46 reproduce Run 1 — every one with no initial wealth — 24 Run 2 and 7 both, all 7 with the
+  working paper's rule. It is fragile: over seeds 31–60 and 61–90 Run 2's defectors fail (t = −2.6,
+  −3.2). The working paper's rule alone (`dpd-working-paper`) is nearer Table 1 but still rejected:
+  759 / 141 (t = 4.8).
+- **Table 9.3 cell by cell**: of the 90 means (45 payoff vectors, cooperators and defectors) 22 fall
+  inside Epstein's 95 % confidence intervals and 51 inside his ranges; both means are inside the
+  intervals in 1 cell of 45, and 5 cells pass both t-tests. Along the diagonal (R = T − 1) our
+  cooperators run 13–92 below his and our defectors 33–106 above (bar T = 2). Where his populations die
+  out entirely (ranges (0, 0)), 1–5 lone defectors survive here: once the cooperators are gone they have
+  nobody to play, and with no maximum age and no metabolism nothing kills them. Row (4, 2)'s defector
+  interval, "(254, 376)", is a misprint: its mean 265 and s.d. 32 give (253, 277).
+- **Run 4 (R = 1) dies out** instead of cycling (`dpd-run-4`): 26 of 30 populations are extinct by
+  cycle 500 and all 30 by 2,000, after at most two swings of the cooperators (above 400, then below
+  100: 0.6 a run). Epstein's figure shows a cycle every 300–500 cycles. There is no cooperator monopoly
+  at R = 1 (nor at R = 5, where all 30 coexist), so the paradox that "cooperators ultimately do better
+  with a low payoff (R = 1) than with a high one (R = 5)" has nothing to stand on. No timing setting
+  gives sustained cycles.
+- **The shifted payoffs (12, 11, 1, 0) never converge to pure defection** (`dpd-shifted`, Fig. 13):
+  all 30 runs coexist at 500 (418 cooperators, 478 defectors) and at 2,000 (409, 487). GSS gives the
+  settings — "maximum age of 100, zero mutation" — and Run 5's 50 % mutation or Run 1's unlimited
+  lives do not converge either. With no negative payoff only old age kills, the lattice stays full
+  and everyone can afford to clone. So the premise of the metabolism argument ("in which cooperators
+  are annihilated") fails, and charged per cycle, as the chapter's note defines it, a metabolism of 6
+  gives another model (`dpd-metabolism`: 644 ± 97 cooperators, 253 ± 97 defectors against Run 2's
+  695 ± 29, t = 2.7). The passage calls the pure-defection run "figure 12", which is Run 5's; it
+  means Fig. 13.
+- **Footnote 27** (T 16, R 11, P 5, S 4, maximum lifetime 10: "an evolution to cooperative monopoly")
+  gives a monopoly in 1 of 30 runs by cycle 2,000 and none by 500 (`dpd-footnote-27`); "hiked by ten"
+  would make R 15, which gives the same.
+- **The coordination game's norm maps** (GSS appendix, `dpd-coordination`: payoffs [1, −3, −3, 1],
+  death age 1,000) form where both conventions persist — at cycle 500, 3.6 % of neighboring pairs
+  differ, against 35 % if mixed at random — but both persist in only 17 of 30 runs at cycle 500, 16 at
+  2,000 and 11 at 5,000.
+
+The survey measures 21 of these claims: 6 hold, 4 are weak and 11 fail. Four built-in sweeps (30
+seeds, cooperators at cycle 500): `dpd-payoffs` (Table 9.3: T 2–10 as lines, R 1–9 on the x axis; the
+sweep format cannot skip the 36 cells with R ≥ T, which are not Prisoner's Dilemmas and fill with
+774–876 cooperators), `dpd-mutation` (Run 2 with mutation 0–50 %: 695 down to 268), `dpd-metabolism`
+(the shifted payoffs with metabolism 0–6 per cycle and per game: 418 at none, 644 and 695 at 6) and
+`dpd-max-age` (maximum age 10–1,000: 666–735, barely mattering).
+
+Agents are drawn by **Strategy** (the default: cooperators blue, defectors red, as Epstein's),
+**Wealth** and **Age** (heat) or **Surrounded** (cooperators all eight of whose neighbors cooperate, in
+blue; everyone else dimmed), with empty sites dark. Inspect shows an agent's strategy, wealth, age and
+maximum age, whether it is surrounded, this cycle's payoffs and games, and each neighbor with what one
+game between them pays each; an empty site says so. Charts: **Population** (cooperators and
+defectors), **Cooperator share**, **Surrounded cooperators**, **Wealth** (the mean of each strategy)
+and **Births and deaths**, against the cycle. A run never stops by default (`end`: a last cycle, 0
+for never); the payoffs, the demography, the timing switches and the pairing apply to the running
+world. **Compare** entries: "Working paper vs published rule — Demographic PD (Compare)" (`dpd-run-1`
+and `dpd-working-paper`), "Negative payoffs vs shifted with metabolism — Demographic PD (Compare)"
+(`dpd-run-2` and `dpd-metabolism`), "Space vs soup — Demographic PD (Compare)" (`dpd-run-1` and
+`dpd-soup`) and "Published rule vs closest reading — Demographic PD (Compare)" (`dpd-run-1` and
+`dpd-closest`). Credit: Joshua M. Epstein, "Zones of Cooperation in Demographic Prisoner's Dilemma,"
+Santa Fe Institute Working Paper 97-12-094 (1997), *Complexity* 4(2) (1998), 36–48, and *Generative
+Social Science* (Princeton, 2006), chapter 9 and its appendix; and Andreas Radax and Bernhard Rengs,
+"Replication of the Demographic Prisoner's Dilemma," MPRA 14419 (2009), published as "Prospects and
+Pitfalls of Statistical Testing: Insights from Replicating the Demographic Prisoner's Dilemma,"
+*JASSS* 13(4) 1 (2010). See `docs/superpowers/specs/2026-09-26-demographic-pd-design.md`.
 
 ## Experiments
 

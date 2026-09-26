@@ -1,4 +1,4 @@
-// Which model a config is (milestones 9–14), and what each model offers the page.
+// Which model a config is (milestones 9–17), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   AnasaziInspection,
@@ -15,6 +15,8 @@ import type {
   StructureInspection,
   ColorMode,
   Config,
+  DpdConfig,
+  DpdInspection,
   EthnoConfig,
   EthnoInspection,
   Inspection,
@@ -27,7 +29,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -43,12 +45,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   ethno: 'Ethnocentrism',
   opinions: 'Bounded Confidence',
   structure: 'Social Structure',
+  dpd: 'Demographic PD',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd'
     ? tag
     : 'sugarscape';
 }
@@ -116,6 +119,14 @@ export function isEthnoView(v: AnyInspection, model: ModelKind): v is EthnoInspe
   return model === 'ethno' && (v.agent === null || 'kin_marker' in v.agent);
 }
 
+/**
+ * A demographic PD site's inspection (its agent says whether it is surrounded). An empty one is
+ * exactly an empty Schelling or ethnocentrism site, so the world's model decides as well as the shape.
+ */
+export function isDpdView(v: AnyInspection, model: ModelKind): v is DpdInspection {
+  return model === 'dpd' && (v.agent === null || 'surrounded' in v.agent);
+}
+
 /** The calendar year a world of `c` is in at `tick` (the anasazi's), or null for a model without one. */
 export function calendarYear(c: ModelConfig, tick: number): number | null {
   return 'model' in c && c.model === 'anasazi' ? c.start_year + tick : null;
@@ -123,13 +134,15 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
 
 /**
  * Ticks until a world of `c` at `tick` is finished (the anasazi's end year, the tags model's last
- * generation, the ethnocentrism model's last period); Infinity for a model that never finishes.
+ * generation, the ethnocentrism model's last period, the demographic PD's last cycle); Infinity for
+ * a model that never finishes.
  */
 export function ticksLeft(c: ModelConfig, tick: number): number {
   if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
   if (modelOf(c) === 'tags' && (c as TagsConfig).end > 0) return Math.max(0, (c as TagsConfig).end - tick);
   if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
   if (modelOf(c) === 'structure' && (c as StructureConfig).stop_at > 0) return Math.max(0, (c as StructureConfig).stop_at - tick);
+  if (modelOf(c) === 'dpd' && (c as DpdConfig).end > 0) return Math.max(0, (c as DpdConfig).end - tick);
   return Infinity;
 }
 
@@ -233,6 +246,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['payoff', 'Payoff'],
     ['strategy', 'Strategy'],
   ],
+  // Epstein's colors first (cooperators blue, defectors red); the core's mode names.
+  dpd: [
+    ['strategy', 'Strategy'],
+    ['wealth', 'Wealth'],
+    ['age', 'Age'],
+    ['surrounded', 'Surrounded'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -249,4 +269,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   ethno: [],
   opinions: [],
   structure: [],
+  dpd: [],
 };

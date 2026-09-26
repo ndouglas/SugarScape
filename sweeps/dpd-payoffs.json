@@ -1,0 +1,36 @@
+{
+  "name": "Demographic PD: Table 9.3's payoffs (Epstein)",
+  "description": "Epstein's Table 9.3: T from 2 to 10 (S = −T) and R from 1 to T − 1 (P = −R), Run 1's other settings, cooperators at cycle 500 over 30 runs. The sweep format cannot skip a cell, so the 36 cells with R ≥ T also run, at the right of each line; they are not Prisoner's Dilemmas (cooperating against a cooperator pays at least as much as defecting) and cooperators take 774–876 of the 900 sites there. Measured (release, seeds 1–30, recorded 2026-09-26), cooperators for R = T − 1 down to 1 — T 10: 750, 700, 631, 424, 177, 103, 0, 0, 0; T 9: 746, 692, 526, 274, 132, 34, 0, 0; T 8: 738, 631, 476, 195, 71, 0, 0; T 7: 705, 583, 357, 129, 0, 0; T 6: 729, 634, 368, 12, 0; T 5: 726, 552, 94, 0; T 4: 689, 414, 0; T 3: 611, 9; T 2: 332. Epstein's pattern holds — cooperators dominate when R is near T and die out when R falls far enough, at the same R in every row — but of the 90 means (cooperators and defectors) only 22 fall inside his 95% confidence intervals and 51 inside his ranges; in just 1 cell of 45 do both means fall inside the intervals. Along the diagonal (R = T − 1) our cooperators run 13–92 below his and our defectors 33–106 above (bar T = 2); where his populations die out, 1–5 lone defectors survive here, with nobody to play and no maximum age to kill them.",
+  "base": {"preset": "dpd-run-1"},
+  "x": {
+    "label": "R (P = −R)",
+    "values": [
+      {"at": 1, "name": "R = 1", "set": {"r": 1, "p": -1}},
+      {"at": 2, "name": "R = 2", "set": {"r": 2, "p": -2}},
+      {"at": 3, "name": "R = 3", "set": {"r": 3, "p": -3}},
+      {"at": 4, "name": "R = 4", "set": {"r": 4, "p": -4}},
+      {"at": 5, "name": "R = 5", "set": {"r": 5, "p": -5}},
+      {"at": 6, "name": "R = 6", "set": {"r": 6, "p": -6}},
+      {"at": 7, "name": "R = 7", "set": {"r": 7, "p": -7}},
+      {"at": 8, "name": "R = 8", "set": {"r": 8, "p": -8}},
+      {"at": 9, "name": "R = 9", "set": {"r": 9, "p": -9}}
+    ]
+  },
+  "series": {
+    "label": "T (S = −T)",
+    "values": [
+      {"at": 2, "name": "T = 2", "set": {"t": 2, "s": -2}},
+      {"at": 3, "name": "T = 3", "set": {"t": 3, "s": -3}},
+      {"at": 4, "name": "T = 4", "set": {"t": 4, "s": -4}},
+      {"at": 5, "name": "T = 5", "set": {"t": 5, "s": -5}},
+      {"at": 6, "name": "T = 6", "set": {"t": 6, "s": -6}},
+      {"at": 7, "name": "T = 7", "set": {"t": 7, "s": -7}},
+      {"at": 8, "name": "T = 8", "set": {"t": 8, "s": -8}},
+      {"at": 9, "name": "T = 9", "set": {"t": 9, "s": -9}},
+      {"at": 10, "name": "T = 10", "set": {"t": 10, "s": -10}}
+    ]
+  },
+  "seeds": {"from": 1, "count": 30},
+  "ticks": 500,
+  "metric": {"kind": "final", "series": "cooperators"}
+}

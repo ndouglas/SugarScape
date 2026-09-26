@@ -8,6 +8,7 @@ import {
   isOpinionsView,
   isStructureView,
   isCultureView,
+  isDpdView,
   isEthnoView,
   isRingView,
   isSpatialView,
@@ -313,5 +314,44 @@ describe('the ethnocentrism model', () => {
     expect(ticksLeft(ethno(0), 5)).toBe(Infinity);
     expect(finishesUnpredictably(ethno(2000))).toBe(false);
     expect(calendarYear(ethno(2000), 5)).toBeNull();
+  });
+});
+
+describe('the demographic PD', () => {
+  const dpd = (end: number) => ({ model: 'dpd', end }) as unknown as ModelConfig;
+
+  it('is read by its tag, and its inspections by the model (an empty site is shaped like Schelling’s and ethnocentrism’s)', () => {
+    expect(modelOf(dpd(0))).toBe('dpd');
+    expect(isSugar(dpd(0))).toBe(false);
+    const empty = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
+    const agent = { site: { x: 1, y: 2 }, agent: { id: 3, strategy: 'C', surrounded: false, neighbors: [] } } as unknown as AnyInspection;
+    const ethno = { site: { x: 1, y: 2 }, agent: { id: 3, kin_marker: 3, neighbors: [] } } as unknown as AnyInspection;
+    expect([empty, agent].map((v) => isDpdView(v, 'dpd'))).toEqual([true, true]);
+    expect([empty, agent].map((v) => isDpdView(v, 'ethno'))).toEqual([false, false]);
+    expect([empty, agent].map((v) => isDpdView(v, 'schelling'))).toEqual([false, false]);
+    expect(isDpdView(ethno, 'dpd')).toBe(false);
+    expect([empty, agent].map((v) => isEthnoView(v, 'dpd'))).toEqual([false, false]);
+    expect(isTagsView(agent) || isRingView(agent) || isSugarView(agent) || isValleyView(agent) || isCivilView(agent) || isSpatialView(agent)).toBe(false);
+    expect(isClassesView(agent) || isCultureView(agent)).toBe(false);
+  });
+
+  it('offers strategy, wealth, age and surrounded colors and no overlays, and is grouped last', () => {
+    expect(COLOR_MODES.dpd).toEqual([
+      ['strategy', 'Strategy'],
+      ['wealth', 'Wealth'],
+      ['age', 'Age'],
+      ['surrounded', 'Surrounded'],
+    ]);
+    expect(MODEL_OVERLAYS.dpd).toEqual([]);
+    const p = (id: string, config: object) => ({ id, name: id, source: '', description: '', config }) as unknown as Preset;
+    expect(presetGroups([p('dpd', { model: 'dpd' }), p('ha', { model: 'ethno' })]).map((g) => g.label)).toEqual(['Ethnocentrism', 'Demographic PD']);
+  });
+
+  it('counts down to its last cycle, or never with none (the default)', () => {
+    expect(ticksLeft(dpd(500), 490)).toBe(10);
+    expect(ticksLeft(dpd(500), 505)).toBe(0);
+    expect(ticksLeft(dpd(0), 5)).toBe(Infinity);
+    expect(finishesUnpredictably(dpd(500))).toBe(false);
+    expect(calendarYear(dpd(500), 5)).toBeNull();
   });
 });

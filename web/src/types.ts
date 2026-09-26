@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -256,6 +256,44 @@ export interface EthnoConfig {
   schedule: ScheduledChange[];
 }
 
+/**
+ * Epstein's demographic Prisoner's Dilemma (milestone 19): agents with fixed strategies move, play
+ * their neighbors, clone and die by their accumulated payoffs, with the working paper's rule, Radax
+ * and Rengs' timing choices, soup and metabolism as switches. A tick is a cycle.
+ */
+export interface DpdConfig {
+  model: 'dpd';
+  width: number;
+  agents: number;
+  initial_cooperators: number;
+  initial_wealth: number;
+  /** Payoffs: T to a defector against a cooperator, R to two cooperators, P to two defectors, S to a cooperator against a defector (any finite values). */
+  t: number;
+  r: number;
+  p: number;
+  s: number;
+  fission_wealth: number;
+  endowment: number;
+  /** 0: no maximum. */
+  max_age: number;
+  metabolism: number;
+  metabolism_per: 'cycle' | 'interaction';
+  mutation: number;
+  vision: number;
+  play: 'each_neighbor' | 'random_neighbor';
+  pairing: 'space' | 'soup';
+  death_timing: 'immediate' | 'own_turn';
+  removal: 'immediate' | 'end_of_cycle';
+  endowment_from: 'parent' | 'granted';
+  newborn_age: 'random' | 'zero';
+  updating: 'asynchronous' | 'synchronous';
+  shuffle: 'swaps' | 'full';
+  newborns_act: 'next_cycle' | 'this_cycle';
+  /** The last cycle (0: never). */
+  end: number;
+  schedule: ScheduledChange[];
+}
+
 
 /**
  * Axelrod's culture model (milestone 14): sites with F features of q traits copying a neighbor's
@@ -335,7 +373,7 @@ export interface StructureConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -495,6 +533,21 @@ export interface EthnoStats {
   relative_given_tag: number | null;
 }
 
+/** A cycle's statistics, of the agents alive at its end. The share and mean wealths are null with nobody to count. */
+export interface DpdStats {
+  tick: number;
+  cooperators: number;
+  defectors: number;
+  population: number;
+  cooperator_share: number | null;
+  /** Cooperators all eight of whose Moore neighbors are cooperators. */
+  surrounded: number;
+  wealth_c: number | null;
+  wealth_d: number | null;
+  births: number;
+  deaths: number;
+}
+
 /** The latest statistics of a world of any model. */
 export interface CultureStats {
   tick: number;
@@ -557,7 +610,7 @@ export interface StructureStats {
   partner_p_slope: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -716,6 +769,26 @@ export interface EthnoAgentView {
 /** An ethnocentrism site. Empty, it looks exactly like an empty Schelling site: `isEthnoView` asks the model. */
 export interface EthnoInspection { site: { x: number; y: number }; agent: EthnoAgentView | null }
 
+/** An occupied neighbor of a demographic PD agent (up, left, right, down), with one game's payoff to each under the current payoffs. An infinite payoff serializes as null. */
+export interface DpdNeighborView { x: number; y: number; id: number; strategy: 'C' | 'D'; payoff: number | null; their_payoff: number | null }
+/** A demographic PD agent: its strategy, wealth and age, whether it is surrounded, this cycle's income and games, and its neighbors. Wealth and income serialize as null if ever infinite. */
+export interface DpdAgentView {
+  id: number;
+  strategy: 'C' | 'D';
+  wealth: number | null;
+  age: number;
+  /** The maximum age (0: none). */
+  max_age: number;
+  /** A cooperator all eight of whose Moore neighbors are cooperators. */
+  surrounded: boolean;
+  /** Payoffs received and games played this cycle. */
+  income: number | null;
+  games: number;
+  neighbors: DpdNeighborView[];
+}
+/** A demographic PD site. Empty, it looks exactly like an empty Schelling site: `isDpdView` asks the model. */
+export interface DpdInspection { site: { x: number; y: number }; agent: DpdAgentView | null }
+
 /** What a world of any model says about a site. */
 /** A culture site: its position, traits, and the sizes of its region and zone. */
 export interface CultureSiteView { x: number; y: number; traits: number[]; region_size: number; zone_size: number }
@@ -785,12 +858,13 @@ export interface StructureInspection {
   agent: StructureAgentView | null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
  * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`, or (tags)
- * `count`, `tolerance`, `clones`, or (ethnocentrism) `strategy`, `tag`, `lineage`, `ptr`.
+ * `count`, `tolerance`, `clones`, or (ethnocentrism) `strategy`, `tag`, `lineage`, `ptr`, or (the
+ * demographic PD) `strategy`, `wealth`, `age`, `surrounded`.
  */
 export type ColorMode =
   | 'tribe'
@@ -827,7 +901,8 @@ export type ColorMode =
   | 'opinion'
   | 'friendliness'
   | 'provocability'
-  | 'strategy';
+  | 'strategy'
+  | 'surrounded';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
