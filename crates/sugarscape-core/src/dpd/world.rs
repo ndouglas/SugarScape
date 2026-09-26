@@ -1235,6 +1235,19 @@ mod tests {
     }
 
     #[test]
+    fn run_1_with_a_full_shuffle_reaches_the_pinned_fingerprint() {
+        // No preset uses `shuffle: full` (every golden entry shuffles by swaps), so this pins one
+        // directly; `crates/sugarscape-wasm/tests/web.rs` checks WASM against the same value.
+        let c = DpdConfig {
+            shuffle: Shuffle::Full,
+            ..DpdConfig::default()
+        };
+        let mut w = DpdWorld::new(c, 1).unwrap();
+        w.run(200);
+        assert_eq!(w.fingerprint(), 0x97c2_897b_93c3_c7e4);
+    }
+
+    #[test]
     fn a_cycle_runs_turns_in_list_order_or_each_phase_for_everyone() {
         let phases: [fn(&mut DpdWorld, usize); 4] = [
             DpdWorld::move_agent,

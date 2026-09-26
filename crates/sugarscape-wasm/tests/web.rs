@@ -770,6 +770,19 @@ fn dpd_sims_match_the_native_golden_entries() {
 }
 
 #[wasm_bindgen_test]
+fn dpd_with_a_full_shuffle_matches_the_native_fingerprint() {
+    // No preset uses `shuffle: full`; `dpd::world::tests::
+    // run_1_with_a_full_shuffle_reaches_the_pinned_fingerprint` pins the
+    // same config and value natively.
+    let mut config: serde_json::Value = serde_json::from_str(&preset_json("dpd-run-1")).unwrap();
+    config["shuffle"] = serde_json::json!("full");
+    let mut sim = Sim::new(&config.to_string(), 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.model_kind(), "dpd");
+    sim.step(200);
+    assert_eq!(sim.fingerprint(), "0x97c2897b93c3c7e4");
+}
+
+#[wasm_bindgen_test]
 fn anasazi_overlays_and_inspection() {
     let sim = Sim::new(&preset_json("lhv-published-defaults"), 2, JsValue::NULL).unwrap();
     let n = sim.population() as usize;
