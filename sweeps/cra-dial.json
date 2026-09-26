@@ -1,0 +1,34 @@
+{
+  "name": "Social Structure: turning the dial (FFR)",
+  "description": "'Turning the dial': FRN with each fixed partner replaced for the period by a random one with probability x, from 0 (FRN) to 1 (random mixing each period). The paper: 'Around a parameter value of 0.3 the dynamics shift … at levels of 0.5 and above, it collapses.' Measured (release, seeds 1–10, 2500 periods, recorded 2026-09-26): 2.48, 2.41, 2.28, 2.01, 1.77, 1.30, 1.15, 1.11, 1.10, 1.09, 1.10 at x = 0 … 1 — the steepest fall between 0.3 and 0.5, flat from 0.6.",
+  "base": {
+    "preset": "cra-frn"
+  },
+  "x": {
+    "label": "Random substitution",
+    "path": "substitution",
+    "values": [
+      0.0,
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1.0
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2500,
+  "metric": {
+    "kind": "window_mean",
+    "series": "mean_payoff",
+    "from": 1501
+  }
+}

@@ -295,7 +295,12 @@ fn builtins_and_series_names_are_listed() {
             "hk-bias",
             "hk-updating",
             "hk-lattice",
-            "hk-population"
+            "hk-population",
+            "cra-table-2",
+            "cra-dial",
+            "cra-threshold",
+            "cra-noise",
+            "cra-population"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -719,6 +724,21 @@ fn classes_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "classes");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn structure_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    for (id, fp) in [
+        ("cra-rwr", "0xc7f45f59d9b25490"),
+        ("cra-2dk", "0x3b8c19aab4aae805"),
+        ("cra-frne", "0xdf2fc96965742a81"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "structure");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

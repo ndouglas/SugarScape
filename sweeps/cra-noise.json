@@ -1,0 +1,83 @@
+{
+  "name": "Social Structure: the paper's two readings of its method",
+  "description": "The paper describes its own method twice. Its start: 'evenly distributing the agents throughout the strategy space' (Appendix) or 'initialized randomly' (§3.1). Its copying noise: on every agent 'regardless of which … is adopted' (Appendix) or as 'errors in the actual copying process' (§2). Measured (release, seeds 1–10, 2500 periods, recorded 2026-09-26): the start makes no difference (RWR 1.089 either way; FRN 2.479 and 2.470); noise only on copying raises every fixed structure's payoff (2DK 2.554 → 2.651, FRNE 2.573 → 2.652, FRN 2.479 → 2.529) and moves it away from Table 2 — the Appendix's reading is the one the table reflects.",
+  "base": {
+    "preset": "cra-frn"
+  },
+  "x": {
+    "label": "Social structure",
+    "values": [
+      {
+        "at": 0,
+        "name": "RWR",
+        "set": {
+          "structure": "rwr",
+          "substitution": 0.0
+        }
+      },
+      {
+        "at": 1,
+        "name": "2DK",
+        "set": {
+          "structure": "torus",
+          "substitution": 0.0
+        }
+      },
+      {
+        "at": 2,
+        "name": "FRNE",
+        "set": {
+          "structure": "frne",
+          "substitution": 0.0
+        }
+      },
+      {
+        "at": 3,
+        "name": "FRN",
+        "set": {
+          "structure": "frn",
+          "substitution": 0.0
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Reading",
+    "values": [
+      {
+        "at": 0,
+        "name": "Noise on everyone, even start (Appendix)",
+        "set": {
+          "noise_on": "always",
+          "start": "grid"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Noise only on copying",
+        "set": {
+          "noise_on": "copy",
+          "start": "grid"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Random start",
+        "set": {
+          "noise_on": "always",
+          "start": "random"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2500,
+  "metric": {
+    "kind": "window_mean",
+    "series": "mean_payoff",
+    "from": 1501
+  }
+}

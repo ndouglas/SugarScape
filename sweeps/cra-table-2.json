@@ -1,0 +1,78 @@
+{
+  "name": "Social Structure: Table 2's mean payoffs",
+  "description": "Cohen, Riolo and Axelrod's Table 2: the mean payoff per move over the last 1000 of 2500 periods under each social structure. The paper (30 runs): RWR 1.091, 2DK 2.557, FRNE 2.575, FRN 2.480, FFR-0.1 2.385, FFR-0.3 2.100, FFR-0.5 1.257. Measured (release, seeds 1–10, 2500 periods, recorded 2026-09-26): 1.089, 2.554, 2.573, 2.479, 2.412, 2.008, 1.302 — within 0.1 everywhere; the survey's 30 runs come closer still.",
+  "base": {
+    "preset": "cra-frn"
+  },
+  "x": {
+    "label": "Social structure",
+    "values": [
+      {
+        "at": 0,
+        "name": "RWR",
+        "set": {
+          "structure": "rwr",
+          "substitution": 0.0
+        }
+      },
+      {
+        "at": 1,
+        "name": "2DK",
+        "set": {
+          "structure": "torus",
+          "substitution": 0.0
+        }
+      },
+      {
+        "at": 2,
+        "name": "FRNE",
+        "set": {
+          "structure": "frne",
+          "substitution": 0.0
+        }
+      },
+      {
+        "at": 3,
+        "name": "FRN",
+        "set": {
+          "structure": "frn",
+          "substitution": 0.0
+        }
+      },
+      {
+        "at": 4,
+        "name": "FFR 0.1",
+        "set": {
+          "structure": "frn",
+          "substitution": 0.1
+        }
+      },
+      {
+        "at": 5,
+        "name": "FFR 0.3",
+        "set": {
+          "structure": "frn",
+          "substitution": 0.3
+        }
+      },
+      {
+        "at": 6,
+        "name": "FFR 0.5",
+        "set": {
+          "structure": "frn",
+          "substitution": 0.5
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2500,
+  "metric": {
+    "kind": "window_mean",
+    "series": "mean_payoff",
+    "from": 1501
+  }
+}

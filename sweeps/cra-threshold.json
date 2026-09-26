@@ -1,0 +1,56 @@
+{
+  "name": "Social Structure: how much the unstated threshold matters",
+  "description": "The paper never states what counts as 'high cooperation'. The metric is Table 2's 'Remain High' — the share of periods at or above the threshold once a run first reaches it — against the threshold. Measured (release, seeds 1–10, 2500 periods, recorded 2026-09-26): at 2.3, RWR 0.014, FRN 0.933, FFR-0.3 0.370 (the paper: 0.015, 0.942, 0.402) — and every other row of Table 2 lands within 0.03 of the paper at 2.3 too (the survey), so 2.3 is the default. At 2.5 FRN would hold only 0.46, at 2.0 FFR-0.3 would hold 0.66.",
+  "base": {
+    "preset": "cra-frn"
+  },
+  "x": {
+    "label": "High cooperation at",
+    "path": "high",
+    "values": [
+      2.0,
+      2.1,
+      2.2,
+      2.3,
+      2.4,
+      2.5,
+      2.6
+    ]
+  },
+  "series": {
+    "label": "Structure",
+    "values": [
+      {
+        "at": 0,
+        "name": "RWR",
+        "set": {
+          "structure": "rwr"
+        }
+      },
+      {
+        "at": 1,
+        "name": "FRN",
+        "set": {
+          "structure": "frn"
+        }
+      },
+      {
+        "at": 2,
+        "name": "FFR 0.3",
+        "set": {
+          "structure": "frn",
+          "substitution": 0.3
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2500,
+  "metric": {
+    "kind": "final",
+    "series": "share_high_since"
+  }
+}

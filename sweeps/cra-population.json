@@ -1,0 +1,47 @@
+{
+  "name": "Social Structure: population size (note 1)",
+  "description": "Note 1: 'our simulation runs for populations up to 4096 agents display very similar aggregate statistics'. Measured (release, seeds 1–5, 2500 periods, recorded 2026-09-26): RWR 1.23, 1.18, 1.10, 1.08, 1.08 and FRN 2.07, 2.45, 2.47, 2.49, 2.50 at 64, 144, 256, 576, 1024 agents — alike from 256 up; small populations differ (64 agents: RWR higher, FRN lower). The survey checks 4096.",
+  "base": {
+    "preset": "cra-frn"
+  },
+  "x": {
+    "label": "Agents (n)",
+    "path": "agents",
+    "values": [
+      64,
+      144,
+      256,
+      576,
+      1024
+    ]
+  },
+  "series": {
+    "label": "Structure",
+    "values": [
+      {
+        "at": 0,
+        "name": "RWR",
+        "set": {
+          "structure": "rwr"
+        }
+      },
+      {
+        "at": 1,
+        "name": "FRN",
+        "set": {
+          "structure": "frn"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 2500,
+  "metric": {
+    "kind": "window_mean",
+    "series": "mean_payoff",
+    "from": 1501
+  }
+}

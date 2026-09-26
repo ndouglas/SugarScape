@@ -959,7 +959,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 45] = [
+const BUILTINS: [Builtin; 50] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1139,6 +1139,26 @@ const BUILTINS: [Builtin; 45] = [
     Builtin {
         id: "hk-population",
         json: include_str!("../../../sweeps/hk-population.json"),
+    },
+    Builtin {
+        id: "cra-table-2",
+        json: include_str!("../../../sweeps/cra-table-2.json"),
+    },
+    Builtin {
+        id: "cra-dial",
+        json: include_str!("../../../sweeps/cra-dial.json"),
+    },
+    Builtin {
+        id: "cra-threshold",
+        json: include_str!("../../../sweeps/cra-threshold.json"),
+    },
+    Builtin {
+        id: "cra-noise",
+        json: include_str!("../../../sweeps/cra-noise.json"),
+    },
+    Builtin {
+        id: "cra-population",
+        json: include_str!("../../../sweeps/cra-population.json"),
     },
 ];
 
@@ -2007,7 +2027,12 @@ mod tests {
                 "hk-bias",
                 "hk-updating",
                 "hk-lattice",
-                "hk-population"
+                "hk-population",
+                "cra-table-2",
+                "cra-dial",
+                "cra-threshold",
+                "cra-noise",
+                "cra-population"
             ]
         );
         for b in builtins() {

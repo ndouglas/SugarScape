@@ -189,6 +189,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Culture => "the lattice is stable",
             ModelKind::Classes => "equity reached",
             ModelKind::Opinions => "stable",
+            ModelKind::Structure => "its last period",
             ModelKind::Sugarscape => "the cultures have settled",
             ModelKind::Ethno => "its last period",
             _ => "its end year",
