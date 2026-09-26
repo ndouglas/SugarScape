@@ -119,11 +119,14 @@ pub fn claims() -> Vec<Claim> {
             item: "ax-norms",
             source: Source::Book,
             citation: AXELROD,
-            text: "Table 1: Lee (boldness 2/7, vengefulness 4/7) — one defection (3), punished once (−9), hurt by 36 defections (−36), punishing 9 (−18) — scores −60",
+            text: "Table 1: Lee (boldness 2/7, vengefulness 4/7) — one defection (3), punished once (−9), hurt by 36 defections (−36), punishing 9 (−18) — scores −60 (a check that the default payoff constants T, P, H and E combine to −60 under Lee's tallies, not a played generation: the core's `table_1s_arithmetic` test plays a hand-built world and checks the same arithmetic against the engine's own counts)",
             check: |_| {
                 let c = NormsConfig::default();
                 let lee = c.temptation + c.punishment + 36.0 * c.hurt + 9.0 * c.enforcement;
-                outcome(lee == -60.0, format!("{lee} from the default payoffs"))
+                outcome(
+                    lee == -60.0,
+                    format!("{lee} from the default payoff constants (not a played generation)"),
+                )
             },
         },
         Claim {
