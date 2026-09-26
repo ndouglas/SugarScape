@@ -91,6 +91,54 @@ def seasonal_felt(felt, d, timing):
     return update
 
 
+def sooty_felt(felt, d, timing):
+    """Stains the felt where pollution lies: a `soot` attribute on its faces
+    (0 clean … 1 black) — the felt's faces are the board's cells, in order —
+    mixing felt toward soot; returns an updater that sets it for a frame
+    from the sites' pollution."""
+    mat = bpy.data.materials.new("felt-soot")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    grass, grime = nt.nodes.new("ShaderNodeBsdfPrincipled"), nt.nodes.new("ShaderNodeBsdfPrincipled")
+    for p, color, rough, sheen in ((grass, (0.30, 0.50, 0.26), 1.0, 0.8), (grime, (0.015, 0.013, 0.012), 1.0, 0.0)):
+        p.inputs["Base Color"].default_value = (*color, 1)
+        p.inputs["Roughness"].default_value = rough
+        p.inputs["Sheen Weight"].default_value = sheen
+    attr = nt.nodes.new("ShaderNodeAttribute")
+    attr.attribute_type = "GEOMETRY"
+    attr.attribute_name = "soot"
+    # Blotchy grime: the soot level times a slow noise between 0.6 and 1.4.
+    coord, noise = nt.nodes.new("ShaderNodeTexCoord"), nt.nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 0.35
+    nt.links.new(coord.outputs["Object"], noise.inputs["Vector"])
+    spread = nt.nodes.new("ShaderNodeMapRange")
+    spread.inputs["To Min"].default_value, spread.inputs["To Max"].default_value = 0.6, 1.4
+    nt.links.new(noise.outputs["Fac"], spread.inputs["Value"])
+    blotch = nt.nodes.new("ShaderNodeMath")
+    blotch.operation = "MULTIPLY"
+    blotch.use_clamp = True
+    nt.links.new(attr.outputs["Fac"], blotch.inputs[0])
+    nt.links.new(spread.outputs["Result"], blotch.inputs[1])
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(blotch.outputs[0], mix.inputs[0])
+    nt.links.new(grass.outputs[0], mix.inputs[1])
+    nt.links.new(grime.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    felt.data.materials.clear()
+    felt.data.materials.append(mat)
+    mesh = felt.data
+    mesh.attributes.new("soot", "FLOAT", "FACE")
+
+    def update(frame):
+        cells = animate.pollution_at(d, timing.tick_at(frame))
+        mesh.attributes["soot"].data.foreach_set("value", [animate.soot(p) for p in cells])
+        mesh.update()
+
+    return update
+
+
 def _gumdrop_prototype():
     mesh = bpy.data.meshes.new("gumdrop")
     bm = bmesh.new()

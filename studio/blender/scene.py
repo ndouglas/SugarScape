@@ -117,6 +117,8 @@ def build_beat(beat, d, preview, compare=None, measured=None):
         felt, corners = board.felt_board(d)
         if d.config["seasons"]["enabled"]:
             updaters.append(board.seasonal_felt(felt, d, timing))
+        elif any(any(f.pollution) for f in d.frames):
+            updaters.append(board.sooty_felt(felt, d, timing))
         _, update_sugar = board.sugar(d, corners, timing)
         updaters.append(update_sugar)
         tracks = dump_mod.tracks(d)

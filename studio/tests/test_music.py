@@ -4,7 +4,7 @@ import unittest
 import episode
 import music
 
-TUNES = {name: episode.load_module(name, "tune").TUNE for name in ("sugarscape", "seasons")}
+TUNES = {name: episode.load_module(name, "tune").TUNE for name in ("sugarscape", "seasons", "pollution")}
 
 
 def bars(voice_body):

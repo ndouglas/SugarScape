@@ -2,7 +2,7 @@
 
 import importlib.util
 import pathlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import animate
 
@@ -17,7 +17,8 @@ class Beat:
     into the dump's `placed` that overlays follow — the caption's height
     (−1 bottom, 1 top of the frame), whether the caption is a title
     (larger, over a scrim that dims the frame), and `compare`, a second
-    shot whose dump overlays may set against this one's."""
+    shot whose dump overlays may set against this one's, and `params` for
+    overlays (labels, rows)."""
 
     name: str
     caption: str
@@ -33,6 +34,7 @@ class Beat:
     caption_y: float = -0.8
     title: bool = False
     compare: str | None = None
+    params: dict = field(default_factory=dict)
 
     @property
     def frames(self):

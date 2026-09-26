@@ -1,0 +1,29 @@
+{
+  "medians": {
+    "gini": 0.3349083057432789,
+    "gini_clean": 0.38539505388449613,
+    "hill_share": 0.6094076120319214,
+    "hill_share49": 0.8969251200326898,
+    "hill_share_clean": 0.9161394161394161,
+    "met_hi_alive": 0.14142857142857143,
+    "met_hi_alive_clean": 0.8265664160401003,
+    "met_lo_alive": 1.0,
+    "met_lo_alive_clean": 1.0,
+    "pol300": 78.8154,
+    "pol_hill": 172.5582753862618,
+    "pol_mean": 140.06220000000002,
+    "pol_plain": 116.09793193285822,
+    "pol_under": 155.3028756768393,
+    "pop": 177.0,
+    "pop_clean": 228.0,
+    "vis_hi_alive": 0.7080419580419581,
+    "vis_hi_alive_clean": 1.0,
+    "vis_lo_alive": 0.8077469793887704,
+    "vis_lo_alive_clean": 0.8861111111111111,
+    "vision": 3.67927847934754,
+    "vision_clean": 3.813757444068888,
+    "wealth": 630.295424607008,
+    "wealth_clean": 575.1017383021788
+  },
+  "seeds": 20
+}

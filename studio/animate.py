@@ -61,15 +61,39 @@ class Timing:
         return tick
 
 
-def corner_heights(capacity, w, h):
-    """Each lattice corner's height: the mean capacity of the four cells
-    around it (wrapping), so hills are smooth. Row-major, (w+1)·(h+1)."""
+def corner_values(values, w, h):
+    """Each lattice corner's value: the mean of the four cells around it
+    (wrapping). Row-major, (w+1)·(h+1)."""
     out = []
     for cy in range(h + 1):
         for cx in range(w + 1):
             cells = [((cx + dx) % w, (cy + dy) % h) for dx in (-1, 0) for dy in (-1, 0)]
-            out.append(sum(capacity[y * w + x] for x, y in cells) / 4 * HEIGHT_PER_SUGAR)
+            out.append(sum(values[y * w + x] for x, y in cells) / 4)
     return out
+
+
+def corner_heights(capacity, w, h):
+    """Each lattice corner's height, from the capacities around it, so hills are smooth."""
+    return [v * HEIGHT_PER_SUGAR for v in corner_values(capacity, w, h)]
+
+
+SOOT_KNEE, SOOT_FULL = 3.0, 250.0  # a log scale from a few units to black at 250
+
+
+def soot(pollution):
+    """How sooty felt looks, 0 (clean) to 1, on a log scale: one meal's
+    mess shows, and heavy pollution still reads darker than lighter."""
+    return min(1.0, math.log1p(max(pollution, 0.0) / SOOT_KNEE) / math.log1p(SOOT_FULL / SOOT_KNEE))
+
+
+def pollution_at(d, tick):
+    """Every site's pollution at a fractional tick, linear between frames."""
+    tick = min(max(tick, 0), d.ticks)
+    lo = int(math.floor(tick))
+    if lo >= d.ticks:
+        return list(d.frames[d.ticks].pollution)
+    a = tick - lo
+    return [p + (q - p) * a for p, q in zip(d.frames[lo].pollution, d.frames[lo + 1].pollution)]
 
 
 def cell_height(corners, x, y, w):

@@ -52,6 +52,25 @@ class BoardTest(unittest.TestCase):
         self.assertAlmostEqual(animate.levels_at(d, 1.5)[j], mid)
 
 
+class SootTest(unittest.TestCase):
+    def test_corner_values_average_the_four_cells_around_each_corner(self):
+        corners = animate.corner_values([0, 0, 0, 8], 2, 2)
+        self.assertEqual(len(corners), 9)
+        self.assertEqual(corners[4], 2.0)  # the middle corner touches all four cells
+        self.assertEqual(corners[0], 2.0)  # the board wraps, so every corner does
+
+    def test_soot_shows_the_first_stains_and_still_tells_heavy_from_heavier(self):
+        self.assertEqual(animate.soot(0), 0.0)
+        self.assertGreater(animate.soot(5), 0.15)  # one meal's mess is visible
+        self.assertGreater(animate.soot(173) - animate.soot(116), 0.08)  # hills vs plains at tick 500
+        self.assertEqual(animate.soot(1000), 1.0)
+
+    def test_pollution_between_ticks_is_linear(self):
+        d = dump.load(FIXTURE)
+        self.assertEqual(animate.pollution_at(d, -1), d.frames[0].pollution)
+        self.assertEqual(animate.pollution_at(d, 99), d.frames[-1].pollution)
+
+
 class PoseTest(unittest.TestCase):
     corners = animate.corner_heights([0.0] * 64, 8, 8)
     # Half a second a tick: shorter than HOP_SECONDS, so a hop fills its tick.

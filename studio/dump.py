@@ -24,6 +24,7 @@ class Frame:
     sugar: list
     deaths: dict
     born: list
+    pollution: list
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,8 @@ def parse(text):
             sugar=f["sugar"],
             deaths=dict(f["deaths"]),
             born=f["born"],
+            # Dumps before pollution was recorded have none.
+            pollution=f.get("pollution") or [0.0] * len(f["sugar"]),
         )
         for f in raw["frames"]
     ]
