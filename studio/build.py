@@ -41,10 +41,11 @@ def blender(*args):
     run([BLENDER, "-b", "--factory-startup", "--python-exit-code", "1", "-P", STUDIO / "render.py", "--", *args], quiet=True)
 
 
-def soundtrack(name, out, seconds):
+def soundtrack(name, out, beats, frames):
     """The episode's own recording (music.wav/.aif/.aiff/.m4a in its folder,
-    e.g. a GarageBand export) if there is one, else the generated draft of
-    the tune fitted to `seconds`, else None (with a warning)."""
+    e.g. a GarageBand export) if there is one, else a draft of the episode's
+    tune (tune.py) fitted to the cut with its stings on their beats, else
+    None (with a warning)."""
     for ext in ("wav", "aif", "aiff", "m4a"):
         own = episode.episode_dir(name) / f"music.{ext}"
         if own.exists():
@@ -53,7 +54,10 @@ def soundtrack(name, out, seconds):
     if not SOUNDFONT.exists():
         print(f"music: none (no {SOUNDFONT}; see studio/README.md)")
         return None
-    wav = music.render(seconds, out / "music", SOUNDFONT)
+    tune = episode.load_module(name, "tune").TUNE
+    seconds = cut.total_frames(frames, DISSOLVE) / 30
+    cues = music.cue_times(tune.cues, [b.name for b in beats], frames, DISSOLVE)
+    wav = music.render(tune, seconds, out / "music", SOUNDFONT, cues)
     print(f"music: generated {wav} (MIDI beside it)")
     return str(wav)
 
@@ -97,7 +101,7 @@ def main():
         sys.exit("cannot cut:\n  " + "\n  ".join(problems))
     MOVIES.mkdir(parents=True, exist_ok=True)
     movie = MOVIES / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
-    track = None if args.no_music else soundtrack(args.episode, out, cut.total_frames(frames, DISSOLVE) / 30)
+    track = None if args.no_music else soundtrack(args.episode, out, beats, frames)
     # Previews keep detail at low resolution; the final must fit Bluesky's 100 MB.
     crf = 16 if args.preview else FINAL_CRF
     run(cut.command([str(f) for f in folders], frames, str(movie), captions, DISSOLVE, music=track, crf=crf))
