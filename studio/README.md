@@ -9,8 +9,9 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py                     # re-measure the pilot's captions over 20 seeds
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
-Outputs go to `studio/out/<episode>/` (ignored by git): `dumps/`, `beats/NN/` (PNG frames and the
-beat's `.blend`), and `<episode>.mp4`. The `.blend` files open at the frame they were saved on;
+Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
+`FLUMP_MOVIES` to change the folder). Working files go to `studio/out/<episode>/` (ignored by
+git): `dumps/`, `beats/NN/` (PNG frames and the beat's `.blend`) and `music/`. The `.blend` files open at the frame they were saved on;
 the animation is driven by a handler installed at render time, so scrubbing them shows nothing.
 
 Render times on an M1 Max (Blender 5.2, Eevee): the pilot's 19 beats (2,889 frames after dissolves,
@@ -25,9 +26,10 @@ The build lays a soundtrack under the cut, trimmed to the video and faded in and
 - Otherwise `music.py` writes an original gånglåt, *Flumps' Walk*, in ABC notation, chooses its
   form and tempo so it ends with the video, and renders it with abc2midi and FluidSynth to
   `out/<episode>/music/flumps-walk.{abc,mid,wav}`. That needs `brew install fluid-synth abcmidi` and
-  the FluidR3 GM SoundFont (MIT licence) at `out/soundfonts/FluidR3_GM.sf2`:
+  the FluidR3 GM SoundFont (MIT licence) at `~/Music/SoundFonts/FluidR3_GM.sf2` (or wherever
+  `FLUMP_SOUNDFONT` points):
 
-      curl -L -o studio/out/soundfonts/FluidR3_GM.sf2 --create-dirs \
+      curl -L -o ~/Music/SoundFonts/FluidR3_GM.sf2 --create-dirs \
         https://github.com/pianobooster/fluid-soundfont/releases/download/v3.1/FluidR3_GM.sf2
 
 To give the tune better instruments, drag `flumps-walk.mid` into GarageBand (one track each for

@@ -9,10 +9,16 @@ GarageBand, given better instruments, and exported; an audio file placed at
 studio/episodes/<episode>/music.(wav|aif|aiff|m4a) replaces the draft.
 """
 
+import os
 import pathlib
 import re
 import subprocess
 import sys
+
+# The SoundFont lives outside the repository (override with FLUMP_SOUNDFONT).
+SOUNDFONT = pathlib.Path(
+    os.environ.get("FLUMP_SOUNDFONT", pathlib.Path.home() / "Music" / "SoundFonts" / "FluidR3_GM.sf2")
+)
 
 SECTION_BARS = 8
 MIN_BPM, TARGET_BPM, MAX_BPM = 92, 104, 116
@@ -110,5 +116,4 @@ def render(seconds, out_dir, soundfont):
 
 
 if __name__ == "__main__":
-    here = pathlib.Path(__file__).resolve().parent
-    print(render(float(sys.argv[1]), sys.argv[2], here / "out" / "soundfonts" / "FluidR3_GM.sf2"))
+    print(render(float(sys.argv[1]), sys.argv[2], SOUNDFONT))

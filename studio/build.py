@@ -21,7 +21,10 @@ import episode  # noqa: E402
 import music  # noqa: E402
 
 BLENDER = os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Blender")
-SOUNDFONT = STUDIO / "out" / "soundfonts" / "FluidR3_GM.sf2"
+# Finished videos live outside the repository (override with FLUMP_MOVIES);
+# so does the SoundFont (music.SOUNDFONT).
+MOVIES = pathlib.Path(os.environ.get("FLUMP_MOVIES", pathlib.Path.home() / "Movies" / "Flump Studio"))
+SOUNDFONT = music.SOUNDFONT
 CLI = REPO / "target" / "release" / "sugarscape"
 DISSOLVE = 12
 FINAL_CRF = 21
@@ -91,7 +94,8 @@ def main():
     problems = cut.check_folders([str(f) for f in folders], frames, captions)
     if problems:
         sys.exit("cannot cut:\n  " + "\n  ".join(problems))
-    movie = out / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
+    MOVIES.mkdir(parents=True, exist_ok=True)
+    movie = MOVIES / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
     track = None if args.no_music else soundtrack(args.episode, out, cut.total_frames(frames, DISSOLVE) / 30)
     # Previews keep detail at low resolution; the final must fit Bluesky's 100 MB.
     crf = 16 if args.preview else FINAL_CRF
