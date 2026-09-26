@@ -45,4 +45,20 @@ describe('dpdRows', () => {
     expect(dpdRows(d)[0]).toEqual(['Agent', '#57 · defector']);
     expect(dpdRows(d).at(-1)).toEqual(['(0, 29)', '#3 · cooperator · a game pays this agent 6 and the neighbor -6']);
   });
+
+  it('shows "—" for a null wealth, income or neighbor payoff (an infinite value serialized by serde_json)', () => {
+    const a = agent({
+      wealth: null,
+      income: null,
+      neighbors: [{ x: 5, y: 3, id: 12, strategy: 'C', payoff: null, their_payoff: null }],
+    });
+    expect(dpdRows(a)).toEqual([
+      ['Agent', '#57 · cooperator'],
+      ['Wealth', '—'],
+      ['Age', '37 cycles (maximum 100)'],
+      ['Surrounded', 'no'],
+      ['This cycle', '— from 2 games'],
+      ['(5, 3)', '#12 · cooperator · a game pays this agent — and the neighbor —'],
+    ]);
+  });
 });

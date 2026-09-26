@@ -698,20 +698,20 @@ export interface EthnoAgentView {
 /** An ethnocentrism site. Empty, it looks exactly like an empty Schelling site: `isEthnoView` asks the model. */
 export interface EthnoInspection { site: { x: number; y: number }; agent: EthnoAgentView | null }
 
-/** An occupied neighbor of a demographic PD agent (up, left, right, down), with one game's payoff to each under the current payoffs. */
-export interface DpdNeighborView { x: number; y: number; id: number; strategy: 'C' | 'D'; payoff: number; their_payoff: number }
-/** A demographic PD agent: its strategy, wealth and age, whether it is surrounded, this cycle's income and games, and its neighbors. */
+/** An occupied neighbor of a demographic PD agent (up, left, right, down), with one game's payoff to each under the current payoffs. An infinite payoff serializes as null. */
+export interface DpdNeighborView { x: number; y: number; id: number; strategy: 'C' | 'D'; payoff: number | null; their_payoff: number | null }
+/** A demographic PD agent: its strategy, wealth and age, whether it is surrounded, this cycle's income and games, and its neighbors. Wealth and income serialize as null if ever infinite. */
 export interface DpdAgentView {
   id: number;
   strategy: 'C' | 'D';
-  wealth: number;
+  wealth: number | null;
   age: number;
   /** The maximum age (0: none). */
   max_age: number;
   /** A cooperator all eight of whose Moore neighbors are cooperators. */
   surrounded: boolean;
   /** Payoffs received and games played this cycle. */
-  income: number;
+  income: number | null;
   games: number;
   neighbors: DpdNeighborView[];
 }

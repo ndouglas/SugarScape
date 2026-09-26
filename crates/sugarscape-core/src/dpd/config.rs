@@ -274,7 +274,11 @@ impl DpdConfig {
             "must be a number ≥ 0",
         );
         for (field, v) in [("t", self.t), ("r", self.r), ("p", self.p), ("s", self.s)] {
-            check(v.is_finite(), field, "must be a number");
+            check(
+                v.is_finite() && v.abs() <= 1e6,
+                field,
+                "must be a number with magnitude at most 1,000,000",
+            );
         }
         check(
             nonneg(self.fission_wealth),
@@ -588,6 +592,9 @@ mod tests {
         assert_eq!(bad(&|c| c.r = f64::INFINITY), ["r"]);
         assert_eq!(bad(&|c| c.p = f64::NAN), ["p"]);
         assert_eq!(bad(&|c| c.s = f64::NEG_INFINITY), ["s"]);
+        assert_eq!(bad(&|c| c.t = 1.7e308), ["t"]);
+        assert_eq!(bad(&|c| c.t = 1_000_001.0), ["t"]);
+        assert!(bad(&|c| c.t = 1_000_000.0).is_empty());
         assert_eq!(bad(&|c| c.fission_wealth = -1.0), ["fission_wealth"]);
         assert_eq!(bad(&|c| c.endowment = -0.5), ["endowment"]);
         assert_eq!(bad(&|c| c.metabolism = -1.0), ["metabolism"]);

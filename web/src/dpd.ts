@@ -4,8 +4,8 @@ import type { DpdAgentView } from './types';
 /** A strategy's name. */
 const STRATEGY: Record<'C' | 'D', string> = { C: 'cooperator', D: 'defector' };
 
-/** Whole numbers as they are, others to two decimals. */
-const num = (n: number): string => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+/** Whole numbers as they are, others to two decimals; an infinite payoff serializes as null, shown as "—". */
+const num = (n: number | null): string => (n === null ? '—' : Number.isInteger(n) ? String(n) : n.toFixed(2));
 
 /** "1 game", "3 games" (and cycles alike). */
 const count = (n: number, one: string): string => `${n} ${n === 1 ? one : `${one}s`}`;
