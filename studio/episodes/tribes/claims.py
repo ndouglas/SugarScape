@@ -39,8 +39,8 @@ def verdicts(rows):
     return [
         # 17 of 20 seeds reach 90% by tick 3000, so the caption says "most
         # worlds", not every one.
-        ("in most worlds, every neighbourhood ends up one color", converged >= 0.75 * n,
-         f"neighbours in the same tribe: {median(rows, 'homog0'):.0%} at the start, {median(rows, 'homog3000'):.0%} at "
+        ("in most worlds, every neighborhood ends up one color", converged >= 0.75 * n,
+         f"neighbors in the same tribe: {median(rows, 'homog0'):.0%} at the start, {median(rows, 'homog3000'):.0%} at "
          f"tick {TICKS}; at least 90% in {converged} of {n} seeds"),
         ("each hill becomes one tribe", hills >= most, f"both hills at least 90% one tribe in {hills} of {n} seeds"),
         ("one tribe wins about half the time; otherwise the hills split",
@@ -60,9 +60,9 @@ def seed_row(d, calm):
     start_lead, _ = tribes.majority(d.frames[0])
     lead, _ = tribes.majority(end)
     return {
-        "homog0": tribes.neighbours_alike(d.frames[0], W, H),
-        "homog1000": tribes.neighbours_alike(d.frames[1000], W, H),
-        "homog3000": tribes.neighbours_alike(end, W, H),
+        "homog0": tribes.neighbors_alike(d.frames[0], W, H),
+        "homog1000": tribes.neighbors_alike(d.frames[1000], W, H),
+        "homog3000": tribes.neighbors_alike(end, W, H),
         "global_share": share,
         "one_tribe": share >= 0.9,
         "hills_differ": ne is not None and sw is not None and ne != sw,
@@ -90,7 +90,7 @@ def measure(tmp):
               f"Seeds where one tribe holds ≥ 97% at the end: {one}.",
               f"Seeds where the hills end as different tribes, each ≥ 95% one tribe: {split}.",
               f"The starting majority (about 51%) ends ahead in {sum(r['start_lead_wins'] for r in rows.values())} of {len(rows)}.",
-              "Hills: the north-east and south-west quarters of the board. Neighbours: von Neumann pairs."]
+              "Hills: the north-east and south-west quarters of the board. Neighbors: von Neumann pairs."]
     medians = {k: median(rows, k) for k in keys}
     medians.update(one_tribe_seeds=sum(r["one_tribe"] for r in rows.values()) / len(rows),
                    split_seeds=sum(r["hills_differ"] for r in rows.values()) / len(rows),

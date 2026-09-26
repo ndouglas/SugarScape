@@ -618,7 +618,7 @@ def traits(beat, d, ctx):
 
 
 def alike(beat, d, ctx):
-    """Top right: how alike neighbours are (the share of adjacent pairs in
+    """Top right: how alike neighbors are (the share of adjacent pairs in
     the same tribe) and each tribe's share, at the tick shown."""
     anchor = ctx.screen.anchor("alike", 0.66, 0.78)
     _card("alike-card", anchor, (0, 0, -0.01), (0.62, 0.24, 0.002))
@@ -631,7 +631,7 @@ def alike(beat, d, ctx):
 
     def update(frame):
         f = d.frames[min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)]
-        top.data.body = f"neighbours alike: {tribes.neighbours_alike(f, d.width, d.height):.0%}"
+        top.data.body = f"neighbors alike: {tribes.neighbors_alike(f, d.width, d.height):.0%}"
         n = max(len(f.groups), 1)
         share = sum(g == 0 for g in f.groups.values()) / n
         blue.data.body = f"Blue {share:.0%}"

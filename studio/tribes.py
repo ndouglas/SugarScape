@@ -1,9 +1,9 @@
 """Tribes (rule K, Animations III-6/III-7) read from a frame: how alike
-neighbours are, and which tribe leads where. Pure; used by the Tribes
+neighbors are, and which tribe leads where. Pure; used by the Tribes
 episode's claims and its gauge."""
 
 
-def neighbours_alike(f, w, h):
+def neighbors_alike(f, w, h):
     """The share of von Neumann-adjacent pairs of agents in the same tribe
     (the board wraps); NaN with no adjacent pairs."""
     at = {(a.x, a.y): f.groups[i] for i, a in f.agents.items()}

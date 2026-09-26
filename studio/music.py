@@ -32,7 +32,7 @@ CUE_DELAY = 0.3  # a sting lands this long after its beat begins
 class Voice:
     """One instrument: a General MIDI program (0-based), its volume, a
     channel (10 for percussion; None lets abc2midi choose) and a stereo
-    position (0 left … 127 right; None leaves it centred)."""
+    position (0 left … 127 right; None leaves it centered)."""
 
     name: str
     program: int

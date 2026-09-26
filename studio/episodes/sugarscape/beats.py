@@ -7,7 +7,7 @@ sugar peaks are around cells (38.5, 10.5) and (14.5, 34.5), i.e. board
 
 What each shot does (from its dump; see measurements.md for the crowd beats):
 sugar — a few full gumdrops on a small hill.
-grow — the centre site regrows 0 → 1 → 2 → 3 → 4, a notch a tick, then stops.
+grow — the center site regrows 0 → 1 → 2 → 3 → 4, a notch a tick, then stops.
 meet — a Flump lands beside a hill and, at tick 1, hops 3 cells onto it.
 eat — a Flump hops 2 cells onto the only gumdrop in sight and eats all of it
   (3 → 6 sugar after paying 1).

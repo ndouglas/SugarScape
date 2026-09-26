@@ -9,7 +9,7 @@ rub — a Blue Flump among three Reds on a small, sugar-rich board: its tags
   flip at ticks 2 and 7 (01001000100 → …), and at tick 10 it turns Red
   (01011001101). The influence runs both ways: a Red briefly turns Blue too.
 world — iii-6-culture, seed 7 (typical of 20): 50/50 and mixed at the start
-  (neighbours alike 56%); Blue holds 95% and both hills by tick 3000.
+  (neighbors alike 56%); Blue holds 95% and both hills by tick 3000.
 divided — seed 9: at tick 3000 the north-east hill is all Red, the
   south-west 99% Blue; the world splits 52/48.
 calm — seed 7 with culture off, for the population comparison.
@@ -36,7 +36,7 @@ BEATS = [
          camera=hold(CLOSE_EYE, CLOSE_AT, lens=40)),
     Beat("rule", "More zeros: Blue. More ones: Red.", 4.5, shot="rub", closeup=True, ticks_per_second=0.15,
          start_tick=1, focus=(0,), overlays=("traits",), params=TRIBE, camera=hold(CLOSE_EYE, CLOSE_AT, lens=42)),
-    Beat("rub", "Neighbours rub off on each other: one trait flips to match.", 5.0, shot="rub", closeup=True,
+    Beat("rub", "Neighbors rub off on each other: one trait flips to match.", 5.0, shot="rub", closeup=True,
          ticks_per_second=0.8, start_tick=1, focus=(0,), overlays=("traits",), params=TRIBE,
          camera=hold(BOARD_EYE, BOARD_AT, lens=34)),
     Beat("turn", "Flip enough, and a Flump changes tribe.", 6.0, shot="rub", closeup=True, ticks_per_second=1.0,
@@ -44,7 +44,7 @@ BEATS = [
     Beat("mixed", "400 Flumps, half Blue, half Red, all mixed up.", 5.0, shot="world", ticks_per_second=4,
          lead_in=0.6, overlays=("alike",), params=TRIBE,
          camera=(Move(0, 5, (0, -38, 22), (0, 0, 0), WIDE_EYE, WIDE_AT, orbit=0.2),)),
-    Beat("converge", "In most worlds, every neighbourhood ends up one colour…", 8.0, shot="world",
+    Beat("converge", "In most worlds, every neighborhood ends up one color…", 8.0, shot="world",
          ticks_per_second=120, start_tick=20, overlays=("alike",), params=TRIBE,
          camera=hold(WIDE_EYE, WIDE_AT, lens=36, drift=(0, 3, -1.5))),
     Beat("hills", "…and each hill becomes one tribe.", 8.0, shot="world", ticks_per_second=250, start_tick=980,
@@ -64,7 +64,7 @@ BEATS = [
          params={**TRIBE, "title": "Flumps alive at tick 3000", "format": "num", "top": 250,
                  "rows": [[("with tribes", "pop"), ("without", "pop_calm")]]},
          camera=(Move(0, 7, (0, -60, 34), (-8, 0, 0), (-2, -58, 33), (-8, 0, 0)),)),
-    Beat("question", "Nobody chose a side.\nTheir neighbours chose for them.", 6.0, shot="divided", start_tick=3000,
+    Beat("question", "Nobody chose a side.\nTheir neighbors chose for them.", 6.0, shot="divided", start_tick=3000,
          caption_y=0.0, title=True, params=TRIBE,
          camera=(Move(0, 6, WIDE_EYE, WIDE_AT, (0, -70, 40), WIDE_AT, orbit=0.1),)),
     Beat("end", "Tribes — after Epstein & Axtell, 1996\nndouglas.github.io/SugarScape", 5.0, caption_y=0.45,

@@ -11,14 +11,14 @@ def frame(cells):
 
 
 class TribesTest(unittest.TestCase):
-    def test_neighbours_alike_counts_adjacent_pairs_in_the_same_tribe(self):
+    def test_neighbors_alike_counts_adjacent_pairs_in_the_same_tribe(self):
         f = frame({(0, 0): 0, (1, 0): 0, (2, 0): 1, (5, 5): 1})
-        # Pairs: (0,0)-(1,0) same, (1,0)-(2,0) differ; (5,5) has no neighbours.
-        self.assertEqual(tribes.neighbours_alike(f, 10, 10), 0.5)
+        # Pairs: (0,0)-(1,0) same, (1,0)-(2,0) differ; (5,5) has no neighbors.
+        self.assertEqual(tribes.neighbors_alike(f, 10, 10), 0.5)
 
     def test_the_board_wraps(self):
         f = frame({(0, 0): 1, (9, 0): 1})
-        self.assertEqual(tribes.neighbours_alike(f, 10, 10), 1.0)
+        self.assertEqual(tribes.neighbors_alike(f, 10, 10), 1.0)
 
     def test_majority_reports_the_leading_tribe_and_its_share(self):
         f = frame({(0, 0): 0, (1, 0): 0, (2, 0): 1, (8, 8): 1})

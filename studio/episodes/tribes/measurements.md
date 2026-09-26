@@ -19,11 +19,11 @@ Typical seed: 7.
 Seeds where one tribe holds ≥ 97% at the end: [6, 13, 16, 17, 18, 19, 20].
 Seeds where the hills end as different tribes, each ≥ 95% one tribe: [2, 3, 5, 9, 11, 15].
 The starting majority (about 51%) ends ahead in 14 of 20.
-Hills: the north-east and south-west quarters of the board. Neighbours: von Neumann pairs.
+Hills: the north-east and south-west quarters of the board. Neighbors: von Neumann pairs.
 
 ## Captions
 
-- holds: in most worlds, every neighbourhood ends up one color — neighbours in the same tribe: 48% at the start, 100% at tick 3000; at least 90% in 17 of 20 seeds.
+- holds: in most worlds, every neighborhood ends up one color — neighbors in the same tribe: 48% at the start, 100% at tick 3000; at least 90% in 17 of 20 seeds.
 - holds: each hill becomes one tribe — both hills at least 90% one tribe in 18 of 20 seeds.
 - holds: one tribe wins about half the time; otherwise the hills split — one tribe holds at least 90% of all Flumps in 10 of 20 seeds; the hills end up different tribes in 9.
 - holds: being Red or Blue changes nothing else: just as many Flumps live either way — population with culture 225.5 vs 225 without; within 5% in 20 of 20 seeds, higher in 8, lower in 8.
