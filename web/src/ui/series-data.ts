@@ -118,6 +118,9 @@ export interface ModelChart { title: string; lines: ChartLine[]; range?: [number
 /** A classes config with two tags (its per-tag charts show). */
 export const hasTags = (c: ModelConfig): boolean => 'tags' in c && (c as { tags: unknown }).tags === true;
 
+/** A norms config with Axelrod's two groups (the by-group chart shows). */
+export const hasGroups = (c: ModelConfig): boolean => 'groups' in c && (c as { groups: { enabled?: unknown } }).groups?.enabled === true;
+
 export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant === 'ethnic';
 
 /**
@@ -386,6 +389,44 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       ],
     },
   ],
+  norms: [
+    {
+      title: 'Boldness and vengefulness',
+      lines: [
+        { key: 'mean_boldness', label: 'Boldness', color: '--red' },
+        { key: 'mean_vengefulness', label: 'Vengefulness', color: '--blue' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Events',
+      lines: [
+        { key: 'defections', label: 'Defections', color: '--red' },
+        { key: 'punishments', label: 'Punishments', color: '--c3' },
+        { key: 'metapunishments', label: 'Metapunishments', color: '--c4' },
+      ],
+    },
+    { title: 'Mean payoff', lines: [{ key: 'mean_payoff', label: 'Per agent per generation', color: '--c1' }] },
+    {
+      title: 'Norm state',
+      lines: [
+        { key: 'established', label: 'Established', color: '--lender' },
+        { key: 'collapsed', label: 'Collapsed', color: '--red' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'By group',
+      lines: [
+        { key: 'strong_boldness', label: 'Strong: boldness', color: '--red' },
+        { key: 'weak_boldness', label: 'Weak: boldness', color: '--c3' },
+        { key: 'strong_vengefulness', label: 'Strong: vengefulness', color: '--blue' },
+        { key: 'weak_vengefulness', label: 'Weak: vengefulness', color: '--c4' },
+      ],
+      range: [0, 1],
+      shown: hasGroups,
+    },
+  ],
 };
 
 /**
@@ -393,7 +434,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

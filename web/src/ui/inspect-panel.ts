@@ -2,7 +2,7 @@ import { citizenRows, shownCitizen } from '../civil';
 import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
-import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -14,6 +14,7 @@ import type {
   CultureInspection,
   CultureSiteView,
   DpdInspection,
+  NormsInspection,
   EthnoConfig,
   EthnoInspection,
   LinkView,
@@ -163,6 +164,34 @@ export class InspectPanel {
    * payoffs, and its neighbors with what a game between them pays. An agent that died leaves the
    * site's rows alone.
    */
+  /** A plane cell (its strategy and the agents holding it) or a strip row (one agent's generation). */
+  private normsRows(view: NormsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const agent = (a: NormsInspection['agents'][number]) => {
+      const group = a.group ? ` · ${a.group}` : '';
+      return `B ${a.boldness}/7 · V ${a.vengefulness}/7${group} · payoff ${fmt(a.payoff)}`;
+    };
+    if (view.agent) {
+      const a = view.agent;
+      return [
+        row('Agent', `#${a.id}${a.group ? ` (${a.group})` : ''}`),
+        row('Strategy', `${a.bits} — boldness ${a.boldness}/7, vengefulness ${a.vengefulness}/7`),
+        row('Payoff', fmt(a.payoff)),
+        row('Defected', `${a.defections}× · punished ${a.punished}×`),
+        row('Punished others', `${a.punishments}× · metapunished ${a.metapunishments}× · was metapunished ${a.metapunished}×`),
+        row('Copies', a.parent === null ? 'the starting population' : `#${a.parent} of the generation before`),
+      ];
+    }
+    if (view.level) {
+      const rows = [row('Strategy', `boldness ${view.level[0]}/7, vengefulness ${view.level[1]}/7`)];
+      if (view.agents.length === 0) return [...rows, row('Agents', 'none')];
+      for (const a of view.agents.slice(0, 12)) rows.push(row(`#${a.id}`, agent(a)));
+      if (view.agents.length > 12) rows.push(row('', `and ${view.agents.length - 12} more`));
+      return rows;
+    }
+    return [row('Point', 'between the plane and the agents')];
+  }
+
   private dpdSiteRows(view: DpdInspection, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     const rows = [row('Site', `(${view.site.x}, ${view.site.y})`)];
@@ -352,6 +381,8 @@ export class InspectPanel {
         ? this.ethnoSiteRows(view, gone)
         : isDpdView(view, this.engine.model)
           ? this.dpdSiteRows(view, gone)
+          : isNormsView(view)
+            ? this.normsRows(view)
           : isStructureView(view)
             ? this.structureRows(view)
             : isOpinionsView(view)

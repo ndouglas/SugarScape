@@ -32,6 +32,9 @@ import type {
   StructureConfig,
   StructureInspection,
   StructureStats,
+  NormsConfig,
+  NormsInspection,
+  NormsStats,
   Param,
   Preset,
   Snapshot,
@@ -460,6 +463,11 @@ describe('other models through the engine', () => {
     ['dpd-footnote-27', '0xd1adeadce6881068'],
     ['dpd-rr-best', '0xe8fdc4ce027dd236'],
     ['dpd-coordination', '0x47f8c68504a9157a'],
+    ['gi-metanorms-long', '0xf80d7b08d057046f'],
+    ['gi-low-mutation', '0x2c37f146a39f0d51'],
+    ['gi-mild-metanorms', '0xb7435abcb67c192b'],
+    ['gi-temptation-10', '0xa191ff11a4f9ee68'],
+    ['gi-tournament', '0x95ea76458cee1a46'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -538,6 +546,24 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the norms model through the engine', () => {
+  it('stops at its last generation and inspects an agent and a strategy', async () => {
+    const r = presets.find((p) => p.id === 'ax-metanorms')!;
+    const e = await Engine.create({ config: structuredClone(r.config as NormsConfig), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'payoff' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as NormsStats;
+    expect([e.finished, ends, e.tick, s.tick]).toEqual([true, 1, 100, 100]);
+    // The first strip row (x 102 onward) is agent 1.
+    await e.select(110, 1);
+    const v = e.inspection!.view as NormsInspection;
+    expect(v.agent!.id).toBe(1);
+    expect(v.agent!.bits).toMatch(/^[01]{6}$/);
   });
 });
 

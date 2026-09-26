@@ -17,6 +17,8 @@ import type {
   Config,
   DpdConfig,
   DpdInspection,
+  NormsConfig,
+  NormsInspection,
   EthnoConfig,
   EthnoInspection,
   Inspection,
@@ -29,7 +31,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -46,12 +48,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   opinions: 'Bounded Confidence',
   structure: 'Social Structure',
   dpd: 'Demographic PD',
+  norms: 'Norms and Metanorms',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms'
     ? tag
     : 'sugarscape';
 }
@@ -123,6 +126,11 @@ export function isEthnoView(v: AnyInspection, model: ModelKind): v is EthnoInspe
  * A demographic PD site's inspection (its agent says whether it is surrounded). An empty one is
  * exactly an empty Schelling or ethnocentrism site, so the world's model decides as well as the shape.
  */
+/** A cell of the norms frame (it names its plane levels). */
+export function isNormsView(v: AnyInspection): v is NormsInspection {
+  return 'level' in v && 'agents' in v;
+}
+
 export function isDpdView(v: AnyInspection, model: ModelKind): v is DpdInspection {
   return model === 'dpd' && (v.agent === null || 'surrounded' in v.agent);
 }
@@ -143,6 +151,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
   if (modelOf(c) === 'structure' && (c as StructureConfig).stop_at > 0) return Math.max(0, (c as StructureConfig).stop_at - tick);
   if (modelOf(c) === 'dpd' && (c as DpdConfig).end > 0) return Math.max(0, (c as DpdConfig).end - tick);
+  if (modelOf(c) === 'norms' && (c as NormsConfig).stop_at > 0) return Math.max(0, (c as NormsConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -253,6 +262,12 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['age', 'Age'],
     ['surrounded', 'Surrounded'],
   ],
+  // The plane by how many agents hold each strategy; payoff; group (under dominance).
+  norms: [
+    ['agents', 'Agents'],
+    ['payoff', 'Payoff'],
+    ['group', 'Group'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -270,4 +285,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   opinions: [],
   structure: [],
   dpd: [],
+  norms: [],
 };

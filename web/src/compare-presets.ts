@@ -116,6 +116,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'dpd-run-1',
     b: 'dpd-closest',
   },
+  {
+    id: 'gi-axelrod-vs-tournament',
+    label: 'Axelrod’s selection vs a random tournament — Norms and Metanorms (Compare)',
+    a: 'gi-metanorms-long',
+    b: 'gi-tournament',
+  },
 ];
 
 /**

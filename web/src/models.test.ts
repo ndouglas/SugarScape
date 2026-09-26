@@ -7,6 +7,7 @@ import {
   isClassesView,
   isOpinionsView,
   isStructureView,
+  isNormsView,
   isCultureView,
   isDpdView,
   isEthnoView,
@@ -100,6 +101,28 @@ describe('the anasazi model', () => {
     const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the norms model', () => {
+  it('is read by its tag, and its inspections by their plane level', () => {
+    const c = { model: 'norms', stop_at: 100 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('norms');
+    const cell = { site: { x: 1, y: 2 }, level: [3, 4], agents: [], agent: null } as unknown as AnyInspection;
+    const block = { site: { x: 1, y: 2 }, block: { x: 0, y: 0 }, plane: null, agents: [], agent: null } as unknown as AnyInspection;
+    expect([cell, block].map(isNormsView)).toEqual([true, false]);
+    expect(isStructureView(cell)).toBe(false);
+  });
+
+  it('colors three ways, has no overlays, and stops predictably at its last generation', () => {
+    expect(COLOR_MODES.norms).toEqual([
+      ['agents', 'Agents'],
+      ['payoff', 'Payoff'],
+      ['group', 'Group'],
+    ]);
+    expect(MODEL_OVERLAYS.norms).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'norms', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(100)), ticksLeft(c(100), 40), ticksLeft(c(0), 40)]).toEqual([false, 60, Infinity]);
   });
 });
 

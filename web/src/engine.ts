@@ -60,6 +60,7 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'sugarscape') return `The cultures have settled at t = ${tick}: every two share all or nothing — Reset to run it again`;
   if (modelOf(config) === 'ethno' || modelOf(config) === 'structure') return `This run has reached its last period (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'dpd') return `This run has reached its last cycle (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'norms') return `This run has reached its last generation (${tick}) — Reset to run it again`;
   const year = calendarYear(config, tick);
   return `This run has reached its end year${year === null ? '' : ` (AD ${year})`} — Reset to run it again`;
 }

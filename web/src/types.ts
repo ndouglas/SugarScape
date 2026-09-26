@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -373,7 +373,30 @@ export interface StructureConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig;
+/**
+ * Axelrod's norms and metanorms games (milestone 20): agents evolving boldness and vengefulness,
+ * with Galán and Izquierdo's departures and readings as switches.
+ */
+export interface NormsConfig {
+  model: 'norms';
+  agents: number;
+  metanorms: boolean;
+  rounds: number;
+  temptation: number;
+  hurt: number;
+  punishment: number;
+  enforcement: number;
+  meta_punishment: number;
+  meta_enforcement: number;
+  mutation: number;
+  selection: 'axelrod' | 'tournament' | 'roulette' | 'average';
+  refill: 'random' | 'ranked';
+  all_equal: 'drift' | 'keep';
+  groups: { enabled: boolean; strong: number; weak: number; strong_punishment: number };
+  stop_at: number;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -610,7 +633,25 @@ export interface StructureStats {
   partner_p_slope: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats;
+export interface NormsStats {
+  tick: number;
+  mean_boldness: number;
+  mean_vengefulness: number;
+  mean_payoff: number;
+  defections: number;
+  punishments: number;
+  metapunishments: number;
+  /** Galán & Izquierdo's regions: 1 when the generation is in them. */
+  established: number;
+  collapsed: number;
+  strong_boldness: number;
+  weak_boldness: number;
+  strong_vengefulness: number;
+  weak_vengefulness: number;
+  copied_equal: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -858,7 +899,30 @@ export interface StructureInspection {
   agent: StructureAgentView | null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection;
+/** An agent of the generation that played last: its strategy, payoff and what happened to it. */
+export interface NormAgentView {
+  id: number;
+  group: 'strong' | 'weak' | null;
+  bits: string;
+  boldness: number;
+  vengefulness: number;
+  payoff: number;
+  defections: number;
+  punished: number;
+  punishments: number;
+  metapunishments: number;
+  metapunished: number;
+  parent: number | null;
+}
+/** A cell of the boldness–vengefulness plane (its levels and agents) or of the agent strip. */
+export interface NormsInspection {
+  site: { x: number; y: number };
+  level: [number, number] | null;
+  agents: NormAgentView[];
+  agent: NormAgentView | null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -902,7 +966,8 @@ export type ColorMode =
   | 'friendliness'
   | 'provocability'
   | 'strategy'
-  | 'surrounded';
+  | 'surrounded'
+  | 'agents';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

@@ -227,6 +227,17 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('norms charts', () => {
+  it('chart boldness and vengefulness, events, payoff, the norm state and (with groups) each group', () => {
+    expect(MODEL_CHARTS.norms.map((c) => c.title)).toEqual(['Boldness and vengefulness', 'Events', 'Mean payoff', 'Norm state', 'By group']);
+    const grouped = { model: 'norms', groups: { enabled: true } } as unknown as ModelConfig;
+    const plain = { model: 'norms', groups: { enabled: false } } as unknown as ModelConfig;
+    const byGroup = MODEL_CHARTS.norms.find((c) => c.title === 'By group')!;
+    expect([byGroup.shown!(grouped), byGroup.shown!(plain)]).toEqual([true, false]);
+    expect(timeAxisLabel('norms')).toBe('Generations');
+  });
+});
+
 describe('social-structure charts', () => {
   it('chart payoff, cooperation, strategy, high cooperation and copying over periods', () => {
     expect(MODEL_CHARTS.structure.map((c) => c.title)).toEqual(['Mean payoff', 'Cooperation', 'Strategy', 'High cooperation', 'Copying']);

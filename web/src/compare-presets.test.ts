@@ -42,6 +42,11 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs Axelrod’s selection and a random tournament', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['gi-axelrod-vs-tournament', 'gi-metanorms-long', 'gi-tournament', 'Axelrod’s selection vs a random tournament — Norms and Metanorms (Compare)']);
+  });
+
   it('pairs random mixing and fixed random neighbors', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['cra-rwr-vs-frn', 'cra-rwr', 'cra-frn', 'Random mixing vs fixed random neighbors — Social Structure (Compare)']);
