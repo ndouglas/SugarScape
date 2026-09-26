@@ -27,10 +27,12 @@ struct Run {
     /// Whether the run was ever in each regime, and its last regime.
     ever: [bool; 6],
     last: f64,
-    /// Mean payoff over periods 1–20, and the mean realized error rate over
-    /// periods 100 on (0 for shorter runs).
-    early_payoff: f64,
+    /// The mean realized error rate over periods 100 on (0 for shorter runs).
     realized_noise: f64,
+    /// Mean payoff over the periods in the fractious regime (NaN if none),
+    /// and how many there were.
+    fractious_payoff: f64,
+    fractious_periods: f64,
 }
 
 fn summarize(w: &ModelWorld) -> Run {
@@ -38,6 +40,12 @@ fn summarize(w: &ModelWorld) -> Run {
     let regime = s("regime");
     let payoff = s("mean_payoff");
     let noise = s("realized_noise");
+    let fractious: Vec<f64> = regime
+        .iter()
+        .zip(&payoff)
+        .filter(|(&r, _)| r == f64::from(FRACTIOUS))
+        .map(|(_, &p)| p)
+        .collect();
     let mut ever = [false; 6];
     for &r in &regime {
         ever[r as usize] = true;
@@ -56,12 +64,13 @@ fn summarize(w: &ModelWorld) -> Run {
         first_attractor: *s("first_attractor").last().unwrap(),
         ever,
         last: *regime.last().unwrap(),
-        early_payoff: payoff[1..payoff.len().min(21)].iter().sum::<f64>() / 20.0,
         realized_noise: if tail.is_empty() {
             0.0
         } else {
             tail.iter().sum::<f64>() / tail.len() as f64
         },
+        fractious_payoff: fractious.iter().sum::<f64>() / fractious.len() as f64,
+        fractious_periods: fractious.len() as f64,
     }
 }
 
@@ -197,8 +206,21 @@ pub fn claims() -> Vec<Claim> {
             item: "aey-fractious",
             source: Source::Book,
             citation: AEY,
-            text: "Fig. 3: in the fractious state the average share per person is about one-quarter (periods 1–20 from a fractious start: 15–35)",
-            check: |s| range(&col(&runs(s, 2000, |c| c.start = Start::Fractious), |r| r.early_payoff), 15.0, 35.0, false),
+            text: "Fig. 3: in the fractious state the average share per person is about one-quarter (mean payoff over the periods a fractious start spends in the fractious regime: 15–35)",
+            check: |s| {
+                let r = runs(s, 2000, |c| c.start = Start::Fractious);
+                let mut o = range(&col(&r, |r| r.fractious_payoff).into_iter().filter(|p| !p.is_nan()).collect::<Vec<_>>(), 15.0, 35.0, false);
+                let periods = col(&r, |r| r.fractious_periods);
+                let first = col(&r, |r| r.first_equity);
+                o.detail = format!(
+                    "fractious for {}–{} periods; first equity at periods {}–{}",
+                    periods.iter().cloned().fold(f64::INFINITY, f64::min),
+                    periods.iter().cloned().fold(0.0, f64::max),
+                    first.iter().cloned().fold(f64::INFINITY, f64::min),
+                    first.iter().cloned().fold(0.0, f64::max),
+                );
+                o
+            },
         },
         Claim {
             id: "classes.fig-4.magnitude",
@@ -280,8 +302,8 @@ pub fn claims() -> Vec<Claim> {
             item: "pvplh-small-tags",
             source: Source::Comment,
             citation: PVPLH,
-            text: "with 20 agents, m 5, ε 0.05 segregation appears (Figs. 9–10: one type equitable and the other fractious, in at least one seed)",
-            check: |s| share(&runs(s, 5000, small_tags), |r| r.ever[EQUITY_BETWEEN as usize] || segregated(r), 0.05, 1.0, "segregated or split within"),
+            text: "with 20 agents, m 5, ε 0.05 segregation appears (Figs. 9–10; AEY's rule: classes or division below in at least one seed)",
+            check: |s| share(&runs(s, 5000, small_tags), segregated, 0.05, 1.0, "segregated"),
         },
         Claim {
             id: "classes.pvplh.mode-segregates",
@@ -378,7 +400,7 @@ pub fn claims() -> Vec<Claim> {
             item: "pvplh-lattice",
             source: Source::Comment,
             citation: PVPLH,
-            text: "on a 10 × 10 Moore torus (tags at random, mode rule, m 5, ε 0.05) the well-mixed attractors recur: classes or a split within types in at least one seed",
+            text: "on a 10 × 10 Moore torus (tags at random, mode rule, m 5, ε 0.05) the well-mixed attractors recur: classes, or equity between types without it within, in at least one seed",
             check: |s| {
                 share(
                     &runs(s, 5000, |c| {
@@ -390,7 +412,7 @@ pub fn claims() -> Vec<Claim> {
                     |r| r.ever[CLASSES as usize] || r.ever[EQUITY_BETWEEN as usize],
                     0.05,
                     1.0,
-                    "classes or split within",
+                    "in classes or equity between only",
                 )
             },
         },

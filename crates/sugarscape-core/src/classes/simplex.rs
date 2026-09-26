@@ -34,7 +34,9 @@ pub fn mix(x: usize, y: usize) -> Option<[f64; 3]> {
     let ph = 1.0 - y as f64 / (TALL - 1) as f64;
     let pl = (x as f64 - ph * ((SIDE - 1) / 2) as f64) / (SIDE - 1) as f64;
     let pm = 1.0 - ph - pl;
-    let eps = 0.5 / (SIDE - 1) as f64;
+    // Half a cell across, plus the slack rounding y leaves: a memory's
+    // rounded point stays inside.
+    let eps = 0.5 / (SIDE - 1) as f64 + 0.5 / (TALL - 1) as f64;
     (pl >= -eps && pm >= -eps).then(|| [pl.max(0.0), pm.max(0.0), ph])
 }
 
@@ -95,6 +97,19 @@ mod tests {
             let t = f64::from(v[0] + v[1] + v[2]);
             for k in 0..3 {
                 assert!((p[k] - f64::from(v[k]) / t).abs() < 0.02, "{v:?} {p:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn every_memory_plots_inside_the_triangle() {
+        for total in 1..=100u32 {
+            for l in 0..=total {
+                for h in 0..=total - l {
+                    let v = [l, total - l - h, h];
+                    let (x, y) = point(v);
+                    assert!(mix(x, y).is_some(), "{v:?} plots outside at ({x}, {y})");
+                }
             }
         }
     }

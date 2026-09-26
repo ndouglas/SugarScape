@@ -136,7 +136,9 @@ pub fn equity(views: &[View], noise: f64) -> bool {
             continue;
         }
         any = true;
-        if f64::from(v[1]) < (1.0 - noise) * f64::from(total) {
+        // A little slack so (1 − ε)·m landing a hair above an integer does
+        // not demand one M more.
+        if f64::from(v[1]) < (1.0 - noise) * f64::from(total) - 1e-9 {
             return false;
         }
     }
@@ -224,6 +226,13 @@ mod tests {
                 assert_eq!(b & 1 << M, 0, "low {low}, {l} L's");
             }
         }
+    }
+
+    #[test]
+    fn the_equity_threshold_is_not_raised_by_rounding() {
+        // (1 − 0.44) · 25 = 14 exactly, though 0.56 · 25.0 lands above 14.
+        assert!(equity(&[[11, 14, 0]], 0.44));
+        assert!(!equity(&[[12, 13, 0]], 0.44));
     }
 
     #[test]

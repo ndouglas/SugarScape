@@ -589,18 +589,20 @@ What reproduces (20 seeds unless stated): the realized error rate is 2ε/3 (0.13
 paper's 0.1333); a random start reaches equity, by period 14 (median); transition times from a
 fractious start grow steeply with memory and population. What does not: **the fractious state of
 Fig. 3 is never reached from a random start, and started fractious it does not persist** (the paper:
-over 10⁹ periods) — every run leaves it within 2 000; the transition times are about two orders of
+over 10⁹ periods) — it lasts 1 to 10 periods, paying about 18 rather than a quarter of the pie, and
+every run reaches equity by period 53; the transition times are about two orders of
 magnitude below Fig. 4's (a median of 600 periods at m = 13, ε = 0.1, against "in excess of 10⁵");
 and **with tags at AEY's parameters, classes and "equity above, division below" never appear**
-(0 of 20), confirming Poza, Villafáñez, Pajares, López-Paredes and Hernández (2011). Planted, a
-class system does persist (18 of 20 at 20 000 periods).
+(0 of 20), confirming Poza, Villafáñez, Pajares, López-Paredes and Hernández (2011) — nor at the
+smaller society (20 agents, memory 5, ε = 0.05) where they report seeing it. Planted, a class
+system does persist (18 of 20 at 20 000 periods).
 
 Poza et al.'s departures are switches: **Decision** — best-reply to the most frequent remembered
 demand, under which segregation appears in 10 of 20 runs and half the runs reach the fractious state
 first; **Low demand** (5–45; a higher L slows the way to equity, as they found); **Memories start**
 empty and growing (they report a longer transition; measured, no difference); and **Who meets whom**
 — a torus of lattice neighbors, tags laid out at random, in four zones or in two (with tags at
-random, 12 of 20 runs reach classes or a split within a type).
+random, 12 of 20 runs reach classes or equity between types without equity within).
 
 The view is the paper's memory simplex: H at the top, M at the lower left, L at the lower right,
 each agent a dot at its memory's mix, the background shaded by the best reply there (**Best reply**)

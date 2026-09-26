@@ -608,7 +608,12 @@ fn tag_layout(c: &ClassesConfig, rng: &mut SimRng) -> Vec<u8> {
                 Layout::FourZones => (0..n)
                     .map(|i| u8::from((i % w < w / 2) != (i / w < h / 2)))
                     .collect(),
-                Layout::TwoZones => (0..n).map(|i| u8::from(i % w >= w / 2)).collect(),
+                // Halves along an even side (w × h is even), left and right
+                // when the width allows.
+                Layout::TwoZones if w.is_multiple_of(2) => {
+                    (0..n).map(|i| u8::from(i % w >= w / 2)).collect()
+                }
+                Layout::TwoZones => (0..n).map(|i| u8::from(i / w >= h / 2)).collect(),
             }
         }
     }
@@ -917,6 +922,32 @@ mod tests {
                 50,
                 "{layout:?}"
             );
+        }
+    }
+
+    #[test]
+    fn every_lattice_layout_splits_the_tags_in_half() {
+        for (width, height) in [(3, 4), (5, 4), (4, 3), (4, 5), (10, 10)] {
+            for layout in [Layout::Random, Layout::FourZones, Layout::TwoZones] {
+                let w = ClassesWorld::new(
+                    config(|c| {
+                        c.tags = true;
+                        c.agents = width * height;
+                        c.interaction = Interaction::Lattice;
+                        c.lattice.width = width;
+                        c.lattice.height = height;
+                        c.lattice.layout = layout;
+                    }),
+                    1,
+                )
+                .unwrap();
+                let dark = w.agents().iter().filter(|a| a.tag == 0).count();
+                assert_eq!(
+                    2 * dark as u32,
+                    width * height,
+                    "{width} × {height} {layout:?}"
+                );
+            }
         }
     }
 

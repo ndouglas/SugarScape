@@ -41,10 +41,10 @@ AEY's bargaining model — agents who remember their last m opponents' demands a
 20 seeds unless stated; the survey reproduces each.
 
 - Realized error 0.1335 (AEY 0.1333). Fig. 2: equity by period 14 (median; IQR 13–16).
-- Fig. 3: from random starts the fractious state is never reached first (0/20); started fractious, every run reaches equity within 2 000 periods; while fractious the mean payoff is about 30 of 100 (the paper: "only about one-quarter").
+- Fig. 3: from random starts the fractious state is never reached first (0/20); started fractious, the regime lasts 1–10 periods and every run reaches equity by period 36–53; while fractious the mean payoff is about 18 of 100 (median; the paper: "only about one-quarter").
 - Fig. 4 (N 10, from a fractious start): ε 0.05: 334 periods at m 8, 25 300 at m 14; ε 0.1, m 13: median 600 (AEY: over 10⁵). Fig. 5 (m 10, ε 0.1): 148 at N 20, 11 600 at N 60.
 - Tags at AEY's parameters: classes 0/20, divided below 0/20, equity between 18/20; planted classes persist 18/20 at 20 000 periods.
-- PVPLH: at N 20, m 5, ε 0.05 every run segregates or splits within a type; the mode rule segregates 10/20 and goes fractious first 11/20 (AEY's rule 0 and 0); L 40 slows equity (325 vs 110 at L 15); progressive memory 186 vs 173 (no difference, p = 0.36); a random-layout lattice reaches classes or a split within a type in 12/20.
+- PVPLH: at N 20, m 5, ε 0.05 no run segregates under AEY's rule (every run passes through equity between types only); the mode rule segregates 10/20 and goes fractious first 11/20 (AEY's rule 0 and 0); L 40 slows equity (325 vs 110 at L 15); progressive memory 186 vs 173 (no difference, p = 0.36); a random-layout lattice reaches classes or equity between types only in 12/20.
 
 ## Architecture
 

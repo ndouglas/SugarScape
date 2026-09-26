@@ -44,7 +44,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "aey-fractious",
             "One type: a fractious start",
             AEY,
-            "The same society started fractious: every memory half H and half L, so everyone demands H at once. The paper (Fig. 3): a fractious state — agents aggressive or passive, pie wasted — that 'persists in excess of 10⁹ time periods'. Measured (20 seeds): the first periods pay about 30 each (the paper: about a quarter of the pie), but every seed reaches equity within a few hundred periods, and no random start ever falls into the fractious state first. At 100 agents with ε = 0.2 the fractious regime does not persist.",
+            "The same society started fractious: every memory half H and half L, so everyone demands H at once. The paper (Fig. 3): a fractious state — agents aggressive or passive, pie wasted — that 'persists in excess of 10⁹ time periods'. Measured (20 seeds): the fractious regime lasts 1 to 10 periods, paying about 18 each (the paper: about a quarter of the pie); every seed reaches equity by period 36 to 53, and no random start ever falls into the fractious state first. At 100 agents with ε = 0.2 the fractious regime does not persist.",
             |c| c.start = Start::Fractious,
         ),
         preset(
@@ -80,7 +80,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "pvplh-small-tags",
             "Two tags, small and forgetful",
             PVPLH,
-            "Poza et al. 2011's tag society, small and forgetful: 20 agents, memory 5, ε = 0.05, where they could finally see segregation. Measured (20 seeds, 5000 periods): every seed passes through equity between types but not within (one type compromising, the other fractious); classes still never appear under AEY's rule.",
+            "Poza et al. 2011's tag society, small and forgetful: 20 agents, memory 5, ε = 0.05, where they could finally see segregation. Measured (20 seeds, 5000 periods): every seed passes through equity between types but not within, but one type compromising while the other is fractious appears only briefly, in 1 seed of 20; classes and division below never appear under AEY's rule. The mode rule (pvplh-mode) is what segregates.",
             |c| {
                 c.tags = true;
                 c.agents = 20;
