@@ -28,6 +28,19 @@ HK's bounded-confidence model (their eq. BC) as a tenth model kind, `opinions` (
 - **Claims without figures (§4.3):** "Random serial updating gives extreme opinions a slightly better chance to survive. But none of the results stated above depends crucially on simultaneous updating." "First simulations show that this type of locality matters dramatically: If the neighbourhoods in which the agents interact are fairly small (though overlapping!), then the phase in between plurality and consensus, i.e. polarization, disappears."
 - **Theory (§3 D, App. D):** the profile stabilizes in finite time (Theorem 6); a two-sided split is permanent.
 
+## Measured in planning
+
+20 seeds unless stated; the survey reproduces each.
+
+- Fig. 2 (625 random): at ε 0.01 a median of 37.5 survivors (34–43; the paper's run: 38); at 0.15 exactly two camps in 6 runs, a third camp in the middle in 14 (in 12 about as large as the others); at 0.25 consensus in all. Stable before period 15 in 53 of 60 runs; the slowest at period 168.
+- Fig. 3 (50 runs): 37.7, 7.9, 3.6, 2.7, 1.9 survivors at ε 0.01, 0.05, 0.10, 0.15, 0.20; two camps the rule from 0.16 to 0.21; consensus in 13, 30, 48, 50 runs at 0.21, 0.22, 0.24, 0.25; consensus in every run above 0.4.
+- Evenly spaced: 50 at 0.2 split in period 6 and are still from period 8; 100 at 0.05 split 8 times (9 survivors, stable at 20); 100 at 0.25 agree at period 10.
+- Asymmetric: at εr 0.2 the mean is 0.53, 0.68 and 0.94 with εl 0.18, 0.1 and 0.02; `hk-one-sided` (100 evenly spaced, 0.08/0.24) opens a one-sided split in period 5 that closes in period 9, ending in consensus at 0.85.
+- Opinion-dependent (ε 0.6): consensus in 20, 18 and 8 runs of 20 at m 0.36, 0.44 and 0.52, none from 0.64; range 0.99 at m = 1 for ε 0.2, 0.4, 0.6; median stable period 5 at m 0, 24 at m 0.4. Fig. 18c (50 evenly spaced, m 0.5) splits in period 4.
+- Serial: at ε 0.05, 7.9 survivors simultaneous, 8.4 shuffled, 9.0 random draws (50 runs); the phases in place under both orders.
+- Lattice (25 × 25, run to stability, capped at 20 000): a second camp of a fifth in 7 of 20 Moore runs at 0.15 and 2 of 20 von Neumann runs at 0.2, never otherwise (ε 0.05–0.6); everyone listening: 20, 20, 17 of 20 at 0.1, 0.15, 0.2. Stability takes hundreds to tens of thousands of periods.
+- Lorenz: consensus at ε 0.22 in 1 of 20 runs with 50 agents, 12 with 625, 16 with 2000; at 0.25, 7 with 50 and 20 from 625.
+
 ## Architecture
 
 Model kind `opinions` ("Bounded Confidence"): `ModelKind::Opinions`, `ModelConfig::Opinions(OpinionsConfig)` tagged `"model": "opinions"`, an `OpinionsWorld` implementing `Model`, schema, `SERIES`, presets and golden entries — the same wiring as the culture and classes models. Code in `crates/sugarscape-core/src/opinions/` (`config.rs`, `world.rs`, `stats.rs`, `view.rs` for the opinion × time frame, `presets.rs`, `mod.rs`).
@@ -48,7 +61,9 @@ Model kind `opinions` ("Bounded Confidence"): `ModelKind::Opinions`, `ModelConfi
 | `lattice.neighborhood` | `moore` | reset | `moore` or `von_neumann` |
 | `stop_when_stable` | true | live | `finished()` at the first stable period |
 
-Under `symmetric` only `epsilon` is read; under `asymmetric` only `epsilon_left` and `epsilon_right`; under `opinion_dependent` `epsilon` and `bias`. The Rules panel shows all three and each help line says when it applies.
+Under `symmetric` only `epsilon` is read; under `asymmetric` only `epsilon_left` and `epsilon_right`; under `opinion_dependent` `epsilon` and `bias`. The Rules panel shows `epsilon_left` and `epsilon_right` only under `asymmetric`, `bias` only under `opinion_dependent`, and the lattice's size and neighborhood only with `lattice`.
+
+A live edit to confidence or updating unsettles a stable run: `stable_at` clears and the run resumes.
 
 ## Step (one period)
 
@@ -56,17 +71,19 @@ Under `symmetric` only `epsilon` is read; under `asymmetric` only `epsilon_left`
 - **Simultaneous:** every agent's new opinion is the mean of the reached opinions at t. With `all`, opinions are kept sorted with prefix sums, so each agent's reach is a contiguous run found by binary search (O(n log n) per period). The sum over a run is taken as a prefix-sum difference; stated below as a numeric choice.
 - **Serial:** agents update one at a time against the current profile (O(n) each, direct summation).
 - **Lattice:** candidates are the agent and its 8 (Moore) or 4 (von Neumann) torus neighbors; direct summation.
-- **Numerics (stated):** means are computed by direct summation over the reached agents in index order for lattice and serial updating, and by sorted prefix sums otherwise; the golden entries pin whichever the build uses. A period is **stable** when no opinion moves more than 10⁻¹⁰; clusters are maximal runs of sorted opinions whose neighboring gaps are at most 10⁻¹⁰. (Averaging k identical doubles need not return the same double, so exact stillness is not guaranteed; the tolerance is far below any ε.)
+- **Numerics (stated):** means are computed by direct summation over the reached agents in index order for lattice and serial updating, and by sorted prefix sums otherwise; the golden entries pin whichever the build uses. A period is **stable** when no opinion moves more than 10⁻¹⁰; clusters are maximal runs of sorted opinions whose neighboring gaps are at most 10⁻⁶ (serial updating closes camps only geometrically: a 10⁻¹⁰ tolerance counted one serially updated consensus as two or three). (Averaging k identical doubles need not return the same double, so exact stillness is not guaranteed; both tolerances are far below any ε.)
 
 ## Statistics
 
 `SERIES`: `clusters` (surviving opinions, as above), `largest`, `second` (shares of agents in the two biggest clusters), `mean_opinion`, `median_opinion`, `range` (max − min), `splits` (gaps between sorted neighbors x_{k+1} − x_k greater than both the lower one's εr and the upper one's εl), `one_sided_splits` (gaps within exactly one of those reaches), `max_change` (the largest |Δx| this period), `stable_at` (the first stable period, else the current one). Splits are counted on the sorted profile for `all`; under `lattice` they are reported on the sorted profile too (they then describe the opinion distribution, not who can reach whom — stated in the help).
 
+A run is **polarized** (survey, descriptions) when its second camp holds at least a fifth of the agents.
+
 ## Views
 
-- **Opinion × time** on the grid canvas: 240 × 200 cells; opinion 0 at the bottom, 1 at the top; 4 cells per period, the last 60 periods (older ones scroll off, as in the tag × time view). Each agent's line is drawn between consecutive periods; where sorted neighbors are within reach of each other in a period, the gap between them is filled gray (HK's Figs. 4, 7, 13). The history (opinions per retained period) is world state: keyframes and step-back restore it.
-- **Color modes:** **Start** (each line by its starting opinion, red at 0 through magenta at 1, as in HK), **Opinion** (by the current opinion), and with `lattice` **Lattice** (the torus, one block per site colored by opinion).
-- **Inspect:** a point gives the period, the opinion there, and the agents whose lines pass within one cell (id, start, current opinion, εl, εr, how many it reaches); on the Lattice mode, a site. `locate` returns nothing; Follow hidden.
+- **Opinion × time** on the grid canvas: 241 × 201 cells (60 periods of 4 cells plus the current column; with `lattice`, 450 wide: the torus is a panel 8 cells right of the diagram, as tall as it); opinion 0 at the bottom, 1 at the top; 4 cells per period, the last 60 periods (older ones scroll off, as in the tag × time view). Each agent's line is drawn between consecutive periods; where sorted neighbors are within reach of each other in a period, the gap between them is filled gray (HK's Figs. 4, 7, 13). The history (opinions per retained period) is world state: keyframes and step-back restore it.
+- **Color modes:** **Start** (each line by its starting opinion, red at 0 through magenta at 1, as in HK) and **Opinion** (by the current opinion). The lattice is a panel, not a mode: Inspect has no mode to tell which view a click is in.
+- **Inspect:** a point gives the period, the opinion there, and the agents whose lines pass within one cell (id, start, current opinion, εl, εr, how many it reaches); the nearest kept period at or left of the column; on the lattice panel, a site. `locate` returns nothing; Follow hidden.
 - **Charts:** Clusters; Largest camps (`largest`, `second`); Mean and median; Splits (two-sided, one-sided); Change (`max_change`). Time axis: Periods.
 
 ## Presets
@@ -90,12 +107,12 @@ Under `symmetric` only `epsilon` is read; under `asymmetric` only `epsilon_left`
 ## Experiments and CLI
 
 Seeds and ranges measured to fit a browser run, recorded in each description; the survey runs the paper's counts. Runs stop when stable; sweeps read a stopped world at its last values (the culture model's padding).
-- `hk-diagonal`: final `clusters` against ε = 0.01 … 0.40 (Fig. 3; and `largest`).
-- `hk-asymmetry`: final `mean_opinion` against εr = 0.02 … 0.40, series εl = 0.9, 0.5, 0.1 × εr (Figs. 11, 12c).
-- `hk-bias`: final `clusters` (and `range`) against m = 0 … 1, series ε = 0.2, 0.4, 0.6 (Fig. 17).
-- `hk-updating`: final `clusters` against ε, series the three updating modes.
-- `hk-lattice`: final `clusters` and `largest` + `second` against ε, series `all`, Moore, von Neumann.
-- `hk-population`: final `largest` against n = 25 … 2000 at ε = 0.2 and 0.25 (Lorenz 2006: the consensus threshold moves with n).
+- `hk-diagonal`: final `clusters` against ε = 0.01 … 0.40, 50 seeds (Fig. 3).
+- `hk-asymmetry`: final `mean_opinion` against εr = 0.02 … 0.40, series εl = 0.02, 0.1, 0.2 (Fig. 12c's grid; a series cannot scale with x, so Fig. 11's lines εl = k·εr are the survey's).
+- `hk-bias`: final `range` against m = 0 … 1 in 26 steps, series ε = 0.2, 0.4, 0.6, 625 random opinions (Fig. 17).
+- `hk-updating`: final `clusters` against ε = 0.05 … 0.30, series the three updating modes.
+- `hk-lattice`: final `second` after 2000 periods against ε = 0.1 … 0.6, series everyone, Moore, von Neumann.
+- `hk-population`: final `largest` against n = 25 … 2000, series ε = 0.2, 0.22, 0.25 (Lorenz 2006).
 The CLI names the stop `(stable)`.
 
 ## Survey
@@ -119,7 +136,7 @@ The presets menu gains a **Bounded Confidence** group and the Compare entry; the
 
 - **Golden/legacy:** existing entries untouched; new entries for every `opinions` preset.
 - **Core unit:** the BC mean on hand profiles (symmetric, asymmetric, opinion-dependent with HK's worked example); the prefix-sum path agrees with direct summation; the reach always includes self; simultaneous vs serial (serial sees changed opinions); lattice neighbors on the torus; regular start endpoints; stability and cluster tolerance; splits and one-sided splits on hand profiles; `stable_at` and the stop; the view (lines, gray bands, scrolling) and Inspect; keyframes restore the history; live and reset fields; degenerate configs (n = 2, ε 0 and 1, εl = 0, m 0 and 1).
-- **Web:** schema groups, charts, the Compare entry, a sweep over an `opinions` base, determinism through the engine.
+- **Web:** schema groups, charts, the Compare entry, a sweep over an `opinions` base, determinism through the engine (`hk-lattice` in the golden list — every other preset stops before 200 ticks — and `hk-regular-50` run to its stop at period 8).
 - **Browser (controller):** every preset's view and charts, Inspect, the stop, Compare, recording, Experiments, every existing scenario.
 
 ## Docs

@@ -140,7 +140,7 @@ Model extensions:
 ## Other artificial societies
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
-**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture** and **Emergence of Classes**.
+**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**, **Emergence of Classes** and **Bounded Confidence**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -619,6 +619,61 @@ Multi-Agent Bargaining Model," in S. Durlauf and H. P. Young (eds.), *Social Dyn
 2001); David J. Poza, Félix A. Villafáñez, Javier Pajares, Adolfo López-Paredes and Cesáreo
 Hernández, "New Insights on the Emergence of Classes Model," *Discrete Dynamics in Nature and
 Society* 2011, 915279. See `docs/superpowers/specs/2026-09-25-classes-design.md`.
+
+### Bounded Confidence (Hegselmann & Krause 2002)
+
+Opinions between 0 and 1. Each period every agent moves to the mean of the opinions within its
+reach, its own included; everything further away is ignored. The defaults are the paper's: 625
+opinions drawn uniformly, updated all at once, each agent reaching ε = 0.15 either way. Agents who
+cannot reach each other drift apart for good, so the profile freezes into camps — many with little
+confidence (plurality), two or three in between (polarization), one with much (consensus). A period
+is stable when no opinion moves more than 10⁻¹⁰; opinions within 10⁻⁶ count as one.
+
+What reproduces (20 seeds unless stated): Fig. 2a's "exactly 38" surviving opinions at ε = 0.01
+(median 37.5); consensus at 0.25; Fig. 3's walk along ε — plurality, then camps, then a consensus
+that takes over between 0.21 and 0.25 (50 runs: 13, 30 and 50 in consensus at 0.21, 0.22, 0.25),
+always above 0.4; the evenly spaced figures exactly (50 opinions at 0.2 split in period 6 and are
+still from period 8; 100 at 0.05 split 8 times; 100 at 0.25 agree). What does not: **Fig. 2b's two
+camps at ε = 0.15 are the exception — 6 runs of 20; 14 end with a third camp in the middle, usually
+as large** (two camps are the rule only from 0.16 to 0.21); and "less than 15 periods to a stable
+pattern" holds for 53 runs of 60, the slowest taking 168 while two nearly merged camps close.
+
+The paper's asymmetries are settings. **Asymmetric** confidence, the same for everyone (§4.2.1):
+the mean drifts toward the side agents listen to (at εr = 0.2, from 0.53 with εl = 0.18 to 0.94
+with εl = 0.02), and one-sided splits — a gap one side reaches across and the other does not —
+close again, as the paper says two-sided ones never do. Confidence **leaning with one's opinion**
+(§4.2.2, bias m): camps grow and move outward, reaching 0 and 1 at m = 1; at ε = 0.6 consensus holds
+to m = 0.36 and breaks between 0.44 (18 of 20 runs in consensus) and 0.52 (8 of 20) — the paper
+says "m ≈ 0.4" — and takes longer before it breaks.
+
+Two of the paper's claims have no figure, so they are switches here. **Updating**: "none of the
+results … depends crucially on simultaneous updating", without saying which serial order — each
+agent once per period in random order, or n random draws. Measured, the phases keep their places
+under both, and serial updating leaves slightly more opinions at small ε (9 against 8 at ε = 0.05),
+as the paper says. **Who listens to whom**: on a torus where agents hear only their neighbors,
+"polarization … disappears". Measured on a 25 × 25 torus, it does: one big camp with dozens of
+stranded local minorities, settling only after thousands of periods; a second camp of a fifth of
+the agents in 9 of 200 lattice runs (ε 0.1–0.3, both neighborhoods) against 57 of 100 among
+everyone. Lorenz (2006) showed that the consensus threshold depends on the number of agents: at
+ε = 0.22 consensus in 1 run of 20 with 50 agents, 12 with 1000.
+
+The view is the paper's opinion × time diagram: each agent a line, red where it started at 0 to
+magenta at 1 (**Start**; **Opinion** colors by where it is now), gray between neighbors still
+within each other's reach, the last 60 periods; with a lattice the torus is drawn to the right.
+Inspect a point for its period, opinion and the agents passing (start, reach, how many they
+hear), or a site. Charts: Clusters; Largest camps; Mean and median; Splits (two-sided,
+one-sided); Change. A run stops when stable; changing confidence or updating resumes it. Presets:
+`hk-plurality`, `hk-polarisation`, `hk-consensus`, `hk-regular-50`, `hk-regular-plurality`,
+`hk-regular-consensus`, `hk-asym-a`, `hk-asym-b`, `hk-asym-c`, `hk-one-sided` (Fig. 13's caption
+says εl = 0.8, read as 0.08), `hk-bias`, `hk-serial`, `hk-lattice`. **Compare** entry:
+"Simultaneous vs serial updating — Bounded Confidence (Compare)". Built-in sweeps: `hk-diagonal`,
+`hk-asymmetry`, `hk-bias`, `hk-updating`, `hk-lattice`, `hk-population`.
+
+Credit: Rainer Hegselmann and Ulrich Krause, "Opinion Dynamics and Bounded Confidence: Models,
+Analysis, and Simulation," *Journal of Artificial Societies and Social Simulation* 5(3) (2002), 2;
+Jan Lorenz, "Consensus Strikes Back in the Hegselmann-Krause Model of Continuous Opinion Dynamics
+Under Bounded Confidence," *JASSS* 9(1) (2006), 8. See
+`docs/superpowers/specs/2026-09-25-bounded-confidence-design.md`.
 
 ## Experiments
 

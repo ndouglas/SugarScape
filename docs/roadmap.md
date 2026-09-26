@@ -131,6 +131,16 @@ reproduce; the persistent fractious state and the transition times' magnitude do
 et al. found, classes never emerge under the paper's rule at its parameters — they do under the mode
 rule, and persist once planted. See `docs/superpowers/specs/2026-09-25-classes-design.md`.
 
+## Milestone 16: Bounded Confidence (done)
+
+Hegselmann and Krause's opinion dynamics under bounded confidence (2002) as a tenth model kind, with
+symmetric, asymmetric and opinion-dependent confidence as settings and the paper's two unfigured
+claims — random serial updating, lattice neighborhoods — as switches. The survivors at small
+confidence, the walk from plurality through polarization to consensus, the evenly spaced figures,
+the asymmetric drift and the bias's break reproduce; Fig. 2b's two camps are the exception at its
+confidence, and the lattice claim holds. See
+`docs/superpowers/specs/2026-09-25-bounded-confidence-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -142,6 +152,7 @@ rule, and persist once planted. See `docs/superpowers/specs/2026-09-25-classes-d
 - **Tag-based cooperation** (Riolo, Cohen & Axelrod 2001): done (Milestone 12).
 - **Axelrod's culture model and its docking with Sugarscape**: done (Milestone 14).
 - **Axtell, Epstein & Young's emergence of classes**: done (Milestone 15).
+- **Hegselmann & Krause's bounded confidence**: done (Milestone 16).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions
