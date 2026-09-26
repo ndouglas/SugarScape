@@ -24,6 +24,7 @@ BLENDER = os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Bl
 SOUNDFONT = STUDIO / "out" / "soundfonts" / "FluidR3_GM.sf2"
 CLI = REPO / "target" / "release" / "sugarscape"
 DISSOLVE = 12
+FINAL_CRF = 21
 
 
 def run(argv, quiet=False):
@@ -92,7 +93,9 @@ def main():
         sys.exit("cannot cut:\n  " + "\n  ".join(problems))
     movie = out / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
     track = None if args.no_music else soundtrack(args.episode, out, cut.total_frames(frames, DISSOLVE) / 30)
-    run(cut.command([str(f) for f in folders], frames, str(movie), captions, DISSOLVE, music=track))
+    # Previews keep detail at low resolution; the final must fit Bluesky's 100 MB.
+    crf = 16 if args.preview else FINAL_CRF
+    run(cut.command([str(f) for f in folders], frames, str(movie), captions, DISSOLVE, music=track, crf=crf))
     probe = subprocess.run(
         ["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",
          "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", str(movie)],

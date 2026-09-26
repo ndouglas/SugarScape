@@ -31,7 +31,7 @@ def _seconds(frames, fps):
     return f"{frames / fps:g}"
 
 
-def command(folders, frames, out, captions=None, dissolve=12, fps=30, music=None):
+def command(folders, frames, out, captions=None, dissolve=12, fps=30, music=None, crf=16):
     """The ffmpeg argv: `folders[i]` holds beat i's frames (0001.png …),
     `frames[i]` their count, `captions[i]` a transparent PNG or None, and
     `music` an audio file trimmed to the video and faded in and out."""
@@ -63,7 +63,7 @@ def command(folders, frames, out, captions=None, dissolve=12, fps=30, music=None
             f"{label}{labels[i]}xfade=transition=fade:duration={dissolve / fps:g}:offset={round(elapsed / fps, 4):g}{nxt}"
         )
         label = nxt
-    encode = ["-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(fps), "-movflags", "+faststart"]
+    encode = ["-c:v", "libx264", "-preset", "slow", "-crf", str(crf), "-pix_fmt", "yuv420p", "-r", str(fps), "-movflags", "+faststart"]
     # An input's own stream is mapped as 0:v; a filter's output as [label].
     video = label if parts else label.strip("[]")
     maps = ["-map", video]

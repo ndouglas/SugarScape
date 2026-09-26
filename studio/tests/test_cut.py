@@ -14,6 +14,10 @@ class CutTest(unittest.TestCase):
         self.assertEqual(cut.total_frames([90, 60, 30], 12), 180 - 24)
         self.assertEqual(cut.total_frames([90], 12), 90)
 
+    def test_quality_is_a_parameter(self):
+        argv = cut.command(["b/01"], [90], "o.mp4", crf=21)
+        self.assertEqual(argv[argv.index("-crf") + 1], "21")
+
     def test_one_beat_without_a_caption_is_a_plain_encode(self):
         argv = cut.command(["b/01"], [90], "o.mp4")
         self.assertIn("b/01/%04d.png", argv)
