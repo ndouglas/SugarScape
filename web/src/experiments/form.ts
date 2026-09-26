@@ -47,6 +47,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'final', series: 'fit' },
     };
   }
+  if (model === 'classes') {
+    // Fig. 4's axis (the built-in aey-memory): the way out of a fractious start against memory.
+    return { ...form, x: { path: 'memory', values: '6:14:2' }, ticks: 100000, metric: { ...form.metric, kind: 'final', series: 'equity_at' } };
+  }
   if (model === 'culture') {
     // Table 2's axis (the built-in ac-table-2): stable regions against traits per feature.
     return { ...form, x: { path: 'traits', values: '5:15:5' }, ticks: 20000, metric: { ...form.metric, kind: 'final', series: 'regions' } };

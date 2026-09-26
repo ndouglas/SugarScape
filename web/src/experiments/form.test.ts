@@ -138,6 +138,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('classes')).toMatchObject({
+      x: { path: 'memory', values: '6:14:2' },
+      ticks: 100000,
+      metric: { kind: 'final', series: 'equity_at' },
+    });
     expect(defaultForm('culture')).toMatchObject({
       x: { path: 'traits', values: '5:15:5' },
       ticks: 20000,

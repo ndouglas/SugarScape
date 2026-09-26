@@ -115,6 +115,9 @@ export interface ChartLine { key: string; label: string; color: string; referenc
 export interface ModelChart { title: string; lines: ChartLine[]; range?: [number, number]; shown?: (c: ModelConfig) => boolean }
 
 /** A civil config of Model II (its groups and kills have charts). */
+/** A classes config with two tags (its per-tag charts show). */
+export const hasTags = (c: ModelConfig): boolean => 'tags' in c && (c as { tags: unknown }).tags === true;
+
 export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant === 'ethnic';
 
 /**
@@ -241,11 +244,36 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     { title: 'Active bonds', lines: [{ key: 'active_bonds', label: 'Pairs that can still interact', color: '--red' }] },
     { title: 'Changes', lines: [{ key: 'changes', label: 'Traits changed this tick', color: '--c3' }] },
   ],
+  classes: [
+    { title: 'Mean payoff', lines: [{ key: 'mean_payoff', label: 'Per agent per match', color: '--c1' }], range: [0, 70] },
+    {
+      title: 'Outcomes',
+      lines: [
+        { key: 'outcome_mm', label: 'M–M', color: '--c2' },
+        { key: 'outcome_hl', label: 'H–L', color: '--c3' },
+        { key: 'outcome_fail', label: 'Over 100', color: '--red' },
+        { key: 'outcome_waste', label: 'Under 100', color: '--muted' },
+      ],
+      range: [0, 1],
+    },
+    { title: 'M in memory', lines: [{ key: 'm_share', label: 'Share of remembered demands', color: '--c2' }], range: [0, 1] },
+    { title: 'Regime', lines: [{ key: 'regime', label: '0 mixed · 1 equity · 2 fractious · 3 classes · 4 split within · 5 divided below', color: '--c4' }], range: [0, 5] },
+    {
+      title: 'Payoffs by tag',
+      lines: [
+        { key: 'payoff_dark', label: 'Dark', color: '--red' },
+        { key: 'payoff_light', label: 'Light', color: '--blue' },
+      ],
+      range: [0, 70],
+      shown: hasTags,
+    },
+    { title: 'Inter-type advantage', lines: [{ key: 'payoff_inter', label: 'Dark minus light, against each other', color: '--c3' }], shown: hasTags },
+  ],
 };
 
 /** A model's time charts count calendar years (the anasazi's) or ticks. */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' ? 'Periods' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

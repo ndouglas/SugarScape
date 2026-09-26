@@ -42,6 +42,11 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs AEY’s rule and the mode rule with tags', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['aey-tags-vs-mode', 'aey-tags', 'pvplh-mode', 'AEY’s rule vs the mode rule, with tags — Emergence of Classes (Compare)']);
+  });
+
   it('pairs the docking paper’s two activations at 20 × 20', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual([
