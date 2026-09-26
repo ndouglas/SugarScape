@@ -39,7 +39,7 @@ HK's bounded-confidence model (their eq. BC) as a tenth model kind, `opinions` (
 - Opinion-dependent (ε 0.6): consensus in 20, 18 and 8 runs of 20 at m 0.36, 0.44 and 0.52, none from 0.64; range 0.99 at m = 1 for ε 0.2, 0.4, 0.6; median stable period 5 at m 0, 24 at m 0.4. Fig. 18c (50 evenly spaced, m 0.5) splits in period 4.
 - Serial: at ε 0.05, 7.9 survivors simultaneous, 8.4 shuffled, 9.0 random draws (50 runs); the phases in place under both orders.
 - Lattice (25 × 25, run to stability, capped at 20 000): a second camp of a fifth in 7 of 20 Moore runs at 0.15 and 2 of 20 von Neumann runs at 0.2, never otherwise (ε 0.05–0.6); everyone listening: 20, 20, 17 of 20 at 0.1, 0.15, 0.2. Stability takes hundreds to tens of thousands of periods.
-- Lorenz: consensus at ε 0.22 in 1 of 20 runs with 50 agents, 12 with 625, 16 with 2000; at 0.25, 7 with 50 and 20 from 625.
+- Lorenz: consensus at ε 0.22 in 1 of 20 runs with 50 agents, 12 with 625 and with 1000, 16 with 2000; at 0.25, 7 with 50 and 20 from 625.
 
 ## Architecture
 
