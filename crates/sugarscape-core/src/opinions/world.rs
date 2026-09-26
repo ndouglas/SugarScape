@@ -335,15 +335,15 @@ impl OpinionsWorld {
         }
         let site = OpinionsCell { x, y };
         let (cx, cy) = (x as usize, y as usize);
-        let view = |i: usize, opinion: f64| {
-            let (l, r) = self.config.reach(self.x[i]);
+        let view = |i: usize, opinion: f64, profile: &[f64]| {
+            let (l, r) = self.config.reach(profile[i]);
             OpinionAgent {
                 id: i as u64 + 1,
                 start: self.start[i],
                 opinion,
                 epsilon_left: l,
                 epsilon_right: r,
-                reaches: self.reaches(i, &self.x),
+                reaches: self.reaches(i, profile),
             }
         };
         let mut out = OpinionsInspection {
@@ -362,7 +362,7 @@ impl OpinionsWorld {
             out.opinion = Some(opinion_at(cy));
             out.agents = (0..profile.len())
                 .filter(|&i| row(profile[i]).abs_diff(cy) <= 1)
-                .map(|i| view(i, profile[i]))
+                .map(|i| view(i, profile[i], profile))
                 .collect();
         } else if self.config.interaction == Interaction::Lattice && cx >= LATTICE_X {
             let l = &self.config.lattice;
@@ -374,7 +374,7 @@ impl OpinionsWorld {
                     y: sy as u32,
                 });
                 let i = sy * l.width as usize + sx;
-                out.agents = vec![view(i, self.x[i])];
+                out.agents = vec![view(i, self.x[i], &self.x)];
             }
         }
         Ok(out)
@@ -797,6 +797,48 @@ mod tests {
             "the gap"
         );
         assert_eq!(Model::locate(&l, 1), None);
+    }
+
+    #[test]
+    fn inspect_reports_the_inspected_periods_own_reach_and_reaches() {
+        // Opinion-dependent confidence ties reach to the agent's own
+        // opinion, so a diagram point from an earlier period must report
+        // epsilon_left/right and reaches computed on THAT period's profile,
+        // not the current one.
+        let mut w = world(|c| {
+            c.agents = 5;
+            c.start = Start::Regular;
+            c.confidence = Confidence::OpinionDependent;
+            c.epsilon = 0.6;
+            c.bias = 1.0;
+            c.stop_when_stable = false;
+        });
+        w.run(3);
+        let starts = w.starts().to_vec();
+
+        // Find an agent whose starting reach or reach-count differs from its
+        // current one, so the test isn't vacuously true; agent 0 (start 0.0)
+        // never moves under bias = 1 (it only ever looks left of itself, and
+        // nothing is there), so a middle agent is used instead.
+        let i = (0..starts.len())
+            .find(|&i| {
+                w.config.reach(starts[i]) != w.config.reach(w.opinions()[i])
+                    || w.reaches(i, &starts) != w.reaches(i, w.opinions())
+            })
+            .expect("some agent's opinion moved in 3 periods");
+        let want_reach = w.config.reach(starts[i]);
+        let want_reaches = w.reaches(i, &starts);
+
+        let y = row(starts[i]) as u32;
+        let v = w.inspect(0, y).unwrap();
+        assert_eq!(v.period, Some(0));
+        let agent = v
+            .agents
+            .iter()
+            .find(|a| a.id == i as u64 + 1)
+            .expect("the agent at its own starting row, period 0");
+        assert_eq!((agent.epsilon_left, agent.epsilon_right), want_reach);
+        assert_eq!(agent.reaches, want_reaches);
     }
 
     #[test]

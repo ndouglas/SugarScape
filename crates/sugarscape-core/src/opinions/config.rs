@@ -166,7 +166,7 @@ impl OpinionsConfig {
                 "sides must be between 3 and 44",
             );
             check(
-                self.agents == l.width * l.height,
+                u64::from(self.agents) == u64::from(l.width) * u64::from(l.height),
                 "agents",
                 "must be the lattice's width × height",
             );
@@ -365,6 +365,29 @@ mod tests {
             ..OpinionsConfig::default()
         };
         assert_eq!(tiny.validate().unwrap_err()[0].field, "lattice");
+    }
+
+    #[test]
+    fn huge_pasted_lattice_sides_fail_validation_without_overflowing() {
+        // width * height as u32 would overflow (70_000² > u32::MAX); this
+        // must report an error, not panic in a debug build.
+        let huge = OpinionsConfig {
+            agents: 4,
+            interaction: Interaction::Lattice,
+            lattice: LatticeConfig {
+                width: 70_000,
+                height: 70_000,
+                neighborhood: Neighborhood::Moore,
+            },
+            ..OpinionsConfig::default()
+        };
+        let fields: Vec<String> = huge
+            .validate()
+            .unwrap_err()
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert!(fields.contains(&"lattice".to_string()), "{fields:?}");
     }
 
     #[test]
