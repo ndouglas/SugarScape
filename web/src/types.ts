@@ -80,8 +80,8 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-/** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd';
+/** The models the playground runs (milestones 9–21). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'image';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -294,6 +294,61 @@ export interface DpdConfig {
   schedule: ScheduledChange[];
 }
 
+/** An image-scoring strategy class (milestone 21). */
+export type ImageClass = 'k' | 'h' | 'and' | 'or' | 'own_only' | 'binary' | 'standing' | 'q';
+
+/**
+ * One image-scoring strategy as the core writes it: `{k: 0}`, `{h: 1}`, `{and: {k, h}}`,
+ * `{or: {k, h}}`, `{own_only: h}`, `{binary: k}`, `"standing"` or `{q: Δq in hundredths}`.
+ */
+export type ImageStrategy =
+  | { k: number }
+  | { h: number }
+  | { and: { k: number; h: number } }
+  | { or: { k: number; h: number } }
+  | { own_only: number }
+  | { binary: number }
+  | 'standing'
+  | { q: number };
+
+/**
+ * Nowak and Sigmund's image scoring (milestone 21), with Leimar and Hammerstein's island model,
+ * errors, standing and q strategies: g groups of n, each generation m random donor–recipient pairs
+ * per group, offspring in proportion to payoff. A tick is a generation.
+ */
+export interface ImageConfig {
+  model: 'image';
+  groups: number;
+  group_size: number;
+  /** p: the chance an offspring's parent comes from its own group. */
+  local: number;
+  /** m: rounds per group per generation (fixed, or the mean). */
+  rounds: number;
+  rounds_kind: 'fixed' | 'random';
+  b: number;
+  c: number;
+  u0: number;
+  /** `both`: c added to donor and recipient each round (LH01 on NS98). */
+  offset: 'both' | 'none';
+  /** Scores stay in −clamp … +clamp (0: unbounded). */
+  clamp: number;
+  information: 'perfect' | 'observers';
+  /** With observers: the mean number of members besides the pair who see an interaction. */
+  observers: number;
+  /** What an observer writes: its own tally ± 1 (FAIR23), or the donor's new score. */
+  records: 'tally' | 'score';
+  execution_error: number;
+  perception_error: number;
+  mutation: number;
+  /** The classes allowed (presets, files and links set them; the Rules panel does not). */
+  strategies: ImageClass[];
+  /** `"uniform"`, or everyone playing `only` but the first round(share × n) of each group playing `invader`. */
+  initial: 'uniform' | { only: ImageStrategy; invader?: ImageStrategy; share?: number };
+  /** The last generation (0: never). */
+  end: number;
+  schedule: ScheduledChange[];
+}
+
 
 /**
  * Axelrod's culture model (milestone 14): sites with F features of q traits copying a neighbor's
@@ -373,7 +428,7 @@ export interface StructureConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | ImageConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -533,6 +588,36 @@ export interface EthnoStats {
   relative_given_tag: number | null;
 }
 
+/**
+ * A generation's statistics: the rounds it played and the strategies that played them (tick 0: the
+ * first generation before it plays, so its help rate is null). A share or mean with nobody to count
+ * is null.
+ */
+export interface ImageStats {
+  tick: number;
+  /** Helps ÷ rounds played. */
+  help_rate: number | null;
+  /** The mean k over agents whose strategy has one (k, AND, OR, binary). */
+  mean_k: number | null;
+  /** The share whose strategy helps at a generation's start (k ≤ 0 for the k strategies). */
+  cooperative: number | null;
+  mean_payoff: number | null;
+  mean_score: number | null;
+  k_cooperative: number | null;
+  k_defective: number | null;
+  h: number | null;
+  own_only: number | null;
+  and: number | null;
+  or: number | null;
+  standing: number | null;
+  binary_c: number | null;
+  binary_x: number | null;
+  binary_d: number | null;
+  q: number | null;
+  /** Helps given this generation. */
+  helps: number;
+}
+
 /** A cycle's statistics, of the agents alive at its end. The share and mean wealths are null with nobody to count. */
 export interface DpdStats {
   tick: number;
@@ -610,7 +695,7 @@ export interface StructureStats {
   partner_p_slope: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | ImageStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -789,6 +874,36 @@ export interface DpdAgentView {
 /** A demographic PD site. Empty, it looks exactly like an empty Schelling site: `isDpdView` asks the model. */
 export interface DpdInspection { site: { x: number; y: number }; agent: DpdAgentView | null }
 
+/** An image-scoring agent in the generation that last played. */
+export interface ImageAgentView {
+  id: number;
+  group: number;
+  /** "k = 0", "k = 0, h = 1 (AND)", "standing", "Δq = 0.25" … */
+  strategy: string;
+  class: ImageClass;
+  /** Whether the strategy helps at a generation's start. */
+  cooperative: boolean;
+  score: number;
+  /** Good standing (as everyone would judge it without perception errors). */
+  standing: boolean;
+  /**
+   * With private records: the members who have seen it act this generation, and their mean record
+   * of its score (null when none has); both null with perfect information.
+   */
+  known: number | null;
+  mean_view: number | null;
+  payoff: number;
+  /** Helps given and received this generation. */
+  given: number;
+  received: number;
+}
+/**
+ * A cell of the image-scoring frame: its group's tile (null in a gap) and the agent there (null in a
+ * gap or a tile's unused cell). It has `cell`, not `site`: the guards that read `site` check that
+ * there is one.
+ */
+export interface ImageInspection { cell: { x: number; y: number }; group: number | null; agent: ImageAgentView | null }
+
 /** What a world of any model says about a site. */
 /** A culture site: its position, traits, and the sizes of its region and zone. */
 export interface CultureSiteView { x: number; y: number; traits: number[]; region_size: number; zone_size: number }
@@ -858,13 +973,14 @@ export interface StructureInspection {
   agent: StructureAgentView | null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | ImageInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
  * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`, or (tags)
  * `count`, `tolerance`, `clones`, or (ethnocentrism) `strategy`, `tag`, `lineage`, `ptr`, or (the
- * demographic PD) `strategy`, `wealth`, `age`, `surrounded`.
+ * demographic PD) `strategy`, `wealth`, `age`, `surrounded`, or (image scoring) `strategy`, `score`,
+ * `payoff`.
  */
 export type ColorMode =
   | 'tribe'
@@ -902,7 +1018,8 @@ export type ColorMode =
   | 'friendliness'
   | 'provocability'
   | 'strategy'
-  | 'surrounded';
+  | 'surrounded'
+  | 'score';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

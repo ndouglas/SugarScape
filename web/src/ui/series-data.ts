@@ -120,6 +120,12 @@ export const hasTags = (c: ModelConfig): boolean => 'tags' in c && (c as { tags:
 
 export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant === 'ethnic';
 
+/** Whether an image-scoring config allows LH01's binary scorers (who have their own shares chart). */
+const hasBinary = (c: ModelConfig): boolean => 'strategies' in c && (c.strategies as string[]).includes('binary');
+
+/** Whether an image-scoring config allows a class with a k (k, AND, OR, binary). */
+const hasK = (c: ModelConfig): boolean => 'strategies' in c && (c.strategies as string[]).some((s) => s === 'k' || s === 'and' || s === 'or' || s === 'binary');
+
 /**
  * The other models' charts (Decision 13), each a time chart of the model's own series:
  * Schelling's segregation, share unsatisfied, moves and Red share; Ring World's flocks, flock
@@ -129,7 +135,9 @@ export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant
  * kills; the spatial games' cooperators, changes, switches and payoffs; the tags model's donation,
  * tolerance, clusters, tags and takeovers; the ethnocentrism model's strategies (in the frame's
  * colors), cooperation, population and kin; the demographic PD's cooperators and defectors (in the
- * frame's colors), cooperator share, surrounded cooperators, mean wealths, and births and deaths.
+ * frame's colors), cooperator share, surrounded cooperators, mean wealths, and births and deaths;
+ * image scoring's help rate and cooperative strategies, mean k, strategy shares (the binary scorers
+ * apart) and mean payoff.
  */
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
@@ -386,14 +394,52 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       ],
     },
   ],
+  image: [
+    {
+      title: 'Help rate',
+      lines: [
+        { key: 'help_rate', label: 'Helps ÷ rounds', color: '--c1' },
+        { key: 'cooperative', label: 'Cooperative strategies', color: '--blue' },
+      ],
+      range: [0, 1],
+    },
+    { title: 'Mean k', lines: [{ key: 'mean_k', label: 'Over strategies with a k', color: '--c4' }], range: [-5, 6], shown: hasK },
+    {
+      title: 'Strategy shares',
+      lines: [
+        { key: 'k_cooperative', label: 'k ≤ 0', color: '--blue' },
+        { key: 'k_defective', label: 'k > 0', color: '--red' },
+        { key: 'h', label: 'h (own score)', color: '--c3' },
+        { key: 'own_only', label: 'Own score only', color: '--muted' },
+        { key: 'and', label: 'AND', color: '--c1' },
+        { key: 'or', label: 'OR', color: '--c4' },
+        { key: 'standing', label: 'Standing', color: '--c2' },
+        { key: 'q', label: 'q strategies', color: '--lender' },
+      ],
+      range: [0, 1],
+      shown: (c) => !hasBinary(c),
+    },
+    {
+      title: 'Binary scorers and standing',
+      lines: [
+        { key: 'binary_c', label: 'Cooperators', color: '--blue' },
+        { key: 'binary_x', label: 'Discriminators', color: '--c3' },
+        { key: 'binary_d', label: 'Defectors', color: '--red' },
+        { key: 'standing', label: 'Standing', color: '--c2' },
+      ],
+      range: [0, 1],
+      shown: hasBinary,
+    },
+    { title: 'Mean payoff', lines: [{ key: 'mean_payoff', label: 'Per agent, this generation', color: '--c2' }] },
+  ],
 };
 
 /**
- * A model's time charts count calendar years (the anasazi's), generations (tags), periods
- * (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
+ * A model's time charts count calendar years (the anasazi's), generations (tags, image scoring),
+ * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

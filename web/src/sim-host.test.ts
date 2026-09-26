@@ -97,7 +97,7 @@ describe('SimHost', () => {
       diseaseList: true,
     };
     const full = t.snap(t.send({ type: 'step', n: 1 }, { wants: all }));
-    expect(full.inspection?.view.site).toMatchObject({ x: 0, y: 0 });
+    expect(full.inspection?.view).toMatchObject({ site: { x: 0, y: 0 } });
     expect(full.trail).toBeDefined();
     expect(full.networks?.trade).toEqual(Uint32Array.of(0, 0, 1, 1));
     expect(Object.keys(full.charts ?? {})).toEqual(['population']);

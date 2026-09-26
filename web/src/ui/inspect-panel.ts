@@ -2,7 +2,8 @@ import { citizenRows, shownCitizen } from '../civil';
 import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
-import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { imageRows } from '../image-scoring';
+import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -16,6 +17,8 @@ import type {
   DpdInspection,
   EthnoConfig,
   EthnoInspection,
+  ImageConfig,
+  ImageInspection,
   LinkView,
   RingInspection,
   SchellingInspection,
@@ -169,6 +172,16 @@ export class InspectPanel {
     if (gone) return rows;
     if (!view.agent) return [...rows, row('Agent', 'none (an empty site)')];
     return [...rows, ...dpdRows(view.agent).map(([k, v]) => row(k, v))];
+  }
+
+  /**
+   * An image-scoring cell and the agent of the generation that last played there. A followed agent
+   * lives one generation (its offspring have new ids), so once it is gone only the cell shows.
+   */
+  private imageCellRows(view: ImageInspection, gone: boolean): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (gone) return [row('Cell', `(${view.cell.x}, ${view.cell.y})`)];
+    return imageRows(view, this.engine.config as ImageConfig).map(([k, v]) => row(k, v));
   }
 
   /** A civil site: its cop, the agent shown there (followed into jail), and others jailed after arrest here. */
@@ -336,6 +349,12 @@ export class InspectPanel {
     // The host tracks a selected agent while it lives (Decision 3).
     const gone = shown.agentId !== null && !shown.alive;
     const view = shown.view;
+    // First: an image-scoring cell has no `site` for the guards below to read.
+    if (isImageView(view)) {
+      const note = gone ? [h('p', { class: 'error' }, `Agent #${shown.agentId}’s generation has passed: each agent lives one generation.`)] : [];
+      this.el.replaceChildren(...note, h('table', {}, ...this.imageCellRows(view, gone)));
+      return;
+    }
     if (!isSugarView(view)) {
       // A Schelling agent that reached its maximum residence has left the landscape; a household
       // dies or leaves the valley; a civil agent dies, is released, or (Model II) is killed.

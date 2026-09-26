@@ -1,4 +1,4 @@
-// Which model a config is (milestones 9–17), and what each model offers the page.
+// Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   AnasaziInspection,
@@ -19,6 +19,8 @@ import type {
   DpdInspection,
   EthnoConfig,
   EthnoInspection,
+  ImageConfig,
+  ImageInspection,
   Inspection,
   ModelConfig,
   ModelKind,
@@ -29,7 +31,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'image'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -46,12 +48,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   opinions: 'Bounded Confidence',
   structure: 'Social Structure',
   dpd: 'Demographic PD',
+  image: 'Image Scoring',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'image'
     ? tag
     : 'sugarscape';
 }
@@ -62,17 +65,17 @@ export function isSugar(c: ModelConfig): c is Config {
 
 /** A sugarscape site's inspection (it lists the site's resources). */
 export function isSugarView(v: AnyInspection): v is Inspection {
-  return 'resources' in v.site;
+  return 'site' in v && 'resources' in v.site;
 }
 
 /** A Ring World site's inspection (it has sugar but no resources list). */
 export function isRingView(v: AnyInspection): v is RingInspection {
-  return 'sugar' in v.site;
+  return 'site' in v && 'sugar' in v.site;
 }
 
 /** A Long House Valley cell's inspection (it names its zone). */
 export function isValleyView(v: AnyInspection): v is AnasaziInspection {
-  return 'zone' in v.site;
+  return 'site' in v && 'zone' in v.site;
 }
 
 /** A civil violence site's inspection (it lists the agents jailed after arrest there). */
@@ -82,7 +85,7 @@ export function isCivilView(v: AnyInspection): v is CivilInspection {
 
 /** A spatial games cell's inspection (it names its z). */
 export function isSpatialView(v: AnyInspection): v is SpatialInspection {
-  return 'z' in v.site;
+  return 'site' in v && 'z' in v.site;
 }
 
 /** A cell of the tags model's diagram (it names its generation). */
@@ -127,6 +130,14 @@ export function isDpdView(v: AnyInspection, model: ModelKind): v is DpdInspectio
   return model === 'dpd' && (v.agent === null || 'surrounded' in v.agent);
 }
 
+/**
+ * A cell of the image-scoring frame (it names its cell and group; no other model's inspection has a
+ * `cell`). It has no `site`, so the guards above check for one before reading it.
+ */
+export function isImageView(v: AnyInspection): v is ImageInspection {
+  return 'cell' in v && 'group' in v;
+}
+
 /** The calendar year a world of `c` is in at `tick` (the anasazi's), or null for a model without one. */
 export function calendarYear(c: ModelConfig, tick: number): number | null {
   return 'model' in c && c.model === 'anasazi' ? c.start_year + tick : null;
@@ -134,8 +145,8 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
 
 /**
  * Ticks until a world of `c` at `tick` is finished (the anasazi's end year, the tags model's last
- * generation, the ethnocentrism model's last period, the demographic PD's last cycle); Infinity for
- * a model that never finishes.
+ * generation, the ethnocentrism model's last period, the demographic PD's last cycle, image scoring's
+ * last generation); Infinity for a model that never finishes.
  */
 export function ticksLeft(c: ModelConfig, tick: number): number {
   if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
@@ -143,6 +154,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
   if (modelOf(c) === 'structure' && (c as StructureConfig).stop_at > 0) return Math.max(0, (c as StructureConfig).stop_at - tick);
   if (modelOf(c) === 'dpd' && (c as DpdConfig).end > 0) return Math.max(0, (c as DpdConfig).end - tick);
+  if (modelOf(c) === 'image' && (c as ImageConfig).end > 0) return Math.max(0, (c as ImageConfig).end - tick);
   return Infinity;
 }
 
@@ -253,6 +265,12 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['age', 'Age'],
     ['surrounded', 'Surrounded'],
   ],
+  // The strategies first (k on a blue–red scale, each other class its own color); the core's mode names.
+  image: [
+    ['strategy', 'Strategy'],
+    ['score', 'Score'],
+    ['payoff', 'Payoff'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -270,4 +288,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   opinions: [],
   structure: [],
   dpd: [],
+  image: [],
 };

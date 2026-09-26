@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider } from './schema-form';
-import type { AnasaziConfig, DpdConfig, EthnoConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
+import type { AnasaziConfig, DpdConfig, EthnoConfig, ImageConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
 
 const ring = (): RingConfig => ({
   model: 'ring',
@@ -147,5 +147,23 @@ describe('the schema form', () => {
     expect(paramShown(play, c)).toBe(true);
     paramEdit(param({ path: 'pairing', kind: 'choice' }), 'soup')(c);
     expect(paramShown(play, c)).toBe(false);
+  });
+
+  it('reads and writes small rates and whole limits, and shows the observers only with observers (image scoring)', () => {
+    const c = { model: 'image', mutation: 0.0001, clamp: 5, observers: 10, information: 'perfect' } as unknown as ImageConfig;
+    const mutation = param({ path: 'mutation', kind: 'number', min: 0, max: 0.1, step: 0.0001 });
+    expect([paramInput(mutation, c), paramSlider(mutation, c)]).toEqual(['0.0001', '0.0001']);
+    paramEdit(mutation, '0.001')(c);
+    expect(c.mutation).toBe(0.001);
+    // Clamp 0 means unbounded scores; an integer box rounds.
+    const clamp = param({ path: 'clamp', kind: 'integer', min: 0, max: 100 });
+    paramEdit(clamp, '0')(c);
+    expect(c.clamp).toBe(0);
+    paramEdit(clamp, '2.6')(c);
+    expect(c.clamp).toBe(3);
+    const observers = { path: 'observers', label: 'Observers per interaction', kind: 'number', apply: 'live', group: 'Information', show_if: { path: 'information', equals: 'observers' } } as Param;
+    expect(paramShown(observers, c)).toBe(false);
+    paramEdit(param({ path: 'information', kind: 'choice' }), 'observers')(c);
+    expect(paramShown(observers, c)).toBe(true);
   });
 });

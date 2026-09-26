@@ -10,6 +10,7 @@ import {
   isCultureView,
   isDpdView,
   isEthnoView,
+  isImageView,
   isRingView,
   isSpatialView,
   isSugar,
@@ -353,5 +354,49 @@ describe('the demographic PD', () => {
     expect(ticksLeft(dpd(0), 5)).toBe(Infinity);
     expect(finishesUnpredictably(dpd(500))).toBe(false);
     expect(calendarYear(dpd(500), 5)).toBeNull();
+  });
+});
+
+describe('image scoring', () => {
+  const image = (end: number) => ({ model: 'image', end }) as unknown as ModelConfig;
+
+  it('is read by its tag, and its cells by their shape, which no other model’s inspection shares', () => {
+    expect(modelOf(image(0))).toBe('image');
+    expect(isSugar(image(0))).toBe(false);
+    const gap = { cell: { x: 10, y: 0 }, group: null, agent: null } as AnyInspection;
+    const agent = { cell: { x: 1, y: 2 }, group: 0, agent: { id: 3, group: 0, strategy: 'k = 0', class: 'k', score: 1 } } as unknown as AnyInspection;
+    expect([gap, agent].map(isImageView)).toEqual([true, true]);
+    // The guards that read `site` check for one first (an image cell has none).
+    for (const v of [gap, agent]) {
+      expect([isSugarView(v), isRingView(v), isValleyView(v), isSpatialView(v)]).toEqual([false, false, false, false]);
+      expect([isCivilView(v), isTagsView(v), isClassesView(v), isCultureView(v), isStructureView(v), isOpinionsView(v)]).toEqual([false, false, false, false, false, false]);
+      expect([isEthnoView(v, 'image'), isDpdView(v, 'image')]).toEqual([false, false]);
+    }
+    const empty = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
+    const sugar = { site: { x: 1, y: 2, resources: [] }, agent: null } as unknown as AnyInspection;
+    expect([empty, sugar].map(isImageView)).toEqual([false, false]);
+  });
+
+  it('offers strategy, score and payoff colors and no overlays, and is grouped last', () => {
+    expect(COLOR_MODES.image).toEqual([
+      ['strategy', 'Strategy'],
+      ['score', 'Score'],
+      ['payoff', 'Payoff'],
+    ]);
+    expect(MODEL_OVERLAYS.image).toEqual([]);
+    const p = (id: string, config: object) => ({ id, name: id, source: '', description: '', config }) as unknown as Preset;
+    expect(presetGroups([p('ns', { model: 'image' }), p('dpd', { model: 'dpd' }), p('ha', { model: 'ethno' })]).map((g) => g.label)).toEqual([
+      'Ethnocentrism',
+      'Demographic PD',
+      'Image Scoring',
+    ]);
+  });
+
+  it('counts down to its last generation, or never with none (the default)', () => {
+    expect(ticksLeft(image(500), 490)).toBe(10);
+    expect(ticksLeft(image(500), 505)).toBe(0);
+    expect(ticksLeft(image(0), 5)).toBe(Infinity);
+    expect(finishesUnpredictably(image(500))).toBe(false);
+    expect(calendarYear(image(500), 5)).toBeNull();
   });
 });

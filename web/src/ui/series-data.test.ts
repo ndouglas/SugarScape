@@ -337,3 +337,45 @@ describe('the demographic PD’s charts', () => {
     expect(timeAxisLabel('dpd')).toBe('Cycle');
   });
 });
+
+describe('image scoring’s charts', () => {
+  const image = (strategies: string[]) => ({ model: 'image', strategies }) as unknown as ModelConfig;
+
+  it('charts the help rate with cooperative strategies, mean k, strategy shares and mean payoff against the generation', () => {
+    expect(MODEL_CHARTS.image.map((c) => c.title)).toEqual(['Help rate', 'Mean k', 'Strategy shares', 'Binary scorers and standing', 'Mean payoff']);
+    expect(MODEL_CHARTS.image.map((c) => c.lines.map((l) => [l.key, l.color]))).toEqual([
+      [
+        ['help_rate', '--c1'],
+        ['cooperative', '--blue'],
+      ],
+      [['mean_k', '--c4']],
+      [
+        ['k_cooperative', '--blue'],
+        ['k_defective', '--red'],
+        ['h', '--c3'],
+        ['own_only', '--muted'],
+        ['and', '--c1'],
+        ['or', '--c4'],
+        ['standing', '--c2'],
+        ['q', '--lender'],
+      ],
+      [
+        ['binary_c', '--blue'],
+        ['binary_x', '--c3'],
+        ['binary_d', '--red'],
+        ['standing', '--c2'],
+      ],
+      [['mean_payoff', '--c2']],
+    ]);
+    expect(MODEL_CHARTS.image.map((c) => c.range)).toEqual([[0, 1], [-5, 6], [0, 1], [0, 1], undefined]);
+    expect(timeAxisLabel('image')).toBe('Generation');
+  });
+
+  it('shows mean k only with a class that has a k, and the binary scorers’ shares instead of the others', () => {
+    const shown = (strategies: string[]) => MODEL_CHARTS.image.map((c) => !c.shown || c.shown(image(strategies)));
+    expect(shown(['k'])).toEqual([true, true, true, false, true]);
+    expect(shown(['and', 'q'])).toEqual([true, true, true, false, true]);
+    expect(shown(['own_only'])).toEqual([true, false, true, false, true]);
+    expect(shown(['binary', 'standing'])).toEqual([true, true, false, true, true]);
+  });
+});
