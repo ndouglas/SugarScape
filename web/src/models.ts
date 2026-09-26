@@ -92,12 +92,12 @@ export function isClassesView(v: AnyInspection): v is ClassesInspection {
   return 'simplex' in v && 'mix' in v;
 }
 
-/** A cell of the bounded-confidence frame (it names its period and lattice site). */
 /** A cell of the social-structure frame (it names its block cell and plane point). */
 export function isStructureView(v: AnyInspection): v is StructureInspection {
   return 'block' in v && 'plane' in v;
 }
 
+/** A cell of the bounded-confidence frame (it names its period and lattice site). */
 export function isOpinionsView(v: AnyInspection): v is OpinionsInspection {
   return 'period' in v && 'lattice_site' in v;
 }

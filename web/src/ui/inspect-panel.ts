@@ -168,7 +168,7 @@ export class InspectPanel {
     return rows;
   }
 
-  /** A cell of the opinion × time diagram (its period, opinion and the agents passing) or of the lattice. */
+  /** A cell of the agents' block (its agent) or of the p–q plane (its point and the agents there). */
   private structureRows(view: StructureInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     const names = { tft: 'near Tit-for-Tat', alld: 'near Always Defect', allc: 'near Always Cooperate', other: 'mixed' };
@@ -187,9 +187,11 @@ export class InspectPanel {
       if (view.agents.length > 12) rows.push(row('', `and ${view.agents.length - 12} more`));
       return rows;
     }
+    if (view.block) return [row('Block cell', 'no agent here')];
     return [row('Point', 'between the agents and the plane')];
   }
 
+  /** A cell of the opinion × time diagram (its period, opinion and the agents passing) or of the lattice. */
   private opinionsRows(view: OpinionsInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     const rows: HTMLElement[] = [];
