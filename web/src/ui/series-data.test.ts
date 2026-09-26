@@ -261,3 +261,20 @@ describe('the spatial games’ charts', () => {
     expect(MODEL_CHARTS.spatial.map((c) => c.title)).toEqual(['Cooperators', 'Changes', 'Switches', 'Payoffs']);
   });
 });
+
+describe('the ethnocentrism model’s charts', () => {
+  it('charts strategies, cooperation, population and kin against the period', () => {
+    expect(MODEL_CHARTS.ethno.map((c) => c.title)).toEqual(['Strategies', 'Cooperation', 'Population', 'Kin']);
+    expect(MODEL_CHARTS.ethno[0].lines.map((l) => [l.key, l.color])).toEqual([
+      ['ethnocentric', '--lender'],
+      ['humanitarian', '--blue'],
+      ['selfish', '--red'],
+      ['traitorous', '--both'],
+      ['kin', '--c4'],
+      ['nonkin', '--c2'],
+      ['mixed', '--muted'],
+    ]);
+    expect(MODEL_CHARTS.ethno.every((c) => !c.shown)).toBe(true);
+    expect(timeAxisLabel('ethno')).toBe('Period');
+  });
+});

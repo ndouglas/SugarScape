@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { describedBy, groupParams, paramEdit, paramInput, paramShown } from './schema-form';
-import type { AnasaziConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
+import type { AnasaziConfig, EthnoConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
 
 const ring = (): RingConfig => ({
   model: 'ring',
@@ -91,5 +91,26 @@ describe('the schema form', () => {
     const rebellion = { model: 'civil', variant: 'rebellion' } as unknown as ModelConfig;
     expect([paramShown(p, ethnic), paramShown(p, rebellion)]).toEqual([true, false]);
     expect(paramShown(always, rebellion)).toBe(true);
+  });
+
+  it('shows a field while a bool field is on (the ethnocentrism model’s kin fields)', () => {
+    const p = { path: 'kin_basis', label: 'Tag or kin basis', kind: 'choice', apply: 'reset', group: 'Traits', show_if: { path: 'kin_strategies', equals: 'true' } } as Param;
+    const kin = (on: boolean) => ({ model: 'ethno', kin_strategies: on }) as unknown as ModelConfig;
+    expect([paramShown(p, kin(true)), paramShown(p, kin(false))]).toEqual([true, false]);
+  });
+
+  it('shows a nullable field’s null as an empty box and writes an empty box as null', () => {
+    const p = param({ path: 'tag_mutation', kind: 'number', step: 0.005, nullable: true });
+    const c = { model: 'ethno', tag_mutation: null, mutation: 0.005 } as unknown as EthnoConfig;
+    expect(paramInput(p, c)).toBe('');
+    paramEdit(p, '0.3')(c);
+    expect(c.tag_mutation).toBe(0.3);
+    expect(paramInput(p, c)).toBe('0.3');
+    paramEdit(p, ' ')(c);
+    expect(c.tag_mutation).toBeNull();
+    // A field that is not nullable reads an empty box as a number, as before.
+    const r = ring();
+    paramEdit(param({ path: 'growback', kind: 'number' }), '')(r);
+    expect(r.growback).toBe(0);
   });
 });

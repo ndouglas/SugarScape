@@ -77,7 +77,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'ethno';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -221,7 +221,38 @@ export interface TagsConfig {
   selection: 'tournament' | 'adopt';
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig;
+/** A strategy as Inspect and `allowed` name it (`allowed` lists only E, H, S and T). */
+export type EthnoStrategy = 'E' | 'H' | 'S' | 'T' | 'kin' | 'nonkin' | 'mixed';
+
+/** Hammond & Axelrod's ethnocentrism model and its critics' variants (milestone 14). A tick is a period. */
+export interface EthnoConfig {
+  model: 'ethno';
+  width: number;
+  colors: number;
+  start: 'empty' | 'random' | 'selfish';
+  immigration: number;
+  base_ptr: number;
+  cost: number;
+  benefit: number;
+  death: number;
+  mutation: number;
+  /** The tag's own mutation rate; null = `mutation`. */
+  tag_mutation: number | null;
+  pair_play: 'once' | 'twice';
+  discrimination: 'same_other' | 'none' | 'each_color';
+  misperception: number;
+  offspring: 'adjacent' | 'anywhere';
+  /** Not on the Rules panel: presets, files and links set it. */
+  allowed: ('E' | 'H' | 'S' | 'T')[];
+  kin_strategies: boolean;
+  kin_basis: 'mutates' | 'fixed';
+  kin_mutation: number;
+  /** The last period (0: never). */
+  end: number;
+  schedule: ScheduledChange[];
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | EthnoConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -238,8 +269,10 @@ export interface Param {
   group: string;
   /** A one-line explanation shown under the control (the anasazi's quirks). */
   help?: string;
-  /** Shown only while the string field `path` equals `equals` (Model II's population fields). */
+  /** Shown only while the field `path` equals `equals` (a bool as `'true'`/`'false'`): Model II's population fields, the kin fields. */
   show_if?: { path: string; equals: string };
+  /** A number field that may be empty: null shows as an empty box, and an empty box sends null. */
+  nullable?: true;
 }
 
 export interface FieldError { field: string; message: string }
@@ -356,8 +389,27 @@ export interface TagsStats {
   takeovers: number;
 }
 
+/** A period's statistics. Shares are null on an empty lattice; the interaction ratios null with a zero denominator (and at t = 0). */
+export interface EthnoStats {
+  tick: number;
+  population: number;
+  ethnocentric: number | null;
+  humanitarian: number | null;
+  selfish: number | null;
+  traitorous: number | null;
+  kin: number | null;
+  nonkin: number | null;
+  mixed: number | null;
+  cooperation: number | null;
+  same_tag: number | null;
+  relatives: number | null;
+  kin_help: number | null;
+  tag_given_relative: number | null;
+  relative_given_tag: number | null;
+}
+
 /** The latest statistics of a world of any model. */
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | EthnoStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -494,13 +546,43 @@ export interface TagsInspection {
   agent: null;
 }
 
+/** An occupied neighbor of an ethnocentrism agent (up, left, right, down): whether they share a founding immigrant, and this period's helps each way. */
+export interface EthnoNeighborView { x: number; y: number; tag: number; strategy: EthnoStrategy; related: boolean; helped: number; helped_by: number }
+/** An ethnocentrism agent: its traits, this period's PTR and helps, its lineage, kin marker and age, and its neighbors. */
+export interface EthnoAgentView {
+  id: number;
+  tag: number;
+  strategy: EthnoStrategy;
+  /** What same/other is judged by: the tag, or (kin strategies) the kin marker. */
+  basis: 'tag' | 'kin';
+  ptr: number;
+  given: number;
+  received: number;
+  /** The founding immigrant's id. */
+  lineage: number;
+  /** The family founder's id. */
+  kin_marker: number;
+  age: number;
+  neighbors: EthnoNeighborView[];
+}
+/** An ethnocentrism site. Empty, it looks exactly like an empty Schelling site: `isEthnoView` asks the model. */
+export interface EthnoInspection { site: { x: number; y: number }; agent: EthnoAgentView | null }
+
 /** What a world of any model says about a site. */
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection;
+export type AnyInspection =
+  | Inspection
+  | SchellingInspection
+  | RingInspection
+  | AnasaziInspection
+  | CivilInspection
+  | TagsInspection
+  | SpatialInspection
+  | EthnoInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
  * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`, or (tags)
- * `count`, `tolerance`, `clones`.
+ * `count`, `tolerance`, `clones`, or (ethnocentrism) `strategy`, `tag`, `lineage`, `ptr`.
  */
 export type ColorMode =
   | 'tribe'
@@ -525,7 +607,9 @@ export type ColorMode =
   | 'payoff'
   | 'count'
   | 'tolerance'
-  | 'clones';
+  | 'clones'
+  | 'tag'
+  | 'ptr';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

@@ -1,11 +1,14 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
-import { isCivilView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { ethnoRows } from '../ethno';
+import { isCivilView, isEthnoView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AnasaziInspection,
   CivilInspection,
+  EthnoConfig,
+  EthnoInspection,
   LinkView,
   RingInspection,
   SchellingInspection,
@@ -135,6 +138,19 @@ export class InspectPanel {
     return [...rows, ...playerRows(view.agent, config.update === 'asynchronous').map(([k, v]) => row(k, v))];
   }
 
+  /**
+   * An ethnocentrism site and its agent: tag, strategy (and basis), PTR and helps, lineage, kin
+   * marker and age, and its neighbors. An agent that died leaves the site's rows alone.
+   */
+  private ethnoRows(view: EthnoInspection, gone: boolean): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const rows = [row('Site', `(${view.site.x}, ${view.site.y})`)];
+    if (gone) return rows;
+    if (!view.agent) return [...rows, row('Agent', 'none (an empty site)')];
+    const kin = (this.engine.config as EthnoConfig).kin_strategies;
+    return [...rows, ...ethnoRows(view.agent, kin).map(([k, v]) => row(k, v))];
+  }
+
   /** A civil site: its cop, the agent shown there (followed into jail), and others jailed after arrest here. */
   private civilRows(view: CivilInspection, followed: number | null, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -232,19 +248,24 @@ export class InspectPanel {
         ? `Household #${shown.agentId} is gone: it died or left the valley.`
         : isCivilView(view)
           ? `Agent #${shown.agentId} is gone: killed, or dead of old age.`
-          : `Agent #${shown.agentId} has left.`;
+          : isEthnoView(view, this.engine.model)
+            ? `Agent #${shown.agentId} has died.`
+            : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
-      const rows = isTagsView(view)
-        ? this.tagsRows(view)
-        : isRingView(view)
-          ? this.ringRows(view, gone)
-          : isValleyView(view)
-            ? this.valleyRows(view, gone)
-            : isCivilView(view)
-              ? this.civilRows(view, shown.agentId, gone)
-              : isSpatialView(view)
-                ? this.spatialRows(view)
-              : this.schellingRows(view, gone);
+      // First: an empty ethnocentrism site is shaped like an empty Schelling site.
+      const rows = isEthnoView(view, this.engine.model)
+        ? this.ethnoRows(view, gone)
+        : isTagsView(view)
+          ? this.tagsRows(view)
+          : isRingView(view)
+            ? this.ringRows(view, gone)
+            : isValleyView(view)
+              ? this.valleyRows(view, gone)
+              : isCivilView(view)
+                ? this.civilRows(view, shown.agentId, gone)
+                : isSpatialView(view)
+                  ? this.spatialRows(view)
+                  : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

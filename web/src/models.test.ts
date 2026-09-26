@@ -4,6 +4,7 @@ import {
   COLOR_MODES,
   finishesUnpredictably,
   isCivilView,
+  isEthnoView,
   isRingView,
   isSpatialView,
   isSugar,
@@ -176,5 +177,41 @@ describe('the spatial model', () => {
       ['payoff', 'Payoff'],
     ]);
     expect(MODEL_OVERLAYS.spatial).toEqual([]);
+  });
+});
+
+describe('the ethnocentrism model', () => {
+  const ethno = (end: number) => ({ model: 'ethno', end }) as unknown as ModelConfig;
+
+  it('is read by its tag, and its inspections by the model (an empty site is shaped like Schelling’s)', () => {
+    expect(modelOf(ethno(2000))).toBe('ethno');
+    expect(isSugar(ethno(2000))).toBe(false);
+    const empty = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
+    const agent = { site: { x: 1, y: 2 }, agent: { id: 3, kin_marker: 3, neighbors: [] } } as unknown as AnyInspection;
+    const schelling = { site: { x: 1, y: 2 }, agent: { id: 3, neighbors: 2 } } as unknown as AnyInspection;
+    expect([empty, agent].map((v) => isEthnoView(v, 'ethno'))).toEqual([true, true]);
+    expect([empty, agent, schelling].map((v) => isEthnoView(v, 'schelling'))).toEqual([false, false, false]);
+    expect(isEthnoView(schelling, 'ethno')).toBe(false);
+    expect(isTagsView(agent) || isRingView(agent) || isSugarView(agent) || isValleyView(agent) || isCivilView(agent) || isSpatialView(agent)).toBe(false);
+  });
+
+  it('offers strategy, tag, lineage and PTR colors and no overlays, and is grouped last', () => {
+    expect(COLOR_MODES.ethno).toEqual([
+      ['strategy', 'Strategy'],
+      ['tag', 'Tag'],
+      ['lineage', 'Lineage'],
+      ['ptr', 'PTR'],
+    ]);
+    expect(MODEL_OVERLAYS.ethno).toEqual([]);
+    const p = (id: string, config: object) => ({ id, name: id, source: '', description: '', config }) as unknown as Preset;
+    expect(presetGroups([p('ha', { model: 'ethno' }), p('nm', { model: 'spatial' })]).map((g) => g.label)).toEqual(['Spatial Games', 'Ethnocentrism']);
+  });
+
+  it('counts down to its last period, or never with none', () => {
+    expect(ticksLeft(ethno(2000), 1990)).toBe(10);
+    expect(ticksLeft(ethno(2000), 2005)).toBe(0);
+    expect(ticksLeft(ethno(0), 5)).toBe(Infinity);
+    expect(finishesUnpredictably(ethno(2000))).toBe(false);
+    expect(calendarYear(ethno(2000), 5)).toBeNull();
   });
 });

@@ -478,7 +478,8 @@ pub fn schema() -> Vec<Param> {
             (0.0, 1.0, 0.005),
             Live,
         )
-        .with_help("Empty: the mutation rate"),
+        .with_help("Empty: the mutation rate")
+        .nullable(),
         Param::integer("Run", "end", "Last period (0: never)", (0, 100_000), Live),
     ]
 }
@@ -623,6 +624,24 @@ mod tests {
             )
         );
         assert!(serde_json::from_str::<EthnoConfig>(r#"{"tags": 3}"#).is_err());
+    }
+
+    #[test]
+    fn only_the_tag_mutation_may_be_empty_on_the_panel() {
+        let params = schema();
+        let nullable: Vec<_> = params
+            .iter()
+            .filter(|p| p.nullable)
+            .map(|p| p.path)
+            .collect();
+        assert_eq!(nullable, ["tag_mutation"]);
+        let json = serde_json::to_value(&params).unwrap();
+        let flagged = json
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|p| p.get("nullable").is_some());
+        assert_eq!(flagged.count(), 1);
     }
 
     #[test]

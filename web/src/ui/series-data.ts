@@ -123,7 +123,9 @@ export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant
  * size (mean and largest) and distance moved; the anasazi's households against the historical
  * record, carrying capacity, fit, stored corn, and births, moves and departures; civil violence's
  * actives, quiet and jailed, legitimacy, cops, tension, outbursts, and in Model II its groups and
- * kills; the spatial games' cooperators, changes, switches and payoffs.
+ * kills; the spatial games' cooperators, changes, switches and payoffs; the tags model's donation,
+ * tolerance, clusters, tags and takeovers; the ethnocentrism model's strategies (in the frame's
+ * colors), cooperation, population and kin.
  */
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
@@ -227,11 +229,45 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     { title: 'Distinct tags', lines: [{ key: 'distinct_tags', label: 'Distinct tags', color: '--c2' }] },
     { title: 'Takeovers', lines: [{ key: 'takeovers', label: 'Dominant clusters replaced', color: '--c3' }] },
   ],
+  ethno: [
+    {
+      title: 'Strategies',
+      lines: [
+        { key: 'ethnocentric', label: 'Ethnocentric', color: '--lender' },
+        { key: 'humanitarian', label: 'Humanitarian', color: '--blue' },
+        { key: 'selfish', label: 'Selfish', color: '--red' },
+        { key: 'traitorous', label: 'Traitorous', color: '--both' },
+        { key: 'kin', label: 'Kin', color: '--c4' },
+        { key: 'nonkin', label: 'Non-kin', color: '--c2' },
+        { key: 'mixed', label: 'Mixed', color: '--muted' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Cooperation',
+      lines: [
+        { key: 'cooperation', label: 'Helps per decision', color: '--c1' },
+        { key: 'same_tag', label: 'Decisions toward the same tag', color: '--c3' },
+      ],
+      range: [0, 1],
+    },
+    { title: 'Population', lines: [{ key: 'population', label: 'Agents', color: '--c2' }] },
+    {
+      title: 'Kin',
+      lines: [
+        { key: 'relatives', label: 'Neighbors related', color: '--muted' },
+        { key: 'kin_help', label: 'Helps to relatives', color: '--c4' },
+        { key: 'tag_given_relative', label: 'Same tag if related', color: '--c1' },
+        { key: 'relative_given_tag', label: 'Related if same tag', color: '--c3' },
+      ],
+      range: [0, 1],
+    },
+  ],
 };
 
-/** A model's time charts count calendar years (the anasazi's) or ticks. */
+/** A model's time charts count calendar years (the anasazi's), generations (tags), periods (ethnocentrism, HA06's word) or ticks. */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'ethno' ? 'Period' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */
