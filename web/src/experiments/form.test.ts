@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Config, SchellingConfig } from '../types';
+import type { Config, EthnoConfig, Param, SchellingConfig } from '../types';
 import { controlFor, defaultForm, formToSweep, numericPaths, sweepToForm, TIMESERIES_X, type SweepForm } from './form';
 import type { Sweep } from './types';
 
@@ -126,6 +126,15 @@ describe('path suggestions', () => {
       'disease.enabled',
     ]);
   });
+
+  it('suggests a null nullable numeric field too (the ethnocentrism model’s tag mutation), given its schema', () => {
+    const config = { model: 'ethno', mutation: 0.005, tag_mutation: null } as unknown as EthnoConfig;
+    const nullable = { path: 'tag_mutation', label: 'Tag mutation rate', kind: 'number', apply: 'live', group: 'Mutation', nullable: true } as Param;
+    const schema = [{ path: 'mutation', label: 'Mutation rate', kind: 'number', apply: 'live', group: 'Mutation' } as Param, nullable];
+    expect(numericPaths(config, schema)).toEqual(['mutation', 'tag_mutation']);
+    // Without the schema, a null leaf is skipped, as before — never guessed at.
+    expect(numericPaths(config)).toEqual(['mutation']);
+  });
 });
 
 describe('sweeps over other models', () => {
@@ -168,6 +177,11 @@ describe('sweeps over other models', () => {
       x: { path: 'b', values: '1.05:2.05:0.05' },
       ticks: 200,
       metric: { kind: 'final', series: 'fraction_c' },
+    });
+    expect(defaultForm('ethno')).toMatchObject({
+      x: { path: 'cost', values: '0.005:0.03:0.0025' },
+      ticks: 2000,
+      metric: { kind: 'window_mean', series: 'ethnocentric', from: 1901, to: null },
     });
   });
 

@@ -1,0 +1,16 @@
+{
+  "name": "Ethnocentrism: kin discriminators against more colours (Jansson 2013)",
+  "description": "Jansson 2013 §5.3: with kin discriminators (a kin marker naming the family's founder, mutating at 0.5%), more colours make tags a better proxy for kinship, and the kin–ingroup gap \"goes below ten percentage units at 36 markers\". The mean kin-discriminator share over periods 1,901–2,000 against the number of colours (the ethnocentric share comes from the same runs), with the tag-or-kin basis mutating like a strategy bit or fixed at immigration (Jansson does not say which). Measured (release, seeds 1–10, recorded 2026-09-25), kin / ethnocentric — mutating: 4: 52.1 / 26.7%; 8: 46.7 / 35.1; 12: 42.7 / 35.6; 16: 47.0 / 32.6; 20: 41.3 / 39.6; 24: 43.5 / 37.3; 28: 41.5 / 39.7; 32: 40.1 / 41.4; 36: 44.7 / 37.9; 40: 39.4 / 40.5; fixed: 4: 65.5 / 12.6; 8: 52.1 / 26.6; 12: 48.1 / 31.3; 16: 44.6 / 35.6; 20: 47.1 / 33.8; 24: 41.0 / 42.2; 28: 50.2 / 31.0; 32: 51.3 / 30.1; 36: 40.1 / 38.2; 40: 33.1 / 48.5. Mutating, the gap is below ten points from 12 colours (bar 16) — much sooner than 36. Fixed, it starts twice as wide and drifts down noisily (seed spread 10–18 points): over 20 seeds it stays 10–16 points from 16 to 36 colours (1.5 at 24) and closes only at 40, nearer Jansson's shape; neither reading gives a clean crossing at 36.",
+  "base": {"preset": "jansson-kin"},
+  "x": {"label": "Colours", "path": "colors", "values": [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]},
+  "series": {
+    "label": "Tag or kin basis",
+    "values": [
+      {"at": 0, "name": "Mutates like a strategy bit", "set": {"kin_basis": "mutates"}},
+      {"at": 1, "name": "Fixed at immigration", "set": {"kin_basis": "fixed"}}
+    ]
+  },
+  "seeds": {"from": 1, "count": 10},
+  "ticks": 2000,
+  "metric": {"kind": "window_mean", "series": "kin", "from": 1901}
+}

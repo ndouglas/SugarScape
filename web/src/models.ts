@@ -1,4 +1,4 @@
-// Which model a config is (milestones 9–12), and what each model offers the page.
+// Which model a config is (milestones 9–14), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   AnasaziInspection,
@@ -13,6 +13,8 @@ import type {
   OpinionsInspection,
   ColorMode,
   Config,
+  EthnoConfig,
+  EthnoInspection,
   Inspection,
   ModelConfig,
   ModelKind,
@@ -23,7 +25,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'opinions'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -36,13 +38,14 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   tags: 'Tag Cooperation',
   culture: 'Axelrod Culture',
   classes: 'Emergence of Classes',
+  ethno: 'Ethnocentrism',
   opinions: 'Bounded Confidence',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'opinions'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions'
     ? tag
     : 'sugarscape';
 }
@@ -96,6 +99,15 @@ export function isCultureView(v: AnyInspection): v is CultureInspection {
   return 'kind' in v && 'neighbors' in v;
 }
 
+/**
+ * An ethnocentrism site's inspection (its agent names a kin marker). An empty one
+ * (`{ site: { x, y }, agent: null }`) is exactly an empty Schelling site, so the world's model
+ * decides as well as the shape.
+ */
+export function isEthnoView(v: AnyInspection, model: ModelKind): v is EthnoInspection {
+  return model === 'ethno' && (v.agent === null || 'kin_marker' in v.agent);
+}
+
 /** The calendar year a world of `c` is in at `tick` (the anasazi's), or null for a model without one. */
 export function calendarYear(c: ModelConfig, tick: number): number | null {
   return 'model' in c && c.model === 'anasazi' ? c.start_year + tick : null;
@@ -103,11 +115,12 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
 
 /**
  * Ticks until a world of `c` at `tick` is finished (the anasazi's end year, the tags model's last
- * generation); Infinity for a model that never finishes.
+ * generation, the ethnocentrism model's last period); Infinity for a model that never finishes.
  */
 export function ticksLeft(c: ModelConfig, tick: number): number {
   if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
   if (modelOf(c) === 'tags' && (c as TagsConfig).end > 0) return Math.max(0, (c as TagsConfig).end - tick);
+  if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
   return Infinity;
 }
 
@@ -192,6 +205,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['best_reply', 'Best reply'],
     ['payoff', 'Payoff'],
   ],
+  // Strategy first (the paper's question); the core's mode names.
+  ethno: [
+    ['strategy', 'Strategy'],
+    ['tag', 'Tag'],
+    ['lineage', 'Lineage'],
+    ['ptr', 'PTR'],
+  ],
   // Lines colored by where each agent started (HK's figures) or where it is now.
   opinions: [
     ['start', 'Start'],
@@ -210,5 +230,6 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   tags: [],
   culture: [],
   classes: [],
+  ethno: [],
   opinions: [],
 };

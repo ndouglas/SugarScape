@@ -1165,6 +1165,7 @@ describe('Engine with other models', () => {
     expect(finishedNotice({ model: 'tags' } as unknown as ModelConfig, 30000)).toBe(
       'This run has reached its last generation (30000) — Reset to run it again',
     );
+    expect(finishedNotice({ model: 'ethno' } as unknown as ModelConfig, 2000)).toBe('This run has reached its last period (2000) — Reset to run it again');
     let ends = 0;
     e.on('finished', () => ends++);
     e.setSpeed(4);

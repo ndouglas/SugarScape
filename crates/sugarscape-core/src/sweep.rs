@@ -394,6 +394,11 @@ impl Sweep {
                 crate::model::ModelKind::Tags => {
                     format!("the tags model stops at its last generation, {max} in this config")
                 }
+                crate::model::ModelKind::Ethno => {
+                    format!(
+                        "the ethnocentrism model stops at its last period, {max} in this config"
+                    )
+                }
                 _ => format!(
                     "the Long House Valley stops at its end year, \
                      {max} ticks after its start year in this config"
@@ -954,7 +959,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 38] = [
+const BUILTINS: [Builtin; 45] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1082,6 +1087,34 @@ const BUILTINS: [Builtin; 38] = [
     Builtin {
         id: "pvplh-payoffs",
         json: include_str!("../../../sweeps/pvplh-payoffs.json"),
+    },
+    Builtin {
+        id: "ha-cost",
+        json: include_str!("../../../sweeps/ha-cost.json"),
+    },
+    Builtin {
+        id: "ha-colors",
+        json: include_str!("../../../sweeps/ha-colors.json"),
+    },
+    Builtin {
+        id: "ha-mutation",
+        json: include_str!("../../../sweeps/ha-mutation.json"),
+    },
+    Builtin {
+        id: "ha-immigration",
+        json: include_str!("../../../sweeps/ha-immigration.json"),
+    },
+    Builtin {
+        id: "ha-lattice",
+        json: include_str!("../../../sweeps/ha-lattice.json"),
+    },
+    Builtin {
+        id: "jansson-tag-mutation",
+        json: include_str!("../../../sweeps/jansson-tag-mutation.json"),
+    },
+    Builtin {
+        id: "jansson-markers",
+        json: include_str!("../../../sweeps/jansson-markers.json"),
     },
     Builtin {
         id: "hk-diagonal",
@@ -1915,6 +1948,16 @@ mod tests {
     }
 
     #[test]
+    fn an_ethno_sweep_past_the_last_period_names_the_model() {
+        let mut s = builtin("ha-cost").unwrap();
+        s.ticks = 2001;
+        let e = s.points().unwrap_err();
+        assert_eq!(e[0].field, "ticks");
+        assert!(e[0].message.starts_with("must be ≤ 2000"), "{e:?}");
+        assert!(e[0].message.contains("ethnocentrism"), "{e:?}");
+    }
+
+    #[test]
     fn builtin_sweeps_parse_and_validate() {
         let ids: Vec<&str> = builtins().iter().map(|b| b.id).collect();
         assert_eq!(
@@ -1952,6 +1995,13 @@ mod tests {
                 "aey-first-attractor",
                 "aey-tag-regimes",
                 "pvplh-payoffs",
+                "ha-cost",
+                "ha-colors",
+                "ha-mutation",
+                "ha-immigration",
+                "ha-lattice",
+                "jansson-tag-mutation",
+                "jansson-markers",
                 "hk-diagonal",
                 "hk-asymmetry",
                 "hk-bias",

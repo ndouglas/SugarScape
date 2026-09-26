@@ -63,6 +63,24 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     b: 'pvplh-mode',
   },
   {
+    id: 'ha-four-vs-five',
+    label: 'Four colors vs five (the Java’s draw) — Ethnocentrism (Compare)',
+    a: 'ha-standard',
+    b: 'ha-java-five-colors',
+  },
+  {
+    id: 'ha-adjacent-vs-anywhere',
+    label: 'Next to the parent vs anywhere — Ethnocentrism (Compare)',
+    a: 'ha-standard',
+    b: 'jansson-offspring-anywhere',
+  },
+  {
+    id: 'ha-tags-vs-kin',
+    label: 'Tags vs kin — Ethnocentrism (Compare)',
+    a: 'ha-standard',
+    b: 'jansson-kin',
+  },
+  {
     id: 'hk-simultaneous-vs-serial',
     label: 'Simultaneous vs serial updating — Bounded Confidence (Compare)',
     a: 'hk-polarisation',

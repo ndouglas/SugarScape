@@ -28,7 +28,8 @@ function number(p: Param, raw: string): number {
 /**
  * The edit a control makes: sets `path` (a range sets `path.min` and `path.max`). The values are
  * sent as typed; the core validates them and names the field in its errors. A range keeps its ends
- * in order: editing min above max raises max to match, and editing max below min lowers min.
+ * in order: editing min above max raises max to match, and editing max below min lowers min. An
+ * empty box of a `nullable` field sets null.
  */
 export function paramEdit(p: Param, input: ParamInput): (c: ModelConfig) => void {
   return (c) => {
@@ -45,15 +46,20 @@ export function paramEdit(p: Param, input: ParamInput): (c: ModelConfig) => void
       setPath(c, p.path, input === true);
     } else if (p.kind === 'choice') {
       setPath(c, p.path, String(input));
+    } else if (p.nullable && String(input).trim() === '') {
+      setPath(c, p.path, null);
     } else {
       setPath(c, p.path, number(p, String(input)));
     }
   };
 }
 
-/** Whether a field shows in `config`: always, or while its `show_if` field equals its value. */
+/**
+ * Whether a field shows in `config`: always, or while its `show_if` field equals its value (a bool
+ * field compared as `'true'` or `'false'`).
+ */
 export function paramShown(p: Param, config: ModelConfig): boolean {
-  return !p.show_if || getPath(config, p.show_if.path) === p.show_if.equals;
+  return !p.show_if || String(getPath(config, p.show_if.path)) === p.show_if.equals;
 }
 
 /** The control's current value in `config`, as its input shows it. */
@@ -64,6 +70,20 @@ export function paramInput(p: Param, config: ModelConfig): ParamInput {
     return { min: String(r.min), max: String(r.max) };
   }
   if (p.kind === 'bool') return v === true;
+  // A nullable field's null (the ethnocentrism model's tag mutation: "the mutation rate") is an empty box.
+  if (v === null && p.nullable) return '';
+  return String(v);
+}
+
+/**
+ * A number or integer control's slider position: the field's value, or — while a nullable field is
+ * null — the value it falls back to (`p.fallback`'s path, or `p.min` with none). The number box
+ * still reads null as empty (`paramInput`); this is only for the slider, which HTML range
+ * sanitization would otherwise draw at its own midpoint default (Review Important 1).
+ */
+export function paramSlider(p: Param, config: ModelConfig): string {
+  const v = getPath(config, p.path);
+  if (v === null && p.nullable) return String(p.fallback !== undefined ? getPath(config, p.fallback) : p.min);
   return String(v);
 }
 

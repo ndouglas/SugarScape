@@ -131,9 +131,21 @@ reproduce; the persistent fractious state and the transition times' magnitude do
 et al. found, classes never emerge under the paper's rule at its parameters — they do under the mode
 rule, and persist once planted. See `docs/superpowers/specs/2026-09-25-classes-design.md`.
 
-## Milestone 16: Bounded Confidence (done)
+## Milestone 16: Ethnocentrism (done)
 
-Hegselmann and Krause's opinion dynamics under bounded confidence (2002) as a tenth model kind, with
+Hammond and Axelrod's evolution of ethnocentrism (2006) as a tenth model kind, with its appendix's and
+its archived code's departures as switches and presets, and the variants of Hartshorn, Kaznatcheev and
+Shultz (2013) and Jansson (2013). The standard case and most of Table 1 reproduce within 3 points, and
+Hartshorn, Kaznatcheev and Shultz's shares, early patterns and Study 2 orders almost exactly; the appendix's
+5 % mutation is a slip, the code draws five colors for four (which Table 1 cannot tell apart), and the
+color-blind agents' 14 % cooperation does not reproduce under any reading (41.8 %). Ethnocentrics take over
+later than Table 1 l says, and Jansson's kin discriminators win by far less than his Table 5 unless the
+kin basis never mutates, which he does not say. See
+`docs/superpowers/specs/2026-09-25-ethnocentrism-design.md`.
+
+## Milestone 17: Bounded Confidence (done)
+
+Hegselmann and Krause's opinion dynamics under bounded confidence (2002) as an eleventh model kind, with
 symmetric, asymmetric and opinion-dependent confidence as settings and the paper's two unfigured
 claims — random serial updating, lattice neighborhoods — as switches. The survivors at small
 confidence, the walk from plurality through polarization to consensus, the evenly spaced figures,
@@ -152,7 +164,8 @@ confidence, and the lattice claim holds. See
 - **Tag-based cooperation** (Riolo, Cohen & Axelrod 2001): done (Milestone 12).
 - **Axelrod's culture model and its docking with Sugarscape**: done (Milestone 14).
 - **Axtell, Epstein & Young's emergence of classes**: done (Milestone 15).
-- **Hegselmann & Krause's bounded confidence**: done (Milestone 16).
+- **Hammond–Axelrod ethnocentrism** (and Hartshorn, Kaznatcheev & Shultz's and Jansson's critiques): done (Milestone 16).
+- **Hegselmann & Krause's bounded confidence**: done (Milestone 17).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

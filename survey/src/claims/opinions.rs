@@ -1,4 +1,4 @@
-//! Hegselmann & Krause's bounded confidence (milestone 16): the paper's
+//! Hegselmann & Krause's bounded confidence (milestone 17): the paper's
 //! Section 4 figures, its two unfigured claims (serial updating, lattice
 //! neighborhoods) and Lorenz's dependence on the number of agents. Runs go
 //! to stability; runs that several claims share are memoized per process,

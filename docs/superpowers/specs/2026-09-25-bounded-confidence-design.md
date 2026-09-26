@@ -1,15 +1,15 @@
-# SugarScape Milestone 16 — Bounded Confidence (Hegselmann & Krause) — Design
+# SugarScape Milestone 17 — Bounded Confidence (Hegselmann & Krause) — Design
 
 **Date:** 2026-09-25
 **Builds on:** the milestone 1–15 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds and the literal-default-plus-named-switch pattern of milestones 11–15.
 **Source text:** Rainer Hegselmann and Ulrich Krause, "Opinion Dynamics and Bounded Confidence: Models, Analysis, and Simulation", *Journal of Artificial Societies and Social Simulation* 5(3) (2002), 2 (HK below).
 **Related:** Jan Lorenz, "Consensus Strikes Back in the Hegselmann-Krause Model of Continuous Opinion Dynamics Under Bounded Confidence", *JASSS* 9(1) (2006), 8.
 
-The milestone number is provisional: another session is building ethnocentrism in parallel, and whichever merges second renumbers.
+Ethnocentrism merged first as Milestone 16, so this is Milestone 17.
 
 ## Goal
 
-HK's bounded-confidence model (their eq. BC) as a tenth model kind, `opinions` ("Bounded Confidence"), a full citizen of the playground: the paper's Section 4 figures as presets and sweeps, its symmetric, opinion-independent and opinion-dependent confidence as settings, and its two unfigured claims — random serial updating changes nothing, and local neighborhoods remove polarization — as named switches, with every claim measured over 20 seeds (50 where HK used 50).
+HK's bounded-confidence model (their eq. BC) as an eleventh model kind, `opinions` ("Bounded Confidence"), a full citizen of the playground: the paper's Section 4 figures as presets and sweeps, its symmetric, opinion-independent and opinion-dependent confidence as settings, and its two unfigured claims — random serial updating changes nothing, and local neighborhoods remove polarization — as named switches, with every claim measured over 20 seeds (50 where HK used 50).
 
 ## Non-negotiable constraints
 
@@ -141,4 +141,4 @@ The presets menu gains a **Bounded Confidence** group and the Compare entry; the
 
 ## Docs
 
-README: a Bounded Confidence section (the rule, stated choices, switches and sources, presets and what they reproduce, sweeps); roadmap: Milestone 16 done.
+README: a Bounded Confidence section (the rule, stated choices, switches and sources, presets and what they reproduce, sweeps); roadmap: Milestone 17 done.

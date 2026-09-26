@@ -1,4 +1,4 @@
-//! Bounded Confidence (milestone 16): Hegselmann and Krause, "Opinion
+//! Bounded Confidence (milestone 17): Hegselmann and Krause, "Opinion
 //! Dynamics and Bounded Confidence: Models, Analysis, and Simulation" (JASSS
 //! 2002), with its unfigured claims (serial updating, local neighborhoods) as
 //! named switches. See docs/superpowers/specs/2026-09-25-bounded-confidence-design.md.

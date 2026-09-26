@@ -16,7 +16,7 @@ use sugarscape_core::network;
 use sugarscape_core::sweep::{self, Metric, Outcome as RunOutcome, Sweep, SweepResult};
 use sugarscape_core::world::World;
 
-use crate::claim::{equivalent, greater, range, untestable, Claim, Outcome, Source, Verdict};
+use crate::claim::{all_of, equivalent, greater, range, untestable, Claim, Outcome, Source};
 use crate::runner::{each_seed, preset, series, window_mean};
 use crate::stats;
 
@@ -50,35 +50,6 @@ impl<T> Memo<T> {
         m.push((seeds.to_vec(), v.clone()));
         v
     }
-}
-
-/// Several judged parts of one statement ("at every vision"): the worst
-/// verdict wins (Fails, then Weak, then Untestable, then Holds; Error first).
-fn all_of(parts: Vec<(String, Outcome)>) -> Outcome {
-    let rank = |v: Verdict| match v {
-        Verdict::Error => 4,
-        Verdict::Fails => 3,
-        Verdict::Weak => 2,
-        Verdict::Untestable => 1,
-        Verdict::Holds => 0,
-    };
-    let verdict = parts
-        .iter()
-        .map(|(_, o)| o.verdict)
-        .max_by_key(|v| rank(*v))
-        .unwrap_or(Verdict::Untestable);
-    let measured = parts
-        .iter()
-        .map(|(label, o)| format!("[{label}: {:?}] {}", o.verdict, o.measured))
-        .collect::<Vec<_>>()
-        .join(" ");
-    let detail = parts
-        .iter()
-        .filter(|(_, o)| !o.detail.is_empty())
-        .map(|(label, o)| format!("[{label}] {}", o.detail))
-        .collect::<Vec<_>>()
-        .join(" ");
-    Outcome { verdict, measured, detail }
 }
 
 fn col<const N: usize>(rows: &[[f64; N]], i: usize) -> Vec<f64> {

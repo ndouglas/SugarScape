@@ -56,9 +56,21 @@ pub struct Param {
     /// population fields).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub show_if: Option<ShowIf>,
+    /// A number field that may be empty (JSON null): the panel shows null
+    /// as an empty box and sends null for one (milestone 14: the
+    /// ethnocentrism model's tag mutation).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub nullable: bool,
+    /// For a nullable field, the path the panel's slider follows while the
+    /// field is null (so the slider does not fall back to the browser's own
+    /// midpoint default): the ethnocentrism model's tag mutation follows
+    /// `mutation`. A nullable field with none uses `min` instead.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fallback: Option<&'static str>,
 }
 
-/// A condition on the config: the field at `path` (a string) equals `equals`.
+/// A condition on the config: the field at `path` (a string, or a bool
+/// compared as `"true"`/`"false"`) equals `equals`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub struct ShowIf {
     pub path: &'static str,
@@ -85,6 +97,8 @@ impl Param {
             group,
             help: None,
             show_if: None,
+            nullable: false,
+            fallback: None,
         }
     }
 
@@ -94,9 +108,22 @@ impl Param {
         self
     }
 
-    /// The same field, shown only while the string field `path` is `equals`.
+    /// The same field, shown only while the field `path` is `equals` (a
+    /// bool as `"true"` or `"false"`).
     pub fn shown_if(mut self, path: &'static str, equals: &'static str) -> Self {
         self.show_if = Some(ShowIf { path, equals });
+        self
+    }
+
+    /// The same field, which may be empty (null).
+    pub fn nullable(mut self) -> Self {
+        self.nullable = true;
+        self
+    }
+
+    /// The same nullable field, whose slider follows `path` while it is null.
+    pub fn falls_back_to(mut self, path: &'static str) -> Self {
+        self.fallback = Some(path);
         self
     }
 

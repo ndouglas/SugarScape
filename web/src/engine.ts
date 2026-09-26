@@ -58,6 +58,7 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
     return `Stable at t = ${tick}: no opinion moves any more — Reset, or change confidence or updating, to run it again`;
   if (modelOf(config) === 'culture') return `The lattice is stable at t = ${tick}: no two neighbors can interact — Reset to run it again`;
   if (modelOf(config) === 'sugarscape') return `The cultures have settled at t = ${tick}: every two share all or nothing — Reset to run it again`;
+  if (modelOf(config) === 'ethno') return `This run has reached its last period (${tick}) — Reset to run it again`;
   const year = calendarYear(config, tick);
   return `This run has reached its end year${year === null ? '' : ` (AD ${year})`} — Reset to run it again`;
 }

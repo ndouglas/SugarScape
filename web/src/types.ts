@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'opinions';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -225,6 +225,38 @@ export interface TagsConfig {
   selection: 'tournament' | 'adopt';
 }
 
+/** A strategy as Inspect and `allowed` name it (`allowed` lists only E, H, S and T). */
+export type EthnoStrategy = 'E' | 'H' | 'S' | 'T' | 'kin' | 'nonkin' | 'mixed';
+
+/** Hammond & Axelrod's ethnocentrism model and its critics' variants (milestone 16). A tick is a period. */
+export interface EthnoConfig {
+  model: 'ethno';
+  width: number;
+  colors: number;
+  start: 'empty' | 'random' | 'selfish';
+  immigration: number;
+  base_ptr: number;
+  cost: number;
+  benefit: number;
+  death: number;
+  mutation: number;
+  /** The tag's own mutation rate; null = `mutation`. */
+  tag_mutation: number | null;
+  pair_play: 'once' | 'twice';
+  discrimination: 'same_other' | 'none' | 'each_color';
+  misperception: number;
+  offspring: 'adjacent' | 'anywhere';
+  /** Not on the Rules panel: presets, files and links set it. */
+  allowed: ('E' | 'H' | 'S' | 'T')[];
+  kin_strategies: boolean;
+  kin_basis: 'mutates' | 'fixed';
+  kin_mutation: number;
+  /** The last period (0: never). */
+  end: number;
+  schedule: ScheduledChange[];
+}
+
+
 /**
  * Axelrod's culture model (milestone 14): sites with F features of q traits copying a neighbor's
  * trait with probability equal to their similarity, with Axtell et al.'s and later departures.
@@ -263,7 +295,7 @@ export interface ClassesConfig {
 }
 
 /**
- * Hegselmann and Krause's bounded confidence (milestone 16): agents move to the mean of the opinions
+ * Hegselmann and Krause's bounded confidence (milestone 17): agents move to the mean of the opinions
  * within their reach, with the paper's asymmetric and opinion-dependent confidence and its unfigured
  * claims (serial updating, lattice neighborhoods) as switches.
  */
@@ -282,7 +314,7 @@ export interface OpinionsConfig {
   stop_when_stable: boolean;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | OpinionsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -299,8 +331,12 @@ export interface Param {
   group: string;
   /** A one-line explanation shown under the control (the anasazi's quirks). */
   help?: string;
-  /** Shown only while the string field `path` equals `equals` (Model II's population fields). */
+  /** Shown only while the field `path` equals `equals` (a bool as `'true'`/`'false'`): Model II's population fields, the kin fields. */
   show_if?: { path: string; equals: string };
+  /** A number field that may be empty: null shows as an empty box, and an empty box sends null. */
+  nullable?: true;
+  /** For a nullable field, the path its slider follows while null (else it follows `min`). */
+  fallback?: string;
 }
 
 export interface FieldError { field: string; message: string }
@@ -419,6 +455,25 @@ export interface TagsStats {
   takeovers: number;
 }
 
+/** A period's statistics. Shares are null on an empty lattice; the interaction ratios null with a zero denominator (and at t = 0). */
+export interface EthnoStats {
+  tick: number;
+  population: number;
+  ethnocentric: number | null;
+  humanitarian: number | null;
+  selfish: number | null;
+  traitorous: number | null;
+  kin: number | null;
+  nonkin: number | null;
+  mixed: number | null;
+  cooperation: number | null;
+  same_tag: number | null;
+  relatives: number | null;
+  kin_help: number | null;
+  tag_given_relative: number | null;
+  relative_given_tag: number | null;
+}
+
 /** The latest statistics of a world of any model. */
 export interface CultureStats {
   tick: number;
@@ -466,7 +521,7 @@ export interface OpinionsStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | OpinionsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -603,6 +658,28 @@ export interface TagsInspection {
   agent: null;
 }
 
+/** An occupied neighbor of an ethnocentrism agent (up, left, right, down): whether they share a founding immigrant, and this period's helps each way. */
+export interface EthnoNeighborView { x: number; y: number; tag: number; strategy: EthnoStrategy; related: boolean; helped: number; helped_by: number }
+/** An ethnocentrism agent: its traits, this period's PTR and helps, its lineage, kin marker and age, and its neighbors. */
+export interface EthnoAgentView {
+  id: number;
+  tag: number;
+  strategy: EthnoStrategy;
+  /** What same/other is judged by: the tag, or (kin strategies) the kin marker. */
+  basis: 'tag' | 'kin';
+  ptr: number;
+  given: number;
+  received: number;
+  /** The founding immigrant's id. */
+  lineage: number;
+  /** The family founder's id. */
+  kin_marker: number;
+  age: number;
+  neighbors: EthnoNeighborView[];
+}
+/** An ethnocentrism site. Empty, it looks exactly like an empty Schelling site: `isEthnoView` asks the model. */
+export interface EthnoInspection { site: { x: number; y: number }; agent: EthnoAgentView | null }
+
 /** What a world of any model says about a site. */
 /** A culture site: its position, traits, and the sizes of its region and zone. */
 export interface CultureSiteView { x: number; y: number; traits: number[]; region_size: number; zone_size: number }
@@ -650,12 +727,12 @@ export interface OpinionsInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | OpinionsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
  * `occupation`, `zones`, `yield`, or (civil violence) `action`, `grievance`, `group`, or (tags)
- * `count`, `tolerance`, `clones`.
+ * `count`, `tolerance`, `clones`, or (ethnocentrism) `strategy`, `tag`, `lineage`, `ptr`.
  */
 export type ColorMode =
   | 'tribe'
@@ -681,6 +758,8 @@ export type ColorMode =
   | 'count'
   | 'tolerance'
   | 'clones'
+  | 'tag'
+  | 'ptr'
   | 'culture'
   | 'similarity'
   | 'zones'

@@ -1,4 +1,4 @@
-import type { FieldError, ModelConfig, ModelKind } from '../types';
+import type { FieldError, ModelConfig, ModelKind, Param } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -70,6 +70,15 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
   if (model === 'spatial') {
     // NBM94's axis: cooperators against the temptation b.
     return { ...form, x: { path: 'b', values: '1.05:2.05:0.05' }, ticks: 200, metric: { ...form.metric, kind: 'final', series: 'fraction_c' } };
+  }
+  if (model === 'ethno') {
+    // HA06's summary (the mean over the last 100 of 2,000 periods) against the cost of helping (the built-in ha-cost).
+    return {
+      ...form,
+      x: { path: 'cost', values: '0.005:0.03:0.0025' },
+      ticks: 2000,
+      metric: { ...form.metric, kind: 'window_mean', series: 'ethnocentric', from: 1901, to: null },
+    };
   }
   return form;
 }
@@ -180,12 +189,17 @@ export function controlFor(field: string): string {
   return CONTROLS.has(field) ? field : 'general';
 }
 
-/** Dotted paths of every number or boolean in a config (the path input's suggestions). */
-export function numericPaths(config: ModelConfig): string[] {
+/**
+ * Dotted paths of every number or boolean in a config (the path input's suggestions), plus any
+ * nullable numeric field's path while it is null (the ethnocentrism model's `tag_mutation`: a plain
+ * null tells `typeof` nothing, so `schema` names which null leaves are numbers, not e.g. a range).
+ */
+export function numericPaths(config: ModelConfig, schema: Param[] = []): string[] {
+  const nullable = new Set(schema.filter((p) => p.nullable).map((p) => p.path));
   const out: string[] = [];
   const walk = (value: unknown, path: string) => {
     if (path === 'schedule' || path === 'disease.outbreaks') return;
-    if (typeof value === 'number' || typeof value === 'boolean') {
+    if (typeof value === 'number' || typeof value === 'boolean' || (value === null && nullable.has(path))) {
       out.push(path);
       return;
     }
