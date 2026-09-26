@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Config, SchellingConfig } from '../types';
+import type { Config, EthnoConfig, Param, SchellingConfig } from '../types';
 import { controlFor, defaultForm, formToSweep, numericPaths, sweepToForm, TIMESERIES_X, type SweepForm } from './form';
 import type { Sweep } from './types';
 
@@ -125,6 +125,15 @@ describe('path suggestions', () => {
       'goods.0.metabolism.max',
       'disease.enabled',
     ]);
+  });
+
+  it('suggests a null nullable numeric field too (the ethnocentrism model’s tag mutation), given its schema', () => {
+    const config = { model: 'ethno', mutation: 0.005, tag_mutation: null } as unknown as EthnoConfig;
+    const nullable = { path: 'tag_mutation', label: 'Tag mutation rate', kind: 'number', apply: 'live', group: 'Mutation', nullable: true } as Param;
+    const schema = [{ path: 'mutation', label: 'Mutation rate', kind: 'number', apply: 'live', group: 'Mutation' } as Param, nullable];
+    expect(numericPaths(config, schema)).toEqual(['mutation', 'tag_mutation']);
+    // Without the schema, a null leaf is skipped, as before — never guessed at.
+    expect(numericPaths(config)).toEqual(['mutation']);
   });
 });
 

@@ -142,7 +142,7 @@ export class InspectPanel {
    * An ethnocentrism site and its agent: tag, strategy (and basis), PTR and helps, lineage, kin
    * marker and age, and its neighbors. An agent that died leaves the site's rows alone.
    */
-  private ethnoRows(view: EthnoInspection, gone: boolean): HTMLElement[] {
+  private ethnoSiteRows(view: EthnoInspection, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     const rows = [row('Site', `(${view.site.x}, ${view.site.y})`)];
     if (gone) return rows;
@@ -254,7 +254,7 @@ export class InspectPanel {
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
       // First: an empty ethnocentrism site is shaped like an empty Schelling site.
       const rows = isEthnoView(view, this.engine.model)
-        ? this.ethnoRows(view, gone)
+        ? this.ethnoSiteRows(view, gone)
         : isTagsView(view)
           ? this.tagsRows(view)
           : isRingView(view)

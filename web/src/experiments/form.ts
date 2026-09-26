@@ -1,4 +1,4 @@
-import type { FieldError, ModelConfig, ModelKind } from '../types';
+import type { FieldError, ModelConfig, ModelKind, Param } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -177,12 +177,17 @@ export function controlFor(field: string): string {
   return CONTROLS.has(field) ? field : 'general';
 }
 
-/** Dotted paths of every number or boolean in a config (the path input's suggestions). */
-export function numericPaths(config: ModelConfig): string[] {
+/**
+ * Dotted paths of every number or boolean in a config (the path input's suggestions), plus any
+ * nullable numeric field's path while it is null (the ethnocentrism model's `tag_mutation`: a plain
+ * null tells `typeof` nothing, so `schema` names which null leaves are numbers, not e.g. a range).
+ */
+export function numericPaths(config: ModelConfig, schema: Param[] = []): string[] {
+  const nullable = new Set(schema.filter((p) => p.nullable).map((p) => p.path));
   const out: string[] = [];
   const walk = (value: unknown, path: string) => {
     if (path === 'schedule' || path === 'disease.outbreaks') return;
-    if (typeof value === 'number' || typeof value === 'boolean') {
+    if (typeof value === 'number' || typeof value === 'boolean' || (value === null && nullable.has(path))) {
       out.push(path);
       return;
     }

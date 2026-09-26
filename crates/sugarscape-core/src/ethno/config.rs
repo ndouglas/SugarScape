@@ -301,7 +301,7 @@ impl EthnoConfig {
             self.allows_all()
                 || (self.discrimination == Discrimination::SameOther && !self.kin_strategies),
             "allowed",
-            "restricting strategies needs same/other discrimination without kin strategies",
+            "restricting strategies needs same/other discrimination without kin strategies (set by the preset; load another preset to change it)",
         );
         check(
             self.start != Start::Selfish || self.allowed.contains(&Strategy::Selfish),

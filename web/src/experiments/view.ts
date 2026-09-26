@@ -9,6 +9,7 @@ import {
 } from '../wasm-pkg/sugarscape.js';
 import { canvasBlob, downloadBlob, downloadText } from '../downloads';
 import type { Engine } from '../engine';
+import { modelOf } from '../models';
 import { encodeSweep } from '../share';
 import { parseErrors, type FieldError, type ModelConfig } from '../types';
 import { h } from '../ui/dom';
@@ -217,7 +218,8 @@ export class ExperimentsView {
     } catch {
       names = [];
     }
-    return new FormView(form, base, note, config ? numericPaths(config) : [], names, () => this.validate());
+    const schema = config ? (this.engine.schemas[modelOf(config)] ?? []) : [];
+    return new FormView(form, base, note, config ? numericPaths(config, schema) : [], names, () => this.validate());
   }
 
   private setEditor(editor: SweepEditor): void {
