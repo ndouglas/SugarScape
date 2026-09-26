@@ -43,7 +43,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "dpd-run-2",
             "Run 2: maximum age 100",
             GSS,
-            "Run 1 with a maximum age of 100 (initial and newborn ages random in 1–100). Table 2: 784 ± 29 cooperators, 99 ± 25 defectors. Measured: 695 ± 29 (628–741) and 196 ± 28 (152–263) — twice Epstein's defectors (not reproduced). Radax & Rengs' factorial of the six timing switches finds one setting of 64 that matches (removal at once, death on the agent's own turn, a full shuffle): 785 ± 23 / 110 ± 22.",
+            "Run 1 with a maximum age of 100 (initial and newborn ages random in 1–100). Table 2: 784 ± 29 cooperators, 99 ± 25 defectors. Measured: 695 ± 29 (628–741) and 196 ± 28 (152–263) — twice Epstein's defectors (not reproduced). Repeating Radax & Rengs' factorial of the six timing switches here, one setting of 64 matches (removal at once, death on the agent's own turn, a full shuffle): 785 ± 23 / 110 ± 22, not one of theirs.",
             |c| c.max_age = 100,
         ),
         preset(
