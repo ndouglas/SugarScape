@@ -1001,20 +1001,22 @@ his three outcomes and the norm is rarely established (4 runs); metanorms establ
 dominance variant (20 strong agents punished less, 10 weak) behaves as he says — without metanorms
 both groups end bold, with them the weak group is kept from being bold (and so is the strong one).
 Galán and Izquierdo re-implemented it and ran it longer. Their results reproduce: the norms game
-collapses in 99 of 100 runs by 1 000 generations; metanorms decay — 92 runs established at 100
-generations, 52 established and 43 collapsed by 10⁵, and at 10⁶ generations 18 of 20 runs had
-collapsed (8 of 10 in the survey's own run); the norm collapses far sooner with a mutation rate of
-0.001, with meta-payoffs a tenth as large, or under any of their three other selection rules (random
-tournament, roulette wheel, above-the-mean); and it holds everywhere with a temptation of 10.
+collapses in 99 of 100 runs by 1 000 generations (the ax-norms preset's 100-seed figure); metanorms
+decay — 92 of 100 runs established at 100 generations, 52 established and 43 collapsed by 10⁵ (100
+seeds, measured in planning; the survey's own 50 seeds: 43 established at 100, 0 collapsed by
+1 000, 20 by 10⁵), and at 10⁶ generations 18 of 20 runs had collapsed (8 of 10 in the survey's own
+run); the norm collapses far sooner with a mutation rate of 0.001, with meta-payoffs a tenth as
+large, or under any of their three other selection rules (random tournament, roulette wheel,
+above-the-mean); and it holds everywhere with a temptation of 10.
 
 Axelrod left two things unstated, and both are switches. **When every payoff ties** (so there is no
 standard deviation), Galán and Izquierdo give everyone two offspring and remove a random half; they
 warn this 'can alter the long-term results significantly'. It does: giving everyone one offspring
-instead keeps the metanorm — 92 of 100 runs established at 10⁵, 3 collapsed. And **how the offspring
-are brought back to 20** ('For convenience, the number of offspring is adjusted') is not a
-convenience: removing the worst parents' copies first and copying the best collapses all 50 runs by
-10⁵, against 20 with random removal. Whether Axelrod's metanorm lasts depends on details his paper
-does not give.
+instead keeps the metanorm — 92 of 100 runs established at 10⁵, 3 collapsed (the 100-seed planning
+figure). And **how the offspring are brought back to 20** ('For convenience, the number of offspring
+is adjusted') is not a convenience: removing the worst parents' copies first and copying the best
+collapses all 50 runs by 10⁵, against 20 with random removal (the survey's own 50-seed figure).
+Whether Axelrod's metanorm lasts depends on details his paper does not give.
 
 The view is the papers' boldness–vengefulness plane — boldness to the right, vengefulness up, each
 strategy a cell shaded by how many agents hold it, Galán and Izquierdo's norm-established (green) and
