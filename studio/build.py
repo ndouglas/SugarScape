@@ -1,6 +1,6 @@
 """Builds an episode: shots → frame dumps → beat renders and captions → the cut.
 
-    python3 studio/build.py EPISODE [--preview] [--beat N] [--skip-shots] [--skip-render]
+    python3 studio/build.py EPISODE [--preview] [--beat N] [--skip-shots] [--skip-render] [--no-music]
 
 --beat N renders one beat (1-based) and stops before the cut. The cut checks
 that the video has exactly the frames the beats add up to.
@@ -18,8 +18,10 @@ sys.path.insert(0, str(STUDIO))
 
 import cut  # noqa: E402
 import episode  # noqa: E402
+import music  # noqa: E402
 
 BLENDER = os.environ.get("BLENDER", "/Applications/Blender.app/Contents/MacOS/Blender")
+SOUNDFONT = STUDIO / "out" / "soundfonts" / "FluidR3_GM.sf2"
 CLI = REPO / "target" / "release" / "sugarscape"
 DISSOLVE = 12
 
@@ -35,6 +37,23 @@ def blender(*args):
     run([BLENDER, "-b", "--factory-startup", "--python-exit-code", "1", "-P", STUDIO / "render.py", "--", *args], quiet=True)
 
 
+def soundtrack(name, out, seconds):
+    """The episode's own recording (music.wav/.aif/.aiff/.m4a in its folder,
+    e.g. a GarageBand export) if there is one, else the generated draft of
+    the tune fitted to `seconds`, else None (with a warning)."""
+    for ext in ("wav", "aif", "aiff", "m4a"):
+        own = episode.episode_dir(name) / f"music.{ext}"
+        if own.exists():
+            print(f"music: {own}")
+            return str(own)
+    if not SOUNDFONT.exists():
+        print(f"music: none (no {SOUNDFONT}; see studio/README.md)")
+        return None
+    wav = music.render(seconds, out / "music", SOUNDFONT)
+    print(f"music: generated {wav} (MIDI beside it)")
+    return str(wav)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("episode")
@@ -42,6 +61,7 @@ def main():
     p.add_argument("--beat", type=int)
     p.add_argument("--skip-shots", action="store_true")
     p.add_argument("--skip-render", action="store_true")
+    p.add_argument("--no-music", action="store_true")
     args = p.parse_args()
     beats = episode.load_episode(args.episode)
     out = STUDIO / "out" / args.episode
@@ -70,8 +90,9 @@ def main():
     problems = cut.check_folders([str(f) for f in folders], frames, captions)
     if problems:
         sys.exit("cannot cut:\n  " + "\n  ".join(problems))
-    movie =out / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
-    run(cut.command([str(f) for f in folders], frames, str(movie), captions, DISSOLVE))
+    movie = out / f"{args.episode}{'-preview' if args.preview else ''}.mp4"
+    track = None if args.no_music else soundtrack(args.episode, out, cut.total_frames(frames, DISSOLVE) / 30)
+    run(cut.command([str(f) for f in folders], frames, str(movie), captions, DISSOLVE, music=track))
     probe = subprocess.run(
         ["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",
          "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", str(movie)],

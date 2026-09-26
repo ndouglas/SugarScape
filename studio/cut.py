@@ -4,6 +4,7 @@ and faded in and out, joined with cross-dissolves by ffmpeg."""
 import pathlib
 
 CAPTION_IN, CAPTION_RAMP, CAPTION_OUT = 0.3, 0.4, 0.5
+MUSIC_FADE_IN, MUSIC_FADE_OUT, MUSIC_VOLUME = 0.5, 2.5, 0.8
 
 
 def check_folders(folders, frames, captions):
@@ -30,9 +31,10 @@ def _seconds(frames, fps):
     return f"{frames / fps:g}"
 
 
-def command(folders, frames, out, captions=None, dissolve=12, fps=30):
+def command(folders, frames, out, captions=None, dissolve=12, fps=30, music=None):
     """The ffmpeg argv: `folders[i]` holds beat i's frames (0001.png …),
-    `frames[i]` their count, `captions[i]` a transparent PNG or None."""
+    `frames[i]` their count, `captions[i]` a transparent PNG or None, and
+    `music` an audio file trimmed to the video and faded in and out."""
     captions = captions or [None] * len(folders)
     argv = ["ffmpeg", "-y", "-loglevel", "error"]
     for folder in folders:
@@ -62,6 +64,18 @@ def command(folders, frames, out, captions=None, dissolve=12, fps=30):
         )
         label = nxt
     encode = ["-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(fps), "-movflags", "+faststart"]
+    # An input's own stream is mapped as 0:v; a filter's output as [label].
+    video = label if parts else label.strip("[]")
+    maps = ["-map", video]
+    if music is not None:
+        argv += ["-i", music]
+        length = total_frames(frames, dissolve) / fps
+        parts.append(
+            f"[{extra}:a]atrim=0:{length:g},afade=t=in:d={MUSIC_FADE_IN:g},"
+            f"afade=t=out:st={length - MUSIC_FADE_OUT:g}:d={MUSIC_FADE_OUT:g},volume={MUSIC_VOLUME:g}[a]"
+        )
+        maps += ["-map", "[a]"]
+        encode += ["-c:a", "aac", "-b:a", "192k"]
     if not parts:
         return argv + encode + [out]
-    return argv + ["-filter_complex", ";".join(parts), "-map", label] + encode + [out]
+    return argv + ["-filter_complex", ";".join(parts), *maps] + encode + [out]

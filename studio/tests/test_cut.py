@@ -44,6 +44,23 @@ class CutTest(unittest.TestCase):
         self.assertEqual(argv[argv.index("-map") + 1], "[b0]")
 
 
+class MusicMixTest(unittest.TestCase):
+    def test_music_is_trimmed_to_the_video_and_faded(self):
+        argv = cut.command(["a", "b"], [90, 60], "o.mp4", music="m.wav")
+        self.assertIn("m.wav", argv)
+        g = graph(argv)
+        # 150 frames less one 12-frame dissolve: 138 frames = 4.6 s.
+        self.assertIn("[2:a]atrim=0:4.6,afade=t=in:d=0.5,afade=t=out:st=2.1:d=2.5,volume=0.8[a]", g)
+        maps = [argv[i + 1] for i, a in enumerate(argv) if a == "-map"]
+        self.assertEqual(maps, ["[v1]", "[a]"])
+        self.assertIn("aac", argv)
+
+    def test_a_single_uncaptioned_beat_with_music_still_gets_a_graph(self):
+        argv = cut.command(["a"], [90], "o.mp4", music="m.wav")
+        maps = [argv[i + 1] for i, a in enumerate(argv) if a == "-map"]
+        self.assertEqual(maps, ["0:v", "[a]"])
+
+
 class FolderCheckTest(unittest.TestCase):
     def folder(self, root, name, count, caption=False):
         f = root / name
