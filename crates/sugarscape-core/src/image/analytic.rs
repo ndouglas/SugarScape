@@ -82,6 +82,7 @@ impl Binary {
 
     /// De(k): a defector's expected payoff in round k (from 1).
     pub fn de(&self, k: u32, x: f64) -> f64 {
+        assert!(k >= 1, "rounds count from 1");
         let (b, q) = (self.b, self.q);
         b * x * (1.0 - q + q * power(0.5, k - 1)) / 2.0
     }
@@ -89,6 +90,7 @@ impl Binary {
     /// Di(k) − De(k), NS98's closed form; at qx = 1 (q = x = 1) its limit
     /// [(b − c) − b·2^−(k−1)]/2.
     pub fn di_minus_de(&self, k: u32, x: f64) -> f64 {
+        assert!(k >= 1, "rounds count from 1");
         let (b, c, q) = (self.b, self.c, self.q);
         let qx = 1.0 - q * x;
         if qx == 0.0 {
@@ -102,6 +104,7 @@ impl Binary {
     /// Di(k) − De(k) by iterating the difference equations and averaging
     /// the payoffs over each type's frequencies.
     pub fn di_minus_de_iterated(&self, k: u32, x: f64) -> f64 {
+        assert!(k >= 1, "rounds count from 1");
         let mut s = State::start(x);
         for _ in 1..k {
             s = self.round(s);
@@ -326,8 +329,10 @@ pub fn universal_threshold(start: Start) -> f64 {
 }
 
 /// LH01's r = (m − 1)/(n + m − 1): the expected rounds as a recipient
-/// before next being a donor or the game's end (random rounds, mean m).
+/// before next being a donor or the game's end (random rounds, mean m;
+/// a generation plays at least one, so m ≥ 1).
 pub fn standing_r(n: u32, m: u32) -> f64 {
+    assert!(m >= 1, "a generation plays at least one round");
     f64::from(m - 1) / f64::from(n + m - 1)
 }
 
@@ -351,6 +356,35 @@ pub fn standing_stable(b: f64, c: f64, n: u32, m: u32, e: f64, eps: f64) -> bool
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[should_panic(expected = "rounds count from 1")]
+    fn de_has_no_round_zero() {
+        Binary::ns98().de(0, 0.5);
+    }
+
+    #[test]
+    #[should_panic(expected = "rounds count from 1")]
+    fn di_minus_de_has_no_round_zero() {
+        Binary::ns98().di_minus_de(0, 0.5);
+    }
+
+    #[test]
+    #[should_panic(expected = "rounds count from 1")]
+    fn the_iterated_difference_has_no_round_zero() {
+        Binary::ns98().di_minus_de_iterated(0, 0.5);
+    }
+
+    #[test]
+    #[should_panic(expected = "at least one round")]
+    fn standing_r_needs_a_round() {
+        standing_r(100, 0);
+    }
+
+    #[test]
+    fn standing_r_is_zero_with_one_round() {
+        assert_eq!(standing_r(100, 1), 0.0);
+    }
 
     fn close(a: f64, b: f64, tol: f64) -> bool {
         (a - b).abs() <= tol
