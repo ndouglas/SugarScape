@@ -60,7 +60,7 @@ Model kind `structure` ("Social Structure"): `ModelKind::Structure`, `ModelConfi
 | `agents` | 256 | reset | n (4–4096); a perfect square of at least 3 × 3 under `torus` |
 | `structure` | `rwr` | reset | `rwr`, `torus` (2DK), `frne`, `frn` |
 | `substitution` | 0 | live | x: each fixed link replaced for this period by a uniform random partner (not A) with probability x (FFR-x with `frn`; a switch the paper does not test with `torus`/`frne`; ignored under `rwr`) |
-| `partners` | 4 | reset | partners each agent chooses (the torus's NEWS count is fixed at 4; `partners` then must be 4); 1–16 and fewer than the agents; even under `frne` |
+| `partners` | 4 | reset | partners each agent chooses (the torus's NEWS count is fixed at 4; `partners` then must be 4); 1–16 and fewer than the agents; under `frne` even and at most the agents − 2 |
 | `moves` | 4 | live | moves per game |
 | `judge_error` | 0.1 | live | chance the copy decision is inverted |
 | `mutation` | 0.1 | live | chance per strategy parameter of noise |

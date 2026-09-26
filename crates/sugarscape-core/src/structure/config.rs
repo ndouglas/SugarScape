@@ -249,7 +249,7 @@ pub fn schema() -> Vec<Param> {
             (0.0, 5.0, 0.05),
             Live,
         )
-        .with_help("Mean payoff per move. CRA do not state their threshold; see the cra-threshold sweep."),
+        .with_help("Mean payoff per move. CRA do not state their threshold; see the cra-threshold sweep. An edit applies from the next period; the first period reached is not recomputed."),
         Param::integer("Measures", "stop_at", "Stop at period", (0, 1_000_000), Live)
             .with_help("CRA ran 2500 periods. 0: never."),
     ]
