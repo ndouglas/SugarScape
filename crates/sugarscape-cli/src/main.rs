@@ -210,7 +210,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
         // the tags model at its last generation; Axelrod's culture and bounded
         // confidence once stable, a sugarscape under his rule once its cultures
         // settle; ethnocentrism at its last period; the demographic PD at its
-        // last cycle.
+        // last cycle; image scoring at its last generation.
         let why = match config.kind() {
             ModelKind::Civil => "a group has died out",
             ModelKind::Tags => "its last generation",
@@ -221,6 +221,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Sugarscape => "the cultures have settled",
             ModelKind::Ethno => "its last period",
             ModelKind::Dpd => "its last cycle",
+            ModelKind::Image => "its last generation",
             _ => "its end year",
         };
         eprintln!("finished at tick {} ({why})", world.tick());

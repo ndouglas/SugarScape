@@ -1,7 +1,7 @@
 //! Earlier runs are unchanged: with disease off, the milestone-1 and
 //! Chapter IV presets evolve exactly as they did before Chapter V was added.
 
-use sugarscape_core::model::ModelWorld;
+use sugarscape_core::model::{ModelConfig, ModelKind, ModelWorld};
 use sugarscape_core::presets;
 use sugarscape_core::world::World;
 
@@ -201,6 +201,53 @@ fn model_fingerprint(id: &str) -> u64 {
     world.model().fingerprint()
 }
 
+/// Image scoring's presets: (id, generations, fingerprint from seed 1). The
+/// island presets (100 groups of 100, 50,000 rounds a generation, and with
+/// perception errors a record per pair of members) run 20 generations, the
+/// one-group presets 200.
+const IMAGE_GOLDEN: &[(&str, u32, u64)] = &[
+    // Milestone 21: image scoring.
+    ("ns-fig-1", 200, 0x98875bd71738cf05),
+    ("ns-fig-2", 200, 0x91995405bae5fd9),
+    ("ns-fig-3-n20", 200, 0xb4bd11bc229673c4),
+    ("ns-fig-3-n50", 200, 0x5907ce5cb47602cf),
+    ("ns-fig-3-n100", 200, 0xaf771beff4611d0d),
+    ("ns-fig-4a", 200, 0xe7d6cefc18bd8d6a),
+    ("ns-fig-4b", 200, 0xa4c19c5fa5fcfe3),
+    ("ns-fig-4c", 200, 0x64755eafb526a816),
+    ("ns-fig-4d", 200, 0x72ca0b1d80947f44),
+    ("ns-own-only", 200, 0x20d6768b1fbd7081),
+    ("ns-no-offset", 200, 0xc595349de0c0bf65),
+    ("lh-fig-1a", 20, 0x46669de796924497),
+    ("lh-fig-1b", 20, 0x2c3d0dea6af0c894),
+    ("lh-fig-2a", 200, 0x56250416634c6ed9),
+    ("lh-fig-2b", 20, 0x566a697764e9cdd9),
+    ("lh-fig-2c", 20, 0x963ec9f09d2fadbe),
+    ("lh-fig-3a", 20, 0x46059fbe6bab2056),
+    ("lh-fig-3b", 20, 0x4d6575c59b0da89a),
+    ("lh-fig-4a", 20, 0xd5654fa4b600eb57),
+    ("lh-fig-4b", 20, 0x4bfe8ea9f3e8598b),
+    ("lh-fig-4c", 20, 0x6371653b544f6387),
+];
+
+fn image_fingerprint(id: &str, ticks: u32) -> u64 {
+    let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
+    let mut world = ModelWorld::new(preset.config, 1).unwrap();
+    world.model_mut().run(ticks);
+    world.model().fingerprint()
+}
+
+#[test]
+fn image_presets_are_unchanged() {
+    for &(id, ticks, expected) in IMAGE_GOLDEN {
+        assert_eq!(
+            image_fingerprint(id, ticks),
+            expected,
+            "preset {id} changed"
+        );
+    }
+}
+
 #[test]
 fn other_models_are_unchanged() {
     for &(id, expected) in MODEL_GOLDEN {
@@ -212,14 +259,15 @@ fn other_models_are_unchanged() {
 fn every_model_preset_has_a_golden_entry() {
     for p in presets::catalog() {
         assert!(
-            GOLDEN.iter().chain(MODEL_GOLDEN).any(|&(id, _)| id == p.id),
+            GOLDEN.iter().chain(MODEL_GOLDEN).any(|&(id, _)| id == p.id)
+                || IMAGE_GOLDEN.iter().any(|&(id, _, _)| id == p.id),
             "record a golden fingerprint for {} (run print_golden)",
             p.id
         );
     }
 }
 
-/// Prints `GOLDEN` entries, then `MODEL_GOLDEN`'s:
+/// Prints `GOLDEN` entries, then `MODEL_GOLDEN`'s, then `IMAGE_GOLDEN`'s:
 /// `cargo test -p sugarscape-core --test golden -- --ignored --nocapture`.
 #[test]
 #[ignore]
@@ -228,10 +276,23 @@ fn print_golden() {
         println!("    (\"{}\", {:#x}),", p.id, fingerprint(p.id));
     }
     println!("MODEL_GOLDEN:");
+    let image = |p: &presets::ModelPreset| p.config.kind() == ModelKind::Image;
     for p in presets::catalog()
         .iter()
-        .filter(|p| p.config.sugarscape().is_none())
+        .filter(|p| p.config.sugarscape().is_none() && !image(p))
     {
         println!("    (\"{}\", {:#x}),", p.id, model_fingerprint(p.id));
+    }
+    println!("IMAGE_GOLDEN:");
+    for p in presets::catalog().iter().filter(|p| image(p)) {
+        let ModelConfig::Image(c) = &p.config else {
+            unreachable!()
+        };
+        let ticks = if c.groups > 1 { 20 } else { 200 };
+        println!(
+            "    (\"{}\", {ticks}, {:#x}),",
+            p.id,
+            image_fingerprint(p.id, ticks)
+        );
     }
 }

@@ -5,6 +5,7 @@ use sugarscape_core::model::ModelWorld;
 use sugarscape_core::presets;
 
 /// One preset per model kind, and a second for the spatial games' asynchronous updating.
+/// Image scoring's is AND strategies with observers (private records, mutation).
 const IDS: &[&str] = &[
     "vi-1-everything",
     "vi-4-schelling-25",
@@ -15,6 +16,7 @@ const IDS: &[&str] = &[
     "hg-async-kaleidoscope",
     "jansson-kin",
     "dpd-rr-best",
+    "ns-fig-4b",
 ];
 
 fn world(id: &str) -> ModelWorld {

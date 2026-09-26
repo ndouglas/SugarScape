@@ -17,6 +17,7 @@ pub mod ethno;
 pub mod export;
 pub mod frames;
 pub mod geometry;
+pub mod image;
 pub mod landscape;
 mod legacy;
 pub mod model;
