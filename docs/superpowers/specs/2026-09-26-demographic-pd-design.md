@@ -31,7 +31,7 @@ Add Epstein's Demographic Prisoner's Dilemma as an eleventh model kind (after mi
 - **Runs:** Run 1 (no maximum age): about 5 to 1 by t = 50; Table 1 / 9.2 (30 runs, t = 500): cooperators range (752, 806), mean 779, s.d. 15; defectors (93, 148), 121, 15. Run 2 (maximum age 100): Table 2 / 9.4: cooperators (708, 846), 784, 29; defectors (45, 160), 99, 25. Run 3 (R = 2): more oscillatory. Run 4 (R = 1): predator–prey cycles; outcomes differ by seed (coexistence, cooperator monopoly or extinction); "cooperators ultimately do better with a low payoff (R = 1) than with a high one (R = 5)!… But it is not robust." Run 5 (Run 2 with 50 % mutation): cooperation persists through 10,000 cycles. Soup ("equiprobable random agent pairings") runs to pure defection. Payoffs shifted by 6 (12, 11, 1, 0) run to pure defection (Fig. 13). "Equivalent mathematically": the shifted payoffs with a metabolism of 6 "recover, in effect, our initial payoffs" (metabolism = "a fixed decrement to accumulated payoff per cycle", WP note 29); the passage calls the pure-defection run "figure 12" (the 50 %-mutation run; it means Fig. 13). Footnote 27: payoffs 16, 11, 5, 4 with maximum lifetime 10 evolve to cooperative monopoly. Surrounded cooperators: cooperators all eight of whose Moore neighbours are cooperators (Fig. 10–11).
 - **GSS Table 9.3:** 45 payoff vectors (T = 2 … 10, R = 1 … T − 1, S = −T, P = −R), 30 runs each at t = 500, Run 1's other settings: range, mean, s.d. and 95 % CI for cooperators and defectors (e.g. (10, 9): 809 / 77; (6, 5): 779 / 121; (4, 1): 0 / 0). Row (4, 2)'s defector CI "(254, 376)" contradicts its mean 265 and s.d. 32 (≈ (253, 277)).
 - **GSS appendix:** the same mechanics with payoffs [1, −3, −3, 1], death age 1,000, mutation 0 give persistent "norm maps" (regions of each convention, accidents at their borders).
-- **RR:** seven unstated binary choices — dead removed immediately vs at the end of the cycle; death immediately (even on another's turn) vs on one's own turn; endowment taken from the parent vs granted; newborns' age random vs 0; asynchronous vs synchronous (all move, then all play, then all reproduce); RNG library; Repast's shuffle vs Epstein's swaps — a 2⁷ factorial × 30 runs, Welch t-tests against Tables 1 and 2: **0 of 128 settings reproduce Run 1, 7 of 128 reproduce Run 2, none both**; best Run 2 fit: removal at end of cycle, immediate death, endowment granted, random newborn age, asynchronous, Epstein's swaps → 780 (25) / 97 (22).
+- **RR:** seven unstated binary choices — dead removed immediately vs at the end of the cycle; death immediately (even on another's turn) vs on one's own turn; endowment taken from the parent vs granted; newborns' age random vs 0; asynchronous vs synchronous (all move, then all play, then all reproduce); RNG library; Repast's shuffle vs Epstein's swaps — a 2⁷ factorial × 30 runs, t-tests against Tables 1 and 2: **1 of 128 settings reproduces Run 1 (a synchronous one, which they set aside as "radically different from the original model"; their summary counts none), 7 of 128 reproduce Run 2, none both**; best Run 2 fit: removal at end of cycle, immediate death, endowment granted, random newborn age, asynchronous, Epstein's swaps → 780 (25) / 97 (22).
 
 ## Architecture
 
@@ -97,8 +97,8 @@ After the list: dead agents still present are removed; the list is reordered per
 ## Views
 
 - **Colour modes:** **Strategy** (default; cooperators blue, defectors red, GSS's colours), **Wealth** (heat), **Age** (heat), **Surrounded** (surrounded cooperators highlighted). Empty sites dark.
-- **Inspect:** an agent's strategy, wealth, age and maximum age, whether surrounded, and each neighbour with this cycle's payoff between them; an empty site says so.
-- **Charts:** **Population** (cooperators, defectors), **Cooperator share**, **Surrounded cooperators**, **Wealth** (mean C, mean D), **Births and deaths**. (A cooperator-vs-defector phase diagram, Figs. 4 and 9, only if the chart library supports it without a new chart type.)
+- **Inspect:** an agent's strategy, wealth, age and maximum age, whether surrounded, this cycle's payoffs and games, and each neighbour with what one game between them pays each under the current payoffs (agents move, so per-partner totals are not kept: plan Decision 13); an empty site says so.
+- **Charts:** **Population** (cooperators, defectors), **Cooperator share**, **Surrounded cooperators**, **Wealth** (mean C, mean D), **Births and deaths**, against the **cycle** (Epstein's word). No cooperator-vs-defector phase diagram (Figs. 4 and 9): the model charts are time charts only, and a phase diagram would be a new chart type (plan Decision 22).
 
 ## Presets
 
@@ -110,37 +110,38 @@ After the list: dead agents still present are removed; the list is reordered per
 | `dpd-run-4` | max age 100, R 1 | Run 4 |
 | `dpd-run-5` | max age 100, mutation 0.5 | Run 5 |
 | `dpd-working-paper` | `play: random_neighbor` | WP's rule |
+| `dpd-closest` | `play: random_neighbor`, `initial_wealth: 0`, `newborns_act: this_cycle` | the readings that reproduce Tables 1 and 2 together (plan Decision 17) |
 | `dpd-soup` | `pairing: soup` | the soup variant |
-| `dpd-shifted` | max age 100, mutation 0.5, payoffs 12, 11, 1, 0 | Fig. 13 |
+| `dpd-shifted` | max age 100, payoffs 12, 11, 1, 0 (GSS: "maximum age of 100, zero mutation" — Run 2's settings; plan Decision 10) | Fig. 13 |
 | `dpd-metabolism` | `dpd-shifted` with metabolism 6 | the "equivalent" run |
 | `dpd-footnote-27` | payoffs 16, 11, 5, 4, max age 10 | footnote 27 |
 | `dpd-rr-best` | RR's best Run 2 fit | RR |
 | `dpd-coordination` | CD's payoffs [1, −3, −3, 1] as (CC, CD, DC, DD): R 1, S −3, T −3, P 1; max age 1,000 | GSS appendix |
 
-(The runs following Run 5 — `dpd-shifted`, `dpd-metabolism` — take Run 5's settings as "all else as before"; the dry run checks this against the figures' descriptions and records the reading.)
+(`dpd-shifted` and `dpd-metabolism` take Run 2's settings, as GSS states them — not Run 5's, which the working paper's context and its "figure 12" suggest: with 50 % mutation pure defection is impossible. No reading converges to pure defection; plan Decision 10 and the measurements.)
 
-**Compare entries:** "Working paper vs published rule — Demographic PD (Compare)" (`dpd-run-1` vs `dpd-working-paper`), "Negative payoffs vs shifted with metabolism — Demographic PD (Compare)" (`dpd-run-5` vs `dpd-metabolism`), "Space vs soup — Demographic PD (Compare)" (`dpd-run-1` vs `dpd-soup`).
+**Compare entries:** "Working paper vs published rule — Demographic PD (Compare)" (`dpd-run-1` vs `dpd-working-paper`), "Negative payoffs vs shifted with metabolism — Demographic PD (Compare)" (`dpd-run-2` vs `dpd-metabolism`: `dpd-metabolism` has Run 2's settings), "Space vs soup — Demographic PD (Compare)" (`dpd-run-1` vs `dpd-soup`), "Published rule vs closest reading — Demographic PD (Compare)" (`dpd-run-1` vs `dpd-closest`; plan Decision 21).
 
 ## Experiments and CLI
 
 Thirty seeds, 500 cycles, metric the final value unless noted.
 
-- `dpd-payoffs`: Table 9.3's 45 cells (T = 2 … 10 as series, R as x; cells with R ≥ T skipped or laid out as the sweep format allows — the plan settles it); metrics `cooperators` (and the survey reads `defectors`).
+- `dpd-payoffs`: Table 9.3's 45 cells (T = 2 … 10 as series, R = 1 … 9 as x, each value setting `p = −r` and `s = −t`); the sweep format cannot skip a cell, so the 36 cells with R ≥ T also run and the description says so (plan Decision 15); metric `cooperators` (the survey reads `defectors` itself).
 - `dpd-mutation`: base Run 2; x = mutation 0 … 0.5.
 - `dpd-metabolism`: base `dpd-shifted`; x = metabolism 0 … 6; series `metabolism_per` cycle vs interaction; metric `cooperators`.
-- `dpd-max-age`: x = max age 10 … 1,000.
+- `dpd-max-age`: base Run 1; x = max age 10 … 1,000.
 - `sugarscape presets | run | sweep` accept `dpd`.
 
 ## Claims to test (survey and book-style tests, 30 seeds as Epstein)
 
-- **Epstein:** Table 1 and Table 2 (means and ranges); Table 9.3 cell by cell (our mean inside Epstein's 95 % CI, and within his range); Run 1's ~5 : 1 by t = 50; Run 4's oscillation (a measured cycle count) and seed-dependent outcomes; the R = 1 paradox (share of seeds ending in cooperator monopoly at R = 1 vs R = 5); Run 5's persistence through 10,000 cycles; soup → pure defection; shifted payoffs → pure defection; the metabolism equivalence (per cycle, per interaction); footnote 27's monopoly; the coordination game's persistent regions.
-- **RR:** the 64 combinations of the six model switches (RNG excluded) × 30 seeds against Tables 1 and 2 (RR: 0 / 7 of 128, none both); RR's best fit.
+- **Epstein:** Table 1 and Table 2 (means and ranges); Table 9.3 cell by cell (our mean inside Epstein's 95 % CI, and within his range); Run 1's ~5 : 1 by t = 50; Run 4's oscillation (a measured cycle count) and seed-dependent outcomes; the R = 1 paradox (share of seeds ending in cooperator monopoly at R = 1 vs R = 5); Run 5's persistence through 10,000 cycles; soup → pure defection; shifted payoffs → pure defection; the metabolism equivalence (per cycle, per interaction: exact per interaction, measured); footnote 27's monopoly (printed R = 11, though "hiked by ten" gives 15: both measured); the coordination game's persistent regions.
+- **RR:** the 64 combinations of the six model switches (RNG excluded) × 30 seeds against Tables 1 and 2 (RR: 1 / 7 of 128, none both); RR's best fit. The core's book-style test runs all 64; the survey runs subsets (the 32 asynchronous settings for Run 1, RR's own seven Run 2 fits — six without the RNG column), plan Decision 24.
 
 Tolerances come from the measurements (as milestones 11–16).
 
 ## Page
 
-- A **Demographic PD** presets group; the schema panel in groups **Game** (T, R, P, S), **Population** (width, agents, initial cooperators, initial wealth, fission wealth, endowment, max age, metabolism and its timing, vision), **Evolution** (mutation), **Timing** (death timing, removal, endowment from, newborn age, newborns act, updating, shuffle), **Interaction** (play, pairing), **Run** (end); the four colour modes; the charts; Inspect; the three Compare entries; `defaultForm('dpd')` (x = R, 30 seeds, final `cooperators` at 500).
+- A **Demographic PD** presets group; the schema panel in groups **Game** (T, R, P, S), **Population** (width, agents, initial cooperators, initial wealth, fission wealth, endowment, max age, metabolism and its timing, vision), **Evolution** (mutation), **Timing** (death timing, removal, endowment from, newborn age, newborns act, updating, shuffle), **Interaction** (play, pairing), **Run** (end); the four colour modes; the charts; Inspect; the four Compare entries; `defaultForm('dpd')` (x = R 1–5, the form's usual 3 seeds, final `cooperators` at 500; plan Decision 23).
 - Keyframes, the timeline, stop rules, share links, sessions, recording and Compare work unchanged.
 
 ## Testing
