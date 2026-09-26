@@ -460,63 +460,102 @@ def rings_hungry(beat, d, ctx):
 
 def counter(beat, d, ctx):
     """Top right: this world's population against the compare world's (the
-    same seed without seasons) at the tick shown."""
+    same seed without the rule this episode is about) at the tick shown.
+    Labels from params: `with`, `without`."""
     anchor = ctx.screen.anchor("counter", 0.66, 0.78)
     _card("counter-card", anchor, (0, 0, -0.01), (0.62, 0.24, 0.002))
     cold = materials.fading("counter-seasons", WINTER, 1.6)
     warm = materials.fading("counter-calm", SUMMER, 1.6)
     with_ = text("counter-with", "", 0.052, cold, anchor, location=(-0.28, 0.035, 0), align="LEFT")
     without = text("counter-without", "", 0.052, warm, anchor, location=(-0.28, -0.065, 0), align="LEFT")
+    labels = (beat.params.get("with", "with seasons"), beat.params.get("without", "without seasons"))
 
     def update(frame):
         k = min(int(round(ctx.timing.tick_at(frame))), d.ticks)
-        with_.data.body = f"with seasons: {len(d.frames[k].agents)} Flumps"
-        without.data.body = f"without seasons: {len(ctx.compare.frames[k].agents)} Flumps"
+        with_.data.body = f"{labels[0]}: {len(d.frames[k].agents)} Flumps"
+        without.data.body = f"{labels[1]}: {len(ctx.compare.frames[k].agents)} Flumps"
 
     return update
 
 
-SURVIVAL_ROWS = [
-    ("started rich", "rich_alive", "started poor", "poor_alive"),
-    ("born on a hill", "hill_alive", "born on the plains", "plain_alive"),
-    ("needs little", "met_low_alive", "needs a lot", "met_high_alive"),
-]
+def hills(beat, d, ctx):
+    """Top right: the share of Flumps living on hill sites (capacity ≥ 3) at
+    the tick shown, against the compare world's."""
+    anchor = ctx.screen.anchor("hills", 0.66, 0.78)
+    _card("hills-card", anchor, (0, 0, -0.01), (0.62, 0.24, 0.002))
+    here = text("hills-here", "", 0.052, materials.fading("hills-here", CREAM, 1.6), anchor,
+                location=(-0.28, 0.035, 0), align="LEFT")
+    there = text("hills-there", "", 0.052, materials.fading("hills-there", SUMMER, 1.6), anchor,
+                 location=(-0.28, -0.065, 0), align="LEFT")
+    label = beat.params.get("without", "without pollution")
+
+    def share(dd, k):
+        agents = dd.frames[k].agents.values()
+        return sum(dd.capacity[a.y * dd.width + a.x] >= 3 for a in agents) / max(len(agents), 1)
+
+    def update(frame):
+        k = min(int(round(ctx.timing.tick_at(frame))), d.ticks)
+        here.data.body = f"on the hills: {share(d, k):.0%}"
+        there.data.body = f"{label}: {share(ctx.compare, k):.0%}"
+
+    return update
 
 
-def survival_panel(beat, d, ctx):
-    """How many survive by what they started with — the medians over the
-    measured seeds (measurements.json), not one run, since the caption's
-    ranking is theirs: rich vs poor, hill vs plains, needing little vs a lot."""
+SURVIVAL = {
+    "title": "who survives the seasons",
+    "rows": [
+        [("started rich", "rich_alive"), ("started poor", "poor_alive")],
+        [("born on a hill", "hill_alive"), ("born on the plains", "plain_alive")],
+        [("needs little", "met_low_alive"), ("needs a lot", "met_high_alive")],
+    ],
+}
+
+
+def bars(beat, d, ctx):
+    """A panel of paired bars from the medians over the measured seeds
+    (measurements.json) — not one run, since captions rank the medians.
+    params: `title`, `rows` (groups of (label, key) pairs, the first teal and
+    the second coral), `format` ("pct" or "num"), `top` (the bar scale; for
+    numbers, the value of a full bar)."""
+    params = {**SURVIVAL, **beat.params}
     medians, seeds = ctx.measured["medians"], ctx.measured["seeds"]
-    anchor = ctx.screen.anchor("survival", 0.46, 0.08)
-    _card("survival-card", anchor, (0, 0.0, -0.01), (0.9, 0.68, 0.002))
-    ink = materials.fading("survival-ink", CREAM, 1.6)
-    text("survival-title", "who survives the seasons", 0.055, ink, anchor, location=(0, 0.27, 0))
-    text("survival-note", f"median over {seeds} runs", 0.035, ink, anchor, location=(0, 0.215, 0))
+    percent = params.get("format", "pct") == "pct"
+    top = params.get("top", 1.0)
+    anchor = ctx.screen.anchor("bars", 0.46, 0.08)
+    groups = params["rows"]
+    height = 0.28 + 0.17 * len(groups)
+    _card("bars-card", anchor, (0, 0.0, -0.01), (0.9, height, 0.002))
+    ink = materials.fading("bars-ink", CREAM, 1.6)
+    text("bars-title", params["title"], 0.055, ink, anchor, location=(0, height / 2 - 0.07, 0))
+    text("bars-note", f"median over {seeds} runs", 0.035, ink, anchor, location=(0, height / 2 - 0.125, 0))
     width = 0.3
-    for i, (good, good_key, bad, bad_key) in enumerate(SURVIVAL_ROWS):
-        y = 0.13 - i * 0.17
-        for j, (label, key, color) in enumerate(((good, good_key, "teal"), (bad, bad_key, "coral"))):
+    tops = params.get("tops", [top] * len(groups))
+    for i, group in enumerate(groups):
+        y = height / 2 - 0.21 - i * 0.17
+        for j, (label, key) in enumerate(group):
             yy = y - j * 0.062
-            share = medians[key]
-            text(f"survival-{i}-{j}", label, 0.04, ink, anchor, location=(-0.06, yy - 0.012, 0), align="RIGHT")
-            bar_w = max(share * width, 0.002)
-            box(f"survival-bar-{i}-{j}", materials.knit(color), anchor,
+            value = medians[key]
+            color = ("teal", "coral")[j % 2]
+            text(f"bars-{i}-{j}", label, 0.04, ink, anchor, location=(-0.06, yy - 0.012, 0), align="RIGHT")
+            bar_w = max(min(value / tops[i], 1.0) * width, 0.002)
+            box(f"bars-bar-{i}-{j}", materials.knit(color), anchor,
                 location=(-0.04 + bar_w / 2, yy, 0), scale=(bar_w, 0.046, 0.004))
-            text(f"survival-pct-{i}-{j}", f"{share:.0%}", 0.04, ink, anchor,
-                 location=(-0.02 + bar_w, yy - 0.012, 0), align="LEFT")
+            shown = f"{value:.0%}" if percent else (f"{value:.3f}" if value < 1 else f"{value:.0f}")
+            text(f"bars-value-{i}-{j}", shown, 0.04, ink, anchor, location=(-0.02 + bar_w, yy - 0.012, 0), align="LEFT")
     return lambda frame: None
 
 
 # The overlays drawn in screen space (on `Screen` anchors).
-SCREEN = {"season-card", "counter", "survival", "dials", "histogram", "wealth"}
+SCREEN = {"season-card", "counter", "hills", "survival", "bars", "dials", "histogram", "wealth"}
 
 BUILDERS = {
     "season-card": season_card,
     "rings-migrants": rings_migrants,
     "rings-hungry": rings_hungry,
     "counter": counter,
-    "survival": survival_panel,
+    "survival": bars,
+    "bars": bars,
+    "hills": hills,
     "wealth": wealth,
     "belly": belly,
     "sight": sight,
