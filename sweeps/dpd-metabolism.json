@@ -1,0 +1,16 @@
+{
+  "name": "Demographic PD: shifted payoffs against metabolism, per cycle or per game (Epstein)",
+  "description": "Epstein: the shifted payoffs (12, 11, 1, 0) with a metabolism of 6 are \"equivalent mathematically\" to the original (6, 5, −5, −6), metabolism being a fixed decrement \"per cycle\" (the text also says \"after every interaction\"). Cooperators at cycle 500 against the metabolism, charged per cycle or per game. Measured (release, seeds 1–30, recorded 2026-09-26), per cycle: 0: 418; 1: 414; 2: 435; 3: 495; 4: 612; 5: 661; 6: 644; per game: 0: 418; 1: 339; 2: 380; 3: 514; 4: 677; 5: 714; 6: 695. Per game at 6 is Run 2 exactly (the same runs, to the fingerprint); per cycle at 6 is another model with a similar outcome. Metabolism does raise cooperation, as Epstein's \"necessity is the mother of cooperation\" conjecture says — but from coexistence (418 at no metabolism), not from pure defection.",
+  "base": {"preset": "dpd-shifted"},
+  "x": {"label": "Metabolism", "path": "metabolism", "values": [0, 1, 2, 3, 4, 5, 6]},
+  "series": {
+    "label": "Metabolism charged",
+    "values": [
+      {"at": 0, "name": "Per cycle", "set": {"metabolism_per": "cycle"}},
+      {"at": 1, "name": "Per game", "set": {"metabolism_per": "interaction"}}
+    ]
+  },
+  "seeds": {"from": 1, "count": 30},
+  "ticks": 500,
+  "metric": {"kind": "final", "series": "cooperators"}
+}

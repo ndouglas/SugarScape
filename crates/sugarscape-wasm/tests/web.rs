@@ -289,7 +289,11 @@ fn builtins_and_series_names_are_listed() {
             "ha-immigration",
             "ha-lattice",
             "jansson-tag-mutation",
-            "jansson-markers"
+            "jansson-markers",
+            "dpd-payoffs",
+            "dpd-mutation",
+            "dpd-metabolism",
+            "dpd-max-age"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -744,6 +748,22 @@ fn ethno_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "ethno");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn dpd_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: wealth sums and
+    // the swap shuffle's draws are the same bits here as natively.
+    for (id, fp) in [
+        ("dpd-run-1", "0x3d64b053fbfee4f6"),
+        ("dpd-run-5", "0x2f5ae2bdc6bd257a"),
+        ("dpd-rr-best", "0xe8fdc4ce027dd236"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "dpd");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

@@ -87,6 +87,10 @@ fn presets_and_sweeps_are_listed() {
         "ha-lattice",
         "jansson-tag-mutation",
         "jansson-markers",
+        "dpd-payoffs",
+        "dpd-mutation",
+        "dpd-metabolism",
+        "dpd-max-age",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),

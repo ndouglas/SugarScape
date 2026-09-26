@@ -962,7 +962,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 39] = [
+const BUILTINS: [Builtin; 43] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1118,6 +1118,22 @@ const BUILTINS: [Builtin; 39] = [
     Builtin {
         id: "jansson-markers",
         json: include_str!("../../../sweeps/jansson-markers.json"),
+    },
+    Builtin {
+        id: "dpd-payoffs",
+        json: include_str!("../../../sweeps/dpd-payoffs.json"),
+    },
+    Builtin {
+        id: "dpd-mutation",
+        json: include_str!("../../../sweeps/dpd-mutation.json"),
+    },
+    Builtin {
+        id: "dpd-metabolism",
+        json: include_str!("../../../sweeps/dpd-metabolism.json"),
+    },
+    Builtin {
+        id: "dpd-max-age",
+        json: include_str!("../../../sweeps/dpd-max-age.json"),
     },
 ];
 
@@ -1980,7 +1996,11 @@ mod tests {
                 "ha-immigration",
                 "ha-lattice",
                 "jansson-tag-mutation",
-                "jansson-markers"
+                "jansson-markers",
+                "dpd-payoffs",
+                "dpd-mutation",
+                "dpd-metabolism",
+                "dpd-max-age"
             ]
         );
         for b in builtins() {
