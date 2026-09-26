@@ -718,13 +718,16 @@ mod tests {
         let stable_tick = w.tick;
         assert_eq!(stable_tick, 8);
 
-        // Changing only stop_when_stable must not clear stable_at.
+        // Changing only stop_when_stable must not clear stable_at: stepping
+        // afterward keeps reporting the original settling period, since a
+        // wrongly cleared stable_at would let this step record the new tick.
         let mut same = w.clone();
         let same_config = OpinionsConfig {
             stop_when_stable: false,
             ..same.config.clone()
         };
         Model::set_config(&mut same, ModelConfig::Opinions(same_config)).unwrap();
+        same.step();
         assert_eq!(same.stats.latest().unwrap().stable_at, stable_tick);
 
         // A live edit to epsilon resumes a stopped run.
