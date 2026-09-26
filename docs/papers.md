@@ -38,25 +38,22 @@ worth doing; "size" is a guess at the milestone's scale.
 | # | Model | Original | Critique or follow-up | Size | Shape |
 |---|---|---|---|---|---|
 | 1 | Axelrod's norms and metanorms | `norms/axelrod-1986-apsr-evolutionary-approach-to-norms.pdf` | `norms/galan-izquierdo-2005-jasss-appearances-can-be-deceiving.html` | small | new kind (20 agents, boldness and vengefulness, a genetic algorithm) |
-| 2 | Relative agreement and extremism | `bounded-confidence/deffuant-amblard-weisbuch-faure-2002-jasss-how-can-extremism-prevail.html` | `bounded-confidence/amblard-deffuant-2004-network-topology-and-extremism.pdf`, `bounded-confidence/weisbuch-2003-bounded-confidence-and-social-networks.pdf` | medium | extends `opinions` (pairwise updating, uncertainty, networks) |
+| 2 | Relative agreement and extremism | `bounded-confidence/deffuant-neau-amblard-weisbuch-2000-acs-mixing-beliefs.pdf` (the pairwise original), `bounded-confidence/deffuant-amblard-weisbuch-faure-2002-jasss-how-can-extremism-prevail.html` | `bounded-confidence/amblard-deffuant-2004-network-topology-and-extremism.pdf`, `bounded-confidence/weisbuch-2003-bounded-confidence-and-social-networks.pdf` | medium | extends `opinions` (pairwise updating, uncertainty, networks) |
 | 3 | Image scoring | `image-scoring/nowak-sigmund-1998-iiasa-indirect-reciprocity-by-image-scoring.pdf` | `image-scoring/leimar-hammerstein-2001-prsb-cooperation-through-indirect-reciprocity.pdf` | medium | new kind |
 | 4 | El Farol and the minority game | `el-farol/arthur-1994-aer-inductive-reasoning-and-bounded-rationality.pdf` | `el-farol/challet-zhang-1997-emergence-of-cooperation-minority-game.pdf` | small | new kind (predictor pools, the memory transition) |
 | 5 | Threshold models | `thresholds/granovetter-1978-ajs-threshold-models-of-collective-behavior.pdf` (*scan*) | — | small | new kind, or a Sugarscape rule |
-| 6 | Altruistic punishment | `punishment/boyd-gintis-bowles-richerson-2003-pnas-altruistic-punishment.pdf` | — | medium | new kind (groups, migration, conflict) |
-| 7 | Zero-intelligence traders | `zi-traders/gode-sunder-1993-jpe-zero-intelligence-traders.pdf` (*scan*) | Cliff & Bruten 1997 (*wanted*) | medium | new kind: a double auction with values and costs (Sugarscape's `PriceRule::Random` is only the bilateral analog) |
-| 8 | Bali water temples | `bali/lansing-kremer-1993-am-anthropologist-balinese-water-temples.pdf` (*scan*) | `bali/janssen-2007-agricultural-systems-coordination-in-irrigation.pdf`; github.com/mars0i/bali (NetLogo, no license: reference only); Janssen's CoMSES model 2221 for the watershed data (check its license first) | large | new kind on a watershed: subaks, dams, rain, pests |
-| 9 | Emergence of firms | `firms/axtell-1999-emergence-of-firms.pdf` (108 pp) | — | large | new kind (team formation, power-law firm sizes) |
-| 10 | Emergent actors in world politics | `geopolitics/cederman-1997-emergent-actors-in-world-politics.pdf` (274-page book) | — | very large | new kind (states on a grid, conquest, nationalism) |
+| 6 | The timing of retirement | `retirement/axtell-epstein-1999-coordination-in-transient-social-networks-retirement.pdf` | — | small | new kind (age cohorts, rational and imitating agents, a social network) |
+| 7 | Altruistic punishment | `punishment/boyd-gintis-bowles-richerson-2003-pnas-altruistic-punishment.pdf` | — | medium | new kind (groups, migration, conflict) |
+| 8 | Zero-intelligence traders | `zi-traders/gode-sunder-1993-jpe-zero-intelligence-traders.pdf` (*scan*) | `zi-traders/cliff-1997-hp-minimal-intelligence-agents-for-bargaining.pdf` (Cliff's HP Labs report: where ZI-C fails, and ZIP traders) | medium | new kind: a double auction with values and costs (Sugarscape's `PriceRule::Random` is only the bilateral analog) |
+| 9 | Bali water temples | `bali/lansing-kremer-1993-am-anthropologist-balinese-water-temples.pdf` (*scan*) | `bali/janssen-2007-agricultural-systems-coordination-in-irrigation.pdf`; github.com/mars0i/bali (NetLogo, no license: reference only); Janssen's CoMSES model 2221 for the watershed data (check its license first) | large | new kind on a watershed: subaks, dams, rain, pests |
+| 10 | Emergence of firms | `firms/axtell-1999-emergence-of-firms.pdf` (108 pp) | — | large | new kind (team formation, power-law firm sizes) |
+| 11 | Emergent actors in world politics | `geopolitics/cederman-1997-emergent-actors-in-world-politics.pdf` (274-page book) | — | very large | new kind (states on a grid, conquest, nationalism) |
 
 ## Wanted
 
 Papers that would strengthen a milestone or unblock a queued one, not yet found:
 
 - Kirman, "Ants, Rationality, and Recruitment" (QJE 1993): herding between two sources.
-- Axtell & Epstein, "Coordination in Transient Social Networks: … Timing of Retirement" (1999).
-- Cliff & Bruten 1997, on zero-intelligence traders and the shape of supply and demand.
-- Deffuant, Neau, Amblard & Weisbuch, "Mixing beliefs among interacting agents" (2000): the
-  pairwise bounded-confidence original, for queue item 2.
 - For the completed milestones' records: Epstein 2002 (civil violence), Janssen 2009 (Anasazi),
   Edmonds & Hales 2003 and Roberts & Sherratt 2002 (tags), Axtell, Axelrod, Epstein & Cohen 1996
   (docking), Lorenz 2006 (bounded confidence).
