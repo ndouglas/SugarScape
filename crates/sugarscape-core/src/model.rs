@@ -12,6 +12,7 @@ use crate::config::{Config, FieldError};
 use crate::culture::{CultureConfig, CultureWorld};
 use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
+use crate::norms::{NormsConfig, NormsWorld};
 use crate::opinions::{OpinionsConfig, OpinionsWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::ring::{RingConfig, RingWorld};
@@ -22,8 +23,8 @@ use crate::structure::{StructureConfig, StructureWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
 use crate::{
-    anasazi, civil, classes, culture, dpd, ethno, export, opinions, ring, schelling, spatial,
-    stats, structure, tags,
+    anasazi, civil, classes, culture, dpd, ethno, export, norms, opinions, ring, schelling,
+    spatial, stats, structure, tags,
 };
 
 /// Which model a config or world is.
@@ -43,10 +44,11 @@ pub enum ModelKind {
     Opinions,
     Structure,
     Dpd,
+    Norms,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 13] = [
+    pub const ALL: [ModelKind; 14] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -60,6 +62,7 @@ impl ModelKind {
         ModelKind::Opinions,
         ModelKind::Structure,
         ModelKind::Dpd,
+        ModelKind::Norms,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -77,6 +80,7 @@ impl ModelKind {
             ModelKind::Opinions => "opinions",
             ModelKind::Structure => "structure",
             ModelKind::Dpd => "dpd",
+            ModelKind::Norms => "norms",
         }
     }
 
@@ -97,6 +101,7 @@ impl ModelKind {
             ModelKind::Opinions => opinions::schema(),
             ModelKind::Structure => structure::schema(),
             ModelKind::Dpd => dpd::schema(),
+            ModelKind::Norms => norms::schema(),
         }
     }
 }
@@ -123,6 +128,7 @@ pub enum ModelConfig {
     Opinions(OpinionsConfig),
     Structure(StructureConfig),
     Dpd(DpdConfig),
+    Norms(NormsConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -141,6 +147,7 @@ enum Tagged<'a> {
     Opinions(&'a OpinionsConfig),
     Structure(&'a StructureConfig),
     Dpd(&'a DpdConfig),
+    Norms(&'a NormsConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -166,6 +173,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Opinions(c) => Tagged::Opinions(c).serialize(s),
             ModelConfig::Structure(c) => Tagged::Structure(c).serialize(s),
             ModelConfig::Dpd(c) => Tagged::Dpd(c).serialize(s),
+            ModelConfig::Norms(c) => Tagged::Norms(c).serialize(s),
         }
     }
 }
@@ -186,6 +194,7 @@ impl ModelConfig {
             ModelConfig::Opinions(_) => ModelKind::Opinions,
             ModelConfig::Structure(_) => ModelKind::Structure,
             ModelConfig::Dpd(_) => ModelKind::Dpd,
+            ModelConfig::Norms(_) => ModelKind::Norms,
         }
     }
 
@@ -259,10 +268,13 @@ impl ModelConfig {
             "dpd" => serde_json::from_value(value)
                 .map(ModelConfig::Dpd)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "norms" => serde_json::from_value(value)
+                .map(ModelConfig::Norms)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure or dpd)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd or norms)"
                 ),
             )),
         }
@@ -283,6 +295,7 @@ impl ModelConfig {
             ModelConfig::Opinions(c) => c.validate(),
             ModelConfig::Structure(c) => c.validate(),
             ModelConfig::Dpd(c) => c.validate(),
+            ModelConfig::Norms(c) => c.validate(),
         }
     }
 
@@ -303,6 +316,7 @@ impl ModelConfig {
             ModelConfig::Opinions(c) => set_path(c, path, value).map(ModelConfig::Opinions),
             ModelConfig::Structure(c) => set_path(c, path, value).map(ModelConfig::Structure),
             ModelConfig::Dpd(c) => set_path(c, path, value).map(ModelConfig::Dpd),
+            ModelConfig::Norms(c) => set_path(c, path, value).map(ModelConfig::Norms),
         }
     }
 
@@ -322,7 +336,8 @@ impl ModelConfig {
             | ModelConfig::Culture(_)
             | ModelConfig::Classes(_)
             | ModelConfig::Opinions(_)
-            | ModelConfig::Structure(_) => None,
+            | ModelConfig::Structure(_)
+            | ModelConfig::Norms(_) => None,
         }
     }
 
@@ -342,6 +357,7 @@ impl ModelConfig {
             ModelConfig::Opinions(_) => opinions::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Structure(_) => structure::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Dpd(_) => dpd::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Norms(_) => norms::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -524,6 +540,7 @@ pub enum ModelWorld {
     Opinions(Box<OpinionsWorld>),
     Structure(Box<StructureWorld>),
     Dpd(Box<DpdWorld>),
+    Norms(Box<NormsWorld>),
 }
 
 impl ModelWorld {
@@ -560,6 +577,7 @@ impl ModelWorld {
                 ModelWorld::Structure(Box::new(StructureWorld::new(c, seed)?))
             }
             ModelConfig::Dpd(c) => ModelWorld::Dpd(Box::new(DpdWorld::new(c, seed)?)),
+            ModelConfig::Norms(c) => ModelWorld::Norms(Box::new(NormsWorld::new(c, seed)?)),
         })
     }
 
@@ -578,6 +596,7 @@ impl ModelWorld {
             ModelWorld::Opinions(_) => ModelKind::Opinions,
             ModelWorld::Structure(_) => ModelKind::Structure,
             ModelWorld::Dpd(_) => ModelKind::Dpd,
+            ModelWorld::Norms(_) => ModelKind::Norms,
         }
     }
 
@@ -596,6 +615,7 @@ impl ModelWorld {
             ModelWorld::Opinions(w) => w.as_ref(),
             ModelWorld::Structure(w) => w.as_ref(),
             ModelWorld::Dpd(w) => w.as_ref(),
+            ModelWorld::Norms(w) => w.as_ref(),
         }
     }
 
@@ -614,6 +634,7 @@ impl ModelWorld {
             ModelWorld::Opinions(w) => w.as_mut(),
             ModelWorld::Structure(w) => w.as_mut(),
             ModelWorld::Dpd(w) => w.as_mut(),
+            ModelWorld::Norms(w) => w.as_mut(),
         }
     }
 
@@ -700,6 +721,7 @@ impl ModelWorld {
             ModelWorld::Opinions(w) => copy_without_history!(Opinions, w),
             ModelWorld::Structure(w) => copy_without_history!(Structure, w),
             ModelWorld::Dpd(w) => copy_without_history!(Dpd, w),
+            ModelWorld::Norms(w) => copy_without_history!(Norms, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -728,6 +750,7 @@ impl ModelWorld {
             (ModelWorld::Opinions(live), ModelWorld::Opinions(kept)) => restore_into!(live, kept),
             (ModelWorld::Structure(live), ModelWorld::Structure(kept)) => restore_into!(live, kept),
             (ModelWorld::Dpd(live), ModelWorld::Dpd(kept)) => restore_into!(live, kept),
+            (ModelWorld::Norms(live), ModelWorld::Norms(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1042,7 +1065,8 @@ mod tests {
                 "ethno",
                 "opinions",
                 "structure",
-                "dpd"
+                "dpd",
+                "norms"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

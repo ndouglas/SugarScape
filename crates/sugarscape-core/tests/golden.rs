@@ -166,6 +166,15 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("dpd-footnote-27", 0xd1adeadce6881068),
     ("dpd-rr-best", 0xe8fdc4ce027dd236),
     ("dpd-coordination", 0x47f8c68504a9157a),
+    ("ax-norms", 0x52458d1993432cfe),
+    ("ax-metanorms", 0x679a78d57f20640c),
+    ("ax-dominance", 0x405accd101253f9d),
+    ("ax-dominance-metanorms", 0x74717dff3c2ba3f1),
+    ("gi-metanorms-long", 0xf80d7b08d057046f),
+    ("gi-low-mutation", 0x2c37f146a39f0d51),
+    ("gi-mild-metanorms", 0xb7435abcb67c192b),
+    ("gi-temptation-10", 0xa191ff11a4f9ee68),
+    ("gi-tournament", 0x95ea76458cee1a46),
 ];
 
 fn fingerprint(id: &str) -> u64 {

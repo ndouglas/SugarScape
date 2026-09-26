@@ -21,6 +21,7 @@ pub mod landscape;
 mod legacy;
 pub mod model;
 pub mod network;
+pub mod norms;
 pub mod opinions;
 pub mod portable;
 pub mod presets;
