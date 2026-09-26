@@ -277,7 +277,12 @@ fn builtins_and_series_names_are_listed() {
             "ac-activation",
             "ac-traits-transition",
             "ac-drift",
-            "dock-mobility"
+            "dock-mobility",
+            "aey-memory",
+            "aey-population",
+            "aey-first-attractor",
+            "aey-tag-regimes",
+            "pvplh-payoffs"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -686,6 +691,21 @@ fn tags_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "tags");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn classes_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    for (id, fp) in [
+        ("aey-equity", "0x6aa634df2b9c3944"),
+        ("aey-tags", "0x1455ea172db78c68"),
+        ("pvplh-lattice", "0x7975f5afc2d06c10"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "classes");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

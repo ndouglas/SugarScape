@@ -954,7 +954,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 27] = [
+const BUILTINS: [Builtin; 32] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1062,6 +1062,26 @@ const BUILTINS: [Builtin; 27] = [
     Builtin {
         id: "dock-mobility",
         json: include_str!("../../../sweeps/dock-mobility.json"),
+    },
+    Builtin {
+        id: "aey-memory",
+        json: include_str!("../../../sweeps/aey-memory.json"),
+    },
+    Builtin {
+        id: "aey-population",
+        json: include_str!("../../../sweeps/aey-population.json"),
+    },
+    Builtin {
+        id: "aey-first-attractor",
+        json: include_str!("../../../sweeps/aey-first-attractor.json"),
+    },
+    Builtin {
+        id: "aey-tag-regimes",
+        json: include_str!("../../../sweeps/aey-tag-regimes.json"),
+    },
+    Builtin {
+        id: "pvplh-payoffs",
+        json: include_str!("../../../sweeps/pvplh-payoffs.json"),
     },
 ];
 
@@ -1902,7 +1922,12 @@ mod tests {
                 "ac-activation",
                 "ac-traits-transition",
                 "ac-drift",
-                "dock-mobility"
+                "dock-mobility",
+                "aey-memory",
+                "aey-population",
+                "aey-first-attractor",
+                "aey-tag-regimes",
+                "pvplh-payoffs"
             ]
         );
         for b in builtins() {

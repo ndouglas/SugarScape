@@ -186,6 +186,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Civil => "a group has died out",
             ModelKind::Tags => "its last generation",
             ModelKind::Culture => "the lattice is stable",
+            ModelKind::Classes => "equity reached",
             ModelKind::Sugarscape => "the cultures have settled",
             _ => "its end year",
         };
