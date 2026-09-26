@@ -140,7 +140,7 @@ Model extensions:
 ## Other artificial societies
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
-**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation** and **Spatial Games**.
+**Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games** and **Ethnocentrism**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -505,6 +505,145 @@ running world. Credit: Martin A. Nowak and Robert M. May, "Evolutionary games an
 computer simulations," *PNAS* 90 (1993), 7716–7718; and Martin A. Nowak, Sebastian Bonhoeffer and
 Robert M. May, "Spatial games and the maintenance of cooperation," *PNAS* 91 (1994), 4877–4881. See
 `docs/superpowers/specs/2026-09-25-spatial-games-design.md`.
+
+### Ethnocentrism (Hammond & Axelrod 2006, and its critics)
+
+Hammond and Axelrod's model of in-group favoritism: an empty 50 × 50 torus on which every site has
+four neighbors. Each period an immigrant with random traits arrives at a random empty site; its
+traits are a tag (one of four colors) and two strategy bits, whether to help an agent of its own
+color and whether to help one of another. Every agent's potential to reproduce (PTR) is reset to
+12 %; then each agent decides, for each occupied neighbor, whether to help it — helping costs the
+helper 1 % of PTR and gives the neighbor 3 %. In random order each agent then reproduces with
+probability PTR into an empty neighboring site, if there is one, the offspring copying its parent
+with a 0.5 % chance of mutation per trait; finally every agent dies with probability 10 %. An agent
+that helps only its own color is ethnocentric (E), one that helps everyone humanitarian (H), one that
+helps no one selfish (S) and one that helps only other colors traitorous (T). The paper reports the
+mean over the last 100 of 2,000 periods, over ten runs: 76.3 % ethnocentric, 74.2 % of decisions
+cooperative (its Table 1 a).
+
+**The paper, its appendix and its code disagree**, and each disagreement is a switch or a preset.
+The appendix gives `MutationRate = 0.05` where the text, Table 1, the authors' code and NetLogo's
+replication use 0.005: at 5 % the lattice never sorts (36.0 % ethnocentric, 56.4 % cooperative;
+`ha-appendix-mutation`), so the appendix's figure is a slip. The appendix's interaction loop ("A
+decides whether to donate to N … N decides whether to donate to A", for each neighbor N of each agent
+A), read literally, decides every direction twice a period; the code decides once, and twice gives
+80.9 % ethnocentric and 77.3 % cooperative, five points above Table 1 a (`pair_play: twice`,
+`ha-appendix-double-play`). The archived Java draws a new agent's tag with Ascape's inclusive
+`randomInRange(0, 4)`, so "four colors" are five (`ha-java-five-colors`); and its archived main loop
+has the immigration block commented out and fills the lattice with random agents at the start, so
+the code as archived is a full random start with no immigration (`ha-java-archive`) — contrary to its
+own documentation, and it lands on the same outcome as the paper, faster: 77.7 % ethnocentric
+(43 % by period 100, against 35 % in the standard case).
+
+The paper leaves several things open; the choices made here are stated here and in the module docs.
+Immigrants interact, reproduce and can die in the period they arrive (as NetLogo); offspring do not
+reproduce in the period they are born but can die in it (the code and NetLogo agree); a tag mutation
+always gives a different color (the code); a fractional immigration rate is a chance of one more
+immigrant (the code's `halfImmigrant`); misperception, "misperceiving whether the other agent has the
+same color", is per decision, the agent then using its other bit (the code's noise). Agents that
+"distinguish all four colors" carry one help bit per color, each mutating like any other trait, and
+count as ethnocentric when they help their own color only; agents "unable to distinguish their own
+color from others" carry a single bit (help everyone or no one). Each period's statistics are
+shares of the agents alive at its end, and cooperation is helps ÷ decisions that period; a run's
+summary is the mean over its last 100 periods, as the paper's.
+
+What reproduces, measured (release, seeds 1–10, periods 1,901–2,000 unless noted):
+
+- **Table 1 in both columns within 3 points** for rows a (75.9 % ethnocentric, 76.0 % cooperative),
+  b (cost 0.5 %), d (two colors), e (eight), f (mutation 0.25 %, Figure 1: 83.4 / 80.2 against
+  82.8 / 79.8), h (immigration 0.5) and m ("run length 2,000", read as 4,000 periods since the
+  standard is already 2,000: 77.1 / 75.9 against 77.3 / 74.4).
+- **A lattice of egoists** with no immigration becomes "just as dominant" (`ha-egoist-start`): 78.6 %
+  ethnocentric, though slowly — 7 % at period 100, 70 % at 500, after the population falls to 786.
+- **Misperception 10 %** (`ha-misperception`): 71.7 % ethnocentric, "more than two-thirds".
+- **Hartshorn, Kaznatcheev and Shultz (2013)** reproduce almost exactly, over their 50 worlds of
+  1,000 cycles: final shares 7.7 % selfish, 2.6 % traitorous, 72.4 % ethnocentric and 17.3 %
+  humanitarian (theirs .08 / .02 / .73 / .17) with 1,568 agents ("just under 1,600"); by their
+  chi-square tests, 17 worlds show early humanitarian dominance, 18 early ethnocentric dominance and
+  15 strong competition (theirs 16 / 16 / 18); and in their Study 2 (only some strategies allowed:
+  `allowed`, which presets, files and links set) ethnocentric > humanitarian > selfish > traitorous
+  in every subset but HST, where traitors beat the selfish (`hks-no-ethnocentrics`: 84.7 %
+  humanitarian, 8.4 % traitorous, 7.0 % selfish), all fifteen orders as their Table 3, most counts
+  within 5 %.
+- **Jansson (2013)**: with offspring placed anywhere instead of next to the parent
+  (`jansson-offspring-anywhere`) cooperation collapses to 4.5 % (88.7 % selfish), "similar to the null
+  model"; relatives (a common founding immigrant) are 75.4 % of neighboring pairs, P(same tag |
+  relatives) 95.1 % and P(relatives | same tag) 90.1 % (his Table 4: 74.7, 95.3, 89.2), and 86.8 % of
+  all help goes to relatives (his 89 % of an ethnocentric's); raising the tag's own mutation rate
+  (`tag_mutation`), humanitarians pass ethnocentrics between 25 % and 30 % (44.9 against 39.9 at 30 %,
+  `jansson-tag-mutation-30`; he says 30 %).
+
+What does not, or only partly:
+
+- **The color-blind 14 %.** At doubled cost HA06 report 56 % cooperation for agents that see color and
+  14 % for agents "unable to distinguish their own color from others". Here seeing agents cooperate
+  64.7 % and blind ones (`ha-cost-2-blind`) 41.8 %, three times 14 %. No reading of "unable to
+  distinguish" gets there: one color 40.2 %, a coin flip per decision 44.9 %, every decision twice
+  24.5 %. Only a harsher game does — cost 3 %, 12.7 % (or the benefit halved, 11.6 %) — and then
+  seeing agents fall to 29.8 % (17.7 %), far below 56 %. And blind agents cooperate *more* than seeing
+  ones whenever helping is cheap (81.2 % against 76.0 % at the standard cost, 89.0 against 78.5 at
+  0.5 %): seeing color helps cooperation only above a cost of about 1.25 %.
+- **Ethnocentrics take over later than Table 1 l says.** After 500 periods 57.3 % are ethnocentric,
+  not 73.9 %; the last-100 mean is 70.3 % by period 1,000 and 72.4 % by 1,500. Hartshorn, Kaznatcheev
+  and Shultz's "around 300 cycles" holds for the median world (282) but worlds range from 21 to 596:
+  11 of 50 settle before period 100 and 11 after 400.
+- **"80 percent ethnocentric"** with each-color strategies (`ha-each-color`) holds only loosely: 27.0 %
+  help their own color alone, while 84.3 % help their own color and refuse at least one other.
+- Rows c, g, i, j and k are off by more than 3 points: at cost 2 % cooperation is 64.7 %, not 56.1 %;
+  mutation 1 %, immigration 2 and a 25 × 25 lattice leave 4–6 points fewer ethnocentrics (63.0, 70.5
+  and 64.4 against 67.1, 74.4 and 70.5); a 100 × 100 lattice cooperates 3.1 points more. Cooperation
+  runs about 2 points above HA06 in most rows (mean +2.4).
+- **Four colors or five?** Table 1 cannot tell: the ethnocentric share is flat from 3 to 6 colors
+  (76.2, 75.9, 75.4, 76.1 %), and rows d, a and e fit 2/4/8 colors and the code's 2/5/9 about equally
+  (root-mean-square error over the thirteen rows 5.2 against 5.8 points ethnocentric, 3.3 against
+  4.0 cooperative).
+- **Jansson's kin discriminators** (`kin_strategies`: a basis bit says whether same and other are
+  judged by the tag or by a kin marker naming the family's founder) win, but by far less than his
+  Table 5: 52.1 % kin and 26.7 % tag-ethnocentric, against 76.2 % and 16.4 % (`jansson-kin`). He does
+  not say how the basis is inherited; fixed at immigration instead of mutating (`kin_basis: fixed`,
+  `jansson-kin-fixed`), kin take 65.5 % and tag-ethnocentrics 12.6 %, nearer his table. With more
+  colors the kin–tag gap closes, as he says, but below ten points from about 12 colors, not 36; with a
+  fixed basis it hovers at 10–16 points from 16 to 36 colors (one dip at 24) and closes near 40. At 60 % tag mutation
+  traitors only draw level with ethnocentrics (20.8 against 21.8 %; they pass by 75 %), and at 90 %
+  they do not outnumber humanitarians (39.8 against 43.6 %), both of which he says they do.
+
+The survey measures 38 of these claims (20 seeds; 50 for Hartshorn, Kaznatcheev and Shultz's own
+worlds): 15 hold, 11 are weak and 12 fail. Most Table 1 rows are weak because their cooperation,
+about 2 points high, puts too few worlds within 3 points of HA06's.
+
+Seven built-in sweeps (ten seeds, 2,000 periods, the mean over periods 1,901–2,000): `ha-cost`
+(cooperation against the cost of helping, seeing and blind: 78.5 / 89.0 % at 0.5 %, 76.0 / 81.2 % at
+1 %, 64.7 / 41.8 % at 2 %, 29.8 / 12.7 % at 3 %), `ha-colors` (the ethnocentric share for 2 to 9
+colors: 68.9, 76.2, 75.9, 75.4, 76.1, 78.6, 77.9, 81.8 %), `ha-mutation` (0.25 % to 5 %, once and
+twice: 83.4 / 86.6 % down to 36.0 / 42.7 %), `ha-immigration` (0.5 to 2 immigrants: 77.9 down to
+70.5 %), `ha-lattice` (25 to 100 wide: 64.4, 75.9, 76.6, 76.5 %), `jansson-tag-mutation` (0.5 % to
+90 %: humanitarians pass ethnocentrics between 25 % and 30 %) and `jansson-markers` (kin strategies
+with 4 to 40 colors, the basis mutating or fixed).
+
+Agents are drawn by **Strategy** (the default: ethnocentric green, humanitarian blue, selfish red,
+traitorous yellow, kin purple, non-kin orange, other each-color patterns gray), **Tag** (the code's
+blue, red, green and yellow, then up to 40 hues), **Lineage** (a color per founding immigrant) or
+**PTR** (this period's, as heat), with empty sites dark. Inspect shows an agent's tag, strategy (and,
+with kin strategies, what it judges by), this period's PTR and helps, its lineage, kin marker and
+age, and each neighbor's tag and strategy, whether they are related, and who helped whom; an empty
+site says so. Charts: **Strategies**, **Cooperation** (helps per decision and the share of decisions
+toward the same tag), **Population** and **Kin** (related neighbors, help to relatives, and the two
+conditional probabilities of Jansson's Table 4), against the period. A run stops at period 2,000
+(`end`; 0 for never); immigration, PTR, cost, benefit, death, the mutation rates, pair play,
+misperception and offspring placement apply to the running world. **Compare** entries: "Four colors
+vs five (the Java's draw) — Ethnocentrism (Compare)" (`ha-standard` and `ha-java-five-colors`),
+"Next to the parent vs anywhere — Ethnocentrism (Compare)" (`ha-standard` and
+`jansson-offspring-anywhere`: 75.9 % ethnocentric against 8.3 %) and "Tags vs kin — Ethnocentrism
+(Compare)" (`ha-standard` and `jansson-kin`). Credit: Ross A. Hammond and Robert Axelrod, "The
+Evolution of Ethnocentrism," *Journal of Conflict Resolution* 50(6) (2006), 926–936, and their
+archived Java/Ascape code (2003); Uri Wilensky's NetLogo *Ethnocentrism*, the replication they cite;
+Thomas R. Shultz, Max Hartshorn and Ross A. Hammond, "Stages in the evolution of ethnocentrism,"
+*CogSci 2008*; Thomas R. Shultz, Max Hartshorn and Artem Kaznatcheev, "Why is ethnocentrism more
+common than humanitarianism?", *CogSci 2009*; Max Hartshorn, Artem Kaznatcheev and Thomas R. Shultz,
+"The Evolutionary Dominance of Ethnocentric Cooperation," *JASSS* 16(3) 7 (2013); and Fredrik
+Jansson, "Pitfalls in Spatial Modelling of Ethnocentrism: A Simulation Analysis of the Model of
+Hammond and Axelrod," *JASSS* 16(3) 2 (2013). See
+`docs/superpowers/specs/2026-09-25-ethnocentrism-design.md`.
 
 ## Experiments
 

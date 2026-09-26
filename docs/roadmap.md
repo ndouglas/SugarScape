@@ -112,6 +112,18 @@ three decimals; Huberman and Glance's "always all D" holds only above b = 1.8, a
 the random arrays' r_c ≈ 9 depends on an unreported starting mix. See
 `docs/superpowers/specs/2026-09-25-spatial-games-design.md`.
 
+## Milestone 14: Ethnocentrism (done)
+
+Hammond and Axelrod's evolution of ethnocentrism (2006) as an eighth model kind, with its appendix's and
+its archived code's departures as switches and presets, and the variants of Hartshorn, Kaznatcheev and
+Shultz (2013) and Jansson (2013). The standard case and most of Table 1 reproduce within 3 points, and
+Hartshorn, Kaznatcheev and Shultz's shares, early patterns and Study 2 orders almost exactly; the appendix's
+5 % mutation is a slip, the code draws five colors for four (which Table 1 cannot tell apart), and the
+color-blind agents' 14 % cooperation does not reproduce under any reading (41.8 %). Ethnocentrics take over
+later than Table 1 l says, and Jansson's kin discriminators win by far less than his Table 5 unless the
+kin basis never mutates, which he does not say. See
+`docs/superpowers/specs/2026-09-25-ethnocentrism-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -121,6 +133,7 @@ the random arrays' r_c ≈ 9 depends on an unreported starting mix. See
 - **Nowak–May spatial games**: done (Milestone 13).
 - **Epstein's civil violence**: done (Milestone 11).
 - **Tag-based cooperation** (Riolo, Cohen & Axelrod 2001): done (Milestone 12).
+- **Hammond–Axelrod ethnocentrism** (and Hartshorn, Kaznatcheev & Shultz's and Jansson's critiques): done (Milestone 14).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

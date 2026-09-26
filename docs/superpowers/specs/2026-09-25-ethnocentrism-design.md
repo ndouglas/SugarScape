@@ -16,7 +16,7 @@ Not available: Hammond & Axelrod 2006, *Theor. Pop. Biol.* 69 (the companion pap
 
 ## Goal
 
-Add Hammond and Axelrod's ethnocentrism model as a seventh model kind, with the variants HA06 claim in the text and the critics' variants as named switches — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey), with each source's claims measured, including where the paper, its appendix and its code disagree.
+Add Hammond and Axelrod's ethnocentrism model as an eighth model kind (after the tags model and the spatial games), with the variants HA06 claim in the text and the critics' variants as named switches — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey), with each source's claims measured, including where the paper, its appendix and its code disagree.
 
 ## Non-negotiable constraints
 
@@ -63,6 +63,7 @@ Add Hammond and Axelrod's ethnocentrism model as a seventh model kind, with the 
 | `offspring` | `adjacent` | live | `adjacent` (a random empty neighbour) or `anywhere` (a random empty site) |
 | `allowed` | `["E","H","S","T"]` | reset | the strategies immigrants and mutations may produce (`same_other`, no kin strategies) |
 | `kin_strategies` | false | reset | adds a basis bit: discriminate on the tag or on the kin marker (J13 §5.2) |
+| `kin_basis` | `mutates` | reset | how the basis bit is inherited: `mutates` (a trait mutating at `mutation`) or `fixed` (drawn at immigration, never mutating); J13 does not say (plan Decision 22) |
 | `kin_mutation` | 0.005 | live | the kin marker's mutation rate |
 | `end` | 2000 | live | the last period (0: never) |
 | `schedule` | `[]` | — | as milestone 11's (live paths only) |
@@ -95,7 +96,7 @@ Full starts (`random`, `selfish`) fill every site before the first period; each 
 9. **Misperception** (HA06: "misperceive whether the other agent … has the same color"): per decision, the agent uses its other bit (HA-Java's noise).
 10. **Each-colour strategies** (HA06: "distinguish all four colors", no detail): one help bit per colour, each mutating at `mutation`; "ethnocentric" = helps its own colour only.
 11. **Blind agents** (HA06: "unable to distinguish"): one help bit, mutating at `mutation`.
-12. **Kin strategies** (J13 does not say how the basis is inherited): a basis bit mutating at `mutation`.
+12. **Kin strategies** (J13 does not say how the basis is inherited): a basis bit mutating at `mutation` by default; `kin_basis: fixed` draws it at immigration and never mutates it, which fits Table 5 better (kin 65.5 % against 52.1 %; J13 76.2 %) but is not what the sources say either (plan Decision 22).
 13. **The run's summary** (HA06, HKS13): the mean over the last 100 periods (1,901–2,000).
 
 ## Statistics
@@ -106,7 +107,7 @@ Full starts (`random`, `selfish`) fill every site before the first period; each 
 
 - **Colour modes:** **Strategy** (the default: E, H, S, T, kin, nonkin, mixed each a distinct colour), **Tag** (a palette of up to 40), **Lineage** (a colour hashed from the founding immigrant), **PTR** (this period's PTR as heat). Empty sites dark.
 - **Inspect:** the agent's tag, strategy and basis; this period's PTR, helps given and received; lineage, kin marker and age; each neighbour's tag, strategy, whether related, and who helped whom. An empty site says so.
-- **Charts:** **Strategies** (the strategy shares), **Cooperation** (`cooperation`, `same_tag`), **Population**, **Kin** (`kin_help`, `tag_given_relative`, `relative_given_tag`).
+- **Charts:** **Strategies** (the strategy shares, in the Strategy mode's colours), **Cooperation** (`cooperation`, `same_tag`), **Population**, **Kin** (`relatives`, `kin_help`, `tag_given_relative`, `relative_given_tag`: J13 Table 4's three numbers and §4.3's).
 
 ## Presets
 
@@ -126,6 +127,7 @@ Full starts (`random`, `selfish`) fill every site before the first period; each 
 | `jansson-offspring-anywhere` | `offspring: anywhere` | J13 §3.6 |
 | `jansson-tag-mutation-30` | tag mutation 0.3 | J13 §4.4 |
 | `jansson-kin` | `kin_strategies: true` | J13 §5.2 |
+| `jansson-kin-fixed` | `kin_strategies: true`, `kin_basis: fixed` | J13 §5.2, the basis fixed (plan Decision 22) |
 | `hks-no-ethnocentrics` | allowed H, S, T | HKS13 Study 2 |
 
 **Compare entries:** "Four colors vs five (the Java's draw) — Ethnocentrism (Compare)" (`ha-standard` vs `ha-java-five-colors`), "Next to the parent vs anywhere — Ethnocentrism (Compare)" (`ha-standard` vs `jansson-offspring-anywhere`), "Tags vs kin — Ethnocentrism (Compare)" (`ha-standard` vs `jansson-kin`).
@@ -140,7 +142,7 @@ Ten seeds, 2,000 periods, metric the window mean over periods 1,901–2,000 unle
 - `ha-immigration`: x = immigration 0.5 … 2.
 - `ha-lattice`: x = width 25 … 100.
 - `jansson-tag-mutation`: x = tag mutation 0.005 … 0.9; metric `ethnocentric` (the survey reads `humanitarian` from the same runs for the crossing).
-- `jansson-markers`: base `jansson-kin`; x = colours 4 … 40; metric `kin`.
+- `jansson-markers`: base `jansson-kin`; x = colours 4 … 40; series `kin_basis` mutates vs fixed; metric `kin`.
 - `sugarscape presets | run | sweep` accept `ethno`.
 
 ## Claims to test (survey and book-style tests; ten seeds as HA06, 50 where HKS13 used 50)
@@ -154,7 +156,8 @@ Tolerances come from the measurements (as milestones 11–13).
 
 ## Page
 
-- An **Ethnocentrism** presets group; the schema panel in groups **Game** (cost, benefit, base PTR, pair play), **Population** (width, start, immigration, death, offspring), **Traits** (colours, discrimination, misperception shown only for `same_other`, allowed shown only for `same_other` without kin, kin strategies, kin mutation shown only with kin strategies), **Mutation** (mutation, tag mutation), **Run** (end); the four colour modes; the four charts; Inspect; the three Compare entries; `defaultForm('ethno')` (x = cost, window-mean `ethnocentric`).
+- An **Ethnocentrism** presets group; the schema panel in groups **Game** (cost, benefit, base PTR, pair play), **Population** (width, start, immigration, death, offspring), **Traits** (colours, discrimination, misperception shown only for `same_other`, kin strategies, kin basis and kin mutation shown only with kin strategies), **Mutation** (mutation, tag mutation — empty means the mutation rate), **Run** (end); the four colour modes; the four charts, against the **period**; Inspect; the three Compare entries; `defaultForm('ethno')` (x = cost 0.005–0.03 by 0.0025, 2,000 periods, window-mean `ethnocentric` over 1,901–2,000).
+- `allowed` is not on the panel (a list is not a panel kind; presets, files and links set it and it round-trips through live edits, resets, links and sessions), so "allowed shown only for `same_other` without kin" has no field to hide; validation still rejects a restricted `allowed` with another discrimination or with kin strategies. The panel shows a nullable number (`tag_mutation`'s null) as an empty box and sends an empty box as null (the schema's `nullable`), and `show_if` compares a bool field as `"true"`/`"false"`.
 - Keyframes, the timeline, stop rules, share links, sessions, recording and Compare work unchanged.
 
 ## Testing
