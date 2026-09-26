@@ -53,6 +53,18 @@ class DumpTest(unittest.TestCase):
             f.pop("pollution", None)
         self.assertEqual(dump.parse(json.dumps(raw)).frames[3].pollution, [0.0] * 64)
 
+    def test_births_map_each_newcomer_to_its_sex_and_parents(self):
+        first = self.d.placed[0]
+        sex, parents = self.d.frames[0].births[first]
+        self.assertIn(sex, ("female", "male"))
+        self.assertIsNone(parents)  # placed, not born of parents
+        self.assertEqual(set(self.d.frames[2].births), set(self.d.frames[2].born))
+        raw = json.loads(FIXTURE.read_text())
+        for f in raw["frames"]:
+            f.pop("births", None)
+        old = dump.parse(json.dumps(raw))
+        self.assertEqual(old.frames[0].births[first], (None, None))
+
     def test_wrong_format_is_refused(self):
         with self.assertRaisesRegex(ValueError, "format"):
             dump.parse('{"format": 99}')

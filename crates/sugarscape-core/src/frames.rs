@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::agent::Sex;
 use crate::config::{Config, FieldError};
 use crate::edit::AgentOverrides;
 use crate::model::ModelConfig;
@@ -108,6 +109,9 @@ impl Shot {
 /// `[id, x, y, sugar, age, vision, metabolism]`.
 pub type AgentRow = (u64, u32, u32, f64, u32, u32, u32);
 
+/// `[id, sex, [parent, parent] | null]`.
+pub type Birth = (u64, Sex, Option<[u64; 2]>);
+
 /// The world after a tick and that tick's placements.
 #[derive(Clone, Debug, Serialize)]
 pub struct Frame {
@@ -122,6 +126,10 @@ pub struct Frame {
     /// Agents first seen in this frame (the initial population, replacements
     /// and placements).
     pub born: Vec<u64>,
+    /// The same agents as `[id, sex, [parent, parent] | null]`: parents for
+    /// children born under rule S, none for founders, placements and
+    /// replacements.
+    pub births: Vec<Birth>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -159,10 +167,15 @@ fn frame(world: &World, seen: &mut BTreeSet<u64>, deaths: Vec<(u64, &'static str
             (a.id, x, y, a.holdings[0], a.age, a.vision, a.metabolism[0])
         })
         .collect();
-    let born = agents
+    let born: Vec<u64> = agents
         .iter()
         .map(|a| a.0)
         .filter(|&id| seen.insert(id))
+        .collect();
+    let births = born
+        .iter()
+        .filter_map(|&id| world.agent(id))
+        .map(|a| (a.id, a.sex, a.parents))
         .collect();
     Frame {
         tick: world.tick,
@@ -171,6 +184,7 @@ fn frame(world: &World, seen: &mut BTreeSet<u64>, deaths: Vec<(u64, &'static str
         pollution: world.sites.iter().map(|s| s.pollution[0]).collect(),
         deaths,
         born,
+        births,
     }
 }
 
@@ -292,6 +306,36 @@ mod tests {
         assert_eq!(d.stats["population"].len(), 13);
         assert_eq!(d.frames[0].agents.len(), 400);
         assert_eq!(d.frames[0].born.len(), 400);
+    }
+
+    #[test]
+    fn births_record_sex_and_parents_who_were_alive_the_tick_before() {
+        let d = run(r#"{"preset": "iii-2-sex", "ticks": 40, "seed": 1}"#);
+        // The founders have no parents; every agent first seen is a birth.
+        assert_eq!(d.frames[0].births.len(), d.frames[0].born.len());
+        assert!(d.frames[0].births.iter().all(|b| b.2.is_none()));
+        let children: Vec<_> = d
+            .frames
+            .iter()
+            .flat_map(|f| f.births.iter().map(move |b| (f.tick, b)))
+            .collect();
+        let born_here: Vec<_> = children
+            .iter()
+            .filter(|(t, b)| *t > 0 && b.2.is_some())
+            .collect();
+        assert!(!born_here.is_empty(), "no children in 40 ticks");
+        for (tick, (id, _, parents)) in born_here {
+            let prev = &d.frames[*tick as usize - 1];
+            for p in parents.unwrap() {
+                assert!(
+                    prev.agents.iter().any(|a| a.0 == p),
+                    "{id}'s parent {p} was not alive"
+                );
+            }
+        }
+        let founders = &d.frames[0].births;
+        assert!(founders.iter().any(|b| b.1 == Sex::Female));
+        assert!(founders.iter().any(|b| b.1 == Sex::Male));
     }
 
     #[test]

@@ -25,6 +25,7 @@ class Frame:
     deaths: dict
     born: list
     pollution: list
+    births: dict
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,13 @@ def parse(text):
             born=f["born"],
             # Dumps before pollution was recorded have none.
             pollution=f.get("pollution") or [0.0] * len(f["sugar"]),
+            # id → (sex, (parent, parent) or None); dumps before births were
+            # recorded know neither.
+            births=(
+                {i: (sex, tuple(ps) if ps else None) for i, sex, ps in f["births"]}
+                if "births" in f
+                else {i: (None, None) for i in f["born"]}
+            ),
         )
         for f in raw["frames"]
     ]
