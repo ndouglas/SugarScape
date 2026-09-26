@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider } from './schema-form';
-import type { AnasaziConfig, EthnoConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
+import type { AnasaziConfig, DpdConfig, EthnoConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
 
 const ring = (): RingConfig => ({
   model: 'ring',
@@ -132,5 +132,20 @@ describe('the schema form', () => {
     // A nullable field with no fallback path falls back to its minimum.
     const noFallback = param({ path: 'tag_mutation', kind: 'number', min: 0.01, nullable: true });
     expect(paramSlider(noFallback, c)).toBe('0.01');
+  });
+
+  it('reads and writes negative payoffs, and shows the play rule only in space (the demographic PD)', () => {
+    const s = param({ path: 's', kind: 'number', min: -20, max: 20, step: 1 });
+    const c = { model: 'dpd', t: 6, r: 5, p: -5, s: -6, pairing: 'space' } as unknown as DpdConfig;
+    expect(paramInput(s, c)).toBe('-6');
+    expect(paramSlider(s, c)).toBe('-6');
+    paramEdit(s, '-3')(c);
+    expect(c.s).toBe(-3);
+    paramEdit(s, '-2.5')(c);
+    expect(c.s).toBe(-2.5);
+    const play = { path: 'play', label: 'Play', kind: 'choice', apply: 'live', group: 'Interaction', show_if: { path: 'pairing', equals: 'space' } } as Param;
+    expect(paramShown(play, c)).toBe(true);
+    paramEdit(param({ path: 'pairing', kind: 'choice' }), 'soup')(c);
+    expect(paramShown(play, c)).toBe(false);
   });
 });

@@ -298,3 +298,28 @@ describe('the ethnocentrism model’s charts', () => {
     expect(timeAxisLabel('ethno')).toBe('Period');
   });
 });
+
+describe('the demographic PD’s charts', () => {
+  it('charts population, cooperator share, surrounded cooperators, wealth and births and deaths against the cycle', () => {
+    expect(MODEL_CHARTS.dpd.map((c) => c.title)).toEqual(['Population', 'Cooperator share', 'Surrounded cooperators', 'Wealth', 'Births and deaths']);
+    expect(MODEL_CHARTS.dpd.map((c) => c.lines.map((l) => [l.key, l.color]))).toEqual([
+      [
+        ['cooperators', '--blue'],
+        ['defectors', '--red'],
+      ],
+      [['cooperator_share', '--blue']],
+      [['surrounded', '--c1']],
+      [
+        ['wealth_c', '--blue'],
+        ['wealth_d', '--red'],
+      ],
+      [
+        ['births', '--c2'],
+        ['deaths', '--muted'],
+      ],
+    ]);
+    expect(MODEL_CHARTS.dpd[1].range).toEqual([0, 1]);
+    expect(MODEL_CHARTS.dpd.every((c) => !c.shown)).toBe(true);
+    expect(timeAxisLabel('dpd')).toBe('Cycle');
+  });
+});

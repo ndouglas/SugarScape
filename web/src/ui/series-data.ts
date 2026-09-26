@@ -128,7 +128,8 @@ export const isEthnic = (c: ModelConfig): boolean => 'variant' in c && c.variant
  * actives, quiet and jailed, legitimacy, cops, tension, outbursts, and in Model II its groups and
  * kills; the spatial games' cooperators, changes, switches and payoffs; the tags model's donation,
  * tolerance, clusters, tags and takeovers; the ethnocentrism model's strategies (in the frame's
- * colors), cooperation, population and kin.
+ * colors), cooperation, population and kin; the demographic PD's cooperators and defectors (in the
+ * frame's colors), cooperator share, surrounded cooperators, mean wealths, and births and deaths.
  */
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
@@ -305,11 +306,51 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       range: [0, 1],
     },
   ],
+  dpd: [
+    {
+      title: 'Population',
+      lines: [
+        { key: 'cooperators', label: 'Cooperators', color: '--blue' },
+        { key: 'defectors', label: 'Defectors', color: '--red' },
+      ],
+    },
+    { title: 'Cooperator share', lines: [{ key: 'cooperator_share', label: 'Cooperators ÷ agents', color: '--blue' }], range: [0, 1] },
+    { title: 'Surrounded cooperators', lines: [{ key: 'surrounded', label: 'All eight neighbors cooperate', color: '--c1' }] },
+    {
+      title: 'Wealth',
+      lines: [
+        { key: 'wealth_c', label: 'Mean, cooperators', color: '--blue' },
+        { key: 'wealth_d', label: 'Mean, defectors', color: '--red' },
+      ],
+    },
+    {
+      title: 'Births and deaths',
+      lines: [
+        { key: 'births', label: 'Births', color: '--c2' },
+        { key: 'deaths', label: 'Deaths', color: '--muted' },
+      ],
+    },
+  ],
 };
 
-/** A model's time charts count calendar years (the anasazi's), generations (tags), periods (ethnocentrism, HA06's word) or ticks. */
+/**
+ * A model's time charts count calendar years (the anasazi's), generations (tags), periods
+ * (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
+ */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' ? 'Periods' : model === 'ethno' ? 'Period' : 'Tick';
+  return model === 'anasazi'
+    ? 'Year'
+    : model === 'tags'
+      ? 'Generation'
+      : model === 'culture'
+        ? 'Events per site'
+        : model === 'classes'
+          ? 'Periods'
+          : model === 'ethno'
+            ? 'Period'
+            : model === 'dpd'
+              ? 'Cycle'
+              : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

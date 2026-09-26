@@ -1163,6 +1163,7 @@ describe('Engine with other models', () => {
       'This run has reached its last generation (30000) — Reset to run it again',
     );
     expect(finishedNotice({ model: 'ethno' } as unknown as ModelConfig, 2000)).toBe('This run has reached its last period (2000) — Reset to run it again');
+    expect(finishedNotice({ model: 'dpd' } as unknown as ModelConfig, 500)).toBe('This run has reached its last cycle (500) — Reset to run it again');
     let ends = 0;
     e.on('finished', () => ends++);
     e.setSpeed(4);
