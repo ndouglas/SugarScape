@@ -110,6 +110,21 @@ def _agents(beat, d, tracks, timing, corners):
     return update
 
 
+def _title_card():
+    """A beat with no shot: a felt tabletop and one Flump, blinking at the
+    viewer. Nothing is simulated, so it does nothing else."""
+    bpy.ops.mesh.primitive_plane_add(size=1)
+    felt = bpy.context.active_object
+    felt.scale = (16, 10, 1)
+    felt.data.materials.append(materials.felt())
+    rig = flump.build_flump("host", "cream")
+
+    def update(frame):
+        rig.eyes.scale = (1, 1, animate.blink(7, frame))
+
+    return update
+
+
 def build_beat(beat, d, preview, compare=None, measured=None):
     """Builds the beat's scene; returns its per-frame updaters."""
     scene = bpy.context.scene
