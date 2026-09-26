@@ -1,0 +1,66 @@
+{
+  "name": "Relative Agreement: small worlds (Amblard & Deffuant Fig. 4)",
+  "description": "Amblard and Deffuant 2004, Fig. 4: y against the number of neighbors k on a small-world ring, for three rewiring probabilities p (500 agents where the paper has 1000; U 1.8, pe 0.05 at ±1, μ 0.1, at most 5 000 periods). 'A transition from double extreme convergence to single extreme convergence … when the connectivity (k) increases … for higher connectivity when p decreases'. Measured (release, seeds 1–10, recorded 2026-09-26): single extremes from k 32 at p 0.8 and 1 (0.70, 0.60), from k 64 at p 0.2 (0.40; 0.90 at 128) — the threshold falls as p rises, as claimed, but sits above the paper's 'around 8'. Below it y ≈ 0 with a moderate counted as extremist past 0.9 (the reply's rule for extremists at ±1): central, not both extremes. Counted past 0.7 (the fourth line), low k gives y 0.46–0.53, the paper's both extremes: the local clusters settle between 0.7 and 0.9, and the paper does not say where it counted.",
+  "base": {
+    "preset": "ad-small-world"
+  },
+  "set": {
+    "agents": 500
+  },
+  "x": {
+    "label": "Neighbors (k)",
+    "path": "small_world.degree",
+    "values": [
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ]
+  },
+  "series": {
+    "label": "Rewiring and cutoff",
+    "values": [
+      {
+        "at": 0.2,
+        "name": "p = 0.2",
+        "set": {
+          "small_world.rewire": 0.2
+        }
+      },
+      {
+        "at": 0.8,
+        "name": "p = 0.8",
+        "set": {
+          "small_world.rewire": 0.8
+        }
+      },
+      {
+        "at": 1.0,
+        "name": "p = 1",
+        "set": {
+          "small_world.rewire": 1.0
+        }
+      },
+      {
+        "at": 0.81,
+        "name": "p = 0.8, cutoff 0.7",
+        "set": {
+          "small_world.rewire": 0.8,
+          "extreme_margin": 0.3
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "y"
+  }
+}

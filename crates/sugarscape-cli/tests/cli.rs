@@ -109,6 +109,14 @@ fn presets_and_sweeps_are_listed() {
         "norms-selection",
         "norms-readings",
         "norms-dominance",
+        "ra-clusters",
+        "ra-map",
+        "ra-readings",
+        "ra-population",
+        "ra-rules",
+        "ra-delta",
+        "ad-connectivity",
+        "w-dispersion",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -468,6 +476,16 @@ fn a_norms_run_stops_at_its_last_generation() {
     let out = sugarscape(&["run", "--preset", "ax-norms", "--ticks", "1000"]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 100 (its last generation)\n");
+}
+
+#[test]
+fn an_agreement_run_stops_when_stable_or_at_its_last_period() {
+    let out = sugarscape(&["run", "--preset", "ra-literal", "--ticks", "20000"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 376 (stable)\n");
+    let out = sugarscape(&["run", "--preset", "ra-meadows-cliff", "--ticks", "1000"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 200 (its last period)\n");
 }
 
 #[test]

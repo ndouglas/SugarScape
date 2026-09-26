@@ -1,0 +1,86 @@
+{
+  "name": "Relative Agreement: Meadows and Cliff against the reply",
+  "description": "Why Meadows and Cliff (2012) could not reproduce Fig. 9, and the reply (Deffuant et al. 2013): y at pe 0.05 against U under five readings. Meadows and Cliff place the extremists in a band [0.8, 1], stop at 200 meetings per agent and count a moderate as extremist only past ±0.8; the reply runs 1 200 and counts past ±0.7. Measured (release, seeds 1–20, recorded 2026-09-26), y at U 1.2 / 1.6 / 2.0: Meadows and Cliff 0.00 / 0.00 / 0.00; their horizon fixed 0.45 / 0.40 / 0.50; their cutoff fixed 0.40 / 0.39 / 0.26; both fixed 1.00 / 1.00 / 1.00; the 2002 paper as stated 0.80 / 0.80 / 1.00. Both fixes are needed; the literal reading, run until nothing moves, agrees with the reply.",
+  "base": {
+    "preset": "ra-literal"
+  },
+  "x": {
+    "label": "Moderates' uncertainty (U)",
+    "path": "uncertainty",
+    "values": [
+      0.4,
+      0.6,
+      0.8,
+      1.0,
+      1.2,
+      1.4,
+      1.6,
+      1.8,
+      2.0
+    ]
+  },
+  "series": {
+    "label": "Reading",
+    "values": [
+      {
+        "at": 0,
+        "name": "Meadows & Cliff (band, cutoff 0.8, 200 periods)",
+        "set": {
+          "extreme_margin": 0.0,
+          "stop_at": 200,
+          "placement": "band",
+          "stop_when_stable": false
+        }
+      },
+      {
+        "at": 1,
+        "name": "Their horizon fixed (1200 periods)",
+        "set": {
+          "extreme_margin": 0.0,
+          "stop_at": 1200,
+          "placement": "band",
+          "stop_when_stable": false
+        }
+      },
+      {
+        "at": 2,
+        "name": "Their cutoff fixed (0.7)",
+        "set": {
+          "extreme_margin": 0.1,
+          "stop_at": 200,
+          "placement": "band",
+          "stop_when_stable": false
+        }
+      },
+      {
+        "at": 3,
+        "name": "The 2013 reply (both fixed)",
+        "set": {
+          "extreme_margin": 0.1,
+          "stop_at": 1200,
+          "placement": "band",
+          "stop_when_stable": false
+        }
+      },
+      {
+        "at": 4,
+        "name": "As the 2002 paper states it (drawn, to stability)",
+        "set": {
+          "placement": "drawn",
+          "extreme_margin": 0.1,
+          "stop_when_stable": true,
+          "stop_at": 20000
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "y"
+  }
+}

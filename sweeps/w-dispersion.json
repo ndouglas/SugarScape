@@ -1,0 +1,119 @@
+{
+  "name": "Relative Agreement: dispersion on networks (Weisbuch Fig. 3)",
+  "description": "Weisbuch 2004, Fig. 3: the dispersion index (the sum of squared cluster shares) against the threshold d, pairwise bounded confidence, 900 agents, μ 0.5; on the networks a random agent picks a random neighbor and only it moves. Well mixed: 'two distinct steps at y = 0.5 and y = 0.33'; scale-free: 'a continuous increase … with only a kink in the d = 0.25, y = 0.7 region', close to the lattice, and closer to well mixed with twice the links. Measured (release, seeds 1–20, recorded 2026-09-26): well mixed 0.35 at d 0.15, 0.50–0.51 from 0.2 to 0.25, 0.94 from 0.3 — the steps; 4 links 0.16, 0.34, 0.62, 0.86 at d 0.15, 0.2, 0.25, 0.3 — no steps; the 30 × 30 lattice 0.02, 0.26, 0.70, 0.86; 8 links 0.32, 0.47, 0.56, 0.94. The claims hold.",
+  "base": {
+    "preset": "w-scale-free"
+  },
+  "x": {
+    "label": "Threshold (d, on [0, 1])",
+    "values": [
+      {
+        "at": 0.1,
+        "set": {
+          "uncertainty": 0.2
+        }
+      },
+      {
+        "at": 0.15,
+        "set": {
+          "uncertainty": 0.3
+        }
+      },
+      {
+        "at": 0.2,
+        "set": {
+          "uncertainty": 0.4
+        }
+      },
+      {
+        "at": 0.22,
+        "set": {
+          "uncertainty": 0.44
+        }
+      },
+      {
+        "at": 0.25,
+        "set": {
+          "uncertainty": 0.5
+        }
+      },
+      {
+        "at": 0.28,
+        "set": {
+          "uncertainty": 0.56
+        }
+      },
+      {
+        "at": 0.3,
+        "set": {
+          "uncertainty": 0.6
+        }
+      },
+      {
+        "at": 0.35,
+        "set": {
+          "uncertainty": 0.7
+        }
+      },
+      {
+        "at": 0.4,
+        "set": {
+          "uncertainty": 0.8
+        }
+      },
+      {
+        "at": 0.5,
+        "set": {
+          "uncertainty": 1.0
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Network",
+    "values": [
+      {
+        "at": 0,
+        "name": "Well mixed",
+        "set": {
+          "network": "all",
+          "pair_update": "simultaneous"
+        }
+      },
+      {
+        "at": 1,
+        "name": "30 × 30 lattice",
+        "set": {
+          "network": "lattice",
+          "lattice.width": 30,
+          "lattice.height": 30
+        }
+      },
+      {
+        "at": 2,
+        "name": "Scale-free, 4 links on average",
+        "set": {
+          "network": "scale_free",
+          "scale_free.links": 2
+        }
+      },
+      {
+        "at": 3,
+        "name": "Scale-free, 8 links on average",
+        "set": {
+          "network": "scale_free",
+          "scale_free.links": 4
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "dispersion"
+  }
+}

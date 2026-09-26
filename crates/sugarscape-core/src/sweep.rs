@@ -962,7 +962,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 61] = [
+const BUILTINS: [Builtin; 69] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1206,6 +1206,38 @@ const BUILTINS: [Builtin; 61] = [
     Builtin {
         id: "norms-dominance",
         json: include_str!("../../../sweeps/norms-dominance.json"),
+    },
+    Builtin {
+        id: "ra-clusters",
+        json: include_str!("../../../sweeps/ra-clusters.json"),
+    },
+    Builtin {
+        id: "ra-map",
+        json: include_str!("../../../sweeps/ra-map.json"),
+    },
+    Builtin {
+        id: "ra-readings",
+        json: include_str!("../../../sweeps/ra-readings.json"),
+    },
+    Builtin {
+        id: "ra-population",
+        json: include_str!("../../../sweeps/ra-population.json"),
+    },
+    Builtin {
+        id: "ra-rules",
+        json: include_str!("../../../sweeps/ra-rules.json"),
+    },
+    Builtin {
+        id: "ra-delta",
+        json: include_str!("../../../sweeps/ra-delta.json"),
+    },
+    Builtin {
+        id: "ad-connectivity",
+        json: include_str!("../../../sweeps/ad-connectivity.json"),
+    },
+    Builtin {
+        id: "w-dispersion",
+        json: include_str!("../../../sweeps/w-dispersion.json"),
     },
 ];
 
@@ -2090,7 +2122,15 @@ mod tests {
                 "norms-temptation",
                 "norms-selection",
                 "norms-readings",
-                "norms-dominance"
+                "norms-dominance",
+                "ra-clusters",
+                "ra-map",
+                "ra-readings",
+                "ra-population",
+                "ra-rules",
+                "ra-delta",
+                "ad-connectivity",
+                "w-dispersion"
             ]
         );
         for b in builtins() {
