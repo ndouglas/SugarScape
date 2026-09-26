@@ -38,7 +38,7 @@ class TribesVerdictTest(unittest.TestCase):
         for v in r.values():
             v["pop"] = 260
         v = {c: holds for c, holds, _ in self.claims.verdicts(r)}
-        self.assertFalse(v["being Red or Blue changes nothing else"])
+        self.assertFalse(v["being Red or Blue changes nothing else: just as many Flumps live either way"])
 
 
 if __name__ == "__main__":

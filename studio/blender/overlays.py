@@ -14,6 +14,7 @@ import animate
 import dump as dump_mod
 import lineage
 import seasons
+import tribes
 from blender import flump, materials
 
 FONT = pathlib.Path(__file__).resolve().parent.parent / "fonts" / "Baloo2.ttf"
@@ -586,8 +587,61 @@ def bequests(beat, d, ctx):
 BEQUEST_FRAMES = 24
 
 
+def traits(beat, d, ctx):
+    """Each focus Flump's cultural tags (its eleven traits) on a dark pill
+    over it, updated as they flip; the text is its tribe's color."""
+    items = []
+    inks = [materials.fading(f"traits-{c}", materials.YARN[c], 3.0) for c in materials.TRIBE_YARN]
+    for i in beat.focus:
+        id_ = d.placed[i]
+        holder = bpy.data.objects.new(f"traits{id_}", None)
+        bpy.context.scene.collection.objects.link(holder)
+        _card(f"traits{id_}-pill", holder, (0, 0, -0.03), (2.3, 0.5, 0.02))
+        labels = [text(f"traits{id_}-{g}", "", 0.34, ink, holder) for g, ink in enumerate(inks)]
+        items.append((id_, holder, labels))
+
+    def update(frame):
+        k = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
+        for id_, holder, labels in items:
+            p = _pose(ctx, d, id_, frame)
+            if not p.visible or id_ not in d.frames[k].tags:
+                flump.stow(holder)
+                continue
+            holder.location = (p.x, p.y, p.z + 1.2)
+            holder.scale = (0.6,) * 3
+            _turn_to_camera(holder, ctx)
+            group = d.frames[k].groups[id_]
+            for g, label in enumerate(labels):
+                label.data.body = d.frames[k].tags[id_] if g == group else ""
+
+    return update
+
+
+def alike(beat, d, ctx):
+    """Top right: how alike neighbours are (the share of adjacent pairs in
+    the same tribe) and each tribe's share, at the tick shown."""
+    anchor = ctx.screen.anchor("alike", 0.66, 0.78)
+    _card("alike-card", anchor, (0, 0, -0.01), (0.62, 0.24, 0.002))
+    top = text("alike-top", "", 0.052, materials.fading("alike-ink", CREAM, 1.6), anchor,
+               location=(-0.28, 0.035, 0), align="LEFT")
+    blue = text("alike-blue", "", 0.052, materials.fading("alike-blue", materials.YARN["blue"], 3.0), anchor,
+                location=(-0.28, -0.065, 0), align="LEFT")
+    red = text("alike-red", "", 0.052, materials.fading("alike-red", materials.YARN["red"], 3.0), anchor,
+               location=(0.02, -0.065, 0), align="LEFT")
+
+    def update(frame):
+        f = d.frames[min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)]
+        top.data.body = f"neighbours alike: {tribes.neighbours_alike(f, d.width, d.height):.0%}"
+        n = max(len(f.groups), 1)
+        share = sum(g == 0 for g in f.groups.values()) / n
+        blue.data.body = f"Blue {share:.0%}"
+        red.data.body = f"Red {1 - share:.0%}"
+
+    return update
+
+
 # The overlays drawn in screen space (on `Screen` anchors).
-SCREEN = {"season-card", "counter", "hills", "survival", "bars", "dials", "histogram", "wealth"}
+SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth"}
 
 BUILDERS = {
     "season-card": season_card,
@@ -598,6 +652,8 @@ BUILDERS = {
     "bars": bars,
     "hills": hills,
     "bequests": bequests,
+    "traits": traits,
+    "alike": alike,
     "wealth": wealth,
     "belly": belly,
     "sight": sight,

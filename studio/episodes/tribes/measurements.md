@@ -26,4 +26,4 @@ Hills: the north-east and south-west quarters of the board. Neighbours: von Neum
 - holds: in most worlds, every neighbourhood ends up one color — neighbours in the same tribe: 48% at the start, 100% at tick 3000; at least 90% in 17 of 20 seeds.
 - holds: each hill becomes one tribe — both hills at least 90% one tribe in 18 of 20 seeds.
 - holds: one tribe wins about half the time; otherwise the hills split — one tribe holds at least 90% of all Flumps in 10 of 20 seeds; the hills end up different tribes in 9.
-- holds: being Red or Blue changes nothing else — population with culture 225.5 vs 225 without; within 5% in 20 of 20 seeds, higher in 8, lower in 8.
+- holds: being Red or Blue changes nothing else: just as many Flumps live either way — population with culture 225.5 vs 225 without; within 5% in 20 of 20 seeds, higher in 8, lower in 8.

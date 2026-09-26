@@ -46,7 +46,7 @@ def verdicts(rows):
         ("one tribe wins about half the time; otherwise the hills split",
          0.3 * n <= one <= 0.7 * n and 0.3 * n <= split <= 0.7 * n,
          f"one tribe holds at least 90% of all Flumps in {one} of {n} seeds; the hills end up different tribes in {split}"),
-        ("being Red or Blue changes nothing else", close >= most and max(above, below) <= 0.75 * n,
+        ("being Red or Blue changes nothing else: just as many Flumps live either way", close >= most and max(above, below) <= 0.75 * n,
          f"population with culture {median(rows, 'pop'):g} vs {median(rows, 'pop_calm'):g} without; within 5% in {close} "
          f"of {n} seeds, higher in {above}, lower in {below}"),
     ]

@@ -30,13 +30,15 @@ CUE_DELAY = 0.3  # a sting lands this long after its beat begins
 
 @dataclass(frozen=True)
 class Voice:
-    """One instrument: a General MIDI program (0-based), its volume, and a
-    channel (10 for percussion; None lets abc2midi choose)."""
+    """One instrument: a General MIDI program (0-based), its volume, a
+    channel (10 for percussion; None lets abc2midi choose) and a stereo
+    position (0 left … 127 right; None leaves it centred)."""
 
     name: str
     program: int
     volume: int
     channel: int | None = None
+    pan: int | None = None
 
 
 @dataclass(frozen=True)
@@ -100,6 +102,8 @@ def _voice(i, v):
     if v.channel is not None:
         lines.append(f"%%MIDI channel {v.channel}")
     lines += [f"%%MIDI program {v.program}", f"%%MIDI control 7 {v.volume}"]
+    if v.pan is not None:
+        lines.append(f"%%MIDI control 10 {v.pan}")
     return lines
 
 

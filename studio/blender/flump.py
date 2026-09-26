@@ -18,6 +18,15 @@ class FlumpRig:
     root: object
     body: object
     eyes: object
+    yarn: list  # the knitted parts (body, arms, feet), for recoloring
+
+
+def recolor(rig, color):
+    """Re-knits a Flump in another yarn (its tribe changed, say)."""
+    mat = materials.knit(color)
+    for part in rig.yarn:
+        if part.data.materials[0] is not mat:
+            part.data.materials[0] = mat
 
 
 def _sphere(name, radius, location, scale, material, parent, collection, segments=32):
@@ -52,12 +61,13 @@ def build_flump(name, color, collection=None):
     yarn = materials.knit(color)
     sphere = _sphere
     body = sphere(f"{name}.body", 0.4, (0, 0, 0.38), (1, 0.95, 0.9), yarn, size, collection)
+    knitted = [body]
     sub = body.modifiers.new("smooth", "SUBSURF")
     sub.levels = sub.render_levels = 1
     blush = materials.matte("blush", BLUSH)
     for side in (-1, 1):
-        sphere(f"{name}.arm", 0.1, (side * 0.38, 0, 0.4), (1, 1, 1), yarn, size, collection, segments=16)
-        sphere(f"{name}.foot", 0.1, (side * 0.16, -0.06, 0.06), (1, 1.3, 0.6), yarn, size, collection, segments=16)
+        knitted.append(sphere(f"{name}.arm", 0.1, (side * 0.38, 0, 0.4), (1, 1, 1), yarn, size, collection, segments=16))
+        knitted.append(sphere(f"{name}.foot", 0.1, (side * 0.16, -0.06, 0.06), (1, 1.3, 0.6), yarn, size, collection, segments=16))
         sphere(f"{name}.blush", 0.06, (side * 0.24, -0.33, 0.37), (1, 0.3, 0.7), blush, size, collection, segments=16)
     eyes = _empty(f"{name}.eyes", size, collection, location=(0, -0.35, 0.5))
     ink = materials.gloss("eye", (0.01, 0.01, 0.012))
@@ -66,17 +76,17 @@ def build_flump(name, color, collection=None):
         eye = sphere(f"{name}.eye", 0.09, (side * 0.12, 0, 0), (0.72, 0.5, 1.35), ink, eyes, collection, segments=24)
         # The highlight's scale undoes the eye's, so it stays round.
         sphere(f"{name}.shine", 0.026, (-0.028, -0.07, 0.035), (1 / 0.72, 1 / 0.5, 1 / 1.35), shine, eye, collection, segments=12)
-    return FlumpRig(root, body, eyes)
+    return FlumpRig(root, body, eyes, knitted)
 
 
 def crowd_prototypes():
-    """One Flump per yarn color, each in its own collection that is never
-    linked to the scene, so only its instances render."""
-    protos = []
+    """One Flump per yarn color, by name, each in its own collection that is
+    never linked to the scene, so only its instances render."""
+    protos = {}
     for color in materials.YARN:
         coll = bpy.data.collections.new(f"flump-{color}")
         build_flump(f"proto-{color}", color, coll)
-        protos.append(coll)
+        protos[color] = coll
     return protos
 
 

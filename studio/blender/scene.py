@@ -64,46 +64,48 @@ def _agents(beat, d, tracks, timing, corners):
     """Flumps for every agent — full rigs in close-ups (placed agents take the
     yarn colors in order), collection instances in crowds — and their updater.
     With params colors="family", a Flump wears its family line's color (its
-    mother's, back to a founding mother)."""
+    mother's, back to a founding mother); with colors="tribe", its tribe's,
+    changing as its tribe does."""
     w, h = d.width, d.height
-    colors = list(materials.YARN)
+    colors = list(materials.CROWD_YARN)
     RIGS.clear()
     instances = {}
-    family = lineage.families(d) if beat.params.get("colors") == "family" else {}
+    mode = beat.params.get("colors")
+    family = lineage.families(d) if mode == "family" else {}
     order = {id_: i for i, id_ in enumerate(d.placed)}
-    if beat.closeup:
-        for id_ in tracks:
-            key = family.get(id_, id_)
-            RIGS[id_] = flump.build_flump(f"flump{id_}", colors[order.get(key, key) % len(colors)])
-    else:
-        protos = flump.crowd_prototypes()
-        for id_ in tracks:
-            instances[id_] = flump.crowd_instance(f"flump{id_}", protos[family.get(id_, id_) % len(protos)])
+
+    def base_color(id_):
+        key = family.get(id_, id_)
+        return colors[order.get(key, key) % len(colors)]
+
+    def tribe_color(id_, frame):
+        f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
+        g = f.groups.get(id_)
+        return materials.TRIBE_YARN[g] if g is not None else None
+
+    protos = None if beat.closeup else flump.crowd_prototypes()
+    for id_ in tracks:
+        start = tribe_color(id_, timing.frame(tracks[id_].first)) if mode == "tribe" else None
+        color = start or base_color(id_)
+        if beat.closeup:
+            RIGS[id_] = flump.build_flump(f"flump{id_}", color)
+        else:
+            instances[id_] = flump.crowd_instance(f"flump{id_}", protos[color])
 
     def update(frame):
         for id_, t in tracks.items():
             p = animate.pose(t, timing, frame, corners, w, h)
+            color = tribe_color(id_, frame) if mode == "tribe" and p.visible else None
             if beat.closeup:
                 rig = RIGS[id_]
                 flump.apply(rig.root, p)
                 rig.eyes.scale = (1, 1, animate.blink(id_, frame) * (1 - 0.4 * p.hunger))
+                if color:
+                    flump.recolor(rig, color)
             else:
                 flump.apply(instances[id_], p)
-
-    return update
-
-
-def _title_card():
-    """A beat with no shot: a felt tabletop and one Flump, blinking at the
-    viewer. Nothing is simulated, so it does nothing else."""
-    bpy.ops.mesh.primitive_plane_add(size=1)
-    felt = bpy.context.active_object
-    felt.scale = (16, 10, 1)
-    felt.data.materials.append(materials.felt())
-    rig = flump.build_flump("host", "cream")
-
-    def update(frame):
-        rig.eyes.scale = (1, 1, animate.blink(7, frame))
+                if color and instances[id_].instance_collection is not protos[color]:
+                    instances[id_].instance_collection = protos[color]
 
     return update
 
@@ -113,6 +115,10 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     scene = bpy.context.scene
     reset(scene, preview)
     scene.frame_start, scene.frame_end = 1, beat.frames
+    # Motion blur smears into ghosts once Flumps hop more than once a frame:
+    # it fades out as the beat speeds past one tick a frame.
+    ticks_per_frame = beat.ticks_per_second / 30
+    scene.render.motion_blur_shutter = 0.3 / max(1.0, ticks_per_frame)
     updaters = []
     timing = corners = None
     tracks = {}

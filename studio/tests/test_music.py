@@ -52,6 +52,13 @@ class MusicTest(unittest.TestCase):
             for voice, bar in tune.ending.items():
                 self.assertEqual(music.eighths(bar), per_bar, (name, "ending", voice))
 
+    def test_a_voice_can_be_placed_left_or_right(self):
+        tune = TUNES["sugarscape"]
+        panned = music.Tune(**{**tune.__dict__, "voices": (music.Voice("accordion", 21, 110, pan=20),) + tune.voices[1:]})
+        abc = music.score(panned, 96.0)
+        self.assertIn("%%MIDI control 10 20", abc)
+        self.assertNotIn("%%MIDI control 10", music.score(tune, 96.0))
+
     def test_percussion_voices_play_on_channel_ten(self):
         abc = music.score(TUNES["seasons"], 70.0)
         self.assertIn("%%MIDI channel 10", abc)
