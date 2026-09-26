@@ -304,7 +304,14 @@ fn builtins_and_series_names_are_listed() {
             "dpd-payoffs",
             "dpd-mutation",
             "dpd-metabolism",
-            "dpd-max-age"
+            "dpd-max-age",
+            "norms-horizon",
+            "norms-mutation",
+            "norms-meta-payoffs",
+            "norms-temptation",
+            "norms-selection",
+            "norms-readings",
+            "norms-dominance"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -789,6 +796,21 @@ fn ethno_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "ethno");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn norms_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    for (id, fp) in [
+        ("ax-metanorms", "0x679a78d57f20640c"),
+        ("ax-dominance", "0x405accd101253f9d"),
+        ("gi-tournament", "0x95ea76458cee1a46"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "norms");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

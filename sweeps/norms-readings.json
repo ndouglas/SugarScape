@@ -1,0 +1,72 @@
+{
+  "name": "Norms: what Axelrod left unstated (Galán & Izquierdo note 4)",
+  "description": "What Axelrod did not say: how the offspring are brought back to 20 ('For convenience, the number of offspring is adjusted') and what happens when every payoff ties (Galán & Izquierdo's note 4: it 'can alter the long-term results significantly'). The metanorms game; the metric is the share of runs collapsed. Measured (release, seeds 1–10, recorded 2026-09-26): after 10 000 generations 0 (random refill, ties drift — G&I's reading), 0 (random, ties kept), 0.7 (ranked refill, ties drift) and 0.5 (ranked, kept). A ranked refill loses the norm within 10 000 generations; the tie rule shows by 10⁵ — ties drifting, 43 of 100 runs collapsed; ties kept, 3 (the survey).",
+  "base": {
+    "preset": "gi-metanorms-long"
+  },
+  "x": {
+    "label": "Reading",
+    "values": [
+      {
+        "at": 0,
+        "name": "Random refill, ties drift (G&I)",
+        "set": {
+          "refill": "random",
+          "all_equal": "drift"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Random refill, ties kept",
+        "set": {
+          "refill": "random",
+          "all_equal": "keep"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Ranked refill, ties drift",
+        "set": {
+          "refill": "ranked",
+          "all_equal": "drift"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Ranked refill, ties kept",
+        "set": {
+          "refill": "ranked",
+          "all_equal": "keep"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Generations",
+    "values": [
+      {
+        "at": 0,
+        "name": "1 000 generations",
+        "set": {
+          "stop_at": 1000
+        }
+      },
+      {
+        "at": 1,
+        "name": "10 000 generations",
+        "set": {
+          "stop_at": 10000
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 10000,
+  "metric": {
+    "kind": "final",
+    "series": "collapsed"
+  }
+}

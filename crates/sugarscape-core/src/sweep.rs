@@ -962,7 +962,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 54] = [
+const BUILTINS: [Builtin; 61] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1178,6 +1178,34 @@ const BUILTINS: [Builtin; 54] = [
     Builtin {
         id: "dpd-max-age",
         json: include_str!("../../../sweeps/dpd-max-age.json"),
+    },
+    Builtin {
+        id: "norms-horizon",
+        json: include_str!("../../../sweeps/norms-horizon.json"),
+    },
+    Builtin {
+        id: "norms-mutation",
+        json: include_str!("../../../sweeps/norms-mutation.json"),
+    },
+    Builtin {
+        id: "norms-meta-payoffs",
+        json: include_str!("../../../sweeps/norms-meta-payoffs.json"),
+    },
+    Builtin {
+        id: "norms-temptation",
+        json: include_str!("../../../sweeps/norms-temptation.json"),
+    },
+    Builtin {
+        id: "norms-selection",
+        json: include_str!("../../../sweeps/norms-selection.json"),
+    },
+    Builtin {
+        id: "norms-readings",
+        json: include_str!("../../../sweeps/norms-readings.json"),
+    },
+    Builtin {
+        id: "norms-dominance",
+        json: include_str!("../../../sweeps/norms-dominance.json"),
     },
 ];
 
@@ -2055,7 +2083,14 @@ mod tests {
                 "dpd-payoffs",
                 "dpd-mutation",
                 "dpd-metabolism",
-                "dpd-max-age"
+                "dpd-max-age",
+                "norms-horizon",
+                "norms-mutation",
+                "norms-meta-payoffs",
+                "norms-temptation",
+                "norms-selection",
+                "norms-readings",
+                "norms-dominance"
             ]
         );
         for b in builtins() {

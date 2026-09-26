@@ -221,6 +221,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Sugarscape => "the cultures have settled",
             ModelKind::Ethno => "its last period",
             ModelKind::Dpd => "its last cycle",
+            ModelKind::Norms => "its last generation",
             _ => "its end year",
         };
         eprintln!("finished at tick {} ({why})", world.tick());
