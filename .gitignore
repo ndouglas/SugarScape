@@ -28,3 +28,4 @@ web/src/wasm-pkg/
 
 # Flump studio build outputs
 studio/out/
+__pycache__/
