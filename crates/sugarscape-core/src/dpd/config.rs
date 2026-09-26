@@ -116,7 +116,11 @@ pub enum NewbornsAct {
     /// From the next cycle.
     #[default]
     NextCycle,
-    /// In this cycle, after the agents already in the list.
+    /// In this cycle, after the agents already in the list. Under
+    /// synchronous updating a newborn joins the growing bound mid-phase, so
+    /// it skips that cycle's move and play, can reproduce itself in the same
+    /// reproduce phase if born rich enough, and ages in the cycle it is
+    /// born.
     ThisCycle,
 }
 

@@ -77,7 +77,7 @@ A cycle (asynchronous): the agent list, in its current order; for each agent sti
 3. **Reproduce**: wealth ≥ `fission_wealth` and an unoccupied von Neumann neighbour (`soup`: an unoccupied site anywhere) → an offspring on a uniformly chosen one, with `endowment` (subtracted from the parent with `endowment_from: parent`), the parent's strategy flipped with probability `mutation`, age per `newborn_age`, inserted per `newborns_act` (`next_cycle`: appended after this cycle; `this_cycle`: appended to the current list and processed in its turn).
 4. **Age and die**: age + 1; `metabolism_per: cycle` charges `metabolism`; wealth below 0 or (with `max_age` > 0) age above `max_age` → death.
 
-After the list: dead agents still present are removed; the list is reordered per `shuffle`. `updating: synchronous` runs the phases for all agents in turn (all move, then all play, then all reproduce, then age and death). Initial ages (and, with `newborn_age: random`, newborns') are uniform in 1 … `max_age` (0 with no maximum).
+After the list: dead agents still present are removed; the list is reordered per `shuffle`. `updating: synchronous` runs the phases for all agents in turn (all move, then all play, then all reproduce, then age and death). With `newborns_act: this_cycle` under synchronous updating, a newborn joins the growing bound mid-phase: it skips that cycle's move and play, can reproduce itself in the same reproduce phase if born rich enough, and ages in its birth cycle. Initial ages (and, with `newborn_age: random`, newborns') are uniform in 1 … `max_age` (0 with no maximum).
 
 ## Choices the sources leave open
 
