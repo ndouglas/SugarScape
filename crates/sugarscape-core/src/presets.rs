@@ -673,7 +673,8 @@ impl From<Preset> for ModelPreset {
 
 /// Every model's presets: the sugarscape's (`all`), then Schelling's, Ring
 /// World's, the anasazi's, civil violence's, the tags model's, the spatial
-/// games', the ethnocentrism model's and the demographic PD's.
+/// games', the ethnocentrism model's, the demographic PD's, the norms
+/// model's and relative agreement's.
 pub fn catalog() -> Vec<ModelPreset> {
     let mut out: Vec<ModelPreset> = all().into_iter().map(ModelPreset::from).collect();
     out.extend(crate::schelling::presets());
@@ -689,6 +690,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::ethno::presets());
     out.extend(crate::dpd::presets());
     out.extend(crate::norms::presets());
+    out.extend(crate::agreement::presets());
     out
 }
 

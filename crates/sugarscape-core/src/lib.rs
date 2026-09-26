@@ -4,6 +4,7 @@
 //! rule statements in Chapters II–III.
 
 pub mod agent;
+pub mod agreement;
 pub mod anasazi;
 pub mod bits;
 pub mod civil;
