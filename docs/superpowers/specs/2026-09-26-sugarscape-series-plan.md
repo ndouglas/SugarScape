@@ -30,8 +30,8 @@ tag cooperation, spatial games, N goods) are a separate series.
 | # | Episode | Book | What emerges (holds over 20 seeds in the survey) | New studio work |
 |---|---|---|---|---|
 | 1 | Sugarscape ✅ | II-1–5 | Selection on sight and thrift; crowding on the hills; skewed wealth | — |
-| 2 | Seasons ✅ (in production) | II-7 | Migration without planning; seasons cost a third of the Flumps and remove every hungry one; needing little matters far more than where or how rich a Flump starts | Frost, season card, rings, counter, survival panel |
-| 3 | Pollution | II-8 | Harvesting and eating pollute; Flumps shun polluted sites; diffusion spreads it; carrying capacity falls | Pollution in the dump; stains on the felt |
+| 2 | Seasons ✅ | II-7 | Migration without planning; seasons cost a third of the Flumps and remove every hungry one; needing little matters far more than where or how rich a Flump starts | Frost, season card, rings, counter, survival panel |
+| 3 | Pollution ✅ (in production) | II-8 | The best land gets the dirtiest; Flumps flee the hills but the mess follows them; a quarter of the Flumps are lost, the hungry and then the far-sighted first; survivors end up more equal because there are fewer of them | Pollution in the dump; soot on the felt; a hills gauge; bar panels |
 | 4 | Inheritance | III-1–4 | Pairing, children, generations; vision rises and metabolism falls; inherited sugar raises the Gini | Sex, parents and children in the dump; births beside parents; sugar passing to heirs |
 | 5 | Tribes | III-6 | Neighbors copy cultural tags; tribes form; each hill tends to one. Finding: global one-tribe dominance holds on only about half the seeds | Tags and tribe in the dump; yarn color by tribe |
 | 6 | War | III-9–14 | Conquest; fronts that hold; conversion when culture and combat run together (the book's colliding waves don't reproduce as set up) | Attacks in the dump; a pounce |
