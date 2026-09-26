@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 54] = [
+const BUILTINS: [Builtin; 58] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1181,6 +1181,22 @@ const BUILTINS: [Builtin; 54] = [
     Builtin {
         id: "dpd-max-age",
         json: include_str!("../../../sweeps/dpd-max-age.json"),
+    },
+    Builtin {
+        id: "ns-rounds",
+        json: include_str!("../../../sweeps/ns-rounds.json"),
+    },
+    Builtin {
+        id: "ns-group-size",
+        json: include_str!("../../../sweeps/ns-group-size.json"),
+    },
+    Builtin {
+        id: "lh-cost",
+        json: include_str!("../../../sweeps/lh-cost.json"),
+    },
+    Builtin {
+        id: "lh-gene-flow",
+        json: include_str!("../../../sweeps/lh-gene-flow.json"),
     },
 ];
 
@@ -2058,7 +2074,11 @@ mod tests {
                 "dpd-payoffs",
                 "dpd-mutation",
                 "dpd-metabolism",
-                "dpd-max-age"
+                "dpd-max-age",
+                "ns-rounds",
+                "ns-group-size",
+                "lh-cost",
+                "lh-gene-flow"
             ]
         );
         for b in builtins() {

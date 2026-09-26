@@ -1,0 +1,29 @@
+{
+  "name": "Image scoring: help against gene flow in the island model (LH01 Fig. 2)",
+  "description": "LH01 Fig. 2: less drift, less image scoring — 9% help at p = 0.9 and 2% at p = 0.5 (10⁵ generations). Fig. 2b's settings (100 groups of 100, AND strategies, c 0.25, errors 0.02), the help rate over generations 1,001–5,000 against the chance p that a parent is local. Measured (release, seeds 1–10, recorded 2026-09-26): p 0.5: 15%; 0.6: 35%; 0.7: 39%; 0.8: 50%; 0.9: 44%; 1 (isolated groups): 27%. Not monotone and not reproduced: some gene flow raises help above isolated groups, and only at p = 0.5 does it fall toward LH01's levels.",
+  "base": {
+    "preset": "lh-fig-2b"
+  },
+  "x": {
+    "label": "Local parents (p)",
+    "path": "local",
+    "values": [
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1.0
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "help_rate",
+    "from": 1001
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Image scoring: cooperation against group size with ten observers (NS98 Fig. 3)",
+  "description": "NS98 Fig. 3: with ten observers per interaction, cooperation gets harder as groups grow (90%, 47%, 18% at n = 20, 50, 100). m = 10n, mutation 0.001, each member keeping its own tally; cooperative strategies (k ≤ 0) averaged over generations 1,001–20,000. Measured (release, seeds 1–10, recorded 2026-09-26): n 20: 86%; 30: 83%; 50: 44%; 70: 35%; 100: 20%. Reproduced.",
+  "base": {
+    "preset": "ns-fig-3-n50"
+  },
+  "x": {
+    "label": "Group size (n; m = 10n)",
+    "values": [
+      {
+        "at": 20,
+        "name": "n = 20",
+        "set": {
+          "group_size": 20,
+          "rounds": 200
+        }
+      },
+      {
+        "at": 30,
+        "name": "n = 30",
+        "set": {
+          "group_size": 30,
+          "rounds": 300
+        }
+      },
+      {
+        "at": 50,
+        "name": "n = 50",
+        "set": {
+          "group_size": 50,
+          "rounds": 500
+        }
+      },
+      {
+        "at": 70,
+        "name": "n = 70",
+        "set": {
+          "group_size": 70,
+          "rounds": 700
+        }
+      },
+      {
+        "at": 100,
+        "name": "n = 100",
+        "set": {
+          "group_size": 100,
+          "rounds": 1000
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "cooperative",
+    "from": 1001
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "Image scoring: cooperation against rounds per generation (NS98 Fig. 2)",
+  "description": "NS98: \"Cooperation is more likely to win the greater the number m of interactions per generation\", and \"it suffices that each player is chosen only for about 2 interactions per life-time\" (m ≈ n). Fig. 2's settings (n = 100, mutation 0.001), the share of cooperative strategies (k ≤ 0) averaged over generations 1,001–20,000. Measured (release, seeds 1–10, recorded 2026-09-26): m 25: 1%; 50: 10%; 75: 8%; 100: 18%; 125: 15%; 150: 23%; 200: 50%; 300: 65%; 500: 91%. More rounds, more cooperation — but at two interactions per lifetime (m = 100) cooperative strategies hold 18% of the time; they reach half only at m = 200 (four per lifetime). Not reproduced.",
+  "base": {
+    "preset": "ns-fig-2"
+  },
+  "x": {
+    "label": "Rounds per generation (m)",
+    "path": "rounds",
+    "values": [
+      25,
+      50,
+      75,
+      100,
+      125,
+      150,
+      200,
+      300,
+      500
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "cooperative",
+    "from": 1001
+  }
+}

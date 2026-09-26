@@ -102,6 +102,10 @@ fn presets_and_sweeps_are_listed() {
         "dpd-mutation",
         "dpd-metabolism",
         "dpd-max-age",
+        "ns-rounds",
+        "ns-group-size",
+        "lh-cost",
+        "lh-gene-flow",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),

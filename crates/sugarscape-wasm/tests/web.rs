@@ -304,7 +304,11 @@ fn builtins_and_series_names_are_listed() {
             "dpd-payoffs",
             "dpd-mutation",
             "dpd-metabolism",
-            "dpd-max-age"
+            "dpd-max-age",
+            "ns-rounds",
+            "ns-group-size",
+            "lh-cost",
+            "lh-gene-flow"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -806,6 +810,24 @@ fn dpd_sims_match_the_native_golden_entries() {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "dpd");
         sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn image_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, IMAGE_GOLDEN: payoff sums,
+    // roulette draws and the observers' records are the same bits here as
+    // natively (perfect information, observers with AND strategies, and the
+    // island model with q strategies).
+    for (id, ticks, fp) in [
+        ("ns-fig-1", 200, "0x98875bd71738cf05"),
+        ("ns-fig-4b", 200, "0x0a4c19c5fa5fcfe3"),
+        ("lh-fig-3b", 20, "0x4d6575c59b0da89a"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "image");
+        sim.step(ticks);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }
 }
