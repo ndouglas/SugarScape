@@ -142,7 +142,9 @@ pub struct DpdConfig {
     pub fission_wealth: f64,
     /// An offspring's starting wealth.
     pub endowment: f64,
-    /// The maximum age (0: none).
+    /// The maximum age (0: none). Live: ages carry over across a change, so
+    /// lowering it mid-run kills every agent already past the new maximum
+    /// on its next turn.
     pub max_age: u32,
     /// Wealth charged per cycle or per game.
     pub metabolism: f64,
@@ -404,7 +406,8 @@ pub fn schema() -> Vec<Param> {
             "Maximum age (0: none)",
             (0, 100_000),
             Live,
-        ),
+        )
+        .with_help("Ages carry over: lowering this mid-run kills every agent already past the new maximum on its next turn"),
         Param::number(
             "Population",
             "metabolism",

@@ -1081,6 +1081,26 @@ mod tests {
     }
 
     #[test]
+    fn a_live_max_age_lowered_mid_run_kills_agents_already_past_it_on_their_next_turn() {
+        // No maximum yet: ages have been counting freely.
+        let mut w = world(5, |_| {});
+        let old = put(&mut w, (0, 0), true, 10.0);
+        let young = put(&mut w, (3, 3), true, 10.0);
+        w.agents[old].age = 150;
+        w.agents[young].age = 50;
+        let (old_id, young_id) = (w.agents[old].id, w.agents[young].id);
+        let mut next = w.config.clone();
+        next.max_age = 100;
+        w.set_config(ModelConfig::Dpd(next)).unwrap();
+        assert!(!w.agents[old].dead, "the change alone does not kill anyone");
+        w.step();
+        // `end_cycle` drops the dead and reorders the list, so look up by id.
+        let ids: Vec<u64> = w.agents.iter().map(|a| a.id).collect();
+        assert!(!ids.contains(&old_id), "already past the new maximum");
+        assert!(ids.contains(&young_id));
+    }
+
+    #[test]
     fn metabolism_is_charged_per_cycle_or_per_game() {
         let mut w = world(5, |c| c.metabolism = 3.0);
         let a = put(&mut w, (2, 2), true, 10.0);
