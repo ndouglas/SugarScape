@@ -1,0 +1,3 @@
+{"preset": "ii-2-unit", "ticks": 0,
+ "set": {"width": 5, "height": 5, "population": 0, "vision.max": 2,
+   "goods.0.map": {"kind": "peaks", "peaks": [{"x": 2, "y": 2, "radius": 1.5, "height": 4}]}}}

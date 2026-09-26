@@ -121,28 +121,42 @@ def _pose(ctx, d, id_, frame):
     return animate.pose(ctx.tracks[id_], ctx.timing, frame, ctx.corners, d.width, d.height)
 
 
+def _turn_to_camera(obj, ctx):
+    direction = ctx.camera.matrix_world.translation - obj.location
+    obj.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
+
+
 def belly(beat, d, ctx):
-    """A meter floating over each focus Flump, filled by its sugar (full at 20)."""
+    """A meter floating over each focus Flump: a dark case, a glowing gold
+    fill for its sugar (full at 20) and the count beside it."""
     meters = {}
+    # Bright emission washes out toward white under AgX; a deep orange at
+    # modest strength stays gold.
+    gold = materials.fading("belly-gold", (1.0, 0.38, 0.0), 0.9)
+    cream = materials.fading("belly-ink", (1.0, 0.97, 0.9), 4.0)
     for i in beat.focus:
         id_ = d.placed[i]
         holder = bpy.data.objects.new(f"belly{id_}", None)
         bpy.context.scene.collection.objects.link(holder)
-        back = box(f"belly{id_}-back", materials.knit("cream"), holder, scale=(0.62, 0.08, 0.14))
-        fill = box(f"belly{id_}-fill", materials.knit("butter"), holder, location=(0, -0.05, 0), scale=(0.56, 0.06, 0.09))
-        meters[id_] = (holder, back, fill)
+        # The holder turns to face the camera, so its local +Z points at the lens.
+        _card(f"belly{id_}-case", holder, (0, 0, -0.02), (0.74, 0.2, 0.02))
+        fill = box(f"belly{id_}-fill", gold, holder, scale=(0.64, 0.12, 0.02))
+        count = text(f"belly{id_}-count", "", 0.3, cream, holder, location=(0.45, -0.02, 0), align="LEFT")
+        meters[id_] = (holder, fill, count)
 
     def update(frame):
-        for id_, (holder, back, fill) in meters.items():
+        for id_, (holder, fill, count) in meters.items():
             p = _pose(ctx, d, id_, frame)
             if not p.visible:
                 flump.stow(holder)
                 continue
             level = min(max(p.sugar / 20, 0.0), 1.0)
             holder.scale = (1, 1, 1)
-            holder.location = (p.x, p.y, p.z + 1.0)
-            fill.scale.x = max(level, 0.002) * 0.56
-            fill.location.x = -0.28 + fill.scale.x / 2
+            holder.location = (p.x, p.y, p.z + 1.05)
+            _turn_to_camera(holder, ctx)
+            fill.scale.x = max(level, 0.002) * 0.64
+            fill.location.x = -0.32 + fill.scale.x / 2
+            count.data.body = f"{p.sugar:.0f}"
 
     return update
 
@@ -184,15 +198,16 @@ def sight(beat, d, ctx):
 
 
 def labels(beat, d, ctx):
-    """"sees N · eats M" over each focus Flump, turned to the camera."""
+    """"sees N · eats M" over each focus Flump on a dark pill, turned to the camera."""
     items = []
-    cream = materials.fading("label", CREAM, 1.2)
+    cream = materials.fading("label", CREAM, 2.2)
     for i in beat.focus:
         id_ = d.placed[i]
         a = d.frames[ctx.tracks[id_].first].agents[id_]
         holder = bpy.data.objects.new(f"label{id_}", None)
         bpy.context.scene.collection.objects.link(holder)
-        text(f"label{id_}-text", f"sees {a.vision} · eats {a.metabolism}", 0.3, cream, holder)
+        _card(f"label{id_}-pill", holder, (0, 0, -0.03), (2.6, 0.5, 0.02))
+        text(f"label{id_}-text", f"sees {a.vision} · eats {a.metabolism}", 0.34, cream, holder)
         items.append((id_, holder))
 
     def update(frame):
@@ -201,17 +216,20 @@ def labels(beat, d, ctx):
             if not p.visible:
                 flump.stow(holder)
                 continue
-            holder.location = (p.x, p.y, p.z + 1.15)
+            holder.location = (p.x, p.y, p.z + 1.2)
             holder.scale = (0.6,) * 3
-            direction = ctx.camera.matrix_world.translation - holder.location
-            holder.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
+            _turn_to_camera(holder, ctx)
 
     return update
 
 
 def _card(name, parent, location, scale):
-    """A dark felt card behind a screen-space display, so it reads on any shot."""
-    return box(name, materials.matte("card", (0.05, 0.04, 0.035)), parent, location=location, scale=scale)
+    """A dark card behind a display, so it reads on any shot. Its bevel is
+    wide, so small cards come out as pills."""
+    card = box(name, materials.matte("card", (0.03, 0.025, 0.02)), parent, location=location, scale=scale)
+    card.modifiers["round"].width = 0.08
+    card.modifiers["round"].segments = 6
+    return card
 
 
 def _gauge(screen, name, color, x, y):
@@ -238,7 +256,7 @@ def dials(beat, d, ctx):
             v = series[i]
             fill.scale.x = max(min(v / top, 1.0), 0.002) * 0.46
             fill.location.x = -0.23 + fill.scale.x / 2
-            label.data.body = f"average {title}: {v:.2f}"
+            label.data.body = f"average {title}: {v:.2f}   (was {series[0]:.2f})"
 
     return update
 
