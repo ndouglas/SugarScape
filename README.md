@@ -141,7 +141,7 @@ Model extensions:
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
-**Emergence of Classes**, **Ethnocentrism** and **Bounded Confidence**.
+**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence** and **Social Structure**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -815,6 +815,53 @@ Analysis, and Simulation," *Journal of Artificial Societies and Social Simulatio
 Jan Lorenz, "Consensus Strikes Back in the Hegselmann-Krause Model of Continuous Opinion Dynamics
 Under Bounded Confidence," *JASSS* 9(1) (2006), 8. See
 `docs/superpowers/specs/2026-09-25-bounded-confidence-design.md`.
+
+### Social Structure (Cohen, Riolo & Axelrod 2001)
+
+256 agents each period play four-move Prisoner's Dilemmas (payoffs 3, 0, 5, 1) with four partners.
+A strategy is three probabilities: cooperate on the first move (y), after the other cooperated (p,
+"friendliness") and after it defected (q; a low q is "provocable"). At the end of a period each agent
+copies the best-scoring agent it played if that one did strictly better — misjudging 10 % of the
+time — and each of y, p and q has a 10 % chance of Gaussian noise. What changes between runs is the
+social structure, who plays whom: fresh random partners every period (**RWR**), four neighbors on a
+16 × 16 torus (**2DK**), fixed random neighbors, four each and symmetric (**FRNE**), fixed random
+neighbors drawn once, one-way (**FRN**), or FRN with each partner swapped for a random one with
+probability x each period (**FFR-x**, the paper's "dial"). The paper's point: what sustains
+cooperation is not the torus's clustering but its continuity — "context preservation".
+
+It reproduces closely (30 runs of 2500 periods, as the paper). Table 2's mean payoffs over the last
+1000 periods: RWR 1.089, 2DK 2.553, FRNE 2.574, FRN 2.478, FFR-0.1 2.405, FFR-0.3 2.036, FFR-0.5
+1.325, against 1.091, 2.557, 2.575, 2.480, 2.385, 2.100, 1.257. The first period averages 2.25 and
+every structure collapses before the fixed ones recover (Fig. 1). In the paper's crucial region of
+the p–q plane the average p moves −0.012 under RWR and +0.051 under FRN (the paper: −0.016, +0.052),
+because under FRN an agent's partners share its friendliness (slope 0.179, F 1087; the paper 0.158,
+F 717; not significant under RWR). FRNE does beat 2DK (note 5), 4096 agents behave like 256 (note 1),
+and FRNE's fan-out matches Table A1 to within 3 % out to five links. FFR-0.3 is bi-stable, as stated: 25 of 30 runs
+spend 50 periods or more both high and low.
+
+The paper never says what "high cooperation" means. At a mean payoff of 2.3 every row of Table 2's
+"Remain High" lands within 0.03 of the paper (FRN 0.940 against 0.942, FFR-0.1 0.843 against 0.844);
+2.2 or 2.4 miss by 0.14 and 0.26 — so **High cooperation at** defaults to 2.3. It also describes its
+own method twice, and the two readings are switches. **Strategies start** "evenly distributed …
+throughout the strategy space" (the Appendix) or "initialized randomly" (§3.1): no difference.
+**Noise on** every agent every period, "regardless of which … is adopted" (the Appendix), or only as
+"errors in the actual copying process" (§2): these differ — noise only on copying gives FRN 2.530
+instead of 2.478 — and only the Appendix's rule reproduces Table 2.
+
+The view is the agents as a block of cells (the torus itself under 2DK; index order otherwise) next
+to the paper's p–q plane, with the population's average over the last 200 periods as a fading trail
+and every agent as a dot. Color modes: **Friendliness** (p), **Provocability** (1 − q), **Payoff**
+and **Strategy** (near Tit-for-Tat, Always Defect, Always Cooperate, or mixed). Inspect an agent for
+its strategy, payoff, whom it copied and the partners it played (and Follow it), or a point of the
+plane for the agents there. Charts: Mean payoff; Cooperation; Strategy (p, q, y); High cooperation;
+Copying (and the partners' p slope). Presets: `cra-rwr`, `cra-2dk`, `cra-frne`, `cra-frn`,
+`cra-ffr-01`, `cra-ffr-03`, `cra-ffr-05`, `cra-random-start`, `cra-copy-noise`, each stopping at
+2500. **Compare** entry: "Random mixing vs fixed random neighbors — Social Structure (Compare)".
+Built-in sweeps: `cra-table-2`, `cra-dial`, `cra-threshold`, `cra-noise`, `cra-population`.
+
+Credit: Michael D. Cohen, Rick L. Riolo and Robert Axelrod, "The Role of Social Structure in the
+Maintenance of Cooperative Regimes," *Rationality and Society* 13(1) (2001), 5–32. See
+`docs/superpowers/specs/2026-09-26-social-structure-design.md`.
 
 ## Experiments
 

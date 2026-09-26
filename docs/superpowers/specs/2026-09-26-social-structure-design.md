@@ -38,6 +38,17 @@ CRA's population of adaptive agents playing short iterated Prisoner's Dilemmas u
 - **Mechanism claims:** in the region p ∈ [0.30, 0.35], q ∈ [0.05, 0.10] (population averages) the average p moves by −0.016 under RWR and +0.052 under FRN; the regression of partners' average p on own p there is "not significant for RWR" (7168 points) and "highly significant for FRN (slope = 0.1580; F = 717.20; N = 5376)"; FFR-0.3 is "bi-stable"; "Around a parameter value of 0.3 the dynamics shift … at levels of 0.5 and above, it collapses."
 - **Notes:** note 1 — up to 4096 agents "display very similar aggregate statistics"; note 5 — "FRNE populations actually have a better average score than the 2DK populations"; Table A1 — FRNE agents at distance d = 1…6: 4.00, 11.74, 32.38, 74.59, 98.42, 33.23.
 
+## Measured in planning
+
+30 seeds × 2500 periods unless stated (the paper's counts); the survey reproduces each.
+
+- Table 2 (mean payoff, periods 1501–2500 / Remain High at 2.3 / Attain High C): RWR 1.089 / 0.020 / 0.43; 2DK 2.553 / 0.998 / 1.00; FRNE 2.574 / 0.997 / 1.00; FRN 2.478 / 0.940 / 1.00; FFR-0.1 2.405 / 0.843 / 1.00; FFR-0.3 2.036 / 0.376 / 1.00; FFR-0.5 1.325 / 0.073 / 0.97. Remain High's largest miss over the rows: 0.140 at 2.2, 0.026 at 2.3, 0.263 at 2.4.
+- FFR-0.3: 25 of 30 runs spend 50 periods or more both high and low (bi-stable).
+- Fig. 1: first-period means 2.259, 2.253, 2.253, 2.259 (RWR, 2DK, FRNE, FRN); dips 1.11, 1.50, 1.51, 1.30; period 50: 1.12, 2.50, 2.57, 2.05.
+- The crucial region (population p 0.30–0.35, q 0.05–0.10): Δp −0.0118 over 21 visits (RWR), +0.0510 over 22 (FRN); pooled partner-p regression FRN slope 0.179, F 1087, N 5632; RWR slope 0.007, F 2.1, N 5376.
+- Note 5: FRNE above 2DK (medians 2.572, 2.555; p = 5e-11). Note 1: at 4096 agents RWR 1.083, FRN 2.500 (8 runs). Table A1 (10 FRNE graphs): 4.00, 11.74, 32.14, 72.87, 97.71, 35.74.
+- The readings: random start FRN 2.473 (even 2.478); noise only on copying FRN 2.530 (on everyone 2.478).
+
 ## Architecture
 
 Model kind `structure` ("Social Structure"): `ModelKind::Structure`, `ModelConfig::Structure(StructureConfig)` tagged `"model": "structure"`, a `StructureWorld` implementing `Model`, schema, `SERIES`, presets and golden entries — the same wiring as the other models. Code in `crates/sugarscape-core/src/structure/` (`config.rs`, `graph.rs` for the fixed structures and fan-out, `world.rs`, `stats.rs`, `view.rs`, `presets.rs`, `mod.rs`).
@@ -46,17 +57,17 @@ Model kind `structure` ("Social Structure"): `ModelKind::Structure`, `ModelConfi
 
 | Field | Default | Apply | Meaning |
 |---|---|---|---|
-| `agents` | 256 | reset | n (4–4096); a perfect square under `torus` |
+| `agents` | 256 | reset | n (4–4096); a perfect square of at least 3 × 3 under `torus` |
 | `structure` | `rwr` | reset | `rwr`, `torus` (2DK), `frne`, `frn` |
 | `substitution` | 0 | live | x: each fixed link replaced for this period by a uniform random partner (not A) with probability x (FFR-x with `frn`; a switch the paper does not test with `torus`/`frne`; ignored under `rwr`) |
-| `partners` | 4 | reset | partners each agent chooses (the torus's NEWS count is fixed at 4; `partners` then must be 4) |
+| `partners` | 4 | reset | partners each agent chooses (the torus's NEWS count is fixed at 4; `partners` then must be 4); 1–16 and fewer than the agents; even under `frne` |
 | `moves` | 4 | live | moves per game |
 | `judge_error` | 0.1 | live | chance the copy decision is inverted |
 | `mutation` | 0.1 | live | chance per strategy parameter of noise |
 | `mutation_sd` | 0.4 | live | the noise's standard deviation |
 | `noise_on` | `always` | live | `always` (Appendix: every agent, every period) or `copy` (§2: only an agent that copied) |
 | `start` | `grid` | reset | `grid` (Appendix: p and q on an evenly spaced grid, (i + ½)/k for k = ⌈√n⌉ values each, the first n points in row order; y = p) or `random` (§3.1: p, q uniform; y = p) |
-| `high` | chosen in planning | live | "high cooperation": population mean payoff per move at least this (the paper does not state its threshold; planning measures the payoff distributions and records the choice) |
+| `high` | 2.3 | live | "high cooperation": population mean payoff per move at least this (the paper does not state its threshold; planning found 2.3: every row's Remain High within 0.03 of Table 2 there, against 0.14 and 0.26 at 2.2 and 2.4) |
 | `stop_at` | 0 | live | `finished()` at this period (0: never); presets set 2500 |
 
 ## Step (one period)
@@ -72,7 +83,7 @@ Random draws are in a fixed order (partners, then games in agent order, then ada
 
 - `torus`: a random permutation places agents on the √n × √n torus; neighbors are the 4 NEWS sites. Each agent's chosen list is its 4 neighbors, so every pair plays twice.
 - `frn`: each agent draws `partners` others uniformly with replacement.
-- `frne`: a random `partners`-regular simple symmetric graph, built by pairing stubs at random (retrying on self-loops or duplicates), then the Appendix's mixing — each agent performs n random swap attempts (a double-edge swap with a random other edge, kept only if it creates no self-loop or duplicate). Each agent's chosen list is its neighbors, so every pair plays twice, as in 2DK. (CRA's swap procedure is described only in outline; this construction is a stated choice.) `agents × partners` must be even.
+- `frne`: a random `partners`-regular simple symmetric graph (`partners` even): a ring lattice (each agent linked to the `partners`/2 nearest on each side) mixed by CRA's procedure — each agent, n times, swaps one of its neighbors with a random other agent's neighbor (a double-edge swap), kept only when it creates no self-link or repeated link. (CRA describe their construction only in outline; this is a stated choice. No retries are needed.)
 
 ## Statistics
 
@@ -84,9 +95,9 @@ Table 2's measures are read from these: Attain High C = whether `attained_high` 
 
 - **Agents** (left): a √n-side block (⌈√n⌉ for non-squares), one cell per agent — under `torus` its lattice site, otherwise its index in row order (the help says so).
 - **p–q plane** (right, 101 × 101 cells, p along the bottom, q up; a 6-cell gap between): the population's average (p, q) over the last 200 periods as a fading trail, and every agent as a dot (brighter where several coincide).
-- **Color modes:** **Friendliness** (p), **Provocability** (1 − q), **Payoff** (this period's score), **Strategy** (nearest of TFT (1,1,0), ALLD (0,0,0), ALLC (1,1,1), or other when farther than 0.5 from all).
+- **Color modes:** **Friendliness** (p), **Provocability** (1 − q), **Payoff** (this period's score), **Strategy** (nearest of TFT (1,1,0), ALLD (0,0,0), ALLC (1,1,1), or other when farther than 0.5 from all). Payoff scales a score of 0–3 red to green.
 - **Inspect:** an agent: y, p, q, score, the partners it played this period (id, p, score, how many games), whether and whom it copied; a plane cell: its (p, q) and the agents there. `locate` returns an agent's block cell; Follow available.
-- **Charts:** Mean payoff (with the threshold as a reference line); Cooperation; Strategy (p, q, y); High cooperation (`high`, `share_high_since`); Copying (`copied`, `partner_p_slope`). Time axis: Periods.
+- **Charts:** Mean payoff (chart reference lines are series, so the threshold is not drawn); Cooperation; Strategy (p, q, y); High cooperation (`high`, `share_high_since`); Copying (`copied`, `partner_p_slope`). Time axis: Periods.
 
 ## Presets
 
@@ -110,7 +121,7 @@ Seeds and periods measured to fit a browser run and recorded in each description
 - `cra-threshold`: share of runs attaining high against the `high` threshold, series RWR and FRN.
 - `cra-noise`: mean payoff per structure, series `always`/`copy` × `grid`/`random`.
 - `cra-population`: mean payoff against n = 64 … 4096, series RWR and FRN.
-The CLI names the stop `(its last period)` (the existing default).
+The CLI names the stop `(its last period)` (the existing default says `its end year`).
 
 ## Survey
 
@@ -132,7 +143,7 @@ The presets menu gains a **Social Structure** group and the Compare entry; the R
 
 - **Golden/legacy:** existing entries untouched; new entries for every `structure` preset.
 - **Core unit:** the game (payoffs, move counts; y/p/q extremes give TFT/ALLD/ALLC play); scores per move including both roles; RWR never self-pairs; torus neighbors wrap and each pair plays twice; FRN draws with replacement; FRNE is simple, symmetric and `partners`-regular; substitution replaces links only for the period; adaptation copies only strictly better, ties uniform, judge error inverts, noise on `always` vs `copy`, clamping; grid and random starts; the statistics (including the slope) on hand-built populations; keyframes; live and reset fields; degenerate configs (n = 4, judge error 0 and 1, mutation 0 and 1, substitution 1).
-- **Web:** schema groups, charts, the Compare entry, a sweep over a `structure` base, determinism through the engine.
+- **Web:** schema groups, charts, the Compare entry, a sweep over a `structure` base, determinism through the engine (all nine presets in the golden list; `cra-2dk` with `stop_at` 30 run to its stop and inspected).
 - **Browser (controller):** every preset's view and charts, Inspect, Compare, recording, Experiments, every existing scenario.
 
 ## Docs

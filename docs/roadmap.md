@@ -153,6 +153,15 @@ the asymmetric drift and the bias's break reproduce; Fig. 2b's two camps are the
 confidence, and the lattice claim holds. See
 `docs/superpowers/specs/2026-09-25-bounded-confidence-design.md`.
 
+## Milestone 18: Social Structure (done)
+
+Cohen, Riolo and Axelrod's adaptive agents playing short iterated Prisoner's Dilemmas under six social
+structures (2001) as a new model kind, with the paper's substitution dial live and its two readings of
+its own method as switches. Table 2, Fig. 1, the crucial p–q region, the partner regression, notes 1
+and 5 and Table A1 all reproduce closely; the unstated high-cooperation threshold is recovered as 2.3;
+the two starts are equivalent, and of the two noise rules only the Appendix's reproduces Table 2. See
+`docs/superpowers/specs/2026-09-26-social-structure-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -166,6 +175,7 @@ confidence, and the lattice claim holds. See
 - **Axtell, Epstein & Young's emergence of classes**: done (Milestone 15).
 - **Hammond–Axelrod ethnocentrism** (and Hartshorn, Kaznatcheev & Shultz's and Jansson's critiques): done (Milestone 16).
 - **Hegselmann & Krause's bounded confidence**: done (Milestone 17).
+- **Cohen, Riolo & Axelrod's social structure**: done (Milestone 18).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions
