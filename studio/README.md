@@ -9,7 +9,7 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/build.py seasons --beat 4    # one beat (1-based)
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
-Episodes so far: `sugarscape` (the pilot), `seasons` and `pollution`.
+Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution` and `inheritance`.
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -52,7 +52,8 @@ lays it under the video, faded in and out.
 The tunes so far: the pilot's *Flumps' Walk*, a gånglåt in D (accordion, fiddle drone, guitar),
 Seasons' *The Thaw*, a waltz in A minor after the Russian waltz (violin and pizzicato for
 summer; celesta and sleigh bells in C major for winter), and Pollution's *Smoke over the Mill*, a
-brass-band chorale in E♭ that sinks into C minor under a tolling bell.
+brass-band chorale in E♭ that sinks into C minor under a tolling bell, and Inheritance's *The
+Ground Beneath*, a passacaglia in D minor whose cello ground repeats under every variation.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to
