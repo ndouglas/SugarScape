@@ -1,0 +1,16 @@
+{
+  "medians": {
+    "global_share": 0.8496081977094635,
+    "hills_one_tribe": 0.9,
+    "homog0": 0.4824074074074074,
+    "homog1000": 0.7935897435897437,
+    "homog3000": 1.0,
+    "ne_share": 1.0,
+    "one_tribe_seeds": 0.5,
+    "pop": 225.5,
+    "pop_calm": 225.0,
+    "split_seeds": 0.45,
+    "sw_share": 1.0
+  },
+  "seeds": 20
+}

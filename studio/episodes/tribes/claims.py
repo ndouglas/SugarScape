@@ -37,7 +37,9 @@ def verdicts(rows):
     above = _count(rows, lambda r: r["pop"] > r["pop_calm"])
     below = _count(rows, lambda r: r["pop"] < r["pop_calm"])
     return [
-        ("neighbourhoods turn one color", converged >= most,
+        # 17 of 20 seeds reach 90% by tick 3000, so the caption says "most
+        # worlds", not every one.
+        ("in most worlds, every neighbourhood ends up one color", converged >= 0.75 * n,
          f"neighbours in the same tribe: {median(rows, 'homog0'):.0%} at the start, {median(rows, 'homog3000'):.0%} at "
          f"tick {TICKS}; at least 90% in {converged} of {n} seeds"),
         ("each hill becomes one tribe", hills >= most, f"both hills at least 90% one tribe in {hills} of {n} seeds"),

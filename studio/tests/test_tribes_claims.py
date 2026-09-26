@@ -25,7 +25,7 @@ class TribesVerdictTest(unittest.TestCase):
         self.assertTrue(all(self.verdicts().values()), self.verdicts())
 
     def test_neighbourhoods_that_stay_mixed_break_the_convergence_claim(self):
-        self.assertFalse(self.verdicts(homog3000=0.6)["neighbourhoods turn one color"])
+        self.assertFalse(self.verdicts(homog3000=0.6)["in most worlds, every neighbourhood ends up one color"])
 
     def test_mixed_hills_break_the_one_tribe_per_hill_claim(self):
         self.assertFalse(self.verdicts(ne_share=0.6)["each hill becomes one tribe"])

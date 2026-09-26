@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::agent::Sex;
+use crate::agent::{Sex, Tribe};
 use crate::config::{Config, FieldError};
 use crate::edit::AgentOverrides;
 use crate::model::ModelConfig;
@@ -58,6 +58,8 @@ pub struct Place {
     pub sugar: Option<f64>,
     #[serde(default)]
     pub sex: Option<Sex>,
+    #[serde(default)]
+    pub tribe: Option<Tribe>,
 }
 
 fn first_seed() -> u64 {
@@ -221,7 +223,7 @@ fn place(
             metabolism: p.metabolism,
             sugar: p.sugar,
             sex: p.sex,
-            ..AgentOverrides::default()
+            tribe: p.tribe,
         };
         let id = world
             .place_agent(p.x, p.y, &overrides)
@@ -346,6 +348,15 @@ mod tests {
             d.frames[0].tags != d.frames[5].tags,
             "no tag flipped in 5 ticks"
         );
+    }
+
+    #[test]
+    fn a_placement_can_set_its_tribe() {
+        let d = run(
+            r#"{"preset": "iii-6-culture", "ticks": 0, "set": {"population": 0},
+            "place": [{"x": 1, "y": 1, "tribe": "blue"}, {"x": 2, "y": 1, "tribe": "red"}]}"#,
+        );
+        assert_eq!(d.frames[0].groups, vec![0, 1]);
     }
 
     #[test]
