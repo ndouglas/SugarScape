@@ -1,3 +1,4 @@
+import json
 import pathlib
 import unittest
 
@@ -44,6 +45,13 @@ class DumpTest(unittest.TestCase):
         self.assertEqual(dump.survival(self.d, lambda a: True), 0.5)
         self.assertEqual(dump.survival(self.d, lambda a: a.metabolism >= 4), 0.0)
         self.assertTrue(dump.survival(self.d, lambda a: a.vision > 99) != dump.survival(self.d, lambda a: a.vision > 99))
+
+    def test_frames_carry_pollution_or_zeros_for_older_dumps(self):
+        self.assertEqual(self.d.frames[3].pollution, [0.0] * 64)
+        raw = json.loads(FIXTURE.read_text())
+        for f in raw["frames"]:
+            f.pop("pollution", None)
+        self.assertEqual(dump.parse(json.dumps(raw)).frames[3].pollution, [0.0] * 64)
 
     def test_wrong_format_is_refused(self):
         with self.assertRaisesRegex(ValueError, "format"):

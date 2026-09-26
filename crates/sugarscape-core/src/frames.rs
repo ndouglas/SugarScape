@@ -115,6 +115,8 @@ pub struct Frame {
     pub agents: Vec<AgentRow>,
     /// Good 0's level at every site, row-major.
     pub sugar: Vec<f64>,
+    /// Pollutant 0's level at every site, row-major (zero while pollution is off).
+    pub pollution: Vec<f64>,
     /// Agents that died during this tick, with the cause.
     pub deaths: Vec<(u64, &'static str)>,
     /// Agents first seen in this frame (the initial population, replacements
@@ -166,6 +168,7 @@ fn frame(world: &World, seen: &mut BTreeSet<u64>, deaths: Vec<(u64, &'static str
         tick: world.tick,
         agents,
         sugar: world.sites.iter().map(|s| s.resource[0]).collect(),
+        pollution: world.sites.iter().map(|s| s.pollution[0]).collect(),
         deaths,
         born,
     }
@@ -289,6 +292,14 @@ mod tests {
         assert_eq!(d.stats["population"].len(), 13);
         assert_eq!(d.frames[0].agents.len(), 400);
         assert_eq!(d.frames[0].born.len(), 400);
+    }
+
+    #[test]
+    fn frames_carry_each_sites_pollution_once_it_forms() {
+        let d = run(r#"{"preset": "ii-8-pollution", "ticks": 60, "seed": 1}"#);
+        assert_eq!(d.frames[0].pollution.len(), d.capacity.len());
+        assert!(d.frames[50].pollution.iter().all(|&p| p == 0.0));
+        assert!(d.frames[60].pollution.iter().any(|&p| p > 0.0));
     }
 
     #[test]
