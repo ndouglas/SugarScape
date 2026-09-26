@@ -143,6 +143,15 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("hk-bias", 0x9a2ed969514cbda2),
     ("hk-serial", 0xb06db73333504889),
     ("hk-lattice", 0xe33359f120b204d9),
+    ("cra-rwr", 0xc7f45f59d9b25490),
+    ("cra-2dk", 0x3b8c19aab4aae805),
+    ("cra-frne", 0xdf2fc96965742a81),
+    ("cra-frn", 0x924d4b2fe686ae18),
+    ("cra-ffr-01", 0x424eda2182150e01),
+    ("cra-ffr-03", 0xbc09206184dc7003),
+    ("cra-ffr-05", 0xf9573021f9848025),
+    ("cra-random-start", 0x1871afd34df774a9),
+    ("cra-copy-noise", 0xd8871da3505ee758),
 ];
 
 fn fingerprint(id: &str) -> u64 {

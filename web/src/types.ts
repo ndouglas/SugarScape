@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -314,7 +314,28 @@ export interface OpinionsConfig {
   stop_when_stable: boolean;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig;
+/**
+ * Cohen, Riolo and Axelrod's population of adaptive agents playing short iterated Prisoner's
+ * Dilemmas under a social structure (milestone 18), with the paper's two readings of its method as
+ * switches.
+ */
+export interface StructureConfig {
+  model: 'structure';
+  agents: number;
+  structure: 'rwr' | 'torus' | 'frne' | 'frn';
+  substitution: number;
+  partners: number;
+  moves: number;
+  judge_error: number;
+  mutation: number;
+  mutation_sd: number;
+  noise_on: 'always' | 'copy';
+  start: 'grid' | 'random';
+  high: number;
+  stop_at: number;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -521,7 +542,22 @@ export interface OpinionsStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats;
+export interface StructureStats {
+  tick: number;
+  mean_payoff: number;
+  cooperation: number;
+  mean_y: number;
+  mean_p: number;
+  mean_q: number;
+  high: number;
+  /** The first period at or above the threshold, else −1. */
+  attained_high: number;
+  share_high_since: number;
+  copied: number;
+  partner_p_slope: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -727,7 +763,29 @@ export interface OpinionsInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection;
+/** An agent played this period: its p as played, its score and how many games. */
+export interface PartnerView { id: number; p: number; score: number; games: number }
+/** An agent: its strategy, class, this period's score, whom it copied and (in the block) its partners. */
+export interface StructureAgentView {
+  id: number;
+  y: number;
+  p: number;
+  q: number;
+  class: 'tft' | 'alld' | 'allc' | 'other';
+  score: number;
+  copied: number | null;
+  partners: PartnerView[];
+}
+/** A cell of the agents' block (its agent) or of the p–q plane (its (p, q) and the agents there). */
+export interface StructureInspection {
+  site: { x: number; y: number };
+  block: { x: number; y: number } | null;
+  plane: [number, number] | null;
+  agents: StructureAgentView[];
+  agent: StructureAgentView | null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -766,7 +824,10 @@ export type ColorMode =
   | 'best_reply'
   | 'payoff'
   | 'start'
-  | 'opinion';
+  | 'opinion'
+  | 'friendliness'
+  | 'provocability'
+  | 'strategy';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

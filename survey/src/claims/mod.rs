@@ -9,6 +9,7 @@ mod culture;
 mod ethno;
 mod opinions;
 mod spatial;
+mod structure;
 mod tags;
 
 use crate::claim::Claim;
@@ -26,6 +27,7 @@ pub fn all() -> Vec<Claim> {
         ethno::claims(),
         opinions::claims(),
         spatial::claims(),
+        structure::claims(),
         tags::claims(),
     ]
     .into_iter()

@@ -332,11 +332,39 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     },
     { title: 'Change', lines: [{ key: 'max_change', label: 'Largest move this period', color: '--c4' }] },
   ],
+  structure: [
+    { title: 'Mean payoff', lines: [{ key: 'mean_payoff', label: 'Per move', color: '--c1' }], range: [0, 5] },
+    { title: 'Cooperation', lines: [{ key: 'cooperation', label: 'Share of moves', color: '--c2' }], range: [0, 1] },
+    {
+      title: 'Strategy',
+      lines: [
+        { key: 'mean_p', label: 'Friendliness (p)', color: '--c2' },
+        { key: 'mean_q', label: 'Forgiveness (q)', color: '--c3' },
+        { key: 'mean_y', label: 'First move (y)', color: '--muted' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'High cooperation',
+      lines: [
+        { key: 'high', label: 'At the threshold', color: '--c1' },
+        { key: 'share_high_since', label: 'Share since first reached', color: '--c4' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Copying',
+      lines: [
+        { key: 'copied', label: 'Agents copying', color: '--c3' },
+        { key: 'partner_p_slope', label: 'Partners’ p on own p (slope)', color: '--c4' },
+      ],
+    },
+  ],
 };
 
 /** A model's time charts count calendar years (the anasazi's), generations (tags), periods (ethnocentrism, HA06's word) or ticks. */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' ? 'Periods' : model === 'ethno' ? 'Period' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' ? 'Periods' : model === 'ethno' ? 'Period' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

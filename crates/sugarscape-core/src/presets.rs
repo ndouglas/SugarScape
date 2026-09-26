@@ -684,6 +684,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::culture::presets());
     out.extend(crate::classes::presets());
     out.extend(crate::opinions::presets());
+    out.extend(crate::structure::presets());
     out.extend(crate::spatial::presets());
     out.extend(crate::ethno::presets());
     out

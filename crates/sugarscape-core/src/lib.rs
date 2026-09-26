@@ -32,6 +32,7 @@ pub mod schema;
 pub mod social;
 pub mod spatial;
 pub mod stats;
+pub mod structure;
 pub mod sweep;
 pub mod tags;
 pub mod world;

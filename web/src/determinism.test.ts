@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
 import { defaultForm, formToSweep } from './experiments/form';
@@ -26,6 +26,9 @@ import type {
   OpinionsConfig,
   OpinionsInspection,
   OpinionsStats,
+  StructureConfig,
+  StructureInspection,
+  StructureStats,
   Param,
   Preset,
   Snapshot,
@@ -33,6 +36,7 @@ import type {
   TagsInspection,
   TagsStats,
 } from './types';
+import { InspectPanel } from './ui/inspect-panel';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -431,6 +435,15 @@ describe('other models through the engine', () => {
     ['jansson-kin-fixed', '0x3fac090571612879'],
     ['hks-no-ethnocentrics', '0xbe867e7210bad2d2'],
     ['hk-lattice', '0xe33359f120b204d9'],
+    ['cra-rwr', '0xc7f45f59d9b25490'],
+    ['cra-2dk', '0x3b8c19aab4aae805'],
+    ['cra-frne', '0xdf2fc96965742a81'],
+    ['cra-frn', '0x924d4b2fe686ae18'],
+    ['cra-ffr-01', '0x424eda2182150e01'],
+    ['cra-ffr-03', '0xbc09206184dc7003'],
+    ['cra-ffr-05', '0xf9573021f9848025'],
+    ['cra-random-start', '0x1871afd34df774a9'],
+    ['cra-copy-noise', '0xd8871da3505ee758'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -509,6 +522,66 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the social-structure model through the engine', () => {
+  it('stops at its last period and inspects an agent and its partners', async () => {
+    const r = presets.find((p) => p.id === 'cra-2dk')!;
+    const config = { ...structuredClone(r.config as StructureConfig), stop_at: 30 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'strategy' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as StructureStats;
+    expect([e.finished, ends, e.tick, s.tick]).toEqual([true, 1, 30, 30]);
+    // The torus: every agent played its four neighbors twice.
+    await e.select(1, 1);
+    const v = e.inspection!.view as StructureInspection;
+    expect(v.block).toEqual({ x: 0, y: 0 });
+    expect(v.agent!.partners.map((p) => p.games)).toEqual([2, 2, 2, 2]);
+  });
+
+  it('labels an empty block cell of a non-square population instead of falling through to the gap text', async () => {
+    const r = presets.find((p) => p.id === 'cra-rwr')!;
+    const config = { ...structuredClone(r.config as StructureConfig), agents: 250, stop_at: 5 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'strategy' });
+    await e.advance(1);
+    // block side 16, cell 6 px: block cell (15, 15) is index 255, past the 250th agent.
+    await e.select(90, 90);
+    const v = e.inspection!.view as StructureInspection;
+    expect(v.block).toEqual({ x: 15, y: 15 });
+    expect(v.agent).toBeNull();
+
+    // A minimal document, just enough for `h()` to build <tr><th>/<td> rows.
+    const stubElement = (tag: string) => {
+      const el: { tag: string; children: unknown[]; setAttribute: () => void; addEventListener: () => void; append: (...items: unknown[]) => void } = {
+        tag,
+        children: [],
+        setAttribute: () => {},
+        addEventListener: () => {},
+        append(...items: unknown[]) {
+          el.children.push(...items);
+        },
+      };
+      Object.defineProperty(el, 'textContent', {
+        get: () => el.children.map((c) => (typeof c === 'string' ? c : (c as { textContent: string }).textContent)).join(''),
+      });
+      return el;
+    };
+    vi.stubGlobal('document', { createElement: stubElement });
+    try {
+      const structureRows = (InspectPanel.prototype as unknown as { structureRows(view: StructureInspection): { textContent: string }[] }).structureRows;
+      const text = structureRows(v)
+        .map((row) => row.textContent)
+        .join(' | ');
+      expect(text).toContain('Block cell');
+      expect(text).toContain('no agent here');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

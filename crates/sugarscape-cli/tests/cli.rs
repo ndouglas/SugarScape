@@ -93,6 +93,11 @@ fn presets_and_sweeps_are_listed() {
         "hk-updating",
         "hk-lattice",
         "hk-population",
+        "cra-table-2",
+        "cra-dial",
+        "cra-threshold",
+        "cra-noise",
+        "cra-population",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -445,6 +450,13 @@ fn a_classes_run_stops_at_equity() {
         err.starts_with("finished at tick ") && err.ends_with(" (equity reached)\n"),
         "{err}"
     );
+}
+
+#[test]
+fn a_social_structure_run_stops_at_its_last_period() {
+    let out = sugarscape(&["run", "--preset", "cra-rwr", "--ticks", "3000"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 2500 (its last period)\n");
 }
 
 #[test]
