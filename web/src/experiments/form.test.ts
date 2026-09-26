@@ -178,6 +178,13 @@ describe('sweeps over other models', () => {
       ticks: 2000,
       metric: { kind: 'window_mean', series: 'ethnocentric', from: 1901, to: null },
     });
+    expect(defaultForm('dpd')).toMatchObject({
+      x: { path: 'r', values: '1:5:1' },
+      series: null,
+      seeds: 3,
+      ticks: 500,
+      metric: { kind: 'final', series: 'cooperators' },
+    });
   });
 
   it('suggest a Schelling config’s own paths, never its model tag', () => {

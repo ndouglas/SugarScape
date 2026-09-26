@@ -80,6 +80,30 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'ha-standard',
     b: 'jansson-kin',
   },
+  {
+    id: 'dpd-wp-vs-published',
+    label: 'Working paper vs published rule — Demographic PD (Compare)',
+    a: 'dpd-run-1',
+    b: 'dpd-working-paper',
+  },
+  {
+    id: 'dpd-negative-vs-metabolism',
+    label: 'Negative payoffs vs shifted with metabolism — Demographic PD (Compare)',
+    a: 'dpd-run-2',
+    b: 'dpd-metabolism',
+  },
+  {
+    id: 'dpd-space-vs-soup',
+    label: 'Space vs soup — Demographic PD (Compare)',
+    a: 'dpd-run-1',
+    b: 'dpd-soup',
+  },
+  {
+    id: 'dpd-published-vs-closest',
+    label: 'Published rule vs closest reading — Demographic PD (Compare)',
+    a: 'dpd-run-1',
+    b: 'dpd-closest',
+  },
 ];
 
 /**
