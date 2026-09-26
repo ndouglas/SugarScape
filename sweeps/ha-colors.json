@@ -1,0 +1,9 @@
+{
+  "name": "Ethnocentrism: how many colours? Table 1 d/a/e against 2/4/8 and 2/5/9",
+  "description": "Table 1 d/a/e (2, 4 and 8 colours: 69.4, 76.3 and 79.1% ethnocentric), and the question whether HA-Java's colour draw — randomInRange(0, numColors), inclusive, so five tags for \"four\" and nine for \"eight\" — produced them. The mean ethnocentric share over periods 1,901–2,000. Measured (release, seeds 1–10, recorded 2026-09-25): 2: 68.9%; 3: 76.2; 4: 75.9; 5: 75.4; 6: 76.1; 7: 78.6; 8: 77.9; 9: 81.8. Rows d/a/e fit 2/4/8 (68.9/75.9/77.9) and 2/5/9 (68.9/75.4/81.8) about equally well: the share is flat from 3 to 6 colours and ten seeds cannot tell the two readings apart.",
+  "base": {"preset": "ha-standard"},
+  "x": {"label": "Colours", "path": "colors", "values": [2, 3, 4, 5, 6, 7, 8, 9]},
+  "seeds": {"from": 1, "count": 10},
+  "ticks": 2000,
+  "metric": {"kind": "window_mean", "series": "ethnocentric", "from": 1901}
+}

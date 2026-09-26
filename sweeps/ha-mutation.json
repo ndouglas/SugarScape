@@ -1,0 +1,16 @@
+{
+  "name": "Ethnocentrism: the mutation rate, the text's and the appendix's (HA06)",
+  "description": "HA06's text and Table 1 use a mutation rate of 0.5% (0.25% and 1% in rows f and g); its appendix says 5%, and its appendix's interaction loop, read literally, decides every direction twice. The mean ethnocentric share over periods 1,901–2,000 against the mutation rate, deciding once (HA-Java, NetLogo) or twice. Measured (release, seeds 1–10, recorded 2026-09-25), once / twice: 0.25%: 83.4 / 86.6%; 0.5%: 75.9 / 80.9; 1%: 63.0 / 74.6; 2%: 52.4 / 62.9; 5%: 36.0 / 42.7. Table 1 a (76.3%) is the text's 0.5% played once; the appendix's 5% gives about 36–43% and cannot be what the paper ran.",
+  "base": {"preset": "ha-standard"},
+  "x": {"label": "Mutation rate", "path": "mutation", "values": [0.0025, 0.005, 0.01, 0.02, 0.05]},
+  "series": {
+    "label": "Decisions per neighbor",
+    "values": [
+      {"at": 0, "name": "Once (the code)", "set": {"pair_play": "once"}},
+      {"at": 1, "name": "Twice (the appendix)", "set": {"pair_play": "twice"}}
+    ]
+  },
+  "seeds": {"from": 1, "count": 10},
+  "ticks": 2000,
+  "metric": {"kind": "window_mean", "series": "ethnocentric", "from": 1901}
+}

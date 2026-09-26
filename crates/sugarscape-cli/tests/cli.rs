@@ -68,6 +68,13 @@ fn presets_and_sweeps_are_listed() {
         "rca-cost",
         "rca-clones",
         "rca-population",
+        "ha-cost",
+        "ha-colors",
+        "ha-mutation",
+        "ha-immigration",
+        "ha-lattice",
+        "jansson-tag-mutation",
+        "jansson-markers",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),

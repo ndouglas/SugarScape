@@ -270,7 +270,14 @@ fn builtins_and_series_names_are_listed() {
             "rca-pairings",
             "rca-cost",
             "rca-clones",
-            "rca-population"
+            "rca-population",
+            "ha-cost",
+            "ha-colors",
+            "ha-mutation",
+            "ha-immigration",
+            "ha-lattice",
+            "jansson-tag-mutation",
+            "jansson-markers"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -679,6 +686,22 @@ fn tags_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "tags");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn ethno_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: PTR sums and
+    // uniform draws are the same bits here as natively.
+    for (id, fp) in [
+        ("ha-standard", "0xf07433e56417f07c"),
+        ("ha-misperception", "0x5567187174fd1c15"),
+        ("jansson-kin", "0x265998639eacfbd0"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "ethno");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }
