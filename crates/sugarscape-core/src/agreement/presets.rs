@@ -92,7 +92,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "dnaw-lattice",
             "On a lattice: one cluster and stragglers",
             DNAW,
-            "The same meetings on a 29 × 29 torus, each agent meeting only its four neighbors, d = 0.3, μ = 0.3 (Fig. 5): 'a large majority … reached consensus … apart from isolated agents which have extremist opinions'. The torus is drawn at the right. The caption's '100 000 iterations' are 119 meetings per agent. Measured (20 seeds): at period 119 the largest cluster (opinions within 10⁻³) holds only 41 % — the lattice is still settling; run to stability (median period 1 797) it holds 92 %, with 27 isolated agents: the figure's picture, but much later than its caption says.",
+            "The same meetings on a 29 × 29 torus, each agent meeting only its four neighbors, d = 0.3, μ = 0.3 (Fig. 5): 'a large majority … reached consensus … apart from isolated agents which have extremist opinions'. The torus is drawn at the right. The caption's '100 000 iterations' are 119 periods of 841 meetings. Measured (20 seeds): at period 119 the largest cluster (opinions within 10⁻³) holds only 41 % — the lattice is still settling; run to stability (median period 1 797) it holds 92 %, with 27 isolated agents: the figure's picture, but much later than its caption says.",
             |c| {
                 dnaw(c, 0.3, 0.3);
                 c.network = Network::Lattice;
@@ -155,7 +155,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ra-meadows-cliff",
             "Meadows and Cliff's reading",
             MC,
-            "Meadows and Cliff's reimplementation of Fig. 9's corner: moderates uniform on (−0.8, 0.8), extremists uniform in [0.8, 1] and [−1, −0.8], y measured after 200 meetings per agent with a moderate counted as extremist only past ±0.8. Their conclusion: 'no conditions under which single extreme convergence will occur in the majority of the simulations'. Measured (20 seeds): y 0.00 in every run — yet the mean opinion has already drifted to ±0.56: the majority is on its way to one extreme but short of 0.8 at period 200. Compare with ra-deffuant-2013.",
+            "Meadows and Cliff's reimplementation of Fig. 9's corner: moderates uniform on (−0.8, 0.8), extremists uniform in [0.8, 1] and [−1, −0.8], y measured after 200 periods of 200 meetings (40 000 meetings) with a moderate counted as extremist only past ±0.8. Their conclusion: 'no conditions under which single extreme convergence will occur in the majority of the simulations'. Measured (20 seeds): y 0.00 in every run — yet the mean opinion has already drifted to ±0.56: the majority is on its way to one extreme but short of 0.8 at period 200. Compare with ra-deffuant-2013.",
             |c| {
                 reading(c, 0.0, 200);
             },
@@ -164,7 +164,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ra-deffuant-2013",
             "The authors' reply",
             DAW,
-            "Deffuant, Amblard and Weisbuch's reply (2013): Meadows and Cliff 'compute indicator y before model convergence'; with 1 200 meetings per agent and new extremists counted past ±0.7 ('a threshold … lower of 0.1 than the threshold for initial extremists') their own program gives Fig. 9. Same placement as ra-meadows-cliff. Measured (20 seeds): a single extreme in 19 runs (y 0.95). Neither fix is enough alone (the ra-readings sweep): the drifted majority settles between 0.7 and 0.8.",
+            "Deffuant, Amblard and Weisbuch's reply (2013): Meadows and Cliff 'compute indicator y before model convergence'; with 1 200 periods (240 000 meetings) and new extremists counted past ±0.7 ('a threshold … lower of 0.1 than the threshold for initial extremists') their own program gives Fig. 9. Same placement as ra-meadows-cliff. Measured (20 seeds): a single extreme in 19 runs (y 0.95). Neither fix is enough alone (the ra-readings sweep): the drifted majority settles between 0.7 and 0.8.",
             |c| {
                 reading(c, 0.1, 1200);
             },
@@ -216,7 +216,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ad-small-world",
             "Extremists in a small world",
             AD,
-            "Amblard and Deffuant's small world (Figs. 4–5): 1000 agents on a ring, each linked to 32 neighbors, 80 % of links rewired at random; 5 % extremists at ±1, moderates at 1.8, μ = 0.1. Fully connected, these parameters give a single extreme; on sparse networks both extremes. Measured (20 seeds): a single extreme in 11 runs, central in 9 — k = 32 is near the transition (the ad-connectivity sweep).",
+            "Amblard and Deffuant's small world (Figs. 4–5): 1000 agents on a ring, each linked to 32 neighbors, 80 % of links rewired at random; 5 % extremists at ±1, moderates at 1.8, μ = 0.1. Fully connected, these parameters give a single extreme; on sparse rings the paper reports both extremes, which appear here only when moderates are counted as extremists past 0.7 (the ad-connectivity sweep) — with this preset's cutoff at 0.9 they read as central. Measured (20 seeds): a single extreme in 11 runs, central in 9 — k = 32 is near the transition (the ad-connectivity sweep).",
             |c| {
                 c.agents = 1000;
                 c.mu = 0.1;

@@ -1075,7 +1075,8 @@ paper as stated is the default. Measured (planning and the survey):
   extreme only around U = 1, a central band at U 0.8 with averaged uncertainties, none with the variance
   rule.
 - **ue matters, and the cutoff misreads it.** §4.8 finds no influence of the extremists' uncertainty;
-  at N 1000 single extremes rise from 7 to 20 of 20 runs as ue goes from 0.05 to 0.2 — and at 0.2 the
+  at N 1000 (pe 0.05, U 1.4) the population drifts to one extreme far less often at ue 0.05 than at 0.2
+  (median |mean opinion| 0.03 against 0.75) — and at 0.2 the
   extreme cluster settles at ±0.75, inside the reply's 'innermost extremist less 0.1', so y reads 0.
 - **Networks.** On a Moore lattice there is never a single extreme (Amblard and Deffuant, 2004). On
   small-world rings it needs a critical number of neighbors that falls as rewiring rises — as they say,
@@ -1084,7 +1085,8 @@ paper as stated is the default. Measured (planning and the survey):
   depends, again, on the unstated cutoff. Weisbuch's scale-free networks (2004) reproduce: no steps in
   the dispersion, close to the square lattice, closer to well mixed with twice the links; hubs end in
   the big cluster; 16 % of agents never move. Deffuant 2000's lattice picture appears only when run to
-  stability, hundreds of periods after the caption's '100 000 iterations'.
+  stability (a median period of about 1 800), not after the caption's '100 000 iterations' (119
+  periods).
 
 Switches for what the papers leave open: **Placement** (the most extreme draws; set to ±1; Meadows and
 Cliff's band), **New-extremist margin** (the reply's 0.1; 0 for Meadows and Cliff), **A meeting

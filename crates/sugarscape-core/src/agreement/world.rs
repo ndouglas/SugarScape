@@ -726,7 +726,14 @@ impl Model for AgreementWorld {
         if self.config.moves_differently(&next) {
             self.stable_at = None;
         }
+        let recount = self.config.extreme_margin != next.extreme_margin;
         self.config = next;
+        // y is a reading of the current opinions: a new margin recounts this
+        // period's snapshot at once, so a stopped run shows it too.
+        if recount {
+            self.stats.truncate(self.stats.history().len() - 1);
+            self.record();
+        }
         Ok(())
     }
 
@@ -998,6 +1005,37 @@ mod tests {
         };
         Model::set_config(&mut w, ModelConfig::Agreement(faster)).unwrap();
         assert!(!w.is_finished(), "a new rule unsettles the run");
+    }
+
+    #[test]
+    fn a_margin_edit_recounts_a_stopped_run() {
+        // Meadows and Cliff's reading, stopped at 200: the majority has
+        // drifted but not past 0.8, so y is 0 until the cutoff moves in.
+        let mut w = world(|c| {
+            c.extremists = 0.05;
+            c.uncertainty = 1.4;
+            c.placement = Placement::Band;
+            c.extreme_margin = 0.0;
+            c.stop_when_stable = false;
+            c.stop_at = 200;
+        });
+        w.run(1000);
+        assert!(w.is_finished());
+        let before = w.stats.latest().unwrap().clone();
+        assert_eq!(before.y, 0.0);
+        let wider = AgreementConfig {
+            extreme_margin: 0.5,
+            ..w.config.clone()
+        };
+        Model::set_config(&mut w, ModelConfig::Agreement(wider)).unwrap();
+        let after = w.stats.latest().unwrap();
+        assert!(after.y > 0.0, "y follows the new cutoff at once");
+        assert_eq!(
+            (after.tick, w.stats.history().len()),
+            (200, 201),
+            "recounted, not stepped"
+        );
+        assert_eq!(after.mean_opinion, before.mean_opinion);
     }
 
     #[test]

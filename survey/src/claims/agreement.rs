@@ -23,7 +23,8 @@ const MC: &str = "Meadows & Cliff 2012, JASSS 15(4) 4";
 const DAW: &str = "Deffuant, Amblard & Weisbuch 2013, JASSS 16(1) 11";
 const AD: &str = "Amblard & Deffuant 2004, Physica A 343";
 const W: &str = "Weisbuch 2004, EPJ B 38";
-/// Far past any fully connected stability time (hundreds of periods).
+/// Far past any fully connected stability time (hundreds of periods; a
+/// lattice's can take thousands).
 const CAP: u32 = 20_000;
 
 /// One run at its end.
@@ -375,7 +376,7 @@ pub fn claims() -> Vec<Claim> {
             item: "dnaw-lattice",
             source: Source::Book,
             citation: DNAW,
-            text: "Fig. 5's caption: that picture 'after 100 000 iterations' (119 meetings per agent on 841 agents)",
+            text: "Fig. 5's caption: that picture 'after 100 000 iterations' (119 periods of 841 meetings)",
             check: |_| {
                 let r = runs(20, 119, |c| {
                     dnaw(0.3, 841)(c);
@@ -386,7 +387,7 @@ pub fn claims() -> Vec<Claim> {
                 });
                 let k = count(&r, |r| r.largest >= 0.8);
                 outcome(k >= 16, format!("{k}/20 runs with a cluster of 80 % or more at period 119; mean largest {:.2}", mean(&r, |r| r.largest)))
-                    .with("Run to stability the picture appears (agreement.dnaw.lattice), hundreds of periods later.")
+                    .with("Run to stability the picture appears (agreement.dnaw.lattice), at a median period of about 1 800.")
             },
         },
         Claim {
@@ -618,7 +619,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-rules",
             source: Source::Book,
             citation: DAWF,
-            text: "§6, Fig. 20, with eq. 11 as printed (|x − x′| < u′, the influencer's uncertainty): single extreme 'around … U = 1', both extremes near U 0.4–0.5 (δ 0.1, N 1000, 50 runs)",
+            text: "§6, Fig. 20, with eq. 11 as printed (|x − x′| < u′, the influencer's uncertainty): single extreme 'around … U = 1' (in at least half of 50 runs at U 1.0; U 0.5 reported; δ 0.1, N 1000)",
             check: |_| {
                 let one = runs(50, CAP, bc(Rule::Bc, Window::Influencer, 1.0, 0.1));
                 let half = runs(50, CAP, bc(Rule::Bc, Window::Influencer, 0.5, 0.1));
@@ -631,7 +632,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-rules",
             source: Source::Book,
             citation: DAWF,
-            text: "§6, Fig. 20, with the listener's own uncertainty as the window: single extreme around U = 1, only central above U 1.2 (δ 0.1, N 1000, 50 runs; at most 2 000 periods)",
+            text: "§6, Fig. 20, with the listener's own uncertainty as the window: single extreme around U = 1 and none above U 1.2 (at least 40 of 50 runs single at U 1.0, none at U 1.6; δ 0.1, N 1000; at most 2 000 periods)",
             check: |_| {
                 let one = runs(50, 2_000, bc(Rule::Bc, Window::Listener, 1.0, 0.1));
                 let high = runs(50, 2_000, bc(Rule::Bc, Window::Listener, 1.6, 0.1));
@@ -701,7 +702,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-deffuant-2013",
             source: Source::Book,
             citation: DAW,
-            text: "The reply: with 1 200 meetings per agent and new extremists past ±0.7, 'the single extreme convergence is very frequent (often more than 80% of the simulations) for low values of pe and large values of U' (pe 0.05, U 1.4, N 200, 50 runs)",
+            text: "The reply: with 1 200 periods (240 000 meetings) and new extremists past ±0.7, 'the single extreme convergence is very frequent (often more than 80% of the simulations) for low values of pe and large values of U' (pe 0.05, U 1.4, N 200, 50 runs)",
             check: |_| share(&runs(50, CAP, reading(0.1, 1200)), Run::single, 0.8, 1.0, "in a single extreme"),
         },
         Claim {
@@ -724,7 +725,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-literal",
             source: Source::Book,
             citation: DAW,
-            text: "The reply measures y 'when all the agent opinions are completely stabilized' by a fixed 1 200 meetings per agent; the literal rule (run until nothing moves by 10⁻⁶ in a period) reads the same y (band, cutoff 0.7, pe 0.05, U 1.4, N 200, 50 runs)",
+            text: "The reply measures y 'when all the agent opinions are completely stabilized' by a fixed 1 200 periods; the literal rule (run until nothing moves by 10⁻⁶ in a period) reads the same y (band, cutoff 0.7, pe 0.05, U 1.4, N 200, 50 runs)",
             check: |_| {
                 let fixed = runs(50, CAP, reading(0.1, 1200));
                 let stable = runs(50, CAP, reading(0.1, 0));

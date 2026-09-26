@@ -231,6 +231,8 @@ describe('relative agreement charts', () => {
   it('chart convergence, clusters, dispersion, opinion and uncertainty, and change over periods', () => {
     expect(MODEL_CHARTS.agreement.map((c) => c.title)).toEqual(['Convergence', 'Clusters', 'Dispersion', 'Opinion and uncertainty', 'Change']);
     expect(timeAxisLabel('agreement')).toBe('Periods');
+    // p₊ and p₋ count moderates past the cutoff (the boundary less the margin), not at ±1.
+    expect(MODEL_CHARTS.agreement[0].lines.map((l) => l.label)).toEqual(['y', 'Moderates turned extremist (+)', 'Moderates turned extremist (−)']);
   });
 });
 

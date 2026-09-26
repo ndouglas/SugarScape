@@ -432,8 +432,8 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       title: 'Convergence',
       lines: [
         { key: 'y', label: 'y', color: '--c1' },
-        { key: 'p_plus', label: 'Moderates at +1', color: '--red' },
-        { key: 'p_minus', label: 'Moderates at −1', color: '--blue' },
+        { key: 'p_plus', label: 'Moderates turned extremist (+)', color: '--red' },
+        { key: 'p_minus', label: 'Moderates turned extremist (−)', color: '--blue' },
       ],
       range: [0, 1],
     },
