@@ -840,13 +840,14 @@ What does not, or only partly:
   with a low payoff (R = 1) than with a high one (R = 5)" has nothing to stand on. No timing setting
   gives sustained cycles.
 - **The shifted payoffs (12, 11, 1, 0) never converge to pure defection** (`dpd-shifted`, Fig. 13):
-  all 30 runs coexist at 500 and 2,000 (418 cooperators, 478 defectors). GSS gives the settings —
-  "maximum age of 100, zero mutation" — and Run 5's 50 % mutation or Run 1's unlimited lives do not
-  converge either. With no negative payoff only old age kills, the lattice stays full and everyone can
-  afford to clone. So the premise of the metabolism argument ("in which cooperators are annihilated")
-  fails, and charged per cycle, as the chapter's note defines it, a metabolism of 6 gives another model
-  (`dpd-metabolism`: 644 ± 97 cooperators, 253 ± 97 defectors against Run 2's 695 ± 29, t = 2.7). The
-  passage calls the pure-defection run "figure 12", which is Run 5's; it means Fig. 13.
+  all 30 runs coexist at 500 (418 cooperators, 478 defectors) and at 2,000 (409, 487). GSS gives the
+  settings — "maximum age of 100, zero mutation" — and Run 5's 50 % mutation or Run 1's unlimited
+  lives do not converge either. With no negative payoff only old age kills, the lattice stays full
+  and everyone can afford to clone. So the premise of the metabolism argument ("in which cooperators
+  are annihilated") fails, and charged per cycle, as the chapter's note defines it, a metabolism of 6
+  gives another model (`dpd-metabolism`: 644 ± 97 cooperators, 253 ± 97 defectors against Run 2's
+  695 ± 29, t = 2.7). The passage calls the pure-defection run "figure 12", which is Run 5's; it
+  means Fig. 13.
 - **Footnote 27** (T 16, R 11, P 5, S 4, maximum lifetime 10: "an evolution to cooperative monopoly")
   gives a monopoly in 1 of 30 runs by cycle 2,000 and none by 500 (`dpd-footnote-27`); "hiked by ten"
   would make R 15, which gives the same.
