@@ -1,7 +1,7 @@
 import { scheduleLines } from '../civil';
 import type { Engine } from '../engine';
 import { errorsFor } from '../paths';
-import { describedBy, groupParams, paramEdit, paramInput, paramShown, type ParamInput } from '../schema-form';
+import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, type ParamInput } from '../schema-form';
 import type { CivilConfig, FieldError, ModelKind, Param } from '../types';
 import { h } from './dom';
 
@@ -172,9 +172,10 @@ export class SchemaPanel {
         slider.addEventListener('change', () => void this.commit(p, slider.value));
         num.addEventListener('change', () => void this.commit(p, num.value));
         this.syncers.push(() => {
-          const v = String(current());
-          if (!focused(slider)) slider.value = v;
-          if (!focused(num)) num.value = v;
+          if (!focused(num)) num.value = String(current());
+          // A null nullable field (the ethnocentrism model's tag mutation) shows its slider at the
+          // value it falls back to, not the browser's own midpoint default for an empty value.
+          if (!focused(slider)) slider.value = paramSlider(p, this.engine.config);
         });
         return h('div', { class: 'control' }, h('label', {}, p.label), h('div', { class: 'row' }, slider, num), help, slot);
       }

@@ -479,7 +479,8 @@ pub fn schema() -> Vec<Param> {
             Live,
         )
         .with_help("Empty: the mutation rate")
-        .nullable(),
+        .nullable()
+        .falls_back_to("mutation"),
         Param::integer("Run", "end", "Last period (0: never)", (0, 100_000), Live),
     ]
 }
@@ -635,6 +636,14 @@ mod tests {
             .map(|p| p.path)
             .collect();
         assert_eq!(nullable, ["tag_mutation"]);
+        assert_eq!(
+            params
+                .iter()
+                .find(|p| p.path == "tag_mutation")
+                .unwrap()
+                .fallback,
+            Some("mutation")
+        );
         let json = serde_json::to_value(&params).unwrap();
         let flagged = json
             .as_array()

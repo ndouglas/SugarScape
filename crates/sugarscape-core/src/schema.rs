@@ -61,6 +61,12 @@ pub struct Param {
     /// ethnocentrism model's tag mutation).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub nullable: bool,
+    /// For a nullable field, the path the panel's slider follows while the
+    /// field is null (so the slider does not fall back to the browser's own
+    /// midpoint default): the ethnocentrism model's tag mutation follows
+    /// `mutation`. A nullable field with none uses `min` instead.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fallback: Option<&'static str>,
 }
 
 /// A condition on the config: the field at `path` (a string, or a bool
@@ -92,6 +98,7 @@ impl Param {
             help: None,
             show_if: None,
             nullable: false,
+            fallback: None,
         }
     }
 
@@ -111,6 +118,12 @@ impl Param {
     /// The same field, which may be empty (null).
     pub fn nullable(mut self) -> Self {
         self.nullable = true;
+        self
+    }
+
+    /// The same nullable field, whose slider follows `path` while it is null.
+    pub fn falls_back_to(mut self, path: &'static str) -> Self {
+        self.fallback = Some(path);
         self
     }
 

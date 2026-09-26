@@ -273,6 +273,8 @@ export interface Param {
   show_if?: { path: string; equals: string };
   /** A number field that may be empty: null shows as an empty box, and an empty box sends null. */
   nullable?: true;
+  /** For a nullable field, the path its slider follows while null (else it follows `min`). */
+  fallback?: string;
 }
 
 export interface FieldError { field: string; message: string }

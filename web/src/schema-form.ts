@@ -76,6 +76,18 @@ export function paramInput(p: Param, config: ModelConfig): ParamInput {
 }
 
 /**
+ * A number or integer control's slider position: the field's value, or — while a nullable field is
+ * null — the value it falls back to (`p.fallback`'s path, or `p.min` with none). The number box
+ * still reads null as empty (`paramInput`); this is only for the slider, which HTML range
+ * sanitization would otherwise draw at its own midpoint default (Review Important 1).
+ */
+export function paramSlider(p: Param, config: ModelConfig): string {
+  const v = getPath(config, p.path);
+  if (v === null && p.nullable) return String(p.fallback !== undefined ? getPath(config, p.fallback) : p.min);
+  return String(v);
+}
+
+/**
  * The ids a control's `aria-describedby` names: its help (when it has one) and its error slot while
  * that shows an error, so a screen reader reads both with the control.
  */
