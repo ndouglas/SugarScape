@@ -282,7 +282,13 @@ fn builtins_and_series_names_are_listed() {
             "aey-population",
             "aey-first-attractor",
             "aey-tag-regimes",
-            "pvplh-payoffs"
+            "pvplh-payoffs",
+            "hk-diagonal",
+            "hk-asymmetry",
+            "hk-bias",
+            "hk-updating",
+            "hk-lattice",
+            "hk-population"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -706,6 +712,21 @@ fn classes_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "classes");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn opinions_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    for (id, fp) in [
+        ("hk-polarisation", "0x204ac33894adc63e"),
+        ("hk-serial", "0xb06db73333504889"),
+        ("hk-lattice", "0xe33359f120b204d9"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "opinions");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

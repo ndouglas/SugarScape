@@ -954,7 +954,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 32] = [
+const BUILTINS: [Builtin; 38] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1082,6 +1082,30 @@ const BUILTINS: [Builtin; 32] = [
     Builtin {
         id: "pvplh-payoffs",
         json: include_str!("../../../sweeps/pvplh-payoffs.json"),
+    },
+    Builtin {
+        id: "hk-diagonal",
+        json: include_str!("../../../sweeps/hk-diagonal.json"),
+    },
+    Builtin {
+        id: "hk-asymmetry",
+        json: include_str!("../../../sweeps/hk-asymmetry.json"),
+    },
+    Builtin {
+        id: "hk-bias",
+        json: include_str!("../../../sweeps/hk-bias.json"),
+    },
+    Builtin {
+        id: "hk-updating",
+        json: include_str!("../../../sweeps/hk-updating.json"),
+    },
+    Builtin {
+        id: "hk-lattice",
+        json: include_str!("../../../sweeps/hk-lattice.json"),
+    },
+    Builtin {
+        id: "hk-population",
+        json: include_str!("../../../sweeps/hk-population.json"),
     },
 ];
 
@@ -1927,7 +1951,13 @@ mod tests {
                 "aey-population",
                 "aey-first-attractor",
                 "aey-tag-regimes",
-                "pvplh-payoffs"
+                "pvplh-payoffs",
+                "hk-diagonal",
+                "hk-asymmetry",
+                "hk-bias",
+                "hk-updating",
+                "hk-lattice",
+                "hk-population"
             ]
         );
         for b in builtins() {

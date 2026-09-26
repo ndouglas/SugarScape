@@ -1,0 +1,62 @@
+{
+  "name": "Bounded Confidence: walking the diagonal (Fig. 3)",
+  "description": "Hegselmann and Krause's Fig. 3: surviving opinions after the dynamics stabilize, 625 random opinions, simultaneous updating, ε = 0.01 to 0.40, 50 runs each. They report plurality, then polarization, then — 'at about step 25' — a sudden consensus, and consensus always above 0.4. Measured (release, seeds 1–50, recorded 2026-09-25): 37.7 opinions at 0.01, 7.9 at 0.05, 3.6 at 0.10, 2.7 at 0.15 (three camps more often than two), 1.9 at 0.20; consensus in 30 of 50 runs at 0.22, 48 at 0.24 and every run from 0.25. The phases and the consensus threshold reproduce.",
+  "base": {
+    "preset": "hk-polarisation"
+  },
+  "x": {
+    "label": "Confidence (ε)",
+    "path": "epsilon",
+    "values": [
+      0.01,
+      0.02,
+      0.03,
+      0.04,
+      0.05,
+      0.06,
+      0.07,
+      0.08,
+      0.09,
+      0.1,
+      0.11,
+      0.12,
+      0.13,
+      0.14,
+      0.15,
+      0.16,
+      0.17,
+      0.18,
+      0.19,
+      0.2,
+      0.21,
+      0.22,
+      0.23,
+      0.24,
+      0.25,
+      0.26,
+      0.27,
+      0.28,
+      0.29,
+      0.3,
+      0.31,
+      0.32,
+      0.33,
+      0.34,
+      0.35,
+      0.36,
+      0.37,
+      0.38,
+      0.39,
+      0.4
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 50
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "clusters"
+  }
+}

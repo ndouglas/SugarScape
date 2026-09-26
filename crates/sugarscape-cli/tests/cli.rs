@@ -80,6 +80,12 @@ fn presets_and_sweeps_are_listed() {
         "aey-first-attractor",
         "aey-tag-regimes",
         "pvplh-payoffs",
+        "hk-diagonal",
+        "hk-asymmetry",
+        "hk-bias",
+        "hk-updating",
+        "hk-lattice",
+        "hk-population",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -432,6 +438,13 @@ fn a_classes_run_stops_at_equity() {
         err.starts_with("finished at tick ") && err.ends_with(" (equity reached)\n"),
         "{err}"
     );
+}
+
+#[test]
+fn a_bounded_confidence_run_stops_when_stable() {
+    let out = sugarscape(&["run", "--preset", "hk-regular-50", "--ticks", "1000"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 8 (stable)\n");
 }
 
 #[test]

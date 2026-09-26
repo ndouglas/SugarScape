@@ -1,0 +1,65 @@
+{
+  "name": "Bounded Confidence: does locality end polarization? (§4.3)",
+  "description": "HK §4.3's unfigured claim: with small, overlapping neighborhoods, 'polarization … disappears'. The metric is the share of agents in the second-largest camp after 2000 periods (0 at consensus, near 0.5 with two equal camps), for everyone, a Moore torus and a von Neumann torus (25 × 25). Measured (release, seeds 1–5, recorded 2026-09-25): everyone listening, 0.31, 0.40 and 0.46 at ε = 0.10, 0.15 and 0.20, then 0; on either lattice never above 0.06 — one big camp and many small stranded minorities instead of two camps. The claim holds (run to stability, the survey finds a second camp of a fifth in 7 of 20 Moore runs at ε = 0.15 and nowhere else).",
+  "base": {
+    "preset": "hk-polarisation"
+  },
+  "x": {
+    "label": "Confidence (ε)",
+    "path": "epsilon",
+    "values": [
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.6
+    ]
+  },
+  "series": {
+    "label": "Who listens",
+    "values": [
+      {
+        "at": 0,
+        "name": "Everyone (HK)",
+        "set": {
+          "interaction": "all"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Moore lattice",
+        "set": {
+          "interaction": "lattice",
+          "lattice": {
+            "width": 25,
+            "height": 25,
+            "neighborhood": "moore"
+          }
+        }
+      },
+      {
+        "at": 2,
+        "name": "von Neumann lattice",
+        "set": {
+          "interaction": "lattice",
+          "lattice": {
+            "width": 25,
+            "height": 25,
+            "neighborhood": "von_neumann"
+          }
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "second"
+  }
+}
