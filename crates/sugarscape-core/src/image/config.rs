@@ -198,6 +198,11 @@ pub const LIVE: [&str; 14] = [
 pub const MAX_AGENTS: u32 = 40_000;
 pub const MAX_GROUP: u32 = 500;
 pub const MAX_ROUNDS: u32 = 20_000;
+/// A generation's work budget: the rounds all groups play, and (with
+/// private records, where each round may be watched by every member) the
+/// rounds times the group size. Each keeps a step well under a second.
+pub const MAX_ROUNDS_PLAYED: u64 = 2_000_000;
+pub const MAX_SIGHTINGS: u64 = 50_000_000;
 
 impl ImageConfig {
     /// Every strategy the allowed classes contain, in `strategies` order.
@@ -215,6 +220,11 @@ impl ImageConfig {
         } else {
             (-(self.clamp as i32), self.clamp as i32)
         }
+    }
+
+    /// Whether members keep private records (observers or perception errors).
+    pub fn private(&self) -> bool {
+        self.information == Information::Observers || self.perception_error > 0.0
     }
 
     /// The chance each member besides the pair sees an interaction.
@@ -256,11 +266,23 @@ impl ImageConfig {
             "groups × group size must be at most 40,000",
         );
         check(unit(self.local), "local", "must be between 0 and 1");
-        check(
-            (1..=MAX_ROUNDS).contains(&self.rounds),
-            "rounds",
-            "must be between 1 and 20,000",
-        );
+        let rounds_ok = (1..=MAX_ROUNDS).contains(&self.rounds);
+        check(rounds_ok, "rounds", "must be between 1 and 20,000");
+        if size_ok && groups_ok && rounds_ok {
+            let played = u64::from(self.groups) * u64::from(self.rounds);
+            check(
+                played <= MAX_ROUNDS_PLAYED,
+                "rounds",
+                "groups × rounds must be at most 2,000,000 (the rounds a generation plays)",
+            );
+            check(
+                played > MAX_ROUNDS_PLAYED
+                    || !self.private()
+                    || played * u64::from(self.group_size) <= MAX_SIGHTINGS,
+                "rounds",
+                "with private records (observers or perception errors), groups × rounds × group size must be at most 50,000,000",
+            );
+        }
         for (field, v) in [("b", self.b), ("c", self.c), ("u0", self.u0)] {
             check(
                 v.is_finite() && (0.0..=1000.0).contains(&v),
@@ -575,6 +597,68 @@ mod tests {
         assert_eq!(bad(&|c| c.local = 1.5), ["local"]);
         assert_eq!(bad(&|c| c.rounds = 0), ["rounds"]);
         assert_eq!(bad(&|c| c.rounds = 20_001), ["rounds"]);
+        assert!(bad(&|c| {
+            c.groups = 100;
+            c.rounds = 20_000;
+        })
+        .is_empty());
+        assert_eq!(
+            bad(&|c| {
+                c.groups = 101;
+                c.rounds = 20_000;
+            }),
+            ["rounds"]
+        );
+        assert!(bad(&|c| {
+            c.groups = 25;
+            c.rounds = 20_000;
+            c.information = Information::Observers;
+        })
+        .is_empty());
+        assert_eq!(
+            bad(&|c| {
+                c.groups = 26;
+                c.rounds = 20_000;
+                c.information = Information::Observers;
+            }),
+            ["rounds"]
+        );
+        assert_eq!(
+            bad(&|c| {
+                c.groups = 80;
+                c.group_size = 500;
+                c.rounds = 20_000;
+                c.perception_error = 0.02;
+            }),
+            ["rounds"],
+            "one error for the rounds, not two"
+        );
+        assert_eq!(
+            bad(&|c| {
+                c.groups = 80;
+                c.group_size = 500;
+                c.rounds = 1_251;
+                c.perception_error = 0.02;
+            }),
+            ["rounds"]
+        );
+        let e = ImageConfig {
+            groups: 101,
+            rounds: 20_000,
+            ..Default::default()
+        }
+        .validate()
+        .unwrap_err();
+        assert!(e[0].message.contains("2,000,000"), "{}", e[0].message);
+        let e = ImageConfig {
+            groups: 26,
+            rounds: 20_000,
+            information: Information::Observers,
+            ..Default::default()
+        }
+        .validate()
+        .unwrap_err();
+        assert!(e[0].message.contains("50,000,000"), "{}", e[0].message);
         assert_eq!(bad(&|c| c.b = f64::NAN), ["b"]);
         assert_eq!(bad(&|c| c.c = -0.1), ["c"]);
         assert_eq!(bad(&|c| c.u0 = f64::INFINITY), ["u0"]);

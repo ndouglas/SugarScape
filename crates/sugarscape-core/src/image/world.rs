@@ -13,7 +13,7 @@ use std::sync::Arc;
 use rand::Rng;
 use serde::Serialize;
 
-use super::config::{ImageConfig, Information, Initial, Offset, Records, RoundsKind};
+use super::config::{ImageConfig, Initial, Offset, Records, RoundsKind};
 use super::stats::{ratio, ImageSnapshot, SERIES};
 use super::strategy::{Class, Situation, Strategy, Tallies};
 use crate::config::FieldError;
@@ -293,8 +293,7 @@ impl ImageWorld {
         for a in &mut self.agents {
             (a.score, a.good, a.payoff, a.given, a.received) = (0, true, u0, 0, 0);
         }
-        let private =
-            self.config.information == Information::Observers || self.config.perception_error > 0.0;
+        let private = self.config.private();
         let (g, n) = (self.config.groups as usize, self.n());
         self.views.clear();
         self.marks.clear();
@@ -807,7 +806,7 @@ impl Model for ImageWorld {
 mod tests {
     use super::*;
     use crate::config::ScheduledChange;
-    use crate::image::config::Seeded;
+    use crate::image::config::{Information, Seeded};
     use serde_json::json;
 
     /// A world of `groups` × `n` all playing `only`, after `edit`, with its
