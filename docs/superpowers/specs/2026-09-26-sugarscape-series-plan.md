@@ -33,12 +33,12 @@ tag cooperation, spatial games, N goods) are a separate series.
 | 2 | Seasons ✅ | II-7 | Migration without planning; seasons cost a third of the Flumps and remove every hungry one; needing little matters far more than where or how rich a Flump starts | Frost, season card, rings, counter, survival panel |
 | 3 | Pollution ✅ | II-8 | The best land gets the dirtiest; Flumps flee the hills but the mess follows them; a quarter of the Flumps are lost, the hungry and then the far-sighted first; survivors end up more equal because there are fewer of them | Pollution in the dump; soot on the felt; a hills gauge; bar panels |
 | 4 | Inheritance ✅ | III-1–4 | Pairing, children, ~60 generations; kept in the family, sugar feeds nearly four times as many Flumps, but the Gini more than doubles and fortunes persist across generations | Sex and parents in the dump; family-line colors; bequests; twin close-ups |
-| 5 | Tribes ✅ (in production) | III-6 | Local convergence, global polarization: each hill becomes one tribe (18 of 20), but one tribe takes the world only half the time (10 of 20; the hills split in 9); tribes change nothing else | Tags and tribe in the dump; live tribe colors; traits pill; neighbors-alike gauge |
+| 5 | Tribes ✅ | III-6 | Local convergence, global polarization: each hill becomes one tribe (18 of 20), but one tribe takes the world only half the time (10 of 20; the hills split in 9); tribes change nothing else | Tags and tribe in the dump; live tribe colors; traits pill; neighbors-alike gauge |
 | 6 | War | III-9–14 | Conquest; fronts that hold; conversion when culture and combat run together (the book's colliding waves don't reproduce as set up) | Attacks in the dump; a pounce |
 | 7 | Markets | IV-1–6 | Spice on the opposite hills; trade; prices near one; trade raises carrying capacity on every seed at every vision | A second good; trade arcs; a price chart |
 | 8 | Credit | IV-5 | Older Flumps lend, younger borrow to have children; a lending hierarchy | Loan lines; an age cue |
 | 9 | Contagion | V | Immune systems learn; endemic disease; a novel disease sweeping an unprepared society (McNeill) | Infections in the dump; a sick tint |
-| 10 | What didn't reproduce | VI + findings | Everything together, then the honest part: under the stated rules the book's VI-2 crash, VI-3 doubling, travelling waves, one-tribe dominance and falling foresight don't reproduce | Side-by-side Compare in the cut |
+| 10 | What didn't reproduce | VI + findings | Everything together, then the honest part: under the stated rules the book's VI-2 crash, VI-3 doubling, travelling waves, one-tribe dominance (already shown in Tribes) and falling foresight don't reproduce | Side-by-side Compare in the cut |
 
 Episode order after Seasons is open; Inheritance follows on most directly from the pilot's question.
 
