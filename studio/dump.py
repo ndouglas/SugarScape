@@ -84,6 +84,14 @@ def load(path):
         return parse(f.read())
 
 
+def survival(d, pred, at=None):
+    """The share of the agents alive at tick 0 for which `pred(agent)` holds
+    that are still alive at tick `at` (default: the last); NaN if none."""
+    start, end = d.frames[0].agents, d.frames[d.ticks if at is None else at].agents
+    ids = [i for i, a in start.items() if pred(a)]
+    return sum(i in end for i in ids) / len(ids) if ids else float("nan")
+
+
 def tracks(d):
     out = {}
     for frame in d.frames:

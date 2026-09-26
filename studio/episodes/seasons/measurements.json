@@ -1,0 +1,20 @@
+{
+  "medians": {
+    "hill_alive": 0.4482797202797203,
+    "met_alive": 1.4271698113207547,
+    "met_alive_calm": 1.8218524251805985,
+    "met_high_alive": 0.0,
+    "met_high_alive_calm": 0.25182926829268293,
+    "met_low_alive": 0.9453535594839942,
+    "migrant_share": 0.9342293139144713,
+    "migrant_summer": 0.6439581736495702,
+    "plain_alive": 0.33687943262411346,
+    "poor_alive": 0.3712193686069615,
+    "pop": 160.0,
+    "pop_calm": 228.0,
+    "rich_alive": 0.40582989934472746,
+    "vision_alive": 3.7939536878216122,
+    "vision_alive_calm": 3.813757444068888
+  },
+  "seeds": 20
+}

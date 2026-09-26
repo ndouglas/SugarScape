@@ -39,6 +39,12 @@ class DumpTest(unittest.TestCase):
         self.assertIsNone(late.death)
         self.assertEqual(len(late.cells), 5)
 
+    def test_survival_is_the_share_of_a_starting_group_alive_at_the_end(self):
+        # Three start (two placed at tick 0 plus none else); the starving one dies.
+        self.assertEqual(dump.survival(self.d, lambda a: True), 0.5)
+        self.assertEqual(dump.survival(self.d, lambda a: a.metabolism >= 4), 0.0)
+        self.assertTrue(dump.survival(self.d, lambda a: a.vision > 99) != dump.survival(self.d, lambda a: a.vision > 99))
+
     def test_wrong_format_is_refused(self):
         with self.assertRaisesRegex(ValueError, "format"):
             dump.parse('{"format": 99}')

@@ -40,6 +40,12 @@ class StrategyTest(unittest.TestCase):
         self.assertIsNone(seasons.switches(track([(0, 1)] * 3, first=2), 0, 4, 10))
         self.assertIsNone(seasons.switches(track([(0, 1)] * 3, death=3), 0, 4, 10))
 
+    def test_migrants_cross_at_least_twice_in_the_window(self):
+        roamer = dump.Track(1, 0, [(0, 1), (0, 8), (0, 1)], [9.0] * 3, None, None)
+        homebody = dump.Track(2, 0, [(0, 1)] * 3, [9.0] * 3, None, None)
+        late = dump.Track(3, 1, [(0, 8), (0, 1)], [9.0] * 2, None, None)
+        self.assertEqual(seasons.migrants({1: roamer, 2: homebody, 3: late}, 0, 2, 10), {1})
+
     def test_summer_share_is_the_share_of_ticks_spent_in_summer(self):
         # Period 2: north summer at ticks 0–1 and 4–5, winter at 2–3.
         t = track([(0, 1), (0, 1), (0, 8), (0, 8), (0, 1), (0, 1)])

@@ -73,7 +73,8 @@ def main():
     chosen = [args.beat] if args.beat else list(range(1, len(beats) + 1))
     if not args.skip_shots:
         run(["cargo", "build", "--release", "-q", "-p", "sugarscape-cli"])
-        for shot in sorted({beats[i - 1].shot for i in chosen if beats[i - 1].shot}):
+        wanted = {s for i in chosen for s in (beats[i - 1].shot, beats[i - 1].compare) if s}
+        for shot in sorted(wanted):
             src = episode.episode_dir(args.episode) / "shots" / f"{shot}.json"
             run([CLI, "shot", src, "--out", out / "dumps" / f"{shot}.frames.json"])
     kind = "preview" if args.preview else "beats"

@@ -40,6 +40,12 @@ def switches(track, start, end, height):
     return sum(a != b for a, b in zip(sides, sides[1:]))
 
 
+def migrants(tracks, start, end, height):
+    """The ids of Flumps alive through ticks start..end that crossed between
+    hemispheres at least twice in them (the survey's migrators)."""
+    return {i for i, t in tracks.items() if (switches(t, start, end, height) or 0) >= 2}
+
+
 def summer_share(track, start, end, height, period):
     """The share of ticks start..end a Flump spent in the summer hemisphere
     (None if it was not alive for all of them)."""

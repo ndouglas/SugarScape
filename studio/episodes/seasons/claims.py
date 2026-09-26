@@ -6,7 +6,7 @@ import statistics
 
 import measure as m
 import seasons
-from dump import tracks
+from dump import survival, tracks
 from measure import median
 
 TICKS = 500
@@ -49,12 +49,6 @@ def verdicts(rows):
     ]
 
 
-def _survival(d, pred):
-    start, alive = d.frames[0].agents, d.frames[-1].agents
-    ids = [i for i, a in start.items() if pred(a)]
-    return sum(i in alive for i in ids) / len(ids) if ids else float("nan")
-
-
 def seed_row(d, calm):
     """One seed's measures from its seasonal dump `d` and calm dump."""
     cap, w, h = d.capacity, d.width, d.height
@@ -70,14 +64,14 @@ def seed_row(d, calm):
     row["migrant_share"] = len(migrants) / len(alive) if alive else float("nan")
     for tag, dd in (("", d), ("_calm", calm)):
         survivors = dd.frames[-1].agents.values()
-        row["met_high_alive" + tag] = _survival(dd, lambda a: a.metabolism >= 3)
+        row["met_high_alive" + tag] = survival(dd, lambda a: a.metabolism >= 3)
         row["met_alive" + tag] = statistics.mean(a.metabolism for a in survivors)
         row["vision_alive" + tag] = statistics.mean(a.vision for a in survivors)
-    row["met_low_alive"] = _survival(d, lambda a: a.metabolism == 1)
-    row["hill_alive"] = _survival(d, lambda a: cap[a.y * w + a.x] >= HILL)
-    row["plain_alive"] = _survival(d, lambda a: cap[a.y * w + a.x] <= PLAIN)
-    row["rich_alive"] = _survival(d, lambda a: a.sugar >= 20)
-    row["poor_alive"] = _survival(d, lambda a: a.sugar <= 10)
+    row["met_low_alive"] = survival(d, lambda a: a.metabolism == 1)
+    row["hill_alive"] = survival(d, lambda a: cap[a.y * w + a.x] >= HILL)
+    row["plain_alive"] = survival(d, lambda a: cap[a.y * w + a.x] <= PLAIN)
+    row["rich_alive"] = survival(d, lambda a: a.sugar >= 20)
+    row["poor_alive"] = survival(d, lambda a: a.sugar <= 10)
     return row
 
 
@@ -96,4 +90,5 @@ def measure(tmp):
     lines += ["", f"Typical seed: {m.typical_seed(rows, ['pop', 'migrant_summer', 'met_alive'])}.",
               f"Migrants: alive through ticks {WINDOW[0]}–{WINDOW[1]} and crossing hemispheres at least twice.",
               f"Born on a hill: capacity ≥ {HILL}; on the plains: ≤ {PLAIN}. Rich: ≥ 20 sugar at the start; poor: ≤ 10."]
-    return lines, verdicts(rows)
+    medians = {k: median(rows, k) for k in keys}
+    return lines, verdicts(rows), {"medians": medians, "seeds": len(rows)}

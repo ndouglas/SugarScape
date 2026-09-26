@@ -15,8 +15,9 @@ class Beat:
     """One beat: its caption, length, shot, pacing, camera moves (`camera.Move`s),
     whether its Flumps are close-up rigs, overlay names, `focus` — indexes
     into the dump's `placed` that overlays follow — the caption's height
-    (−1 bottom, 1 top of the frame), and whether the caption is a title:
-    larger, over a scrim that dims the frame."""
+    (−1 bottom, 1 top of the frame), whether the caption is a title
+    (larger, over a scrim that dims the frame), and `compare`, a second
+    shot whose dump overlays may set against this one's."""
 
     name: str
     caption: str
@@ -31,6 +32,7 @@ class Beat:
     focus: tuple = ()
     caption_y: float = -0.8
     title: bool = False
+    compare: str | None = None
 
     @property
     def frames(self):

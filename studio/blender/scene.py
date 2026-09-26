@@ -41,7 +41,8 @@ def add_camera(scene, beat):
     data = bpy.data.cameras.new("camera")
     # Toy-like depth of field in close-ups; wide shots stay sharp, and so do
     # their screen-space displays.
-    data.dof.use_dof = beat.closeup
+    # Screen-space panels float just in front of the lens and would blur.
+    data.dof.use_dof = beat.closeup and not any(name in overlays.SCREEN for name in beat.overlays)
     data.dof.aperture_fstop = 4.0
     obj = bpy.data.objects.new("camera", data)
     scene.collection.objects.link(obj)
@@ -103,7 +104,7 @@ def _title_card():
     return update
 
 
-def build_beat(beat, d, preview):
+def build_beat(beat, d, preview, compare=None, measured=None):
     """Builds the beat's scene; returns its per-frame updaters."""
     scene = bpy.context.scene
     reset(scene, preview)
@@ -113,7 +114,9 @@ def build_beat(beat, d, preview):
     tracks = {}
     if d is not None:
         timing = beat.timing(d.ticks)
-        _, corners = board.felt_board(d)
+        felt, corners = board.felt_board(d)
+        if d.config["seasons"]["enabled"]:
+            updaters.append(board.seasonal_felt(felt, d, timing))
         _, update_sugar = board.sugar(d, corners, timing)
         updaters.append(update_sugar)
         tracks = dump_mod.tracks(d)
@@ -126,7 +129,10 @@ def build_beat(beat, d, preview):
     screen = overlays.Screen(camera_obj)
     # The camera and its screen anchors move first; overlays read them.
     updaters[:0] = [update_camera, screen.update]
-    ctx = SimpleNamespace(camera=camera_obj, screen=screen, timing=timing, tracks=tracks, corners=corners, rigs=RIGS)
+    ctx = SimpleNamespace(
+        camera=camera_obj, screen=screen, timing=timing, tracks=tracks, corners=corners, rigs=RIGS, compare=compare,
+        measured=measured or {},
+    )
     for name in beat.overlays:
         updaters.append(overlays.BUILDERS[name](beat, d, ctx))
     return updaters
