@@ -1142,8 +1142,23 @@ mod tests {
             a.payoff = -0.1;
         }
         w.agents[2].payoff = 0.0;
-        w.reproduce();
-        assert_eq!(w.agents.len(), 4, "a uniform draw when nobody has weight");
+        // Every payoff is negative or 0: the pool is empty, and a uniform
+        // draw should give each of the four distinct strategies roughly the
+        // same share, not always the same one.
+        let mut counts = [0u32; 4];
+        for _ in 0..1000 {
+            let mut v = w.clone();
+            v.reproduce();
+            for a in &v.agents {
+                counts[a.strategy.k().unwrap() as usize] += 1;
+            }
+            w.rng = v.rng;
+        }
+        assert!(counts.iter().filter(|&&c| c > 0).count() > 1, "{counts:?}");
+        let total = f64::from(counts.iter().sum::<u32>());
+        for c in counts {
+            assert!((f64::from(c) / total - 0.25).abs() < 0.05, "{counts:?}");
+        }
     }
 
     #[test]
@@ -1410,21 +1425,65 @@ mod tests {
         let mut buf = Vec::new();
         for mode in ["strategy", "score", "payoff"] {
             w.render(mode, "", &mut buf).unwrap();
-            assert!(!buf.is_empty(), "{mode}");
         }
         assert_eq!(w.population(), 20);
+        // K(-5) always helps, so 2,000 rounds a group push some agent's
+        // unbounded score well past the ±5 the colour scale clamps to; in
+        // score mode its pixel is exactly the scale's extreme colour.
+        let i = w
+            .agents
+            .iter()
+            .position(|a| a.score.abs() > 5)
+            .expect("2,000 rounds a group push some score past ±5");
+        let extreme = if w.agents[i].score > 0 { BLUE } else { RED };
+        w.render("score", "", &mut buf).unwrap();
+        let (width, _) = Model::size(&w);
+        let (x, y) = w.cell(i);
+        let at = (y * width + x) as usize * 4;
+        assert_eq!(&buf[at..at + 3], &extreme[..]);
     }
 
     #[test]
     fn a_single_round_generation_with_all_payoffs_zero_still_reproduces() {
-        // Defectors with no offset: nobody earns, the pool is empty, and the
-        // next generation is drawn uniformly (Decision on empty pools).
-        let mut w = world(3, 4, Strategy::K(6), |c| {
-            c.rounds = 1;
-            c.offset = Offset::None;
-            c.mutation = 0.5;
-        });
-        w.run(10);
-        assert_eq!(w.population(), 12);
+        // Defectors with no offset: nobody earns (K(5) and K(6) both refuse
+        // at score 0), the pool is empty, and the next generation is drawn
+        // uniformly (Decision on empty pools). Seed each group half K(6),
+        // half K(5): a uniform draw should keep both in roughly equal
+        // shares, not collapse to one. The first generation only plays (its
+        // strategies are the seed); the second is where `reproduce` first
+        // runs, from that first generation's all-zero payoffs.
+        let mut counts = [0u32; 2];
+        for seed in 1..=200 {
+            let mut w = ImageWorld::new(
+                ImageConfig {
+                    groups: 3,
+                    group_size: 4,
+                    rounds: 1,
+                    offset: Offset::None,
+                    initial: Initial::Seeded(Seeded {
+                        only: Strategy::K(6),
+                        invader: Some(Strategy::K(5)),
+                        share: 0.5,
+                    }),
+                    ..Default::default()
+                },
+                seed,
+            )
+            .unwrap();
+            w.run(2);
+            assert_eq!(w.population(), 12);
+            for a in &w.agents {
+                match a.strategy {
+                    Strategy::K(6) => counts[0] += 1,
+                    Strategy::K(5) => counts[1] += 1,
+                    other => panic!("unexpected strategy {other:?}"),
+                }
+            }
+        }
+        assert!(counts[0] > 0 && counts[1] > 0, "{counts:?}");
+        let total = f64::from(counts[0] + counts[1]);
+        for c in counts {
+            assert!((f64::from(c) / total - 0.5).abs() < 0.05, "{counts:?}");
+        }
     }
 }
