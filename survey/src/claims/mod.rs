@@ -4,6 +4,7 @@ mod ch4;
 mod ch5;
 mod ch6;
 mod civil;
+mod ethno;
 mod spatial;
 mod tags;
 
@@ -17,6 +18,7 @@ pub fn all() -> Vec<Claim> {
         ch5::claims(),
         ch6::claims(),
         civil::claims(),
+        ethno::claims(),
         spatial::claims(),
         tags::claims(),
     ]

@@ -171,6 +171,35 @@ pub fn equivalent(
     }
 }
 
+/// Several judged parts of one statement ("at every vision"): the worst
+/// verdict wins (Fails, then Weak, then Untestable, then Holds; Error first).
+pub fn all_of(parts: Vec<(String, Outcome)>) -> Outcome {
+    let rank = |v: Verdict| match v {
+        Verdict::Error => 4,
+        Verdict::Fails => 3,
+        Verdict::Weak => 2,
+        Verdict::Untestable => 1,
+        Verdict::Holds => 0,
+    };
+    let verdict = parts
+        .iter()
+        .map(|(_, o)| o.verdict)
+        .max_by_key(|v| rank(*v))
+        .unwrap_or(Verdict::Untestable);
+    let measured = parts
+        .iter()
+        .map(|(label, o)| format!("[{label}: {:?}] {}", o.verdict, o.measured))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let detail = parts
+        .iter()
+        .filter(|(_, o)| !o.detail.is_empty())
+        .map(|(label, o)| format!("[{label}] {}", o.detail))
+        .collect::<Vec<_>>()
+        .join(" ");
+    Outcome { verdict, measured, detail }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
