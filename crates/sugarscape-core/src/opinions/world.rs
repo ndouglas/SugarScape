@@ -279,6 +279,9 @@ impl OpinionsWorld {
             .map(|(a, b)| (a - b).abs())
             .fold(0.0, f64::max);
         self.tick += 1;
+        if self.max_change > STILL {
+            self.stable_at = None;
+        }
         if self.stable_at.is_none() && self.max_change <= STILL {
             self.stable_at = Some(self.tick);
         }
@@ -539,6 +542,18 @@ impl Model for OpinionsWorld {
         if !changes.is_empty() {
             return Err(changes);
         }
+        // A live edit to how agents move can unsettle a stable run; resuming
+        // it needs `stable_at` cleared now, not left for the next `step()`,
+        // since `run()` checks `is_finished()` before stepping at all.
+        if self.config.confidence != next.confidence
+            || self.config.epsilon != next.epsilon
+            || self.config.epsilon_left != next.epsilon_left
+            || self.config.epsilon_right != next.epsilon_right
+            || self.config.bias != next.bias
+            || self.config.updating != next.updating
+        {
+            self.stable_at = None;
+        }
         self.config = next;
         Ok(())
     }
@@ -547,7 +562,8 @@ impl Model for OpinionsWorld {
         self.is_finished()
     }
 
-    /// Stable: every agent's reach holds only its own cluster, so nothing moves again.
+    /// Stable: every agent's reach holds only its own cluster, so nothing
+    /// moves again — until a live edit changes the rule and unsettles it.
     fn holds_when_finished(&self) -> bool {
         true
     }
@@ -688,6 +704,41 @@ mod tests {
         for (a, b) in on.opinions().iter().zip(&before) {
             assert!((a - b).abs() <= STILL);
         }
+    }
+
+    #[test]
+    fn a_live_edit_after_stability_resumes_the_run() {
+        let mut w = world(|c| {
+            c.agents = 50;
+            c.start = Start::Regular;
+            c.epsilon = 0.2;
+        });
+        w.run(1000);
+        assert!(w.is_finished());
+        let stable_tick = w.tick;
+        assert_eq!(stable_tick, 8);
+
+        // Changing only stop_when_stable must not clear stable_at.
+        let mut same = w.clone();
+        let same_config = OpinionsConfig {
+            stop_when_stable: false,
+            ..same.config.clone()
+        };
+        Model::set_config(&mut same, ModelConfig::Opinions(same_config)).unwrap();
+        assert_eq!(same.stats.latest().unwrap().stable_at, stable_tick);
+
+        // A live edit to epsilon resumes a stopped run.
+        let wider = OpinionsConfig {
+            epsilon: 0.5,
+            ..w.config.clone()
+        };
+        Model::set_config(&mut w, ModelConfig::Opinions(wider)).unwrap();
+        assert!(!w.is_finished(), "the edit unsettles the run");
+        w.run(1000);
+        assert!(w.is_finished());
+        let s = w.stats.latest().unwrap();
+        assert_eq!(s.clusters, 1, "wider confidence pulls everyone together");
+        assert!(s.stable_at > stable_tick);
     }
 
     #[test]
