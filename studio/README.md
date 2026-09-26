@@ -63,6 +63,17 @@ per instrument), choose instruments, keep the tempo, and export the song as audi
 leaves the video silent.
 
 Tests: `python3 -m unittest discover -s studio/tests -t studio -v`
-(`tests/fixtures/tiny.frames.json` is `sugarscape shot tests/fixtures/tiny.json`.)
+(`tests/fixtures/tiny.frames.json` is `sugarscape shot tests/fixtures/tiny.json`.) They check
+every module, the Blender ones included, for names used but not defined, and that each episode's
+beats, overlays, measurements and tune cues agree, without Blender.
+
+Before a render, or after changing anything under `blender/`, run the smoke test:
+`python3 studio/smoke.py [EPISODE ...]` renders one small still and caption of each kind of beat
+from the episodes' real dumps (making any that are missing) and fails on any beat that can't be
+built. All five episodes take under three minutes; stills go to `out/<episode>/smoke/`.
+
+Overlays live in `blender/overlays/`: `parts.py` (anchors, text, cards), `followers.py` (things
+that follow Flumps), `panels.py` (screen-space displays) and `caption.py`; a new overlay goes in
+`BUILDERS` in `__init__.py`.
 
 Baloo 2 is © The Baloo 2 Project Authors, under the SIL Open Font License (`fonts/OFL.txt`).
