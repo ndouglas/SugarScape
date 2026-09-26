@@ -10,6 +10,7 @@ use crate::civil::{CivilConfig, CivilWorld};
 use crate::classes::{ClassesConfig, ClassesWorld};
 use crate::config::{Config, FieldError};
 use crate::culture::{CultureConfig, CultureWorld};
+use crate::opinions::{OpinionsConfig, OpinionsWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::ring::{RingConfig, RingWorld};
 use crate::schelling::{SchellingConfig, SchellingWorld};
@@ -17,7 +18,9 @@ use crate::schema::Param;
 use crate::spatial::{SpatialConfig, SpatialWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
-use crate::{anasazi, civil, classes, culture, export, ring, schelling, spatial, stats, tags};
+use crate::{
+    anasazi, civil, classes, culture, export, opinions, ring, schelling, spatial, stats, tags,
+};
 
 /// Which model a config or world is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -32,10 +35,11 @@ pub enum ModelKind {
     Tags,
     Culture,
     Classes,
+    Opinions,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 9] = [
+    pub const ALL: [ModelKind; 10] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -45,6 +49,7 @@ impl ModelKind {
         ModelKind::Tags,
         ModelKind::Culture,
         ModelKind::Classes,
+        ModelKind::Opinions,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -58,6 +63,7 @@ impl ModelKind {
             ModelKind::Tags => "tags",
             ModelKind::Culture => "culture",
             ModelKind::Classes => "classes",
+            ModelKind::Opinions => "opinions",
         }
     }
 
@@ -74,6 +80,7 @@ impl ModelKind {
             ModelKind::Tags => tags::schema(),
             ModelKind::Culture => culture::schema(),
             ModelKind::Classes => classes::schema(),
+            ModelKind::Opinions => opinions::schema(),
         }
     }
 }
@@ -96,6 +103,7 @@ pub enum ModelConfig {
     Tags(TagsConfig),
     Culture(CultureConfig),
     Classes(ClassesConfig),
+    Opinions(OpinionsConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -110,6 +118,7 @@ enum Tagged<'a> {
     Tags(&'a TagsConfig),
     Culture(&'a CultureConfig),
     Classes(&'a ClassesConfig),
+    Opinions(&'a OpinionsConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -131,6 +140,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Tags(c) => Tagged::Tags(c).serialize(s),
             ModelConfig::Culture(c) => Tagged::Culture(c).serialize(s),
             ModelConfig::Classes(c) => Tagged::Classes(c).serialize(s),
+            ModelConfig::Opinions(c) => Tagged::Opinions(c).serialize(s),
         }
     }
 }
@@ -147,6 +157,7 @@ impl ModelConfig {
             ModelConfig::Tags(_) => ModelKind::Tags,
             ModelConfig::Culture(_) => ModelKind::Culture,
             ModelConfig::Classes(_) => ModelKind::Classes,
+            ModelConfig::Opinions(_) => ModelKind::Opinions,
         }
     }
 
@@ -208,6 +219,9 @@ impl ModelConfig {
             "classes" => serde_json::from_value(value)
                 .map(ModelConfig::Classes)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "opinions" => serde_json::from_value(value)
+                .map(ModelConfig::Opinions)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
@@ -228,6 +242,7 @@ impl ModelConfig {
             ModelConfig::Tags(c) => c.validate(),
             ModelConfig::Culture(c) => c.validate(),
             ModelConfig::Classes(c) => c.validate(),
+            ModelConfig::Opinions(c) => c.validate(),
         }
     }
 
@@ -244,6 +259,7 @@ impl ModelConfig {
             ModelConfig::Tags(c) => set_path(c, path, value).map(ModelConfig::Tags),
             ModelConfig::Culture(c) => set_path(c, path, value).map(ModelConfig::Culture),
             ModelConfig::Classes(c) => set_path(c, path, value).map(ModelConfig::Classes),
+            ModelConfig::Opinions(c) => set_path(c, path, value).map(ModelConfig::Opinions),
         }
     }
 
@@ -259,7 +275,8 @@ impl ModelConfig {
             | ModelConfig::Civil(_)
             | ModelConfig::Spatial(_)
             | ModelConfig::Culture(_)
-            | ModelConfig::Classes(_) => None,
+            | ModelConfig::Classes(_)
+            | ModelConfig::Opinions(_) => None,
         }
     }
 
@@ -275,6 +292,7 @@ impl ModelConfig {
             ModelConfig::Tags(_) => tags::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Culture(_) => culture::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Classes(_) => classes::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Opinions(_) => opinions::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -453,6 +471,7 @@ pub enum ModelWorld {
     Tags(Box<TagsWorld>),
     Culture(Box<CultureWorld>),
     Classes(Box<ClassesWorld>),
+    Opinions(Box<OpinionsWorld>),
 }
 
 impl ModelWorld {
@@ -481,6 +500,9 @@ impl ModelWorld {
             ModelConfig::Tags(c) => ModelWorld::Tags(Box::new(TagsWorld::new(c, seed)?)),
             ModelConfig::Culture(c) => ModelWorld::Culture(Box::new(CultureWorld::new(c, seed)?)),
             ModelConfig::Classes(c) => ModelWorld::Classes(Box::new(ClassesWorld::new(c, seed)?)),
+            ModelConfig::Opinions(c) => {
+                ModelWorld::Opinions(Box::new(OpinionsWorld::new(c, seed)?))
+            }
         })
     }
 
@@ -495,6 +517,7 @@ impl ModelWorld {
             ModelWorld::Tags(_) => ModelKind::Tags,
             ModelWorld::Culture(_) => ModelKind::Culture,
             ModelWorld::Classes(_) => ModelKind::Classes,
+            ModelWorld::Opinions(_) => ModelKind::Opinions,
         }
     }
 
@@ -509,6 +532,7 @@ impl ModelWorld {
             ModelWorld::Tags(w) => w.as_ref(),
             ModelWorld::Culture(w) => w.as_ref(),
             ModelWorld::Classes(w) => w.as_ref(),
+            ModelWorld::Opinions(w) => w.as_ref(),
         }
     }
 
@@ -523,6 +547,7 @@ impl ModelWorld {
             ModelWorld::Tags(w) => w.as_mut(),
             ModelWorld::Culture(w) => w.as_mut(),
             ModelWorld::Classes(w) => w.as_mut(),
+            ModelWorld::Opinions(w) => w.as_mut(),
         }
     }
 
@@ -605,6 +630,7 @@ impl ModelWorld {
             ModelWorld::Tags(w) => copy_without_history!(Tags, w),
             ModelWorld::Culture(w) => copy_without_history!(Culture, w),
             ModelWorld::Classes(w) => copy_without_history!(Classes, w),
+            ModelWorld::Opinions(w) => copy_without_history!(Opinions, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -629,6 +655,7 @@ impl ModelWorld {
             (ModelWorld::Tags(live), ModelWorld::Tags(kept)) => restore_into!(live, kept),
             (ModelWorld::Culture(live), ModelWorld::Culture(kept)) => restore_into!(live, kept),
             (ModelWorld::Classes(live), ModelWorld::Classes(kept)) => restore_into!(live, kept),
+            (ModelWorld::Opinions(live), ModelWorld::Opinions(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -885,7 +912,8 @@ mod tests {
                 "spatial",
                 "tags",
                 "culture",
-                "classes"
+                "classes",
+                "opinions"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

@@ -114,6 +114,19 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("pvplh-mode", 0xb90f0d0cab7966b9),
     ("pvplh-progressive", 0xca60c420d61a7ffc),
     ("pvplh-lattice", 0x7975f5afc2d06c10),
+    ("hk-plurality", 0x587fb8e7c2480e66),
+    ("hk-polarisation", 0x204ac33894adc63e),
+    ("hk-consensus", 0x7d014897a7133c02),
+    ("hk-regular-50", 0xbfd3a4ebe6714f04),
+    ("hk-regular-plurality", 0x8336bae6d0f6a7e9),
+    ("hk-regular-consensus", 0xa52300371b7c72af),
+    ("hk-asym-a", 0x9cde60c378eb0e27),
+    ("hk-asym-b", 0x5b3285bbf1750490),
+    ("hk-asym-c", 0x67b217d709a3f7d3),
+    ("hk-one-sided", 0x84fba5285f2ec536),
+    ("hk-bias", 0x9a2ed969514cbda2),
+    ("hk-serial", 0xb06db73333504889),
+    ("hk-lattice", 0xe33359f120b204d9),
 ];
 
 fn fingerprint(id: &str) -> u64 {

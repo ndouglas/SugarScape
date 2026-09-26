@@ -18,6 +18,7 @@ pub mod landscape;
 mod legacy;
 pub mod model;
 pub mod network;
+pub mod opinions;
 pub mod portable;
 pub mod presets;
 pub mod render;
