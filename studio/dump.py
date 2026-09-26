@@ -1,7 +1,7 @@
 """Loads a frame dump written by `sugarscape shot` (format 1)."""
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 FORMAT = 1
 
@@ -26,6 +26,8 @@ class Frame:
     born: list
     pollution: list
     births: dict
+    tags: dict = field(default_factory=dict)
+    groups: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -74,6 +76,9 @@ def parse(text):
                 if "births" in f
                 else {i: (None, None) for i in f["born"]}
             ),
+            # id → tag bit string and id → group (tribe); empty in older dumps.
+            tags=dict(zip((row[0] for row in f["agents"]), f.get("tags", []))),
+            groups=dict(zip((row[0] for row in f["agents"]), f.get("groups", []))),
         )
         for f in raw["frames"]
     ]

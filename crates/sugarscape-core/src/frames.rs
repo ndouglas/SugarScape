@@ -132,6 +132,10 @@ pub struct Frame {
     /// children born under rule S, none for founders, placements and
     /// replacements.
     pub births: Vec<Birth>,
+    /// Each agent's cultural tags as a bit string, in `agents`' order.
+    pub tags: Vec<String>,
+    /// Each agent's group (tribe) under the config's groups, in `agents`' order.
+    pub groups: Vec<usize>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -179,8 +183,19 @@ fn frame(world: &World, seen: &mut BTreeSet<u64>, deaths: Vec<(u64, &'static str
         .filter_map(|&id| world.agent(id))
         .map(|a| (a.id, a.sex, a.parents))
         .collect();
+    let (tags, groups) = world
+        .agents()
+        .map(|a| {
+            (
+                a.tags.to_bit_string(),
+                a.group(&world.config.culture.groups),
+            )
+        })
+        .unzip();
     Frame {
         tick: world.tick,
+        tags,
+        groups,
         agents,
         sugar: world.sites.iter().map(|s| s.resource[0]).collect(),
         pollution: world.sites.iter().map(|s| s.pollution[0]).collect(),
@@ -312,9 +327,33 @@ mod tests {
     }
 
     #[test]
+    fn frames_carry_each_agents_tags_and_group_beside_its_row() {
+        let d = run(r#"{"preset": "iii-6-culture", "ticks": 5, "seed": 1}"#);
+        for f in &d.frames {
+            assert_eq!(f.tags.len(), f.agents.len());
+            assert_eq!(f.groups.len(), f.agents.len());
+            assert!(f
+                .tags
+                .iter()
+                .all(|t| t.len() == d.config.tag_length as usize));
+            // The book's two tribes: Blue (group 0) when zeros outnumber ones.
+            for (t, &g) in f.tags.iter().zip(&f.groups) {
+                let zeros = t.chars().filter(|&c| c == '0').count();
+                assert_eq!(g, if 2 * zeros > t.len() { 0 } else { 1 });
+            }
+        }
+        assert!(
+            d.frames[0].tags != d.frames[5].tags,
+            "no tag flipped in 5 ticks"
+        );
+    }
+
+    #[test]
     fn a_placement_can_set_its_sex() {
-        let d = run(r#"{"preset": "iii-2-sex", "ticks": 1, "set": {"population": 0},
-            "place": [{"x": 1, "y": 1, "sex": "female"}, {"x": 2, "y": 1, "sex": "male"}]}"#);
+        let d = run(
+            r#"{"preset": "iii-2-sex", "ticks": 1, "set": {"population": 0},
+            "place": [{"x": 1, "y": 1, "sex": "female"}, {"x": 2, "y": 1, "sex": "male"}]}"#,
+        );
         assert_eq!(d.frames[0].births[0].1, Sex::Female);
         assert_eq!(d.frames[0].births[1].1, Sex::Male);
     }

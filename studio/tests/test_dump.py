@@ -65,6 +65,17 @@ class DumpTest(unittest.TestCase):
         old = dump.parse(json.dumps(raw))
         self.assertEqual(old.frames[0].births[first], (None, None))
 
+    def test_frames_map_each_agent_to_its_tags_and_group(self):
+        f = self.d.frames[3]
+        self.assertEqual(set(f.tags), set(f.agents))
+        self.assertEqual(set(f.groups), set(f.agents))
+        self.assertTrue(all(set(t) <= {"0", "1"} for t in f.tags.values()))
+        raw = json.loads(FIXTURE.read_text())
+        for fr in raw["frames"]:
+            fr.pop("tags", None)
+            fr.pop("groups", None)
+        self.assertEqual(dump.parse(json.dumps(raw)).frames[3].groups, {})
+
     def test_wrong_format_is_refused(self):
         with self.assertRaisesRegex(ValueError, "format"):
             dump.parse('{"format": 99}')
