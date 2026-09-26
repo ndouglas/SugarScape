@@ -1,5 +1,6 @@
 import unittest
 
+import episode
 import measure
 
 
@@ -16,7 +17,8 @@ class MeasureTest(unittest.TestCase):
         self.assertEqual(measure.typical_seed(rows, ["a", "b"]), 2)
 
 
-class VerdictTest(unittest.TestCase):
+class PilotVerdictTest(unittest.TestCase):
+    claims = episode.load_module("sugarscape", "claims")
     ii2 = {s: {"pop25": 246, "on_hills": 0.92} for s in range(1, 4)}
     ii5 = {
         s: {"gini0": 0.23, "gini500": 0.48, "mean_over_median": 1.47, "top10_share": 0.30, "bottom50_share": 0.2}
@@ -24,16 +26,16 @@ class VerdictTest(unittest.TestCase):
     }
 
     def test_claims_that_hold(self):
-        v = measure.verdicts(self.ii2, self.ii5, hill_share=0.31, rose=20)
+        v = self.claims.verdicts(self.ii2, self.ii5, hill_share=0.31, rose=20)
         self.assertEqual([holds for _, holds, _ in v], [True] * 5)
 
     def test_an_even_split_fails_the_wealth_gap_claim(self):
         even = {s: dict(self.ii5[s], top10_share=0.12, bottom50_share=0.45) for s in self.ii5}
-        v = dict((claim, holds) for claim, holds, _ in measure.verdicts(self.ii2, even, 0.31, 20))
+        v = dict((claim, holds) for claim, holds, _ in self.claims.verdicts(self.ii2, even, 0.31, 20))
         self.assertFalse(v["some have much more than others (question beat)"])
 
     def test_a_weak_selection_effect_fails_its_claim(self):
-        v = dict((claim, holds) for claim, holds, _ in measure.verdicts(self.ii2, self.ii5, 0.31, rose=15))
+        v = dict((claim, holds) for claim, holds, _ in self.claims.verdicts(self.ii2, self.ii5, 0.31, rose=15))
         self.assertFalse(v["sight up, hunger down (beat 8 dials)"])
 
 

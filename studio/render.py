@@ -8,6 +8,7 @@ INDEX is 1-based. Frames go to studio/out/EPISODE/beats/NN/ (preview/NN/ with
 """
 
 import argparse
+import json
 import pathlib
 import sys
 
@@ -40,7 +41,10 @@ def main(argv):
         bpy.ops.render.render(write_still=True)
         return
     d = dump.load(out / "dumps" / f"{beat.shot}.frames.json") if beat.shot else None
-    scene.install(scene.build_beat(beat, d, args.preview))
+    compare = dump.load(out / "dumps" / f"{beat.compare}.frames.json") if beat.compare else None
+    measured_path = episode.episode_dir(args.episode) / "measurements.json"
+    measured = json.loads(measured_path.read_text()) if measured_path.exists() else {}
+    scene.install(scene.build_beat(beat, d, args.preview, compare, measured))
     bpy.ops.wm.save_as_mainfile(filepath=str(folder / "beat.blend"))
     if args.still is not None:
         s.frame_set(args.still)

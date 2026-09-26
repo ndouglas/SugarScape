@@ -4,12 +4,15 @@ the beat's timing, the agents' tracks, the board's corners and the close-up
 rigs. Screen-space things hang from `Screen` anchors, whose units are half
 the frame's width, so they keep their size on screen as the lens changes."""
 
+import math
 import pathlib
 
 import bmesh
 import bpy
 
 import animate
+import dump as dump_mod
+import seasons
 from blender import flump, materials
 
 FONT = pathlib.Path(__file__).resolve().parent.parent / "fonts" / "Baloo2.ttf"
@@ -359,7 +362,161 @@ def wealth(beat, d, ctx):
     return update
 
 
+SUMMER, WINTER = (1.0, 0.72, 0.25), (0.62, 0.8, 1.0)
+
+
+def season_card(beat, d, ctx):
+    """Top left: which hemisphere has summer and which winter, from the
+    engine's schedule for the tick shown."""
+    period = d.config["seasons"]["period"]
+    anchor = ctx.screen.anchor("season-card", -0.72, 0.78)
+    _card("season-card-box", anchor, (0, 0, -0.01), (0.5, 0.24, 0.002))
+    ink = materials.fading("season-ink", CREAM, 1.6)
+    warm = materials.fading("season-summer", SUMMER, 1.6)
+    cold = materials.fading("season-winter", WINTER, 1.6)
+    rows = {}
+    for side, y in (("north", 0.05), ("south", -0.05)):
+        text(f"season-{side}", side, 0.06, ink, anchor, location=(-0.21, y - 0.015, 0), align="LEFT")
+        rows[side] = (
+            text(f"season-{side}-summer", "summer", 0.06, warm, anchor, location=(0.21, y - 0.015, 0), align="RIGHT"),
+            text(f"season-{side}-winter", "winter", 0.06, cold, anchor, location=(0.21, y - 0.015, 0), align="RIGHT"),
+        )
+
+    def update(frame):
+        summer_north = seasons.north_summer(int(ctx.timing.tick_at(frame)), period)
+        for side, (summer, winter) in rows.items():
+            on, off = (summer, winter) if summer_north == (side == "north") else (winter, summer)
+            on.scale = (1, 1, 1)
+            on.location.z = 0
+            off.scale = (1e-4, 1e-4, 1e-4)  # hidden in place (see flump.stow)
+
+    return update
+
+
+def _torus():
+    mesh = bpy.data.meshes.get("ring")
+    if mesh is None:
+        bm = bmesh.new()
+        ring, tube = 0.46, 0.08
+        rings, sides = 32, 8
+        verts = []
+        for i in range(rings):
+            a = 2 * math.pi * i / rings
+            for j in range(sides):
+                b = 2 * math.pi * j / sides
+                r = ring + tube * math.cos(b)
+                verts.append(bm.verts.new((r * math.cos(a), r * math.sin(a), tube * math.sin(b))))
+        for i in range(rings):
+            for j in range(sides):
+                v = lambda ii, jj: verts[(ii % rings) * sides + (jj % sides)]  # noqa: E731
+                bm.faces.new((v(i, j), v(i + 1, j), v(i + 1, j + 1), v(i, j + 1)))
+        mesh = bpy.data.meshes.new("ring")
+        bm.to_mesh(mesh)
+        bm.free()
+        for poly in mesh.polygons:
+            poly.use_smooth = True
+    return mesh
+
+
+def _rings(name, color, members, d, ctx):
+    """A glowing ring at the feet of each Flump in `members`."""
+    glow = materials.fading(f"ring-{name}", color, 3.0)
+    mesh = _torus()
+    rings = {}
+    for id_ in members:
+        obj = bpy.data.objects.new(f"ring-{name}-{id_}", mesh)
+        bpy.context.scene.collection.objects.link(obj)
+        # The ring mesh is shared; each group's material lives on its objects.
+        if not obj.data.materials:
+            obj.data.materials.append(None)
+        obj.material_slots[0].link = "OBJECT"
+        obj.material_slots[0].material = glow
+        rings[id_] = obj
+
+    def update(frame):
+        for id_, obj in rings.items():
+            p = _pose(ctx, d, id_, frame)
+            if not p.visible:
+                flump.stow(obj)
+                continue
+            s = max(p.sx, 1e-4)
+            obj.scale = (s, s, 1)
+            obj.location = (p.x, p.y, p.z + 0.04)
+
+    return update
+
+
+def rings_migrants(beat, d, ctx):
+    """Gold rings on the migrants: alive from tick 100 to the end and
+    crossing hemispheres at least twice (the claims' definition)."""
+    return _rings("migrants", (1.0, 0.7, 0.1), seasons.migrants(ctx.tracks, 100, d.ticks, d.height), d, ctx)
+
+
+def rings_hungry(beat, d, ctx):
+    """Red rings on the hungry — metabolism ≥ 3 — alive when the beat starts."""
+    at = d.frames[beat.start_tick].agents
+    return _rings("hungry", (1.0, 0.15, 0.1), {i for i, a in at.items() if a.metabolism >= 3}, d, ctx)
+
+
+def counter(beat, d, ctx):
+    """Top right: this world's population against the compare world's (the
+    same seed without seasons) at the tick shown."""
+    anchor = ctx.screen.anchor("counter", 0.66, 0.78)
+    _card("counter-card", anchor, (0, 0, -0.01), (0.62, 0.24, 0.002))
+    cold = materials.fading("counter-seasons", WINTER, 1.6)
+    warm = materials.fading("counter-calm", SUMMER, 1.6)
+    with_ = text("counter-with", "", 0.052, cold, anchor, location=(-0.28, 0.035, 0), align="LEFT")
+    without = text("counter-without", "", 0.052, warm, anchor, location=(-0.28, -0.065, 0), align="LEFT")
+
+    def update(frame):
+        k = min(int(round(ctx.timing.tick_at(frame))), d.ticks)
+        with_.data.body = f"with seasons: {len(d.frames[k].agents)} Flumps"
+        without.data.body = f"without seasons: {len(ctx.compare.frames[k].agents)} Flumps"
+
+    return update
+
+
+SURVIVAL_ROWS = [
+    ("started rich", "rich_alive", "started poor", "poor_alive"),
+    ("born on a hill", "hill_alive", "born on the plains", "plain_alive"),
+    ("needs little", "met_low_alive", "needs a lot", "met_high_alive"),
+]
+
+
+def survival_panel(beat, d, ctx):
+    """How many survive by what they started with — the medians over the
+    measured seeds (measurements.json), not one run, since the caption's
+    ranking is theirs: rich vs poor, hill vs plains, needing little vs a lot."""
+    medians, seeds = ctx.measured["medians"], ctx.measured["seeds"]
+    anchor = ctx.screen.anchor("survival", 0.46, 0.08)
+    _card("survival-card", anchor, (0, 0.0, -0.01), (0.9, 0.68, 0.002))
+    ink = materials.fading("survival-ink", CREAM, 1.6)
+    text("survival-title", "who survives the seasons", 0.055, ink, anchor, location=(0, 0.27, 0))
+    text("survival-note", f"median over {seeds} runs", 0.035, ink, anchor, location=(0, 0.215, 0))
+    width = 0.3
+    for i, (good, good_key, bad, bad_key) in enumerate(SURVIVAL_ROWS):
+        y = 0.13 - i * 0.17
+        for j, (label, key, color) in enumerate(((good, good_key, "teal"), (bad, bad_key, "coral"))):
+            yy = y - j * 0.062
+            share = medians[key]
+            text(f"survival-{i}-{j}", label, 0.04, ink, anchor, location=(-0.06, yy - 0.012, 0), align="RIGHT")
+            bar_w = max(share * width, 0.002)
+            box(f"survival-bar-{i}-{j}", materials.knit(color), anchor,
+                location=(-0.04 + bar_w / 2, yy, 0), scale=(bar_w, 0.046, 0.004))
+            text(f"survival-pct-{i}-{j}", f"{share:.0%}", 0.04, ink, anchor,
+                 location=(-0.02 + bar_w, yy - 0.012, 0), align="LEFT")
+    return lambda frame: None
+
+
+# The overlays drawn in screen space (on `Screen` anchors).
+SCREEN = {"season-card", "counter", "survival", "dials", "histogram", "wealth"}
+
 BUILDERS = {
+    "season-card": season_card,
+    "rings-migrants": rings_migrants,
+    "rings-hungry": rings_hungry,
+    "counter": counter,
+    "survival": survival_panel,
     "wealth": wealth,
     "belly": belly,
     "sight": sight,

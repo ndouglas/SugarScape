@@ -1,24 +1,39 @@
-"""Measures the pilot's captioned claims over 20 seeds and writes
-studio/episodes/sugarscape/measurements.md. Run: python3 studio/measure.py"""
+"""Measures an episode's captioned claims over 20 seeds and writes
+studio/episodes/<episode>/measurements.md:
+
+    python3 studio/measure.py EPISODE
+
+Each episode's `claims.py` defines `measure(tmp) -> (lines, verdicts)`: the
+report's tables, and one (claim, holds, why) per captioned claim. This
+module holds what they share: running the CLI, summaries, typical seeds.
+"""
 
 import csv
 import json
 import pathlib
 import statistics
 import subprocess
+import sys
 import tempfile
-
-import animate
 
 STUDIO = pathlib.Path(__file__).resolve().parent
 REPO = STUDIO.parent
 CLI = REPO / "target" / "release" / "sugarscape"
 SEEDS = range(1, 21)
-HILL = 3  # a site of capacity ≥ 3 is on a hill
+
+sys.path.insert(0, str(STUDIO))
+
+import dump  # noqa: E402
+import episode  # noqa: E402
 
 
 def summary(values):
     return {"median": statistics.median(values), "lo": min(values), "hi": max(values)}
+
+
+def median(rows, key):
+    """The median over seeds of one measure (`rows` maps seed → measures)."""
+    return statistics.median(r[key] for r in rows.values())
 
 
 def typical_seed(rows, keys):
@@ -35,25 +50,8 @@ def typical_seed(rows, keys):
     return min(sorted(rows), key=distance)
 
 
-def verdicts(ii2, ii5, hill_share, rose):
-    """Each captioned claim, whether the 20 seeds support it, and why."""
-    med = lambda rows, k: statistics.median(r[k] for r in rows.values())  # noqa: E731
-    pop25, hills = med(ii2, "pop25"), med(ii2, "on_hills")
-    g0, g500, skew = med(ii5, "gini0"), med(ii5, "gini500"), med(ii5, "mean_over_median")
-    top, bottom = med(ii5, "top10_share"), med(ii5, "bottom50_share")
-    return [
-        ("many poof early (beat 7)", pop25 < 0.8 * 400, f"median population at tick 25 is {pop25:g} of 400"),
-        ("survivors crowd the hills (beats 7–8)", hills > 2 * hill_share,
-         f"{hills:.0%} of survivors on hill sites, which are {hill_share:.0%} of the board"),
-        ("sight up, hunger down (beat 8 dials)", rose >= 18, f"in {rose} of 20 seeds"),
-        ("some are rich (beat 9)", g500 > g0 + 0.1 and skew > 1.2,
-         f"Gini {g0:.2f} → {g500:.2f}; mean holding {skew:.2f} × the median"),
-        ("some have much more than others (question beat)", top >= 2 * 0.1 and bottom <= 0.7 * 0.5,
-         f"the richest tenth hold {top:.0%} of the sugar, the poorest half {bottom:.0%}"),
-    ]
-
-
-def _run(preset, seed, ticks, tmp):
+def run(preset, seed, ticks, tmp):
+    """The series and final agents (as CSV rows) of a preset run."""
     series, agents = tmp / f"{preset}-{seed}.csv", tmp / f"{preset}-{seed}-agents.csv"
     subprocess.run(
         [CLI, "run", "--preset", preset, "--seed", str(seed), "--ticks", str(ticks),
@@ -67,14 +65,15 @@ def _run(preset, seed, ticks, tmp):
     return s, a
 
 
-def _capacity(tmp):
-    shot = tmp / "landscape.json"
-    shot.write_text(json.dumps({"preset": "ii-2-unit", "ticks": 0, "set": {"population": 0}}))
-    out = subprocess.run([CLI, "shot", shot], capture_output=True, text=True, check=True)
-    return json.loads(out.stdout)["capacity"]
+def shot(spec, tmp, name):
+    """Runs a shot (a dict, as in a shot file) and loads its frame dump."""
+    src, out = tmp / f"{name}.json", tmp / f"{name}.frames.json"
+    src.write_text(json.dumps(spec))
+    subprocess.run([CLI, "shot", src, "--out", out], check=True)
+    return dump.load(out)
 
 
-def _table(rows, keys):
+def table(rows, keys):
     lines = ["| measure | median | min | max |", "|---|---|---|---|"]
     for k in keys:
         v = summary([r[k] for r in rows.values()])
@@ -82,59 +81,24 @@ def _table(rows, keys):
     return lines
 
 
-def main():
+def main(name):
     subprocess.run(["cargo", "build", "--release", "-q", "-p", "sugarscape-cli"], check=True, cwd=REPO)
-    ii2, ii5 = {}, {}
+    claims = episode.load_module(name, "claims")
     with tempfile.TemporaryDirectory() as t:
-        tmp = pathlib.Path(t)
-        cap = _capacity(tmp)
-        hill_share = sum(c >= HILL for c in cap) / len(cap)
-        for seed in SEEDS:
-            s, a = _run("ii-2-unit", seed, 300, tmp)
-            on_hills = sum(cap[int(r["y"]) * 50 + int(r["x"])] >= HILL for r in a) / max(len(a), 1)
-            ii2[seed] = {
-                "pop0": float(s[0]["population"]),
-                "pop25": float(s[25]["population"]),
-                "pop300": float(s[300]["population"]),
-                "on_hills": on_hills,
-                "vision0": float(s[0]["mean_vision"]),
-                "vision300": float(s[300]["mean_vision"]),
-                "metab0": float(s[0]["mean_metabolism"]),
-                "metab300": float(s[300]["mean_metabolism"]),
-            }
-            s, a = _run("ii-5-wealth", seed, 500, tmp)
-            sugar = sorted(float(r["sugar"]) for r in a)
-            poorest, _, richest = animate.shares(sugar)
-            ii5[seed] = {
-                "gini0": float(s[0]["gini"]),
-                "gini500": float(s[500]["gini"]),
-                "mean_over_median": statistics.mean(sugar) / statistics.median(sugar),
-                "top10_share": richest,
-                "bottom50_share": poorest,
-            }
-    rose = sum(r["vision300"] > r["vision0"] and r["metab300"] < r["metab0"] for r in ii2.values())
-    lines = ["# Pilot measurements (seeds 1–20)", "", "Generated by `python3 studio/measure.py`.", ""]
-    lines += ["## ii-2-unit, 300 ticks (beats 7–8)", ""]
-    lines += _table(ii2, ["pop0", "pop25", "pop300", "on_hills", "vision0", "vision300", "metab0", "metab300"])
-    lines += [
-        "",
-        f"Share of all sites with capacity ≥ {HILL}: {hill_share:.3f}.",
-        f"Seeds where mean vision rose and mean metabolism fell: {rose} of 20.",
-        f"Typical seed: {typical_seed(ii2, ['pop300', 'on_hills', 'vision300', 'metab300'])}.",
-        "",
-        "## ii-5-wealth, 500 ticks (beat 9)",
-        "",
-    ]
-    lines += _table(ii5, ["gini0", "gini500", "mean_over_median", "top10_share", "bottom50_share"])
-    lines += ["", f"Typical seed: {typical_seed(ii5, ['gini500', 'top10_share'])}.", ""]
-    lines += ["## Captions", ""]
-    for claim, holds, why in verdicts(ii2, ii5, hill_share, rose):
+        lines, verdicts, *rest = claims.measure(pathlib.Path(t))
+    if rest:
+        # Values for on-screen panels (e.g. medians over the seeds).
+        path = episode.episode_dir(name) / "measurements.json"
+        path.write_text(json.dumps(rest[0], indent=2, sort_keys=True) + "\n")
+    lines = [f"# {name}: measurements (seeds 1–20)", "", f"Generated by `python3 studio/measure.py {name}`.", "", *lines]
+    lines += ["", "## Captions", ""]
+    for claim, holds, why in verdicts:
         lines.append(f"- {'holds' if holds else 'DOES NOT HOLD'}: {claim} — {why}.")
     lines.append("")
-    path = STUDIO / "episodes" / "sugarscape" / "measurements.md"
+    path = episode.episode_dir(name) / "measurements.md"
     path.write_text("\n".join(lines))
     print(path.read_text())
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1] if len(sys.argv) > 1 else "sugarscape")
