@@ -4,7 +4,7 @@ import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
 import { defaultForm, formToSweep } from './experiments/form';
 import { Engine, type Speed } from './engine';
-import { isDpdView, isEthnoView, modelOf } from './models';
+import { isDpdView, isEthnoView, isImageView, modelOf } from './models';
 import type { NetworkOverlay } from './protocol';
 import { paramShown } from './schema-form';
 import { SimHost } from './sim-host';
@@ -26,6 +26,9 @@ import type {
   EthnoConfig,
   EthnoInspection,
   EthnoStats,
+  ImageConfig,
+  ImageInspection,
+  ImageStats,
   OpinionsConfig,
   OpinionsInspection,
   OpinionsStats,
@@ -474,6 +477,49 @@ describe('other models through the engine', () => {
   });
 });
 
+describe('image scoring’s golden fingerprints', () => {
+  // crates/sugarscape-core/tests/golden.rs IMAGE_GOLDEN (Decision 17): one group 200 generations,
+  // islands 20. The WASM prints 16 hex digits, so ns-fig-2 and ns-fig-4b keep their leading zero.
+  const IMAGE_GOLDEN: [string, number, string][] = [
+    ['ns-fig-1', 200, '0x98875bd71738cf05'],
+    ['ns-fig-2', 200, '0x091995405bae5fd9'],
+    ['ns-fig-3-n20', 200, '0xb4bd11bc229673c4'],
+    ['ns-fig-3-n50', 200, '0x5907ce5cb47602cf'],
+    ['ns-fig-3-n100', 200, '0xaf771beff4611d0d'],
+    ['ns-fig-4a', 200, '0xe7d6cefc18bd8d6a'],
+    ['ns-fig-4b', 200, '0x0a4c19c5fa5fcfe3'],
+    ['ns-fig-4c', 200, '0x64755eafb526a816'],
+    ['ns-fig-4d', 200, '0x72ca0b1d80947f44'],
+    ['ns-own-only', 200, '0x20d6768b1fbd7081'],
+    ['ns-no-offset', 200, '0xc595349de0c0bf65'],
+    ['lh-fig-1a', 20, '0x46669de796924497'],
+    ['lh-fig-1b', 20, '0x2c3d0dea6af0c894'],
+    ['lh-fig-2a', 200, '0x56250416634c6ed9'],
+    ['lh-fig-2b', 20, '0x566a697764e9cdd9'],
+    ['lh-fig-2c', 20, '0x963ec9f09d2fadbe'],
+    ['lh-fig-3a', 20, '0x46059fbe6bab2056'],
+    ['lh-fig-3b', 20, '0x4d6575c59b0da89a'],
+    ['lh-fig-4a', 20, '0xd5654fa4b600eb57'],
+    ['lh-fig-4b', 20, '0x4bfe8ea9f3e8598b'],
+    ['lh-fig-4c', 20, '0x6371653b544f6387'],
+  ];
+
+  it('covers every image-scoring preset', () => {
+    expect(IMAGE_GOLDEN.map(([id]) => id)).toEqual(presets.filter((p) => modelOf(p.config) === 'image').map((p) => p.id));
+  });
+
+  it.each(IMAGE_GOLDEN)('%s reproduces its golden fingerprint after %i generations, whatever is watched', async (id, ticks, golden) => {
+    const preset = presets.find((p) => p.id === id)!;
+    const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });
+    e.want(() => ({ charts: { groups: [['help_rate', 'cooperative']], max: 50 }, lorenz: true, networks: ['trade'] }));
+    e.setDisplay({ colorMode: 'score' });
+    await e.select(0, 0);
+    for (const n of [1, ticks / 2 - 1, ticks / 2]) await e.advance(n);
+    expect(e.tick).toBe(ticks);
+    expect(await e.fingerprint()).toBe(golden);
+  });
+});
+
 describe('model charts', () => {
   it('draw only series their model records', () => {
     for (const [model, charts] of Object.entries(MODEL_CHARTS)) {
@@ -900,6 +946,105 @@ describe('the demographic PD through the engine', () => {
     expect(errors).toEqual([]);
     // Five rewards × the form's three seeds.
     expect(JSON.parse(sweep_points(JSON.stringify(sweep)))).toHaveLength(15);
+  });
+});
+
+describe('image scoring through the engine', () => {
+  const preset = (id: string) => presets.find((p) => p.id === id)!;
+  const imagePresets = presets.filter((p) => modelOf(p.config) === 'image');
+  const create = (id: string, edit: (c: ImageConfig) => void = () => {}) => {
+    const config = structuredClone(preset(id).config) as ImageConfig;
+    edit(config);
+    return Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+  };
+  const schema = (JSON.parse(model_schemas_json()) as Record<string, Param[]>).image;
+  const field = (path: string) => schema.find((p) => p.path === path)!;
+
+  it('builds a Rules panel in the spec’s groups, with observers only under observers and every preset on its sliders', () => {
+    expect([...new Set(schema.map((p) => p.group))]).toEqual(['Game', 'Population', 'Rounds', 'Information', 'Errors', 'Evolution', 'Run']);
+    // Presets, files and links set the strategies and the start (as ethnocentrism's allowed strategies).
+    expect(schema.map((p) => p.path)).not.toContain('strategies');
+    expect(schema.map((p) => p.path)).not.toContain('initial');
+    expect(field('observers').show_if).toEqual({ path: 'information', equals: 'observers' });
+    expect([paramShown(field('observers'), preset('ns-fig-1').config), paramShown(field('observers'), preset('ns-fig-3-n20').config)]).toEqual([false, true]);
+    expect(imagePresets).toHaveLength(21);
+    for (const p of imagePresets) {
+      for (const f of schema.filter((f) => f.kind === 'number' || f.kind === 'integer')) {
+        const v = (p.config as unknown as Record<string, number>)[f.path];
+        expect(v, `${p.id}: ${f.path}`).toBeGreaterThanOrEqual(f.min!);
+        expect(v, `${p.id}: ${f.path}`).toBeLessThanOrEqual(f.max!);
+      }
+    }
+  });
+
+  it('takes live edits of the cost, the records and the observers, and replays them through keyframes and a share link', async () => {
+    const e = await create('ns-fig-3-n20');
+    await e.advance(30);
+    expect(await e.applyModelConfig((c) => void ((c as ImageConfig).c = 0.2))).toBeNull();
+    await e.advance(30);
+    expect(await e.applyModelConfig((c) => void ((c as ImageConfig).records = 'score'))).toBeNull();
+    expect(await e.applyModelConfig((c) => void ((c as ImageConfig).observers = 5))).toBeNull();
+    await e.advance(20);
+    const want = await e.fingerprint();
+    expect(e.tick).toBe(80);
+    await e.seek(20);
+    await e.seek(80);
+    expect(await e.fingerprint()).toBe(want);
+    const { session, tick } = await e.session();
+    const opened = await Engine.create(await decodeShare(await encodeShare(session)), { presets, transport: inline() });
+    await opened.advance(tick);
+    expect([(opened.config as ImageConfig).records, (opened.config as ImageConfig).observers]).toEqual(['score', 5]);
+    expect(await opened.fingerprint()).toBe(want);
+    const errors = await e.applyModelConfig((c) => void ((c as ImageConfig).mutation = 2));
+    expect(errors?.map((f) => f.field)).toEqual(['mutation']);
+  });
+
+  it('stops at its last generation, once, and inspects agents, a tile’s unused cell and a gap', async () => {
+    // Two groups of 20 with observers: tiles of 5 × 5 side by side, a one-cell gap at x = 5.
+    const e = await create('ns-fig-3-n20', (c) => {
+      c.groups = 2;
+      c.end = 30;
+    });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(100);
+    expect([e.tick, e.finished, ends]).toEqual([30, true, 1]);
+    const at = async (x: number, y: number): Promise<ImageInspection> => {
+      await e.select(x, y);
+      const v = e.inspection!.view;
+      expect(isImageView(v)).toBe(true);
+      return v as ImageInspection;
+    };
+    expect(await at(5, 0)).toEqual({ cell: { x: 5, y: 0 }, group: null, agent: null });
+    expect(await at(0, 4)).toEqual({ cell: { x: 0, y: 4 }, group: 0, agent: null });
+    let given = 0;
+    let received = 0;
+    for (const x0 of [0, 6]) {
+      for (let i = 0; i < 20; i++) {
+        const v = await at(x0 + (i % 5), Math.floor(i / 5));
+        const a = v.agent!;
+        expect(v.group).toBe(x0 === 0 ? 0 : 1);
+        expect(e.inspection!.agentId).toBe(a.id);
+        // With observers each agent's record among the others is known.
+        expect(a.known).toBeGreaterThanOrEqual(0);
+        expect(a.known).toBeLessThanOrEqual(19);
+        given += a.given;
+        received += a.received;
+      }
+    }
+    const stats = e.latest as ImageStats;
+    expect([given, received]).toEqual([stats.helps, stats.helps]);
+  });
+
+  it('opens its Compare entries and sweeps its default form', () => {
+    for (const id of ['image-one-vs-island', 'image-scoring-vs-standing', 'image-offset', 'image-group-size']) {
+      const entry = COMPARE_PRESETS.find((c) => c.id === id)!;
+      expect(comparePresetStates(presets, entry, 1), id).not.toBeNull();
+    }
+    const { sweep, errors } = formToSweep(defaultForm('image'), { preset: 'ns-fig-2' });
+    expect(errors).toEqual([]);
+    // Ten values of m × the form's three seeds.
+    expect(JSON.parse(sweep_points(JSON.stringify(sweep)))).toHaveLength(30);
   });
 });
 

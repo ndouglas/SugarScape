@@ -195,6 +195,13 @@ describe('sweeps over other models', () => {
       ticks: 500,
       metric: { kind: 'final', series: 'cooperators' },
     });
+    expect(defaultForm('image')).toMatchObject({
+      x: { path: 'rounds', values: '50:500:50' },
+      series: null,
+      seeds: 3,
+      ticks: 2000,
+      metric: { kind: 'window_mean', series: 'cooperative', from: 1001, to: null },
+    });
   });
 
   it('suggest a Schelling config’s own paths, never its model tag', () => {

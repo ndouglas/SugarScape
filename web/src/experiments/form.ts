@@ -88,6 +88,15 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
     // Table 9.3's axis at T = 6: cooperators after 500 cycles against the reward R (R = 1 dies out).
     return { ...form, x: { path: 'r', values: '1:5:1' }, ticks: 500, metric: { ...form.metric, kind: 'final', series: 'cooperators' } };
   }
+  if (model === 'image') {
+    // NS98's rounds axis (the built-in ns-rounds, shortened): cooperative strategies against m.
+    return {
+      ...form,
+      x: { path: 'rounds', values: '50:500:50' },
+      ticks: 2000,
+      metric: { ...form.metric, kind: 'window_mean', series: 'cooperative', from: 1001, to: null },
+    };
+  }
   return form;
 }
 

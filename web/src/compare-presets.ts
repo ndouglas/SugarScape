@@ -116,6 +116,30 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'dpd-run-1',
     b: 'dpd-closest',
   },
+  {
+    id: 'image-one-vs-island',
+    label: 'One group vs the island model — Image Scoring (Compare)',
+    a: 'lh-fig-2a',
+    b: 'lh-fig-2b',
+  },
+  {
+    id: 'image-scoring-vs-standing',
+    label: 'Image scoring vs standing — Image Scoring (Compare)',
+    a: 'lh-fig-2b',
+    b: 'lh-fig-4c',
+  },
+  {
+    id: 'image-offset',
+    label: 'With vs without the offset — Image Scoring (Compare)',
+    a: 'ns-fig-1',
+    b: 'ns-no-offset',
+  },
+  {
+    id: 'image-group-size',
+    label: 'Small vs large groups with observers — Image Scoring (Compare)',
+    a: 'ns-fig-3-n20',
+    b: 'ns-fig-3-n100',
+  },
 ];
 
 /**

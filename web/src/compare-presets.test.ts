@@ -110,4 +110,14 @@ describe('compare presets', () => {
       ['dpd-published-vs-closest', 'dpd-run-1', 'dpd-closest', 'Published rule vs closest reading — Demographic PD (Compare)'],
     ]);
   });
+
+  it('pairs the image-scoring runs the sources and readings disagree on', () => {
+    const ids = COMPARE_PRESETS.filter((c) => c.id.startsWith('image-')).map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toEqual([
+      ['image-one-vs-island', 'lh-fig-2a', 'lh-fig-2b', 'One group vs the island model — Image Scoring (Compare)'],
+      ['image-scoring-vs-standing', 'lh-fig-2b', 'lh-fig-4c', 'Image scoring vs standing — Image Scoring (Compare)'],
+      ['image-offset', 'ns-fig-1', 'ns-no-offset', 'With vs without the offset — Image Scoring (Compare)'],
+      ['image-group-size', 'ns-fig-3-n20', 'ns-fig-3-n100', 'Small vs large groups with observers — Image Scoring (Compare)'],
+    ]);
+  });
 });
