@@ -1,4 +1,4 @@
-//! The demographic Prisoner's Dilemma (milestone 17): Epstein's working
+//! The demographic Prisoner's Dilemma (milestone 19): Epstein's working
 //! paper (1997) and chapter (GSS 2006, ch. 9 and its appendix) and Radax &
 //! Rengs' replication (RR, 2009), each claim in its source's words. Every
 //! claim runs Epstein's and RR's 30 runs (seeds 1–30, whatever `--seeds`

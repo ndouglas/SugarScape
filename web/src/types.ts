@@ -80,8 +80,8 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-/** The models the playground runs (milestones 9–17). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'dpd';
+/** The models the playground runs (milestones 9–13). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -257,7 +257,7 @@ export interface EthnoConfig {
 }
 
 /**
- * Epstein's demographic Prisoner's Dilemma (milestone 17): agents with fixed strategies move, play
+ * Epstein's demographic Prisoner's Dilemma (milestone 19): agents with fixed strategies move, play
  * their neighbors, clone and die by their accumulated payoffs, with the working paper's rule, Radax
  * and Rengs' timing choices, soup and metabolism as switches. A tick is a cycle.
  */
@@ -332,7 +332,48 @@ export interface ClassesConfig {
   stop_at_equity: boolean;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | DpdConfig;
+/**
+ * Hegselmann and Krause's bounded confidence (milestone 17): agents move to the mean of the opinions
+ * within their reach, with the paper's asymmetric and opinion-dependent confidence and its unfigured
+ * claims (serial updating, lattice neighborhoods) as switches.
+ */
+export interface OpinionsConfig {
+  model: 'opinions';
+  agents: number;
+  start: 'random' | 'regular';
+  confidence: 'symmetric' | 'asymmetric' | 'opinion_dependent';
+  epsilon: number;
+  epsilon_left: number;
+  epsilon_right: number;
+  bias: number;
+  updating: 'simultaneous' | 'serial_shuffled' | 'serial_random';
+  interaction: 'all' | 'lattice';
+  lattice: { width: number; height: number; neighborhood: 'moore' | 'von_neumann' };
+  stop_when_stable: boolean;
+}
+
+/**
+ * Cohen, Riolo and Axelrod's population of adaptive agents playing short iterated Prisoner's
+ * Dilemmas under a social structure (milestone 18), with the paper's two readings of its method as
+ * switches.
+ */
+export interface StructureConfig {
+  model: 'structure';
+  agents: number;
+  structure: 'rwr' | 'torus' | 'frne' | 'frn';
+  substitution: number;
+  partners: number;
+  moves: number;
+  judge_error: number;
+  mutation: number;
+  mutation_sd: number;
+  noise_on: 'always' | 'copy';
+  start: 'grid' | 'random';
+  high: number;
+  stop_at: number;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -539,7 +580,37 @@ export interface ClassesStats {
   realized_noise: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | DpdStats;
+export interface OpinionsStats {
+  tick: number;
+  /** Surviving opinions: groups of opinions within 10⁻⁶ of each other. */
+  clusters: number;
+  largest: number;
+  second: number;
+  mean_opinion: number;
+  median_opinion: number;
+  range: number;
+  splits: number;
+  one_sided_splits: number;
+  max_change: number;
+  stable_at: number;
+}
+
+export interface StructureStats {
+  tick: number;
+  mean_payoff: number;
+  cooperation: number;
+  mean_y: number;
+  mean_p: number;
+  mean_q: number;
+  high: number;
+  /** The first period at or above the threshold, else −1. */
+  attained_high: number;
+  share_high_since: number;
+  copied: number;
+  partner_p_slope: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -750,7 +821,44 @@ export interface ClassesInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | DpdInspection;
+/** An agent whose line passes an inspected point, or a lattice site's agent. */
+export interface OpinionAgent { id: number; start: number; opinion: number; epsilon_left: number; epsilon_right: number; reaches: number }
+/**
+ * A cell of the opinion × time diagram (its period and opinion, and the agents whose lines pass
+ * within a cell) or of the lattice to its right. `agent` is always null: agents have no place to follow.
+ */
+export interface OpinionsInspection {
+  site: { x: number; y: number };
+  period: number | null;
+  opinion: number | null;
+  lattice_site: { x: number; y: number } | null;
+  agents: OpinionAgent[];
+  agent: null;
+}
+
+/** An agent played this period: its p as played, its score and how many games. */
+export interface PartnerView { id: number; p: number; score: number; games: number }
+/** An agent: its strategy, class, this period's score, whom it copied and (in the block) its partners. */
+export interface StructureAgentView {
+  id: number;
+  y: number;
+  p: number;
+  q: number;
+  class: 'tft' | 'alld' | 'allc' | 'other';
+  score: number;
+  copied: number | null;
+  partners: PartnerView[];
+}
+/** A cell of the agents' block (its agent) or of the p–q plane (its (p, q) and the agents there). */
+export interface StructureInspection {
+  site: { x: number; y: number };
+  block: { x: number; y: number } | null;
+  plane: [number, number] | null;
+  agents: StructureAgentView[];
+  agent: StructureAgentView | null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -789,6 +897,11 @@ export type ColorMode =
   | 'zones'
   | 'best_reply'
   | 'payoff'
+  | 'start'
+  | 'opinion'
+  | 'friendliness'
+  | 'provocability'
+  | 'strategy'
   | 'surrounded';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 

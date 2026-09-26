@@ -1,0 +1,54 @@
+{
+  "name": "Bounded Confidence: simultaneous or serial updating (§4.3)",
+  "description": "HK §4.3: 'none of the results … depends crucially on simultaneous updating' — reported without a figure or the serial order. The metric is the surviving opinions, ε = 0.05 to 0.30, under simultaneous updating, each agent once per period in random order, and n random draws per period. Measured (release, seeds 1–10, recorded 2026-09-25): 7.6, 8.4 and 9.0 opinions at 0.05; 2.9, 2.7 and 3.0 at 0.15; consensus at 0.25 and 0.30 under every order (random draws leave a straggler in some runs: 1.2). Serial updating keeps slightly more opinions at small ε, as HK say; the phases keep their places.",
+  "base": {
+    "preset": "hk-polarisation"
+  },
+  "x": {
+    "label": "Confidence (ε)",
+    "path": "epsilon",
+    "values": [
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3
+    ]
+  },
+  "series": {
+    "label": "Updating",
+    "values": [
+      {
+        "at": 0,
+        "name": "Simultaneous (HK)",
+        "set": {
+          "updating": "simultaneous"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Serial, shuffled",
+        "set": {
+          "updating": "serial_shuffled"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Serial, random draws",
+        "set": {
+          "updating": "serial_random"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "clusters"
+  }
+}

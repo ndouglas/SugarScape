@@ -141,7 +141,8 @@ Model extensions:
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
-**Emergence of Classes**, **Ethnocentrism** and **Demographic PD**.
+**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**
+and **Demographic PD**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -761,6 +762,109 @@ Jansson, "Pitfalls in Spatial Modelling of Ethnocentrism: A Simulation Analysis 
 Hammond and Axelrod," *JASSS* 16(3) 2 (2013). See
 `docs/superpowers/specs/2026-09-25-ethnocentrism-design.md`.
 
+### Bounded Confidence (Hegselmann & Krause 2002)
+
+Opinions between 0 and 1. Each period every agent moves to the mean of the opinions within its
+reach, its own included; everything further away is ignored. The defaults are the paper's: 625
+opinions drawn uniformly, updated all at once, each agent reaching ε = 0.15 either way. Agents who
+cannot reach each other drift apart for good, so the profile freezes into camps — many with little
+confidence (plurality), two or three in between (polarization), one with much (consensus). A period
+is stable when no opinion moves more than 10⁻¹⁰; opinions within 10⁻⁶ count as one.
+
+What reproduces (20 seeds unless stated): Fig. 2a's "exactly 38" surviving opinions at ε = 0.01
+(median 37.5); consensus at 0.25; Fig. 3's walk along ε — plurality, then camps, then a consensus
+that takes over between 0.21 and 0.25 (50 runs: 13, 30 and 50 in consensus at 0.21, 0.22, 0.25),
+always above 0.4; the evenly spaced figures exactly (50 opinions at 0.2 split in period 6 and are
+still from period 8; 100 at 0.05 split 8 times; 100 at 0.25 agree). What does not: **Fig. 2b's two
+camps at ε = 0.15 are the exception — 6 runs of 20; 14 end with a third camp in the middle, usually
+as large** (two camps are the rule only from 0.16 to 0.21); and "less than 15 periods to a stable
+pattern" holds for 53 runs of 60, the slowest taking 168 while two nearly merged camps close.
+
+The paper's asymmetries are settings. **Asymmetric** confidence, the same for everyone (§4.2.1):
+the mean drifts toward the side agents listen to (at εr = 0.2, from 0.53 with εl = 0.18 to 0.94
+with εl = 0.02), and one-sided splits — a gap one side reaches across and the other does not —
+close again, as the paper says two-sided ones never do. Confidence **leaning with one's opinion**
+(§4.2.2, bias m): camps grow and move outward, reaching 0 and 1 at m = 1; at ε = 0.6 consensus holds
+to m = 0.36 and breaks between 0.44 (18 of 20 runs in consensus) and 0.52 (8 of 20) — the paper
+says "m ≈ 0.4" — and takes longer before it breaks.
+
+Two of the paper's claims have no figure, so they are switches here. **Updating**: "none of the
+results … depends crucially on simultaneous updating", without saying which serial order — each
+agent once per period in random order, or n random draws. Measured, the phases keep their places
+under both, and serial updating leaves slightly more opinions at small ε (at ε = 0.05, 8.4 with a
+shuffled order and 9.0 with random draws against 7.9, 50 runs), as the paper says. **Who listens to whom**: on a torus where agents hear only their neighbors,
+"polarization … disappears". Measured on a 25 × 25 torus, it does: one big camp with dozens of
+stranded local minorities, settling only after thousands of periods; a second camp of a fifth of
+the agents in 9 of 200 lattice runs (ε 0.1–0.3, both neighborhoods) against 57 of 100 among
+everyone. Lorenz (2006) showed that the consensus threshold depends on the number of agents: at
+ε = 0.22 consensus in 1 run of 20 with 50 agents, 12 with 1000.
+
+The view is the paper's opinion × time diagram: each agent a line, red where it started at 0 to
+magenta at 1 (**Start**; **Opinion** colors by where it is now), gray between neighbors still
+within each other's reach, the last 60 periods; with a lattice the torus is drawn to the right.
+Inspect a point for its period, opinion and the agents passing (start, reach, how many they
+hear), or a site. Charts: Clusters; Largest camps; Mean and median; Splits (two-sided,
+one-sided); Change. A run stops when stable; changing confidence or updating resumes it. Presets:
+`hk-plurality`, `hk-polarisation`, `hk-consensus`, `hk-regular-50`, `hk-regular-plurality`,
+`hk-regular-consensus`, `hk-asym-a`, `hk-asym-b`, `hk-asym-c`, `hk-one-sided` (Fig. 13's caption
+says εl = 0.8, read as 0.08), `hk-bias`, `hk-serial`, `hk-lattice`. **Compare** entry:
+"Simultaneous vs serial updating — Bounded Confidence (Compare)". Built-in sweeps: `hk-diagonal`,
+`hk-asymmetry`, `hk-bias`, `hk-updating`, `hk-lattice`, `hk-population`.
+
+Credit: Rainer Hegselmann and Ulrich Krause, "Opinion Dynamics and Bounded Confidence: Models,
+Analysis, and Simulation," *Journal of Artificial Societies and Social Simulation* 5(3) (2002), 2;
+Jan Lorenz, "Consensus Strikes Back in the Hegselmann-Krause Model of Continuous Opinion Dynamics
+Under Bounded Confidence," *JASSS* 9(1) (2006), 8. See
+`docs/superpowers/specs/2026-09-25-bounded-confidence-design.md`.
+
+### Social Structure (Cohen, Riolo & Axelrod 2001)
+
+256 agents each period play four-move Prisoner's Dilemmas (payoffs 3, 0, 5, 1) with four partners.
+A strategy is three probabilities: cooperate on the first move (y), after the other cooperated (p,
+"friendliness") and after it defected (q; a low q is "provocable"). At the end of a period each agent
+copies the best-scoring agent it played if that one did strictly better — misjudging 10 % of the
+time — and each of y, p and q has a 10 % chance of Gaussian noise. What changes between runs is the
+social structure, who plays whom: fresh random partners every period (**RWR**), four neighbors on a
+16 × 16 torus (**2DK**), fixed random neighbors, four each and symmetric (**FRNE**), fixed random
+neighbors drawn once, one-way (**FRN**), or FRN with each partner swapped for a random one with
+probability x each period (**FFR-x**, the paper's "dial"). The paper's point: what sustains
+cooperation is not the torus's clustering but its continuity — "context preservation".
+
+It reproduces closely (30 runs of 2500 periods, as the paper). Table 2's mean payoffs over the last
+1000 periods: RWR 1.089, 2DK 2.553, FRNE 2.574, FRN 2.478, FFR-0.1 2.405, FFR-0.3 2.036, FFR-0.5
+1.325, against 1.091, 2.557, 2.575, 2.480, 2.385, 2.100, 1.257. The first period averages 2.25 and
+every structure collapses before the fixed ones recover (Fig. 1). In the paper's crucial region of
+the p–q plane the average p moves −0.012 under RWR and +0.051 under FRN (the paper: −0.016, +0.052),
+because under FRN an agent's partners share its friendliness (slope 0.179, F 1087; the paper 0.158,
+F 717; not significant under RWR). FRNE does beat 2DK (note 5), 4096 agents behave like 256 (note 1),
+and FRNE's fan-out matches Table A1 to within 3 % out to five links. FFR-0.3 is bi-stable, as stated: 25 of 30 runs
+spend 50 periods or more both high and low.
+
+The paper never says what "high cooperation" means. At a mean payoff of 2.3 every row of Table 2's
+"Remain High" lands within 0.03 of the paper (FRN 0.940 against 0.942, FFR-0.1 0.843 against 0.844);
+2.2 or 2.4 miss by 0.14 and 0.26 — so **High cooperation at** defaults to 2.3. It also describes its
+own method twice, and the two readings are switches. **Strategies start** "evenly distributed …
+throughout the strategy space" (the Appendix) or "initialized randomly" (§3.1): no difference.
+**Noise on** every agent every period, "regardless of which … is adopted" (the Appendix), or only as
+"errors in the actual copying process" (§2): these differ — noise only on copying gives FRN 2.530
+instead of 2.478, overshoots every fixed structure by 0.05–0.09 and erases FRNE's edge over 2DK — the
+Appendix's rule is the one that matches Table 2 more closely and keeps FRNE above 2DK.
+
+The view is the agents as a block of cells (the torus itself under 2DK; index order otherwise) next
+to the paper's p–q plane, with the population's average over the last 200 periods as a fading trail
+and every agent as a dot. Color modes: **Friendliness** (p), **Provocability** (1 − q), **Payoff**
+and **Strategy** (near Tit-for-Tat, Always Defect, Always Cooperate, or mixed). Inspect an agent for
+its strategy, payoff, whom it copied and the partners it played (and Follow it), or a point of the
+plane for the agents there. Charts: Mean payoff; Cooperation; Strategy (p, q, y); High cooperation;
+Copying (and the partners' p slope). Presets: `cra-rwr`, `cra-2dk`, `cra-frne`, `cra-frn`,
+`cra-ffr-01`, `cra-ffr-03`, `cra-ffr-05`, `cra-random-start`, `cra-copy-noise`, each stopping at
+2500. **Compare** entry: "Random mixing vs fixed random neighbors — Social Structure (Compare)".
+Built-in sweeps: `cra-table-2`, `cra-dial`, `cra-threshold`, `cra-noise`, `cra-population`.
+
+Credit: Michael D. Cohen, Rick L. Riolo and Robert Axelrod, "The Role of Social Structure in the
+Maintenance of Cooperative Regimes," *Rationality and Society* 13(1) (2001), 5–32. See
+`docs/superpowers/specs/2026-09-26-social-structure-design.md`.
+
 ### Demographic Prisoner's Dilemma (Epstein 1998, and its replication)
 
 Epstein's demographic Prisoner's Dilemma: 100 agents on a 30 × 30 torus, each with a fixed strategy,
@@ -1012,6 +1116,7 @@ if encoding fails. Files are named after the setup and the ticks they cover, e.g
     sugarscape run --preset lhv-published --ticks 550 --series-csv lhv.csv          # AD 800–1350
     sugarscape sweep --builtin fig-ii-5 --out fig-ii-5.json --summary-csv fig-ii-5.csv
     sugarscape sweep my-sweep.json --jobs 4 --seeds 3 --ticks 300 --runs-csv runs.csv
+    sugarscape shot beat.json --out beat.frames.json    # a frame dump for the Flump studio
 
 `run` runs a preset or config of any model; it defaults to seed 1 and 1000 ticks (an anasazi run
 stops at its end year and says so on stderr); `--config-out` writes the config it ran and
@@ -1019,6 +1124,14 @@ stops at its end year and says so on stderr); `--config-out` writes the config i
 says otherwise, prints the result JSON unless `--out` is given, and reports progress on
 stderr unless `--quiet`. Exit codes: 0 success, 1 I/O error, 2 usage or validation error
 (printed as `field: message`, one per line).
+
+`shot` runs a shot file — `preset` or `config`, `seed` (default 1), `ticks`, `set` (config
+paths to override, e.g. `"goods.0.map"`), `empty` (start every site with no sugar) and `place`
+(agents placed by hand at a tick with a given vision, metabolism and sugar) — and writes every
+tick of the run as JSON: each agent (`[id, x, y, sugar, age, vision, metabolism]`), the sugar at
+every site, deaths with their cause, births, the placed agents' ids and the statistics series.
+Frame t is the world after t ticks and after that tick's placements. Sugarscape only; see
+`studio/README.md`.
 
 A run is a function of its config and seed, so a sweep's output files are byte-identical for
 any `--jobs` (and in the browser, for any number of workers). Native and browser builds can

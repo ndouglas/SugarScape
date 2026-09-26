@@ -2,13 +2,15 @@ import { citizenRows, shownCitizen } from '../civil';
 import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
-import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AnasaziInspection,
   CivilInspection,
   ClassesInspection,
+  OpinionsInspection,
+  StructureInspection,
   CultureInspection,
   CultureSiteView,
   DpdInspection,
@@ -181,6 +183,45 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A cell of the agents' block (its agent) or of the p–q plane (its point and the agents there). */
+  private structureRows(view: StructureInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const names = { tft: 'near Tit-for-Tat', alld: 'near Always Defect', allc: 'near Always Cooperate', other: 'mixed' };
+    const strategy = (a: { y: number; p: number; q: number; class: keyof typeof names }) =>
+      `y ${fmt(a.y)} · p ${fmt(a.p)} · q ${fmt(a.q)} (${names[a.class]})`;
+    if (view.agent) {
+      const a = view.agent;
+      const rows = [row('Agent', `#${a.id}`), row('Strategy', strategy(a)), row('Payoff per move', fmt(a.score)), row('Copied', a.copied === null ? 'no one' : `#${a.copied}`)];
+      for (const p of a.partners) rows.push(row(`Played #${p.id}`, `${p.games}× · p ${fmt(p.p)} · payoff ${fmt(p.score)}`));
+      return rows;
+    }
+    if (view.plane) {
+      const rows = [row('Point', `p ${fmt(view.plane[0])} · q ${fmt(view.plane[1])}`)];
+      if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+      for (const a of view.agents.slice(0, 12)) rows.push(row(`#${a.id}`, `${strategy(a)} · payoff ${fmt(a.score)}`));
+      if (view.agents.length > 12) rows.push(row('', `and ${view.agents.length - 12} more`));
+      return rows;
+    }
+    if (view.block) return [row('Block cell', 'no agent here')];
+    return [row('Point', 'between the agents and the plane')];
+  }
+
+  /** A cell of the opinion × time diagram (its period, opinion and the agents passing) or of the lattice. */
+  private opinionsRows(view: OpinionsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const rows: HTMLElement[] = [];
+    if (view.period !== null && view.opinion !== null) rows.push(row('Period', String(view.period)), row('Opinion', fmt(view.opinion)));
+    else if (view.lattice_site) rows.push(row('Site', `(${view.lattice_site.x}, ${view.lattice_site.y})`));
+    else return [row('Point', 'between the diagram and the lattice')];
+    if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+    const shown = view.agents.slice(0, 12);
+    for (const a of shown) {
+      rows.push(row(`#${a.id}`, `${fmt(a.opinion)} (started ${fmt(a.start)}) · reach −${fmt(a.epsilon_left)} +${fmt(a.epsilon_right)} · hears ${a.reaches}`));
+    }
+    if (view.agents.length > shown.length) rows.push(row('', `and ${view.agents.length - shown.length} more`));
+    return rows;
+  }
+
   /** A point of a memory simplex: its mix, the best reply there, and the agents whose memory plots there. */
   private classesRows(view: ClassesInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -311,21 +352,25 @@ export class InspectPanel {
         ? this.ethnoSiteRows(view, gone)
         : isDpdView(view, this.engine.model)
           ? this.dpdSiteRows(view, gone)
-          : isClassesView(view)
-            ? this.classesRows(view)
-            : isCultureView(view)
-              ? this.cultureRows(view)
-              : isTagsView(view)
-                ? this.tagsRows(view)
-                : isRingView(view)
-                  ? this.ringRows(view, gone)
-                  : isValleyView(view)
-                    ? this.valleyRows(view, gone)
-                    : isCivilView(view)
-                      ? this.civilRows(view, shown.agentId, gone)
-                      : isSpatialView(view)
-                        ? this.spatialRows(view)
-                        : this.schellingRows(view, gone);
+          : isStructureView(view)
+            ? this.structureRows(view)
+            : isOpinionsView(view)
+              ? this.opinionsRows(view)
+              : isClassesView(view)
+                ? this.classesRows(view)
+                : isCultureView(view)
+                  ? this.cultureRows(view)
+                  : isTagsView(view)
+                    ? this.tagsRows(view)
+                    : isRingView(view)
+                      ? this.ringRows(view, gone)
+                      : isValleyView(view)
+                        ? this.valleyRows(view, gone)
+                        : isCivilView(view)
+                          ? this.civilRows(view, shown.agentId, gone)
+                          : isSpatialView(view)
+                            ? this.spatialRows(view)
+                            : this.schellingRows(view, gone);
       this.el.replaceChildren(...note, h('table', {}, ...rows));
       return;
     }

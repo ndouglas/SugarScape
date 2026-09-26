@@ -1,0 +1,4 @@
+{"preset": "ii-2-unit", "ticks": 14, "seed": 1, "empty": true,
+ "set": {"width": 12, "height": 20, "population": 0, "vision.max": 6, "seasons.enabled": true, "seasons.period": 12,
+   "goods.0.map": {"kind": "flat", "capacity": 2}},
+ "place": [{"x": 6, "y": 13, "vision": 6, "metabolism": 1, "sugar": 8}]}

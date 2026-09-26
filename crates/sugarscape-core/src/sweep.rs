@@ -962,7 +962,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 43] = [
+const BUILTINS: [Builtin; 54] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1118,6 +1118,50 @@ const BUILTINS: [Builtin; 43] = [
     Builtin {
         id: "jansson-markers",
         json: include_str!("../../../sweeps/jansson-markers.json"),
+    },
+    Builtin {
+        id: "hk-diagonal",
+        json: include_str!("../../../sweeps/hk-diagonal.json"),
+    },
+    Builtin {
+        id: "hk-asymmetry",
+        json: include_str!("../../../sweeps/hk-asymmetry.json"),
+    },
+    Builtin {
+        id: "hk-bias",
+        json: include_str!("../../../sweeps/hk-bias.json"),
+    },
+    Builtin {
+        id: "hk-updating",
+        json: include_str!("../../../sweeps/hk-updating.json"),
+    },
+    Builtin {
+        id: "hk-lattice",
+        json: include_str!("../../../sweeps/hk-lattice.json"),
+    },
+    Builtin {
+        id: "hk-population",
+        json: include_str!("../../../sweeps/hk-population.json"),
+    },
+    Builtin {
+        id: "cra-table-2",
+        json: include_str!("../../../sweeps/cra-table-2.json"),
+    },
+    Builtin {
+        id: "cra-dial",
+        json: include_str!("../../../sweeps/cra-dial.json"),
+    },
+    Builtin {
+        id: "cra-threshold",
+        json: include_str!("../../../sweeps/cra-threshold.json"),
+    },
+    Builtin {
+        id: "cra-noise",
+        json: include_str!("../../../sweeps/cra-noise.json"),
+    },
+    Builtin {
+        id: "cra-population",
+        json: include_str!("../../../sweeps/cra-population.json"),
     },
     Builtin {
         id: "dpd-payoffs",
@@ -1997,6 +2041,17 @@ mod tests {
                 "ha-lattice",
                 "jansson-tag-mutation",
                 "jansson-markers",
+                "hk-diagonal",
+                "hk-asymmetry",
+                "hk-bias",
+                "hk-updating",
+                "hk-lattice",
+                "hk-population",
+                "cra-table-2",
+                "cra-dial",
+                "cra-threshold",
+                "cra-noise",
+                "cra-population",
                 "dpd-payoffs",
                 "dpd-mutation",
                 "dpd-metabolism",

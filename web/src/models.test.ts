@@ -5,6 +5,8 @@ import {
   finishesUnpredictably,
   isCivilView,
   isClassesView,
+  isOpinionsView,
+  isStructureView,
   isCultureView,
   isDpdView,
   isEthnoView,
@@ -98,6 +100,51 @@ describe('the anasazi model', () => {
     const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the social-structure model', () => {
+  it('is read by its tag, and its inspections by their block cell and plane point', () => {
+    const c = { model: 'structure', stop_at: 2500 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('structure');
+    const cell = { site: { x: 1, y: 2 }, block: { x: 0, y: 0 }, plane: null, agents: [], agent: null } as unknown as AnyInspection;
+    const line = { site: { x: 1, y: 2 }, period: 3, opinion: 0.5, lattice_site: null, agents: [], agent: null } as unknown as AnyInspection;
+    expect([cell, line].map(isStructureView)).toEqual([true, false]);
+    expect(isOpinionsView(cell) || isClassesView(cell) || isCultureView(cell) || isTagsView(cell) || isSugarView(cell)).toBe(false);
+  });
+
+  it('colors agents four ways, has no overlays, and stops predictably at its last period', () => {
+    expect(COLOR_MODES.structure).toEqual([
+      ['friendliness', 'Friendliness'],
+      ['provocability', 'Provocability'],
+      ['payoff', 'Payoff'],
+      ['strategy', 'Strategy'],
+    ]);
+    expect(MODEL_OVERLAYS.structure).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'structure', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(2500)), ticksLeft(c(2500), 500), ticksLeft(c(0), 500)]).toEqual([false, 2000, Infinity]);
+  });
+});
+
+describe('the bounded-confidence model', () => {
+  it('is read by its tag, and its inspections by their period and lattice site', () => {
+    const c = { model: 'opinions', stop_when_stable: true } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('opinions');
+    const cell = { site: { x: 1, y: 2 }, period: 3, opinion: 0.5, lattice_site: null, agents: [], agent: null } as unknown as AnyInspection;
+    const simplex = { site: { x: 1, y: 2 }, simplex: 'one', mix: [0.2, 0.5, 0.3], best_reply: 'M', agents: [], agent: null } as unknown as AnyInspection;
+    expect([cell, simplex].map(isOpinionsView)).toEqual([true, false]);
+    expect(isClassesView(cell) || isCultureView(cell) || isTagsView(cell) || isSugarView(cell)).toBe(false);
+  });
+
+  it('colors lines by start or opinion, has no overlays, and stops unpredictably when asked to stop at stability', () => {
+    expect(COLOR_MODES.opinions).toEqual([
+      ['start', 'Start'],
+      ['opinion', 'Opinion'],
+    ]);
+    expect(MODEL_OVERLAYS.opinions).toEqual([]);
+    const c = (stop_when_stable: boolean) => ({ model: 'opinions', stop_when_stable }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(true)), finishesUnpredictably(c(false))]).toEqual([true, false]);
+    expect(ticksLeft(c(true), 5)).toBe(Infinity);
   });
 });
 

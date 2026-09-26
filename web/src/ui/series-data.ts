@@ -306,6 +306,61 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       range: [0, 1],
     },
   ],
+  opinions: [
+    { title: 'Clusters', lines: [{ key: 'clusters', label: 'Surviving opinions', color: '--c1' }] },
+    {
+      title: 'Largest camps',
+      lines: [
+        { key: 'largest', label: 'Largest', color: '--c2' },
+        { key: 'second', label: 'Second', color: '--c3' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Mean and median',
+      lines: [
+        { key: 'mean_opinion', label: 'Mean', color: '--c1' },
+        { key: 'median_opinion', label: 'Median', color: '--c4' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Splits',
+      lines: [
+        { key: 'splits', label: 'Two-sided', color: '--red' },
+        { key: 'one_sided_splits', label: 'One-sided', color: '--c3' },
+      ],
+    },
+    { title: 'Change', lines: [{ key: 'max_change', label: 'Largest move this period', color: '--c4' }] },
+  ],
+  structure: [
+    { title: 'Mean payoff', lines: [{ key: 'mean_payoff', label: 'Per move', color: '--c1' }], range: [0, 5] },
+    { title: 'Cooperation', lines: [{ key: 'cooperation', label: 'Share of moves', color: '--c2' }], range: [0, 1] },
+    {
+      title: 'Strategy',
+      lines: [
+        { key: 'mean_p', label: 'Friendliness (p)', color: '--c2' },
+        { key: 'mean_q', label: 'Forgiveness (q)', color: '--c3' },
+        { key: 'mean_y', label: 'First move (y)', color: '--muted' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'High cooperation',
+      lines: [
+        { key: 'high', label: 'At the threshold', color: '--c1' },
+        { key: 'share_high_since', label: 'Share since first reached', color: '--c4' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Copying',
+      lines: [
+        { key: 'copied', label: 'Agents copying', color: '--c3' },
+        { key: 'partner_p_slope', label: 'Partners’ p on own p (slope)', color: '--c4' },
+      ],
+    },
+  ],
   dpd: [
     {
       title: 'Population',
@@ -338,19 +393,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi'
-    ? 'Year'
-    : model === 'tags'
-      ? 'Generation'
-      : model === 'culture'
-        ? 'Events per site'
-        : model === 'classes'
-          ? 'Periods'
-          : model === 'ethno'
-            ? 'Period'
-            : model === 'dpd'
-              ? 'Cycle'
-              : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

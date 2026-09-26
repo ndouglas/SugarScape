@@ -1,0 +1,55 @@
+{
+  "name": "Bounded Confidence: consensus and the number of agents (Lorenz 2006)",
+  "description": "Lorenz 2006 ('Consensus strikes back'): the confidence at which consensus becomes typical depends on the number of agents. The metric is the share of agents in the largest camp (1 at consensus). Measured (release, seeds 1–20, recorded 2026-09-25): at ε = 0.25, 0.73 with 25 agents, 0.89 with 200 and 1 from 625 up; at ε = 0.22, about 0.62 up to 200 agents and 0.82–0.91 from 625 — small groups miss the consensus that HK's 625 agents reach.",
+  "base": {
+    "preset": "hk-polarisation"
+  },
+  "x": {
+    "label": "Agents (n)",
+    "path": "agents",
+    "values": [
+      25,
+      50,
+      100,
+      200,
+      625,
+      1000,
+      2000
+    ]
+  },
+  "series": {
+    "label": "Confidence",
+    "values": [
+      {
+        "at": 0,
+        "name": "ε = 0.2",
+        "set": {
+          "epsilon": 0.2
+        }
+      },
+      {
+        "at": 1,
+        "name": "ε = 0.22",
+        "set": {
+          "epsilon": 0.22
+        }
+      },
+      {
+        "at": 2,
+        "name": "ε = 0.25",
+        "set": {
+          "epsilon": 0.25
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "largest"
+  }
+}

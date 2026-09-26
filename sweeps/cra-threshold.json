@@ -1,0 +1,56 @@
+{
+  "name": "Social Structure: how much the unstated threshold matters",
+  "description": "The paper never states what counts as 'high cooperation'. This sweep's metric is the final share_high_since averaged over every seed: a run that never reaches high contributes 0, so the RWR line here is Remain High × the share of runs that reach high, not Remain High alone (FRN and FFR-0.3 reach high in every run here, so theirs is Remain High). Measured (release, seeds 1–10, 2500 periods, recorded 2026-09-26): at 2.3, RWR 0.014, FRN 0.933, FFR-0.3 0.370 — against the survey's 30-seed Remain High at 2.3 (RWR 0.020, FRN 0.940, FFR-0.3 0.376) and the paper's 0.015, 0.942, 0.402 — and every other row of Table 2 lands within 0.03 of the paper at 2.3 too (the survey), so 2.3 is the default. At 2.5 FRN would hold only 0.46, at 2.0 FFR-0.3 would hold 0.66. (Finding 5) At thresholds of about 2.25 and below, every run 'reaches' high in period 1 (the start averages 2.25), so those points count the opening collapse rather than sustained cooperation — e.g. at 2.0 all 10 RWR seeds 'reach' high.",
+  "base": {
+    "preset": "cra-frn"
+  },
+  "x": {
+    "label": "High cooperation at",
+    "path": "high",
+    "values": [
+      2.0,
+      2.1,
+      2.2,
+      2.3,
+      2.4,
+      2.5,
+      2.6
+    ]
+  },
+  "series": {
+    "label": "Structure",
+    "values": [
+      {
+        "at": 0,
+        "name": "RWR",
+        "set": {
+          "structure": "rwr"
+        }
+      },
+      {
+        "at": 1,
+        "name": "FRN",
+        "set": {
+          "structure": "frn"
+        }
+      },
+      {
+        "at": 2,
+        "name": "FFR 0.3",
+        "set": {
+          "structure": "frn",
+          "substitution": 0.3
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2500,
+  "metric": {
+    "kind": "final",
+    "series": "share_high_since"
+  }
+}

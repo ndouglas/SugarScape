@@ -1,4 +1,4 @@
-// The demographic Prisoner's Dilemma's pure page helpers (milestone 17): Inspect's rows.
+// The demographic Prisoner's Dilemma's pure page helpers (milestone 19): Inspect's rows.
 import type { DpdAgentView } from './types';
 
 /** A strategy's name. */

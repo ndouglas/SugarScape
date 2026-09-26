@@ -1,0 +1,68 @@
+{
+  "name": "Bounded Confidence: asymmetric confidence and the mean (Fig. 12c)",
+  "description": "Hegselmann and Krause's Fig. 12c: the final mean opinion when agents reach εl to the left and εr to the right, the same for everyone. They report that the mean moves toward the favored side, most when confidence in the other direction is small. Measured (release, seeds 1–20, recorded 2026-09-25): with εl = 0.02 the mean climbs from 0.50 to 0.94 as εr grows to 0.2 and stays there; with εl = 0.1 from 0.26 (εr = 0.02: favoring the left) to 0.81; with εl = 0.2 from 0.06 to 0.69. Symmetric points (εl = εr) sit at 0.50. It reproduces.",
+  "base": {
+    "preset": "hk-asym-c"
+  },
+  "x": {
+    "label": "Right reach (εr)",
+    "path": "epsilon_right",
+    "values": [
+      0.02,
+      0.04,
+      0.06,
+      0.08,
+      0.1,
+      0.12,
+      0.14,
+      0.16,
+      0.18,
+      0.2,
+      0.22,
+      0.24,
+      0.26,
+      0.28,
+      0.3,
+      0.32,
+      0.34,
+      0.36,
+      0.38,
+      0.4
+    ]
+  },
+  "series": {
+    "label": "Left reach",
+    "values": [
+      {
+        "at": 0,
+        "name": "εl = 0.02",
+        "set": {
+          "epsilon_left": 0.02
+        }
+      },
+      {
+        "at": 1,
+        "name": "εl = 0.1",
+        "set": {
+          "epsilon_left": 0.1
+        }
+      },
+      {
+        "at": 2,
+        "name": "εl = 0.2",
+        "set": {
+          "epsilon_left": 0.2
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "mean_opinion"
+  }
+}

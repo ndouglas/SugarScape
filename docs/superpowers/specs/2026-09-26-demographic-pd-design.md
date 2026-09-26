@@ -1,8 +1,8 @@
-# SugarScape Milestone 17 — Demographic Prisoner's Dilemma (Epstein and its replication) — Design
+# SugarScape Milestone 19 — Demographic Prisoner's Dilemma (Epstein and its replication) — Design
 
 **Date:** 2026-09-26
-**Milestone number:** 17 if it lands before the `hk` worktree's model; otherwise renumbered at merge.
-**Builds on:** the milestone 1–16 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds and milestone 11's conventions (portable math, named switches for unstated choices, measured descriptions).
+**Milestone number:** 19 (bounded confidence and social structure landed first as 17 and 18).
+**Builds on:** the milestone 1–18 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds and milestone 11's conventions (portable math, named switches for unstated choices, measured descriptions).
 **Sources:**
 - **WP:** Epstein, "Zones of Cooperation in Demographic Prisoner's Dilemma", SFI Working Paper 97-12-094 (1997; the user supplied the PDF).
 - **GSS:** Epstein, *Generative Social Science* (Princeton, 2006), chapter 9 (pp. 199–221; "published previously in *Complexity* 4(2): 36–48", 1998) and its appendix (pp. 222–224, the demographic coordination game). The chapter adds Table 9.1 (Run 1's assumptions) and Table 9.3 (payoff sensitivity) and changes the movement/play rule (below).
@@ -13,7 +13,7 @@ Not recoverable: the original C++ code and the Brookings Java applet (only the 1
 
 ## Goal
 
-Add Epstein's Demographic Prisoner's Dilemma as an eleventh model kind (after milestone 16's ethnocentrism), with the working paper's and the published text's rules, Radax and Rengs' unstated timing choices, soup, metabolism and the coordination game as named switches and presets — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey) — and measure every claim, including Tables 1, 2 and 9.3 and RR's factorial test.
+Add Epstein's Demographic Prisoner's Dilemma as a thirteenth model kind (after bounded confidence and social structure, milestones 17 and 18), with the working paper's and the published text's rules, Radax and Rengs' unstated timing choices, soup, metabolism and the coordination game as named switches and presets — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey) — and measure every claim, including Tables 1, 2 and 9.3 and RR's factorial test.
 
 ## Non-negotiable constraints
 

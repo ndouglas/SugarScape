@@ -1,4 +1,4 @@
-//! The demographic Prisoner's Dilemma (milestone 17): Epstein, "Zones of
+//! The demographic Prisoner's Dilemma (milestone 19): Epstein, "Zones of
 //! Cooperation in Demographic Prisoner's Dilemma" (SFI WP 97-12-094;
 //! Complexity 4(2), 1998; Generative Social Science, 2006, ch. 9 and its
 //! appendix), with the working paper's rule, Radax & Rengs' (2009) unstated

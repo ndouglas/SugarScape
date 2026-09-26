@@ -1,4 +1,4 @@
-//! The demographic Prisoner's Dilemma (milestone 17) against Epstein's
+//! The demographic Prisoner's Dilemma (milestone 19) against Epstein's
 //! working paper (1997) and chapter (GSS 2006, ch. 9 and its appendix) and
 //! Radax & Rengs' replication (RR, 2009). Every claim runs over seeds 1–30
 //! (Epstein's and RR's 30 runs) in release: `cargo test -p sugarscape-core

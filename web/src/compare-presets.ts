@@ -81,6 +81,18 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     b: 'jansson-kin',
   },
   {
+    id: 'hk-simultaneous-vs-serial',
+    label: 'Simultaneous vs serial updating — Bounded Confidence (Compare)',
+    a: 'hk-polarisation',
+    b: 'hk-serial',
+  },
+  {
+    id: 'cra-rwr-vs-frn',
+    label: 'Random mixing vs fixed random neighbors — Social Structure (Compare)',
+    a: 'cra-rwr',
+    b: 'cra-frn',
+  },
+  {
     id: 'dpd-wp-vs-published',
     label: 'Working paper vs published rule — Demographic PD (Compare)',
     a: 'dpd-run-1',

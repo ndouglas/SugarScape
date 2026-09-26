@@ -8,7 +8,9 @@ mod classes;
 mod culture;
 mod dpd;
 mod ethno;
+mod opinions;
 mod spatial;
+mod structure;
 mod tags;
 
 use crate::claim::Claim;
@@ -25,7 +27,9 @@ pub fn all() -> Vec<Claim> {
         culture::claims(),
         dpd::claims(),
         ethno::claims(),
+        opinions::claims(),
         spatial::claims(),
+        structure::claims(),
         tags::claims(),
     ]
     .into_iter()

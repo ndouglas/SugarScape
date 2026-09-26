@@ -28,3 +28,7 @@ web/src/wasm-pkg/
 
 # Flump studio build outputs
 studio/out/
+__pycache__/
+
+# Local copies of source papers (see docs/papers.md); never committed
+papers/
