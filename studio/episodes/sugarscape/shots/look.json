@@ -1,0 +1,4 @@
+{"preset": "ii-2-unit", "ticks": 4, "seed": 2,
+ "set": {"width": 12, "height": 12, "population": 0, "vision.max": 6,
+   "goods.0.map": {"kind": "peaks", "peaks": [{"x": 8, "y": 5, "radius": 4, "height": 4}]}},
+ "place": [{"x": 3, "y": 5, "vision": 4, "metabolism": 1, "sugar": 6}]}

@@ -7,6 +7,7 @@ use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand};
 use sugarscape_core::config::FieldError;
+use sugarscape_core::frames::{self, Shot};
 use sugarscape_core::model::{ModelConfig, ModelKind, ModelWorld};
 use sugarscape_core::presets;
 use sugarscape_core::sweep::{self, Sweep};
@@ -32,6 +33,8 @@ enum Command {
     Run(RunArgs),
     /// Run a parameter sweep.
     Sweep(SweepArgs),
+    /// Run a shot file and write its frame dump (for the Flump studio).
+    Shot(ShotArgs),
 }
 
 #[derive(Debug, Args)]
@@ -103,6 +106,16 @@ struct SweepArgs {
     quiet: bool,
 }
 
+#[derive(Debug, Args)]
+struct ShotArgs {
+    /// A shot JSON file.
+    #[arg(value_name = "FILE")]
+    file: PathBuf,
+    /// Write the frame dump here instead of stdout.
+    #[arg(long, value_name = "PATH")]
+    out: Option<PathBuf>,
+}
+
 /// Why a command failed.
 #[derive(Debug)]
 enum Failure {
@@ -161,6 +174,20 @@ fn run(cli: Cli) -> Result<(), Failure> {
         }
         Command::Run(args) => run_world(args),
         Command::Sweep(args) => run_sweep(args),
+        Command::Shot(args) => run_shot(args),
+    }
+}
+
+fn run_shot(args: ShotArgs) -> Result<(), Failure> {
+    let shot = Shot::from_json(&read(&args.file)?)?;
+    let dump = frames::run_shot(&shot)?;
+    let json = serde_json::to_string(&dump).expect("frame dumps serialize");
+    match &args.out {
+        Some(path) => write(path, &json),
+        None => {
+            println!("{json}");
+            Ok(())
+        }
     }
 }
 
@@ -280,6 +307,15 @@ mod tests {
             Cli::try_parse_from(["sugarscape", "run", "--preset", "a", "--config", "b.json"])
                 .is_err()
         );
+    }
+
+    #[test]
+    fn shot_takes_a_file_and_an_optional_out() {
+        assert!(Cli::try_parse_from(["sugarscape", "shot", "beat.json"]).is_ok());
+        assert!(
+            Cli::try_parse_from(["sugarscape", "shot", "beat.json", "--out", "d.json"]).is_ok()
+        );
+        assert!(Cli::try_parse_from(["sugarscape", "shot"]).is_err());
     }
 
     #[test]
