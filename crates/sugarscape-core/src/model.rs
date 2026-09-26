@@ -17,11 +17,12 @@ use crate::ring::{RingConfig, RingWorld};
 use crate::schelling::{SchellingConfig, SchellingWorld};
 use crate::schema::Param;
 use crate::spatial::{SpatialConfig, SpatialWorld};
+use crate::structure::{StructureConfig, StructureWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
 use crate::{
     anasazi, civil, classes, culture, ethno, export, opinions, ring, schelling, spatial, stats,
-    tags,
+    structure, tags,
 };
 
 /// Which model a config or world is.
@@ -39,10 +40,11 @@ pub enum ModelKind {
     Classes,
     Ethno,
     Opinions,
+    Structure,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 11] = [
+    pub const ALL: [ModelKind; 12] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -54,6 +56,7 @@ impl ModelKind {
         ModelKind::Classes,
         ModelKind::Ethno,
         ModelKind::Opinions,
+        ModelKind::Structure,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -69,6 +72,7 @@ impl ModelKind {
             ModelKind::Classes => "classes",
             ModelKind::Ethno => "ethno",
             ModelKind::Opinions => "opinions",
+            ModelKind::Structure => "structure",
         }
     }
 
@@ -87,6 +91,7 @@ impl ModelKind {
             ModelKind::Classes => classes::schema(),
             ModelKind::Ethno => ethno::schema(),
             ModelKind::Opinions => opinions::schema(),
+            ModelKind::Structure => structure::schema(),
         }
     }
 }
@@ -111,6 +116,7 @@ pub enum ModelConfig {
     Classes(ClassesConfig),
     Ethno(EthnoConfig),
     Opinions(OpinionsConfig),
+    Structure(StructureConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -127,6 +133,7 @@ enum Tagged<'a> {
     Classes(&'a ClassesConfig),
     Ethno(&'a EthnoConfig),
     Opinions(&'a OpinionsConfig),
+    Structure(&'a StructureConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -150,6 +157,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Classes(c) => Tagged::Classes(c).serialize(s),
             ModelConfig::Ethno(c) => Tagged::Ethno(c).serialize(s),
             ModelConfig::Opinions(c) => Tagged::Opinions(c).serialize(s),
+            ModelConfig::Structure(c) => Tagged::Structure(c).serialize(s),
         }
     }
 }
@@ -168,6 +176,7 @@ impl ModelConfig {
             ModelConfig::Classes(_) => ModelKind::Classes,
             ModelConfig::Ethno(_) => ModelKind::Ethno,
             ModelConfig::Opinions(_) => ModelKind::Opinions,
+            ModelConfig::Structure(_) => ModelKind::Structure,
         }
     }
 
@@ -235,10 +244,13 @@ impl ModelConfig {
             "opinions" => serde_json::from_value(value)
                 .map(ModelConfig::Opinions)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "structure" => serde_json::from_value(value)
+                .map(ModelConfig::Structure)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno or opinions)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions or structure)"
                 ),
             )),
         }
@@ -257,6 +269,7 @@ impl ModelConfig {
             ModelConfig::Classes(c) => c.validate(),
             ModelConfig::Ethno(c) => c.validate(),
             ModelConfig::Opinions(c) => c.validate(),
+            ModelConfig::Structure(c) => c.validate(),
         }
     }
 
@@ -275,6 +288,7 @@ impl ModelConfig {
             ModelConfig::Classes(c) => set_path(c, path, value).map(ModelConfig::Classes),
             ModelConfig::Ethno(c) => set_path(c, path, value).map(ModelConfig::Ethno),
             ModelConfig::Opinions(c) => set_path(c, path, value).map(ModelConfig::Opinions),
+            ModelConfig::Structure(c) => set_path(c, path, value).map(ModelConfig::Structure),
         }
     }
 
@@ -292,7 +306,8 @@ impl ModelConfig {
             | ModelConfig::Spatial(_)
             | ModelConfig::Culture(_)
             | ModelConfig::Classes(_)
-            | ModelConfig::Opinions(_) => None,
+            | ModelConfig::Opinions(_)
+            | ModelConfig::Structure(_) => None,
         }
     }
 
@@ -310,6 +325,7 @@ impl ModelConfig {
             ModelConfig::Classes(_) => classes::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Ethno(_) => ethno::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Opinions(_) => opinions::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Structure(_) => structure::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -490,6 +506,7 @@ pub enum ModelWorld {
     Classes(Box<ClassesWorld>),
     Ethno(Box<EthnoWorld>),
     Opinions(Box<OpinionsWorld>),
+    Structure(Box<StructureWorld>),
 }
 
 impl ModelWorld {
@@ -522,6 +539,9 @@ impl ModelWorld {
             ModelConfig::Opinions(c) => {
                 ModelWorld::Opinions(Box::new(OpinionsWorld::new(c, seed)?))
             }
+            ModelConfig::Structure(c) => {
+                ModelWorld::Structure(Box::new(StructureWorld::new(c, seed)?))
+            }
         })
     }
 
@@ -538,6 +558,7 @@ impl ModelWorld {
             ModelWorld::Classes(_) => ModelKind::Classes,
             ModelWorld::Ethno(_) => ModelKind::Ethno,
             ModelWorld::Opinions(_) => ModelKind::Opinions,
+            ModelWorld::Structure(_) => ModelKind::Structure,
         }
     }
 
@@ -554,6 +575,7 @@ impl ModelWorld {
             ModelWorld::Classes(w) => w.as_ref(),
             ModelWorld::Ethno(w) => w.as_ref(),
             ModelWorld::Opinions(w) => w.as_ref(),
+            ModelWorld::Structure(w) => w.as_ref(),
         }
     }
 
@@ -570,6 +592,7 @@ impl ModelWorld {
             ModelWorld::Classes(w) => w.as_mut(),
             ModelWorld::Ethno(w) => w.as_mut(),
             ModelWorld::Opinions(w) => w.as_mut(),
+            ModelWorld::Structure(w) => w.as_mut(),
         }
     }
 
@@ -654,6 +677,7 @@ impl ModelWorld {
             ModelWorld::Classes(w) => copy_without_history!(Classes, w),
             ModelWorld::Ethno(w) => copy_without_history!(Ethno, w),
             ModelWorld::Opinions(w) => copy_without_history!(Opinions, w),
+            ModelWorld::Structure(w) => copy_without_history!(Structure, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -680,6 +704,7 @@ impl ModelWorld {
             (ModelWorld::Classes(live), ModelWorld::Classes(kept)) => restore_into!(live, kept),
             (ModelWorld::Ethno(live), ModelWorld::Ethno(kept)) => restore_into!(live, kept),
             (ModelWorld::Opinions(live), ModelWorld::Opinions(kept)) => restore_into!(live, kept),
+            (ModelWorld::Structure(live), ModelWorld::Structure(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -966,7 +991,8 @@ mod tests {
                 "culture",
                 "classes",
                 "ethno",
-                "opinions"
+                "opinions",
+                "structure"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());
