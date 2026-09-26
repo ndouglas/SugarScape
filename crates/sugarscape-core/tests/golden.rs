@@ -130,6 +130,20 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("jansson-kin", 0x265998639eacfbd0),
     ("jansson-kin-fixed", 0x3fac090571612879),
     ("hks-no-ethnocentrics", 0xbe867e7210bad2d2),
+    // Milestone 17: the demographic Prisoner's Dilemma.
+    ("dpd-run-1", 0x3d64b053fbfee4f6),
+    ("dpd-run-2", 0xe0198124ac5f4789),
+    ("dpd-run-3", 0x1c819cc85b7bb351),
+    ("dpd-run-4", 0xe6b5d66dee22ce07),
+    ("dpd-run-5", 0x2f5ae2bdc6bd257a),
+    ("dpd-working-paper", 0xaba834120f15810b),
+    ("dpd-closest", 0xd1c7475297f9864c),
+    ("dpd-soup", 0xdb64ad16a49146b),
+    ("dpd-shifted", 0x39b59d546b2bb2e8),
+    ("dpd-metabolism", 0x7b580a83419a3ea4),
+    ("dpd-footnote-27", 0xd1adeadce6881068),
+    ("dpd-rr-best", 0xe8fdc4ce027dd236),
+    ("dpd-coordination", 0x47f8c68504a9157a),
 ];
 
 fn fingerprint(id: &str) -> u64 {

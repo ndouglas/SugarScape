@@ -399,6 +399,9 @@ impl Sweep {
                         "the ethnocentrism model stops at its last period, {max} in this config"
                     )
                 }
+                crate::model::ModelKind::Dpd => {
+                    format!("the demographic PD stops at its last cycle, {max} in this config")
+                }
                 _ => format!(
                     "the Long House Valley stops at its end year, \
                      {max} ticks after its start year in this config"

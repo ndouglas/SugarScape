@@ -10,6 +10,7 @@ use crate::civil::{CivilConfig, CivilWorld};
 use crate::classes::{ClassesConfig, ClassesWorld};
 use crate::config::{Config, FieldError};
 use crate::culture::{CultureConfig, CultureWorld};
+use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::ring::{RingConfig, RingWorld};
@@ -19,7 +20,7 @@ use crate::spatial::{SpatialConfig, SpatialWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
 use crate::{
-    anasazi, civil, classes, culture, ethno, export, ring, schelling, spatial, stats, tags,
+    anasazi, civil, classes, culture, dpd, ethno, export, ring, schelling, spatial, stats, tags,
 };
 
 /// Which model a config or world is.
@@ -36,10 +37,11 @@ pub enum ModelKind {
     Culture,
     Classes,
     Ethno,
+    Dpd,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 10] = [
+    pub const ALL: [ModelKind; 11] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -50,6 +52,7 @@ impl ModelKind {
         ModelKind::Culture,
         ModelKind::Classes,
         ModelKind::Ethno,
+        ModelKind::Dpd,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -64,6 +67,7 @@ impl ModelKind {
             ModelKind::Culture => "culture",
             ModelKind::Classes => "classes",
             ModelKind::Ethno => "ethno",
+            ModelKind::Dpd => "dpd",
         }
     }
 
@@ -81,6 +85,7 @@ impl ModelKind {
             ModelKind::Culture => culture::schema(),
             ModelKind::Classes => classes::schema(),
             ModelKind::Ethno => ethno::schema(),
+            ModelKind::Dpd => dpd::schema(),
         }
     }
 }
@@ -104,6 +109,7 @@ pub enum ModelConfig {
     Culture(CultureConfig),
     Classes(ClassesConfig),
     Ethno(EthnoConfig),
+    Dpd(DpdConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -119,6 +125,7 @@ enum Tagged<'a> {
     Culture(&'a CultureConfig),
     Classes(&'a ClassesConfig),
     Ethno(&'a EthnoConfig),
+    Dpd(&'a DpdConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -141,6 +148,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Culture(c) => Tagged::Culture(c).serialize(s),
             ModelConfig::Classes(c) => Tagged::Classes(c).serialize(s),
             ModelConfig::Ethno(c) => Tagged::Ethno(c).serialize(s),
+            ModelConfig::Dpd(c) => Tagged::Dpd(c).serialize(s),
         }
     }
 }
@@ -158,6 +166,7 @@ impl ModelConfig {
             ModelConfig::Culture(_) => ModelKind::Culture,
             ModelConfig::Classes(_) => ModelKind::Classes,
             ModelConfig::Ethno(_) => ModelKind::Ethno,
+            ModelConfig::Dpd(_) => ModelKind::Dpd,
         }
     }
 
@@ -222,10 +231,13 @@ impl ModelConfig {
             "ethno" => serde_json::from_value(value)
                 .map(ModelConfig::Ethno)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "dpd" => serde_json::from_value(value)
+                .map(ModelConfig::Dpd)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes or ethno)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno or dpd)"
                 ),
             )),
         }
@@ -243,6 +255,7 @@ impl ModelConfig {
             ModelConfig::Culture(c) => c.validate(),
             ModelConfig::Classes(c) => c.validate(),
             ModelConfig::Ethno(c) => c.validate(),
+            ModelConfig::Dpd(c) => c.validate(),
         }
     }
 
@@ -260,6 +273,7 @@ impl ModelConfig {
             ModelConfig::Culture(c) => set_path(c, path, value).map(ModelConfig::Culture),
             ModelConfig::Classes(c) => set_path(c, path, value).map(ModelConfig::Classes),
             ModelConfig::Ethno(c) => set_path(c, path, value).map(ModelConfig::Ethno),
+            ModelConfig::Dpd(c) => set_path(c, path, value).map(ModelConfig::Dpd),
         }
     }
 
@@ -270,6 +284,7 @@ impl ModelConfig {
             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
             ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
             ModelConfig::Ethno(c) => (c.end > 0).then_some(c.end),
+            ModelConfig::Dpd(c) => (c.end > 0).then_some(c.end),
             ModelConfig::Sugarscape(_)
             | ModelConfig::Schelling(_)
             | ModelConfig::Ring(_)
@@ -293,6 +308,7 @@ impl ModelConfig {
             ModelConfig::Culture(_) => culture::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Classes(_) => classes::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Ethno(_) => ethno::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Dpd(_) => dpd::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -472,6 +488,7 @@ pub enum ModelWorld {
     Culture(Box<CultureWorld>),
     Classes(Box<ClassesWorld>),
     Ethno(Box<EthnoWorld>),
+    Dpd(Box<DpdWorld>),
 }
 
 impl ModelWorld {
@@ -501,6 +518,7 @@ impl ModelWorld {
             ModelConfig::Culture(c) => ModelWorld::Culture(Box::new(CultureWorld::new(c, seed)?)),
             ModelConfig::Classes(c) => ModelWorld::Classes(Box::new(ClassesWorld::new(c, seed)?)),
             ModelConfig::Ethno(c) => ModelWorld::Ethno(Box::new(EthnoWorld::new(c, seed)?)),
+            ModelConfig::Dpd(c) => ModelWorld::Dpd(Box::new(DpdWorld::new(c, seed)?)),
         })
     }
 
@@ -516,6 +534,7 @@ impl ModelWorld {
             ModelWorld::Culture(_) => ModelKind::Culture,
             ModelWorld::Classes(_) => ModelKind::Classes,
             ModelWorld::Ethno(_) => ModelKind::Ethno,
+            ModelWorld::Dpd(_) => ModelKind::Dpd,
         }
     }
 
@@ -531,6 +550,7 @@ impl ModelWorld {
             ModelWorld::Culture(w) => w.as_ref(),
             ModelWorld::Classes(w) => w.as_ref(),
             ModelWorld::Ethno(w) => w.as_ref(),
+            ModelWorld::Dpd(w) => w.as_ref(),
         }
     }
 
@@ -546,6 +566,7 @@ impl ModelWorld {
             ModelWorld::Culture(w) => w.as_mut(),
             ModelWorld::Classes(w) => w.as_mut(),
             ModelWorld::Ethno(w) => w.as_mut(),
+            ModelWorld::Dpd(w) => w.as_mut(),
         }
     }
 
@@ -629,6 +650,7 @@ impl ModelWorld {
             ModelWorld::Culture(w) => copy_without_history!(Culture, w),
             ModelWorld::Classes(w) => copy_without_history!(Classes, w),
             ModelWorld::Ethno(w) => copy_without_history!(Ethno, w),
+            ModelWorld::Dpd(w) => copy_without_history!(Dpd, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -654,6 +676,7 @@ impl ModelWorld {
             (ModelWorld::Culture(live), ModelWorld::Culture(kept)) => restore_into!(live, kept),
             (ModelWorld::Classes(live), ModelWorld::Classes(kept)) => restore_into!(live, kept),
             (ModelWorld::Ethno(live), ModelWorld::Ethno(kept)) => restore_into!(live, kept),
+            (ModelWorld::Dpd(live), ModelWorld::Dpd(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -907,6 +930,32 @@ mod tests {
     }
 
     #[test]
+    fn dpd_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "dpd", "max_age": 100, "removal": "end_of_cycle"}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Dpd);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(json["model"], "dpd");
+        assert_eq!(json["removal"], "end_of_cycle");
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["cooperators", "defectors"]);
+        assert_eq!(c.max_ticks(), None);
+        let next = c.with_path("end", &json!(500)).unwrap();
+        assert_eq!(next.max_ticks(), Some(500));
+        let e = ModelConfig::from_json(r#"{"model": "dpd", "mutation": 2}"#).unwrap_err();
+        assert_eq!(e[0].field, "mutation");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!((w.kind(), w.model().size()), (ModelKind::Dpd, (30, 30)));
+        assert_eq!(w.model().population(), 100);
+        let cp = w.checkpoint().expect("dpd worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -939,7 +988,8 @@ mod tests {
                 "tags",
                 "culture",
                 "classes",
-                "ethno"
+                "ethno",
+                "dpd"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());
