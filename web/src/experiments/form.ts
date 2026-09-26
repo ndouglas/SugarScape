@@ -47,6 +47,10 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'final', series: 'fit' },
     };
   }
+  if (model === 'opinions') {
+    // Fig. 3's axis (the built-in hk-diagonal): surviving opinions against confidence.
+    return { ...form, x: { path: 'epsilon', values: '0.05:0.3:0.05' }, ticks: 1000, metric: { ...form.metric, kind: 'final', series: 'clusters' } };
+  }
   if (model === 'classes') {
     // Fig. 4's axis (the built-in aey-memory): the way out of a fractious start against memory.
     return { ...form, x: { path: 'memory', values: '6:14:2' }, ticks: 100000, metric: { ...form.metric, kind: 'final', series: 'equity_at' } };

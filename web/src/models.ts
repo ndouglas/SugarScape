@@ -9,6 +9,8 @@ import type {
   ClassesInspection,
   CultureConfig,
   CultureInspection,
+  OpinionsConfig,
+  OpinionsInspection,
   ColorMode,
   Config,
   Inspection,
@@ -21,7 +23,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'opinions'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -34,12 +36,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   tags: 'Tag Cooperation',
   culture: 'Axelrod Culture',
   classes: 'Emergence of Classes',
+  opinions: 'Bounded Confidence',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'opinions'
     ? tag
     : 'sugarscape';
 }
@@ -83,6 +86,11 @@ export function isClassesView(v: AnyInspection): v is ClassesInspection {
   return 'simplex' in v && 'mix' in v;
 }
 
+/** A cell of the bounded-confidence frame (it names its period and lattice site). */
+export function isOpinionsView(v: AnyInspection): v is OpinionsInspection {
+  return 'period' in v && 'lattice_site' in v;
+}
+
 /** A cell of the culture frame (it says whether it is a site or a lane). */
 export function isCultureView(v: AnyInspection): v is CultureInspection {
   return 'kind' in v && 'neighbors' in v;
@@ -112,6 +120,7 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   const model = modelOf(c);
   if (model === 'culture') return (c as CultureConfig).stop_when_stable && (c as CultureConfig).drift === 0;
   if (model === 'classes') return (c as ClassesConfig).stop_at_equity;
+  if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -183,6 +192,11 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['best_reply', 'Best reply'],
     ['payoff', 'Payoff'],
   ],
+  // Lines colored by where each agent started (HK's figures) or where it is now.
+  opinions: [
+    ['start', 'Start'],
+    ['opinion', 'Opinion'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -196,4 +210,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   tags: [],
   culture: [],
   classes: [],
+  opinions: [],
 };

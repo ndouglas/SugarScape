@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('bounded-confidence charts', () => {
+  it('chart clusters, camps, the center, splits and change over periods', () => {
+    expect(MODEL_CHARTS.opinions.map((c) => c.title)).toEqual(['Clusters', 'Largest camps', 'Mean and median', 'Splits', 'Change']);
+    expect(timeAxisLabel('opinions')).toBe('Periods');
+  });
+});
+
 describe('classes charts', () => {
   it('chart payoffs, outcomes, memory and the regime, and per-tag payoffs only with tags', () => {
     expect(MODEL_CHARTS.classes.map((c) => c.title)).toEqual(['Mean payoff', 'Outcomes', 'M in memory', 'Regime', 'Payoffs by tag', 'Inter-type advantage']);

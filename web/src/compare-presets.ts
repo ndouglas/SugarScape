@@ -62,6 +62,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'aey-tags',
     b: 'pvplh-mode',
   },
+  {
+    id: 'hk-simultaneous-vs-serial',
+    label: 'Simultaneous vs serial updating — Bounded Confidence (Compare)',
+    a: 'hk-polarisation',
+    b: 'hk-serial',
+  },
 ];
 
 /**

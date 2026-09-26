@@ -269,11 +269,38 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     },
     { title: 'Inter-type advantage', lines: [{ key: 'payoff_inter', label: 'Dark minus light, against each other', color: '--c3' }], shown: hasTags },
   ],
+  opinions: [
+    { title: 'Clusters', lines: [{ key: 'clusters', label: 'Surviving opinions', color: '--c1' }] },
+    {
+      title: 'Largest camps',
+      lines: [
+        { key: 'largest', label: 'Largest', color: '--c2' },
+        { key: 'second', label: 'Second', color: '--c3' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Mean and median',
+      lines: [
+        { key: 'mean_opinion', label: 'Mean', color: '--c1' },
+        { key: 'median_opinion', label: 'Median', color: '--c4' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Splits',
+      lines: [
+        { key: 'splits', label: 'Two-sided', color: '--red' },
+        { key: 'one_sided_splits', label: 'One-sided', color: '--c3' },
+      ],
+    },
+    { title: 'Change', lines: [{ key: 'max_change', label: 'Largest move this period', color: '--c4' }] },
+  ],
 };
 
 /** A model's time charts count calendar years (the anasazi's) or ticks. */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' ? 'Periods' : 'Tick';
+  return model === 'anasazi' ? 'Year' : model === 'tags' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' ? 'Periods' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

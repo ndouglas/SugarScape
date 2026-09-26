@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'opinions';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -262,7 +262,27 @@ export interface ClassesConfig {
   stop_at_equity: boolean;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig;
+/**
+ * Hegselmann and Krause's bounded confidence (milestone 16): agents move to the mean of the opinions
+ * within their reach, with the paper's asymmetric and opinion-dependent confidence and its unfigured
+ * claims (serial updating, lattice neighborhoods) as switches.
+ */
+export interface OpinionsConfig {
+  model: 'opinions';
+  agents: number;
+  start: 'random' | 'regular';
+  confidence: 'symmetric' | 'asymmetric' | 'opinion_dependent';
+  epsilon: number;
+  epsilon_left: number;
+  epsilon_right: number;
+  bias: number;
+  updating: 'simultaneous' | 'serial_shuffled' | 'serial_random';
+  interaction: 'all' | 'lattice';
+  lattice: { width: number; height: number; neighborhood: 'moore' | 'von_neumann' };
+  stop_when_stable: boolean;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | OpinionsConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -431,7 +451,22 @@ export interface ClassesStats {
   realized_noise: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats;
+export interface OpinionsStats {
+  tick: number;
+  /** Surviving opinions: groups of opinions within 10⁻⁶ of each other. */
+  clusters: number;
+  largest: number;
+  second: number;
+  mean_opinion: number;
+  median_opinion: number;
+  range: number;
+  splits: number;
+  one_sided_splits: number;
+  max_change: number;
+  stable_at: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | OpinionsStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -600,7 +635,22 @@ export interface ClassesInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection;
+/** An agent whose line passes an inspected point, or a lattice site's agent. */
+export interface OpinionAgent { id: number; start: number; opinion: number; epsilon_left: number; epsilon_right: number; reaches: number }
+/**
+ * A cell of the opinion × time diagram (its period and opinion, and the agents whose lines pass
+ * within a cell) or of the lattice to its right. `agent` is always null: agents have no place to follow.
+ */
+export interface OpinionsInspection {
+  site: { x: number; y: number };
+  period: number | null;
+  opinion: number | null;
+  lattice_site: { x: number; y: number } | null;
+  agents: OpinionAgent[];
+  agent: null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | OpinionsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -635,7 +685,9 @@ export type ColorMode =
   | 'similarity'
   | 'zones'
   | 'best_reply'
-  | 'payoff';
+  | 'payoff'
+  | 'start'
+  | 'opinion';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

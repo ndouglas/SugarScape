@@ -42,6 +42,11 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs simultaneous and serial updating', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['hk-simultaneous-vs-serial', 'hk-polarisation', 'hk-serial', 'Simultaneous vs serial updating — Bounded Confidence (Compare)']);
+  });
+
   it('pairs AEY’s rule and the mode rule with tags', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['aey-tags-vs-mode', 'aey-tags', 'pvplh-mode', 'AEY’s rule vs the mode rule, with tags — Emergence of Classes (Compare)']);

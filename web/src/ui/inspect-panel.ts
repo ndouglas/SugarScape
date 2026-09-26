@@ -1,12 +1,13 @@
 import { citizenRows, shownCitizen } from '../civil';
 import type { Engine } from '../engine';
-import { isCivilView, isClassesView, isCultureView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isCivilView, isClassesView, isCultureView, isOpinionsView, isRingView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AnasaziInspection,
   CivilInspection,
   ClassesInspection,
+  OpinionsInspection,
   CultureInspection,
   CultureSiteView,
   LinkView,
@@ -150,6 +151,22 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A cell of the opinion × time diagram (its period, opinion and the agents passing) or of the lattice. */
+  private opinionsRows(view: OpinionsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const rows: HTMLElement[] = [];
+    if (view.period !== null && view.opinion !== null) rows.push(row('Period', String(view.period)), row('Opinion', fmt(view.opinion)));
+    else if (view.lattice_site) rows.push(row('Site', `(${view.lattice_site.x}, ${view.lattice_site.y})`));
+    else return [row('Point', 'between the diagram and the lattice')];
+    if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+    const shown = view.agents.slice(0, 12);
+    for (const a of shown) {
+      rows.push(row(`#${a.id}`, `${fmt(a.opinion)} (started ${fmt(a.start)}) · reach −${fmt(a.epsilon_left)} +${fmt(a.epsilon_right)} · hears ${a.reaches}`));
+    }
+    if (view.agents.length > shown.length) rows.push(row('', `and ${view.agents.length - shown.length} more`));
+    return rows;
+  }
+
   /** A point of a memory simplex: its mix, the best reply there, and the agents whose memory plots there. */
   private classesRows(view: ClassesInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -273,7 +290,9 @@ export class InspectPanel {
           ? `Agent #${shown.agentId} is gone: killed, or dead of old age.`
           : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
-      const rows = isClassesView(view)
+      const rows = isOpinionsView(view)
+        ? this.opinionsRows(view)
+        : isClassesView(view)
         ? this.classesRows(view)
         : isCultureView(view)
         ? this.cultureRows(view)

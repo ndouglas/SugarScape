@@ -138,6 +138,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('opinions')).toMatchObject({
+      x: { path: 'epsilon', values: '0.05:0.3:0.05' },
+      ticks: 1000,
+      metric: { kind: 'final', series: 'clusters' },
+    });
     expect(defaultForm('classes')).toMatchObject({
       x: { path: 'memory', values: '6:14:2' },
       ticks: 100000,

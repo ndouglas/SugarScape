@@ -8,7 +8,7 @@ import { SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
-import type { AnasaziStats, CivilConfig, CivilStats, ClassesConfig, ClassesInspection, ClassesStats, CultureInspection, CultureStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
+import type { AnasaziStats, CivilConfig, CivilStats, ClassesConfig, ClassesInspection, ClassesStats, CultureInspection, CultureStats, OpinionsConfig, OpinionsInspection, OpinionsStats, Preset, Snapshot, TagsConfig, TagsInspection, TagsStats } from './types';
 import { MODEL_CHARTS } from './ui/series-data';
 import { config_series_names, initSync, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
@@ -390,6 +390,7 @@ describe('other models through the engine', () => {
     ['pvplh-mode', '0xb90f0d0cab7966b9'],
     ['pvplh-progressive', '0xca60c420d61a7ffc'],
     ['pvplh-lattice', '0x7975f5afc2d06c10'],
+    ['hk-lattice', '0xe33359f120b204d9'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -468,6 +469,26 @@ describe('the anasazi through the engine', () => {
     await e.advance(1000);
     expect([e.tick, e.finished, ends]).toEqual([550, true, 1]);
     expect((e.latest as AnasaziStats).year).toBe(1350);
+  });
+});
+
+describe('the bounded-confidence model through the engine', () => {
+  it('stops once when stable, matches the native golden entry and inspects a line', async () => {
+    const r = presets.find((p) => p.id === 'hk-regular-50')!;
+    const e = await Engine.create({ config: structuredClone(r.config as OpinionsConfig), seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'opinion' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as OpinionsStats;
+    expect([e.finished, ends, e.tick, s.stable_at, s.clusters]).toEqual([true, 1, 8, 8, 2]);
+    // crates/sugarscape-core/tests/golden.rs: hk-regular-50 stops at period 8 of its 200.
+    expect(await e.fingerprint()).toBe('0xbfd3a4ebe6714f04');
+    // Agent 1 starts at 0: the diagram's bottom row, in the column of the oldest kept period.
+    await e.select(0, 200);
+    const v = e.inspection!.view as OpinionsInspection;
+    expect([v.period, v.opinion, v.agents[0].id, v.agents[0].start]).toEqual([0, 0, 1, 0]);
+    expect(e.inspection!.agentId).toBeNull();
   });
 });
 
