@@ -36,6 +36,16 @@ AEY's bargaining model — agents who remember their last m opponents' demands a
 - **Progressive memory:** memories start empty and grow to m; first demands random; longer time to equity (their Fig. 8, ε = 0.1, m = 12), same long run.
 - **Lattice:** 10 × 10 torus, Moore neighbors, 50 of each tag laid out at random, in four zones or in two zones; the well-mixed attractors recur; with two zones, new border equilibria appear.
 
+## Measured in planning
+
+20 seeds unless stated; the survey reproduces each.
+
+- Realized error 0.1335 (AEY 0.1333). Fig. 2: equity by period 14 (median; IQR 13–16).
+- Fig. 3: from random starts the fractious state is never reached first (0/20); started fractious, every run reaches equity within 2 000 periods; while fractious the mean payoff is about 30 of 100 (the paper: "only about one-quarter").
+- Fig. 4 (N 10, from a fractious start): ε 0.05: 334 periods at m 8, 25 300 at m 14; ε 0.1, m 13: median 600 (AEY: over 10⁵). Fig. 5 (m 10, ε 0.1): 148 at N 20, 11 600 at N 60.
+- Tags at AEY's parameters: classes 0/20, divided below 0/20, equity between 18/20; planted classes persist 18/20 at 20 000 periods.
+- PVPLH: at N 20, m 5, ε 0.05 every run segregates or splits within a type; the mode rule segregates 10/20 and goes fractious first 11/20 (AEY's rule 0 and 0); L 40 slows equity (325 vs 110 at L 15); progressive memory 186 vs 173 (no difference, p = 0.36); a random-layout lattice reaches classes or a split within a type in 12/20.
+
 ## Architecture
 
 Model kind `classes` ("Emergence of Classes"): `ModelKind::Classes`, `ModelConfig::Classes(ClassesConfig)` tagged `"model": "classes"`, a `ClassesWorld` implementing `Model`, schema, `SERIES`, presets and golden entries — the same wiring as the culture model. Code in `crates/sugarscape-core/src/classes/` (`config.rs`, `world.rs`, `stats.rs` for regimes, `simplex.rs` for the view, `presets.rs`, `mod.rs`).
@@ -51,9 +61,9 @@ Model kind `classes` ("Emergence of Classes"): `ModelKind::Classes`, `ModelConfi
 | `tag_memory` | `per_tag` | reset | `per_tag` (a memory of length m for each tag; PVPLH's reading of AEY) or `shared` (one memory of the last m opponents with their tags) |
 | `decision` | `expected` | live | `expected` (AEY: maximize expected payoff) or `mode` (PVPLH: best reply to the most frequent demand; ties uniformly) |
 | `low` | 30 | live | the L demand; H = 100 − L; M = 50 (PVPLH Table 1: 5–45) |
-| `start` | `random` | reset | `random` (each memory slot uniform over L, M, H), `fractious` (each memory ⌈m/2⌉ H and ⌊m/2⌋ L, shuffled), `progressive` (memories start empty and grow; PVPLH), `classes` (tags: within-type memories all M; darks' memories of lights all L, lights' of darks all H) |
+| `start` | `random` | reset | `random` (each memory slot uniform over L, M, H), `fractious` (each memory ⌈m/2⌉ H and ⌊m/2⌋ L — deterministic counts, shuffled), `progressive` (memories start empty and grow; PVPLH), `classes` (tags: within-type memories all M; darks' memories of lights all L, lights' of darks all H) |
 | `interaction` | `random` | reset | `random` (AEY) or `lattice` (PVPLH: a torus) |
-| `lattice.width`, `lattice.height` | 10, 10 | reset | with `lattice`; `agents` = width × height |
+| `lattice.width`, `lattice.height` | 10, 10 | reset | with `lattice`; 3–40 each; `agents` = width × height |
 | `lattice.neighborhood` | `moore` | reset | `moore` or `von_neumann` |
 | `lattice.layout` | `random` | reset | tag layout: `random`, `four_zones` (quadrants), `two_zones` (halves) |
 | `stop_at_equity` | false | live | `finished()` at the first equity tick |
@@ -67,7 +77,7 @@ N/2 matches. A match: with `random`, two distinct agents uniformly; with `lattic
 ## Regimes
 
 For a set S of memories (all memories in one type; with tags the intra- and inter-type memories per tag), our reading of AEY's pictures:
-- **equity:** every memory in S holds at least (1 − ε)·(its length) M's (AEY's transition target, per memory);
+- **equity:** every memory in S has M as its only best reply (AEY's pictures). AEY's transition target — every memory holds at least (1 − ε)·(its length) M's — defines `equity_at` and the stop, not the regime: applied to the regime it made equity unreachable at N = 100, ε = 0.2;
 - **fractious:** no memory in S has M as a best reply (every agent is in the L or H region);
 - **aggressive / submissive:** every memory in S best-replies H / L.
 
@@ -75,7 +85,7 @@ The world's regime: one type — `equity`, `fractious` or `mixed`; tags — `equ
 
 ## Statistics
 
-`SERIES`: `mean_payoff` (per agent per match this period), `m_share` (M's among all memory entries), `outcome_mm`, `outcome_hl` (H against L), `outcome_fail` (demands summing over 100), `outcome_waste` (under 100: LL, LM), `regime` (a code: 0 mixed, 1 equity, 2 fractious, 3 classes, 4 equity-between, 5 divided-below), `equity_at` (the first equity tick, else the current tick), `first_attractor` (0 none yet, 1 equity, 2 fractious — PVPLH Figs. 4–5), and with tags `payoff_dark`, `payoff_light`, `payoff_inter` (dark's minus light's mean payoff in inter matches).
+`SERIES`: `mean_payoff` (per agent per match this period), `m_share` (M's among all memory entries), `outcome_mm`, `outcome_hl` (H against L), `outcome_fail` (demands summing over 100), `outcome_waste` (under 100: LL, LM), `regime` (a code: 0 mixed, 1 equity, 2 fractious, 3 classes, 4 equity-between, 5 divided-below), `equity_at` (the first tick meeting AEY's transition target, else the current tick; it holds its first value once reached, so its final value is the transition time), `first_attractor` (0 none yet, 1 equity, 2 fractious — PVPLH Figs. 4–5), `segregated` (1 in classes or divided-below, else 0), `realized_noise` (the share of demands that were not a best reply; AEY's note 9), and with tags `payoff_dark`, `payoff_light`, `payoff_inter` (dark's minus light's mean payoff in inter matches).
 
 ## Views
 
@@ -102,11 +112,11 @@ The world's regime: one type — `equity`, `fractious` or `mixed`; tags — `equ
 
 ## Experiments and CLI
 
-Tick caps and seeds measured to fit a browser run and recorded in each description; the survey runs longer.
+Tick caps and seeds measured to fit a browser run and recorded in each description; the survey runs longer. The built-in sweeps set `stop_at_equity: false` (a stopped world is not a permanent state); `aey-tag-regimes` averages `segregated`, not `regime`, and its series are the two decision rules. The web determinism test leaves out `aey-transition` (it stops at period 74).
 - `aey-memory`: final `equity_at` from a fractious start, N 10, against m (6–18), series ε 0.05 / 0.1 (Fig. 4).
 - `aey-population`: the same against N (10–100) at m 10, series ε 0.02 / 0.05 / 0.1 (Fig. 5).
 - `aey-first-attractor`: final `first_attractor` share against N and m, series `expected` / `mode` (PVPLH Figs. 4–5).
-- `aey-tag-regimes`: final `regime` against N and m with tags, series `per_tag` / `shared` — how often classes appear.
+- `aey-tag-regimes`: the share of periods segregated (`segregated`) with tags at three settings, series `expected` / `mode` — how often classes appear.
 - `pvplh-payoffs`: `equity_at` against `low` (5–45) and N (PVPLH Fig. 7).
 
 ## Survey
