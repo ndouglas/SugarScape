@@ -175,6 +175,18 @@ payoffs never converge to pure defection, footnote 27's monopoly comes in 1 run 
 "equivalence" is exact only when metabolism is charged per game. See
 `docs/superpowers/specs/2026-09-26-demographic-pd-design.md`.
 
+## Milestone 21: Image scoring (done)
+
+Nowak and Sigmund's image scoring (1998) as a fourteenth model kind, with Leimar and Hammerstein's island
+model, errors, own-score, standing and q strategies, the payoff offset and how an observer records as
+switches. (Numbered 21: the norms milestone takes 20.) NS98's universal constant reproduces to every
+printed digit, and its unstated start is found (the negatives at −1, the rest out of reach); Fig. 2's
+endless cycles and Fig. 3's group-size effect reproduce, the latter only when each observer keeps its own
+tally. But Fig. 1's victory of k = 0 comes in 20 runs of 100 (defection wins 60), two interactions per
+lifetime give cooperation 18 % of the time, not most, and Leimar and Hammerstein's island model does not
+undo image scoring (44 % help against their 9 %), though standing invades as they say. See
+`docs/superpowers/specs/2026-09-26-image-scoring-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -190,6 +202,7 @@ payoffs never converge to pure defection, footnote 27's monopoly comes in 1 run 
 - **Hegselmann & Krause's bounded confidence**: done (Milestone 17).
 - **Cohen, Riolo & Axelrod's social structure**: done (Milestone 18).
 - **Epstein's demographic Prisoner's Dilemma** (and Radax & Rengs' replication): done (Milestone 19).
+- **Nowak & Sigmund's image scoring** (and Leimar & Hammerstein's critique): done (Milestone 21).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

@@ -9,7 +9,7 @@
 - **PB03:** Panchanathan & Boyd, "A tale of two defectors", *J. Theor. Biol.* 224 (2003) 115–126 (binary-score analysis; standing).
 - **LFS99:** Lotem, Fishman & Stone, *Nature* 400 (1999) 226–227 and its appendix (no ESS without phenotypic defectors).
 - **OI06:** Ohtsuki & Iwasa, "The leading eight", *J. Theor. Biol.* 239 (2006) 435–444 (image scoring is not among the stable norms).
-- **FAIR23:** the Make Models FAIR NetLogo reimplementation (`imagescore.nlogo`, 2023): scores clamped at ±5, roulette reproduction, mutation uniform over k, observers Bernoulli per agent — but no payoff offset and a fixed visibility probability rather than NS98's ten observers.
+- **FAIR23:** the Make Models FAIR NetLogo reimplementation (`imagescore.nlogo`, 2023; Marco Janssen's 2010 NetLogo 4.1.1 model, republished): scores clamped at ±5, roulette reproduction, mutation uniform over k, observers Bernoulli per agent, c added to donor and recipient each round ("as stated in Nowak and Sigmund c is added…") — but a fixed visibility probability rather than NS98's ten observers, and with visibility below 1 its donor reads the recipient's record of itself (`[item ([who] of receiver) imagescoreothers] of receiver`), not its own record of the recipient: a bug (plan Decision 22).
 
 ## Goal
 
@@ -42,10 +42,11 @@ Add image scoring as a fourteenth model kind — NS98's simulations (Figs. 1–4
 | `local` | 1 | live | p: chance a parent is drawn from the offspring's own group |
 | `rounds`, `rounds_kind` | 125, `fixed` | live | m; `random`: each round is the last with probability 1/m |
 | `b`, `c`, `u0` | 1, 0.1, 0 | live | benefit, cost, initial payoff |
-| `offset` | `both` | live | `both`: add c to donor and recipient each round (LH01 on NS98); `none` (FAIR23) |
+| `offset` | `both` | live | `both`: add c to donor and recipient each round (LH01 on NS98, and FAIR23); `none` (our ablation: nobody's reading; plan Decision 16) |
 | `clamp` | 5 | live | scores stay in −clamp … +clamp (0: unbounded) |
 | `information` | `perfect` | reset | `perfect` or `observers` |
 | `observers` | 10 | live | mean observers per interaction (each other group member except the pair sees with probability observers/(n − 2); the recipient always sees) |
+| `records` | `tally` | live | what an observer writes: `tally` (its own record one up or down by the action seen: FAIR23's `imagescoreothers`) or `score` (the donor's true previous score ± 1: one sighting reveals the whole score); NS98 say only that onlookers "update their perception" (plan Decision 4) |
 | `execution_error` | 0 | live | e: a donor does the other action |
 | `perception_error` | 0 | live | ε: an observer records the other action |
 | `mutation` | 0 | live | ν: an offspring's strategy is redrawn uniformly from the allowed set |
@@ -59,12 +60,12 @@ Add image scoring as a fourteenth model kind — NS98's simulations (Figs. 1–4
 A generation (one tick), per group:
 
 1. Scores 0 (standing good; binary scores 0; q-strategy tallies at LH01's prior); payoffs `u0`; with `observers`, every perception entry unknown (0).
-2. For each round (m fixed, or until the 1/m stop): a uniformly random donor and a different uniformly random recipient in the group. The donor's view of the recipient (perfect: the score; observers: its own record) and its own score decide per its strategy; with probability e the action flips. Helping: donor −c, recipient +b; `offset: both` adds c to both. The donor's score ±1 (clamped); standing and q tallies update; observers (the recipient always, each other member with probability observers/(n − 2)) record the donor's new score (flipped action with probability ε).
+2. For each round (m fixed, or until the 1/m stop): a uniformly random donor and a different uniformly random recipient in the group. The donor's view of the recipient (perfect: the score; observers: its own record) and its own score decide per its strategy; with probability e the action flips. Helping: donor −c, recipient +b; `offset: both` adds c to both. The donor's score ±1 (clamped); standing and q tallies update; observers (the recipient always, each other member with probability observers/(n − 2)) record the action (flipped with probability ε): by default each moves its own record one up or down (`records: tally`), or it writes the donor's new score (`records: score`). Measured, Fig. 3 reproduces only with `tally` (86 / 44 / 20 % against 90 / 47 / 18 %; `score`: 97 / 93 / 92 %).
 3. After all groups: each new agent's parent is drawn by payoff-proportional roulette from its group (probability p) or from the whole population (1 − p); with probability ν its strategy is redrawn uniformly from the allowed set.
 
 ## Choices the sources leave open
 
-1. **The offset** — "we add 0.1 in each interaction": LH01 say to both players each round: default `both`; FAIR23 omits it (`none`).
+1. **The offset** — "we add 0.1 in each interaction": LH01 say to both players each round: default `both`; FAIR23 does the same (its code says so; this spec first said it omits it), so `none` is our ablation (`ns-no-offset`).
 2. **Score range** — Fig. 1's legend: ±5, clamped (FAIR23, LH01).
 3. **Reproduction** — "in proportion to their fitness": roulette with replacement, fixed n (FAIR23, LH01).
 4. **Mutation** — "another randomly chosen strategy": uniform over the allowed set (FAIR23).
@@ -77,13 +78,13 @@ A generation (one tick), per group:
 
 ## Statistics
 
-`SERIES`: `help_rate` (helps ÷ rounds), `mean_k` (over k-bearing strategies), `cooperative` (share with k ≤ 0 or a cooperative class), `mean_payoff`, `mean_score`, shares `k_cooperative`, `k_defective`, `h`, `and`, `or`, `standing`, `binary_c`, `binary_d`, `binary_x` (discriminators), `q`.
+`SERIES`: `help_rate` (helps ÷ rounds), `mean_k` (over k-bearing strategies), `cooperative` (share whose strategy helps at a generation's start: k ≤ 0, generalised to every class; plan Decision 10), `mean_payoff`, `mean_score`, shares `k_cooperative`, `k_defective`, `h`, `own_only`, `and`, `or`, `standing`, `binary_c`, `binary_x` (discriminators), `binary_d`, `q`, and `helps` (a count). (`own_only` and `helps` were added in the core: the list had no share for own-score strategies.)
 
 ## Views
 
 - **Colour modes:** **Strategy** (k on a blue–red scale; each other class its own colour), **Score** (diverging −5 … +5), **Payoff** (heat). Each group is a tile of cells, groups in a grid.
-- **Inspect:** an agent's strategy, score (with observers: how many members know it, and their mean view), payoff, helps given and received this generation.
-- **Charts:** **Help rate**, **Mean k**, **Strategy shares**, **Mean payoff**.
+- **Inspect:** a cell's group (with more than one); its agent's strategy and whether it helps at a generation's start, score (with private records: how many others have seen it act, and their mean record), standing (when standing plays), payoff, helps given and received this generation; a gap or a tile's unused cell says so. There are no neighbours to list (partners are random each round). An agent lives one generation, so a followed agent is gone at the next tick (plan Decision 27).
+- **Charts** (against the **generation**): **Help rate** (with the cooperative share), **Mean k** (only with a class that has a k), **Strategy shares** (k ≤ 0, k > 0, h, own only, AND, OR, standing, q; or, with binary scorers, **Binary scorers and standing** instead), **Mean payoff** (plan Decision 26).
 
 ## Presets
 
@@ -92,21 +93,21 @@ A generation (one tick), per group:
 | `ns-fig-1` | defaults | NS98 Fig. 1 |
 | `ns-fig-2` | m 300, ν 0.001 | NS98 Fig. 2 |
 | `ns-fig-3-n20`, `ns-fig-3-n50`, `ns-fig-3-n100` | observers 10, m 10n, ν 0.001 | NS98 Fig. 3 |
-| `ns-fig-4a` … `ns-fig-4d` | AND / OR, perfect / observers (n 20), m 500, ν 0.001 | NS98 Fig. 4 |
+| `ns-fig-4a` … `ns-fig-4d` | AND / OR, perfect / observers (n 20), ν 0.001; m 500 with perfect information, m 200 with observers ("as in figure 3 with n = 20": m = 10n; plan Decision 16) | NS98 Fig. 4 |
 | `ns-own-only` | `own_only`, m 500, ν 0.001 | NS98 Fig. 4 text |
 | `lh-fig-1a`, `lh-fig-1b` | k 0 (or k 0 & h 1) with an h 1 invader; g 100, m 500, c 0.25, p 0.9 (e 0, 0.05) | LH01 Fig. 1 |
 | `lh-fig-2a`, `lh-fig-2b`, `lh-fig-2c` | AND strategies; g 1 / g 100 p 0.9 / p 0.5; c 0.25, ν 0.001, e 0 / 0.02 / 0.02 | LH01 Fig. 2 |
 | `lh-fig-3a`, `lh-fig-3b` | c 0.1, u₀ 5, p 0.5, e 0.02; without / with q strategies | LH01 Fig. 3 |
 | `lh-fig-4a`, `lh-fig-4b`, `lh-fig-4c` | standing vs binary strategies; e 0.05 / e = ε = 0.025 / long run ν 0.0001 | LH01 Fig. 4 |
-| `fair-no-offset` | `offset: none` | FAIR23's reading |
+| `ns-no-offset` | `offset: none` | our ablation (FAIR23 adds the offset; plan Decision 16) |
 
-**Compare entries:** "One group vs the island model — Image Scoring (Compare)" (`lh-fig-2a` vs `lh-fig-2b`), "Image scoring vs standing — Image Scoring (Compare)" (`lh-fig-4a` with standing vs without), "With vs without the offset — Image Scoring (Compare)" (`ns-fig-1` vs `fair-no-offset`).
+**Compare entries:** "One group vs the island model — Image Scoring (Compare)" (`lh-fig-2a` vs `lh-fig-2b`), "Image scoring vs standing — Image Scoring (Compare)" (`lh-fig-2b` vs `lh-fig-4c`: the island model with AND strategies against standing among binary scorers; no preset has discriminators without standing, and Compare pairs presets; plan Decision 24), "With vs without the offset — Image Scoring (Compare)" (`ns-fig-1` vs `ns-no-offset`), "Small vs large groups with observers — Image Scoring (Compare)" (`ns-fig-3-n20` vs `ns-fig-3-n100`).
 
 ## Experiments and CLI
 
 - `ns-rounds`: base `ns-fig-2`; x = m 25 … 500; metric `cooperative`.
 - `ns-group-size`: base `ns-fig-3-n50`; x = n 20 … 100 (m = 10n per point via the sweep's series or paired paths); metric `cooperative`.
-- `lh-cost`: x = c 0.05 … 0.5; series one group vs island; metric `help_rate`.
+- `lh-cost`: base `lh-fig-2b`; x = c 0.05 … 0.5; series one group vs island; metric `help_rate`.
 - `lh-gene-flow`: base `lh-fig-2b`; x = p 0.5 … 1; metric `help_rate`.
 - `sugarscape presets | run | sweep` accept `image`.
 
@@ -114,19 +115,19 @@ A generation (one tick), per group:
 
 - **NS98:** Fig. 1 fixation of k = 0 (and when); Fig. 2 cycles (a measured count) and unconditional cooperators preceding defector invasions; Fig. 3's 90 / 47 / 18 %; Fig. 4's 55 / 57 / 70 / 80 % and most frequent strategies; own-only < 0.1 %; "about 2 interactions per lifetime"; the Methods' analytics (q > c/b; ~1.2 rounds; the equilibrium with cooperators) by iterating their equations and by simulation; 0.738… under each tried start.
 - **LH01:** Fig. 1a/1b invasions; Fig. 2's 39 / 9 / 2 %; Fig. 3's 45 / 15 % and 12 % q strategies; the standing condition and Fig. 4's invasions and long run.
-- **Ours:** the offset's effect on Fig. 1; FAIR23's fixed visibility against NS98's ten observers.
+- **Ours:** the offset's effect on Fig. 1; FAIR23's fixed visibility against NS98's ten observers; `records: tally` against `score` in Fig. 3.
 
-Tolerances come from the measurements (as milestones 11–19); runs shorter than the papers' are stated.
+Tolerances come from the measurements (as milestones 11–19); runs shorter than the papers' are stated. The survey judges a source's percentage by equivalence within 5 points and runs `lh-fig-4c` on a subset (plan Decision 28).
 
 ## Page
 
-- An **Image Scoring** presets group; the schema panel in groups **Game** (b, c, u₀, offset), **Population** (groups, group size, local), **Rounds** (m, kind), **Information** (mode, observers shown only with `observers`, clamp), **Errors** (execution, perception), **Evolution** (mutation), **Run** (end); `strategies` and `initial` set by presets, files and links (as ethno's `allowed`); the colour modes; charts; Inspect; the Compare entries; `defaultForm('image')` (x = rounds, `cooperative`).
+- An **Image Scoring** presets group; the schema panel in groups **Game** (b, c, u₀, offset), **Population** (groups, group size, local), **Rounds** (m, kind), **Information** (mode, observers shown only with `observers`, records, clamp), **Errors** (execution, perception), **Evolution** (mutation), **Run** (end); `strategies` and `initial` set by presets, files and links (as ethno's `allowed`); the colour modes; charts; Inspect; the Compare entries; `defaultForm('image')` (x = rounds 50 … 500, 2,000 generations, the mean `cooperative` from generation 1,001, the form's 3 seeds; plan Decision 25).
 - Keyframes, the timeline, stop rules, share links, sessions, recording and Compare work unchanged.
 
 ## Testing
 
 - **Core unit:** a round's payoffs with and without the offset; score update and clamp; each strategy class's decision (k, h, and, or, binary, standing, q) on hand-built states; execution and perception errors; observers (the recipient always sees; expected count); unknown scores as 0; random rounds; roulette reproduction and the island draw; mutation uniform over the allowed set; `initial` with an invader; `analytic.rs` against the paper's formulas; validation errors on the named field.
-- **Golden:** entries for every preset; earlier entries untouched; WASM equal to native.
+- **Golden:** entries for every preset in a separate `IMAGE_GOLDEN` of (id, generations, fingerprint): one-group presets 200 generations, island presets 20 (a 100 × 100 island generation is 50,000 rounds; plan Decision 17); earlier entries untouched; WASM equal to native, and the page's determinism test the same table.
 - **Book-style (`#[ignore]`, release):** the claims above, thresholds measured.
 - **Web (Vitest):** schema fields; charts; Inspect rows; Compare entries; `defaultForm('image')`; determinism fingerprints.
 - **Browser (controller):** every preset, colour modes, Inspect, the Compare entries, sweeps, Max speed at g 100 × n 100.

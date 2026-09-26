@@ -141,8 +141,8 @@ Model extensions:
 
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
-**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**
-and **Demographic PD**.
+**Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
+**Demographic PD** and **Image Scoring**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -985,6 +985,138 @@ Social Science* (Princeton, 2006), chapter 9 and its appendix; and Andreas Radax
 "Replication of the Demographic Prisoner's Dilemma," MPRA 14419 (2009), published as "Prospects and
 Pitfalls of Statistical Testing: Insights from Replicating the Demographic Prisoner's Dilemma,"
 *JASSS* 13(4) 1 (2010). See `docs/superpowers/specs/2026-09-26-demographic-pd-design.md`.
+
+### Image Scoring (Nowak & Sigmund 1998, and its critics)
+
+Nowak and Sigmund's indirect reciprocity by image scoring: 100 players, each with an image score that
+starts every generation at 0. In each generation 125 random donor–recipient pairs are drawn; a donor
+with strategy k helps if the recipient's score is at least k (cost 0.1 to the donor, benefit 1 to the
+recipient), and helping raises the donor's score by one and refusing lowers it, within −5 … +5. k runs
+from −5 (always help) to +6 (never), drawn at random at the start; players leave offspring in
+proportion to their payoffs, and an offspring may mutate to another strategy. A tick is a generation.
+Leimar and Hammerstein (2001) put the same game in an island model (100 groups of 100, a parent drawn
+from the offspring's own group with probability p), add execution and perception errors, strategies
+that look only at their own score (h), both scores (AND, OR), q strategies and Sugden's standing, and
+argue that image scoring is not evolutionarily stable.
+
+**The sources leave choices open;** each is a switch or a preset. "To avoid negative payoffs we add 0.1
+in each interaction": Leimar and Hammerstein say c is added to donor and recipient every round, as does
+FAIR23's NetLogo model, and the default follows them (`offset: none` is our ablation, `ns-no-offset`).
+Scores are clamped at ±5 (`clamp`, 0 for none), reproduction is payoff-proportional roulette and
+mutation is uniform over the allowed strategies. With observers (Fig. 3: "each interaction is
+observed, on average, by 10 randomly chosen players"), the recipient always sees and each other member
+with probability 10/(n − 2) (`observers`), and each keeps its own record, 0 until it has seen someone
+act; NS98 say only that onlookers "update their perception", so how an observer records is a switch:
+its own tally one up or down (`records: tally`, FAIR23's, the default) or the donor's new score, the
+whole score at one sighting (`records: score`). Rounds are fixed or random (`rounds_kind`: each the
+last with probability 1/m, for Leimar and Hammerstein's analysis). The classes a run allows
+(`strategies`: k, h, AND, OR, own score only, binary scorers, standing, q) and its start (uniform, or
+everyone on one strategy with an invader at a share of each group) come from presets, files and links.
+
+What reproduces, measured (release, seeds 1–10 unless noted; a window is the mean over the stated
+generations, per seed, then over seeds; NS98 averaged over 10⁷ generations and Leimar and Hammerstein
+over 10⁵–10⁶, so these runs are 10–100 times shorter):
+
+- **The universal constant, to every printed digit, and its unstated start.** With everyone at k = 0
+  and unbounded scores, NS98 give 0.7380294688360… as the largest fraction below 0 from which the
+  population still reaches all-out cooperation, without saying how the scores start. All the negatives
+  at −1 and the rest so high that they never fall below 0 gives 0.7380294688360038. Any finite start
+  lower than about +80 gives less: 0.5 with the rest at 0, 0.642 at +1, 0.688 at +2; spreading the
+  negatives over −1 … −5 gives 0.338.
+- **Fig. 2's endless cycles** (`ns-fig-2`: m 300, mutation 0.001): 172 collapses of cooperation (k ≤ 0
+  falling from at least 90 % to at most 10 %) and 167 recoveries in 10⁶ generations (seeds 1–10 ×
+  10⁵), 12–24 per seed; the unconditional cooperators (k ≤ −4) hold 68 % of the population over the 50
+  generations before a collapse against 8 % in cooperative phases, as NS98 describe. Cooperative
+  strategies hold 67 % of the time.
+- **Fig. 3's group-size effect, with each observer's own tally** (`ns-fig-3-n20`, `-n50`, `-n100`: ten
+  observers, m = 10n): cooperative strategies 86 %, 44 % and 20 % of generations 1,001–20,000 at n =
+  20, 50 and 100, against NS98's 90 %, 47 % and 18 % (to 100,000 at n = 20: 91 %).
+- **Fig. 4a** (`ns-fig-4a`, AND strategies): 53 % of interactions cooperative (NS98 55 %) over
+  generations 1,001–50,000, with (k 0, h 1) the most frequent strategy (22 %).
+- **The Methods' thresholds**: discriminators are stable against defectors above (bq + c)/(bq − c) =
+  1.2222 rounds ("about 1.2"), and only when q > c/b; with cooperators, defectors win below c(2 −
+  w)/(bwq) (0.1222 at w = 0.9).
+- **Leimar and Hammerstein's Fig. 1a**: h = 1 invades a population of k = 0 (`lh-fig-1a`: 37 % by
+  generation 50, fixed by 150 in every run; faster than their 80 % at 150). **Fig. 2a** (one group, AND
+  strategies, c 0.25): help in 37 % of rounds (they report 39 %), (k 0, h 1) the most frequent (38 %).
+  **Fig. 3's help rates**: 52 % (45 %) without and 17 % (15 %) with q strategies over generations
+  1,001–3,000 (to 10,000: 47 % and 15 %).
+- **Standing** (Fig. 4): it invades binary discriminators (`lh-fig-4a`: 69 % by generation 500, 98 % by
+  1,000) and still does with perception errors (`lh-fig-4b`: 35 % and 75 %, seeds 1–5), and from a
+  uniform start dominates with cooperators beside it (`lh-fig-4c`, seeds 1–3, generations 1,001–1,500:
+  standing 53 %, cooperators 39 %, discriminators 8 %, defectors 0.02 %) — although their condition for
+  standing with perception errors, vrb < c < rb, is not met at these parameters (v = 0.5, r = 0.833, vrb
+  = 0.417 > c = 0.25), as they say.
+
+What does not, or only partly:
+
+- **Fig. 1's victory of k = 0 is a minority outcome.** NS98 show one run in which k = 0 is fixed after
+  166 generations. Of seeds 1–100 run to fixation, k = 0 wins 20 (median generation 56) and some k ≤ 0
+  40; defection wins the other 60. More rounds do help, as NS98 say: some k ≤ 0 wins 91 of 100 at m =
+  300 and all 100 at m = 1,000.
+- **"It suffices that each player is chosen only for about 2 interactions per life-time"** (m ≈ n):
+  with Fig. 2's settings, cooperative strategies hold 18 % of generations 1,001–20,000 at m = 100 and
+  reach half only at m = 200, four interactions per lifetime (the sweep `ns-rounds`).
+- **Fig. 3 depends on how an observer records.** If one sighting revealed the donor's whole score
+  (`records: score`), n = 20, 50 and 100 would cooperate alike: 97 %, 93 %, 92 %. And FAIR23's fixed
+  visibility (each member sees with probability 0.1: 1.8 and 4.8 observers at n = 20 and 50, not ten)
+  flattens it the other way: 28 % and 16 %.
+- **Fig. 4's other panels**: 53 % (NS98 57 %) in 4b, with (k 0, h 5) most frequent (NS98 (k 0, h 4));
+  78 % and 85 % (70 %, 80 %) in 4c and 4d, where the most frequent strategies are cooperative ORs, (k 3,
+  h 4) and (k 2, h 5), and NS98's defectors (k 6, h −5) come second and third. 4b and 4d are "as in
+  figure 3 with n = 20", so m = 200 (at m = 500, 55 % and 94 %).
+- **Own-score strategies help in 0.19 % of rounds** (`ns-own-only`), not "less than 0.1 %": uniform
+  mutants keep a floor, 5 of 12 of them (h ≥ 1) helping at a generation's start.
+- **The Methods' x_min in a simulation**: over five of the Methods' rounds discriminators should beat
+  defectors from a share of 0.123; in NS98's random pairs (n 100, m 250, 2,000 seeds a share) the
+  payoff gap turns positive only at 0.16. The Methods' rounds, in which everyone plays once, are not
+  random pairs.
+- **Leimar and Hammerstein's island model does not undo image scoring here.** Fig. 2b (`lh-fig-2b`: p
+  0.9, execution errors 0.02): help in 44 % of rounds over generations 1,001–5,000 (to 20,000: 34 %,
+  runs from 2 % to 54 %) against their 9 %; Fig. 2c (p 0.5): 15 % against 2 %. Help is not even
+  monotone in gene flow (the sweep `lh-gene-flow`: 27 % in isolated groups, p = 1; 50 % at p = 0.8),
+  and below c = 0.25 the island model helps more than one group (`lh-cost`).
+- **Fig. 1b's invasion is ten times slower**: h = 1 invades (k 0, h 1) with execution errors 0.05, but
+  holds 1.8 % by generation 150, 13 % by 500 and 42 % by 1,000 (`lh-fig-1b`). **Fig. 3b's q
+  strategies** hold 26 % of the population over generations 1,001–3,000 (18 % to 10,000), against their
+  12 %.
+- **The offset lowers cooperation.** Without it (`ns-no-offset`) some k ≤ 0 wins Fig. 1 in 63 runs of
+  100 (k = 0 in 10) against 40, and Fig. 2's cooperative strategies hold 78 % of the time against 67 %:
+  adding c to both players weakens selection, and cooperation loses by it.
+
+The survey measures 34 of these claims: 14 hold, 8 are weak, 11 fail, and one (Fig. 4c's long run, too slow
+for it) is left to the book test. Four built-in sweeps (seeds 1–10):
+`ns-rounds` (Fig. 2's settings, m 25–500, cooperative strategies over generations 1,001–20,000: 1 %,
+10 %, 8 %, 18 %, 15 %, 23 %, 50 %, 65 %, 91 %), `ns-group-size` (Fig. 3, n 20–100 with m = 10n: 86 %,
+83 %, 44 %, 35 %, 20 %), `lh-cost` (c 0.05–0.5, one group against 100 groups, help over generations
+1,001–5,000: 58 % and 53 % at 0.05, 35 % and 44 % at 0.25, 6 % and 2 % at 0.5) and `lh-gene-flow` (p
+0.5–1: 15 %, 35 %, 39 %, 50 %, 44 %, 27 %).
+
+Each group is a tile of cells, the groups in a grid with a gap between tiles. Agents are drawn by
+**Strategy** (the default: k on a blue–red scale from −5 to +6, h, own-score, standing and q
+strategies each their own color), **Score** (below 0 red, above blue) or **Payoff** (heat). Inspect shows
+a cell's group, its agent's strategy and whether it helps at a generation's start, its score (with
+observers, how many others have seen it act and their mean record of it), its standing when standing
+plays, its payoff and the help it gave and received; a gap or a tile's unused cell says so. An agent
+lives one generation, so a followed agent's offspring are new agents. Charts, against the generation:
+**Help rate** (with the share of cooperative strategies), **Mean k**, **Strategy shares** (the binary
+scorers and standing in their own chart) and **Mean payoff**. A run never stops by default (`end`: a
+last generation, 0 for never); the game, the rounds, the observers, the records, the errors, mutation
+and `local` apply to the running world from the next generation. **Compare** entries: "One group vs
+the island model — Image Scoring (Compare)" (`lh-fig-2a` and `lh-fig-2b`), "Image scoring vs standing
+— Image Scoring (Compare)" (`lh-fig-2b` and `lh-fig-4c`: the island model with AND strategies or with
+standing), "With vs without the offset — Image Scoring (Compare)" (`ns-fig-1` and `ns-no-offset`) and
+"Small vs large groups with observers — Image Scoring (Compare)" (`ns-fig-3-n20` and
+`ns-fig-3-n100`). Credit: Martin A. Nowak and Karl Sigmund, "Evolution of indirect reciprocity by
+image scoring," *Nature* 393 (1998), 573–577 (IIASA IR-98-040, with "The Dynamics of Indirect
+Reciprocity," *J. Theor. Biol.* 194 (1998), 561–574); Olof Leimar and Peter Hammerstein, "Evolution of
+cooperation through indirect reciprocity," *Proc. R. Soc. Lond. B* 268 (2001), 745–753; Karthik
+Panchanathan and Robert Boyd, "A tale of two defectors," *J. Theor. Biol.* 224 (2003), 115–126; Arnon
+Lotem, Michael A. Fishman and Lewi Stone, "Evolution of cooperation between individuals," *Nature* 400
+(1999), 226–227; Hisashi Ohtsuki and Yoh Iwasa, "The leading eight," *J. Theor. Biol.* 239 (2006),
+435–444; and Marco Janssen's NetLogo model of image scoring (2010), republished by Make Models FAIR
+(2023), whose donor, with visibility below 1, reads the recipient's record of itself. See
+`docs/superpowers/specs/2026-09-26-image-scoring-design.md`.
 
 ## Experiments
 
