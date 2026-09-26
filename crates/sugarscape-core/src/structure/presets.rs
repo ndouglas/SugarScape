@@ -74,7 +74,7 @@ pub fn presets() -> Vec<ModelPreset> {
             frn(c);
             c.start = Start::Random;
         }),
-        preset("cra-copy-noise", "FRN, noise only on copying", "FRN with noise only on agents that copy (§2's 'errors in the actual copying process') instead of on every agent every period (the Appendix). Measured (30 seeds, 2500 periods, high = 2.3): 2.530 and held 98.4 % against 2.478 and 94.0 % — less noise, more cooperation; the Appendix's reading is the one that matches Table 2.", |c| {
+        preset("cra-copy-noise", "FRN, noise only on copying", "FRN with noise only on agents that copy (§2's 'errors in the actual copying process') instead of on every agent every period (the Appendix). Measured (30 seeds, 2500 periods, high = 2.3): 2.530 and held 98.4 % against 2.478 and 94.0 % — less noise, more cooperation, overshooting Table 2; the Appendix's reading is the one that matches Table 2 more closely.", |c| {
             frn(c);
             c.noise_on = NoiseOn::Copy;
         }),

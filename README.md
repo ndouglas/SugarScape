@@ -846,7 +846,8 @@ own method twice, and the two readings are switches. **Strategies start** "evenl
 throughout the strategy space" (the Appendix) or "initialized randomly" (§3.1): no difference.
 **Noise on** every agent every period, "regardless of which … is adopted" (the Appendix), or only as
 "errors in the actual copying process" (§2): these differ — noise only on copying gives FRN 2.530
-instead of 2.478 — and only the Appendix's rule reproduces Table 2.
+instead of 2.478, overshoots every fixed structure by 0.05–0.09 and erases FRNE's edge over 2DK — the
+Appendix's rule is the one that matches Table 2 more closely and keeps FRNE above 2DK.
 
 The view is the agents as a block of cells (the torus itself under 2DK; index order otherwise) next
 to the paper's p–q plane, with the population's average over the last 200 periods as a fading trail
