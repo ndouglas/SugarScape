@@ -185,6 +185,17 @@ and sooner under milder meta-payoffs, lower mutation or any other selection rule
 decide the result: ties kept, the metanorm holds; a ranked refill, it collapses in every run. See
 `docs/superpowers/specs/2026-09-26-norms-design.md`.
 
+## Milestone 22: Relative Agreement (done)
+
+Deffuant et al.'s relative agreement model with extremists (2002) as a model kind, with their pairwise
+bounded confidence (2000) and §6 variants, Amblard and Deffuant's lattices and small worlds (2004),
+Weisbuch's scale-free networks (2004), and Meadows and Cliff's (2012) and the authors' (2013) readings
+of what the paper left unstated as switches. Fig. 9's layout reproduces as the paper states the model;
+Meadows and Cliff's failure reproduces under their reading, and both of the reply's fixes are needed.
+Balanced extremists' single extreme is a finite-size effect; Figs. 5 and 7 do not reproduce at their
+stated parameters; eq. 11 as printed reproduces none of §6; the unstated cutoff for counting extremists
+decides the network results. See `docs/superpowers/specs/2026-09-26-relative-agreement-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -201,6 +212,7 @@ decide the result: ties kept, the metanorm holds; a ranked refill, it collapses 
 - **Cohen, Riolo & Axelrod's social structure**: done (Milestone 18).
 - **Epstein's demographic Prisoner's Dilemma** (and Radax & Rengs' replication): done (Milestone 19).
 - **Axelrod's norms and metanorms** (and Galán & Izquierdo's re-implementation): done (Milestone 20).
+- **Deffuant et al.'s relative agreement and extremism** (and Meadows & Cliff's replication): done (Milestone 22).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

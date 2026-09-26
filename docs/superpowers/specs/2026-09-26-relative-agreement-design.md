@@ -122,9 +122,9 @@ A period is **stable** when no opinion or uncertainty moved more than 10⁻⁶ i
 
 - **Opinion × time** (left): 241 × 201 cells, +1 at the top. The history keeps at most 241 columns: when full, every other kept period is dropped and later periods are kept at the doubled interval, so a run of any length stays in view. The history is world state: keyframes and step-back restore it.
 - **Start vs now** (right, 8-cell gap): 201 × 201, each agent a dot at (start, current opinion); the diagonal marks agents that never moved (DNAW Fig. 3, W Figs. 4–5).
-- **Torus** (further right, 8-cell gap) under `lattice` and the grid substrate: one cell per site, colored by opinion.
+- **Torus** (further right, 8-cell gap) under `lattice` and the grid substrate: one cell per site, colored by current opinion in every mode.
 - **Color modes:** **Uncertainty** (default; confident to uncertain, as DAWF's figures), **Role** (initial extremists by side; moderates by current opinion), **Start** (by starting opinion).
-- **Inspect:** a line or dot — the agent's id, role, start, opinion, uncertainty, degree, meetings and moves; a torus site the same. `locate` returns the agent's dot; Follow available.
+- **Inspect:** a column, dot or site — the agents there, each with its id, role, start, opinion and uncertainty (in that period), degree, meetings and moves. `agent` stays null and `locate` returns nothing, as in `opinions`: the page would otherwise re-read a tracked agent at its dot, where neighbors crowd it (amended in planning).
 - **Charts:** Convergence (`y`, `p_plus`, `p_minus`); Clusters (`clusters`, `major`, `isolated`); Dispersion (`dispersion`, `unmoved`); Opinion and uncertainty (`mean_opinion`, `mean_uncertainty`); Change (`max_change`). Time axis: Periods.
 
 ## Presets
@@ -184,3 +184,21 @@ The presets menu gains a **Relative Agreement** group and the Compare entry; the
 ## Docs
 
 README: a Relative Agreement section (the rules, the stated choices and switches, the readings and what each reproduces, presets, sweeps, and the findings: both fixes are needed; single extreme is a finite-size effect at δ 0; eq. 11's printed window reproduces none of §6; the cutoff decides AD's low-k regime). `docs/papers.md`: the milestone's row, with M&C and DAW as the critique and reply; roadmap: Milestone 22 done.
+
+## Amendments (implementation planning)
+
+The model was implemented in full while planning (`docs/superpowers/plans/2026-09-26-relative-agreement.md`) and measured with it; these change or extend the sections above.
+
+- **Inspect reads cells** (see Views): `agent` is always null and `locate` returns nothing.
+- **Weisbuch's lattice line** in `w-dispersion` uses his pairing and one-way updating, like the scale-free lines; the well-mixed line uses DNAW's symmetric meetings.
+- **The web golden list** holds the nine presets still running at period 200 on seed 1 (`dnaw-lattice`, `dnaw-lattice-clusters`, `ra-central`, `ra-literal`, `ra-deffuant-2013`, `ra-bc-extremists`, `ad-moore`, `ad-small-world`, `w-scale-free`); the rest settle sooner. An engine test runs `ra-single` to its stop at 71 and `ra-meadows-cliff` to 200.
+- **Measured with the implementation** (20–50 seeds; the survey's numbers):
+  - Fig. 5 (pe 0.2, U 0.4, μ 0.5): 48 % of moderates become extremists (22 % with extremists at ±1) against the caption's 4 %.
+  - Figs. 7–8 (pe 0.1, U 1.4, μ 0.5): both extremes in 39 of 40 runs, under every placement and update order; at Fig. 9's μ 0.2, single 24 and central 16 of 40. The figures' μ looks misstated (§4.8: larger μ widens both extremes).
+  - Fig. 9 at N 1000: the single-extreme zone (y ≥ 0.75, pe ≤ 0.075, U ≥ 1.4) holds in 14 of 35 cells; at N 200, 35 of 35. With δ 0.1 it holds in all 55 cells at U ≥ 1.6, pe ≤ 0.15.
+  - §4.8's ue: at N 1000, pe 0.05, U 1.4, the population drifts to one extreme in far fewer runs at ue 0.05 than at 0.2 (median |mean opinion| 0.03 against 0.75); and at ue 0.2 the extreme cluster settles at ±0.75, inside the reply's cutoff (y 0.00; 1.00 counted 0.3 inside the innermost extremist).
+  - The reply's "any large number of agents": single extreme in 37 of 50 runs at N 2000 for pe 0.05, 1 of 50 for pe 0.1 (δ 0). With δ 0.1 y rises with N (0.84 at N 100 to 0.99 at N 2000).
+  - Fig. 4 at N 1000: relative agreement 2.00, 2.70, 3.40, 5.36, 10.54 clusters at w/2u 2, 2.5, 3.33, 5, 10 (within a fifth of w/2u; 2.10, 3.04, 3.70, 5.90, 11.28 at N 200); bounded confidence 2.00, 2.98 at 2.5, 3.33, then 3.44, 4.32, 8.92 at 4, 5, 10 — the integer part only up to about 3.
+  - AD (N 1000, 20 runs): most runs single from k 32 at p 0.8, 64 at p 1, 256 at p 0.2; none single on the Moore torus (largest y 0.51 over 160 runs); at k 2–4 central with the 0.9 cutoff, both extremes in 40 of 40 with 0.7; the grid substrate's y rises from 0.01 at k 8 to 1.00 at k 120.
+  - Weisbuch (N 900, 50 runs): well-mixed dispersion 0.36, 0.50, 0.51 at d 0.15, 0.2, 0.25; scale-free 0.17, 0.34, 0.60, 0.84 and the lattice 0.02, 0.30, 0.70, 0.86 at d 0.15–0.3; 8 links 0.22 from well mixed against 0.57 for 4; 62 % of the ten best-connected agents in the largest cluster (which holds 49 %); 15.9 % never move (0.1 % well mixed).
+  - DNAW's lattice at d 0.3: at period 119 (the caption's 100 000 iterations) the largest cluster holds 39 % on average; at stability 92 %, with a median of 28 isolated agents.

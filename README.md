@@ -142,7 +142,7 @@ Model extensions:
 The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
-**Demographic PD** and **Norms and Metanorms**.
+**Demographic PD**, **Norms and Metanorms** and **Relative Agreement**.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session
@@ -1035,6 +1035,86 @@ Credit: Robert Axelrod, "An Evolutionary Approach to Norms," *American Political
 80(4) (1986), 1095–1111; José Manuel Galán and Luis R. Izquierdo, "Appearances Can Be Deceiving:
 Lessons Learned Re-Implementing Axelrod's 'Evolutionary Approach to Norms'," *JASSS* 8(3) 2 (2005).
 See `docs/superpowers/specs/2026-09-26-norms-design.md`.
+
+### Relative Agreement (Deffuant et al. 2000, 2002; Meadows & Cliff 2012)
+
+Random pairs meet, N meetings a period. In Deffuant, Neau, Amblard and Weisbuch's pairwise bounded
+confidence (2000), two agents whose opinions differ by less than d each move a fraction μ of the way
+toward the other. In Deffuant, Amblard, Weisbuch and Faure's **relative agreement** (2002) each agent
+also has an uncertainty — a segment around its opinion — and a partner moves it by μ times the overlap
+of their segments beyond half the influencer's width, divided by that width: confident agents sway
+uncertain ones, and uncertainties move too. A few **extremists** — the most extreme opinions, very
+confident — can then leave the majority in the center, split it between the two extremes, or pull it
+all to one extreme. The paper maps which happens with an indicator y (the squared shares of moderates
+that end up extremists at each end, summed: 0 central, 0.5 both extremes, 1 a single extreme) over
+the moderates' uncertainty U and the share of extremists pe (Fig. 9). Opinions run from −1 to 1;
+Deffuant 2000's d on [0, 1] is U = 2d here.
+
+Meadows and Cliff (2012) reimplemented the model twice and could not reproduce Fig. 9; the authors
+replied (2013) that Meadows and Cliff measured y before the model converged, and counted too few
+moderates as extremists — neither detail is in the 2002 paper. Both readings are presets, and the
+paper as stated is the default. Measured (planning and the survey):
+
+- **Both fixes are needed.** At Fig. 9's corner (pe 0.05, U 1.4, 200 agents) Meadows and Cliff's
+  reading gives y 0.00; their horizon fixed, 0.40; their cutoff fixed, 0.27; both fixed, 0.98. The
+  majority has drifted most of the way to one extreme by their stop and settles between 0.7 and 0.8.
+  The paper as stated — the extremists drawn, run until nothing moves — agrees with the reply.
+- **The single extreme is a finite-size effect when the extremists are balanced.** At pe 0.1, U 1.6
+  it comes in 79 % of runs with 100 agents, 16 % with 1000 and none with 4000; Fig. 9's single-extreme
+  zone at its stated 1000 agents covers 14 of the 35 cells it shows at pe ≤ 0.075, U ≥ 1.4, and all 35
+  with 200 agents. With a lean (δ 0.1) it holds and strengthens with N. Meadows and Cliff were right
+  that it shrinks with N; the reply's 'any large number of agents' holds only at the smallest pe.
+- **Figs. 5 and 7 do not reproduce at their stated parameters.** Fig. 5's 'only … 4%' of moderates
+  becoming extremists is 48 % (22 % with extremists at ±1). Fig. 7's single extreme — and Fig. 8's
+  central convergence 'for the same parameters' — never appear at the stated μ = 0.5: both extremes in
+  39 of 40 runs. At Fig. 9's μ = 0.2 the pair appears (single 24, central 16), as §4.8's own μ result
+  predicts.
+- **Eq. 11 as printed reproduces none of §6.** The bounded-confidence window 'If |x − x′| < u′', u′
+  being the influencer's uncertainty, lets uncertain moderates pull the confident extremists in: y is
+  0.00 everywhere. With the listener's own uncertainty (**BC window** switch) §6's claims hold: a single
+  extreme only around U = 1, a central band at U 0.8 with averaged uncertainties, none with the variance
+  rule.
+- **ue matters, and the cutoff misreads it.** §4.8 finds no influence of the extremists' uncertainty;
+  at N 1000 single extremes rise from 7 to 20 of 20 runs as ue goes from 0.05 to 0.2 — and at 0.2 the
+  extreme cluster settles at ±0.75, inside the reply's 'innermost extremist less 0.1', so y reads 0.
+- **Networks.** On a Moore lattice there is never a single extreme (Amblard and Deffuant, 2004). On
+  small-world rings it needs a critical number of neighbors that falls as rewiring rises — as they say,
+  but at k 32 to 256 (most runs single from k 32 at p 0.8, 64 at p 1, 256 at p 0.2) rather than
+  'around 8' — and whether sparse rings end in both extremes or the center
+  depends, again, on the unstated cutoff. Weisbuch's scale-free networks (2004) reproduce: no steps in
+  the dispersion, close to the square lattice, closer to well mixed with twice the links; hubs end in
+  the big cluster; 16 % of agents never move. Deffuant 2000's lattice picture appears only when run to
+  stability, hundreds of periods after the caption's '100 000 iterations'.
+
+Switches for what the papers leave open: **Placement** (the most extreme draws; set to ±1; Meadows and
+Cliff's band), **New-extremist margin** (the reply's 0.1; 0 for Meadows and Cliff), **A meeting
+updates** (both from their old values; one after the other; only the first, as Weisbuch), **Pairs** on
+a network (a random link; an agent then a neighbor), **BC window**, and the stop (**Stop when stable**,
+**Stop at period**). Networks: anyone, a lattice (four or eight neighbors), a small world grown from a
+ring or the lattice, a scale-free network.
+
+The view has three panels: **opinion × time** (lines are agents, +1 at the top; the history halves
+when full, so a run of any length stays in view), **start against now** (each agent a dot; the diagonal
+marks those that never moved) and, on a lattice, the **torus** colored by opinion. Color modes:
+**Uncertainty** (confident red to uncertain green, the papers' coloring), **Role** (the initial
+extremists by side), **Start**. Inspect a column, dot or site for the agents there. Charts:
+Convergence (y, p₊, p₋); Clusters; Dispersion; Opinion and uncertainty; Change. Presets:
+`dnaw-consensus`, `dnaw-clusters`, `dnaw-lattice`, `dnaw-lattice-clusters`, `ra-uniform`, `ra-central`,
+`ra-both`, `ra-single`, `ra-literal`, `ra-meadows-cliff`, `ra-deffuant-2013`, `ra-bc-extremists`,
+`ra-bc-printed`, `ad-moore`, `ad-small-world`, `w-scale-free`. **Compare** entry: "Meadows and Cliff vs
+Deffuant et al.’s reply — Relative Agreement (Compare)". Built-in sweeps: `ra-clusters`, `ra-map`,
+`ra-readings`, `ra-population`, `ra-rules`, `ra-delta`, `ad-connectivity`, `w-dispersion`.
+
+Credit: Guillaume Deffuant, David Neau, Frédéric Amblard and Gérard Weisbuch, "Mixing Beliefs Among
+Interacting Agents," *Advances in Complex Systems* 3 (2000), 87–98; Guillaume Deffuant, Frédéric
+Amblard, Gérard Weisbuch and Thierry Faure, "How Can Extremism Prevail? A Study Based on the Relative
+Agreement Interaction Model," *JASSS* 5(4) 1 (2002); Frédéric Amblard and Guillaume Deffuant, "The
+Role of Network Topology on Extremism Propagation with the Relative Agreement Opinion Dynamics,"
+*Physica A* 343 (2004); Gérard Weisbuch, "Bounded Confidence and Social Networks," *European Physical
+Journal B* 38 (2004); Michael Meadows and Dave Cliff, "Reexamining the Relative Agreement Model of
+Opinion Dynamics," *JASSS* 15(4) 4 (2012); Guillaume Deffuant, Frédéric Amblard and Gérard Weisbuch,
+"The Results of Meadows and Cliff Are Wrong Because They Compute Indicator y Before Model
+Convergence," *JASSS* 16(1) 11 (2013). See `docs/superpowers/specs/2026-09-26-relative-agreement-design.md`.
 
 ## Experiments
 
