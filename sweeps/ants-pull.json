@@ -1,0 +1,48 @@
+{
+  "name": "Ants: Becker's majority pull",
+  "description": "Becker's majority pull, which Kirman suggests but does not run: the share of steps with one source holding 80 % or more after 20 000 steps, against the pull, for Figure IIb's strong recruiting and Figure Ic's weak recruiting. Measured (release, seeds 1–5, recorded 2026-09-27): strong 0.79, 0.997, 0.999, 1.000, 1.000 at pull 0, 0.25, 0.5, 1, 2 — the colony locks in at one source; weak 0.001, 0.011, 0.097, 0.53, 0.93 — at pull 1 the exact distribution peaks at 18 % and 82 %, the real ants' 80–20. 'More extreme', as Kirman says.",
+  "base": {
+    "preset": "ants-2b"
+  },
+  "x": {
+    "label": "Majority pull",
+    "path": "pull",
+    "values": [
+      0,
+      0.25,
+      0.5,
+      1,
+      2
+    ]
+  },
+  "series": {
+    "label": "Recruiting",
+    "values": [
+      {
+        "at": 0,
+        "name": "Strong (Fig. IIb)",
+        "set": {
+          "epsilon": 0.002,
+          "delta": 0.01
+        }
+      },
+      {
+        "at": 1,
+        "name": "Weak (Fig. Ic)",
+        "set": {
+          "epsilon": 0.15,
+          "delta": 0.3
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "extreme"
+  }
+}

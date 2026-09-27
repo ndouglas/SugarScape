@@ -1,0 +1,29 @@
+{
+  "name": "Ants: how widely the colony swings against self-conversion",
+  "description": "Kirman's Figure I across self-conversion: the variance of the share at the first source after 20 000 steps (10⁶ meetings) against ε, 100 ants, δ 0.01. Below ε = (1 − δ)/(N − 1) = 0.01 the colony piles up at one source or the other (a variance near 0.25 is all-or-nothing), above it the colony centers. Measured (release, seeds 1–5, recorded 2026-09-27): 0.196, 0.170, 0.125, 0.089, 0.051, 0.023, 0.013 at ε 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, against the exact 0.209, 0.179, 0.126, 0.085, 0.052, 0.025, 0.014 (the beta-binomial's (2α + N)/(4N(2α + 1)), α = ε(N − 1)/(1 − δ)). Reproduced; the smallest ε mix slowly, so a finite run falls short.",
+  "base": {
+    "preset": "ants-1a"
+  },
+  "x": {
+    "label": "Self-conversion (ε)",
+    "path": "epsilon",
+    "values": [
+      0.001,
+      0.002,
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "variance"
+  }
+}

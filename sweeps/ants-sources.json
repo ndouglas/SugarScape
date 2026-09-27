@@ -1,0 +1,27 @@
+{
+  "name": "Ants: more food sources",
+  "description": "Kirman: 'Generalizing to a larger number of sources would not change the analysis.' The share of steps with one source holding 80 % or more after 20 000 steps against the number of sources, Figure IIb's ε and δ (a self-converting ant picks any other source). Measured (release, seeds 1–10, recorded 2026-09-27): 0.79, 0.77, 0.77, 0.77, 0.77 with 2 to 6 sources. It holds.",
+  "base": {
+    "preset": "ants-2b"
+  },
+  "x": {
+    "label": "Sources",
+    "path": "sources",
+    "values": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "extreme"
+  }
+}

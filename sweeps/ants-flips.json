@@ -1,0 +1,27 @@
+{
+  "name": "Ants: flips between sources against self-conversion",
+  "description": "How often the colony flips between sources: flips (from one source holding 80 % to the other) in 20 000 steps (10⁶ meetings) against ε, 100 ants, δ 0.01. Measured (release, seeds 1–10, recorded 2026-09-27): 13, 25, 34, 44, 69 at ε 0.001, 0.002, 0.003, 0.005, 0.01. More self-conversion, more flips — until ε passes (1 − δ)/(N − 1) = 0.01 and the colony stops crowding one source at all.",
+  "base": {
+    "preset": "ants-2b"
+  },
+  "x": {
+    "label": "Self-conversion (ε)",
+    "path": "epsilon",
+    "values": [
+      0.001,
+      0.002,
+      0.003,
+      0.005,
+      0.01
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "flips"
+  }
+}

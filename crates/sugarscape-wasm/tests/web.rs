@@ -330,7 +330,13 @@ fn builtins_and_series_names_are_listed() {
             "mg-fig-1",
             "mg-strategies",
             "mg-information",
-            "cmo-bias"
+            "cmo-bias",
+            "ants-alpha",
+            "ants-n",
+            "ants-flips",
+            "ants-pull",
+            "ants-sources",
+            "am-independent"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -870,6 +876,26 @@ fn farol_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "farol");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn ants_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: Kirman's chain,
+    // the pull, three sources, and Alfarano and Milaković's rule on a ring,
+    // a random graph and with ants that never herd.
+    for (id, fp) in [
+        ("ants-2b", "0xf9258e5dd9d1d673"),
+        ("ants-becker", "0x4ebaae97020b8902"),
+        ("ants-three", "0x4a2871368f4ab782"),
+        ("am-ring", "0x0104a02f3c5f5011"),
+        ("am-random", "0x3e7b4009dc784788"),
+        ("am-independent", "0x023127da92f6506f"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "ants");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }
