@@ -1,0 +1,20 @@
+{
+  "name": "Minds 1: travel and the ideal free distribution",
+  "description": "The richer patch's share of on-patch Flumps against the utility mind's travel k (a site's welfare divided by 1 + k·d, d its distance), at input ratios 2.10 and 4.42 (matching: 0.68 and 0.82). Baum & Kraft 1998 found travel between patches slightly reduced undermatching; here travel is a preference for nearby sugar under rule M's jump. Seeds 1–20, ticks 500–1000.",
+  "base": { "preset": "ifd-travel" },
+  "x": {
+    "label": "Travel k",
+    "path": "decision.travel",
+    "values": [0, 0.1, 0.5, 1, 2]
+  },
+  "series": {
+    "label": "Input ratio",
+    "values": [
+      { "at": 2.1, "name": "2.10 : 1", "set": { "goods.0.map.peaks.1.radius": 7.0 } },
+      { "at": 4.42, "name": "4.42 : 1", "set": { "goods.0.map.peaks.1.radius": 5.0 } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 1000,
+  "metric": { "kind": "window_mean", "series": "first_patch_share", "from": 500 }
+}

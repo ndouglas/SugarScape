@@ -1,0 +1,26 @@
+{
+  "name": "Minds 1: the ideal free distribution under rule M",
+  "description": "The share of on-patch Flumps on the richer patch (mean over ticks 500–1000) against the input ratio of the two patches, at three visions, under the book's rule M. Input matching (Parker 1978) predicts a share of R / (1 + R): 0.50, 0.58, 0.68, 0.74 and 0.82. Seeds 1–20.",
+  "base": { "preset": "ifd-even" },
+  "x": {
+    "label": "Input ratio (first patch : second)",
+    "values": [
+      { "at": 1.0, "set": { "goods.0.map.peaks.1.radius": 10.0 } },
+      { "at": 1.36, "set": { "goods.0.map.peaks.1.radius": 8.5 } },
+      { "at": 2.1, "set": { "goods.0.map.peaks.1.radius": 7.0 } },
+      { "at": 2.8, "set": { "goods.0.map.peaks.1.radius": 6.0 } },
+      { "at": 4.42, "set": { "goods.0.map.peaks.1.radius": 5.0 } }
+    ]
+  },
+  "series": {
+    "label": "Vision",
+    "values": [
+      { "at": 1, "name": "Vision 1–6", "set": { "vision": { "min": 1, "max": 6 } } },
+      { "at": 2, "name": "Vision 5–10", "set": { "vision": { "min": 5, "max": 10 } } },
+      { "at": 3, "name": "Vision 10–20", "set": { "vision": { "min": 10, "max": 20 } } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 1000,
+  "metric": { "kind": "window_mean", "series": "first_patch_share", "from": 500 }
+}

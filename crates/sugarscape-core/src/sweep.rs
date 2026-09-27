@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 80] = [
+const BUILTINS: [Builtin; 84] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1285,6 +1285,22 @@ const BUILTINS: [Builtin; 80] = [
     Builtin {
         id: "cmo-bias",
         json: include_str!("../../../sweeps/cmo-bias.json"),
+    },
+    Builtin {
+        id: "ifd-matching",
+        json: include_str!("../../../sweeps/ifd-matching.json"),
+    },
+    Builtin {
+        id: "ifd-idle",
+        json: include_str!("../../../sweeps/ifd-idle.json"),
+    },
+    Builtin {
+        id: "ifd-crowding",
+        json: include_str!("../../../sweeps/ifd-crowding.json"),
+    },
+    Builtin {
+        id: "ifd-travel",
+        json: include_str!("../../../sweeps/ifd-travel.json"),
     },
 ];
 
@@ -2188,7 +2204,11 @@ mod tests {
                 "mg-fig-1",
                 "mg-strategies",
                 "mg-information",
-                "cmo-bias"
+                "cmo-bias",
+                "ifd-matching",
+                "ifd-idle",
+                "ifd-crowding",
+                "ifd-travel"
             ]
         );
         for b in builtins() {
