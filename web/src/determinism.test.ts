@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  AntsConfig,
+  AntsInspection,
+  AntsStats,
   FarolConfig,
   FarolInspection,
   FarolStats,
@@ -494,6 +497,12 @@ describe('other models through the engine', () => {
     ['mg-inverse', '0xf9b094733c6a48aa'],
     ['mg-arms-race', '0x4c1e9852373241c9'],
     ['cmo-binary', '0x2081105c24039d0c'],
+    ['ants-2b', '0xf9258e5dd9d1d673'],
+    ['ants-becker', '0x4ebaae97020b8902'],
+    ['ants-three', '0x4a2871368f4ab782'],
+    ['am-ring', '0x0104a02f3c5f5011'],
+    ['am-random', '0x3e7b4009dc784788'],
+    ['am-independent', '0x023127da92f6506f'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -703,6 +712,31 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the ants model through the engine', () => {
+  it('stops at its last step and inspects an ant, a step and a histogram row', async () => {
+    const r = presets.find((p) => p.id === 'am-ring')!;
+    const config = { ...structuredClone(r.config as AntsConfig), stop_at: 30 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'degree' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as AntsStats;
+    expect([e.finished, ends, e.tick, s.tick]).toEqual([true, 1, 30, 30]);
+    expect(s.theory_variance).toBeGreaterThan(0);
+    // The ant grid starts at x 518; ant 1 is its top-left cell.
+    await e.select(518, 0);
+    const v = e.inspection!.view as AntsInspection;
+    expect([v.panel, v.member!.id, v.member!.degree]).toEqual(['ants', 1, 10]);
+    expect(e.inspection!.agentId).toBeNull();
+    await e.select(29, 0);
+    const t = e.inspection!.view as AntsInspection;
+    expect([t.step, t.shares!.length]).toEqual([30, 2]);
+    await e.select(409, 100);
+    expect((e.inspection!.view as AntsInspection).panel).toBe('histogram');
   });
 });
 

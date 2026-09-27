@@ -43,6 +43,11 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs Kirman’s colony with ten times the ants', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['ants-colony-size', 'ants-2b', 'ants-crowd', 'Colony size — Ants (Compare)']);
+  });
+
   it('pairs Arthur’s accuracy and payoff-rated predictors', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['ef-accuracy-vs-payoff', 'ef-arthur', 'ef-payoff', 'Accuracy vs payoff scoring — El Farol (Compare)']);

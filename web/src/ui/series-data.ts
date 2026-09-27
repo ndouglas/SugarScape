@@ -543,6 +543,31 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     { title: 'Switching', lines: [{ key: 'switching', label: 'Switched strategy', color: '--c4' }], range: [0, 1] },
     { title: 'Memory', lines: [{ key: 'mean_memory', label: 'Mean memory', color: '--c3' }], shown: memoriesVary },
   ],
+  ants: [
+    {
+      title: 'Share',
+      lines: [
+        { key: 'share', label: 'At the first source', color: '--c1' },
+        { key: 'top_share', label: 'At the largest source', color: '--c3' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Variance',
+      lines: [
+        { key: 'variance', label: 'Var of the share, so far', color: '--red' },
+        { key: 'theory_variance', label: 'Theory', color: '--c4' },
+      ],
+    },
+    {
+      title: 'Flips',
+      lines: [
+        { key: 'flips', label: 'Flips so far', color: '--c2' },
+        { key: 'residence', label: 'Steps between flips', color: '--c4' },
+      ],
+    },
+    { title: 'Extremes', lines: [{ key: 'extreme', label: 'Steps with a source at 80 % or more', color: '--c1' }], range: [0, 1] },
+  ],
 };
 
 /**
@@ -550,7 +575,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' ? 'Steps' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

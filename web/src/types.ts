@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -480,7 +480,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -536,6 +536,60 @@ export interface FarolInspection {
   attendance: number | null;
   count: number | null;
   member: FarolAgentView | null;
+  agent: null;
+}
+
+/**
+ * Kirman's ants and recruitment (milestone 24), with Becker's majority pull, more sources, meetings
+ * over a network, and Alfarano and Milaković's agent rule.
+ */
+export interface AntsConfig {
+  model: 'ants';
+  ants: number;
+  rule: 'kirman' | 'alfarano';
+  epsilon: number;
+  delta: number;
+  conversion: 'kirman' | 'footnote';
+  meetings: number;
+  sources: number;
+  pull: number;
+  a: number;
+  lambda: number;
+  network: 'complete' | 'ring' | 'small_world' | 'random' | 'scale_free';
+  degree: number;
+  link: number;
+  independent: number;
+  start: 'random' | 'one';
+  stop_at: number;
+}
+
+export interface AntsStats {
+  tick: number;
+  /** z: the share at the first source; the largest source's share. */
+  share: number;
+  top_share: number;
+  /** Var[z] so far, and what theory gives (null when neither Kirman's chain nor the mean field applies). */
+  variance: number;
+  theory_variance: number | null;
+  flips: number;
+  residence: number;
+  extreme: number;
+}
+
+export interface AntView { id: number; source: number; independent: boolean; degree: number; elsewhere: number }
+/**
+ * A cell of the ants frame: a step of the time panel, a row of the histogram, or an ant of the grid
+ * (`member`). `agent` is always null: cells are read where they are.
+ */
+export interface AntsInspection {
+  site: { x: number; y: number };
+  panel: 'time' | 'histogram' | 'ants' | null;
+  step: number | null;
+  shares: number[] | null;
+  share: number | null;
+  count: number | null;
+  theory: number | null;
+  member: AntView | null;
   agent: null;
 }
 
@@ -846,7 +900,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -1171,7 +1225,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1223,7 +1277,10 @@ export type ColorMode =
   | 'score'
   | 'choice'
   | 'gain'
-  | 'memory';
+  | 'memory'
+  | 'source'
+  | 'independent'
+  | 'degree';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

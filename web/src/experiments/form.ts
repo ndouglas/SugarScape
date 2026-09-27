@@ -104,6 +104,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
     return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
+  if (model === 'ants') {
+    // The built-in ants-flips' axis: flips between sources against self-conversion ε.
+    return { ...form, x: { path: 'epsilon', values: '0.001,0.002,0.003,0.005,0.01' }, ticks: 20000, metric: { ...form.metric, kind: 'final', series: 'flips' } };
+  }
   if (model === 'image') {
     // NS98's rounds axis (the built-in ns-rounds, shortened): cooperative strategies against m.
     return {
