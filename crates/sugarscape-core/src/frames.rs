@@ -64,6 +64,10 @@ pub struct Place {
     pub spice: Option<f64>,
     #[serde(default)]
     pub spice_metabolism: Option<u32>,
+    #[serde(default)]
+    pub age: Option<u32>,
+    #[serde(default)]
+    pub endowment: Option<f64>,
 }
 
 fn first_seed() -> u64 {
@@ -319,6 +323,8 @@ fn place(
             tribe: p.tribe,
             spice: p.spice,
             spice_metabolism: p.spice_metabolism,
+            age: p.age,
+            endowment: p.endowment,
         };
         let id = world
             .place_agent(p.x, p.y, &overrides)

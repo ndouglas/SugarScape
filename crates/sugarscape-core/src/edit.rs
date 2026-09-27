@@ -20,6 +20,10 @@ pub struct AgentOverrides {
     /// Good 1 (spice) held and needed; two-good worlds only.
     pub spice: Option<f64>,
     pub spice_metabolism: Option<u32>,
+    /// Age at placement, and a birth endowment of sugar other than what it
+    /// holds (credit's borrowers are those short of theirs).
+    pub age: Option<u32>,
+    pub endowment: Option<f64>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -191,6 +195,12 @@ impl World {
         }
         if let Some(m) = o.spice_metabolism {
             agent.metabolism[1] = m;
+        }
+        if let Some(age) = o.age {
+            agent.age = age;
+        }
+        if let Some(e) = o.endowment {
+            agent.initial[0] = e;
         }
         if let Some(sex) = o.sex {
             agent.sex = sex;
@@ -467,6 +477,20 @@ mod tests {
             one.place_agent(2, 3, &overrides).is_err(),
             "no spice in a one-good world"
         );
+    }
+
+    #[test]
+    fn a_placement_can_set_its_age_and_birth_endowment() {
+        let mut w = blank_world(10, 10);
+        let overrides = AgentOverrides {
+            sugar: Some(5.0),
+            age: Some(70),
+            endowment: Some(40.0),
+            ..Default::default()
+        };
+        let id = w.place_agent(2, 3, &overrides).unwrap();
+        let a = w.agent(id).unwrap();
+        assert_eq!((a.age, a.holdings[0], a.initial[0]), (70, 5.0, 40.0));
     }
 
     #[test]

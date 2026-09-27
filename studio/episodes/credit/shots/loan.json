@@ -1,0 +1,36 @@
+{
+ "preset": "iv-5-credit",
+ "ticks": 14,
+ "seed": 4,
+ "set": {
+  "width": 10,
+  "height": 10,
+  "population": 0,
+  "vision.max": 3,
+  "goods.0.map": {
+   "kind": "flat",
+   "capacity": 3
+  }
+ },
+ "place": [
+  {
+   "x": 4,
+   "y": 4,
+   "age": 62,
+   "sugar": 60,
+   "vision": 1,
+   "metabolism": 1,
+   "sex": "female"
+  },
+  {
+   "x": 5,
+   "y": 4,
+   "age": 25,
+   "sugar": 5,
+   "endowment": 40,
+   "vision": 1,
+   "metabolism": 1,
+   "sex": "male"
+  }
+ ]
+}
