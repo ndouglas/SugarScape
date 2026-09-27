@@ -175,9 +175,19 @@ payoffs never converge to pure defection, footnote 27's monopoly comes in 1 run 
 "equivalence" is exact only when metabolism is charged per game. See
 `docs/superpowers/specs/2026-09-26-demographic-pd-design.md`.
 
+## Milestone 20: Norms and Metanorms (done)
+
+Axelrod's norms and metanorms games (1986) as a model kind, with his dominance variant, Galán and
+Izquierdo's departures (run length, mutation, meta-payoffs, temptation, three other selection rules) and
+their readings of what Axelrod left unstated as switches. Axelrod's 100-generation results and dominance
+claims reproduce; so do Galán and Izquierdo's reversals — metanorms usually collapse by 10⁶ generations,
+and sooner under milder meta-payoffs, lower mutation or any other selection rule. The unstated details
+decide the result: ties kept, the metanorm holds; a ranked refill, it collapses in every run. See
+`docs/superpowers/specs/2026-09-26-norms-design.md`.
+
 ## Milestone 21: Image scoring (done)
 
-Nowak and Sigmund's image scoring (1998) as a fourteenth model kind, with Leimar and Hammerstein's island
+Nowak and Sigmund's image scoring (1998) as a model kind, with Leimar and Hammerstein's island
 model, errors, own-score, standing and q strategies, the payoff offset and how an observer records as
 switches. (Numbered 21: the norms milestone takes 20.) NS98's universal constant reproduces to every
 printed digit, and its unstated start is found (the negatives at −1, the rest out of reach); Fig. 2's
@@ -186,6 +196,17 @@ tally. But Fig. 1's victory of k = 0 comes in 20 runs of 100 (defection wins 60)
 lifetime give cooperation 18 % of the time, not most, and Leimar and Hammerstein's island model does not
 undo image scoring (44 % help against their 9 %), though standing invades as they say. See
 `docs/superpowers/specs/2026-09-26-image-scoring-design.md`.
+
+## Milestone 22: Relative Agreement (done)
+
+Deffuant et al.'s relative agreement model with extremists (2002) as a model kind, with their pairwise
+bounded confidence (2000) and §6 variants, Amblard and Deffuant's lattices and small worlds (2004),
+Weisbuch's scale-free networks (2004), and Meadows and Cliff's (2012) and the authors' (2013) readings
+of what the paper left unstated as switches. Fig. 9's layout reproduces as the paper states the model;
+Meadows and Cliff's failure reproduces under their reading, and both of the reply's fixes are needed.
+Balanced extremists' single extreme is a finite-size effect; Figs. 5 and 7 do not reproduce at their
+stated parameters; eq. 11 as printed reproduces none of §6; the unstated cutoff for counting extremists
+decides the network results. See `docs/superpowers/specs/2026-09-26-relative-agreement-design.md`.
 
 ## Experiments and science
 
@@ -202,7 +223,9 @@ undo image scoring (44 % help against their 9 %), though standing invades as the
 - **Hegselmann & Krause's bounded confidence**: done (Milestone 17).
 - **Cohen, Riolo & Axelrod's social structure**: done (Milestone 18).
 - **Epstein's demographic Prisoner's Dilemma** (and Radax & Rengs' replication): done (Milestone 19).
+- **Axelrod's norms and metanorms** (and Galán & Izquierdo's re-implementation): done (Milestone 20).
 - **Nowak & Sigmund's image scoring** (and Leimar & Hammerstein's critique): done (Milestone 21).
+- **Deffuant et al.'s relative agreement and extremism** (and Meadows & Cliff's replication): done (Milestone 22).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

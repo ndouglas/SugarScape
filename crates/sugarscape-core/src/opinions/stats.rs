@@ -78,10 +78,16 @@ impl Series for OpinionsSnapshot {
 
 /// The sizes of the clusters of a sorted profile, in order.
 pub fn clusters(sorted: &[f64]) -> Vec<usize> {
+    groups(sorted, SAME)
+}
+
+/// The sizes of the runs of a sorted profile whose neighboring gaps are at
+/// most `gap`, in order.
+pub fn groups(sorted: &[f64], gap: f64) -> Vec<usize> {
     let mut out = Vec::new();
     let mut run = 0;
     for (k, &x) in sorted.iter().enumerate() {
-        if k > 0 && x - sorted[k - 1] > SAME {
+        if k > 0 && x - sorted[k - 1] > gap {
             out.push(run);
             run = 0;
         }

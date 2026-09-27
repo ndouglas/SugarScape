@@ -84,6 +84,14 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
       metric: { ...form.metric, kind: 'window_mean', series: 'ethnocentric', from: 1901, to: null },
     };
   }
+  if (model === 'agreement') {
+    // Fig. 9's axis (the built-in ra-map): y against the moderates' uncertainty.
+    return { ...form, x: { path: 'uncertainty', values: '0.2:2:0.2' }, ticks: 20000, metric: { ...form.metric, kind: 'final', series: 'y' } };
+  }
+  if (model === 'norms') {
+    // Galán & Izquierdo's horizon (the built-in norms-horizon): collapse against how long runs last.
+    return { ...form, x: { path: 'stop_at', values: '100,1000,10000' }, ticks: 10000, metric: { ...form.metric, kind: 'final', series: 'collapsed' } };
+  }
   if (model === 'dpd') {
     // Table 9.3's axis at T = 6: cooperators after 500 cycles against the reward R (R = 1 dies out).
     return { ...form, x: { path: 'r', values: '1:5:1' }, ticks: 500, metric: { ...form.metric, kind: 'final', series: 'cooperators' } };

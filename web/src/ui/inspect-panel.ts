@@ -3,10 +3,11 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
+  AgreementInspection,
   AnasaziInspection,
   CivilInspection,
   ClassesInspection,
@@ -15,6 +16,7 @@ import type {
   CultureInspection,
   CultureSiteView,
   DpdInspection,
+  NormsInspection,
   EthnoConfig,
   EthnoInspection,
   ImageConfig,
@@ -166,6 +168,34 @@ export class InspectPanel {
    * payoffs, and its neighbors with what a game between them pays. An agent that died leaves the
    * site's rows alone.
    */
+  /** A plane cell (its strategy and the agents holding it) or a strip row (one agent's generation). */
+  private normsRows(view: NormsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const agent = (a: NormsInspection['agents'][number]) => {
+      const group = a.group ? ` · ${a.group}` : '';
+      return `B ${a.boldness}/7 · V ${a.vengefulness}/7${group} · payoff ${fmt(a.payoff)}`;
+    };
+    if (view.agent) {
+      const a = view.agent;
+      return [
+        row('Agent', `#${a.id}${a.group ? ` (${a.group})` : ''}`),
+        row('Strategy', `${a.bits} — boldness ${a.boldness}/7, vengefulness ${a.vengefulness}/7`),
+        row('Payoff', fmt(a.payoff)),
+        row('Defected', `${a.defections}× · punished ${a.punished}×`),
+        row('Punished others', `${a.punishments}× · metapunished ${a.metapunishments}× · was metapunished ${a.metapunished}×`),
+        row('Copies', a.parent === null ? 'the starting population' : `#${a.parent} of the generation before`),
+      ];
+    }
+    if (view.level) {
+      const rows = [row('Strategy', `boldness ${view.level[0]}/7, vengefulness ${view.level[1]}/7`)];
+      if (view.agents.length === 0) return [...rows, row('Agents', 'none')];
+      for (const a of view.agents.slice(0, 12)) rows.push(row(`#${a.id}`, agent(a)));
+      if (view.agents.length > 12) rows.push(row('', `and ${view.agents.length - 12} more`));
+      return rows;
+    }
+    return [row('Point', 'between the plane and the agents')];
+  }
+
   private dpdSiteRows(view: DpdInspection, gone: boolean): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     const rows = [row('Site', `(${view.site.x}, ${view.site.y})`)];
@@ -217,6 +247,29 @@ export class InspectPanel {
     }
     if (view.block) return [row('Block cell', 'no agent here')];
     return [row('Point', 'between the agents and the plane')];
+  }
+
+  /** A cell of relative agreement's diagram, start-against-now panel or torus, and the agents there. */
+  private agreementRows(view: AgreementInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (view.panel === null) return [row('Point', 'between the panels')];
+    const panel = { diagram: 'Opinion × time', scatter: 'Start against now', torus: 'Lattice' }[view.panel];
+    const rows = [row('Panel', panel)];
+    if (view.period !== null) rows.push(row('Period', String(view.period)));
+    if (view.opinion !== null) rows.push(row('Opinion', fmt(view.opinion)));
+    if (view.agents.length === 0) return [...rows, row('Agents', 'none here')];
+    const role = { plus: 'extremist (+1)', minus: 'extremist (−1)', moderate: 'moderate' };
+    const shown = view.agents.slice(0, 12);
+    for (const a of shown) {
+      rows.push(
+        row(
+          `#${a.id}`,
+          `${fmt(a.opinion)} ± ${fmt(a.uncertainty)} · ${role[a.role]} · started ${fmt(a.start)} · ${a.degree} neighbors · moved in ${a.moves} of ${a.meetings} meetings`,
+        ),
+      );
+    }
+    if (view.agents.length > shown.length) rows.push(row('', `and ${view.agents.length - shown.length} more`));
+    return rows;
   }
 
   /** A cell of the opinion × time diagram (its period, opinion and the agents passing) or of the lattice. */
@@ -371,6 +424,10 @@ export class InspectPanel {
         ? this.ethnoSiteRows(view, gone)
         : isDpdView(view, this.engine.model)
           ? this.dpdSiteRows(view, gone)
+          : isNormsView(view)
+            ? this.normsRows(view)
+          : isAgreementView(view)
+            ? this.agreementRows(view)
           : isStructureView(view)
             ? this.structureRows(view)
             : isOpinionsView(view)

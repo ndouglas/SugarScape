@@ -4,7 +4,7 @@ import unittest
 import episode
 import music
 
-TUNES = {name: episode.load_module(name, "tune").TUNE for name in ("sugarscape", "seasons", "pollution")}
+TUNES = {name: episode.load_module(name, "tune").TUNE for name in ("sugarscape", "seasons", "pollution", "inheritance", "tribes")}
 
 
 def bars(voice_body):
@@ -52,6 +52,13 @@ class MusicTest(unittest.TestCase):
             for voice, bar in tune.ending.items():
                 self.assertEqual(music.eighths(bar), per_bar, (name, "ending", voice))
 
+    def test_a_voice_can_be_placed_left_or_right(self):
+        tune = TUNES["sugarscape"]
+        panned = music.Tune(**{**tune.__dict__, "voices": (music.Voice("accordion", 21, 110, pan=20),) + tune.voices[1:]})
+        abc = music.score(panned, 96.0)
+        self.assertIn("%%MIDI control 10 20", abc)
+        self.assertNotIn("%%MIDI control 10", music.score(tune, 96.0))
+
     def test_percussion_voices_play_on_channel_ten(self):
         abc = music.score(TUNES["seasons"], 70.0)
         self.assertIn("%%MIDI channel 10", abc)
@@ -60,6 +67,10 @@ class MusicTest(unittest.TestCase):
         cues = music.cue_times(TUNES["seasons"].cues, ["reprise", "seasons", "slower"], [120, 180, 180], dissolve=12)
         # "seasons" starts at (120 − 12)/30 = 3.6 s; "slower" at (120 + 180 − 24)/30 = 9.2 s; each 0.3 s in.
         self.assertEqual(cues, [("summer", 3.9), ("winter", 9.5)])
+
+    def test_a_cue_can_land_at_its_own_moment_in_the_beat(self):
+        cues = music.cue_times((("a", "x", 2.5), ("b", "y")), ["a", "b"], [150, 90], dissolve=12)
+        self.assertEqual(cues, [("x", 2.5), ("y", round((150 - 12) / 30 + music.CUE_DELAY, 3))])
 
     def test_the_sting_mix_delays_each_sting(self):
         argv = music.sting_mix_command("t.wav", [("s.wav", 3.9), ("w.wav", 9.5)], "o.wav")

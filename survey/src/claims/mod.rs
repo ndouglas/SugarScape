@@ -1,3 +1,4 @@
+mod agreement;
 mod ch2;
 mod ch3;
 mod ch4;
@@ -8,6 +9,7 @@ mod classes;
 mod culture;
 mod dpd;
 mod ethno;
+mod norms;
 mod image;
 mod opinions;
 mod spatial;
@@ -18,6 +20,7 @@ use crate::claim::Claim;
 
 pub fn all() -> Vec<Claim> {
     [
+        agreement::claims(),
         ch2::claims(),
         ch3::claims(),
         ch4::claims(),
@@ -28,6 +31,7 @@ pub fn all() -> Vec<Claim> {
         culture::claims(),
         dpd::claims(),
         ethno::claims(),
+        norms::claims(),
         image::claims(),
         opinions::claims(),
         spatial::claims(),

@@ -1,0 +1,68 @@
+{
+  "name": "Norms: four selection rules (Galán & Izquierdo Fig. 12)",
+  "description": "Galán & Izquierdo's Fig. 12: the metanorms game under Axelrod's selection and their three alternatives; the metric is the share of runs collapsed. Measured (release, seeds 1–10, recorded 2026-09-26): after 10 000 generations 0, 0.8, 0.9 and 0.9 under Axelrod's rule, a random tournament, a roulette wheel and above-the-mean selection (after 1 000: 0, 0.6, 0.2, 0.1). Axelrod's rule is the one that keeps the norm; any of the other three, equally reasonable, loses it.",
+  "base": {
+    "preset": "gi-metanorms-long"
+  },
+  "x": {
+    "label": "Selection",
+    "values": [
+      {
+        "at": 0,
+        "name": "Axelrod",
+        "set": {
+          "selection": "axelrod"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Random tournament",
+        "set": {
+          "selection": "tournament"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Roulette wheel",
+        "set": {
+          "selection": "roulette"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Above the mean",
+        "set": {
+          "selection": "average"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Generations",
+    "values": [
+      {
+        "at": 0,
+        "name": "1 000 generations",
+        "set": {
+          "stop_at": 1000
+        }
+      },
+      {
+        "at": 1,
+        "name": "10 000 generations",
+        "set": {
+          "stop_at": 10000
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 10000,
+  "metric": {
+    "kind": "final",
+    "series": "collapsed"
+  }
+}

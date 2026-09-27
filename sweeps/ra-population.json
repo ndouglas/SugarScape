@@ -1,0 +1,52 @@
+{
+  "name": "Relative Agreement: single extreme against population size",
+  "description": "Is the single extreme a finite-size effect? y at pe 0.1, U 1.6 (μ 0.2, the literal reading) against the number of agents, with the extremists balanced (δ 0) or leaning (δ 0.1). Meadows and Cliff found the single-extreme zone shrinking as N grows; the reply says it 'takes place with any large number of agents'. Measured (release, seeds 1–20, recorded 2026-09-26): δ 0: 0.74, 0.54, 0.34, 0.45, 0.15, 0.25, 0.05 for N 100, 200, 400, 700, 1000, 1500, 2000 — balanced extremists lose the single extreme as N grows (planning: none of 100 runs at N 4000); δ 0.1: 0.84 to 0.99, rising with N. A lean decides it; balanced, only chance does, and chance fades with N.",
+  "base": {
+    "preset": "ra-literal"
+  },
+  "set": {
+    "extremists": 0.1,
+    "uncertainty": 1.6
+  },
+  "x": {
+    "label": "Agents (N)",
+    "path": "agents",
+    "values": [
+      100,
+      200,
+      400,
+      700,
+      1000,
+      1500,
+      2000
+    ]
+  },
+  "series": {
+    "label": "Lean (δ)",
+    "values": [
+      {
+        "at": 0,
+        "name": "δ = 0",
+        "set": {
+          "delta": 0.0
+        }
+      },
+      {
+        "at": 1,
+        "name": "δ = 0.1",
+        "set": {
+          "delta": 0.1
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "y"
+  }
+}

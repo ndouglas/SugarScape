@@ -30,13 +30,15 @@ CUE_DELAY = 0.3  # a sting lands this long after its beat begins
 
 @dataclass(frozen=True)
 class Voice:
-    """One instrument: a General MIDI program (0-based), its volume, and a
-    channel (10 for percussion; None lets abc2midi choose)."""
+    """One instrument: a General MIDI program (0-based), its volume, a
+    channel (10 for percussion; None lets abc2midi choose) and a stereo
+    position (0 left … 127 right; None leaves it centered)."""
 
     name: str
     program: int
     volume: int
     channel: int | None = None
+    pan: int | None = None
 
 
 @dataclass(frozen=True)
@@ -100,6 +102,8 @@ def _voice(i, v):
     if v.channel is not None:
         lines.append(f"%%MIDI channel {v.channel}")
     lines += [f"%%MIDI program {v.program}", f"%%MIDI control 7 {v.volume}"]
+    if v.pan is not None:
+        lines.append(f"%%MIDI control 10 {v.pan}")
     return lines
 
 
@@ -125,13 +129,18 @@ def sting_score(tune, name):
 
 
 def cue_times(cues, beat_names, frames, dissolve=12, fps=30):
-    """Each cue (beat name, sting) as (sting, seconds into the cut): the
-    moment its beat begins — after the dissolves before it — plus CUE_DELAY."""
+    """Each cue (beat name, sting[, seconds into the beat]) as (sting, seconds
+    into the cut): the moment its beat begins — after the dissolves before
+    it — plus its own offset, or CUE_DELAY."""
     starts, elapsed = {}, 0
-    for i, (name, n) in enumerate(zip(beat_names, frames)):
+    for name, n in zip(beat_names, frames):
         starts[name] = elapsed / fps
         elapsed += n - dissolve
-    return [(sting, round(starts[beat] + CUE_DELAY, 3)) for beat, sting in cues if beat in starts]
+    out = []
+    for beat, sting, *offset in cues:
+        if beat in starts:
+            out.append((sting, round(starts[beat] + (offset[0] if offset else CUE_DELAY), 3)))
+    return out
 
 
 def sting_mix_command(track, stings, out):

@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 58] = [
+const BUILTINS: [Builtin; 73] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1181,6 +1181,66 @@ const BUILTINS: [Builtin; 58] = [
     Builtin {
         id: "dpd-max-age",
         json: include_str!("../../../sweeps/dpd-max-age.json"),
+    },
+    Builtin {
+        id: "norms-horizon",
+        json: include_str!("../../../sweeps/norms-horizon.json"),
+    },
+    Builtin {
+        id: "norms-mutation",
+        json: include_str!("../../../sweeps/norms-mutation.json"),
+    },
+    Builtin {
+        id: "norms-meta-payoffs",
+        json: include_str!("../../../sweeps/norms-meta-payoffs.json"),
+    },
+    Builtin {
+        id: "norms-temptation",
+        json: include_str!("../../../sweeps/norms-temptation.json"),
+    },
+    Builtin {
+        id: "norms-selection",
+        json: include_str!("../../../sweeps/norms-selection.json"),
+    },
+    Builtin {
+        id: "norms-readings",
+        json: include_str!("../../../sweeps/norms-readings.json"),
+    },
+    Builtin {
+        id: "norms-dominance",
+        json: include_str!("../../../sweeps/norms-dominance.json"),
+    },
+    Builtin {
+        id: "ra-clusters",
+        json: include_str!("../../../sweeps/ra-clusters.json"),
+    },
+    Builtin {
+        id: "ra-map",
+        json: include_str!("../../../sweeps/ra-map.json"),
+    },
+    Builtin {
+        id: "ra-readings",
+        json: include_str!("../../../sweeps/ra-readings.json"),
+    },
+    Builtin {
+        id: "ra-population",
+        json: include_str!("../../../sweeps/ra-population.json"),
+    },
+    Builtin {
+        id: "ra-rules",
+        json: include_str!("../../../sweeps/ra-rules.json"),
+    },
+    Builtin {
+        id: "ra-delta",
+        json: include_str!("../../../sweeps/ra-delta.json"),
+    },
+    Builtin {
+        id: "ad-connectivity",
+        json: include_str!("../../../sweeps/ad-connectivity.json"),
+    },
+    Builtin {
+        id: "w-dispersion",
+        json: include_str!("../../../sweeps/w-dispersion.json"),
     },
     Builtin {
         id: "ns-rounds",
@@ -2075,6 +2135,21 @@ mod tests {
                 "dpd-mutation",
                 "dpd-metabolism",
                 "dpd-max-age",
+                "norms-horizon",
+                "norms-mutation",
+                "norms-meta-payoffs",
+                "norms-temptation",
+                "norms-selection",
+                "norms-readings",
+                "norms-dominance",
+                "ra-clusters",
+                "ra-map",
+                "ra-readings",
+                "ra-population",
+                "ra-rules",
+                "ra-delta",
+                "ad-connectivity",
+                "w-dispersion",
                 "ns-rounds",
                 "ns-group-size",
                 "lh-cost",

@@ -5,6 +5,7 @@
 
 use serde::{Serialize, Serializer};
 
+use crate::agreement::{AgreementConfig, AgreementWorld};
 use crate::anasazi::{AnasaziConfig, AnasaziWorld};
 use crate::civil::{CivilConfig, CivilWorld};
 use crate::classes::{ClassesConfig, ClassesWorld};
@@ -13,6 +14,7 @@ use crate::culture::{CultureConfig, CultureWorld};
 use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::image::{ImageConfig, ImageWorld};
+use crate::norms::{NormsConfig, NormsWorld};
 use crate::opinions::{OpinionsConfig, OpinionsWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::ring::{RingConfig, RingWorld};
@@ -23,8 +25,8 @@ use crate::structure::{StructureConfig, StructureWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
 use crate::{
-    anasazi, civil, classes, culture, dpd, ethno, export, image, opinions, ring, schelling,
-    spatial, stats, structure, tags,
+    agreement, anasazi, civil, classes, culture, dpd, ethno, export, image, norms, opinions, ring,
+    schelling, spatial, stats, structure, tags,
 };
 
 /// Which model a config or world is.
@@ -44,11 +46,13 @@ pub enum ModelKind {
     Opinions,
     Structure,
     Dpd,
+    Norms,
+    Agreement,
     Image,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 14] = [
+    pub const ALL: [ModelKind; 16] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -62,6 +66,8 @@ impl ModelKind {
         ModelKind::Opinions,
         ModelKind::Structure,
         ModelKind::Dpd,
+        ModelKind::Norms,
+        ModelKind::Agreement,
         ModelKind::Image,
     ];
 
@@ -80,6 +86,8 @@ impl ModelKind {
             ModelKind::Opinions => "opinions",
             ModelKind::Structure => "structure",
             ModelKind::Dpd => "dpd",
+            ModelKind::Norms => "norms",
+            ModelKind::Agreement => "agreement",
             ModelKind::Image => "image",
         }
     }
@@ -101,6 +109,8 @@ impl ModelKind {
             ModelKind::Opinions => opinions::schema(),
             ModelKind::Structure => structure::schema(),
             ModelKind::Dpd => dpd::schema(),
+            ModelKind::Norms => norms::schema(),
+            ModelKind::Agreement => agreement::schema(),
             ModelKind::Image => image::schema(),
         }
     }
@@ -128,6 +138,8 @@ pub enum ModelConfig {
     Opinions(OpinionsConfig),
     Structure(StructureConfig),
     Dpd(DpdConfig),
+    Norms(NormsConfig),
+    Agreement(AgreementConfig),
     Image(ImageConfig),
 }
 
@@ -147,6 +159,8 @@ enum Tagged<'a> {
     Opinions(&'a OpinionsConfig),
     Structure(&'a StructureConfig),
     Dpd(&'a DpdConfig),
+    Norms(&'a NormsConfig),
+    Agreement(&'a AgreementConfig),
     Image(&'a ImageConfig),
 }
 
@@ -173,6 +187,8 @@ impl Serialize for ModelConfig {
             ModelConfig::Opinions(c) => Tagged::Opinions(c).serialize(s),
             ModelConfig::Structure(c) => Tagged::Structure(c).serialize(s),
             ModelConfig::Dpd(c) => Tagged::Dpd(c).serialize(s),
+            ModelConfig::Norms(c) => Tagged::Norms(c).serialize(s),
+            ModelConfig::Agreement(c) => Tagged::Agreement(c).serialize(s),
             ModelConfig::Image(c) => Tagged::Image(c).serialize(s),
         }
     }
@@ -194,6 +210,8 @@ impl ModelConfig {
             ModelConfig::Opinions(_) => ModelKind::Opinions,
             ModelConfig::Structure(_) => ModelKind::Structure,
             ModelConfig::Dpd(_) => ModelKind::Dpd,
+            ModelConfig::Norms(_) => ModelKind::Norms,
+            ModelConfig::Agreement(_) => ModelKind::Agreement,
             ModelConfig::Image(_) => ModelKind::Image,
         }
     }
@@ -268,13 +286,19 @@ impl ModelConfig {
             "dpd" => serde_json::from_value(value)
                 .map(ModelConfig::Dpd)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "norms" => serde_json::from_value(value)
+                .map(ModelConfig::Norms)
+                .map_err(|e| FieldError::new("config", e.to_string())),
+            "agreement" => serde_json::from_value(value)
+                .map(ModelConfig::Agreement)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "image" => serde_json::from_value(value)
                 .map(ModelConfig::Image)
                 .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd or image)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement or image)"
                 ),
             )),
         }
@@ -295,6 +319,8 @@ impl ModelConfig {
             ModelConfig::Opinions(c) => c.validate(),
             ModelConfig::Structure(c) => c.validate(),
             ModelConfig::Dpd(c) => c.validate(),
+            ModelConfig::Norms(c) => c.validate(),
+            ModelConfig::Agreement(c) => c.validate(),
             ModelConfig::Image(c) => c.validate(),
         }
     }
@@ -316,6 +342,8 @@ impl ModelConfig {
             ModelConfig::Opinions(c) => set_path(c, path, value).map(ModelConfig::Opinions),
             ModelConfig::Structure(c) => set_path(c, path, value).map(ModelConfig::Structure),
             ModelConfig::Dpd(c) => set_path(c, path, value).map(ModelConfig::Dpd),
+            ModelConfig::Norms(c) => set_path(c, path, value).map(ModelConfig::Norms),
+            ModelConfig::Agreement(c) => set_path(c, path, value).map(ModelConfig::Agreement),
             ModelConfig::Image(c) => set_path(c, path, value).map(ModelConfig::Image),
         }
     }
@@ -337,7 +365,9 @@ impl ModelConfig {
             | ModelConfig::Culture(_)
             | ModelConfig::Classes(_)
             | ModelConfig::Opinions(_)
-            | ModelConfig::Structure(_) => None,
+            | ModelConfig::Structure(_)
+            | ModelConfig::Norms(_)
+            | ModelConfig::Agreement(_) => None,
         }
     }
 
@@ -357,6 +387,8 @@ impl ModelConfig {
             ModelConfig::Opinions(_) => opinions::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Structure(_) => structure::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Dpd(_) => dpd::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Norms(_) => norms::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Agreement(_) => agreement::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Image(_) => image::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
@@ -540,6 +572,8 @@ pub enum ModelWorld {
     Opinions(Box<OpinionsWorld>),
     Structure(Box<StructureWorld>),
     Dpd(Box<DpdWorld>),
+    Norms(Box<NormsWorld>),
+    Agreement(Box<AgreementWorld>),
     Image(Box<ImageWorld>),
 }
 
@@ -577,6 +611,10 @@ impl ModelWorld {
                 ModelWorld::Structure(Box::new(StructureWorld::new(c, seed)?))
             }
             ModelConfig::Dpd(c) => ModelWorld::Dpd(Box::new(DpdWorld::new(c, seed)?)),
+            ModelConfig::Norms(c) => ModelWorld::Norms(Box::new(NormsWorld::new(c, seed)?)),
+            ModelConfig::Agreement(c) => {
+                ModelWorld::Agreement(Box::new(AgreementWorld::new(c, seed)?))
+            }
             ModelConfig::Image(c) => ModelWorld::Image(Box::new(ImageWorld::new(c, seed)?)),
         })
     }
@@ -596,6 +634,8 @@ impl ModelWorld {
             ModelWorld::Opinions(_) => ModelKind::Opinions,
             ModelWorld::Structure(_) => ModelKind::Structure,
             ModelWorld::Dpd(_) => ModelKind::Dpd,
+            ModelWorld::Norms(_) => ModelKind::Norms,
+            ModelWorld::Agreement(_) => ModelKind::Agreement,
             ModelWorld::Image(_) => ModelKind::Image,
         }
     }
@@ -615,6 +655,8 @@ impl ModelWorld {
             ModelWorld::Opinions(w) => w.as_ref(),
             ModelWorld::Structure(w) => w.as_ref(),
             ModelWorld::Dpd(w) => w.as_ref(),
+            ModelWorld::Norms(w) => w.as_ref(),
+            ModelWorld::Agreement(w) => w.as_ref(),
             ModelWorld::Image(w) => w.as_ref(),
         }
     }
@@ -634,6 +676,8 @@ impl ModelWorld {
             ModelWorld::Opinions(w) => w.as_mut(),
             ModelWorld::Structure(w) => w.as_mut(),
             ModelWorld::Dpd(w) => w.as_mut(),
+            ModelWorld::Norms(w) => w.as_mut(),
+            ModelWorld::Agreement(w) => w.as_mut(),
             ModelWorld::Image(w) => w.as_mut(),
         }
     }
@@ -721,6 +765,8 @@ impl ModelWorld {
             ModelWorld::Opinions(w) => copy_without_history!(Opinions, w),
             ModelWorld::Structure(w) => copy_without_history!(Structure, w),
             ModelWorld::Dpd(w) => copy_without_history!(Dpd, w),
+            ModelWorld::Norms(w) => copy_without_history!(Norms, w),
+            ModelWorld::Agreement(w) => copy_without_history!(Agreement, w),
             // Without its private records, which the next generation rebuilds.
             ModelWorld::Image(w) => ModelWorld::Image(Box::new(w.keyframe())),
             _ => return None,
@@ -751,6 +797,10 @@ impl ModelWorld {
             (ModelWorld::Opinions(live), ModelWorld::Opinions(kept)) => restore_into!(live, kept),
             (ModelWorld::Structure(live), ModelWorld::Structure(kept)) => restore_into!(live, kept),
             (ModelWorld::Dpd(live), ModelWorld::Dpd(kept)) => restore_into!(live, kept),
+            (ModelWorld::Norms(live), ModelWorld::Norms(kept)) => restore_into!(live, kept),
+            (ModelWorld::Agreement(live), ModelWorld::Agreement(kept)) => {
+                restore_into!(live, kept)
+            }
             (ModelWorld::Image(live), ModelWorld::Image(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
@@ -1093,6 +1143,8 @@ mod tests {
                 "opinions",
                 "structure",
                 "dpd",
+                "norms",
+                "agreement",
                 "image"
             ]
         );

@@ -3,10 +3,12 @@ import {
   calendarYear,
   COLOR_MODES,
   finishesUnpredictably,
+  isAgreementView,
   isCivilView,
   isClassesView,
   isOpinionsView,
   isStructureView,
+  isNormsView,
   isCultureView,
   isDpdView,
   isEthnoView,
@@ -101,6 +103,51 @@ describe('the anasazi model', () => {
     const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the relative agreement model', () => {
+  it('is read by its tag, and its inspections by their panel', () => {
+    const c = { model: 'agreement', stop_at: 200 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('agreement');
+    const cell = { site: { x: 1, y: 2 }, panel: 'diagram', period: 0, opinion: 0.5, agents: [], agent: null } as unknown as AnyInspection;
+    const hk = { site: { x: 1, y: 2 }, period: 0, opinion: 0.5, lattice_site: null, agents: [], agent: null } as unknown as AnyInspection;
+    expect([cell, hk].map(isAgreementView)).toEqual([true, false]);
+    expect([isOpinionsView(cell), isNormsView(cell)]).toEqual([false, false]);
+  });
+
+  it('colors three ways, has no overlays, and stops at its period or unpredictably when stable', () => {
+    expect(COLOR_MODES.agreement).toEqual([
+      ['uncertainty', 'Uncertainty'],
+      ['role', 'Role'],
+      ['start', 'Start'],
+    ]);
+    expect(MODEL_OVERLAYS.agreement).toEqual([]);
+    const c = (stop_when_stable: boolean, stop_at: number) => ({ model: 'agreement', stop_when_stable, stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(false, 200)), ticksLeft(c(false, 200), 40)]).toEqual([false, 160]);
+    expect([finishesUnpredictably(c(true, 20000)), ticksLeft(c(true, 20000), 40), ticksLeft(c(true, 0), 40)]).toEqual([true, 19960, Infinity]);
+  });
+});
+
+describe('the norms model', () => {
+  it('is read by its tag, and its inspections by their plane level', () => {
+    const c = { model: 'norms', stop_at: 100 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('norms');
+    const cell = { site: { x: 1, y: 2 }, level: [3, 4], agents: [], agent: null } as unknown as AnyInspection;
+    const block = { site: { x: 1, y: 2 }, block: { x: 0, y: 0 }, plane: null, agents: [], agent: null } as unknown as AnyInspection;
+    expect([cell, block].map(isNormsView)).toEqual([true, false]);
+    expect(isStructureView(cell)).toBe(false);
+  });
+
+  it('colors three ways, has no overlays, and stops predictably at its last generation', () => {
+    expect(COLOR_MODES.norms).toEqual([
+      ['agents', 'Agents'],
+      ['payoff', 'Payoff'],
+      ['group', 'Group'],
+    ]);
+    expect(MODEL_OVERLAYS.norms).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'norms', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(100)), ticksLeft(c(100), 40), ticksLeft(c(0), 40)]).toEqual([false, 60, Infinity]);
   });
 });
 

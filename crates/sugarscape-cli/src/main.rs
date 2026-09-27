@@ -210,7 +210,8 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
         // the tags model at its last generation; Axelrod's culture and bounded
         // confidence once stable, a sugarscape under his rule once its cultures
         // settle; ethnocentrism at its last period; the demographic PD at its
-        // last cycle; image scoring at its last generation.
+        // last cycle; norms and image scoring at their last
+        // generation.
         let why = match config.kind() {
             ModelKind::Civil => "a group has died out",
             ModelKind::Tags => "its last generation",
@@ -221,6 +222,17 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Sugarscape => "the cultures have settled",
             ModelKind::Ethno => "its last period",
             ModelKind::Dpd => "its last cycle",
+            ModelKind::Norms => "its last generation",
+            // Relative agreement stops when stable, or at `stop_at` (a cap, or a
+            // reading's fixed horizon).
+            ModelKind::Agreement => match &config {
+                ModelConfig::Agreement(c)
+                    if c.stop_at > 0 && world.tick() >= u64::from(c.stop_at) =>
+                {
+                    "its last period"
+                }
+                _ => "stable",
+            },
             ModelKind::Image => "its last generation",
             _ => "its end year",
         };

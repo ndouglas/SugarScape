@@ -1,0 +1,6 @@
+{"preset": "iii-4-inheritance", "ticks": 40, "seed": 1,
+ "set": {"width": 12, "height": 12, "population": 0, "vision.max": 6,
+   "lifespan.max_age": {"min": 30, "max": 30},
+   "goods.0.map": {"kind": "peaks", "peaks": [{"x": 6, "y": 6, "radius": 4, "height": 4}]}},
+ "place": [{"x": 5, "y": 6, "vision": 2, "metabolism": 1, "sugar": 6, "sex": "female"},
+           {"x": 6, "y": 6, "vision": 2, "metabolism": 1, "sugar": 6, "sex": "male"}]}

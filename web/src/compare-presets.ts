@@ -117,6 +117,18 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     b: 'dpd-closest',
   },
   {
+    id: 'gi-axelrod-vs-tournament',
+    label: 'Axelrod’s selection vs a random tournament — Norms and Metanorms (Compare)',
+    a: 'gi-metanorms-long',
+    b: 'gi-tournament',
+  },
+  {
+    id: 'ra-meadows-cliff-vs-reply',
+    label: 'Meadows and Cliff vs Deffuant et al.’s reply — Relative Agreement (Compare)',
+    a: 'ra-meadows-cliff',
+    b: 'ra-deffuant-2013',
+  },
+  {
     id: 'image-one-vs-island',
     label: 'One group vs the island model — Image Scoring (Compare)',
     a: 'lh-fig-2a',

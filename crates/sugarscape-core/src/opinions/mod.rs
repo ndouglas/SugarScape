@@ -13,6 +13,8 @@ pub use config::{
     schema, Confidence, Interaction, LatticeConfig, Neighborhood, OpinionsConfig, Start, Updating,
 };
 pub use presets::presets;
-pub use stats::{clusters, median, splits, OpinionsSnapshot, SAME, SERIES, STILL};
-pub use view::{hue, opinion_at, row, GAP, HISTORY, LATTICE_X, STEP, TALL, WIDE};
+pub use stats::{clusters, groups, median, splits, OpinionsSnapshot, SAME, SERIES, STILL};
+pub use view::{
+    hue, opinion_at, row, site_cells, Canvas, GAP, HISTORY, LATTICE_X, STEP, TALL, WIDE,
+};
 pub use world::{OpinionAgent, OpinionsCell, OpinionsInspection, OpinionsMode, OpinionsWorld};

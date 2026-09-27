@@ -1,0 +1,79 @@
+{
+  "name": "Relative Agreement: the rules of §6 (DAWF Figs. 9, 20–22)",
+  "description": "Deffuant et al. 2002 §6: relative agreement against three bounded-confidence rules, y against U at pe 0.05 and δ 0.1 (200 agents, μ 0.2, at most 2 000 periods: plain bounded confidence above U 1.2 never goes still). Measured (release, seeds 1–20, recorded 2026-09-26): relative agreement single extreme from U 1.2 (0.84–0.95); bounded confidence with eq. 11 as printed (the influencer's uncertainty) 0.00 everywhere; with the listener's uncertainty a single extreme at U 1.0 (0.90), none above 1.4 — the paper's 'limited to a zone … around U = 1'; averaging uncertainties 0.45–0.75 from U 1.2; the variance rule 0.00 everywhere ('the absence of single extreme convergence'). §6's text is reproduced only with the listener's window.",
+  "base": {
+    "preset": "ra-literal"
+  },
+  "set": {
+    "delta": 0.1
+  },
+  "x": {
+    "label": "Moderates' uncertainty (U)",
+    "path": "uncertainty",
+    "values": [
+      0.2,
+      0.4,
+      0.6,
+      0.8,
+      1.0,
+      1.2,
+      1.4,
+      1.6,
+      1.8,
+      2.0
+    ]
+  },
+  "series": {
+    "label": "Rule",
+    "values": [
+      {
+        "at": 0,
+        "name": "Relative agreement",
+        "set": {
+          "rule": "ra"
+        }
+      },
+      {
+        "at": 1,
+        "name": "BC, eq. 11 as printed",
+        "set": {
+          "rule": "bc",
+          "window": "influencer"
+        }
+      },
+      {
+        "at": 2,
+        "name": "BC, the listener's window",
+        "set": {
+          "rule": "bc",
+          "window": "listener"
+        }
+      },
+      {
+        "at": 3,
+        "name": "BC averaging, the listener's window",
+        "set": {
+          "rule": "bc_averaging",
+          "window": "listener"
+        }
+      },
+      {
+        "at": 4,
+        "name": "BC from variance",
+        "set": {
+          "rule": "bc_variance",
+          "window": "listener"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "y"
+  }
+}

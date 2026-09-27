@@ -1,0 +1,44 @@
+{
+  "name": "Norms: the norm over time (Galán & Izquierdo Figs. 4–5)",
+  "description": "Galán & Izquierdo's Figs. 4–5: the share of runs in which the norm has collapsed (mean boldness ≥ 6/7 and mean vengefulness ≤ 1/7) after 100, 1 000 and 10 000 generations. Axelrod ran 100. Measured (release, seeds 1–20, recorded 2026-09-26): the norms game 0.25, 1.00, 0.95; the metanorms game 0, 0, 0.05. The norms game's collapse is complete within 1 000 generations; the metanorms game's comes later — by 10⁵ generations 43 of 100 runs have collapsed (100 seeds, measured in planning; the survey's 50 seeds: 20 of 50), and Galán & Izquierdo's runs to 10⁶ show it usually does.",
+  "base": {
+    "preset": "ax-norms"
+  },
+  "x": {
+    "label": "Generations",
+    "path": "stop_at",
+    "values": [
+      100,
+      1000,
+      10000
+    ]
+  },
+  "series": {
+    "label": "Game",
+    "values": [
+      {
+        "at": 0,
+        "name": "Norms",
+        "set": {
+          "metanorms": false
+        }
+      },
+      {
+        "at": 1,
+        "name": "Metanorms",
+        "set": {
+          "metanorms": true
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 10000,
+  "metric": {
+    "kind": "final",
+    "series": "collapsed"
+  }
+}

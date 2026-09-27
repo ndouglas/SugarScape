@@ -305,6 +305,21 @@ fn builtins_and_series_names_are_listed() {
             "dpd-mutation",
             "dpd-metabolism",
             "dpd-max-age",
+            "norms-horizon",
+            "norms-mutation",
+            "norms-meta-payoffs",
+            "norms-temptation",
+            "norms-selection",
+            "norms-readings",
+            "norms-dominance",
+            "ra-clusters",
+            "ra-map",
+            "ra-readings",
+            "ra-population",
+            "ra-rules",
+            "ra-delta",
+            "ad-connectivity",
+            "w-dispersion",
             "ns-rounds",
             "ns-group-size",
             "lh-cost",
@@ -793,6 +808,39 @@ fn ethno_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "ethno");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn norms_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    for (id, fp) in [
+        ("ax-metanorms", "0x679a78d57f20640c"),
+        ("ax-dominance", "0x405accd101253f9d"),
+        ("gi-tournament", "0x95ea76458cee1a46"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "norms");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn agreement_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: pair meetings on
+    // every network, and each rule.
+    for (id, fp) in [
+        ("ra-literal", "0x2a130dc7026094f7"),
+        ("ra-bc-extremists", "0xc304b87400a0bb46"),
+        ("dnaw-lattice", "0x60f9414e1157482d"),
+        ("ad-small-world", "0xd29498f3ac055d5d"),
+        ("w-scale-free", "0xed9e58b01a7987d8"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "agreement");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

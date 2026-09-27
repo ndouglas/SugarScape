@@ -80,8 +80,8 @@ export interface Config {
   schedule: ScheduledChange[];
 }
 
-/** The models the playground runs (milestones 9–21). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'image';
+/** The models the playground runs (milestones 9–13). */
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -428,7 +428,59 @@ export interface StructureConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | ImageConfig;
+/**
+ * Axelrod's norms and metanorms games (milestone 20): agents evolving boldness and vengefulness,
+ * with Galán and Izquierdo's departures and readings as switches.
+ */
+export interface NormsConfig {
+  model: 'norms';
+  agents: number;
+  metanorms: boolean;
+  rounds: number;
+  temptation: number;
+  hurt: number;
+  punishment: number;
+  enforcement: number;
+  meta_punishment: number;
+  meta_enforcement: number;
+  mutation: number;
+  selection: 'axelrod' | 'tournament' | 'roulette' | 'average';
+  refill: 'random' | 'ranked';
+  all_equal: 'drift' | 'keep';
+  groups: { enabled: boolean; strong: number; weak: number; strong_punishment: number };
+  stop_at: number;
+}
+
+/**
+ * Deffuant et al.'s relative agreement (milestone 22): random pairs meet and move each other's
+ * opinions and uncertainties; extremists, three bounded-confidence rules, networks, and the readings
+ * the papers leave open (Meadows and Cliff's, the 2013 reply's, eq. 11's window) as switches.
+ */
+export interface AgreementConfig {
+  model: 'agreement';
+  agents: number;
+  rule: 'ra' | 'bc' | 'bc_averaging' | 'bc_variance';
+  window: 'influencer' | 'listener';
+  mu: number;
+  alpha: number;
+  uncertainty: number;
+  extremists: number;
+  extremist_uncertainty: number;
+  delta: number;
+  placement: 'drawn' | 'bounds' | 'band';
+  band: number;
+  extreme_margin: number;
+  pair_update: 'simultaneous' | 'sequential' | 'one_way';
+  network: 'all' | 'lattice' | 'small_world' | 'scale_free';
+  lattice: { width: number; height: number; neighborhood: 'moore' | 'von_neumann' };
+  small_world: { substrate: 'ring' | 'grid'; degree: number; rewire: number };
+  scale_free: { links: number };
+  pairing: 'edge' | 'node';
+  stop_when_stable: boolean;
+  stop_at: number;
+}
+
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig;
 
 export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -695,7 +747,46 @@ export interface StructureStats {
   partner_p_slope: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | ImageStats;
+export interface NormsStats {
+  tick: number;
+  mean_boldness: number;
+  mean_vengefulness: number;
+  mean_payoff: number;
+  defections: number;
+  punishments: number;
+  metapunishments: number;
+  /** Galán & Izquierdo's regions: 1 when the generation is in them. */
+  established: number;
+  collapsed: number;
+  strong_boldness: number;
+  weak_boldness: number;
+  strong_vengefulness: number;
+  weak_vengefulness: number;
+  copied_equal: number;
+}
+
+export interface AgreementStats {
+  tick: number;
+  /** DAWF's indicator: the squared shares of moderates turned extremist at each end, summed. */
+  y: number;
+  p_plus: number;
+  p_minus: number;
+  /** 0 central, 1 both extremes, 2 single extreme, 3 intermediate. */
+  outcome: number;
+  clusters: number;
+  major: number;
+  isolated: number;
+  largest: number;
+  second: number;
+  dispersion: number;
+  unmoved: number;
+  mean_opinion: number;
+  mean_uncertainty: number;
+  max_change: number;
+  stable_at: number;
+}
+
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -973,7 +1064,54 @@ export interface StructureInspection {
   agent: StructureAgentView | null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | ImageInspection;
+/** An agent of the generation that played last: its strategy, payoff and what happened to it. */
+export interface NormAgentView {
+  id: number;
+  group: 'strong' | 'weak' | null;
+  bits: string;
+  boldness: number;
+  vengefulness: number;
+  payoff: number;
+  defections: number;
+  punished: number;
+  punishments: number;
+  metapunishments: number;
+  metapunished: number;
+  parent: number | null;
+}
+/** A cell of the boldness–vengefulness plane (its levels and agents) or of the agent strip. */
+export interface NormsInspection {
+  site: { x: number; y: number };
+  level: [number, number] | null;
+  agents: NormAgentView[];
+  agent: NormAgentView | null;
+}
+
+/** An agent at an inspected cell: its opinion and uncertainty there, where it started, and its meetings. */
+export interface AgreementAgent {
+  id: number;
+  role: 'plus' | 'minus' | 'moderate';
+  start: number;
+  opinion: number;
+  uncertainty: number;
+  degree: number;
+  meetings: number;
+  moves: number;
+}
+/**
+ * A cell of the opinion × time diagram, the start-against-now panel or the torus, and the agents
+ * there. `agent` is always null: a clicked cell is read again each period.
+ */
+export interface AgreementInspection {
+  site: { x: number; y: number };
+  panel: 'diagram' | 'scatter' | 'torus' | null;
+  period: number | null;
+  opinion: number | null;
+  agents: AgreementAgent[];
+  agent: null;
+}
+
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1019,6 +1157,9 @@ export type ColorMode =
   | 'provocability'
   | 'strategy'
   | 'surrounded'
+  | 'agents'
+  | 'uncertainty'
+  | 'role'
   | 'score';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 

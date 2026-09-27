@@ -4,6 +4,7 @@
 //! rule statements in Chapters II–III.
 
 pub mod agent;
+pub mod agreement;
 pub mod anasazi;
 pub mod bits;
 pub mod civil;
@@ -22,6 +23,7 @@ pub mod landscape;
 mod legacy;
 pub mod model;
 pub mod network;
+pub mod norms;
 pub mod opinions;
 pub mod portable;
 pub mod presets;

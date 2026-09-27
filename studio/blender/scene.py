@@ -8,6 +8,7 @@ from mathutils import Vector
 import animate
 import camera as cam
 import dump as dump_mod
+import lineage
 from blender import board, flump, materials, overlays
 
 UPDATERS = []
@@ -61,30 +62,50 @@ def add_camera(scene, beat):
 
 def _agents(beat, d, tracks, timing, corners):
     """Flumps for every agent — full rigs in close-ups (placed agents take the
-    yarn colors in order), collection instances in crowds — and their updater."""
+    yarn colors in order), collection instances in crowds — and their updater.
+    With params colors="family", a Flump wears its family line's color (its
+    mother's, back to a founding mother); with colors="tribe", its tribe's,
+    changing as its tribe does."""
     w, h = d.width, d.height
-    colors = list(materials.YARN)
+    colors = list(materials.CROWD_YARN)
     RIGS.clear()
     instances = {}
-    if beat.closeup:
-        order = {id_: i for i, id_ in enumerate(d.placed)}
-        for id_ in tracks:
-            color = colors[order.get(id_, id_) % len(colors)]
+    mode = beat.params.get("colors")
+    family = lineage.families(d) if mode == "family" else {}
+    order = {id_: i for i, id_ in enumerate(d.placed)}
+
+    def base_color(id_):
+        key = family.get(id_, id_)
+        return colors[order.get(key, key) % len(colors)]
+
+    def tribe_color(id_, frame):
+        f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
+        g = f.groups.get(id_)
+        return materials.TRIBE_YARN[g] if g is not None else None
+
+    protos = None if beat.closeup else flump.crowd_prototypes()
+    for id_ in tracks:
+        start = tribe_color(id_, timing.frame(tracks[id_].first)) if mode == "tribe" else None
+        color = start or base_color(id_)
+        if beat.closeup:
             RIGS[id_] = flump.build_flump(f"flump{id_}", color)
-    else:
-        protos = flump.crowd_prototypes()
-        for id_ in tracks:
-            instances[id_] = flump.crowd_instance(f"flump{id_}", protos[id_ % len(protos)])
+        else:
+            instances[id_] = flump.crowd_instance(f"flump{id_}", protos[color])
 
     def update(frame):
         for id_, t in tracks.items():
             p = animate.pose(t, timing, frame, corners, w, h)
+            color = tribe_color(id_, frame) if mode == "tribe" and p.visible else None
             if beat.closeup:
                 rig = RIGS[id_]
                 flump.apply(rig.root, p)
                 rig.eyes.scale = (1, 1, animate.blink(id_, frame) * (1 - 0.4 * p.hunger))
+                if color:
+                    flump.recolor(rig, color)
             else:
                 flump.apply(instances[id_], p)
+                if color and instances[id_].instance_collection is not protos[color]:
+                    instances[id_].instance_collection = protos[color]
 
     return update
 
@@ -109,6 +130,10 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     scene = bpy.context.scene
     reset(scene, preview)
     scene.frame_start, scene.frame_end = 1, beat.frames
+    # Motion blur smears into ghosts once Flumps hop more than once a frame:
+    # it fades out as the beat speeds past one tick a frame.
+    ticks_per_frame = beat.ticks_per_second / 30
+    scene.render.motion_blur_shutter = 0.3 / max(1.0, ticks_per_frame)
     updaters = []
     timing = corners = None
     tracks = {}
@@ -121,7 +146,10 @@ def build_beat(beat, d, preview, compare=None, measured=None):
             updaters.append(board.sooty_felt(felt, d, timing))
         _, update_sugar = board.sugar(d, corners, timing)
         updaters.append(update_sugar)
-        tracks = dump_mod.tracks(d)
+        # Only the Flumps alive during this beat's ticks get objects: a long
+        # run with births can have many thousands over its whole length.
+        first, last = timing.tick_at(1), timing.tick_at(beat.frames + 1)
+        tracks = {i: t for i, t in dump_mod.tracks(d).items() if animate.alive_in(t, first, last)}
         updaters.append(_agents(beat, d, tracks, timing, corners))
         materials.lights_and_world(scene, max(d.width, d.height))
     else:

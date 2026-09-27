@@ -1,0 +1,74 @@
+{
+  "name": "Relative Agreement: y against U, by pe (DAWF Fig. 9)",
+  "description": "Deffuant et al. 2002, Fig. 9: y against the moderates' uncertainty U for four proportions of extremists, as the paper states the model (μ 0.2, ue 0.1, the extremists drawn, run to stability), 200 agents where the figure has 1000 (the survey runs 1000). y is 0 when the moderates stay central, 0.5 when they split between the extremes, 1 when they all go to one. Measured (release, seeds 1–20, recorded 2026-09-26): the figure's zones — low y at small U; y ≈ 0.5 (both extremes) from U 0.7 for pe ≥ 0.1; the central dip near U 0.8–1.0 at small pe; y 1.00 from U 1.2 at pe 0.025 and 0.80–1.00 from 1.2 at pe 0.05. At pe 0.1 and above, large U gives 0.5–0.7: a mix of single and central runs.",
+  "base": {
+    "preset": "ra-literal"
+  },
+  "x": {
+    "label": "Moderates' uncertainty (U)",
+    "path": "uncertainty",
+    "values": [
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1.0,
+      1.1,
+      1.2,
+      1.3,
+      1.4,
+      1.5,
+      1.6,
+      1.7,
+      1.8,
+      1.9,
+      2.0
+    ]
+  },
+  "series": {
+    "label": "Extremists (pe)",
+    "values": [
+      {
+        "at": 0.025,
+        "name": "pe = 0.025",
+        "set": {
+          "extremists": 0.025
+        }
+      },
+      {
+        "at": 0.05,
+        "name": "pe = 0.05",
+        "set": {
+          "extremists": 0.05
+        }
+      },
+      {
+        "at": 0.1,
+        "name": "pe = 0.1",
+        "set": {
+          "extremists": 0.1
+        }
+      },
+      {
+        "at": 0.2,
+        "name": "pe = 0.2",
+        "set": {
+          "extremists": 0.2
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "y"
+  }
+}

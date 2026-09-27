@@ -13,7 +13,7 @@
 
 ## Goal
 
-Add image scoring as a fourteenth model kind — NS98's simulations (Figs. 1–4), their analytic results, and LH01's island model, execution and perception errors, h strategies, q strategies and Sugden's standing strategy — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey), with every claim measured.
+Add image scoring as a model kind (the sixteenth, after norms and relative agreement) — NS98's simulations (Figs. 1–4), their analytic results, and LH01's island model, execution and perception errors, h strategies, q strategies and Sugden's standing strategy — a full citizen of the playground (worker engine, Max speed, replay and links, keyframes and the timeline, stop rules, Compare, recording, Experiments, the CLI and the survey), with every claim measured.
 
 ## Non-negotiable constraints
 
