@@ -1,0 +1,66 @@
+{
+ "preset": "v-1-rid",
+ "ticks": 14,
+ "seed": 61,
+ "set": {
+  "width": 8,
+  "height": 8,
+  "population": 0,
+  "vision.max": 1,
+  "goods.0.map": {
+   "kind": "flat",
+   "capacity": 2
+  }
+ },
+ "place": [
+  {
+   "x": 3,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 20
+  },
+  {
+   "x": 4,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 20
+  },
+  {
+   "x": 5,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 20
+  },
+  {
+   "x": 3,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 20
+  },
+  {
+   "x": 5,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 20
+  },
+  {
+   "x": 3,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 20
+  },
+  {
+   "x": 4,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "sugar": 20
+  }
+ ]
+}

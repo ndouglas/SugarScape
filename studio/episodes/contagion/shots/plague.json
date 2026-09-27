@@ -1,0 +1,17 @@
+{
+ "preset": "v-mcneill",
+ "ticks": 500,
+ "seed": 18,
+ "set": {
+  "disease.outbreaks": [
+   {
+    "tick": 300,
+    "agents": 5,
+    "length": {
+     "min": 40,
+     "max": 40
+    }
+   }
+  ]
+ }
+}
