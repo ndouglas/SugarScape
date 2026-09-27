@@ -17,6 +17,14 @@ describe('compactNumber', () => {
   it('preserves the sign', () => {
     expect(compactNumber(-1234)).toBe('-1.2k');
   });
+
+  it('keeps two significant digits below 1, so small axes do not all read 0', () => {
+    expect(compactNumber(0.008)).toBe('0.008');
+    expect(compactNumber(0.0125)).toBe('0.013');
+    expect(compactNumber(0.25)).toBe('0.25');
+    expect(compactNumber(0.5)).toBe('0.5');
+    expect(compactNumber(-0.04)).toBe('-0.04');
+  });
 });
 
 describe('percent', () => {
