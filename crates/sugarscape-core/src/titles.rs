@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 186] = [
+pub const TITLES: [(&str, &str); 202] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -732,6 +732,52 @@ pub const TITLES: [(&str, &str); 186] = [
     (
         "lh-fig-4c",
         "All four strategies from the start: standing dominates",
+    ),
+    (
+        "ef-arthur",
+        "Who goes to the bar? Attendance averages 60 but swings far more than chance",
+    ),
+    (
+        "ef-payoff",
+        "Rate predictors by their advice, not their accuracy: the cycle goes",
+    ),
+    (
+        "ef-random",
+        "Coin-flippers also average 60, with far smaller swings",
+    ),
+    (
+        "ef-shared",
+        "Everyone holds the same predictors, and nobody is ever right",
+    ),
+    ("mg-m6", "Two sides, the minority wins: short memories"),
+    ("mg-m8", "Two sides, the minority wins: longer memories"),
+    ("mg-m10", "Two sides, the minority wins: long memories"),
+    (
+        "mg-mixed",
+        "Long and short memories play together: the longer win, up to about six",
+    ),
+    (
+        "mg-inverse",
+        "Win more the smaller the minority: the paper's two peaks don't appear",
+    ),
+    (
+        "mg-evolution",
+        "The worst player is replaced by a mutated copy of the best",
+    ),
+    (
+        "mg-inbred",
+        "Perfect copies of the best player, and no mutation",
+    ),
+    (
+        "mg-arms-race",
+        "Memories that can grow: an arms race that levels off",
+    ),
+    ("mg-crowded", "Too little memory: worse than coin flips"),
+    ("mg-critical", "Just enough memory: the best coordination"),
+    ("mg-random-like", "Too much memory: no better than chance"),
+    (
+        "cmo-binary",
+        "El Farol as a yes-or-no game: 60 seats, two rounds of memory",
     ),
 ];
 

@@ -192,6 +192,23 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("ad-moore", 0xd39d77107d873634),
     ("ad-small-world", 0xd29498f3ac055d5d),
     ("w-scale-free", 0xed9e58b01a7987d8),
+    // Milestone 23: El Farol and the minority game.
+    ("ef-arthur", 0x21d68cd385f4c107),
+    ("ef-payoff", 0xfc1e2e95d6261a60),
+    ("ef-random", 0xbf2299aeb9dfc6a),
+    ("ef-shared", 0xaf9103c32858ba9c),
+    ("mg-m6", 0x3aa1d7ced39f99c8),
+    ("mg-m8", 0x9caf59baa2af5f1),
+    ("mg-m10", 0xa1bf780e9b23275),
+    ("mg-mixed", 0x6059c33de58936b),
+    ("mg-inverse", 0xf9b094733c6a48aa),
+    ("mg-evolution", 0xfdc5294338f8dc1d),
+    ("mg-inbred", 0xc64cd71e7701ce15),
+    ("mg-arms-race", 0x4c1e9852373241c9),
+    ("mg-crowded", 0x5d20e99c75dfd073),
+    ("mg-critical", 0x307ea6e032479849),
+    ("mg-random-like", 0xbdb3ec814e99c525),
+    ("cmo-binary", 0x2081105c24039d0c),
 ];
 
 fn fingerprint(id: &str) -> u64 {
