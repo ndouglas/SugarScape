@@ -621,7 +621,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-even",
             "Ideal free distribution: equal patches",
             "Fretwell & Lucas 1969; Minds 1",
-            "Two cone-shaped sugar patches of the same size (305 sites each, input 0.25 a tick per site) on a 60 × 40 torus, and 100 Flumps of metabolism 1 and vision 1–6. The ideal free distribution predicts an even split. Measured (20 seeds, tick 1000): 0.98 as many Flumps on the first patch as the second, with 45 of 100 alive — the rest never saw sugar and starved.",
+            "Two cone-shaped sugar patches of the same size (305 sites each, input 0.25 a tick per site) on a 60 × 40 torus, and 100 Flumps of metabolism 1 and vision 1–6. The ideal free distribution predicts an even split. Measured (20 seeds, tick 1000): 0.98 as many Flumps on the first patch as the second, with 45 of 100 alive. Measured: the on-patch counts are the same when nobody starves, so the dead are Flumps who never found sugar.",
             |c| two_patches(c, 10.0),
         ),
         preset(
@@ -652,7 +652,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-no-starving",
             "Ideal free distribution: nobody starves",
             "Fretwell & Lucas 1969; Minds 1",
-            "The 2.10 : 1 patches with an endowment of 100 000, so nobody starves within the run. Rule M keeps a Flump in place when nothing it sees is better, so one that starts out of sight of sugar never moves. Measured (20 seeds, tick 1000): 65 of 100 off both patches (over half in all 20 seeds), so the 'free' of the ideal free distribution fails. The on-patch counts are the same as with starvation, and s is identical seed by seed: the Flumps who die are the ones who never find sugar. The survey judges the survival claim only Weak, since its unpaired equivalence test sees the wide spread across seeds, not the seed-by-seed identity.",
+            "The 2.10 : 1 patches with an endowment of 100 000, so nobody starves within the run. Rule M keeps a Flump in place when nothing it sees is better, so one that starts out of sight of sugar never moves. Measured (20 seeds, tick 1000): 65 of 100 off both patches (over half in all 20 seeds), so the 'free' of the ideal free distribution fails. The on-patch counts are the same as with starvation, and s is identical seed by seed in all 20 seeds, so the survival claim holds: the Flumps who die are the ones who never find sugar.",
             |c| {
                 two_patches(c, 7.0);
                 c.goods[0].endowment = URange::new(100_000, 100_000);
@@ -662,7 +662,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-wander",
             "Utility mind: wander when nothing scores",
             "Minds 1",
-            "The no-starving world under the utility mind with idle wander: a Flump that sees no sugar moves to a random free site in sight instead of staying put. It tests the 'free' of the ideal free distribution apart from the 'ideal'. Measured (20 seeds, tick 1000): under 1 of 100 off both patches, so wandering does make the Flumps free. But only 1.43 times as many are on the richer patch (1.71 under stay), and s falls from 0.72 to 0.40, away from matching, so the claim that wandering moves s toward 1 fails. Since nobody starves, the wanderers fill both patches past what they feed (41 Flumps on the poorer patch's 36 sugar a tick), so the split likely follows where they arrive, not the inputs.",
+            "The no-starving world under the utility mind with idle wander: a Flump that sees no sugar moves to a random free site in sight instead of staying put. It tests the 'free' of the ideal free distribution apart from the 'ideal'. Measured (20 seeds, tick 1000): under 1 of 100 off both patches, so wandering does make the Flumps free. But only 1.43 times as many are on the richer patch (1.71 under stay), and s falls from 0.72 to 0.40, away from matching, so the claim that wandering moves s toward 1 fails. Since nobody starves, the wanderers overfill the poorer patch (41 Flumps on its 36 sugar a tick), so the split likely follows where they arrive, not the inputs.",
             |c| {
                 two_patches(c, 7.0);
                 c.goods[0].endowment = URange::new(100_000, 100_000);
@@ -674,7 +674,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-crowding",
             "Utility mind: crowding m = 1",
             "Sutherland 1983; Minds 1",
-            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with crowding m = 1: a site's welfare is divided by (1 + n), n the Flumps next to it. Sutherland's interference model predicts input matching at m = 1; here the interference is local. We expected local crowding only to push Flumps apart and lower s. Measured (20 seeds, tick 1000): 1.93 times as many Flumps on the richer patch (1.85 without crowding). Across the five input ratios s has median 0.95 against 0.90 at m = 0, with 18 of 20 seeds within 0.9–1.1. So Sutherland's matching holds, and crowding raises s.",
+            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with crowding m = 1: a site's welfare is divided by (1 + n), n the Flumps next to it. Sutherland's interference model predicts input matching at m = 1; here the interference is local. We expected local crowding only to push Flumps apart and lower s. Measured (20 seeds, tick 1000): 1.93 times as many Flumps on the richer patch (1.85 without crowding). Across the five input ratios s has median 0.95 against 0.90 at m = 0, with 18 of 20 seeds within 0.9–1.1. So Sutherland's matching holds, and crowding raises s (one-sided Mann–Whitney p = 0.0003).",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);

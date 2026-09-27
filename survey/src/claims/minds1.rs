@@ -9,7 +9,7 @@ use sugarscape_core::geometry::{Pos, Torus};
 use sugarscape_core::landscape::patch_of;
 use sugarscape_core::world::World;
 
-use crate::claim::{all_of, equivalent, greater, range, Claim, Source};
+use crate::claim::{all_of, greater, range, Claim, Source};
 use crate::runner::{each_seed, preset, series};
 use crate::stats::median;
 
@@ -211,11 +211,15 @@ pub fn claims() -> Vec<Claim> {
             item: "ifd-matching",
             source: Source::Comment,
             citation: SPEC,
-            text: "Catchment, not choice: under rule M at vision 1–6, s is within 0.1 of the catchment prediction (the slope of the log ratio of the patches' sight-catchments on the log input ratio)",
+            text: "Catchment, not choice: under rule M at vision 1–6, s is within 0.1 of the catchment prediction in at least 80 % of seeds (the prediction is the slope of the log ratio of the patches' sight-catchments on the log input ratio)",
             check: |seeds| {
                 let pred = catchment_s(URange::new(1, 6));
-                range(&s_per_seed(seeds, |_| {}), pred - 0.1, pred + 0.1, false)
-                    .with(&format!("Catchment prediction s = {pred:.4}."))
+                let s = s_per_seed(seeds, |_| {});
+                let m = median(&s);
+                range(&s, pred - 0.1, pred + 0.1, false).with(&format!(
+                    "Catchment prediction s = {pred:.4}; the seeds' median s = {m:.4} ({:+.4} from it).",
+                    m - pred
+                ))
             },
         },
         Claim {
@@ -223,16 +227,17 @@ pub fn claims() -> Vec<Claim> {
             item: "ifd-no-starving",
             source: Source::Comment,
             citation: SPEC,
-            text: "Survival plays no part: under rule M at vision 1–6, s is the same (within 0.05) with and without starvation",
+            text: "Survival plays no part: under rule M at vision 1–6, s is the same seed by seed (within 0.05 in at least 80 % of seeds) with and without starvation",
             check: |seeds| {
                 let starving = s_per_seed(seeds, |_| {});
                 let no_starving = s_per_seed(seeds, fed);
-                let diffs: Vec<f64> = no_starving.iter().zip(&starving).map(|(a, b)| (a - b).abs()).collect();
+                let diffs: Vec<f64> = no_starving.iter().zip(&starving).map(|(a, b)| a - b).collect();
                 let same = diffs.iter().filter(|&&d| d == 0.0).count();
-                let most = diffs.iter().copied().fold(0.0, f64::max);
-                equivalent(&no_starving, &starving, Some(0.05), "no starving", "starving").with(&format!(
-                    "Paired by seed: s is identical in {same} of {} seeds (largest difference {most:.4}); the unpaired TOST sees only the spread across seeds.",
-                    diffs.len()
+                range(&diffs, -0.05, 0.05, false).with(&format!(
+                    "Per-seed differences in s (no starving − starving); identical in {same} of {} seeds. Medians: no starving {:.4}, starving {:.4}.",
+                    diffs.len(),
+                    median(&no_starving),
+                    median(&starving)
                 ))
             },
         },
@@ -279,8 +284,10 @@ pub fn claims() -> Vec<Claim> {
                 let s1 = s_per_seed(seeds, utility_far(1.0, 0.0));
                 let (a, b) = (median(&s0), median(&s1));
                 let direction = if b < a { "falls" } else { "does not fall" };
+                let rise = greater(&s1, &s0, "crowding 1", "crowding 0");
                 range(&s1, 0.9, 1.1, false).with(&format!(
-                    "s {direction} from crowding 0 (median {a:.4}) to crowding 1 (median {b:.4})."
+                    "s {direction} from crowding 0 (median {a:.4}) to crowding 1 (median {b:.4}). Does crowding raise s? {:?}: {}.",
+                    rise.verdict, rise.measured
                 ))
             },
         },
