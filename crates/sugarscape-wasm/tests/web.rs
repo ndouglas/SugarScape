@@ -482,6 +482,17 @@ fn fingerprint_matches_the_golden_entry() {
 }
 
 #[wasm_bindgen_test]
+fn the_utility_minds_crowding_matches_its_golden_entry() {
+    // Crowding uses portable ln and exp: native and wasm must agree.
+    let preset = sugarscape_core::presets::by_id("ifd-crowding").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0x5a5e863436971c96");
+}
+
+#[wasm_bindgen_test]
 fn fingerprint_hex_keeps_leading_zeros() {
     assert_eq!(fingerprint_hex(0xab), "0x00000000000000ab");
     assert_eq!(fingerprint_hex(0), "0x0000000000000000");
