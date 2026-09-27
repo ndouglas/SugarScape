@@ -16,7 +16,10 @@ fn fingerprint(config: Config) -> u64 {
 fn the_utility_mind_with_rule_ms_consideration_is_rule_m() {
     let mut checked = 0;
     for p in presets::all() {
-        if p.config.combat.enabled {
+        // Only a book-rule preset's own fingerprint is the reduction's
+        // target; a preset already tuned under the utility mind (its own
+        // travel, crowding or wander) is not rule M and is skipped here.
+        if p.config.combat.enabled || p.config.decision.rule != DecisionRule::Book {
             continue;
         }
         let mut c = p.config.clone();

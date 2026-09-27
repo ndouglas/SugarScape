@@ -4,8 +4,8 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, CultureKind, Good, Map, Outbreak, Peak, Placement, Pollutant, Pollution,
-    ScheduledChange, Transform, URange, SPICE_COLOR,
+    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, Outbreak, Peak, Placement,
+    Pollutant, Pollution, ScheduledChange, Transform, URange, SPICE_COLOR,
 };
 use crate::model::ModelConfig;
 
@@ -617,6 +617,81 @@ pub fn all() -> Vec<Preset> {
             "The mobility experiment with 30 traits per feature. Axtell et al. 1996: 2.2 ± 1.2 cultures, more than with 15 traits. Measured (20 seeds, 20 000 ticks): 5.7 ± 1.6, and 13 of 20 runs never stop — more than with 15 traits, as they found, but well above their count.",
             |c| docking(c, 30),
         ),
+        preset(
+            "ifd-even",
+            "Ideal free distribution: equal patches",
+            "Fretwell & Lucas 1969; Minds 1",
+            "Two cone-shaped sugar patches of the same size (305 sites each, input 0.25 a tick per site) on a 60 × 40 torus, and 100 Flumps of metabolism 1 and vision 1–6. The ideal free distribution predicts an even split. Measured in planning (20 seeds, tick 1000): 0.98 as many Flumps on the first patch as the second.",
+            |c| two_patches(c, 10.0),
+        ),
+        preset(
+            "ifd-two-to-one",
+            "Ideal free distribution: 2.1 : 1",
+            "Parker 1978; Milinski 1979; Minds 1",
+            "The second patch has radius 7 (145 sites against 305: input ratio 2.10, near Milinski's 2 : 1). Input matching predicts 2.10 times as many Flumps on the richer patch. Measured in planning (20 seeds, tick 1000): 1.71 times; with ratios 1, 2.10 and 4.42 the matching exponent s is 0.745 (s = 1 is matching; below 1, undermatching, as Kennedy & Gray 1993 report for most animal experiments).",
+            |c| two_patches(c, 7.0),
+        ),
+        preset(
+            "ifd-four-to-one",
+            "Ideal free distribution: 4.4 : 1",
+            "Parker 1978; Minds 1",
+            "The second patch has radius 5 (69 sites: input ratio 4.42). Input matching predicts 4.42 times as many Flumps on the richer patch. Measured in planning (20 seeds, tick 1000): 2.96 times.",
+            |c| two_patches(c, 5.0),
+        ),
+        preset(
+            "ifd-far-sighted",
+            "Ideal free distribution: vision 10–20",
+            "Kennedy & Gray 1993; Minds 1",
+            "The 2.10 : 1 patches with vision 10–20, far enough to see across the 7-site gap between the patches. Measured in planning (20 seeds, tick 1000): 1.86 times as many Flumps on the richer patch; s 0.92 across ratios 1, 2.10 and 4.42 — close to matching.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+            },
+        ),
+        preset(
+            "ifd-no-starving",
+            "Ideal free distribution: nobody starves",
+            "Fretwell & Lucas 1969; Minds 1",
+            "The 2.10 : 1 patches with an endowment of 100 000, so nobody starves within the run. The on-patch counts are the same as with starvation: the Flumps who die are the ones who never find sugar. Rule M keeps a Flump in place when nothing it sees is better, so one that starts out of sight of sugar never moves. Measured in planning (20 seeds, tick 1000): 65 of 100 off both patches.",
+            |c| {
+                two_patches(c, 7.0);
+                c.goods[0].endowment = URange::new(100_000, 100_000);
+            },
+        ),
+        preset(
+            "ifd-wander",
+            "Utility mind: wander when nothing scores",
+            "Minds 1",
+            "The no-starving world under the utility mind with idle wander: a Flump that sees no sugar moves to a random free site in sight instead of staying put. It tests the 'free' of the ideal free distribution apart from the 'ideal'.",
+            |c| {
+                two_patches(c, 7.0);
+                c.goods[0].endowment = URange::new(100_000, 100_000);
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.idle = Idle::Wander;
+            },
+        ),
+        preset(
+            "ifd-crowding",
+            "Utility mind: crowding m = 1",
+            "Sutherland 1983; Minds 1",
+            "The 2.10 : 1 patches under the utility mind with crowding m = 1: a site's welfare is divided by (1 + n), n the Flumps next to it. Sutherland's interference model predicts input matching at m = 1; here the interference is local.",
+            |c| {
+                two_patches(c, 7.0);
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.crowding = 1.0;
+            },
+        ),
+        preset(
+            "ifd-travel",
+            "Utility mind: travel k = 0.5",
+            "Baum & Kraft 1998; Minds 1",
+            "The 2.10 : 1 patches under the utility mind with travel k = 0.5: a site's welfare is divided by (1 + 0.5·d), d its distance. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching; here travel is a preference for nearby sugar under rule M's one-tick jump, not a cost of switching.",
+            |c| {
+                two_patches(c, 7.0);
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.travel = 0.5;
+            },
+        ),
     ]
 }
 
@@ -642,6 +717,37 @@ fn docking(c: &mut Config, traits: u32) {
     c.culture.features = 5;
     c.culture.traits = traits;
     c.culture.stop_when_settled = true;
+}
+
+/// Minds 1's world (the spec's probe): a 60 × 40 torus with two cone patches
+/// of height 4 at (15, 20), radius 10, and (42, 20), radius `second_radius`;
+/// sugar grows back 0.25 a tick; 100 Flumps with metabolism 1, endowment 50
+/// and vision 1–6. Nominal inputs (sites with capacity ≥ 1, × 0.25): 305
+/// against 305, 225, 145, 109 and 69 sites at radius 10, 8.5, 7, 6 and 5
+/// (R 1.00, 1.36, 2.10, 2.80, 4.42); about 112 Flumps can be fed at R 2.10.
+pub(crate) fn two_patches(c: &mut Config, second_radius: f64) {
+    c.width = 60;
+    c.height = 40;
+    c.population = 100;
+    c.goods[0].map = Map::Peaks {
+        peaks: vec![
+            Peak {
+                x: 15,
+                y: 20,
+                radius: 10.0,
+                height: 4.0,
+            },
+            Peak {
+                x: 42,
+                y: 20,
+                radius: second_radius,
+                height: 4.0,
+            },
+        ],
+    };
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.goods[0].endowment = URange::new(50, 50);
+    c.growback.rate = 0.25;
 }
 
 pub fn by_id(id: &str) -> Option<Preset> {
@@ -726,6 +832,63 @@ pub fn find(id: &str) -> Option<ModelPreset> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::{DecisionRule, Idle};
+
+    #[test]
+    fn the_ifd_presets_share_the_two_patch_world() {
+        let ids = [
+            "ifd-even",
+            "ifd-two-to-one",
+            "ifd-four-to-one",
+            "ifd-far-sighted",
+            "ifd-no-starving",
+            "ifd-wander",
+            "ifd-crowding",
+            "ifd-travel",
+        ];
+        for id in ids {
+            let c = by_id(id).unwrap_or_else(|| panic!("{id}")).config;
+            assert_eq!((c.width, c.height, c.population), (60, 40, 100), "{id}");
+            assert_eq!(c.growback.rate, 0.25, "{id}");
+            let Map::Peaks { peaks } = &c.goods[0].map else {
+                panic!("{id}: peaks")
+            };
+            assert_eq!(
+                (peaks[0].x, peaks[0].y, peaks[0].radius),
+                (15, 20, 10.0),
+                "{id}"
+            );
+            assert_eq!((peaks[1].x, peaks[1].y), (42, 20), "{id}");
+        }
+        let radius = |id: &str| match &by_id(id).unwrap().config.goods[0].map {
+            Map::Peaks { peaks } => peaks[1].radius,
+            _ => unreachable!(),
+        };
+        assert_eq!(
+            [
+                radius("ifd-even"),
+                radius("ifd-two-to-one"),
+                radius("ifd-four-to-one")
+            ],
+            [10.0, 7.0, 5.0]
+        );
+        let d = |id: &str| by_id(id).unwrap().config.decision;
+        assert_eq!(d("ifd-two-to-one").rule, DecisionRule::Book);
+        assert_eq!(
+            (d("ifd-wander").rule, d("ifd-wander").idle),
+            (DecisionRule::Utility, Idle::Wander)
+        );
+        assert_eq!(d("ifd-crowding").crowding, 1.0);
+        assert_eq!(d("ifd-travel").travel, 0.5);
+        assert_eq!(
+            by_id("ifd-far-sighted").unwrap().config.vision,
+            URange::new(10, 20)
+        );
+        assert_eq!(
+            by_id("ifd-no-starving").unwrap().config.goods[0].endowment,
+            URange::new(100_000, 100_000)
+        );
+    }
 
     #[test]
     fn every_preset_has_a_plain_title_and_serializes_it() {
@@ -791,7 +954,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 31);
+        assert_eq!(presets.len(), 39);
         for p in presets {
             p.config
                 .validate()

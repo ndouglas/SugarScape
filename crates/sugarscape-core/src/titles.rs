@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 202] = [
+pub const TITLES: [(&str, &str); 210] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -125,6 +125,32 @@ pub const TITLES: [(&str, &str); 202] = [
         "dock-mobility-30",
         "Culture on the move with more traits: more cultures survive than the paper reports",
     ),
+    (
+        "ifd-even",
+        "Two equal sugar patches: the Flumps split evenly",
+    ),
+    (
+        "ifd-two-to-one",
+        "One patch yields twice as much, but draws fewer than twice the Flumps",
+    ),
+    (
+        "ifd-four-to-one",
+        "One patch yields four times as much, but draws under three times the Flumps",
+    ),
+    (
+        "ifd-far-sighted",
+        "Flumps who can see across the gap come close to matching the yields",
+    ),
+    (
+        "ifd-no-starving",
+        "Nobody starves, and most Flumps never find sugar",
+    ),
+    (
+        "ifd-wander",
+        "Flumps who see no sugar wander instead of waiting",
+    ),
+    ("ifd-crowding", "Flumps who avoid crowded sugar"),
+    ("ifd-travel", "Flumps who prefer nearby sugar"),
     (
         "vi-4-schelling-25",
         "Mild preferences, clear segregation: wanting a quarter alike is enough",
