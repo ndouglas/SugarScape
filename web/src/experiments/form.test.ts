@@ -147,6 +147,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('farol')).toMatchObject({
+      x: { path: 'strategies', values: '2:24:2' },
+      ticks: 2000,
+      metric: { kind: 'final', series: 'fluctuation' },
+    });
     expect(defaultForm('agreement')).toMatchObject({
       x: { path: 'uncertainty', values: '0.2:2:0.2' },
       ticks: 20000,

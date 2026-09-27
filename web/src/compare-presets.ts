@@ -152,6 +152,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'ns-fig-3-n20',
     b: 'ns-fig-3-n100',
   },
+  {
+    id: 'ef-accuracy-vs-payoff',
+    label: 'Accuracy vs payoff scoring — El Farol (Compare)',
+    a: 'ef-arthur',
+    b: 'ef-payoff',
+  },
 ];
 
 /**

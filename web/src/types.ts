@@ -81,7 +81,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -480,7 +480,63 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig;
+
+/**
+ * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
+ * and Ottino's scoring, bias and random baseline, and the minority game's Darwinian variant.
+ */
+export interface FarolConfig {
+  model: 'farol';
+  game: 'el_farol' | 'minority';
+  agents: number;
+  strategies: number;
+  behavior: 'inductive' | 'random';
+  capacity: number;
+  scoring: 'error' | 'payoff';
+  decay: number;
+  at_capacity: 'stay' | 'go';
+  shared: boolean;
+  memory: number;
+  mixed_memory: { enabled: boolean; min: number; max: number };
+  payoff: 'step' | 'inverse';
+  rounding: 'nearest' | 'exact';
+  bias: number;
+  information: 'true' | 'random';
+  evolution: { enabled: boolean; every: number; strategy_mutation: number; memory_mutation: number };
+  stop_at: number;
+}
+
+export interface FarolStats {
+  tick: number;
+  attendance: number;
+  crowded: number;
+  /** (A − c)² over the last 100 rounds, over N; and the same for coin-flippers. */
+  fluctuation: number;
+  random_fluctuation: number;
+  success: number;
+  mean_gain: number;
+  switching: number;
+  forecast_above: number;
+  mean_memory: number;
+}
+
+/** A strategy or predictor of an inspected agent: its score, and what it says for next round. */
+export interface FarolStrategyView { label: string; score: number; forecast: number | null; attend: boolean | null; active: boolean }
+export interface FarolAgentView { id: number; memory: number; went: boolean; gain: number; switches: number; strategies: FarolStrategyView[] }
+/**
+ * A cell of the El Farol frame: a round of the time panel, a row of the histogram, or an agent of
+ * the grid (`member`). `agent` is always null: cells are read where they are.
+ */
+export interface FarolInspection {
+  site: { x: number; y: number };
+  panel: 'time' | 'histogram' | 'agents' | null;
+  round: number | null;
+  attendance: number | null;
+  count: number | null;
+  member: FarolAgentView | null;
+  agent: null;
+}
 
 /** A preset: `title` is the menu's plain headline; `source` and `name` are its figure or paper and its rules. */
 export interface Preset { id: string; title: string; name: string; source: string; description: string; config: ModelConfig }
@@ -787,7 +843,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -1112,7 +1168,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1161,7 +1217,10 @@ export type ColorMode =
   | 'agents'
   | 'uncertainty'
   | 'role'
-  | 'score';
+  | 'score'
+  | 'choice'
+  | 'gain'
+  | 'memory';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

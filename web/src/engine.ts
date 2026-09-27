@@ -52,6 +52,7 @@ export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its
 /** What the page says when a world has run its course (the engine pauses and fires 'finished'). */
 export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
+  if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'tags' || modelOf(config) === 'image') return `This run has reached its last generation (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'classes') return `Equity reached at t = ${tick}: every agent remembers mostly M — Reset to run it again`;
   if (modelOf(config) === 'opinions')
