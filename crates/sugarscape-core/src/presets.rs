@@ -652,7 +652,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-no-starving",
             "Ideal free distribution: nobody starves",
             "Fretwell & Lucas 1969; Minds 1",
-            "The 2.10 : 1 patches with an endowment of 100 000, so nobody starves within the run. Rule M keeps a Flump in place when nothing it sees is better, so one that starts out of sight of sugar never moves. Measured (20 seeds, tick 1000): 65 of 100 off both patches (over half in all 20 seeds), so the 'free' of the ideal free distribution fails. The on-patch counts are the same as with starvation, and s is identical seed by seed in all 20 seeds, so the survival claim holds: the Flumps who die are the ones who never find sugar.",
+            "The 2.10 : 1 patches with an endowment of 100 000, so nobody starves within the run. Rule M keeps a Flump in place when nothing it sees is better, so one that starts out of sight of sugar never moves. Measured (20 seeds, tick 1000): a median 66 of 100 off both patches (over half in all 20 seeds), so the 'free' of the ideal free distribution fails. The on-patch counts are the same as with starvation, and s is identical seed by seed in all 20 seeds, so the survival claim holds: the Flumps who die are the ones who never find sugar.",
             |c| {
                 two_patches(c, 7.0);
                 c.goods[0].endowment = URange::new(100_000, 100_000);

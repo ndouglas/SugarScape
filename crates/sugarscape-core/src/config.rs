@@ -545,7 +545,7 @@ impl Default for DiseaseRule {
 pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
-/// Paths a schedule may not set: disease structure and the decision rule.
+/// Paths a schedule may not set: structure (culture, disease) and the decision rule.
 pub const RESET_ONLY_PATHS: [&str; 12] = [
     "culture.rule",
     "culture.features",

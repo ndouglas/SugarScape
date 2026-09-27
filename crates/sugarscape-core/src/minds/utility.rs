@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn a_boxed_in_wanderer_stays_and_draws_nothing() {
+    fn a_boxed_in_wanderer_stays_and_draws_as_rule_m() {
         let mut w = blank_world(11, 11);
         w.config.decision = utility(0.0, 0.0, Idle::Wander);
         let me = spawn(&mut w, 5, 5);

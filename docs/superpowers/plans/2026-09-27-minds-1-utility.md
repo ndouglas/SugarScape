@@ -33,7 +33,7 @@
 
 1. **Configs that omit `decision` or give it partly** (old share links, sessions, saved configs) must load as the book, with missing fields defaulted. Owned by Task 1.
 2. **A schedule that sets `decision.travel` mid-run** must be accepted and take effect; one that sets `decision.rule` or the whole `decision` must be refused as reset-only. Owned by Task 1.
-3. **A wandering Flump boxed in with every neighboring site in sight occupied** must stay put, and draw nothing, rather than panic or pick its own site through a draw. Owned by Task 3.
+3. **A wandering Flump boxed in with every neighboring site in sight occupied** must stay put, and draw exactly as rule M would, rather than panic or pick its own site through a draw. Owned by Task 3.
 4. **Crowding must not count the mover itself** when it scores its own current site. Owned by Task 3.
 5. **Patch series on a one-peak map or a non-peaks map must be absent, not zero.** An empty world must give `first_patch_share` 0, not NaN. Owned by Task 4.
 

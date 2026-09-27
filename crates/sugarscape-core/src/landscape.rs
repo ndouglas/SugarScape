@@ -104,7 +104,7 @@ pub fn peak_distance(p: &Peak, x: u32, y: u32, w: u32, h: u32) -> f64 {
 
 /// The patch holding (x, y) (Minds 1): its nearest peak (the lower index on
 /// ties), when (x, y) is closer than that peak's radius — exactly the sites
-/// where that peak gives capacity ≥ 1.
+/// where that peak gives capacity ≥ 1, when patches don't overlap.
 pub fn patch_of(peaks: &[Peak], x: u32, y: u32, w: u32, h: u32) -> Option<usize> {
     let mut best: Option<(usize, f64)> = None;
     for (k, p) in peaks.iter().enumerate() {

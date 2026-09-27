@@ -608,6 +608,8 @@ export interface Snapshot {
   groups: number[];
   /** Under Axelrod's culture rule (milestone 14). */
   axelrod?: { distinct_cultures: number; settled: boolean };
+  /** Minds 1's patch counts, on peaks maps with two or more peaks. */
+  patches?: { on_first: number; on_other: number; off: number };
 }
 
 export interface SchellingStats {

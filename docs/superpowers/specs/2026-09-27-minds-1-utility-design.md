@@ -304,6 +304,8 @@ These change or extend the sections above. The measured values are the survey's 
   holds), but *s* falls from 0.72 to 0.40, so "toward matching" fails. The wanderers overfill the
   poorer patch (41 Flumps on its 36 sugar a tick), so the split likely follows where they arrive.
   That cause is not measured.
+- **A boxed-in wanderer (no free site in sight) stays** by rule M's `choose` over its own site, so
+  it draws exactly as under `stay`.
 - **Other survey results.** Parker fails at vision 1–6 (median *s* 0.72, 4 of 20 within 0.9–1.1)
   and at 10–20 (0.90, 8 of 20). Undermatching holds at 1–6 (17 of 20), 5–10 (median 0.63, 20 of
   20) and 10–20 (20 of 20). Stuck holds: a median 66 % off both patches with nobody starving,
