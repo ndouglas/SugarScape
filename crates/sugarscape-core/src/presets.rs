@@ -621,28 +621,28 @@ pub fn all() -> Vec<Preset> {
             "ifd-even",
             "Ideal free distribution: equal patches",
             "Fretwell & Lucas 1969; Minds 1",
-            "Two cone-shaped sugar patches of the same size (305 sites each, input 0.25 a tick per site) on a 60 × 40 torus, and 100 Flumps of metabolism 1 and vision 1–6. The ideal free distribution predicts an even split. Measured in planning (20 seeds, tick 1000): 0.98 as many Flumps on the first patch as the second.",
+            "Two cone-shaped sugar patches of the same size (305 sites each, input 0.25 a tick per site) on a 60 × 40 torus, and 100 Flumps of metabolism 1 and vision 1–6. The ideal free distribution predicts an even split. Measured (20 seeds, tick 1000): 0.98 as many Flumps on the first patch as the second, with 45 of 100 alive — the rest never saw sugar and starved.",
             |c| two_patches(c, 10.0),
         ),
         preset(
             "ifd-two-to-one",
             "Ideal free distribution: 2.1 : 1",
             "Parker 1978; Milinski 1979; Minds 1",
-            "The second patch has radius 7 (145 sites against 305: input ratio 2.10, near Milinski's 2 : 1). Input matching predicts 2.10 times as many Flumps on the richer patch. Measured in planning (20 seeds, tick 1000): 1.71 times; with ratios 1, 2.10 and 4.42 the matching exponent s is 0.745 (s = 1 is matching; below 1, undermatching, as Kennedy & Gray 1993 report for most animal experiments).",
+            "The second patch has radius 7 (145 sites against 305: input ratio 2.10, near Milinski's 2 : 1). Input matching predicts 2.10 times as many Flumps on the richer patch. Measured (20 seeds, tick 1000): 1.71 times. Fitted per seed across input ratios 1, 1.36, 2.10, 2.80 and 4.42, the matching exponent s has median 0.72 (s = 1 is matching). Parker's input matching fails (4 of 20 seeds within 0.9–1.1); undermatching, which Kennedy & Gray 1993 report for most animal experiments, holds. The median is close to the catchment prediction of 0.71, which counts the sites from which each patch is in sight. But the seeds scatter widely (IQR 0.59–0.92), and only 6 of 20 land within 0.1 of it, so that claim fails as judged.",
             |c| two_patches(c, 7.0),
         ),
         preset(
             "ifd-four-to-one",
             "Ideal free distribution: 4.4 : 1",
             "Parker 1978; Minds 1",
-            "The second patch has radius 5 (69 sites: input ratio 4.42). Input matching predicts 4.42 times as many Flumps on the richer patch. Measured in planning (20 seeds, tick 1000): 2.96 times.",
+            "The second patch has radius 5 (69 sites: input ratio 4.42). Input matching predicts 4.42 times as many Flumps on the richer patch. Measured (20 seeds, tick 1000): 2.96 times.",
             |c| two_patches(c, 5.0),
         ),
         preset(
             "ifd-far-sighted",
             "Ideal free distribution: vision 10–20",
             "Kennedy & Gray 1993; Minds 1",
-            "The 2.10 : 1 patches with vision 10–20, far enough to see across the 7-site gap between the patches. Measured in planning (20 seeds, tick 1000): 1.86 times as many Flumps on the richer patch; s 0.92 across ratios 1, 2.10 and 4.42 — close to matching.",
+            "The 2.10 : 1 patches with vision 10–20, far enough to see across the 7-site gap between the patches. Measured (20 seeds, tick 1000): 1.85 times as many Flumps on the richer patch; s has median 0.90 across the five input ratios, close to matching but still under it. Every seed undermatches, and only 8 of 20 are within 0.9–1.1, so Parker's input matching narrowly fails here too.",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);
@@ -652,7 +652,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-no-starving",
             "Ideal free distribution: nobody starves",
             "Fretwell & Lucas 1969; Minds 1",
-            "The 2.10 : 1 patches with an endowment of 100 000, so nobody starves within the run. The on-patch counts are the same as with starvation: the Flumps who die are the ones who never find sugar. Rule M keeps a Flump in place when nothing it sees is better, so one that starts out of sight of sugar never moves. Measured in planning (20 seeds, tick 1000): 65 of 100 off both patches.",
+            "The 2.10 : 1 patches with an endowment of 100 000, so nobody starves within the run. Rule M keeps a Flump in place when nothing it sees is better, so one that starts out of sight of sugar never moves. Measured (20 seeds, tick 1000): 65 of 100 off both patches (over half in all 20 seeds), so the 'free' of the ideal free distribution fails. The on-patch counts are the same as with starvation, and s is identical seed by seed: the Flumps who die are the ones who never find sugar. The survey judges the survival claim only Weak, since its unpaired equivalence test sees the wide spread across seeds, not the seed-by-seed identity.",
             |c| {
                 two_patches(c, 7.0);
                 c.goods[0].endowment = URange::new(100_000, 100_000);
@@ -662,7 +662,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-wander",
             "Utility mind: wander when nothing scores",
             "Minds 1",
-            "The no-starving world under the utility mind with idle wander: a Flump that sees no sugar moves to a random free site in sight instead of staying put. It tests the 'free' of the ideal free distribution apart from the 'ideal'.",
+            "The no-starving world under the utility mind with idle wander: a Flump that sees no sugar moves to a random free site in sight instead of staying put. It tests the 'free' of the ideal free distribution apart from the 'ideal'. Measured (20 seeds, tick 1000): under 1 of 100 off both patches, so wandering does make the Flumps free. But only 1.43 times as many are on the richer patch (1.71 under stay), and s falls from 0.72 to 0.40, away from matching, so the claim that wandering moves s toward 1 fails. Since nobody starves, the wanderers fill both patches past what they feed (41 Flumps on the poorer patch's 36 sugar a tick), so the split likely follows where they arrive, not the inputs.",
             |c| {
                 two_patches(c, 7.0);
                 c.goods[0].endowment = URange::new(100_000, 100_000);
@@ -674,7 +674,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-crowding",
             "Utility mind: crowding m = 1",
             "Sutherland 1983; Minds 1",
-            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with crowding m = 1: a site's welfare is divided by (1 + n), n the Flumps next to it. Sutherland's interference model predicts input matching at m = 1; here the interference is local.",
+            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with crowding m = 1: a site's welfare is divided by (1 + n), n the Flumps next to it. Sutherland's interference model predicts input matching at m = 1; here the interference is local. We expected local crowding only to push Flumps apart and lower s. Measured (20 seeds, tick 1000): 1.93 times as many Flumps on the richer patch (1.85 without crowding). Across the five input ratios s has median 0.95 against 0.90 at m = 0, with 18 of 20 seeds within 0.9–1.1. So Sutherland's matching holds, and crowding raises s.",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);
@@ -686,7 +686,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-travel",
             "Utility mind: travel k = 0.5",
             "Baum & Kraft 1998; Minds 1",
-            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with travel k = 0.5: a site's welfare is divided by (1 + 0.5·d), d its distance. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching; here travel is a preference for nearby sugar under rule M's one-tick jump, not a cost of switching.",
+            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with travel k = 0.5: a site's welfare is divided by (1 + 0.5·d), d its distance. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching; here travel is a preference for nearby sugar under rule M's one-tick jump, not a cost of switching. Measured (20 seeds, tick 1000): 1.52 times as many Flumps on the richer patch (1.85 without travel). Across the five input ratios s has median 0.73 against 0.90 at k = 0, so undermatching grows, the opposite of Baum & Kraft's direction, and their claim fails here.",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);

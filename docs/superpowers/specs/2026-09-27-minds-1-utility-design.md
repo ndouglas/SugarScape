@@ -23,14 +23,15 @@ preset titles of `crates/sugarscape-core/src/titles.rs`.
 
 **Critique and follow-ups** (local copies where open, in `papers/ideal-free/`):
 - D. J. D. Earn and R. A. Johnstone, "A systematic error in tests of ideal free theory", *Proc. R.
-  Soc. B* 264 (1997), 1671–1675 (PMC1688719).
+  Soc. B* 264 (1997), 1671–1675 (PMC1688719; *not in `papers/`*: PMC and Europe PMC serve a
+  challenge page instead of the PDF).
 - W. M. Baum and J. R. Kraft, "Group choice: competition, travel, and the ideal free distribution",
-  *JEAB* 69 (1998), 227–245 (PMC1284661).
+  *JEAB* 69 (1998), 227–245 (PMC1284661; *not in `papers/`*: a scan behind the same challenge).
 - W. J. Sutherland, "Aggregation and the 'ideal free' distribution", *J. Anim. Ecol.* 52 (1983),
   821–828 (*not in `papers/`*).
 - E. J. Collins, A. I. Houston and A. Lang, "The ideal free distribution: an analysis of the
   perceptual limit model", *Evol. Ecol. Res.* 4 (2002), 471–493: a secondary statement of
-  Fretwell–Lucas and Parker, and of the matching regression.
+  Fretwell–Lucas and Parker, and of the matching regression (copy in `papers/ideal-free/`).
 
 **The utility mind:**
 - D. Mark, *Behavioral Mathematics for Game AI* (2009).

@@ -147,10 +147,16 @@ pub const TITLES: [(&str, &str); 210] = [
     ),
     (
         "ifd-wander",
-        "Flumps who see no sugar wander instead of waiting",
+        "Flumps who see no sugar wander: nearly all find a patch, but the split strays from the yields",
     ),
-    ("ifd-crowding", "Flumps who avoid crowded sugar"),
-    ("ifd-travel", "Flumps who prefer nearby sugar"),
+    (
+        "ifd-crowding",
+        "Flumps who avoid crowded sugar come closer to matching the yields",
+    ),
+    (
+        "ifd-travel",
+        "Flumps who prefer nearby sugar stray further from matching the yields",
+    ),
     (
         "vi-4-schelling-25",
         "Mild preferences, clear segregation: wanting a quarter alike is enough",
