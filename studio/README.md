@@ -9,7 +9,7 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/build.py seasons --beat 4    # one beat (1-based)
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
-Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`, `markets`, `war`, `credit` and `contagion`.
+Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`, `markets`, `war`, `credit`, `contagion` and `finale`.
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -64,7 +64,8 @@ the march beneath it on the last title (a tune's `ducks` sink it under a sting),
 *Borrowed Time*, a 7/4 blues in E: a walking bass over coin percussion, then the band with tenor
 sax, and a ka-ching as the first loan is made, and Contagion's *Tarantella of the Well*, the
 dance once believed to cure a spider's poison, brightening to A major as immune systems learn and
-turning dark and driving for the plague.
+turning dark and driving for the plague, and the finale's *The Walk Home*, the pilot's gånglåt theme
+passed two bars at a time between every episode's instruments, ending on a lone accordion.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to

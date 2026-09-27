@@ -122,6 +122,8 @@ def measure(tmp):
     lines += ["", f"Typical seed (VI): {m.typical_seed(rows, ['vi2_late', 'vi3_late', 'vi3_max'])}."]
     medians = {k: median(rows, k) for k in keys}
     tribes_m, war_m, contagion_m = earlier("tribes"), earlier("war"), earlier("contagion")
+    # The ledger shows trades to the nearest thousand: a median, not a count.
+    medians.update(trades_rounded=round(medians["trades"], -3))
     medians.update(one_tribe_share=tribes_m["one_tribe_seeds"], newcomers=war_m["young"],
                    residue=contagion_m["v1_end"], fizzle=contagion_m["reach"])
     lines += ["", "From the earlier episodes' measurements: "
