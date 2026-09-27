@@ -1385,8 +1385,9 @@ Measured (20 seeds, tick 1000; the survey and the sweeps):
   not the same thing. In the sweep the share falls from 0.649 at k 0 to 0.602 at k 0.5, then
   recovers a little (0.613 at k 2).
 - **At vision 1–6, crowding and travel do nothing to the split.** No Flump sees both patches, so
-  there is nothing to weigh; the share is 0.6366 at every value of either knob. That is why their
-  presets, sweeps and claims use vision 10–20.
+  there is nothing to weigh. A 10-seed check during implementation (2.10 : 1, crowding 0, 1 and 4,
+  travel 0, 0.5 and 2, ticks 500–1000) found the share unchanged (0.637) at every value. That is
+  why their presets, sweeps and claims use vision 10–20.
 
 Switches (the Rules panel's **Decision (Minds 1)** group): **Rule** (rule M or the utility mind;
 rebuilds the world), **Travel k** and **Crowding m** (0–10), and **When nothing in sight scores**

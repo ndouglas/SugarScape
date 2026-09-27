@@ -276,14 +276,15 @@ the claims are reported whether they hold or fail.
 - **`docs/studies/2026-09-27-minds.md`:** Minds 1's status and results.
 - **Roadmap:** a Minds line.
 
-## Amendments (implementation)
+## Amendments (implementation planning)
 
 These change or extend the sections above. The measured values are the survey's (20 seeds, tick
 1000) and the sweeps'.
 
 - **Crowding and travel are tested at vision 10–20, not 1–6.** At vision 1–6 no Flump sees both
-  patches, so neither knob has anything to weigh, and the patch split is unchanged: the share is
-  0.6366 at every value of either knob. The `ifd-crowding` and `ifd-travel` presets, their sweeps,
+  patches, so neither knob has anything to weigh. A 10-seed check during implementation (not a
+  committed sweep; 2.10 : 1, crowding 0, 1 and 4, travel 0, 0.5 and 2, ticks 500–1000) found the
+  share unchanged (0.637) at every value. The `ifd-crowding` and `ifd-travel` presets, their sweeps,
   and the Sutherland and Baum–Kraft claims all use vision 10–20, in both arms.
 - **The survival claim is judged paired.** The same seeds run with and without starvation, so the
   claim is judged on per-seed differences in *s* (within 0.05 in at least 80 % of seeds). *s* is
