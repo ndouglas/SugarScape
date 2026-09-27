@@ -66,7 +66,7 @@ BEATS = [
          params={**TRIBE, "title": "who does the killing (worlds with a conquest)",
                  "rows": [[("the top killer", "top_share"), ("everyone else", "others_share")]]},
          camera=hold(SIDE_EYE, SIDE_AT, lens=37)),
-    Beat("spoils", "The winner ends up about 25 times richer than the richest Flump in a world without war.", 7.5,
+    Beat("spoils", "The winner ends up about 25 times richer\nthan the richest Flump in a world without war.", 7.5,
          shot="conquest", start_tick=2000, overlays=("bars",),
          params={**TRIBE, "title": "the richest Flump's sugar at tick 2000", "format": "num", "top": 120000,
                  "rows": [[("with war", "richest_war"), ("without", "richest_peace")]]},
