@@ -79,7 +79,7 @@ def verdicts(rows, sweep):
 def _shuttle(tmp, seed, trade):
     spec = {"preset": "iv-1-spice", "ticks": SHUTTLE[1], "seed": seed, "set": {"trade.enabled": trade}}
     d = m.shot(spec, tmp, f"spice-{seed}-{trade}")
-    share = markets.shuttle_share(d.frames, d.width, markets.sides(d.capacity, d.spice_capacity), *SHUTTLE)
+    share = markets.shuttle_share(d.frames, d.width, markets.sides(d.capacity, d.spice_capacity, markets.DEEP), *SHUTTLE)
     (tmp / f"spice-{seed}-{trade}.frames.json").unlink()  # 200 ticks of two goods: large
     return share
 

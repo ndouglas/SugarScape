@@ -5,24 +5,20 @@ import collections
 
 
 def levels(loans):
-    """Each Flump in the loan network's level: 1 for pure lenders, and one
-    more than its deepest lender for everyone else (a lender's lender is
-    above it). Cycles, which the rule allows, are broken where first met."""
+    """Each Flump in the loan network's level: the number of Flumps on the
+    longest chain of lenders ending at it that visits no Flump twice (1 for a
+    pure lender). Cycles, which the rule allows, are followed only once
+    round. Exact: the networks are small and sparse."""
     lenders_of = collections.defaultdict(set)
     members = set()
     for l in loans:
         lenders_of[l.borrower].add(l.lender)
         members |= {l.lender, l.borrower}
-    memo = {}
 
-    def level(a, path):
-        if a in memo:
-            return memo[a]
-        above = [level(b, path | {a}) for b in lenders_of.get(a, ()) if b not in path]
-        memo[a] = 1 + max(above, default=0)
-        return memo[a]
+    def longest(a, path):
+        return 1 + max((longest(b, path | {b}) for b in lenders_of.get(a, ()) if b not in path), default=0)
 
-    return {a: level(a, frozenset()) for a in sorted(members)}
+    return {a: longest(a, frozenset({a})) for a in sorted(members)}
 
 
 def depth(loans):

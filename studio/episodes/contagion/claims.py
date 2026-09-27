@@ -76,9 +76,13 @@ def _outbreak(tmp, seed, length, name):
     if length != 10:
         spec["set"] = {"disease.outbreaks": [{"tick": OUTBREAK, "agents": 5, "length": {"min": length, "max": length}}]}
     d = m.shot(spec, tmp, name)
-    novel = {i.disease for f in d.frames[OUTBREAK - 1 : OUTBREAK + 2] for i in f.infections if i.infector is None}
-    caught = {i.infected for f in d.frames[OUTBREAK:] for i in f.infections if i.disease in novel}
-    at_outbreak, at_400 = set(d.frames[OUTBREAK].agents), set(d.frames[400].agents)
+    seeded = [i for f in d.frames[OUTBREAK - 1 : OUTBREAK + 2] for i in f.infections if i.infector is None]
+    novel, given = {i.disease for i in seeded}, {i.infected for i in seeded}
+    # Caught from another Flump: the outbreak's own recipients are left out
+    # of both the count and the population it's a share of.
+    caught = {i.infected for f in d.frames[OUTBREAK:] for i in f.infections
+              if i.disease in novel and i.infector is not None} - given
+    at_outbreak, at_400 = set(d.frames[OUTBREAK].agents) - given, set(d.frames[400].agents) - given
     result = (len(caught & at_outbreak) / len(at_outbreak), len(caught & at_400) / len(at_400),
               len(d.frames[PLAGUE_END].agents))
     (tmp / f"{name}.frames.json").unlink()

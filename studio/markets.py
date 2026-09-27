@@ -4,11 +4,18 @@ hills, which way trades go and at what price (see episodes/markets)."""
 import math
 
 
-def sides(sugar_capacity, spice_capacity):
-    """Each site's side: "sugar" or "spice", whichever it grows more of, or
-    None where they are equal (the middle, and the bare ground)."""
+# The hills touch along a seam where a 2/1 site sits beside a 1/2 one: one
+# step across it isn't a walk between hills. A site belongs to a hill only
+# where it grows at least DEEP more of that hill's good.
+DEEP = 2
+
+
+def sides(sugar_capacity, spice_capacity, margin=1):
+    """Each site's side: "sugar" or "spice" where it grows at least `margin`
+    more of that good than the other, else None (the seam, the middle, and
+    the bare ground)."""
     return [
-        "sugar" if a > b else "spice" if b > a else None
+        "sugar" if a - b >= margin else "spice" if b - a >= margin else None
         for a, b in zip(sugar_capacity, spice_capacity)
     ]
 
