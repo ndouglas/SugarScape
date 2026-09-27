@@ -1,5 +1,6 @@
 """Overlays in the world, following Flumps: meters, sight, labels, sugar
-stacks, rings, bequests and traits."""
+stacks, rings, bequests, traits, trades, loot, the warlord and where kills
+happened."""
 
 import math
 
@@ -10,7 +11,8 @@ import animate
 import lineage
 import markets
 import seasons
-from blender import flump, materials
+import war
+from blender import board, flump, materials
 
 from .parts import CREAM, ball, box, card, flump_pose, text, turn_to_camera
 
@@ -57,7 +59,10 @@ def belly(beat, d, ctx):
         tick = ctx.timing.tick_at(frame)
         for id_, (holder, bars) in meters.items():
             p = flump_pose(ctx, d, id_, frame)
-            if not p.visible:
+            death = ctx.tracks[id_].death
+            # Gone with the poof, so a victim's meter never overlaps its killer's.
+            poofing = death is not None and frame >= ctx.timing.frame(death) - ctx.timing.poof_frames
+            if not p.visible or poofing:
                 flump.stow(holder)
                 continue
             holder.scale = (1, 1, 1)
@@ -180,8 +185,9 @@ def _torus():
     return mesh
 
 
-def _rings(name, color, members, d, ctx):
-    """A glowing ring at the feet of each Flump in `members`."""
+def _rings(name, color, members, d, ctx, size=1.0):
+    """A glowing ring at the feet of each Flump in `members` (`size` times a
+    Flump's width across)."""
     glow = materials.fading(f"ring-{name}", color, 3.0)
     mesh = _torus()
     rings = {}
@@ -202,7 +208,7 @@ def _rings(name, color, members, d, ctx):
                 flump.stow(obj)
                 continue
             s = max(p.sx, 1e-4)
-            obj.scale = (s, s, 1)
+            obj.scale = (s * size, s * size, 1)
             obj.location = (p.x, p.y, p.z + 0.04)
 
     return update
@@ -340,5 +346,119 @@ def trades(beat, d, ctx):
                 used += 1
         for o in sugar[used:] + spice[used:]:
             flump.stow(o)
+
+    return update
+
+
+LOOT_FRAMES = 18
+
+
+def loot(beat, d, ctx):
+    """At each kill, a glowing gumdrop — the victim's sugar — arcs from where
+    the victim stood to its killer, sized by how much it carried."""
+    flows = []
+    gold = materials.gumdrop()
+    for k in range(1, d.ticks + 1):
+        before = d.frames[k - 1].agents
+        for kill in d.frames[k].kills:
+            if kill.attacker not in ctx.tracks or kill.victim not in before:
+                continue
+            v = before[kill.victim]
+            start = ctx.timing.frame(k) - ctx.timing.poof_frames
+            size = min(0.12 + 0.03 * math.sqrt(kill.loot), 0.45)
+            flows.append((start, (v.x, v.y), kill.attacker, ball(f"loot-{k}-{kill.victim}", size, gold)))
+
+    def update(frame):
+        for start, (vx, vy), killer, obj in flows:
+            u = (frame - start) / LOOT_FRAMES
+            if not 0 <= u <= 1:
+                flump.stow(obj)
+                continue
+            x0, y0 = animate.cell_center(vx, vy, d.width, d.height)
+            z0 = animate.cell_height(ctx.corners, vx, vy, d.width) + 0.5
+            p = flump_pose(ctx, d, killer, frame)
+            e = animate.smoothstep(u)
+            obj.location = (x0 + (p.x - x0) * e, y0 + (p.y - y0) * e, z0 + (p.z + 0.5 - z0) * e + math.sin(math.pi * u))
+            s = 1 - 0.5 * u
+            obj.scale = (s, s, s)
+
+    return update
+
+
+WARLORD_SCALE = 3.0
+
+
+def warlord(beat, d, ctx):
+    """A red ring at the feet of the run's busiest killer and, over it, its
+    sugar and its kills so far."""
+    ranked = war.killers(d)
+    if not ranked or ranked[0][0] not in ctx.tracks:
+        return lambda frame: None
+    top = ranked[0][0]
+    # Wide shots: the ring and the label are several times a Flump's size, so
+    # the one Flump the beat is about can be found among 200.
+    ring = _rings("warlord", (1.0, 0.12, 0.08), {top}, d, ctx, size=WARLORD_SCALE)
+    holder = bpy.data.objects.new("warlord-label", None)
+    bpy.context.scene.collection.objects.link(holder)
+    card("warlord-pill", holder, (0, 0, -0.03), (3.4, 0.5, 0.02))
+    label = text("warlord-text", "", 0.34, materials.fading("warlord-ink", CREAM, 2.2), holder)
+    made = [0]
+    for f in d.frames:
+        made.append(made[-1] + sum(1 for k in f.kills if k.attacker == top))
+
+    def update(frame):
+        ring(frame)
+        p = flump_pose(ctx, d, top, frame)
+        if not p.visible:
+            flump.stow(holder)
+            return
+        k = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
+        holder.location = (p.x, p.y, p.z + 1.2 + 0.5 * WARLORD_SCALE)
+        holder.scale = (WARLORD_SCALE,) * 3
+        turn_to_camera(holder, ctx)
+        label.data.body = f"{p.sugar:,.0f} sugar · {made[k + 1]} kills"
+
+    return update
+
+
+# A kill mark's size as a gumdrop level (4 is a full gumdrop, GUMDROP_SIZE
+# across): small, flat and nearly black, so it reads as a stain, not a spice.
+KILL_MARK = 1.2
+
+
+def killmap(beat, d, ctx):
+    """A dark mark where each Flump was killed, appearing as it dies and
+    staying: where the fighting has been."""
+    spots, ticks = [], []
+    for k in range(1, d.ticks + 1):
+        before = d.frames[k - 1].agents
+        for kill in d.frames[k].kills:
+            v = before.get(kill.victim)
+            if v is None:
+                continue
+            x, y = animate.cell_center(v.x, v.y, d.width, d.height)
+            spots.append((x, y, animate.cell_height(ctx.corners, v.x, v.y, d.width) + 0.08))
+            ticks.append(k)
+    mesh = bpy.data.meshes.new("killmap")
+    mesh.from_pydata(spots, [], [])
+    mesh.attributes.new("level", "FLOAT", "POINT")
+    obj = bpy.data.objects.new("killmap", mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    proto_mesh = bpy.data.meshes.new("kill-mark")
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=6, radius=0.5)
+    bm.to_mesh(proto_mesh)
+    bm.free()
+    proto_mesh.materials.append(materials.matte("kill-mark", (0.1, 0.01, 0.01)))
+    proto = bpy.data.objects.new("kill-mark", proto_mesh)
+    proto.scale = (1, 1, 0.08)
+    bpy.context.scene.collection.objects.link(proto)
+    proto.hide_render = proto.hide_viewport = True
+    obj.modifiers.new("marks", "NODES").node_group = board.instancer_tree(proto)
+
+    def update(frame):
+        now = ctx.timing.tick_at(frame)
+        mesh.attributes["level"].data.foreach_set("value", [KILL_MARK if t <= now else 0.0 for t in ticks])
+        mesh.update()
 
     return update

@@ -339,3 +339,28 @@ def prices(beat, d, ctx):
         readout.data.body = f"1 sugar = {price[now]:.2f} spice   ·   prices differ by about {apart:.0%}"
 
     return update
+
+
+def kills(beat, d, ctx):
+    """Top right: the Flumps killed so far, and each tribe's number alive, at
+    the tick shown."""
+    anchor = ctx.screen.anchor("kills", 0.66, 0.76)
+    card("kills-card", anchor, (0, -0.02, -0.01), (0.62, 0.3, 0.002))
+    ink = materials.fading("kills-ink", CREAM, 1.6)
+    killed = text("kills-line", "", 0.052, ink, anchor, location=(-0.28, 0.06, 0), align="LEFT")
+    blue = text("kills-blue", "", 0.048, materials.fading("kills-blue", materials.YARN["blue"], 3.0), anchor,
+                location=(-0.28, -0.04, 0), align="LEFT")
+    red = text("kills-red", "", 0.048, materials.fading("kills-red", materials.YARN["red"], 3.0), anchor,
+               location=(0.02, -0.04, 0), align="LEFT")
+    total = [0]
+    for f in d.frames:
+        total.append(total[-1] + len(f.kills))
+
+    def update(frame):
+        k = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
+        f = d.frames[k]
+        killed.data.body = f"Flumps killed: {total[k + 1]}"
+        blue.data.body = f"Blue {sum(g == 0 for g in f.groups.values())}"
+        red.data.body = f"Red {sum(g == 1 for g in f.groups.values())}"
+
+    return update

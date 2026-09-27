@@ -16,6 +16,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import wave
 from dataclasses import dataclass, field
 
 # The SoundFont lives outside the repository (override with FLUMP_SOUNDFONT).
@@ -26,6 +27,7 @@ SOUNDFONT = pathlib.Path(
 SECTION_BARS = 8
 RING_OUT = 1.5  # seconds the last chord rings under the end card
 CUE_DELAY = 0.3  # a sting lands this long after its beat begins
+DUCK_RAMP = 0.8  # seconds the track takes to sink under a ducking sting, and to come back
 
 
 @dataclass(frozen=True)
@@ -59,10 +61,15 @@ class Tune:
     bpm: tuple
     stings: dict = field(default_factory=dict)
     cues: tuple = ()
+    # Stings that sink the tune while they play: {sting name: the tune's gain
+    # beneath it}, so the tune collapses under the sting instead of competing.
+    ducks: dict = field(default_factory=dict)
 
 
 def eighths(bar):
-    """The length of an ABC bar in eighth notes (L:1/8)."""
+    """The length of an ABC bar in eighth notes (L:1/8). Decorations such as
+    dynamics (!pp!, !fff!) take no time: their letters are not notes."""
+    bar = re.sub(r"![^!]*!", "", bar)
     return sum(int(n or 1) for _, n in re.findall(r"(\[[^\]]+\]|[_^=]?[A-Ga-gz][,']*)(\d*)", bar))
 
 
@@ -143,10 +150,31 @@ def cue_times(cues, beat_names, frames, dissolve=12, fps=30):
     return out
 
 
-def sting_mix_command(track, stings, out):
-    """ffmpeg argv laying each (wav, seconds) sting over `track`."""
+def duck_gain(t, ducks, ramp=DUCK_RAMP):
+    """The track's gain at `t` seconds under ducks (start, end, gain): down to
+    `gain` over `ramp` seconds from `start`, back up over the last `ramp`."""
+    g = 1.0
+    for a, b, low in ducks:
+        depth = min(min(max((t - a) / ramp, 0.0), 1.0), min(max((b - t) / ramp, 0.0), 1.0))
+        g *= 1 - (1 - low) * depth
+    return g
+
+
+def duck_expression(ducks, ramp=DUCK_RAMP):
+    """duck_gain as an ffmpeg expression in t."""
+    return "*".join(
+        f"(1-{1 - low:g}*min(clip((t-{a:g})/{ramp:g},0,1),clip(({b:g}-t)/{ramp:g},0,1)))" for a, b, low in ducks
+    ) or "1"
+
+
+def sting_mix_command(track, stings, out, ducks=()):
+    """ffmpeg argv laying each (wav, seconds) sting over `track`, sinking the
+    track under any ducks (start, end, gain)."""
     argv = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(track)]
     parts, labels = [], ["[0:a]"]
+    if ducks:
+        parts.append(f"[0:a]volume='{duck_expression(ducks)}':eval=frame[main]")
+        labels = ["[main]"]
     for i, (wav, at) in enumerate(stings):
         argv += ["-i", str(wav)]
         ms = round(at * 1000)
@@ -154,6 +182,11 @@ def sting_mix_command(track, stings, out):
         labels.append(f"[s{i}]")
     parts.append(f"{''.join(labels)}amix=inputs={len(labels)}:duration=first:normalize=0[out]")
     return argv + ["-filter_complex", ";".join(parts), "-map", "[out]", str(out)]
+
+
+def _seconds(path):
+    with wave.open(str(path)) as w:
+        return w.getnframes() / w.getframerate()
 
 
 def _synth(abc_text, stem, soundfont):
@@ -173,8 +206,9 @@ def render(tune, seconds, out_dir, soundfont, cues=()):
     if not cues:
         return wav
     stings = [(_synth(sting_score(tune, s), out / f"{tune.slug}-sting-{s}", soundfont), at) for s, at in cues]
+    ducks = [(at, at + _seconds(path), tune.ducks[s]) for (s, _), (path, at) in zip(cues, stings) if s in tune.ducks]
     mixed = out / f"{tune.slug}-with-stings.wav"
-    subprocess.run(sting_mix_command(wav, stings, mixed), check=True)
+    subprocess.run(sting_mix_command(wav, stings, mixed, ducks), check=True)
     return mixed
 
 

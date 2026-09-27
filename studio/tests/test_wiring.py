@@ -106,6 +106,7 @@ class WiringTest(unittest.TestCase):
                 with self.subTest(episode=name, cue=(beat, sting)):
                     self.assertIn(beat, names)
                     self.assertIn(sting, tune.stings)
+            self.assertLessEqual(set(tune.ducks), set(tune.stings), name)
 
 
 if __name__ == "__main__":

@@ -157,7 +157,8 @@ def _gumdrop_prototype(name, material):
     return g
 
 
-def _instancer_tree(proto):
+def instancer_tree(proto):
+    """Geometry nodes instancing `proto` on each point, scaled by √level."""
     ng = bpy.data.node_groups.new("gumdrops", "GeometryNodeTree")
     ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
     ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
@@ -211,7 +212,7 @@ def sugar(d, corners, timing, good="sugar"):
     bpy.context.scene.collection.objects.link(obj)
     mod = obj.modifiers.new("gumdrops", "NODES")
     material = materials.spice_drop() if good == "spice" else materials.gumdrop()
-    mod.node_group = _instancer_tree(_gumdrop_prototype(f"{good}-drop", material))
+    mod.node_group = instancer_tree(_gumdrop_prototype(f"{good}-drop", material))
 
     def update(frame):
         levels = animate.levels_at(d, timing.tick_at(frame), timing.hop, good)

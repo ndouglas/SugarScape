@@ -1,0 +1,36 @@
+{
+ "preset": "iii-9-combat",
+ "ticks": 8,
+ "seed": 1,
+ "set": {
+  "width": 8,
+  "height": 8,
+  "population": 0,
+  "vision.max": 3,
+  "placement": {
+   "kind": "random"
+  },
+  "goods.0.map": {
+   "kind": "flat",
+   "capacity": 1
+  }
+ },
+ "place": [
+  {
+   "x": 3,
+   "y": 3,
+   "sugar": 40,
+   "vision": 2,
+   "metabolism": 1,
+   "tribe": "blue"
+  },
+  {
+   "x": 3,
+   "y": 5,
+   "sugar": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "tribe": "red"
+  }
+ ]
+}

@@ -80,5 +80,31 @@ class MusicTest(unittest.TestCase):
         self.assertIn("amix=inputs=3", graph)
 
 
+    def test_a_ducking_sting_lowers_the_track_while_it_plays(self):
+        argv = music.sting_mix_command("t.wav", [("s.wav", 3.0)], "o.wav", ducks=[(3.0, 9.0, 0.2)])
+        graph = argv[argv.index("-filter_complex") + 1]
+        self.assertIn("[0:a]volume='", graph)
+        self.assertIn(":eval=frame[main]", graph)
+        self.assertIn("[main][s0]amix=inputs=2", graph)
+
+    def test_the_duck_ramps_down_holds_and_ramps_back(self):
+        gain = lambda t: music.duck_gain(t, [(3.0, 9.0, 0.2)])
+        self.assertEqual(gain(2.0), 1.0)
+        self.assertAlmostEqual(gain(3.0 + music.DUCK_RAMP / 2), 0.6)
+        self.assertAlmostEqual(gain(6.0), 0.2)
+        self.assertEqual(gain(9.5), 1.0)
+
+    def test_the_expression_ffmpeg_gets_matches_the_gain(self):
+        expr = music.duck_expression([(3.0, 9.0, 0.2)])
+        for t in (2.0, 3.4, 6.0, 8.8, 9.5):
+            python = expr.replace("clip", "_clip").replace("min(", "_min(")
+            value = eval(python, {"_clip": lambda x, lo, hi: min(max(x, lo), hi), "_min": min, "t": t})
+            self.assertAlmostEqual(value, music.duck_gain(t, [(3.0, 9.0, 0.2)]))
+
+
+    def test_dynamics_and_other_decorations_take_no_time(self):
+        self.assertEqual(music.eighths("!pp! D,3 D, !mf! D,2 !fff! D,2 A,,2"), 10)
+
+
 if __name__ == "__main__":
     unittest.main()
