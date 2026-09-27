@@ -63,8 +63,8 @@ Model kind `farol` ("El Farol and the Minority Game"): `ModelKind::Farol`, `Mode
 | `agents` | 100 | reset | N (3–2 001) |
 | `strategies` | 12 | reset | Arthur's k or CZ97's S (1–48 under `el_farol`, 1–16 under `minority`) |
 | `behavior` | `inductive` | live | `inductive` or `random` (attend with probability `capacity`/N: CMO's zero-intelligence agents) |
-| `capacity` | 60 | reset | L. El Farol: attendance of L or more is crowded. Minority: attending (side A) wins when A ≤ L |
-| `scoring` | `error` | live | El Farol: `error` (Arthur's "most accurate": the predictor with the lowest decaying mean of \|prediction − A\|) or `payoff` (CMO: a point whenever the predictor's advice was right) |
+| `capacity` | null | reset | L. El Farol: attendance of L or more is crowded. Minority: attending (side A) wins when A ≤ L. Null (amended in review): the game's own, 60 % of N rounded or (N − 1)/2, so editing N keeps the plain game |
+| `scoring` | `error` | reset (amended in review: error scores and payoff points share one tally) | El Farol: `error` (Arthur's "most accurate": the predictor with the lowest decaying mean of \|prediction − A\|) or `payoff` (CMO: a point whenever the predictor's advice was right) |
 | `decay` | 0.9 | live | λ in the error score s ← λs + (1 − λ)\|prediction − A\| (Arthur gives none) |
 | `at_capacity` | `stay` | live | an agent whose predictor forecasts exactly L: `stay` (Arthur: go only if expecting "fewer than 60") or `go` |
 | `shared` | false | reset | every agent holds the whole library (Arthur's "ponder … if all agents shared the same set") |

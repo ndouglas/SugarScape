@@ -34,7 +34,7 @@ fn minority(c: &mut FarolConfig, n: u32, s: u32, m: u32) {
     c.agents = n;
     c.strategies = s;
     c.memory = m;
-    c.capacity = (n - 1) / 2;
+    c.capacity = None;
 }
 
 pub fn presets() -> Vec<ModelPreset> {
@@ -179,7 +179,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "Challet, Marsili and Ottino's El Farol as a minority game: 120 agents, 60 seats, strategies reading only whether each of the last two weeks was crowded, each entry 'go' with probability 0.5 — so, on average, agents want 60 seats. Measured (10 seeds): mean attendance 60.4, but σ²/N 1.67 against coin-flippers' 0.25 — near āN = L adaptive agents do worse than random, as they say. The cmo-bias sweep shows a small bias, or a longer memory, bringing the swings down.",
             |c| {
                 minority(c, 120, 2, 2);
-                c.capacity = 60;
+                c.capacity = Some(60);
             },
         ),
     ]
@@ -203,7 +203,7 @@ mod tests {
         assert_eq!(find("ef-payoff").scoring, Scoring::Payoff);
         let m = find("mg-m10");
         assert_eq!(
-            (m.game, m.agents, m.strategies, m.memory, m.capacity),
+            (m.game, m.agents, m.strategies, m.memory, m.capacity()),
             (Game::Minority, 1001, 5, 10, 500)
         );
         assert!(m.plain_minority());
@@ -213,7 +213,10 @@ mod tests {
             (2, 50, 0.1)
         );
         let b = find("cmo-binary");
-        assert_eq!((b.agents, b.capacity, b.memory, b.bias), (120, 60, 2, 0.5));
+        assert_eq!(
+            (b.agents, b.capacity(), b.memory, b.bias),
+            (120, 60, 2, 0.5)
+        );
         assert!(!b.plain_minority());
         assert!(got.iter().all(|(_, c)| c.validate().is_ok()));
     }

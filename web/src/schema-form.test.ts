@@ -93,6 +93,12 @@ describe('the schema form', () => {
     expect(paramShown(always, rebellion)).toBe(true);
   });
 
+  it('shows a field with a second condition only while both hold (El Farol’s accuracy memory)', () => {
+    const p = { path: 'decay', label: 'Accuracy memory', kind: 'number', apply: 'live', group: 'El Farol', show_if: { path: 'game', equals: 'el_farol' }, also_if: { path: 'scoring', equals: 'error' } } as Param;
+    const at = (game: string, scoring: string) => paramShown(p, { model: 'farol', game, scoring } as unknown as ModelConfig);
+    expect([at('el_farol', 'error'), at('el_farol', 'payoff'), at('minority', 'error')]).toEqual([true, false, false]);
+  });
+
   it('shows a field while a bool field is on (the ethnocentrism model’s kin fields)', () => {
     const p = { path: 'kin_basis', label: 'Tag or kin basis', kind: 'choice', apply: 'reset', group: 'Traits', show_if: { path: 'kin_strategies', equals: 'true' } } as Param;
     const kin = (on: boolean) => ({ model: 'ethno', kin_strategies: on }) as unknown as ModelConfig;

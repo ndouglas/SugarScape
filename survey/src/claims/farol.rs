@@ -45,10 +45,10 @@ fn summarize(w: &ModelWorld, rounds: u32) -> Run {
         unreachable!()
     };
     let n = f64::from(c.agents);
-    let center = if c.game == Game::Minority && 2 * c.capacity + 1 == c.agents {
+    let center = if c.plain_minority() {
         n / 2.0
     } else {
-        f64::from(c.capacity)
+        f64::from(c.capacity())
     };
     let a = m.series("attendance").unwrap();
     let played = &a[1..];
@@ -162,7 +162,7 @@ fn mg(n: u32, s: u32, m: u32) -> impl FnOnce(&mut FarolConfig) {
         c.agents = n;
         c.strategies = s;
         c.memory = m;
-        c.capacity = (n - 1) / 2;
+        c.capacity = None;
     }
 }
 
@@ -170,7 +170,7 @@ fn mg(n: u32, s: u32, m: u32) -> impl FnOnce(&mut FarolConfig) {
 fn binary(n: u32, m: u32) -> impl FnOnce(&mut FarolConfig) {
     move |c| {
         mg(n, 2, m)(c);
-        c.capacity = 60;
+        c.capacity = Some(60);
     }
 }
 
@@ -262,7 +262,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ef-predictors",
             source: Source::Book,
             citation: ARTHUR,
-            text: "The results 'are robust to changes in types of predictors created and in numbers assigned' (mean within 2 of 60 for k 2 to 32, and with either rule at exactly 60)",
+            text: "The results 'are robust to changes in types of predictors created and in numbers assigned' (tested only for numbers: mean within 2 of 60 for k 2 to 32, and with either rule at exactly 60; the library of 48 is fixed, so the types are not varied)",
             check: |_| {
                 let mut parts: Vec<(String, Outcome)> = [2, 4, 16, 32]
                     .into_iter()

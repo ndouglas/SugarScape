@@ -24,7 +24,8 @@ pub enum Game {
 pub enum Behavior {
     /// By their best strategy or predictor.
     Inductive,
-    /// Attending with probability capacity / N (CMO's zero-intelligence agents).
+    /// Attending with probability capacity / N (CMO's zero-intelligence
+    /// agents), or on a fair coin in the plain minority game.
     Random,
 }
 
@@ -127,8 +128,9 @@ pub struct FarolConfig {
     /// Arthur's k or CZ97's S.
     pub strategies: u32,
     pub behavior: Behavior,
-    /// L.
-    pub capacity: u32,
+    /// L; empty (null) is the game's own: 60 % of N at El Farol, (N − 1)/2
+    /// in the minority game.
+    pub capacity: Option<u32>,
     pub scoring: Scoring,
     /// λ in the error score s ← λs + (1 − λ)|forecast − A|.
     pub decay: f64,
@@ -156,7 +158,7 @@ impl Default for FarolConfig {
             agents: 100,
             strategies: 12,
             behavior: Behavior::Inductive,
-            capacity: 60,
+            capacity: None,
             scoring: Scoring::Error,
             decay: 0.9,
             at_capacity: AtCapacity::Stay,
@@ -201,10 +203,18 @@ impl FarolConfig {
             .unwrap_or(1)
     }
 
+    /// L: the capacity set, or the game's own.
+    pub fn capacity(&self) -> u32 {
+        self.capacity.unwrap_or(match self.game {
+            Game::ElFarol => (self.agents * 6 + 5) / 10,
+            Game::Minority => self.agents.saturating_sub(1) / 2,
+        })
+    }
+
     /// The side a strategy entry names is compared with `capacity`: it is the
     /// plain minority game when capacity = (N − 1)/2.
     pub fn plain_minority(&self) -> bool {
-        self.game == Game::Minority && 2 * self.capacity + 1 == self.agents
+        self.game == Game::Minority && 2 * self.capacity() + 1 == self.agents
     }
 
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
@@ -233,7 +243,7 @@ impl FarolConfig {
             },
         );
         check(
-            self.capacity <= self.agents,
+            self.capacity() <= self.agents,
             "capacity",
             "must be at most the number of agents",
         );
@@ -283,6 +293,7 @@ impl FarolConfig {
             ("agents", self.agents == next.agents),
             ("strategies", self.strategies == next.strategies),
             ("capacity", self.capacity == next.capacity),
+            ("scoring", self.scoring == next.scoring),
             ("shared", self.shared == next.shared),
             ("memory", self.memory == next.memory),
             ("mixed_memory", self.mixed_memory == next.mixed_memory),
@@ -315,16 +326,18 @@ pub fn schema() -> Vec<Param> {
             .with_help("Arthur: 100. Challet & Zhang: an odd number, 101 or 1001."),
         Param::integer("Game", "strategies", "Strategies each", (1, LIBRARY), Reset)
             .with_help("Arthur's k (6, 12 or 23), or Challet & Zhang's S (2 to 16)."),
-        Param::integer("Game", "capacity", "Capacity (L)", (0, 2001), Reset).with_help(
-            "El Farol: L or more is crowded. Minority game: attending wins at L or fewer; (N − 1)/2 is the plain game.",
-        ),
+        Param::integer("Game", "capacity", "Capacity (L)", (0, 2001), Reset)
+            .nullable()
+            .with_help(
+                "El Farol: L or more is crowded. Minority game: attending wins at L or fewer. Empty: the game's own, 60 % of N or (N − 1)/2 (the plain game).",
+            ),
         Param::choice(
             "Game",
             "behavior",
             "Agents decide",
             &[
                 ("inductive", "By their best strategy"),
-                ("random", "At random (probability L/N)"),
+                ("random", "At random (probability L/N; a fair coin in the plain minority game)"),
             ],
             Live,
         )
@@ -337,11 +350,12 @@ pub fn schema() -> Vec<Param> {
                 ("error", "Accuracy (Arthur)"),
                 ("payoff", "The advice they give (Challet, Marsili & Ottino)"),
             ],
-            Live,
+            Reset,
         )
         .shown_if("game", "el_farol"),
         Param::number("El Farol", "decay", "Accuracy memory (λ)", (0.0, 1.0, 0.01), Live)
-            .shown_if("scoring", "error")
+            .shown_if("game", "el_farol")
+            .and_shown_if("scoring", "error")
             .with_help("Error ← λ·error + (1 − λ)·|forecast − attendance|. Arthur gives no value."),
         Param::choice(
             "El Farol",
@@ -359,9 +373,11 @@ pub fn schema() -> Vec<Param> {
         Param::bool("Minority game", "mixed_memory.enabled", "Mixed memories", Reset)
             .shown_if("game", "minority"),
         Param::integer("Minority game", "mixed_memory.min", "Shortest", (1, MAX_MEMORY), Reset)
-            .shown_if("mixed_memory.enabled", "true"),
+            .shown_if("game", "minority")
+            .and_shown_if("mixed_memory.enabled", "true"),
         Param::integer("Minority game", "mixed_memory.max", "Longest", (1, MAX_MEMORY), Reset)
-            .shown_if("mixed_memory.enabled", "true"),
+            .shown_if("game", "minority")
+            .and_shown_if("mixed_memory.enabled", "true"),
         Param::choice(
             "Minority game",
             "payoff",
@@ -380,7 +396,8 @@ pub fn schema() -> Vec<Param> {
             ],
             Live,
         )
-        .shown_if("payoff", "inverse"),
+        .shown_if("game", "minority")
+        .and_shown_if("payoff", "inverse"),
         Param::number("Minority game", "bias", "Bias (ā)", (0.0, 1.0, 0.01), Reset)
             .shown_if("game", "minority")
             .with_help("The chance a strategy says attend (Challet, Marsili & Ottino)."),
@@ -396,7 +413,8 @@ pub fn schema() -> Vec<Param> {
             .shown_if("game", "minority")
             .with_help("Challet & Zhang: the worst player is replaced by a copy of the best, its scores reset."),
         Param::integer("Evolution", "evolution.every", "Every (rounds)", (1, 100_000), Reset)
-            .shown_if("evolution.enabled", "true"),
+            .shown_if("game", "minority")
+            .and_shown_if("evolution.enabled", "true"),
         Param::number(
             "Evolution",
             "evolution.strategy_mutation",
@@ -404,7 +422,8 @@ pub fn schema() -> Vec<Param> {
             (0.0, 1.0, 0.01),
             Reset,
         )
-        .shown_if("evolution.enabled", "true"),
+        .shown_if("game", "minority")
+        .and_shown_if("evolution.enabled", "true"),
         Param::number(
             "Evolution",
             "evolution.memory_mutation",
@@ -412,7 +431,8 @@ pub fn schema() -> Vec<Param> {
             (0.0, 1.0, 0.01),
             Reset,
         )
-        .shown_if("evolution.enabled", "true"),
+        .shown_if("game", "minority")
+        .and_shown_if("evolution.enabled", "true"),
         Param::integer("Stopping", "stop_at", "Stop at round", (0, 1_000_000), Live)
             .with_help("0: never."),
     ]
@@ -427,7 +447,7 @@ mod tests {
     fn defaults_are_arthur_s_bar() {
         let c = FarolConfig::default();
         assert_eq!(
-            (c.game, c.agents, c.capacity, c.strategies),
+            (c.game, c.agents, c.capacity(), c.strategies),
             (Game::ElFarol, 100, 60, 12)
         );
         assert_eq!(
@@ -442,7 +462,7 @@ mod tests {
         let bad = FarolConfig {
             agents: 2,
             strategies: 49,
-            capacity: 3,
+            capacity: Some(3),
             decay: 1.5,
             bias: -0.1,
             memory: 0,
@@ -487,7 +507,7 @@ mod tests {
             agents,
             strategies,
             memory,
-            capacity: (agents - 1) / 2,
+            capacity: None,
             ..FarolConfig::default()
         };
         assert!(mg(1001, 5, 12).validate().is_ok());
@@ -507,7 +527,7 @@ mod tests {
             FarolConfig {
                 game: Game::Minority,
                 strategies: 17,
-                capacity: 49,
+                capacity: Some(49),
                 ..el
             }
             .validate()
@@ -518,8 +538,103 @@ mod tests {
     }
 
     #[test]
+    fn a_blank_capacity_is_the_game_s_own() {
+        let mg = |agents| FarolConfig {
+            game: Game::Minority,
+            agents,
+            capacity: None,
+            ..FarolConfig::default()
+        };
+        assert_eq!(mg(1001).capacity(), 500);
+        assert!(mg(501).plain_minority(), "editing N keeps the plain game");
+        assert_eq!(mg(501).capacity(), 250);
+        let bar = |agents| FarolConfig {
+            agents,
+            capacity: None,
+            ..FarolConfig::default()
+        };
+        assert_eq!(bar(100).capacity(), 60);
+        assert_eq!(bar(201).capacity(), 121, "60 % of N, rounded");
+        let fixed = FarolConfig {
+            capacity: Some(40),
+            ..bar(200)
+        };
+        assert_eq!(fixed.capacity(), 40);
+        let json = serde_json::to_value(mg(101)).unwrap();
+        assert!(json["capacity"].is_null());
+        let back: FarolConfig = serde_json::from_value(json).unwrap();
+        assert_eq!(back, mg(101));
+    }
+
+    #[test]
+    fn scoring_changes_only_on_reset() {
+        let next = FarolConfig {
+            scoring: Scoring::Payoff,
+            ..FarolConfig::default()
+        };
+        let changes = FarolConfig::default().structural_changes(&next);
+        assert_eq!(changes.len(), 1);
+        assert_eq!(changes[0].field, "scoring");
+    }
+
+    /// Whether the panel shows `p` for `c`: every condition holds.
+    fn shown(p: &Param, c: &FarolConfig) -> bool {
+        let json = serde_json::to_value(c).unwrap();
+        let holds = |cond: &Option<crate::schema::ShowIf>| {
+            cond.is_none_or(|cond| {
+                let v = cond.path.split('.').fold(&json, |v, key| &v[key]);
+                let s = match v {
+                    serde_json::Value::String(s) => s.clone(),
+                    other => other.to_string(),
+                };
+                s == cond.equals
+            })
+        };
+        holds(&p.show_if) && holds(&p.also_if)
+    }
+
+    #[test]
+    fn fields_show_only_under_their_game() {
+        let everything_on = |game| FarolConfig {
+            game,
+            scoring: Scoring::Error,
+            payoff: Payoff::Inverse,
+            mixed_memory: MixedMemory {
+                enabled: true,
+                ..MixedMemory::default()
+            },
+            evolution: Evolution {
+                enabled: true,
+                ..Evolution::default()
+            },
+            ..FarolConfig::default()
+        };
+        let (el, mg) = (everything_on(Game::ElFarol), everything_on(Game::Minority));
+        for p in schema() {
+            match p.group {
+                "El Farol" => assert!(!shown(&p, &mg), "{} under the minority game", p.path),
+                "Minority game" | "Evolution" => {
+                    assert!(!shown(&p, &el), "{} under El Farol", p.path)
+                }
+                _ => {}
+            }
+        }
+        let decay = schema().into_iter().find(|p| p.path == "decay").unwrap();
+        assert!(shown(&decay, &el));
+        let payoff_rated = FarolConfig {
+            scoring: Scoring::Payoff,
+            ..el
+        };
+        assert!(!shown(&decay, &payoff_rated));
+    }
+
+    #[test]
     fn schema_paths_exist_and_match_what_set_config_allows() {
-        let config = ModelConfig::Farol(FarolConfig::default());
+        // A set capacity, so the check has a number to change.
+        let config = ModelConfig::Farol(FarolConfig {
+            capacity: Some(60),
+            ..FarolConfig::default()
+        });
         crate::schema::check_schema(&schema(), &config, || {
             ModelWorld::new(config.clone(), 1).unwrap()
         });

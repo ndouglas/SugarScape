@@ -56,6 +56,10 @@ pub struct Param {
     /// population fields).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub show_if: Option<ShowIf>,
+    /// A second condition that must also hold (milestone 23: El Farol's
+    /// accuracy memory shows only under El Farol and accuracy scoring).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub also_if: Option<ShowIf>,
     /// A number field that may be empty (JSON null): the panel shows null
     /// as an empty box and sends null for one (milestone 14: the
     /// ethnocentrism model's tag mutation).
@@ -97,6 +101,7 @@ impl Param {
             group,
             help: None,
             show_if: None,
+            also_if: None,
             nullable: false,
             fallback: None,
         }
@@ -112,6 +117,13 @@ impl Param {
     /// bool as `"true"` or `"false"`).
     pub fn shown_if(mut self, path: &'static str, equals: &'static str) -> Self {
         self.show_if = Some(ShowIf { path, equals });
+        self
+    }
+
+    /// The same field, shown only while `show_if` holds and the field `path`
+    /// is also `equals`.
+    pub fn and_shown_if(mut self, path: &'static str, equals: &'static str) -> Self {
+        self.also_if = Some(ShowIf { path, equals });
         self
     }
 

@@ -259,7 +259,7 @@ impl FarolWorld {
         if self.config.plain_minority() {
             f64::from(self.config.agents) / 2.0
         } else {
-            f64::from(self.config.capacity)
+            f64::from(self.config.capacity())
         }
     }
 
@@ -269,7 +269,7 @@ impl FarolWorld {
         if self.config.plain_minority() {
             0.5
         } else {
-            f64::from(self.config.capacity) / f64::from(self.config.agents)
+            f64::from(self.config.capacity()) / f64::from(self.config.agents)
         }
     }
 
@@ -337,7 +337,7 @@ impl FarolWorld {
         let (attendance, success, above) = match self.config.game {
             Game::ElFarol => {
                 let forecasts = self.forecasts();
-                let cap = self.config.capacity;
+                let cap = self.config.capacity();
                 let mut above = 0u32;
                 for i in 0..n as usize {
                     let went = if random {
@@ -410,7 +410,7 @@ impl FarolWorld {
                     self.agents[i].went = went;
                 }
                 let a = self.agents.iter().filter(|a| a.went).count() as u32;
-                let a_wins = a <= self.config.capacity;
+                let a_wins = a <= self.config.capacity();
                 let winners = if a_wins { a } else { n - a };
                 let pay = payoff(&self.config, n, winners);
                 for ag in &mut self.agents {
@@ -451,8 +451,8 @@ impl FarolWorld {
             self.squares.pop_front();
         }
         let crowded = match self.config.game {
-            Game::ElFarol => attendance >= self.config.capacity,
-            Game::Minority => attendance > self.config.capacity,
+            Game::ElFarol => attendance >= self.config.capacity(),
+            Game::Minority => attendance > self.config.capacity(),
         };
         let nf = f64::from(n);
         self.round = FarolSnapshot {
@@ -748,12 +748,12 @@ impl Model for FarolWorld {
         let mut c = Canvas { buf, wide: 0 };
         c.clear(fw as usize, fh as usize);
         let n = self.config.agents;
-        let cap_row = row(self.config.capacity, n);
+        let cap_row = row(self.config.capacity(), n);
         let shown = self.shown();
         for (k, &a) in shown.iter().enumerate() {
             let crowded = match self.config.game {
-                Game::ElFarol => a >= self.config.capacity,
-                Game::Minority => a > self.config.capacity,
+                Game::ElFarol => a >= self.config.capacity(),
+                Game::Minority => a > self.config.capacity(),
             };
             if crowded {
                 c.column(k, 0, TALL - 1, CROWDED);
@@ -892,7 +892,7 @@ mod tests {
             c.agents = n;
             c.strategies = s;
             c.memory = m;
-            c.capacity = (n - 1) / 2;
+            c.capacity = None;
         }
     }
 
@@ -940,7 +940,7 @@ mod tests {
     fn crowding_starts_at_the_capacity_and_forecasts_of_exactly_l_stay_home() {
         let three = |c: &mut FarolConfig| {
             c.agents = 3;
-            c.capacity = 2;
+            c.capacity = Some(2);
         };
         let mut w = world(three);
         w.recent = VecDeque::from(vec![2; LOOKBACK]);
@@ -1237,7 +1237,6 @@ mod tests {
     fn live_edits_apply_and_the_population_waits_for_reset() {
         let mut w = world(|_| {});
         let next = config(|c| {
-            c.scoring = Scoring::Payoff;
             c.at_capacity = AtCapacity::Go;
             c.behavior = Behavior::Random;
             c.stop_at = 10;
@@ -1249,6 +1248,9 @@ mod tests {
             ("agents", config(|c| c.agents = 101)),
             ("game", config(|c| c.game = Game::Minority)),
             ("strategies", config(|c| c.strategies = 6)),
+            // Error scores and payoff points share one tally: a switch
+            // mid-run would act on the least accurate predictor.
+            ("scoring", config(|c| c.scoring = Scoring::Payoff)),
         ] {
             let e = Model::set_config(&mut w, ModelConfig::Farol(edit)).unwrap_err();
             assert_eq!(e[0].field, field);
@@ -1260,12 +1262,12 @@ mod tests {
         for c in [
             config(|c| {
                 c.agents = 3;
-                c.capacity = 1;
+                c.capacity = Some(1);
             }),
             config(|c| c.strategies = 1),
             config(|c| c.strategies = 48),
-            config(|c| c.capacity = 0),
-            config(|c| c.capacity = 100),
+            config(|c| c.capacity = Some(0)),
+            config(|c| c.capacity = Some(100)),
             config(|c| c.decay = 0.0),
             config(|c| c.decay = 1.0),
             config(minority(3, 1, 1)),
@@ -1276,7 +1278,7 @@ mod tests {
             }),
             config(|c| {
                 minority(101, 2, 3)(c);
-                c.capacity = 0;
+                c.capacity = Some(0);
             }),
             config(|c| {
                 minority(101, 2, 3)(c);

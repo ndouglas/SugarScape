@@ -492,7 +492,8 @@ export interface FarolConfig {
   agents: number;
   strategies: number;
   behavior: 'inductive' | 'random';
-  capacity: number;
+  /** Null: the game's own (60 % of N, or (N − 1)/2). */
+  capacity: number | null;
   scoring: 'error' | 'payoff';
   decay: number;
   at_capacity: 'stay' | 'go';
@@ -556,6 +557,8 @@ export interface Param {
   help?: string;
   /** Shown only while the field `path` equals `equals` (a bool as `'true'`/`'false'`): Model II's population fields, the kin fields. */
   show_if?: { path: string; equals: string };
+  /** A second condition that must also hold. */
+  also_if?: { path: string; equals: string };
   /** A number field that may be empty: null shows as an empty box, and an empty box sends null. */
   nullable?: true;
   /** For a nullable field, the path its slider follows while null (else it follows `min`). */

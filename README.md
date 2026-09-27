@@ -1271,11 +1271,15 @@ yes-or-no version of El Farol.
 
 Measured (the survey and the presets' descriptions):
 
-- **The mean at 60 is trivial; the swings are not.** Arthur's attendance does average 59–60 at every
+- **The mean at 60 is trivial; the swings are not.** Arthur's attendance does average 58–60 at every
   k from 2 to 32, as he says — but agents going at random with probability 0.6 average 60 too
   (Challet, Marsili and Ottino's point), and Arthur's agents swing 20 to 50 times as widely (σ²/N
   5–11 against 0.24). Rated by the advice they give instead of their accuracy, the swings halve, but
   stay well above chance.
+- **Arthur's robustness needs a large library.** The library here is fixed at 48, and his numbers
+  hold across k; but in planning, a library of 25 gave a mean of 52 at k 23, with attendance swinging
+  between near-empty and near-full (σ²/N 22). His "robust to changes in types of predictors created"
+  is not tested here, and on that evidence it would not hold for small libraries.
 - **Arthur's cycles do not go away.** Rated by accuracy, attendance alternates high and low (a lag-1
   autocorrelation of −0.23 to −0.57) where he says "no persistent cycles"; rated by payoff the cycle
   is gone. And 30–36 % of the forecasts in use are above 60, not his 40 %.

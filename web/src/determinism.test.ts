@@ -726,6 +726,38 @@ describe('the El Farol model through the engine', () => {
     await e.select(29, 0);
     expect((e.inspection!.view as FarolInspection).round).toBe(30);
   });
+
+  const farolPresets = presets.filter((p) => modelOf(p.config) === 'farol');
+  const schema = (JSON.parse(model_schemas_json()) as Record<string, Param[]>).farol;
+
+  it('starts an Experiments sweep every game accepts', () => {
+    expect(farolPresets).toHaveLength(16);
+    for (const p of farolPresets) {
+      const { sweep, errors } = formToSweep(defaultForm('farol', p.config), { preset: p.id });
+      expect(errors, p.id).toEqual([]);
+      expect(() => sweep_points(JSON.stringify(sweep)), p.id).not.toThrow();
+    }
+  });
+
+  it('shows each game’s fields only under that game', () => {
+    for (const p of farolPresets) {
+      const game = (p.config as FarolConfig).game;
+      for (const f of schema.filter((f) => paramShown(f, p.config))) {
+        if (f.group === 'El Farol') expect(game, `${p.id}: ${f.path}`).toBe('el_farol');
+        if (f.group === 'Minority game' || f.group === 'Evolution') expect(game, `${p.id}: ${f.path}`).toBe('minority');
+      }
+    }
+  });
+
+  it('keeps the plain minority game when the number of players changes', async () => {
+    const mg = presets.find((p) => p.id === 'mg-m6')!;
+    expect((mg.config as FarolConfig).capacity).toBeNull();
+    const config = { ...structuredClone(mg.config as FarolConfig), agents: 501 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    await e.advance(200);
+    // Coin-flippers' σ²/N of the plain game is ¼, centered on N/2.
+    expect((e.latest as FarolStats).random_fluctuation).toBeCloseTo(0.25, 6);
+  });
 });
 
 describe('the relative agreement model through the engine', () => {
