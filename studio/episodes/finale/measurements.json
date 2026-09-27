@@ -1,0 +1,22 @@
+{
+  "medians": {
+    "fizzle": 0.04703973754001575,
+    "foresight_end": 4.412647743016951,
+    "foresight_start": 4.9775,
+    "ii6_travelers": 0.021249999999999998,
+    "iii12_mixed": 0.0,
+    "iii14_pop": 10.0,
+    "newcomers": 0.6762625046478101,
+    "one_tribe_share": 0.5,
+    "residue": 0.018062363972906455,
+    "trades": 31329.5,
+    "vi2_dip": 173.5,
+    "vi2_late": 837.2537313432836,
+    "vi2_min_late": 725.0,
+    "vi3_dip": 123.0,
+    "vi3_late": 820.6691542288557,
+    "vi3_max": 913.5,
+    "vi3_period": 50.0
+  },
+  "seeds": 20
+}
