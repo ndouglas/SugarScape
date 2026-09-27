@@ -60,6 +60,10 @@ pub struct Place {
     pub sex: Option<Sex>,
     #[serde(default)]
     pub tribe: Option<Tribe>,
+    #[serde(default)]
+    pub spice: Option<f64>,
+    #[serde(default)]
+    pub spice_metabolism: Option<u32>,
 }
 
 fn first_seed() -> u64 {
@@ -284,6 +288,8 @@ fn place(
             sugar: p.sugar,
             sex: p.sex,
             tribe: p.tribe,
+            spice: p.spice,
+            spice_metabolism: p.spice_metabolism,
         };
         let id = world
             .place_agent(p.x, p.y, &overrides)
@@ -446,6 +452,16 @@ mod tests {
         let total = |f: fn(&(u64, u64, f64, f64, u32)) -> f64| merged.iter().map(f).sum::<f64>();
         assert!((total(|t| t.2) - sugar).abs() < 1e-9);
         assert!((total(|t| t.3) - spice).abs() < 1e-9);
+    }
+
+    #[test]
+    fn a_placement_can_set_its_spice() {
+        let d = run(
+            r#"{"preset": "iv-1-spice", "ticks": 0, "set": {"population": 0},
+            "place": [{"x": 1, "y": 1, "sugar": 30, "spice": 3, "spice_metabolism": 2}]}"#,
+        );
+        assert_eq!(d.frames[0].agents[0].3, 30.0);
+        assert_eq!(d.frames[0].spice_agents[0], (3.0, 2));
     }
 
     #[test]
