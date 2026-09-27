@@ -125,6 +125,8 @@ deleted.
   defined".
 - Walls may not cover every site.
 - `placement` must leave room for the population: the free sites number at least `population`.
+- `walls` changes only on reset: it's added to the reset-only paths and to `structural_changes`, as
+  maps are.
 - `#[serde(default)]` for both, so older configs load as today; `legacy::convert` gets the
   defaults.
 
@@ -223,8 +225,9 @@ or fail.
   negative: walking isn't the missing mechanism.
 - **Speed:** the capacity under walk rises toward the jump's as speed rises (`walk-speed`).
 - **Baum and Kraft, travel:** requiring travel to switch patches reduces undermatching. s with the
-  far gap exceeds s with no fence (`ifd-fence-far` against Minds 1's `ifd-far-sighted` under
-  `walk`).
+  far gap exceeds s in the same world under `walk` with no fence (`ifd-fence-far` against
+  `ifd-far-sighted` switched to `walk`). The `ifd-detour` sweep shows s against the gap's offset,
+  and the direction is reported either way.
 - **Baum and Kraft, visual barrier:** a visual barrier has no effect. s with the opaque wall is
   equivalent to s with the fence at the same gap (`ifd-wall` against `ifd-fence`, paired).
 
