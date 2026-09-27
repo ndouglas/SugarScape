@@ -25,7 +25,8 @@ const GOLDEN: &[(&str, u64)] = &[
     // Chapter IV, recorded before any Chapter V change.
     ("iv-1-spice", 0xd937df7102a3a4),
     ("iv-3-trade", 0x6f14b0be4cd3b21e),
-    ("iv-15-trade-sex", 0xda2f681086c8729b),
+    // 2026-09-27: the book's Figure IV-14 fertility ages (35–45 / 45–55).
+    ("iv-15-trade-sex", 0x3cb6f69f8627bb0d),
     ("iv-3-pollution", 0xa44cef03ce32f537),
     ("iv-18-foresight", 0x71bdcb5c44708373),
     ("iv-5-credit", 0xac5bbc30ed0fb306),

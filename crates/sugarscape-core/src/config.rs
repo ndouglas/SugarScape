@@ -250,11 +250,26 @@ pub struct Diffusion {
     pub every: u32,
 }
 
-/// Death from old age; `max_age` is also R_[a,b]'s [a, b].
+/// Death from old age; `max_age` is also R_[a,b]'s [a, b]. `founders`: how
+/// old the initial population starts (the book doesn't say; its Animation
+/// VI-2 shows births at t = 1, so its founders there were not all newborn).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Lifespan {
     pub enabled: bool,
     pub max_age: URange,
+    #[serde(default)]
+    pub founders: FounderAges,
+}
+
+/// The initial population's ages.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FounderAges {
+    /// Every founder is born at t = 0 (the engine's reading).
+    #[default]
+    Newborn,
+    /// Each founder's age is drawn uniformly from [0, its maximum age).
+    Random,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -403,6 +418,24 @@ pub struct SexRule {
     pub fertility_onset: URange,
     pub female_end: URange,
     pub male_end: URange,
+    #[serde(default)]
+    pub fertile_wealth: FertileWealth,
+}
+
+/// Rule S's wealth test ("at least as much sugar as it was born with", a
+/// one-good rule) read over several goods; the book doesn't say.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FertileWealth {
+    /// At least its birth endowment of every good (the engine's reading).
+    #[default]
+    EachGood,
+    /// At least its birth endowment in total, summing the goods.
+    Total,
+    /// At least the welfare its birth endowment gave it.
+    Welfare,
+    /// At least its birth endowment of sugar (good 0) alone.
+    Sugar,
 }
 
 impl SexRule {
@@ -676,6 +709,7 @@ impl Default for Config {
             lifespan: Lifespan {
                 enabled: false,
                 max_age: URange::new(60, 100),
+                founders: FounderAges::Newborn,
             },
             replacement: Toggle { enabled: false },
             sex: SexRule {
@@ -683,6 +717,7 @@ impl Default for Config {
                 fertility_onset: URange::new(12, 15),
                 female_end: URange::new(40, 50),
                 male_end: URange::new(50, 60),
+                fertile_wealth: FertileWealth::EachGood,
             },
             inheritance: Toggle { enabled: false },
             culture: CultureRule {

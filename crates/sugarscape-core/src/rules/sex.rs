@@ -27,15 +27,16 @@ pub(crate) fn act(world: &mut World, id: AgentId) {
     let pos = world.agent(id).expect("live agent").pos;
     let mut neighbors = world.torus.neighbors(pos);
     neighbors.shuffle(&mut world.rng);
+    let (test, goods) = (world.config.sex.fertile_wealth, world.config.goods.len());
     for q in neighbors {
         let me = world.agent(id).expect("live agent");
-        if !me.is_fertile() {
+        if !me.is_fertile(test, goods) {
             return;
         }
         let Some(mate) = world.agent_at(q) else {
             continue;
         };
-        if mate.sex == me.sex || !mate.is_fertile() {
+        if mate.sex == me.sex || !mate.is_fertile(test, goods) {
             continue;
         }
         let mate_id = mate.id;

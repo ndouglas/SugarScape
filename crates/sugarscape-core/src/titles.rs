@@ -70,7 +70,7 @@ pub const TITLES: [(&str, &str); 202] = [
     ),
     (
         "iv-15-trade-sex",
-        "Trade across generations: prices never settle, and spread wider over time",
+        "Trade across generations: prices never settle, and most societies die out",
     ),
     (
         "iv-3-pollution",

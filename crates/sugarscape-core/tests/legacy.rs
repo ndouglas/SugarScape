@@ -45,6 +45,8 @@ fn legacy_preset_configs_load_as_the_presets() {
     // differs from today's preset only in the named field.
     // ii-6-waves: moved to the book's full 20×20 block (the model survey).
     let changed_placement = ["ii-6-waves"];
+    // iv-15-trade-sex: the book's Figure IV-14 fertility ages (35–45 / 45–55).
+    let changed_fertility = ["iv-15-trade-sex"];
     for (id, json) in fixtures {
         let preset = presets::by_id(&id).unwrap_or_else(|| panic!("preset {id} disappeared"));
         let mut loaded =
@@ -52,6 +54,11 @@ fn legacy_preset_configs_load_as_the_presets() {
         if changed_placement.contains(&id.as_str()) {
             assert_ne!(loaded.placement, preset.config.placement, "{id}");
             loaded.placement = preset.config.placement;
+        }
+        if changed_fertility.contains(&id.as_str()) {
+            assert_ne!(loaded.sex, preset.config.sex, "{id}");
+            loaded.sex.female_end = preset.config.sex.female_end;
+            loaded.sex.male_end = preset.config.sex.male_end;
         }
         assert_eq!(loaded, preset.config, "{id}");
     }

@@ -65,9 +65,12 @@ export interface Config {
   seasons: { enabled: boolean; winter_divisor: number; period: number };
   pollution: { enabled: boolean; pollutants: Pollutant[] };
   diffusion: { enabled: boolean; every: number };
-  lifespan: { enabled: boolean; max_age: URange };
+  lifespan: { enabled: boolean; max_age: URange; founders?: 'newborn' | 'random' };
   replacement: { enabled: boolean };
-  sex: { enabled: boolean; fertility_onset: URange; female_end: URange; male_end: URange };
+  sex: {
+    enabled: boolean; fertility_onset: URange; female_end: URange; male_end: URange;
+    fertile_wealth?: 'each_good' | 'total' | 'welfare' | 'sugar';
+  };
   inheritance: { enabled: boolean };
   /**
    * Rule K. `rule`, `features`, `traits` and `stop_when_settled` are milestone 14's Axelrod option

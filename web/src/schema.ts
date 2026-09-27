@@ -90,7 +90,17 @@ export const GROUPS: Group[] = [
   },
   {
     title: 'Lifespan', enable: 'lifespan.enabled',
-    controls: [{ kind: 'range', path: 'lifespan.max_age', label: 'Max age [a, b]', min: 1, max: 300 }],
+    controls: [
+      { kind: 'range', path: 'lifespan.max_age', label: 'Max age [a, b]', min: 1, max: 300 },
+      {
+        kind: 'select', path: 'lifespan.founders', label: 'Founders start', reset: true,
+        current: (c) => c.lifespan.founders ?? 'newborn',
+        options: [
+          { value: 'newborn', label: 'Newborn', apply: (c) => { c.lifespan.founders = 'newborn'; } },
+          { value: 'random', label: 'At random ages (the book\'s VI-2 figure)', apply: (c) => { c.lifespan.founders = 'random'; } },
+        ],
+      },
+    ],
   },
   { title: 'Replacement (R)', enable: 'replacement.enabled', note: 'Needs lifespan; excludes sex.', controls: [] },
   {
@@ -99,6 +109,16 @@ export const GROUPS: Group[] = [
       { kind: 'range', path: 'sex.fertility_onset', label: 'Fertility begins', min: 0, max: 100 },
       { kind: 'range', path: 'sex.female_end', label: 'Female fertility ends', min: 0, max: 150 },
       { kind: 'range', path: 'sex.male_end', label: 'Male fertility ends', min: 0, max: 150 },
+      {
+        kind: 'select', path: 'sex.fertile_wealth', label: 'Wealth to have children (two goods)',
+        current: (c) => c.sex.fertile_wealth ?? 'each_good',
+        options: [
+          { value: 'each_good', label: 'Its endowment of each good', apply: (c) => { c.sex.fertile_wealth = 'each_good'; } },
+          { value: 'total', label: 'Its endowment in total', apply: (c) => { c.sex.fertile_wealth = 'total'; } },
+          { value: 'welfare', label: 'The welfare of its endowment', apply: (c) => { c.sex.fertile_wealth = 'welfare'; } },
+          { value: 'sugar', label: 'Its sugar endowment alone', apply: (c) => { c.sex.fertile_wealth = 'sugar'; } },
+        ],
+      },
     ],
   },
   { title: 'Inheritance (I)', enable: 'inheritance.enabled', controls: [] },

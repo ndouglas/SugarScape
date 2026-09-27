@@ -300,12 +300,16 @@ pub fn all() -> Vec<Preset> {
         preset(
             "iv-15-trade-sex",
             "({G₁}, {M, S, T})",
-            "Figure IV-15",
-            "Finite lives and evolving preferences keep prices from settling: their dispersion grows over time. Some runs die out (3 of 20 by t = 1000).",
+            "Figure IV-14",
+            "Finite lives and evolving preferences keep prices from settling: their dispersion grows over time. With the book's fertility ages (childbearing ending at 35–45 for women, 45–55 for men), most runs die out: 15 of 20 by t = 1000.",
             |c| {
                 market(c);
                 c.sex.enabled = true;
                 c.lifespan.enabled = true;
+                // The book's Figure IV-14: childbearing ends at 35–45 for
+                // women and 45–55 for men (not Chapter III's 40–50 / 50–60).
+                c.sex.female_end = URange::new(35, 45);
+                c.sex.male_end = URange::new(45, 55);
             },
         ),
         preset(

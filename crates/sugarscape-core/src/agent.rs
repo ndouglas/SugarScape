@@ -4,7 +4,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::bits::Bits;
-use crate::config::{group_of, Config, Group, MAX_GOODS};
+use crate::config::{group_of, Config, FertileWealth, Group, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::social::Social;
 
@@ -253,15 +253,27 @@ impl Agent {
         group_of(groups, self.tags.zeros())
     }
 
-    /// Of childbearing age and holding at least the endowment it was born
-    /// with of every good (goods it was born without are excepted).
-    pub fn is_fertile(&self) -> bool {
+    /// Of childbearing age and as wealthy as it was born, as `test` reads
+    /// that over the world's `goods` goods: by default at least the endowment
+    /// it was born with of every good (goods it was born without are excepted).
+    pub fn is_fertile(&self, test: FertileWealth, goods: usize) -> bool {
+        let (have, born) = (&self.holdings[..goods], &self.initial[..goods]);
         (self.fertility_onset..=self.fertility_end).contains(&self.age)
-            && self
-                .holdings
-                .iter()
-                .zip(&self.initial)
-                .all(|(&have, &born_with)| born_with <= 0.0 || have >= born_with)
+            && match test {
+                FertileWealth::EachGood => have
+                    .iter()
+                    .zip(born)
+                    .all(|(&have, &born_with)| born_with <= 0.0 || have >= born_with),
+                FertileWealth::Total => have.iter().sum::<f64>() >= born.iter().sum::<f64>(),
+                FertileWealth::Welfare => {
+                    let m: Vec<f64> = self.metabolism[..goods]
+                        .iter()
+                        .map(|&m| f64::from(m))
+                        .collect();
+                    crate::econ::welfare_n(have, &m) >= crate::econ::welfare_n(born, &m)
+                }
+                FertileWealth::Sugar => have[0] >= born[0],
+            }
     }
 
     /// Units of `good` burned per tick: its metabolism plus `fee` per carried
@@ -349,15 +361,40 @@ mod tests {
     }
 
     #[test]
+    fn the_fertility_tests_read_two_goods_four_ways() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        let id = crate::testkit::spawn(&mut w, 1, 1);
+        let a = w.agent_mut(id).unwrap();
+        a.age = a.fertility_onset;
+        a.metabolism[0] = 1;
+        a.metabolism[1] = 1;
+        a.initial[0] = 10.0;
+        a.initial[1] = 10.0;
+        // More sugar, less spice: the same total and, with equal needs, lower welfare.
+        a.holdings[0] = 14.0;
+        a.holdings[1] = 6.0;
+        assert!(!a.is_fertile(FertileWealth::EachGood, 2), "short of spice");
+        assert!(a.is_fertile(FertileWealth::Total, 2), "20 against 20");
+        assert!(!a.is_fertile(FertileWealth::Welfare, 2), "√(14·6) < 10");
+        assert!(a.is_fertile(FertileWealth::Sugar, 2), "14 sugar against 10");
+    }
+
+    #[test]
     fn spice_counts_for_fertility_only_for_agents_with_spice_traits() {
         let mut w = crate::testkit::blank_world(5, 5);
         let id = crate::testkit::spawn(&mut w, 1, 1);
         let a = w.agent_mut(id).unwrap();
         a.holdings[1] = 9.0;
-        assert!(!a.is_fertile(), "below its spice endowment");
+        assert!(
+            !a.is_fertile(FertileWealth::EachGood, MAX_GOODS),
+            "below its spice endowment"
+        );
         a.initial[1] = 0.0;
         a.holdings[1] = -1.0;
-        assert!(a.is_fertile(), "no spice endowment, no spice requirement");
+        assert!(
+            a.is_fertile(FertileWealth::EachGood, MAX_GOODS),
+            "no spice endowment, no spice requirement"
+        );
     }
 
     #[test]
@@ -429,8 +466,11 @@ mod tests {
         let a = w.agent_mut(id).unwrap();
         a.initial[2] = 4.0;
         a.holdings[2] = 3.0;
-        assert!(!a.is_fertile(), "short of good 2");
+        assert!(
+            !a.is_fertile(FertileWealth::EachGood, MAX_GOODS),
+            "short of good 2"
+        );
         a.holdings[2] = 4.0;
-        assert!(a.is_fertile());
+        assert!(a.is_fertile(FertileWealth::EachGood, MAX_GOODS));
     }
 }
