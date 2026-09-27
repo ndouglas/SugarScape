@@ -209,6 +209,20 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("mg-critical", 0x307ea6e032479849),
     ("mg-random-like", 0xbdb3ec814e99c525),
     ("cmo-binary", 0x2081105c24039d0c),
+    // Milestone 24: ants and recruitment.
+    ("ants-1a", 0x7b10d1c9e08f188e),
+    ("ants-1b", 0x4a9423bcb26804a8),
+    ("ants-1c", 0x8dcfeb59054ffc3d),
+    ("ants-2a", 0x8dcfeb59054ffc3d),
+    ("ants-2b", 0xf9258e5dd9d1d673),
+    ("ants-crowd", 0x3332ad31a53efbe8),
+    ("ants-becker", 0x4ebaae97020b8902),
+    ("ants-lock", 0xbb3de1a046a835d4),
+    ("ants-three", 0x4a2871368f4ab782),
+    ("am-ring", 0x104a02f3c5f5011),
+    ("am-random", 0x3e7b4009dc784788),
+    ("am-scale-free", 0x9e1c3fd99aa8a637),
+    ("am-independent", 0x23127da92f6506f),
 ];
 
 fn fingerprint(id: &str) -> u64 {

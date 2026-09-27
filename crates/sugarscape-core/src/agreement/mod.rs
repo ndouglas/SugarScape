@@ -12,11 +12,11 @@ mod stats;
 mod view;
 mod world;
 
+pub use crate::graph::Graph;
 pub use config::{
     schema, AgreementConfig, LatticeConfig, Network, PairUpdate, Pairing, Placement, Rule,
     ScaleFreeConfig, SmallWorldConfig, Substrate, Window, MAX_AGENTS, MAX_SIDE,
 };
-pub use network::Graph;
 pub use presets::presets;
 pub use stats::{grouping, AgreementSnapshot, Outcome, GAP, SERIES, STILL};
 pub use view::{row, scatter_col, COLUMNS, KEPT, SCATTER_X, TALL, TORUS_X};

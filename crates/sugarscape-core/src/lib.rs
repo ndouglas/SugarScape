@@ -6,6 +6,7 @@
 pub mod agent;
 pub mod agreement;
 pub mod anasazi;
+pub mod ants;
 pub mod bits;
 pub mod civil;
 pub mod classes;
@@ -19,6 +20,7 @@ pub mod export;
 pub mod farol;
 pub mod frames;
 pub mod geometry;
+pub mod graph;
 pub mod image;
 pub mod landscape;
 mod legacy;

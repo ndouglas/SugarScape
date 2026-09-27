@@ -7,6 +7,7 @@ use serde::{Serialize, Serializer};
 
 use crate::agreement::{AgreementConfig, AgreementWorld};
 use crate::anasazi::{AnasaziConfig, AnasaziWorld};
+use crate::ants::{AntsConfig, AntsWorld};
 use crate::civil::{CivilConfig, CivilWorld};
 use crate::classes::{ClassesConfig, ClassesWorld};
 use crate::config::{Config, FieldError};
@@ -26,8 +27,8 @@ use crate::structure::{StructureConfig, StructureWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::world::World;
 use crate::{
-    agreement, anasazi, civil, classes, culture, dpd, ethno, export, farol, image, norms, opinions,
-    ring, schelling, spatial, stats, structure, tags,
+    agreement, anasazi, ants, civil, classes, culture, dpd, ethno, export, farol, image, norms,
+    opinions, ring, schelling, spatial, stats, structure, tags,
 };
 
 /// Which model a config or world is.
@@ -51,10 +52,11 @@ pub enum ModelKind {
     Agreement,
     Image,
     Farol,
+    Ants,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 17] = [
+    pub const ALL: [ModelKind; 18] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -72,6 +74,7 @@ impl ModelKind {
         ModelKind::Agreement,
         ModelKind::Image,
         ModelKind::Farol,
+        ModelKind::Ants,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -93,6 +96,7 @@ impl ModelKind {
             ModelKind::Agreement => "agreement",
             ModelKind::Image => "image",
             ModelKind::Farol => "farol",
+            ModelKind::Ants => "ants",
         }
     }
 
@@ -117,6 +121,7 @@ impl ModelKind {
             ModelKind::Agreement => agreement::schema(),
             ModelKind::Image => image::schema(),
             ModelKind::Farol => farol::schema(),
+            ModelKind::Ants => ants::schema(),
         }
     }
 }
@@ -147,6 +152,7 @@ pub enum ModelConfig {
     Agreement(AgreementConfig),
     Image(ImageConfig),
     Farol(FarolConfig),
+    Ants(AntsConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -169,6 +175,7 @@ enum Tagged<'a> {
     Agreement(&'a AgreementConfig),
     Image(&'a ImageConfig),
     Farol(&'a FarolConfig),
+    Ants(&'a AntsConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -198,6 +205,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Agreement(c) => Tagged::Agreement(c).serialize(s),
             ModelConfig::Image(c) => Tagged::Image(c).serialize(s),
             ModelConfig::Farol(c) => Tagged::Farol(c).serialize(s),
+            ModelConfig::Ants(c) => Tagged::Ants(c).serialize(s),
         }
     }
 }
@@ -222,6 +230,7 @@ impl ModelConfig {
             ModelConfig::Agreement(_) => ModelKind::Agreement,
             ModelConfig::Image(_) => ModelKind::Image,
             ModelConfig::Farol(_) => ModelKind::Farol,
+            ModelConfig::Ants(_) => ModelKind::Ants,
         }
     }
 
@@ -307,10 +316,13 @@ impl ModelConfig {
             "farol" => serde_json::from_value(value)
                 .map(ModelConfig::Farol)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "ants" => serde_json::from_value(value)
+                .map(ModelConfig::Ants)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image or farol)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol or ants)"
                 ),
             )),
         }
@@ -335,6 +347,7 @@ impl ModelConfig {
             ModelConfig::Agreement(c) => c.validate(),
             ModelConfig::Image(c) => c.validate(),
             ModelConfig::Farol(c) => c.validate(),
+            ModelConfig::Ants(c) => c.validate(),
         }
     }
 
@@ -359,6 +372,7 @@ impl ModelConfig {
             ModelConfig::Agreement(c) => set_path(c, path, value).map(ModelConfig::Agreement),
             ModelConfig::Image(c) => set_path(c, path, value).map(ModelConfig::Image),
             ModelConfig::Farol(c) => set_path(c, path, value).map(ModelConfig::Farol),
+            ModelConfig::Ants(c) => set_path(c, path, value).map(ModelConfig::Ants),
         }
     }
 
@@ -382,7 +396,8 @@ impl ModelConfig {
             | ModelConfig::Structure(_)
             | ModelConfig::Norms(_)
             | ModelConfig::Agreement(_)
-            | ModelConfig::Farol(_) => None,
+            | ModelConfig::Farol(_)
+            | ModelConfig::Ants(_) => None,
         }
     }
 
@@ -406,6 +421,7 @@ impl ModelConfig {
             ModelConfig::Agreement(_) => agreement::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Image(_) => image::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Farol(_) => farol::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Ants(_) => ants::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -592,6 +608,7 @@ pub enum ModelWorld {
     Agreement(Box<AgreementWorld>),
     Image(Box<ImageWorld>),
     Farol(Box<FarolWorld>),
+    Ants(Box<AntsWorld>),
 }
 
 impl ModelWorld {
@@ -634,6 +651,7 @@ impl ModelWorld {
             }
             ModelConfig::Image(c) => ModelWorld::Image(Box::new(ImageWorld::new(c, seed)?)),
             ModelConfig::Farol(c) => ModelWorld::Farol(Box::new(FarolWorld::new(c, seed)?)),
+            ModelConfig::Ants(c) => ModelWorld::Ants(Box::new(AntsWorld::new(c, seed)?)),
         })
     }
 
@@ -656,6 +674,7 @@ impl ModelWorld {
             ModelWorld::Agreement(_) => ModelKind::Agreement,
             ModelWorld::Image(_) => ModelKind::Image,
             ModelWorld::Farol(_) => ModelKind::Farol,
+            ModelWorld::Ants(_) => ModelKind::Ants,
         }
     }
 
@@ -678,6 +697,7 @@ impl ModelWorld {
             ModelWorld::Agreement(w) => w.as_ref(),
             ModelWorld::Image(w) => w.as_ref(),
             ModelWorld::Farol(w) => w.as_ref(),
+            ModelWorld::Ants(w) => w.as_ref(),
         }
     }
 
@@ -700,6 +720,7 @@ impl ModelWorld {
             ModelWorld::Agreement(w) => w.as_mut(),
             ModelWorld::Image(w) => w.as_mut(),
             ModelWorld::Farol(w) => w.as_mut(),
+            ModelWorld::Ants(w) => w.as_mut(),
         }
     }
 
@@ -791,6 +812,7 @@ impl ModelWorld {
             // Without its private records, which the next generation rebuilds.
             ModelWorld::Image(w) => ModelWorld::Image(Box::new(w.keyframe())),
             ModelWorld::Farol(w) => copy_without_history!(Farol, w),
+            ModelWorld::Ants(w) => copy_without_history!(Ants, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -825,6 +847,7 @@ impl ModelWorld {
             }
             (ModelWorld::Image(live), ModelWorld::Image(kept)) => restore_into!(live, kept),
             (ModelWorld::Farol(live), ModelWorld::Farol(kept)) => restore_into!(live, kept),
+            (ModelWorld::Ants(live), ModelWorld::Ants(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1154,6 +1177,30 @@ mod tests {
     }
 
     #[test]
+    fn ants_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "ants", "ants": 200, "rule": "alfarano", "network": "random", "a": 0.05}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Ants);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["meetings"].as_u64()),
+            (Some("ants"), Some(50))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["share", "top_share"]);
+        let e = ModelConfig::from_json(r#"{"model": "ants", "sources": 9}"#).unwrap_err();
+        assert_eq!(e[0].field, "sources");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Ants);
+        let cp = w.checkpoint().expect("ants worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -1193,7 +1240,8 @@ mod tests {
                 "norms",
                 "agreement",
                 "image",
-                "farol"
+                "farol",
+                "ants"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

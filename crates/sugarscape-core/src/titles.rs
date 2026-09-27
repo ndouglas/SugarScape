@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 202] = [
+pub const TITLES: [(&str, &str); 215] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -778,6 +778,52 @@ pub const TITLES: [(&str, &str); 202] = [
     (
         "cmo-binary",
         "El Farol as a yes-or-no game: 60 seats, two rounds of memory",
+    ),
+    (
+        "ants-1a",
+        "Two identical sources, and most of the colony crowds one",
+    ),
+    (
+        "ants-1b",
+        "Every split of the colony between two sources is about equally likely",
+    ),
+    ("ants-1c", "Weak recruiting: the ants spread about evenly"),
+    ("ants-2a", "The colony wanders around half and half"),
+    (
+        "ants-2b",
+        "Nearly all the ants at one source, then a sudden flip",
+    ),
+    (
+        "ants-crowd",
+        "Ten times the ants, the same habits, and the herding is gone",
+    ),
+    (
+        "ants-becker",
+        "Following the crowd pays: the colony settles about 80–20, like the real ants",
+    ),
+    (
+        "ants-lock",
+        "Following the crowd pays too well: one source, forever",
+    ),
+    (
+        "ants-three",
+        "Three sources: one holds the colony for a while, then another",
+    ),
+    (
+        "am-ring",
+        "Herding over a ring: weaker than the theory predicts",
+    ),
+    (
+        "am-random",
+        "Herding over a random network: just as the theory predicts",
+    ),
+    (
+        "am-scale-free",
+        "Herding over a network with hubs: close to the theory",
+    ),
+    (
+        "am-independent",
+        "Five ants in a hundred who ignore everyone calm the whole colony",
     ),
 ];
 
