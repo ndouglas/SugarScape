@@ -1,10 +1,15 @@
 """Overlays on the screen: gauges, charts and cards hung from `Screen`
 anchors, reading the frame shown, a compare world or the measurements."""
 
+import math
+
+import bpy
+
 import animate
+import markets
 import seasons
 import tribes
-from blender import materials
+from blender import flump, materials
 
 from .parts import CREAM, SUMMER, WINTER, box, card, gauge, text
 
@@ -238,5 +243,99 @@ def alike(beat, d, ctx):
         share = sum(g == 0 for g in f.groups.values()) / n
         blue.data.body = f"Blue {share:.0%}"
         red.data.body = f"Red {1 - share:.0%}"
+
+    return update
+
+
+def census(beat, d, ctx):
+    """Top right: how many Flumps are alive at the tick shown, against how
+    many there were at the start."""
+    anchor = ctx.screen.anchor("census", 0.66, 0.78)
+    card("census-card", anchor, (0, 0, -0.01), (0.62, 0.17, 0.002))
+    line = text("census-line", "", 0.052, materials.fading("census-ink", CREAM, 1.6), anchor,
+                location=(-0.28, -0.015, 0), align="LEFT")
+    start = len(d.frames[0].agents)
+
+    def update(frame):
+        k = min(int(round(ctx.timing.tick_at(frame))), d.ticks)
+        line.data.body = f"Flumps alive: {len(d.frames[k].agents)} of {start}"
+
+    return update
+
+
+# The price chart's log scale: from 1/2.5 to 2.5 times one-for-one, and its
+# size. A tick's price swings when few pairs trade, so the chart shows a
+# rolling average, and says so.
+PRICE_RANGE = math.log(2.5)
+PRICE_WINDOW = 20
+CHART_W, CHART_H = 0.66, 0.3
+
+
+def _polyline(name, parent, points, material):
+    cu = bpy.data.curves.new(name, "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = 0.004
+    spline = cu.splines.new("POLY")
+    spline.points.add(len(points) - 1)
+    cu.materials.append(material)
+    obj = bpy.data.objects.new(name, cu)
+    obj.parent = parent
+    bpy.context.scene.collection.objects.link(obj)
+    return obj, spline
+
+
+def prices(beat, d, ctx):
+    """Bottom right: the price in spice per sugar (the geometric mean of the
+    tick's trades, from the dump, averaged over PRICE_WINDOW ticks) on a log
+    scale, drawn up to the tick shown, with a band as wide as the prices' spread and a line at one for
+    one; beneath, the price and how far apart prices are."""
+    price, spread = markets.smoothed(*markets.price_series(d.frames), PRICE_WINDOW)
+    anchor = ctx.screen.anchor("prices", 0.56, -0.5)
+    card("prices-card", anchor, (0, 0, -0.01), (0.84, 0.56, 0.002))
+    ink = materials.fading("prices-ink", CREAM, 1.6)
+    text("prices-title", f"price of sugar, in spice ({PRICE_WINDOW}-tick average)", 0.04, ink, anchor,
+         location=(0, 0.225, 0))
+    box("prices-one", materials.fading("prices-one-ink", CREAM, 0.6), anchor, location=(0, 0, -0.003),
+        scale=(CHART_W, 0.004, 0.002))
+    text("prices-one-label", "1 for 1", 0.03, ink, anchor, location=(-CHART_W / 2 - 0.01, -0.01, 0), align="RIGHT")
+    readout = text("prices-readout", "", 0.036, ink, anchor, location=(0, -0.225, 0))
+
+    def at(k, value):
+        x = -CHART_W / 2 + CHART_W * k / max(d.ticks, 1)
+        y = CHART_H / 2 * min(max(math.log(value) / PRICE_RANGE, -1), 1)
+        return x, y
+
+    first = next((k for k, v in enumerate(price) if v is not None), None)
+    line, spline = _polyline("prices-line", anchor, price, materials.fading("prices-gold", (1.0, 0.55, 0.1), 2.0))
+    band = bpy.data.meshes.new("prices-band")
+    n = len(price)
+    band.from_pydata([(0, 0, 0)] * (2 * n), [], [(2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2) for i in range(n - 1)])
+    band.materials.append(materials.fading("prices-spread", (0.95, 0.45, 0.38), 0.7))
+    band_obj = bpy.data.objects.new("prices-band", band)
+    band_obj.parent = anchor
+    bpy.context.scene.collection.objects.link(band_obj)
+
+    def update(frame):
+        now = min(int(round(ctx.timing.tick_at(frame))), d.ticks)
+        if first is None or now < first:
+            flump.stow(line)
+            flump.stow(band_obj)
+            readout.data.body = "no trades yet"
+            return
+        line.scale = band_obj.scale = (1, 1, 1)
+        line.location.z, band_obj.location.z = 0.002, -0.001
+        points, verts = [], []
+        for k in range(n):
+            j = min(max(k, first), now)
+            x, y = at(j, price[j])
+            points += [x, y, 0, 1]
+            _, lo = at(j, price[j] / math.exp(spread[j]))
+            _, hi = at(j, price[j] * math.exp(spread[j]))
+            verts += [x, lo, 0, x, hi, 0]
+        spline.points.foreach_set("co", points)
+        band.vertices.foreach_set("co", verts)
+        band.update()
+        apart = math.exp(spread[now]) - 1
+        readout.data.body = f"1 sugar = {price[now]:.2f} spice   ·   prices differ by about {apart:.0%}"
 
     return update

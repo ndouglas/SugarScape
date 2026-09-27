@@ -1,5 +1,7 @@
 """Sugar and spice: which hill a site belongs to, Flumps walking between the
-hills, and which way trades go (see episodes/markets)."""
+hills, which way trades go and at what price (see episodes/markets)."""
+
+import math
 
 
 def sides(sugar_capacity, spice_capacity):
@@ -59,3 +61,53 @@ def expected_direction(before, after):
         total += 1
         right += _sugar_rich(before, t.sugar_giver) > _sugar_rich(before, t.spice_giver)
     return right, total
+
+
+def shuttlers(tracks, width, side_of, first, last):
+    """The ids of the tracks alive from tick `first` to `last` that change
+    side at least twice in between (as `shuttle_share` counts them)."""
+    out = set()
+    for id_, t in tracks.items():
+        end = t.first + len(t.cells) - 1
+        if t.first > first or end < last:
+            continue
+        path = [y * width + x for x, y in t.cells[first - t.first : last - t.first + 1]]
+        if crossings(path, side_of) >= 2:
+            out.add(id_)
+    return out
+
+
+def price_series(frames):
+    """Each tick's price in spice per sugar — the geometric mean of the pairs'
+    prices, each weighted by its exchanges — and the spread, the standard
+    deviation of their log prices. None before the first trade; a tick
+    without trades keeps the last."""
+    prices, spreads = [], []
+    price = spread = None
+    for f in frames:
+        logs = [(math.log(t.price), t.exchanges) for t in f.trades]
+        n = sum(w for _, w in logs)
+        if n:
+            mean = sum(v * w for v, w in logs) / n
+            price = math.exp(mean)
+            spread = math.sqrt(sum(w * (v - mean) ** 2 for v, w in logs) / n)
+        prices.append(price)
+        spreads.append(spread)
+    return prices, spreads
+
+
+def smoothed(prices, spreads, window):
+    """Rolling averages over the last `window` ticks with a price: the
+    geometric mean of the prices and the mean of the spreads. A tick's
+    price swings when few pairs trade; the average shows where it settles."""
+    out_p, out_s = [], []
+    for k in range(len(prices)):
+        seen = [(p, s) for p, s in zip(prices[max(k - window + 1, 0) : k + 1], spreads[max(k - window + 1, 0) : k + 1])
+                if p is not None]
+        if not seen:
+            out_p.append(None)
+            out_s.append(None)
+            continue
+        out_p.append(math.exp(sum(math.log(p) for p, _ in seen) / len(seen)))
+        out_s.append(sum(s for _, s in seen) / len(seen))
+    return out_p, out_s

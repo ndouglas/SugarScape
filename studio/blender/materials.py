@@ -95,6 +95,19 @@ def gumdrop():
     return m
 
 
+def spice_drop():
+    """Spice: a glossy paprika-red drop, darker and smoother than sugar, so
+    the two read apart even small."""
+    m, nt, p, fresh = _principled("spice-drop")
+    if fresh:
+        p.inputs["Base Color"].default_value = (0.62, 0.07, 0.03, 1)
+        p.inputs["Roughness"].default_value = 0.3
+        p.inputs["Subsurface Weight"].default_value = 0.4
+        p.inputs["Subsurface Radius"].default_value = (1.0, 0.25, 0.1)
+        p.inputs["Coat Weight"].default_value = 0.5
+    return m
+
+
 def gloss(name, color, emission=0.0):
     m, nt, p, fresh = _principled(name)
     if fresh:

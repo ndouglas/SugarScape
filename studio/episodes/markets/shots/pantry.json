@@ -1,0 +1,44 @@
+{
+ "preset": "iv-1-spice",
+ "ticks": 30,
+ "seed": 3,
+ "set": {
+  "width": 10,
+  "height": 10,
+  "population": 0,
+  "goods.0.map": {
+   "kind": "peaks",
+   "peaks": [
+    {
+     "x": 2,
+     "y": 7,
+     "radius": 5,
+     "height": 4
+    }
+   ]
+  },
+  "goods.1.map": {
+   "kind": "peaks",
+   "peaks": [
+    {
+     "x": 7,
+     "y": 2,
+     "radius": 5,
+     "height": 4
+    }
+   ]
+  },
+  "vision.max": 4
+ },
+ "place": [
+  {
+   "x": 4,
+   "y": 5,
+   "vision": 4,
+   "metabolism": 1,
+   "sugar": 20,
+   "spice": 4,
+   "spice_metabolism": 2
+  }
+ ]
+}

@@ -8,45 +8,67 @@ import bpy
 
 import animate
 import lineage
+import markets
 import seasons
 from blender import flump, materials
 
 from .parts import CREAM, ball, box, card, flump_pose, text, turn_to_camera
 
 
+def _spice_at(d, id_, tick):
+    """A Flump's spice at a fractional tick, rising or falling through the tick."""
+    k = min(max(int(math.floor(tick)), 0), d.ticks)
+    now = d.frames[k].spice_agents.get(id_)
+    if now is None:
+        return 0.0
+    after = d.frames[min(k + 1, d.ticks)].spice_agents.get(id_, now)
+    return now[0] + (after[0] - now[0]) * (tick - k)
+
+
 def belly(beat, d, ctx):
     """A meter floating over each focus Flump (or every Flump, with params
     belly="all"): a dark case, a glowing gold fill for its sugar (full at
-    params belly_full, default 20) and the count beside it."""
+    params belly_full, default 20) and the count beside it. In a two-good
+    world, a red spice fill beneath, full at the same level."""
     meters = {}
     full = beat.params.get("belly_full", 20)
     ids = list(ctx.tracks) if beat.params.get("belly") == "all" else [d.placed[i] for i in beat.focus]
+    two = bool(d.spice_capacity)
     # Bright emission washes out toward white under AgX; a deep orange at
     # modest strength stays gold.
     gold = materials.fading("belly-gold", (1.0, 0.38, 0.0), 0.9)
+    red = materials.fading("belly-spice", (0.9, 0.05, 0.02), 0.9)
     cream = materials.fading("belly-ink", (1.0, 0.97, 0.9), 4.0)
+    rows = ((0.09, gold), (-0.09, red)) if two else ((0.0, gold),)
     for id_ in ids:
         holder = bpy.data.objects.new(f"belly{id_}", None)
         bpy.context.scene.collection.objects.link(holder)
         # The holder turns to face the camera, so its local +Z points at the lens.
-        card(f"belly{id_}-case", holder, (0, 0, -0.02), (0.74, 0.2, 0.02))
-        fill = box(f"belly{id_}-fill", gold, holder, scale=(0.64, 0.12, 0.02))
-        count = text(f"belly{id_}-count", "", 0.3, cream, holder, location=(0.45, -0.02, 0), align="LEFT")
-        meters[id_] = (holder, fill, count)
+        card(f"belly{id_}-case", holder, (0, 0, -0.02), (0.74, 0.38 if two else 0.2, 0.02))
+        bars = []
+        for i, (y, ink) in enumerate(rows):
+            fill = box(f"belly{id_}-fill{i}", ink, holder, location=(0, y, 0), scale=(0.64, 0.12, 0.02))
+            size = 0.22 if two else 0.3
+            count = text(f"belly{id_}-count{i}", "", size, cream, holder, location=(0.45, y - 0.02, 0), align="LEFT")
+            bars.append((fill, count))
+        meters[id_] = (holder, bars)
 
     def update(frame):
-        for id_, (holder, fill, count) in meters.items():
+        tick = ctx.timing.tick_at(frame)
+        for id_, (holder, bars) in meters.items():
             p = flump_pose(ctx, d, id_, frame)
             if not p.visible:
                 flump.stow(holder)
                 continue
-            level = min(max(p.sugar / full, 0.0), 1.0)
             holder.scale = (1, 1, 1)
-            holder.location = (p.x, p.y, p.z + 1.05)
+            holder.location = (p.x, p.y, p.z + (1.15 if two else 1.05))
             turn_to_camera(holder, ctx)
-            fill.scale.x = max(level, 0.002) * 0.64
-            fill.location.x = -0.32 + fill.scale.x / 2
-            count.data.body = f"{p.sugar:.0f}"
+            amounts = (p.sugar, _spice_at(d, id_, tick)) if two else (p.sugar,)
+            for (fill, count), amount in zip(bars, amounts):
+                level = min(max(amount / full, 0.0), 1.0)
+                fill.scale.x = max(level, 0.002) * 0.64
+                fill.location.x = -0.32 + fill.scale.x / 2
+                count.data.body = f"{amount:.0f}"
 
     return update
 
@@ -192,6 +214,13 @@ def rings_migrants(beat, d, ctx):
     return _rings("migrants", (1.0, 0.7, 0.1), seasons.migrants(ctx.tracks, 100, d.ticks, d.height), d, ctx)
 
 
+def rings_shuttlers(beat, d, ctx):
+    """Gold rings on the shuttlers: alive from tick 100 to 200 and changing
+    hills at least twice in between (the claims' definition)."""
+    sides = markets.sides(d.capacity, d.spice_capacity)
+    return _rings("shuttlers", (1.0, 0.7, 0.1), markets.shuttlers(ctx.tracks, d.width, sides, 100, 200), d, ctx)
+
+
 def rings_hungry(beat, d, ctx):
     """Red rings on the hungry — metabolism ≥ 3 — alive when the beat starts."""
     at = d.frames[beat.start_tick].agents
@@ -260,5 +289,56 @@ def traits(beat, d, ctx):
             group = d.frames[k].groups[id_]
             for g, label in enumerate(labels):
                 label.data.body = d.frames[k].tags[id_] if g == group else ""
+
+    return update
+
+
+# The share of a tick the arcs fly, from its start: before the next hop
+# when ticks are slow; while the Flumps move, following them, when fast.
+TRADE_FLIGHT = 0.8
+# Partners are neighbors, but across the board's wrapped edge they stand at
+# opposite sides of it: an arc between them would cross the whole board.
+TRADE_REACH = 1.5
+
+
+def trades(beat, d, ctx):
+    """Each tick's trades as two drops crossing between the partners: a sugar
+    gumdrop from the one giving sugar, a spice drop back, sized by how much
+    moved, flying early in the tick after the one the dump lists them in
+    (where the partners stand then). Pairs that are neighbors only across
+    the wrapped edge get no arc."""
+    first, last = int(ctx.timing.tick_at(1)), int(ctx.timing.tick_at(beat.frames + 1)) + 1
+    busiest = max((len(d.frames[k].trades) for k in range(first, min(last, d.ticks) + 1)), default=0)
+    sugar = [ball(f"trade-sugar{i}", 0.1, materials.gumdrop()) for i in range(busiest)]
+    spice = [ball(f"trade-spice{i}", 0.1, materials.spice_drop()) for i in range(busiest)]
+    for o in sugar + spice:
+        flump.stow(o)
+
+    def fly(obj, a, b, u, lift, amount):
+        e = animate.smoothstep(u)
+        obj.location = (a.x + (b.x - a.x) * e, a.y + (b.y - a.y) * e,
+                        a.z + 0.7 + (b.z - a.z) * e + lift * math.sin(math.pi * u))
+        s = min(0.6 + 0.15 * math.sqrt(amount), 1.2) * (1 - 0.3 * u)
+        obj.scale = (s, s, s)
+
+    def update(frame):
+        tick = ctx.timing.tick_at(frame)
+        k = min(int(math.floor(tick)), d.ticks)
+        u = (tick - k) / TRADE_FLIGHT
+        used = 0
+        if 0 <= u <= 1:
+            for t in d.frames[k].trades:
+                if t.sugar_giver not in ctx.tracks or t.spice_giver not in ctx.tracks:
+                    continue
+                a = flump_pose(ctx, d, t.sugar_giver, frame)
+                b = flump_pose(ctx, d, t.spice_giver, frame)
+                if not (a.visible and b.visible) or math.hypot(a.x - b.x, a.y - b.y) > TRADE_REACH:
+                    continue
+                # The drops pass each other: sugar arcs high, spice low.
+                fly(sugar[used], a, b, u, 0.9, t.sugar)
+                fly(spice[used], b, a, u, 0.45, t.spice)
+                used += 1
+        for o in sugar[used:] + spice[used:]:
+            flump.stow(o)
 
     return update

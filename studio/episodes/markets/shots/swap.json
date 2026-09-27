@@ -1,0 +1,345 @@
+{
+ "preset": "iv-3-trade",
+ "ticks": 12,
+ "seed": 3,
+ "set": {
+  "width": 6,
+  "height": 6,
+  "population": 0,
+  "vision.max": 3,
+  "goods.0.map": {
+   "kind": "flat",
+   "capacity": 1
+  },
+  "goods.1.map": {
+   "kind": "flat",
+   "capacity": 1
+  }
+ },
+ "place": [
+  {
+   "x": 2,
+   "y": 2,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 3,
+   "y": 2,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 1,
+   "y": 0,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 2,
+   "y": 0,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 3,
+   "y": 0,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 4,
+   "y": 0,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 5,
+   "y": 0,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 0,
+   "y": 1,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 1,
+   "y": 1,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 2,
+   "y": 1,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 3,
+   "y": 1,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 4,
+   "y": 1,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 5,
+   "y": 1,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 0,
+   "y": 2,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 1,
+   "y": 2,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 4,
+   "y": 2,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 5,
+   "y": 2,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 0,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 1,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 2,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 3,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 4,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 5,
+   "y": 3,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 0,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 1,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 2,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 3,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 4,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 5,
+   "y": 4,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 0,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 1,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 2,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 3,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  },
+  {
+   "x": 4,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 3,
+   "spice": 30
+  },
+  {
+   "x": 5,
+   "y": 5,
+   "vision": 1,
+   "metabolism": 1,
+   "spice_metabolism": 1,
+   "sugar": 30,
+   "spice": 3
+  }
+ ]
+}
