@@ -11,6 +11,7 @@ import animate
 import lineage
 import markets
 import seasons
+import credit
 import war
 from blender import board, flump, materials
 
@@ -115,8 +116,10 @@ def sight(beat, d, ctx):
 
 
 def labels(beat, d, ctx):
-    """"sees N · eats M" over each focus Flump on a dark pill, turned to the camera."""
+    """"sees N · eats M" over each focus Flump on a dark pill, turned to the
+    camera; with params label="age", its age at the tick shown instead."""
     items = []
+    ages = beat.params.get("label") == "age"
     cream = materials.fading("label", CREAM, 2.2)
     for i in beat.focus:
         id_ = d.placed[i]
@@ -124,15 +127,18 @@ def labels(beat, d, ctx):
         holder = bpy.data.objects.new(f"label{id_}", None)
         bpy.context.scene.collection.objects.link(holder)
         card(f"label{id_}-pill", holder, (0, 0, -0.03), (2.6, 0.5, 0.02))
-        text(f"label{id_}-text", f"sees {a.vision} · eats {a.metabolism}", 0.34, cream, holder)
-        items.append((id_, holder))
+        body = "" if ages else f"sees {a.vision} · eats {a.metabolism}"
+        items.append((id_, holder, text(f"label{id_}-text", body, 0.34, cream, holder)))
 
     def update(frame):
-        for id_, holder in items:
+        k = min(max(int(ctx.timing.tick_at(frame)), 0), d.ticks)
+        for id_, holder, label in items:
             p = flump_pose(ctx, d, id_, frame)
             if not p.visible:
                 flump.stow(holder)
                 continue
+            if ages and id_ in d.frames[k].agents:
+                label.data.body = f"age {d.frames[k].agents[id_].age}"
             holder.location = (p.x, p.y, p.z + 1.2)
             holder.scale = (0.6,) * 3
             turn_to_camera(holder, ctx)
@@ -460,5 +466,84 @@ def killmap(beat, d, ctx):
         now = ctx.timing.tick_at(frame)
         mesh.attributes["level"].data.foreach_set("value", [KILL_MARK if t <= now else 0.0 for t in ticks])
         mesh.update()
+
+    return update
+
+
+# Loan lines take the book's colors: lenders green, Flumps that both lend and
+# borrow yellow, and deeper levels toward red; a line takes its lender's.
+LEVEL_COLORS = ((0.2, 0.85, 0.3), (0.95, 0.85, 0.2), (1.0, 0.55, 0.1), (1.0, 0.25, 0.1), (0.85, 0.05, 0.1))
+LOAN_REACH = 1.5  # neighbors only across the wrapped edge get no line
+LOAN_FLIGHT = 20  # frames a loan's or a repayment's sugar takes to fly
+
+
+def _loan_key(loan):
+    return (loan.lender, loan.borrower, loan.due_tick)
+
+
+def loanlines(beat, d, ctx):
+    """An arc from each lender to each of its borrowers for the loans
+    outstanding at the tick shown, in its lender's level's color. With
+    params flows=True, a gumdrop also flies from lender to borrower as a loan
+    is made and back, larger, as it is repaid (the loan gone at its due tick
+    with both alive). params reach: the longest line drawn (default
+    LOAN_REACH, neighbors only; a close-up can follow a pair apart)."""
+    reach = beat.params.get("reach", LOAN_REACH)
+    first, last = int(ctx.timing.tick_at(1)), min(int(ctx.timing.tick_at(beat.frames + 1)) + 1, d.ticks)
+    most = max((len(d.frames[k].loans) for k in range(first, last + 1)), default=0)
+    cu = bpy.data.curves.new("loanlines", "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = beat.params.get("line_width", 0.05)
+    for c in LEVEL_COLORS:
+        cu.materials.append(materials.fading(f"loan-{c}", c, 2.0))
+    splines = []
+    for _ in range(max(most, 1)):
+        s = cu.splines.new("POLY")
+        s.points.add(2)
+        splines.append(s)
+    obj = bpy.data.objects.new("loanlines", cu)
+    bpy.context.scene.collection.objects.link(obj)
+    flows = []
+    if beat.params.get("flows"):
+        gold = materials.gumdrop()
+        for k in range(max(first, 1), last + 1):
+            before = {_loan_key(l): l for l in d.frames[k - 1].loans}
+            now = {_loan_key(l): l for l in d.frames[k].loans}
+            alive = d.frames[k].agents
+            for key, l in now.items():
+                if key not in before and l.lender in ctx.tracks and l.borrower in ctx.tracks:
+                    flows.append((ctx.timing.frame(k), l.lender, l.borrower, ball(f"lend-{k}-{key}", 0.16, gold)))
+            for key, l in before.items():
+                if key not in now and l.due_tick == k - 1 and l.lender in alive and l.borrower in alive:
+                    flows.append((ctx.timing.frame(k), l.borrower, l.lender, ball(f"repay-{k}-{key}", 0.24, gold)))
+
+    def update(frame):
+        k = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
+        loans = d.frames[k].loans
+        level = credit.levels(loans)
+        used = 0
+        for l in loans:
+            if l.lender not in ctx.tracks or l.borrower not in ctx.tracks:
+                continue
+            a, b = flump_pose(ctx, d, l.lender, frame), flump_pose(ctx, d, l.borrower, frame)
+            if not (a.visible and b.visible) or math.hypot(a.x - b.x, a.y - b.y) > reach or used >= len(splines):
+                continue
+            s = splines[used]
+            mid = ((a.x + b.x) / 2, (a.y + b.y) / 2, max(a.z, b.z) + 1.3)
+            s.points.foreach_set("co", [a.x, a.y, a.z + 0.7, 1, *mid, 1, b.x, b.y, b.z + 0.7, 1])
+            s.material_index = min(level.get(l.lender, 1), len(LEVEL_COLORS)) - 1
+            used += 1
+        for s in splines[used:]:
+            s.points.foreach_set("co", [0, 0, -20, 1] * 3)
+        for start, src, dst, ball_obj in flows:
+            u = (frame - start) / LOAN_FLIGHT
+            if not 0 <= u <= 1:
+                flump.stow(ball_obj)
+                continue
+            p, q = flump_pose(ctx, d, src, frame), flump_pose(ctx, d, dst, frame)
+            e = animate.smoothstep(u)
+            ball_obj.location = (p.x + (q.x - p.x) * e, p.y + (q.y - p.y) * e,
+                                 p.z + 0.8 + (q.z - p.z) * e + 1.2 * math.sin(math.pi * u))
+            ball_obj.scale = (1, 1, 1)
 
     return update

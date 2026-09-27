@@ -64,6 +64,10 @@ pub struct Place {
     pub spice: Option<f64>,
     #[serde(default)]
     pub spice_metabolism: Option<u32>,
+    #[serde(default)]
+    pub age: Option<u32>,
+    #[serde(default)]
+    pub endowment: Option<f64>,
 }
 
 fn first_seed() -> u64 {
@@ -161,6 +165,15 @@ pub struct Frame {
     /// order they happened (absent when there were none).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub kills: Vec<(u64, u64, f64)>,
+    /// The loans outstanding after this tick under rule L as `[lender,
+    /// borrower, amount due, due tick]`, by loan id (absent when none). A
+    /// loan whose due tick is this frame's is settled in the next step.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub loans: Vec<(u64, u64, f64, u64)>,
+    /// The newcomers' fertile ages as `[id, onset, end]`, with sex on (absent
+    /// otherwise): lenders past childbearing, borrowers within it.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fertility: Vec<(u64, u32, u32)>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -248,6 +261,18 @@ fn frame(
             )
         })
         .unzip();
+    let loans = world
+        .loans()
+        .map(|l| (l.lender, l.borrower, l.due, l.due_tick))
+        .collect();
+    let fertility = if world.config.sex.enabled {
+        born.iter()
+            .filter_map(|&id| world.agent(id))
+            .map(|a| (a.id, a.fertility_onset, a.fertility_end))
+            .collect()
+    } else {
+        Vec::new()
+    };
     let two_goods = world.config.goods.len() > 1;
     let (spice, spice_agents) = if two_goods {
         (
@@ -268,6 +293,8 @@ fn frame(
         spice_agents,
         trades,
         kills,
+        loans,
+        fertility,
         agents,
         sugar: world.sites.iter().map(|s| s.resource[0]).collect(),
         pollution: world.sites.iter().map(|s| s.pollution[0]).collect(),
@@ -296,6 +323,8 @@ fn place(
             tribe: p.tribe,
             spice: p.spice,
             spice_metabolism: p.spice_metabolism,
+            age: p.age,
+            endowment: p.endowment,
         };
         let id = world
             .place_agent(p.x, p.y, &overrides)
@@ -507,6 +536,46 @@ mod tests {
             .unwrap()
             .iter()
             .all(|f| f.get("kills").is_none()));
+    }
+
+    #[test]
+    fn credit_frames_carry_outstanding_loans_and_fertile_ages() {
+        let d = run(r#"{"preset": "iv-5-credit", "ticks": 60, "seed": 1}"#);
+        let fertile: BTreeMap<u64, (u32, u32)> = d
+            .frames
+            .iter()
+            .flat_map(|f| f.fertility.iter().map(|&(id, on, end)| (id, (on, end))))
+            .collect();
+        for f in &d.frames {
+            for &(id, _) in f
+                .births
+                .iter()
+                .map(|b| (b.0, ()))
+                .collect::<Vec<_>>()
+                .iter()
+            {
+                assert!(fertile.contains_key(&id), "a newcomer without fertile ages");
+            }
+            let alive: BTreeSet<u64> = f.agents.iter().map(|a| a.0).collect();
+            for &(lender, borrower, due, due_tick) in &f.loans {
+                assert_ne!(lender, borrower);
+                assert!(alive.contains(&borrower), "a loan to the dead");
+                // Settled in the step after the frame whose tick is its due tick.
+                assert!(due > 0.0 && due_tick >= f.tick);
+            }
+        }
+        assert!(
+            d.frames.iter().any(|f| !f.loans.is_empty()),
+            "no loans in 60 ticks"
+        );
+        let (on, end) = fertile.values().next().unwrap();
+        assert!(on < end);
+        let json = serde_json::to_value(run(TINY)).unwrap();
+        assert!(json["frames"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|f| f.get("loans").is_none() && f.get("fertility").is_none()));
     }
 
     #[test]

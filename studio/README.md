@@ -9,7 +9,7 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/build.py seasons --beat 4    # one beat (1-based)
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
-Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`, `markets` and `war`.
+Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`, `markets`, `war` and `credit`.
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -60,7 +60,9 @@ banjo, tuba and clarinet, whose oom-pah walks between two notes as the Flumps wa
 hills, with a D-minor clarinet strain and a B♭ trio, and War's *Poseidon's Horn*, an original 5/4
 march in D minor on a triplet figure, building under a drone from timpani and snare to the full
 march, until its horn sting — a chord swelling across the brass patches, choir and organ — ducks
-the march beneath it on the last title (a tune's `ducks` sink it under a sting).
+the march beneath it on the last title (a tune's `ducks` sink it under a sting), and Credit's
+*Borrowed Time*, a 7/4 blues in E: a walking bass over coin percussion, then the band with tenor
+sax, and a ka-ching as the first loan is made.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to

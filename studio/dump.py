@@ -32,6 +32,8 @@ class Frame:
     spice_agents: dict = field(default_factory=dict)
     trades: list = field(default_factory=list)
     kills: list = field(default_factory=list)
+    loans: list = field(default_factory=list)
+    fertility: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -59,6 +61,17 @@ class Kill:
     attacker: int
     victim: int
     loot: float
+
+
+@dataclass(frozen=True)
+class Loan:
+    """A loan outstanding under rule L: `borrower` owes `lender` `due` at
+    `due_tick` (settled in the step after the frame of that tick)."""
+
+    lender: int
+    borrower: int
+    due: float
+    due_tick: int
 
 
 @dataclass(frozen=True)
@@ -117,6 +130,9 @@ def parse(text):
             spice_agents={row[0]: tuple(s) for row, s in zip(f["agents"], f.get("spice_agents", []))},
             trades=[Trade(*t) for t in f.get("trades", [])],
             kills=[Kill(*k) for k in f.get("kills", [])],
+            loans=[Loan(*l) for l in f.get("loans", [])],
+            # id → (fertility onset, end), for this frame's newcomers.
+            fertility={i: (on, end) for i, on, end in f.get("fertility", [])},
         )
         for f in raw["frames"]
     ]

@@ -1,0 +1,17 @@
+{
+  "medians": {
+    "births": 5335.0,
+    "births_off": 4465.5,
+    "borrower_age": 37.0,
+    "both_share": 0.12477106227106227,
+    "depth": 5.0,
+    "gini": 0.18001043397384153,
+    "gini_off": 0.16027726933697295,
+    "lender_age": 60.0,
+    "max_depth": 10.0,
+    "past": 0.6602004284194916,
+    "pop": 450.0,
+    "pop_off": 378.0
+  },
+  "seeds": 20
+}
