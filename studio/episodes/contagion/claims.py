@@ -30,38 +30,35 @@ def _sick(frame):
 
 
 def verdicts(rows):
-    """Each captioned claim, whether the 20 seeds support it, and why."""
+    """Each captioned claim, whether the 20 seeds support it, and why. Rule E
+    follows the book's note 16 (one immune flip per agent per tick) and its
+    worked example (a learned disease passed on through its tick); under the
+    engine's earlier reading, V-1 kept a residue and V-2 an endemic level."""
     n = len(rows)
-    lingers = _count(rows, lambda r: r["v1_end"] > 0)
-    more = _count(rows, lambda r: r["v2_late"] > r["v1_late"])
-    fewer = _count(rows, lambda r: r["plague_ratio"] < 1)
     wells = [r["v1_well_by"] for r in rows.values()]
-    quick = sum(w <= 15 for w in wells)
+    rid = _count(rows, lambda r: r["v1_end"] == 0)
+    cleared = _count(rows, lambda r: r["v2_late"] == 0)
+    lower = _count(rows, lambda r: r["ratio"] < 1)
+    fewer = _count(rows, lambda r: r["plague_ratio"] < 1)
     return [
         ("at the start, almost every Flump is sick", median(rows, "v1_start") >= 0.85,
          f"sick at tick 0: {median(rows, 'v1_start'):.0%} (median; {min(r['v1_start'] for r in rows.values()):.0%}–"
          f"{max(r['v1_start'] for r in rows.values()):.0%}); agents already immune to a disease are not given it"),
-        # Only 14 of 20 are well within 15 ticks and one takes 43, so the caption
-        # gives the bound every world meets.
-        ("within a few dozen ticks at most, nearly all are well", max(wells) <= 50,
-         f"fewer than 5% sick by tick {statistics.median(wells):g} (median; {min(wells)}–{max(wells)}); within 15 "
-         f"ticks in {quick} of {n}"),
-        ("the book says society rids itself of every disease; here a little always lingers, in 18 of 20 worlds",
-         lingers == 18,
-         f"still sick at tick {TICKS}: {median(rows, 'v1_end'):.1%} (median) and more than none in {lingers} of {n}"),
-        # More in 16 of 20, not all: the caption names the count.
-        ("give them more diseases than an immune system can hold, and more of it stays for good, in 16 of 20 worlds",
-         more == 16 and min(r["v2_late"] for r in rows.values()) > 0,
-         f"sick over ticks 500–{TICKS}: {median(rows, 'v2_late'):.1%} with 25 diseases against "
-         f"{median(rows, 'v1_late'):.1%} with 10; more in {more} of {n}"),
-        ("the book expects a plague; here it fizzles: about one Flump in twenty catches it",
-         0.03 <= median(rows, "reach") <= 0.08,
-         f"Flumps alive at tick {OUTBREAK} that catch the novel 10-bit disease by tick {PLAGUE_END}: "
-         f"{median(rows, 'reach'):.1%} (median; up to {max(r['reach'] for r in rows.values()):.0%}); population at "
-         f"{PLAGUE_END} against no outbreak: {median(rows, 'ratio'):.2f}, lower in "
-         f"{_count(rows, lambda r: r['ratio'] < 1)} of {n}"),
-        ("only a disease four times longer than any in the book sweeps through, and costs a fifth of the Flumps",
-         median(rows, "plague_reach") >= 0.9 and fewer == n and 0.75 <= median(rows, "plague_ratio") <= 0.85,
+        ("within a few ticks, nearly all are well", max(wells) <= 15,
+         f"fewer than 5% sick by tick {statistics.median(wells):g} (median; {min(wells)}–{max(wells)})"),
+        ("the book says society rids itself of every disease; it does, in 20 of 20 worlds", rid == n,
+         f"no sick Flump at tick {TICKS} in {rid} of {n}"),
+        ("give them more diseases than an immune system can hold: the book says disease stays; it clears here too, "
+         "in 20 of 20", cleared == n,
+         f"V-2 (25 diseases, 10 each): no sick Flump over ticks 500–{TICKS} in {cleared} of {n}"),
+        ("the book expects a plague; it spreads to about half the Flumps, and costs almost nothing",
+         0.4 <= median(rows, "reach") <= 0.7 and 0.97 <= median(rows, "ratio") <= 1.03 and 6 <= lower <= 14,
+         f"Flumps alive at tick {OUTBREAK} that catch the novel 10-bit disease from another Flump by tick {PLAGUE_END}: "
+         f"{median(rows, 'reach'):.0%} (median; {min(r['reach'] for r in rows.values()):.0%}–"
+         f"{max(r['reach'] for r in rows.values()):.0%}); population at {PLAGUE_END} against no outbreak: "
+         f"{median(rows, 'ratio'):.2f}, lower in {lower} of {n} (a coin flip)"),
+        ("only a disease four times longer than any in the book sweeps through, and costs about a quarter of the Flumps",
+         median(rows, "plague_reach") >= 0.9 and fewer == n and 0.7 <= median(rows, "plague_ratio") <= 0.8,
          f"a {LONG}-bit outbreak: {median(rows, 'plague_reach'):.0%} of the Flumps alive at tick 400 have caught it "
          f"(median); population at {PLAGUE_END} against no outbreak {median(rows, 'plague_ratio'):.2f}, lower in "
          f"{fewer} of {n}"),
@@ -76,9 +73,13 @@ def _outbreak(tmp, seed, length, name):
     if length != 10:
         spec["set"] = {"disease.outbreaks": [{"tick": OUTBREAK, "agents": 5, "length": {"min": length, "max": length}}]}
     d = m.shot(spec, tmp, name)
-    novel = {i.disease for f in d.frames[OUTBREAK - 1 : OUTBREAK + 2] for i in f.infections if i.infector is None}
-    caught = {i.infected for f in d.frames[OUTBREAK:] for i in f.infections if i.disease in novel}
-    at_outbreak, at_400 = set(d.frames[OUTBREAK].agents), set(d.frames[400].agents)
+    seeded = [i for f in d.frames[OUTBREAK - 1 : OUTBREAK + 2] for i in f.infections if i.infector is None]
+    novel, given = {i.disease for i in seeded}, {i.infected for i in seeded}
+    # Caught from another Flump: the outbreak's own recipients are left out
+    # of both the count and the population it's a share of.
+    caught = {i.infected for f in d.frames[OUTBREAK:] for i in f.infections
+              if i.disease in novel and i.infector is not None} - given
+    at_outbreak, at_400 = set(d.frames[OUTBREAK].agents) - given, set(d.frames[400].agents) - given
     result = (len(caught & at_outbreak) / len(at_outbreak), len(caught & at_400) / len(at_400),
               len(d.frames[PLAGUE_END].agents))
     (tmp / f"{name}.frames.json").unlink()

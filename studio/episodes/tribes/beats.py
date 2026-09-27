@@ -53,7 +53,10 @@ BEATS = [
          overlays=("alike",), params=TRIBE, camera=hold(WIDE_EYE, WIDE_AT, lens=36)),
     Beat("divided", "In this one, each hill kept its own.", 6.0, shot="divided", start_tick=3000,
          overlays=("alike",), params=TRIBE, camera=hold(WIDE_EYE, WIDE_AT, lens=36)),
-    Beat("half", "The book expects one tribe to win. In our runs, that happens half the time.", 8.0, shot="divided",
+    # The book (p. 74, note 22): each spatially separate subpopulation
+    # converges to pure Blue or pure Red on its own; its "typical" run ended
+    # all Blue. So half the time is what the book predicts, not a failure.
+    Beat("half", "Each hill settles on its own, as the book says.\nOne tribe takes both only half the time.", 8.0, shot="divided",
          start_tick=3000, overlays=("bars",),
          params={**TRIBE, "title": "in 20 worlds",
                  "rows": [[("one tribe takes the world", "one_tribe_seeds"), ("the hills split", "split_seeds")],

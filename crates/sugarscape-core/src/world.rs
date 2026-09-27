@@ -3,10 +3,11 @@
 use std::collections::BTreeMap;
 
 use rand::seq::SliceRandom;
+use rand::Rng;
 
 use crate::agent::{Agent, AgentId, DiseaseId, Tribe};
 use crate::bits::Bits;
-use crate::config::{Config, FieldError, Placement, MAX_GOODS};
+use crate::config::{Config, FieldError, FounderAges, Placement, MAX_GOODS};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
 use crate::rng::{self, SimRng};
@@ -225,6 +226,11 @@ impl World {
             let mut agent = Agent::random(&self.config, pos, self.tick, &mut self.rng);
             if let Some(t) = tribe {
                 agent.tags = agent.tags.forced_to(t);
+            }
+            // Drawn only when asked for, so newborn founders keep every
+            // earlier run's random stream.
+            if self.config.lifespan.founders == FounderAges::Random {
+                agent.age = self.rng.gen_range(0..agent.max_age.max(1));
             }
             rules::disease::endow(self, &mut agent);
             self.insert_agent(agent)
@@ -675,6 +681,17 @@ fn rect(x: u32, y: u32, width: u32, height: u32) -> Vec<Pos> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn founders_can_start_at_random_ages_without_moving_anyone_elses_draws() {
+        let mut c = crate::presets::by_id("iii-2-sex").unwrap().config;
+        let newborn = World::new(c.clone(), 3).unwrap();
+        assert!(newborn.agents().all(|a| a.age == 0));
+        c.lifespan.founders = FounderAges::Random;
+        let aged = World::new(c, 3).unwrap();
+        assert!(aged.agents().all(|a| a.age < a.max_age));
+        assert!(aged.agents().filter(|a| a.age > 20).count() > aged.population() / 2);
+    }
     use crate::config::{Config, Good, Placement};
 
     #[test]

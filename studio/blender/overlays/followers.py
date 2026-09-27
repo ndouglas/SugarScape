@@ -235,7 +235,7 @@ def rings_migrants(beat, d, ctx):
 def rings_shuttlers(beat, d, ctx):
     """Gold rings on the shuttlers: alive from tick 100 to 200 and changing
     hills at least twice in between (the claims' definition)."""
-    sides = markets.sides(d.capacity, d.spice_capacity)
+    sides = markets.sides(d.capacity, d.spice_capacity, markets.DEEP)
     return _rings("shuttlers", (1.0, 0.7, 0.1), markets.shuttlers(ctx.tracks, d.width, sides, 100, 200), d, ctx)
 
 

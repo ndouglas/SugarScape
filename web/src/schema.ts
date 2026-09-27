@@ -93,7 +93,17 @@ export const GROUPS: Group[] = [
   },
   {
     title: 'Lifespan', enable: 'lifespan.enabled',
-    controls: [{ kind: 'range', path: 'lifespan.max_age', label: 'Max age [a, b]', min: 1, max: 300 }],
+    controls: [
+      { kind: 'range', path: 'lifespan.max_age', label: 'Max age [a, b]', min: 1, max: 300 },
+      {
+        kind: 'select', path: 'lifespan.founders', label: 'Founders start', reset: true,
+        current: (c) => c.lifespan.founders ?? 'newborn',
+        options: [
+          { value: 'newborn', label: 'Newborn', apply: (c) => { c.lifespan.founders = 'newborn'; } },
+          { value: 'random', label: 'At random ages (the book\'s VI-2 figure)', apply: (c) => { c.lifespan.founders = 'random'; } },
+        ],
+      },
+    ],
   },
   { title: 'Replacement (R)', enable: 'replacement.enabled', note: 'Needs lifespan; excludes sex.', controls: [] },
   {
@@ -102,6 +112,16 @@ export const GROUPS: Group[] = [
       { kind: 'range', path: 'sex.fertility_onset', label: 'Fertility begins', min: 0, max: 100 },
       { kind: 'range', path: 'sex.female_end', label: 'Female fertility ends', min: 0, max: 150 },
       { kind: 'range', path: 'sex.male_end', label: 'Male fertility ends', min: 0, max: 150 },
+      {
+        kind: 'select', path: 'sex.fertile_wealth', label: 'Wealth to have children (two goods)',
+        current: (c) => c.sex.fertile_wealth ?? 'each_good',
+        options: [
+          { value: 'each_good', label: 'Its endowment of each good', apply: (c) => { c.sex.fertile_wealth = 'each_good'; } },
+          { value: 'total', label: 'Its endowment in total', apply: (c) => { c.sex.fertile_wealth = 'total'; } },
+          { value: 'welfare', label: 'The welfare of its endowment', apply: (c) => { c.sex.fertile_wealth = 'welfare'; } },
+          { value: 'sugar', label: 'Its sugar endowment alone', apply: (c) => { c.sex.fertile_wealth = 'sugar'; } },
+        ],
+      },
     ],
   },
   { title: 'Inheritance (I)', enable: 'inheritance.enabled', controls: [] },
@@ -196,6 +216,22 @@ export const GROUPS: Group[] = [
       { kind: 'number', path: 'disease.initial', label: 'Diseases per new agent', min: 0, max: 100, step: 1 },
       { kind: 'number', path: 'disease.fee', label: 'Metabolism per disease', min: 0, max: 5, step: 0.5 },
       { kind: 'number', path: 'disease.flips_per_tick', label: 'Immune flips per tick (medicine)', min: 1, max: 10, step: 1 },
+      {
+        kind: 'select', path: 'disease.learning', label: 'Immune learning',
+        current: (c) => c.disease.learning,
+        options: [
+          { value: 'per_agent', label: 'Flips per agent (note 16, book)', apply: (c) => { c.disease.learning = 'per_agent'; } },
+          { value: 'per_disease', label: 'Flips per carried disease', apply: (c) => { c.disease.learning = 'per_disease'; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'disease.cure', label: 'A learned disease is dropped',
+        current: (c) => c.disease.cure,
+        options: [
+          { value: 'next_tick', label: 'Next tick, passed on meanwhile (book)', apply: (c) => { c.disease.cure = 'next_tick'; } },
+          { value: 'immediate', label: 'At once', apply: (c) => { c.disease.cure = 'immediate'; } },
+        ],
+      },
       { kind: 'number', path: 'disease.genome_mutation', label: 'Genome mutation rate', min: 0, max: 0.1, step: 0.001 },
       { kind: 'number', path: 'disease.disease_mutation', label: 'Disease mutation rate', min: 0, max: 1, step: 0.01 },
     ],

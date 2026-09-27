@@ -419,3 +419,85 @@ def sick(beat, d, ctx):
         line.data.body = f"sick: {ill} of {len(f.agents)} ({ill / max(len(f.agents), 1):.0%})"
 
     return update
+
+
+POP_TOP = 1200  # the chart's ceiling: past the book's doubling of 500
+
+
+def popchart(beat, d, ctx):
+    """Right: this run's population and the compare run's, drawn up to the
+    tick shown, over the whole run's width, with a line at the book's
+    doubling (1000). params: `labels` (this run's, the compare run's).
+    (No "crash" line: both runs dip below any such line early and recover,
+    and a viewer would read the dip as the book's crash.)"""
+    here, there = beat.params.get("labels", ("this run", "the other"))
+    anchor = ctx.screen.anchor("popchart", 0.52, -0.02)
+    card("popchart-card", anchor, (0, 0, -0.01), (0.9, 0.8, 0.002))
+    ink = materials.fading("popchart-ink", CREAM, 1.6)
+    text("popchart-title", "Flumps alive", 0.045, ink, anchor, location=(0, 0.34, 0))
+    width, height, left, bottom = 0.74, 0.54, -0.37, -0.28
+
+    def at(k, pop):
+        return left + width * k / max(d.ticks, 1), bottom + height * min(pop, POP_TOP) / POP_TOP
+
+    for level, label in ((1000, "the book's doubling"),):
+        _, y = at(0, level)
+        box(f"popchart-ref-{level}", materials.fading(f"popchart-ref-{level}", CREAM, 0.5), anchor,
+            location=(0, y, -0.004), scale=(width, 0.003, 0.002))
+        text(f"popchart-ref-{level}-label", label, 0.026, ink, anchor, location=(left + width, y + 0.018, 0),
+             align="RIGHT")
+    series = [(d.stats["population"], "teal", here, 0), (ctx.compare.stats["population"], "coral", there, 1)]
+    lines = []
+    for pop, color, label, i in series:
+        line, spline = _polyline(f"popchart-{i}", anchor, pop, materials.fading(f"popchart-{color}", materials.YARN[color], 2.5))
+        text(f"popchart-label-{i}", label, 0.032, materials.fading(f"popchart-label-{i}", materials.YARN[color], 2.5),
+             anchor, location=(left + 0.02, 0.27 - 0.045 * i, 0), align="LEFT")
+        lines.append((pop, line, spline))
+
+    def update(frame):
+        now = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
+        for pop, line, spline in lines:
+            points = []
+            for k in range(len(pop)):
+                x, y = at(min(k, now), pop[min(k, now)])
+                points += [x, y, 0, 1]
+            spline.points.foreach_set("co", points)
+            line.location.z = 0.002
+
+    return update
+
+
+LEDGER_ROWS = 8
+
+
+def ledger(beat, d, ctx):
+    """Center: the book's claims against what we measured, a row at a time
+    across the beat. params rows: (the book, here) pairs; `here` may name
+    measured medians as {key} or {key:format}, filled from measurements.json.
+    params heads: the two columns' headings (default the book / here)."""
+    rows = beat.params["rows"][:LEDGER_ROWS]
+    medians = ctx.measured.get("medians", {})
+    anchor = ctx.screen.anchor("ledger", 0.0, 0.08)
+    height = 0.2 + 0.1 * len(rows)
+    card("ledger-card", anchor, (0, 0, -0.01), (1.6, height, 0.002))
+    ink = materials.fading("ledger-ink", CREAM, 1.6)
+    coral = materials.fading("ledger-book", materials.YARN["coral"], 2.5)
+    teal = materials.fading("ledger-here", materials.YARN["teal"], 2.5)
+    book_head, here_head = beat.params.get("heads", ("the book", "here, over 20 worlds"))
+    text("ledger-book-head", book_head, 0.04, coral, anchor, location=(-0.36, height / 2 - 0.07, 0))
+    text("ledger-here-head", here_head, 0.04, teal, anchor, location=(0.4, height / 2 - 0.07, 0))
+    shown = []
+    for i, (book, here) in enumerate(rows):
+        y = height / 2 - 0.17 - 0.1 * i
+        a = text(f"ledger-{i}-book", book, 0.034, ink, anchor, location=(-0.36, y, 0))
+        b = text(f"ledger-{i}-here", here.format(**medians), 0.034, ink, anchor, location=(0.4, y, 0))
+        shown.append((a, b))
+
+    def update(frame):
+        # Each row appears in turn over the first 80 % of the beat.
+        visible = int(len(rows) * min(frame / (0.8 * beat.frames), 1.0) + 0.999)
+        for i, (a, b) in enumerate(shown):
+            s = 1.0 if i < visible else 1e-4
+            a.scale = b.scale = (s, s, s)
+
+    return update

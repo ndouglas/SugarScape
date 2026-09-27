@@ -5,17 +5,21 @@ Flumps turn sickly green while they carry a disease; infection lines are the
 book's transmission network (Animation V-3).
 
 What each shot does (from its dump; see measurements.md for the world beats):
+Rule E follows the book: one immune flip per agent per tick (note 16), and a
+disease learned this tick still passed on this tick (the worked example).
+
 ward — an 8 × 8 flat board: seven neighbors, each carrying 1–3 diseases. In
-  tick 1 diseases pass all round the cluster (six infections); by tick 4 all
-  are well but one, a carrier with 2 diseases that stays sick through tick 14
-  and re-infects its neighbors at ticks 3, 5, 9 and 10.
-rid — v-1-rid, seed 17 (typical of 20): 87% sick at tick 0, 6% by tick 4,
-  about 1.4% for good.
-endemic — v-2-endemic, seed 17: 25 diseases, 10 each.
+  ticks 1–3 diseases pass round the cluster (seven infections); every one of
+  them is well by tick 6.
+rid — v-1-rid, seed 17 (typical of 20): 87% sick at tick 0, 2% by tick 8,
+  none from tick 12 on.
+endemic — v-2-endemic, seed 17: 25 diseases, 10 each; everyone sick at tick
+  0, none from tick 15 on.
 stranger — v-mcneill, seed 18 (typical of 20): no one sick by tick 299; the
-  novel 10-bit disease given to 5 at tick 300 peaks at 2.1% and is gone by 305.
-plague — the same seed with a 40-bit novel disease (our experiment): 49% sick
-  by tick 305, 91% by 310.
+  novel 10-bit disease given to 5 at tick 300 peaks at 22% at tick 302 and is
+  gone by 310.
+plague — the same seed with a 40-bit novel disease (our experiment): 53% sick
+  by tick 305, 94% by 310.
 """
 
 from camera import Move
@@ -46,22 +50,22 @@ BEATS = [
     Beat("start", "At the start, almost every Flump is sick.", 5.0, shot="rid", ticks_per_second=0.2, lead_in=0.6,
          overlays=("sick",), params=WIDE,
          camera=(Move(0, 5, (0, -38, 22), (0, 0, 0), WIDE_EYE, WIDE_AT, orbit=0.2),)),
-    Beat("well", "Within a few dozen ticks at most, nearly all are well.", 6.5, shot="rid", ticks_per_second=6,
+    Beat("well", "Within a few ticks, nearly all are well.", 6.5, shot="rid", ticks_per_second=6,
          start_tick=1, overlays=("sick", "infections"), params=WIDE, camera=hold(WIDE_EYE, WIDE_AT, lens=36)),
-    Beat("linger", "The book says society rids itself of every disease.\nHere a little always lingers, in 18 of 20 worlds.",
+    Beat("linger", "The book says society rids itself of every disease.\nIt does, in 20 of 20 worlds.",
          7.0, shot="rid", ticks_per_second=150, start_tick=40, overlays=("sick",), params=WIDE,
          camera=hold(WIDE_EYE, WIDE_AT, lens=37, drift=(0, 3, -1.5))),
-    Beat("endemic", "Give them more diseases than an immune system can hold,\nand more of it stays for good, in 16 of 20 worlds.",
-         7.5, shot="endemic", ticks_per_second=140, lead_in=0.3, overlays=("sick",), params=WIDE,
+    Beat("endemic", "More diseases than an immune system can hold: the book says disease stays.\nIt clears here too, in 20 of 20.",
+         7.5, shot="endemic", ticks_per_second=2.5, lead_in=0.3, overlays=("sick", "infections"), params=WIDE,
          camera=(Move(0, 7.5, WIDE_EYE, WIDE_AT, (4, -52, 30), WIDE_AT, orbit=0.2),)),
     Beat("stranger", "Now a healthy society meets a disease it has never seen.", 5.5, shot="stranger",
          ticks_per_second=3, start_tick=292, overlays=("sick", "infections"), params=WIDE,
          camera=hold((0, -44, 26), (0, 0, 0), lens=38)),
-    Beat("fizzle", "The book expects a plague. Here it fizzles:\nabout one Flump in twenty catches it.", 7.0,
+    Beat("fizzle", "The book expects a plague. It spreads to about half the Flumps,\nand costs almost nothing.", 7.0,
          shot="stranger", ticks_per_second=2.5, start_tick=299, overlays=("sick", "infections"), params=WIDE,
          camera=hold((0, -44, 26), (0, 0, 0), lens=40)),
     Beat("plague", "Only a disease four times longer than any in the book sweeps through,\n"
-         "and costs a fifth of the Flumps. (Our experiment, not the book's.)", 9.0, shot="plague",
+         "and costs about a quarter of the Flumps. (Our experiment, not the book's.)", 9.0, shot="plague",
          ticks_per_second=3, start_tick=298, overlays=("sick", "infections"), params=WIDE,
          camera=(Move(0, 9, (0, -44, 26), (0, 0, 0), (0, -58, 32), WIDE_AT, orbit=0.15),)),
     Beat("question", "A plague needs something\nthis world has never known.", 6.0, shot="plague", start_tick=500,

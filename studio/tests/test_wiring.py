@@ -6,6 +6,7 @@ mid-render, or (the cue) never."""
 import ast
 import json
 import pathlib
+import string
 import unittest
 
 import episode
@@ -82,6 +83,13 @@ class WiringTest(unittest.TestCase):
                 with self.subTest(episode=name, beat=b.name):
                     self.assertTrue(path.exists(), "the panel needs measurements.json (run measure.py)")
                     rows = b.params.get("rows", [])
+                    if "ledger" in b.overlays:
+                        # (the book, here) rows; here's {key} placeholders name medians.
+                        for book, here in rows:
+                            for _, key, _, _ in string.Formatter().parse(here):
+                                if key:
+                                    self.assertIn(key, medians, book)
+                        continue
                     for group in rows:
                         for label, key in group:
                             self.assertIn(key, medians, label)

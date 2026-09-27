@@ -1,7 +1,9 @@
 //! Properties that must hold after every tick for any rule combination.
 
 use proptest::prelude::*;
-use sugarscape_core::config::{Config, Good, Map, Outbreak, Pollutant, Transform, URange};
+use sugarscape_core::config::{
+    Config, DiseaseCure, Good, Map, Outbreak, Pollutant, Transform, URange,
+};
 use sugarscape_core::world::World;
 
 // The brief's `prop_map` builds `Config` by assigning fields one at a time
@@ -174,8 +176,10 @@ fn check(world: &World) -> Result<(), TestCaseError> {
             let Some(disease) = world.diseases.get(id as usize) else {
                 return Err(TestCaseError::fail(format!("invalid disease id {id}")));
             };
+            // With the book's timing (cure: next_tick) a disease learned this
+            // tick is carried until the agent's next turn, by design.
             prop_assert!(
-                !a.immune.contains(disease),
+                world.config.disease.cure == DiseaseCure::NextTick || !a.immune.contains(disease),
                 "agent {} carries disease {} it is immune to",
                 a.id,
                 id

@@ -6,8 +6,8 @@ Ideas beyond the current milestone, roughly in order of how much they add. Each 
 
 Immune and disease bit strings, immune response and transmission (E), metabolic symptoms,
 immune-genome inheritance, disease mutation, outbreaks, Infect/Vaccinate tools, a disease
-network overlay and the book's presets (V-1 near-eradication, V-2 endemic, the McNeill
-outbreak), plus `vi-1-everything`. See
+network overlay and the book's presets (V-1 eradication, V-2, which clears rather than
+staying endemic under footnote 16's reading, and the McNeill outbreak), plus `vi-1-everything`. See
 `docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md`.
 
 ## Milestone 4: N goods (done)

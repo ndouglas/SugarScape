@@ -253,7 +253,7 @@ impl World {
             metabolism: a.metabolism[..n].to_vec(),
             age: a.age,
             max_age: a.max_age,
-            fertile: a.is_fertile(),
+            fertile: a.is_fertile(self.config.sex.fertile_wealth, self.config.goods.len()),
             fertility_onset: a.fertility_onset,
             fertility_end: a.fertility_end,
             born: a.born,

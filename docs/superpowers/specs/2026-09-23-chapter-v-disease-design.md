@@ -76,8 +76,8 @@ New block `disease` (all defaults from the book's Animation V-1):
 
 | id | Rules | Parameters |
 |---|---|---|
-| `v-1-rid` | ({G₁}, {M, E}) | Chapter II agents; disease on: 10 diseases, lengths 1–10, 4 per agent, immune length 50 (Animation V-1: the immune response drives near-eradication — a residue of ~1–3% persists because learning one disease can overwrite the window that cured another) |
-| `v-2-endemic` | ({G₁}, {M, E}) | as `v-1-rid` with 25 diseases, 10 per agent (Animation V-2: endemic disease) |
+| `v-1-rid` | ({G₁}, {M, E}) | Chapter II agents; disease on: 10 diseases, lengths 1–10, 4 per agent, immune length 50 (Animation V-1: society rids itself of every disease, as the book says — since 2026-09-27; see the note below) |
+| `v-2-endemic` | ({G₁}, {M, E}) | as `v-1-rid` with 25 diseases, 10 per agent (Animation V-2: the book's endemic level; under note 16 it clears too — see the note below) |
 | `v-mcneill` | ({G₁}, {M, S, E}) + outbreak | `v-1-rid` disease setup with Chapter III demography; outbreak at t = 300 infecting 5 agents with a forced 10-bit `length` so the novel disease reliably takes hold rather than sometimes already being a substring of existing immune strings by chance |
 | `vi-1-everything` | ({G₁}, {M, S, I, K, T, L, E}) | spice, sex, lifespan, inheritance, culture, trade, credit and disease together; endowments measured during implementation so the population survives (recorded, as with `iv-18-foresight`) |
 
@@ -86,5 +86,17 @@ New block `disease` (all defaults from the book's Animation V-1):
 - **Golden:** Chapter IV presets added to `tests/golden.rs` before the first core change; all golden entries must stay green.
 - **Unit:** the book's worked example (immune `1011101001`, disease `10011` → learned in one tick, immune becomes `1001101001`); cure on substring; leftmost window on ties; `flips_per_tick > 1`; transmission skips immune/already-infected neighbors and records the network; effective metabolism with fee; genome crossover and mutation; disease mutation appends distinct variants; outbreak at its tick; infect and vaccinate edits.
 - **Property:** with disease on, no agent carries a disease that is a substring of its `immune`, and no duplicates; disease ids are valid indices.
-- **Book reproductions (`#[ignore]`, release, measured values in comments):** `v-1-rid` falls to near-zero infected (not exactly zero — see Presets); `v-2-endemic` still has infected agents at t = 1000; `v-mcneill` transmissions (agent-to-agent spread, excluding the outbreak's own seeding) rise after the t = 300 outbreak.
+- **Book reproductions (`#[ignore]`, release, measured values in comments):** `v-1-rid` reaches exactly zero infected; `v-2-endemic` clears too (the book's endemic level does not reproduce under note 16); `v-mcneill` transmissions (agent-to-agent spread, excluding the outbreak's own seeding) rise after the t = 300 outbreak.
 - **Browser:** the controller checks the new group, color mode, overlay, tools, charts, inspector and presets with the puppeteer harness.
+
+## Note (2026-09-27): one immune flip per agent
+
+An independent review against the book found that this design flipped one immune bit *for each
+carried disease* each tick, while the book's note 16 says "Unmedicated agents are allowed to flip one
+immune bit per cycle", and dropped a learned disease before the agent could pass it on, while the
+worked example says the agent can still pass it on during the tick it learns it. Both are now named
+switches whose defaults follow the book (`disease.learning`: `per_agent` | `per_disease`;
+`disease.cure`: `next_tick` | `immediate`). Under the book's readings V-1 reaches exactly zero (the
+book's claim reproduces) and V-2 clears too (the book's endemic level does not reproduce). The
+earlier readings leave agents stuck for good between two diseases whose flips undo each other, which
+was the "residue" this design attributed to overwritten windows.

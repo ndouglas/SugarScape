@@ -612,9 +612,15 @@ mod tests {
         let d = run(r#"{"preset": "v-1-rid", "ticks": 10, "seed": 1}"#);
         for f in &d.frames {
             assert_eq!(f.diseases.len(), f.agents.len());
-            let alive: BTreeSet<u64> = f.agents.iter().map(|a| a.0).collect();
+            // An agent infected this tick may still die later in it.
+            let seen: BTreeSet<u64> = f
+                .agents
+                .iter()
+                .map(|a| a.0)
+                .chain(f.deaths.iter().map(|d| d.0))
+                .collect();
             for &(infector, infected, _) in &f.infections {
-                assert!(alive.contains(&infected));
+                assert!(seen.contains(&infected));
                 assert_ne!(infector, Some(infected));
             }
         }

@@ -22,6 +22,15 @@ class SideTest(unittest.TestCase):
         self.assertEqual(sides, ["sugar", "spice"])
         self.assertEqual(markets.sides([2.0], [2.0]), [None])
 
+    def test_the_seam_between_the_hills_belongs_to_neither(self):
+        # 2/1 beside 1/2 is the seam; 4/0 and 0/4 are deep in each hill.
+        sugar, spice = [4, 2, 1, 0], [0, 1, 2, 4]
+        self.assertEqual(markets.sides(sugar, spice), ["sugar", "sugar", "spice", "spice"])
+        self.assertEqual(markets.sides(sugar, spice, markets.DEEP), ["sugar", None, None, "spice"])
+        # Stepping back and forth across the seam isn't a walk between hills.
+        self.assertEqual(markets.crossings([1, 2, 1, 2], markets.sides(sugar, spice, markets.DEEP)), 0)
+        self.assertEqual(markets.crossings([0, 1, 2, 3, 2, 1, 0], markets.sides(sugar, spice, markets.DEEP)), 2)
+
     def test_crossings_count_changes_of_side_ignoring_the_middle(self):
         sides = ["sugar", None, "spice"]
         # Sugar, middle, spice, middle, sugar: two crossings.

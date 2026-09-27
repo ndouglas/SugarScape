@@ -250,11 +250,26 @@ pub struct Diffusion {
     pub every: u32,
 }
 
-/// Death from old age; `max_age` is also R_[a,b]'s [a, b].
+/// Death from old age; `max_age` is also R_[a,b]'s [a, b]. `founders`: how
+/// old the initial population starts (the book doesn't say; its Animation
+/// VI-2 shows births at t = 1, so its founders there were not all newborn).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Lifespan {
     pub enabled: bool,
     pub max_age: URange,
+    #[serde(default)]
+    pub founders: FounderAges,
+}
+
+/// The initial population's ages.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FounderAges {
+    /// Every founder is born at t = 0 (the engine's reading).
+    #[default]
+    Newborn,
+    /// Each founder's age is drawn uniformly from [0, its maximum age).
+    Random,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -438,6 +453,24 @@ pub struct SexRule {
     pub fertility_onset: URange,
     pub female_end: URange,
     pub male_end: URange,
+    #[serde(default)]
+    pub fertile_wealth: FertileWealth,
+}
+
+/// Rule S's wealth test ("at least as much sugar as it was born with", a
+/// one-good rule) read over several goods; the book doesn't say.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FertileWealth {
+    /// At least its birth endowment of every good (the engine's reading).
+    #[default]
+    EachGood,
+    /// At least its birth endowment in total, summing the goods.
+    Total,
+    /// At least the welfare its birth endowment gave it.
+    Welfare,
+    /// At least its birth endowment of sugar (good 0) alone.
+    Sugar,
 }
 
 impl SexRule {
@@ -488,6 +521,35 @@ pub struct Outbreak {
     pub length: Option<URange>,
 }
 
+/// How many immune bits an agent flips each tick. The book's note 16:
+/// "Unmedicated agents are allowed to flip one immune bit per cycle".
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ImmuneLearning {
+    /// Note 16: `flips_per_tick` flips per agent, toward its oldest carried
+    /// disease it hasn't learned.
+    #[default]
+    PerAgent,
+    /// `flips_per_tick` flips for each carried disease, in turn (the
+    /// engine's earlier reading of Appendix B). Two diseases can then undo
+    /// each other's flips, leaving an agent sick for good.
+    PerDisease,
+}
+
+/// When a disease the immune string has learned is dropped.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DiseaseCure {
+    /// The book's worked example: learned this tick, the disease still
+    /// costs its fee and is passed on this tick, and is gone at the start of
+    /// the agent's next turn.
+    #[default]
+    NextTick,
+    /// Dropped as soon as it is learned, before the agent passes anything on
+    /// (the engine's earlier reading).
+    Immediate,
+}
+
 /// Rule E (Chapter V, Appendix B): immune response and disease transmission.
 /// The defaults are Animation V-1's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -504,8 +566,11 @@ pub struct DiseaseRule {
     pub immune_length: u32,
     /// Extra metabolism of each good per carried disease.
     pub fee: f64,
-    /// Immune bits flipped per carried disease per tick ("medicine").
+    /// Immune bits flipped per tick ("medicine"), per agent or per carried
+    /// disease as `learning` says.
     pub flips_per_tick: u32,
+    pub learning: ImmuneLearning,
+    pub cure: DiseaseCure,
     /// Per-bit mutation probability of a child's immune genome.
     pub genome_mutation: f64,
     /// Probability that a transmitted disease mutates one random bit.
@@ -534,6 +599,8 @@ impl Default for DiseaseRule {
             immune_length: 50,
             fee: 1.0,
             flips_per_tick: 1,
+            learning: ImmuneLearning::PerAgent,
+            cure: DiseaseCure::NextTick,
             genome_mutation: 0.0,
             disease_mutation: 0.0,
             outbreaks: Vec::new(),
@@ -679,6 +746,7 @@ impl Default for Config {
             lifespan: Lifespan {
                 enabled: false,
                 max_age: URange::new(60, 100),
+                founders: FounderAges::Newborn,
             },
             replacement: Toggle { enabled: false },
             sex: SexRule {
@@ -686,6 +754,7 @@ impl Default for Config {
                 fertility_onset: URange::new(12, 15),
                 female_end: URange::new(40, 50),
                 male_end: URange::new(50, 60),
+                fertile_wealth: FertileWealth::EachGood,
             },
             inheritance: Toggle { enabled: false },
             culture: CultureRule {

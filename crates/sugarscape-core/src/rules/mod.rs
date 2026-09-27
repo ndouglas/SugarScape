@@ -13,7 +13,7 @@ pub mod sex;
 pub mod trade;
 
 use crate::agent::AgentId;
-use crate::config::MAX_GOODS;
+use crate::config::{DiseaseCure, MAX_GOODS};
 use crate::world::World;
 
 /// Resources an agent collected from its site this turn.
@@ -36,6 +36,11 @@ impl Harvest {
 /// (if still alive) mate with each neighbor, spread culture to them, trade,
 /// borrow, and (rule E) train its immune system and pass on disease.
 pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
+    // The book's worked example: a disease learned last turn is gone now,
+    // before it can cost another fee or be passed on again.
+    if world.config.disease.enabled && world.config.disease.cure == DiseaseCure::NextTick {
+        disease::cure_immune(world, id);
+    }
     let harvest = if world.config.combat.enabled {
         combat::act(world, id)
     } else {

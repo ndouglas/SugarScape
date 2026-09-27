@@ -70,7 +70,7 @@ pub const TITLES: [(&str, &str); 223] = [
     ),
     (
         "iv-15-trade-sex",
-        "Trade across generations: prices never settle, and spread wider over time",
+        "Trade across generations: prices never settle, and most societies die out",
     ),
     (
         "iv-3-pollution",
@@ -86,11 +86,11 @@ pub const TITLES: [(&str, &str); 223] = [
     ),
     (
         "v-1-rid",
-        "Immune systems learn their diseases and nearly wipe them out",
+        "Immune systems learn their diseases and wipe them out",
     ),
     (
         "v-2-endemic",
-        "Too many diseases to remember: sickness never goes away",
+        "Too many diseases to remember, yet sickness clears: the book expected it to stay",
     ),
     (
         "v-mcneill",

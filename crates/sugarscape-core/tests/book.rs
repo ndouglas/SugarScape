@@ -165,31 +165,16 @@ fn foresight_evolves_to_a_modest_nonzero_level() {
 #[test]
 #[ignore]
 fn immune_learning_rids_the_society_of_disease() {
-    // Animation V-1: with 10 short diseases and 50-bit immune strings, the
-    // immune response quickly drives the population from near-saturation
-    // down to a small residual sick share.
+    // Animation V-1: with 10 short diseases and 50-bit immune strings, "society
+    // is able to rid itself of all diseases". Under the book's note 16 (one
+    // immune bit flipped per agent per tick) and its worked example's timing
+    // (a disease learned this tick is still passed on this tick), it does:
+    // seeds 1..=3 are disease-free by ticks 15, 9 and 13 and stay so.
     //
-    // Observed (seeds 1..=3, no births/deaths other than starvation, so the
-    // population itself settles near Chapter II's ~224 carrying capacity):
-    // f[0] = 0.9475, 0.8975, 0.8850; f[1000] = 0.0300, 0.0090, 0.0142.
-    //
-    // Exact eradication (the fraction reaching `0.0` and staying there) does
-    // not hold: run to 5000 ticks instead of 1000, the fraction never once
-    // touches 0.0 for any of the three seeds (minimum over t in 500..=5000
-    // is 0.0090-0.0303 depending on seed) -- it settles into a low, stable
-    // endemic churn rather than eradication. A minimal unit case confirms
-    // why this is correct behavior, not a bug: training the immune string
-    // toward one disease can flip a bit inside the window that currently
-    // satisfies a *different*, already-cured disease, un-curing it
-    // (Appendix B's algorithm has no per-disease "memory" of a fixed window
-    // -- `closest_window` is recomputed fresh each call). With 10 diseases
-    // averaging 5.5 bits packed into a 50-bit string, some interference of
-    // this kind is unavoidable; it is the same mechanism the book credits
-    // for V-2's *stronger* endemic persistence with 25 diseases, just
-    // weaker here. So the assertions below keep the book's real claim --
-    // the immune response controls the outbreak, driving infection down by
-    // roughly two orders of magnitude -- without demanding literal,
-    // permanent eradication.
+    // The engine's earlier reading, a flip for each carried disease
+    // (learning: per_disease, cure: immediate), leaves a residue instead
+    // (f[1000] = 0.0300, 0.0090, 0.0142 for seeds 1..=3): learning one disease
+    // can flip back a bit another needs, so an agent can stay sick for good.
     let config = presets::by_id("v-1-rid").unwrap().config;
     for seed in 1..=3 {
         let w = run(config.clone(), seed, 1000);
@@ -199,50 +184,62 @@ fn immune_learning_rids_the_society_of_disease() {
             "seed {seed}: starting share {} not saturated",
             f[0]
         );
-        assert!(
-            f[1000] < 0.05,
+        assert_eq!(
+            f[1000], 0.0,
             "seed {seed}: still {} infected at t=1000",
             f[1000]
         );
     }
+    let mut per_disease = config.clone();
+    per_disease.disease.learning = sugarscape_core::config::ImmuneLearning::PerDisease;
+    per_disease.disease.cure = sugarscape_core::config::DiseaseCure::Immediate;
+    let w = run(per_disease, 1, 1000);
+    assert!(
+        w.stats.latest().unwrap().infected_fraction > 0.0,
+        "the earlier reading's residue"
+    );
 }
 
 #[test]
 #[ignore]
-fn many_diseases_stay_endemic() {
-    // Animation V-2: 25 diseases, 10 per agent — learning one immunity
-    // disturbs others, so the society cannot rid itself of disease. That
-    // alone doesn't distinguish V-2 from V-1 (V-1's residual churn also
-    // keeps `share > 0.0` at t=1000), so this test also compares directly
-    // against V-1: V-2's mean `infected_fraction` over t in 500..=1000
-    // should exceed V-1's for the same seed.
-    //
-    // Observed per-seed means over t in 500..=1000 (seeds 1..=3):
-    //   seed 1: v1 = 0.022902, v2 = 0.045334 (v2/v1 = 1.98)
-    //   seed 2: v1 = 0.010603, v2 = 0.042674 (v2/v1 = 4.02)
-    //   seed 3: v1 = 0.017767, v2 = 0.078412 (v2/v1 = 4.41)
-    // Mean-of-means: v1 = 0.017091, v2 = 0.055473, a ratio of ~3.2x.
-    //
-    // The contrast is real but noisy. Over seeds 1..=10, V-2 exceeds V-1 in
-    // 8 of 10: V-1 reaches exactly zero for seeds 4 and 7, but seeds 5
-    // (v1 0.0338 vs v2 0.0330) and 10 (v1 0.1173 vs v2 0.0186) invert.
-    // Seeds 1..=3 are the book-test seeds used throughout this file.
+fn many_diseases_clear_too_under_note_16() {
+    // Animation V-2: 25 diseases, 10 per agent. The book reports that
+    // "society is unable to rid itself of disease" and "an endemic level of
+    // infection is sustained". Under note 16 it does rid itself: seeds 1..=3
+    // are disease-free by ticks 18, 19 and 18. Only the engine's earlier
+    // reading (a flip per carried disease) keeps it endemic, from agents stuck
+    // between diseases whose flips undo each other; its means over t in
+    // 500..=1000 for seeds 1..=3 are 0.045334, 0.042674 and 0.078412, above
+    // V-1's 0.022902, 0.010603 and 0.017767 under the same reading.
     let v1 = presets::by_id("v-1-rid").unwrap().config;
     let v2 = presets::by_id("v-2-endemic").unwrap().config;
+    let per_disease = |mut c: Config| {
+        c.disease.learning = sugarscape_core::config::ImmuneLearning::PerDisease;
+        c.disease.cure = sugarscape_core::config::DiseaseCure::Immediate;
+        c
+    };
+    let mean = |w: &World| {
+        let f = w.stats.series("infected_fraction").unwrap();
+        f[500..=1000].iter().sum::<f64>() / f[500..=1000].len() as f64
+    };
     for seed in 1..=3 {
-        let w1 = run(v1.clone(), seed, 1000);
-        let f1 = w1.stats.series("infected_fraction").unwrap();
-        let mean1 = f1[500..=1000].iter().sum::<f64>() / f1[500..=1000].len() as f64;
-
-        let w2 = run(v2.clone(), seed, 1000);
-        let f2 = w2.stats.series("infected_fraction").unwrap();
-        let mean2 = f2[500..=1000].iter().sum::<f64>() / f2[500..=1000].len() as f64;
-
-        let share = w2.stats.latest().unwrap().infected_fraction;
-        assert!(share > 0.0, "seed {seed}: disease died out");
+        let w = run(v2.clone(), seed, 1000);
+        assert_eq!(
+            w.stats.latest().unwrap().infected_fraction,
+            0.0,
+            "seed {seed}: V-2 did not clear"
+        );
+        let (w1, w2) = (
+            run(per_disease(v1.clone()), seed, 1000),
+            run(per_disease(v2.clone()), seed, 1000),
+        );
         assert!(
-            mean2 > mean1,
-            "seed {seed}: v2 mean {mean2} does not exceed v1 mean {mean1}"
+            w2.stats.latest().unwrap().infected_fraction > 0.0,
+            "seed {seed}: no endemic level per disease"
+        );
+        assert!(
+            mean(&w2) > mean(&w1),
+            "seed {seed}: per disease, V-2 does not exceed V-1"
         );
     }
 }
@@ -274,9 +271,11 @@ fn a_novel_disease_spreads_after_the_mcneill_outbreak() {
     //
     // Observed (seeds 1..=3): transmissions (infector: Some(_)) summed over
     // ticks [200,300) (before the outbreak) = 0, 0, 0; summed over ticks
-    // [300,400) (after) = 22, 1, 11. A wider 15-seed sweep confirmed every
-    // seed's after-count is > 0 (range 1-111) with before always 0, so this
-    // isn't a lucky pick of seeds 1..=3.
+    // [300,400) (after) = 237, 26, 159. A wider 15-seed sweep confirmed every
+    // seed's after-count is > 0 (range 22-291) with before always 0, so this
+    // isn't a lucky pick of seeds 1..=3. (Under the engine's earlier reading,
+    // which dropped a disease before passing it on in the tick it was
+    // learned, the range was 1-111.)
     let config = presets::by_id("v-mcneill").unwrap().config;
     for seed in 1..=3 {
         let mut w = World::new(config.clone(), seed).unwrap();

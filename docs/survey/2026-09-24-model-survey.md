@@ -21,6 +21,23 @@ four places where it, or the descriptions it checked, no longer stand:
   converts appear at once and fight their own side, leaving fewer than 20 agents by t = 100, with far
   fewer conversions than culture alone. The description now says so (`iii-14.civil-war`,
   `iii-14.fewer-conversions`).
+- **III-6's "single-tribe dominance"** was never the book's claim. Its "typical" run ended all Blue,
+  but it says each spatially separate subpopulation converges to pure Blue or pure Red on its own
+  (p. 74 and note 22), so the mountains splitting about half the time agrees with the book.
+  `iii-6.one-tribe` now cites the design doc it came from.
+- **Disease (V-1, V-2, McNeill):** an independent review found rule E flipped one immune bit per
+  carried disease each tick, against the book's note 16 ("one immune bit per cycle"), and dropped a
+  learned disease before the agent passed it on, against the worked example. Under the book's readings
+  (now the defaults; the old ones are switches) V-1 is disease-free in 20 of 20 (the book's claim
+  reproduces), V-2 clears too (its endemic level doesn't), and McNeill's novel disease reaches about
+  half the population but takes no toll. The residue and endemic level measured below came from
+  agents stuck between two diseases whose flips undid each other.
+- **Chapter VI:** the book leaves the founders' ages, endowments and two-good fertility test unsaid.
+  Over all 16 combinations (20 seeds each), the book's contrast (VI-2 crashing, VI-3 more than
+  doubling) appears in at most 1 of 20 worlds; with Chapter III's endowments VI-2 crashes as the book
+  says, but VI-3 crashes in just as many worlds. See `studio/episodes/finale/measurements.md`.
+- **iv-15-trade-sex** is the book's Figure IV-14, not IV-15, and uses its stated fertility ages
+  (35–45 / 45–55); with them 15 of 20 runs die out by t = 1000.
 - **Figure IV-6's "trade wins on all 10 seeds at every vision"** (item 9) no longer holds on main:
   over 20 seeds trade is higher in 118 of 120 seed–vision pairs, and in 59 of 60 within the sweep's
   own seeds 1–10 (seed 10 at mean vision 2 goes the other way).
