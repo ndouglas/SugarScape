@@ -1,0 +1,71 @@
+{
+  "name": "Ants: herding against colony size",
+  "description": "Alfarano and Milaković's N-dependence: the variance of the share against the number of ants, 500 meetings (Kirman) or one sweep (Alfarano and Milaković) a step, 20 000 steps. Kirman's rule at Figure IIb's ε and δ, with anyone meeting anyone or on a random network (link probability 0.1), and Alfarano and Milaković's (a 0.5, λ 1) on a ring of degree 10 and on the random network. Measured (release, seeds 1–3, recorded 2026-09-27): Kirman 0.208, 0.179, 0.137, 0.078, 0.040 at N 50, 100, 200, 500, 1 000 (on the random network 0.207 … 0.054) — the herding fades; Alfarano and Milaković on the ring 0.038, 0.020, 0.009, 0.003, 0.002 (their mean field 0.042 … 0.0025); on the random network 0.022, 0.021, 0.022, 0.020, 0.018, flat, as they say (mean field 0.023). A random network cures N-dependence under their rule, where each ant hears all its neighbors, and not under Kirman's, where a meeting is one partner.",
+  "base": {
+    "preset": "ants-2b"
+  },
+  "set": {
+    "meetings": 500
+  },
+  "x": {
+    "label": "Ants (N)",
+    "path": "ants",
+    "values": [
+      50,
+      100,
+      200,
+      500,
+      1000
+    ]
+  },
+  "series": {
+    "label": "Rule and network",
+    "values": [
+      {
+        "at": 0,
+        "name": "Kirman, anyone meets anyone",
+        "set": {
+          "rule": "kirman",
+          "network": "complete"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Kirman, a random network",
+        "set": {
+          "rule": "kirman",
+          "network": "random"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Alfarano & Milaković, a ring",
+        "set": {
+          "rule": "alfarano",
+          "network": "ring",
+          "a": 0.5,
+          "lambda": 1
+        }
+      },
+      {
+        "at": 3,
+        "name": "Alfarano & Milaković, a random network",
+        "set": {
+          "rule": "alfarano",
+          "network": "random",
+          "a": 0.5,
+          "lambda": 1
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 3
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "variance"
+  }
+}

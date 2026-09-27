@@ -715,6 +715,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::agreement::presets());
     out.extend(crate::image::presets());
     out.extend(crate::farol::presets());
+    out.extend(crate::ants::presets());
     out
 }
 

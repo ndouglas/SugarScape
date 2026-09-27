@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('ants charts', () => {
+  it('chart the split, its variance against theory, flips and extremes over steps', () => {
+    expect(MODEL_CHARTS.ants.map((c) => c.title)).toEqual(['Share', 'Variance', 'Flips', 'Extremes']);
+    expect(timeAxisLabel('ants')).toBe('Steps');
+  });
+});
+
 describe('El Farol and minority game charts', () => {
   it('chart attendance, fluctuations, success, forecasts, switching and memory over rounds', () => {
     expect(MODEL_CHARTS.farol.map((c) => c.title)).toEqual(['Attendance', 'Fluctuations', 'Success', 'Forecasts', 'Switching', 'Memory']);

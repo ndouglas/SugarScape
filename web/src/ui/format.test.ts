@@ -17,6 +17,19 @@ describe('compactNumber', () => {
   it('preserves the sign', () => {
     expect(compactNumber(-1234)).toBe('-1.2k');
   });
+
+  it('keeps three significant digits below 1, so small axes do not all read 0', () => {
+    expect(compactNumber(0.008)).toBe('0.008');
+    expect(compactNumber(0.0125)).toBe('0.0125');
+    expect(compactNumber(0.25)).toBe('0.25');
+    expect(compactNumber(0.5)).toBe('0.5');
+    expect(compactNumber(-0.04)).toBe('-0.04');
+  });
+
+  it('labels uPlot’s 2.5-step ticks exactly', () => {
+    expect([0.1, 0.125, 0.15, 0.175, 0.2].map(compactNumber)).toEqual(['0.1', '0.125', '0.15', '0.175', '0.2']);
+    expect([0.0025, 0.005, 0.0075].map(compactNumber)).toEqual(['0.0025', '0.005', '0.0075']);
+  });
 });
 
 describe('percent', () => {

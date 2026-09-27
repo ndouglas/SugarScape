@@ -10,7 +10,6 @@ use rand::Rng;
 use serde::Serialize;
 
 use super::config::{AgreementConfig, PairUpdate, Pairing, Placement, Rule, Window};
-use super::network::Graph;
 use super::stats::{grouping, AgreementSnapshot, Outcome, STILL};
 use super::view::{
     opinion_at, opinion_color, row, scatter_col, uncertainty_color, COLUMNS, DIAGONAL, KEPT, MINUS,
@@ -18,6 +17,7 @@ use super::view::{
 };
 use crate::config::FieldError;
 use crate::export;
+use crate::graph::Graph;
 use crate::model::{wrong_model, Model, ModelConfig, ModelKind};
 use crate::opinions::{site_cells, Canvas};
 use crate::render::{lerp, Rgb};
