@@ -1,32 +1,44 @@
 """The War episode's tune: "Poseidon's Horn", an original march in 5/4 in D
 minor, after the effect of King Crimson's "The Devil's Triangle" (itself
-after Holst's "Mars") — not after either's notes. The ostinato is our own
-lopsided figure, long-short-long-long-long (3 + 1 + 2 + 2 + 2 eighths).
+after Holst's "Mars") — not after either's notes. The rhythm is our own: a
+triplet, a quarter, two eighths, a triplet, a quarter (2 + 2 + 2 + 2 + 2
+eighths), played by timpani, snare, strings and brass stabs.
 
-A: the long quiet — low strings and timpani, a snare that almost starts —
-then trombones, snare and fife join, building. B: after the horn — a drone
-and a lone timpani, the march gone. C: the war that never ends — the
-ostinato again, grinding against a trombone semitone, unresolved; it ends
-on an open fifth.
+One build across the whole film, under a drone that never stops. A (the
+close-ups and the long quiet): timpani and snare out front, strings on the
+figure. B (from the warlord on): the march — bass drum, snare, brass stabs on
+the triplets, trombones climbing. C (the endless war): fife and tuba join,
+louder and louder.
 
-Sting: the horn. One enormous chord, swelling on every brass patch, choir
-and organ over a timpani roll, as the warlord rises; the tune ducks beneath
-it (`ducks`), and trombones slide down through it as the march collapses.
-The horn has its own tracks, so GarageBand can give it a bigger patch than
-FluidR3's General MIDI brass."""
+Sting: the horn, on the last title ("Nobody fights an equal…"). One enormous
+chord swelling across every brass patch, choir and organ over a timpani and
+snare roll and a crash; the march ducks beneath it (`ducks`) and collapses,
+the trombones sliding down through it, into the end card. The horn has its
+own tracks, so GarageBand can give it a bigger patch than FluidR3's."""
 
 from music import Tune, Voice
 
-STRINGS, TIMPANI, SNARE, TROMBONE, TUBA, FIFE = "strings", "timpani", "snare", "trombone", "tuba", "fife"
+DRONE, STRINGS, TIMPANI, SNARE, KICK, CRASH = "drone", "strings", "timpani", "snare", "bass drum", "crash"
+TROMBONE, TUBA, FIFE = "trombone", "tuba", "fife"
 BRASS, HORNS, SYNTH, CHOIR, ORGAN = "horn: brass", "horn: french horns", "horn: synth brass", "horn: choir", "horn: organ"
-HORN = (BRASS, HORNS, SYNTH, CHOIR, ORGAN)
 
 BAR = "z10"
-OSTINATO = "D,3 D, D,2 D,2 A,,2"  # our own: long-short-long-long-long
-GRIND = "D,3 D, _E,2 D,2 A,,2"  # the same, with the semitone that won't resolve
-TIMP = "D,,2 z4 A,,2 z2"
-SNARE_PICKUP = "z8 D,,2"  # a snare that almost starts
-SNARE_MARCH = "D,,3 D,, D,,2 D,,2 D,,2"
+
+
+def rhythm(note):
+    """Our figure on one note: triplet, quarter, two eighths, triplet, quarter."""
+    return f"(3{note}{note}{note} {note}2 {note}{note} (3{note}{note}{note} {note}2"
+
+
+def triplets(note):
+    """Only the figure's two triplets: the snare that almost starts."""
+    return f"(3{note}{note}{note} z2 z2 (3{note}{note}{note} z2"
+
+
+# General MIDI drums (channel 10): bass drum C,, (36), snare D,, (38), crash ^C, (49).
+SNARE_N, KICK_N, CRASH_N = "D,,", "C,,", "^C,"
+KICK_BAR = f"{KICK_N}2 z2 {KICK_N}2 z2 {KICK_N}2"
+STAB = "[D,A,D]"
 
 
 def _bars(bars):
@@ -37,71 +49,88 @@ def _rest(n=8):
     return _bars([BAR] * n)
 
 
+def _louder(steps, bar):
+    """8 bars of `bar`, each marked with its dynamic from `steps` (None keeps it)."""
+    return _bars([f"!{s}! {bar}" if s else bar for s in steps])
+
+
 TUNE = Tune(
     title="Poseidon's Horn",
     slug="poseidons-horn",
     key="Dm",
     beats_per_bar=5,
-    voices=(Voice(STRINGS, 48, 100), Voice(TIMPANI, 47, 110), Voice(SNARE, 0, 90, channel=10),
-            Voice(TROMBONE, 57, 100), Voice(TUBA, 58, 100), Voice(FIFE, 72, 85),
+    voices=(Voice(DRONE, 49, 85), Voice(STRINGS, 48, 100), Voice(TIMPANI, 47, 127),
+            Voice(SNARE, 0, 120, channel=10), Voice(KICK, 0, 127, channel=10), Voice(CRASH, 0, 110, channel=10),
+            Voice(TROMBONE, 57, 105), Voice(TUBA, 58, 105), Voice(FIFE, 72, 90),
             Voice(BRASS, 61, 127), Voice(HORNS, 60, 127), Voice(SYNTH, 62, 110), Voice(CHOIR, 52, 120),
             Voice(ORGAN, 19, 110)),
     sections={
-        "A": {  # the quiet, then the build
-            STRINGS: _bars([f"!p! {OSTINATO}", OSTINATO, OSTINATO, OSTINATO,
-                            f"!mp! {OSTINATO}", OSTINATO, f"!f! {OSTINATO}", OSTINATO]),
-            TIMPANI: _bars([f"!p! {TIMP}", TIMP, TIMP, TIMP, f"!mf! {TIMP}", TIMP, f"!ff! {TIMP}", TIMP]),
-            SNARE: _bars([BAR, BAR, BAR, f"!pp! {SNARE_PICKUP}", BAR, f"!mp! {SNARE_PICKUP}",
-                          f"!f! {SNARE_MARCH}", SNARE_MARCH]),
-            TROMBONE: _bars([BAR, BAR, BAR, BAR, "!mp! D,4 F,2 E,2 D,2", "E,4 G,2 F,2 E,2",
-                             "!f! F,4 A,2 G,2 F,2", "A,4 _B,2 A,2 G,2"]),
-            TUBA: _bars([BAR, BAR, BAR, BAR, "!mp! D,,10", "D,,10", "!f! D,,10", "A,,,10"]),
-            FIFE: _bars([BAR] * 6 + ["!mf! d3 d e2 f2 a2", "g3 f e2 d2 A2"]),
-            **{v: _rest() for v in HORN},
+        "A": {  # the close-ups and the quiet: percussion out front, the figure beneath
+            DRONE: _louder(["p"] + [None] * 7, "[D,A,]10"),
+            STRINGS: _louder(["p", None, None, None, "mp", None, None, None], rhythm("D,")),
+            TIMPANI: _louder(["mp", None, None, None, "mf", None, None, None], rhythm("D,,")),
+            SNARE: _bars(["!p! " + triplets(SNARE_N), BAR, triplets(SNARE_N), BAR,
+                          "!mp! " + triplets(SNARE_N), triplets(SNARE_N), "!mf! " + rhythm(SNARE_N), rhythm(SNARE_N)]),
+            KICK: _rest(), CRASH: _rest(), TROMBONE: _rest(), TUBA: _rest(), FIFE: _rest(),
+            BRASS: _rest(), HORNS: _rest(), SYNTH: _rest(), CHOIR: _rest(), ORGAN: _rest(),
         },
-        "B": {  # after the horn: a drone and a lone drum; the march is gone
-            STRINGS: _bars(["!mf! [D,A,]10", "[D,A,]10", "!p! [D,A,]10", "[D,A,]10",
-                            "!pp! [D,A,]10", "[D,A,]10", "[D,A,]10", "[D,A,]10"]),
-            TIMPANI: _bars(["!mp! D,,2 z8", BAR, "D,,2 z8", BAR, "!p! D,,2 z8", BAR, "D,,2 z8", BAR]),
-            SNARE: _rest(),
-            TROMBONE: _rest(),
-            TUBA: _bars(["!p! D,,10", "D,,10", "D,,10", "D,,10", "!pp! D,,10", "D,,10", "D,,10", "D,,10"]),
-            FIFE: _rest(),
-            **{v: _rest() for v in HORN},
+        "B": {  # the march: the warlord's
+            DRONE: _louder(["mp"] + [None] * 7, "[D,A,]10"),
+            STRINGS: _louder(["mf"] + [None] * 7, rhythm("D,")),
+            TIMPANI: _louder(["f"] + [None] * 7, rhythm("D,,")),
+            SNARE: _louder(["f"] + [None] * 7, rhythm(SNARE_N)),
+            KICK: _louder(["f"] + [None] * 7, KICK_BAR),
+            CRASH: _bars([f"!mf! {CRASH_N}10"] + [BAR] * 7),
+            TROMBONE: _bars(["!mf! D,4 F,2 E,2 D,2", "E,4 G,2 F,2 E,2", "F,4 A,2 G,2 F,2", "A,4 _B,2 A,2 G,2",
+                             "!f! D,4 F,2 E,2 D,2", "E,4 G,2 F,2 E,2", "F,4 A,2 G,2 F,2", "A,4 _B,2 A,2 G,2"]),
+            TUBA: _rest(), FIFE: _rest(),
+            # The horns' percussive side: stabs on the figure's triplets.
+            BRASS: _louder(["mf", None, None, None, "f", None, None, None], triplets(STAB)),
+            HORNS: _rest(), SYNTH: _rest(), CHOIR: _rest(), ORGAN: _rest(),
         },
-        "C": {  # the war that never ends: grinding, unresolved
-            STRINGS: _bars([f"!mf! {GRIND}", GRIND, GRIND, GRIND, f"!f! {GRIND}", GRIND, GRIND, GRIND]),
-            TIMPANI: _bars([f"!mf! {TIMP}"] + [TIMP] * 7),
-            SNARE: _bars([f"!mf! {SNARE_MARCH}"] + [SNARE_MARCH] * 7),
-            TROMBONE: _bars(["!mf! [D,_E,]10", "[D,_E,]10", "[F,_G,]10", "[F,_G,]10",
-                             "!f! [D,_E,]10", "[D,_E,]10", "[A,,_B,,]10", "[A,,_B,,]10"]),
-            TUBA: _bars(["!mf! D,,10", "D,,10", "D,,10", "D,,10", "D,,10", "D,,10", "A,,,10", "A,,,10"]),
-            FIFE: _rest(),
-            **{v: _rest() for v in HORN},
+        "C": {  # the war that never ends: everything, louder and louder
+            DRONE: _louder(["mf", None, None, None, "f", None, None, None], "[D,A,]10"),
+            STRINGS: _louder(["f", None, None, None, "ff", None, None, None], rhythm("D,")),
+            TIMPANI: _louder(["f", None, None, None, "ff", None, "fff", None], rhythm("D,,")),
+            SNARE: _louder(["f", None, None, None, "ff", None, "fff", None], rhythm(SNARE_N)),
+            KICK: _louder(["f", None, None, None, "ff", None, "fff", None], KICK_BAR),
+            CRASH: _bars([f"!f! {CRASH_N}10", BAR, BAR, BAR, f"!ff! {CRASH_N}10", BAR, f"!fff! {CRASH_N}10", BAR]),
+            TROMBONE: _bars(["!f! [D,_E,]10", "[D,_E,]10", "[F,_G,]10", "[F,_G,]10",
+                             "!ff! [D,_E,]10", "[D,_E,]10", "[A,,_B,,]10", "[A,,_B,,]10"]),
+            TUBA: _louder(["f", None, None, None, "ff", None, None, None], rhythm("D,,")),
+            FIFE: _bars(["!f! d3 d e2 f2 a2", "g3 f e2 d2 A2", "d3 d e2 f2 a2", "_b3 a g2 f2 e2",
+                         "!ff! d3 d e2 f2 a2", "g3 f e2 d2 A2", "d3 d e2 f2 a2", "_b3 a g2 f2 e2"]),
+            BRASS: _louder(["f", None, None, None, "ff", None, "fff", None], rhythm(STAB)),
+            HORNS: _louder(["f", None, None, None, "ff", None, "fff", None], triplets("[A,DF]")),
+            SYNTH: _rest(), CHOIR: _rest(), ORGAN: _rest(),
         },
     },
-    # The story wants the build to crest as the warlord rises (about 26 s in),
-    # the aftermath under the bars, and the endless war last: one form.
+    # One form: the build must reach the last title, where the horn comes in.
     forms=("ABC",),
-    ending={STRINGS: "!mf! [D,A,]10", TIMPANI: "D,,10", SNARE: BAR, TROMBONE: "[D,A,]10", TUBA: "D,,10",
-            FIFE: BAR, **{v: BAR for v in HORN}},
+    ending={DRONE: "!mf! [D,A,]10", STRINGS: "[D,A,]10", TIMPANI: "D,,10", SNARE: BAR, KICK: BAR, CRASH: BAR,
+            TROMBONE: "[D,A,]10", TUBA: "D,,10", FIFE: BAR, BRASS: BAR, HORNS: BAR, SYNTH: BAR, CHOIR: BAR,
+            ORGAN: BAR},
     bpm=(72, 84, 100),
     stings={
-        # Two bars: the chord swells from nothing, re-struck louder and louder,
-        # then holds at full strength; beneath, the trombones slide down and
-        # the timpani rolls.
+        # Two bars: the chord swells from nothing, re-struck louder and louder
+        # on the figure's pulse, then holds at full strength over rolls and a
+        # crash; beneath, the trombones slide down as the march collapses.
         "horn": ({
             BRASS: "!pp! [D,A,DA]2 !p! [D,A,DA]2 !mp! [D,A,DA]2 !mf! [D,A,DA]2 !f! [D,A,DA]2 | !fff! [D,A,DA]10",
             HORNS: "!pp! [A,DF]2 !p! [A,DF]2 !mp! [A,DF]2 !mf! [A,DF]2 !f! [A,DF]2 | !fff! [A,DF]10",
             SYNTH: "!pp! [D,A,D]2 !p! [D,A,D]2 !mp! [D,A,D]2 !mf! [D,A,D]2 !f! [D,A,D]2 | !fff! [D,A,D]10",
             CHOIR: "!pp! [DFA]2 !p! [DFA]2 !mp! [DFA]2 !mf! [DFA]2 !f! [DFA]2 | !fff! [DFAd]10",
             ORGAN: "!mp! [D,,,D,,]10 | !fff! [D,,,D,,A,,]10",
-            TIMPANI: "!pp! D,, D,, D,, D,, !mp! D,, D,, !mf! D,, D,, !f! D,, D,, | !fff! D,, D,, D,, D,, D,, D,, D,, D,, D,, D,,",
-            TROMBONE: "!f! A,2 _A,2 G,2 _G,2 F,2 | !p! E,2 _E,2 D,6",
+            TIMPANI: "!p! (3D,,D,,D,, (3D,,D,,D,, !mf! (3D,,D,,D,, (3D,,D,,D,, !f! (3D,,D,,D,, | "
+                     "!fff! (3D,,D,,D,, (3D,,D,,D,, (3D,,D,,D,, (3D,,D,,D,, D,,2",
+            SNARE: "!p! D,, D,, D,, D,, !mf! D,, D,, D,, D,, !f! D,, D,, | !fff! D,, D,, D,, D,, D,, D,, z4",
+            CRASH: f"z10 | !fff! {CRASH_N}10",
+            TROMBONE: "!f! A,2 _A,2 G,2 _G,2 F,2 | !mf! E,2 _E,2 D,6",
         }, 66),
     },
-    ducks={"horn": 0.15},
-    # The horn swells as Blue 63 begins its rampage: its first kill is at tick
-    # 605, about 0.3 s into "warlord".
-    cues=(("warlord", "horn", 0.2),),
+    ducks={"horn": 0.2},
+    # The horn's swell (its first bar, 4.5 s) rises under the end of
+    # "nofront", so its full-strength hold fills the last title, "Nobody
+    # fights an equal…".
+    cues=(("nofront", "horn", 4.2),),
 )

@@ -102,6 +102,10 @@ class MusicTest(unittest.TestCase):
             self.assertAlmostEqual(value, music.duck_gain(t, [(3.0, 9.0, 0.2)]))
 
 
+    def test_a_triplet_fits_three_notes_in_the_time_of_two(self):
+        self.assertEqual(music.eighths("(3D,D,D, D,2 D,D, (3D,D,D, D,2"), 10)
+        self.assertEqual(music.eighths("(3[DA][DA][DA] z2"), 4)
+
     def test_dynamics_and_other_decorations_take_no_time(self):
         self.assertEqual(music.eighths("!pp! D,3 D, !mf! D,2 !fff! D,2 A,,2"), 10)
 

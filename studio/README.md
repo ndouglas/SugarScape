@@ -58,8 +58,9 @@ Tribes' *Two Choirs*, a polychoral canzona with recorders on the left answering 
 the right until they play as one, and Markets' *The Spice Rag*, a slow rag in F for honky-tonk piano,
 banjo, tuba and clarinet, whose oom-pah walks between two notes as the Flumps walk between two
 hills, with a D-minor clarinet strain and a B♭ trio, and War's *Poseidon's Horn*, an original 5/4
-march in D minor whose horn sting — a chord swelling across the brass patches, choir and organ —
-ducks the march beneath it as the warlord rises (a tune's `ducks` sink it under a sting).
+march in D minor on a triplet figure, building under a drone from timpani and snare to the full
+march, until its horn sting — a chord swelling across the brass patches, choir and organ — ducks
+the march beneath it on the last title (a tune's `ducks` sink it under a sting).
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to

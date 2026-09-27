@@ -68,9 +68,21 @@ class Tune:
 
 def eighths(bar):
     """The length of an ABC bar in eighth notes (L:1/8). Decorations such as
-    dynamics (!pp!, !fff!) take no time: their letters are not notes."""
+    dynamics (!pp!, !fff!) take no time: their letters are not notes. A
+    triplet, (3 and three notes, takes two-thirds of their length."""
     bar = re.sub(r"![^!]*!", "", bar)
-    return sum(int(n or 1) for _, n in re.findall(r"(\[[^\]]+\]|[_^=]?[A-Ga-gz][,']*)(\d*)", bar))
+    total, triplet = 0.0, 0
+    for mark, _, n in re.findall(r"(\(3)|(\[[^\]]+\]|[_^=]?[A-Ga-gz][,']*)(\d*)", bar):
+        if mark:
+            triplet = 3
+            continue
+        length = int(n or 1)
+        if triplet:
+            triplet -= 1
+            total += length * 2 / 3
+        else:
+            total += length
+    return round(total, 6)
 
 
 def tempo_for(tune, total_bars, seconds):
