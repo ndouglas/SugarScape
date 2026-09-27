@@ -32,12 +32,12 @@ LEDGER = {"rows": [
 ]}
 # Chapter VI under the book's unsaid details: four wealth tests for
 # childbearing in each row, as ranges over them, in 20 worlds each.
-UNSAID = {**CHART, "heads": ("what the book leaves unsaid", "crashes without trade · with trade · doublings"),
+UNSAID = {**CHART, "heads": ("what the book leaves unsaid", "of 20 worlds: crash, no trade   /   crash, trade   /   double"),
           "rows": [
-              ("founders newborn, endowments 25–50", "{g0_crash} · {g0_crash3} · {g0_double}"),
-              ("founders newborn, endowments 50–100", "{g1_crash} · {g1_crash3} · {g1_double}"),
-              ("founders at random ages, endowments 25–50", "{g2_crash} · {g2_crash3} · {g2_double}"),
-              ("founders at random ages, endowments 50–100", "{g3_crash} · {g3_crash3} · {g3_double}"),
+              ("founders newborn, endowments 25–50", "{g0_crash}   /   {g0_crash3}   /   {g0_double}"),
+              ("founders newborn, endowments 50–100", "{g1_crash}   /   {g1_crash3}   /   {g1_double}"),
+              ("founders at random ages, endowments 25–50", "{g2_crash}   /   {g2_crash3}   /   {g2_double}"),
+              ("founders at random ages, endowments 50–100", "{g3_crash}   /   {g3_crash3}   /   {g3_double}"),
           ]}
 
 
