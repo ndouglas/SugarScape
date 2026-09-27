@@ -70,24 +70,28 @@ READINGS = [
 
 
 def _reading(tmp, reading, seed):
-    """One world under one reading: (VI-2 crashed, VI-3 doubled). Crashed:
-    fewer than CRASH Flumps at tick 1000 (or none); doubled: past twice its
-    start at any tick."""
+    """One world under one reading: (VI-2 crashed, VI-3 doubled, VI-3
+    crashed). Crashed: fewer than CRASH Flumps at tick 1000 (or none);
+    doubled: past twice its start at any tick."""
     vi2, _ = m.run("vi-2-no-trade", seed, TICKS, tmp, reading)
     vi3, _ = m.run("vi-3-trade", seed, TICKS, tmp, reading)
-    return float(vi2[-1]["population"]) < CRASH, max(float(r["population"]) for r in vi3) > 2 * START
+    return (float(vi2[-1]["population"]) < CRASH, max(float(r["population"]) for r in vi3) > 2 * START,
+            float(vi3[-1]["population"]) < CRASH)
 
 
 def readings(tmp):
     """For each reading: (worlds where VI-2 crashed, where VI-3 doubled, where
-    both happened: the book's contrast)."""
+    both happened: the book's contrast, where VI-3 crashed too)."""
+    for preset in ("vi-2-no-trade", "vi-3-trade"):
+        m.preset_config(preset, tmp)  # written once, before the runs share it
     jobs = [(i, seed) for i in range(len(READINGS)) for seed in m.SEEDS]
     with concurrent.futures.ThreadPoolExecutor(8) as pool:
         results = list(pool.map(lambda job: (job[0], _reading(tmp, READINGS[job[0]], job[1])), jobs))
     out = []
     for i in range(len(READINGS)):
         mine = [r for j, r in results if j == i]
-        out.append((sum(c for c, _ in mine), sum(dbl for _, dbl in mine), sum(c and dbl for c, dbl in mine)))
+        out.append((sum(c for c, _, _ in mine), sum(d for _, d, _ in mine), sum(c and d for c, d, _ in mine),
+                    sum(c3 for _, _, c3 in mine)))
     return out
 
 
@@ -107,7 +111,7 @@ def verdicts(rows, sweep):
     near = lambda k: 720 <= median(rows, k) <= 880  # noqa: E731
     still = _count(rows, lambda r: r["ii6_travelers"] < 0.1)
     apart = _count(rows, lambda r: r["iii12_mixed"] == 0)
-    most_contrast = max(c for _, _, c in sweep)
+    most_contrast = max(s[2] for s in sweep)
     cleared = _count(rows, lambda r: r["v2_end"] == 0)
     meet = ("two tribes that collide (III-12): they never meet" if apart == n else
             f"two tribes that collide (III-12): in {apart} of {n} worlds they never meet")
@@ -126,7 +130,8 @@ def verdicts(rows, sweep):
          f"{len(sweep)} readings (founders newborn or at random ages; endowments 25–50 or 50–100; four wealth tests for "
          f"childbearing): the book's contrast — VI-2 below {CRASH} at tick {TICKS} and VI-3 past {2 * START} — in at "
          f"most {most_contrast} of {n} worlds in any reading (crashes without trade: "
-         f"{', '.join(str(c) for c, _, _ in sweep)}; doublings with trade: {', '.join(str(d) for _, d, _ in sweep)})"),
+         f"{', '.join(str(s[0]) for s in sweep)}; doublings with trade: {', '.join(str(s[1]) for s in sweep)}; crashes "
+         f"with trade: {', '.join(str(s[3]) for s in sweep)})"),
         ("waves that sweep across the land (II-6): here the Flumps stay put", still == n,
          f"Flumps that ever get 10 or more cells beyond the starting block (on the wrapping board) within 100 ticks: "
          f"{median(rows, 'ii6_travelers'):.1%} (median); under 10% in {still} of {n}"),
@@ -188,17 +193,28 @@ def measure(tmp):
     lines += m.table(rows, keys)
     lines += ["", f"Typical seed (VI): {m.typical_seed(rows, ['vi2_late', 'vi3_late', 'vi3_max'])}.", "",
               "## Chapter VI under every reading of its unstated details", "",
-              "| founders | endowment | wealth to have children | VI-2 crashes | VI-3 doubles | both |", "|---|---|---|---|---|---|"]
-    for reading, (crash, double, both) in zip(READINGS, sweep):
+              "| founders | endowment | wealth to have children | VI-2 crashes | VI-3 doubles | both | VI-3 crashes |",
+              "|---|---|---|---|---|---|---|"]
+    for reading, (crash, double, both, crash3) in zip(READINGS, sweep):
         e = reading["goods.0.endowment"]
         lines.append(f"| {reading['lifespan.founders']} | {e['min']}–{e['max']} | {reading['sex.fertile_wealth']} | "
-                     f"{crash} | {double} | {both} |")
+                     f"{crash} | {double} | {both} | {crash3} |")
     medians = {k: median(rows, k) for k in keys}
     # The ledger shows trades to the nearest thousand: a median, not a count.
     medians.update(trades_rounded=round(medians["trades"], -3))
     war_m, contagion_m = earlier("war"), earlier("contagion")
-    medians.update(newcomers=war_m["young"], fizzle=contagion_m["reach"],
-                   readings=len(sweep), iii12_apart=_count(rows, lambda r: r["iii12_mixed"] == 0))
+    medians.update(newcomers=war_m["young"], fizzle=contagion_m["reach"], toll=contagion_m["ratio"],
+                   readings=len(sweep), iii12_apart=_count(rows, lambda r: r["iii12_mixed"] == 0),
+                   v2_cleared=_count(rows, lambda r: r["v2_end"] == 0))
+    # The readings panel: each group of four (the wealth tests), founders ×
+    # endowment, as ranges over its four readings.
+    for g in range(4):
+        group = sweep[4 * g : 4 * g + 4]
+        def span(k, group=group):
+            lo, hi = min(s[k] for s in group), max(s[k] for s in group)
+            return f"{lo}" if lo == hi else f"{lo}–{hi}"
+
+        medians.update({f"g{g}_crash": span(0), f"g{g}_double": span(1), f"g{g}_crash3": span(3)})
     lines += ["", "From the earlier episodes' measurements: "
               f"{medians['newcomers']:.0%} of III-11's dead are newcomers (War); {medians['fizzle']:.1%} catch "
               "McNeill's novel disease from another Flump (Contagion)."]

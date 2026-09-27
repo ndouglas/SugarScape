@@ -7,7 +7,7 @@ import episode
 HOLDS = dict(vi2_late=837.0, vi3_late=821.0, vi2_dip=174.0, vi3_dip=123.0, vi2_min_late=725.0, vi3_max=914.0,
              vi3_cycle=False, ii6_travelers=0.02, iii12_mixed=0.0, iii14_pop=10.0, trades=31330.0,
              foresight_start=4.98, foresight_end=4.41, v2_end=0.0)
-SWEEP = [(0, 0, 0)] * 16
+SWEEP = [(0, 0, 0, 0)] * 16
 
 
 def rows(**changes):
@@ -40,8 +40,8 @@ class FinaleVerdictTest(unittest.TestCase):
         self.assertFalse(self.verdicts(r)[self.NONE])
 
     def test_a_reading_with_the_books_contrast_in_most_worlds_breaks_the_unsaid_claim(self):
-        self.assertFalse(self.verdicts(sweep=[(0, 0, 0)] * 15 + [(14, 12, 11)])[self.UNSAID])
-        self.assertTrue(self.verdicts(sweep=[(0, 0, 0)] * 15 + [(14, 12, 10)])[self.UNSAID])
+        self.assertFalse(self.verdicts(sweep=[(0, 0, 0, 0)] * 15 + [(14, 12, 11, 0)])[self.UNSAID])
+        self.assertTrue(self.verdicts(sweep=[(0, 0, 0, 0)] * 15 + [(14, 12, 10, 0)])[self.UNSAID])
 
     def test_never_meet_is_said_only_when_no_world_mixes(self):
         r = rows()

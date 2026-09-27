@@ -82,7 +82,8 @@ def run(preset, seed, ticks, tmp, changes=None):
     series, agents = tmp / f"{name}-{seed}.csv", tmp / f"{name}-{seed}-agents.csv"
     source = ["--preset", preset]
     if changes:
-        config = tmp / f"{name}.json"
+        # One file per run, so runs in parallel never share a half-written one.
+        config = tmp / f"{name}-{seed}.json"
         config.write_text(json.dumps(with_changes(preset_config(preset, tmp), changes)))
         source = ["--config", config]
     subprocess.run(

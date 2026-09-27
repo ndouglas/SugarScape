@@ -473,7 +473,8 @@ LEDGER_ROWS = 8
 def ledger(beat, d, ctx):
     """Center: the book's claims against what we measured, a row at a time
     across the beat. params rows: (the book, here) pairs; `here` may name
-    measured medians as {key} or {key:format}, filled from measurements.json."""
+    measured medians as {key} or {key:format}, filled from measurements.json.
+    params heads: the two columns' headings (default the book / here)."""
     rows = beat.params["rows"][:LEDGER_ROWS]
     medians = ctx.measured.get("medians", {})
     anchor = ctx.screen.anchor("ledger", 0.0, 0.08)
@@ -482,8 +483,9 @@ def ledger(beat, d, ctx):
     ink = materials.fading("ledger-ink", CREAM, 1.6)
     coral = materials.fading("ledger-book", materials.YARN["coral"], 2.5)
     teal = materials.fading("ledger-here", materials.YARN["teal"], 2.5)
-    text("ledger-book-head", "the book", 0.04, coral, anchor, location=(-0.36, height / 2 - 0.07, 0))
-    text("ledger-here-head", "here, over 20 worlds", 0.04, teal, anchor, location=(0.4, height / 2 - 0.07, 0))
+    book_head, here_head = beat.params.get("heads", ("the book", "here, over 20 worlds"))
+    text("ledger-book-head", book_head, 0.04, coral, anchor, location=(-0.36, height / 2 - 0.07, 0))
+    text("ledger-here-head", here_head, 0.04, teal, anchor, location=(0.4, height / 2 - 0.07, 0))
     shown = []
     for i, (book, here) in enumerate(rows):
         y = height / 2 - 0.17 - 0.1 * i

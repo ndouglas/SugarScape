@@ -380,8 +380,12 @@ pub fn claims() -> Vec<Claim> {
         Claim {
             id: "iii-6.one-tribe",
             item: "iii-6-culture",
-            source: Source::Book,
-            citation: "docs/superpowers/specs/2026-09-22-sugarscape-wasm-playground-design.md: \"K converges toward single-tribe dominance\"; tests/book.rs: \"the book: after ~2700 ticks\"",
+            // Not the book's claim: its "typical" run ended all Blue, but it
+            // says each spatially separate subpopulation converges to pure
+            // Blue or pure Red on its own (p. 74, note 22), which a split
+            // agrees with. The design doc's paraphrase is what's tested here.
+            source: Source::App,
+            citation: "docs/superpowers/specs/2026-09-22-sugarscape-wasm-playground-design.md: \"K converges toward single-tribe dominance\" (the book, p. 74 and note 22, predicts each hill converging on its own)",
             text: "single-tribe dominance (the larger tribe holds ≥ 90% of agents at t = 3000)",
             check: |s| {
                 let m = after(&preset("iii-6-culture"), s, 3000, majority_share);
