@@ -5,8 +5,8 @@ rigs. Screen-space things hang from `Screen` anchors, whose units are half
 the frame's width, so they keep their size on screen as the lens changes."""
 
 from .caption import caption_scene
-from .followers import belly, bequests, labels, rings_hungry, rings_migrants, rings_shuttlers, sight, stacks, trades, traits, loot, warlord, killmap, loanlines
-from .panels import alike, bars, census, counter, dials, hills, histogram, kills, ladder, prices, season_card, wealth
+from .followers import belly, bequests, labels, rings_hungry, rings_migrants, rings_shuttlers, sight, stacks, trades, traits, loot, warlord, killmap, loanlines, infections
+from .panels import alike, bars, census, counter, dials, hills, histogram, kills, ladder, prices, sick, season_card, wealth
 from .parts import Screen
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
@@ -14,7 +14,7 @@ __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
 # The overlays drawn in screen space (on `Screen` anchors).
 SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
-          "census", "prices", "kills", "ladder"}
+          "census", "prices", "kills", "ladder", "sick"}
 
 
 BUILDERS = {
@@ -45,4 +45,6 @@ BUILDERS = {
     "kills": kills,
     "loanlines": loanlines,
     "ladder": ladder,
+    "infections": infections,
+    "sick": sick,
 }

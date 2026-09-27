@@ -117,9 +117,11 @@ def sight(beat, d, ctx):
 
 def labels(beat, d, ctx):
     """"sees N · eats M" over each focus Flump on a dark pill, turned to the
-    camera; with params label="age", its age at the tick shown instead."""
+    camera; with params label="age", its age at the tick shown instead, and
+    with label="diseases", how many diseases it carries ("well" for none)."""
     items = []
-    ages = beat.params.get("label") == "age"
+    kind = beat.params.get("label")
+    ages = kind in ("age", "diseases")
     cream = materials.fading("label", CREAM, 2.2)
     for i in beat.focus:
         id_ = d.placed[i]
@@ -137,8 +139,11 @@ def labels(beat, d, ctx):
             if not p.visible:
                 flump.stow(holder)
                 continue
-            if ages and id_ in d.frames[k].agents:
+            if kind == "age" and id_ in d.frames[k].agents:
                 label.data.body = f"age {d.frames[k].agents[id_].age}"
+            elif kind == "diseases" and id_ in d.frames[k].agents:
+                n = d.frames[k].diseases.get(id_, 0)
+                label.data.body = "well" if n == 0 else f"{n} disease{'s' if n > 1 else ''}"
             holder.location = (p.x, p.y, p.z + 1.2)
             holder.scale = (0.6,) * 3
             turn_to_camera(holder, ctx)
@@ -545,5 +550,53 @@ def loanlines(beat, d, ctx):
             ball_obj.location = (p.x + (q.x - p.x) * e, p.y + (q.y - p.y) * e,
                                  p.z + 0.8 + (q.z - p.z) * e + 1.2 * math.sin(math.pi * u))
             ball_obj.scale = (1, 1, 1)
+
+    return update
+
+
+INFECTION_REACH = 1.5  # neighbors only across the wrapped edge get no line
+INFECTION_FLIGHT = 0.8  # the share of a tick a new infection's line shows
+
+
+def infections(beat, d, ctx):
+    """The book's transmission network (Animation V-3): as each infection
+    happens, a red line arcs from the Flump who passed the disease on to the
+    one who caught it, showing early in the tick and fading."""
+    first, last = int(ctx.timing.tick_at(1)), min(int(ctx.timing.tick_at(beat.frames + 1)) + 1, d.ticks)
+    most = max((len(d.frames[k].infections) for k in range(first, last + 1)), default=0)
+    cu = bpy.data.curves.new("infections", "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = beat.params.get("line_width", 0.06)
+    cu.materials.append(materials.fading("infection", (0.95, 0.12, 0.08), 2.5))
+    splines = []
+    for _ in range(max(most, 1)):
+        s = cu.splines.new("POLY")
+        s.points.add(2)
+        splines.append(s)
+    obj = bpy.data.objects.new("infections", cu)
+    bpy.context.scene.collection.objects.link(obj)
+
+    def update(frame):
+        tick = ctx.timing.tick_at(frame)
+        k = min(int(math.floor(tick)), d.ticks)
+        u = (tick - k) / INFECTION_FLIGHT
+        used = 0
+        if 0 <= u <= 1:
+            for i in d.frames[k].infections:
+                if i.infector is None or i.infector not in ctx.tracks or i.infected not in ctx.tracks:
+                    continue
+                a, b = flump_pose(ctx, d, i.infector, frame), flump_pose(ctx, d, i.infected, frame)
+                if not (a.visible and b.visible) or math.hypot(a.x - b.x, a.y - b.y) > INFECTION_REACH:
+                    continue
+                if used >= len(splines):
+                    break
+                mid = ((a.x + b.x) / 2, (a.y + b.y) / 2, max(a.z, b.z) + 1.1)
+                # Drawn from the infector outward as the tick begins.
+                e = min(u * 2, 1.0)
+                end = (a.x + (b.x - a.x) * e, a.y + (b.y - a.y) * e, a.z + 0.7 + (b.z - a.z) * e)
+                splines[used].points.foreach_set("co", [a.x, a.y, a.z + 0.7, 1, *mid, 1, *end, 1])
+                used += 1
+        for s in splines[used:]:
+            s.points.foreach_set("co", [0, 0, -20, 1] * 3)
 
     return update

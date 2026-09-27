@@ -403,3 +403,19 @@ def ladder(beat, d, ctx):
             count.data.body = f"{n}" if n else ""
 
     return update
+
+
+def sick(beat, d, ctx):
+    """Top right: how many Flumps carry a disease at the tick shown, and what
+    share of everyone that is."""
+    anchor = ctx.screen.anchor("sick", 0.66, 0.78)
+    card("sick-card", anchor, (0, 0, -0.01), (0.62, 0.17, 0.002))
+    line = text("sick-line", "", 0.05, materials.fading("sick-ink", materials.YARN["sick"], 3.0), anchor,
+                location=(-0.28, -0.015, 0), align="LEFT")
+
+    def update(frame):
+        f = d.frames[min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)]
+        ill = sum(1 for n in f.diseases.values() if n)
+        line.data.body = f"sick: {ill} of {len(f.agents)} ({ill / max(len(f.agents), 1):.0%})"
+
+    return update

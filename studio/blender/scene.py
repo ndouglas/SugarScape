@@ -65,7 +65,8 @@ def _agents(beat, d, tracks, timing, corners):
     yarn colors in order), collection instances in crowds — and their updater.
     With params colors="family", a Flump wears its family line's color (its
     mother's, back to a founding mother); with colors="tribe", its tribe's,
-    changing as its tribe does."""
+    changing as its tribe does; with colors="sick", sickly green while it
+    carries a disease and its own color when well."""
     w, h = d.width, d.height
     colors = list(materials.CROWD_YARN)
     RIGS.clear()
@@ -78,14 +79,19 @@ def _agents(beat, d, tracks, timing, corners):
         key = family.get(id_, id_)
         return colors[order.get(key, key) % len(colors)]
 
-    def tribe_color(id_, frame):
+    live = mode in ("tribe", "sick")
+
+    def live_color(id_, frame):
+        """The color the tick shown gives a Flump (None: its own)."""
         f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
-        g = f.groups.get(id_)
-        return materials.TRIBE_YARN[g] if g is not None else None
+        if mode == "tribe":
+            g = f.groups.get(id_)
+            return materials.TRIBE_YARN[g] if g is not None else None
+        return "sick" if f.diseases.get(id_) else None
 
     protos = None if beat.closeup else flump.crowd_prototypes()
     for id_ in tracks:
-        start = tribe_color(id_, timing.frame(tracks[id_].first)) if mode == "tribe" else None
+        start = live_color(id_, timing.frame(tracks[id_].first)) if live else None
         color = start or base_color(id_)
         if beat.closeup:
             RIGS[id_] = flump.build_flump(f"flump{id_}", color)
@@ -95,7 +101,7 @@ def _agents(beat, d, tracks, timing, corners):
     def update(frame):
         for id_, t in tracks.items():
             p = animate.pose(t, timing, frame, corners, w, h)
-            color = tribe_color(id_, frame) if mode == "tribe" and p.visible else None
+            color = (live_color(id_, frame) or base_color(id_)) if live and p.visible else None
             if beat.closeup:
                 rig = RIGS[id_]
                 flump.apply(rig.root, p)
