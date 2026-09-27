@@ -50,13 +50,45 @@ def typical_seed(rows, keys):
     return min(sorted(rows), key=distance)
 
 
-def run(preset, seed, ticks, tmp):
-    """The series and final agents (as CSV rows) of a preset run."""
-    series, agents = tmp / f"{preset}-{seed}.csv", tmp / f"{preset}-{seed}-agents.csv"
+def with_changes(config, changes):
+    """`config` (a dict) with each dotted path in `changes` set, as a shot's
+    `set` does."""
+    config = json.loads(json.dumps(config))
+    for path, value in changes.items():
+        *parents, last = path.split(".")
+        node = config
+        for key in parents:
+            node = node[int(key)] if isinstance(node, list) else node[key]
+        if isinstance(node, list):
+            node[int(last)] = value
+        else:
+            node[last] = value
+    return config
+
+
+def preset_config(preset, tmp):
+    """A preset's config as a dict, as the CLI loads it."""
+    out = tmp / f"{preset}.config.json"
+    if not out.exists():
+        subprocess.run([CLI, "run", "--preset", preset, "--ticks", "0", "--config-out", out],
+                       check=True, stdout=subprocess.DEVNULL)
+    return json.loads(out.read_text())
+
+
+def run(preset, seed, ticks, tmp, changes=None):
+    """The series and final agents (as CSV rows) of a preset run, with any
+    `changes` to its config (dotted paths, as a shot's `set`)."""
+    name = preset + ("-" + "-".join(f"{k}={v}" for k, v in sorted(changes.items())) if changes else "")
+    series, agents = tmp / f"{name}-{seed}.csv", tmp / f"{name}-{seed}-agents.csv"
+    source = ["--preset", preset]
+    if changes:
+        config = tmp / f"{name}.json"
+        config.write_text(json.dumps(with_changes(preset_config(preset, tmp), changes)))
+        source = ["--config", config]
     subprocess.run(
-        [CLI, "run", "--preset", preset, "--seed", str(seed), "--ticks", str(ticks),
+        [CLI, "run", *source, "--seed", str(seed), "--ticks", str(ticks),
          "--series-csv", series, "--agents-csv", agents],
-        check=True,
+        check=True, stdout=subprocess.DEVNULL,
     )
     with open(series) as f:
         s = list(csv.DictReader(f))

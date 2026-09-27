@@ -16,6 +16,12 @@ class MeasureTest(unittest.TestCase):
         rows = {1: {"a": 1, "b": 0}, 2: {"a": 1, "b": 4}, 3: {"a": 1, "b": 5}}
         self.assertEqual(measure.typical_seed(rows, ["a", "b"]), 2)
 
+    def test_changes_set_dotted_paths_without_touching_the_original(self):
+        config = {"trade": {"enabled": True}, "goods": [{"metabolism": 1}, {"metabolism": 2}]}
+        changed = measure.with_changes(config, {"trade.enabled": False, "goods.1.metabolism": 4})
+        self.assertEqual(changed, {"trade": {"enabled": False}, "goods": [{"metabolism": 1}, {"metabolism": 4}]})
+        self.assertTrue(config["trade"]["enabled"])
+
 
 class PilotVerdictTest(unittest.TestCase):
     claims = episode.load_module("sugarscape", "claims")
