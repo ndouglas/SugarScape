@@ -133,7 +133,8 @@ def labels(beat, d, ctx):
         items.append((id_, holder, text(f"label{id_}-text", body, 0.34, cream, holder)))
 
     def update(frame):
-        k = min(max(int(ctx.timing.tick_at(frame)), 0), d.ticks)
+        # Rounded, as the Flumps' live colors are, so a label never contradicts its tint.
+        k = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
         for id_, holder, label in items:
             p = flump_pose(ctx, d, id_, frame)
             if not p.visible:
