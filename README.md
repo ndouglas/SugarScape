@@ -103,9 +103,20 @@ Model extensions:
 - Switching disease on or off, and changing the number of diseases, their lengths or the
   immune-string length, rebuilds the world; the fee, flips per tick ("medicine") and
   mutation rates apply to the running world. Outbreaks are listed in the Schedule section.
-- `v-1-rid` reaches near-eradication rather than exactly zero infected: learning one disease
-  can overwrite the immune-string window that cured another, so a residue of about 1–3%
-  persists.
+- Immune learning follows the book's footnote 16 by default (`disease.learning: per_agent`): an
+  agent flips one bit a tick in all, toward the oldest disease it still carries, and a cured
+  disease is shed at the start of its next turn (`disease.cure: next_tick`, as in the worked
+  example). Under this reading `v-1-rid` reaches zero infected in 20 of 20 runs, and so does
+  `v-2-endemic`: the book's endemic level does not reproduce. The earlier reading, one flip per
+  carried disease each tick (`per_disease`), leaves V-1 a residue of about 1–3% and keeps V-2
+  endemic; `disease.cure: immediate` sheds a disease the moment it is matched.
+- Chapter VI leaves details unstated, so each is a switch that defaults to the earlier behavior:
+  founders' ages (`lifespan.founders`: `newborn` or `random`), what wealth makes an agent
+  fertile (`sex.fertile_wealth`: `each_good`, `total`, `welfare` or `sugar`), and per-placement
+  spice, spice metabolism, age and endowment. Across all 16 combinations, trade never turns
+  VI-2's crash into VI-3's doubling in more than 1 run of 20.
+- `iv-15-trade-sex` follows Figure IV-14's fertility ends (women 35–45, men 45–55); under the
+  book's rules its population dies out in 15 of 20 runs.
 - The disease fee counts as metabolism everywhere metabolism is used, including consumption
   pollution: sick agents pollute more than healthy ones when pollution is on.
 - `vi-1-everything`'s disease flares after each scheduled outbreak (t = 150, 400, 650) and

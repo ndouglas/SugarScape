@@ -60,6 +60,12 @@ should say so, as `iii-12-collision`'s does. The survey's III-9 sentence needs "
 
 ## Markets (IV-1 to IV-6, IV-13)
 
+> **Corrected after the review (2026-09-27).** The shuttling numbers below counted a Flump as
+> changing hills whenever it crossed the midline, so walks along the border counted too. Counting
+> only walks between sites deep in each hill (`markets.DEEP`), 28 % shuttle without trade and 29 %
+> with it. The episode says "about a quarter" and "about as many Flumps still shuttle", not "about
+> half" and "more, not fewer". The rest of this record is kept as measured at the time.
+
 | Candidate claim | Measured | Verdict |
 |---|---|---|
 | Without trade, Flumps shuttle between sugar and spice (iv-1) | 49 % (46–52 %) cross sides at least twice in t = 100–200; ≥ 50 % on 9/20 | **Reword**: "about half" |
