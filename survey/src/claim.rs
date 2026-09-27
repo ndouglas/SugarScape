@@ -107,6 +107,20 @@ pub fn range(values: &[f64], lo: f64, hi: f64, about: bool) -> Outcome {
     }
 }
 
+/// Claim: between `lo` and `hi` seeds (inclusive) satisfy something, each
+/// seed's flag being 1.0 or 0.0 — for a description that states a count
+/// ("14 of 20") rather than a property of every run.
+pub fn count(flags: &[f64], lo: usize, hi: usize) -> Outcome {
+    let v = stats::finite(flags);
+    if v.len() < MIN_SEEDS {
+        return too_few(v.len());
+    }
+    let n = v.iter().filter(|&&f| f > 0.5).count();
+    let verdict = if (lo..=hi).contains(&n) { Verdict::Holds } else { Verdict::Fails };
+    let measured = format!("{n} of {} seeds (expected {lo}–{hi})", v.len());
+    Outcome { verdict, measured, detail: String::new() }
+}
+
 /// Claim: `a` exceeds `b`. One-sided Mann–Whitney at p < 0.01.
 pub fn greater(a: &[f64], b: &[f64], a_name: &str, b_name: &str) -> Outcome {
     let (a, b) = (stats::finite(a), stats::finite(b));
@@ -203,6 +217,14 @@ pub fn all_of(parts: Vec<(String, Outcome)>) -> Outcome {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn count_holds_only_inside_its_bounds() {
+        let flags = [1.0, 1.0, 0.0, 1.0, 0.0, 1.0];
+        assert_eq!(count(&flags, 3, 5).verdict, Verdict::Holds);
+        assert_eq!(count(&flags, 5, 6).verdict, Verdict::Fails);
+        assert_eq!(count(&flags[..3], 0, 3).verdict, Verdict::Untestable);
+    }
 
     #[test]
     fn range_counts_seeds_and_widens_about() {

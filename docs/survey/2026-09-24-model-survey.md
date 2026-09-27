@@ -5,6 +5,26 @@ as of `e77e038` plus the N-goods sweep fix. Milestone 9 (Schelling, Ring World),
 covered. Spec: `docs/superpowers/specs/2026-09-24-model-survey-design.md`. Raw numbers:
 `survey/out/results.json`; triage notes: `survey/out/triage.md`.
 
+## Corrections since (2026-09-27)
+
+This report is a dated snapshot. Measurements for the Flump Studio's War and Markets episodes found
+four places where it, or the descriptions it checked, no longer stand:
+
+- **III-9's tribes "rarely meet"** (item 1 below) is true only by t = 500 (median 5 kills). By t = 2000
+  one tribe holds at least 90 % in 14 of 20 runs, and one agent makes about 94 % of the kills: the
+  book's blitzkrieg reproduces, slowly. New claims `iii-9.warlord` and `iii-9.conquest` hold.
+- **III-11's "prolonged battle fronts"** passed a check that asked only whether fighting continued.
+  No front forms under the book's stated random replacement: kills spread over every quarter of the
+  board and most of the dead are newcomers. The description now says so (`iii-11.never-stops`,
+  `iii-11.no-front`, `iii-11.newcomers`).
+- **III-14's "conquest and conversion together"** was untestable as worded. The run is a civil war:
+  converts appear at once and fight their own side, leaving fewer than 20 agents by t = 100, with far
+  fewer conversions than culture alone. The description now says so (`iii-14.civil-war`,
+  `iii-14.fewer-conversions`).
+- **Figure IV-6's "trade wins on all 10 seeds at every vision"** (item 9) no longer holds on main:
+  over 20 seeds trade is higher in 118 of 120 seed–vision pairs, and in 59 of 60 within the sweep's
+  own seeds 1–10 (seed 10 at mean vision 2 goes the other way).
+
 ## Summary
 
 156 claims: **125 hold, 11 weak, 15 fail, 5 untestable**, and no check crashed.

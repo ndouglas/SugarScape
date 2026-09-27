@@ -8,7 +8,7 @@ use sugarscape_core::agent::Tribe;
 use sugarscape_core::config::Config;
 use sugarscape_core::world::{DeathCause, World};
 
-use crate::claim::{greater, range, untestable, Claim, Source};
+use crate::claim::{count, greater, range, Claim, Source};
 use crate::runner::{after, each_seed, preset, series, window_mean};
 use crate::stats;
 
@@ -182,6 +182,66 @@ fn generations_alive(seeds: &[u64]) -> Vec<f64> {
         }
         let alive: BTreeSet<u32> = w.agents().map(|a| gen[&a.id]).collect();
         alive.len() as f64
+    })
+}
+
+/// iii-9 over t = 1..=2000, per seed: [one tribe ≥ 90 % at the end (1/0),
+/// the busiest killer's share of the kills when there were ≥ 50 (else NaN)].
+fn conquest_and_warlord(seeds: &[u64]) -> Vec<[f64; 2]> {
+    each_seed(&preset("iii-9-combat"), seeds, |mut w| {
+        let mut made: BTreeMap<u64, usize> = BTreeMap::new();
+        for _ in 0..2000 {
+            w.step();
+            for k in &w.events().kills {
+                *made.entry(k.attacker).or_default() += 1;
+            }
+        }
+        let total: usize = made.values().sum();
+        let top = made.values().copied().max().unwrap_or(0);
+        let share = if total >= 50 { top as f64 / total as f64 } else { f64::NAN };
+        [flag(majority_share(&w) >= 0.9), share]
+    })
+}
+
+/// iii-11 over t = 1..=500, per seed: [every quarter of the board holds
+/// ≥ 15 % of the kills (1/0), the share of victims aged 5 or less].
+fn front_and_newcomers(seeds: &[u64]) -> Vec<[f64; 2]> {
+    each_seed(&preset("iii-11-combat-fixed"), seeds, |mut w| {
+        let (cw, ch) = (w.config.width, w.config.height);
+        let mut quarters = [0usize; 4];
+        let (mut young, mut victims) = (0usize, 0usize);
+        for _ in 0..500 {
+            let before: BTreeMap<u64, (u32, u32, u32)> =
+                w.agents().map(|a| (a.id, (a.pos.x, a.pos.y, a.age))).collect();
+            w.step();
+            for k in &w.events().kills {
+                if let Some(&(x, y, age)) = before.get(&k.victim) {
+                    quarters[usize::from(x >= cw / 2) + 2 * usize::from(y >= ch / 2)] += 1;
+                    young += usize::from(age <= 5);
+                    victims += 1;
+                }
+            }
+        }
+        let spread = quarters.iter().all(|&q| q as f64 >= 0.15 * victims as f64);
+        [flag(victims > 0 && spread), young as f64 / victims.max(1) as f64]
+    })
+}
+
+/// iii-14 over t = 1..=500 with combat as configured: agents whose tribe
+/// ever changed.
+fn conversions(config: &Config, seeds: &[u64]) -> Vec<f64> {
+    each_seed(config, seeds, |mut w| {
+        let mut first: BTreeMap<u64, Tribe> = w.agents().map(|a| (a.id, a.tribe())).collect();
+        let mut converted = BTreeSet::new();
+        for _ in 0..500 {
+            w.step();
+            for a in w.agents() {
+                if *first.entry(a.id).or_insert(a.tribe()) != a.tribe() {
+                    converted.insert(a.id);
+                }
+            }
+        }
+        converted.len() as f64
     })
 }
 
@@ -417,6 +477,26 @@ pub fn claims() -> Vec<Claim> {
             // 95%, not 100%: a winner killed later in the same tick cannot be matched.
             check: |s| range(&whole_wealth_matched(s), 0.95, 1.0, false),
         },
+        Claim {
+            id: "iii-9.warlord",
+            item: "iii-9-combat",
+            source: Source::App,
+            citation: "presets.rs iii-9-combat description",
+            text: "one agent makes nearly all the kills (in runs with ≥ 50 combat deaths over t = 1..=2000, the busiest killer makes ≥ 80% of them)",
+            check: |s| {
+                let r = conquest_and_warlord(s);
+                range(&r.iter().map(|x| x[1]).collect::<Vec<_>>(), 0.8, 1.0, false)
+            },
+        },
+        Claim {
+            id: "iii-9.conquest",
+            item: "iii-9-combat",
+            source: Source::App,
+            citation: "presets.rs iii-9-combat description",
+            // The studio measured 14 of 20 (studio/episodes/war/measurements.md).
+            text: "in most runs one tribe is wiped out or nearly (one tribe holds ≥ 90% at t = 2000 in 11–17 of 20 seeds)",
+            check: |s| count(&conquest_and_warlord(s).iter().map(|x| x[0]).collect::<Vec<_>>(), 11, 17),
+        },
         // ---- iii-11-combat-fixed ----
         Claim {
             id: "iii-11.held-at-400",
@@ -452,11 +532,11 @@ pub fn claims() -> Vec<Claim> {
             },
         },
         Claim {
-            id: "iii-11.prolonged-fronts",
+            id: "iii-11.never-stops",
             item: "iii-11-combat-fixed",
             source: Source::App,
             citation: "presets.rs iii-11-combat-fixed description",
-            text: "prolonged battle fronts (at t = 500 both tribes hold ≥ 10% of agents and there were ≥ 10 combat deaths over t = 401..=500)",
+            text: "the fighting never stops (at t = 500 both tribes hold ≥ 10% of agents and there were ≥ 10 combat deaths over t = 401..=500)",
             // ≥ 10 kills per 100 ticks: fighting still going on, not a stray kill.
             check: |s| {
                 let ok = each_seed(&preset("iii-11-combat-fixed"), s, |mut w| {
@@ -469,6 +549,28 @@ pub fn claims() -> Vec<Claim> {
                     flag(k >= 10 && majority_share(&w) <= 0.9)
                 });
                 range(&ok, 1.0, 1.0, false)
+            },
+        },
+        Claim {
+            id: "iii-11.no-front",
+            item: "iii-11-combat-fixed",
+            source: Source::App,
+            citation: "presets.rs iii-11-combat-fixed description",
+            text: "no battle front forms: kills spread over the whole board (every quarter holds ≥ 15% of the combat deaths over t = 1..=500)",
+            check: |s| {
+                let r = front_and_newcomers(s);
+                range(&r.iter().map(|x| x[0]).collect::<Vec<_>>(), 1.0, 1.0, false)
+            },
+        },
+        Claim {
+            id: "iii-11.newcomers",
+            item: "iii-11-combat-fixed",
+            source: Source::App,
+            citation: "presets.rs iii-11-combat-fixed description",
+            text: "most of the dead are newcomers (over t = 1..=500, more than half of the combat victims are aged 5 or less)",
+            check: |s| {
+                let r = front_and_newcomers(s);
+                range(&r.iter().map(|x| x[1]).collect::<Vec<_>>(), 0.5, 1.0, false)
             },
         },
         // ---- iii-12-collision ----
@@ -567,12 +669,32 @@ pub fn claims() -> Vec<Claim> {
             },
         },
         Claim {
-            id: "iii-14.together",
+            id: "iii-14.civil-war",
             item: "iii-14-combat-culture",
             source: Source::App,
             citation: "presets.rs iii-14-combat-culture description",
-            text: "conquest and conversion together, as distinct from iii-9-combat",
-            check: |_| untestable("\"together\" names no outcome beyond both processes occurring (iii-14.conquest, iii-14.conversion); the description states no result of their interaction to compare with iii-9-combat"),
+            text: "converts start a civil war that leaves fewer than 20 agents by t = 100",
+            check: |s| {
+                let n = after(&preset("iii-14-combat-culture"), s, 100, |w| w.population() as f64);
+                range(&n, 0.0, 19.0, false)
+            },
+        },
+        Claim {
+            id: "iii-14.fewer-conversions",
+            item: "iii-14-combat-culture",
+            source: Source::App,
+            citation: "presets.rs iii-14-combat-culture description",
+            text: "combat leaves far fewer conversions than culture alone (agents ever changing tribe over t = 1..=500, culture only vs with combat)",
+            check: |s| {
+                let mut calm = preset("iii-14-combat-culture");
+                calm.combat.enabled = false;
+                greater(
+                    &conversions(&calm, s),
+                    &conversions(&preset("iii-14-combat-culture"), s),
+                    "culture only",
+                    "with combat",
+                )
+            },
         },
     ]
 }

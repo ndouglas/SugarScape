@@ -237,7 +237,7 @@ pub fn all() -> Vec<Preset> {
             "iii-9-combat",
             "({G₁}, {C∞})",
             "Animation III-9",
-            "Unlimited combat between two tribes: the winner accumulates its victims' whole wealth.",
+            "Unlimited combat between two tribes: the winner takes its victim's whole wealth. An agent may attack only a poorer enemy, and not where a richer one would see it, so equals never fight and the fighting starts slowly. In most runs one agent grows rich enough that no enemy may attack it, makes nearly all the kills, and its tribe wipes out the other, or nearly, by t = 2000: the book's blitzkrieg.",
             |c| {
                 tribes(c);
                 c.combat.enabled = true;
@@ -247,7 +247,7 @@ pub fn all() -> Vec<Preset> {
             "iii-11-combat-fixed",
             "({G₁}, {C₂, R[60,100]})",
             "Animation III-11",
-            "Fixed reward of 2 per kill, population held at 400 by replacement: prolonged battle fronts.",
+            "Fixed reward of 2 per kill, population held at 400 by replacement. The book reports coherent battle fronts; under its stated rule, which puts each replacement at a random site, the fighting never stops but no front forms: kills spread over the whole board, and most of the dead are newcomers killed within a few ticks of landing among enemies.",
             |c| {
                 tribes(c);
                 c.combat.enabled = true;
@@ -271,7 +271,7 @@ pub fn all() -> Vec<Preset> {
             "iii-14-combat-culture",
             "({G₁}, {C∞, K})",
             "Animation III-14",
-            "Combat with cultural transmission: conquest and conversion together.",
+            "Combat with cultural transmission. The book shows invaders converted before they can conquer; with its random tags many agents start one flip from the other tribe, so converts appear at once and fight their own side: a civil war leaves fewer than 20 agents by t = 100, and combat leaves far fewer conversions than culture alone.",
             |c| {
                 tribes(c);
                 c.combat.enabled = true;

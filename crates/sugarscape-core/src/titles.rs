@@ -46,11 +46,11 @@ pub const TITLES: [(&str, &str); 202] = [
     ),
     (
         "iii-9-combat",
-        "Two tribes fight, and each winner takes its victim's whole fortune",
+        "Quiet for hundreds of ticks, then one agent conquers the other tribe",
     ),
     (
         "iii-11-combat-fixed",
-        "Two tribes fight for a fixed reward and hold long battle fronts",
+        "Two tribes fight forever, but the book's battle fronts never form",
     ),
     (
         "iii-12-collision",
@@ -58,7 +58,7 @@ pub const TITLES: [(&str, &str); 202] = [
     ),
     (
         "iii-14-combat-culture",
-        "Tribes conquer and convert each other at the same time",
+        "Culture meets combat: converts start a civil war that leaves almost no one",
     ),
     (
         "iv-1-spice",
