@@ -22,7 +22,7 @@ use crate::agent::AgentId;
 use crate::geometry::Pos;
 use crate::rules::{movement::choose, Harvest};
 use crate::social::Seen;
-use crate::world::{DeathCause, World};
+use crate::world::{DeathCause, Kill, World};
 
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let me = world.agent(id).expect("live agent");
@@ -60,6 +60,11 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
         loot = cap.min(victim.holdings[0]);
         victim.holdings[0] -= loot;
         world.kill(victim_id, DeathCause::Combat);
+        world.events.kills.push(Kill {
+            attacker: id,
+            victim: victim_id,
+            loot,
+        });
     }
     world.move_agent(id, target);
     social.moved(world, Seen::at(world, target), tags);
@@ -130,6 +135,24 @@ mod tests {
         assert_eq!(w.agent(me).unwrap().holdings[0], 14.0);
         assert!(w.agent(victim).is_none());
         assert_eq!(w.events().deaths[0].cause, DeathCause::Combat);
+    }
+
+    #[test]
+    fn a_kill_records_its_attacker_victim_and_loot() {
+        let mut w = fighting_world();
+        w.config.combat.unlimited = false;
+        w.config.combat.reward = 2.0;
+        let me = blue(&mut w, 5, 5, 10.0, 2);
+        let victim = red(&mut w, 5, 7, 3.0);
+        act(&mut w, me);
+        assert_eq!(
+            w.events().kills,
+            vec![Kill {
+                attacker: me,
+                victim,
+                loot: 2.0
+            }]
+        );
     }
 
     #[test]

@@ -157,6 +157,10 @@ pub struct Frame {
     /// there were none).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub trades: Vec<PairTrade>,
+    /// This tick's kills under rule C as `[attacker, victim, loot]`, in the
+    /// order they happened (absent when there were none).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub kills: Vec<(u64, u64, f64)>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -216,6 +220,7 @@ fn frame(
     seen: &mut BTreeSet<u64>,
     deaths: Vec<(u64, &'static str)>,
     trades: Vec<PairTrade>,
+    kills: Vec<(u64, u64, f64)>,
 ) -> Frame {
     let agents: Vec<AgentRow> = world
         .agents()
@@ -262,6 +267,7 @@ fn frame(
         spice,
         spice_agents,
         trades,
+        kills,
         agents,
         sugar: world.sites.iter().map(|s| s.resource[0]).collect(),
         pollution: world.sites.iter().map(|s| s.pollution[0]).collect(),
@@ -325,7 +331,7 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
     let mut seen = BTreeSet::new();
     let mut placed = Vec::new();
     place(&mut world, shot, &mut placed)?;
-    let mut frames = vec![frame(&world, &mut seen, Vec::new(), Vec::new())];
+    let mut frames = vec![frame(&world, &mut seen, Vec::new(), Vec::new(), Vec::new())];
     for _ in 0..shot.ticks {
         world.step();
         let deaths = world
@@ -335,8 +341,14 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
             .map(|d| (d.id, cause_name(d.cause)))
             .collect();
         let traded = trades(&world.events().trades);
+        let kills = world
+            .events()
+            .kills
+            .iter()
+            .map(|k| (k.attacker, k.victim, k.loot))
+            .collect();
         place(&mut world, shot, &mut placed)?;
-        frames.push(frame(&world, &mut seen, deaths, traded));
+        frames.push(frame(&world, &mut seen, deaths, traded, kills));
     }
     placed.sort_by_key(|&(i, _)| i);
     let stats = stats::series_names(&config)
@@ -462,6 +474,39 @@ mod tests {
         );
         assert_eq!(d.frames[0].agents[0].3, 30.0);
         assert_eq!(d.frames[0].spice_agents[0], (3.0, 2));
+    }
+
+    #[test]
+    fn frames_carry_each_ticks_kills_matching_its_combat_deaths() {
+        let d = run(r#"{"preset": "iii-9-combat", "ticks": 5, "seed": 2,
+            "set": {"width": 8, "height": 8, "population": 0, "vision.max": 3,
+                "placement": {"kind": "random"}, "goods.0.map": {"kind": "flat", "capacity": 1}},
+            "place": [{"x": 2, "y": 2, "sugar": 40, "vision": 3, "tribe": "blue"},
+                      {"x": 2, "y": 4, "sugar": 2, "vision": 1, "tribe": "red"},
+                      {"x": 4, "y": 2, "sugar": 2, "vision": 1, "tribe": "red"}]}"#);
+        let mut kills = 0;
+        for f in &d.frames {
+            let victims: BTreeSet<u64> = f.kills.iter().map(|k| k.1).collect();
+            let combat: BTreeSet<u64> = f
+                .deaths
+                .iter()
+                .filter(|(_, c)| *c == "combat")
+                .map(|(id, _)| *id)
+                .collect();
+            assert_eq!(victims, combat);
+            for &(attacker, _, loot) in &f.kills {
+                assert_eq!(attacker, d.placed[0]);
+                assert!(loot > 0.0);
+            }
+            kills += f.kills.len();
+        }
+        assert!(kills > 0, "the rich Blue never attacked");
+        let json = serde_json::to_value(run(TINY)).unwrap();
+        assert!(json["frames"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|f| f.get("kills").is_none()));
     }
 
     #[test]

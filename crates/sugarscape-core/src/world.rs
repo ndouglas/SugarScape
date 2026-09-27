@@ -38,6 +38,15 @@ pub struct Trade {
     pub amount: f64,
 }
 
+/// One kill under rule C: `attacker` took `victim`'s site and `loot` of its
+/// sugar.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Kill {
+    pub attacker: AgentId,
+    pub victim: AgentId,
+    pub loot: f64,
+}
+
 /// One infection: `infector` gave `disease` to `infected` (`None` for an
 /// outbreak).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -73,6 +82,7 @@ pub struct TickEvents {
     pub births: u32,
     pub deaths: Vec<Death>,
     pub trades: Vec<Trade>,
+    pub kills: Vec<Kill>,
     pub loans_made: u32,
     pub amount_lent: f64,
     pub defaults: u32,

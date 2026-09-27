@@ -1,0 +1,6 @@
+{"preset": "iii-9-combat", "ticks": 5, "seed": 2,
+ "set": {"width": 8, "height": 8, "population": 0, "vision.max": 3,
+   "placement": {"kind": "random"}, "goods.0.map": {"kind": "flat", "capacity": 1}},
+ "place": [{"x": 2, "y": 2, "sugar": 40, "vision": 3, "tribe": "blue"},
+           {"x": 2, "y": 4, "sugar": 2, "vision": 1, "tribe": "red"},
+           {"x": 4, "y": 2, "sugar": 2, "vision": 1, "tribe": "red"}]}

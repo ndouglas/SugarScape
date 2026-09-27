@@ -31,6 +31,7 @@ class Frame:
     spice: list = field(default_factory=list)
     spice_agents: dict = field(default_factory=dict)
     trades: list = field(default_factory=list)
+    kills: list = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,16 @@ class Trade:
     def price(self):
         """Spice per sugar, over the tick's exchanges."""
         return self.spice / self.sugar
+
+
+@dataclass(frozen=True)
+class Kill:
+    """One kill under rule C: `attacker` took `victim`'s site and `loot` of
+    its sugar."""
+
+    attacker: int
+    victim: int
+    loot: float
 
 
 @dataclass(frozen=True)
@@ -105,6 +116,7 @@ def parse(text):
             spice=f.get("spice", []),
             spice_agents={row[0]: tuple(s) for row, s in zip(f["agents"], f.get("spice_agents", []))},
             trades=[Trade(*t) for t in f.get("trades", [])],
+            kills=[Kill(*k) for k in f.get("kills", [])],
         )
         for f in raw["frames"]
     ]

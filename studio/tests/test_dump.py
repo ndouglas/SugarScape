@@ -121,5 +121,25 @@ class MarketDumpTest(unittest.TestCase):
         self.assertAlmostEqual(t.price, t.spice / t.sugar)
 
 
+
+# Made by `sugarscape shot tests/fixtures/war.json`: a rich Blue among two
+# poor Reds on an 8 × 8 board with combat on.
+WAR = pathlib.Path(__file__).parent / "fixtures" / "war.frames.json"
+
+
+class WarDumpTest(unittest.TestCase):
+    def test_kills_name_attacker_victim_and_loot_and_match_combat_deaths(self):
+        d = dump.load(WAR)
+        blue = d.placed[0]
+        kills = [k for f in d.frames for k in f.kills]
+        self.assertTrue(kills)
+        for f in d.frames:
+            self.assertEqual({k.victim for k in f.kills}, {i for i, c in f.deaths.items() if c == "combat"})
+        self.assertTrue(all(isinstance(k, dump.Kill) and k.attacker == blue and k.loot > 0 for k in kills))
+
+    def test_dumps_without_combat_have_no_kills(self):
+        self.assertTrue(all(f.kills == [] for f in dump.load(FIXTURE).frames))
+
+
 if __name__ == "__main__":
     unittest.main()
