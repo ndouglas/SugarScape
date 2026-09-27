@@ -234,6 +234,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
                 _ => "stable",
             },
             ModelKind::Image => "its last generation",
+            ModelKind::Farol => "its last round",
             _ => "its end year",
         };
         eprintln!("finished at tick {} ({why})", world.tick());

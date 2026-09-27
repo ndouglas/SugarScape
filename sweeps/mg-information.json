@@ -1,0 +1,51 @@
+{
+  "name": "Minority game: the real history against a random one",
+  "description": "Does the minority game need its own history? σ²/N against memory for 101 players with 2 strategies, reading the real record of winning sides or a random one drawn each round. Measured (release, seeds 1–10, recorded 2026-09-27): 2.0/2.3, 1.4/1.3, 0.82/0.76, 0.37/0.37, 0.10/0.11, 0.060/0.060, 0.10/0.12, 0.15/0.15, 0.18/0.20, 0.22/0.24 at M 1 to 10 — the same curve: what matters is that everyone reads the same signal, not that it is the real one.",
+  "base": {
+    "preset": "mg-critical"
+  },
+  "x": {
+    "label": "Memory (M)",
+    "path": "memory",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ]
+  },
+  "series": {
+    "label": "History",
+    "values": [
+      {
+        "at": 0,
+        "name": "The real history",
+        "set": {
+          "information": "true"
+        }
+      },
+      {
+        "at": 1,
+        "name": "A random history",
+        "set": {
+          "information": "random"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "fluctuation"
+  }
+}

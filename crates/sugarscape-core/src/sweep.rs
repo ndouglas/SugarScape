@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 73] = [
+const BUILTINS: [Builtin; 80] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1257,6 +1257,34 @@ const BUILTINS: [Builtin; 73] = [
     Builtin {
         id: "lh-gene-flow",
         json: include_str!("../../../sweeps/lh-gene-flow.json"),
+    },
+    Builtin {
+        id: "ef-predictors",
+        json: include_str!("../../../sweeps/ef-predictors.json"),
+    },
+    Builtin {
+        id: "ef-capacity",
+        json: include_str!("../../../sweeps/ef-capacity.json"),
+    },
+    Builtin {
+        id: "mg-memory",
+        json: include_str!("../../../sweeps/mg-memory.json"),
+    },
+    Builtin {
+        id: "mg-fig-1",
+        json: include_str!("../../../sweeps/mg-fig-1.json"),
+    },
+    Builtin {
+        id: "mg-strategies",
+        json: include_str!("../../../sweeps/mg-strategies.json"),
+    },
+    Builtin {
+        id: "mg-information",
+        json: include_str!("../../../sweeps/mg-information.json"),
+    },
+    Builtin {
+        id: "cmo-bias",
+        json: include_str!("../../../sweeps/cmo-bias.json"),
     },
 ];
 
@@ -2153,7 +2181,14 @@ mod tests {
                 "ns-rounds",
                 "ns-group-size",
                 "lh-cost",
-                "lh-gene-flow"
+                "lh-gene-flow",
+                "ef-predictors",
+                "ef-capacity",
+                "mg-memory",
+                "mg-fig-1",
+                "mg-strategies",
+                "mg-information",
+                "cmo-bias"
             ]
         );
         for b in builtins() {
