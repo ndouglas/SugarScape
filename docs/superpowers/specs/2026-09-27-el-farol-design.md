@@ -158,3 +158,13 @@ The presets menu gains an **El Farol and the Minority Game** group (titled prese
 ## Docs
 
 README: an El Farol and the Minority Game section (both games, the stated library and choices, switches, presets, sweeps, and the findings: the mean at 60 is trivial and adaptive agents fluctuate far more than coin-flippers; accuracy scoring keeps a two-period cycle; Arthur's robustness needs a large library; CZ97's Fig. 1 and 2 hold; the two peaks of Fig. 4 do not appear; the memory transition). `docs/papers.md`: the milestone's row with SMR, CZ98 and CMO; roadmap: Milestone 23 done.
+
+## Amendments (implementation planning)
+
+The model was implemented in full while planning (`docs/superpowers/plans/2026-09-27-el-farol.md`) and measured with it; these change or extend the sections above.
+
+- **Random agents in the plain minority game flip a fair coin** (p = ½) rather than attending with probability L/N = (N − 1)/2N: the "random guessing" Savit et al. and Challet and Zhang compare with, and a baseline of exactly 0.25. With any other capacity p = L/N, as specified.
+- **Scores are the library's, not each agent's** (El Farol): every agent that holds a predictor rates it against the same history, so its score is kept once. The dynamics are unchanged.
+- **The evolution presets replace the worst player every 10 rounds** (`every` still defaults to 100): at 100 the decline of Fig. 9 barely shows within a browser session.
+- **Inspect:** a grid cell's agent is `member`; `agent` stays null.
+- **Measured with the implementation** (the survey): Arthur's mean 59.1–59.5 at k 6, 12, 23 and 58.1–59.9 across k 2–32 and the rule at exactly 60; lag-1 autocorrelation −0.57, −0.43, −0.23 (−0.06 rated by payoff); forecasts above 60 in use 30 %, 32 %, 36 %; CMO's binary El Farol σ²/N 1.66 at N 120, m 2 against 0.25, a bias helping at N 90 (0.08) and less clearly at N 150 (1.41 against 1.74); CZ97 Fig. 1 7.17, 2.11, 0.40 (S 5) and 1.60, 0.19, 0.18 (S 2); Fig. 2 0.351 to 0.500 by M 6, level after; Fig. 4 all rounds within 5 % of N/2 when rounded, 72 % unrounded; Fig. 5 0.457 at S 2 against 0.397 at S 9; Fig. 6 correlations of switches with wins −0.73 to −0.86; Fig. 9 σ²/N 5.6 to 2.2 over 40 000 rounds; Fig. 10 without mutation 2.39 against 2.16 (N 1001) and 0.32 against 0.25 (N 101), not significant; Fig. 11 final mean memory 2.92 (N 101) and 4.95 (N 1001); SMR's minimum at M 5, 6, 7 for N 51, 101, 201 (2^M/N 0.63, 0.63, 0.64), σ²/N scaling 3.88 at m 2 and 0.98 at m 14 from N 51 to 201; the best of 101 agents wins 48.7 % at m 3, 54.2 % at m 6, 52.5 % at m 8 and 49.0 % at m 10 — above the transition only near it.
