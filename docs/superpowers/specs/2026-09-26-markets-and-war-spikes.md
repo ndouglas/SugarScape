@@ -34,6 +34,26 @@ close the episode honestly ("with replacements, nobody ever wins"). III-12's mis
 III-14's civil war go to the finale. Footage: seeds 20, 12 and 8 conquer early (the killing starts
 around ticks 104, 322 and 295); seeds 3, 7, 15, 17 and 18 never do.
 
+**The book, checked** (`papers/sugarscape/`, pp. 83–92 and Appendix B):
+- **III-9 reproduces.** The book calls it "the stunning blitzkrieg", explains it as "increasing
+  returns … the bigger you are the faster you grow", and lists three outcomes: Blue wins, Red wins, or
+  small colonies coexist, each on its own peak. That matches our 14 conquests and 6 standoffs in 20.
+- **III-11 does not.** The book's replacements are "random agent[s] of the same tribe", and rule R
+  (p. 32–33 and Appendix B) states a "random position on the sugarscape". Our engine does exactly
+  that. The book reports "coherent battle fronts. Penetration is minimal … a prolonged war of
+  attrition". Under its stated rule, there is no front.
+- **III-14 does not.** The book says "everything exactly as in animation III-9 … except that cultural
+  processes are unfolding" and tells of invaders converted before they conquer. With the stated random
+  tags we get a civil war instead. The book mentions unanimous tags (all 0s against all 1s) only in a
+  footnote, as an alternative (n. 20).
+- **Framing this suggests: deterrence.** Rule C never lets a Flump attack an equal, or attack when a
+  richer enemy would see it, so equals never fight. War comes only when it is lopsided, and then it is
+  quick. The long war of attrition is the part the book claims and its stated rules don't produce.
+
+Next: named switches, with the literal rules as the default: replacements placed near their own tribe
+(III-11), and unanimous starting tags (III-14). Then a 20-seed sweep of each, to see whether the
+book's fronts and conversions come back.
+
 Engine follow-ups (not studio work): the `iii-11-combat-fixed` and `iii-14-combat-culture` preset
 descriptions claim fronts and "conquest and conversion together", and both fail. Their descriptions
 should say so, as `iii-12-collision`'s does. The survey's III-9 sentence needs "by t = 500".
