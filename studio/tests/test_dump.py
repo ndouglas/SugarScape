@@ -164,5 +164,25 @@ class CreditDumpTest(unittest.TestCase):
         self.assertTrue(all(f.loans == [] and f.fertility == {} for f in dump.load(FIXTURE).frames))
 
 
+
+# Made by `sugarscape shot tests/fixtures/disease.json`: v-1-rid on a flat
+# 10 × 10 board with 40 agents.
+DISEASE = pathlib.Path(__file__).parent / "fixtures" / "disease.frames.json"
+
+
+class DiseaseDumpTest(unittest.TestCase):
+    def test_diseases_carried_and_infections(self):
+        d = dump.load(DISEASE)
+        self.assertEqual(set(d.frames[0].diseases), set(d.frames[0].agents))
+        self.assertTrue(any(n > 0 for n in d.frames[0].diseases.values()))
+        infections = [i for f in d.frames for i in f.infections]
+        self.assertTrue(infections)
+        self.assertIsInstance(infections[0], dump.Infection)
+        self.assertNotEqual(infections[0].infector, infections[0].infected)
+
+    def test_dumps_without_disease_have_none(self):
+        self.assertTrue(all(f.diseases == {} and f.infections == [] for f in dump.load(FIXTURE).frames))
+
+
 if __name__ == "__main__":
     unittest.main()

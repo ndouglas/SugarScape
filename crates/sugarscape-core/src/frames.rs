@@ -174,6 +174,14 @@ pub struct Frame {
     /// otherwise): lenders past childbearing, borrowers within it.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub fertility: Vec<(u64, u32, u32)>,
+    /// How many diseases each agent carries, in `agents`' order (absent with
+    /// disease off).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub diseases: Vec<usize>,
+    /// This tick's infections under rule E as `[infector | null, infected,
+    /// disease]`, null for an outbreak (absent when none).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub infections: Vec<(Option<u64>, u64, u32)>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -234,6 +242,7 @@ fn frame(
     deaths: Vec<(u64, &'static str)>,
     trades: Vec<PairTrade>,
     kills: Vec<(u64, u64, f64)>,
+    infections: Vec<(Option<u64>, u64, u32)>,
 ) -> Frame {
     let agents: Vec<AgentRow> = world
         .agents()
@@ -273,6 +282,11 @@ fn frame(
     } else {
         Vec::new()
     };
+    let diseases = if world.config.disease.enabled {
+        world.agents().map(|a| a.diseases.len()).collect()
+    } else {
+        Vec::new()
+    };
     let two_goods = world.config.goods.len() > 1;
     let (spice, spice_agents) = if two_goods {
         (
@@ -295,6 +309,8 @@ fn frame(
         kills,
         loans,
         fertility,
+        diseases,
+        infections,
         agents,
         sugar: world.sites.iter().map(|s| s.resource[0]).collect(),
         pollution: world.sites.iter().map(|s| s.pollution[0]).collect(),
@@ -360,7 +376,14 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
     let mut seen = BTreeSet::new();
     let mut placed = Vec::new();
     place(&mut world, shot, &mut placed)?;
-    let mut frames = vec![frame(&world, &mut seen, Vec::new(), Vec::new(), Vec::new())];
+    let mut frames = vec![frame(
+        &world,
+        &mut seen,
+        Vec::new(),
+        Vec::new(),
+        Vec::new(),
+        Vec::new(),
+    )];
     for _ in 0..shot.ticks {
         world.step();
         let deaths = world
@@ -376,8 +399,14 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
             .iter()
             .map(|k| (k.attacker, k.victim, k.loot))
             .collect();
+        let infections = world
+            .events()
+            .infections
+            .iter()
+            .map(|i| (i.infector, i.infected, i.disease))
+            .collect();
         place(&mut world, shot, &mut placed)?;
-        frames.push(frame(&world, &mut seen, deaths, traded, kills));
+        frames.push(frame(&world, &mut seen, deaths, traded, kills, infections));
     }
     placed.sort_by_key(|&(i, _)| i);
     let stats = stats::series_names(&config)
@@ -576,6 +605,36 @@ mod tests {
             .unwrap()
             .iter()
             .all(|f| f.get("loans").is_none() && f.get("fertility").is_none()));
+    }
+
+    #[test]
+    fn disease_frames_carry_each_agents_diseases_and_the_ticks_infections() {
+        let d = run(r#"{"preset": "v-1-rid", "ticks": 10, "seed": 1}"#);
+        for f in &d.frames {
+            assert_eq!(f.diseases.len(), f.agents.len());
+            let alive: BTreeSet<u64> = f.agents.iter().map(|a| a.0).collect();
+            for &(infector, infected, _) in &f.infections {
+                assert!(alive.contains(&infected));
+                assert_ne!(infector, Some(infected));
+            }
+        }
+        // Endowment skips diseases an immune string already holds, so a few
+        // agents start well.
+        let sick = d.frames[0].diseases.iter().filter(|&&n| n > 0).count();
+        assert!(
+            sick * 10 > d.frames[0].diseases.len() * 9,
+            "most agents start sick"
+        );
+        assert!(
+            d.frames.iter().any(|f| !f.infections.is_empty()),
+            "no infections in 10 ticks"
+        );
+        let json = serde_json::to_value(run(TINY)).unwrap();
+        assert!(json["frames"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|f| f.get("diseases").is_none() && f.get("infections").is_none()));
     }
 
     #[test]

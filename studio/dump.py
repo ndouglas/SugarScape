@@ -34,6 +34,8 @@ class Frame:
     kills: list = field(default_factory=list)
     loans: list = field(default_factory=list)
     fertility: dict = field(default_factory=dict)
+    diseases: dict = field(default_factory=dict)
+    infections: list = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -72,6 +74,16 @@ class Loan:
     borrower: int
     due: float
     due_tick: int
+
+
+@dataclass(frozen=True)
+class Infection:
+    """One infection under rule E: `infector` (None for an outbreak) gave
+    `disease` to `infected`."""
+
+    infector: int | None
+    infected: int
+    disease: int
 
 
 @dataclass(frozen=True)
@@ -133,6 +145,9 @@ def parse(text):
             loans=[Loan(*l) for l in f.get("loans", [])],
             # id → (fertility onset, end), for this frame's newcomers.
             fertility={i: (on, end) for i, on, end in f.get("fertility", [])},
+            # id → diseases carried, and the tick's infections (disease on).
+            diseases=dict(zip((row[0] for row in f["agents"]), f.get("diseases", []))),
+            infections=[Infection(*i) for i in f.get("infections", [])],
         )
         for f in raw["frames"]
     ]
