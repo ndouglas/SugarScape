@@ -674,9 +674,10 @@ pub fn all() -> Vec<Preset> {
             "ifd-crowding",
             "Utility mind: crowding m = 1",
             "Sutherland 1983; Minds 1",
-            "The 2.10 : 1 patches under the utility mind with crowding m = 1: a site's welfare is divided by (1 + n), n the Flumps next to it. Sutherland's interference model predicts input matching at m = 1; here the interference is local.",
+            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with crowding m = 1: a site's welfare is divided by (1 + n), n the Flumps next to it. Sutherland's interference model predicts input matching at m = 1; here the interference is local.",
             |c| {
                 two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
                 c.decision.rule = DecisionRule::Utility;
                 c.decision.crowding = 1.0;
             },
@@ -685,9 +686,10 @@ pub fn all() -> Vec<Preset> {
             "ifd-travel",
             "Utility mind: travel k = 0.5",
             "Baum & Kraft 1998; Minds 1",
-            "The 2.10 : 1 patches under the utility mind with travel k = 0.5: a site's welfare is divided by (1 + 0.5·d), d its distance. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching; here travel is a preference for nearby sugar under rule M's one-tick jump, not a cost of switching.",
+            "The 2.10 : 1 patches with vision 10–20 (far enough to see both patches, as in ifd-far-sighted) under the utility mind with travel k = 0.5: a site's welfare is divided by (1 + 0.5·d), d its distance. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching; here travel is a preference for nearby sugar under rule M's one-tick jump, not a cost of switching.",
             |c| {
                 two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
                 c.decision.rule = DecisionRule::Utility;
                 c.decision.travel = 0.5;
             },
@@ -880,10 +882,13 @@ mod tests {
         );
         assert_eq!(d("ifd-crowding").crowding, 1.0);
         assert_eq!(d("ifd-travel").travel, 0.5);
-        assert_eq!(
-            by_id("ifd-far-sighted").unwrap().config.vision,
-            URange::new(10, 20)
-        );
+        for id in ["ifd-far-sighted", "ifd-crowding", "ifd-travel"] {
+            assert_eq!(
+                by_id(id).unwrap().config.vision,
+                URange::new(10, 20),
+                "{id}"
+            );
+        }
         assert_eq!(
             by_id("ifd-no-starving").unwrap().config.goods[0].endowment,
             URange::new(100_000, 100_000)

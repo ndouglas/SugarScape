@@ -59,8 +59,11 @@ const GOLDEN: &[(&str, u64)] = &[
     ("ifd-far-sighted", 0x200e86235eb03f55),
     ("ifd-no-starving", 0x471d7b55040cfaa4),
     ("ifd-wander", 0x255ac0e4071cd48),
-    ("ifd-crowding", 0x9d029c33d82c601b),
-    ("ifd-travel", 0x2c811f3f3e46324d),
+    // Re-recorded when ifd-crowding/ifd-travel moved to vision 10–20 (fix
+    // round 1, task 6): at vision 1–6 no Flump sees both patches, so
+    // crowding/travel could never move the patch split.
+    ("ifd-crowding", 0x5a5e863436971c96),
+    ("ifd-travel", 0x1a39e97e6ff051bb),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

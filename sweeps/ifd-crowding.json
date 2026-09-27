@@ -1,6 +1,6 @@
 {
   "name": "Minds 1: crowding and the ideal free distribution",
-  "description": "The richer patch's share of on-patch Flumps against the utility mind's crowding m (a site's welfare times (1 + n)^−m, n the Flumps next to it), at input ratios 2.10 and 4.42 (matching: 0.68 and 0.82). Sutherland 1983 predicts matching at m = 1 for patch-wide interference; this crowding is local. Seeds 1–20, ticks 500–1000.",
+  "description": "The richer patch's share of on-patch Flumps against the utility mind's crowding m (a site's welfare times (1 + n)^−m, n the Flumps next to it), at input ratios 2.10 and 4.42 (matching: 0.68 and 0.82), at vision 10–20 (both patches in sight). Sutherland 1983 predicts matching at m = 1 for patch-wide interference; this crowding is local. At vision 1–6 the knobs leave the share unchanged, since no Flump can see both patches to weigh one against the other. Seeds 1–20, ticks 500–1000.",
   "base": { "preset": "ifd-crowding" },
   "x": {
     "label": "Crowding m",
