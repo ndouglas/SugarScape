@@ -330,7 +330,11 @@ fn builtins_and_series_names_are_listed() {
             "mg-fig-1",
             "mg-strategies",
             "mg-information",
-            "cmo-bias"
+            "cmo-bias",
+            "ifd-matching",
+            "ifd-idle",
+            "ifd-crowding",
+            "ifd-travel"
         ]
     );
     assert!(list[0]["sweep"]["name"]
