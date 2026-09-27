@@ -397,6 +397,41 @@ pub struct TradeRule {
     pub price: PriceRule,
 }
 
+/// Minds 1: which rule makes rule M's decision (where to move). `Book` is rule
+/// M as stated; `Utility` is `crate::minds::utility`. Rule C still decides
+/// moves under combat.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DecisionRule {
+    #[default]
+    Book,
+    Utility,
+}
+
+/// What the utility mind does when every site it sees scores 0.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Idle {
+    /// Stay put, as rule M does (the current site wins ties at distance 0).
+    #[default]
+    Stay,
+    /// Move to a uniformly random unoccupied site in sight.
+    Wander,
+}
+
+/// The decision seam (Minds 1). `travel`, `crowding` and `idle` apply under
+/// the utility rule; under the book they are kept but ignored.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Decision {
+    pub rule: DecisionRule,
+    /// k in the travel consideration 1 / (1 + k·d).
+    pub travel: f64,
+    /// m in the crowding consideration (1 + n)^(−m).
+    pub crowding: f64,
+    pub idle: Idle,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SexRule {
     pub enabled: bool,
@@ -510,9 +545,8 @@ impl Default for DiseaseRule {
 pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
-/// Disease paths a schedule may not set (they fix the disease list and
-/// immune strings).
-pub const RESET_ONLY_PATHS: [&str; 10] = [
+/// Paths a schedule may not set: disease structure and the decision rule.
+pub const RESET_ONLY_PATHS: [&str; 12] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -523,6 +557,8 @@ pub const RESET_ONLY_PATHS: [&str; 10] = [
     "disease.length.min",
     "disease.length.max",
     "disease.immune_length",
+    "decision",
+    "decision.rule",
 ];
 
 /// Whether a schedule may not set `path` (Decision 5): the goods list, whole
@@ -607,6 +643,7 @@ pub struct Config {
     pub credit: CreditRule,
     pub foresight: Foresight,
     pub disease: DiseaseRule,
+    pub decision: Decision,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -678,6 +715,7 @@ impl Default for Config {
                 range: URange::new(0, 10),
             },
             disease: DiseaseRule::default(),
+            decision: Decision::default(),
             schedule: Vec::new(),
         }
     }
@@ -1147,6 +1185,22 @@ impl Config {
             "combat.enabled",
             "combat (C) needs exactly one good",
         );
+        let dc = &self.decision;
+        for (v, field) in [
+            (dc.travel, "decision.travel"),
+            (dc.crowding, "decision.crowding"),
+        ] {
+            e.check(
+                v.is_finite() && (0.0..=10.0).contains(&v),
+                field,
+                "must be between 0 and 10",
+            );
+        }
+        e.check(
+            !(dc.rule == DecisionRule::Utility && self.combat.enabled),
+            "decision.rule",
+            "rule C decides moves under combat",
+        );
         e.check(self.credit.duration >= 1, "credit.duration", "must be ≥ 1");
         e.non_negative(self.credit.rate, "credit.rate");
         let d = &self.disease;
@@ -1327,6 +1381,9 @@ impl Config {
         }
         if a.immune_length != b.immune_length {
             out.push(FieldError::new("disease.immune_length", msg));
+        }
+        if self.decision.rule != next.decision.rule {
+            out.push(FieldError::new("decision.rule", msg));
         }
         out
     }
@@ -2514,5 +2571,91 @@ mod tests {
                 "{bad}"
             );
         }
+    }
+
+    #[test]
+    fn decision_defaults_to_the_book_and_older_configs_load_as_the_book() {
+        assert_eq!(Config::default().decision, Decision::default());
+        assert_eq!(Decision::default().rule, DecisionRule::Book);
+        assert_eq!(Decision::default().idle, Idle::Stay);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v.as_object_mut().unwrap().remove("decision");
+        assert_eq!(Config::from_value(v).unwrap().decision, Decision::default());
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["decision"] = serde_json::json!({ "rule": "utility" });
+        let d = Config::from_value(v).unwrap().decision;
+        assert_eq!(
+            (d.rule, d.travel, d.crowding, d.idle),
+            (DecisionRule::Utility, 0.0, 0.0, Idle::Stay)
+        );
+    }
+
+    #[test]
+    fn decision_is_validated() {
+        let with = |f: fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(|c| c.decision.travel = 10.0).is_empty());
+        assert_eq!(with(|c| c.decision.travel = 10.5), ["decision.travel"]);
+        assert_eq!(with(|c| c.decision.travel = -0.1), ["decision.travel"]);
+        assert_eq!(
+            with(|c| c.decision.crowding = f64::NAN),
+            ["decision.crowding"]
+        );
+        assert_eq!(
+            with(|c| {
+                c.decision.rule = DecisionRule::Utility;
+                c.combat.enabled = true;
+            }),
+            ["decision.rule"]
+        );
+        // Under the book the utility fields are kept but ignored: no error.
+        assert!(with(|c| {
+            c.decision.travel = 2.0;
+            c.decision.idle = Idle::Wander;
+        })
+        .is_empty());
+    }
+
+    #[test]
+    fn the_decision_rule_changes_only_on_reset_and_its_knobs_live() {
+        let a = Config::default();
+        let mut b = a.clone();
+        b.decision.rule = DecisionRule::Utility;
+        let f: Vec<String> = a
+            .structural_changes(&b)
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert_eq!(f, ["decision.rule"]);
+        let mut b = a.clone();
+        b.decision.travel = 1.0;
+        b.decision.crowding = 1.0;
+        b.decision.idle = Idle::Wander;
+        assert!(a.structural_changes(&b).is_empty());
+        for (path, value) in [
+            ("decision.rule", serde_json::json!("utility")),
+            ("decision", serde_json::json!({ "rule": "utility" })),
+        ] {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
+        let c = Config {
+            schedule: vec![
+                change(5, "decision.travel", serde_json::json!(0.5)),
+                change(6, "decision.idle", serde_json::json!("wander")),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
     }
 }

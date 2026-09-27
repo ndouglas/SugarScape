@@ -207,6 +207,7 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         credit: old.credit,
         foresight: old.foresight,
         disease: old.disease,
+        decision: crate::config::Decision::default(),
         schedule,
     })
 }
