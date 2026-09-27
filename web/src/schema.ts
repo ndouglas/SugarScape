@@ -1,5 +1,8 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Config } from './types';
+import type { Config, Decision } from './types';
+
+/** A config's decision, or the book's for older configs. */
+const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
 
 interface Base {
   path: string;
@@ -152,6 +155,36 @@ export const GROUPS: Group[] = [
   {
     title: 'Foresight', enable: 'foresight.enabled', note: 'Needs at least two goods.',
     controls: [{ kind: 'range', path: 'foresight.range', label: 'Foresight φ', min: 0, max: 20 }],
+  },
+  {
+    title: 'Decision (Minds 1)',
+    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat.',
+    controls: [
+      {
+        kind: 'select', path: 'decision.rule', label: 'Rule', reset: true,
+        current: (c) => c.decision?.rule ?? 'book',
+        options: [
+          { value: 'book', label: 'Rule M (book)', apply: (c) => { c.decision = { ...decision(c), rule: 'book' }; } },
+          { value: 'utility', label: 'Utility mind', apply: (c) => { c.decision = { ...decision(c), rule: 'utility' }; } },
+        ],
+      },
+      {
+        kind: 'number', path: 'decision.travel', label: 'Travel k (welfare ÷ (1 + k·distance))', min: 0, max: 10, step: 0.1,
+        adjust: (next) => { next.decision = { ...decision(next), ...next.decision }; },
+      },
+      {
+        kind: 'number', path: 'decision.crowding', label: 'Crowding m (welfare × (1 + neighbors)^−m)', min: 0, max: 10, step: 0.1,
+        adjust: (next) => { next.decision = { ...decision(next), ...next.decision }; },
+      },
+      {
+        kind: 'select', path: 'decision.idle', label: 'When nothing in sight scores',
+        current: (c) => c.decision?.idle ?? 'stay',
+        options: [
+          { value: 'stay', label: 'Stay (book)', apply: (c) => { c.decision = { ...decision(c), idle: 'stay' }; } },
+          { value: 'wander', label: 'Wander to a random free site in sight', apply: (c) => { c.decision = { ...decision(c), idle: 'wander' }; } },
+        ],
+      },
+    ],
   },
   {
     title: 'Disease (E)', enable: 'disease.enabled', enableResets: true,
