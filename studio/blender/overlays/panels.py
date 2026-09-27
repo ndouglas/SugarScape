@@ -6,6 +6,7 @@ import math
 import bpy
 
 import animate
+import credit
 import markets
 import seasons
 import tribes
@@ -362,5 +363,43 @@ def kills(beat, d, ctx):
         killed.data.body = f"Flumps killed: {total[k + 1]}"
         blue.data.body = f"Blue {sum(g == 0 for g in f.groups.values())}"
         red.data.body = f"Red {sum(g == 1 for g in f.groups.values())}"
+
+    return update
+
+
+LADDER_LEVELS = 10
+
+
+def ladder(beat, d, ctx):
+    """Right: the debt ladder — how many Flumps sit at each level of the loan
+    network at the tick shown (level 1: pure lenders), bars on a square-root
+    scale so one Flump at the bottom still shows beside a hundred at the top,
+    and the count beside each."""
+    anchor = ctx.screen.anchor("ladder", 0.66, 0.05)
+    card("ladder-card", anchor, (0, 0, -0.01), (0.56, 0.92, 0.002))
+    ink = materials.fading("ladder-ink", CREAM, 1.6)
+    text("ladder-title", "the debt ladder", 0.045, ink, anchor, location=(0, 0.4, 0))
+    text("ladder-note", "Flumps at each level; lenders at the top", 0.028, ink, anchor, location=(0, 0.35, 0))
+    colors = [materials.knit("teal")] * 1 + [materials.knit("butter")] * 3 + [materials.knit("coral")] * 6
+    rows = []
+    for i in range(LADDER_LEVELS):
+        y = 0.28 - i * 0.068
+        text(f"ladder-level-{i}", f"{i + 1}", 0.032, ink, anchor, location=(-0.2, y - 0.01, 0), align="RIGHT")
+        bar = box(f"ladder-bar-{i}", colors[i], anchor, location=(-0.17, y, 0), scale=(0.002, 0.045, 0.004))
+        count = text(f"ladder-count-{i}", "", 0.03, ink, anchor, location=(-0.15, y - 0.01, 0), align="LEFT")
+        rows.append((bar, count))
+    width = 0.34
+
+    def update(frame):
+        k = min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)
+        counts = [0] * LADDER_LEVELS
+        for level in credit.levels(d.frames[k].loans).values():
+            counts[min(level, LADDER_LEVELS) - 1] += 1
+        top = max(max(counts), 1) ** 0.5
+        for (bar, count), n in zip(rows, counts):
+            bar.scale.x = max(n ** 0.5 / top * width, 0.002)
+            bar.location.x = -0.17 + bar.scale.x / 2
+            count.location.x = -0.15 + bar.scale.x
+            count.data.body = f"{n}" if n else ""
 
     return update

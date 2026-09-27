@@ -34,6 +34,10 @@ def verdicts(rows):
          f"over the loans outstanding at tick {AT}: lenders' median age {median(rows, 'lender_age'):g}, borrowers' "
          f"{median(rows, 'borrower_age'):g} (medians over seeds); lenders older in {older} of {n}; "
          f"{median(rows, 'past'):.0%} of loans from lenders past childbearing"),
+        ("two in three loans come from Flumps too old to have children",
+         0.6 <= median(rows, "past") <= 0.72 and min(r["past"] for r in rows.values()) >= 0.5,
+         f"at tick {AT}, loans whose lender is past its fertility's end: {median(rows, 'past'):.0%} (median; "
+         f"{min(r['past'] for r in rows.values()):.0%}–{max(r['past'] for r in rows.values()):.0%})"),
         ("some Flumps borrow and lend at once, and chains of debt form", chains == n,
          f"at tick {AT}, some Flump is both lender and borrower and the network is at least 3 levels deep in "
          f"{chains} of {n} seeds ({median(rows, 'both_share'):.0%} of the network's Flumps are both, median)"),

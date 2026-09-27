@@ -25,6 +25,7 @@ Levels: pure lenders are level 1; every other Flump in the network sits one belo
 ## Captions
 
 - holds: loans flow from old to young: lenders about 60, borrowers about 37 — over the loans outstanding at tick 500: lenders' median age 60, borrowers' 37 (medians over seeds); lenders older in 20 of 20; 66% of loans from lenders past childbearing.
+- holds: two in three loans come from Flumps too old to have children — at tick 500, loans whose lender is past its fertility's end: 66% (median; 59%–72%).
 - holds: some Flumps borrow and lend at once, and chains of debt form — at tick 500, some Flump is both lender and borrower and the network is at least 3 levels deep in 20 of 20 seeds (12% of the network's Flumps are both, median).
 - holds: the book saw five levels; ours reach about ten — the deepest level over the 1000 ticks: 10 (median; 8–11).
 - holds: with credit, about a fifth more Flumps are born, in all 20 worlds — births over 1000 ticks: 5335 with credit, 4465.5 without (+20%, median); more in 20 of 20.
