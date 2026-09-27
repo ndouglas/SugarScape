@@ -2,7 +2,7 @@ import unittest
 
 import episode
 
-HOLDS = dict(shuttle=0.49, shuttle_trade=0.66, alive=120.0, exchanges1=340, right=95, trades=100,
+HOLDS = dict(shuttle=0.28, shuttle_trade=0.29, alive=120.0, exchanges1=340, right=95, trades=100,
              ln_price_late=0.006, sd_early=0.45, sd_late=0.026, gini_trade=0.365, gini=0.32)
 SWEEP = (118, 120)
 
@@ -20,9 +20,13 @@ class MarketsVerdictTest(unittest.TestCase):
     def test_the_measured_world_supports_every_caption(self):
         self.assertTrue(all(self.verdicts().values()), self.verdicts())
 
-    def test_most_flumps_shuttling_breaks_the_about_half_claim(self):
-        v = self.verdicts(shuttle=0.8, shuttle_trade=0.9)
-        self.assertFalse(v["without trade, about half the Flumps walk back and forth between the hills"])
+    def test_most_flumps_shuttling_breaks_the_about_a_quarter_claim(self):
+        v = self.verdicts(shuttle=0.8, shuttle_trade=0.8)
+        self.assertFalse(v["without trade, about a quarter of the Flumps walk back and forth between the hills"])
+
+    def test_trade_halving_the_walking_breaks_the_as_many_claim(self):
+        v = self.verdicts(shuttle_trade=0.1)
+        self.assertFalse(v["but it doesn't stop the walking: about as many Flumps still shuttle"])
 
     def test_trades_the_wrong_way_break_the_swap_claim(self):
         self.assertFalse(self.verdicts(right=60)["neighbors swap what they have too much of for what they lack"])

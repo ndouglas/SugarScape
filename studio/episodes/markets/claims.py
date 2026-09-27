@@ -46,8 +46,10 @@ def verdicts(rows, sweep):
     first = [r["exchanges1"] for r in rows.values()]
     wins, pairs = sweep
     return [
-        ("without trade, about half the Flumps walk back and forth between the hills",
-         0.4 <= median(rows, "shuttle") <= 0.6,
+        # The review's seam fix (walks count only between sites deep in each
+        # hill) took this from 49% to 28%: the caption changed with it.
+        ("without trade, about a quarter of the Flumps walk back and forth between the hills",
+         0.2 <= median(rows, "shuttle") <= 0.33,
          f"{median(rows, 'shuttle'):.0%} of the Flumps alive through ticks {SHUTTLE[0]}–{SHUTTLE[1]} change hills "
          f"at least twice (median; {min(r['shuttle'] for r in rows.values()):.0%}–"
          f"{max(r['shuttle'] for r in rows.values()):.0%})"),
@@ -67,7 +69,8 @@ def verdicts(rows, sweep):
          f"{LONG - 50}–{LONG}; narrower in {narrower} of {n} seeds"),
         ("trade feeds more Flumps: in 118 of 120 worlds", (wins, pairs) == (118, 120),
          f"trade's carrying capacity is higher in {wins} of {pairs} seed–vision pairs (Figure IV-6, mean vision 1–6)"),
-        ("but it doesn't stop the walking: more Flumps shuttle, not fewer", walk_more >= most,
+        ("but it doesn't stop the walking: about as many Flumps still shuttle",
+         abs(median(rows, "shuttle_trade") - median(rows, "shuttle")) <= 0.05,
          f"{median(rows, 'shuttle_trade'):.0%} shuttle with trade, {median(rows, 'shuttle'):.0%} without; more in "
          f"{walk_more} of {n} seeds"),
         ("and it makes them less equal, in all 20 worlds", less_equal == n,

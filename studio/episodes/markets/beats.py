@@ -13,10 +13,10 @@ swap — a 6 × 6 board packed with Flumps in a checkerboard, 30 sugar and 3
   spice or the reverse; nobody can move, so neighbors trade: 101 pairs, 340
   exchanges at a median price of 1.0 in tick 1, and by tick 4 all are even
   and trading stops. The followed pair start in the middle.
-shuttle — iv-1-spice, seed 18 (typical of 20 for walking): 49 % of the
+shuttle — iv-1-spice, seed 18 (typical of 20 for walking): 28 % of the
   Flumps alive through ticks 100–200 change hills twice or more; 400 → 119
   by tick 1000, all by starvation.
-walk — the same seed with trade on: 66 % shuttle.
+walk — the same seed with trade on: 30 % shuttle (walks count between sites deep in each hill).
 market — iv-3-trade, seed 19 (typical of 20 for the market): 355 exchanges
   in tick 1, 108 at tick 10, 12 at tick 500; the price stays near one while
   the spread falls from 0.47 (ticks 1–50) to 0.02 (950–1000).
@@ -43,7 +43,7 @@ BEATS = [
     Beat("two", "A Flump needs both. Run out of either, and it's gone.", 5.5, shot="pantry", closeup=True,
          ticks_per_second=1.5, start_tick=3, focus=(0,), overlays=("belly",), params={"belly_full": 30},
          camera=hold(PANTRY_EYE, PANTRY_AT, lens=36)),
-    Beat("shuttle", "Without trade, about half the Flumps walk back and forth between the hills.", 7.0,
+    Beat("shuttle", "Without trade, about a quarter of the Flumps walk back and forth between the hills.", 7.0,
          shot="shuttle", ticks_per_second=12, start_tick=100, overlays=("rings-shuttlers",),
          camera=(Move(0, 7, (0, -38, 22), (0, 0, 0), WIDE_EYE, WIDE_AT, orbit=0.2),)),
     Beat("cost", "Of 400 Flumps, about 120 survive.", 6.0, shot="shuttle", ticks_per_second=170, lead_in=0.3,
@@ -66,7 +66,7 @@ BEATS = [
          params={"title": "Flumps the land can feed", "format": "num", "top": 80,
                  "rows": [[("with trade", "pop_trade"), ("without", "pop_no_trade")]]},
          camera=hold(SIDE_EYE, SIDE_AT, lens=36)),
-    Beat("travel", "But it doesn't stop the walking: more Flumps shuttle, not fewer.", 7.0, shot="walk",
+    Beat("travel", "But it doesn't stop the walking: about as many Flumps still shuttle.", 7.0, shot="walk",
          ticks_per_second=12, start_tick=100, overlays=("rings-shuttlers",),
          camera=(Move(0, 7, WIDE_EYE, WIDE_AT, (4, -52, 30), WIDE_AT, orbit=0.2),)),
     Beat("unequal", "And it makes them less equal, in all 20 worlds.", 7.5, shot="market", start_tick=1000,
