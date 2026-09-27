@@ -1,0 +1,4 @@
+{"preset": "iv-3-trade", "ticks": 3, "seed": 1,
+ "set": {"width": 12, "height": 12, "population": 30,
+   "goods.0.map": {"kind": "peaks", "peaks": [{"x": 3, "y": 3, "radius": 6, "height": 4}]},
+   "goods.1.map": {"kind": "peaks", "peaks": [{"x": 8, "y": 8, "radius": 6, "height": 4}]}}}

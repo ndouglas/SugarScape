@@ -28,6 +28,26 @@ class Frame:
     births: dict
     tags: dict = field(default_factory=dict)
     groups: dict = field(default_factory=dict)
+    spice: list = field(default_factory=list)
+    spice_agents: dict = field(default_factory=dict)
+    trades: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Trade:
+    """One tick's exchanges between two agents, merged: `sugar_giver` gave
+    `sugar` and received `spice` from `spice_giver` in `exchanges` trades."""
+
+    sugar_giver: int
+    spice_giver: int
+    sugar: float
+    spice: float
+    exchanges: int
+
+    @property
+    def price(self):
+        """Spice per sugar, over the tick's exchanges."""
+        return self.spice / self.sugar
 
 
 @dataclass(frozen=True)
@@ -41,6 +61,7 @@ class Dump:
     config: dict
     frames: list
     stats: dict
+    spice_capacity: list = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -79,6 +100,11 @@ def parse(text):
             # id → tag bit string and id → group (tribe); empty in older dumps.
             tags=dict(zip((row[0] for row in f["agents"]), f.get("tags", []))),
             groups=dict(zip((row[0] for row in f["agents"]), f.get("groups", []))),
+            # Two-good worlds only: spice per site, id → (spice, spice
+            # metabolism), and the tick's trades by pair.
+            spice=f.get("spice", []),
+            spice_agents={row[0]: tuple(s) for row, s in zip(f["agents"], f.get("spice_agents", []))},
+            trades=[Trade(*t) for t in f.get("trades", [])],
         )
         for f in raw["frames"]
     ]
@@ -92,6 +118,7 @@ def parse(text):
         config=raw["config"],
         frames=frames,
         stats=raw["stats"],
+        spice_capacity=raw.get("spice_capacity", []),
     )
 
 
