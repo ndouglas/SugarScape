@@ -12,6 +12,8 @@ const UNITS: [number, string][] = [
 export function compactNumber(n: number): string {
   const sign = n < 0 ? '-' : '';
   const abs = Math.abs(n);
+  // Below 1, three significant digits (a variance of 0.008 is not 0; a 0.175 tick is not 0.17).
+  if (abs > 0 && abs < 1) return sign + String(Number(abs.toPrecision(3)));
   const [threshold, suffix] = UNITS.find(([t]) => abs >= t) ?? [1, ''];
   const scaled = Math.round((abs / threshold) * 10) / 10;
   const text = Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(1);

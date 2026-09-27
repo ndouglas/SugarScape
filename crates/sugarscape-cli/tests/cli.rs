@@ -131,6 +131,12 @@ fn presets_and_sweeps_are_listed() {
         "mg-strategies",
         "mg-information",
         "cmo-bias",
+        "ants-alpha",
+        "ants-n",
+        "ants-flips",
+        "ants-pull",
+        "ants-sources",
+        "am-independent",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -516,6 +522,22 @@ fn a_farol_run_stops_at_its_last_round() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 25 (its last round)\n");
+}
+
+#[test]
+fn an_ants_run_stops_at_its_last_step() {
+    let dir = scratch("ants");
+    let config = dir.join("stop.json");
+    std::fs::write(&config, r#"{"model": "ants", "stop_at": 25}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 25 (its last step)\n");
 }
 
 #[test]

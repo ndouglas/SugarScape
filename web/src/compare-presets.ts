@@ -158,6 +158,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'ef-arthur',
     b: 'ef-payoff',
   },
+  {
+    id: 'ants-colony-size',
+    label: 'Colony size — Ants (Compare)',
+    a: 'ants-2b',
+    b: 'ants-crowd',
+  },
 ];
 
 /**

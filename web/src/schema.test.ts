@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultGroups, threeTribes } from './groups';
+import { setPath } from './paths';
 import { GROUPS } from './schema';
 import type { Config, TagGroup } from './types';
 
@@ -39,5 +40,42 @@ describe('trade', () => {
     expect(price.current(c)).toBe('random');
     price.options[0].apply(c);
     expect(c.trade.price).toBe('geometric_mean');
+  });
+});
+
+describe('decision', () => {
+  it('offers the book and the utility mind, rebuilding the world, with live knobs', () => {
+    const rule = control('decision.rule');
+    expect(rule.kind).toBe('select');
+    if (rule.kind !== 'select') return;
+    expect(rule.reset).toBe(true);
+    expect(rule.options.map((o) => o.value)).toEqual(['book', 'utility']);
+    const c = {} as unknown as Config;
+    expect(rule.current(c)).toBe('book'); // older configs have no decision
+    rule.options[1].apply(c);
+    expect(rule.current(c)).toBe('utility');
+    expect(c.decision).toEqual({ rule: 'utility', travel: 0, crowding: 0, idle: 'stay' });
+    for (const path of ['decision.travel', 'decision.crowding']) {
+      const k = control(path);
+      expect(k.kind).toBe('number');
+      expect(k.reset).toBeUndefined();
+    }
+    const idle = control('decision.idle');
+    if (idle.kind !== 'select') throw new Error('idle is a select');
+    expect(idle.options.map((o) => o.value)).toEqual(['stay', 'wander']);
+    const d = {} as unknown as Config;
+    idle.options[1].apply(d);
+    expect(d.decision?.idle).toBe('wander');
+    expect(d.decision?.rule).toBe('book');
+  });
+
+  it('creates a complete decision object when a number control is set on a config missing it', () => {
+    const travel = control('decision.travel');
+    const c = {} as unknown as Config;
+    const before = structuredClone(c);
+    expect(() => setPath(c, 'decision.travel', 2)).toThrow();
+    travel.adjust!(c, before);
+    setPath(c, 'decision.travel', 2);
+    expect(c.decision).toEqual({ rule: 'book', travel: 2, crowding: 0, idle: 'stay' });
   });
 });

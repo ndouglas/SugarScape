@@ -218,6 +218,16 @@ and his agents swing far more than coin-flippers, with a high-low cycle he says 
 memory transition and most of Challet and Zhang's figures reproduce; their two-peaked payoff and the
 waste of pure cloning do not. See `docs/superpowers/specs/2026-09-27-el-farol-design.md`.
 
+## Milestone 24: Ants and Recruitment (done)
+
+Kirman's recruitment chain (1993) as a model kind, with the three extensions he names but does not
+run — Becker's majority pull, more food sources, meetings over a network — and Alfarano and
+Milaković's agent rule and network critique (2007) as switches. The chain's long-run distribution
+reproduces exactly (the beta-binomial), but never at the ants' 80–20; Becker's pull gives it. Figure
+IIb's "average about one-half" needs a hundred times the figure's run; the herding fades as the
+colony grows; a random network cures that under Alfarano and Milaković's rule but not Kirman's, and
+their mean field fails on rings. See `docs/superpowers/specs/2026-09-27-ants-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -237,6 +247,8 @@ waste of pure cloning do not. See `docs/superpowers/specs/2026-09-27-el-farol-de
 - **Nowak & Sigmund's image scoring** (and Leimar & Hammerstein's critique): done (Milestone 21).
 - **Deffuant et al.'s relative agreement and extremism** (and Meadows & Cliff's replication): done (Milestone 22).
 - **Arthur's El Farol and Challet & Zhang's minority game** (and the memory transition, and Challet, Marsili & Ottino's critique): done (Milestone 23).
+- **Kirman's ants and recruitment** (and Alfarano & Milaković's network critique): done (Milestone 24).
+- **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

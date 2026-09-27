@@ -2,8 +2,9 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
-import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
 import { calendarYear } from '../models';
+import { hasPatches } from '../patches';
+import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
 import type { Config, ModelConfig, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
@@ -134,6 +135,25 @@ const CHARTS: ChartDef[] = [
     section: 'top',
     lines: fixed([{ key: 'distinct_cultures', label: 'Axelrod cultures', color: '--c3' }]),
     shown: (c) => c.culture.rule === 'axelrod',
+  },
+  {
+    title: 'Patches',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'on_first_patch', label: 'First patch', color: '--c1' },
+      { key: 'on_other_patches', label: 'Other patches', color: '--c2' },
+      { key: 'off_patch', label: 'Off patch', color: '--c3' },
+    ]),
+    shown: hasPatches,
+  },
+  {
+    title: 'First patch share',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'first_patch_share', label: 'Share', color: '--c1' }]),
+    range: [0, 1],
+    shown: hasPatches,
   },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },

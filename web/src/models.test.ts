@@ -4,6 +4,7 @@ import {
   COLOR_MODES,
   finishesUnpredictably,
   isAgreementView,
+  isAntsView,
   isFarolView,
   isCivilView,
   isClassesView,
@@ -114,6 +115,28 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the ants model', () => {
+  it('is read by its tag, and its inspections by their shares', () => {
+    const c = { model: 'ants', stop_at: 0 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('ants');
+    const cell = { site: { x: 1, y: 2 }, panel: 'ants', step: null, shares: null, share: null, count: null, theory: null, member: null, agent: null } as unknown as AnyInspection;
+    const farol = { site: { x: 1, y: 2 }, panel: 'agents', round: null, attendance: null, count: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, farol].map(isAntsView)).toEqual([true, false]);
+    expect(isAgreementView(cell)).toBe(false);
+  });
+
+  it('colors three ways, has no overlays, and stops predictably at its last step', () => {
+    expect(COLOR_MODES.ants).toEqual([
+      ['source', 'Source'],
+      ['independent', 'Independent'],
+      ['degree', 'Degree'],
+    ]);
+    expect(MODEL_OVERLAYS.ants).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'ants', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(2000)), ticksLeft(c(2000), 500), ticksLeft(c(0), 500)]).toEqual([false, 1500, Infinity]);
   });
 });
 

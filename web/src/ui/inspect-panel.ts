@@ -3,10 +3,11 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
+  AntsInspection,
   FarolInspection,
   AgreementInspection,
   AnasaziInspection,
@@ -269,6 +270,24 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A step of the ants' time panel, a row of their histogram, or an ant. */
+  private antsRows(view: AntsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${Math.round(100 * x)} %`;
+    if (view.panel === 'time') return [row('Step', String(view.step)), row('Shares', (view.shares ?? []).map(pct).join(' · '))];
+    if (view.panel === 'histogram') {
+      const rows = [row('At the first source', `about ${pct(view.share ?? 0)}`), row('Steps', String(view.count))];
+      if (view.theory !== null) rows.push(row('Theory', `${fmt(100 * view.theory)} % of steps`));
+      return rows;
+    }
+    const a = view.member;
+    if (!a) return [row('Point', 'between the panels')];
+    return [
+      row('Ant', `#${a.id} · source ${a.source}${a.independent ? ' · never herds' : ''}`),
+      row('Can meet', `${a.degree} · ${a.elsewhere} at another source`),
+    ];
+  }
+
   /** A cell of relative agreement's diagram, start-against-now panel or torus, and the agents there. */
   private agreementRows(view: AgreementInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -448,6 +467,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isAntsView(view)
+            ? this.antsRows(view)
           : isFarolView(view)
             ? this.farolRows(view)
           : isStructureView(view)

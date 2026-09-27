@@ -233,14 +233,22 @@ export class RulesPanel {
         const apply = (v: string) =>
           this.commit((cfg) => {
             const before = structuredClone(cfg);
-            setPath(cfg, c.path, Number(v));
+            // A number control's path may have a missing parent on an older config (e.g.
+            // decision.travel with no decision); adjust seeds it, then the write is retried.
+            try {
+              setPath(cfg, c.path, Number(v));
+            } catch (err) {
+              if (!c.adjust) throw err;
+              c.adjust(cfg, before);
+              setPath(cfg, c.path, Number(v));
+            }
             c.adjust?.(cfg, before);
           }, reset);
         slider.addEventListener('input', () => (num.value = slider.value));
         slider.addEventListener('change', () => apply(slider.value));
         num.addEventListener('change', () => apply(num.value));
         this.syncers.push(() => {
-          const v = String(getPath(this.engine.sugar, c.path));
+          const v = String(getPath(this.engine.sugar, c.path) ?? 0);
           slider.value = v;
           num.value = v;
         });

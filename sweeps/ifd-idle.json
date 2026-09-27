@@ -1,0 +1,25 @@
+{
+  "name": "Minds 1: waiting or wandering when nothing is in sight",
+  "description": "The richer patch's share of on-patch Flumps against the input ratio, with nobody starving, when a Flump that sees no sugar stays put (rule M) or wanders (the utility mind's idle wander). Seeds 1–20, ticks 500–1000.",
+  "base": { "preset": "ifd-no-starving" },
+  "x": {
+    "label": "Input ratio (first patch : second)",
+    "values": [
+      { "at": 1.0, "set": { "goods.0.map.peaks.1.radius": 10.0 } },
+      { "at": 1.36, "set": { "goods.0.map.peaks.1.radius": 8.5 } },
+      { "at": 2.1, "set": { "goods.0.map.peaks.1.radius": 7.0 } },
+      { "at": 2.8, "set": { "goods.0.map.peaks.1.radius": 6.0 } },
+      { "at": 4.42, "set": { "goods.0.map.peaks.1.radius": 5.0 } }
+    ]
+  },
+  "series": {
+    "label": "Idle",
+    "values": [
+      { "at": 0, "name": "Stay (rule M)", "set": { "decision.rule": "book" } },
+      { "at": 1, "name": "Wander", "set": { "decision.rule": "utility", "decision.idle": "wander" } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 1000,
+  "metric": { "kind": "window_mean", "series": "first_patch_share", "from": 500 }
+}

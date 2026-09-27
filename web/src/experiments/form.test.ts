@@ -147,6 +147,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('ants')).toMatchObject({
+      x: { path: 'epsilon', values: '0.001,0.002,0.003,0.005,0.01' },
+      ticks: 20000,
+      metric: { kind: 'final', series: 'flips' },
+    });
     expect(defaultForm('farol')).toMatchObject({
       x: { path: 'strategies', values: '2:24:2' },
       ticks: 2000,
