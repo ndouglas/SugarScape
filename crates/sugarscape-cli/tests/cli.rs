@@ -124,6 +124,13 @@ fn presets_and_sweeps_are_listed() {
         "ns-group-size",
         "lh-cost",
         "lh-gene-flow",
+        "ef-predictors",
+        "ef-capacity",
+        "mg-memory",
+        "mg-fig-1",
+        "mg-strategies",
+        "mg-information",
+        "cmo-bias",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -493,6 +500,22 @@ fn an_agreement_run_stops_when_stable_or_at_its_last_period() {
     let out = sugarscape(&["run", "--preset", "ra-meadows-cliff", "--ticks", "1000"]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 200 (its last period)\n");
+}
+
+#[test]
+fn a_farol_run_stops_at_its_last_round() {
+    let dir = scratch("farol");
+    let config = dir.join("stop.json");
+    std::fs::write(&config, r#"{"model": "farol", "stop_at": 25}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 25 (its last round)\n");
 }
 
 #[test]

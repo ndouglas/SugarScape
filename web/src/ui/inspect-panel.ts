@@ -3,10 +3,11 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
+  FarolInspection,
   AgreementInspection,
   AnasaziInspection,
   CivilInspection,
@@ -249,6 +250,25 @@ export class InspectPanel {
     return [row('Point', 'between the agents and the plane')];
   }
 
+  /** A round of the El Farol time panel, a row of its histogram, or an agent and its strategies. */
+  private farolRows(view: FarolInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (view.panel === 'time') return [row('Round', String(view.round)), row('Attendance', String(view.attendance))];
+    if (view.panel === 'histogram') return [row('Attendance', `about ${view.attendance}`), row('Rounds', String(view.count))];
+    const a = view.member;
+    if (!a) return [row('Point', 'between the panels')];
+    const rows = [
+      row('Agent', `#${a.id}${a.memory > 0 ? ` · memory ${a.memory}` : ''}`),
+      row('This round', a.went ? 'went (side A)' : 'stayed (side B)'),
+      row('Winnings', `${fmt(a.gain)} · switched ${a.switches}×`),
+    ];
+    for (const s of a.strategies) {
+      const says = s.forecast !== null ? `forecasts ${s.forecast}` : s.attend ? 'would go' : 'would stay';
+      rows.push(row(s.active ? `▶ ${s.label}` : s.label, `${says} · score ${fmt(s.score)}`));
+    }
+    return rows;
+  }
+
   /** A cell of relative agreement's diagram, start-against-now panel or torus, and the agents there. */
   private agreementRows(view: AgreementInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -428,6 +448,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isFarolView(view)
+            ? this.farolRows(view)
           : isStructureView(view)
             ? this.structureRows(view)
             : isOpinionsView(view)

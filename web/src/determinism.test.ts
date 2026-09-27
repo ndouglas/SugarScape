@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  FarolConfig,
+  FarolInspection,
+  FarolStats,
   AgreementInspection,
   AgreementStats,
   AnasaziStats,
@@ -484,6 +487,13 @@ describe('other models through the engine', () => {
     ['ad-moore', '0xd39d77107d873634'],
     ['ad-small-world', '0xd29498f3ac055d5d'],
     ['w-scale-free', '0xed9e58b01a7987d8'],
+    ['ef-arthur', '0x21d68cd385f4c107'],
+    ['ef-payoff', '0xfc1e2e95d6261a60'],
+    ['ef-random', '0x0bf2299aeb9dfc6a'],
+    ['mg-m6', '0x3aa1d7ced39f99c8'],
+    ['mg-inverse', '0xf9b094733c6a48aa'],
+    ['mg-arms-race', '0x4c1e9852373241c9'],
+    ['cmo-binary', '0x2081105c24039d0c'],
   ];
 
   it.each(GOLDEN_MODELS)('%s reproduces its golden fingerprint, whatever is watched', async (id, golden) => {
@@ -693,6 +703,60 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the El Farol model through the engine', () => {
+  it('stops at its last round and inspects an agent and a round', async () => {
+    const r = presets.find((p) => p.id === 'ef-arthur')!;
+    const config = { ...structuredClone(r.config as FarolConfig), stop_at: 30 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'strategy' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as FarolStats;
+    expect([e.finished, ends, e.tick, s.tick]).toEqual([true, 1, 30, 30]);
+    // The agent grid starts at x 358; agent 1 is its top-left cell.
+    await e.select(358, 0);
+    const v = e.inspection!.view as FarolInspection;
+    expect([v.panel, v.member!.id, v.member!.strategies.length]).toEqual(['agents', 1, 12]);
+    expect(v.member!.strategies.filter((x) => x.active).length).toBe(1);
+    expect(e.inspection!.agentId).toBeNull();
+    await e.select(29, 0);
+    expect((e.inspection!.view as FarolInspection).round).toBe(30);
+  });
+
+  const farolPresets = presets.filter((p) => modelOf(p.config) === 'farol');
+  const schema = (JSON.parse(model_schemas_json()) as Record<string, Param[]>).farol;
+
+  it('starts an Experiments sweep every game accepts', () => {
+    expect(farolPresets).toHaveLength(16);
+    for (const p of farolPresets) {
+      const { sweep, errors } = formToSweep(defaultForm('farol', p.config), { preset: p.id });
+      expect(errors, p.id).toEqual([]);
+      expect(() => sweep_points(JSON.stringify(sweep)), p.id).not.toThrow();
+    }
+  });
+
+  it('shows each game’s fields only under that game', () => {
+    for (const p of farolPresets) {
+      const game = (p.config as FarolConfig).game;
+      for (const f of schema.filter((f) => paramShown(f, p.config))) {
+        if (f.group === 'El Farol') expect(game, `${p.id}: ${f.path}`).toBe('el_farol');
+        if (f.group === 'Minority game' || f.group === 'Evolution') expect(game, `${p.id}: ${f.path}`).toBe('minority');
+      }
+    }
+  });
+
+  it('keeps the plain minority game when the number of players changes', async () => {
+    const mg = presets.find((p) => p.id === 'mg-m6')!;
+    expect((mg.config as FarolConfig).capacity).toBeNull();
+    const config = { ...structuredClone(mg.config as FarolConfig), agents: 501 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    await e.advance(200);
+    // Coin-flippers' σ²/N of the plain game is ¼, centered on N/2.
+    expect((e.latest as FarolStats).random_fluctuation).toBeCloseTo(0.25, 6);
   });
 });
 

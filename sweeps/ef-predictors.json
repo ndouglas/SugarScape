@@ -1,0 +1,59 @@
+{
+  "name": "El Farol: swings against predictors per agent",
+  "description": "Arthur's bar: how far attendance swings (σ²/N over the last 100 of 2 000 rounds) against how many predictors each agent holds, with predictors rated by accuracy (Arthur), by the advice they give (Challet, Marsili and Ottino), and against agents going at random with probability 0.6. Measured (release, seeds 1–10, recorded 2026-09-27): accuracy 2.5, 3.2, 4.0, 4.7, 5.4, 5.8, 7.0, 8.6, 11.2, 14.9, 25.9 at k 1, 2, 3, 4, 6, 8, 12, 16, 23, 32, 48; payoff 2.5, 0.26, 0.28, 0.30, 0.76, 1.4, 2.8, 3.7, 5.7, 8.1, 13.2; random 0.21–0.25 throughout. Every inductive setting swings more than coin-flippers except payoff-rated agents with two to four predictors, and more predictors always make it worse.",
+  "base": {
+    "preset": "ef-arthur"
+  },
+  "x": {
+    "label": "Predictors per agent (k)",
+    "path": "strategies",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      16,
+      23,
+      32,
+      48
+    ]
+  },
+  "series": {
+    "label": "Agents",
+    "values": [
+      {
+        "at": 0,
+        "name": "Rated by accuracy (Arthur)",
+        "set": {
+          "scoring": "error"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Rated by payoff (CMO)",
+        "set": {
+          "scoring": "payoff"
+        }
+      },
+      {
+        "at": 2,
+        "name": "At random",
+        "set": {
+          "behavior": "random"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "fluctuation"
+  }
+}

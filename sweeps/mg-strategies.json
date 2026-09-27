@@ -1,0 +1,35 @@
+{
+  "name": "Minority game: more strategies, worse players (Fig. 5)",
+  "description": "Challet and Zhang's Fig. 5: with more strategies to choose from, players 'tend to perform worse'. Wins per round (rounds 1 001–3 000) against S at 1001 players, memory 5. Measured (release, seeds 1–5, recorded 2026-09-27): 0.459, 0.439, 0.428, 0.417, 0.411, 0.403, 0.399, 0.395 at S 2 to 9. Reproduced.",
+  "base": {
+    "preset": "mg-m8"
+  },
+  "set": {
+    "memory": 5
+  },
+  "x": {
+    "label": "Strategies (S)",
+    "path": "strategies",
+    "values": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 3000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "success",
+    "from": 1001,
+    "to": 3000
+  }
+}

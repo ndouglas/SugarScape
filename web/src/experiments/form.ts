@@ -23,7 +23,7 @@ export const MAX_SERIES_VALUES = 16;
 export const TIMESERIES_X: Axis = { label: 'All runs', values: [{ at: 0, set: {} }] };
 
 /** A new sweep's form for a base of `model`: an axis and a statistic that model has (Decision 14). */
-export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
+export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfig): SweepForm {
   const form: SweepForm = {
     name: 'Untitled sweep',
     x: { path: 'vision.max', values: '1:6:1' },
@@ -95,6 +95,14 @@ export function defaultForm(model: ModelKind = 'sugarscape'): SweepForm {
   if (model === 'dpd') {
     // Table 9.3's axis at T = 6: cooperators after 500 cycles against the reward R (R = 1 dies out).
     return { ...form, x: { path: 'r', values: '1:5:1' }, ticks: 500, metric: { ...form.metric, kind: 'final', series: 'cooperators' } };
+  }
+  if (model === 'farol' && config && 'game' in config && config.game === 'minority') {
+    // The built-in mg-memory's axis: how far the crowd swings against memory (strategies stop at 16).
+    return { ...form, x: { path: 'memory', values: '1:12:1' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
+  }
+  if (model === 'farol') {
+    // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
+    return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
   if (model === 'image') {
     // NS98's rounds axis (the built-in ns-rounds, shortened): cooperative strategies against m.

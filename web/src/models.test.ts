@@ -4,6 +4,7 @@ import {
   COLOR_MODES,
   finishesUnpredictably,
   isAgreementView,
+  isFarolView,
   isCivilView,
   isClassesView,
   isOpinionsView,
@@ -113,6 +114,29 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the El Farol and minority game model', () => {
+  it('is read by its tag, and its inspections by their panel and member', () => {
+    const c = { model: 'farol', stop_at: 100 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('farol');
+    const cell = { site: { x: 1, y: 2 }, panel: 'agents', round: null, attendance: null, count: null, member: null, agent: null } as unknown as AnyInspection;
+    const ra = { site: { x: 1, y: 2 }, panel: 'diagram', period: 0, opinion: 0.5, agents: [], agent: null } as unknown as AnyInspection;
+    expect([cell, ra].map(isFarolView)).toEqual([true, false]);
+    expect(isAgreementView(cell)).toBe(false);
+  });
+
+  it('colors four ways, has no overlays, and stops predictably at its last round', () => {
+    expect(COLOR_MODES.farol).toEqual([
+      ['choice', 'Choice'],
+      ['gain', 'Gain'],
+      ['strategy', 'Strategy'],
+      ['memory', 'Memory'],
+    ]);
+    expect(MODEL_OVERLAYS.farol).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'farol', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(100)), ticksLeft(c(100), 40), ticksLeft(c(0), 40)]).toEqual([false, 60, Infinity]);
   });
 });
 

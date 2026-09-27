@@ -56,10 +56,11 @@ export function paramEdit(p: Param, input: ParamInput): (c: ModelConfig) => void
 
 /**
  * Whether a field shows in `config`: always, or while its `show_if` field equals its value (a bool
- * field compared as `'true'` or `'false'`).
+ * field compared as `'true'` or `'false'`) and so does its `also_if` field, if it has one.
  */
 export function paramShown(p: Param, config: ModelConfig): boolean {
-  return !p.show_if || String(getPath(config, p.show_if.path)) === p.show_if.equals;
+  const holds = (c?: { path: string; equals: string }) => !c || String(getPath(config, c.path)) === c.equals;
+  return holds(p.show_if) && holds(p.also_if);
 }
 
 /** The control's current value in `config`, as its input shows it. */

@@ -1,6 +1,8 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  FarolConfig,
+  FarolInspection,
   AgreementConfig,
   AgreementInspection,
   AnasaziInspection,
@@ -35,7 +37,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -55,12 +57,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   norms: 'Norms and Metanorms',
   agreement: 'Relative Agreement',
   image: 'Image Scoring',
+  farol: 'El Farol and the Minority Game',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol'
     ? tag
     : 'sugarscape';
 }
@@ -154,6 +157,11 @@ export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
 }
 
+/** A cell of the El Farol frame (it names its panel and its grid agent, `member`). */
+export function isFarolView(v: AnyInspection): v is FarolInspection {
+  return 'panel' in v && 'member' in v;
+}
+
 /** The calendar year a world of `c` is in at `tick` (the anasazi's), or null for a model without one. */
 export function calendarYear(c: ModelConfig, tick: number): number | null {
   return 'model' in c && c.model === 'anasazi' ? c.start_year + tick : null;
@@ -174,6 +182,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   // Relative agreement's stop_at is its horizon, or a cap on a run that stops when stable.
   if (modelOf(c) === 'agreement' && (c as AgreementConfig).stop_at > 0) return Math.max(0, (c as AgreementConfig).stop_at - tick);
   if (modelOf(c) === 'image' && (c as ImageConfig).end > 0) return Math.max(0, (c as ImageConfig).end - tick);
+  if (modelOf(c) === 'farol' && (c as FarolConfig).stop_at > 0) return Math.max(0, (c as FarolConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -313,6 +322,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['score', 'Score'],
     ['payoff', 'Payoff'],
   ],
+  // Who went this round; winnings; the active predictor's family (or who switched); memory.
+  farol: [
+    ['choice', 'Choice'],
+    ['gain', 'Gain'],
+    ['strategy', 'Strategy'],
+    ['memory', 'Memory'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -333,4 +349,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   norms: [],
   agreement: [],
   image: [],
+  farol: [],
 };

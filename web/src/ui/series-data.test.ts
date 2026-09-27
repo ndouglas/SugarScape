@@ -227,6 +227,18 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('El Farol and minority game charts', () => {
+  it('chart attendance, fluctuations, success, forecasts, switching and memory over rounds', () => {
+    expect(MODEL_CHARTS.farol.map((c) => c.title)).toEqual(['Attendance', 'Fluctuations', 'Success', 'Forecasts', 'Switching', 'Memory']);
+    const chart = (t: string) => MODEL_CHARTS.farol.find((c) => c.title === t)!;
+    const el = { model: 'farol', game: 'el_farol', mixed_memory: { enabled: false }, evolution: { enabled: false } } as unknown as ModelConfig;
+    const mg = { model: 'farol', game: 'minority', mixed_memory: { enabled: true }, evolution: { enabled: false } } as unknown as ModelConfig;
+    expect([chart('Forecasts').shown!(el), chart('Forecasts').shown!(mg)]).toEqual([true, false]);
+    expect([chart('Memory').shown!(el), chart('Memory').shown!(mg)]).toEqual([false, true]);
+    expect(timeAxisLabel('farol')).toBe('Rounds');
+  });
+});
+
 describe('relative agreement charts', () => {
   it('chart convergence, clusters, dispersion, opinion and uncertainty, and change over periods', () => {
     expect(MODEL_CHARTS.agreement.map((c) => c.title)).toEqual(['Convergence', 'Clusters', 'Dispersion', 'Opinion and uncertainty', 'Change']);

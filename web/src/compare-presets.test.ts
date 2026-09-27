@@ -43,6 +43,11 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs Arthur’s accuracy and payoff-rated predictors', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['ef-accuracy-vs-payoff', 'ef-arthur', 'ef-payoff', 'Accuracy vs payoff scoring — El Farol (Compare)']);
+  });
+
   it('pairs Meadows and Cliff’s reading and the reply', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['ra-meadows-cliff-vs-reply', 'ra-meadows-cliff', 'ra-deffuant-2013', 'Meadows and Cliff vs Deffuant et al.’s reply — Relative Agreement (Compare)']);

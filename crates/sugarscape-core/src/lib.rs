@@ -16,6 +16,7 @@ pub mod econ;
 pub mod edit;
 pub mod ethno;
 pub mod export;
+pub mod farol;
 pub mod frames;
 pub mod geometry;
 pub mod image;

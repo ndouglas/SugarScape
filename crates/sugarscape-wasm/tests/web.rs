@@ -323,7 +323,14 @@ fn builtins_and_series_names_are_listed() {
             "ns-rounds",
             "ns-group-size",
             "lh-cost",
-            "lh-gene-flow"
+            "lh-gene-flow",
+            "ef-predictors",
+            "ef-capacity",
+            "mg-memory",
+            "mg-fig-1",
+            "mg-strategies",
+            "mg-information",
+            "cmo-bias"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -844,6 +851,25 @@ fn agreement_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "agreement");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn farol_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: both games,
+    // mixed memories, the inverse payoff and evolution with memory mutation.
+    for (id, fp) in [
+        ("ef-arthur", "0x21d68cd385f4c107"),
+        ("ef-payoff", "0xfc1e2e95d6261a60"),
+        ("mg-mixed", "0x06059c33de58936b"),
+        ("mg-inverse", "0xf9b094733c6a48aa"),
+        ("mg-arms-race", "0x4c1e9852373241c9"),
+        ("cmo-binary", "0x2081105c24039d0c"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "farol");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

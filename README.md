@@ -143,7 +143,7 @@ The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **R
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**
-and **Image Scoring**.
+**Image Scoring** and **El Farol and the Minority Game**.
 Each preset is listed by a plain title saying what happens in it; under the menu, the chosen
 preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
@@ -1256,6 +1256,67 @@ Journal B* 38 (2004); Michael Meadows and Dave Cliff, "Reexamining the Relative 
 Opinion Dynamics," *JASSS* 15(4) 4 (2012); Guillaume Deffuant, Frédéric Amblard and Gérard Weisbuch,
 "The Results of Meadows and Cliff Are Wrong Because They Compute Indicator y Before Model
 Convergence," *JASSS* 16(1) 11 (2013). See `docs/superpowers/specs/2026-09-26-relative-agreement-design.md`.
+
+### El Farol and the Minority Game (Arthur 1994; Challet & Zhang 1997)
+
+**El Farol.** 100 people decide each week whether to go to a bar that is fun only if fewer than 60
+come (Arthur). Nobody knows who else is going; each holds a few simple forecasts of next week's
+attendance from past weeks' (the same as some week ago, a mirror image, an average, a trend — a
+stated library of 48, Arthur's "several dozen") and goes if the forecast that has lately been most
+accurate says fewer than 60. **The minority game** (Challet and Zhang) strips this to its core: an odd
+number of players each choose side A or B, and the smaller side wins. Each player holds a few
+strategies — tables from the last M winning sides to a choice — and plays the one that would have won
+most so far. With a capacity other than half, the minority game is also Challet, Marsili and Ottino's
+yes-or-no version of El Farol.
+
+Measured (the survey and the presets' descriptions):
+
+- **The mean at 60 is trivial; the swings are not.** Arthur's attendance does average 58–60 at every
+  k from 2 to 32, as he says — but agents going at random with probability 0.6 average 60 too
+  (Challet, Marsili and Ottino's point), and Arthur's agents swing 20 to 50 times as widely (σ²/N
+  5–11 against 0.24). Rated by the advice they give instead of their accuracy, the swings halve, but
+  stay well above chance.
+- **Arthur's robustness needs a large library.** The library here is fixed at 48, and his numbers
+  hold across k; but in planning, a library of 25 gave a mean of 52 at k 23, with attendance swinging
+  between near-empty and near-full (σ²/N 22). His "robust to changes in types of predictors created"
+  is not tested here, and on that evidence it would not hold for small libraries.
+- **Arthur's cycles do not go away.** Rated by accuracy, attendance alternates high and low (a lag-1
+  autocorrelation of −0.23 to −0.57) where he says "no persistent cycles"; rated by payoff the cycle
+  is gone. And 30–36 % of the forecasts in use are above 60, not his 40 %.
+- **The memory transition reproduces** (Savit, Manuca and Riolo): with 2 strategies, fluctuations are
+  worst with short memories, lowest where 2^M/N ≈ 0.63 and back to chance with long ones, and the
+  minimum moves one memory step per doubling of N. Players beat a coin just above the transition
+  (the best of 101 wins 54 % at M 6), not far above it (49 % at M 10), where the paper says they
+  still do.
+- **Challet and Zhang's figures mostly hold.** Fluctuations fall through memories 6, 8 and 10 at
+  1001 players (Fig. 1 — with 5 strategies each; with 2, M 10 is already past the minimum); mixed
+  memories win more up to about 6, then level off (Fig. 2); more strategies make players worse
+  (Fig. 5); frequent switchers do worse (Fig. 6); the Darwinian version cuts fluctuations (Fig. 9);
+  memory evolves upward and settles, higher for 1001 players than 101 (Fig. 11). Two do not: the
+  "win more, the smaller the minority" payoff gives one peak, not two (Fig. 4 — rounded as stated,
+  an even split pays nothing and nothing is learned; unrounded, still one peak), and cloning without
+  mutation gives no "tremendous waste" (Fig. 10).
+
+Switches: **Game**; **Agents decide** (by their best strategy, or at random); **Predictors rated by**
+(accuracy, or the advice they give), **Accuracy memory**, **Forecast exactly L**, **Everyone holds
+the whole library** (El Farol); **Memory**, **Mixed memories**, **Winners get** (a point, or N/x − 2),
+**N/x − 2** (rounded, or exact), **Bias**, **History** (the real one, or random), and **Replace the
+worst** with its interval and mutations (the minority game). The view: attendance over the last 240
+rounds (crowded rounds shaded, the capacity marked), the attendance histogram on the same scale, and
+the agents as a grid. Color modes: **Choice**, **Gain**, **Strategy**, **Memory**. Charts: Attendance;
+Fluctuations (with coin-flippers' level); Success; Forecasts; Switching; Memory. Presets: `ef-arthur`,
+`ef-payoff`, `ef-random`, `ef-shared`, `mg-m6`, `mg-m8`, `mg-m10`, `mg-mixed`, `mg-inverse`,
+`mg-evolution`, `mg-inbred`, `mg-arms-race`, `mg-crowded`, `mg-critical`, `mg-random-like`,
+`cmo-binary`. **Compare** entry: "Accuracy vs payoff scoring — El Farol (Compare)". Built-in sweeps:
+`ef-predictors`, `ef-capacity`, `mg-memory`, `mg-fig-1`, `mg-strategies`, `mg-information`, `cmo-bias`.
+
+Credit: W. Brian Arthur, "Inductive Reasoning and Bounded Rationality," *American Economic Review*
+84(2) (1994), 406–411; Damien Challet and Yi-Cheng Zhang, "Emergence of Cooperation and Organization
+in an Evolutionary Game," *Physica A* 246 (1997); Robert Savit, Radu Manuca and Rick Riolo, "Adaptive
+Competition, Market Efficiency, and Phase Transitions," *Physical Review Letters* 82 (1999); Damien
+Challet and Yi-Cheng Zhang, "On the Minority Game: Analytical and Numerical Studies," *Physica A* 256
+(1998); Damien Challet, Matteo Marsili and Gabriele Ottino, "Shedding Light on El Farol," *Physica A*
+332 (2004). See `docs/superpowers/specs/2026-09-27-el-farol-design.md`.
 
 ## Experiments
 

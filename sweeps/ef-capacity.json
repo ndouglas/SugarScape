@@ -1,0 +1,50 @@
+{
+  "name": "El Farol: mean attendance against capacity",
+  "description": "Challet, Marsili and Ottino: convergence of the mean to the capacity is trivial. Mean attendance over rounds 201–2 000 against the capacity L, for Arthur's agents and for agents going at random with probability L/100. Measured (release, seeds 1–10, recorded 2026-09-27): Arthur's agents 21.9, 31.1, 40.1, 48.9, 59.1, 67.9, 77.1 at L 20 to 80; random agents 19.9–80.0, within 0.1 of L every time. The inductive agents track L roughly; the random ones exactly.",
+  "base": {
+    "preset": "ef-arthur"
+  },
+  "x": {
+    "label": "Capacity (L)",
+    "path": "capacity",
+    "values": [
+      20,
+      30,
+      40,
+      50,
+      60,
+      70,
+      80
+    ]
+  },
+  "series": {
+    "label": "Agents",
+    "values": [
+      {
+        "at": 0,
+        "name": "Inductive (Arthur)",
+        "set": {
+          "behavior": "inductive"
+        }
+      },
+      {
+        "at": 1,
+        "name": "At random",
+        "set": {
+          "behavior": "random"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "attendance",
+    "from": 201,
+    "to": 2000
+  }
+}

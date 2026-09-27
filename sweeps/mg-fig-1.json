@@ -1,0 +1,50 @@
+{
+  "name": "Minority game: Fig. 1's memories at N = 1001",
+  "description": "Challet and Zhang's Fig. 1 memories at 1001 players: σ²/N over the last 100 of 3 000 rounds against memory, with 2 or 5 strategies each. They report fluctuations 'in decreasing order' for M = 6, 8, 10 (S not stated). Measured (release, seeds 1–5, recorded 2026-09-27): S 5 — 23.0, 12.2, 6.8, 2.5, 2.3, 1.4, 0.37, 0.27, 0.25 at M 4 to 12, decreasing through 10 as they say; S 2 — the minimum at M 9 (0.11), rising again at 10 (0.14). Which S they used decides whether M 10 beats M 8.",
+  "base": {
+    "preset": "mg-m8"
+  },
+  "x": {
+    "label": "Memory (M)",
+    "path": "memory",
+    "values": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ]
+  },
+  "series": {
+    "label": "Strategies",
+    "values": [
+      {
+        "at": 2,
+        "name": "S = 2",
+        "set": {
+          "strategies": 2
+        }
+      },
+      {
+        "at": 5,
+        "name": "S = 5",
+        "set": {
+          "strategies": 5
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 3000,
+  "metric": {
+    "kind": "final",
+    "series": "fluctuation"
+  }
+}

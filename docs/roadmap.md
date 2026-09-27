@@ -208,6 +208,16 @@ Balanced extremists' single extreme is a finite-size effect; Figs. 5 and 7 do no
 stated parameters; eq. 11 as printed reproduces none of §6; the unstated cutoff for counting extremists
 decides the network results. See `docs/superpowers/specs/2026-09-26-relative-agreement-design.md`.
 
+## Milestone 23: El Farol and the Minority Game (done)
+
+Arthur's El Farol bar (1994) and Challet and Zhang's minority game (1997) as one model kind, with a
+stated predictor library, Challet, Marsili and Ottino's scoring, bias and random baseline (2004),
+Savit, Manuca and Riolo's memory transition (1999), and the minority game's payoff, mixed-memory and
+Darwinian variants as switches. Arthur's mean of 60 holds but is trivial — random agents get it too —
+and his agents swing far more than coin-flippers, with a high-low cycle he says never persists; the
+memory transition and most of Challet and Zhang's figures reproduce; their two-peaked payoff and the
+waste of pure cloning do not. See `docs/superpowers/specs/2026-09-27-el-farol-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -226,6 +236,7 @@ decides the network results. See `docs/superpowers/specs/2026-09-26-relative-agr
 - **Axelrod's norms and metanorms** (and Galán & Izquierdo's re-implementation): done (Milestone 20).
 - **Nowak & Sigmund's image scoring** (and Leimar & Hammerstein's critique): done (Milestone 21).
 - **Deffuant et al.'s relative agreement and extremism** (and Meadows & Cliff's replication): done (Milestone 22).
+- **Arthur's El Farol and Challet & Zhang's minority game** (and the memory transition, and Challet, Marsili & Ottino's critique): done (Milestone 23).
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

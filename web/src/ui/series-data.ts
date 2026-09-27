@@ -142,6 +142,15 @@ const hasK = (c: ModelConfig): boolean => 'strategies' in c && (c.strategies as 
  * image scoring's help rate and cooperative strategies, mean k, strategy shares (the binary scorers
  * apart) and mean payoff.
  */
+/** An El Farol config playing Arthur's game (its forecasts chart shows). */
+export const isElFarol = (c: ModelConfig): boolean => 'game' in c && (c as { game: unknown }).game === 'el_farol';
+
+/** A minority game whose memories differ or evolve (its memory chart shows). */
+export const memoriesVary = (c: ModelConfig): boolean => {
+  const f = c as { game?: unknown; mixed_memory?: { enabled?: unknown }; evolution?: { enabled?: unknown } };
+  return f.game === 'minority' && (f.mixed_memory?.enabled === true || f.evolution?.enabled === true);
+};
+
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
     { title: 'Segregation', lines: [{ key: 'segregation', label: 'Like neighbors (mean share)', color: '--c2' }], range: [0, 1] },
@@ -508,6 +517,32 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     },
     { title: 'Mean payoff', lines: [{ key: 'mean_payoff', label: 'Per agent, this generation', color: '--c2' }] },
   ],
+  farol: [
+    { title: 'Attendance', lines: [{ key: 'attendance', label: 'Attendance', color: '--c1' }] },
+    {
+      title: 'Fluctuations',
+      lines: [
+        { key: 'fluctuation', label: 'σ²/N, last 100 rounds', color: '--red' },
+        { key: 'random_fluctuation', label: 'Coin-flippers', color: '--c4' },
+      ],
+    },
+    {
+      title: 'Success',
+      lines: [
+        { key: 'success', label: 'Right this round', color: '--c1' },
+        { key: 'mean_gain', label: 'Gain per round so far', color: '--c3' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Forecasts',
+      lines: [{ key: 'forecast_above', label: 'Forecasting above capacity', color: '--c2' }],
+      range: [0, 1],
+      shown: isElFarol,
+    },
+    { title: 'Switching', lines: [{ key: 'switching', label: 'Switched strategy', color: '--c4' }], range: [0, 1] },
+    { title: 'Memory', lines: [{ key: 'mean_memory', label: 'Mean memory', color: '--c3' }], shown: memoriesVary },
+  ],
 };
 
 /**
@@ -515,7 +550,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

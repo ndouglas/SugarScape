@@ -1,0 +1,57 @@
+{
+  "name": "The binary El Farol: swings against the number of agents (CMO Fig. 1)",
+  "description": "Challet, Marsili and Ottino's binary El Farol: 60 seats, strategies reading only whether recent weeks were crowded, each entry 'go' with probability 0.5; σ²/N over the last 100 of 5 000 rounds against the number of agents N, for memories 2, 3 and 6. At N = 120 agents want exactly 60 seats on average. Measured (release, seeds 1–10, recorded 2026-09-27): M 2 — 0.52, 0.11, 0.76, 1.34, 1.61, 1.61, 1.39, 1.17, 1.13 at N 80 to 160, worse than coin-flippers (0.24–0.25) near N = 120 and best at a bias (N 90); M 6 — 0.056 at N 120, better than coin-flippers, worse away from it. Short memories do worst where the strategies are unbiased; a longer memory turns that around, as they find.",
+  "base": {
+    "preset": "cmo-binary"
+  },
+  "x": {
+    "label": "Agents (N), 60 seats",
+    "path": "agents",
+    "values": [
+      80,
+      90,
+      100,
+      110,
+      120,
+      130,
+      140,
+      150,
+      160
+    ]
+  },
+  "series": {
+    "label": "Memory",
+    "values": [
+      {
+        "at": 2,
+        "name": "M = 2",
+        "set": {
+          "memory": 2
+        }
+      },
+      {
+        "at": 3,
+        "name": "M = 3",
+        "set": {
+          "memory": 3
+        }
+      },
+      {
+        "at": 6,
+        "name": "M = 6",
+        "set": {
+          "memory": 6
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "fluctuation"
+  }
+}
