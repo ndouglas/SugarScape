@@ -22,6 +22,8 @@ import {
   MODEL_OVERLAYS,
   modelOf,
   presetGroups,
+  presetOptionLabel,
+  presetReference,
   ticksLeft,
 } from './models';
 import type { AnyInspection, Config, ModelConfig, Preset } from './types';
@@ -58,7 +60,7 @@ describe('modelOf', () => {
 
 describe('presetGroups', () => {
   it('groups the presets menu by model in a fixed order, leaving out models without presets', () => {
-    const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
+    const p = (id: string, config: unknown): Preset => ({ id, title: id, name: id, source: '', description: '', config: config as ModelConfig });
     const presets = [p('ring-1', { model: 'ring' }), p('ii-2', {}), p('ii-3', {}), p('ring-2', { model: 'ring' })];
     expect(presetGroups(presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([
       ['Sugarscape', ['ii-2', 'ii-3']],
@@ -100,9 +102,17 @@ describe('the anasazi model', () => {
   });
 
   it('groups its presets under Artificial Anasazi, last', () => {
-    const p = (id: string, config: unknown): Preset => ({ id, name: id, source: '', description: '', config: config as ModelConfig });
+    const p = (id: string, config: unknown): Preset => ({ id, title: id, name: id, source: '', description: '', config: config as ModelConfig });
     const groups = presetGroups([p('lhv', valley), p('ii-2', {}), p('vi-8', { model: 'ring' })]);
     expect(groups.map((g) => g.label)).toEqual(['Sugarscape', 'Ring World', 'Artificial Anasazi']);
+  });
+});
+
+describe('the presets menu', () => {
+  it('shows each preset by its plain title, with its source and rules beside the description', () => {
+    const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
+    expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
+    expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
   });
 });
 

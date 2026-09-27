@@ -10,7 +10,7 @@ import { DiseaseListPoll } from './ui/disease-picker';
 import { chartsBehind, distributionsDue, distributionWants, type DistState } from './ui/series-data';
 
 const config = { width: 4, height: 3 } as unknown as Config;
-const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', description: '', config }];
+const presets: Preset[] = [{ id: 'ii-2-unit', title: 'Unit', name: 'Unit', source: 'II-2', description: '', config }];
 /** Lets queued microtasks and zero-delay timers run. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 /** A config the test knows is a sugarscape's. */
@@ -1036,8 +1036,8 @@ describe('Engine with other models', () => {
   const valley = { model: 'anasazi', width: 6, height: 4, start_year: 800, end_year: 810, finish: 10 } as unknown as ModelConfig;
   const models: Preset[] = [
     ...presets,
-    { id: 'vi-4', name: 'Schelling', source: 'VI-4', description: '', config: schelling },
-    { id: 'vi-8', name: 'Ring', source: 'VI-8', description: '', config: ring },
+    { id: 'vi-4', title: 'Schelling', name: 'Schelling', source: 'VI-4', description: '', config: schelling },
+    { id: 'vi-8', title: 'Ring', name: 'Ring', source: 'VI-8', description: '', config: ring },
   ];
   const make = (config: ModelConfig, transport = new HookedTransport(new SimHost(fakeModule()))) =>
     Engine.create({ config, seed: 1 }, { presets: models, transport });

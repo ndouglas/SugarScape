@@ -192,6 +192,16 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
 
+/** What the presets menu shows for a preset: its plain title. */
+export function presetOptionLabel(p: Preset): string {
+  return p.title;
+}
+
+/** Where a preset comes from and which rules it runs, shown with its description. */
+export function presetReference(p: Preset): string {
+  return `${p.source} · ${p.name}`;
+}
+
 export function presetModel(p: Preset): ModelKind {
   return modelOf(p.config);
 }

@@ -649,14 +649,36 @@ pub fn by_id(id: &str) -> Option<Preset> {
 }
 
 /// A preset of any model: what the page's presets menu, sweeps and the CLI
-/// list. A sugarscape preset's config serializes exactly as its `Preset`'s.
-#[derive(Clone, Debug, Serialize)]
+/// list. A sugarscape preset's config serializes exactly as its `Preset`'s;
+/// the JSON also carries its `title` (see `crate::titles`).
+#[derive(Clone, Debug)]
 pub struct ModelPreset {
     pub id: &'static str,
     pub name: &'static str,
     pub source: &'static str,
     pub description: &'static str,
     pub config: ModelConfig,
+}
+
+impl ModelPreset {
+    /// A plain headline of what happens in this preset (`crate::titles`).
+    pub fn title(&self) -> &'static str {
+        crate::titles::title(self.id)
+    }
+}
+
+impl Serialize for ModelPreset {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut out = s.serialize_struct("ModelPreset", 6)?;
+        out.serialize_field("id", self.id)?;
+        out.serialize_field("title", self.title())?;
+        out.serialize_field("name", self.name)?;
+        out.serialize_field("source", self.source)?;
+        out.serialize_field("description", self.description)?;
+        out.serialize_field("config", &self.config)?;
+        out.end()
+    }
 }
 
 impl From<Preset> for ModelPreset {
@@ -703,6 +725,41 @@ pub fn find(id: &str) -> Option<ModelPreset> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_preset_has_a_plain_title_and_serializes_it() {
+        let catalog = catalog();
+        assert_eq!(
+            crate::titles::TITLES.len(),
+            catalog.len(),
+            "one title per preset"
+        );
+        for p in &catalog {
+            let t = p.title();
+            assert!(!t.is_empty(), "{} has no title", p.id);
+            // A title says what happens, not where it is from or which rules it runs.
+            for jargon in ["Animation", "Fig.", "Figure", "Table "] {
+                assert!(!t.starts_with(jargon), "{}: {t}", p.id);
+            }
+            assert!(!t.contains("({"), "{}: rule notation in {t}", p.id);
+            let numbered_run = t
+                .strip_prefix("Run ")
+                .is_some_and(|rest| rest.starts_with(|c: char| c.is_ascii_digit()));
+            assert!(!numbered_run, "{}: {t}", p.id);
+            let json = serde_json::to_value(p).unwrap();
+            assert_eq!(json["title"], t, "{}", p.id);
+            assert_eq!(
+                (json["id"].as_str(), json["name"].as_str()),
+                (Some(p.id), Some(p.name))
+            );
+        }
+        for (id, _) in crate::titles::TITLES {
+            assert!(
+                catalog.iter().any(|p| p.id == id),
+                "a title for no preset: {id}"
+            );
+        }
+    }
     use crate::world::World;
 
     #[test]
@@ -750,10 +807,11 @@ mod tests {
         for (p, q) in sugarscape.iter().zip(&catalog) {
             assert_eq!(p.id, q.id);
             assert_eq!(q.config.sugarscape(), Some(&p.config));
-            assert_eq!(
-                serde_json::to_string(p).unwrap(),
-                serde_json::to_string(q).unwrap()
-            );
+            // The catalog adds the menu's title; everything else is unchanged.
+            let mut listed = serde_json::to_value(q).unwrap();
+            let title = listed.as_object_mut().unwrap().remove("title").unwrap();
+            assert_eq!(title, q.title());
+            assert_eq!(serde_json::to_value(p).unwrap(), listed);
         }
         assert_eq!(
             find("iv-3-trade").unwrap().config,

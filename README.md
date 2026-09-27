@@ -144,6 +144,8 @@ The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **R
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**
 and **Image Scoring**.
+Each preset is listed by a plain title saying what happens in it; under the menu, the chosen
+preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. A config without a `model` key is a sugarscape config, so every older config, link, session

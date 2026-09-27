@@ -25,7 +25,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// List the presets of every model (id, source, name).
+    /// List the presets of every model (id, source, name, title).
     Presets,
     /// List the built-in sweeps (id, name).
     Sweeps,
@@ -162,7 +162,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
     match cli.command {
         Command::Presets => {
             for p in presets::catalog() {
-                println!("{}\t{}\t{}", p.id, p.source, p.name);
+                println!("{}\t{}\t{}\t{}", p.id, p.source, p.name, p.title());
             }
             Ok(())
         }

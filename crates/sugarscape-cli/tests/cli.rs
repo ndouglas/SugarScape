@@ -44,6 +44,9 @@ fn presets_and_sweeps_are_listed() {
     assert!(stdout(&out)
         .lines()
         .any(|l| l.starts_with("ii-2-unit\tAnimation II-2\t")));
+    // The fourth column is the menu's plain title.
+    assert!(stdout(&out).lines().any(|l| l
+        == "ii-2-unit\tAnimation II-2\t({G₁}, {M})\tSugar grows back slowly: foraging never stops and the population falls to about 224"));
     let out = sugarscape(&["sweeps"]);
     assert!(out.status.success(), "{}", stderr(&out));
     let text = stdout(&out);

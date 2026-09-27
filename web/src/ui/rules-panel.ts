@@ -2,7 +2,7 @@ import { COMPARE_PRESETS } from '../compare-presets';
 import type { Engine } from '../engine';
 import { goodsEditorSignature, pollutionEditorSignature } from '../goods';
 import { groupsEditorSignature } from '../groups';
-import { presetGroups, presetModel } from '../models';
+import { presetGroups, presetModel, presetOptionLabel, presetReference } from '../models';
 import { errorsFor, getPath, setPath } from '../paths';
 import { GROUPS, type Control, type Group } from '../schema';
 import { scheduleLines } from '../schedule';
@@ -135,20 +135,23 @@ export class RulesPanel {
       h('option', { value: '', disabled: true }, 'Custom'),
       ...presetGroups(this.engine.presets)
         .filter((g) => !this.opts.sameModelOnly || g.model === this.engine.model)
-        .map((g) => h('optgroup', { label: g.label }, ...g.presets.map((p) => h('option', { value: p.id }, `${p.name} — ${p.source}`)))),
+        .map((g) => h('optgroup', { label: g.label }, ...g.presets.map((p) => h('option', { value: p.id }, presetOptionLabel(p))))),
       this.opts.onCompare
         ? h('optgroup', { label: 'Compare' }, ...COMPARE_PRESETS.map((c) => h('option', { value: `compare:${c.id}` }, c.label)))
         : null,
     );
     const badge = h('span', { class: 'badge' }, 'modified');
+    const reference = h('p', { class: 'hint preset-reference' });
     const desc = h('p', { class: 'hint' });
     this.presetSync = () => {
       const p = this.engine.presets.find((x) => x.id === this.engine.presetId);
       select.value = p?.id ?? '';
       badge.hidden = !this.engine.isModified();
+      reference.textContent = p ? presetReference(p) : '';
+      reference.hidden = p === undefined;
       desc.textContent = p ? p.description : 'Custom configuration.';
     };
-    return h('section', { class: 'presets' }, h('label', {}, 'Rule system ', badge), select, desc);
+    return h('section', { class: 'presets' }, h('label', {}, 'Rule system ', badge), select, reference, desc);
   }
 
   private scheduleSection(): HTMLElement {

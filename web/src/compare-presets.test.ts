@@ -4,6 +4,7 @@ import type { Config, Preset } from './types';
 
 const preset = (id: string, trade: boolean): Preset => ({
   id,
+  title: id,
   name: id,
   source: '',
   description: '',
@@ -37,7 +38,7 @@ describe('compare presets', () => {
   it('opens the published Anasazi replication as A and the documented model as B', () => {
     const lhv = COMPARE_PRESETS.find((c) => c.id === 'lhv-published-vs-documented')!;
     expect(lhv).toMatchObject({ a: 'lhv-published', b: 'lhv-documented', label: 'Replication vs documented — Anasazi (Compare)' });
-    const valley = (id: string): Preset => ({ id, name: id, source: '', description: '', config: { model: 'anasazi' } as unknown as Config });
+    const valley = (id: string): Preset => ({ id, title: id, name: id, source: '', description: '', config: { model: 'anasazi' } as unknown as Config });
     const states = comparePresetStates([valley('lhv-published'), valley('lhv-documented')], lhv, 9)!;
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });

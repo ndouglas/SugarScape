@@ -548,9 +548,12 @@ fn presets_list_every_model_with_sugarscape_configs_untagged() {
     assert_eq!(model("ii-2-unit"), None);
     assert_eq!(model("vi-4-schelling-25").as_deref(), Some("schelling"));
     assert_eq!(model("vi-9-ring-megagroup").as_deref(), Some("ring"));
-    let first = &list[0];
+    // Sugarscape presets serialize as before, plus the menu's title.
+    let mut first = list[0].clone();
+    let title = first.as_object_mut().unwrap().remove("title");
+    assert!(title.and_then(|t| t.as_str().map(|t| !t.is_empty())) == Some(true));
     let direct = serde_json::to_value(&sugarscape_core::presets::all()[0]).unwrap();
-    assert_eq!(first, &direct, "sugarscape presets serialize as before");
+    assert_eq!(first, direct, "sugarscape presets serialize as before");
 }
 
 #[wasm_bindgen_test]

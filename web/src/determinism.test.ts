@@ -541,6 +541,16 @@ describe('image scoring’s golden fingerprints', () => {
   });
 });
 
+describe('preset titles', () => {
+  it('reach the page for every preset, and none is a figure number or rule notation', () => {
+    expect(presets.length).toBeGreaterThan(180);
+    for (const p of presets) {
+      expect(p.title, p.id).toBeTruthy();
+      expect(p.title, p.id).not.toMatch(/^(Animation|Fig\.|Figure|Table )|\(\{/);
+    }
+  });
+});
+
 describe('model charts', () => {
   it('draw only series their model records', () => {
     for (const [model, charts] of Object.entries(MODEL_CHARTS)) {

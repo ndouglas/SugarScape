@@ -482,7 +482,8 @@ export interface AgreementConfig {
 
 export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig;
 
-export interface Preset { id: string; name: string; source: string; description: string; config: ModelConfig }
+/** A preset: `title` is the menu's plain headline; `source` and `name` are its figure or paper and its rules. */
+export interface Preset { id: string; title: string; name: string; source: string; description: string; config: ModelConfig }
 
 /** One field of a model's Rules panel (the core's `schema::Param`). */
 export interface Param {

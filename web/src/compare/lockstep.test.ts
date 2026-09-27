@@ -8,7 +8,7 @@ import type { Config, Preset } from '../types';
 import { AdaptiveBatch, copyWorld, Lockstep, MAX_BATCH } from './lockstep';
 
 const config = { width: 4, height: 3 } as unknown as Config;
-const presets: Preset[] = [{ id: 'ii-2-unit', name: 'Unit', source: 'II-2', description: '', config }];
+const presets: Preset[] = [{ id: 'ii-2-unit', title: 'Unit', name: 'Unit', source: 'II-2', description: '', config }];
 /** A valley config that ends after `end` years. */
 const valley = (end: number) =>
   ({ model: 'anasazi', width: 4, height: 3, start_year: 800, end_year: 800 + end, finish: end }) as unknown as Config;
