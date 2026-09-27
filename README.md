@@ -1318,6 +1318,97 @@ Challet and Yi-Cheng Zhang, "On the Minority Game: Analytical and Numerical Stud
 (1998); Damien Challet, Matteo Marsili and Gabriele Ottino, "Shedding Light on El Farol," *Physica A*
 332 (2004). See `docs/superpowers/specs/2026-09-27-el-farol-design.md`.
 
+### Minds 1: the utility mind and the ideal free distribution
+
+This is our own experiment, not a reproduction: the first step of the Minds program
+(`docs/studies/2026-09-27-minds.md`), which builds decision engines one at a time and tests each
+against a known answer and an attested regularity before any social result rests on it.
+
+**The seam.** A new switch, **decision.rule**, picks what decides where a Flump moves. `book` (the
+default) is rule M, unchanged. `utility` is a **utility mind** in the style of Mark and Lewis: each
+candidate site at distance d scores W × T(d) × C, the product of three considerations.
+
+- **W** is rule M's welfare: sugar (discounted by pollution when on), or foresight welfare over
+  several goods.
+- **Travel**, T(d) = 1 / (1 + k·d): hyperbolic discounting of distance.
+- **Crowding**, C = (1 + n)^−m, with n the Flumps on the site's four neighbors, not counting the
+  mover: Sutherland's interference, made local.
+- **Idle**: when every candidate scores 0, `stay` (the book) or `wander` to a random free site in
+  sight.
+
+W stays raw (Lewis normalizes each consideration, but a constant shared by every candidate does not
+change the order), and ties and draws are rule M's. So with k = 0, m = 0 and `stay` the utility mind
+*is* rule M: every book-rule Sugarscape preset without combat gives the same fingerprint under
+either rule. Rule C still decides moves under combat, and `utility` with combat on is an error.
+
+**The target.** In the **ideal free distribution** (Fretwell and Lucas, 1969), animals that know
+every patch and can move freely spread so that none can do better by switching. With continuous
+input, the counts on two patches match their input rates (Parker's input matching). Experiments
+mostly **undermatch**: the richer patch draws fewer than its share (Kennedy and Gray, 1993).
+Fit N₁/N₂ = b·(R₁/R₂)^s: s = 1 is matching, s < 1 undermatching. Following Earn and Johnstone
+(1997), s here comes from means of per-sample log ratios (ln N₁/N₂ every 10 ticks from 500 to
+1000), never from the ratio of mean counts, which makes the theory appear to underestimate the
+consumers on poorer patches. Each seed gets its own s, the slope across five input ratios (1, 1.36,
+2.10, 2.80, 4.42).
+
+The world: two cone patches of sugar on a 60 × 40 torus, growback 0.25, and 100 Flumps of
+metabolism 1. A Flump is on a patch when it is inside the radius of its nearest peak.
+
+Measured (20 seeds, tick 1000; the survey and the sweeps):
+
+- **Rule M undermatches, and Parker's matching fails.** s has median 0.72 at vision 1–6 (IQR
+  0.59–0.92; 4 of 20 seeds within 0.9–1.1), 0.63 at 5–10 and 0.90 at 10–20 (IQR 0.87–0.93; 8 of
+  20). Every seed undermatches at 5–10 and 10–20, and 17 of 20 at 1–6. s does not rise steadily
+  with vision: 5–10 is the lowest. At 2.10 : 1 the richer patch holds 63 %, 61 % and 65 % of the
+  on-patch Flumps at the three visions, against matching's 68 %.
+- **"Free" fails before "ideal" does.** Rule M keeps a Flump in place when nothing it sees is
+  better, so a Flump that starts out of sight of sugar never moves. With nobody starving, a median
+  66 of 100 are off both patches at tick 1000, over half in all 20 seeds.
+- **Survival plays no part.** Starving or not, s is identical seed by seed in all 20 seeds. The
+  Flumps who die are the ones who never find sugar.
+- **Wandering frees the Flumps but moves s away from matching.** Under `wander` a median 0.5 % are
+  off patch. But s falls from 0.72 to 0.40, so the claim that wandering moves s toward 1 fails.
+  The wanderers overfill the poorer patch (41 Flumps on its 36 sugar a tick), so the split likely
+  follows where they arrive, not the inputs. That cause is not measured.
+- **Catchment is close on the median, but fails as judged.** At vision 1–6 no Flump can see across
+  the gap between the patches, so a patch's count may be set by how many Flumps start within sight
+  of it. Counting those sites predicts s = 0.709. The seeds' median is 0.722, but they scatter, and
+  only 6 of 20 land within 0.1 of the prediction (the claim asks for 80 %).
+- **Sutherland holds, in the direction we did not expect.** At vision 10–20 under the utility mind,
+  crowding m = 1 gives s median 0.95 (18 of 20 seeds within 0.9–1.1), as Sutherland's m = 1
+  predicts. We expected local crowding only to push Flumps apart and lower s. Instead it raises s
+  from 0.90 (one-sided Mann–Whitney p = 0.0003). In the sweep the share rises from 0.649 at m 0 to
+  about 0.659 at m 0.5 and stays there to m 4.
+- **Baum and Kraft fail here.** They found that travel between patches slightly reduced
+  undermatching. At vision 10–20, travel k = 0.5 lowers s from 0.90 to 0.73. Their travel was a
+  cost of switching; ours is a preference for nearby sugar under rule M's one-tick jump, which is
+  not the same thing. In the sweep the share falls from 0.649 at k 0 to 0.602 at k 0.5, then
+  recovers a little (0.613 at k 2).
+- **At vision 1–6, crowding and travel do nothing to the split.** No Flump sees both patches, so
+  there is nothing to weigh; the share is 0.6366 at every value of either knob. That is why their
+  presets, sweeps and claims use vision 10–20.
+
+Switches (the Rules panel's **Decision (Minds 1)** group): **Rule** (rule M or the utility mind;
+rebuilds the world), **Travel k** and **Crowding m** (0–10), and **When nothing in sight scores**
+(stay or wander). Under rule M the last three are kept but ignored. On a map of two or more peaks
+two charts appear: **Patches** (Flumps on the first patch, on other patches and off patch) and
+**First patch share**. Presets: `ifd-even`, `ifd-two-to-one`, `ifd-four-to-one`, `ifd-far-sighted`,
+`ifd-no-starving`, `ifd-wander`, `ifd-crowding`, `ifd-travel`. Built-in sweeps: `ifd-matching`
+(share against input ratio at three visions), `ifd-idle` (stay against wander), `ifd-crowding`,
+`ifd-travel`.
+
+Credit: S. D. Fretwell and H. L. Lucas, "On Territorial Behavior and Other Factors Influencing
+Habitat Distribution in Birds," *Acta Biotheoretica* 19 (1969); G. A. Parker, "Searching for Mates,"
+in *Behavioural Ecology* (1978); M. Kennedy and R. D. Gray, "Can Ecological Theory Predict the
+Distribution of Foraging Animals?," *Oikos* 68 (1993); D. J. D. Earn and R. A. Johnstone, "A
+Systematic Error in Tests of Ideal Free Theory," *Proc. R. Soc. B* 264 (1997); W. J. Sutherland,
+"Aggregation and the 'Ideal Free' Distribution," *J. Anim. Ecol.* 52 (1983); W. M. Baum and J. R.
+Kraft, "Group Choice: Competition, Travel, and the Ideal Free Distribution," *JEAB* 69 (1998); E. J.
+Collins, A. I. Houston and A. Lang, "The Ideal Free Distribution: An Analysis of the Perceptual Limit
+Model," *Evol. Ecol. Res.* 4 (2002); D. Mark, *Behavioral Mathematics for Game AI* (2009); M. Lewis,
+"Choosing Effective Utility-Based Considerations," *Game AI Pro 3* (2017). See
+`docs/superpowers/specs/2026-09-27-minds-1-utility-design.md`.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's

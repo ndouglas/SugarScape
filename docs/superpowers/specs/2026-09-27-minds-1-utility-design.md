@@ -275,3 +275,47 @@ the claims are reported whether they hold or fail.
   sweeps, and the findings as measured.
 - **`docs/studies/2026-09-27-minds.md`:** Minds 1's status and results.
 - **Roadmap:** a Minds line.
+
+## Amendments (implementation)
+
+These change or extend the sections above. The measured values are the survey's (20 seeds, tick
+1000) and the sweeps'.
+
+- **Crowding and travel are tested at vision 10–20, not 1–6.** At vision 1–6 no Flump sees both
+  patches, so neither knob has anything to weigh, and the patch split is unchanged: the share is
+  0.6366 at every value of either knob. The `ifd-crowding` and `ifd-travel` presets, their sweeps,
+  and the Sutherland and Baum–Kraft claims all use vision 10–20, in both arms.
+- **The survival claim is judged paired.** The same seeds run with and without starvation, so the
+  claim is judged on per-seed differences in *s* (within 0.05 in at least 80 % of seeds). *s* is
+  identical in 20 of 20 seeds: Holds. An unpaired equivalence test, which sees only the spread
+  across seeds, had called it Weak.
+- **The catchment claim keeps a strict per-seed judge, and fails.** Prediction 0.709; the seeds'
+  median 0.722 (IQR 0.59–0.92); only 6 of 20 within 0.1, against the 80 % asked.
+- **Sutherland: the expectation was wrong.** The spec expected the claim to fail and crowding to
+  lower *s*. Measured: crowding m = 1 raises *s* from 0.896 to 0.954 (one-sided Mann–Whitney
+  p ≈ 0.0003), with 18 of 20 seeds within 0.9–1.1, so Sutherland's matching holds. The sweep's
+  share at R 2.10 rises from 0.649 at m 0 to about 0.659 from m 0.5 to 4.
+- **Baum and Kraft: the direction is reversed.** Travel k = 0.5 lowers *s* from 0.90 to 0.73
+  (their claim fails). Their travel was a cost of switching; ours is a preference for nearby sugar
+  under rule M's one-tick jump. The sweep's share at R 2.10 falls from 0.649 at k 0 to 0.602 at
+  k 0.5, then recovers a little (0.613 at k 2).
+- **Wander frees the Flumps but lowers *s*.** A median 0.005 of Flumps are off patch ("free"
+  holds), but *s* falls from 0.72 to 0.40, so "toward matching" fails. The wanderers overfill the
+  poorer patch (41 Flumps on its 36 sugar a tick), so the split likely follows where they arrive.
+  That cause is not measured.
+- **Other survey results.** Parker fails at vision 1–6 (median *s* 0.72, 4 of 20 within 0.9–1.1)
+  and at 10–20 (0.90, 8 of 20). Undermatching holds at 1–6 (17 of 20), 5–10 (median 0.63, 20 of
+  20) and 10–20 (20 of 20). Stuck holds: a median 66 % off both patches with nobody starving,
+  over half in 20 of 20 seeds. These replace the planning probe's numbers.
+- **Patch membership** is the nearest peak, when the site is within that peak's radius. That
+  equals "capacity ≥ 1" only when patches don't overlap, as in every Minds 1 preset. On
+  overlapping peaks the two can differ; that's out of scope here.
+- **The reduction test skips presets whose own rule is the utility mind** (`ifd-wander`,
+  `ifd-crowding`, `ifd-travel`): they are not rule M. Their book counterparts are covered.
+- **Sources.** `papers/` is gitignored (local copies). Collins, Houston and Lang (2002) and Lewis
+  (2017) were saved. Earn and Johnstone (1997) and Baum and Kraft (1998) could not be fetched: the
+  hosts served a challenge page.
+- **Titles** follow the measurements: `ifd-wander` "Flumps who see no sugar wander: nearly all find
+  a patch, but the split strays from the yields"; `ifd-crowding` "Flumps who avoid crowded sugar
+  come closer to matching the yields"; `ifd-travel` "Flumps who prefer nearby sugar stray further
+  from matching the yields".
