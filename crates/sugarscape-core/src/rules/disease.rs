@@ -4,7 +4,7 @@
 
 use crate::agent::{Agent, AgentId, DiseaseId};
 use crate::bits::Bits;
-use crate::config::{DiseaseRule, URange};
+use crate::config::{DiseaseCure, DiseaseRule, ImmuneLearning, URange};
 use crate::rng::SimRng;
 use crate::world::{Infection, World};
 use rand::seq::SliceRandom;
@@ -65,11 +65,15 @@ pub(crate) fn act(world: &mut World, id: AgentId) {
     transmit(world, id);
 }
 
-/// Appendix B's immune response: for each carried disease, up to
-/// `flips_per_tick` single-bit steps toward it (`Bits::learn`); then every
-/// carried disease the trained string now contains is cured.
+/// Appendix B's immune response: single-bit steps toward the carried
+/// diseases (`Bits::learn`) — `flips_per_tick` in all, toward the oldest
+/// disease not yet learned (note 16), or `flips_per_tick` for each disease
+/// (`ImmuneLearning::PerDisease`). With `DiseaseCure::Immediate`, every
+/// carried disease the trained string now contains is then cured; otherwise
+/// that waits for the start of the agent's next turn (`agent_turn`).
 pub(crate) fn respond(world: &mut World, id: AgentId) {
-    let flips = world.config.disease.flips_per_tick;
+    let rule = &world.config.disease;
+    let (flips, learning, cure) = (rule.flips_per_tick, rule.learning, rule.cure);
     let carried: Vec<Bits> = world
         .agent(id)
         .expect("live agent")
@@ -78,14 +82,31 @@ pub(crate) fn respond(world: &mut World, id: AgentId) {
         .map(|&d| world.diseases[d as usize])
         .collect();
     let a = world.agent_mut(id).expect("live agent");
-    for d in &carried {
-        for _ in 0..flips {
-            if !a.immune.learn(d) {
-                break;
+    match learning {
+        ImmuneLearning::PerDisease => {
+            for d in &carried {
+                for _ in 0..flips {
+                    if !a.immune.learn(d) {
+                        break;
+                    }
+                }
+            }
+        }
+        ImmuneLearning::PerAgent => {
+            let mut left = flips;
+            for d in &carried {
+                while left > 0 && a.immune.learn(d) {
+                    left -= 1;
+                }
+                if left == 0 {
+                    break;
+                }
             }
         }
     }
-    cure_immune(world, id);
+    if cure == DiseaseCure::Immediate {
+        cure_immune(world, id);
+    }
 }
 
 /// Drops every carried disease that is a substring of the agent's immune string.
@@ -224,6 +245,15 @@ mod tests {
         w
     }
 
+    /// A sick world under the engine's earlier readings: a flip per carried
+    /// disease, and a learned disease dropped at once.
+    fn sick_world_per_disease() -> World {
+        let mut w = sick_world();
+        w.config.disease.learning = ImmuneLearning::PerDisease;
+        w.config.disease.cure = DiseaseCure::Immediate;
+        w
+    }
+
     /// An agent at (x, y) with the given immune string, carrying `diseases`.
     fn patient(w: &mut World, x: u32, y: u32, immune: &str, diseases: Vec<DiseaseId>) -> AgentId {
         let id = spawn(w, x, y);
@@ -263,25 +293,78 @@ mod tests {
 
     #[test]
     fn book_example_is_learned_in_one_tick() {
-        // Appendix B's worked example, through a whole tick: the agent stays
-        // put (nothing to gather), burns its fee, then its immune system flips
-        // one bit and the disease is gone.
+        // Appendix B's worked example: "learning takes only 1 period. For
+        // that cycle, the agent's metabolism is hiked by one and the agent can
+        // pass the disease to neighbors." The agent stays put (nothing to
+        // gather), burns its fee, flips one bit and still carries the disease
+        // through that tick; it is gone at the start of the next, with no
+        // second fee.
         let mut w = sick_world();
         w.diseases = vec![b("10011")];
         let id = patient(&mut w, 5, 5, "1011101001", vec![0]);
+        let neighbor = patient(&mut w, 5, 6, "0000000000", vec![]);
         w.step();
         let a = w.agent(id).unwrap();
         assert_eq!(a.immune.to_bit_string(), "1001101001");
-        assert!(a.diseases.is_empty(), "cured");
+        assert_eq!(
+            a.diseases,
+            vec![0],
+            "carried through the tick it is learned"
+        );
         assert_eq!(
             a.holdings[0], 9.0,
             "metabolism 0 plus a fee of 1 for one disease"
         );
+        assert_eq!(
+            w.agent(neighbor).unwrap().diseases,
+            vec![0],
+            "and passed on"
+        );
+        w.step();
+        let a = w.agent(id).unwrap();
+        assert!(a.diseases.is_empty(), "cured at the start of the next turn");
+        assert_eq!(a.holdings[0], 9.0, "no second fee");
+    }
+
+    #[test]
+    fn under_the_immediate_cure_a_learned_disease_is_never_passed_on() {
+        let mut w = sick_world_per_disease();
+        w.diseases = vec![b("10011")];
+        let id = patient(&mut w, 5, 5, "1011101001", vec![0]);
+        let neighbor = patient(&mut w, 5, 6, "0000000000", vec![]);
+        w.step();
+        assert!(w.agent(id).unwrap().diseases.is_empty());
+        assert!(w.agent(neighbor).unwrap().diseases.is_empty());
+    }
+
+    #[test]
+    fn one_flip_per_agent_learns_what_a_flip_per_disease_undoes() {
+        // Two diseases that pull one bit opposite ways: flipping for each
+        // disease every tick loops (00101 → 00001 → 00101 …) and the agent
+        // stays sick for good; one flip per agent (note 16) learns 000 and
+        // then 111 and is cured.
+        for (learning, cured) in [
+            (ImmuneLearning::PerDisease, false),
+            (ImmuneLearning::PerAgent, true),
+        ] {
+            let mut w = sick_world();
+            w.config.disease.learning = learning;
+            w.config.disease.immune_length = 5;
+            w.diseases = vec![b("000"), b("111")];
+            let id = patient(&mut w, 5, 5, "00101", vec![0, 1]);
+            w.agent_mut(id).unwrap().holdings[0] = 1000.0;
+            w.run(20);
+            assert_eq!(
+                w.agent(id).unwrap().diseases.is_empty(),
+                cured,
+                "{learning:?}"
+            );
+        }
     }
 
     #[test]
     fn a_disease_already_in_the_immune_string_is_cured_without_flips() {
-        let mut w = sick_world();
+        let mut w = sick_world_per_disease();
         w.diseases = vec![b("11")];
         let id = patient(&mut w, 5, 5, "0000011000", vec![0]);
         respond(&mut w, id);
@@ -292,7 +375,7 @@ mod tests {
 
     #[test]
     fn one_flip_per_tick_unless_medicine_adds_more() {
-        let mut w = sick_world();
+        let mut w = sick_world_per_disease();
         w.diseases = vec![b("1111")];
         let id = patient(&mut w, 5, 5, "0000000000", vec![0]);
         respond(&mut w, id);
@@ -310,7 +393,7 @@ mod tests {
     #[test]
     fn every_disease_the_trained_string_now_contains_is_cured() {
         // Training on 11 flips position 0, which also makes 1 a substring.
-        let mut w = sick_world();
+        let mut w = sick_world_per_disease();
         w.diseases = vec![b("11"), b("1")];
         let id = patient(&mut w, 5, 5, "0000000000", vec![0, 1]);
         respond(&mut w, id);

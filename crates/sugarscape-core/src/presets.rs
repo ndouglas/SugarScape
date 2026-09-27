@@ -362,14 +362,14 @@ pub fn all() -> Vec<Preset> {
             "v-1-rid",
             "({G₁}, {M, E})",
             "Animation V-1",
-            "Immune systems learn the diseases their agents carry: near-eradication. A small residue persists, typically 1–3% but from near 0 to above 3% depending on the run, because learning one disease can overwrite the window that cured another.",
+            "Immune systems learn the diseases their agents carry, one immune bit per tick (the book's note 16): society rids itself of every disease, as the book says (disease-free by t = 1000 in 20 of 20 runs). With a flip for each carried disease instead (learning: per_disease), learning one disease can undo another's flips and a small residue persists.",
             disease,
         ),
         preset(
             "v-2-endemic",
             "({G₁}, {M, E}) with 25 diseases",
             "Animation V-2",
-            "Too many diseases for one immune string: learning one immunity can overwrite another, and disease stays endemic.",
+            "Animation V-2: 25 diseases, 10 per agent. The book finds an endemic level of infection; under its one-flip-per-tick rule (note 16) disease clears here too (disease-free by t = 1000 in 20 of 20 runs). Only a flip for each carried disease (learning: per_disease) keeps it endemic, from agents stuck between diseases whose flips undo each other.",
             |c| {
                 disease(c);
                 c.disease.count = 25;

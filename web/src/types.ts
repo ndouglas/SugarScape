@@ -46,6 +46,8 @@ export interface DiseaseRule {
   immune_length: number;
   fee: number;
   flips_per_tick: number;
+  learning: 'per_agent' | 'per_disease';
+  cure: 'next_tick' | 'immediate';
   genome_mutation: number;
   disease_mutation: number;
   outbreaks: Outbreak[];

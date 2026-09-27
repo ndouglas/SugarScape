@@ -163,6 +163,22 @@ export const GROUPS: Group[] = [
       { kind: 'number', path: 'disease.initial', label: 'Diseases per new agent', min: 0, max: 100, step: 1 },
       { kind: 'number', path: 'disease.fee', label: 'Metabolism per disease', min: 0, max: 5, step: 0.5 },
       { kind: 'number', path: 'disease.flips_per_tick', label: 'Immune flips per tick (medicine)', min: 1, max: 10, step: 1 },
+      {
+        kind: 'select', path: 'disease.learning', label: 'Immune learning',
+        current: (c) => c.disease.learning,
+        options: [
+          { value: 'per_agent', label: 'Flips per agent (note 16, book)', apply: (c) => { c.disease.learning = 'per_agent'; } },
+          { value: 'per_disease', label: 'Flips per carried disease', apply: (c) => { c.disease.learning = 'per_disease'; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'disease.cure', label: 'A learned disease is dropped',
+        current: (c) => c.disease.cure,
+        options: [
+          { value: 'next_tick', label: 'Next tick, passed on meanwhile (book)', apply: (c) => { c.disease.cure = 'next_tick'; } },
+          { value: 'immediate', label: 'At once', apply: (c) => { c.disease.cure = 'immediate'; } },
+        ],
+      },
       { kind: 'number', path: 'disease.genome_mutation', label: 'Genome mutation rate', min: 0, max: 0.1, step: 0.001 },
       { kind: 'number', path: 'disease.disease_mutation', label: 'Disease mutation rate', min: 0, max: 1, step: 0.01 },
     ],

@@ -86,11 +86,11 @@ pub const TITLES: [(&str, &str); 202] = [
     ),
     (
         "v-1-rid",
-        "Immune systems learn their diseases and nearly wipe them out",
+        "Immune systems learn their diseases and wipe them out",
     ),
     (
         "v-2-endemic",
-        "Too many diseases to remember: sickness never goes away",
+        "Too many diseases to remember, yet sickness clears: the book expected it to stay",
     ),
     (
         "v-mcneill",

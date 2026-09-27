@@ -32,12 +32,14 @@ const GOLDEN: &[(&str, u64)] = &[
     // Chapter V (disease on). Re-recorded when `fingerprint()` started
     // hashing `immune_genome` too (previously only the trained `immune`
     // string was hashed).
-    ("v-1-rid", 0x51a57db11c232edb),
-    ("v-2-endemic", 0x899e70cd17f1484a),
-    ("v-mcneill", 0x81def3a081577ad9),
+    // 2026-09-27: rule E's defaults follow the book (one immune flip per agent, note 16;
+    // a learned disease passed on through the tick it is learned), changing the disease presets.
+    ("v-1-rid", 0x2b95091f2990df9c),
+    ("v-2-endemic", 0xa6cc74ede42df04f),
+    ("v-mcneill", 0x6e40133658894b2d),
     // Re-recorded when credit became per-good (N goods): vi-1-everything now
     // lends and borrows spice as well as sugar. No other entry changed.
-    ("vi-1-everything", 0xd04f0968e3ac2c63),
+    ("vi-1-everything", 0x248c95796772a102),
     // N goods.
     ("n-3-trade", 0x2c2589dca0955ed7),
     ("n-4-peaks", 0x6e7eb172a4a8b78d),

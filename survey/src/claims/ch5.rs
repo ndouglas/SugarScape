@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+use sugarscape_core::config::{DiseaseCure, ImmuneLearning};
 use sugarscape_core::world::World;
 
 use crate::claim::{greater, range, Claim, Source};
@@ -10,6 +11,15 @@ use crate::runner::{after, each_seed, preset, series, window_mean};
 /// The infected_fraction series of `id` after `ticks` ticks, per seed.
 fn infected(id: &str, ticks: u32, seeds: &[u64]) -> Vec<Vec<f64>> {
     after(&preset(id), seeds, ticks, |w| series(w, "infected_fraction"))
+}
+
+/// As `infected`, under the engine's earlier reading of rule E: a flip per
+/// carried disease, and a learned disease dropped at once.
+fn infected_per_disease(id: &str, ticks: u32, seeds: &[u64]) -> Vec<Vec<f64>> {
+    let mut c = preset(id);
+    c.disease.learning = ImmuneLearning::PerDisease;
+    c.disease.cure = DiseaseCure::Immediate;
+    after(&c, seeds, ticks, |w| series(w, "infected_fraction"))
 }
 
 /// (agent, disease) pairs where the disease is a substring of the agent's
@@ -98,17 +108,14 @@ pub fn claims() -> Vec<Claim> {
             },
         },
         Claim {
-            id: "v-1.residue",
+            id: "v-1.eradicated",
             item: "v-1-rid",
             source: Source::App,
-            citation: "presets.rs v-1-rid description: \"a residue of ~1-3% persists\"; README.md: \"about 1–3%\"",
-            text: "a residue of ~1–3% infected persists (mean infected_fraction over t = 500..=1000 in about [0.01, 0.03])",
+            citation: "presets.rs v-1-rid description: \"society rids itself of every disease\"",
+            text: "society rids itself of every disease (infected_fraction exactly 0 at t = 1000)",
             check: |s| {
-                let m: Vec<f64> = infected("v-1-rid", 1000, s)
-                    .iter()
-                    .map(|f| window_mean(f, 500, 1000))
-                    .collect();
-                range(&m, 0.01, 0.03, true)
+                let f: Vec<f64> = infected("v-1-rid", 1000, s).iter().map(|f| f[1000]).collect();
+                range(&f, 0.0, 0.0, false)
             },
         },
         Claim {
@@ -145,16 +152,13 @@ pub fn claims() -> Vec<Claim> {
             },
         },
         Claim {
-            id: "v-1.never-zero",
+            id: "v-1.per-disease-residue",
             item: "v-1-rid",
-            source: Source::Comment,
-            citation: "tests/book.rs immune_learning_rids_the_society_of_disease: \"the fraction never once touches 0.0 ... (minimum over t in 500..=5000 is 0.0090-0.0303 depending on seed)\"",
-            text: "infection never reaches zero (minimum infected_fraction over t = 500..=5000 above 0)",
+            source: Source::App,
+            citation: "presets.rs v-1-rid description: \"With a flip for each carried disease instead (learning: per_disease) ... a small residue persists\"",
+            text: "with a flip per carried disease, a residue persists (minimum infected_fraction over t = 500..=1000 above 0)",
             check: |s| {
-                let m: Vec<f64> = infected("v-1-rid", 5000, s)
-                    .iter()
-                    .map(|f| min_over(f, 500, 5000))
-                    .collect();
+                let m: Vec<f64> = infected_per_disease("v-1-rid", 1000, s).iter().map(|f| min_over(f, 500, 1000)).collect();
                 range(&m, f64::MIN_POSITIVE, 1.0, false)
             },
         },
@@ -163,7 +167,7 @@ pub fn claims() -> Vec<Claim> {
             id: "v-2.endemic",
             item: "v-2-endemic",
             source: Source::Book,
-            citation: "docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md (Animation V-2: endemic disease; \"v-2-endemic still has infected agents at t = 1000\"); tests/book.rs many_diseases_stay_endemic; presets.rs: \"disease stays endemic\"",
+            citation: "docs/superpowers/specs/2026-09-23-chapter-v-disease-design.md (Animation V-2: endemic disease; \"v-2-endemic still has infected agents at t = 1000\"); tests/book.rs many_diseases_clear_too_under_note_16 (the book's claim; under note 16 it fails)",
             text: "disease stays endemic (infected_fraction above 0 at every tick of t = 500..=1000)",
             check: |s| {
                 let m: Vec<f64> = infected("v-2-endemic", 1000, s)
@@ -174,16 +178,25 @@ pub fn claims() -> Vec<Claim> {
             },
         },
         Claim {
-            id: "v-2.exceeds-v1",
+            id: "v-2.clears",
             item: "v-2-endemic",
             source: Source::App,
-            citation: "presets.rs v-2-endemic (\"disease stays endemic\") against v-1-rid (\"near-eradication\"); tests/book.rs many_diseases_stay_endemic asserts mean2 > mean1",
-            text: "V-2 carries more disease than V-1 (mean infected_fraction over t = 500..=1000)",
+            citation: "presets.rs v-2-endemic description: \"under its one-flip-per-tick rule (note 16) disease clears here too\"",
+            text: "under note 16 disease clears (infected_fraction exactly 0 at t = 1000)",
             check: |s| {
-                let m = |id| -> Vec<f64> {
-                    infected(id, 1000, s).iter().map(|f| window_mean(f, 500, 1000)).collect()
-                };
-                greater(&m("v-2-endemic"), &m("v-1-rid"), "V-2", "V-1")
+                let f: Vec<f64> = infected("v-2-endemic", 1000, s).iter().map(|f| f[1000]).collect();
+                range(&f, 0.0, 0.0, false)
+            },
+        },
+        Claim {
+            id: "v-2.per-disease-endemic",
+            item: "v-2-endemic",
+            source: Source::App,
+            citation: "presets.rs v-2-endemic description: \"Only a flip for each carried disease (learning: per_disease) keeps it endemic\"",
+            text: "with a flip per carried disease it stays endemic (infected_fraction above 0 at every tick of t = 500..=1000)",
+            check: |s| {
+                let m: Vec<f64> = infected_per_disease("v-2-endemic", 1000, s).iter().map(|f| min_over(f, 500, 1000)).collect();
+                range(&m, f64::MIN_POSITIVE, 1.0, false)
             },
         },
         Claim {
@@ -199,10 +212,10 @@ pub fn claims() -> Vec<Claim> {
             id: "v-2.measured-level",
             item: "v-2-endemic",
             source: Source::Comment,
-            citation: "tests/book.rs many_diseases_stay_endemic: V-2 means over t in 500..=1000 of 0.045334, 0.042674, 0.078412 (seeds 1-3)",
-            text: "mean infected_fraction over t = 500..=1000 within the recorded 0.0427–0.0784",
+            citation: "tests/book.rs many_diseases_clear_too_under_note_16: per disease, V-2 means over t in 500..=1000 of 0.045334, 0.042674, 0.078412 (seeds 1-3)",
+            text: "with a flip per carried disease, mean infected_fraction over t = 500..=1000 within the recorded 0.0427–0.0784",
             check: |s| {
-                let m: Vec<f64> = infected("v-2-endemic", 1000, s)
+                let m: Vec<f64> = infected_per_disease("v-2-endemic", 1000, s)
                     .iter()
                     .map(|f| window_mean(f, 500, 1000))
                     .collect();
@@ -255,7 +268,7 @@ pub fn claims() -> Vec<Claim> {
             id: "v-mcneill.before-zero",
             item: "v-mcneill",
             source: Source::Comment,
-            citation: "tests/book.rs a_novel_disease_spreads_after_the_mcneill_outbreak: \"A wider 15-seed sweep confirmed every seed's after-count is > 0 (range 1-111) with before always 0\"",
+            citation: "tests/book.rs a_novel_disease_spreads_after_the_mcneill_outbreak: \"A wider 15-seed sweep confirmed every seed's after-count is > 0 (range 22-291) with before always 0\"",
             text: "no transmissions over steps t = 200..300 (the society has learned away what it carries)",
             check: |s| range(&col(&mcneill_transmissions(s), 0), 0.0, 0.0, false),
         },
@@ -263,9 +276,9 @@ pub fn claims() -> Vec<Claim> {
             id: "v-mcneill.after-count",
             item: "v-mcneill",
             source: Source::Comment,
-            citation: "tests/book.rs a_novel_disease_spreads_after_the_mcneill_outbreak: \"every seed's after-count is > 0 (range 1-111)\"",
-            text: "transmissions over steps t = 300..400 within the recorded 1–111",
-            check: |s| range(&col(&mcneill_transmissions(s), 1), 1.0, 111.0, false),
+            citation: "tests/book.rs a_novel_disease_spreads_after_the_mcneill_outbreak: \"every seed's after-count is > 0 (range 22-291)\"",
+            text: "transmissions over steps t = 300..400 within the recorded 22–291",
+            check: |s| range(&col(&mcneill_transmissions(s), 1), 22.0, 291.0, false),
         },
     ]
 }

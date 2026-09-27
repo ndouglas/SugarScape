@@ -453,6 +453,35 @@ pub struct Outbreak {
     pub length: Option<URange>,
 }
 
+/// How many immune bits an agent flips each tick. The book's note 16:
+/// "Unmedicated agents are allowed to flip one immune bit per cycle".
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ImmuneLearning {
+    /// Note 16: `flips_per_tick` flips per agent, toward its oldest carried
+    /// disease it hasn't learned.
+    #[default]
+    PerAgent,
+    /// `flips_per_tick` flips for each carried disease, in turn (the
+    /// engine's earlier reading of Appendix B). Two diseases can then undo
+    /// each other's flips, leaving an agent sick for good.
+    PerDisease,
+}
+
+/// When a disease the immune string has learned is dropped.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DiseaseCure {
+    /// The book's worked example: learned this tick, the disease still
+    /// costs its fee and is passed on this tick, and is gone at the start of
+    /// the agent's next turn.
+    #[default]
+    NextTick,
+    /// Dropped as soon as it is learned, before the agent passes anything on
+    /// (the engine's earlier reading).
+    Immediate,
+}
+
 /// Rule E (Chapter V, Appendix B): immune response and disease transmission.
 /// The defaults are Animation V-1's.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -469,8 +498,11 @@ pub struct DiseaseRule {
     pub immune_length: u32,
     /// Extra metabolism of each good per carried disease.
     pub fee: f64,
-    /// Immune bits flipped per carried disease per tick ("medicine").
+    /// Immune bits flipped per tick ("medicine"), per agent or per carried
+    /// disease as `learning` says.
     pub flips_per_tick: u32,
+    pub learning: ImmuneLearning,
+    pub cure: DiseaseCure,
     /// Per-bit mutation probability of a child's immune genome.
     pub genome_mutation: f64,
     /// Probability that a transmitted disease mutates one random bit.
@@ -499,6 +531,8 @@ impl Default for DiseaseRule {
             immune_length: 50,
             fee: 1.0,
             flips_per_tick: 1,
+            learning: ImmuneLearning::PerAgent,
+            cure: DiseaseCure::NextTick,
             genome_mutation: 0.0,
             disease_mutation: 0.0,
             outbreaks: Vec::new(),
