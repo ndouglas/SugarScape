@@ -248,6 +248,7 @@ their mean field fails on rings. See `docs/superpowers/specs/2026-09-27-ants-des
 - **Deffuant et al.'s relative agreement and extremism** (and Meadows & Cliff's replication): done (Milestone 22).
 - **Arthur's El Farol and Challet & Zhang's minority game** (and the memory transition, and Challet, Marsili & Ottino's critique): done (Milestone 23).
 - **Kirman's ants and recruitment** (and Alfarano & Milaković's network critique): done (Milestone 24).
+- **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

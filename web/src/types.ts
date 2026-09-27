@@ -51,6 +51,14 @@ export interface DiseaseRule {
   outbreaks: Outbreak[];
 }
 
+/** Minds 1's decision seam (absent from older configs: the book's rule M). */
+export interface Decision {
+  rule: 'book' | 'utility';
+  travel: number;
+  crowding: number;
+  idle: 'stay' | 'wander';
+}
+
 export interface Config {
   width: number;
   height: number;
@@ -77,6 +85,7 @@ export interface Config {
   credit: { enabled: boolean; duration: number; rate: number };
   foresight: { enabled: boolean; range: URange };
   disease: DiseaseRule;
+  decision?: Decision;
   schedule: ScheduledChange[];
 }
 
@@ -653,6 +662,8 @@ export interface Snapshot {
   groups: number[];
   /** Under Axelrod's culture rule (milestone 14). */
   axelrod?: { distinct_cultures: number; settled: boolean };
+  /** Minds 1's patch counts, on peaks maps with two or more peaks. */
+  patches?: { on_first: number; on_other: number; off: number };
 }
 
 export interface SchellingStats {

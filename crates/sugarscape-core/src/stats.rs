@@ -47,9 +47,18 @@ pub struct GoodStats {
     pub traded: f64,
 }
 
+/// goods[0]'s peaks when there are at least two (the patch series' condition).
+fn patches(config: &Config) -> Option<&[crate::config::Peak]> {
+    match &config.goods[0].map {
+        crate::config::Map::Peaks { peaks } if peaks.len() >= 2 => Some(peaks),
+        _ => None,
+    }
+}
+
 /// `SERIES`, then `mean_holding_I`, `mean_metabolism_I`, `traded_I` for
 /// each good, then `mean_pollution_K` for each pollutant, then
-/// `group_share_K` for each group.
+/// `group_share_K` for each group, then (under Axelrod) `distinct_cultures`
+/// and `settled`, then (on a two-or-more-peak map) the patch series.
 pub fn series_names(config: &Config) -> Vec<String> {
     let mut names: Vec<String> = SERIES.iter().map(|s| s.to_string()).collect();
     for i in 0..config.goods.len() {
@@ -66,6 +75,16 @@ pub fn series_names(config: &Config) -> Vec<String> {
     if config.culture.rule == crate::config::CultureKind::Axelrod {
         names.push("distinct_cultures".into());
         names.push("settled".into());
+    }
+    if patches(config).is_some() {
+        for s in [
+            "on_first_patch",
+            "on_other_patches",
+            "off_patch",
+            "first_patch_share",
+        ] {
+            names.push(s.into());
+        }
     }
     names
 }
@@ -115,12 +134,26 @@ pub struct Snapshot {
     /// whether every two share nothing (1) or not (0). Absent otherwise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub axelrod: Option<AxelrodStats>,
+    /// Minds 1's patch counts, present when goods[0]'s map is `peaks` with
+    /// at least two peaks.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub patches: Option<PatchStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
 pub struct AxelrodStats {
     pub distinct_cultures: u32,
     pub settled: bool,
+}
+
+/// Minds 1's patch counts: Flumps on the first peak's patch, on any other's,
+/// and on none (`landscape::patch_of`). Present when goods[0]'s map is
+/// `peaks` with at least two peaks.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct PatchStats {
+    pub on_first: u32,
+    pub on_other: u32,
+    pub off: u32,
 }
 
 impl Snapshot {
@@ -233,6 +266,18 @@ impl Snapshot {
                     }
                 },
             ),
+            patches: patches(&world.config).map(|peaks| {
+                let (w, h) = (world.config.width, world.config.height);
+                let mut p = PatchStats::default();
+                for a in world.agents() {
+                    match crate::landscape::patch_of(peaks, a.pos.x, a.pos.y, w, h) {
+                        Some(0) => p.on_first += 1,
+                        Some(_) => p.on_other += 1,
+                        None => p.off += 1,
+                    }
+                }
+                p
+            }),
         }
     }
 
@@ -285,6 +330,22 @@ impl Snapshot {
                     match name {
                         "distinct_cultures" => return Some(f64::from(a.distinct_cultures)),
                         "settled" => return Some(f64::from(u8::from(a.settled))),
+                        _ => {}
+                    }
+                }
+                if let Some(p) = self.patches {
+                    match name {
+                        "on_first_patch" => return Some(f64::from(p.on_first)),
+                        "on_other_patches" => return Some(f64::from(p.on_other)),
+                        "off_patch" => return Some(f64::from(p.off)),
+                        "first_patch_share" => {
+                            let on = p.on_first + p.on_other;
+                            return Some(if on == 0 {
+                                0.0
+                            } else {
+                                f64::from(p.on_first) / f64::from(on)
+                            });
+                        }
                         _ => {}
                     }
                 }
@@ -1079,5 +1140,71 @@ mod tests {
         assert_ne!(s.gini_total, s.gini);
         assert_eq!(two.stats.series("gini_total").unwrap().len(), 6);
         assert_eq!(series_names(&two.config)[SERIES.len() - 1], "gini_total");
+    }
+
+    fn two_patch_world() -> World {
+        let mut c = Config {
+            width: 60,
+            height: 40,
+            population: 0,
+            ..Config::default()
+        };
+        c.goods[0].map = crate::config::Map::Peaks {
+            peaks: vec![
+                crate::config::Peak {
+                    x: 15,
+                    y: 20,
+                    radius: 10.0,
+                    height: 4.0,
+                },
+                crate::config::Peak {
+                    x: 42,
+                    y: 20,
+                    radius: 7.0,
+                    height: 4.0,
+                },
+            ],
+        };
+        World::new(c, 1).unwrap()
+    }
+
+    #[test]
+    fn patch_series_exist_only_on_maps_of_two_or_more_peaks() {
+        let names = |c: &Config| series_names(c);
+        let two = two_patch_world().config.clone();
+        for s in [
+            "on_first_patch",
+            "on_other_patches",
+            "off_patch",
+            "first_patch_share",
+        ] {
+            assert!(names(&two).contains(&s.to_string()), "{s}");
+            assert!(
+                !names(&Config::default()).contains(&s.to_string()),
+                "{s} on two_peaks"
+            );
+        }
+        let mut one = two.clone();
+        if let crate::config::Map::Peaks { peaks } = &mut one.goods[0].map {
+            peaks.truncate(1);
+        }
+        assert!(!names(&one).contains(&"off_patch".to_string()));
+        let snap = Snapshot::of(&World::new(Config::default(), 1).unwrap());
+        assert!(snap.patches.is_none());
+        assert_eq!(snap.value("off_patch"), None);
+    }
+
+    #[test]
+    fn patch_series_count_flumps_by_patch() {
+        let mut w = two_patch_world();
+        assert_eq!(Snapshot::of(&w).value("first_patch_share"), Some(0.0)); // nobody: 0, not NaN
+        for (x, y) in [(15, 20), (16, 20), (42, 20), (30, 5)] {
+            crate::testkit::spawn(&mut w, x, y);
+        }
+        let s = Snapshot::of(&w);
+        assert_eq!(s.value("on_first_patch"), Some(2.0));
+        assert_eq!(s.value("on_other_patches"), Some(1.0));
+        assert_eq!(s.value("off_patch"), Some(1.0));
+        assert_eq!(s.value("first_patch_share"), Some(2.0 / 3.0));
     }
 }

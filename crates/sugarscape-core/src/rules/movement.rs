@@ -50,72 +50,66 @@ pub(crate) fn devaluation(config: &Config, site: &Site, good: usize) -> Option<f
 }
 
 /// Rule M: look along the four lattice directions as far as vision permits,
-/// go to the nearest unoccupied site of maximum welfare and collect its sugar.
-/// The agent's current site competes at distance 0, so it stays put when
-/// nothing visible is better. Returns the harvest.
+/// go to the nearest unoccupied site of maximum welfare and collect its sugar
+/// (every good, with n ≥ 2). The agent's current site competes at distance 0,
+/// so it stays put when nothing visible is better. Returns the harvest.
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
-    if world.config.goods.len() >= 2 {
-        return act_goods(world, id);
-    }
-    let agent = world.agent(id).expect("live agent");
-    let (pos, vision) = (agent.pos, agent.vision);
-    let (tags, mut social) = (agent.tags, agent.social);
-    let welfare = |w: &World, p: Pos| {
-        let s = w.site(p);
-        match devaluation(&w.config, s, 0) {
-            Some(d) => s.resource[0] / (1.0 + d),
-            None => s.resource[0],
-        }
-    };
-    let mut candidates = vec![(pos, 0, welfare(world, pos))];
-    for (q, d) in world.torus.sight(pos, vision) {
-        if !world.is_occupied(q) {
-            candidates.push((q, d, welfare(world, q)));
-        }
-    }
+    let candidates = candidates(world, id);
     let target = choose(&candidates, &mut world.rng);
-    world.move_agent(id, target);
-    social.moved(world, Seen::at(world, target), tags);
-    let site = world.site_mut(target);
-    let gathered = site.resource[0];
-    site.resource[0] = 0.0;
-    let a = world.agent_mut(id).expect("live agent");
-    a.holdings[0] += gathered;
-    a.social = social;
-    Harvest::of(&[gathered])
+    go_and_gather(world, id, target)
 }
 
-/// Multicommodity M over n ≥ 2 goods: maximize (foresight) welfare after
-/// gathering. Pollution discounts each good by 1/(1 + Σ pₖ) over the
-/// pollutants that devalue it.
-fn act_goods(world: &mut World, id: AgentId) -> Harvest {
-    let n = world.config.goods.len();
-    let fee = world.config.disease.active_fee();
+/// Rule M's candidates for `id`: its current site at distance 0, then the
+/// unoccupied sites in sight in `torus.sight` order, each with rule M's
+/// welfare. One good: sugar, discounted by 1/(1 + Σ pₖ) under pollution.
+/// n ≥ 2 goods: foresight welfare after gathering, each good discounted by
+/// the pollutants that devalue it.
+pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
     let a = world.agent(id).expect("live agent");
-    let (pos, vision, phi, held) = (a.pos, a.vision, a.foresight, a.holdings);
-    let (tags, mut social) = (a.tags, a.social);
-    let mets = a.effective_metabolisms(n, fee);
-    let value = |w: &World, p: Pos| {
-        let s = w.site(p);
-        let after: [f64; MAX_GOODS] = std::array::from_fn(|i| {
-            if i >= n {
-                return 0.0;
+    let (pos, vision) = (a.pos, a.vision);
+    let n = world.config.goods.len();
+    let value: Box<dyn Fn(Pos) -> f64 + '_> = if n >= 2 {
+        let fee = world.config.disease.active_fee();
+        let (phi, held) = (a.foresight, a.holdings);
+        let mets = a.effective_metabolisms(n, fee);
+        Box::new(move |p: Pos| {
+            let s = world.site(p);
+            let after: [f64; MAX_GOODS] = std::array::from_fn(|i| {
+                if i >= n {
+                    return 0.0;
+                }
+                let counted = match devaluation(&world.config, s, i) {
+                    Some(d) => s.resource[i] * (1.0 / (1.0 + d)),
+                    None => s.resource[i],
+                };
+                held[i] + counted
+            });
+            crate::econ::foresight_welfare_n(&after[..n], &mets[..n], phi)
+        })
+    } else {
+        Box::new(|p: Pos| {
+            let s = world.site(p);
+            match devaluation(&world.config, s, 0) {
+                Some(d) => s.resource[0] / (1.0 + d),
+                None => s.resource[0],
             }
-            let counted = match devaluation(&w.config, s, i) {
-                Some(d) => s.resource[i] * (1.0 / (1.0 + d)),
-                None => s.resource[i],
-            };
-            held[i] + counted
-        });
-        crate::econ::foresight_welfare_n(&after[..n], &mets[..n], phi)
+        })
     };
-    let mut candidates = vec![(pos, 0, value(world, pos))];
+    let mut out = vec![(pos, 0, value(pos))];
     for (q, d) in world.torus.sight(pos, vision) {
         if !world.is_occupied(q) {
-            candidates.push((q, d, value(world, q)));
+            out.push((q, d, value(q)));
         }
     }
-    let target = choose(&candidates, &mut world.rng);
+    out
+}
+
+/// Moves `id` to `target` (its own site to stay), records its neighbors, and
+/// gathers every good there.
+pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+    let n = world.config.goods.len();
+    let a = world.agent(id).expect("live agent");
+    let (tags, mut social) = (a.tags, a.social);
     world.move_agent(id, target);
     social.moved(world, Seen::at(world, target), tags);
     let site = world.site_mut(target);
@@ -315,6 +309,21 @@ mod tests {
         assert_eq!(h.gathered[..3], [0.0, 0.0, 2.0]);
         assert_eq!(w.agent(id).unwrap().holdings[2], 4.0);
         assert_eq!(w.site(Pos::new(5, 3)).resource[2], 0.0);
+    }
+
+    #[test]
+    fn candidates_list_the_current_site_first_then_sight_order_skipping_occupied() {
+        let mut w = blank_world(11, 11);
+        let id = mover(&mut w, 2);
+        spawn(&mut w, 5, 6); // occupied: skipped
+        set_sugar(&mut w, 5, 5, 1.0);
+        set_sugar(&mut w, 7, 5, 3.0);
+        let c = candidates(&w, id);
+        assert_eq!(c[0], (Pos::new(5, 5), 0, 1.0));
+        assert_eq!(c.len(), 1 + 8 - 1);
+        assert!(c.iter().all(|x| x.0 != Pos::new(5, 6)));
+        assert!(c.windows(2).all(|p| p[0].1 <= p[1].1), "distance order");
+        assert!(c.contains(&(Pos::new(7, 5), 2, 3.0)));
     }
 
     #[test]

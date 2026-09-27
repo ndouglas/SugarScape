@@ -91,6 +91,31 @@ fn peak_capacity(peaks: &[Peak], x: usize, y: usize, w: usize, h: usize) -> f64 
         .fold(0.0, f64::max)
 }
 
+/// Torus (Euclidean) distance from (x, y) to `p`'s center on a w × h grid,
+/// as `peak_capacity` measures it.
+pub fn peak_distance(p: &Peak, x: u32, y: u32, w: u32, h: u32) -> f64 {
+    let torus = |a: u32, b: u32, n: u32| {
+        let d = (f64::from(a) - f64::from(b)).abs();
+        d.min(f64::from(n) - d)
+    };
+    let (dx, dy) = (torus(x, p.x, w), torus(y, p.y, h));
+    (dx * dx + dy * dy).sqrt()
+}
+
+/// The patch holding (x, y) (Minds 1): its nearest peak (the lower index on
+/// ties), when (x, y) is closer than that peak's radius — exactly the sites
+/// where that peak gives capacity ≥ 1, when patches don't overlap.
+pub fn patch_of(peaks: &[Peak], x: u32, y: u32, w: u32, h: u32) -> Option<usize> {
+    let mut best: Option<(usize, f64)> = None;
+    for (k, p) in peaks.iter().enumerate() {
+        let d = peak_distance(p, x, y, w, h);
+        if best.is_none_or(|(_, b)| d < b) {
+            best = Some((k, d));
+        }
+    }
+    best.filter(|&(k, d)| d < peaks[k].radius).map(|(k, _)| k)
+}
+
 /// SplitMix64's output function: a fixed integer hash (no RNG state).
 fn mix(z: u64) -> u64 {
     let mut z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
@@ -251,6 +276,48 @@ mod tests {
             10,
         );
         assert_eq!(two[2 * 10 + 2], 3.0, "max(1, ⌈6 · (1 − 1/2)⌉)");
+    }
+
+    /// `peak_capacity(peaks, x, y, w, h)` for every site of a w×h grid.
+    fn capacities_for_test(peaks: &[Peak], w: usize, h: usize) -> Vec<f64> {
+        (0..w * h)
+            .map(|i| peak_capacity(peaks, i % w, i / w, w, h))
+            .collect()
+    }
+
+    #[test]
+    fn a_site_belongs_to_its_nearest_peaks_patch_inside_the_radius() {
+        let peaks = [
+            Peak {
+                x: 15,
+                y: 20,
+                radius: 10.0,
+                height: 4.0,
+            },
+            Peak {
+                x: 42,
+                y: 20,
+                radius: 7.0,
+                height: 4.0,
+            },
+        ];
+        assert_eq!(patch_of(&peaks, 15, 20, 60, 40), Some(0));
+        assert_eq!(patch_of(&peaks, 24, 20, 60, 40), Some(0)); // d 9 < 10
+        assert_eq!(patch_of(&peaks, 25, 20, 60, 40), None); // d 10: not inside
+        assert_eq!(patch_of(&peaks, 36, 20, 60, 40), Some(1)); // d 6 < 7
+        assert_eq!(patch_of(&peaks, 30, 20, 60, 40), None);
+        // Across the seam: x 58 is 17 from 15 one way, 43 the other.
+        assert_eq!(peak_distance(&peaks[0], 58, 20, 60, 40), 17.0);
+        assert_eq!(patch_of(&peaks, 7, 39, 60, 40), None); // d √(64+361)
+
+        // The patch sites match capacity ≥ 1 exactly (the spec's nominal input).
+        let caps = capacities_for_test(&peaks, 60, 40);
+        for y in 0..40 {
+            for x in 0..60 {
+                let inside = patch_of(&peaks, x, y, 60, 40).is_some();
+                assert_eq!(inside, caps[(y * 60 + x) as usize] >= 1.0, "({x}, {y})");
+            }
+        }
     }
 
     #[test]

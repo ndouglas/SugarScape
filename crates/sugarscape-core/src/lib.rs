@@ -24,6 +24,7 @@ pub mod graph;
 pub mod image;
 pub mod landscape;
 mod legacy;
+pub mod minds;
 pub mod model;
 pub mod network;
 pub mod norms;

@@ -13,6 +13,7 @@ mod ethno;
 mod farol;
 mod norms;
 mod image;
+mod minds1;
 mod opinions;
 mod spatial;
 mod structure;
@@ -37,6 +38,7 @@ pub fn all() -> Vec<Claim> {
         farol::claims(),
         norms::claims(),
         image::claims(),
+        minds1::claims(),
         opinions::claims(),
         spatial::claims(),
         structure::claims(),

@@ -52,6 +52,18 @@ const GOLDEN: &[(&str, u64)] = &[
     // Milestone 14: Axelrod's culture rule in the Sugarscape (the docking).
     ("dock-mobility-15", 0x9d0a2ced876f00d2),
     ("dock-mobility-30", 0x10a0c00c27c1660d),
+    // Minds 1: the ideal free distribution (two patches; the utility mind).
+    ("ifd-even", 0xb5792be0a465638a),
+    ("ifd-two-to-one", 0xbc6e9d14253d630d),
+    ("ifd-four-to-one", 0x2eaf63d27955774d),
+    ("ifd-far-sighted", 0x200e86235eb03f55),
+    ("ifd-no-starving", 0x471d7b55040cfaa4),
+    ("ifd-wander", 0x255ac0e4071cd48),
+    // Re-recorded when ifd-crowding/ifd-travel moved to vision 10–20 (fix
+    // round 1, task 6): at vision 1–6 no Flump sees both patches, so
+    // crowding/travel could never move the patch split.
+    ("ifd-crowding", 0x5a5e863436971c96),
+    ("ifd-travel", 0x1a39e97e6ff051bb),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

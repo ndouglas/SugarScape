@@ -39,7 +39,7 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     let harvest = if world.config.combat.enabled {
         combat::act(world, id)
     } else {
-        movement::act(world, id)
+        crate::minds::decide(world, id)
     };
     lifecycle::metabolize(world, id, harvest);
     if world.config.credit.enabled {
