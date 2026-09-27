@@ -1,0 +1,3 @@
+{"preset": "iv-5-credit", "ticks": 40, "seed": 1,
+ "set": {"width": 12, "height": 12, "population": 40,
+   "goods.0.map": {"kind": "peaks", "peaks": [{"x": 6, "y": 6, "radius": 6, "height": 4}]}}}

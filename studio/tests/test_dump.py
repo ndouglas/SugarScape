@@ -141,5 +141,28 @@ class WarDumpTest(unittest.TestCase):
         self.assertTrue(all(f.kills == [] for f in dump.load(FIXTURE).frames))
 
 
+
+# Made by `sugarscape shot tests/fixtures/credit.json`: iv-5-credit on a
+# 12 × 12 board with 40 founders.
+CREDIT = pathlib.Path(__file__).parent / "fixtures" / "credit.frames.json"
+
+
+class CreditDumpTest(unittest.TestCase):
+    def test_loans_and_fertile_ages(self):
+        d = dump.load(CREDIT)
+        loans = [(f.tick, l) for f in d.frames for l in f.loans]
+        self.assertTrue(loans)
+        tick, loan = loans[0]
+        self.assertIsInstance(loan, dump.Loan)
+        self.assertGreater(loan.due, 0)
+        self.assertGreaterEqual(loan.due_tick, tick)
+        onset, end = d.frames[0].fertility[d.placed[0]] if d.placed else next(iter(d.frames[0].fertility.values()))
+        self.assertLess(onset, end)
+        self.assertEqual(set(d.frames[0].fertility), set(d.frames[0].agents))
+
+    def test_dumps_without_credit_have_no_loans(self):
+        self.assertTrue(all(f.loans == [] and f.fertility == {} for f in dump.load(FIXTURE).frames))
+
+
 if __name__ == "__main__":
     unittest.main()
