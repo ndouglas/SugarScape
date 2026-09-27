@@ -1,0 +1,8 @@
+{
+ "preset": "iv-1-spice",
+ "ticks": 200,
+ "seed": 18,
+ "set": {
+  "trade.enabled": true
+ }
+}

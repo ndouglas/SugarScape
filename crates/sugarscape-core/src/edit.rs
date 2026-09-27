@@ -17,6 +17,9 @@ pub struct AgentOverrides {
     pub sugar: Option<f64>,
     pub sex: Option<Sex>,
     pub tribe: Option<Tribe>,
+    /// Good 1 (spice) held and needed; two-good worlds only.
+    pub spice: Option<f64>,
+    pub spice_metabolism: Option<u32>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -168,6 +171,9 @@ impl World {
 
     pub fn place_agent(&mut self, x: u32, y: u32, o: &AgentOverrides) -> Result<AgentId, String> {
         let pos = self.checked_pos(x, y)?;
+        if (o.spice.is_some() || o.spice_metabolism.is_some()) && self.config.goods.len() < 2 {
+            return Err("spice needs a second good".into());
+        }
         let mut agent = Agent::random(&self.config, pos, self.tick, &mut self.rng);
         if let Some(v) = o.vision {
             agent.vision = v;
@@ -178,6 +184,13 @@ impl World {
         if let Some(s) = o.sugar {
             agent.holdings[0] = s;
             agent.initial[0] = s;
+        }
+        if let Some(s) = o.spice {
+            agent.holdings[1] = s;
+            agent.initial[1] = s;
+        }
+        if let Some(m) = o.spice_metabolism {
+            agent.metabolism[1] = m;
         }
         if let Some(sex) = o.sex {
             agent.sex = sex;
@@ -422,6 +435,38 @@ mod tests {
             "radius 1 disc excludes diagonals"
         );
         assert!(w.paint_capacity(20, 0, 1, 1.0, 0).is_err());
+    }
+
+    #[test]
+    fn a_placement_can_set_spice_in_a_two_good_world() {
+        let config = match crate::presets::find("iv-1-spice").unwrap().config {
+            crate::model::ModelConfig::Sugarscape(c) => c,
+            _ => unreachable!(),
+        };
+        let mut w = World::new(
+            Config {
+                population: 0,
+                ..config
+            },
+            1,
+        )
+        .unwrap();
+        let overrides = AgentOverrides {
+            spice: Some(7.0),
+            spice_metabolism: Some(4),
+            ..Default::default()
+        };
+        let id = w.place_agent(2, 3, &overrides).unwrap();
+        let a = w.agent(id).unwrap();
+        assert_eq!(
+            (a.holdings[1], a.initial[1], a.metabolism[1]),
+            (7.0, 7.0, 4)
+        );
+        let mut one = blank_world(10, 10);
+        assert!(
+            one.place_agent(2, 3, &overrides).is_err(),
+            "no spice in a one-good world"
+        );
     }
 
     #[test]

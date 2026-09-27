@@ -146,6 +146,9 @@ def build_beat(beat, d, preview, compare=None, measured=None):
             updaters.append(board.sooty_felt(felt, d, timing))
         _, update_sugar = board.sugar(d, corners, timing)
         updaters.append(update_sugar)
+        if d.spice_capacity:
+            _, update_spice = board.sugar(d, corners, timing, "spice")
+            updaters.append(update_spice)
         # Only the Flumps alive during this beat's ticks get objects: a long
         # run with births can have many thousands over its whole length.
         first, last = timing.tick_at(1), timing.tick_at(beat.frames + 1)

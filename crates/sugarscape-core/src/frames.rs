@@ -15,7 +15,7 @@ use crate::edit::AgentOverrides;
 use crate::model::ModelConfig;
 use crate::presets;
 use crate::stats;
-use crate::world::{DeathCause, World};
+use crate::world::{DeathCause, Trade, World};
 
 /// The dump format's version.
 pub const FORMAT: u32 = 1;
@@ -60,6 +60,10 @@ pub struct Place {
     pub sex: Option<Sex>,
     #[serde(default)]
     pub tribe: Option<Tribe>,
+    #[serde(default)]
+    pub spice: Option<f64>,
+    #[serde(default)]
+    pub spice_metabolism: Option<u32>,
 }
 
 fn first_seed() -> u64 {
@@ -116,6 +120,10 @@ pub type AgentRow = (u64, u32, u32, f64, u32, u32, u32);
 /// `[id, sex, [parent, parent] | null]`.
 pub type Birth = (u64, Sex, Option<[u64; 2]>);
 
+/// A tick's exchanges between two agents under rule T, merged:
+/// `[sugar giver, spice giver, sugar, spice, exchanges]`.
+pub type PairTrade = (u64, u64, f64, f64, u32);
+
 /// The world after a tick and that tick's placements.
 #[derive(Clone, Debug, Serialize)]
 pub struct Frame {
@@ -138,6 +146,17 @@ pub struct Frame {
     pub tags: Vec<String>,
     /// Each agent's group (tribe) under the config's groups, in `agents`' order.
     pub groups: Vec<usize>,
+    /// Good 1's level at every site, row-major (absent with one good).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub spice: Vec<f64>,
+    /// Each agent's `[spice, spice metabolism]`, in `agents`' order (absent
+    /// with one good).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub spice_agents: Vec<(f64, u32)>,
+    /// This tick's sugar-for-spice exchanges, merged by pair (absent when
+    /// there were none).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub trades: Vec<PairTrade>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -152,6 +171,9 @@ pub struct FrameDump {
     pub height: u32,
     /// Good 0's capacity at every site, row-major.
     pub capacity: Vec<f64>,
+    /// Good 1's capacity at every site, row-major (absent with one good).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub spice_capacity: Vec<f64>,
     /// The placed agents' ids, in the order of the shot's `place`.
     pub placed: Vec<u64>,
     pub config: Config,
@@ -167,7 +189,34 @@ fn cause_name(cause: DeathCause) -> &'static str {
     }
 }
 
-fn frame(world: &World, seen: &mut BTreeSet<u64>, deaths: Vec<(u64, &'static str)>) -> Frame {
+/// Merges a tick's exchanges of sugar (good 0) for spice (good 1) by pair,
+/// in the order of the pairs' ids; exchanges of other goods are left out.
+fn trades(events: &[Trade]) -> Vec<PairTrade> {
+    let mut pairs: BTreeMap<(u64, u64), (f64, f64, u32)> = BTreeMap::new();
+    for t in events {
+        let (got, paid) = (t.amount, t.amount * t.price);
+        let (key, sugar, spice) = match t.goods {
+            (0, 1) => ((t.seller, t.buyer), got, paid),
+            (1, 0) => ((t.buyer, t.seller), paid, got),
+            _ => continue,
+        };
+        let e = pairs.entry(key).or_default();
+        e.0 += sugar;
+        e.1 += spice;
+        e.2 += 1;
+    }
+    pairs
+        .into_iter()
+        .map(|((a, b), (sugar, spice, n))| (a, b, sugar, spice, n))
+        .collect()
+}
+
+fn frame(
+    world: &World,
+    seen: &mut BTreeSet<u64>,
+    deaths: Vec<(u64, &'static str)>,
+    trades: Vec<PairTrade>,
+) -> Frame {
     let agents: Vec<AgentRow> = world
         .agents()
         .map(|a| {
@@ -194,10 +243,25 @@ fn frame(world: &World, seen: &mut BTreeSet<u64>, deaths: Vec<(u64, &'static str
             )
         })
         .unzip();
+    let two_goods = world.config.goods.len() > 1;
+    let (spice, spice_agents) = if two_goods {
+        (
+            world.sites.iter().map(|s| s.resource[1]).collect(),
+            world
+                .agents()
+                .map(|a| (a.holdings[1], a.metabolism[1]))
+                .collect(),
+        )
+    } else {
+        (Vec::new(), Vec::new())
+    };
     Frame {
         tick: world.tick,
         tags,
         groups,
+        spice,
+        spice_agents,
+        trades,
         agents,
         sugar: world.sites.iter().map(|s| s.resource[0]).collect(),
         pollution: world.sites.iter().map(|s| s.pollution[0]).collect(),
@@ -224,6 +288,8 @@ fn place(
             sugar: p.sugar,
             sex: p.sex,
             tribe: p.tribe,
+            spice: p.spice,
+            spice_metabolism: p.spice_metabolism,
         };
         let id = world
             .place_agent(p.x, p.y, &overrides)
@@ -251,10 +317,15 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
         }
     }
     let capacity = world.capacities(0);
+    let spice_capacity = if config.goods.len() > 1 {
+        world.capacities(1)
+    } else {
+        Vec::new()
+    };
     let mut seen = BTreeSet::new();
     let mut placed = Vec::new();
     place(&mut world, shot, &mut placed)?;
-    let mut frames = vec![frame(&world, &mut seen, Vec::new())];
+    let mut frames = vec![frame(&world, &mut seen, Vec::new(), Vec::new())];
     for _ in 0..shot.ticks {
         world.step();
         let deaths = world
@@ -263,8 +334,9 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
             .iter()
             .map(|d| (d.id, cause_name(d.cause)))
             .collect();
+        let traded = trades(&world.events().trades);
         place(&mut world, shot, &mut placed)?;
-        frames.push(frame(&world, &mut seen, deaths));
+        frames.push(frame(&world, &mut seen, deaths, traded));
     }
     placed.sort_by_key(|&(i, _)| i);
     let stats = stats::series_names(&config)
@@ -279,6 +351,7 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
         width: config.width,
         height: config.height,
         capacity,
+        spice_capacity,
         placed: placed.into_iter().map(|(_, id)| id).collect(),
         config,
         frames,
@@ -326,6 +399,87 @@ mod tests {
         assert_eq!(d.stats["population"].len(), 13);
         assert_eq!(d.frames[0].agents.len(), 400);
         assert_eq!(d.frames[0].born.len(), 400);
+    }
+
+    #[test]
+    fn two_good_frames_carry_spice_and_each_ticks_trades_by_pair() {
+        let d = run(r#"{"preset": "iv-3-trade", "ticks": 3, "seed": 1}"#);
+        let sites = (d.width * d.height) as usize;
+        assert_eq!(d.spice_capacity.len(), sites);
+        assert!(d.spice_capacity.iter().any(|&c| c > 0.0));
+        for f in &d.frames {
+            assert_eq!(f.spice.len(), sites);
+            assert_eq!(f.spice_agents.len(), f.agents.len());
+            assert!(f.spice_agents.iter().all(|&(held, m)| held >= 0.0 && m > 0));
+        }
+        assert!(d.frames[0].trades.is_empty());
+        let t1 = &d.frames[1].trades;
+        assert!(!t1.is_empty(), "no trades in the first tick");
+        let mut pairs = BTreeSet::new();
+        for &(sugar_giver, spice_giver, sugar, spice, exchanges) in t1 {
+            assert_ne!(sugar_giver, spice_giver);
+            assert!(sugar > 0.0 && spice > 0.0 && exchanges > 0);
+            assert!(
+                pairs.insert((sugar_giver, spice_giver)),
+                "a pair listed twice"
+            );
+        }
+    }
+
+    #[test]
+    fn trades_account_for_every_exchange_and_the_goods_moved() {
+        let config = presets::find("iv-3-trade").unwrap().config;
+        let ModelConfig::Sugarscape(config) = config else {
+            panic!("sugarscape")
+        };
+        let mut world = World::new(config, 1).unwrap();
+        world.step();
+        let events = &world.events().trades;
+        let merged = trades(events);
+        let exchanges: u32 = merged.iter().map(|t| t.4).sum();
+        assert_eq!(exchanges as usize, events.len());
+        let (mut sugar, mut spice) = (0.0, 0.0);
+        for t in events {
+            let (got, paid) = (t.amount, t.amount * t.price);
+            let (s, p) = if t.goods == (0, 1) {
+                (got, paid)
+            } else {
+                (paid, got)
+            };
+            sugar += s;
+            spice += p;
+        }
+        let total = |f: fn(&(u64, u64, f64, f64, u32)) -> f64| merged.iter().map(f).sum::<f64>();
+        assert!((total(|t| t.2) - sugar).abs() < 1e-9);
+        assert!((total(|t| t.3) - spice).abs() < 1e-9);
+    }
+
+    #[test]
+    fn a_placement_can_set_its_spice() {
+        let d = run(
+            r#"{"preset": "iv-1-spice", "ticks": 0, "set": {"population": 0},
+            "place": [{"x": 1, "y": 1, "sugar": 30, "spice": 3, "spice_metabolism": 2}]}"#,
+        );
+        assert_eq!(d.frames[0].agents[0].3, 30.0);
+        assert_eq!(d.frames[0].spice_agents[0], (3.0, 2));
+    }
+
+    #[test]
+    fn one_good_dumps_leave_spice_and_trades_out() {
+        let d = run(TINY);
+        assert!(d.spice_capacity.is_empty());
+        assert!(d
+            .frames
+            .iter()
+            .all(|f| f.spice.is_empty() && f.spice_agents.is_empty() && f.trades.is_empty()));
+        // Absent, not empty, so one-good dumps keep their bytes.
+        let json = serde_json::to_value(&d).unwrap();
+        assert!(json.get("spice_capacity").is_none());
+        for f in json["frames"].as_array().unwrap() {
+            assert!(["spice", "spice_agents", "trades"]
+                .iter()
+                .all(|k| f.get(k).is_none()));
+        }
     }
 
     #[test]

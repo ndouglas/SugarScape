@@ -76,9 +76,49 @@ class DumpTest(unittest.TestCase):
             fr.pop("groups", None)
         self.assertEqual(dump.parse(json.dumps(raw)).frames[3].groups, {})
 
+    def test_one_good_dumps_have_no_spice_or_trades(self):
+        self.assertEqual(self.d.spice_capacity, [])
+        self.assertTrue(all(f.spice == [] and f.spice_agents == {} and f.trades == [] for f in self.d.frames))
+
     def test_wrong_format_is_refused(self):
         with self.assertRaisesRegex(ValueError, "format"):
             dump.parse('{"format": 99}')
+
+
+
+# Made by `sugarscape shot tests/fixtures/market.json`: iv-3-trade on a
+# 12 × 12 board, sugar in one corner and spice in the other.
+MARKET = pathlib.Path(__file__).parent / "fixtures" / "market.frames.json"
+
+
+class MarketDumpTest(unittest.TestCase):
+    def setUp(self):
+        self.d = dump.load(MARKET)
+
+    def test_spice_is_recorded_per_site_and_per_agent(self):
+        self.assertEqual(len(self.d.spice_capacity), 144)
+        f = self.d.frames[2]
+        self.assertEqual(len(f.spice), 144)
+        self.assertEqual(set(f.spice_agents), set(f.agents))
+        held, metabolism = f.spice_agents[next(iter(f.agents))]
+        self.assertGreaterEqual(held, 0)
+        self.assertGreater(metabolism, 0)
+
+    def test_trades_name_both_partners_and_what_moved(self):
+        self.assertEqual(self.d.frames[0].trades, [])
+        t = self.d.frames[1].trades[0]
+        self.assertIsInstance(t, dump.Trade)
+        self.assertNotEqual(t.sugar_giver, t.spice_giver)
+        self.assertGreater(t.sugar, 0)
+        self.assertGreater(t.spice, 0)
+        self.assertGreaterEqual(t.exchanges, 1)
+        # Both partners are alive in the frame the trade is recorded in.
+        self.assertIn(t.sugar_giver, self.d.frames[1].agents)
+        self.assertIn(t.spice_giver, self.d.frames[1].agents)
+
+    def test_a_trades_price_is_spice_per_sugar(self):
+        t = self.d.frames[1].trades[0]
+        self.assertAlmostEqual(t.price, t.spice / t.sugar)
 
 
 if __name__ == "__main__":

@@ -72,6 +72,14 @@ def corner_values(values, w, h):
     return out
 
 
+def relief(d):
+    """The capacity the board's hills follow: sugar's, or with two goods the
+    larger of sugar's and spice's at each site, so both goods' hills rise."""
+    if not d.spice_capacity:
+        return d.capacity
+    return [max(a, b) for a, b in zip(d.capacity, d.spice_capacity)]
+
+
 def corner_heights(capacity, w, h):
     """Each lattice corner's height, from the capacities around it, so hills are smooth."""
     return [v * HEIGHT_PER_SUGAR for v in corner_values(capacity, w, h)]
@@ -106,17 +114,17 @@ def cell_center(x, y, w, h):
     return (x - w / 2 + 0.5, h / 2 - y - 0.5)
 
 
-def levels_at(d, tick, hop=1.0):
-    """Every site's sugar at a fractional tick: growback rises linearly
-    through the tick; eaten sugar vanishes at the landing of a hop that
-    takes the last `hop` of the tick."""
+def levels_at(d, tick, hop=1.0, good="sugar"):
+    """Every site's sugar (or `good="spice"`) at a fractional tick: growback
+    rises linearly through the tick; eaten sugar vanishes at the landing of
+    a hop that takes the last `hop` of the tick."""
     tick = min(max(tick, 0), d.ticks)
     lo = int(math.floor(tick))
     if lo >= d.ticks:
-        return list(d.frames[d.ticks].sugar)
+        return list(getattr(d.frames[d.ticks], good))
     a = tick - lo
     landed = a >= 1 - hop * (1 - LAND)
-    before, after = d.frames[lo].sugar, d.frames[lo + 1].sugar
+    before, after = getattr(d.frames[lo], good), getattr(d.frames[lo + 1], good)
     return [(b if landed else s) if b < s else s + (b - s) * a for s, b in zip(before, after)]
 
 

@@ -1,5 +1,6 @@
-"""The felt board (smooth hills from capacity) and the sugar: one points
-object with a `level` attribute, instanced as gumdrops by geometry nodes."""
+"""The felt board (smooth hills from capacity) and the sugar (and spice, in
+two-good worlds): one points object per good with a `level` attribute,
+instanced as gumdrops by geometry nodes."""
 
 import bmesh
 import bpy
@@ -14,7 +15,7 @@ GUMDROP_SIZE = 0.45
 def felt_board(d):
     """The felt mesh, its corners' heights, and nothing else: cells are 1 unit."""
     w, h = d.width, d.height
-    corners = animate.corner_heights(d.capacity, w, h)
+    corners = animate.corner_heights(animate.relief(d), w, h)
     verts = [
         (cx - w / 2, h / 2 - cy, corners[cy * (w + 1) + cx])
         for cy in range(h + 1)
@@ -139,16 +140,16 @@ def sooty_felt(felt, d, timing):
     return update
 
 
-def _gumdrop_prototype():
-    mesh = bpy.data.meshes.new("gumdrop")
+def _gumdrop_prototype(name, material):
+    mesh = bpy.data.meshes.new(name)
     bm = bmesh.new()
     bmesh.ops.create_uvsphere(bm, u_segments=24, v_segments=12, radius=0.5)
     bm.to_mesh(mesh)
     bm.free()
     for poly in mesh.polygons:
         poly.use_smooth = True
-    mesh.materials.append(materials.gumdrop())
-    g = bpy.data.objects.new("gumdrop", mesh)
+    mesh.materials.append(material)
+    g = bpy.data.objects.new(name, mesh)
     g.scale = (1, 1, 0.8)
     bpy.context.scene.collection.objects.link(g)
     g.hide_render = True
@@ -188,24 +189,32 @@ def _instancer_tree(proto):
     return ng
 
 
-def sugar(d, corners, timing):
-    """The gumdrops, and an updater that sets each site's level for a frame."""
+# With two goods, a site can hold both: sugar sits a little west of the
+# cell's center and spice a little east, so neither hides the other.
+SIDE_BY_SIDE = 0.18
+
+
+def sugar(d, corners, timing, good="sugar"):
+    """A good's gumdrops (golden sugar, or red spice), and an updater that
+    sets each site's level for a frame."""
     w, h = d.width, d.height
+    shift = (SIDE_BY_SIDE if good == "spice" else -SIDE_BY_SIDE) if d.spice_capacity else 0.0
     verts = []
     for y in range(h):
         for x in range(w):
             cx, cy = animate.cell_center(x, y, w, h)
-            verts.append((cx, cy, animate.cell_height(corners, x, y, w) + 0.05))
-    mesh = bpy.data.meshes.new("sugar")
+            verts.append((cx + shift, cy, animate.cell_height(corners, x, y, w) + 0.05))
+    mesh = bpy.data.meshes.new(good)
     mesh.from_pydata(verts, [], [])
     mesh.attributes.new("level", "FLOAT", "POINT")
-    obj = bpy.data.objects.new("sugar", mesh)
+    obj = bpy.data.objects.new(good, mesh)
     bpy.context.scene.collection.objects.link(obj)
     mod = obj.modifiers.new("gumdrops", "NODES")
-    mod.node_group = _instancer_tree(_gumdrop_prototype())
+    material = materials.spice_drop() if good == "spice" else materials.gumdrop()
+    mod.node_group = _instancer_tree(_gumdrop_prototype(f"{good}-drop", material))
 
     def update(frame):
-        levels = animate.levels_at(d, timing.tick_at(frame), timing.hop)
+        levels = animate.levels_at(d, timing.tick_at(frame), timing.hop, good)
         mesh.attributes["level"].data.foreach_set("value", levels)
         mesh.update()
 

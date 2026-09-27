@@ -9,7 +9,7 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/build.py seasons --beat 4    # one beat (1-based)
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
-Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance` and `tribes`.
+Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes` and `markets`.
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -55,7 +55,9 @@ summer; celesta and sleigh bells in C major for winter), and Pollution's *Smoke 
 brass-band chorale in E♭ that sinks into C minor under a tolling bell, and Inheritance's *The
 Ground Beneath*, a passacaglia in D minor whose cello ground repeats under every variation, and
 Tribes' *Two Choirs*, a polychoral canzona with recorders on the left answering oboe and bassoon on
-the right until they play as one.
+the right until they play as one, and Markets' *The Spice Rag*, a slow rag in F for honky-tonk piano,
+banjo, tuba and clarinet, whose oom-pah walks between two notes as the Flumps walk between two
+hills, with a D-minor clarinet strain and a B♭ trio.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to

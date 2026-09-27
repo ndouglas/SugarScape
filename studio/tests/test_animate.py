@@ -52,6 +52,25 @@ class BoardTest(unittest.TestCase):
         self.assertAlmostEqual(animate.levels_at(d, 1.5)[j], mid)
 
 
+MARKET = pathlib.Path(__file__).parent / "fixtures" / "market.frames.json"
+
+
+class TwoGoodTest(unittest.TestCase):
+    def setUp(self):
+        self.d = dump.load(MARKET)
+
+    def test_spice_levels_come_from_the_spice_frames(self):
+        self.assertEqual(animate.levels_at(self.d, 0, good="spice"), self.d.frames[0].spice)
+        self.assertEqual(animate.levels_at(self.d, 99, good="spice"), self.d.frames[-1].spice)
+        self.assertNotEqual(animate.levels_at(self.d, 1, good="spice"), animate.levels_at(self.d, 1))
+
+    def test_the_relief_rises_over_both_goods_hills(self):
+        relief = animate.relief(self.d)
+        self.assertEqual(relief, [max(a, b) for a, b in zip(self.d.capacity, self.d.spice_capacity)])
+        one = dump.load(FIXTURE)
+        self.assertEqual(animate.relief(one), one.capacity)
+
+
 class SootTest(unittest.TestCase):
     def test_corner_values_average_the_four_cells_around_each_corner(self):
         corners = animate.corner_values([0, 0, 0, 8], 2, 2)
