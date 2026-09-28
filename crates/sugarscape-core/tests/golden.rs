@@ -238,6 +238,22 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("am-random", 0x3e7b4009dc784788),
     ("am-scale-free", 0x9e1c3fd99aa8a637),
     ("am-independent", 0x23127da92f6506f),
+    // Milestone 25: threshold models.
+    ("gr-uniform", 0x85b7748fd9f64ab0),
+    ("gr-perturbed", 0xbea93b91e6680639),
+    ("gr-normal-12", 0xd933d5ae864ab70b),
+    ("gr-normal-13", 0xcda701fbbdaa19ce),
+    ("gr-normal-sampled", 0xa9bca3821a0f4774),
+    ("gr-city", 0xa587dcb16521cf3c),
+    ("gr-friends", 0x37ae8bba4d07be7c),
+    ("gr-friends-perturbed", 0x6acc92415fc58d6e),
+    ("gr-ceilings", 0x1cc528db96973a5a),
+    ("gr-clusters", 0xd493a3251cde5fbe),
+    ("watts-lower", 0xedb45df7d6e152de),
+    ("watts-middle", 0x1ed3157ee5e9ac61),
+    ("watts-upper", 0xea32457929c916d8),
+    ("watts-hetero", 0x1ebbdf6d37320885),
+    ("watts-hub", 0x994dd1ff0bedf61b),
 ];
 
 fn fingerprint(id: &str) -> u64 {

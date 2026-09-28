@@ -25,10 +25,11 @@ use crate::schema::Param;
 use crate::spatial::{SpatialConfig, SpatialWorld};
 use crate::structure::{StructureConfig, StructureWorld};
 use crate::tags::{TagsConfig, TagsWorld};
+use crate::thresholds::{ThresholdsConfig, ThresholdsWorld};
 use crate::world::World;
 use crate::{
     agreement, anasazi, ants, civil, classes, culture, dpd, ethno, export, farol, image, norms,
-    opinions, ring, schelling, spatial, stats, structure, tags,
+    opinions, ring, schelling, spatial, stats, structure, tags, thresholds,
 };
 
 /// Which model a config or world is.
@@ -53,10 +54,11 @@ pub enum ModelKind {
     Image,
     Farol,
     Ants,
+    Thresholds,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 18] = [
+    pub const ALL: [ModelKind; 19] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -75,6 +77,7 @@ impl ModelKind {
         ModelKind::Image,
         ModelKind::Farol,
         ModelKind::Ants,
+        ModelKind::Thresholds,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -97,6 +100,7 @@ impl ModelKind {
             ModelKind::Image => "image",
             ModelKind::Farol => "farol",
             ModelKind::Ants => "ants",
+            ModelKind::Thresholds => "thresholds",
         }
     }
 
@@ -122,6 +126,7 @@ impl ModelKind {
             ModelKind::Image => image::schema(),
             ModelKind::Farol => farol::schema(),
             ModelKind::Ants => ants::schema(),
+            ModelKind::Thresholds => thresholds::schema(),
         }
     }
 }
@@ -153,6 +158,7 @@ pub enum ModelConfig {
     Image(ImageConfig),
     Farol(FarolConfig),
     Ants(AntsConfig),
+    Thresholds(ThresholdsConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -176,6 +182,7 @@ enum Tagged<'a> {
     Image(&'a ImageConfig),
     Farol(&'a FarolConfig),
     Ants(&'a AntsConfig),
+    Thresholds(&'a ThresholdsConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -206,6 +213,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Image(c) => Tagged::Image(c).serialize(s),
             ModelConfig::Farol(c) => Tagged::Farol(c).serialize(s),
             ModelConfig::Ants(c) => Tagged::Ants(c).serialize(s),
+            ModelConfig::Thresholds(c) => Tagged::Thresholds(c).serialize(s),
         }
     }
 }
@@ -231,6 +239,7 @@ impl ModelConfig {
             ModelConfig::Image(_) => ModelKind::Image,
             ModelConfig::Farol(_) => ModelKind::Farol,
             ModelConfig::Ants(_) => ModelKind::Ants,
+            ModelConfig::Thresholds(_) => ModelKind::Thresholds,
         }
     }
 
@@ -319,10 +328,13 @@ impl ModelConfig {
             "ants" => serde_json::from_value(value)
                 .map(ModelConfig::Ants)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "thresholds" => serde_json::from_value(value)
+                .map(ModelConfig::Thresholds)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol or ants)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants or thresholds)"
                 ),
             )),
         }
@@ -348,6 +360,7 @@ impl ModelConfig {
             ModelConfig::Image(c) => c.validate(),
             ModelConfig::Farol(c) => c.validate(),
             ModelConfig::Ants(c) => c.validate(),
+            ModelConfig::Thresholds(c) => c.validate(),
         }
     }
 
@@ -373,6 +386,7 @@ impl ModelConfig {
             ModelConfig::Image(c) => set_path(c, path, value).map(ModelConfig::Image),
             ModelConfig::Farol(c) => set_path(c, path, value).map(ModelConfig::Farol),
             ModelConfig::Ants(c) => set_path(c, path, value).map(ModelConfig::Ants),
+            ModelConfig::Thresholds(c) => set_path(c, path, value).map(ModelConfig::Thresholds),
         }
     }
 
@@ -397,7 +411,8 @@ impl ModelConfig {
             | ModelConfig::Norms(_)
             | ModelConfig::Agreement(_)
             | ModelConfig::Farol(_)
-            | ModelConfig::Ants(_) => None,
+            | ModelConfig::Ants(_)
+            | ModelConfig::Thresholds(_) => None,
         }
     }
 
@@ -422,6 +437,9 @@ impl ModelConfig {
             ModelConfig::Image(_) => image::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Farol(_) => farol::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Ants(_) => ants::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Thresholds(_) => {
+                thresholds::SERIES.iter().map(|s| s.to_string()).collect()
+            }
         }
     }
 }
@@ -609,6 +627,7 @@ pub enum ModelWorld {
     Image(Box<ImageWorld>),
     Farol(Box<FarolWorld>),
     Ants(Box<AntsWorld>),
+    Thresholds(Box<ThresholdsWorld>),
 }
 
 impl ModelWorld {
@@ -652,6 +671,9 @@ impl ModelWorld {
             ModelConfig::Image(c) => ModelWorld::Image(Box::new(ImageWorld::new(c, seed)?)),
             ModelConfig::Farol(c) => ModelWorld::Farol(Box::new(FarolWorld::new(c, seed)?)),
             ModelConfig::Ants(c) => ModelWorld::Ants(Box::new(AntsWorld::new(c, seed)?)),
+            ModelConfig::Thresholds(c) => {
+                ModelWorld::Thresholds(Box::new(ThresholdsWorld::new(c, seed)?))
+            }
         })
     }
 
@@ -675,6 +697,7 @@ impl ModelWorld {
             ModelWorld::Image(_) => ModelKind::Image,
             ModelWorld::Farol(_) => ModelKind::Farol,
             ModelWorld::Ants(_) => ModelKind::Ants,
+            ModelWorld::Thresholds(_) => ModelKind::Thresholds,
         }
     }
 
@@ -698,6 +721,7 @@ impl ModelWorld {
             ModelWorld::Image(w) => w.as_ref(),
             ModelWorld::Farol(w) => w.as_ref(),
             ModelWorld::Ants(w) => w.as_ref(),
+            ModelWorld::Thresholds(w) => w.as_ref(),
         }
     }
 
@@ -721,6 +745,7 @@ impl ModelWorld {
             ModelWorld::Image(w) => w.as_mut(),
             ModelWorld::Farol(w) => w.as_mut(),
             ModelWorld::Ants(w) => w.as_mut(),
+            ModelWorld::Thresholds(w) => w.as_mut(),
         }
     }
 
@@ -813,6 +838,7 @@ impl ModelWorld {
             ModelWorld::Image(w) => ModelWorld::Image(Box::new(w.keyframe())),
             ModelWorld::Farol(w) => copy_without_history!(Farol, w),
             ModelWorld::Ants(w) => copy_without_history!(Ants, w),
+            ModelWorld::Thresholds(w) => copy_without_history!(Thresholds, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -848,6 +874,9 @@ impl ModelWorld {
             (ModelWorld::Image(live), ModelWorld::Image(kept)) => restore_into!(live, kept),
             (ModelWorld::Farol(live), ModelWorld::Farol(kept)) => restore_into!(live, kept),
             (ModelWorld::Ants(live), ModelWorld::Ants(kept)) => restore_into!(live, kept),
+            (ModelWorld::Thresholds(live), ModelWorld::Thresholds(kept)) => {
+                restore_into!(live, kept)
+            }
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1201,6 +1230,30 @@ mod tests {
     }
 
     #[test]
+    fn thresholds_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "thresholds", "distribution": "normal", "sd": 0.13, "friends": {"enabled": true}}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Thresholds);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["actors"].as_u64()),
+            (Some("thresholds"), Some(100))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["acting", "step"]);
+        let e = ModelConfig::from_json(r#"{"model": "thresholds", "trigger": "hub"}"#).unwrap_err();
+        assert_eq!(e[0].field, "trigger");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Thresholds);
+        let cp = w.checkpoint().expect("thresholds worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -1241,7 +1294,8 @@ mod tests {
                 "agreement",
                 "image",
                 "farol",
-                "ants"
+                "ants",
+                "thresholds"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());
