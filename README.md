@@ -1719,6 +1719,83 @@ Agent-Based Computational Model of the Timing of Retirement," Brookings CSED Wor
 in H. Aaron, ed., *Behavioral Dimensions of Retirement Economics* (1999); Joshua M. Epstein, *Generative
 Social Science* (Princeton, 2006), chapter 7. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.
 
+### Altruistic Punishment (Boyd, Gintis, Bowles & Richerson 2003)
+
+**The model.** People punish free riders even when it costs them and brings them nothing, and group
+selection was thought to sustain costly cooperation only in small groups. Boyd, Gintis, Bowles and
+Richerson's answer: punishment is cheap once defectors are rare. 128 groups of contributors, defectors
+and punishers play a one-shot game (cooperating costs c = 0.2; punishers fine each defector p/n = 0.8/n at
+a cost of 0.2/n); everyone copies someone who earns more, sometimes from another group; groups fight,
+the one with fewer defectors more likely to win and replace the loser; a few agents mutate. Their
+figures plot cooperation, averaged over the last 1 000 of 2 000 periods, against group size.
+
+**How this reproduction handles the paper's gaps and contradictions.** Every reading is a named
+switch, every figure was read from the PDF at 300 dpi by marker, and every "reproduces the figure"
+claim uses one rule, fixed in advance: a mean gap of at most 0.05 over group sizes 4–256.
+- **The payoff baseline is never stated.** Imitation needs payoffs above 0; a baseline of 1 fits the
+  paper's own calibration (a trait with advantage c spreads from 10 % to 90 % in about 40 periods;
+  "50" stated).
+- **The conflict rate contradicts itself.** Fig. 1's caption gives 0.075, 0.015, 0.003; its legend 0.0075,
+  0.015, 0.03. Under the text's rules neither reproduces the figure: cooperation collapses a group size
+  or two too soon (0.17 at n 128 where the figure has 0.64). No baseline fixes it — a higher one lets
+  punishment reach larger groups but lifts cooperation without punishment far above the figure.
+- **One reading reproduces all of it.** "Groups are paired at random, and with probability ε,
+  intergroup conflict results" can mean either group of a pair starts the conflict, each with
+  probability ε: a pair then fights at about 2ε. Their Methods derive ε = 0.015 from an extinction rate
+  of 0.0075 as if pairs fought at ε; but under the "either" reading, with baseline 1, all six of Fig. 1's
+  curves reproduce (mean gaps 0.010–0.033), and so do Figs. 2 and 3, which that reading was not fitted
+  to — all but Fig. 4's fixed cost, which falls a group size sooner (a mean gap of 0.051). The switch is
+  **Groups meet: in random pairs; either can start it (the figures)**, and the preset `bg-either`.
+- **Janssen's NetLogo replication** (CoMSES 2223) fills the gaps differently — a benefit, every group
+  challenging one, conflict over this period's acts, imitation in turn; his readings are switches here
+  (not his code). Together they come close too (84 % at n 32) because his pairing also doubles conflict.
+
+Measured (the survey and the presets' descriptions; the text's readings unless stated):
+
+- **The figures' shapes hold.** Without punishment, cooperation survives only in groups of 4 or 8
+  (Fig. 1a); punishment sustains more at every size (Fig. 1b); more conflict, more cooperation; more
+  mixing, less (Fig. 2); a fine only twice the cost gives much less (Fig. 3); a fixed punishing cost gives
+  nothing from n 32 (Fig. 4). Lower mutation raises cooperation substantially, more errors lower it, and
+  where the population starts does not matter — all as stated.
+- **The reach does not, under the text's reading:** "cooperation is sustained in groups on the order of
+  100 individuals" — 17 % at n 128. Under the "either" reading, 59 %.
+- **The mixing calibration is off.** m = 0.01 is said to equalize two groups in about 50 periods; after
+  50, 58 % of the difference remains. A member meets the other group with probability m and copies it
+  half the time, so the gap shrinks by about m a period.
+- **Fewer groups add more than noise:** 0.56 at 8 groups against 0.69 at 128.
+- **Continuous traits are not similar.** Cooperation rises with group size (94 % at n 32, 90 % at 256,
+  against the base model's 69 % and 12 %): uniform mutants keep the mean punishment near ½, and a
+  defector then pays about p/2 = 0.4, more than c.
+- **The ring is not cooperation-free**: about half cooperate in groups of 4 or 8, though little from 32.
+- **The per-capita benefit with payoff conflict** is qualitatively similar, as stated.
+- **Cooney's PDE claims (2024):** a shallow dip in payoff at weak punishment appears — but under every
+  victory rule, not only the normalized one his Remark 6.1 blames; a higher cost of punishing never
+  raises the share of punishers here.
+
+Switches: **Groups (N)**, **Group size (n)**, **At the start**, **Cost of cooperating (c)**, **Cost of being
+punished (p)**, **Punishers pay** (k/n per defector, or a fixed cost), **Cost of punishing (k)**, **Fixed
+cost**, **Errors (e)**, **A punisher who errs** (punishes the others, nobody, or itself too), **Benefit to
+others (b)**, **Baseline payoff**, **Mixing (m)**, **Imitation happens** (all at once, or in turn),
+**Mutation (μ)**, **Conflict (ε)**, **Groups meet** (in random pairs; either can start it; each challenges
+one), **Groups fight over** (defectors, payoffs normalized, payoffs through tanh) with **Sensitivity**,
+**Defectors are counted by** (type, or this period's acts), **A defeated group** (becomes a copy of the
+winners, or is refilled with them from the winners), **Traits** (discrete or continuous), **Groups are**
+(anywhere with conflict, or on a ring without), **Long-run window** and **Stop at period**. The view: every
+group a block of its agents, contributors blue, punishers green, defectors red, a group that just lost
+framed; below, cooperation and punishment over time. Color modes: **Type**, **Acts**, **Payoff**,
+**Group**. Charts: Types; Cooperation (with the long-run average); Payoff; Conflict. Presets: `bg-base`,
+`bg-either`, `bg-none`, `bg-large`, `bg-weak`, `bg-fixed`, `bg-mixing`, `bg-benefit`, `bg-continuous`,
+`bg-ring`, `bg-janssen`. **Compare** entry: "With vs without punishment — Altruistic Punishment
+(Compare)". Built-in sweeps: `bg-fig1a`, `bg-fig1b`, `bg-fig1-caption`, `bg-fig1-either`, `bg-fig2a`,
+`bg-fig2b`, `bg-fig3`, `bg-fig4`, `bg-baseline`, `bg-readings`, `bg-mutation`, `bg-error`, `bg-groups`,
+`bg-benefit`, `bg-continuous`, `bg-ring`, `bg-cooney-fine`, `bg-cooney-cost`.
+
+Credit: Robert Boyd, Herbert Gintis, Samuel Bowles and Peter J. Richerson, "The evolution of altruistic
+punishment," *PNAS* 100(6): 3531–3535 (2003); Daniel B. Cooney, "Exploring the Evolution of Altruistic
+Punishment with a PDE Model of Cultural Multilevel Selection," arXiv:2405.18419 (2024; *Bull. Math.
+Biol.* 2025); Marco Janssen's replication, CoMSES Net 2223 (GPL-3.0, read for its readings only). See
+`docs/superpowers/specs/2026-09-28-punishment-design.md`.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's

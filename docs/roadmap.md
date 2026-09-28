@@ -250,6 +250,19 @@ effect at 5 % rational; footnote 5 is false (counting every friend, no norm form
 not reproduce (the new norm comes in 2 periods); coupling slows the rational group as much as it
 speeds the other. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.
 
+## Milestone 27: Altruistic Punishment (done)
+
+Boyd, Gintis, Bowles and Richerson's altruistic punishment (PNAS 2003) as a model kind: groups of
+contributors, defectors and punishers, payoff-biased imitation with mixing, intergroup conflict and
+mutation, with the paper's structural variants (a per-capita benefit with payoff conflict, continuous
+traits, a ring without extinction), Cooney's PDE critique (2024) and Janssen's NetLogo replication's
+readings as switches. The figures' shapes hold under the text's rules, but not their reach; the
+payoff baseline is unstated and Fig. 1's caption and legend disagree on the conflict rates. One
+reading — either group of a pair can start the conflict, about twice the stated rate — reproduces
+Figs. 1–3 closely (all but Fig. 4's fixed cost). Continuous traits are not "similar"; the mixing
+calibration is off by five; Cooney's payoff dip appears under every victory rule. See
+`docs/superpowers/specs/2026-09-28-punishment-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -272,6 +285,7 @@ speeds the other. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.
 - **Kirman's ants and recruitment** (and Alfarano & Milaković's network critique): done (Milestone 24).
 - **Granovetter's threshold models** (and Watts's global cascades): done (Milestone 25).
 - **Axtell and Epstein's timing of retirement**: done (Milestone 26).
+- **Boyd, Gintis, Bowles and Richerson's altruistic punishment** (and Cooney's PDE critique): done (Milestone 27).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Credit hierarchy view**: done (Milestone 6).

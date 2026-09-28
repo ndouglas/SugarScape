@@ -166,3 +166,15 @@ The presets menu gains an **Altruistic Punishment** group and the Compare entry;
 ## Docs
 
 README: an Altruistic Punishment section (the model, the stated choices, switches, presets, sweeps, and the findings). `docs/papers.md`: the milestone's row (with Cooney as the critique and Janssen's code as reference); the Queue's first entry removed; roadmap: Milestone 27 done.
+
+## Amendments (implementation planning)
+
+Found while implementing and measuring, in the plan `docs/superpowers/plans/2026-09-28-punishment.md`:
+
+- **A fourth pairing, `either`**, the reading the figures fit: groups are paired at random and either group of a pair can start the conflict, each with probability ε (a pair fights with probability 2ε − ε²). Measured with the implementation, it reproduces all six of Fig. 1's curves (mean gaps 0.010–0.033) and Figs. 2 and 3 (0.006–0.022), which it was not found from; Fig. 4's fixed cost misses at 0.051. The preset `bg-either` and the sweep `bg-fig1-either` show it. Every "reproduces the figure" claim uses one rule, fixed before measuring: a mean gap of at most 0.05 over n 4–256.
+- **The figures' values** were read from the PDF at 300 dpi by marker centers (a marker hidden under another curve takes that curve's value).
+- **Presets:** eleven, `bg-either` added; the titles as measured (`bg-base` "Punishers keep about 70 % of groups of 32 cooperating"; `bg-fixed`, `bg-continuous` and `bg-ring` say what happens).
+- **Sweeps:** eighteen. `bg-sensitivity` is `bg-mutation`, `bg-error` and `bg-groups`; `bg-readings` compares the text, `challenge`, `in_turn` and Janssen's readings with and without punishment; `bg-continuous` adds a run without conflict; `bg-cooney-fine` and `bg-cooney-cost` add the `defectors` rule as a third series and read window means of `payoff` and `punishment`.
+- **The Conflict chart** shows `conflicts` and `spread`: every conflict replaces a group, so `extinctions` always equals `conflicts` (it stays a series).
+- **The mosaic:** ⌈√(2N)⌉ groups a row; cells of 480/(groups a row × ⌈√n⌉) pixels, from 1 to 8.
+- **Measured with the implementation** (the survey, 25 claims: 12 hold, 1 weak, 12 fail): Figs. 1a, 2, 3 and 4's shapes, punishment helping at n 32, conflict raising cooperation, the spread calibration (40 periods), mutation, errors, the benefit variant and the start all hold; Fig. 1b's reach, Fig. 2b's reach, "groups on the order of 100" (0.17 at n 128), the caption's rates, the mixing calibration (0.58 of the difference left after 50 periods), continuous traits (0.94 against 0.69 at n 32), the ring (0.51 at n 4), every baseline, Janssen's readings (1a's mean gap 0.056), the Fig. 2–4 generalization of `either` (Fig. 4 at 0.051) and both of Cooney's claims (the dip appears under tanh too; a higher k never raises punishment) fail; fewer groups is weak (a lower mean at 8, not only noise).

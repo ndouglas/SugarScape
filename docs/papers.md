@@ -34,6 +34,7 @@ read online or from another copy; add it when found. Scanned PDFs (no text layer
 | 24 | `ants` | `ants/kirman-1993-qje-ants-rationality-and-recruitment.pdf`; the critique `ants/alfarano-milakovic-2007-warwick-wp-should-network-structure-matter.pdf` (published as JEDC 33(1), 2009) | the chain is exactly beta-binomial but never rests at the ants' 80–20 (Becker's pull does); Fig. IIb's time average needs 100× the figure; herding fades with N, cured by a random network only under AM's rule; AM's mean field fails on rings |
 | 25 | `thresholds` | `thresholds/granovetter-1978-ajs-threshold-models-of-collective-behavior.pdf` (*scan*, read by OCR); the follow-up `thresholds/watts-2002-pnas-simple-model-of-global-cascades-on-random-networks.pdf` (from the Internet Archive's copy of PNAS) | the crowds and Fig. 2's continuous jump reproduce, but a crowd of people tips at a σ set by rounding and sampled crowds do not jump; the city's riot of 100 comes 2 % of the time; Watts's upper edge depends on n, his Fig. 4b cannot be built, hubs help in both regimes |
 | 26 | `retirement` | `retirement/axtell-epstein-1999-coordination-in-transient-social-networks-retirement.pdf`; the revised text `demographic-pd/epstein-2006-generative-social-science.pdf` (ch. 7) | the realizations (a little slower) and network-size effects reproduce, extent only at 10 % rational; footnote 5 is false; Fig. 6-6's minimum rationality needs an unstated rule (friends replaced); the 65 → 62 switch takes 2 periods, not 20–35; coupling slows the rational group |
+| 27 | `punishment` | `punishment/boyd-gintis-bowles-richerson-2003-pnas-altruistic-punishment.pdf`; the critique `punishment/cooney-2024-arxiv-altruistic-punishment-pde-multilevel-selection.pdf` (published in *Bull. Math. Biol.* 2025); Janssen's NetLogo replication `punishment/janssen-comses-2223-netlogo/` (GPL-3.0: readings only) | the shapes hold but not the reach; the baseline is unstated and the caption contradicts the legend; either group starting a conflict (twice the stated rate) reproduces Figs. 1–3; continuous traits are not similar; Cooney's dip appears under every victory rule |
 
 ## Queue
 
@@ -42,11 +43,10 @@ worth doing; "size" is a guess at the milestone's scale.
 
 | # | Model | Original | Critique or follow-up | Size | Shape |
 |---|---|---|---|---|---|
-| 1 | Altruistic punishment | `punishment/boyd-gintis-bowles-richerson-2003-pnas-altruistic-punishment.pdf` | — | medium | new kind (groups, migration, conflict) |
-| 2 | Zero-intelligence traders | `zi-traders/gode-sunder-1993-jpe-zero-intelligence-traders.pdf` (*scan*) | `zi-traders/cliff-1997-hp-minimal-intelligence-agents-for-bargaining.pdf` (Cliff's HP Labs report: where ZI-C fails, and ZIP traders) | medium | new kind: a double auction with values and costs (Sugarscape's `PriceRule::Random` is only the bilateral analog) |
-| 3 | Bali water temples | `bali/lansing-kremer-1993-am-anthropologist-balinese-water-temples.pdf` (*scan*) | `bali/janssen-2007-agricultural-systems-coordination-in-irrigation.pdf`; github.com/mars0i/bali (NetLogo, no license: reference only); Janssen's CoMSES model 2221 for the watershed data (check its license first) | large | new kind on a watershed: subaks, dams, rain, pests |
-| 4 | Emergence of firms | `firms/axtell-1999-emergence-of-firms.pdf` (108 pp) | — | large | new kind (team formation, power-law firm sizes) |
-| 5 | Emergent actors in world politics | `geopolitics/cederman-1997-emergent-actors-in-world-politics.pdf` (274-page book) | — | very large | new kind (states on a grid, conquest, nationalism) |
+| 1 | Zero-intelligence traders | `zi-traders/gode-sunder-1993-jpe-zero-intelligence-traders.pdf` (*scan*) | `zi-traders/cliff-1997-hp-minimal-intelligence-agents-for-bargaining.pdf` (Cliff's HP Labs report: where ZI-C fails, and ZIP traders) | medium | new kind: a double auction with values and costs (Sugarscape's `PriceRule::Random` is only the bilateral analog) |
+| 2 | Bali water temples | `bali/lansing-kremer-1993-am-anthropologist-balinese-water-temples.pdf` (*scan*) | `bali/janssen-2007-agricultural-systems-coordination-in-irrigation.pdf`; github.com/mars0i/bali (NetLogo, no license: reference only); Janssen's CoMSES model 2221 for the watershed data (check its license first) | large | new kind on a watershed: subaks, dams, rain, pests |
+| 3 | Emergence of firms | `firms/axtell-1999-emergence-of-firms.pdf` (108 pp) | — | large | new kind (team formation, power-law firm sizes) |
+| 4 | Emergent actors in world politics | `geopolitics/cederman-1997-emergent-actors-in-world-politics.pdf` (274-page book) | — | very large | new kind (states on a grid, conquest, nationalism) |
 
 ## Wanted
 
