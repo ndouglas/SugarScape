@@ -5,6 +5,7 @@
 
 pub mod astar;
 pub mod grid;
+pub mod memory;
 pub mod utility;
 
 use crate::agent::AgentId;

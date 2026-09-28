@@ -103,6 +103,8 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         culture: Vec::new(),
         social: Social::default(),
         plan: crate::agent::Plan::default(),
+        remembers: false,
+        memory: crate::minds::memory::Memory::default(),
     };
     // Goods 1..n pick where Chapter IV picked spice's metabolism.
     for (i, m) in child.metabolism.iter_mut().enumerate().take(n).skip(1) {
@@ -130,6 +132,12 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
             .zip(&b.culture)
             .map(|(&x, &y)| if rng.gen_bool(0.5) { x } else { y })
             .collect();
+    }
+    // Drawn last, and only under memory, so every other run's random stream
+    // is unchanged. The child's memory starts empty; it doesn't inherit
+    // either parent's.
+    if world.config.memory.span > 0 {
+        child.remembers = rng.gen_bool(world.config.memory.share);
     }
     let pa = world.agent_mut(a_id).expect("parent");
     for (have, give) in pa.holdings.iter_mut().zip(&from_a).take(n) {
