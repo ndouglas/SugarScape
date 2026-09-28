@@ -270,6 +270,74 @@ mod tests {
         assert_eq!(w.fingerprint(), before, "plan is observational, not hashed");
     }
 
+    fn walled_world(walls: Vec<crate::config::Wall>) -> World {
+        let mut c = blank_config(11, 11);
+        c.walls = walls;
+        World::new(c, 7).unwrap()
+    }
+
+    fn wall(x: u32, y: u32, width: u32, height: u32, opaque: bool) -> crate::config::Wall {
+        crate::config::Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque,
+        }
+    }
+
+    #[test]
+    fn a_walker_boxed_in_by_walls_stays_and_gathers_where_it_is_without_panicking() {
+        // Fences (not opaque), not occupants, on all four neighbors: they
+        // block movement but not sight, so sugar beyond one is visible and
+        // chosen as the target, yet the walker can't reach it.
+        let mut w = walled_world(vec![
+            wall(5, 4, 1, 1, false),
+            wall(5, 6, 1, 1, false),
+            wall(4, 5, 1, 1, false),
+            wall(6, 5, 1, 1, false),
+        ]);
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        let id = spawn(&mut w, 5, 5);
+        w.agent_mut(id).unwrap().vision = 3;
+        set_sugar(&mut w, 5, 5, 0.5);
+        set_sugar(&mut w, 5, 2, 3.0); // visible past the fence at (5, 4)
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 5), 0.5)
+        );
+    }
+
+    #[test]
+    fn a_walker_stays_put_when_the_target_is_a_pocket_sealed_by_fences() {
+        // A ring of fences around (5, 5) leaves it visible (fences don't
+        // stop sight) but unreachable (they do block movement) from any
+        // side.
+        let mut w = walled_world(vec![
+            wall(4, 4, 3, 1, false),
+            wall(4, 6, 3, 1, false),
+            wall(4, 5, 1, 1, false),
+            wall(6, 5, 1, 1, false),
+        ]);
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        let id = spawn(&mut w, 5, 1);
+        w.agent_mut(id).unwrap().vision = 4;
+        set_sugar(&mut w, 5, 1, 0.2);
+        set_sugar(&mut w, 5, 5, 5.0); // in the sealed pocket
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 1), 0.2)
+        );
+    }
+
     fn spicy(w: &mut World, vision: u32) -> AgentId {
         add_goods(&mut w.config, 2);
         let id = mover(w, vision);

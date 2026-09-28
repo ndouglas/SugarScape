@@ -108,8 +108,9 @@ pub struct AgentView {
     pub immune_genome: String,
     pub diseases: Vec<DiseaseView>,
     pub infected_by: Option<LinkView>,
-    /// Minds 2: where the agent is walking and the path left to it (`None`
-    /// under `jump`, or once it has arrived).
+    /// Minds 2: where the agent is walking and the path left to it. `None`
+    /// until the agent first moves; its path is empty under `jump` or once
+    /// the agent has arrived.
     pub plan: Option<PlanView>,
 }
 
