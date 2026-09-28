@@ -1480,6 +1480,114 @@ Model," *Evol. Ecol. Res.* 4 (2002); D. Mark, *Behavioral Mathematics for Game A
 "Choosing Effective Utility-Based Considerations," *Game AI Pro 3* (2017). See
 `docs/superpowers/specs/2026-09-27-minds-1-utility-design.md`.
 
+### Minds 2: A* and walking
+
+This is our own experiment, not a reproduction: the second step of the Minds program
+(`docs/studies/2026-09-27-minds.md`). Rule M jumps a Flump to the best site in sight in one tick,
+however far away it is. Minds 2 adds an A* engine, walls and fences, and a switch that makes Flumps
+walk instead. Then it measures which of the book's results need the jump, and what happens to the
+ideal free distribution when switching patches truly costs a walk.
+
+**A\*, verified.** A generic A* (Hart, Nilsson and Raphael, 1968) searches any graph with an
+expansion limit. It draws no random numbers. Ties go to the lowest f, then the lowest h, then the
+earliest pushed, and the torus pushes its neighbors north, south, east, west. Two checks:
+
+- **Against Dijkstra:** on 1 000 random walled tori (4-way) and 1 000 random octile maps (8-way,
+  no corner cutting), with 0–40 % walls, A*'s cost equals Dijkstra's, and both agree when there
+  is no path. (A case whose start or goal falls on a wall is skipped.) The heuristics, torus
+  Manhattan and octile distance, are consistent, and a closed set keeps any site from being
+  expanded twice. Unit tests pin the tie order and the exact expansion count on a tie case, the
+  start = goal case, an unreachable goal and the limit's exact boundary.
+- **Against Sturtevant's benchmarks** (2012): one random map (`random512-10-0`, 89 scenarios) and
+  one maze (`maze512-4-0`, 106 scenarios) from the Moving AI synthetic sets. A*'s octile cost
+  equals each scenario's published optimal length within 1e-6. The subset is in
+  `crates/sugarscape-core/tests/fixtures/movingai/` under the Open Data Commons Attribution
+  License, with a README giving the source.
+
+**Walls and fences.** `walls` is a list of rectangles (set on reset; presets supply them). A wall
+site holds no sugar, never grows back and never holds a Flump, so placement, moves, children,
+replacement and combat all skip it. Pollution neither lands on it nor diffuses into it. An opaque
+wall also stops each of rule M's four lines of sight; a fence blocks only movement. With no walls,
+sight, placement and diffusion are exactly as before. The grid draws walls in stone and fences in
+wood.
+
+**Walking.** Under `movement.mode: walk`, the decision rule (rule M or the utility mind) picks its
+target as before. Then A* finds a 4-way path around walls and other Flumps, and the Flump takes
+`speed` steps along it (1–50) and gathers only where it stops. It plans again every tick. If there
+is no path within 4 096 expanded sites, it stays and gathers where it is. At vision 1 every target
+is one step away, so walking *is* jumping: every golden Sugarscape preset without combat, with
+vision forced to 1, gives the same fingerprint under walk as under jump. Walking with combat on is
+an error, since rule C jumps. Inspect shows where the Flump is heading and how many steps are left,
+and draws its planned path as a dashed line.
+
+Measured (20 seeds; the survey unless a sweep is named). "Holds" and "Fails" are the survey's
+verdicts on claims we set before running:
+
+- **The book's carrying capacity needs the jump (Fails, as expected).** On `ii-2-unit` the mean
+  population over ticks 300–500 has median 181 under walking against 228 under the jump. No seed
+  lands within 214–234, around the book's 224. Walking is lower in all 20 seeds, by a median 47
+  Flumps. Likely cause: a walker gathers at each site on its way instead of the best one it saw,
+  and that site is often harvested or taken by the time it arrives.
+- **Speed brings it back (Holds).** Capacity rises toward the jump's as speed rises. The
+  `walk-speed` sweep's means: 181.5 at one step a tick, 201.4 at 2, 212.8 at 3, 218.4 at 4, 225.2
+  at 6 and 227.5 at 10, against 228.5 jumping. In the survey, speed 10 (median 227.4) beats
+  speed 1 in every seed.
+- **Walking wipes out the gain from vision.** In the `walk-vision` sweep, the jump's capacity rises
+  with vision (means 182.7 at vision 1, 205.5 at 1–3, 228.5 at 1–6, 241.5 at 1–10). Walking stays
+  flat (182.7, 188.8, 181.5, 182.2). At vision 1 the two are the same rule.
+- **Skewed wealth doesn't need the jump (Holds).** Under walking the wealth at tick 500 is
+  right-skewed in every seed: skewness median 1.26 against 1.27 jumping, Gini 0.46 against 0.48.
+- **Seasonal migration survives walking, with fewer migrants (Holds).** A median 55 % of the Flumps
+  alive over ticks 100–300 change hemisphere at least twice, against 83 % jumping. Likely cause: a
+  walker needs many ticks to cross, so fewer finish before the season or their target changes.
+- **Walking doesn't bring back the waves (Fails, as expected).** The book's II-6 block sends waves
+  toward the far mountain. At tick 100 a median 0.6 % of Flumps are farther than 25 sites (torus
+  distance) from the starting block's center, against 0.8 % jumping and the quarter the claim
+  asks for. Walking isn't the missing mechanism.
+- **Baum and Kraft's travel claim fails, in the opposite direction.** They found that requiring
+  travel to switch patches slightly reduced undermatching. Here a fence separates Minds 1's two
+  patches (vision 10–20), with a two-site gap. Moving the gap to the far end (`ifd-fence-far`)
+  gives s median 0.85 against 0.90 walking with no fence, lower in 18 of 20 seeds. So undermatching
+  grows. The `ifd-detour` sweep agrees in direction: the richer patch's share at 2.10 : 1 drifts
+  from 0.664 (gap at the center) to 0.658 (15 rows off) behind a fence, and from 0.668 to 0.652
+  behind a wall.
+- **The visual barrier: Weak.** Baum and Kraft found a visual barrier had no effect. With an opaque
+  wall instead of a fence (same gap), s has median 0.91 against 0.88, and only 10 of 20 seeds are
+  within 0.05 of their fence's s. If anything, the wall raises s.
+- **s and the single ratio point different ways.** At the presets' own 2.10 : 1 ratio (median mean
+  N₁/N₂ over ticks 500–1000), the fenced worlds put slightly more Flumps on the richer patch: far
+  fence 1.96, near fence 1.99, wall 1.99, against 1.97 walking with no fence and 1.88 jumping. Yet
+  s is lower with the far gap. s measures how the split tracks the input ratio across five patch
+  sizes; the 2.10 : 1 ratio is one point on that line. We haven't measured why the two disagree.
+
+**Cost** (µs per Flump-tick: wall-clock over the whole tick with all rules, from the release CLI,
+2 000 ticks, seeds 1–5, divided by the population summed over the ticks):
+
+| Preset | Movement | µs per Flump-tick |
+|---|---|---|
+| `ii-2-unit` | jump (book) | 1.05 |
+| `walk-capacity` | walk, speed 1 | 4.66 |
+| `walk-fast` | walk, speed 3 | 5.10 |
+| `ifd-far-sighted` | jump, vision 10–20 | 2.65 |
+| `ifd-fence` | walk, vision 10–20, fences | 7.77 |
+
+Minds 1's baseline from planning: `ii-2-unit` 1.09 (book) and 1.13 (utility mind). Walking costs
+about 4.4 times the jump on `ii-2-unit`, and about 2.9 times at vision 10–20 behind fences.
+
+Switches (the Rules panel's **Movement (Minds 2)** group): **Mode** (Jump (book) or Walk) and
+**Speed** (cells per tick), both live. Walls come only from presets. Presets: `walk-capacity`,
+`walk-wealth`, `walk-seasons`, `walk-waves`, `walk-fast`, `ifd-fence`, `ifd-fence-far`, `ifd-wall`.
+Built-in sweeps: `walk-speed` (capacity against speed), `walk-vision` (capacity against vision,
+walking and jumping), `ifd-detour` (the richer patch's share against the gap's offset, fence and
+wall).
+
+Credit: P. E. Hart, N. J. Nilsson and B. Raphael, "A Formal Basis for the Heuristic Determination
+of Minimum Cost Paths," *IEEE Trans. Systems Science and Cybernetics* 4(2) (1968); N. R.
+Sturtevant, "Benchmarks for Grid-Based Pathfinding," *IEEE Trans. Computational Intelligence and AI
+in Games* 4(2) (2012), with the Moving AI benchmark data (movingai.com, ODC-By); W. M. Baum and
+J. R. Kraft, "Group Choice: Competition, Travel, and the Ideal Free Distribution," *JEAB* 69
+(1998). See `docs/superpowers/specs/2026-09-27-minds-2-walking-design.md`.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's
@@ -1668,3 +1776,8 @@ CoMSES Computational Model Library, doi:10.25937/krp4-g724, under the GPL-2.0 (s
 WASM, so the web build also serves those three files at `anasazi-data/NOTICE`,
 `anasazi-data/LICENSE` and `anasazi-data/CITATION.cff` beside the page, and the Rules panel of an
 Artificial Anasazi world credits the data and links the notice.
+
+The A* test fixtures (`crates/sugarscape-core/tests/fixtures/movingai/`) are a subset of Nathan
+Sturtevant's Moving AI grid benchmarks (movingai.com/benchmarks), under the Open Data Commons
+Attribution License; the README there gives the source and what was kept. They are used only by
+the tests.

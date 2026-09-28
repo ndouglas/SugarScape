@@ -282,3 +282,80 @@ or fail.
   utility, walk; per Flump per tick).
 - **Roadmap:** the Minds line.
 - **The spec's amendments.**
+
+## Amendments (implementation planning)
+
+These change or extend the sections above. The measured values are the survey's (20 seeds) and
+the sweeps' (20 seeds), with the source named. The cost figures are the release CLI's.
+
+- **Wall and fence colors are fixed, not theme tokens.** The core render is always dark, so walls
+  are stone `[0x5a, 0x55, 0x4c]` and fences wood `[0x8a, 0x6d, 0x3b]` (`render::WALL`,
+  `render::FENCE`). This replaces the Page section's "theme tokens in light and dark".
+- **Validation checks free sites per placement rectangle,** not only across the grid: a Block, and
+  each of the two Tribes corners, must hold its own population on its non-wall sites. Combat skips
+  wall sites explicitly (a fence doesn't stop rule C's sight, so its sites are excluded as
+  targets), and `move_agent` debug-asserts that its destination isn't a wall.
+- **The plan and Inspect, as built.**
+  - `Agent.plan` is observational: never hashed, exported or shared.
+  - `AgentView.plan` is `None` until the agent's first move. Its path is empty under jump, or once
+    the agent has arrived.
+  - Inspect shows "Heading: (x, y), n step(s) left" (singular at 1), "Staying", or under jump
+    "Moved to (x, y)".
+  - The inspected agent's planned path is drawn as a dashed accent line, split into separate
+    segments where it crosses the torus seam.
+- **The walking reduction test sets jump explicitly on both sides.** The `walk-*` presets start in
+  walk mode, so without that the test would have compared walk against walk for them. The utility
+  reduction skips presets whose rule is already the utility mind, as in Minds 1.
+- **The benchmark subset** keeps every 20th scenario of `random512-10-0` (89 checked) and every
+  100th of `maze512-4-0` (106 checked), not every 10th of each.
+- **A `walk-vision` sweep** was added beside `walk-speed` and `ifd-detour` (the capacity against
+  vision 1, 1–3, 1–6, 1–10, walking and jumping).
+- **Three survey claims are judged on paired per-seed differences,** because the same seeds run in
+  both arms: `walk-capacity.lower` (jump − walk), `walk-speed.recovers` (speed 10 − speed 1) and
+  `ifd-fence-far.baum-kraft` (s far gap − s no fence). Each holds when the difference is positive
+  in at least 80 % of seeds. The unpaired Mann–Whitney result is in each detail and gives the same
+  verdict in all three. The judges were chosen before any run. `walk-speed.recovers`' text follows
+  this spec's "rises toward the jump's"; the judge is speed 10 above speed 1.
+- **The waves measure** is "the share of Flumps farther than 25 (torus distance) from the starting
+  block's center at tick 100", not "within the northeast mountain's radius". The block is
+  `ii-6-waves`' 20 × 20 placement at (0, 30), center (9.5, 39.5).
+- **Measured (the survey, 20 seeds):**
+  - II-2 under walking **fails**, as expected: mean population over ticks 300–500, median 181
+    (IQR 176–190) against 228 jumping; no seed within 214–234. Walking is lower in 20 of 20 seeds,
+    by a median 47. The planning probe's 179 and 230 are replaced.
+  - II-5 under walking **holds**: skewness median 1.26 (1.27 jumping), Gini 0.46 (0.48).
+  - II-7 under walking **holds**: a median 55 % of Flumps alive over ticks 100–300 change
+    hemisphere at least twice, against 83 % jumping.
+  - The waves **fail**, as expected: median 0.6 % beyond 25 sites at tick 100 (0.8 % jumping);
+    0 of 20 seeds reach a quarter.
+  - Speed **holds**: speed 10 (median 227.4) beats speed 1 in 20 of 20 seeds; speed 3 gives 214.0;
+    jumping 228.3.
+  - Baum and Kraft's travel claim **fails in the opposite direction**: s median 0.85 with the far
+    gap against 0.90 walking with no fence (0.90 jumping), lower in 18 of 20 seeds.
+  - The visual barrier is **Weak**: s median 0.91 with the wall against 0.88 with the fence at the
+    same gap; 10 of 20 seeds within 0.05.
+- **The ratio and s point different ways.** At the presets' own 2.10 : 1 ratio, the median mean
+  N₁/N₂ over ticks 500–1000 is 1.96 with the far fence, 1.99 with the near fence, 1.99 with the
+  wall, 1.97 walking with no fence and 1.88 jumping. So the fenced worlds put slightly more Flumps
+  on the richer patch at that ratio, yet s fitted across the five patch sizes is lower with the far
+  gap (0.846 against 0.899). s measures how the split tracks the input across sizes; the ratio is
+  a single point on it. The cause of the difference isn't measured.
+- **Sweeps (20 seeds, means):**
+  - `walk-speed`: walking 181.5, 201.4, 212.8, 218.4, 225.2, 227.5 at speeds 1, 2, 3, 4, 6, 10;
+    jumping 228.5 throughout.
+  - `walk-vision`: jumping 182.7, 205.5, 228.5, 241.5 at vision 1, 1–3, 1–6, 1–10; walking 182.7,
+    188.8, 181.5, 182.2. Walking gains nothing from vision.
+  - `ifd-detour`: the richer patch's share at gap offsets 0, 5, 10, 15 is 0.664, 0.665, 0.657,
+    0.658 behind a fence and 0.668, 0.657, 0.652, 0.652 behind a wall.
+- **Cost** (µs per Flump-tick, whole tick, release CLI, 2 000 ticks, seeds 1–5): `ii-2-unit` jump
+  1.05, `walk-capacity` 4.66, `walk-fast` 5.10, `ifd-far-sighted` jump 2.65, `ifd-fence` walk
+  7.77. Minds 1's baseline: 1.09 (book) and 1.13 (utility).
+- **Titles** follow the measurements: `walk-wealth` "Flumps who walk are born and die, and wealth
+  grows as lopsided as when they jump"; `walk-seasons` "Walking through the seasons: Flumps still
+  migrate, but fewer of them"; `walk-fast` "Flumps who walk three steps a tick: most of the lost
+  population comes back"; `ifd-fence-far` "The gap moves to the far end: a long walk to switch,
+  and across patch sizes Flumps stray further from matching the yields".
+- **Sources.** The Moving AI fixture subset is committed under ODC-By, with its README
+  (`crates/sugarscape-core/tests/fixtures/movingai/README.md`). Sturtevant's paper is saved in
+  the gitignored `papers/pathfinding/`. Hart, Nilsson and Raphael (1968) and Baum and Kraft (1998)
+  are not in `papers/`.
