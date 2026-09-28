@@ -42,6 +42,11 @@ fn walking_at_vision_one_is_jumping() {
         }
         let mut jump = p.config.clone();
         jump.vision = sugarscape_core::config::URange::new(1, 1);
+        // Minds 2's walk-* presets already start in walk mode, so both sides
+        // must set `mode` explicitly to compare a real jump against a real
+        // walk (fixed here; it previously compared walk against walk for
+        // those presets).
+        jump.movement.mode = sugarscape_core::config::MoveMode::Jump;
         let mut walk = jump.clone();
         walk.movement.mode = sugarscape_core::config::MoveMode::Walk;
         assert_eq!(fingerprint(walk), fingerprint(jump), "{}", p.id);

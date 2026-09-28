@@ -4,8 +4,8 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, Outbreak, Peak, Placement,
-    Pollutant, Pollution, ScheduledChange, Transform, URange, SPICE_COLOR,
+    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, MoveMode, Outbreak, Peak,
+    Placement, Pollutant, Pollution, ScheduledChange, Transform, URange, Wall, SPICE_COLOR,
 };
 use crate::model::ModelConfig;
 
@@ -136,6 +136,32 @@ fn traits(c: &mut Config, metabolism: URange, endowment: URange) {
     }
 }
 
+/// Animation II-4/II-5's finite lifetimes with replacement.
+fn wealth(c: &mut Config) {
+    c.lifespan.enabled = true;
+    c.replacement.enabled = true;
+}
+
+/// Animation II-7's seasons.
+fn enable_seasons(c: &mut Config) {
+    c.seasons.enabled = true;
+}
+
+/// The book's first frame for Animation II-6: a 20×20 block in the
+/// bottom-left corner, otherwise as Animation II-2 (400 agents, so full).
+/// Surveyed (docs/survey/2026-09-24-model-survey.md): the ring of the book's
+/// second frame appears by t ≈ 8, but no northeasterly waves follow on any
+/// seed.
+fn waves(c: &mut Config) {
+    c.placement = Placement::Block {
+        x: 0,
+        y: 30,
+        width: 20,
+        height: 20,
+    };
+    c.vision = URange::new(1, 10);
+}
+
 pub fn all() -> Vec<Preset> {
     vec![
         preset(
@@ -157,37 +183,21 @@ pub fn all() -> Vec<Preset> {
             "({G₁}, {M, R[60,100]})",
             "Animations II-4/II-5",
             "Finite lifetimes with replacement: a skewed wealth distribution emerges; watch the Lorenz curve and Gini coefficient.",
-            |c| {
-                c.lifespan.enabled = true;
-                c.replacement.enabled = true;
-            },
+            wealth,
         ),
         preset(
             "ii-6-waves",
             "Diagonal waves",
             "Animation II-6",
             "A full 20×20 block of agents with vision up to 10 starts in the southwest corner, as in the book, and bursts outward as a ring. The book's waves then travel northeast; here they don't: the survivors settle on the southwest mountain.",
-            |c| {
-                // The book's first frame: a 20×20 block in the bottom-left
-                // corner, otherwise as Animation II-2 (400 agents, so full).
-                // Surveyed (docs/survey/2026-09-24-model-survey.md): the
-                // ring of the book's second frame appears by t ≈ 8, but no
-                // northeasterly waves follow on any seed.
-                c.placement = Placement::Block {
-                    x: 0,
-                    y: 30,
-                    width: 20,
-                    height: 20,
-                };
-                c.vision = URange::new(1, 10);
-            },
+            waves,
         ),
         preset(
             "ii-7-seasons",
             "({S₁,₈,₅₀}, {M})",
             "Animation II-7",
             "Seasons flip every 50 ticks: high-vision agents migrate, low-vision low-metabolism agents hibernate.",
-            |c| c.seasons.enabled = true,
+            enable_seasons,
         ),
         preset(
             "ii-8-pollution",
@@ -698,6 +708,89 @@ pub fn all() -> Vec<Preset> {
                 c.decision.travel = 0.5;
             },
         ),
+        preset(
+            "walk-capacity",
+            "Walking: carrying capacity",
+            "Epstein & Axtell II-2; Minds 2",
+            "Rule M's Flumps jump to the best site in sight; these walk there one step a tick along an A* path. Measured in planning (a throwaway hack, 10 seeds): the population settles near 179 instead of the book's 224 (230 under jump).",
+            |c| c.movement.mode = MoveMode::Walk,
+        ),
+        preset(
+            "walk-wealth",
+            "Walking: wealth distribution",
+            "Epstein & Axtell II-5; Minds 2",
+            "Finite lifetimes with replacement, as in ii-5-wealth, but rule M's Flumps walk to the best site they see instead of jumping there in one tick.",
+            |c| {
+                wealth(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-seasons",
+            "Walking: seasons",
+            "Epstein & Axtell II-7; Minds 2",
+            "Seasons flipping every 50 ticks, as in ii-7-seasons, but rule M's Flumps walk to the best site they see instead of jumping there in one tick.",
+            |c| {
+                enable_seasons(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-waves",
+            "Walking: diagonal waves",
+            "Epstein & Axtell II-6; Minds 2",
+            "The book's waves travel northeast from the southwest block; under rule M's jump they don't. In planning, walking didn't bring them back either: the block settles on the near mountain.",
+            |c| {
+                waves(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-fast",
+            "Walking: speed 3",
+            "Minds 2",
+            "ii-2-unit's unit growback and carrying capacity, but Flumps walk three steps a tick instead of one along their A* path.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                c.movement.speed = 3;
+            },
+        ),
+        preset(
+            "ifd-fence",
+            "Travel between patches: a fence with a central gap",
+            "Baum & Kraft 1998; Minds 2",
+            "The 2.10 : 1 patches with vision 10–20 (as in ifd-far-sighted), fenced apart except for a two-site gap at the midline of the 60 × 40 torus (and a matching gap in a second fence at x = 2, closing the route the other way around the torus); rule M's Flumps walk to the best site they see instead of jumping there, so switching patches costs a walk through the gap.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, false);
+            },
+        ),
+        preset(
+            "ifd-fence-far",
+            "Travel between patches: the gap moves to the far end",
+            "Baum & Kraft 1998; Minds 2",
+            "The same fence as ifd-fence, but its gap sits at rows 35–36 instead of 20–21, near the far end of the patches, so a Flump switching patches faces a much longer walk to reach the gap.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 15, false);
+            },
+        ),
+        preset(
+            "ifd-wall",
+            "Travel between patches: an opaque wall with a central gap",
+            "Baum & Kraft 1998; Minds 2",
+            "ifd-fence with an opaque wall instead of a fence. An opaque wall: the other patch is visible only through the gap.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+            },
+        ),
     ]
 }
 
@@ -754,6 +847,25 @@ pub(crate) fn two_patches(c: &mut Config, second_radius: f64) {
     c.goods[0].metabolism = URange::new(1, 1);
     c.goods[0].endowment = URange::new(50, 50);
     c.growback.rate = 0.25;
+}
+
+/// Minds 2's fences: one-site-wide fences at x = 28 (between the patches)
+/// and x = 2 (closing the route around the torus), from top to bottom
+/// except a two-site gap at rows 20 + `offset` and 21 + `offset`.
+fn fence(c: &mut Config, offset: u32, opaque: bool) {
+    let rect = |x, y, height| Wall {
+        x,
+        y,
+        width: 1,
+        height,
+        opaque,
+    };
+    c.walls = vec![
+        rect(28, 0, 20 + offset),
+        rect(28, 22 + offset, 18 - offset),
+        rect(2, 0, 20 + offset),
+        rect(2, 22 + offset, 18 - offset),
+    ];
 }
 
 pub fn by_id(id: &str) -> Option<Preset> {
@@ -839,7 +951,7 @@ pub fn find(id: &str) -> Option<ModelPreset> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{DecisionRule, Idle};
+    use crate::config::{DecisionRule, Idle, Movement};
 
     #[test]
     fn the_ifd_presets_share_the_two_patch_world() {
@@ -898,6 +1010,47 @@ mod tests {
             by_id("ifd-no-starving").unwrap().config.goods[0].endowment,
             URange::new(100_000, 100_000)
         );
+    }
+
+    #[test]
+    fn the_walking_presets_walk_and_the_fenced_ones_have_a_gap() {
+        for id in [
+            "walk-capacity",
+            "walk-wealth",
+            "walk-seasons",
+            "walk-waves",
+            "walk-fast",
+            "ifd-fence",
+            "ifd-fence-far",
+            "ifd-wall",
+        ] {
+            let c = by_id(id).unwrap_or_else(|| panic!("{id}")).config;
+            assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
+        }
+        assert_eq!(by_id("walk-fast").unwrap().config.movement.speed, 3);
+        let base = |id: &str| by_id(id).unwrap().config;
+        let mut jumped = base("walk-capacity");
+        jumped.movement = Movement::default();
+        assert_eq!(jumped, base("ii-2-unit"));
+        let gap_rows = |id: &str| {
+            let c = base(id);
+            let covered = |y: u32| {
+                c.walls
+                    .iter()
+                    .any(|w| w.x == 28 && (w.y..w.y + w.height).contains(&y))
+            };
+            (0..40).filter(|&y| !covered(y)).collect::<Vec<_>>()
+        };
+        assert_eq!(gap_rows("ifd-fence"), [20, 21]);
+        assert_eq!(gap_rows("ifd-fence-far"), [35, 36]);
+        assert!(base("ifd-fence").walls.iter().all(|w| !w.opaque));
+        assert!(base("ifd-wall").walls.iter().all(|w| w.opaque));
+        assert_eq!(
+            base("ifd-fence").walls.len(),
+            4,
+            "x = 28 and x = 2, above and below the gap"
+        );
+        assert_eq!(base("ifd-fence").vision, URange::new(10, 20));
     }
 
     #[test]
@@ -964,7 +1117,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 39);
+        assert_eq!(presets.len(), 47);
         for p in presets {
             p.config
                 .validate()

@@ -67,6 +67,15 @@ const GOLDEN: &[(&str, u64)] = &[
     // crowding/travel could never move the patch split.
     ("ifd-crowding", 0x5a5e863436971c96),
     ("ifd-travel", 0x1a39e97e6ff051bb),
+    // Minds 2
+    ("walk-capacity", 0x221010b49063dacf),
+    ("walk-wealth", 0xa83586c20c3a101b),
+    ("walk-seasons", 0x6962baedceba3118),
+    ("walk-waves", 0x521bce5f41d93cbd),
+    ("walk-fast", 0xe4a6fece9ed8eb7c),
+    ("ifd-fence", 0x6c30002185fdb871),
+    ("ifd-fence-far", 0x2a0ceead5af4938c),
+    ("ifd-wall", 0xd079a77c3ac80869),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 223] = [
+pub const TITLES: [(&str, &str); 231] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -156,6 +156,29 @@ pub const TITLES: [(&str, &str); 223] = [
     (
         "ifd-travel",
         "Flumps who prefer nearby sugar stray further from matching the yields",
+    ),
+    (
+        "walk-capacity",
+        "Flumps who walk instead of jump: fewer of them survive",
+    ),
+    ("walk-wealth", "Walking changes who gets rich"),
+    ("walk-seasons", "Walking through the seasons"),
+    (
+        "walk-waves",
+        "Walking doesn't bring back the book's waves",
+    ),
+    ("walk-fast", "Flumps who walk three steps a tick"),
+    (
+        "ifd-fence",
+        "A fence between the patches, with one gap",
+    ),
+    (
+        "ifd-fence-far",
+        "The gap moves to the far end: switching costs a long walk",
+    ),
+    (
+        "ifd-wall",
+        "A wall between the patches: the other patch is out of sight too",
     ),
     (
         "vi-4-schelling-25",
