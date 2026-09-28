@@ -196,12 +196,12 @@ def bars(beat, d, ctx):
     (measurements.json) — not one run, since captions rank the medians.
     params: `title`, `rows` (groups of (label, key) pairs, the first teal and
     the second coral), `format` ("pct" or "num"), `top` (the bar scale; for
-    numbers, the value of a full bar)."""
+    numbers, the value of a full bar), `y` (the panel's height on screen)."""
     params = {**SURVIVAL, **beat.params}
     medians, seeds = ctx.measured["medians"], ctx.measured["seeds"]
     percent = params.get("format", "pct") == "pct"
     top = params.get("top", 1.0)
-    anchor = ctx.screen.anchor("bars", 0.46, 0.08)
+    anchor = ctx.screen.anchor("bars", 0.46, params.get("y", 0.08))
     groups = params["rows"]
     height = 0.28 + 0.17 * len(groups)
     card("bars-card", anchor, (0, 0.0, -0.01), (0.9, height, 0.002))

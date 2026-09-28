@@ -1,6 +1,10 @@
 # Spike: the demographic Prisoner's Dilemma (Cooperation, episode 2)
 
 **Date:** 2026-09-28
+**Corrected after the review (2026-09-28):** the "book" caption first said Epstein's count "needs rules
+he never wrote down". His working paper prints the same Table 1 beside a rule he did write: one game
+a turn. It now credits that rule. The "low" caption now says Run 4 keeps Run 2's 100-cycle lives, and
+that Epstein allows extinction as one outcome; "half helpers" became "about half".
 **Status:** built as `studio/episodes/living` (claims in its `measurements.md`: all nine hold as
 proposed); "book" was lengthened to 10 s so the round's sections land on the story (72 s).
 **Question:** which of Epstein's claims hold on the board we'd film, and what the studio needs to film
@@ -30,7 +34,7 @@ cheats) and a flat board without sugar.
 |---|---|---|
 | From 100 Flumps, the land fills, mostly with helpers (Table 1, dpd-run-1) | Cycle 500: 733 ± 18 helpers (710–778), 167 ± 18 cheats; the board full (899–900 of 900) in 20 of 20 | Holds: "about 730 to 170" |
 | Epstein's Table 1: 779 ± 15 helpers, 121 ± 15 cheats | 733 against 779: 46 fewer helpers; no seed reaches 779 | **Fails** under the published rules |
-| …with rules Epstein never states (dpd-closest: one random neighbor a turn, founders with no wealth, newborns acting at once) | 785 ± 18 helpers, 115 ± 19 cheats | Matches, with unstated rules |
+| …with the working paper's own rule (one game a turn against a random neighbor, printed beside the same Table 1) and founders with no wealth | 784 ± 18 helpers (t 1.0 against Table 1) | Matches: only the founders' wealth is a detail no source gives this way |
 | Five helpers to every cheat by cycle 50 | 4.5 (3.8–6.2) | Near: "about four and a half to one" if used |
 | Cheats live on the edges of helper clusters | 96 % of cheats touch a helper, but 100 % would if the same Flumps were shuffled at random (the board is full) | Uninformative: dropped |
 | Soup: pair at random instead, and cooperation dies (dpd-soup) | The last helper is gone by cycle 5–12 in 19 of 20; in the other, a lone helper outlives everyone | Holds: "in 19 of 20" |

@@ -1,12 +1,13 @@
 {
   "medians": {
     "cheats": 171.0,
-    "closest": 785.0,
     "epstein": 779.0,
     "helpers": 728.5,
     "low_end": 0.0,
     "population": 900.0,
-    "soup_end": 1.0
+    "soup_end": 1.0,
+    "working": 781.0,
+    "working_only": 760.5
   },
   "seeds": 20
 }
