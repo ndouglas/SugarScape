@@ -83,7 +83,7 @@ const GOLDEN: &[(&str, u64)] = &[
     ("mem-seasons", 0x7445335112f02389),
     ("mem-truffles", 0xf511426e092ca85b),
     ("mem-trapline", 0xae81840c5bbbe91),
-    ("mem-mvt", 0xa00361ad0017c367),
+    ("mem-mvt", 0x6d0e4eacf7b8108d),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

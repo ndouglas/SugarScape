@@ -116,6 +116,14 @@ fn with_belief(mut c: Config, b: Belief) -> Config {
     c
 }
 
+/// The utility mind with travel cost `k` (crowding 0, idle as configured):
+/// a site's value falls with its distance, unlike rule M's.
+fn priced_travel(mut c: Config, k: f64) -> Config {
+    c.decision.rule = DecisionRule::Utility;
+    c.decision.travel = k;
+    c
+}
+
 fn with_share(mut c: Config, share: f64) -> Config {
     c.memory.share = share;
     c
@@ -252,12 +260,18 @@ fn trapline(c: &Config, seeds: &[u64], ticks: u32) -> Vec<Trap> {
     })
 }
 
-fn med_or_nan(v: &[f64]) -> f64 {
+/// The `q` quantile of the finite values, NaN with none.
+fn q_or_nan(v: &[f64], q: f64) -> f64 {
+    let v = stats::finite(v);
     if v.is_empty() {
         f64::NAN
     } else {
-        median(v)
+        stats::quantile(&v, q)
     }
+}
+
+fn med_or_nan(v: &[f64]) -> f64 {
+    q_or_nan(v, 0.5)
 }
 
 // ----------------------------------------------------------------------- MVT
@@ -273,6 +287,10 @@ const MVT_TICKS: u32 = 1000;
 /// `utility` is the preset's mind (travel 0.5); otherwise rule M.
 fn mvt(s: u32, utility: bool) -> Config {
     let mut c = preset("mem-mvt");
+    let Map::Peaks { peaks } = &c.goods[0].map else {
+        unreachable!("mem-mvt is a peaks map")
+    };
+    let (radius, height) = (peaks[0].radius, peaks[0].height);
     c.width = 3 * s;
     c.height = 3 * s;
     c.vision = URange::new(1, 18);
@@ -282,8 +300,8 @@ fn mvt(s: u32, utility: bool) -> Config {
                 (0..3u32).map(move |j| Peak {
                     x: s / 2 + s * i,
                     y: s / 2 + s * j,
-                    radius: 4.0,
-                    height: 4.0,
+                    radius,
+                    height,
                 })
             })
             .collect(),
@@ -425,7 +443,7 @@ fn residence_medians(runs: &[Vec<Visits>]) -> String {
                 "{s}: {:.2} ({n} completed visits; at the end, median {:.1} of 10 Flumps alive and a median share {:.2} of them on a patch)",
                 med_or_nan(&stats::finite(&res)),
                 median(&alive),
-                median(&on)
+                med_or_nan(&on)
             )
         })
         .collect::<Vec<_>>()
@@ -642,7 +660,17 @@ pub fn claims() -> Vec<Claim> {
             source: Source::Comment,
             citation: SPEC,
             text: "Memory pays behind a wall: rememberers are wealthier than others (ticks 200–500), seed by seed",
-            check: |seeds| richer(&preset("mem-walled"), seeds),
+            check: |seeds| {
+                let recall = groups(&with_belief(preset("mem-walled"), Belief::Recall), seeds);
+                let losing = recall.iter().filter(|x| x.adv < 0.0).count();
+                richer(&preset("mem-walled"), seeds).with(&format!(
+                    "Under recall: median advantage {:.2}, negative in {losing} of {} seeds; alive at tick 500: rememberers {:.3}, others {:.3}.",
+                    median(&col(&recall, |x| x.adv)),
+                    recall.len(),
+                    median(&col(&recall, |x| x.rem_alive)),
+                    median(&col(&recall, |x| x.oth_alive)),
+                ))
+            },
         },
         Claim {
             id: "mem-seasons.advantage",
@@ -775,11 +803,16 @@ pub fn claims() -> Vec<Claim> {
                 let (u, ur) = residence_slopes(seeds, true);
                 let (m, mr) = residence_slopes(seeds, false);
                 range(&u, f64::MIN_POSITIVE, f64::INFINITY, false).with(&format!(
-                    "Nine peaks on a 3s × 3s torus at spacing s, vision 1–18 throughout (s = 20 is the preset but for vision); completed visits over ticks 1–{MVT_TICKS}. Median residence by spacing, utility with travel: {}. Rule M: slope median {:.4} (IQR {:.4}–{:.4}); residence by spacing {}.",
+                    "Nine peaks on a 3s × 3s torus at spacing s, vision 1–18 throughout (s = 20 is the preset but for vision); completed visits over ticks 1–{MVT_TICKS} (visits under way at tick 0 or at the end, or cut short by death, are dropped); residences are medians over seeds of per-seed means. A slope needs at least 3 spacings with a completed visit: finite for utility with travel in {} of {} seeds, for rule M in {} of {}, positive in {}. Median residence by spacing, utility with travel: {}. Rule M: slope median {:.4} (IQR {:.4}–{:.4}); residence by spacing {}.",
+                    stats::finite(&u).len(),
+                    u.len(),
+                    stats::finite(&m).len(),
+                    m.len(),
+                    m.iter().filter(|&&x| x > 0.0).count(),
                     residence_medians(&ur),
-                    median(&stats::finite(&m)),
-                    stats::quantile(&stats::finite(&m), 0.25),
-                    stats::quantile(&stats::finite(&m), 0.75),
+                    med_or_nan(&m),
+                    q_or_nan(&m, 0.25),
+                    q_or_nan(&m, 0.75),
                     residence_medians(&mr),
                 ))
             },
@@ -820,7 +853,7 @@ pub fn claims() -> Vec<Claim> {
                 range(&share, 0.5 + f64::EPSILON, 1.0, false).with(&format!(
                     "Per-seed share of departures that overstay, mem-mvt (utility with travel), ticks 1–{MVT_TICKS}; {deps} departures over all seeds; at the end, median {:.1} of 10 Flumps alive, a median share {:.2} of them on a patch. Rule M on mem-mvt's world: median share {:.3} at the preset's vision 1–20 ({} seeds with departures), {:.3} at vision 1–18 as in the spacing runs ({} seeds).",
                     median(&alive),
-                    median(&on),
+                    med_or_nan(&on),
                     med_or_nan(&m20),
                     m20.len(),
                     med_or_nan(&m18),
@@ -887,6 +920,55 @@ pub fn claims() -> Vec<Claim> {
             citation: "Hornvale M2c1",
             text: "Projection beats recall with truffles: under project the rememberers' advantage is larger and belief_error smaller than under recall, seed by seed",
             check: |seeds| hornvale("mem-truffles", seeds),
+        },
+        Claim {
+            id: "mem-open.travel",
+            item: "mem-open",
+            source: Source::Comment,
+            citation: SPEC,
+            text: "Memory pays only when travel is priced: in mem-open's world (memory, belief and share as in the preset), under the utility mind with travel 0.5 the rememberers' advantage exceeds rule M's, and rememberers are wealthier than others (ticks 200–500), seed by seed",
+            check: |seeds| {
+                let rule_m = groups(&preset("mem-open"), seeds);
+                let priced = groups(&priced_travel(preset("mem-open"), 0.5), seeds);
+                let other = |id: &str| {
+                    let m = groups(&preset(id), seeds);
+                    let t = groups(&priced_travel(preset(id), 0.5), seeds);
+                    format!(
+                        "{id}: rule M median advantage {:.2}, travel 0.5 {:.2} (travel 0.5 higher in {} of {} seeds)",
+                        median(&col(&m, |x| x.adv)),
+                        median(&col(&t, |x| x.adv)),
+                        t.iter().zip(&m).filter(|(a, b)| a.adv > b.adv).count(),
+                        seeds.len()
+                    )
+                };
+                all_of(vec![
+                    (
+                        "travel 0.5 against rule M".into(),
+                        paired_greater(
+                            &col(&priced, |x| x.adv),
+                            &col(&rule_m, |x| x.adv),
+                            "travel 0.5",
+                            "rule M",
+                        ),
+                    ),
+                    (
+                        "rememberers against others under travel 0.5".into(),
+                        paired_greater(
+                            &col(&priced, |x| x.rem),
+                            &col(&priced, |x| x.oth),
+                            "rememberers",
+                            "others",
+                        ),
+                    ),
+                ])
+                .with(&format!(
+                    "Rule M: {} Travel 0.5: {} Same switch elsewhere: {}; {}.",
+                    describe(&rule_m),
+                    describe(&priced),
+                    other("mem-walled"),
+                    other("mem-truffles")
+                ))
+            },
         },
         Claim {
             id: "mem-open.capacity",
@@ -967,6 +1049,20 @@ mod tests {
         let a = trapline_index(&messy, &mut shuffle_rng(1, 7));
         assert_eq!(a, trapline_index(&messy, &mut shuffle_rng(1, 7)));
         assert!(a > 0.0 && a.is_finite(), "{a}");
+    }
+
+    #[test]
+    fn each_mvt_patch_takes_in_less_than_one_flump_eats() {
+        let c = preset("mem-mvt");
+        let Map::Peaks { peaks } = &c.goods[0].map else {
+            unreachable!()
+        };
+        let sites = (0..c.height)
+            .flat_map(|y| (0..c.width).map(move |x| (x, y)))
+            .filter(|&(x, y)| patch_of(peaks, x, y, c.width, c.height) == Some(0))
+            .count();
+        assert_eq!(sites, 9, "radius 2: the center, 4 at distance 1, 4 at √2");
+        assert!(sites as f64 * c.growback.rate < 1.0);
     }
 
     #[test]

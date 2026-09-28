@@ -199,7 +199,7 @@ pub const TITLES: [(&str, &str); 253] = [
     ),
     (
         "mem-walled",
-        "Remembering what lies beyond the wall",
+        "Remembering beyond the wall: rememberers starve",
     ),
     (
         "mem-seasons",
@@ -215,7 +215,7 @@ pub const TITLES: [(&str, &str); 253] = [
     ),
     (
         "mem-mvt",
-        "When to leave a patch: foragers who find one never leave",
+        "When to leave a patch: the farther apart the patches, the longer foragers stay",
     ),
     (
         "vi-4-schelling-25",
