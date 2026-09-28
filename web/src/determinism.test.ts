@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  ThresholdsConfig,
+  ThresholdsInspection,
+  ThresholdsStats,
   AntsConfig,
   AntsInspection,
   AntsStats,
@@ -498,6 +501,12 @@ describe('other models through the engine', () => {
     ['mg-arms-race', '0x4c1e9852373241c9'],
     ['cmo-binary', '0x2081105c24039d0c'],
     ['ants-2b', '0xf9258e5dd9d1d673'],
+    ['gr-normal-sampled', '0xa9bca3821a0f4774'],
+    ['gr-city', '0xa587dcb16521cf3c'],
+    ['gr-friends', '0x37ae8bba4d07be7c'],
+    ['gr-ceilings', '0x1cc528db96973a5a'],
+    ['gr-clusters', '0xd493a3251cde5fbe'],
+    ['watts-middle', '0x1ed3157ee5e9ac61'],
     ['ants-becker', '0x4ebaae97020b8902'],
     ['ants-three', '0x4a2871368f4ab782'],
     ['am-ring', '0x0104a02f3c5f5011'],
@@ -712,6 +721,28 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the thresholds model through the engine', () => {
+  it('stops at its last step and inspects an actor, a step and Figure 1', async () => {
+    const r = presets.find((p) => p.id === 'gr-uniform')!;
+    const config = { ...structuredClone(r.config as ThresholdsConfig), stop_at: 50 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'threshold' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as ThresholdsStats;
+    expect([e.finished, ends, e.tick, s.tick, s.acting]).toEqual([true, 1, 50, 50, 0.5]);
+    // The actor grid starts at x 518; actor 1 (threshold 0) is its top-left cell.
+    await e.select(518, 0);
+    const v = e.inspection!.view as ThresholdsInspection;
+    expect([v.panel, v.member!.id, v.member!.threshold, v.member!.acting]).toEqual(['actors', 1, 0, true]);
+    expect(e.inspection!.agentId).toBeNull();
+    await e.select(459, 100);
+    const f = e.inspection!.view as ThresholdsInspection;
+    expect([f.panel, f.cdf]).toEqual(['figure', 0.51]);
   });
 });
 

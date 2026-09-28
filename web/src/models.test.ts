@@ -5,6 +5,7 @@ import {
   finishesUnpredictably,
   isAgreementView,
   isAntsView,
+  isThresholdsView,
   isFarolView,
   isCivilView,
   isClassesView,
@@ -115,6 +116,29 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the thresholds model', () => {
+  it('is read by its tag, and its inspections by their cdf, before the ants’ and El Farol’s', () => {
+    const c = { model: 'thresholds', stop_at: 0 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('thresholds');
+    const cell = { site: { x: 1, y: 2 }, panel: 'actors', step: null, crowds: null, share: null, cdf: null, count: null, member: null, agent: null } as unknown as AnyInspection;
+    const ants = { site: { x: 1, y: 2 }, panel: 'ants', step: null, shares: null, share: null, count: null, theory: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, ants].map(isThresholdsView)).toEqual([true, false]);
+    expect(isAntsView(cell)).toBe(false);
+  });
+
+  it('colors four ways, has no overlays, and stops predictably at its last step', () => {
+    expect(COLOR_MODES.thresholds).toEqual([
+      ['state', 'State'],
+      ['threshold', 'Threshold'],
+      ['degree', 'Degree'],
+      ['crowd', 'Crowd'],
+    ]);
+    expect(MODEL_OVERLAYS.thresholds).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'thresholds', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(50)), ticksLeft(c(50), 20), ticksLeft(c(0), 20)]).toEqual([false, 30, Infinity]);
   });
 });
 
