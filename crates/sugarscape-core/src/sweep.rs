@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 97] = [
+const BUILTINS: [Builtin; 100] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1353,6 +1353,18 @@ const BUILTINS: [Builtin; 97] = [
     Builtin {
         id: "watts-targeting",
         json: include_str!("../../../sweeps/watts-targeting.json"),
+    },
+    Builtin {
+        id: "walk-speed",
+        json: include_str!("../../../sweeps/walk-speed.json"),
+    },
+    Builtin {
+        id: "walk-vision",
+        json: include_str!("../../../sweeps/walk-vision.json"),
+    },
+    Builtin {
+        id: "ifd-detour",
+        json: include_str!("../../../sweeps/ifd-detour.json"),
     },
 ];
 
@@ -2273,7 +2285,10 @@ mod tests {
                 "gr-ceilings",
                 "watts-window",
                 "watts-hetero",
-                "watts-targeting"
+                "watts-targeting",
+                "walk-speed",
+                "walk-vision",
+                "ifd-detour"
             ]
         );
         for b in builtins() {

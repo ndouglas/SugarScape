@@ -1,8 +1,11 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Config, Decision } from './types';
+import type { Config, Decision, Movement } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
+
+/** A config's movement, or the book's jump at speed 1 for older configs. */
+const movement = (c: Config): Movement => c.movement ?? { mode: 'jump', speed: 1 };
 
 interface Base {
   path: string;
@@ -203,6 +206,24 @@ export const GROUPS: Group[] = [
           { value: 'stay', label: 'Stay (book)', apply: (c) => { c.decision = { ...decision(c), idle: 'stay' }; } },
           { value: 'wander', label: 'Wander to a random free site in sight', apply: (c) => { c.decision = { ...decision(c), idle: 'wander' }; } },
         ],
+      },
+    ],
+  },
+  {
+    title: 'Movement (Minds 2)',
+    note: 'How a Flump reaches the site it chose. The book’s rule M jumps there in one tick. Walking takes that many steps a tick along an A* path around walls and other Flumps, and plans again every tick. Walls and fences come from presets (the Minds 2 fence presets); a wall also blocks sight.',
+    controls: [
+      {
+        kind: 'select', path: 'movement.mode', label: 'Mode',
+        current: (c) => c.movement?.mode ?? 'jump',
+        options: [
+          { value: 'jump', label: 'Jump (book)', apply: (c) => { c.movement = { ...movement(c), mode: 'jump' }; } },
+          { value: 'walk', label: 'Walk', apply: (c) => { c.movement = { ...movement(c), mode: 'walk' }; } },
+        ],
+      },
+      {
+        kind: 'number', path: 'movement.speed', label: 'Speed (cells per tick)', min: 1, max: 50, step: 1,
+        adjust: (next) => { next.movement = { ...movement(next), ...next.movement }; },
       },
     ],
   },

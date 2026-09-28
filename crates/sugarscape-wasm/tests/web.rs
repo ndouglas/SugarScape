@@ -156,6 +156,10 @@ fn disease_api_lists_infects_and_vaccinates() {
     );
     assert_eq!(sim.vaccinate(p[0], p[1], 0, 10).unwrap(), 1);
     let view: serde_json::Value = serde_json::from_str(&sim.inspect(p[0], p[1]).unwrap()).unwrap();
+    assert!(
+        view["agent"].get("plan").is_some(),
+        "Minds 2: plan appears in the inspection"
+    );
     let carried = view["agent"]["diseases"].as_array().unwrap();
     assert!(
         carried.iter().all(|d| d["id"] != 10),
@@ -347,7 +351,10 @@ fn builtins_and_series_names_are_listed() {
             "gr-ceilings",
             "watts-window",
             "watts-hetero",
-            "watts-targeting"
+            "watts-targeting",
+            "walk-speed",
+            "walk-vision",
+            "ifd-detour"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -507,6 +514,17 @@ fn the_utility_minds_crowding_matches_its_golden_entry() {
     sim.step(200);
     // crates/sugarscape-core/tests/golden.rs
     assert_eq!(sim.fingerprint(), "0x5a5e863436971c96");
+}
+
+#[wasm_bindgen_test]
+fn walking_behind_a_fence_matches_its_golden_entry() {
+    // Fences, walls and A* walking: native and wasm must agree.
+    let preset = sugarscape_core::presets::by_id("ifd-fence").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0x6c30002185fdb871");
 }
 
 #[wasm_bindgen_test]

@@ -1,0 +1,16 @@
+{
+  "name": "Minds 2: travel between patches and the ideal free distribution",
+  "description": "The richer patch's share of on-patch Flumps (2.10 : 1 inputs, vision 10–20, walking) against how far the only gap in the fences between the patches lies from the patches' center row, for a fence (sight passes) and an opaque wall (the other patch visible only through the gap). Baum & Kraft 1998: requiring travel to switch patches reduced undermatching slightly; a visual barrier had no effect. Seeds 1–20, ticks 500–1000.",
+  "base": { "preset": "ifd-fence" },
+  "x": { "label": "Gap offset (rows)", "values": [
+    { "at": 0, "set": { "walls.0.height": 20, "walls.1.y": 22, "walls.1.height": 18, "walls.2.height": 20, "walls.3.y": 22, "walls.3.height": 18 } },
+    { "at": 5, "set": { "walls.0.height": 25, "walls.1.y": 27, "walls.1.height": 13, "walls.2.height": 25, "walls.3.y": 27, "walls.3.height": 13 } },
+    { "at": 10, "set": { "walls.0.height": 30, "walls.1.y": 32, "walls.1.height": 8, "walls.2.height": 30, "walls.3.y": 32, "walls.3.height": 8 } },
+    { "at": 15, "set": { "walls.0.height": 35, "walls.1.y": 37, "walls.1.height": 3, "walls.2.height": 35, "walls.3.y": 37, "walls.3.height": 3 } } ] },
+  "series": { "label": "Barrier", "values": [
+    { "at": 0, "name": "Fence", "set": { "walls.0.opaque": false, "walls.1.opaque": false, "walls.2.opaque": false, "walls.3.opaque": false } },
+    { "at": 1, "name": "Wall", "set": { "walls.0.opaque": true, "walls.1.opaque": true, "walls.2.opaque": true, "walls.3.opaque": true } } ] },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 1000,
+  "metric": { "kind": "window_mean", "series": "first_patch_share", "from": 500 }
+}

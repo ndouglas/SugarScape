@@ -61,6 +61,21 @@ export interface Decision {
   idle: 'stay' | 'wander';
 }
 
+/** Minds 2's movement seam (absent from older configs: the book's rule M jumps at speed 1). */
+export interface Movement {
+  mode: 'jump' | 'walk';
+  speed: number;
+}
+
+/** Minds 2: a rectangle of impassable sites. `opaque` walls (stone) also block sight; fences (wood) don't. */
+export interface Wall {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opaque: boolean;
+}
+
 export interface Config {
   width: number;
   height: number;
@@ -91,6 +106,8 @@ export interface Config {
   foresight: { enabled: boolean; range: URange };
   disease: DiseaseRule;
   decision?: Decision;
+  movement?: Movement;
+  walls?: Wall[];
   schedule: ScheduledChange[];
 }
 
@@ -1018,6 +1035,11 @@ export interface AgentView {
   immune_genome: string;
   diseases: DiseaseView[];
   infected_by: LinkView | null;
+  /**
+   * Minds 2: null until the agent first moves; `path` is empty under jump, once it has arrived, or
+   * when no path was found. `walked`: it walked (or tried to) rather than jumped.
+   */
+  plan?: { target_x: number; target_y: number; path: [number, number][]; walked: boolean } | null;
 }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 

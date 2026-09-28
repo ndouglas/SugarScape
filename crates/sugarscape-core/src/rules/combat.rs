@@ -36,7 +36,11 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     };
 
     let mut candidates = vec![(pos, 0, world.site(pos).resource[0])];
-    for (q, d) in world.torus.sight(pos, vision) {
+    for (q, d) in world.sight(pos, vision) {
+        // A fence is visible (sight passes through it) but never a target.
+        if world.is_wall(q) {
+            continue;
+        }
         let site_sugar = world.site(q).resource[0];
         let reward = match world.agent_at(q) {
             Some(o)
@@ -88,7 +92,7 @@ fn vulnerable(
     after: f64,
 ) -> bool {
     let groups = &world.config.culture.groups;
-    world.torus.sight(target, vision).into_iter().any(|(q, _)| {
+    world.sight(target, vision).into_iter().any(|(q, _)| {
         world
             .agent_at(q)
             .is_some_and(|o| o.id != attacker && o.group(groups) != group && o.holdings[0] > after)
@@ -105,6 +109,13 @@ mod tests {
         let mut w = blank_world(15, 15);
         w.config.combat.enabled = true;
         w
+    }
+
+    fn walled_fighting_world(walls: Vec<crate::config::Wall>) -> World {
+        let mut c = crate::testkit::blank_config(15, 15);
+        c.combat.enabled = true;
+        c.walls = walls;
+        World::new(c, 7).unwrap()
     }
 
     fn red(w: &mut World, x: u32, y: u32, sugar: f64) -> AgentId {
@@ -225,6 +236,43 @@ mod tests {
         a.tags = Tags::new(bits, 11);
         a.holdings[0] = sugar;
         id
+    }
+
+    #[test]
+    fn combat_never_targets_a_fence() {
+        // A fence is visible (sight passes through it) but must never be a
+        // candidate target, even tied at reward 0 with every other empty
+        // site in range.
+        let mut w = walled_fighting_world(vec![crate::config::Wall {
+            x: 6,
+            y: 5,
+            width: 1,
+            height: 1,
+            opaque: false,
+        }]);
+        let me = blue(&mut w, 5, 5, 10.0, 1);
+        act(&mut w, me);
+        assert_ne!(w.agent(me).unwrap().pos, Pos::new(6, 5));
+    }
+
+    #[test]
+    fn combat_candidates_stop_at_an_opaque_wall() {
+        let mut w = walled_fighting_world(vec![crate::config::Wall {
+            x: 5,
+            y: 6,
+            width: 1,
+            height: 1,
+            opaque: true,
+        }]);
+        let me = blue(&mut w, 5, 5, 10.0, 4);
+        let victim = red(&mut w, 5, 8, 3.0);
+        act(&mut w, me);
+        assert_eq!(
+            w.agent(me).unwrap().pos,
+            Pos::new(5, 5),
+            "the wall hides the victim behind it"
+        );
+        assert!(w.agent(victim).is_some(), "never seen, so never attacked");
     }
 
     #[test]

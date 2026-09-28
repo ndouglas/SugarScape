@@ -3,6 +3,8 @@
 //! engine beside it, and every engine reduces to rule M when it sees and
 //! values only what rule M does.
 
+pub mod astar;
+pub mod grid;
 pub mod utility;
 
 use crate::agent::AgentId;

@@ -63,6 +63,16 @@ pub struct LoanView {
     pub due_tick: u64,
 }
 
+/// Minds 2: an agent's plan, for display.
+#[derive(Clone, Debug, Serialize)]
+pub struct PlanView {
+    pub target_x: u32,
+    pub target_y: u32,
+    pub path: Vec<[u32; 2]>,
+    /// The agent walked (or tried to) rather than jumped.
+    pub walked: bool,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct DiseaseEntry {
     pub id: DiseaseId,
@@ -100,6 +110,10 @@ pub struct AgentView {
     pub immune_genome: String,
     pub diseases: Vec<DiseaseView>,
     pub infected_by: Option<LinkView>,
+    /// Minds 2: where the agent is walking and the path left to it. `None`
+    /// until the agent first moves; its path is empty under `jump` or once
+    /// the agent has arrived.
+    pub plan: Option<PlanView>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -140,7 +154,11 @@ impl World {
                 if dx * dx + dy * dy > r * r {
                     continue;
                 }
-                let site = self.site_mut(self.torus.offset(center, dx, dy));
+                let pos = self.torus.offset(center, dx, dy);
+                if self.is_wall(pos) {
+                    continue;
+                }
+                let site = self.site_mut(pos);
                 site.capacity[good] = value;
                 site.resource[good] = site.resource[good].min(value);
             }
@@ -166,7 +184,11 @@ impl World {
         if let Some(bad) = capacities.iter().find(|c| !(0.0..=10.0).contains(*c)) {
             return Err(format!("capacities must be between 0 and 10 (got {bad})"));
         }
-        for (site, &c) in self.sites.iter_mut().zip(capacities) {
+        let walls = &self.walls;
+        for ((i, site), &c) in self.sites.iter_mut().enumerate().zip(capacities) {
+            if walls[i] != 0 {
+                continue;
+            }
             site.capacity[good] = c;
             site.resource[good] = site.resource[good].min(c);
         }
@@ -296,6 +318,12 @@ impl World {
                 })
                 .collect(),
             infected_by: a.infected_by.map(link),
+            plan: a.plan.target.map(|t| PlanView {
+                target_x: t.x,
+                target_y: t.y,
+                path: a.plan.path.iter().map(|p| [p.x, p.y]).collect(),
+                walked: a.plan.walked,
+            }),
         });
         Ok(Inspection {
             site: SiteView {
@@ -445,6 +473,50 @@ mod tests {
             "radius 1 disc excludes diagonals"
         );
         assert!(w.paint_capacity(20, 0, 1, 1.0, 0).is_err());
+    }
+
+    #[test]
+    fn painting_and_setting_capacity_leaves_a_wall_at_zero() {
+        let mut c = crate::testkit::blank_config(20, 20);
+        c.walls = vec![crate::config::Wall {
+            x: 10,
+            y: 10,
+            width: 1,
+            height: 1,
+            opaque: false,
+        }];
+        let mut w = World::new(c, 1).unwrap();
+        let wall = Pos::new(10, 10);
+        w.paint_capacity(10, 10, 2, 4.0, 0).unwrap();
+        assert_eq!(w.site(wall).capacity[0], 0.0, "painting skips the wall");
+        assert_eq!(
+            w.site(Pos::new(11, 10)).capacity[0],
+            4.0,
+            "an open site in the disc is still painted"
+        );
+        let caps = vec![4.0; 400];
+        w.set_capacities(0, &caps).unwrap();
+        assert_eq!(
+            w.site(wall).capacity[0],
+            0.0,
+            "set_capacities skips the wall"
+        );
+        assert_eq!(w.site(Pos::new(0, 0)).capacity[0], 4.0);
+    }
+
+    #[test]
+    fn placing_an_agent_on_a_wall_is_refused() {
+        let mut c = crate::testkit::blank_config(10, 10);
+        c.walls = vec![crate::config::Wall {
+            x: 3,
+            y: 3,
+            width: 1,
+            height: 1,
+            opaque: true,
+        }];
+        let mut w = World::new(c, 1).unwrap();
+        let err = w.place_agent(3, 3, &AgentOverrides::default()).unwrap_err();
+        assert!(err.contains("wall"), "{err}");
     }
 
     #[test]

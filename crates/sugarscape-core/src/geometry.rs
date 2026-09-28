@@ -62,10 +62,26 @@ impl Torus {
     /// first. Excludes `p`; on small tori where lines of sight wrap onto the
     /// same site, each site appears once at its shortest distance.
     pub fn sight(&self, p: Pos, vision: u32) -> Vec<(Pos, u32)> {
+        self.sight_until(p, vision, |_| false)
+    }
+
+    /// Like `sight`, but a line of sight stops at the first `q` for which
+    /// `blocked(q)` holds: that site is not pushed, and nothing past it along
+    /// the same direction is either.
+    pub fn sight_until(
+        &self,
+        p: Pos,
+        vision: u32,
+        blocked: impl Fn(Pos) -> bool,
+    ) -> Vec<(Pos, u32)> {
         let mut seen = Vec::with_capacity(4 * vision as usize);
         for (dx, dy) in DIRECTIONS {
             for d in 1..=vision as i32 {
-                seen.push((self.offset(p, dx * d, dy * d), d as u32));
+                let q = self.offset(p, dx * d, dy * d);
+                if blocked(q) {
+                    break;
+                }
+                seen.push((q, d as u32));
             }
         }
         seen.sort_by_key(|&(_, d)| d);

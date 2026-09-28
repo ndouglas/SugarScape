@@ -37,6 +37,17 @@ import { percent } from './format';
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
+/**
+ * The Heading row's text for a walked plan: the target and steps left (singular/plural), "Can't
+ * reach" when no path was found to a target elsewhere, or "Staying" when the agent is at its target.
+ */
+export function headingText(plan: NonNullable<AgentView['plan']>, at: [number, number]): string {
+  const n = plan.path.length;
+  const target = `(${plan.target_x}, ${plan.target_y})`;
+  if (n) return `${target}, ${n} ${n === 1 ? 'step' : 'steps'} left`;
+  return plan.target_x === at[0] && plan.target_y === at[1] ? 'Staying' : `Can't reach ${target}`;
+}
+
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
   private visible = false;
@@ -87,6 +98,13 @@ export class InspectPanel {
       ),
       ...(this.engine.sugar.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
+      ...(a.plan
+        ? [
+            a.plan.walked
+              ? row('Heading', headingText(a.plan, [a.x, a.y]))
+              : row('Moved to', `(${a.plan.target_x}, ${a.plan.target_y})`),
+          ]
+        : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),

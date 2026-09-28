@@ -260,6 +260,7 @@ stated, and hubs help in both regimes. See `docs/superpowers/specs/2026-09-27-th
 - **Kirman's ants and recruitment** (and Alfarano & Milaković's network critique): done (Milestone 24).
 - **Granovetter's threshold models** (and Watts's global cascades): done (Milestone 25).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
+- **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

@@ -53,6 +53,29 @@ mod tests {
     }
 
     #[test]
+    fn replacement_never_places_onto_a_wall() {
+        for seed in 0..20 {
+            let mut c = blank_config(5, 5);
+            c.lifespan.enabled = true;
+            c.replacement.enabled = true;
+            // Walls fill all but row 4.
+            c.walls = vec![crate::config::Wall {
+                x: 0,
+                y: 0,
+                width: 5,
+                height: 4,
+                opaque: false,
+            }];
+            let mut w = World::new(c, seed).unwrap();
+            let id = spawn(&mut w, 2, 4);
+            w.agent_mut(id).unwrap().metabolism[0] = 50;
+            w.step();
+            let newcomer = w.agents().next().expect("replaced");
+            assert!(!w.is_wall(newcomer.pos), "seed {seed}: {:?}", newcomer.pos);
+        }
+    }
+
+    #[test]
     fn no_replacement_when_disabled() {
         let mut w = blank_world(5, 5);
         let id = spawn(&mut w, 2, 2);

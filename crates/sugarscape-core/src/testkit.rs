@@ -50,9 +50,11 @@ pub fn blank_world(width: u32, height: u32) -> World {
 }
 
 /// A fertile-aged female with vision 1, metabolism 0, 10 sugar (endowment 10),
-/// all-zero tags (Blue) and all-zero immune strings, no diseases. Tweak fields through `world.agent_mut(id)`.
-pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
-    let agent = Agent {
+/// all-zero tags (Blue) and all-zero immune strings, no diseases, at (x, y).
+/// Built but not inserted, so a wall or an occupied site can be tested
+/// against `World::insert_agent`'s error. Tweak fields before inserting.
+pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
+    Agent {
         id: 0,
         pos: Pos::new(x, y),
         vision: 1,
@@ -76,7 +78,14 @@ pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
         infected_by: None,
         culture: Vec::new(),
         social: Social::default(),
-    };
+        plan: crate::agent::Plan::default(),
+    }
+}
+
+/// Places `agent_at`'s agent at (x, y) and inserts it, panicking if the site
+/// is occupied or a wall.
+pub fn spawn(world: &mut World, x: u32, y: u32) -> AgentId {
+    let agent = agent_at(world, x, y);
     world.insert_agent(agent).expect("test site is empty")
 }
 

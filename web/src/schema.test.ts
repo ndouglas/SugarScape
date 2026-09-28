@@ -79,3 +79,35 @@ describe('decision', () => {
     expect(c.decision).toEqual({ rule: 'book', travel: 2, crowding: 0, idle: 'stay' });
   });
 });
+
+describe('movement', () => {
+  it('offers jump and walk, live, defaulting older configs to jump', () => {
+    const mode = control('movement.mode');
+    expect(mode.kind).toBe('select');
+    if (mode.kind !== 'select') return;
+    expect(mode.reset).toBeUndefined();
+    expect(mode.options.map((o) => o.value)).toEqual(['jump', 'walk']);
+    const c = {} as unknown as Config;
+    expect(mode.current(c)).toBe('jump'); // older configs have no movement
+    mode.options[1].apply(c);
+    expect(mode.current(c)).toBe('walk');
+    expect(c.movement).toEqual({ mode: 'walk', speed: 1 });
+
+    const speed = control('movement.speed');
+    expect(speed.kind).toBe('number');
+    if (speed.kind !== 'number') return;
+    expect(speed.reset).toBeUndefined();
+    expect(speed.min).toBe(1);
+    expect(speed.max).toBe(50);
+  });
+
+  it('creates a complete movement object when speed is set on a config missing it', () => {
+    const speed = control('movement.speed');
+    const c = {} as unknown as Config;
+    const before = structuredClone(c);
+    expect(() => setPath(c, 'movement.speed', 5)).toThrow();
+    speed.adjust!(c, before);
+    setPath(c, 'movement.speed', 5);
+    expect(c.movement).toEqual({ mode: 'jump', speed: 5 });
+  });
+});

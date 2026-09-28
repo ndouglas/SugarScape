@@ -4,8 +4,8 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, Outbreak, Peak, Placement,
-    Pollutant, Pollution, ScheduledChange, Transform, URange, SPICE_COLOR,
+    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, MoveMode, Outbreak, Peak,
+    Placement, Pollutant, Pollution, ScheduledChange, Transform, URange, Wall, SPICE_COLOR,
 };
 use crate::model::ModelConfig;
 
@@ -136,6 +136,32 @@ fn traits(c: &mut Config, metabolism: URange, endowment: URange) {
     }
 }
 
+/// Animation II-4/II-5's finite lifetimes with replacement.
+fn wealth(c: &mut Config) {
+    c.lifespan.enabled = true;
+    c.replacement.enabled = true;
+}
+
+/// Animation II-7's seasons.
+fn enable_seasons(c: &mut Config) {
+    c.seasons.enabled = true;
+}
+
+/// The book's first frame for Animation II-6: a 20×20 block in the
+/// bottom-left corner, otherwise as Animation II-2 (400 agents, so full).
+/// Surveyed (docs/survey/2026-09-24-model-survey.md): the ring of the book's
+/// second frame appears by t ≈ 8, but no northeasterly waves follow on any
+/// seed.
+fn waves(c: &mut Config) {
+    c.placement = Placement::Block {
+        x: 0,
+        y: 30,
+        width: 20,
+        height: 20,
+    };
+    c.vision = URange::new(1, 10);
+}
+
 pub fn all() -> Vec<Preset> {
     vec![
         preset(
@@ -157,37 +183,21 @@ pub fn all() -> Vec<Preset> {
             "({G₁}, {M, R[60,100]})",
             "Animations II-4/II-5",
             "Finite lifetimes with replacement: a skewed wealth distribution emerges; watch the Lorenz curve and Gini coefficient.",
-            |c| {
-                c.lifespan.enabled = true;
-                c.replacement.enabled = true;
-            },
+            wealth,
         ),
         preset(
             "ii-6-waves",
             "Diagonal waves",
             "Animation II-6",
             "A full 20×20 block of agents with vision up to 10 starts in the southwest corner, as in the book, and bursts outward as a ring. The book's waves then travel northeast; here they don't: the survivors settle on the southwest mountain.",
-            |c| {
-                // The book's first frame: a 20×20 block in the bottom-left
-                // corner, otherwise as Animation II-2 (400 agents, so full).
-                // Surveyed (docs/survey/2026-09-24-model-survey.md): the
-                // ring of the book's second frame appears by t ≈ 8, but no
-                // northeasterly waves follow on any seed.
-                c.placement = Placement::Block {
-                    x: 0,
-                    y: 30,
-                    width: 20,
-                    height: 20,
-                };
-                c.vision = URange::new(1, 10);
-            },
+            waves,
         ),
         preset(
             "ii-7-seasons",
             "({S₁,₈,₅₀}, {M})",
             "Animation II-7",
             "Seasons flip every 50 ticks: high-vision agents migrate, low-vision low-metabolism agents hibernate.",
-            |c| c.seasons.enabled = true,
+            enable_seasons,
         ),
         preset(
             "ii-8-pollution",
@@ -698,6 +708,89 @@ pub fn all() -> Vec<Preset> {
                 c.decision.travel = 0.5;
             },
         ),
+        preset(
+            "walk-capacity",
+            "Walking: carrying capacity",
+            "Epstein & Axtell II-2; Minds 2",
+            "Rule M's Flumps jump to the best site in sight; these walk there one step a tick along an A* path. Measured (20 seeds, mean population over ticks 300–500): 181 against 228 under the jump, so the book's carrying capacity of about 224 fails under walking (no seed within 214–234), and walking lowers it in every seed, by a median 47 Flumps. In the walk-speed and walk-vision sweeps (an observation, not a judged claim), capacity tracks how far a Flump gets in a tick, roughly min(speed, vision): walking at vision 1–6 (181.5) is about jumping at vision 1 (182.7), and walking at speed 3 (212.8) and 6 (225.2) is near jumping at vision 1–3 (205.5) and 1–6 (228.5). Walking faster brings the population back (see walk-fast and the walk-speed sweep).",
+            |c| c.movement.mode = MoveMode::Walk,
+        ),
+        preset(
+            "walk-wealth",
+            "Walking: wealth distribution",
+            "Epstein & Axtell II-5; Minds 2",
+            "Finite lifetimes with replacement, as in ii-5-wealth, but rule M's Flumps walk to the best site they see instead of jumping there in one tick. Measured (20 seeds, tick 500): wealth is still right-skewed in every seed, so the book's skewed distribution (Animation II-5) doesn't need the jump. The skewness has median 1.26 against 1.27 under the jump, and the Gini 0.46 against 0.48.",
+            |c| {
+                wealth(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-seasons",
+            "Walking: seasons",
+            "Epstein & Axtell II-7; Minds 2",
+            "Seasons flipping every 50 ticks, as in ii-7-seasons, but rule M's Flumps walk to the best site they see instead of jumping there in one tick. Measured (20 seeds, Flumps alive over ticks 100–300): a median 55 % change hemisphere at least twice, against 83 % under the jump, so migration with the seasons (Animation II-7) survives walking, but fewer Flumps migrate. Likely cause: crossing to the other hemisphere takes a walker many ticks, so fewer finish the crossing before the season or their target changes.",
+            |c| {
+                enable_seasons(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-waves",
+            "Walking: diagonal waves",
+            "Epstein & Axtell II-6; Minds 2",
+            "The book's waves travel northeast from the southwest block; under rule M's jump they don't. Measured (20 seeds, tick 100): a median 0.6 % of Flumps are farther than 25 sites from the block's center, against 0.8 % under the jump; no seed comes near a quarter (in planning, the block settled on the near mountain under both). So walking isn't the missing mechanism behind the waves (Animation II-6).",
+            |c| {
+                waves(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-fast",
+            "Walking: speed 3",
+            "Minds 2",
+            "ii-2-unit's unit growback and carrying capacity, but Flumps walk three steps a tick instead of one along their A* path. Measured (20 seeds, mean population over ticks 300–500): 214, between walking at one step a tick (181) and the jump (228). The capacity under walk rises toward the jump's as speed rises: at ten steps a tick it is 227, higher than at one step in every seed and within about one Flump of the jump's 228.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                c.movement.speed = 3;
+            },
+        ),
+        preset(
+            "ifd-fence",
+            "Travel between patches: a fence with a central gap",
+            "Baum & Kraft 1998; Minds 2",
+            "The 2.10 : 1 patches with vision 10–20 (as in ifd-far-sighted), fenced apart except for a two-site gap at the midline of the 60 × 40 torus (and a matching gap in a second fence at x = 2, closing the route the other way around the torus); rule M's Flumps walk to the best site they see instead of jumping there, so switching patches costs a walk through the gap. Measured (20 seeds, ticks 500–1000): 1.99 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping (ifd-far-sighted). Across the five input ratios s has median 0.88, against 0.90 walking with no fence, so the fence doesn't reduce undermatching. A confound, unmeasured: the fences leave 25 columns on the richer patch's side and 33 on the poorer's, so about 57 % of Flumps start on the poorer side.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, false);
+            },
+        ),
+        preset(
+            "ifd-fence-far",
+            "Travel between patches: the gap moves to the far end",
+            "Baum & Kraft 1998; Minds 2",
+            "The same fence as ifd-fence, but its gap sits at rows 35–36 instead of 20–21, below both patches (which span rows 10–30), so a Flump switching patches faces a much longer walk to reach the gap. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.85 against 0.90 walking with no fence, and is lower in 18 of 20 seeds, so undermatching grows, the opposite of Baum & Kraft's direction, and their claim fails here. At 2.10 : 1 alone there are 1.96 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping; that points the same way, but the walking arms' ratios (1.96–1.99) are untested and too close to tell apart.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 15, false);
+            },
+        ),
+        preset(
+            "ifd-wall",
+            "Travel between patches: an opaque wall with a central gap",
+            "Baum & Kraft 1998; Minds 2",
+            "ifd-fence with an opaque wall instead of a fence. An opaque wall: the other patch is visible only through the gap. Baum & Kraft found that a visual barrier had no effect. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.91 against 0.88 with the fence, and only 10 of 20 seeds are within 0.05 of their fence's s, so no effect is not shown seed by seed (a weak result); the wall, if anything, raises s. At 2.10 : 1 alone there are 1.99 times as many Flumps on the richer patch, as with the fence.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+            },
+        ),
     ]
 }
 
@@ -754,6 +847,29 @@ pub(crate) fn two_patches(c: &mut Config, second_radius: f64) {
     c.goods[0].metabolism = URange::new(1, 1);
     c.goods[0].endowment = URange::new(50, 50);
     c.growback.rate = 0.25;
+}
+
+/// Minds 2's fences: one-site-wide fences at x = 28 (between the patches)
+/// and x = 2 (closing the route around the torus), from top to bottom
+/// except a two-site gap at rows 20 + `offset` and 21 + `offset`.
+///
+/// A confound, unmeasured: the fences split the torus into 25 columns on
+/// the richer patch's side (x = 3–27) and 33 on the poorer's, so random
+/// placement starts about 57 % of Flumps on the poorer side.
+fn fence(c: &mut Config, offset: u32, opaque: bool) {
+    let rect = |x, y, height| Wall {
+        x,
+        y,
+        width: 1,
+        height,
+        opaque,
+    };
+    c.walls = vec![
+        rect(28, 0, 20 + offset),
+        rect(28, 22 + offset, 18 - offset),
+        rect(2, 0, 20 + offset),
+        rect(2, 22 + offset, 18 - offset),
+    ];
 }
 
 pub fn by_id(id: &str) -> Option<Preset> {
@@ -840,7 +956,7 @@ pub fn find(id: &str) -> Option<ModelPreset> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{DecisionRule, Idle};
+    use crate::config::{DecisionRule, Idle, Movement};
 
     #[test]
     fn the_ifd_presets_share_the_two_patch_world() {
@@ -899,6 +1015,47 @@ mod tests {
             by_id("ifd-no-starving").unwrap().config.goods[0].endowment,
             URange::new(100_000, 100_000)
         );
+    }
+
+    #[test]
+    fn the_walking_presets_walk_and_the_fenced_ones_have_a_gap() {
+        for id in [
+            "walk-capacity",
+            "walk-wealth",
+            "walk-seasons",
+            "walk-waves",
+            "walk-fast",
+            "ifd-fence",
+            "ifd-fence-far",
+            "ifd-wall",
+        ] {
+            let c = by_id(id).unwrap_or_else(|| panic!("{id}")).config;
+            assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
+        }
+        assert_eq!(by_id("walk-fast").unwrap().config.movement.speed, 3);
+        let base = |id: &str| by_id(id).unwrap().config;
+        let mut jumped = base("walk-capacity");
+        jumped.movement = Movement::default();
+        assert_eq!(jumped, base("ii-2-unit"));
+        let gap_rows = |id: &str| {
+            let c = base(id);
+            let covered = |y: u32| {
+                c.walls
+                    .iter()
+                    .any(|w| w.x == 28 && (w.y..w.y + w.height).contains(&y))
+            };
+            (0..40).filter(|&y| !covered(y)).collect::<Vec<_>>()
+        };
+        assert_eq!(gap_rows("ifd-fence"), [20, 21]);
+        assert_eq!(gap_rows("ifd-fence-far"), [35, 36]);
+        assert!(base("ifd-fence").walls.iter().all(|w| !w.opaque));
+        assert!(base("ifd-wall").walls.iter().all(|w| w.opaque));
+        assert_eq!(
+            base("ifd-fence").walls.len(),
+            4,
+            "x = 28 and x = 2, above and below the gap"
+        );
+        assert_eq!(base("ifd-fence").vision, URange::new(10, 20));
     }
 
     #[test]
@@ -965,7 +1122,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 39);
+        assert_eq!(presets.len(), 47);
         for p in presets {
             p.config
                 .validate()

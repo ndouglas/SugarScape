@@ -3,14 +3,20 @@
 
 use rand::seq::SliceRandom;
 
-use crate::agent::AgentId;
-use crate::config::{Config, MAX_GOODS};
+use crate::agent::{AgentId, Plan};
+use crate::config::{Config, MoveMode, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::landscape::Site;
+use crate::minds::astar::astar;
+use crate::minds::grid::TorusGrid;
 use crate::rng::SimRng;
 use crate::rules::Harvest;
 use crate::social::Seen;
 use crate::world::World;
+
+/// Most sites A* may expand for a walking agent; past it the target counts
+/// as unreachable (Minds 2).
+pub const WALK_LIMIT: usize = 4096;
 
 /// Picks among `(site, distance, value)` candidates: highest value, then
 /// nearest, then uniformly at random.
@@ -56,7 +62,7 @@ pub(crate) fn devaluation(config: &Config, site: &Site, good: usize) -> Option<f
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let candidates = candidates(world, id);
     let target = choose(&candidates, &mut world.rng);
-    go_and_gather(world, id, target)
+    arrive(world, id, target)
 }
 
 /// Rule M's candidates for `id`: its current site at distance 0, then the
@@ -96,7 +102,7 @@ pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
         })
     };
     let mut out = vec![(pos, 0, value(pos))];
-    for (q, d) in world.torus.sight(pos, vision) {
+    for (q, d) in world.sight(pos, vision) {
         if !world.is_occupied(q) {
             out.push((q, d, value(q)));
         }
@@ -131,6 +137,49 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     harvest
 }
 
+/// Reaches `target` by the configured movement, then gathers where the
+/// agent stops. `jump` (rule M) goes there in one tick. `walk` takes `speed`
+/// steps along an A* path on the 4-way torus (walls and occupied sites
+/// impassable, except the target) and stays when there is none within
+/// `WALK_LIMIT`. Records the agent's plan; draws nothing.
+pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+    let pos = world.agent(id).expect("live agent").pos;
+    let m = world.config.movement;
+    if m.mode == MoveMode::Jump || target == pos {
+        world.agent_mut(id).expect("live agent").plan = Plan {
+            target: Some(target),
+            path: Vec::new(),
+            walked: m.mode == MoveMode::Walk,
+        };
+        return go_and_gather(world, id, target);
+    }
+    let torus = world.torus;
+    // Walls split the non-wall sites into components labeled at build. A
+    // target in another component can't be reached, so skip the search:
+    // this only short-circuits searches A* would fail anyway, and the
+    // walker stays exactly as on a `None` from A*.
+    let found = if world.walled_apart(pos, target) {
+        None
+    } else {
+        let grid = TorusGrid::new(torus, |q| q == target || !world.is_occupied(q));
+        astar(&grid, torus.index(pos), torus.index(target), WALK_LIMIT)
+    };
+    let (stop, rest) = match found {
+        Some(s) => {
+            let steps = (m.speed as usize).min(s.path.len() - 1);
+            let rest = s.path[steps + 1..].iter().map(|&i| torus.pos(i)).collect();
+            (torus.pos(s.path[steps]), rest)
+        }
+        None => (pos, Vec::new()),
+    };
+    world.agent_mut(id).expect("live agent").plan = Plan {
+        target: Some(target),
+        path: rest,
+        walked: true,
+    };
+    go_and_gather(world, id, stop)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,6 +190,201 @@ mod tests {
         let id = spawn(w, 5, 5);
         w.agent_mut(id).unwrap().vision = vision;
         id
+    }
+
+    fn walker(w: &mut World, vision: u32, speed: u32) -> AgentId {
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed,
+        };
+        mover(w, vision)
+    }
+
+    #[test]
+    fn a_walker_takes_one_step_toward_the_target_and_gathers_only_there() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 1);
+        set_sugar(&mut w, 5, 8, 3.0);
+        set_sugar(&mut w, 5, 6, 1.0); // on the way: stepped onto, so gathered
+        let h = act(&mut w, id);
+        // Rule M picks (5, 8) (the most sugar); the walker steps to (5, 6).
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 6));
+        assert_eq!(h.gathered[0], 1.0);
+        assert_eq!(w.site(Pos::new(5, 8)).resource[0], 3.0, "not reached yet");
+        let plan = &w.agent(id).unwrap().plan;
+        assert_eq!(plan.target, Some(Pos::new(5, 8)));
+        assert_eq!(plan.path, vec![Pos::new(5, 7), Pos::new(5, 8)]);
+    }
+
+    #[test]
+    fn a_walker_goes_around_an_occupant() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 1);
+        spawn(&mut w, 5, 6);
+        set_sugar(&mut w, 5, 7, 3.0);
+        act(&mut w, id);
+        let p = w.agent(id).unwrap().pos;
+        assert!(
+            p == Pos::new(4, 5) || p == Pos::new(6, 5),
+            "a sidestep, got {p:?}"
+        );
+    }
+
+    #[test]
+    fn speed_three_stops_at_the_target() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 3);
+        set_sugar(&mut w, 5, 7, 3.0);
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 7), 3.0)
+        );
+        assert!(w.agent(id).unwrap().plan.path.is_empty());
+    }
+
+    #[test]
+    fn a_walker_with_no_path_stays_and_gathers_where_it_is() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 1);
+        set_sugar(&mut w, 5, 5, 0.5);
+        set_sugar(&mut w, 5, 8, 3.0);
+        for (x, y) in [(5, 4), (5, 6), (4, 5), (6, 5)] {
+            spawn(&mut w, x, y); // boxed in
+        }
+        let before = w.rng.clone();
+        let candidates_before = candidates(&w, id);
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 5), 0.5)
+        );
+        // No draws beyond `choose`: `w.rng` after `act` matches a clone
+        // advanced by exactly one `choose` over the pre-`act` candidates.
+        let mut expected = before;
+        let _ = choose(&candidates_before, &mut expected);
+        assert_eq!(w.rng, expected);
+    }
+
+    #[test]
+    fn plan_is_not_hashed() {
+        let mut w = blank_world(5, 5);
+        let id = spawn(&mut w, 1, 1);
+        let before = w.fingerprint();
+        w.agent_mut(id).unwrap().plan = crate::agent::Plan {
+            target: Some(Pos::new(2, 2)),
+            path: vec![Pos::new(1, 2), Pos::new(2, 2)],
+            walked: true,
+        };
+        assert_eq!(w.fingerprint(), before, "plan is observational, not hashed");
+    }
+
+    fn walled_world(walls: Vec<crate::config::Wall>) -> World {
+        let mut c = blank_config(11, 11);
+        c.walls = walls;
+        World::new(c, 7).unwrap()
+    }
+
+    fn wall(x: u32, y: u32, width: u32, height: u32, opaque: bool) -> crate::config::Wall {
+        crate::config::Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque,
+        }
+    }
+
+    #[test]
+    fn a_walker_boxed_in_by_walls_stays_and_gathers_where_it_is_without_panicking() {
+        // Fences (not opaque), not occupants, on all four neighbors: they
+        // block movement but not sight, so sugar beyond one is visible and
+        // chosen as the target, yet the walker can't reach it.
+        let mut w = walled_world(vec![
+            wall(5, 4, 1, 1, false),
+            wall(5, 6, 1, 1, false),
+            wall(4, 5, 1, 1, false),
+            wall(6, 5, 1, 1, false),
+        ]);
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        let id = spawn(&mut w, 5, 5);
+        w.agent_mut(id).unwrap().vision = 3;
+        set_sugar(&mut w, 5, 5, 0.5);
+        set_sugar(&mut w, 5, 2, 3.0); // visible past the fence at (5, 4)
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 5), 0.5)
+        );
+    }
+
+    #[test]
+    fn a_walker_stays_put_when_the_target_is_a_pocket_sealed_by_fences() {
+        // A ring of fences around (5, 5) leaves it visible (fences don't
+        // stop sight) but unreachable (they do block movement) from any
+        // side.
+        let mut w = walled_world(vec![
+            wall(4, 4, 3, 1, false),
+            wall(4, 6, 3, 1, false),
+            wall(4, 5, 1, 1, false),
+            wall(6, 5, 1, 1, false),
+        ]);
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        let id = spawn(&mut w, 5, 1);
+        w.agent_mut(id).unwrap().vision = 4;
+        set_sugar(&mut w, 5, 1, 0.2);
+        set_sugar(&mut w, 5, 5, 5.0); // in the sealed pocket
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 1), 0.2)
+        );
+    }
+
+    #[test]
+    fn the_wall_component_precheck_changes_nothing_but_the_search() {
+        // The sealed pocket again: the precheck skips A*, and the walker
+        // stays and gathers exactly as when A* runs and finds no path.
+        let mut w = walled_world(vec![
+            wall(4, 4, 3, 1, false),
+            wall(4, 6, 3, 1, false),
+            wall(4, 5, 1, 1, false),
+            wall(6, 5, 1, 1, false),
+        ]);
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        let id = spawn(&mut w, 5, 1);
+        w.agent_mut(id).unwrap().vision = 4;
+        set_sugar(&mut w, 5, 1, 0.2);
+        set_sugar(&mut w, 5, 5, 5.0);
+        assert!(w.walled_apart(Pos::new(5, 1), Pos::new(5, 5)));
+        assert!(!w.walled_apart(Pos::new(5, 1), Pos::new(9, 9)));
+        let mut searched = w.clone();
+        searched.regions.clear(); // no precheck: A* runs and fails
+        let (h, h_searched) = (act(&mut w, id), act(&mut searched, id));
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 1), 0.2)
+        );
+        assert_eq!(h.gathered, h_searched.gathered);
+        assert_eq!(w.agent(id).unwrap().plan, searched.agent(id).unwrap().plan);
+        assert_eq!(w.rng, searched.rng);
+        assert_eq!(w.fingerprint(), searched.fingerprint());
+    }
+
+    #[test]
+    fn without_walls_no_components_are_labeled() {
+        let w = blank_world(11, 11);
+        assert!(w.regions.is_empty());
+        assert!(!w.walled_apart(Pos::new(0, 0), Pos::new(5, 5)));
     }
 
     fn spicy(w: &mut World, vision: u32) -> AgentId {
