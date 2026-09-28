@@ -320,3 +320,99 @@ seed. Memory-on against memory-off comparisons are paired across the same seeds.
   pilfering and re-caching when observed set up the deception program.
 - **Roadmap:** the Minds line.
 - **The spec's amendments.**
+
+## Amendments (implementation)
+
+These change or extend the sections above. The measured values are the survey's (20 seeds) and the
+sweeps' (20 seeds), with the source named. The cost figures are the release CLI's.
+
+- **Ruling: an occupied remembered target.** A walker's A\* goal may be occupied, because a
+  remembered target can be, and the Flump can't see who stands there. If the site it would stop on
+  is occupied (possible only at the target), it stops at the site before it on the path, or stays.
+  This supersedes the Memory section's "stays where it stands".
+- **Ruling: diagnostics measured at choosing.** `belief_error` and the share of stale choices are
+  measured when a Flump chooses a remembered target out of sight, as believed against true value
+  then, not on arrival. The series `stale_choices` (the share of those choices whose target was
+  truly worth less than believed) replaces `stale_arrivals`. The page's **Memory** chart shows
+  `stale_choices`.
+- **Remembered sites carry no pollution discount.** Memory keeps no pollution, and the Flump can't
+  see it out of sight. The true value in `belief_error` does include the discount, so under
+  pollution the belief error includes pollution the Flump couldn't see. No memory preset uses
+  pollution.
+- **Wander and memory.** Under the utility mind's idle `wander`, a Flump wanders only when nothing,
+  in sight or remembered, scores above 0, and then draws only among sites in sight. A remembered
+  site worth more than 0 is chosen as any other candidate. A non-rememberer's draws are unchanged.
+- **The truffle hash, as built.** A site has a spot when
+  `mix(index ⊕ ((seed << 32) | 0x5eed)) < share · 2⁶⁴` (`rules::truffles::has_spot`), with
+  `share ≥ 1` meaning every non-wall site exactly. Every spot starts ripe. A live change to
+  `truffles.regrow` applies only to future harvests: a spot already waiting keeps its ripe tick.
+- **Inspect and the overlay, as built.**
+  - `AgentView.memory` is `{ remembers, sites, spots }`, or `None` when `span` is 0.
+  - `World::memory_view` and the WASM `inspect_memory(x, y)` give the inspected Flump's remembered
+    sites as flat `[x, y, age, spot]` records in site order, `spot` 0 (none known), 1 (believed
+    unripe) or 2 (believed ripe). They're empty for a non-rememberer, an empty site or memory off.
+  - The page's worker plumbing follows `trail()`: `Wants.memory`, `WorldSnapshot.memory` and
+    `Engine.inspectMemory()` keep the records in step with the selection, cleared on reset.
+  - The grid draws remembered sites as squares fading with age (alpha 0.4 at age 0, 0 at `span`),
+    and known spots as circles, filled when believed ripe. Inspect's row reads "Remembers: n sites
+    (m truffle spots)", singular at 1, or "Doesn't remember".
+- **The reduction, as built.** `memory.span` 0 with `truffles.share` 0, written in explicitly, gives
+  every non-Minds-3 preset its own fingerprint (`tests/minds.rs`). The walking reduction sets
+  `span` 0 on both sides, since a memory preset can't be forced to jump. `share` 0 with `span` > 0
+  is checked by behavior (nobody remembers, no remembered moves), not by fingerprint, since
+  `remembers` is still drawn.
+- **Sweeps, as built.** `mem-span-recall` and `mem-span-project` use spans 10–400; span 0 is left
+  out, since the advantage is undefined with nobody remembering. `mem-share` is as specified.
+- **MVT residence and overstaying are survey measures,** with no series or sweep: `mean_residence`
+  and the `mem-mvt-spacing` sweep were not built. The survey steps the world and times completed
+  patch visits itself, on nine peaks on a 3s × 3s torus at s = 12, 16, 20 and 24, with vision 1–18
+  throughout (a 36 × 36 torus at s = 12 can't have vision 20).
+- **The MVT world.** Two redesigns were tried and withdrawn, and the rich-patch preset was restored
+  (golden `0xa00361ad0017c367` again).
+  - Depleting patches (radius 2, growback 0.05, 0.45 sugar a tick per patch) with 10 Flumps: nobody
+    is alive after tick 200.
+  - The same with 3 Flumps (4.05 sugar a tick in all, against a need of 3): nobody is alive at tick
+    1000, and only 3 departures happen across 20 seeds.
+  - Rich patches: foragers who find a patch never leave (0 departures over 20 seeds; a median 5 of
+    10 alive at tick 1000, all on a patch).
+  - Both MVT claims are Untestable. Likely reason: rule M and the utility mind compare the values of
+    sites, not rates of intake, and hold no estimate of the habitat's average; and with sight only
+    along rows and columns, a forager that has emptied a patch often sees no other. The theorem
+    moves to Minds 4.
+- **An added claim, `mem-open.travel`,** set after the first survey run showed rule M's missing
+  travel price. It asks two paired things of `mem-open` under the utility mind with travel 0.5
+  (memory as in the preset): the advantage beats rule M's, and rememberers beat the others. The
+  detail reports the same switch for `mem-walled` and `mem-truffles`.
+- **Measured (the survey, 20 seeds, ticks 200–500 unless named):**
+  - `mem-open`: advantage −113 (rememberers 324, others 438); within 10 % in 2 of 20 seeds
+    (**Fails**; we expected about 0).
+  - `mem-walled` −114 (7 % of rememberers alive at tick 500 against 74 %; under `recall` −40),
+    `mem-seasons` −48, `mem-truffles` −82, `mem-catchment` −90: all **Fail**. Rememberers reach a
+    patch sooner in `mem-catchment` (median tick 27.5 against 33).
+  - `mem-trapline`: +69, in every seed (**Holds**). Memory pays only here.
+  - `mem-open.travel` is **Weak**: travel 0.5 raises the advantage in every seed, by a median 119,
+    to +7.4, but rememberers are richer in only 10 of 20 seeds. `mem-walled` goes from −114 to −55
+    (every seed), `mem-truffles` from −82 to +1.5 (18 of 20).
+  - Hornvale's pathology **fails**: `project` is worse than `recall` in every seed, −113 against −34
+    on `mem-open` (belief error 2.67 against 2.46) and −82 against −25 on `mem-truffles` (4.99
+    against 2.46). `stale_choices` is 0.93 and 0.95 on `mem-open`.
+  - Truffles **hold**: rememberers gather 0.0147 a Flump-tick against 0.0065 (ticks 1–500), about
+    2.3 times.
+  - Traplining **holds**: index median 0.15, below 0.8 in every seed; non-rememberers 0.36 with share
+    0.5. The payoff **holds**: 0.050 against 0.011. Gill **fails**: the median revisit interval is 50
+    ticks with 5 Flumps and with 20.
+  - Forgetting: under `recall` the best span is 25 at growback 0.25 and 10 at 1, shorter in 12 of 20
+    seeds (**Weak**). Under `project` the median advantage is highest at span 10 at every rate, so a
+    longer best span **fails**.
+  - Capacity **fails**: memory for everyone gives 154 against 181 without memory (175 under
+    `recall`).
+  - The `mem-span-project` sweep: the mean advantage is negative everywhere, from −94 to −174.
+  - The `mem-share` sweep (untested): −88, −73, −76, −86 and −98 at shares 0.1, 0.25, 0.5, 0.75
+    and 0.9 (sd 46–74).
+- **Cost** (µs per Flump-tick, release CLI, 2 000 ticks, seeds 1–5). The machine was loaded, so
+  Minds 2's presets were re-timed alongside: `mem-open` 19.7, `mem-truffles` 28.9, `mem-mvt` 14.5,
+  `mem-walled` 8.7; `walk-capacity` 4.91 (4.66 in Minds 2), `ifd-fence` 14.74 (7.77), `ii-2-unit`
+  1.62 (1.05).
+- **Titles** follow the measurements: `mem-open` "Remembering on the open sugarscape: rememberers
+  end up poorer"; `mem-walled` "Remembering beyond the wall: rememberers starve"; `mem-mvt` "When to
+  leave a patch: foragers who find a rich one never leave".

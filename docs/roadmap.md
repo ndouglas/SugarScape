@@ -261,6 +261,7 @@ stated, and hubs help in both regimes. See `docs/superpowers/specs/2026-09-27-th
 - **Granovetter's threshold models** (and Watts's global cascades): done (Milestone 25).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
+- **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

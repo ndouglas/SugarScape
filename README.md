@@ -1598,6 +1598,134 @@ in Games* 4(2) (2012), with the Moving AI benchmark data (movingai.com, ODC-By);
 J. R. Kraft, "Group Choice: Competition, Travel, and the Ideal Free Distribution," *JEAB* 69
 (1998). See `docs/superpowers/specs/2026-09-27-minds-2-walking-design.md`.
 
+### Minds 3: memory, belief and truffles
+
+This is our own experiment, not a reproduction: the third step of the Minds program
+(`docs/studies/2026-09-27-minds.md`). Rule M sees only what is in sight, and a walker forgets a
+target as soon as it drops out of view. Minds 3 gives Flumps memory of the sites they've seen and a
+belief about what a remembered site holds now. It adds hidden **truffle** spots that only memory can
+exploit. Then it measures memory's value as an information asymmetry: rememberers against
+non-rememberers in the same world, paired seed by seed.
+
+**Memory.** Under `memory.span` > 0 a share of Flumps (`memory.share`, drawn at birth) remember.
+Each tick, after moving, a rememberer records every site in sight and its own site, with the levels
+it saw and the tick. An entry not seen again for `span` ticks is forgotten. Children start with
+empty memories. Memory needs walking, since a remembered site out of sight can only be walked to.
+
+- **Belief.** `recall` believes a remembered site holds what it held when seen. `project` believes
+  that plus growback since, capped at the most ever seen there (the docking with Hornvale's
+  "dynamics" beliefs).
+- **The choice.** Remembered sites out of sight join the candidates with their believed value, at
+  their torus distance. Rule M and the utility mind then choose as before. The Flump can't see who
+  stands on a remembered site, so occupancy doesn't filter it; if the target turns out occupied, the
+  walker stops one site short, or stays. Remembered sites carry no pollution discount, since the
+  Flump can't see pollution out of sight. Under idle `wander`, a Flump wanders only when nothing in
+  sight or in memory scores above 0, and then only among sites in sight.
+- **The reduction.** With `span` 0 every preset keeps its fingerprint, and memory draws nothing.
+
+**Truffles.** A share of sites (`truffles.share`) hold a hidden spot, placed by a hash of the site
+and `truffles.seed`, never by the world's random numbers. So the layout is the same with memory on
+or off. Nobody sees a spot. A Flump that stops on a ripe one gathers `truffles.value` sugar, and the
+spot ripens again `truffles.regrow` ticks later. Anyone can find one by chance; only a rememberer can
+come back.
+
+Measured (20 seeds, ticks 200–500 unless named; the survey, which judges claims we set before
+running):
+
+- **Memory mostly hurts under rule M.** Rememberers end up poorer in five of the six worlds. On the
+  open sugarscape (`mem-open`) they hold a median 324 sugar against the others' 438, an advantage of
+  −113; we expected about 0, and only 2 of 20 seeds land within 10 %. Behind the wall
+  (`mem-walled`) it's −114, and only 7 % of rememberers are alive at tick 500 against 74 % of the
+  others. Through the seasons it's −48, among truffles −82, and on the two patches out of sight
+  (`mem-catchment`) −90, poorer in every seed, though rememberers reach a patch a little sooner
+  (median tick 27.5 against 33). Memory pays only on the trapline world: +69, in every seed.
+- **Travel is the missing price.** Rule M values a site by its sugar alone, so a far remembered site
+  believed full beats a near one. Under the utility mind with travel k = 0.5 (memory as before), the
+  advantage on `mem-open` rises in every seed, by a median 119, to +7.4. But rememberers are richer
+  in only 10 of 20 seeds there (IQR −18 to +37), so the claim that memory pays once travel is priced
+  is Weak. The same switch takes `mem-walled` from −114 to −55 (higher in every seed) and
+  `mem-truffles` from −82 to +1.5 (higher in 18 of 20). Memory's value depends on the decision rule
+  pricing travel.
+- **Projection is worse than recall, the opposite of Hornvale.** On `mem-open` the advantage is −113
+  under `project` against −34 under `recall`, worse in every seed, with a larger belief error (2.67
+  against 2.46 sugar). On `mem-truffles` it's −82 against −25, with twice the belief error (4.99
+  against 2.46). Hornvale's goblins gained from projection; likely because Hornvale's planner prices
+  what competitors take in the meantime, and ours doesn't. Staleness alone doesn't separate the two
+  beliefs: on `mem-open`, 93 % of choices of a remembered site out of sight find less there than
+  believed under `project`, and 95 % under `recall`.
+- **Rememberers find the truffles but lose overall.** On `mem-truffles` they gather 0.0147 truffles a
+  Flump-tick against 0.0065 (ticks 1–500), about 2.3 times as many, more in every seed, yet end
+  poorer in 18 of 20 seeds.
+- **Traplining appears, and pays.** On `mem-trapline` (truffle spots the main food, everyone
+  remembering) Thomson, Slatkin and Thomson's index of return variability (0 for a perfect
+  trapliner, 1 for random revisits) has a per-seed median of 0.15, below 0.8 in every seed. With half
+  remembering, the non-rememberers' index is 0.36, also well below 1; likely the sparse map channels
+  anyone's wanderings through the same spots. Rememberers gather 0.050 truffles a Flump-tick against
+  0.011 and hold 144 sugar against 76, in every seed, as Ohashi and Thomson's "more competitive"
+  predicts.
+- **Gill's competition effect fails.** The median interval between visits to the same spot is 50
+  ticks with 5 Flumps and with 20 (regrowth takes 40), and about 12 % of revisits come sooner than
+  40 ticks either way.
+- **Forgetting tracks regrowth only weakly.** Under `recall` (the `mem-span-recall` sweep, recomputed
+  per seed in the survey) the best span is 25 ticks at growback 0.25 and 0.5 and 10 at growback 1,
+  shorter at the fast rate in only 12 of 20 seeds (Weak, for Bracis et al.). The advantage is
+  negative at every span and rate. Under `project` the median advantage is highest at span 10 at
+  every rate, so projection doesn't make longer memories pay (Fails).
+- **Memory doesn't restore walking's lost capacity.** On `walk-capacity` with memory for everyone,
+  the population (mean over ticks 300–500) has median 154 against 181 without memory, lower in every
+  seed (175 under `recall`; 228 jumping).
+- **The marginal value theorem is untestable here.** On `mem-mvt` (nine rich patches, the utility
+  mind with travel) foragers who find a patch never leave: 0 departures over 20 seeds, and a median
+  5 of 10 alive at tick 1000, each settled on a patch. Two depleting redesigns were tried and
+  withdrawn: with 10 Flumps nobody is alive after tick 200, and with 3 nobody is alive at tick 1000
+  and only 3 departures happen across 20 seeds. Likely reason: these minds compare the values of
+  sites, not rates of intake, and hold no estimate of the habitat's average, so the theorem's
+  leave-when-your-rate-falls-to-the-average can't be expressed. With sight only along rows and
+  columns, a forager that has emptied a patch often sees no other. The theorem moves to Minds 4.
+
+The `mem-share` sweep (20 seeds, an observation, not a judged claim) asks whether memory is worth
+more when rare. It isn't, on `mem-truffles`: the mean advantage is −88, −73, −76, −86 and −98 at
+shares 0.1, 0.25, 0.5, 0.75 and 0.9 (sd 46–74), negative at every share. No test was run.
+
+**Cost** (µs per Flump-tick, measured as in Minds 2; the machine was loaded, so Minds 2's presets
+were re-timed in the same session):
+
+| Preset | µs per Flump-tick |
+|---|---|
+| `mem-open` | 19.7 |
+| `mem-truffles` | 28.9 |
+| `mem-mvt` | 14.5 |
+| `mem-walled` | 8.7 |
+| `walk-capacity` (re-timed; 4.66 in Minds 2) | 4.91 |
+| `ifd-fence` (re-timed; 7.77 in Minds 2) | 14.74 |
+| `ii-2-unit` (re-timed; 1.05 in Minds 2) | 1.62 |
+
+Against `walk-capacity` timed now, memory costs 4.0 times on the open sugarscape and 5.9 times with
+truffles. `mem-walled` is cheaper than `ifd-fence` because its rememberers die; `ifd-fence`'s
+figure also looks inflated by the load. `mem-mvt` ran only 39 519 Flump-ticks, since most Flumps die
+early.
+
+Switches: the Rules panel's **Memory (Minds 3)** group (**Span**, **Share born remembering**, both
+on reset, and **Belief**, live) and **Truffles** group (**Share of sites with a spot** and **Layout
+seed** on reset, **Value** and **Regrow time** live; a live change to regrow time applies to future
+harvests only). Inspect shows "Remembers: n sites (m truffle spots)" or "Doesn't remember", and the
+grid draws the inspected Flump's remembered sites as a faint overlay fading with age, with its known
+truffle spots as circles (filled when believed ripe). Charts: **Memory** (`remembered_moves`,
+`stale_choices`, `belief_error`), **Rememberers vs others** and **Truffles**. Presets: `mem-open`,
+`mem-catchment`, `mem-walled`, `mem-seasons`, `mem-truffles`, `mem-trapline`, `mem-mvt`. Built-in
+sweeps: `mem-span-recall` and `mem-span-project` (the advantage against span at three growback
+rates) and `mem-share` (the advantage against the share remembering, on `mem-truffles`).
+
+Credit: E. L. Charnov, "Optimal Foraging, the Marginal Value Theorem," *Theoretical Population
+Biology* 9(2) (1976); D. W. Stephens and J. R. Krebs, *Foraging Theory* (1986); C. Bracis, E.
+Gurarie, B. Van Moorter and R. A. Goodwin, "Memory Effects on Movement Behavior in Animal Foraging,"
+*PLoS ONE* 10(8) (2015); D. Boyer and P. D. Walsh, "Modelling the Mobility of Living Organisms in
+Heterogeneous Landscapes," *Phil. Trans. R. Soc. A* 368 (2010); J. D. Thomson, M. Slatkin and B. A.
+Thomson, "Trapline Foraging by Bumble Bees: II," *Behavioral Ecology* 8(2) (1997); K. Ohashi and
+J. D. Thomson, "Efficient Harvesting of Renewing Resources," *Behavioral Ecology* 16(3) (2005); F. B.
+Gill, "Trapline Foraging by Hermit Hummingbirds," *Ecology* 69(6) (1988). See
+`docs/superpowers/specs/2026-09-28-minds-3-memory-design.md`.
+
 ### Threshold Models (Granovetter 1978; Watts 2002)
 
 **The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins
