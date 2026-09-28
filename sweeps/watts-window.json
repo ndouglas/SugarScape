@@ -1,0 +1,61 @@
+{
+  "name": "Threshold models: Watts's cascade window",
+  "description": "Watts's Figure 1: the share of single-node sparks that become global cascades (a tenth of the network or more) against mean degree, 2 000 nodes, for thresholds of 14 %, 18 % and 24 %. Measured (release, seeds 1–4, recorded 2026-09-27): at 18 %, 0 at z 0.5, 1 % at 1, 53 % at 1.5, 71 %, 88 %, 88 %, 73 % at 2–5, 19 % at 6, 0.3 % at 7, 0 at 8 — the analytic window is 1.02–5.76 for an infinite network; lower thresholds widen it (14 %: still 82 % at z 8), higher narrow it (24 %: gone by z 5).",
+  "base": {
+    "preset": "watts-middle"
+  },
+  "set": {
+    "actors": 2000
+  },
+  "x": {
+    "label": "Mean degree (z)",
+    "path": "degree",
+    "values": [
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  "series": {
+    "label": "Threshold (φ*)",
+    "values": [
+      {
+        "at": 0.14,
+        "name": "φ* = 0.14",
+        "set": {
+          "mean": 0.14
+        }
+      },
+      {
+        "at": 0.18,
+        "name": "φ* = 0.18",
+        "set": {
+          "mean": 0.18
+        }
+      },
+      {
+        "at": 0.24,
+        "name": "φ* = 0.24",
+        "set": {
+          "mean": 0.24
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 4
+  },
+  "ticks": 600,
+  "metric": {
+    "kind": "final",
+    "series": "global_share"
+  }
+}

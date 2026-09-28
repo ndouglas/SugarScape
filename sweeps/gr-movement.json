@@ -1,0 +1,29 @@
+{
+  "name": "Threshold models: movement between crowds",
+  "description": "Granovetter's clusters: ten crowds of 100 from the uniform city, the mean share rioting over the last 100 of 400 steps against how often people move between crowds. Measured (release, seeds 1–10, recorded 2026-09-27): 12 %, 20 %, 29 %, 42 %, 41 %, 33 %, 29 % at movement 0, 0.001, 0.005, 0.01, 0.05, 0.2, 1 — a middling movement is the most incendiary.",
+  "base": {
+    "preset": "gr-clusters"
+  },
+  "x": {
+    "label": "Movement per step",
+    "path": "clusters.movement",
+    "values": [
+      0,
+      0.001,
+      0.005,
+      0.01,
+      0.05,
+      0.2,
+      1
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 400,
+  "metric": {
+    "kind": "final",
+    "series": "recent_mean"
+  }
+}
