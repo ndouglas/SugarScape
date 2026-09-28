@@ -1,0 +1,58 @@
+{
+  "name": "Retirement: transition time against rationality",
+  "description": "Axtell and Epstein's Figure 6-6: the period by which 95 % of eligible agents have retired, against the share of rationals, for 0, 5 and 10 % randoms (blank: never within 300 periods). Measured (release, seeds 1–10, recorded 2026-09-28): no randoms: never at 0, then 79, 72, 54, 14, 7, 5 at 2, 5, 10, 15, 20, 25 %; 5 % random: 72, 69, 61, 16, 8, 5, 4; 10 % random: 62, 43, 18, 8, 6, 4, 3. Fewer rationals, slower; more randoms, faster — as stated. But with 5 % randoms no minimum of rationals is needed, and nothing takes the paper's hundreds to thousands of periods: slow runs finish once the initial population has died out. See ae-rational-replace.",
+  "base": {
+    "preset": "ae-base"
+  },
+  "set": {
+    "stop_at_norm": true
+  },
+  "x": {
+    "label": "Rational share",
+    "path": "rational",
+    "values": [
+      0,
+      0.02,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25
+    ]
+  },
+  "series": {
+    "label": "Random share",
+    "values": [
+      {
+        "at": 0,
+        "name": "No randoms",
+        "set": {
+          "random": 0
+        }
+      },
+      {
+        "at": 0.05,
+        "name": "5 % random",
+        "set": {
+          "random": 0.05
+        }
+      },
+      {
+        "at": 0.1,
+        "name": "10 % random",
+        "set": {
+          "random": 0.1
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 300,
+  "metric": {
+    "kind": "final",
+    "series": "transition"
+  }
+}

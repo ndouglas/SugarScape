@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 97] = [
+const BUILTINS: [Builtin; 105] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1353,6 +1353,38 @@ const BUILTINS: [Builtin; 97] = [
     Builtin {
         id: "watts-targeting",
         json: include_str!("../../../sweeps/watts-targeting.json"),
+    },
+    Builtin {
+        id: "ae-rational",
+        json: include_str!("../../../sweeps/ae-rational.json"),
+    },
+    Builtin {
+        id: "ae-rational-replace",
+        json: include_str!("../../../sweeps/ae-rational-replace.json"),
+    },
+    Builtin {
+        id: "ae-threshold",
+        json: include_str!("../../../sweeps/ae-threshold.json"),
+    },
+    Builtin {
+        id: "ae-size",
+        json: include_str!("../../../sweeps/ae-size.json"),
+    },
+    Builtin {
+        id: "ae-extent",
+        json: include_str!("../../../sweeps/ae-extent.json"),
+    },
+    Builtin {
+        id: "ae-policy",
+        json: include_str!("../../../sweeps/ae-policy.json"),
+    },
+    Builtin {
+        id: "ae-coupling",
+        json: include_str!("../../../sweeps/ae-coupling.json"),
+    },
+    Builtin {
+        id: "ae-coupling-rational",
+        json: include_str!("../../../sweeps/ae-coupling-rational.json"),
     },
 ];
 
@@ -2273,7 +2305,15 @@ mod tests {
                 "gr-ceilings",
                 "watts-window",
                 "watts-hetero",
-                "watts-targeting"
+                "watts-targeting",
+                "ae-rational",
+                "ae-rational-replace",
+                "ae-threshold",
+                "ae-size",
+                "ae-extent",
+                "ae-policy",
+                "ae-coupling",
+                "ae-coupling-rational"
             ]
         );
         for b in builtins() {

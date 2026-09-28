@@ -236,6 +236,10 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Image => "its last generation",
             ModelKind::Farol => "its last round",
             ModelKind::Ants | ModelKind::Thresholds => "its last step",
+            ModelKind::Retirement => match &config {
+                ModelConfig::Retirement(c) if c.stop_at_norm => "the norm set in",
+                _ => "its last period",
+            },
             _ => "its end year",
         };
         eprintln!("finished at tick {} ({why})", world.tick());

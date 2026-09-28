@@ -347,7 +347,15 @@ fn builtins_and_series_names_are_listed() {
             "gr-ceilings",
             "watts-window",
             "watts-hetero",
-            "watts-targeting"
+            "watts-targeting",
+            "ae-rational",
+            "ae-rational-replace",
+            "ae-threshold",
+            "ae-size",
+            "ae-extent",
+            "ae-policy",
+            "ae-coupling",
+            "ae-coupling-rational"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -940,6 +948,23 @@ fn thresholds_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "thresholds");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn retirement_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the base case,
+    // the policy switch, two groups, and friends replaced.
+    for (id, fp) in [
+        ("ae-base", "0x2d5c384cbc8ebd2f"),
+        ("ae-policy", "0x96c030d4a1280cd4"),
+        ("ae-groups", "0xadde267c611d5392"),
+        ("ae-replace", "0x90d96b846be612f2"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "retirement");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

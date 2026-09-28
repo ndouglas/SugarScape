@@ -144,6 +144,14 @@ fn presets_and_sweeps_are_listed() {
         "watts-window",
         "watts-hetero",
         "watts-targeting",
+        "ae-rational",
+        "ae-rational-replace",
+        "ae-threshold",
+        "ae-size",
+        "ae-extent",
+        "ae-policy",
+        "ae-coupling",
+        "ae-coupling-rational",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -565,6 +573,38 @@ fn a_thresholds_run_stops_at_its_last_step() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 25 (its last step)\n");
+}
+
+#[test]
+fn a_retirement_run_stops_at_the_norm_or_its_last_period() {
+    let dir = scratch("retirement");
+    let config = dir.join("norm.json");
+    std::fs::write(
+        &config,
+        r#"{"model": "retirement", "per_cohort": 20, "rational": 0.3, "stop_at_norm": true}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).ends_with("(the norm set in)\n"),
+        "{}",
+        stderr(&out)
+    );
+    let stop = dir.join("stop.json");
+    std::fs::write(
+        &stop,
+        r#"{"model": "retirement", "per_cohort": 20, "stop_at": 25}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&["run", "--config", stop.to_str().unwrap(), "--ticks", "100"]);
+    assert_eq!(stderr(&out), "finished at tick 25 (its last period)\n");
 }
 
 #[test]
