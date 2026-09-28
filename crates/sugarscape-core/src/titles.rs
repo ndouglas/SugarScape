@@ -179,7 +179,7 @@ pub const TITLES: [(&str, &str); 246] = [
     ),
     (
         "ifd-fence",
-        "A fence with a central gap: Flumps split between the patches about as they do with no fence",
+        "A fence with a central gap: no clear change from no fence",
     ),
     (
         "ifd-fence-far",

@@ -297,18 +297,18 @@ the sweeps' (20 seeds), with the source named. The cost figures are the release 
   targets), and `move_agent` debug-asserts that its destination isn't a wall.
 - **The plan and Inspect, as built.**
   - `Agent.plan` is observational: never hashed, exported or shared.
-  - `AgentView.plan` is `None` until the agent's first move. Its path is empty under jump, or once
-    the agent has arrived.
+  - `AgentView.plan` is `None` until the agent's first move. Its path is empty under jump, once the
+    agent has arrived, or when no path was found.
   - Inspect shows "Heading: (x, y), n step(s) left" (singular at 1), "Staying" at the target,
     "Can't reach (x, y)" when no path was found to a target elsewhere, or under jump "Moved to
     (x, y)". The plan records whether the agent walked (`Plan.walked`), and Inspect picks the row
     by that, not by the current mode, so a mode switch while paused doesn't mislabel it.
+  - The inspected agent's planned path is drawn as a dashed accent line, split into separate
+    segments where it crosses the torus seam.
 - **A wall-component precheck.** With walls, the non-wall sites' connected components (4-way,
   on the torus) are labeled once when the world is built. A walker whose target lies in another
   component stays without searching, exactly as on a failed A*. Without walls nothing is labeled
   or checked.
-  - The inspected agent's planned path is drawn as a dashed accent line, split into separate
-    segments where it crosses the torus seam.
 - **The walking reduction test sets jump explicitly on both sides.** The `walk-*` presets start in
   walk mode, so without that the test would have compared walk against walk for them. The utility
   reduction skips presets whose rule is already the utility mind, as in Minds 1.
@@ -372,8 +372,7 @@ the sweeps' (20 seeds), with the source named. The cost figures are the release 
   migrate, but fewer of them"; `walk-fast` "Flumps who walk three steps a tick: most of the lost
   population comes back"; `ifd-fence-far` "The gap moves to the far end: a long walk to switch,
   and across patch sizes Flumps stray further from matching the yields"; `ifd-fence` "A fence with
-  a central gap: Flumps split between the patches about as they do with no fence" (s 0.88 against
-  0.90, untested); `ifd-wall` "An opaque wall instead of a fence: no clear difference" (Weak,
+  a central gap: no clear change from no fence" (s 0.88 against 0.90, untested); `ifd-wall` "An opaque wall instead of a fence: no clear difference" (Weak,
   10 of 20 seeds within 0.05).
 - **Sources.** The Moving AI fixture subset is committed under ODC-By, with its README
   (`crates/sugarscape-core/tests/fixtures/movingai/README.md`). Sturtevant's paper is saved in
