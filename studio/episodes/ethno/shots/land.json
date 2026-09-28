@@ -1,0 +1,5 @@
+{
+ "preset": "ha-standard",
+ "ticks": 1500,
+ "seed": 15
+}

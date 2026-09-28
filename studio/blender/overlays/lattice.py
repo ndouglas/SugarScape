@@ -1,5 +1,6 @@
-"""Overlays for spatial games: the helpers gauge, average earnings, each
-Flump's score in a close-up, and the games one Flump plays."""
+"""Overlays for the Cooperation series. Spatial games: the helpers gauge,
+average earnings, each Flump's score in a close-up, and the games one Flump
+plays. Ethnocentrism: the four kinds' shares, and their legend."""
 
 import math
 
@@ -8,6 +9,7 @@ from mathutils import Vector
 
 import lattice
 from blender import materials
+from blender.lattice import KINDS
 
 from .parts import CREAM, box, card, text, turn_to_camera
 
@@ -140,3 +142,49 @@ def play(beat, d, ctx):
             line.rotation_euler = (end - start).to_track_quat("Z", "Y").to_euler()
 
     return update
+
+
+# Ethnocentrism's kinds, in the order the paper lists them, with the words
+# the episode uses.
+KIND_NAMES = (("E", "help only their own color"), ("H", "help everyone"), ("S", "help no one"),
+              ("T", "help only other colors"))
+KIND_STATS = {"E": "ethnocentric", "H": "humanitarian", "S": "selfish", "T": "traitorous"}
+
+
+def _swatch(name, kind, anchor, location):
+    box(name, materials.matte(f"kind-{kind}", KINDS[kind]), anchor, location=location, scale=(0.045, 0.045, 0.004))
+
+
+def kinds(beat, d, ctx):
+    """Top right: the share of each kind at the period shown, each beside
+    its felt color."""
+    anchor = ctx.screen.anchor("kinds", 0.6, 0.66)
+    card("kinds-card", anchor, (0, 0, -0.01), (0.74, 0.4, 0.002))
+    ink = materials.fading("kinds-ink", CREAM, 1.6)
+    rows = []
+    for j, (kind, words) in enumerate(KIND_NAMES):
+        y = 0.13 - j * 0.085
+        _swatch(f"kinds-swatch-{kind}", kind, anchor, (-0.3, y, 0))
+        rows.append((kind, text(f"kinds-{kind}", "", 0.042, ink, anchor, location=(-0.26, y - 0.012, 0), align="LEFT"),
+                     words))
+
+    def update(frame):
+        tick = ctx.timing.tick_at(frame)
+        for kind, label, words in rows:
+            v = _stat(d, KIND_STATS[kind], tick)
+            v = 0.0 if v is None or (isinstance(v, float) and math.isnan(v)) else v
+            label.data.body = f"{v:.0%} {words}"
+
+    return update
+
+
+def legend(beat, d, ctx):
+    """Top right: what each felt color means."""
+    anchor = ctx.screen.anchor("legend", 0.6, 0.66)
+    card("legend-card", anchor, (0, 0, -0.01), (0.74, 0.4, 0.002))
+    ink = materials.fading("legend-ink", CREAM, 1.6)
+    for j, (kind, words) in enumerate(KIND_NAMES):
+        y = 0.13 - j * 0.085
+        _swatch(f"legend-swatch-{kind}", kind, anchor, (-0.3, y, 0))
+        text(f"legend-{kind}", words, 0.042, ink, anchor, location=(-0.26, y - 0.012, 0), align="LEFT")
+    return lambda frame: None

@@ -1,0 +1,114 @@
+"""The Ethnocentrism episode's captioned claims (Hammond & Axelrod 2006),
+measured over 20 seeds (see studio/measure.py and
+docs/superpowers/specs/2026-09-28-ethnocentrism-spike.md). Every land is
+the paper's 50 × 50 torus; shares are the mean over the last 100 periods,
+as the paper's are.
+
+- ha-standard to period 2,000.
+- The scattering: ha-standard to period 1,000, then each child placed on a
+  random empty square anywhere (Jansson 2013's variant) to 2,000.
+- ha-cost-2-blind: color-blind Flumps, helping at double cost.
+"""
+
+import statistics
+
+import measure as m
+from measure import median
+
+TICKS = 2000
+SWITCH = 1000
+LATE = (1901, 2000)
+SCATTER = {"schedule": [{"tick": SWITCH, "set": {"offspring": "anywhere"}}]}
+PAPER_BLIND = 0.14
+
+
+def _series(preset, seed, tmp, changes=None):
+    rows, _ = m.run(preset, seed, TICKS, tmp, changes)
+    out = []
+    for r in rows:
+        out.append({k: float(v) if v not in ("", "NaN") else float("nan") for k, v in r.items()})
+    return out
+
+
+def _late(rows, key):
+    return statistics.fmean(r[key] for r in rows if LATE[0] <= r["tick"] <= LATE[1])
+
+
+def _count(rows, test):
+    return sum(bool(test(r)) for r in rows.values())
+
+
+def verdicts(rows, config):
+    """Each captioned claim, whether the seeds support it, and why. `config`:
+    ha-standard's."""
+    n = len(rows)
+    largest = _count(rows, lambda r: r["own"] > max(r["everyone"], r["none"], r["others"]))
+    kin = [r["kin_help"] for r in rows.values()]
+    dark = [r["scattered_none"] for r in rows.values()]
+    blind = [r["blind"] for r in rows.values()]
+    return [
+        ("each Flump wears one of four colors, and passes it on to its children",
+         config["colors"] == 4 and config["mutation"] <= 0.01,
+         f"{config['colors']} colors; a child's color differs from its parent's with probability {config['mutation']}"),
+        ("each carries two rules, help my own color? help the others?, making four kinds",
+         config["discrimination"] == "same_other" and sorted(config["allowed"]) == ["E", "H", "S", "T"],
+         f"discrimination {config['discrimination']}, kinds {config['allowed']}"),
+        ("helping costs a little of your chance to have a child, and gives the neighbor three times as much",
+         abs(config["benefit"] - 3 * config["cost"]) < 1e-12,
+         f"cost {config['cost']:.0%} of the chance, benefit {config['benefit']:.0%}, from a base of "
+         f"{config['base_ptr']:.0%}"),
+        ("the land starts empty; newcomers arrive one at a time; children are born next door",
+         config["start"] == "empty" and config["immigration"] == 1 and config["offspring"] == "adjacent",
+         f"start {config['start']}, {config['immigration']:g} newcomer a period, offspring {config['offspring']}"),
+        ("favoritism wins: about 3 in 4 Flumps help only their own color, in all 20 worlds",
+         0.7 <= median(rows, "own") <= 0.8 and largest == n,
+         f"help-own-only over periods {LATE[0]}–{LATE[1]}: {median(rows, 'own'):.1%} (median; "
+         f"{min(r['own'] for r in rows.values()):.1%}–{max(r['own'] for r in rows.values()):.1%}), the largest kind "
+         f"in {largest} of {n}; cooperation {median(rows, 'cooperation'):.1%}"),
+        ("why? their neighbors are family: over 8 in 10 of all helps go to relatives", min(kin) > 0.8,
+         f"helps to Flumps with the same founding newcomer: {statistics.median(kin):.1%} (median; "
+         f"{min(kin):.1%}–{max(kin):.1%}); neighboring pairs that are relatives {median(rows, 'relatives'):.1%}"),
+        ("put each child anywhere, and favoritism collapses: nine in ten Flumps help no one",
+         min(dark) >= 0.8 and 0.85 <= statistics.median(dark) <= 0.95,
+         f"scattered from period {SWITCH}: help-no-one over {LATE[0]}–{LATE[1]} {statistics.median(dark):.1%} "
+         f"(median; {min(dark):.1%}–{max(dark):.1%}); cooperation {median(rows, 'scattered_cooperation'):.1%}; "
+         f"helps to relatives {median(rows, 'scattered_kin_help'):.1%}"),
+        ("the paper says color-blind Flumps, paying double to help, help 14% of the time; here, 42%",
+         round(statistics.median(blind), 2) == 0.42 and min(blind) > 2 * PAPER_BLIND,
+         f"cooperation over {LATE[0]}–{LATE[1]}: {statistics.median(blind):.1%} (median; "
+         f"{min(blind):.1%}–{max(blind):.1%}), every world above twice the paper's {PAPER_BLIND:.0%}"),
+    ]
+
+
+def seed_row(tmp, seed):
+    std = _series("ha-standard", seed, tmp)
+    scattered = _series("ha-standard", seed, tmp, SCATTER)
+    blind = _series("ha-cost-2-blind", seed, tmp)
+    return {
+        "own": _late(std, "ethnocentric"),
+        "everyone": _late(std, "humanitarian"),
+        "none": _late(std, "selfish"),
+        "others": _late(std, "traitorous"),
+        "cooperation": _late(std, "cooperation"),
+        "kin_help": _late(std, "kin_help"),
+        "relatives": _late(std, "relatives"),
+        "population": _late(std, "population"),
+        "scattered_none": _late(scattered, "selfish"),
+        "scattered_cooperation": _late(scattered, "cooperation"),
+        "scattered_kin_help": _late(scattered, "kin_help"),
+        "blind": _late(blind, "cooperation"),
+    }
+
+
+def measure(tmp):
+    rows = {seed: seed_row(tmp, seed) for seed in m.SEEDS}
+    config = m.preset_config("ha-standard", tmp)
+    keys = ["own", "everyone", "none", "others", "cooperation", "kin_help", "relatives", "population",
+            "scattered_none", "scattered_cooperation", "scattered_kin_help", "blind"]
+    lines = [f"## The paper's 50 × 50 land, means over periods {LATE[0]}–{LATE[1]}", ""]
+    lines += m.table(rows, keys)
+    lines += ["", f"Typical seeds: land {m.typical_seed(rows, ['own', 'kin_help'])}, "
+              f"scattered {m.typical_seed(rows, ['scattered_none'])}, blind {m.typical_seed(rows, ['blind'])}."]
+    medians = {k: median(rows, k) for k in keys}
+    medians["paper_blind"] = PAPER_BLIND
+    return lines, verdicts(rows, config), {"medians": medians, "seeds": len(rows)}

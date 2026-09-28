@@ -1,6 +1,6 @@
 """Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
 shot as a `Dump`, a spatial-games shot as a `Lattice`, and a demographic-PD
-shot as a `Dump` too (see `_dpd`)."""
+shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`)."""
 
 import json
 from dataclasses import dataclass, field
@@ -38,6 +38,8 @@ class Frame:
     fertility: dict = field(default_factory=dict)
     diseases: dict = field(default_factory=dict)
     infections: list = field(default_factory=list)
+    # id → kind, as a letter (E, H, S, T): ethnocentrism's strategies.
+    kinds: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -149,6 +151,8 @@ def parse(text):
         raise ValueError(f"frame dump format {raw.get('format')!r}, expected {FORMAT}")
     if raw.get("model") == "dpd":
         return _dpd(raw)
+    if raw.get("model") == "ethno":
+        return _ethno(raw)
     if raw.get("model") == "spatial":
         return Lattice(
             seed=raw["seed"], ticks=raw["ticks"], width=raw["width"], height=raw["height"], config=raw["config"],
@@ -229,6 +233,34 @@ def _dpd(raw):
     return Dump(
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
         placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model="dpd",
+    )
+
+
+def _ethno(raw):
+    """An ethnocentrism shot as a `Dump`: each Flump's color (its tag) in
+    its group, its kind in `kinds`; they never move, so births and deaths
+    are the differences between frames (every death is the model's random
+    one)."""
+    w, h = raw["width"], raw["height"]
+    frames, before = [], set()
+    for f in raw["frames"]:
+        ids = {row[0] for row in f["agents"]}
+        born = [row[0] for row in f["agents"] if row[0] not in before]
+        frames.append(Frame(
+            tick=f["tick"],
+            agents={i: Agent(i, x, y, 0.0, 0, 0, 0) for i, x, y, *_ in f["agents"]},
+            sugar=[0.0] * (w * h),
+            deaths={i: "random" for i in sorted(before - ids)},
+            born=born,
+            pollution=[0.0] * (w * h),
+            births={i: (None, None) for i in born},
+            groups={row[0]: row[3] for row in f["agents"]},
+            kinds={row[0]: row[4] for row in f["agents"]},
+        ))
+        before = ids
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model="ethno",
     )
 
 

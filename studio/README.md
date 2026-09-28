@@ -11,13 +11,16 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial` and `living`.
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living` and `ethno`.
 
-Shots run the Sugarscape, spatial games or the demographic PD. A spatial shot's dump records each
+Shots run the Sugarscape, spatial games, the demographic PD or ethnocentrism. A spatial shot's dump records each
 generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
 board. A demographic-PD shot's dump records each cycle's agents, births (with the parent) and deaths,
 and loads as a Sugarscape dump without sugar, so its crowd walks, clones and dies as the Sugarscape's
-does (`colors: "strategy"`: blue helpers, red cheats).
+does (`colors: "strategy"`: blue helpers, red cheats). An ethnocentrism shot's dump records each
+period's agents (their square, color, kind and founding newcomer); its board gets a Flump per square,
+not per Flump (the land churns through hundreds of thousands), each in its color's yarn
+(`colors: "tag"`) on felt in its kind's color.
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -79,7 +82,9 @@ vibraphone on one twelve-note figure in D Dorian, the vibraphone slipping ahead 
 until, when the Flumps move one at a time, it falls into triplets over a drone a half step down; and
 Living neighbors' *A Round for Neighbors*, a round in G for flute, clarinet, oboe and bassoon, each
 voice copying the tune as each clone copies its parent, until in the soup they crowd in a bar apart
-in G minor and drop out, leaving a muted trumpet alone.
+in G minor and drop out, leaving a muted trumpet alone; and Ethnocentrism's *Cradle Song for Four
+Colors*, a lullaby in F for music box, harp, clarinet and cello, one instrument per color, whose
+phrases scatter to the wrong instruments when children are scattered, until the music box winds down.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to

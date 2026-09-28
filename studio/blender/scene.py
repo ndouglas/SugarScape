@@ -68,7 +68,8 @@ def _agents(beat, d, tracks, timing, corners):
     mother's, back to a founding mother); with colors="tribe", its tribe's,
     changing as its tribe does; with colors="sick", sickly green while it
     carries a disease and its own color when well; with colors="strategy"
-    (the demographic PD), blue for a helper and red for a cheat."""
+    (the demographic PD), blue for a helper and red for a cheat; with
+    colors="tag" (ethnocentrism), its tag's yarn."""
     w, h = d.width, d.height
     colors = list(materials.CROWD_YARN)
     RIGS.clear()
@@ -81,11 +82,16 @@ def _agents(beat, d, tracks, timing, corners):
         key = family.get(id_, id_)
         return colors[order.get(key, key) % len(colors)]
 
-    live = mode in ("tribe", "sick", "strategy")
+    live = mode in ("tribe", "sick", "strategy", "tag")
 
     def live_color(id_, frame):
         """The color the tick shown gives a Flump (None: its own)."""
         f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
+        if mode == "tag":
+            g = f.groups.get(id_)
+            if g is None:
+                g = d.frames[tracks[id_].first].groups.get(id_)
+            return materials.TAG_YARN[g % len(materials.TAG_YARN)] if g is not None else None
         if mode in ("tribe", "strategy"):
             g = f.groups.get(id_)
             if g is None and mode == "strategy":
@@ -155,8 +161,14 @@ def build_beat(beat, d, preview, compare=None, measured=None):
         materials.lights_and_world(scene, max(d.width, d.height))
     elif d is not None:
         timing = beat.timing(d.ticks)
-        felt, corners = board.felt_board(d)
-        # A demographic-PD board is bare felt: no seasons, soot or sugar.
+        if d.model == "ethno":
+            # Flat felt whose squares show each Flump's kind, and a Flump per
+            # square rather than per Flump (see lattice_board.ethno).
+            corners = animate.corner_heights(animate.relief(d), d.width, d.height)
+            updaters.append(lattice_board.ethno(beat, d, timing))
+        else:
+            felt, corners = board.felt_board(d)
+        # Other models' boards are bare felt: no seasons, soot or sugar.
         sugarscape = d.model == "sugarscape"
         if sugarscape and d.config["seasons"]["enabled"]:
             updaters.append(board.seasonal_felt(felt, d, timing))
@@ -171,8 +183,9 @@ def build_beat(beat, d, preview, compare=None, measured=None):
         # Only the Flumps alive during this beat's ticks get objects: a long
         # run with births can have many thousands over its whole length.
         first, last = timing.tick_at(1), timing.tick_at(beat.frames + 1)
-        tracks = {i: t for i, t in dump_mod.tracks(d).items() if animate.alive_in(t, first, last)}
-        updaters.append(_agents(beat, d, tracks, timing, corners))
+        if d.model != "ethno":
+            tracks = {i: t for i, t in dump_mod.tracks(d).items() if animate.alive_in(t, first, last)}
+            updaters.append(_agents(beat, d, tracks, timing, corners))
         materials.lights_and_world(scene, max(d.width, d.height))
     else:
         updaters.append(_title_card())
