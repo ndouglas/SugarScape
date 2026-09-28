@@ -2,7 +2,8 @@ import unittest
 
 import episode
 
-ROW = dict(third_10=0.325, third_40=0.325, ahead=1.0, frontier=0.49, tempt=0.75, all_d_at=97, async_17_min=0.99,
+ROW = dict(third_2=0.325, third_10=0.325, third_25=0.325, ahead=1.0, frontier=0.49, tempt_10=0.75, tempt_25=0.84,
+           tempt_40=0.88, all_d_at=97, below_one_min=0.99,
            below_async=0.72, below_sync=0.88, kaleidoscope=(1.0, 0.99))
 FACTS = dict(scores_follow=True, copies_follow=True, b=1.9, board_frames=4, start=(1, 9800), symmetric=True,
              symmetric_to=260, edge=49, same_every_seed=True, min_c=0.18, still=0, changed=0.22,
@@ -35,8 +36,8 @@ class SpatialVerdictTest(unittest.TestCase):
 
     def test_one_run_far_from_a_third_breaks_about_a_third(self):
         r = rows()
-        r[4]["third_40"] = 0.0
-        self.assertFalse(self.verdicts(r)["scatter the cheats anywhere: about a third of the Flumps end up helping"])
+        r[4]["third_25"] = 0.0
+        self.assertFalse(self.verdicts(r)["scatter a few cheats anywhere: about a third of the Flumps end up helping"])
 
     def test_one_generation_where_cheats_earn_more_breaks_every_generation(self):
         r = rows()
@@ -51,7 +52,8 @@ class SpatialVerdictTest(unittest.TestCase):
     def test_helpers_losing_below_the_chaos_break_either_way(self):
         r = rows()
         r[5]["below_async"] = 0.3
-        self.assertFalse(self.verdicts(r)["unless cheating is less tempting: then helpers survive either way"])
+        claim = "Nowak, Bonhoeffer and May replied in 1994: make cheating less tempting, and helpers survive either way"
+        self.assertFalse(self.verdicts(r)[claim])
 
 
 if __name__ == "__main__":

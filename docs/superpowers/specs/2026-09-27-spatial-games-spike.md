@@ -40,7 +40,9 @@ above, the crowd reads as a clear pattern of blue and red.
 
 **For the finale:** the chaos, and "about a third", exist only because every Flump moves at once.
 "Almost all starting proportions" means up to about half cheats on a board this size. HG93's
-"always" holds only above b = 1.8, which they never state.
+takeover reproduces in the regime they ran (1.8 < b < 2, NM92's Fig. 3); NBM94 showed it doesn't
+hold below it. (Corrected after the review: this line first said HG93 "never state" b, which was
+unfair; their figures place them in that regime.)
 
 **Preset fix (engine, not studio):** `hg-async-kaleidoscope`'s description says that at b = 1.7
 "the lone defector dies out (f_C 0.974–0.999)". It doesn't: those numbers mean 31–225 cheats
