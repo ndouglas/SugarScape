@@ -1,6 +1,20 @@
 # Spike: tags (Cooperation, episode 4)
 
 **Date:** 2026-09-28
+**Corrected after the review (2026-09-28):**
+
+- **Tie rule:** the paper states it (p. 442: an agent "adopts the other's tag and tolerance if the
+  other's score is higher than its own"); only its p. 441 wording reads as a coin flip. The docs had
+  called it unstated.
+- **Twins:** the paper reports them itself (p. 442): the twins beat now says "The paper saw it too", and
+  the end card credits Edmonds & Hales, whose result "It was twins" is.
+- **Takeovers:** one definition for both halves of the cycle caption (the most common exact tag
+  changing while half the Flumps hold it): every 343 generations (294–483), 95.2 % of 565 steps within
+  0.03 of the tag range, none over 0.075. The engine's 0.01-radius count had made the paper's cycle look
+  "much slower than it describes"; it isn't. The caption is now "every few hundred generations, a new
+  crowd takes over".
+- **Narrow:** measured directly: 94.3 % of gifts go to an exact twin (89.7–96.2 %).
+- **Clones:** compared with the same coin-flip ties (73.7 %), above it in 20 of 20.
 **Status:** built as `studio/episodes/tags` (claims in its `measurements.md`; 74 s). Two changes
 after the first cut:
 
@@ -47,8 +61,8 @@ thousands of generations.
 
 | Candidate claim | Measured | Verdict |
 |---|---|---|
-| Table 1: 73.6 % of meetings end in a gift (rca-published: ties to the current agent) | 73.7 % (72.3–74.0) | Reproduces, with the unstated tie rule |
-| …with the paper's literal coin-flip ties, at two pairings: 4.3 % | 42.0 % (34.5–48.3); ties to the current agent give 2.0 % | **Fails** as written: the tables need the unstated rule |
+| Table 1: 73.6 % of meetings end in a gift (rca-published: ties to the current agent) | 73.7 % (72.3–74.0) | Reproduces, with the paper's p. 442 tie rule |
+| …with the paper's literal coin-flip ties, at two pairings: 4.3 % | 42.0 % (34.5–48.3); ties to the current agent give 2.0 % | The tables need p. 442's rule; the coin-flip reading of p. 441 doesn't give them |
 | Clusters: most Flumps share one shade | 85.3 % in the dominant cluster (within 0.02 of its modal tag); 97.1 % of that cluster hold the modal tag exactly | Holds: they're twins |
 | Tolerance does the work | mean tolerance 0.018 (0.017–0.020): Flumps help almost no one but exact twins | The paper's mechanism is doing little |
 | A new cluster rises and takes over, again and again | 29 takeovers a run (19–37): one every 1,030 generations (810–1,580) | Holds: "every thousand generations or so" |

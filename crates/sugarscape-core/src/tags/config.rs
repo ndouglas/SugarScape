@@ -199,7 +199,7 @@ pub fn schema() -> Vec<Param> {
             ],
             Live,
         )
-        .with_help("The paper does not say; Edmonds & Hales 2003 found only “current agent wins” matches its tables."),
+        .with_help("The paper's p. 442 “adopts … if the other's score is higher than its own” keeps the current agent; its p. 441 “the one with the higher score” reads as a coin flip. Only the first matches its tables (Edmonds & Hales 2003)."),
         Param::choice(
             "Replications",
             "donation_test",

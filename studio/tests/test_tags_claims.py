@@ -3,7 +3,8 @@ import unittest
 import episode
 
 ROW = dict(gifts=0.737, cluster=0.853, related=0.971, twins=0.829, tolerance=0.018, takeovers=29.0,
-           per_takeover=1034.0, step=0.07, step_median=0.007, strict=0.0138, clones=0.753)
+           per_takeover=1034.0, gap=400.0, steps=[0.005, 0.007, 0.01, 0.004], twin_gifts=0.94, strict=0.0138,
+           literal=0.737, clones=0.753)
 CONFIG = dict(agents=100, pairings=3, donation_test="at_most", cost=0.1, benefit=1.0, selection="tournament",
               tie_rule="current")
 
@@ -26,7 +27,7 @@ class TagsVerdictTest(unittest.TestCase):
                                                          "says"])
 
     def test_scattered_shades_break_most_share_one(self):
-        self.assertFalse(self.verdicts(rows(twins=0.4))["but look where they stand: most Flumps share one exact shade"])
+        self.assertFalse(self.verdicts(rows(twins=0.4))["the paper saw it too: most Flumps share one exact shade"])
 
     def test_a_wide_tolerance_breaks_tiny(self):
         r = rows()
@@ -35,15 +36,22 @@ class TagsVerdictTest(unittest.TestCase):
 
     def test_a_world_where_clones_give_less_breaks_even_more(self):
         r = rows()
-        r[4]["clones"] = 0.70
+        r[4]["clones"] = 0.73
         self.assertFalse(self.verdicts(r)["take tolerance away entirely, and they give even more: 75%"])
 
     def test_one_takeover_from_across_the_ring_breaks_next_door(self):
         r = rows()
-        r[12]["step"] = 0.4
-        self.assertFalse(self.verdicts(r)["every thousand generations or so, a new shade takes over: always the one next "
+        r[12]["steps"] = [0.005, 0.4]
+        self.assertFalse(self.verdicts(r)["every few hundred generations, a new crowd takes over: always right next "
                                           "door"])
 
+    def test_takeovers_every_few_thousand_generations_break_every_few_hundred(self):
+        self.assertFalse(self.verdicts(rows(gap=3000.0))["every few hundred generations, a new crowd takes over: always "
+                                                         "right next door"])
+
+    def test_gifts_mostly_to_strangers_break_help_almost_no_one_but_their_twins(self):
+        self.assertFalse(self.verdicts(rows(twin_gifts=0.6))["their tolerance is tiny; they help almost no one but "
+                                                             "their twins"])
 
 if __name__ == "__main__":
     unittest.main()
