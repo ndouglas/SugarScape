@@ -1,0 +1,13 @@
+{
+  "name": "Minds 3: share remembering and wealth advantage",
+  "description": "The mean wealth advantage of rememberers over everyone else on mem-truffles's world (hidden truffle spots, walking, 200-tick memory span, project belief) against the share of newborns that remember: 0.1, 0.25, 0.5, 0.75 or 0.9. Seeds 1–20, ticks 500, measured over ticks 200–500.",
+  "base": { "preset": "mem-truffles" },
+  "x": {
+    "label": "Share remembering",
+    "path": "memory.share",
+    "values": [0.1, 0.25, 0.5, 0.75, 0.9]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 500,
+  "metric": { "kind": "window_mean", "series": "wealth_advantage", "from": 200 }
+}

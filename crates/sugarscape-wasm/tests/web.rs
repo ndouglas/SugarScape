@@ -354,7 +354,10 @@ fn builtins_and_series_names_are_listed() {
             "watts-targeting",
             "walk-speed",
             "walk-vision",
-            "ifd-detour"
+            "ifd-detour",
+            "mem-span-recall",
+            "mem-span-project",
+            "mem-share"
         ]
     );
     assert!(list[0]["sweep"]["name"]
