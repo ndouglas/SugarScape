@@ -13,6 +13,7 @@ import ring
 from blender import board, flump, materials, overlays
 from blender import lattice as lattice_board
 from blender import ring as ring_board
+from blender import street as street_board
 
 UPDATERS = []
 # The first exception the frame handler raised, if any.
@@ -157,7 +158,11 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     updaters = []
     timing = corners = None
     tracks = {}
-    if isinstance(d, dump_mod.Ring):
+    if isinstance(d, dump_mod.Street):
+        timing = beat.timing(d.ticks)
+        updaters.append(street_board.build(beat, d, timing))
+        materials.lights_and_world(scene, 60)
+    elif isinstance(d, dump_mod.Ring):
         timing = beat.timing(d.ticks)
         updaters.append(ring_board.build(beat, d, timing))
         materials.lights_and_world(scene, 2 * ring.RADIUS)

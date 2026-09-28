@@ -1,7 +1,7 @@
 """Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
 shot as a `Dump`, a spatial-games shot as a `Lattice`, and a demographic-PD
-shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`), and a
-tags shot as a `Ring`."""
+shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`), a
+tags shot as a `Ring`, and an image-scoring shot as a `Street`."""
 
 import json
 from dataclasses import dataclass, field
@@ -182,6 +182,31 @@ class Ring:
         return self.frames[min(max(int(round(tick)), 0), self.ticks)]
 
 
+@dataclass(frozen=True)
+class StreetFrame:
+    """An image-scoring generation after it played: each agent as (id, k or
+    None, score, payoff) in list order, and its meetings as (donor,
+    recipient, helped) places (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    meetings: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Street:
+    """An image-scoring shot."""
+
+    seed: int
+    ticks: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
 def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
@@ -190,6 +215,12 @@ def parse(text):
         return _dpd(raw)
     if raw.get("model") == "ethno":
         return _ethno(raw)
+    if raw.get("model") == "image":
+        return Street(
+            seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], stats=raw["stats"],
+            frames=[StreetFrame(f["tick"], [tuple(a) for a in f["agents"]], [tuple(m) for m in f.get("meetings", [])])
+                    for f in raw["frames"]],
+        )
     if raw.get("model") == "tags":
         return Ring(
             seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], stats=raw["stats"],

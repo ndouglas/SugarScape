@@ -10,6 +10,7 @@ from .panels import alike, bars, census, tally, counter, dials, hills, histogram
 from .lattice import earnings, helpers, kinds, legend, play, scores
 from .parts import Screen
 from .ring import gifts, rate, tolerance
+from .street import meetings
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
@@ -61,4 +62,5 @@ BUILDERS = {
     "rate": rate,
     "gifts": gifts,
     "tolerance": tolerance,
+    "meetings": meetings,
 }
