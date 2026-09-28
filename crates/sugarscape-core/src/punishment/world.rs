@@ -357,14 +357,14 @@ impl PunishmentWorld {
         let mut pairs = Vec::new();
         match self.config.pairing {
             Pairing::Paired => {
-                for pair in order.chunks_exact(2) {
+                for pair in order.as_chunks::<2>().0 {
                     if self.rng.gen::<f64>() < eps {
                         pairs.push((pair[0], pair[1]));
                     }
                 }
             }
             Pairing::Either => {
-                for pair in order.chunks_exact(2) {
+                for pair in order.as_chunks::<2>().0 {
                     let (a, b) = (self.rng.gen::<f64>(), self.rng.gen::<f64>());
                     if a < eps || b < eps {
                         pairs.push((pair[0], pair[1]));

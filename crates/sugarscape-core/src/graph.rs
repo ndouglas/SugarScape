@@ -210,7 +210,7 @@ pub fn configuration(degrees: &[u32], rng: &mut SimRng) -> Vec<Vec<u32>> {
         ends.swap(i, j);
     }
     let mut adj = vec![Vec::new(); n];
-    for pair in ends.chunks_exact(2) {
+    for pair in ends.as_chunks::<2>().0 {
         let (a, b) = (pair[0], pair[1]);
         if a != b && !adj[a as usize].contains(&b) {
             adj[a as usize].push(b);
