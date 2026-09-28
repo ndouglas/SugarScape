@@ -1,0 +1,75 @@
+{
+  "name": "Zero-Intelligence Traders: efficiency by market (Table 2)",
+  "description": "Gode and Sunder's Table 2: efficiency (profit earned over the maximum surplus, averaged over six periods of 2 000 shouts) by market, with and without the budget constraint. Measured (release, seeds 1–20, recorded 2026-09-28): ZI-U 90.0, 90.0, 76.7, 48.8, 86.7 (Table 2: 90.0, 90.0, 76.7, 48.8, 86.0 — exact in markets 1–4, which were read from the figures with it; market 5 is approximate); ZI-C 99.9, 99.8, 99.7, 99.5, 97.1 (Table 2: 99.9, 99.2, 99.0, 98.2, 97.1). The budget constraint alone lifts efficiency to near 100 %, as stated.",
+  "base": {
+    "preset": "gs-1"
+  },
+  "x": {
+    "label": "Market",
+    "values": [
+      {
+        "at": 1,
+        "name": "Market 1",
+        "set": {
+          "market": "gs1"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Market 2",
+        "set": {
+          "market": "gs2"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Market 3",
+        "set": {
+          "market": "gs3"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Market 4",
+        "set": {
+          "market": "gs4"
+        }
+      },
+      {
+        "at": 5,
+        "name": "Market 5",
+        "set": {
+          "market": "gs5"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Traders",
+    "values": [
+      {
+        "at": 0,
+        "name": "ZI-U",
+        "set": {
+          "strategy": "zi_u"
+        }
+      },
+      {
+        "at": 1,
+        "name": "ZI-C",
+        "set": {
+          "strategy": "zi_c"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 12000,
+  "metric": {
+    "kind": "final",
+    "series": "avg_efficiency"
+  }
+}

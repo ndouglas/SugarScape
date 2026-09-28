@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 126] = [
+const BUILTINS: [Builtin; 134] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1469,6 +1469,38 @@ const BUILTINS: [Builtin; 126] = [
     Builtin {
         id: "bg-cooney-cost",
         json: include_str!("../../../sweeps/bg-cooney-cost.json"),
+    },
+    Builtin {
+        id: "gs-efficiency",
+        json: include_str!("../../../sweeps/gs-efficiency.json"),
+    },
+    Builtin {
+        id: "gs-dispersion",
+        json: include_str!("../../../sweeps/gs-dispersion.json"),
+    },
+    Builtin {
+        id: "gs-shouts",
+        json: include_str!("../../../sweeps/gs-shouts.json"),
+    },
+    Builtin {
+        id: "gs-mechanism",
+        json: include_str!("../../../sweeps/gs-mechanism.json"),
+    },
+    Builtin {
+        id: "cliff-prices",
+        json: include_str!("../../../sweeps/cliff-prices.json"),
+    },
+    Builtin {
+        id: "zip-days",
+        json: include_str!("../../../sweeps/zip-days.json"),
+    },
+    Builtin {
+        id: "zip-momentum",
+        json: include_str!("../../../sweeps/zip-momentum.json"),
+    },
+    Builtin {
+        id: "zip-shift",
+        json: include_str!("../../../sweeps/zip-shift.json"),
     },
 ];
 
@@ -2418,7 +2450,15 @@ mod tests {
                 "bg-continuous",
                 "bg-ring",
                 "bg-cooney-fine",
-                "bg-cooney-cost"
+                "bg-cooney-cost",
+                "gs-efficiency",
+                "gs-dispersion",
+                "gs-shouts",
+                "gs-mechanism",
+                "cliff-prices",
+                "zip-days",
+                "zip-momentum",
+                "zip-shift"
             ]
         );
         for b in builtins() {
