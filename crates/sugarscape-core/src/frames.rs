@@ -4,9 +4,10 @@
 //! tick, recording every agent, the sugar at every site, deaths, births and
 //! the statistics series. Spatial games' shots record each generation's
 //! strategies instead, the demographic Prisoner's Dilemma's each cycle's
-//! agents, births and deaths, ethnocentrism's each period's agents, and the
-//! tags model's each generation's agents and gifts (`run`). Other models
-//! are not filmed yet.
+//! agents, births and deaths, ethnocentrism's each period's agents, the tags
+//! model's each generation's agents and gifts, and image scoring's each
+//! generation's agents and meetings (`run`). Other models are not filmed
+//! yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -18,6 +19,7 @@ use crate::config::{Config, FieldError};
 use crate::dpd::{DpdConfig, DpdDeath, DpdWorld, SERIES as DPD_SERIES};
 use crate::edit::AgentOverrides;
 use crate::ethno::{EthnoConfig, EthnoWorld, Strategy, SERIES as ETHNO_SERIES};
+use crate::image::{ImageConfig, ImageWorld, SERIES as IMAGE_SERIES};
 use crate::model::ModelConfig;
 use crate::presets;
 use crate::spatial::{Lattice, SpatialConfig, SpatialWorld, SERIES as SPATIAL_SERIES};
@@ -54,7 +56,7 @@ pub struct Shot {
     /// Spatial games: record every player's score in each frame.
     #[serde(default)]
     pub scores: bool,
-    /// Tags: record each generation's gifts.
+    /// Tags: record each generation's gifts; image scoring: its meetings.
     #[serde(default)]
     pub gifts: bool,
 }
@@ -157,6 +159,17 @@ impl Shot {
             other => Err(vec![FieldError::new(
                 "model",
                 format!("not a demographic-PD shot: {}", other.kind().as_str()),
+            )]),
+        }
+    }
+
+    /// An image-scoring shot's config with `set` applied, validated.
+    pub fn image_config(&self) -> Result<ImageConfig, Vec<FieldError>> {
+        match self.model_config()? {
+            ModelConfig::Image(c) => Ok(c),
+            other => Err(vec![FieldError::new(
+                "model",
+                format!("not an image-scoring shot: {}", other.kind().as_str()),
             )]),
         }
     }
@@ -634,6 +647,35 @@ pub struct TagsDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// `[id, k | null, score, payoff]`, in the population's list order (group
+/// by group): k for the threshold strategies (k, AND, OR, binary), null for
+/// the others.
+pub type ImageRow = (u64, Option<i8>, i32, f64);
+
+/// An image-scoring shot's population after one generation has played.
+#[derive(Clone, Debug, Serialize)]
+pub struct ImageFrame {
+    pub tick: u64,
+    pub agents: Vec<ImageRow>,
+    /// This generation's meetings as `[donor, recipient, helped]` places in
+    /// the list, in the order they happened (absent unless the shot asks,
+    /// with `"gifts": true`).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub meetings: Vec<(u32, u32, bool)>,
+}
+
+/// A whole image-scoring shot, generation 0 (before it plays) first.
+#[derive(Clone, Debug, Serialize)]
+pub struct ImageDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub config: ImageConfig,
+    pub frames: Vec<ImageFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -643,6 +685,7 @@ pub enum Dump {
     Dpd(DpdDump),
     Ethno(EthnoDump),
     Tags(TagsDump),
+    Image(ImageDump),
 }
 
 /// Runs `shot`, whatever its model.
@@ -653,7 +696,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
     match shot.base()? {
         ModelConfig::Sugarscape(_) => {
             if shot.gifts {
-                return Err(only("gifts", "tags"));
+                return Err(only("gifts", "tags and image-scoring"));
             }
             if shot.cells.is_some() {
                 return Err(only("cells", "spatial-games"));
@@ -663,12 +706,22 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             run_shot(shot).map(|d| Dump::Sugarscape(Box::new(d)))
         }
-        ModelConfig::Spatial(_) | ModelConfig::Dpd(_) | ModelConfig::Ethno(_) | ModelConfig::Tags(_) => {
+        ModelConfig::Spatial(_)
+        | ModelConfig::Dpd(_)
+        | ModelConfig::Ethno(_)
+        | ModelConfig::Tags(_)
+        | ModelConfig::Image(_) => {
             if !shot.place.is_empty() {
                 return Err(only("place", "sugarscape"));
             }
             if shot.empty {
                 return Err(only("empty", "sugarscape"));
+            }
+            if matches!(shot.base()?, ModelConfig::Image(_)) {
+                if shot.cells.is_some() || shot.scores {
+                    return Err(only(if shot.scores { "scores" } else { "cells" }, "spatial-games"));
+                }
+                return run_image(shot).map(Dump::Image);
             }
             if matches!(shot.base()?, ModelConfig::Tags(_)) {
                 if shot.cells.is_some() || shot.scores {
@@ -677,7 +730,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
                 return run_tags(shot).map(Dump::Tags);
             }
             if shot.gifts {
-                return Err(only("gifts", "tags"));
+                return Err(only("gifts", "tags and image-scoring"));
             }
             if matches!(shot.base()?, ModelConfig::Spatial(_)) {
                 return run_lattice(shot).map(Dump::Spatial);
@@ -696,7 +749,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism and tags, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags and image scoring, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -927,6 +980,43 @@ pub fn run_tags(shot: &Shot) -> Result<TagsDump, Vec<FieldError>> {
     Ok(TagsDump {
         format: FORMAT,
         model: "tags",
+        seed: shot.seed,
+        ticks: shot.ticks,
+        config,
+        frames,
+        stats,
+    })
+}
+
+fn image_frame(world: &ImageWorld) -> ImageFrame {
+    ImageFrame {
+        tick: world.tick,
+        agents: world
+            .agents()
+            .iter()
+            .map(|a| (a.id, a.strategy.k(), a.score, a.payoff))
+            .collect(),
+        meetings: world.meetings().map(<[_]>::to_vec).unwrap_or_default(),
+    }
+}
+
+/// Runs an image-scoring shot and records every generation.
+pub fn run_image(shot: &Shot) -> Result<ImageDump, Vec<FieldError>> {
+    let config = shot.image_config()?;
+    let mut world = ImageWorld::new(config.clone(), shot.seed)?;
+    world.record_meetings(shot.gifts);
+    let mut frames = vec![image_frame(&world)];
+    for _ in 0..shot.ticks {
+        world.step();
+        frames.push(image_frame(&world));
+    }
+    let stats = IMAGE_SERIES
+        .iter()
+        .filter_map(|&name| world.stats.series(name).map(|s| (name.to_string(), s)))
+        .collect();
+    Ok(ImageDump {
+        format: FORMAT,
+        model: "image",
         seed: shot.seed,
         ticks: shot.ticks,
         config,
@@ -1551,6 +1641,39 @@ mod tests {
             assert!(f.agents.iter().zip(&given).all(|(a, &n)| a.4 == n));
             assert!(f.agents.iter().zip(&received).all(|(a, &n)| a.5 == n));
             assert_eq!(d.stats["donation_rate"][k], f.gifts.len() as f64 / 300.0);
+        }
+    }
+
+    #[test]
+    fn an_image_shot_records_meetings_that_replay_every_score() {
+        let d = match super::run(
+            &Shot::from_json(r#"{"preset": "ns-fig-1", "ticks": 12, "seed": 3, "gifts": true}"#)
+                .unwrap(),
+        )
+        .unwrap()
+        {
+            Dump::Image(d) => d,
+            _ => panic!("an image-scoring shot"),
+        };
+        assert_eq!((d.model, d.frames.len()), ("image", 13));
+        for (k, f) in d.frames.iter().enumerate().skip(1) {
+            assert_eq!(f.agents.len(), 100);
+            assert_eq!(f.meetings.len(), 125);
+            // Scores start at 0 and move one up for a gift, one down for a
+            // refusal, within ±5.
+            let mut scores = vec![0i32; 100];
+            for &(donor, recipient, helped) in &f.meetings {
+                assert_ne!(donor, recipient);
+                let s = &mut scores[donor as usize];
+                *s = (*s + if helped { 1 } else { -1 }).clamp(-5, 5);
+            }
+            assert!(f.agents.iter().zip(&scores).all(|(a, &s)| a.2 == s));
+            let helps = f.meetings.iter().filter(|m| m.2).count();
+            assert_eq!(d.stats["help_rate"][k], helps as f64 / 125.0);
+            assert!(f
+                .agents
+                .iter()
+                .all(|a| a.1.is_some_and(|k| (-5..=6).contains(&k))));
         }
     }
 
