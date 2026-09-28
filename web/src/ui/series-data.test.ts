@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('thresholds charts', () => {
+  it('chart participation against theory, episodes, the last cascade and the swing over steps', () => {
+    expect(MODEL_CHARTS.thresholds.map((c) => c.title)).toEqual(['Participation', 'Episodes', 'Last cascade', 'Swing']);
+    expect(timeAxisLabel('thresholds')).toBe('Steps');
+  });
+});
+
 describe('ants charts', () => {
   it('chart the split, its variance against theory, flips and extremes over steps', () => {
     expect(MODEL_CHARTS.ants.map((c) => c.title)).toEqual(['Share', 'Variance', 'Flips', 'Extremes']);

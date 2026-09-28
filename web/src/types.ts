@@ -95,7 +95,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -494,7 +494,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -604,6 +604,75 @@ export interface AntsInspection {
   count: number | null;
   theory: number | null;
   member: AntView | null;
+  agent: null;
+}
+
+/**
+ * Granovetter's threshold models (milestone 25): crowds, friends, sampled crowds, clusters and
+ * ceilings, with Watts's cascades on random networks.
+ */
+export interface ThresholdsConfig {
+  model: 'thresholds';
+  actors: number;
+  distribution: 'uniform' | 'perturbed' | 'normal' | 'fixed';
+  mean: number;
+  sd: number;
+  crowd: 'quantiles' | 'sampled';
+  rounding: 'exact' | 'floor' | 'nearest';
+  population: 'fixed' | 'city';
+  network: 'everyone' | 'random' | 'power_law';
+  degree: number;
+  counts_self: boolean;
+  friends: { enabled: boolean; acquaintance: number; weight: number; symmetric: boolean };
+  trigger: 'instigators' | 'random' | 'hub';
+  zero: 'acts' | 'when_reached';
+  update: 'synchronous' | 'asynchronous';
+  ceilings: { share: number; at: number };
+  clusters: { enabled: boolean; count: number; movement: number };
+  repeat: boolean;
+  global: number;
+  max_steps: number;
+  stop_at: number;
+}
+
+export interface ThresholdsStats {
+  tick: number;
+  acting: number;
+  step: number;
+  episodes: number;
+  last_size: number;
+  mean_size: number;
+  global_share: number;
+  /** Granovetter's continuous equilibrium share (a normal crowd seen whole), or null. */
+  theory: number | null;
+  recent_mean: number;
+  swing: number;
+}
+
+export interface ActorView {
+  id: number;
+  threshold: number | null;
+  ceiling: number | null;
+  degree: number | null;
+  sees: number;
+  of: number;
+  acting: boolean;
+  seed: boolean;
+  crowd: number;
+}
+/**
+ * A cell of the thresholds frame: a step of the time panel, a point of Granovetter's Figure 1, a
+ * histogram row, or an actor of the grid (`member`). `agent` is always null.
+ */
+export interface ThresholdsInspection {
+  site: { x: number; y: number };
+  panel: 'time' | 'figure' | 'histogram' | 'actors' | null;
+  step: number | null;
+  crowds: number[] | null;
+  share: number | null;
+  cdf: number | null;
+  count: number | null;
+  member: ActorView | null;
   agent: null;
 }
 
@@ -916,7 +985,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -1241,7 +1310,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1296,7 +1365,10 @@ export type ColorMode =
   | 'memory'
   | 'source'
   | 'independent'
-  | 'degree';
+  | 'degree'
+  | 'state'
+  | 'threshold'
+  | 'crowd';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

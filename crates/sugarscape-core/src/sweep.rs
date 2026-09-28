@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 90] = [
+const BUILTINS: [Builtin; 97] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1325,6 +1325,34 @@ const BUILTINS: [Builtin; 90] = [
     Builtin {
         id: "ifd-travel",
         json: include_str!("../../../sweeps/ifd-travel.json"),
+    },
+    Builtin {
+        id: "gr-sd",
+        json: include_str!("../../../sweeps/gr-sd.json"),
+    },
+    Builtin {
+        id: "gr-friends",
+        json: include_str!("../../../sweeps/gr-friends.json"),
+    },
+    Builtin {
+        id: "gr-movement",
+        json: include_str!("../../../sweeps/gr-movement.json"),
+    },
+    Builtin {
+        id: "gr-ceilings",
+        json: include_str!("../../../sweeps/gr-ceilings.json"),
+    },
+    Builtin {
+        id: "watts-window",
+        json: include_str!("../../../sweeps/watts-window.json"),
+    },
+    Builtin {
+        id: "watts-hetero",
+        json: include_str!("../../../sweeps/watts-hetero.json"),
+    },
+    Builtin {
+        id: "watts-targeting",
+        json: include_str!("../../../sweeps/watts-targeting.json"),
     },
 ];
 
@@ -2238,7 +2266,14 @@ mod tests {
                 "ifd-matching",
                 "ifd-idle",
                 "ifd-crowding",
-                "ifd-travel"
+                "ifd-travel",
+                "gr-sd",
+                "gr-friends",
+                "gr-movement",
+                "gr-ceilings",
+                "watts-window",
+                "watts-hetero",
+                "watts-targeting"
             ]
         );
         for b in builtins() {

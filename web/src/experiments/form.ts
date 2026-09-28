@@ -104,6 +104,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
     return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
+  if (model === 'thresholds') {
+    // The built-in gr-sd's axis: the share rioting at equilibrium against the spread of thresholds.
+    return { ...form, x: { path: 'sd', values: '0.1:0.2:0.01' }, ticks: 200, metric: { ...form.metric, kind: 'final', series: 'acting' } };
+  }
   if (model === 'ants') {
     // The built-in ants-flips' axis: flips between sources against self-conversion ε.
     return { ...form, x: { path: 'epsilon', values: '0.001,0.002,0.003,0.005,0.01' }, ticks: 20000, metric: { ...form.metric, kind: 'final', series: 'flips' } };

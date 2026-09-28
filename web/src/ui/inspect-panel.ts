@@ -3,11 +3,12 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
+  ThresholdsInspection,
   FarolInspection,
   AgreementInspection,
   AnasaziInspection,
@@ -270,6 +271,25 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A step of the thresholds' time panel, a point of Figure 1, a histogram row, or an actor. */
+  private thresholdsRows(view: ThresholdsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${fmt(100 * x)} %`;
+    if (view.panel === 'time') return [row('Step', String(view.step)), row('Acting', (view.crowds ?? []).map(pct).join(' · '))];
+    if (view.panel === 'figure') return [row('Share acting', pct(view.share ?? 0)), row('Thresholds at or below', pct(view.cdf ?? 0))];
+    if (view.panel === 'histogram') return [row('Final share', `about ${pct(view.share ?? 0)}`), row('Episodes', String(view.count))];
+    const a = view.member;
+    if (!a) return [row('Point', 'between the panels')];
+    const rows = [
+      row('Actor', `#${a.id}${a.seed ? ' · the spark' : ''}${a.crowd > 1 ? ` · crowd ${a.crowd}` : ''}`),
+      row('Threshold', a.threshold === null ? 'never acts' : pct(a.threshold)),
+      row('Sees acting', `${a.sees} of ${a.of}${a.degree !== null ? ` · watches ${a.degree}` : ''}`),
+      row('Now', a.acting ? 'acting' : 'not acting'),
+    ];
+    if (a.ceiling !== null) rows.push(row('Leaves above', pct(a.ceiling)));
+    return rows;
+  }
+
   /** A step of the ants' time panel, a row of their histogram, or an ant. */
   private antsRows(view: AntsInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -467,6 +487,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isThresholdsView(view)
+            ? this.thresholdsRows(view)
           : isAntsView(view)
             ? this.antsRows(view)
           : isFarolView(view)

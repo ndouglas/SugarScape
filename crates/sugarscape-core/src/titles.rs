@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 223] = [
+pub const TITLES: [(&str, &str); 238] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -856,6 +856,66 @@ pub const TITLES: [(&str, &str); 223] = [
     (
         "am-independent",
         "Five ants in a hundred who ignore everyone calm the whole colony",
+    ),
+    (
+        "gr-uniform",
+        "One instigator, and all 100 riot",
+    ),
+    (
+        "gr-perturbed",
+        "Move one person up one notch, and only the instigator riots",
+    ),
+    (
+        "gr-normal-12",
+        "Mean threshold 25, spread 12: a handful riot",
+    ),
+    (
+        "gr-normal-13",
+        "Mean threshold 25, spread 13: nearly everyone riots",
+    ),
+    (
+        "gr-normal-sampled",
+        "The same crowd drawn from real people: no sharp tipping point",
+    ),
+    (
+        "gr-city",
+        "Crowds drawn from a city that should riot: half end with no rioter or one",
+    ),
+    (
+        "gr-friends",
+        "Count friends double, and the crowd that should riot mostly doesn't",
+    ),
+    (
+        "gr-friends-perturbed",
+        "Close friends rescue the stalled crowd, now and then",
+    ),
+    (
+        "gr-ceilings",
+        "Join a crowd, leave a mob: the riot builds and collapses",
+    ),
+    (
+        "gr-clusters",
+        "Ten crowds with people drifting between them",
+    ),
+    (
+        "watts-lower",
+        "Few links: mostly small cascades, now and then a large one",
+    ),
+    (
+        "watts-middle",
+        "A middling network: most sparks spread everywhere",
+    ),
+    (
+        "watts-upper",
+        "Many links: almost never, then everything",
+    ),
+    (
+        "watts-hetero",
+        "Varied thresholds keep dense networks cascading",
+    ),
+    (
+        "watts-hub",
+        "Light the best-connected node",
     ),
 ];
 

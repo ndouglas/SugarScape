@@ -1,0 +1,47 @@
+{
+  "name": "Threshold models: ceilings and pulsing riots",
+  "description": "Ceilings (Granovetter's Figure 3): how far the uniform crowd's riot swings over the last 100 of 600 steps against the share who leave once more than 90 % of the others riot. Measured (release, seeds 1–10, recorded 2026-09-27): deciding together, 0, 0.07, 0.14, 0.16, 0.27, 0.26 at shares 0, 0.1, 0.2, 0.3, 0.5, 0.7 — the riot pulses by about the share holding ceilings, in most crowds; one at a time, 0.04 or less — it hovers near 90 %.",
+  "base": {
+    "preset": "gr-ceilings"
+  },
+  "x": {
+    "label": "Share who leave above 90 %",
+    "path": "ceilings.share",
+    "values": [
+      0,
+      0.1,
+      0.2,
+      0.3,
+      0.5,
+      0.7
+    ]
+  },
+  "series": {
+    "label": "Actors decide",
+    "values": [
+      {
+        "at": 0,
+        "name": "Together",
+        "set": {
+          "update": "synchronous"
+        }
+      },
+      {
+        "at": 1,
+        "name": "One at a time",
+        "set": {
+          "update": "asynchronous"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 600,
+  "metric": {
+    "kind": "final",
+    "series": "swing"
+  }
+}

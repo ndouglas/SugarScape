@@ -228,6 +228,16 @@ IIb's "average about one-half" needs a hundred times the figure's run; the herdi
 colony grows; a random network cures that under Alfarano and Milaković's rule but not Kirman's, and
 their mean field fails on rings. See `docs/superpowers/specs/2026-09-27-ants-design.md`.
 
+## Milestone 25: Threshold Models (done)
+
+Granovetter's threshold model (1978) as a model kind, with the four extensions he sketches — friends,
+crowds sampled from a city, clusters with movement, ceilings — and Watts's cascades on random
+networks (2002). His crowds and Figure 2's continuous jump reproduce, but a crowd of real people has
+no single tipping point, and the city's "equilibrium of 100" happens in 2 % of crowds; the friends
+claims hold under a stated reading; middling movement is most incendiary; ceilings make riots pulse.
+Watts's window and power law reproduce; his upper edge depends on n, his Fig. 4b cannot be built as
+stated, and hubs help in both regimes. See `docs/superpowers/specs/2026-09-27-thresholds-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -248,6 +258,7 @@ their mean field fails on rings. See `docs/superpowers/specs/2026-09-27-ants-des
 - **Deffuant et al.'s relative agreement and extremism** (and Meadows & Cliff's replication): done (Milestone 22).
 - **Arthur's El Farol and Challet & Zhang's minority game** (and the memory transition, and Challet, Marsili & Ottino's critique): done (Milestone 23).
 - **Kirman's ants and recruitment** (and Alfarano & Milaković's network critique): done (Milestone 24).
+- **Granovetter's threshold models** (and Watts's global cascades): done (Milestone 25).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Credit hierarchy view**: done (Milestone 6).
 

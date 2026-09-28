@@ -164,6 +164,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'ants-2b',
     b: 'ants-crowd',
   },
+  {
+    id: 'gr-uniform-vs-perturbed',
+    label: 'Uniform vs perturbed crowd — Threshold Models (Compare)',
+    a: 'gr-uniform',
+    b: 'gr-perturbed',
+  },
 ];
 
 /**

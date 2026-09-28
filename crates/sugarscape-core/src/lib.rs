@@ -43,6 +43,7 @@ pub mod stats;
 pub mod structure;
 pub mod sweep;
 pub mod tags;
+pub mod thresholds;
 pub mod titles;
 pub mod world;
 

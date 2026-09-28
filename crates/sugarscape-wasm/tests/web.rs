@@ -340,7 +340,14 @@ fn builtins_and_series_names_are_listed() {
             "ifd-matching",
             "ifd-idle",
             "ifd-crowding",
-            "ifd-travel"
+            "ifd-travel",
+            "gr-sd",
+            "gr-friends",
+            "gr-movement",
+            "gr-ceilings",
+            "watts-window",
+            "watts-hetero",
+            "watts-targeting"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -911,6 +918,28 @@ fn ants_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "ants");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn thresholds_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: normal crowds by
+    // quantiles and samples (the portable logarithm), city crowds, friends,
+    // ceilings, clusters and Watts's networks.
+    for (id, fp) in [
+        ("gr-normal-13", "0xcda701fbbdaa19ce"),
+        ("gr-normal-sampled", "0xa9bca3821a0f4774"),
+        ("gr-city", "0xa587dcb16521cf3c"),
+        ("gr-friends", "0x37ae8bba4d07be7c"),
+        ("gr-ceilings", "0x1cc528db96973a5a"),
+        ("gr-clusters", "0xd493a3251cde5fbe"),
+        ("watts-middle", "0x1ed3157ee5e9ac61"),
+        ("watts-hetero", "0x1ebbdf6d37320885"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "thresholds");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

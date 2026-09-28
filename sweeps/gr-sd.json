@@ -1,0 +1,62 @@
+{
+  "name": "Threshold models: Granovetter's Figure 2",
+  "description": "Granovetter's Figure 2 for a crowd of 100: the share rioting at equilibrium against the spread of normal thresholds (mean 25 %). Measured (release, seeds 1–20, recorded 2026-09-27): rounded to whole people, 4 % at σ 0.12 and 5 % at 0.122, then 100 % from 0.124 — the jump at Granovetter's 12.2; kept as fractions, the jump waits until between 0.124 and 0.126; drawn at random, no jump: 1 %, 7 %, 22 %, 32 %, 32 %, 32 %, 32 %, 38 %, 76 %, 81 %, 100 % at σ 0.10 … 0.20. The critical point is a property of the idealized distribution and of how its thresholds become people.",
+  "base": {
+    "preset": "gr-normal-13"
+  },
+  "x": {
+    "label": "Spread of thresholds (sd)",
+    "path": "sd",
+    "values": [
+      0.1,
+      0.11,
+      0.115,
+      0.12,
+      0.122,
+      0.124,
+      0.126,
+      0.13,
+      0.14,
+      0.16,
+      0.2
+    ]
+  },
+  "series": {
+    "label": "The crowd",
+    "values": [
+      {
+        "at": 0,
+        "name": "Quantiles, rounded to people",
+        "set": {
+          "crowd": "quantiles",
+          "rounding": "nearest"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Quantiles, as fractions",
+        "set": {
+          "crowd": "quantiles",
+          "rounding": "exact"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Drawn at random",
+        "set": {
+          "crowd": "sampled",
+          "rounding": "exact"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 200,
+  "metric": {
+    "kind": "final",
+    "series": "acting"
+  }
+}

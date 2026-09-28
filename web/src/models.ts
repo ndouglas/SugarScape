@@ -1,6 +1,8 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  ThresholdsConfig,
+  ThresholdsInspection,
   AntsConfig,
   AntsInspection,
   FarolConfig,
@@ -39,7 +41,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -61,12 +63,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   image: 'Image Scoring',
   farol: 'El Farol and the Minority Game',
   ants: 'Ants and Recruitment',
+  thresholds: 'Threshold Models',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds'
     ? tag
     : 'sugarscape';
 }
@@ -160,6 +163,11 @@ export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
 }
 
+/** A cell of the thresholds frame (a panel, an actor as `member`, and Figure 1's `cdf`); check it first. */
+export function isThresholdsView(v: AnyInspection): v is ThresholdsInspection {
+  return 'panel' in v && 'cdf' in v;
+}
+
 /** A cell of the ants frame (a panel, a grid ant as `member`, and each source's `shares`). */
 export function isAntsView(v: AnyInspection): v is AntsInspection {
   return 'panel' in v && 'shares' in v;
@@ -192,6 +200,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'image' && (c as ImageConfig).end > 0) return Math.max(0, (c as ImageConfig).end - tick);
   if (modelOf(c) === 'farol' && (c as FarolConfig).stop_at > 0) return Math.max(0, (c as FarolConfig).stop_at - tick);
   if (modelOf(c) === 'ants' && (c as AntsConfig).stop_at > 0) return Math.max(0, (c as AntsConfig).stop_at - tick);
+  if (modelOf(c) === 'thresholds' && (c as ThresholdsConfig).stop_at > 0) return Math.max(0, (c as ThresholdsConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -344,6 +353,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['independent', 'Independent'],
     ['degree', 'Degree'],
   ],
+  // Who acts (and the seed); each actor's threshold; how many it watches; its crowd.
+  thresholds: [
+    ['state', 'State'],
+    ['threshold', 'Threshold'],
+    ['degree', 'Degree'],
+    ['crowd', 'Crowd'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -366,4 +382,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   image: [],
   farol: [],
   ants: [],
+  thresholds: [],
 };

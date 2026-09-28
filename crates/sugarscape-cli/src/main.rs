@@ -235,7 +235,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             },
             ModelKind::Image => "its last generation",
             ModelKind::Farol => "its last round",
-            ModelKind::Ants => "its last step",
+            ModelKind::Ants | ModelKind::Thresholds => "its last step",
             _ => "its end year",
         };
         eprintln!("finished at tick {} ({why})", world.tick());
