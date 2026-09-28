@@ -44,14 +44,14 @@ pub fn presets() -> Vec<ModelPreset> {
             "Table 6-1's base case: 10 % rational, 85 % imitators, 5 % random, thresholds 0.5, networks of 10–25 people within up to five cohorts. Axtell and Epstein never define their 'transition time'; here it is the first period in which 95 % of the eligible have retired. Measured (20 seeds): 16 periods (± 3). Their other choices matter too: activating everyone in one random order instead of cohort by cohort, oldest first, it takes 26; counting every friend instead of the eligible ones, never.",
             |_| {},
         ),
-        preset("ae-slow", "Fig. 6-5: 5 % rational", AE, "Figure 6-5: only 5 % rational, 90 % imitators. Retirement stalls at a fifth or so of those eligible, wavers — 'the trajectory is not monotone' — and then, once the retired old have spread their example, sweeps to 100 %: 'It is as if retirement percolates up from older to younger agents.' Measured (20 seeds): 61 periods (± 3); the first run climbs to 31 % by period 40, falls back to 21 %, and completes at period 70. Reproduced.", |c| {
+        preset("ae-slow", "Fig. 6-5: 5 % rational", AE, "Figure 6-5: only 5 % rational, 90 % imitators. Retirement stalls at a fifth or so of those eligible, wavers — 'the trajectory is not monotone' — and then, once the retired old have spread their example, sweeps to 100 %: 'It is as if retirement percolates up from older to younger agents.' Measured (20 seeds): 61 periods (± 3); the first run climbs to 33 % by period 40, falls back to 20 %, and sweeps to 99 % at period 63. Reproduced.", |c| {
             c.rational = 0.05;
         }),
         preset(
             "ae-policy",
             "Animation 6-3: 65 to 62",
             AE,
-            "Axtell and Epstein's policy experiment: retirement mandatory at 70, and once the age 65 norm is established, the eligibility age drops to 62, as Congress's did in 1961. The paper: the new norm 'emerges after twenty to thirty periods', and 'in about 35 periods if between 1 and 4 percent of the population responds rationally' — the sluggish response the model was built to explain. Measured (20 seeds): the new norm is reached 2 periods after the switch, at every rational share from 0 to 14 % (the ae-policy sweep). Imitators just turned 62 count their eligible friends, who now include the retired 65-to-67-year-olds; half have retired, so they retire at once. The stated rules do not produce the decades.",
+            "Axtell and Epstein's policy experiment: retirement mandatory at 70, and once the age 65 norm is established, the eligibility age drops to 62, as Congress's did in 1961. The paper: the new norm 'emerges after twenty to thirty periods', and 'in about 35 periods if between 1 and 4 percent of the population responds rationally' — the sluggish response the model was built to explain. Measured (20 seeds): the new norm is reached 2 periods after the switch in every run, and in 2 or fewer at every rational share from 0 to 14 % (the ae-policy sweep, 10 seeds). Imitators just turned 62 count their eligible friends, who now include the retired 65-to-67-year-olds; half have retired, so they retire at once. The stated rules do not produce the decades.",
             |c| {
                 c.rational = 0.05;
                 c.mandatory = 70;
@@ -86,7 +86,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ae-replace",
             "Friends replaced, 5 % rational",
             AE,
-            "A choice the paper never states: when a friend dies, is its place in the network taken by the 20-year-old reborn in its slot (the default; their pseudo-code reuses agent objects) or does the agent find a replacement of about its own age (here)? With friends replaced, networks keep their eligible members and imitation is harder: 5 % rationality never establishes the norm (10 seeds, 600 periods), and 10 % takes 70 ± 75 periods — the 'minimum proportions … rational' and the rapidly growing variance of Axtell and Epstein's Figure 6-6, which the default reading does not produce.",
+            "A choice the paper never states: when a friend dies, is its place in the network taken by the 20-year-old reborn in its slot (the default; their pseudo-code reuses agent objects) or does the agent find a replacement of about its own age (here)? With friends replaced, networks keep their eligible members and imitation is harder: 5 % rationality never establishes the norm (10 seeds, 600 periods), and 10 % reaches it in 8 runs of 10, after 22 to 279 periods, while the other 2 never do within 600 — the 'minimum proportions … rational' and the rapidly growing variance of Axtell and Epstein's Figure 6-6, which the default reading does not produce.",
             |c| {
                 c.rational = 0.05;
                 c.renewal = Renewal::Replace;

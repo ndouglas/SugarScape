@@ -243,8 +243,9 @@ stated, and hubs help in both regimes. See `docs/superpowers/specs/2026-09-27-th
 Axtell and Epstein's retirement model (1999; Epstein 2006, ch. 7) as a model kind: cohorts, deaths and
 newborns, rational, random and imitating agents in transient networks, the policy switch from 65 to 62
 and two coupled sub-populations, with the unstated rules — whom an imitator counts, what becomes of a
-dead friend's place, activation order, transition time — as switches. The realizations and the
-network-size effects reproduce; footnote 5 is false (counting every friend, no norm forms); Figure
+dead friend's place, activation order, transition time — as switches. The realizations reproduce in
+shape (a little slower than stated) and the network-size effects as stated, but network extent has no
+effect at 5 % rational; footnote 5 is false (counting every friend, no norm forms); Figure
 6-6's minimum of rationality needs an unstated renewal rule; the policy switch's slow response does
 not reproduce (the new norm comes in 2 periods); coupling slows the rational group as much as it
 speeds the other. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.

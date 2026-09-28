@@ -1555,11 +1555,13 @@ eligible members of their own small network — people within a few years of the
 
 Measured (the survey and the presets' descriptions):
 
-- **The realizations reproduce.** With 15 % rational, 95 % of those eligible have retired by period 8
-  on average, rising steadily (the text says "within the first 6 periods"); with 5 %, retirement
+- **The realizations reproduce in shape, a little slower.** With 15 % rational, 95 % of those eligible
+  have retired by period 8 on average, rising steadily (the text says "within the first 6 periods"; 4
+  runs of 20 make it by then); with 5 %, retirement
   stalls, wavers and "percolates up" from the old, finishing near period 61. Larger networks slow the
   transition, a spread of network sizes speeds it, the cohort size does not matter, and retirement
-  mandatory at 70 speeds it — all as stated.
+  mandatory at 70 speeds it — all as stated. Wider networks speed it at 10 % rational, as stated, but
+  not at 5 % (Figure 6-9), where the narrowest are as fast as the widest.
 - **Footnote 5 is false.** Counting every friend instead of the eligible ones is said to leave the
   results' "qualitative character" unchanged; counting every friend, no norm ever forms — the young
   friends hold the share retired below one half.
@@ -1567,7 +1569,8 @@ Measured (the survey and the presets' descriptions):
   passes to the newborn in its slot — no minimum of rationality is needed (72 periods with no
   rationals at all) and nothing takes the paper's hundreds of periods. Only if friends who die are
   replaced by someone of about the same age do the paper's "minimum proportions" and long, erratic
-  transitions appear (no norm at 0 or 5 % rational; 10 % takes 70 ± 75 periods).
+  transitions appear (no norm at 0 or 5 % rational; at 10 %, 8 runs of 10 reach it after 22 to 279 periods and 2 never
+  do within 600).
 - **The policy switch does not reproduce.** Lowering eligibility to 62 once the norm is established,
   the paper's new norm "emerges after twenty to thirty periods"; here it comes in 2, at every share of
   rationals, under either rule: an imitator just turned 62 counts its retired 65-to-67-year-old friends

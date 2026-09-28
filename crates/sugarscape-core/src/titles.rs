@@ -923,7 +923,7 @@ pub const TITLES: [(&str, &str); 245] = [
     ),
     (
         "ae-base",
-        "A tenth decide rationally, and the norm takes a generation",
+        "A tenth decide rationally, and retiring at 65 takes hold in about 16 years",
     ),
     (
         "ae-slow",

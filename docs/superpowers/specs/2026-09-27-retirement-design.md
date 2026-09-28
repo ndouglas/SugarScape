@@ -99,7 +99,7 @@ Titles follow `titles.rs`'s style; drafts.
 | Preset | Title | Setup |
 |---|---|---|
 | `ae-rapid` | 15 % decide rationally, and retiring at 65 sets in within a few years | 15/80/5 (Fig. 6-4, GSS's shares) |
-| `ae-base` | A tenth decide rationally, and the norm takes a generation | Table 6-1 (the kind's default) |
+| `ae-base` | A tenth decide rationally, and retiring at 65 takes hold in about 16 years | Table 6-1 (the kind's default) |
 | `ae-slow` | 5 % rational: retiring at 65 spreads slowly, up from the old | 5/90/5 (Fig. 6-5) |
 | `ae-policy` | Congress lowers the age to 62: here the new norm comes in a few years | 5 % rational, mandatory 70, policy |
 | `ae-groups` | Two communities, one with no rational agents, loosely linked | groups, coupling 0.1 |

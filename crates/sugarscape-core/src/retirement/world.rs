@@ -414,6 +414,7 @@ impl RetirementWorld {
             }
             let c = &self.config;
             if c.mandatory > 0 && age >= c.mandatory {
+                exposed[(age - YOUNGEST) as usize] += 1;
                 self.retire(i, age, &mut retirements);
                 continue;
             }
@@ -454,6 +455,11 @@ impl RetirementWorld {
                     switched = true;
                 }
             }
+        } else if self.config.policy.enabled && self.switched_at.is_none() {
+            // The policy turned on after the norm: it switches now.
+            self.eligibility = self.config.policy.to;
+            self.switched_at = Some(self.tick);
+            switched = true;
         } else if let (Some(at), None) = (self.switched_at, self.transition_new) {
             if share >= self.config.norm {
                 self.transition_new = Some(self.tick - at);
@@ -1071,6 +1077,33 @@ mod tests {
                 assert!(w.agents[i].retired, "{i}");
             }
         }
+    }
+
+    #[test]
+    fn mandatory_retirees_count_as_exposed_at_their_age() {
+        let mut w = world(|c| c.mandatory = 70);
+        w.run(3);
+        let (r, e) = w.hazards();
+        let k = (70 - YOUNGEST) as usize;
+        assert!(r[k] > 0);
+        assert!(e[k] >= r[k], "{} retired of {} exposed at 70", r[k], e[k]);
+    }
+
+    #[test]
+    fn turning_the_policy_on_after_the_norm_switches_next_period() {
+        let mut w = world(|c| c.stop_at_norm = true);
+        w.run(500);
+        let t = w.transition().unwrap();
+        assert!(w.is_finished());
+        let mut next = w.config.clone();
+        next.policy.enabled = true;
+        Model::set_config(&mut w, ModelConfig::Retirement(next)).unwrap();
+        assert!(!w.is_finished());
+        w.run(500);
+        assert!(w.is_finished());
+        assert_eq!(w.eligibility(), 62);
+        assert!(w.transition_new().is_some());
+        assert_eq!(w.transition(), Some(t));
     }
 
     #[test]

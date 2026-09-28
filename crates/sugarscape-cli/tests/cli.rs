@@ -605,6 +605,15 @@ fn a_retirement_run_stops_at_the_norm_or_its_last_period() {
     .unwrap();
     let out = sugarscape(&["run", "--config", stop.to_str().unwrap(), "--ticks", "100"]);
     assert_eq!(stderr(&out), "finished at tick 25 (its last period)\n");
+    // Stopping at the norm, but no norm by `stop_at`: counting all members.
+    let never = dir.join("never.json");
+    std::fs::write(
+        &never,
+        r#"{"model": "retirement", "per_cohort": 20, "counts": "all", "stop_at_norm": true, "stop_at": 20}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&["run", "--config", never.to_str().unwrap(), "--ticks", "100"]);
+    assert_eq!(stderr(&out), "finished at tick 20 (its last period)\n");
 }
 
 #[test]
