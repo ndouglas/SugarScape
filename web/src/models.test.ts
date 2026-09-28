@@ -27,8 +27,10 @@ import {
   MODEL_OVERLAYS,
   modelOf,
   presetGroups,
+  presetSubgroups,
   presetOptionLabel,
   presetReference,
+  sugarscapeChapter,
   ticksLeft,
 } from './models';
 import type { AnyInspection, Config, ModelConfig, Preset } from './types';
@@ -71,6 +73,35 @@ describe('presetGroups', () => {
       ['Sugarscape', ['ii-2', 'ii-3']],
       ['Ring World', ['ring-1', 'ring-2']],
     ]);
+  });
+});
+
+describe('presetSubgroups', () => {
+  const p = (id: string, source: string, config: unknown = {}): Preset =>
+    ({ id, title: id, name: id, source, description: '', config: config as ModelConfig });
+
+  it('reads a sugarscape preset’s chapter from its source, and the Minds experiments apart', () => {
+    const chapters = ['Animation II-2', 'Animations II-4/II-5', 'Figure III-6', 'Chapter IV, footnote 7', 'Animation V-1', 'Chapter VI',
+      'Fretwell & Lucas 1969; Minds 1', 'Epstein & Axtell II-7; Minds 2', 'Minds 3', 'Appendix B, rule P',
+      'Axtell, Axelrod, Epstein & Cohen 1996, §4.3.1'];
+    expect(chapters.map((s) => sugarscapeChapter(p('x', s)))).toEqual([
+      'Chapter II', 'Chapter II', 'Chapter III', 'Chapter IV', 'Chapter V', 'Chapter VI', 'Minds', 'Minds', 'Minds', 'Appendix B',
+      'Other sources',
+    ]);
+  });
+
+  it('groups the sugarscape by chapter in first-appearance order, and other models as one list', () => {
+    const presets = [
+      p('ii-1', 'Animation II-1'), p('iii-1', 'Figure III-1'), p('ii-2', 'Animation II-2'),
+      p('ifd', 'Minds 1'), p('ring-1', 'Chapter VI', { model: 'ring' }), p('ring-2', 'Chapter VI', { model: 'ring' }),
+    ];
+    expect(presetSubgroups('sugarscape', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([
+      ['Chapter II', ['ii-1', 'ii-2']],
+      ['Chapter III', ['iii-1']],
+      ['Minds', ['ifd']],
+    ]);
+    expect(presetSubgroups('ring', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([[null, ['ring-1', 'ring-2']]]);
+    expect(presetSubgroups('schelling', presets)).toEqual([]);
   });
 });
 
