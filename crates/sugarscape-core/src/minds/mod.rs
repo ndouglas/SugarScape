@@ -19,5 +19,9 @@ pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
     match world.config.decision.rule {
         DecisionRule::Book => movement::act(world, id),
         DecisionRule::Utility => utility::act(world, id),
+        // Task 4/5 replaces this
+        DecisionRule::Goap => movement::act(world, id),
+        // Task 4/5 replaces this
+        DecisionRule::Mvt => movement::act(world, id),
     }
 }

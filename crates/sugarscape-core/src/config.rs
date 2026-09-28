@@ -414,13 +414,48 @@ pub struct TradeRule {
 
 /// Minds 1: which rule makes rule M's decision (where to move). `Book` is rule
 /// M as stated; `Utility` is `crate::minds::utility`. Rule C still decides
-/// moves under combat.
+/// moves under combat. Minds 4 adds `Goap` (search over candidate sites) and
+/// `Mvt` (the marginal value theorem's stay/leave rule); both need
+/// `movement.mode: walk`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DecisionRule {
     #[default]
     Book,
     Utility,
+    Goap,
+    Mvt,
+}
+
+/// Minds 4: GOAP's search — the nearest `k` candidate sites, planned
+/// `horizon` steps ahead.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Goap {
+    /// Candidate sites considered, nearest first (1–12).
+    pub k: u32,
+    /// Steps planned ahead (1–100).
+    pub horizon: u32,
+}
+
+impl Default for Goap {
+    fn default() -> Self {
+        Self { k: 8, horizon: 10 }
+    }
+}
+
+/// Minds 4: the marginal value theorem's stay/leave rule.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Mvt {
+    /// Smoothing constant for the running rate estimate ρ, in (0, 1].
+    pub alpha: f64,
+}
+
+impl Default for Mvt {
+    fn default() -> Self {
+        Self { alpha: 0.05 }
+    }
 }
 
 /// What the utility mind does when every site it sees scores 0.
@@ -499,6 +534,20 @@ pub enum Belief {
     Project,
 }
 
+/// Minds 4: what a newborn Flump's memory starts knowing, before it has seen
+/// anything itself.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MemoryPrior {
+    /// Starts knowing nothing (the book's Flump).
+    #[default]
+    None,
+    /// Starts knowing where every site is, though not what it currently
+    /// holds. Needs `memory.span > 0` — knowing the map is worthless to a
+    /// Flump that can't hold what it learns there.
+    Map,
+}
+
 /// Minds 3: how far and how well Flumps remember sites out of sight.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -510,6 +559,8 @@ pub struct Memory {
     /// Share of agents born remembering (0–1).
     pub share: f64,
     pub belief: Belief,
+    /// Minds 4: what a newborn starts knowing (reset-only, unlike `belief`).
+    pub prior: MemoryPrior,
 }
 
 impl Default for Memory {
@@ -518,6 +569,7 @@ impl Default for Memory {
             span: 0,
             share: 1.0,
             belief: Belief::Project,
+            prior: MemoryPrior::None,
         }
     }
 }
@@ -714,7 +766,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 19] = [
+pub const RESET_ONLY_PATHS: [&str; 20] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -731,6 +783,7 @@ pub const RESET_ONLY_PATHS: [&str; 19] = [
     "memory",
     "memory.span",
     "memory.share",
+    "memory.prior",
     "truffles",
     "truffles.share",
     "truffles.seed",
@@ -824,6 +877,8 @@ pub struct Config {
     pub walls: Vec<Wall>,
     pub memory: Memory,
     pub truffles: Truffles,
+    pub goap: Goap,
+    pub mvt: Mvt,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -902,6 +957,8 @@ impl Default for Config {
             walls: Vec::new(),
             memory: Memory::default(),
             truffles: Truffles::default(),
+            goap: Goap::default(),
+            mvt: Mvt::default(),
             schedule: Vec::new(),
         }
     }
@@ -1458,6 +1515,27 @@ impl Config {
             "rule C decides moves under combat",
         );
         e.check(
+            !matches!(dc.rule, DecisionRule::Goap | DecisionRule::Mvt)
+                || self.movement.mode == MoveMode::Walk,
+            "decision.rule",
+            "planning and the marginal-value rule walk; set movement.mode to walk",
+        );
+        e.check(
+            (1..=12).contains(&self.goap.k),
+            "goap.k",
+            "must be between 1 and 12",
+        );
+        e.check(
+            (1..=100).contains(&self.goap.horizon),
+            "goap.horizon",
+            "must be between 1 and 100",
+        );
+        e.check(
+            self.mvt.alpha.is_finite() && self.mvt.alpha > 0.0 && self.mvt.alpha <= 1.0,
+            "mvt.alpha",
+            "must be greater than 0 and at most 1",
+        );
+        e.check(
             (1..=50).contains(&self.movement.speed),
             "movement.speed",
             "must be between 1 and 50",
@@ -1500,6 +1578,11 @@ impl Config {
             self.memory.span == 0 || self.movement.mode == MoveMode::Walk,
             "memory.span",
             "remembered sites out of sight can only be walked to",
+        );
+        e.check(
+            self.memory.prior != MemoryPrior::Map || self.memory.span > 0,
+            "memory.prior",
+            "knowing the map needs memory (span > 0)",
         );
         e.check(
             (0.0..=1.0).contains(&self.truffles.share),
@@ -1709,6 +1792,9 @@ impl Config {
         }
         if self.memory.share != next.memory.share {
             out.push(FieldError::new("memory.share", msg));
+        }
+        if self.memory.prior != next.memory.prior {
+            out.push(FieldError::new("memory.prior", msg));
         }
         if self.truffles.share != next.truffles.share {
             out.push(FieldError::new("truffles.share", msg));
@@ -3188,6 +3274,7 @@ mod tests {
                 span: 0,
                 share: 1.0,
                 belief: Belief::Project,
+                prior: MemoryPrior::None,
             }
         );
         assert_eq!(
@@ -3216,6 +3303,7 @@ mod tests {
                 span: 50,
                 share: 1.0,
                 belief: Belief::Project,
+                prior: MemoryPrior::None,
             }
         );
     }
@@ -3342,5 +3430,165 @@ mod tests {
                 "{path}: {errs:?}"
             );
         }
+    }
+
+    #[test]
+    fn goap_and_mvt_default_to_the_book_and_older_configs_load() {
+        let d = Config::default();
+        assert_eq!(d.goap, Goap { k: 8, horizon: 10 });
+        assert_eq!(d.mvt, Mvt { alpha: 0.05 });
+        assert_eq!(d.memory.prior, MemoryPrior::None);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.remove("goap");
+        o.remove("mvt");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!((c.goap, c.mvt), (Goap::default(), Mvt::default()));
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.get_mut("memory")
+            .unwrap()
+            .as_object_mut()
+            .unwrap()
+            .remove("prior");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!(c.memory.prior, MemoryPrior::None);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["goap"] = serde_json::json!({ "k": 3 });
+        assert_eq!(
+            Config::from_value(v).unwrap().goap,
+            Goap { k: 3, horizon: 10 }
+        );
+    }
+
+    #[test]
+    fn goap_mvt_and_prior_are_validated() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(&|c| c.goap.k = 1).is_empty());
+        assert!(with(&|c| c.goap.k = 12).is_empty());
+        assert_eq!(with(&|c| c.goap.k = 0), ["goap.k"]);
+        assert_eq!(with(&|c| c.goap.k = 13), ["goap.k"]);
+        assert!(with(&|c| c.goap.horizon = 1).is_empty());
+        assert!(with(&|c| c.goap.horizon = 100).is_empty());
+        assert_eq!(with(&|c| c.goap.horizon = 0), ["goap.horizon"]);
+        assert_eq!(with(&|c| c.goap.horizon = 101), ["goap.horizon"]);
+        assert!(with(&|c| c.mvt.alpha = 1.0).is_empty());
+        assert!(with(&|c| c.mvt.alpha = 0.001).is_empty());
+        assert_eq!(with(&|c| c.mvt.alpha = 0.0), ["mvt.alpha"]);
+        assert_eq!(with(&|c| c.mvt.alpha = 1.5), ["mvt.alpha"]);
+        assert_eq!(with(&|c| c.mvt.alpha = -0.1), ["mvt.alpha"]);
+        assert_eq!(with(&|c| c.mvt.alpha = f64::NAN), ["mvt.alpha"]);
+
+        // GOAP and MVT need movement.mode: walk (the default is jump).
+        assert_eq!(
+            with(&|c| c.decision.rule = DecisionRule::Goap),
+            ["decision.rule"]
+        );
+        assert_eq!(
+            with(&|c| c.decision.rule = DecisionRule::Mvt),
+            ["decision.rule"]
+        );
+        assert!(with(&|c| {
+            c.decision.rule = DecisionRule::Goap;
+            c.movement.mode = MoveMode::Walk;
+        })
+        .is_empty());
+        assert!(with(&|c| {
+            c.decision.rule = DecisionRule::Mvt;
+            c.movement.mode = MoveMode::Walk;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.decision.rule = DecisionRule::Goap;
+        let errs = c.validate().unwrap_err();
+        assert_eq!(
+            errs[0].message,
+            "planning and the marginal-value rule walk; set movement.mode to walk"
+        );
+
+        // `memory.prior: map` needs `memory.span > 0`.
+        assert_eq!(
+            with(&|c| c.memory.prior = MemoryPrior::Map),
+            ["memory.prior"]
+        );
+        assert!(with(&|c| {
+            c.memory.prior = MemoryPrior::Map;
+            c.movement.mode = MoveMode::Walk;
+            c.memory.span = 10;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.memory.prior = MemoryPrior::Map;
+        let errs = c.validate().unwrap_err();
+        assert!(
+            errs.iter().any(|e| e.field == "memory.prior"
+                && e.message == "knowing the map needs memory (span > 0)"),
+            "{errs:?}"
+        );
+    }
+
+    #[test]
+    fn goap_and_mvt_knobs_live_and_prior_is_reset_only() {
+        let a = Config::default();
+        let mut b = a.clone();
+        b.movement.mode = MoveMode::Walk;
+        b.decision.rule = DecisionRule::Goap;
+        b.goap.k = 4;
+        b.goap.horizon = 20;
+        b.mvt.alpha = 0.2;
+        // `decision.rule` is already reset-only (checked elsewhere); the
+        // knobs themselves are not.
+        let f: Vec<String> = a
+            .structural_changes(&{
+                let mut c = a.clone();
+                c.goap.k = 4;
+                c.goap.horizon = 20;
+                c.mvt.alpha = 0.2;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert!(f.is_empty());
+        let c = Config {
+            movement: Movement {
+                mode: MoveMode::Walk,
+                speed: 1,
+            },
+            decision: Decision {
+                rule: DecisionRule::Goap,
+                ..Decision::default()
+            },
+            schedule: vec![
+                change(5, "goap.k", serde_json::json!(4)),
+                change(6, "goap.horizon", serde_json::json!(20)),
+                change(7, "mvt.alpha", serde_json::json!(0.2)),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+
+        // `memory.prior` changes only on reset.
+        assert_eq!(
+            a.structural_changes(&{
+                let mut c = a.clone();
+                c.memory.prior = MemoryPrior::Map;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect::<Vec<_>>(),
+            ["memory.prior"]
+        );
+        let c = Config {
+            schedule: vec![change(5, "memory.prior", serde_json::json!("map"))],
+            ..Default::default()
+        };
+        let errs = c.validate().unwrap_err();
+        assert!(errs[0].message.contains("only on reset"), "{errs:?}");
     }
 }
