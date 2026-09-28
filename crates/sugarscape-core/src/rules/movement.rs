@@ -3,14 +3,20 @@
 
 use rand::seq::SliceRandom;
 
-use crate::agent::AgentId;
-use crate::config::{Config, MAX_GOODS};
+use crate::agent::{AgentId, Plan};
+use crate::config::{Config, MoveMode, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::landscape::Site;
+use crate::minds::astar::astar;
+use crate::minds::grid::TorusGrid;
 use crate::rng::SimRng;
 use crate::rules::Harvest;
 use crate::social::Seen;
 use crate::world::World;
+
+/// Most sites A* may expand for a walking agent; past it the target counts
+/// as unreachable (Minds 2).
+pub const WALK_LIMIT: usize = 4096;
 
 /// Picks among `(site, distance, value)` candidates: highest value, then
 /// nearest, then uniformly at random.
@@ -56,7 +62,7 @@ pub(crate) fn devaluation(config: &Config, site: &Site, good: usize) -> Option<f
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let candidates = candidates(world, id);
     let target = choose(&candidates, &mut world.rng);
-    go_and_gather(world, id, target)
+    arrive(world, id, target)
 }
 
 /// Rule M's candidates for `id`: its current site at distance 0, then the
@@ -131,6 +137,41 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     harvest
 }
 
+/// Reaches `target` by the configured movement, then gathers where the
+/// agent stops. `jump` (rule M) goes there in one tick. `walk` takes `speed`
+/// steps along an A* path on the 4-way torus (walls and occupied sites
+/// impassable, except the target) and stays when there is none within
+/// `WALK_LIMIT`. Records the agent's plan; draws nothing.
+pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+    let pos = world.agent(id).expect("live agent").pos;
+    let m = world.config.movement;
+    if m.mode == MoveMode::Jump || target == pos {
+        world.agent_mut(id).expect("live agent").plan = Plan {
+            target: Some(target),
+            path: Vec::new(),
+        };
+        return go_and_gather(world, id, target);
+    }
+    let torus = world.torus;
+    let found = {
+        let grid = TorusGrid::new(torus, |q| q == target || !world.is_occupied(q));
+        astar(&grid, torus.index(pos), torus.index(target), WALK_LIMIT)
+    };
+    let (stop, rest) = match found {
+        Some(s) => {
+            let steps = (m.speed as usize).min(s.path.len() - 1);
+            let rest = s.path[steps + 1..].iter().map(|&i| torus.pos(i)).collect();
+            (torus.pos(s.path[steps]), rest)
+        }
+        None => (pos, Vec::new()),
+    };
+    world.agent_mut(id).expect("live agent").plan = Plan {
+        target: Some(target),
+        path: rest,
+    };
+    go_and_gather(world, id, stop)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,6 +182,92 @@ mod tests {
         let id = spawn(w, 5, 5);
         w.agent_mut(id).unwrap().vision = vision;
         id
+    }
+
+    fn walker(w: &mut World, vision: u32, speed: u32) -> AgentId {
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed,
+        };
+        mover(w, vision)
+    }
+
+    #[test]
+    fn a_walker_takes_one_step_toward_the_target_and_gathers_only_there() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 1);
+        set_sugar(&mut w, 5, 8, 3.0);
+        set_sugar(&mut w, 5, 6, 1.0); // on the way: stepped onto, so gathered
+        let h = act(&mut w, id);
+        // Rule M picks (5, 8) (the most sugar); the walker steps to (5, 6).
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 6));
+        assert_eq!(h.gathered[0], 1.0);
+        assert_eq!(w.site(Pos::new(5, 8)).resource[0], 3.0, "not reached yet");
+        let plan = &w.agent(id).unwrap().plan;
+        assert_eq!(plan.target, Some(Pos::new(5, 8)));
+        assert_eq!(plan.path, vec![Pos::new(5, 7), Pos::new(5, 8)]);
+    }
+
+    #[test]
+    fn a_walker_goes_around_an_occupant() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 1);
+        spawn(&mut w, 5, 6);
+        set_sugar(&mut w, 5, 7, 3.0);
+        act(&mut w, id);
+        let p = w.agent(id).unwrap().pos;
+        assert!(
+            p == Pos::new(4, 5) || p == Pos::new(6, 5),
+            "a sidestep, got {p:?}"
+        );
+    }
+
+    #[test]
+    fn speed_three_stops_at_the_target() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 3);
+        set_sugar(&mut w, 5, 7, 3.0);
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 7), 3.0)
+        );
+        assert!(w.agent(id).unwrap().plan.path.is_empty());
+    }
+
+    #[test]
+    fn a_walker_with_no_path_stays_and_gathers_where_it_is() {
+        let mut w = blank_world(11, 11);
+        let id = walker(&mut w, 3, 1);
+        set_sugar(&mut w, 5, 5, 0.5);
+        set_sugar(&mut w, 5, 8, 3.0);
+        for (x, y) in [(5, 4), (5, 6), (4, 5), (6, 5)] {
+            spawn(&mut w, x, y); // boxed in
+        }
+        let before = w.rng.clone();
+        let candidates_before = candidates(&w, id);
+        let h = act(&mut w, id);
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 5), 0.5)
+        );
+        // No draws beyond `choose`: `w.rng` after `act` matches a clone
+        // advanced by exactly one `choose` over the pre-`act` candidates.
+        let mut expected = before;
+        let _ = choose(&candidates_before, &mut expected);
+        assert_eq!(w.rng, expected);
+    }
+
+    #[test]
+    fn plan_is_not_hashed() {
+        let mut w = blank_world(5, 5);
+        let id = spawn(&mut w, 1, 1);
+        let before = w.fingerprint();
+        w.agent_mut(id).unwrap().plan = crate::agent::Plan {
+            target: Some(Pos::new(2, 2)),
+            path: vec![Pos::new(1, 2), Pos::new(2, 2)],
+        };
+        assert_eq!(w.fingerprint(), before, "plan is observational, not hashed");
     }
 
     fn spicy(w: &mut World, vision: u32) -> AgentId {

@@ -15,7 +15,7 @@ use crate::agent::AgentId;
 use crate::config::{Decision, Idle};
 use crate::geometry::Pos;
 use crate::portable::{exp_neg, ln};
-use crate::rules::movement::{candidates, choose, go_and_gather};
+use crate::rules::movement::{arrive, candidates, choose};
 use crate::rules::Harvest;
 use crate::world::World;
 
@@ -62,13 +62,13 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
             Some(c) => c.0,
             None => {
                 let target = choose(&scored, &mut world.rng);
-                return go_and_gather(world, id, target);
+                return arrive(world, id, target);
             }
         }
     } else {
         choose(&scored, &mut world.rng)
     };
-    go_and_gather(world, id, target)
+    arrive(world, id, target)
 }
 
 #[cfg(test)]

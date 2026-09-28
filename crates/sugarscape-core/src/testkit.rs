@@ -78,6 +78,7 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         infected_by: None,
         culture: Vec::new(),
         social: Social::default(),
+        plan: crate::agent::Plan::default(),
     }
 }
 

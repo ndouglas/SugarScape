@@ -63,6 +63,14 @@ pub struct LoanView {
     pub due_tick: u64,
 }
 
+/// Minds 2: an agent's plan, for display.
+#[derive(Clone, Debug, Serialize)]
+pub struct PlanView {
+    pub target_x: u32,
+    pub target_y: u32,
+    pub path: Vec<[u32; 2]>,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct DiseaseEntry {
     pub id: DiseaseId,
@@ -100,6 +108,9 @@ pub struct AgentView {
     pub immune_genome: String,
     pub diseases: Vec<DiseaseView>,
     pub infected_by: Option<LinkView>,
+    /// Minds 2: where the agent is walking and the path left to it (`None`
+    /// under `jump`, or once it has arrived).
+    pub plan: Option<PlanView>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -304,6 +315,11 @@ impl World {
                 })
                 .collect(),
             infected_by: a.infected_by.map(link),
+            plan: a.plan.target.map(|t| PlanView {
+                target_x: t.x,
+                target_y: t.y,
+                path: a.plan.path.iter().map(|p| [p.x, p.y]).collect(),
+            }),
         });
         Ok(Inspection {
             site: SiteView {

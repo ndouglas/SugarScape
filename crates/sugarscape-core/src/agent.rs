@@ -38,6 +38,15 @@ pub type AgentId = u64;
 /// An index into `World::diseases`.
 pub type DiseaseId = u32;
 
+/// Minds 2: where the agent last decided to go and the path it planned
+/// there that it hasn't walked yet (observation only: never hashed,
+/// exported or shared, like `social`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Plan {
+    pub target: Option<Pos>,
+    pub path: Vec<Pos>,
+}
+
 /// A cultural tag string of `len` bits (1..=64); bit `i` is tag position `i`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Tags {
@@ -180,6 +189,10 @@ pub struct Agent {
     /// Neighbor list and friends (observation only: never hashed, exported or
     /// shared; see `social`).
     pub social: Social,
+    /// Where the agent last decided to go and the path it planned there that
+    /// it hasn't walked yet (observation only: never hashed, exported or
+    /// shared, like `social`).
+    pub plan: Plan,
 }
 
 impl Agent {
@@ -216,6 +229,7 @@ impl Agent {
             infected_by: None,
             culture: Vec::new(),
             social: Social::default(),
+            plan: Plan::default(),
         };
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
         // endowment then metabolism, in good order.

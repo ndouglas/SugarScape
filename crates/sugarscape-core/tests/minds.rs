@@ -32,3 +32,20 @@ fn the_utility_mind_with_rule_ms_consideration_is_rule_m() {
     }
     assert!(checked >= 20, "checked {checked} presets");
 }
+
+#[test]
+fn walking_at_vision_one_is_jumping() {
+    let mut checked = 0;
+    for p in presets::all() {
+        if p.config.combat.enabled {
+            continue;
+        }
+        let mut jump = p.config.clone();
+        jump.vision = sugarscape_core::config::URange::new(1, 1);
+        let mut walk = jump.clone();
+        walk.movement.mode = sugarscape_core::config::MoveMode::Walk;
+        assert_eq!(fingerprint(walk), fingerprint(jump), "{}", p.id);
+        checked += 1;
+    }
+    assert!(checked >= 20, "checked {checked} presets");
+}

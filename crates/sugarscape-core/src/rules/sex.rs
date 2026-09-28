@@ -102,6 +102,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         infected_by: None,
         culture: Vec::new(),
         social: Social::default(),
+        plan: crate::agent::Plan::default(),
     };
     // Goods 1..n pick where Chapter IV picked spice's metabolism.
     for (i, m) in child.metabolism.iter_mut().enumerate().take(n).skip(1) {
