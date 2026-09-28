@@ -383,6 +383,7 @@ impl World {
         }
         let (fi, ti) = (self.torus.index(from), self.torus.index(to));
         assert!(self.occupancy[ti].is_none(), "move onto occupied site");
+        debug_assert!(!self.is_wall(to), "move onto a wall");
         self.occupancy[fi] = None;
         self.occupancy[ti] = Some(id);
         self.agents.get_mut(&id).expect("live agent").pos = to;
@@ -1109,7 +1110,7 @@ mod tests {
     }
 
     #[test]
-    fn placement_skips_walls_and_is_unchanged_without_them() {
+    fn placement_skips_walls() {
         let c = crate::config::Config {
             walls: vec![wall(0, 0, 50, 40, true)],
             population: 400,

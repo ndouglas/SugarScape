@@ -37,6 +37,10 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
 
     let mut candidates = vec![(pos, 0, world.site(pos).resource[0])];
     for (q, d) in world.sight(pos, vision) {
+        // A fence is visible (sight passes through it) but never a target.
+        if world.is_wall(q) {
+            continue;
+        }
         let site_sugar = world.site(q).resource[0];
         let reward = match world.agent_at(q) {
             Some(o)
@@ -232,6 +236,23 @@ mod tests {
         a.tags = Tags::new(bits, 11);
         a.holdings[0] = sugar;
         id
+    }
+
+    #[test]
+    fn combat_never_targets_a_fence() {
+        // A fence is visible (sight passes through it) but must never be a
+        // candidate target, even tied at reward 0 with every other empty
+        // site in range.
+        let mut w = walled_fighting_world(vec![crate::config::Wall {
+            x: 6,
+            y: 5,
+            width: 1,
+            height: 1,
+            opaque: false,
+        }]);
+        let me = blue(&mut w, 5, 5, 10.0, 1);
+        act(&mut w, me);
+        assert_ne!(w.agent(me).unwrap().pos, Pos::new(6, 5));
     }
 
     #[test]

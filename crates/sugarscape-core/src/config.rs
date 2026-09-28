@@ -1107,12 +1107,10 @@ impl Config {
         );
     }
 
-    /// Sites not covered by any wall (Minds 2).
-    pub fn free_sites(&self) -> usize {
+    /// A row-major mask over the whole grid: `true` where some wall covers
+    /// the site.
+    fn walled_mask(&self) -> Vec<bool> {
         let (w, h) = (self.width as usize, self.height as usize);
-        if self.walls.is_empty() {
-            return w * h;
-        }
         let mut walled = vec![false; w * h];
         for wall in &self.walls {
             for y in wall.y..wall.y.saturating_add(wall.height).min(self.height) {
@@ -1121,7 +1119,33 @@ impl Config {
                 }
             }
         }
-        walled.iter().filter(|&&b| !b).count()
+        walled
+    }
+
+    /// Sites not covered by any wall (Minds 2).
+    pub fn free_sites(&self) -> usize {
+        if self.walls.is_empty() {
+            return (self.width as usize) * (self.height as usize);
+        }
+        self.walled_mask().iter().filter(|&&b| !b).count()
+    }
+
+    /// Free sites inside the rectangle `(x, y, width, height)`, clipped to
+    /// the grid — the same rectangles `World::populate` places into.
+    fn free_sites_in(&self, x: u32, y: u32, width: u32, height: u32) -> usize {
+        if self.walls.is_empty() {
+            return (width.min(self.width.saturating_sub(x)) as usize)
+                * (height.min(self.height.saturating_sub(y)) as usize);
+        }
+        let w = self.width as usize;
+        let mask = self.walled_mask();
+        (y..y.saturating_add(height).min(self.height))
+            .map(|yy| {
+                (x..x.saturating_add(width).min(self.width))
+                    .filter(|&xx| !mask[yy as usize * w + xx as usize])
+                    .count()
+            })
+            .sum()
     }
 
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
@@ -1185,10 +1209,19 @@ impl Config {
                     "population",
                     "cannot exceed the block's area",
                 );
+                if !self.walls.is_empty() {
+                    let free = self.free_sites_in(x, y, width, height);
+                    e.check(
+                        self.population as usize <= free,
+                        "population",
+                        format!("must be at most the {free} free sites in the block"),
+                    );
+                }
             }
             Placement::Tribes { size } => {
+                let corners_fit = size > 0 && size.saturating_mul(2) <= self.width.min(self.height);
                 e.check(
-                    size > 0 && size.saturating_mul(2) <= self.width.min(self.height),
+                    corners_fit,
                     "placement.size",
                     "the two corner blocks must fit without overlapping",
                 );
@@ -1197,6 +1230,26 @@ impl Config {
                     "population",
                     "cannot exceed the two blocks' area",
                 );
+                if !self.walls.is_empty() && corners_fit {
+                    let blues = (self.population as usize).div_ceil(2);
+                    let reds = self.population as usize - blues;
+                    let free_sw = self.free_sites_in(0, self.height - size, size, size);
+                    let free_ne = self.free_sites_in(self.width - size, 0, size, size);
+                    e.check(
+                        blues <= free_sw,
+                        "population",
+                        format!(
+                            "blues need {blues} in the southwest corner but only {free_sw} are free"
+                        ),
+                    );
+                    e.check(
+                        reds <= free_ne,
+                        "population",
+                        format!(
+                            "reds need {reds} in the northeast corner but only {free_ne} are free"
+                        ),
+                    );
+                }
             }
         }
         let max_vision = self.width.min(self.height) / 2;
@@ -2899,6 +2952,67 @@ mod tests {
         assert_eq!(c.free_sites(), 2500);
         c.walls = vec![wall(0, 0, 10, 1), wall(5, 0, 10, 2)]; // overlapping
         assert_eq!(c.free_sites(), 2500 - (15 + 10));
+    }
+
+    #[test]
+    fn a_walled_block_validates_against_the_blocks_own_free_sites() {
+        let wall = |x, y, width, height| Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque: false,
+        };
+        let with = |walls: Vec<Wall>, population: u32| {
+            let c = Config {
+                placement: Placement::Block {
+                    x: 0,
+                    y: 0,
+                    width: 10,
+                    height: 10,
+                },
+                population,
+                walls,
+                ..Config::default()
+            };
+            fields(c.validate())
+        };
+        // The block is 100 sites; a wall covers half (50), leaving 50 free.
+        // 80 fits the block's area (100) but not its 50 free sites.
+        assert_eq!(with(vec![wall(0, 0, 10, 5)], 80), ["population"]);
+        // The same wall, with a population the 50 free sites can hold.
+        assert!(with(vec![wall(0, 0, 10, 5)], 40).is_empty());
+        // A wall entirely outside the block: the block is still fully free.
+        assert!(with(vec![wall(20, 20, 10, 10)], 100).is_empty());
+    }
+
+    #[test]
+    fn walled_tribes_corners_validate_against_their_own_free_sites() {
+        let wall = |x, y, width, height| Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque: false,
+        };
+        let with = |walls: Vec<Wall>, population: u32| {
+            let c = Config {
+                placement: Placement::Tribes { size: 10 },
+                population,
+                walls,
+                ..Config::default()
+            };
+            fields(c.validate())
+        };
+        // The southwest corner (0, 40, 10, 10) is 100 sites; this wall covers
+        // 40, leaving 60 free. 130 needs 65 blues (ceil(130/2)), which the
+        // 60 free southwest sites can't hold, though the unwalled 100-site
+        // northeast corner easily holds the 65 reds.
+        assert_eq!(with(vec![wall(0, 40, 10, 4)], 130), ["population"]);
+        // The same wall, with a population the 60 free sites can hold.
+        assert!(with(vec![wall(0, 40, 10, 4)], 100).is_empty());
+        // A wall outside both corners: both stay fully free.
+        assert!(with(vec![wall(20, 20, 10, 10)], 150).is_empty());
     }
 
     #[test]
