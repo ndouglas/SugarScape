@@ -281,7 +281,7 @@ const MVT_TICKS: u32 = 1000;
 
 /// `mem-mvt` at lattice spacing `s`: nine peaks at (s/2 + s·i, s/2 + s·j)
 /// on a 3s × 3s torus, so each patch keeps its share of the torus and the
-/// Flumps their share per patch; only the walk between patches changes.
+/// 10 Flumps their 10/9 per patch; only the walk between patches changes.
 /// Vision is 1–18 at every spacing (the 36 × 36 torus of spacing 12 allows
 /// at most 18, half the grid), so s = 20 is the preset but for vision.
 /// `utility` is the preset's mind (travel 0.5); otherwise rule M.
@@ -312,6 +312,10 @@ fn mvt(s: u32, utility: bool) -> Config {
     }
     c
 }
+
+/// The marginal value theorem in both regimes these engines were tried in
+/// (Minds 3, Task 10 fix rounds 1–3); the claims' details carry it.
+const MVT_REGIMES: &str = "Rich patches (the preset): under the utility mind with travel, foragers who find a patch never leave it (rule M's foragers do move between patches, but its residence slope and overstaying above are unreliable). Depleting patches (tried in fix rounds 1 and 2, radius 2 and growback 0.05, 0.45 sugar a tick per patch): foragers starve before any switch; with 10 Flumps no one is alive after tick 200; with 3, no one is alive at tick 1000 and only 3 departures happen across 20 seeds. Likely reason: rule M and the utility mind compare the values of sites, not rates of intake, and hold no estimate of the habitat's average rate; and with sight only along rows and columns, a forager that has emptied a patch often has no other patch in sight. So the theorem's leave-when-your-rate-falls-to-the-average decision can't be expressed here; it is left to Minds 4 (planning).";
 
 struct Visits {
     /// Mean length in ticks of completed patch visits (NaN with none).
@@ -816,6 +820,7 @@ pub fn claims() -> Vec<Claim> {
                     q_or_nan(&m, 0.75),
                     residence_medians(&mr),
                 ))
+                .with(MVT_REGIMES)
             },
         },
         Claim {
@@ -858,7 +863,7 @@ pub fn claims() -> Vec<Claim> {
                 };
                 let (m20, m18) = (rule_m(20), rule_m(18));
                 range(&share, 0.5 + f64::EPSILON, 1.0, false).with(&format!(
-                    "Per-seed share of departures that overstay, mem-mvt (utility with travel), ticks 1–{MVT_TICKS}; {deps} departures over all seeds; at tick {MVT_TICKS}, a median {:.1} of the {pop} Flumps alive (per seed: {alive_list}), a median share {:.2} of them on a patch. Rule M on mem-mvt's world: median share {:.3} at the preset's vision 1–20 ({} seeds with departures), {:.3} at vision 1–18 as in the spacing runs ({} seeds).",
+                    "Per-seed share of departures that overstay, mem-mvt (utility with travel), ticks 1–{MVT_TICKS}; {deps} departures over all seeds; at tick {MVT_TICKS}, a median {:.1} of the {pop} Flumps alive (per seed: {alive_list}), a median share {:.2} of them on a patch. Rule M's figures, on mem-mvt's world: median share {:.3} at the preset's vision 1–20 ({} seeds with departures), {:.3} at vision 1–18 as in the spacing runs ({} seeds).",
                     median(&alive),
                     med_or_nan(&on),
                     med_or_nan(&m20),
@@ -866,6 +871,7 @@ pub fn claims() -> Vec<Claim> {
                     med_or_nan(&m18),
                     m18.len()
                 ))
+                .with(MVT_REGIMES)
             },
         },
         Claim {
@@ -1056,20 +1062,6 @@ mod tests {
         let a = trapline_index(&messy, &mut shuffle_rng(1, 7));
         assert_eq!(a, trapline_index(&messy, &mut shuffle_rng(1, 7)));
         assert!(a > 0.0 && a.is_finite(), "{a}");
-    }
-
-    #[test]
-    fn each_mvt_patch_takes_in_less_than_one_flump_eats() {
-        let c = preset("mem-mvt");
-        let Map::Peaks { peaks } = &c.goods[0].map else {
-            unreachable!()
-        };
-        let sites = (0..c.height)
-            .flat_map(|y| (0..c.width).map(move |x| (x, y)))
-            .filter(|&(x, y)| patch_of(peaks, x, y, c.width, c.height) == Some(0))
-            .count();
-        assert_eq!(sites, 9, "radius 2: the center, 4 at distance 1, 4 at √2");
-        assert!(sites as f64 * c.growback.rate < 1.0);
     }
 
     #[test]

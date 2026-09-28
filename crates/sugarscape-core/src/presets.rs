@@ -887,18 +887,18 @@ pub fn all() -> Vec<Preset> {
             "mem-mvt",
             "Memory: the marginal value theorem",
             "Charnov 1976; Minds 3",
-            "3 Flumps (metabolism 1, endowment 50, vision 1–20) on a 60 × 60 torus with nine equal patches (peaks of radius 2, height 4: 9 sites each, capacity 20) on a square lattice of spacing 20, growback 0.05, so each patch takes in 0.45 sugar a tick, less than one Flump eats, while the nine together (4.05) exceed the 3 Flumps' need; walking under the utility mind with travel k = 0.5, and memory (span 400, share 1) so every Flump can walk back to a remembered patch. Few foragers, patches in sight that deplete, and a travel cost is the marginal value theorem's setting: when to leave a patch that's still yielding. Measured (20 seeds, ticks 1–1000): the habitat's input (4.05 sugar a tick) exceeds the 3 Flumps' need (3), yet every Flump is dead by tick 1000 in every seed, and in a 10-seed check most die by tick 50. Only 3 departures from a patch occur over all 20 seeds, so neither residence against spacing nor overstaying can be measured (both claims untestable). Likely cause: a Flump sees only along the lattice's rows and columns, so one that starts, or finishes a patch, with no patch in line within its vision has nothing to score and stands still; wandering instead (idle wander, a 10-seed check) keeps 2–3 alive to tick 50 but none to tick 200.",
+            "10 Flumps (metabolism 1, endowment 50, vision 1–20) on a 60 × 60 torus with nine equal patches (peaks of radius 4, height 4) on a square lattice of spacing 20, growback 0.25; walking under the utility mind with travel k = 0.5, and memory (span 400, share 1) so every Flump can walk back to a remembered patch. Few foragers, patches in sight and a travel cost is the marginal value theorem's setting: when to leave a patch that's still yielding. Measured (20 seeds, ticks 1–1000): under this mind, foragers who find a patch never leave it. A patch here takes in far more than one Flump eats, so no Flump ever departs (0 departures over all 20 seeds) and a median 5 of the 10 are alive at tick 1000, each settled on a patch; the rest likely start with no sugar in sight and stand still until they starve. Depleting patches don't help: with radius 2 and growback 0.05 (0.45 sugar a tick per patch), nobody is alive after tick 200 with 10 Flumps; with 3, nobody is alive at tick 1000 and only 3 departures happen across 20 seeds. So the theorem's decision, leaving when a patch's intake falls to the habitat's average, is untestable here. Likely reason: rule M and the utility mind compare the values of sites, not rates of intake, and hold no estimate of the habitat's average rate; and with sight only along rows and columns, a forager that has emptied a patch often has no other patch in sight. The marginal value theorem is left to Minds 4 (planning).",
             |c| {
                 c.width = 60;
                 c.height = 60;
-                c.population = 3;
+                c.population = 10;
                 c.goods[0].map = Map::Peaks {
                     peaks: (0..3u32)
                         .flat_map(|i| {
                             (0..3u32).map(move |j| Peak {
                                 x: 10 + 20 * i,
                                 y: 10 + 20 * j,
-                                radius: 2.0,
+                                radius: 4.0,
                                 height: 4.0,
                             })
                         })
@@ -907,7 +907,7 @@ pub fn all() -> Vec<Preset> {
                 c.goods[0].metabolism = URange::new(1, 1);
                 c.goods[0].endowment = URange::new(50, 50);
                 c.vision = URange::new(1, 20);
-                c.growback.rate = 0.05;
+                c.growback.rate = 0.25;
                 c.movement.mode = MoveMode::Walk;
                 c.decision.rule = DecisionRule::Utility;
                 c.decision.travel = 0.5;
@@ -1487,7 +1487,7 @@ mod tests {
         expected.sort();
         assert_eq!(centers, expected, "mem-mvt: peak centers");
         assert!(
-            peaks.iter().all(|p| p.radius == 2.0 && p.height == 4.0),
+            peaks.iter().all(|p| p.radius == 4.0 && p.height == 4.0),
             "mem-mvt: peak radius/height"
         );
     }
