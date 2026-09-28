@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  PunishmentConfig,
+  PunishmentInspection,
+  PunishmentStats,
   RetirementConfig,
   RetirementInspection,
   RetirementStats,
@@ -724,6 +727,28 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the punishment model through the engine', () => {
+  it('stops at its last period and inspects an agent, its group and a period', async () => {
+    const r = presets.find((p) => p.id === 'bg-base')!;
+    const config = { ...structuredClone(r.config as PunishmentConfig), groups: 16, size: 8, stop_at: 50, window: 20 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'acts' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as PunishmentStats;
+    expect([e.finished, ends, e.tick]).toEqual([true, 1, 50]);
+    expect(s.long_run).not.toBeNull();
+    expect(s.contributors + s.punishers + s.defectors).toBeCloseTo(1, 9);
+    // 16 groups of 8: six groups a row, 3 × 3 cells of 8 pixels, the first at (2, 2).
+    await e.select(3, 3);
+    const v = e.inspection!.view as PunishmentInspection;
+    expect([v.panel, v.agent?.id, v.group?.index]).toEqual(['groups', 1, 0]);
+    await e.select(10, 100);
+    expect((e.inspection!.view as PunishmentInspection).panel).toBe('time');
   });
 });
 

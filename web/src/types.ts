@@ -112,7 +112,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -511,7 +511,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -764,6 +764,89 @@ export interface RetirementInspection {
   retired: number | null;
   member: RetireeView | null;
   agent: null;
+}
+
+/**
+ * Boyd, Gintis, Bowles and Richerson's altruistic punishment (milestone 27): groups of contributors,
+ * defectors and punishers, payoff-biased imitation, intergroup conflict and mutation.
+ */
+export interface PunishmentConfig {
+  model: 'punishment';
+  groups: number;
+  size: number;
+  cost: number;
+  punish_cost: number;
+  fine: number;
+  punishing: 'variable' | 'fixed';
+  fixed_cost: number;
+  benefit: number;
+  baseline: number;
+  error: number;
+  mixing: number;
+  mutation: number;
+  conflict: number;
+  pairing: 'paired' | 'either' | 'challenge';
+  victory: 'defectors' | 'payoff' | 'tanh';
+  sensitivity: number;
+  counted: 'types' | 'acts';
+  erring: 'others' | 'none' | 'self';
+  imitation: 'together' | 'in_turn';
+  refill: 'copy' | 'split';
+  traits: 'discrete' | 'continuous';
+  structure: 'groups' | 'ring';
+  start: 'one_punisher_group' | 'all_defectors';
+  window: number;
+  stop_at: number;
+}
+
+export interface PunishmentStats {
+  tick: number;
+  cooperation: number;
+  contributors: number;
+  punishers: number;
+  defectors: number;
+  punishment: number;
+  /** This period's share cooperating and mean payoff (null before the first period). */
+  acts: number | null;
+  payoff: number | null;
+  conflicts: number;
+  extinctions: number;
+  spread: number;
+  /** The mean cooperation over the long-run window so far (null before it). */
+  long_run: number | null;
+}
+
+export interface PunisherView {
+  id: number;
+  group: number;
+  kind: 'contributor' | 'defector' | 'punisher' | null;
+  cooperate: number;
+  punish: number;
+  cooperated: boolean;
+  punished: boolean;
+  payoff: number;
+}
+
+export interface PunishmentGroupView {
+  index: number;
+  contributors: number;
+  punishers: number;
+  defectors: number;
+  acts: number;
+  payoff: number;
+  last_conflict: number | null;
+  lost: boolean;
+}
+
+/** A cell of the punishment frame: an agent and its group, or a period of the time strip. */
+export interface PunishmentInspection {
+  site: { x: number; y: number };
+  panel: 'groups' | 'time' | null;
+  group: PunishmentGroupView | null;
+  agent: PunisherView | null;
+  period: number | null;
+  cooperation: number | null;
+  punishment: number | null;
 }
 
 /** A preset: `title` is the menu's plain headline; `source` and `name` are its figure or paper and its rules. */
@@ -1075,7 +1158,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -1405,7 +1488,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1466,7 +1549,8 @@ export type ColorMode =
   | 'crowd'
   | 'status'
   | 'type'
-  | 'group';
+  | 'group'
+  | 'acts';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

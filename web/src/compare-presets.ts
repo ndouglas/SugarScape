@@ -176,6 +176,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'ae-rapid',
     b: 'ae-slow',
   },
+  {
+    id: 'bg-base-vs-none',
+    label: 'With vs without punishment — Altruistic Punishment (Compare)',
+    a: 'bg-base',
+    b: 'bg-none',
+  },
 ];
 
 /**
