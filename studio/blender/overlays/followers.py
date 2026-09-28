@@ -117,11 +117,12 @@ def sight(beat, d, ctx):
 
 def labels(beat, d, ctx):
     """"sees N · eats M" over each focus Flump on a dark pill, turned to the
-    camera; with params label="age", its age at the tick shown instead, and
-    with label="diseases", how many diseases it carries ("well" for none)."""
+    camera; with params label="age", its age at the tick shown instead,
+    with label="diseases", how many diseases it carries ("well" for none),
+    and with label="wealth", its wealth (the demographic PD's)."""
     items = []
     kind = beat.params.get("label")
-    ages = kind in ("age", "diseases")
+    ages = kind in ("age", "diseases", "wealth")
     cream = materials.fading("label", CREAM, 2.2)
     for i in beat.focus:
         id_ = d.placed[i]
@@ -142,6 +143,8 @@ def labels(beat, d, ctx):
                 continue
             if kind == "age" and id_ in d.frames[k].agents:
                 label.data.body = f"age {d.frames[k].agents[id_].age}"
+            elif kind == "wealth" and id_ in d.frames[k].agents:
+                label.data.body = f"wealth {d.frames[k].agents[id_].sugar:g}"
             elif kind == "diseases" and id_ in d.frames[k].agents:
                 n = d.frames[k].diseases.get(id_, 0)
                 label.data.body = "well" if n == 0 else f"{n} disease{'s' if n > 1 else ''}"

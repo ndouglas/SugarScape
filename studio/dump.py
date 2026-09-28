@@ -1,5 +1,6 @@
 """Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
-shot as a `Dump`, a spatial-games shot as a `Lattice`."""
+shot as a `Dump`, a spatial-games shot as a `Lattice`, and a demographic-PD
+shot as a `Dump` too (see `_dpd`)."""
 
 import json
 from dataclasses import dataclass, field
@@ -99,6 +100,7 @@ class Dump:
     frames: list
     stats: dict
     spice_capacity: list = field(default_factory=list)
+    model: str = "sugarscape"
 
 
 @dataclass(frozen=True)
@@ -145,6 +147,8 @@ def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
         raise ValueError(f"frame dump format {raw.get('format')!r}, expected {FORMAT}")
+    if raw.get("model") == "dpd":
+        return _dpd(raw)
     if raw.get("model") == "spatial":
         return Lattice(
             seed=raw["seed"], ticks=raw["ticks"], width=raw["width"], height=raw["height"], config=raw["config"],
@@ -196,6 +200,35 @@ def parse(text):
         frames=frames,
         stats=raw["stats"],
         spice_capacity=raw.get("spice_capacity", []),
+    )
+
+
+def _dpd(raw):
+    """A demographic-PD shot as a `Dump`, so the crowd animates as the
+    Sugarscape's does: each agent's wealth stands in its `sugar`, its
+    strategy in its group (0 a helper, 1 a cheat), and each clone's parent in
+    both its parents' places; the board has no sugar. `placed` lists the
+    founders, so a beat's `focus` can follow them."""
+    w, h = raw["width"], raw["height"]
+    frames, seen = [], set()
+    for f in raw["frames"]:
+        ids = [row[0] for row in f["agents"]]
+        born = [i for i in ids if i not in seen]
+        seen.update(born)
+        parents = {child: parent for child, parent in f["births"]}
+        frames.append(Frame(
+            tick=f["tick"],
+            agents={i: Agent(i, x, y, wealth, age, 0, 0) for i, x, y, wealth, age, _ in f["agents"]},
+            sugar=[0.0] * (w * h),
+            deaths=dict(f["deaths"]),
+            born=born,
+            pollution=[0.0] * (w * h),
+            births={i: (None, (parents[i], parents[i]) if i in parents else None) for i in born},
+            groups={row[0]: 0 if row[5] == "C" else 1 for row in f["agents"]},
+        ))
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model="dpd",
     )
 
 

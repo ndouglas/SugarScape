@@ -11,10 +11,13 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`.
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial` and `living`.
 
-Shots run the Sugarscape or spatial games (a spatial shot's dump records each generation's strategies,
-and its scores with `"scores": true`; `cells` gives a close-up a hand-made board).
+Shots run the Sugarscape, spatial games or the demographic PD. A spatial shot's dump records each
+generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
+board. A demographic-PD shot's dump records each cycle's agents, births (with the parent) and deaths,
+and loads as a Sugarscape dump without sugar, so its crowd walks, clones and dies as the Sugarscape's
+does (`colors: "strategy"`: blue helpers, red cheats).
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -73,7 +76,10 @@ turning dark and driving for the plague, and the finale's *The Walk Home*, the p
 passed two bars at a time between every episode's instruments, ending on a lone accordion; and
 Spatial games' *Neighbors in Phase*, a phase piece after Reich's *Piano Phase*: marimba and
 vibraphone on one twelve-note figure in D Dorian, the vibraphone slipping ahead an eighth at a time
-until, when the Flumps move one at a time, it falls into triplets over a drone a half step down.
+until, when the Flumps move one at a time, it falls into triplets over a drone a half step down; and
+Living neighbors' *A Round for Neighbors*, a round in G for flute, clarinet, oboe and bassoon, each
+voice copying the tune as each clone copies its parent, until in the soup they crowd in a bar apart
+in G minor and drop out, leaving a muted trumpet alone.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to

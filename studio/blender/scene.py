@@ -67,7 +67,8 @@ def _agents(beat, d, tracks, timing, corners):
     With params colors="family", a Flump wears its family line's color (its
     mother's, back to a founding mother); with colors="tribe", its tribe's,
     changing as its tribe does; with colors="sick", sickly green while it
-    carries a disease and its own color when well."""
+    carries a disease and its own color when well; with colors="strategy"
+    (the demographic PD), blue for a helper and red for a cheat."""
     w, h = d.width, d.height
     colors = list(materials.CROWD_YARN)
     RIGS.clear()
@@ -80,13 +81,17 @@ def _agents(beat, d, tracks, timing, corners):
         key = family.get(id_, id_)
         return colors[order.get(key, key) % len(colors)]
 
-    live = mode in ("tribe", "sick")
+    live = mode in ("tribe", "sick", "strategy")
 
     def live_color(id_, frame):
         """The color the tick shown gives a Flump (None: its own)."""
         f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
-        if mode == "tribe":
+        if mode in ("tribe", "strategy"):
             g = f.groups.get(id_)
+            if g is None and mode == "strategy":
+                # A newborn pops in just before its cycle's frame; a
+                # strategy never changes, so its first frame's will do.
+                g = d.frames[tracks[id_].first].groups.get(id_)
             return materials.TRIBE_YARN[g] if g is not None else None
         return "sick" if f.diseases.get(id_) else None
 
@@ -151,12 +156,15 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     elif d is not None:
         timing = beat.timing(d.ticks)
         felt, corners = board.felt_board(d)
-        if d.config["seasons"]["enabled"]:
+        # A demographic-PD board is bare felt: no seasons, soot or sugar.
+        sugarscape = d.model == "sugarscape"
+        if sugarscape and d.config["seasons"]["enabled"]:
             updaters.append(board.seasonal_felt(felt, d, timing))
-        elif any(any(f.pollution) for f in d.frames):
+        elif sugarscape and any(any(f.pollution) for f in d.frames):
             updaters.append(board.sooty_felt(felt, d, timing))
-        _, update_sugar = board.sugar(d, corners, timing)
-        updaters.append(update_sugar)
+        if sugarscape:
+            _, update_sugar = board.sugar(d, corners, timing)
+            updaters.append(update_sugar)
         if d.spice_capacity:
             _, update_spice = board.sugar(d, corners, timing, "spice")
             updaters.append(update_spice)

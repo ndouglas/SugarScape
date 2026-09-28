@@ -248,6 +248,25 @@ def alike(beat, d, ctx):
     return update
 
 
+def tally(beat, d, ctx):
+    """Top right: how many helpers (group 0, blue) and cheats (group 1, red)
+    are alive at the tick shown: the demographic PD's strategies."""
+    anchor = ctx.screen.anchor("tally", 0.66, 0.78)
+    card("tally-card", anchor, (0, 0, -0.01), (0.62, 0.17, 0.002))
+    blue = text("tally-helpers", "", 0.052, materials.fading("tally-blue", materials.YARN["blue"], 3.0), anchor,
+                location=(-0.28, -0.015, 0), align="LEFT")
+    red = text("tally-cheats", "", 0.052, materials.fading("tally-red", materials.YARN["red"], 3.0), anchor,
+               location=(0.03, -0.015, 0), align="LEFT")
+
+    def update(frame):
+        f = d.frames[min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)]
+        cheats = sum(f.groups.values())
+        blue.data.body = f"helpers {len(f.groups) - cheats}"
+        red.data.body = f"cheats {cheats}"
+
+    return update
+
+
 def census(beat, d, ctx):
     """Top right: how many Flumps are alive at the tick shown, against how
     many there were at the start."""
