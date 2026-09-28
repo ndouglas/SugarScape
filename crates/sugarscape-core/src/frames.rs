@@ -3,9 +3,9 @@
 //! config, a seed, config overrides and agents placed by hand — run tick by
 //! tick, recording every agent, the sugar at every site, deaths, births and
 //! the statistics series. Spatial games' shots record each generation's
-//! strategies instead, and the demographic Prisoner's Dilemma's each
-//! cycle's agents, births and deaths (`run`). Other models are not filmed
-//! yet.
+//! strategies instead, the demographic Prisoner's Dilemma's each cycle's
+//! agents, births and deaths, and ethnocentrism's each period's agents
+//! (`run`). Other models are not filmed yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -16,6 +16,7 @@ use crate::agent::{Sex, Tribe};
 use crate::config::{Config, FieldError};
 use crate::dpd::{DpdConfig, DpdDeath, DpdWorld, SERIES as DPD_SERIES};
 use crate::edit::AgentOverrides;
+use crate::ethno::{EthnoConfig, EthnoWorld, Strategy, SERIES as ETHNO_SERIES};
 use crate::model::ModelConfig;
 use crate::presets;
 use crate::spatial::{Lattice, SpatialConfig, SpatialWorld, SERIES as SPATIAL_SERIES};
@@ -131,25 +132,39 @@ impl Shot {
         Ok(config)
     }
 
-    /// A demographic-PD shot's config with `set` applied, validated.
-    pub fn dpd_config(&self) -> Result<DpdConfig, Vec<FieldError>> {
+    /// The preset or config with `set` applied and validated, for a model
+    /// other than the Sugarscape.
+    fn model_config(&self) -> Result<ModelConfig, Vec<FieldError>> {
         let mut config = self.base()?;
-        if !matches!(config, ModelConfig::Dpd(_)) {
-            return Err(vec![FieldError::new(
-                "model",
-                format!("not a demographic-PD shot: {}", config.kind().as_str()),
-            )]);
-        }
         for (path, value) in &self.set {
             config = config
                 .with_path(path, value)
                 .map_err(|e| vec![FieldError::new(format!("set.{path}"), e.message)])?;
         }
         config.validate()?;
-        let ModelConfig::Dpd(config) = config else {
-            unreachable!("set keeps the model")
-        };
         Ok(config)
+    }
+
+    /// A demographic-PD shot's config with `set` applied, validated.
+    pub fn dpd_config(&self) -> Result<DpdConfig, Vec<FieldError>> {
+        match self.model_config()? {
+            ModelConfig::Dpd(c) => Ok(c),
+            other => Err(vec![FieldError::new(
+                "model",
+                format!("not a demographic-PD shot: {}", other.kind().as_str()),
+            )]),
+        }
+    }
+
+    /// An ethnocentrism shot's config with `set` applied, validated.
+    pub fn ethno_config(&self) -> Result<EthnoConfig, Vec<FieldError>> {
+        match self.model_config()? {
+            ModelConfig::Ethno(c) => Ok(c),
+            other => Err(vec![FieldError::new(
+                "model",
+                format!("not an ethnocentrism shot: {}", other.kind().as_str()),
+            )]),
+        }
     }
 
     /// A spatial-games shot's config with `set` applied, validated: a flat
@@ -548,6 +563,32 @@ pub struct DpdDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// `[id, x, y, tag, kind, founding immigrant]`, the kind as a letter (E, H,
+/// S, T) or a word (kin, nonkin, mixed).
+pub type EthnoRow = (u64, u32, u32, u32, Strategy, u64);
+
+/// An ethnocentrism shot's world after one period. Agents never move, so
+/// births and deaths are the differences between consecutive frames.
+#[derive(Clone, Debug, Serialize)]
+pub struct EthnoFrame {
+    pub tick: u64,
+    pub agents: Vec<EthnoRow>,
+}
+
+/// A whole ethnocentrism shot, period 0 first.
+#[derive(Clone, Debug, Serialize)]
+pub struct EthnoDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub width: u32,
+    pub height: u32,
+    pub config: EthnoConfig,
+    pub frames: Vec<EthnoFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -555,6 +596,7 @@ pub enum Dump {
     Sugarscape(Box<FrameDump>),
     Spatial(LatticeDump),
     Dpd(DpdDump),
+    Ethno(EthnoDump),
 }
 
 /// Runs `shot`, whatever its model.
@@ -572,7 +614,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             run_shot(shot).map(|d| Dump::Sugarscape(Box::new(d)))
         }
-        ModelConfig::Spatial(_) | ModelConfig::Dpd(_) => {
+        ModelConfig::Spatial(_) | ModelConfig::Dpd(_) | ModelConfig::Ethno(_) => {
             if !shot.place.is_empty() {
                 return Err(only("place", "sugarscape"));
             }
@@ -588,12 +630,15 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             if shot.scores {
                 return Err(only("scores", "spatial-games"));
             }
+            if matches!(shot.base()?, ModelConfig::Ethno(_)) {
+                return run_ethno(shot).map(Dump::Ethno);
+            }
             run_dpd(shot).map(Dump::Dpd)
         }
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games and the demographic PD, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD and ethnocentrism, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -744,6 +789,46 @@ pub fn run_dpd(shot: &Shot) -> Result<DpdDump, Vec<FieldError>> {
     Ok(DpdDump {
         format: FORMAT,
         model: "dpd",
+        seed: shot.seed,
+        ticks: shot.ticks,
+        width: config.width,
+        height: config.width,
+        config,
+        frames,
+        stats,
+    })
+}
+
+fn ethno_frame(world: &EthnoWorld) -> EthnoFrame {
+    let w = world.config.width;
+    EthnoFrame {
+        tick: world.tick,
+        agents: world
+            .occupied()
+            .map(|(s, a)| {
+                let s = s as u32;
+                (a.id, s % w, s / w, a.tag, world.strategy(a), a.lineage)
+            })
+            .collect(),
+    }
+}
+
+/// Runs an ethnocentrism shot and records every period.
+pub fn run_ethno(shot: &Shot) -> Result<EthnoDump, Vec<FieldError>> {
+    let config = shot.ethno_config()?;
+    let mut world = EthnoWorld::new(config.clone(), shot.seed)?;
+    let mut frames = vec![ethno_frame(&world)];
+    for _ in 0..shot.ticks {
+        world.step();
+        frames.push(ethno_frame(&world));
+    }
+    let stats = ETHNO_SERIES
+        .iter()
+        .filter_map(|&name| world.stats.series(name).map(|s| (name.to_string(), s)))
+        .collect();
+    Ok(EthnoDump {
+        format: FORMAT,
+        model: "ethno",
         seed: shot.seed,
         ticks: shot.ticks,
         width: config.width,
@@ -1300,6 +1385,42 @@ mod tests {
             .map(|x| x.1)
             .collect();
         assert_eq!(causes, BTreeSet::from(["broke", "old_age"]));
+    }
+
+    #[test]
+    fn an_ethno_shot_records_each_periods_agents_where_they_stay() {
+        let d = match super::run(
+            &Shot::from_json(r#"{"preset": "ha-standard", "ticks": 60, "seed": 2}"#).unwrap(),
+        )
+        .unwrap()
+        {
+            Dump::Ethno(d) => d,
+            _ => panic!("an ethnocentrism shot"),
+        };
+        assert_eq!(
+            (d.model, d.width, d.height, d.frames.len()),
+            ("ethno", 50, 50, 61)
+        );
+        assert!(d.frames[0].agents.is_empty());
+        let json = serde_json::to_value(&d.frames[60]).unwrap();
+        let kinds: BTreeSet<&str> = json["agents"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|a| a[4].as_str().unwrap())
+            .collect();
+        assert!(kinds.is_subset(&BTreeSet::from(["E", "H", "S", "T"])));
+        for k in 1..d.frames.len() {
+            assert_eq!(d.stats["population"][k], d.frames[k].agents.len() as f64);
+            // An agent keeps its square and traits for its whole life.
+            let before: BTreeMap<u64, EthnoRow> =
+                d.frames[k - 1].agents.iter().map(|a| (a.0, *a)).collect();
+            for a in &d.frames[k].agents {
+                if let Some(b) = before.get(&a.0) {
+                    assert_eq!(a, b);
+                }
+            }
+        }
     }
 
     #[test]

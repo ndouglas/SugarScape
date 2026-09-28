@@ -215,6 +215,14 @@ impl EthnoWorld {
         self.sites.iter().flatten()
     }
 
+    /// Each agent with its site, in site order.
+    pub fn occupied(&self) -> impl Iterator<Item = (usize, &Agent)> {
+        self.sites
+            .iter()
+            .enumerate()
+            .filter_map(|(s, a)| a.as_ref().map(|a| (s, a)))
+    }
+
     pub fn population(&self) -> usize {
         self.sites.len() - self.empty.len()
     }
