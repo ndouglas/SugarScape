@@ -4,6 +4,7 @@
 //! values only what rule M does.
 
 pub mod astar;
+pub mod goap;
 pub mod grid;
 pub mod memory;
 pub mod utility;
