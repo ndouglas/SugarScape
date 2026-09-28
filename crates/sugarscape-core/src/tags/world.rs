@@ -136,6 +136,9 @@ pub struct TagsWorld {
     takeovers: Takeovers,
     /// The diagram's rows, oldest first (shared by keyframes).
     history: VecDeque<Arc<Row>>,
+    /// The last generation's gifts as (giver, receiver) places in the list,
+    /// in the order they happened, when recording them (the studio's shots).
+    gifts: Option<Vec<(u32, u32)>>,
     pub stats: Stats<TagsSnapshot>,
 }
 
@@ -171,11 +174,24 @@ impl TagsWorld {
             pairings: 0,
             takeovers: Takeovers::default(),
             history: VecDeque::with_capacity(HISTORY),
+            gifts: None,
             stats: Stats::default(),
         };
         world.play();
         world.record();
         Ok(world)
+    }
+
+    /// Starts or stops recording each generation's gifts (from the next
+    /// generation played). Recording draws nothing.
+    pub fn record_gifts(&mut self, on: bool) {
+        self.gifts = on.then(Vec::new);
+    }
+
+    /// The last generation's gifts as (giver, receiver) places in the list,
+    /// if recording.
+    pub fn gifts(&self) -> Option<&[(u32, u32)]> {
+        self.gifts.as_deref()
     }
 
     pub fn agents(&self) -> &[Tagger] {
@@ -235,6 +251,9 @@ impl TagsWorld {
             a.received = 0;
         }
         let mut donations = 0;
+        if let Some(g) = &mut self.gifts {
+            g.clear();
+        }
         for a in 0..self.agents.len() {
             for _ in 0..self.config.pairings {
                 let b = self.other(a);
@@ -242,6 +261,9 @@ impl TagsWorld {
                     self.agents[a].given += 1;
                     self.agents[b].received += 1;
                     donations += 1;
+                    if let Some(g) = &mut self.gifts {
+                        g.push((a as u32, b as u32));
+                    }
                 }
             }
         }

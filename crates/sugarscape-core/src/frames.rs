@@ -4,8 +4,9 @@
 //! tick, recording every agent, the sugar at every site, deaths, births and
 //! the statistics series. Spatial games' shots record each generation's
 //! strategies instead, the demographic Prisoner's Dilemma's each cycle's
-//! agents, births and deaths, and ethnocentrism's each period's agents
-//! (`run`). Other models are not filmed yet.
+//! agents, births and deaths, ethnocentrism's each period's agents, and the
+//! tags model's each generation's agents and gifts (`run`). Other models
+//! are not filmed yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,6 +22,7 @@ use crate::model::ModelConfig;
 use crate::presets;
 use crate::spatial::{Lattice, SpatialConfig, SpatialWorld, SERIES as SPATIAL_SERIES};
 use crate::stats;
+use crate::tags::{TagsConfig, TagsWorld, SERIES as TAGS_SERIES};
 use crate::world::{DeathCause, Trade, World};
 
 /// The dump format's version.
@@ -52,6 +54,9 @@ pub struct Shot {
     /// Spatial games: record every player's score in each frame.
     #[serde(default)]
     pub scores: bool,
+    /// Tags: record each generation's gifts.
+    #[serde(default)]
+    pub gifts: bool,
 }
 
 /// An agent placed by hand when the world reaches `tick`, with the given
@@ -152,6 +157,17 @@ impl Shot {
             other => Err(vec![FieldError::new(
                 "model",
                 format!("not a demographic-PD shot: {}", other.kind().as_str()),
+            )]),
+        }
+    }
+
+    /// A tags shot's config with `set` applied, validated.
+    pub fn tags_config(&self) -> Result<TagsConfig, Vec<FieldError>> {
+        match self.model_config()? {
+            ModelConfig::Tags(c) => Ok(c),
+            other => Err(vec![FieldError::new(
+                "model",
+                format!("not a tags shot: {}", other.kind().as_str()),
             )]),
         }
     }
@@ -589,6 +605,35 @@ pub struct EthnoDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// `[id, parent, tag, tolerance, gifts given, gifts received]`, in the
+/// population's list order: place k's agent descends from place k's before
+/// it or from its opponent's.
+pub type TagsRow = (u64, u64, f64, f64, u32, u32);
+
+/// A tags shot's population after one generation.
+#[derive(Clone, Debug, Serialize)]
+pub struct TagsFrame {
+    pub tick: u64,
+    pub agents: Vec<TagsRow>,
+    /// This generation's gifts as `[giver, receiver]` places in the list,
+    /// in the order they happened (absent unless the shot asks, with
+    /// `"gifts": true`).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub gifts: Vec<(u32, u32)>,
+}
+
+/// A whole tags shot, generation 0 first.
+#[derive(Clone, Debug, Serialize)]
+pub struct TagsDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub config: TagsConfig,
+    pub frames: Vec<TagsFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -597,6 +642,7 @@ pub enum Dump {
     Spatial(LatticeDump),
     Dpd(DpdDump),
     Ethno(EthnoDump),
+    Tags(TagsDump),
 }
 
 /// Runs `shot`, whatever its model.
@@ -606,6 +652,9 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
     };
     match shot.base()? {
         ModelConfig::Sugarscape(_) => {
+            if shot.gifts {
+                return Err(only("gifts", "tags"));
+            }
             if shot.cells.is_some() {
                 return Err(only("cells", "spatial-games"));
             }
@@ -614,12 +663,21 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             run_shot(shot).map(|d| Dump::Sugarscape(Box::new(d)))
         }
-        ModelConfig::Spatial(_) | ModelConfig::Dpd(_) | ModelConfig::Ethno(_) => {
+        ModelConfig::Spatial(_) | ModelConfig::Dpd(_) | ModelConfig::Ethno(_) | ModelConfig::Tags(_) => {
             if !shot.place.is_empty() {
                 return Err(only("place", "sugarscape"));
             }
             if shot.empty {
                 return Err(only("empty", "sugarscape"));
+            }
+            if matches!(shot.base()?, ModelConfig::Tags(_)) {
+                if shot.cells.is_some() || shot.scores {
+                    return Err(only(if shot.scores { "scores" } else { "cells" }, "spatial-games"));
+                }
+                return run_tags(shot).map(Dump::Tags);
+            }
+            if shot.gifts {
+                return Err(only("gifts", "tags"));
             }
             if matches!(shot.base()?, ModelConfig::Spatial(_)) {
                 return run_lattice(shot).map(Dump::Spatial);
@@ -638,7 +696,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games, the demographic PD and ethnocentrism, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism and tags, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -833,6 +891,44 @@ pub fn run_ethno(shot: &Shot) -> Result<EthnoDump, Vec<FieldError>> {
         ticks: shot.ticks,
         width: config.width,
         height: config.width,
+        config,
+        frames,
+        stats,
+    })
+}
+
+fn tags_frame(world: &TagsWorld) -> TagsFrame {
+    TagsFrame {
+        tick: world.tick,
+        agents: world
+            .agents()
+            .iter()
+            .map(|a| (a.id, a.parent, a.tag, a.tolerance, a.given, a.received))
+            .collect(),
+        gifts: world.gifts().map(<[_]>::to_vec).unwrap_or_default(),
+    }
+}
+
+/// Runs a tags shot and records every generation. Generation 0 is played
+/// as the world is made, so its gifts are not recorded.
+pub fn run_tags(shot: &Shot) -> Result<TagsDump, Vec<FieldError>> {
+    let config = shot.tags_config()?;
+    let mut world = TagsWorld::new(config.clone(), shot.seed)?;
+    world.record_gifts(shot.gifts);
+    let mut frames = vec![tags_frame(&world)];
+    for _ in 0..shot.ticks {
+        world.step();
+        frames.push(tags_frame(&world));
+    }
+    let stats = TAGS_SERIES
+        .iter()
+        .filter_map(|&name| world.stats.series(name).map(|s| (name.to_string(), s)))
+        .collect();
+    Ok(TagsDump {
+        format: FORMAT,
+        model: "tags",
+        seed: shot.seed,
+        ticks: shot.ticks,
         config,
         frames,
         stats,
@@ -1421,6 +1517,54 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn a_tags_shot_records_each_generation_and_its_gifts() {
+        let d = match super::run(
+            &Shot::from_json(
+                r#"{"preset": "rca-published", "ticks": 30, "seed": 4, "gifts": true}"#,
+            )
+            .unwrap(),
+        )
+        .unwrap()
+        {
+            Dump::Tags(d) => d,
+            _ => panic!("a tags shot"),
+        };
+        assert_eq!((d.model, d.frames.len()), ("tags", 31));
+        assert!(d.frames[0].gifts.is_empty());
+        for k in 1..d.frames.len() {
+            let f = &d.frames[k];
+            assert_eq!(f.agents.len(), 100);
+            // Each place's agent descends from an agent of the generation before.
+            let before: BTreeSet<u64> = d.frames[k - 1].agents.iter().map(|a| a.0).collect();
+            assert!(f.agents.iter().all(|a| before.contains(&a.1)));
+            // The gifts match the tallies and the donation rate.
+            let mut given = vec![0u32; 100];
+            let mut received = vec![0u32; 100];
+            for &(g, r) in &f.gifts {
+                assert_ne!(g, r);
+                given[g as usize] += 1;
+                received[r as usize] += 1;
+            }
+            assert!(f.agents.iter().zip(&given).all(|(a, &n)| a.4 == n));
+            assert!(f.agents.iter().zip(&received).all(|(a, &n)| a.5 == n));
+            assert_eq!(d.stats["donation_rate"][k], f.gifts.len() as f64 / 300.0);
+        }
+    }
+
+    #[test]
+    fn gifts_are_for_tags_shots_only() {
+        let err = |json: &str| fields(super::run(&Shot::from_json(json).unwrap()).unwrap_err());
+        assert_eq!(
+            err(r#"{"preset": "dpd-run-1", "ticks": 1, "gifts": true}"#),
+            ["gifts"]
+        );
+        assert_eq!(
+            err(r#"{"preset": "ii-2-unit", "ticks": 1, "gifts": true}"#),
+            ["gifts"]
+        );
     }
 
     #[test]
