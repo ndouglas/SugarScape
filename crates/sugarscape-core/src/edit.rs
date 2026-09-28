@@ -114,6 +114,19 @@ pub struct AgentView {
     /// until the agent first moves; its path is empty under `jump` or once
     /// the agent has arrived.
     pub plan: Option<PlanView>,
+    /// Minds 3: whether the agent remembers, and how many sites and truffle
+    /// spots it holds in memory. `None` while memory is off (`span` 0).
+    pub memory: Option<MemoryView>,
+}
+
+/// Minds 3: what an agent remembers, for display.
+#[derive(Clone, Debug, Serialize)]
+pub struct MemoryView {
+    pub remembers: bool,
+    /// Sites in its memory (forgotten ones may linger until the next sweep).
+    pub sites: u32,
+    /// Of those, the ones where it knows a truffle spot.
+    pub spots: u32,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -323,6 +336,16 @@ impl World {
                 target_y: t.y,
                 path: a.plan.path.iter().map(|p| [p.x, p.y]).collect(),
                 walked: a.plan.walked,
+            }),
+            memory: (self.config.memory.span > 0).then(|| MemoryView {
+                remembers: a.remembers,
+                sites: a.memory.sites.len() as u32,
+                spots: a
+                    .memory
+                    .sites
+                    .values()
+                    .filter(|s| s.truffle.is_some())
+                    .count() as u32,
             }),
         });
         Ok(Inspection {
@@ -600,6 +623,38 @@ mod tests {
         assert_eq!(w.agent(child).unwrap().holdings[0], before);
         assert_eq!(w.occupant(Pos::new(1, 1)), None);
         assert!(w.events().deaths.is_empty());
+    }
+
+    #[test]
+    fn inspect_shows_memory_only_when_memory_is_on() {
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        assert!(w.inspect(2, 2).unwrap().agent.unwrap().memory.is_none());
+        w.config.movement.mode = crate::config::MoveMode::Walk;
+        w.config.memory.span = 20;
+        let seen = crate::minds::memory::Seen {
+            levels: [0.0; crate::config::MAX_GOODS],
+            most: [0.0; crate::config::MAX_GOODS],
+            tick: 0,
+            truffle: None,
+        };
+        {
+            let a = w.agent_mut(id).unwrap();
+            a.remembers = true;
+            a.memory.sites.insert(1, seen);
+            a.memory.sites.insert(
+                2,
+                crate::minds::memory::Seen {
+                    truffle: Some(crate::minds::memory::TruffleSeen {
+                        ripe: true,
+                        tick: 0,
+                    }),
+                    ..seen
+                },
+            );
+        }
+        let m = w.inspect(2, 2).unwrap().agent.unwrap().memory.unwrap();
+        assert_eq!((m.remembers, m.sites, m.spots), (true, 2, 1));
     }
 
     #[test]

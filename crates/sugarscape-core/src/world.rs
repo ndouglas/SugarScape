@@ -92,6 +92,17 @@ pub struct TickEvents {
     pub truffles_found: u32,
     /// Minds 3: of `truffles_found`, how many were harvested by a rememberer.
     pub truffles_by_rememberers: u32,
+    /// Minds 3: choices of where to go made this tick by rememberers.
+    pub moves: u32,
+    /// Minds 3: of `moves`, those whose target was a remembered site out of
+    /// sight.
+    pub remembered_moves: u32,
+    /// Minds 3: Σ |believed − true| welfare over the `remembered_moves`,
+    /// measured when the target is chosen (not on arrival).
+    pub belief_error_sum: f64,
+    /// Minds 3: of `remembered_moves`, those whose target was truly worth
+    /// less than believed when chosen.
+    pub stale_choices: u32,
 }
 
 #[derive(Clone)]

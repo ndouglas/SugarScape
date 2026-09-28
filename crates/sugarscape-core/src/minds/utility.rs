@@ -15,7 +15,7 @@ use crate::agent::AgentId;
 use crate::config::{Decision, Idle};
 use crate::geometry::Pos;
 use crate::portable::{exp_neg, ln};
-use crate::rules::movement::{arrive, candidates, choose};
+use crate::rules::movement::{arrive, candidates_with_memory, choose, record_choice};
 use crate::rules::Harvest;
 use crate::world::World;
 
@@ -42,13 +42,15 @@ pub fn crowd(world: &World, site: Pos, mover: AgentId) -> u32 {
         .count() as u32
 }
 
-/// Rule M's step under the utility mind.
+/// Rule M's step under the utility mind. A rememberer's remembered sites
+/// (Minds 3) are scored with crowding 0: nobody out of sight can be counted.
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let d = world.config.decision;
-    let mut scored = candidates(world, id);
+    let (welfare, start) = candidates_with_memory(world, id);
+    let mut scored = welfare.clone();
     if d.crowding > 0.0 || d.travel > 0.0 {
-        for c in &mut scored {
-            let n = if d.crowding > 0.0 {
+        for (k, c) in scored.iter_mut().enumerate() {
+            let n = if d.crowding > 0.0 && k < start {
                 crowd(world, c.0, id)
             } else {
                 0
@@ -60,14 +62,12 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
         // The current site is scored[0]; wander among the others, if any.
         match scored[1..].choose(&mut world.rng) {
             Some(c) => c.0,
-            None => {
-                let target = choose(&scored, &mut world.rng);
-                return arrive(world, id, target);
-            }
+            None => choose(&scored, &mut world.rng),
         }
     } else {
         choose(&scored, &mut world.rng)
     };
+    record_choice(world, id, &welfare, start, target);
     arrive(world, id, target)
 }
 
@@ -179,5 +179,39 @@ mod tests {
         let mut expected = before;
         crate::rules::movement::choose(&[(Pos::new(5, 5), 0, 0.0)], &mut expected);
         assert_eq!(w.rng, expected);
+    }
+
+    #[test]
+    fn crowding_is_zero_for_a_remembered_site() {
+        // Remembered (5, 9) worth 4 has two Flumps beside it, out of sight:
+        // crowded it would score 4 / 3 and lose to (6, 5)'s 3, but the
+        // walker can't know who's there, so it scores 4.
+        let mut c = blank_config(21, 21);
+        c.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        c.memory.span = 100;
+        c.memory.belief = crate::config::Belief::Recall;
+        c.decision = utility(0.0, 1.0, Idle::Stay);
+        let mut w = World::new(c, 7).unwrap();
+        let me = spawn(&mut w, 5, 5);
+        w.agent_mut(me).unwrap().remembers = true;
+        let idx = w.torus.index(Pos::new(5, 9)) as u32;
+        let mut seen = crate::minds::memory::Seen {
+            levels: [0.0; crate::config::MAX_GOODS],
+            most: [0.0; crate::config::MAX_GOODS],
+            tick: 0,
+            truffle: None,
+        };
+        (seen.levels[0], seen.most[0]) = (4.0, 4.0);
+        w.agent_mut(me).unwrap().memory.sites.insert(idx, seen);
+        spawn(&mut w, 4, 9);
+        spawn(&mut w, 6, 9);
+        set_sugar(&mut w, 6, 5, 3.0);
+        w.tick = 1;
+        act(&mut w, me);
+        assert_eq!(w.agent(me).unwrap().plan.target, Some(Pos::new(5, 9)));
+        assert_eq!(w.events().remembered_moves, 1);
     }
 }
