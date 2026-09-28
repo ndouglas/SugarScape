@@ -215,7 +215,7 @@ pub const TITLES: [(&str, &str); 253] = [
     ),
     (
         "mem-mvt",
-        "When to leave a patch: the farther apart the patches, the longer foragers stay",
+        "When to leave a patch: every forager starves before the question arises",
     ),
     (
         "vi-4-schelling-25",

@@ -281,7 +281,7 @@ const MVT_TICKS: u32 = 1000;
 
 /// `mem-mvt` at lattice spacing `s`: nine peaks at (s/2 + s·i, s/2 + s·j)
 /// on a 3s × 3s torus, so each patch keeps its share of the torus and the
-/// 10 Flumps their 10/9 per patch; only the walk between patches changes.
+/// Flumps their share per patch; only the walk between patches changes.
 /// Vision is 1–18 at every spacing (the 36 × 36 torus of spacing 12 allows
 /// at most 18, half the grid), so s = 20 is the preset but for vision.
 /// `utility` is the preset's mind (travel 0.5); otherwise rule M.
@@ -431,6 +431,7 @@ fn residence_slopes(seeds: &[u64], utility: bool) -> (Vec<f64>, Vec<Vec<Visits>>
 }
 
 fn residence_medians(runs: &[Vec<Visits>]) -> String {
+    let pop = preset("mem-mvt").population;
     SPACINGS
         .iter()
         .zip(runs)
@@ -440,7 +441,7 @@ fn residence_medians(runs: &[Vec<Visits>]) -> String {
             let on: Vec<f64> = r.iter().map(|v| v.on_patch).collect();
             let alive: Vec<f64> = r.iter().map(|v| v.alive).collect();
             format!(
-                "{s}: {:.2} ({n} completed visits; at the end, median {:.1} of 10 Flumps alive and a median share {:.2} of them on a patch)",
+                "{s}: {:.2} ({n} completed visits; at tick {MVT_TICKS}, a median {:.1} of the {pop} Flumps alive and a median share {:.2} of them on a patch)",
                 med_or_nan(&stats::finite(&res)),
                 median(&alive),
                 med_or_nan(&on)
@@ -838,6 +839,12 @@ pub fn claims() -> Vec<Claim> {
                 let deps: usize = v.iter().map(|x| x.departures).sum();
                 let on: Vec<f64> = v.iter().map(|x| x.on_patch).collect();
                 let alive: Vec<f64> = v.iter().map(|x| x.alive).collect();
+                let pop = preset("mem-mvt").population;
+                let alive_list = alive
+                    .iter()
+                    .map(|a| format!("{a:.0}"))
+                    .collect::<Vec<_>>()
+                    .join(" ");
                 let rule_m = |vision: u32| {
                     let mut c = preset("mem-mvt");
                     c.decision.rule = DecisionRule::Book;
@@ -851,7 +858,7 @@ pub fn claims() -> Vec<Claim> {
                 };
                 let (m20, m18) = (rule_m(20), rule_m(18));
                 range(&share, 0.5 + f64::EPSILON, 1.0, false).with(&format!(
-                    "Per-seed share of departures that overstay, mem-mvt (utility with travel), ticks 1–{MVT_TICKS}; {deps} departures over all seeds; at the end, median {:.1} of 10 Flumps alive, a median share {:.2} of them on a patch. Rule M on mem-mvt's world: median share {:.3} at the preset's vision 1–20 ({} seeds with departures), {:.3} at vision 1–18 as in the spacing runs ({} seeds).",
+                    "Per-seed share of departures that overstay, mem-mvt (utility with travel), ticks 1–{MVT_TICKS}; {deps} departures over all seeds; at tick {MVT_TICKS}, a median {:.1} of the {pop} Flumps alive (per seed: {alive_list}), a median share {:.2} of them on a patch. Rule M on mem-mvt's world: median share {:.3} at the preset's vision 1–20 ({} seeds with departures), {:.3} at vision 1–18 as in the spacing runs ({} seeds).",
                     median(&alive),
                     med_or_nan(&on),
                     med_or_nan(&m20),
