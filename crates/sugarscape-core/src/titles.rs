@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 238] = [
+pub const TITLES: [(&str, &str); 245] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -916,6 +916,34 @@ pub const TITLES: [(&str, &str); 238] = [
     (
         "watts-hub",
         "Light the best-connected node",
+    ),
+    (
+        "ae-rapid",
+        "15 % decide rationally, and retiring at 65 sets in within a few years",
+    ),
+    (
+        "ae-base",
+        "A tenth decide rationally, and the norm takes a generation",
+    ),
+    (
+        "ae-slow",
+        "5 % rational: retiring at 65 spreads slowly, up from the old",
+    ),
+    (
+        "ae-policy",
+        "Congress lowers the age to 62: here the new norm comes in a few years",
+    ),
+    (
+        "ae-groups",
+        "Two communities, one with no rational agents, loosely linked",
+    ),
+    (
+        "ae-all-members",
+        "Count every friend, not just the eligible, and no norm ever forms",
+    ),
+    (
+        "ae-replace",
+        "Replace friends who die, and 5 % rationality is no longer enough",
     ),
 ];
 

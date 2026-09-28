@@ -254,6 +254,14 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("watts-upper", 0xea32457929c916d8),
     ("watts-hetero", 0x1ebbdf6d37320885),
     ("watts-hub", 0x994dd1ff0bedf61b),
+    // Milestone 26: the timing of retirement.
+    ("ae-rapid", 0x1d6b4cb389aa872f),
+    ("ae-base", 0x2d5c384cbc8ebd2f),
+    ("ae-slow", 0x63110dc295184e1b),
+    ("ae-policy", 0x96c030d4a1280cd4),
+    ("ae-groups", 0xadde267c611d5392),
+    ("ae-all-members", 0x8f6694a3282613e3),
+    ("ae-replace", 0x90d96b846be612f2),
 ];
 
 fn fingerprint(id: &str) -> u64 {

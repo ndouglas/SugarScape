@@ -32,6 +32,7 @@ pub mod opinions;
 pub mod portable;
 pub mod presets;
 pub mod render;
+pub mod retirement;
 pub mod ring;
 pub mod rng;
 pub mod rules;
