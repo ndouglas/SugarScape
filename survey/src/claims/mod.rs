@@ -18,6 +18,7 @@ mod opinions;
 mod spatial;
 mod structure;
 mod tags;
+mod thresholds;
 
 use crate::claim::Claim;
 
@@ -43,6 +44,7 @@ pub fn all() -> Vec<Claim> {
         spatial::claims(),
         structure::claims(),
         tags::claims(),
+        thresholds::claims(),
     ]
     .into_iter()
     .flatten()
