@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('zi charts', () => {
+  it('chart prices, efficiency, convergence, dispersion and volume over shouts', () => {
+    expect(MODEL_CHARTS.zi.map((c) => c.title)).toEqual(['Prices', 'Efficiency', 'Convergence', 'Profit dispersion', 'Volume']);
+    expect(timeAxisLabel('zi')).toBe('Shouts');
+  });
+});
+
 describe('punishment charts', () => {
   it('chart the types, cooperation with its long-run average, payoff and conflict over periods', () => {
     expect(MODEL_CHARTS.punishment.map((c) => c.title)).toEqual(['Types', 'Cooperation', 'Payoff', 'Conflict']);

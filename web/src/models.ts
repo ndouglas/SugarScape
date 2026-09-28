@@ -1,6 +1,7 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  ZiInspection,
   PunishmentConfig,
   PunishmentInspection,
   RetirementConfig,
@@ -45,7 +46,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -70,12 +71,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   thresholds: 'Threshold Models',
   retirement: 'The Timing of Retirement',
   punishment: 'Altruistic Punishment',
+  zi: 'Zero-Intelligence Traders',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi'
     ? tag
     : 'sugarscape';
 }
@@ -167,6 +169,11 @@ export function isDpdView(v: AnyInspection, model: ModelKind): v is DpdInspectio
  */
 export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
+}
+
+/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
+export function isZiView(v: AnyInspection): v is ZiInspection {
+  return 'panel' in v && 'trade' in v && 'supply' in v;
 }
 
 /** A cell of the punishment frame (a panel, an agent and its group, and a period's `punishment`); check it first. */
@@ -393,6 +400,12 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['payoff', 'Payoff'],
     ['group', 'Group'],
   ],
+  // Buyers and sellers; each trader's profit against its equilibrium profit; ZIP margins.
+  zi: [
+    ['side', 'Side'],
+    ['profit', 'Profit'],
+    ['margin', 'Margin'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -418,4 +431,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   thresholds: [],
   retirement: [],
   punishment: [],
+  zi: [],
 };

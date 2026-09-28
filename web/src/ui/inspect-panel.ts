@@ -3,12 +3,13 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isPunishmentView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
   PunishmentInspection,
+  ZiInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -291,6 +292,32 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A step of the schedules, a trade, or a trader. */
+  private ziRows(view: ZiInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (view.panel === 'schedules')
+      return [row('Unit', String(view.unit)), row('Demand', view.demand === null ? '—' : String(view.demand)), row('Supply', view.supply === null ? '—' : String(view.supply))];
+    if (view.panel === 'prices') {
+      const t = view.trade;
+      if (!t) return [row('Trade', 'none here')];
+      return [
+        row('Trade', `period ${t.period}, shout ${t.tick}`),
+        row('Price', String(t.price)),
+        row('Buyer', `#${t.buyer + 1} (value ${t.value}, profit ${t.value - t.price})`),
+        row('Seller', `#${t.seller + 1} (cost ${t.cost}, profit ${t.price - t.cost})`),
+      ];
+    }
+    const a = view.trader;
+    if (!a) return [row('Point', 'between panels')];
+    const rows = [
+      row('Trader', `#${a.id} · ${a.buyer ? 'buyer' : 'seller'}`),
+      row(a.buyer ? 'Values' : 'Costs', a.limits.join(', ')),
+      row('This period', `${a.traded} traded · profit ${a.profit} (equilibrium ${fmt(a.equilibrium_profit)})`),
+    ];
+    if (a.margin !== null) rows.push(row('Margin (μ)', fmt(a.margin)));
+    return rows;
+  }
+
   /** An agent and its group, or a period of the time strip. */
   private punishmentRows(view: PunishmentInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -548,6 +575,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isZiView(view)
+            ? this.ziRows(view)
           : isPunishmentView(view)
             ? this.punishmentRows(view)
           : isRetirementView(view)

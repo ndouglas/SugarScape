@@ -7,6 +7,7 @@ import {
   isAntsView,
   isThresholdsView,
   isPunishmentView,
+  isZiView,
   isRetirementView,
   isFarolView,
   isCivilView,
@@ -118,6 +119,26 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the zi model', () => {
+  it('is read by its tag, and its inspections by `trade` and `supply`, before the others with a panel', () => {
+    expect(modelOf({ model: 'zi' } as unknown as ModelConfig)).toBe('zi');
+    const cell = { site: { x: 1, y: 2 }, panel: 'schedules', unit: 1, demand: 102, supply: 34, trade: null, trader: null, agent: null } as unknown as AnyInspection;
+    const pun = { site: { x: 1, y: 2 }, panel: 'groups', group: null, agent: null, period: null, cooperation: null, punishment: null } as unknown as AnyInspection;
+    expect([cell, pun].map(isZiView)).toEqual([true, false]);
+    expect([isPunishmentView(cell), isRetirementView(cell), isThresholdsView(cell)]).toEqual([false, false, false]);
+  });
+
+  it('colors three ways, has no overlays, and ends after its periods', () => {
+    expect(COLOR_MODES.zi).toEqual([
+      ['side', 'Side'],
+      ['profit', 'Profit'],
+      ['margin', 'Margin'],
+    ]);
+    expect(MODEL_OVERLAYS.zi).toEqual([]);
+    expect(finishesUnpredictably({ model: 'zi', stop_at: 6 } as unknown as ModelConfig)).toBe(false);
   });
 });
 

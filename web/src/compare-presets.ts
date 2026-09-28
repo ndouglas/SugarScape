@@ -182,6 +182,18 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'bg-base',
     b: 'bg-none',
   },
+  {
+    id: 'gs-1-vs-u',
+    label: 'With vs without the budget constraint — Zero-Intelligence Traders (Compare)',
+    a: 'gs-1',
+    b: 'gs-1-u',
+  },
+  {
+    id: 'zi-c-vs-zip',
+    label: 'ZI-C vs ZIP in a box market — Zero-Intelligence Traders (Compare)',
+    a: 'cliff-excess-demand',
+    b: 'zip-excess-demand',
+  },
 ];
 
 /**
