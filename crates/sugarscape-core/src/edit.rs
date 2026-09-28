@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 use crate::agent::{Agent, AgentId, DiseaseId, Sex, Tribe};
 use crate::config::{Config, FieldError};
 use crate::geometry::Pos;
+use crate::minds::memory::believed_ripe;
 use crate::rules;
 use crate::world::{LoanId, World};
 
@@ -360,6 +361,50 @@ impl World {
         })
     }
 
+    /// Minds 3: the Flump at `pos`'s remembered sites, in the memory's own
+    /// (site-index) order: each site's `(x, y)`, its age in ticks since last
+    /// seen (capped at `u32::MAX`), and its `spot` — 0 for no known truffle
+    /// spot, 1 for one believed unripe, 2 for one believed ripe
+    /// (`minds::memory::believed_ripe`). Empty when there's no Flump there,
+    /// it doesn't remember, or memory is off (`span` 0).
+    pub fn memory_view(&self, pos: Pos) -> Vec<[u32; 4]> {
+        if self.config.memory.span == 0 {
+            return Vec::new();
+        }
+        let Some(agent) = self.agent_at(pos) else {
+            return Vec::new();
+        };
+        if !agent.remembers {
+            return Vec::new();
+        }
+        let now = self.tick;
+        agent
+            .memory
+            .sites
+            .iter()
+            .map(|(&idx, seen)| {
+                let p = self.torus.pos(idx as usize);
+                let age = now.saturating_sub(seen.tick).min(u64::from(u32::MAX)) as u32;
+                let spot = match &seen.truffle {
+                    None => 0,
+                    Some(t) => {
+                        if believed_ripe(
+                            t,
+                            now,
+                            self.config.truffles.regrow,
+                            self.config.memory.belief,
+                        ) {
+                            2
+                        } else {
+                            1
+                        }
+                    }
+                };
+                [p.x, p.y, age, spot]
+            })
+            .collect()
+    }
+
     /// Swaps in a new config mid-run. Rule toggles and parameters take effect
     /// on the next tick; grid size, tag length and landscape need a reset.
     /// Only schedule entries that have not fired yet are validated.
@@ -655,6 +700,84 @@ mod tests {
         }
         let m = w.inspect(2, 2).unwrap().agent.unwrap().memory.unwrap();
         assert_eq!((m.remembers, m.sites, m.spots), (true, 2, 1));
+    }
+
+    #[test]
+    fn memory_view_is_empty_with_memory_off_no_flump_or_a_non_rememberer() {
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        assert!(
+            w.memory_view(Pos::new(2, 2)).is_empty(),
+            "memory off (span 0)"
+        );
+        w.config.movement.mode = crate::config::MoveMode::Walk;
+        w.config.memory.span = 20;
+        assert!(
+            w.memory_view(Pos::new(5, 5)).is_empty(),
+            "no Flump at that site"
+        );
+        assert!(
+            w.memory_view(Pos::new(2, 2)).is_empty(),
+            "the Flump there doesn't remember"
+        );
+        w.agent_mut(id).unwrap().remembers = true;
+        assert!(
+            w.memory_view(Pos::new(2, 2)).is_empty(),
+            "remembers, but nothing in memory yet"
+        );
+    }
+
+    #[test]
+    fn memory_view_lists_sites_in_memory_order_with_age_and_spot() {
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        w.config.movement.mode = crate::config::MoveMode::Walk;
+        w.config.memory.span = 20;
+        w.config.memory.belief = crate::config::Belief::Project;
+        w.config.truffles.regrow = 10;
+        w.tick = 20;
+        let blank_seen = crate::minds::memory::Seen {
+            levels: [0.0; crate::config::MAX_GOODS],
+            most: [0.0; crate::config::MAX_GOODS],
+            tick: 18,
+            truffle: None,
+        };
+        {
+            let a = w.agent_mut(id).unwrap();
+            a.remembers = true;
+            // Site 1: no known spot, last seen 2 ticks ago.
+            a.memory.sites.insert(1, blank_seen);
+            // Site 2: a spot seen unripe 5 ticks ago; regrow is 10, so it's
+            // still believed unripe.
+            a.memory.sites.insert(
+                2,
+                crate::minds::memory::Seen {
+                    truffle: Some(crate::minds::memory::TruffleSeen {
+                        ripe: false,
+                        tick: 15,
+                    }),
+                    ..blank_seen
+                },
+            );
+            // Site 5: a spot seen unripe 15 ticks ago; past regrow, so it's
+            // now believed ripe.
+            a.memory.sites.insert(
+                5,
+                crate::minds::memory::Seen {
+                    truffle: Some(crate::minds::memory::TruffleSeen {
+                        ripe: false,
+                        tick: 5,
+                    }),
+                    ..blank_seen
+                },
+            );
+        }
+        let view = w.memory_view(Pos::new(2, 2));
+        assert_eq!(
+            view,
+            vec![[1, 0, 2, 0], [2, 0, 2, 1], [5, 0, 2, 2],],
+            "BTreeMap (site-index) order, each [x, y, age, spot]"
+        );
     }
 
     #[test]
