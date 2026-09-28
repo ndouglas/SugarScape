@@ -1609,8 +1609,9 @@ non-rememberers in the same world, paired seed by seed.
 
 **Memory.** Under `memory.span` > 0 a share of Flumps (`memory.share`, drawn at birth) remember.
 Each tick, after moving, a rememberer records every site in sight and its own site, with the levels
-it saw and the tick. An entry not seen again for `span` ticks is forgotten. Children start with
-empty memories. Memory needs walking, since a remembered site out of sight can only be walked to.
+it saw and the tick. An entry not seen again for `span` ticks is forgotten, and a Flump holds at
+most 4 096 sites: past that, the ones seen longest ago go first. Children start with empty
+memories. Memory needs walking, since a remembered site out of sight can only be walked to.
 
 - **Belief.** `recall` believes a remembered site holds what it held when seen. `project` believes
   that plus growback since, capped at the most ever seen there (the docking with Hornvale's
@@ -1637,19 +1638,28 @@ running):
   −113; we expected about 0, and only 2 of 20 seeds land within 10 %. Behind the wall
   (`mem-walled`) it's −114, and only 7 % of rememberers are alive at tick 500 against 74 % of the
   others. Through the seasons it's −48, among truffles −82, and on the two patches out of sight
-  (`mem-catchment`) −90, poorer in every seed, though rememberers reach a patch a little sooner
-  (median tick 27.5 against 33). Memory pays only on the trapline world: +69, in every seed.
-- **Travel is the missing price.** Rule M values a site by its sugar alone, so a far remembered site
-  believed full beats a near one. Under the utility mind with travel k = 0.5 (memory as before), the
-  advantage on `mem-open` rises in every seed, by a median 119, to +7.4. But rememberers are richer
-  in only 10 of 20 seeds there (IQR −18 to +37), so the claim that memory pays once travel is priced
-  is Weak. The same switch takes `mem-walled` from −114 to −55 (higher in every seed) and
-  `mem-truffles` from −82 to +1.5 (higher in 18 of 20). Memory's value depends on the decision rule
-  pricing travel.
+  (`mem-catchment`) −90, poorer in every seed, though rememberers reach a patch sooner (median tick
+  27.5 against 33). That −90 is on holdings near 100 000 (an endowment so large nobody starves), so
+  under 0.1 %. Memory pays only on the trapline world: +69, in every seed (measured with half the
+  Flumps remembering; the preset has everyone remember).
+- **Pricing travel removes the loss, largely by using memory less; no gain was shown.** Rule M
+  values a site by its sugar alone, so a far remembered site believed full beats a near one: rule M
+  prices no travel, a likely contributor to the loss. Under the utility mind with travel k = 0.5
+  (memory as before), the advantage on `mem-open` rises in every seed, by a median 119, to about
+  neutral: +7.4 (IQR −18 to +37), rememberers richer in only 10 of 20 seeds (Weak). But the share
+  of rememberers' choices aimed at a remembered site out of sight falls from 0.68 to 0.10 (median
+  over seeds, on ticks 200–500 with any such choice), so the travel price mostly works by leaving
+  memory unused. Across the arms, the loss tracks how often memory is used: `project` uses it about
+  twice as often as `recall` (0.68 against 0.34 on `mem-open`, 0.73 against 0.34 on `mem-truffles`)
+  and loses more (−113 against −34, and −82 against −25). The same switch takes `mem-walled` from
+  −114 to −55 (higher in every seed, still a loss) and `mem-truffles` from −82 to +1.5 (higher in
+  18 of 20), and there too memory is used less: the share falls from 0.96 to 0.65 behind the wall
+  and from 0.73 to 0.25 among truffles.
 - **Projection is worse than recall, the opposite of Hornvale.** On `mem-open` the advantage is −113
   under `project` against −34 under `recall`, worse in every seed, with a larger belief error (2.67
   against 2.46 sugar). On `mem-truffles` it's −82 against −25, with twice the belief error (4.99
-  against 2.46). Hornvale's goblins gained from projection; likely because Hornvale's planner prices
+  against 2.46). The belief error is measured only on chosen targets, the ones believed best, so it
+  carries a selection bias. Hornvale's goblins gained from projection; likely because Hornvale's planner prices
   what competitors take in the meantime, and ours doesn't. Staleness alone doesn't separate the two
   beliefs: on `mem-open`, 93 % of choices of a remembered site out of sight find less there than
   believed under `project`, and 95 % under `recall`.
@@ -1666,11 +1676,14 @@ running):
 - **Gill's competition effect fails.** The median interval between visits to the same spot is 50
   ticks with 5 Flumps and with 20 (regrowth takes 40), and about 12 % of revisits come sooner than
   40 ticks either way.
-- **Forgetting tracks regrowth only weakly.** Under `recall` (the `mem-span-recall` sweep, recomputed
-  per seed in the survey) the best span is 25 ticks at growback 0.25 and 0.5 and 10 at growback 1,
-  shorter at the fast rate in only 12 of 20 seeds (Weak, for Bracis et al.). The advantage is
-  negative at every span and rate. Under `project` the median advantage is highest at span 10 at
-  every rate, so projection doesn't make longer memories pay (Fails).
+- **Forgetting tracking regrowth isn't shown.** Under `recall` (the `mem-span-recall` sweep,
+  recomputed per seed in the survey) the advantage is negative at every span and growback rate, so
+  the "best" span is only the least-harmful one. At growback 1 it sits at the shortest span tested
+  (10 ticks, IQR 10–10), the floor of the grid; at 0.25 and 0.5 it's 25. The survey scores it Weak
+  for Bracis et al. (shorter at the fast rate in 12 of 20 seeds), but a best span stuck at the floor
+  can't show forgetting tracking regrowth: only that memory hurts least when it's shortest. Under
+  `project` the median advantage is highest at span 10 at every rate, so projection doesn't make
+  longer memories pay (Fails).
 - **Memory doesn't restore walking's lost capacity.** On `walk-capacity` with memory for everyone,
   the population (mean over ticks 300–500) has median 154 against 181 without memory, lower in every
   seed (175 under `recall`; 228 jumping).
@@ -1710,8 +1723,10 @@ on reset, and **Belief**, live) and **Truffles** group (**Share of sites with a 
 seed** on reset, **Value** and **Regrow time** live; a live change to regrow time applies to future
 harvests only). Inspect shows "Remembers: n sites (m truffle spots)" or "Doesn't remember", and the
 grid draws the inspected Flump's remembered sites as a faint overlay fading with age, with its known
-truffle spots as circles (filled when believed ripe). Charts: **Memory** (`remembered_moves`,
-`stale_choices`, `belief_error`), **Rememberers vs others** and **Truffles**. Presets: `mem-open`,
+truffle spots as circles (filled when believed ripe). Charts: **Memory** (`remembered_moves` and
+`stale_choices`, both shares), **Belief error (sugar)**, **Rememberers vs others** and
+**Truffles**. Truffles need rule M's move to be gathered, so they can't be combined with combat
+(rule C). Presets: `mem-open`,
 `mem-catchment`, `mem-walled`, `mem-seasons`, `mem-truffles`, `mem-trapline`, `mem-mvt`. Built-in
 sweeps: `mem-span-recall` and `mem-span-project` (the advantage against span at three growback
 rates) and `mem-share` (the advantage against the share remembering, on `mem-truffles`).

@@ -520,6 +520,30 @@ fn best_spans(g: &Grid) -> Vec<Vec<f64>> {
         .collect()
 }
 
+/// What the best span means when memory never pays: if every median
+/// advantage in the grid is negative, the "best" span is only the least
+/// harmful one, and a best span stuck at the grid's shortest can't show
+/// forgetting tracking regrowth. Empty otherwise.
+fn least_harmful(g: &Grid, best: &[Vec<f64>]) -> String {
+    let all_negative = g.iter().flatten().all(|v| median(v) < 0.0);
+    if !all_negative {
+        return String::new();
+    }
+    let floor = f64::from(SPANS[0]);
+    let fast = best.last().expect("a rate");
+    let at_floor = if stats::quantile(fast, 0.25) == floor && stats::quantile(fast, 0.75) == floor {
+        format!(
+            " At growback {} it sits at the shortest span tested ({floor:.0}, IQR {floor:.0}–{floor:.0}), the floor of the grid, so the comparison can't show forgetting tracking regrowth: it shows only that memory hurts least when it's shortest.",
+            RATES[RATES.len() - 1]
+        )
+    } else {
+        String::new()
+    };
+    format!(
+        "The median advantage is negative at every span and rate, so the \"best\" span is the least-harmful span, not one where memory pays.{at_floor}"
+    )
+}
+
 fn grid_summary(g: &Grid) -> String {
     RATES
         .iter()
@@ -883,11 +907,16 @@ pub fn claims() -> Vec<Claim> {
             check: |seeds| {
                 let g = grid(Belief::Recall, seeds);
                 let best = best_spans(&g);
-                paired_greater(&best[0], &best[2], "best span at 0.25", "best span at 1").with(&format!(
-                    "Best span per seed, median by growback rate: {}. Median advantage by rate and span: {}.",
-                    best_summary(&best),
-                    grid_summary(&g)
-                ))
+                let out = paired_greater(&best[0], &best[2], "best span at 0.25", "best span at 1")
+                    .with(&format!(
+                        "Best span per seed, median by growback rate: {}. Median advantage by rate and span: {}.",
+                        best_summary(&best),
+                        grid_summary(&g)
+                    ));
+                match least_harmful(&g, &best) {
+                    note if note.is_empty() => out,
+                    note => out.with(&note),
+                }
             },
         },
         Claim {
@@ -947,11 +976,13 @@ pub fn claims() -> Vec<Claim> {
                     let m = groups(&preset(id), seeds);
                     let t = groups(&priced_travel(preset(id), 0.5), seeds);
                     format!(
-                        "{id}: rule M median advantage {:.2}, travel 0.5 {:.2} (travel 0.5 higher in {} of {} seeds)",
+                        "{id}: rule M median advantage {:.2}, travel 0.5 {:.2} (travel 0.5 higher in {} of {} seeds); remembered_moves rule M {:.3}, travel 0.5 {:.3}",
                         median(&col(&m, |x| x.adv)),
                         median(&col(&t, |x| x.adv)),
                         t.iter().zip(&m).filter(|(a, b)| a.adv > b.adv).count(),
-                        seeds.len()
+                        seeds.len(),
+                        median(&stats::finite(&col(&m, |x| x.moves))),
+                        median(&stats::finite(&col(&t, |x| x.moves))),
                     )
                 };
                 all_of(vec![

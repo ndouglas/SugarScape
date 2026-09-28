@@ -335,6 +335,26 @@ sweeps' (20 seeds), with the source named. The cost figures are the release CLI'
   then, not on arrival. The series `stale_choices` (the share of those choices whose target was
   truly worth less than believed) replaces `stale_arrivals`. The page's **Memory** chart shows
   `stale_choices`.
+- **Ruling: a cap on memory.** A Flump holds at most `MEMORY_CAP` = 4 096 remembered sites. When
+  `observe` would push its memory past that, the entries seen longest ago are dropped, the lowest
+  site index first on a tie, so what was just seen always stays. Before the cap, memory grew
+  without bound on a big flat world with a long span: the final review measured 1.29 M entries and
+  about 220 MB on a 500 × 500 world with span 10 000 at tick 1 500, before keyframes. `Seen` now
+  keeps levels and most only for the configured goods (one boxed slice), not all `MAX_GOODS`; the
+  believed values are bit-for-bit the same `f64`s. The standard presets hold far fewer than 4 096
+  sites per Flump, so every golden fingerprint is unchanged.
+- **Ruling: no truffles under combat.** Rule C never calls rule M's gather, so a truffle spot would
+  never be picked. `truffles.share` > 0 with `combat.enabled` is a validation error: "truffles are
+  gathered by rule M's move; combat (rule C) doesn't gather them".
+- **Known limit: an unreachable remembered target.** A rememberer whose remembered target can't be
+  reached (walls split it off, occupied sites block every path, or A\* finds none within
+  `WALK_LIMIT`) stays where it stands, as any walker does on a failed search, and then chooses the
+  same target again every tick, since nothing it sees changes the belief, until it's forgotten
+  `span` ticks after it was last seen. No behavior changes for this; it's recorded so a stuck
+  rememberer isn't mistaken for a bug.
+- **The Memory chart, split.** The **Memory** chart shows the two shares, `remembered_moves` and
+  `stale_choices` (range 0–1); `belief_error`, in sugar, has its own chart, **Belief error
+  (sugar)**, shown under the same condition (`span` > 0).
 - **Remembered sites carry no pollution discount.** Memory keeps no pollution, and the Flump can't
   see it out of sight. The true value in `belief_error` does include the discount, so under
   pollution the belief error includes pollution the Flump couldn't see. No memory preset uses
@@ -388,21 +408,33 @@ sweeps' (20 seeds), with the source named. The cost figures are the release CLI'
     (**Fails**; we expected about 0).
   - `mem-walled` −114 (7 % of rememberers alive at tick 500 against 74 %; under `recall` −40),
     `mem-seasons` −48, `mem-truffles` −82, `mem-catchment` −90: all **Fail**. Rememberers reach a
-    patch sooner in `mem-catchment` (median tick 27.5 against 33).
-  - `mem-trapline`: +69, in every seed (**Holds**). Memory pays only here.
+    patch sooner in `mem-catchment` (median tick 27.5 against 33); its −90 is on holdings near
+    100 000 (the endowment), under 0.1 %.
+  - `mem-trapline`: +69, in every seed (**Holds**), measured at share 0.5, not the preset's share 1.
+    Memory pays only here.
   - `mem-open.travel` is **Weak**: travel 0.5 raises the advantage in every seed, by a median 119,
-    to +7.4, but rememberers are richer in only 10 of 20 seeds. `mem-walled` goes from −114 to −55
-    (every seed), `mem-truffles` from −82 to +1.5 (18 of 20).
+    to about neutral, +7.4 (IQR −18 to +37), rememberers richer in 10 of 20 seeds. The share of
+    rememberers' choices aimed at a remembered site falls from 0.68 to 0.10. Across the arms the
+    loss tracks how often memory is used: `project` uses it about twice as often as `recall` (0.68
+    against 0.34 on `mem-open`, 0.73 against 0.34 on `mem-truffles`) and loses more. So pricing
+    travel removes the loss, largely by using memory less; no gain was shown. Rule M prices no
+    travel, a likely contributor. `mem-walled` goes from −114 to −55 (every seed), `mem-truffles`
+    from −82 to +1.5 (18 of 20), with the share of remembered choices falling from 0.96 to 0.65 and
+    from 0.73 to 0.25; the claim's detail now reports those shares.
   - Hornvale's pathology **fails**: `project` is worse than `recall` in every seed, −113 against −34
     on `mem-open` (belief error 2.67 against 2.46) and −82 against −25 on `mem-truffles` (4.99
-    against 2.46). `stale_choices` is 0.93 and 0.95 on `mem-open`.
+    against 2.46). `stale_choices` is 0.93 and 0.95 on `mem-open`. `belief_error` is measured only on
+    chosen targets, the ones believed best, so it carries a selection bias.
   - Truffles **hold**: rememberers gather 0.0147 a Flump-tick against 0.0065 (ticks 1–500), about
     2.3 times.
-  - Traplining **holds**: index median 0.15, below 0.8 in every seed; non-rememberers 0.36 with share
-    0.5. The payoff **holds**: 0.050 against 0.011. Gill **fails**: the median revisit interval is 50
+  - Traplining **holds**: index median 0.15, below 0.8 in every seed; the non-rememberer control
+    (share 0.5) scores 0.36, which also passes the 0.8 threshold. The payoff **holds**: 0.050 against 0.011. Gill **fails**: the median revisit interval is 50
     ticks with 5 Flumps and with 20.
   - Forgetting: under `recall` the best span is 25 at growback 0.25 and 10 at 1, shorter in 12 of 20
-    seeds (**Weak**). Under `project` the median advantage is highest at span 10 at every rate, so a
+    seeds (**Weak**, the computed verdict, kept). But the advantage is negative at every span and
+    rate, so the "best" span is the least-harmful span, and at growback 1 it sits at the lowest span
+    tested (10, IQR 10–10). So the claim can't show forgetting tracking regrowth; the survey's
+    detail says so. Under `project` the median advantage is highest at span 10 at every rate, so a
     longer best span **fails**.
   - Capacity **fails**: memory for everyone gives 154 against 181 without memory (175 under
     `recall`).
@@ -414,5 +446,8 @@ sweeps' (20 seeds), with the source named. The cost figures are the release CLI'
   `mem-walled` 8.7; `walk-capacity` 4.91 (4.66 in Minds 2), `ifd-fence` 14.74 (7.77), `ii-2-unit`
   1.62 (1.05).
 - **Titles** follow the measurements: `mem-open` "Remembering on the open sugarscape: rememberers
-  end up poorer"; `mem-walled` "Remembering beyond the wall: rememberers starve"; `mem-mvt` "When to
-  leave a patch: foragers who find a rich one never leave".
+  end up poorer"; `mem-catchment` "Wanderers who remember reach patches sooner but end slightly
+  poorer"; `mem-walled` "Remembering beyond the wall: rememberers starve"; `mem-seasons`
+  "Remembering the other hemisphere: rememberers end poorer"; `mem-truffles` "Hidden truffles:
+  rememberers find over twice as many and still end poorer"; `mem-mvt` "When to leave a patch:
+  foragers who find a rich one never leave".
