@@ -116,7 +116,7 @@ Titles follow `titles.rs`'s style; drafts.
 | `gr-perturbed` | Move one person up one notch, and only the instigator riots | perturbed |
 | `gr-normal-12` / `gr-normal-13` | Mean threshold 25, spread 12 / 13: a handful riot, or nearly everyone | normal, quantiles, nearest |
 | `gr-normal-sampled` | The same crowd drawn from real people: no sharp tipping point | normal σ 0.122, sampled, repeat |
-| `gr-city` | Crowds drawn from a city that should riot: half end with one rioter | city, repeat |
+| `gr-city` | Crowds drawn from a city that should riot: half end with no rioter or one | city, repeat |
 | `gr-friends` | Count friends double, and the crowd that should riot mostly doesn't | uniform, friends 0.25 × 2, repeat |
 | `gr-friends-perturbed` | Close friends rescue the stalled crowd, now and then | perturbed, friends 0.25 × 5, repeat |
 | `gr-ceilings` | Join a crowd, leave a mob: the riot builds and collapses | uniform, 30 % ceilings at 90 % |

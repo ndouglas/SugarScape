@@ -175,6 +175,10 @@ pub fn gnp_sparse(n: usize, p: f64, rng: &mut SimRng) -> Vec<Vec<u32>> {
         return adj;
     }
     let lp = crate::portable::ln(1.0 - p);
+    if lp >= 0.0 {
+        // p so small that 1 − p rounds to 1: no links.
+        return adj;
+    }
     let (mut v, mut w) = (1usize, -1i64);
     while v < n {
         let r: f64 = rng.gen();
@@ -279,6 +283,14 @@ mod tests {
         let full = Graph::from_lists(gnp_sparse(10, 1.0, &mut rng::seeded(3)));
         assert_eq!(full.edges().len(), 45);
         simple(&full, 10);
+    }
+
+    #[test]
+    fn a_vanishing_link_probability_gives_no_links_rather_than_a_panic() {
+        // 1 − 1e-17 rounds to 1, so ln(1 − p) is 0 and the skip would be −∞.
+        assert!(gnp_sparse(20_000, 1e-17, &mut rng::seeded(5))
+            .iter()
+            .all(Vec::is_empty));
     }
 
     #[test]

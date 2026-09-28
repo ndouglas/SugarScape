@@ -879,7 +879,7 @@ pub const TITLES: [(&str, &str); 238] = [
     ),
     (
         "gr-city",
-        "Crowds drawn from a city that should riot: half end with one rioter",
+        "Crowds drawn from a city that should riot: half end with no rioter or one",
     ),
     (
         "gr-friends",

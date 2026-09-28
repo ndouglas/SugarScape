@@ -84,7 +84,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "gr-normal-sampled",
             "Fig. 2's crowd, sampled",
             GRANOVETTER,
-            "Figure 2's crowd with σ 12.2, but each crowd drawn at random from the normal distribution, as real crowds would be, and one crowd after another. Granovetter's jump — 'a wholly discontinuous, striking qualitative effect' — is a property of the idealized distribution: drawn crowds riot past half 15 % of the time at σ 12 and 25 % at 12.5, rising smoothly (the survey, 1 000 crowds each). Measured here (10 seeds, 3 000 steps): 21 % of about 600 crowds riot past a tenth; the mean crowd ends at 21 %. The histogram of outcomes is split: most crowds end with a few rioters, a fifth with nearly everyone.",
+            "Figure 2's crowd with σ 12.2, but each crowd drawn at random from the normal distribution, as real crowds would be, and one crowd after another. Granovetter's jump — 'a wholly discontinuous, striking qualitative effect' — is a property of the idealized distribution: drawn crowds riot past half 15 % of the time at σ 12 and 25 % at 12.5, rising smoothly (the survey, 1 000 crowds each). Measured here (10 seeds, 3 000 steps): 21 % of about 6 000 crowds riot past a tenth; the mean crowd ends at 21 %. The histogram of outcomes is split: most crowds end with a few rioters, a fifth with nearly everyone.",
             |c| {
                 normal(c, 0.122);
                 c.crowd = Crowd::Sampled;
@@ -106,7 +106,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "gr-friends",
             "Friends count twice",
             GRANOVETTER,
-            "The uniform crowd, but friends count twice: each pair are friends with probability ¼, and a person weighs what his friends do double, dividing by the whole crowd with friends counted twice (Granovetter's 63/120 example). Now the person at 1 % joins only if the instigator is his friend. Granovetter: the uniform crowd's riot of 100 'is unstable against almost any kind of social structural influence … the modal equilibrium result is one rioter.' Measured (10 seeds, 3 000 steps, about 850 crowds): the mean crowd ends at 1.5 rioters; the mode is one rioter in 8 of 10 weight-and-acquaintance settings (the survey).",
+            "The uniform crowd, but friends count twice: each pair are friends with probability ¼, and a person weighs what his friends do double, dividing by the whole crowd with friends counted twice (Granovetter's 63/120 example). Now the person at 1 % joins only if the instigator is his friend. Granovetter: the uniform crowd's riot of 100 'is unstable against almost any kind of social structural influence … the modal equilibrium result is one rioter.' Measured (10 seeds, 3 000 steps, about 8 500 crowds): the mean crowd ends at 1.5 rioters; the mode is one rioter in 8 of 10 weight-and-acquaintance settings (the survey).",
             |c| {
                 c.friends = Friends {
                     enabled: true,
@@ -140,13 +140,15 @@ pub fn presets() -> Vec<ModelPreset> {
                     share: 0.1,
                     at: 0.9,
                 };
+                // The pulse never settles: don't cut the episode off at 1 000 steps.
+                c.max_steps = 100_000;
             },
         ),
         preset(
             "gr-clusters",
             "Ten crowds, 5 % moving each step",
             GRANOVETTER,
-            "Granovetter's clusters: ten crowds of 100 drawn from the uniform city, with each person moving to another crowd with probability 0.05 each step and reconsidering there — so rioters who wander into a calm crowd can stop. He asks 'what level of movement among clusters would have the most incendiary effect'. Measured (the survey, 20 runs): 39 % rioting at this movement, against 12 % with no movement and 11 % with everyone moving every step — a middling movement spreads instigators without dissolving the riots they start. The time panel shows each crowd's share in its own color.",
+            "Granovetter's clusters: ten crowds of 100 drawn from the uniform city, with each person moving to another crowd with probability 0.05 each step and reconsidering there — so rioters who wander into a calm crowd can stop. He asks 'what level of movement among clusters would have the most incendiary effect'. Measured (the gr-movement sweep, 10 runs, the last 100 of 400 steps): 41 % rioting at this movement, against 12 % with no movement and 29 % with everyone moving every step — a middling movement spreads instigators without dissolving the riots they start. The time panel shows each crowd's share in its own color.",
             |c| {
                 c.population = Population::City;
                 c.clusters = Clusters {
@@ -229,6 +231,10 @@ mod tests {
             (10_000, 6.14, 0.18, Network::Random)
         );
         assert_eq!(find("watts-hetero").zero, Zero::WhenReached);
+        assert!(
+            find("gr-ceilings").max_steps >= 100_000,
+            "the pulse must not be cut off at step 1000"
+        );
         assert!(find("gr-clusters").clusters.enabled);
         assert!(got.iter().all(|(_, c)| c.validate().is_ok()));
     }
