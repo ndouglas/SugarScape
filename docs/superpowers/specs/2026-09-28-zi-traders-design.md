@@ -122,3 +122,15 @@ The presets menu gains a **Zero-Intelligence Traders** group and the Compare ent
 ## Docs
 
 README: a Zero-Intelligence Traders section (the model, how the scans and the code were read, the stated choices, switches, presets, sweeps, and the findings). `docs/papers.md`: the milestone's row (with Cliff as the critique); the Queue's first entry removed; roadmap: Milestone 28 done.
+
+## Amendments (implementation planning)
+
+Found while implementing and measuring, in the plan `docs/superpowers/plans/2026-09-28-zi-traders.md`:
+
+- **ZIP converges far better than the prototype showed.** Implemented to Cliff's code, the daily mean prices (50 seeds) reach within 2 of P₀ by day 10 in all four markets — excess demand 124, 144, 167, 182, 188 … 198; excess supply 244 … 202 — where the throwaway prototype had 133 and 232 (it differed from the code in a detail not traced). The momentum discrepancy is smaller than planned: the text's reading converges a day or two sooner (excess demand: 179 against 167 on day 3).
+- **NYSE rules for ZIP off.** Cliff's ZIP control file has NYSE off (his ZI-C runs had it on); with it on, a ZIP day ends within a few dozen shouts (no one can beat the quote). The ZIP presets and claims turn it off.
+- **`sellers_only` under the book** is allowed: nothing trades (no one bids). Every live field must accept a change on its own.
+- **ZIP's A** — $0.05 on Cliff's $4 range — is scaled to the price range (5 at 400, 2.5 at 200).
+- **Statistics:** the per-period series are held as `last_*` (the last completed period) and `avg_*` (the mean over completed periods), and the sweeps read those; one tick is one shout; the inspection carries `agent: null` like the others.
+- **Market 5:** 86.7 % ZI-U efficiency against Table 2's 86.0 — approximate, as planned.
+- **Measured with the implementation** (the survey, 16 claims: 14 hold, 2 fail): Tables 1–3, footnote 5's ordering (magnitudes 0.91 and 0.85 against .74 and .42), the period length (44–86 % at 100 shouts), efficiency under Cliff's mechanism, the critique in Gode and Sunder's mechanism, ZIP convergence, the approach from below, dispersion a tenth, the shifts, the retail market and the momentum effect hold; Cliff's box-market predictions (138 against 125; 250 against 260) fail, and so does ZIP's "often averaging 100 %" in the symmetric market (98.9).

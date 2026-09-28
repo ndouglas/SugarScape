@@ -263,6 +263,17 @@ Figs. 1–4, the text's rate 2 (either group starting a conflict, a switch here,
 calibration is off by five; Cooney's payoff dip appears under every victory rule. See
 `docs/superpowers/specs/2026-09-28-punishment-design.md`.
 
+## Milestone 28: Zero-Intelligence Traders (done)
+
+Gode and Sunder's double auction with zero-intelligence traders (JPE 1993) as a model kind, with
+Cliff's critique, simulator and ZIP traders (HP Labs 1997): their five markets read from the scan
+(Table 2's ZI-U efficiencies pin four of them down exactly), Cliff's markets, shifts and retail
+market, and every unstated rule a switch. Gode and Sunder's efficiencies and dispersions reproduce —
+but only with enough shouts per period, which their "30 seconds" never gives; Cliff's price
+predictions miss the box markets and his 233⅓ is not his formula's, though his critique's direction
+holds even in Gode and Sunder's mechanism; ZIP converges, and his code's momentum is not his text's.
+See `docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -286,6 +297,7 @@ calibration is off by five; Cooney's payoff dip appears under every victory rule
 - **Granovetter's threshold models** (and Watts's global cascades): done (Milestone 25).
 - **Axtell and Epstein's timing of retirement**: done (Milestone 26).
 - **Boyd, Gintis, Bowles and Richerson's altruistic punishment** (and Cooney's PDE critique): done (Milestone 27).
+- **Gode and Sunder's zero-intelligence traders** (and Cliff's critique and ZIP traders): done (Milestone 28).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Credit hierarchy view**: done (Milestone 6).

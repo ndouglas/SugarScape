@@ -1802,6 +1802,68 @@ Punishment with a PDE Model of Cultural Multilevel Selection," arXiv:2405.18419 
 Biol.* 2025); Marco Janssen's replication, CoMSES Net 2223 (GPL-3.0, read for its readings only). See
 `docs/superpowers/specs/2026-09-28-punishment-design.md`.
 
+### Zero-Intelligence Traders (Gode & Sunder 1993; Cliff 1997)
+
+**The model.** Are markets efficient because traders are smart? Gode and Sunder replaced human traders
+in a double auction with programs that shout random prices. Unconstrained (ZI-U), they trade at a loss
+and waste surplus; merely forbidden to trade at a loss (ZI-C), they capture almost all of it — "the
+market as a partial substitute for individual rationality." Six buyers and six sellers trade units
+one at a time; a shout that crosses the standing bid or ask trades at the earlier order's price, and
+each trade clears the book. Cliff (1997) argued that ZI-C prices converge on equilibrium only when
+supply and demand are symmetric, and built traders that learn a profit margin (ZIP).
+
+**How the sources were read.** Gode and Sunder's paper is a scan (read by OCR); their five markets
+exist only as step curves in the figures. Because ZI-U traders trade every unit, a market's ZI-U
+efficiency follows arithmetically from its schedules — so Table 2's ZI-U numbers pin markets 1–4 down
+exactly (90.0, 90.0, 76.7, 48.8), alongside the text's P₀ of 69 and 170 and volumes of 24 and 6;
+market 5, a fine staircase, is read as well as the scan allows (86.7 against 86.0). Cliff's results
+come from the C code in his appendices, which differs from his text in places; the code is the
+default, the text a switch.
+
+Measured (the survey and the presets' descriptions):
+
+- **Gode and Sunder reproduce, given enough time.** ZI-C efficiency 99.9, 99.8, 99.7, 99.5, 97.1 in
+  markets 1–5 (their 99.9, 99.2, 99.0, 98.2, 97.1); ZI-U exactly theirs; profit dispersion close to Table
+  3; prices tightening within each period (Table 1's negative slopes). The rank correlation of the
+  trading order with the efficient one is higher for ZI-C than ZI-U, as their footnote says, though
+  higher than theirs (0.91 and 0.85 against 0.74 and 0.42).
+- **But "30 seconds" decides it.** Their periods lasted 30 seconds, never translated into shouts. At 100
+  shouts a period ZI-C efficiency is 44–86 %; it needs about 500–1 000 to reach their numbers. The
+  random traders capture the surplus because they get enough chances.
+- **Cliff's critique holds in direction, not in number.** In his simulator (a random willing trader at
+  the shout's price) ZI-C mean prices are 200.6, 235.8, 138.1, 250.3 in his four markets (P₀ 200): his
+  predictions hold for the symmetric and flat markets but miss the box markets by 13 and 10, and his
+  printed 233⅓ is not his own formula's (241⅔). In Gode and Sunder's own mechanism the prices sit
+  about half as far from P₀ (216.6, 161.8, 232.9) — still off, so the critique's direction survives.
+- **ZIP learns its way to equilibrium.** Daily mean prices converge on P₀ in all four markets — the
+  flat one within 4 days, the excess-demand box from below and steadily — and after a demand or supply
+  shift; profit dispersion falls to a tenth of ZI-C's or less. Efficiency averages 98.9–100 % (the
+  symmetric market just short of "often averaging 100 %"). In Smith's retail market, where only sellers
+  post prices, trades stay below P₀ as Cliff says, but rise past $2.00 by day 9.
+- **Cliff's momentum.** His text draws ZIP's momentum from U[0.2, 0.8]; his code overwrites it with
+  U[0, 0.1]. The text's reading converges a day or two sooner in the box markets.
+
+Switches: **Market** (Gode and Sunder's 1–5, Cliff's symmetric, flat supply, excess demand, excess supply
+and retail, or custom), **Highest price**, **Traders** (ZI-C, ZI-U, ZIP) with **ZIP momentum** (his code or
+his text), **Trades happen** (against the standing quote, or with a random willing trader) with **NYSE
+rules**, **Who shouts** (a random trader, or a side then a trader), **Only sellers shout**, **A period
+ends** (after a number of shouts, or after 100 failures in a row) with **Shouts a period**, **Shift**
+(demand up or supply down 50) with **Shift from period**, and **Stop after period**. The view follows Gode
+and Sunder's figures: the schedules, the trade prices across periods, and a strip of traders with
+their profits against their equilibrium profits. Color modes: **Side**, **Profit**, **Margin**. Charts:
+Prices; Efficiency; Convergence (Smith's α); Profit dispersion; Volume. Presets: `gs-1`–`gs-5`, `gs-1-u`,
+`gs-4-u`, `cliff-symmetric`, `cliff-flat`, `cliff-excess-demand`, `cliff-excess-supply`, `zip-symmetric`,
+`zip-flat`, `zip-excess-demand`, `zip-excess-supply`, `zip-demand-shift`, `zip-supply-shift`, `zip-retail`.
+**Compare** entries: "With vs without the budget constraint — Zero-Intelligence Traders (Compare)" and
+"ZI-C vs ZIP in a box market — Zero-Intelligence Traders (Compare)". Built-in sweeps: `gs-efficiency`,
+`gs-dispersion`, `gs-shouts`, `gs-mechanism`, `cliff-prices`, `zip-days`, `zip-momentum`, `zip-shift`.
+
+Credit: Dhananjay K. Gode and Shyam Sunder, "Allocative Efficiency of Markets with Zero-Intelligence
+Traders: Market as a Partial Substitute for Individual Rationality," *Journal of Political Economy*
+101(1): 119–137 (1993); Dave Cliff, "Minimal-Intelligence Agents for Bargaining Behaviours in
+Market-Based Environments," HP Laboratories HPL-97-91 (1997). See
+`docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's
