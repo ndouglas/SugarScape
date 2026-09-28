@@ -2,7 +2,8 @@
 //! docs/superpowers/specs/2026-09-25-flump-studio-design.md): a shot — a
 //! config, a seed, config overrides and agents placed by hand — run tick by
 //! tick, recording every agent, the sugar at every site, deaths, births and
-//! the statistics series. Sugarscape only for now.
+//! the statistics series. Spatial games' shots record each generation's
+//! strategies instead (`run`). Other models are not filmed yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -14,6 +15,7 @@ use crate::config::{Config, FieldError};
 use crate::edit::AgentOverrides;
 use crate::model::ModelConfig;
 use crate::presets;
+use crate::spatial::{Lattice, SpatialConfig, SpatialWorld, SERIES as SPATIAL_SERIES};
 use crate::stats;
 use crate::world::{DeathCause, Trade, World};
 
@@ -39,6 +41,13 @@ pub struct Shot {
     pub empty: bool,
     #[serde(default)]
     pub place: Vec<Place>,
+    /// Spatial games: rows of `C` and `D`, top row first, replacing the
+    /// config's start (a close-up's hand-made board).
+    #[serde(default)]
+    pub cells: Option<Vec<String>>,
+    /// Spatial games: record every player's score in each frame.
+    #[serde(default)]
+    pub scores: bool,
 }
 
 /// An agent placed by hand when the world reaches `tick`, with the given
@@ -79,24 +88,26 @@ impl Shot {
         serde_json::from_str(json).map_err(|e| vec![FieldError::new("shot", e.to_string())])
     }
 
-    /// The preset or config with `set` applied, validated.
-    pub fn config(&self) -> Result<Config, Vec<FieldError>> {
-        let base = match (&self.preset, &self.config) {
+    /// The preset or config, before `set`.
+    fn base(&self) -> Result<ModelConfig, Vec<FieldError>> {
+        match (&self.preset, &self.config) {
             (Some(id), None) => presets::find(id).map(|p| p.config).ok_or_else(|| {
                 vec![FieldError::new(
                     "preset",
                     format!("unknown preset {id:?} (see `sugarscape presets`)"),
                 )]
-            })?,
-            (None, Some(value)) => ModelConfig::from_value(value.clone()).map_err(|e| vec![e])?,
-            _ => {
-                return Err(vec![FieldError::new(
-                    "shot",
-                    "give exactly one of preset or config",
-                )])
-            }
-        };
-        let mut config = match base {
+            }),
+            (None, Some(value)) => ModelConfig::from_value(value.clone()).map_err(|e| vec![e]),
+            _ => Err(vec![FieldError::new(
+                "shot",
+                "give exactly one of preset or config",
+            )]),
+        }
+    }
+
+    /// The preset or config with `set` applied, validated.
+    pub fn config(&self) -> Result<Config, Vec<FieldError>> {
+        let mut config = match self.base()? {
             ModelConfig::Sugarscape(c) => c,
             other => {
                 return Err(vec![FieldError::new(
@@ -114,6 +125,34 @@ impl Shot {
                 .map_err(|e| vec![FieldError::new(format!("set.{path}"), e.message)])?;
         }
         config.validate()?;
+        Ok(config)
+    }
+
+    /// A spatial-games shot's config with `set` applied, validated: a flat
+    /// lattice (a square grid or a random array), as a board can show.
+    pub fn spatial_config(&self) -> Result<SpatialConfig, Vec<FieldError>> {
+        let mut config = self.base()?;
+        if !matches!(config, ModelConfig::Spatial(_)) {
+            return Err(vec![FieldError::new(
+                "model",
+                format!("not a spatial-games shot: {}", config.kind().as_str()),
+            )]);
+        }
+        for (path, value) in &self.set {
+            config = config
+                .with_path(path, value)
+                .map_err(|e| vec![FieldError::new(format!("set.{path}"), e.message)])?;
+        }
+        config.validate()?;
+        let ModelConfig::Spatial(config) = config else {
+            unreachable!("set keeps the model")
+        };
+        if config.lattice == Lattice::Cube {
+            return Err(vec![FieldError::new(
+                "lattice",
+                "a board shows one layer: film a square grid or a random array",
+            )]);
+        }
         Ok(config)
     }
 }
@@ -423,6 +462,165 @@ pub fn run_shot(shot: &Shot) -> Result<FrameDump, Vec<FieldError>> {
         capacity,
         spice_capacity,
         placed: placed.into_iter().map(|(_, id)| id).collect(),
+        config,
+        frames,
+        stats,
+    })
+}
+
+/// A spatial-games shot's world after one generation.
+#[derive(Clone, Debug, Serialize)]
+pub struct LatticeFrame {
+    pub tick: u64,
+    /// Each square's player, row-major: `C`, `D`, or `.` for none.
+    pub strategies: String,
+    /// Each player's score, in `strategies`' order of players (absent unless
+    /// the shot asks).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub scores: Vec<f64>,
+}
+
+/// A whole spatial-games shot, generation 0 first.
+#[derive(Clone, Debug, Serialize)]
+pub struct LatticeDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub width: u32,
+    pub height: u32,
+    pub config: SpatialConfig,
+    pub frames: Vec<LatticeFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
+/// A shot's dump, of whichever model it runs.
+#[derive(Clone, Debug, Serialize)]
+#[serde(untagged)]
+pub enum Dump {
+    Sugarscape(Box<FrameDump>),
+    Spatial(LatticeDump),
+}
+
+/// Runs `shot`, whatever its model.
+pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
+    let only = |field: &str, model: &str| {
+        vec![FieldError::new(field, format!("is for {model} shots only"))]
+    };
+    match shot.base()? {
+        ModelConfig::Sugarscape(_) => {
+            if shot.cells.is_some() {
+                return Err(only("cells", "spatial-games"));
+            }
+            if shot.scores {
+                return Err(only("scores", "spatial-games"));
+            }
+            run_shot(shot).map(|d| Dump::Sugarscape(Box::new(d)))
+        }
+        ModelConfig::Spatial(_) => {
+            if !shot.place.is_empty() {
+                return Err(only("place", "sugarscape"));
+            }
+            if shot.empty {
+                return Err(only("empty", "sugarscape"));
+            }
+            run_lattice(shot).map(Dump::Spatial)
+        }
+        other => Err(vec![FieldError::new(
+            "model",
+            format!(
+                "shots run the sugarscape and spatial games, not {}",
+                other.kind().as_str()
+            ),
+        )]),
+    }
+}
+
+/// The squares' strategies as `C`, `D` and `.`, row-major.
+fn strategies(world: &SpatialWorld) -> String {
+    let (w, h, _) = world.geometry.dims;
+    (0..h)
+        .flat_map(|y| (0..w).map(move |x| (x, y)))
+        .map(|(x, y)| match world.geometry.at(x, y, 0) {
+            Some(i) if world.is_cooperator(i) => 'C',
+            Some(_) => 'D',
+            None => '.',
+        })
+        .collect()
+}
+
+fn lattice_frame(world: &SpatialWorld, scores: bool) -> LatticeFrame {
+    let (w, h, _) = world.geometry.dims;
+    LatticeFrame {
+        tick: world.tick,
+        strategies: strategies(world),
+        scores: if scores {
+            (0..h)
+                .flat_map(|y| (0..w).map(move |x| (x, y)))
+                .filter_map(|(x, y)| world.geometry.at(x, y, 0))
+                .map(|i| world.score(i))
+                .collect()
+        } else {
+            Vec::new()
+        },
+    }
+}
+
+/// Reads a shot's `cells` into one strategy per player (true: C).
+fn start_cells(world: &SpatialWorld, rows: &[String]) -> Result<Vec<bool>, Vec<FieldError>> {
+    let bad = |message: String| vec![FieldError::new("cells", message)];
+    if world.config.lattice != Lattice::Square {
+        return Err(bad("a hand-made start needs a square grid".into()));
+    }
+    let (w, h, _) = world.geometry.dims;
+    if rows.len() != h as usize {
+        return Err(bad(format!("has {} rows; the grid has {h}", rows.len())));
+    }
+    let mut coop = vec![true; world.players()];
+    for (y, row) in rows.iter().enumerate() {
+        if row.chars().count() != w as usize {
+            return Err(bad(format!("row {y} is not {w} squares wide")));
+        }
+        for (x, c) in row.chars().enumerate() {
+            let i = world
+                .geometry
+                .at(x as u32, y as u32, 0)
+                .expect("a square grid has a player on every square");
+            coop[i] = match c {
+                'C' => true,
+                'D' => false,
+                _ => return Err(bad(format!("row {y} has {c:?}: use C and D"))),
+            };
+        }
+    }
+    Ok(coop)
+}
+
+/// Runs a spatial-games shot and records every generation.
+pub fn run_lattice(shot: &Shot) -> Result<LatticeDump, Vec<FieldError>> {
+    let config = shot.spatial_config()?;
+    let mut world = SpatialWorld::new(config.clone(), shot.seed)?;
+    if let Some(rows) = &shot.cells {
+        let coop = start_cells(&world, rows)?;
+        world.set_start(coop);
+    }
+    let mut frames = vec![lattice_frame(&world, shot.scores)];
+    for _ in 0..shot.ticks {
+        world.step();
+        frames.push(lattice_frame(&world, shot.scores));
+    }
+    let stats = SPATIAL_SERIES
+        .iter()
+        .filter_map(|&name| world.stats.series(name).map(|s| (name.to_string(), s)))
+        .collect();
+    let (width, height, _) = world.geometry.dims;
+    Ok(LatticeDump {
+        format: FORMAT,
+        model: "spatial",
+        seed: shot.seed,
+        ticks: shot.ticks,
+        width,
+        height,
         config,
         frames,
         stats,
@@ -861,6 +1059,82 @@ mod tests {
         );
         let s = shot(r#"{"preset": "vi-4-schelling-25", "ticks": 1}"#).unwrap();
         assert_eq!(fields(s.config().unwrap_err()), ["model"]);
+    }
+
+    fn lattice(json: &str) -> LatticeDump {
+        match super::run(&Shot::from_json(json).unwrap()).unwrap() {
+            Dump::Spatial(d) => d,
+            Dump::Sugarscape(_) => panic!("a spatial shot"),
+        }
+    }
+
+    #[test]
+    fn a_spatial_shot_records_each_generations_strategies_and_the_series() {
+        let d = lattice(r#"{"preset": "nm-3-kaleidoscope", "ticks": 3}"#);
+        assert_eq!((d.model, d.width, d.height), ("spatial", 99, 99));
+        assert_eq!(d.frames.len(), 4);
+        assert_eq!(d.stats["fraction_c"].len(), 4);
+        let first = &d.frames[0].strategies;
+        assert_eq!(first.len(), 99 * 99);
+        assert_eq!(first.matches('D').count(), 1);
+        assert_eq!(first.find('D'), Some(49 * 99 + 49));
+        for (f, share) in d.frames.iter().zip(&d.stats["fraction_c"]) {
+            let c = f.strategies.matches('C').count() as f64;
+            assert_eq!(c / (99.0 * 99.0), *share);
+            assert!(f.scores.is_empty());
+        }
+    }
+
+    #[test]
+    fn a_hand_made_start_replaces_the_configs_and_scores_follow_the_rule() {
+        let d = lattice(
+            r#"{"preset": "nm-3-kaleidoscope", "ticks": 1, "scores": true,
+            "set": {"width": 3, "height": 3},
+            "cells": ["CCC", "CDC", "CCC"]}"#,
+        );
+        assert_eq!(d.frames[0].strategies, "CCCCDCCCC");
+        // The cheat plays 8 helpers at b = 1.9 and itself for nothing; a corner
+        // helper plays 2 helpers, the cheat, and itself.
+        assert!((d.frames[0].scores[4] - 8.0 * 1.9).abs() < 1e-12);
+        assert_eq!(d.frames[0].scores[0], 3.0);
+        assert_eq!(d.stats["fraction_c"][0], 8.0 / 9.0);
+        // The cheat out-earns every neighbor, so all copy it.
+        assert_eq!(d.frames[1].strategies, "DDDDDDDDD");
+    }
+
+    #[test]
+    fn spatial_shots_reject_the_sugarscapes_fields_and_a_bad_board() {
+        let err = |json: &str| fields(super::run(&Shot::from_json(json).unwrap()).unwrap_err());
+        let k = r#""preset": "nm-3-kaleidoscope", "ticks": 1"#;
+        assert_eq!(
+            err(&format!(r#"{{{k}, "place": [{{"x": 1, "y": 1}}]}}"#)),
+            ["place"]
+        );
+        assert_eq!(err(&format!(r#"{{{k}, "empty": true}}"#)), ["empty"]);
+        assert_eq!(err(&format!(r#"{{{k}, "cells": ["CD"]}}"#)), ["cells"]);
+        assert_eq!(
+            err(
+                r#"{"preset": "nm-3-kaleidoscope", "ticks": 1, "set": {"width": 2, "height": 1}, "cells": ["CX"]}"#
+            ),
+            ["cells"]
+        );
+        assert_eq!(err(r#"{"preset": "nbm-cube", "ticks": 1}"#), ["lattice"]);
+        assert_eq!(
+            err(r#"{"preset": "ii-2-unit", "ticks": 1, "scores": true}"#),
+            ["scores"]
+        );
+        assert_eq!(
+            err(r#"{"preset": "vi-4-schelling-25", "ticks": 1}"#),
+            ["model"]
+        );
+    }
+
+    #[test]
+    fn a_random_array_marks_its_empty_squares() {
+        let d = lattice(r#"{"preset": "nbm-random-array", "ticks": 1}"#);
+        let s = &d.frames[0].strategies;
+        assert_eq!(s.len(), 200 * 200);
+        assert_eq!(s.matches('.').count(), 200 * 200 - 2000);
     }
 
     #[test]

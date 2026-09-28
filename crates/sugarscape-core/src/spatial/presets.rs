@@ -89,7 +89,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "hg-async-kaleidoscope",
             "The kaleidoscope, asynchronous",
             HG93,
-            "HG93's Fig. 1: NM92's kaleidoscope with asynchronous updating — each microstep one random player is rescored and replaced by its best-scoring neighbor, N microsteps a generation. The paper: \"within a hundred generations or so\" all players defect, and \"as long as there is at least one defector … always\". Measured (seeds 1–20): all D at t = 56–149 (mean 101) — reproduced; but HG93 never say which b they used, and below 1.8 the claim fails: at b = 1.7 the lone defector dies out (f_C 0.974–0.999). The sweep hg-async runs every b.",
+            "HG93's Fig. 1: NM92's kaleidoscope with asynchronous updating — each microstep one random player is rescored and replaced by its best-scoring neighbor, N microsteps a generation. The paper: \"within a hundred generations or so\" all players defect, and \"as long as there is at least one defector … always\". Measured (seeds 1–20): all D at t = 56–149 (mean 101) — reproduced; but HG93 never say which b they used, and below 1.8 the claim fails: at b = 1.7 the defectors never take over, staying a small stuck cluster (f_C 0.974–0.999 at t = 400, 20 of 20). The sweep hg-async runs every b.",
             |c| {
                 kaleidoscope(c);
                 c.update = Update::Asynchronous;

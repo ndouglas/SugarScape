@@ -179,6 +179,19 @@ impl SpatialWorld {
         }
     }
 
+    /// Replaces the starting strategies (true: C), one per player, and
+    /// restarts the statistics from them: a hand-made start for the
+    /// studio's close-ups. Only before the first generation.
+    pub fn set_start(&mut self, coop: Vec<bool>) {
+        assert_eq!(self.tick, 0, "a start is set before the first generation");
+        assert_eq!(coop.len(), self.players(), "one strategy per player");
+        self.previous.clone_from(&coop);
+        self.coop = coop;
+        self.rescore_all();
+        self.stats.truncate(0);
+        self.record();
+    }
+
     /// Player `i`'s cooperating neighbors, counted afresh.
     fn count_cooperating(&self, i: usize) -> u32 {
         let nb = self.geometry.neighbors(i);

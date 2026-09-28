@@ -477,7 +477,7 @@ What does not, or only partly:
   (`hg-async-kaleidoscope`, b = 1.9) is all D at t = 56–149 (mean 101), "within a hundred generations
   or so," as they say. But they never state b, and their claim that "as long as there is at least one
   defector in the initial state … the matrix always evolved rapidly into a state of overall defection"
-  holds only above b = 1.8: at b = 1.7 the lone defector dies out (f_C 0.974–0.999), and across NBM94's
+  holds only above b = 1.8: at b = 1.7 the defectors stay a small stuck cluster and never take over (f_C 0.974–0.999), and across NBM94's
   b values it takes over (or nearly) only at 1.9 and 2.01 (f_C 0 and 0.04; 0.61 at 1.55, 0.99–1.00 elsewhere).
 - **"C cannot persist" at m = 1 without self-interaction** (NBM94): C is gone (f_C ≤ 0.007) at
   b = 1.13 and 1.35, but at b = 1.05 it keeps 0.16–0.33. (Deterministic winning without
