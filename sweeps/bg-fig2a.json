@@ -1,0 +1,55 @@
+{
+  "name": "Altruistic Punishment: Fig. 2a, mixing without punishment",
+  "description": "Figure 2a: cooperation against group size without punishment, for mixing rates m 0.002, 0.01, 0.05. Measured (release, seeds 1–10, the mean cooperation over the last 1 000 of 2 000 periods, recorded 2026-09-28): m 0.002: 0.67, 0.46, 0.19, 0.10 …; m 0.01: 0.62, 0.33, 0.14, 0.10 …; m 0.05: 0.32, 0.16, 0.11, 0.10 … at n 4, 8, 16, 32. More mixing, less cooperation, as stated (the figure: 0.79, 0.66, 0.34; 0.75, 0.57, 0.20; 0.55, 0.21, 0.11).",
+  "base": {
+    "preset": "bg-none"
+  },
+  "x": {
+    "label": "Group size (n)",
+    "path": "size",
+    "values": [
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "series": {
+    "label": "Mixing (m)",
+    "values": [
+      {
+        "at": 0.002,
+        "name": "m = 0.002",
+        "set": {
+          "mixing": 0.002
+        }
+      },
+      {
+        "at": 0.01,
+        "name": "m = 0.01",
+        "set": {
+          "mixing": 0.01
+        }
+      },
+      {
+        "at": 0.05,
+        "name": "m = 0.05",
+        "set": {
+          "mixing": 0.05
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "long_run"
+  }
+}

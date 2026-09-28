@@ -1,0 +1,62 @@
+{
+  "name": "Altruistic Punishment: payoff against the fine (Cooney)",
+  "description": "Cooney's claim: under conflict decided by average payoffs normalized by the widest possible difference, the long-run average payoff depends non-monotonically on the strength of punishment p — and (his Remark 6.1) not under the Fermi (tanh) rule. b 2c, n 32. Measured (release, seeds 1–10, the mean payoff over the last 1 000 of 2 000 periods, recorded 2026-09-28): normalized: 1.010, 1.006, 1.004, 1.002, 1.002, 1.003, 1.041, 1.095, 1.113, 1.131; tanh: 1.010, 1.006, 1.005, 1.003, 1.004, 1.034, 1.090, 1.118, 1.125, 1.136; by defectors: 1.010, 1.006, 1.004, 1.003, 1.006, 1.046, 1.091, 1.118, 1.128, 1.135 at p 0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.2, 1.6, 2.4. A shallow dip at p 0.4–0.5 under every rule: weak punishment costs punishers without deterring anyone. The dip is there, but not only where Cooney's analysis puts it.",
+  "base": {
+    "preset": "bg-benefit"
+  },
+  "set": {
+    "benefit": 0.4
+  },
+  "x": {
+    "label": "Cost of being punished (p)",
+    "path": "fine",
+    "values": [
+      0,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.8,
+      1.2,
+      1.6,
+      2.4
+    ]
+  },
+  "series": {
+    "label": "Groups fight over",
+    "values": [
+      {
+        "at": 0,
+        "name": "Payoffs, normalized",
+        "set": {
+          "victory": "payoff"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Payoffs, tanh",
+        "set": {
+          "victory": "tanh"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Defectors",
+        "set": {
+          "victory": "defectors"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "payoff",
+    "from": 1001
+  }
+}

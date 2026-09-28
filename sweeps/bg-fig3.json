@@ -1,0 +1,48 @@
+{
+  "name": "Altruistic Punishment: Fig. 3, the cost of being punished",
+  "description": "Figure 3: the cost of being punished p = 0.4 against the base case's 0.8. Measured (release, seeds 1–10, the mean cooperation over the last 1 000 of 2 000 periods, recorded 2026-09-28): p 0.4: 0.66, 0.51, 0.23, 0.09, 0.07, 0.07, 0.07; p 0.8: 0.82, 0.83, 0.78, 0.69, 0.44, 0.17, 0.12 at n 4–256. 'Lower values of p result in much lower levels of cooperation', as stated (the figure's p 0.4: 0.80, 0.72, 0.58, 0.21, 0.07 …).",
+  "base": {
+    "preset": "bg-base"
+  },
+  "x": {
+    "label": "Group size (n)",
+    "path": "size",
+    "values": [
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "series": {
+    "label": "Cost of being punished (p)",
+    "values": [
+      {
+        "at": 0.4,
+        "name": "p = 0.4",
+        "set": {
+          "fine": 0.4
+        }
+      },
+      {
+        "at": 0.8,
+        "name": "p = 0.8",
+        "set": {
+          "fine": 0.8
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "long_run"
+  }
+}

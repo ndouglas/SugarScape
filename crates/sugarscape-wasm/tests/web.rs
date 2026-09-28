@@ -362,7 +362,25 @@ fn builtins_and_series_names_are_listed() {
             "ae-extent",
             "ae-policy",
             "ae-coupling",
-            "ae-coupling-rational"
+            "ae-coupling-rational",
+            "bg-fig1a",
+            "bg-fig1b",
+            "bg-fig1-caption",
+            "bg-fig1-either",
+            "bg-fig2a",
+            "bg-fig2b",
+            "bg-fig3",
+            "bg-fig4",
+            "bg-baseline",
+            "bg-readings",
+            "bg-mutation",
+            "bg-error",
+            "bg-groups",
+            "bg-benefit",
+            "bg-continuous",
+            "bg-ring",
+            "bg-cooney-fine",
+            "bg-cooney-cost"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -986,6 +1004,31 @@ fn retirement_sims_match_the_native_golden_entries() {
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }
+}
+
+#[wasm_bindgen_test]
+fn punishment_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the base case,
+    // either group starting a conflict, payoff conflict, continuous traits,
+    // the ring, and Janssen's readings.
+    for (id, fp) in [
+        ("bg-base", "0x18a87a7bb2ab932d"),
+        ("bg-either", "0xa966f403050db40d"),
+        ("bg-benefit", "0xe5fec27869f67010"),
+        ("bg-continuous", "0xf763b0b75f9a2298"),
+        ("bg-ring", "0xc4e75af13ebdeaed"),
+        ("bg-janssen", "0xe95bb859afd7e9b0"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "punishment");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+    // The tanh victory rule (portable exp_neg): the native CLI's fingerprint.
+    let tanh = r#"{"model": "punishment", "groups": 32, "size": 16, "benefit": 0.4, "victory": "tanh", "sensitivity": 3, "conflict": 0.1}"#;
+    let mut sim = Sim::new(tanh, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    assert_eq!(sim.fingerprint(), "0x41e7fa5fab5ba690");
 }
 
 #[wasm_bindgen_test]

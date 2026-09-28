@@ -1,0 +1,57 @@
+{
+  "name": "Altruistic Punishment: punishers against the cost of punishing (Cooney)",
+  "description": "Cooney's claim: under normalized payoff conflict, 'increasing the cost of punishing defectors can increase the level of altruistic punishment at steady state'. b 2c, n 32. Measured (release, seeds 1–10, the mean punishment over the last 1 000 of 2 000 periods, recorded 2026-09-28): normalized: 0.511, 0.441, 0.247, 0.017, 0.006; tanh: 0.533, 0.494, 0.417, 0.084, 0.006; by defectors: 0.550, 0.520, 0.438, 0.202, 0.008 at k 0.05, 0.1, 0.2, 0.4, 0.8. Punishment falls with its cost under every rule; the rise does not appear.",
+  "base": {
+    "preset": "bg-benefit"
+  },
+  "set": {
+    "benefit": 0.4
+  },
+  "x": {
+    "label": "Cost of punishing (k)",
+    "path": "punish_cost",
+    "values": [
+      0.05,
+      0.1,
+      0.2,
+      0.4,
+      0.8
+    ]
+  },
+  "series": {
+    "label": "Groups fight over",
+    "values": [
+      {
+        "at": 0,
+        "name": "Payoffs, normalized",
+        "set": {
+          "victory": "payoff"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Payoffs, tanh",
+        "set": {
+          "victory": "tanh"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Defectors",
+        "set": {
+          "victory": "defectors"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "punishment",
+    "from": 1001
+  }
+}
