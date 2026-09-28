@@ -1,0 +1,6 @@
+{
+ "preset": "rca-published",
+ "ticks": 5,
+ "seed": 4,
+ "gifts": true
+}

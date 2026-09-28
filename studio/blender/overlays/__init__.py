@@ -9,13 +9,14 @@ from .followers import belly, bequests, labels, rings_hungry, rings_migrants, ri
 from .panels import alike, bars, census, tally, counter, dials, hills, histogram, kills, ladder, ledger, popchart, prices, sick, season_card, wealth
 from .lattice import earnings, helpers, kinds, legend, play, scores
 from .parts import Screen
+from .ring import gifts, rate, tolerance
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
 
 # The overlays drawn in screen space (on `Screen` anchors).
 SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
-          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend"}
+          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate"}
 
 
 BUILDERS = {
@@ -57,4 +58,7 @@ BUILDERS = {
     "tally": tally,
     "kinds": kinds,
     "legend": legend,
+    "rate": rate,
+    "gifts": gifts,
+    "tolerance": tolerance,
 }

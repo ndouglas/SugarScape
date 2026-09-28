@@ -9,8 +9,10 @@ import animate
 import camera as cam
 import dump as dump_mod
 import lineage
+import ring
 from blender import board, flump, materials, overlays
 from blender import lattice as lattice_board
+from blender import ring as ring_board
 
 UPDATERS = []
 # The first exception the frame handler raised, if any.
@@ -155,7 +157,11 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     updaters = []
     timing = corners = None
     tracks = {}
-    if isinstance(d, dump_mod.Lattice):
+    if isinstance(d, dump_mod.Ring):
+        timing = beat.timing(d.ticks)
+        updaters.append(ring_board.build(beat, d, timing))
+        materials.lights_and_world(scene, 2 * ring.RADIUS)
+    elif isinstance(d, dump_mod.Lattice):
         timing = beat.timing(d.ticks)
         updaters.append(lattice_board.build(beat, d, timing))
         materials.lights_and_world(scene, max(d.width, d.height))

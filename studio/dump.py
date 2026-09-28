@@ -1,6 +1,7 @@
 """Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
 shot as a `Dump`, a spatial-games shot as a `Lattice`, and a demographic-PD
-shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`)."""
+shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`), and a
+tags shot as a `Ring`."""
 
 import json
 from dataclasses import dataclass, field
@@ -145,6 +146,42 @@ class Lattice:
         return self.frames[min(max(int(round(tick)), 0), self.ticks)]
 
 
+@dataclass(frozen=True)
+class Tagger:
+    """One agent of a tags generation, at its place in the population's list."""
+
+    id: int
+    parent: int
+    tag: float
+    tolerance: float
+    given: int
+    received: int
+
+
+@dataclass(frozen=True)
+class RingFrame:
+    """A tags generation: its agents in list order, and its gifts as
+    (giver, receiver) places (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    gifts: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Ring:
+    """A tags shot."""
+
+    seed: int
+    ticks: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
 def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
@@ -153,6 +190,12 @@ def parse(text):
         return _dpd(raw)
     if raw.get("model") == "ethno":
         return _ethno(raw)
+    if raw.get("model") == "tags":
+        return Ring(
+            seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], stats=raw["stats"],
+            frames=[RingFrame(f["tick"], [Tagger(*a) for a in f["agents"]], [tuple(g) for g in f.get("gifts", [])])
+                    for f in raw["frames"]],
+        )
     if raw.get("model") == "spatial":
         return Lattice(
             seed=raw["seed"], ticks=raw["ticks"], width=raw["width"], height=raw["height"], config=raw["config"],
