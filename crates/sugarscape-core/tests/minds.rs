@@ -47,6 +47,10 @@ fn walking_at_vision_one_is_jumping() {
         // walk (fixed here; it previously compared walk against walk for
         // those presets).
         jump.movement.mode = sugarscape_core::config::MoveMode::Jump;
+        // Minds 3's mem-* presets have span > 0, which requires walking;
+        // forcing `mode: jump` above would make the config invalid. Memory
+        // isn't the subject of this reduction, so turn it off on both sides.
+        jump.memory.span = 0;
         let mut walk = jump.clone();
         walk.movement.mode = sugarscape_core::config::MoveMode::Walk;
         assert_eq!(fingerprint(walk), fingerprint(jump), "{}", p.id);

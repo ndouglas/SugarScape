@@ -147,6 +147,21 @@ fn enable_seasons(c: &mut Config) {
     c.seasons.enabled = true;
 }
 
+/// Minds 3: `span` ticks of memory for a `share` of newborns, under
+/// `project` belief (the engine's default).
+fn memory(c: &mut Config, span: u32, share: f64) {
+    c.memory.span = span;
+    c.memory.share = share;
+}
+
+/// Minds 3: truffle spots covering `share` of non-wall sites, worth `value`
+/// sugar and regrowing after `regrow` ticks (`seed` stays the default, 1).
+fn truffles(c: &mut Config, share: f64, value: f64, regrow: u32) {
+    c.truffles.share = share;
+    c.truffles.value = value;
+    c.truffles.regrow = regrow;
+}
+
 /// The book's first frame for Animation II-6: a 20×20 block in the
 /// bottom-left corner, otherwise as Animation II-2 (400 agents, so full).
 /// Surveyed (docs/survey/2026-09-24-model-survey.md): the ring of the book's
@@ -791,6 +806,114 @@ pub fn all() -> Vec<Preset> {
                 fence(c, 0, true);
             },
         ),
+        preset(
+            "mem-open",
+            "Memory: open sugarscape",
+            "Minds 3",
+            "walk-capacity's world (rule M's Flumps walking to the best site in sight) with memory: a rememberer that leaves a mountain can walk back to it for 100 ticks after it drops out of sight. The mountains stay in sight of most sites and refill fast, so a rememberer should gain little. Measured: see the survey.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+            },
+        ),
+        preset(
+            "mem-catchment",
+            "Memory: patches out of sight",
+            "Minds 3",
+            "ifd-no-starving's world (the 2.10 : 1 patches with an endowment so large nobody starves), walking under the utility mind with idle wander, and memory: a rememberer that once saw a patch can walk back to it once it's out of sight, instead of wandering blind like everyone else. Measured: see the survey.",
+            |c| {
+                two_patches(c, 7.0);
+                c.goods[0].endowment = URange::new(100_000, 100_000);
+                c.movement.mode = MoveMode::Walk;
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.idle = Idle::Wander;
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-walled",
+            "Memory: beyond the wall",
+            "Minds 3",
+            "ifd-wall's world (the opaque wall with a central gap, hiding the far patch from view) with memory: only a rememberer that once passed through the gap and saw the far patch can walk back to it once it's hidden again. Measured: see the survey.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-seasons",
+            "Memory: the other hemisphere",
+            "Minds 3",
+            "walk-seasons's world (seasons flipping every 50 ticks, Flumps walking) with memory: a rememberer can walk back toward the hemisphere it last saw thriving, instead of relying on what's in sight when the season turns. Measured: see the survey.",
+            |c| {
+                enable_seasons(c);
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+            },
+        ),
+        preset(
+            "mem-truffles",
+            "Memory: hidden truffle spots",
+            "Minds 3",
+            "walk-capacity's world with truffles: hash-placed spots that are invisible until walked onto, worth 5 sugar, and take 30 ticks to regrow after being picked (5 % of sites). Only a rememberer can head back to a spot it has already found. Measured: see the survey.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.05, 5.0, 30);
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-trapline",
+            "Memory: a trapline of truffle spots",
+            "Thomson, Slatkin & Thomson 1997; Ohashi & Thomson 2005; Gill 1988; Minds 3",
+            "A sparse 50 × 50 torus (flat capacity 1, growback 0.1) where truffle spots (2 % of sites, worth 10 sugar, regrowing after 40 ticks) are the main food; 20 Flumps of metabolism 1, endowment 30 and vision 1–6 walk, and every Flump remembers for 400 ticks. Traplining — a fixed round of revisits timed to regrowth — should appear among rememberers. Measured: see the survey.",
+            |c| {
+                c.width = 50;
+                c.height = 50;
+                c.population = 20;
+                c.goods[0].map = Map::Flat { capacity: 1.0 };
+                c.growback.rate = 0.1;
+                c.goods[0].metabolism = URange::new(1, 1);
+                c.goods[0].endowment = URange::new(30, 30);
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.02, 10.0, 40);
+                memory(c, 400, 1.0);
+            },
+        ),
+        preset(
+            "mem-mvt",
+            "Memory: the marginal value theorem",
+            "Charnov 1976; Minds 3",
+            "10 Flumps (metabolism 1, endowment 50, vision 1–20) on a 60 × 60 torus with nine equal patches (peaks of radius 4, height 4) on a square lattice of spacing 20, growback 0.25; walking under the utility mind with travel k = 0.5, and memory (span 400, share 1) so every Flump can walk back to a remembered patch. Few foragers, patches in sight and a travel cost is the marginal value theorem's setting: when to leave a patch that's still yielding. Measured: see the survey.",
+            |c| {
+                c.width = 60;
+                c.height = 60;
+                c.population = 10;
+                c.goods[0].map = Map::Peaks {
+                    peaks: (0..3u32)
+                        .flat_map(|i| {
+                            (0..3u32).map(move |j| Peak {
+                                x: 10 + 20 * i,
+                                y: 10 + 20 * j,
+                                radius: 4.0,
+                                height: 4.0,
+                            })
+                        })
+                        .collect(),
+                };
+                c.goods[0].metabolism = URange::new(1, 1);
+                c.goods[0].endowment = URange::new(50, 50);
+                c.vision = URange::new(1, 20);
+                c.growback.rate = 0.25;
+                c.movement.mode = MoveMode::Walk;
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.travel = 0.5;
+                memory(c, 400, 1.0);
+            },
+        ),
     ]
 }
 
@@ -1122,7 +1245,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 47);
+        assert_eq!(presets.len(), 54);
         for p in presets {
             p.config
                 .validate()
@@ -1326,6 +1449,47 @@ mod tests {
             .map(|g| (g.name.as_str(), g.zeros.min, g.zeros.max))
             .collect();
         assert_eq!(spans, [("Blue", 0, 3), ("Green", 4, 7), ("Red", 8, 11)]);
+    }
+
+    #[test]
+    fn the_memory_presets_walk_and_remember() {
+        let ids = [
+            "mem-open",
+            "mem-catchment",
+            "mem-walled",
+            "mem-seasons",
+            "mem-truffles",
+            "mem-trapline",
+            "mem-mvt",
+        ];
+        for id in ids {
+            let c = by_id(id).unwrap_or_else(|| panic!("{id}")).config;
+            c.validate().unwrap_or_else(|e| panic!("{id}: {e:?}"));
+            assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
+            assert!(c.memory.span > 0, "{id}: no memory");
+        }
+        for id in ["mem-truffles", "mem-trapline"] {
+            assert!(
+                by_id(id).unwrap().config.truffles.share > 0.0,
+                "{id}: no truffles"
+            );
+        }
+        let mvt = by_id("mem-mvt").unwrap().config;
+        let Map::Peaks { peaks } = &mvt.goods[0].map else {
+            panic!("mem-mvt: not a peaks map")
+        };
+        assert_eq!(peaks.len(), 9, "mem-mvt: nine peaks");
+        let mut centers: Vec<(u32, u32)> = peaks.iter().map(|p| (p.x, p.y)).collect();
+        centers.sort();
+        let mut expected: Vec<(u32, u32)> = (0..3u32)
+            .flat_map(|i| (0..3u32).map(move |j| (10 + 20 * i, 10 + 20 * j)))
+            .collect();
+        expected.sort();
+        assert_eq!(centers, expected, "mem-mvt: peak centers");
+        assert!(
+            peaks.iter().all(|p| p.radius == 4.0 && p.height == 4.0),
+            "mem-mvt: peak radius/height"
+        );
     }
 
     #[test]

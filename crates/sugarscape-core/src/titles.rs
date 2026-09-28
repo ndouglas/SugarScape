@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 246] = [
+pub const TITLES: [(&str, &str); 253] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -188,6 +188,34 @@ pub const TITLES: [(&str, &str); 246] = [
     (
         "ifd-wall",
         "An opaque wall instead of a fence: no clear difference",
+    ),
+    (
+        "mem-open",
+        "Remembering on the open sugarscape: little to gain",
+    ),
+    (
+        "mem-catchment",
+        "Wanderers who remember the patches they've seen",
+    ),
+    (
+        "mem-walled",
+        "Remembering what lies beyond the wall",
+    ),
+    (
+        "mem-seasons",
+        "Remembering the other hemisphere through the seasons",
+    ),
+    (
+        "mem-truffles",
+        "Hidden truffles only rememberers come back for",
+    ),
+    (
+        "mem-trapline",
+        "Foragers who learn a route between truffle spots",
+    ),
+    (
+        "mem-mvt",
+        "When to leave a patch: a few foragers among nine patches",
     ),
     (
         "vi-4-schelling-25",
