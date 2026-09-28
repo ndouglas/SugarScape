@@ -154,7 +154,7 @@ The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **R
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**,
-**Image Scoring**, **El Farol and the Minority Game**, **Ants and Recruitment** and **Threshold Models**.
+**Image Scoring**, **El Farol and the Minority Game**, **Ants and Recruitment**, **Threshold Models** and **The Timing of Retirement**.
 Each preset is listed by a plain title saying what happens in it; under the menu, the chosen
 preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
@@ -1544,6 +1544,59 @@ continuous equilibrium); Episodes; Last cascade; Swing. Presets: `gr-uniform`, `
 Credit: Mark Granovetter, "Threshold Models of Collective Behavior," *American Journal of Sociology*
 83(6) (1978), 1420–1443; Duncan J. Watts, "A Simple Model of Global Cascades on Random Networks,"
 *PNAS* 99(9) (2002), 5766–5771. See `docs/superpowers/specs/2026-09-27-thresholds-design.md`.
+
+### The Timing of Retirement (Axtell & Epstein 1999)
+
+**The model.** In 1961 Congress let workers claim Social Security at 62 instead of 65, yet it took
+nearly three decades for the most common retirement age to follow. Axtell and Epstein's agents live
+in 81 one-year cohorts, die at random between 60 and 100, and are replaced by 20-year-olds. A few are
+rational and retire as soon as they may; a few retire at random; most imitate, retiring once half the
+eligible members of their own small network — people within a few years of their age — have.
+
+Measured (the survey and the presets' descriptions):
+
+- **The realizations reproduce.** With 15 % rational, 95 % of those eligible have retired by period 8
+  on average, rising steadily (the text says "within the first 6 periods"); with 5 %, retirement
+  stalls, wavers and "percolates up" from the old, finishing near period 61. Larger networks slow the
+  transition, a spread of network sizes speeds it, the cohort size does not matter, and retirement
+  mandatory at 70 speeds it — all as stated.
+- **Footnote 5 is false.** Counting every friend instead of the eligible ones is said to leave the
+  results' "qualitative character" unchanged; counting every friend, no norm ever forms — the young
+  friends hold the share retired below one half.
+- **Figure 6-6 needs an unstated rule.** Under the pseudo-code's reading — a dead friend's place
+  passes to the newborn in its slot — no minimum of rationality is needed (72 periods with no
+  rationals at all) and nothing takes the paper's hundreds of periods. Only if friends who die are
+  replaced by someone of about the same age do the paper's "minimum proportions" and long, erratic
+  transitions appear (no norm at 0 or 5 % rational; 10 % takes 70 ± 75 periods).
+- **The policy switch does not reproduce.** Lowering eligibility to 62 once the norm is established,
+  the paper's new norm "emerges after twenty to thirty periods"; here it comes in 2, at every share of
+  rationals, under either rule: an imitator just turned 62 counts its retired 65-to-67-year-old friends
+  and retires at once. The decades the model was built to explain do not follow from its rules.
+- **Coupling pulls both ways.** A little coupling between a community without rationals and one with
+  them pulls the first into line (75 → 46 periods at 0.1), as the paper says, but slows the second just
+  as much (19 → 34), until both take about 58; the paper's figure keeps the rational group fast. A
+  little spread in the thresholds first doubles the transition time before more spread shortens it.
+
+Switches: **Agents per cohort**, **The first agents' death ages**, **Each period, agents act** (cohort by
+cohort, oldest first, or in one random order), **Rational share**, **Random share**, **Random agents'
+chance**, **Imitation threshold**, **Threshold spread**, **Imitators count** (eligible members, or every
+member), **Network size**, **Extent**, **When a member dies** (the newborn in its slot takes its place,
+or it is replaced within the holder's age range), **Eligibility age**, **Mandatory age**, **Lower the
+age once the norm is reached** with **To**, **The norm is reached at** (the paper never defines its
+transition time; here, the first period with that share of the eligible retired), **Two
+sub-populations** with **Coupling**, and **Stop at the norm**. The view is Axtell and Epstein's: one row
+per age from 20 at the top, agents colored by type while working and red once retired; beside it, the
+share retiring at each age over the last 10 periods, and the share of the eligible retired over time.
+Color modes: **Status**, **Type**, **Threshold**, **Group**. Charts: Retired share (by group with two
+sub-populations); Retirement age; Transition; Group transitions. Presets: `ae-rapid`, `ae-base`,
+`ae-slow`, `ae-policy`, `ae-groups`, `ae-all-members`, `ae-replace`. **Compare** entry: "15 % vs 5 %
+rational — Retirement (Compare)". Built-in sweeps: `ae-rational`, `ae-rational-replace`,
+`ae-threshold`, `ae-size`, `ae-extent`, `ae-policy`, `ae-coupling`, `ae-coupling-rational`.
+
+Credit: Robert L. Axtell and Joshua M. Epstein, "Coordination in Transient Social Networks: An
+Agent-Based Computational Model of the Timing of Retirement," Brookings CSED Working Paper No. 1 (1999),
+in H. Aaron, ed., *Behavioral Dimensions of Retirement Economics* (1999); Joshua M. Epstein, *Generative
+Social Science* (Princeton, 2006), chapter 7. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.
 
 ## Experiments
 
