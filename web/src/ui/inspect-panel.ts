@@ -98,6 +98,7 @@ export class InspectPanel {
       ),
       ...(this.engine.sugar.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
+      ...((this.engine.sugar.memory?.span ?? 0) > 0 ? [row('Remembers', this.memoryText(a))] : []),
       ...(a.plan
         ? [
             a.plan.walked
@@ -121,6 +122,13 @@ export class InspectPanel {
               ` ${fmt(l.due)} ${this.goodName(l.good)} by t=${l.due_tick}`))))]
         : []),
     ];
+  }
+
+  /** Minds 3: "n sites (m truffle spots)" for a rememberer, else "Doesn't remember". */
+  private memoryText(a: AgentView): string {
+    const m = a.memory;
+    if (!m?.remembers) return "Doesn't remember";
+    return `${m.sites} sites (${m.spots} truffle spots)`;
   }
 
   private diseaseRows(a: AgentView): HTMLElement[] {

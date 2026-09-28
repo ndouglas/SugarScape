@@ -263,6 +263,8 @@ export class Engine {
   private followedId: number | null = null;
   private followedLive = false;
   private trailCells = NO_CELLS;
+  /** Minds 3: the inspected Flump's remembered sites, flat `[x, y, age, spot, …]` (the overlay). */
+  private memoryCells = NO_CELLS;
   private edges: Partial<Record<Overlay, Uint32Array>> = {};
   /** The last group received per `chartKey` (the host re-sends a group only when its history grew). */
   private charts = new Map<string, ChartGroup>();
@@ -586,6 +588,11 @@ export class Engine {
     return this.trailCells;
   }
 
+  /** Minds 3: the inspected Flump's remembered sites, flat `[x, y, age, spot, …]` (empty otherwise). */
+  inspectMemory(): Uint32Array {
+    return this.memoryCells;
+  }
+
   /** Edges `[x1, y1, x2, y2, …]` of an overlay that is on (empty until its first snapshot). */
   networks(kind: Overlay): Uint32Array {
     return this.edges[kind] ?? NO_CELLS;
@@ -735,6 +742,7 @@ export class Engine {
         this.followedId = other.followedId;
         this.followedLive = other.followedLive;
         this.trailCells = other.trailCells;
+        this.memoryCells = other.memoryCells;
         this.edges = { ...other.edges };
         this.charts = new Map(other.charts);
         this.landscapes = other.landscapes;
@@ -793,6 +801,9 @@ export class Engine {
     const select = this.pendingSelect !== undefined ? this.pendingSelect : this.selection;
     // While a reset is outstanding the selection belongs to the old world.
     if (select && this.resetting === 0) own.select = { ...select };
+    // Minds 3: the memory overlay follows the selection itself (no separate command needs a
+    // pending override, unlike select/trail above).
+    if (select && this.resetting === 0 && this.model === 'sugarscape') own.memory = true;
     const trail = this.pendingTrail !== undefined ? this.pendingTrail : this.followedId !== null;
     if (trail) own.trail = true;
     // Networks exist only in a sugarscape; the ring view needs Ring World's state with every
@@ -887,6 +898,8 @@ export class Engine {
       this.selectedUnder = gen;
       this.inspection = s.inspection;
       this.selection = { x: s.inspection.x, y: s.inspection.y, agentId: s.inspection.agentId };
+      // Minds 3: sent alongside `s.inspection` whenever `wants.memory` asked for it (see `wants()`).
+      this.memoryCells = s.memory ?? NO_CELLS;
     }
     this.trailCells = s.trail ?? (s.followed === null ? NO_CELLS : this.trailCells);
     if (s.networks) Object.assign(this.edges, s.networks);
@@ -1053,6 +1066,7 @@ export class Engine {
     if (this.selectedUnder < gen) {
       this.selection = null;
       this.inspection = null;
+      this.memoryCells = NO_CELLS;
     }
     const clamped = this.adopt(result.snapshot);
     if (!opts.keepSetup) {

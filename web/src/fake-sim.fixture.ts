@@ -148,6 +148,10 @@ export class FakeSim implements SimLike {
     const id = this.agentAt(x, y);
     return JSON.stringify({ site: { x, y, resources: [1], capacities: [4], pollution: [] }, agent: id === undefined ? null : { id } });
   }
+  /** Minds 3: `[x, y, 7, 2]` for the agent at `(x, y)` (a stand-in remembered site); empty elsewhere. */
+  inspect_memory(x: number, y: number): Uint32Array {
+    return this.agentAt(x, y) !== undefined ? Uint32Array.of(x, y, 7, 2) : new Uint32Array(0);
+  }
   locate(id: number): Uint32Array | undefined {
     const p = this.agents.get(id);
     return p && Uint32Array.from(p);

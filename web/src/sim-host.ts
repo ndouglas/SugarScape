@@ -46,6 +46,8 @@ export interface SimLike {
   lorenz_total(points: number): Float64Array;
   supply_demand(): Float64Array;
   inspect(x: number, y: number): string;
+  /** Minds 3: `(x, y)`'s Flump's remembered sites, flat `[x, y, age, spot, …]`; empty otherwise. */
+  inspect_memory(x: number, y: number): Uint32Array;
   locate(id: number): Uint32Array | undefined;
   follow(id: number): void;
   unfollow(): void;
@@ -750,6 +752,9 @@ export class SimHost {
     const select = wants.select;
     if (selected !== undefined) s.inspection = selected;
     else if (select) s.inspection = optional(() => this.track(sim, select));
+    // Minds 3: the inspected Flump's remembered sites, for the same site `s.inspection` just
+    // resolved (empty when there's none, it doesn't remember, or memory is off).
+    if (wants.memory && sugar) s.memory = s.inspection ? sim.inspect_memory(s.inspection.x, s.inspection.y) : new Uint32Array(0);
     if (wants.charts) {
       const charts = this.charts(sim, wants.charts.groups, wants.charts.max, throttleCharts);
       if (charts) s.charts = charts;

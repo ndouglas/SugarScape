@@ -111,3 +111,78 @@ describe('movement', () => {
     expect(c.movement).toEqual({ mode: 'jump', speed: 5 });
   });
 });
+
+describe('memory', () => {
+  it('offers span, share (reset-only) and belief (live), defaulting older configs off (span 0, project)', () => {
+    const span = control('memory.span');
+    expect(span.kind).toBe('number');
+    if (span.kind !== 'number') return;
+    expect(span.reset).toBe(true);
+    expect(span.min).toBe(0);
+    expect(span.max).toBe(10_000);
+
+    const share = control('memory.share');
+    expect(share.kind).toBe('number');
+    if (share.kind !== 'number') return;
+    expect(share.reset).toBe(true);
+    expect(share.min).toBe(0);
+    expect(share.max).toBe(1);
+
+    const belief = control('memory.belief');
+    expect(belief.kind).toBe('select');
+    if (belief.kind !== 'select') return;
+    expect(belief.reset).toBeUndefined();
+    expect(belief.options.map((o) => o.value)).toEqual(['recall', 'project']);
+    const c = {} as unknown as Config;
+    expect(belief.current(c)).toBe('project'); // older configs have no memory
+    belief.options[0].apply(c);
+    expect(belief.current(c)).toBe('recall');
+    expect(c.memory).toEqual({ span: 0, share: 1, belief: 'recall' });
+  });
+
+  it('creates a complete memory object when a number control is set on a config missing it', () => {
+    const span = control('memory.span');
+    const c = {} as unknown as Config;
+    const before = structuredClone(c);
+    expect(() => setPath(c, 'memory.span', 50)).toThrow();
+    span.adjust!(c, before);
+    setPath(c, 'memory.span', 50);
+    expect(c.memory).toEqual({ span: 50, share: 1, belief: 'project' });
+  });
+});
+
+describe('truffles', () => {
+  it('offers share and seed (reset-only), value and regrow (live), defaulting older configs off (share 0)', () => {
+    const share = control('truffles.share');
+    expect(share.kind).toBe('number');
+    if (share.kind !== 'number') return;
+    expect(share.reset).toBe(true);
+    expect(share.min).toBe(0);
+    expect(share.max).toBe(1);
+
+    const value = control('truffles.value');
+    expect(value.kind).toBe('number');
+    if (value.kind !== 'number') return;
+    expect(value.reset).toBeUndefined();
+
+    const regrow = control('truffles.regrow');
+    expect(regrow.kind).toBe('number');
+    if (regrow.kind !== 'number') return;
+    expect(regrow.reset).toBeUndefined();
+
+    const seed = control('truffles.seed');
+    expect(seed.kind).toBe('number');
+    if (seed.kind !== 'number') return;
+    expect(seed.reset).toBe(true);
+  });
+
+  it('creates a complete truffles object when a number control is set on a config missing it', () => {
+    const value = control('truffles.value');
+    const c = {} as unknown as Config;
+    const before = structuredClone(c);
+    expect(() => setPath(c, 'truffles.value', 8)).toThrow();
+    value.adjust!(c, before);
+    setPath(c, 'truffles.value', 8);
+    expect(c.truffles).toEqual({ share: 0, value: 8, regrow: 30, seed: 1 });
+  });
+});

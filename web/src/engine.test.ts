@@ -283,6 +283,17 @@ describe('Engine', () => {
     expect(engine.trail()).toHaveLength(0);
   });
 
+  it("selects an agent and keeps its memory overlay current, clearing it once nothing is selected", async () => {
+    const { engine } = await setup();
+    expect(engine.inspectMemory()).toHaveLength(0);
+    await engine.selectAgent(1); // agent 1 starts at (1, 1); FakeSim answers [1, 1, 7, 2]
+    expect(Array.from(engine.inspectMemory())).toEqual([1, 1, 7, 2]);
+    await engine.advance(1); // walks to (2, 1)
+    expect(Array.from(engine.inspectMemory())).toEqual([2, 1, 7, 2]);
+    await engine.reset();
+    expect(engine.inspectMemory()).toHaveLength(0);
+  });
+
   it('fetches the networks of the overlays that are on', async () => {
     const { engine } = await setup();
     expect(engine.networks('trade')).toHaveLength(0);

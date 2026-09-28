@@ -76,6 +76,30 @@ export interface Wall {
   opaque: boolean;
 }
 
+/** Minds 3: how a Flump reasons about a remembered site it can't currently see. */
+export type Belief = 'recall' | 'project';
+
+/**
+ * Minds 3's memory seam (absent from older configs: the book, no memory). `span` and `share` are
+ * reset-only (`span > 0` needs `movement.mode: 'walk'`); `belief` applies live.
+ */
+export interface Memory {
+  span: number;
+  share: number;
+  belief: Belief;
+}
+
+/**
+ * Minds 3's truffles (absent from older configs: no truffles). `share` and `seed` are reset-only;
+ * `value` and `regrow` apply live.
+ */
+export interface Truffles {
+  share: number;
+  value: number;
+  regrow: number;
+  seed: number;
+}
+
 export interface Config {
   width: number;
   height: number;
@@ -108,6 +132,8 @@ export interface Config {
   decision?: Decision;
   movement?: Movement;
   walls?: Wall[];
+  memory?: Memory;
+  truffles?: Truffles;
   schedule: ScheduledChange[];
 }
 
@@ -1040,6 +1066,11 @@ export interface AgentView {
    * when no path was found. `walked`: it walked (or tried to) rather than jumped.
    */
   plan?: { target_x: number; target_y: number; path: [number, number][]; walked: boolean } | null;
+  /**
+   * Minds 3: whether the agent remembers, and how many sites and truffle spots it holds in
+   * memory. `null` while memory is off (`span` 0).
+   */
+  memory?: { remembers: boolean; sites: number; spots: number } | null;
 }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
