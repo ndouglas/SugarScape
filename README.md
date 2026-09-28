@@ -1494,7 +1494,8 @@ earliest pushed, and the torus pushes its neighbors north, south, east, west. Tw
 
 - **Against Dijkstra:** on 1 000 random walled tori (4-way) and 1 000 random octile maps (8-way,
   no corner cutting), with 0–40 % walls, A*'s cost equals Dijkstra's, and both agree when there
-  is no path. (A case whose start or goal falls on a wall is skipped.) The heuristics, torus
+  is no path. A case whose start or goal falls on a wall is skipped, so 665 tori and 659 maps
+  (1 324 of 2 000) are checked; the tests assert at least 600 of each. The heuristics, torus
   Manhattan and octile distance, are consistent, and a closed set keeps any site from being
   expanded twice. Unit tests pin the tie order and the exact expansion count on a tie case, the
   start = goal case, an unreachable goal and the limit's exact boundary.
@@ -1517,8 +1518,8 @@ target as before. Then A* finds a 4-way path around walls and other Flumps, and 
 is no path within 4 096 expanded sites, it stays and gathers where it is. At vision 1 every target
 is one step away, so walking *is* jumping: every golden Sugarscape preset without combat, with
 vision forced to 1, gives the same fingerprint under walk as under jump. Walking with combat on is
-an error, since rule C jumps. Inspect shows where the Flump is heading and how many steps are left,
-and draws its planned path as a dashed line.
+an error, since rule C jumps. Inspect shows where the Flump is heading and how many steps are left
+(or that it can't reach its target), and draws its planned path as a dashed line.
 
 Measured (20 seeds; the survey unless a sweep is named). "Holds" and "Fails" are the survey's
 verdicts on claims we set before running:
@@ -1526,8 +1527,10 @@ verdicts on claims we set before running:
 - **The book's carrying capacity needs the jump (Fails, as expected).** On `ii-2-unit` the mean
   population over ticks 300–500 has median 181 under walking against 228 under the jump. No seed
   lands within 214–234, around the book's 224. Walking is lower in all 20 seeds, by a median 47
-  Flumps. Likely cause: a walker gathers at each site on its way instead of the best one it saw,
-  and that site is often harvested or taken by the time it arrives.
+  Flumps. The sweeps (not a judged claim) show capacity tracking how far a Flump gets in a tick,
+  roughly min(speed, vision): walking at speed 1 and vision 1–6 (181.5) is about jumping at
+  vision 1 (182.7); walking at speed 3 (212.8) is near jumping at vision 1–3 (205.5); walking at
+  speed 6 (225.2) is near jumping at vision 1–6 (228.5).
 - **Speed brings it back (Holds).** Capacity rises toward the jump's as speed rises. The
   `walk-speed` sweep's means: 181.5 at one step a tick, 201.4 at 2, 212.8 at 3, 218.4 at 4, 225.2
   at 6 and 227.5 at 10, against 228.5 jumping. In the survey, speed 10 (median 227.4) beats
@@ -1548,17 +1551,24 @@ verdicts on claims we set before running:
   travel to switch patches slightly reduced undermatching. Here a fence separates Minds 1's two
   patches (vision 10–20), with a two-site gap. Moving the gap to the far end (`ifd-fence-far`)
   gives s median 0.85 against 0.90 walking with no fence, lower in 18 of 20 seeds. So undermatching
-  grows. The `ifd-detour` sweep agrees in direction: the richer patch's share at 2.10 : 1 drifts
-  from 0.664 (gap at the center) to 0.658 (15 rows off) behind a fence, and from 0.668 to 0.652
-  behind a wall.
+  grows. The `ifd-detour` sweep compares gap offsets, not a fence against no fence, so it can't
+  back that comparison, and no test was run on it. Behind a fence the richer patch's share at
+  2.10 : 1 is flat within noise (means 0.6638, 0.6649, 0.6569, 0.6577 at offsets 0, 5, 10, 15;
+  sd 0.007–0.014, n 20). Behind a wall it falls slightly, from 0.668 to 0.652 (about 0.016,
+  roughly 3 standard errors).
+- **A confound in the fenced worlds.** The fences at x = 2 and x = 28 split the torus into 25
+  columns on the richer patch's side and 33 on the poorer's, so random placement starts about
+  57 % of Flumps on the poorer side. Its effect isn't measured.
 - **The visual barrier: Weak.** Baum and Kraft found a visual barrier had no effect. With an opaque
   wall instead of a fence (same gap), s has median 0.91 against 0.88, and only 10 of 20 seeds are
   within 0.05 of their fence's s. If anything, the wall raises s.
-- **s and the single ratio point different ways.** At the presets' own 2.10 : 1 ratio (median mean
-  N₁/N₂ over ticks 500–1000), the fenced worlds put slightly more Flumps on the richer patch: far
-  fence 1.96, near fence 1.99, wall 1.99, against 1.97 walking with no fence and 1.88 jumping. Yet
-  s is lower with the far gap. s measures how the split tracks the input ratio across five patch
-  sizes; the 2.10 : 1 ratio is one point on that line. We haven't measured why the two disagree.
+- **At the single 2.10 : 1 ratio the walking arms can't be told apart.** At the presets' own ratio
+  (median mean N₁/N₂ over ticks 500–1000): far fence 1.96, near fence 1.99, wall 1.99, walking
+  with no fence 1.97, jumping 1.88. For the far gap the ratio (1.96 against 1.97) and s (0.846
+  against 0.899) point the same way. None of the ratio differences among the walking arms is
+  tested, and their medians are within 0.03 of each other, so at this one ratio they can't be told
+  apart. All of them sit above the jump's 1.88. s measures how the split tracks the input across
+  five patch sizes; the ratio is one point on that line.
 
 **Cost** (µs per Flump-tick: wall-clock over the whole tick with all rules, from the release CLI,
 2 000 ticks, seeds 1–5, divided by the population summed over the ticks):

@@ -299,8 +299,14 @@ the sweeps' (20 seeds), with the source named. The cost figures are the release 
   - `Agent.plan` is observational: never hashed, exported or shared.
   - `AgentView.plan` is `None` until the agent's first move. Its path is empty under jump, or once
     the agent has arrived.
-  - Inspect shows "Heading: (x, y), n step(s) left" (singular at 1), "Staying", or under jump
-    "Moved to (x, y)".
+  - Inspect shows "Heading: (x, y), n step(s) left" (singular at 1), "Staying" at the target,
+    "Can't reach (x, y)" when no path was found to a target elsewhere, or under jump "Moved to
+    (x, y)". The plan records whether the agent walked (`Plan.walked`), and Inspect picks the row
+    by that, not by the current mode, so a mode switch while paused doesn't mislabel it.
+- **A wall-component precheck.** With walls, the non-wall sites' connected components (4-way,
+  on the torus) are labeled once when the world is built. A walker whose target lies in another
+  component stays without searching, exactly as on a failed A*. Without walls nothing is labeled
+  or checked.
   - The inspected agent's planned path is drawn as a dashed accent line, split into separate
     segments where it crosses the torus seam.
 - **The walking reduction test sets jump explicitly on both sides.** The `walk-*` presets start in
@@ -332,21 +338,32 @@ the sweeps' (20 seeds), with the source named. The cost figures are the release 
     jumping 228.3.
   - Baum and Kraft's travel claim **fails in the opposite direction**: s median 0.85 with the far
     gap against 0.90 walking with no fence (0.90 jumping), lower in 18 of 20 seeds.
+  - A confound, unmeasured: the fences at x = 2 and x = 28 split the torus into 25 columns on the
+    richer patch's side and 33 on the poorer's, so random placement starts about 57 % of Flumps
+    on the poorer side.
   - The visual barrier is **Weak**: s median 0.91 with the wall against 0.88 with the fence at the
     same gap; 10 of 20 seeds within 0.05.
-- **The ratio and s point different ways.** At the presets' own 2.10 : 1 ratio, the median mean
-  N₁/N₂ over ticks 500–1000 is 1.96 with the far fence, 1.99 with the near fence, 1.99 with the
-  wall, 1.97 walking with no fence and 1.88 jumping. So the fenced worlds put slightly more Flumps
-  on the richer patch at that ratio, yet s fitted across the five patch sizes is lower with the far
-  gap (0.846 against 0.899). s measures how the split tracks the input across sizes; the ratio is
-  a single point on it. The cause of the difference isn't measured.
+- **At the single 2.10 : 1 ratio the walking arms can't be told apart.** The median mean N₁/N₂
+  over ticks 500–1000 is 1.96 with the far fence, 1.99 with the near fence, 1.99 with the wall,
+  1.97 walking with no fence and 1.88 jumping. For the far gap the ratio (1.96 against 1.97) and
+  s (0.846 against 0.899) point the same way. None of the ratio differences among the walking arms
+  is tested, and their medians are within 0.03 of each other; all sit above the jump's 1.88.
 - **Sweeps (20 seeds, means):**
   - `walk-speed`: walking 181.5, 201.4, 212.8, 218.4, 225.2, 227.5 at speeds 1, 2, 3, 4, 6, 10;
     jumping 228.5 throughout.
   - `walk-vision`: jumping 182.7, 205.5, 228.5, 241.5 at vision 1, 1–3, 1–6, 1–10; walking 182.7,
     188.8, 181.5, 182.2. Walking gains nothing from vision.
   - `ifd-detour`: the richer patch's share at gap offsets 0, 5, 10, 15 is 0.664, 0.665, 0.657,
-    0.658 behind a fence and 0.668, 0.657, 0.652, 0.652 behind a wall.
+    0.658 behind a fence (flat within noise; sd 0.007–0.014, n 20) and 0.668, 0.657, 0.652, 0.652
+    behind a wall (a fall of about 0.016, roughly 3 standard errors). No test was run, and the
+    sweep compares gap offsets, not fence against no fence, so it can't back the travel claim's
+    comparison.
+  - Capacity tracks reach per tick, roughly min(speed, vision) (a sweep observation, not a judged
+    claim): walking at vision 1–6 (181.5) is about jumping at vision 1 (182.7); walking at speed 3
+    (212.8) is near jumping at vision 1–3 (205.5); walking at speed 6 (225.2) is near jumping at
+    vision 1–6 (228.5).
+- **The Dijkstra checks skip walled starts and goals:** 665 of 1 000 tori and 659 of 1 000 octile
+  maps are checked (1 324 of 2 000); each test asserts at least 600.
 - **Cost** (µs per Flump-tick, whole tick, release CLI, 2 000 ticks, seeds 1–5): `ii-2-unit` jump
   1.05, `walk-capacity` 4.66, `walk-fast` 5.10, `ifd-far-sighted` jump 2.65, `ifd-fence` walk
   7.77. Minds 1's baseline: 1.09 (book) and 1.13 (utility).
@@ -354,7 +371,10 @@ the sweeps' (20 seeds), with the source named. The cost figures are the release 
   grows as lopsided as when they jump"; `walk-seasons` "Walking through the seasons: Flumps still
   migrate, but fewer of them"; `walk-fast` "Flumps who walk three steps a tick: most of the lost
   population comes back"; `ifd-fence-far` "The gap moves to the far end: a long walk to switch,
-  and across patch sizes Flumps stray further from matching the yields".
+  and across patch sizes Flumps stray further from matching the yields"; `ifd-fence` "A fence with
+  a central gap: Flumps split between the patches about as they do with no fence" (s 0.88 against
+  0.90, untested); `ifd-wall` "An opaque wall instead of a fence: no clear difference" (Weak,
+  10 of 20 seeds within 0.05).
 - **Sources.** The Moving AI fixture subset is committed under ODC-By, with its README
   (`crates/sugarscape-core/tests/fixtures/movingai/README.md`). Sturtevant's paper is saved in
   the gitignored `papers/pathfinding/`. Hart, Nilsson and Raphael (1968) and Baum and Kraft (1998)
