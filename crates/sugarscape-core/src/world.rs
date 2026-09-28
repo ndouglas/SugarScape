@@ -260,6 +260,11 @@ impl World {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
         }
         world.populate();
+        // Minds 4: `memory.prior: map` gives founders that remember a
+        // memory of every non-wall site as the world starts; a no-op
+        // otherwise. Runs once here, after placement, so children and
+        // replacements (never routed through this) still start empty.
+        crate::minds::memory::know_the_map(&mut world);
         world.stats.push(Snapshot::of(&world));
         Ok(world)
     }
