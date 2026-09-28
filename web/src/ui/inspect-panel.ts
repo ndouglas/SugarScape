@@ -86,6 +86,13 @@ export class InspectPanel {
       ),
       ...(this.engine.sugar.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
+      ...(a.plan
+        ? [
+            (this.engine.sugar.movement?.mode ?? 'jump') === 'walk'
+              ? row('Heading', a.plan.path.length ? `(${a.plan.target_x}, ${a.plan.target_y}), ${a.plan.path.length} steps left` : 'Staying')
+              : row('Moved to', `(${a.plan.target_x}, ${a.plan.target_y})`),
+          ]
+        : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),

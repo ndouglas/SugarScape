@@ -1,7 +1,9 @@
 import type { Engine } from '../engine';
+import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
 import { arrowHead, wrappedSegments } from './overlay';
+import { planSegments } from './plan-path';
 import { trailSegments } from './trail';
 
 const CELL = 12;
@@ -131,6 +133,22 @@ export class GridView {
         ctx.lineTo((s.x2 + 0.5) * CELL, (s.y2 + 0.5) * CELL);
         ctx.stroke();
       }
+      ctx.restore();
+    }
+
+    const inspection = this.engine.inspection;
+    const agent = inspection && isSugarView(inspection.view) ? inspection.view.agent : null;
+    if (agent?.plan && agent.plan.path.length) {
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (const [x1, y1, x2, y2] of planSegments([agent.x, agent.y], agent.plan.path, width, height)) {
+        ctx.moveTo((x1 + 0.5) * CELL, (y1 + 0.5) * CELL);
+        ctx.lineTo((x2 + 0.5) * CELL, (y2 + 0.5) * CELL);
+      }
+      ctx.stroke();
       ctx.restore();
     }
 
