@@ -57,22 +57,21 @@ fn walking_at_vision_one_is_jumping() {
 
 #[test]
 fn memory_and_truffles_off_explicitly_is_every_preset() {
-    // Minds 3's reduction: with `memory.span` 0 and `truffles.share` 0 set
-    // explicitly, memory is off and draws nothing, so every walking preset,
-    // and every other non-combat preset, keeps its own golden fingerprint.
+    // Minds 3's reduction: a preset's JSON with `memory.span` 0 and
+    // `truffles.share` 0 written in explicitly loads (through serde and
+    // validation) to a world whose 200-tick fingerprint is the preset's own,
+    // which `tests/golden.rs` pins. Memory off draws nothing.
     let mut checked = 0;
     for p in presets::all() {
-        if p.config.combat.enabled {
-            continue;
-        }
         // A Minds 3 preset turns memory or truffles on: it's not the book.
         if p.config.memory.span > 0 || p.config.truffles.share > 0.0 {
             continue;
         }
-        let mut c = p.config.clone();
-        c.memory.span = 0;
-        c.truffles.share = 0.0;
-        // `tests/golden.rs` pins each preset's own fingerprint.
+        let mut v = serde_json::to_value(&p.config).unwrap();
+        v["memory"]["span"] = serde_json::json!(0);
+        v["truffles"]["share"] = serde_json::json!(0.0);
+        let c = Config::from_json(&v.to_string()).unwrap_or_else(|e| panic!("{}: {e:?}", p.id));
+        assert_eq!((c.memory.span, c.truffles.share), (0, 0.0), "{}", p.id);
         assert_eq!(fingerprint(c), fingerprint(p.config.clone()), "{}", p.id);
         checked += 1;
     }

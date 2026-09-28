@@ -98,7 +98,9 @@ pub struct TickEvents {
     /// sight.
     pub remembered_moves: u32,
     /// Minds 3: Σ |believed − true| welfare over the `remembered_moves`,
-    /// measured when the target is chosen (not on arrival).
+    /// measured when the target is chosen (not on arrival). Remembered
+    /// values carry no pollution discount, so under pollution the error
+    /// includes pollution the Flump couldn't see.
     pub belief_error_sum: f64,
     /// Minds 3: of `remembered_moves`, those whose target was truly worth
     /// less than believed when chosen.
