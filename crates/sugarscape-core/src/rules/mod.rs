@@ -11,6 +11,7 @@ pub mod pollution;
 pub mod replacement;
 pub mod sex;
 pub mod trade;
+pub mod truffles;
 
 use crate::agent::AgentId;
 use crate::config::{DiseaseCure, MAX_GOODS};

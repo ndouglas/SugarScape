@@ -88,6 +88,10 @@ pub struct TickEvents {
     pub amount_lent: f64,
     pub defaults: u32,
     pub infections: Vec<Infection>,
+    /// Minds 3: truffle spots harvested this tick.
+    pub truffles_found: u32,
+    /// Minds 3: of `truffles_found`, how many were harvested by a rememberer.
+    pub truffles_by_rememberers: u32,
 }
 
 #[derive(Clone)]
@@ -97,6 +101,12 @@ pub struct World {
     /// Completed ticks.
     pub tick: u64,
     pub sites: Vec<Site>,
+    /// Minds 3: truffle spots, row-major, one entry per site. `None` is no
+    /// spot; `Some(t)` is a spot ripe again at tick `t` (ripe now when
+    /// `t <= tick`). Built once from `config.truffles` (placed by hash, not
+    /// `World.rng`; walls never get a spot); empty when `truffles.share` is
+    /// 0, so `truffle` answers `None` everywhere without a lookup.
+    pub truffles: Vec<Option<u64>>,
     /// Chapter V's master list of diseases; a disease's id is its index.
     pub diseases: Vec<Bits>,
     agents: BTreeMap<AgentId, Agent>,
@@ -197,10 +207,27 @@ impl World {
         } else {
             label_regions(torus, &walls)
         };
+        let truffles: Vec<Option<u64>> = if config.truffles.share <= 0.0 {
+            Vec::new()
+        } else {
+            (0..torus.len())
+                .map(|s| {
+                    if walls[s] != 0 {
+                        return None;
+                    }
+                    if rules::truffles::has_spot(s, config.truffles.seed, config.truffles.share) {
+                        Some(0u64)
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        };
         let mut world = World {
             torus,
             tick: 0,
             sites,
+            truffles,
             diseases: Vec::new(),
             agents: BTreeMap::new(),
             occupancy: vec![None; torus.len()],
@@ -344,6 +371,25 @@ impl World {
     pub fn site_mut(&mut self, pos: Pos) -> &mut Site {
         let i = self.torus.index(pos);
         &mut self.sites[i]
+    }
+
+    /// Minds 3: whether `pos` has a truffle spot, and if so whether it's
+    /// ripe now. `None` where there's no spot (including everywhere, when
+    /// `truffles.share` is 0).
+    pub fn truffle(&self, pos: Pos) -> Option<bool> {
+        let i = self.torus.index(pos);
+        self.truffles
+            .get(i)
+            .copied()
+            .flatten()
+            .map(|ripe_at| ripe_at <= self.tick)
+    }
+
+    /// Mutable access to the tick a spot at `pos` is next ripe at; `None`
+    /// where there's no spot there.
+    pub(crate) fn truffle_ripe_at(&mut self, pos: Pos) -> Option<&mut u64> {
+        let i = self.torus.index(pos);
+        self.truffles.get_mut(i)?.as_mut()
     }
 
     pub fn empty_sites(&self) -> Vec<Pos> {
@@ -1164,5 +1210,72 @@ mod tests {
         let w = World::new(c, 3).unwrap();
         assert_eq!(w.population(), 400);
         assert!(w.agents().all(|a| a.pos.y >= 40));
+    }
+
+    // --- Minds 3: truffles ---
+
+    fn truffle_config(width: u32, height: u32, share: f64) -> crate::config::Config {
+        let mut c = crate::testkit::blank_config(width, height);
+        c.truffles.share = share;
+        c
+    }
+
+    fn all_positions(w: &World) -> Vec<Pos> {
+        (0..w.torus.len()).map(|i| w.torus.pos(i)).collect()
+    }
+
+    #[test]
+    fn truffle_layout_is_the_same_across_world_seeds() {
+        let mut c = truffle_config(20, 20, 0.2);
+        c.truffles.seed = 3;
+        let a = World::new(c.clone(), 1).unwrap();
+        let b = World::new(c, 2).unwrap();
+        for p in all_positions(&a) {
+            assert_eq!(a.truffle(p), b.truffle(p), "at {p:?}");
+        }
+        // At least the hash actually placed something, so the check above
+        // isn't vacuously true.
+        assert!(all_positions(&a).iter().any(|&p| a.truffle(p).is_some()));
+    }
+
+    #[test]
+    fn truffle_share_is_within_one_percent_over_a_100_by_100_grid() {
+        let c = truffle_config(100, 100, 0.05);
+        let w = World::new(c, 1).unwrap();
+        let n = 100 * 100;
+        let count = all_positions(&w)
+            .iter()
+            .filter(|&&p| w.truffle(p).is_some())
+            .count();
+        let share = count as f64 / f64::from(n);
+        assert!(
+            (share - 0.05).abs() < 0.0005,
+            "share {share} within 1% of 0.05"
+        );
+    }
+
+    #[test]
+    fn truffle_share_zero_gives_none() {
+        let c = truffle_config(10, 10, 0.0);
+        let w = World::new(c, 1).unwrap();
+        assert!(all_positions(&w).iter().all(|&p| w.truffle(p).is_none()));
+    }
+
+    #[test]
+    fn truffle_share_one_gives_every_non_wall_site_a_ripe_spot_and_none_on_walls() {
+        let mut c = truffle_config(11, 11, 1.0);
+        c.walls = vec![wall(3, 3, 2, 2, true)];
+        let w = World::new(c, 1).unwrap();
+        for p in all_positions(&w) {
+            if w.is_wall(p) {
+                assert_eq!(w.truffle(p), None, "no spot on a wall, at {p:?}");
+            } else {
+                assert_eq!(
+                    w.truffle(p),
+                    Some(true),
+                    "every non-wall site has a ripe spot, at {p:?}"
+                );
+            }
+        }
     }
 }

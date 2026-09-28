@@ -111,11 +111,13 @@ pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
 }
 
 /// Moves `id` to `target` (its own site to stay), records its neighbors, and
-/// gathers every good there.
+/// gathers every good there, plus a truffle spot's value (Minds 3) if it's
+/// ripe: into good 0's harvest and the agent's holdings, like any other
+/// gathered sugar, and the spot goes unripe until `tick + regrow`.
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
-    let (tags, mut social) = (a.tags, a.social);
+    let (tags, mut social, remembers) = (a.tags, a.social, a.remembers);
     world.move_agent(id, target);
     social.moved(world, Seen::at(world, target), tags);
     let site = world.site_mut(target);
@@ -128,6 +130,23 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     {
         *got = *level;
         *level = 0.0;
+    }
+    let now = world.tick;
+    let regrow = u64::from(world.config.truffles.regrow);
+    let value = world.config.truffles.value;
+    let mut picked = false;
+    if let Some(ripe_at) = world.truffle_ripe_at(target) {
+        if *ripe_at <= now {
+            *ripe_at = now + regrow;
+            picked = true;
+        }
+    }
+    if picked {
+        harvest.gathered[0] += value;
+        world.events.truffles_found += 1;
+        if remembers {
+            world.events.truffles_by_rememberers += 1;
+        }
     }
     let a = world.agent_mut(id).expect("live agent");
     for (have, got) in a.holdings.iter_mut().zip(&harvest.gathered).take(n) {
@@ -601,5 +620,89 @@ mod tests {
         w.site_mut(Pos::new(5, 7)).pollution[0] = 9.0;
         act(&mut w, id);
         assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 7));
+    }
+
+    // --- Minds 3: truffles ---
+
+    fn truffle_world(width: u32, height: u32, share: f64, value: f64, regrow: u32) -> World {
+        let mut c = blank_config(width, height);
+        c.truffles.share = share;
+        c.truffles.value = value;
+        c.truffles.regrow = regrow;
+        World::new(c, 7).unwrap()
+    }
+
+    #[test]
+    fn stopping_on_a_ripe_spot_gains_value_then_the_spot_regrows_after_regrow_ticks() {
+        let mut w = truffle_world(11, 11, 1.0, 5.0, 3);
+        let id = mover(&mut w, 1);
+        let pos = w.agent(id).unwrap().pos;
+        assert_eq!(w.truffle(pos), Some(true), "starts ripe");
+        let before_holdings = w.agent(id).unwrap().holdings[0];
+
+        w.tick = 10;
+        let h = go_and_gather(&mut w, id, pos);
+        assert_eq!(h.gathered[0], 5.0, "sugar (0) plus the truffle's value");
+        assert_eq!(w.agent(id).unwrap().holdings[0], before_holdings + 5.0);
+        assert_eq!(w.truffle(pos), Some(false), "picked: unripe now");
+        assert_eq!(w.events.truffles_found, 1);
+
+        // Stopping again before tick + regrow (13) gains nothing extra.
+        w.tick = 12;
+        let h2 = go_and_gather(&mut w, id, pos);
+        assert_eq!(h2.gathered[0], 0.0);
+        assert_eq!(w.events.truffles_found, 1, "not counted again");
+
+        // At exactly tick + regrow it's ripe again.
+        w.tick = 13;
+        let h3 = go_and_gather(&mut w, id, pos);
+        assert_eq!(h3.gathered[0], 5.0);
+        assert_eq!(w.truffle(pos), Some(false));
+        assert_eq!(w.events.truffles_found, 2);
+    }
+
+    #[test]
+    fn truffles_found_counts_rememberers_separately() {
+        let mut w = truffle_world(11, 11, 1.0, 5.0, 3);
+        let id = mover(&mut w, 1);
+        w.agent_mut(id).unwrap().remembers = true;
+        let pos = w.agent(id).unwrap().pos;
+        go_and_gather(&mut w, id, pos);
+        assert_eq!(w.events.truffles_found, 1);
+        assert_eq!(w.events.truffles_by_rememberers, 1);
+    }
+
+    #[test]
+    fn truffles_found_by_a_non_rememberer_does_not_count_toward_by_rememberers() {
+        let mut w = truffle_world(11, 11, 1.0, 5.0, 3);
+        let id = mover(&mut w, 1); // remembers is false by default
+        let pos = w.agent(id).unwrap().pos;
+        go_and_gather(&mut w, id, pos);
+        assert_eq!(w.events.truffles_found, 1);
+        assert_eq!(w.events.truffles_by_rememberers, 0);
+    }
+
+    #[test]
+    fn truffles_without_a_spot_gather_nothing_extra() {
+        let mut w = truffle_world(11, 11, 0.0, 5.0, 3);
+        let id = mover(&mut w, 1);
+        let pos = w.agent(id).unwrap().pos;
+        assert_eq!(w.truffle(pos), None);
+        let h = go_and_gather(&mut w, id, pos);
+        assert_eq!(h.gathered[0], 0.0);
+        assert_eq!(w.events.truffles_found, 0);
+    }
+
+    #[test]
+    fn truffle_spots_dont_change_rule_ms_candidate_values() {
+        // A Flump that hasn't harvested the spot doesn't know it's there, so
+        // its value never leaks into the plain rule M valuation.
+        let mut w = truffle_world(11, 11, 1.0, 100.0, 3);
+        let id = mover(&mut w, 2);
+        let c = candidates(&w, id);
+        assert!(
+            c.iter().all(|&(_, _, v)| v == 0.0),
+            "every candidate is worth exactly its (zero) sugar, truffle or not"
+        );
     }
 }

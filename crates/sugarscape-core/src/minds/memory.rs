@@ -64,6 +64,13 @@ pub(crate) fn observe(world: &mut World, id: AgentId) {
         })
         .collect();
 
+    // The Flump's own site's truffle spot, if it has one (a harvest this
+    // turn already left it unripe by now, so this sees that).
+    let own_idx = world.torus.index(pos) as u32;
+    let own_truffle = world
+        .truffle(pos)
+        .map(|ripe| TruffleSeen { ripe, tick: now });
+
     let agent = world.agent_mut(id).expect("live agent");
     for (idx, levels) in observed {
         let entry = agent.memory.sites.entry(idx).or_insert(Seen {
@@ -76,6 +83,11 @@ pub(crate) fn observe(world: &mut World, id: AgentId) {
         entry.tick = now;
         for (m, &l) in entry.most.iter_mut().zip(levels.iter()) {
             *m = m.max(l);
+        }
+        if idx == own_idx {
+            if let Some(t) = own_truffle {
+                entry.truffle = Some(t);
+            }
         }
     }
     if now.is_multiple_of(16) {
@@ -348,6 +360,52 @@ mod tests {
         c.memory.share = 0.0;
         let b = Agent::random(&c, Pos::new(0, 0), 0, &mut seeded(1));
         assert!(!b.remembers);
+    }
+
+    // --- observe and truffles ---
+
+    #[test]
+    fn observe_records_the_flumps_own_truffle_spot_ripe_then_unripe_after_a_harvest() {
+        let mut c = blank_config(10, 10);
+        c.movement.mode = MoveMode::Walk;
+        c.memory.span = 50;
+        c.memory.share = 1.0;
+        c.truffles.share = 1.0;
+        c.truffles.value = 5.0;
+        c.truffles.regrow = 30;
+        let mut w = World::new(c, 7).expect("valid config");
+        let id = spawn(&mut w, 5, 5);
+        w.agent_mut(id).unwrap().remembers = true;
+        let own = w.torus.index(Pos::new(5, 5)) as u32;
+
+        w.tick = 10;
+        observe(&mut w, id);
+        let seen = w.agent(id).unwrap().memory.sites[&own]
+            .truffle
+            .expect("the spot the Flump stands on is seen");
+        assert!(seen.ripe, "not yet harvested");
+        assert_eq!(seen.tick, 10);
+
+        // Harvest it, then observe again at the same tick: it's now seen unripe.
+        crate::rules::movement::go_and_gather(&mut w, id, Pos::new(5, 5));
+        observe(&mut w, id);
+        let seen2 = w.agent(id).unwrap().memory.sites[&own]
+            .truffle
+            .expect("still a spot, just picked");
+        assert!(!seen2.ripe, "a Flump that just harvested sees it unripe");
+        assert_eq!(seen2.tick, 10);
+    }
+
+    #[test]
+    fn observe_leaves_truffle_none_when_the_own_site_has_no_spot() {
+        let mut w = memory_world(10, 10, 50);
+        // memory_world sets memory.share 1.0 but truffles default to share 0.
+        let id = spawn(&mut w, 5, 5);
+        w.agent_mut(id).unwrap().remembers = true;
+        let own = w.torus.index(Pos::new(5, 5)) as u32;
+        w.tick = 5;
+        observe(&mut w, id);
+        assert_eq!(w.agent(id).unwrap().memory.sites[&own].truffle, None);
     }
 
     #[test]
