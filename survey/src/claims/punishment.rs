@@ -45,6 +45,76 @@ const FIG2B: [[f64; 7]; 3] = [
 const FIG3_WEAK: [f64; 7] = [0.80, 0.72, 0.58, 0.21, 0.07, 0.06, 0.06];
 const FIG4_FIXED: [f64; 7] = [0.84, 0.78, 0.50, 0.10, 0.07, 0.06, 0.06];
 
+/// How well a reading reproduces Figs. 1–4: each of the 14 curves' mean and
+/// largest gap to the figure (group sizes 4–256), and whether every mean gap
+/// is within 0.05. `reading` is applied after each curve's own settings, so a
+/// reading that scales ε scales each curve's.
+fn fit(reading: fn(&mut PunishmentConfig)) -> Outcome {
+    #[allow(clippy::type_complexity)]
+    let curves: [(&str, f64, f64, f64, bool, bool, [f64; 7]); 14] = [
+        // (name, ε, m, p, punishment, fixed cost, the figure)
+        ("1a ε 0.0075", 0.0075, 0.01, 0.8, false, false, FIG1A_LOW),
+        ("1a ε 0.015", 0.015, 0.01, 0.8, false, false, FIG1A),
+        ("1a ε 0.03", 0.03, 0.01, 0.8, false, false, FIG1A_HIGH),
+        ("1b ε 0.0075", 0.0075, 0.01, 0.8, true, false, FIG1B_LOW),
+        ("1b ε 0.015", 0.015, 0.01, 0.8, true, false, FIG1B),
+        ("1b ε 0.03", 0.03, 0.01, 0.8, true, false, FIG1B_HIGH),
+        ("2a m 0.002", 0.015, 0.002, 0.8, false, false, FIG2A[0]),
+        ("2a m 0.01", 0.015, 0.01, 0.8, false, false, FIG2A[1]),
+        ("2a m 0.05", 0.015, 0.05, 0.8, false, false, FIG2A[2]),
+        ("2b m 0.002", 0.015, 0.002, 0.8, true, false, FIG2B[0]),
+        ("2b m 0.01", 0.015, 0.01, 0.8, true, false, FIG2B[1]),
+        ("2b m 0.05", 0.015, 0.05, 0.8, true, false, FIG2B[2]),
+        ("3 p 0.4", 0.015, 0.01, 0.4, true, false, FIG3_WEAK),
+        ("4 fixed", 0.015, 0.01, 0.8, true, true, FIG4_FIXED),
+    ];
+    let mut within = [0, 0];
+    let mut lines = Vec::new();
+    // Curves sharing their settings (Fig. 2's m 0.01 is Fig. 1's ε 0.015) are run once.
+    let mut seen: Vec<((u64, u64, u64, bool, bool), Vec<f64>)> = Vec::new();
+    for &(name, eps, m, p, punish, fixed, figure) in &curves {
+        let key = (eps.to_bits(), m.to_bits(), p.to_bits(), punish, fixed);
+        let v = match seen.iter().find(|(k, _)| *k == key) {
+            Some((_, v)) => v.clone(),
+            None => {
+                let v = curve(
+                    |c| {
+                        c.conflict = eps;
+                        c.mixing = m;
+                        c.fine = p;
+                        if !punish {
+                            none(c);
+                        }
+                        if fixed {
+                            c.punishing = Punishing::Fixed;
+                        }
+                        reading(c);
+                    },
+                    &SIZES,
+                );
+                seen.push((key, v.clone()));
+                v
+            }
+        };
+        let (g, worst) = (mean_gap(&v, &figure), gap(&v, &figure));
+        if g <= 0.05 {
+            within[usize::from(!name.starts_with('1'))] += 1;
+        }
+        lines.push(format!("{name}: {} ({g:.3}, worst {worst:.2})", show(&v)));
+    }
+    let all = within[0] + within[1];
+    outcome(
+        all == curves.len(),
+        format!(
+            "{all} of 14 within 0.05 (Fig. 1: {} of 6; Figs. 2–4: {} of 8) — {}",
+            within[0],
+            within[1],
+            lines.join("; ")
+        ),
+    )
+    .with("Mean gaps over mostly-floor curves are lenient (every reading gets the 0.09 floor right); the worst point shows where a curve departs.")
+}
+
 fn outcome(holds: bool, measured: String) -> Outcome {
     Outcome {
         verdict: if holds {
@@ -234,84 +304,28 @@ pub fn claims() -> Vec<Claim> {
             },
         },
         Claim {
+            id: "punishment.bg.literal-fit",
+            item: "bg-fig1b",
+            source: Source::Book,
+            citation: BGBR,
+            text: "The stated model (conflict in random pairs, each pair fighting with probability ε; baseline 1) reproduces Figs. 1–4: all 14 curves within a mean gap of 0.05 over n 4–256",
+            check: |_| fit(|_| {}),
+        },
+        Claim {
             id: "punishment.bg.either",
             item: "bg-fig1-either",
             source: Source::Comment,
             citation: BGBR,
-            text: "Ours: Fig. 1 is the stated model when either group of a pair can start the conflict, each with probability ε — a pair fights with probability 2ε − ε², about twice the text's, and a group dies at about ε a period, not the ε/2 = 0.0075 their Methods derive. At the legend's ε 0.0075, 0.015 and 0.03, all six curves (both panels) within a mean gap of 0.05 of the figure over n 4–256",
-            check: |_| {
-                let figures = [
-                    (0.0075, false, FIG1A_LOW),
-                    (0.015, false, FIG1A),
-                    (0.03, false, FIG1A_HIGH),
-                    (0.0075, true, FIG1B_LOW),
-                    (0.015, true, FIG1B),
-                    (0.03, true, FIG1B_HIGH),
-                ];
-                let parts = figures
-                    .iter()
-                    .map(|&(eps, punish, fig)| {
-                        let v = curve(
-                            |c| {
-                                c.pairing = Pairing::Either;
-                                c.conflict = eps;
-                                if !punish {
-                                    none(c);
-                                }
-                            },
-                            &SIZES,
-                        );
-                        let g = mean_gap(&v, &fig);
-                        let name = format!("{} ε {eps}", if punish { "1b" } else { "1a" });
-                        (name, outcome(g <= 0.05, format!("{} against {} (mean gap {g:.3})", show(&v), show(&fig))))
-                    })
-                    .collect();
-                all_of(parts)
-            },
+            text: "Ours: with either group of a pair starting the conflict, each with probability ε (a pair fights with probability 2ε − ε²: about twice the text's, which the Methods' extinction arithmetic contradicts), the model reproduces Figs. 1–4: all 14 curves within a mean gap of 0.05 (found from Fig. 1's six; Figs. 2–4's eight were not used to find it)",
+            check: |_| fit(|c| c.pairing = Pairing::Either),
         },
         Claim {
-            id: "punishment.bg.either-others",
+            id: "punishment.bg.doubled",
             item: "bg-fig1-either",
             source: Source::Comment,
             citation: BGBR,
-            text: "Ours: the reading found from Fig. 1 (either group starts the conflict) reproduces the figures it was not found from — Fig. 2a and 2b (m 0.002, 0.01, 0.05), Fig. 3 (p 0.4) and Fig. 4 (a fixed cost) at ε 0.015, each curve within a mean gap of 0.05 over n 4–256",
-            check: |_| {
-                let either = |c: &mut PunishmentConfig| c.pairing = Pairing::Either;
-                let mut parts = Vec::new();
-                for (k, &m) in [0.002, 0.01, 0.05].iter().enumerate() {
-                    for punish in [false, true] {
-                        let v = curve(
-                            |c| {
-                                either(c);
-                                c.mixing = m;
-                                if !punish {
-                                    none(c);
-                                }
-                            },
-                            &SIZES,
-                        );
-                        let fig = if punish { FIG2B[k] } else { FIG2A[k] };
-                        let g = mean_gap(&v, &fig);
-                        let name = format!("{} m {m}", if punish { "2b" } else { "2a" });
-                        parts.push((name, outcome(g <= 0.05, format!("{} against {} ({g:.3})", show(&v), show(&fig)))));
-                    }
-                }
-                for (name, fig, edit) in [
-                    ("3 p 0.4", FIG3_WEAK, (|c: &mut PunishmentConfig| c.fine = 0.4) as fn(&mut PunishmentConfig)),
-                    ("4 fixed", FIG4_FIXED, |c| c.punishing = Punishing::Fixed),
-                ] {
-                    let v = curve(
-                        |c| {
-                            either(c);
-                            edit(c);
-                        },
-                        &SIZES,
-                    );
-                    let g = mean_gap(&v, &fig);
-                    parts.push((name.into(), outcome(g <= 0.05, format!("{} against {} ({g:.3})", show(&v), show(&fig)))));
-                }
-                all_of(parts)
-            },
+            text: "Ours, the control: random pairs as the text says, each fighting with probability 2ε, reproduce Figs. 1–4 (all 14 curves within a mean gap of 0.05) — so what the figures fit is about twice the stated conflict rate, not one mechanism for it",
+            check: |_| fit(|c| c.conflict *= 2.0),
         },
         Claim {
             id: "punishment.bg.fig2",

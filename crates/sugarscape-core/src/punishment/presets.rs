@@ -41,7 +41,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "bg-either",
             "Fig. 1b as plotted: either group starts a conflict",
             BGBR,
-            "The base case, with one reading changed: 'groups are paired at random, and with probability ε, intergroup conflict results' — either group of a pair can start the conflict, each with probability ε, so a pair fights with probability 2ε − ε², about twice the text's. Their Methods derive ε from an extinction rate of 0.0075 as if pairs fought at ε; the figures fit this reading instead. Measured (10 seeds, the last 1 000 of 2 000 periods): 84 % cooperate at n 32 (the figure: 83 %); across Fig. 1's six curves the mean gap to the figure is 0.010–0.033 (bg-fig1-either), and it reproduces Figs. 2 and 3 as well — all but Fig. 4's fixed cost, which falls a group size sooner.",
+            "The base case, with one reading changed: either group of a pair can start the conflict, each with probability ε, so a pair fights with probability 2ε − ε², about twice the text's. The text's own arithmetic says pairs fight at ε (their Methods derive ε from an extinction rate of 0.0075); the figures fit about twice that, and this is one way to get it (pairs at 2ε, or each group challenging one, fit as well). Measured (10 seeds, the last 1 000 of 2 000 periods): 84 % cooperate at n 32 (the figure: 83 %); Fig. 1's six curves within a mean gap of 0.010–0.033 (bg-fig1-either), and 13 of Figs. 1–4's 14 curves within 0.05 — Fig. 4's fixed cost at 0.051, at the threshold.",
             |c| c.pairing = Pairing::Either,
         ),
         preset(

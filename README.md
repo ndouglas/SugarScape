@@ -1731,7 +1731,8 @@ figures plot cooperation, averaged over the last 1 000 of 2 000 periods, against
 
 **How this reproduction handles the paper's gaps and contradictions.** Every reading is a named
 switch, every figure was read from the PDF at 300 dpi by marker, and every "reproduces the figure"
-claim uses one rule, fixed in advance: a mean gap of at most 0.05 over group sizes 4–256.
+claim uses one rule, fixed in advance: a mean gap of at most 0.05 over group sizes 4–256, reported with
+each curve's worst point (a mean over curves that sit mostly at the 0.09 floor is lenient).
 - **The payoff baseline is never stated.** Imitation needs payoffs above 0; a baseline of 1 fits the
   paper's own calibration (a trait with advantage c spreads from 10 % to 90 % in about 40 periods;
   "50" stated).
@@ -1739,16 +1740,21 @@ claim uses one rule, fixed in advance: a mean gap of at most 0.05 over group siz
   0.015, 0.03. Under the text's rules neither reproduces the figure: cooperation collapses a group size
   or two too soon (0.17 at n 128 where the figure has 0.64). No baseline fixes it — a higher one lets
   punishment reach larger groups but lifts cooperation without punishment far above the figure.
-- **One reading reproduces all of it.** "Groups are paired at random, and with probability ε,
-  intergroup conflict results" can mean either group of a pair starts the conflict, each with
-  probability ε: a pair then fights at about 2ε. Their Methods derive ε = 0.015 from an extinction rate
-  of 0.0075 as if pairs fought at ε; but under the "either" reading, with baseline 1, all six of Fig. 1's
-  curves reproduce (mean gaps 0.010–0.033), and so do Figs. 2 and 3, which that reading was not fitted
-  to — all but Fig. 4's fixed cost, which falls a group size sooner (a mean gap of 0.051). The switch is
-  **Groups meet: in random pairs; either can start it (the figures)**, and the preset `bg-either`.
+- **The figures fit about twice the stated conflict rate.** Of Figs. 1–4's 14 curves, the stated model
+  reproduces 2 (worst points up to 0.47 off). With pairs fighting at 2ε, all 14 reproduce (mean gaps
+  0.006–0.049, worst points at most 0.16) — including the eight curves of Figs. 2–4, which were not used
+  to find the factor. Their Methods derive ε = 0.015 from an extinction rate of 0.0075 because "only one
+  of the two groups entering into a conflict becomes extinct", so the text says pairs fight at ε; the
+  figures look like groups fighting at about ε each — as if their code let either group of a pair start
+  the conflict. That is a switch here, **Groups meet: in random pairs; either can start it (the
+  figures)** (preset `bg-either`: a pair fights at 2ε − ε²), and it reproduces 13 of 14 (Fig. 4's fixed
+  cost at 0.051, where 2ε has 0.049 — noise at the threshold). Janssen's "each group challenges one" is a
+  third way to double it; the data cannot tell these apart, and doubling the victory slope, another way
+  to strengthen group selection, is untested.
 - **Janssen's NetLogo replication** (CoMSES 2223) fills the gaps differently — a benefit, every group
   challenging one, conflict over this period's acts, imitation in turn; his readings are switches here
-  (not his code). Together they come close too (84 % at n 32) because his pairing also doubles conflict.
+  (not his code). Together they come close too (84 % at n 32) because his pairing also doubles conflict,
+  but his benefit lifts cooperation without punishment above the figure (0.42 at n 16 against 0.20).
 
 Measured (the survey and the presets' descriptions; the text's readings unless stated):
 

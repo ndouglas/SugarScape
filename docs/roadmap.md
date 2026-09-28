@@ -257,9 +257,9 @@ contributors, defectors and punishers, payoff-biased imitation with mixing, inte
 mutation, with the paper's structural variants (a per-capita benefit with payoff conflict, continuous
 traits, a ring without extinction), Cooney's PDE critique (2024) and Janssen's NetLogo replication's
 readings as switches. The figures' shapes hold under the text's rules, but not their reach; the
-payoff baseline is unstated and Fig. 1's caption and legend disagree on the conflict rates. One
-reading — either group of a pair can start the conflict, about twice the stated rate — reproduces
-Figs. 1–3 closely (all but Fig. 4's fixed cost). Continuous traits are not "similar"; the mixing
+payoff baseline is unstated and Fig. 1's caption and legend disagree on the conflict rates. The
+figures fit about twice the stated conflict rate: pairs fighting at 2ε reproduce all 14 curves of
+Figs. 1–4, the text's rate 2 (either group starting a conflict, a switch here, 13). Continuous traits are not "similar"; the mixing
 calibration is off by five; Cooney's payoff dip appears under every victory rule. See
 `docs/superpowers/specs/2026-09-28-punishment-design.md`.
 
