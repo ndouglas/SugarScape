@@ -35,7 +35,13 @@ fn capacity(c: &Config, seeds: &[u64]) -> Vec<f64> {
 fn paired_greater(a: &[f64], b: &[f64], a_name: &str, b_name: &str) -> Outcome {
     let diffs: Vec<f64> = a.iter().zip(b).map(|(x, y)| x - y).collect();
     let unpaired = greater(a, b, a_name, b_name);
-    range(&diffs, f64::MIN_POSITIVE, f64::INFINITY, false).with(&format!(
+    let mut outcome = range(&diffs, f64::MIN_POSITIVE, f64::INFINITY, false);
+    // `range` prints the bounds, [0.0000, inf] here; say what they mean.
+    if let Some(i) = outcome.measured.rfind(" in [") {
+        outcome.measured.truncate(i);
+        outcome.measured.push_str(" > 0");
+    }
+    outcome.with(&format!(
         "Paired differences ({a_name} − {b_name}), same seeds. Unpaired: {:?}: {}.",
         unpaired.verdict, unpaired.measured
     ))

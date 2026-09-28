@@ -712,7 +712,7 @@ pub fn all() -> Vec<Preset> {
             "walk-capacity",
             "Walking: carrying capacity",
             "Epstein & Axtell II-2; Minds 2",
-            "Rule M's Flumps jump to the best site in sight; these walk there one step a tick along an A* path. Measured (20 seeds, mean population over ticks 300–500): 181 against 228 under the jump, so the book's carrying capacity of about 224 fails under walking (no seed within 214–234), and walking lowers it in every seed, by a median 47 Flumps. Likely cause: a walking Flump gathers at each site on its way instead of the best one it saw, and that site is often harvested or taken by the time it arrives. Walking faster brings the population back (see walk-fast and the walk-speed sweep).",
+            "Rule M's Flumps jump to the best site in sight; these walk there one step a tick along an A* path. Measured (20 seeds, mean population over ticks 300–500): 181 against 228 under the jump, so the book's carrying capacity of about 224 fails under walking (no seed within 214–234), and walking lowers it in every seed, by a median 47 Flumps. In the walk-speed and walk-vision sweeps (an observation, not a judged claim), capacity tracks how far a Flump gets in a tick, roughly min(speed, vision): walking at vision 1–6 (181.5) is about jumping at vision 1 (182.7), and walking at speed 3 (212.8) and 6 (225.2) is near jumping at vision 1–3 (205.5) and 1–6 (228.5). Walking faster brings the population back (see walk-fast and the walk-speed sweep).",
             |c| c.movement.mode = MoveMode::Walk,
         ),
         preset(
@@ -759,7 +759,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-fence",
             "Travel between patches: a fence with a central gap",
             "Baum & Kraft 1998; Minds 2",
-            "The 2.10 : 1 patches with vision 10–20 (as in ifd-far-sighted), fenced apart except for a two-site gap at the midline of the 60 × 40 torus (and a matching gap in a second fence at x = 2, closing the route the other way around the torus); rule M's Flumps walk to the best site they see instead of jumping there, so switching patches costs a walk through the gap. Measured (20 seeds, ticks 500–1000): 1.99 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping (ifd-far-sighted). Across the five input ratios s has median 0.88, against 0.90 walking with no fence, so the fence doesn't reduce undermatching.",
+            "The 2.10 : 1 patches with vision 10–20 (as in ifd-far-sighted), fenced apart except for a two-site gap at the midline of the 60 × 40 torus (and a matching gap in a second fence at x = 2, closing the route the other way around the torus); rule M's Flumps walk to the best site they see instead of jumping there, so switching patches costs a walk through the gap. Measured (20 seeds, ticks 500–1000): 1.99 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping (ifd-far-sighted). Across the five input ratios s has median 0.88, against 0.90 walking with no fence, so the fence doesn't reduce undermatching. A confound, unmeasured: the fences leave 25 columns on the richer patch's side and 33 on the poorer's, so about 57 % of Flumps start on the poorer side.",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);
@@ -771,7 +771,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-fence-far",
             "Travel between patches: the gap moves to the far end",
             "Baum & Kraft 1998; Minds 2",
-            "The same fence as ifd-fence, but its gap sits at rows 35–36 instead of 20–21, near the far end of the patches, so a Flump switching patches faces a much longer walk to reach the gap. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.85 against 0.90 walking with no fence, and is lower in 18 of 20 seeds, so undermatching grows, the opposite of Baum & Kraft's direction, and their claim fails here. The difference is in s across patch sizes, not at this preset's own ratio: at 2.10 : 1 alone there are 1.96 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping.",
+            "The same fence as ifd-fence, but its gap sits at rows 35–36 instead of 20–21, below both patches (which span rows 10–30), so a Flump switching patches faces a much longer walk to reach the gap. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.85 against 0.90 walking with no fence, and is lower in 18 of 20 seeds, so undermatching grows, the opposite of Baum & Kraft's direction, and their claim fails here. At 2.10 : 1 alone there are 1.96 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping; that points the same way, but the walking arms' ratios (1.96–1.99) are untested and too close to tell apart.",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);
@@ -852,6 +852,10 @@ pub(crate) fn two_patches(c: &mut Config, second_radius: f64) {
 /// Minds 2's fences: one-site-wide fences at x = 28 (between the patches)
 /// and x = 2 (closing the route around the torus), from top to bottom
 /// except a two-site gap at rows 20 + `offset` and 21 + `offset`.
+///
+/// A confound, unmeasured: the fences split the torus into 25 columns on
+/// the richer patch's side (x = 3–27) and 33 on the poorer's, so random
+/// placement starts about 57 % of Flumps on the poorer side.
 fn fence(c: &mut Config, offset: u32, opaque: bool) {
     let rect = |x, y, height| Wall {
         x,

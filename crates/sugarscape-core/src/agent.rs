@@ -45,6 +45,9 @@ pub type DiseaseId = u32;
 pub struct Plan {
     pub target: Option<Pos>,
     pub path: Vec<Pos>,
+    /// Whether the agent walked, or tried to (under `walk`), rather than
+    /// jumped: Inspect labels the plan by this, not by the current mode.
+    pub walked: bool,
 }
 
 /// A cultural tag string of `len` bits (1..=64); bit `i` is tag position `i`.

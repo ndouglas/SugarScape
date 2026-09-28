@@ -55,6 +55,7 @@ fn random_mask(rng: &mut impl Rng, len: usize, density: f64) -> Vec<bool> {
 #[test]
 fn astar_matches_dijkstra_on_random_walled_tori() {
     let mut rng = rand_pcg::Pcg64Mcg::seed_from_u64(20260927);
+    let mut checked = 0;
     for case in 0..1000 {
         let (w, h) = (rng.gen_range(3..30u32), rng.gen_range(3..30u32));
         let torus = Torus::new(w, h);
@@ -68,6 +69,7 @@ fn astar_matches_dijkstra_on_random_walled_tori() {
         if !open[s] || !open[t] {
             continue;
         }
+        checked += 1;
         let want = dijkstra(&grid, s, t, (w * h) as usize);
         let got = astar(&grid, s, t, usize::MAX);
         match (want, got) {
@@ -85,11 +87,15 @@ fn astar_matches_dijkstra_on_random_walled_tori() {
             (w, g) => panic!("case {case}: dijkstra {w:?}, astar {:?}", g.map(|s| s.cost)),
         }
     }
+    eprintln!("walled tori: {checked} of 1000 cases checked");
+    // A case whose start or goal is a wall is skipped; enough must remain.
+    assert!(checked >= 600, "only {checked} of 1000 cases checked");
 }
 
 #[test]
 fn astar_matches_dijkstra_on_random_octile_maps() {
     let mut rng = rand_pcg::Pcg64Mcg::seed_from_u64(7);
+    let mut checked = 0;
     for case in 0..1000 {
         let (w, h) = (rng.gen_range(2..40usize), rng.gen_range(2..40usize));
         let density = (case % 5) as f64 * 0.1;
@@ -114,6 +120,7 @@ fn astar_matches_dijkstra_on_random_octile_maps() {
         if !map.passable(sx, sy) || !map.passable(tx, ty) {
             continue;
         }
+        checked += 1;
         let (s, t) = (map.index(sx, sy), map.index(tx, ty));
         let want = dijkstra(&map, s, t, w * h);
         let got = astar(&map, s, t, usize::MAX).map(|f| f.cost);
@@ -123,6 +130,9 @@ fn astar_matches_dijkstra_on_random_octile_maps() {
             other => panic!("case {case}: {other:?}"),
         }
     }
+    eprintln!("octile maps: {checked} of 1000 cases checked");
+    // A case whose start or goal is a wall is skipped; enough must remain.
+    assert!(checked >= 600, "only {checked} of 1000 cases checked");
 }
 
 fn scenarios(map_file: &str, scen_file: &str) {

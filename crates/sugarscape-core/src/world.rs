@@ -105,6 +105,10 @@ pub struct World {
     /// from `config.walls` (walls change only on reset); all zero when there
     /// are none.
     pub(crate) walls: Vec<u8>,
+    /// Row-major: each non-wall site's connected component among the
+    /// non-wall sites (4-way, on the torus); walls get `u32::MAX`. Built once
+    /// with `walls`; empty when there are none, and then never consulted.
+    pub(crate) regions: Vec<u32>,
     pub(crate) rng: SimRng,
     next_id: AgentId,
     pub(crate) events: TickEvents,
@@ -188,6 +192,11 @@ impl World {
                 Site::full(&caps[..n])
             })
             .collect();
+        let regions = if config.walls.is_empty() {
+            Vec::new()
+        } else {
+            label_regions(torus, &walls)
+        };
         let mut world = World {
             torus,
             tick: 0,
@@ -196,6 +205,7 @@ impl World {
             agents: BTreeMap::new(),
             occupancy: vec![None; torus.len()],
             walls,
+            regions,
             rng: rng::seeded(seed),
             next_id: 1,
             events: TickEvents::default(),
@@ -300,6 +310,15 @@ impl World {
     /// Whether `pos` is a wall (fence or opaque): no sugar, no Flumps.
     pub fn is_wall(&self, pos: Pos) -> bool {
         self.walls[self.torus.index(pos)] != 0
+    }
+
+    /// Whether no 4-way path through non-wall sites joins `a` and `b`, by
+    /// the components labeled at build. Always false without walls. Other
+    /// Flumps are ignored, so a `true` means every walk from `a` to `b`
+    /// fails, never the reverse.
+    pub(crate) fn walled_apart(&self, a: Pos, b: Pos) -> bool {
+        !self.regions.is_empty()
+            && self.regions[self.torus.index(a)] != self.regions[self.torus.index(b)]
     }
 
     /// Whether `pos` is an opaque wall: it also stops sight.
@@ -729,6 +748,32 @@ impl World {
             }
         }
     }
+}
+
+/// Labels the connected components of the non-wall sites (4-way, on the
+/// torus) by flood fill, in index order; walls get `u32::MAX`.
+fn label_regions(torus: Torus, walls: &[u8]) -> Vec<u32> {
+    let mut regions = vec![u32::MAX; walls.len()];
+    let mut next = 0;
+    let mut stack = Vec::new();
+    for start in 0..walls.len() {
+        if walls[start] != 0 || regions[start] != u32::MAX {
+            continue;
+        }
+        regions[start] = next;
+        stack.push(start);
+        while let Some(i) = stack.pop() {
+            for q in torus.neighbors(torus.pos(i)) {
+                let j = torus.index(q);
+                if walls[j] == 0 && regions[j] == u32::MAX {
+                    regions[j] = next;
+                    stack.push(j);
+                }
+            }
+        }
+        next += 1;
+    }
+    regions
 }
 
 fn rect(x: u32, y: u32, width: u32, height: u32) -> Vec<Pos> {

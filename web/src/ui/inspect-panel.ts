@@ -36,10 +36,15 @@ import { percent } from './format';
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
-/** The Heading row's text under walk: the target and steps left (singular/plural), or "Staying" once arrived. */
-export function headingText(plan: NonNullable<AgentView['plan']>): string {
+/**
+ * The Heading row's text for a walked plan: the target and steps left (singular/plural), "Can't
+ * reach" when no path was found to a target elsewhere, or "Staying" when the agent is at its target.
+ */
+export function headingText(plan: NonNullable<AgentView['plan']>, at: [number, number]): string {
   const n = plan.path.length;
-  return n ? `(${plan.target_x}, ${plan.target_y}), ${n} ${n === 1 ? 'step' : 'steps'} left` : 'Staying';
+  const target = `(${plan.target_x}, ${plan.target_y})`;
+  if (n) return `${target}, ${n} ${n === 1 ? 'step' : 'steps'} left`;
+  return plan.target_x === at[0] && plan.target_y === at[1] ? 'Staying' : `Can't reach ${target}`;
 }
 
 export class InspectPanel {
@@ -94,8 +99,8 @@ export class InspectPanel {
       row('Vision', String(a.vision)),
       ...(a.plan
         ? [
-            (this.engine.sugar.movement?.mode ?? 'jump') === 'walk'
-              ? row('Heading', headingText(a.plan))
+            a.plan.walked
+              ? row('Heading', headingText(a.plan, [a.x, a.y]))
               : row('Moved to', `(${a.plan.target_x}, ${a.plan.target_y})`),
           ]
         : []),

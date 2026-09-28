@@ -966,8 +966,11 @@ export interface AgentView {
   immune_genome: string;
   diseases: DiseaseView[];
   infected_by: LinkView | null;
-  /** Minds 2: null until the agent first moves; `path` is empty under jump or once it has arrived. */
-  plan?: { target_x: number; target_y: number; path: [number, number][] } | null;
+  /**
+   * Minds 2: null until the agent first moves; `path` is empty under jump, once it has arrived, or
+   * when no path was found. `walked`: it walked (or tried to) rather than jumped.
+   */
+  plan?: { target_x: number; target_y: number; path: [number, number][]; walked: boolean } | null;
 }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 

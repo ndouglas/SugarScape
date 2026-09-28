@@ -179,7 +179,7 @@ pub const TITLES: [(&str, &str); 231] = [
     ),
     (
         "ifd-fence",
-        "A fence between the patches, with one gap",
+        "A fence with a central gap: Flumps split between the patches about as they do with no fence",
     ),
     (
         "ifd-fence-far",
@@ -187,7 +187,7 @@ pub const TITLES: [(&str, &str); 231] = [
     ),
     (
         "ifd-wall",
-        "A wall between the patches: the other patch is out of sight too",
+        "An opaque wall instead of a fence: no clear difference",
     ),
     (
         "vi-4-schelling-25",

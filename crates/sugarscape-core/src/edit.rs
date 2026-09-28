@@ -69,6 +69,8 @@ pub struct PlanView {
     pub target_x: u32,
     pub target_y: u32,
     pub path: Vec<[u32; 2]>,
+    /// The agent walked (or tried to) rather than jumped.
+    pub walked: bool,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -320,6 +322,7 @@ impl World {
                 target_x: t.x,
                 target_y: t.y,
                 path: a.plan.path.iter().map(|p| [p.x, p.y]).collect(),
+                walked: a.plan.walked,
             }),
         });
         Ok(Inspection {

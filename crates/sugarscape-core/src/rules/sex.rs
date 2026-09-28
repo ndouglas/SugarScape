@@ -236,6 +236,29 @@ mod tests {
     }
 
     #[test]
+    fn a_child_is_never_born_onto_a_wall() {
+        // Every cradle but (4, 2) is a wall: the child lands there, whatever the seed.
+        let wall = |x, y| crate::config::Wall {
+            x,
+            y,
+            width: 1,
+            height: 1,
+            opaque: false,
+        };
+        for seed in 0..20 {
+            let mut c = blank_config(10, 10);
+            c.walls = [(2, 1), (2, 3), (1, 2), (3, 1), (3, 3)]
+                .map(|(x, y)| wall(x, y))
+                .to_vec();
+            let mut w = World::new(c, seed).unwrap();
+            let (mom, _) = couple(&mut w);
+            act(&mut w, mom);
+            let child = w.agents().find(|a| a.parents.is_some()).unwrap();
+            assert_eq!(child.pos, Pos::new(4, 2), "seed {seed}");
+        }
+    }
+
+    #[test]
     fn child_tags_agree_where_parents_agree() {
         let mut w = blank_world(10, 10);
         let (mom, dad) = couple(&mut w);

@@ -149,11 +149,18 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
         world.agent_mut(id).expect("live agent").plan = Plan {
             target: Some(target),
             path: Vec::new(),
+            walked: m.mode == MoveMode::Walk,
         };
         return go_and_gather(world, id, target);
     }
     let torus = world.torus;
-    let found = {
+    // Walls split the non-wall sites into components labeled at build. A
+    // target in another component can't be reached, so skip the search:
+    // this only short-circuits searches A* would fail anyway, and the
+    // walker stays exactly as on a `None` from A*.
+    let found = if world.walled_apart(pos, target) {
+        None
+    } else {
         let grid = TorusGrid::new(torus, |q| q == target || !world.is_occupied(q));
         astar(&grid, torus.index(pos), torus.index(target), WALK_LIMIT)
     };
@@ -168,6 +175,7 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     world.agent_mut(id).expect("live agent").plan = Plan {
         target: Some(target),
         path: rest,
+        walked: true,
     };
     go_and_gather(world, id, stop)
 }
@@ -266,6 +274,7 @@ mod tests {
         w.agent_mut(id).unwrap().plan = crate::agent::Plan {
             target: Some(Pos::new(2, 2)),
             path: vec![Pos::new(1, 2), Pos::new(2, 2)],
+            walked: true,
         };
         assert_eq!(w.fingerprint(), before, "plan is observational, not hashed");
     }
@@ -336,6 +345,46 @@ mod tests {
             (w.agent(id).unwrap().pos, h.gathered[0]),
             (Pos::new(5, 1), 0.2)
         );
+    }
+
+    #[test]
+    fn the_wall_component_precheck_changes_nothing_but_the_search() {
+        // The sealed pocket again: the precheck skips A*, and the walker
+        // stays and gathers exactly as when A* runs and finds no path.
+        let mut w = walled_world(vec![
+            wall(4, 4, 3, 1, false),
+            wall(4, 6, 3, 1, false),
+            wall(4, 5, 1, 1, false),
+            wall(6, 5, 1, 1, false),
+        ]);
+        w.config.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        let id = spawn(&mut w, 5, 1);
+        w.agent_mut(id).unwrap().vision = 4;
+        set_sugar(&mut w, 5, 1, 0.2);
+        set_sugar(&mut w, 5, 5, 5.0);
+        assert!(w.walled_apart(Pos::new(5, 1), Pos::new(5, 5)));
+        assert!(!w.walled_apart(Pos::new(5, 1), Pos::new(9, 9)));
+        let mut searched = w.clone();
+        searched.regions.clear(); // no precheck: A* runs and fails
+        let (h, h_searched) = (act(&mut w, id), act(&mut searched, id));
+        assert_eq!(
+            (w.agent(id).unwrap().pos, h.gathered[0]),
+            (Pos::new(5, 1), 0.2)
+        );
+        assert_eq!(h.gathered, h_searched.gathered);
+        assert_eq!(w.agent(id).unwrap().plan, searched.agent(id).unwrap().plan);
+        assert_eq!(w.rng, searched.rng);
+        assert_eq!(w.fingerprint(), searched.fingerprint());
+    }
+
+    #[test]
+    fn without_walls_no_components_are_labeled() {
+        let w = blank_world(11, 11);
+        assert!(w.regions.is_empty());
+        assert!(!w.walled_apart(Pos::new(0, 0), Pos::new(5, 5)));
     }
 
     fn spicy(w: &mut World, vision: u32) -> AgentId {
