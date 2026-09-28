@@ -8,17 +8,37 @@ pub(crate) fn diffuse(world: &mut World) {
     if !d.enabled || !(world.tick + 1).is_multiple_of(u64::from(d.every)) {
         return;
     }
+    let has_walls = world.has_walls();
     for k in 0..world.config.pollution.pollutants.len() {
         let next: Vec<f64> = (0..world.sites.len())
             .map(|i| {
                 let p = world.torus.pos(i);
-                world
-                    .torus
-                    .neighbors(p)
-                    .iter()
-                    .map(|&q| world.site(q).pollution[k])
-                    .sum::<f64>()
-                    / 4.0
+                if !has_walls {
+                    // Today's exact expression: bit-identical without walls.
+                    return world
+                        .torus
+                        .neighbors(p)
+                        .iter()
+                        .map(|&q| world.site(q).pollution[k])
+                        .sum::<f64>()
+                        / 4.0;
+                }
+                if world.is_wall(p) {
+                    return 0.0;
+                }
+                let mut sum = 0.0;
+                let mut count = 0u32;
+                for q in world.torus.neighbors(p) {
+                    if !world.is_wall(q) {
+                        sum += world.site(q).pollution[k];
+                        count += 1;
+                    }
+                }
+                if count == 0 {
+                    0.0
+                } else {
+                    sum / f64::from(count)
+                }
             })
             .collect();
         for (site, p) in world.sites.iter_mut().zip(next) {
@@ -63,6 +83,35 @@ mod tests {
         w.tick = 1;
         diffuse(&mut w);
         assert_eq!(w.site(Pos::new(4, 4)).pollution[0], 0.0);
+    }
+
+    #[test]
+    fn diffusion_averages_over_non_wall_neighbors_and_wall_sites_stay_zero() {
+        let mut c = crate::testkit::blank_config(10, 10);
+        c.walls = vec![crate::config::Wall {
+            x: 4,
+            y: 3,
+            width: 1,
+            height: 1,
+            opaque: true,
+        }];
+        c.diffusion.enabled = true;
+        let mut w = World::new(c, 1).unwrap();
+        // (4,4)'s neighbors: N (4,3) is the wall; S (4,5), E (5,4), W (3,4) are open.
+        for p in [Pos::new(4, 5), Pos::new(5, 4), Pos::new(3, 4)] {
+            w.site_mut(p).pollution[0] = 3.0;
+        }
+        diffuse(&mut w);
+        assert_eq!(
+            w.site(Pos::new(4, 4)).pollution[0],
+            3.0,
+            "the sum of its three open neighbors over 3"
+        );
+        assert_eq!(
+            w.site(Pos::new(4, 3)).pollution[0],
+            0.0,
+            "a wall site stays at 0"
+        );
     }
 
     #[test]

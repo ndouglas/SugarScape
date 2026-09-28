@@ -96,7 +96,7 @@ pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
         })
     };
     let mut out = vec![(pos, 0, value(pos))];
-    for (q, d) in world.torus.sight(pos, vision) {
+    for (q, d) in world.sight(pos, vision) {
         if !world.is_occupied(q) {
             out.push((q, d, value(q)));
         }

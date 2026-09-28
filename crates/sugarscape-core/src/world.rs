@@ -101,6 +101,10 @@ pub struct World {
     pub diseases: Vec<Bits>,
     agents: BTreeMap<AgentId, Agent>,
     occupancy: Vec<Option<AgentId>>,
+    /// Row-major, one entry per site: 0 free, 1 a fence, 2 opaque. Built once
+    /// from `config.walls` (walls change only on reset); all zero when there
+    /// are none.
+    pub(crate) walls: Vec<u8>,
     pub(crate) rng: SimRng,
     next_id: AgentId,
     pub(crate) events: TickEvents,
@@ -162,11 +166,24 @@ impl World {
                 None => maps.push(landscape::generate(&good.map, config.width, config.height)),
             }
         }
+        let mut walls = vec![0u8; torus.len()];
+        for wall in &config.walls {
+            let mark = if wall.opaque { 2 } else { 1 };
+            for y in wall.y..wall.y.saturating_add(wall.height).min(config.height) {
+                for x in wall.x..wall.x.saturating_add(wall.width).min(config.width) {
+                    let i = torus.index(Pos::new(x, y));
+                    // Opaque wins where rectangles overlap.
+                    walls[i] = walls[i].max(mark);
+                }
+            }
+        }
         let sites = (0..torus.len())
             .map(|s| {
                 let mut caps = [0.0; MAX_GOODS];
-                for (slot, map) in caps.iter_mut().zip(&maps) {
-                    *slot = map[s];
+                if walls[s] == 0 {
+                    for (slot, map) in caps.iter_mut().zip(&maps) {
+                        *slot = map[s];
+                    }
                 }
                 Site::full(&caps[..n])
             })
@@ -178,6 +195,7 @@ impl World {
             diseases: Vec::new(),
             agents: BTreeMap::new(),
             occupancy: vec![None; torus.len()],
+            walls,
             rng: rng::seeded(seed),
             next_id: 1,
             events: TickEvents::default(),
@@ -221,6 +239,9 @@ impl World {
     }
 
     fn place(&mut self, mut cells: Vec<Pos>, n: usize, tribe: Option<Tribe>) {
+        if self.has_walls() {
+            cells.retain(|&p| !self.is_wall(p));
+        }
         cells.shuffle(&mut self.rng);
         for pos in cells.into_iter().take(n) {
             let mut agent = Agent::random(&self.config, pos, self.tick, &mut self.rng);
@@ -268,7 +289,33 @@ impl World {
     }
 
     pub fn is_occupied(&self, pos: Pos) -> bool {
-        self.occupant(pos).is_some()
+        self.occupant(pos).is_some() || self.is_wall(pos)
+    }
+
+    /// Whether `config.walls` lists any walls.
+    pub fn has_walls(&self) -> bool {
+        !self.config.walls.is_empty()
+    }
+
+    /// Whether `pos` is a wall (fence or opaque): no sugar, no Flumps.
+    pub fn is_wall(&self, pos: Pos) -> bool {
+        self.walls[self.torus.index(pos)] != 0
+    }
+
+    /// Whether `pos` is an opaque wall: it also stops sight.
+    pub fn is_opaque(&self, pos: Pos) -> bool {
+        self.walls[self.torus.index(pos)] == 2
+    }
+
+    /// Every site visible from `pos` with `vision`: `torus.sight` unchanged
+    /// when there are no walls, or stopped at the nearest opaque wall along
+    /// each direction.
+    pub fn sight(&self, pos: Pos, vision: u32) -> Vec<(Pos, u32)> {
+        if !self.has_walls() {
+            self.torus.sight(pos, vision)
+        } else {
+            self.torus.sight_until(pos, vision, |q| self.is_opaque(q))
+        }
     }
 
     pub fn site(&self, pos: Pos) -> &Site {
@@ -282,7 +329,7 @@ impl World {
 
     pub fn empty_sites(&self) -> Vec<Pos> {
         (0..self.torus.len())
-            .filter(|&i| self.occupancy[i].is_none())
+            .filter(|&i| self.occupancy[i].is_none() && self.walls[i] == 0)
             .map(|i| self.torus.pos(i))
             .collect()
     }
@@ -296,14 +343,25 @@ impl World {
     /// generates (painted, or supplied by a share link).
     pub fn landscape_edited(&self, good: usize) -> bool {
         self.config.goods.get(good).is_some_and(|g| {
-            self.capacities(good)
-                != crate::landscape::generate(&g.map, self.config.width, self.config.height)
+            let mut generated =
+                crate::landscape::generate(&g.map, self.config.width, self.config.height);
+            if self.has_walls() {
+                for (v, &w) in generated.iter_mut().zip(&self.walls) {
+                    if w != 0 {
+                        *v = 0.0;
+                    }
+                }
+            }
+            self.capacities(good) != generated
         })
     }
 
     /// Adds `agent` at its position with a fresh id.
     pub fn insert_agent(&mut self, mut agent: Agent) -> Result<AgentId, String> {
         let i = self.torus.index(agent.pos);
+        if self.walls[i] != 0 {
+            return Err(format!("site ({}, {}) is a wall", agent.pos.x, agent.pos.y));
+        }
         if self.occupancy[i].is_some() {
             return Err(format!(
                 "site ({}, {}) is occupied",
@@ -986,5 +1044,79 @@ mod tests {
         assert_eq!((w.followed(), w.trail().len()), (None, 0));
         w.follow(Some(999));
         assert!(w.trail().is_empty(), "nobody alive to record");
+    }
+
+    fn walled(walls: Vec<crate::config::Wall>) -> World {
+        let mut c = crate::testkit::blank_config(11, 11);
+        c.walls = walls;
+        World::new(c, 7).unwrap()
+    }
+    fn wall(x: u32, y: u32, width: u32, height: u32, opaque: bool) -> crate::config::Wall {
+        crate::config::Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque,
+        }
+    }
+
+    #[test]
+    fn with_no_walls_sight_is_the_toruss() {
+        let w = walled(vec![]);
+        for v in [1, 3, 5, 6, 10] {
+            assert_eq!(w.sight(Pos::new(5, 5), v), w.torus.sight(Pos::new(5, 5), v));
+            assert_eq!(
+                w.sight(Pos::new(0, 10), v),
+                w.torus.sight(Pos::new(0, 10), v)
+            );
+        }
+        assert!(!w.has_walls());
+    }
+
+    #[test]
+    fn opaque_walls_stop_sight_and_fences_do_not() {
+        let w = walled(vec![wall(5, 2, 1, 1, true), wall(7, 5, 1, 1, false)]);
+        let seen: Vec<Pos> = w
+            .sight(Pos::new(5, 5), 4)
+            .into_iter()
+            .map(|s| s.0)
+            .collect();
+        assert!(seen.contains(&Pos::new(5, 3)));
+        assert!(
+            !seen.contains(&Pos::new(5, 2)),
+            "the wall itself isn't a sight line site"
+        );
+        assert!(!seen.contains(&Pos::new(5, 1)), "behind the wall");
+        assert!(
+            seen.contains(&Pos::new(7, 5)) && seen.contains(&Pos::new(8, 5)),
+            "a fence doesn't block sight"
+        );
+    }
+
+    #[test]
+    fn walls_hold_nothing_and_nobody() {
+        let mut w = walled(vec![wall(3, 3, 2, 2, false)]);
+        let p = Pos::new(3, 3);
+        assert!(w.is_wall(p) && w.is_occupied(p) && w.occupant(p).is_none());
+        assert_eq!((w.site(p).capacity[0], w.site(p).resource[0]), (0.0, 0.0));
+        assert!(!w.empty_sites().contains(&p));
+        let mut a = crate::testkit::agent_at(&w, 3, 3);
+        a.pos = p;
+        assert!(w.insert_agent(a).unwrap_err().contains("wall"));
+        crate::rules::growback::apply(&mut w);
+        assert_eq!(w.site(p).resource[0], 0.0);
+    }
+
+    #[test]
+    fn placement_skips_walls_and_is_unchanged_without_them() {
+        let c = crate::config::Config {
+            walls: vec![wall(0, 0, 50, 40, true)],
+            population: 400,
+            ..crate::config::Config::default()
+        };
+        let w = World::new(c, 3).unwrap();
+        assert_eq!(w.population(), 400);
+        assert!(w.agents().all(|a| a.pos.y >= 40));
     }
 }

@@ -36,6 +36,10 @@ pub const FOUNDER: Rgb = [0x5a, 0x5a, 0x5a];
 pub const FOUNDER_PARENT: Rgb = [0xff, 0x4d, 0x4d];
 pub const BORN: Rgb = [0x3d, 0xd6, 0x6b];
 pub const BORN_PARENT: Rgb = [0xff, 0xe0, 0x4d];
+/// A wall site (stone): opaque, blocks sight.
+pub const WALL: Rgb = [0x5a, 0x55, 0x4c];
+/// A fence site (wood): passable to sight, not to Flumps.
+pub const FENCE: Rgb = [0x8a, 0x6d, 0x3b];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ColorMode {
@@ -201,13 +205,20 @@ pub fn render(
                 .max(1e-9),
         ),
     };
+    let has_walls = world.has_walls();
     for (i, site) in world.sites.iter().enumerate() {
-        let level = match layer {
-            Layer::Resource(g) => site.resource[g],
-            Layer::Capacity(g) => site.capacity[g],
-            Layer::Pollution(k) => site.pollution[k],
+        let rgb = if has_walls && world.is_opaque(world.torus.pos(i)) {
+            WALL
+        } else if has_walls && world.is_wall(world.torus.pos(i)) {
+            FENCE
+        } else {
+            let level = match layer {
+                Layer::Resource(g) => site.resource[g],
+                Layer::Capacity(g) => site.capacity[g],
+                Layer::Pollution(k) => site.pollution[k],
+            };
+            lerp(BACKGROUND, color, level / max)
         };
-        let rgb = lerp(BACKGROUND, color, level / max);
         buf[i * 4..i * 4 + 4].copy_from_slice(&[rgb[0], rgb[1], rgb[2], 255]);
     }
     let v = world.config.vision;
@@ -258,6 +269,37 @@ mod tests {
     fn pixel(buf: &[u8], w: &World, x: u32, y: u32) -> [u8; 4] {
         let i = w.torus.index(Pos::new(x, y)) * 4;
         [buf[i], buf[i + 1], buf[i + 2], buf[i + 3]]
+    }
+
+    #[test]
+    fn wall_and_fence_sites_draw_their_own_colors() {
+        let mut c = crate::testkit::blank_config(10, 10);
+        c.walls = vec![
+            crate::config::Wall {
+                x: 2,
+                y: 2,
+                width: 1,
+                height: 1,
+                opaque: true,
+            },
+            crate::config::Wall {
+                x: 4,
+                y: 4,
+                width: 1,
+                height: 1,
+                opaque: false,
+            },
+        ];
+        let w = World::new(c, 1).unwrap();
+        let mut buf = Vec::new();
+        render(&w, ColorMode::Tribe, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(pixel(&buf, &w, 2, 2)[..3], WALL);
+        assert_eq!(pixel(&buf, &w, 4, 4)[..3], FENCE);
+        assert_eq!(
+            pixel(&buf, &w, 0, 0)[..3],
+            BACKGROUND,
+            "an open, empty site"
+        );
     }
 
     #[test]
