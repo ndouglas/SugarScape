@@ -92,6 +92,47 @@ fn s_walk(seeds: &[u64], fences: &'static str) -> Vec<f64> {
     })
 }
 
+/// Mean over ticks 500, 510, …, 1000 of N₁/N₂ (Flumps on the richer patch
+/// over those on the other), skipping samples with an empty patch.
+fn mean_ratio(w: &World) -> f64 {
+    let (a, b) = (series(w, "on_first_patch"), series(w, "on_other_patches"));
+    let v: Vec<f64> = (500..=1000)
+        .step_by(10)
+        .filter(|&t| a[t] > 0.0 && b[t] > 0.0)
+        .map(|t| a[t] / b[t])
+        .collect();
+    if v.is_empty() {
+        f64::NAN
+    } else {
+        stats::mean(&v)
+    }
+}
+
+/// At the presets' own 2.10 : 1 (radius 7): the median over seeds of the
+/// mean N₁/N₂ over ticks 500–1000, for each arm.
+fn ratios_at_preset(seeds: &[u64]) -> String {
+    let mut open = preset("ifd-far-sighted");
+    walk(&mut open);
+    let arms = [
+        ("far fence", preset("ifd-fence-far")),
+        ("near fence", preset("ifd-fence")),
+        ("wall", preset("ifd-wall")),
+        ("no fence walking", open),
+        ("jump", preset("ifd-far-sighted")),
+    ];
+    let parts: Vec<String> = arms
+        .iter()
+        .map(|(name, c)| {
+            let r = after(c, seeds, 1000, mean_ratio);
+            format!("{name} {:.2}", median(&r))
+        })
+        .collect();
+    format!(
+        "At 2.10 : 1 (radius 7), median mean N₁/N₂ over ticks 500–1000: {}.",
+        parts.join(", ")
+    )
+}
+
 pub fn claims() -> Vec<Claim> {
     vec![
         Claim {
@@ -179,7 +220,7 @@ pub fn claims() -> Vec<Claim> {
             item: "walk-speed",
             source: Source::Comment,
             citation: SPEC,
-            text: "Faster walking recovers the jump's carrying capacity",
+            text: "The capacity under walk rises toward the jump's as speed rises",
             check: |seeds| {
                 let at = |speed| {
                     let mut c = preset("walk-capacity");
@@ -187,8 +228,11 @@ pub fn claims() -> Vec<Claim> {
                     capacity(&c, seeds)
                 };
                 let jump = capacity(&preset("ii-2-unit"), seeds);
-                paired_greater(&at(10), &at(1), "speed 10", "speed 1").with(&format!(
-                    "Mean population over ticks 300–500. Jump (ii-2-unit): median {:.1}.",
+                let ten = at(10);
+                paired_greater(&ten, &at(1), "speed 10", "speed 1").with(&format!(
+                    "Mean population over ticks 300–500. Speed 3 (walk-fast): median {:.1}. Speed 10: median {:.1}, against jump (ii-2-unit) median {:.1}.",
+                    median(&at(3)),
+                    median(&ten),
                     median(&jump)
                 ))
             },
@@ -204,8 +248,9 @@ pub fn claims() -> Vec<Claim> {
                 let open = s_walk(seeds, "");
                 let jump = s_per_seed(seeds, |c| c.vision = URange::new(10, 20));
                 paired_greater(&far, &open, "s far gap", "s no fence").with(&format!(
-                    "s at vision 10–20 across the five input ratios; no fence is ifd-far-sighted switched to walk. Jump with no fence (ifd-far-sighted): median s {:.4}.",
-                    median(&jump)
+                    "s at vision 10–20 across the five input ratios; no fence is ifd-far-sighted switched to walk. Jump with no fence (ifd-far-sighted): median s {:.4}. {}",
+                    median(&jump),
+                    ratios_at_preset(seeds)
                 ))
             },
         },
@@ -220,9 +265,10 @@ pub fn claims() -> Vec<Claim> {
                 let fence = s_walk(seeds, "ifd-fence");
                 let diffs: Vec<f64> = wall.iter().zip(&fence).map(|(a, b)| a - b).collect();
                 range(&diffs, -0.05, 0.05, false).with(&format!(
-                    "Per-seed s (wall) − s (fence), gap at rows 20–21. Medians: wall {:.4}, fence {:.4}.",
+                    "Per-seed s (wall) − s (fence), gap at rows 20–21. Medians: wall {:.4}, fence {:.4}. {}",
                     median(&wall),
-                    median(&fence)
+                    median(&fence),
+                    ratios_at_preset(seeds)
                 ))
             },
         },

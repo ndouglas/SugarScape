@@ -75,7 +75,7 @@ fn seasonal_groups(seeds: &[u64]) -> Vec<[f64; 4]> {
     })
 }
 
-/// Runs a fresh world to t = 300 and returns, for each agent alive for all
+/// Takes a fresh world (at t = 0), runs it to t = 300 and returns, for each agent alive for all
 /// of t = 100..=300, how many times it changed hemisphere (north is y < 25).
 pub(crate) fn hemisphere_switches(w: &mut World) -> BTreeMap<u64, u32> {
     w.run(100);

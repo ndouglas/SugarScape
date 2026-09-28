@@ -183,7 +183,7 @@ pub const TITLES: [(&str, &str); 231] = [
     ),
     (
         "ifd-fence-far",
-        "The gap moves to the far end: a long walk to switch, and Flumps stray further from matching the yields",
+        "The gap moves to the far end: a long walk to switch, and across patch sizes Flumps stray further from matching the yields",
     ),
     (
         "ifd-wall",

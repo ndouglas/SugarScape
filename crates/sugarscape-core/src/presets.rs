@@ -729,7 +729,7 @@ pub fn all() -> Vec<Preset> {
             "walk-seasons",
             "Walking: seasons",
             "Epstein & Axtell II-7; Minds 2",
-            "Seasons flipping every 50 ticks, as in ii-7-seasons, but rule M's Flumps walk to the best site they see instead of jumping there in one tick. Measured (20 seeds, Flumps alive over ticks 100–300): a median 55 % change hemisphere at least twice, against 83 % under the jump, so migration with the seasons (Animation II-7) survives walking, but fewer Flumps migrate. Likely cause: crossing to the other hemisphere takes a walker many ticks, so fewer find it worth it.",
+            "Seasons flipping every 50 ticks, as in ii-7-seasons, but rule M's Flumps walk to the best site they see instead of jumping there in one tick. Measured (20 seeds, Flumps alive over ticks 100–300): a median 55 % change hemisphere at least twice, against 83 % under the jump, so migration with the seasons (Animation II-7) survives walking, but fewer Flumps migrate. Likely cause: crossing to the other hemisphere takes a walker many ticks, so fewer finish the crossing before the season or their target changes.",
             |c| {
                 enable_seasons(c);
                 c.movement.mode = MoveMode::Walk;
@@ -739,7 +739,7 @@ pub fn all() -> Vec<Preset> {
             "walk-waves",
             "Walking: diagonal waves",
             "Epstein & Axtell II-6; Minds 2",
-            "The book's waves travel northeast from the southwest block; under rule M's jump they don't. Measured (20 seeds, tick 100): a median 0.6 % of Flumps are farther than 25 sites from the block's center, against 0.8 % under the jump; no seed comes near a quarter. The block settles on the near mountain either way, so walking isn't the missing mechanism behind the waves (Animation II-6).",
+            "The book's waves travel northeast from the southwest block; under rule M's jump they don't. Measured (20 seeds, tick 100): a median 0.6 % of Flumps are farther than 25 sites from the block's center, against 0.8 % under the jump; no seed comes near a quarter (in planning, the block settled on the near mountain under both). So walking isn't the missing mechanism behind the waves (Animation II-6).",
             |c| {
                 waves(c);
                 c.movement.mode = MoveMode::Walk;
@@ -749,7 +749,7 @@ pub fn all() -> Vec<Preset> {
             "walk-fast",
             "Walking: speed 3",
             "Minds 2",
-            "ii-2-unit's unit growback and carrying capacity, but Flumps walk three steps a tick instead of one along their A* path. Measured (20 seeds, mean population over ticks 300–500): 214, between walking at one step a tick (181) and the jump (228). At ten steps a tick the population is 227, higher than at one step in every seed, so faster walking recovers the jump's carrying capacity.",
+            "ii-2-unit's unit growback and carrying capacity, but Flumps walk three steps a tick instead of one along their A* path. Measured (20 seeds, mean population over ticks 300–500): 214, between walking at one step a tick (181) and the jump (228). The capacity under walk rises toward the jump's as speed rises: at ten steps a tick it is 227, higher than at one step in every seed and within about one Flump of the jump's 228.",
             |c| {
                 c.movement.mode = MoveMode::Walk;
                 c.movement.speed = 3;
@@ -759,7 +759,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-fence",
             "Travel between patches: a fence with a central gap",
             "Baum & Kraft 1998; Minds 2",
-            "The 2.10 : 1 patches with vision 10–20 (as in ifd-far-sighted), fenced apart except for a two-site gap at the midline of the 60 × 40 torus (and a matching gap in a second fence at x = 2, closing the route the other way around the torus); rule M's Flumps walk to the best site they see instead of jumping there, so switching patches costs a walk through the gap. Measured (20 seeds, ticks 500–1000): 1.99 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.86 jumping (ifd-far-sighted). Across the five input ratios s has median 0.88, against 0.90 walking with no fence, so the fence doesn't reduce undermatching.",
+            "The 2.10 : 1 patches with vision 10–20 (as in ifd-far-sighted), fenced apart except for a two-site gap at the midline of the 60 × 40 torus (and a matching gap in a second fence at x = 2, closing the route the other way around the torus); rule M's Flumps walk to the best site they see instead of jumping there, so switching patches costs a walk through the gap. Measured (20 seeds, ticks 500–1000): 1.99 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping (ifd-far-sighted). Across the five input ratios s has median 0.88, against 0.90 walking with no fence, so the fence doesn't reduce undermatching.",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);
@@ -771,7 +771,7 @@ pub fn all() -> Vec<Preset> {
             "ifd-fence-far",
             "Travel between patches: the gap moves to the far end",
             "Baum & Kraft 1998; Minds 2",
-            "The same fence as ifd-fence, but its gap sits at rows 35–36 instead of 20–21, near the far end of the patches, so a Flump switching patches faces a much longer walk to reach the gap. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.85 against 0.90 walking with no fence, and is lower in 18 of 20 seeds, so undermatching grows, the opposite of Baum & Kraft's direction, and their claim fails here. At 2.10 : 1 alone there are 1.96 times as many Flumps on the richer patch.",
+            "The same fence as ifd-fence, but its gap sits at rows 35–36 instead of 20–21, near the far end of the patches, so a Flump switching patches faces a much longer walk to reach the gap. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.85 against 0.90 walking with no fence, and is lower in 18 of 20 seeds, so undermatching grows, the opposite of Baum & Kraft's direction, and their claim fails here. The difference is in s across patch sizes, not at this preset's own ratio: at 2.10 : 1 alone there are 1.96 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping.",
             |c| {
                 two_patches(c, 7.0);
                 c.vision = URange::new(10, 20);
