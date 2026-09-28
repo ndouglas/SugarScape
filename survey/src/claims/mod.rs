@@ -14,6 +14,7 @@ mod farol;
 mod norms;
 mod image;
 mod minds1;
+mod minds2;
 mod opinions;
 mod spatial;
 mod structure;
@@ -39,6 +40,7 @@ pub fn all() -> Vec<Claim> {
         norms::claims(),
         image::claims(),
         minds1::claims(),
+        minds2::claims(),
         opinions::claims(),
         spatial::claims(),
         structure::claims(),

@@ -161,20 +161,29 @@ pub const TITLES: [(&str, &str); 231] = [
         "walk-capacity",
         "Flumps who walk instead of jump: fewer of them survive",
     ),
-    ("walk-wealth", "Walking changes who gets rich"),
-    ("walk-seasons", "Walking through the seasons"),
+    (
+        "walk-wealth",
+        "Flumps who walk are born and die, and wealth grows as lopsided as when they jump",
+    ),
+    (
+        "walk-seasons",
+        "Walking through the seasons: Flumps still migrate, but fewer of them",
+    ),
     (
         "walk-waves",
         "Walking doesn't bring back the book's waves",
     ),
-    ("walk-fast", "Flumps who walk three steps a tick"),
+    (
+        "walk-fast",
+        "Flumps who walk three steps a tick: most of the lost population comes back",
+    ),
     (
         "ifd-fence",
         "A fence between the patches, with one gap",
     ),
     (
         "ifd-fence-far",
-        "The gap moves to the far end: switching costs a long walk",
+        "The gap moves to the far end: a long walk to switch, and Flumps stray further from matching the yields",
     ),
     (
         "ifd-wall",

@@ -58,20 +58,7 @@ fn col(rows: &[[f64; 4]], i: usize) -> Vec<f64> {
 /// twice; hibernators never do.
 fn seasonal_groups(seeds: &[u64]) -> Vec<[f64; 4]> {
     each_seed(&preset("ii-7-seasons"), seeds, |mut w| {
-        w.run(100);
-        let mut last: BTreeMap<u64, bool> = w.agents().map(|a| (a.id, a.pos.y < 25)).collect();
-        let mut switches: BTreeMap<u64, u32> = last.keys().map(|id| (*id, 0)).collect();
-        for _ in 0..200 {
-            w.step();
-            let now: BTreeMap<u64, bool> = w.agents().map(|a| (a.id, a.pos.y < 25)).collect();
-            switches.retain(|id, _| now.contains_key(id));
-            for (id, n) in switches.iter_mut() {
-                if now[id] != last[id] {
-                    *n += 1;
-                }
-            }
-            last = now;
-        }
+        let switches = hemisphere_switches(&mut w);
         let traits: BTreeMap<u64, (f64, f64)> = w
             .agents()
             .map(|a| (a.id, (f64::from(a.vision), f64::from(a.metabolism[0]))))
@@ -88,7 +75,37 @@ fn seasonal_groups(seeds: &[u64]) -> Vec<[f64; 4]> {
     })
 }
 
-fn wealths(w: &World) -> Vec<f64> {
+/// Runs a fresh world to t = 300 and returns, for each agent alive for all
+/// of t = 100..=300, how many times it changed hemisphere (north is y < 25).
+pub(crate) fn hemisphere_switches(w: &mut World) -> BTreeMap<u64, u32> {
+    w.run(100);
+    let mut last: BTreeMap<u64, bool> = w.agents().map(|a| (a.id, a.pos.y < 25)).collect();
+    let mut switches: BTreeMap<u64, u32> = last.keys().map(|id| (*id, 0)).collect();
+    for _ in 0..200 {
+        w.step();
+        let now: BTreeMap<u64, bool> = w.agents().map(|a| (a.id, a.pos.y < 25)).collect();
+        switches.retain(|id, _| now.contains_key(id));
+        for (id, n) in switches.iter_mut() {
+            if now[id] != last[id] {
+                *n += 1;
+            }
+        }
+        last = now;
+    }
+    switches
+}
+
+/// Share of the agents alive for all of t = 100..=300 that changed
+/// hemisphere at least twice (the migrants of `seasonal_groups`).
+pub(crate) fn migrant_share(w: &mut World) -> f64 {
+    let switches = hemisphere_switches(w);
+    if switches.is_empty() {
+        return f64::NAN;
+    }
+    switches.values().filter(|&&n| n >= 2).count() as f64 / switches.len() as f64
+}
+
+pub(crate) fn wealths(w: &World) -> Vec<f64> {
     w.agents().map(|a| a.holdings[0]).collect()
 }
 

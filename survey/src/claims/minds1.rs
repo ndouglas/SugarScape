@@ -14,9 +14,9 @@ use crate::runner::{each_seed, preset, series};
 use crate::stats::median;
 
 const SPEC: &str = "docs/superpowers/specs/2026-09-27-minds-1-utility-design.md";
-const RADII: [f64; 5] = [10.0, 8.5, 7.0, 6.0, 5.0];
+pub(crate) const RADII: [f64; 5] = [10.0, 8.5, 7.0, 6.0, 5.0];
 
-fn with_radius(mut c: Config, r: f64) -> Config {
+pub(crate) fn with_radius(mut c: Config, r: f64) -> Config {
     if let Map::Peaks { peaks } = &mut c.goods[0].map {
         peaks[1].radius = r;
     }
@@ -35,12 +35,12 @@ fn patch_map(c: &Config) -> Vec<Option<usize>> {
 }
 
 /// Sites of patch `k` (capacity ≥ 1): the nominal input divided by the rate.
-fn sites(c: &Config, k: usize) -> f64 {
+pub(crate) fn sites(c: &Config, k: usize) -> f64 {
     f64::from(patch_map(c).iter().filter(|&&p| p == Some(k)).count() as u32)
 }
 
 /// ln(R₁/R₂) at each of `RADII`.
-fn ln_inputs() -> Vec<f64> {
+pub(crate) fn ln_inputs() -> Vec<f64> {
     RADII
         .iter()
         .map(|&r| {
@@ -52,7 +52,7 @@ fn ln_inputs() -> Vec<f64> {
 
 /// Mean over ticks 500, 510, …, 1000 of ln(first / other), skipping samples
 /// with an empty patch; NaN when every sample has one.
-fn log_ratio(w: &World) -> f64 {
+pub(crate) fn log_ratio(w: &World) -> f64 {
     let (a, b) = (series(w, "on_first_patch"), series(w, "on_other_patches"));
     let v: Vec<f64> = (500..=1000)
         .step_by(10)
@@ -67,7 +67,7 @@ fn log_ratio(w: &World) -> f64 {
 }
 
 /// Least-squares slope of y on x over the finite pairs; NaN with fewer than 3.
-fn slope(x: &[f64], y: &[f64]) -> f64 {
+pub(crate) fn slope(x: &[f64], y: &[f64]) -> f64 {
     let pts: Vec<(f64, f64)> = x
         .iter()
         .zip(y)
@@ -87,7 +87,7 @@ fn slope(x: &[f64], y: &[f64]) -> f64 {
 
 /// Per seed: s across the five input ratios, starting from `ifd-even`
 /// edited by `edit`.
-fn s_per_seed(seeds: &[u64], edit: impl Fn(&mut Config)) -> Vec<f64> {
+pub(crate) fn s_per_seed(seeds: &[u64], edit: impl Fn(&mut Config)) -> Vec<f64> {
     let per_radius: Vec<Vec<f64>> = RADII
         .iter()
         .map(|&r| {
