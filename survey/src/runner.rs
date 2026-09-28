@@ -32,6 +32,18 @@ pub fn each_seed<T: Send>(config: &Config, seeds: &[u64], f: impl Fn(World) -> T
     })
 }
 
+/// Like `each_seed`, handing `f` the seed too (for survey-side RNGs seeded
+/// from it, never `World.rng`).
+pub fn each_seed_with<T: Send>(
+    config: &Config,
+    seeds: &[u64],
+    f: impl Fn(u64, World) -> T + Sync,
+) -> Vec<T> {
+    on_threads(seeds, |seed| {
+        f(seed, World::new(config.clone(), seed).expect("a valid config"))
+    })
+}
+
 /// Runs `ticks` ticks per seed, then measures with `f`.
 pub fn after<T: Send>(
     config: &Config,

@@ -113,6 +113,8 @@ dependencies = [
 name = "survey"
 version = "0.1.0"
 dependencies = [
+ "rand",
+ "rand_pcg",
  "serde",
  "serde_json",
  "sugarscape-core",

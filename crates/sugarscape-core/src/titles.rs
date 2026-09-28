@@ -191,7 +191,7 @@ pub const TITLES: [(&str, &str); 253] = [
     ),
     (
         "mem-open",
-        "Remembering on the open sugarscape: little to gain",
+        "Remembering on the open sugarscape: rememberers end up poorer",
     ),
     (
         "mem-catchment",
@@ -215,7 +215,7 @@ pub const TITLES: [(&str, &str); 253] = [
     ),
     (
         "mem-mvt",
-        "When to leave a patch: a few foragers among nine patches",
+        "When to leave a patch: foragers who find one never leave",
     ),
     (
         "vi-4-schelling-25",
