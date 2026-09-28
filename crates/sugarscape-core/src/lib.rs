@@ -48,6 +48,7 @@ pub mod tags;
 pub mod thresholds;
 pub mod titles;
 pub mod world;
+pub mod zi;
 
 #[cfg(test)]
 pub(crate) mod testkit;

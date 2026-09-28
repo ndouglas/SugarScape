@@ -23,6 +23,7 @@ mod spatial;
 mod structure;
 mod tags;
 mod thresholds;
+mod zi;
 
 use crate::claim::Claim;
 
@@ -53,6 +54,7 @@ pub fn all() -> Vec<Claim> {
         structure::claims(),
         tags::claims(),
         thresholds::claims(),
+        zi::claims(),
     ]
     .into_iter()
     .flatten()

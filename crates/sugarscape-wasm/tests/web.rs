@@ -383,7 +383,15 @@ fn builtins_and_series_names_are_listed() {
             "bg-cooney-cost",
             "mem-span-recall",
             "mem-span-project",
-            "mem-share"
+            "mem-share",
+            "gs-efficiency",
+            "gs-dispersion",
+            "gs-shouts",
+            "gs-mechanism",
+            "cliff-prices",
+            "zip-days",
+            "zip-momentum",
+            "zip-shift"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -1100,6 +1108,25 @@ fn punishment_sims_match_the_native_golden_entries() {
     let mut sim = Sim::new(tanh, 1, JsValue::NULL).unwrap();
     sim.step(200);
     assert_eq!(sim.fingerprint(), "0x41e7fa5fab5ba690");
+}
+
+#[wasm_bindgen_test]
+fn zi_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the book with
+    // ZI-C and ZI-U, market 5, Cliff's mechanism, and ZIP's margins (f64).
+    for (id, fp) in [
+        ("gs-1", "0xe38d85243d149ae6"),
+        ("gs-4-u", "0xeaabdfdb9910b213"),
+        ("gs-5", "0xdbd5cfd66c153ac1"),
+        ("cliff-excess-demand", "0xede597e74207bcda"),
+        ("zip-symmetric", "0x1f0f2ad1aff93fe8"),
+        ("zip-retail", "0x843e23fc86d35493"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "zi");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
 }
 
 #[wasm_bindgen_test]

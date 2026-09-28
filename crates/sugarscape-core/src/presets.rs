@@ -1070,6 +1070,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::thresholds::presets());
     out.extend(crate::retirement::presets());
     out.extend(crate::punishment::presets());
+    out.extend(crate::zi::presets());
     out
 }
 

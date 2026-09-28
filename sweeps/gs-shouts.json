@@ -1,0 +1,69 @@
+{
+  "name": "Zero-Intelligence Traders: efficiency against the period's length",
+  "description": "Gode and Sunder ran 'six periods of … 30 seconds for machine traders' and never say how many shouts that was. ZI-C efficiency against shouts a period. Measured (release, seeds 1–10, recorded 2026-09-28): market 1: 18, 34, 58, 82, 98.5, 99.9, 99.9 at 25, 50, 100, 200, 500, 1 000, 2 000; market 4: 39, 64, 86, 97, 99.0, 99.4, 99.5; market 5: 12, 23, 44, 68, 92, 97, 97. Their near-100 % efficiency needs at least about 500–1 000 shouts a period: the traders capture the surplus because they get enough chances.",
+  "base": {
+    "preset": "gs-1"
+  },
+  "x": {
+    "label": "Shouts a period",
+    "path": "shouts",
+    "values": [
+      25,
+      50,
+      100,
+      200,
+      500,
+      1000,
+      2000
+    ]
+  },
+  "series": {
+    "label": "Market",
+    "values": [
+      {
+        "at": 1,
+        "name": "Market 1",
+        "set": {
+          "market": "gs1"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Market 2",
+        "set": {
+          "market": "gs2"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Market 3",
+        "set": {
+          "market": "gs3"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Market 4",
+        "set": {
+          "market": "gs4"
+        }
+      },
+      {
+        "at": 5,
+        "name": "Market 5",
+        "set": {
+          "market": "gs5"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 12000,
+  "metric": {
+    "kind": "final",
+    "series": "avg_efficiency"
+  }
+}

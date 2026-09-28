@@ -1,0 +1,75 @@
+{
+  "name": "Zero-Intelligence Traders: profit dispersion by market (Table 3)",
+  "description": "Gode and Sunder's Table 3: profit dispersion (the RMS of each trader's profit minus its equilibrium profit) by market. Measured (release, seeds 1–20, recorded 2026-09-28): ZI-U 177.5, 240.6, 102.1, 384.2, 234.0 (Table 3: 225.5, 253.1, 90.5, 363.8, 156.3); ZI-C 31.8, 49.0, 18.0, 64.8, 23.7 (Table 3: 28.5, 49.8, 15.9, 60.5, 19.1) — ZI-C close in every market, ZI-U the same order.",
+  "base": {
+    "preset": "gs-1"
+  },
+  "x": {
+    "label": "Market",
+    "values": [
+      {
+        "at": 1,
+        "name": "Market 1",
+        "set": {
+          "market": "gs1"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Market 2",
+        "set": {
+          "market": "gs2"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Market 3",
+        "set": {
+          "market": "gs3"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Market 4",
+        "set": {
+          "market": "gs4"
+        }
+      },
+      {
+        "at": 5,
+        "name": "Market 5",
+        "set": {
+          "market": "gs5"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Traders",
+    "values": [
+      {
+        "at": 0,
+        "name": "ZI-U",
+        "set": {
+          "strategy": "zi_u"
+        }
+      },
+      {
+        "at": 1,
+        "name": "ZI-C",
+        "set": {
+          "strategy": "zi_c"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 12000,
+  "metric": {
+    "kind": "final",
+    "series": "avg_dispersion"
+  }
+}

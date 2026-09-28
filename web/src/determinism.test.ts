@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  ZiConfig,
+  ZiInspection,
+  ZiStats,
   PunishmentConfig,
   PunishmentInspection,
   PunishmentStats,
@@ -727,6 +730,26 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the zi model through the engine', () => {
+  it('stops after its last period and inspects a step, a trade and a trader', async () => {
+    const r = presets.find((p) => p.id === 'gs-1')!;
+    const config = { ...structuredClone(r.config as ZiConfig), shouts: 200, stop_at: 3 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'profit' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as ZiStats;
+    expect([e.finished, ends, e.tick, s.period]).toEqual([true, 1, 600, 4]);
+    expect(s.last_efficiency).toBeGreaterThan(50);
+    await e.select(0, 100);
+    const v = e.inspection!.view as ZiInspection;
+    expect([v.panel, v.unit, v.demand, v.supply]).toEqual(['schedules', 1, 102, 34]);
+    await e.select(5, 240);
+    expect((e.inspection!.view as ZiInspection).trader?.id).toBe(1);
   });
 });
 

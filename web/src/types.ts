@@ -138,7 +138,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -537,7 +537,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -875,6 +875,78 @@ export interface PunishmentInspection {
   punishment: number | null;
 }
 
+/**
+ * Gode and Sunder's zero-intelligence traders (milestone 28), with Cliff's critique, mechanism and
+ * ZIP traders.
+ */
+export interface ZiConfig {
+  model: 'zi';
+  market: 'gs1' | 'gs2' | 'gs3' | 'gs4' | 'gs5' | 'symmetric' | 'flat_supply' | 'excess_demand' | 'excess_supply' | 'retail' | 'custom';
+  buyers: number[][];
+  sellers: number[][];
+  price_max: number;
+  strategy: 'zi_u' | 'zi_c' | 'zip';
+  mechanism: 'book' | 'cliff';
+  nyse: boolean;
+  turns: 'trader' | 'side';
+  sellers_only: boolean;
+  period_end: 'shouts' | 'sessions' | 'failures';
+  shouts: number;
+  sessions: number;
+  momentum: 'code' | 'text';
+  shift: 'none' | 'demand' | 'supply';
+  shift_at: number;
+  stop_at: number;
+}
+
+export interface ZiStats {
+  tick: number;
+  /** This shout's trade price (null if it did not trade). */
+  price: number | null;
+  /** This period so far (the mean price and rmsd null before a trade). */
+  mean_price: number | null;
+  volume: number;
+  efficiency: number | null;
+  rmsd: number | null;
+  alpha: number | null;
+  dispersion: number;
+  period: number;
+  p0: number;
+  /** The last completed period, and means over the completed periods (null before one). */
+  last_price: number | null;
+  last_efficiency: number | null;
+  last_alpha: number | null;
+  last_dispersion: number | null;
+  avg_price: number | null;
+  avg_efficiency: number | null;
+  avg_dispersion: number | null;
+}
+
+export interface ZiTrade { period: number; tick: number; price: number; buyer: number; seller: number; value: number; cost: number }
+
+export interface ZiTraderView {
+  id: number;
+  buyer: boolean;
+  limits: number[];
+  traded: number;
+  profit: number;
+  equilibrium_profit: number;
+  margin: number | null;
+}
+
+/** A cell of the zi frame: a step of the schedules, a trade, or a trader. */
+export interface ZiInspection {
+  site: { x: number; y: number };
+  panel: 'schedules' | 'prices' | 'traders' | null;
+  unit: number | null;
+  demand: number | null;
+  supply: number | null;
+  trade: ZiTrade | null;
+  trader: ZiTraderView | null;
+  /** Always null: cells are read where they are. */
+  agent: null;
+}
+
 /** A preset: `title` is the menu's plain headline; `source` and `name` are its figure or paper and its rules. */
 export interface Preset { id: string; title: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -1184,7 +1256,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -1519,7 +1591,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1581,7 +1653,10 @@ export type ColorMode =
   | 'status'
   | 'type'
   | 'group'
-  | 'acts';
+  | 'acts'
+  | 'side'
+  | 'profit'
+  | 'margin';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

@@ -170,6 +170,14 @@ fn presets_and_sweeps_are_listed() {
         "bg-ring",
         "bg-cooney-fine",
         "bg-cooney-cost",
+        "gs-efficiency",
+        "gs-dispersion",
+        "gs-shouts",
+        "gs-mechanism",
+        "cliff-prices",
+        "zip-days",
+        "zip-momentum",
+        "zip-shift",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -591,6 +599,22 @@ fn a_thresholds_run_stops_at_its_last_step() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 25 (its last step)\n");
+}
+
+#[test]
+fn a_zi_run_stops_at_its_last_period() {
+    let dir = scratch("zi");
+    let config = dir.join("zi.json");
+    std::fs::write(&config, r#"{"model": "zi", "shouts": 100, "stop_at": 3}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "1000",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 300 (its last period)\n");
 }
 
 #[test]

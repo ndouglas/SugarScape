@@ -1,0 +1,65 @@
+{
+  "name": "Zero-Intelligence Traders: ZIP's daily mean price",
+  "description": "ZIP traders' mean price on each of ten days in Cliff's four markets (his simulator as coded: 9 sessions a day, NYSE off). Measured (release, seeds 1–50, recorded 2026-09-28): symmetric 187, 195, 197, 198, 199, 200, 200, 200, 200, 200; flat supply 223, 205, 203, 202, 201 …; excess demand 124, 153, 168, 179, 190, 194, 196, 197, 198, 198; excess supply 244, 223, 213, 207, 204, 203, 202 … 202. All converge on P₀ 200 — the box markets from below and above, a few days later than the others.",
+  "base": {
+    "preset": "zip-symmetric"
+  },
+  "x": {
+    "label": "Day",
+    "path": "stop_at",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ]
+  },
+  "series": {
+    "label": "Market",
+    "values": [
+      {
+        "at": 1,
+        "name": "Symmetric",
+        "set": {
+          "market": "symmetric"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Flat supply",
+        "set": {
+          "market": "flat_supply"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Excess demand",
+        "set": {
+          "market": "excess_demand"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Excess supply",
+        "set": {
+          "market": "excess_supply"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 50
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "last_price"
+  }
+}

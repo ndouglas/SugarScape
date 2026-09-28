@@ -147,6 +147,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('zi')).toMatchObject({
+      x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' },
+      ticks: 12000,
+      metric: { kind: 'final', series: 'avg_efficiency' },
+    });
     expect(defaultForm('punishment')).toMatchObject({
       x: { path: 'size', values: '4,8,16,32,64,128,256' },
       ticks: 2000,

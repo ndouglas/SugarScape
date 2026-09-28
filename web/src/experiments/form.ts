@@ -104,6 +104,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
     return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
+  if (model === 'zi') {
+    // The built-in gs-shouts' axis: efficiency against the period's length (Gode and Sunder's "30 seconds").
+    return { ...form, x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' }, ticks: 12000, metric: { ...form.metric, kind: 'final', series: 'avg_efficiency' } };
+  }
   if (model === 'punishment') {
     // The built-in bg-fig1b's axis: the long-run cooperation (the last 1 000 of 2 000 periods) against group size.
     return { ...form, x: { path: 'size', values: '4,8,16,32,64,128,256' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'long_run' } };
