@@ -208,13 +208,7 @@ mod tests {
         let me = spawn(&mut w, 5, 5);
         w.agent_mut(me).unwrap().remembers = true;
         let idx = w.torus.index(Pos::new(5, 9)) as u32;
-        let mut seen = crate::minds::memory::Seen {
-            levels: [0.0; crate::config::MAX_GOODS],
-            most: [0.0; crate::config::MAX_GOODS],
-            tick: 0,
-            truffle: None,
-        };
-        (seen.levels[0], seen.most[0]) = (4.0, 4.0);
+        let seen = crate::minds::memory::Seen::new(&[4.0], &[4.0], 0);
         w.agent_mut(me).unwrap().memory.sites.insert(idx, seen);
         spawn(&mut w, 4, 9);
         spawn(&mut w, 6, 9);
@@ -240,13 +234,7 @@ mod tests {
         let me = spawn(&mut w, 5, 5);
         w.agent_mut(me).unwrap().remembers = true;
         let idx = w.torus.index(Pos::new(5, 9)) as u32;
-        let mut seen = crate::minds::memory::Seen {
-            levels: [0.0; crate::config::MAX_GOODS],
-            most: [0.0; crate::config::MAX_GOODS],
-            tick: 0,
-            truffle: None,
-        };
-        (seen.levels[0], seen.most[0]) = (level, level);
+        let seen = crate::minds::memory::Seen::new(&[level], &[level], 0);
         w.agent_mut(me).unwrap().memory.sites.insert(idx, seen);
         w.tick = 1;
         (w, me)

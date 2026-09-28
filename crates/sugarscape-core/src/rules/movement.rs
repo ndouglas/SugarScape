@@ -917,14 +917,10 @@ mod tests {
     /// Plants a memory of sugar `level` (most `most`) seen at (x, y) at `tick`.
     fn remember(w: &mut World, id: AgentId, x: u32, y: u32, level: f64, most: f64, tick: u64) {
         let idx = w.torus.index(Pos::new(x, y)) as u32;
-        let mut seen = crate::minds::memory::Seen {
-            levels: [0.0; MAX_GOODS],
-            most: [0.0; MAX_GOODS],
-            tick,
-            truffle: None,
-        };
-        seen.levels[0] = level;
-        seen.most[0] = most;
+        let n = w.config.goods.len();
+        let (mut levels, mut mosts) = (vec![0.0; n], vec![0.0; n]);
+        (levels[0], mosts[0]) = (level, most);
+        let seen = crate::minds::memory::Seen::new(&levels, &mosts, tick);
         w.agent_mut(id).unwrap().memory.sites.insert(idx, seen);
     }
 
@@ -941,6 +937,28 @@ mod tests {
         act(&mut w, id);
         assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 6));
         assert_eq!(w.agent(id).unwrap().plan.target, Some(Pos::new(5, 9)));
+    }
+
+    #[test]
+    fn project_grows_a_remembered_site_at_its_own_rows_seasonal_rate() {
+        let mut w = memory_world(crate::config::Belief::Project);
+        w.config.seasons.enabled = true;
+        w.config.seasons.period = 50;
+        w.config.seasons.winter_divisor = 8;
+        let id = rememberer(&mut w, 5, 5);
+        // Both seen harvested at tick 0, both able to hold 10.
+        remember(&mut w, id, 5, 1, 0.0, 10.0, 0); // north: summer at tick 4
+        remember(&mut w, id, 5, 15, 0.0, 10.0, 0); // south: winter at tick 4
+        w.tick = 4;
+        let (c, start) = candidates_with_memory(&w, id);
+        assert_eq!(
+            &c[start..],
+            &[
+                (Pos::new(5, 1), 4, 4.0),   // 0 + 4 ticks × 1
+                (Pos::new(5, 15), 10, 0.5), // 0 + 4 ticks × 1/8
+            ],
+            "each site projects at its own row's rate, not the Flump's"
+        );
     }
 
     #[test]

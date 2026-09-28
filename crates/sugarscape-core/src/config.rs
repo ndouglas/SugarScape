@@ -1506,6 +1506,11 @@ impl Config {
             "truffles.share",
             "must be between 0 and 1",
         );
+        e.check(
+            self.truffles.share == 0.0 || !self.combat.enabled,
+            "truffles.share",
+            "truffles are gathered by rule M's move; combat (rule C) doesn't gather them",
+        );
         e.non_negative(self.truffles.value, "truffles.value");
         e.check(
             (1..=10_000).contains(&self.truffles.regrow),
@@ -3261,6 +3266,23 @@ mod tests {
         assert!(with(&|c| c.truffles.regrow = 10_000).is_empty());
         assert_eq!(with(&|c| c.truffles.regrow = 0), ["truffles.regrow"]);
         assert_eq!(with(&|c| c.truffles.regrow = 10_001), ["truffles.regrow"]);
+        // Rule C never calls rule M's gather, so truffles would sit unpicked.
+        assert!(with(&|c| c.combat.enabled = true).is_empty());
+        assert_eq!(
+            with(&|c| {
+                c.combat.enabled = true;
+                c.truffles.share = 0.5;
+            }),
+            ["truffles.share"]
+        );
+        let mut c = Config::default();
+        c.combat.enabled = true;
+        c.truffles.share = 0.5;
+        let errs = c.validate().unwrap_err();
+        assert_eq!(
+            errs[0].message,
+            "truffles are gathered by rule M's move; combat (rule C) doesn't gather them"
+        );
     }
 
     #[test]

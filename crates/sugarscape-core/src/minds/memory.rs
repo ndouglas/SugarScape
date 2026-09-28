@@ -9,14 +9,61 @@ use crate::config::{Belief, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::world::World;
 
+/// Most sites one Flump remembers at once. When `observe` would push its
+/// memory past this, the entries seen longest ago go first (on a tie, the
+/// lowest site index). Before the cap, a big flat world with a long span let
+/// memory grow without bound: the final review measured 1.29 M entries and
+/// about 220 MB on a 500×500 world with span 10 000 at tick 1 500, before
+/// keyframes. The standard presets hold far fewer per Flump than this, so the
+/// cap never binds on them.
+pub const MEMORY_CAP: usize = 4096;
+
 /// A remembered site (Minds 3): the levels seen, the most ever seen there, when it was last seen, and
 /// what the Flump knows of a truffle spot there.
-#[derive(Clone, Copy, Debug, PartialEq)]
+///
+/// Levels and most are kept only for the configured goods (one boxed slice,
+/// levels then most, `n` each), not for all `MAX_GOODS`: the values are the
+/// same `f64`s as ever, just without the unused slots.
+#[derive(Clone, Debug, PartialEq)]
 pub struct Seen {
-    pub levels: [f64; MAX_GOODS],
-    pub most: [f64; MAX_GOODS],
+    vals: Box<[f64]>,
     pub tick: u64,
     pub truffle: Option<TruffleSeen>,
+}
+
+impl Seen {
+    /// A site seen at `tick` with these levels and most (the same length:
+    /// one per configured good), and no known truffle spot.
+    pub fn new(levels: &[f64], most: &[f64], tick: u64) -> Self {
+        assert_eq!(levels.len(), most.len(), "one level and one most per good");
+        let vals = levels.iter().chain(most).copied().collect();
+        Self {
+            vals,
+            tick,
+            truffle: None,
+        }
+    }
+
+    /// The levels last seen, one per configured good.
+    pub fn levels(&self) -> &[f64] {
+        &self.vals[..self.vals.len() / 2]
+    }
+
+    /// The most ever seen, one per configured good.
+    pub fn most(&self) -> &[f64] {
+        &self.vals[self.vals.len() / 2..]
+    }
+
+    /// Records `levels` seen at `tick`, raising `most` where they're higher.
+    fn update(&mut self, levels: &[f64], tick: u64) {
+        let n = self.vals.len() / 2;
+        let (seen, most) = self.vals.split_at_mut(n);
+        seen.copy_from_slice(levels);
+        for (m, &l) in most.iter_mut().zip(levels) {
+            *m = m.max(l);
+        }
+        self.tick = tick;
+    }
 }
 
 /// A known truffle spot: whether it was ripe when last seen, and when that was (a harvest counts as seen unripe).
@@ -26,7 +73,8 @@ pub struct TruffleSeen {
     pub tick: u64,
 }
 
-/// A Flump's remembered sites, by site index (deterministic order).
+/// A Flump's remembered sites, by site index (deterministic order), at most
+/// [`MEMORY_CAP`] of them.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Memory {
     pub sites: BTreeMap<u32, Seen>,
@@ -35,7 +83,9 @@ pub struct Memory {
 /// After the move: a rememberer records every site in its sight and its own
 /// site. Builds the observed list first (immutable borrow of `world`), then
 /// writes it into the agent's memory. Runs `forget` every 16 ticks per agent;
-/// Task 4's candidates also forget lazily.
+/// Task 4's candidates also forget lazily. Then, if the memory holds more
+/// than [`MEMORY_CAP`] sites, drops the ones seen longest ago (lowest site
+/// index first on a tie) until it holds exactly the cap.
 pub(crate) fn observe(world: &mut World, id: AgentId) {
     let agent = world.agent(id).expect("live agent");
     if !agent.remembers {
@@ -72,18 +122,14 @@ pub(crate) fn observe(world: &mut World, id: AgentId) {
         .map(|ripe| TruffleSeen { ripe, tick: now });
 
     let agent = world.agent_mut(id).expect("live agent");
+    let zeros = [0.0; MAX_GOODS];
     for (idx, levels) in observed {
-        let entry = agent.memory.sites.entry(idx).or_insert(Seen {
-            levels: [0.0; MAX_GOODS],
-            most: [0.0; MAX_GOODS],
-            tick: now,
-            truffle: None,
-        });
-        entry.levels = levels;
-        entry.tick = now;
-        for (m, &l) in entry.most.iter_mut().zip(levels.iter()) {
-            *m = m.max(l);
-        }
+        let entry = agent
+            .memory
+            .sites
+            .entry(idx)
+            .or_insert_with(|| Seen::new(&zeros[..n], &zeros[..n], now));
+        entry.update(&levels[..n], now);
         if idx == own_idx {
             if let Some(t) = own_truffle {
                 entry.truffle = Some(t);
@@ -92,6 +138,25 @@ pub(crate) fn observe(world: &mut World, id: AgentId) {
     }
     if now.is_multiple_of(16) {
         forget(&mut agent.memory, now, span);
+    }
+    cap(&mut agent.memory, MEMORY_CAP);
+}
+
+/// Drops the entries seen longest ago (lowest site index first on a tie)
+/// until `memory` holds at most `limit` sites.
+pub(crate) fn cap(memory: &mut Memory, limit: usize) {
+    let excess = memory.sites.len().saturating_sub(limit);
+    if excess == 0 {
+        return;
+    }
+    let mut order: Vec<(u64, u32)> = memory
+        .sites
+        .iter()
+        .map(|(&i, seen)| (seen.tick, i))
+        .collect();
+    order.select_nth_unstable(excess - 1);
+    for &(_, i) in &order[..excess] {
+        memory.sites.remove(&i);
     }
 }
 
@@ -116,17 +181,18 @@ pub fn believed_level(
     instant: bool,
     belief: Belief,
 ) -> f64 {
+    let (levels, most) = (seen.levels(), seen.most());
     if belief == Belief::Recall {
-        return seen.levels[i];
+        return levels[i];
     }
     let age = now.saturating_sub(seen.tick);
     if age == 0 {
-        return seen.levels[i];
+        return levels[i];
     }
     if instant {
-        seen.most[i]
+        most[i]
     } else {
-        (seen.levels[i] + rate * age as f64).min(seen.most[i])
+        (levels[i] + rate * age as f64).min(most[i])
     }
 }
 
@@ -150,15 +216,7 @@ mod tests {
     use rand::Rng;
 
     fn seen_at(levels: f64, most: f64, tick: u64) -> Seen {
-        let mut s = Seen {
-            levels: [0.0; MAX_GOODS],
-            most: [0.0; MAX_GOODS],
-            tick,
-            truffle: None,
-        };
-        s.levels[0] = levels;
-        s.most[0] = most;
-        s
+        Seen::new(&[levels], &[most], tick)
     }
 
     fn memory_world(width: u32, height: u32, span: u32) -> World {
@@ -186,10 +244,10 @@ mod tests {
         assert_eq!(mem.sites.len(), 9);
         let own = w.torus.index(Pos::new(5, 5)) as u32;
         let east = w.torus.index(Pos::new(6, 5)) as u32;
-        assert_eq!(mem.sites[&own].levels[0], 3.0);
-        assert_eq!(mem.sites[&own].most[0], 3.0);
+        assert_eq!(mem.sites[&own].levels()[0], 3.0);
+        assert_eq!(mem.sites[&own].most()[0], 3.0);
         assert_eq!(mem.sites[&own].tick, 10);
-        assert_eq!(mem.sites[&east].levels[0], 4.0);
+        assert_eq!(mem.sites[&east].levels()[0], 4.0);
     }
 
     #[test]
@@ -214,10 +272,10 @@ mod tests {
         w.tick = 9;
         observe(&mut w, id);
         let own = w.torus.index(Pos::new(5, 5)) as u32;
-        let seen = w.agent(id).unwrap().memory.sites[&own];
-        assert_eq!(seen.levels[0], 2.0, "the level tracks what's current");
+        let seen = &w.agent(id).unwrap().memory.sites[&own];
+        assert_eq!(seen.levels()[0], 2.0, "the level tracks what's current");
         assert_eq!(seen.tick, 9);
-        assert_eq!(seen.most[0], 5.0, "most stays at the higher value seen");
+        assert_eq!(seen.most()[0], 5.0, "most stays at the higher value seen");
     }
 
     // --- forget ---
@@ -315,25 +373,60 @@ mod tests {
     // --- the `remembers` draw ---
 
     #[test]
-    fn span_zero_draws_nothing_new_in_agent_random() {
+    fn the_remembers_draw_is_one_extra_draw_after_everything_else() {
         use crate::agent::Agent;
         use crate::config::Config;
-        use crate::geometry::Pos;
-        let config = Config::default();
-        assert_eq!(config.memory.span, 0, "the default is off");
-        let mut rng = seeded(4);
-        let _ = Agent::random(&config, Pos::new(0, 0), 0, &mut rng);
-        // Nothing about the `remembers` field changes what's drawn: a clone
-        // taken beforehand and advanced by the exact same call agrees on
-        // every later draw, so `Agent::random` under span 0 draws the same
-        // sequence a clone of the same call does (a direct, if weak, check
-        // that the guarded branch was skipped rather than merely idempotent
-        // — the strong check is `span_zero_world_matches_the_pinned_golden`
-        // below, which pins the sequence against a value recorded before
-        // this change existed).
-        let mut clone = seeded(4);
-        let _ = Agent::random(&config, Pos::new(0, 0), 0, &mut clone);
-        assert_eq!(rng.gen::<u64>(), clone.gen::<u64>());
+        let off = Config::default();
+        assert_eq!(off.memory.span, 0, "the default is off");
+        let mut on = off.clone();
+        on.movement.mode = MoveMode::Walk;
+        on.memory.span = 20;
+        // Share 0.5, so the draw really consumes the stream (a share of 0 or
+        // 1 answers without drawing).
+        on.memory.share = 0.5;
+        for seed in 0..32 {
+            let mut rng_off = seeded(seed);
+            let a = Agent::random(&off, Pos::new(0, 0), 0, &mut rng_off);
+            let mut rng_on = seeded(seed);
+            let b = Agent::random(&on, Pos::new(0, 0), 0, &mut rng_on);
+            assert!(!a.remembers, "span 0 never remembers");
+            let mut b_as_off = b.clone();
+            b_as_off.remembers = false;
+            assert_eq!(a, b_as_off, "seed {seed}: only `remembers` differs");
+            // Exactly one more draw: span 0's end state advanced by one
+            // `gen_bool(0.5)` is span > 0's end state, and that draw is the
+            // one that decided `remembers`.
+            let mut advanced = rng_off.clone();
+            assert_eq!(advanced.gen_bool(0.5), b.remembers, "seed {seed}");
+            assert!(advanced == rng_on, "seed {seed}: one extra draw");
+        }
+    }
+
+    #[test]
+    fn a_sex_childs_remembers_draw_is_one_extra_draw_after_everything_else() {
+        let born = |span: u32| {
+            let mut w = memory_world(10, 10, span.max(1));
+            w.config.memory.span = span;
+            w.config.memory.share = 0.5;
+            w.config.sex.enabled = true;
+            let mom = spawn(&mut w, 2, 2);
+            let dad = spawn(&mut w, 3, 2);
+            w.agent_mut(dad).unwrap().sex = crate::agent::Sex::Male;
+            let rng_before = w.rng.clone();
+            crate::rules::sex::act(&mut w, mom);
+            let child = w.agents().find(|a| a.parents.is_some()).unwrap().clone();
+            (child, rng_before, w.rng.clone())
+        };
+        let (a, before_off, rng_off) = born(0);
+        let (b, before_on, rng_on) = born(20);
+        assert!(before_off == before_on, "the same stream going in");
+        assert!(!a.remembers, "span 0 never remembers");
+        let mut b_as_off = b.clone();
+        b_as_off.remembers = false;
+        assert_eq!(a, b_as_off, "only `remembers` differs");
+        let mut advanced = rng_off.clone();
+        assert_eq!(advanced.gen_bool(0.5), b.remembers);
+        assert!(advanced == rng_on, "one extra draw");
     }
 
     #[test]
@@ -439,5 +532,56 @@ mod tests {
             child.remembers,
             "the child draws its own remembers (share 1.0)"
         );
+    }
+
+    // --- the cap ---
+
+    #[test]
+    fn cap_drops_the_oldest_then_the_lowest_site_index() {
+        let mut m = Memory::default();
+        m.sites.insert(7, seen_at(1.0, 1.0, 5));
+        m.sites.insert(3, seen_at(1.0, 1.0, 5));
+        m.sites.insert(9, seen_at(1.0, 1.0, 2));
+        m.sites.insert(1, seen_at(1.0, 1.0, 8));
+        cap(&mut m, 4);
+        assert_eq!(m.sites.len(), 4, "at the cap, nothing goes");
+        cap(&mut m, 2);
+        // 9 (tick 2) is oldest; 3 and 7 tie at tick 5, so 3 (lower) goes.
+        assert_eq!(m.sites.keys().copied().collect::<Vec<_>>(), [1, 7]);
+    }
+
+    #[test]
+    fn memory_never_exceeds_the_cap_on_a_big_flat_world_with_a_long_span() {
+        let (width, height) = (200, 200);
+        let mut c = blank_config(width, height);
+        c.goods[0].map = crate::config::Map::Flat { capacity: 4.0 };
+        c.movement.mode = MoveMode::Walk;
+        c.memory.span = 10_000;
+        c.memory.share = 1.0;
+        let mut w = World::new(c, 7).expect("valid config");
+        assert!(
+            (width * height) as usize > MEMORY_CAP,
+            "the world has more sites than the cap"
+        );
+        let id = spawn(&mut w, 0, 0);
+        w.agent_mut(id).unwrap().remembers = true;
+        w.agent_mut(id).unwrap().vision = 10;
+        let mut reached = false;
+        // Hop 21 columns a tick (a fresh stripe of 41 sites each time) along
+        // rows 21 apart, so memory keeps meeting sites it hasn't seen.
+        for t in 1..=400u64 {
+            let x = ((t * 21) % u64::from(width)) as u32;
+            let y = ((t * 21 / u64::from(width)) * 21 % u64::from(height)) as u32;
+            w.move_agent(id, Pos::new(x, y));
+            w.tick = t;
+            observe(&mut w, id);
+            let m = &w.agent(id).unwrap().memory;
+            assert!(m.sites.len() <= MEMORY_CAP, "tick {t}: {}", m.sites.len());
+            reached |= m.sites.len() == MEMORY_CAP;
+            // What was just seen is always kept: it's the newest.
+            let own = w.torus.index(Pos::new(x, y)) as u32;
+            assert_eq!(m.sites[&own].tick, t);
+        }
+        assert!(reached, "the walk fills memory to the cap");
     }
 }

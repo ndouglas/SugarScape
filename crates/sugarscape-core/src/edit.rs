@@ -670,6 +670,16 @@ mod tests {
         assert!(w.events().deaths.is_empty());
     }
 
+    /// `seen`, with a truffle spot there seen `ripe` (or not) at `tick`.
+    fn with_spot(
+        mut seen: crate::minds::memory::Seen,
+        ripe: bool,
+        tick: u64,
+    ) -> crate::minds::memory::Seen {
+        seen.truffle = Some(crate::minds::memory::TruffleSeen { ripe, tick });
+        seen
+    }
+
     #[test]
     fn inspect_shows_memory_only_when_memory_is_on() {
         let mut w = blank_world(10, 10);
@@ -677,26 +687,12 @@ mod tests {
         assert!(w.inspect(2, 2).unwrap().agent.unwrap().memory.is_none());
         w.config.movement.mode = crate::config::MoveMode::Walk;
         w.config.memory.span = 20;
-        let seen = crate::minds::memory::Seen {
-            levels: [0.0; crate::config::MAX_GOODS],
-            most: [0.0; crate::config::MAX_GOODS],
-            tick: 0,
-            truffle: None,
-        };
+        let seen = crate::minds::memory::Seen::new(&[0.0], &[0.0], 0);
         {
             let a = w.agent_mut(id).unwrap();
             a.remembers = true;
-            a.memory.sites.insert(1, seen);
-            a.memory.sites.insert(
-                2,
-                crate::minds::memory::Seen {
-                    truffle: Some(crate::minds::memory::TruffleSeen {
-                        ripe: true,
-                        tick: 0,
-                    }),
-                    ..seen
-                },
-            );
+            a.memory.sites.insert(1, seen.clone());
+            a.memory.sites.insert(2, with_spot(seen.clone(), true, 0));
         }
         let m = w.inspect(2, 2).unwrap().agent.unwrap().memory.unwrap();
         assert_eq!((m.remembers, m.sites, m.spots), (true, 2, 1));
@@ -736,41 +732,22 @@ mod tests {
         w.config.memory.belief = crate::config::Belief::Project;
         w.config.truffles.regrow = 10;
         w.tick = 20;
-        let blank_seen = crate::minds::memory::Seen {
-            levels: [0.0; crate::config::MAX_GOODS],
-            most: [0.0; crate::config::MAX_GOODS],
-            tick: 18,
-            truffle: None,
-        };
+        let blank_seen = crate::minds::memory::Seen::new(&[0.0], &[0.0], 18);
         {
             let a = w.agent_mut(id).unwrap();
             a.remembers = true;
             // Site 1: no known spot, last seen 2 ticks ago.
-            a.memory.sites.insert(1, blank_seen);
+            a.memory.sites.insert(1, blank_seen.clone());
             // Site 2: a spot seen unripe 5 ticks ago; regrow is 10, so it's
             // still believed unripe.
-            a.memory.sites.insert(
-                2,
-                crate::minds::memory::Seen {
-                    truffle: Some(crate::minds::memory::TruffleSeen {
-                        ripe: false,
-                        tick: 15,
-                    }),
-                    ..blank_seen
-                },
-            );
+            a.memory
+                .sites
+                .insert(2, with_spot(blank_seen.clone(), false, 15));
             // Site 5: a spot seen unripe 15 ticks ago; past regrow, so it's
             // now believed ripe.
-            a.memory.sites.insert(
-                5,
-                crate::minds::memory::Seen {
-                    truffle: Some(crate::minds::memory::TruffleSeen {
-                        ripe: false,
-                        tick: 5,
-                    }),
-                    ..blank_seen
-                },
-            );
+            a.memory
+                .sites
+                .insert(5, with_spot(blank_seen.clone(), false, 5));
         }
         let view = w.memory_view(Pos::new(2, 2));
         assert_eq!(

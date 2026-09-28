@@ -162,8 +162,16 @@ const CHARTS: ChartDef[] = [
     lines: fixed([
       { key: 'remembered_moves', label: 'Remembered moves', color: '--c1' },
       { key: 'stale_choices', label: 'Stale choices', color: '--c2' },
-      { key: 'belief_error', label: 'Belief error', color: '--c3' },
     ]),
+    range: [0, 1],
+    shown: (c) => (c.memory?.span ?? 0) > 0,
+  },
+  {
+    // In sugar, not a share, so apart from the Memory chart's two shares.
+    title: 'Belief error (sugar)',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'belief_error', label: 'Belief error', color: '--c1' }]),
     shown: (c) => (c.memory?.span ?? 0) > 0,
   },
   {

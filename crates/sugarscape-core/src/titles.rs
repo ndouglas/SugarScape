@@ -195,7 +195,7 @@ pub const TITLES: [(&str, &str); 253] = [
     ),
     (
         "mem-catchment",
-        "Wanderers who remember the patches they've seen",
+        "Wanderers who remember reach patches sooner but end slightly poorer",
     ),
     (
         "mem-walled",
@@ -203,11 +203,11 @@ pub const TITLES: [(&str, &str); 253] = [
     ),
     (
         "mem-seasons",
-        "Remembering the other hemisphere through the seasons",
+        "Remembering the other hemisphere: rememberers end poorer",
     ),
     (
         "mem-truffles",
-        "Hidden truffles only rememberers come back for",
+        "Hidden truffles: rememberers find over twice as many and still end poorer",
     ),
     (
         "mem-trapline",
