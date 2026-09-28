@@ -1,6 +1,7 @@
 {
   "medians": {
     "blind": 0.4157122998600303,
+    "blind1": 0.8152507568231655,
     "cooperation": 0.7560571872961601,
     "everyone": 0.12889652492838588,
     "kin_help": 0.8644882549417487,
@@ -8,11 +9,13 @@
     "others": 0.02330098430720462,
     "own": 0.7672557011845915,
     "paper_blind": 0.14,
+    "paper_seeing": 0.56,
     "population": 1565.1,
     "relatives": 0.7523505097481382,
     "scattered_cooperation": 0.048977148236740486,
     "scattered_kin_help": 0.1270506098672842,
-    "scattered_none": 0.8831454186607783
+    "scattered_none": 0.8831454186607783,
+    "seeing2": 0.666140333379685
   },
   "seeds": 20
 }

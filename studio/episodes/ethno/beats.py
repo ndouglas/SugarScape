@@ -9,12 +9,14 @@ magenta helps only other colors.
 
 What each shot does (see measurements.md for the 20-seed claims):
 closeup — 8 × 8, every square filled at random (seed 3), 4 periods.
-land — ha-standard, seed 15 (typical of 20), to period 1,500: help-own-only
-  70 % by period 800, 84 % at 1,500.
+land — ha-standard, seed 15 (typical of 20), to period 1,400: help-own-only
+  70 % by period 800, 77 % at 1,380 (where "favor" ends: the 20-seed median).
 scatter — ha-standard, seed 9 (typical of 20 for the scattering), with each
   child placed anywhere from period 1,000: help-no-one 7 % at 1,000, 47 % at
   1,200 and 88 % at 1,500; the land fills to about 2,250.
 blind — ha-cost-2-blind, seed 2 (typical), 2,000 periods.
+blind1 — ha-standard with color-blind Flumps (discrimination none), seed 20
+  (typical of 20: 81.9 % help over periods 1,901–2,000), 2,000 periods.
 """
 
 from camera import Move
@@ -45,11 +47,11 @@ BEATS = [
     Beat("arrive", "The land starts empty. Newcomers arrive one at a time;\nchildren are born next door.", 6.0,
          shot="land", ticks_per_second=25, overlays=("kinds",), params=TAG,
          camera=(Move(0, 6, (0, -20, 22), (0, 0, 0), WIDE_EYE, WIDE_AT, lens0=35, lens1=35),)),
-    Beat("favor", "Favoritism wins: about 3 in 4 Flumps help only their own color,\nin all 20 worlds.", 7.5,
-         shot="land", ticks_per_second=180, start_tick=150, overlays=("kinds",), params=TAG,
+    Beat("favor", "Favoritism wins in all 20 worlds:\nabout 3 in 4 Flumps help only their own color.", 7.5,
+         shot="land", ticks_per_second=164, start_tick=150, overlays=("kinds",), params=TAG,
          camera=hold(WIDE_EYE, WIDE_AT, lens=35, drift=(0, 1, -1))),
-    Beat("family", "Why? Their neighbors are family:\nover 8 in 10 of all helps go to relatives.", 7.0, shot="land",
-         ticks_per_second=3, start_tick=1480, overlays=("bars",),
+    Beat("family", "Why? Their neighbors share ancestors:\nover 8 in 10 of all helps go to relatives.", 7.0, shot="land",
+         ticks_per_second=3, start_tick=1360, overlays=("bars",),
          params={**TAG, "title": "family", "format": "pct",
                  "rows": [[("helps that go to relatives", "kin_help")], [("neighbors who are relatives", "relatives")]]},
          camera=(Move(0, 7, WIDE_EYE, WIDE_AT, LOW_EYE, LOW_AT, lens0=35, lens1=42),)),
@@ -57,14 +59,21 @@ BEATS = [
          start_tick=990, overlays=("kinds",), params=TAG, camera=hold(WIDE_EYE, WIDE_AT, lens=35, drift=(0, 1, -1))),
     Beat("dark", "Favoritism collapses. Nine in ten Flumps help no one.", 7.5, shot="scatter", ticks_per_second=70,
          start_tick=1023, overlays=("kinds",), params=TAG, camera=hold(WIDE_EYE, WIDE_AT, lens=36, drift=(0, 1, -1))),
-    Beat("blind", "The paper says color-blind Flumps, paying double to help,\nhelp 14% of the time. Here: 42%.", 8.0,
-         shot="blind", ticks_per_second=13, start_tick=1896, overlays=("bars",),
-         params={**TAG, "title": "how often color-blind Flumps help", "format": "pct",
-                 "rows": [[("the paper", "paper_blind")], [("here", "blind")]]},
+    Beat("blind", "The paper: at double cost, color-seeing Flumps help 56% of the time,\n"
+         "color-blind ones 14%. Here: 67% and 42%.", 9.0,
+         shot="blind", ticks_per_second=11, start_tick=1896, overlays=("bars",),
+         params={**TAG, "title": "how often Flumps help, at double cost", "format": "pct",
+                 "rows": [[("seeing color, the paper", "paper_seeing"), ("seeing color, here", "seeing2")],
+                          [("color-blind, the paper", "paper_blind"), ("color-blind, here", "blind")]]},
          camera=hold(WIDE_EYE, WIDE_AT, lens=35, drift=(0, 1, -1))),
-    Beat("point", "Favoritism didn't make them helpful.\nFamily did.", 6.0, shot="land", start_tick=1500, caption_y=0.0,
+    Beat("usual", "At the paper's usual cost, color-blind Flumps help even more:\n82% to 76%.", 7.0, shot="blind1",
+         ticks_per_second=12, start_tick=1910, overlays=("bars",),
+         params={**TAG, "title": "how often Flumps help, at the usual cost", "format": "pct",
+                 "rows": [[("color-blind", "blind1"), ("seeing color", "cooperation")]]},
+         camera=hold(WIDE_EYE, WIDE_AT, lens=35, drift=(0, 1, -1))),
+    Beat("point", "Favoritism didn't make them helpful.\nFamily did.", 6.0, shot="land", start_tick=1380, caption_y=0.0,
          title=True, params=TAG,
          camera=(Move(0, 6, WIDE_EYE, WIDE_AT, (0, -60, 50), WIDE_AT, lens0=35, lens1=35, orbit=0.1),)),
-    Beat("end", "Ethnocentrism — after Hammond & Axelrod, 2006\nndouglas.github.io/SugarScape", 5.0, caption_y=0.45,
+    Beat("end", "Ethnocentrism — after Hammond & Axelrod, 2006; Jansson, 2013\nndouglas.github.io/SugarScape", 5.0, caption_y=0.45,
          camera=hold((0, -5.5, 1.8), (0, 0, 0.6), lens=50, drift=(0, 0.3, -0.1))),
 ]

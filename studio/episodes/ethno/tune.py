@@ -10,8 +10,8 @@ C (favoritism and family: the clarinet answers the tune's phrase ends); D
 (the scattering: fragments on the wrong instruments in the wrong registers,
 bare fifths, then the music box alone, its notes lengthening as a box winds
 down, stopping short of home); E (color-blind: the clarinet alone, the tune
-without its answers; then the title: all four, the lullaby whole, ending on
-a soft F major chord in the harp).
+without its answers); G (the usual cost and the title: all four, the
+lullaby whole, ending on a soft F major chord in the harp).
 """
 
 from music import Tune, Voice
@@ -64,14 +64,12 @@ TUNE = Tune(
                      harp=["[F,C]6", BAR, "[D,A,]6", BAR, BAR, BAR, BAR, BAR],
                      clarinet=[BAR, "g2 f e2 c", BAR, "c'3 a3", BAR, BAR, BAR, BAR],
                      cello=["c2 A F2 A", BAR, "D,,2 F,, A,,2 D,", BAR, BAR, BAR, BAR, BAR]),
-        # Color-blind: the clarinet alone, unanswered; then all four, whole.
-        "E": section("mf",
-                     box=[BAR] * 4 + TUNE_BARS[4:],
-                     harp=[BAR] * 4 + HARP_BARS[4:],
-                     clarinet=TUNE_BARS[:4] + ANSWER[4:],
-                     cello=[BAR] * 4 + CELLO_BARS[4:]),
+        # Color-blind: the clarinet alone, unanswered.
+        "E": section("mf", clarinet=TUNE_BARS),
+        # The usual cost and the title: all four, whole.
+        "G": section("mf", box=TUNE_BARS, harp=HARP_BARS, clarinet=ANSWER, cello=CELLO_BARS),
     },
-    forms=("ABCDE",),
+    forms=("ABCDEG",),
     ending={BOX: "F6", HARP: "[F,A,CF]6", CLARINET: "A6", CELLO: "F,,6"},
-    bpm=(92, 103, 115),
+    bpm=(92, 110, 118),
 )

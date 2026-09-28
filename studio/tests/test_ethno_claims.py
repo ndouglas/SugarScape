@@ -3,7 +3,8 @@ import unittest
 import episode
 
 ROW = dict(own=0.767, everyone=0.129, none=0.085, others=0.023, cooperation=0.756, kin_help=0.864, relatives=0.752,
-           population=1565.0, scattered_none=0.883, scattered_cooperation=0.049, scattered_kin_help=0.127, blind=0.416)
+           population=1565.0, scattered_none=0.883, scattered_cooperation=0.049, scattered_kin_help=0.127, blind=0.416,
+           seeing2=0.666, blind1=0.817)
 CONFIG = dict(colors=4, mutation=0.005, discrimination="same_other", allowed=["E", "H", "S", "T"], cost=0.01,
               benefit=0.03, base_ptr=0.12, start="empty", immigration=1.0, offspring="adjacent")
 
@@ -29,13 +30,13 @@ class EthnoVerdictTest(unittest.TestCase):
     def test_one_world_where_another_kind_leads_breaks_all_20(self):
         r = rows()
         r[6]["none"] = 0.8
-        self.assertFalse(self.verdicts(r)["favoritism wins: about 3 in 4 Flumps help only their own color, in all 20 "
-                                          "worlds"])
+        self.assertFalse(self.verdicts(r)["favoritism wins in all 20 worlds: about 3 in 4 Flumps help only their own "
+                                          "color"])
 
     def test_one_world_with_less_kin_help_breaks_over_8_in_10(self):
         r = rows()
         r[2]["kin_help"] = 0.7
-        self.assertFalse(self.verdicts(r)["why? their neighbors are family: over 8 in 10 of all helps go to relatives"])
+        self.assertFalse(self.verdicts(r)["why? their neighbors share ancestors: over 8 in 10 of all helps go to relatives"])
 
     def test_a_scattered_world_that_keeps_helping_breaks_the_collapse(self):
         r = rows()
@@ -43,9 +44,15 @@ class EthnoVerdictTest(unittest.TestCase):
         self.assertFalse(self.verdicts(r)["put each child anywhere, and favoritism collapses: nine in ten Flumps help "
                                           "no one"])
 
-    def test_the_caption_must_name_the_measured_share(self):
-        self.assertFalse(self.verdicts(rows(blind=0.3))["the paper says color-blind Flumps, paying double to help, help "
-                                                        "14% of the time; here, 42%"])
+    def test_the_caption_must_name_the_measured_shares(self):
+        claim = ("the paper: at double cost, color-seeing Flumps help 56% of the time, color-blind ones 14%; here, 67% "
+                 "and 42%")
+        self.assertFalse(self.verdicts(rows(blind=0.3))[claim])
+        self.assertFalse(self.verdicts(rows(seeing2=0.56))[claim])
+
+    def test_blind_flumps_helping_less_breaks_even_more(self):
+        claim = "at the paper's usual cost, color-blind Flumps help even more: 82% to 76%"
+        self.assertFalse(self.verdicts(rows(blind1=0.70))[claim])
 
 
 if __name__ == "__main__":

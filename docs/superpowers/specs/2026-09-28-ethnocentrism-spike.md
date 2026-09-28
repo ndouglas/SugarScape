@@ -1,6 +1,12 @@
 # Spike: ethnocentrism (Cooperation, episode 3)
 
 **Date:** 2026-09-28
+**Corrected after the review (2026-09-28):** the "blind" caption first set our 42 % against the
+paper's 14 % alone. The paper's paired figure for Flumps that see color (56 %) doesn't reproduce either
+(here 67 %), and cooperation at double cost is steep in the cost, so the caption now shows both pairs
+and blames no one. A new "usual" beat measures what the title rests on: at the standard cost,
+color-blind Flumps help more (81.5 % to 75.6 %, in 18 of 20 seeds). "Family" became "share
+ancestors", "favor" ends at a period near the median, and the end card credits Jansson.
 **Status:** built as `studio/episodes/ethno` (claims in its `measurements.md`: all eight hold as
 proposed). The scattering is filmed as the standard case switched to offspring-anywhere at period
 1,000, and measured that way. The land churns through about 250,000 Flumps a shot, so the board
@@ -46,7 +52,7 @@ A board of ethnocentrics glows amber between the Flumps; one where nobody helps 
 | Figure 1: mutation 0.25 %, 82.8 / 79.8 | 84.3 / 80.4 | Reproduces |
 | From a full land of egoists, "just as dominant" | 78.6 % ethnocentric | Reproduces |
 | Offspring placed anywhere (Jansson 2013): like the null model | cooperation 4.6 % (3.9–5.6); 88.8 % selfish; only 15 % of helps reach relatives | Reproduces: the headline |
-| Color-blind, helping at double cost: "cooperation falls to 14 percent" | 41.6 % (31.7–55.3) | **Fails**: three times the paper's |
+| Color-blind, helping at double cost: "cooperation falls to 14 percent" | 41.6 % (31.7–55.3) | Doesn't reproduce, nor does the paired seeing figure (56 %; here 67 %) |
 | The appendix's 5 % mutation | 35.7 % ethnocentric | A slip (the text, tables and code use 0.5 %) |
 
 **For the finale:** color-blind cooperation at double cost; the appendix's mutation rate.
