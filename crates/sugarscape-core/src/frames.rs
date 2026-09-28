@@ -3,7 +3,9 @@
 //! config, a seed, config overrides and agents placed by hand — run tick by
 //! tick, recording every agent, the sugar at every site, deaths, births and
 //! the statistics series. Spatial games' shots record each generation's
-//! strategies instead (`run`). Other models are not filmed yet.
+//! strategies instead, and the demographic Prisoner's Dilemma's each
+//! cycle's agents, births and deaths (`run`). Other models are not filmed
+//! yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -12,6 +14,7 @@ use serde_json::Value;
 
 use crate::agent::{Sex, Tribe};
 use crate::config::{Config, FieldError};
+use crate::dpd::{DpdConfig, DpdDeath, DpdWorld, SERIES as DPD_SERIES};
 use crate::edit::AgentOverrides;
 use crate::model::ModelConfig;
 use crate::presets;
@@ -125,6 +128,27 @@ impl Shot {
                 .map_err(|e| vec![FieldError::new(format!("set.{path}"), e.message)])?;
         }
         config.validate()?;
+        Ok(config)
+    }
+
+    /// A demographic-PD shot's config with `set` applied, validated.
+    pub fn dpd_config(&self) -> Result<DpdConfig, Vec<FieldError>> {
+        let mut config = self.base()?;
+        if !matches!(config, ModelConfig::Dpd(_)) {
+            return Err(vec![FieldError::new(
+                "model",
+                format!("not a demographic-PD shot: {}", config.kind().as_str()),
+            )]);
+        }
+        for (path, value) in &self.set {
+            config = config
+                .with_path(path, value)
+                .map_err(|e| vec![FieldError::new(format!("set.{path}"), e.message)])?;
+        }
+        config.validate()?;
+        let ModelConfig::Dpd(config) = config else {
+            unreachable!("set keeps the model")
+        };
         Ok(config)
     }
 
@@ -494,12 +518,43 @@ pub struct LatticeDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// `[id, x, y, wealth, age, "C" | "D"]`.
+pub type DpdRow = (u64, u32, u32, f64, u32, &'static str);
+
+/// A demographic-PD shot's world after one cycle.
+#[derive(Clone, Debug, Serialize)]
+pub struct DpdFrame {
+    pub tick: u64,
+    pub agents: Vec<DpdRow>,
+    /// This cycle's births as `[offspring, parent]`, of the offspring alive
+    /// at its end.
+    pub births: Vec<(u64, u64)>,
+    /// This cycle's deaths as `[id, "broke" | "old_age"]`, of agents alive
+    /// at the cycle's start.
+    pub deaths: Vec<(u64, &'static str)>,
+}
+
+/// A whole demographic-PD shot, cycle 0 first.
+#[derive(Clone, Debug, Serialize)]
+pub struct DpdDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub width: u32,
+    pub height: u32,
+    pub config: DpdConfig,
+    pub frames: Vec<DpdFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
 pub enum Dump {
     Sugarscape(Box<FrameDump>),
     Spatial(LatticeDump),
+    Dpd(DpdDump),
 }
 
 /// Runs `shot`, whatever its model.
@@ -517,19 +572,28 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             run_shot(shot).map(|d| Dump::Sugarscape(Box::new(d)))
         }
-        ModelConfig::Spatial(_) => {
+        ModelConfig::Spatial(_) | ModelConfig::Dpd(_) => {
             if !shot.place.is_empty() {
                 return Err(only("place", "sugarscape"));
             }
             if shot.empty {
                 return Err(only("empty", "sugarscape"));
             }
-            run_lattice(shot).map(Dump::Spatial)
+            if matches!(shot.base()?, ModelConfig::Spatial(_)) {
+                return run_lattice(shot).map(Dump::Spatial);
+            }
+            if shot.cells.is_some() {
+                return Err(only("cells", "spatial-games"));
+            }
+            if shot.scores {
+                return Err(only("scores", "spatial-games"));
+            }
+            run_dpd(shot).map(Dump::Dpd)
         }
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape and spatial games, not {}",
+                "shots run the sugarscape, spatial games and the demographic PD, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -621,6 +685,69 @@ pub fn run_lattice(shot: &Shot) -> Result<LatticeDump, Vec<FieldError>> {
         ticks: shot.ticks,
         width,
         height,
+        config,
+        frames,
+        stats,
+    })
+}
+
+fn dpd_frame(world: &DpdWorld, before: &BTreeSet<u64>, alive: &mut BTreeSet<u64>) -> DpdFrame {
+    let w = world.config.width;
+    let agents: Vec<DpdRow> = world
+        .agents()
+        .map(|a| {
+            let strategy = if a.cooperator { "C" } else { "D" };
+            (a.id, a.site % w, a.site / w, a.wealth, a.age, strategy)
+        })
+        .collect();
+    *alive = agents.iter().map(|a| a.0).collect();
+    let events = world.events();
+    DpdFrame {
+        tick: world.tick,
+        births: events
+            .births
+            .iter()
+            .filter(|b| alive.contains(&b.0))
+            .copied()
+            .collect(),
+        deaths: events
+            .deaths
+            .iter()
+            .filter(|d| before.contains(&d.0))
+            .map(|&(id, cause)| {
+                let cause = match cause {
+                    DpdDeath::Broke => "broke",
+                    DpdDeath::OldAge => "old_age",
+                };
+                (id, cause)
+            })
+            .collect(),
+        agents,
+    }
+}
+
+/// Runs a demographic-PD shot and records every cycle.
+pub fn run_dpd(shot: &Shot) -> Result<DpdDump, Vec<FieldError>> {
+    let config = shot.dpd_config()?;
+    let mut world = DpdWorld::new(config.clone(), shot.seed)?;
+    let mut alive = BTreeSet::new();
+    let mut frames = vec![dpd_frame(&world, &BTreeSet::new(), &mut alive)];
+    for _ in 0..shot.ticks {
+        world.step();
+        let before = std::mem::take(&mut alive);
+        frames.push(dpd_frame(&world, &before, &mut alive));
+    }
+    let stats = DPD_SERIES
+        .iter()
+        .filter_map(|&name| world.stats.series(name).map(|s| (name.to_string(), s)))
+        .collect();
+    Ok(DpdDump {
+        format: FORMAT,
+        model: "dpd",
+        seed: shot.seed,
+        ticks: shot.ticks,
+        width: config.width,
+        height: config.width,
         config,
         frames,
         stats,
@@ -1064,7 +1191,7 @@ mod tests {
     fn lattice(json: &str) -> LatticeDump {
         match super::run(&Shot::from_json(json).unwrap()).unwrap() {
             Dump::Spatial(d) => d,
-            Dump::Sugarscape(_) => panic!("a spatial shot"),
+            _ => panic!("a spatial shot"),
         }
     }
 
@@ -1126,6 +1253,69 @@ mod tests {
         assert_eq!(
             err(r#"{"preset": "vi-4-schelling-25", "ticks": 1}"#),
             ["model"]
+        );
+    }
+
+    fn dpd(json: &str) -> DpdDump {
+        match super::run(&Shot::from_json(json).unwrap()).unwrap() {
+            Dump::Dpd(d) => d,
+            _ => panic!("a demographic-PD shot"),
+        }
+    }
+
+    #[test]
+    fn a_dpd_shot_records_agents_births_and_deaths_that_add_up() {
+        let d = dpd(r#"{"preset": "dpd-run-2", "ticks": 40, "seed": 3}"#);
+        assert_eq!(
+            (d.model, d.width, d.height, d.frames.len()),
+            ("dpd", 30, 30, 41)
+        );
+        assert_eq!(d.frames[0].agents.len(), 100);
+        assert_eq!(d.stats["population"].len(), 41);
+        let (mut births, mut deaths) = (0, 0);
+        let side = |f: &DpdFrame, id: u64| f.agents.iter().find(|a| a.0 == id).map(|a| a.5);
+        for k in 1..d.frames.len() {
+            let before: BTreeSet<u64> = d.frames[k - 1].agents.iter().map(|a| a.0).collect();
+            let after: BTreeSet<u64> = d.frames[k].agents.iter().map(|a| a.0).collect();
+            let born: BTreeSet<u64> = d.frames[k].births.iter().map(|b| b.0).collect();
+            let died: BTreeSet<u64> = d.frames[k].deaths.iter().map(|x| x.0).collect();
+            // Everyone new was born this cycle, and everyone gone died in it.
+            assert_eq!(&after - &before, born);
+            assert_eq!(&before - &after, died);
+            for &(child, parent) in &d.frames[k].births {
+                assert!(parent < child);
+                // No mutation in Run 2: a clone keeps its parent's strategy.
+                let parent_side = side(&d.frames[k], parent).or(side(&d.frames[k - 1], parent));
+                assert_eq!(side(&d.frames[k], child), parent_side);
+            }
+            births += born.len();
+            deaths += died.len();
+            assert_eq!(d.stats["population"][k], after.len() as f64);
+        }
+        assert!(births > 0 && deaths > 0);
+        let causes: BTreeSet<&str> = d
+            .frames
+            .iter()
+            .flat_map(|f| &f.deaths)
+            .map(|x| x.1)
+            .collect();
+        assert_eq!(causes, BTreeSet::from(["broke", "old_age"]));
+    }
+
+    #[test]
+    fn dpd_shots_reject_other_models_fields() {
+        let err = |json: &str| fields(super::run(&Shot::from_json(json).unwrap()).unwrap_err());
+        assert_eq!(
+            err(r#"{"preset": "dpd-run-1", "ticks": 1, "scores": true}"#),
+            ["scores"]
+        );
+        assert_eq!(
+            err(r#"{"preset": "dpd-run-1", "ticks": 1, "cells": ["C"]}"#),
+            ["cells"]
+        );
+        assert_eq!(
+            err(r#"{"preset": "dpd-run-1", "ticks": 1, "empty": true}"#),
+            ["empty"]
         );
     }
 

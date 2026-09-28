@@ -113,6 +113,24 @@ pub struct NeighborView {
     pub their_payoff: f64,
 }
 
+/// Why an agent died.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DpdDeath {
+    /// Its wealth went negative.
+    Broke,
+    /// Past the maximum age.
+    OldAge,
+}
+
+/// What the last cycle did, for the studio's frame dumps: each birth as
+/// (offspring, parent), and each death, in the order they happened.
+/// Recording draws nothing.
+#[derive(Clone, Debug, Default)]
+pub struct DpdEvents {
+    pub births: Vec<(u64, u64)>,
+    pub deaths: Vec<(u64, DpdDeath)>,
+}
+
 #[derive(Clone)]
 pub struct DpdWorld {
     pub config: DpdConfig,
@@ -139,6 +157,7 @@ pub struct DpdWorld {
     living: u32,
     births: u32,
     deaths: u32,
+    events: DpdEvents,
     rng: SimRng,
     pub stats: Stats<DpdSnapshot>,
 }
@@ -193,6 +212,7 @@ impl DpdWorld {
             living: 0,
             births: 0,
             deaths: 0,
+            events: DpdEvents::default(),
             rng: rng::seeded(seed),
             stats: Stats::default(),
         };
@@ -204,6 +224,11 @@ impl DpdWorld {
         }
         w.record();
         Ok(w)
+    }
+
+    /// The last cycle's births and deaths.
+    pub fn events(&self) -> &DpdEvents {
+        &self.events
     }
 
     pub fn sites(&self) -> usize {
@@ -237,8 +262,8 @@ impl DpdWorld {
         }
     }
 
-    /// Adds an agent to the end of the list on the empty `site`.
-    fn add(&mut self, site: usize, cooperator: bool, wealth: f64, age: u32) {
+    /// Adds an agent to the end of the list on the empty `site`; its id.
+    fn add(&mut self, site: usize, cooperator: bool, wealth: f64, age: u32) -> u64 {
         let id = self.next_id;
         self.next_id += 1;
         let k = self.agents.len();
@@ -254,6 +279,7 @@ impl DpdWorld {
         });
         self.place(site, k);
         self.living += 1;
+        id
     }
 
     fn place(&mut self, site: usize, k: usize) {
@@ -376,6 +402,7 @@ impl DpdWorld {
     fn begin_cycle(&mut self) {
         self.births = 0;
         self.deaths = 0;
+        self.events = DpdEvents::default();
         for a in &mut self.agents {
             a.income = 0.0;
             a.games = 0;
@@ -490,13 +517,14 @@ impl DpdWorld {
         if self.config.death_timing == DeathTiming::Immediate {
             for me in [i, k] {
                 if self.agents[me].wealth < 0.0 {
-                    self.die(me);
+                    self.die(me, DpdDeath::Broke);
                 }
             }
         }
     }
 
-    fn die(&mut self, k: usize) {
+    fn die(&mut self, k: usize, cause: DpdDeath) {
+        self.events.deaths.push((self.agents[k].id, cause));
         self.agents[k].dead = true;
         self.living -= 1;
         self.deaths += 1;
@@ -542,7 +570,8 @@ impl DpdWorld {
             NewbornAge::Random => self.random_age(),
             NewbornAge::Zero => 0,
         };
-        self.add(site, cooperator, endowment, age);
+        let child = self.add(site, cooperator, endowment, age);
+        self.events.births.push((child, self.agents[i].id));
         self.births += 1;
     }
 
@@ -560,8 +589,10 @@ impl DpdWorld {
         if per_cycle {
             a.wealth -= m;
         }
-        if a.wealth < 0.0 || (max_age > 0 && a.age > max_age) {
-            self.die(i);
+        if a.wealth < 0.0 {
+            self.die(i, DpdDeath::Broke);
+        } else if max_age > 0 && a.age > max_age {
+            self.die(i, DpdDeath::OldAge);
         }
     }
 
