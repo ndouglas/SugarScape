@@ -487,6 +487,67 @@ pub struct Wall {
     pub opaque: bool,
 }
 
+/// Minds 3: how a Flump reasons about a remembered site it can't currently
+/// see.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Belief {
+    /// Believes the site still holds exactly what it last saw there.
+    Recall,
+    /// Projects growback since it was last seen (the engine's default).
+    #[default]
+    Project,
+}
+
+/// Minds 3: how far and how well Flumps remember sites out of sight.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Memory {
+    /// Ticks a seen site is remembered after it leaves sight (0–10 000); 0
+    /// turns memory off. `span > 0` needs `movement.mode: walk` — a rememberer
+    /// has to be able to walk back to what it recalls.
+    pub span: u32,
+    /// Share of agents born remembering (0–1).
+    pub share: f64,
+    pub belief: Belief,
+}
+
+impl Default for Memory {
+    fn default() -> Self {
+        Self {
+            span: 0,
+            share: 1.0,
+            belief: Belief::Project,
+        }
+    }
+}
+
+/// Minds 3: truffles, a second growback good placed by hash and hidden until
+/// an agent walks onto its site.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Truffles {
+    /// Share of non-wall sites given a truffle spot (0–1).
+    pub share: f64,
+    /// Sugar value a truffle spot gives when picked (≥ 0).
+    pub value: f64,
+    /// Ticks a picked spot takes to regrow (1–10 000).
+    pub regrow: u32,
+    /// Mixed into the hash that places spots, independent of `World.rng`.
+    pub seed: u32,
+}
+
+impl Default for Truffles {
+    fn default() -> Self {
+        Self {
+            share: 0.0,
+            value: 5.0,
+            regrow: 30,
+            seed: 1,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SexRule {
     pub enabled: bool,
@@ -653,7 +714,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 13] = [
+pub const RESET_ONLY_PATHS: [&str; 19] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -667,6 +728,12 @@ pub const RESET_ONLY_PATHS: [&str; 13] = [
     "decision",
     "decision.rule",
     "walls",
+    "memory",
+    "memory.span",
+    "memory.share",
+    "truffles",
+    "truffles.share",
+    "truffles.seed",
 ];
 
 /// Whether a schedule may not set `path` (Decision 5): the goods list, whole
@@ -755,6 +822,8 @@ pub struct Config {
     pub decision: Decision,
     pub movement: Movement,
     pub walls: Vec<Wall>,
+    pub memory: Memory,
+    pub truffles: Truffles,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -831,6 +900,8 @@ impl Default for Config {
             decision: Decision::default(),
             movement: Movement::default(),
             walls: Vec::new(),
+            memory: Memory::default(),
+            truffles: Truffles::default(),
             schedule: Vec::new(),
         }
     }
@@ -1415,6 +1486,32 @@ impl Config {
                 format!("must be at most the {free} sites not covered by walls"),
             );
         }
+        e.check(
+            (0..=10_000).contains(&self.memory.span),
+            "memory.span",
+            "must be between 0 and 10000",
+        );
+        e.check(
+            (0.0..=1.0).contains(&self.memory.share),
+            "memory.share",
+            "must be between 0 and 1",
+        );
+        e.check(
+            self.memory.span == 0 || self.movement.mode == MoveMode::Walk,
+            "memory.span",
+            "remembered sites out of sight can only be walked to",
+        );
+        e.check(
+            (0.0..=1.0).contains(&self.truffles.share),
+            "truffles.share",
+            "must be between 0 and 1",
+        );
+        e.non_negative(self.truffles.value, "truffles.value");
+        e.check(
+            (1..=10_000).contains(&self.truffles.regrow),
+            "truffles.regrow",
+            "must be between 1 and 10000",
+        );
         e.check(self.credit.duration >= 1, "credit.duration", "must be ≥ 1");
         e.non_negative(self.credit.rate, "credit.rate");
         let d = &self.disease;
@@ -1601,6 +1698,18 @@ impl Config {
         }
         if self.walls != next.walls {
             out.push(FieldError::new("walls", msg));
+        }
+        if self.memory.span != next.memory.span {
+            out.push(FieldError::new("memory.span", msg));
+        }
+        if self.memory.share != next.memory.share {
+            out.push(FieldError::new("memory.share", msg));
+        }
+        if self.truffles.share != next.truffles.share {
+            out.push(FieldError::new("truffles.share", msg));
+        }
+        if self.truffles.seed != next.truffles.seed {
+            out.push(FieldError::new("truffles.seed", msg));
         }
         out
     }
@@ -3063,5 +3172,153 @@ mod tests {
             ..Default::default()
         };
         c.validate().unwrap();
+    }
+
+    #[test]
+    fn memory_and_truffles_default_to_the_book_and_older_configs_load() {
+        let d = Config::default();
+        assert_eq!(
+            d.memory,
+            Memory {
+                span: 0,
+                share: 1.0,
+                belief: Belief::Project,
+            }
+        );
+        assert_eq!(
+            d.truffles,
+            Truffles {
+                share: 0.0,
+                value: 5.0,
+                regrow: 30,
+                seed: 1,
+            }
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.remove("memory");
+        o.remove("truffles");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!(
+            (c.memory, c.truffles),
+            (Memory::default(), Truffles::default())
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["memory"] = serde_json::json!({ "span": 50 });
+        assert_eq!(
+            Config::from_value(v).unwrap().memory,
+            Memory {
+                span: 50,
+                share: 1.0,
+                belief: Belief::Project,
+            }
+        );
+    }
+
+    #[test]
+    fn memory_and_truffles_are_validated() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(&|c| {
+            c.movement.mode = MoveMode::Walk;
+            c.memory.span = 10_000;
+        })
+        .is_empty());
+        assert_eq!(
+            with(&|c| {
+                c.movement.mode = MoveMode::Walk;
+                c.memory.span = 10_001;
+            }),
+            ["memory.span"]
+        );
+        assert!(with(&|c| c.memory.share = 0.0).is_empty());
+        assert_eq!(with(&|c| c.memory.share = 1.5), ["memory.share"]);
+        assert_eq!(with(&|c| c.memory.share = f64::NAN), ["memory.share"]);
+        // The default movement is `jump`, which can't walk to a remembered site.
+        assert_eq!(with(&|c| c.memory.span = 5), ["memory.span"]);
+        assert!(with(&|c| {
+            c.movement.mode = MoveMode::Walk;
+            c.memory.span = 5;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.memory.span = 5;
+        let errs = c.validate().unwrap_err();
+        assert!(
+            errs[0]
+                .message
+                .contains("remembered sites out of sight can only be walked to"),
+            "{errs:?}"
+        );
+        assert!(with(&|c| c.truffles.share = 1.0).is_empty());
+        assert_eq!(with(&|c| c.truffles.share = 1.5), ["truffles.share"]);
+        assert_eq!(with(&|c| c.truffles.value = -1.0), ["truffles.value"]);
+        assert_eq!(with(&|c| c.truffles.value = f64::NAN), ["truffles.value"]);
+        assert!(with(&|c| c.truffles.regrow = 1).is_empty());
+        assert!(with(&|c| c.truffles.regrow = 10_000).is_empty());
+        assert_eq!(with(&|c| c.truffles.regrow = 0), ["truffles.regrow"]);
+        assert_eq!(with(&|c| c.truffles.regrow = 10_001), ["truffles.regrow"]);
+    }
+
+    #[test]
+    fn memory_and_truffles_are_reset_only_except_belief_value_and_regrow() {
+        let a = Config::default();
+        let changed = |f: &dyn Fn(&mut Config)| {
+            let mut b = a.clone();
+            f(&mut b);
+            a.structural_changes(&b)
+                .into_iter()
+                .map(|e| e.field)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            changed(&|c| {
+                c.movement.mode = MoveMode::Walk;
+                c.memory.span = 10;
+            }),
+            ["memory.span"]
+        );
+        assert_eq!(changed(&|c| c.memory.share = 0.5), ["memory.share"]);
+        assert_eq!(changed(&|c| c.truffles.share = 0.5), ["truffles.share"]);
+        assert_eq!(changed(&|c| c.truffles.seed = 2), ["truffles.seed"]);
+        assert!(changed(&|c| {
+            c.memory.belief = Belief::Recall;
+            c.truffles.value = 10.0;
+            c.truffles.regrow = 50;
+        })
+        .is_empty());
+
+        // A schedule may set `memory.belief` and `truffles.regrow` live.
+        let c = Config {
+            schedule: vec![
+                change(5, "memory.belief", serde_json::json!("recall")),
+                change(6, "truffles.regrow", serde_json::json!(50)),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+
+        // But `memory.span`, `memory` and `truffles.share` change only on reset.
+        for (path, value) in [
+            ("memory.span", serde_json::json!(5)),
+            (
+                "memory",
+                serde_json::json!({ "span": 0, "share": 1.0, "belief": "project" }),
+            ),
+            ("truffles.share", serde_json::json!(0.5)),
+        ] {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
     }
 }
