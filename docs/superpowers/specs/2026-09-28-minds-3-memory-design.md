@@ -209,7 +209,7 @@ Titles are drafts, to be replaced by measured wording. Every memory preset walks
 | Preset | World | Why memory might matter |
 |---|---|---|
 | `mem-open` | `walk-capacity` with memory (span 100, share 0.5) | The control. Rich mountains always in sight, crowded, fast-depleting. Expected: little or no advantage. |
-| `mem-catchment` | Minds 1's `ifd-no-starving` world, utility mind with wander, memory (span 200, share 0.5) | Patches out of sight; wanderers that once saw a patch can return. |
+| `mem-catchment` | Minds 1's `ifd-no-starving` world, walking, utility mind with wander, memory (span 200, share 0.5) | Patches out of sight; wanderers that once saw a patch can return. |
 | `mem-walled` | `ifd-wall` with memory (span 200, share 0.5) | The wall hides the other patch; only those who passed the gap know it. |
 | `mem-seasons` | `walk-seasons` with memory (span 100, share 0.5) | The rich hemisphere alternates; remembering the other one pays. |
 | `mem-truffles` | `walk-capacity` with truffles (share 0.05, value 5, regrow 30) and memory (span 200, share 0.5) | Hidden spots only memory exploits. |
