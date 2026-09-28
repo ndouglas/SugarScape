@@ -43,6 +43,11 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs 15 % and 5 % rational retirees', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['ae-rapid-vs-slow', 'ae-rapid', 'ae-slow', '15 % vs 5 % rational — Retirement (Compare)']);
+  });
+
   it('pairs Granovetter’s uniform and perturbed crowds', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['gr-uniform-vs-perturbed', 'gr-uniform', 'gr-perturbed', 'Uniform vs perturbed crowd — Threshold Models (Compare)']);

@@ -1,6 +1,8 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  RetirementConfig,
+  RetirementInspection,
   ThresholdsConfig,
   ThresholdsInspection,
   AntsConfig,
@@ -41,7 +43,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -64,12 +66,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   farol: 'El Farol and the Minority Game',
   ants: 'Ants and Recruitment',
   thresholds: 'Threshold Models',
+  retirement: 'The Timing of Retirement',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement'
     ? tag
     : 'sugarscape';
 }
@@ -163,6 +166,11 @@ export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
 }
 
+/** A cell of the retirement frame (a panel, an agent as `member`, and an age's `exposed`); check it first. */
+export function isRetirementView(v: AnyInspection): v is RetirementInspection {
+  return 'panel' in v && 'exposed' in v;
+}
+
 /** A cell of the thresholds frame (a panel, an actor as `member`, and Figure 1's `cdf`); check it first. */
 export function isThresholdsView(v: AnyInspection): v is ThresholdsInspection {
   return 'panel' in v && 'cdf' in v;
@@ -201,6 +209,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'farol' && (c as FarolConfig).stop_at > 0) return Math.max(0, (c as FarolConfig).stop_at - tick);
   if (modelOf(c) === 'ants' && (c as AntsConfig).stop_at > 0) return Math.max(0, (c as AntsConfig).stop_at - tick);
   if (modelOf(c) === 'thresholds' && (c as ThresholdsConfig).stop_at > 0) return Math.max(0, (c as ThresholdsConfig).stop_at - tick);
+  if (modelOf(c) === 'retirement' && (c as RetirementConfig).stop_at > 0) return Math.max(0, (c as RetirementConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -215,6 +224,7 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   if (model === 'classes') return (c as ClassesConfig).stop_at_equity;
   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
   if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
+  if (model === 'retirement') return (c as RetirementConfig).stop_at_norm;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -360,6 +370,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['degree', 'Degree'],
     ['crowd', 'Crowd'],
   ],
+  // Working by type, or retired; each agent's type; its threshold; its sub-population.
+  retirement: [
+    ['status', 'Status'],
+    ['type', 'Type'],
+    ['threshold', 'Threshold'],
+    ['group', 'Group'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -383,4 +400,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   farol: [],
   ants: [],
   thresholds: [],
+  retirement: [],
 };

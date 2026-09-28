@@ -95,7 +95,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -494,7 +494,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -673,6 +673,79 @@ export interface ThresholdsInspection {
   cdf: number | null;
   count: number | null;
   member: ActorView | null;
+  agent: null;
+}
+
+/**
+ * Axtell and Epstein's timing of retirement (milestone 26): cohorts, rationals, randoms and
+ * imitators in transient social networks, the policy switch and two coupled sub-populations.
+ */
+export interface RetirementConfig {
+  model: 'retirement';
+  per_cohort: number;
+  rational: number;
+  random: number;
+  p: number;
+  threshold: number;
+  spread: number;
+  size: { min: number; max: number };
+  extent: number;
+  counts: 'eligible' | 'all';
+  renewal: 'slot' | 'replace';
+  order: 'by_cohort' | 'shuffled';
+  initial_deaths: 'literal' | 'survivors';
+  eligibility: number;
+  mandatory: number;
+  policy: { enabled: boolean; to: number };
+  groups: { enabled: boolean; coupling: number };
+  norm: number;
+  stop_at_norm: boolean;
+  stop_at: number;
+}
+
+export interface RetirementStats {
+  tick: number;
+  retired: number;
+  retired_a: number;
+  retired_b: number;
+  /** The period the norm set in, and periods from the policy switch to the new norm (null before). */
+  transition: number | null;
+  transition_new: number | null;
+  /** The period each group reached the norm (both `transition` without groups). */
+  transition_a: number | null;
+  transition_b: number | null;
+  modal_age: number | null;
+  mean_age: number | null;
+  rational_share: number;
+  eligibility: number;
+}
+
+export interface RetireeView {
+  id: number;
+  age: number;
+  kind: 'rational' | 'random' | 'imitator';
+  threshold: number;
+  death_age: number;
+  group: number;
+  network: number;
+  eligible: number;
+  retired_members: number;
+  retired: boolean;
+  retired_at: number | null;
+}
+/**
+ * A cell of the retirement frame: an agent of the population, an age's retirement bar, or a period
+ * of the time panel. `agent` is always null.
+ */
+export interface RetirementInspection {
+  site: { x: number; y: number };
+  panel: 'population' | 'ages' | 'time' | null;
+  age: number | null;
+  retirements: number | null;
+  exposed: number | null;
+  period: number | null;
+  retired: number | null;
+  member: RetireeView | null;
   agent: null;
 }
 
@@ -985,7 +1058,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -1310,7 +1383,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1368,7 +1441,10 @@ export type ColorMode =
   | 'degree'
   | 'state'
   | 'threshold'
-  | 'crowd';
+  | 'crowd'
+  | 'status'
+  | 'type'
+  | 'group';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

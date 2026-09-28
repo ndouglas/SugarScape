@@ -3,11 +3,12 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
+  RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
   AgreementInspection,
@@ -271,6 +272,27 @@ export class InspectPanel {
     return rows;
   }
 
+  /** An agent of the retirement population, an age's retirements, or a period. */
+  private retirementRows(view: RetirementInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${fmt(100 * x)} %`;
+    if (view.panel === 'time') return [row('Period', String(view.period)), row('Eligible retired', pct(view.retired ?? 0))];
+    if (view.panel === 'ages') {
+      const e = view.exposed ?? 0;
+      return [row('Age', String(view.age)), row('Retired, last 10 periods', `${view.retirements} of ${e}${e > 0 ? ` (${pct((view.retirements ?? 0) / e)})` : ''}`)];
+    }
+    const a = view.member;
+    if (!a) return [row('Age', view.age === null ? '—' : String(view.age)), row('Point', 'an empty place')];
+    const rows = [
+      row('Agent', `#${a.id} · ${a.kind}${a.group > 0 ? ' · second group' : ''}`),
+      row('Age', `${a.age} (dies at ${fmt(a.death_age)})`),
+      row('Status', a.retired ? `retired${a.retired_at !== null ? ` at ${a.retired_at}` : ''}` : 'working'),
+      row('Network', `${a.network} · ${a.eligible} eligible · ${a.retired_members} retired`),
+    ];
+    if (a.kind === 'imitator') rows.push(row('Threshold', pct(a.threshold)));
+    return rows;
+  }
+
   /** A step of the thresholds' time panel, a point of Figure 1, a histogram row, or an actor. */
   private thresholdsRows(view: ThresholdsInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -487,6 +509,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isRetirementView(view)
+            ? this.retirementRows(view)
           : isThresholdsView(view)
             ? this.thresholdsRows(view)
           : isAntsView(view)

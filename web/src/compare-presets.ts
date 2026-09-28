@@ -170,6 +170,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'gr-uniform',
     b: 'gr-perturbed',
   },
+  {
+    id: 'ae-rapid-vs-slow',
+    label: '15 % vs 5 % rational — Retirement (Compare)',
+    a: 'ae-rapid',
+    b: 'ae-slow',
+  },
 ];
 
 /**
