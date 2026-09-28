@@ -288,6 +288,7 @@ calibration is off by five; Cooney's payoff dip appears under every victory rule
 - **Boyd, Gintis, Bowles and Richerson's altruistic punishment** (and Cooney's PDE critique): done (Milestone 27).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
+- **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

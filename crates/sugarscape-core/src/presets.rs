@@ -147,6 +147,21 @@ fn enable_seasons(c: &mut Config) {
     c.seasons.enabled = true;
 }
 
+/// Minds 3: `span` ticks of memory for a `share` of newborns, under
+/// `project` belief (the engine's default).
+fn memory(c: &mut Config, span: u32, share: f64) {
+    c.memory.span = span;
+    c.memory.share = share;
+}
+
+/// Minds 3: truffle spots covering `share` of non-wall sites, worth `value`
+/// sugar and regrowing after `regrow` ticks (`seed` stays the default, 1).
+fn truffles(c: &mut Config, share: f64, value: f64, regrow: u32) {
+    c.truffles.share = share;
+    c.truffles.value = value;
+    c.truffles.regrow = regrow;
+}
+
 /// The book's first frame for Animation II-6: a 20×20 block in the
 /// bottom-left corner, otherwise as Animation II-2 (400 agents, so full).
 /// Surveyed (docs/survey/2026-09-24-model-survey.md): the ring of the book's
@@ -791,6 +806,114 @@ pub fn all() -> Vec<Preset> {
                 fence(c, 0, true);
             },
         ),
+        preset(
+            "mem-open",
+            "Memory: open sugarscape",
+            "Minds 3",
+            "walk-capacity's world (rule M's Flumps walking to the best site in sight) with memory: a rememberer that leaves a mountain can walk back to it for 100 ticks after it drops out of sight. The mountains stay in sight of most sites and refill fast, so a rememberer should gain little. Measured (20 seeds, ticks 200–500): rememberers lose instead. They hold a median 324 sugar against the others' 438 (an advantage of −113), within 10 % of the others in only 2 of 20 seeds. Two likely causes. First, rule M prices no travel: it values a site by its sugar alone, so a far remembered site believed full beats a near one. Under the utility mind with travel 0.5 (memory as here), the advantage rises by a median 119, higher in every seed, to about neutral: +7.4 (IQR −18 to +37), rememberers wealthier in only 10 of 20 seeds. But the share of rememberers' choices aimed at a remembered site falls from 0.68 to 0.10, and across the arms the loss tracks how often memory is used (projection uses it about twice as often as recall, 0.68 against 0.34, and loses more). So pricing travel removes the loss, largely by using memory less; no gain was shown. Second, projection ignores competitors who harvest a site first: under recall (believing a site holds what it held when seen) the advantage is −34, and projection is worse than recall in every seed, with a larger belief error (2.67 against 2.46 sugar; measured only on the targets chosen, the ones believed best, so biased by that selection). Most choices of a remembered site out of sight find less there than believed under either belief (93 % under project, 95 % under recall). Memory for everyone (share 1) lowers the population to 154 from walking's 181 (mean over ticks 300–500), in every seed, so memory doesn't restore the capacity walking lost. Across spans (the mem-span sweeps) the advantage is negative at every span and growback rate, so the \"best\" span is only the least-harmful one; under recall it's 10 ticks at growback 1, the shortest span tested (IQR 10–10), against 25 at 0.25 and 0.5. Pinned at the floor of the grid, it can't show Bracis et al.'s forgetting that tracks regrowth.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+            },
+        ),
+        preset(
+            "mem-catchment",
+            "Memory: patches out of sight",
+            "Minds 3",
+            "ifd-no-starving's world (the 2.10 : 1 patches with an endowment so large nobody starves), walking under the utility mind with idle wander, and memory: a rememberer that once saw a patch can walk back to it once it's out of sight, instead of wandering blind like everyone else. Measured (20 seeds): rememberers first reach a patch sooner (median tick 27.5 against 33) and spend slightly more of ticks 200–500 on a patch (90 % against 89 %), yet they end slightly poorer in every seed, by a median 90 sugar over ticks 200–500, on holdings near 100 000 (under 0.1 %). Likely causes, not isolated here: travel that costs a walker time goes unpriced in the choice, so far remembered sites beat near ones; and projection counts on regrowth that others harvest first (see mem-open).",
+            |c| {
+                two_patches(c, 7.0);
+                c.goods[0].endowment = URange::new(100_000, 100_000);
+                c.movement.mode = MoveMode::Walk;
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.idle = Idle::Wander;
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-walled",
+            "Memory: beyond the wall",
+            "Minds 3",
+            "ifd-wall's world (the opaque wall with a central gap, hiding the far patch from view) with memory: only a rememberer that once passed through the gap and saw the far patch can walk back to it once it's hidden again. Measured (20 seeds, ticks 200–500): memory is ruinous here. Rememberers hold a median 12 sugar against the others' 127, poorer in every seed, and only 7 % of them are alive at tick 500 against 74 % of the others. On ticks when any rememberer chose a remembered site out of sight, such choices were 96 % of their moves, and 98 % of them found less than believed. Recall is strongly negative too: an advantage of −40, negative in every seed, with 49 % of rememberers alive at tick 500 against 73 % of the others; so projection isn't the only driver; likely causes are both unpriced travel and projection. Rule M prices no travel, so with vision 10–20 a rememberer walks to far remembered sites believed full and starves on the way. Under the utility mind with travel 0.5 the advantage improves from −114 to −55, higher in every seed, but stays negative, while the share of rememberers' choices aimed at a remembered site falls from 0.96 to 0.65: pricing travel shrinks the loss, largely by using memory less; no gain was shown. The two arms aren't additive and the travel arm also changes the mind, so they don't rank the causes.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-seasons",
+            "Memory: the other hemisphere",
+            "Minds 3",
+            "walk-seasons's world (seasons flipping every 50 ticks, Flumps walking) with memory: a rememberer can walk back toward the hemisphere it last saw thriving, instead of relying on what's in sight when the season turns. Measured (20 seeds, ticks 200–500): rememberers end poorer in every seed (a median 295 sugar against 342), and 23 % of them are alive at tick 500 against 36 % of the others; 96 % of their choices of a remembered site find less than believed. Likely causes, not isolated here: rule M prices no travel, so far remembered sites beat near ones, and projection counts on regrowth that others harvest first (see mem-open).",
+            |c| {
+                enable_seasons(c);
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+            },
+        ),
+        preset(
+            "mem-truffles",
+            "Memory: hidden truffle spots",
+            "Minds 3",
+            "walk-capacity's world with truffles: hash-placed spots that are invisible until walked onto, worth 5 sugar, and take 30 ticks to regrow after being picked (5 % of sites). Only a rememberer can head back to a spot it has already found. Measured (20 seeds): rememberers do find more truffles, 0.0147 a Flump-tick against 0.0065 (ticks 1–500), more in every seed, but they end poorer in 18 of 20 seeds (a median 347 sugar against 430 over ticks 200–500). A likely contributor: chasing remembered sugar far away costs more than truffles bring, since rule M prices no travel. Under the utility mind with travel 0.5 the advantage rises from −82 to about neutral, +1.5, higher in 18 of 20 seeds, while the share of rememberers' choices aimed at a remembered site falls from 0.73 to 0.25: pricing travel removes the loss, largely by using memory less; no gain was shown. Projection adds to the loss: under recall the advantage is −25 (still a loss) against −82, and projection is worse than recall in every seed, with twice the belief error (4.99 against 2.46).",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.05, 5.0, 30);
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-trapline",
+            "Memory: a trapline of truffle spots",
+            "Thomson, Slatkin & Thomson 1997; Ohashi & Thomson 2005; Gill 1988; Minds 3",
+            "A sparse 50 × 50 torus (flat capacity 1, growback 0.1) where truffle spots (2 % of sites, worth 10 sugar, regrowing after 40 ticks) are the main food; 20 Flumps of metabolism 1, endowment 30 and vision 1–6 walk, and every Flump remembers for 400 ticks. Traplining — a fixed round of revisits timed to regrowth — should appear among rememberers. Measured (20 seeds, ticks 1–1000): it does. The index of return variability (Thomson, Slatkin & Thomson 1997: 0 for a perfect trapliner, 1 for random revisits) has a per-seed median of 0.15, below 0.8 in every seed. With half the Flumps remembering, rememberers gather 0.050 truffles a Flump-tick against 0.011 and are wealthier in every seed (144 sugar against 76 over ticks 200–500), as Ohashi & Thomson's \"more competitive\" predicts. The non-rememberers' index is 0.36 there, which also passes the 0.8 threshold, so the index alone doesn't show memory making the trapline; likely the sparse map channels anyone's wanderings through the same spots. The +69 advantage (144 against 76) is at share 0.5, not the preset's share 1. Gill's competition effect doesn't appear: the median interval between visits to the same spot is 50 ticks with 5 Flumps and with 20 (regrowth takes 40), and only about 12 % of revisits come sooner than 40 ticks either way.",
+            |c| {
+                c.width = 50;
+                c.height = 50;
+                c.population = 20;
+                c.goods[0].map = Map::Flat { capacity: 1.0 };
+                c.growback.rate = 0.1;
+                c.goods[0].metabolism = URange::new(1, 1);
+                c.goods[0].endowment = URange::new(30, 30);
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.02, 10.0, 40);
+                memory(c, 400, 1.0);
+            },
+        ),
+        preset(
+            "mem-mvt",
+            "Memory: the marginal value theorem",
+            "Charnov 1976; Minds 3",
+            "10 Flumps (metabolism 1, endowment 50, vision 1–20) on a 60 × 60 torus with nine equal patches (peaks of radius 4, height 4) on a square lattice of spacing 20, growback 0.25; walking under the utility mind with travel k = 0.5, and memory (span 400, share 1) so every Flump can walk back to a remembered patch. Few foragers, patches in sight and a travel cost is the marginal value theorem's setting: when to leave a patch that's still yielding. Measured (20 seeds, ticks 1–1000): under this mind, foragers who find a patch never leave it. A patch here takes in far more than one Flump eats, so no Flump ever departs (0 departures over all 20 seeds) and a median 5 of the 10 are alive at tick 1000, each settled on a patch; the rest likely start with no sugar in sight and stand still until they starve. Depleting patches don't help: with radius 2 and growback 0.05 (0.45 sugar a tick per patch), nobody is alive after tick 200 with 10 Flumps; with 3, nobody is alive at tick 1000 and only 3 departures happen across 20 seeds. So the theorem's decision, leaving when a patch's intake falls to the habitat's average, is untestable here. Likely reason: rule M and the utility mind compare the values of sites, not rates of intake, and hold no estimate of the habitat's average rate; and with sight only along rows and columns, a forager that has emptied a patch often has no other patch in sight. The marginal value theorem is left to Minds 4 (planning).",
+            |c| {
+                c.width = 60;
+                c.height = 60;
+                c.population = 10;
+                c.goods[0].map = Map::Peaks {
+                    peaks: (0..3u32)
+                        .flat_map(|i| {
+                            (0..3u32).map(move |j| Peak {
+                                x: 10 + 20 * i,
+                                y: 10 + 20 * j,
+                                radius: 4.0,
+                                height: 4.0,
+                            })
+                        })
+                        .collect(),
+                };
+                c.goods[0].metabolism = URange::new(1, 1);
+                c.goods[0].endowment = URange::new(50, 50);
+                c.vision = URange::new(1, 20);
+                c.growback.rate = 0.25;
+                c.movement.mode = MoveMode::Walk;
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.travel = 0.5;
+                memory(c, 400, 1.0);
+            },
+        ),
     ]
 }
 
@@ -1124,7 +1247,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 47);
+        assert_eq!(presets.len(), 54);
         for p in presets {
             p.config
                 .validate()
@@ -1328,6 +1451,47 @@ mod tests {
             .map(|g| (g.name.as_str(), g.zeros.min, g.zeros.max))
             .collect();
         assert_eq!(spans, [("Blue", 0, 3), ("Green", 4, 7), ("Red", 8, 11)]);
+    }
+
+    #[test]
+    fn the_memory_presets_walk_and_remember() {
+        let ids = [
+            "mem-open",
+            "mem-catchment",
+            "mem-walled",
+            "mem-seasons",
+            "mem-truffles",
+            "mem-trapline",
+            "mem-mvt",
+        ];
+        for id in ids {
+            let c = by_id(id).unwrap_or_else(|| panic!("{id}")).config;
+            c.validate().unwrap_or_else(|e| panic!("{id}: {e:?}"));
+            assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
+            assert!(c.memory.span > 0, "{id}: no memory");
+        }
+        for id in ["mem-truffles", "mem-trapline"] {
+            assert!(
+                by_id(id).unwrap().config.truffles.share > 0.0,
+                "{id}: no truffles"
+            );
+        }
+        let mvt = by_id("mem-mvt").unwrap().config;
+        let Map::Peaks { peaks } = &mvt.goods[0].map else {
+            panic!("mem-mvt: not a peaks map")
+        };
+        assert_eq!(peaks.len(), 9, "mem-mvt: nine peaks");
+        let mut centers: Vec<(u32, u32)> = peaks.iter().map(|p| (p.x, p.y)).collect();
+        centers.sort();
+        let mut expected: Vec<(u32, u32)> = (0..3u32)
+            .flat_map(|i| (0..3u32).map(move |j| (10 + 20 * i, 10 + 20 * j)))
+            .collect();
+        expected.sort();
+        assert_eq!(centers, expected, "mem-mvt: peak centers");
+        assert!(
+            peaks.iter().all(|p| p.radius == 4.0 && p.height == 4.0),
+            "mem-mvt: peak radius/height"
+        );
     }
 
     #[test]

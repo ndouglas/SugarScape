@@ -1,11 +1,17 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Config, Decision, Movement } from './types';
+import type { Config, Decision, Memory, Movement, Truffles } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
 
 /** A config's movement, or the book's jump at speed 1 for older configs. */
 const movement = (c: Config): Movement => c.movement ?? { mode: 'jump', speed: 1 };
+
+/** A config's memory, or the engine's default (span 0: memory off) for older configs. */
+const memory = (c: Config): Memory => c.memory ?? { span: 0, share: 1, belief: 'project' };
+
+/** A config's truffles, or the engine's default (share 0: no truffles) for older configs. */
+const truffles = (c: Config): Truffles => c.truffles ?? { share: 0, value: 5, regrow: 30, seed: 1 };
 
 interface Base {
   path: string;
@@ -224,6 +230,50 @@ export const GROUPS: Group[] = [
       {
         kind: 'number', path: 'movement.speed', label: 'Speed (cells per tick)', min: 1, max: 50, step: 1,
         adjust: (next) => { next.movement = { ...movement(next), ...next.movement }; },
+      },
+    ],
+  },
+  {
+    title: 'Memory (Minds 3)',
+    note: 'Memory needs walking (Movement: Walk). A remembered site’s belief is what was seen (recall) or that plus growback since (project).',
+    controls: [
+      {
+        kind: 'number', path: 'memory.span', label: 'Span (ticks a site is remembered)', min: 0, max: 10_000, step: 1, reset: true,
+        adjust: (next) => { next.memory = { ...memory(next), ...next.memory }; },
+      },
+      {
+        kind: 'number', path: 'memory.share', label: 'Share born remembering', min: 0, max: 1, step: 0.05, reset: true,
+        adjust: (next) => { next.memory = { ...memory(next), ...next.memory }; },
+      },
+      {
+        kind: 'select', path: 'memory.belief', label: 'Belief about a remembered site',
+        current: (c) => memory(c).belief,
+        options: [
+          { value: 'recall', label: 'Recall: what it saw there', apply: (c) => { c.memory = { ...memory(c), belief: 'recall' }; } },
+          { value: 'project', label: 'Project: that plus growback since', apply: (c) => { c.memory = { ...memory(c), belief: 'project' }; } },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Truffles',
+    note: 'Hidden spots, found only by stopping on them; they ripen again a fixed time after a harvest.',
+    controls: [
+      {
+        kind: 'number', path: 'truffles.share', label: 'Share of sites with a spot', min: 0, max: 1, step: 0.01, reset: true,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
+      },
+      {
+        kind: 'number', path: 'truffles.value', label: 'Value when picked', min: 0, max: 50, step: 0.5,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
+      },
+      {
+        kind: 'number', path: 'truffles.regrow', label: 'Regrow time (ticks)', min: 1, max: 10_000, step: 1,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
+      },
+      {
+        kind: 'number', path: 'truffles.seed', label: 'Layout seed', min: 0, max: 999_999, step: 1, reset: true,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
       },
     ],
   },

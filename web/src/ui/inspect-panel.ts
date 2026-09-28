@@ -50,6 +50,17 @@ export function headingText(plan: NonNullable<AgentView['plan']>, at: [number, n
   return plan.target_x === at[0] && plan.target_y === at[1] ? 'Staying' : `Can't reach ${target}`;
 }
 
+/**
+ * The Remembers row's text (Minds 3): "n site(s) (m truffle spot(s))", singular/plural for each
+ * noun, or "Doesn't remember" for a non-rememberer (or `null`, memory off).
+ */
+export function memoryText(m: AgentView['memory']): string {
+  if (!m?.remembers) return "Doesn't remember";
+  const sites = m.sites === 1 ? 'site' : 'sites';
+  const spots = m.spots === 1 ? 'spot' : 'spots';
+  return `${m.sites} ${sites} (${m.spots} truffle ${spots})`;
+}
+
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
   private visible = false;
@@ -100,6 +111,7 @@ export class InspectPanel {
       ),
       ...(this.engine.sugar.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
+      ...((this.engine.sugar.memory?.span ?? 0) > 0 ? [row('Remembers', memoryText(a.memory))] : []),
       ...(a.plan
         ? [
             a.plan.walked

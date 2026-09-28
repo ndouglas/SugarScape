@@ -76,6 +76,14 @@ const GOLDEN: &[(&str, u64)] = &[
     ("ifd-fence", 0x6c30002185fdb871),
     ("ifd-fence-far", 0x2a0ceead5af4938c),
     ("ifd-wall", 0xd079a77c3ac80869),
+    // Minds 3
+    ("mem-open", 0x817e0bb1cb4065b),
+    ("mem-catchment", 0xbae607062bd8a385),
+    ("mem-walled", 0xe5a8f45dd79a6779),
+    ("mem-seasons", 0x7445335112f02389),
+    ("mem-truffles", 0xf511426e092ca85b),
+    ("mem-trapline", 0xae81840c5bbbe91),
+    ("mem-mvt", 0xa00361ad0017c367),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

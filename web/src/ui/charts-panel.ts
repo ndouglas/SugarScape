@@ -155,6 +155,45 @@ const CHARTS: ChartDef[] = [
     range: [0, 1],
     shown: hasPatches,
   },
+  {
+    title: 'Memory',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'remembered_moves', label: 'Remembered moves', color: '--c1' },
+      { key: 'stale_choices', label: 'Stale choices', color: '--c2' },
+    ]),
+    range: [0, 1],
+    shown: (c) => (c.memory?.span ?? 0) > 0,
+  },
+  {
+    // In sugar, not a share, so apart from the Memory chart's two shares.
+    title: 'Belief error (sugar)',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'belief_error', label: 'Belief error', color: '--c1' }]),
+    shown: (c) => (c.memory?.span ?? 0) > 0,
+  },
+  {
+    title: 'Rememberers vs others',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'wealth_rememberers', label: 'Rememberers', color: '--c1' },
+      { key: 'wealth_others', label: 'Others', color: '--c2' },
+    ]),
+    shown: (c) => (c.memory?.span ?? 0) > 0,
+  },
+  {
+    title: 'Truffles',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'truffles_found', label: 'Found', color: '--c1' },
+      { key: 'truffles_by_rememberers', label: 'By rememberers', color: '--c2' },
+    ]),
+    shown: (c) => (c.truffles?.share ?? 0) > 0,
+  },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },
   { title: 'Units traded', kind: 'time', section: 'goods', lines: perGood('traded_'), shown: (c) => c.trade.enabled },

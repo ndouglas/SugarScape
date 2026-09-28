@@ -32,7 +32,7 @@ fn capacity(c: &Config, seeds: &[u64]) -> Vec<f64> {
 /// Claim: `a` exceeds `b` seed by seed. Holds when a − b > 0 in at least 80 %
 /// of seeds (`range` on the paired differences); the unpaired one-sided
 /// Mann–Whitney is reported in the detail.
-fn paired_greater(a: &[f64], b: &[f64], a_name: &str, b_name: &str) -> Outcome {
+pub(crate) fn paired_greater(a: &[f64], b: &[f64], a_name: &str, b_name: &str) -> Outcome {
     let diffs: Vec<f64> = a.iter().zip(b).map(|(x, y)| x - y).collect();
     let unpaired = greater(a, b, a_name, b_name);
     let mut outcome = range(&diffs, f64::MIN_POSITIVE, f64::INFINITY, false);

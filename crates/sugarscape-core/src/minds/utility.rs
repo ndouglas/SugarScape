@@ -15,7 +15,7 @@ use crate::agent::AgentId;
 use crate::config::{Decision, Idle};
 use crate::geometry::Pos;
 use crate::portable::{exp_neg, ln};
-use crate::rules::movement::{arrive, candidates, choose};
+use crate::rules::movement::{arrive, candidates_with_memory, choose, record_choice};
 use crate::rules::Harvest;
 use crate::world::World;
 
@@ -42,32 +42,42 @@ pub fn crowd(world: &World, site: Pos, mover: AgentId) -> u32 {
         .count() as u32
 }
 
-/// Rule M's step under the utility mind.
+/// Rule M's step under the utility mind. A rememberer's remembered sites
+/// (Minds 3) are scored with crowding 0: nobody out of sight can be counted.
+/// Wandering happens only when nothing in sight scores and nothing
+/// remembered scores above 0, and then only among the sites in sight.
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let d = world.config.decision;
-    let mut scored = candidates(world, id);
-    if d.crowding > 0.0 || d.travel > 0.0 {
-        for c in &mut scored {
-            let n = if d.crowding > 0.0 {
+    let (welfare, start) = candidates_with_memory(world, id);
+    // Scored only when a consideration is on; otherwise the score is the
+    // welfare itself, and no copy is made.
+    let rescored = (d.crowding > 0.0 || d.travel > 0.0).then(|| {
+        let mut scored = welfare.clone();
+        for (k, c) in scored.iter_mut().enumerate() {
+            let n = if d.crowding > 0.0 && k < start {
                 crowd(world, c.0, id)
             } else {
                 0
             };
             c.2 = score(c.2, c.1, n, &d);
         }
-    }
-    let target = if d.idle == Idle::Wander && scored.iter().all(|c| c.2 == 0.0) {
-        // The current site is scored[0]; wander among the others, if any.
-        match scored[1..].choose(&mut world.rng) {
+        scored
+    });
+    let scored = rescored.as_deref().unwrap_or(&welfare);
+    let idle = d.idle == Idle::Wander
+        && scored[..start].iter().all(|c| c.2 == 0.0)
+        && scored[start..].iter().all(|c| c.2 <= 0.0);
+    let target = if idle {
+        // The current site is scored[0]; wander among the others in sight,
+        // if any.
+        match scored[1..start].choose(&mut world.rng) {
             Some(c) => c.0,
-            None => {
-                let target = choose(&scored, &mut world.rng);
-                return arrive(world, id, target);
-            }
+            None => choose(scored, &mut world.rng),
         }
     } else {
-        choose(&scored, &mut world.rng)
+        choose(scored, &mut world.rng)
     };
+    record_choice(world, id, &welfare, start, target);
     arrive(world, id, target)
 }
 
@@ -179,5 +189,76 @@ mod tests {
         let mut expected = before;
         crate::rules::movement::choose(&[(Pos::new(5, 5), 0, 0.0)], &mut expected);
         assert_eq!(w.rng, expected);
+    }
+
+    #[test]
+    fn crowding_is_zero_for_a_remembered_site() {
+        // Remembered (5, 9) worth 4 has two Flumps beside it, out of sight:
+        // crowded it would score 4 / 3 and lose to (6, 5)'s 3, but the
+        // walker can't know who's there, so it scores 4.
+        let mut c = blank_config(21, 21);
+        c.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        c.memory.span = 100;
+        c.memory.belief = crate::config::Belief::Recall;
+        c.decision = utility(0.0, 1.0, Idle::Stay);
+        let mut w = World::new(c, 7).unwrap();
+        let me = spawn(&mut w, 5, 5);
+        w.agent_mut(me).unwrap().remembers = true;
+        let idx = w.torus.index(Pos::new(5, 9)) as u32;
+        let seen = crate::minds::memory::Seen::new(&[4.0], &[4.0], 0);
+        w.agent_mut(me).unwrap().memory.sites.insert(idx, seen);
+        spawn(&mut w, 4, 9);
+        spawn(&mut w, 6, 9);
+        set_sugar(&mut w, 6, 5, 3.0);
+        w.tick = 1;
+        act(&mut w, me);
+        assert_eq!(w.agent(me).unwrap().plan.target, Some(Pos::new(5, 9)));
+        assert_eq!(w.events().remembered_moves, 1);
+    }
+
+    /// A rememberer at (5, 5) with vision 1 in a walking utility world with
+    /// wander, remembering sugar `level` at (5, 9).
+    fn wandering_rememberer(level: f64) -> (World, AgentId) {
+        let mut c = blank_config(21, 21);
+        c.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        c.memory.span = 100;
+        c.memory.belief = crate::config::Belief::Recall;
+        c.decision = utility(0.0, 0.0, Idle::Wander);
+        let mut w = World::new(c, 7).unwrap();
+        let me = spawn(&mut w, 5, 5);
+        w.agent_mut(me).unwrap().remembers = true;
+        let idx = w.torus.index(Pos::new(5, 9)) as u32;
+        let seen = crate::minds::memory::Seen::new(&[level], &[level], 0);
+        w.agent_mut(me).unwrap().memory.sites.insert(idx, seen);
+        w.tick = 1;
+        (w, me)
+    }
+
+    #[test]
+    fn a_rememberer_with_nothing_in_sight_walks_to_a_remembered_site_rather_than_wander() {
+        let (mut w, me) = wandering_rememberer(4.0);
+        act(&mut w, me);
+        assert_eq!(w.agent(me).unwrap().plan.target, Some(Pos::new(5, 9)));
+        assert_eq!(w.agent(me).unwrap().pos, Pos::new(5, 6));
+    }
+
+    #[test]
+    fn a_rememberer_with_nothing_positive_anywhere_wanders_only_in_sight() {
+        for seed in 0..40 {
+            let (mut w, me) = wandering_rememberer(0.0);
+            w.rng = crate::rng::seeded(seed);
+            act(&mut w, me);
+            let t = w.agent(me).unwrap().plan.target.unwrap();
+            assert_ne!(t, Pos::new(5, 9), "never a remembered site");
+            assert_ne!(t, Pos::new(5, 5), "it wanders");
+            assert_eq!(t.x.abs_diff(5) + t.y.abs_diff(5), 1, "in sight: {t:?}");
+            assert_eq!(w.events().remembered_moves, 0);
+        }
     }
 }

@@ -86,6 +86,24 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
+    if config.memory.span > 0 {
+        for s in [
+            "remembering",
+            "remembered_moves",
+            "belief_error",
+            "stale_choices",
+            "wealth_rememberers",
+            "wealth_others",
+            "wealth_advantage",
+        ] {
+            names.push(s.into());
+        }
+    }
+    if config.truffles.share > 0.0 {
+        for s in ["truffles_found", "truffles_by_rememberers"] {
+            names.push(s.into());
+        }
+    }
     names
 }
 
@@ -138,6 +156,12 @@ pub struct Snapshot {
     /// at least two peaks.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub patches: Option<PatchStats>,
+    /// Minds 3's memory series, present when `memory.span > 0`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memory: Option<MemoryStats>,
+    /// Minds 3's truffle series, present when `truffles.share > 0`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub truffles: Option<TruffleStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -154,6 +178,35 @@ pub struct PatchStats {
     pub on_first: u32,
     pub on_other: u32,
     pub off: u32,
+}
+
+/// Minds 3's memory series (see the module's series list). Shares and means
+/// are 0 (not NaN) when their group or denominator is empty.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct MemoryStats {
+    /// Share of living agents who remember.
+    pub remembering: f64,
+    /// Share of rememberers' choices this tick that targeted a remembered
+    /// out-of-sight site.
+    pub remembered_moves: f64,
+    /// Mean |believed − true| welfare over those remembered choices.
+    pub belief_error: f64,
+    /// Share of those remembered choices whose true value was below the
+    /// believed value when chosen.
+    pub stale_choices: f64,
+    /// Mean sugar held by rememberers (0 if none are alive).
+    pub wealth_rememberers: f64,
+    /// Mean sugar held by non-rememberers (0 if none are alive).
+    pub wealth_others: f64,
+    /// `wealth_rememberers − wealth_others`, 0 unless both groups exist.
+    pub wealth_advantage: f64,
+}
+
+/// Minds 3's truffle series (see the module's series list).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct TruffleStats {
+    pub truffles_found: u32,
+    pub truffles_by_rememberers: u32,
 }
 
 impl Snapshot {
@@ -278,6 +331,64 @@ impl Snapshot {
                 }
                 p
             }),
+            memory: (world.config.memory.span > 0).then(|| {
+                let remembering = mean(&|a| if a.remembers { 1.0 } else { 0.0 });
+                let moves = events.moves;
+                let remembered = events.remembered_moves;
+                let remembered_moves = if moves == 0 {
+                    0.0
+                } else {
+                    f64::from(remembered) / f64::from(moves)
+                };
+                let belief_error = if remembered == 0 {
+                    0.0
+                } else {
+                    events.belief_error_sum / f64::from(remembered)
+                };
+                let stale_choices = if remembered == 0 {
+                    0.0
+                } else {
+                    f64::from(events.stale_choices) / f64::from(remembered)
+                };
+                let (mut rem_sum, mut rem_n, mut oth_sum, mut oth_n) = (0.0, 0u32, 0.0, 0u32);
+                for a in world.agents() {
+                    if a.remembers {
+                        rem_sum += a.holdings[0];
+                        rem_n += 1;
+                    } else {
+                        oth_sum += a.holdings[0];
+                        oth_n += 1;
+                    }
+                }
+                let wealth_rememberers = if rem_n == 0 {
+                    0.0
+                } else {
+                    rem_sum / f64::from(rem_n)
+                };
+                let wealth_others = if oth_n == 0 {
+                    0.0
+                } else {
+                    oth_sum / f64::from(oth_n)
+                };
+                let wealth_advantage = if rem_n == 0 || oth_n == 0 {
+                    0.0
+                } else {
+                    wealth_rememberers - wealth_others
+                };
+                MemoryStats {
+                    remembering,
+                    remembered_moves,
+                    belief_error,
+                    stale_choices,
+                    wealth_rememberers,
+                    wealth_others,
+                    wealth_advantage,
+                }
+            }),
+            truffles: (world.config.truffles.share > 0.0).then_some(TruffleStats {
+                truffles_found: events.truffles_found,
+                truffles_by_rememberers: events.truffles_by_rememberers,
+            }),
         }
     }
 
@@ -345,6 +456,27 @@ impl Snapshot {
                             } else {
                                 f64::from(p.on_first) / f64::from(on)
                             });
+                        }
+                        _ => {}
+                    }
+                }
+                if let Some(m) = self.memory {
+                    match name {
+                        "remembering" => return Some(m.remembering),
+                        "remembered_moves" => return Some(m.remembered_moves),
+                        "belief_error" => return Some(m.belief_error),
+                        "stale_choices" => return Some(m.stale_choices),
+                        "wealth_rememberers" => return Some(m.wealth_rememberers),
+                        "wealth_others" => return Some(m.wealth_others),
+                        "wealth_advantage" => return Some(m.wealth_advantage),
+                        _ => {}
+                    }
+                }
+                if let Some(t) = self.truffles {
+                    match name {
+                        "truffles_found" => return Some(f64::from(t.truffles_found)),
+                        "truffles_by_rememberers" => {
+                            return Some(f64::from(t.truffles_by_rememberers))
                         }
                         _ => {}
                     }
@@ -1206,5 +1338,165 @@ mod tests {
         assert_eq!(s.value("on_other_patches"), Some(1.0));
         assert_eq!(s.value("off_patch"), Some(1.0));
         assert_eq!(s.value("first_patch_share"), Some(2.0 / 3.0));
+    }
+
+    const MEMORY_SERIES: [&str; 7] = [
+        "remembering",
+        "remembered_moves",
+        "belief_error",
+        "stale_choices",
+        "wealth_rememberers",
+        "wealth_others",
+        "wealth_advantage",
+    ];
+    const TRUFFLE_SERIES: [&str; 2] = ["truffles_found", "truffles_by_rememberers"];
+
+    #[test]
+    fn memory_and_truffle_series_exist_only_under_their_switches() {
+        let off = Config::default();
+        let names = series_names(&off);
+        for s in MEMORY_SERIES.iter().chain(TRUFFLE_SERIES.iter()) {
+            assert!(!names.contains(&s.to_string()), "{s}");
+        }
+        let snap = Snapshot::of(&World::new(off, 1).unwrap());
+        assert!(snap.memory.is_none());
+        assert!(snap.truffles.is_none());
+        for s in MEMORY_SERIES.iter().chain(TRUFFLE_SERIES.iter()) {
+            assert_eq!(snap.value(s), None, "{s}");
+        }
+
+        let mut on = Config::default();
+        on.memory.span = 50;
+        on.truffles.share = 0.2;
+        let names = series_names(&on);
+        for s in MEMORY_SERIES.iter().chain(TRUFFLE_SERIES.iter()) {
+            assert!(names.contains(&s.to_string()), "{s}");
+        }
+    }
+
+    #[test]
+    fn memory_series_shares_and_means_with_empty_groups_as_zero() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.memory.span = 50;
+        // Nobody alive yet: shares and means are 0, not NaN.
+        let empty = Snapshot::of(&w);
+        let m = empty.memory.expect("memory stats present");
+        assert_eq!(
+            (
+                m.remembering,
+                m.remembered_moves,
+                m.belief_error,
+                m.stale_choices,
+                m.wealth_rememberers,
+                m.wealth_others,
+                m.wealth_advantage
+            ),
+            (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        );
+
+        // Three rememberers, one non-rememberer.
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        let c = spawn(&mut w, 2, 0);
+        let d = spawn(&mut w, 3, 0);
+        for id in [a, b, c] {
+            w.agent_mut(id).unwrap().remembers = true;
+        }
+        w.agent_mut(a).unwrap().holdings[0] = 10.0;
+        w.agent_mut(b).unwrap().holdings[0] = 20.0;
+        w.agent_mut(c).unwrap().holdings[0] = 30.0;
+        w.agent_mut(d).unwrap().holdings[0] = 100.0;
+        w.events.moves = 5;
+        w.events.remembered_moves = 2;
+        w.events.belief_error_sum = 3.0;
+        w.events.stale_choices = 1;
+        let s = Snapshot::of(&w);
+        let m = s.memory.expect("memory stats present");
+        assert_eq!(m.remembering, 0.75, "3 of 4 remember");
+        assert_eq!(m.remembered_moves, 2.0 / 5.0);
+        assert_eq!(m.belief_error, 3.0 / 2.0);
+        assert_eq!(m.stale_choices, 1.0 / 2.0);
+        assert_eq!(m.wealth_rememberers, 20.0, "mean of 10, 20, 30");
+        assert_eq!(m.wealth_others, 100.0);
+        assert_eq!(m.wealth_advantage, 20.0 - 100.0);
+        assert!(s.truffles.is_none(), "truffles.share is still 0");
+        for name in MEMORY_SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+
+        // Everyone remembers: `wealth_others` has no members, so both it and
+        // the advantage are 0 (not the rememberers' own mean, not NaN).
+        w.agent_mut(d).unwrap().remembers = true;
+        let s = Snapshot::of(&w);
+        let m = s.memory.unwrap();
+        assert_eq!(m.wealth_others, 0.0);
+        assert_eq!(m.wealth_advantage, 0.0);
+        assert_eq!(m.wealth_rememberers, (10.0 + 20.0 + 30.0 + 100.0) / 4.0);
+    }
+
+    #[test]
+    fn memory_series_zero_denominators_are_zero_not_nan() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.memory.span = 50;
+        spawn(&mut w, 0, 0);
+        // No moves at all this tick.
+        let s = Snapshot::of(&w);
+        let m = s.memory.unwrap();
+        assert_eq!(
+            (m.remembered_moves, m.belief_error, m.stale_choices),
+            (0.0, 0.0, 0.0)
+        );
+
+        // Moves, but none remembered.
+        w.events.moves = 4;
+        let s = Snapshot::of(&w);
+        let m = s.memory.unwrap();
+        assert_eq!(m.remembered_moves, 0.0);
+        assert_eq!((m.belief_error, m.stale_choices), (0.0, 0.0));
+    }
+
+    #[test]
+    fn truffle_series_read_the_tick_events() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.truffles.share = 0.1;
+        let empty = Snapshot::of(&w);
+        let t = empty.truffles.expect("truffle stats present");
+        assert_eq!((t.truffles_found, t.truffles_by_rememberers), (0, 0));
+        assert!(empty.memory.is_none(), "memory.span is still 0");
+
+        w.events.truffles_found = 7;
+        w.events.truffles_by_rememberers = 3;
+        let s = Snapshot::of(&w);
+        let t = s.truffles.unwrap();
+        assert_eq!((t.truffles_found, t.truffles_by_rememberers), (7, 3));
+        for name in TRUFFLE_SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+        assert_eq!(s.value("truffles_found"), Some(7.0));
+        assert_eq!(s.value("truffles_by_rememberers"), Some(3.0));
+    }
+
+    #[test]
+    fn memory_and_truffle_series_names_come_after_the_patch_series() {
+        let mut c = Config::default();
+        c.memory.span = 50;
+        c.truffles.share = 0.2;
+        let names = series_names(&c);
+        let base = series_names(&Config::default()).len();
+        assert_eq!(
+            names.len(),
+            base + MEMORY_SERIES.len() + TRUFFLE_SERIES.len()
+        );
+        assert_eq!(
+            &names[base..base + MEMORY_SERIES.len()],
+            MEMORY_SERIES.as_slice()
+        );
+        assert_eq!(
+            &names[base + MEMORY_SERIES.len()..],
+            TRUFFLE_SERIES.as_slice()
+        );
     }
 }

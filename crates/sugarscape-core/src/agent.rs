@@ -196,6 +196,12 @@ pub struct Agent {
     /// it hasn't walked yet (observation only: never hashed, exported or
     /// shared, like `social`).
     pub plan: Plan,
+    /// Minds 3: whether this Flump remembers sites out of sight, drawn from
+    /// `memory.share` when `memory.span > 0` (always false otherwise).
+    pub remembers: bool,
+    /// Minds 3: sites this Flump remembers (observation only: never hashed,
+    /// exported or shared, like `social`; empty unless `remembers`).
+    pub memory: crate::minds::memory::Memory,
 }
 
 impl Agent {
@@ -233,6 +239,8 @@ impl Agent {
             culture: Vec::new(),
             social: Social::default(),
             plan: Plan::default(),
+            remembers: false,
+            memory: crate::minds::memory::Memory::default(),
         };
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
         // endowment then metabolism, in good order.
@@ -257,6 +265,11 @@ impl Agent {
             agent.culture = (0..config.culture.features)
                 .map(|_| rng.gen_range(0..q) as u8)
                 .collect();
+        }
+        // Drawn last, and only under memory, so every other run's random
+        // stream is unchanged.
+        if config.memory.span > 0 {
+            agent.remembers = rng.gen_bool(config.memory.share);
         }
         agent
     }

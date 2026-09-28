@@ -15,6 +15,7 @@ mod norms;
 mod image;
 mod minds1;
 mod minds2;
+mod minds3;
 mod opinions;
 mod punishment;
 mod retirement;
@@ -44,6 +45,7 @@ pub fn all() -> Vec<Claim> {
         image::claims(),
         minds1::claims(),
         minds2::claims(),
+        minds3::claims(),
         opinions::claims(),
         punishment::claims(),
         retirement::claims(),

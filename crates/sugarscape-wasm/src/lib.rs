@@ -3,6 +3,7 @@
 
 use sugarscape_core::config::{Config, FieldError};
 use sugarscape_core::edit::AgentOverrides;
+use sugarscape_core::geometry::Pos;
 use sugarscape_core::model::{Model, ModelConfig, ModelKind, ModelWorld};
 use sugarscape_core::sweep::{RunResult, Sweep, SweepResult};
 use sugarscape_core::world::World;
@@ -409,6 +410,19 @@ impl Sim {
     /// World: site `x`, whatever `y`).
     pub fn inspect(&self, x: u32, y: u32) -> Result<String, JsValue> {
         self.model().inspect_json(x, y).map_err(edit_error)
+    }
+
+    /// The Flump at `(x, y)`'s remembered sites (Minds 3; `World::memory_view`),
+    /// flattened as `[x, y, age, spot]` per site, in memory order. Empty for
+    /// no Flump there, one that doesn't remember, memory off, or a
+    /// non-sugarscape model.
+    pub fn inspect_memory(&self, x: u32, y: u32) -> Vec<u32> {
+        self.sugar_or(Vec::new(), |w| {
+            w.memory_view(Pos::new(x, y))
+                .into_iter()
+                .flatten()
+                .collect()
+        })
     }
 
     pub fn locate(&self, id: f64) -> Option<Vec<u32>> {

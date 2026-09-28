@@ -380,7 +380,10 @@ fn builtins_and_series_names_are_listed() {
             "bg-continuous",
             "bg-ring",
             "bg-cooney-fine",
-            "bg-cooney-cost"
+            "bg-cooney-cost",
+            "mem-span-recall",
+            "mem-span-project",
+            "mem-share"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -551,6 +554,74 @@ fn walking_behind_a_fence_matches_its_golden_entry() {
     sim.step(200);
     // crates/sugarscape-core/tests/golden.rs
     assert_eq!(sim.fingerprint(), "0x6c30002185fdb871");
+}
+
+#[wasm_bindgen_test]
+fn remembered_truffles_matches_its_golden_entry() {
+    // Minds 3: memory and believed truffle spots; native and wasm must agree.
+    let preset = sugarscape_core::presets::by_id("mem-truffles").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0xf511426e092ca85b");
+}
+
+#[wasm_bindgen_test]
+fn inspect_memory_lists_a_rememberers_sites_and_is_empty_elsewhere() {
+    let preset = sugarscape_core::presets::by_id("mem-truffles").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(50);
+
+    let (width, height) = (sim.width(), sim.height());
+    let mut found = false;
+    let mut empty_site = None;
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                if empty_site.is_none() {
+                    empty_site = Some((x, y));
+                }
+                continue;
+            };
+            let Some(memory) = agent.get("memory").and_then(|m| m.as_object()) else {
+                continue;
+            };
+            if memory.get("remembers").and_then(|r| r.as_bool()) != Some(true) {
+                continue;
+            }
+            let sites = memory.get("sites").and_then(|s| s.as_u64()).unwrap();
+            let list = sim.inspect_memory(x, y);
+            assert_eq!(list.len() % 4, 0, "a flat list of [x, y, age, spot]");
+            assert_eq!(
+                list.len() as u64,
+                sites * 4,
+                "one [x, y, age, spot] per remembered site"
+            );
+            for entry in list.chunks(4) {
+                let [sx, sy, _age, spot] = entry else {
+                    unreachable!()
+                };
+                assert!(*sx < width && *sy < height, "plausible coordinates");
+                assert!(*spot <= 2, "spot is 0, 1 or 2");
+            }
+            found = true;
+            break;
+        }
+        if found {
+            break;
+        }
+    }
+    assert!(found, "expected at least one rememberer by tick 50");
+
+    let (ex, ey) = empty_site.expect("expected at least one empty site");
+    assert!(
+        sim.inspect_memory(ex, ey).is_empty(),
+        "no Flump there: empty"
+    );
 }
 
 #[wasm_bindgen_test]
