@@ -157,3 +157,18 @@ The presets menu gains a **Threshold Models** group and the Compare entry; the R
 ## Docs
 
 README: a Threshold Models section (the model, the stated choices, switches, presets, sweeps, and the findings: the uniform and perturbed crowds and Figure 2 reproduce, but a real crowd of 100 has no sharp tipping point and its critical σ depends on rounding; "equilibrium 100" happens in 2.6 % of sampled crowds; the friends claims hold under our reading; intermediate movement is most incendiary; ceilings make riots pulse; Watts's window and slope ½ reproduce, his upper edge and "one in 1,000" depend on n, Fig. 4b cannot be built above z 1.95, and hubs still help in the dense regime). `docs/papers.md`: the milestone's row with Watts; roadmap: Milestone 25 done.
+
+## Amendments (implementation planning)
+
+The model was implemented in full while planning (`docs/superpowers/plans/2026-09-27-thresholds.md`) and measured with it; these change or extend the sections above.
+
+- **Watts's presets and sweeps are `watts-*`**, not `w-*`: `w-scale-free` is already Weisbuch's (milestone 22).
+- **Thresholds are exact fractions** (`num/den`): whole-people thresholds as k/N, real ones to six decimals; every comparison is a·den ≥ num·g in integers.
+- **Normal thresholds are portable**: quantiles by Acklam's approximation and draws by the anasazi's polar method, both on `crate::portable::ln`, so native and WASM agree bit for bit (the WASM golden test covers sampled normals).
+- **Networks** use a new sparse G(n, p) (geometric skipping, portable) and a configuration model for power-law degrees (degrees drawn from the table, self-links and repeats dropped); the power law's κ is solved by bisection with the portable exponential.
+- **Friends need at most 2 000 actors** (one-way ties draw every ordered pair).
+- **`gr-ceilings` gives 10 % ceilings**, not 30 %: whether a crowd pulses depends on who holds the ceilings (at 30 % seed 1 settles; at 10 %, 34 of 40 crowds pulse), and the swing is about the share holding them (83–92 at 10 %).
+- **Statistics:** `recent_mean` and `swing` (the mean and range of the share acting over the last 100 steps) replace `clusters_mean`; `theory` is Granovetter's continuous equilibrium for a normal crowd seen whole, null otherwise.
+- **The view** marks episode starts with a short tick at the top of the time panel; the Figure 1 panel shows the c.d.f. (blue), the 45° line and the episode's staircase (orange).
+- **Charts:** Participation (`acting`, `theory`), Episodes (`mean_size`, `global_share`), Last cascade (`last_size`), Swing (`swing`).
+- **Measured with the implementation** (the survey, 20 claims; 14 hold, 6 fail): the uniform and perturbed crowds 100 and 1; Fig. 2's continuous 5.48 at σ 12.2 and 100.0 at 12.3; the crowd of 100 tipping at 12.55, 11.89, 12.23 (fractions, rounded down, rounded); sampled crowds past half 0.15 at σ 12 and 0.25 at 12.5; the city's 0.369 + 0.137 = 0.505, everyone in 2.3 %, mean 12.4; friends' weight 0, 0, 0.43, 0.52 at w 1, 2, 5, 10; the quarter peak 0.19, 0.27, 0.43, 0.01, 0 at a 0.05–0.9; symmetry equivalent (0.43 against 0.41); the perturbed crowd's 95th percentile 7; the uniform crowd's mode one in 8 of 10 settings; no episode past 35 steps without removal; ceilings pulsing in 34, 29, 22 of 40 at shares 0.1, 0.3, 0.5; movement 0.39 at m 0.05 against 0.12 and 0.11; Watts's window 1.02–5.76 analytic, 0.59, 0.91, 0.76 global at z 1.5, 3, 5 and 0 at 0.8 and 7; global size 0.941 against S 0.940; the lower edge's slope −0.48; the upper edge 19.9 % global at n 1 000 (3.0 % at n 10 000); Fig. 4a 0.85 against 0 at z 8 but 0.10 against 0.23 at z 1.2; Fig. 4b's largest ratio 0.65 and no global cascades at z 1.5; hubs 0.95 against 0.37 at z 1.3 and 0.88 against 0.52 at z 5.5.

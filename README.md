@@ -154,7 +154,7 @@ The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **R
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**,
-**Image Scoring**, **El Farol and the Minority Game** and **Ants and Recruitment**.
+**Image Scoring**, **El Farol and the Minority Game**, **Ants and Recruitment** and **Threshold Models**.
 Each preset is listed by a plain title saying what happens in it; under the menu, the chosen
 preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
@@ -1479,6 +1479,71 @@ Collins, A. I. Houston and A. Lang, "The Ideal Free Distribution: An Analysis of
 Model," *Evol. Ecol. Res.* 4 (2002); D. Mark, *Behavioral Mathematics for Game AI* (2009); M. Lewis,
 "Choosing Effective Utility-Based Considerations," *Game AI Pro 3* (2017). See
 `docs/superpowers/specs/2026-09-27-minds-1-utility-design.md`.
+
+### Threshold Models (Granovetter 1978; Watts 2002)
+
+**The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins
+(Granovetter). An instigator (threshold 0) acts; whoever's threshold that reaches acts next; and so
+on until nobody new is tipped. Everything turns on the exact distribution of thresholds, not its
+average. **Watts** put the same rule on a sparse random network — each person watches only his
+neighbors — and asked when a single spark becomes a cascade that sweeps the network.
+
+Measured (the survey and the presets' descriptions):
+
+- **Granovetter's crowds reproduce.** Thresholds 0 to 99 give a riot of 100; move the person at 1
+  up to 2 and only the instigator riots. His Figure 2's continuous calculation jumps between σ 12.2
+  and 12.3 — "about six" rioters below (5.5), "nearly 100" above, 50 in the limit.
+- **A crowd of real people has no single tipping point.** A crowd of 100 whose thresholds are the
+  normal's quantiles tips at σ 12.23 when thresholds are rounded to whole people (his 12.2), 11.89
+  when rounded down, 12.55 when kept as fractions. And crowds drawn at random from the normal
+  distribution show no jump at all: they riot past half 15 % of the time at σ 12, 25 % at 12.5.
+- **The "equilibrium of 100" is rare.** Of crowds drawn from his uniform city, 36.9 % + 13.7 % =
+  50.5 % end with no rioters or one ("over half … .51"), as he says — but everyone riots in only
+  2.3 %, and the mean is 12 rioters.
+- **The friends claims hold under our reading** (friends at random, counted w times, the actor
+  dividing by the whole crowd with himself included, as in his 63/120 example): the uniform crowd's
+  most common outcome becomes one rioter; the perturbed crowd spreads more often as friends weigh
+  more (0, 0, 43 %, 52 % at weights 1, 2, 5, 10), most at an acquaintance of a quarter, rarely past
+  seven rioters; one-way friendships change little.
+- **A middling movement between crowds is the most incendiary** (12 % rioting with no movement, 41 %
+  at 0.05, 29 % with everyone moving every step), as he suggests.
+- **Ceilings make riots pulse.** With some people leaving once more than 90 % riot (his Figure 3),
+  most crowds never settle — the riot climbs, the cautious leave, it climbs again — but whether a
+  given crowd pulses depends on who holds the ceilings; decided one at a time, it hovers near 90 %.
+- **Watts's window reproduces**: cascades between z ≈ 1 and 6 at threshold 18 % (the analytic window
+  1.02–5.76), global cascades filling the connected network (0.941 against S = 0.940), and a
+  power law of slope ½ at the lower edge (−0.48).
+- **His upper edge depends on network size.** At his n 1 000 and z 6.14, 20 % of sparks go global,
+  not "a single cascade in 1,000 trials" (3 % at n 10 000).
+- **Varied thresholds widen only the dense side of the window**; at the sparse side they narrow it
+  (9 % against 28 % at z 1.2). **His Figure 4b cannot be built as stated**: with τ 2.5 and k ≥ 1 a
+  power law's mean degree cannot exceed 1.95, and at threshold 18 % no such network cascades.
+- **Hubs help in both regimes**: the best-connected spark goes global far more often at z 1.3 (95 %
+  against 39 %) and still twice as often at z 5.5 (89 % against 44 %), where he says it does not.
+
+Switches: **Actors**, **Each crowd** (as drawn, or sampled from the city), **Started by**
+(instigators, one random actor, the hub), **Actors decide** (together, or one at a time), **Count
+oneself in the group**, **Thresholds** (uniform, perturbed, normal, everyone the same), **Mean**,
+**Spread**, **A normal crowd is** (quantiles, or drawn), **Thresholds are** (fractions, or whole
+people rounded down or to the nearest), **A threshold of 0** (acts at once, or once a neighbor does),
+**Friends count more** with **Acquaintance**, **A friend counts as** and **Friendship is mutual**,
+**Who sees whom** (the whole crowd, a random network, a network with hubs) with **Mean degree**,
+**Ceilings** (the share who leave, and above what), **Several crowds** with **Crowds** and **Movement
+per step**, and **Episodes** (start again at each equilibrium; what counts as global; the longest
+episode). The view: the share acting over the last 400 steps (one line per crowd), Granovetter's
+Figure 1 (the thresholds' c.d.f. against the 45° line, with the riot's staircase) for a single crowd
+seen whole or the histogram of episode sizes otherwise, and the actors as a grid. Color modes:
+**State**, **Threshold**, **Degree**, **Crowd**. Charts: Participation (with Granovetter's
+continuous equilibrium); Episodes; Last cascade; Swing. Presets: `gr-uniform`, `gr-perturbed`,
+`gr-normal-12`, `gr-normal-13`, `gr-normal-sampled`, `gr-city`, `gr-friends`,
+`gr-friends-perturbed`, `gr-ceilings`, `gr-clusters`, `watts-lower`, `watts-middle`, `watts-upper`,
+`watts-hetero`, `watts-hub`. **Compare** entry: "Uniform vs perturbed crowd — Threshold Models
+(Compare)". Built-in sweeps: `gr-sd`, `gr-friends`, `gr-movement`, `gr-ceilings`, `watts-window`,
+`watts-hetero`, `watts-targeting`.
+
+Credit: Mark Granovetter, "Threshold Models of Collective Behavior," *American Journal of Sociology*
+83(6) (1978), 1420–1443; Duncan J. Watts, "A Simple Model of Global Cascades on Random Networks,"
+*PNAS* 99(9) (2002), 5766–5771. See `docs/superpowers/specs/2026-09-27-thresholds-design.md`.
 
 ## Experiments
 
