@@ -3,7 +3,7 @@
 //! then the lowest h, then the earliest pushed; it draws no random numbers.
 
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 /// A graph A* can search. Nodes are indices.
 pub trait Graph {
@@ -64,7 +64,7 @@ pub fn astar<G: Graph>(g: &G, start: usize, goal: usize, limit: usize) -> Option
         });
     }
     let mut best: HashMap<usize, (f64, usize)> = HashMap::new(); // g, parent
-    let mut closed: HashMap<usize, ()> = HashMap::new();
+    let mut closed: HashSet<usize> = HashSet::new();
     let mut open = BinaryHeap::new();
     let mut seq = 0u64;
     let h0 = g.heuristic(start, goal);
@@ -79,7 +79,7 @@ pub fn astar<G: Graph>(g: &G, start: usize, goal: usize, limit: usize) -> Option
     let mut out = Vec::new();
     let mut expanded = 0usize;
     while let Some(Open { node, g: gn, .. }) = open.pop() {
-        if closed.contains_key(&node) || gn > best[&node].0 {
+        if closed.contains(&node) || gn > best[&node].0 {
             continue;
         }
         if node == goal {
@@ -100,12 +100,12 @@ pub fn astar<G: Graph>(g: &G, start: usize, goal: usize, limit: usize) -> Option
             return None;
         }
         expanded += 1;
-        closed.insert(node, ());
+        closed.insert(node);
         out.clear();
         g.neighbors(node, &mut out);
         for &(m, c) in &out {
             let gm = gn + c;
-            if closed.contains_key(&m) || best.get(&m).is_some_and(|&(b, _)| b <= gm) {
+            if closed.contains(&m) || best.get(&m).is_some_and(|&(b, _)| b <= gm) {
                 continue;
             }
             best.insert(m, (gm, node));
@@ -180,6 +180,24 @@ mod tests {
             Pos::new(4, 5),
             "south first (pushed before east at equal f and h)"
         );
-        assert!(s.expanded <= 81, "each site at most once");
+        // Expansions before the goal pops: (4,4), (4,5), (4,6), (5,6) -- the
+        // goal itself is popped and returned without being counted.
+        assert_eq!(
+            s.expanded, 4,
+            "exactly the four sites on the found path before the goal"
+        );
+    }
+
+    #[test]
+    fn limit_at_exactly_expanded_succeeds_one_less_fails() {
+        let t = Torus::new(9, 9);
+        let g = TorusGrid::new(t, |_| true);
+        let (start, goal) = (t.index(Pos::new(4, 4)), t.index(Pos::new(6, 6)));
+        let unlimited = astar(&g, start, goal, usize::MAX).unwrap();
+        let k = unlimited.expanded;
+        assert!(k > 1, "need a multi-expansion case to bound");
+        let at_limit = astar(&g, start, goal, k).unwrap();
+        assert_eq!(at_limit.path, unlimited.path);
+        assert!(astar(&g, start, goal, k - 1).is_none());
     }
 }
