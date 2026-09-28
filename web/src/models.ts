@@ -252,6 +252,34 @@ export function presetModel(p: Preset): ModelKind {
   return modelOf(p.config);
 }
 
+/**
+ * A sugarscape preset's chapter of the book, from its source ("Animation II-2", "Figure III-6",
+ * "Chapter IV, footnote 7"), its appendix, "Minds" for the decision-engine experiments built on it,
+ * or "Other sources" (the docking study).
+ */
+export function sugarscapeChapter(p: Preset): string {
+  if (/\bMinds\b/.test(p.source)) return 'Minds';
+  const m = /\b(VI|IV|V|III|II)(?=[-\s,/]|$)/.exec(p.source);
+  if (m) return `Chapter ${m[1]}`;
+  const appendix = /\bAppendix ([A-Z])\b/.exec(p.source);
+  return appendix ? `Appendix ${appendix[1]}` : 'Other sources';
+}
+
+/**
+ * The preset menu's groups within one model: the sugarscape's by chapter (in the order they first
+ * appear), and every other model's as one unlabeled list in list order.
+ */
+export function presetSubgroups(model: ModelKind, presets: Preset[]): { label: string | null; presets: Preset[] }[] {
+  const mine = presets.filter((p) => presetModel(p) === model);
+  if (model !== 'sugarscape') return mine.length > 0 ? [{ label: null, presets: mine }] : [];
+  const groups = new Map<string, Preset[]>();
+  for (const p of mine) {
+    const chapter = sugarscapeChapter(p);
+    groups.set(chapter, [...(groups.get(chapter) ?? []), p]);
+  }
+  return [...groups].map(([label, presets]) => ({ label, presets }));
+}
+
 /** The presets menu's groups: each model with presets, in `MODELS` order, its presets in list order. */
 export function presetGroups(presets: Preset[]): { model: ModelKind; label: string; presets: Preset[] }[] {
   return MODELS.map((model) => ({ model, label: MODEL_LABELS[model], presets: presets.filter((p) => presetModel(p) === model) })).filter(
