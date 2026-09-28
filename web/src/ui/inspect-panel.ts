@@ -36,6 +36,12 @@ import { percent } from './format';
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
+/** The Heading row's text under walk: the target and steps left (singular/plural), or "Staying" once arrived. */
+export function headingText(plan: NonNullable<AgentView['plan']>): string {
+  const n = plan.path.length;
+  return n ? `(${plan.target_x}, ${plan.target_y}), ${n} ${n === 1 ? 'step' : 'steps'} left` : 'Staying';
+}
+
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
   private visible = false;
@@ -89,7 +95,7 @@ export class InspectPanel {
       ...(a.plan
         ? [
             (this.engine.sugar.movement?.mode ?? 'jump') === 'walk'
-              ? row('Heading', a.plan.path.length ? `(${a.plan.target_x}, ${a.plan.target_y}), ${a.plan.path.length} steps left` : 'Staying')
+              ? row('Heading', headingText(a.plan))
               : row('Moved to', `(${a.plan.target_x}, ${a.plan.target_y})`),
           ]
         : []),
