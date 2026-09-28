@@ -142,6 +142,9 @@ const hasK = (c: ModelConfig): boolean => 'strategies' in c && (c.strategies as 
  * image scoring's help rate and cooperative strategies, mean k, strategy shares (the binary scorers
  * apart) and mean payoff.
  */
+/** A retirement config with two sub-populations (its by-group lines show). */
+export const hasRetirementGroups = (c: ModelConfig): boolean => (c as { groups?: { enabled?: unknown } }).groups?.enabled === true && (c as { model?: unknown }).model === 'retirement';
+
 /** An El Farol config playing Arthur's game (its forecasts chart shows). */
 export const isElFarol = (c: ModelConfig): boolean => 'game' in c && (c as { game: unknown }).game === 'el_farol';
 
@@ -588,6 +591,42 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     { title: 'Last cascade', lines: [{ key: 'last_size', label: 'Final share of the last episode', color: '--c3' }], range: [0, 1] },
     { title: 'Swing', lines: [{ key: 'swing', label: 'Range over the last 100 steps', color: '--c4' }], range: [0, 1] },
   ],
+  retirement: [
+    {
+      title: 'Retired share',
+      lines: [
+        { key: 'retired', label: 'Of those eligible', color: '--red' },
+        { key: 'retired_a', label: 'First group', color: '--c2' },
+        { key: 'retired_b', label: 'Second group', color: '--c3' },
+      ],
+      range: [0, 1],
+      shown: hasRetirementGroups,
+    },
+    { title: 'Retired share', lines: [{ key: 'retired', label: 'Of those eligible', color: '--red' }], range: [0, 1], shown: (c) => !hasRetirementGroups(c) },
+    {
+      title: 'Retirement age',
+      lines: [
+        { key: 'modal_age', label: 'Most common, last 10 periods', color: '--c1' },
+        { key: 'mean_age', label: 'Mean, last 10 periods', color: '--c4' },
+        { key: 'eligibility', label: 'Eligibility', color: '--c2' },
+      ],
+    },
+    {
+      title: 'Transition',
+      lines: [
+        { key: 'transition', label: 'The period the norm set in', color: '--c1' },
+        { key: 'transition_new', label: 'Periods from the switch to the new norm', color: '--red' },
+      ],
+    },
+    {
+      title: 'Group transitions',
+      lines: [
+        { key: 'transition_a', label: 'First group (no rationals)', color: '--c2' },
+        { key: 'transition_b', label: 'Second group', color: '--c3' },
+      ],
+      shown: hasRetirementGroups,
+    },
+  ],
 };
 
 /**
@@ -595,7 +634,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' ? 'Periods' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

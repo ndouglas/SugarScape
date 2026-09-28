@@ -54,6 +54,13 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'retirement') {
+    const c = config as { stop_at_norm?: boolean; stop_at?: number };
+    const capped = (c.stop_at ?? 0) > 0 && tick >= (c.stop_at ?? 0);
+    return c.stop_at_norm && !capped
+      ? `The retirement norm has set in at t = ${tick} — Reset to run it again`
+      : `This run has reached its last period (${tick}) — Reset to run it again`;
+  }
   if (modelOf(config) === 'tags' || modelOf(config) === 'image') return `This run has reached its last generation (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'classes') return `Equity reached at t = ${tick}: every agent remembers mostly M — Reset to run it again`;
   if (modelOf(config) === 'opinions')

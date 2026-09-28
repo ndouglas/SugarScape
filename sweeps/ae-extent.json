@@ -1,0 +1,50 @@
+{
+  "name": "Retirement: network extent across cohorts",
+  "description": "Figure 6-9: transition time against how many cohorts a network spans either way, at 10 % and 5 % rational. Measured (release, seeds 1–10, recorded 2026-09-28): 10 %: 20, 20, 16, 16, 16, 12 at extents 1, 2, 3, 5, 7, 10; 5 %: 49, 59, 64, 61, 58, 49. Wider networks are faster, as stated, at 10 % and from extent 3 at 5 %; at 5 % the narrowest networks are fast too.",
+  "base": {
+    "preset": "ae-base"
+  },
+  "set": {
+    "stop_at_norm": true
+  },
+  "x": {
+    "label": "Extent (cohorts)",
+    "path": "extent",
+    "values": [
+      1,
+      2,
+      3,
+      5,
+      7,
+      10
+    ]
+  },
+  "series": {
+    "label": "Rational share",
+    "values": [
+      {
+        "at": 0.1,
+        "name": "10 % rational",
+        "set": {
+          "rational": 0.1
+        }
+      },
+      {
+        "at": 0.05,
+        "name": "5 % rational",
+        "set": {
+          "rational": 0.05
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 300,
+  "metric": {
+    "kind": "final",
+    "series": "transition"
+  }
+}

@@ -238,6 +238,18 @@ claims hold under a stated reading; middling movement is most incendiary; ceilin
 Watts's window and power law reproduce; his upper edge depends on n, his Fig. 4b cannot be built as
 stated, and hubs help in both regimes. See `docs/superpowers/specs/2026-09-27-thresholds-design.md`.
 
+## Milestone 26: The Timing of Retirement (done)
+
+Axtell and Epstein's retirement model (1999; Epstein 2006, ch. 7) as a model kind: cohorts, deaths and
+newborns, rational, random and imitating agents in transient networks, the policy switch from 65 to 62
+and two coupled sub-populations, with the unstated rules — whom an imitator counts, what becomes of a
+dead friend's place, activation order, transition time — as switches. The realizations reproduce in
+shape (a little slower than stated) and the network-size effects as stated, but network extent has no
+effect at 5 % rational; footnote 5 is false (counting every friend, no norm forms); Figure
+6-6's minimum of rationality needs an unstated renewal rule; the policy switch's slow response does
+not reproduce (the new norm comes in 2 periods); coupling slows the rational group as much as it
+speeds the other. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -259,6 +271,7 @@ stated, and hubs help in both regimes. See `docs/superpowers/specs/2026-09-27-th
 - **Arthur's El Farol and Challet & Zhang's minority game** (and the memory transition, and Challet, Marsili & Ottino's critique): done (Milestone 23).
 - **Kirman's ants and recruitment** (and Alfarano & Milaković's network critique): done (Milestone 24).
 - **Granovetter's threshold models** (and Watts's global cascades): done (Milestone 25).
+- **Axtell and Epstein's timing of retirement**: done (Milestone 26).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Credit hierarchy view**: done (Milestone 6).

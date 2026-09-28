@@ -1,0 +1,28 @@
+{
+  "name": "Retirement: the group with rationals, against coupling",
+  "description": "Figure 6-11's other group: the period the group with 10 % rationals reaches the norm, against coupling. Measured (release, seeds 1–10, recorded 2026-09-28): 19, 27, 34, 44, 57, 59 at couplings 0 to 0.25. The coupling that pulls the other group in slows this one just as much; by 0.2 both take about 58 periods. The paper's figure keeps this group fast.",
+  "base": {
+    "preset": "ae-groups"
+  },
+  "x": {
+    "label": "Coupling",
+    "path": "groups.coupling",
+    "values": [
+      0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 300,
+  "metric": {
+    "kind": "final",
+    "series": "transition_b"
+  }
+}

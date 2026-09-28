@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  RetirementConfig,
+  RetirementInspection,
+  RetirementStats,
   ThresholdsConfig,
   ThresholdsInspection,
   ThresholdsStats,
@@ -721,6 +724,28 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the retirement model through the engine', () => {
+  it('stops at the norm and inspects an agent, an age and a period', async () => {
+    const r = presets.find((p) => p.id === 'ae-rapid')!;
+    const config = { ...structuredClone(r.config as RetirementConfig), stop_at_norm: true };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'type' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as RetirementStats;
+    expect([e.finished, ends, s.transition]).toEqual([true, 1, e.tick]);
+    expect(s.retired).toBeGreaterThanOrEqual(0.95);
+    // Row 45 (2 pixels an age) is age 65.
+    await e.select(0, 90);
+    const v = e.inspection!.view as RetirementInspection;
+    expect([v.panel, v.age]).toEqual(['population', 65]);
+    expect(e.inspection!.agentId).toBeNull();
+    await e.select(410, 90);
+    expect((e.inspection!.view as RetirementInspection).panel).toBe('ages');
   });
 });
 

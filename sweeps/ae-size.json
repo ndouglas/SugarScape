@@ -1,0 +1,31 @@
+{
+  "name": "Retirement: network size",
+  "description": "Figure 6-8c: transition time against the largest network, sizes drawn from U[10, max]. Measured (release, seeds 1–10, recorded 2026-09-28): 8, 13, 23, 39, 60, 69 at 10, 20, 30, 40, 60, 80 — rising steeply, as stated ('in large networks it is difficult for a new norm to establish itself'), then leveling as runs finish when the initial population has died out.",
+  "base": {
+    "preset": "ae-base"
+  },
+  "set": {
+    "stop_at_norm": true
+  },
+  "x": {
+    "label": "Largest network (S ~ U[10, max])",
+    "path": "size.max",
+    "values": [
+      10,
+      20,
+      30,
+      40,
+      60,
+      80
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 300,
+  "metric": {
+    "kind": "final",
+    "series": "transition"
+  }
+}

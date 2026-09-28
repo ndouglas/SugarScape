@@ -6,6 +6,7 @@ import {
   isAgreementView,
   isAntsView,
   isThresholdsView,
+  isRetirementView,
   isFarolView,
   isCivilView,
   isClassesView,
@@ -116,6 +117,29 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the retirement model', () => {
+  it('is read by its tag, and its inspections by `exposed`, before the others with a panel', () => {
+    const c = { model: 'retirement', stop_at: 0, stop_at_norm: false } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('retirement');
+    const cell = { site: { x: 1, y: 2 }, panel: 'population', age: 65, retirements: null, exposed: null, period: null, retired: null, member: null, agent: null } as unknown as AnyInspection;
+    const th = { site: { x: 1, y: 2 }, panel: 'actors', step: null, crowds: null, share: null, cdf: null, count: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, th].map(isRetirementView)).toEqual([true, false]);
+    expect(isThresholdsView(cell)).toBe(false);
+  });
+
+  it('colors four ways, has no overlays, and stops unpredictably only at the norm', () => {
+    expect(COLOR_MODES.retirement).toEqual([
+      ['status', 'Status'],
+      ['type', 'Type'],
+      ['threshold', 'Threshold'],
+      ['group', 'Group'],
+    ]);
+    expect(MODEL_OVERLAYS.retirement).toEqual([]);
+    const c = (stop_at: number, stop_at_norm: boolean) => ({ model: 'retirement', stop_at, stop_at_norm }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(100, false)), finishesUnpredictably(c(0, true)), ticksLeft(c(100, false), 40), ticksLeft(c(0, false), 40)]).toEqual([false, true, 60, Infinity]);
   });
 });
 

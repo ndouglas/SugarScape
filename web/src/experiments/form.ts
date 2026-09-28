@@ -104,6 +104,15 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
     return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
+  if (model === 'retirement') {
+    // The built-in ae-rational's axis: the period the age 65 norm sets in (kept once reached) against the rational share.
+    return {
+      ...form,
+      x: { path: 'rational', values: '0.02,0.05,0.1,0.15,0.2,0.25' },
+      ticks: 400,
+      metric: { ...form.metric, kind: 'final', series: 'transition' },
+    };
+  }
   if (model === 'thresholds') {
     // The built-in gr-sd's axis: the share rioting at equilibrium against the spread of thresholds.
     return { ...form, x: { path: 'sd', values: '0.1:0.2:0.01' }, ticks: 200, metric: { ...form.metric, kind: 'final', series: 'acting' } };

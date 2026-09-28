@@ -945,6 +945,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::farol::presets());
     out.extend(crate::ants::presets());
     out.extend(crate::thresholds::presets());
+    out.extend(crate::retirement::presets());
     out
 }
 

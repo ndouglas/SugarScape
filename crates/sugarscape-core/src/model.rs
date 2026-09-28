@@ -19,6 +19,7 @@ use crate::image::{ImageConfig, ImageWorld};
 use crate::norms::{NormsConfig, NormsWorld};
 use crate::opinions::{OpinionsConfig, OpinionsWorld};
 use crate::render::{self, ColorMode, Layer};
+use crate::retirement::{RetirementConfig, RetirementWorld};
 use crate::ring::{RingConfig, RingWorld};
 use crate::schelling::{SchellingConfig, SchellingWorld};
 use crate::schema::Param;
@@ -29,7 +30,7 @@ use crate::thresholds::{ThresholdsConfig, ThresholdsWorld};
 use crate::world::World;
 use crate::{
     agreement, anasazi, ants, civil, classes, culture, dpd, ethno, export, farol, image, norms,
-    opinions, ring, schelling, spatial, stats, structure, tags, thresholds,
+    opinions, retirement, ring, schelling, spatial, stats, structure, tags, thresholds,
 };
 
 /// Which model a config or world is.
@@ -55,10 +56,11 @@ pub enum ModelKind {
     Farol,
     Ants,
     Thresholds,
+    Retirement,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 19] = [
+    pub const ALL: [ModelKind; 20] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -78,6 +80,7 @@ impl ModelKind {
         ModelKind::Farol,
         ModelKind::Ants,
         ModelKind::Thresholds,
+        ModelKind::Retirement,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -101,6 +104,7 @@ impl ModelKind {
             ModelKind::Farol => "farol",
             ModelKind::Ants => "ants",
             ModelKind::Thresholds => "thresholds",
+            ModelKind::Retirement => "retirement",
         }
     }
 
@@ -127,6 +131,7 @@ impl ModelKind {
             ModelKind::Farol => farol::schema(),
             ModelKind::Ants => ants::schema(),
             ModelKind::Thresholds => thresholds::schema(),
+            ModelKind::Retirement => retirement::schema(),
         }
     }
 }
@@ -159,6 +164,7 @@ pub enum ModelConfig {
     Farol(FarolConfig),
     Ants(AntsConfig),
     Thresholds(ThresholdsConfig),
+    Retirement(RetirementConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -183,6 +189,7 @@ enum Tagged<'a> {
     Farol(&'a FarolConfig),
     Ants(&'a AntsConfig),
     Thresholds(&'a ThresholdsConfig),
+    Retirement(&'a RetirementConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -214,6 +221,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Farol(c) => Tagged::Farol(c).serialize(s),
             ModelConfig::Ants(c) => Tagged::Ants(c).serialize(s),
             ModelConfig::Thresholds(c) => Tagged::Thresholds(c).serialize(s),
+            ModelConfig::Retirement(c) => Tagged::Retirement(c).serialize(s),
         }
     }
 }
@@ -240,6 +248,7 @@ impl ModelConfig {
             ModelConfig::Farol(_) => ModelKind::Farol,
             ModelConfig::Ants(_) => ModelKind::Ants,
             ModelConfig::Thresholds(_) => ModelKind::Thresholds,
+            ModelConfig::Retirement(_) => ModelKind::Retirement,
         }
     }
 
@@ -331,10 +340,13 @@ impl ModelConfig {
             "thresholds" => serde_json::from_value(value)
                 .map(ModelConfig::Thresholds)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "retirement" => serde_json::from_value(value)
+                .map(ModelConfig::Retirement)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants or thresholds)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds or retirement)"
                 ),
             )),
         }
@@ -361,6 +373,7 @@ impl ModelConfig {
             ModelConfig::Farol(c) => c.validate(),
             ModelConfig::Ants(c) => c.validate(),
             ModelConfig::Thresholds(c) => c.validate(),
+            ModelConfig::Retirement(c) => c.validate(),
         }
     }
 
@@ -387,6 +400,7 @@ impl ModelConfig {
             ModelConfig::Farol(c) => set_path(c, path, value).map(ModelConfig::Farol),
             ModelConfig::Ants(c) => set_path(c, path, value).map(ModelConfig::Ants),
             ModelConfig::Thresholds(c) => set_path(c, path, value).map(ModelConfig::Thresholds),
+            ModelConfig::Retirement(c) => set_path(c, path, value).map(ModelConfig::Retirement),
         }
     }
 
@@ -412,7 +426,8 @@ impl ModelConfig {
             | ModelConfig::Agreement(_)
             | ModelConfig::Farol(_)
             | ModelConfig::Ants(_)
-            | ModelConfig::Thresholds(_) => None,
+            | ModelConfig::Thresholds(_)
+            | ModelConfig::Retirement(_) => None,
         }
     }
 
@@ -439,6 +454,9 @@ impl ModelConfig {
             ModelConfig::Ants(_) => ants::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Thresholds(_) => {
                 thresholds::SERIES.iter().map(|s| s.to_string()).collect()
+            }
+            ModelConfig::Retirement(_) => {
+                retirement::SERIES.iter().map(|s| s.to_string()).collect()
             }
         }
     }
@@ -628,6 +646,7 @@ pub enum ModelWorld {
     Farol(Box<FarolWorld>),
     Ants(Box<AntsWorld>),
     Thresholds(Box<ThresholdsWorld>),
+    Retirement(Box<RetirementWorld>),
 }
 
 impl ModelWorld {
@@ -674,6 +693,9 @@ impl ModelWorld {
             ModelConfig::Thresholds(c) => {
                 ModelWorld::Thresholds(Box::new(ThresholdsWorld::new(c, seed)?))
             }
+            ModelConfig::Retirement(c) => {
+                ModelWorld::Retirement(Box::new(RetirementWorld::new(c, seed)?))
+            }
         })
     }
 
@@ -698,6 +720,7 @@ impl ModelWorld {
             ModelWorld::Farol(_) => ModelKind::Farol,
             ModelWorld::Ants(_) => ModelKind::Ants,
             ModelWorld::Thresholds(_) => ModelKind::Thresholds,
+            ModelWorld::Retirement(_) => ModelKind::Retirement,
         }
     }
 
@@ -722,6 +745,7 @@ impl ModelWorld {
             ModelWorld::Farol(w) => w.as_ref(),
             ModelWorld::Ants(w) => w.as_ref(),
             ModelWorld::Thresholds(w) => w.as_ref(),
+            ModelWorld::Retirement(w) => w.as_ref(),
         }
     }
 
@@ -746,6 +770,7 @@ impl ModelWorld {
             ModelWorld::Farol(w) => w.as_mut(),
             ModelWorld::Ants(w) => w.as_mut(),
             ModelWorld::Thresholds(w) => w.as_mut(),
+            ModelWorld::Retirement(w) => w.as_mut(),
         }
     }
 
@@ -839,6 +864,7 @@ impl ModelWorld {
             ModelWorld::Farol(w) => copy_without_history!(Farol, w),
             ModelWorld::Ants(w) => copy_without_history!(Ants, w),
             ModelWorld::Thresholds(w) => copy_without_history!(Thresholds, w),
+            ModelWorld::Retirement(w) => copy_without_history!(Retirement, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -875,6 +901,9 @@ impl ModelWorld {
             (ModelWorld::Farol(live), ModelWorld::Farol(kept)) => restore_into!(live, kept),
             (ModelWorld::Ants(live), ModelWorld::Ants(kept)) => restore_into!(live, kept),
             (ModelWorld::Thresholds(live), ModelWorld::Thresholds(kept)) => {
+                restore_into!(live, kept)
+            }
+            (ModelWorld::Retirement(live), ModelWorld::Retirement(kept)) => {
                 restore_into!(live, kept)
             }
             _ => return Err("the keyframe is of another model".into()),
@@ -1254,6 +1283,30 @@ mod tests {
     }
 
     #[test]
+    fn retirement_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "retirement", "per_cohort": 20, "renewal": "replace", "size": {"min": 5, "max": 9}}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Retirement);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["extent"].as_u64()),
+            (Some("retirement"), Some(5))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["retired", "retired_a"]);
+        let e = ModelConfig::from_json(r#"{"model": "retirement", "norm": 0}"#).unwrap_err();
+        assert_eq!(e[0].field, "norm");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Retirement);
+        let cp = w.checkpoint().expect("retirement worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -1295,7 +1348,8 @@ mod tests {
                 "image",
                 "farol",
                 "ants",
-                "thresholds"
+                "thresholds",
+                "retirement"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

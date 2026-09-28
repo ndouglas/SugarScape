@@ -227,6 +227,17 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('retirement charts', () => {
+  it('chart the retired share (by group when there are groups), retirement ages and the transition over periods', () => {
+    expect(MODEL_CHARTS.retirement.map((c) => c.title)).toEqual(['Retired share', 'Retired share', 'Retirement age', 'Transition', 'Group transitions']);
+    const one = { model: 'retirement', groups: { enabled: false } } as unknown as ModelConfig;
+    const two = { model: 'retirement', groups: { enabled: true } } as unknown as ModelConfig;
+    const [byGroup, single] = MODEL_CHARTS.retirement;
+    expect([byGroup.shown!(one), byGroup.shown!(two), single.shown!(one), single.shown!(two)]).toEqual([false, true, true, false]);
+    expect(timeAxisLabel('retirement')).toBe('Periods');
+  });
+});
+
 describe('thresholds charts', () => {
   it('chart participation against theory, episodes, the last cascade and the swing over steps', () => {
     expect(MODEL_CHARTS.thresholds.map((c) => c.title)).toEqual(['Participation', 'Episodes', 'Last cascade', 'Swing']);
