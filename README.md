@@ -353,16 +353,19 @@ rarely meet twice and nobody knows what anyone did before — yet the paper find
 pairings end in a donation, through clusters of similar tags that rise, are invaded by less
 tolerant mutants and are replaced.
 
-**The published tables depend on a rule the paper does not state.** "Giving an offspring to the one
-with the higher score" says nothing about equal scores. Read literally — a coin flip — the model
-gives 42 % donation at two pairings where the paper reports 4.3 %, and 45 % at cost 0.5 where it
-reports 24.7 %; only "the current agent wins ties" reproduces the paper, as Edmonds & Hales (2003)
-found. And under any tie rule, cooperation exists only because agents with *identical* tags must
+**The published tables depend on how ties are read.** "Giving an offspring to the one with the
+higher score" (p. 441) says nothing about equal scores; read as a coin flip, the model gives 42 %
+donation at two pairings where the paper reports 4.3 %, and 45 % at cost 0.5 where it reports
+24.7 %. But the paper's p. 442 settles it: an agent "adopts the other's tag and tolerance if the
+other's score is higher than its own", so a tie keeps the current agent, and that rule reproduces
+the paper, as Edmonds & Hales (2003) found. (Corrected 2026-09-28: this section first called the
+rule unstated.) And under any tie rule, cooperation exists only because agents with *identical* tags must
 donate to each other (≤ with T ≥ 0): donating only when |Δtag| < T, letting tolerance fall to
 −10⁻⁶ (Roberts & Sherratt 2002) or adding 10⁻⁶ of noise to every tag each collapse donation to
 1–5 %, while fixing every tolerance at zero *raises* it to 75 %. The tolerance mechanism the paper
-credits does none of the work. The config default is the literal rule (coin-flip ties); the
-presets that reproduce the paper set `tie_rule: current` and say so.
+credits does none of the work, though the paper itself reports the clusters of identical tags
+and their high relatedness (p. 442). The config default is coin-flip ties; the presets that
+reproduce the paper set `tie_rule: current` and say so.
 
 The Rules panel's **Replications** section holds the switches: `tie_rule` (coin flip, current
 agent, opponent — Edmonds & Hales' "no bias", "selected bias" and "random bias"), `donation_test`
@@ -475,10 +478,13 @@ What does not, or only partly:
   0.380), the same at every b in (5/3, 2), against the paper's ~0.374 — close, but not within 0.005.
 - **Huberman and Glance's "always".** Their kaleidoscope with asynchronous updating
   (`hg-async-kaleidoscope`, b = 1.9) is all D at t = 56–149 (mean 101), "within a hundred generations
-  or so," as they say. But they never state b, and their claim that "as long as there is at least one
-  defector in the initial state … the matrix always evolved rapidly into a state of overall defection"
-  holds only above b = 1.8: at b = 1.7 the defectors stay a small stuck cluster and never take over (f_C 0.974–0.999), and across NBM94's
-  b values it takes over (or nearly) only at 1.9 and 2.01 (f_C 0 and 0.04; 0.61 at 1.55, 0.99–1.00 elsewhere).
+  or so," as they say: their case reproduces. They ran NM92's Fig. 3 regime (their synchronous panel
+  "corresponds to figure 3b", where 1.8 < b < 2), in which the kaleidoscope is the same for any b, and
+  their "always" is about starting states ("as long as there is at least one defector in the initial
+  state"). What doesn't carry over is the broader conclusion they drew, as NBM94 showed (HG93 "consider
+  only this single case"): at b = 1.7 the defectors stay a small stuck cluster and never take over (f_C
+  0.974–0.999), and across NBM94's b values one defector takes over (or nearly) only at 1.9 and 2.01 (f_C 0
+  and 0.04; 0.61 at 1.55, 0.99–1.00 elsewhere).
 - **"C cannot persist" at m = 1 without self-interaction** (NBM94): C is gone (f_C ≤ 0.007) at
   b = 1.13 and 1.35, but at b = 1.05 it keeps 0.16–0.33. (Deterministic winning without
   self-interaction keeps C, 0.85–0.95, as they say.)
@@ -713,7 +719,10 @@ What does not, or only partly:
   24.5 %. Only a harsher game does — cost 3 %, 12.7 % (or the benefit halved, 11.6 %) — and then
   seeing agents fall to 29.8 % (17.7 %), far below 56 %. And blind agents cooperate *more* than seeing
   ones whenever helping is cheap (81.2 % against 76.0 % at the standard cost, 89.0 against 78.5 at
-  0.5 %): seeing color helps cooperation only somewhere between a cost of 1 % and 1.5 %.
+  0.5 %): seeing color helps cooperation only somewhere between a cost of 1 % and 1.5 %. Neither of
+  the doubled-cost figures reproduces, the seeing one included, and cooperation there is steep in the
+  cost, so a modest unstated difference in the game could explain both; HA06 build this comparison on
+  their *Theoretical Population Biology* paper (2006), not yet read here.
 - **Ethnocentrics take over later than Table 1 l says.** After 500 periods 57.3 % are ethnocentric,
   not 73.9 %; the last-100 mean is 70.3 % by period 1,000 and 72.4 % by 1,500. Hartshorn, Kaznatcheev
   and Shultz's "around 300 cycles" holds for the median world (282) but worlds range from 21 to 596:

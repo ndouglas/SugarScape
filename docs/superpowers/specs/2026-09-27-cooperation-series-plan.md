@@ -2,8 +2,9 @@
 
 **Date:** 2026-09-27
 **Status:** in progress. Episodes 1 (Spatial games), 2 (Living neighbors,
-`2026-09-28-demographic-pd-spike.md`), 3 (Ethnocentrism, `2026-09-28-ethnocentrism-spike.md`)
-and 4 (Tags, `2026-09-28-tags-spike.md`) are built.
+`2026-09-28-demographic-pd-spike.md`), 3 (Ethnocentrism, `2026-09-28-ethnocentrism-spike.md`),
+4 (Tags, `2026-09-28-tags-spike.md`) and 5 (Reputation,
+`2026-09-28-image-scoring-spike.md`) are built.
 **Follows:** the Sugarscape series (`2026-09-26-sugarscape-series-plan.md`, complete), and keeps its
 rules.
 
@@ -38,7 +39,7 @@ result, and a finale collects them.
 | 1 | Spatial games ✅ | Nowak & May 1992; Huberman & Glance 1993; Nowak, Bonhoeffer & May 1994 | 99 × 99 lattice | Helpers survive in clusters: about a third help forever at b = 1.9. Move the Flumps one at a time and one cheat takes the world (20 of 20), but only above b = 1.8 |
 | 2 | Living neighbors (demographic PD) ✅ | Epstein 1998 | 30 × 30 torus, moving agents with wealth | Space alone saves cooperators; mixed in a soup they are gone by cycle 8. Tables 1 and 2 need unstated rules |
 | 3 | Ethnocentrism ✅ | Hammond & Axelrod 2006 | 50 × 50 torus, 4 colors | Favoritism works only because relatives live next door: scatter the babies and cooperation falls from 76% to 4.5%. Color-blind cooperation doesn't reproduce; the appendix's mutation rate is a slip |
-| 4 | Tags | Riolo, Cohen & Axelrod 2001 | 100 agents, well mixed | The cooperation is identical twins forced to help each other; the tolerance the paper credits does nothing. Table 1 needs an unstated tie rule |
+| 4 | Tags ✅ | Riolo, Cohen & Axelrod 2001 | 100 agents, well mixed | The cooperation is identical twins forced to help each other (the paper reports the twins; Edmonds & Hales showed tolerance does nothing without them). Table 1 needs p. 442's tie rule, not a coin flip |
 | 5 | Reputation (image scoring) | Nowak & Sigmund 1998; Leimar & Hammerstein 2001 | 100 agents, well mixed | The showcase run is the lucky one: discriminators win 1 run in 5. The universal constant reproduces to every digit; "two interactions per lifetime" doesn't suffice |
 | 6 | Norms | Axelrod 1986; Galán & Izquierdo 2005 | 20 agents | Punishing those who don't punish establishes the norm (92 of 100), but run on, an unstated tie rule decides whether it lasts |
 | 7 | Friends and strangers (social structure) | Cohen, Riolo & Axelrod 2001 | 256 agents: torus, fixed networks or strangers | The one that reproduces: fixed friends cooperate as well as neighbors (2.57 vs 2.55); strangers sit at 1.09 |

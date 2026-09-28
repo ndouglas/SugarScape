@@ -19,11 +19,11 @@ read online or from another copy; add it when found. Scanned PDFs (no text layer
 | 9 | `schelling`, `ring` | the book, Chapter VI | — |
 | 10 | `anasazi` | Janssen 2009 JASSS 12(4) 13 and the CoMSES data (*not in `papers/`*); Axtell et al. 2002 PNAS (*not in `papers/`*) | the documented model does not reproduce the published fit |
 | 11 | `civil` | Epstein 2002 PNAS 99 (*not in `papers/`*) | the stated arrest rule gives no rebellion; only NetLogo's rounding reproduces Model I |
-| 12 | `tags` | `tags/riolo-cohen-axelrod-2001-nature-cooperation-without-reciprocity.pdf`; Edmonds & Hales 2003, Roberts & Sherratt 2002 (*not in `papers/`*) | the tables need an unstated tie rule |
-| 13 | `spatial` | `spatial-games/nowak-may-1992-…` (*scan*), `huberman-glance-1993-…`, `nowak-bonhoeffer-may-1994-…` | Huberman & Glance's "always all D" holds only above b = 1.8 |
+| 12 | `tags` | `tags/riolo-cohen-axelrod-2001-nature-cooperation-without-reciprocity.pdf`; Edmonds & Hales 2003, Roberts & Sherratt 2002 (*not in `papers/`*) | the tables need p. 442's tie rule (the current agent wins), not a coin flip |
+| 13 | `spatial` | `spatial-games/nowak-may-1992-…` (*scan*), `huberman-glance-1993-…`, `nowak-bonhoeffer-may-1994-…` | Huberman & Glance's one-defector takeover reproduces in their regime (1.8 < b < 2); as NBM94 showed, not below it |
 | 14 | `culture` | `culture/axelrod-1997-jcr-dissemination-of-culture.pdf` (*scan*); Axtell, Axelrod, Epstein & Cohen 1996 (*not in `papers/`*) | the docked mobility experiment's single culture does not reproduce |
 | 15 | `classes` | `classes/axtell-epstein-young-2000-…`, `classes/poza-et-al-2011-…` | classes never emerge under AEY's rule at their parameters |
-| 16 | `ethno` | `ethnocentrism/hammond-axelrod-2006-jcr-evolution-of-ethnocentrism.pdf` | the appendix's 5 % mutation is a slip; color-blind cooperation does not reproduce |
+| 16 | `ethno` | `ethnocentrism/hammond-axelrod-2006-jcr-evolution-of-ethnocentrism.pdf` | the appendix's 5 % mutation is a slip; neither doubled-cost figure (56 % seeing, 14 % blind) reproduces |
 | 17 | `opinions` | `bounded-confidence/hegselmann-krause-2002-…` | Fig. 2b's two camps are the exception; the lattice claim holds |
 | 18 | `structure` | `social-structure/cohen-riolo-axelrod-2001-role-of-social-structure.pdf` | reproduces closely; the unstated threshold is 2.3; only the Appendix's noise rule keeps FRNE above 2DK |
 | 19 | `dpd` | `demographic-pd/epstein-1998-zones-of-cooperation-in-demographic-pd.pdf` (the working paper), `demographic-pd/epstein-2006-generative-social-science.pdf` (ch. 9: the published rule, Tables 9.1 and 9.3), `demographic-pd/radax-rengs-2009-mpra-replication-of-the-demographic-prisoners-dilemma.pdf` (published as JASSS 13(4) 1, 2010) | Tables 1 and 2 do not reproduce under the published rule; only unstated readings (founders with no wealth, the working paper's rule) come close; the metabolism "equivalence" holds only per game |
@@ -52,6 +52,10 @@ worth doing; "size" is a guess at the milestone's scale.
 
 Papers that would strengthen a milestone, not yet found (every queued model's sources are in hand):
 
+- For ethnocentrism: Hammond & Axelrod, "Evolution of contingent altruism when cooperation is
+  expensive", *Theoretical Population Biology* 69 (2006), 333–338, the model HA06 builds on, and the
+  source of the blind-versus-seeing comparison at high cost that doesn't reproduce here (read it
+  before any caption says HA06's 14 % is wrong).
 - For the completed milestones' records: Epstein 2002 (civil violence), Janssen 2009 (Anasazi),
   Edmonds & Hales 2003 and Roberts & Sherratt 2002 (tags), Axtell, Axelrod, Epstein & Cohen 1996
   (docking), Lorenz 2006 (bounded confidence).
