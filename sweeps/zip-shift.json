@@ -1,6 +1,6 @@
 {
   "name": "Zero-Intelligence Traders: ZIP after a shift of demand or supply",
-  "description": "ZIP traders in the symmetric market, shifted after day 10: demand up 50 cents (P₀ 225) or supply down 50 (P₀ 175). Measured (release, seeds 1–50, recorded 2026-09-28): demand 200 on day 10, then 221, 222, 223, 224, 225, 226, 225, 225, 225, 225; supply 161, 168, 170, 172, 173, 174, 175, 175, 175, 175. They re-converge within about five days, as Cliff shows.",
+  "description": "ZIP traders in the symmetric market, shifted after day 10: demand up 50 cents (P₀ 225) or supply down 50 (P₀ 175). Measured (release, seeds 1–50, recorded 2026-09-28): demand 200 on day 10, then 220, 222, 224, 224, 224, 225, 225, 225, 225, 225; supply 159, 170, 172, 174, 174, 175, 175, 175, 175, 175. They re-converge within about five days, as Cliff shows.",
   "base": {
     "preset": "zip-demand-shift"
   },

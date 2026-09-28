@@ -271,7 +271,8 @@ Cliff's critique, simulator and ZIP traders (HP Labs 1997): their five markets r
 market, and every unstated rule a switch. Gode and Sunder's efficiencies and dispersions reproduce —
 but only with enough shouts per period, which their "30 seconds" never gives; Cliff's price
 predictions miss the box markets and his 233⅓ is not his formula's, though his critique's direction
-holds even in Gode and Sunder's mechanism; ZIP converges, and his code's momentum is not his text's.
+holds even in Gode and Sunder's mechanism; ZIP converges; and his code's momentum and day are not his
+text's.
 See `docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
 
 ## Experiments and science

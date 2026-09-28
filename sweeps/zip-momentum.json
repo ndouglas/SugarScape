@@ -1,6 +1,6 @@
 {
   "name": "Zero-Intelligence Traders: ZIP's momentum, Cliff's code against his text",
-  "description": "Cliff's text draws ZIP's momentum γ from U[0.2, 0.8]; his code overwrites it with U[0, 0.1], which produced his results. Measured (release, seeds 1–50, recorded 2026-09-28), excess demand: code 124, 144, 167, 182, 188 … 198 by day 10; text 127, 156, 179, 189, 195 … 199. Excess supply: code 244, 225, 213, 208, 204 … 202; text 242, 224, 209, 204, 201 … 201. The text's reading converges a day or two sooner; both reach P₀.",
+  "description": "Cliff's text draws ZIP's momentum γ from U[0.2, 0.8]; his code overwrites it with U[0, 0.1], which produced his results. Measured (release, seeds 1–50, recorded 2026-09-28), excess demand: code 124, 153, 168, 179, 190 … 198 by day 10; text 127, 161, 179, 190, 195 … 199. Excess supply: code 244, 223, 213, 207, 204 … 202; text 242, 222, 209, 204, 202 … 201. The text's reading converges a day or two sooner; both reach P₀.",
   "base": {
     "preset": "zip-excess-demand"
   },

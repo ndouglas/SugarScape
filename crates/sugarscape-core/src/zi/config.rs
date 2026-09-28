@@ -71,8 +71,12 @@ pub enum Turns {
 pub enum PeriodEnd {
     /// After a fixed number of shouts.
     Shouts,
-    /// Cliff: after 100 failed shouts in a row, or when the side to shout
-    /// has no one able.
+    /// Cliff's code (`smith.c`): after `sessions` trading sessions, each
+    /// ending in a trade or 100 failed shouts in a row, or when the side to
+    /// shout has no one able.
+    Sessions,
+    /// Cliff's text: after 100 failed shouts in a row, or when the side to
+    /// shout has no one able.
     Failures,
 }
 
@@ -99,7 +103,7 @@ pub enum Shift {
 
 /// Cliff's shift: $0.50.
 pub const SHIFT: u32 = 50;
-/// Cliff's failed shouts in a row that end a day.
+/// Cliff's failed shouts in a row that end a session (his code) or a day (his text).
 pub const MAX_FAILS: u32 = 100;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -123,6 +127,9 @@ pub struct ZiConfig {
     pub period_end: PeriodEnd,
     /// Shouts a period under `PeriodEnd::Shouts`.
     pub shouts: u32,
+    /// Sessions a day under `PeriodEnd::Sessions` (Cliff's `max_trades`: 11
+    /// in his ZI-C runs, 9 in his ZIP control file).
+    pub sessions: u32,
     pub momentum: Momentum,
     pub shift: Shift,
     /// The first shifted period.
@@ -147,6 +154,7 @@ impl Default for ZiConfig {
             sellers_only: false,
             period_end: PeriodEnd::Shouts,
             shouts: 2000,
+            sessions: 11,
             momentum: Momentum::Code,
             shift: Shift::None,
             shift_at: 11,
@@ -212,6 +220,11 @@ impl ZiConfig {
         check(
             (1..=1_000_000).contains(&self.shouts),
             "shouts",
+            "must be between 1 and 1000000",
+        );
+        check(
+            (1..=1_000_000).contains(&self.sessions),
+            "sessions",
             "must be between 1 and 1000000",
         );
         check(self.shift_at >= 1, "shift_at", "must be at least 1");
@@ -324,13 +337,23 @@ pub fn schema() -> Vec<Param> {
             "A period ends",
             &[
                 ("shouts", "After a number of shouts"),
-                ("failures", "After 100 failures in a row (Cliff)"),
+                ("sessions", "After its sessions (Cliff's code)"),
+                ("failures", "After 100 failures in a row (Cliff's text)"),
             ],
             Live,
         ),
         Param::integer("Periods", "shouts", "Shouts a period", (1, 1_000_000), Live)
             .shown_if("period_end", "shouts")
             .with_help("Gode & Sunder: 30 seconds, never given in shouts."),
+        Param::integer(
+            "Periods",
+            "sessions",
+            "Sessions a day",
+            (1, 1_000_000),
+            Live,
+        )
+        .shown_if("period_end", "sessions")
+        .with_help("Each ends in a trade or 100 failures. Cliff: 11 (ZI-C), 9 (ZIP)."),
         Param::choice(
             "Periods",
             "shift",

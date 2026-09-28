@@ -45,6 +45,7 @@ pub fn schedules(c: &ZiConfig) -> (Vec<Vec<u32>>, Vec<Vec<u32>>) {
             six(&[49, 54, 59, 64, 69, 74]),
         ),
         Market::Gs3 => (six(&[133, 95, 90]), six(&[90, 95, 100])),
+        // The second cost reads 141 by pixel; 142 gives Table 2's 48.8 % for ZI-U.
         Market::Gs4 => (
             six(&[180, 175, 170, 165, 160]),
             six(&[90, 142, 170, 190, 198]),

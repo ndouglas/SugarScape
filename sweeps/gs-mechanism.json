@@ -1,6 +1,6 @@
 {
   "name": "Zero-Intelligence Traders: Gode and Sunder's book against Cliff's mechanism",
-  "description": "Gode and Sunder's book (a crossing shout trades at the standing order's price) against Cliff's mechanism (a random willing trader on the other side takes the shout at its price), ZI-C. Measured (release, seeds 1–20, recorded 2026-09-28): book 99.9, 99.8, 99.7, 99.5, 97.1; Cliff's 99.4, 99.5, 98.2, 99.2, 96.7 in markets 1–5. Efficiency survives the change of mechanism.",
+  "description": "Gode and Sunder's book (a crossing shout trades at the standing order's price) against Cliff's mechanism (a random willing trader on the other side takes the shout at its price), ZI-C. Measured (release, seeds 1–20, recorded 2026-09-28): book 99.9, 99.8, 99.7, 99.5, 97.1; Cliff's 99.8, 99.8, 99.5, 99.6, 97.2 in markets 1–5. Efficiency survives the change of mechanism.",
   "base": {
     "preset": "gs-1"
   },

@@ -1,6 +1,6 @@
 {
   "name": "Zero-Intelligence Traders: ZIP's daily mean price",
-  "description": "ZIP traders' mean price on each of ten days in Cliff's four markets. Measured (release, seeds 1–50, recorded 2026-09-28): symmetric 184, 191, 194, 196, 198, 199, 199, 200, 200, 200; flat supply 225, 208, 204, 202, 202, 201 …; excess demand 124, 144, 167, 182, 188, 194, 196, 197, 198, 198; excess supply 244, 225, 213, 208, 204, 203, 202 … 202. All converge on P₀ 200 — the box markets from below and above, within a few days more than the others.",
+  "description": "ZIP traders' mean price on each of ten days in Cliff's four markets (his simulator as coded: 9 sessions a day, NYSE off). Measured (release, seeds 1–50, recorded 2026-09-28): symmetric 187, 195, 197, 198, 199, 200, 200, 200, 200, 200; flat supply 223, 205, 203, 202, 201 …; excess demand 124, 153, 168, 179, 190, 194, 196, 197, 198, 198; excess supply 244, 223, 213, 207, 204, 203, 202 … 202. All converge on P₀ 200 — the box markets from below and above, a few days later than the others.",
   "base": {
     "preset": "zip-symmetric"
   },

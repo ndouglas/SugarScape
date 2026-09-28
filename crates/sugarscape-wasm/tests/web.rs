@@ -1047,9 +1047,9 @@ fn zi_sims_match_the_native_golden_entries() {
         ("gs-1", "0xe38d85243d149ae6"),
         ("gs-4-u", "0xeaabdfdb9910b213"),
         ("gs-5", "0xdbd5cfd66c153ac1"),
-        ("cliff-excess-demand", "0xba8efd62a0b5f064"),
-        ("zip-symmetric", "0x410e3a0938f8f88f"),
-        ("zip-retail", "0x5925a52d82bfec49"),
+        ("cliff-excess-demand", "0xede597e74207bcda"),
+        ("zip-symmetric", "0x1f0f2ad1aff93fe8"),
+        ("zip-retail", "0x843e23fc86d35493"),
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "zi");

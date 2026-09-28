@@ -1,8 +1,9 @@
 //! Zero-intelligence traders (milestone 28): Gode and Sunder (1993), with
 //! Cliff's (1997) critique and ZIP traders. Gode and Sunder's markets run six
 //! periods of 2 000 shouts (their "30 seconds" is never translated into
-//! shouts); Cliff's run his simulator (his mechanism, side-first turns, days
-//! ended by 100 failures; NYSE rules for ZI-C, not for ZIP) for ten days.
+//! shouts); Cliff's run his simulator as coded (his mechanism, side-first
+//! turns, days of 11 sessions for ZI-C and 9 for ZIP, each ending in a trade
+//! or 100 failures; NYSE rules for ZI-C, not for ZIP) for ten days.
 
 use sugarscape_core::model::{ModelConfig, ModelWorld};
 use sugarscape_core::zi::{
@@ -67,7 +68,8 @@ fn cliff(market: Market, strategy: Strategy) -> ZiConfig {
         mechanism: Mechanism::Cliff,
         nyse: strategy != Strategy::Zip,
         turns: Turns::Side,
-        period_end: PeriodEnd::Failures,
+        period_end: PeriodEnd::Sessions,
+        sessions: if strategy == Strategy::Zip { 9 } else { 11 },
         stop_at: 10,
         ..ZiConfig::default()
     }
@@ -185,14 +187,14 @@ pub fn claims() -> Vec<Claim> {
         Claim {
             id: "zi.gs.table2-u",
             item: "gs-efficiency",
-            source: Source::Book,
+            source: Source::Comment,
             citation: GS,
-            text: "Table 2, ZI-U: efficiency 90.0, 90.0, 76.7, 48.8, 86.0 in markets 1–5 (every unit trades, so it follows from the schedules; within 1 point in every market, 10 seeds × 6 periods)",
+            text: "A calibration check, not a finding: markets 1–4 were read from the figures with Table 2's ZI-U efficiencies (90.0, 90.0, 76.7, 48.8), which follow from the schedules because every unit trades; they must come out exactly (within 0.05), and market 5, read as well as the scan allows, within 1 of 86.0 (10 seeds × 6 periods)",
             check: |_| {
                 let v: Vec<f64> = GS_MARKETS.iter().map(|&m| mean(&per_seed(&worlds(gs(m, Strategy::ZiU), 10), |p| p.efficiency))).collect();
-                let ok = v.iter().zip(T2_U).all(|(a, b)| (a - b).abs() <= 1.0);
+                let ok = v.iter().zip(T2_U).enumerate().all(|(k, (a, b))| (a - b).abs() <= if k < 4 { 0.05 } else { 1.0 });
                 outcome(ok, format!("{} against {}", show(&v), show(&T2_U)))
-                    .with("Markets 1–4 were digitized so that this holds exactly; market 5 is a fine staircase read as well as the scan allows.")
+                    .with("Market 4's second cost reads 141 by pixel; 142 is the value that gives 48.8.")
             },
         },
         Claim {

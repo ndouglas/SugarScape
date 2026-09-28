@@ -864,8 +864,9 @@ export interface ZiConfig {
   nyse: boolean;
   turns: 'trader' | 'side';
   sellers_only: boolean;
-  period_end: 'shouts' | 'failures';
+  period_end: 'shouts' | 'sessions' | 'failures';
   shouts: number;
+  sessions: number;
   momentum: 'code' | 'text';
   shift: 'none' | 'demand' | 'supply';
   shift_at: number;

@@ -160,9 +160,11 @@ pub struct ZiWorld {
     /// Buyers, then sellers.
     traders: Vec<Trader>,
     buyers: usize,
-    /// The period under way (1-based), its shouts and failures in a row.
+    /// The period under way (1-based), its shouts, its completed sessions,
+    /// and failures in a row.
     period: u64,
     shouts: u32,
+    sessions: u32,
     fails: u32,
     /// The standing bid and ask: (price, trader).
     bid: Option<(u32, usize)>,
@@ -231,6 +233,7 @@ impl ZiWorld {
             buyers: b.len(),
             period: 1,
             shouts: 0,
+            sessions: 0,
             fails: 0,
             bid: None,
             ask: None,
@@ -311,15 +314,20 @@ impl ZiWorld {
         if self.config.mechanism != Mechanism::Cliff || !self.config.nyse {
             return true;
         }
-        // Cliff: ZI traders are barred by their limit, ZIP traders by their price.
-        let own = match self.config.strategy {
-            Strategy::Zip => t.zip_price(),
-            _ => f64::from(t.limit()),
-        };
-        if t.buyer {
-            self.bid.is_none_or(|(p, _)| own > f64::from(p))
+        // Cliff: ZIP traders are barred unless their price beats the quote;
+        // ZI traders only when their limit cannot reach it (`limit > best_offer`
+        // bars a seller, so a limit at the quote may still shout).
+        if self.config.strategy == Strategy::Zip {
+            let own = t.zip_price();
+            if t.buyer {
+                self.bid.is_none_or(|(p, _)| own > f64::from(p))
+            } else {
+                self.ask.is_none_or(|(p, _)| own < f64::from(p))
+            }
+        } else if t.buyer {
+            self.bid.is_none_or(|(p, _)| t.limit() >= p)
         } else {
-            self.ask.is_none_or(|(p, _)| own < f64::from(p))
+            self.ask.is_none_or(|(p, _)| t.limit() <= p)
         }
     }
 
@@ -390,6 +398,8 @@ impl ZiWorld {
                 }
             }
         }
+        // A session ends with a trade or 100 failures in a row (Cliff's code).
+        let session_over = traded.is_some() || self.fails + 1 >= MAX_FAILS;
         if traded.is_some() {
             self.fails = 0;
         } else {
@@ -398,6 +408,15 @@ impl ZiWorld {
         let over = match self.config.period_end {
             PeriodEnd::Shouts => self.shouts >= self.config.shouts,
             PeriodEnd::Failures => blocked || self.fails >= MAX_FAILS,
+            PeriodEnd::Sessions => {
+                if session_over && !blocked {
+                    self.sessions += 1;
+                    if traded.is_none() {
+                        self.fails = 0;
+                    }
+                }
+                blocked || self.sessions >= self.config.sessions
+            }
         };
         if over {
             self.close_period();
@@ -624,6 +643,7 @@ impl ZiWorld {
         self.last_profits = self.traders.iter().map(|t| t.profit).collect();
         self.period += 1;
         self.shouts = 0;
+        self.sessions = 0;
         self.fails = 0;
         self.bid = None;
         self.ask = None;
@@ -1068,11 +1088,51 @@ mod tests {
             c.market = Market::Symmetric;
         });
         w.bid = Some((300, 10));
-        // Buyers with values ≤ 300 may not bid; the one valued 325 may.
+        // Buyers valued below 300 may not bid; those at 300 and 325 may.
         let able: Vec<usize> = (0..w.buyers).filter(|&i| w.able(i)).collect();
-        assert_eq!(able, [10]);
+        assert_eq!(able, [9, 10]);
         w.config.nyse = false;
         assert!((0..w.buyers).all(|i| w.able(i)));
+    }
+
+    #[test]
+    fn a_day_runs_its_sessions_each_ending_in_a_trade_or_100_failures() {
+        // Cliff's code: a session ends with a trade or 100 failed shouts; a
+        // day with `sessions` of them (or when the side to shout has no one
+        // able).
+        let mut w = world(|c| {
+            cliff(c);
+            c.market = Market::Symmetric;
+            c.period_end = PeriodEnd::Sessions;
+            c.sessions = 3;
+        });
+        w.run_periods(1);
+        assert!(w.periods[0].volume <= 3, "{}", w.periods[0].volume);
+        // A market where nothing can trade: three sessions of 100 failures.
+        let mut dead = world(|c| {
+            cliff(c);
+            c.market = Market::Custom;
+            c.buyers = vec![vec![100]];
+            c.sellers = vec![vec![300]];
+            c.nyse = false;
+            c.period_end = PeriodEnd::Sessions;
+            c.sessions = 3;
+        });
+        dead.run_periods(1);
+        assert_eq!(dead.tick, 300);
+    }
+
+    #[test]
+    fn nyse_lets_a_zi_trader_at_the_quote_shout() {
+        // Cliff bars a ZI seller only when its limit is above the best offer.
+        let mut w = world(|c| {
+            cliff(c);
+            c.market = Market::FlatSupply;
+        });
+        w.ask = Some((200, w.buyers));
+        assert!((w.buyers..w.traders.len()).all(|i| w.able(i)));
+        w.ask = Some((199, w.buyers));
+        assert!((w.buyers..w.traders.len()).all(|i| !w.able(i)));
     }
 
     #[test]
