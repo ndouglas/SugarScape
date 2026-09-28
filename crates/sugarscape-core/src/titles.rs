@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 264] = [
+pub const TITLES: [(&str, &str); 282] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1020,6 +1020,78 @@ pub const TITLES: [(&str, &str); 264] = [
     (
         "bg-janssen",
         "Janssen's readings of the gaps together",
+    ),
+    (
+        "gs-1",
+        "Random traders who never take a loss capture nearly all the surplus",
+    ),
+    (
+        "gs-2",
+        "Market 2: random traders who never lose reach 99.8 % efficiency",
+    ),
+    (
+        "gs-3",
+        "Market 3: six units worth trading, and random traders find them",
+    ),
+    (
+        "gs-4",
+        "Market 4: loss-averse random traders capture 99.5 %; free ones, half",
+    ),
+    (
+        "gs-5",
+        "Market 5: marginal traders crowd equilibrium, and efficiency dips to 97 %",
+    ),
+    (
+        "gs-1-u",
+        "Traders free to lose money: 90 % efficiency and prices everywhere",
+    ),
+    (
+        "gs-4-u",
+        "Free to lose money in market 4, traders capture less than half",
+    ),
+    (
+        "cliff-symmetric",
+        "Symmetric supply and demand: random prices center on equilibrium",
+    ),
+    (
+        "cliff-flat",
+        "Flat supply: random prices settle well above equilibrium",
+    ),
+    (
+        "cliff-excess-demand",
+        "Too many buyers: random prices sit far below equilibrium",
+    ),
+    (
+        "cliff-excess-supply",
+        "Too many sellers: random prices sit far above equilibrium",
+    ),
+    (
+        "zip-symmetric",
+        "Traders who learn a margin converge on the equilibrium price",
+    ),
+    (
+        "zip-flat",
+        "Learning traders reach equilibrium within days when supply is flat",
+    ),
+    (
+        "zip-excess-demand",
+        "Where buyers abound, learning traders climb to equilibrium from below",
+    ),
+    (
+        "zip-excess-supply",
+        "Where sellers abound, learning traders fall to equilibrium from above",
+    ),
+    (
+        "zip-demand-shift",
+        "Demand jumps after day 10, and learning traders follow it",
+    ),
+    (
+        "zip-supply-shift",
+        "Supply drops after day 10, and learning traders follow it",
+    ),
+    (
+        "zip-retail",
+        "Only sellers post prices, and trades stay below equilibrium",
     ),
 ];
 
