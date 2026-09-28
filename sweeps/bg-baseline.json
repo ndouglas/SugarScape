@@ -1,0 +1,82 @@
+{
+  "name": "Altruistic Punishment: the unstated baseline",
+  "description": "The paper never says what payoff the game's costs and fines are subtracted from; imitation needs payoffs above 0. Baselines 1, 2, 4, with and without punishment. Measured (release, seeds 1–10, the mean cooperation over the last 1 000 of 2 000 periods, recorded 2026-09-28): with punishment, 1: 0.82, 0.83, 0.78, 0.69, 0.44, 0.17, 0.12; 2: 0.80, 0.79, 0.79, 0.75, 0.69, 0.51, 0.18; 4: 0.79, 0.78, 0.77, 0.76, 0.73, 0.70, 0.66. Without: 1: 0.62, 0.33, 0.14, 0.10, 0.09 …; 2: 0.73, 0.60, 0.42, 0.26, 0.20, 0.19, 0.18; 4: 0.77, 0.72, 0.62, 0.50, 0.41, 0.35, 0.33. A higher baseline weakens selection, so punishment reaches larger groups — but cooperation without punishment then stays far above the figure's 0.09: no baseline fits both panels. Baseline 1 does, when either group can start a conflict (bg-fig1-either).",
+  "base": {
+    "preset": "bg-base"
+  },
+  "x": {
+    "label": "Group size (n)",
+    "path": "size",
+    "values": [
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "series": {
+    "label": "Baseline payoff",
+    "values": [
+      {
+        "at": 1,
+        "name": "1, punishment",
+        "set": {
+          "baseline": 1
+        }
+      },
+      {
+        "at": 2,
+        "name": "2, punishment",
+        "set": {
+          "baseline": 2
+        }
+      },
+      {
+        "at": 4,
+        "name": "4, punishment",
+        "set": {
+          "baseline": 4
+        }
+      },
+      {
+        "at": -1,
+        "name": "1, none",
+        "set": {
+          "baseline": 1,
+          "fine": 0,
+          "punish_cost": 0
+        }
+      },
+      {
+        "at": -2,
+        "name": "2, none",
+        "set": {
+          "baseline": 2,
+          "fine": 0,
+          "punish_cost": 0
+        }
+      },
+      {
+        "at": -4,
+        "name": "4, none",
+        "set": {
+          "baseline": 4,
+          "fine": 0,
+          "punish_cost": 0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "long_run"
+  }
+}

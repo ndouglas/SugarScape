@@ -152,6 +152,24 @@ fn presets_and_sweeps_are_listed() {
         "ae-policy",
         "ae-coupling",
         "ae-coupling-rational",
+        "bg-fig1a",
+        "bg-fig1b",
+        "bg-fig1-caption",
+        "bg-fig1-either",
+        "bg-fig2a",
+        "bg-fig2b",
+        "bg-fig3",
+        "bg-fig4",
+        "bg-baseline",
+        "bg-readings",
+        "bg-mutation",
+        "bg-error",
+        "bg-groups",
+        "bg-benefit",
+        "bg-continuous",
+        "bg-ring",
+        "bg-cooney-fine",
+        "bg-cooney-cost",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -573,6 +591,26 @@ fn a_thresholds_run_stops_at_its_last_step() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 25 (its last step)\n");
+}
+
+#[test]
+fn a_punishment_run_stops_at_its_last_period() {
+    let dir = scratch("punishment");
+    let config = dir.join("punishment.json");
+    std::fs::write(
+        &config,
+        r#"{"model": "punishment", "groups": 8, "size": 4, "stop_at": 30}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 30 (its last period)\n");
 }
 
 #[test]

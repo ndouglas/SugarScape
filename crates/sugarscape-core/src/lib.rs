@@ -31,6 +31,7 @@ pub mod norms;
 pub mod opinions;
 pub mod portable;
 pub mod presets;
+pub mod punishment;
 pub mod render;
 pub mod retirement;
 pub mod ring;

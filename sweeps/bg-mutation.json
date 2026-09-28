@@ -1,0 +1,27 @@
+{
+  "name": "Altruistic Punishment: mutation",
+  "description": "'Decreasing the mutation rate substantially increases the long run average levels of cooperation.' Measured (release, seeds 1–10, the mean cooperation over the last 1 000 of 2 000 periods, recorded 2026-09-28), n 32: 0.96, 0.83, 0.69, 0.57, 0.64 at μ 0.001, 0.005, 0.01, 0.02, 0.05 — as stated, from 0.69 to 0.96.",
+  "base": {
+    "preset": "bg-base"
+  },
+  "x": {
+    "label": "Mutation (μ)",
+    "path": "mutation",
+    "values": [
+      0.001,
+      0.005,
+      0.01,
+      0.02,
+      0.05
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "long_run"
+  }
+}

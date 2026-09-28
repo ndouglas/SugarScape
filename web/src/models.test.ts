@@ -6,6 +6,7 @@ import {
   isAgreementView,
   isAntsView,
   isThresholdsView,
+  isPunishmentView,
   isRetirementView,
   isFarolView,
   isCivilView,
@@ -117,6 +118,29 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the punishment model', () => {
+  it('is read by its tag, and its inspections by `punishment`, before the others with a panel', () => {
+    const c = { model: 'punishment', stop_at: 2000 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('punishment');
+    const cell = { site: { x: 1, y: 2 }, panel: 'groups', group: null, agent: null, period: null, cooperation: null, punishment: null } as unknown as AnyInspection;
+    const ret = { site: { x: 1, y: 2 }, panel: 'population', age: 65, retirements: null, exposed: null, period: null, retired: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, ret].map(isPunishmentView)).toEqual([true, false]);
+    expect([isRetirementView(cell), isThresholdsView(cell)]).toEqual([false, false]);
+  });
+
+  it('colors four ways, has no overlays, and ends at its last period', () => {
+    expect(COLOR_MODES.punishment).toEqual([
+      ['type', 'Type'],
+      ['acts', 'Acts'],
+      ['payoff', 'Payoff'],
+      ['group', 'Group'],
+    ]);
+    expect(MODEL_OVERLAYS.punishment).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'punishment', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(2000)), ticksLeft(c(2000), 500), ticksLeft(c(0), 500)]).toEqual([false, 1500, Infinity]);
   });
 });
 

@@ -1154,6 +1154,7 @@ describe('Engine with other models', () => {
     expect(finishedNotice({ model: 'farol', stop_at: 100 } as unknown as ModelConfig, 100)).toBe('This run has reached its last round (100) — Reset to run it again');
     expect(finishedNotice({ model: 'ants', stop_at: 2000 } as unknown as ModelConfig, 2000)).toBe('This run has reached its last step (2000) — Reset to run it again');
     expect(finishedNotice({ model: 'thresholds', stop_at: 50 } as unknown as ModelConfig, 50)).toBe('This run has reached its last step (50) — Reset to run it again');
+    expect(finishedNotice({ model: 'punishment', stop_at: 2000 } as unknown as ModelConfig, 2000)).toBe('This run has reached its last period (2000) — Reset to run it again');
     expect(finishedNotice({ model: 'retirement', stop_at: 50 } as unknown as ModelConfig, 50)).toBe('This run has reached its last period (50) — Reset to run it again');
     expect(finishedNotice({ model: 'retirement', stop_at_norm: true } as unknown as ModelConfig, 16)).toBe('The retirement norm has set in at t = 16 — Reset to run it again');
     expect(finishedNotice({ model: 'retirement', stop_at_norm: true, stop_at: 20 } as unknown as ModelConfig, 20)).toBe('This run has reached its last period (20) — Reset to run it again');

@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 253] = [
+pub const TITLES: [(&str, &str); 264] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -976,6 +976,50 @@ pub const TITLES: [(&str, &str); 253] = [
     (
         "ae-replace",
         "Replace friends who die, and 5 % rationality is no longer enough",
+    ),
+    (
+        "bg-base",
+        "Punishers keep about 70 % of groups of 32 cooperating",
+    ),
+    (
+        "bg-either",
+        "Either group can start a war, and the paper's figures appear",
+    ),
+    (
+        "bg-none",
+        "Without punishment, groups of 32 fall to defection",
+    ),
+    (
+        "bg-large",
+        "Groups of 128: punishment no longer holds",
+    ),
+    (
+        "bg-weak",
+        "A fine only twice the cost, and cooperation fades",
+    ),
+    (
+        "bg-fixed",
+        "Punishers who pay whether or not anyone defects, and cooperation fails",
+    ),
+    (
+        "bg-mixing",
+        "More mixing between groups, and cooperation falls",
+    ),
+    (
+        "bg-benefit",
+        "Cooperation benefits the group, and groups fight over payoffs",
+    ),
+    (
+        "bg-continuous",
+        "Cooperate and punish by degrees, and nearly everyone cooperates",
+    ),
+    (
+        "bg-ring",
+        "A ring of groups with no wars: cooperation stays low",
+    ),
+    (
+        "bg-janssen",
+        "Janssen's readings of the gaps together",
     ),
 ];
 

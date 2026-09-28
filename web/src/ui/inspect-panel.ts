@@ -3,11 +3,12 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isPunishmentView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
+  PunishmentInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -290,6 +291,26 @@ export class InspectPanel {
     return rows;
   }
 
+  /** An agent and its group, or a period of the time strip. */
+  private punishmentRows(view: PunishmentInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${fmt(100 * x)} %`;
+    if (view.panel === 'time')
+      return [row('Period', String(view.period)), row('Cooperation', pct(view.cooperation ?? 0)), row('Punishment', pct(view.punishment ?? 0))];
+    const a = view.agent;
+    const g = view.group;
+    if (!a || !g) return [row('Point', 'between groups')];
+    const traits = a.kind ?? `cooperates ${pct(a.cooperate)} · punishes ${pct(a.punish)}`;
+    const did = `${a.cooperated ? 'cooperated' : 'defected'}${a.punished ? ' and punished' : ''}`;
+    return [
+      row('Agent', `#${a.id} · ${traits}`),
+      row('This period', `${did} · payoff ${fmt(a.payoff)}`),
+      row('Group', `#${g.index + 1} · ${pct(g.contributors)} contributors · ${pct(g.punishers)} punishers · ${pct(g.defectors)} defectors`),
+      row('Group this period', `${pct(g.acts)} cooperated · mean payoff ${fmt(g.payoff)}`),
+      row('Last conflict', g.last_conflict === null ? 'none yet' : `period ${g.last_conflict} (${g.lost ? 'lost: replaced' : 'won'})`),
+    ];
+  }
+
   /** An agent of the retirement population, an age's retirements, or a period. */
   private retirementRows(view: RetirementInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -527,6 +548,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isPunishmentView(view)
+            ? this.punishmentRows(view)
           : isRetirementView(view)
             ? this.retirementRows(view)
           : isThresholdsView(view)

@@ -1,0 +1,27 @@
+{
+  "name": "Altruistic Punishment: errors",
+  "description": "'Increasing e, the error rate, reduces the long run average amount of cooperation.' Measured (release, seeds 1–10, the mean cooperation over the last 1 000 of 2 000 periods, recorded 2026-09-28), n 32: 0.73, 0.69, 0.65, 0.55, 0.38 at e 0, 0.02, 0.05, 0.1, 0.2 — as stated.",
+  "base": {
+    "preset": "bg-base"
+  },
+  "x": {
+    "label": "Errors (e)",
+    "path": "error",
+    "values": [
+      0,
+      0.02,
+      0.05,
+      0.1,
+      0.2
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "long_run"
+  }
+}

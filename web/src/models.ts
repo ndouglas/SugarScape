@@ -1,6 +1,8 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  PunishmentConfig,
+  PunishmentInspection,
   RetirementConfig,
   RetirementInspection,
   ThresholdsConfig,
@@ -43,7 +45,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -67,12 +69,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   ants: 'Ants and Recruitment',
   thresholds: 'Threshold Models',
   retirement: 'The Timing of Retirement',
+  punishment: 'Altruistic Punishment',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment'
     ? tag
     : 'sugarscape';
 }
@@ -166,6 +169,11 @@ export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
 }
 
+/** A cell of the punishment frame (a panel, an agent and its group, and a period's `punishment`); check it first. */
+export function isPunishmentView(v: AnyInspection): v is PunishmentInspection {
+  return 'panel' in v && 'punishment' in v;
+}
+
 /** A cell of the retirement frame (a panel, an agent as `member`, and an age's `exposed`); check it first. */
 export function isRetirementView(v: AnyInspection): v is RetirementInspection {
   return 'panel' in v && 'exposed' in v;
@@ -210,6 +218,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'ants' && (c as AntsConfig).stop_at > 0) return Math.max(0, (c as AntsConfig).stop_at - tick);
   if (modelOf(c) === 'thresholds' && (c as ThresholdsConfig).stop_at > 0) return Math.max(0, (c as ThresholdsConfig).stop_at - tick);
   if (modelOf(c) === 'retirement' && (c as RetirementConfig).stop_at > 0) return Math.max(0, (c as RetirementConfig).stop_at - tick);
+  if (modelOf(c) === 'punishment' && (c as PunishmentConfig).stop_at > 0) return Math.max(0, (c as PunishmentConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -377,6 +386,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['threshold', 'Threshold'],
     ['group', 'Group'],
   ],
+  // Each agent's type (blended for continuous traits); what it did this period; its payoff; its group's share of defectors.
+  punishment: [
+    ['type', 'Type'],
+    ['acts', 'Acts'],
+    ['payoff', 'Payoff'],
+    ['group', 'Group'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -401,4 +417,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   ants: [],
   thresholds: [],
   retirement: [],
+  punishment: [],
 };

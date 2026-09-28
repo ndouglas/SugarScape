@@ -227,6 +227,14 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('punishment charts', () => {
+  it('chart the types, cooperation with its long-run average, payoff and conflict over periods', () => {
+    expect(MODEL_CHARTS.punishment.map((c) => c.title)).toEqual(['Types', 'Cooperation', 'Payoff', 'Conflict']);
+    expect(MODEL_CHARTS.punishment[1].lines.map((l) => l.key)).toEqual(['cooperation', 'long_run', 'acts']);
+    expect(timeAxisLabel('punishment')).toBe('Periods');
+  });
+});
+
 describe('retirement charts', () => {
   it('chart the retired share (by group when there are groups), retirement ages and the transition over periods', () => {
     expect(MODEL_CHARTS.retirement.map((c) => c.title)).toEqual(['Retired share', 'Retired share', 'Retirement age', 'Transition', 'Group transitions']);

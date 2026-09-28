@@ -104,6 +104,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
     return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
+  if (model === 'punishment') {
+    // The built-in bg-fig1b's axis: the long-run cooperation (the last 1 000 of 2 000 periods) against group size.
+    return { ...form, x: { path: 'size', values: '4,8,16,32,64,128,256' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'long_run' } };
+  }
   if (model === 'retirement') {
     // The built-in ae-rational's axis: the period the age 65 norm sets in (kept once reached) against the rational share.
     return {

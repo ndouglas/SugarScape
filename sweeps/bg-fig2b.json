@@ -1,0 +1,55 @@
+{
+  "name": "Altruistic Punishment: Fig. 2b, mixing with punishment",
+  "description": "Figure 2b: with punishment, for mixing rates m 0.002, 0.01, 0.05. Measured (release, seeds 1–10, the mean cooperation over the last 1 000 of 2 000 periods, recorded 2026-09-28): m 0.002: 0.82, 0.82, 0.77, 0.72, 0.65, 0.43, 0.38; m 0.01: 0.82, 0.83, 0.78, 0.69, 0.44, 0.17, 0.12; m 0.05: 0.81, 0.83, 0.77, 0.28, 0.08, 0.07, 0.07 at n 4–256. 'At higher rates of mixing, cooperation does not persist in the largest groups', as stated; but the figure's m 0.002 keeps 0.71 and 0.73 at n 128 and 256, where this has 0.43 and 0.38. When either group can start a conflict: 0.70 and 0.73.",
+  "base": {
+    "preset": "bg-base"
+  },
+  "x": {
+    "label": "Group size (n)",
+    "path": "size",
+    "values": [
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "series": {
+    "label": "Mixing (m)",
+    "values": [
+      {
+        "at": 0.002,
+        "name": "m = 0.002",
+        "set": {
+          "mixing": 0.002
+        }
+      },
+      {
+        "at": 0.01,
+        "name": "m = 0.01",
+        "set": {
+          "mixing": 0.01
+        }
+      },
+      {
+        "at": 0.05,
+        "name": "m = 0.05",
+        "set": {
+          "mixing": 0.05
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "long_run"
+  }
+}

@@ -271,6 +271,17 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("ae-groups", 0xadde267c611d5392),
     ("ae-all-members", 0x8f6694a3282613e3),
     ("ae-replace", 0x90d96b846be612f2),
+    ("bg-base", 0x18a87a7bb2ab932d),
+    ("bg-either", 0xa966f403050db40d),
+    ("bg-none", 0x8082577a230b3670),
+    ("bg-large", 0x7d2e95c561d9fdb0),
+    ("bg-weak", 0x1ce6ad7a771157d0),
+    ("bg-fixed", 0x58e1a7a64780e030),
+    ("bg-mixing", 0x5d9e1aa7e6f5a06d),
+    ("bg-benefit", 0xe5fec27869f67010),
+    ("bg-continuous", 0xf763b0b75f9a2298),
+    ("bg-ring", 0xc4e75af13ebdeaed),
+    ("bg-janssen", 0xe95bb859afd7e9b0),
 ];
 
 fn fingerprint(id: &str) -> u64 {

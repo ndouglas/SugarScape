@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 108] = [
+const BUILTINS: [Builtin; 126] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1397,6 +1397,78 @@ const BUILTINS: [Builtin; 108] = [
     Builtin {
         id: "ae-coupling-rational",
         json: include_str!("../../../sweeps/ae-coupling-rational.json"),
+    },
+    Builtin {
+        id: "bg-fig1a",
+        json: include_str!("../../../sweeps/bg-fig1a.json"),
+    },
+    Builtin {
+        id: "bg-fig1b",
+        json: include_str!("../../../sweeps/bg-fig1b.json"),
+    },
+    Builtin {
+        id: "bg-fig1-caption",
+        json: include_str!("../../../sweeps/bg-fig1-caption.json"),
+    },
+    Builtin {
+        id: "bg-fig1-either",
+        json: include_str!("../../../sweeps/bg-fig1-either.json"),
+    },
+    Builtin {
+        id: "bg-fig2a",
+        json: include_str!("../../../sweeps/bg-fig2a.json"),
+    },
+    Builtin {
+        id: "bg-fig2b",
+        json: include_str!("../../../sweeps/bg-fig2b.json"),
+    },
+    Builtin {
+        id: "bg-fig3",
+        json: include_str!("../../../sweeps/bg-fig3.json"),
+    },
+    Builtin {
+        id: "bg-fig4",
+        json: include_str!("../../../sweeps/bg-fig4.json"),
+    },
+    Builtin {
+        id: "bg-baseline",
+        json: include_str!("../../../sweeps/bg-baseline.json"),
+    },
+    Builtin {
+        id: "bg-readings",
+        json: include_str!("../../../sweeps/bg-readings.json"),
+    },
+    Builtin {
+        id: "bg-mutation",
+        json: include_str!("../../../sweeps/bg-mutation.json"),
+    },
+    Builtin {
+        id: "bg-error",
+        json: include_str!("../../../sweeps/bg-error.json"),
+    },
+    Builtin {
+        id: "bg-groups",
+        json: include_str!("../../../sweeps/bg-groups.json"),
+    },
+    Builtin {
+        id: "bg-benefit",
+        json: include_str!("../../../sweeps/bg-benefit.json"),
+    },
+    Builtin {
+        id: "bg-continuous",
+        json: include_str!("../../../sweeps/bg-continuous.json"),
+    },
+    Builtin {
+        id: "bg-ring",
+        json: include_str!("../../../sweeps/bg-ring.json"),
+    },
+    Builtin {
+        id: "bg-cooney-fine",
+        json: include_str!("../../../sweeps/bg-cooney-fine.json"),
+    },
+    Builtin {
+        id: "bg-cooney-cost",
+        json: include_str!("../../../sweeps/bg-cooney-cost.json"),
     },
 ];
 
@@ -2328,7 +2400,25 @@ mod tests {
                 "ae-extent",
                 "ae-policy",
                 "ae-coupling",
-                "ae-coupling-rational"
+                "ae-coupling-rational",
+                "bg-fig1a",
+                "bg-fig1b",
+                "bg-fig1-caption",
+                "bg-fig1-either",
+                "bg-fig2a",
+                "bg-fig2b",
+                "bg-fig3",
+                "bg-fig4",
+                "bg-baseline",
+                "bg-readings",
+                "bg-mutation",
+                "bg-error",
+                "bg-groups",
+                "bg-benefit",
+                "bg-continuous",
+                "bg-ring",
+                "bg-cooney-fine",
+                "bg-cooney-cost"
             ]
         );
         for b in builtins() {
