@@ -1,0 +1,6 @@
+{
+ "preset": "nbm-continuous",
+ "ticks": 200,
+ "seed": 8,
+ "set": {"width": 99, "height": 99}
+}

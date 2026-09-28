@@ -1,4 +1,5 @@
-"""Loads a frame dump written by `sugarscape shot` (format 1)."""
+"""Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
+shot as a `Dump`, a spatial-games shot as a `Lattice`."""
 
 import json
 from dataclasses import dataclass, field
@@ -113,10 +114,43 @@ class Track:
     cause: str | None
 
 
+@dataclass(frozen=True)
+class LatticeFrame:
+    """A spatial-games generation: each square's player, row-major, as `C`,
+    `D` or `.` (none), and each player's score (when the shot asked)."""
+
+    tick: int
+    strategies: str
+    scores: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Lattice:
+    """A spatial-games shot."""
+
+    seed: int
+    ticks: int
+    width: int
+    height: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        """The frame at `tick`, rounded and clamped to the shot."""
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
 def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
         raise ValueError(f"frame dump format {raw.get('format')!r}, expected {FORMAT}")
+    if raw.get("model") == "spatial":
+        return Lattice(
+            seed=raw["seed"], ticks=raw["ticks"], width=raw["width"], height=raw["height"], config=raw["config"],
+            frames=[LatticeFrame(f["tick"], f["strategies"], f.get("scores", [])) for f in raw["frames"]],
+            stats=raw["stats"],
+        )
     frames = [
         Frame(
             tick=f["tick"],

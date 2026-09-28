@@ -1,15 +1,20 @@
 # Flump Studio
 
 Short explainer videos rendered in Blender from real engine runs (see
-`docs/superpowers/specs/2026-09-25-flump-studio-design.md`, and the series plan in
-`docs/superpowers/specs/2026-09-26-sugarscape-series-plan.md`).
+`docs/superpowers/specs/2026-09-25-flump-studio-design.md`, and the series plans in
+`docs/superpowers/specs/2026-09-26-sugarscape-series-plan.md` and
+`docs/superpowers/specs/2026-09-27-cooperation-series-plan.md`).
 
     python3 studio/build.py seasons --preview   # an episode, 960 × 540 (the shareable size)
     python3 studio/build.py seasons             # 1920 × 1080, final quality
     python3 studio/build.py seasons --beat 4    # one beat (1-based)
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
-Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`, `markets`, `war`, `credit`, `contagion` and `finale`.
+Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`.
+
+Shots run the Sugarscape or spatial games (a spatial shot's dump records each generation's strategies,
+and its scores with `"scores": true`; `cells` gives a close-up a hand-made board).
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -65,7 +70,10 @@ the march beneath it on the last title (a tune's `ducks` sink it under a sting),
 sax, and a ka-ching as the first loan is made, and Contagion's *Tarantella of the Well*, the
 dance once believed to cure a spider's poison, brightening to A major as immune systems learn and
 turning dark and driving for the plague, and the finale's *The Walk Home*, the pilot's gånglåt theme
-passed two bars at a time between every episode's instruments, ending on a lone accordion.
+passed two bars at a time between every episode's instruments, ending on a lone accordion; and
+Spatial games' *Neighbors in Phase*, a phase piece after Reich's *Piano Phase*: marimba and
+vibraphone on one twelve-note figure in D Dorian, the vibraphone slipping ahead an eighth at a time
+until, when the Flumps move one at a time, it falls into triplets over a drone a half step down.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to

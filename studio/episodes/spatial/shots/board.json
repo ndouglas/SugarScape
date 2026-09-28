@@ -1,0 +1,7 @@
+{
+ "preset": "nm-3-kaleidoscope",
+ "ticks": 3,
+ "scores": true,
+ "set": {"width": 7, "height": 7},
+ "cells": ["CCCCDDD", "CCCCDDD", "CCCCDDD", "CCCCCCC", "DDCCCCC", "DDCCCCC", "DDCCCCC"]
+}

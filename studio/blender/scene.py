@@ -10,6 +10,7 @@ import camera as cam
 import dump as dump_mod
 import lineage
 from blender import board, flump, materials, overlays
+from blender import lattice as lattice_board
 
 UPDATERS = []
 # The first exception the frame handler raised, if any.
@@ -143,7 +144,11 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     updaters = []
     timing = corners = None
     tracks = {}
-    if d is not None:
+    if isinstance(d, dump_mod.Lattice):
+        timing = beat.timing(d.ticks)
+        updaters.append(lattice_board.build(beat, d, timing))
+        materials.lights_and_world(scene, max(d.width, d.height))
+    elif d is not None:
         timing = beat.timing(d.ticks)
         felt, corners = board.felt_board(d)
         if d.config["seasons"]["enabled"]:
