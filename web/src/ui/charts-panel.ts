@@ -195,16 +195,24 @@ const CHARTS: ChartDef[] = [
     shown: (c) => (c.truffles?.share ?? 0) > 0,
   },
   {
-    // GOAP's plans; fallbacks and plans_remembered show whether the planner (and its memory) is used.
+    // GOAP's plans, in steps.
     title: 'Planning',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'mean_plan_length', label: 'Mean plan length', color: '--c2' }]),
+    shown: (c) => c.decision?.rule === 'goap',
+  },
+  {
+    // Shares per living Flump (or per plan): whether the planner, and its memory, are used.
+    title: 'Plan use',
     kind: 'time',
     section: 'top',
     lines: fixed([
       { key: 'replans', label: 'Plans per Flump', color: '--c1' },
-      { key: 'mean_plan_length', label: 'Mean plan length', color: '--c2' },
       { key: 'fallbacks', label: 'Fell back to rate', color: '--c3' },
       { key: 'plans_remembered', label: 'Plans using memory', color: '--c4' },
     ]),
+    range: [0, 1],
     shown: (c) => c.decision?.rule === 'goap',
   },
   {
