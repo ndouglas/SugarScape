@@ -30,6 +30,7 @@
 - The reserve is R = good-0 metabolism × `goap.horizon`; surplus = max(0, holdings − R). In the lab the reserve is 0.
 - Deterministic and portable. No new `ln`/`exp`/`pow`. Ties in the stated order (site index ascending, compartments K1 < K2 < K3).
 - Survey judges and thresholds are committed before any survey run and never tuned.
+- **The Minds menu entry (main, 359ed2e).** Minds worlds have their own model-menu entry, apart from the book's Sugarscape. Every Minds 5 preset's `source` names "Minds 5" (e.g. "Raby et al. 2007; Minds 5"), so `presetMenu` puts it under Minds. `web/src/models.ts`: `MINDS_TITLES['5'] = 'Minds 5: caching'`, and `usesMinds` also returns true for `caching.rule !== 'none'`, `caching.capacity > 0`, `central.enabled`, or `seasons.mode === 'global'`. Every new Rules group is `minds: true`; `seasons.mode` goes in the Minds caching group, not the book's Seasons group.
 - American spelling. Titles follow `titles.rs`. Every commit ends with `Claude-Session: https://claude.ai/code/session_01BxjiP46rwioLoJSaqLMDiJ`.
 - Work in `/Users/nathan/Projects/ndouglas/SugarScape/.claude/worktrees/minds-5` (branch `minds-5`).
 
@@ -210,7 +211,7 @@ The principle: (a) ≥ 1.5 × one Flump's winter need, and winter regrowth < 0.5
 - "Where scrub-jays' breakfast lessons send each kind of cacher"
 - "Where Amodio's rotating compartments send each kind of cacher"
 
-Update the counts; record only new golden entries; `tests/minds.rs` reductions pass. **Commit.**
+Every preset's `source` names "Minds 5". Update the counts; record only new golden entries; `tests/minds.rs` reductions pass. **Commit.**
 
 ---
 
@@ -228,8 +229,9 @@ Pin `cache-winter-plan`'s golden. `AgentView.caching: Option<CachingView { holdi
 
 ### Task 12: The page
 
-- **Caching group:** rule (none, even, compensate, plan; reset), capacity (0–200, reset), share (0.05–1, live), λ (0.05–1, live), lookahead (1–10, live).
-- **Seasons:** mode select (hemispheres, global; reset). **Central:** on/off (reset).
+- **Caching group (`minds: true`, titled "Caching (Minds 5)"):** rule (none, even, compensate, plan; reset), capacity (0–200, reset), share (0.05–1, live), λ (0.05–1, live), lookahead (1–10, live).
+- **In the same Minds group:** the seasons mode select (hemispheres, global; reset; the book's Seasons group is unchanged) and central-place on/off (reset).
+- **The menu:** `usesMinds` and `MINDS_TITLES` as in the Global Constraints, with tests in `models.test.ts` (a caching config and a global-winter config are Minds worlds; the Minds 5 presets group under "Minds 5: caching").
 - Seed defaults when the objects are absent (the Minds 1–4 pattern).
 - **Inspect:** "Carrying x of C", "Caches: n, holding y" (singular at 1), the forecast under plan, home and last load under central.
 - **Map:** the inspected Flump's caches drawn as small markers.
