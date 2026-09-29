@@ -1,11 +1,12 @@
 # Cooperation: the second Flump series
 
 **Date:** 2026-09-27
-**Status:** in progress. Episodes 1 (Spatial games), 2 (Living neighbors,
+**Status:** complete (2026-09-29): all eight episodes are built. Episodes 1 (Spatial games), 2 (Living neighbors,
 `2026-09-28-demographic-pd-spike.md`), 3 (Ethnocentrism, `2026-09-28-ethnocentrism-spike.md`),
 4 (Tags, `2026-09-28-tags-spike.md`), 5 (Reputation,
-`2026-09-28-image-scoring-spike.md`), 6 (Norms, `2026-09-28-norms-spike.md`) and 7 (Friends and
-strangers, `2026-09-28-social-structure-spike.md`) are built.
+`2026-09-28-image-scoring-spike.md`), 6 (Norms, `2026-09-28-norms-spike.md`), 7 (Friends and
+strangers, `2026-09-28-social-structure-spike.md`) and 8 (the finale, Why help a stranger?,
+`2026-09-28-cooperation-finale-spike.md`).
 **Follows:** the Sugarscape series (`2026-09-26-sugarscape-series-plan.md`, complete), and keeps its
 rules.
 
@@ -44,7 +45,7 @@ result, and a finale collects them.
 | 5 | Reputation (image scoring) ✅ | Nowak & Sigmund 1998; Leimar & Hammerstein 2001 | 100 agents, well mixed | The showcase run is the lucky one: discriminators win 1 run in 5. The universal constant reproduces to every digit; "two interactions per lifetime" doesn't suffice |
 | 6 | Norms ✅ | Axelrod 1986; Galán & Izquierdo 2005 | 20 agents | Punishing those who don't punish establishes the norm (92 of 100), but run on, an ambiguous tie rule decides whether it lasts |
 | 7 | Friends and strangers (social structure) ✅ | Cohen, Riolo & Axelrod 2001 | 256 agents: torus, fixed networks or strangers | The one that reproduces: fixed partners, scattered anywhere, cooperate nearly as well as neighbors (2.48 vs 2.56); strangers sit at 1.08; every row of Table 2 within 0.09 |
-| 8 | What didn't reproduce | all | — | The ledger |
+| 8 | Why help a stranger? (the finale) ✅ | all ten papers | each episode's board | Helping works when something makes the stranger less strange. Eight results reproduce closely; two depend on a detail the papers give two ways (Epstein's rules, the norms tie); two didn't come back as written (Hammond & Axelrod's 56 % at double cost, Epstein's Run 4) |
 
 Numbers in this table are the repository's own records, at each model's seed count (10–100).
 Every caption is re-measured over 20 seeds on its shot before it goes on screen.

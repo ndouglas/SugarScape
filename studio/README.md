@@ -11,7 +11,7 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image` and `norms`.
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale).
 
 Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring or norms. A spatial shot's dump records each
 generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
@@ -118,7 +118,7 @@ beats, overlays, measurements and tune cues agree, without Blender.
 Before a render, or after changing anything under `blender/`, run the smoke test:
 `python3 studio/smoke.py [EPISODE ...]` renders one small still and caption of each kind of beat
 from the episodes' real dumps (making any that are missing) and fails on any beat that can't be
-built. All five episodes take under three minutes; stills go to `out/<episode>/smoke/`.
+built. Each episode takes a few seconds to a minute; stills go to `out/<episode>/smoke/`.
 
 Overlays live in `blender/overlays/`: `parts.py` (anchors, text, cards), `followers.py` (things
 that follow Flumps), `panels.py` (screen-space displays) and `caption.py`; a new overlay goes in

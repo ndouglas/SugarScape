@@ -1,0 +1,6 @@
+{
+ "preset": "nm-1b-chaos",
+ "ticks": 300,
+ "seed": 11,
+ "set": {"width": 99, "height": 99}
+}
