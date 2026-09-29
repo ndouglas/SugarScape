@@ -45,7 +45,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ax-dominance",
             "Dominance: two groups",
             AXELROD,
-            "Axelrod's dominance: 20 whites punished less (P = −3) and 10 blacks (P = −9); everyone plays everyone, and each group reproduces within itself. Axelrod: without metanorms 'even members of the stronger group tend to be free riders … low vengefulness and high boldness in both groups'. Measured (100 seeds, generation 100): boldness 0.94 (strong) and 0.86 (weak), vengefulness 0.01 and 0.03 — as stated.",
+            "Axelrod's dominance: 20 whites punished less (P = −3) and 10 blacks (P = −9), each group reproducing within itself. Not yet his model: in his, a group's defections hurt and are punished only by the other group, with metapunishment within groups (p. 1103); here everyone plays everyone. Axelrod: without metanorms 'even members of the stronger group tend to be free riders … low vengefulness and high boldness in both groups'. Measured (100 seeds, generation 100): boldness 0.94 (strong) and 0.86 (weak), vengefulness 0.01 and 0.03 — as he states for his model; this departure may change it.",
             |c| {
                 c.groups = GroupsConfig {
                     enabled: true,
@@ -58,7 +58,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ax-dominance-metanorms",
             "Dominance with metanorms",
             AXELROD,
-            "Dominance with metanorms. Axelrod: 'it becomes relatively easier for the strong group to keep the weak group from being bold'. Measured (100 seeds, generation 100): boldness 0.06 (strong) and 0.02 (weak), vengefulness 0.93 and 0.90 — the weak group is kept from being bold, and so is the strong one: metanorms establish the norm in both.",
+            "Dominance with metanorms. Axelrod: 'it becomes relatively easier for the strong group to keep the weak group from being bold'. Measured (100 seeds, generation 100): boldness 0.06 (strong) and 0.02 (weak), vengefulness 0.93 and 0.90 — the weak group is kept from being bold, and so is the strong one, which is not his second claim (\"it is not so easy for the weak group to keep the strong one from defecting\"); in his model only the other group punishes, which this preset doesn't yet do.",
             |c| {
                 c.groups = GroupsConfig {
                     enabled: true,
@@ -68,7 +68,7 @@ pub fn presets() -> Vec<ModelPreset> {
                 c.stop_at = 100;
             },
         ),
-        preset("gi-metanorms-long", "Metanorms, run long", GI, "The metanorms game run for 20 000 generations. Galán & Izquierdo (1,000 runs to 10⁶ generations): 'Even though after 100 generations the norm is almost always established, as time goes by … the norm usually collapses.' Measured (50 seeds): established in 43 of 50 at generation 100 and 38 at 20 000, collapsed in 5; (100 seeds) 52 established and 43 collapsed by 10⁵ — the drift toward collapse is there, slower than their 10⁶-generation horizon shows. How fast depends on unstated details: see the Readings switches.", long),
+        preset("gi-metanorms-long", "Metanorms, run long", GI, "The metanorms game run for 20 000 generations. Galán & Izquierdo (1,000 runs to 10⁶ generations): 'Even though after 100 generations the norm is almost always established, as time goes by … the norm usually collapses.' Measured (50 seeds): established in 43 of 50 at generation 100 and 38 at 20 000, collapsed in 5; (100 seeds) 52 established and 43 collapsed by 10⁵ — the drift toward collapse is there, slower than their 10⁶-generation horizon shows. How fast depends on details Axelrod's text leaves ambiguous: see the Readings switches (under his own words for ties, all_equal: keep, the norm mostly holds even at 10⁶).", long),
         preset(
             "gi-low-mutation",
             "Metanorms, mutation 0.001",

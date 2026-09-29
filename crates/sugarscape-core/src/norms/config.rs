@@ -1,6 +1,6 @@
 //! The Norms and Metanorms model's parameters: Axelrod's (1986) values, his
 //! dominance variant, and Galán & Izquierdo's (2005) departures and readings
-//! of what he left unstated, as named switches.
+//! where his text is ambiguous, as named switches.
 
 use serde::{Deserialize, Serialize};
 

@@ -1020,9 +1020,13 @@ same −9 and −2, the same vengefulness). Then the more successful breed: one 
 the mean payoff, two offspring; one below, none; each bit mutates at 1 %.
 
 Axelrod's claims hold at his horizon (100 seeds, generation 100): the norms game ends spread across
-his three outcomes and the norm is rarely established (4 runs); metanorms establish it in 92; and his
-dominance variant (20 strong agents punished less, 10 weak) behaves as he says — without metanorms
-both groups end bold, with them the weak group is kept from being bold (and so is the strong one).
+his three outcomes and the norm is rarely established (4 runs); metanorms establish it in 92. His
+dominance variant (20 strong agents punished less, 10 weak) is **not yet implemented as he describes
+it**: in his, a group's defections hurt, and are punished by, only the other group, and metapunishment
+happens within groups (p. 1103); here everyone punishes everyone and only reproduction is split by
+group. Under that departure both groups end bold without metanorms, and with them both are kept from
+being bold, which is not his second claim ("it is not so easy for the weak group to keep the strong one
+from defecting"). His rule should become the default, with ours a named switch.
 Galán and Izquierdo re-implemented it and ran it longer. Their results reproduce: the norms game
 collapses in 99 of 100 runs by 1 000 generations (the ax-norms preset's 100-seed figure); metanorms
 decay — 92 of 100 runs established at 100 generations, 52 established and 43 collapsed by 10⁵ (100
@@ -1030,16 +1034,25 @@ seeds, measured in planning; the survey's own 50 seeds: 43 established at 100, 0
 1 000, 20 by 10⁵), and at 10⁶ generations 18 of 20 runs had collapsed (8 of 10 in the survey's own
 run); the norm collapses far sooner with a mutation rate of 0.001, with meta-payoffs a tenth as
 large, or under any of their three other selection rules (random tournament, roulette wheel,
-above-the-mean); and it holds everywhere with a temptation of 10.
+above-the-mean); and with a temptation of 10 it held in every run we measured (they say "almost all").
+Galán and Izquierdo stress that this "should not be understood as a critique": Axelrod's conclusions
+hold at his horizon, and 1986's computers could not run a million generations.
 
-Axelrod left two things unstated, and both are switches. **When every payoff ties** (so there is no
-standard deviation), Galán and Izquierdo give everyone two offspring and remove a random half; they
-warn this 'can alter the long-term results significantly'. It does: giving everyone one offspring
-instead keeps the metanorm — 92 of 100 runs established at 10⁵, 3 collapsed (the 100-seed planning
+Axelrod's text is ambiguous in two places Galán and Izquierdo flag, and both are switches. **When every
+payoff ties** (so the standard deviation is zero), his text gives "an average individual one
+offspring" (p. 1099), so everyone keeps one; Galán and Izquierdo call the case ambiguous (their note 4)
+and give everyone two offspring, then remove a random half, which is the engine's default. They warn
+this 'can alter the long-term results significantly'. It does: under his words, giving everyone one
+offspring keeps the metanorm — 92 of 100 runs established at 10⁵, 3 collapsed (the 100-seed planning
 figure). And **how the offspring are brought back to 20** ('For convenience, the number of offspring
 is adjusted') is not a convenience: removing the worst parents' copies first and copying the best
-collapses all 50 runs by 10⁵, against 20 with random removal (the survey's own 50-seed figure).
-Whether Axelrod's metanorm lasts depends on details his paper does not give.
+collapses all 50 runs by 10⁵, against 20 with random removal (the survey's own 50-seed figure); that
+ranked reading is ours, in neither paper. Several further readings come from Galán and Izquierdo, not
+Axelrod, and are fixed here: the step rule for offspring (Axelrod fixes only three points on the curve),
+the population standard deviation, that the defector can't catch a non-punisher, and that a
+metapunisher must have seen the defection. Whether Axelrod's metanorm lasts depends on details his
+paper leaves open. The Norms episode films this: at 10⁶ generations the norm has collapsed in 18 of 20
+worlds under Galán and Izquierdo's tie reading, and still holds in 14 of 20 under Axelrod's.
 
 The view is the papers' boldness–vengefulness plane — boldness to the right, vengefulness up, each
 strategy a cell shaded by how many agents hold it, Galán and Izquierdo's norm-established (green) and
