@@ -50,6 +50,22 @@ pub struct Plan {
     pub walked: bool,
 }
 
+/// Minds 4: a GOAP Flump's foraging plan (`decision.rule: goap`): the
+/// targets it hasn't reached yet, each with the value it was planned at,
+/// what the whole plan was to gather and the goal G it planned for. Kept
+/// until the next target is invalidated or the plan is finished. It
+/// decides where the Flump goes, but like `plan` it's never hashed,
+/// exported or shared: it's rebuilt from what the Flump sees and remembers.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct GoapPlan {
+    /// Remaining targets in order, each with its value when planned.
+    pub steps: Vec<(Pos, f64)>,
+    /// The plan's total planned value, from its first step.
+    pub gathers: f64,
+    /// The goal: metabolism × `goap.horizon`.
+    pub goal: f64,
+}
+
 /// A cultural tag string of `len` bits (1..=64); bit `i` is tag position `i`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Tags {
@@ -196,6 +212,10 @@ pub struct Agent {
     /// it hasn't walked yet (observation only: never hashed, exported or
     /// shared, like `social`).
     pub plan: Plan,
+    /// Minds 4: the GOAP plan it's following; `None` until it first plans
+    /// (and always under the other rules). Observation for Inspect, and
+    /// behavior under GOAP, but never hashed, exported or shared.
+    pub goap_plan: Option<GoapPlan>,
     /// Minds 3: whether this Flump remembers sites out of sight, drawn from
     /// `memory.share` when `memory.span > 0` (always false otherwise).
     pub remembers: bool,
@@ -239,6 +259,7 @@ impl Agent {
             culture: Vec::new(),
             social: Social::default(),
             plan: Plan::default(),
+            goap_plan: None,
             remembers: false,
             memory: crate::minds::memory::Memory::default(),
         };

@@ -427,14 +427,14 @@ pub enum DecisionRule {
     Mvt,
 }
 
-/// Minds 4: GOAP's search — the nearest `k` candidate sites, planned
-/// `horizon` steps ahead.
+/// Minds 4: GOAP's foraging search — the best `k` known sites by value,
+/// and a goal of `horizon` ticks of food.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Goap {
-    /// Candidate sites considered, nearest first (1–12).
+    /// Known sites a plan considers, best value first (1–12).
     pub k: u32,
-    /// Steps planned ahead (1–100).
+    /// Ticks of food the goal asks for: G = metabolism × horizon (1–100).
     pub horizon: u32,
 }
 
@@ -542,9 +542,10 @@ pub enum MemoryPrior {
     /// Starts knowing nothing (the book's Flump).
     #[default]
     None,
-    /// Starts knowing where every site is, though not what it currently
-    /// holds. Needs `memory.span > 0` — knowing the map is worthless to a
-    /// Flump that can't hold what it learns there.
+    /// Starts knowing the whole map: every site in memory, seen at tick 0
+    /// with its starting levels (the theorem's ideal forager). Needs
+    /// `memory.span > 0` — knowing the map is worthless to a Flump that
+    /// can't hold what it learns there.
     Map,
 }
 

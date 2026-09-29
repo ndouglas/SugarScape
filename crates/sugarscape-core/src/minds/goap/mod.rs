@@ -10,6 +10,7 @@
 //! goal; the sentinel's heuristic is 0 and so is a goal state's, so a
 //! consistent domain heuristic stays consistent.
 
+pub mod forage;
 pub mod strips;
 
 use std::cell::RefCell;

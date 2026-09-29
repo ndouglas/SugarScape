@@ -79,6 +79,7 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         culture: Vec::new(),
         social: Social::default(),
         plan: crate::agent::Plan::default(),
+        goap_plan: None,
         remembers: false,
         memory: crate::minds::memory::Memory::default(),
     }

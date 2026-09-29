@@ -74,6 +74,17 @@ pub struct PlanView {
     pub walked: bool,
 }
 
+/// Minds 4: a GOAP Flump's plan, for Inspect.
+#[derive(Clone, Debug, Serialize)]
+pub struct GoapView {
+    /// The targets left, in order.
+    pub steps: Vec<[u32; 2]>,
+    /// What the plan was to gather in all.
+    pub gathers: f64,
+    /// The goal G it planned for.
+    pub goal: f64,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct DiseaseEntry {
     pub id: DiseaseId,
@@ -118,6 +129,10 @@ pub struct AgentView {
     /// Minds 3: whether the agent remembers, and how many sites and truffle
     /// spots it holds in memory. `None` while memory is off (`span` 0).
     pub memory: Option<MemoryView>,
+    /// Minds 4: the GOAP plan. `Some` only under `decision.rule: goap` once
+    /// the Flump has planned; its steps are empty when the plan is done or
+    /// was dropped and the Flump took the fallback.
+    pub goap: Option<GoapView>,
 }
 
 /// Minds 3: what an agent remembers, for display.
@@ -348,6 +363,15 @@ impl World {
                     .filter(|s| s.truffle.is_some())
                     .count() as u32,
             }),
+            goap: a
+                .goap_plan
+                .as_ref()
+                .filter(|_| self.config.decision.rule == crate::config::DecisionRule::Goap)
+                .map(|g| GoapView {
+                    steps: g.steps.iter().map(|(p, _)| [p.x, p.y]).collect(),
+                    gathers: g.gathers,
+                    goal: g.goal,
+                }),
         });
         Ok(Inspection {
             site: SiteView {

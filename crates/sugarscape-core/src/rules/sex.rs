@@ -103,6 +103,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         culture: Vec::new(),
         social: Social::default(),
         plan: crate::agent::Plan::default(),
+        goap_plan: None,
         remembers: false,
         memory: crate::minds::memory::Memory::default(),
     };

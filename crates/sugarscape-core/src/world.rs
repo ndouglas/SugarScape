@@ -105,6 +105,14 @@ pub struct TickEvents {
     /// Minds 3: of `remembered_moves`, those whose target was truly worth
     /// less than believed when chosen.
     pub stale_choices: u32,
+    /// Minds 4: GOAP plans made this tick (found, with at least one step;
+    /// the fallback and an empty plan aren't counted).
+    pub plans: u32,
+    /// Minds 4: Σ steps over this tick's `plans`.
+    pub plan_steps_sum: u32,
+    /// Minds 4: of `plans`, those with any target from the Flump's
+    /// remembered entries out of sight (the usage check Minds 3 taught).
+    pub plans_with_remembered: u32,
 }
 
 #[derive(Clone)]

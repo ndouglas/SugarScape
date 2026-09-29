@@ -229,7 +229,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
 }
 
 /// Steps between `a` and `b` along the 4-way torus (Manhattan, wrapping).
-fn lattice_distance(torus: Torus, a: Pos, b: Pos) -> u32 {
+pub(crate) fn lattice_distance(torus: Torus, a: Pos, b: Pos) -> u32 {
     let dx = a.x.abs_diff(b.x);
     let dy = a.y.abs_diff(b.y);
     dx.min(torus.width - dx) + dy.min(torus.height - dy)
