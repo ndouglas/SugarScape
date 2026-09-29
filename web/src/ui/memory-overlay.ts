@@ -36,3 +36,20 @@ export function memoryMarks(flat: ArrayLike<number>, span: number): MemoryMark[]
   }
   return out;
 }
+
+/** Minds 5: how one of the inspected agent's caches draws — a small diamond at its site. */
+export interface CacheMark {
+  x: number;
+  y: number;
+  /** The diamond's half-width as a share of a cell: 0.15 for a near-empty cache, up to 0.35 for its largest. */
+  size: number;
+}
+
+/**
+ * The inspected agent's caches as marks, in site order, each sized by the square root of its amount
+ * against the agent's largest (so area goes with sugar).
+ */
+export function cacheMarks(caches: { x: number; y: number; amount: number }[]): CacheMark[] {
+  const most = caches.reduce((m, c) => Math.max(m, c.amount), 0);
+  return caches.map(({ x, y, amount }) => ({ x, y, size: 0.15 + 0.2 * (most > 0 ? Math.sqrt(Math.max(0, amount) / most) : 0) }));
+}

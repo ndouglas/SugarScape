@@ -87,6 +87,10 @@ const fixed = (lines: Line[]) => () => lines;
 const perGood = (prefix: string) => (c: Config): Line[] =>
   c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
 
+/** Minds 5: caching is on (a rule that buries, mixed rules, or a carrying limit), as the core's `Caching::is_on`. */
+const cachingOn = (c: Config): boolean =>
+  (c.caching?.rule ?? 'none') !== 'none' || c.caching?.mixed === true || (c.caching?.capacity ?? 0) > 0;
+
 const SECTIONS: { id: Section; title?: string; shown: (c: Config) => boolean }[] = [
   { id: 'top', shown: () => true },
   { id: 'goods', title: 'Goods', shown: () => true },
@@ -229,6 +233,42 @@ const CHARTS: ChartDef[] = [
     lines: fixed([{ key: 'replans', label: 'Leaving per agent', color: '--c2' }]),
     range: [0, 1],
     shown: (c) => c.decision?.rule === 'mvt',
+  },
+  {
+    // Minds 5: sugar in caches (a stock), and buried and dug this tick (flows).
+    title: 'Caching',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'cached', label: 'Cached', color: '--c1' },
+      { key: 'buried', label: 'Buried', color: '--c2' },
+      { key: 'dug', label: 'Dug', color: '--c3' },
+    ]),
+    shown: cachingOn,
+  },
+  {
+    // Cumulative Σ dug ÷ Σ buried since tick 0.
+    title: 'Recovery',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'recovery', label: 'Dug ÷ buried', color: '--c4' }]),
+    range: [0, 1],
+    shown: cachingOn,
+  },
+  {
+    // Minds 5, central place: the mean load a trip brought home, cumulative since tick 0.
+    title: 'Loads',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'mean_load', label: 'Mean load', color: '--c1' }]),
+    shown: (c) => c.central?.enabled === true,
+  },
+  {
+    title: 'Trips',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'trips', label: 'Deliveries per agent', color: '--c2' }]),
+    shown: (c) => c.central?.enabled === true,
   },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },

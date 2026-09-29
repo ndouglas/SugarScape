@@ -8,6 +8,8 @@ import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
+  CachingView,
+  CentralView,
   PunishmentInspection,
   ZiInspection,
   BaliInspection,
@@ -79,6 +81,42 @@ export function rateText(rate: number): string {
   return `${rate.toFixed(2)} sugar a tick`;
 }
 
+/**
+ * The Carrying row's text (Minds 5): the agent's good-0 holding against its carrying limit, "x of C",
+ * or just "x" when there is no limit (C = 0).
+ */
+export function carryingText(held: number, cap: number): string {
+  return cap > 0 ? `${fmt(held)} of ${fmt(cap)}` : fmt(held);
+}
+
+/** The Caches row's text (Minds 5): "n cache(s), holding y", singular at one cache. */
+export function cachesText(c: Pick<CachingView, 'caches' | 'total'>): string {
+  const n = c.caches.length;
+  return `${n} ${n === 1 ? 'cache' : 'caches'}, holding ${fmt(c.total)}`;
+}
+
+/**
+ * The Minds 5 caching rows, label and text: the agent's own caching rule (its own under mixed rules),
+ * what it carries against the limit (good 0, `held`), its caches, and rule plan's forecast shortfall
+ * when it is computing one.
+ */
+export function cachingRows(c: CachingView, held: number): [string, string][] {
+  return [
+    ['Caching rule', c.rule],
+    ['Carrying', carryingText(held, c.holdings_cap)],
+    ['Caches', cachesText(c)],
+    ...(c.forecast != null ? [['Forecast shortfall', fmt(c.forecast)] as [string, string]] : []),
+  ];
+}
+
+/** The Minds 5 central-place rows, label and text: the agent's home and its last delivered load. */
+export function centralRows(c: CentralView): [string, string][] {
+  return [
+    ['Home', `(${c.home[0]}, ${c.home[1]})`],
+    ['Last load', fmt(c.last_load)],
+  ];
+}
+
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
   private visible = false;
@@ -144,6 +182,8 @@ export class InspectPanel {
           ]
         : []),
       ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
+      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0).map(([k, v]) => row(k, v)) : []),
+      ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),

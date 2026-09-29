@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { headingText, memoryText, planText, rateText } from './inspect-panel';
+import { cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText } from './inspect-panel';
 
 const plan = (path: [number, number][]) => ({ target_x: 3, target_y: 4, path, walked: true });
 const memory = (sites: number, spots: number) => ({ remembers: true, sites, spots });
@@ -73,5 +73,60 @@ describe('rateText', () => {
   it('gives ρ in sugar a tick to two decimals', () => {
     expect(rateText(1)).toBe('1.00 sugar a tick');
     expect(rateText(0.4567)).toBe('0.46 sugar a tick');
+  });
+});
+
+describe('carryingText', () => {
+  it('gives the holding against the carrying limit', () => {
+    expect(carryingText(12, 20)).toBe('12 of 20');
+    expect(carryingText(7.456, 320)).toBe('7.46 of 320');
+  });
+
+  it('gives the holding alone with no limit (0)', () => {
+    expect(carryingText(12, 0)).toBe('12');
+  });
+});
+
+describe('cachesText', () => {
+  const cache = (amount: number) => ({ x: 1, y: 2, amount });
+
+  it('singularizes exactly one cache', () => {
+    expect(cachesText({ caches: [cache(4)], total: 4 })).toBe('1 cache, holding 4');
+  });
+
+  it('pluralizes none and several', () => {
+    expect(cachesText({ caches: [], total: 0 })).toBe('0 caches, holding 0');
+    expect(cachesText({ caches: [cache(2.5), cache(3)], total: 5.5 })).toBe('2 caches, holding 5.50');
+  });
+});
+
+describe('cachingRows', () => {
+  const view = (forecast: number | null) => ({ rule: 'plan' as const, holdings_cap: 20, caches: [{ x: 1, y: 2, amount: 3 }], total: 3, forecast });
+
+  it('gives the agent’s own rule, what it carries, its caches and the forecast under plan', () => {
+    expect(cachingRows(view(6.5), 9)).toEqual([
+      ['Caching rule', 'plan'],
+      ['Carrying', '9 of 20'],
+      ['Caches', '1 cache, holding 3'],
+      ['Forecast shortfall', '6.50'],
+    ]);
+  });
+
+  it('leaves the forecast out when there is none (other rules, or winter)', () => {
+    expect(cachingRows({ ...view(null), rule: 'even', holdings_cap: 0 }, 9)).toEqual([
+      ['Caching rule', 'even'],
+      ['Carrying', '9'],
+      ['Caches', '1 cache, holding 3'],
+    ]);
+  });
+});
+
+describe('centralRows', () => {
+  it('gives the home and the last load', () => {
+    expect(centralRows({ home: [4, 7], last_load: 12.25 })).toEqual([
+      ['Home', '(4, 7)'],
+      ['Last load', '12.25'],
+    ]);
+    expect(centralRows({ home: [0, 0], last_load: 0 })).toEqual([['Home', '(0, 0)'], ['Last load', '0']]);
   });
 });
