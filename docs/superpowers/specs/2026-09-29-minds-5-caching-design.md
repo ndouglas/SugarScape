@@ -303,3 +303,20 @@ Titles are drafts.
 
 README (a Minds 5 section), the program document (status, results, cost table, and the next
 target), the roadmap line, and this spec's amendments.
+
+## Amendments (implementation)
+
+- **The lab is a world mode** (`lab: raby | amodio`, reset-only, validated to the rig), not a harness
+  outside the world: one code path serves tests, survey and presets. It draws nothing new.
+- **Amodio's FPH 2 doesn't follow from the schedule as we read it.** For the Food-First group the
+  next three days are K1 without food (day 10), K2 with food (11) and K3 without food (12), so a
+  planner provisioning for them caches in K1 and K3 (ours: 15/0/15). The paper states FPH 2 as
+  "distribute the caches across compartments K1 and K2". We keep our derivation and score both
+  patterns in the survey. For the Empty-First group ours (0/30/0) matches the paper's statement.
+- **Provisioning for tomorrow caches nothing when tomorrow has food.** `plan` with lookahead 1 does
+  that for Amodio's Empty-First group and for Raby's breakfast-first counterbalancing. The paper's
+  FPH 1 reads as "the next day without food"; the survey scores the paper's statement beside ours.
+- **Whole units:** remainders go in K order, so Raby's `compensate` is 27/3 with breakfast in K3
+  and 4/26 with breakfast in K1; the survey pools both counterbalancings.
+- **Individual differences** come only from `compensate`'s λ in the lab (all F is cached, so
+  `share` is unused); `even` and `plan` populations have no spread.
