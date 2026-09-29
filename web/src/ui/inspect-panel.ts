@@ -3,7 +3,7 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isBaliView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isBaliView, isLineView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -11,6 +11,7 @@ import type {
   PunishmentInspection,
   ZiInspection,
   BaliInspection,
+  LineInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -181,6 +182,18 @@ export class InspectPanel {
             ),
       ),
       row('Infected by', a.infected_by ? this.links([a.infected_by]) : h('span', { class: 'hint' }, 'nobody')),
+    ];
+  }
+
+  /** A person in Schelling's line: its place, color and neighbors alike. */
+  private lineRows(view: LineInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const p = view.agent;
+    if (!p) return [row('Place', 'past the end of the line')];
+    return [
+      row('Person', `#${p.id} · ${p.color === 'red' ? 'Red' : 'Blue'}`),
+      row('Place', `${p.place + 1} from the left`),
+      row('Satisfied', `${p.satisfied ? 'yes' : 'no'} (${p.like} of ${p.neighbors} neighbors alike)`),
     ];
   }
 
@@ -635,6 +648,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isLineView(view)
+            ? this.lineRows(view)
           : isBaliView(view)
             ? this.baliRows(view)
           : isZiView(view)

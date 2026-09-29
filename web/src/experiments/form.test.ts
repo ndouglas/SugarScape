@@ -257,6 +257,16 @@ describe('sweeps over other models', () => {
       population: 2000,
       preference: { min: 0.25, max: 0.25 },
       residence: { enabled: false, min: 80, max: 100 },
+      neighborhood: 'von_neumann',
+      radius: 1,
+      edges: 'torus',
+      movement: 'random',
+      order: 'random',
+      sweep: 'reading',
+      red_share: 0.5,
+      exact: false,
+      red_demand: { min: [], max: [] },
+      blue_demand: { min: [], max: [] },
     };
     expect(numericPaths(schelling)).toEqual([
       'width',
@@ -267,6 +277,9 @@ describe('sweeps over other models', () => {
       'residence.enabled',
       'residence.min',
       'residence.max',
+      'radius',
+      'red_share',
+      'exact',
     ]);
     const { sweep } = formToSweep(defaultForm('schelling'), { config: schelling });
     expect(sweep!.base).toEqual({ config: schelling });

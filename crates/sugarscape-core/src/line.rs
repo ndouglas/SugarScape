@@ -196,9 +196,11 @@ pub struct PersonView {
     pub satisfied: bool,
 }
 
+/// A cell of the drawn line: its place in the row, and the person there (none past the end).
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct LineInspection {
-    pub person: Option<PersonView>,
+    pub place: u32,
+    pub agent: Option<PersonView>,
 }
 
 #[derive(Clone)]
@@ -395,7 +397,8 @@ impl LineWorld {
         }
         let k = (y * w + x) as usize;
         Ok(LineInspection {
-            person: self.people.get(k).map(|p| {
+            place: k as u32,
+            agent: self.people.get(k).map(|p| {
                 let (like, neighbors) = self.counts(k);
                 PersonView {
                     id: p.id,
@@ -813,7 +816,7 @@ mod tests {
         );
         w.run(3);
         assert!(
-            w.inspect(0, 1).unwrap().person.is_some() && w.inspect(40, 1).unwrap().person.is_none()
+            w.inspect(0, 1).unwrap().agent.is_some() && w.inspect(40, 1).unwrap().agent.is_none()
         );
     }
 }
