@@ -239,43 +239,43 @@ pub const TITLES: [(&str, &str); 317] = [
     ),
     (
         "cache-winter-none",
-        "Winter with nothing put away",
+        "Winter with nothing put away: half the population dies in the first winter",
     ),
     (
         "cache-winter-even",
-        "Agents who bury a share of every surplus",
+        "Burying half of every surplus: three in four survive the first winter",
     ),
     (
         "cache-winter-compensate",
-        "Agents who bury more where food has been scarce",
+        "Burying more where food was scarce survives winter no better than an even share",
     ),
     (
         "cache-winter-plan",
-        "Agents who plan for winter bury what they'll need",
+        "Agents who plan for winter: nearly nine in ten survive the first, burying a sixth as much",
     ),
     (
         "cache-winter-mixed",
-        "Four ways to face winter, side by side",
+        "Four ways to face winter side by side: planners are a third of the survivors",
     ),
     (
         "central-near",
-        "Carrying loads home from a near patch",
+        "Loads grow with distance from home, but likely because the walk lowers the forager's bar",
     ),
     (
         "central-far",
-        "Carrying loads home from a far patch",
+        "Carrying loads home from a far patch: bigger loads, and half the trips fill up",
     ),
     (
         "central-linear",
-        "Carrying loads home when the patch never runs down",
+        "A patch that never runs down: trips either turn back at once or fill up",
     ),
     (
         "cache-raby",
-        "Where scrub-jays' breakfast lessons send each kind of cacher",
+        "Raby's breakfast test: compensators and planners cache where breakfast was missing",
     ),
     (
         "cache-amodio",
-        "Where Amodio's rotating compartments send each kind of cacher",
+        "Amodio's rotating compartments: each rule leaves its own signature, and the jays' is an even split",
     ),
     (
         "vi-4-schelling-25",

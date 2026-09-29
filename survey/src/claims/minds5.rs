@@ -1186,14 +1186,20 @@ struct Trip {
     delivered: f64,
     /// Gross gathered in patch 0 (near in Lima's habitat) and patch 1.
     by_patch: [f64; 2],
-    harvest_ticks: u32,
+    /// Ticks away from home and not committed to a target (deciding in a
+    /// patch), the last of them the decision to go home.
+    stay: u32,
+    /// On the first such tick: the patch it was in (`usize::MAX` for
+    /// none), that patch's standing sugar and the agent's ρ.
+    arrival: Option<(usize, f64, f64)>,
     end: End,
 }
 
 #[derive(Default)]
 struct Current {
     by_patch: [f64; 2],
-    harvest_ticks: u32,
+    stay: u32,
+    arrival: Option<(usize, f64, f64)>,
     end: Option<End>,
 }
 
@@ -1225,9 +1231,20 @@ fn central_run(mut w: World) -> CentralRun {
         _ => Vec::new(),
     };
     let (gw, gh) = (w.config.width, w.config.height);
+    let mut members: Vec<Vec<usize>> = vec![Vec::new(); peaks.len()];
+    for i in 0..torus.len() {
+        let q = torus.pos(i);
+        if let Some(k) = patch_of(&peaks, q.x, q.y, gw, gh) {
+            members[k].push(i);
+        }
+    }
     let mut out = CentralRun::default();
     let mut cur: HashMap<AgentId, Current> = HashMap::new();
     for _ in 0..CENTRAL_TICKS {
+        let stock: Vec<f64> = members
+            .iter()
+            .map(|m| m.iter().map(|&i| w.sites[i].resource[0]).sum())
+            .collect();
         let pre: HashMap<AgentId, CentralPre> = w
             .agents()
             .map(|a| {
@@ -1258,7 +1275,8 @@ fn central_run(mut w: World) -> CentralRun {
                         gross: p.load,
                         delivered: p.load.min(p.held - r).max(0.0),
                         by_patch: c.by_patch,
-                        harvest_ticks: c.harvest_ticks,
+                        stay: c.stay,
+                        arrival: c.arrival,
                         end: c.end.unwrap_or(End::Other),
                     });
                     out.rho_jumps.push(a.delivery_rate - p.rho);
@@ -1266,8 +1284,18 @@ fn central_run(mut w: World) -> CentralRun {
                 *c = Current::default();
                 gained = a.load_trip;
             }
+            if p.pos != home && p.leaving.is_none() {
+                c.stay += 1;
+                if c.arrival.is_none() {
+                    let k = patch_of(&peaks, p.pos.x, p.pos.y, gw, gh);
+                    c.arrival = Some((
+                        k.unwrap_or(usize::MAX),
+                        k.map_or(f64::NAN, |k| stock[k]),
+                        p.rho,
+                    ));
+                }
+            }
             if gained > 0.0 {
-                c.harvest_ticks += 1;
                 if let Some(k) = patch_of(&peaks, a.pos.x, a.pos.y, gw, gh) {
                     if k < 2 {
                         c.by_patch[k] += gained;
@@ -1303,9 +1331,14 @@ fn trips_report(name: &str, runs: &[CentralRun]) -> String {
     let count = |e: End| trips.iter().filter(|t| t.end == e).count();
     let gross: Vec<f64> = trips.iter().map(|t| t.gross).collect();
     let delivered: Vec<f64> = trips.iter().map(|t| t.delivered).collect();
-    let short = trips.iter().filter(|t| t.harvest_ticks <= 2).count();
+    let at_once = trips.iter().filter(|t| t.stay <= 1).count();
+    let stays: Vec<f64> = trips.iter().map(|t| f64::from(t.stay)).collect();
+    let arrival_rho: Vec<f64> = trips
+        .iter()
+        .filter_map(|t| t.arrival.map(|a| a.2))
+        .collect();
     format!(
-        "{name}: {n} trips over {} seeds; ended by full {:.1} %, low (food for the walk home) {:.1} %, ρ or an empty site {:.1} %, not seen deciding {:.1} %; mean gross load {:.1}, delivered {:.1}; trips with at most 2 harvest ticks {:.1} %; mean_load (ticks 900–1000) median {:.1}; alive at tick {CENTRAL_TICKS}: {} of {}",
+        "{name}: {n} trips over {} seeds; ended by full {:.1} %, low (food for the walk home) {:.1} %, ρ or an empty site {:.1} %, not seen deciding {:.1} %; mean gross load {:.1}, delivered {:.1}; ticks deciding in a patch (uncommitted, away from home) median {:.0}, 1 (it left on arrival) in {:.1} % of trips; ρ on arrival median {:.2}; mean_load (ticks 900–1000) median {:.1}; alive at tick {CENTRAL_TICKS}: {} of {}",
         runs.len(),
         pct(count(End::Full), n),
         pct(count(End::Low), n),
@@ -1313,7 +1346,9 @@ fn trips_report(name: &str, runs: &[CentralRun]) -> String {
         pct(count(End::Other), n),
         if n == 0 { f64::NAN } else { mean(&gross) },
         if n == 0 { f64::NAN } else { mean(&delivered) },
-        pct(short, n),
+        med_or_nan(&stays),
+        pct(at_once, n),
+        med_or_nan(&arrival_rho),
         median(&runs.iter().map(|r| r.mean_load).collect::<Vec<_>>()),
         runs.iter().map(|r| r.alive).sum::<usize>(),
         5 * runs.len(),
@@ -1441,6 +1476,39 @@ fn lima_diffs(r: &CentralRun) -> (f64, f64, f64, f64, usize, usize) {
     )
 }
 
+/// Lima's habitat, per patch (a trip's patch by over half its gross load):
+/// ρ, the patch's standing sugar and the ticks deciding there on arrival,
+/// and the loads.
+fn by_patch_report(runs: &[CentralRun]) -> String {
+    let rows: Vec<String> = ["near", "far"]
+        .iter()
+        .enumerate()
+        .map(|(k, name)| {
+            let t: Vec<&Trip> = runs
+                .iter()
+                .flat_map(|r| &r.trips)
+                .filter(|t| t.gross > 0.0 && t.by_patch[k] > 0.5 * t.gross)
+                .collect();
+            let at: Vec<(usize, f64, f64)> = t.iter().filter_map(|t| t.arrival).collect();
+            let m = |f: &dyn Fn(&Trip) -> f64| t.iter().map(|x| f(x)).sum::<f64>() / t.len() as f64;
+            let ma = |f: &dyn Fn(&(usize, f64, f64)) -> f64| at.iter().map(f).sum::<f64>() / at.len() as f64;
+            format!(
+                "{name} ({} trips): on arrival ρ {:.2} and the patch's standing sugar {:.1} (arrived in this patch {} of {}); ticks deciding in the patch {:.1}; gross load {:.1}, delivered {:.1}; ended by full {:.1} %",
+                t.len(),
+                ma(&|a| a.2),
+                ma(&|a| a.1),
+                at.iter().filter(|a| a.0 == k).count(),
+                at.len(),
+                m(&|x| f64::from(x.stay)),
+                m(&|x| x.gross),
+                m(&|x| x.delivered),
+                pct(t.iter().filter(|x| x.end == End::Full).count(), t.len()),
+            )
+        })
+        .collect();
+    format!("Reported, by patch (all seeds): {}.", rows.join("; "))
+}
+
 fn lima_claim(seeds: &[u64]) -> Outcome {
     let runs = central(&lima_world(), seeds);
     let d: Vec<(f64, f64, f64, f64, usize, usize)> = runs.iter().map(lima_diffs).collect();
@@ -1473,6 +1541,7 @@ fn lima_claim(seeds: &[u64]) -> Outcome {
             equivalent(&near, &far, None, "near", "far").measured,
         ))
         .with(&trips_report("Lima's habitat", &runs))
+        .with(&by_patch_report(&runs))
 }
 
 pub fn claims() -> Vec<Claim> {
