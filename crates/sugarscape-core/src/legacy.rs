@@ -212,6 +212,8 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         walls: Vec::new(),
         memory: crate::config::Memory::default(),
         truffles: crate::config::Truffles::default(),
+        goap: crate::config::Goap::default(),
+        mvt: crate::config::Mvt::default(),
         schedule,
     })
 }

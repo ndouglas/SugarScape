@@ -1,0 +1,14 @@
+{
+  "name": "Minds 4: carrying capacity against the planner's shortlist size",
+  "description": "The mean population over ticks 300–500 of Animation II-2's world when Flumps walk and plan with GOAP, against K, the number of known sites a plan considers: 2, 4, 8 or 12. Seeds 1–20.",
+  "base": { "preset": "ii-2-unit" },
+  "set": { "movement.mode": "walk", "decision.rule": "goap" },
+  "x": {
+    "label": "Shortlist size K",
+    "path": "goap.k",
+    "values": [2, 4, 8, 12]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 500,
+  "metric": { "kind": "window_mean", "series": "population", "from": 300 }
+}

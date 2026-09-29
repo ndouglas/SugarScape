@@ -25,6 +25,7 @@ import type {
   NormsInspection,
   EthnoConfig,
   EthnoInspection,
+  GoapView,
   ImageConfig,
   ImageInspection,
   LinkView,
@@ -60,6 +61,21 @@ export function memoryText(m: AgentView['memory']): string {
   const sites = m.sites === 1 ? 'site' : 'sites';
   const spots = m.spots === 1 ? 'spot' : 'spots';
   return `${m.sites} ${sites} (${m.spots} truffle ${spots})`;
+}
+
+/**
+ * The Plan row's text (Minds 4, GOAP): "n step(s), gathers ~x of G", singular at one step, or
+ * "Done (gathers ~x of G)" once no targets are left. `x` is rounded to one decimal.
+ */
+export function planText(goap: GoapView): string {
+  const n = goap.steps.length;
+  const gathers = `gathers ~${Number(goap.gathers.toFixed(1))} of ${fmt(goap.goal)}`;
+  return n ? `${n} ${n === 1 ? 'step' : 'steps'}, ${gathers}` : `Done (${gathers})`;
+}
+
+/** The Average rate row's text (Minds 4, marginal value): ρ in sugar a tick, to two decimals. */
+export function rateText(rate: number): string {
+  return `${rate.toFixed(2)} sugar a tick`;
 }
 
 export class InspectPanel {
@@ -120,6 +136,13 @@ export class InspectPanel {
               : row('Moved to', `(${a.plan.target_x}, ${a.plan.target_y})`),
           ]
         : []),
+      ...(a.goap
+        ? [
+            row('Plan', planText(a.goap)),
+            ...(a.goap.steps.length ? [row('Next target', `(${a.goap.steps[0][0]}, ${a.goap.steps[0][1]})`)] : []),
+          ]
+        : []),
+      ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),

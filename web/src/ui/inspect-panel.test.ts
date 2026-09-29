@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { headingText, memoryText } from './inspect-panel';
+import { headingText, memoryText, planText, rateText } from './inspect-panel';
 
 const plan = (path: [number, number][]) => ({ target_x: 3, target_y: 4, path, walked: true });
 const memory = (sites: number, spots: number) => ({ remembers: true, sites, spots });
@@ -46,5 +46,32 @@ describe('memoryText', () => {
   it('singularizes and pluralizes each noun independently', () => {
     expect(memoryText(memory(1, 2))).toBe('1 site (2 truffle spots)');
     expect(memoryText(memory(2, 1))).toBe('2 sites (1 truffle spot)');
+  });
+});
+
+describe('planText', () => {
+  const goap = (steps: [number, number][], gathers: number, goal: number) => ({ steps, gathers, goal });
+
+  it('singularizes exactly one step', () => {
+    expect(planText(goap([[3, 4]], 10.04, 10))).toBe('1 step, gathers ~10 of 10');
+  });
+
+  it('pluralizes more than one step and rounds the gathering to one decimal', () => {
+    expect(planText(goap([[3, 4], [5, 6], [7, 8]], 12.345, 10))).toBe('3 steps, gathers ~12.3 of 10');
+  });
+
+  it('says done once no targets are left', () => {
+    expect(planText(goap([], 11.5, 10))).toBe('Done (gathers ~11.5 of 10)');
+  });
+
+  it('says done for an empty plan (G = 0)', () => {
+    expect(planText(goap([], 0, 0))).toBe('Done (gathers ~0 of 0)');
+  });
+});
+
+describe('rateText', () => {
+  it('gives ρ in sugar a tick to two decimals', () => {
+    expect(rateText(1)).toBe('1.00 sugar a tick');
+    expect(rateText(0.4567)).toBe('0.46 sugar a tick');
   });
 });

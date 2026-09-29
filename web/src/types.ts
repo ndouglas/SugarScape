@@ -53,9 +53,12 @@ export interface DiseaseRule {
   outbreaks: Outbreak[];
 }
 
-/** Minds 1's decision seam (absent from older configs: the book's rule M). */
+/**
+ * Minds 1's decision seam (absent from older configs: the book's rule M). Minds 4 adds `goap`
+ * (planning) and `mvt` (the marginal-value rule); both need `movement.mode: 'walk'`.
+ */
 export interface Decision {
-  rule: 'book' | 'utility';
+  rule: 'book' | 'utility' | 'goap' | 'mvt';
   travel: number;
   crowding: number;
   idle: 'stay' | 'wander';
@@ -87,6 +90,23 @@ export interface Memory {
   span: number;
   share: number;
   belief: Belief;
+  /** Minds 4: what a founder starts knowing (reset-only; absent from older configs: `none`); founders start knowing the map, children start with empty memory. */
+  prior?: 'none' | 'map';
+}
+
+/**
+ * Minds 4's GOAP search (absent from older configs: k 8, horizon 10, shortlist rate); all live.
+ * `k` known sites (1–12) ranked by `shortlist`; a goal of `horizon` ticks of food (1–100).
+ */
+export interface Goap {
+  k: number;
+  horizon: number;
+  shortlist: 'rate' | 'value';
+}
+
+/** Minds 4's marginal-value rule (absent from older configs: α 0.05); `alpha` in (0, 1], live. */
+export interface Mvt {
+  alpha: number;
 }
 
 /**
@@ -134,6 +154,8 @@ export interface Config {
   walls?: Wall[];
   memory?: Memory;
   truffles?: Truffles;
+  goap?: Goap;
+  mvt?: Mvt;
   schedule: ScheduledChange[];
 }
 
@@ -1299,7 +1321,16 @@ export interface AgentView {
    * memory. `null` while memory is off (`span` 0).
    */
   memory?: { remembers: boolean; sites: number; spots: number } | null;
+  /**
+   * Minds 4: the GOAP plan, under `decision.rule: 'goap'` while the Flump holds one: the targets
+   * left in order (empty just after the plan finishes), what it was to gather in all, and its goal
+   * G. `null` otherwise.
+   */
+  goap?: GoapView | null;
+  /** Minds 4: the running intake-rate estimate ρ, under `decision.rule: 'mvt'` only. */
+  rate?: number | null;
 }
+export interface GoapView { steps: [number, number][]; gathers: number; goal: number }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
 export interface SchellingAgentView {

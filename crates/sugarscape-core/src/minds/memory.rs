@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use crate::agent::AgentId;
-use crate::config::{Belief, MAX_GOODS};
+use crate::config::{Belief, MemoryPrior, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::world::World;
 
@@ -158,6 +158,61 @@ pub(crate) fn cap(memory: &mut Memory, limit: usize) {
     for &(_, i) in &order[..excess] {
         memory.sites.remove(&i);
     }
+}
+
+/// Minds 4: `memory.prior: map`. At world creation, after founders are
+/// placed, gives every founder that remembers a memory of every non-wall
+/// site as the world starts: its opening level of each good recorded as
+/// both `levels` and `most`, at tick 0, with no truffle knowledge (knowing
+/// the map isn't knowing where the truffles are). A no-op when `prior`
+/// isn't `Map`, or for an agent that doesn't remember. Draws nothing from
+/// any RNG. Children and replacements never call this, so they still start
+/// empty, as in Minds 3.
+///
+/// Respects [`MEMORY_CAP`] (Review Focus 4): on a world with more non-wall
+/// sites than the cap, keeps the [`MEMORY_CAP`] sites with the highest
+/// starting level of good 0, ties going to the lower site index — see
+/// [`keep_richest`].
+pub(crate) fn know_the_map(world: &mut World) {
+    if world.config.memory.prior != MemoryPrior::Map {
+        return;
+    }
+    let n = world.config.goods.len();
+    let entries: Vec<(f64, u32)> = (0..world.sites.len())
+        .filter(|&i| world.walls[i] == 0)
+        .map(|i| (world.sites[i].resource[0], i as u32))
+        .collect();
+    let kept = keep_richest(entries, MEMORY_CAP);
+    let prior: BTreeMap<u32, Seen> = kept
+        .into_iter()
+        .map(|(_, i)| {
+            let levels = &world.sites[i as usize].resource[..n];
+            (i, Seen::new(levels, levels, 0))
+        })
+        .collect();
+    let founders: Vec<AgentId> = world
+        .agents()
+        .filter(|a| a.remembers)
+        .map(|a| a.id)
+        .collect();
+    for id in founders {
+        world.agent_mut(id).expect("live founder").memory.sites = prior.clone();
+    }
+}
+
+/// Keeps the `cap` best of `entries` (a site's good-0 level and its index),
+/// highest level first, ties going to the lower site index. A single
+/// `select_nth_unstable_by` partition, not a full sort, and a no-op once
+/// `entries` is at or under `cap`.
+fn keep_richest(mut entries: Vec<(f64, u32)>, cap: usize) -> Vec<(f64, u32)> {
+    let excess = entries.len().saturating_sub(cap);
+    if excess > 0 {
+        entries.select_nth_unstable_by(excess - 1, |a, b| {
+            a.0.total_cmp(&b.0).then_with(|| b.1.cmp(&a.1))
+        });
+        entries.drain(..excess);
+    }
+    entries
 }
 
 /// Drops entries last seen more than `span` ticks ago (an entry at age
@@ -548,6 +603,119 @@ mod tests {
         cap(&mut m, 2);
         // 9 (tick 2) is oldest; 3 and 7 tie at tick 5, so 3 (lower) goes.
         assert_eq!(m.sites.keys().copied().collect::<Vec<_>>(), [1, 7]);
+    }
+
+    // --- `memory.prior: map` (Minds 4) ---
+
+    #[test]
+    fn keep_richest_keeps_the_highest_levels() {
+        let entries = vec![(1.0, 7), (1.0, 3), (2.0, 9), (5.0, 1)];
+        let mut idx: Vec<u32> = keep_richest(entries, 2)
+            .into_iter()
+            .map(|(_, i)| i)
+            .collect();
+        idx.sort_unstable();
+        assert_eq!(idx, [1, 9], "5.0 and 2.0 beat 1.0");
+    }
+
+    #[test]
+    fn keep_richest_breaks_ties_by_the_lower_site_index() {
+        let entries = vec![(1.0, 7), (1.0, 3), (1.0, 9), (1.0, 1)];
+        let mut idx: Vec<u32> = keep_richest(entries, 2)
+            .into_iter()
+            .map(|(_, i)| i)
+            .collect();
+        idx.sort_unstable();
+        assert_eq!(idx, [1, 3], "every level ties, so the lowest indices win");
+    }
+
+    #[test]
+    fn keep_richest_is_a_no_op_at_or_under_the_cap() {
+        let entries = vec![(1.0, 7), (2.0, 3)];
+        assert_eq!(keep_richest(entries.clone(), 2).len(), 2);
+        assert_eq!(keep_richest(entries, 5).len(), 2);
+    }
+
+    #[test]
+    fn map_prior_gives_every_founder_that_remembers_every_nonwall_site_at_tick_zero() {
+        let mut c = blank_config(5, 5);
+        c.movement.mode = MoveMode::Walk;
+        c.memory.span = 20;
+        c.memory.share = 1.0;
+        c.memory.prior = MemoryPrior::Map;
+        c.population = 3;
+        let len = (c.width * c.height) as usize;
+        let landscape: Vec<f64> = (0..len).map(|i| i as f64).collect();
+        let w = World::with_landscapes(c, 7, &[Some(landscape.clone())]).expect("valid config");
+        assert_eq!(w.population(), 3);
+        for agent in w.agents() {
+            assert!(agent.remembers, "share 1.0");
+            assert_eq!(agent.memory.sites.len(), len, "every non-wall site");
+            for (i, &level) in landscape.iter().enumerate() {
+                let seen = &agent.memory.sites[&(i as u32)];
+                assert_eq!(seen.levels()[0], level);
+                assert_eq!(seen.most()[0], level);
+                assert_eq!(seen.tick, 0);
+                assert_eq!(seen.truffle, None, "no truffle knowledge");
+            }
+        }
+    }
+
+    #[test]
+    fn map_prior_none_seeds_nothing() {
+        let mut c = blank_config(5, 5);
+        c.movement.mode = MoveMode::Walk;
+        c.memory.span = 20;
+        c.memory.share = 1.0;
+        c.population = 3;
+        // memory.prior defaults to None.
+        let w = World::new(c, 7).expect("valid config");
+        for agent in w.agents() {
+            assert!(agent.remembers);
+            assert!(
+                agent.memory.sites.is_empty(),
+                "prior none leaves founders exactly as Minds 3 did"
+            );
+        }
+    }
+
+    #[test]
+    fn map_prior_gives_non_rememberers_nothing() {
+        let mut c = blank_config(5, 5);
+        c.movement.mode = MoveMode::Walk;
+        c.memory.span = 20;
+        c.memory.share = 0.0;
+        c.memory.prior = MemoryPrior::Map;
+        c.population = 3;
+        let w = World::new(c, 7).expect("valid config");
+        for agent in w.agents() {
+            assert!(!agent.remembers, "share 0.0");
+            assert!(agent.memory.sites.is_empty());
+        }
+    }
+
+    #[test]
+    fn map_prior_respects_the_cap_and_keeps_the_richest_sites() {
+        let (width, height) = (80, 80);
+        let len = (width * height) as usize;
+        assert!(len > MEMORY_CAP, "the world has more sites than the cap");
+        let mut c = blank_config(width, height);
+        c.movement.mode = MoveMode::Walk;
+        c.memory.span = 20;
+        c.memory.share = 1.0;
+        c.memory.prior = MemoryPrior::Map;
+        c.population = 1;
+        let landscape: Vec<f64> = (0..len).map(|i| i as f64).collect();
+        let w = World::with_landscapes(c, 7, &[Some(landscape)]).expect("valid config");
+        let agent = w.agents().next().expect("one founder");
+        assert_eq!(agent.memory.sites.len(), MEMORY_CAP);
+        let richest_start = (len - MEMORY_CAP) as u32;
+        for &idx in agent.memory.sites.keys() {
+            assert!(
+                idx >= richest_start,
+                "kept the {MEMORY_CAP} richest sites, not site {idx}"
+            );
+        }
     }
 
     #[test]

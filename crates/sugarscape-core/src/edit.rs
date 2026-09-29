@@ -74,6 +74,17 @@ pub struct PlanView {
     pub walked: bool,
 }
 
+/// Minds 4: a GOAP Flump's plan, for Inspect.
+#[derive(Clone, Debug, Serialize)]
+pub struct GoapView {
+    /// The targets left, in order.
+    pub steps: Vec<[u32; 2]>,
+    /// What the plan was to gather in all.
+    pub gathers: f64,
+    /// The goal G it planned for.
+    pub goal: f64,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct DiseaseEntry {
     pub id: DiseaseId,
@@ -118,6 +129,14 @@ pub struct AgentView {
     /// Minds 3: whether the agent remembers, and how many sites and truffle
     /// spots it holds in memory. `None` while memory is off (`span` 0).
     pub memory: Option<MemoryView>,
+    /// Minds 4: the GOAP plan. `Some` only under `decision.rule: goap` while
+    /// the Flump holds a plan: its steps are empty once the plan is done
+    /// (or was empty, G = 0). `None` after a dropped plan or a fallback, so
+    /// no stale figures show.
+    pub goap: Option<GoapView>,
+    /// Minds 4: the Flump's running intake-rate estimate ρ. `Some` only
+    /// under `decision.rule: mvt`.
+    pub rate: Option<f64>,
 }
 
 /// Minds 3: what an agent remembers, for display.
@@ -348,6 +367,16 @@ impl World {
                     .filter(|s| s.truffle.is_some())
                     .count() as u32,
             }),
+            goap: a
+                .goap_plan
+                .as_ref()
+                .filter(|_| self.config.decision.rule == crate::config::DecisionRule::Goap)
+                .map(|g| GoapView {
+                    steps: g.steps.iter().map(|(p, _)| [p.x, p.y]).collect(),
+                    gathers: g.gathers,
+                    goal: g.goal,
+                }),
+            rate: (self.config.decision.rule == crate::config::DecisionRule::Mvt).then_some(a.rate),
         });
         Ok(Inspection {
             site: SiteView {
@@ -696,6 +725,17 @@ mod tests {
         }
         let m = w.inspect(2, 2).unwrap().agent.unwrap().memory.unwrap();
         assert_eq!((m.remembers, m.sites, m.spots), (true, 2, 1));
+    }
+
+    #[test]
+    fn inspect_shows_the_rate_only_under_mvt() {
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        w.agent_mut(id).unwrap().rate = 1.25;
+        assert!(w.inspect(2, 2).unwrap().agent.unwrap().rate.is_none());
+        w.config.movement.mode = crate::config::MoveMode::Walk;
+        w.config.decision.rule = crate::config::DecisionRule::Mvt;
+        assert_eq!(w.inspect(2, 2).unwrap().agent.unwrap().rate, Some(1.25));
     }
 
     #[test]

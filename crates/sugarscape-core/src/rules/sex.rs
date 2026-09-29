@@ -103,9 +103,13 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         culture: Vec::new(),
         social: Social::default(),
         plan: crate::agent::Plan::default(),
+        goap_plan: None,
         remembers: false,
         memory: crate::minds::memory::Memory::default(),
+        rate: 0.0,
+        leaving: None,
     };
+    child.rate = f64::from(child.metabolism[0]);
     // Goods 1..n pick where Chapter IV picked spice's metabolism.
     for (i, m) in child.metabolism.iter_mut().enumerate().take(n).skip(1) {
         *m = pick(rng, a.metabolism[i], b.metabolism[i]);

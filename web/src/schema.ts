@@ -1,5 +1,5 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Config, Decision, Memory, Movement, Truffles } from './types';
+import type { Config, Decision, Goap, Memory, Movement, Mvt, Truffles } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
@@ -8,7 +8,13 @@ const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 
 const movement = (c: Config): Movement => c.movement ?? { mode: 'jump', speed: 1 };
 
 /** A config's memory, or the engine's default (span 0: memory off) for older configs. */
-const memory = (c: Config): Memory => c.memory ?? { span: 0, share: 1, belief: 'project' };
+const memory = (c: Config): Memory => c.memory ?? { span: 0, share: 1, belief: 'project', prior: 'none' };
+
+/** A config's GOAP search, or the engine's default for older configs. */
+const goap = (c: Config): Goap => c.goap ?? { k: 8, horizon: 10, shortlist: 'rate' };
+
+/** A config's marginal-value rule, or the engine's default for older configs. */
+const mvt = (c: Config): Mvt => c.mvt ?? { alpha: 0.05 };
 
 /** A config's truffles, or the engine's default (share 0: no truffles) for older configs. */
 const truffles = (c: Config): Truffles => c.truffles ?? { share: 0, value: 5, regrow: 30, seed: 1 };
@@ -186,8 +192,8 @@ export const GROUPS: Group[] = [
     controls: [{ kind: 'range', path: 'foresight.range', label: 'Foresight φ', min: 0, max: 20 }],
   },
   {
-    title: 'Decision (Minds 1)',
-    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat.',
+    title: 'Decision (Minds 1, 4)',
+    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average; it also needs one good. Both need walking (Movement: Walk).',
     controls: [
       {
         kind: 'select', path: 'decision.rule', label: 'Rule', reset: true,
@@ -195,6 +201,8 @@ export const GROUPS: Group[] = [
         options: [
           { value: 'book', label: 'Rule M (book)', apply: (c) => { c.decision = { ...decision(c), rule: 'book' }; } },
           { value: 'utility', label: 'Utility mind', apply: (c) => { c.decision = { ...decision(c), rule: 'utility' }; } },
+          { value: 'goap', label: 'GOAP (plan)', apply: (c) => { c.decision = { ...decision(c), rule: 'goap' }; } },
+          { value: 'mvt', label: 'Marginal value (leave below your average)', apply: (c) => { c.decision = { ...decision(c), rule: 'mvt' }; } },
         ],
       },
       {
@@ -212,6 +220,26 @@ export const GROUPS: Group[] = [
           { value: 'stay', label: 'Stay (book)', apply: (c) => { c.decision = { ...decision(c), idle: 'stay' }; } },
           { value: 'wander', label: 'Wander to a random free site in sight', apply: (c) => { c.decision = { ...decision(c), idle: 'wander' }; } },
         ],
+      },
+      {
+        kind: 'number', path: 'goap.k', label: 'GOAP: known sites a plan considers', min: 1, max: 12, step: 1,
+        adjust: (next) => { next.goap = { ...goap(next), ...next.goap }; },
+      },
+      {
+        kind: 'number', path: 'goap.horizon', label: 'GOAP: ticks of food a plan gathers', min: 1, max: 100, step: 1,
+        adjust: (next) => { next.goap = { ...goap(next), ...next.goap }; },
+      },
+      {
+        kind: 'select', path: 'goap.shortlist', label: 'GOAP: which known sites',
+        current: (c) => goap(c).shortlist,
+        options: [
+          { value: 'rate', label: 'Most sugar per step (rate)', apply: (c) => { c.goap = { ...goap(c), shortlist: 'rate' }; } },
+          { value: 'value', label: 'Most sugar (value)', apply: (c) => { c.goap = { ...goap(c), shortlist: 'value' }; } },
+        ],
+      },
+      {
+        kind: 'number', path: 'mvt.alpha', label: 'Marginal value: smoothing α of the average', min: 0.01, max: 1, step: 0.01,
+        adjust: (next) => { next.mvt = { ...mvt(next), ...next.mvt }; },
       },
     ],
   },
@@ -251,6 +279,14 @@ export const GROUPS: Group[] = [
         options: [
           { value: 'recall', label: 'Recall: what it saw there', apply: (c) => { c.memory = { ...memory(c), belief: 'recall' }; } },
           { value: 'project', label: 'Project: that plus growback since', apply: (c) => { c.memory = { ...memory(c), belief: 'project' }; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'memory.prior', label: 'Founders start knowing', reset: true,
+        current: (c) => memory(c).prior ?? 'none',
+        options: [
+          { value: 'none', label: 'Nothing (book)', apply: (c) => { c.memory = { ...memory(c), prior: 'none' }; } },
+          { value: 'map', label: 'The whole map (needs a span)', apply: (c) => { c.memory = { ...memory(c), prior: 'map' }; } },
         ],
       },
     ],

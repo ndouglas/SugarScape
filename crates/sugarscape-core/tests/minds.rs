@@ -37,7 +37,14 @@ fn the_utility_mind_with_rule_ms_consideration_is_rule_m() {
 fn walking_at_vision_one_is_jumping() {
     let mut checked = 0;
     for p in presets::all() {
-        if p.config.combat.enabled {
+        // Minds 4's GOAP and MVT rules exist only for walkers (validation
+        // rejects them under `mode: jump`), so they have no jump to compare.
+        if p.config.combat.enabled
+            || matches!(
+                p.config.decision.rule,
+                DecisionRule::Goap | DecisionRule::Mvt
+            )
+        {
             continue;
         }
         let mut jump = p.config.clone();

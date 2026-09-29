@@ -4,8 +4,10 @@
 //! values only what rule M does.
 
 pub mod astar;
+pub mod goap;
 pub mod grid;
 pub mod memory;
+pub mod mvt;
 pub mod utility;
 
 use crate::agent::AgentId;
@@ -19,5 +21,7 @@ pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
     match world.config.decision.rule {
         DecisionRule::Book => movement::act(world, id),
         DecisionRule::Utility => utility::act(world, id),
+        DecisionRule::Goap => goap::forage::act(world, id),
+        DecisionRule::Mvt => mvt::act(world, id),
     }
 }

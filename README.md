@@ -1741,6 +1741,177 @@ J. D. Thomson, "Efficient Harvesting of Renewing Resources," *Behavioral Ecology
 Gill, "Trapline Foraging by Hermit Hummingbirds," *Ecology* 69(6) (1988). See
 `docs/superpowers/specs/2026-09-28-minds-3-memory-design.md`.
 
+### Minds 4: GOAP and the marginal value theorem
+
+This is our own experiment, not a reproduction: the fourth step of the Minds program
+(`docs/studies/2026-09-27-minds.md`). Rule M and the utility mind choose one site at a time and hold
+no estimate of what the habitat yields on average, so Minds 3 couldn't test the marginal value
+theorem, and rule M prices no travel. Minds 4 adds the program's first planner, goal-oriented action
+planning (GOAP), and a learned marginal-value rule. It then runs the theorem's tests and asks Minds
+3's open question again: does memory pay a mind that prices travel?
+
+**GOAP, verified.** A generic planner searches any domain that supplies states, actions
+(preconditions, effects, cost) and an admissible heuristic, with Minds 2's A\* over the state graph
+and an expansion limit. It draws no random numbers. The search runs forward, not backward as in
+Orkin's F.E.A.R.: our states hold amounts of sugar, and regression over numeric effects is awkward.
+Two checks, on a STRIPS encoding (Fikes and Nilsson):
+
+- **Known optimal plan lengths** (Helmert and Mattmüller): gripper, 3n − 1 for even n and 3n for
+  odd, for n = 1–8; two logistics families, 4n (one truck per city for n = 1–6, one truck in one
+  city for n = 1–5; n = 6 runs about a minute and is left to an ignored test, which gives 24); and a
+  blocks-world family, 4n − 2, for n = 1–6. Every plan is replayed from the start.
+- **Against Dijkstra:** on 500 random STRIPS instances (6–12 facts, 4–12 actions, costs 1–3) the
+  plan's cost equals Dijkstra's, or both find none: 130 non-empty plans, 107 starts already at the
+  goal and 263 unsolvable instances.
+
+**The foraging domain.** Under `decision.rule: goap` a Flump plans a run of harvests that gathers
+G = metabolism × `goap.horizon` (H ticks of food, default 10) in the fewest ticks.
+
+- **Candidates:** its own site and K others it sees or remembers (`goap.k`, default 8), at Minds 3's
+  believed values.
+- **Actions:** harvest site i, costing the torus distance + 1 ticks (harvesting where it stands
+  costs 1). Regrowth during a plan is ignored.
+- **State:** where it is and which candidates it has harvested; gathered sugar is derived, so a plan
+  has at most (K + 1)·2^K states.
+- **Heuristic:** ⌈(G − gathered) / the best unharvested value⌉, admissible. On 400 random instances
+  the plan's cost equals an uninformed search's.
+- **Executing.** The Flump walks to the plan's first site and keeps the plan until it's invalidated
+  (the next site is taken, holds less than half what was planned, or can't be reached) or finished.
+  Then it replans, following Orkin.
+- **Fallback.** If the known sugar can't reach G, or the search passes 4 096 expansions, it takes
+  the single site with the best value ÷ (distance + 1). That's its only random draw, rule M's tie
+  draw.
+- **One good only:** G is in sugar, and foresight welfare over several goods isn't.
+- **The reduction.** With travel priced at 0 (a test-only hook), K covering sight and H = 1, GOAP's
+  target has rule M's best value and nearest distance on 200 random neighborhoods (where one harvest
+  meets G). Among equal-cost plans GOAP takes A\*'s fixed order, not rule M's draw, so the two can
+  pick different sites among equals.
+
+**Which sites a plan considers decides the result.** The spec shortlisted the K best known sites by
+value. With the map known, those are the far, full peak centers, so the planner can only plan long
+walks. It shuttles between centers and starves: on the MVT world at spacing 20, 4 of 60 Flumps are
+alive at tick 1000 (20 seeds, 3 each), against 28 of 60 when the shortlist ranks by value ÷
+(distance + 1). So the default is that rate shortlist, and the spec's value ranking is kept as the
+switch `goap.shortlist: value`.
+
+**The marginal-value rule** (`decision.rule: mvt`) is Constantino and Daw's rule at site level. Each
+Flump keeps ρ, a running mean of its gain per tick (travel ticks count 0; ρ ← ρ + α(gain − ρ),
+α = `mvt.alpha`, default 0.05; ρ starts at the metabolism). It stays while the best site within one
+step is believed to yield at least ρ; otherwise it commits to the best site it knows and walks there.
+
+**Knowing the map.** `memory.prior: map` gives every founding rememberer every non-wall site at
+tick 0, with its starting level (the theorem's ideal forager); children start empty. It needs a
+memory span. Past Minds 3's cap of 4 096 sites, the richest are kept.
+
+**The theorem's world** (`goap-mvt`, `mvt-rule`): nine patches (peaks of radius 3, height 4, 25
+sites and 56 sugar each) 20 apart on a 60 × 60 torus, with 3 Flumps of metabolism 1, vision 1–6,
+endowment 50, walking, memory for all (span 1 000, `project`, the map known). The design asked that
+a patch run out under one forager while the whole world feeds everyone. At the spec's growback 0.05
+a patch regrows 1.25 a tick, more than one forager eats, so it never runs out. So growback became
+0.02 (0.5 a tick per patch) and the population 5 became 3 (regrowth 1.5 times the need). A lone
+planner then empties its patch by tick 33 and leaves at tick 36. Even so only 1–2 of the 3 are
+alive at tick 1000 in each seed.
+
+Measured (20 seeds; the survey, which judges claims we set before running, unless a sweep is named).
+The travel tests use the same world at spacings s = 12, 16, 20 and 24 (a 3s × 3s torus):
+
+- **Longer travel, longer stays, under GOAP (Holds).** The per-seed slope of mean patch residence on
+  spacing is positive in 20 of 20 seeds (median 0.41). Median residence is 18.6, 22.6, 25.7 and
+  22.8 ticks at s = 12–24. Under the marginal-value rule it holds too, but the effect is small:
+  positive in 19 of 20 (median 0.096), with 11.8, 12.4, 12.7 and 12.9 ticks. Rule M with the same
+  knowledge reverses the theorem, with shorter stays at longer travel in 20 of 20 seeds (6.3 down to
+  5.0), and so does GOAP with the value shortlist (20 of 20; 7.6, 8.6, 6.8, 5.9). Caveat: survival
+  falls with spacing under every rule, so at s ≥ 20 the residences rest on few Flumps (a median of
+  1 or fewer of the 3 alive at tick 1000), and death cuts visits short.
+- **Overstaying: GOAP Holds as judged, likely only through the walk out; the marginal-value rule
+  Fails.**
+  The measure, set before running: at each departure, the gain on the Flump's last tick in the
+  patch against its mean gain per tick so far. At s = 20, GOAP overstays at a median 57 % of
+  departures, over half in 18 of 20 seeds. The marginal-value rule overstays at 39 %, over half in
+  0 of 20. That last tick is often the first step out. Without the ticks in transit (reported, not
+  judged; fallback ticks that stay put count as transit, 0.1–0.7 % of ticks), GOAP overstays at
+  20–33 % and the marginal-value rule at 2–7 %, and no seed is above half at any spacing under
+  either. So GOAP's literal overstaying is likely the walk out.
+  Overstaying also falls as travel grows under both (GOAP 61 % to 46 %, the marginal-value rule
+  56 % to 35 %, from s = 12 to 24). That's the opposite of Constantino and Daw, whose people
+  overstayed significantly only when travel was long.
+- **Memory pays a planner, among the living (Holds).** Under GOAP the rememberers' wealth advantage
+  (ticks 200–500) is +69 on the open sugarscape (19 of 20 seeds), +99 among truffles (20 of 20) and
+  +33 behind the wall (20 of 20), against rule M's −113, −82 and −114 in the same worlds. Minds 3's
+  travel-priced utility mind (travel 0.5), the fairer comparator, gave about +7 open, +1.5 among
+  truffles and −55 behind the wall. The memory is used: 98–99 % of rememberers' plans include a
+  remembered site out of sight.
+- **Part of it is survivorship.** Counting the dead as 0 (sugar per founding member, ticks
+  200–500), the advantage is +35 open (18 of 20 seeds), +26 among truffles (14 of 20) and +10 behind
+  the wall (15 of 20), short of 80 % of seeds in the last two. Fewer rememberers are alive at tick
+  500 than others in every world (48 % against 50 %, 41 % against 53 %, 60 % against 74 %). The
+  judged advantage is conditional on survival.
+- **The gain is relative to planners who don't remember, not to rule M.** GOAP's non-rememberers
+  are much poorer than rule M's (240 against 438 on the open sugarscape, 254 against 430 among
+  truffles), while a GOAP rememberer on the open sugarscape (319) is no richer than rule M's (324).
+  GOAP also holds more Flumps (population 200.5 against 176.5 open, 67.3 against 45.8 behind the
+  wall); more Flumps sharing the same sugar is a likely cause, not isolated. A possible bias isn't
+  isolated either: a plan's next site must still be a candidate, and a non-rememberer loses an
+  off-axis site from its candidates as soon as it's out of sight, so its plans are dropped sooner.
+
+The sweeps (20 seeds, observations, not judged claims):
+
+- **Horizon** (`goap-horizon`, `ii-2-unit` walking under GOAP, mean population over ticks 300–500):
+  143.3 at H = 2, 159.0 at 5, 206.4 at 10, 206.3 at 20 and 195.7 at 40, against 181 for walking
+  rule M and 224 for the book's jump. So planning ten ticks of food brings back over half of what
+  walking lost. But on `ii-2-unit` most GOAP decisions are the rate fallback (52 % of Flump-ticks
+  against 21 % planned, one seed over 200 ticks), so the gain is likely as much the rate choice as
+  the planning. Not isolated.
+- **K** (`goap-k`): 196.5, 207.9, 206.4 and 204.9 at K = 2, 4, 8 and 12 (sd 9.5–11.5): flat within
+  noise past four sites (untested).
+- **Memory's share** (`goap-memory`, on `goap-truffles`): the mean advantage is +90, +100, +104,
+  +100 and +113 at shares 0.1, 0.25, 0.5, 0.75 and 0.9 (sd 41–52), against Minds 3's `mem-share`
+  under rule M (−73 to −98). Positive at every share, and not worth more when rare. No test was
+  run.
+
+**Cost** (µs per Flump-tick, measured as in Minds 2 and 3; Minds 3's presets re-timed in the same
+run):
+
+| Preset | µs per Flump-tick |
+|---|---|
+| `goap-mvt` | 80.7 |
+| `mvt-rule` | 54.2 |
+| `goap-open` | 82.2 |
+| `goap-truffles` | 74.7 |
+| `goap-walled` | 149.0 |
+| `mem-open` (re-timed) | 14.2 |
+| `mem-truffles` (re-timed) | 24.3 |
+| `mem-mvt` (re-timed) | 14.6 |
+| `mem-walled` (re-timed) | 9.1 |
+| `walk-capacity` (re-timed) | 5.58 |
+| `ii-2-unit` (re-timed) | 1.20 |
+
+Against rule M in the same world, planning costs 5.8 times on the open sugarscape, 3.1 times with
+truffles and 16 times behind the wall, where rule M's rememberers die. The search never passed its
+limit in any survey world. `goap-mvt` and `mvt-rule` run only 3 Flumps on 3 600 sites, which
+inflates both figures.
+
+Switches: the Rules panel's **Decision (Minds 1, 4)** group adds GOAP and the marginal-value rule to
+**Rule** (on reset; both need Movement: Walk), and live **K**, **Horizon**, **Which known sites**
+(rate or value) and **α**. The **Memory** group adds the prior (on reset). Inspect shows a planner's
+"Plan: n steps, gathers ~x of G" and its next target, with its route drawn on the grid, or a
+marginal-value Flump's ρ. Charts: **Planning** (mean plan length) and **Plan use** (plans and
+fallbacks per Flump; plans using memory as a share of plans) under GOAP; **Average rate** and
+**Leaving** under the marginal-value rule. Presets: `goap-mvt`, `mvt-rule`, `goap-open`,
+`goap-truffles`, `goap-walled`.
+Built-in sweeps: `goap-horizon`, `goap-k`, `goap-memory`.
+
+Credit: R. E. Fikes and N. J. Nilsson, "STRIPS: A New Approach to the Application of Theorem Proving
+to Problem Solving," *Artificial Intelligence* 2 (1971); J. Orkin, "Applying Goal-Oriented Action
+Planning to Games," *AI Game Programming Wisdom 2* (2004), "Symbolic Representation of Game World
+State: Toward Real-Time Planning in Games," AAAI workshop WS-04-04 (2004), and "Three States and a
+Plan: The A.I. of F.E.A.R.," GDC (2006); M. Helmert and R. Mattmüller, "Accuracy of Admissible
+Heuristic Functions in Selected Planning Domains" (2007); J. Slaney and S. Thiébaux, "Blocks World
+Revisited," *Artificial Intelligence* 125 (2001); E. L. Charnov, "Optimal Foraging, the Marginal
+Value Theorem," *Theoretical Population Biology* 9(2) (1976); S. M. Constantino and N. D. Daw,
+"Learning the Opportunity Cost of Time in a Patch-Foraging Task," *Cognitive, Affective, &
+Behavioral Neuroscience* 15(4) (2015). See `docs/superpowers/specs/2026-09-28-minds-4-goap-design.md`.
+
 ### Threshold Models (Granovetter 1978; Watts 2002)
 
 **The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins

@@ -49,7 +49,7 @@ describe('decision', () => {
     expect(rule.kind).toBe('select');
     if (rule.kind !== 'select') return;
     expect(rule.reset).toBe(true);
-    expect(rule.options.map((o) => o.value)).toEqual(['book', 'utility']);
+    expect(rule.options.map((o) => o.value)).toEqual(['book', 'utility', 'goap', 'mvt']);
     const c = {} as unknown as Config;
     expect(rule.current(c)).toBe('book'); // older configs have no decision
     rule.options[1].apply(c);
@@ -77,6 +77,56 @@ describe('decision', () => {
     travel.adjust!(c, before);
     setPath(c, 'decision.travel', 2);
     expect(c.decision).toEqual({ rule: 'book', travel: 2, crowding: 0, idle: 'stay' });
+  });
+});
+
+describe('goap and mvt', () => {
+  it('offers GOAP and the marginal-value rule as decision rules', () => {
+    const rule = control('decision.rule');
+    if (rule.kind !== 'select') throw new Error('rule is a select');
+    const c = {} as unknown as Config;
+    rule.options.find((o) => o.value === 'goap')!.apply(c);
+    expect(c.decision).toEqual({ rule: 'goap', travel: 0, crowding: 0, idle: 'stay' });
+    rule.options.find((o) => o.value === 'mvt')!.apply(c);
+    expect(rule.current(c)).toBe('mvt');
+    expect(rule.options.map((o) => o.label)).toContain('GOAP (plan)');
+    expect(rule.options.map((o) => o.label)).toContain('Marginal value (leave below your average)');
+  });
+
+  it('offers k, horizon, shortlist and α live, in their ranges', () => {
+    const ranges: [string, number, number, number][] = [
+      ['goap.k', 1, 12, 1],
+      ['goap.horizon', 1, 100, 1],
+      ['mvt.alpha', 0.01, 1, 0.01],
+    ];
+    for (const [path, min, max, step] of ranges) {
+      const k = control(path);
+      if (k.kind !== 'number') throw new Error(`${path} is a number`);
+      expect(k.reset).toBeUndefined();
+      expect([k.min, k.max, k.step]).toEqual([min, max, step]);
+    }
+    const shortlist = control('goap.shortlist');
+    if (shortlist.kind !== 'select') throw new Error('shortlist is a select');
+    expect(shortlist.reset).toBeUndefined();
+    expect(shortlist.options.map((o) => [o.value, o.label])).toEqual([
+      ['rate', 'Most sugar per step (rate)'],
+      ['value', 'Most sugar (value)'],
+    ]);
+    const c = {} as unknown as Config;
+    expect(shortlist.current(c)).toBe('rate'); // older configs have no goap
+    shortlist.options[1].apply(c);
+    expect(c.goap).toEqual({ k: 8, horizon: 10, shortlist: 'value' });
+  });
+
+  it('creates complete goap and mvt objects when a number control is set on a config missing them', () => {
+    const c = {} as unknown as Config;
+    for (const [path, value] of [['goap.k', 3], ['goap.horizon', 20], ['mvt.alpha', 0.2]] as const) {
+      const before = structuredClone(c);
+      control(path).adjust!(c, before);
+      setPath(c, path, value);
+    }
+    expect(c.goap).toEqual({ k: 3, horizon: 20, shortlist: 'rate' });
+    expect(c.mvt).toEqual({ alpha: 0.2 });
   });
 });
 
@@ -137,7 +187,19 @@ describe('memory', () => {
     expect(belief.current(c)).toBe('project'); // older configs have no memory
     belief.options[0].apply(c);
     expect(belief.current(c)).toBe('recall');
-    expect(c.memory).toEqual({ span: 0, share: 1, belief: 'recall' });
+    expect(c.memory).toEqual({ span: 0, share: 1, belief: 'recall', prior: 'none' });
+  });
+
+  it('offers the prior, reset-only, defaulting older configs (and older memory objects) to none', () => {
+    const prior = control('memory.prior');
+    if (prior.kind !== 'select') throw new Error('prior is a select');
+    expect(prior.reset).toBe(true);
+    expect(prior.options.map((o) => o.value)).toEqual(['none', 'map']);
+    expect(prior.current({} as unknown as Config)).toBe('none');
+    const older = { memory: { span: 100, share: 1, belief: 'project' } } as unknown as Config;
+    expect(prior.current(older)).toBe('none');
+    prior.options[1].apply(older);
+    expect(older.memory).toEqual({ span: 100, share: 1, belief: 'project', prior: 'map' });
   });
 
   it('creates a complete memory object when a number control is set on a config missing it', () => {
@@ -147,7 +209,7 @@ describe('memory', () => {
     expect(() => setPath(c, 'memory.span', 50)).toThrow();
     span.adjust!(c, before);
     setPath(c, 'memory.span', 50);
-    expect(c.memory).toEqual({ span: 50, share: 1, belief: 'project' });
+    expect(c.memory).toEqual({ span: 50, share: 1, belief: 'project', prior: 'none' });
   });
 });
 
