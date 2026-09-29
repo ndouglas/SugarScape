@@ -15,7 +15,12 @@
 //! still takes in 0.5 a tick and the nine 1.5 times the need. Vision 1–6
 //! and the prior map at every spacing, so s = 20 is the preset.
 
+use std::collections::HashMap;
 use sugarscape_core::config::{Config, DecisionRule, Map, Peak, Shortlist};
+
+use sugarscape_core::agent::{Agent, AgentId};
+use sugarscape_core::geometry::Pos;
+use sugarscape_core::landscape::patch_of;
 use sugarscape_core::world::World;
 
 use crate::claim::{range, Claim, Outcome, Source};
@@ -316,6 +321,157 @@ fn overstay(rule: DecisionRule, seeds: &[u64]) -> Outcome {
         q_or_nan(&slopes, 0.25),
         q_or_nan(&slopes, 0.75),
     ))
+    .with(&settled_report(rule, seeds))
+}
+
+/// The overstay measure without transit (reported, not judged): each
+/// departure's gain on its last in-patch tick on which the Flump wasn't in
+/// transit, against the same realized mean gain rate as `visits`. Visits
+/// whose every in-patch tick was in transit are dropped.
+#[derive(Default)]
+struct Settled {
+    departures: usize,
+    dropped: usize,
+    overstays: usize,
+}
+
+impl Settled {
+    fn share(&self) -> f64 {
+        let kept = self.departures - self.dropped;
+        if kept == 0 {
+            f64::NAN
+        } else {
+            self.overstays as f64 / kept as f64
+        }
+    }
+}
+
+/// What the survey's trace keeps of a Flump before a step.
+struct Before {
+    leaving: Option<Pos>,
+    targets: Vec<Pos>,
+}
+
+fn before(a: &Agent) -> Before {
+    Before {
+        leaving: a.leaving,
+        targets: a
+            .goap_plan
+            .as_ref()
+            .map_or(Vec::new(), |g| g.steps.iter().map(|s| s.0).collect()),
+    }
+}
+
+/// Whether the Flump was in transit this tick. The marginal-value rule:
+/// `leaving` was set at the start of the tick or is set after it. GOAP: its
+/// landing site wasn't a plan target (a step of its plan before or after the
+/// tick, or the target it reached this tick under a plan). A GOAP tick on
+/// the fallback (no plan) counts as transit.
+fn in_transit(rule: DecisionRule, b: &Before, a: &Agent) -> bool {
+    match rule {
+        DecisionRule::Mvt => b.leaving.is_some() || a.leaving.is_some(),
+        _ => {
+            let reached = a.goap_plan.is_some() && a.plan.target == Some(a.pos);
+            let listed = |t: &Vec<Pos>| t.contains(&a.pos);
+            let after: Vec<Pos> = a
+                .goap_plan
+                .as_ref()
+                .map_or(Vec::new(), |g| g.steps.iter().map(|s| s.0).collect());
+            !(reached || listed(&b.targets) || listed(&after))
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct SettledTrack {
+    patch: Option<usize>,
+    held: f64,
+    gathered: f64,
+    /// The gain on the visit's last tick not in transit, if any.
+    settled_gain: Option<f64>,
+}
+
+/// `visits`'s trace, with the gain on the last tick not in transit.
+fn settled(c: &Config, seeds: &[u64]) -> Vec<Settled> {
+    let Map::Peaks { peaks } = &c.goods[0].map else {
+        unreachable!("a patch world is a peaks map")
+    };
+    let peaks = peaks.clone();
+    let (gw, gh, rule) = (c.width, c.height, c.decision.rule);
+    each_seed(c, seeds, move |mut w| {
+        let on = |x: u32, y: u32| patch_of(&peaks, x, y, gw, gh);
+        let mut tracks: HashMap<AgentId, SettledTrack> = w
+            .agents()
+            .map(|a| {
+                let t = SettledTrack {
+                    patch: on(a.pos.x, a.pos.y),
+                    held: a.holdings[0],
+                    gathered: 0.0,
+                    settled_gain: None,
+                };
+                (a.id, t)
+            })
+            .collect();
+        let mut out = Settled::default();
+        for _ in 0..MVT_TICKS {
+            let pre: HashMap<AgentId, Before> = w.agents().map(|a| (a.id, before(a))).collect();
+            w.step();
+            let t = w.tick;
+            for a in w.agents() {
+                let tr = tracks.get_mut(&a.id).expect("no births in a patch world");
+                let gain = a.holdings[0] - tr.held + f64::from(a.metabolism[0]);
+                let patch = on(a.pos.x, a.pos.y);
+                if patch != tr.patch {
+                    if tr.patch.is_some() && t >= 2 {
+                        out.departures += 1;
+                        match tr.settled_gain {
+                            None => out.dropped += 1,
+                            Some(g) if g < tr.gathered / (t - 1) as f64 => out.overstays += 1,
+                            Some(_) => {}
+                        }
+                    }
+                    tr.patch = patch;
+                    tr.settled_gain = None;
+                }
+                if patch.is_some() && !in_transit(rule, &pre[&a.id], a) {
+                    tr.settled_gain = Some(gain);
+                }
+                tr.gathered += gain;
+                tr.held = a.holdings[0];
+            }
+        }
+        out
+    })
+}
+
+/// The robustness row: per spacing, the median settled share, departures
+/// kept and the share of departures dropped (all in transit).
+fn settled_report(rule: DecisionRule, seeds: &[u64]) -> String {
+    let cells: Vec<String> = SPACINGS
+        .iter()
+        .map(|&s| {
+            let v = settled(&tori(s, rule), seeds);
+            let deps: usize = v.iter().map(|x| x.departures).sum();
+            let dropped: usize = v.iter().map(|x| x.dropped).sum();
+            let shares: Vec<f64> = v.iter().map(Settled::share).collect();
+            format!(
+                "{s}: {:.3} ({} departures kept, {:.1} % dropped as all transit; above 0.5 in {} of {} seeds)",
+                med_or_nan(&shares),
+                deps - dropped,
+                100.0 * dropped as f64 / deps.max(1) as f64,
+                shares.iter().filter(|&&x| x > 0.5).count(),
+                stats::finite(&shares).len(),
+            )
+        })
+        .collect();
+    format!(
+        "Reported, not judged: the same measure without transit (the gain on the last in-patch tick not in transit; {}), median share by spacing: {}.",
+        match rule {
+            DecisionRule::Mvt => "in transit: `leaving` set at the start of the tick or after it",
+            _ => "in transit: the landing site wasn't a plan target, or no plan (the fallback)",
+        },
+        cells.join(", ")
+    )
 }
 
 // -------------------------------------------------------- memory for a planner
@@ -326,8 +482,9 @@ struct MemRun {
     usage: Usage,
     /// Mean population over ticks 200–500.
     pop: f64,
-    /// Sugar held at tick 500 per founding rememberer and per founding
-    /// other (the dead count as 0): the advantage without survivorship.
+    /// Sugar held per founding rememberer and per founding other (the dead
+    /// count as 0), each a mean over ticks 200–500 like the headline: the
+    /// advantage without survivorship.
     per_founder: (f64, f64),
 }
 
@@ -335,22 +492,28 @@ fn mem_runs(c: &Config, seeds: &[u64]) -> Vec<MemRun> {
     each_seed(c, seeds, |mut w| {
         let founders = |w: &World, r: bool| w.agents().filter(|a| a.remembers == r).count() as f64;
         let (r0, o0) = (founders(&w, true), founders(&w, false));
-        let mut usage = Usage::default();
-        for _ in 0..500 {
-            w.step();
-            usage.add(&w);
-        }
-        let held = |r: bool| -> f64 {
+        let held = |w: &World, r: bool| -> f64 {
             w.agents()
                 .filter(|a| a.remembers == r)
                 .map(|a| a.holdings[0])
                 .sum()
         };
+        let mut usage = Usage::default();
+        let (mut fr, mut fo, mut n) = (0.0, 0.0, 0.0);
+        for _ in 0..500 {
+            w.step();
+            usage.add(&w);
+            if w.tick >= 200 {
+                fr += held(&w, true) / r0;
+                fo += held(&w, false) / o0;
+                n += 1.0;
+            }
+        }
         MemRun {
             g: measure(&w),
             usage,
             pop: window_mean(&series(&w, "population"), 200, 500),
-            per_founder: (held(true) / r0, held(false) / o0),
+            per_founder: (fr / n, fo / n),
         }
     })
 }
@@ -396,7 +559,7 @@ fn planner_memory(goap_id: &str, mem_id: &str, seeds: &[u64]) -> Outcome {
         describe(&m),
     ))
     .with(&format!(
-        "Reported, without survivorship (sugar held at tick 500 per founding member, the dead counting 0): GOAP {}; rule M {}. Median population over ticks 200–500: GOAP {:.1}, rule M {:.1} (GOAP higher in {} of {} seeds).",
+        "Reported, without survivorship (sugar held per founding member, the dead counting 0, mean over ticks 200–500): GOAP {}; rule M {}. Median population over ticks 200–500: GOAP {:.1}, rule M {:.1} (GOAP higher in {} of {} seeds).",
         founder(&gr),
         founder(&mr),
         median(&gp),
@@ -486,6 +649,23 @@ mod tests {
         );
         c.validate().expect("rule M with the prior map is valid");
         assert_eq!(value_shortlist(20).goap.shortlist, Shortlist::Value);
+    }
+
+    #[test]
+    fn spacing_12_places_the_nine_peaks_at_s_over_2_plus_s_i() {
+        let c = tori(12, DecisionRule::Goap);
+        let Map::Peaks { peaks } = &c.goods[0].map else {
+            panic!("a peaks map")
+        };
+        let mut at: Vec<(u32, u32)> = peaks.iter().map(|p| (p.x, p.y)).collect();
+        at.sort_unstable();
+        let mut want: Vec<(u32, u32)> = [6, 18, 30]
+            .iter()
+            .flat_map(|&x| [6, 18, 30].map(|y| (x, y)))
+            .collect();
+        want.sort_unstable();
+        assert_eq!(at, want);
+        assert!(peaks.iter().all(|p| p.radius == 3.0 && p.height == 4.0));
     }
 
     #[test]

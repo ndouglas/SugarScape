@@ -231,11 +231,11 @@ pub const TITLES: [(&str, &str); 276] = [
     ),
     (
         "goap-truffles",
-        "Planners who remember hidden truffles end up richer",
+        "Planners who remember hidden truffles end up richer while they live",
     ),
     (
         "goap-walled",
-        "Planners who remember what lies beyond the wall end up richer, not starving",
+        "Planners who remember what lies beyond the wall end up richer, and most survive",
     ),
     (
         "vi-4-schelling-25",
