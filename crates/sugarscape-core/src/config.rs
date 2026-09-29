@@ -151,6 +151,21 @@ pub struct Seasons {
     pub enabled: bool,
     pub winter_divisor: u32,
     pub period: u32,
+    /// Minds 5: `hemispheres` is S_{α,β,γ} as written (north and south flip
+    /// opposite); `global` is winter everywhere at once (reset-only, unlike
+    /// `enabled`/`winter_divisor`/`period`).
+    #[serde(default)]
+    pub mode: SeasonMode,
+}
+
+/// Minds 5: whether S_{α,β,γ}'s winter is regional (the book's north/south
+/// split) or falls on every row together.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SeasonMode {
+    #[default]
+    Hemispheres,
+    Global,
 }
 
 /// Colors of Chapter IV's goods (the renderer's `SUGAR` and `SPICE`).
@@ -624,6 +639,68 @@ impl Default for Truffles {
     }
 }
 
+/// Minds 5: which hypothesis a caching Flump's burying and digging follow.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CachingRule {
+    /// No caching (the book's Flump; reproduces Minds 4 bit for bit).
+    #[default]
+    None,
+    Even,
+    Compensate,
+    Plan,
+}
+
+/// Minds 5: a carrying limit, plus caches Flumps bury and dig, under `rule`.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Caching {
+    pub rule: CachingRule,
+    /// Most good 0 a Flump may hold (0 = no limit). Reset-only, like `rule`.
+    pub capacity: u32,
+    /// Share of surplus buried, in (0, 1].
+    pub share: f64,
+    /// Smoothing constant for the rule `compensate` uses, in (0, 1].
+    pub lambda: f64,
+    /// Days a rule `plan` forager looks ahead (1–10).
+    pub lookahead: u32,
+}
+
+impl Default for Caching {
+    fn default() -> Self {
+        Self {
+            rule: CachingRule::None,
+            capacity: 0,
+            share: 0.5,
+            lambda: 0.5,
+            lookahead: 1,
+        }
+    }
+}
+
+/// Minds 5: central-place foraging — round trips from a home, under the
+/// marginal-value rule or planning.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Central {
+    pub enabled: bool,
+}
+
+/// Minds 5: which lab's protocol the scripted harness runs (Task 6).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LabProtocol {
+    Raby,
+    Amodio,
+}
+
+/// Minds 5: a scripted lab harness, each rule's prediction an oracle
+/// (Task 6). Reset-only; needs a caching rule.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Lab {
+    pub protocol: LabProtocol,
+    pub food_first: bool,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SexRule {
     pub enabled: bool,
@@ -790,7 +867,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 20] = [
+pub const RESET_ONLY_PATHS: [&str; 27] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -811,13 +888,20 @@ pub const RESET_ONLY_PATHS: [&str; 20] = [
     "truffles",
     "truffles.share",
     "truffles.seed",
+    "seasons",
+    "seasons.mode",
+    "caching",
+    "caching.rule",
+    "caching.capacity",
+    "central",
+    "central.enabled",
 ];
 
 /// Whether a schedule may not set `path` (Decision 5): the goods list, whole
 /// goods and their maps, the pollutant list, the groups list, whole groups
-/// and their ranges, and `RESET_ONLY_PATHS`. A good's name, color and trait
-/// ranges, a pollutant's name and coefficients, and a group's name and color
-/// may be scheduled.
+/// and their ranges, the lab (Minds 5, Task 6), and `RESET_ONLY_PATHS`. A
+/// good's name, color and trait ranges, a pollutant's name and coefficients,
+/// and a group's name and color may be scheduled.
 fn reset_only(path: &str) -> bool {
     let parts: Vec<&str> = path.split('.').collect();
     matches!(
@@ -831,6 +915,7 @@ fn reset_only(path: &str) -> bool {
             | ["culture", "groups"]
             | ["culture", "groups", _]
             | ["culture", "groups", _, "zeros", ..]
+            | ["lab", ..]
             | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
 }
@@ -903,6 +988,10 @@ pub struct Config {
     pub truffles: Truffles,
     pub goap: Goap,
     pub mvt: Mvt,
+    pub caching: Caching,
+    pub central: Central,
+    #[serde(default)]
+    pub lab: Option<Lab>,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -926,6 +1015,7 @@ impl Default for Config {
                 enabled: false,
                 winter_divisor: 8,
                 period: 50,
+                mode: SeasonMode::Hemispheres,
             },
             pollution: Pollution {
                 enabled: false,
@@ -983,6 +1073,9 @@ impl Default for Config {
             truffles: Truffles::default(),
             goap: Goap::default(),
             mvt: Mvt::default(),
+            caching: Caching::default(),
+            central: Central { enabled: false },
+            lab: None,
             schedule: Vec::new(),
         }
     }
@@ -1576,6 +1669,43 @@ impl Config {
             "must be greater than 0 and at most 1",
         );
         e.check(
+            self.caching.share.is_finite() && self.caching.share > 0.0 && self.caching.share <= 1.0,
+            "caching.share",
+            "must be greater than 0 and at most 1",
+        );
+        e.check(
+            self.caching.lambda.is_finite()
+                && self.caching.lambda > 0.0
+                && self.caching.lambda <= 1.0,
+            "caching.lambda",
+            "must be greater than 0 and at most 1",
+        );
+        e.check(
+            (1..=10).contains(&self.caching.lookahead),
+            "caching.lookahead",
+            "must be between 1 and 10",
+        );
+        // A plan sums the values of the sites it harvests, as GOAP does; with
+        // n ≥ 2 goods a site's value is foresight welfare, which doesn't sum.
+        e.check(
+            (self.caching.rule == CachingRule::None && self.caching.capacity == 0)
+                || self.goods.len() == 1,
+            "caching.rule",
+            "caching needs exactly one good",
+        );
+        e.check(
+            !self.central.enabled
+                || (matches!(self.decision.rule, DecisionRule::Mvt | DecisionRule::Goap)
+                    && self.caching.capacity > 0),
+            "central.enabled",
+            "central-place foraging needs the marginal-value rule or planning, and a carrying limit",
+        );
+        e.check(
+            self.lab.is_none() || self.caching.rule != CachingRule::None,
+            "lab",
+            "a lab needs a caching rule",
+        );
+        e.check(
             (1..=50).contains(&self.movement.speed),
             "movement.speed",
             "must be between 1 and 50",
@@ -1841,6 +1971,21 @@ impl Config {
         }
         if self.truffles.seed != next.truffles.seed {
             out.push(FieldError::new("truffles.seed", msg));
+        }
+        if self.seasons.mode != next.seasons.mode {
+            out.push(FieldError::new("seasons.mode", msg));
+        }
+        if self.caching.rule != next.caching.rule {
+            out.push(FieldError::new("caching.rule", msg));
+        }
+        if self.caching.capacity != next.caching.capacity {
+            out.push(FieldError::new("caching.capacity", msg));
+        }
+        if self.central.enabled != next.central.enabled {
+            out.push(FieldError::new("central.enabled", msg));
+        }
+        if self.lab != next.lab {
+            out.push(FieldError::new("lab", msg));
         }
         out
     }
@@ -3661,5 +3806,264 @@ mod tests {
         };
         let errs = c.validate().unwrap_err();
         assert!(errs[0].message.contains("only on reset"), "{errs:?}");
+    }
+
+    #[test]
+    fn caching_central_and_seasons_mode_default_to_the_book_and_older_configs_load() {
+        let d = Config::default();
+        assert_eq!(
+            d.caching,
+            Caching {
+                rule: CachingRule::None,
+                capacity: 0,
+                share: 0.5,
+                lambda: 0.5,
+                lookahead: 1,
+            }
+        );
+        assert_eq!(d.central, Central { enabled: false });
+        assert_eq!(d.seasons.mode, SeasonMode::Hemispheres);
+        assert_eq!(d.lab, None);
+
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.remove("caching");
+        o.remove("central");
+        o.remove("lab");
+        o.get_mut("seasons")
+            .unwrap()
+            .as_object_mut()
+            .unwrap()
+            .remove("mode");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!(c.caching, Caching::default());
+        assert_eq!(c.central, Central { enabled: false });
+        assert_eq!(c.seasons.mode, SeasonMode::Hemispheres);
+        assert_eq!(c.lab, None);
+
+        // A partial `caching` object fills the rest from the default (like GOAP's).
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["caching"] = serde_json::json!({ "rule": "even" });
+        assert_eq!(
+            Config::from_value(v).unwrap().caching,
+            Caching {
+                rule: CachingRule::Even,
+                capacity: 0,
+                share: 0.5,
+                lambda: 0.5,
+                lookahead: 1,
+            }
+        );
+
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        assert_eq!(v["caching"]["rule"], serde_json::json!("none"));
+        for (rule, tag) in [
+            (CachingRule::None, "none"),
+            (CachingRule::Even, "even"),
+            (CachingRule::Compensate, "compensate"),
+            (CachingRule::Plan, "plan"),
+        ] {
+            v["caching"]["rule"] = serde_json::json!(tag);
+            assert_eq!(Config::from_value(v.clone()).unwrap().caching.rule, rule);
+        }
+        assert_eq!(v["seasons"]["mode"], serde_json::json!("hemispheres"));
+    }
+
+    #[test]
+    fn caching_central_and_lab_are_validated() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        // `caching.share` and `caching.lambda` are in (0, 1].
+        assert!(with(&|c| c.caching.share = 1.0).is_empty());
+        assert!(with(&|c| c.caching.share = 0.001).is_empty());
+        assert_eq!(with(&|c| c.caching.share = 0.0), ["caching.share"]);
+        assert_eq!(with(&|c| c.caching.share = 1.5), ["caching.share"]);
+        assert_eq!(with(&|c| c.caching.share = -0.1), ["caching.share"]);
+        assert_eq!(with(&|c| c.caching.share = f64::NAN), ["caching.share"]);
+        assert!(with(&|c| c.caching.lambda = 1.0).is_empty());
+        assert_eq!(with(&|c| c.caching.lambda = 0.0), ["caching.lambda"]);
+        assert_eq!(with(&|c| c.caching.lambda = 1.5), ["caching.lambda"]);
+
+        // `caching.lookahead` is 1–10.
+        assert!(with(&|c| c.caching.lookahead = 1).is_empty());
+        assert!(with(&|c| c.caching.lookahead = 10).is_empty());
+        assert_eq!(with(&|c| c.caching.lookahead = 0), ["caching.lookahead"]);
+        assert_eq!(with(&|c| c.caching.lookahead = 11), ["caching.lookahead"]);
+
+        // Caching (rule ≠ none or capacity > 0) needs exactly one good.
+        assert!(with(&|c| {
+            c.caching.rule = CachingRule::Even;
+        })
+        .is_empty());
+        assert!(with(&|c| {
+            c.caching.capacity = 100;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.caching.rule = CachingRule::Even;
+        c.add_good(Good::spice());
+        let errs = c.validate().unwrap_err();
+        assert_eq!(errs.len(), 1);
+        assert_eq!(errs[0].field, "caching.rule");
+        assert_eq!(errs[0].message, "caching needs exactly one good");
+        let mut c = Config::default();
+        c.caching.capacity = 100;
+        c.add_good(Good::spice());
+        let errs = c.validate().unwrap_err();
+        assert_eq!(errs.len(), 1);
+        assert_eq!(errs[0].field, "caching.rule");
+
+        // `central.enabled` needs `decision.rule` mvt or goap, and `caching.capacity > 0`.
+        assert_eq!(with(&|c| c.central.enabled = true), ["central.enabled"]);
+        assert_eq!(
+            with(&|c| {
+                c.central.enabled = true;
+                c.caching.capacity = 10;
+            }),
+            ["central.enabled"]
+        );
+        assert_eq!(
+            with(&|c| {
+                c.central.enabled = true;
+                c.decision.rule = DecisionRule::Mvt;
+                c.movement.mode = MoveMode::Walk;
+            }),
+            ["central.enabled"]
+        );
+        assert!(with(&|c| {
+            c.central.enabled = true;
+            c.decision.rule = DecisionRule::Mvt;
+            c.movement.mode = MoveMode::Walk;
+            c.caching.capacity = 10;
+        })
+        .is_empty());
+        assert!(with(&|c| {
+            c.central.enabled = true;
+            c.decision.rule = DecisionRule::Goap;
+            c.movement.mode = MoveMode::Walk;
+            c.caching.capacity = 10;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.central.enabled = true;
+        let errs = c.validate().unwrap_err();
+        assert!(
+            errs.iter().any(|e| e.field == "central.enabled"
+                && e.message
+                    == "central-place foraging needs the marginal-value rule or planning, and a carrying limit"),
+            "{errs:?}"
+        );
+
+        // A lab needs a caching rule.
+        assert_eq!(
+            with(&|c| {
+                c.lab = Some(Lab {
+                    protocol: LabProtocol::Raby,
+                    food_first: true,
+                });
+            }),
+            ["lab"]
+        );
+        assert!(with(&|c| {
+            c.lab = Some(Lab {
+                protocol: LabProtocol::Amodio,
+                food_first: false,
+            });
+            c.caching.rule = CachingRule::Compensate;
+        })
+        .is_empty());
+    }
+
+    #[test]
+    fn caching_knobs_live_and_rule_capacity_mode_central_are_reset_only() {
+        let a = Config::default();
+        // The rate/smoothing/lookahead knobs are live.
+        let f: Vec<String> = a
+            .structural_changes(&{
+                let mut c = a.clone();
+                c.caching.share = 0.2;
+                c.caching.lambda = 0.9;
+                c.caching.lookahead = 5;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert!(f.is_empty(), "{f:?}");
+        let c = Config {
+            schedule: vec![
+                change(5, "caching.share", serde_json::json!(0.2)),
+                change(6, "caching.lambda", serde_json::json!(0.9)),
+                change(7, "caching.lookahead", serde_json::json!(5)),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+
+        // `caching.rule`, `caching.capacity`, `seasons.mode` and
+        // `central.enabled` change only on reset.
+        assert_eq!(
+            a.structural_changes(&{
+                let mut c = a.clone();
+                c.caching.rule = CachingRule::Even;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect::<Vec<_>>(),
+            ["caching.rule"]
+        );
+        assert_eq!(
+            a.structural_changes(&{
+                let mut c = a.clone();
+                c.caching.capacity = 50;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect::<Vec<_>>(),
+            ["caching.capacity"]
+        );
+        assert_eq!(
+            a.structural_changes(&{
+                let mut c = a.clone();
+                c.seasons.mode = SeasonMode::Global;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect::<Vec<_>>(),
+            ["seasons.mode"]
+        );
+        assert_eq!(
+            a.structural_changes(&{
+                let mut c = a.clone();
+                c.central.enabled = true;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect::<Vec<_>>(),
+            ["central.enabled"]
+        );
+        for (path, value) in [
+            ("caching.rule", serde_json::json!("even")),
+            ("caching.capacity", serde_json::json!(50)),
+            ("seasons.mode", serde_json::json!("global")),
+            ("central.enabled", serde_json::json!(true)),
+        ] {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
     }
 }
