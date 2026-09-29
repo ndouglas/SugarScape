@@ -403,7 +403,10 @@ fn builtins_and_series_names_are_listed() {
             "bali-two-node",
             "bali-gamma",
             "bali-adaptive",
-            "bali-links"
+            "bali-links",
+            "cache-capacity",
+            "cache-winter",
+            "central-distance"
         ]
     );
     assert!(list[0]["sweep"]["name"]
