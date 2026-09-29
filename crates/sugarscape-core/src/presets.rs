@@ -4,8 +4,9 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, MoveMode, Outbreak, Peak,
-    Placement, Pollutant, Pollution, ScheduledChange, Transform, URange, Wall, SPICE_COLOR,
+    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, MemoryPrior, MoveMode,
+    Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange, Transform, URange, Wall,
+    SPICE_COLOR,
 };
 use crate::model::ModelConfig;
 
@@ -152,6 +153,42 @@ fn enable_seasons(c: &mut Config) {
 fn memory(c: &mut Config, span: u32, share: f64) {
     c.memory.span = span;
     c.memory.share = share;
+}
+
+/// Minds 4: the marginal value theorem's world. Nine peaks (radius 3,
+/// height 4: 25 sites of capacity ≥ 1 each) at (10 + 20i, 10 + 20j) on a
+/// 60 × 60 torus; 3 Flumps of metabolism 1, endowment 50 and vision 1–6,
+/// walking, every one remembering (span 1 000, `project`) and starting with
+/// the whole map (`memory.prior: map`); growback 0.02. The balance was
+/// measured before this was recorded (Minds 4, Task 7): the spec's
+/// growback 0.05 gives a patch 25 × 0.05 = 1.25 sugar a tick, more than one
+/// forager eats, so a patch never runs out; the plan's mechanical rule set
+/// growback so a patch takes in 0.5 a tick, and the population so all nine
+/// patches' 4.5 a tick is 1.5 times the need (3 × 1).
+fn mvt_world(c: &mut Config, rule: DecisionRule) {
+    c.width = 60;
+    c.height = 60;
+    c.population = 3;
+    c.goods[0].map = Map::Peaks {
+        peaks: (0..3u32)
+            .flat_map(|i| {
+                (0..3u32).map(move |j| Peak {
+                    x: 10 + 20 * i,
+                    y: 10 + 20 * j,
+                    radius: 3.0,
+                    height: 4.0,
+                })
+            })
+            .collect(),
+    };
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.goods[0].endowment = URange::new(50, 50);
+    c.vision = URange::new(1, 6);
+    c.growback.rate = 0.02;
+    c.movement.mode = MoveMode::Walk;
+    c.decision.rule = rule;
+    memory(c, 1000, 1.0);
+    c.memory.prior = MemoryPrior::Map;
 }
 
 /// Minds 3: truffle spots covering `share` of non-wall sites, worth `value`
@@ -914,6 +951,57 @@ pub fn all() -> Vec<Preset> {
                 memory(c, 400, 1.0);
             },
         ),
+        preset(
+            "goap-mvt",
+            "Planning: when to leave a patch",
+            "Charnov 1976; Orkin 2006; Minds 4",
+            "The marginal value theorem's world, for a planner: 3 Flumps (metabolism 1, endowment 50, vision 1–6) on a 60 × 60 torus with nine equal patches (peaks of radius 3, height 4, 25 sites each) on a square lattice of spacing 20, growback 0.02. They walk, and plan with GOAP: each tick a Flump without a plan searches for the fastest sequence of harvests, among the 8 best sites it knows, that gathers 10 ticks of food, pricing each walk by its length. Every Flump remembers (span 1 000, share 1) and starts knowing the whole map, as the theorem's ideal forager does. The balance is set so a patch runs out under one forager (it takes in 0.5 sugar a tick against a forager's 1) while all nine patches together take in 1.5 times what the population eats (4.5 against 3).",
+            |c| mvt_world(c, DecisionRule::Goap),
+        ),
+        preset(
+            "mvt-rule",
+            "The marginal-value rule",
+            "Charnov 1976; Constantino & Daw 2015; Minds 4",
+            "goap-mvt's world under the marginal-value rule instead of planning: each Flump keeps ρ, a running mean of its intake per tick (travel ticks count as 0; smoothing α 0.05; starting at its metabolism). It stays while the best site within one step, its own included, is believed to hold at least ρ, and harvests there; otherwise it leaves for the best site it knows, committed until it arrives. Every Flump knows the whole map from the start and remembers what it sees (span 1 000).",
+            |c| mvt_world(c, DecisionRule::Mvt),
+        ),
+        preset(
+            "goap-open",
+            "Planning with memory: open sugarscape",
+            "Orkin 2006; Minds 4",
+            "mem-open's world (walk-capacity's Flumps walking to their targets; half of them remember for 100 ticks) with the planner instead of rule M: each Flump without a plan searches for the fastest sequence of harvests, among the 8 best sites it sees or remembers, that gathers 10 ticks of food, pricing each walk by its length. Rule M prices no travel, the likely cause of rememberers' losses in mem-open; the planner does.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+                c.decision.rule = DecisionRule::Goap;
+            },
+        ),
+        preset(
+            "goap-truffles",
+            "Planning with memory: hidden truffle spots",
+            "Orkin 2006; Minds 4",
+            "mem-truffles's world (walk-capacity's world with truffle spots, invisible until walked onto, worth 5 sugar and regrowing 30 ticks after being picked, on 5 % of sites; half the Flumps remember for 200 ticks) with the planner instead of rule M: each Flump without a plan searches for the fastest sequence of harvests, among the 8 best sites it sees or remembers, that gathers 10 ticks of food, pricing each walk by its length.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.05, 5.0, 30);
+                memory(c, 200, 0.5);
+                c.decision.rule = DecisionRule::Goap;
+            },
+        ),
+        preset(
+            "goap-walled",
+            "Planning with memory: beyond the wall",
+            "Orkin 2006; Minds 4",
+            "mem-walled's world (the 2.10 : 1 patches with vision 10–20, split by an opaque wall with a central gap; half the Flumps remember for 200 ticks) with the planner instead of rule M: each Flump without a plan searches for the fastest sequence of harvests, among the 8 best sites it sees or remembers, that gathers 10 ticks of food, pricing each walk by its length. In mem-walled, rememberers starved walking to far remembered sites; the planner counts the walk.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+                memory(c, 200, 0.5);
+                c.decision.rule = DecisionRule::Goap;
+            },
+        ),
     ]
 }
 
@@ -1247,7 +1335,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 54);
+        assert_eq!(presets.len(), 59);
         for p in presets {
             p.config
                 .validate()
@@ -1492,6 +1580,43 @@ mod tests {
             peaks.iter().all(|p| p.radius == 4.0 && p.height == 4.0),
             "mem-mvt: peak radius/height"
         );
+    }
+
+    #[test]
+    fn the_planning_presets_are_minds_3_worlds_under_goap_and_the_mvt_world() {
+        // goap-open, goap-truffles and goap-walled are Minds 3's worlds with
+        // only the decision rule changed.
+        for (goap, mem) in [
+            ("goap-open", "mem-open"),
+            ("goap-truffles", "mem-truffles"),
+            ("goap-walled", "mem-walled"),
+        ] {
+            let g = by_id(goap).unwrap().config;
+            g.validate().unwrap_or_else(|e| panic!("{goap}: {e:?}"));
+            let mut m = by_id(mem).unwrap().config;
+            m.decision.rule = DecisionRule::Goap;
+            assert_eq!(g, m, "{goap}");
+        }
+        // goap-mvt and mvt-rule share one world, balanced per Task 7: a
+        // patch takes in 25 × 0.02 = 0.5 a tick (< one forager's 1), and
+        // nine patches take in 1.5 times the population's need.
+        let goap = by_id("goap-mvt").unwrap().config;
+        let mut mvt = by_id("mvt-rule").unwrap().config;
+        assert_eq!(goap.decision.rule, DecisionRule::Goap);
+        assert_eq!(mvt.decision.rule, DecisionRule::Mvt);
+        mvt.decision.rule = DecisionRule::Goap;
+        assert_eq!(goap, mvt);
+        goap.validate().unwrap();
+        assert_eq!(goap.memory.prior, MemoryPrior::Map);
+        assert_eq!((goap.memory.span, goap.memory.share), (1000, 1.0));
+        assert_eq!(goap.vision, URange::new(1, 6));
+        let w = crate::world::World::new(goap.clone(), 1).unwrap();
+        let sites = w.sites.iter().filter(|s| s.capacity[0] >= 1.0).count();
+        assert_eq!(sites, 9 * 25);
+        let per_patch = 25.0 * goap.growback.rate;
+        assert!((per_patch - 0.5).abs() < 1e-12, "{per_patch}");
+        let need = f64::from(goap.population);
+        assert!((9.0 * per_patch / need - 1.5).abs() < 1e-12);
     }
 
     #[test]

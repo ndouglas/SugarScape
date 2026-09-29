@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 271] = [
+pub const TITLES: [(&str, &str); 276] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -216,6 +216,26 @@ pub const TITLES: [(&str, &str); 271] = [
     (
         "mem-mvt",
         "When to leave a patch: foragers who find a rich one never leave",
+    ),
+    (
+        "goap-mvt",
+        "Planners who price travel: when to leave a patch",
+    ),
+    (
+        "mvt-rule",
+        "The marginal-value rule: leave when the patch falls below your average",
+    ),
+    (
+        "goap-open",
+        "Planners with memory on the open sugarscape",
+    ),
+    (
+        "goap-truffles",
+        "Planners who remember hidden truffles",
+    ),
+    (
+        "goap-walled",
+        "Planners who remember what lies beyond the wall",
     ),
     (
         "vi-4-schelling-25",

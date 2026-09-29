@@ -84,6 +84,12 @@ const GOLDEN: &[(&str, u64)] = &[
     ("mem-truffles", 0xf511426e092ca85b),
     ("mem-trapline", 0xae81840c5bbbe91),
     ("mem-mvt", 0xa00361ad0017c367),
+    // Minds 4
+    ("goap-mvt", 0x6896da7180418e2),
+    ("mvt-rule", 0xc7322d80421cf559),
+    ("goap-open", 0x67650ec7ade7453e),
+    ("goap-truffles", 0xb934ec5e3fd1ec45),
+    ("goap-walled", 0x4e5dc6beda77265f),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
