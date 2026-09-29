@@ -143,6 +143,7 @@ fn at_home(world: &mut World, id: AgentId, home: Pos, keep: f64) -> f64 {
         e.deliveries += 1;
         e.delivered += q;
         delivered = q;
+        world.agent_mut(id).expect("live agent").last_load = q;
     }
     let held = world.agent(id).expect("live agent").holdings[0];
     if held < keep {

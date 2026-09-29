@@ -120,6 +120,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         home: None,
         load_trip: 0.0,
         delivery_rate: 0.0,
+        last_load: 0.0,
     };
     child.rate = f64::from(child.metabolism[0]);
     child.delivery_rate = child.rate;

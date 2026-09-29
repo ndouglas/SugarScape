@@ -284,6 +284,13 @@ pub struct Agent {
     /// at the agent's good-0 metabolism, with no draw, as Minds 4's `rate`
     /// does. Never hashed.
     pub delivery_rate: f64,
+    /// Minds 5, central-place foraging: the load delivered on the last trip
+    /// that delivered anything (`minds::central::at_home`'s `q`), for
+    /// Inspect; 0 before a first delivery and in every other world. Not
+    /// updated on a trip that delivers nothing, so it holds while an agent
+    /// sits home between trips. Never hashed, exported or shared, like
+    /// `rate`.
+    pub last_load: f64,
 }
 
 impl Agent {
@@ -337,6 +344,7 @@ impl Agent {
             home: None,
             load_trip: 0.0,
             delivery_rate: 0.0,
+            last_load: 0.0,
         };
         agent.rate = f64::from(agent.metabolism[0]);
         agent.delivery_rate = agent.rate;

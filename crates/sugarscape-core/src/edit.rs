@@ -40,6 +40,12 @@ pub struct SiteView {
     pub capacities: Vec<f64>,
     /// Level of each pollutant.
     pub pollution: Vec<f64>,
+    /// Minds 5: the world's own wall state at this site right now (`0` free,
+    /// `1` a fence, `2` opaque), not `config.walls`. In a lab world a
+    /// doorway is `2` until the test evening opens it (`World::open_wall`),
+    /// so this is how Inspect and drawing see it change; everywhere else
+    /// walls change only on reset and this matches `config.walls`.
+    pub wall: u8,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -86,6 +92,43 @@ pub struct GoapView {
     pub gathers: f64,
     /// The goal G it planned for.
     pub goal: f64,
+}
+
+/// Minds 5: one of an agent's caches, for display.
+#[derive(Clone, Debug, Serialize)]
+pub struct CacheView {
+    pub x: u32,
+    pub y: u32,
+    pub amount: f64,
+}
+
+/// Minds 5: an agent's caching state, for Inspect.
+#[derive(Clone, Debug, Serialize)]
+pub struct CachingView {
+    /// The caching rule this agent follows (`caching.rule`, or its own
+    /// under `caching.mixed`; `rules::rule_of`).
+    pub rule: crate::config::CachingRule,
+    /// The carrying limit (`caching.capacity`); 0 for none.
+    pub holdings_cap: f64,
+    /// This agent's own caches, in site order.
+    pub caches: Vec<CacheView>,
+    /// Σ of `caches`' amounts.
+    pub total: f64,
+    /// Rule `plan`'s current forecast shortfall (burn × γ − forecast −
+    /// cached; `rules::shortfall`): `Some` only under rule `plan`, with
+    /// `seasons.mode: global` on, and outside winter (when the rule isn't
+    /// computing one); `None` otherwise, including for every other rule.
+    pub forecast: Option<f64>,
+}
+
+/// Minds 5: a central-place forager's state, for Inspect.
+#[derive(Clone, Debug, Serialize)]
+pub struct CentralView {
+    /// Where the agent forages from and delivers to.
+    pub home: [u32; 2],
+    /// The load delivered on its last trip that delivered anything
+    /// (`Agent.last_load`); 0 before a first delivery.
+    pub last_load: f64,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -140,6 +183,11 @@ pub struct AgentView {
     /// Minds 4: the agent's running intake-rate estimate ρ. `Some` only
     /// under `decision.rule: mvt`.
     pub rate: Option<f64>,
+    /// Minds 5: caching state. `Some` only while `caching.is_on()`.
+    pub caching: Option<CachingView>,
+    /// Minds 5: central-place foraging state. `Some` only while
+    /// `central.enabled`.
+    pub central: Option<CentralView>,
 }
 
 /// Minds 3: what an agent remembers, for display.
@@ -388,6 +436,48 @@ impl World {
                     goal: g.goal,
                 }),
             rate: (self.config.decision.rule == crate::config::DecisionRule::Mvt).then_some(a.rate),
+            caching: self.config.caching.is_on().then(|| {
+                let rule = crate::minds::caching::rules::rule_of(self, a.id);
+                let caches: Vec<CacheView> = a
+                    .caches
+                    .iter()
+                    .map(|(&site, &amount)| {
+                        let p = self.torus.pos(site as usize);
+                        CacheView {
+                            x: p.x,
+                            y: p.y,
+                            amount,
+                        }
+                    })
+                    .collect();
+                let total = a.caches.values().sum();
+                let seasons = self.config.seasons;
+                let forecast = (rule == crate::config::CachingRule::Plan
+                    && seasons.enabled
+                    && seasons.mode == crate::config::SeasonMode::Global
+                    && !rules::growback::is_winter(&self.config, self.tick))
+                .then(|| {
+                    let fee = self.config.disease.active_fee();
+                    let burn = a.effective_metabolism(0, fee);
+                    crate::minds::caching::rules::shortfall(
+                        burn,
+                        seasons.period,
+                        a.last_winter.as_ref(),
+                        total,
+                    )
+                });
+                CachingView {
+                    rule,
+                    holdings_cap: f64::from(self.config.caching.capacity),
+                    caches,
+                    total,
+                    forecast,
+                }
+            }),
+            central: self.config.central.enabled.then(|| CentralView {
+                home: a.home.map_or([a.pos.x, a.pos.y], |p| [p.x, p.y]),
+                last_load: a.last_load,
+            }),
         });
         Ok(Inspection {
             site: SiteView {
@@ -396,6 +486,7 @@ impl World {
                 resources: s.resource[..n].to_vec(),
                 capacities: s.capacity[..n].to_vec(),
                 pollution: s.pollution[..m].to_vec(),
+                wall: self.walls[self.torus.index(pos)],
             },
             agent,
         })
@@ -747,6 +838,92 @@ mod tests {
         w.config.movement.mode = crate::config::MoveMode::Walk;
         w.config.decision.rule = crate::config::DecisionRule::Mvt;
         assert_eq!(w.inspect(2, 2).unwrap().agent.unwrap().rate, Some(1.25));
+    }
+
+    #[test]
+    fn inspect_shows_caching_only_when_on() {
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        assert!(w.inspect(2, 2).unwrap().agent.unwrap().caching.is_none());
+        w.config.caching.rule = crate::config::CachingRule::Even;
+        w.config.caching.capacity = 50;
+        let site = w.torus.index(Pos::new(3, 3)) as u32;
+        w.agent_mut(id).unwrap().caches.insert(site, 12.0);
+        let caching = w.inspect(2, 2).unwrap().agent.unwrap().caching.unwrap();
+        assert_eq!(caching.rule, crate::config::CachingRule::Even);
+        assert_eq!(caching.holdings_cap, 50.0);
+        assert_eq!(caching.total, 12.0);
+        assert_eq!(caching.caches.len(), 1);
+        assert_eq!((caching.caches[0].x, caching.caches[0].y), (3, 3));
+        assert_eq!(caching.caches[0].amount, 12.0);
+        assert!(caching.forecast.is_none(), "forecast is rule plan's alone");
+    }
+
+    #[test]
+    fn inspect_reports_plans_forecast_shortfall_outside_winter_only() {
+        let mut w = blank_world(10, 10);
+        spawn(&mut w, 2, 2);
+        w.config.caching.rule = crate::config::CachingRule::Plan;
+        w.config.seasons.enabled = true;
+        w.config.seasons.mode = crate::config::SeasonMode::Global;
+        w.config.seasons.period = 100;
+        assert!(
+            w.inspect(2, 2)
+                .unwrap()
+                .agent
+                .unwrap()
+                .caching
+                .unwrap()
+                .forecast
+                .is_some(),
+            "tick 0 is summer"
+        );
+        w.tick = 150;
+        assert!(
+            w.inspect(2, 2)
+                .unwrap()
+                .agent
+                .unwrap()
+                .caching
+                .unwrap()
+                .forecast
+                .is_none(),
+            "no forecast is computed in winter"
+        );
+    }
+
+    #[test]
+    fn inspect_shows_central_only_when_enabled() {
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        assert!(w.inspect(2, 2).unwrap().agent.unwrap().central.is_none());
+        w.config.central.enabled = true;
+        w.agent_mut(id).unwrap().home = Some(Pos::new(4, 4));
+        w.agent_mut(id).unwrap().last_load = 7.5;
+        let central = w.inspect(2, 2).unwrap().agent.unwrap().central.unwrap();
+        assert_eq!(central.home, [4, 4]);
+        assert_eq!(central.last_load, 7.5);
+    }
+
+    #[test]
+    fn inspect_reports_the_worlds_current_wall_state_not_configs() {
+        let mut c = crate::testkit::blank_config(10, 10);
+        c.walls = vec![crate::config::Wall {
+            x: 3,
+            y: 3,
+            width: 1,
+            height: 1,
+            opaque: true,
+        }];
+        let mut w = World::new(c, 1).unwrap();
+        assert_eq!(w.inspect(3, 3).unwrap().site.wall, 2, "opaque");
+        assert_eq!(w.inspect(0, 0).unwrap().site.wall, 0, "free");
+        w.open_wall(Pos::new(3, 3));
+        assert_eq!(
+            w.inspect(3, 3).unwrap().site.wall,
+            0,
+            "opened at runtime, like a lab doorway"
+        );
     }
 
     #[test]
