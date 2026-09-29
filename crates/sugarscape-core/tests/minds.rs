@@ -38,8 +38,10 @@ fn walking_at_vision_one_is_jumping() {
     let mut checked = 0;
     for p in presets::all() {
         // Minds 4's GOAP and MVT rules exist only for walkers (validation
-        // rejects them under `mode: jump`), so they have no jump to compare.
+        // rejects them under `mode: jump`), so they have no jump to compare;
+        // nor does Minds 5's caching ("caching walks").
         if p.config.combat.enabled
+            || p.config.caching.is_on()
             || matches!(
                 p.config.decision.rule,
                 DecisionRule::Goap | DecisionRule::Mvt

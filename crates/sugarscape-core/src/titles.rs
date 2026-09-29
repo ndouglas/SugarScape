@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 307] = [
+pub const TITLES: [(&str, &str); 317] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -236,6 +236,46 @@ pub const TITLES: [(&str, &str); 307] = [
     (
         "goap-walled",
         "Planners who remember what lies beyond the wall end up richer, and most survive",
+    ),
+    (
+        "cache-winter-none",
+        "Winter with nothing put away",
+    ),
+    (
+        "cache-winter-even",
+        "Agents who bury a share of every surplus",
+    ),
+    (
+        "cache-winter-compensate",
+        "Agents who bury more where food has been scarce",
+    ),
+    (
+        "cache-winter-plan",
+        "Agents who plan for winter bury what they'll need",
+    ),
+    (
+        "cache-winter-mixed",
+        "Four ways to face winter, side by side",
+    ),
+    (
+        "central-near",
+        "Carrying loads home from a near patch",
+    ),
+    (
+        "central-far",
+        "Carrying loads home from a far patch",
+    ),
+    (
+        "central-linear",
+        "Carrying loads home when the patch never runs down",
+    ),
+    (
+        "cache-raby",
+        "Where scrub-jays' breakfast lessons send each kind of cacher",
+    ),
+    (
+        "cache-amodio",
+        "Where Amodio's rotating compartments send each kind of cacher",
     ),
     (
         "vi-4-schelling-25",

@@ -4,10 +4,11 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, MemoryPrior, MoveMode,
-    Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange, Transform, URange, Wall,
-    SPICE_COLOR,
+    three_tribes, CachingRule, Config, CultureKind, DecisionRule, Good, Idle, Lab, LabProtocol,
+    Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange,
+    SeasonMode, Transform, URange, Wall, SPICE_COLOR,
 };
+use crate::minds::caching::lab::{rig_config, LabParams};
 use crate::model::ModelConfig;
 
 #[derive(Clone, Debug, Serialize)]
@@ -189,6 +190,97 @@ fn mvt_world(c: &mut Config, rule: DecisionRule) {
     c.decision.rule = rule;
     memory(c, 1000, 1.0);
     c.memory.prior = MemoryPrior::Map;
+}
+
+/// Minds 5: the winter world. walk-capacity's landscape (the default
+/// sugarscape, rule M's agents walking, mem-open's memory: half of them
+/// remember for 100 ticks) with a winter everywhere at once
+/// (`seasons.mode: global`, γ = 100, β = 32), 175 agents of metabolism 1,
+/// a carrying limit of 50 (half a winter's need: without a limit, holdings
+/// are an unlimited cache), `goap.horizon` 20 (R = 20 for every rule) and
+/// caching `rule` (`mixed` deals the four rules round-robin instead).
+///
+/// The balance was measured before this was recorded (Task 9; 5 seeds, no
+/// caching): (a) the first summer's surplus is 151.0 per agent against a
+/// winter need of 100 (1.51 ≥ 1.5), and (b) winter regrowth (sites with
+/// capacity × α γ / β = 6 466) is 0.39 of the population's winter need
+/// (165.8 alive × 100). walk-capacity's own traits (metabolism 1–4) can't
+/// meet (a) at any population, β or γ tried (a walker harvests at most
+/// about 3.5 a tick), hence metabolism 1. Survival through the first winter
+/// (alive at 200 ÷ alive at 100): none 48.5 %, even 74.9 %, compensate
+/// 73.8 %, plan 88.2 %. At the default horizon (R = 10) even did worse than
+/// none (45.2 %, compensate 44.6 %, plan 71.5 %): under rule M a hungry
+/// agent heads for its biggest cache, not its nearest, and with a thin
+/// reserve starves on the way (it goes hungry only below R / 2).
+fn winter_world(c: &mut Config, rule: CachingRule, mixed: bool) {
+    c.movement.mode = MoveMode::Walk;
+    memory(c, 100, 0.5);
+    c.population = 175;
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.seasons.enabled = true;
+    c.seasons.mode = SeasonMode::Global;
+    c.seasons.period = 100;
+    c.seasons.winter_divisor = 32;
+    c.caching.capacity = 50;
+    c.caching.rule = rule;
+    c.caching.mixed = mixed;
+    c.goap.horizon = 20;
+}
+
+/// Minds 5: the central-place world. A 60 × 30 torus with a column of
+/// five patches (peaks of radius 3 and height 4 at x = 45, y = 3, 9, 15,
+/// 21, 27) growing back 0.25 a tick (`instant` for linear loading: every
+/// site refills at once, so a load grows in step with the ticks spent
+/// gathering it). 5 agents of metabolism 1, endowment 60 and vision 1–6
+/// have their homes at random rows of the column x = `home_x`, so the
+/// patches are 45 − `home_x` columns east of home (and at most 3 rows off a
+/// patch center). They walk, know the whole map (memory span 1 000, `prior:
+/// map`), carry at most 80 and forage in round trips under the
+/// marginal-value rule (`mvt.alpha` 0.05). Near is `home_x` 37 (8 columns),
+/// far is 25 (20 columns). Checked before recording (seeds 1–3, ticks
+/// 1–1000): every world delivers, with 4–5 of 5 alive at tick 1000. A
+/// first try with one patch and the homes in a 5-row block starved: the
+/// agents all made for the one best site, and an endowment above the
+/// carrying limit left no room to gather.
+fn central_world(c: &mut Config, home_x: u32, instant: bool) {
+    c.width = 60;
+    c.height = 30;
+    c.population = 5;
+    c.placement = Placement::Block {
+        x: home_x,
+        y: 0,
+        width: 1,
+        height: 30,
+    };
+    c.goods[0].map = Map::Peaks {
+        peaks: (0..5u32)
+            .map(|j| Peak {
+                x: 45,
+                y: 3 + 6 * j,
+                radius: 3.0,
+                height: 4.0,
+            })
+            .collect(),
+    };
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.goods[0].endowment = URange::new(60, 60);
+    c.vision = URange::new(1, 6);
+    c.growback.rate = 0.25;
+    c.growback.instant = instant;
+    c.movement.mode = MoveMode::Walk;
+    c.decision.rule = DecisionRule::Mvt;
+    memory(c, 1000, 1.0);
+    c.memory.prior = MemoryPrior::Map;
+    c.caching.capacity = 80;
+    c.central.enabled = true;
+}
+
+/// Minds 5: a lab (`lab::rig_config`) with `n` agents under
+/// `caching.mixed`: agents 1, 2, 3, 4, 5, … follow none, even, compensate,
+/// plan, none, … (the config's own rule, `even`, is ignored).
+fn mixed_lab(c: &mut Config, lab: Lab, n: u32) {
+    *c = rig_config(lab, CachingRule::Even, LabParams::default(), n);
+    c.caching.mixed = true;
 }
 
 /// Minds 3: truffle spots covering `share` of non-wall sites, worth `value`
@@ -1002,6 +1094,76 @@ pub fn all() -> Vec<Preset> {
                 c.decision.rule = DecisionRule::Goap;
             },
         ),
+        preset(
+            "cache-winter-none",
+            "Caching: winter, nothing put away",
+            "Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need, and keeps a reserve of 20 ticks' food. Nobody caches: whatever an agent can't carry, it leaves.",
+            |c| winter_world(c, CachingRule::None, false),
+        ),
+        preset(
+            "cache-winter-even",
+            "Caching: winter, an even share",
+            "Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need, and keeps a reserve of 20 ticks' food. Each agent buries half its surplus (what it holds above its reserve) where it stands, every tick it has any, and digs its caches when it holds less than half its reserve.",
+            |c| winter_world(c, CachingRule::Even, false),
+        ),
+        preset(
+            "cache-winter-compensate",
+            "Caching: winter, compensating",
+            "Amodio et al. 2021; Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need, and keeps a reserve of 20 ticks' food. Each agent buries a share of its surplus where it stands, weighted by where food has been scarce: a site's weight halves each time it finds food there, and it buries half its surplus × the site's weight ÷ the mean weight of the sites it knows. It digs its caches when it holds less than half its reserve.",
+            |c| winter_world(c, CachingRule::Compensate, false),
+        ),
+        preset(
+            "cache-winter-plan",
+            "Caching: winter, planning",
+            "Raby et al. 2007; Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need, and keeps a reserve of 20 ticks' food. Each agent knows the calendar and plans: through the summer it buries toward its forecast shortfall (100 ticks' food, less the winter intake it recorded last winter, less what it has cached), at sites it foraged last winter (anywhere before its first winter, when it forecasts no winter intake). It digs its caches when it holds less than half its reserve.",
+            |c| winter_world(c, CachingRule::Plan, false),
+        ),
+        preset(
+            "cache-winter-mixed",
+            "Caching: winter, four rules side by side",
+            "Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need, and keeps a reserve of 20 ticks' food. A quarter of the agents on each caching rule, dealt round-robin by id: none, an even share, compensating and planning. A child takes its parent's rule.",
+            |c| winter_world(c, CachingRule::None, true),
+        ),
+        preset(
+            "central-near",
+            "Central-place foraging: a near patch",
+            "Orians & Pearson 1979; Stephens & Krebs 1986; Minds 5",
+            "5 agents with homes 8 columns west of a column of five sugar patches (a 60 × 30 torus; the patches grow back 0.25 a tick) forage in round trips and carry their loads home to a larder. Each keeps ρ, its delivered sugar per tick over its trips; in a patch it stays while the best site within one step yields at least ρ (and it isn't full, or low on food for the walk home), then walks home, delivers and leaves again, keeping enough in hand for the walk out and back. They know the whole map, carry at most 80 and burn 1 a tick. central-far is the same world with homes 20 columns away.",
+            |c| central_world(c, 37, false),
+        ),
+        preset(
+            "central-far",
+            "Central-place foraging: a far patch",
+            "Orians & Pearson 1979; Stephens & Krebs 1986; Minds 5",
+            "central-near's world with the homes 20 columns west of the patches instead of 8: 5 agents forage in round trips under the marginal-value rule and carry their loads home to a larder, carrying at most 80.",
+            |c| central_world(c, 25, false),
+        ),
+        preset(
+            "central-linear",
+            "Central-place foraging: linear loading",
+            "Orians & Pearson 1979; Stephens & Krebs 1986; Minds 5",
+            "central-near's world (homes 8 columns from the patches) with instant growback: every site refills at once, so a patch never runs down and a load grows in step with the time spent gathering it. Only the carrying limit of 80 and the food for the walk home end a trip.",
+            |c| central_world(c, 37, true),
+        ),
+        preset(
+            "cache-raby",
+            "Caching lab: Raby's breakfast test",
+            "Raby et al. 2007; Minds 5",
+            "Raby et al.'s \"planning for breakfast\" protocol on a 13 × 8 rig of three compartments and a hall. For six days, 8 agents spend each morning shut in K1 or K3 in turn (K1 first), with breakfast only in K3; each evening they're back in the hall. On the test evening the doorways of K1 and K3 open and each agent, given 30 sugar, walks out alone and caches it. The agents take the caching rules round-robin: none, an even split, compensating (weights halved where food was found) and planning (the cycle finder's forecast of the next morning), two agents each.",
+            |c| mixed_lab(c, Lab { protocol: LabProtocol::Raby, food_first: false }, 8),
+        ),
+        preset(
+            "cache-amodio",
+            "Caching lab: Amodio's rotating compartments",
+            "Amodio et al. 2021; Minds 5",
+            "Amodio et al.'s Experiment 2 (Food-First) on a 13 × 8 rig of three compartments and a hall. For nine days, 6 agents spend each morning shut in K1, K2, K3, K1, … in turn, with food on the first day and every other day after; each evening they're back in the hall. On the test evening all three doorways open and each agent, given 30 sugar, walks out alone and caches it. The agents take the caching rules round-robin: none, an even split, compensating (weights halved where food was found) and planning (the cycle finder's forecast of the next morning).",
+            |c| mixed_lab(c, Lab { protocol: LabProtocol::Amodio, food_first: true }, 6),
+        ),
     ]
 }
 
@@ -1337,7 +1499,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 59);
+        assert_eq!(presets.len(), 69);
         for p in presets {
             p.config
                 .validate()
@@ -1619,6 +1781,98 @@ mod tests {
         assert!((per_patch - 0.5).abs() < 1e-12, "{per_patch}");
         let need = f64::from(goap.population);
         assert!((9.0 * per_patch / need - 1.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn the_minds_5_presets_share_their_worlds_and_name_minds_5() {
+        use crate::config::{Caching, CachingRule, SeasonMode};
+        // The winter presets differ only in the caching rule (or mixed).
+        let base = by_id("cache-winter-none").unwrap().config;
+        assert_eq!(base.population, 175);
+        assert_eq!(base.goods[0].metabolism, URange::new(1, 1));
+        assert!(base.seasons.enabled && base.seasons.mode == SeasonMode::Global);
+        assert_eq!(
+            (base.seasons.period, base.seasons.winter_divisor),
+            (100, 32)
+        );
+        assert_eq!((base.caching.capacity, base.goap.horizon), (50, 20));
+        assert_eq!(base.movement.mode, MoveMode::Walk);
+        assert_eq!((base.memory.span, base.memory.share), (100, 0.5));
+        let walk = by_id("walk-capacity").unwrap().config;
+        assert_eq!(
+            walk.goods[0].map, base.goods[0].map,
+            "walk-capacity's landscape"
+        );
+        for (id, rule, mixed) in [
+            ("cache-winter-even", CachingRule::Even, false),
+            ("cache-winter-compensate", CachingRule::Compensate, false),
+            ("cache-winter-plan", CachingRule::Plan, false),
+            ("cache-winter-mixed", CachingRule::None, true),
+        ] {
+            let mut c = by_id(id).unwrap().config;
+            assert_eq!((c.caching.rule, c.caching.mixed), (rule, mixed), "{id}");
+            c.caching.rule = CachingRule::None;
+            c.caching.mixed = false;
+            assert_eq!(c, base, "{id}");
+        }
+        // Mixed deals a quarter of the founders to each rule.
+        let w = World::new(by_id("cache-winter-mixed").unwrap().config, 1).unwrap();
+        for rule in Caching::MIXED {
+            let n = w.agents().filter(|a| a.caching_rule == rule).count();
+            assert!((43..=44).contains(&n), "{rule:?}: {n}");
+        }
+        // Central: near and far differ only in where the homes are; linear
+        // is near with instant growback.
+        let near = by_id("central-near").unwrap().config;
+        let mut far = by_id("central-far").unwrap().config;
+        let mut linear = by_id("central-linear").unwrap().config;
+        assert!(near.central.enabled && near.decision.rule == DecisionRule::Mvt);
+        assert_eq!(
+            (near.placement, far.placement),
+            (
+                Placement::Block {
+                    x: 37,
+                    y: 0,
+                    width: 1,
+                    height: 30
+                },
+                Placement::Block {
+                    x: 25,
+                    y: 0,
+                    width: 1,
+                    height: 30
+                }
+            )
+        );
+        far.placement = near.placement;
+        assert_eq!(far, near);
+        assert!(linear.growback.instant && !near.growback.instant);
+        linear.growback.instant = false;
+        assert_eq!(linear, near);
+        // The labs are the rig with mixed rules.
+        for (id, n) in [("cache-raby", 8), ("cache-amodio", 6)] {
+            let c = by_id(id).unwrap().config;
+            assert!(c.caching.mixed && c.lab.is_some(), "{id}");
+            assert_eq!(c.population, n, "{id}");
+        }
+        for id in [
+            "cache-winter-none",
+            "cache-winter-even",
+            "cache-winter-compensate",
+            "cache-winter-plan",
+            "cache-winter-mixed",
+            "central-near",
+            "central-far",
+            "central-linear",
+            "cache-raby",
+            "cache-amodio",
+        ] {
+            let p = by_id(id).unwrap();
+            assert!(p.source.contains("Minds 5"), "{id}: {}", p.source);
+            p.config
+                .validate()
+                .unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        }
     }
 
     #[test]
