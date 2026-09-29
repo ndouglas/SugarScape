@@ -126,6 +126,9 @@ pub struct ImageWorld {
     helps: u64,
     rounds_played: u64,
     next_id: u64,
+    /// The last generation's meetings as (donor, recipient, helped), places
+    /// in the agent list, when recording them (the studio's shots).
+    meetings: Option<Vec<(u32, u32, bool)>>,
     rng: SimRng,
     pub stats: Stats<ImageSnapshot>,
 }
@@ -171,6 +174,7 @@ impl ImageWorld {
             helps: 0,
             rounds_played: 0,
             next_id: 1,
+            meetings: None,
             rng: rng::seeded(seed),
             stats: Stats::default(),
         };
@@ -220,6 +224,18 @@ impl ImageWorld {
     /// Every agent, group by group.
     pub fn agents(&self) -> &[Agent] {
         &self.agents
+    }
+
+    /// Starts or stops recording each generation's meetings (from the next
+    /// generation played). Recording draws nothing.
+    pub fn record_meetings(&mut self, on: bool) {
+        self.meetings = on.then(Vec::new);
+    }
+
+    /// The last generation's meetings as (donor, recipient, helped), places
+    /// in the agent list, if recording.
+    pub fn meetings(&self) -> Option<&[(u32, u32, bool)]> {
+        self.meetings.as_deref()
     }
 
     /// Group `g`'s members.
@@ -334,6 +350,9 @@ impl ImageWorld {
         }
         self.helps = 0;
         self.rounds_played = 0;
+        if let Some(m) = &mut self.meetings {
+            m.clear();
+        }
     }
 
     /// Rule 2: each group plays its rounds.
@@ -427,6 +446,9 @@ impl ImageWorld {
         }
         self.helps += u64::from(help);
         self.rounds_played += 1;
+        if let Some(m) = &mut self.meetings {
+            m.push((di as u32, ri as u32, help));
+        }
         if private {
             self.observe(g, d, r, old, help);
         }

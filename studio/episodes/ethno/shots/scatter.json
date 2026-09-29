@@ -1,0 +1,6 @@
+{
+ "preset": "ha-standard",
+ "ticks": 1550,
+ "seed": 9,
+ "set": {"schedule": [{"tick": 1000, "set": {"offspring": "anywhere"}}]}
+}

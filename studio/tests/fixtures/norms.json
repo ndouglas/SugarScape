@@ -1,0 +1,6 @@
+{
+ "preset": "ax-metanorms",
+ "ticks": 4,
+ "seed": 2,
+ "gifts": true
+}

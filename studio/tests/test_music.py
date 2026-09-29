@@ -32,7 +32,7 @@ class MusicTest(unittest.TestCase):
         for name, tune in TUNES.items():
             abc = music.score(tune, 70.0)
             self.assertIn(f"K:{tune.key}", abc)
-            self.assertIn(f"M:{tune.beats_per_bar}/4", abc)
+            self.assertIn(f"M:{tune.meter or f'{tune.beats_per_bar}/4'}", abc)
             voices = re.split(r"^V:\d.*$", abc, flags=re.M)[1:]
             self.assertEqual(len(voices), len(tune.voices))
             expected = len(music.form_for(tune, 70.0)) * music.SECTION_BARS

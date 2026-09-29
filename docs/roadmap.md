@@ -97,18 +97,19 @@ regime and the safe havens do not reproduce. See `docs/superpowers/specs/2026-09
 
 Riolo, Cohen & Axelrod's tag-based donation (Nature 2001) as a sixth model kind, with Edmonds &
 Hales' (JASSS 2003) and Roberts & Sherratt's (Nature 2002) departures as switches and the paper's
-runs as presets. The paper's tables reproduce only with an unstated tie rule (the current agent
-wins); read literally, two pairings give 42 % donation, not 4.3 %. Under any tie rule cooperation
+runs as presets. The paper's tables reproduce with the tie rule of its p. 442 (the current agent
+wins); read as a coin flip (its p. 441 wording), two pairings give 42 % donation, not 4.3 %. Under any tie rule cooperation
 rests on forced donation between identical tags: the strict test, a floor below zero or tag noise
 collapse it, and tolerance fixed at zero raises it. The paper's cycle of clusters rising and being
-invaded is far slower than it describes. See `docs/superpowers/specs/2026-09-25-tags-design.md`.
+invaded reproduces (a takeover every ~340 generations), each new cluster right next to the old. See `docs/superpowers/specs/2026-09-25-tags-design.md`.
 
 ## Milestone 13: Spatial games (done)
 
 Nowak and May's spatial Prisoner's Dilemma (1992) as a seventh model kind, with Huberman and Glance's
 asynchronous updating (1993) and Nowak, Bonhoeffer and May's probabilistic winning, continuous time, random
 arrays and cubes (1994). The kaleidoscope reproduces exactly and the chaotic regime settles at 12 ln 2 − 8 to
-three decimals; Huberman and Glance's "always all D" holds only above b = 1.8, a value they never state; and
+three decimals; Huberman and Glance's one-defector takeover reproduces in the regime they ran (1.8 < b < 2),
+and, as Nowak, Bonhoeffer and May showed, not below it; and
 the random arrays' r_c ≈ 9 depends on an unreported starting mix. See
 `docs/superpowers/specs/2026-09-25-spatial-games-design.md`.
 
@@ -138,7 +139,8 @@ its archived code's departures as switches and presets, and the variants of Hart
 Shultz (2013) and Jansson (2013). The standard case and most of Table 1 reproduce within 3 points, and
 Hartshorn, Kaznatcheev and Shultz's shares, early patterns and Study 2 orders almost exactly; the appendix's
 5 % mutation is a slip, the code draws five colors for four (which Table 1 cannot tell apart), and the
-color-blind agents' 14 % cooperation does not reproduce under any reading (41.8 %). Ethnocentrics take over
+doubled-cost figures don't reproduce under any reading tried (seeing 56 %, here 65–67 %; color-blind 14 %,
+here 42 %). Ethnocentrics take over
 later than Table 1 l says, and Jansson's kin discriminators win by far less than his Table 5 unless the
 kin basis never mutates, which he does not say. See
 `docs/superpowers/specs/2026-09-25-ethnocentrism-design.md`.

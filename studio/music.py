@@ -64,6 +64,9 @@ class Tune:
     # Stings that sink the tune while they play: {sting name: the tune's gain
     # beneath it}, so the tune collapses under the sting instead of competing.
     ducks: dict = field(default_factory=dict)
+    # The meter line, when it isn't beats_per_bar quarter notes (a slip
+    # jig's "9/8", with beats_per_bar 4.5: tempos stay in quarter notes).
+    meter: str | None = None
 
 
 def eighths(bar):
@@ -111,9 +114,9 @@ def _line(bars):
     return " | ".join(bars) + " |"
 
 
-def _header(title, beats_per_bar, bpm, key):
+def _header(title, beats_per_bar, bpm, key, meter=None):
     return ["X:1", f"T:{title}", "C:original, written for the Flump studio",
-            f"M:{beats_per_bar}/4", "L:1/8", f"Q:1/4={bpm}", f"K:{key}"]
+            f"M:{meter or f'{beats_per_bar}/4'}", "L:1/8", f"Q:1/4={bpm}", f"K:{key}"]
 
 
 def _voice(i, v):
@@ -129,7 +132,7 @@ def _voice(i, v):
 def score(tune, seconds):
     form = form_for(tune, seconds)
     bpm = round(tempo_for(tune, len(form) * SECTION_BARS, seconds))
-    lines = _header(tune.title, tune.beats_per_bar, bpm, tune.key)
+    lines = _header(tune.title, tune.beats_per_bar, bpm, tune.key, tune.meter)
     for i, v in enumerate(tune.voices, start=1):
         bars = [b for s in form for b in _bars(tune.sections[s][v.name])]
         bars[-1] = tune.ending[v.name]
@@ -140,7 +143,7 @@ def score(tune, seconds):
 
 def sting_score(tune, name):
     parts, bpm = tune.stings[name]
-    lines = _header(f"{tune.title}: {name}", tune.beats_per_bar, bpm, tune.key)
+    lines = _header(f"{tune.title}: {name}", tune.beats_per_bar, bpm, tune.key, tune.meter)
     voices = {v.name: v for v in tune.voices}
     for i, (voice, text) in enumerate(parts.items(), start=1):
         lines += _voice(i, voices[voice]) + [text]

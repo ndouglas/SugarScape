@@ -17,5 +17,6 @@ pub use config::{
 pub use presets::presets;
 pub use stats::{DpdSnapshot, SERIES};
 pub use world::{
-    Agent, AgentView, DpdInspection, DpdMode, DpdWorld, NeighborView, Site, COOPERATOR, DEFECTOR,
+    Agent, AgentView, DpdDeath, DpdEvents, DpdInspection, DpdMode, DpdWorld, NeighborView, Site,
+    COOPERATOR, DEFECTOR,
 };

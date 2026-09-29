@@ -53,17 +53,25 @@ def _empty(name, parent, collection, location=(0, 0, 0)):
     return e
 
 
-def build_flump(name, color, collection=None):
+def build_flump(name, color, collection=None, low=False):
+    """A Flump rig. `low` builds it with a quarter of the segments and no
+    smoothing: for crowds seen from far off, where each Flump is a few
+    pixels wide and the detail costs render time without showing."""
     collection = collection or bpy.context.scene.collection
     root = _empty(name, None, collection)
     size = _empty(f"{name}.size", root, collection)
     size.scale = (SIZE,) * 3
     yarn = materials.knit(color)
-    sphere = _sphere
-    body = sphere(f"{name}.body", 0.4, (0, 0, 0.38), (1, 0.95, 0.9), yarn, size, collection)
+
+    def sphere(*args, segments=32):
+        return _sphere(*args, segments=max(6, segments // 4) if low else segments)
+
+    body = sphere(f"{name}.body", 0.4, (0, 0, 0.38), (1, 0.95, 0.9), yarn, size, collection,
+                  segments=48 if low else 32)
     knitted = [body]
-    sub = body.modifiers.new("smooth", "SUBSURF")
-    sub.levels = sub.render_levels = 1
+    if not low:
+        sub = body.modifiers.new("smooth", "SUBSURF")
+        sub.levels = sub.render_levels = 1
     blush = materials.matte("blush", BLUSH)
     for side in (-1, 1):
         knitted.append(sphere(f"{name}.arm", 0.1, (side * 0.38, 0, 0.4), (1, 1, 1), yarn, size, collection, segments=16))
@@ -79,13 +87,14 @@ def build_flump(name, color, collection=None):
     return FlumpRig(root, body, eyes, knitted)
 
 
-def crowd_prototypes():
+def crowd_prototypes(low=False):
     """One Flump per yarn color, by name, each in its own collection that is
-    never linked to the scene, so only its instances render."""
+    never linked to the scene, so only its instances render; `low` builds
+    them low-detail (see `build_flump`)."""
     protos = {}
     for color in materials.YARN:
         coll = bpy.data.collections.new(f"flump-{color}")
-        build_flump(f"proto-{color}", color, coll)
+        build_flump(f"proto-{color}", color, coll, low=low)
         protos[color] = coll
     return protos
 

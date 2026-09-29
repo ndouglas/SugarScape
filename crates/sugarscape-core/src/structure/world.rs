@@ -174,6 +174,22 @@ impl StructureWorld {
         &self.strategies
     }
 
+    /// This period's strategies as played.
+    pub fn played(&self) -> &[Strategy] {
+        &self.played
+    }
+
+    /// This period's scores (payoff per move).
+    pub fn scores(&self) -> &[f64] {
+        &self.scores
+    }
+
+    /// This period's distinct partners of each agent (whether it chose them
+    /// or they chose it), with the games played.
+    pub fn met(&self) -> &[Vec<(u32, u32)>] {
+        &self.met
+    }
+
     pub fn graph(&self) -> &Graph {
         &self.graph
     }

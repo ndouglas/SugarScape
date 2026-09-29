@@ -1,6 +1,6 @@
 {
   "name": "Norms: dominance (Axelrod)",
-  "description": "Axelrod's dominance: 20 strong agents (punishment −3) and 10 weak (−9), each group reproducing within itself; the metric is the weak group's mean boldness after 100 generations. Measured (release, seeds 1–20, recorded 2026-09-26): 0.89 in the norms game and 0.02 with metanorms (the strong group's: 0.94 and 0.06 over 100 seeds). Without metanorms both groups end bold, as Axelrod says; with them the weak group is kept from being bold — and so is the strong group.",
+  "description": "Axelrod's dominance: 20 strong agents (punishment −3) and 10 weak (−9), each group reproducing within itself, a defection hurting and punished by only the other group, metapunishment within a group (p. 1103); the metric is the weak group's mean boldness after 100 generations. Measured (release, 100 seeds, recorded 2026-09-29): 0.52 in the norms game (bold in 50 runs, below 0.2 in 39) and 0.04 with metanorms (the strong group's: 0.96 and 0.15). With metanorms the weak group is kept from being bold more easily than the strong, as Axelrod says; without them it ends bold in only about half the runs. Under groups.rule everyone (this engine's first version): 0.86 and 0.02.",
   "base": {
     "preset": "ax-dominance"
   },

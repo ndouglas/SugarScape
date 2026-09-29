@@ -1,0 +1,5 @@
+{
+ "preset": "rca-strict",
+ "ticks": 200,
+ "seed": 2
+}

@@ -353,16 +353,19 @@ rarely meet twice and nobody knows what anyone did before — yet the paper find
 pairings end in a donation, through clusters of similar tags that rise, are invaded by less
 tolerant mutants and are replaced.
 
-**The published tables depend on a rule the paper does not state.** "Giving an offspring to the one
-with the higher score" says nothing about equal scores. Read literally — a coin flip — the model
-gives 42 % donation at two pairings where the paper reports 4.3 %, and 45 % at cost 0.5 where it
-reports 24.7 %; only "the current agent wins ties" reproduces the paper, as Edmonds & Hales (2003)
-found. And under any tie rule, cooperation exists only because agents with *identical* tags must
+**The published tables depend on how ties are read.** "Giving an offspring to the one with the
+higher score" (p. 441) says nothing about equal scores; read as a coin flip, the model gives 42 %
+donation at two pairings where the paper reports 4.3 %, and 45 % at cost 0.5 where it reports
+24.7 %. But the paper's p. 442 settles it: an agent "adopts the other's tag and tolerance if the
+other's score is higher than its own", so a tie keeps the current agent, and that rule reproduces
+the paper, as Edmonds & Hales (2003) found. (Corrected 2026-09-28: this section first called the
+rule unstated.) And under any tie rule, cooperation exists only because agents with *identical* tags must
 donate to each other (≤ with T ≥ 0): donating only when |Δtag| < T, letting tolerance fall to
 −10⁻⁶ (Roberts & Sherratt 2002) or adding 10⁻⁶ of noise to every tag each collapse donation to
 1–5 %, while fixing every tolerance at zero *raises* it to 75 %. The tolerance mechanism the paper
-credits does none of the work. The config default is the literal rule (coin-flip ties); the
-presets that reproduce the paper set `tie_rule: current` and say so.
+credits does none of the work, though the paper itself reports the clusters of identical tags
+and their high relatedness (p. 442). The config default is coin-flip ties; the presets that
+reproduce the paper set `tie_rule: current` and say so.
 
 The Rules panel's **Replications** section holds the switches: `tie_rule` (coin flip, current
 agent, opponent — Edmonds & Hales' "no bias", "selected bias" and "random bias"), `donation_test`
@@ -475,10 +478,13 @@ What does not, or only partly:
   0.380), the same at every b in (5/3, 2), against the paper's ~0.374 — close, but not within 0.005.
 - **Huberman and Glance's "always".** Their kaleidoscope with asynchronous updating
   (`hg-async-kaleidoscope`, b = 1.9) is all D at t = 56–149 (mean 101), "within a hundred generations
-  or so," as they say. But they never state b, and their claim that "as long as there is at least one
-  defector in the initial state … the matrix always evolved rapidly into a state of overall defection"
-  holds only above b = 1.8: at b = 1.7 the lone defector dies out (f_C 0.974–0.999), and across NBM94's
-  b values it takes over (or nearly) only at 1.9 and 2.01 (f_C 0 and 0.04; 0.61 at 1.55, 0.99–1.00 elsewhere).
+  or so," as they say: their case reproduces. They ran NM92's Fig. 3 regime (their synchronous panel
+  "corresponds to figure 3b", where 1.8 < b < 2), in which the kaleidoscope is the same for any b, and
+  their "always" is about starting states ("as long as there is at least one defector in the initial
+  state"). What doesn't carry over is the broader conclusion they drew, as NBM94 showed (HG93 "consider
+  only this single case"): at b = 1.7 the defectors stay a small stuck cluster and never take over (f_C
+  0.974–0.999), and across NBM94's b values one defector takes over (or nearly) only at 1.9 and 2.01 (f_C 0
+  and 0.04; 0.61 at 1.55, 0.99–1.00 elsewhere).
 - **"C cannot persist" at m = 1 without self-interaction** (NBM94): C is gone (f_C ≤ 0.007) at
   b = 1.13 and 1.35, but at b = 1.05 it keeps 0.16–0.33. (Deterministic winning without
   self-interaction keeps C, 0.85–0.95, as they say.)
@@ -713,7 +719,10 @@ What does not, or only partly:
   24.5 %. Only a harsher game does — cost 3 %, 12.7 % (or the benefit halved, 11.6 %) — and then
   seeing agents fall to 29.8 % (17.7 %), far below 56 %. And blind agents cooperate *more* than seeing
   ones whenever helping is cheap (81.2 % against 76.0 % at the standard cost, 89.0 against 78.5 at
-  0.5 %): seeing color helps cooperation only somewhere between a cost of 1 % and 1.5 %.
+  0.5 %): seeing color helps cooperation only somewhere between a cost of 1 % and 1.5 %. Neither of
+  the doubled-cost figures reproduces, the seeing one included, and cooperation there is steep in the
+  cost, so a modest unstated difference in the game could explain both; HA06 build this comparison on
+  their *Theoretical Population Biology* paper (2006), not yet read here.
 - **Ethnocentrics take over later than Table 1 l says.** After 500 periods 57.3 % are ethnocentric,
   not 73.9 %; the last-100 mean is 70.3 % by period 1,000 and 72.4 % by 1,500. Hartshorn, Kaznatcheev
   and Shultz's "around 300 cycles" holds for the median world (282) but worlds range from 21 to 596:
@@ -851,18 +860,21 @@ every structure collapses before the fixed ones recover (Fig. 1). In the paper's
 the p–q plane the average p moves −0.012 under RWR and +0.051 under FRN (the paper: −0.016, +0.052),
 because under FRN an agent's partners share its friendliness (slope 0.179, F 1087; the paper 0.158,
 F 717; not significant under RWR). FRNE does beat 2DK (note 5), 4096 agents behave like 256 (note 1),
-and FRNE's fan-out matches Table A1 to within 3 % out to five links. FFR-0.3 is bi-stable, as stated: 25 of 30 runs
-spend 50 periods or more both high and low.
+and FRNE's fan-out matches Table A1 to within 3 % out to five links. The paper calls FFR-0.3 bi-stable, with
+long stretches at high and low p (p. 21); our test of that is our own, and lenient: 25 of 30 runs
+spend 50 periods or more both high and low over the whole run (11 of 20 after period 1000).
 
-The paper never says what "high cooperation" means. At a mean payoff of 2.3 every row of Table 2's
+The paper doesn't define "high cooperation" formally, but p. 20's "9 of our 30 histories reached an
+average score over 2.3" (Table 2's RWR 0.30) implies 2.3, and fitting agrees: at 2.3 every row of Table 2's
 "Remain High" lands within 0.03 of the paper (FRN 0.940 against 0.942, FFR-0.1 0.843 against 0.844);
-2.2 or 2.4 miss by 0.14 and 0.26 — so **High cooperation at** defaults to 2.3. It also describes its
+2.2 or 2.4 miss by 0.14 and 0.26. **High cooperation at** defaults to 2.3. It also describes its
 own method twice, and the two readings are switches. **Strategies start** "evenly distributed …
 throughout the strategy space" (the Appendix) or "initialized randomly" (§3.1): no difference.
 **Noise on** every agent every period, "regardless of which … is adopted" (the Appendix), or only as
-"errors in the actual copying process" (§2): these differ — noise only on copying gives FRN 2.530
-instead of 2.478, overshoots every fixed structure by 0.05–0.09 and erases FRNE's edge over 2DK — the
-Appendix's rule is the one that matches Table 2 more closely and keeps FRNE above 2DK.
+"errors in the actual copying process" (§2; loose where the Appendix is explicit, rather than a
+contradiction): these differ — noise only on copying gives FRN 2.530 instead of 2.478, overshoots every
+fixed structure by 0.05–0.09 and shrinks FRNE's edge over 2DK by about two thirds (+0.007 over 40 seeds,
+against +0.021; still significant). The Appendix's rule matches Table 2 more closely.
 
 The view is the agents as a block of cells (the torus itself under 2DK; index order otherwise) next
 to the paper's p–q plane, with the population's average over the last 200 periods as a fading trail
@@ -1011,9 +1023,16 @@ same −9 and −2, the same vengefulness). Then the more successful breed: one 
 the mean payoff, two offspring; one below, none; each bit mutates at 1 %.
 
 Axelrod's claims hold at his horizon (100 seeds, generation 100): the norms game ends spread across
-his three outcomes and the norm is rarely established (4 runs); metanorms establish it in 92; and his
-dominance variant (20 strong agents punished less, 10 weak) behaves as he says — without metanorms
-both groups end bold, with them the weak group is kept from being bold (and so is the strong one).
+his three outcomes and the norm is rarely established (4 runs); metanorms establish it in 92. His
+dominance variant (20 strong agents punished less, 10 weak) follows his rule: a group's defections
+hurt, and are punished by, only the other group, metapunishment happens within groups, and each group
+breeds within itself (p. 1103). **Who a defection touches** switches to everyone, this engine's first
+version. With metanorms his claims hold (100 seeds): the weak group is kept from being bold (0.04) and
+the strong one less so (0.15), "not so easy" as he says; under the everyone rule both are kept down
+(0.02 and 0.06). Without metanorms he says "even members of the stronger group tend to be free riders …
+high boldness in both groups": the strong group ends bold in 97 of 100, but the weak group only in about
+half (50 of 100 at 0.6 or more; kept below 0.2 in 39, by a strong group left slightly vengeful), a
+mean of 0.52. He gives no counts; under the everyone rule both end bold (0.94 and 0.86).
 Galán and Izquierdo re-implemented it and ran it longer. Their results reproduce: the norms game
 collapses in 99 of 100 runs by 1 000 generations (the ax-norms preset's 100-seed figure); metanorms
 decay — 92 of 100 runs established at 100 generations, 52 established and 43 collapsed by 10⁵ (100
@@ -1021,16 +1040,25 @@ seeds, measured in planning; the survey's own 50 seeds: 43 established at 100, 0
 1 000, 20 by 10⁵), and at 10⁶ generations 18 of 20 runs had collapsed (8 of 10 in the survey's own
 run); the norm collapses far sooner with a mutation rate of 0.001, with meta-payoffs a tenth as
 large, or under any of their three other selection rules (random tournament, roulette wheel,
-above-the-mean); and it holds everywhere with a temptation of 10.
+above-the-mean); and with a temptation of 10 it held in every run we measured (they say "almost all").
+Galán and Izquierdo stress that this "should not be understood as a critique": Axelrod's conclusions
+hold at his horizon, and 1986's computers could not run a million generations.
 
-Axelrod left two things unstated, and both are switches. **When every payoff ties** (so there is no
-standard deviation), Galán and Izquierdo give everyone two offspring and remove a random half; they
-warn this 'can alter the long-term results significantly'. It does: giving everyone one offspring
-instead keeps the metanorm — 92 of 100 runs established at 10⁵, 3 collapsed (the 100-seed planning
+Axelrod's text is ambiguous in two places Galán and Izquierdo flag, and both are switches. **When every
+payoff ties** (so the standard deviation is zero), his text gives "an average individual one
+offspring" (p. 1099), so everyone keeps one; Galán and Izquierdo call the case ambiguous (their note 4)
+and give everyone two offspring, then remove a random half, which is the engine's default. They warn
+this 'can alter the long-term results significantly'. It does: under his words, giving everyone one
+offspring keeps the metanorm — 92 of 100 runs established at 10⁵, 3 collapsed (the 100-seed planning
 figure). And **how the offspring are brought back to 20** ('For convenience, the number of offspring
 is adjusted') is not a convenience: removing the worst parents' copies first and copying the best
-collapses all 50 runs by 10⁵, against 20 with random removal (the survey's own 50-seed figure).
-Whether Axelrod's metanorm lasts depends on details his paper does not give.
+collapses all 50 runs by 10⁵, against 20 with random removal (the survey's own 50-seed figure); that
+ranked reading is ours, in neither paper. Several further readings come from Galán and Izquierdo, not
+Axelrod, and are fixed here: the step rule for offspring (Axelrod fixes only three points on the curve),
+the population standard deviation, that the defector can't catch a non-punisher, and that a
+metapunisher must have seen the defection. Whether Axelrod's metanorm lasts depends on details his
+paper leaves open. The Norms episode films this: at 10⁶ generations the norm has collapsed in 18 of 20
+worlds under Galán and Izquierdo's tie reading, and still holds in 14 of 20 under Axelrod's.
 
 The view is the papers' boldness–vengefulness plane — boldness to the right, vengefulness up, each
 strategy a cell shaded by how many agents hold it, Galán and Izquierdo's norm-established (green) and

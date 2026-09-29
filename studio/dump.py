@@ -1,4 +1,8 @@
-"""Loads a frame dump written by `sugarscape shot` (format 1)."""
+"""Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
+shot as a `Dump`, a spatial-games shot as a `Lattice`, and a demographic-PD
+shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`), a
+tags shot as a `Ring`, an image-scoring shot as a `Street`, a norms shot as a
+`Plane`, and a social-structure shot as a `Grid`."""
 
 import json
 from dataclasses import dataclass, field
@@ -36,6 +40,8 @@ class Frame:
     fertility: dict = field(default_factory=dict)
     diseases: dict = field(default_factory=dict)
     infections: list = field(default_factory=list)
+    # id → kind, as a letter (E, H, S, T): ethnocentrism's strategies.
+    kinds: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -98,6 +104,7 @@ class Dump:
     frames: list
     stats: dict
     spice_capacity: list = field(default_factory=list)
+    model: str = "sugarscape"
 
 
 @dataclass(frozen=True)
@@ -113,10 +120,186 @@ class Track:
     cause: str | None
 
 
+@dataclass(frozen=True)
+class LatticeFrame:
+    """A spatial-games generation: each square's player, row-major, as `C`,
+    `D` or `.` (none), and each player's score (when the shot asked)."""
+
+    tick: int
+    strategies: str
+    scores: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Lattice:
+    """A spatial-games shot."""
+
+    seed: int
+    ticks: int
+    width: int
+    height: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        """The frame at `tick`, rounded and clamped to the shot."""
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
+@dataclass(frozen=True)
+class Tagger:
+    """One agent of a tags generation, at its place in the population's list."""
+
+    id: int
+    parent: int
+    tag: float
+    tolerance: float
+    given: int
+    received: int
+
+
+@dataclass(frozen=True)
+class RingFrame:
+    """A tags generation: its agents in list order, and its gifts as
+    (giver, receiver) places (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    gifts: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Ring:
+    """A tags shot."""
+
+    seed: int
+    ticks: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
+@dataclass(frozen=True)
+class StreetFrame:
+    """An image-scoring generation after it played: each agent as (id, k or
+    None, score, payoff) in list order, and its meetings as (donor,
+    recipient, helped) places (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    meetings: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Street:
+    """An image-scoring shot."""
+
+    seed: int
+    ticks: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
+@dataclass(frozen=True)
+class PlaneFrame:
+    """A norms generation after it played: its true generation, each agent
+    as (boldness, vengefulness, payoff, parent place or None), and its events
+    by places (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    cheats: list = field(default_factory=list)
+    punishments: list = field(default_factory=list)
+    metapunishments: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Plane:
+    """A norms shot. Frames may be every `every`th generation: `ticks` counts
+    frames (what a beat's timing steps through), and each frame keeps its
+    true generation."""
+
+    seed: int
+    ticks: int
+    every: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
+@dataclass(frozen=True)
+class GridFrame:
+    """A social-structure period: each agent's (y, p, q, score) as played,
+    and each agent's partners (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    partners: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Grid:
+    """A social-structure shot; `site` gives each agent's torus square (empty
+    for the other structures)."""
+
+    seed: int
+    ticks: int
+    config: dict
+    site: list
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
 def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
         raise ValueError(f"frame dump format {raw.get('format')!r}, expected {FORMAT}")
+    if raw.get("model") == "dpd":
+        return _dpd(raw)
+    if raw.get("model") == "ethno":
+        return _ethno(raw)
+    if raw.get("model") == "structure":
+        return Grid(seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], site=raw["site"], stats=raw["stats"],
+                    frames=[GridFrame(f["tick"], [tuple(a) for a in f["agents"]], f.get("partners", []))
+                            for f in raw["frames"]])
+    if raw.get("model") == "norms":
+        frames = [PlaneFrame(f["tick"], [tuple(a) for a in f["agents"]], f.get("cheats", []),
+                             [tuple(x) for x in f.get("punishments", [])], [tuple(x) for x in f.get("metapunishments", [])])
+                  for f in raw["frames"]]
+        return Plane(seed=raw["seed"], ticks=len(frames) - 1, every=raw["every"], config=raw["config"], frames=frames,
+                     stats=raw["stats"])
+    if raw.get("model") == "image":
+        return Street(
+            seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], stats=raw["stats"],
+            frames=[StreetFrame(f["tick"], [tuple(a) for a in f["agents"]], [tuple(m) for m in f.get("meetings", [])])
+                    for f in raw["frames"]],
+        )
+    if raw.get("model") == "tags":
+        return Ring(
+            seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], stats=raw["stats"],
+            frames=[RingFrame(f["tick"], [Tagger(*a) for a in f["agents"]], [tuple(g) for g in f.get("gifts", [])])
+                    for f in raw["frames"]],
+        )
+    if raw.get("model") == "spatial":
+        return Lattice(
+            seed=raw["seed"], ticks=raw["ticks"], width=raw["width"], height=raw["height"], config=raw["config"],
+            frames=[LatticeFrame(f["tick"], f["strategies"], f.get("scores", [])) for f in raw["frames"]],
+            stats=raw["stats"],
+        )
     frames = [
         Frame(
             tick=f["tick"],
@@ -162,6 +345,63 @@ def parse(text):
         frames=frames,
         stats=raw["stats"],
         spice_capacity=raw.get("spice_capacity", []),
+    )
+
+
+def _dpd(raw):
+    """A demographic-PD shot as a `Dump`, so the crowd animates as the
+    Sugarscape's does: each agent's wealth stands in its `sugar`, its
+    strategy in its group (0 a helper, 1 a cheat), and each clone's parent in
+    both its parents' places; the board has no sugar. `placed` lists the
+    founders, so a beat's `focus` can follow them."""
+    w, h = raw["width"], raw["height"]
+    frames, seen = [], set()
+    for f in raw["frames"]:
+        ids = [row[0] for row in f["agents"]]
+        born = [i for i in ids if i not in seen]
+        seen.update(born)
+        parents = {child: parent for child, parent in f["births"]}
+        frames.append(Frame(
+            tick=f["tick"],
+            agents={i: Agent(i, x, y, wealth, age, 0, 0) for i, x, y, wealth, age, _ in f["agents"]},
+            sugar=[0.0] * (w * h),
+            deaths=dict(f["deaths"]),
+            born=born,
+            pollution=[0.0] * (w * h),
+            births={i: (None, (parents[i], parents[i]) if i in parents else None) for i in born},
+            groups={row[0]: 0 if row[5] == "C" else 1 for row in f["agents"]},
+        ))
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model="dpd",
+    )
+
+
+def _ethno(raw):
+    """An ethnocentrism shot as a `Dump`: each Flump's color (its tag) in
+    its group, its kind in `kinds`; they never move, so births and deaths
+    are the differences between frames (every death is the model's random
+    one)."""
+    w, h = raw["width"], raw["height"]
+    frames, before = [], set()
+    for f in raw["frames"]:
+        ids = {row[0] for row in f["agents"]}
+        born = [row[0] for row in f["agents"] if row[0] not in before]
+        frames.append(Frame(
+            tick=f["tick"],
+            agents={i: Agent(i, x, y, 0.0, 0, 0, 0) for i, x, y, *_ in f["agents"]},
+            sugar=[0.0] * (w * h),
+            deaths={i: "random" for i in sorted(before - ids)},
+            born=born,
+            pollution=[0.0] * (w * h),
+            births={i: (None, None) for i in born},
+            groups={row[0]: row[3] for row in f["agents"]},
+            kinds={row[0]: row[4] for row in f["agents"]},
+        ))
+        before = ids
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model="ethno",
     )
 
 

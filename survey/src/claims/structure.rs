@@ -213,7 +213,7 @@ pub fn claims() -> Vec<Claim> {
                     item: $item,
                     source: Source::Book,
                     citation: CRA,
-                    text: "Table 2: 'Remain High', the share of time at high cooperation once reached (the unstated threshold read as 2.3; within 0.05)",
+                    text: "Table 2: 'Remain High', the share of time at high cooperation once reached (high read as 2.3, which p. 20 implies; within 0.05)",
                     check: |_| remain_claim($i),
                 },
             )*]
@@ -286,7 +286,7 @@ pub fn claims() -> Vec<Claim> {
             item: "cra-ffr-03",
             source: Source::Book,
             citation: CRA,
-            text: "FFR-0.3 shows 'a bi-stable condition in which long stretches at high-p alternate with long stretches at low-p' (most runs spend 50 periods or more both high and low)",
+            text: "FFR-0.3 shows 'a bi-stable condition in which long stretches at high-p alternate with long stretches at low-p' (our own, lenient test: most runs spend 50 periods or more both high and low)",
             check: |_| {
                 let rs = row(5);
                 let k = rs.iter().filter(|r| r.bistable(2.3, 50)).count();

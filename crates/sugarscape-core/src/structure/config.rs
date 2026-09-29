@@ -64,7 +64,7 @@ pub struct StructureConfig {
     pub noise_on: NoiseOn,
     pub start: Start,
     /// "High cooperation": a mean payoff per move of at least this (the
-    /// paper does not state its threshold).
+    /// paper doesn't define it formally; p. 20 implies 2.3).
     pub high: f64,
     /// Stop at this period (0: never).
     pub stop_at: u32,
@@ -249,7 +249,7 @@ pub fn schema() -> Vec<Param> {
             (0.0, 5.0, 0.05),
             Live,
         )
-        .with_help("Mean payoff per move. CRA do not state their threshold; see the cra-threshold sweep. An edit applies from the next period; the first period reached is not recomputed."),
+        .with_help("Mean payoff per move. CRA don't define it formally, but p. 20 ('9 of our 30 histories reached an average score over 2.3', Table 2's 0.30) implies 2.3; see the cra-threshold sweep. An edit applies from the next period; the first period reached is not recomputed."),
         Param::integer("Measures", "stop_at", "Stop at period", (0, 1_000_000), Live)
             .with_help("CRA ran 2500 periods. 0: never."),
     ]

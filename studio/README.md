@@ -1,15 +1,39 @@
 # Flump Studio
 
 Short explainer videos rendered in Blender from real engine runs (see
-`docs/superpowers/specs/2026-09-25-flump-studio-design.md`, and the series plan in
-`docs/superpowers/specs/2026-09-26-sugarscape-series-plan.md`).
+`docs/superpowers/specs/2026-09-25-flump-studio-design.md`, and the series plans in
+`docs/superpowers/specs/2026-09-26-sugarscape-series-plan.md` and
+`docs/superpowers/specs/2026-09-27-cooperation-series-plan.md`).
 
     python3 studio/build.py seasons --preview   # an episode, 960 × 540 (the shareable size)
     python3 studio/build.py seasons             # 1920 × 1080, final quality
     python3 studio/build.py seasons --beat 4    # one beat (1-based)
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
-Episodes so far: `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`, `markets`, `war`, `credit`, `contagion` and `finale`.
+Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale).
+
+Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring or norms. A spatial shot's dump records each
+generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
+board. A demographic-PD shot's dump records each cycle's agents, births (with the parent) and deaths,
+and loads as a Sugarscape dump without sugar, so its crowd walks, clones and dies as the Sugarscape's
+does (`colors: "strategy"`: blue helpers, red cheats). An ethnocentrism shot's dump records each
+period's agents (their square, color, kind and founding newcomer); its board gets a Flump per square,
+not per Flump (the land churns through hundreds of thousands), each in its color's yarn
+(`colors: "tag"`) on felt in its kind's color. A tags shot's dump records each generation's list of
+agents (with their parents) and, with `"gifts": true`, each gift; it loads as a `Ring`: a ring of felt
+where each Flump stands at its tag's shade, twins crowding together, and a Flump leaps to its role
+model's shade when its offspring copies another (`ring.py`). An image-scoring shot's dump records
+each generation's agents (threshold, score, payoff) and, with `"gifts": true`, each meeting; it loads
+as a `Street`: a column per threshold, each Flump in its score's yarn, the next generation taking its
+places before its meetings play out one by one (`street.py`). A norms shot's dump records each
+generation's agents (boldness, vengefulness, payoff) and, with `"gifts": true`, its cheats,
+punishments and metapunishments; `"every": n` keeps every nth generation, so a million generations
+fit a few hundred frames. It loads as a `Plane`: the boldness–vengefulness plane, a Flump per place
+standing on its square (`plane.py`). A social-structure shot's dump records each period's agents (y, p,
+q, payoff) and, with `"gifts": true`, each agent's partners; it loads as a `Grid`: a 16 × 16 block,
+each Flump in its friendliness's shade, on its own square under the torus and in index order
+otherwise, with yarn lines to a few followed Flumps' partners (`grid.py`).
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -65,7 +89,21 @@ the march beneath it on the last title (a tune's `ducks` sink it under a sting),
 sax, and a ka-ching as the first loan is made, and Contagion's *Tarantella of the Well*, the
 dance once believed to cure a spider's poison, brightening to A major as immune systems learn and
 turning dark and driving for the plague, and the finale's *The Walk Home*, the pilot's gånglåt theme
-passed two bars at a time between every episode's instruments, ending on a lone accordion.
+passed two bars at a time between every episode's instruments, ending on a lone accordion; and
+Spatial games' *Neighbors in Phase*, a phase piece after Reich's *Piano Phase*: marimba and
+vibraphone on one twelve-note figure in D Dorian, the vibraphone slipping ahead an eighth at a time
+until, when the Flumps move one at a time, it falls into triplets over a drone a half step down; and
+Living neighbors' *A Round for Neighbors*, a round in G for flute, clarinet, oboe and bassoon, each
+voice copying the tune as each clone copies its parent, until in the soup they crowd in a bar apart
+in G minor and drop out, leaving a muted trumpet alone; and Ethnocentrism's *Cradle Song for Four
+Colors*, a lullaby in F for music box, harp, clarinet and cello, one instrument per color, whose
+phrases scatter to the wrong instruments when children are scattered, until the music box winds down;
+and Tags' *The Twins' Slip Jig*, in 9/8 (a tune's `meter` line), played in unison by twin instruments,
+up a step with each takeover, until the twins are forbidden and the fiddle falls a beat late; and
+Reputation's *The Talk of the Town*, a Charleston in B♭ whose clarinet phrases a muted trumpet
+repeats a bar later, as a reputation gets passed along, until the band drops out to a lone tuba; and
+Norms' *A Fugue for Keeping Order*, a fugue in C minor for string quartet whose voices answer each
+other while the norm holds and fray when it collapses.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to
@@ -80,7 +118,7 @@ beats, overlays, measurements and tune cues agree, without Blender.
 Before a render, or after changing anything under `blender/`, run the smoke test:
 `python3 studio/smoke.py [EPISODE ...]` renders one small still and caption of each kind of beat
 from the episodes' real dumps (making any that are missing) and fails on any beat that can't be
-built. All five episodes take under three minutes; stills go to `out/<episode>/smoke/`.
+built. Each episode takes a few seconds to a minute; stills go to `out/<episode>/smoke/`.
 
 Overlays live in `blender/overlays/`: `parts.py` (anchors, text, cards), `followers.py` (things
 that follow Flumps), `panels.py` (screen-space displays) and `caption.py`; a new overlay goes in

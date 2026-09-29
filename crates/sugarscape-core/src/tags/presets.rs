@@ -38,14 +38,14 @@ pub fn presets() -> Vec<ModelPreset> {
             "rca-published",
             "Published: ties to the current agent",
             RCA,
-            "100 agents, each with a tag and a tolerance drawn from [0, 1], meet 3 others at random each generation and donate (cost 0.1, benefit 1) when the other's tag is within their tolerance of their own; each agent then faces a random other and the higher score has the offspring, whose tag is redrawn with probability 0.1 and whose tolerance gets Gaussian noise (s.d. 0.01) with probability 0.1. The paper does not say who wins a tie; Edmonds & Hales 2003 found only 'the current agent wins' matches its tables, so this preset uses it. Measured (20 seeds × 30 000 generations): donation 73.7% (the paper: 73.6%). The paper's cycle of clusters rising and being invaded is much slower than it describes: a median of 29 takeovers per run (Fig. 1 shows two in 500 generations), dominant clusters hold 86% of the agents (the paper: 75–80%) and are 91% one exact tag when they take over (the paper: 79%).",
+            "100 agents, each with a tag and a tolerance drawn from [0, 1], meet 3 others at random each generation and donate (cost 0.1, benefit 1) when the other's tag is within their tolerance of their own; each agent then faces a random other and the higher score has the offspring, whose tag is redrawn with probability 0.1 and whose tolerance gets Gaussian noise (s.d. 0.01) with probability 0.1. Ties go to the current agent, as the paper's p. 442 has it (an agent \"adopts the other's tag and tolerance if the other's score is higher than its own\"); Edmonds & Hales 2003 found only this rule matches its tables. Measured (20 seeds × 30 000 generations): donation 73.7% (the paper: 73.6%). Clusters rise and are invaded as the paper describes: counting a takeover whenever the most common exact tag changes while half the agents hold it, one every 343 generations (median of 20 seeds; Fig. 1 shows two in 500), each only a small step from the last (the Stats' own count, a new cluster more than 0.01 away, gives 29 a run); dominant clusters hold 86% of the agents (the paper: 75–80%) and are 91% one exact tag when they take over (the paper: 79%).",
             published,
         ),
         preset(
             "rca-literal",
             "Literal: ties by coin flip",
             EH,
-            "The paper's rules as written: when two scores are equal, a coin flip decides who has the offspring. At 3 pairings this changes nothing (73.7%), but at 2 it gives 42% donation where the paper reports 4.3%, and at cost 0.5 it gives 45% where the paper reports 24.7% (20 seeds; Edmonds & Hales 2003 measured 42.6% and 45.9%). Open 'Published vs literal ties at P = 2' in the presets menu to run both.",
+            "Ties by coin flip, a natural reading of the paper's p. 441 (\"giving an offspring to the one with the higher score\"), though its p. 442 keeps the current agent. At 3 pairings this changes nothing (73.7%), but at 2 it gives 42% donation where the paper reports 4.3%, and at cost 0.5 it gives 45% where the paper reports 24.7% (20 seeds; Edmonds & Hales 2003 measured 42.6% and 45.9%). Open 'Published vs literal ties at P = 2' in the presets menu to run both.",
             |_| {},
         ),
         preset(

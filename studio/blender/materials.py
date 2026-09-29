@@ -19,6 +19,8 @@ YARN = {
 # tribes, by group index (0 Blue, 1 Red).
 CROWD_YARN = ("cream", "coral", "teal", "lilac", "butter")
 TRIBE_YARN = ("blue", "red")
+# Ethnocentrism's four colors (tags), by index.
+TAG_YARN = ("coral", "teal", "lilac", "blue")
 
 
 def _principled(name):

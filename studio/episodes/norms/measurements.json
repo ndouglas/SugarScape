@@ -1,0 +1,13 @@
+{
+  "medians": {
+    "his_collapsed": 0.0,
+    "his_established": 1.0,
+    "long_collapsed": 1.0,
+    "long_established": 0.0,
+    "meta_established": 1.0,
+    "mild_collapsed": 1.0,
+    "mild_his_collapsed": 1.0,
+    "norms_collapsed": 1.0
+  },
+  "seeds": 20
+}

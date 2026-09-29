@@ -1,0 +1,6 @@
+{
+ "preset": "ha-standard",
+ "ticks": 8,
+ "seed": 2,
+ "set": {"width": 10, "start": "random"}
+}

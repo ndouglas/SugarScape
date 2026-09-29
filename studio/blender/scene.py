@@ -9,7 +9,13 @@ import animate
 import camera as cam
 import dump as dump_mod
 import lineage
+import ring
 from blender import board, flump, materials, overlays
+from blender import lattice as lattice_board
+from blender import ring as ring_board
+from blender import street as street_board
+from blender import plane as plane_board
+from blender import grid as grid_board
 
 UPDATERS = []
 # The first exception the frame handler raised, if any.
@@ -66,7 +72,9 @@ def _agents(beat, d, tracks, timing, corners):
     With params colors="family", a Flump wears its family line's color (its
     mother's, back to a founding mother); with colors="tribe", its tribe's,
     changing as its tribe does; with colors="sick", sickly green while it
-    carries a disease and its own color when well."""
+    carries a disease and its own color when well; with colors="strategy"
+    (the demographic PD), blue for a helper and red for a cheat; with
+    colors="tag" (ethnocentrism), its tag's yarn."""
     w, h = d.width, d.height
     colors = list(materials.CROWD_YARN)
     RIGS.clear()
@@ -79,13 +87,22 @@ def _agents(beat, d, tracks, timing, corners):
         key = family.get(id_, id_)
         return colors[order.get(key, key) % len(colors)]
 
-    live = mode in ("tribe", "sick")
+    live = mode in ("tribe", "sick", "strategy", "tag")
 
     def live_color(id_, frame):
         """The color the tick shown gives a Flump (None: its own)."""
         f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
-        if mode == "tribe":
+        if mode == "tag":
             g = f.groups.get(id_)
+            if g is None:
+                g = d.frames[tracks[id_].first].groups.get(id_)
+            return materials.TAG_YARN[g % len(materials.TAG_YARN)] if g is not None else None
+        if mode in ("tribe", "strategy"):
+            g = f.groups.get(id_)
+            if g is None and mode == "strategy":
+                # A newborn pops in just before its cycle's frame; a
+                # strategy never changes, so its first frame's will do.
+                g = d.frames[tracks[id_].first].groups.get(id_)
             return materials.TRIBE_YARN[g] if g is not None else None
         return "sick" if f.diseases.get(id_) else None
 
@@ -143,23 +160,53 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     updaters = []
     timing = corners = None
     tracks = {}
-    if d is not None:
+    if isinstance(d, dump_mod.Grid):
         timing = beat.timing(d.ticks)
-        felt, corners = board.felt_board(d)
-        if d.config["seasons"]["enabled"]:
+        updaters.append(grid_board.build(beat, d, timing))
+        materials.lights_and_world(scene, 30)
+    elif isinstance(d, dump_mod.Plane):
+        timing = beat.timing(d.ticks)
+        updaters.append(plane_board.build(beat, d, timing))
+        materials.lights_and_world(scene, 40)
+    elif isinstance(d, dump_mod.Street):
+        timing = beat.timing(d.ticks)
+        updaters.append(street_board.build(beat, d, timing))
+        materials.lights_and_world(scene, 60)
+    elif isinstance(d, dump_mod.Ring):
+        timing = beat.timing(d.ticks)
+        updaters.append(ring_board.build(beat, d, timing))
+        materials.lights_and_world(scene, 2 * ring.RADIUS)
+    elif isinstance(d, dump_mod.Lattice):
+        timing = beat.timing(d.ticks)
+        updaters.append(lattice_board.build(beat, d, timing))
+        materials.lights_and_world(scene, max(d.width, d.height))
+    elif d is not None:
+        timing = beat.timing(d.ticks)
+        if d.model == "ethno":
+            # Flat felt whose squares show each Flump's kind, and a Flump per
+            # square rather than per Flump (see lattice_board.ethno).
+            corners = animate.corner_heights(animate.relief(d), d.width, d.height)
+            updaters.append(lattice_board.ethno(beat, d, timing))
+        else:
+            felt, corners = board.felt_board(d)
+        # Other models' boards are bare felt: no seasons, soot or sugar.
+        sugarscape = d.model == "sugarscape"
+        if sugarscape and d.config["seasons"]["enabled"]:
             updaters.append(board.seasonal_felt(felt, d, timing))
-        elif any(any(f.pollution) for f in d.frames):
+        elif sugarscape and any(any(f.pollution) for f in d.frames):
             updaters.append(board.sooty_felt(felt, d, timing))
-        _, update_sugar = board.sugar(d, corners, timing)
-        updaters.append(update_sugar)
+        if sugarscape:
+            _, update_sugar = board.sugar(d, corners, timing)
+            updaters.append(update_sugar)
         if d.spice_capacity:
             _, update_spice = board.sugar(d, corners, timing, "spice")
             updaters.append(update_spice)
         # Only the Flumps alive during this beat's ticks get objects: a long
         # run with births can have many thousands over its whole length.
         first, last = timing.tick_at(1), timing.tick_at(beat.frames + 1)
-        tracks = {i: t for i, t in dump_mod.tracks(d).items() if animate.alive_in(t, first, last)}
-        updaters.append(_agents(beat, d, tracks, timing, corners))
+        if d.model != "ethno":
+            tracks = {i: t for i, t in dump_mod.tracks(d).items() if animate.alive_in(t, first, last)}
+            updaters.append(_agents(beat, d, tracks, timing, corners))
         materials.lights_and_world(scene, max(d.width, d.height))
     else:
         updaters.append(_title_card())

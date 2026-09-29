@@ -1,0 +1,5 @@
+{
+ "preset": "hg-async-kaleidoscope",
+ "ticks": 200,
+ "seed": 17
+}

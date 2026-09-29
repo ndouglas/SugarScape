@@ -1,0 +1,6 @@
+{
+ "preset": "dpd-run-1",
+ "ticks": 6,
+ "seed": 45,
+ "set": {"width": 8, "agents": 14}
+}

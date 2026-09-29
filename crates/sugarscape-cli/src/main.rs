@@ -180,7 +180,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
 
 fn run_shot(args: ShotArgs) -> Result<(), Failure> {
     let shot = Shot::from_json(&read(&args.file)?)?;
-    let dump = frames::run_shot(&shot)?;
+    let dump = frames::run(&shot)?;
     let json = serde_json::to_string(&dump).expect("frame dumps serialize");
     match &args.out {
         Some(path) => write(path, &json),

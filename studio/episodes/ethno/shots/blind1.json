@@ -1,0 +1,6 @@
+{
+ "preset": "ha-standard",
+ "ticks": 2000,
+ "seed": 20,
+ "set": {"discrimination": "none"}
+}

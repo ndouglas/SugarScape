@@ -198,6 +198,19 @@ pub fn claims() -> Vec<Claim> {
             },
         },
         Claim {
+            id: "norms.dominance.strong-harder",
+            item: "ax-dominance-metanorms",
+            source: Source::Book,
+            citation: AXELROD,
+            text: "Dominance with metanorms: 'it is not so easy for the weak group to keep the strong one from defecting' (at generation 100 the weak group's mean boldness ≤ 0.25 and the strong group's at least 0.1 higher)",
+            check: |_| {
+                let r = runs(SHORT, &[100], groups(true));
+                let m = |f: fn(&Reading) -> f64| r.iter().map(|x| f(&x[0])).sum::<f64>() / r.len() as f64;
+                let (sb, wb) = (m(|x| x.strong_boldness), m(|x| x.weak_boldness));
+                outcome(wb <= 0.25 && sb - wb >= 0.1, format!("boldness strong {sb:.2}, weak {wb:.2}"))
+            },
+        },
+        Claim {
             id: "norms.gi.norms-collapse",
             item: "norms-horizon",
             source: Source::Comment,
