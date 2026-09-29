@@ -394,7 +394,16 @@ fn builtins_and_series_names_are_listed() {
             "zip-shift",
             "goap-horizon",
             "goap-k",
-            "goap-memory"
+            "goap-memory",
+            "bali-levels",
+            "bali-growth",
+            "bali-dispersal",
+            "bali-rain",
+            "bali-imitation-growth",
+            "bali-two-node",
+            "bali-gamma",
+            "bali-adaptive",
+            "bali-links"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -1173,6 +1182,28 @@ fn zi_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "zi");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn bali_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: rain, water and
+    // pests (f64), imitation, eq. 4 with innovation, adaptive planting, the
+    // plan search and the two nodes.
+    for (id, fp) in [
+        ("lk-random", "0x7d84b477ca8fba95"),
+        ("lk-stressed", "0x0626e5d5529abfb7"),
+        ("janssen-code", "0xb423b71bbc6353d0"),
+        ("janssen-levels-14", "0xa1d94a968698c5ed"),
+        ("janssen-two-node", "0xf87c8032f908abcc"),
+        ("janssen-generalized", "0xa2ae0ad93a97f180"),
+        ("janssen-adaptive", "0xea4877048a644fad"),
+        ("janssen-fewer-links", "0x878f982a182d0672"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "bali");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

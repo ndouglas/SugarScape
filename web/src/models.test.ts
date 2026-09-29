@@ -5,6 +5,7 @@ import {
   finishesUnpredictably,
   isAgreementView,
   isAntsView,
+  isBaliView,
   isThresholdsView,
   isPunishmentView,
   isZiView,
@@ -150,6 +151,26 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the bali model', () => {
+  it('is read by its tag, and its inspections by `subak` and `dam`, before the others with a panel', () => {
+    expect(modelOf({ model: 'bali' } as unknown as ModelConfig)).toBe('bali');
+    const cell = { site: { x: 1, y: 2 }, panel: 'map', subak: null, dam: null, month: null, stress: null, agent: null } as unknown as AnyInspection;
+    const zi = { site: { x: 1, y: 2 }, panel: 'schedules', unit: 1, demand: 102, supply: 34, trade: null, trader: null, agent: null } as unknown as AnyInspection;
+    expect([cell, zi].map(isBaliView)).toEqual([true, false]);
+    expect([isZiView(cell), isPunishmentView(cell), isRetirementView(cell), isThresholdsView(cell)]).toEqual([false, false, false, false]);
+  });
+
+  it('colors six ways, has no overlays, and ends after its years (in months, or the two nodes’ periods)', () => {
+    expect(COLOR_MODES.bali.map(([m]) => m)).toEqual(['plan', 'temple', 'harvest', 'pests', 'water', 'crop']);
+    expect(MODEL_OVERLAYS.bali).toEqual([]);
+    const c = { model: 'bali', watershed: 'bali', node_periods: 12, stop_at: 30 } as unknown as ModelConfig;
+    expect(ticksLeft(c, 350)).toBe(10);
+    expect(ticksLeft({ ...c, watershed: 'two_node', node_periods: 2 } as unknown as ModelConfig, 50)).toBe(10);
+    expect(ticksLeft({ ...c, stop_at: 0 } as unknown as ModelConfig, 50)).toBe(Infinity);
+    expect(finishesUnpredictably(c)).toBe(false);
   });
 });
 

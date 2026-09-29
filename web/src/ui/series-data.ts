@@ -627,6 +627,39 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       shown: hasRetirementGroups,
     },
   ],
+  bali: [
+    {
+      title: 'Harvest',
+      lines: [
+        { key: 'harvest', label: 'Last year (t/ha)', color: '--c1' },
+        { key: 'scored', label: 'Mean of the scored years', color: '--c4' },
+        { key: 'spread', label: 'Spread across subaks', color: '--c2' },
+      ],
+    },
+    { title: 'Changing plans', lines: [{ key: 'changing', label: 'Subaks that changed', color: '--c1' }] },
+    {
+      title: 'Water and pests',
+      lines: [
+        { key: 'water_stress', label: 'Water short (share)', color: '--blue' },
+        { key: 'pest_loss', label: 'Harvest lost to pests (share)', color: '--red' },
+      ],
+      range: [0, 1],
+    },
+    {
+      title: 'Patches',
+      lines: [
+        { key: 'patches', label: 'Patches of one plan', color: '--c1' },
+        { key: 'strategies', label: 'Plans in use', color: '--c2' },
+      ],
+    },
+    {
+      title: 'Temple match',
+      lines: [
+        { key: 'temple_match', label: 'Patches vs mascetis (ARI)', color: '--c1' },
+        { key: 'network_match', label: 'Pest network vs mascetis', color: '--c4' },
+      ],
+    },
+  ],
   zi: [
     {
       title: 'Prices',
@@ -694,7 +727,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

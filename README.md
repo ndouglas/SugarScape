@@ -154,7 +154,8 @@ The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **R
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**,
-**Image Scoring**, **El Farol and the Minority Game**, **Ants and Recruitment**, **Threshold Models** and **The Timing of Retirement**.
+**Image Scoring**, **El Farol and the Minority Game**, **Ants and Recruitment**, **Threshold Models**,
+**The Timing of Retirement**, **Altruistic Punishment**, **Zero-Intelligence Traders** and **Balinese Water Temples**.
 Each preset is listed by a plain title saying what happens in it; under the menu, the chosen
 preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
@@ -2212,6 +2213,102 @@ Traders: Market as a Partial Substitute for Individual Rationality," *Journal of
 101(1): 119–137 (1993); Dave Cliff, "Minimal-Intelligence Agents for Bargaining Behaviours in
 Market-Based Environments," HP Laboratories HPL-97-91 (1997). See
 `docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
+
+### Balinese Water Temples (Lansing & Kremer 1993; Janssen 2007)
+
+**The model.** On the Oos and Petanu rivers of Bali, 172 subaks (farmers' associations) take water from
+12 weirs and share pests with their neighbors. Planting at the same time as your neighbors lets a
+shared fallow starve the pests; planting at the same time as everyone upstream leaves too little water.
+Lansing and Kremer's simulation let each subak copy the planting plan of its best-harvesting neighbor
+once a year, and found that within 8 to 35 years yields rose and the subaks fell into patches that
+"bore a remarkable similarity" to the congregations of the water temples — the temples, they argued,
+solve the trade-off. Janssen (2007) reimplemented the model and asked how much coordination is worth,
+at what scale, and whether other decision rules do as well. One tick is a month.
+
+**How the sources were read.** Lansing and Kremer's paper is a scan with the rules in prose; Janssen's
+paper gives the equations and his later NetLogo release (CoMSES 2221) the watershed: the subaks' areas,
+temples, dams and pest links, the dams' flows, catchments and rain zones, the 21 plans, the rain tables
+and the crops' constants. Those data files are GPL-2.0 and ship beside the MIT code in `data/bali/`
+(see its `NOTICE`); the code was written from the published descriptions. Janssen's code departs from
+the texts in two places, each a switch: each month it balances the water of one random dam, with no
+inflow from upstream (**Water flows**), and it reads the subak–dam file's columns as (return, source)
+although the first is the upstream dam in 93 of 95 cases (**Dam columns**). His code also resets pests
+each year ("If we don't … the system gets locked into low harvest rates"): the default, and a switch.
+Our readings where the texts are silent or cannot be followed: level 2 is the two rivers (Janssen's
+highlands and lowlands are not identifiable in the data); level 7 is adjacent pairs of mascetis; level 28
+is the mascetis split by the data's second temple column, which gives only 22 groups; the high-yielding
+runs use two rice crops without Lansing and Kremer's vegetable crop, which Janssen's 21 plans drop;
+adaptive subaks' water threshold is m/day per hectare the source dam serves (his Fig. 12's axis, 0–500
+m³/day per hectare, agrees), their neighborhood is the subak and the subaks whose pests reach it, and they
+plant three-month rice; under eq. 4 a subak innovates only when no one qualifies to be copied; the plan
+search scores year 2 of a two-year run, on the same random draws for every option, climbing from the
+better of random plans and the best single plan for everyone (Janssen used several starting points), and
+under random rain it plans for middle rain; the perturbation's magnitudes are ours.
+
+Measured (the survey — 9 claims hold, 3 are weak, 11 fail — and the presets' descriptions):
+
+- **Imitation works, as Lansing and Kremer say.** From random plans the harvest rises from 10.9 to 20.4
+  t/ha/yr, nearly all of it in eight years; Table 1's three rises reproduce within 10 % (traditional
+  rice 5.0 → 8.1, their 4.9 → 8.57; high-yielding 16.9 → 18.2, their 15.91 → 18.08; low rain and high
+  pests 12.9 → 16.5, their 13.67 → 17.66). It holds "every time": at every pest growth and dispersal,
+  rain and start we tried, imitating subaks reap 1.6 to 2.1 times what the same plans fixed reap.
+- **But the resemblance to the temples is mostly the pest network's.** The mapped pest links fall into 46
+  groups (27 of them single subaks); those groups alone match the 14 masceti congregations with an
+  adjusted Rand index of 0.33. Imitation ends with mostly one plan per group, and its patches match the
+  temples at 0.37 on average — slightly higher, but not consistently (above the network on 6 of 10
+  seeds), and short of the 0.05 margin we set after planning had measured it. The subaks also settle
+  harder than the paper says: 7 are still changing in year 8 and 2 by year 30, not 20.
+- **The perturbation does not recover — from the paper's start.** Pests and drought from year 21 (Fig.
+  11) cut the harvest of the high-yielding run from 18.1 to 16.5, and it stays there: every subak began
+  with the same plan, so imitation has nothing different to copy. From random plans the same
+  perturbation recovers within seven years on 3 of 10 seeds. The paper's "twice as long" from the start
+  does not appear either.
+- **The scale of coordination hardly matters — how little depends on a reading of the data.** Janssen's
+  search finds finer coordination always helps, but at middle rain by only 0.7 % from one group to 172
+  under his code's reading of the subak–dam columns and 3.7 % under the physical reading; the temple
+  scale is never best. Under the code's reading water rarely binds — summed over the watershed the dams'
+  base flow roughly meets the demand of every subak planting at once, the network routing passes surplus
+  down to the intakes short of it, and growing months lose at most 2 % of their water at any rain.
+  Under the physical reading water binds at low rain (8 % lost) and the rise from one group to 172
+  reaches 7 %. Janssen's Fig. 1 rise (≈ 17.5 to 22.8, +30 %) appears under neither reading, and neither
+  do his rising inequality, his benefit of coordination at g 2.2 alone or his losses at high dispersal.
+- **Janssen's two nodes and his other rules reproduce in part.** The two-node threshold at ∛10 ≈ 2.14
+  holds exactly (the best harvest falls between g 2.1 and 2.2); imitation discounted by distance (eq. 4)
+  does best with γp below 0.5 and beats neighbor imitation (25.4 against 20.4). Adaptive subaks never
+  plant at very low pest tolerance and plant too early at high tolerance, as his Fig. 12 says; within
+  his plotted water thresholds the harvest is nearly flat (26.0, 26.2, 25.3, 26.0), and his best pair
+  (0.05, 0.02) is 7 % below (0.05, 0.05). Adaptive subaks lose harvest when pest links are added and not
+  when removed, as he found; but his eq.-4 imitators, which should lose when links are removed and not
+  mind added ones, lose about 4 % when half are removed (Mann–Whitney p = 0.08) and 6 % when links are
+  added (p = 0.007).
+- **His code's departures barely matter for imitation.** The one-random-dam routing, the swapped columns
+  and the diffusion form of the pest equation each move the imitation endpoint by 1–3 %; the columns
+  matter more for the searched levels (above). The pest reset is essential (without it, 4.1 against
+  20.1).
+
+Switches: **Watershed** (the Oos and Petanu, or Janssen's two nodes with **Rain units a month** and
+**Periods a year**), **Starting plans** (random, traditional, high-yielding, one per temple, or Janssen's
+search) with **Groups sharing a plan**, **Each year, subaks** (copy their best neighbor; copy by eq. 4
+with **γp**, **γw** and **Innovation (ρ)**; plant adaptively with **Water to plant** and **Pests to plant
+under**; or keep their plans), **Pest growth (g)**, **Pest dispersal (d)**, **Pest equation** (Lansing
+and Kremer's shortcut or the diffusion form), **Pests reset each year**, **Pests and drought strike
+(Fig. 11)** with **From year**, **Rain**, **Rain ×**, **Water flows**, **Dam columns**, **Remove pest
+links (pₑ)**, **Add pest links (pₙ)**, **Score from year** and **Stop after year**. The view is the
+watershed: subaks as discs sized by area, dams as squares, rivers and pest links as lines, and below it a
+strip of each dam's water over the last twelve months. Color modes: **Plan**, **Temple**, **Harvest**,
+**Pests**, **Water**, **Crop**. Charts: Harvest; Changing plans; Water and pests; Patches; Temple match.
+Presets: `lk-random`, `lk-random-fixed`, `lk-traditional`, `lk-hyv`, `lk-perturbed`, `lk-stressed`,
+`lk-temples`, `janssen-code`, `janssen-levels-14`, `janssen-two-node`, `janssen-generalized`,
+`janssen-adaptive`, `janssen-fewer-links`. **Compare** entry: "Imitating neighbors vs fixed random
+plans — Balinese Water Temples (Compare)". Built-in sweeps: `bali-levels`, `bali-growth`,
+`bali-dispersal`, `bali-rain`, `bali-imitation-growth`, `bali-two-node`, `bali-gamma`, `bali-adaptive`,
+`bali-links`.
+
+Credit: J. Stephen Lansing and James N. Kremer, "Emergent Properties of Balinese Water Temples,"
+*American Anthropologist* 95(1): 97–114 (1993); Marco A. Janssen, "Coordination in Irrigation Systems:
+An Analysis of the Lansing–Kremer Model of Bali," *Agricultural Systems* 93: 170–190 (2007); the
+watershed data from Janssen's "Lansing–Kremer model" (CoMSES Net 2221, v1.2.0, GPL-2.0). See
+`docs/superpowers/specs/2026-09-28-bali-water-temples-design.md`.
 
 ## Experiments
 

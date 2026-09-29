@@ -1,0 +1,54 @@
+; Balinese water temple tables, transcribed from the constants in Marco Janssen's
+; NetLogo replication of the Lansing-Kremer model (CoMSES 2221 v1.2.0, Bali31.nlogo);
+; distributed under the same GPL-2.0 terms as the data files beside it (see NOTICE).
+;
+; plans: 21 twelve-month cropping plans (0 fallow, 1 six-month traditional rice,
+; 2 four-month traditional rice, 3 three-month high-yielding rice)
+plans
+3 3 3 0 3 3 3 0 3 3 3 0
+3 3 3 0 0 0 3 3 3 0 0 0
+3 3 3 0 3 3 3 0 0 0 0 0
+3 3 3 0 0 3 3 3 0 0 0 0
+3 3 3 0 0 0 0 3 3 3 0 0
+3 3 3 0 0 0 0 0 3 3 3 0
+1 1 1 1 1 1 0 2 2 2 2 0
+1 1 1 1 1 1 0 3 3 3 0 0
+1 1 1 1 1 1 0 0 3 3 3 0
+1 1 1 1 1 1 0 0 0 0 0 0
+2 2 2 2 0 0 2 2 2 2 0 0
+2 2 2 2 0 2 2 2 2 0 0 0
+2 2 2 2 0 0 0 2 2 2 2 0
+2 2 2 2 0 0 3 3 3 0 0 0
+2 2 2 2 0 3 3 3 0 0 0 0
+2 2 2 2 0 0 0 3 3 3 0 0
+2 2 2 2 0 0 0 0 3 3 3 0
+3 3 3 0 0 2 2 2 2 0 0 0
+3 3 3 0 0 0 2 2 2 2 0 0
+3 3 3 0 2 2 2 2 0 0 0 0
+3 3 3 0 0 0 0 2 2 2 2 0
+; rain: mm a month, January to December, by elevation zone (0-4) and scenario
+; (low, middle, high)
+rain
+114 118 100   8  21   0   0   2   1   0  28 114
+252 269 167  67  96  96 110  48  64 101 150 271
+390 420 234 126 171 192 220  94 127 202 272 428
+200 167 131  63  42  62   0   0   0  26  92 156
+364 278 230 135 131 153 160  84 109 194 220 298
+528 389 329 207 220 244 320 168 218 362 348 440
+215 227 205 100 121  51   6   4  67  45 138 243
+282 274 319 181 206 141  95 138 249 265 267 327
+349 321 433 262 291 231 184 272 431 485 396 411
+148 210 120  53  53  54   8  13   0  45 112 192
+348 291 221 138 124 160 183 106 136 179 241 312
+548 372 322 223 195 266 358 199 272 313 370 432
+289 234 249 125  78  13   0   6  10  57 141 281
+418 384 372 246 208 128 114  68  77 162 268 405
+547 534 495 367 338 243 228 130 144 267 395 529
+; crops (fallow, six-month, four-month, three-month, vegetables): months to
+; grow, potential yield (t/ha), pest sensitivity, water use (m/day)
+devtime 0 6 4 3 0
+yield 0 5 5 10 0
+sensitivity 0 0.5 0.75 1.0 0
+use 0 0.015 0.015 0.015 0.003
+; the dams' river network: upstream dam, downstream dam
+dams 0 5 5 6 6 8 1 7 7 8 2 9 3 9 4 9 9 10 10 11

@@ -314,6 +314,20 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("zip-demand-shift", 0x1f0f2ad1aff93fe8),
     ("zip-supply-shift", 0x1f0f2ad1aff93fe8),
     ("zip-retail", 0x843e23fc86d35493),
+    // Milestone 29: Balinese Water Temples (200 months).
+    ("lk-random", 0x7d84b477ca8fba95),
+    ("lk-random-fixed", 0x9523e158c2e642a),
+    ("lk-traditional", 0x8520f5f008de482f),
+    ("lk-hyv", 0xcce2d26b2ee974a9),
+    ("lk-perturbed", 0xcce2d26b2ee974a9),
+    ("lk-stressed", 0x626e5d5529abfb7),
+    ("lk-temples", 0xa92f00f760825795),
+    ("janssen-code", 0xb423b71bbc6353d0),
+    ("janssen-levels-14", 0xa1d94a968698c5ed),
+    ("janssen-two-node", 0xf87c8032f908abcc),
+    ("janssen-generalized", 0xa2ae0ad93a97f180),
+    ("janssen-adaptive", 0xea4877048a644fad),
+    ("janssen-fewer-links", 0x878f982a182d0672),
 ];
 
 fn fingerprint(id: &str) -> u64 {
