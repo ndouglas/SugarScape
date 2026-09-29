@@ -860,18 +860,21 @@ every structure collapses before the fixed ones recover (Fig. 1). In the paper's
 the p–q plane the average p moves −0.012 under RWR and +0.051 under FRN (the paper: −0.016, +0.052),
 because under FRN an agent's partners share its friendliness (slope 0.179, F 1087; the paper 0.158,
 F 717; not significant under RWR). FRNE does beat 2DK (note 5), 4096 agents behave like 256 (note 1),
-and FRNE's fan-out matches Table A1 to within 3 % out to five links. FFR-0.3 is bi-stable, as stated: 25 of 30 runs
-spend 50 periods or more both high and low.
+and FRNE's fan-out matches Table A1 to within 3 % out to five links. The paper calls FFR-0.3 bi-stable, with
+long stretches at high and low p (p. 21); our test of that is our own, and lenient: 25 of 30 runs
+spend 50 periods or more both high and low over the whole run (11 of 20 after period 1000).
 
-The paper never says what "high cooperation" means. At a mean payoff of 2.3 every row of Table 2's
+The paper doesn't define "high cooperation" formally, but p. 20's "9 of our 30 histories reached an
+average score over 2.3" (Table 2's RWR 0.30) implies 2.3, and fitting agrees: at 2.3 every row of Table 2's
 "Remain High" lands within 0.03 of the paper (FRN 0.940 against 0.942, FFR-0.1 0.843 against 0.844);
-2.2 or 2.4 miss by 0.14 and 0.26 — so **High cooperation at** defaults to 2.3. It also describes its
+2.2 or 2.4 miss by 0.14 and 0.26. **High cooperation at** defaults to 2.3. It also describes its
 own method twice, and the two readings are switches. **Strategies start** "evenly distributed …
 throughout the strategy space" (the Appendix) or "initialized randomly" (§3.1): no difference.
 **Noise on** every agent every period, "regardless of which … is adopted" (the Appendix), or only as
-"errors in the actual copying process" (§2): these differ — noise only on copying gives FRN 2.530
-instead of 2.478, overshoots every fixed structure by 0.05–0.09 and erases FRNE's edge over 2DK — the
-Appendix's rule is the one that matches Table 2 more closely and keeps FRNE above 2DK.
+"errors in the actual copying process" (§2; loose where the Appendix is explicit, rather than a
+contradiction): these differ — noise only on copying gives FRN 2.530 instead of 2.478, overshoots every
+fixed structure by 0.05–0.09 and shrinks FRNE's edge over 2DK by about two thirds (+0.007 over 40 seeds,
+against +0.021; still significant). The Appendix's rule matches Table 2 more closely.
 
 The view is the agents as a block of cells (the torus itself under 2DK; index order otherwise) next
 to the paper's p–q plane, with the population's average over the last 200 periods as a fading trail
