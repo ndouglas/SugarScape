@@ -1024,12 +1024,15 @@ the mean payoff, two offspring; one below, none; each bit mutates at 1 %.
 
 Axelrod's claims hold at his horizon (100 seeds, generation 100): the norms game ends spread across
 his three outcomes and the norm is rarely established (4 runs); metanorms establish it in 92. His
-dominance variant (20 strong agents punished less, 10 weak) is **not yet implemented as he describes
-it**: in his, a group's defections hurt, and are punished by, only the other group, and metapunishment
-happens within groups (p. 1103); here everyone punishes everyone and only reproduction is split by
-group. Under that departure both groups end bold without metanorms, and with them both are kept from
-being bold, which is not his second claim ("it is not so easy for the weak group to keep the strong one
-from defecting"). His rule should become the default, with ours a named switch.
+dominance variant (20 strong agents punished less, 10 weak) follows his rule: a group's defections
+hurt, and are punished by, only the other group, metapunishment happens within groups, and each group
+breeds within itself (p. 1103). **Who a defection touches** switches to everyone, this engine's first
+version. With metanorms his claims hold (100 seeds): the weak group is kept from being bold (0.04) and
+the strong one less so (0.15), "not so easy" as he says; under the everyone rule both are kept down
+(0.02 and 0.06). Without metanorms he says "even members of the stronger group tend to be free riders …
+high boldness in both groups": the strong group ends bold in 97 of 100, but the weak group only in about
+half (50 of 100 at 0.6 or more; kept below 0.2 in 39, by a strong group left slightly vengeful), a
+mean of 0.52. He gives no counts; under the everyone rule both end bold (0.94 and 0.86).
 Galán and Izquierdo re-implemented it and ran it longer. Their results reproduce: the norms game
 collapses in 99 of 100 runs by 1 000 generations (the ax-norms preset's 100-seed figure); metanorms
 decay — 92 of 100 runs established at 100 generations, 52 established and 43 collapsed by 10⁵ (100

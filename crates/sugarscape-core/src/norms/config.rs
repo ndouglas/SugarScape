@@ -43,6 +43,21 @@ pub enum AllEqual {
     Keep,
 }
 
+/// Under groups, who a defection hurts and who may punish.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GroupRule {
+    /// Axelrod (p. 1103): "the defections of a player only hurt the members
+    /// of the other group and are therefore only punished by members of the
+    /// other group"; punishment for not punishing "would only occur within a
+    /// group".
+    #[default]
+    Between,
+    /// Everyone plays everyone, as without groups (this engine's first
+    /// version).
+    Everyone,
+}
+
 /// Axelrod's dominance variant: a strong group less hurt by punishment and
 /// more numerous than a weak one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -53,6 +68,7 @@ pub struct GroupsConfig {
     pub weak: u32,
     /// The strong group's cost of being punished (the weak group's is `punishment`).
     pub strong_punishment: f64,
+    pub rule: GroupRule,
 }
 
 impl Default for GroupsConfig {
@@ -63,6 +79,7 @@ impl Default for GroupsConfig {
             strong: 20,
             weak: 10,
             strong_punishment: -3.0,
+            rule: GroupRule::Between,
         }
     }
 }
@@ -243,6 +260,18 @@ pub fn schema() -> Vec<Param> {
             (-20.0, 0.0, 0.5),
             Live,
         )
+        .shown_if("groups.enabled", "true"),
+        Param::choice(
+            "Payoffs",
+            "groups.rule",
+            "Who a defection touches",
+            &[
+                ("between", "Only the other group (Axelrod)"),
+                ("everyone", "Everyone"),
+            ],
+            Live,
+        )
+        .with_help("Axelrod (p. 1103): a defection hurts, and is punished by, only the other group; metapunishment stays within a group.")
         .shown_if("groups.enabled", "true"),
         Param::integer("Evolution", "rounds", "Rounds per generation", (1, 20), Live)
             .with_help("Axelrod: four opportunities to defect each."),

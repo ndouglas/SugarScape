@@ -45,7 +45,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ax-dominance",
             "Dominance: two groups",
             AXELROD,
-            "Axelrod's dominance: 20 whites punished less (P = −3) and 10 blacks (P = −9), each group reproducing within itself. Not yet his model: in his, a group's defections hurt and are punished only by the other group, with metapunishment within groups (p. 1103); here everyone plays everyone. Axelrod: without metanorms 'even members of the stronger group tend to be free riders … low vengefulness and high boldness in both groups'. Measured (100 seeds, generation 100): boldness 0.94 (strong) and 0.86 (weak), vengefulness 0.01 and 0.03 — as he states for his model; this departure may change it.",
+            "Axelrod's dominance: 20 whites punished less (P = −3) and 10 blacks (P = −9), each group reproducing within itself; a player's defections hurt, and are punished by, only the other group (p. 1103). Axelrod: without metanorms 'even members of the stronger group tend to be free riders … low vengefulness and high boldness in both groups'. Measured (100 seeds, generation 100): the strong group bold in 97 (mean 0.96, vengefulness 0.13); the weak group bold (0.6 or more) in only 50 and kept below 0.2 in 39 (mean 0.52). He gives no counts. With everyone touched instead (groups.rule: everyone): both bold, 0.94 and 0.86.",
             |c| {
                 c.groups = GroupsConfig {
                     enabled: true,
@@ -58,7 +58,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ax-dominance-metanorms",
             "Dominance with metanorms",
             AXELROD,
-            "Dominance with metanorms. Axelrod: 'it becomes relatively easier for the strong group to keep the weak group from being bold'. Measured (100 seeds, generation 100): boldness 0.06 (strong) and 0.02 (weak), vengefulness 0.93 and 0.90 — the weak group is kept from being bold, and so is the strong one, which is not his second claim (\"it is not so easy for the weak group to keep the strong one from defecting\"); in his model only the other group punishes, which this preset doesn't yet do.",
+            "Dominance with metanorms; punishment for not punishing stays within a group (p. 1103). Axelrod: 'it becomes relatively easier for the strong group to keep the weak group from being bold, while it is not so easy for the weak group to keep the strong one from defecting'. Measured (100 seeds, generation 100): boldness 0.15 (strong) and 0.04 (weak), vengefulness 0.76 and 0.87 — as he says. With everyone touched instead: 0.06 and 0.02, both kept down.",
             |c| {
                 c.groups = GroupsConfig {
                     enabled: true,

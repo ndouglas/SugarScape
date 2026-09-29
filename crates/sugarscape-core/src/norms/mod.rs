@@ -9,7 +9,7 @@ mod stats;
 mod view;
 mod world;
 
-pub use config::{schema, AllEqual, GroupsConfig, NormsConfig, Refill, Selection};
+pub use config::{schema, AllEqual, GroupRule, GroupsConfig, NormsConfig, Refill, Selection};
 pub use presets::presets;
 pub use stats::{collapsed, established, NormsSnapshot, SERIES};
 pub use view::{frame, level_at, level_cell, row_top, LEVEL, PLANE, STRIP, STRIP_X, TRAIL};

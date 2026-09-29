@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-28
 **Status:** built as `studio/episodes/norms` (claims in its `measurements.md`: all ten hold, with the
-counts the spike found; 77 s). Dominance stays out; its engine fix is separate work.
+counts the spike found; 77 s). Dominance stays out. Its engine fix is done (2026-09-29): Axelrod's rule is the default, ours a named
+switch (see the README).
 **Question:** what do Axelrod (1986) and Galán & Izquierdo (2005) each claim, which claims hold over 20
 seeds, and how do we film a model of 20 Flumps whose traits drift over a million generations?
 **Method:** an independent paper-versus-code review *before* the storyboard (see below), and CLI runs

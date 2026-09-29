@@ -9,7 +9,7 @@ use std::fmt::Write;
 use rand::Rng;
 use serde::Serialize;
 
-use super::config::{AllEqual, NormsConfig, Refill, Selection};
+use super::config::{AllEqual, GroupRule, NormsConfig, Refill, Selection};
 use super::stats::{collapsed, established, NormsSnapshot};
 use super::view::{
     agent_at_row, frame, level_at, level_cell, mean_pixel, row_top, Canvas, BOLD_BAR, COLLAPSED,
@@ -225,6 +225,13 @@ impl NormsWorld {
         if let Some(e) = &mut self.events {
             *e = NormsEvents::default();
         }
+        let between = c.groups.enabled && c.groups.rule == GroupRule::Between;
+        let group: Vec<u8> = self.agents.iter().map(|a| a.group).collect();
+        // Under Axelrod's rule, a defection touches only the other group, and
+        // a non-punisher answers only to its own.
+        let hurts = |i: usize, j: usize| j != i && (!between || group[j] != group[i]);
+        let answers =
+            |j: usize, k: usize, i: usize| k != i && k != j && (!between || group[k] == group[j]);
         for _ in 0..c.rounds {
             for i in 0..n {
                 let seen = self.rng.gen::<f64>();
@@ -236,10 +243,10 @@ impl NormsWorld {
                 if let Some(e) = &mut self.events {
                     e.cheats.push(i as u32);
                 }
-                for j in (0..n).filter(|&j| j != i) {
+                for j in (0..n).filter(|&j| hurts(i, j)) {
                     self.agents[j].payoff += c.hurt;
                 }
-                for j in (0..n).filter(|&j| j != i) {
+                for j in (0..n).filter(|&j| hurts(i, j)) {
                     if !self.chance(seen) {
                         continue;
                     }
@@ -252,7 +259,7 @@ impl NormsWorld {
                             e.punishments.push((j as u32, i as u32));
                         }
                     } else if c.metanorms {
-                        for k in (0..n).filter(|&k| k != i && k != j) {
+                        for k in (0..n).filter(|&k| answers(j, k, i)) {
                             if self.chance(seen)
                                 && self.chance(f64::from(self.agents[k].vengefulness) / 7.0)
                             {
@@ -735,7 +742,7 @@ impl Model for NormsWorld {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::norms::config::GroupsConfig;
+    use crate::norms::config::{GroupRule, GroupsConfig};
 
     fn config(edit: impl FnOnce(&mut NormsConfig)) -> NormsConfig {
         let mut c = NormsConfig::default();
@@ -1009,6 +1016,49 @@ mod tests {
         assert!(w.agents()[..20].iter().all(|a| a.group == 0));
         let s = w.stats.latest().unwrap();
         assert!(s.strong_boldness >= 0.0 && s.weak_boldness >= 0.0);
+    }
+
+    #[test]
+    fn under_axelrods_rule_a_defection_touches_only_the_other_group() {
+        // Agent 0 (strong) always defects. Agent 1 (strong) and agent 2
+        // (weak) are fully vengeful; agent 3 (weak) never punishes.
+        let run = |rule| {
+            let mut w = world(|c| {
+                c.groups = GroupsConfig {
+                    enabled: true,
+                    strong: 2,
+                    weak: 2,
+                    rule,
+                    ..GroupsConfig::default()
+                };
+                c.metanorms = true;
+                c.mutation = 0.0;
+            });
+            set(&mut w, &[(7, 0), (0, 7), (0, 7), (0, 0)]);
+            w.step();
+            w.played().to_vec()
+        };
+        let p = run(GroupRule::Between);
+        assert_eq!(p[0].defections, 4);
+        assert_eq!(p[1].payoff, 0.0, "a defection doesn't hurt its own group");
+        assert_eq!(
+            (p[1].punishments, p[1].metapunishments),
+            (0, 0),
+            "nor does its own group punish"
+        );
+        assert_eq!(
+            p[0].punished, p[2].punishments,
+            "only the other group punishes"
+        );
+        assert_eq!(
+            p[3].metapunished, p[2].metapunishments,
+            "a non-punisher answers only to its own group"
+        );
+        assert!(p[2].punishments > 0 && p[2].metapunishments > 0);
+        let q = run(GroupRule::Everyone);
+        assert_eq!(q[0].punished, q[1].punishments + q[2].punishments);
+        assert!(q[1].punishments > 0, "everyone punishes everyone");
+        assert!(q[1].payoff < 0.0, "and is hurt by everyone");
     }
 
     #[test]
