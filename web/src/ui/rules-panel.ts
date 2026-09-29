@@ -2,11 +2,11 @@ import { COMPARE_PRESETS } from '../compare-presets';
 import type { Engine } from '../engine';
 import { goodsEditorSignature, pollutionEditorSignature } from '../goods';
 import { groupsEditorSignature } from '../groups';
-import { presetGroups, presetModel, presetOptionLabel, presetReference, presetSubgroups } from '../models';
+import { worldMenu, presetGroups, presetModel, presetOptionLabel, presetReference, presetSubgroups, type MenuKind } from '../models';
 import { errorsFor, getPath, setPath } from '../paths';
 import { GROUPS, type Control, type Group } from '../schema';
 import { scheduleLines } from '../schedule';
-import type { Config, FieldError, ModelKind, URange } from '../types';
+import type { Config, FieldError, URange } from '../types';
 import { h } from './dom';
 import { goodsEditor, type Commit, type Editor } from './goods-editor';
 import { groupsEditor } from './groups-editor';
@@ -48,6 +48,8 @@ export class RulesPanel {
   private editorSyncers: (() => void)[] = [];
   private errorSlots: { path: string; el: HTMLElement; withField: boolean }[] = [];
   private general = h('div', { class: 'error' });
+  /** The Minds rules' sections, shown only for a Minds world. */
+  private readonly mindsSections: HTMLElement[] = [];
   private readonly sugarBody: HTMLElement;
   private readonly schema: SchemaPanel;
 
@@ -55,7 +57,17 @@ export class RulesPanel {
     private engine: Engine,
     private opts: RulesOptions = {},
   ) {
-    this.sugarBody = h('div', {}, this.scheduleSection(), this.general, ...GROUPS.map((g) => this.groupSection(g)));
+    this.sugarBody = h(
+      'div',
+      {},
+      this.scheduleSection(),
+      this.general,
+      ...GROUPS.map((g) => {
+        const el = this.groupSection(g);
+        if (g.minds) this.mindsSections.push(el);
+        return el;
+      }),
+    );
     this.schema = new SchemaPanel(engine);
     this.el.append(this.presetSection(), this.sugarBody, this.schema.el);
     engine.on('reset', () => this.sync());
@@ -79,6 +91,11 @@ export class RulesPanel {
     this.renderErrors();
   }
 
+  /** The model menu's entry for the running world (the Minds, or its model). */
+  private menu(): MenuKind {
+    return worldMenu(this.engine.config, this.engine.presets.find((p) => p.id === this.engine.presetId));
+  }
+
   private sync(editors = true): void {
     this.presetSync();
     const sugar = this.engine.model === 'sugarscape';
@@ -88,6 +105,9 @@ export class RulesPanel {
       this.schema.sync();
       return;
     }
+    // The Minds rules belong to the model menu's Minds entry, not to the book's sugarscape.
+    const minds = this.menu() === 'minds';
+    this.mindsSections.forEach((el) => (el.hidden = !minds));
     this.syncers.forEach((s) => s());
     if (editors) this.editorSyncers.forEach((s) => s());
   }
@@ -154,7 +174,7 @@ export class RulesPanel {
       }
       presetSelect.replaceChildren(
         custom(),
-        ...presetSubgroups(model as ModelKind, this.engine.presets).map((g) => {
+        ...presetSubgroups(model as MenuKind, this.engine.presets).map((g) => {
           const options = g.presets.map((p) => h('option', { value: p.id }, presetOptionLabel(p)));
           return g.label === null ? options : [h('optgroup', { label: g.label }, ...options)];
         }).flat(),
@@ -165,12 +185,13 @@ export class RulesPanel {
       {
         onchange: async () => {
           const model = modelSelect.value;
-          if (model === COMPARE || model === this.engine.model) {
+          const current = this.menu();
+          if (model === COMPARE || model === current) {
             list(model);
-            if (model === this.engine.model) this.sync();
+            if (model === current) this.sync();
             return;
           }
-          const first = presetSubgroups(model as ModelKind, this.engine.presets)[0]?.presets[0];
+          const first = presetSubgroups(model as MenuKind, this.engine.presets)[0]?.presets[0];
           if (first) await load(first.id);
         },
       },
@@ -184,8 +205,9 @@ export class RulesPanel {
     const desc = h('p', { class: 'hint' });
     this.presetSync = () => {
       const p = this.engine.presets.find((x) => x.id === this.engine.presetId);
-      modelSelect.value = this.engine.model;
-      if (listed !== this.engine.model) list(this.engine.model);
+      const menu = this.menu();
+      modelSelect.value = menu;
+      if (listed !== menu) list(menu);
       presetSelect.value = p?.id ?? '';
       badge.hidden = !this.engine.isModified();
       reference.textContent = p ? presetReference(p) : '';

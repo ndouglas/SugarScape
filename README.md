@@ -150,7 +150,7 @@ Model extensions:
 
 ## Other artificial societies
 
-The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **Ring World**,
+The presets menu groups its presets by model: **Sugarscape**, **Minds**, **Schelling**, **Ring World**,
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**,
@@ -160,7 +160,11 @@ Each preset is listed by a plain title saying what happens in it; under the menu
 preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
-model. A config without a `model` key is a sugarscape config, so every older config, link, session
+model. **Minds** runs on the sugarscape model but is its own entry: it holds the Minds experiments'
+presets (grouped Minds 1–4), and its Rules panel adds the Decision, Movement, Memory and Truffles
+sections, which the book's Sugarscape entry leaves out. A world counts as Minds if it came from a Minds
+preset or uses any Minds rule (a decision other than rule M, walking, memory, walls or truffles), so
+a Minds share link opens under Minds. A config without a `model` key is a sugarscape config, so every older config, link, session
 file and sweep reads as before. The other models' Rules panels are built from their parameter
 schemas (each section says whether its fields rebuild the world or apply as it runs, and live
 changes replay from links); they have no editing tools, overlays, trails or Credit tab. Compare

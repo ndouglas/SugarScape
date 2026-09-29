@@ -4,7 +4,7 @@ import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
 import { defaultForm, formToSweep } from './experiments/form';
 import { Engine, type Speed } from './engine';
-import { isDpdView, isEthnoView, isImageView, modelOf } from './models';
+import { isDpdView, isEthnoView, isImageView, modelOf, presetMenu } from './models';
 import type { NetworkOverlay } from './protocol';
 import { paramShown } from './schema-form';
 import { SimHost } from './sim-host';
@@ -733,6 +733,14 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the Minds menu over the real presets', () => {
+  it('holds every preset whose source names a Minds milestone, and no other', () => {
+    const minds = presets.filter((p) => /\bMinds \d/.test(p.source)).map((p) => p.id);
+    expect(minds.length).toBeGreaterThanOrEqual(28);
+    expect(presets.filter((p) => presetMenu(p) === 'minds').map((p) => p.id)).toEqual(minds);
   });
 });
 

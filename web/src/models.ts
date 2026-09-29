@@ -285,12 +285,73 @@ export function sugarscapeChapter(p: Preset): string {
 }
 
 /**
- * The preset menu's groups within one model: the sugarscape's by chapter (in the order they first
- * appear), and every other model's as one unlabeled list in list order.
+ * Whether `c` is a Minds world (docs/studies/2026-09-27-minds.md): a sugarscape config that uses any rule
+ * the Minds experiments added — a decision other than rule M, walking, memory, walls or truffles.
+ * The Minds run on the sugarscape model but have their own entry in the model menu.
  */
-export function presetSubgroups(model: ModelKind, presets: Preset[]): { label: string | null; presets: Preset[] }[] {
-  const mine = presets.filter((p) => presetModel(p) === model);
-  if (model !== 'sugarscape') return mine.length > 0 ? [{ label: null, presets: mine }] : [];
+export function usesMinds(c: ModelConfig): boolean {
+  if (!isSugar(c)) return false;
+  const s = c as Config;
+  return (
+    (s.decision?.rule ?? 'book') !== 'book' ||
+    s.movement?.mode === 'walk' ||
+    (s.memory?.span ?? 0) > 0 ||
+    (s.walls?.length ?? 0) > 0 ||
+    (s.truffles?.share ?? 0) > 0
+  );
+}
+
+/** An entry of the model menu: a model, or the Minds (sugarscape worlds using the Minds rules). */
+export type MenuKind = ModelKind | 'minds';
+
+/** The model menu's entries in order: the Minds right after the Sugarscape. */
+export const MENUS: MenuKind[] = ['sugarscape', 'minds', ...MODELS.filter((m) => m !== 'sugarscape')];
+
+export const MENU_LABELS: Record<MenuKind, string> = { ...MODEL_LABELS, minds: 'Minds' };
+
+/** The model menu's entry for config `c` by its rules alone. */
+export function menuOf(c: ModelConfig): MenuKind {
+  return usesMinds(c) ? 'minds' : modelOf(c);
+}
+
+/**
+ * A preset's entry: Minds if its source names a Minds milestone (some Minds baselines run the book's
+ * rule M on a Minds world) or it uses a Minds rule.
+ */
+export function presetMenu(p: Preset): MenuKind {
+  return /\bMinds \d/.test(p.source) ? 'minds' : menuOf(p.config);
+}
+
+/** A world's entry: its preset's if it came from a Minds preset, else by its rules (share links, custom setups). */
+export function worldMenu(config: ModelConfig, preset: Preset | undefined): MenuKind {
+  return preset && presetMenu(preset) === 'minds' ? 'minds' : menuOf(config);
+}
+
+/** The Minds milestones' groups in the presets menu. */
+const MINDS_TITLES: Record<string, string> = {
+  '1': 'Minds 1: the utility mind',
+  '2': 'Minds 2: walking',
+  '3': 'Minds 3: memory',
+  '4': 'Minds 4: planning',
+};
+
+/**
+ * The preset menu's groups within one menu entry: the sugarscape's by chapter (in the order they first
+ * appear), the Minds by milestone (in order), and every other model's as one unlabeled list in list order.
+ */
+export function presetSubgroups(menu: MenuKind, presets: Preset[]): { label: string | null; presets: Preset[] }[] {
+  const mine = presets.filter((p) => presetMenu(p) === menu);
+  if (menu === 'minds') {
+    const groups = new Map<string, Preset[]>();
+    for (const p of mine) {
+      const n = /\bMinds (\d+)/.exec(p.source)?.[1] ?? '';
+      groups.set(n, [...(groups.get(n) ?? []), p]);
+    }
+    return [...groups]
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([n, presets]) => ({ label: MINDS_TITLES[n] ?? (n ? `Minds ${n}` : 'Minds'), presets }));
+  }
+  if (menu !== 'sugarscape') return mine.length > 0 ? [{ label: null, presets: mine }] : [];
   const groups = new Map<string, Preset[]>();
   for (const p of mine) {
     const chapter = sugarscapeChapter(p);
@@ -299,9 +360,9 @@ export function presetSubgroups(model: ModelKind, presets: Preset[]): { label: s
   return [...groups].map(([label, presets]) => ({ label, presets }));
 }
 
-/** The presets menu's groups: each model with presets, in `MODELS` order, its presets in list order. */
-export function presetGroups(presets: Preset[]): { model: ModelKind; label: string; presets: Preset[] }[] {
-  return MODELS.map((model) => ({ model, label: MODEL_LABELS[model], presets: presets.filter((p) => presetModel(p) === model) })).filter(
+/** The model menu's entries with presets, in `MENUS` order, each with its presets in list order. */
+export function presetGroups(presets: Preset[]): { model: MenuKind; label: string; presets: Preset[] }[] {
+  return MENUS.map((model) => ({ model, label: MENU_LABELS[model], presets: presets.filter((p) => presetMenu(p) === model) })).filter(
     (g) => g.presets.length > 0,
   );
 }
