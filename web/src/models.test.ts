@@ -5,6 +5,11 @@ import {
   finishesUnpredictably,
   isAgreementView,
   isAntsView,
+  menuOf,
+  presetMenu,
+  usesMinds,
+  worldMenu,
+  isBaliView,
   isThresholdsView,
   isPunishmentView,
   isZiView,
@@ -77,6 +82,70 @@ describe('presetGroups', () => {
   });
 });
 
+describe('the Minds menu', () => {
+  const p = (id: string, source: string, config: unknown = {}): Preset =>
+    ({ id, title: id, name: id, source, description: '', config: config as ModelConfig });
+
+  it('counts a sugarscape world as Minds when it uses any Minds rule', () => {
+    const minds = [
+      { decision: { rule: 'utility' } },
+      { decision: { rule: 'goap' } },
+      { decision: { rule: 'mvt' } },
+      { movement: { mode: 'walk', speed: 1 } },
+      { memory: { span: 100, share: 1, belief: 'recall' } },
+      { walls: [{ x: 1, y: 1, width: 2, height: 2, opaque: true }] },
+      { truffles: { share: 0.1, value: 10, regrow: 50, seed: 1 } },
+    ];
+    expect(minds.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(minds.map(() => true));
+    const book = [
+      {},
+      { decision: { rule: 'book' }, movement: { mode: 'jump', speed: 1 }, memory: { span: 0, share: 0, belief: 'recall' }, walls: [] },
+      { truffles: { share: 0, value: 10, regrow: 50, seed: 1 } },
+      { model: 'ring', movement: { mode: 'walk' } },
+    ];
+    expect(book.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(book.map(() => false));
+    expect([menuOf({ decision: { rule: 'goap' } } as unknown as ModelConfig), menuOf({} as ModelConfig), menuOf({ model: 'ring' } as unknown as ModelConfig)]).toEqual([
+      'minds',
+      'sugarscape',
+      'ring',
+    ]);
+  });
+
+  it('counts a preset as Minds by its source too (Minds baselines run rule M), and a world by its preset or its rules', () => {
+    const baseline = p('ifd-even', 'Fretwell & Lucas 1969; Minds 1', { decision: { rule: 'book' } });
+    const book = p('ii-2', 'Animation II-2');
+    expect([presetMenu(baseline), presetMenu(book), presetMenu(p('ring-1', 'Chapter VI', { model: 'ring' }))]).toEqual(['minds', 'sugarscape', 'ring']);
+    // A world keeps its preset's entry when modified; without a preset its rules decide.
+    expect(worldMenu(baseline.config, baseline)).toBe('minds');
+    expect(worldMenu(book.config, book)).toBe('sugarscape');
+    expect(worldMenu({ movement: { mode: 'walk', speed: 1 } } as unknown as ModelConfig, book)).toBe('minds');
+    expect(worldMenu({ decision: { rule: 'goap' } } as unknown as ModelConfig, undefined)).toBe('minds');
+    expect(worldMenu({} as ModelConfig, undefined)).toBe('sugarscape');
+  });
+
+  it('lists Minds right after Sugarscape, and takes its presets out of the Sugarscape list', () => {
+    const presets = [
+      p('ii-2', 'Animation II-2'),
+      p('ring-1', 'Chapter VI', { model: 'ring' }),
+      p('goap-open', 'Orkin 2006; Minds 4', { decision: { rule: 'goap' }, movement: { mode: 'walk', speed: 1 } }),
+      p('ifd-even', 'Fretwell & Lucas 1969; Minds 1', { decision: { rule: 'book' } }),
+      p('walk-capacity', 'Epstein & Axtell II-2; Minds 2', { movement: { mode: 'walk', speed: 1 } }),
+      p('ifd-fence', 'Baum & Kraft 1998; Minds 2', { decision: { rule: 'utility' }, walls: [{ x: 0, y: 0, width: 1, height: 1, opaque: false }] }),
+    ];
+    expect(presetGroups(presets).map((g) => [g.model, g.label, g.presets.map((x) => x.id)])).toEqual([
+      ['sugarscape', 'Sugarscape', ['ii-2']],
+      ['minds', 'Minds', ['goap-open', 'ifd-even', 'walk-capacity', 'ifd-fence']],
+      ['ring', 'Ring World', ['ring-1']],
+    ]);
+    expect(presetSubgroups('sugarscape', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([['Chapter II', ['ii-2']]]);
+    expect(presetSubgroups('minds', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([
+      ['Minds 1: the utility mind', ['ifd-even']],
+      ['Minds 2: walking', ['walk-capacity', 'ifd-fence']],
+      ['Minds 4: planning', ['goap-open']],
+    ]);
+  });
+});
+
 describe('presetSubgroups', () => {
   const p = (id: string, source: string, config: unknown = {}): Preset =>
     ({ id, title: id, name: id, source, description: '', config: config as ModelConfig });
@@ -94,12 +163,11 @@ describe('presetSubgroups', () => {
   it('groups the sugarscape by chapter in first-appearance order, and other models as one list', () => {
     const presets = [
       p('ii-1', 'Animation II-1'), p('iii-1', 'Figure III-1'), p('ii-2', 'Animation II-2'),
-      p('ifd', 'Minds 1'), p('ring-1', 'Chapter VI', { model: 'ring' }), p('ring-2', 'Chapter VI', { model: 'ring' }),
+      p('ring-1', 'Chapter VI', { model: 'ring' }), p('ring-2', 'Chapter VI', { model: 'ring' }),
     ];
     expect(presetSubgroups('sugarscape', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([
       ['Chapter II', ['ii-1', 'ii-2']],
       ['Chapter III', ['iii-1']],
-      ['Minds', ['ifd']],
     ]);
     expect(presetSubgroups('ring', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([[null, ['ring-1', 'ring-2']]]);
     expect(presetSubgroups('schelling', presets)).toEqual([]);
@@ -150,6 +218,26 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the bali model', () => {
+  it('is read by its tag, and its inspections by `subak` and `dam`, before the others with a panel', () => {
+    expect(modelOf({ model: 'bali' } as unknown as ModelConfig)).toBe('bali');
+    const cell = { site: { x: 1, y: 2 }, panel: 'map', subak: null, dam: null, month: null, stress: null, agent: null } as unknown as AnyInspection;
+    const zi = { site: { x: 1, y: 2 }, panel: 'schedules', unit: 1, demand: 102, supply: 34, trade: null, trader: null, agent: null } as unknown as AnyInspection;
+    expect([cell, zi].map(isBaliView)).toEqual([true, false]);
+    expect([isZiView(cell), isPunishmentView(cell), isRetirementView(cell), isThresholdsView(cell)]).toEqual([false, false, false, false]);
+  });
+
+  it('colors six ways, has no overlays, and ends after its years (in months, or the two nodes’ periods)', () => {
+    expect(COLOR_MODES.bali.map(([m]) => m)).toEqual(['plan', 'temple', 'harvest', 'pests', 'water', 'crop']);
+    expect(MODEL_OVERLAYS.bali).toEqual([]);
+    const c = { model: 'bali', watershed: 'bali', node_periods: 12, stop_at: 30 } as unknown as ModelConfig;
+    expect(ticksLeft(c, 350)).toBe(10);
+    expect(ticksLeft({ ...c, watershed: 'two_node', node_periods: 2 } as unknown as ModelConfig, 50)).toBe(10);
+    expect(ticksLeft({ ...c, stop_at: 0 } as unknown as ModelConfig, 50)).toBe(Infinity);
+    expect(finishesUnpredictably(c)).toBe(false);
   });
 });
 

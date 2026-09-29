@@ -104,6 +104,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
     return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
+  if (model === 'bali') {
+    // The built-in bali-imitation-growth's axis: the scored harvest against pest growth.
+    return { ...form, x: { path: 'growth', values: '2:2.4:0.1' }, ticks: 360, metric: { ...form.metric, kind: 'final', series: 'scored' } };
+  }
   if (model === 'zi') {
     // The built-in gs-shouts' axis: efficiency against the period's length (Gode and Sunder's "30 seconds").
     return { ...form, x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' }, ticks: 12000, metric: { ...form.metric, kind: 'final', series: 'avg_efficiency' } };

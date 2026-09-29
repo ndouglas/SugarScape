@@ -1,0 +1,81 @@
+{
+  "name": "Balinese Water Temples: coordination and pest growth",
+  "description": "Janssen's Fig. 3: the scale of coordination at pest growth g 2.0, 2.2 and 2.4 (middle rain; the search as in bali-levels), under each reading of the dam columns. Measured (release, seeds 1–3, all alike, recorded 2026-09-29), levels 1 → 172: code's columns g 2.0 27.65, 27.65, 27.65, 27.70, 27.71, 27.90; g 2.2 27.05, 27.05, 27.05, 27.09, 27.09, 27.25; g 2.4 25.98, 25.98, 25.98, 26.00, 26.01, 26.13. Physical columns g 2.0 26.35, 26.35, 26.35, 26.69, 26.58, 27.29; g 2.2 25.79, 25.79, 25.79, 25.99, 26.00, 26.75; g 2.4 24.79, 24.79, 24.79, 24.96, 24.97, 25.57. Faster pests cost every level alike, and the benefit of coordination is no larger at g 2.2 than at 2.0 (Janssen: at 2.2 only).",
+  "base": {
+    "preset": "janssen-levels-14"
+  },
+  "x": {
+    "label": "Groups sharing a plan",
+    "path": "level",
+    "values": [
+      1,
+      2,
+      7,
+      14,
+      28,
+      172
+    ]
+  },
+  "series": {
+    "label": "Pest growth and dam columns",
+    "values": [
+      {
+        "at": 1,
+        "name": "g = 2.0, Janssen's code's columns",
+        "set": {
+          "growth": 2.0,
+          "dam_columns": "code"
+        }
+      },
+      {
+        "at": 2,
+        "name": "g = 2.2, Janssen's code's columns",
+        "set": {
+          "growth": 2.2,
+          "dam_columns": "code"
+        }
+      },
+      {
+        "at": 3,
+        "name": "g = 2.4, Janssen's code's columns",
+        "set": {
+          "growth": 2.4,
+          "dam_columns": "code"
+        }
+      },
+      {
+        "at": 4,
+        "name": "g = 2.0, physical columns",
+        "set": {
+          "growth": 2.0,
+          "dam_columns": "physical"
+        }
+      },
+      {
+        "at": 5,
+        "name": "g = 2.2, physical columns",
+        "set": {
+          "growth": 2.2,
+          "dam_columns": "physical"
+        }
+      },
+      {
+        "at": 6,
+        "name": "g = 2.4, physical columns",
+        "set": {
+          "growth": 2.4,
+          "dam_columns": "physical"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 3
+  },
+  "ticks": 120,
+  "metric": {
+    "kind": "final",
+    "series": "scored"
+  }
+}

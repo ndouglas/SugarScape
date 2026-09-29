@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('bali charts', () => {
+  it('chart harvest, changing plans, water and pests, patches and the temple match over months', () => {
+    expect(MODEL_CHARTS.bali.map((c) => c.title)).toEqual(['Harvest', 'Changing plans', 'Water and pests', 'Patches', 'Temple match']);
+    expect(timeAxisLabel('bali')).toBe('Months');
+  });
+});
+
 describe('zi charts', () => {
   it('chart prices, efficiency, convergence, dispersion and volume over shouts', () => {
     expect(MODEL_CHARTS.zi.map((c) => c.title)).toEqual(['Prices', 'Efficiency', 'Convergence', 'Profit dispersion', 'Volume']);

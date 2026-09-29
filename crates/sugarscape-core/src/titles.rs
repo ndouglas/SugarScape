@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 294] = [
+pub const TITLES: [(&str, &str); 307] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1140,6 +1140,58 @@ pub const TITLES: [(&str, &str); 294] = [
     (
         "zip-retail",
         "Only sellers post prices, and trades stay below equilibrium",
+    ),
+    (
+        "lk-random",
+        "Farmers copying their best neighbor's planting double the rice harvest",
+    ),
+    (
+        "lk-random-fixed",
+        "Random plans that never change reap half as much",
+    ),
+    (
+        "lk-traditional",
+        "Traditional rice gains from copying neighbors as fallows line up",
+    ),
+    (
+        "lk-hyv",
+        "High-yielding rice gains a little from copying neighbors",
+    ),
+    (
+        "lk-perturbed",
+        "Pests and drought strike in year 21, and the harvest never recovers",
+    ),
+    (
+        "lk-stressed",
+        "Pests and drought from the start hold the harvest lower",
+    ),
+    (
+        "lk-temples",
+        "One random plan per temple, fixed, reaps far less than copying",
+    ),
+    (
+        "janssen-code",
+        "Water routed as Janssen's code does barely changes the harvest",
+    ),
+    (
+        "janssen-levels-14",
+        "The best plan for each temple's subaks, found by search",
+    ),
+    (
+        "janssen-two-node",
+        "Two subaks on one river share water and pests",
+    ),
+    (
+        "janssen-generalized",
+        "Copying good farmers anywhere, discounted by distance, beats copying neighbors",
+    ),
+    (
+        "janssen-adaptive",
+        "Farmers plant when water is ample and pests are low",
+    ),
+    (
+        "janssen-fewer-links",
+        "With half the pest links gone, copying stalls early",
     ),
 ];
 

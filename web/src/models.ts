@@ -2,6 +2,8 @@
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   ZiInspection,
+  BaliConfig,
+  BaliInspection,
   PunishmentConfig,
   PunishmentInspection,
   RetirementConfig,
@@ -46,7 +48,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -72,12 +74,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   retirement: 'The Timing of Retirement',
   punishment: 'Altruistic Punishment',
   zi: 'Zero-Intelligence Traders',
+  bali: 'Balinese Water Temples',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali'
     ? tag
     : 'sugarscape';
 }
@@ -171,6 +174,11 @@ export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
 }
 
+/** A cell of the bali frame (a panel, a `subak` and a `dam`); check it first. */
+export function isBaliView(v: AnyInspection): v is BaliInspection {
+  return 'panel' in v && 'subak' in v && 'dam' in v;
+}
+
 /** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
 export function isZiView(v: AnyInspection): v is ZiInspection {
   return 'panel' in v && 'trade' in v && 'supply' in v;
@@ -226,6 +234,10 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'thresholds' && (c as ThresholdsConfig).stop_at > 0) return Math.max(0, (c as ThresholdsConfig).stop_at - tick);
   if (modelOf(c) === 'retirement' && (c as RetirementConfig).stop_at > 0) return Math.max(0, (c as RetirementConfig).stop_at - tick);
   if (modelOf(c) === 'punishment' && (c as PunishmentConfig).stop_at > 0) return Math.max(0, (c as PunishmentConfig).stop_at - tick);
+  if (modelOf(c) === 'bali' && (c as BaliConfig).stop_at > 0) {
+    const b = c as BaliConfig;
+    return Math.max(0, b.stop_at * (b.watershed === 'two_node' ? b.node_periods : 12) - tick);
+  }
   return Infinity;
 }
 
@@ -273,12 +285,73 @@ export function sugarscapeChapter(p: Preset): string {
 }
 
 /**
- * The preset menu's groups within one model: the sugarscape's by chapter (in the order they first
- * appear), and every other model's as one unlabeled list in list order.
+ * Whether `c` is a Minds world (docs/studies/2026-09-27-minds.md): a sugarscape config that uses any rule
+ * the Minds experiments added — a decision other than rule M, walking, memory, walls or truffles.
+ * The Minds run on the sugarscape model but have their own entry in the model menu.
  */
-export function presetSubgroups(model: ModelKind, presets: Preset[]): { label: string | null; presets: Preset[] }[] {
-  const mine = presets.filter((p) => presetModel(p) === model);
-  if (model !== 'sugarscape') return mine.length > 0 ? [{ label: null, presets: mine }] : [];
+export function usesMinds(c: ModelConfig): boolean {
+  if (!isSugar(c)) return false;
+  const s = c as Config;
+  return (
+    (s.decision?.rule ?? 'book') !== 'book' ||
+    s.movement?.mode === 'walk' ||
+    (s.memory?.span ?? 0) > 0 ||
+    (s.walls?.length ?? 0) > 0 ||
+    (s.truffles?.share ?? 0) > 0
+  );
+}
+
+/** An entry of the model menu: a model, or the Minds (sugarscape worlds using the Minds rules). */
+export type MenuKind = ModelKind | 'minds';
+
+/** The model menu's entries in order: the Minds right after the Sugarscape. */
+export const MENUS: MenuKind[] = ['sugarscape', 'minds', ...MODELS.filter((m) => m !== 'sugarscape')];
+
+export const MENU_LABELS: Record<MenuKind, string> = { ...MODEL_LABELS, minds: 'Minds' };
+
+/** The model menu's entry for config `c` by its rules alone. */
+export function menuOf(c: ModelConfig): MenuKind {
+  return usesMinds(c) ? 'minds' : modelOf(c);
+}
+
+/**
+ * A preset's entry: Minds if its source names a Minds milestone (some Minds baselines run the book's
+ * rule M on a Minds world) or it uses a Minds rule.
+ */
+export function presetMenu(p: Preset): MenuKind {
+  return /\bMinds \d/.test(p.source) ? 'minds' : menuOf(p.config);
+}
+
+/** A world's entry: its preset's if it came from a Minds preset, else by its rules (share links, custom setups). */
+export function worldMenu(config: ModelConfig, preset: Preset | undefined): MenuKind {
+  return preset && presetMenu(preset) === 'minds' ? 'minds' : menuOf(config);
+}
+
+/** The Minds milestones' groups in the presets menu. */
+const MINDS_TITLES: Record<string, string> = {
+  '1': 'Minds 1: the utility mind',
+  '2': 'Minds 2: walking',
+  '3': 'Minds 3: memory',
+  '4': 'Minds 4: planning',
+};
+
+/**
+ * The preset menu's groups within one menu entry: the sugarscape's by chapter (in the order they first
+ * appear), the Minds by milestone (in order), and every other model's as one unlabeled list in list order.
+ */
+export function presetSubgroups(menu: MenuKind, presets: Preset[]): { label: string | null; presets: Preset[] }[] {
+  const mine = presets.filter((p) => presetMenu(p) === menu);
+  if (menu === 'minds') {
+    const groups = new Map<string, Preset[]>();
+    for (const p of mine) {
+      const n = /\bMinds (\d+)/.exec(p.source)?.[1] ?? '';
+      groups.set(n, [...(groups.get(n) ?? []), p]);
+    }
+    return [...groups]
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([n, presets]) => ({ label: MINDS_TITLES[n] ?? (n ? `Minds ${n}` : 'Minds'), presets }));
+  }
+  if (menu !== 'sugarscape') return mine.length > 0 ? [{ label: null, presets: mine }] : [];
   const groups = new Map<string, Preset[]>();
   for (const p of mine) {
     const chapter = sugarscapeChapter(p);
@@ -287,9 +360,9 @@ export function presetSubgroups(model: ModelKind, presets: Preset[]): { label: s
   return [...groups].map(([label, presets]) => ({ label, presets }));
 }
 
-/** The presets menu's groups: each model with presets, in `MODELS` order, its presets in list order. */
-export function presetGroups(presets: Preset[]): { model: ModelKind; label: string; presets: Preset[] }[] {
-  return MODELS.map((model) => ({ model, label: MODEL_LABELS[model], presets: presets.filter((p) => presetModel(p) === model) })).filter(
+/** The model menu's entries with presets, in `MENUS` order, each with its presets in list order. */
+export function presetGroups(presets: Preset[]): { model: MenuKind; label: string; presets: Preset[] }[] {
+  return MENUS.map((model) => ({ model, label: MENU_LABELS[model], presets: presets.filter((p) => presetMenu(p) === model) })).filter(
     (g) => g.presets.length > 0,
   );
 }
@@ -434,6 +507,15 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['profit', 'Profit'],
     ['margin', 'Margin'],
   ],
+  // Plans and start months first; the temples to compare them with; the year's harvest; this month's state.
+  bali: [
+    ['plan', 'Plan'],
+    ['temple', 'Temple'],
+    ['harvest', 'Harvest'],
+    ['pests', 'Pests'],
+    ['water', 'Water'],
+    ['crop', 'Crop'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -460,4 +542,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   retirement: [],
   punishment: [],
   zi: [],
+  bali: [],
 };

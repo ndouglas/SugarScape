@@ -1,0 +1,68 @@
+{
+  "name": "Balinese Water Temples: imitation under each rain",
+  "description": "Imitation from random plans, and the same plans fixed, under each rain scenario (random: low, middle or high each year at 25/50/25 %); the harvest over years 6–30. Measured (release, seeds 1–10, recorded 2026-09-28): imitating 19.85, 20.06, 20.19, 20.08 t/ha/yr; fixed 10.71, 10.84, 10.87, 10.82 (low, middle, high, random). Rain barely matters; imitation nearly doubles the harvest in every scenario.",
+  "base": {
+    "preset": "lk-random"
+  },
+  "x": {
+    "label": "Rain",
+    "values": [
+      {
+        "at": 1,
+        "name": "Low",
+        "set": {
+          "rain": "low"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Middle",
+        "set": {
+          "rain": "middle"
+        }
+      },
+      {
+        "at": 3,
+        "name": "High",
+        "set": {
+          "rain": "high"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Random",
+        "set": {
+          "rain": "random"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Decision",
+    "values": [
+      {
+        "at": 1,
+        "name": "Imitate",
+        "set": {
+          "decision": "imitate"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Fixed",
+        "set": {
+          "decision": "fixed"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 360,
+  "metric": {
+    "kind": "final",
+    "series": "scored"
+  }
+}

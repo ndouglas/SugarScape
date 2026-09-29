@@ -160,7 +160,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -559,7 +559,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -969,6 +969,83 @@ export interface ZiInspection {
   agent: null;
 }
 
+/**
+ * Lansing and Kremer's Balinese water temples (milestone 29), with Janssen's reanalysis, on Janssen's
+ * data for the Oos and Petanu. One tick is a month.
+ */
+export interface BaliConfig {
+  model: 'bali';
+  watershed: 'bali' | 'two_node';
+  plans: 'random' | 'traditional' | 'hyv' | 'temples' | 'search';
+  level: number;
+  decision: 'imitate' | 'generalized' | 'adaptive' | 'fixed';
+  growth: number;
+  dispersal: number;
+  rain: 'low' | 'middle' | 'high' | 'random';
+  rain_scale: number;
+  perturb: { enabled: boolean; at: number; growth: number; dispersal: number; damage: number; rain: number };
+  routing: 'network' | 'janssen_code';
+  dam_columns: 'code' | 'physical';
+  pest_form: 'shortcut' | 'diffusion';
+  pest_reset: boolean;
+  gamma_p: number;
+  gamma_w: number;
+  innovation: number;
+  m_w: number;
+  m_p: number;
+  remove_links: number;
+  add_links: number;
+  node_rain: number;
+  node_periods: number;
+  score_from: number;
+  stop_at: number;
+}
+
+/** A month's statistics; the year's are held from its end (null before the first, or where they do not apply). */
+export interface BaliStats {
+  tick: number;
+  harvest: number | null;
+  spread: number | null;
+  scored: number | null;
+  changing: number;
+  water_stress: number | null;
+  pest_loss: number | null;
+  patches: number | null;
+  strategies: number | null;
+  temple_match: number | null;
+  network_match: number | null;
+  year: number;
+}
+
+export interface BaliSubakView {
+  id: number;
+  area: number;
+  masceti: number;
+  source: number;
+  ret: number;
+  plan: number;
+  start: number;
+  crop: number;
+  harvest: number;
+  pests: number;
+  water: number;
+  neighbors: number;
+}
+
+export interface BaliDamView { id: number; inflow: number; demand: number; stress: number }
+
+/** A cell of the bali frame: a subak or a dam on the map, or a month of the water strip. */
+export interface BaliInspection {
+  site: { x: number; y: number };
+  panel: 'map' | 'strip' | null;
+  subak: BaliSubakView | null;
+  dam: BaliDamView | null;
+  month: number | null;
+  stress: number | null;
+  /** Always null: cells are read where they are. */
+  agent: null;
+}
+
 /** A preset: `title` is the menu's plain headline; `source` and `name` are its figure or paper and its rules. */
 export interface Preset { id: string; title: string; name: string; source: string; description: string; config: ModelConfig }
 
@@ -1278,7 +1355,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -1622,7 +1699,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1687,7 +1764,13 @@ export type ColorMode =
   | 'acts'
   | 'side'
   | 'profit'
-  | 'margin';
+  | 'margin'
+  | 'plan'
+  | 'temple'
+  | 'harvest'
+  | 'pests'
+  | 'water'
+  | 'crop';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

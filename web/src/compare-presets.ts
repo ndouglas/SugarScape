@@ -194,6 +194,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'cliff-excess-demand',
     b: 'zip-excess-demand',
   },
+  {
+    id: 'lk-random-vs-fixed',
+    label: 'Imitating neighbors vs fixed random plans — Balinese Water Temples (Compare)',
+    a: 'lk-random',
+    b: 'lk-random-fixed',
+  },
 ];
 
 /**
