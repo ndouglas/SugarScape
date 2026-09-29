@@ -1,6 +1,6 @@
 {
   "name": "Balinese Water Temples: the scale of coordination",
-  "description": "Janssen's Fig. 1–2: the subaks in 1, 2, 7, 14, 28 or 172 groups each share one plan and start month, found by hill-climbing (exhaustively for 1 and 2 groups), then fixed for ten years; the harvest over years 6–10. Measured (release, seeds 1–3, recorded 2026-09-28), levels 1 → 172: low rain 26.41, 26.41, 26.37, 26.50, 26.38, 26.36; middle 27.05, 27.05, 27.01, 27.09, 26.97, 26.80; high 27.33, 27.33, 27.29, 27.36, 27.22, 26.98 t/ha/yr. The temple scale (14) is best everywhere, but by 0.1 %: water hardly binds, so one plan for the watershed already synchronizes the fallow. Janssen's rise from ≈ 17.5 to 22.8 does not appear. Slow: each 172-group search takes about ten seconds.",
+  "description": "Janssen's Fig. 1–2: the subaks in 1, 2, 7, 14, 28 or 172 groups each share one plan and start month, found by hill-climbing (exhaustively for 1 and 2 groups; otherwise from the better of random plans and the best single plan for everyone), then fixed for ten years; the harvest over years 6–10, under each reading of the subak–dam columns. Level 2 is our two rivers (Janssen's highlands and lowlands are not in the data); level 28 has 22 groups in the data. Measured (release, seeds 1–3, all alike, recorded 2026-09-29), levels 1 → 172: Janssen's code's columns: low rain 26.41, 26.41, 26.41, 26.50, 26.44, 26.81; middle 27.05, 27.05, 27.05, 27.09, 27.09, 27.25; high 27.33, 27.33, 27.33, 27.36, 27.34, 27.43. Physical columns: low 23.06, 23.06, 23.58, 24.04, 24.06, 24.68; middle 25.79, 25.79, 25.79, 25.99, 26.00, 26.75; high 26.64, 26.64, 26.64, 26.74, 26.75, 27.22 t/ha/yr. Finer coordination always helps, but by 0.3–1.5 % under the code's reading, where water rarely binds; under the physical reading water binds at low rain and the rise reaches 7 %. Janssen's rise from ≈ 17.5 to 22.8 (+30 %) appears under neither, and the temple scale (14) is never best. Slow: each 172-group search takes about ten seconds.",
   "base": {
     "preset": "janssen-levels-14"
   },
@@ -17,27 +17,54 @@
     ]
   },
   "series": {
-    "label": "Rain",
+    "label": "Rain and dam columns",
     "values": [
       {
         "at": 1,
-        "name": "Low",
+        "name": "Low, Janssen's code's columns",
         "set": {
-          "rain": "low"
+          "rain": "low",
+          "dam_columns": "code"
         }
       },
       {
         "at": 2,
-        "name": "Middle",
+        "name": "Middle, Janssen's code's columns",
         "set": {
-          "rain": "middle"
+          "rain": "middle",
+          "dam_columns": "code"
         }
       },
       {
         "at": 3,
-        "name": "High",
+        "name": "High, Janssen's code's columns",
         "set": {
-          "rain": "high"
+          "rain": "high",
+          "dam_columns": "code"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Low, physical columns",
+        "set": {
+          "rain": "low",
+          "dam_columns": "physical"
+        }
+      },
+      {
+        "at": 5,
+        "name": "Middle, physical columns",
+        "set": {
+          "rain": "middle",
+          "dam_columns": "physical"
+        }
+      },
+      {
+        "at": 6,
+        "name": "High, physical columns",
+        "set": {
+          "rain": "high",
+          "dam_columns": "physical"
         }
       }
     ]

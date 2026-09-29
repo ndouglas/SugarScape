@@ -938,6 +938,15 @@ impl Model for BaliWorld {
         if !changes.is_empty() {
             return Err(changes);
         }
+        // Two nodes run the best pair for their pests: new pests, a new pair
+        // (the nodes' pests and the year's harvest so far carry on).
+        if let Some(nodes) = &mut self.nodes {
+            if (next.growth, next.dispersal) != (nodes.g, nodes.d) {
+                nodes.g = next.growth;
+                nodes.d = next.dispersal;
+                nodes.pair = best(next.growth, next.dispersal, nodes.rain, nodes.periods, 60).0;
+            }
+        }
         if next.decision == Decision::Generalized && self.distances.is_none() {
             self.distances = Some(Self::distances(&self.net));
         }
@@ -1215,6 +1224,25 @@ mod tests {
                 .or(Model::locate(&w, 6))
         );
         assert!(Model::locate(&w, 173).is_none());
+    }
+
+    #[test]
+    fn two_nodes_take_live_edits_of_growth_dispersal_and_their_best_plans() {
+        let mut w = world(|c| {
+            c.watershed = Watershed::TwoNode;
+            c.growth = 2.0;
+        });
+        let mut next = w.config.clone();
+        next.growth = 2.8;
+        next.dispersal = 1.0;
+        Model::set_config(&mut w, ModelConfig::Bali(next)).unwrap();
+        let n = w.nodes().unwrap();
+        assert_eq!((n.g, n.d), (2.8, 1.0));
+        assert_eq!(
+            n.pair,
+            best(2.8, 1.0, 2.0, 12, 60).0,
+            "re-planned for the new pests"
+        );
     }
 
     #[test]

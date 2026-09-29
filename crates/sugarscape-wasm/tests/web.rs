@@ -1147,7 +1147,7 @@ fn bali_sims_match_the_native_golden_entries() {
         ("lk-random", "0x7d84b477ca8fba95"),
         ("lk-stressed", "0x0626e5d5529abfb7"),
         ("janssen-code", "0xb423b71bbc6353d0"),
-        ("janssen-levels-14", "0xce1902065a4680a5"),
+        ("janssen-levels-14", "0xa1d94a968698c5ed"),
         ("janssen-two-node", "0xf87c8032f908abcc"),
         ("janssen-generalized", "0xa2ae0ad93a97f180"),
         ("janssen-adaptive", "0xea4877048a644fad"),

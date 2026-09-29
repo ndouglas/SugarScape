@@ -128,8 +128,10 @@ impl Default for Perturb {
 pub struct BaliConfig {
     pub watershed: Watershed,
     pub plans: Plans,
-    /// Groups sharing a plan under `Plans::Search` or `Decision::Fixed`
-    /// with `Plans::Temples`: 1, 2, 7, 14, 28 or 172.
+    /// Lansing and Kremer's coordination levels, for `Plans::Search`: 1, 2, 7,
+    /// 14, 28 or 172. Level 2 is our two rivers (Janssen: highlands and
+    /// lowlands, not identifiable in the data); level 28, the mascetis split
+    /// by the data's second temple column, has only 22 non-empty groups.
     pub level: u32,
     pub decision: Decision,
     /// g: pest growth with rice in the field (0.1 when fallow).
@@ -198,7 +200,8 @@ impl Default for BaliConfig {
     }
 }
 
-/// The coordination levels: groups sharing a plan.
+/// The coordination levels, by Lansing and Kremer's names (level 28 has 22
+/// groups in the data).
 pub const LEVELS: [u32; 6] = [1, 2, 7, 14, 28, 172];
 
 impl BaliConfig {
@@ -345,7 +348,7 @@ pub fn schema() -> Vec<Param> {
         ),
         Param::integer("Plans", "level", "Groups sharing a plan", (1, 172), Reset)
             .shown_if("plans", "search")
-            .with_help("1 (the watershed), 2 (the rivers), 7 (pairs of temples), 14 (the temples), 28 (temple halves) or 172."),
+            .with_help("1 (the watershed), 2 (the two rivers: Janssen's highlands and lowlands are not in the data), 7 (pairs of temples), 14 (the temples), 28 (the temples split by the data's second temple column: only 22 groups) or 172."),
         Param::choice(
             "Decisions",
             "decision",

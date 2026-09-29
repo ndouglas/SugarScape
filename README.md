@@ -2035,42 +2035,57 @@ the texts in two places, each a switch: each month it balances the water of one 
 inflow from upstream (**Water flows**), and it reads the subak–dam file's columns as (return, source)
 although the first is the upstream dam in 93 of 95 cases (**Dam columns**). His code also resets pests
 each year ("If we don't … the system gets locked into low harvest rates"): the default, and a switch.
-Our readings where both texts are silent: level 7 is adjacent pairs of mascetis and level 28 masceti ×
-the data's second temple column; the high-yielding runs use two rice crops without Lansing and Kremer's
-vegetable crop, which Janssen's 21 plans drop; adaptive subaks' water threshold is m/day per hectare the
-source dam serves; the plan search scores year 2 of a two-year run; the perturbation's magnitudes are
-ours.
+Our readings where the texts are silent or cannot be followed: level 2 is the two rivers (Janssen's
+highlands and lowlands are not identifiable in the data); level 7 is adjacent pairs of mascetis; level 28
+is the mascetis split by the data's second temple column, which gives only 22 groups; the high-yielding
+runs use two rice crops without Lansing and Kremer's vegetable crop, which Janssen's 21 plans drop;
+adaptive subaks' water threshold is m/day per hectare the source dam serves (his Fig. 12's axis, 0–500
+m³/day per hectare, agrees), their neighborhood is the subak and the subaks whose pests reach it, and they
+plant three-month rice; under eq. 4 a subak innovates only when no one qualifies to be copied; the plan
+search scores year 2 of a two-year run, on the same random draws for every option, climbing from the
+better of random plans and the best single plan for everyone (Janssen used several starting points), and
+under random rain it plans for middle rain; the perturbation's magnitudes are ours.
 
-Measured (the survey — 9 claims hold, 4 are weak, 9 fail — and the presets' descriptions):
+Measured (the survey — 9 claims hold, 3 are weak, 11 fail — and the presets' descriptions):
 
 - **Imitation works, as Lansing and Kremer say.** From random plans the harvest rises from 10.9 to 20.4
   t/ha/yr, nearly all of it in eight years; Table 1's three rises reproduce within 10 % (traditional
   rice 5.0 → 8.1, their 4.9 → 8.57; high-yielding 16.9 → 18.2, their 15.91 → 18.08; low rain and high
   pests 12.9 → 16.5, their 13.67 → 17.66). It holds "every time": at every pest growth and dispersal,
-  rain and start we tried, imitating subaks reap nearly twice what the same plans fixed reap.
-- **But the resemblance to the temples is the pest network's.** The mapped pest links fall into 46
+  rain and start we tried, imitating subaks reap 1.6 to 2.1 times what the same plans fixed reap.
+- **But the resemblance to the temples is mostly the pest network's.** The mapped pest links fall into 46
   groups (27 of them single subaks); those groups alone match the 14 masceti congregations with an
   adjusted Rand index of 0.33. Imitation ends with mostly one plan per group, and its patches match the
-  temples at 0.37 — no better, within our margin of 0.05. The subaks also settle harder than the paper
-  says: 7 are still changing in year 8 and 2 by year 30, not 20.
-- **The perturbation does not recover.** Pests and drought from year 21 (Fig. 11) cut the harvest from
-  18.1 to 16.5 — and it stays there; the paper's recovery within seven years does not appear, and
-  neither does its "twice as long" from the start.
-- **Water hardly binds, so the scale of coordination hardly matters.** The dams' base flow alone meets
-  the demand of every subak planting at once, and growing months lose at most 2 % of their water at any
-  rain. Janssen's search finds 26.4–27.7 t/ha/yr at every level from one group to 172, the temple scale
-  best by 0.1 %; his Fig. 1 rise (≈ 17.5 to 22.8), his benefit of coordination at g 2.2 alone and his
-  losses at high dispersal do not appear. Rain changes the imitation endpoint by 2 %.
+  temples at 0.37 on average — slightly higher, but not consistently (above the network on 6 of 10
+  seeds), and short of the 0.05 margin we set after planning had measured it. The subaks also settle
+  harder than the paper says: 7 are still changing in year 8 and 2 by year 30, not 20.
+- **The perturbation does not recover — from the paper's start.** Pests and drought from year 21 (Fig.
+  11) cut the harvest of the high-yielding run from 18.1 to 16.5, and it stays there: every subak began
+  with the same plan, so imitation has nothing different to copy. From random plans the same
+  perturbation recovers within seven years on 3 of 10 seeds. The paper's "twice as long" from the start
+  does not appear either.
+- **The scale of coordination hardly matters — how little depends on a reading of the data.** Janssen's
+  search finds finer coordination always helps, but at middle rain by only 0.7 % from one group to 172
+  under his code's reading of the subak–dam columns and 3.7 % under the physical reading; the temple
+  scale is never best. Under the code's reading water rarely binds — summed over the watershed the dams'
+  base flow roughly meets the demand of every subak planting at once, the network routing passes surplus
+  down to the intakes short of it, and growing months lose at most 2 % of their water at any rain.
+  Under the physical reading water binds at low rain (8 % lost) and the rise from one group to 172
+  reaches 7 %. Janssen's Fig. 1 rise (≈ 17.5 to 22.8, +30 %) appears under neither reading, and neither
+  do his rising inequality, his benefit of coordination at g 2.2 alone or his losses at high dispersal.
 - **Janssen's two nodes and his other rules reproduce in part.** The two-node threshold at ∛10 ≈ 2.14
   holds exactly (the best harvest falls between g 2.1 and 2.2); imitation discounted by distance (eq. 4)
-  does best with γp below 0.5 and beats neighbor imitation (25.4 against 20.4); adaptive subaks plant
-  never at very low pest tolerance and less at high water thresholds or high tolerance, as his Fig. 12
-  says, though his best pair (0.05, 0.02) is 7 % below (0.05, 0.05); they lose harvest when pest links
-  are added and not when removed, as he found — but his imitators, which should lose when links are
-  removed, barely notice (Mann–Whitney p = 0.08).
-- **His code's departures barely matter here.** The one-random-dam routing, the swapped columns and the
-  diffusion form of the pest equation each move the endpoint by 1–3 %; the pest reset is essential
-  (without it, 4.1 against 20.1).
+  does best with γp below 0.5 and beats neighbor imitation (25.4 against 20.4). Adaptive subaks never
+  plant at very low pest tolerance and plant too early at high tolerance, as his Fig. 12 says; within
+  his plotted water thresholds the harvest is nearly flat (26.0, 26.2, 25.3, 26.0), and his best pair
+  (0.05, 0.02) is 7 % below (0.05, 0.05). Adaptive subaks lose harvest when pest links are added and not
+  when removed, as he found; but his eq.-4 imitators, which should lose when links are removed and not
+  mind added ones, lose about 4 % when half are removed (Mann–Whitney p = 0.08) and 6 % when links are
+  added (p = 0.007).
+- **His code's departures barely matter for imitation.** The one-random-dam routing, the swapped columns
+  and the diffusion form of the pest equation each move the imitation endpoint by 1–3 %; the columns
+  matter more for the searched levels (above). The pest reset is essential (without it, 4.1 against
+  20.1).
 
 Switches: **Watershed** (the Oos and Petanu, or Janssen's two nodes with **Rain units a month** and
 **Periods a year**), **Starting plans** (random, traditional, high-yielding, one per temple, or Janssen's

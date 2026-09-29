@@ -116,30 +116,79 @@ fn searched(level: u32, edit: impl Fn(&mut BaliConfig)) -> BaliConfig {
     c
 }
 
-/// (scored, spread) at each level for g 2.0, 2.2 and 2.4, 3 seeds each.
-fn levels() -> &'static Vec<Vec<(f64, f64)>> {
-    static T: OnceLock<Vec<Vec<(f64, f64)>>> = OnceLock::new();
-    T.get_or_init(|| {
-        [2.0, 2.2, 2.4]
-            .iter()
-            .map(|&g| {
-                LEVELS
-                    .iter()
-                    .map(|&l| {
-                        let ws = worlds(searched(l, |c| c.growth = g), 3);
-                        (
-                            mean(&scored(&ws)),
-                            mean(
-                                &ws.iter()
-                                    .map(|w| w.stats.latest().unwrap().spread)
-                                    .collect::<Vec<_>>(),
-                            ),
-                        )
-                    })
-                    .collect()
-            })
-            .collect()
+/// (scored, spread) at each level: rows for g 2.0, 2.2 and 2.4 at middle
+/// rain, then g 2.2 at low rain; 3 seeds each.
+type Table = Vec<Vec<(f64, f64)>>;
+
+fn levels(columns: DamColumns) -> &'static Table {
+    static CODE: OnceLock<Table> = OnceLock::new();
+    static PHYSICAL: OnceLock<Table> = OnceLock::new();
+    let cell = if columns == DamColumns::Code {
+        &CODE
+    } else {
+        &PHYSICAL
+    };
+    cell.get_or_init(|| {
+        [
+            (2.0, Rain::Middle),
+            (2.2, Rain::Middle),
+            (2.4, Rain::Middle),
+            (2.2, Rain::Low),
+        ]
+        .iter()
+        .map(|&(g, rain)| {
+            LEVELS
+                .iter()
+                .map(|&l| {
+                    let ws = worlds(
+                        searched(l, |c| {
+                            c.growth = g;
+                            c.rain = rain;
+                            c.dam_columns = columns;
+                        }),
+                        3,
+                    );
+                    (
+                        mean(&scored(&ws)),
+                        mean(
+                            &ws.iter()
+                                .map(|w| w.stats.latest().unwrap().spread)
+                                .collect::<Vec<_>>(),
+                        ),
+                    )
+                })
+                .collect()
+        })
+        .collect()
     })
+}
+
+/// A claim about the levels judged under both readings of the subak–dam
+/// columns (Janssen's Java code, whose runs his figures show, is not
+/// available): Holds under both, Weak under one, Fails under neither.
+fn both_readings(judge: impl Fn(DamColumns) -> Outcome) -> Outcome {
+    let (code, physical) = (judge(DamColumns::Code), judge(DamColumns::Physical));
+    let held = [&code, &physical]
+        .iter()
+        .filter(|o| o.verdict == Verdict::Holds)
+        .count();
+    let verdict = match held {
+        2 => Verdict::Holds,
+        1 => Verdict::Weak,
+        _ => Verdict::Fails,
+    };
+    Outcome {
+        verdict,
+        measured: format!(
+            "[Janssen's code's columns: {:?}] {} [physical columns: {:?}] {}",
+            code.verdict, code.measured, physical.verdict, physical.measured
+        ),
+        detail: [code.detail, physical.detail]
+            .into_iter()
+            .filter(|d| !d.is_empty())
+            .collect::<Vec<_>>()
+            .join(" "),
+    }
 }
 
 /// Years until a harvest series comes within 0.1 of its final value, from `from`.
@@ -210,8 +259,9 @@ pub fn claims() -> Vec<Claim> {
                 let t = at_year_ends(&ws, |s| s.temple_match);
                 let net = ws[0].stats.latest().unwrap().network_match;
                 let peak = t.iter().copied().fold(f64::MIN, f64::max);
-                outcome(t[29] >= net + 0.05, format!("patches {:.3} at year 30 (peak {peak:.3}), the network's components {net:.3}", t[29]))
-                    .with("The pest links alone fall into 46 components (27 of them single subaks); imitation ends with mostly one plan per component, so the patches inherit the network's resemblance to the temples.")
+                let above = ws.iter().filter(|w| w.stats.latest().unwrap().temple_match > net + 1e-9).count();
+                outcome(t[29] >= net + 0.05, format!("patches {:.3} at year 30 (peak {peak:.3}; above the network on {above} of {} seeds), the network's components {net:.3}", t[29], ws.len()))
+                    .with("The pest links alone fall into 46 components (27 of them single subaks); imitation ends with mostly one plan per component, so the patches inherit the network's resemblance to the temples. The 0.05 margin was set after planning had measured 0.37 against 0.33.")
             },
         },
         Claim {
@@ -223,7 +273,10 @@ pub fn claims() -> Vec<Claim> {
             check: |_| {
                 let y = yearly(&worlds(perturbed(21), 10));
                 let (fall, rise) = (y[19] - y[20], y[27] - y[20]);
+                let random: Vec<Vec<f64>> = worlds(BaliConfig { plans: Plans::Random, ..perturbed(21) }, 10).iter().map(|w| w.yearly().to_vec()).collect();
+                let recovered = random.iter().filter(|y| y[27] - y[20] >= 0.25).count();
                 outcome(fall >= 1.0 && rise >= 0.25, format!("years 19–28: {} (fall {fall:.2}, recovery {rise:.2})", show(&y[18..28])))
+                    .with(&format!("Judged on the paper's high-yielding start, where every subak shares one plan and imitation has nothing different to copy. Not judged: from random plans the same perturbation recovers by at least 0.25 within seven years on {recovered} of 10 seeds."))
             },
         },
         Claim {
@@ -244,20 +297,22 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-levels",
             source: Source::Book,
             citation: LK,
-            text: "Fig. 6: of the scales of coordination, 'the highest peak is achieved by the scale of coordination that most closely approximates the temple scale' — level 14 (the mascetis) best, by at least 1 % (Weak if best by less), at g 2.0, 2.2 and 2.4 (Janssen's search, 3 seeds)",
+            text: "Fig. 6: of the scales of coordination, 'the highest peak is achieved by the scale of coordination that most closely approximates the temple scale' — level 14 (the mascetis) best, by at least 1 % (Weak if best by less), at g 2.0, 2.2 and 2.4 (Janssen's search, 3 seeds), under each reading of the dam columns",
             check: |_| {
-                let parts = [2.0, 2.2, 2.4]
-                    .iter()
-                    .zip(levels())
-                    .map(|(g, row)| {
-                        let at14 = row[3].0;
-                        let other = row.iter().enumerate().filter(|&(k, _)| k != 3).map(|(_, r)| r.0).fold(f64::MIN, f64::max);
-                        let verdict = if at14 >= 1.01 * other { Verdict::Holds } else if at14 > other { Verdict::Weak } else { Verdict::Fails };
-                        let v: Vec<f64> = row.iter().map(|r| r.0).collect();
-                        (format!("g {g}"), Outcome { verdict, measured: format!("levels 1, 2, 7, 14, 28, 172: {}", show(&v)), detail: String::new() })
-                    })
-                    .collect();
-                all_of(parts)
+                both_readings(|columns| {
+                    let parts = [2.0, 2.2, 2.4]
+                        .iter()
+                        .zip(levels(columns))
+                        .map(|(g, row)| {
+                            let at14 = row[3].0;
+                            let other = row.iter().enumerate().filter(|&(k, _)| k != 3).map(|(_, r)| r.0).fold(f64::MIN, f64::max);
+                            let verdict = if at14 >= 1.01 * other { Verdict::Holds } else if at14 > other { Verdict::Weak } else { Verdict::Fails };
+                            let v: Vec<f64> = row.iter().map(|r| r.0).collect();
+                            (format!("g {g}"), Outcome { verdict, measured: format!("levels 1, 2, 7, 14, 28, 172: {}", show(&v)), detail: String::new() })
+                        })
+                        .collect();
+                    all_of(parts)
+                })
             },
         },
         Claim {
@@ -265,7 +320,7 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-imitation-growth",
             source: Source::Book,
             citation: LK,
-            text: "'the same phenomenon occurs every time, regardless of the initial distribution of cropping patterns, or ecological parameters such as flow rates or pest biology' — imitation beats the same plans fixed (scored years, Mann–Whitney, 10 seeds) at g 2.0 and 2.4, d 0.18 and 0.45, low and high rain, and from the traditional pattern",
+            text: "'the same phenomenon occurs every time, regardless of the initial distribution of cropping patterns, or ecological parameters such as flow rates or pest biology' (rain standing in for flow rates) — imitation beats the same plans fixed (scored years, Mann–Whitney, 10 seeds) at g 2.0 and 2.4, d 0.18 and 0.45, low and high rain, and from the traditional pattern",
             check: |_| {
                 let cases: [(&str, Edit); 7] = [
                     ("g 2.0", |c| c.growth = 2.0),
@@ -294,12 +349,14 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-levels",
             source: Source::Book,
             citation: J,
-            text: "Fig. 1: 'with an increasing number of smaller groups, there is a higher amount of total rice harvest' (≈ 17.5 at one group to 22.8 at 172) — level 172 at least 5 % above level 1 (middle rain, g 2.2, 3 seeds)",
+            text: "Fig. 1: 'with an increasing number of smaller groups, there is a higher amount of total rice harvest' (≈ 17.5 at one group to 22.8 at 172) — level 172 at least 5 % above level 1 (middle rain, g 2.2, 3 seeds), under each reading of the dam columns",
             check: |_| {
-                let row = &levels()[1];
-                let v: Vec<f64> = row.iter().map(|r| r.0).collect();
-                outcome(v[5] >= 1.05 * v[0], format!("levels 1, 2, 7, 14, 28, 172: {}", show(&v)))
-                    .with("Water hardly binds (the dams' base flow alone meets full planting's demand), so one plan for the whole watershed already synchronizes the fallow; a local search from random plans at 172 groups ends a little lower.")
+                both_readings(|columns| {
+                    let v: Vec<f64> = levels(columns)[1].iter().map(|r| r.0).collect();
+                    let low: Vec<f64> = levels(columns)[3].iter().map(|r| r.0).collect();
+                    outcome(v[5] >= 1.05 * v[0], format!("levels 1, 2, 7, 14, 28, 172: {} (+{:.1} %; at low rain +{:.1} %)", show(&v), 100.0 * (v[5] / v[0] - 1.0), 100.0 * (low[5] / low[0] - 1.0)))
+                })
+                .with("The rise is small because water rarely binds at middle rain: summed over the watershed, the dams' base flow roughly meets full planting's demand, and the network routing passes surplus down to the intakes short of it. Under the physical column reading at low rain it reaches Janssen's direction (see bali.ours.columns-levels), though not his size (+30 %).")
             },
         },
         Claim {
@@ -307,11 +364,12 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-levels",
             source: Source::Book,
             citation: J,
-            text: "'there is also an increasing inequality between annual harvest levels of subaks' — the spread of harvests at 172 groups above that at one (middle rain, 3 seeds)",
+            text: "'there is also an increasing inequality between annual harvest levels of subaks' — the spread of harvests at 172 groups above that at one (middle rain, 3 seeds), under each reading of the dam columns",
             check: |_| {
-                let row = &levels()[1];
-                let v: Vec<f64> = row.iter().map(|r| r.1).collect();
-                outcome(v[5] > v[0], format!("spread at levels 1, 2, 7, 14, 28, 172: {}", show(&v)))
+                both_readings(|columns| {
+                    let v: Vec<f64> = levels(columns)[1].iter().map(|r| r.1).collect();
+                    outcome(v[5] > v[0], format!("spread at levels 1, 2, 7, 14, 28, 172: {}", show(&v)))
+                })
             },
         },
         Claim {
@@ -319,14 +377,16 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-growth",
             source: Source::Book,
             citation: J,
-            text: "Fig. 3: 'The benefit of synchronization is only derived for the medium growth rate of pests' — the range of harvests across levels at g 2.2 more than twice that at g 2.0 and at g 2.4 (3 seeds)",
+            text: "Fig. 3: 'The benefit of synchronization is only derived for the medium growth rate of pests' — the range of harvests across levels at g 2.2 more than twice that at g 2.0 and at g 2.4 (3 seeds), under each reading of the dam columns",
             check: |_| {
-                let range = |row: &Vec<(f64, f64)>| {
-                    let v: Vec<f64> = row.iter().map(|r| r.0).collect();
-                    v.iter().copied().fold(f64::MIN, f64::max) - v.iter().copied().fold(f64::MAX, f64::min)
-                };
-                let r: Vec<f64> = levels().iter().map(range).collect();
-                outcome(r[1] > 2.0 * r[0] && r[1] > 2.0 * r[2], format!("range across levels at g 2.0, 2.2, 2.4: {}", show(&r)))
+                both_readings(|columns| {
+                    let range = |row: &Vec<(f64, f64)>| {
+                        let v: Vec<f64> = row.iter().map(|r| r.0).collect();
+                        v.iter().copied().fold(f64::MIN, f64::max) - v.iter().copied().fold(f64::MAX, f64::min)
+                    };
+                    let r: Vec<f64> = levels(columns)[..3].iter().map(range).collect();
+                    outcome(r[1] > 2.0 * r[0] && r[1] > 2.0 * r[2], format!("range across levels at g 2.0, 2.2, 2.4: {}", show(&r)))
+                })
             },
         },
         Claim {
@@ -334,11 +394,21 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-dispersal",
             source: Source::Book,
             citation: J,
-            text: "Fig. 4: 'When the pest spreads quickly, the harvest is severely affected' — the searched harvest at d 0.45 at least 10 % below that at d 0.3 (level 14, 3 seeds)",
+            text: "Fig. 4: 'When the pest spreads quickly, the harvest is severely affected' — the searched harvest at d 0.45 at least 10 % below that at d 0.3 (level 14, 3 seeds), under each reading of the dam columns",
             check: |_| {
-                let at = |d: f64| mean(&scored(&worlds(searched(14, |c| c.dispersal = d), 3)));
-                let (mid, high) = (at(0.3), at(0.45));
-                outcome(high <= 0.9 * mid, format!("d 0.3: {mid:.2}; d 0.45: {high:.2}"))
+                both_readings(|columns| {
+                    let at = |d: f64| {
+                        mean(&scored(&worlds(
+                            searched(14, |c| {
+                                c.dispersal = d;
+                                c.dam_columns = columns;
+                            }),
+                            3,
+                        )))
+                    };
+                    let (mid, high) = (at(0.3), at(0.45));
+                    outcome(high <= 0.9 * mid, format!("d 0.3: {mid:.2}; d 0.45: {high:.2}"))
+                })
             },
         },
         Claim {
@@ -379,7 +449,7 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-adaptive",
             source: Source::Book,
             citation: J,
-            text: "Fig. 12: 'if mp is very low subaks never plant crops … When mp is large, crops are planted too early … a larger value of mw leads to a lower performance', and mw 0.05 with mp 0.02 'maximized the default case' — no harvest at mp 0.01; less at mp 0.5 than 0.02 and at mw 0.2 than 0.05; and (0.05, 0.02) within 1 % of the best of mw 0–0.2 × mp 0.01–0.5",
+            text: "Fig. 12: 'if mp is very low subaks never plant crops … When mp is large, crops are planted too early … a larger value of mw leads to a lower performance', and mw 0.05 with mp 0.02 'maximized the default case' — no harvest at mp 0.01; less at mp 0.5 than 0.02, and at mw 0.05 than 0 (his plotted range, 0–500 m³/day per hectare); and (0.05, 0.02) within 1 % of the best of mw 0–0.2 × mp 0.01–0.5",
             check: |_| {
                 let at = |mw: f64, mp: f64| mean(&scored(&worlds(BaliConfig { decision: Decision::Adaptive, m_w: mw, m_p: mp, ..BaliConfig::default() }, 3)));
                 let mws = [0.0, 0.01, 0.02, 0.05, 0.1, 0.2];
@@ -390,10 +460,10 @@ pub fn claims() -> Vec<Claim> {
                 all_of(vec![
                     ("mp very low".into(), outcome(get(0.05, 0.01) == 0.0, format!("{:.2} at mp 0.01", get(0.05, 0.01)))),
                     ("mp large".into(), outcome(get(0.05, 0.5) < get(0.05, 0.02), format!("{:.2} at mp 0.5, {:.2} at 0.02", get(0.05, 0.5), get(0.05, 0.02)))),
-                    ("mw large".into(), outcome(get(0.2, 0.02) < get(0.05, 0.02), format!("{:.2} at mw 0.2, {:.2} at 0.05", get(0.2, 0.02), get(0.05, 0.02)))),
+                    ("mw large".into(), outcome(get(0.05, 0.02) < get(0.0, 0.02), format!("mw 0, 0.01, 0.02, 0.05: {:.2}, {:.2}, {:.2}, {:.2}; beyond his range, 0.1 and 0.2: {:.2}, {:.2}", get(0.0, 0.02), get(0.01, 0.02), get(0.02, 0.02), get(0.05, 0.02), get(0.1, 0.02), get(0.2, 0.02)))),
                     ("the stated best".into(), outcome(get(0.05, 0.02) >= 0.99 * best.2, format!("{:.2} at (0.05, 0.02); best {:.2} at ({}, {})", get(0.05, 0.02), best.2, best.0, best.1))),
                 ])
-                .with("mw is read as m/day per hectare the source dam serves (a stated choice); pests never fall below the floor of 0.01, so mp 0.01 never plants.")
+                .with("mw is read as m/day per hectare the source dam serves (a stated choice, which his Fig. 12's axis, 0–500 m³/day, supports: 0–0.05 m/day per hectare); pests never fall below the floor of 0.01, so mp 0.01 never plants.")
             },
         },
         Claim {
@@ -444,7 +514,7 @@ pub fn claims() -> Vec<Claim> {
             item: "lk-random",
             source: Source::Comment,
             citation: J,
-            text: "Ours: reading the subak–dam file's columns the physical way round (the first is the upstream dam in 93 of 95 cases) instead of as Janssen's code does changes the endpoint by less than 5 % (10 seeds)",
+            text: "Ours: reading the subak–dam file's columns the physical way round (the first is the upstream dam in 93 of 95 cases) instead of as Janssen's code does changes the imitation endpoint by less than 5 % (10 seeds; for the searched levels it matters more — see bali.ours.columns-levels)",
             check: |_| {
                 let code = scored(&worlds(BaliConfig::default(), 10));
                 let phys = scored(&worlds(BaliConfig { dam_columns: DamColumns::Physical, ..BaliConfig::default() }, 10));
@@ -480,13 +550,34 @@ pub fn claims() -> Vec<Claim> {
             item: "bali-rain",
             source: Source::Comment,
             citation: J,
-            text: "Ours: water hardly binds on the Oos and Petanu — growing months lose under 5 % of their water on average at low, middle and high rain (imitation, year 30, 10 seeds), and rain changes the imitation endpoint by under 5 %",
+            text: "Ours: under Janssen's code's reading of the dam columns water hardly binds — growing months lose under 5 % of their water at low, middle and high rain, and rain changes the imitation endpoint by under 5 % — but under the physical reading it binds at low rain (at least 5 % lost) (imitation, year 30, 10 seeds)",
             check: |_| {
-                let at = |rain: Rain| worlds(BaliConfig { rain, ..BaliConfig::default() }, 10);
-                let runs = [("low", at(Rain::Low)), ("middle", at(Rain::Middle)), ("high", at(Rain::High))];
-                let stress: Vec<f64> = runs.iter().map(|(_, ws)| mean(&ws.iter().map(|w| w.stats.latest().unwrap().water_stress).collect::<Vec<_>>())).collect();
-                let s: Vec<f64> = runs.iter().map(|(_, ws)| mean(&scored(ws))).collect();
-                outcome(stress.iter().all(|&x| x < 0.05) && (s[0] - s[2]).abs() < 0.05 * s[1], format!("water lost {} and scored {} at low, middle, high rain", show(&stress), show(&s)))
+                let stress = |ws: &[BaliWorld]| mean(&ws.iter().map(|w| w.stats.latest().unwrap().water_stress).collect::<Vec<_>>());
+                let at = |rain: Rain, dam_columns: DamColumns| worlds(BaliConfig { rain, dam_columns, ..BaliConfig::default() }, 10);
+                let runs = [at(Rain::Low, DamColumns::Code), at(Rain::Middle, DamColumns::Code), at(Rain::High, DamColumns::Code)];
+                let lost: Vec<f64> = runs.iter().map(|ws| stress(ws)).collect();
+                let s: Vec<f64> = runs.iter().map(|ws| mean(&scored(ws))).collect();
+                let physical = at(Rain::Low, DamColumns::Physical);
+                all_of(vec![
+                    ("code's columns".into(), outcome(lost.iter().all(|&x| x < 0.05) && (s[0] - s[2]).abs() < 0.05 * s[1], format!("water lost {} and scored {} at low, middle, high rain", show(&lost), show(&s)))),
+                    ("physical columns".into(), outcome(stress(&physical) >= 0.05, format!("water lost {:.3} at low rain; scored {:.2}", stress(&physical), mean(&scored(&physical))))),
+                ])
+            },
+        },
+        Claim {
+            id: "bali.ours.columns-levels",
+            item: "bali-levels",
+            source: Source::Comment,
+            citation: J,
+            text: "Ours: the reading of the dam columns decides whether finer coordination pays at low rain — level 172 at least 5 % above level 1 under the physical reading, under 5 % under Janssen's code's (g 2.2, 3 seeds)",
+            check: |_| {
+                let rise = |columns| {
+                    let v: Vec<f64> = levels(columns)[3].iter().map(|r| r.0).collect();
+                    (v[5] / v[0] - 1.0, v)
+                };
+                let ((code, cv), (phys, pv)) = (rise(DamColumns::Code), rise(DamColumns::Physical));
+                outcome(phys >= 0.05 && code < 0.05, format!("levels 1 → 172 at low rain: code's columns {} (+{:.1} %); physical {} (+{:.1} %)", show(&cv), 100.0 * code, show(&pv), 100.0 * phys))
+                    .with("The rule was written after the final review had measured it.")
             },
         },
     ]

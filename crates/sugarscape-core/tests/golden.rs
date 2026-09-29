@@ -317,7 +317,7 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("lk-stressed", 0x626e5d5529abfb7),
     ("lk-temples", 0xa92f00f760825795),
     ("janssen-code", 0xb423b71bbc6353d0),
-    ("janssen-levels-14", 0xce1902065a4680a5),
+    ("janssen-levels-14", 0xa1d94a968698c5ed),
     ("janssen-two-node", 0xf87c8032f908abcc),
     ("janssen-generalized", 0xa2ae0ad93a97f180),
     ("janssen-adaptive", 0xea4877048a644fad),

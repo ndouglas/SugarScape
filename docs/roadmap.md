@@ -283,9 +283,10 @@ rain, water and pests month by month; neighbor imitation, Janssen's plan search 
 coordination, his two-node model, imitation discounted by network distance and adaptive subaks; and
 his code's departures from the texts as switches. Imitation's rise and Table 1 reproduce, and hold
 "every time"; but the patches' resemblance to the temples is the pest network's own, the subaks settle
-harder than the paper says, and the perturbation never recovers. Water hardly binds on these rivers, so
-the scale of coordination hardly matters and Janssen's rise with finer coordination does not appear;
-his two-node threshold holds exactly.
+harder than the paper says, and the paper's perturbed run never recovers. Finer coordination helps by
+only 1–7 % — how much depends on the reading of the subak–dam columns, since water binds only under the
+physical one — never Janssen's +30 %, and the temple scale is never best; his two-node threshold holds
+exactly.
 See `docs/superpowers/specs/2026-09-28-bali-water-temples-design.md`.
 
 ## Experiments and science
