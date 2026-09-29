@@ -1,0 +1,57 @@
+{
+  "name": "Schelling's line: cluster size against neighborhood",
+  "description": "Schelling's line (70 people, at least half alike wanted) counting from one to six neighbors on each side. Schelling: four on each side gives groups \"of about twelve\"; three gives \"a mean of 7 or 8 per cluster\". Measured (release, seeds 1–20, recorded 2026-09-29), mean cluster size at round 50: 4.0, 6.3, 8.4, 10.5, 11.9 and 13.3 for one to six neighbors on each side.",
+  "base": {
+    "preset": "s71-line"
+  },
+  "x": {
+    "label": "Neighbors on each side",
+    "values": [
+      {
+        "at": 1,
+        "set": {
+          "radius": 1
+        }
+      },
+      {
+        "at": 2,
+        "set": {
+          "radius": 2
+        }
+      },
+      {
+        "at": 3,
+        "set": {
+          "radius": 3
+        }
+      },
+      {
+        "at": 4,
+        "set": {
+          "radius": 4
+        }
+      },
+      {
+        "at": 5,
+        "set": {
+          "radius": 5
+        }
+      },
+      {
+        "at": 6,
+        "set": {
+          "radius": 6
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 50,
+  "metric": {
+    "kind": "final",
+    "series": "mean_group"
+  }
+}

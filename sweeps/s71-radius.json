@@ -1,0 +1,33 @@
+{
+  "name": "Schelling's board: counting 8 or 24 neighbors",
+  "description": "Schelling's board counting the eight surrounding squares or \"the 24 surrounding squares in a 5 × 5 area\", equal numbers, half alike wanted. Schelling (p. 164, stated without a figure): enlarging the neighborhood \"attenuates the tendency to segregate, at least for moderate demands and near-equal numbers\". Measured (release, seeds 1–20, recorded 2026-09-29): mean like share 0.80 with eight neighbors, 0.77 with 24 (counted over each one's own neighborhood).",
+  "base": {
+    "preset": "s71-board"
+  },
+  "x": {
+    "label": "Neighborhood radius",
+    "values": [
+      {
+        "at": 1,
+        "set": {
+          "radius": 1
+        }
+      },
+      {
+        "at": 2,
+        "set": {
+          "radius": 2
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 50,
+  "metric": {
+    "kind": "final",
+    "series": "segregation"
+  }
+}

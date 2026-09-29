@@ -1,0 +1,57 @@
+{
+  "name": "Schelling's line: restricted travel",
+  "description": "Schelling's restricted movement: a 20 % minority on a line of 70 may pass at most this many people, accepting three alike of eight within reach when half is not to be had (0: no limit, and no fallback). Schelling: \"everybody achieves his desired neighborhood … without traveling as far as if he and the others had been free to travel\" (he does not give the radius). Measured (release, seeds 1–20, recorded 2026-09-29), mean share unsatisfied at round 50: 15 % passing at most 2, 10 % at 5, 6 % at 10, 3 % at 20, 2 % at 30, and 3 % with no limit.",
+  "base": {
+    "preset": "s71-line-reach"
+  },
+  "x": {
+    "label": "Most people passed",
+    "values": [
+      {
+        "at": 2,
+        "set": {
+          "reach": 2
+        }
+      },
+      {
+        "at": 5,
+        "set": {
+          "reach": 5
+        }
+      },
+      {
+        "at": 10,
+        "set": {
+          "reach": 10
+        }
+      },
+      {
+        "at": 20,
+        "set": {
+          "reach": 20
+        }
+      },
+      {
+        "at": 30,
+        "set": {
+          "reach": 30
+        }
+      },
+      {
+        "at": 0,
+        "set": {
+          "reach": 0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 50,
+  "metric": {
+    "kind": "final",
+    "series": "unsatisfied"
+  }
+}

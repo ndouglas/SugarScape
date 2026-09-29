@@ -1,0 +1,42 @@
+{
+  "name": "Schelling's board: the order of moves",
+  "description": "Schelling's board moved in three orders: rounds from the upper left (Fig. 8), rounds from the center out (Fig. 9), and everyone in a random order each turn. Schelling: \"The particular outcome will depend very much on the order in which discontented stars and zeros are moved, the character of the outcome not very much.\" Measured (release, seeds 1–20, recorded 2026-09-29): mean like share 0.796, 0.800 and 0.792.",
+  "base": {
+    "preset": "s71-board"
+  },
+  "x": {
+    "label": "Order",
+    "values": [
+      {
+        "at": 0,
+        "name": "From the upper left",
+        "set": {
+          "sweep": "reading"
+        }
+      },
+      {
+        "at": 1,
+        "name": "From the center out",
+        "set": {
+          "sweep": "center_out"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Everyone at random",
+        "set": {
+          "order": "random"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 50,
+  "metric": {
+    "kind": "final",
+    "series": "segregation"
+  }
+}

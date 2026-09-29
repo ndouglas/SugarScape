@@ -261,6 +261,12 @@ fn builtins_and_series_names_are_listed() {
             "n-goods-carrying-capacity",
             "bargaining-rules",
             "schelling-tipping",
+            "s71-demand",
+            "s71-vacancy",
+            "s71-radius",
+            "s71-order",
+            "line-radius",
+            "line-reach",
             "lhv-calibration",
             "lhv-quirks",
             "cv-ratio-rules",
@@ -1157,6 +1163,24 @@ fn punishment_sims_match_the_native_golden_entries() {
     let mut sim = Sim::new(tanh, 1, JsValue::NULL).unwrap();
     sim.step(200);
     assert_eq!(sim.fingerprint(), "0x41e7fa5fab5ba690");
+}
+
+#[wasm_bindgen_test]
+fn schelling_1971_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the nearest move,
+    // rounds, demand tables and a 24-square neighborhood; the line.
+    for (id, kind, fp) in [
+        ("s71-board", "schelling", "0x8be271afb20afb6f"),
+        ("s71-wide", "schelling", "0xc055fcf62dfa79e3"),
+        ("s71-integrate", "schelling", "0x585eb57399a48639"),
+        ("s71-line", "line", "0xc24ebff812a7868a"),
+        ("s71-line-reach", "line", "0x0db5a785349b5aab"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), kind);
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
 }
 
 #[wasm_bindgen_test]
