@@ -191,8 +191,8 @@ Old configs without these fields read as Schelling's rules.
 
 Schelling's 2-D numbers come from boards he worked by hand ("My samples have been too small, so
 far, to allow serious generalizations"), so the survey (`s71.*`, 20 seeds, rules from his numbers)
-asks whether they are typical. His direction holds everywhere; his boards sit at the segregated
-end of what his rules give:
+asks whether they are typical. On the board his direction holds throughout, and his boards sit at
+the segregated end of what his rules give:
 
 - `s71-board` (Figs. 7–8): still after 3–5 rounds, neighbors 0.80 alike and 38 % with none of the
   other color — his Fig. 9 has four-fifths to five-sixths and 40 %, Fig. 8 90 % and two-thirds; the
@@ -206,11 +206,14 @@ end of what his rules give:
   crowded (5.6 neighbors against 4.8), as he says.
 - `s71-minority` (Fig. 13): the minority goes from 0.35 to 0.57 alike — a ratio of 1.3, short of
   his 2:1 — and is denser (5.6 neighbors against 4.8).
-- `s71-wide` (p. 154's 24 squares): 0.77 against 0.80: a little attenuation, as he conjectured.
+- `s71-wide` (p. 154's 24 squares), measured on one ruler, the like share among the eight surrounding
+  squares (a wider window dilutes its own count): at half alike, 0.86 against 0.80 — more sorting;
+  at a moderate third, 0.55 against 0.66 — less, as he conjectured "for moderate demands", adding
+  that it "may not stand up when less tolerant demands … are put into the larger neighborhoods".
 - `s71-congregate` (Fig. 16): wanting three alike and indifferent to the other color, 0.79 alike and
   37 % unmixed — his "just over 75%" and 38 %.
-- `s71-integrate` (Fig. 17's bands): 96 moves against 56, and 9 % still unsatisfied when moving
-  stops, as he expected. His ranked preferences are left to the variations milestone.
+- `s71-integrate` (Fig. 17's bands): 96 moves against 46 for the same population wanting half alike,
+  and 9 % still unsatisfied when moving stops, as he expected. His ranked preferences are left to the variations milestone.
 
 Epstein & Axtell's variant (*Growing Artificial Societies*, pp. 165–171) differs as they say
 ("he moves agents to the nearest satisfactory site, whereas our agents simply select an acceptable
@@ -224,7 +227,8 @@ leaves when it reaches it, and a newcomer of random color takes a random site wh
   a measure, and p. 170 calls VI-5 "modestly segregated").
 - `vi-6-schelling-50-residence`: 50 %: about 0.95.
 - `vi-7-schelling-mixed`: preferences 25–50 %: about 0.93, close to VI-6. With four neighbors a
-  preference above ¼ acts as ⅓ or ½, so VI-7 is a third at ⅓ and two-thirds at ½.
+  preference above ¼ acts as ⅓ or ½, depending on how many neighbors an agent has (0.3 needs one of
+  three but two of four).
 
 Agents are drawn by **Color**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
 the charts are Segregation, Like neighbors by color, No opposite neighbor, Unsatisfied, Moves and
@@ -232,7 +236,9 @@ Red share; Inspect shows an agent's color, preference, alike neighbors and resid
 `schelling-tipping` (the book's "how little racism is enough to tip a society", on VI-4: with four
 neighbors only the shares 1/4, 1/3, 1/2 and 2/3 can matter, so segregation rises in steps: about
 0.50, 0.63, 0.73, 0.83 and 0.93), and on Schelling's board `s71-demand`, `s71-vacancy`
-(vacancy barely matters until the board is nearly full), `s71-radius` and `s71-order`.
+(vacancy barely matters until the board is nearly full), `s71-radius` (on the eight-square ruler)
+and `s71-order`. Series include `like_near`, the like share among the eight surrounding squares
+whatever the neighborhood.
 
 ### Schelling's line (Schelling 1971, pp. 149–154)
 
@@ -246,14 +252,17 @@ right ties are at random, and one with nowhere to go stays. **Most people passed
 of "three out of eight". The page wraps the row every **People per row**; charts are Groups, Group
 size, Like neighbors and Unsatisfied; Inspect shows a person's place and neighbors alike.
 
-- `s71-line` (Figs. 1–2): 7 groups of 10, neighbors 0.78 alike (medians of 20) — within his tabletop
-  range, "from about five groupings with an average of 14 members to seven or eight groupings with an
-  average of 9 or 10"; his Fig. 2 has six of 12 and 81.5 %. In about half the seeds one or two people
+- `s71-line` (Figs. 1–2): 7 groups of 10, neighbors 0.78 alike (medians of 20; a mean of each
+  person's share, where his 81.5 % pools all neighbors) — within his tabletop range, "from about five
+  groupings with an average of 14 members to seven or eight groupings with an average of 9 or 10";
+  his Fig. 2 has six of 12. In about half the seeds one or two people
   are still moving at round 30: his "no guarantee" of equilibrium, seen.
 - `s71-line-3`: three neighbors each side: groups of 8.75 and 0.79 alike, against his "7 or 8" and
   "75% to 80%".
-- `s71-line-minority` (p. 152's die-roll halving of the zeros): 0.85 alike against 0.78, groups of 13:
-  the smaller minority clusters more, as he says.
+- `s71-line-minority` (p. 152's die-roll halving of the zeros): the zeros end 0.77 alike, against
+  0.78 on the even line, in shorter runs: here the halved minority is no more segregated, where he
+  says "the minority itself tends to become more segregated … as its relative size diminishes"
+  (everyone together is 0.85 alike, because the majority's share rises).
 - `s71-line-reach`: a 20 % minority passing at most 10 people: 6 % still unsatisfied (3 % with no
   limit), where he found "everybody achieves his desired neighborhood". Sweeps: `line-radius` (groups
   of 4.0, 6.3, 8.4, 10.5, 11.9 and 13.3 for one to six neighbors each side) and `line-reach`.

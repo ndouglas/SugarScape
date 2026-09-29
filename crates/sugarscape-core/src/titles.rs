@@ -259,7 +259,7 @@ pub const TITLES: [(&str, &str); 319] = [
     ),
     (
         "s71-wide",
-        "Counting 24 neighbors instead of eight: a little less sorting",
+        "Counting 24 neighbors while wanting half alike: more sorting, not less",
     ),
     (
         "s71-congregate",
@@ -279,7 +279,7 @@ pub const TITLES: [(&str, &str); 319] = [
     ),
     (
         "s71-line-minority",
-        "A smaller minority gathers in bigger clusters",
+        "Halving the minority: it ends no more segregated",
     ),
     (
         "s71-line-reach",

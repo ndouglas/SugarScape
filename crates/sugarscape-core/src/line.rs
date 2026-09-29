@@ -131,10 +131,12 @@ impl LineConfig {
 }
 
 /// The statistics series.
-pub const SERIES: [&str; 8] = [
+pub const SERIES: [&str; 10] = [
     "groups",
     "mean_group",
     "like_share",
+    "like_red",
+    "like_blue",
     "no_unlike",
     "unsatisfied",
     "moves",
@@ -148,8 +150,10 @@ pub struct LineSnapshot {
     /// Runs of one color ("clusters").
     pub groups: u32,
     pub mean_group: f64,
-    /// Mean share of neighbors alike.
+    /// Mean share of neighbors alike, over everyone and over each color.
     pub like_share: f64,
+    pub like_red: f64,
+    pub like_blue: f64,
     /// Share with no neighbor of the other color.
     pub no_unlike: f64,
     pub unsatisfied: f64,
@@ -170,6 +174,8 @@ impl Series for LineSnapshot {
             "groups" => f64::from(self.groups),
             "mean_group" => self.mean_group,
             "like_share" => self.like_share,
+            "like_red" => self.like_red,
+            "like_blue" => self.like_blue,
             "no_unlike" => self.no_unlike,
             "unsatisfied" => self.unsatisfied,
             "moves" => f64::from(self.moves),
@@ -363,10 +369,12 @@ impl LineWorld {
             }
         }
         let (mut share, mut unmixed, mut unsatisfied, mut reds) = (0.0, 0usize, 0usize, 0usize);
+        let mut by_color = [0.0; 2];
         for i in 0..n {
             let (like, all) = self.counts(i);
             if all > 0 {
                 share += f64::from(like) / f64::from(all);
+                by_color[usize::from(self.people[i].red)] += f64::from(like) / f64::from(all);
             }
             unmixed += usize::from(like == all);
             unsatisfied += usize::from(!self.content(like, all, self.config.preference));
@@ -382,6 +390,16 @@ impl LineWorld {
                 n as f64 / f64::from(groups)
             },
             like_share: if n == 0 { 0.0 } else { share / n as f64 },
+            like_red: if reds == 0 {
+                0.0
+            } else {
+                by_color[1] / reds as f64
+            },
+            like_blue: if n == reds {
+                0.0
+            } else {
+                by_color[0] / (n - reds) as f64
+            },
             no_unlike: of(unmixed),
             unsatisfied: of(unsatisfied),
             moves: self.moves,
@@ -643,7 +661,7 @@ pub fn presets() -> Vec<ModelPreset> {
         preset(
             "s71-line",
             "Schelling's line",
-            "Fig. 1: 70 stars (Red) and zeros (Blue) at random; each wants at least half of its four neighbors on either side like itself; the discontented, left to right a round at a time, move to the nearest point that suits them. Schelling: \"six clusters … averaging 12 members\", and from tabletop runs \"from about five groupings with an average of 14 members to seven or eight groupings with an average of 9 or 10\". Measured (20 seeds, 50 rounds, medians): 7 groups of 10, neighbors 0.78 alike; in about half the seeds one or two people are still moving at round 30.",
+            "Fig. 1: 70 stars (Red) and zeros (Blue) at random; each wants at least half of its four neighbors on either side like itself; the discontented, left to right a round at a time, move to the nearest point that suits them. Schelling: \"six clusters … averaging 12 members\", and from tabletop runs \"from about five groupings with an average of 14 members to seven or eight groupings with an average of 9 or 10\". Measured (20 seeds, 50 rounds, medians): 7 groups of 10, neighbors 0.78 alike (a mean of each person's share; Schelling's 81.5 % pools all neighbors); in about half the seeds one or two people are still moving at round 30.",
             |_| {},
         ),
         preset(
@@ -655,7 +673,7 @@ pub fn presets() -> Vec<ModelPreset> {
         preset(
             "s71-line-minority",
             "Schelling's line with a minority",
-            "Half the zeros (Blue) removed, as Schelling did by die roll (p. 152): 35 stars to 18 zeros. Schelling: \"the minority itself tends to become more segregated from the majority, as its relative size diminishes\". Measured (20 seeds): neighbors 0.85 alike, against 0.78 on the even line; groups of 13.",
+            "Half the zeros (Blue) removed, as Schelling did by die roll (p. 152): 35 stars to 18 zeros. Schelling: \"the minority itself tends to become more segregated from the majority, as its relative size diminishes\". Measured (20 seeds): the zeros 0.77 alike, against 0.78 on the even line (everyone together 0.85, the majority's share rising): the minority is not more segregated here.",
             |c| {
                 c.length = 53;
                 c.red_share = 35.0 / 53.0;
@@ -772,6 +790,26 @@ mod tests {
         assert_eq!(exact.colors().matches('R').count(), 35);
         let coin = LineWorld::new(LineConfig::default(), 3).unwrap();
         assert_eq!(coin.colors().len(), 70);
+    }
+
+    #[test]
+    fn like_shares_are_kept_for_each_color() {
+        let w = line_of("RRRBBRRRRB", 4);
+        let s = w.stats.latest().unwrap();
+        let (mut red, mut blue) = (Vec::new(), Vec::new());
+        for i in 0..10 {
+            let (like, n) = w.counts(i);
+            let v = f64::from(like) / f64::from(n);
+            if w.people()[i].red {
+                red.push(v)
+            } else {
+                blue.push(v)
+            }
+        }
+        let mean = |v: &[f64]| v.iter().sum::<f64>() / v.len() as f64;
+        assert!(
+            (s.like_red - mean(&red)).abs() < 1e-12 && (s.like_blue - mean(&blue)).abs() < 1e-12
+        );
     }
 
     #[test]

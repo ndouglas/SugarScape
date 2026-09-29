@@ -174,7 +174,7 @@ pub fn claims() -> Vec<Claim> {
             item: "s71-minority",
             source: Source::Book,
             citation: SCHELLING,
-            text: "A minority half the size of the majority, each wanting two like neighbors (Fig. 13): the minority goes from about 1:2 like to unlike \"to 2:1\", and is \"denser\" (pp. 160–161, 164). Holds if the minority's (Blue) median like share is at least 0.6 (a ratio of 1.5) and its median neighbors exceed the majority's",
+            text: "A minority half the size of the majority, each wanting two like neighbors (Fig. 13): the minority goes from about 1:2 like to unlike \"to 2:1\", and is \"denser\" (pp. 160–161, 164). Holds if the minority's (Blue) median like share is at least 0.6 (a ratio of 1.5: our tolerance around his 2:1) and its median neighbors exceed the majority's",
             check: |seeds| {
                 let id = "s71-minority";
                 let like = last(id, seeds, BOARD_TICKS, "like_blue", same);
@@ -193,11 +193,28 @@ pub fn claims() -> Vec<Claim> {
             item: "s71-wide",
             source: Source::Book,
             citation: SCHELLING,
-            text: "\"Enlarging the area within which a person counts his neighbors attenuates the tendency to segregate, at least for moderate demands and near-equal numbers\" (p. 164; no figure). Holds if the median like share counting 24 neighbors is below that counting eight",
+            text: "\"Enlarging the area within which a person counts his neighbors attenuates the tendency to segregate, at least for moderate demands and near-equal numbers\" (p. 164; no figure). Measured on one ruler, the like share among the eight surrounding squares, at a moderate demand of one-third (Fig. 11's table and its 24-square equivalent, a third alike). Holds if that median is lower counting 24 neighbors than counting eight",
             check: |seeds| {
-                let eight = last("s71-board", seeds, BOARD_TICKS, "segregation", same);
-                let wide = last("s71-wide", seeds, BOARD_TICKS, "segregation", same);
-                outcome(wide < eight, format!("like share {eight:.3} with 8, {wide:.3} with 24 (medians)"))
+                let near = |radius: u32, third: bool| {
+                    let mut c = model_preset("s71-board");
+                    if let ModelConfig::Schelling(s) = &mut c {
+                        s.radius = radius;
+                        if third {
+                            s.preference.min = 1.0 / 3.0;
+                            s.preference.max = 1.0 / 3.0;
+                        }
+                    }
+                    median(model_after(&c, seeds, BOARD_TICKS, |w: &ModelWorld| {
+                        w.model().latest_value("like_near").unwrap()
+                    }))
+                };
+                let (e3, w3, e2, w2) = (near(1, true), near(2, true), near(1, false), near(2, false));
+                outcome(
+                    w3 < e3,
+                    format!(
+                        "like share among the eight around: at a third, {e3:.3} counting 8, {w3:.3} counting 24; at half, {e2:.3} and {w2:.3} (medians)"
+                    ),
+                )
             },
         },
         Claim {
@@ -216,9 +233,16 @@ pub fn claims() -> Vec<Claim> {
             item: "s71-integrate",
             source: Source::Book,
             citation: SCHELLING,
-            text: "Integrationist bands (Fig. 17): \"equilibrium is achieved only with a much larger number of moves … More individuals may be incapable of being satisfied\" (p. 166). Holds if the median total moves exceed the half-alike board's and the median share still unsatisfied at the end is above zero",
+            text: "Integrationist bands (Fig. 17): \"equilibrium is achieved only with a much larger number of moves … More individuals may be incapable of being satisfied\" (p. 166). Holds if the median total moves exceed those of the same population (two-thirds Red) wanting half alike, and the median share still unsatisfied at the end is above zero",
             check: |seeds| {
-                let (mi, mb) = (moves("s71-integrate", seeds), moves("s71-board", seeds));
+                let mi = moves("s71-integrate", seeds);
+                let mut half = model_preset("s71-board");
+                if let ModelConfig::Schelling(s) = &mut half {
+                    s.red_share = 2.0 / 3.0;
+                }
+                let mb = median(model_after(&half, seeds, BOARD_TICKS, |w: &ModelWorld| {
+                    w.model().series("moves").unwrap().iter().sum()
+                }));
                 let left = last("s71-integrate", seeds, BOARD_TICKS, "unsatisfied", same);
                 outcome(
                     mi > mb && left > 0.0,
@@ -261,11 +285,14 @@ pub fn claims() -> Vec<Claim> {
             item: "s71-line-minority",
             source: Source::Book,
             citation: SCHELLING,
-            text: "Halving the zeros (p. 152): \"the minority itself tends to become more segregated from the majority, as its relative size diminishes\" (p. 153). Holds if the median like share is higher than on the even line (our measure counts both colors)",
+            text: "Halving the zeros (p. 152): \"the minority itself tends to become more segregated from the majority, as its relative size diminishes\" (p. 153). Holds if the zeros' (Blue) median like share is higher on the halved line than on the even one",
             check: |seeds| {
-                let even = last("s71-line", seeds, LINE_TICKS, "like_share", same);
-                let minority = last("s71-line-minority", seeds, LINE_TICKS, "like_share", same);
-                outcome(minority > even, format!("like share {minority:.3} against {even:.3} (medians)"))
+                let even = last("s71-line", seeds, LINE_TICKS, "like_blue", same);
+                let minority = last("s71-line-minority", seeds, LINE_TICKS, "like_blue", same);
+                outcome(
+                    minority > even,
+                    format!("the zeros' like share {minority:.3} when halved, {even:.3} on the even line (medians)"),
+                )
             },
         },
         Claim {

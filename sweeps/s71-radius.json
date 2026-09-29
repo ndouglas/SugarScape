@@ -1,6 +1,6 @@
 {
-  "name": "Schelling's board: counting 8 or 24 neighbors",
-  "description": "Schelling's board counting the eight surrounding squares or \"the 24 surrounding squares in a 5 × 5 area\", equal numbers, half alike wanted. Schelling (p. 164, stated without a figure): enlarging the neighborhood \"attenuates the tendency to segregate, at least for moderate demands and near-equal numbers\". Measured (release, seeds 1–20, recorded 2026-09-29): mean like share 0.80 with eight neighbors, 0.77 with 24 (counted over each one's own neighborhood).",
+  "name": "Schelling's board: counting 8 or 24 neighbors (like share among the eight around)",
+  "description": "Schelling's board counting the eight surrounding squares or \"the 24 surrounding squares in a 5 × 5 area\", equal numbers, half alike wanted, measured on one ruler: the like share among the eight surrounding squares (a wider window dilutes its own count, so each neighborhood's own share would not compare). Schelling (p. 164, stated without a figure): enlarging the neighborhood \"attenuates the tendency to segregate, at least for moderate demands and near-equal numbers. This observation may not stand up when less tolerant demands … are put into the larger neighborhoods.\" Measured (release, seeds 1–20, recorded 2026-09-29): at half alike, 0.80 counting eight and 0.86 counting 24 — more sorting, not less; at a moderate third (the survey's s71.wide.attenuates), 0.66 and 0.55, as he conjectured.",
   "base": {
     "preset": "s71-board"
   },
@@ -28,6 +28,6 @@
   "ticks": 50,
   "metric": {
     "kind": "final",
-    "series": "segregation"
+    "series": "like_near"
   }
 }
