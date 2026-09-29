@@ -22,6 +22,11 @@ use crate::world::World;
 pub struct Harvest {
     /// Units of each good gathered (slots ≥ n are 0).
     pub gathered: [f64; MAX_GOODS],
+    /// Minds 5: good 0 dug from the agent's own cache this turn (already in
+    /// its holdings). Not newly gathered: it was counted when first
+    /// gathered, so it forms no pollution, isn't income and doesn't feed
+    /// the marginal-value rule's estimate of the habitat's intake rate.
+    pub dug: f64,
 }
 
 impl Harvest {
@@ -29,7 +34,7 @@ impl Harvest {
     pub fn of(amounts: &[f64]) -> Self {
         let mut gathered = [0.0; MAX_GOODS];
         gathered[..amounts.len()].copy_from_slice(amounts);
-        Self { gathered }
+        Self { gathered, dug: 0.0 }
     }
 }
 

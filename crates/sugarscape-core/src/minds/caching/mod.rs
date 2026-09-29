@@ -72,7 +72,7 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) {
 /// Digs `id`'s cache at site index `site`, taking min(cache, `room`), and
 /// returns what it took (0 when there's no cache there). An emptied cache is
 /// removed. A positive dig counts `dug`, `digs` and the cache's age. The
-/// caller adds the take to holdings, as the tick's harvest.
+/// caller adds the take to holdings, as `Harvest::dug` (never `gathered`).
 pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     let now = world.tick;
     let a = world.agent_mut(id).expect("live agent");
@@ -306,7 +306,7 @@ mod tests {
         // Holdings 0 < R = 10: it digs instead of harvesting the site.
         w.tick = 9;
         let h = go_and_gather(&mut w, id, Pos::new(5, 5));
-        assert_eq!(h.gathered[0], 8.0);
+        assert_eq!((h.gathered[0], h.dug), (0.0, 8.0));
         assert_eq!(w.agent(id).unwrap().holdings[0], 8.0);
         assert!(w.agent(id).unwrap().caches.is_empty());
         assert!(w.agent(id).unwrap().cache_since.is_empty());
@@ -330,7 +330,7 @@ mod tests {
         w.agent_mut(id).unwrap().cache_since.insert(here, 0);
         let before = total(&w);
         let h = go_and_gather(&mut w, id, Pos::new(5, 5));
-        assert_eq!(h.gathered[0], 3.0, "room is 12 − 9");
+        assert_eq!((h.gathered[0], h.dug), (0.0, 3.0), "room is 12 − 9");
         assert_eq!(w.agent(id).unwrap().caches[&here], 2.0);
         assert_eq!(w.agent(id).unwrap().cache_since[&here], 0);
         assert_eq!(total(&w), before);
@@ -339,6 +339,29 @@ mod tests {
         assert_eq!(h.gathered[0], 0.0);
         assert_eq!(w.agent(id).unwrap().caches[&here], 2.0);
         assert_eq!(w.events.digs, 1);
+    }
+
+    #[test]
+    fn digging_adds_no_pollution_and_isnt_newly_gathered() {
+        let mut w = blank_world(11, 11);
+        w.config.pollution.enabled = true;
+        w.config.pollution.pollutants[0].production[0] = 1.0;
+        w.config.pollution.pollutants[0].consumption[0] = 0.0;
+        let id = caching_agent(&mut w, 2.0, 0);
+        let here = at(&w, 5, 5);
+        w.agent_mut(id).unwrap().caches.insert(here, 6.0);
+        w.agent_mut(id).unwrap().cache_since.insert(here, 0);
+        w.config.credit.enabled = true;
+        crate::rules::agent_turn(&mut w, id);
+        let a = w.agent(id).unwrap();
+        assert_eq!(a.holdings[0], 7.0, "2 + 6 dug − 1 burned");
+        assert_eq!(w.events.dug, 6.0);
+        assert_eq!(
+            w.site(Pos::new(5, 5)).pollution[0],
+            0.0,
+            "no pollution from a dig"
+        );
+        assert_eq!(a.income[0], -1.0, "dug sugar isn't income: 0 − 1 burned");
     }
 
     fn walker(w: &mut World) {

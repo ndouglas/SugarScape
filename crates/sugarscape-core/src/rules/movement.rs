@@ -303,8 +303,9 @@ pub(crate) fn record_choice(
 ///   truffle's sugar was never on the site).
 /// - **Dig.** At a site holding its own cache, while holdings are below the
 ///   reserve, the agent digs instead: it takes min(cache, room) (room
-///   unlimited with C = 0) as the tick's harvest and leaves the site and
-///   any truffle as they are.
+///   unlimited with C = 0) into its holdings and leaves the site and any
+///   truffle as they are. The dig is `Harvest::dug`, not `gathered`: it
+///   was gathered once already, so it forms no pollution.
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
@@ -327,9 +328,9 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     social.moved(world, Seen::at(world, target), tags);
     let mut harvest = Harvest::default();
     if digs {
-        harvest.gathered[0] = crate::minds::caching::dig(world, id, site_index, room(held));
+        harvest.dug = crate::minds::caching::dig(world, id, site_index, room(held));
         let a = world.agent_mut(id).expect("live agent");
-        a.holdings[0] += harvest.gathered[0];
+        a.holdings[0] += harvest.dug;
         a.social = social;
         return harvest;
     }
