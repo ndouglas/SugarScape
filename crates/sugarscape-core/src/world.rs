@@ -648,7 +648,10 @@ impl World {
     /// Takes an agent off the grid with no death event and no inheritance.
     /// Every removal (every cause of death, and an edit) passes here, so a
     /// Minds 5 agent's caches are counted into `events.cache_lost` once and
-    /// leave the world with it.
+    /// leave the world with it. An edit between ticks removes caches too,
+    /// but that count lands in the finished tick's events after its
+    /// statistics were taken, and the next tick resets them: caches removed
+    /// by an edit aren't reported in any tick's `cache_lost`.
     pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
         let agent = self.agents.remove(&id)?;
         if !agent.caches.is_empty() {

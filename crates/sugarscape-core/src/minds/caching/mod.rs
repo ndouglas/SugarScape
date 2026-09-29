@@ -100,16 +100,18 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
 /// While `id` is hungry (has caches and holds less than its reserve), adds
 /// each cache, in site index order, to rule M's candidates at its amount.
 ///
-/// - A cache already listed (its own site, a free site in sight, or a
-///   remembered site) keeps its place, valued at the larger of the two.
-/// - Otherwise it joins at its torus Manhattan distance, inserted at
-///   `start` (after the sight list, before the remembered entries, so
-///   Minds 3's diagnostics don't count it as a remembered choice), and
-///   `start` moves past it.
-/// - Skipped (the agent falls back to its rule's ordinary choice): a cache
-///   walled apart from it, one another agent stands on (the agent knows
-///   where its cache is taken, in sight or not, so no mode ever targets an
-///   occupied site), and the target its last walk found no path to.
+/// - Skipped first (the agent falls back to its rule's ordinary choice, and
+///   a listed entry for the site keeps its value): a cache walled apart from
+///   it, one another agent stands on (the agent knows where its cache is
+///   taken, in sight or not, so it never targets an occupied site), and the
+///   target its last walk found no path to.
+/// - A cache already listed before `start` (its own site or a free site in
+///   sight) keeps its place, valued at the larger of the two.
+/// - Otherwise it joins at `start` (after the sight list, before the
+///   remembered entries, so Minds 3's diagnostics don't count it as a
+///   remembered choice) and `start` moves past it: a new entry at its torus
+///   Manhattan distance, or a remembered entry for its site, moved there and
+///   valued at the larger of the two.
 ///
 /// No caches, or not hungry: the list is untouched and nothing allocates.
 pub(crate) fn join_caches(
@@ -131,10 +133,6 @@ pub(crate) fn join_caches(
     let mut extra = Vec::new();
     for (&i, &amount) in &a.caches {
         let q = torus.pos(i as usize);
-        if let Some(c) = out.iter_mut().find(|c| c.0 == q) {
-            c.2 = c.2.max(amount);
-            continue;
-        }
         if world.is_wall(q)
             || world.walled_apart(pos, q)
             || world.occupant(q).is_some_and(|o| o != id)
@@ -142,7 +140,14 @@ pub(crate) fn join_caches(
         {
             continue;
         }
-        extra.push((q, lattice_distance(torus, pos, q), amount));
+        match out.iter().position(|c| c.0 == q) {
+            Some(j) if j < *start => out[j].2 = out[j].2.max(amount),
+            Some(j) => {
+                let (q, d, v) = out.remove(j);
+                extra.push((q, d, v.max(amount)));
+            }
+            None => extra.push((q, lattice_distance(torus, pos, q), amount)),
+        }
     }
     let k = extra.len();
     out.splice(*start..*start, extra);
@@ -419,6 +424,83 @@ mod tests {
         assert_eq!(value(5, 5), 2.0);
         assert_eq!(value(5, 6), 4.0, "the site's own 4 beats the cache's 3");
         assert_eq!(value(6, 5), 3.0);
+        // Arrival delivers the value: the site's 4 is harvested (the cache
+        // stays); at (6, 5) the cache's 3 beats the site's 1 and is dug.
+        let mut w2 = w.clone();
+        let h = go_and_gather(&mut w2, id, Pos::new(5, 6));
+        assert_eq!((h.gathered[0], h.dug), (4.0, 0.0));
+        assert_eq!(w2.agent(id).unwrap().caches[&at(&w2, 5, 6)], 3.0);
+        let h = go_and_gather(&mut w, id, Pos::new(6, 5));
+        assert_eq!((h.gathered[0], h.dug), (0.0, 3.0));
+        assert_eq!(w.site(Pos::new(6, 5)).resource[0], 1.0);
+    }
+
+    #[test]
+    fn a_richer_site_over_its_cache_is_harvested_under_the_limit_and_pollutes() {
+        let mut w = blank_world(11, 11);
+        w.config.pollution.enabled = true;
+        w.config.pollution.pollutants[0].production[0] = 1.0;
+        w.config.pollution.pollutants[0].consumption[0] = 0.0;
+        let id = caching_agent(&mut w, 2.0, 6);
+        set_sugar(&mut w, 5, 5, 9.0);
+        let here = at(&w, 5, 5);
+        w.agent_mut(id).unwrap().caches.insert(here, 5.0);
+        crate::rules::agent_turn(&mut w, id);
+        assert_eq!(w.agent(id).unwrap().caches[&here], 5.0, "not dug");
+        assert_eq!(w.site(Pos::new(5, 5)).resource[0], 5.0, "9 − room 4");
+        assert_eq!(w.site(Pos::new(5, 5)).pollution[0], 4.0);
+        assert_eq!(w.agent(id).unwrap().holdings[0], 5.0, "2 + 4 − 1");
+    }
+
+    /// A walker with memory (span 100) at (5, 5), hungry (2 < R = 10), who
+    /// remembers (5, 9) out of sight at `believed` and has a cache of 50
+    /// there.
+    fn rememberer_with_a_remembered_cache(believed: f64) -> (World, AgentId) {
+        let mut w = blank_world(15, 15);
+        walker(&mut w);
+        w.config.memory.span = 100;
+        let id = caching_agent(&mut w, 2.0, 0);
+        let site = at(&w, 5, 9);
+        let a = w.agent_mut(id).unwrap();
+        a.remembers = true;
+        let seen = crate::minds::memory::Seen::new(&[believed], &[believed], 0);
+        a.memory.sites.insert(site, seen);
+        a.caches.insert(site, 50.0);
+        w.tick = 1;
+        (w, id)
+    }
+
+    #[test]
+    fn a_cache_whose_walk_failed_leaves_its_remembered_entry_alone() {
+        let (mut w, id) = rememberer_with_a_remembered_cache(0.0);
+        w.agent_mut(id).unwrap().plan = crate::agent::Plan {
+            target: Some(Pos::new(5, 9)),
+            path: Vec::new(),
+            walked: true,
+        };
+        set_sugar(&mut w, 6, 5, 1.0);
+        let (c, start) = crate::rules::movement::candidates_with_memory(&w, id);
+        let i = c.iter().position(|e| e.0 == Pos::new(5, 9)).unwrap();
+        assert!(i >= start, "still a remembered entry");
+        assert_eq!(c[i].2, 0.0, "the cache's 50 isn't merged in");
+        // Rule M takes the 1 in sight instead of retrying the cache.
+        crate::minds::decide(&mut w, id);
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(6, 5));
+        assert_eq!(w.agent(id).unwrap().plan.target, Some(Pos::new(6, 5)));
+    }
+
+    #[test]
+    fn a_cache_merged_into_a_remembered_entry_moves_before_start() {
+        let (mut w, id) = rememberer_with_a_remembered_cache(2.0);
+        let (c, start) = crate::rules::movement::candidates_with_memory(&w, id);
+        let i = c.iter().position(|e| e.0 == Pos::new(5, 9)).unwrap();
+        assert!(i < start, "no longer a remembered entry");
+        assert_eq!(c[i], (Pos::new(5, 9), 4, 50.0));
+        assert_eq!(c.iter().filter(|e| e.0 == Pos::new(5, 9)).count(), 1);
+        // Choosing it isn't a remembered move.
+        crate::minds::decide(&mut w, id);
+        assert_eq!(w.agent(id).unwrap().plan.target, Some(Pos::new(5, 9)));
+        assert_eq!((w.events.moves, w.events.remembered_moves), (1, 0));
     }
 
     // Review Focus 2.
@@ -507,10 +589,18 @@ mod tests {
         assert_ne!(w.fingerprint(), one);
     }
 
+    /// Σ sites + holdings + caches + eaten + holdings and caches that left
+    /// with the dead = start + growback, over 300 ticks of a small world
+    /// with a scripted bury each turn and one agent killed at tick 150.
+    /// Fractional growback (0.3) and buries (0.3 of surplus) make the sums
+    /// inexact in binary: each bury and dig moves the same f64 between two
+    /// places, but the test's running totals re-add thousands of terms in a
+    /// different order, so they balance to within 1e-9 × the total, not
+    /// bit for bit.
     #[test]
     fn sugar_is_conserved_over_300_ticks_of_scripted_burying() {
         let mut c = blank_config(12, 12);
-        c.growback.rate = 1.0;
+        c.growback.rate = 0.3;
         c.goap.horizon = 3;
         c.caching.capacity = 8;
         c.movement = Movement {
@@ -520,7 +610,7 @@ mod tests {
         let mut w = World::new(c, 11).unwrap();
         for y in 0..12 {
             for x in 0..12 {
-                set_sugar(&mut w, x, y, if (x + y) % 3 == 0 { 4.0 } else { 1.0 });
+                set_sugar(&mut w, x, y, if (x + y) % 3 == 0 { 4.0 } else { 1.5 });
             }
         }
         let mut ids = Vec::new();
@@ -533,24 +623,36 @@ mod tests {
             ids.push(id);
         }
         let start = total(&w);
-        let (mut eaten, mut grown) = (0.0, 0.0);
+        let (mut eaten, mut grown, mut left) = (0.0, 0.0, 0.0);
         let (mut buried, mut dug, mut digs) = (0.0, 0.0, 0);
+        let doomed = ids[0];
         for _ in 0..300 {
             w.events = crate::world::TickEvents::default();
+            if w.tick == 150 {
+                // Killed with its caches: they leave, counted in cache_lost.
+                let a = w.agent(doomed).unwrap();
+                assert!(!a.caches.is_empty(), "it dies holding caches");
+                left += a.holdings[0];
+                w.kill(doomed, crate::world::DeathCause::OldAge);
+                assert!(w.events.cache_lost > 0.0);
+            }
             let mut order = w.agent_ids();
             use rand::seq::SliceRandom;
             order.shuffle(&mut w.rng);
             for id in order {
                 eaten += f64::from(w.agent(id).unwrap().metabolism[0]);
                 crate::rules::agent_turn(&mut w, id);
-                assert!(w.agent(id).is_some(), "no deaths: the landscape is rich");
-                // The script: bury all the surplus on even ticks, and every
-                // fifth tick all but 2 (below R = 3, so it goes hungry and
-                // digs).
+                assert!(
+                    w.agent(id).is_some(),
+                    "no starvation: the landscape is rich"
+                );
+                // The script: bury 0.3 of the surplus on even ticks, and
+                // every fifth tick all but 2 (below R = 3, so it goes hungry
+                // and digs).
                 let q = if w.tick.is_multiple_of(5) {
                     w.agent(id).unwrap().holdings[0] - 2.0
                 } else if w.tick.is_multiple_of(2) {
-                    surplus(&w, id)
+                    0.3 * surplus(&w, id)
                 } else {
                     0.0
                 };
@@ -560,12 +662,15 @@ mod tests {
             crate::rules::growback::apply(&mut w);
             grown += sites_sum(&w) - before;
             w.tick += 1;
+            left += w.events.cache_lost;
             buried += w.events.buried;
             dug += w.events.dug;
             digs += w.events.digs;
             assert!(w.agents().all(|a| a.holdings[0] <= 8.0));
-            assert_eq!(total(&w) + eaten, start + grown);
+            let (lhs, rhs) = (total(&w) + eaten + left, start + grown);
+            assert!((lhs - rhs).abs() <= 1e-9 * rhs, "{lhs} vs {rhs}");
         }
+        assert_eq!(w.population(), 4);
         assert!(
             buried > 0.0 && dug > 0.0 && digs > 0,
             "{buried} {dug} {digs}"

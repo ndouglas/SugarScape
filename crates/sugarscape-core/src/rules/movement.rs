@@ -159,8 +159,10 @@ pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
 ///
 /// A non-rememberer's list is rule M's exactly, value for value.
 ///
-/// Minds 5: a hungry agent's own caches join last (`caching::join_caches`),
-/// which leaves the list untouched for an agent without caches.
+/// Minds 5: a hungry agent's own caches join after the sight list, before
+/// the remembered entries (`caching::join_caches`: a cache already listed is
+/// merged by the larger value and moved there if it was remembered); the
+/// list is untouched for an agent without caches.
 pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
     let a = world.agent(id).expect("live agent");
     let (pos, vision) = (a.pos, a.vision);
@@ -302,19 +304,30 @@ pub(crate) fn record_choice(
 ///   the same, so the unpicked excess is lost with its ripeness (as a
 ///   truffle's sugar was never on the site).
 /// - **Dig.** At a site holding its own cache, while holdings are below the
-///   reserve, the agent digs instead: it takes min(cache, room) (room
-///   unlimited with C = 0) into its holdings and leaves the site and any
-///   truffle as they are. The dig is `Harvest::dug`, not `gathered`: it
-///   was gathered once already, so it forms no pollution.
+///   reserve, the agent takes the larger of the two: it digs when the cache
+///   is at least the site's level (plus a ripe truffle's value, what
+///   harvesting would deliver), and otherwise harvests the site as usual.
+///   So a candidate valued at max(site, cache) delivers that on arrival. A
+///   dig takes min(cache, room) (room unlimited with C = 0) into its
+///   holdings and leaves the site and any truffle as they are. It is
+///   `Harvest::dug`, not `gathered`: it was gathered once already, so it
+///   forms no pollution.
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
     let (tags, mut social, remembers) = (a.tags, a.social, a.remembers);
     let capacity = world.config.caching.capacity;
     let site_index = world.torus.index(target) as u32;
-    let digs = !a.caches.is_empty()
-        && a.caches.contains_key(&site_index)
-        && crate::minds::caching::hungry(world, id);
+    let digs = a.caches.get(&site_index).is_some_and(|&cache| {
+        let ripe = world.truffle(target) == Some(true);
+        let truffle = if ripe {
+            world.config.truffles.value
+        } else {
+            0.0
+        };
+        cache >= world.site(target).resource[0] + truffle
+            && crate::minds::caching::hungry(world, id)
+    });
     // Room under the carrying limit; infinite with no limit.
     let room = |held: f64| {
         if capacity > 0 {
