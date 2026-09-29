@@ -157,6 +157,15 @@ export const memoriesVary = (c: ModelConfig): boolean => {
 export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]> = {
   schelling: [
     { title: 'Segregation', lines: [{ key: 'segregation', label: 'Like neighbors (mean share)', color: '--c2' }], range: [0, 1] },
+    {
+      title: 'Like neighbors by color',
+      lines: [
+        { key: 'like_red', label: 'Red', color: '--red' },
+        { key: 'like_blue', label: 'Blue', color: '--blue' },
+      ],
+      range: [0, 1],
+    },
+    { title: 'No opposite neighbor', lines: [{ key: 'no_unlike', label: 'Share of agents', color: '--c3' }], range: [0, 1] },
     { title: 'Unsatisfied', lines: [{ key: 'unsatisfied', label: 'Unsatisfied share', color: '--red' }], range: [0, 1] },
     { title: 'Moves', lines: [{ key: 'moves', label: 'Agents moved', color: '--c1' }] },
     { title: 'Red share', lines: [{ key: 'red_share', label: 'Red', color: '--red' }], range: [0, 1] },
@@ -720,6 +729,12 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
       ],
     },
   ],
+  line: [
+    { title: 'Groups', lines: [{ key: 'groups', label: 'Runs of one color', color: '--c1' }] },
+    { title: 'Group size', lines: [{ key: 'mean_group', label: 'Mean people per group', color: '--c2' }] },
+    { title: 'Like neighbors', lines: [{ key: 'like_share', label: 'Mean share alike', color: '--c3' }], range: [0, 1] },
+    { title: 'Unsatisfied', lines: [{ key: 'unsatisfied', label: 'Unsatisfied share', color: '--red' }], range: [0, 1] },
+  ],
 };
 
 /**
@@ -727,7 +742,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

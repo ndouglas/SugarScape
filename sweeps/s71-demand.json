@@ -1,0 +1,105 @@
+{
+  "name": "Schelling's board: like neighbors against demand",
+  "description": "Schelling's 1971 board (13 × 16, edges, eight neighbors, the nearest square, rounds) with every agent wanting the same share of like neighbors. Schelling: segregation is \"slight when the demand is for about one-third … and striking when the demand is as high as one-half\", \"a rapidly rising function of demands in the range from about 35% to 50%\". With up to eight neighbors a demand acts in eighths and sevenths, so the curve rises in small steps. Measured (release, seeds 1–20, recorded 2026-09-29), mean like share at the end: 0.50 color-blind, 0.56 at 20 %, 0.59 at 25 %, 0.66 at 30 %, 0.72 at 35–40 %, 0.80 at 45–50 %, 0.89 at 55 %, 0.91 at 60 %, 0.95 at 65 % and 0.97 at 70 %.",
+  "base": {
+    "preset": "s71-board"
+  },
+  "x": {
+    "label": "Like neighbors wanted (share)",
+    "values": [
+      {
+        "at": 0.0,
+        "set": {
+          "preference.min": 0.0,
+          "preference.max": 0.0
+        }
+      },
+      {
+        "at": 0.2,
+        "set": {
+          "preference.min": 0.2,
+          "preference.max": 0.2
+        }
+      },
+      {
+        "at": 0.25,
+        "set": {
+          "preference.min": 0.25,
+          "preference.max": 0.25
+        }
+      },
+      {
+        "at": 0.3,
+        "set": {
+          "preference.min": 0.3,
+          "preference.max": 0.3
+        }
+      },
+      {
+        "at": 0.35,
+        "set": {
+          "preference.min": 0.35,
+          "preference.max": 0.35
+        }
+      },
+      {
+        "at": 0.4,
+        "set": {
+          "preference.min": 0.4,
+          "preference.max": 0.4
+        }
+      },
+      {
+        "at": 0.45,
+        "set": {
+          "preference.min": 0.45,
+          "preference.max": 0.45
+        }
+      },
+      {
+        "at": 0.5,
+        "set": {
+          "preference.min": 0.5,
+          "preference.max": 0.5
+        }
+      },
+      {
+        "at": 0.55,
+        "set": {
+          "preference.min": 0.55,
+          "preference.max": 0.55
+        }
+      },
+      {
+        "at": 0.6,
+        "set": {
+          "preference.min": 0.6,
+          "preference.max": 0.6
+        }
+      },
+      {
+        "at": 0.65,
+        "set": {
+          "preference.min": 0.65,
+          "preference.max": 0.65
+        }
+      },
+      {
+        "at": 0.7,
+        "set": {
+          "preference.min": 0.7,
+          "preference.max": 0.7
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 50,
+  "metric": {
+    "kind": "final",
+    "series": "segregation"
+  }
+}

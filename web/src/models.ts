@@ -1,6 +1,7 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  LineInspection,
   ZiInspection,
   BaliConfig,
   BaliInspection,
@@ -48,7 +49,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -75,12 +76,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   punishment: 'Altruistic Punishment',
   zi: 'Zero-Intelligence Traders',
   bali: 'Balinese Water Temples',
+  line: "Schelling's line",
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line'
     ? tag
     : 'sugarscape';
 }
@@ -180,6 +182,11 @@ export function isBaliView(v: AnyInspection): v is BaliInspection {
 }
 
 /** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
+/** A person in Schelling's line (or the row past its end). */
+export function isLineView(v: AnyInspection): v is LineInspection {
+  return 'place' in v && 'agent' in v;
+}
+
 export function isZiView(v: AnyInspection): v is ZiInspection {
   return 'panel' in v && 'trade' in v && 'supply' in v;
 }
@@ -516,6 +523,11 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['water', 'Water'],
     ['crop', 'Crop'],
   ],
+  // Schelling's line: stars Red, zeros Blue; the discontented yellow.
+  line: [
+    ['color', 'Color'],
+    ['satisfaction', 'Satisfaction'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -543,4 +555,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   punishment: [],
   zi: [],
   bali: [],
+  line: [],
 };

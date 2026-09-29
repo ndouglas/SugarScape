@@ -17,6 +17,7 @@ use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::farol::{FarolConfig, FarolWorld};
 use crate::image::{ImageConfig, ImageWorld};
+use crate::line::{LineConfig, LineWorld};
 use crate::norms::{NormsConfig, NormsWorld};
 use crate::opinions::{OpinionsConfig, OpinionsWorld};
 use crate::punishment::{PunishmentConfig, PunishmentWorld};
@@ -64,10 +65,11 @@ pub enum ModelKind {
     Punishment,
     Zi,
     Bali,
+    Line,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 23] = [
+    pub const ALL: [ModelKind; 24] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -91,6 +93,7 @@ impl ModelKind {
         ModelKind::Punishment,
         ModelKind::Zi,
         ModelKind::Bali,
+        ModelKind::Line,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -118,6 +121,7 @@ impl ModelKind {
             ModelKind::Punishment => "punishment",
             ModelKind::Zi => "zi",
             ModelKind::Bali => "bali",
+            ModelKind::Line => "line",
         }
     }
 
@@ -148,6 +152,7 @@ impl ModelKind {
             ModelKind::Punishment => punishment::schema(),
             ModelKind::Zi => zi::schema(),
             ModelKind::Bali => bali::schema(),
+            ModelKind::Line => crate::line::schema(),
         }
     }
 }
@@ -184,6 +189,7 @@ pub enum ModelConfig {
     Punishment(PunishmentConfig),
     Zi(ZiConfig),
     Bali(BaliConfig),
+    Line(LineConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -212,6 +218,7 @@ enum Tagged<'a> {
     Punishment(&'a PunishmentConfig),
     Zi(&'a ZiConfig),
     Bali(&'a BaliConfig),
+    Line(&'a LineConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -247,6 +254,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Punishment(c) => Tagged::Punishment(c).serialize(s),
             ModelConfig::Zi(c) => Tagged::Zi(c).serialize(s),
             ModelConfig::Bali(c) => Tagged::Bali(c).serialize(s),
+            ModelConfig::Line(c) => Tagged::Line(c).serialize(s),
         }
     }
 }
@@ -277,6 +285,7 @@ impl ModelConfig {
             ModelConfig::Punishment(_) => ModelKind::Punishment,
             ModelConfig::Zi(_) => ModelKind::Zi,
             ModelConfig::Bali(_) => ModelKind::Bali,
+            ModelConfig::Line(_) => ModelKind::Line,
         }
     }
 
@@ -374,6 +383,9 @@ impl ModelConfig {
             "punishment" => serde_json::from_value(value)
                 .map(ModelConfig::Punishment)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "line" => serde_json::from_value(value)
+                .map(ModelConfig::Line)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "zi" => serde_json::from_value(value)
                 .map(ModelConfig::Zi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -414,6 +426,7 @@ impl ModelConfig {
             ModelConfig::Punishment(c) => c.validate(),
             ModelConfig::Zi(c) => c.validate(),
             ModelConfig::Bali(c) => c.validate(),
+            ModelConfig::Line(c) => c.validate(),
         }
     }
 
@@ -444,6 +457,7 @@ impl ModelConfig {
             ModelConfig::Punishment(c) => set_path(c, path, value).map(ModelConfig::Punishment),
             ModelConfig::Zi(c) => set_path(c, path, value).map(ModelConfig::Zi),
             ModelConfig::Bali(c) => set_path(c, path, value).map(ModelConfig::Bali),
+            ModelConfig::Line(c) => set_path(c, path, value).map(ModelConfig::Line),
         }
     }
 
@@ -473,7 +487,8 @@ impl ModelConfig {
             | ModelConfig::Retirement(_)
             | ModelConfig::Punishment(_)
             | ModelConfig::Zi(_)
-            | ModelConfig::Bali(_) => None,
+            | ModelConfig::Bali(_)
+            | ModelConfig::Line(_) => None,
         }
     }
 
@@ -509,6 +524,7 @@ impl ModelConfig {
             }
             ModelConfig::Zi(_) => zi::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Bali(_) => bali::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Line(_) => crate::line::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -701,6 +717,7 @@ pub enum ModelWorld {
     Punishment(Box<PunishmentWorld>),
     Zi(Box<ZiWorld>),
     Bali(Box<BaliWorld>),
+    Line(Box<LineWorld>),
 }
 
 impl ModelWorld {
@@ -755,6 +772,7 @@ impl ModelWorld {
             }
             ModelConfig::Zi(c) => ModelWorld::Zi(Box::new(ZiWorld::new(c, seed)?)),
             ModelConfig::Bali(c) => ModelWorld::Bali(Box::new(BaliWorld::new(c, seed)?)),
+            ModelConfig::Line(c) => ModelWorld::Line(Box::new(LineWorld::new(c, seed)?)),
         })
     }
 
@@ -783,6 +801,7 @@ impl ModelWorld {
             ModelWorld::Punishment(_) => ModelKind::Punishment,
             ModelWorld::Zi(_) => ModelKind::Zi,
             ModelWorld::Bali(_) => ModelKind::Bali,
+            ModelWorld::Line(_) => ModelKind::Line,
         }
     }
 
@@ -811,6 +830,7 @@ impl ModelWorld {
             ModelWorld::Punishment(w) => w.as_ref(),
             ModelWorld::Zi(w) => w.as_ref(),
             ModelWorld::Bali(w) => w.as_ref(),
+            ModelWorld::Line(w) => w.as_ref(),
         }
     }
 
@@ -839,6 +859,7 @@ impl ModelWorld {
             ModelWorld::Punishment(w) => w.as_mut(),
             ModelWorld::Zi(w) => w.as_mut(),
             ModelWorld::Bali(w) => w.as_mut(),
+            ModelWorld::Line(w) => w.as_mut(),
         }
     }
 
@@ -936,6 +957,7 @@ impl ModelWorld {
             ModelWorld::Punishment(w) => copy_without_history!(Punishment, w),
             ModelWorld::Zi(w) => copy_without_history!(Zi, w),
             ModelWorld::Bali(w) => copy_without_history!(Bali, w),
+            ModelWorld::Line(w) => copy_without_history!(Line, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -986,6 +1008,7 @@ impl ModelWorld {
             (ModelWorld::Bali(live), ModelWorld::Bali(kept)) => {
                 restore_into!(live, kept)
             }
+            (ModelWorld::Line(live), ModelWorld::Line(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1028,8 +1051,8 @@ mod tests {
         };
         assert_eq!(
             (s.population, s.width),
-            (100, 50),
-            "missing fields take the defaults"
+            (100, 16),
+            "missing fields take the defaults (Schelling's 1971 board)"
         );
         let json = serde_json::to_value(&c).unwrap();
         assert_eq!(json["model"], "schelling");
@@ -1044,11 +1067,11 @@ mod tests {
     #[test]
     fn with_path_sets_another_models_fields() {
         let c = ModelConfig::Schelling(SchellingConfig::default());
-        let next = c.with_path("preference.max", &json!(0.5)).unwrap();
+        let next = c.with_path("preference.max", &json!(0.75)).unwrap();
         let ModelConfig::Schelling(s) = &next else {
             unreachable!()
         };
-        assert_eq!((s.preference.min, s.preference.max), (0.25, 0.5));
+        assert_eq!((s.preference.min, s.preference.max), (0.5, 0.75));
         assert_eq!(
             c.with_path("vision.max", &json!(3)).unwrap_err().message,
             "unknown field vision.max"
@@ -1504,7 +1527,8 @@ mod tests {
                 "retirement",
                 "punishment",
                 "zi",
-                "bali"
+                "bali",
+                "line"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

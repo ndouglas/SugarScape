@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 307] = [
+pub const TITLES: [(&str, &str); 319] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -236,6 +236,54 @@ pub const TITLES: [(&str, &str); 307] = [
     (
         "goap-walled",
         "Planners who remember what lies beyond the wall end up richer, and most survive",
+    ),
+    (
+        "s71-board",
+        "Wanting half your neighbors alike: four in five end up alike",
+    ),
+    (
+        "s71-center-out",
+        "Moving from the center out: a different town, just as sorted",
+    ),
+    (
+        "s71-third",
+        "Wanting a third alike: only slight sorting",
+    ),
+    (
+        "s71-unequal-demands",
+        "The more demanding color ends up more crowded, not more sorted",
+    ),
+    (
+        "s71-minority",
+        "A two-to-one minority ends up more sorted and more crowded",
+    ),
+    (
+        "s71-wide",
+        "Counting 24 neighbors while wanting half alike: more sorting, not less",
+    ),
+    (
+        "s71-congregate",
+        "Wanting company, not separation: four in five alike anyway",
+    ),
+    (
+        "s71-integrate",
+        "Wanting a mixed street: some can never be satisfied",
+    ),
+    (
+        "s71-line",
+        "Wanting half alike on a line: about seven clusters of ten",
+    ),
+    (
+        "s71-line-3",
+        "Counting three neighbors each side: clusters of about nine",
+    ),
+    (
+        "s71-line-minority",
+        "Halving the minority: it ends no more segregated",
+    ),
+    (
+        "s71-line-reach",
+        "Travel limited: most end content, a few never do",
     ),
     (
         "vi-4-schelling-25",

@@ -94,6 +94,18 @@ const GOLDEN: &[(&str, u64)] = &[
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
 const MODEL_GOLDEN: &[(&str, u64)] = &[
+    ("s71-board", 0x8be271afb20afb6f),
+    ("s71-center-out", 0x4d984d3877efd40e),
+    ("s71-third", 0x1ad27c86391e5a56),
+    ("s71-unequal-demands", 0x85e8185284286a17),
+    ("s71-minority", 0xf38046ed144b9d70),
+    ("s71-wide", 0xc055fcf62dfa79e3),
+    ("s71-congregate", 0x87002c6991586729),
+    ("s71-integrate", 0x585eb57399a48639),
+    ("s71-line", 0xc24ebff812a7868a),
+    ("s71-line-3", 0x40fcb924df508f4a),
+    ("s71-line-minority", 0x26c48bba627b2b8c),
+    ("s71-line-reach", 0x0db5a785349b5aab),
     ("vi-4-schelling-25", 0x7a7072c3433f5f6f),
     ("vi-5-schelling-25-residence", 0x9abe1c25e873debd),
     ("vi-6-schelling-50-residence", 0x637412f7af91f684),

@@ -1,7 +1,10 @@
-//! The book's variant of Schelling's segregation model (Chapter VI,
-//! animations VI-4 to VI-7): Red and Blue agents on a torus, each wanting at
-//! least a fraction of its von Neumann neighbors to share its color, moving
-//! to a random acceptable site when unsatisfied.
+//! Schelling's segregation model: by default his own checkerboard (1971,
+//! "Dynamic Models of Segregation"): stars (Red) and zeros (Blue) on a board
+//! with edges, each wanting a share of its eight surrounding neighbors alike,
+//! the discontented moving a round at a time to the nearest square that
+//! suits; and, as presets, Epstein & Axtell's variant (1996, Chapter VI,
+//! animations VI-4 to VI-7): a torus, four neighbors, a random acceptable site,
+//! everyone in a random order. Every difference is a named switch.
 
 use std::collections::BTreeMap;
 use std::fmt::Write;
@@ -59,6 +62,81 @@ impl Default for Residence {
     }
 }
 
+/// Which squares around an agent are its neighborhood.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Neighborhood {
+    /// Schelling: "the eight surrounding squares" (radius 2: the 24 of a 5 × 5 area).
+    Moore,
+    /// Epstein & Axtell: north, east, south and west.
+    VonNeumann,
+}
+
+/// What lies past the board's edge.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Edges {
+    /// Schelling: "Along the edge of the board a square has only five
+    /// neighboring squares, and in a corner but three."
+    Bounded,
+    /// Epstein & Axtell: the board wraps around.
+    Torus,
+}
+
+/// Where a discontented agent goes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Movement {
+    /// Schelling: "the nearest satisfactory vacant square", nearest "measured
+    /// by the number of squares one traverses horizontally and vertically";
+    /// ties (unstated) at random.
+    Nearest,
+    /// Epstein & Axtell: "an acceptable site at random".
+    Random,
+}
+
+/// Who moves when.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Order {
+    /// Schelling: a round is the discontented at its start, in `sweep`
+    /// order; one content when its turn comes stays, and one made
+    /// discontent waits for the next round.
+    Rounds,
+    /// Epstein & Axtell: every agent, in a random order, each turn.
+    Random,
+}
+
+/// The order of a round's movers (Schelling: "no exact rule for the order of
+/// moves has been adhered to strictly").
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Sweep {
+    /// Fig. 8: "from the upper left corner downward and to the right".
+    Reading,
+    /// Fig. 9: "from the center outwards".
+    CenterOut,
+}
+
+/// A demand table: for each number of occupied neighbors n (index n), the
+/// least and most like-colored neighbors wanted (Schelling: "there are eight
+/// denominators and therefore eight numerators to specify"). Empty: the
+/// agent's share (`preference`) instead. A `min` above n (or above `max`)
+/// makes that count unacceptable: Fig. 16's congregationists want three alike
+/// even with fewer than three neighbors.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Demand {
+    pub min: Vec<u8>,
+    pub max: Vec<u8>,
+}
+
+impl Demand {
+    fn is_empty(&self) -> bool {
+        self.min.is_empty() && self.max.is_empty()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct SchellingConfig {
@@ -69,30 +147,83 @@ pub struct SchellingConfig {
     /// `[min, max]` (min = max for a fixed preference).
     pub preference: FRange,
     pub residence: Residence,
+    pub neighborhood: Neighborhood,
+    /// 1: the adjacent squares; 2: two squares out (Moore: the 24 of a 5 × 5 area).
+    pub radius: u32,
+    pub edges: Edges,
+    pub movement: Movement,
+    pub order: Order,
+    pub sweep: Sweep,
+    /// The share of agents that are Red (Schelling's stars).
+    pub red_share: f64,
+    /// Exactly `round(population × red_share)` Red at the start (else a coin
+    /// each). Newcomers always toss a coin.
+    pub exact: bool,
+    pub red_demand: Demand,
+    pub blue_demand: Demand,
 }
 
 impl Default for SchellingConfig {
-    /// Animation VI-4: "a 50 × 50 lattice … with 2000 Red and Blue agents …
-    /// at least 25 percent of its neighbors", no maximum residence.
+    /// Schelling (1971, pp. 154–156): a 13-row, 16-column board with edges,
+    /// 69 stars (Red), 69 zeros (Blue) and 70 blanks placed at random; the
+    /// eight surrounding squares; "no fewer than half of one's neighbors be of
+    /// the same color"; "the discontent moving to the nearest satisfactory
+    /// vacant square", a round at a time from the upper left.
     fn default() -> Self {
         SchellingConfig {
-            width: 50,
-            height: 50,
-            population: 2000,
-            preference: FRange {
-                min: 0.25,
-                max: 0.25,
-            },
+            width: 16,
+            height: 13,
+            population: 138,
+            preference: FRange { min: 0.5, max: 0.5 },
             residence: Residence {
                 enabled: false,
                 min: 80,
                 max: 100,
             },
+            neighborhood: Neighborhood::Moore,
+            radius: 1,
+            edges: Edges::Bounded,
+            movement: Movement::Nearest,
+            order: Order::Rounds,
+            sweep: Sweep::Reading,
+            red_share: 0.5,
+            exact: true,
+            red_demand: Demand::default(),
+            blue_demand: Demand::default(),
         }
     }
 }
 
+/// Epstein & Axtell's variant (1996, animation VI-4): 2000 agents on a 50 × 50
+/// torus, four neighbors, "at least 25 percent", "an acceptable site at
+/// random", agents acting in a random order, a coin for each agent's color.
+pub fn epstein_axtell(c: &mut SchellingConfig) {
+    c.width = 50;
+    c.height = 50;
+    c.population = 2000;
+    c.preference = FRange {
+        min: 0.25,
+        max: 0.25,
+    };
+    c.neighborhood = Neighborhood::VonNeumann;
+    c.radius = 1;
+    c.edges = Edges::Torus;
+    c.movement = Movement::Random;
+    c.order = Order::Random;
+    c.red_share = 0.5;
+    c.exact = false;
+}
+
 impl SchellingConfig {
+    /// The most neighbors an agent can have.
+    pub fn max_neighbors(&self) -> usize {
+        let r = self.radius as usize;
+        match self.neighborhood {
+            Neighborhood::Moore => (2 * r + 1) * (2 * r + 1) - 1,
+            Neighborhood::VonNeumann => 2 * r * (r + 1),
+        }
+    }
+
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
         let mut e = Vec::new();
         let mut check = |ok: bool, field: &str, message: &str| {
@@ -101,14 +232,14 @@ impl SchellingConfig {
             }
         };
         check(
-            (5..=500).contains(&self.width),
+            (1..=500).contains(&self.width),
             "width",
-            "must be between 5 and 500",
+            "must be between 1 and 500",
         );
         check(
-            (5..=500).contains(&self.height),
+            (1..=500).contains(&self.height),
             "height",
-            "must be between 5 and 500",
+            "must be between 1 and 500",
         );
         check(
             u64::from(self.population) < u64::from(self.width) * u64::from(self.height),
@@ -126,6 +257,38 @@ impl SchellingConfig {
         let r = self.residence;
         check(r.min >= 1, "residence.min", "must be ≥ 1");
         check(r.min <= r.max, "residence", "min must be ≤ max");
+        check(
+            (1..=3).contains(&self.radius),
+            "radius",
+            "must be between 1 and 3",
+        );
+        check(
+            fraction(self.red_share),
+            "red_share",
+            "must be a fraction between 0 and 1",
+        );
+        let k = self.max_neighbors();
+        for (field, d) in [
+            ("red_demand", &self.red_demand),
+            ("blue_demand", &self.blue_demand),
+        ] {
+            if d.is_empty() {
+                continue;
+            }
+            check(
+                d.min.len() == k + 1 && d.max.len() == k + 1,
+                field,
+                "needs one entry for each number of neighbors, 0 to the most (a preset's tables fit its neighborhood and radius: choose another preset to change them)",
+            );
+            check(
+                d.max
+                    .iter()
+                    .enumerate()
+                    .all(|(n, &hi)| usize::from(hi) <= n),
+                field,
+                "max must not exceed the number of neighbors",
+            );
+        }
         if e.is_empty() {
             Ok(())
         } else {
@@ -143,6 +306,16 @@ impl SchellingConfig {
             ("population", self.population == next.population),
             ("preference", self.preference == next.preference),
             ("residence", self.residence == next.residence),
+            ("neighborhood", self.neighborhood == next.neighborhood),
+            ("radius", self.radius == next.radius),
+            ("edges", self.edges == next.edges),
+            ("movement", self.movement == next.movement),
+            ("order", self.order == next.order),
+            ("sweep", self.sweep == next.sweep),
+            ("red_share", self.red_share == next.red_share),
+            ("exact", self.exact == next.exact),
+            ("red_demand", self.red_demand == next.red_demand),
+            ("blue_demand", self.blue_demand == next.blue_demand),
         ] {
             if !same {
                 out.push(FieldError::new(field, msg));
@@ -153,13 +326,20 @@ impl SchellingConfig {
 }
 
 /// The statistics series, in the order the CSV and the page list them.
-pub const SERIES: [&str; 6] = [
+pub const SERIES: [&str; 13] = [
     "unsatisfied",
     "segregation",
     "moves",
     "red_share",
     "quiet",
     "population",
+    "like_red",
+    "like_blue",
+    "no_unlike",
+    "like_ratio",
+    "neighbors_red",
+    "neighbors_blue",
+    "like_near",
 ];
 
 /// One tick's statistics.
@@ -178,6 +358,20 @@ pub struct SchellingSnapshot {
     pub red_share: f64,
     /// 1 when a tick ran and no agent moved, else 0 (0 at t = 0).
     pub quiet: u32,
+    /// Mean share of like neighbors among Red (Blue) agents with a neighbor.
+    pub like_red: f64,
+    pub like_blue: f64,
+    /// Share of agents with no neighbor of the other color.
+    pub no_unlike: f64,
+    /// Like-colored neighbor pairs per unlike pair, over everyone (0 with no
+    /// unlike pair): Schelling's "ratio of like to opposite neighbors".
+    pub like_ratio: f64,
+    /// Mean number of neighbors of a Red (Blue) agent (his "density").
+    pub neighbors_red: f64,
+    pub neighbors_blue: f64,
+    /// Mean share of like neighbors among the eight surrounding squares,
+    /// whatever the neighborhood: one ruler for comparing neighborhoods.
+    pub like_near: f64,
 }
 
 impl Series for SchellingSnapshot {
@@ -194,6 +388,13 @@ impl Series for SchellingSnapshot {
             "moves" => f64::from(self.moves),
             "red_share" => self.red_share,
             "quiet" => f64::from(self.quiet),
+            "like_red" => self.like_red,
+            "like_blue" => self.like_blue,
+            "no_unlike" => self.no_unlike,
+            "like_ratio" => self.like_ratio,
+            "neighbors_red" => self.neighbors_red,
+            "neighbors_blue" => self.neighbors_blue,
+            "like_near" => self.like_near,
             _ => return None,
         })
     }
@@ -231,7 +432,7 @@ pub struct ResidentView {
     pub color: &'static str,
     pub preference: f64,
     pub satisfied: bool,
-    /// Like-colored and all occupied von Neumann neighbors.
+    /// Like-colored and all occupied neighbors.
     pub like: u32,
     pub neighbors: u32,
     pub age: u32,
@@ -261,30 +462,72 @@ impl std::str::FromStr for SchellingMode {
 
 /// Whether `like` of `occupied` neighbors meet `preference` ("if this number
 /// is greater than or equal to its preference the agent is … satisfied");
-/// an agent with no neighbors is satisfied.
+/// an agent with no neighbors is satisfied (Schelling leaves it unstated; his
+/// "less than half … like" reading agrees).
 pub fn satisfied(like: u32, occupied: u32, preference: f64) -> bool {
     occupied == 0 || f64::from(like) / f64::from(occupied) >= preference
 }
 
-/// A (like, occupied) neighbor class: `occupied` in 0..=4, `like` in
-/// 0..=occupied, numbered `occupied·(occupied + 1)/2 + like` (15 classes).
-const CLASSES: usize = 15;
-const UNFILED: u8 = u8::MAX;
+/// A (like, occupied) neighbor class: `occupied` in 0..=k, `like` in
+/// 0..=occupied, numbered `occupied·(occupied + 1)/2 + like`.
+const UNFILED: u16 = u16::MAX;
 
 fn class(like: u8, occupied: u8) -> usize {
     usize::from(occupied) * (usize::from(occupied) + 1) / 2 + usize::from(like)
 }
 
-/// Whether an agent with `preference` is satisfied in each class.
-fn acceptable_classes(preference: f64) -> [bool; CLASSES] {
-    let mut out = [false; CLASSES];
-    for occupied in 0..=4u8 {
-        for like in 0..=occupied {
-            out[class(like, occupied)] =
-                satisfied(u32::from(like), u32::from(occupied), preference);
-        }
-    }
-    out
+/// Every site's neighbors, as site indices: von Neumann radius 1 on the torus
+/// in `Torus::neighbors` order (so Epstein & Axtell's runs draw as before);
+/// otherwise row by row, off-board offsets dropped when bounded and repeats
+/// dropped on a small torus.
+fn neighbor_list(c: &SchellingConfig, torus: &Torus) -> Vec<Vec<u32>> {
+    let r = c.radius as i32;
+    let (w, h) = (torus.width as i32, torus.height as i32);
+    (0..torus.len())
+        .map(|i| {
+            let p = torus.pos(i);
+            // (On a torus narrower than 3 the offsets reach the site itself or repeat.)
+            if c.neighborhood == Neighborhood::VonNeumann
+                && r == 1
+                && c.edges == Edges::Torus
+                && w >= 3
+                && h >= 3
+            {
+                return torus
+                    .neighbors(p)
+                    .iter()
+                    .map(|&n| torus.index(n) as u32)
+                    .collect();
+            }
+            let mut out: Vec<u32> = Vec::new();
+            for dy in -r..=r {
+                for dx in -r..=r {
+                    let within = match c.neighborhood {
+                        Neighborhood::Moore => true,
+                        Neighborhood::VonNeumann => dx.abs() + dy.abs() <= r,
+                    };
+                    if (dx, dy) == (0, 0) || !within {
+                        continue;
+                    }
+                    let q = match c.edges {
+                        Edges::Bounded => {
+                            let (x, y) = (p.x as i32 + dx, p.y as i32 + dy);
+                            if x < 0 || y < 0 || x >= w || y >= h {
+                                continue;
+                            }
+                            Pos::new(x as u32, y as u32)
+                        }
+                        Edges::Torus => torus.offset(p, dx, dy),
+                    };
+                    let j = torus.index(q) as u32;
+                    if j as usize != i && !out.contains(&j) {
+                        out.push(j);
+                    }
+                }
+            }
+            out
+        })
+        .collect()
 }
 
 #[derive(Clone)]
@@ -296,14 +539,20 @@ pub struct SchellingWorld {
     agents: BTreeMap<u64, Resident>,
     /// The agent on each site (row-major).
     grid: Vec<Option<u64>>,
-    /// Occupied von Neumann neighbors of each site: `[blue, red]` counts.
+    /// Each site's neighbors (see `neighbor_list`).
+    adj: Vec<Vec<u32>>,
+    /// Each site's eight surrounding squares (for `like_near`).
+    adj8: Vec<Vec<u32>>,
+    /// The number of (like, occupied) classes for this neighborhood.
+    classes: usize,
+    /// Occupied neighbors of each site: `[blue, red]` counts.
     counts: [Vec<u8>; 2],
     /// Every empty site filed, for each color (`[blue, red]`), under the
     /// class it would give an agent of that color standing there.
-    pools: [[Vec<u32>; CLASSES]; 2],
+    pools: [Vec<Vec<u32>>; 2],
     /// Each site's class in `pools` (`UNFILED` when occupied, or while its
     /// agent considers moving) and its index there.
-    filed: [Vec<u8>; 2],
+    filed: [Vec<u16>; 2],
     slot: [Vec<u32>; 2],
     rng: SimRng,
     next_id: u64,
@@ -316,13 +565,25 @@ impl SchellingWorld {
         config.validate()?;
         let torus = Torus::new(config.width, config.height);
         let n = torus.len();
+        let k = config.max_neighbors();
+        let classes = (k + 1) * (k + 2) / 2;
         let mut world = SchellingWorld {
             torus,
             tick: 0,
             agents: BTreeMap::new(),
             grid: vec![None; n],
+            adj: neighbor_list(&config, &torus),
+            adj8: neighbor_list(
+                &SchellingConfig {
+                    neighborhood: Neighborhood::Moore,
+                    radius: 1,
+                    ..config.clone()
+                },
+                &torus,
+            ),
+            classes,
             counts: [vec![0; n], vec![0; n]],
-            pools: Default::default(),
+            pools: [vec![Vec::new(); classes], vec![Vec::new(); classes]],
             filed: [vec![UNFILED; n], vec![UNFILED; n]],
             slot: [vec![0; n], vec![0; n]],
             rng: rng::seeded(seed),
@@ -336,8 +597,17 @@ impl SchellingWorld {
         }
         let mut cells: Vec<usize> = (0..n).collect();
         cells.shuffle(&mut world.rng);
-        for &i in cells.iter().take(world.config.population as usize) {
-            let agent = world.newcomer(torus.pos(i));
+        let reds = (f64::from(world.config.population) * world.config.red_share).round() as usize;
+        for (k, &i) in cells
+            .iter()
+            .take(world.config.population as usize)
+            .enumerate()
+        {
+            let mut agent = world.newcomer(torus.pos(i));
+            if world.config.exact {
+                // The sites are shuffled, so the first `reds` placed fall at random.
+                agent.red = k < reds;
+            }
             world.insert(agent);
         }
         let snapshot = world.snapshot();
@@ -345,13 +615,13 @@ impl SchellingWorld {
         Ok(world)
     }
 
-    /// A new agent at `pos`: Red or Blue with probability ½, a preference
+    /// A new agent at `pos`: Red with probability `red_share`, a preference
     /// uniform in the configured range, and (residence on) a residence
     /// uniform in its range.
     fn newcomer(&mut self, pos: Pos) -> Resident {
         let c = &self.config;
         let (p, r) = (c.preference, c.residence);
-        let red = self.rng.gen_bool(0.5);
+        let red = self.rng.gen_bool(c.red_share);
         let preference = self.rng.gen_range(p.min..=p.max);
         let residence = if r.enabled {
             self.rng.gen_range(r.min..=r.max)
@@ -375,7 +645,7 @@ impl SchellingWorld {
         let (blues, reds) = (self.counts[0][i], self.counts[1][i]);
         for (c, like) in [(0, blues), (1, reds)] {
             let k = class(like, blues + reds);
-            self.filed[c][i] = k as u8;
+            self.filed[c][i] = k as u16;
             self.slot[c][i] = self.pools[c][k].len() as u32;
             self.pools[c][k].push(i as u32);
         }
@@ -400,8 +670,8 @@ impl SchellingWorld {
     /// Adds `delta` to the `red` count of each neighbor of site `i`,
     /// refiling the empty ones.
     fn tell_neighbors(&mut self, i: usize, red: bool, add: bool) {
-        for n in self.torus.neighbors(self.torus.pos(i)) {
-            let j = self.torus.index(n);
+        for k in 0..self.adj[i].len() {
+            let j = self.adj[i][k] as usize;
             let count = &mut self.counts[usize::from(red)][j];
             if add {
                 *count += 1;
@@ -434,12 +704,45 @@ impl SchellingWorld {
         self.agents.insert(a.id, a);
     }
 
+    /// Whether an agent of color `red` with `preference`, with `like` of
+    /// `occupied` neighbors alike, is content: its color's demand table when
+    /// it has one, else its share.
+    pub fn content(&self, red: bool, preference: f64, like: u32, occupied: u32) -> bool {
+        let d = if red {
+            &self.config.red_demand
+        } else {
+            &self.config.blue_demand
+        };
+        if d.is_empty() {
+            return satisfied(like, occupied, preference);
+        }
+        let n = occupied as usize;
+        u32::from(d.min[n]) <= like && like <= u32::from(d.max[n])
+    }
+
+    /// Whether an agent of color `red` with `preference` is content in each
+    /// class (every class when `preference` is `None`).
+    fn acceptable(&self, red: bool, preference: Option<f64>) -> Vec<bool> {
+        let mut out = vec![true; self.classes];
+        if let Some(p) = preference {
+            let k = self.config.max_neighbors() as u8;
+            for occupied in 0..=k {
+                for like in 0..=occupied {
+                    out[class(like, occupied)] =
+                        self.content(red, p, u32::from(like), u32::from(occupied));
+                }
+            }
+        }
+        out
+    }
+
     /// A uniformly random filed site that satisfies an agent of color `red`
     /// with `preference` (every filed site when `preference` is `None`).
     fn pick(&mut self, red: bool, preference: Option<f64>) -> Option<usize> {
-        let ok = preference.map_or([true; CLASSES], acceptable_classes);
+        let ok = self.acceptable(red, preference);
+        let classes = self.classes;
         let pools = &self.pools[usize::from(red)];
-        let total: usize = (0..CLASSES)
+        let total: usize = (0..classes)
             .filter(|&k| ok[k])
             .map(|k| pools[k].len())
             .sum();
@@ -449,7 +752,7 @@ impl SchellingWorld {
         // Sampled as u32 (sites ≤ 250 000): a usize range would draw
         // differently on wasm32 than on 64-bit targets.
         let mut r = self.rng.gen_range(0..total as u32) as usize;
-        for k in (0..CLASSES).filter(|&k| ok[k]) {
+        for k in (0..classes).filter(|&k| ok[k]) {
             let pool = &pools[k];
             if r < pool.len() {
                 return Some(pool[r] as usize);
@@ -478,27 +781,136 @@ impl SchellingWorld {
     /// Whether `a` is satisfied where it stands.
     pub fn is_satisfied(&self, a: &Resident) -> bool {
         let (like, occupied) = self.neighbors(a);
-        satisfied(like, occupied, a.preference)
+        self.content(a.red, a.preference, like, occupied)
     }
 
-    /// One tick: agents act in a random order, and each unsatisfied one moves
-    /// to a site chosen uniformly at random among the empty sites where it
-    /// would be satisfied — judged with its own site vacated, so it does not
-    /// count itself as a neighbor — or stays if there is none. Then every
+    /// The Manhattan distance from `p` to `q` (wrapping on the torus).
+    fn steps(&self, p: Pos, q: Pos) -> i32 {
+        let (dx, dy) = (
+            (p.x as i32 - q.x as i32).abs(),
+            (p.y as i32 - q.y as i32).abs(),
+        );
+        match self.config.edges {
+            Edges::Bounded => dx + dy,
+            Edges::Torus => {
+                let (w, h) = (self.torus.width as i32, self.torus.height as i32);
+                dx.min(w - dx) + dy.min(h - dy)
+            }
+        }
+    }
+
+    /// Schelling's move: the empty site fewest steps (horizontally and
+    /// vertically) from `from` where an agent of color `red` with
+    /// `preference` is content, judged with `from` already vacated; ties at
+    /// random; `None` if there is none.
+    fn nearest(&mut self, red: bool, preference: f64, from: usize) -> Option<usize> {
+        // The pools file every empty site by class: if no acceptable class has
+        // one, no square can suit, and there is nothing to search (or draw).
+        let ok = self.acceptable(red, Some(preference));
+        let pools = &self.pools[usize::from(red)];
+        if !(0..self.classes).any(|k| ok[k] && !pools[k].is_empty()) {
+            return None;
+        }
+        let (w, h) = (self.torus.width as i32, self.torus.height as i32);
+        let p = self.torus.pos(from);
+        let farthest = match self.config.edges {
+            Edges::Bounded => (w - 1) + (h - 1),
+            Edges::Torus => w / 2 + h / 2,
+        };
+        for d in 1..=farthest {
+            let mut found: Vec<usize> = Vec::new();
+            for dy in -d..=d {
+                let rest = d - dy.abs();
+                for dx in [-rest, rest] {
+                    let q = match self.config.edges {
+                        Edges::Bounded => {
+                            let (x, y) = (p.x as i32 + dx, p.y as i32 + dy);
+                            if x < 0 || y < 0 || x >= w || y >= h {
+                                continue;
+                            }
+                            Pos::new(x as u32, y as u32)
+                        }
+                        Edges::Torus => self.torus.offset(p, dx, dy),
+                    };
+                    let j = self.torus.index(q);
+                    if self.grid[j].is_some()
+                        || j == from
+                        || found.contains(&j)
+                        || self.steps(p, q) != d
+                    {
+                        continue;
+                    }
+                    let (blues, reds) = (self.counts[0][j], self.counts[1][j]);
+                    let like = if red { reds } else { blues };
+                    if self.content(red, preference, u32::from(like), u32::from(blues + reds)) {
+                        found.push(j);
+                    }
+                }
+            }
+            if !found.is_empty() {
+                return Some(found[self.rng.gen_range(0..found.len() as u32) as usize]);
+            }
+        }
+        None
+    }
+
+    /// This step's movers: under `Rounds`, the discontented now, in `sweep`
+    /// order; under `Random`, every agent in a random order.
+    fn movers(&mut self) -> Vec<u64> {
+        match self.config.order {
+            Order::Random => {
+                let mut order: Vec<u64> = self.agents.keys().copied().collect();
+                order.shuffle(&mut self.rng);
+                order
+            }
+            Order::Rounds => {
+                let (w, h) = (self.torus.width as i64, self.torus.height as i64);
+                let mut v: Vec<(i64, usize, u64)> = self
+                    .agents
+                    .values()
+                    .filter(|a| !self.is_satisfied(a))
+                    .map(|a| {
+                        let i = self.torus.index(a.pos);
+                        let key = match self.config.sweep {
+                            Sweep::Reading => 0,
+                            Sweep::CenterOut => {
+                                let (x, y) = (
+                                    2 * i64::from(a.pos.x) - (w - 1),
+                                    2 * i64::from(a.pos.y) - (h - 1),
+                                );
+                                x * x + y * y
+                            }
+                        };
+                        (key, i, a.id)
+                    })
+                    .collect();
+                v.sort_unstable();
+                v.into_iter().map(|(_, _, id)| id).collect()
+            }
+        }
+    }
+
+    /// One step: the movers (a round of the discontented, or everyone in a
+    /// random order) take their turns, and each still unsatisfied moves — to
+    /// the nearest empty site where it would be satisfied, or one chosen at
+    /// random among them — judged with its own site vacated, so it does not
+    /// count itself as a neighbor; it stays if there is none. Then every
     /// agent ages, and with residence on each that reaches its maximum is
     /// replaced.
     pub fn step(&mut self) {
-        let mut order: Vec<u64> = self.agents.keys().copied().collect();
-        order.shuffle(&mut self.rng);
         let mut moves = 0;
-        for id in order {
+        for id in self.movers() {
             let a = self.agents[&id];
             if self.is_satisfied(&a) {
                 continue;
             }
             let from = self.torus.index(a.pos);
             self.vacate(from, a.red);
-            match self.pick(a.red, Some(a.preference)) {
+            let to = match self.config.movement {
+                Movement::Nearest => self.nearest(a.red, a.preference, from),
+                Movement::Random => self.pick(a.red, Some(a.preference)),
+            };
+            match to {
                 Some(to) => {
                     self.occupy(to, id, a.red);
                     self.file(from);
@@ -555,20 +967,49 @@ impl SchellingWorld {
     fn snapshot(&self) -> SchellingSnapshot {
         let n = self.agents.len();
         let (mut unsatisfied, mut reds, mut shares, mut counted) = (0usize, 0usize, 0.0, 0usize);
+        // Per color (`[blue, red]`): agents, those with a neighbor, their like
+        // shares, and their neighbors.
+        let (mut of, mut with, mut like_sum, mut near) =
+            ([0usize; 2], [0usize; 2], [0.0; 2], [0u64; 2]);
+        let (mut unmixed, mut likes, mut unlikes) = (0usize, 0u64, 0u64);
+        let (mut near_sum, mut near_with) = (0.0, 0usize);
         for a in self.agents.values() {
             let (like, occupied) = self.neighbors(a);
-            if !satisfied(like, occupied, a.preference) {
+            let c = usize::from(a.red);
+            if !self.content(a.red, a.preference, like, occupied) {
                 unsatisfied += 1;
             }
             if a.red {
                 reds += 1;
             }
+            of[c] += 1;
+            near[c] += u64::from(occupied);
+            likes += u64::from(like);
+            unlikes += u64::from(occupied - like);
+            if like == occupied {
+                unmixed += 1;
+            }
+            let i = self.torus.index(a.pos);
+            let (mut l8, mut o8) = (0u32, 0u32);
+            for &j in &self.adj8[i] {
+                if let Some(id) = self.grid[j as usize] {
+                    o8 += 1;
+                    l8 += u32::from(self.agents[&id].red == a.red);
+                }
+            }
+            if o8 > 0 {
+                near_sum += f64::from(l8) / f64::from(o8);
+                near_with += 1;
+            }
             if occupied > 0 {
                 shares += f64::from(like) / f64::from(occupied);
                 counted += 1;
+                with[c] += 1;
+                like_sum[c] += f64::from(like) / f64::from(occupied);
             }
         }
         let share = |k: usize, of: usize| if of == 0 { 0.0 } else { k as f64 / of as f64 };
+        let mean = |sum: f64, of: usize| if of == 0 { 0.0 } else { sum / of as f64 };
         SchellingSnapshot {
             tick: self.tick,
             population: n as u32,
@@ -581,6 +1022,17 @@ impl SchellingWorld {
             moves: self.moves,
             red_share: share(reds, n),
             quiet: u32::from(self.tick > 0 && self.moves == 0),
+            like_red: mean(like_sum[1], with[1]),
+            like_blue: mean(like_sum[0], with[0]),
+            no_unlike: share(unmixed, n),
+            like_ratio: if unlikes == 0 {
+                0.0
+            } else {
+                likes as f64 / unlikes as f64
+            },
+            neighbors_red: mean(near[1] as f64, of[1]),
+            neighbors_blue: mean(near[0] as f64, of[0]),
+            like_near: mean(near_sum, near_with),
         }
     }
 
@@ -609,7 +1061,7 @@ impl SchellingWorld {
                 id: a.id,
                 color: if a.red { "red" } else { "blue" },
                 preference: a.preference,
-                satisfied: satisfied(like, neighbors, a.preference),
+                satisfied: self.content(a.red, a.preference, like, neighbors),
                 like,
                 neighbors,
                 age: a.age,
@@ -748,20 +1200,78 @@ impl Model for SchellingWorld {
 pub fn schema() -> Vec<Param> {
     use Apply::Reset;
     // UI limits, narrower than `validate()` on purpose (performance): the
-    // panel offers width and height 5–200 and residence 1–1000 ticks, while
+    // panel offers width and height 1–200 and residence 1–1000 ticks, while
     // configs from files and links may use `validate()`'s full range (width
-    // and height 5–500, any population below width × height, residence ≥ 1).
+    // and height 1–500, any population below width × height, residence ≥ 1).
     vec![
-        Param::integer("Setup", "width", "Width", (5, 200), Reset),
-        Param::integer("Setup", "height", "Height", (5, 200), Reset),
+        Param::integer("Setup", "width", "Width", (1, 200), Reset),
+        Param::integer("Setup", "height", "Height", (1, 200), Reset),
         Param::integer("Setup", "population", "Agents", (0, 39_999), Reset),
+        Param::number("Setup", "red_share", "Red share", (0.0, 1.0, 0.01), Reset)
+            .with_help("Schelling's stars are Red, his zeros Blue."),
+        Param::bool("Setup", "exact", "Exact numbers", Reset)
+            .with_help("Exactly that share Red at the start (Schelling's boards); off, a coin for each agent (Epstein & Axtell)."),
+        Param::choice(
+            "Neighborhood",
+            "neighborhood",
+            "Neighborhood",
+            &[
+                ("moore", "The surrounding squares (Schelling)"),
+                ("von_neumann", "North, east, south, west (Epstein & Axtell)"),
+            ],
+            Reset,
+        ),
+        Param::integer("Neighborhood", "radius", "Radius", (1, 3), Reset)
+            .with_help("Schelling: 1, the eight around; 2, \"the 24 surrounding squares in a 5 × 5 area\"."),
+        Param::choice(
+            "Neighborhood",
+            "edges",
+            "Edges",
+            &[
+                ("bounded", "A board with edges (Schelling)"),
+                ("torus", "Wrapping around (Epstein & Axtell)"),
+            ],
+            Reset,
+        ),
         Param::range(
             "Preference",
             "preference",
             "Like neighbors wanted (fraction)",
             (0.0, 1.0, 0.05),
             Reset,
+        )
+        .with_help("A preset may set a demand table for each number of neighbors instead (Schelling's figures); a table overrides this."),
+        Param::choice(
+            "Movement",
+            "movement",
+            "Where the discontented go",
+            &[
+                ("nearest", "The nearest square that suits (Schelling)"),
+                ("random", "Any square that suits, at random (Epstein & Axtell)"),
+            ],
+            Reset,
         ),
+        Param::choice(
+            "Movement",
+            "order",
+            "Who moves when",
+            &[
+                ("rounds", "Rounds of the discontented (Schelling)"),
+                ("random", "Everyone, in a random order (Epstein & Axtell)"),
+            ],
+            Reset,
+        ),
+        Param::choice(
+            "Movement",
+            "sweep",
+            "Order within a round",
+            &[
+                ("reading", "From the upper left (Fig. 8)"),
+                ("center_out", "From the center out (Fig. 9)"),
+            ],
+            Reset,
+        )
+        .shown_if("order", "rounds"),
         Param::bool("Residence", "residence.enabled", "Maximum residence", Reset),
         Param::range(
             "Residence",
@@ -799,24 +1309,125 @@ fn residence(c: &mut SchellingConfig) {
     };
 }
 
-/// Animations VI-4 to VI-7.
+/// An Epstein & Axtell preset: their variant, then `edit`.
+fn ea_preset(
+    id: &'static str,
+    name: &'static str,
+    source: &'static str,
+    description: &'static str,
+    edit: impl FnOnce(&mut SchellingConfig),
+) -> ModelPreset {
+    preset(id, name, source, description, |c| {
+        epstein_axtell(c);
+        edit(c);
+    })
+}
+
+/// A demand table wanting at least `min[n]` alike among `n` neighbors (at most all of them).
+fn at_least(min: [u8; 9]) -> Demand {
+    Demand {
+        min: min.to_vec(),
+        max: (0..=8).collect(),
+    }
+}
+
+/// Schelling's 1971 figures, then Epstein & Axtell's animations VI-4 to VI-7.
 pub fn presets() -> Vec<ModelPreset> {
     vec![
         preset(
+            "s71-board",
+            "Schelling's checkerboard",
+            "Schelling 1971, Figs. 7–8",
+            "Schelling's own model: a 13 × 16 board with edges, 69 stars (Red), 69 zeros (Blue) and 70 blanks at random; each wants \"no fewer than half of one's neighbors\" (the eight surrounding squares, occupied ones counted) to be its color; the discontented move, a round at a time from the upper left, to \"the nearest satisfactory vacant square\". Measured (20 seeds, 60 rounds, medians): still after 3–5 rounds; neighbors 0.80 alike and 38 % with none of the other color, a like-to-unlike ratio of 3.6 — near his Fig. 9 (four-fifths to five-sixths, 40 %), below his Fig. 8 (90 %, two-thirds) and his \"upwards of four to one\".",
+            |_| {},
+        ),
+        preset(
+            "s71-center-out",
+            "Schelling's checkerboard, from the center out",
+            "Schelling 1971, Fig. 9",
+            "As Figs. 7–8, but each round's movers take their turns from the center of the board outwards (\"The particular outcome will depend very much on the order … the character of the outcome not very much\"). Measured (20 seeds): 0.80 alike, as from the upper left (0.80) and in a random order (0.79).",
+            |c| c.sweep = Sweep::CenterOut,
+        ),
+        preset(
+            "s71-third",
+            "Asking for a third",
+            "Schelling 1971, Fig. 11",
+            "Demands of about one-third: \"one like neighbor out of four or fewer, two out of five or more\". Schelling: the segregation is \"slight when the demand is for about one-third … and striking when the demand is as high as one-half\". Measured (20 seeds): 0.60 alike, a ratio of 1.35 — under his 1.5.",
+            |c| {
+                c.red_demand = at_least([0, 1, 1, 1, 1, 2, 2, 2, 2]);
+                c.blue_demand = at_least([0, 1, 1, 1, 1, 2, 2, 2, 2]);
+            },
+        ),
+        preset(
+            "s71-unequal-demands",
+            "One color asks for more",
+            "Schelling 1971, Fig. 12",
+            "72 stars (Red) and 77 zeros (Blue). Zeros as Fig. 11; stars \"demand two of their own color if they have three to five neighbors, three if they have six or seven neighbors, and four out of eight\" (with one or two neighbors, unstated: one). Schelling: \"the more demanding end up with a higher proportion of like neighbors, but not much higher\", and more densely settled. Measured (20 seeds): stars 0.67 alike, zeros 0.67; stars average 5.6 neighbors, zeros 4.8.",
+            |c| {
+                c.population = 149;
+                c.red_share = 72.0 / 149.0;
+                c.red_demand = at_least([0, 1, 1, 2, 2, 2, 3, 3, 4]);
+                c.blue_demand = at_least([0, 1, 1, 1, 1, 2, 2, 2, 2]);
+            },
+        ),
+        preset(
+            "s71-minority",
+            "A two-to-one minority",
+            "Schelling 1971, Fig. 13",
+            "Stars (Red) outnumber zeros (Blue) about two to one; each wants \"a minimum of two neighbors of like color\" (one, with a single neighbor). Schelling: the minority's like-to-unlike ratio goes from about 1:2 to 2:1, and it settles more densely. Measured (20 seeds): the minority goes from 0.35 to 0.57 alike (a ratio of 1.3, short of his 2:1) and averages 5.6 neighbors against the majority's 4.8.",
+            |c| {
+                c.red_share = 2.0 / 3.0;
+                c.red_demand = at_least([0, 1, 2, 2, 2, 2, 2, 2, 2]);
+                c.blue_demand = at_least([0, 1, 2, 2, 2, 2, 2, 2, 2]);
+            },
+        ),
+        preset(
+            "s71-wide",
+            "Counting 24 neighbors",
+            "Schelling 1971, p. 154",
+            "The neighborhood widened to \"the 24 surrounding squares in a 5 × 5 area\", equal numbers, half alike wanted. Schelling (p. 164, stated without a figure): \"Enlarging the area within which a person counts his neighbors attenuates the tendency to segregate, at least for moderate demands and near-equal numbers.\" Measured (20 seeds), among the eight surrounding squares: 0.86 alike counting 24, against 0.80 counting eight — more sorting at this demand; at a third, 0.55 against 0.66, as he conjectured.",
+            |c| c.radius = 2,
+        ),
+        preset(
+            "s71-congregate",
+            "Wanting company, not separation",
+            "Schelling 1971, Fig. 16",
+            "Congregationists: each wants \"three neighbors like himself out of eight surrounding spaces … and to be indifferent to the presence of the opposite color\" (his \"two out of five, along the edge\" is not reproduced: three everywhere). Schelling: like neighbors \"just over 75%\", 38% with none of the other color. Measured (20 seeds): 0.79 alike, 37 % with none of the other color.",
+            |c| {
+                c.red_demand = at_least([3; 9]);
+                c.blue_demand = at_least([3; 9]);
+            },
+        ),
+        preset(
+            "s71-integrate",
+            "Wanting a mixed street",
+            "Schelling 1971, Fig. 17",
+            "Integrationists: stars (Red) about twice the zeros (Blue); each wants, \"among eight neighbors, at least three and at most six like oneself; among seven, at least three and at most five; among six, at least three and at most four; among five, at least two and at most four; among four, either two or three; among three, either one or two; and one out of two\" (with one neighbor, unstated: either). Schelling: more moves, some who can't be satisfied, a minority \"rationed\", and \"dead spaces\". Measured (20 seeds): 96 moves against the half-alike board's 56; 9 % still unsatisfied when moving stops.",
+            |c| {
+                c.red_share = 2.0 / 3.0;
+                let bands = Demand {
+                    min: vec![0, 0, 1, 1, 2, 2, 3, 3, 3],
+                    max: vec![0, 1, 1, 2, 3, 4, 4, 5, 6],
+                };
+                c.red_demand = bands.clone();
+                c.blue_demand = bands;
+            },
+        ),
+        ea_preset(
             "vi-4-schelling-25",
             "Schelling segregation, 25% like neighbors",
             "Animation VI-4",
             "2000 Red and Blue agents on a 50×50 torus, each wanting at least 25% of its von Neumann neighbors to share its color; an unsatisfied agent moves to a random site where it would be satisfied. Within a few ticks nobody moves, and the pattern is clearly more segregated than the start (segregation about 0.50 → 0.63).",
             |_| {},
         ),
-        preset(
+        ea_preset(
             "vi-5-schelling-25-residence",
             "Schelling segregation, 25%, residence 80–100",
             "Animation VI-5",
-            "As VI-4, but each agent leaves after 80–100 ticks and is replaced by a new agent of random color placed where it is satisfied: the pattern never settles. Its segregation climbs to about 0.76, somewhat above VI-4's (the book calls the two comparable).",
+            "As VI-4, but each agent leaves after 80–100 ticks and is replaced by a new agent of random color placed where it is satisfied: the pattern never settles. Its segregation climbs to about 0.76, above VI-4's 0.63 and far below VI-6's 0.95 (the book calls the degree \"comparable\" to VI-4's without a measure, and p. 170 calls VI-5 \"modestly segregated\").",
             residence,
         ),
-        preset(
+        ea_preset(
             "vi-6-schelling-50-residence",
             "Schelling segregation, 50%, residence 80–100",
             "Animation VI-6",
@@ -826,7 +1437,7 @@ pub fn presets() -> Vec<ModelPreset> {
                 c.preference = FRange { min: 0.5, max: 0.5 };
             },
         ),
-        preset(
+        ea_preset(
             "vi-7-schelling-mixed",
             "Schelling segregation, 25–50% mixed, residence 80–100",
             "Animation VI-7",
@@ -846,6 +1457,324 @@ pub fn presets() -> Vec<ModelPreset> {
 mod tests {
     use super::*;
 
+    /// Epstein & Axtell's variant, which the older tests were written for.
+    fn ea() -> SchellingConfig {
+        let mut c = SchellingConfig::default();
+        epstein_axtell(&mut c);
+        c
+    }
+
+    /// A `w` × `h` world under Schelling's 1971 rules with nobody on it.
+    fn empty71(w: u32, h: u32, seed: u64) -> SchellingWorld {
+        SchellingWorld::new(
+            SchellingConfig {
+                width: w,
+                height: h,
+                population: 0,
+                ..SchellingConfig::default()
+            },
+            seed,
+        )
+        .unwrap()
+    }
+
+    fn at(w: &SchellingWorld, id: u64) -> (u32, u32) {
+        let a = agent(w, id);
+        (a.pos.x, a.pos.y)
+    }
+
+    #[test]
+    fn the_default_is_schellings_1971_board() {
+        let c = SchellingConfig::default();
+        assert_eq!((c.width, c.height, c.population), (16, 13, 138));
+        assert_eq!(
+            (c.neighborhood, c.radius, c.edges),
+            (Neighborhood::Moore, 1, Edges::Bounded)
+        );
+        assert_eq!(
+            (c.movement, c.order, c.sweep),
+            (Movement::Nearest, Order::Rounds, Sweep::Reading)
+        );
+        assert!(c.exact && c.preference.min == 0.5 && c.preference.max == 0.5);
+        let e = ea();
+        assert_eq!(
+            (
+                e.width,
+                e.population,
+                e.neighborhood,
+                e.edges,
+                e.movement,
+                e.order,
+                e.exact
+            ),
+            (
+                50,
+                2000,
+                Neighborhood::VonNeumann,
+                Edges::Torus,
+                Movement::Random,
+                Order::Random,
+                false
+            )
+        );
+        assert_eq!(c.max_neighbors(), 8);
+        assert_eq!(
+            SchellingConfig {
+                radius: 2,
+                ..c.clone()
+            }
+            .max_neighbors(),
+            24
+        );
+        assert_eq!(e.max_neighbors(), 4);
+    }
+
+    #[test]
+    fn exact_counts_split_the_population() {
+        let w = SchellingWorld::new(SchellingConfig::default(), 5).unwrap();
+        assert_eq!(w.agents().filter(|a| a.red).count(), 69);
+        let m = SchellingWorld::new(
+            SchellingConfig {
+                red_share: 2.0 / 3.0,
+                ..SchellingConfig::default()
+            },
+            5,
+        )
+        .unwrap();
+        assert_eq!(m.agents().filter(|a| a.red).count(), 92);
+    }
+
+    #[test]
+    fn bounded_corners_and_edges_count_what_is_there() {
+        let mut w = empty71(16, 13, 1);
+        let corner = put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 1, 0, true, 0.5);
+        put(&mut w, 0, 1, false, 0.5);
+        put(&mut w, 15, 12, false, 0.5);
+        assert_eq!(
+            w.neighbors(&agent(&w, corner)),
+            (1, 2),
+            "a corner sees 3 squares; 2 are occupied"
+        );
+        assert_eq!(w.adj[w.torus.index(Pos::new(0, 0))].len(), 3);
+        assert_eq!(
+            w.adj[w.torus.index(Pos::new(5, 0))].len(),
+            5,
+            "an edge square has 5 neighbors"
+        );
+        assert_eq!(w.adj[w.torus.index(Pos::new(5, 5))].len(), 8);
+        let wide = SchellingWorld::new(
+            SchellingConfig {
+                population: 0,
+                radius: 2,
+                ..SchellingConfig::default()
+            },
+            1,
+        )
+        .unwrap();
+        assert_eq!(wide.adj[wide.torus.index(Pos::new(5, 5))].len(), 24);
+        assert_eq!(wide.adj[wide.torus.index(Pos::new(0, 0))].len(), 8);
+    }
+
+    #[test]
+    fn demand_tables_bound_like_neighbors_both_ways() {
+        let mut c = SchellingConfig::default();
+        // Fig. 17's integrationists among 8 neighbors: at least 3, at most 6 alike.
+        let (mut min, mut max) = (vec![0u8; 9], (0..=8u8).collect::<Vec<_>>());
+        min[8] = 3;
+        max[8] = 6;
+        c.red_demand = Demand { min, max };
+        c.population = 0;
+        let w = SchellingWorld::new(c, 1).unwrap();
+        assert!(!w.content(true, 0.5, 2, 8) && w.content(true, 0.5, 3, 8));
+        assert!(w.content(true, 0.5, 6, 8) && !w.content(true, 0.5, 7, 8));
+        assert!(
+            !w.content(false, 0.5, 3, 8),
+            "blue keeps the share: 3 of 8 is under half"
+        );
+        assert!(
+            w.content(false, 0.5, 0, 0),
+            "under a share, no neighbors is content"
+        );
+    }
+
+    #[test]
+    fn the_nearest_move_takes_the_closest_acceptable_square() {
+        // A red in the corner beside two blues who are content anywhere; the
+        // nearest squares where it has at least half red neighbors (here, no
+        // neighbors at all) are three steps away, one along each edge.
+        for seed in 1..10 {
+            let mut w = empty71(16, 13, seed);
+            let red = put(&mut w, 0, 0, true, 0.5);
+            put(&mut w, 1, 0, false, 0.0);
+            put(&mut w, 0, 1, false, 0.0);
+            w.step();
+            assert!([(3, 0), (0, 3)].contains(&at(&w, red)), "{:?}", at(&w, red));
+        }
+    }
+
+    #[test]
+    fn nearest_ties_are_broken_at_random() {
+        let spots: std::collections::BTreeSet<_> = (1..40)
+            .map(|seed| {
+                let mut w = empty71(16, 13, seed);
+                let red = put(&mut w, 0, 0, true, 0.5);
+                put(&mut w, 1, 0, false, 0.0);
+                put(&mut w, 0, 1, false, 0.0);
+                w.step();
+                at(&w, red)
+            })
+            .collect();
+        assert_eq!(
+            spots.len(),
+            2,
+            "both equally near squares are chosen sometimes"
+        );
+    }
+
+    #[test]
+    fn rounds_skip_the_content_and_defer_the_newly_discontent() {
+        // One row: A(red) b · C(blue) · B(red) b, blues b content anywhere.
+        let mut w = empty71(7, 1, 1);
+        let a = put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 1, 0, false, 0.0);
+        let c = put(&mut w, 3, 0, false, 0.5);
+        let b = put(&mut w, 5, 0, true, 0.5);
+        put(&mut w, 6, 0, false, 0.0);
+        assert!(!w.is_satisfied(&agent(&w, a)) && !w.is_satisfied(&agent(&w, b)));
+        assert!(w.is_satisfied(&agent(&w, c)), "C has no neighbors yet");
+        w.step();
+        assert_eq!(
+            at(&w, a),
+            (4, 0),
+            "A goes beside B, the nearest square half red"
+        );
+        assert_eq!(at(&w, b), (5, 0), "B, content when its turn came, stays");
+        assert_eq!(
+            at(&w, c),
+            (3, 0),
+            "C, made discontent by A, waits for the next round"
+        );
+        assert!(!w.is_satisfied(&agent(&w, c)));
+        w.step();
+        assert_eq!(at(&w, c), (2, 0), "and moves in round two, beside the blue");
+    }
+
+    #[test]
+    fn wide_neighborhoods_keep_their_pools_right() {
+        // 24 neighbors make 325 (like, occupied) classes: more than a byte holds.
+        for movement in [Movement::Random, Movement::Nearest] {
+            let c = SchellingConfig {
+                radius: 2,
+                movement,
+                ..SchellingConfig::default()
+            };
+            let mut w = SchellingWorld::new(c, 2).unwrap();
+            for _ in 0..6 {
+                w.step();
+            }
+            for red in [false, true] {
+                let mut direct: Vec<usize> = (0..w.torus.len())
+                    .filter(|&i| w.grid[i].is_none())
+                    .filter(|&i| {
+                        let (mut like, mut occupied) = (0, 0);
+                        for &j in &w.adj[i] {
+                            if let Some(id) = w.grid[j as usize] {
+                                occupied += 1;
+                                like += u32::from(w.agents[&id].red == red);
+                            }
+                        }
+                        w.content(red, 0.5, like, occupied)
+                    })
+                    .collect();
+                direct.sort_unstable();
+                let pooled: Vec<usize> = pooled(&w, red, 0.5)
+                    .iter()
+                    .map(|&p| w.torus.index(p))
+                    .collect();
+                assert_eq!(pooled, direct, "{movement:?} red={red}");
+            }
+        }
+    }
+
+    #[test]
+    fn like_near_counts_the_eight_surrounding_squares_whatever_the_neighborhood() {
+        // With 24 neighbors counted, `like_near` still reads the eight around.
+        let mut w = SchellingWorld::new(
+            SchellingConfig {
+                width: 7,
+                height: 7,
+                population: 0,
+                radius: 2,
+                ..SchellingConfig::default()
+            },
+            1,
+        )
+        .unwrap();
+        put(&mut w, 3, 3, true, 0.0);
+        put(&mut w, 4, 3, true, 0.0);
+        put(&mut w, 5, 5, false, 0.0); // two squares out: in the 24, not the 8
+        let s = w.snapshot();
+        // reds: each sees only the other red in its eight (1 of 1); the blue sees nobody in its eight.
+        assert_eq!(s.like_near, 1.0);
+        assert!(s.segregation < 1.0, "over 24 squares the reds see the blue");
+    }
+
+    #[test]
+    fn a_tiny_torus_never_counts_an_agent_as_its_own_neighbor() {
+        let mut w = SchellingWorld::new(
+            SchellingConfig {
+                width: 3,
+                height: 1,
+                population: 0,
+                ..ea()
+            },
+            1,
+        )
+        .unwrap();
+        let a = put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 1, 0, false, 0.5);
+        assert_eq!(
+            w.neighbors(&agent(&w, a)),
+            (0, 1),
+            "one blue neighbor, and not itself"
+        );
+        assert!(!w.is_satisfied(&agent(&w, a)));
+    }
+
+    #[test]
+    fn nobody_scans_the_board_when_no_square_could_suit() {
+        // A crowded board where almost no one can be content: every mover's
+        // search must give up at once, not walk the whole board each round.
+        let c = SchellingConfig {
+            width: 100,
+            height: 100,
+            population: 9000,
+            preference: FRange { min: 0.9, max: 0.9 },
+            ..SchellingConfig::default()
+        };
+        let mut w = SchellingWorld::new(c, 1).unwrap();
+        let t = std::time::Instant::now();
+        w.step();
+        w.step();
+        assert!(t.elapsed().as_secs_f64() < 2.0, "{:?}", t.elapsed());
+    }
+
+    #[test]
+    fn the_snapshot_counts_like_neighbors_by_color_and_the_unmixed() {
+        let mut w = empty71(7, 1, 1);
+        put(&mut w, 0, 0, true, 0.0);
+        put(&mut w, 1, 0, true, 0.0);
+        put(&mut w, 2, 0, false, 0.0);
+        put(&mut w, 4, 0, false, 0.0);
+        let s = w.snapshot();
+        // reds: 1/1 and 1/2; blues: 0/1 and none.
+        assert_eq!((s.like_red, s.like_blue), (0.75, 0.0));
+        assert_eq!(s.no_unlike, 0.5, "the red at 0 and the lone blue at 4");
+        assert_eq!(s.like_ratio, 1.0, "two like links, two unlike");
+        assert_eq!((s.neighbors_red, s.neighbors_blue), (1.5, 0.5));
+    }
+
     /// A `w` × `h` world with nobody on it (agents are placed by `put`).
     fn empty(w: u32, h: u32) -> SchellingWorld {
         SchellingWorld::new(
@@ -853,7 +1782,7 @@ mod tests {
                 width: w,
                 height: h,
                 population: 0,
-                ..SchellingConfig::default()
+                ..ea()
             },
             1,
         )
@@ -898,8 +1827,8 @@ mod tests {
 
     /// The filed sites an agent of color `red` with `preference` may pick, in site order.
     fn pooled(w: &SchellingWorld, red: bool, preference: f64) -> Vec<Pos> {
-        let ok = acceptable_classes(preference);
-        let mut out: Vec<Pos> = (0..CLASSES)
+        let ok = w.acceptable(red, Some(preference));
+        let mut out: Vec<Pos> = (0..w.classes)
             .filter(|&k| ok[k])
             .flat_map(|k| {
                 w.pools[usize::from(red)][k]
@@ -918,7 +1847,7 @@ mod tests {
             height: 9,
             population: 80,
             preference: FRange { min: 0.2, max: 0.8 },
-            ..SchellingConfig::default()
+            ..ea()
         };
         c.residence = Residence {
             enabled: true,
@@ -1053,7 +1982,7 @@ mod tests {
             width: 20,
             height: 20,
             population: 300,
-            ..SchellingConfig::default()
+            ..ea()
         };
         c.residence = Residence {
             enabled: true,
@@ -1154,7 +2083,7 @@ mod tests {
 
     #[test]
     fn setup_places_the_population_on_distinct_sites_with_both_colors() {
-        let w = SchellingWorld::new(SchellingConfig::default(), 3).unwrap();
+        let w = SchellingWorld::new(ea(), 3).unwrap();
         assert_eq!(w.agents().count(), 2000);
         let reds = w.agents().filter(|a| a.red).count();
         assert!((900..=1100).contains(&reds), "{reds}");
@@ -1165,7 +2094,7 @@ mod tests {
                     min: 0.25,
                     max: 0.5,
                 },
-                ..SchellingConfig::default()
+                ..ea()
             },
             3,
         )
@@ -1180,7 +2109,7 @@ mod tests {
     #[test]
     fn validation_names_fields() {
         let bad = SchellingConfig {
-            width: 4,
+            width: 0,
             population: 2500,
             preference: FRange { min: 0.6, max: 0.5 },
             residence: Residence {
@@ -1188,7 +2117,7 @@ mod tests {
                 min: 0,
                 max: 5,
             },
-            ..SchellingConfig::default()
+            ..ea()
         };
         let fields: Vec<String> = bad
             .validate()
@@ -1224,12 +2153,12 @@ mod tests {
 
     #[test]
     fn set_config_refuses_every_change() {
-        let mut w = SchellingWorld::new(SchellingConfig::default(), 1).unwrap();
-        let same = ModelConfig::Schelling(SchellingConfig::default());
+        let mut w = SchellingWorld::new(ea(), 1).unwrap();
+        let same = ModelConfig::Schelling(ea());
         assert!(Model::set_config(&mut w, same).is_ok());
         let next = SchellingConfig {
             population: 10,
-            ..SchellingConfig::default()
+            ..ea()
         };
         let e = Model::set_config(&mut w, ModelConfig::Schelling(next)).unwrap_err();
         assert_eq!(e[0].field, "population");
@@ -1237,7 +2166,7 @@ mod tests {
 
     #[test]
     fn schema_paths_exist_and_match_what_set_config_allows() {
-        let config = ModelConfig::Schelling(SchellingConfig::default());
+        let config = ModelConfig::Schelling(ea());
         crate::schema::check_schema(&schema(), &config, || {
             crate::model::ModelWorld::new(config.clone(), 1).unwrap()
         });

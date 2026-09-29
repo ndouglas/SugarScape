@@ -13,6 +13,7 @@ import {
   isThresholdsView,
   isPunishmentView,
   isZiView,
+  isLineView,
   isRetirementView,
   isFarolView,
   isCivilView,
@@ -714,5 +715,18 @@ describe('image scoring', () => {
     expect(ticksLeft(image(0), 5)).toBe(Infinity);
     expect(finishesUnpredictably(image(500))).toBe(false);
     expect(calendarYear(image(500), 5)).toBeNull();
+  });
+});
+
+describe("Schelling's line", () => {
+  it('is read by its tag, drawn in Color or Satisfaction, and told apart from a Schelling site', () => {
+    expect(modelOf({ model: 'line' } as ModelConfig)).toBe('line');
+    expect(COLOR_MODES.line.map(([m]) => m)).toEqual(['color', 'satisfaction']);
+    expect(MODEL_OVERLAYS.line).toEqual([]);
+    const person = { place: 3, agent: { id: 4, place: 3, color: 'red', like: 5, neighbors: 8, satisfied: true } } as AnyInspection;
+    const pastTheEnd = { place: 90, agent: null } as AnyInspection;
+    const schellingSite = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
+    expect(isLineView(person) && isLineView(pastTheEnd)).toBe(true);
+    expect(isLineView(schellingSite)).toBe(false);
   });
 });

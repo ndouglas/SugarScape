@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 149] = [
+const BUILTINS: [Builtin; 155] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -989,6 +989,30 @@ const BUILTINS: [Builtin; 149] = [
     Builtin {
         id: "schelling-tipping",
         json: include_str!("../../../sweeps/schelling-tipping.json"),
+    },
+    Builtin {
+        id: "s71-demand",
+        json: include_str!("../../../sweeps/s71-demand.json"),
+    },
+    Builtin {
+        id: "s71-vacancy",
+        json: include_str!("../../../sweeps/s71-vacancy.json"),
+    },
+    Builtin {
+        id: "s71-radius",
+        json: include_str!("../../../sweeps/s71-radius.json"),
+    },
+    Builtin {
+        id: "s71-order",
+        json: include_str!("../../../sweeps/s71-order.json"),
+    },
+    Builtin {
+        id: "line-radius",
+        json: include_str!("../../../sweeps/line-radius.json"),
+    },
+    Builtin {
+        id: "line-reach",
+        json: include_str!("../../../sweeps/line-reach.json"),
     },
     Builtin {
         id: "lhv-calibration",
@@ -2391,6 +2415,12 @@ mod tests {
                 "n-goods-carrying-capacity",
                 "bargaining-rules",
                 "schelling-tipping",
+                "s71-demand",
+                "s71-vacancy",
+                "s71-radius",
+                "s71-order",
+                "line-radius",
+                "line-reach",
                 "lhv-calibration",
                 "lhv-quirks",
                 "cv-ratio-rules",

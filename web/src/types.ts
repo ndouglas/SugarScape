@@ -160,12 +160,15 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
 
-/** The book's Schelling variant (animations VI-4 to VI-7). */
+/** A demand table: for n occupied neighbors, the least (`min[n]`) and most (`max[n]`) alike wanted; empty uses the share. */
+export interface Demand { min: number[]; max: number[] }
+
+/** Schelling's checkerboard (1971) by default; Epstein & Axtell's variant (VI-4 to VI-7) as presets. */
 export interface SchellingConfig {
   model: 'schelling';
   width: number;
@@ -173,6 +176,16 @@ export interface SchellingConfig {
   population: number;
   preference: FRange;
   residence: { enabled: boolean; min: number; max: number };
+  neighborhood: 'moore' | 'von_neumann';
+  radius: number;
+  edges: 'bounded' | 'torus';
+  movement: 'nearest' | 'random';
+  order: 'rounds' | 'random';
+  sweep: 'reading' | 'center_out';
+  red_share: number;
+  exact: boolean;
+  red_demand: Demand;
+  blue_demand: Demand;
 }
 
 /** Ring World (animations VI-8 and VI-9). */
@@ -559,7 +572,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1415,7 +1428,7 @@ export interface SchellingAgentView {
   color: 'red' | 'blue';
   preference: number;
   satisfied: boolean;
-  /** Like-colored and all occupied von Neumann neighbors. */
+  /** Like-colored and all occupied neighbors. */
   like: number;
   neighbors: number;
   age: number;
@@ -1423,6 +1436,22 @@ export interface SchellingAgentView {
   residence: number | null;
 }
 export interface SchellingInspection { site: { x: number; y: number }; agent: SchellingAgentView | null }
+
+/** Schelling's line (1971): a row of stars (Red) and zeros (Blue) with no gaps. */
+export interface LineConfig {
+  model: 'line';
+  length: number;
+  red_share: number;
+  exact: boolean;
+  radius: number;
+  preference: number;
+  reach: number;
+  fallback: number;
+  wrap: number;
+}
+/** A person in the line: its place, color and how many of its neighbors are alike. */
+export interface LinePersonView { id: number; place: number; color: 'red' | 'blue'; like: number; neighbors: number; satisfied: boolean }
+export interface LineInspection { place: number; agent: LinePersonView | null }
 export interface RingInspection { site: { x: number; sugar: number; capacity: number }; agent: { id: number; vision: number } | null }
 /** A Long House Valley cell: its zone, this year's PDSI class and yields, water and occupants. */
 export interface ValleyCellView {
@@ -1699,7 +1728,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
