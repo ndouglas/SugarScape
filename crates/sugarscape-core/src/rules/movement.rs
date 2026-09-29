@@ -158,6 +158,9 @@ pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
 ///   keeps no pollution: the Flump doesn't see it out of sight).
 ///
 /// A non-rememberer's list is rule M's exactly, value for value.
+///
+/// Minds 5: a hungry agent's own caches join last (`caching::join_caches`),
+/// which leaves the list untouched for an agent without caches.
 pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
     let a = world.agent(id).expect("live agent");
     let (pos, vision) = (a.pos, a.vision);
@@ -193,8 +196,9 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
             out.push((q, d, value(q)));
         }
     }
-    let start = out.len();
+    let mut start = out.len();
     if !known {
+        crate::minds::caching::join_caches(world, id, &mut out, &mut start);
         return (out, start);
     }
     let torus = world.torus;
@@ -225,6 +229,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
         }
         out.push((q, lattice_distance(torus, pos, q), welfare.of(&levels)));
     }
+    crate::minds::caching::join_caches(world, id, &mut out, &mut start);
     (out, start)
 }
 
@@ -244,7 +249,12 @@ fn true_value(world: &World, id: AgentId, p: Pos) -> f64 {
     if world.truffle(p) == Some(true) {
         levels[0] += world.config.truffles.value;
     }
-    welfare_of(world, a, &levels)
+    let value = welfare_of(world, a, &levels);
+    // Minds 5: a hungry agent's own cache counts as its candidate did.
+    match crate::minds::caching::cache_value(world, id, p) {
+        Some(cache) => value.max(cache),
+        None => value,
+    }
 }
 
 /// Minds 3's diagnostics for a rememberer's choice of `target` among
@@ -284,14 +294,46 @@ pub(crate) fn record_choice(
 /// gathers every good there, plus a truffle spot's value (Minds 3) if it's
 /// ripe: into good 0's harvest and the agent's holdings, like any other
 /// gathered sugar, and the spot goes unripe until `tick + regrow`.
+///
+/// Minds 5:
+/// - **Carrying limit.** With `caching.capacity` C > 0, good 0 gathered is
+///   min(level, C − holdings) (≥ 0) and the rest stays on the site. A ripe
+///   truffle's value is capped by what room is left; the spot is picked all
+///   the same, so the unpicked excess is lost with its ripeness (as a
+///   truffle's sugar was never on the site).
+/// - **Dig.** At a site holding its own cache, while holdings are below the
+///   reserve, the agent digs instead: it takes min(cache, room) (room
+///   unlimited with C = 0) as the tick's harvest and leaves the site and
+///   any truffle as they are.
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
     let (tags, mut social, remembers) = (a.tags, a.social, a.remembers);
+    let capacity = world.config.caching.capacity;
+    let site_index = world.torus.index(target) as u32;
+    let digs = !a.caches.is_empty()
+        && a.caches.contains_key(&site_index)
+        && crate::minds::caching::hungry(world, id);
+    // Room under the carrying limit; infinite with no limit.
+    let room = |held: f64| {
+        if capacity > 0 {
+            (f64::from(capacity) - held).max(0.0)
+        } else {
+            f64::INFINITY
+        }
+    };
+    let held = a.holdings[0];
     world.move_agent(id, target);
     social.moved(world, Seen::at(world, target), tags);
-    let site = world.site_mut(target);
     let mut harvest = Harvest::default();
+    if digs {
+        harvest.gathered[0] = crate::minds::caching::dig(world, id, site_index, room(held));
+        let a = world.agent_mut(id).expect("live agent");
+        a.holdings[0] += harvest.gathered[0];
+        a.social = social;
+        return harvest;
+    }
+    let site = world.site_mut(target);
     for (got, level) in harvest
         .gathered
         .iter_mut()
@@ -300,6 +342,13 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     {
         *got = *level;
         *level = 0.0;
+    }
+    if capacity > 0 {
+        // Caching runs with exactly one good (validated): only good 0 is
+        // limited. What doesn't fit goes back on the site.
+        let take = harvest.gathered[0].min(room(held));
+        site.resource[0] = harvest.gathered[0] - take;
+        harvest.gathered[0] = take;
     }
     let now = world.tick;
     let regrow = u64::from(world.config.truffles.regrow);
@@ -312,7 +361,11 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         }
     }
     if picked {
-        harvest.gathered[0] += value;
+        harvest.gathered[0] += if capacity > 0 {
+            value.min(room(held + harvest.gathered[0]))
+        } else {
+            value
+        };
         world.events.truffles_found += 1;
         if remembers {
             world.events.truffles_by_rememberers += 1;

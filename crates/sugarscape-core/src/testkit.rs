@@ -84,6 +84,8 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         memory: crate::minds::memory::Memory::default(),
         rate: 0.0,
         leaving: None,
+        caches: std::collections::BTreeMap::new(),
+        cache_since: std::collections::BTreeMap::new(),
     }
 }
 

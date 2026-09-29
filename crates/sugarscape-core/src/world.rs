@@ -126,6 +126,18 @@ pub struct TickEvents {
     /// Minds 4: MVT Flumps that set `leaving` this tick (their local value
     /// fell below ρ).
     pub leaves: u32,
+    /// Minds 5: sugar buried into caches this tick.
+    pub buried: f64,
+    /// Minds 5: sugar dug out of caches this tick.
+    pub dug: f64,
+    /// Minds 5: sugar left in the caches of agents removed this tick (it
+    /// leaves the world with them).
+    pub cache_lost: f64,
+    /// Minds 5: Σ over this tick's `digs` of the dug cache's age (ticks since
+    /// its first unit was buried).
+    pub dig_ages_sum: u64,
+    /// Minds 5: digs this tick (each taking a positive amount).
+    pub digs: u32,
 }
 
 #[derive(Clone)]
@@ -594,6 +606,15 @@ impl World {
                     eat(u64::from(t));
                 }
             }
+            // Minds 5: caches only when there are any, so every world
+            // without caching hashes as before.
+            if !a.caches.is_empty() {
+                eat(a.caches.len() as u64);
+                for (&site, &amount) in &a.caches {
+                    eat(u64::from(site));
+                    eat(amount.to_bits());
+                }
+            }
             if disease {
                 eat(u64::from(a.immune.len()));
                 eat(a.immune.bits());
@@ -625,8 +646,14 @@ impl World {
     }
 
     /// Takes an agent off the grid with no death event and no inheritance.
+    /// Every removal (every cause of death, and an edit) passes here, so a
+    /// Minds 5 agent's caches are counted into `events.cache_lost` once and
+    /// leave the world with it.
     pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
         let agent = self.agents.remove(&id)?;
+        if !agent.caches.is_empty() {
+            self.events.cache_lost += agent.caches.values().sum::<f64>();
+        }
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
         if !self.loans.is_empty() {

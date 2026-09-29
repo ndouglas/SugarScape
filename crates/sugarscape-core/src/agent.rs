@@ -1,5 +1,7 @@
 //! Agents and their genetic and cultural attributes.
 
+use std::collections::BTreeMap;
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -236,6 +238,13 @@ pub struct Agent {
     /// the site becomes occupied. Never hashed, exported or shared, like
     /// `plan`.
     pub leaving: Option<Pos>,
+    /// Minds 5: this agent's caches, site index → sugar buried there
+    /// (`minds::caching`). Nobody else sees or takes them; they don't decay,
+    /// die with the agent and aren't inherited. Hashed only when non-empty.
+    pub caches: BTreeMap<u32, f64>,
+    /// Minds 5: for each cache, the tick of the first unit buried there since
+    /// the site's cache was last empty (for the age of what's dug).
+    pub cache_since: BTreeMap<u32, u64>,
 }
 
 impl Agent {
@@ -278,6 +287,8 @@ impl Agent {
             memory: crate::minds::memory::Memory::default(),
             rate: 0.0,
             leaving: None,
+            caches: BTreeMap::new(),
+            cache_since: BTreeMap::new(),
         };
         agent.rate = f64::from(agent.metabolism[0]);
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
