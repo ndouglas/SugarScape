@@ -1,6 +1,6 @@
 {
   "name": "Minds 2: carrying capacity against walking speed",
-  "description": "The mean population over ticks 300–500 of Animation II-2's world when Flumps walk 1, 2, 3, 4, 6 or 10 steps a tick along an A* path, against rule M's jump at each point. The book reports about 224 under the jump. Seeds 1–20.",
+  "description": "The mean population over ticks 300–500 of Animation II-2's world when agents walk 1, 2, 3, 4, 6 or 10 steps a tick along an A* path, against rule M's jump at each point. The book reports about 224 under the jump. Seeds 1–20.",
   "base": { "preset": "walk-capacity" },
   "x": { "label": "Steps per tick", "path": "movement.speed", "values": [1, 2, 3, 4, 6, 10] },
   "series": { "label": "Movement", "values": [

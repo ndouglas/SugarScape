@@ -50,13 +50,13 @@ pub struct Plan {
     pub walked: bool,
 }
 
-/// Minds 4: a GOAP Flump's foraging plan (`decision.rule: goap`): the
+/// Minds 4: a GOAP agent's foraging plan (`decision.rule: goap`): the
 /// targets it hasn't reached yet, each with the value it was planned at,
 /// what the whole plan was to gather and the goal G it planned for. Kept
 /// (with empty steps once finished) until it replans; cleared when the next
 /// target is invalidated. It
-/// decides where the Flump goes, but like `plan` it's never hashed,
-/// exported or shared: it's rebuilt from what the Flump sees and remembers.
+/// decides where the agent goes, but like `plan` it's never hashed,
+/// exported or shared: it's rebuilt from what the agent sees and remembers.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GoapPlan {
     /// Remaining targets in order, each with its value when planned.
@@ -218,21 +218,21 @@ pub struct Agent {
     /// other rules. Observation for Inspect, and
     /// behavior under GOAP, but never hashed, exported or shared.
     pub goap_plan: Option<GoapPlan>,
-    /// Minds 3: whether this Flump remembers sites out of sight, drawn from
+    /// Minds 3: whether this agent remembers sites out of sight, drawn from
     /// `memory.share` when `memory.span > 0` (always false otherwise).
     pub remembers: bool,
-    /// Minds 3: sites this Flump remembers (observation only: never hashed,
+    /// Minds 3: sites this agent remembers (observation only: never hashed,
     /// exported or shared, like `social`; empty unless `remembers`).
     pub memory: crate::minds::memory::Memory,
     /// Minds 4: the marginal value theorem's running estimate ρ of the
     /// habitat's intake rate (`decision.rule: mvt`), updated from good 0's
-    /// harvest after every move; starts at the Flump's own good-0
+    /// harvest after every move; starts at the agent's own good-0
     /// metabolism, with no draw. Clamped at ≥ 0 and never NaN. Never
     /// hashed, exported or shared, like `plan`.
     pub rate: f64,
-    /// Minds 4: the site a Flump under MVT has committed to leaving for,
+    /// Minds 4: the site an agent under MVT has committed to leaving for,
     /// while its own patch's local value has fallen below ρ; `None` under
-    /// every other rule and while a Flump stays. Cleared on arrival or if
+    /// every other rule and while an agent stays. Cleared on arrival or if
     /// the site becomes occupied. Never hashed, exported or shared, like
     /// `plan`.
     pub leaving: Option<Pos>,

@@ -1,5 +1,5 @@
 //! Minds 4's marginal-value rule (`decision.rule: mvt`; Constantino & Daw
-//! 2015): a Flump stays on a patch while its immediate surroundings still
+//! 2015): an agent stays on a patch while its immediate surroundings still
 //! out-yield a running estimate ρ of the habitat's average intake rate, and
 //! leaves for the best site it knows of once they don't.
 //!
@@ -8,14 +8,14 @@
 //!   exponential moving average Constantino & Daw fit foragers to. Clamped
 //!   at ≥ 0; `f64::max` also turns a NaN result into 0 rather than letting
 //!   it escape (Review Focus 5).
-//! - **Deciding.** A Flump already committed to leaving (`leaving`) walks
+//! - **Deciding.** An agent already committed to leaving (`leaving`) walks
 //!   there without reconsidering, so a better option passed along the way
 //!   doesn't distract it. The commitment is dropped, and decided again the
 //!   same tick, once it's reached or once it's no longer one of the
-//!   Flump's reachable candidates (occupied out from under it, walled off,
+//!   agent's reachable candidates (occupied out from under it, walled off,
 //!   or where the last walk found no path — `reachable_candidates`, Task
 //!   4's filter over `candidates_with_memory`). With nothing committed, the
-//!   Flump looks at its own site and its lattice neighbors only (distance ≤
+//!   agent looks at its own site and its lattice neighbors only (distance ≤
 //!   1): the best of those by believed value, ties broken as rule M breaks
 //!   them (`choose`, a draw among the nearest of the best). If that value
 //!   is at least ρ, it heads there — its own site included, so staying is
@@ -44,7 +44,7 @@ fn updated_rate(rate: f64, alpha: f64, gain: f64) -> f64 {
     (rate + alpha * (gain - rate)).max(0.0)
 }
 
-/// Whether `t` still holds as where the Flump is heading: it's arrived, or
+/// Whether `t` still holds as where the agent is heading: it's arrived, or
 /// `t` is still one of its reachable candidates (so, if it was in sight,
 /// it's still unoccupied; it isn't walled off; and it isn't where the last
 /// walk found no path).
@@ -63,7 +63,7 @@ fn best_known(torus: Torus, candidates: &[(Pos, u32, f64)]) -> Pos {
                 .then(a.1.cmp(&b.1))
                 .then(torus.index(a.0).cmp(&torus.index(b.0)))
         })
-        .expect("the Flump's own site is always a candidate")
+        .expect("the agent's own site is always a candidate")
         .0
 }
 
@@ -101,7 +101,7 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
             } else {
                 let t = best_known(world.torus, &candidates);
                 // Nothing known is worth anything: the best candidate is the
-                // Flump's own site. That isn't a leave — it just stays and
+                // agent's own site. That isn't a leave — it just stays and
                 // harvests in place, so neither `leaving` nor `events.leaves`
                 // is set.
                 if t != pos {
@@ -141,7 +141,7 @@ mod tests {
         World::new(c, 7).unwrap()
     }
 
-    /// A Flump at (x, y) with `vision` and rate ρ = `rate`.
+    /// An agent at (x, y) with `vision` and rate ρ = `rate`.
     fn forager(w: &mut World, x: u32, y: u32, vision: u32, rate: f64) -> AgentId {
         let id = spawn(w, x, y);
         let a = w.agent_mut(id).unwrap();
@@ -190,7 +190,7 @@ mod tests {
     #[test]
     fn leaving_commits_past_a_closer_distraction() {
         // Own site and every neighbor are worth 0, well below ρ = 1: the
-        // Flump commits to the only known sugar, three sites away.
+        // agent commits to the only known sugar, three sites away.
         let mut w = mvt_world(21, 0.1);
         let id = forager(&mut w, 5, 5, 6, 1.0);
         set_sugar(&mut w, 5, 8, 5.0);
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn a_commitment_taken_by_another_flump_is_dropped_and_redecided() {
+    fn a_commitment_taken_by_another_agent_is_dropped_and_redecided() {
         let mut w = mvt_world(21, 0.1);
         let id = forager(&mut w, 5, 5, 6, 1.0);
         set_sugar(&mut w, 5, 8, 5.0);
@@ -243,7 +243,7 @@ mod tests {
     #[test]
     fn nothing_known_worth_anything_stays_without_counting_a_leave() {
         // Own site and every candidate are worth 0, but ρ is nonzero: the
-        // local check fails (0 < ρ), so the Flump would ordinarily commit to
+        // local check fails (0 < ρ), so the agent would ordinarily commit to
         // leaving — except the best-known site over everything it knows of
         // is its own (nothing beats it), so this isn't a leave.
         let mut w = mvt_world(21, 0.1);

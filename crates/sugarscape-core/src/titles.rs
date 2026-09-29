@@ -127,47 +127,47 @@ pub const TITLES: [(&str, &str); 307] = [
     ),
     (
         "ifd-even",
-        "Two equal sugar patches: the Flumps split evenly",
+        "Two equal sugar patches: the agents split evenly",
     ),
     (
         "ifd-two-to-one",
-        "One patch yields twice as much, but draws fewer than twice the Flumps",
+        "One patch yields twice as much, but draws fewer than twice the agents",
     ),
     (
         "ifd-four-to-one",
-        "One patch yields four times as much, but draws under three times the Flumps",
+        "One patch yields four times as much, but draws under three times the agents",
     ),
     (
         "ifd-far-sighted",
-        "Flumps who can see across the gap come close to matching the yields",
+        "Agents who can see across the gap come close to matching the yields",
     ),
     (
         "ifd-no-starving",
-        "Nobody starves, and most Flumps never find sugar",
+        "Nobody starves, and most agents never find sugar",
     ),
     (
         "ifd-wander",
-        "Flumps who see no sugar wander: nearly all find a patch, but the split strays from the yields",
+        "Agents who see no sugar wander: nearly all find a patch, but the split strays from the yields",
     ),
     (
         "ifd-crowding",
-        "Flumps who avoid crowded sugar come closer to matching the yields",
+        "Agents who avoid crowded sugar come closer to matching the yields",
     ),
     (
         "ifd-travel",
-        "Flumps who prefer nearby sugar stray further from matching the yields",
+        "Agents who prefer nearby sugar stray further from matching the yields",
     ),
     (
         "walk-capacity",
-        "Flumps who walk instead of jump: fewer of them survive",
+        "Agents who walk instead of jump: fewer of them survive",
     ),
     (
         "walk-wealth",
-        "Flumps who walk are born and die, and wealth grows as lopsided as when they jump",
+        "Agents who walk are born and die, and wealth grows as lopsided as when they jump",
     ),
     (
         "walk-seasons",
-        "Walking through the seasons: Flumps still migrate, but fewer of them",
+        "Walking through the seasons: agents still migrate, but fewer of them",
     ),
     (
         "walk-waves",
@@ -175,7 +175,7 @@ pub const TITLES: [(&str, &str); 307] = [
     ),
     (
         "walk-fast",
-        "Flumps who walk three steps a tick: most of the lost population comes back",
+        "Agents who walk three steps a tick: most of the lost population comes back",
     ),
     (
         "ifd-fence",
@@ -183,7 +183,7 @@ pub const TITLES: [(&str, &str); 307] = [
     ),
     (
         "ifd-fence-far",
-        "The gap moves to the far end: a long walk to switch, and across patch sizes Flumps stray further from matching the yields",
+        "The gap moves to the far end: a long walk to switch, and across patch sizes agents stray further from matching the yields",
     ),
     (
         "ifd-wall",

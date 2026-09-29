@@ -1,6 +1,6 @@
 {
   "name": "Minds 2: carrying capacity against vision, walking and jumping",
-  "description": "The mean population over ticks 300–500 of Animation II-2's world against the vision range, when Flumps jump (rule M) or walk one step a tick. At vision 1 the two are the same rule. Seeds 1–20.",
+  "description": "The mean population over ticks 300–500 of Animation II-2's world against the vision range, when agents jump (rule M) or walk one step a tick. At vision 1 the two are the same rule. Seeds 1–20.",
   "base": { "preset": "walk-capacity" },
   "x": { "label": "Vision range", "values": [
     { "at": 1, "name": "1", "set": { "vision": { "min": 1, "max": 1 } } },

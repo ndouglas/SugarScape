@@ -412,9 +412,9 @@ impl Sim {
         self.model().inspect_json(x, y).map_err(edit_error)
     }
 
-    /// The Flump at `(x, y)`'s remembered sites (Minds 3; `World::memory_view`),
+    /// The agent at `(x, y)`'s remembered sites (Minds 3; `World::memory_view`),
     /// flattened as `[x, y, age, spot]` per site, in memory order. Empty for
-    /// no Flump there, one that doesn't remember, memory off, or a
+    /// no agent there, one that doesn't remember, memory off, or a
     /// non-sugarscape model.
     pub fn inspect_memory(&self, x: u32, y: u32) -> Vec<u32> {
         self.sugar_or(Vec::new(), |w| {

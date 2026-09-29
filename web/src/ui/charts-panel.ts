@@ -203,12 +203,12 @@ const CHARTS: ChartDef[] = [
     shown: (c) => c.decision?.rule === 'goap',
   },
   {
-    // Shares per living Flump (or per plan): whether the planner, and its memory, are used.
+    // Shares per living agent (or per plan): whether the planner, and its memory, are used.
     title: 'Plan use',
     kind: 'time',
     section: 'top',
     lines: fixed([
-      { key: 'replans', label: 'Plans per Flump', color: '--c1' },
+      { key: 'replans', label: 'Plans per agent', color: '--c1' },
       { key: 'fallbacks', label: 'Fell back to rate', color: '--c3' },
       { key: 'plans_remembered', label: 'Plans using memory', color: '--c4' },
     ]),
@@ -226,7 +226,7 @@ const CHARTS: ChartDef[] = [
     title: 'Leaving',
     kind: 'time',
     section: 'top',
-    lines: fixed([{ key: 'replans', label: 'Leaving per Flump', color: '--c2' }]),
+    lines: fixed([{ key: 'replans', label: 'Leaving per agent', color: '--c2' }]),
     range: [0, 1],
     shown: (c) => c.decision?.rule === 'mvt',
   },

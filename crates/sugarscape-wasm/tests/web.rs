@@ -599,7 +599,7 @@ fn planning_the_marginal_value_theorem_matches_its_golden_entry() {
 }
 
 #[wasm_bindgen_test]
-fn inspect_reports_a_goap_flumps_plan() {
+fn inspect_reports_a_goap_agents_plan() {
     let preset = sugarscape_core::presets::by_id("goap-mvt").unwrap();
     let json = serde_json::to_string(&preset.config).unwrap();
     let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
@@ -630,7 +630,7 @@ fn inspect_reports_a_goap_flumps_plan() {
             break;
         }
     }
-    assert!(found, "expected at least one Flump with a plan by tick 50");
+    assert!(found, "expected at least one agent with a plan by tick 50");
 }
 
 #[wasm_bindgen_test]
@@ -686,7 +686,7 @@ fn inspect_memory_lists_a_rememberers_sites_and_is_empty_elsewhere() {
     let (ex, ey) = empty_site.expect("expected at least one empty site");
     assert!(
         sim.inspect_memory(ex, ey).is_empty(),
-        "no Flump there: empty"
+        "no agent there: empty"
     );
 }
 

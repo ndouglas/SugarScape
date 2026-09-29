@@ -147,15 +147,15 @@ pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
 /// its remembered entries start (the list's length when there are none).
 ///
 /// - A site in sight (or its own) carries its true welfare, with
-///   `truffles.value` sugar added to good 0 when the Flump knows a spot
+///   `truffles.value` sugar added to good 0 when the agent knows a spot
 ///   there (a memory with `truffle: Some`) that it believes ripe.
 /// - After the sight list come the remembered sites out of sight, in site
 ///   index order: not its own site, not in sight, not a wall, and not
 ///   forgotten (last seen at most `span` ticks ago). Each carries the
 ///   welfare of its believed levels plus any believed-ripe truffle, at its
-///   torus Manhattan distance. True occupancy doesn't filter them (the Flump
+///   torus Manhattan distance. True occupancy doesn't filter them (the agent
 ///   can't see who's there), and they carry no pollution discount (memory
-///   keeps no pollution: the Flump doesn't see it out of sight).
+///   keeps no pollution: the agent doesn't see it out of sight).
 ///
 /// A non-rememberer's list is rule M's exactly, value for value.
 pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
@@ -169,7 +169,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
     let span = u64::from(mem.span);
     let truffle_value = config.truffles.value;
     let regrow = config.truffles.regrow;
-    // Whether the Flump knows a spot at site index `i` that it believes ripe
+    // Whether the agent knows a spot at site index `i` that it believes ripe
     // (and hasn't forgotten).
     let believes_ripe = |i: u32| -> bool {
         a.memory.sites.get(&i).is_some_and(|seen| {
@@ -876,7 +876,7 @@ mod tests {
 
     #[test]
     fn truffle_spots_dont_change_rule_ms_candidate_values() {
-        // A Flump that hasn't harvested the spot doesn't know it's there, so
+        // An agent that hasn't harvested the spot doesn't know it's there, so
         // its value never leaks into the plain rule M valuation.
         let mut w = truffle_world(11, 11, 1.0, 100.0, 3);
         let id = mover(&mut w, 2);
@@ -957,7 +957,7 @@ mod tests {
                 (Pos::new(5, 1), 4, 4.0),   // 0 + 4 ticks × 1
                 (Pos::new(5, 15), 10, 0.5), // 0 + 4 ticks × 1/8
             ],
-            "each site projects at its own row's rate, not the Flump's"
+            "each site projects at its own row's rate, not the agent's"
         );
     }
 
@@ -1192,7 +1192,7 @@ mod tests {
     }
 
     #[test]
-    fn a_crowded_world_of_rememberers_runs_without_two_flumps_on_a_site() {
+    fn a_crowded_world_of_rememberers_runs_without_two_agents_on_a_site() {
         let mut c = crate::presets::by_id("walk-capacity").unwrap().config;
         c.memory.span = 100;
         c.memory.share = 1.0;
@@ -1205,7 +1205,7 @@ mod tests {
             let n = at.len();
             at.sort_by_key(|p| (p.y, p.x));
             at.dedup();
-            assert_eq!(at.len(), n, "one Flump per site");
+            assert_eq!(at.len(), n, "one agent per site");
             assert!(w.agents().all(|a| w.occupant(a.pos) == Some(a.id)));
         }
         assert!(remembered > 0, "someone chose a remembered site");
