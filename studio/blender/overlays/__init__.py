@@ -10,6 +10,7 @@ from .panels import alike, bars, census, tally, counter, dials, hills, histogram
 from .lattice import earnings, helpers, kinds, legend, play, scores
 from .parts import Screen
 from .ring import gifts, rate, tolerance
+from .grid import payoff, ties
 from .plane import events, generation, mean_traits
 from .street import meetings
 
@@ -18,7 +19,7 @@ __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
 # The overlays drawn in screen space (on `Screen` anchors).
 SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
-          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits"}
+          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff"}
 
 
 BUILDERS = {
@@ -67,4 +68,6 @@ BUILDERS = {
     "events": events,
     "generation": generation,
     "mean-traits": mean_traits,
+    "ties": ties,
+    "payoff": payoff,
 }

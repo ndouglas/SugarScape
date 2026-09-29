@@ -4,7 +4,8 @@
 **Status:** in progress. Episodes 1 (Spatial games), 2 (Living neighbors,
 `2026-09-28-demographic-pd-spike.md`), 3 (Ethnocentrism, `2026-09-28-ethnocentrism-spike.md`),
 4 (Tags, `2026-09-28-tags-spike.md`), 5 (Reputation,
-`2026-09-28-image-scoring-spike.md`) and 6 (Norms, `2026-09-28-norms-spike.md`) are built.
+`2026-09-28-image-scoring-spike.md`), 6 (Norms, `2026-09-28-norms-spike.md`) and 7 (Friends and
+strangers, `2026-09-28-social-structure-spike.md`) are built.
 **Follows:** the Sugarscape series (`2026-09-26-sugarscape-series-plan.md`, complete), and keeps its
 rules.
 
@@ -41,8 +42,8 @@ result, and a finale collects them.
 | 3 | Ethnocentrism ✅ | Hammond & Axelrod 2006 | 50 × 50 torus, 4 colors | Favoritism works only because relatives live next door: scatter the babies and cooperation falls from 76% to 4.5%. Color-blind cooperation doesn't reproduce; the appendix's mutation rate is a slip |
 | 4 | Tags ✅ | Riolo, Cohen & Axelrod 2001 | 100 agents, well mixed | The cooperation is identical twins forced to help each other (the paper reports the twins; Edmonds & Hales showed tolerance does nothing without them). Table 1 needs p. 442's tie rule, not a coin flip |
 | 5 | Reputation (image scoring) ✅ | Nowak & Sigmund 1998; Leimar & Hammerstein 2001 | 100 agents, well mixed | The showcase run is the lucky one: discriminators win 1 run in 5. The universal constant reproduces to every digit; "two interactions per lifetime" doesn't suffice |
-| 6 | Norms ✅ | Axelrod 1986; Galán & Izquierdo 2005 | 20 agents | Punishing those who don't punish establishes the norm (92 of 100), but run on, an unstated tie rule decides whether it lasts |
-| 7 | Friends and strangers (social structure) | Cohen, Riolo & Axelrod 2001 | 256 agents: torus, fixed networks or strangers | The one that reproduces: fixed friends cooperate as well as neighbors (2.57 vs 2.55); strangers sit at 1.09 |
+| 6 | Norms ✅ | Axelrod 1986; Galán & Izquierdo 2005 | 20 agents | Punishing those who don't punish establishes the norm (92 of 100), but run on, an ambiguous tie rule decides whether it lasts |
+| 7 | Friends and strangers (social structure) ✅ | Cohen, Riolo & Axelrod 2001 | 256 agents: torus, fixed networks or strangers | The one that reproduces: fixed partners, scattered anywhere, cooperate nearly as well as neighbors (2.48 vs 2.56); strangers sit at 1.08; every row of Table 2 within 0.09 |
 | 8 | What didn't reproduce | all | — | The ledger |
 
 Numbers in this table are the repository's own records, at each model's seed count (10–100).

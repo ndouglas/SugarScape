@@ -15,6 +15,7 @@ from blender import lattice as lattice_board
 from blender import ring as ring_board
 from blender import street as street_board
 from blender import plane as plane_board
+from blender import grid as grid_board
 
 UPDATERS = []
 # The first exception the frame handler raised, if any.
@@ -159,7 +160,11 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     updaters = []
     timing = corners = None
     tracks = {}
-    if isinstance(d, dump_mod.Plane):
+    if isinstance(d, dump_mod.Grid):
+        timing = beat.timing(d.ticks)
+        updaters.append(grid_board.build(beat, d, timing))
+        materials.lights_and_world(scene, 30)
+    elif isinstance(d, dump_mod.Plane):
         timing = beat.timing(d.ticks)
         updaters.append(plane_board.build(beat, d, timing))
         materials.lights_and_world(scene, 40)

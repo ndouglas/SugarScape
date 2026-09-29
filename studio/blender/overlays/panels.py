@@ -196,7 +196,8 @@ def bars(beat, d, ctx):
     (measurements.json) — not one run, since captions rank the medians.
     params: `title`, `rows` (groups of (label, key) pairs, the first teal and
     the second coral), `format` ("pct" or "num"), `top` (the bar scale; for
-    numbers, the value of a full bar), `y` (the panel's height on screen)."""
+    numbers, the value of a full bar), `digits` (decimal places for numbers,
+    when given), `y` (the panel's height on screen)."""
     params = {**SURVIVAL, **beat.params}
     medians, seeds = ctx.measured["medians"], ctx.measured["seeds"]
     percent = params.get("format", "pct") == "pct"
@@ -220,7 +221,12 @@ def bars(beat, d, ctx):
             bar_w = max(min(value / tops[i], 1.0) * width, 0.002)
             box(f"bars-bar-{i}-{j}", materials.knit(color), anchor,
                 location=(-0.04 + bar_w / 2, yy, 0), scale=(bar_w, 0.046, 0.004))
-            shown = f"{value:.0%}" if percent else (f"{value:.3f}" if value < 1 else f"{value:.0f}")
+            if percent:
+                shown = f"{value:.0%}"
+            elif "digits" in params:
+                shown = f"{value:.{params['digits']}f}"
+            else:
+                shown = f"{value:.3f}" if value < 1 else f"{value:.0f}"
             text(f"bars-value-{i}-{j}", shown, 0.04, ink, anchor, location=(-0.02 + bar_w, yy - 0.012, 0), align="LEFT")
     return lambda frame: None
 

@@ -30,7 +30,10 @@ places before its meetings play out one by one (`street.py`). A norms shot's dum
 generation's agents (boldness, vengefulness, payoff) and, with `"gifts": true`, its cheats,
 punishments and metapunishments; `"every": n` keeps every nth generation, so a million generations
 fit a few hundred frames. It loads as a `Plane`: the boldness–vengefulness plane, a Flump per place
-standing on its square (`plane.py`).
+standing on its square (`plane.py`). A social-structure shot's dump records each period's agents (y, p,
+q, payoff) and, with `"gifts": true`, each agent's partners; it loads as a `Grid`: a 16 × 16 block,
+each Flump in its friendliness's shade, on its own square under the torus and in index order
+otherwise, with yarn lines to a few followed Flumps' partners (`grid.py`).
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set

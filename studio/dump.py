@@ -1,8 +1,8 @@
 """Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
 shot as a `Dump`, a spatial-games shot as a `Lattice`, and a demographic-PD
 shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`), a
-tags shot as a `Ring`, an image-scoring shot as a `Street`, and a norms shot as a
-`Plane`."""
+tags shot as a `Ring`, an image-scoring shot as a `Street`, a norms shot as a
+`Plane`, and a social-structure shot as a `Grid`."""
 
 import json
 from dataclasses import dataclass, field
@@ -238,6 +238,32 @@ class Plane:
         return self.frames[min(max(int(round(tick)), 0), self.ticks)]
 
 
+@dataclass(frozen=True)
+class GridFrame:
+    """A social-structure period: each agent's (y, p, q, score) as played,
+    and each agent's partners (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    partners: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Grid:
+    """A social-structure shot; `site` gives each agent's torus square (empty
+    for the other structures)."""
+
+    seed: int
+    ticks: int
+    config: dict
+    site: list
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
 def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
@@ -246,6 +272,10 @@ def parse(text):
         return _dpd(raw)
     if raw.get("model") == "ethno":
         return _ethno(raw)
+    if raw.get("model") == "structure":
+        return Grid(seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], site=raw["site"], stats=raw["stats"],
+                    frames=[GridFrame(f["tick"], [tuple(a) for a in f["agents"]], f.get("partners", []))
+                            for f in raw["frames"]])
     if raw.get("model") == "norms":
         frames = [PlaneFrame(f["tick"], [tuple(a) for a in f["agents"]], f.get("cheats", []),
                              [tuple(x) for x in f.get("punishments", [])], [tuple(x) for x in f.get("metapunishments", [])])

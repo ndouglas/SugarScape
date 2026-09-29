@@ -6,8 +6,9 @@
 //! strategies instead, the demographic Prisoner's Dilemma's each cycle's
 //! agents, births and deaths, ethnocentrism's each period's agents, the tags
 //! model's each generation's agents and gifts, image scoring's each
-//! generation's agents and meetings, and the norms game's each generation's
-//! agents and events (`run`). Other models are not filmed yet.
+//! generation's agents and meetings, the norms game's each generation's
+//! agents and events, and social structure's each period's agents and
+//! partners (`run`). Other models are not filmed yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -25,6 +26,7 @@ use crate::norms::{NormsConfig, NormsWorld, SERIES as NORMS_SERIES};
 use crate::presets;
 use crate::spatial::{Lattice, SpatialConfig, SpatialWorld, SERIES as SPATIAL_SERIES};
 use crate::stats;
+use crate::structure::{StructureConfig, StructureWorld, SERIES as STRUCTURE_SERIES};
 use crate::tags::{TagsConfig, TagsWorld, SERIES as TAGS_SERIES};
 use crate::world::{DeathCause, Trade, World};
 
@@ -169,6 +171,17 @@ impl Shot {
             other => Err(vec![FieldError::new(
                 "model",
                 format!("not a demographic-PD shot: {}", other.kind().as_str()),
+            )]),
+        }
+    }
+
+    /// A social-structure shot's config with `set` applied, validated.
+    pub fn structure_config(&self) -> Result<StructureConfig, Vec<FieldError>> {
+        match self.model_config()? {
+            ModelConfig::Structure(c) => Ok(c),
+            other => Err(vec![FieldError::new(
+                "model",
+                format!("not a social-structure shot: {}", other.kind().as_str()),
             )]),
         }
     }
@@ -734,6 +747,37 @@ pub struct NormsDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// `[y, p, q, score]`: a strategy as played this period, and its payoff
+/// per move.
+pub type StructureRow = (f64, f64, f64, f64);
+
+/// A social-structure shot's population after one period.
+#[derive(Clone, Debug, Serialize)]
+pub struct StructureFrame {
+    pub tick: u64,
+    pub agents: Vec<StructureRow>,
+    /// Each agent's partners this period (whether it chose them or they
+    /// chose it), in agent order (absent unless the shot asks, with
+    /// `"gifts": true`).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub partners: Vec<Vec<u32>>,
+}
+
+/// A whole social-structure shot, period 0 (before any play) first.
+#[derive(Clone, Debug, Serialize)]
+pub struct StructureDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub config: StructureConfig,
+    /// On the torus, each agent's square, row-major (16 × 16 for 256);
+    /// empty for the other structures.
+    pub site: Vec<u32>,
+    pub frames: Vec<StructureFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -745,6 +789,7 @@ pub enum Dump {
     Tags(TagsDump),
     Image(ImageDump),
     Norms(NormsDump),
+    Structure(StructureDump),
 }
 
 /// Runs `shot`, whatever its model.
@@ -773,7 +818,8 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
         | ModelConfig::Ethno(_)
         | ModelConfig::Tags(_)
         | ModelConfig::Image(_)
-        | ModelConfig::Norms(_) => {
+        | ModelConfig::Norms(_)
+        | ModelConfig::Structure(_) => {
             if !shot.place.is_empty() {
                 return Err(only("place", "sugarscape"));
             }
@@ -788,6 +834,12 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             if shot.every != 1 {
                 return Err(only("every", "norms"));
+            }
+            if matches!(shot.base()?, ModelConfig::Structure(_)) {
+                if shot.cells.is_some() || shot.scores {
+                    return Err(only(if shot.scores { "scores" } else { "cells" }, "spatial-games"));
+                }
+                return run_structure(shot).map(Dump::Structure);
             }
             if matches!(shot.base()?, ModelConfig::Image(_)) {
                 if shot.cells.is_some() || shot.scores {
@@ -821,7 +873,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring and norms, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms and social structure, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -1145,6 +1197,52 @@ pub fn run_norms(shot: &Shot) -> Result<NormsDump, Vec<FieldError>> {
         seed: shot.seed,
         ticks: shot.ticks,
         every: shot.every,
+        config,
+        frames,
+        stats,
+    })
+}
+
+fn structure_frame(world: &StructureWorld, partners: bool) -> StructureFrame {
+    StructureFrame {
+        tick: world.tick,
+        agents: world
+            .played()
+            .iter()
+            .zip(world.scores())
+            .map(|(s, &score)| (s.y, s.p, s.q, score))
+            .collect(),
+        partners: if partners {
+            world
+                .met()
+                .iter()
+                .map(|m| m.iter().map(|&(b, _)| b).collect())
+                .collect()
+        } else {
+            Vec::new()
+        },
+    }
+}
+
+/// Runs a social-structure shot and records every period.
+pub fn run_structure(shot: &Shot) -> Result<StructureDump, Vec<FieldError>> {
+    let config = shot.structure_config()?;
+    let mut world = StructureWorld::new(config.clone(), shot.seed)?;
+    let mut frames = vec![structure_frame(&world, false)];
+    for _ in 0..shot.ticks {
+        world.step();
+        frames.push(structure_frame(&world, shot.gifts));
+    }
+    let stats = STRUCTURE_SERIES
+        .iter()
+        .filter_map(|&name| world.stats.series(name).map(|s| (name.to_string(), s)))
+        .collect();
+    Ok(StructureDump {
+        format: FORMAT,
+        model: "structure",
+        seed: shot.seed,
+        ticks: shot.ticks,
+        site: world.graph().site.clone(),
         config,
         frames,
         stats,
@@ -1864,6 +1962,54 @@ mod tests {
             err(r#"{"preset": "ii-2-unit", "ticks": 1, "every": 2}"#),
             ["every"]
         );
+    }
+
+    fn structure(json: &str) -> StructureDump {
+        match super::run(&Shot::from_json(json).unwrap()).unwrap() {
+            Dump::Structure(d) => d,
+            _ => panic!("a social-structure shot"),
+        }
+    }
+
+    #[test]
+    fn a_structure_shot_records_partners_as_its_structure_gives_them() {
+        let torus = structure(r#"{"preset": "cra-2dk", "ticks": 3, "seed": 2, "gifts": true}"#);
+        assert_eq!(
+            (torus.model, torus.frames.len(), torus.site.len()),
+            ("structure", 4, 256)
+        );
+        let at: BTreeMap<u32, usize> = torus
+            .site
+            .iter()
+            .enumerate()
+            .map(|(a, &s)| (s, a))
+            .collect();
+        for f in &torus.frames[1..] {
+            assert_eq!(f.agents.len(), 256);
+            for (a, partners) in f.partners.iter().enumerate() {
+                // On the torus, exactly the four squares next door.
+                let s = torus.site[a];
+                let (x, y) = (s % 16, s / 16);
+                let mut expected: Vec<usize> = [
+                    ((x + 1) % 16, y),
+                    ((x + 15) % 16, y),
+                    (x, (y + 1) % 16),
+                    (x, (y + 15) % 16),
+                ]
+                .iter()
+                .map(|&(x, y)| at[&(y * 16 + x)])
+                .collect();
+                let mut got: Vec<usize> = partners.iter().map(|&b| b as usize).collect();
+                expected.sort();
+                got.sort();
+                assert_eq!(got, expected);
+            }
+        }
+        let fixed = structure(r#"{"preset": "cra-frn", "ticks": 3, "seed": 2, "gifts": true}"#);
+        assert!(fixed.site.is_empty());
+        assert_eq!(fixed.frames[1].partners, fixed.frames[3].partners);
+        let strangers = structure(r#"{"preset": "cra-rwr", "ticks": 3, "seed": 2, "gifts": true}"#);
+        assert_ne!(strangers.frames[1].partners, strangers.frames[2].partners);
     }
 
     #[test]
