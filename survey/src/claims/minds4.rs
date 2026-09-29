@@ -78,7 +78,7 @@ fn rule_name(rule: DecisionRule) -> &'static str {
     }
 }
 
-fn list(v: &[f64], digits: usize) -> String {
+pub(crate) fn list(v: &[f64], digits: usize) -> String {
     v.iter()
         .map(|x| format!("{x:.digits$}"))
         .collect::<Vec<_>>()
