@@ -3593,13 +3593,6 @@ mod tests {
     #[test]
     fn goap_and_mvt_knobs_live_and_prior_is_reset_only() {
         let a = Config::default();
-        let mut b = a.clone();
-        b.movement.mode = MoveMode::Walk;
-        b.decision.rule = DecisionRule::Goap;
-        b.goap.k = 4;
-        b.goap.horizon = 20;
-        b.goap.shortlist = Shortlist::Value;
-        b.mvt.alpha = 0.2;
         // `decision.rule` is already reset-only (checked elsewhere); the
         // knobs themselves are not.
         let f: Vec<String> = a

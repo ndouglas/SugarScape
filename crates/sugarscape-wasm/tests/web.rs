@@ -571,6 +571,52 @@ fn remembered_truffles_matches_its_golden_entry() {
 }
 
 #[wasm_bindgen_test]
+fn planning_the_marginal_value_theorem_matches_its_golden_entry() {
+    // Minds 4: GOAP planning; native and wasm must agree.
+    let preset = sugarscape_core::presets::by_id("goap-mvt").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0x08bc669f7b7ddb21");
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_a_goap_flumps_plan() {
+    let preset = sugarscape_core::presets::by_id("goap-mvt").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(50);
+
+    let (width, height) = (sim.width(), sim.height());
+    let mut found = false;
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let Some(goap) = agent.get("goap").and_then(|g| g.as_object()) else {
+                continue;
+            };
+            let steps = goap.get("steps").and_then(|s| s.as_array()).unwrap();
+            if steps.is_empty() {
+                continue;
+            }
+            assert!(goap.get("gathers").and_then(|g| g.as_f64()).unwrap() > 0.0);
+            assert!(goap.get("goal").and_then(|g| g.as_f64()).unwrap() > 0.0);
+            found = true;
+            break;
+        }
+        if found {
+            break;
+        }
+    }
+    assert!(found, "expected at least one Flump with a plan by tick 50");
+}
+
+#[wasm_bindgen_test]
 fn inspect_memory_lists_a_rememberers_sites_and_is_empty_elsewhere() {
     let preset = sugarscape_core::presets::by_id("mem-truffles").unwrap();
     let json = serde_json::to_string(&preset.config).unwrap();
