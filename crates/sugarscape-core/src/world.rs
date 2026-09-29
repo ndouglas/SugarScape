@@ -113,6 +113,10 @@ pub struct TickEvents {
     /// Minds 4: of `plans`, those with any target from the Flump's
     /// remembered entries out of sight (the usage check Minds 3 taught).
     pub plans_with_remembered: u32,
+    /// Minds 4: of `plans`, those made by rememberers (the denominator of
+    /// the rememberers' usage share; only a rememberer's plan can hold a
+    /// remembered site).
+    pub plans_by_rememberers: u32,
     /// Minds 4: GOAP Flumps that took the rate choice this tick because the
     /// sugar they know of (their slots, all harvested) falls short of G.
     pub fallback_short: u32,

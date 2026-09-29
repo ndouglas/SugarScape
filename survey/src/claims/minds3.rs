@@ -30,20 +30,20 @@ use crate::stats::{self, median};
 const SPEC: &str = "docs/superpowers/specs/2026-09-28-minds-3-memory-design.md";
 
 /// What one 500-tick run says about rememberers and others.
-struct Groups {
+pub(crate) struct Groups {
     /// Mean `wealth_advantage` over ticks 200–500.
-    adv: f64,
+    pub(crate) adv: f64,
     /// Mean `wealth_rememberers` and `wealth_others` over ticks 200–500.
-    rem: f64,
-    oth: f64,
+    pub(crate) rem: f64,
+    pub(crate) oth: f64,
     /// Mean `belief_error`, `stale_choices` and `remembered_moves` over the
     /// ticks 200–500 with at least one remembered choice (NaN with none).
-    err: f64,
-    stale: f64,
-    moves: f64,
+    pub(crate) err: f64,
+    pub(crate) stale: f64,
+    pub(crate) moves: f64,
     /// Share of each group alive at tick 500 (of those alive at tick 0).
-    rem_alive: f64,
-    oth_alive: f64,
+    pub(crate) rem_alive: f64,
+    pub(crate) oth_alive: f64,
 }
 
 /// Rememberers and others alive at tick `t`.
@@ -53,39 +53,42 @@ fn group_sizes(w: &World, t: usize) -> (f64, f64) {
     (rem, pop - rem)
 }
 
-fn groups(c: &Config, seeds: &[u64]) -> Vec<Groups> {
-    after(c, seeds, 500, |w| {
-        let moves = series(w, "remembered_moves");
-        let active: Vec<usize> = (200..=500).filter(|&t| moves[t] > 0.0).collect();
-        let over_active = |name: &str| {
-            let s = series(w, name);
-            if active.is_empty() {
-                f64::NAN
-            } else {
-                active.iter().map(|&t| s[t]).sum::<f64>() / active.len() as f64
-            }
-        };
-        let (r0, o0) = group_sizes(w, 0);
-        let (r1, o1) = group_sizes(w, 500);
-        Groups {
-            adv: window_mean(&series(w, "wealth_advantage"), 200, 500),
-            rem: window_mean(&series(w, "wealth_rememberers"), 200, 500),
-            oth: window_mean(&series(w, "wealth_others"), 200, 500),
-            err: over_active("belief_error"),
-            stale: over_active("stale_choices"),
-            moves: over_active("remembered_moves"),
-            rem_alive: r1 / r0,
-            oth_alive: o1 / o0,
-        }
-    })
+pub(crate) fn groups(c: &Config, seeds: &[u64]) -> Vec<Groups> {
+    after(c, seeds, 500, measure)
 }
 
-fn col(g: &[Groups], f: impl Fn(&Groups) -> f64) -> Vec<f64> {
+/// `Groups` of a world run to tick 500.
+pub(crate) fn measure(w: &World) -> Groups {
+    let moves = series(w, "remembered_moves");
+    let active: Vec<usize> = (200..=500).filter(|&t| moves[t] > 0.0).collect();
+    let over_active = |name: &str| {
+        let s = series(w, name);
+        if active.is_empty() {
+            f64::NAN
+        } else {
+            active.iter().map(|&t| s[t]).sum::<f64>() / active.len() as f64
+        }
+    };
+    let (r0, o0) = group_sizes(w, 0);
+    let (r1, o1) = group_sizes(w, 500);
+    Groups {
+        adv: window_mean(&series(w, "wealth_advantage"), 200, 500),
+        rem: window_mean(&series(w, "wealth_rememberers"), 200, 500),
+        oth: window_mean(&series(w, "wealth_others"), 200, 500),
+        err: over_active("belief_error"),
+        stale: over_active("stale_choices"),
+        moves: over_active("remembered_moves"),
+        rem_alive: r1 / r0,
+        oth_alive: o1 / o0,
+    }
+}
+
+pub(crate) fn col(g: &[Groups], f: impl Fn(&Groups) -> f64) -> Vec<f64> {
     g.iter().map(f).collect()
 }
 
 /// The medians a memory claim reports alongside its verdict.
-fn describe(g: &[Groups]) -> String {
+pub(crate) fn describe(g: &[Groups]) -> String {
     format!(
         "Medians over seeds (ticks 200–500): advantage {:.2}; wealth rememberers {:.2}, others {:.2}; remembered_moves {:.3}; belief_error {:.3}; stale_choices {:.3}; alive at tick 500: rememberers {:.3}, others {:.3}.",
         median(&col(g, |x| x.adv)),
@@ -100,7 +103,7 @@ fn describe(g: &[Groups]) -> String {
 }
 
 /// Rememberers wealthier than others, paired within each seed.
-fn richer(c: &Config, seeds: &[u64]) -> Outcome {
+pub(crate) fn richer(c: &Config, seeds: &[u64]) -> Outcome {
     let g = groups(c, seeds);
     paired_greater(
         &col(&g, |x| x.rem),
@@ -261,7 +264,7 @@ fn trapline(c: &Config, seeds: &[u64], ticks: u32) -> Vec<Trap> {
 }
 
 /// The `q` quantile of the finite values, NaN with none.
-fn q_or_nan(v: &[f64], q: f64) -> f64 {
+pub(crate) fn q_or_nan(v: &[f64], q: f64) -> f64 {
     let v = stats::finite(v);
     if v.is_empty() {
         f64::NAN
@@ -270,14 +273,14 @@ fn q_or_nan(v: &[f64], q: f64) -> f64 {
     }
 }
 
-fn med_or_nan(v: &[f64]) -> f64 {
+pub(crate) fn med_or_nan(v: &[f64]) -> f64 {
     q_or_nan(v, 0.5)
 }
 
 // ----------------------------------------------------------------------- MVT
 
-const SPACINGS: [u32; 4] = [12, 16, 20, 24];
-const MVT_TICKS: u32 = 1000;
+pub(crate) const SPACINGS: [u32; 4] = [12, 16, 20, 24];
+pub(crate) const MVT_TICKS: u32 = 1000;
 
 /// `mem-mvt` at lattice spacing `s`: nine peaks at (s/2 + s·i, s/2 + s·j)
 /// on a 3s × 3s torus, so each patch keeps its share of the torus and the
@@ -317,18 +320,29 @@ fn mvt(s: u32, utility: bool) -> Config {
 /// (Minds 3, Task 10 fix rounds 1–3); the claims' details carry it.
 const MVT_REGIMES: &str = "Rich patches (the preset): under the utility mind with travel, foragers who find a patch never leave it (rule M's foragers do move between patches, but its residence slope is unreliable; rule M's overstay figures are reported in `mem-mvt.overstay`). Depleting patches (tried in fix rounds 1 and 2, radius 2 and growback 0.05, 0.45 sugar a tick per patch): foragers starve before any switch; with 10 Flumps no one is alive after tick 200; with 3, no one is alive at tick 1000 and only 3 departures happen across 20 seeds. Likely reason: rule M and the utility mind compare the values of sites, not rates of intake, and hold no estimate of the habitat's average rate; and with sight only along rows and columns, a forager that has emptied a patch often has no other patch in sight. So the theorem's leave-when-your-rate-falls-to-the-average decision can't be expressed here; it is left to Minds 4 (planning).";
 
-struct Visits {
+pub(crate) struct Visits {
     /// Mean length in ticks of completed patch visits (NaN with none).
-    residence: f64,
-    visits: usize,
-    departures: usize,
+    pub(crate) residence: f64,
+    pub(crate) visits: usize,
+    pub(crate) departures: usize,
     /// Share of the living Flumps on a patch at the last tick.
-    on_patch: f64,
+    pub(crate) on_patch: f64,
     /// Flumps alive at the last tick.
-    alive: f64,
+    pub(crate) alive: f64,
     /// Departures whose last tick in the patch gathered less than the
     /// Flump's mean gathered per tick so far.
-    overstays: usize,
+    pub(crate) overstays: usize,
+}
+
+impl Visits {
+    /// The share of departures that overstay (NaN with none).
+    pub(crate) fn overstay_share(&self) -> f64 {
+        if self.departures == 0 {
+            f64::NAN
+        } else {
+            self.overstays as f64 / self.departures as f64
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -344,10 +358,10 @@ struct Track {
 
 /// Steps `MVT_TICKS` ticks, following each Flump's patch (`patch_of`) and
 /// its sugar gathered each tick (the change in holdings plus metabolism;
-/// nothing else moves sugar in these worlds).
-fn visits(c: &Config, seeds: &[u64]) -> Vec<Visits> {
+/// nothing else moves sugar in these worlds: no births, no trade).
+pub(crate) fn visits(c: &Config, seeds: &[u64]) -> Vec<Visits> {
     let Map::Peaks { peaks } = &c.goods[0].map else {
-        unreachable!("mem-mvt is a peaks map")
+        unreachable!("a patch world is a peaks map")
     };
     let peaks = peaks.clone();
     let (gw, gh) = (c.width, c.height);
@@ -374,7 +388,7 @@ fn visits(c: &Config, seeds: &[u64]) -> Vec<Visits> {
             w.step();
             let t = w.tick;
             for a in w.agents() {
-                let tr = tracks.get_mut(&a.id).expect("no births in mem-mvt");
+                let tr = tracks.get_mut(&a.id).expect("no births in a patch world");
                 let gain = a.holdings[0] - tr.held + f64::from(a.metabolism[0]);
                 let patch = on(a.pos.x, a.pos.y);
                 if patch != tr.patch {
@@ -421,12 +435,12 @@ fn visits(c: &Config, seeds: &[u64]) -> Vec<Visits> {
 }
 
 /// Per seed: the slope of mean residence on spacing, and each spacing's
-/// residences.
-fn residence_slopes(seeds: &[u64], utility: bool) -> (Vec<f64>, Vec<Vec<Visits>>) {
-    let runs: Vec<Vec<Visits>> = SPACINGS
-        .iter()
-        .map(|&s| visits(&mvt(s, utility), seeds))
-        .collect();
+/// residences; `world(s)` is the world at spacing `s`.
+pub(crate) fn residence_slopes(
+    seeds: &[u64],
+    world: impl Fn(u32) -> Config,
+) -> (Vec<f64>, Vec<Vec<Visits>>) {
+    let runs: Vec<Vec<Visits>> = SPACINGS.iter().map(|&s| visits(&world(s), seeds)).collect();
     let x: Vec<f64> = SPACINGS.iter().map(|&s| f64::from(s)).collect();
     let slopes = (0..seeds.len())
         .map(|i| slope(&x, &runs.iter().map(|r| r[i].residence).collect::<Vec<_>>()))
@@ -434,8 +448,9 @@ fn residence_slopes(seeds: &[u64], utility: bool) -> (Vec<f64>, Vec<Vec<Visits>>
     (slopes, runs)
 }
 
-fn residence_medians(runs: &[Vec<Visits>]) -> String {
-    let pop = preset("mem-mvt").population;
+/// Each spacing's median residence, visit count, alive and on-patch
+/// figures, for a world of `pop` Flumps.
+pub(crate) fn residence_medians(runs: &[Vec<Visits>], pop: u32) -> String {
     SPACINGS
         .iter()
         .zip(runs)
@@ -829,8 +844,9 @@ pub fn claims() -> Vec<Claim> {
             citation: "Charnov 1976; Stephens & Krebs 1986, Fig. 2.2",
             text: "Longer travel, longer stays: under the utility mind with travel, mean patch residence rises with the patches' spacing (the per-seed slope over spacings 12, 16, 20 and 24 is above 0 in at least 80 % of seeds); under rule M the slope is reported",
             check: |seeds| {
-                let (u, ur) = residence_slopes(seeds, true);
-                let (m, mr) = residence_slopes(seeds, false);
+                let (u, ur) = residence_slopes(seeds, |s| mvt(s, true));
+                let (m, mr) = residence_slopes(seeds, |s| mvt(s, false));
+                let pop = preset("mem-mvt").population;
                 range(&u, f64::MIN_POSITIVE, f64::INFINITY, false).with(&format!(
                     "Nine peaks on a 3s × 3s torus at spacing s, vision 1–18 throughout (s = 20 is the preset but for vision); completed visits over ticks 1–{MVT_TICKS} (visits under way at tick 0 or at the end, or cut short by death, are dropped); residences are medians over seeds of per-seed means. A slope needs at least 3 spacings with a completed visit: finite for utility with travel in {} of {} seeds, for rule M in {} of {}, positive in {}. Median residence by spacing, utility with travel: {}. Rule M: slope median {:.4} (IQR {:.4}–{:.4}); residence by spacing {}.",
                     stats::finite(&u).len(),
@@ -838,11 +854,11 @@ pub fn claims() -> Vec<Claim> {
                     stats::finite(&m).len(),
                     m.len(),
                     m.iter().filter(|&&x| x > 0.0).count(),
-                    residence_medians(&ur),
+                    residence_medians(&ur, pop),
                     med_or_nan(&m),
                     q_or_nan(&m, 0.25),
                     q_or_nan(&m, 0.75),
-                    residence_medians(&mr),
+                    residence_medians(&mr, pop),
                 ))
                 .with(MVT_REGIMES)
             },
@@ -855,16 +871,7 @@ pub fn claims() -> Vec<Claim> {
             text: "Flumps overstay: at over half of departures, the sugar gathered on the last tick in the patch is below the Flump's mean gathered per tick so far, in at least 80 % of seeds",
             check: |seeds| {
                 let v = visits(&preset("mem-mvt"), seeds);
-                let share: Vec<f64> = v
-                    .iter()
-                    .map(|x| {
-                        if x.departures == 0 {
-                            f64::NAN
-                        } else {
-                            x.overstays as f64 / x.departures as f64
-                        }
-                    })
-                    .collect();
+                let share: Vec<f64> = v.iter().map(Visits::overstay_share).collect();
                 let deps: usize = v.iter().map(|x| x.departures).sum();
                 let on: Vec<f64> = v.iter().map(|x| x.on_patch).collect();
                 let alive: Vec<f64> = v.iter().map(|x| x.alive).collect();

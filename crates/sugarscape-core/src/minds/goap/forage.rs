@@ -253,8 +253,10 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
         Ok(p) => {
             let steps: Vec<(Pos, f64)> = p.actions.iter().map(|&s| sites[usize::from(s)]).collect();
             if !steps.is_empty() {
+                let remembers = world.agent(id).expect("live agent").remembers;
                 let e = &mut world.events;
                 e.plans += 1;
+                e.plans_by_rememberers += u32::from(remembers);
                 e.plan_steps_sum += steps.len() as u32;
                 if p.actions.iter().any(|&s| slots[usize::from(s)] >= start) {
                     e.plans_with_remembered += 1;
@@ -476,6 +478,7 @@ mod tests {
         // one walk deep, so tick 3 plans (5, 9) again: plan and fallback
         // alternate, and the Flump never moves.
         assert_eq!((w.events.plans, w.events.fallback_short), (2, 1));
+        assert_eq!(w.events.plans_by_rememberers, 0, "it doesn't remember");
     }
 
     #[test]
@@ -649,7 +652,10 @@ mod tests {
         act(&mut w, id);
         assert_eq!(target(&w, id), Some(Pos::new(5, 9)));
         let e = &w.events;
-        assert_eq!((e.plans, e.plans_with_remembered), (1, 1));
+        assert_eq!(
+            (e.plans, e.plans_with_remembered, e.plans_by_rememberers),
+            (1, 1, 1)
+        );
         assert_eq!((e.moves, e.remembered_moves), (1, 1));
     }
 
