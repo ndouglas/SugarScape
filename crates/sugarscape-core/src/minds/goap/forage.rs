@@ -3,9 +3,11 @@
 //!
 //! - **Candidates.** Rule M's list (`candidates_with_memory`: its own site,
 //!   the free sites in sight and, for a rememberer, remembered sites at
-//!   believed values). The best `goap.k` other than its own site, by value
-//!   descending, then distance ascending, then site index, plus its own site
-//!   (slot 0; the others are slots 1..=K).
+//!   believed values). The best `goap.k` other than its own site, by
+//!   `goap.shortlist`: `rate` (the default), value ÷ (distance + 1)
+//!   descending, the fallback's rate; `value` (the spec's original), value
+//!   descending; either then distance ascending, then site index. Plus its
+//!   own site (slot 0; the others are slots 1..=K).
 //! - **State.** `(slot the Flump is at, mask of slots harvested)`. The sugar
 //!   gathered is derived from the mask, never stored, so there are at most
 //!   (K + 1)·2^(K + 1) states.
@@ -23,6 +25,7 @@
 //!   planner draws nothing). `choose` breaks ties only in the fallback.
 
 use crate::agent::{AgentId, GoapPlan};
+use crate::config::Shortlist;
 use crate::geometry::{Pos, Torus};
 use crate::rules::movement::{
     arrive, candidates_with_memory, choose, lattice_distance, record_choice,
@@ -217,9 +220,16 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let goal = goal_of(world, id);
     let torus = world.torus;
     let mut others: Vec<usize> = (1..candidates.len()).collect();
+    // The shortlist's key: the rate uses the fallback's distance + 1, with
+    // travel as the plan counts it (0 under the reduction's hook).
+    let key = |c: &(Pos, u32, f64)| match world.config.goap.shortlist {
+        Shortlist::Rate => c.2 / (f64::from(travel(c.1)) + 1.0),
+        Shortlist::Value => c.2,
+    };
     others.sort_by(|&i, &j| {
         let (a, b) = (&candidates[i], &candidates[j]);
-        b.2.total_cmp(&a.2)
+        key(b)
+            .total_cmp(&key(a))
             .then(a.1.cmp(&b.1))
             .then(torus.index(a.0).cmp(&torus.index(b.0)))
     });
@@ -322,7 +332,11 @@ mod tests {
             speed: 1,
         };
         c.decision.rule = DecisionRule::Goap;
-        c.goap = Goap { k, horizon };
+        c.goap = Goap {
+            k,
+            horizon,
+            ..Goap::default()
+        };
         World::new(c, 7).unwrap()
     }
 
@@ -473,7 +487,11 @@ mod tests {
             speed: 1,
         };
         c.decision.rule = DecisionRule::Goap;
-        c.goap = Goap { k: 8, horizon: 3 };
+        c.goap = Goap {
+            k: 8,
+            horizon: 3,
+            ..Goap::default()
+        };
         c.memory.span = 100;
         c.memory.share = 1.0;
         c.walls = [0, 10]
@@ -613,7 +631,11 @@ mod tests {
             speed: 1,
         };
         c.decision.rule = DecisionRule::Goap;
-        c.goap = Goap { k: 8, horizon: 4 };
+        c.goap = Goap {
+            k: 8,
+            horizon: 4,
+            ..Goap::default()
+        };
         c.memory.span = 100;
         c.memory.share = 1.0;
         let mut w = World::new(c, 7).unwrap();
@@ -629,6 +651,45 @@ mod tests {
         let e = &w.events;
         assert_eq!((e.plans, e.plans_with_remembered), (1, 1));
         assert_eq!((e.moves, e.remembered_moves), (1, 1));
+    }
+
+    #[test]
+    fn the_rate_shortlist_keeps_a_near_site_the_value_shortlist_drops() {
+        // A Flump knowing the map: a near 3 at distance 1 and a far 4 at
+        // distance 20, K = 1, G = 3 (either site alone reaches it). Rate:
+        // 3 ÷ 2 beats 4 ÷ 21, so it plans the near site; value: 4 beats 3.
+        let run = |shortlist: Shortlist| {
+            let mut c = blank_config(45, 45);
+            c.movement = Movement {
+                mode: MoveMode::Walk,
+                speed: 1,
+            };
+            c.decision.rule = DecisionRule::Goap;
+            c.goap = Goap {
+                k: 1,
+                horizon: 3,
+                shortlist,
+            };
+            c.memory.span = 100;
+            c.memory.share = 1.0;
+            let mut w = World::new(c, 7).unwrap();
+            let id = forager(&mut w, 5, 5, 1, 1);
+            w.agent_mut(id).unwrap().remembers = true;
+            for (q, v) in [(Pos::new(5, 6), 3.0), (Pos::new(5, 25), 4.0)] {
+                set_sugar(&mut w, q.x, q.y, v);
+                let idx = w.torus.index(q) as u32;
+                let seen = crate::minds::memory::Seen::new(&[v], &[v], 0);
+                w.agent_mut(id).unwrap().memory.sites.insert(idx, seen);
+            }
+            w.tick = 1;
+            act(&mut w, id);
+            (steps(&w, id), target(&w, id))
+        };
+        let near = Pos::new(5, 6);
+        let far = Pos::new(5, 25);
+        // One step away: it arrives this tick, so the plan's step is done.
+        assert_eq!(run(Shortlist::Rate), (vec![], Some(near)));
+        assert_eq!(run(Shortlist::Value), (vec![far], Some(far)));
     }
 
     /// The domain with no heuristic: A* becomes Dijkstra.

@@ -427,20 +427,41 @@ pub enum DecisionRule {
     Mvt,
 }
 
-/// Minds 4: GOAP's foraging search — the best `k` known sites by value,
-/// and a goal of `horizon` ticks of food.
+/// Minds 4: how GOAP picks the `k` known sites a plan considers.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Shortlist {
+    /// The best `k` by believed value ÷ (distance + 1), the fallback's rate
+    /// (then distance, then site index).
+    #[default]
+    Rate,
+    /// The spec's original ranking: believed value alone (then distance,
+    /// then site index). Kept as a named switch: with a known map it
+    /// shortlists only far full sites, so a planner walks from patch to
+    /// patch and never runs one down (Minds 4, Task 7).
+    Value,
+}
+
+/// Minds 4: GOAP's foraging search — the best `k` known sites by
+/// `shortlist`, and a goal of `horizon` ticks of food.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Goap {
-    /// Known sites a plan considers, best value first (1–12).
+    /// Known sites a plan considers (1–12), ranked by `shortlist`.
     pub k: u32,
     /// Ticks of food the goal asks for: G = metabolism × horizon (1–100).
     pub horizon: u32,
+    /// How the `k` sites are ranked.
+    pub shortlist: Shortlist,
 }
 
 impl Default for Goap {
     fn default() -> Self {
-        Self { k: 8, horizon: 10 }
+        Self {
+            k: 8,
+            horizon: 10,
+            shortlist: Shortlist::Rate,
+        }
     }
 }
 
@@ -3444,7 +3465,14 @@ mod tests {
     #[test]
     fn goap_and_mvt_default_to_the_book_and_older_configs_load() {
         let d = Config::default();
-        assert_eq!(d.goap, Goap { k: 8, horizon: 10 });
+        assert_eq!(
+            d.goap,
+            Goap {
+                k: 8,
+                horizon: 10,
+                shortlist: Shortlist::Rate
+            }
+        );
         assert_eq!(d.mvt, Mvt { alpha: 0.05 });
         assert_eq!(d.memory.prior, MemoryPrior::None);
         let mut v = serde_json::to_value(Config::default()).unwrap();
@@ -3466,7 +3494,18 @@ mod tests {
         v["goap"] = serde_json::json!({ "k": 3 });
         assert_eq!(
             Config::from_value(v).unwrap().goap,
-            Goap { k: 3, horizon: 10 }
+            Goap {
+                k: 3,
+                horizon: 10,
+                shortlist: Shortlist::Rate
+            }
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        assert_eq!(v["goap"]["shortlist"], serde_json::json!("rate"));
+        v["goap"]["shortlist"] = serde_json::json!("value");
+        assert_eq!(
+            Config::from_value(v).unwrap().goap.shortlist,
+            Shortlist::Value
         );
     }
 
