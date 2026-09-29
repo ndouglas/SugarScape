@@ -264,6 +264,12 @@ pub struct Agent {
     /// `caching.lambda`), drawn per agent by `lab::run_population`; `None`
     /// uses the config's. Never hashed.
     pub cache_params: Option<(f64, f64)>,
+    /// Minds 5: this agent's caching rule under `caching.mixed` (founders
+    /// round-robin by id, children their parent's; see
+    /// `minds::caching::rules::rule_of`). Without `mixed` every agent
+    /// follows `caching.rule` and this only records it at birth. Never
+    /// hashed, like `rate`.
+    pub caching_rule: crate::config::CachingRule,
     /// Minds 5, central-place foraging (`central.enabled`): the site the
     /// agent was placed or born on, where its larder (its cache there) is
     /// and where it delivers its loads; set by `World::insert_agent`, `None`
@@ -327,6 +333,7 @@ impl Agent {
             last_winter: None,
             this_winter: crate::minds::caching::rules::WinterRecord::default(),
             cache_params: None,
+            caching_rule: config.caching.rule,
             home: None,
             load_trip: 0.0,
             delivery_rate: 0.0,

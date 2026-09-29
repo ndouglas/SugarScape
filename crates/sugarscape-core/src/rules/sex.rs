@@ -115,6 +115,8 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         last_winter: None,
         this_winter: crate::minds::caching::rules::WinterRecord::default(),
         cache_params: None,
+        // Minds 5: a child takes the rule of the parent whose turn it is.
+        caching_rule: a.caching_rule,
         home: None,
         load_trip: 0.0,
         delivery_rate: 0.0,
@@ -195,6 +197,21 @@ mod tests {
             d.tags = Tags::new(u64::MAX, d.tags.len());
         }
         (mom, dad)
+    }
+
+    #[test]
+    fn under_mixed_caching_a_child_takes_the_rule_of_the_parent_whose_turn_it_is() {
+        use crate::config::CachingRule;
+        let mut w = blank_world(10, 10);
+        w.config.caching.mixed = true;
+        let (mom, dad) = couple(&mut w);
+        // Founders 1 and 2: none and even, dealt by id.
+        assert_eq!(w.agent(mom).unwrap().caching_rule, CachingRule::None);
+        assert_eq!(w.agent(dad).unwrap().caching_rule, CachingRule::Even);
+        w.agent_mut(mom).unwrap().caching_rule = CachingRule::Plan;
+        act(&mut w, mom);
+        let child = w.agents().find(|a| a.parents.is_some()).unwrap();
+        assert_eq!(child.caching_rule, CachingRule::Plan, "not dealt by its id");
     }
 
     #[test]

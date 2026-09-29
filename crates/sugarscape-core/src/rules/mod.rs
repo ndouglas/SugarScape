@@ -14,7 +14,7 @@ pub mod trade;
 pub mod truffles;
 
 use crate::agent::AgentId;
-use crate::config::{CachingRule, DiseaseCure, MAX_GOODS};
+use crate::config::{DiseaseCure, MAX_GOODS};
 use crate::world::World;
 
 /// Resources an agent collected from its site this turn.
@@ -56,7 +56,7 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
         crate::minds::memory::observe(world, id);
     }
     // Minds 5: burying, after the move and harvest and before eating.
-    if world.config.caching.rule != CachingRule::None {
+    if world.config.caching.buries() {
         crate::minds::caching::rules::act(world, id, &harvest);
     }
     lifecycle::metabolize(world, id, harvest);

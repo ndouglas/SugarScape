@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use std::ops::Range;
 
-use crate::config::{CachingRule, Config};
+use crate::config::Config;
 use crate::world::World;
 
 pub const SERIES: [&str; 25] = [
@@ -119,7 +119,7 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
-    if config.caching.rule != CachingRule::None || config.caching.capacity > 0 {
+    if config.caching.is_on() {
         for s in ["cached", "buried", "dug", "recovery", "mean_cache_age"] {
             names.push(s.into());
         }
@@ -530,38 +530,36 @@ impl Snapshot {
                     mean_rate: mean(&|a| a.rate),
                 }
             }),
-            caching: (world.config.caching.rule != CachingRule::None
-                || world.config.caching.capacity > 0)
-                .then(|| {
-                    let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
-                    let (prev_buried, prev_dug) = world
-                        .stats
-                        .latest()
-                        .and_then(|s| s.caching)
-                        .map(|c| (c.buried_total, c.dug_total))
-                        .unwrap_or((0.0, 0.0));
-                    let buried_total = prev_buried + events.buried;
-                    let dug_total = prev_dug + events.dug;
-                    let recovery = if buried_total == 0.0 {
-                        0.0
-                    } else {
-                        dug_total / buried_total
-                    };
-                    let mean_cache_age = if events.digs == 0 {
-                        0.0
-                    } else {
-                        events.dig_ages_sum as f64 / f64::from(events.digs)
-                    };
-                    CachingStats {
-                        cached,
-                        buried: events.buried,
-                        dug: events.dug,
-                        recovery,
-                        mean_cache_age,
-                        buried_total,
-                        dug_total,
-                    }
-                }),
+            caching: world.config.caching.is_on().then(|| {
+                let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+                let (prev_buried, prev_dug) = world
+                    .stats
+                    .latest()
+                    .and_then(|s| s.caching)
+                    .map(|c| (c.buried_total, c.dug_total))
+                    .unwrap_or((0.0, 0.0));
+                let buried_total = prev_buried + events.buried;
+                let dug_total = prev_dug + events.dug;
+                let recovery = if buried_total == 0.0 {
+                    0.0
+                } else {
+                    dug_total / buried_total
+                };
+                let mean_cache_age = if events.digs == 0 {
+                    0.0
+                } else {
+                    events.dig_ages_sum as f64 / f64::from(events.digs)
+                };
+                CachingStats {
+                    cached,
+                    buried: events.buried,
+                    dug: events.dug,
+                    recovery,
+                    mean_cache_age,
+                    buried_total,
+                    dug_total,
+                }
+            }),
             central: world.config.central.enabled.then(|| {
                 let mean_load = if events.deliveries == 0 {
                     0.0
@@ -1899,7 +1897,7 @@ mod tests {
     fn caching_series_reads_the_tick_events_and_world_caches() {
         use crate::testkit::*;
         let mut w = blank_world(5, 5);
-        w.config.caching.rule = CachingRule::Even;
+        w.config.caching.rule = crate::config::CachingRule::Even;
         let a = spawn(&mut w, 0, 0);
         let b = spawn(&mut w, 1, 0);
         w.agent_mut(a).unwrap().caches.insert(2, 3.0);
@@ -1926,7 +1924,7 @@ mod tests {
         use crate::testkit::*;
         use crate::world::TickEvents;
         let mut w = blank_world(5, 5);
-        w.config.caching.rule = CachingRule::Even;
+        w.config.caching.rule = crate::config::CachingRule::Even;
 
         w.events.buried = 10.0;
         let s1 = Snapshot::of(&w);
@@ -1957,7 +1955,7 @@ mod tests {
     #[test]
     fn caching_series_zero_denominators_are_zero_not_nan() {
         let mut w = crate::testkit::blank_world(5, 5);
-        w.config.caching.rule = CachingRule::Even;
+        w.config.caching.rule = crate::config::CachingRule::Even;
         // Nothing buried yet, no digs, nobody caching: 0, not NaN.
         let s = Snapshot::of(&w);
         let c = s.caching.unwrap();
@@ -1998,7 +1996,7 @@ mod tests {
         let base = series_names(&Config::default()).len();
 
         let mut caching = Config::default();
-        caching.caching.rule = CachingRule::Even;
+        caching.caching.rule = crate::config::CachingRule::Even;
         let names = series_names(&caching);
         assert_eq!(names.len(), base + CACHING_SERIES.len());
         assert_eq!(&names[base..], CACHING_SERIES.as_slice());
@@ -2010,7 +2008,7 @@ mod tests {
         assert_eq!(&names[base..], CENTRAL_SERIES.as_slice());
 
         let mut both = Config::default();
-        both.caching.rule = CachingRule::Even;
+        both.caching.rule = crate::config::CachingRule::Even;
         both.central.enabled = true;
         let names = series_names(&both);
         assert_eq!(

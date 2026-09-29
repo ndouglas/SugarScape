@@ -320,6 +320,16 @@ fn bury_all(world: &mut World, id: AgentId, allocation: Vec<(u32, f64)>) {
     }
 }
 
+/// The caching rule `id` follows: its own (`Agent.caching_rule`) under
+/// `caching.mixed`, otherwise `caching.rule`.
+pub(crate) fn rule_of(world: &World, id: AgentId) -> CachingRule {
+    if world.config.caching.mixed {
+        world.agent(id).expect("live agent").caching_rule
+    } else {
+        world.config.caching.rule
+    }
+}
+
 /// The field's caching step for `id`, after its move and `harvest` and
 /// before it eats. Does nothing under rule `none`. In a lab world nothing is
 /// buried here: the lab's schedule buries on the test evening, and this
@@ -334,7 +344,7 @@ pub(crate) fn act(world: &mut World, id: AgentId, harvest: &Harvest) {
         let a = world.agent(id).expect("live agent");
         world.torus.index(a.pos) as u32
     };
-    match caching.rule {
+    match rule_of(world, id) {
         CachingRule::None => {}
         CachingRule::Even => {
             let amount = caching.share * surplus(world, id);
@@ -555,6 +565,41 @@ mod tests {
     fn turn(w: &mut World, id: AgentId) {
         w.events = crate::world::TickEvents::default();
         crate::rules::agent_turn(w, id);
+    }
+
+    #[test]
+    fn under_mixed_each_agent_buries_by_its_own_rule() {
+        // Four founders, dealt none, even, compensate, plan by id, each on
+        // its own site with 4 sugar and holding 30; each buries what a world
+        // of its rule alone buries (plan: nothing, seasons being off).
+        let mut w = blank_world(11, 11);
+        w.config.movement = Movement {
+            mode: MoveMode::Walk,
+            speed: 1,
+        };
+        w.config.caching.rule = CachingRule::Even;
+        w.config.caching.mixed = true;
+        let ids: Vec<AgentId> = (0..4).map(|k| spawn(&mut w, 1 + 3 * k, 5)).collect();
+        for (k, &id) in ids.iter().enumerate() {
+            set_sugar(&mut w, 1 + 3 * k as u32, 5, 4.0);
+            let a = w.agent_mut(id).unwrap();
+            a.metabolism[0] = 1;
+            a.holdings[0] = 30.0;
+            assert_eq!(a.caching_rule, crate::config::Caching::MIXED[k]);
+        }
+        for &id in &ids {
+            let rule = w.agent(id).unwrap().caching_rule;
+            turn(&mut w, id);
+            let (mut alone, one) = field(rule, 30.0);
+            set_sugar(&mut alone, 5, 5, 4.0);
+            turn(&mut alone, one);
+            assert_eq!(w.events.buried, alone.events.buried, "{rule:?}");
+            assert_eq!(
+                w.agent(id).unwrap().holdings[0],
+                alone.agent(one).unwrap().holdings[0],
+                "{rule:?}"
+            );
+        }
     }
 
     #[test]

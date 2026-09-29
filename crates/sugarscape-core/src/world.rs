@@ -509,6 +509,10 @@ impl World {
         let id = self.next_id;
         self.next_id += 1;
         agent.id = id;
+        // Minds 5: under `caching.mixed` a founder's rule is dealt by its id.
+        if self.config.caching.mixed && agent.parents.is_none() {
+            agent.caching_rule = self.config.caching.founder_rule(id);
+        }
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {
             agent.home = Some(agent.pos);

@@ -74,7 +74,7 @@
 //! counted once); predicting nothing, it buries nothing.
 
 use super::episodes::{Episode, Episodes};
-use super::rules::{allocate_compensate, allocate_even, allocate_plan};
+use super::rules::{allocate_compensate, allocate_even, allocate_plan, rule_of};
 use crate::agent::{AgentId, Plan};
 use crate::config::{
     CachingRule, Config, Good, Lab, LabProtocol, Map, MoveMode, Movement, Placement, URange, Wall,
@@ -354,11 +354,11 @@ fn evening(world: &mut World, lab: Lab, d: u64) {
     let k = place(lab.protocol, d);
     clear_food(world);
     let config_lambda = world.config.caching.lambda;
-    let compensate = world.config.caching.rule == CachingRule::Compensate;
     for (i, id) in roster(world).into_iter().enumerate() {
         if i >= MAX_AGENTS as usize {
             break;
         }
+        let compensate = rule_of(world, id) == CachingRule::Compensate;
         let a = world.agent_mut(id).expect("live agent");
         if compensate {
             let lambda = a.cache_params.map_or(config_lambda, |p| p.1);
@@ -391,7 +391,7 @@ pub fn allocation(world: &World, id: AgentId) -> Vec<(u32, f64)> {
     };
     let places = caching_places(lab.protocol);
     let a = world.agent(id).expect("live agent");
-    match world.config.caching.rule {
+    match rule_of(world, id) {
         CachingRule::None => Vec::new(),
         CachingRule::Even => allocate_even(F, places, true),
         CachingRule::Compensate => allocate_compensate(F, places, a.weights.map(), true),
@@ -552,6 +552,42 @@ mod tests {
         Lab {
             protocol: LabProtocol::Raby,
             food_first: first,
+        }
+    }
+
+    #[test]
+    fn a_mixed_lab_gives_each_agent_its_own_rules_allocation() {
+        // `caching.mixed`: agents 1..=n follow none, even, compensate, plan
+        // round-robin, and each caches what that rule alone would (the
+        // agents don't interact: they're carried, and tested one at a time).
+        let amodio = Lab {
+            protocol: LabProtocol::Amodio,
+            food_first: true,
+        };
+        for (lab, n) in [(raby(true), 8), (raby(false), 8), (amodio, 6)] {
+            let mut c = rig_config(lab, CachingRule::Even, LabParams::default(), n);
+            c.caching.mixed = true;
+            c.validate().unwrap();
+            let w = World::new(c, 5).unwrap();
+            let rules: Vec<CachingRule> = w.agents().map(|a| a.caching_rule).collect();
+            assert_eq!(
+                rules,
+                (1..=u64::from(n))
+                    .map(|id| w.config.caching.founder_rule(id))
+                    .collect::<Vec<_>>()
+            );
+            let got = run(w);
+            for (i, r) in got.iter().enumerate() {
+                // A lab needs a caching rule, so `none` alone can't run: it
+                // caches nothing.
+                let alone = if rules[i] == CachingRule::None {
+                    LabResult::default()
+                } else {
+                    run_lab(lab, rules[i], LabParams::default(), 5)
+                };
+                assert_eq!(*r, alone, "{lab:?} agent {i} under {:?}", rules[i]);
+            }
+            assert_ne!(got[1], LabResult::default(), "even caches all of F");
         }
     }
 

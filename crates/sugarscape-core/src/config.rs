@@ -664,6 +664,11 @@ pub struct Caching {
     pub lambda: f64,
     /// Days a rule `plan` forager looks ahead (1–10).
     pub lookahead: u32,
+    /// A quarter of the founders on each rule: founder k (in id order, from
+    /// 0) follows `none`, `even`, `compensate`, `plan` by k mod 4, with no
+    /// draw, and children take their parent's rule (`Agent.caching_rule`);
+    /// `rule` is then ignored. Reset-only.
+    pub mixed: bool,
 }
 
 impl Default for Caching {
@@ -674,6 +679,36 @@ impl Default for Caching {
             share: 0.5,
             lambda: 0.5,
             lookahead: 1,
+            mixed: false,
+        }
+    }
+}
+
+impl Caching {
+    /// The rules `mixed` deals out, in founder order.
+    pub const MIXED: [CachingRule; 4] = [
+        CachingRule::None,
+        CachingRule::Even,
+        CachingRule::Compensate,
+        CachingRule::Plan,
+    ];
+
+    /// Whether any agent buries: a rule other than `none`, or `mixed`.
+    pub fn buries(&self) -> bool {
+        self.rule != CachingRule::None || self.mixed
+    }
+
+    /// Whether caching is on at all: a rule that buries, or a carrying limit.
+    pub fn is_on(&self) -> bool {
+        self.buries() || self.capacity > 0
+    }
+
+    /// The rule a founder with `id` (ids count from 1) follows.
+    pub fn founder_rule(&self, id: u64) -> CachingRule {
+        if self.mixed {
+            Self::MIXED[((id.saturating_sub(1)) % 4) as usize]
+        } else {
+            self.rule
         }
     }
 }
@@ -867,7 +902,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 27] = [
+pub const RESET_ONLY_PATHS: [&str; 28] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -893,6 +928,7 @@ pub const RESET_ONLY_PATHS: [&str; 27] = [
     "caching",
     "caching.rule",
     "caching.capacity",
+    "caching.mixed",
     "central",
     "central.enabled",
 ];
@@ -1688,8 +1724,7 @@ impl Config {
         // A plan sums the values of the sites it harvests, as GOAP does; with
         // n ≥ 2 goods a site's value is foresight welfare, which doesn't sum.
         e.check(
-            (self.caching.rule == CachingRule::None && self.caching.capacity == 0)
-                || self.goods.len() == 1,
+            !self.caching.is_on() || self.goods.len() == 1,
             "caching.rule",
             "caching needs exactly one good",
         );
@@ -1697,16 +1732,14 @@ impl Config {
         // only be walked to; walking also keeps an agent from jumping to a
         // cache it can't see.
         e.check(
-            (self.caching.rule == CachingRule::None && self.caching.capacity == 0)
-                || self.movement.mode == MoveMode::Walk,
+            !self.caching.is_on() || self.movement.mode == MoveMode::Walk,
             "caching.rule",
             "caching walks; set movement.mode to walk",
         );
         // Rule C moves and harvests by its own rule, with no reserve or
         // caches in view; burying after a raid is undefined.
         e.check(
-            (self.caching.rule == CachingRule::None && self.caching.capacity == 0)
-                || !self.combat.enabled,
+            !self.caching.is_on() || !self.combat.enabled,
             "caching.rule",
             "caching and combat can't run together",
         );
@@ -1718,7 +1751,7 @@ impl Config {
             "central-place foraging needs the marginal-value rule or planning, and a carrying limit",
         );
         e.check(
-            self.lab.is_none() || self.caching.rule != CachingRule::None,
+            self.lab.is_none() || self.caching.buries(),
             "lab",
             "a lab needs a caching rule",
         );
@@ -2000,6 +2033,9 @@ impl Config {
         }
         if self.caching.capacity != next.caching.capacity {
             out.push(FieldError::new("caching.capacity", msg));
+        }
+        if self.caching.mixed != next.caching.mixed {
+            out.push(FieldError::new("caching.mixed", msg));
         }
         if self.central.enabled != next.central.enabled {
             out.push(FieldError::new("central.enabled", msg));
@@ -3839,6 +3875,7 @@ mod tests {
                 share: 0.5,
                 lambda: 0.5,
                 lookahead: 1,
+                mixed: false,
             }
         );
         assert_eq!(d.central, Central { enabled: false });
@@ -3872,6 +3909,7 @@ mod tests {
                 share: 0.5,
                 lambda: 0.5,
                 lookahead: 1,
+                mixed: false,
             }
         );
 
@@ -4142,6 +4180,7 @@ mod tests {
             ("caching.capacity", serde_json::json!(50)),
             ("seasons.mode", serde_json::json!("global")),
             ("central.enabled", serde_json::json!(true)),
+            ("caching.mixed", serde_json::json!(true)),
         ] {
             let c = Config {
                 schedule: vec![change(5, path, value)],
@@ -4153,5 +4192,52 @@ mod tests {
                 "{path}: {errs:?}"
             );
         }
+    }
+
+    #[test]
+    fn caching_mixed_is_off_by_default_reset_only_and_deals_rules_round_robin() {
+        let a = Config::default();
+        assert!(!a.caching.mixed);
+        // An older `caching` object without `mixed` loads with it off.
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["caching"].as_object_mut().unwrap().remove("mixed");
+        assert!(!Config::from_value(v).unwrap().caching.mixed);
+        // Reset-only.
+        let f: Vec<String> = a
+            .structural_changes(&{
+                let mut c = a.clone();
+                c.caching.mixed = true;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert_eq!(f, ["caching.mixed"]);
+        // Mixed is caching: it needs walking, one good and no combat, and it
+        // is a lab's caching rule.
+        let mut c = Config::default();
+        c.caching.mixed = true;
+        let errs = c.validate().unwrap_err();
+        assert_eq!(errs[0].message, "caching walks; set movement.mode to walk");
+        c.movement.mode = MoveMode::Walk;
+        c.validate().unwrap();
+        assert!(c.caching.buries() && c.caching.is_on());
+        // Founders by id (from 1): none, even, compensate, plan, none, …
+        let rules: Vec<CachingRule> = (1..=6).map(|id| c.caching.founder_rule(id)).collect();
+        assert_eq!(
+            rules,
+            [
+                CachingRule::None,
+                CachingRule::Even,
+                CachingRule::Compensate,
+                CachingRule::Plan,
+                CachingRule::None,
+                CachingRule::Even,
+            ]
+        );
+        // Off, every founder takes `rule`.
+        c.caching.mixed = false;
+        c.caching.rule = CachingRule::Plan;
+        assert_eq!(c.caching.founder_rule(1), CachingRule::Plan);
     }
 }
