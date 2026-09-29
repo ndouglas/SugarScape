@@ -543,7 +543,7 @@ pub struct Wall {
     pub opaque: bool,
 }
 
-/// Minds 3: how a Flump reasons about a remembered site it can't currently
+/// Minds 3: how an agent reasons about a remembered site it can't currently
 /// see.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -555,23 +555,23 @@ pub enum Belief {
     Project,
 }
 
-/// Minds 4: what a founding Flump's memory starts knowing, before it has
+/// Minds 4: what a founding agent's memory starts knowing, before it has
 /// seen anything itself. Founders start knowing the map; children start
 /// with empty memory.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MemoryPrior {
-    /// Starts knowing nothing (the book's Flump).
+    /// Starts knowing nothing (the book's agent).
     #[default]
     None,
     /// Starts knowing the whole map: every site in memory, seen at tick 0
     /// with its starting levels (the theorem's ideal forager). Needs
-    /// `memory.span > 0` — knowing the map is worthless to a Flump that
+    /// `memory.span > 0` — knowing the map is worthless to an agent that
     /// can't hold what it learns there.
     Map,
 }
 
-/// Minds 3: how far and how well Flumps remember sites out of sight.
+/// Minds 3: how far and how well agents remember sites out of sight.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Memory {
@@ -3172,7 +3172,7 @@ mod tests {
         assert_eq!(with(&|c| c.walls = vec![wall(45, 0, 6, 1)]), ["walls.0"]); // past the edge
         assert_eq!(with(&|c| c.walls = vec![wall(0, 0, 0, 1)]), ["walls.0"]); // empty
         assert_eq!(with(&|c| c.walls = vec![wall(0, 0, 50, 50)]), ["walls"]); // every site
-                                                                              // 400 Flumps need 400 free sites: 50×50 minus a 50×43 block leaves 350.
+                                                                              // 400 agents need 400 free sites: 50×50 minus a 50×43 block leaves 350.
         assert_eq!(
             with(&|c| c.walls = vec![wall(0, 0, 50, 43)]),
             ["population"]

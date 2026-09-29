@@ -147,6 +147,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('bali')).toMatchObject({
+      x: { path: 'growth', values: '2:2.4:0.1' },
+      ticks: 360,
+      metric: { kind: 'final', series: 'scored' },
+    });
     expect(defaultForm('zi')).toMatchObject({
       x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' },
       ticks: 12000,

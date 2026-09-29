@@ -5,7 +5,7 @@
 //!
 //! Pairing: every within-world comparison (rememberers against others) is
 //! paired per seed by construction; every comparison of two configurations
-//! (`project` against `recall`, 5 Flumps against 20, memory on against off)
+//! (`project` against `recall`, 5 agents against 20, memory on against off)
 //! runs the same seeds in both arms and is judged on the per-seed
 //! differences (`paired_greater`). The advantage is the per-seed mean of
 //! `wealth_advantage` over ticks 200–500.
@@ -133,7 +133,7 @@ fn with_share(mut c: Config, share: f64) -> Config {
     c
 }
 
-/// Truffles per Flump-tick over ticks 1..=`ticks` for (rememberers, others):
+/// Truffles per agent-tick over ticks 1..=`ticks` for (rememberers, others):
 /// each group's truffles over the sum of its living counts at the start of
 /// each tick.
 fn truffle_rates(c: &Config, seeds: &[u64], ticks: u32) -> Vec<(f64, f64)> {
@@ -197,7 +197,7 @@ fn trapline_index(seq: &[u32], rng: &mut Pcg64) -> f64 {
     }
 }
 
-/// A survey-side generator per (world seed, Flump).
+/// A survey-side generator per (world seed, agent).
 fn shuffle_rng(seed: u64, id: AgentId) -> Pcg64 {
     Pcg64::seed_from_u64(seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ id.rotate_left(32))
 }
@@ -211,7 +211,7 @@ struct Trap {
     intervals: Vec<f64>,
 }
 
-/// Steps `ticks` ticks, logging each Flump's arrivals at truffle spots (a
+/// Steps `ticks` ticks, logging each agent's arrivals at truffle spots (a
 /// visit is ending a tick on a spot site it wasn't on the tick before).
 fn trapline(c: &Config, seeds: &[u64], ticks: u32) -> Vec<Trap> {
     each_seed_with(c, seeds, move |seed, mut w| {
@@ -285,7 +285,7 @@ pub(crate) const MVT_TICKS: u32 = 1000;
 
 /// `mem-mvt` at lattice spacing `s`: nine peaks at (s/2 + s·i, s/2 + s·j)
 /// on a 3s × 3s torus, so each patch keeps its share of the torus and the
-/// 10 Flumps their 10/9 per patch; only the walk between patches changes.
+/// 10 agents their 10/9 per patch; only the walk between patches changes.
 /// Vision is 1–18 at every spacing (the 36 × 36 torus of spacing 12 allows
 /// at most 18, half the grid), so s = 20 is the preset but for vision.
 /// `utility` is the preset's mind (travel 0.5); otherwise rule M.
@@ -319,19 +319,19 @@ fn mvt(s: u32, utility: bool) -> Config {
 
 /// The marginal value theorem in both regimes these engines were tried in
 /// (Minds 3, Task 10 fix rounds 1–3); the claims' details carry it.
-const MVT_REGIMES: &str = "Rich patches (the preset): under the utility mind with travel, foragers who find a patch never leave it (rule M's foragers do move between patches, but its residence slope is unreliable; rule M's overstay figures are reported in `mem-mvt.overstay`). Depleting patches (tried in fix rounds 1 and 2, radius 2 and growback 0.05, 0.45 sugar a tick per patch): foragers starve before any switch; with 10 Flumps no one is alive after tick 200; with 3, no one is alive at tick 1000 and only 3 departures happen across 20 seeds. Likely reason: rule M and the utility mind compare the values of sites, not rates of intake, and hold no estimate of the habitat's average rate; and with sight only along rows and columns, a forager that has emptied a patch often has no other patch in sight. So the theorem's leave-when-your-rate-falls-to-the-average decision can't be expressed here; it is left to Minds 4 (planning).";
+const MVT_REGIMES: &str = "Rich patches (the preset): under the utility mind with travel, foragers who find a patch never leave it (rule M's foragers do move between patches, but its residence slope is unreliable; rule M's overstay figures are reported in `mem-mvt.overstay`). Depleting patches (tried in fix rounds 1 and 2, radius 2 and growback 0.05, 0.45 sugar a tick per patch): foragers starve before any switch; with 10 agents no one is alive after tick 200; with 3, no one is alive at tick 1000 and only 3 departures happen across 20 seeds. Likely reason: rule M and the utility mind compare the values of sites, not rates of intake, and hold no estimate of the habitat's average rate; and with sight only along rows and columns, a forager that has emptied a patch often has no other patch in sight. So the theorem's leave-when-your-rate-falls-to-the-average decision can't be expressed here; it is left to Minds 4 (planning).";
 
 pub(crate) struct Visits {
     /// Mean length in ticks of completed patch visits (NaN with none).
     pub(crate) residence: f64,
     pub(crate) visits: usize,
     pub(crate) departures: usize,
-    /// Share of the living Flumps on a patch at the last tick.
+    /// Share of the living agents on a patch at the last tick.
     pub(crate) on_patch: f64,
-    /// Flumps alive at the last tick.
+    /// Agents alive at the last tick.
     pub(crate) alive: f64,
     /// Departures whose last tick in the patch gathered less than the
-    /// Flump's mean gathered per tick so far.
+    /// agent's mean gathered per tick so far.
     pub(crate) overstays: usize,
 }
 
@@ -357,7 +357,7 @@ struct Track {
     last_gain: f64,
 }
 
-/// Steps `MVT_TICKS` ticks, following each Flump's patch (`patch_of`) and
+/// Steps `MVT_TICKS` ticks, following each agent's patch (`patch_of`) and
 /// its sugar gathered each tick (the change in holdings plus metabolism;
 /// nothing else moves sugar in these worlds: no births, no trade).
 pub(crate) fn visits(c: &Config, seeds: &[u64]) -> Vec<Visits> {
@@ -450,7 +450,7 @@ pub(crate) fn residence_slopes(
 }
 
 /// Each spacing's median residence, visit count, alive and on-patch
-/// figures, for a world of `pop` Flumps.
+/// figures, for a world of `pop` agents.
 pub(crate) fn residence_medians(runs: &[Vec<Visits>], pop: u32) -> String {
     SPACINGS
         .iter()
@@ -461,7 +461,7 @@ pub(crate) fn residence_medians(runs: &[Vec<Visits>], pop: u32) -> String {
             let on: Vec<f64> = r.iter().map(|v| v.on_patch).collect();
             let alive: Vec<f64> = r.iter().map(|v| v.alive).collect();
             format!(
-                "{s}: {:.2} ({n} completed visits; at tick {MVT_TICKS}, a median {:.1} of the {pop} Flumps alive and a median share {:.2} of them on a patch)",
+                "{s}: {:.2} ({n} completed visits; at tick {MVT_TICKS}, a median {:.1} of the {pop} agents alive and a median share {:.2} of them on a patch)",
                 med_or_nan(&stats::finite(&res)),
                 median(&alive),
                 med_or_nan(&on)
@@ -738,7 +738,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mem-trapline",
             source: Source::Comment,
             citation: SPEC,
-            text: "Memory pays on the trapline world: with half the Flumps remembering (share 0.5), rememberers are wealthier than others (ticks 200–500), seed by seed",
+            text: "Memory pays on the trapline world: with half the agents remembering (share 0.5), rememberers are wealthier than others (ticks 200–500), seed by seed",
             check: |seeds| richer(&trapline_mixed(), seeds),
         },
         Claim {
@@ -753,7 +753,7 @@ pub fn claims() -> Vec<Claim> {
                 let never_r: usize = c.iter().map(|x| x.never_rem).sum();
                 let never_o: usize = c.iter().map(|x| x.never_oth).sum();
                 paired_greater(&f(|x| x.rem), &f(|x| x.oth), "rememberers", "others").with(&format!(
-                    "Medians over seeds: advantage {:.2}; first tick on a patch (per seed, the median Flump; never reached by tick 500 counts as 501): rememberers {:.1}, others {:.1}; never reached, over all seeds: rememberers {never_r}, others {never_o}; share on a patch over ticks 200–500: rememberers {:.3}, others {:.3}.",
+                    "Medians over seeds: advantage {:.2}; first tick on a patch (per seed, the median agent; never reached by tick 500 counts as 501): rememberers {:.1}, others {:.1}; never reached, over all seeds: rememberers {never_r}, others {never_o}; share on a patch over ticks 200–500: rememberers {:.3}, others {:.3}.",
                     median(&f(|x| x.adv)),
                     median(&f(|x| x.first_rem)),
                     median(&f(|x| x.first_oth)),
@@ -767,7 +767,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mem-truffles",
             source: Source::Comment,
             citation: SPEC,
-            text: "Rememberers gather more truffles per head than others (ticks 1–500, per Flump-tick alive)",
+            text: "Rememberers gather more truffles per head than others (ticks 1–500, per agent-tick alive)",
             check: |seeds| {
                 let r = truffle_rates(&preset("mem-truffles"), seeds, 500);
                 let (a, b): (Vec<f64>, Vec<f64>) = r.into_iter().unzip();
@@ -789,7 +789,7 @@ pub fn claims() -> Vec<Claim> {
                 let mr: Vec<f64> = stats::finite(&mixed.iter().map(|x| med_or_nan(&x.idx_rem)).collect::<Vec<_>>());
                 let mo: Vec<f64> = stats::finite(&mixed.iter().map(|x| med_or_nan(&x.idx_oth)).collect::<Vec<_>>());
                 range(&meds, 0.0, 0.8, false).with(&format!(
-                    "Every Flump remembers (the preset); {n} qualifying sequences over all seeds; the per-seed median is below 1 in {below1} of {} seeds. Control, share 0.5: median of per-seed medians, rememberers {:.3} ({} seeds), non-rememberers {:.3} ({} seeds).",
+                    "Every agent remembers (the preset); {n} qualifying sequences over all seeds; the per-seed median is below 1 in {below1} of {} seeds. Control, share 0.5: median of per-seed medians, rememberers {:.3} ({} seeds), non-rememberers {:.3} ({} seeds).",
                     meds.len(),
                     med_or_nan(&mr),
                     mr.len(),
@@ -803,7 +803,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mem-trapline",
             source: Source::Book,
             citation: "Gill 1988",
-            text: "Competition shortens revisits: the median interval between a rememberer's visits to the same spot is shorter with 20 Flumps than with 5 (ticks 1–1000), seed by seed",
+            text: "Competition shortens revisits: the median interval between a rememberer's visits to the same spot is shorter with 20 agents than with 5 (ticks 1–1000), seed by seed",
             check: |seeds| {
                 let at = |pop: u32| {
                     let mut c = preset("mem-trapline");
@@ -817,8 +817,8 @@ pub fn claims() -> Vec<Claim> {
                     let all: Vec<f64> = t.iter().flat_map(|x| x.intervals.clone()).collect();
                     all.iter().filter(|&&i| i < 40.0).count() as f64 / all.len() as f64
                 };
-                paired_greater(&m5, &m20, "5 Flumps", "20 Flumps").with(&format!(
-                    "Against regrow 40: median of per-seed median intervals, 5 Flumps {:.1}, 20 Flumps {:.1}; share of all revisits sooner than 40 ticks, 5 Flumps {:.3}, 20 Flumps {:.3}.",
+                paired_greater(&m5, &m20, "5 agents", "20 agents").with(&format!(
+                    "Against regrow 40: median of per-seed median intervals, 5 agents {:.1}, 20 agents {:.1}; share of all revisits sooner than 40 ticks, 5 agents {:.3}, 20 agents {:.3}.",
                     median(&stats::finite(&m5)),
                     median(&stats::finite(&m20)),
                     under(&five),
@@ -831,7 +831,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mem-trapline",
             source: Source::Book,
             citation: "Ohashi & Thomson 2005",
-            text: "Traplining is more competitive: with half the Flumps remembering (share 0.5), rememberers gather more truffles per head than others (ticks 1–1000, per Flump-tick alive), seed by seed",
+            text: "Traplining is more competitive: with half the agents remembering (share 0.5), rememberers gather more truffles per head than others (ticks 1–1000, per agent-tick alive), seed by seed",
             check: |seeds| {
                 let r = truffle_rates(&trapline_mixed(), seeds, TRAP_TICKS);
                 let (a, b): (Vec<f64>, Vec<f64>) = r.into_iter().unzip();
@@ -869,7 +869,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mem-mvt",
             source: Source::Book,
             citation: "Nonacs 2001; Hayden, Pearson & Platt 2011",
-            text: "Flumps overstay: at over half of departures, the sugar gathered on the last tick in the patch is below the Flump's mean gathered per tick so far, in at least 80 % of seeds",
+            text: "Agents overstay: at over half of departures, the sugar gathered on the last tick in the patch is below the agent's mean gathered per tick so far, in at least 80 % of seeds",
             check: |seeds| {
                 let v = visits(&preset("mem-mvt"), seeds);
                 let share: Vec<f64> = v.iter().map(Visits::overstay_share).collect();
@@ -895,7 +895,7 @@ pub fn claims() -> Vec<Claim> {
                 };
                 let (m20, m18) = (rule_m(20), rule_m(18));
                 range(&share, 0.5 + f64::EPSILON, 1.0, false).with(&format!(
-                    "Per-seed share of departures that overstay, mem-mvt (utility with travel), ticks 1–{MVT_TICKS}; {deps} departures over all seeds; at tick {MVT_TICKS}, a median {:.1} of the {pop} Flumps alive (per seed: {alive_list}), a median share {:.2} of them on a patch. Rule M's figures, on mem-mvt's world: median share {:.3} at the preset's vision 1–20 ({} seeds with departures), {:.3} at vision 1–18 as in the spacing runs ({} seeds).",
+                    "Per-seed share of departures that overstay, mem-mvt (utility with travel), ticks 1–{MVT_TICKS}; {deps} departures over all seeds; at tick {MVT_TICKS}, a median {:.1} of the {pop} agents alive (per seed: {alive_list}), a median share {:.2} of them on a patch. Rule M's figures, on mem-mvt's world: median share {:.3} at the preset's vision 1–20 ({} seeds with departures), {:.3} at vision 1–18 as in the spacing runs ({} seeds).",
                     median(&alive),
                     med_or_nan(&on),
                     med_or_nan(&m20),

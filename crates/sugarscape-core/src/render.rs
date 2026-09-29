@@ -38,7 +38,7 @@ pub const BORN: Rgb = [0x3d, 0xd6, 0x6b];
 pub const BORN_PARENT: Rgb = [0xff, 0xe0, 0x4d];
 /// A wall site (stone): opaque, blocks sight.
 pub const WALL: Rgb = [0x5a, 0x55, 0x4c];
-/// A fence site (wood): passable to sight, not to Flumps.
+/// A fence site (wood): passable to sight, not to agents.
 pub const FENCE: Rgb = [0x8a, 0x6d, 0x3b];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

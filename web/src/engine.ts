@@ -54,6 +54,7 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'bali') return `This run has reached its last year — Reset to run it again`;
   if (modelOf(config) === 'zi') return `This run has reached its last period — Reset to run it again`;
   if (modelOf(config) === 'punishment') return `This run has reached its last period (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'retirement') {
@@ -272,7 +273,7 @@ export class Engine {
   private followedId: number | null = null;
   private followedLive = false;
   private trailCells = NO_CELLS;
-  /** Minds 3: the inspected Flump's remembered sites, flat `[x, y, age, spot, …]` (the overlay). */
+  /** Minds 3: the inspected agent's remembered sites, flat `[x, y, age, spot, …]` (the overlay). */
   private memoryCells = NO_CELLS;
   private edges: Partial<Record<Overlay, Uint32Array>> = {};
   /** The last group received per `chartKey` (the host re-sends a group only when its history grew). */
@@ -597,7 +598,7 @@ export class Engine {
     return this.trailCells;
   }
 
-  /** Minds 3: the inspected Flump's remembered sites, flat `[x, y, age, spot, …]` (empty otherwise). */
+  /** Minds 3: the inspected agent's remembered sites, flat `[x, y, age, spot, …]` (empty otherwise). */
   inspectMemory(): Uint32Array {
     return this.memoryCells;
   }

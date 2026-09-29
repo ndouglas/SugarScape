@@ -1,0 +1,80 @@
+{
+  "name": "Balinese Water Temples: pest links removed and added",
+  "description": "Janssen's Figs. 15–16: pest links removed (each with probability pₑ) or added between subaks sharing a dam (pₙ), for eq.-4 imitators (γ 0.4), neighbor imitators and adaptive subaks; the harvest over years 6–30. Measured (release, seeds 1–10, recorded 2026-09-28), half removed, a quarter removed, as mapped, 5 % added, 20 % added: eq. 4 24.18, 24.32, 24.64, 23.06, 23.22; neighbors 16.21, 18.10, 20.06, 21.55, 21.80; adaptive 25.95, 25.95, 25.95, 25.46, 17.02 t/ha/yr. Adaptive subaks behave as Janssen found; eq.-4 imitators barely notice removal, and neighbor imitators gain from added links.",
+  "base": {
+    "preset": "lk-random"
+  },
+  "x": {
+    "label": "Links",
+    "values": [
+      {
+        "at": 1,
+        "name": "Half removed",
+        "set": {
+          "remove_links": 0.5
+        }
+      },
+      {
+        "at": 2,
+        "name": "A quarter removed",
+        "set": {
+          "remove_links": 0.25
+        }
+      },
+      {
+        "at": 3,
+        "name": "As mapped",
+        "set": {}
+      },
+      {
+        "at": 4,
+        "name": "Some added (0.05)",
+        "set": {
+          "add_links": 0.05
+        }
+      },
+      {
+        "at": 5,
+        "name": "More added (0.2)",
+        "set": {
+          "add_links": 0.2
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Decision",
+    "values": [
+      {
+        "at": 1,
+        "name": "Imitate (eq. 4, γ 0.4)",
+        "set": {
+          "decision": "generalized"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Imitate the best neighbor",
+        "set": {
+          "decision": "imitate"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Adaptive",
+        "set": {
+          "decision": "adaptive"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 360,
+  "metric": {
+    "kind": "final",
+    "series": "scored"
+  }
+}

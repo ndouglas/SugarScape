@@ -1,7 +1,7 @@
 //! The utility mind (Minds 1; Mark 2009, Dill and Mark 2010, Lewis 2017):
 //! each candidate site's score is the product of its considerations —
 //! rule M's welfare W, travel T(d) = 1 / (1 + k·d) and crowding
-//! C = (1 + n)^(−m), n the Flumps on the site's von Neumann neighbors other
+//! C = (1 + n)^(−m), n the agents on the site's von Neumann neighbors other
 //! than the mover. With k = m = 0 the score is W exactly, and the choice is
 //! rule M's (same candidates, tie rule and draw).
 //!
@@ -32,7 +32,7 @@ pub fn score(welfare: f64, distance: u32, crowd: u32, d: &Decision) -> f64 {
     s
 }
 
-/// Flumps on `site`'s four von Neumann neighbors, not counting `mover`.
+/// Agents on `site`'s four von Neumann neighbors, not counting `mover`.
 pub fn crowd(world: &World, site: Pos, mover: AgentId) -> u32 {
     world
         .torus
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn crowding_turns_a_flump_away_from_a_crowded_site() {
+    fn crowding_turns_an_agent_away_from_a_crowded_site() {
         let mut w = blank_world(11, 11);
         w.config.decision = utility(0.0, 1.0, Idle::Stay);
         let me = spawn(&mut w, 5, 5);
@@ -193,7 +193,7 @@ mod tests {
 
     #[test]
     fn crowding_is_zero_for_a_remembered_site() {
-        // Remembered (5, 9) worth 4 has two Flumps beside it, out of sight:
+        // Remembered (5, 9) worth 4 has two agents beside it, out of sight:
         // crowded it would score 4 / 3 and lose to (6, 5)'s 3, but the
         // walker can't know who's there, so it scores 4.
         let mut c = blank_config(21, 21);

@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 146] = [
+const BUILTINS: [Builtin; 155] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1549,6 +1549,42 @@ const BUILTINS: [Builtin; 146] = [
     Builtin {
         id: "goap-memory",
         json: include_str!("../../../sweeps/goap-memory.json"),
+    },
+    Builtin {
+        id: "bali-levels",
+        json: include_str!("../../../sweeps/bali-levels.json"),
+    },
+    Builtin {
+        id: "bali-growth",
+        json: include_str!("../../../sweeps/bali-growth.json"),
+    },
+    Builtin {
+        id: "bali-dispersal",
+        json: include_str!("../../../sweeps/bali-dispersal.json"),
+    },
+    Builtin {
+        id: "bali-rain",
+        json: include_str!("../../../sweeps/bali-rain.json"),
+    },
+    Builtin {
+        id: "bali-imitation-growth",
+        json: include_str!("../../../sweeps/bali-imitation-growth.json"),
+    },
+    Builtin {
+        id: "bali-two-node",
+        json: include_str!("../../../sweeps/bali-two-node.json"),
+    },
+    Builtin {
+        id: "bali-gamma",
+        json: include_str!("../../../sweeps/bali-gamma.json"),
+    },
+    Builtin {
+        id: "bali-adaptive",
+        json: include_str!("../../../sweeps/bali-adaptive.json"),
+    },
+    Builtin {
+        id: "bali-links",
+        json: include_str!("../../../sweeps/bali-links.json"),
     },
 ];
 
@@ -2518,7 +2554,16 @@ mod tests {
                 "zip-shift",
                 "goap-horizon",
                 "goap-k",
-                "goap-memory"
+                "goap-memory",
+                "bali-levels",
+                "bali-growth",
+                "bali-dispersal",
+                "bali-rain",
+                "bali-imitation-growth",
+                "bali-two-node",
+                "bali-gamma",
+                "bali-adaptive",
+                "bali-links"
             ]
         );
         for b in builtins() {

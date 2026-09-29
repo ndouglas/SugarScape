@@ -11,7 +11,7 @@
 //!
 //! The spacing worlds are `goap-mvt`'s at spacing s (nine peaks at
 //! (s/2 + s·i, s/2 + s·j) on a 3s × 3s torus), keeping Task 7's balance:
-//! the patches, growback 0.02 and 3 Flumps don't change with s, so a patch
+//! the patches, growback 0.02 and 3 agents don't change with s, so a patch
 //! still takes in 0.5 a tick and the nine 1.5 times the need. Vision 1–6
 //! and the prior map at every spacing, so s = 20 is the preset.
 
@@ -87,12 +87,12 @@ fn list(v: &[f64], digits: usize) -> String {
 
 // --------------------------------------------------------------------- usage
 
-/// How often GOAP Flumps planned or fell back, summed over a run's ticks
-/// (`World::events` after each step; Flump-ticks are the living counts after
+/// How often GOAP agents planned or fell back, summed over a run's ticks
+/// (`World::events` after each step; agent-ticks are the living counts after
 /// each tick, as the stats series count them).
 #[derive(Default, Clone, Copy)]
 struct Usage {
-    flump_ticks: u64,
+    agent_ticks: u64,
     plans: u64,
     plans_by_rememberers: u64,
     plans_with_remembered: u64,
@@ -103,7 +103,7 @@ struct Usage {
 impl Usage {
     fn add(&mut self, w: &World) {
         let e = w.events();
-        self.flump_ticks += w.population() as u64;
+        self.agent_ticks += w.population() as u64;
         self.plans += u64::from(e.plans);
         self.plans_by_rememberers += u64::from(e.plans_by_rememberers);
         self.plans_with_remembered += u64::from(e.plans_with_remembered);
@@ -113,7 +113,7 @@ impl Usage {
 
     fn sum(all: &[Usage]) -> Usage {
         all.iter().fold(Usage::default(), |a, u| Usage {
-            flump_ticks: a.flump_ticks + u.flump_ticks,
+            agent_ticks: a.agent_ticks + u.agent_ticks,
             plans: a.plans + u.plans,
             plans_by_rememberers: a.plans_by_rememberers + u.plans_by_rememberers,
             plans_with_remembered: a.plans_with_remembered + u.plans_with_remembered,
@@ -123,7 +123,7 @@ impl Usage {
     }
 
     fn describe(&self, ticks: u32) -> String {
-        let per = |n: u64| 100.0 * n as f64 / self.flump_ticks as f64;
+        let per = |n: u64| 100.0 * n as f64 / self.agent_ticks as f64;
         let used = if self.plans_by_rememberers == 0 {
             "no rememberer planned".to_string()
         } else {
@@ -135,8 +135,8 @@ impl Usage {
             )
         };
         format!(
-            "Usage over ticks 1–{ticks}, all seeds ({} Flump-ticks): a new plan on {:.1} %, the fallback because known sugar falls short of G on {:.1} %, because the search passed its limit on {:.2} %; the rest follow a plan or stay. {used}.",
-            self.flump_ticks,
+            "Usage over ticks 1–{ticks}, all seeds ({} agent-ticks): a new plan on {:.1} %, the fallback because known sugar falls short of G on {:.1} %, because the search passed its limit on {:.2} %; the rest follow a plan or stay. {used}.",
+            self.agent_ticks,
             per(self.plans),
             per(self.fallback_short),
             per(self.fallback_limit),
@@ -205,7 +205,7 @@ fn travel(rule: DecisionRule, seeds: &[u64]) -> Outcome {
     let (m, mr) = residence_slopes(seeds, |s| tori(s, DecisionRule::Book));
     let mut out = range(&x, f64::MIN_POSITIVE, f64::INFINITY, false)
         .with(&format!(
-            "goap-mvt's world at spacing s (a 3s × 3s torus, the same nine patches, growback 0.02, 3 Flumps, vision 1–6, the prior map); completed visits over ticks 1–{MVT_TICKS} (visits under way at tick 0 or at the end, or cut short by death, are dropped); a slope needs at least 3 spacings with a completed visit; residences are medians over seeds of per-seed means."
+            "goap-mvt's world at spacing s (a 3s × 3s torus, the same nine patches, growback 0.02, 3 agents, vision 1–6, the prior map); completed visits over ticks 1–{MVT_TICKS} (visits under way at tick 0 or at the end, or cut short by death, are dropped); a slope needs at least 3 spacings with a completed visit; residences are medians over seeds of per-seed means."
         ))
         .with(&slope_report(rule_name(rule), seeds, &x, &xr))
         .with(&format!(
@@ -311,7 +311,7 @@ fn overstay(rule: DecisionRule, seeds: &[u64]) -> Outcome {
         .collect::<Vec<_>>()
         .join("; ");
     range(&share, 0.5 + f64::EPSILON, 1.0, false).with(&format!(
-        "Per-seed share of departures whose last tick in the patch gathered less than the Flump's mean gathered per tick so far, goap-mvt's world at s = 20 (the preset), ticks 1–{MVT_TICKS}; per seed {}. With travel (spacing): median share by spacing {}; per-seed slope of the share on spacing finite in {} of {} seeds, positive in {}, median {:.4} (IQR {:.4}–{:.4}). Compared on the same worlds: {others}.",
+        "Per-seed share of departures whose last tick in the patch gathered less than the agent's mean gathered per tick so far, goap-mvt's world at s = 20 (the preset), ticks 1–{MVT_TICKS}; per seed {}. With travel (spacing): median share by spacing {}; per-seed slope of the share on spacing finite in {} of {} seeds, positive in {}, median {:.4} (IQR {:.4}–{:.4}). Compared on the same worlds: {others}.",
         list(&share, 2),
         overstay_by_spacing(&runs),
         stats::finite(&slopes).len(),
@@ -325,7 +325,7 @@ fn overstay(rule: DecisionRule, seeds: &[u64]) -> Outcome {
 }
 
 /// The overstay measure without transit (reported, not judged): each
-/// departure's gain on its last in-patch tick on which the Flump wasn't in
+/// departure's gain on its last in-patch tick on which the agent wasn't in
 /// transit, against the same realized mean gain rate as `visits`. Visits
 /// whose every in-patch tick was in transit are dropped.
 #[derive(Default)]
@@ -346,7 +346,7 @@ impl Settled {
     }
 }
 
-/// What the survey's trace keeps of a Flump before a step.
+/// What the survey's trace keeps of an agent before a step.
 struct Before {
     leaving: Option<Pos>,
     targets: Vec<Pos>,
@@ -362,7 +362,7 @@ fn before(a: &Agent) -> Before {
     }
 }
 
-/// Whether the Flump was in transit this tick. The marginal-value rule:
+/// Whether the agent was in transit this tick. The marginal-value rule:
 /// `leaving` was set at the start of the tick or is set after it. GOAP: its
 /// landing site wasn't a plan target (a step of its plan before or after the
 /// tick, or the target it reached this tick under a plan). A GOAP tick on
@@ -593,7 +593,7 @@ pub fn claims() -> Vec<Claim> {
             item: "goap-mvt",
             source: Source::Book,
             citation: "Nonacs 2001; Constantino & Daw 2015",
-            text: "Planners overstay: at over half of departures, the sugar gathered on the last tick in the patch is below the Flump's mean gathered per tick so far, in at least 80 % of seeds (s = 20); the share against spacing is reported",
+            text: "Planners overstay: at over half of departures, the sugar gathered on the last tick in the patch is below the agent's mean gathered per tick so far, in at least 80 % of seeds (s = 20); the share against spacing is reported",
             check: |seeds| overstay(DecisionRule::Goap, seeds),
         },
         Claim {
@@ -601,7 +601,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mvt-rule",
             source: Source::Book,
             citation: "Nonacs 2001; Constantino & Daw 2015",
-            text: "Marginal-value foragers overstay: at over half of departures, the sugar gathered on the last tick in the patch is below the Flump's mean gathered per tick so far, in at least 80 % of seeds (s = 20); the share against spacing is reported",
+            text: "Marginal-value foragers overstay: at over half of departures, the sugar gathered on the last tick in the patch is below the agent's mean gathered per tick so far, in at least 80 % of seeds (s = 20); the share against spacing is reported",
             check: |seeds| overstay(DecisionRule::Mvt, seeds),
         },
         Claim {
@@ -669,12 +669,12 @@ mod tests {
     }
 
     #[test]
-    fn usage_counts_plans_and_flump_ticks() {
+    fn usage_counts_plans_and_agent_ticks() {
         let u = usage(&preset("goap-mvt"), &[1], 20);
         assert!(
-            u.flump_ticks > 0 && u.flump_ticks <= 60,
+            u.agent_ticks > 0 && u.agent_ticks <= 60,
             "{}",
-            u.flump_ticks
+            u.agent_ticks
         );
         assert!(u.plans > 0);
         assert!(u.plans_with_remembered <= u.plans_by_rememberers);

@@ -1,6 +1,6 @@
 {
   "name": "Minds 1: waiting or wandering when nothing is in sight",
-  "description": "The richer patch's share of on-patch Flumps against the input ratio, with nobody starving, when a Flump that sees no sugar stays put (rule M) or wanders (the utility mind's idle wander). Seeds 1–20, ticks 500–1000.",
+  "description": "The richer patch's share of on-patch agents against the input ratio, with nobody starving, when an agent that sees no sugar stays put (rule M) or wanders (the utility mind's idle wander). Seeds 1–20, ticks 500–1000.",
   "base": { "preset": "ifd-no-starving" },
   "x": {
     "label": "Input ratio (first patch : second)",

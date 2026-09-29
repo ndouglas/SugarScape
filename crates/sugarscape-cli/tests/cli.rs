@@ -178,6 +178,15 @@ fn presets_and_sweeps_are_listed() {
         "zip-days",
         "zip-momentum",
         "zip-shift",
+        "bali-levels",
+        "bali-growth",
+        "bali-dispersal",
+        "bali-rain",
+        "bali-imitation-growth",
+        "bali-two-node",
+        "bali-gamma",
+        "bali-adaptive",
+        "bali-links",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -615,6 +624,22 @@ fn a_zi_run_stops_at_its_last_period() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 300 (its last period)\n");
+}
+
+#[test]
+fn a_bali_run_stops_at_its_last_year() {
+    let dir = scratch("bali");
+    let config = dir.join("bali.json");
+    std::fs::write(&config, r#"{"model": "bali", "stop_at": 2}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "1000",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 24 (its last year)\n");
 }
 
 #[test]

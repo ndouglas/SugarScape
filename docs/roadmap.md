@@ -277,6 +277,20 @@ holds even in Gode and Sunder's mechanism; ZIP converges; and his code's momentu
 text's.
 See `docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
 
+## Milestone 29: Balinese Water Temples (done)
+
+Lansing and Kremer's water temples (American Anthropologist 1993) as a model kind on Janssen's data for
+the Oos and Petanu, with Janssen's reanalysis (Agricultural Systems 2007): the watershed's subaks, dams,
+rain, water and pests month by month; neighbor imitation, Janssen's plan search at six scales of
+coordination, his two-node model, imitation discounted by network distance and adaptive subaks; and
+his code's departures from the texts as switches. Imitation's rise and Table 1 reproduce, and hold
+"every time"; but the patches' resemblance to the temples is the pest network's own, the subaks settle
+harder than the paper says, and the paper's perturbed run never recovers. Finer coordination helps by
+only 1–7 % — how much depends on the reading of the subak–dam columns, since water binds only under the
+physical one — never Janssen's +30 %, and the temple scale is never best; his two-node threshold holds
+exactly.
+See `docs/superpowers/specs/2026-09-28-bali-water-temples-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -301,6 +315,7 @@ See `docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
 - **Axtell and Epstein's timing of retirement**: done (Milestone 26).
 - **Boyd, Gintis, Bowles and Richerson's altruistic punishment** (and Cooney's PDE critique): done (Milestone 27).
 - **Gode and Sunder's zero-intelligence traders** (and Cliff's critique and ZIP traders): done (Milestone 28).
+- **Lansing and Kremer's Balinese water temples** (and Janssen's reanalysis): done (Milestone 29).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.

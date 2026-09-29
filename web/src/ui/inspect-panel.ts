@@ -3,13 +3,14 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isBaliView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
   PunishmentInspection,
   ZiInspection,
+  BaliInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -327,6 +328,30 @@ export class InspectPanel {
     return rows;
   }
 
+  /** A subak or a dam on the map, or a month of the water strip. */
+  private baliRows(view: BaliInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${fmt(100 * x)} %`;
+    const CROPS = ['fallow', 'six-month rice', 'four-month rice', 'three-month rice', 'vegetables'];
+    const s = view.subak;
+    if (s)
+      return [
+        row('Subak', `#${s.id} · ${fmt(s.area)} ha · masceti ${s.masceti}`),
+        row('Dams', `source ${s.source} · return ${s.ret}`),
+        row('Plan', `${s.plan + 1} of 21 from month ${s.start + 1}`),
+        row('Now', `${CROPS[s.crop] ?? 'fallow'} · pests ${fmt(s.pests)} · water ${pct(s.water)}`),
+        row('Last year', `${fmt(s.harvest)} t/ha`),
+        row('Neighbors', String(s.neighbors)),
+      ];
+    const d = view.dam;
+    if (!d) return [row('Point', view.panel === 'strip' ? 'no month yet' : 'no subak or dam here')];
+    const rows = [row('Dam', `#${d.id}`)];
+    if (view.panel === 'strip' && view.month !== null) rows.push(row('Month', String(view.month)));
+    rows.push(row('Water met', pct(view.stress ?? d.stress)));
+    if (view.panel === 'map') rows.push(row('This month', `inflow ${fmt(d.inflow)} m³/day · demand ${fmt(d.demand)} m³/day`));
+    return rows;
+  }
+
   /** A step of the schedules, a trade, or a trader. */
   private ziRows(view: ZiInspection): HTMLElement[] {
     const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -610,6 +635,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isBaliView(view)
+            ? this.baliRows(view)
           : isZiView(view)
             ? this.ziRows(view)
           : isPunishmentView(view)

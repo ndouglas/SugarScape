@@ -400,7 +400,16 @@ fn builtins_and_series_names_are_listed() {
             "zip-shift",
             "goap-horizon",
             "goap-k",
-            "goap-memory"
+            "goap-memory",
+            "bali-levels",
+            "bali-growth",
+            "bali-dispersal",
+            "bali-rain",
+            "bali-imitation-growth",
+            "bali-two-node",
+            "bali-gamma",
+            "bali-adaptive",
+            "bali-links"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -596,7 +605,7 @@ fn planning_the_marginal_value_theorem_matches_its_golden_entry() {
 }
 
 #[wasm_bindgen_test]
-fn inspect_reports_a_goap_flumps_plan() {
+fn inspect_reports_a_goap_agents_plan() {
     let preset = sugarscape_core::presets::by_id("goap-mvt").unwrap();
     let json = serde_json::to_string(&preset.config).unwrap();
     let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
@@ -627,7 +636,7 @@ fn inspect_reports_a_goap_flumps_plan() {
             break;
         }
     }
-    assert!(found, "expected at least one Flump with a plan by tick 50");
+    assert!(found, "expected at least one agent with a plan by tick 50");
 }
 
 #[wasm_bindgen_test]
@@ -683,7 +692,7 @@ fn inspect_memory_lists_a_rememberers_sites_and_is_empty_elsewhere() {
     let (ex, ey) = empty_site.expect("expected at least one empty site");
     assert!(
         sim.inspect_memory(ex, ey).is_empty(),
-        "no Flump there: empty"
+        "no agent there: empty"
     );
 }
 
@@ -1034,7 +1043,7 @@ fn norms_sims_match_the_native_golden_entries() {
     // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
     for (id, fp) in [
         ("ax-metanorms", "0x679a78d57f20640c"),
-        ("ax-dominance", "0x405accd101253f9d"),
+        ("ax-dominance", "0x53ae18fb6b9c339a"),
         ("gi-tournament", "0x95ea76458cee1a46"),
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
@@ -1197,6 +1206,28 @@ fn zi_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "zi");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn bali_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: rain, water and
+    // pests (f64), imitation, eq. 4 with innovation, adaptive planting, the
+    // plan search and the two nodes.
+    for (id, fp) in [
+        ("lk-random", "0x7d84b477ca8fba95"),
+        ("lk-stressed", "0x0626e5d5529abfb7"),
+        ("janssen-code", "0xb423b71bbc6353d0"),
+        ("janssen-levels-14", "0xa1d94a968698c5ed"),
+        ("janssen-two-node", "0xf87c8032f908abcc"),
+        ("janssen-generalized", "0xa2ae0ad93a97f180"),
+        ("janssen-adaptive", "0xea4877048a644fad"),
+        ("janssen-fewer-links", "0x878f982a182d0672"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "bali");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

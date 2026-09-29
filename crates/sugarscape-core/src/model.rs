@@ -8,6 +8,7 @@ use serde::{Serialize, Serializer};
 use crate::agreement::{AgreementConfig, AgreementWorld};
 use crate::anasazi::{AnasaziConfig, AnasaziWorld};
 use crate::ants::{AntsConfig, AntsWorld};
+use crate::bali::{BaliConfig, BaliWorld};
 use crate::civil::{CivilConfig, CivilWorld};
 use crate::classes::{ClassesConfig, ClassesWorld};
 use crate::config::{Config, FieldError};
@@ -32,9 +33,9 @@ use crate::thresholds::{ThresholdsConfig, ThresholdsWorld};
 use crate::world::World;
 use crate::zi::{ZiConfig, ZiWorld};
 use crate::{
-    agreement, anasazi, ants, civil, classes, culture, dpd, ethno, export, farol, image, norms,
-    opinions, punishment, retirement, ring, schelling, spatial, stats, structure, tags, thresholds,
-    zi,
+    agreement, anasazi, ants, bali, civil, classes, culture, dpd, ethno, export, farol, image,
+    norms, opinions, punishment, retirement, ring, schelling, spatial, stats, structure, tags,
+    thresholds, zi,
 };
 
 /// Which model a config or world is.
@@ -63,11 +64,12 @@ pub enum ModelKind {
     Retirement,
     Punishment,
     Zi,
+    Bali,
     Line,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 23] = [
+    pub const ALL: [ModelKind; 24] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -90,6 +92,7 @@ impl ModelKind {
         ModelKind::Retirement,
         ModelKind::Punishment,
         ModelKind::Zi,
+        ModelKind::Bali,
         ModelKind::Line,
     ];
 
@@ -117,6 +120,7 @@ impl ModelKind {
             ModelKind::Retirement => "retirement",
             ModelKind::Punishment => "punishment",
             ModelKind::Zi => "zi",
+            ModelKind::Bali => "bali",
             ModelKind::Line => "line",
         }
     }
@@ -147,6 +151,7 @@ impl ModelKind {
             ModelKind::Retirement => retirement::schema(),
             ModelKind::Punishment => punishment::schema(),
             ModelKind::Zi => zi::schema(),
+            ModelKind::Bali => bali::schema(),
             ModelKind::Line => crate::line::schema(),
         }
     }
@@ -183,6 +188,7 @@ pub enum ModelConfig {
     Retirement(RetirementConfig),
     Punishment(PunishmentConfig),
     Zi(ZiConfig),
+    Bali(BaliConfig),
     Line(LineConfig),
 }
 
@@ -211,6 +217,7 @@ enum Tagged<'a> {
     Retirement(&'a RetirementConfig),
     Punishment(&'a PunishmentConfig),
     Zi(&'a ZiConfig),
+    Bali(&'a BaliConfig),
     Line(&'a LineConfig),
 }
 
@@ -246,6 +253,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Retirement(c) => Tagged::Retirement(c).serialize(s),
             ModelConfig::Punishment(c) => Tagged::Punishment(c).serialize(s),
             ModelConfig::Zi(c) => Tagged::Zi(c).serialize(s),
+            ModelConfig::Bali(c) => Tagged::Bali(c).serialize(s),
             ModelConfig::Line(c) => Tagged::Line(c).serialize(s),
         }
     }
@@ -276,6 +284,7 @@ impl ModelConfig {
             ModelConfig::Retirement(_) => ModelKind::Retirement,
             ModelConfig::Punishment(_) => ModelKind::Punishment,
             ModelConfig::Zi(_) => ModelKind::Zi,
+            ModelConfig::Bali(_) => ModelKind::Bali,
             ModelConfig::Line(_) => ModelKind::Line,
         }
     }
@@ -380,10 +389,13 @@ impl ModelConfig {
             "zi" => serde_json::from_value(value)
                 .map(ModelConfig::Zi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "bali" => serde_json::from_value(value)
+                .map(ModelConfig::Bali)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment or zi)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi or bali)"
                 ),
             )),
         }
@@ -413,6 +425,7 @@ impl ModelConfig {
             ModelConfig::Retirement(c) => c.validate(),
             ModelConfig::Punishment(c) => c.validate(),
             ModelConfig::Zi(c) => c.validate(),
+            ModelConfig::Bali(c) => c.validate(),
             ModelConfig::Line(c) => c.validate(),
         }
     }
@@ -443,6 +456,7 @@ impl ModelConfig {
             ModelConfig::Retirement(c) => set_path(c, path, value).map(ModelConfig::Retirement),
             ModelConfig::Punishment(c) => set_path(c, path, value).map(ModelConfig::Punishment),
             ModelConfig::Zi(c) => set_path(c, path, value).map(ModelConfig::Zi),
+            ModelConfig::Bali(c) => set_path(c, path, value).map(ModelConfig::Bali),
             ModelConfig::Line(c) => set_path(c, path, value).map(ModelConfig::Line),
         }
     }
@@ -473,6 +487,7 @@ impl ModelConfig {
             | ModelConfig::Retirement(_)
             | ModelConfig::Punishment(_)
             | ModelConfig::Zi(_)
+            | ModelConfig::Bali(_)
             | ModelConfig::Line(_) => None,
         }
     }
@@ -508,6 +523,7 @@ impl ModelConfig {
                 punishment::SERIES.iter().map(|s| s.to_string()).collect()
             }
             ModelConfig::Zi(_) => zi::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Bali(_) => bali::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Line(_) => crate::line::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
@@ -700,6 +716,7 @@ pub enum ModelWorld {
     Retirement(Box<RetirementWorld>),
     Punishment(Box<PunishmentWorld>),
     Zi(Box<ZiWorld>),
+    Bali(Box<BaliWorld>),
     Line(Box<LineWorld>),
 }
 
@@ -754,6 +771,7 @@ impl ModelWorld {
                 ModelWorld::Punishment(Box::new(PunishmentWorld::new(c, seed)?))
             }
             ModelConfig::Zi(c) => ModelWorld::Zi(Box::new(ZiWorld::new(c, seed)?)),
+            ModelConfig::Bali(c) => ModelWorld::Bali(Box::new(BaliWorld::new(c, seed)?)),
             ModelConfig::Line(c) => ModelWorld::Line(Box::new(LineWorld::new(c, seed)?)),
         })
     }
@@ -782,6 +800,7 @@ impl ModelWorld {
             ModelWorld::Retirement(_) => ModelKind::Retirement,
             ModelWorld::Punishment(_) => ModelKind::Punishment,
             ModelWorld::Zi(_) => ModelKind::Zi,
+            ModelWorld::Bali(_) => ModelKind::Bali,
             ModelWorld::Line(_) => ModelKind::Line,
         }
     }
@@ -810,6 +829,7 @@ impl ModelWorld {
             ModelWorld::Retirement(w) => w.as_ref(),
             ModelWorld::Punishment(w) => w.as_ref(),
             ModelWorld::Zi(w) => w.as_ref(),
+            ModelWorld::Bali(w) => w.as_ref(),
             ModelWorld::Line(w) => w.as_ref(),
         }
     }
@@ -838,6 +858,7 @@ impl ModelWorld {
             ModelWorld::Retirement(w) => w.as_mut(),
             ModelWorld::Punishment(w) => w.as_mut(),
             ModelWorld::Zi(w) => w.as_mut(),
+            ModelWorld::Bali(w) => w.as_mut(),
             ModelWorld::Line(w) => w.as_mut(),
         }
     }
@@ -935,6 +956,7 @@ impl ModelWorld {
             ModelWorld::Retirement(w) => copy_without_history!(Retirement, w),
             ModelWorld::Punishment(w) => copy_without_history!(Punishment, w),
             ModelWorld::Zi(w) => copy_without_history!(Zi, w),
+            ModelWorld::Bali(w) => copy_without_history!(Bali, w),
             ModelWorld::Line(w) => copy_without_history!(Line, w),
             _ => return None,
         };
@@ -981,6 +1003,9 @@ impl ModelWorld {
                 restore_into!(live, kept)
             }
             (ModelWorld::Zi(live), ModelWorld::Zi(kept)) => {
+                restore_into!(live, kept)
+            }
+            (ModelWorld::Bali(live), ModelWorld::Bali(kept)) => {
                 restore_into!(live, kept)
             }
             (ModelWorld::Line(live), ModelWorld::Line(kept)) => restore_into!(live, kept),
@@ -1409,6 +1434,30 @@ mod tests {
     }
 
     #[test]
+    fn bali_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "bali", "plans": "traditional", "growth": 2.4, "stop_at": 2}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Bali);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["level"].as_u64()),
+            (Some("bali"), Some(14))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["harvest", "spread"]);
+        let e = ModelConfig::from_json(r#"{"model": "bali", "growth": -1}"#).unwrap_err();
+        assert_eq!(e[0].field, "growth");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Bali);
+        let cp = w.checkpoint().expect("bali worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn zi_configs_round_trip_with_their_tag() {
         let c = ModelConfig::from_json(
             r#"{"model": "zi", "market": "gs4", "strategy": "zi_u", "shouts": 500}"#,
@@ -1478,6 +1527,7 @@ mod tests {
                 "retirement",
                 "punishment",
                 "zi",
+                "bali",
                 "line"
             ]
         );

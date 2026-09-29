@@ -1,5 +1,5 @@
 //! Minds 3: truffles, hidden spots placed by hash (never on walls) that ripen
-//! again a fixed time after a Flump harvests them.
+//! again a fixed time after an agent harvests them.
 
 use crate::landscape::mix;
 
