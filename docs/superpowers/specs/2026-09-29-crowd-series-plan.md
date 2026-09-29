@@ -1,7 +1,8 @@
 # Following the Crowd: the third Flump series
 
 **Date:** 2026-09-29
-**Status:** planned; episodes 1–3 (Schelling) in spike.
+**Status:** in progress. Episode 1 (Neighbors like me, `2026-09-29-schelling-spike.md`) is built on
+milestone 30 (Schelling's own models); episodes 2–3 (his tipping model; the variations) need engine work.
 **Follows:** the Sugarscape series (`2026-09-26-sugarscape-series-plan.md`) and the Cooperation series
 (`2026-09-27-cooperation-series-plan.md`), both complete, and keeps their rules.
 
@@ -33,7 +34,7 @@ which the user is doing separately.
 
 | # | Episode | Source | Model | What the repository's records suggest (to be re-checked) |
 |---|---|---|---|---|
-| 1 | Neighbors like me | Schelling 1969, 1971: the line and the checkerboard | `schelling` (his rules as the default) | Mild demands, exaggerated separation; his tabletop counts are hand-worked examples, to be tested as typical |
+| 1 | Neighbors like me ✅ | Schelling 1969, 1971: the line and the checkerboard | `schelling` (his rules as the default) | Mild demands, exaggerated separation; his tabletop counts are hand-worked examples, to be tested as typical |
 | 2 | The tipping point | Schelling 1971: the bounded neighborhood | new, small | Only the all-one-color mixes are stable unless tolerance is wide; greater tolerance can hurt |
 | 3 | Variations on Schelling | Epstein & Axtell 1996; Pancs & Vriend 2007; Zhang 2004; Gauvin, Vannimenus & Nadal 2009; Singh, Vainchtein & Weiss 2009 | `schelling` switches | Wanting a mixed street still sorts the town; a frozen, a segregated and a mixed phase; clusters shrink on a big board |
 | 4 | One culture or many | Axelrod 1997 | `culture` | Local convergence, global polarization; the docked mobility result doesn't reproduce |

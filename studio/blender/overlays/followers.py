@@ -229,6 +229,37 @@ def _rings(name, color, members, d, ctx, size=1.0):
     return update
 
 
+def rings_unhappy(beat, d, ctx):
+    """Schelling: a warm ring at the feet of each Flump discontented at the
+    round shown (its `sugar` is 0), gone once it is content."""
+    glow = materials.fading("ring-unhappy", (1.0, 0.72, 0.15), 3.0)
+    mesh = _torus()
+    members = {i for f in d.frames[beat.start_tick:] for i, a in f.agents.items() if a.sugar == 0.0}
+    rings = {}
+    for id_ in members:
+        obj = bpy.data.objects.new(f"ring-unhappy-{id_}", mesh)
+        bpy.context.scene.collection.objects.link(obj)
+        if not obj.data.materials:
+            obj.data.materials.append(None)
+        obj.material_slots[0].link = "OBJECT"
+        obj.material_slots[0].material = glow
+        rings[id_] = obj
+
+    def update(frame):
+        f = d.frames[min(max(int(round(ctx.timing.tick_at(frame))), 0), d.ticks)]
+        for id_, obj in rings.items():
+            a = f.agents.get(id_)
+            p = flump_pose(ctx, d, id_, frame)
+            if a is None or a.sugar != 0.0 or not p.visible:
+                flump.stow(obj)
+                continue
+            s = max(p.sx, 1e-4)
+            obj.scale = (s, s, 1)
+            obj.location = (p.x, p.y, p.z + 0.04)
+
+    return update
+
+
 def rings_migrants(beat, d, ctx):
     """Gold rings on the migrants: alive from tick 100 to the end and
     crossing hemispheres at least twice (the claims' definition)."""

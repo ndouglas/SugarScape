@@ -270,6 +270,8 @@ def parse(text):
         raise ValueError(f"frame dump format {raw.get('format')!r}, expected {FORMAT}")
     if raw.get("model") == "dpd":
         return _dpd(raw)
+    if raw.get("model") in ("schelling", "line"):
+        return _schelling(raw)
     if raw.get("model") == "ethno":
         return _ethno(raw)
     if raw.get("model") == "structure":
@@ -374,6 +376,32 @@ def _dpd(raw):
     return Dump(
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
         placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model="dpd",
+    )
+
+
+def _schelling(raw):
+    """A Schelling shot (his board, or his line laid out as a row of squares)
+    as a `Dump`, so the Flumps walk as the Sugarscape's do: each Flump's color
+    in its group (1 Red, his stars; 0 Blue, his zeros, as the "strategy"
+    colors draw them) and whether it is content in its `sugar` (1 or 0). Nobody
+    is born or dies."""
+    w, h = raw["width"], raw["height"]
+    frames = [
+        Frame(
+            tick=f["tick"],
+            agents={i: Agent(i, x, y, 1.0 if content else 0.0, 0, 0, 0) for i, x, y, _, content in f["agents"]},
+            sugar=[0.0] * (w * h),
+            deaths={},
+            born=[],
+            pollution=[0.0] * (w * h),
+            births={},
+            groups={row[0]: 1 if row[3] else 0 for row in f["agents"]},
+        )
+        for f in raw["frames"]
+    ]
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
     )
 
 
