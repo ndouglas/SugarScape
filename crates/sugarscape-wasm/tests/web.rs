@@ -1028,7 +1028,7 @@ fn norms_sims_match_the_native_golden_entries() {
     // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
     for (id, fp) in [
         ("ax-metanorms", "0x679a78d57f20640c"),
-        ("ax-dominance", "0x405accd101253f9d"),
+        ("ax-dominance", "0x53ae18fb6b9c339a"),
         ("gi-tournament", "0x95ea76458cee1a46"),
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
