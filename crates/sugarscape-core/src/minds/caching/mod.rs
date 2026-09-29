@@ -7,12 +7,15 @@
 //! - **Bury(q)** (`bury`) at the agent's current site: holdings −= q, cache
 //!   += q. It costs no tick.
 //! - **Dig** (`dig`, called by `movement::go_and_gather`): arriving at its own
-//!   cache while holdings are below the reserve, the agent takes min(cache,
+//!   cache while holdings are below half the reserve, the agent takes min(cache,
 //!   room under the carrying limit) instead of harvesting the site.
 //! - **Caches as candidates** (`join_caches`, called by
 //!   `movement::candidates_with_memory`, which rule M, the utility mind,
 //!   GOAP and the marginal-value rule all build on): while holdings are
-//!   below the reserve, each cache joins the candidates at its amount.
+//!   below half the reserve, each cache joins the candidates at its amount.
+//!   Burying stops at R, so holdings between R / 2 and R neither bury nor
+//!   dig: the band keeps an agent from digging back what it just buried. A
+//!   central-place world keeps the threshold at R (see [`hungry`]).
 //! - **Reserve.** R = good-0 effective metabolism × `goap.horizon` (GOAP's
 //!   goal G: H ticks of food); 0 in the lab. Surplus is holdings above R.
 //!   In a central-place world R is one tick's need (the metabolism alone),
@@ -53,10 +56,24 @@ pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
 }
 
 /// Whether `id` digs rather than forages: it has caches and holds less than
-/// its reserve. False, without computing R, for an agent with no caches.
+/// half its reserve (R / 2). Burying stops at R, so the band between R / 2
+/// and R keeps an agent from digging back what it just buried (without it,
+/// an agent that buried down to R ate below R and dug the next tick). In a
+/// central-place world the threshold stays R, one tick's need: an agent
+/// holding between R / 2 and R that didn't dig would eat below zero and die.
+/// False, without computing R, for an agent with no caches.
 pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
-    !a.caches.is_empty() && a.holdings[0] < reserve(world, id)
+    if a.caches.is_empty() {
+        return false;
+    }
+    let r = reserve(world, id);
+    let threshold = if world.config.central.enabled {
+        r
+    } else {
+        r / 2.0
+    };
+    a.holdings[0] < threshold
 }
 
 /// Buries `q` sugar (clamped to [0, holdings]) at the agent's current site.
@@ -105,7 +122,8 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     take
 }
 
-/// While `id` is hungry (has caches and holds less than its reserve), adds
+/// While `id` is hungry (has caches and holds less than half its reserve, R in
+/// a central-place world), adds
 /// each cache, in site index order, to rule M's candidates at its amount.
 ///
 /// - Skipped first (the agent falls back to its rule's ordinary choice, and
@@ -336,18 +354,18 @@ mod tests {
     #[test]
     fn a_dig_takes_only_the_room_and_a_fed_agent_harvests_instead() {
         let mut w = blank_world(11, 11);
-        let id = caching_agent(&mut w, 9.0, 12);
+        let id = caching_agent(&mut w, 4.0, 7);
         let here = at(&w, 5, 5);
         set_sugar(&mut w, 5, 5, 1.0);
         w.agent_mut(id).unwrap().caches.insert(here, 5.0);
         w.agent_mut(id).unwrap().cache_since.insert(here, 0);
         let before = total(&w);
         let h = go_and_gather(&mut w, id, Pos::new(5, 5));
-        assert_eq!((h.gathered[0], h.dug), (0.0, 3.0), "room is 12 − 9");
+        assert_eq!((h.gathered[0], h.dug), (0.0, 3.0), "room is 7 − 4");
         assert_eq!(w.agent(id).unwrap().caches[&here], 2.0);
         assert_eq!(w.agent(id).unwrap().cache_since[&here], 0);
         assert_eq!(total(&w), before);
-        // At 12 ≥ R = 10 it isn't hungry: it harvests the site (room 0).
+        // At 7 ≥ R / 2 = 5 it isn't hungry: it harvests the site (room 0).
         let h = go_and_gather(&mut w, id, Pos::new(5, 5));
         assert_eq!(h.gathered[0], 0.0);
         assert_eq!(w.agent(id).unwrap().caches[&here], 2.0);
@@ -411,7 +429,12 @@ mod tests {
         let cache = at(&w, 9, 5);
         w.agent_mut(id).unwrap().caches.insert(cache, 7.0);
         assert_eq!(candidates(&w, id), plain, "10 is not below R = 10");
+        // The band between R / 2 and R neither buries nor digs.
         w.agent_mut(id).unwrap().holdings[0] = 9.0;
+        assert_eq!(candidates(&w, id), plain, "9 is in the band");
+        w.agent_mut(id).unwrap().holdings[0] = 5.0;
+        assert_eq!(candidates(&w, id), plain, "5 is not below R / 2 = 5");
+        w.agent_mut(id).unwrap().holdings[0] = 4.5;
         assert_eq!(candidates(&w, id).len(), plain.len() + 1);
     }
 
@@ -655,10 +678,10 @@ mod tests {
                     "no starvation: the landscape is rich"
                 );
                 // The script: bury 0.3 of the surplus on even ticks, and
-                // every fifth tick all but 2 (below R = 3, so it goes hungry
-                // and digs).
+                // every fifth tick all but 1 (below R / 2 = 1.5, so it goes
+                // hungry and digs).
                 let q = if w.tick.is_multiple_of(5) {
-                    w.agent(id).unwrap().holdings[0] - 2.0
+                    w.agent(id).unwrap().holdings[0] - 1.0
                 } else if w.tick.is_multiple_of(2) {
                     0.3 * surplus(&w, id)
                 } else {

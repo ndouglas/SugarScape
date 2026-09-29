@@ -303,8 +303,9 @@ pub(crate) fn record_choice(
 ///   truffle's value is capped by what room is left; the spot is picked all
 ///   the same, so the unpicked excess is lost with its ripeness (as a
 ///   truffle's sugar was never on the site).
-/// - **Dig.** At a site holding its own cache, while holdings are below the
-///   reserve, the agent takes the larger of the two: it digs when the cache
+/// - **Dig.** At a site holding its own cache, while it's hungry (holdings
+///   below half the reserve; the reserve itself in a central-place world,
+///   `caching::hungry`), the agent takes the larger of the two: it digs when the cache
 ///   is at least the site's level (plus a ripe truffle's value, what
 ///   harvesting would deliver), and otherwise harvests the site as usual.
 ///   So a candidate valued at max(site, cache) delivers that on arrival. A

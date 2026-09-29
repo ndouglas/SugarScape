@@ -114,9 +114,12 @@ mechanics make possible, against its textbook predictions.
   bury after harvesting in the same tick.
 - **Dig** at a site with the Flump's cache: takes min(cache, room under the limit). It is the
   harvest of that tick (it replaces harvesting the site).
-- **Caches as candidates.** When holdings are below the reserve (below), each of the Flump's caches
+- **Caches as candidates.** When holdings are below half the reserve (below), each of the Flump's caches
   joins its candidate sites (rule M, utility, GOAP, the marginal-value rule), valued at its amount.
-  Arriving at one digs it.
+  Arriving at one digs it. Burying stops at R, so the band between R/2 and R stops a Flump digging
+  back what it just buried (amended in Task 9: with the threshold at R, rule `plan` buried down to R,
+  ate below it and dug its caches back the next tick all summer). A central-place world keeps the
+  threshold at R, one tick's need, since a Flump holding less than that that didn't dig would starve.
 - **Reserve.** R = metabolism × `goap.horizon` (H ticks of food, as in GOAP's goal). Surplus is
   holdings above R.
 - **Conservation.** Sites + holdings + caches + eaten is conserved across bury and dig exactly.
