@@ -219,23 +219,23 @@ pub const TITLES: [(&str, &str); 276] = [
     ),
     (
         "goap-mvt",
-        "Planners who price travel: when to leave a patch",
+        "Planners who price travel stay longer when patches are farther apart",
     ),
     (
         "mvt-rule",
-        "The marginal-value rule: leave when the patch falls below your average",
+        "Leave when a patch falls below your average: stays lengthen only slightly with travel",
     ),
     (
         "goap-open",
-        "Planners with memory on the open sugarscape",
+        "Planners who remember end up richer on the open sugarscape",
     ),
     (
         "goap-truffles",
-        "Planners who remember hidden truffles",
+        "Planners who remember hidden truffles end up richer",
     ),
     (
         "goap-walled",
-        "Planners who remember what lies beyond the wall",
+        "Planners who remember what lies beyond the wall end up richer, not starving",
     ),
     (
         "vi-4-schelling-25",

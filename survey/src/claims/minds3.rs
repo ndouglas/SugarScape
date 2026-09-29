@@ -30,6 +30,7 @@ use crate::stats::{self, median};
 const SPEC: &str = "docs/superpowers/specs/2026-09-28-minds-3-memory-design.md";
 
 /// What one 500-tick run says about rememberers and others.
+#[derive(Clone)]
 pub(crate) struct Groups {
     /// Mean `wealth_advantage` over ticks 200–500.
     pub(crate) adv: f64,

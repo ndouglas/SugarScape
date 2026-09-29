@@ -22,10 +22,10 @@ use crate::claim::{range, Claim, Outcome, Source};
 use crate::claims::minds1::slope;
 use crate::claims::minds2::paired_greater;
 use crate::claims::minds3::{
-    col, describe, groups, measure, med_or_nan, q_or_nan, residence_medians, residence_slopes,
-    visits, Groups, Visits, MVT_TICKS, SPACINGS,
+    col, describe, measure, med_or_nan, q_or_nan, residence_medians, residence_slopes, visits,
+    Groups, Visits, MVT_TICKS, SPACINGS,
 };
-use crate::runner::{each_seed, preset};
+use crate::runner::{each_seed, preset, series, window_mean};
 use crate::stats::{self, median};
 
 const SPEC: &str = "docs/superpowers/specs/2026-09-28-minds-4-goap-design.md";
@@ -320,21 +320,66 @@ fn overstay(rule: DecisionRule, seeds: &[u64]) -> Outcome {
 
 // -------------------------------------------------------- memory for a planner
 
+/// One 500-tick run of a memory world.
+struct MemRun {
+    g: Groups,
+    usage: Usage,
+    /// Mean population over ticks 200–500.
+    pop: f64,
+    /// Sugar held at tick 500 per founding rememberer and per founding
+    /// other (the dead count as 0): the advantage without survivorship.
+    per_founder: (f64, f64),
+}
+
+fn mem_runs(c: &Config, seeds: &[u64]) -> Vec<MemRun> {
+    each_seed(c, seeds, |mut w| {
+        let founders = |w: &World, r: bool| w.agents().filter(|a| a.remembers == r).count() as f64;
+        let (r0, o0) = (founders(&w, true), founders(&w, false));
+        let mut usage = Usage::default();
+        for _ in 0..500 {
+            w.step();
+            usage.add(&w);
+        }
+        let held = |r: bool| -> f64 {
+            w.agents()
+                .filter(|a| a.remembers == r)
+                .map(|a| a.holdings[0])
+                .sum()
+        };
+        MemRun {
+            g: measure(&w),
+            usage,
+            pop: window_mean(&series(&w, "population"), 200, 500),
+            per_founder: (held(true) / r0, held(false) / o0),
+        }
+    })
+}
+
 /// Rememberers against others under GOAP in `goap_id`, paired per seed;
 /// beside rule M's advantage in Minds 3's `mem_id` on the same seeds, and
 /// the usage check.
 fn planner_memory(goap_id: &str, mem_id: &str, seeds: &[u64]) -> Outcome {
-    let runs: Vec<(Groups, Usage)> = each_seed(&preset(goap_id), seeds, |mut w| {
-        let mut u = Usage::default();
-        for _ in 0..500 {
-            w.step();
-            u.add(&w);
-        }
-        (measure(&w), u)
-    });
-    let (g, u): (Vec<Groups>, Vec<Usage>) = runs.into_iter().unzip();
-    let m = groups(&preset(mem_id), seeds);
+    let (gr, mr) = (
+        mem_runs(&preset(goap_id), seeds),
+        mem_runs(&preset(mem_id), seeds),
+    );
+    let g: Vec<Groups> = gr.iter().map(|r| r.g.clone()).collect();
+    let m: Vec<Groups> = mr.iter().map(|r| r.g.clone()).collect();
     let (ga, ma) = (col(&g, |x| x.adv), col(&m, |x| x.adv));
+    let f = |r: &[MemRun], k: fn(&MemRun) -> f64| r.iter().map(k).collect::<Vec<f64>>();
+    let founder = |r: &[MemRun]| {
+        let d = f(r, |x| x.per_founder.0 - x.per_founder.1);
+        format!(
+            "rememberers {:.1}, others {:.1}, difference {:.1}, positive in {} of {} seeds",
+            median(&f(r, |x| x.per_founder.0)),
+            median(&f(r, |x| x.per_founder.1)),
+            median(&d),
+            d.iter().filter(|&&x| x > 0.0).count(),
+            d.len()
+        )
+    };
+    let (gp, mp) = (f(&gr, |x| x.pop), f(&mr, |x| x.pop));
+    let usage: Vec<Usage> = gr.iter().map(|r| r.usage).collect();
     paired_greater(
         &col(&g, |x| x.rem),
         &col(&g, |x| x.oth),
@@ -343,15 +388,23 @@ fn planner_memory(goap_id: &str, mem_id: &str, seeds: &[u64]) -> Outcome {
     )
     .with(&format!("GOAP: {}", describe(&g)))
     .with(&format!(
-        "Per-seed advantage under GOAP: {}. Rule M ({mem_id}, same seeds): median advantage {:.2}, rememberers alive at tick 500 {:.3} against others {:.3}; GOAP's advantage higher than rule M's in {} of {} seeds (reported, not judged).",
+        "Per-seed advantage under GOAP: {}. Rule M ({mem_id}, same seeds): median advantage {:.2}; GOAP's advantage higher than rule M's in {} of {} seeds (reported, not judged). Rule M's {}",
         list(&ga, 1),
         median(&ma),
-        median(&col(&m, |x| x.rem_alive)),
-        median(&col(&m, |x| x.oth_alive)),
         ga.iter().zip(&ma).filter(|(a, b)| a > b).count(),
         seeds.len(),
+        describe(&m),
     ))
-    .with(&Usage::sum(&u).describe(500))
+    .with(&format!(
+        "Reported, without survivorship (sugar held at tick 500 per founding member, the dead counting 0): GOAP {}; rule M {}. Median population over ticks 200–500: GOAP {:.1}, rule M {:.1} (GOAP higher in {} of {} seeds).",
+        founder(&gr),
+        founder(&mr),
+        median(&gp),
+        median(&mp),
+        gp.iter().zip(&mp).filter(|(a, b)| a > b).count(),
+        seeds.len(),
+    ))
+    .with(&Usage::sum(&usage).describe(500))
 }
 
 pub fn claims() -> Vec<Claim> {
