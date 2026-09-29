@@ -36,8 +36,10 @@ pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
 /// Whether every row is in winter at `tick`, under `seasons.mode: global`
 /// (the agents' shared calendar: summer first, then winter, flipping every
 /// γ ticks, like the book's north). With seasons off this is always
-/// `false`; under `hemispheres` it's undefined for a single global answer
-/// (rows disagree), so callers must be in `global` mode.
+/// `false`. Under `hemispheres` it returns the north's answer (the south's
+/// is the opposite), but rows disagree there, so every caller other than
+/// [`rate_at`] must use `global` mode (debug builds assert it); rule
+/// `plan` checks the mode before asking.
 pub(crate) fn is_winter(config: &Config, tick: u64) -> bool {
     let s = &config.seasons;
     if !s.enabled {

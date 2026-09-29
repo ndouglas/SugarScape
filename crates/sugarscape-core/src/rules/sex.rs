@@ -110,6 +110,10 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         leaving: None,
         caches: std::collections::BTreeMap::new(),
         cache_since: std::collections::BTreeMap::new(),
+        weights: std::collections::BTreeMap::new(),
+        episodes: None,
+        last_winter: None,
+        this_winter: crate::minds::caching::rules::WinterRecord::default(),
     };
     child.rate = f64::from(child.metabolism[0]);
     // Goods 1..n pick where Chapter IV picked spice's metabolism.

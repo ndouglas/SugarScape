@@ -20,6 +20,7 @@
 //! Σ caches + eaten. Nothing here draws.
 
 pub mod episodes;
+pub mod rules;
 
 use crate::agent::AgentId;
 use crate::geometry::Pos;
@@ -39,7 +40,6 @@ pub(crate) fn reserve(world: &World, id: AgentId) -> f64 {
 }
 
 /// max(0, holdings − R): what an agent may bury.
-#[allow(dead_code)] // The caching rules call it.
 pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
     let held = world.agent(id).expect("live agent").holdings[0];
     (held - reserve(world, id)).max(0.0)
@@ -55,7 +55,6 @@ pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
 /// Buries `q` sugar (clamped to [0, holdings]) at the agent's current site.
 /// Adds to `events.buried`; a cache begun on an empty site starts its age
 /// now.
-#[allow(dead_code)] // The caching rules call it; so do the tests.
 pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) {
     let now = world.tick;
     let torus = world.torus;

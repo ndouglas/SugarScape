@@ -86,6 +86,10 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         leaving: None,
         caches: std::collections::BTreeMap::new(),
         cache_since: std::collections::BTreeMap::new(),
+        weights: std::collections::BTreeMap::new(),
+        episodes: None,
+        last_winter: None,
+        this_winter: crate::minds::caching::rules::WinterRecord::default(),
     }
 }
 

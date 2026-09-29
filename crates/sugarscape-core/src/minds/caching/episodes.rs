@@ -11,6 +11,8 @@
 //!
 //! Nothing here draws.
 
+use std::collections::VecDeque;
+
 use super::super::memory::MEMORY_CAP;
 
 /// The smallest p in 1..`seq.len()` with `seq[i] == seq[i + p]` for every i
@@ -52,23 +54,26 @@ pub struct Episode {
 /// memory.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Episodes {
-    pub days: Vec<Episode>,
+    pub days: VecDeque<Episode>,
 }
 
 impl Episodes {
     /// Records today's episode, dropping the oldest day once past
     /// [`MEMORY_CAP`].
     pub fn push(&mut self, episode: Episode) {
-        self.days.push(episode);
+        self.days.push_back(episode);
         if self.days.len() > MEMORY_CAP {
-            self.days.remove(0);
+            self.days.pop_front();
         }
     }
 
     /// Where the agent will be and whether it'll find food, `k` days ahead
     /// (1 = tomorrow). Extrapolates the place sequence and the food
     /// sequence separately — their periods differ (3 and 2 in Amodio's
-    /// schedule) — and returns `None` if either has no period.
+    /// schedule) — and returns `None` if either has no period. Because the
+    /// two are extrapolated on separate periods, it can predict a place and
+    /// food pair never observed together (the spec permits this: each
+    /// sequence is a regularity of its own).
     pub fn predict(&self, k: usize) -> Option<Episode> {
         let places: Vec<u32> = self.days.iter().map(|e| e.place).collect();
         let foods: Vec<bool> = self.days.iter().map(|e| e.food).collect();
@@ -162,6 +167,41 @@ mod tests {
         );
     }
 
+    // Amodio's Experiment 2, Empty-First: food on the even days.
+    #[test]
+    fn amodios_empty_first_schedule_predicts_the_opposite_food() {
+        let mut episodes = Episodes::default();
+        for day in 1u32..=9 {
+            let place = (day - 1) % 3;
+            let food = day % 2 == 0; // Empty-First: food on the even days
+            episodes.push(Episode { place, food });
+        }
+        assert_eq!(
+            episodes.predict(1),
+            Some(Episode {
+                place: 0,
+                food: true
+            }),
+            "day 10: K1, food present"
+        );
+        assert_eq!(
+            episodes.predict(2),
+            Some(Episode {
+                place: 1,
+                food: false
+            }),
+            "day 11: K2, food absent"
+        );
+        assert_eq!(
+            episodes.predict(3),
+            Some(Episode {
+                place: 2,
+                food: true
+            }),
+            "day 12: K3, food present"
+        );
+    }
+
     #[test]
     fn predict_is_none_when_either_sequence_has_no_period() {
         let mut episodes = Episodes::default();
@@ -183,11 +223,11 @@ mod tests {
         }
         assert_eq!(episodes.days.len(), MEMORY_CAP);
         assert_eq!(
-            episodes.days.first().unwrap().place,
+            episodes.days.front().unwrap().place,
             5,
             "the first 5 dropped"
         );
-        assert_eq!(episodes.days.last().unwrap().place, (MEMORY_CAP + 4) as u32);
+        assert_eq!(episodes.days.back().unwrap().place, (MEMORY_CAP + 4) as u32);
     }
 
     /// A naive period finder, written independently of [`period`]: the
