@@ -297,15 +297,19 @@ pub struct CachingStats {
 
 /// Minds 5's central-place foraging series (see the module's series list).
 /// `delivered`, and so `mean_load`, counts a trip's gross intake, not net of
-/// what the agent ate on the way (`minds::central`'s `at_home`). Every ratio
-/// is 0 when its denominator (this tick's deliveries, or living agents) is
-/// 0.
+/// what the agent ate on the way (`minds::central`'s `at_home`). `mean_load`
+/// is 0 before the first delivery; `trips` is 0 when nobody is alive.
+/// `delivered_total` and `deliveries_total` carry `mean_load`'s running sums
+/// forward from the previous snapshot (`Stats::latest`), the way `recovery`
+/// does; they aren't series themselves.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
 pub struct CentralStats {
-    /// `delivered ÷ deliveries` this tick.
+    /// Cumulative Σ delivered ÷ Σ deliveries since tick 0.
     pub mean_load: f64,
     /// `deliveries ÷ alive` this tick.
     pub trips: f64,
+    delivered_total: f64,
+    deliveries_total: f64,
 }
 
 impl Snapshot {
@@ -561,17 +565,30 @@ impl Snapshot {
                 }
             }),
             central: world.config.central.enabled.then(|| {
-                let mean_load = if events.deliveries == 0 {
+                let (prev_delivered, prev_deliveries) = world
+                    .stats
+                    .latest()
+                    .and_then(|s| s.central)
+                    .map(|c| (c.delivered_total, c.deliveries_total))
+                    .unwrap_or((0.0, 0.0));
+                let delivered_total = prev_delivered + events.delivered;
+                let deliveries_total = prev_deliveries + f64::from(events.deliveries);
+                let mean_load = if deliveries_total == 0.0 {
                     0.0
                 } else {
-                    events.delivered / f64::from(events.deliveries)
+                    delivered_total / deliveries_total
                 };
                 let trips = if n == 0 {
                     0.0
                 } else {
                     f64::from(events.deliveries) / n as f64
                 };
-                CentralStats { mean_load, trips }
+                CentralStats {
+                    mean_load,
+                    trips,
+                    delivered_total,
+                    deliveries_total,
+                }
             }),
         }
     }
@@ -1974,7 +1991,7 @@ mod tests {
         w.events.delivered = 12.0;
         let s = Snapshot::of(&w);
         let c = s.central.expect("central stats present");
-        assert_eq!(c.mean_load, 4.0, "12 delivered over 3 deliveries");
+        assert_eq!(c.mean_load, 4.0, "12 delivered over 3 deliveries so far");
         assert_eq!(c.trips, 1.5, "3 deliveries over 2 living agents");
         assert!(s.caching.is_none());
         for name in CENTRAL_SERIES {
@@ -1990,6 +2007,32 @@ mod tests {
         let s = Snapshot::of(&w);
         let c = s.central.unwrap();
         assert_eq!((c.mean_load, c.trips), (0.0, 0.0));
+    }
+
+    #[test]
+    fn central_mean_load_is_cumulative_since_tick_zero() {
+        use crate::testkit::*;
+        use crate::world::TickEvents;
+        let mut w = blank_world(5, 5);
+        w.config.central.enabled = true;
+        spawn(&mut w, 0, 0);
+        spawn(&mut w, 1, 0);
+
+        w.events.deliveries = 3;
+        w.events.delivered = 12.0;
+        let s1 = Snapshot::of(&w);
+        assert_eq!(s1.central.unwrap().mean_load, 4.0, "12 over 3, tick 1");
+        w.stats.push(s1);
+
+        w.events = TickEvents::default();
+        w.events.deliveries = 1;
+        w.events.delivered = 2.0;
+        let s2 = Snapshot::of(&w);
+        assert_eq!(
+            s2.central.unwrap().mean_load,
+            14.0 / 4.0,
+            "14 delivered of 4 deliveries, cumulative since tick 0"
+        );
     }
 
     #[test]
