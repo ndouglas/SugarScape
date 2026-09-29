@@ -1,0 +1,1 @@
+{"preset": "ax-metanorms", "ticks": 1000000, "seed": 2, "every": 2500, "set": {"stop_at": 0, "all_equal": "drift"}}

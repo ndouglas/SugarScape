@@ -1,7 +1,8 @@
 """Loads a frame dump written by `sugarscape shot` (format 1): a Sugarscape
 shot as a `Dump`, a spatial-games shot as a `Lattice`, and a demographic-PD
 shot and an ethnocentrism shot as `Dump`s too (see `_dpd` and `_ethno`), a
-tags shot as a `Ring`, and an image-scoring shot as a `Street`."""
+tags shot as a `Ring`, an image-scoring shot as a `Street`, and a norms shot as a
+`Plane`."""
 
 import json
 from dataclasses import dataclass, field
@@ -207,6 +208,36 @@ class Street:
         return self.frames[min(max(int(round(tick)), 0), self.ticks)]
 
 
+@dataclass(frozen=True)
+class PlaneFrame:
+    """A norms generation after it played: its true generation, each agent
+    as (boldness, vengefulness, payoff, parent place or None), and its events
+    by places (when the shot recorded them)."""
+
+    tick: int
+    agents: list
+    cheats: list = field(default_factory=list)
+    punishments: list = field(default_factory=list)
+    metapunishments: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Plane:
+    """A norms shot. Frames may be every `every`th generation: `ticks` counts
+    frames (what a beat's timing steps through), and each frame keeps its
+    true generation."""
+
+    seed: int
+    ticks: int
+    every: int
+    config: dict
+    frames: list
+    stats: dict
+
+    def frame(self, tick):
+        return self.frames[min(max(int(round(tick)), 0), self.ticks)]
+
+
 def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
@@ -215,6 +246,12 @@ def parse(text):
         return _dpd(raw)
     if raw.get("model") == "ethno":
         return _ethno(raw)
+    if raw.get("model") == "norms":
+        frames = [PlaneFrame(f["tick"], [tuple(a) for a in f["agents"]], f.get("cheats", []),
+                             [tuple(x) for x in f.get("punishments", [])], [tuple(x) for x in f.get("metapunishments", [])])
+                  for f in raw["frames"]]
+        return Plane(seed=raw["seed"], ticks=len(frames) - 1, every=raw["every"], config=raw["config"], frames=frames,
+                     stats=raw["stats"])
     if raw.get("model") == "image":
         return Street(
             seed=raw["seed"], ticks=raw["ticks"], config=raw["config"], stats=raw["stats"],

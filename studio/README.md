@@ -11,9 +11,9 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags` and `image`.
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image` and `norms`.
 
-Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags or image scoring. A spatial shot's dump records each
+Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring or norms. A spatial shot's dump records each
 generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
 board. A demographic-PD shot's dump records each cycle's agents, births (with the parent) and deaths,
 and loads as a Sugarscape dump without sugar, so its crowd walks, clones and dies as the Sugarscape's
@@ -26,7 +26,11 @@ where each Flump stands at its tag's shade, twins crowding together, and a Flump
 model's shade when its offspring copies another (`ring.py`). An image-scoring shot's dump records
 each generation's agents (threshold, score, payoff) and, with `"gifts": true`, each meeting; it loads
 as a `Street`: a column per threshold, each Flump in its score's yarn, the next generation taking its
-places before its meetings play out one by one (`street.py`).
+places before its meetings play out one by one (`street.py`). A norms shot's dump records each
+generation's agents (boldness, vengefulness, payoff) and, with `"gifts": true`, its cheats,
+punishments and metapunishments; `"every": n` keeps every nth generation, so a million generations
+fit a few hundred frames. It loads as a `Plane`: the boldness–vengefulness plane, a Flump per place
+standing on its square (`plane.py`).
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -94,7 +98,9 @@ phrases scatter to the wrong instruments when children are scattered, until the 
 and Tags' *The Twins' Slip Jig*, in 9/8 (a tune's `meter` line), played in unison by twin instruments,
 up a step with each takeover, until the twins are forbidden and the fiddle falls a beat late; and
 Reputation's *The Talk of the Town*, a Charleston in B♭ whose clarinet phrases a muted trumpet
-repeats a bar later, as a reputation gets passed along, until the band drops out to a lone tuba.
+repeats a bar later, as a reputation gets passed along, until the band drops out to a lone tuba; and
+Norms' *A Fugue for Keeping Order*, a fugue in C minor for string quartet whose voices answer each
+other while the norm holds and fray when it collapses.
 
 To give a tune better instruments, drag `out/<episode>/music/<slug>.mid` into GarageBand (one track
 per instrument), choose instruments, keep the tempo, and export the song as audio to
