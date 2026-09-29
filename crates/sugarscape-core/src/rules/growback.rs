@@ -34,7 +34,7 @@ pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
 }
 
 /// Whether every row is in winter at `tick`, under `seasons.mode: global`
-/// (the Flumps' shared calendar: summer first, then winter, flipping every
+/// (the agents' shared calendar: summer first, then winter, flipping every
 /// γ ticks, like the book's north). With seasons off this is always
 /// `false`; under `hemispheres` it's undefined for a single global answer
 /// (rows disagree), so callers must be in `global` mode.

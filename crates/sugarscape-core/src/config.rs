@@ -639,11 +639,11 @@ impl Default for Truffles {
     }
 }
 
-/// Minds 5: which hypothesis a caching Flump's burying and digging follow.
+/// Minds 5: which hypothesis a caching agent's burying and digging follow.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CachingRule {
-    /// No caching (the book's Flump; reproduces Minds 4 bit for bit).
+    /// No caching (the book's agent; reproduces Minds 4 bit for bit).
     #[default]
     None,
     Even,
@@ -651,12 +651,12 @@ pub enum CachingRule {
     Plan,
 }
 
-/// Minds 5: a carrying limit, plus caches Flumps bury and dig, under `rule`.
+/// Minds 5: a carrying limit, plus caches agents bury and dig, under `rule`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Caching {
     pub rule: CachingRule,
-    /// Most good 0 a Flump may hold (0 = no limit). Reset-only, like `rule`.
+    /// Most good 0 an agent may hold (0 = no limit). Reset-only, like `rule`.
     pub capacity: u32,
     /// Share of surplus buried, in (0, 1].
     pub share: f64,
