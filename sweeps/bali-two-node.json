@@ -1,0 +1,72 @@
+{
+  "name": "Balinese Water Temples: two nodes",
+  "description": "Janssen's §4: the best pair of plans for two nodes, by pest growth g, the harvest in the last year (twelve months: 60 years; two periods: the best of three plans each, over 60 years). Measured (release, recorded 2026-09-28), g 1.6 → 3.0: rain 2, d 0.3: 5.75, 5.65, 5.52, 5.44, 4.51, 4.36, 3.92, 3.37, 3.16, 2.92; rain 2, d 1.0: the same to 2.1, then 3.73 … 2.92; rain 1.5: 4.32 … 4.08, 3.62 … 2.60; rain 1: 3.88 … 2.60; two periods: 1.97 … 1.94. The drop comes between 2.1 and 2.2, as Janssen's ∛10 ≈ 2.14 says.",
+  "base": {
+    "preset": "janssen-two-node"
+  },
+  "x": {
+    "label": "Pest growth g",
+    "path": "growth",
+    "values": [
+      1.6,
+      1.8,
+      2.0,
+      2.1,
+      2.2,
+      2.3,
+      2.4,
+      2.6,
+      2.8,
+      3.0
+    ]
+  },
+  "series": {
+    "label": "Periods, rain and dispersal",
+    "values": [
+      {
+        "at": 1,
+        "name": "12 months, rain 2, d 0.3",
+        "set": {
+          "dispersal": 0.3
+        }
+      },
+      {
+        "at": 2,
+        "name": "12 months, rain 2, d 1.0",
+        "set": {
+          "dispersal": 1.0
+        }
+      },
+      {
+        "at": 3,
+        "name": "12 months, rain 1.5, d 0.3",
+        "set": {
+          "node_rain": 1.5
+        }
+      },
+      {
+        "at": 4,
+        "name": "12 months, rain 1, d 0.3",
+        "set": {
+          "node_rain": 1.0
+        }
+      },
+      {
+        "at": 5,
+        "name": "2 periods, d 0.3",
+        "set": {
+          "node_periods": 2
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 1
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "harvest"
+  }
+}

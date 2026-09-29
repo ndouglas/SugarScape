@@ -1,0 +1,46 @@
+{
+  "name": "Balinese Water Temples: imitation's gain at each pest growth",
+  "description": "Imitation from random plans against the same plans fixed, at pest growth g 2.0 to 2.4; the harvest over years 6–30. Measured (release, seeds 1–10, recorded 2026-09-28): imitating 21.01, 20.59, 20.06, 19.48, 18.86; fixed 12.80, 11.84, 10.84, 9.93, 9.13 t/ha/yr. Imitation's gain grows with g (from 8.2 to 9.7) — it is no knife-edge.",
+  "base": {
+    "preset": "lk-random"
+  },
+  "x": {
+    "label": "Pest growth g",
+    "path": "growth",
+    "values": [
+      2.0,
+      2.1,
+      2.2,
+      2.3,
+      2.4
+    ]
+  },
+  "series": {
+    "label": "Decision",
+    "values": [
+      {
+        "at": 1,
+        "name": "Imitate",
+        "set": {
+          "decision": "imitate"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Fixed",
+        "set": {
+          "decision": "fixed"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 360,
+  "metric": {
+    "kind": "final",
+    "series": "scored"
+  }
+}

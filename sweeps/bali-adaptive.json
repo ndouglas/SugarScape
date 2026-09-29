@@ -1,0 +1,68 @@
+{
+  "name": "Balinese Water Temples: adaptive subaks' thresholds",
+  "description": "Janssen's Fig. 12: adaptive subaks by water threshold m_w (m/day per hectare served at the source dam, our reading) and pest threshold m_p; the harvest over years 6–30. Measured (release, recorded 2026-09-28; every seed alike), m_w 0 → 0.2: m_p 0.01 never plants (pests never fall below the floor of 0.01); m_p 0.02 26.03, 26.21, 25.30, 25.95, 11.28, 2.41; m_p 0.05 26.03, 26.90, 25.30, 28.02, 12.99, 2.41; m_p 0.1 much the same; m_p 0.5 19.40, 20.62, 18.60, 20.81, 12.60, 2.22. Janssen's shape holds; his best pair (0.05, 0.02) is 7 % below (0.05, 0.05).",
+  "base": {
+    "preset": "janssen-adaptive"
+  },
+  "x": {
+    "label": "Water threshold m_w",
+    "path": "m_w",
+    "values": [
+      0.0,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      0.2
+    ]
+  },
+  "series": {
+    "label": "Pest threshold m_p",
+    "values": [
+      {
+        "at": 1,
+        "name": "m_p = 0.01",
+        "set": {
+          "m_p": 0.01
+        }
+      },
+      {
+        "at": 2,
+        "name": "m_p = 0.02",
+        "set": {
+          "m_p": 0.02
+        }
+      },
+      {
+        "at": 3,
+        "name": "m_p = 0.05",
+        "set": {
+          "m_p": 0.05
+        }
+      },
+      {
+        "at": 4,
+        "name": "m_p = 0.1",
+        "set": {
+          "m_p": 0.1
+        }
+      },
+      {
+        "at": 5,
+        "name": "m_p = 0.5",
+        "set": {
+          "m_p": 0.5
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 360,
+  "metric": {
+    "kind": "final",
+    "series": "scored"
+  }
+}

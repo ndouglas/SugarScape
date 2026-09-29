@@ -1,0 +1,54 @@
+{
+  "name": "Balinese Water Temples: imitation discounted by distance",
+  "description": "Janssen's Fig. 9: generalized imitation (eq. 4) by γp and γw, with innovation at 0.04; the harvest over years 6–30. Measured (release, seeds 1–10, recorded 2026-09-28), γp 0 → 2: γw 0.1 26.27, 26.29, 26.24, 26.27, 26.27, 26.27; γw 0.4 25.18, 25.16, 24.90, 24.13, 21.27, 20.47; γw 2 21.75, 21.55, 21.48, 19.83, 16.84, 14.41 t/ha/yr. γp below 0.5 is best, as Janssen found; a small γw matters more.",
+  "base": {
+    "preset": "janssen-generalized"
+  },
+  "x": {
+    "label": "γp (pest network)",
+    "path": "gamma_p",
+    "values": [
+      0.0,
+      0.1,
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ]
+  },
+  "series": {
+    "label": "γw (water network)",
+    "values": [
+      {
+        "at": 1,
+        "name": "γw = 0.1",
+        "set": {
+          "gamma_w": 0.1
+        }
+      },
+      {
+        "at": 2,
+        "name": "γw = 0.4",
+        "set": {
+          "gamma_w": 0.4
+        }
+      },
+      {
+        "at": 3,
+        "name": "γw = 2.0",
+        "set": {
+          "gamma_w": 2.0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 360,
+  "metric": {
+    "kind": "final",
+    "series": "scored"
+  }
+}
