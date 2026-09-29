@@ -1047,6 +1047,7 @@ pub fn supply_demand(world: &World) -> SupplyDemand {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::CachingRule;
     use crate::config::Config;
     use crate::config::Pollutant;
 
@@ -1897,7 +1898,7 @@ mod tests {
     fn caching_series_reads_the_tick_events_and_world_caches() {
         use crate::testkit::*;
         let mut w = blank_world(5, 5);
-        w.config.caching.rule = crate::config::CachingRule::Even;
+        w.config.caching.rule = CachingRule::Even;
         let a = spawn(&mut w, 0, 0);
         let b = spawn(&mut w, 1, 0);
         w.agent_mut(a).unwrap().caches.insert(2, 3.0);
@@ -1924,7 +1925,7 @@ mod tests {
         use crate::testkit::*;
         use crate::world::TickEvents;
         let mut w = blank_world(5, 5);
-        w.config.caching.rule = crate::config::CachingRule::Even;
+        w.config.caching.rule = CachingRule::Even;
 
         w.events.buried = 10.0;
         let s1 = Snapshot::of(&w);
@@ -1955,7 +1956,7 @@ mod tests {
     #[test]
     fn caching_series_zero_denominators_are_zero_not_nan() {
         let mut w = crate::testkit::blank_world(5, 5);
-        w.config.caching.rule = crate::config::CachingRule::Even;
+        w.config.caching.rule = CachingRule::Even;
         // Nothing buried yet, no digs, nobody caching: 0, not NaN.
         let s = Snapshot::of(&w);
         let c = s.caching.unwrap();
@@ -1996,7 +1997,7 @@ mod tests {
         let base = series_names(&Config::default()).len();
 
         let mut caching = Config::default();
-        caching.caching.rule = crate::config::CachingRule::Even;
+        caching.caching.rule = CachingRule::Even;
         let names = series_names(&caching);
         assert_eq!(names.len(), base + CACHING_SERIES.len());
         assert_eq!(&names[base..], CACHING_SERIES.as_slice());
@@ -2008,7 +2009,7 @@ mod tests {
         assert_eq!(&names[base..], CENTRAL_SERIES.as_slice());
 
         let mut both = Config::default();
-        both.caching.rule = crate::config::CachingRule::Even;
+        both.caching.rule = CachingRule::Even;
         both.central.enabled = true;
         let names = series_names(&both);
         assert_eq!(

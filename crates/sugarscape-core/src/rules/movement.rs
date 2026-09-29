@@ -299,7 +299,9 @@ pub(crate) fn record_choice(
 ///
 /// Minds 5:
 /// - **Carrying limit.** With `caching.capacity` C > 0, good 0 gathered is
-///   min(level, C − holdings) (≥ 0) and the rest stays on the site. A ripe
+///   min(level, C − holdings) (≥ 0) and the rest stays on the site. In a
+///   central-place world the limit caps the trip's load instead: C −
+///   `load_trip` (provisions in hand don't count against it). A ripe
 ///   truffle's value is capped by what room is left; the spot is picked all
 ///   the same, so the unpicked excess is lost with its ripeness (as a
 ///   truffle's sugar was never on the site).
@@ -339,17 +341,22 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         }
     };
     let held = a.holdings[0];
+    // What counts against the limit: holdings, or in a central-place world
+    // the trip's load alone (the limit caps a load, not load plus
+    // provisions).
+    let central = world.config.central.enabled;
+    let used = if central { a.load_trip } else { held };
     world.move_agent(id, target);
     social.moved(world, Seen::at(world, target), tags);
     let mut harvest = Harvest::default();
     if digs {
         // A central-place forager digs only up to its reserve (one tick's
         // need), so what it digs is eaten, not delivered again.
-        let room = if world.config.central.enabled {
+        let room = if central {
             let short = crate::minds::caching::reserve(world, id) - held;
-            room(held).min(short.max(0.0))
+            room(used).min(short.max(0.0))
         } else {
-            room(held)
+            room(used)
         };
         harvest.dug = crate::minds::caching::dig(world, id, site_index, room);
         let a = world.agent_mut(id).expect("live agent");
@@ -370,7 +377,7 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     if capacity > 0 {
         // Caching runs with exactly one good (validated): only good 0 is
         // limited. What doesn't fit goes back on the site.
-        let take = harvest.gathered[0].min(room(held));
+        let take = harvest.gathered[0].min(room(used));
         site.resource[0] = harvest.gathered[0] - take;
         harvest.gathered[0] = take;
     }
@@ -386,7 +393,7 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     }
     if picked {
         harvest.gathered[0] += if capacity > 0 {
-            value.min(room(held + harvest.gathered[0]))
+            value.min(room(used + harvest.gathered[0]))
         } else {
             value
         };

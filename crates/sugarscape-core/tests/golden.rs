@@ -96,9 +96,9 @@ const GOLDEN: &[(&str, u64)] = &[
     ("cache-winter-compensate", 0x40a9f0b62d0894cc),
     ("cache-winter-plan", 0x79ec96490bcb0eb),
     ("cache-winter-mixed", 0x118657e436a33b14),
-    ("central-near", 0xe85971dce491b3ea),
-    ("central-far", 0x2f0e0a09c19c4747),
-    ("central-linear", 0xbe865248383a02c3),
+    ("central-near", 0x8d4aae8003a9c344),
+    ("central-far", 0x7a9e5541f980a69f),
+    ("central-linear", 0x175e71e582dd82c5),
     ("cache-raby", 0xc30d92bb27b9366b),
     ("cache-amodio", 0xbc5371ef776e55a5),
 ];

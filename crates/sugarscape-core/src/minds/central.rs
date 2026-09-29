@@ -6,22 +6,23 @@
 //!   (`Agent.home`, set by `World::insert_agent`); its larder is its cache
 //!   at home (`minds::caching`).
 //! - **Delivery** happens at home, before the agent's move on the tick it
-//!   leaves again: it buries its trip's load (`Agent.load_trip`, good 0
-//!   gathered since it last left) into the larder, keeping what it holds
-//!   beyond that, and never going below its provisions. A positive burial
-//!   of a load is a delivery (`events.deliveries`, `events.delivered`: the
-//!   load size). Sugar it held before the trip (its endowment) isn't a
-//!   load and stays in hand.
-//! - **Provisions.** An agent keeps P = R × (2D + 2) in hand when it leaves
-//!   home, where R is one tick's need (good-0 metabolism) and D the lattice
-//!   distance to where it's going: food for the walk out and back and a
-//!   tick to spare. Short of P at home, it digs the larder for the
-//!   difference (it costs no tick, like burying). Without provisions an
+//!   leaves again: it buries its trip's whole load (`Agent.load_trip`,
+//!   good 0 gathered since it last left) above R, one tick's need, into the
+//!   larder: min(load, holdings − R). A positive burial is a delivery
+//!   (`events.deliveries`, `events.delivered`: the load brought home).
+//!   Sugar it held before the trip (its endowment) isn't a load and stays
+//!   in hand.
+//! - **Provisions.** Then, if it holds less than P = R × (2D + 2), with D
+//!   the lattice distance to where it's going next (food for the walk out
+//!   and back and a tick to spare), it digs the larder for the difference
+//!   (it costs no tick, like burying). Provisions come out of the larder
+//!   after the delivery is counted, so a far trip's load counts in full,
+//!   not net of the longer walk the next trip needs. Without provisions an
 //!   agent that delivered everything above R would starve on its first
-//!   step out (holdings ≤ 0 kill), so the rule the plan states literally
-//!   ("bury all holdings above one tick's need") isn't viable for
-//!   metabolism > 0; with metabolism 0, P = 0 and the load is all it
-//!   brought back, the literal rule.
+//!   step out (holdings ≤ 0 kill); with metabolism 0, P = 0 and the
+//!   delivery is the whole load.
+//! - **The carrying limit** caps the trip's load, not load plus provisions:
+//!   a harvest takes at most C − `load_trip` (`movement::go_and_gather`).
 //! - **Reserve.** In a central-place world the caching reserve is one
 //!   tick's need (`caching::reserve`), so an agent just back from a
 //!   delivery, holding its provisions, isn't hungry for its larder and
@@ -49,9 +50,9 @@
 //!   site within distance 1 (its own site included, home excluded; rule M's
 //!   tie rule) while that site yields ≥ ρ and something (> 0: an empty site
 //!   isn't a yield, or ρ = 0 would hold it on bare ground forever), and its
-//!   holdings are under the carrying limit less one tick's need (an agent
-//!   that filled up last tick has eaten since, so "under the limit" alone
-//!   would let it top up a unit a tick forever while ρ decays). Otherwise
+//!   load is under the carrying limit less one tick's need (`full` is
+//!   `load_trip` + R ≥ C: a load within a tick's need of the limit has too
+//!   little room for another harvest to be worth the tick). Otherwise
 //!   it commits to going home. It also goes home when what it holds would only just get it
 //!   there (holdings ≤ R × (distance home + 1)).
 //! - **The comparison.** "The best site within distance 1 yields ≥ ρ" sets
@@ -118,30 +119,33 @@ fn provisions(world: &World, id: AgentId, dist: u32) -> f64 {
     reserve(world, id) * f64::from(2 * dist + 2)
 }
 
-/// At home: delivers the trip's load into the larder, keeping `keep` in
-/// hand, or digs the larder up to `keep` when short of it. Resets the trip's
-/// load and returns what was delivered (0 for no delivery).
+/// At home: buries the trip's whole load above R (one tick's need) into the
+/// larder and counts that as the delivery, then takes the next trip's
+/// provisions, `keep`, back from the larder when it holds less than that.
+/// Resets the trip's load and returns what was delivered (0 for no
+/// delivery).
 ///
-/// `delivered` counts gross trip intake: min(holdings − `keep`,
-/// `load_trip`), and `load_trip` is sugar gathered, not net of what the
-/// agent ate on the trip. When it holds an endowment above its provisions,
-/// the sugar eaten on the trip is backfilled from that endowment, so the
-/// whole gross load is buried. That's conserved (the endowment pays), but
-/// it overstates the trip's net contribution.
+/// `delivered` is the load brought home: min(`load_trip`, holdings − R),
+/// the sugar gathered on the trip less anything it had to eat of it on the
+/// way (when it came home holding less than its load plus R). Provisions
+/// are drawn from the larder afterwards, so they don't shrink a delivery:
+/// a far trip's load counts in full, not net of the longer walk it funds.
+/// ρ is measured in the same unit.
 fn at_home(world: &mut World, id: AgentId, home: Pos, keep: f64) -> f64 {
+    let r = reserve(world, id);
     let a = world.agent(id).expect("live agent");
     let (held, load) = (a.holdings[0], a.load_trip);
+    let q = load.min(held - r);
     let mut delivered = 0.0;
-    if held > keep {
-        let q = (held - keep).min(load);
-        if q > 0.0 {
-            bury(world, id, q);
-            let e = &mut world.events;
-            e.deliveries += 1;
-            e.delivered += q;
-            delivered = q;
-        }
-    } else if held < keep {
+    if q > 0.0 {
+        bury(world, id, q);
+        let e = &mut world.events;
+        e.deliveries += 1;
+        e.delivered += q;
+        delivered = q;
+    }
+    let held = world.agent(id).expect("live agent").holdings[0];
+    if held < keep {
         let site = world.torus.index(home) as u32;
         let took = dig(world, id, site, keep - held);
         world.agent_mut(id).expect("live agent").holdings[0] += took;
@@ -223,9 +227,10 @@ fn act_mvt(world: &mut World, id: AgentId) -> Harvest {
                     .filter(|c| c.1 <= 1 && c.0 != home)
                     .collect();
                 let best_local = local.iter().map(|c| c.2).fold(f64::NEG_INFINITY, f64::max);
-                // Full: it reached the limit when it last harvested and has eaten a
-                // tick's need since.
-                let full = capacity > 0.0 && held + r >= capacity;
+                // Full: its load is within a tick's need of the limit (the
+                // limit caps the load, not load plus provisions).
+                let load = world.agent(id).expect("live agent").load_trip;
+                let full = capacity > 0.0 && load + r >= capacity;
                 let low = r > 0.0 && held <= r * f64::from(lattice_distance(torus, pos, home) + 1);
                 if !full && !low && best_local > 0.0 && best_local >= rho {
                     choose(&local, &mut world.rng)
@@ -542,8 +547,10 @@ mod tests {
         (w, id)
     }
 
-    // The controller's ruling: after a delivery the agent leaves; it digs
-    // the larder only when holdings fall below one tick's need.
+    // The controller's rulings: at home the agent buries its whole load
+    // above R and counts that as the delivery, then takes its provisions
+    // back from the larder; it leaves; away, it digs the larder only when
+    // holdings fall below one tick's need.
     #[test]
     fn after_a_delivery_the_agent_leaves_and_digs_only_below_one_ticks_need() {
         let (mut w, id) = forager(20.0);
@@ -551,18 +558,19 @@ mod tests {
         set_sugar(&mut w, 5, 8, 4.0); // 3 away
         let home = at(&w, 5, 5);
         turn(&mut w, id);
-        // Provisions for 3 out and back and a tick: 1 × (2·3 + 2) = 8. Of
-        // the 20 held, the load's 12 above that is delivered.
+        // The whole load of 15 (≤ 20 − R) is delivered; then provisions for
+        // 3 out and back and a tick, 1 × (2·3 + 2) = 8, come back from the
+        // larder: 5 held + 3 dug.
         assert_eq!(w.events.deliveries, 1);
-        assert_eq!(w.events.delivered, 12.0);
+        assert_eq!(w.events.delivered, 15.0);
+        assert_eq!((w.events.digs, w.events.dug), (1, 3.0), "provisions");
         assert_eq!(w.agent(id).unwrap().caches[&home], 12.0);
-        assert_eq!(w.events.digs, 0, "it doesn't dig its delivery back");
         assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 6), "it leaves");
         assert_eq!(w.agent(id).unwrap().leaving, Some(Pos::new(5, 8)));
         assert_eq!(w.agent(id).unwrap().holdings[0], 7.0, "8 − 1 eaten");
         assert_eq!(w.agent(id).unwrap().load_trip, 0.0);
-        // ρ: 1 + 0.05 × (12 − 1).
-        assert!((w.agent(id).unwrap().delivery_rate - 1.55).abs() < 1e-12);
+        // ρ, in the unit of the load brought home: 1 + 0.05 × (15 − 1).
+        assert!((w.agent(id).unwrap().delivery_rate - 1.7).abs() < 1e-12);
         // Its larder isn't a candidate while it holds a tick's need.
         let (c, _) = crate::rules::movement::candidates_with_memory(&w, id);
         let home_value = c.iter().find(|e| e.0 == Pos::new(5, 5)).unwrap().2;
@@ -630,15 +638,19 @@ mod tests {
 
     #[test]
     fn a_full_load_goes_home_whatever_the_patch() {
+        // The limit (40) caps the load, not load plus provisions: holding
+        // 38 with a load of 36, it has room for 4.
         let (mut w, id) = forager(38.0);
+        w.agent_mut(id).unwrap().load_trip = 36.0;
         w.move_agent(id, Pos::new(5, 9));
         w.agent_mut(id).unwrap().delivery_rate = 0.5;
         set_sugar(&mut w, 5, 9, 5.0);
         turn(&mut w, id);
-        assert_eq!(w.agent(id).unwrap().holdings[0], 39.0, "38 + 2 room − 1");
-        assert_eq!(w.site(Pos::new(5, 9)).resource[0], 3.0);
-        // Filled last tick and eaten since (39 + 1 ≥ 40): it goes home,
-        // however rich the next site.
+        assert_eq!(w.agent(id).unwrap().holdings[0], 41.0, "38 + 4 room − 1");
+        assert_eq!(w.agent(id).unwrap().load_trip, 40.0);
+        assert_eq!(w.site(Pos::new(5, 9)).resource[0], 1.0);
+        // A full load (40 + R ≥ 40): it goes home, however rich the next
+        // site.
         set_sugar(&mut w, 5, 10, 9.0);
         turn(&mut w, id);
         assert_eq!(w.agent(id).unwrap().leaving, Some(Pos::new(5, 5)));
