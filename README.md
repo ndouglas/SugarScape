@@ -171,28 +171,92 @@ changes replay from links); they have no editing tools, overlays, trails or Cred
 pairs two worlds of one model: choosing another model's preset while comparing leaves Compare
 keeping A. See `docs/superpowers/specs/2026-09-25-other-artificial-societies-design.md`.
 
-### Schelling segregation (animations VI-4 to VI-7)
+### Schelling segregation (Schelling 1971; Epstein & Axtell's variant, VI-4 to VI-7)
 
-The book's variant of Schelling's model: 2 000 Red and Blue agents on a 50 × 50 torus, each
-wanting at least a share of its von Neumann neighbors to be its own color (an agent with no
-neighbors is satisfied). Agents act in random order; an unsatisfied one moves to a site chosen at
-random among every empty site where it would be satisfied (its own site not counted as a
-neighbor), or stays. With a maximum residence an agent leaves when it reaches it, and a newcomer of
-random color takes a random site where it is satisfied. Segregation is the mean share of like
-neighbors (over agents with neighbors).
+The model is Schelling's own by default ("Dynamic Models of Segregation", *J. Math. Sociol.* 1,
+1971, pp. 154–166): a 13-row, 16-column board with edges, 69 stars (Red), 69 zeros (Blue) and 70
+blanks placed at random; each wants "no fewer than half" of its neighbors — the eight surrounding
+squares, occupied ones counted (a corner has three, an edge five) — to be its color; the
+discontented move "to the nearest satisfactory vacant square", nearest "measured by the number of
+squares one traverses horizontally and vertically", a round at a time: those discontented at the
+round's start, from the upper left, each skipping its turn if it has become content (the newly
+discontented wait for the next round). What he leaves unstated is ours and named: ties at random,
+nowhere acceptable means staying, and no neighbors means content. Every difference from Epstein &
+Axtell's variant is a switch: **Neighborhood** (eight around, radius 1–3, or four), **Edges**
+(bounded or torus), **Where the discontented go** (nearest or random), **Who moves when** (rounds,
+from the upper left or the center out, or everyone in a random order), **Red share** and **Exact
+numbers**. Presets may give each color a **demand table** (for each number of neighbors, the
+least and most alike wanted), Schelling's "eight denominators and therefore eight numerators".
+Old configs without these fields read as Schelling's rules.
+
+Schelling's 2-D numbers come from boards he worked by hand ("My samples have been too small, so
+far, to allow serious generalizations"), so the survey (`s71.*`, 20 seeds, rules from his numbers)
+asks whether they are typical. His direction holds everywhere; his boards sit at the segregated
+end of what his rules give:
+
+- `s71-board` (Figs. 7–8): still after 3–5 rounds, neighbors 0.80 alike and 38 % with none of the
+  other color — his Fig. 9 has four-fifths to five-sixths and 40 %, Fig. 8 90 % and two-thirds; the
+  like-to-unlike ratio is 3.6, not "upwards of four to one".
+- `s71-center-out` (Fig. 9): 0.80, as from the upper left, and 0.79 in a random order: "the
+  *character* of the outcome not very much" holds.
+- `s71-third` (Fig. 11): a ratio of 1.35, "slight", under his 1.5. Across demands (`s71-demand`) the
+  like share climbs 0.56, 0.66, 0.72, 0.80 from 20 % to 50 %: rising, but faster from 20 % to 35 %
+  than in his "rapidly rising" range of 35 % to 50 %.
+- `s71-unequal-demands` (Fig. 12): the more demanding end up no more alike (0.67 each) but more
+  crowded (5.6 neighbors against 4.8), as he says.
+- `s71-minority` (Fig. 13): the minority goes from 0.35 to 0.57 alike — a ratio of 1.3, short of
+  his 2:1 — and is denser (5.6 neighbors against 4.8).
+- `s71-wide` (p. 154's 24 squares): 0.77 against 0.80: a little attenuation, as he conjectured.
+- `s71-congregate` (Fig. 16): wanting three alike and indifferent to the other color, 0.79 alike and
+  37 % unmixed — his "just over 75%" and 38 %.
+- `s71-integrate` (Fig. 17's bands): 96 moves against 56, and 9 % still unsatisfied when moving
+  stops, as he expected. His ranked preferences are left to the variations milestone.
+
+Epstein & Axtell's variant (*Growing Artificial Societies*, pp. 165–171) differs as they say
+("he moves agents to the nearest satisfactory site, whereas our agents simply select an acceptable
+site at random"): 2 000 agents on a 50 × 50 torus, four von Neumann neighbors, a coin for each
+agent's color, everyone acting in a random order each turn. With a maximum residence an agent
+leaves when it reaches it, and a newcomer of random color takes a random site where it is satisfied.
 
 - `vi-4-schelling-25`: 25 %. Nobody moves after 2–3 ticks; segregation rises from about 0.50 to 0.63.
 - `vi-5-schelling-25-residence`: 25 %, residence 80–100 ticks. It never settles; segregation
-  climbs to about 0.76, above VI-4's (the book calls the two comparable).
+  climbs to about 0.76, well below VI-6's (the book calls the degree "comparable" to VI-4's without
+  a measure, and p. 170 calls VI-5 "modestly segregated").
 - `vi-6-schelling-50-residence`: 50 %: about 0.95.
-- `vi-7-schelling-mixed`: preferences 25–50 %: about 0.93, close to VI-6.
+- `vi-7-schelling-mixed`: preferences 25–50 %: about 0.93, close to VI-6. With four neighbors a
+  preference above ¼ acts as ⅓ or ½, so VI-7 is a third at ⅓ and two-thirds at ½.
 
 Agents are drawn by **Color**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
-the charts are Segregation, Unsatisfied, Moves and Red share; Inspect shows an agent's color,
-preference, alike neighbors and residence. The built-in sweep `schelling-tipping` asks the book's
-"how little racism is enough to tip a society": with every agent wanting the same share, from 0 to
-60 %, segregation rises in steps (about 0.50, 0.63, 0.73, 0.83 and 0.93), because with four
-neighbors only the shares 1/4, 1/3, 1/2 and 2/3 can matter.
+the charts are Segregation, Like neighbors by color, No opposite neighbor, Unsatisfied, Moves and
+Red share; Inspect shows an agent's color, preference, alike neighbors and residence. Sweeps:
+`schelling-tipping` (the book's "how little racism is enough to tip a society", on VI-4: with four
+neighbors only the shares 1/4, 1/3, 1/2 and 2/3 can matter, so segregation rises in steps: about
+0.50, 0.63, 0.73, 0.83 and 0.93), and on Schelling's board `s71-demand`, `s71-vacancy`
+(vacancy barely matters until the board is nearly full), `s71-radius` and `s71-order`.
+
+### Schelling's line (Schelling 1971, pp. 149–154)
+
+Schelling's first model, a row of stars (Red) and zeros (Blue) with no gaps, as he typed it: 70
+people, a coin for each (his "odd and even digits in a column of random numbers"); each counts "the
+four nearest neighbors on either side" (fewer near the ends) and wants at least half alike; the
+discontented, a round at a time "counting from left to right", move to "the nearest point that
+meets his minimum demand", nearest counted in people passed, and intrude between two others. Left–
+right ties are at random, and one with nowhere to go stays. **Most people passed** limits travel
+(his "restricted movement", radius not given), with **Accepted within reach instead** his fallback
+of "three out of eight". The page wraps the row every **People per row**; charts are Groups, Group
+size, Like neighbors and Unsatisfied; Inspect shows a person's place and neighbors alike.
+
+- `s71-line` (Figs. 1–2): 7 groups of 10, neighbors 0.78 alike (medians of 20) — within his tabletop
+  range, "from about five groupings with an average of 14 members to seven or eight groupings with an
+  average of 9 or 10"; his Fig. 2 has six of 12 and 81.5 %. In about half the seeds one or two people
+  are still moving at round 30: his "no guarantee" of equilibrium, seen.
+- `s71-line-3`: three neighbors each side: groups of 8.75 and 0.79 alike, against his "7 or 8" and
+  "75% to 80%".
+- `s71-line-minority` (p. 152's die-roll halving of the zeros): 0.85 alike against 0.78, groups of 13:
+  the smaller minority clusters more, as he says.
+- `s71-line-reach`: a 20 % minority passing at most 10 people: 6 % still unsatisfied (3 % with no
+  limit), where he found "everybody achieves his desired neighborhood". Sweeps: `line-radius` (groups
+  of 4.0, 6.3, 8.4, 10.5, 11.9 and 13.3 for one to six neighbors each side) and `line-reach`.
 
 ### Ring World (animations VI-8 and VI-9)
 

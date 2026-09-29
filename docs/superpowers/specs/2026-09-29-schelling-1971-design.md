@@ -1,7 +1,10 @@
-# Design: Schelling's own models (milestone 29)
+# Design: Schelling's own models (milestone 30)
 
 **Date:** 2026-09-29
-**Status:** proposed.
+**Status:** built (milestone 30; Balinese Water Temples took 29 while this was planned). Amendments
+from the build: boards may be as small as 1 × 1 (hand-built test boards, narrow boards); the class
+index is 16-bit (24 neighbors make 325 classes); the line's Inspect names its person `agent`, with
+its `place`, as the page's shared code expects.
 **Why:** the playground's `schelling` model is Epstein & Axtell's 1996 variant. Schelling's 1969
 and 1971 papers are now in `papers/schelling/`, and the user wants his model treated as his: his
 rules as the default, later researchers' versions as named variations. The rules, what he left
@@ -64,7 +67,7 @@ waits for its own spike.
 
 Presets for each figure and claim (`s71-*`), preset titles, survey claims (the notes' §8, decision
 rules fixed before running), sweeps (demand, vacancy, radius, order), the page (both models, the
-new switches in the Rules panel), goldens, and `docs/papers.md` (milestone 29). The studio adds
+new switches in the Rules panel), goldens, and `docs/papers.md` (milestone 30). The studio adds
 `schelling` and `line` shots.
 
 ## Out of scope here
