@@ -1693,6 +1693,15 @@ impl Config {
             "caching.rule",
             "caching needs exactly one good",
         );
+        // Caches out of sight are a kind of memory, and remembered sites can
+        // only be walked to; walking also keeps an agent from jumping to a
+        // cache it can't see.
+        e.check(
+            (self.caching.rule == CachingRule::None && self.caching.capacity == 0)
+                || self.movement.mode == MoveMode::Walk,
+            "caching.rule",
+            "caching walks; set movement.mode to walk",
+        );
         e.check(
             !self.central.enabled
                 || (matches!(self.decision.rule, DecisionRule::Mvt | DecisionRule::Goap)
@@ -3870,6 +3879,33 @@ mod tests {
     }
 
     #[test]
+    fn caching_needs_walking() {
+        let errs = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            c.validate().err().unwrap_or_default()
+        };
+        // Jumping (the default) with a caching rule or a carrying limit.
+        for f in [
+            &(|c: &mut Config| c.caching.rule = CachingRule::Plan) as &dyn Fn(&mut Config),
+            &|c: &mut Config| c.caching.capacity = 5,
+        ] {
+            let e = errs(f);
+            assert_eq!(e.len(), 1, "{e:?}");
+            assert_eq!(e[0].field, "caching.rule");
+            assert_eq!(e[0].message, "caching walks; set movement.mode to walk");
+        }
+        // Walking passes; no caching passes either way.
+        assert!(errs(&|c| {
+            c.movement.mode = MoveMode::Walk;
+            c.caching.rule = CachingRule::Plan;
+            c.caching.capacity = 5;
+        })
+        .is_empty());
+        assert!(errs(&|c| c.movement.mode = MoveMode::Jump).is_empty());
+    }
+
+    #[test]
     fn caching_central_and_lab_are_validated() {
         let with = |f: &dyn Fn(&mut Config)| {
             let mut c = Config::default();
@@ -3894,15 +3930,19 @@ mod tests {
         assert_eq!(with(&|c| c.caching.lookahead = 11), ["caching.lookahead"]);
 
         // Caching (rule ≠ none or capacity > 0) needs exactly one good.
+        let walk = |c: &mut Config| c.movement.mode = MoveMode::Walk;
         assert!(with(&|c| {
+            walk(c);
             c.caching.rule = CachingRule::Even;
         })
         .is_empty());
         assert!(with(&|c| {
+            walk(c);
             c.caching.capacity = 100;
         })
         .is_empty());
         let mut c = Config::default();
+        walk(&mut c);
         c.caching.rule = CachingRule::Even;
         c.add_good(Good::spice());
         let errs = c.validate().unwrap_err();
@@ -3910,6 +3950,7 @@ mod tests {
         assert_eq!(errs[0].field, "caching.rule");
         assert_eq!(errs[0].message, "caching needs exactly one good");
         let mut c = Config::default();
+        walk(&mut c);
         c.caching.capacity = 100;
         c.add_good(Good::spice());
         let errs = c.validate().unwrap_err();
@@ -3921,6 +3962,7 @@ mod tests {
         assert_eq!(
             with(&|c| {
                 c.central.enabled = true;
+                c.movement.mode = MoveMode::Walk;
                 c.caching.capacity = 10;
             }),
             ["central.enabled"]
@@ -3972,6 +4014,7 @@ mod tests {
                 protocol: LabProtocol::Amodio,
                 food_first: false,
             });
+            c.movement.mode = MoveMode::Walk;
             c.caching.rule = CachingRule::Compensate;
         })
         .is_empty());

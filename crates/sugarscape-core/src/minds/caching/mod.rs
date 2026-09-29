@@ -490,6 +490,10 @@ mod tests {
         c.growback.rate = 1.0;
         c.goap.horizon = 3;
         c.caching.capacity = 8;
+        c.movement = Movement {
+            mode: MoveMode::Walk,
+            speed: 1,
+        };
         let mut w = World::new(c, 11).unwrap();
         for y in 0..12 {
             for x in 0..12 {
