@@ -383,7 +383,10 @@ fn builtins_and_series_names_are_listed() {
             "bg-cooney-cost",
             "mem-span-recall",
             "mem-span-project",
-            "mem-share"
+            "mem-share",
+            "goap-horizon",
+            "goap-k",
+            "goap-memory"
         ]
     );
     assert!(list[0]["sweep"]["name"]
