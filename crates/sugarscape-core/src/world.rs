@@ -113,6 +113,12 @@ pub struct TickEvents {
     /// Minds 4: of `plans`, those with any target from the Flump's
     /// remembered entries out of sight (the usage check Minds 3 taught).
     pub plans_with_remembered: u32,
+    /// Minds 4: GOAP Flumps that took the rate choice this tick because the
+    /// sugar they know of (their slots, all harvested) falls short of G.
+    pub fallback_short: u32,
+    /// Minds 4: GOAP Flumps that took the rate choice this tick because the
+    /// search passed `PLAN_LIMIT` expansions.
+    pub fallback_limit: u32,
 }
 
 #[derive(Clone)]

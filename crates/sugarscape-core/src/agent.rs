@@ -53,7 +53,8 @@ pub struct Plan {
 /// Minds 4: a GOAP Flump's foraging plan (`decision.rule: goap`): the
 /// targets it hasn't reached yet, each with the value it was planned at,
 /// what the whole plan was to gather and the goal G it planned for. Kept
-/// until the next target is invalidated or the plan is finished. It
+/// (with empty steps once finished) until it replans; cleared when the next
+/// target is invalidated. It
 /// decides where the Flump goes, but like `plan` it's never hashed,
 /// exported or shared: it's rebuilt from what the Flump sees and remembers.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -212,8 +213,9 @@ pub struct Agent {
     /// it hasn't walked yet (observation only: never hashed, exported or
     /// shared, like `social`).
     pub plan: Plan,
-    /// Minds 4: the GOAP plan it's following; `None` until it first plans
-    /// (and always under the other rules). Observation for Inspect, and
+    /// Minds 4: the GOAP plan it's following; `None` until it plans, again
+    /// once a plan is dropped or it takes the fallback, and always under the
+    /// other rules. Observation for Inspect, and
     /// behavior under GOAP, but never hashed, exported or shared.
     pub goap_plan: Option<GoapPlan>,
     /// Minds 3: whether this Flump remembers sites out of sight, drawn from

@@ -1521,6 +1521,14 @@ impl Config {
             "decision.rule",
             "planning and the marginal-value rule walk; set movement.mode to walk",
         );
+        // A plan sums the values of the sites it harvests against G, sugar
+        // for ticks of burn; with n ≥ 2 goods rule M's values are foresight
+        // welfare, which doesn't sum to an amount.
+        e.check(
+            dc.rule != DecisionRule::Goap || self.goods.len() == 1,
+            "decision.rule",
+            "planning (GOAP) needs exactly one good",
+        );
         e.check(
             (1..=12).contains(&self.goap.k),
             "goap.k",
@@ -3510,6 +3518,17 @@ mod tests {
             errs[0].message,
             "planning and the marginal-value rule walk; set movement.mode to walk"
         );
+        // GOAP needs exactly one good; the marginal-value rule doesn't.
+        let mut c = Config::default();
+        c.decision.rule = DecisionRule::Goap;
+        c.movement.mode = MoveMode::Walk;
+        c.add_good(Good::spice());
+        let errs = c.validate().unwrap_err();
+        assert_eq!(errs.len(), 1);
+        assert_eq!(errs[0].field, "decision.rule");
+        assert_eq!(errs[0].message, "planning (GOAP) needs exactly one good");
+        c.decision.rule = DecisionRule::Mvt;
+        assert!(c.validate().is_ok());
 
         // `memory.prior: map` needs `memory.span > 0`.
         assert_eq!(

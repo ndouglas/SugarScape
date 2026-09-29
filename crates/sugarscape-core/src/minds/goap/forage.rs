@@ -122,21 +122,46 @@ impl Domain for Forage {
     }
 }
 
-/// G: the Flump's burn per tick (its effective sugar metabolism; with n ≥ 2
-/// goods, the mean over the goods) × `goap.horizon`.
+/// G: the Flump's sugar burn per tick (its effective metabolism, disease
+/// fees included) × `goap.horizon`. GOAP runs with exactly one good
+/// (validated), so values and G are both sugar.
 fn goal_of(world: &World, id: AgentId) -> f64 {
     let a = world.agent(id).expect("live agent");
-    let n = world.config.goods.len();
-    let mets = a.effective_metabolisms(n, world.config.disease.active_fee());
-    let burn = mets[..n].iter().sum::<f64>() / n as f64;
+    let burn = a.effective_metabolism(0, world.config.disease.active_fee());
     burn * f64::from(world.config.goap.horizon)
+}
+
+/// Rule M's candidates less the ones GOAP knows it can't reach: sites
+/// walled apart from the Flump, and the target its last walk found no path
+/// to (`plan.target` with an empty path, not where it stands). Its own site
+/// stays first. Returns the list and where its remembered entries start.
+/// Filtering here, not in `candidates_with_memory`, leaves rule M and the
+/// utility mind as they were.
+fn reachable_candidates(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
+    let (all, start) = candidates_with_memory(world, id);
+    let a = world.agent(id).expect("live agent");
+    let failed = a
+        .plan
+        .target
+        .filter(|&t| a.plan.path.is_empty() && t != a.pos);
+    let mut out = Vec::with_capacity(all.len());
+    let mut kept_before_start = 0;
+    for (i, c) in all.into_iter().enumerate() {
+        if i > 0 && (Some(c.0) == failed || world.walled_apart(a.pos, c.0)) {
+            continue;
+        }
+        kept_before_start += usize::from(i < start);
+        out.push(c);
+    }
+    (out, kept_before_start)
 }
 
 /// The next target of the Flump's plan if it still holds, dropping the
 /// plan's steps otherwise. It holds while the target is still one of the
-/// Flump's candidates (so, if it's in sight, it's unoccupied), is worth at
-/// least half its planned value when in sight, isn't walled off, and isn't
-/// where the last walk found no path.
+/// Flump's reachable candidates (so, if it's in sight, it's unoccupied; it
+/// isn't walled off; and it isn't where the last walk found no path) and is
+/// worth at least half its planned value when in sight. A dropped plan is
+/// cleared to `None`, so Inspect shows no stale figures.
 fn next_target(
     world: &mut World,
     id: AgentId,
@@ -145,16 +170,12 @@ fn next_target(
 ) -> Option<Pos> {
     let a = world.agent(id).expect("live agent");
     let &(t, planned) = a.goap_plan.as_ref()?.steps.first()?;
-    let holds = candidates.iter().position(|c| c.0 == t).is_some_and(|i| {
-        (i >= start || candidates[i].2 >= planned / 2.0)
-            && !world.walled_apart(a.pos, t)
-            && !(a.plan.target == Some(t) && a.plan.path.is_empty() && a.pos != t)
-    });
+    let holds = candidates
+        .iter()
+        .position(|c| c.0 == t)
+        .is_some_and(|i| i >= start || candidates[i].2 >= planned / 2.0);
     if !holds {
-        let a = world.agent_mut(id).expect("live agent");
-        if let Some(g) = a.goap_plan.as_mut() {
-            g.steps.clear();
-        }
+        world.agent_mut(id).expect("live agent").goap_plan = None;
     }
     holds.then_some(t)
 }
@@ -182,12 +203,13 @@ fn go(
 }
 
 /// Rule M's step under GOAP: follow the plan while its next target holds;
-/// otherwise plan (at most `PLAN_LIMIT` expansions). An empty plan (G = 0)
-/// stays. With no plan (not enough known sugar for G, or over the limit)
-/// the Flump takes the rate choice: the candidates of best value ÷
+/// otherwise plan (at most `PLAN_LIMIT` expansions) over the candidates it
+/// can reach. An empty plan (G = 0) stays. With no plan (not enough known
+/// sugar for G, or over the limit; counted apart) the plan is cleared to
+/// `None` and the Flump takes the rate choice: the candidates of best value ÷
 /// (distance + 1), passed to `choose` (rule M's tie rule and draw).
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
-    let (candidates, start) = candidates_with_memory(world, id);
+    let (candidates, start) = reachable_candidates(world, id);
     if let Some(t) = next_target(world, id, &candidates, start) {
         return go(world, id, &candidates, start, t);
     }
@@ -209,13 +231,15 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let domain = Forage::new(torus, &sites, goal);
     // Every slot harvested is the most any plan gathers: short of G, no
     // plan exists, so don't search.
+    // Every slot harvested is the most any plan gathers: short of G, no
+    // plan exists, so don't search.
     let found = if domain.is_goal(&(0, (1u16 << sites.len()) - 1)) {
-        plan(&domain, (0, 0), PLAN_LIMIT)
+        plan(&domain, (0, 0), PLAN_LIMIT).ok_or(Fallback::Limit)
     } else {
-        None
+        Err(Fallback::Short)
     };
     match found {
-        Some(p) => {
+        Ok(p) => {
             let steps: Vec<(Pos, f64)> = p.actions.iter().map(|&s| sites[usize::from(s)]).collect();
             if !steps.is_empty() {
                 let e = &mut world.events;
@@ -233,7 +257,13 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
             });
             go(world, id, &candidates, start, target)
         }
-        None => {
+        Err(why) => {
+            let e = &mut world.events;
+            match why {
+                Fallback::Short => e.fallback_short += 1,
+                Fallback::Limit => e.fallback_limit += 1,
+            }
+            world.agent_mut(id).expect("live agent").goap_plan = None;
             let rate = |c: &(Pos, u32, f64)| c.2 / (f64::from(c.1) + 1.0);
             let best = candidates
                 .iter()
@@ -248,6 +278,14 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
             go(world, id, &candidates, start, target)
         }
     }
+}
+
+/// Why a GOAP Flump took the rate choice instead of a plan.
+enum Fallback {
+    /// The sugar it knows of falls short of G.
+    Short,
+    /// The search passed `PLAN_LIMIT` expansions.
+    Limit,
 }
 
 /// Travel ticks for a lattice distance: the distance itself, or 0 under the
@@ -388,18 +426,80 @@ mod tests {
     }
 
     #[test]
-    fn a_target_the_last_walk_couldnt_reach_replans() {
+    fn a_target_the_last_walk_couldnt_reach_is_left_for_another() {
+        // (5, 9) is in sight but ringed by Flumps: the walk finds no path.
+        let mut w = goap_world(21, 8, 3);
+        let id = forager(&mut w, 5, 5, 6, 1);
+        set_sugar(&mut w, 5, 9, 3.0);
+        set_sugar(&mut w, 5, 0, 3.0); // reachable, one farther
+        for (x, y) in [(5, 8), (5, 10), (4, 9), (6, 9)] {
+            spawn(&mut w, x, y);
+        }
+        act(&mut w, id);
+        assert_eq!(target(&w, id), Some(Pos::new(5, 9)));
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 5), "no path: stays");
+        act(&mut w, id);
+        assert_eq!(w.events.plans, 2, "the failed walk invalidates the plan");
+        assert_eq!(target(&w, id), Some(Pos::new(5, 0)), "not the same again");
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 4));
+    }
+
+    #[test]
+    fn a_boxed_in_flump_with_nothing_reachable_falls_back_and_stays() {
         let mut w = goap_world(21, 8, 3);
         let id = forager(&mut w, 5, 5, 6, 1);
         set_sugar(&mut w, 5, 9, 3.0);
         for (x, y) in [(5, 4), (5, 6), (4, 5), (6, 5)] {
             spawn(&mut w, x, y); // boxed in
         }
-        act(&mut w, id);
-        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 5), "no path: stays");
+        for _ in 0..3 {
+            act(&mut w, id);
+            assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 5));
+        }
+        // Tick 1 plans (5, 9) and the walk fails; tick 2 excludes it,
+        // nothing else reaches G, and the fallback stays. The exclusion is
+        // one walk deep, so tick 3 plans (5, 9) again: plan and fallback
+        // alternate, and the Flump never moves.
+        assert_eq!((w.events.plans, w.events.fallback_short), (2, 1));
+    }
+
+    #[test]
+    fn a_remembered_site_across_a_wall_is_never_the_target() {
+        // Full-height fences at x = 0 and x = 10 split the torus in two.
+        let mut c = blank_config(21, 21);
+        c.movement = Movement {
+            mode: MoveMode::Walk,
+            speed: 1,
+        };
+        c.decision.rule = DecisionRule::Goap;
+        c.goap = Goap { k: 8, horizon: 3 };
+        c.memory.span = 100;
+        c.memory.share = 1.0;
+        c.walls = [0, 10]
+            .map(|x| crate::config::Wall {
+                x,
+                y: 0,
+                width: 1,
+                height: 21,
+                opaque: false,
+            })
+            .to_vec();
+        let mut w = World::new(c, 7).unwrap();
+        let id = forager(&mut w, 5, 5, 1, 1);
+        w.agent_mut(id).unwrap().remembers = true;
+        for (x, y, v) in [(15, 5, 4.0), (5, 15, 3.0)] {
+            set_sugar(&mut w, x, y, v);
+            let idx = w.torus.index(Pos::new(x, y)) as u32;
+            let seen = crate::minds::memory::Seen::new(&[v], &[v], 0);
+            w.agent_mut(id).unwrap().memory.sites.insert(idx, seen);
+        }
+        assert!(w.walled_apart(Pos::new(5, 5), Pos::new(15, 5)));
+        w.tick = 1;
+        for _ in 0..3 {
+            act(&mut w, id);
+            assert_eq!(target(&w, id), Some(Pos::new(5, 15)));
+        }
         assert_eq!(w.events.plans, 1);
-        act(&mut w, id);
-        assert_eq!(w.events.plans, 2, "the failed walk invalidates the plan");
     }
 
     #[test]
@@ -410,16 +510,35 @@ mod tests {
             act(&mut w, id);
             assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 5));
         }
-        assert_eq!(w.events.plans, 0);
+        assert_eq!((w.events.plans, w.events.fallback_short), (0, 5));
+        assert_eq!(w.agent(id).unwrap().goap_plan, None, "nothing to show");
         // Some sugar, but never enough for G: the rate choice, not a plan.
         set_sugar(&mut w, 5, 8, 2.0); // rate 2 / 4
         set_sugar(&mut w, 6, 5, 1.0); // rate 1 / 2
         set_sugar(&mut w, 5, 4, 0.5); // rate 0.5 / 2
         act(&mut w, id);
-        assert_eq!(w.events.plans, 0);
+        assert_eq!((w.events.plans, w.events.fallback_short), (0, 6));
+        assert_eq!(w.events.fallback_limit, 0);
         let t = target(&w, id).unwrap();
-        assert!(t == Pos::new(5, 8) || t == Pos::new(6, 5));
         assert_eq!(t, Pos::new(5, 8), "equal rates: the higher value");
+    }
+
+    #[test]
+    fn a_search_past_the_limit_falls_back_and_is_counted() {
+        // G = 13 needs all 13 sites of 1 in sight (vision 3, K = 12): a
+        // tour over 13 sites, far past 4 096 expansions.
+        let mut w = goap_world(21, 12, 1);
+        let id = forager(&mut w, 10, 10, 3, 13);
+        set_sugar(&mut w, 10, 10, 1.0);
+        for (q, _) in w.sight(Pos::new(10, 10), 3) {
+            set_sugar(&mut w, q.x, q.y, 1.0);
+        }
+        act(&mut w, id);
+        let e = &w.events;
+        assert_eq!((e.plans, e.fallback_short, e.fallback_limit), (0, 0, 1));
+        assert_eq!(w.agent(id).unwrap().goap_plan, None);
+        // Rate choice: every site is worth 1, so the own site (1 / 1).
+        assert_eq!(target(&w, id), Some(Pos::new(10, 10)));
     }
 
     #[test]
@@ -464,7 +583,18 @@ mod tests {
             .unwrap();
         assert_eq!(v.steps, vec![[5, 11], [5, 12]]);
         assert_eq!((v.gathers, v.goal), (12.0, 10.0));
+        // Taken target, too little else known: dropped, the fallback, no view.
+        spawn(&mut w, 5, 11);
+        act(&mut w, id);
+        assert_eq!(w.events.fallback_short, 1);
+        let pos = w.agent(id).unwrap().pos;
+        let view = |w: &World| w.inspect(pos.x, pos.y).unwrap().agent.unwrap().goap;
+        assert!(view(&w).is_none());
+        // Under another rule a plan left behind isn't shown.
+        w.agent_mut(id).unwrap().goap_plan = Some(crate::agent::GoapPlan::default());
+        assert!(view(&w).is_some());
         w.config.decision.rule = DecisionRule::Book;
+        assert!(view(&w).is_none());
         assert!(w
             .inspect(pos.x, pos.y)
             .unwrap()

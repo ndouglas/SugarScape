@@ -129,9 +129,10 @@ pub struct AgentView {
     /// Minds 3: whether the agent remembers, and how many sites and truffle
     /// spots it holds in memory. `None` while memory is off (`span` 0).
     pub memory: Option<MemoryView>,
-    /// Minds 4: the GOAP plan. `Some` only under `decision.rule: goap` once
-    /// the Flump has planned; its steps are empty when the plan is done or
-    /// was dropped and the Flump took the fallback.
+    /// Minds 4: the GOAP plan. `Some` only under `decision.rule: goap` while
+    /// the Flump holds a plan: its steps are empty once the plan is done
+    /// (or was empty, G = 0). `None` after a dropped plan or a fallback, so
+    /// no stale figures show.
     pub goap: Option<GoapView>,
 }
 
