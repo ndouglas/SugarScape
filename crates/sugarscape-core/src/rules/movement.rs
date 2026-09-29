@@ -311,7 +311,8 @@ pub(crate) fn record_choice(
 ///   dig takes min(cache, room) (room unlimited with C = 0) into its
 ///   holdings and leaves the site and any truffle as they are. It is
 ///   `Harvest::dug`, not `gathered`: it was gathered once already, so it
-///   forms no pollution.
+///   forms no pollution. In a central-place world a dig takes no more than
+///   the reserve less holdings (`minds::central`).
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
@@ -341,7 +342,15 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     social.moved(world, Seen::at(world, target), tags);
     let mut harvest = Harvest::default();
     if digs {
-        harvest.dug = crate::minds::caching::dig(world, id, site_index, room(held));
+        // A central-place forager digs only up to its reserve (one tick's
+        // need), so what it digs is eaten, not delivered again.
+        let room = if world.config.central.enabled {
+            let short = crate::minds::caching::reserve(world, id) - held;
+            room(held).min(short.max(0.0))
+        } else {
+            room(held)
+        };
+        harvest.dug = crate::minds::caching::dig(world, id, site_index, room);
         let a = world.agent_mut(id).expect("live agent");
         a.holdings[0] += harvest.dug;
         a.social = social;

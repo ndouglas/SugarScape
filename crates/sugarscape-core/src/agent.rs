@@ -264,6 +264,20 @@ pub struct Agent {
     /// `caching.lambda`), drawn per agent by `lab::run_population`; `None`
     /// uses the config's. Never hashed.
     pub cache_params: Option<(f64, f64)>,
+    /// Minds 5, central-place foraging (`central.enabled`): the site the
+    /// agent was placed or born on, where its larder (its cache there) is
+    /// and where it delivers its loads; set by `World::insert_agent`, `None`
+    /// in every other world. Never hashed, like `rate`.
+    pub home: Option<Pos>,
+    /// Minds 5, central-place foraging: good 0 gathered since the agent
+    /// last left home (the load it's carrying back); 0 in other worlds.
+    /// Never hashed.
+    pub load_trip: f64,
+    /// Minds 5, central-place foraging: ρ over round trips, the running
+    /// estimate of sugar delivered home per tick (`minds::central`); starts
+    /// at the agent's good-0 metabolism, with no draw, as Minds 4's `rate`
+    /// does. Never hashed.
+    pub delivery_rate: f64,
 }
 
 impl Agent {
@@ -313,8 +327,12 @@ impl Agent {
             last_winter: None,
             this_winter: crate::minds::caching::rules::WinterRecord::default(),
             cache_params: None,
+            home: None,
+            load_trip: 0.0,
+            delivery_rate: 0.0,
         };
         agent.rate = f64::from(agent.metabolism[0]);
+        agent.delivery_rate = agent.rate;
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
         // endowment then metabolism, in good order.
         for (i, good) in config.goods.iter().enumerate().skip(1) {

@@ -91,6 +91,9 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         last_winter: None,
         this_winter: crate::minds::caching::rules::WinterRecord::default(),
         cache_params: None,
+        home: None,
+        load_trip: 0.0,
+        delivery_rate: 0.0,
     }
 }
 

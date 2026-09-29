@@ -15,6 +15,9 @@
 //!   below the reserve, each cache joins the candidates at its amount.
 //! - **Reserve.** R = good-0 effective metabolism × `goap.horizon` (GOAP's
 //!   goal G: H ticks of food); 0 in the lab. Surplus is holdings above R.
+//!   In a central-place world R is one tick's need (the metabolism alone),
+//!   so an agent back from a delivery isn't hungry for its own larder and
+//!   doesn't dig the load it just buried (`minds::central`).
 //!
 //! Sugar is conserved exactly across bury and dig: Σ sites + Σ holdings +
 //! Σ caches + eaten. Nothing here draws.
@@ -30,13 +33,16 @@ use crate::world::World;
 
 /// R: the sugar an agent keeps on hand, its good-0 burn per tick (effective
 /// metabolism, disease fees included, as GOAP's G) × `goap.horizon`. In the
-/// lab the reserve is 0.
+/// lab the reserve is 0; in a central-place world it's one tick's burn.
 pub(crate) fn reserve(world: &World, id: AgentId) -> f64 {
     if world.config.lab.is_some() {
         return 0.0;
     }
     let a = world.agent(id).expect("live agent");
     let burn = a.effective_metabolism(0, world.config.disease.active_fee());
+    if world.config.central.enabled {
+        return burn;
+    }
     burn * f64::from(world.config.goap.horizon)
 }
 

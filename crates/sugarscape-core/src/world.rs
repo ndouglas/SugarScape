@@ -138,6 +138,13 @@ pub struct TickEvents {
     pub dig_ages_sum: u64,
     /// Minds 5: digs this tick (each taking a positive amount).
     pub digs: u32,
+    /// Minds 5, central-place foraging: loads delivered home this tick (a
+    /// delivery is a positive burial into the larder by an agent back from
+    /// a trip).
+    pub deliveries: u32,
+    /// Minds 5, central-place foraging: Σ over this tick's `deliveries` of
+    /// the load buried (each trip's load size).
+    pub delivered: f64,
 }
 
 #[derive(Clone)]
@@ -502,6 +509,10 @@ impl World {
         let id = self.next_id;
         self.next_id += 1;
         agent.id = id;
+        // Minds 5: a central-place forager's home is where it starts life.
+        if self.config.central.enabled && agent.home.is_none() {
+            agent.home = Some(agent.pos);
+        }
         self.occupancy[i] = Some(id);
         self.agents.insert(id, agent);
         Ok(id)
