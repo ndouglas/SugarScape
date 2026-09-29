@@ -90,7 +90,7 @@ export interface Memory {
   span: number;
   share: number;
   belief: Belief;
-  /** Minds 4: what a newborn starts knowing (reset-only; absent from older configs: `none`). */
+  /** Minds 4: what a founder starts knowing (reset-only; absent from older configs: `none`); founders start knowing the map, children start with empty memory. */
   prior?: 'none' | 'map';
 }
 

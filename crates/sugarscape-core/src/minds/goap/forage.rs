@@ -242,8 +242,6 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let domain = Forage::new(torus, &sites, goal);
     // Every slot harvested is the most any plan gathers: short of G, no
     // plan exists, so don't search.
-    // Every slot harvested is the most any plan gathers: short of G, no
-    // plan exists, so don't search.
     let found = if domain.is_goal(&(0, (1u16 << sites.len()) - 1)) {
         plan(&domain, (0, 0), PLAN_LIMIT).ok_or(Fallback::Limit)
     } else {

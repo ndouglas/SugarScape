@@ -1797,7 +1797,7 @@ switch `goap.shortlist: value`.
 **The marginal-value rule** (`decision.rule: mvt`) is Constantino and Daw's rule at site level. Each
 Flump keeps ρ, a running mean of its gain per tick (travel ticks count 0; ρ ← ρ + α(gain − ρ),
 α = `mvt.alpha`, default 0.05; ρ starts at the metabolism). It stays while the best site within one
-step believes to yield at least ρ; otherwise it commits to the best site it knows and walks there.
+step is believed to yield at least ρ; otherwise it commits to the best site it knows and walks there.
 
 **Knowing the map.** `memory.prior: map` gives every founding rememberer every non-wall site at
 tick 0, with its starting level (the theorem's ideal forager); children start empty. It needs a
@@ -1829,8 +1829,9 @@ The travel tests use the same world at spacings s = 12, 16, 20 and 24 (a 3s × 3
   patch against its mean gain per tick so far. At s = 20, GOAP overstays at a median 57 % of
   departures, over half in 18 of 20 seeds. The marginal-value rule overstays at 39 %, over half in
   0 of 20. That last tick is often the first step out. Without the ticks in transit (reported, not
-  judged), GOAP overstays at 20–33 % and the marginal-value rule at 2–7 %, and no seed is above
-  half at any spacing under either. So GOAP's literal overstaying is likely the walk out.
+  judged; fallback ticks that stay put count as transit, 0.1–0.7 % of ticks), GOAP overstays at
+  20–33 % and the marginal-value rule at 2–7 %, and no seed is above half at any spacing under
+  either. So GOAP's literal overstaying is likely the walk out.
   Overstaying also falls as travel grows under both (GOAP 61 % to 46 %, the marginal-value rule
   56 % to 35 %, from s = 12 to 24). That's the opposite of Constantino and Daw, whose people
   overstayed significantly only when travel was long.
@@ -1894,9 +1895,10 @@ Switches: the Rules panel's **Decision (Minds 1, 4)** group adds GOAP and the ma
 **Rule** (on reset; both need Movement: Walk), and live **K**, **Horizon**, **Which known sites**
 (rate or value) and **α**. The **Memory** group adds the prior (on reset). Inspect shows a planner's
 "Plan: n steps, gathers ~x of G" and its next target, with its route drawn on the grid, or a
-marginal-value Flump's ρ. Charts: **Planning** (mean plan length) and **Plan use** (plans,
-fallbacks and plans using memory, per Flump) under GOAP; **Average rate** and **Leaving** under the
-marginal-value rule. Presets: `goap-mvt`, `mvt-rule`, `goap-open`, `goap-truffles`, `goap-walled`.
+marginal-value Flump's ρ. Charts: **Planning** (mean plan length) and **Plan use** (plans and
+fallbacks per Flump; plans using memory as a share of plans) under GOAP; **Average rate** and
+**Leaving** under the marginal-value rule. Presets: `goap-mvt`, `mvt-rule`, `goap-open`,
+`goap-truffles`, `goap-walled`.
 Built-in sweeps: `goap-horizon`, `goap-k`, `goap-memory`.
 
 Credit: R. E. Fikes and N. J. Nilsson, "STRIPS: A New Approach to the Application of Theorem Proving

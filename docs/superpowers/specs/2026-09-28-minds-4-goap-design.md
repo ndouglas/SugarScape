@@ -289,7 +289,12 @@ sweeps' (20 seeds), with the source named. The cost figures are the release CLI'
   the last walk: a boxed-in Flump alternates between planning and the fallback and never moves.
 - **Ruling: one good.** `decision.rule: goap` with other than exactly one good is a validation error
   ("planning (GOAP) needs exactly one good"): welfare over several goods isn't sugar. G is the
-  effective sugar metabolism (disease fee included) × H. `mvt` isn't restricted.
+  effective sugar metabolism (disease fee included) × H. `mvt` is restricted the same way
+  ("the marginal-value rule needs exactly one good"): ρ is good 0's harvest per tick, but with
+  n ≥ 2 goods a site's value is foresight welfare, a stock rather than a rate, so the rule could
+  never compare it to ρ and would never leave.
+- **Pollution.** With pollution on, a one-good site's value is discounted by s/(1 + p) while G and ρ
+  stay raw sugar; no Minds 4 preset turns pollution on.
 - **Ruling: counting fallbacks.** `TickEvents` counts `plans`, `plan_steps_sum`,
   `plans_with_remembered`, `plans_by_rememberers` (for the usage check, which asks about
   rememberers' plans), `fallback_short` and `fallback_limit`. Only found, non-empty plans count as

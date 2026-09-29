@@ -189,9 +189,9 @@ pub fn gripper(n: usize) -> Strips {
         }
     }
     let mut init = vec![
-        format!("at-robby(A)"),
-        format!("free(left)"),
-        format!("free(right)"),
+        "at-robby(A)".to_string(),
+        "free(left)".to_string(),
+        "free(right)".to_string(),
     ];
     init.extend((1..=n).map(|i| format!("at(ball{i},A)")));
     let goal: Vec<String> = (1..=n).map(|i| format!("at(ball{i},B)")).collect();
@@ -266,7 +266,7 @@ pub fn logistics_one_truck(n: usize) -> Strips {
     let locations: Vec<String> = (0..=2 * n).map(|l| format!("l{l}")).collect();
     let packages: Vec<String> = (1..=n).map(|i| format!("p{i}")).collect();
     truck_actions(&mut b, "t", &locations, &packages);
-    let mut init = vec![format!("at(t,l0)")];
+    let mut init = vec!["at(t,l0)".to_string()];
     init.extend((1..=n).map(|i| format!("at(p{i},l{})", 2 * i - 1)));
     let goal: Vec<String> = (1..=n).map(|i| format!("at(p{i},l{})", 2 * i)).collect();
     b.build(&init, &goal)
@@ -338,7 +338,7 @@ pub fn blocks_family(n: usize) -> Strips {
     }
     let mut init = vec![
         "handempty".to_string(),
-        format!("clear(B1)"),
+        "clear(B1)".to_string(),
         format!("clear(B{})", n + 2),
     ];
     init.extend((1..=n).map(|i| format!("on(B{i},B{})", i + 1)));

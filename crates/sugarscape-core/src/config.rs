@@ -555,8 +555,9 @@ pub enum Belief {
     Project,
 }
 
-/// Minds 4: what a newborn Flump's memory starts knowing, before it has seen
-/// anything itself.
+/// Minds 4: what a founding Flump's memory starts knowing, before it has
+/// seen anything itself. Founders start knowing the map; children start
+/// with empty memory.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MemoryPrior {
@@ -581,7 +582,8 @@ pub struct Memory {
     /// Share of agents born remembering (0–1).
     pub share: f64,
     pub belief: Belief,
-    /// Minds 4: what a newborn starts knowing (reset-only, unlike `belief`).
+    /// Minds 4: what a founder starts knowing (reset-only, unlike `belief`);
+    /// founders start knowing the map, children start with empty memory.
     pub prior: MemoryPrior,
 }
 
@@ -1549,6 +1551,14 @@ impl Config {
             dc.rule != DecisionRule::Goap || self.goods.len() == 1,
             "decision.rule",
             "planning (GOAP) needs exactly one good",
+        );
+        // ρ is good 0's harvest per tick; with n ≥ 2 goods a site's value is
+        // foresight welfare, a stock rather than a rate, so the rule would
+        // never compare it to ρ and would never leave.
+        e.check(
+            dc.rule != DecisionRule::Mvt || self.goods.len() == 1,
+            "decision.rule",
+            "the marginal-value rule needs exactly one good",
         );
         e.check(
             (1..=12).contains(&self.goap.k),
@@ -3557,7 +3567,7 @@ mod tests {
             errs[0].message,
             "planning and the marginal-value rule walk; set movement.mode to walk"
         );
-        // GOAP needs exactly one good; the marginal-value rule doesn't.
+        // GOAP and the marginal-value rule both need exactly one good.
         let mut c = Config::default();
         c.decision.rule = DecisionRule::Goap;
         c.movement.mode = MoveMode::Walk;
@@ -3567,7 +3577,13 @@ mod tests {
         assert_eq!(errs[0].field, "decision.rule");
         assert_eq!(errs[0].message, "planning (GOAP) needs exactly one good");
         c.decision.rule = DecisionRule::Mvt;
-        assert!(c.validate().is_ok());
+        let errs = c.validate().unwrap_err();
+        assert_eq!(errs.len(), 1);
+        assert_eq!(errs[0].field, "decision.rule");
+        assert_eq!(
+            errs[0].message,
+            "the marginal-value rule needs exactly one good"
+        );
 
         // `memory.prior: map` needs `memory.span > 0`.
         assert_eq!(

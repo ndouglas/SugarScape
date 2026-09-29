@@ -193,7 +193,7 @@ export const GROUPS: Group[] = [
   },
   {
     title: 'Decision (Minds 1, 4)',
-    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average. Both need walking (Movement: Walk).',
+    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average; it also needs one good. Both need walking (Movement: Walk).',
     controls: [
       {
         kind: 'select', path: 'decision.rule', label: 'Rule', reset: true,
@@ -282,7 +282,7 @@ export const GROUPS: Group[] = [
         ],
       },
       {
-        kind: 'select', path: 'memory.prior', label: 'A newborn starts knowing', reset: true,
+        kind: 'select', path: 'memory.prior', label: 'Founders start knowing', reset: true,
         current: (c) => memory(c).prior ?? 'none',
         options: [
           { value: 'none', label: 'Nothing (book)', apply: (c) => { c.memory = { ...memory(c), prior: 'none' }; } },
