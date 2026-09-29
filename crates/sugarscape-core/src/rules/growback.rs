@@ -1,18 +1,27 @@
 //! G_α (growback) and S_{α,β,γ} (seasonal growback). G∞ (instant growback)
 //! refills every site to capacity and ignores seasons.
 
-use crate::config::Config;
+use crate::config::{Config, SeasonMode};
 use crate::world::World;
 
 /// Growback rate for row `y` during tick `tick`. With seasons on, the north
 /// has summer while `tick mod 2γ < γ` (the book's footnote 33) and the other
 /// half has winter, growing at α/β per tick. The north is rows
 /// `y < height / 2`, so with an odd height the extra row is in the south.
+/// Under `seasons.mode: global` every row follows the north's calendar
+/// instead (see [`is_winter`]).
 pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
     let base = config.growback.rate;
     let s = &config.seasons;
     if !s.enabled {
         return base;
+    }
+    if s.mode == SeasonMode::Global {
+        return if is_winter(config, tick) {
+            base / f64::from(s.winter_divisor)
+        } else {
+            base
+        };
     }
     let period = u64::from(s.period);
     let north = y < config.height / 2;
@@ -22,6 +31,21 @@ pub(crate) fn rate_at(config: &Config, tick: u64, y: u32) -> f64 {
     } else {
         base / f64::from(s.winter_divisor)
     }
+}
+
+/// Whether every row is in winter at `tick`, under `seasons.mode: global`
+/// (the Flumps' shared calendar: summer first, then winter, flipping every
+/// γ ticks, like the book's north). With seasons off this is always
+/// `false`; under `hemispheres` it's undefined for a single global answer
+/// (rows disagree), so callers must be in `global` mode.
+pub(crate) fn is_winter(config: &Config, tick: u64) -> bool {
+    let s = &config.seasons;
+    if !s.enabled {
+        return false;
+    }
+    debug_assert_eq!(s.mode, SeasonMode::Global, "is_winter is global-only");
+    let period = u64::from(s.period);
+    tick % (2 * period) >= period
 }
 
 pub(crate) fn apply(world: &mut World) {
@@ -89,6 +113,40 @@ mod tests {
     fn without_seasons_rate_is_uniform() {
         let c = blank_config(10, 10);
         assert_eq!(rate_at(&c, 75, 9), 1.0);
+    }
+
+    #[test]
+    fn global_winter_falls_on_every_row_and_flips_every_period() {
+        let mut c = blank_config(10, 10);
+        c.seasons.enabled = true;
+        c.seasons.mode = SeasonMode::Global;
+        c.seasons.winter_divisor = 8;
+        c.seasons.period = 50;
+        for y in 0..10 {
+            assert_eq!(rate_at(&c, 0, y), 1.0, "summer at row {y}");
+        }
+        assert!(!is_winter(&c, 0));
+        for y in 0..10 {
+            assert_eq!(rate_at(&c, 49, y), 1.0, "still summer at row {y}");
+        }
+        for y in 0..10 {
+            assert_eq!(rate_at(&c, 50, y), 0.125, "winter at row {y} after γ ticks");
+        }
+        assert!(is_winter(&c, 50));
+        for y in 0..10 {
+            assert_eq!(rate_at(&c, 99, y), 0.125, "still winter at row {y}");
+        }
+        for y in 0..10 {
+            assert_eq!(rate_at(&c, 100, y), 1.0, "summer again at row {y}");
+        }
+        assert!(!is_winter(&c, 100));
+    }
+
+    #[test]
+    fn without_seasons_is_winter_is_always_false() {
+        let c = blank_config(10, 10);
+        assert!(!is_winter(&c, 0));
+        assert!(!is_winter(&c, 1_000));
     }
 
     #[test]

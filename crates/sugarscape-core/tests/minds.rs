@@ -88,3 +88,30 @@ fn memory_and_truffles_off_explicitly_is_every_preset() {
     }
     assert!(checked >= 20, "checked {checked} presets");
 }
+
+#[test]
+fn global_winter_with_winter_divisor_one_is_seasons_off() {
+    // Minds 5's reduction: `seasons.mode: global` with `winter_divisor: 1`
+    // grows every row at the same rate every tick (winter's α/β is α/1),
+    // so it's the same world as seasons off. ii-2-unit has finite growback
+    // (rate 1.0, not instant) and seasons off by default, so the two
+    // calendars actually differ unless the divisor collapses them.
+    let off = presets::by_id("ii-2-unit").expect("ii-2-unit").config;
+    assert!(
+        !off.growback.instant,
+        "growback must be finite for this to bite"
+    );
+    assert!(!off.seasons.enabled);
+
+    let mut global = off.clone();
+    global.seasons.enabled = true;
+    global.seasons.mode = sugarscape_core::config::SeasonMode::Global;
+    global.seasons.winter_divisor = 1;
+
+    let run = |c: sugarscape_core::config::Config| {
+        let mut w = World::new(c, 1).unwrap();
+        w.run(500);
+        w.fingerprint()
+    };
+    assert_eq!(run(global), run(off));
+}
