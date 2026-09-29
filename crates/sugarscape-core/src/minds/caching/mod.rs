@@ -20,6 +20,7 @@
 //! Σ caches + eaten. Nothing here draws.
 
 pub mod episodes;
+pub mod lab;
 pub mod rules;
 
 use crate::agent::AgentId;

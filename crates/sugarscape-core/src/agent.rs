@@ -260,6 +260,10 @@ pub struct Agent {
     /// Minds 5, rule `plan`: the winter it's in, being recorded (empty in
     /// summer); moved to `last_winter` on the first tick of summer.
     pub this_winter: crate::minds::caching::rules::WinterRecord,
+    /// Minds 5, the lab only: this agent's own (`caching.share`,
+    /// `caching.lambda`), drawn per agent by `lab::run_population`; `None`
+    /// uses the config's. Never hashed.
+    pub cache_params: Option<(f64, f64)>,
 }
 
 impl Agent {
@@ -308,6 +312,7 @@ impl Agent {
             episodes: None,
             last_winter: None,
             this_winter: crate::minds::caching::rules::WinterRecord::default(),
+            cache_params: None,
         };
         agent.rate = f64::from(agent.metabolism[0]);
         // Goods 1..n draw where Chapter IV drew spice: after the tags,

@@ -158,12 +158,14 @@ pub struct World {
     agents: BTreeMap<AgentId, Agent>,
     occupancy: Vec<Option<AgentId>>,
     /// Row-major, one entry per site: 0 free, 1 a fence, 2 opaque. Built once
-    /// from `config.walls` (walls change only on reset); all zero when there
-    /// are none.
+    /// from `config.walls` (walls change only on reset, except the Minds 5
+    /// lab's doorways, which `open_wall` opens on the test evening); all zero
+    /// when there are none.
     pub(crate) walls: Vec<u8>,
     /// Row-major: each non-wall site's connected component among the
     /// non-wall sites (4-way, on the torus); walls get `u32::MAX`. Built once
-    /// with `walls`; empty when there are none, and then never consulted.
+    /// with `walls` (and again by `open_wall`); empty when there are none,
+    /// and then never consulted.
     pub(crate) regions: Vec<u32>,
     pub(crate) rng: SimRng,
     next_id: AgentId,
@@ -397,6 +399,19 @@ impl World {
     pub(crate) fn walled_apart(&self, a: Pos, b: Pos) -> bool {
         !self.regions.is_empty()
             && self.regions[self.torus.index(a)] != self.regions[self.torus.index(b)]
+    }
+
+    /// Opens the wall at `pos` (it becomes a free, empty site) and relabels
+    /// the regions. Only the Minds 5 lab calls this, to open its doorways on
+    /// the test evening; everywhere else walls change only on reset. A site
+    /// that isn't a wall is left alone.
+    pub(crate) fn open_wall(&mut self, pos: Pos) {
+        let i = self.torus.index(pos);
+        if self.walls[i] == 0 {
+            return;
+        }
+        self.walls[i] = 0;
+        self.regions = label_regions(self.torus, &self.walls);
     }
 
     /// Whether `pos` is an opaque wall: it also stops sight.
@@ -764,6 +779,11 @@ impl World {
     pub fn step(&mut self) {
         self.events = TickEvents::default();
         self.apply_schedule();
+        // Minds 5: a lab world applies its protocol's day (placement, food,
+        // doorways, the test evening's burying) before anyone moves.
+        if self.config.lab.is_some() {
+            crate::minds::caching::lab::apply(self);
+        }
         if self.config.disease.enabled {
             rules::disease::outbreaks(self);
         }

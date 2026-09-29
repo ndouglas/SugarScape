@@ -90,6 +90,7 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         episodes: None,
         last_winter: None,
         this_winter: crate::minds::caching::rules::WinterRecord::default(),
+        cache_params: None,
     }
 }
 

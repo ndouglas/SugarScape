@@ -35,6 +35,9 @@
 //!     sites, or anywhere before its first winter. Metabolism is effective
 //!     metabolism (disease fees included), as the reserve's is.
 //!
+//! - **The lab** (`super::lab`) uses only the allocations, with `whole`;
+//!   [`act`] buries nothing there.
+//!
 //! Nothing here draws.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -318,8 +321,14 @@ fn bury_all(world: &mut World, id: AgentId, allocation: Vec<(u32, f64)>) {
 }
 
 /// The field's caching step for `id`, after its move and `harvest` and
-/// before it eats. Does nothing under rule `none`.
+/// before it eats. Does nothing under rule `none`. In a lab world nothing is
+/// buried here: the lab's schedule buries on the test evening, and this
+/// only notes whether the agent found food today (`lab::found`).
 pub(crate) fn act(world: &mut World, id: AgentId, harvest: &Harvest) {
+    if world.config.lab.is_some() {
+        super::lab::found(world, id, harvest);
+        return;
+    }
     let caching = world.config.caching;
     let here = {
         let a = world.agent(id).expect("live agent");

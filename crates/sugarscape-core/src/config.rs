@@ -1722,6 +1722,9 @@ impl Config {
             "lab",
             "a lab needs a caching rule",
         );
+        if let Some(problem) = crate::minds::caching::lab::rig_problem(self) {
+            e.check(false, "lab", problem);
+        }
         e.check(
             (1..=50).contains(&self.movement.speed),
             "movement.speed",
@@ -4040,25 +4043,26 @@ mod tests {
             "{errs:?}"
         );
 
-        // A lab needs a caching rule.
+        // A lab needs a caching rule, and runs only on its rig (Task 6).
+        use crate::minds::caching::lab::{rig_config, LabParams};
+        let lab = Lab {
+            protocol: LabProtocol::Amodio,
+            food_first: false,
+        };
+        let rig = rig_config(lab, CachingRule::Compensate, LabParams::default(), 6);
+        assert_eq!(rig.validate(), Ok(()));
+        let mut c = rig.clone();
+        c.caching.rule = CachingRule::None;
+        assert_eq!(fields(c.validate()), ["lab"]);
         assert_eq!(
             with(&|c| {
-                c.lab = Some(Lab {
-                    protocol: LabProtocol::Raby,
-                    food_first: true,
-                });
+                c.lab = Some(lab);
+                c.movement.mode = MoveMode::Walk;
+                c.caching.rule = CachingRule::Compensate;
             }),
-            ["lab"]
+            ["lab"],
+            "the default world isn't the rig"
         );
-        assert!(with(&|c| {
-            c.lab = Some(Lab {
-                protocol: LabProtocol::Amodio,
-                food_first: false,
-            });
-            c.movement.mode = MoveMode::Walk;
-            c.caching.rule = CachingRule::Compensate;
-        })
-        .is_empty());
     }
 
     #[test]
