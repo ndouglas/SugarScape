@@ -22,7 +22,10 @@
 //!   just heading to distance 0. Otherwise the patch has run dry: it
 //!   commits to the single best site it knows of at all, in sight or
 //!   remembered, ties broken without a draw (nearer, then the lower site
-//!   index), and starts walking.
+//!   index), and starts walking. If that best-known site is its own — every
+//!   candidate it knows of is worth nothing — that isn't a leave: it just
+//!   stays and harvests in place, without setting `leaving` or counting
+//!   `events.leaves`.
 
 use crate::agent::AgentId;
 use crate::geometry::{Pos, Torus};
@@ -97,8 +100,14 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
                 choose(&local, &mut world.rng)
             } else {
                 let t = best_known(world.torus, &candidates);
-                world.agent_mut(id).expect("live agent").leaving = Some(t);
-                world.events.leaves += 1;
+                // Nothing known is worth anything: the best candidate is the
+                // Flump's own site. That isn't a leave — it just stays and
+                // harvests in place, so neither `leaving` nor `events.leaves`
+                // is set.
+                if t != pos {
+                    world.agent_mut(id).expect("live agent").leaving = Some(t);
+                    world.events.leaves += 1;
+                }
                 t
             }
         }
@@ -229,6 +238,20 @@ mod tests {
             Some(Pos::new(5, 8)),
             "dropped, not walked into"
         );
+    }
+
+    #[test]
+    fn nothing_known_worth_anything_stays_without_counting_a_leave() {
+        // Own site and every candidate are worth 0, but ρ is nonzero: the
+        // local check fails (0 < ρ), so the Flump would ordinarily commit to
+        // leaving — except the best-known site over everything it knows of
+        // is its own (nothing beats it), so this isn't a leave.
+        let mut w = mvt_world(21, 0.1);
+        let id = forager(&mut w, 5, 5, 6, 1.0);
+        act(&mut w, id);
+        assert_eq!(w.agent(id).unwrap().pos, Pos::new(5, 5), "stays in place");
+        assert_eq!(w.agent(id).unwrap().leaving, None, "not a commitment");
+        assert_eq!(w.events.leaves, 0, "not counted as a leave");
     }
 
     #[test]

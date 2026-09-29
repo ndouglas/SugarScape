@@ -104,6 +104,21 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
+    if config.decision.rule == crate::config::DecisionRule::Goap {
+        for s in [
+            "replans",
+            "mean_plan_length",
+            "fallbacks",
+            "plans_remembered",
+        ] {
+            names.push(s.into());
+        }
+    }
+    if config.decision.rule == crate::config::DecisionRule::Mvt {
+        for s in ["replans", "mean_rate"] {
+            names.push(s.into());
+        }
+    }
     names
 }
 
@@ -162,6 +177,12 @@ pub struct Snapshot {
     /// Minds 3's truffle series, present when `truffles.share > 0`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub truffles: Option<TruffleStats>,
+    /// Minds 4's GOAP series, present when `decision.rule` is `goap`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub goap: Option<GoapStats>,
+    /// Minds 4's marginal-value series, present when `decision.rule` is `mvt`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mvt: Option<MvtStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -207,6 +228,31 @@ pub struct MemoryStats {
 pub struct TruffleStats {
     pub truffles_found: u32,
     pub truffles_by_rememberers: u32,
+}
+
+/// Minds 4's GOAP series (see the module's series list). Every ratio is 0
+/// when its denominator (living agents, or this tick's plans) is 0.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct GoapStats {
+    /// Plans made this tick per living agent.
+    pub replans: f64,
+    /// Mean steps over this tick's plans.
+    pub mean_plan_length: f64,
+    /// Share of living agents who took the rate-choice fallback this tick
+    /// (short of `G`, or the search hit `PLAN_LIMIT`).
+    pub fallbacks: f64,
+    /// Share of this tick's plans with any target from the Flump's
+    /// remembered entries out of sight.
+    pub plans_remembered: f64,
+}
+
+/// Minds 4's marginal-value series (see the module's series list).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct MvtStats {
+    /// Flumps that set `leaving` this tick, per living agent.
+    pub replans: f64,
+    /// Mean ρ over the living.
+    pub mean_rate: f64,
 }
 
 impl Snapshot {
@@ -389,6 +435,48 @@ impl Snapshot {
                 truffles_found: events.truffles_found,
                 truffles_by_rememberers: events.truffles_by_rememberers,
             }),
+            goap: (world.config.decision.rule == crate::config::DecisionRule::Goap).then(|| {
+                let alive = n as u32;
+                let plans = events.plans;
+                let replans = if alive == 0 {
+                    0.0
+                } else {
+                    f64::from(plans) / f64::from(alive)
+                };
+                let mean_plan_length = if plans == 0 {
+                    0.0
+                } else {
+                    f64::from(events.plan_steps_sum) / f64::from(plans)
+                };
+                let fallbacks = if alive == 0 {
+                    0.0
+                } else {
+                    f64::from(events.fallback_short + events.fallback_limit) / f64::from(alive)
+                };
+                let plans_remembered = if plans == 0 {
+                    0.0
+                } else {
+                    f64::from(events.plans_with_remembered) / f64::from(plans)
+                };
+                GoapStats {
+                    replans,
+                    mean_plan_length,
+                    fallbacks,
+                    plans_remembered,
+                }
+            }),
+            mvt: (world.config.decision.rule == crate::config::DecisionRule::Mvt).then(|| {
+                let alive = n as u32;
+                let replans = if alive == 0 {
+                    0.0
+                } else {
+                    f64::from(events.leaves) / f64::from(alive)
+                };
+                MvtStats {
+                    replans,
+                    mean_rate: mean(&|a| a.rate),
+                }
+            }),
         }
     }
 
@@ -478,6 +566,22 @@ impl Snapshot {
                         "truffles_by_rememberers" => {
                             return Some(f64::from(t.truffles_by_rememberers))
                         }
+                        _ => {}
+                    }
+                }
+                if let Some(g) = self.goap {
+                    match name {
+                        "replans" => return Some(g.replans),
+                        "mean_plan_length" => return Some(g.mean_plan_length),
+                        "fallbacks" => return Some(g.fallbacks),
+                        "plans_remembered" => return Some(g.plans_remembered),
+                        _ => {}
+                    }
+                }
+                if let Some(m) = self.mvt {
+                    match name {
+                        "replans" => return Some(m.replans),
+                        "mean_rate" => return Some(m.mean_rate),
                         _ => {}
                     }
                 }
@@ -1498,5 +1602,142 @@ mod tests {
             &names[base + MEMORY_SERIES.len()..],
             TRUFFLE_SERIES.as_slice()
         );
+    }
+
+    const GOAP_SERIES: [&str; 4] = [
+        "replans",
+        "mean_plan_length",
+        "fallbacks",
+        "plans_remembered",
+    ];
+    const MVT_SERIES: [&str; 2] = ["replans", "mean_rate"];
+    // `replans` names both rules' leave/plan-count series (never together,
+    // since `decision.rule` is one value); the other names are exclusive.
+    const GOAP_ONLY: [&str; 3] = ["mean_plan_length", "fallbacks", "plans_remembered"];
+    const MVT_ONLY: [&str; 1] = ["mean_rate"];
+
+    #[test]
+    fn goap_and_mvt_series_exist_only_under_their_rule() {
+        let book = Config::default();
+        let names = series_names(&book);
+        assert!(!names.contains(&"replans".to_string()));
+        for s in GOAP_ONLY.iter().chain(MVT_ONLY.iter()) {
+            assert!(!names.contains(&s.to_string()), "{s}");
+        }
+        let snap = Snapshot::of(&World::new(book, 1).unwrap());
+        assert!(snap.goap.is_none());
+        assert!(snap.mvt.is_none());
+        for s in GOAP_SERIES.iter().chain(MVT_SERIES.iter()) {
+            assert_eq!(snap.value(s), None, "{s}");
+        }
+
+        let mut goap = Config::default();
+        goap.decision.rule = crate::config::DecisionRule::Goap;
+        let names = series_names(&goap);
+        for s in GOAP_SERIES {
+            assert!(names.contains(&s.to_string()), "{s}");
+        }
+        for s in MVT_ONLY {
+            assert!(!names.contains(&s.to_string()), "{s}");
+        }
+
+        let mut mvt = Config::default();
+        mvt.decision.rule = crate::config::DecisionRule::Mvt;
+        let names = series_names(&mvt);
+        for s in MVT_SERIES {
+            assert!(names.contains(&s.to_string()), "{s}");
+        }
+        for s in GOAP_ONLY {
+            assert!(!names.contains(&s.to_string()), "{s}");
+        }
+    }
+
+    #[test]
+    fn goap_series_reads_the_tick_events() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.decision.rule = crate::config::DecisionRule::Goap;
+        spawn(&mut w, 0, 0);
+        spawn(&mut w, 1, 0);
+        w.events.plans = 3;
+        w.events.plan_steps_sum = 9;
+        w.events.plans_with_remembered = 1;
+        w.events.fallback_short = 1;
+        w.events.fallback_limit = 1;
+        let s = Snapshot::of(&w);
+        let g = s.goap.expect("goap stats present");
+        assert_eq!(g.replans, 1.5, "3 plans over 2 alive");
+        assert_eq!(g.mean_plan_length, 3.0, "9 steps over 3 plans");
+        assert_eq!(g.fallbacks, 1.0, "2 fallbacks over 2 alive");
+        assert_eq!(g.plans_remembered, 1.0 / 3.0);
+        assert!(s.mvt.is_none());
+        for name in GOAP_SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+    }
+
+    #[test]
+    fn goap_series_zero_denominators_are_zero_not_nan() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.decision.rule = crate::config::DecisionRule::Goap;
+        // Nobody alive: the per-alive ratios are 0, not NaN.
+        let s = Snapshot::of(&w);
+        let g = s.goap.unwrap();
+        assert_eq!((g.replans, g.fallbacks), (0.0, 0.0));
+        assert_eq!((g.mean_plan_length, g.plans_remembered), (0.0, 0.0));
+
+        // Alive, but no plans made this tick.
+        spawn(&mut w, 0, 0);
+        let s = Snapshot::of(&w);
+        let g = s.goap.unwrap();
+        assert_eq!(g.replans, 0.0);
+        assert_eq!((g.mean_plan_length, g.plans_remembered), (0.0, 0.0));
+    }
+
+    #[test]
+    fn mvt_series_reads_the_tick_events_and_mean_rate() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.decision.rule = crate::config::DecisionRule::Mvt;
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        w.agent_mut(a).unwrap().rate = 1.0;
+        w.agent_mut(b).unwrap().rate = 3.0;
+        w.events.leaves = 1;
+        let s = Snapshot::of(&w);
+        let m = s.mvt.expect("mvt stats present");
+        assert_eq!(m.replans, 0.5, "1 leave over 2 alive");
+        assert_eq!(m.mean_rate, 2.0, "mean of 1.0 and 3.0");
+        assert!(s.goap.is_none());
+        for name in MVT_SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+    }
+
+    #[test]
+    fn mvt_series_zero_denominators_are_zero_not_nan() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        w.config.decision.rule = crate::config::DecisionRule::Mvt;
+        // Nobody alive: 0, not NaN.
+        let s = Snapshot::of(&w);
+        let m = s.mvt.unwrap();
+        assert_eq!((m.replans, m.mean_rate), (0.0, 0.0));
+    }
+
+    #[test]
+    fn goap_and_mvt_series_names_come_after_truffles() {
+        let mut goap = Config::default();
+        goap.decision.rule = crate::config::DecisionRule::Goap;
+        let names = series_names(&goap);
+        let base = series_names(&Config::default()).len();
+        assert_eq!(names.len(), base + GOAP_SERIES.len());
+        assert_eq!(&names[base..], GOAP_SERIES.as_slice());
+
+        let mut mvt = Config::default();
+        mvt.decision.rule = crate::config::DecisionRule::Mvt;
+        let names = series_names(&mvt);
+        assert_eq!(names.len(), base + MVT_SERIES.len());
+        assert_eq!(&names[base..], MVT_SERIES.as_slice());
     }
 }
