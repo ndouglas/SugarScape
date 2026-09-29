@@ -1,6 +1,6 @@
 {
   "name": "Minds 2: travel between patches and the ideal free distribution",
-  "description": "The richer patch's share of on-patch Flumps (2.10 : 1 inputs, vision 10–20, walking) against how far the only gap in the fences between the patches lies from the patches' center row, for a fence (sight passes) and an opaque wall (the other patch visible only through the gap). Baum & Kraft 1998: requiring travel to switch patches reduced undermatching slightly; a visual barrier had no effect. Seeds 1–20, ticks 500–1000.",
+  "description": "The richer patch's share of on-patch agents (2.10 : 1 inputs, vision 10–20, walking) against how far the only gap in the fences between the patches lies from the patches' center row, for a fence (sight passes) and an opaque wall (the other patch visible only through the gap). Baum & Kraft 1998: requiring travel to switch patches reduced undermatching slightly; a visual barrier had no effect. Seeds 1–20, ticks 500–1000.",
   "base": { "preset": "ifd-fence" },
   "x": { "label": "Gap offset (rows)", "values": [
     { "at": 0, "set": { "walls.0.height": 20, "walls.1.y": 22, "walls.1.height": 18, "walls.2.height": 20, "walls.3.y": 22, "walls.3.height": 18 } },

@@ -273,7 +273,7 @@ export class Engine {
   private followedId: number | null = null;
   private followedLive = false;
   private trailCells = NO_CELLS;
-  /** Minds 3: the inspected Flump's remembered sites, flat `[x, y, age, spot, …]` (the overlay). */
+  /** Minds 3: the inspected agent's remembered sites, flat `[x, y, age, spot, …]` (the overlay). */
   private memoryCells = NO_CELLS;
   private edges: Partial<Record<Overlay, Uint32Array>> = {};
   /** The last group received per `chartKey` (the host re-sends a group only when its history grew). */
@@ -598,7 +598,7 @@ export class Engine {
     return this.trailCells;
   }
 
-  /** Minds 3: the inspected Flump's remembered sites, flat `[x, y, age, spot, …]` (empty otherwise). */
+  /** Minds 3: the inspected agent's remembered sites, flat `[x, y, age, spot, …]` (empty otherwise). */
   inspectMemory(): Uint32Array {
     return this.memoryCells;
   }

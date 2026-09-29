@@ -105,7 +105,7 @@ pub(crate) fn s_per_seed(seeds: &[u64], edit: impl Fn(&mut Config)) -> Vec<f64> 
         .collect()
 }
 
-/// Share of Flumps off both patches at tick 1000, per seed.
+/// Share of agents off both patches at tick 1000, per seed.
 fn off_share(c: &Config, seeds: &[u64]) -> Vec<f64> {
     each_seed(c, seeds, |mut w| {
         w.run(1000);
@@ -159,7 +159,7 @@ fn fed(c: &mut Config) {
     c.goods[0].endowment = URange::new(100_000, 100_000);
 }
 
-/// The utility mind at vision 10–20 (where a Flump can see both patches)
+/// The utility mind at vision 10–20 (where an agent can see both patches)
 /// with crowding `m` and travel `k`.
 fn utility_far(m: f64, k: f64) -> impl Fn(&mut Config) + Copy {
     move |c: &mut Config| {
@@ -246,7 +246,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ifd-no-starving",
             source: Source::Comment,
             citation: SPEC,
-            text: "'Free' fails: under rule M a Flump who starts out of sight of sugar never moves; at R 2.10 and vision 1–6, over half of 100 are off both patches at tick 1000",
+            text: "'Free' fails: under rule M an agent who starts out of sight of sugar never moves; at R 2.10 and vision 1–6, over half of 100 are off both patches at tick 1000",
             check: |seeds| range(&off_share(&preset("ifd-no-starving"), seeds), 0.5, 1.0, false),
         },
         Claim {
@@ -254,7 +254,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ifd-wander",
             source: Source::Comment,
             citation: SPEC,
-            text: "Wandering when nothing scores makes the Flumps free: under 5 % are off both patches at tick 1000",
+            text: "Wandering when nothing scores makes the agents free: under 5 % are off both patches at tick 1000",
             check: |seeds| range(&off_share(&preset("ifd-wander"), seeds), 0.0, 0.05, false),
         },
         Claim {
@@ -278,7 +278,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ifd-crowding",
             source: Source::Book,
             citation: "Sutherland 1983 (via Doncaster 1999)",
-            text: "With interference m = 1, the distribution matches the inputs (s within 0.9–1.1); here under the utility mind at vision 10–20, with the interference local (Flumps on the site's neighbors), not patch-wide",
+            text: "With interference m = 1, the distribution matches the inputs (s within 0.9–1.1); here under the utility mind at vision 10–20, with the interference local (agents on the site's neighbors), not patch-wide",
             check: |seeds| {
                 let s0 = s_per_seed(seeds, utility_far(0.0, 0.0));
                 let s1 = s_per_seed(seeds, utility_far(1.0, 0.0));

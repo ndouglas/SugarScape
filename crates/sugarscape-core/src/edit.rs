@@ -74,7 +74,7 @@ pub struct PlanView {
     pub walked: bool,
 }
 
-/// Minds 4: a GOAP Flump's plan, for Inspect.
+/// Minds 4: a GOAP agent's plan, for Inspect.
 #[derive(Clone, Debug, Serialize)]
 pub struct GoapView {
     /// The targets left, in order.
@@ -130,11 +130,11 @@ pub struct AgentView {
     /// spots it holds in memory. `None` while memory is off (`span` 0).
     pub memory: Option<MemoryView>,
     /// Minds 4: the GOAP plan. `Some` only under `decision.rule: goap` while
-    /// the Flump holds a plan: its steps are empty once the plan is done
+    /// the agent holds a plan: its steps are empty once the plan is done
     /// (or was empty, G = 0). `None` after a dropped plan or a fallback, so
     /// no stale figures show.
     pub goap: Option<GoapView>,
-    /// Minds 4: the Flump's running intake-rate estimate ρ. `Some` only
+    /// Minds 4: the agent's running intake-rate estimate ρ. `Some` only
     /// under `decision.rule: mvt`.
     pub rate: Option<f64>,
 }
@@ -390,11 +390,11 @@ impl World {
         })
     }
 
-    /// Minds 3: the Flump at `pos`'s remembered sites, in the memory's own
+    /// Minds 3: the agent at `pos`'s remembered sites, in the memory's own
     /// (site-index) order: each site's `(x, y)`, its age in ticks since last
     /// seen (capped at `u32::MAX`), and its `spot` — 0 for no known truffle
     /// spot, 1 for one believed unripe, 2 for one believed ripe
-    /// (`minds::memory::believed_ripe`). Empty when there's no Flump there,
+    /// (`minds::memory::believed_ripe`). Empty when there's no agent there,
     /// it doesn't remember, or memory is off (`span` 0).
     pub fn memory_view(&self, pos: Pos) -> Vec<[u32; 4]> {
         if self.config.memory.span == 0 {
@@ -739,7 +739,7 @@ mod tests {
     }
 
     #[test]
-    fn memory_view_is_empty_with_memory_off_no_flump_or_a_non_rememberer() {
+    fn memory_view_is_empty_with_memory_off_no_agent_or_a_non_rememberer() {
         let mut w = blank_world(10, 10);
         let id = spawn(&mut w, 2, 2);
         assert!(
@@ -750,11 +750,11 @@ mod tests {
         w.config.memory.span = 20;
         assert!(
             w.memory_view(Pos::new(5, 5)).is_empty(),
-            "no Flump at that site"
+            "no agent at that site"
         );
         assert!(
             w.memory_view(Pos::new(2, 2)).is_empty(),
-            "the Flump there doesn't remember"
+            "the agent there doesn't remember"
         );
         w.agent_mut(id).unwrap().remembers = true;
         assert!(

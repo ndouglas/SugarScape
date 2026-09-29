@@ -47,7 +47,7 @@ pub(crate) fn paired_greater(a: &[f64], b: &[f64], a_name: &str, b_name: &str) -
     ))
 }
 
-/// Share of Flumps whose torus distance from the center of the starting
+/// Share of agents whose torus distance from the center of the starting
 /// block is above 25 at tick 100.
 fn far_share(c: &Config, seeds: &[u64]) -> Vec<f64> {
     let Placement::Block {
@@ -98,7 +98,7 @@ fn s_walk(seeds: &[u64], fences: &'static str) -> Vec<f64> {
     })
 }
 
-/// Mean over ticks 500, 510, …, 1000 of N₁/N₂ (Flumps on the richer patch
+/// Mean over ticks 500, 510, …, 1000 of N₁/N₂ (agents on the richer patch
 /// over those on the other), skipping samples with an empty patch.
 fn mean_ratio(w: &World) -> f64 {
     let (a, b) = (series(w, "on_first_patch"), series(w, "on_other_patches"));
@@ -146,7 +146,7 @@ pub fn claims() -> Vec<Claim> {
             item: "walk-capacity",
             source: Source::Book,
             citation: "Animation II-2: \"a carrying capacity of approximately 224 is eventually reached\"",
-            text: "The population stabilizes at about 224 (Animation II-2), when Flumps walk",
+            text: "The population stabilizes at about 224 (Animation II-2), when agents walk",
             check: |seeds| {
                 let jump = capacity(&preset("ii-2-unit"), seeds);
                 range(&capacity(&preset("walk-capacity"), seeds), 214.0, 234.0, false).with(&format!(
@@ -175,7 +175,7 @@ pub fn claims() -> Vec<Claim> {
             item: "walk-wealth",
             source: Source::Book,
             citation: "Animation II-5 (ii-5-wealth)",
-            text: "Wealth is right-skewed (Animation II-5), when Flumps walk",
+            text: "Wealth is right-skewed (Animation II-5), when agents walk",
             check: |seeds| {
                 let at = |id| {
                     after(&preset(id), seeds, 500, |w| {
@@ -197,12 +197,12 @@ pub fn claims() -> Vec<Claim> {
             item: "walk-seasons",
             source: Source::Book,
             citation: "Animation II-7 (ii-7-seasons)",
-            text: "Some Flumps migrate with the seasons (Animation II-7), when Flumps walk",
+            text: "Some agents migrate with the seasons (Animation II-7), when agents walk",
             check: |seeds| {
                 let share = |id| each_seed(&preset(id), seeds, |mut w| migrant_share(&mut w));
                 let jump = share("ii-7-seasons");
                 range(&share("walk-seasons"), 0.05, 1.0, false).with(&format!(
-                    "Share of Flumps alive over ticks 100–300 that change hemisphere at least twice. Jump (ii-7-seasons): median {:.3}.",
+                    "Share of agents alive over ticks 100–300 that change hemisphere at least twice. Jump (ii-7-seasons): median {:.3}.",
                     median(&jump)
                 ))
             },
@@ -212,11 +212,11 @@ pub fn claims() -> Vec<Claim> {
             item: "walk-waves",
             source: Source::Book,
             citation: "Animation II-6 (ii-6-waves)",
-            text: "A wave reaches the far mountain (Animation II-6), when Flumps walk",
+            text: "A wave reaches the far mountain (Animation II-6), when agents walk",
             check: |seeds| {
                 let jump = far_share(&preset("ii-6-waves"), seeds);
                 range(&far_share(&preset("walk-waves"), seeds), 0.25, 1.0, false).with(&format!(
-                    "Share of Flumps farther than 25 (torus distance) from the starting block's center at tick 100. Jump (ii-6-waves): median {:.3}.",
+                    "Share of agents farther than 25 (torus distance) from the starting block's center at tick 100. Jump (ii-6-waves): median {:.3}.",
                     median(&jump)
                 ))
             },

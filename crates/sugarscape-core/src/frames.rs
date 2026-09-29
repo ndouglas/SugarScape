@@ -1265,7 +1265,7 @@ mod tests {
         run_shot(&Shot::from_json(json).unwrap()).unwrap()
     }
 
-    /// An 8×8 world with one hill at (4, 4): a Flump on the hill, one on
+    /// An 8×8 world with one hill at (4, 4): an agent on the hill, one on
     /// bare ground that starves in tick 1, and one placed at tick 2.
     const TINY: &str = r#"{"preset": "ii-2-unit", "ticks": 6, "seed": 3,
         "set": {"width": 8, "height": 8, "population": 0, "vision.max": 4,
@@ -1915,7 +1915,7 @@ mod tests {
         let c = &d.config;
         for f in &d.frames[1..] {
             assert_eq!(f.agents.len(), 20);
-            // Each Flump's payoff is what the events give it.
+            // Each agent's payoff is what the events give it.
             let mut pay = vec![0.0f64; 20];
             for &i in &f.cheats {
                 pay[i as usize] += c.temptation;

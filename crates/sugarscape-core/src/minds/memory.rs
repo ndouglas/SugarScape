@@ -9,17 +9,17 @@ use crate::config::{Belief, MemoryPrior, MAX_GOODS};
 use crate::geometry::Pos;
 use crate::world::World;
 
-/// Most sites one Flump remembers at once. When `observe` would push its
+/// Most sites one agent remembers at once. When `observe` would push its
 /// memory past this, the entries seen longest ago go first (on a tie, the
 /// lowest site index). Before the cap, a big flat world with a long span let
 /// memory grow without bound: the final review measured 1.29 M entries and
 /// about 220 MB on a 500×500 world with span 10 000 at tick 1 500, before
-/// keyframes. The standard presets hold far fewer per Flump than this, so the
+/// keyframes. The standard presets hold far fewer per agent than this, so the
 /// cap never binds on them.
 pub const MEMORY_CAP: usize = 4096;
 
 /// A remembered site (Minds 3): the levels seen, the most ever seen there, when it was last seen, and
-/// what the Flump knows of a truffle spot there.
+/// what the agent knows of a truffle spot there.
 ///
 /// Levels and most are kept only for the configured goods (one boxed slice,
 /// levels then most, `n` each), not for all `MAX_GOODS`: the values are the
@@ -73,7 +73,7 @@ pub struct TruffleSeen {
     pub tick: u64,
 }
 
-/// A Flump's remembered sites, by site index (deterministic order), at most
+/// An agent's remembered sites, by site index (deterministic order), at most
 /// [`MEMORY_CAP`] of them.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Memory {
@@ -114,7 +114,7 @@ pub(crate) fn observe(world: &mut World, id: AgentId) {
         })
         .collect();
 
-    // The Flump's own site's truffle spot, if it has one (a harvest this
+    // The agent's own site's truffle spot, if it has one (a harvest this
     // turn already left it unripe by now, so this sees that).
     let own_idx = world.torus.index(pos) as u32;
     let own_truffle = world
@@ -498,7 +498,7 @@ mod tests {
     }
 
     #[test]
-    fn share_one_makes_every_flump_remember_and_share_zero_makes_none() {
+    fn share_one_makes_every_agent_remember_and_share_zero_makes_none() {
         use crate::agent::Agent;
         let mut c = blank_config(10, 10);
         c.memory.span = 20;
@@ -513,7 +513,7 @@ mod tests {
     // --- observe and truffles ---
 
     #[test]
-    fn observe_records_the_flumps_own_truffle_spot_ripe_then_unripe_after_a_harvest() {
+    fn observe_records_the_agents_own_truffle_spot_ripe_then_unripe_after_a_harvest() {
         let mut c = blank_config(10, 10);
         c.movement.mode = MoveMode::Walk;
         c.memory.span = 50;
@@ -530,7 +530,7 @@ mod tests {
         observe(&mut w, id);
         let seen = w.agent(id).unwrap().memory.sites[&own]
             .truffle
-            .expect("the spot the Flump stands on is seen");
+            .expect("the spot the agent stands on is seen");
         assert!(seen.ripe, "not yet harvested");
         assert_eq!(seen.tick, 10);
 
@@ -540,7 +540,7 @@ mod tests {
         let seen2 = w.agent(id).unwrap().memory.sites[&own]
             .truffle
             .expect("still a spot, just picked");
-        assert!(!seen2.ripe, "a Flump that just harvested sees it unripe");
+        assert!(!seen2.ripe, "an agent that just harvested sees it unripe");
         assert_eq!(seen2.tick, 10);
     }
 
