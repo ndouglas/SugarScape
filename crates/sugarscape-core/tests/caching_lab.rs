@@ -138,8 +138,11 @@ fn amodio_plan_looking_three_days_ahead() {
 /// Only λ matters in the lab (it caches all of F), so `even` and `plan`
 /// give every agent the same caches, while `compensate` spreads: with λ in
 /// [0.3, 0.7) the breakfast compartment's w = (1 − λ)³ lies in (0.027,
-/// 0.343], so every agent caches more in the no-breakfast compartment, 22
-/// to 29 of 30 there (30 / 1.343 = 22.3 at the least).
+/// 0.343]. With two places and whole units, K3 (breakfast) = ⌊30w /
+/// (1 + w)⌋ and K1 = 30 − K3 (the remainder goes to K1). At w = 0.343,
+/// 30w / (1 + w) = 7.66, so K3 ≤ 7 and K1 ∈ 23..=30; K3 = 0 (all 30 in
+/// K1) whenever 30w < 1 + w, i.e. w < 1/29, i.e. λ > 0.6745. Every agent
+/// caches more in the no-breakfast compartment.
 #[test]
 fn a_raby_population_differs_only_under_compensate() {
     let p = LabParams::default();
@@ -153,7 +156,8 @@ fn a_raby_population_differs_only_under_compensate() {
     for r in &comp {
         let [k1, k2, k3] = r.caches;
         assert_eq!((k1 + k3, k2), (30, 0));
-        assert!((22..=29).contains(&k1), "{r:?}");
+        assert!(k1 > k3, "{r:?}");
+        assert!((23..=30).contains(&k1), "{r:?}");
     }
     let spread: std::collections::BTreeSet<u32> = comp.iter().map(|r| r.caches[0]).collect();
     assert!(spread.len() > 1, "individual differences: {spread:?}");

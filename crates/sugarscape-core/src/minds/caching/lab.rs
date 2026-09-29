@@ -495,7 +495,8 @@ pub fn results(world: &World) -> Vec<LabResult> {
 /// Draws each agent's own (share, λ) through the world's RNG, in id order
 /// (share first): share uniform in [0.4, 0.6), λ in [0.3, 0.7). The lab's
 /// allocations cache all of F, so only λ (under `compensate`) changes what
-/// an agent does.
+/// an agent does. `share` is drawn but unused in the lab, only to keep the
+/// draw order stable.
 pub fn draw_params(world: &mut World) {
     for id in roster(world) {
         let share = 0.4 + 0.2 * world.rng.gen::<f64>();
@@ -512,6 +513,10 @@ fn run(mut world: World) -> Vec<LabResult> {
     while !finished(&world) && world.tick < limit {
         world.step();
     }
+    assert!(
+        finished(&world),
+        "the lab's test evening didn't finish within {limit} ticks"
+    );
     results(&world)
 }
 
@@ -636,6 +641,61 @@ mod tests {
             }
         );
         assert_eq!(a.caches.len(), 0, "nothing buried while training");
+    }
+
+    #[test]
+    fn rabys_test_evening_opens_k1_and_k3_and_keeps_k2_shut() {
+        let c = rig_config(raby(false), CachingRule::Even, LabParams::default(), 1);
+        let mut w = World::new(c, 3).unwrap();
+        for _ in 0..=24 {
+            w.step();
+        }
+        assert!(!w.is_wall(doorway(0)));
+        assert!(w.is_wall(doorway(1)), "K2 stays shut");
+        assert!(!w.is_wall(doorway(2)));
+        while !finished(&w) {
+            w.step();
+            assert!(w.is_wall(doorway(1)));
+            assert!(w.tick < 200);
+        }
+        assert_eq!(results(&w)[0].caches, [15, 0, 15]);
+    }
+
+    #[test]
+    fn a_lab_refuses_placing_and_removing_agents_and_steps_on() {
+        let c = rig_config(raby(false), CachingRule::Even, LabParams::default(), 2);
+        let mut w = World::new(c, 3).unwrap();
+        let mut plain = w.clone();
+        w.step();
+        plain.step();
+        let o = crate::edit::AgentOverrides::default();
+        assert_eq!(
+            w.place_agent(5, 5, &o).unwrap_err(),
+            "the lab's roster is fixed"
+        );
+        let at = w.agents().next().unwrap().pos;
+        assert_eq!(
+            w.remove_agent(at.x, at.y).unwrap_err(),
+            "the lab's roster is fixed"
+        );
+        assert_eq!(w.population(), 2);
+        // Refused edits change nothing: it steps on as the unedited world.
+        while !finished(&plain) {
+            w.step();
+            plain.step();
+            assert_eq!(w.fingerprint(), plain.fingerprint());
+            assert!(plain.tick < 300);
+        }
+        assert!(finished(&w));
+        assert_eq!(
+            results(&w),
+            vec![
+                LabResult {
+                    caches: [15, 0, 15]
+                };
+                2
+            ]
+        );
     }
 
     #[test]

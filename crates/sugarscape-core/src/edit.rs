@@ -10,6 +10,9 @@ use crate::minds::memory::believed_ripe;
 use crate::rules;
 use crate::world::{LoanId, World};
 
+/// Why `place_agent` and `remove_agent` refuse a lab world (Minds 5).
+const LAB_ROSTER: &str = "the lab's roster is fixed";
+
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(default)]
 pub struct AgentOverrides {
@@ -228,7 +231,12 @@ impl World {
         Ok(())
     }
 
+    /// Refused in a lab world ("the lab's roster is fixed"): the lab's
+    /// schedule places its agents by roster.
     pub fn place_agent(&mut self, x: u32, y: u32, o: &AgentOverrides) -> Result<AgentId, String> {
+        if self.config.lab.is_some() {
+            return Err(LAB_ROSTER.into());
+        }
         let pos = self.checked_pos(x, y)?;
         if (o.spice.is_some() || o.spice_metabolism.is_some()) && self.config.goods.len() < 2 {
             return Err("spice needs a second good".into());
@@ -269,8 +277,11 @@ impl World {
     }
 
     /// Removes the agent at (x, y) without counting a death or bequeathing
-    /// its sugar.
+    /// its sugar. Refused in a lab world ("the lab's roster is fixed").
     pub fn remove_agent(&mut self, x: u32, y: u32) -> Result<(), String> {
+        if self.config.lab.is_some() {
+            return Err(LAB_ROSTER.into());
+        }
         let pos = self.checked_pos(x, y)?;
         let id = self
             .occupant(pos)
