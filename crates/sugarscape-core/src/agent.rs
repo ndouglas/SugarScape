@@ -245,11 +245,11 @@ pub struct Agent {
     /// Minds 5: for each cache, the tick of the first unit buried there since
     /// the site's cache was last empty (for the age of what's dug).
     pub cache_since: BTreeMap<u32, u64>,
-    /// Minds 5, rule `compensate`: each site it has harvested, site index →
-    /// weight w (starting at 1, × (1 − λ) each time it finds food there).
-    /// Empty under every other rule. Never hashed, exported or shared, like
-    /// `rate`.
-    pub weights: BTreeMap<u32, f64>,
+    /// Minds 5, rule `compensate`: its known sites (those it has harvested
+    /// from), site index → weight w (starting at 1, × (1 − λ) each time it
+    /// finds food there), capped at `MEMORY_CAP`. Empty under every other
+    /// rule. Never hashed, exported or shared, like `rate`.
+    pub weights: crate::minds::caching::rules::Weights,
     /// Minds 5: what-where-when memory for the lab's day-by-day protocols
     /// (Task 6's harness fills it); `None` in the field, where rule `plan`
     /// plans from its winter record instead. Never hashed.
@@ -304,7 +304,7 @@ impl Agent {
             leaving: None,
             caches: BTreeMap::new(),
             cache_since: BTreeMap::new(),
-            weights: BTreeMap::new(),
+            weights: crate::minds::caching::rules::Weights::default(),
             episodes: None,
             last_winter: None,
             this_winter: crate::minds::caching::rules::WinterRecord::default(),

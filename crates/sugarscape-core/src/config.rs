@@ -1702,6 +1702,14 @@ impl Config {
             "caching.rule",
             "caching walks; set movement.mode to walk",
         );
+        // Rule C moves and harvests by its own rule, with no reserve or
+        // caches in view; burying after a raid is undefined.
+        e.check(
+            (self.caching.rule == CachingRule::None && self.caching.capacity == 0)
+                || !self.combat.enabled,
+            "caching.rule",
+            "caching and combat can't run together",
+        );
         e.check(
             !self.central.enabled
                 || (matches!(self.decision.rule, DecisionRule::Mvt | DecisionRule::Goap)
@@ -3903,6 +3911,39 @@ mod tests {
         })
         .is_empty());
         assert!(errs(&|c| c.movement.mode = MoveMode::Jump).is_empty());
+    }
+
+    #[test]
+    fn caching_and_combat_cant_run_together() {
+        // Caching walks and rule C jumps, so the pair already failed on
+        // movement; this names the conflict itself, whichever mode is set.
+        let errs = |mode: MoveMode, f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            c.movement.mode = mode;
+            c.combat.enabled = true;
+            f(&mut c);
+            c.validate().err().unwrap_or_default()
+        };
+        let named = |e: &[FieldError]| {
+            e.iter().any(|e| {
+                e.field == "caching.rule" && e.message == "caching and combat can't run together"
+            })
+        };
+        for mode in [MoveMode::Walk, MoveMode::Jump] {
+            for f in [
+                &(|c: &mut Config| c.caching.rule = CachingRule::Even) as &dyn Fn(&mut Config),
+                &|c: &mut Config| c.caching.capacity = 5,
+            ] {
+                assert!(named(&errs(mode, f)), "{mode:?}");
+            }
+        }
+        // Combat alone passes; so does caching alone.
+        assert!(errs(MoveMode::Jump, &|_| {}).is_empty());
+        assert!(errs(MoveMode::Walk, &|c| {
+            c.combat.enabled = false;
+            c.caching.rule = CachingRule::Even;
+        })
+        .is_empty());
     }
 
     #[test]

@@ -4,18 +4,24 @@
 //! - **Allocation** ([`allocate_even`], [`allocate_compensate`],
 //!   [`allocate_plan`]): pure splits of an amount over places, shared by the
 //!   field and the lab. Places come back in ascending order. With `whole`
-//!   (the lab), each share is floored to whole units and the remainder goes
-//!   one unit at a time to the places in ascending order (K1 < K2 < K3); the
-//!   field passes `whole = false`.
+//!   (the lab), shares are apportioned in integer arithmetic (see
+//!   [`apportion_whole`]) and the remainder goes one unit at a time to the
+//!   places in ascending order (K1 < K2 < K3); the field passes `whole =
+//!   false`.
 //! - **The field** ([`act`]), after each agent's move and harvest, before it
 //!   eats:
 //!   - `even` buries `share` × surplus at its current site, every tick.
-//!   - `compensate` first updates the weight of the site it just harvested
-//!     (w starts at 1; w ← w × (1 − λ) when it found food, i.e. gathered
-//!     good 0 > 0 from the site — a dig isn't finding food), then buries
-//!     min(surplus, share × surplus × w / w̄) there, w̄ the mean weight over
-//!     the sites it has harvested. If every weight has decayed to exactly 0
-//!     (w̄ = 0), w / w̄ counts as 1: the sites are equal again.
+//!   - `compensate` keeps a weight for each of its **known sites**: the
+//!     sites it has harvested from (a tick where it moved and took its
+//!     harvest from the site, not from a cache), at most [`MEMORY_CAP`] of
+//!     them ([`Weights`]). Each tick it first updates the weight of the site
+//!     it just harvested (w starts at 1 when the site becomes known; w ← w ×
+//!     (1 − λ) when it found food, i.e. gathered good 0 > 0 from the site).
+//!     A tick where it dug (`harvest.dug > 0`) harvested no site: no weight
+//!     is added or changed. It then buries min(surplus, share × surplus × w
+//!     / w̄) at its current site, w̄ the mean weight over its known sites
+//!     (and w = 1 for a site it doesn't know). If every weight has decayed
+//!     to exactly 0 (w̄ = 0), w / w̄ counts as 1: the sites are equal again.
 //!   - `plan` caches only under `seasons.enabled` with `seasons.mode:
 //!     global` (the calendar it plans by). With seasons off or in
 //!     hemispheres mode it buries nothing: there's no winter everywhere to
@@ -33,6 +39,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::super::memory::MEMORY_CAP;
 use super::{bury, surplus};
 use crate::agent::AgentId;
 use crate::config::{CachingRule, SeasonMode};
@@ -60,6 +67,89 @@ impl WinterRecord {
     }
 }
 
+/// Rule `compensate`'s known sites: site index → weight, at most
+/// [`MEMORY_CAP`] of them, with a running sum so the mean costs O(1).
+///
+/// - **Cap.** Adding a site to a full map first drops the known site with
+///   the lowest site index other than the one being added (deterministic;
+///   there's no recency to go by without another map).
+/// - **Running sum.** Updated by each change's difference, and re-summed
+///   from the map every `len` changes (amortized O(1)) so rounding drift
+///   stays bounded; between re-sums the mean may differ from a fresh sum in
+///   the last bits. A count of nonzero weights makes "every weight is 0"
+///   exact, whatever the drift.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Weights {
+    map: BTreeMap<u32, f64>,
+    sum: f64,
+    nonzero: usize,
+    changes: usize,
+}
+
+impl Weights {
+    /// The weights, by site index.
+    pub fn map(&self) -> &BTreeMap<u32, f64> {
+        &self.map
+    }
+
+    pub fn get(&self, site: u32) -> Option<f64> {
+        self.map.get(&site).copied()
+    }
+
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
+    /// Sets `site`'s weight to `w` (≥ 0), making it known (dropping the
+    /// lowest other site first when full).
+    pub fn set(&mut self, site: u32, w: f64) {
+        let w = w.max(0.0);
+        let old = match self.map.get(&site).copied() {
+            Some(old) => old,
+            None => {
+                if self.map.len() >= MEMORY_CAP {
+                    let (&drop, &dw) = self.map.iter().next().expect("full map");
+                    self.map.remove(&drop);
+                    self.sum -= dw;
+                    self.nonzero -= usize::from(dw > 0.0);
+                }
+                0.0
+            }
+        };
+        let known = self.map.insert(site, w).is_some();
+        self.sum += w - old;
+        self.nonzero = self.nonzero + usize::from(w > 0.0) - usize::from(known && old > 0.0);
+        self.changes += 1;
+        if self.changes >= self.map.len() {
+            self.sum = self.map.values().sum();
+            self.changes = 0;
+        }
+    }
+
+    /// Makes `site` known at weight 1 if it isn't yet, then × (1 − λ) if
+    /// the agent found food there.
+    pub fn harvested(&mut self, site: u32, found: bool, lambda: f64) {
+        let w = self.get(site).unwrap_or(1.0);
+        self.set(site, if found { w * (1.0 - lambda) } else { w });
+    }
+
+    /// w̄: the mean weight over the known sites (1 when there are none; 0
+    /// exactly when every weight is 0).
+    pub fn mean(&self) -> f64 {
+        if self.map.is_empty() {
+            1.0
+        } else if self.nonzero == 0 {
+            0.0
+        } else {
+            self.sum.max(0.0) / self.map.len() as f64
+        }
+    }
+}
+
 /// Rule `plan`'s forecast shortfall for a winter of `gamma` ticks: `burn` ×
 /// γ − forecast − `cached`, the forecast from `last` (0 before a first
 /// winter: the worst case). May be negative (nothing to bury).
@@ -71,22 +161,16 @@ pub fn shortfall(burn: f64, gamma: u32, last: Option<&WinterRecord>, cached: f64
 /// Rule `compensate`'s burial at `site`: min(`surplus`, share × surplus × w
 /// / w̄), w the site's weight (1 if unknown) and w̄ the mean over `weights`
 /// (1 when empty). When w̄ is 0 every weight is 0, and w / w̄ counts as 1.
-pub fn compensate_amount(surplus: f64, share: f64, weights: &BTreeMap<u32, f64>, site: u32) -> f64 {
-    let w = weights.get(&site).copied().unwrap_or(1.0);
-    let mean = if weights.is_empty() {
-        1.0
-    } else {
-        weights.values().sum::<f64>() / weights.len() as f64
-    };
+pub fn compensate_amount(surplus: f64, share: f64, weights: &Weights, site: u32) -> f64 {
+    let w = weights.get(site).unwrap_or(1.0);
+    let mean = weights.mean();
     let ratio = if mean > 0.0 { w / mean } else { 1.0 };
     (share * surplus * ratio).min(surplus).max(0.0)
 }
 
 /// Splits `amount` over `places` (sorted ascending, duplicates dropped) by
 /// `weight`, each place's share its weight over the total (equal shares if
-/// the total isn't positive). With `whole`, the amount is floored to whole
-/// units, each share floored, and the remainder handed out one unit at a
-/// time in ascending place order.
+/// the total isn't positive). With `whole`, see [`apportion_whole`].
 fn apportion(
     amount: f64,
     places: &[u32],
@@ -100,10 +184,27 @@ fn apportion(
     if k == 0 {
         return Vec::new();
     }
-    let amount = if whole { amount.floor() } else { amount }.max(0.0);
-    let weights: Vec<f64> = places.iter().map(|&p| weight(p).max(0.0)).collect();
+    let weights: Vec<f64> = places
+        .iter()
+        .map(|&p| {
+            let w = weight(p);
+            if w.is_finite() {
+                w.max(0.0)
+            } else {
+                0.0
+            }
+        })
+        .collect();
+    if whole {
+        return places
+            .into_iter()
+            .zip(apportion_whole(amount, &weights))
+            .map(|(p, q)| (p, q as f64))
+            .collect();
+    }
+    let amount = amount.max(0.0);
     let total: f64 = weights.iter().sum();
-    let mut out: Vec<(u32, f64)> = places
+    places
         .iter()
         .zip(&weights)
         .map(|(&p, &w)| {
@@ -112,14 +213,68 @@ fn apportion(
             } else {
                 amount / k as f64
             };
-            (p, if whole { q.floor() } else { q })
+            (p, q)
         })
+        .collect()
+}
+
+/// Scale for [`apportion_whole`]'s integer weights: the largest weight maps
+/// to 2⁵².
+const WHOLE_SCALE: f64 = 4_503_599_627_370_496.0;
+
+/// Tolerance for [`apportion_whole`], in units: a share within 10⁻⁶ of the
+/// next whole unit counts as reaching it.
+const WHOLE_EPSILON_INV: u128 = 1_000_000;
+
+/// Whole units of floor(`amount`) (clamped to [0, 2⁶³]) apportioned by
+/// `weights` (finite and ≥ 0; equal if none is positive), in integer
+/// arithmetic.
+///
+/// - Each weight is scaled to an integer nᵢ = round(wᵢ / max w × 2⁵²), and
+///   each share is ⌊(total × nᵢ + ⌊N / 10⁶⌋) / N⌋ with N = Σ nᵢ, in u128:
+///   the exact rational share of the scaled weights, reaching the next unit
+///   when it's within 10⁻⁶ of it. The slack covers the scaling's rounding
+///   (relative error ≤ 2⁻⁵³ per weight, far below 10⁻⁶ of a unit for any
+///   amount the lab uses), so a share that is mathematically a whole number
+///   — 1/3 of 30, or 0.1 : 0.2 : 0.3 of 60 — never loses a unit to it.
+/// - The units left over go one at a time to the places in order (ascending
+///   place index), cycling if need be. Should the slack ever over-give (it
+///   can't with fewer than 10⁶ places), units come back from the last place
+///   first.
+fn apportion_whole(amount: f64, weights: &[f64]) -> Vec<u64> {
+    let k = weights.len();
+    let total = if amount.is_finite() {
+        amount.floor().clamp(0.0, 9_223_372_036_854_775_808.0) as u64
+    } else {
+        0
+    };
+    let max = weights.iter().copied().fold(0.0_f64, f64::max);
+    let scaled: Vec<u128> = if max > 0.0 {
+        weights
+            .iter()
+            .map(|&w| (w / max * WHOLE_SCALE).round() as u128)
+            .collect()
+    } else {
+        vec![1; k]
+    };
+    let n: u128 = scaled.iter().sum();
+    let slack = n / WHOLE_EPSILON_INV;
+    let t = u128::from(total);
+    let mut out: Vec<u64> = scaled
+        .iter()
+        .map(|&s| ((t * s + slack) / n).min(t) as u64)
         .collect();
-    if whole {
-        let given: f64 = out.iter().map(|e| e.1).sum();
-        let left = (amount - given).max(0.0) as usize;
-        for i in 0..left {
-            out[i % k].1 += 1.0;
+    let given: u64 = out.iter().sum();
+    if given <= total {
+        for i in 0..(total - given) as usize {
+            out[i % k] += 1;
+        }
+    } else {
+        let mut over = given - total;
+        for q in out.iter_mut().rev() {
+            let back = over.min(*q);
+            *q -= back;
+            over -= back;
         }
     }
     out
@@ -177,16 +332,16 @@ pub(crate) fn act(world: &mut World, id: AgentId, harvest: &Harvest) {
             bury_all(world, id, allocate_even(amount, &[here], false));
         }
         CachingRule::Compensate => {
-            let found = harvest.gathered[0] > 0.0;
-            let a = world.agent_mut(id).expect("live agent");
-            let w = a.weights.entry(here).or_insert(1.0);
-            if found {
-                *w *= 1.0 - caching.lambda;
+            // A dig harvested no site: the known sites stay as they were.
+            if harvest.dug <= 0.0 {
+                let found = harvest.gathered[0] > 0.0;
+                let a = world.agent_mut(id).expect("live agent");
+                a.weights.harvested(here, found, caching.lambda);
             }
             let s = surplus(world, id);
             let weights = &world.agent(id).expect("live agent").weights;
             let amount = compensate_amount(s, caching.share, weights, here);
-            let allocation = allocate_compensate(amount, &[here], weights, false);
+            let allocation = allocate_compensate(amount, &[here], weights.map(), false);
             bury_all(world, id, allocation);
         }
         CachingRule::Plan => plan(world, id, here, harvest),
@@ -340,10 +495,18 @@ mod tests {
         assert_eq!(WinterRecord::default().forecast(10), 0.0);
     }
 
+    fn known(entries: &[(u32, f64)]) -> Weights {
+        let mut w = Weights::default();
+        for &(site, weight) in entries {
+            w.set(site, weight);
+        }
+        w
+    }
+
     #[test]
     fn compensates_amount_scales_the_share_by_w_over_the_mean() {
         // Weights 1 and 0.5: mean 0.75.
-        let w = map(&[(0, 1.0), (1, 0.5)]);
+        let w = known(&[(0, 1.0), (1, 0.5)]);
         // Site 1: 0.5 × 12 × 0.5 / 0.75 = 4.
         assert_eq!(compensate_amount(12.0, 0.5, &w, 1), 4.0);
         // Site 0: 0.5 × 12 × 4/3 = 8.
@@ -351,7 +514,15 @@ mod tests {
         // Capped at the surplus: share 1 at site 0 would bury 16.
         assert_eq!(compensate_amount(12.0, 1.0, &w, 0), 12.0);
         // All weights 0: w / w̄ counts as 1.
-        let z = map(&[(0, 0.0), (1, 0.0)]);
+        let z = known(&[(0, 0.0), (1, 0.0)]);
+        assert_eq!(compensate_amount(12.0, 0.5, &z, 0), 6.0);
+        // λ = 1 zeroes each site it finds food at; once all are 0, the
+        // mean is exactly 0 however the running sum rounded.
+        let mut z = known(&[(0, 0.3), (1, 0.7), (2, 0.1)]);
+        for site in 0..3 {
+            z.harvested(site, true, 1.0);
+        }
+        assert_eq!(z.mean(), 0.0);
         assert_eq!(compensate_amount(12.0, 0.5, &z, 0), 6.0);
         assert_eq!(compensate_amount(0.0, 0.5, &w, 0), 0.0);
     }
@@ -400,35 +571,123 @@ mod tests {
         let here = w.torus.index(Pos::new(5, 5)) as u32;
         set_sugar(&mut w, 5, 5, 2.0);
         turn(&mut w, id);
-        assert_eq!(w.agent(id).unwrap().weights[&here], 0.5, "found food");
+        assert_eq!(
+            w.agent(id).unwrap().weights.get(here),
+            Some(0.5),
+            "found food"
+        );
         // Its only known site: w / w̄ = 1, so it buries share × surplus:
         // 0.5 × (32 − 10) = 11.
         assert_eq!(w.events.buried, 11.0);
         set_sugar(&mut w, 5, 5, 1.0);
         turn(&mut w, id);
-        assert_eq!(w.agent(id).unwrap().weights[&here], 0.25);
+        assert_eq!(w.agent(id).unwrap().weights.get(here), Some(0.25));
         // Nothing here now, and nothing in sight: no food, no decay.
         turn(&mut w, id);
-        assert_eq!(w.agent(id).unwrap().weights[&here], 0.25);
+        assert_eq!(w.agent(id).unwrap().weights.get(here), Some(0.25));
         // A second known site at weight 1 lowers this one's ratio: mean
         // 0.625, w / w̄ = 0.4.
         let other = w.torus.index(Pos::new(0, 0)) as u32;
-        w.agent_mut(id).unwrap().weights.insert(other, 1.0);
+        w.agent_mut(id).unwrap().weights.set(other, 1.0);
         w.agent_mut(id).unwrap().holdings[0] = 30.0;
         turn(&mut w, id);
         assert!((w.events.buried - 0.5 * 20.0 * 0.4).abs() < 1e-12);
     }
 
     #[test]
-    fn a_dig_is_not_finding_food() {
+    fn a_dig_tick_harvests_no_site_and_leaves_the_known_sites_alone() {
         let (mut w, id) = field(CachingRule::Compensate, 2.0);
         let here = w.torus.index(Pos::new(5, 5)) as u32;
+        set_sugar(&mut w, 5, 5, 1.0);
         w.agent_mut(id).unwrap().caches.insert(here, 5.0);
         turn(&mut w, id);
         assert_eq!(w.events.dug, 5.0);
-        assert_eq!(w.agent(id).unwrap().weights[&here], 1.0);
+        assert_eq!(
+            w.agent(id).unwrap().weights.get(here),
+            None,
+            "a dig site doesn't become known"
+        );
+        // A known site it digs at keeps its weight too.
+        w.agent_mut(id).unwrap().weights.set(here, 0.5);
+        w.agent_mut(id).unwrap().holdings[0] = 2.0;
+        w.agent_mut(id).unwrap().caches.insert(here, 5.0);
+        turn(&mut w, id);
+        assert_eq!(w.events.dug, 5.0);
+        assert_eq!(w.agent(id).unwrap().weights.get(here), Some(0.5));
     }
 
+    #[test]
+    fn known_sites_are_capped_dropping_the_lowest_other_site() {
+        let mut w = Weights::default();
+        for site in 0..MEMORY_CAP as u32 {
+            w.set(site + 10, 1.0);
+        }
+        assert_eq!(w.len(), MEMORY_CAP);
+        // Updating a known site drops nothing.
+        w.harvested(10, true, 0.5);
+        assert_eq!((w.len(), w.get(10)), (MEMORY_CAP, Some(0.5)));
+        // A new site drops the lowest index (10), even below the new one.
+        w.harvested(3, false, 0.5);
+        assert_eq!(w.len(), MEMORY_CAP);
+        assert_eq!((w.get(10), w.get(3)), (None, Some(1.0)));
+        // Then 3 is the lowest, dropped for the next newcomer.
+        w.harvested(100_000, false, 0.5);
+        assert_eq!((w.get(3), w.get(11)), (None, Some(1.0)));
+        assert_eq!(w.mean(), 1.0);
+    }
+
+    #[test]
+    fn the_running_sum_keeps_the_mean_of_the_map() {
+        let mut w = Weights::default();
+        for i in 0..5000u32 {
+            let site = (i * 7919) % 300;
+            w.harvested(site, i % 3 != 0, 0.3);
+            let fresh = w.map().values().sum::<f64>() / w.len() as f64;
+            assert!(
+                (w.mean() - fresh).abs() <= 1e-12 * fresh.max(1e-300),
+                "{i}: {} vs {fresh}",
+                w.mean()
+            );
+        }
+    }
+
+    #[test]
+    fn whole_units_never_lose_a_unit_to_non_dyadic_weights() {
+        // 1/3 : 2/3 : 1 of 30 is exactly 5, 10, 15.
+        let w = map(&[(0, 1.0 / 3.0), (1, 2.0 / 3.0), (2, 1.0)]);
+        assert_eq!(
+            allocate_compensate(30.0, &[0, 1, 2], &w, true),
+            vec![(0, 5.0), (1, 10.0), (2, 15.0)]
+        );
+        // 0.1 : 0.2 : 0.3 of 60 is exactly 10, 20, 30 (0.1 + 0.2 ≠ 0.3 in
+        // binary, but the shares are whole).
+        let w = map(&[(0, 0.1), (1, 0.2), (2, 0.3)]);
+        assert_eq!(
+            allocate_compensate(60.0, &[0, 1, 2], &w, true),
+            vec![(0, 10.0), (1, 20.0), (2, 30.0)]
+        );
+        // Thirds of 1/3 each: 10 apiece.
+        let third = 1.0 / 3.0;
+        let w = map(&[(0, third), (1, third), (2, third)]);
+        assert_eq!(
+            allocate_compensate(30.0, &[0, 1, 2], &w, true),
+            vec![(0, 10.0), (1, 10.0), (2, 10.0)]
+        );
+        // (1 − 0.3)ⁿ weights, as compensate makes them: 0.7 : 0.49 of 119
+        // is 70, 49.
+        let w = map(&[(0, 0.7), (1, 0.7 * 0.7)]);
+        assert_eq!(
+            allocate_compensate(119.0, &[0, 1], &w, true),
+            vec![(0, 70.0), (1, 49.0)]
+        );
+        // A true fraction still floors: 1 : 2 of 10 is 3.33, 6.67 → 3, 6,
+        // and the unit left goes to the first place.
+        let w = map(&[(0, 1.0), (1, 2.0)]);
+        assert_eq!(
+            allocate_compensate(10.0, &[0, 1], &w, true),
+            vec![(0, 4.0), (1, 6.0)]
+        );
+    }
     fn global_winter(w: &mut World, period: u32) {
         w.config.seasons.enabled = true;
         w.config.seasons.mode = SeasonMode::Global;

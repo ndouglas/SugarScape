@@ -110,7 +110,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         leaving: None,
         caches: std::collections::BTreeMap::new(),
         cache_since: std::collections::BTreeMap::new(),
-        weights: std::collections::BTreeMap::new(),
+        weights: crate::minds::caching::rules::Weights::default(),
         episodes: None,
         last_winter: None,
         this_winter: crate::minds::caching::rules::WinterRecord::default(),
