@@ -1,6 +1,6 @@
 {
   "name": "Minds 1: the ideal free distribution under rule M",
-  "description": "The share of on-patch Flumps on the richer patch (mean over ticks 500–1000) against the input ratio of the two patches, at three visions, under the book's rule M. Input matching (Parker 1978) predicts a share of R / (1 + R): 0.50, 0.58, 0.68, 0.74 and 0.82. Seeds 1–20.",
+  "description": "The share of on-patch agents on the richer patch (mean over ticks 500–1000) against the input ratio of the two patches, at three visions, under the book's rule M. Input matching (Parker 1978) predicts a share of R / (1 + R): 0.50, 0.58, 0.68, 0.74 and 0.82. Seeds 1–20.",
   "base": { "preset": "ifd-even" },
   "x": {
     "label": "Input ratio (first patch : second)",

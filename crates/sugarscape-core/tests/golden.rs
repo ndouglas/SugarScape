@@ -63,7 +63,7 @@ const GOLDEN: &[(&str, u64)] = &[
     ("ifd-no-starving", 0x471d7b55040cfaa4),
     ("ifd-wander", 0x255ac0e4071cd48),
     // Re-recorded when ifd-crowding/ifd-travel moved to vision 10–20 (fix
-    // round 1, task 6): at vision 1–6 no Flump sees both patches, so
+    // round 1, task 6): at vision 1–6 no agent sees both patches, so
     // crowding/travel could never move the patch split.
     ("ifd-crowding", 0x5a5e863436971c96),
     ("ifd-travel", 0x1a39e97e6ff051bb),

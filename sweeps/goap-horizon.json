@@ -1,6 +1,6 @@
 {
   "name": "Minds 4: carrying capacity against the planner's horizon",
-  "description": "The mean population over ticks 300–500 of Animation II-2's world when Flumps walk and plan with GOAP, against the goal's horizon H: 2, 5, 10, 20 or 40 ticks of food. Seeds 1–20.",
+  "description": "The mean population over ticks 300–500 of Animation II-2's world when agents walk and plan with GOAP, against the goal's horizon H: 2, 5, 10, 20 or 40 ticks of food. Seeds 1–20.",
   "base": { "preset": "ii-2-unit" },
   "set": { "movement.mode": "walk", "decision.rule": "goap" },
   "x": {

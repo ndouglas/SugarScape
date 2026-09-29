@@ -55,7 +55,7 @@ population, it's fully inspectable.
 - **Deterministic and cheap.** Seeded throughout, replayable exactly, and run at real population
   sizes on a laptop. That's the reason for not using LLMs.
 - **Stay honest.** Results are labeled as our experiments. The real incidents are questions a
-  result raises, never claims it proves. No narration of a Flump's "intent" beyond what its goals
+  result raises, never claims it proves. No narration of an agent's "intent" beyond what its goals
   and planner literally encode.
 
 ## What the repository already gives us, and what it changes
@@ -70,14 +70,14 @@ Checked against the code, not the prompt that started this document:
   what's in sight to plan over, and movement that already jumps anywhere in sight, every plan has
   one step, and that step is rule M's choice. That isn't a failure. It's the program's first
   reduction test, and a finding in its own right: *under the book's observation, means-ends
-  planning adds nothing*. Planning starts to matter only when a Flump has something beyond sight to
+  planning adds nothing*. Planning starts to matter only when an agent has something beyond sight to
   plan over (memory, marks, a board), payoffs that arrive later, or actions that take several ticks
   (carrying food home). Rung 1 as first imagined would be close to a null result; it becomes useful
   once it's paired with memory (below).
 - **There's no planner in the repository**: no GOAP, HTN, utility AI or behavior trees. The planner
   is new code either way.
 - **Trails need two things Sugarscape lacks.** Ant trails form between a nest and food: central-place
-  foraging, where the walk back is where the trail is laid. Sugarscape Flumps have no home, and rule M
+  foraging, where the walk back is where the trail is laid. Sugarscape agents have no home, and rule M
   jumps up to *vision* cells a tick, so there's no path to mark. Rung 2 needs a *home site* switch
   and a *one-cell step* switch. Carrying food home is also the first place a multi-step plan
   naturally arises.
@@ -94,10 +94,10 @@ Checked against the code, not the prompt that started this document:
 - **There's no event stream.** `social.rs` keeps neighbor lists that aren't exported or hashed.
   Rung 7's monitor needs a new event log (moves, reads, writes, erasures, trades) written alongside
   the series CSV.
-- **The engine is fast enough.** On this machine, 1000 ticks of `ii-2-unit` (about 230 Flumps) take
-  0.25 s and `iii-2-sex` (about 390) 0.5 s: under 1 µs per Flump per tick. A small GOAP search (tens
+- **The engine is fast enough.** On this machine, 1000 ticks of `ii-2-unit` (about 230 agents) take
+  0.25 s and `iii-2-sex` (about 390) 0.5 s: under 1 µs per agent per tick. A small GOAP search (tens
   of nodes) costs perhaps 10–100 µs. Replanning every tick makes a run 10–100 times slower: seconds
-  per seed at the book's sizes, minutes at 10,000 Flumps. Plans reused until they fail cut that
+  per seed at the book's sizes, minutes at 10,000 agents. Plans reused until they fail cut that
   further. Twenty seeds per cell stays affordable.
 
 ## The primitives
@@ -111,13 +111,13 @@ enough that ablation means something. Each is a named switch in the Sugarscape c
      and costs, and an A* planner.
    - Actions are typed Sugarscape moves: step, harvest, return home, deposit food, read, mark,
      erase and (with rule T) trade.
-   - Goals are chosen by utility (the most urgent unmet goal), so a Flump that isn't starving
+   - Goals are chosen by utility (the most urgent unmet goal), so an agent that isn't starving
      can pursue something else.
    - **Why GOAP, not HTN:** an HTN's methods are recipes, which write the behavior into the
      designer's decomposition. GOAP's actions are individually dumb and the plan is found, so a
      coordinated behavior is more plausibly emergent. Utility AI alone is rule M generalized: it
      has no lookahead, which is exactly what we want to ablate.
-2. **Private memory** (`memory`): the sites a Flump has seen, with what they held and when. It's
+2. **Private memory** (`memory`): the sites an agent has seen, with what they held and when. It's
    the one-reader case of a shared surface, so rung 3's board can be ablated down to it.
 3. **The shared surface** (`surface`): marks on cells, or on noticeboard sites. A mark is typed
    (a trail scent, or a fact such as "sugar ≥ x at (i, j) at tick t"), decays at a set rate, and
@@ -128,7 +128,7 @@ enough that ablation means something. Each is a named switch in the Sugarscape c
    without a separate primitive.
 4. **Who benefits** (`beneficiary`). This replaces the prompt's reward-accounting switch; the reason
    is the most important design correction here.
-   - **A planner doesn't learn from reward.** A GOAP Flump pursues the goals it's given. If its goal
+   - **A planner doesn't learn from reward.** A GOAP agent pursues the goals it's given. If its goal
      is "the tribe eats," sharing is written in, not emergent. If its goal is "I eat," it never
      shares at a cost.
    - **So self-sacrificial sharing can only emerge through selection.** The willingness to deposit
@@ -205,13 +205,13 @@ Rule M, with the golden tests unchanged.
     mountains are the "otherwise" case, so the board should do little there. That's a sharp,
     testable prediction, and why the patchy-resource landscape exists.
 - **Measure:** time for the population to find a new patch with the board and without it, on both
-  landscapes. Also, whether pooled partial facts (one Flump saw the patch's east edge, another its
-  west) produce plans no single Flump could make.
+  landscapes. Also, whether pooled partial facts (one agent saw the patch's east edge, another its
+  west) produce plans no single agent could make.
 
 ### 4. Costly sharing: the headline rung
 
 - **Primitives:** a heritable willingness to deposit, the sex rule, `readership` as the switch, and
-  a real cost. Depositing takes a trip to the board and a tick not harvesting, so a Flump near
+  a real cost. Depositing takes a trip to the board and a tick not harvesting, so an agent near
   death can pay with its life.
 - **Targets:**
   - Hamilton's rule (Hamilton, 1964): sharing spreads with kin-only readership when *rB > C*, and
@@ -222,7 +222,7 @@ Rule M, with the golden tests unchanged.
   - Tag-scoped reading reproduces the green beard and its known weakness: cheaters who carry the
     tag but don't share (milestones 12 and 16 as references).
   - The Price equation decomposition, reported per run.
-- **Report:** the exact condition under which a Flump deposits a fact and dies before using it, and
+- **Report:** the exact condition under which an agent deposits a fact and dies before using it, and
   whether the shared surface is necessary (against the same trait acting through direct gifts to a
   neighbor, with no surface).
 
@@ -231,8 +231,8 @@ Rule M, with the golden tests unchanged.
 - **Primitives:** `fence`, the board.
 - **Targets:**
   - Information cascades (Bikhchandani, Hirshleifer and Welch, 1992; Banerjee, 1992): once a few
-    Flumps act on a posted loophole, others follow the board and ignore their own evidence.
-  - Threshold cascades (Granovetter, 1978; queue item 2): a Flump uses the loophole once enough
+    agents act on a posted loophole, others follow the board and ignore their own evidence.
+  - Threshold cascades (Granovetter, 1978; queue item 2): an agent uses the loophole once enough
     others have.
   - Specification gaming (the DeepMind list; Krakovna et al., 2020): agents satisfy the rule as
     checked rather than as meant. Here it arises by construction, and the question is only how
@@ -246,11 +246,11 @@ Rule M, with the golden tests unchanged.
 - **Primitives:** a moderator that erases illicit marks: rule-based first, then a GOAP moderator.
 - **Targets:**
   - Red Queen dynamics (Van Valen, 1973): measure and countermeasure with neither side gaining
-    ground. Do Flumps adapt through backups (several copies), relocation (a new board) or coded
+    ground. Do agents adapt through backups (several copies), relocation (a new board) or coded
     marks (tag-scoped readership)?
   - The cost of moderation against its effect, and punishment as a public good (Boyd, Gintis,
     Bowles and Richerson, 2003; queue item 4).
-- **Question:** at what erasure rate does evasion cost Flumps more than the fenced resource
+- **Question:** at what erasure rate does evasion cost agents more than the fenced resource
   returns?
 
 ### 7. Detection
@@ -258,9 +258,9 @@ Rule M, with the golden tests unchanged.
 - **The monitor** sees only the event stream (moves, reads, writes, erasures, trades), never ground
   truth.
 - **Candidate signals:**
-  - Statistical complexity from CSSR-inferred ε-machines, per Flump and per group (Crutchfield and
+  - Statistical complexity from CSSR-inferred ε-machines, per agent and per group (Crutchfield and
     Young, 1989; Shalizi and Klinkner, 2004).
-  - Transfer entropy between Flumps, and between Flumps and board sites (Schreiber, 2000).
+  - Transfer entropy between agents, and between agents and board sites (Schreiber, 2000).
   - Compression ratios of the stream.
   - Synchrony and burst measures.
 - **Measure:** the ROC curve against ground-truth labels, and detection *latency*: how many ticks
@@ -284,7 +284,7 @@ Rule M, with the golden tests unchanged.
 2. Does self-sacrificial sharing of facts emerge, under which readership, and is the shared
    surface necessary for it?
 3. Does loophole knowledge spread culturally faster than it's independently discovered?
-4. Under moderation, do Flumps adapt to evade it, and when does evasion cost more than it gains?
+4. Under moderation, do agents adapt to evade it, and when does evasion cost more than it gains?
 5. Can coordination be detected from the event stream alone, how early, and by which signals?
 6. Which interventions end it, and does the answer depend on scale?
 

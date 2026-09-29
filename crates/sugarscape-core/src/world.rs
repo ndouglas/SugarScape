@@ -100,7 +100,7 @@ pub struct TickEvents {
     /// Minds 3: Σ |believed − true| welfare over the `remembered_moves`,
     /// measured when the target is chosen (not on arrival). Remembered
     /// values carry no pollution discount, so under pollution the error
-    /// includes pollution the Flump couldn't see.
+    /// includes pollution the agent couldn't see.
     pub belief_error_sum: f64,
     /// Minds 3: of `remembered_moves`, those whose target was truly worth
     /// less than believed when chosen.
@@ -110,20 +110,20 @@ pub struct TickEvents {
     pub plans: u32,
     /// Minds 4: Σ steps over this tick's `plans`.
     pub plan_steps_sum: u32,
-    /// Minds 4: of `plans`, those with any target from the Flump's
+    /// Minds 4: of `plans`, those with any target from the agent's
     /// remembered entries out of sight (the usage check Minds 3 taught).
     pub plans_with_remembered: u32,
     /// Minds 4: of `plans`, those made by rememberers (the denominator of
     /// the rememberers' usage share; only a rememberer's plan can hold a
     /// remembered site).
     pub plans_by_rememberers: u32,
-    /// Minds 4: GOAP Flumps that took the rate choice this tick because the
+    /// Minds 4: GOAP agents that took the rate choice this tick because the
     /// sugar they know of (their slots, all harvested) falls short of G.
     pub fallback_short: u32,
-    /// Minds 4: GOAP Flumps that took the rate choice this tick because the
+    /// Minds 4: GOAP agents that took the rate choice this tick because the
     /// search passed `PLAN_LIMIT` expansions.
     pub fallback_limit: u32,
-    /// Minds 4: MVT Flumps that set `leaving` this tick (their local value
+    /// Minds 4: MVT agents that set `leaving` this tick (their local value
     /// fell below ρ).
     pub leaves: u32,
 }
@@ -373,14 +373,14 @@ impl World {
         !self.config.walls.is_empty()
     }
 
-    /// Whether `pos` is a wall (fence or opaque): no sugar, no Flumps.
+    /// Whether `pos` is a wall (fence or opaque): no sugar, no agents.
     pub fn is_wall(&self, pos: Pos) -> bool {
         self.walls[self.torus.index(pos)] != 0
     }
 
     /// Whether no 4-way path through non-wall sites joins `a` and `b`, by
     /// the components labeled at build. Always false without walls. Other
-    /// Flumps are ignored, so a `true` means every walk from `a` to `b`
+    /// agents are ignored, so a `true` means every walk from `a` to `b`
     /// fails, never the reverse.
     pub(crate) fn walled_apart(&self, a: Pos, b: Pos) -> bool {
         !self.regions.is_empty()

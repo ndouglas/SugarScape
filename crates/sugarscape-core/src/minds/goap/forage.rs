@@ -1,5 +1,5 @@
 //! Minds 4's foraging domain and the GOAP decision rule
-//! (`decision.rule: goap`): a Flump plans the fastest way to gather enough.
+//! (`decision.rule: goap`): an agent plans the fastest way to gather enough.
 //!
 //! - **Candidates.** Rule M's list (`candidates_with_memory`: its own site,
 //!   the free sites in sight and, for a rememberer, remembered sites at
@@ -8,7 +8,7 @@
 //!   descending, the fallback's rate; `value` (the spec's original), value
 //!   descending; either then distance ascending, then site index. Plus its
 //!   own site (slot 0; the others are slots 1..=K).
-//! - **State.** `(slot the Flump is at, mask of slots harvested)`. The sugar
+//! - **State.** `(slot the agent is at, mask of slots harvested)`. The sugar
 //!   gathered is derived from the mask, never stored, so there are at most
 //!   (K + 1)·2^(K + 1) states.
 //! - **`Harvest(i)`.** Walk to unharvested slot i and harvest it: the torus
@@ -35,12 +35,12 @@ use crate::world::World;
 
 use super::{plan, Domain};
 
-/// Most states one plan may expand; past it the Flump takes the fallback.
+/// Most states one plan may expand; past it the agent takes the fallback.
 /// The planner counts a goal state's step to its sentinel as an expansion,
 /// so this is 4 095 foraging states plus that step.
 pub const PLAN_LIMIT: usize = 4096;
 
-/// The foraging domain over one decision's slots (0 the Flump's own site).
+/// The foraging domain over one decision's slots (0 the agent's own site).
 pub(crate) struct Forage {
     values: Vec<f64>,
     /// Travel ticks between slots, row-major `n × n`.
@@ -52,7 +52,7 @@ pub(crate) struct Forage {
 }
 
 impl Forage {
-    /// `sites[0]` is the Flump's own site; each entry is a site and its
+    /// `sites[0]` is the agent's own site; each entry is a site and its
     /// value. At most 16 slots.
     pub(crate) fn new(torus: Torus, sites: &[(Pos, f64)], goal: f64) -> Self {
         let n = sites.len();
@@ -125,7 +125,7 @@ impl Domain for Forage {
     }
 }
 
-/// G: the Flump's sugar burn per tick (its effective metabolism, disease
+/// G: the agent's sugar burn per tick (its effective metabolism, disease
 /// fees included) × `goap.horizon`. GOAP runs with exactly one good
 /// (validated), so values and G are both sugar.
 fn goal_of(world: &World, id: AgentId) -> f64 {
@@ -135,7 +135,7 @@ fn goal_of(world: &World, id: AgentId) -> f64 {
 }
 
 /// Rule M's candidates less the ones GOAP knows it can't reach: sites
-/// walled apart from the Flump, and the target its last walk found no path
+/// walled apart from the agent, and the target its last walk found no path
 /// to (`plan.target` with an empty path, not where it stands). Its own site
 /// stays first. Returns the list and where its remembered entries start.
 /// Filtering here, not in `candidates_with_memory`, leaves rule M and the
@@ -160,9 +160,9 @@ pub(crate) fn reachable_candidates(world: &World, id: AgentId) -> (Vec<(Pos, u32
     (out, kept_before_start)
 }
 
-/// The next target of the Flump's plan if it still holds, dropping the
+/// The next target of the agent's plan if it still holds, dropping the
 /// plan's steps otherwise. It holds while the target is still one of the
-/// Flump's reachable candidates (so, if it's in sight, it's unoccupied; it
+/// agent's reachable candidates (so, if it's in sight, it's unoccupied; it
 /// isn't walled off; and it isn't where the last walk found no path) and is
 /// worth at least half its planned value when in sight. A dropped plan is
 /// cleared to `None`, so Inspect shows no stale figures.
@@ -210,7 +210,7 @@ fn go(
 /// otherwise plan (at most `PLAN_LIMIT` expansions) over the candidates it
 /// can reach. An empty plan (G = 0) stays. With no plan (not enough known
 /// sugar for G, or over the limit; counted apart) the plan is cleared to
-/// `None` and the Flump takes the rate choice: the candidates of best value ÷
+/// `None` and the agent takes the rate choice: the candidates of best value ÷
 /// (distance + 1), passed to `choose` (rule M's tie rule and draw).
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let (candidates, start) = reachable_candidates(world, id);
@@ -291,7 +291,7 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     }
 }
 
-/// Why a GOAP Flump took the rate choice instead of a plan.
+/// Why a GOAP agent took the rate choice instead of a plan.
 enum Fallback {
     /// The sugar it knows of falls short of G.
     Short,
@@ -340,7 +340,7 @@ mod tests {
         World::new(c, 7).unwrap()
     }
 
-    /// A Flump at (x, y) with `vision` and sugar metabolism `metabolism`.
+    /// An agent at (x, y) with `vision` and sugar metabolism `metabolism`.
     fn forager(w: &mut World, x: u32, y: u32, vision: u32, metabolism: u32) -> AgentId {
         let id = spawn(w, x, y);
         let a = w.agent_mut(id).unwrap();
@@ -403,7 +403,7 @@ mod tests {
         assert_eq!(steps(&w, id), vec![Pos::new(5, 11), Pos::new(5, 12)]);
     }
 
-    /// A Flump at (5, 5), G = 3, planning for (5, 9) (3, distance 4) over
+    /// An agent at (5, 5), G = 3, planning for (5, 9) (3, distance 4) over
     /// (5, 0) (3, distance 5), both in sight (vision 8); after one act it stands on (5, 6).
     fn heading_for_5_9() -> (World, AgentId) {
         let mut w = goap_world(21, 8, 3);
@@ -442,7 +442,7 @@ mod tests {
 
     #[test]
     fn a_target_the_last_walk_couldnt_reach_is_left_for_another() {
-        // (5, 9) is in sight but ringed by Flumps: the walk finds no path.
+        // (5, 9) is in sight but ringed by agents: the walk finds no path.
         let mut w = goap_world(21, 8, 3);
         let id = forager(&mut w, 5, 5, 6, 1);
         set_sugar(&mut w, 5, 9, 3.0);
@@ -460,7 +460,7 @@ mod tests {
     }
 
     #[test]
-    fn a_boxed_in_flump_with_nothing_reachable_falls_back_and_stays() {
+    fn a_boxed_in_agent_with_nothing_reachable_falls_back_and_stays() {
         let mut w = goap_world(21, 8, 3);
         let id = forager(&mut w, 5, 5, 6, 1);
         set_sugar(&mut w, 5, 9, 3.0);
@@ -474,7 +474,7 @@ mod tests {
         // Tick 1 plans (5, 9) and the walk fails; tick 2 excludes it,
         // nothing else reaches G, and the fallback stays. The exclusion is
         // one walk deep, so tick 3 plans (5, 9) again: plan and fallback
-        // alternate, and the Flump never moves.
+        // alternate, and the agent never moves.
         assert_eq!((w.events.plans, w.events.fallback_short), (2, 1));
         assert_eq!(w.events.plans_by_rememberers, 0, "it doesn't remember");
     }
@@ -659,7 +659,7 @@ mod tests {
 
     #[test]
     fn the_rate_shortlist_keeps_a_near_site_the_value_shortlist_drops() {
-        // A Flump knowing the map: a near 3 at distance 1 and a far 4 at
+        // An agent knowing the map: a near 3 at distance 1 and a far 4 at
         // distance 20, K = 1, G = 3 (either site alone reaches it). Rate:
         // 3 ÷ 2 beats 4 ÷ 21, so it plans the near site; value: 4 beats 3.
         let run = |shortlist: Shortlist| {

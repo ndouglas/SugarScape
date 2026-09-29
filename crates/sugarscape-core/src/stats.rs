@@ -191,7 +191,7 @@ pub struct AxelrodStats {
     pub settled: bool,
 }
 
-/// Minds 1's patch counts: Flumps on the first peak's patch, on any other's,
+/// Minds 1's patch counts: agents on the first peak's patch, on any other's,
 /// and on none (`landscape::patch_of`). Present when goods[0]'s map is
 /// `peaks` with at least two peaks.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -241,7 +241,7 @@ pub struct GoapStats {
     /// Share of living agents who took the rate-choice fallback this tick
     /// (short of `G`, or the search hit `PLAN_LIMIT`).
     pub fallbacks: f64,
-    /// Share of this tick's plans with any target from the Flump's
+    /// Share of this tick's plans with any target from the agent's
     /// remembered entries out of sight.
     pub plans_remembered: f64,
 }
@@ -249,7 +249,7 @@ pub struct GoapStats {
 /// Minds 4's marginal-value series (see the module's series list).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
 pub struct MvtStats {
-    /// Flumps that set `leaving` this tick, per living agent.
+    /// Agents that set `leaving` this tick, per living agent.
     pub replans: f64,
     /// Mean ρ over the living.
     pub mean_rate: f64,
@@ -1431,7 +1431,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_series_count_flumps_by_patch() {
+    fn patch_series_count_agents_by_patch() {
         let mut w = two_patch_world();
         assert_eq!(Snapshot::of(&w).value("first_patch_share"), Some(0.0)); // nobody: 0, not NaN
         for (x, y) in [(15, 20), (16, 20), (42, 20), (30, 5)] {

@@ -155,7 +155,7 @@ export class GridView {
       ctx.stroke();
       ctx.restore();
     }
-    // Minds 4: a GOAP Flump's plan, a sparser dashed route from the Flump through its targets
+    // Minds 4: a GOAP agent's plan, a sparser dashed route from the agent through its targets
     // (straight lines between targets, the short way around the torus; the walk to the next one is
     // the A* path above), each target ringed.
     if (agent?.goap && agent.goap.steps.length) {
@@ -201,7 +201,7 @@ export class GridView {
   }
 
   /**
-   * Minds 3: the inspected Flump's remembered sites — small squares (`--c2`), fading with age —
+   * Minds 3: the inspected agent's remembered sites — small squares (`--c2`), fading with age —
    * and, among them, known truffle spots as small circles (`--accent`, filled when believed ripe).
    * Nothing while memory is off, nothing is selected, or the selection has no agent.
    */

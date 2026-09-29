@@ -79,7 +79,7 @@ export interface Wall {
   opaque: boolean;
 }
 
-/** Minds 3: how a Flump reasons about a remembered site it can't currently see. */
+/** Minds 3: how an agent reasons about a remembered site it can't currently see. */
 export type Belief = 'recall' | 'project';
 
 /**
@@ -1399,7 +1399,7 @@ export interface AgentView {
    */
   memory?: { remembers: boolean; sites: number; spots: number } | null;
   /**
-   * Minds 4: the GOAP plan, under `decision.rule: 'goap'` while the Flump holds one: the targets
+   * Minds 4: the GOAP plan, under `decision.rule: 'goap'` while the agent holds one: the targets
    * left in order (empty just after the plan finishes), what it was to gather in all, and its goal
    * G. `null` otherwise.
    */

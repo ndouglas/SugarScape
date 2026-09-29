@@ -4,7 +4,7 @@ export type MemoryShape = 'square' | 'circle';
 export interface MemoryDrawSpec {
   /** 0.4 · (1 − age / span) at age 0, fading to 0 at age = span. */
   alpha: number;
-  /** A square for a plain remembered site; a circle for one where the Flump knows a truffle spot. */
+  /** A square for a plain remembered site; a circle for one where the agent knows a truffle spot. */
   shape: MemoryShape;
   /** A known spot believed ripe (spot 2) draws filled; unripe (spot 1) or no spot (0) draws unfilled. */
   filled: boolean;
@@ -18,7 +18,7 @@ export interface MemoryMark extends MemoryDrawSpec {
 /**
  * One remembered site `[x, y, age, spot]` (as `inspect_memory` flattens them), plus the memory
  * config's `span`, mapped to how it draws: a square, fading with age, or — for a site where the
- * Flump knows a truffle spot (`spot` 1 or 2) — a circle, filled when it believes the spot ripe
+ * agent knows a truffle spot (`spot` 1 or 2) — a circle, filled when it believes the spot ripe
  * (`spot` 2).
  */
 export function memoryDrawSpec([, , age, spot]: [number, number, number, number], span: number): MemoryDrawSpec {

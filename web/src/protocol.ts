@@ -58,7 +58,7 @@ export interface Wants {
   ring?: boolean;
   /** The anasazi's water, settlements and farm–home links (its overlays). */
   valley?: boolean;
-  /** Minds 3: the selected site's inspected Flump's remembered sites (the memory overlay). */
+  /** Minds 3: the selected site's inspected agent's remembered sites (the memory overlay). */
   memory?: boolean;
 }
 

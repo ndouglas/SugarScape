@@ -196,7 +196,7 @@ export const GROUPS: Group[] = [
   {
     title: 'Decision (Minds 1, 4)',
     minds: true,
-    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average; it also needs one good. Both need walking (Movement: Walk).',
+    note: 'Which rule decides where an agent moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average; it also needs one good. Both need walking (Movement: Walk).',
     controls: [
       {
         kind: 'select', path: 'decision.rule', label: 'Rule', reset: true,
@@ -249,7 +249,7 @@ export const GROUPS: Group[] = [
   {
     title: 'Movement (Minds 2)',
     minds: true,
-    note: 'How a Flump reaches the site it chose. The book’s rule M jumps there in one tick. Walking takes that many steps a tick along an A* path around walls and other Flumps, and plans again every tick. Walls and fences come from presets (the Minds 2 fence presets); a wall also blocks sight.',
+    note: 'How an agent reaches the site it chose. The book’s rule M jumps there in one tick. Walking takes that many steps a tick along an A* path around walls and other agents, and plans again every tick. Walls and fences come from presets (the Minds 2 fence presets); a wall also blocks sight.',
     controls: [
       {
         kind: 'select', path: 'movement.mode', label: 'Mode',

@@ -1427,14 +1427,14 @@ This is our own experiment, not a reproduction: the first step of the Minds prog
 (`docs/studies/2026-09-27-minds.md`), which builds decision engines one at a time and tests each
 against a known answer and an attested regularity before any social result rests on it.
 
-**The seam.** A new switch, **decision.rule**, picks what decides where a Flump moves. `book` (the
+**The seam.** A new switch, **decision.rule**, picks what decides where an agent moves. `book` (the
 default) is rule M, unchanged. `utility` is a **utility mind** in the style of Mark and Lewis: each
 candidate site at distance d scores W × T(d) × C, the product of three considerations.
 
 - **W** is rule M's welfare: sugar (discounted by pollution when on), or foresight welfare over
   several goods.
 - **Travel**, T(d) = 1 / (1 + k·d): hyperbolic discounting of distance.
-- **Crowding**, C = (1 + n)^−m, with n the Flumps on the site's four neighbors, not counting the
+- **Crowding**, C = (1 + n)^−m, with n the agents on the site's four neighbors, not counting the
   mover: Sutherland's interference, made local.
 - **Idle**: when every candidate scores 0, `stay` (the book) or `wander` to a random free site in
   sight.
@@ -1454,8 +1454,8 @@ Fit N₁/N₂ = b·(R₁/R₂)^s: s = 1 is matching, s < 1 undermatching. Follow
 consumers on poorer patches. Each seed gets its own s, the slope across five input ratios (1, 1.36,
 2.10, 2.80, 4.42).
 
-The world: two cone patches of sugar on a 60 × 40 torus, growback 0.25, and 100 Flumps of
-metabolism 1. A Flump is on a patch when it is inside the radius of its nearest peak.
+The world: two cone patches of sugar on a 60 × 40 torus, growback 0.25, and 100 agents of
+metabolism 1. An agent is on a patch when it is inside the radius of its nearest peak.
 
 Measured (20 seeds, tick 1000; the survey and the sweeps):
 
@@ -1463,23 +1463,23 @@ Measured (20 seeds, tick 1000; the survey and the sweeps):
   0.59–0.92; 4 of 20 seeds within 0.9–1.1), 0.63 at 5–10 and 0.90 at 10–20 (IQR 0.87–0.93; 8 of
   20). Every seed undermatches at 5–10 and 10–20, and 17 of 20 at 1–6. s does not rise steadily
   with vision: 5–10 is the lowest. At 2.10 : 1 the richer patch holds 63 %, 61 % and 65 % of the
-  on-patch Flumps at the three visions, against matching's 68 %.
-- **"Free" fails before "ideal" does.** Rule M keeps a Flump in place when nothing it sees is
-  better, so a Flump that starts out of sight of sugar never moves. With nobody starving, a median
+  on-patch agents at the three visions, against matching's 68 %.
+- **"Free" fails before "ideal" does.** Rule M keeps an agent in place when nothing it sees is
+  better, so an agent that starts out of sight of sugar never moves. With nobody starving, a median
   66 of 100 are off both patches at tick 1000, over half in all 20 seeds.
 - **Survival plays no part.** Starving or not, s is identical seed by seed in all 20 seeds. The
-  Flumps who die are the ones who never find sugar.
-- **Wandering frees the Flumps but moves s away from matching.** Under `wander` a median 0.5 % are
+  agents who die are the ones who never find sugar.
+- **Wandering frees the agents but moves s away from matching.** Under `wander` a median 0.5 % are
   off patch. But s falls from 0.72 to 0.40, so the claim that wandering moves s toward 1 fails.
-  The wanderers overfill the poorer patch (41 Flumps on its 36 sugar a tick), so the split likely
+  The wanderers overfill the poorer patch (41 agents on its 36 sugar a tick), so the split likely
   follows where they arrive, not the inputs. That cause is not measured.
-- **Catchment is close on the median, but fails as judged.** At vision 1–6 no Flump can see across
-  the gap between the patches, so a patch's count may be set by how many Flumps start within sight
+- **Catchment is close on the median, but fails as judged.** At vision 1–6 no agent can see across
+  the gap between the patches, so a patch's count may be set by how many agents start within sight
   of it. Counting those sites predicts s = 0.709. The seeds' median is 0.722, but they scatter, and
   only 6 of 20 land within 0.1 of the prediction (the claim asks for 80 %).
 - **Sutherland holds, in the direction we did not expect.** At vision 10–20 under the utility mind,
   crowding m = 1 gives s median 0.95 (18 of 20 seeds within 0.9–1.1), as Sutherland's m = 1
-  predicts. We expected local crowding only to push Flumps apart and lower s. Instead it raises s
+  predicts. We expected local crowding only to push agents apart and lower s. Instead it raises s
   from 0.90 (one-sided Mann–Whitney p = 0.0003). In the sweep the share rises from 0.649 at m 0 to
   about 0.659 at m 0.5 and stays there to m 4.
 - **Baum and Kraft fail here.** They found that travel between patches slightly reduced
@@ -1487,7 +1487,7 @@ Measured (20 seeds, tick 1000; the survey and the sweeps):
   cost of switching; ours is a preference for nearby sugar under rule M's one-tick jump, which is
   not the same thing. In the sweep the share falls from 0.649 at k 0 to 0.602 at k 0.5, then
   recovers a little (0.613 at k 2).
-- **At vision 1–6, crowding and travel do nothing to the split.** No Flump sees both patches, so
+- **At vision 1–6, crowding and travel do nothing to the split.** No agent sees both patches, so
   there is nothing to weigh. A 10-seed check during implementation (2.10 : 1, crowding 0, 1 and 4,
   travel 0, 0.5 and 2, ticks 500–1000) found the share unchanged (0.637) at every value. That is
   why their presets, sweeps and claims use vision 10–20.
@@ -1495,7 +1495,7 @@ Measured (20 seeds, tick 1000; the survey and the sweeps):
 Switches (the Rules panel's **Decision (Minds 1)** group): **Rule** (rule M or the utility mind;
 rebuilds the world), **Travel k** and **Crowding m** (0–10), and **When nothing in sight scores**
 (stay or wander). Under rule M the last three are kept but ignored. On a map of two or more peaks
-two charts appear: **Patches** (Flumps on the first patch, on other patches and off patch) and
+two charts appear: **Patches** (agents on the first patch, on other patches and off patch) and
 **First patch share**. Presets: `ifd-even`, `ifd-two-to-one`, `ifd-four-to-one`, `ifd-far-sighted`,
 `ifd-no-starving`, `ifd-wander`, `ifd-crowding`, `ifd-travel`. Built-in sweeps: `ifd-matching`
 (share against input ratio at three visions), `ifd-idle` (stay against wander), `ifd-crowding`,
@@ -1516,8 +1516,8 @@ Model," *Evol. Ecol. Res.* 4 (2002); D. Mark, *Behavioral Mathematics for Game A
 ### Minds 2: A* and walking
 
 This is our own experiment, not a reproduction: the second step of the Minds program
-(`docs/studies/2026-09-27-minds.md`). Rule M jumps a Flump to the best site in sight in one tick,
-however far away it is. Minds 2 adds an A* engine, walls and fences, and a switch that makes Flumps
+(`docs/studies/2026-09-27-minds.md`). Rule M jumps an agent to the best site in sight in one tick,
+however far away it is. Minds 2 adds an A* engine, walls and fences, and a switch that makes agents
 walk instead. Then it measures which of the book's results need the jump, and what happens to the
 ideal free distribution when switching patches truly costs a walk.
 
@@ -1539,19 +1539,19 @@ earliest pushed, and the torus pushes its neighbors north, south, east, west. Tw
   License, with a README giving the source.
 
 **Walls and fences.** `walls` is a list of rectangles (set on reset; presets supply them). A wall
-site holds no sugar, never grows back and never holds a Flump, so placement, moves, children,
+site holds no sugar, never grows back and never holds an agent, so placement, moves, children,
 replacement and combat all skip it. Pollution neither lands on it nor diffuses into it. An opaque
 wall also stops each of rule M's four lines of sight; a fence blocks only movement. With no walls,
 sight, placement and diffusion are exactly as before. The grid draws walls in stone and fences in
 wood.
 
 **Walking.** Under `movement.mode: walk`, the decision rule (rule M or the utility mind) picks its
-target as before. Then A* finds a 4-way path around walls and other Flumps, and the Flump takes
+target as before. Then A* finds a 4-way path around walls and other agents, and the agent takes
 `speed` steps along it (1–50) and gathers only where it stops. It plans again every tick. If there
 is no path within 4 096 expanded sites, it stays and gathers where it is. At vision 1 every target
 is one step away, so walking *is* jumping: every golden Sugarscape preset without combat, with
 vision forced to 1, gives the same fingerprint under walk as under jump. Walking with combat on is
-an error, since rule C jumps. Inspect shows where the Flump is heading and how many steps are left
+an error, since rule C jumps. Inspect shows where the agent is heading and how many steps are left
 (or that it can't reach its target), and draws its planned path as a dashed line.
 
 Measured (20 seeds; the survey unless a sweep is named). "Holds" and "Fails" are the survey's
@@ -1560,7 +1560,7 @@ verdicts on claims we set before running:
 - **The book's carrying capacity needs the jump (Fails, as expected).** On `ii-2-unit` the mean
   population over ticks 300–500 has median 181 under walking against 228 under the jump. No seed
   lands within 214–234, around the book's 224. Walking is lower in all 20 seeds, by a median 47
-  Flumps. The sweeps (not a judged claim) show capacity tracking how far a Flump gets in a tick,
+  agents. The sweeps (not a judged claim) show capacity tracking how far an agent gets in a tick,
   roughly min(speed, vision): walking at speed 1 and vision 1–6 (181.5) is about jumping at
   vision 1 (182.7); walking at speed 3 (212.8) is near jumping at vision 1–3 (205.5); walking at
   speed 6 (225.2) is near jumping at vision 1–6 (228.5).
@@ -1573,11 +1573,11 @@ verdicts on claims we set before running:
   flat (182.7, 188.8, 181.5, 182.2). At vision 1 the two are the same rule.
 - **Skewed wealth doesn't need the jump (Holds).** Under walking the wealth at tick 500 is
   right-skewed in every seed: skewness median 1.26 against 1.27 jumping, Gini 0.46 against 0.48.
-- **Seasonal migration survives walking, with fewer migrants (Holds).** A median 55 % of the Flumps
+- **Seasonal migration survives walking, with fewer migrants (Holds).** A median 55 % of the agents
   alive over ticks 100–300 change hemisphere at least twice, against 83 % jumping. Likely cause: a
   walker needs many ticks to cross, so fewer finish before the season or their target changes.
 - **Walking doesn't bring back the waves (Fails, as expected).** The book's II-6 block sends waves
-  toward the far mountain. At tick 100 a median 0.6 % of Flumps are farther than 25 sites (torus
+  toward the far mountain. At tick 100 a median 0.6 % of agents are farther than 25 sites (torus
   distance) from the starting block's center, against 0.8 % jumping and the quarter the claim
   asks for. Walking isn't the missing mechanism.
 - **Baum and Kraft's travel claim fails, in the opposite direction.** They found that requiring
@@ -1591,7 +1591,7 @@ verdicts on claims we set before running:
   roughly 3 standard errors).
 - **A confound in the fenced worlds.** The fences at x = 2 and x = 28 split the torus into 25
   columns on the richer patch's side and 33 on the poorer's, so random placement starts about
-  57 % of Flumps on the poorer side. Its effect isn't measured.
+  57 % of agents on the poorer side. Its effect isn't measured.
 - **The visual barrier: Weak.** Baum and Kraft found a visual barrier had no effect. With an opaque
   wall instead of a fence (same gap), s has median 0.91 against 0.88, and only 10 of 20 seeds are
   within 0.05 of their fence's s. If anything, the wall raises s.
@@ -1603,10 +1603,10 @@ verdicts on claims we set before running:
   apart. All of them sit above the jump's 1.88. s measures how the split tracks the input across
   five patch sizes; the ratio is one point on that line.
 
-**Cost** (µs per Flump-tick: wall-clock over the whole tick with all rules, from the release CLI,
+**Cost** (µs per agent-tick: wall-clock over the whole tick with all rules, from the release CLI,
 2 000 ticks, seeds 1–5, divided by the population summed over the ticks):
 
-| Preset | Movement | µs per Flump-tick |
+| Preset | Movement | µs per agent-tick |
 |---|---|---|
 | `ii-2-unit` | jump (book) | 1.05 |
 | `walk-capacity` | walk, speed 1 | 4.66 |
@@ -1635,14 +1635,14 @@ J. R. Kraft, "Group Choice: Competition, Travel, and the Ideal Free Distribution
 
 This is our own experiment, not a reproduction: the third step of the Minds program
 (`docs/studies/2026-09-27-minds.md`). Rule M sees only what is in sight, and a walker forgets a
-target as soon as it drops out of view. Minds 3 gives Flumps memory of the sites they've seen and a
+target as soon as it drops out of view. Minds 3 gives agents memory of the sites they've seen and a
 belief about what a remembered site holds now. It adds hidden **truffle** spots that only memory can
 exploit. Then it measures memory's value as an information asymmetry: rememberers against
 non-rememberers in the same world, paired seed by seed.
 
-**Memory.** Under `memory.span` > 0 a share of Flumps (`memory.share`, drawn at birth) remember.
+**Memory.** Under `memory.span` > 0 a share of agents (`memory.share`, drawn at birth) remember.
 Each tick, after moving, a rememberer records every site in sight and its own site, with the levels
-it saw and the tick. An entry not seen again for `span` ticks is forgotten, and a Flump holds at
+it saw and the tick. An entry not seen again for `span` ticks is forgotten, and an agent holds at
 most 4 096 sites: past that, the ones seen longest ago go first. Children start with empty
 memories. Memory needs walking, since a remembered site out of sight can only be walked to.
 
@@ -1650,16 +1650,16 @@ memories. Memory needs walking, since a remembered site out of sight can only be
   that plus growback since, capped at the most ever seen there (the docking with Hornvale's
   "dynamics" beliefs).
 - **The choice.** Remembered sites out of sight join the candidates with their believed value, at
-  their torus distance. Rule M and the utility mind then choose as before. The Flump can't see who
+  their torus distance. Rule M and the utility mind then choose as before. The agent can't see who
   stands on a remembered site, so occupancy doesn't filter it; if the target turns out occupied, the
   walker stops one site short, or stays. Remembered sites carry no pollution discount, since the
-  Flump can't see pollution out of sight. Under idle `wander`, a Flump wanders only when nothing in
+  agent can't see pollution out of sight. Under idle `wander`, an agent wanders only when nothing in
   sight or in memory scores above 0, and then only among sites in sight.
 - **The reduction.** With `span` 0 every preset keeps its fingerprint, and memory draws nothing.
 
 **Truffles.** A share of sites (`truffles.share`) hold a hidden spot, placed by a hash of the site
 and `truffles.seed`, never by the world's random numbers. So the layout is the same with memory on
-or off. Nobody sees a spot. A Flump that stops on a ripe one gathers `truffles.value` sugar, and the
+or off. Nobody sees a spot. An agent that stops on a ripe one gathers `truffles.value` sugar, and the
 spot ripens again `truffles.regrow` ticks later. Anyone can find one by chance; only a rememberer can
 come back.
 
@@ -1674,7 +1674,7 @@ running):
   (`mem-catchment`) −90, poorer in every seed, though rememberers reach a patch sooner (median tick
   27.5 against 33). That −90 is on holdings near 100 000 (an endowment so large nobody starves), so
   under 0.1 %. Memory pays only on the trapline world: +69, in every seed (measured with half the
-  Flumps remembering; the preset has everyone remember).
+  agents remembering; the preset has everyone remember).
 - **Pricing travel removes the loss, largely by using memory less; no gain was shown.** Rule M
   values a site by its sugar alone, so a far remembered site believed full beats a near one: rule M
   prices no travel, a likely contributor to the loss. Under the utility mind with travel k = 0.5
@@ -1696,18 +1696,18 @@ running):
   what competitors take in the meantime, and ours doesn't. Staleness alone doesn't separate the two
   beliefs: on `mem-open`, 93 % of choices of a remembered site out of sight find less there than
   believed under `project`, and 95 % under `recall`.
-- **Rememberers find the truffles but lose overall.** On `mem-truffles` they gather 0.0147 truffles a
-  Flump-tick against 0.0065 (ticks 1–500), about 2.3 times as many, more in every seed, yet end
+- **Rememberers find the truffles but lose overall.** On `mem-truffles` they gather 0.0147 truffles
+  an agent-tick against 0.0065 (ticks 1–500), about 2.3 times as many, more in every seed, yet end
   poorer in 18 of 20 seeds.
 - **Traplining appears, and pays.** On `mem-trapline` (truffle spots the main food, everyone
   remembering) Thomson, Slatkin and Thomson's index of return variability (0 for a perfect
   trapliner, 1 for random revisits) has a per-seed median of 0.15, below 0.8 in every seed. With half
   remembering, the non-rememberers' index is 0.36, also well below 1; likely the sparse map channels
-  anyone's wanderings through the same spots. Rememberers gather 0.050 truffles a Flump-tick against
+  anyone's wanderings through the same spots. Rememberers gather 0.050 truffles an agent-tick against
   0.011 and hold 144 sugar against 76, in every seed, as Ohashi and Thomson's "more competitive"
   predicts.
 - **Gill's competition effect fails.** The median interval between visits to the same spot is 50
-  ticks with 5 Flumps and with 20 (regrowth takes 40), and about 12 % of revisits come sooner than
+  ticks with 5 agents and with 20 (regrowth takes 40), and about 12 % of revisits come sooner than
   40 ticks either way.
 - **Forgetting tracking regrowth isn't shown.** Under `recall` (the `mem-span-recall` sweep,
   recomputed per seed in the survey) the advantage is negative at every span and growback rate, so
@@ -1723,7 +1723,7 @@ running):
 - **The marginal value theorem is untestable here.** On `mem-mvt` (nine rich patches, the utility
   mind with travel) foragers who find a patch never leave: 0 departures over 20 seeds, and a median
   5 of 10 alive at tick 1000, each settled on a patch. Two depleting redesigns were tried and
-  withdrawn: with 10 Flumps nobody is alive after tick 200, and with 3 nobody is alive at tick 1000
+  withdrawn: with 10 agents nobody is alive after tick 200, and with 3 nobody is alive at tick 1000
   and only 3 departures happen across 20 seeds. Likely reason: these minds compare the values of
   sites, not rates of intake, and hold no estimate of the habitat's average, so the theorem's
   leave-when-your-rate-falls-to-the-average can't be expressed. With sight only along rows and
@@ -1733,10 +1733,10 @@ The `mem-share` sweep (20 seeds, an observation, not a judged claim) asks whethe
 more when rare. It isn't, on `mem-truffles`: the mean advantage is −88, −73, −76, −86 and −98 at
 shares 0.1, 0.25, 0.5, 0.75 and 0.9 (sd 46–74), negative at every share. No test was run.
 
-**Cost** (µs per Flump-tick, measured as in Minds 2; the machine was loaded, so Minds 2's presets
+**Cost** (µs per agent-tick, measured as in Minds 2; the machine was loaded, so Minds 2's presets
 were re-timed in the same session):
 
-| Preset | µs per Flump-tick |
+| Preset | µs per agent-tick |
 |---|---|
 | `mem-open` | 19.7 |
 | `mem-truffles` | 28.9 |
@@ -1748,14 +1748,14 @@ were re-timed in the same session):
 
 Against `walk-capacity` timed now, memory costs 4.0 times on the open sugarscape and 5.9 times with
 truffles. `mem-walled` is cheaper than `ifd-fence` because its rememberers die; `ifd-fence`'s
-figure also looks inflated by the load. `mem-mvt` ran only 39 519 Flump-ticks, since most Flumps die
+figure also looks inflated by the load. `mem-mvt` ran only 39 519 agent-ticks, since most agents die
 early.
 
 Switches: the Rules panel's **Memory (Minds 3)** group (**Span**, **Share born remembering**, both
 on reset, and **Belief**, live) and **Truffles** group (**Share of sites with a spot** and **Layout
 seed** on reset, **Value** and **Regrow time** live; a live change to regrow time applies to future
 harvests only). Inspect shows "Remembers: n sites (m truffle spots)" or "Doesn't remember", and the
-grid draws the inspected Flump's remembered sites as a faint overlay fading with age, with its known
+grid draws the inspected agent's remembered sites as a faint overlay fading with age, with its known
 truffle spots as circles (filled when believed ripe). Charts: **Memory** (`remembered_moves` and
 `stale_choices`, both shares), **Belief error (sugar)**, **Rememberers vs others** and
 **Truffles**. Truffles need rule M's move to be gathered, so they can't be combined with combat
@@ -1797,7 +1797,7 @@ Two checks, on a STRIPS encoding (Fikes and Nilsson):
   plan's cost equals Dijkstra's, or both find none: 130 non-empty plans, 107 starts already at the
   goal and 263 unsolvable instances.
 
-**The foraging domain.** Under `decision.rule: goap` a Flump plans a run of harvests that gathers
+**The foraging domain.** Under `decision.rule: goap` an agent plans a run of harvests that gathers
 G = metabolism × `goap.horizon` (H ticks of food, default 10) in the fewest ticks.
 
 - **Candidates:** its own site and K others it sees or remembers (`goap.k`, default 8), at Minds 3's
@@ -1808,7 +1808,7 @@ G = metabolism × `goap.horizon` (H ticks of food, default 10) in the fewest tic
   has at most (K + 1)·2^K states.
 - **Heuristic:** ⌈(G − gathered) / the best unharvested value⌉, admissible. On 400 random instances
   the plan's cost equals an uninformed search's.
-- **Executing.** The Flump walks to the plan's first site and keeps the plan until it's invalidated
+- **Executing.** The agent walks to the plan's first site and keeps the plan until it's invalidated
   (the next site is taken, holds less than half what was planned, or can't be reached) or finished.
   Then it replans, following Orkin.
 - **Fallback.** If the known sugar can't reach G, or the search passes 4 096 expansions, it takes
@@ -1822,13 +1822,13 @@ G = metabolism × `goap.horizon` (H ticks of food, default 10) in the fewest tic
 
 **Which sites a plan considers decides the result.** The spec shortlisted the K best known sites by
 value. With the map known, those are the far, full peak centers, so the planner can only plan long
-walks. It shuttles between centers and starves: on the MVT world at spacing 20, 4 of 60 Flumps are
+walks. It shuttles between centers and starves: on the MVT world at spacing 20, 4 of 60 agents are
 alive at tick 1000 (20 seeds, 3 each), against 28 of 60 when the shortlist ranks by value ÷
 (distance + 1). So the default is that rate shortlist, and the spec's value ranking is kept as the
 switch `goap.shortlist: value`.
 
 **The marginal-value rule** (`decision.rule: mvt`) is Constantino and Daw's rule at site level. Each
-Flump keeps ρ, a running mean of its gain per tick (travel ticks count 0; ρ ← ρ + α(gain − ρ),
+agent keeps ρ, a running mean of its gain per tick (travel ticks count 0; ρ ← ρ + α(gain − ρ),
 α = `mvt.alpha`, default 0.05; ρ starts at the metabolism). It stays while the best site within one
 step is believed to yield at least ρ; otherwise it commits to the best site it knows and walks there.
 
@@ -1837,7 +1837,7 @@ tick 0, with its starting level (the theorem's ideal forager); children start em
 memory span. Past Minds 3's cap of 4 096 sites, the richest are kept.
 
 **The theorem's world** (`goap-mvt`, `mvt-rule`): nine patches (peaks of radius 3, height 4, 25
-sites and 56 sugar each) 20 apart on a 60 × 60 torus, with 3 Flumps of metabolism 1, vision 1–6,
+sites and 56 sugar each) 20 apart on a 60 × 60 torus, with 3 agents of metabolism 1, vision 1–6,
 endowment 50, walking, memory for all (span 1 000, `project`, the map known). The design asked that
 a patch run out under one forager while the whole world feeds everyone. At the spec's growback 0.05
 a patch regrows 1.25 a tick, more than one forager eats, so it never runs out. So growback became
@@ -1854,11 +1854,11 @@ The travel tests use the same world at spacings s = 12, 16, 20 and 24 (a 3s × 3
   positive in 19 of 20 (median 0.096), with 11.8, 12.4, 12.7 and 12.9 ticks. Rule M with the same
   knowledge reverses the theorem, with shorter stays at longer travel in 20 of 20 seeds (6.3 down to
   5.0), and so does GOAP with the value shortlist (20 of 20; 7.6, 8.6, 6.8, 5.9). Caveat: survival
-  falls with spacing under every rule, so at s ≥ 20 the residences rest on few Flumps (a median of
+  falls with spacing under every rule, so at s ≥ 20 the residences rest on few agents (a median of
   1 or fewer of the 3 alive at tick 1000), and death cuts visits short.
 - **Overstaying: GOAP Holds as judged, likely only through the walk out; the marginal-value rule
   Fails.**
-  The measure, set before running: at each departure, the gain on the Flump's last tick in the
+  The measure, set before running: at each departure, the gain on the agent's last tick in the
   patch against its mean gain per tick so far. At s = 20, GOAP overstays at a median 57 % of
   departures, over half in 18 of 20 seeds. The marginal-value rule overstays at 39 %, over half in
   0 of 20. That last tick is often the first step out. Without the ticks in transit (reported, not
@@ -1882,8 +1882,8 @@ The travel tests use the same world at spacings s = 12, 16, 20 and 24 (a 3s × 3
 - **The gain is relative to planners who don't remember, not to rule M.** GOAP's non-rememberers
   are much poorer than rule M's (240 against 438 on the open sugarscape, 254 against 430 among
   truffles), while a GOAP rememberer on the open sugarscape (319) is no richer than rule M's (324).
-  GOAP also holds more Flumps (population 200.5 against 176.5 open, 67.3 against 45.8 behind the
-  wall); more Flumps sharing the same sugar is a likely cause, not isolated. A possible bias isn't
+  GOAP also holds more agents (population 200.5 against 176.5 open, 67.3 against 45.8 behind the
+  wall); more agents sharing the same sugar is a likely cause, not isolated. A possible bias isn't
   isolated either: a plan's next site must still be a candidate, and a non-rememberer loses an
   off-axis site from its candidates as soon as it's out of sight, so its plans are dropped sooner.
 
@@ -1892,7 +1892,7 @@ The sweeps (20 seeds, observations, not judged claims):
 - **Horizon** (`goap-horizon`, `ii-2-unit` walking under GOAP, mean population over ticks 300–500):
   143.3 at H = 2, 159.0 at 5, 206.4 at 10, 206.3 at 20 and 195.7 at 40, against 181 for walking
   rule M and 224 for the book's jump. So planning ten ticks of food brings back over half of what
-  walking lost. But on `ii-2-unit` most GOAP decisions are the rate fallback (52 % of Flump-ticks
+  walking lost. But on `ii-2-unit` most GOAP decisions are the rate fallback (52 % of agent-ticks
   against 21 % planned, one seed over 200 ticks), so the gain is likely as much the rate choice as
   the planning. Not isolated.
 - **K** (`goap-k`): 196.5, 207.9, 206.4 and 204.9 at K = 2, 4, 8 and 12 (sd 9.5–11.5): flat within
@@ -1902,10 +1902,10 @@ The sweeps (20 seeds, observations, not judged claims):
   under rule M (−73 to −98). Positive at every share, and not worth more when rare. No test was
   run.
 
-**Cost** (µs per Flump-tick, measured as in Minds 2 and 3; Minds 3's presets re-timed in the same
+**Cost** (µs per agent-tick, measured as in Minds 2 and 3; Minds 3's presets re-timed in the same
 run):
 
-| Preset | µs per Flump-tick |
+| Preset | µs per agent-tick |
 |---|---|
 | `goap-mvt` | 80.7 |
 | `mvt-rule` | 54.2 |
@@ -1921,15 +1921,15 @@ run):
 
 Against rule M in the same world, planning costs 5.8 times on the open sugarscape, 3.1 times with
 truffles and 16 times behind the wall, where rule M's rememberers die. The search never passed its
-limit in any survey world. `goap-mvt` and `mvt-rule` run only 3 Flumps on 3 600 sites, which
+limit in any survey world. `goap-mvt` and `mvt-rule` run only 3 agents on 3 600 sites, which
 inflates both figures.
 
 Switches: the Rules panel's **Decision (Minds 1, 4)** group adds GOAP and the marginal-value rule to
 **Rule** (on reset; both need Movement: Walk), and live **K**, **Horizon**, **Which known sites**
 (rate or value) and **α**. The **Memory** group adds the prior (on reset). Inspect shows a planner's
 "Plan: n steps, gathers ~x of G" and its next target, with its route drawn on the grid, or a
-marginal-value Flump's ρ. Charts: **Planning** (mean plan length) and **Plan use** (plans and
-fallbacks per Flump; plans using memory as a share of plans) under GOAP; **Average rate** and
+marginal-value agent's ρ. Charts: **Planning** (mean plan length) and **Plan use** (plans and
+fallbacks per agent; plans using memory as a share of plans) under GOAP; **Average rate** and
 **Leaving** under the marginal-value rule. Presets: `goap-mvt`, `mvt-rule`, `goap-open`,
 `goap-truffles`, `goap-walled`.
 Built-in sweeps: `goap-horizon`, `goap-k`, `goap-memory`.
