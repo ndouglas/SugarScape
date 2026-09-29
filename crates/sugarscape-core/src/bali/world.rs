@@ -349,8 +349,7 @@ impl BaliWorld {
         }
         let p = Params::of(&self.config, year, self.scenario);
         let adaptive = self.config.decision == Decision::Adaptive;
-        let next: Vec<u8>;
-        if adaptive {
+        let next: Vec<u8> = if adaptive {
             // Plant a three-month crop when the source dam's water per
             // hectare it serves exceeds m_w and the neighborhood's pests are
             // below m_p (Janssen §5; the units are stated choices).
@@ -372,21 +371,19 @@ impl BaliWorld {
             for i in 0..n {
                 self.state.crop[i] = if self.grow_left[i] > 0 { 3 } else { 0 };
             }
-            next = self
-                .grow_left
+            self.grow_left
                 .iter()
                 .map(|&g| if g > 1 { 3 } else { 0 })
-                .collect();
+                .collect()
         } else {
             for (i, &(plan, start)) in self.plans.iter().enumerate() {
                 self.state.crop[i] = crop_of(w, plan, start, m);
             }
-            next = self
-                .plans
+            self.plans
                 .iter()
                 .map(|&(plan, start)| crop_of(w, plan, start, m + 1))
-                .collect();
-        }
+                .collect()
+        };
         month(&self.net, &p, m, &mut self.state, &next, &mut self.rng);
         if adaptive {
             for g in &mut self.grow_left {
@@ -1217,12 +1214,8 @@ mod tests {
         assert_eq!(w.inspect(x as u32, y as u32).unwrap().dam.unwrap().id, 0);
         let s = w.inspect(5, (MAP_H + GAP + 1) as u32).unwrap();
         assert_eq!((s.panel, s.dam.unwrap().id), (Some("strip"), 0));
-        assert_eq!(
-            Model::locate(&w, 6),
-            Some((x as u32, y as u32))
-                .filter(|_| false)
-                .or(Model::locate(&w, 6))
-        );
+        let six = at(ws.subaks[5].x, ws.subaks[5].y);
+        assert_eq!(Model::locate(&w, 6), Some((six.0 as u32, six.1 as u32)));
         assert!(Model::locate(&w, 173).is_none());
     }
 
