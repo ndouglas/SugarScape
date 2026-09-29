@@ -7,6 +7,7 @@ pub mod astar;
 pub mod goap;
 pub mod grid;
 pub mod memory;
+pub mod mvt;
 pub mod utility;
 
 use crate::agent::AgentId;
@@ -21,7 +22,6 @@ pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
         DecisionRule::Book => movement::act(world, id),
         DecisionRule::Utility => utility::act(world, id),
         DecisionRule::Goap => goap::forage::act(world, id),
-        // Task 4/5 replaces this
-        DecisionRule::Mvt => movement::act(world, id),
+        DecisionRule::Mvt => mvt::act(world, id),
     }
 }

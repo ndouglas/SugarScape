@@ -136,8 +136,9 @@ fn goal_of(world: &World, id: AgentId) -> f64 {
 /// to (`plan.target` with an empty path, not where it stands). Its own site
 /// stays first. Returns the list and where its remembered entries start.
 /// Filtering here, not in `candidates_with_memory`, leaves rule M and the
-/// utility mind as they were.
-fn reachable_candidates(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
+/// utility mind as they were. Also used by MVT (Minds 4, Task 5), which
+/// needs the same reachability check.
+pub(crate) fn reachable_candidates(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
     let (all, start) = candidates_with_memory(world, id);
     let a = world.agent(id).expect("live agent");
     let failed = a

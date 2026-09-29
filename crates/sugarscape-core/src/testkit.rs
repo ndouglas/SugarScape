@@ -82,6 +82,8 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         goap_plan: None,
         remembers: false,
         memory: crate::minds::memory::Memory::default(),
+        rate: 0.0,
+        leaving: None,
     }
 }
 

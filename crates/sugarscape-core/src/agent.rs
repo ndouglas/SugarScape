@@ -224,6 +224,18 @@ pub struct Agent {
     /// Minds 3: sites this Flump remembers (observation only: never hashed,
     /// exported or shared, like `social`; empty unless `remembers`).
     pub memory: crate::minds::memory::Memory,
+    /// Minds 4: the marginal value theorem's running estimate ρ of the
+    /// habitat's intake rate (`decision.rule: mvt`), updated from good 0's
+    /// harvest after every move; starts at the Flump's own good-0
+    /// metabolism, with no draw. Clamped at ≥ 0 and never NaN. Never
+    /// hashed, exported or shared, like `plan`.
+    pub rate: f64,
+    /// Minds 4: the site a Flump under MVT has committed to leaving for,
+    /// while its own patch's local value has fallen below ρ; `None` under
+    /// every other rule and while a Flump stays. Cleared on arrival or if
+    /// the site becomes occupied. Never hashed, exported or shared, like
+    /// `plan`.
+    pub leaving: Option<Pos>,
 }
 
 impl Agent {
@@ -264,7 +276,10 @@ impl Agent {
             goap_plan: None,
             remembers: false,
             memory: crate::minds::memory::Memory::default(),
+            rate: 0.0,
+            leaving: None,
         };
+        agent.rate = f64::from(agent.metabolism[0]);
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
         // endowment then metabolism, in good order.
         for (i, good) in config.goods.iter().enumerate().skip(1) {

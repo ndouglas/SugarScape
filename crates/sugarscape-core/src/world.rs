@@ -119,6 +119,9 @@ pub struct TickEvents {
     /// Minds 4: GOAP Flumps that took the rate choice this tick because the
     /// search passed `PLAN_LIMIT` expansions.
     pub fallback_limit: u32,
+    /// Minds 4: MVT Flumps that set `leaving` this tick (their local value
+    /// fell below ρ).
+    pub leaves: u32,
 }
 
 #[derive(Clone)]
