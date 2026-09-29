@@ -365,7 +365,7 @@ this plan):
   as winter intake. After a winter survived on caches, planners forecast a mean 54 and bury a
   median 5.4 in the second summer against 82 in the first. Reported as a finding.
 - **The balance, as measured** (5 seeds, no caching, no carrying limit). walk-capacity's own
-  agents (metabolism 1–4) can't meet (a) at any population, β or γ tried (0.39–0.98): a walker
+  agents (metabolism 1–4) can't meet (a) at any population, β or γ tried (0.38–0.98): a walker
   harvests at most about 3.5 a tick. Ruled world: walk-capacity's landscape, uniform metabolism 1,
   175 agents, γ = 100, β = 32, giving (a) 151.0 against 100 (1.51) and (b) 6 466 against 16 580
   (0.39).

@@ -2069,7 +2069,7 @@ caches) are left for a future campaign.
 **The winter world, balanced as measured.** The spec asked for a world where (a) an agent's summer
 surplus is at least 1.5 times its winter need, and (b) winter regrowth is under half the
 population's winter need, with the settings adjusted mechanically. walk-capacity's own agents
-(metabolism 1–4) can't meet (a) at any population, β or γ tried (0.39–0.98), because a walker
+(metabolism 1–4) can't meet (a) at any population, β or γ tried (0.38–0.98), because a walker
 harvests at most about 3.5 a tick. The ruled world is walk-capacity's landscape with 175 agents of
 metabolism 1 (half remembering for 100 ticks), rule M walking, γ = 100 and β = 32. There (a) is
 151.0 against 100 (1.51) and (b) is 6 466 against 16 580 (0.39), both measured with no caching and
