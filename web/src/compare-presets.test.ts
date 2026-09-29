@@ -49,6 +49,11 @@ describe('compare presets', () => {
     expect(ids).toContainEqual(['zi-c-vs-zip', 'cliff-excess-demand', 'zip-excess-demand', 'ZI-C vs ZIP in a box market — Zero-Intelligence Traders (Compare)']);
   });
 
+  it('pairs imitation with the same plans fixed', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['lk-random-vs-fixed', 'lk-random', 'lk-random-fixed', 'Imitating neighbors vs fixed random plans — Balinese Water Temples (Compare)']);
+  });
+
   it('pairs punishment with its absence', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['bg-base-vs-none', 'bg-base', 'bg-none', 'With vs without punishment — Altruistic Punishment (Compare)']);

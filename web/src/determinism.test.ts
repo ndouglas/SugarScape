@@ -14,6 +14,9 @@ import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
   ZiConfig,
+  BaliConfig,
+  BaliInspection,
+  BaliStats,
   ZiInspection,
   ZiStats,
   PunishmentConfig,
@@ -730,6 +733,29 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the bali model through the engine', () => {
+  it('stops after its last year and inspects a subak, and a dam in the water strip', async () => {
+    const r = presets.find((p) => p.id === 'lk-random')!;
+    const config = { ...structuredClone(r.config as BaliConfig), stop_at: 2 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'temple' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as BaliStats;
+    expect([e.finished, ends, e.tick, s.year]).toEqual([true, 1, 24, 2]);
+    expect(s.harvest).toBeGreaterThan(10);
+    // Subak 6 sits at (−17, −1): pixel ((−17 + 23 + 3) × 8, (28 + 1 + 3) × 8).
+    await e.select(72, 256);
+    const v = e.inspection!.view as BaliInspection;
+    expect([v.panel, v.subak?.id, v.subak?.masceti]).toEqual(['map', 6, 10]);
+    // The strip starts 8 pixels below the 512-pixel map; its first row is dam 0.
+    await e.select(5, 521);
+    const w = e.inspection!.view as BaliInspection;
+    expect([w.panel, w.dam?.id]).toEqual(['strip', 0]);
   });
 });
 

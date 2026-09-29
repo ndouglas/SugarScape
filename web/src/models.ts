@@ -2,6 +2,8 @@
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   ZiInspection,
+  BaliConfig,
+  BaliInspection,
   PunishmentConfig,
   PunishmentInspection,
   RetirementConfig,
@@ -46,7 +48,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -72,12 +74,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   retirement: 'The Timing of Retirement',
   punishment: 'Altruistic Punishment',
   zi: 'Zero-Intelligence Traders',
+  bali: 'Balinese Water Temples',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali'
     ? tag
     : 'sugarscape';
 }
@@ -171,6 +174,11 @@ export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
 }
 
+/** A cell of the bali frame (a panel, a `subak` and a `dam`); check it first. */
+export function isBaliView(v: AnyInspection): v is BaliInspection {
+  return 'panel' in v && 'subak' in v && 'dam' in v;
+}
+
 /** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
 export function isZiView(v: AnyInspection): v is ZiInspection {
   return 'panel' in v && 'trade' in v && 'supply' in v;
@@ -226,6 +234,10 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'thresholds' && (c as ThresholdsConfig).stop_at > 0) return Math.max(0, (c as ThresholdsConfig).stop_at - tick);
   if (modelOf(c) === 'retirement' && (c as RetirementConfig).stop_at > 0) return Math.max(0, (c as RetirementConfig).stop_at - tick);
   if (modelOf(c) === 'punishment' && (c as PunishmentConfig).stop_at > 0) return Math.max(0, (c as PunishmentConfig).stop_at - tick);
+  if (modelOf(c) === 'bali' && (c as BaliConfig).stop_at > 0) {
+    const b = c as BaliConfig;
+    return Math.max(0, b.stop_at * (b.watershed === 'two_node' ? b.node_periods : 12) - tick);
+  }
   return Infinity;
 }
 
@@ -434,6 +446,15 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['profit', 'Profit'],
     ['margin', 'Margin'],
   ],
+  // Plans and start months first; the temples to compare them with; the year's harvest; this month's state.
+  bali: [
+    ['plan', 'Plan'],
+    ['temple', 'Temple'],
+    ['harvest', 'Harvest'],
+    ['pests', 'Pests'],
+    ['water', 'Water'],
+    ['crop', 'Crop'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -460,4 +481,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   retirement: [],
   punishment: [],
   zi: [],
+  bali: [],
 };
