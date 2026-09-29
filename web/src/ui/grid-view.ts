@@ -154,8 +154,31 @@ export class GridView {
       ctx.stroke();
       ctx.restore();
     }
+    // Minds 4: a GOAP Flump's plan, a sparser dashed route from the Flump through its targets
+    // (straight lines between targets; the walk to the next one is the A* path above), each target
+    // ringed.
+    if (agent?.goap && agent.goap.steps.length) {
+      ctx.save();
+      ctx.setLineDash([2, 5]);
+      ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (const [x1, y1, x2, y2] of planSegments([agent.x, agent.y], agent.goap.steps, width, height)) {
+        ctx.moveTo((x1 + 0.5) * CELL, (y1 + 0.5) * CELL);
+        ctx.lineTo((x2 + 0.5) * CELL, (y2 + 0.5) * CELL);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1.5;
+      for (const [x, y] of agent.goap.steps) {
+        ctx.beginPath();
+        ctx.arc((x + 0.5) * CELL, (y + 0.5) * CELL, CELL * 0.45, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
-    const accent = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
+    const accent =getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
     const sel = this.engine.selection;
     if (sel) {
       ctx.strokeStyle = '#000';

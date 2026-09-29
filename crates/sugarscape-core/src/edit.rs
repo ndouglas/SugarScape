@@ -134,6 +134,9 @@ pub struct AgentView {
     /// (or was empty, G = 0). `None` after a dropped plan or a fallback, so
     /// no stale figures show.
     pub goap: Option<GoapView>,
+    /// Minds 4: the Flump's running intake-rate estimate ρ. `Some` only
+    /// under `decision.rule: mvt`.
+    pub rate: Option<f64>,
 }
 
 /// Minds 3: what an agent remembers, for display.
@@ -373,6 +376,7 @@ impl World {
                     gathers: g.gathers,
                     goal: g.goal,
                 }),
+            rate: (self.config.decision.rule == crate::config::DecisionRule::Mvt).then_some(a.rate),
         });
         Ok(Inspection {
             site: SiteView {
@@ -721,6 +725,17 @@ mod tests {
         }
         let m = w.inspect(2, 2).unwrap().agent.unwrap().memory.unwrap();
         assert_eq!((m.remembers, m.sites, m.spots), (true, 2, 1));
+    }
+
+    #[test]
+    fn inspect_shows_the_rate_only_under_mvt() {
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        w.agent_mut(id).unwrap().rate = 1.25;
+        assert!(w.inspect(2, 2).unwrap().agent.unwrap().rate.is_none());
+        w.config.movement.mode = crate::config::MoveMode::Walk;
+        w.config.decision.rule = crate::config::DecisionRule::Mvt;
+        assert_eq!(w.inspect(2, 2).unwrap().agent.unwrap().rate, Some(1.25));
     }
 
     #[test]
