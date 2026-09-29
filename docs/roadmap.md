@@ -289,6 +289,7 @@ calibration is off by five; Cooney's payoff dip appears under every victory rule
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.
+- **Minds 4: GOAP and the marginal value theorem; does memory pay a mind that prices travel** (our experiment; docs/studies/2026-09-27-minds.md): done. Planners stay longer when travel is longer; overstaying isn't shown; memory pays a planner among the living. Minds 5 (caching) next.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

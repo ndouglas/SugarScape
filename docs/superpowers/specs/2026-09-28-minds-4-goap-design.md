@@ -240,3 +240,125 @@ A `minds4` claims module, with pairing as in Minds 3.
     counterpoint).
 - **Roadmap:** the Minds line.
 - **The spec's amendments.**
+
+## Amendments (implementation)
+
+These change or extend the sections above. The measured values are the survey's (20 seeds) and the
+sweeps' (20 seeds), with the source named. The cost figures are the release CLI's.
+
+- **Forward search, as built.** The planner lives in `minds/goap/` (`mod.rs`, `strips.rs`,
+  `forage.rs`). It interns each state to an index for Minds 2's `astar`, computing the state's
+  heuristic and goal flag once. A goal state's only edge goes to a sentinel at cost 0, and the
+  sentinel is A\*'s goal, so reaching a goal costs one extra expansion; the limit of 4 096 counts
+  it. A start that is already a goal returns the empty plan without searching. Actions aren't
+  stored per edge: the path's actions are rebuilt by regenerating each state's actions and taking
+  the first cheapest one that reaches the next state.
+- **STRIPS, as built.** Fact sets are `u128`, not `u64`: blocks at n = 6 has 81 facts and one-truck
+  logistics at n = 6 has 97. The heuristic is (unsatisfied goal facts) × (cheapest action cost) when
+  every action adds at most one goal fact, otherwise 0. The families are recovered from Helmert and
+  Mattmüller: `logistics_trucks` (one truck per city, grounded over reachable facts), n = 1–6;
+  `logistics_one_truck`, n = 1–5, with n = 6 (24 = 4·6, about 62 s and 19.3 M expansions) behind
+  `#[ignore]`; gripper, n = 1–8; blocks, n = 1–6. The 500 random instances (6–12 facts, 4–12
+  actions, costs 1–3) give 130 non-empty plans, 107 starts at a goal and 263 unsolvable; every one
+  matches Dijkstra.
+- **The foraging state, as built.** (slot, harvested mask), with gathered sugar derived from the
+  mask, not stored, so a plan has at most (K + 1)·2^K states. The heuristic is ∞ when nothing
+  unharvested is worth anything. If harvesting every slot still falls short of G, the Flump goes
+  straight to the fallback without searching, so a Flump with no known sugar never searches.
+- **Ruling: ties, as built.** Equal-cost plans take A\*'s deterministic order (lowest f, then h, then
+  push order), and only the fallback's maxima go through `choose`. The reduction test asserts that
+  GOAP's first target has rule M's maximal value and minimal distance, on 200 random neighborhoods
+  where one harvest meets G, not the same draw. The exact-draw variant needs a search per first
+  action. So GOAP's choices among equals can differ from rule M's random ones.
+- **Ruling: the shortlist ranks by rate.** The K candidates are the others ranked by value ÷
+  (distance + 1), the fallback's rate, then distance, then site index. The spec's ranking by value is
+  kept as `goap.shortlist: value` (live). Why: with the map known, the value ranking shortlists only
+  the far peak centers, so the option set, not the planner, decides travel. The planner shuttles
+  between centers and starves: at s = 20, 4 of 60 Flumps are alive at tick 1000 under value against
+  28 of 60 under rate, and under value the travel test reverses (residence falls with spacing in 20
+  of 20 seeds). The finding, that what a planner considers matters more than how it plans, stays
+  visible through the switch.
+- **Invalidation, as built.** The next target holds while it's still among the candidates (in sight,
+  that means unoccupied), holds at least half its planned value when in sight, and can be reached.
+  A remembered target out of sight can't be checked for occupancy; `arrive` stops one step short and
+  the next tick finds it taken. A site walked over is harvested on the way, so a later plan step
+  there fails the half-value check and the Flump replans.
+- **Ruling: unreachable candidates.** GOAP drops `walled_apart` candidates and the target the last
+  walk couldn't reach, in `forage.rs`, before the plan check, the slots and the fallback (not in
+  `candidates_with_memory`, so other rules and golden values are unchanged). The exclusion covers only
+  the last walk: a boxed-in Flump alternates between planning and the fallback and never moves.
+- **Ruling: one good.** `decision.rule: goap` with other than exactly one good is a validation error
+  ("planning (GOAP) needs exactly one good"): welfare over several goods isn't sugar. G is the
+  effective sugar metabolism (disease fee included) × H. `mvt` isn't restricted.
+- **Ruling: counting fallbacks.** `TickEvents` counts `plans`, `plan_steps_sum`,
+  `plans_with_remembered`, `plans_by_rememberers` (for the usage check, which asks about
+  rememberers' plans), `fallback_short` and `fallback_limit`. Only found, non-empty plans count as
+  plans.
+- **The marginal-value rule, as built.** The leave target is the best known site by value, then
+  nearer, then lower index (no draw). A commitment is dropped and redecided the same tick when the
+  target leaves the reachable candidates. ρ is clamped at 0 (`max`, which also absorbs NaN). **Ruling:**
+  a Flump whose best known site is its own doesn't count or set a leave. ρ starts at the metabolism
+  and is set after the agent's draws, so the draw order is unchanged.
+- **`memory.prior: map`, as built.** Only founding rememberers get the map; children and
+  replacements start empty. Past `MEMORY_CAP` (4 096) the richest sites are kept, ties to the lower
+  index. It draws nothing.
+- **Statistics, as built. Ruling:** GOAP adds `fallbacks` and `plans_remembered` beside `replans` and
+  `mean_plan_length`. MVT's `replans` is the share that left. **Ruling:** the page's **Planning**
+  chart holds `mean_plan_length` alone, and **Plan use** holds the three shares on 0–1; under MVT,
+  **Average rate** (`mean_rate`) and **Leaving** (`replans`). The page adds `goap.shortlist` and
+  Inspect's ρ (`AgentView.rate`, MVT only). **Ruling:** choosing GOAP or MVT doesn't switch movement
+  to walk; the validation error and the group note say so, as for Minds 2's walk-only rules.
+- **The theorem's world, balanced as measured.** Each radius-3, height-4 patch has 25 sites and 56
+  sugar (225 sites in all). At the spec's growback 0.05 a patch regrows 25 × 0.05 = 1.25 a tick,
+  at least one forager's need, so it never runs out, and total regrowth is 2.25 times the need of 5.
+  By the rule set before measuring, growback became **0.02** (0.5 a patch) and the population **3**
+  (1.5 times the need). Endowment 50, which the spec left open, is `mem-mvt`'s. Under the rate
+  shortlist a lone planner empties its patch (no site holding 1 or more) by tick 33 and leaves at
+  36; the 5-seed check left 1–2 of 3 alive at tick 1000. `mvt-rule` uses the same world.
+- **The survey's worlds, as built.** The spacing tori are built survey-side from `goap-mvt`
+  reshaped to 3s × 3s with peaks at s/2 + s·i, the same patches, growback 0.02 and 3 Flumps at every
+  s, the map known; a test pins s = 20 to the presets. The reduction `walking_at_vision_one_is_jumping`
+  skips GOAP and MVT presets, which can't be forced to jump.
+- **Ruling: overstaying without transit.** The judge stays the pre-registered literal measure (the
+  last in-patch tick's gain against the realized mean gain per tick). A reported row excludes transit
+  ticks (MVT: `leaving` set; GOAP: the landing site wasn't a plan target, or the fallback) and visits
+  that were all transit. GOAP fallback ticks that stay put count as transit (0.1–0.7 % of ticks).
+- **Sweeps, as built.** `goap-horizon` and `goap-k` base on `ii-2-unit` with walk and GOAP set;
+  `goap-memory` bases on `goap-truffles` and uses `mem-share`'s five shares.
+- **Measured (the survey, 20 seeds; ticks 200–500 for the memory worlds):**
+  - `goap-mvt.travel` **Holds**: slope > 0 in 20 of 20 (median 0.413); residence 18.6, 22.6, 25.7,
+    22.8 at s = 12–24. `mvt-rule.travel` **Holds**: 19 of 20 (median 0.096); 11.8, 12.4, 12.7,
+    12.9. Rule M with the same knowledge: negative in 20 of 20 (6.3, 4.9, 4.9, 5.0). Value
+    shortlist: negative in 20 of 20 (7.6, 8.6, 6.8, 5.9). Survival falls with spacing under every
+    rule.
+  - `goap-mvt.overstay` **Holds**: median 0.571, 18 of 20 above 0.5. `mvt-rule.overstay` **Fails**:
+    0.392, 0 of 20. By spacing, GOAP 0.614, 0.594, 0.571, 0.458; MVT 0.555, 0.452, 0.392, 0.348;
+    rule M 0.089–0.140. Without transit: GOAP 0.325, 0.292, 0.303, 0.201; MVT 0.074, 0.032, 0.021,
+    0.043; no seed above 0.5 at any spacing. GOAP's literal overstaying is likely the walk out, and
+    overstaying falls with travel under both (per-seed slope positive in 1 and 0 of 20), opposite to
+    Constantino and Daw.
+  - `goap-open.advantage` **Holds** +69.4 (19 of 20), `goap-truffles` +98.7 (20 of 20),
+    `goap-walled` +32.8 (20 of 20); rule M −112.6, −82.0, −114.1; Minds 3's travel-priced utility
+    mind +7.4, +1.5, −55. Reported: the dead as 0, +35.1 (18 of 20), +26.3 (14 of 20), +10.2 (15 of
+    20); rememberers' plans using a remembered site out of sight 99.0 %, 97.7 %, 99.3 %; new plans
+    on 21–33 % of Flump-ticks, the short fallback on 30–40 %, the limit fallback on 0 %. GOAP's
+    others are poorer than rule M's (240 against 438 open) and GOAP's population higher (200.5
+    against 176.5). The "still a candidate" rule, which drops a non-rememberer's off-axis target
+    sooner, may bias plan survival toward rememberers; not isolated.
+  - Sweeps (untested): `goap-horizon` 143.3, 159.0, 206.4, 206.3, 195.7 at H = 2, 5, 10, 20, 40
+    (walking rule M 181, jump 224); `goap-k` 196.5, 207.9, 206.4, 204.9 at K = 2, 4, 8, 12;
+    `goap-memory` +90.1, +100.2, +104.4, +99.8, +113.0 at shares 0.1–0.9 (rule M's `mem-share`:
+    −88.5, −73.2, −76.2, −86.1, −98.1).
+  - Usage on `ii-2-unit` (one seed, 200 ticks, a scratch count): planned on 20.8 % of Flump-ticks,
+    the short fallback on 52.3 %, the limit fallback on 0 %.
+- **Cost** (µs per Flump-tick, release CLI, 2 000 ticks, seeds 1–5, run twice, within 6 %):
+  `goap-mvt` 80.7, `mvt-rule` 54.2, `goap-open` 82.2, `goap-truffles` 74.7, `goap-walled` 149.0;
+  re-timed `mem-open` 14.2, `mem-truffles` 24.3, `mem-mvt` 14.6, `mem-walled` 9.1, `walk-capacity`
+  5.58, `ii-2-unit` 1.20. GOAP costs 5.8, 3.1 and 16 times rule M in the same worlds.
+- **Titles** follow the measurements: `goap-mvt` "Planners who price travel stay longer when patches
+  are farther apart"; `mvt-rule` "Leave when a patch falls below your average: stays lengthen only
+  slightly with travel"; `goap-open` "Planners who remember end up richer on the open sugarscape";
+  `goap-truffles` "Planners who remember hidden truffles end up richer while they live";
+  `goap-walled` "Planners who remember what lies beyond the wall end up richer, and most survive".
+- **Minds 5's target** is caching, with Raby et al. (2007) and Amodio et al.'s counterpoint; see the
+  program document.
