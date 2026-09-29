@@ -643,19 +643,19 @@ pub fn presets() -> Vec<ModelPreset> {
         preset(
             "s71-line",
             "Schelling's line",
-            "Fig. 1: 70 stars (Red) and zeros (Blue) at random; each wants at least half of its four neighbors on either side like itself; the discontented, left to right a round at a time, move to the nearest point that suits them. Schelling: \"six clusters … averaging 12 members\", and from tabletop runs \"from about five groupings with an average of 14 members to seven or eight groupings with an average of 9 or 10\".",
+            "Fig. 1: 70 stars (Red) and zeros (Blue) at random; each wants at least half of its four neighbors on either side like itself; the discontented, left to right a round at a time, move to the nearest point that suits them. Schelling: \"six clusters … averaging 12 members\", and from tabletop runs \"from about five groupings with an average of 14 members to seven or eight groupings with an average of 9 or 10\". Measured (20 seeds, 50 rounds, medians): 7 groups of 10, neighbors 0.78 alike; in about half the seeds one or two people are still moving at round 30.",
             |_| {},
         ),
         preset(
             "s71-line-3",
             "Schelling's line, three neighbors each side",
-            "The neighborhood cut to three on either side (p. 152). Schelling: \"a mean of 7 or 8 per cluster … with the average person's neighborhood 75% to 80% his own color\".",
+            "The neighborhood cut to three on either side (p. 152). Schelling: \"a mean of 7 or 8 per cluster … with the average person's neighborhood 75% to 80% his own color\". Measured (20 seeds): groups of 8.75, neighbors 0.79 alike.",
             |c| c.radius = 3,
         ),
         preset(
             "s71-line-minority",
             "Schelling's line with a minority",
-            "Half the zeros (Blue) removed, as Schelling did by die roll (p. 152): 35 stars to 18 zeros. Schelling: \"the minority itself tends to become more segregated from the majority, as its relative size diminishes\".",
+            "Half the zeros (Blue) removed, as Schelling did by die roll (p. 152): 35 stars to 18 zeros. Schelling: \"the minority itself tends to become more segregated from the majority, as its relative size diminishes\". Measured (20 seeds): neighbors 0.85 alike, against 0.78 on the even line; groups of 13.",
             |c| {
                 c.length = 53;
                 c.red_share = 35.0 / 53.0;
@@ -664,7 +664,7 @@ pub fn presets() -> Vec<ModelPreset> {
         preset(
             "s71-line-reach",
             "Schelling's line, movement restricted",
-            "A 20% minority (Blue) that may pass at most 10 people; failing half alike within reach, \"the nearest place where three out of eight occur\" (pp. 153–154; the radius is not given). Schelling: \"everybody achieves his desired neighborhood … without traveling as far\".",
+            "A 20% minority (Blue) that may pass at most 10 people; failing half alike within reach, \"the nearest place where three out of eight occur\" (pp. 153–154; the radius is not given). Schelling: \"everybody achieves his desired neighborhood … without traveling as far\". Measured (20 seeds): 6 % still unsatisfied at round 50 (3 % with no limit on travel).",
             |c| {
                 c.red_share = 0.8;
                 c.reach = 10;

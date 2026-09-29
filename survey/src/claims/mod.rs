@@ -21,6 +21,7 @@ mod norms;
 mod opinions;
 mod punishment;
 mod retirement;
+mod schelling71;
 mod spatial;
 mod structure;
 mod tags;
@@ -54,6 +55,7 @@ pub fn all() -> Vec<Claim> {
         opinions::claims(),
         punishment::claims(),
         retirement::claims(),
+        schelling71::claims(),
         spatial::claims(),
         structure::claims(),
         tags::claims(),

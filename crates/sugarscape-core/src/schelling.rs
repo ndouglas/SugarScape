@@ -1291,21 +1291,21 @@ pub fn presets() -> Vec<ModelPreset> {
             "s71-board",
             "Schelling's checkerboard",
             "Schelling 1971, Figs. 7–8",
-            "Schelling's own model: a 13 × 16 board with edges, 69 stars (Red), 69 zeros (Blue) and 70 blanks at random; each wants \"no fewer than half of one's neighbors\" (the eight surrounding squares, occupied ones counted) to be its color; the discontented move, a round at a time from the upper left, to \"the nearest satisfactory vacant square\".",
+            "Schelling's own model: a 13 × 16 board with edges, 69 stars (Red), 69 zeros (Blue) and 70 blanks at random; each wants \"no fewer than half of one's neighbors\" (the eight surrounding squares, occupied ones counted) to be its color; the discontented move, a round at a time from the upper left, to \"the nearest satisfactory vacant square\". Measured (20 seeds, 60 rounds, medians): still after 3–5 rounds; neighbors 0.80 alike and 38 % with none of the other color, a like-to-unlike ratio of 3.6 — near his Fig. 9 (four-fifths to five-sixths, 40 %), below his Fig. 8 (90 %, two-thirds) and his \"upwards of four to one\".",
             |_| {},
         ),
         preset(
             "s71-center-out",
             "Schelling's checkerboard, from the center out",
             "Schelling 1971, Fig. 9",
-            "As Figs. 7–8, but each round's movers take their turns from the center of the board outwards (\"The particular outcome will depend very much on the order … the character of the outcome not very much\").",
+            "As Figs. 7–8, but each round's movers take their turns from the center of the board outwards (\"The particular outcome will depend very much on the order … the character of the outcome not very much\"). Measured (20 seeds): 0.80 alike, as from the upper left (0.80) and in a random order (0.79).",
             |c| c.sweep = Sweep::CenterOut,
         ),
         preset(
             "s71-third",
             "Asking for a third",
             "Schelling 1971, Fig. 11",
-            "Demands of about one-third: \"one like neighbor out of four or fewer, two out of five or more\". Schelling: the segregation is \"slight when the demand is for about one-third … and striking when the demand is as high as one-half\".",
+            "Demands of about one-third: \"one like neighbor out of four or fewer, two out of five or more\". Schelling: the segregation is \"slight when the demand is for about one-third … and striking when the demand is as high as one-half\". Measured (20 seeds): 0.60 alike, a ratio of 1.35 — under his 1.5.",
             |c| {
                 c.red_demand = at_least([0, 1, 1, 1, 1, 2, 2, 2, 2]);
                 c.blue_demand = at_least([0, 1, 1, 1, 1, 2, 2, 2, 2]);
@@ -1315,7 +1315,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "s71-unequal-demands",
             "One color asks for more",
             "Schelling 1971, Fig. 12",
-            "72 stars (Red) and 77 zeros (Blue). Zeros as Fig. 11; stars \"demand two of their own color if they have three to five neighbors, three if they have six or seven neighbors, and four out of eight\" (with one or two neighbors, unstated: one). Schelling: \"the more demanding end up with a higher proportion of like neighbors, but not much higher\", and more densely settled.",
+            "72 stars (Red) and 77 zeros (Blue). Zeros as Fig. 11; stars \"demand two of their own color if they have three to five neighbors, three if they have six or seven neighbors, and four out of eight\" (with one or two neighbors, unstated: one). Schelling: \"the more demanding end up with a higher proportion of like neighbors, but not much higher\", and more densely settled. Measured (20 seeds): stars 0.67 alike, zeros 0.67; stars average 5.6 neighbors, zeros 4.8.",
             |c| {
                 c.population = 149;
                 c.red_share = 72.0 / 149.0;
@@ -1327,7 +1327,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "s71-minority",
             "A two-to-one minority",
             "Schelling 1971, Fig. 13",
-            "Stars (Red) outnumber zeros (Blue) about two to one; each wants \"a minimum of two neighbors of like color\" (one, with a single neighbor). Schelling: the minority's like-to-unlike ratio goes from about 1:2 to 2:1, and it settles more densely.",
+            "Stars (Red) outnumber zeros (Blue) about two to one; each wants \"a minimum of two neighbors of like color\" (one, with a single neighbor). Schelling: the minority's like-to-unlike ratio goes from about 1:2 to 2:1, and it settles more densely. Measured (20 seeds): the minority goes from 0.35 to 0.57 alike (a ratio of 1.3, short of his 2:1) and averages 5.6 neighbors against the majority's 4.8.",
             |c| {
                 c.red_share = 2.0 / 3.0;
                 c.red_demand = at_least([0, 1, 2, 2, 2, 2, 2, 2, 2]);
@@ -1338,14 +1338,14 @@ pub fn presets() -> Vec<ModelPreset> {
             "s71-wide",
             "Counting 24 neighbors",
             "Schelling 1971, p. 154",
-            "The neighborhood widened to \"the 24 surrounding squares in a 5 × 5 area\", equal numbers, half alike wanted. Schelling (p. 164, stated without a figure): \"Enlarging the area within which a person counts his neighbors attenuates the tendency to segregate, at least for moderate demands and near-equal numbers.\"",
+            "The neighborhood widened to \"the 24 surrounding squares in a 5 × 5 area\", equal numbers, half alike wanted. Schelling (p. 164, stated without a figure): \"Enlarging the area within which a person counts his neighbors attenuates the tendency to segregate, at least for moderate demands and near-equal numbers.\" Measured (20 seeds): 0.77 alike over 24 neighbors, against 0.80 over eight.",
             |c| c.radius = 2,
         ),
         preset(
             "s71-congregate",
             "Wanting company, not separation",
             "Schelling 1971, Fig. 16",
-            "Congregationists: each wants \"three neighbors like himself out of eight surrounding spaces … and to be indifferent to the presence of the opposite color\" (his \"two out of five, along the edge\" is not reproduced: three everywhere). Schelling: like neighbors \"just over 75%\", 38% with none of the other color.",
+            "Congregationists: each wants \"three neighbors like himself out of eight surrounding spaces … and to be indifferent to the presence of the opposite color\" (his \"two out of five, along the edge\" is not reproduced: three everywhere). Schelling: like neighbors \"just over 75%\", 38% with none of the other color. Measured (20 seeds): 0.79 alike, 37 % with none of the other color.",
             |c| {
                 c.red_demand = at_least([3; 9]);
                 c.blue_demand = at_least([3; 9]);
@@ -1355,7 +1355,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "s71-integrate",
             "Wanting a mixed street",
             "Schelling 1971, Fig. 17",
-            "Integrationists: stars (Red) about twice the zeros (Blue); each wants, \"among eight neighbors, at least three and at most six like oneself; among seven, at least three and at most five; among six, at least three and at most four; among five, at least two and at most four; among four, either two or three; among three, either one or two; and one out of two\" (with one neighbor, unstated: either). Schelling: more moves, some who can't be satisfied, a minority \"rationed\", and \"dead spaces\".",
+            "Integrationists: stars (Red) about twice the zeros (Blue); each wants, \"among eight neighbors, at least three and at most six like oneself; among seven, at least three and at most five; among six, at least three and at most four; among five, at least two and at most four; among four, either two or three; among three, either one or two; and one out of two\" (with one neighbor, unstated: either). Schelling: more moves, some who can't be satisfied, a minority \"rationed\", and \"dead spaces\". Measured (20 seeds): 96 moves against the half-alike board's 56; 9 % still unsatisfied when moving stops.",
             |c| {
                 c.red_share = 2.0 / 3.0;
                 let bands = Demand {
