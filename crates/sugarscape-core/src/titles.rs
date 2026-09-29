@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 294] = [
+pub const TITLES: [(&str, &str); 302] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -236,6 +236,38 @@ pub const TITLES: [(&str, &str); 294] = [
     (
         "goap-walled",
         "Planners who remember what lies beyond the wall end up richer, and most survive",
+    ),
+    (
+        "s71-board",
+        "Wanting half your neighbors alike: four in five end up alike",
+    ),
+    (
+        "s71-center-out",
+        "Moving from the center out: a different town, just as sorted",
+    ),
+    (
+        "s71-third",
+        "Wanting a third alike: only slight sorting",
+    ),
+    (
+        "s71-unequal-demands",
+        "The more demanding color ends up more crowded, not more sorted",
+    ),
+    (
+        "s71-minority",
+        "A two-to-one minority ends up more sorted and more crowded",
+    ),
+    (
+        "s71-wide",
+        "Counting 24 neighbors instead of eight: a little less sorting",
+    ),
+    (
+        "s71-congregate",
+        "Wanting company, not separation: four in five alike anyway",
+    ),
+    (
+        "s71-integrate",
+        "Wanting a mixed street: some can never be satisfied",
     ),
     (
         "vi-4-schelling-25",

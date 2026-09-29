@@ -1003,8 +1003,8 @@ mod tests {
         };
         assert_eq!(
             (s.population, s.width),
-            (100, 50),
-            "missing fields take the defaults"
+            (100, 16),
+            "missing fields take the defaults (Schelling's 1971 board)"
         );
         let json = serde_json::to_value(&c).unwrap();
         assert_eq!(json["model"], "schelling");
@@ -1019,11 +1019,11 @@ mod tests {
     #[test]
     fn with_path_sets_another_models_fields() {
         let c = ModelConfig::Schelling(SchellingConfig::default());
-        let next = c.with_path("preference.max", &json!(0.5)).unwrap();
+        let next = c.with_path("preference.max", &json!(0.75)).unwrap();
         let ModelConfig::Schelling(s) = &next else {
             unreachable!()
         };
-        assert_eq!((s.preference.min, s.preference.max), (0.25, 0.5));
+        assert_eq!((s.preference.min, s.preference.max), (0.5, 0.75));
         assert_eq!(
             c.with_path("vision.max", &json!(3)).unwrap_err().message,
             "unknown field vision.max"
