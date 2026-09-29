@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 302] = [
+pub const TITLES: [(&str, &str); 306] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -268,6 +268,22 @@ pub const TITLES: [(&str, &str); 302] = [
     (
         "s71-integrate",
         "Wanting a mixed street: some can never be satisfied",
+    ),
+    (
+        "s71-line",
+        "Wanting half alike on a line: about seven clusters of ten",
+    ),
+    (
+        "s71-line-3",
+        "Counting three neighbors each side: clusters of about nine",
+    ),
+    (
+        "s71-line-minority",
+        "A smaller minority gathers in bigger clusters",
+    ),
+    (
+        "s71-line-reach",
+        "Travel limited: most end content, a few never do",
     ),
     (
         "vi-4-schelling-25",

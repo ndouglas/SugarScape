@@ -16,6 +16,7 @@ use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::farol::{FarolConfig, FarolWorld};
 use crate::image::{ImageConfig, ImageWorld};
+use crate::line::{LineConfig, LineWorld};
 use crate::norms::{NormsConfig, NormsWorld};
 use crate::opinions::{OpinionsConfig, OpinionsWorld};
 use crate::punishment::{PunishmentConfig, PunishmentWorld};
@@ -62,10 +63,11 @@ pub enum ModelKind {
     Retirement,
     Punishment,
     Zi,
+    Line,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 22] = [
+    pub const ALL: [ModelKind; 23] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -88,6 +90,7 @@ impl ModelKind {
         ModelKind::Retirement,
         ModelKind::Punishment,
         ModelKind::Zi,
+        ModelKind::Line,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -114,6 +117,7 @@ impl ModelKind {
             ModelKind::Retirement => "retirement",
             ModelKind::Punishment => "punishment",
             ModelKind::Zi => "zi",
+            ModelKind::Line => "line",
         }
     }
 
@@ -143,6 +147,7 @@ impl ModelKind {
             ModelKind::Retirement => retirement::schema(),
             ModelKind::Punishment => punishment::schema(),
             ModelKind::Zi => zi::schema(),
+            ModelKind::Line => crate::line::schema(),
         }
     }
 }
@@ -178,6 +183,7 @@ pub enum ModelConfig {
     Retirement(RetirementConfig),
     Punishment(PunishmentConfig),
     Zi(ZiConfig),
+    Line(LineConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -205,6 +211,7 @@ enum Tagged<'a> {
     Retirement(&'a RetirementConfig),
     Punishment(&'a PunishmentConfig),
     Zi(&'a ZiConfig),
+    Line(&'a LineConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -239,6 +246,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Retirement(c) => Tagged::Retirement(c).serialize(s),
             ModelConfig::Punishment(c) => Tagged::Punishment(c).serialize(s),
             ModelConfig::Zi(c) => Tagged::Zi(c).serialize(s),
+            ModelConfig::Line(c) => Tagged::Line(c).serialize(s),
         }
     }
 }
@@ -268,6 +276,7 @@ impl ModelConfig {
             ModelConfig::Retirement(_) => ModelKind::Retirement,
             ModelConfig::Punishment(_) => ModelKind::Punishment,
             ModelConfig::Zi(_) => ModelKind::Zi,
+            ModelConfig::Line(_) => ModelKind::Line,
         }
     }
 
@@ -365,6 +374,9 @@ impl ModelConfig {
             "punishment" => serde_json::from_value(value)
                 .map(ModelConfig::Punishment)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "line" => serde_json::from_value(value)
+                .map(ModelConfig::Line)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "zi" => serde_json::from_value(value)
                 .map(ModelConfig::Zi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -401,6 +413,7 @@ impl ModelConfig {
             ModelConfig::Retirement(c) => c.validate(),
             ModelConfig::Punishment(c) => c.validate(),
             ModelConfig::Zi(c) => c.validate(),
+            ModelConfig::Line(c) => c.validate(),
         }
     }
 
@@ -430,6 +443,7 @@ impl ModelConfig {
             ModelConfig::Retirement(c) => set_path(c, path, value).map(ModelConfig::Retirement),
             ModelConfig::Punishment(c) => set_path(c, path, value).map(ModelConfig::Punishment),
             ModelConfig::Zi(c) => set_path(c, path, value).map(ModelConfig::Zi),
+            ModelConfig::Line(c) => set_path(c, path, value).map(ModelConfig::Line),
         }
     }
 
@@ -458,7 +472,8 @@ impl ModelConfig {
             | ModelConfig::Thresholds(_)
             | ModelConfig::Retirement(_)
             | ModelConfig::Punishment(_)
-            | ModelConfig::Zi(_) => None,
+            | ModelConfig::Zi(_)
+            | ModelConfig::Line(_) => None,
         }
     }
 
@@ -493,6 +508,7 @@ impl ModelConfig {
                 punishment::SERIES.iter().map(|s| s.to_string()).collect()
             }
             ModelConfig::Zi(_) => zi::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Line(_) => crate::line::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -684,6 +700,7 @@ pub enum ModelWorld {
     Retirement(Box<RetirementWorld>),
     Punishment(Box<PunishmentWorld>),
     Zi(Box<ZiWorld>),
+    Line(Box<LineWorld>),
 }
 
 impl ModelWorld {
@@ -737,6 +754,7 @@ impl ModelWorld {
                 ModelWorld::Punishment(Box::new(PunishmentWorld::new(c, seed)?))
             }
             ModelConfig::Zi(c) => ModelWorld::Zi(Box::new(ZiWorld::new(c, seed)?)),
+            ModelConfig::Line(c) => ModelWorld::Line(Box::new(LineWorld::new(c, seed)?)),
         })
     }
 
@@ -764,6 +782,7 @@ impl ModelWorld {
             ModelWorld::Retirement(_) => ModelKind::Retirement,
             ModelWorld::Punishment(_) => ModelKind::Punishment,
             ModelWorld::Zi(_) => ModelKind::Zi,
+            ModelWorld::Line(_) => ModelKind::Line,
         }
     }
 
@@ -791,6 +810,7 @@ impl ModelWorld {
             ModelWorld::Retirement(w) => w.as_ref(),
             ModelWorld::Punishment(w) => w.as_ref(),
             ModelWorld::Zi(w) => w.as_ref(),
+            ModelWorld::Line(w) => w.as_ref(),
         }
     }
 
@@ -818,6 +838,7 @@ impl ModelWorld {
             ModelWorld::Retirement(w) => w.as_mut(),
             ModelWorld::Punishment(w) => w.as_mut(),
             ModelWorld::Zi(w) => w.as_mut(),
+            ModelWorld::Line(w) => w.as_mut(),
         }
     }
 
@@ -914,6 +935,7 @@ impl ModelWorld {
             ModelWorld::Retirement(w) => copy_without_history!(Retirement, w),
             ModelWorld::Punishment(w) => copy_without_history!(Punishment, w),
             ModelWorld::Zi(w) => copy_without_history!(Zi, w),
+            ModelWorld::Line(w) => copy_without_history!(Line, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -961,6 +983,7 @@ impl ModelWorld {
             (ModelWorld::Zi(live), ModelWorld::Zi(kept)) => {
                 restore_into!(live, kept)
             }
+            (ModelWorld::Line(live), ModelWorld::Line(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1454,7 +1477,8 @@ mod tests {
                 "thresholds",
                 "retirement",
                 "punishment",
-                "zi"
+                "zi",
+                "line"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

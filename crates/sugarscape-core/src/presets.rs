@@ -1159,6 +1159,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::retirement::presets());
     out.extend(crate::punishment::presets());
     out.extend(crate::zi::presets());
+    out.extend(crate::line::presets());
     out
 }
 
