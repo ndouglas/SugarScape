@@ -414,13 +414,69 @@ pub struct TradeRule {
 
 /// Minds 1: which rule makes rule M's decision (where to move). `Book` is rule
 /// M as stated; `Utility` is `crate::minds::utility`. Rule C still decides
-/// moves under combat.
+/// moves under combat. Minds 4 adds `Goap` (search over candidate sites) and
+/// `Mvt` (the marginal value theorem's stay/leave rule); both need
+/// `movement.mode: walk`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DecisionRule {
     #[default]
     Book,
     Utility,
+    Goap,
+    Mvt,
+}
+
+/// Minds 4: how GOAP picks the `k` known sites a plan considers.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Shortlist {
+    /// The best `k` by believed value ÷ (distance + 1), the fallback's rate
+    /// (then distance, then site index).
+    #[default]
+    Rate,
+    /// The spec's original ranking: believed value alone (then distance,
+    /// then site index). Kept as a named switch: with a known map it
+    /// shortlists only far full sites, so a planner walks from patch to
+    /// patch and never runs one down.
+    Value,
+}
+
+/// Minds 4: GOAP's foraging search — the best `k` known sites by
+/// `shortlist`, and a goal of `horizon` ticks of food.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Goap {
+    /// Known sites a plan considers (1–12), ranked by `shortlist`.
+    pub k: u32,
+    /// Ticks of food the goal asks for: G = metabolism × horizon (1–100).
+    pub horizon: u32,
+    /// How the `k` sites are ranked.
+    pub shortlist: Shortlist,
+}
+
+impl Default for Goap {
+    fn default() -> Self {
+        Self {
+            k: 8,
+            horizon: 10,
+            shortlist: Shortlist::Rate,
+        }
+    }
+}
+
+/// Minds 4: the marginal value theorem's stay/leave rule.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Mvt {
+    /// Smoothing constant for the running rate estimate ρ, in (0, 1].
+    pub alpha: f64,
+}
+
+impl Default for Mvt {
+    fn default() -> Self {
+        Self { alpha: 0.05 }
+    }
 }
 
 /// What the utility mind does when every site it sees scores 0.
@@ -445,6 +501,127 @@ pub struct Decision {
     /// m in the crowding consideration (1 + n)^(−m).
     pub crowding: f64,
     pub idle: Idle,
+}
+
+/// Minds 2: how an agent reaches the site its decision picked.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MoveMode {
+    /// Rule M: arrive in one tick, whatever the distance.
+    #[default]
+    Jump,
+    /// Take `speed` steps along an A* path toward it.
+    Walk,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Movement {
+    pub mode: MoveMode,
+    /// Steps per tick under `walk` (1–50).
+    pub speed: u32,
+}
+
+impl Default for Movement {
+    fn default() -> Self {
+        Self {
+            mode: MoveMode::Jump,
+            speed: 1,
+        }
+    }
+}
+
+/// Minds 2: a rectangle of wall sites. Every site in it is impassable and
+/// holds nothing; `opaque` walls also stop sight (a wall), others don't (a
+/// fence).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Wall {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub opaque: bool,
+}
+
+/// Minds 3: how a Flump reasons about a remembered site it can't currently
+/// see.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Belief {
+    /// Believes the site still holds exactly what it last saw there.
+    Recall,
+    /// Projects growback since it was last seen (the engine's default).
+    #[default]
+    Project,
+}
+
+/// Minds 4: what a founding Flump's memory starts knowing, before it has
+/// seen anything itself. Founders start knowing the map; children start
+/// with empty memory.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MemoryPrior {
+    /// Starts knowing nothing (the book's Flump).
+    #[default]
+    None,
+    /// Starts knowing the whole map: every site in memory, seen at tick 0
+    /// with its starting levels (the theorem's ideal forager). Needs
+    /// `memory.span > 0` — knowing the map is worthless to a Flump that
+    /// can't hold what it learns there.
+    Map,
+}
+
+/// Minds 3: how far and how well Flumps remember sites out of sight.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Memory {
+    /// Ticks a seen site is remembered after it leaves sight (0–10 000); 0
+    /// turns memory off. `span > 0` needs `movement.mode: walk` — a rememberer
+    /// has to be able to walk back to what it recalls.
+    pub span: u32,
+    /// Share of agents born remembering (0–1).
+    pub share: f64,
+    pub belief: Belief,
+    /// Minds 4: what a founder starts knowing (reset-only, unlike `belief`);
+    /// founders start knowing the map, children start with empty memory.
+    pub prior: MemoryPrior,
+}
+
+impl Default for Memory {
+    fn default() -> Self {
+        Self {
+            span: 0,
+            share: 1.0,
+            belief: Belief::Project,
+            prior: MemoryPrior::None,
+        }
+    }
+}
+
+/// Minds 3: truffles, a second growback good placed by hash and hidden until
+/// an agent walks onto its site.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Truffles {
+    /// Share of non-wall sites given a truffle spot (0–1).
+    pub share: f64,
+    /// Sugar value a truffle spot gives when picked (≥ 0).
+    pub value: f64,
+    /// Ticks a picked spot takes to regrow (1–10 000).
+    pub regrow: u32,
+    /// Mixed into the hash that places spots, independent of `World.rng`.
+    pub seed: u32,
+}
+
+impl Default for Truffles {
+    fn default() -> Self {
+        Self {
+            share: 0.0,
+            value: 5.0,
+            regrow: 30,
+            seed: 1,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -613,7 +790,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 12] = [
+pub const RESET_ONLY_PATHS: [&str; 20] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -626,6 +803,14 @@ pub const RESET_ONLY_PATHS: [&str; 12] = [
     "disease.immune_length",
     "decision",
     "decision.rule",
+    "walls",
+    "memory",
+    "memory.span",
+    "memory.share",
+    "memory.prior",
+    "truffles",
+    "truffles.share",
+    "truffles.seed",
 ];
 
 /// Whether a schedule may not set `path` (Decision 5): the goods list, whole
@@ -646,6 +831,7 @@ fn reset_only(path: &str) -> bool {
             | ["culture", "groups"]
             | ["culture", "groups", _]
             | ["culture", "groups", _, "zeros", ..]
+            | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
 }
 
@@ -711,6 +897,12 @@ pub struct Config {
     pub foresight: Foresight,
     pub disease: DiseaseRule,
     pub decision: Decision,
+    pub movement: Movement,
+    pub walls: Vec<Wall>,
+    pub memory: Memory,
+    pub truffles: Truffles,
+    pub goap: Goap,
+    pub mvt: Mvt,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -785,6 +977,12 @@ impl Default for Config {
             },
             disease: DiseaseRule::default(),
             decision: Decision::default(),
+            movement: Movement::default(),
+            walls: Vec::new(),
+            memory: Memory::default(),
+            truffles: Truffles::default(),
+            goap: Goap::default(),
+            mvt: Mvt::default(),
             schedule: Vec::new(),
         }
     }
@@ -1061,6 +1259,47 @@ impl Config {
         );
     }
 
+    /// A row-major mask over the whole grid: `true` where some wall covers
+    /// the site.
+    fn walled_mask(&self) -> Vec<bool> {
+        let (w, h) = (self.width as usize, self.height as usize);
+        let mut walled = vec![false; w * h];
+        for wall in &self.walls {
+            for y in wall.y..wall.y.saturating_add(wall.height).min(self.height) {
+                for x in wall.x..wall.x.saturating_add(wall.width).min(self.width) {
+                    walled[y as usize * w + x as usize] = true;
+                }
+            }
+        }
+        walled
+    }
+
+    /// Sites not covered by any wall (Minds 2).
+    pub fn free_sites(&self) -> usize {
+        if self.walls.is_empty() {
+            return (self.width as usize) * (self.height as usize);
+        }
+        self.walled_mask().iter().filter(|&&b| !b).count()
+    }
+
+    /// Free sites inside the rectangle `(x, y, width, height)`, clipped to
+    /// the grid — the same rectangles `World::populate` places into.
+    fn free_sites_in(&self, x: u32, y: u32, width: u32, height: u32) -> usize {
+        if self.walls.is_empty() {
+            return (width.min(self.width.saturating_sub(x)) as usize)
+                * (height.min(self.height.saturating_sub(y)) as usize);
+        }
+        let w = self.width as usize;
+        let mask = self.walled_mask();
+        (y..y.saturating_add(height).min(self.height))
+            .map(|yy| {
+                (x..x.saturating_add(width).min(self.width))
+                    .filter(|&xx| !mask[yy as usize * w + xx as usize])
+                    .count()
+            })
+            .sum()
+    }
+
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
         self.validate_with_schedule_from(0)
     }
@@ -1122,10 +1361,19 @@ impl Config {
                     "population",
                     "cannot exceed the block's area",
                 );
+                if !self.walls.is_empty() {
+                    let free = self.free_sites_in(x, y, width, height);
+                    e.check(
+                        self.population as usize <= free,
+                        "population",
+                        format!("must be at most the {free} free sites in the block"),
+                    );
+                }
             }
             Placement::Tribes { size } => {
+                let corners_fit = size > 0 && size.saturating_mul(2) <= self.width.min(self.height);
                 e.check(
-                    size > 0 && size.saturating_mul(2) <= self.width.min(self.height),
+                    corners_fit,
                     "placement.size",
                     "the two corner blocks must fit without overlapping",
                 );
@@ -1134,6 +1382,26 @@ impl Config {
                     "population",
                     "cannot exceed the two blocks' area",
                 );
+                if !self.walls.is_empty() && corners_fit {
+                    let blues = (self.population as usize).div_ceil(2);
+                    let reds = self.population as usize - blues;
+                    let free_sw = self.free_sites_in(0, self.height - size, size, size);
+                    let free_ne = self.free_sites_in(self.width - size, 0, size, size);
+                    e.check(
+                        blues <= free_sw,
+                        "population",
+                        format!(
+                            "blues need {blues} in the southwest corner but only {free_sw} are free"
+                        ),
+                    );
+                    e.check(
+                        reds <= free_ne,
+                        "population",
+                        format!(
+                            "reds need {reds} in the northeast corner but only {free_ne} are free"
+                        ),
+                    );
+                }
             }
         }
         let max_vision = self.width.min(self.height) / 2;
@@ -1269,6 +1537,108 @@ impl Config {
             !(dc.rule == DecisionRule::Utility && self.combat.enabled),
             "decision.rule",
             "rule C decides moves under combat",
+        );
+        e.check(
+            !matches!(dc.rule, DecisionRule::Goap | DecisionRule::Mvt)
+                || self.movement.mode == MoveMode::Walk,
+            "decision.rule",
+            "planning and the marginal-value rule walk; set movement.mode to walk",
+        );
+        // A plan sums the values of the sites it harvests against G, sugar
+        // for ticks of burn; with n ≥ 2 goods rule M's values are foresight
+        // welfare, which doesn't sum to an amount.
+        e.check(
+            dc.rule != DecisionRule::Goap || self.goods.len() == 1,
+            "decision.rule",
+            "planning (GOAP) needs exactly one good",
+        );
+        // ρ is good 0's harvest per tick; with n ≥ 2 goods a site's value is
+        // foresight welfare, a stock rather than a rate, so the rule would
+        // never compare it to ρ and would never leave.
+        e.check(
+            dc.rule != DecisionRule::Mvt || self.goods.len() == 1,
+            "decision.rule",
+            "the marginal-value rule needs exactly one good",
+        );
+        e.check(
+            (1..=12).contains(&self.goap.k),
+            "goap.k",
+            "must be between 1 and 12",
+        );
+        e.check(
+            (1..=100).contains(&self.goap.horizon),
+            "goap.horizon",
+            "must be between 1 and 100",
+        );
+        e.check(
+            self.mvt.alpha.is_finite() && self.mvt.alpha > 0.0 && self.mvt.alpha <= 1.0,
+            "mvt.alpha",
+            "must be greater than 0 and at most 1",
+        );
+        e.check(
+            (1..=50).contains(&self.movement.speed),
+            "movement.speed",
+            "must be between 1 and 50",
+        );
+        e.check(
+            !(self.movement.mode == MoveMode::Walk && self.combat.enabled),
+            "movement.mode",
+            "rule C jumps; walking combat isn't defined",
+        );
+        for (i, wall) in self.walls.iter().enumerate() {
+            e.check(
+                wall.width >= 1
+                    && wall.height >= 1
+                    && wall.x.saturating_add(wall.width) <= self.width
+                    && wall.y.saturating_add(wall.height) <= self.height,
+                &format!("walls.{i}"),
+                "must be a nonempty rectangle inside the grid",
+            );
+        }
+        if !self.walls.is_empty() {
+            let free = self.free_sites();
+            e.check(free > 0, "walls", "walls may not cover every site");
+            e.check(
+                free == 0 || self.population as usize <= free,
+                "population",
+                format!("must be at most the {free} sites not covered by walls"),
+            );
+        }
+        e.check(
+            (0..=10_000).contains(&self.memory.span),
+            "memory.span",
+            "must be between 0 and 10000",
+        );
+        e.check(
+            (0.0..=1.0).contains(&self.memory.share),
+            "memory.share",
+            "must be between 0 and 1",
+        );
+        e.check(
+            self.memory.span == 0 || self.movement.mode == MoveMode::Walk,
+            "memory.span",
+            "remembered sites out of sight can only be walked to",
+        );
+        e.check(
+            self.memory.prior != MemoryPrior::Map || self.memory.span > 0,
+            "memory.prior",
+            "knowing the map needs memory (span > 0)",
+        );
+        e.check(
+            (0.0..=1.0).contains(&self.truffles.share),
+            "truffles.share",
+            "must be between 0 and 1",
+        );
+        e.check(
+            self.truffles.share == 0.0 || !self.combat.enabled,
+            "truffles.share",
+            "truffles are gathered by rule M's move; combat (rule C) doesn't gather them",
+        );
+        e.non_negative(self.truffles.value, "truffles.value");
+        e.check(
+            (1..=10_000).contains(&self.truffles.regrow),
+            "truffles.regrow",
+            "must be between 1 and 10000",
         );
         e.check(self.credit.duration >= 1, "credit.duration", "must be ≥ 1");
         e.non_negative(self.credit.rate, "credit.rate");
@@ -1453,6 +1823,24 @@ impl Config {
         }
         if self.decision.rule != next.decision.rule {
             out.push(FieldError::new("decision.rule", msg));
+        }
+        if self.walls != next.walls {
+            out.push(FieldError::new("walls", msg));
+        }
+        if self.memory.span != next.memory.span {
+            out.push(FieldError::new("memory.span", msg));
+        }
+        if self.memory.share != next.memory.share {
+            out.push(FieldError::new("memory.share", msg));
+        }
+        if self.memory.prior != next.memory.prior {
+            out.push(FieldError::new("memory.prior", msg));
+        }
+        if self.truffles.share != next.truffles.share {
+            out.push(FieldError::new("truffles.share", msg));
+        }
+        if self.truffles.seed != next.truffles.seed {
+            out.push(FieldError::new("truffles.seed", msg));
         }
         out
     }
@@ -2726,5 +3114,552 @@ mod tests {
             ..Default::default()
         };
         c.validate().unwrap();
+    }
+
+    #[test]
+    fn movement_and_walls_default_to_the_book_and_older_configs_load() {
+        let d = Config::default();
+        assert_eq!(
+            d.movement,
+            Movement {
+                mode: MoveMode::Jump,
+                speed: 1
+            }
+        );
+        assert!(d.walls.is_empty());
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.remove("movement");
+        o.remove("walls");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!((c.movement, c.walls.len()), (Movement::default(), 0));
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["movement"] = serde_json::json!({ "mode": "walk" });
+        assert_eq!(
+            Config::from_value(v).unwrap().movement,
+            Movement {
+                mode: MoveMode::Walk,
+                speed: 1
+            }
+        );
+    }
+
+    #[test]
+    fn movement_and_walls_are_validated() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(&|c| c.movement.speed = 50).is_empty());
+        assert_eq!(with(&|c| c.movement.speed = 0), ["movement.speed"]);
+        assert_eq!(with(&|c| c.movement.speed = 51), ["movement.speed"]);
+        assert_eq!(
+            with(&|c| {
+                c.movement.mode = MoveMode::Walk;
+                c.combat.enabled = true;
+            }),
+            ["movement.mode"]
+        );
+        let wall = |x, y, width, height| Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque: true,
+        };
+        assert!(with(&|c| c.walls = vec![wall(0, 0, 50, 1)]).is_empty());
+        assert_eq!(with(&|c| c.walls = vec![wall(45, 0, 6, 1)]), ["walls.0"]); // past the edge
+        assert_eq!(with(&|c| c.walls = vec![wall(0, 0, 0, 1)]), ["walls.0"]); // empty
+        assert_eq!(with(&|c| c.walls = vec![wall(0, 0, 50, 50)]), ["walls"]); // every site
+                                                                              // 400 Flumps need 400 free sites: 50×50 minus a 50×43 block leaves 350.
+        assert_eq!(
+            with(&|c| c.walls = vec![wall(0, 0, 50, 43)]),
+            ["population"]
+        );
+    }
+
+    #[test]
+    fn free_sites_count_each_walled_site_once() {
+        let mut c = Config::default();
+        let wall = |x, y, width, height| Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque: false,
+        };
+        assert_eq!(c.free_sites(), 2500);
+        c.walls = vec![wall(0, 0, 10, 1), wall(5, 0, 10, 2)]; // overlapping
+        assert_eq!(c.free_sites(), 2500 - (15 + 10));
+    }
+
+    #[test]
+    fn a_walled_block_validates_against_the_blocks_own_free_sites() {
+        let wall = |x, y, width, height| Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque: false,
+        };
+        let with = |walls: Vec<Wall>, population: u32| {
+            let c = Config {
+                placement: Placement::Block {
+                    x: 0,
+                    y: 0,
+                    width: 10,
+                    height: 10,
+                },
+                population,
+                walls,
+                ..Config::default()
+            };
+            fields(c.validate())
+        };
+        // The block is 100 sites; a wall covers half (50), leaving 50 free.
+        // 80 fits the block's area (100) but not its 50 free sites.
+        assert_eq!(with(vec![wall(0, 0, 10, 5)], 80), ["population"]);
+        // The same wall, with a population the 50 free sites can hold.
+        assert!(with(vec![wall(0, 0, 10, 5)], 40).is_empty());
+        // A wall entirely outside the block: the block is still fully free.
+        assert!(with(vec![wall(20, 20, 10, 10)], 100).is_empty());
+    }
+
+    #[test]
+    fn walled_tribes_corners_validate_against_their_own_free_sites() {
+        let wall = |x, y, width, height| Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque: false,
+        };
+        let with = |walls: Vec<Wall>, population: u32| {
+            let c = Config {
+                placement: Placement::Tribes { size: 10 },
+                population,
+                walls,
+                ..Config::default()
+            };
+            fields(c.validate())
+        };
+        // The southwest corner (0, 40, 10, 10) is 100 sites; this wall covers
+        // 40, leaving 60 free. 130 needs 65 blues (ceil(130/2)), which the
+        // 60 free southwest sites can't hold, though the unwalled 100-site
+        // northeast corner easily holds the 65 reds.
+        assert_eq!(with(vec![wall(0, 40, 10, 4)], 130), ["population"]);
+        // The same wall, with a population the 60 free sites can hold.
+        assert!(with(vec![wall(0, 40, 10, 4)], 100).is_empty());
+        // A wall outside both corners: both stay fully free.
+        assert!(with(vec![wall(20, 20, 10, 10)], 150).is_empty());
+    }
+
+    #[test]
+    fn walls_change_only_on_reset_and_movement_lives() {
+        let a = Config::default();
+        let mut b = a.clone();
+        b.walls = vec![Wall {
+            x: 1,
+            y: 1,
+            width: 1,
+            height: 1,
+            opaque: true,
+        }];
+        let f: Vec<String> = a
+            .structural_changes(&b)
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert_eq!(f, ["walls"]);
+        let mut b = a.clone();
+        b.movement = Movement {
+            mode: MoveMode::Walk,
+            speed: 3,
+        };
+        assert!(a.structural_changes(&b).is_empty());
+        for (path, value) in [
+            ("walls", serde_json::json!([])),
+            (
+                "walls.0",
+                serde_json::json!({ "x": 0, "y": 0, "width": 1, "height": 1, "opaque": true }),
+            ),
+        ] {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
+        let c = Config {
+            schedule: vec![
+                change(5, "movement.mode", serde_json::json!("walk")),
+                change(6, "movement.speed", serde_json::json!(4)),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+    }
+
+    #[test]
+    fn memory_and_truffles_default_to_the_book_and_older_configs_load() {
+        let d = Config::default();
+        assert_eq!(
+            d.memory,
+            Memory {
+                span: 0,
+                share: 1.0,
+                belief: Belief::Project,
+                prior: MemoryPrior::None,
+            }
+        );
+        assert_eq!(
+            d.truffles,
+            Truffles {
+                share: 0.0,
+                value: 5.0,
+                regrow: 30,
+                seed: 1,
+            }
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.remove("memory");
+        o.remove("truffles");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!(
+            (c.memory, c.truffles),
+            (Memory::default(), Truffles::default())
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["memory"] = serde_json::json!({ "span": 50 });
+        assert_eq!(
+            Config::from_value(v).unwrap().memory,
+            Memory {
+                span: 50,
+                share: 1.0,
+                belief: Belief::Project,
+                prior: MemoryPrior::None,
+            }
+        );
+    }
+
+    #[test]
+    fn memory_and_truffles_are_validated() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(&|c| {
+            c.movement.mode = MoveMode::Walk;
+            c.memory.span = 10_000;
+        })
+        .is_empty());
+        assert_eq!(
+            with(&|c| {
+                c.movement.mode = MoveMode::Walk;
+                c.memory.span = 10_001;
+            }),
+            ["memory.span"]
+        );
+        assert!(with(&|c| c.memory.share = 0.0).is_empty());
+        assert_eq!(with(&|c| c.memory.share = 1.5), ["memory.share"]);
+        assert_eq!(with(&|c| c.memory.share = f64::NAN), ["memory.share"]);
+        // The default movement is `jump`, which can't walk to a remembered site.
+        assert_eq!(with(&|c| c.memory.span = 5), ["memory.span"]);
+        assert!(with(&|c| {
+            c.movement.mode = MoveMode::Walk;
+            c.memory.span = 5;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.memory.span = 5;
+        let errs = c.validate().unwrap_err();
+        assert!(
+            errs[0]
+                .message
+                .contains("remembered sites out of sight can only be walked to"),
+            "{errs:?}"
+        );
+        assert!(with(&|c| c.truffles.share = 1.0).is_empty());
+        assert_eq!(with(&|c| c.truffles.share = 1.5), ["truffles.share"]);
+        assert_eq!(with(&|c| c.truffles.value = -1.0), ["truffles.value"]);
+        assert_eq!(with(&|c| c.truffles.value = f64::NAN), ["truffles.value"]);
+        assert!(with(&|c| c.truffles.regrow = 1).is_empty());
+        assert!(with(&|c| c.truffles.regrow = 10_000).is_empty());
+        assert_eq!(with(&|c| c.truffles.regrow = 0), ["truffles.regrow"]);
+        assert_eq!(with(&|c| c.truffles.regrow = 10_001), ["truffles.regrow"]);
+        // Rule C never calls rule M's gather, so truffles would sit unpicked.
+        assert!(with(&|c| c.combat.enabled = true).is_empty());
+        assert_eq!(
+            with(&|c| {
+                c.combat.enabled = true;
+                c.truffles.share = 0.5;
+            }),
+            ["truffles.share"]
+        );
+        let mut c = Config::default();
+        c.combat.enabled = true;
+        c.truffles.share = 0.5;
+        let errs = c.validate().unwrap_err();
+        assert_eq!(
+            errs[0].message,
+            "truffles are gathered by rule M's move; combat (rule C) doesn't gather them"
+        );
+    }
+
+    #[test]
+    fn memory_and_truffles_are_reset_only_except_belief_value_and_regrow() {
+        let a = Config::default();
+        let changed = |f: &dyn Fn(&mut Config)| {
+            let mut b = a.clone();
+            f(&mut b);
+            a.structural_changes(&b)
+                .into_iter()
+                .map(|e| e.field)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            changed(&|c| {
+                c.movement.mode = MoveMode::Walk;
+                c.memory.span = 10;
+            }),
+            ["memory.span"]
+        );
+        assert_eq!(changed(&|c| c.memory.share = 0.5), ["memory.share"]);
+        assert_eq!(changed(&|c| c.truffles.share = 0.5), ["truffles.share"]);
+        assert_eq!(changed(&|c| c.truffles.seed = 2), ["truffles.seed"]);
+        assert!(changed(&|c| {
+            c.memory.belief = Belief::Recall;
+            c.truffles.value = 10.0;
+            c.truffles.regrow = 50;
+        })
+        .is_empty());
+
+        // A schedule may set `memory.belief` and `truffles.regrow` live.
+        let c = Config {
+            schedule: vec![
+                change(5, "memory.belief", serde_json::json!("recall")),
+                change(6, "truffles.regrow", serde_json::json!(50)),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+
+        // But `memory.span`, `memory` and `truffles.share` change only on reset.
+        for (path, value) in [
+            ("memory.span", serde_json::json!(5)),
+            (
+                "memory",
+                serde_json::json!({ "span": 0, "share": 1.0, "belief": "project" }),
+            ),
+            ("truffles.share", serde_json::json!(0.5)),
+        ] {
+            let c = Config {
+                schedule: vec![change(5, path, value)],
+                ..Default::default()
+            };
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn goap_and_mvt_default_to_the_book_and_older_configs_load() {
+        let d = Config::default();
+        assert_eq!(
+            d.goap,
+            Goap {
+                k: 8,
+                horizon: 10,
+                shortlist: Shortlist::Rate
+            }
+        );
+        assert_eq!(d.mvt, Mvt { alpha: 0.05 });
+        assert_eq!(d.memory.prior, MemoryPrior::None);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.remove("goap");
+        o.remove("mvt");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!((c.goap, c.mvt), (Goap::default(), Mvt::default()));
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.get_mut("memory")
+            .unwrap()
+            .as_object_mut()
+            .unwrap()
+            .remove("prior");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!(c.memory.prior, MemoryPrior::None);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["goap"] = serde_json::json!({ "k": 3 });
+        assert_eq!(
+            Config::from_value(v).unwrap().goap,
+            Goap {
+                k: 3,
+                horizon: 10,
+                shortlist: Shortlist::Rate
+            }
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        assert_eq!(v["goap"]["shortlist"], serde_json::json!("rate"));
+        v["goap"]["shortlist"] = serde_json::json!("value");
+        assert_eq!(
+            Config::from_value(v).unwrap().goap.shortlist,
+            Shortlist::Value
+        );
+    }
+
+    #[test]
+    fn goap_mvt_and_prior_are_validated() {
+        let with = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            fields(c.validate())
+        };
+        assert!(with(&|c| c.goap.k = 1).is_empty());
+        assert!(with(&|c| c.goap.k = 12).is_empty());
+        assert_eq!(with(&|c| c.goap.k = 0), ["goap.k"]);
+        assert_eq!(with(&|c| c.goap.k = 13), ["goap.k"]);
+        assert!(with(&|c| c.goap.horizon = 1).is_empty());
+        assert!(with(&|c| c.goap.horizon = 100).is_empty());
+        assert_eq!(with(&|c| c.goap.horizon = 0), ["goap.horizon"]);
+        assert_eq!(with(&|c| c.goap.horizon = 101), ["goap.horizon"]);
+        assert!(with(&|c| c.mvt.alpha = 1.0).is_empty());
+        assert!(with(&|c| c.mvt.alpha = 0.001).is_empty());
+        assert_eq!(with(&|c| c.mvt.alpha = 0.0), ["mvt.alpha"]);
+        assert_eq!(with(&|c| c.mvt.alpha = 1.5), ["mvt.alpha"]);
+        assert_eq!(with(&|c| c.mvt.alpha = -0.1), ["mvt.alpha"]);
+        assert_eq!(with(&|c| c.mvt.alpha = f64::NAN), ["mvt.alpha"]);
+
+        // GOAP and MVT need movement.mode: walk (the default is jump).
+        assert_eq!(
+            with(&|c| c.decision.rule = DecisionRule::Goap),
+            ["decision.rule"]
+        );
+        assert_eq!(
+            with(&|c| c.decision.rule = DecisionRule::Mvt),
+            ["decision.rule"]
+        );
+        assert!(with(&|c| {
+            c.decision.rule = DecisionRule::Goap;
+            c.movement.mode = MoveMode::Walk;
+        })
+        .is_empty());
+        assert!(with(&|c| {
+            c.decision.rule = DecisionRule::Mvt;
+            c.movement.mode = MoveMode::Walk;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.decision.rule = DecisionRule::Goap;
+        let errs = c.validate().unwrap_err();
+        assert_eq!(
+            errs[0].message,
+            "planning and the marginal-value rule walk; set movement.mode to walk"
+        );
+        // GOAP and the marginal-value rule both need exactly one good.
+        let mut c = Config::default();
+        c.decision.rule = DecisionRule::Goap;
+        c.movement.mode = MoveMode::Walk;
+        c.add_good(Good::spice());
+        let errs = c.validate().unwrap_err();
+        assert_eq!(errs.len(), 1);
+        assert_eq!(errs[0].field, "decision.rule");
+        assert_eq!(errs[0].message, "planning (GOAP) needs exactly one good");
+        c.decision.rule = DecisionRule::Mvt;
+        let errs = c.validate().unwrap_err();
+        assert_eq!(errs.len(), 1);
+        assert_eq!(errs[0].field, "decision.rule");
+        assert_eq!(
+            errs[0].message,
+            "the marginal-value rule needs exactly one good"
+        );
+
+        // `memory.prior: map` needs `memory.span > 0`.
+        assert_eq!(
+            with(&|c| c.memory.prior = MemoryPrior::Map),
+            ["memory.prior"]
+        );
+        assert!(with(&|c| {
+            c.memory.prior = MemoryPrior::Map;
+            c.movement.mode = MoveMode::Walk;
+            c.memory.span = 10;
+        })
+        .is_empty());
+        let mut c = Config::default();
+        c.memory.prior = MemoryPrior::Map;
+        let errs = c.validate().unwrap_err();
+        assert!(
+            errs.iter().any(|e| e.field == "memory.prior"
+                && e.message == "knowing the map needs memory (span > 0)"),
+            "{errs:?}"
+        );
+    }
+
+    #[test]
+    fn goap_and_mvt_knobs_live_and_prior_is_reset_only() {
+        let a = Config::default();
+        // `decision.rule` is already reset-only (checked elsewhere); the
+        // knobs themselves are not.
+        let f: Vec<String> = a
+            .structural_changes(&{
+                let mut c = a.clone();
+                c.goap.k = 4;
+                c.goap.horizon = 20;
+                c.goap.shortlist = Shortlist::Value;
+                c.mvt.alpha = 0.2;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert!(f.is_empty());
+        let c = Config {
+            movement: Movement {
+                mode: MoveMode::Walk,
+                speed: 1,
+            },
+            decision: Decision {
+                rule: DecisionRule::Goap,
+                ..Decision::default()
+            },
+            schedule: vec![
+                change(5, "goap.k", serde_json::json!(4)),
+                change(6, "goap.horizon", serde_json::json!(20)),
+                change(7, "mvt.alpha", serde_json::json!(0.2)),
+                change(8, "goap.shortlist", serde_json::json!("value")),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+
+        // `memory.prior` changes only on reset.
+        assert_eq!(
+            a.structural_changes(&{
+                let mut c = a.clone();
+                c.memory.prior = MemoryPrior::Map;
+                c
+            })
+            .into_iter()
+            .map(|e| e.field)
+            .collect::<Vec<_>>(),
+            ["memory.prior"]
+        );
+        let c = Config {
+            schedule: vec![change(5, "memory.prior", serde_json::json!("map"))],
+            ..Default::default()
+        };
+        let errs = c.validate().unwrap_err();
+        assert!(errs[0].message.contains("only on reset"), "{errs:?}");
     }
 }

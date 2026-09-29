@@ -88,6 +88,44 @@ pub struct TickEvents {
     pub amount_lent: f64,
     pub defaults: u32,
     pub infections: Vec<Infection>,
+    /// Minds 3: truffle spots harvested this tick.
+    pub truffles_found: u32,
+    /// Minds 3: of `truffles_found`, how many were harvested by a rememberer.
+    pub truffles_by_rememberers: u32,
+    /// Minds 3: choices of where to go made this tick by rememberers.
+    pub moves: u32,
+    /// Minds 3: of `moves`, those whose target was a remembered site out of
+    /// sight.
+    pub remembered_moves: u32,
+    /// Minds 3: Σ |believed − true| welfare over the `remembered_moves`,
+    /// measured when the target is chosen (not on arrival). Remembered
+    /// values carry no pollution discount, so under pollution the error
+    /// includes pollution the Flump couldn't see.
+    pub belief_error_sum: f64,
+    /// Minds 3: of `remembered_moves`, those whose target was truly worth
+    /// less than believed when chosen.
+    pub stale_choices: u32,
+    /// Minds 4: GOAP plans made this tick (found, with at least one step;
+    /// the fallback and an empty plan aren't counted).
+    pub plans: u32,
+    /// Minds 4: Σ steps over this tick's `plans`.
+    pub plan_steps_sum: u32,
+    /// Minds 4: of `plans`, those with any target from the Flump's
+    /// remembered entries out of sight (the usage check Minds 3 taught).
+    pub plans_with_remembered: u32,
+    /// Minds 4: of `plans`, those made by rememberers (the denominator of
+    /// the rememberers' usage share; only a rememberer's plan can hold a
+    /// remembered site).
+    pub plans_by_rememberers: u32,
+    /// Minds 4: GOAP Flumps that took the rate choice this tick because the
+    /// sugar they know of (their slots, all harvested) falls short of G.
+    pub fallback_short: u32,
+    /// Minds 4: GOAP Flumps that took the rate choice this tick because the
+    /// search passed `PLAN_LIMIT` expansions.
+    pub fallback_limit: u32,
+    /// Minds 4: MVT Flumps that set `leaving` this tick (their local value
+    /// fell below ρ).
+    pub leaves: u32,
 }
 
 #[derive(Clone)]
@@ -97,10 +135,24 @@ pub struct World {
     /// Completed ticks.
     pub tick: u64,
     pub sites: Vec<Site>,
+    /// Minds 3: truffle spots, row-major, one entry per site. `None` is no
+    /// spot; `Some(t)` is a spot ripe again at tick `t` (ripe now when
+    /// `t <= tick`). Built once from `config.truffles` (placed by hash, not
+    /// `World.rng`; walls never get a spot); empty when `truffles.share` is
+    /// 0, so `truffle` answers `None` everywhere without a lookup.
+    pub truffles: Vec<Option<u64>>,
     /// Chapter V's master list of diseases; a disease's id is its index.
     pub diseases: Vec<Bits>,
     agents: BTreeMap<AgentId, Agent>,
     occupancy: Vec<Option<AgentId>>,
+    /// Row-major, one entry per site: 0 free, 1 a fence, 2 opaque. Built once
+    /// from `config.walls` (walls change only on reset); all zero when there
+    /// are none.
+    pub(crate) walls: Vec<u8>,
+    /// Row-major: each non-wall site's connected component among the
+    /// non-wall sites (4-way, on the torus); walls get `u32::MAX`. Built once
+    /// with `walls`; empty when there are none, and then never consulted.
+    pub(crate) regions: Vec<u32>,
     pub(crate) rng: SimRng,
     next_id: AgentId,
     pub(crate) events: TickEvents,
@@ -162,22 +214,59 @@ impl World {
                 None => maps.push(landscape::generate(&good.map, config.width, config.height)),
             }
         }
+        let mut walls = vec![0u8; torus.len()];
+        for wall in &config.walls {
+            let mark = if wall.opaque { 2 } else { 1 };
+            for y in wall.y..wall.y.saturating_add(wall.height).min(config.height) {
+                for x in wall.x..wall.x.saturating_add(wall.width).min(config.width) {
+                    let i = torus.index(Pos::new(x, y));
+                    // Opaque wins where rectangles overlap.
+                    walls[i] = walls[i].max(mark);
+                }
+            }
+        }
         let sites = (0..torus.len())
             .map(|s| {
                 let mut caps = [0.0; MAX_GOODS];
-                for (slot, map) in caps.iter_mut().zip(&maps) {
-                    *slot = map[s];
+                if walls[s] == 0 {
+                    for (slot, map) in caps.iter_mut().zip(&maps) {
+                        *slot = map[s];
+                    }
                 }
                 Site::full(&caps[..n])
             })
             .collect();
+        let regions = if config.walls.is_empty() {
+            Vec::new()
+        } else {
+            label_regions(torus, &walls)
+        };
+        let truffles: Vec<Option<u64>> = if config.truffles.share <= 0.0 {
+            Vec::new()
+        } else {
+            (0..torus.len())
+                .map(|s| {
+                    if walls[s] != 0 {
+                        return None;
+                    }
+                    if rules::truffles::has_spot(s, config.truffles.seed, config.truffles.share) {
+                        Some(0u64)
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        };
         let mut world = World {
             torus,
             tick: 0,
             sites,
+            truffles,
             diseases: Vec::new(),
             agents: BTreeMap::new(),
             occupancy: vec![None; torus.len()],
+            walls,
+            regions,
             rng: rng::seeded(seed),
             next_id: 1,
             events: TickEvents::default(),
@@ -192,6 +281,11 @@ impl World {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
         }
         world.populate();
+        // Minds 4: `memory.prior: map` gives founders that remember a
+        // memory of every non-wall site as the world starts; a no-op
+        // otherwise. Runs once here, after placement, so children and
+        // replacements (never routed through this) still start empty.
+        crate::minds::memory::know_the_map(&mut world);
         world.stats.push(Snapshot::of(&world));
         Ok(world)
     }
@@ -221,6 +315,9 @@ impl World {
     }
 
     fn place(&mut self, mut cells: Vec<Pos>, n: usize, tribe: Option<Tribe>) {
+        if self.has_walls() {
+            cells.retain(|&p| !self.is_wall(p));
+        }
         cells.shuffle(&mut self.rng);
         for pos in cells.into_iter().take(n) {
             let mut agent = Agent::random(&self.config, pos, self.tick, &mut self.rng);
@@ -268,7 +365,42 @@ impl World {
     }
 
     pub fn is_occupied(&self, pos: Pos) -> bool {
-        self.occupant(pos).is_some()
+        self.occupant(pos).is_some() || self.is_wall(pos)
+    }
+
+    /// Whether `config.walls` lists any walls.
+    pub fn has_walls(&self) -> bool {
+        !self.config.walls.is_empty()
+    }
+
+    /// Whether `pos` is a wall (fence or opaque): no sugar, no Flumps.
+    pub fn is_wall(&self, pos: Pos) -> bool {
+        self.walls[self.torus.index(pos)] != 0
+    }
+
+    /// Whether no 4-way path through non-wall sites joins `a` and `b`, by
+    /// the components labeled at build. Always false without walls. Other
+    /// Flumps are ignored, so a `true` means every walk from `a` to `b`
+    /// fails, never the reverse.
+    pub(crate) fn walled_apart(&self, a: Pos, b: Pos) -> bool {
+        !self.regions.is_empty()
+            && self.regions[self.torus.index(a)] != self.regions[self.torus.index(b)]
+    }
+
+    /// Whether `pos` is an opaque wall: it also stops sight.
+    pub fn is_opaque(&self, pos: Pos) -> bool {
+        self.walls[self.torus.index(pos)] == 2
+    }
+
+    /// Every site visible from `pos` with `vision`: `torus.sight` unchanged
+    /// when there are no walls, or stopped at the nearest opaque wall along
+    /// each direction.
+    pub fn sight(&self, pos: Pos, vision: u32) -> Vec<(Pos, u32)> {
+        if !self.has_walls() {
+            self.torus.sight(pos, vision)
+        } else {
+            self.torus.sight_until(pos, vision, |q| self.is_opaque(q))
+        }
     }
 
     pub fn site(&self, pos: Pos) -> &Site {
@@ -280,9 +412,28 @@ impl World {
         &mut self.sites[i]
     }
 
+    /// Minds 3: whether `pos` has a truffle spot, and if so whether it's
+    /// ripe now. `None` where there's no spot (including everywhere, when
+    /// `truffles.share` is 0).
+    pub fn truffle(&self, pos: Pos) -> Option<bool> {
+        let i = self.torus.index(pos);
+        self.truffles
+            .get(i)
+            .copied()
+            .flatten()
+            .map(|ripe_at| ripe_at <= self.tick)
+    }
+
+    /// Mutable access to the tick a spot at `pos` is next ripe at; `None`
+    /// where there's no spot there.
+    pub(crate) fn truffle_ripe_at(&mut self, pos: Pos) -> Option<&mut u64> {
+        let i = self.torus.index(pos);
+        self.truffles.get_mut(i)?.as_mut()
+    }
+
     pub fn empty_sites(&self) -> Vec<Pos> {
         (0..self.torus.len())
-            .filter(|&i| self.occupancy[i].is_none())
+            .filter(|&i| self.occupancy[i].is_none() && self.walls[i] == 0)
             .map(|i| self.torus.pos(i))
             .collect()
     }
@@ -296,14 +447,25 @@ impl World {
     /// generates (painted, or supplied by a share link).
     pub fn landscape_edited(&self, good: usize) -> bool {
         self.config.goods.get(good).is_some_and(|g| {
-            self.capacities(good)
-                != crate::landscape::generate(&g.map, self.config.width, self.config.height)
+            let mut generated =
+                crate::landscape::generate(&g.map, self.config.width, self.config.height);
+            if self.has_walls() {
+                for (v, &w) in generated.iter_mut().zip(&self.walls) {
+                    if w != 0 {
+                        *v = 0.0;
+                    }
+                }
+            }
+            self.capacities(good) != generated
         })
     }
 
     /// Adds `agent` at its position with a fresh id.
     pub fn insert_agent(&mut self, mut agent: Agent) -> Result<AgentId, String> {
         let i = self.torus.index(agent.pos);
+        if self.walls[i] != 0 {
+            return Err(format!("site ({}, {}) is a wall", agent.pos.x, agent.pos.y));
+        }
         if self.occupancy[i].is_some() {
             return Err(format!(
                 "site ({}, {}) is occupied",
@@ -325,6 +487,7 @@ impl World {
         }
         let (fi, ti) = (self.torus.index(from), self.torus.index(to));
         assert!(self.occupancy[ti].is_none(), "move onto occupied site");
+        debug_assert!(!self.is_wall(to), "move onto a wall");
         self.occupancy[fi] = None;
         self.occupancy[ti] = Some(id);
         self.agents.get_mut(&id).expect("live agent").pos = to;
@@ -672,6 +835,32 @@ impl World {
     }
 }
 
+/// Labels the connected components of the non-wall sites (4-way, on the
+/// torus) by flood fill, in index order; walls get `u32::MAX`.
+fn label_regions(torus: Torus, walls: &[u8]) -> Vec<u32> {
+    let mut regions = vec![u32::MAX; walls.len()];
+    let mut next = 0;
+    let mut stack = Vec::new();
+    for start in 0..walls.len() {
+        if walls[start] != 0 || regions[start] != u32::MAX {
+            continue;
+        }
+        regions[start] = next;
+        stack.push(start);
+        while let Some(i) = stack.pop() {
+            for q in torus.neighbors(torus.pos(i)) {
+                let j = torus.index(q);
+                if walls[j] == 0 && regions[j] == u32::MAX {
+                    regions[j] = next;
+                    stack.push(j);
+                }
+            }
+        }
+        next += 1;
+    }
+    regions
+}
+
 fn rect(x: u32, y: u32, width: u32, height: u32) -> Vec<Pos> {
     (y..y + height)
         .flat_map(|yy| (x..x + width).map(move |xx| Pos::new(xx, yy)))
@@ -986,5 +1175,146 @@ mod tests {
         assert_eq!((w.followed(), w.trail().len()), (None, 0));
         w.follow(Some(999));
         assert!(w.trail().is_empty(), "nobody alive to record");
+    }
+
+    fn walled(walls: Vec<crate::config::Wall>) -> World {
+        let mut c = crate::testkit::blank_config(11, 11);
+        c.walls = walls;
+        World::new(c, 7).unwrap()
+    }
+    fn wall(x: u32, y: u32, width: u32, height: u32, opaque: bool) -> crate::config::Wall {
+        crate::config::Wall {
+            x,
+            y,
+            width,
+            height,
+            opaque,
+        }
+    }
+
+    #[test]
+    fn with_no_walls_sight_is_the_toruss() {
+        let w = walled(vec![]);
+        for v in [1, 3, 5, 6, 10] {
+            assert_eq!(w.sight(Pos::new(5, 5), v), w.torus.sight(Pos::new(5, 5), v));
+            assert_eq!(
+                w.sight(Pos::new(0, 10), v),
+                w.torus.sight(Pos::new(0, 10), v)
+            );
+        }
+        assert!(!w.has_walls());
+    }
+
+    #[test]
+    fn opaque_walls_stop_sight_and_fences_do_not() {
+        let w = walled(vec![wall(5, 2, 1, 1, true), wall(7, 5, 1, 1, false)]);
+        let seen: Vec<Pos> = w
+            .sight(Pos::new(5, 5), 4)
+            .into_iter()
+            .map(|s| s.0)
+            .collect();
+        assert!(seen.contains(&Pos::new(5, 3)));
+        assert!(
+            !seen.contains(&Pos::new(5, 2)),
+            "the wall itself isn't a sight line site"
+        );
+        assert!(!seen.contains(&Pos::new(5, 1)), "behind the wall");
+        assert!(
+            seen.contains(&Pos::new(7, 5)) && seen.contains(&Pos::new(8, 5)),
+            "a fence doesn't block sight"
+        );
+    }
+
+    #[test]
+    fn walls_hold_nothing_and_nobody() {
+        let mut w = walled(vec![wall(3, 3, 2, 2, false)]);
+        let p = Pos::new(3, 3);
+        assert!(w.is_wall(p) && w.is_occupied(p) && w.occupant(p).is_none());
+        assert_eq!((w.site(p).capacity[0], w.site(p).resource[0]), (0.0, 0.0));
+        assert!(!w.empty_sites().contains(&p));
+        let mut a = crate::testkit::agent_at(&w, 3, 3);
+        a.pos = p;
+        assert!(w.insert_agent(a).unwrap_err().contains("wall"));
+        crate::rules::growback::apply(&mut w);
+        assert_eq!(w.site(p).resource[0], 0.0);
+    }
+
+    #[test]
+    fn placement_skips_walls() {
+        let c = crate::config::Config {
+            walls: vec![wall(0, 0, 50, 40, true)],
+            population: 400,
+            ..crate::config::Config::default()
+        };
+        let w = World::new(c, 3).unwrap();
+        assert_eq!(w.population(), 400);
+        assert!(w.agents().all(|a| a.pos.y >= 40));
+    }
+
+    // --- Minds 3: truffles ---
+
+    fn truffle_config(width: u32, height: u32, share: f64) -> crate::config::Config {
+        let mut c = crate::testkit::blank_config(width, height);
+        c.truffles.share = share;
+        c
+    }
+
+    fn all_positions(w: &World) -> Vec<Pos> {
+        (0..w.torus.len()).map(|i| w.torus.pos(i)).collect()
+    }
+
+    #[test]
+    fn truffle_layout_is_the_same_across_world_seeds() {
+        let mut c = truffle_config(20, 20, 0.2);
+        c.truffles.seed = 3;
+        let a = World::new(c.clone(), 1).unwrap();
+        let b = World::new(c, 2).unwrap();
+        for p in all_positions(&a) {
+            assert_eq!(a.truffle(p), b.truffle(p), "at {p:?}");
+        }
+        // At least the hash actually placed something, so the check above
+        // isn't vacuously true.
+        assert!(all_positions(&a).iter().any(|&p| a.truffle(p).is_some()));
+    }
+
+    #[test]
+    fn truffle_share_is_within_one_percent_over_a_100_by_100_grid() {
+        let c = truffle_config(100, 100, 0.05);
+        let w = World::new(c, 1).unwrap();
+        let n = 100 * 100;
+        let count = all_positions(&w)
+            .iter()
+            .filter(|&&p| w.truffle(p).is_some())
+            .count();
+        let share = count as f64 / f64::from(n);
+        assert!(
+            (share - 0.05).abs() < 0.0005,
+            "share {share} within 1% of 0.05"
+        );
+    }
+
+    #[test]
+    fn truffle_share_zero_gives_none() {
+        let c = truffle_config(10, 10, 0.0);
+        let w = World::new(c, 1).unwrap();
+        assert!(all_positions(&w).iter().all(|&p| w.truffle(p).is_none()));
+    }
+
+    #[test]
+    fn truffle_share_one_gives_every_non_wall_site_a_ripe_spot_and_none_on_walls() {
+        let mut c = truffle_config(11, 11, 1.0);
+        c.walls = vec![wall(3, 3, 2, 2, true)];
+        let w = World::new(c, 1).unwrap();
+        for p in all_positions(&w) {
+            if w.is_wall(p) {
+                assert_eq!(w.truffle(p), None, "no spot on a wall, at {p:?}");
+            } else {
+                assert_eq!(
+                    w.truffle(p),
+                    Some(true),
+                    "every non-wall site has a ripe spot, at {p:?}"
+                );
+            }
+        }
     }
 }

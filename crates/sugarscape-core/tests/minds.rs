@@ -32,3 +32,59 @@ fn the_utility_mind_with_rule_ms_consideration_is_rule_m() {
     }
     assert!(checked >= 20, "checked {checked} presets");
 }
+
+#[test]
+fn walking_at_vision_one_is_jumping() {
+    let mut checked = 0;
+    for p in presets::all() {
+        // Minds 4's GOAP and MVT rules exist only for walkers (validation
+        // rejects them under `mode: jump`), so they have no jump to compare.
+        if p.config.combat.enabled
+            || matches!(
+                p.config.decision.rule,
+                DecisionRule::Goap | DecisionRule::Mvt
+            )
+        {
+            continue;
+        }
+        let mut jump = p.config.clone();
+        jump.vision = sugarscape_core::config::URange::new(1, 1);
+        // Minds 2's walk-* presets already start in walk mode, so both sides
+        // must set `mode` explicitly to compare a real jump against a real
+        // walk (fixed here; it previously compared walk against walk for
+        // those presets).
+        jump.movement.mode = sugarscape_core::config::MoveMode::Jump;
+        // Minds 3's mem-* presets have span > 0, which requires walking;
+        // forcing `mode: jump` above would make the config invalid. Memory
+        // isn't the subject of this reduction, so turn it off on both sides.
+        jump.memory.span = 0;
+        let mut walk = jump.clone();
+        walk.movement.mode = sugarscape_core::config::MoveMode::Walk;
+        assert_eq!(fingerprint(walk), fingerprint(jump), "{}", p.id);
+        checked += 1;
+    }
+    assert!(checked >= 20, "checked {checked} presets");
+}
+
+#[test]
+fn memory_and_truffles_off_explicitly_is_every_preset() {
+    // Minds 3's reduction: a preset's JSON with `memory.span` 0 and
+    // `truffles.share` 0 written in explicitly loads (through serde and
+    // validation) to a world whose 200-tick fingerprint is the preset's own,
+    // which `tests/golden.rs` pins. Memory off draws nothing.
+    let mut checked = 0;
+    for p in presets::all() {
+        // A Minds 3 preset turns memory or truffles on: it's not the book.
+        if p.config.memory.span > 0 || p.config.truffles.share > 0.0 {
+            continue;
+        }
+        let mut v = serde_json::to_value(&p.config).unwrap();
+        v["memory"]["span"] = serde_json::json!(0);
+        v["truffles"]["share"] = serde_json::json!(0.0);
+        let c = Config::from_json(&v.to_string()).unwrap_or_else(|e| panic!("{}: {e:?}", p.id));
+        assert_eq!((c.memory.span, c.truffles.share), (0, 0.0), "{}", p.id);
+        assert_eq!(fingerprint(c), fingerprint(p.config.clone()), "{}", p.id);
+        checked += 1;
+    }
+    assert!(checked >= 20, "checked {checked} presets");
+}

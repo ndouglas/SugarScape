@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 90] = [
+const BUILTINS: [Builtin; 140] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1325,6 +1325,206 @@ const BUILTINS: [Builtin; 90] = [
     Builtin {
         id: "ifd-travel",
         json: include_str!("../../../sweeps/ifd-travel.json"),
+    },
+    Builtin {
+        id: "gr-sd",
+        json: include_str!("../../../sweeps/gr-sd.json"),
+    },
+    Builtin {
+        id: "gr-friends",
+        json: include_str!("../../../sweeps/gr-friends.json"),
+    },
+    Builtin {
+        id: "gr-movement",
+        json: include_str!("../../../sweeps/gr-movement.json"),
+    },
+    Builtin {
+        id: "gr-ceilings",
+        json: include_str!("../../../sweeps/gr-ceilings.json"),
+    },
+    Builtin {
+        id: "watts-window",
+        json: include_str!("../../../sweeps/watts-window.json"),
+    },
+    Builtin {
+        id: "watts-hetero",
+        json: include_str!("../../../sweeps/watts-hetero.json"),
+    },
+    Builtin {
+        id: "watts-targeting",
+        json: include_str!("../../../sweeps/watts-targeting.json"),
+    },
+    Builtin {
+        id: "walk-speed",
+        json: include_str!("../../../sweeps/walk-speed.json"),
+    },
+    Builtin {
+        id: "walk-vision",
+        json: include_str!("../../../sweeps/walk-vision.json"),
+    },
+    Builtin {
+        id: "ifd-detour",
+        json: include_str!("../../../sweeps/ifd-detour.json"),
+    },
+    Builtin {
+        id: "ae-rational",
+        json: include_str!("../../../sweeps/ae-rational.json"),
+    },
+    Builtin {
+        id: "ae-rational-replace",
+        json: include_str!("../../../sweeps/ae-rational-replace.json"),
+    },
+    Builtin {
+        id: "ae-threshold",
+        json: include_str!("../../../sweeps/ae-threshold.json"),
+    },
+    Builtin {
+        id: "ae-size",
+        json: include_str!("../../../sweeps/ae-size.json"),
+    },
+    Builtin {
+        id: "ae-extent",
+        json: include_str!("../../../sweeps/ae-extent.json"),
+    },
+    Builtin {
+        id: "ae-policy",
+        json: include_str!("../../../sweeps/ae-policy.json"),
+    },
+    Builtin {
+        id: "ae-coupling",
+        json: include_str!("../../../sweeps/ae-coupling.json"),
+    },
+    Builtin {
+        id: "ae-coupling-rational",
+        json: include_str!("../../../sweeps/ae-coupling-rational.json"),
+    },
+    Builtin {
+        id: "bg-fig1a",
+        json: include_str!("../../../sweeps/bg-fig1a.json"),
+    },
+    Builtin {
+        id: "bg-fig1b",
+        json: include_str!("../../../sweeps/bg-fig1b.json"),
+    },
+    Builtin {
+        id: "bg-fig1-caption",
+        json: include_str!("../../../sweeps/bg-fig1-caption.json"),
+    },
+    Builtin {
+        id: "bg-fig1-either",
+        json: include_str!("../../../sweeps/bg-fig1-either.json"),
+    },
+    Builtin {
+        id: "bg-fig2a",
+        json: include_str!("../../../sweeps/bg-fig2a.json"),
+    },
+    Builtin {
+        id: "bg-fig2b",
+        json: include_str!("../../../sweeps/bg-fig2b.json"),
+    },
+    Builtin {
+        id: "bg-fig3",
+        json: include_str!("../../../sweeps/bg-fig3.json"),
+    },
+    Builtin {
+        id: "bg-fig4",
+        json: include_str!("../../../sweeps/bg-fig4.json"),
+    },
+    Builtin {
+        id: "bg-baseline",
+        json: include_str!("../../../sweeps/bg-baseline.json"),
+    },
+    Builtin {
+        id: "bg-readings",
+        json: include_str!("../../../sweeps/bg-readings.json"),
+    },
+    Builtin {
+        id: "bg-mutation",
+        json: include_str!("../../../sweeps/bg-mutation.json"),
+    },
+    Builtin {
+        id: "bg-error",
+        json: include_str!("../../../sweeps/bg-error.json"),
+    },
+    Builtin {
+        id: "bg-groups",
+        json: include_str!("../../../sweeps/bg-groups.json"),
+    },
+    Builtin {
+        id: "bg-benefit",
+        json: include_str!("../../../sweeps/bg-benefit.json"),
+    },
+    Builtin {
+        id: "bg-continuous",
+        json: include_str!("../../../sweeps/bg-continuous.json"),
+    },
+    Builtin {
+        id: "bg-ring",
+        json: include_str!("../../../sweeps/bg-ring.json"),
+    },
+    Builtin {
+        id: "bg-cooney-fine",
+        json: include_str!("../../../sweeps/bg-cooney-fine.json"),
+    },
+    Builtin {
+        id: "bg-cooney-cost",
+        json: include_str!("../../../sweeps/bg-cooney-cost.json"),
+    },
+    Builtin {
+        id: "mem-span-recall",
+        json: include_str!("../../../sweeps/mem-span-recall.json"),
+    },
+    Builtin {
+        id: "mem-span-project",
+        json: include_str!("../../../sweeps/mem-span-project.json"),
+    },
+    Builtin {
+        id: "mem-share",
+        json: include_str!("../../../sweeps/mem-share.json"),
+    },
+    Builtin {
+        id: "gs-efficiency",
+        json: include_str!("../../../sweeps/gs-efficiency.json"),
+    },
+    Builtin {
+        id: "gs-dispersion",
+        json: include_str!("../../../sweeps/gs-dispersion.json"),
+    },
+    Builtin {
+        id: "gs-shouts",
+        json: include_str!("../../../sweeps/gs-shouts.json"),
+    },
+    Builtin {
+        id: "gs-mechanism",
+        json: include_str!("../../../sweeps/gs-mechanism.json"),
+    },
+    Builtin {
+        id: "cliff-prices",
+        json: include_str!("../../../sweeps/cliff-prices.json"),
+    },
+    Builtin {
+        id: "zip-days",
+        json: include_str!("../../../sweeps/zip-days.json"),
+    },
+    Builtin {
+        id: "zip-momentum",
+        json: include_str!("../../../sweeps/zip-momentum.json"),
+    },
+    Builtin {
+        id: "zip-shift",
+        json: include_str!("../../../sweeps/zip-shift.json"),
+    },
+    Builtin {
+        id: "goap-horizon",
+        json: include_str!("../../../sweeps/goap-horizon.json"),
+    },
+    Builtin {
+        id: "goap-k",
+        json: include_str!("../../../sweeps/goap-k.json"),
+    },
+    Builtin {
+        id: "goap-memory",
+        json: include_str!("../../../sweeps/goap-memory.json"),
     },
 ];
 
@@ -2238,7 +2438,57 @@ mod tests {
                 "ifd-matching",
                 "ifd-idle",
                 "ifd-crowding",
-                "ifd-travel"
+                "ifd-travel",
+                "gr-sd",
+                "gr-friends",
+                "gr-movement",
+                "gr-ceilings",
+                "watts-window",
+                "watts-hetero",
+                "watts-targeting",
+                "walk-speed",
+                "walk-vision",
+                "ifd-detour",
+                "ae-rational",
+                "ae-rational-replace",
+                "ae-threshold",
+                "ae-size",
+                "ae-extent",
+                "ae-policy",
+                "ae-coupling",
+                "ae-coupling-rational",
+                "bg-fig1a",
+                "bg-fig1b",
+                "bg-fig1-caption",
+                "bg-fig1-either",
+                "bg-fig2a",
+                "bg-fig2b",
+                "bg-fig3",
+                "bg-fig4",
+                "bg-baseline",
+                "bg-readings",
+                "bg-mutation",
+                "bg-error",
+                "bg-groups",
+                "bg-benefit",
+                "bg-continuous",
+                "bg-ring",
+                "bg-cooney-fine",
+                "bg-cooney-cost",
+                "mem-span-recall",
+                "mem-span-project",
+                "mem-share",
+                "gs-efficiency",
+                "gs-dispersion",
+                "gs-shouts",
+                "gs-mechanism",
+                "cliff-prices",
+                "zip-days",
+                "zip-momentum",
+                "zip-shift",
+                "goap-horizon",
+                "goap-k",
+                "goap-memory"
             ]
         );
         for b in builtins() {

@@ -5,6 +5,10 @@ import {
   finishesUnpredictably,
   isAgreementView,
   isAntsView,
+  isThresholdsView,
+  isPunishmentView,
+  isZiView,
+  isRetirementView,
   isFarolView,
   isCivilView,
   isClassesView,
@@ -24,8 +28,10 @@ import {
   MODEL_OVERLAYS,
   modelOf,
   presetGroups,
+  presetSubgroups,
   presetOptionLabel,
   presetReference,
+  sugarscapeChapter,
   ticksLeft,
 } from './models';
 import type { AnyInspection, Config, ModelConfig, Preset } from './types';
@@ -68,6 +74,35 @@ describe('presetGroups', () => {
       ['Sugarscape', ['ii-2', 'ii-3']],
       ['Ring World', ['ring-1', 'ring-2']],
     ]);
+  });
+});
+
+describe('presetSubgroups', () => {
+  const p = (id: string, source: string, config: unknown = {}): Preset =>
+    ({ id, title: id, name: id, source, description: '', config: config as ModelConfig });
+
+  it('reads a sugarscape preset’s chapter from its source, and the Minds experiments apart', () => {
+    const chapters = ['Animation II-2', 'Animations II-4/II-5', 'Figure III-6', 'Chapter IV, footnote 7', 'Animation V-1', 'Chapter VI',
+      'Fretwell & Lucas 1969; Minds 1', 'Epstein & Axtell II-7; Minds 2', 'Minds 3', 'Appendix B, rule P',
+      'Axtell, Axelrod, Epstein & Cohen 1996, §4.3.1'];
+    expect(chapters.map((s) => sugarscapeChapter(p('x', s)))).toEqual([
+      'Chapter II', 'Chapter II', 'Chapter III', 'Chapter IV', 'Chapter V', 'Chapter VI', 'Minds', 'Minds', 'Minds', 'Appendix B',
+      'Other sources',
+    ]);
+  });
+
+  it('groups the sugarscape by chapter in first-appearance order, and other models as one list', () => {
+    const presets = [
+      p('ii-1', 'Animation II-1'), p('iii-1', 'Figure III-1'), p('ii-2', 'Animation II-2'),
+      p('ifd', 'Minds 1'), p('ring-1', 'Chapter VI', { model: 'ring' }), p('ring-2', 'Chapter VI', { model: 'ring' }),
+    ];
+    expect(presetSubgroups('sugarscape', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([
+      ['Chapter II', ['ii-1', 'ii-2']],
+      ['Chapter III', ['iii-1']],
+      ['Minds', ['ifd']],
+    ]);
+    expect(presetSubgroups('ring', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([[null, ['ring-1', 'ring-2']]]);
+    expect(presetSubgroups('schelling', presets)).toEqual([]);
   });
 });
 
@@ -115,6 +150,95 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the zi model', () => {
+  it('is read by its tag, and its inspections by `trade` and `supply`, before the others with a panel', () => {
+    expect(modelOf({ model: 'zi' } as unknown as ModelConfig)).toBe('zi');
+    const cell = { site: { x: 1, y: 2 }, panel: 'schedules', unit: 1, demand: 102, supply: 34, trade: null, trader: null, agent: null } as unknown as AnyInspection;
+    const pun = { site: { x: 1, y: 2 }, panel: 'groups', group: null, agent: null, period: null, cooperation: null, punishment: null } as unknown as AnyInspection;
+    expect([cell, pun].map(isZiView)).toEqual([true, false]);
+    expect([isPunishmentView(cell), isRetirementView(cell), isThresholdsView(cell)]).toEqual([false, false, false]);
+  });
+
+  it('colors three ways, has no overlays, and ends after its periods', () => {
+    expect(COLOR_MODES.zi).toEqual([
+      ['side', 'Side'],
+      ['profit', 'Profit'],
+      ['margin', 'Margin'],
+    ]);
+    expect(MODEL_OVERLAYS.zi).toEqual([]);
+    expect(finishesUnpredictably({ model: 'zi', stop_at: 6 } as unknown as ModelConfig)).toBe(false);
+  });
+});
+
+describe('the punishment model', () => {
+  it('is read by its tag, and its inspections by `punishment`, before the others with a panel', () => {
+    const c = { model: 'punishment', stop_at: 2000 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('punishment');
+    const cell = { site: { x: 1, y: 2 }, panel: 'groups', group: null, agent: null, period: null, cooperation: null, punishment: null } as unknown as AnyInspection;
+    const ret = { site: { x: 1, y: 2 }, panel: 'population', age: 65, retirements: null, exposed: null, period: null, retired: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, ret].map(isPunishmentView)).toEqual([true, false]);
+    expect([isRetirementView(cell), isThresholdsView(cell)]).toEqual([false, false]);
+  });
+
+  it('colors four ways, has no overlays, and ends at its last period', () => {
+    expect(COLOR_MODES.punishment).toEqual([
+      ['type', 'Type'],
+      ['acts', 'Acts'],
+      ['payoff', 'Payoff'],
+      ['group', 'Group'],
+    ]);
+    expect(MODEL_OVERLAYS.punishment).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'punishment', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(2000)), ticksLeft(c(2000), 500), ticksLeft(c(0), 500)]).toEqual([false, 1500, Infinity]);
+  });
+});
+
+describe('the retirement model', () => {
+  it('is read by its tag, and its inspections by `exposed`, before the others with a panel', () => {
+    const c = { model: 'retirement', stop_at: 0, stop_at_norm: false } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('retirement');
+    const cell = { site: { x: 1, y: 2 }, panel: 'population', age: 65, retirements: null, exposed: null, period: null, retired: null, member: null, agent: null } as unknown as AnyInspection;
+    const th = { site: { x: 1, y: 2 }, panel: 'actors', step: null, crowds: null, share: null, cdf: null, count: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, th].map(isRetirementView)).toEqual([true, false]);
+    expect(isThresholdsView(cell)).toBe(false);
+  });
+
+  it('colors four ways, has no overlays, and stops unpredictably only at the norm', () => {
+    expect(COLOR_MODES.retirement).toEqual([
+      ['status', 'Status'],
+      ['type', 'Type'],
+      ['threshold', 'Threshold'],
+      ['group', 'Group'],
+    ]);
+    expect(MODEL_OVERLAYS.retirement).toEqual([]);
+    const c = (stop_at: number, stop_at_norm: boolean) => ({ model: 'retirement', stop_at, stop_at_norm }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(100, false)), finishesUnpredictably(c(0, true)), ticksLeft(c(100, false), 40), ticksLeft(c(0, false), 40)]).toEqual([false, true, 60, Infinity]);
+  });
+});
+
+describe('the thresholds model', () => {
+  it('is read by its tag, and its inspections by their cdf, before the ants’ and El Farol’s', () => {
+    const c = { model: 'thresholds', stop_at: 0 } as unknown as ModelConfig;
+    expect(modelOf(c)).toBe('thresholds');
+    const cell = { site: { x: 1, y: 2 }, panel: 'actors', step: null, crowds: null, share: null, cdf: null, count: null, member: null, agent: null } as unknown as AnyInspection;
+    const ants = { site: { x: 1, y: 2 }, panel: 'ants', step: null, shares: null, share: null, count: null, theory: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, ants].map(isThresholdsView)).toEqual([true, false]);
+    expect(isAntsView(cell)).toBe(false);
+  });
+
+  it('colors four ways, has no overlays, and stops predictably at its last step', () => {
+    expect(COLOR_MODES.thresholds).toEqual([
+      ['state', 'State'],
+      ['threshold', 'Threshold'],
+      ['degree', 'Degree'],
+      ['crowd', 'Crowd'],
+    ]);
+    expect(MODEL_OVERLAYS.thresholds).toEqual([]);
+    const c = (stop_at: number) => ({ model: 'thresholds', stop_at }) as unknown as ModelConfig;
+    expect([finishesUnpredictably(c(50)), ticksLeft(c(50), 20), ticksLeft(c(0), 20)]).toEqual([false, 30, Infinity]);
   });
 });
 

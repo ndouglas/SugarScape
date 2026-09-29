@@ -4,8 +4,9 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, Outbreak, Peak, Placement,
-    Pollutant, Pollution, ScheduledChange, Transform, URange, SPICE_COLOR,
+    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, MemoryPrior, MoveMode,
+    Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange, Transform, URange, Wall,
+    SPICE_COLOR,
 };
 use crate::model::ModelConfig;
 
@@ -136,6 +137,83 @@ fn traits(c: &mut Config, metabolism: URange, endowment: URange) {
     }
 }
 
+/// Animation II-4/II-5's finite lifetimes with replacement.
+fn wealth(c: &mut Config) {
+    c.lifespan.enabled = true;
+    c.replacement.enabled = true;
+}
+
+/// Animation II-7's seasons.
+fn enable_seasons(c: &mut Config) {
+    c.seasons.enabled = true;
+}
+
+/// Minds 3: `span` ticks of memory for a `share` of newborns, under
+/// `project` belief (the engine's default).
+fn memory(c: &mut Config, span: u32, share: f64) {
+    c.memory.span = span;
+    c.memory.share = share;
+}
+
+/// Minds 4: the marginal value theorem's world. Nine peaks (radius 3,
+/// height 4: 25 sites of capacity ≥ 1 each) at (10 + 20i, 10 + 20j) on a
+/// 60 × 60 torus; 3 Flumps of metabolism 1, endowment 50 and vision 1–6,
+/// walking, every one remembering (span 1 000, `project`) and starting with
+/// the whole map (`memory.prior: map`); growback 0.02. The balance was
+/// measured before this was recorded (Minds 4, Task 7): the spec's
+/// growback 0.05 gives a patch 25 × 0.05 = 1.25 sugar a tick, more than one
+/// forager eats, so a patch never runs out; the plan's mechanical rule set
+/// growback so a patch takes in 0.5 a tick, and the population so all nine
+/// patches' 4.5 a tick is 1.5 times the need (3 × 1).
+fn mvt_world(c: &mut Config, rule: DecisionRule) {
+    c.width = 60;
+    c.height = 60;
+    c.population = 3;
+    c.goods[0].map = Map::Peaks {
+        peaks: (0..3u32)
+            .flat_map(|i| {
+                (0..3u32).map(move |j| Peak {
+                    x: 10 + 20 * i,
+                    y: 10 + 20 * j,
+                    radius: 3.0,
+                    height: 4.0,
+                })
+            })
+            .collect(),
+    };
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.goods[0].endowment = URange::new(50, 50);
+    c.vision = URange::new(1, 6);
+    c.growback.rate = 0.02;
+    c.movement.mode = MoveMode::Walk;
+    c.decision.rule = rule;
+    memory(c, 1000, 1.0);
+    c.memory.prior = MemoryPrior::Map;
+}
+
+/// Minds 3: truffle spots covering `share` of non-wall sites, worth `value`
+/// sugar and regrowing after `regrow` ticks (`seed` stays the default, 1).
+fn truffles(c: &mut Config, share: f64, value: f64, regrow: u32) {
+    c.truffles.share = share;
+    c.truffles.value = value;
+    c.truffles.regrow = regrow;
+}
+
+/// The book's first frame for Animation II-6: a 20×20 block in the
+/// bottom-left corner, otherwise as Animation II-2 (400 agents, so full).
+/// Surveyed (docs/survey/2026-09-24-model-survey.md): the ring of the book's
+/// second frame appears by t ≈ 8, but no northeasterly waves follow on any
+/// seed.
+fn waves(c: &mut Config) {
+    c.placement = Placement::Block {
+        x: 0,
+        y: 30,
+        width: 20,
+        height: 20,
+    };
+    c.vision = URange::new(1, 10);
+}
+
 pub fn all() -> Vec<Preset> {
     vec![
         preset(
@@ -157,37 +235,21 @@ pub fn all() -> Vec<Preset> {
             "({G₁}, {M, R[60,100]})",
             "Animations II-4/II-5",
             "Finite lifetimes with replacement: a skewed wealth distribution emerges; watch the Lorenz curve and Gini coefficient.",
-            |c| {
-                c.lifespan.enabled = true;
-                c.replacement.enabled = true;
-            },
+            wealth,
         ),
         preset(
             "ii-6-waves",
             "Diagonal waves",
             "Animation II-6",
             "A full 20×20 block of agents with vision up to 10 starts in the southwest corner, as in the book, and bursts outward as a ring. The book's waves then travel northeast; here they don't: the survivors settle on the southwest mountain.",
-            |c| {
-                // The book's first frame: a 20×20 block in the bottom-left
-                // corner, otherwise as Animation II-2 (400 agents, so full).
-                // Surveyed (docs/survey/2026-09-24-model-survey.md): the
-                // ring of the book's second frame appears by t ≈ 8, but no
-                // northeasterly waves follow on any seed.
-                c.placement = Placement::Block {
-                    x: 0,
-                    y: 30,
-                    width: 20,
-                    height: 20,
-                };
-                c.vision = URange::new(1, 10);
-            },
+            waves,
         ),
         preset(
             "ii-7-seasons",
             "({S₁,₈,₅₀}, {M})",
             "Animation II-7",
             "Seasons flip every 50 ticks: high-vision agents migrate, low-vision low-metabolism agents hibernate.",
-            |c| c.seasons.enabled = true,
+            enable_seasons,
         ),
         preset(
             "ii-8-pollution",
@@ -698,6 +760,248 @@ pub fn all() -> Vec<Preset> {
                 c.decision.travel = 0.5;
             },
         ),
+        preset(
+            "walk-capacity",
+            "Walking: carrying capacity",
+            "Epstein & Axtell II-2; Minds 2",
+            "Rule M's Flumps jump to the best site in sight; these walk there one step a tick along an A* path. Measured (20 seeds, mean population over ticks 300–500): 181 against 228 under the jump, so the book's carrying capacity of about 224 fails under walking (no seed within 214–234), and walking lowers it in every seed, by a median 47 Flumps. In the walk-speed and walk-vision sweeps (an observation, not a judged claim), capacity tracks how far a Flump gets in a tick, roughly min(speed, vision): walking at vision 1–6 (181.5) is about jumping at vision 1 (182.7), and walking at speed 3 (212.8) and 6 (225.2) is near jumping at vision 1–3 (205.5) and 1–6 (228.5). Walking faster brings the population back (see walk-fast and the walk-speed sweep).",
+            |c| c.movement.mode = MoveMode::Walk,
+        ),
+        preset(
+            "walk-wealth",
+            "Walking: wealth distribution",
+            "Epstein & Axtell II-5; Minds 2",
+            "Finite lifetimes with replacement, as in ii-5-wealth, but rule M's Flumps walk to the best site they see instead of jumping there in one tick. Measured (20 seeds, tick 500): wealth is still right-skewed in every seed, so the book's skewed distribution (Animation II-5) doesn't need the jump. The skewness has median 1.26 against 1.27 under the jump, and the Gini 0.46 against 0.48.",
+            |c| {
+                wealth(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-seasons",
+            "Walking: seasons",
+            "Epstein & Axtell II-7; Minds 2",
+            "Seasons flipping every 50 ticks, as in ii-7-seasons, but rule M's Flumps walk to the best site they see instead of jumping there in one tick. Measured (20 seeds, Flumps alive over ticks 100–300): a median 55 % change hemisphere at least twice, against 83 % under the jump, so migration with the seasons (Animation II-7) survives walking, but fewer Flumps migrate. Likely cause: crossing to the other hemisphere takes a walker many ticks, so fewer finish the crossing before the season or their target changes.",
+            |c| {
+                enable_seasons(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-waves",
+            "Walking: diagonal waves",
+            "Epstein & Axtell II-6; Minds 2",
+            "The book's waves travel northeast from the southwest block; under rule M's jump they don't. Measured (20 seeds, tick 100): a median 0.6 % of Flumps are farther than 25 sites from the block's center, against 0.8 % under the jump; no seed comes near a quarter (in planning, the block settled on the near mountain under both). So walking isn't the missing mechanism behind the waves (Animation II-6).",
+            |c| {
+                waves(c);
+                c.movement.mode = MoveMode::Walk;
+            },
+        ),
+        preset(
+            "walk-fast",
+            "Walking: speed 3",
+            "Minds 2",
+            "ii-2-unit's unit growback and carrying capacity, but Flumps walk three steps a tick instead of one along their A* path. Measured (20 seeds, mean population over ticks 300–500): 214, between walking at one step a tick (181) and the jump (228). The capacity under walk rises toward the jump's as speed rises: at ten steps a tick it is 227, higher than at one step in every seed and within about one Flump of the jump's 228.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                c.movement.speed = 3;
+            },
+        ),
+        preset(
+            "ifd-fence",
+            "Travel between patches: a fence with a central gap",
+            "Baum & Kraft 1998; Minds 2",
+            "The 2.10 : 1 patches with vision 10–20 (as in ifd-far-sighted), fenced apart except for a two-site gap at the midline of the 60 × 40 torus (and a matching gap in a second fence at x = 2, closing the route the other way around the torus); rule M's Flumps walk to the best site they see instead of jumping there, so switching patches costs a walk through the gap. Measured (20 seeds, ticks 500–1000): 1.99 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping (ifd-far-sighted). Across the five input ratios s has median 0.88, against 0.90 walking with no fence, so the fence doesn't reduce undermatching. A confound, unmeasured: the fences leave 25 columns on the richer patch's side and 33 on the poorer's, so about 57 % of Flumps start on the poorer side.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, false);
+            },
+        ),
+        preset(
+            "ifd-fence-far",
+            "Travel between patches: the gap moves to the far end",
+            "Baum & Kraft 1998; Minds 2",
+            "The same fence as ifd-fence, but its gap sits at rows 35–36 instead of 20–21, below both patches (which span rows 10–30), so a Flump switching patches faces a much longer walk to reach the gap. Baum & Kraft found that requiring travel to switch patches slightly reduced undermatching. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.85 against 0.90 walking with no fence, and is lower in 18 of 20 seeds, so undermatching grows, the opposite of Baum & Kraft's direction, and their claim fails here. At 2.10 : 1 alone there are 1.96 times as many Flumps on the richer patch, against 1.97 walking with no fence and 1.88 jumping; that points the same way, but the walking arms' ratios (1.96–1.99) are untested and too close to tell apart.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 15, false);
+            },
+        ),
+        preset(
+            "ifd-wall",
+            "Travel between patches: an opaque wall with a central gap",
+            "Baum & Kraft 1998; Minds 2",
+            "ifd-fence with an opaque wall instead of a fence. An opaque wall: the other patch is visible only through the gap. Baum & Kraft found that a visual barrier had no effect. Measured (20 seeds, ticks 500–1000, across the five input ratios): s has median 0.91 against 0.88 with the fence, and only 10 of 20 seeds are within 0.05 of their fence's s, so no effect is not shown seed by seed (a weak result); the wall, if anything, raises s. At 2.10 : 1 alone there are 1.99 times as many Flumps on the richer patch, as with the fence.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+            },
+        ),
+        preset(
+            "mem-open",
+            "Memory: open sugarscape",
+            "Minds 3",
+            "walk-capacity's world (rule M's Flumps walking to the best site in sight) with memory: a rememberer that leaves a mountain can walk back to it for 100 ticks after it drops out of sight. The mountains stay in sight of most sites and refill fast, so a rememberer should gain little. Measured (20 seeds, ticks 200–500): rememberers lose instead. They hold a median 324 sugar against the others' 438 (an advantage of −113), within 10 % of the others in only 2 of 20 seeds. Two likely causes. First, rule M prices no travel: it values a site by its sugar alone, so a far remembered site believed full beats a near one. Under the utility mind with travel 0.5 (memory as here), the advantage rises by a median 119, higher in every seed, to about neutral: +7.4 (IQR −18 to +37), rememberers wealthier in only 10 of 20 seeds. But the share of rememberers' choices aimed at a remembered site falls from 0.68 to 0.10, and across the arms the loss tracks how often memory is used (projection uses it about twice as often as recall, 0.68 against 0.34, and loses more). So pricing travel removes the loss, largely by using memory less; no gain was shown. Second, projection ignores competitors who harvest a site first: under recall (believing a site holds what it held when seen) the advantage is −34, and projection is worse than recall in every seed, with a larger belief error (2.67 against 2.46 sugar; measured only on the targets chosen, the ones believed best, so biased by that selection). Most choices of a remembered site out of sight find less there than believed under either belief (93 % under project, 95 % under recall). Memory for everyone (share 1) lowers the population to 154 from walking's 181 (mean over ticks 300–500), in every seed, so memory doesn't restore the capacity walking lost. Across spans (the mem-span sweeps) the advantage is negative at every span and growback rate, so the \"best\" span is only the least-harmful one; under recall it's 10 ticks at growback 1, the shortest span tested (IQR 10–10), against 25 at 0.25 and 0.5. Pinned at the floor of the grid, it can't show Bracis et al.'s forgetting that tracks regrowth.",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+            },
+        ),
+        preset(
+            "mem-catchment",
+            "Memory: patches out of sight",
+            "Minds 3",
+            "ifd-no-starving's world (the 2.10 : 1 patches with an endowment so large nobody starves), walking under the utility mind with idle wander, and memory: a rememberer that once saw a patch can walk back to it once it's out of sight, instead of wandering blind like everyone else. Measured (20 seeds): rememberers first reach a patch sooner (median tick 27.5 against 33) and spend slightly more of ticks 200–500 on a patch (90 % against 89 %), yet they end slightly poorer in every seed, by a median 90 sugar over ticks 200–500, on holdings near 100 000 (under 0.1 %). Likely causes, not isolated here: travel that costs a walker time goes unpriced in the choice, so far remembered sites beat near ones; and projection counts on regrowth that others harvest first (see mem-open).",
+            |c| {
+                two_patches(c, 7.0);
+                c.goods[0].endowment = URange::new(100_000, 100_000);
+                c.movement.mode = MoveMode::Walk;
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.idle = Idle::Wander;
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-walled",
+            "Memory: beyond the wall",
+            "Minds 3",
+            "ifd-wall's world (the opaque wall with a central gap, hiding the far patch from view) with memory: only a rememberer that once passed through the gap and saw the far patch can walk back to it once it's hidden again. Measured (20 seeds, ticks 200–500): memory is ruinous here. Rememberers hold a median 12 sugar against the others' 127, poorer in every seed, and only 7 % of them are alive at tick 500 against 74 % of the others. On ticks when any rememberer chose a remembered site out of sight, such choices were 96 % of their moves, and 98 % of them found less than believed. Recall is strongly negative too: an advantage of −40, negative in every seed, with 49 % of rememberers alive at tick 500 against 73 % of the others; so projection isn't the only driver; likely causes are both unpriced travel and projection. Rule M prices no travel, so with vision 10–20 a rememberer walks to far remembered sites believed full and starves on the way. Under the utility mind with travel 0.5 the advantage improves from −114 to −55, higher in every seed, but stays negative, while the share of rememberers' choices aimed at a remembered site falls from 0.96 to 0.65: pricing travel shrinks the loss, largely by using memory less; no gain was shown. The two arms aren't additive and the travel arm also changes the mind, so they don't rank the causes.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-seasons",
+            "Memory: the other hemisphere",
+            "Minds 3",
+            "walk-seasons's world (seasons flipping every 50 ticks, Flumps walking) with memory: a rememberer can walk back toward the hemisphere it last saw thriving, instead of relying on what's in sight when the season turns. Measured (20 seeds, ticks 200–500): rememberers end poorer in every seed (a median 295 sugar against 342), and 23 % of them are alive at tick 500 against 36 % of the others; 96 % of their choices of a remembered site find less than believed. Likely causes, not isolated here: rule M prices no travel, so far remembered sites beat near ones, and projection counts on regrowth that others harvest first (see mem-open).",
+            |c| {
+                enable_seasons(c);
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+            },
+        ),
+        preset(
+            "mem-truffles",
+            "Memory: hidden truffle spots",
+            "Minds 3",
+            "walk-capacity's world with truffles: hash-placed spots that are invisible until walked onto, worth 5 sugar, and take 30 ticks to regrow after being picked (5 % of sites). Only a rememberer can head back to a spot it has already found. Measured (20 seeds): rememberers do find more truffles, 0.0147 a Flump-tick against 0.0065 (ticks 1–500), more in every seed, but they end poorer in 18 of 20 seeds (a median 347 sugar against 430 over ticks 200–500). A likely contributor: chasing remembered sugar far away costs more than truffles bring, since rule M prices no travel. Under the utility mind with travel 0.5 the advantage rises from −82 to about neutral, +1.5, higher in 18 of 20 seeds, while the share of rememberers' choices aimed at a remembered site falls from 0.73 to 0.25: pricing travel removes the loss, largely by using memory less; no gain was shown. Projection adds to the loss: under recall the advantage is −25 (still a loss) against −82, and projection is worse than recall in every seed, with twice the belief error (4.99 against 2.46).",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.05, 5.0, 30);
+                memory(c, 200, 0.5);
+            },
+        ),
+        preset(
+            "mem-trapline",
+            "Memory: a trapline of truffle spots",
+            "Thomson, Slatkin & Thomson 1997; Ohashi & Thomson 2005; Gill 1988; Minds 3",
+            "A sparse 50 × 50 torus (flat capacity 1, growback 0.1) where truffle spots (2 % of sites, worth 10 sugar, regrowing after 40 ticks) are the main food; 20 Flumps of metabolism 1, endowment 30 and vision 1–6 walk, and every Flump remembers for 400 ticks. Traplining — a fixed round of revisits timed to regrowth — should appear among rememberers. Measured (20 seeds, ticks 1–1000): it does. The index of return variability (Thomson, Slatkin & Thomson 1997: 0 for a perfect trapliner, 1 for random revisits) has a per-seed median of 0.15, below 0.8 in every seed. With half the Flumps remembering, rememberers gather 0.050 truffles a Flump-tick against 0.011 and are wealthier in every seed (144 sugar against 76 over ticks 200–500), as Ohashi & Thomson's \"more competitive\" predicts. The non-rememberers' index is 0.36 there, which also passes the 0.8 threshold, so the index alone doesn't show memory making the trapline; likely the sparse map channels anyone's wanderings through the same spots. The +69 advantage (144 against 76) is at share 0.5, not the preset's share 1. Gill's competition effect doesn't appear: the median interval between visits to the same spot is 50 ticks with 5 Flumps and with 20 (regrowth takes 40), and only about 12 % of revisits come sooner than 40 ticks either way.",
+            |c| {
+                c.width = 50;
+                c.height = 50;
+                c.population = 20;
+                c.goods[0].map = Map::Flat { capacity: 1.0 };
+                c.growback.rate = 0.1;
+                c.goods[0].metabolism = URange::new(1, 1);
+                c.goods[0].endowment = URange::new(30, 30);
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.02, 10.0, 40);
+                memory(c, 400, 1.0);
+            },
+        ),
+        preset(
+            "mem-mvt",
+            "Memory: the marginal value theorem",
+            "Charnov 1976; Minds 3",
+            "10 Flumps (metabolism 1, endowment 50, vision 1–20) on a 60 × 60 torus with nine equal patches (peaks of radius 4, height 4) on a square lattice of spacing 20, growback 0.25; walking under the utility mind with travel k = 0.5, and memory (span 400, share 1) so every Flump can walk back to a remembered patch. Few foragers, patches in sight and a travel cost is the marginal value theorem's setting: when to leave a patch that's still yielding. Measured (20 seeds, ticks 1–1000): under this mind, foragers who find a patch never leave it. A patch here takes in far more than one Flump eats, so no Flump ever departs (0 departures over all 20 seeds) and a median 5 of the 10 are alive at tick 1000, each settled on a patch; the rest likely start with no sugar in sight and stand still until they starve. Depleting patches don't help: with radius 2 and growback 0.05 (0.45 sugar a tick per patch), nobody is alive after tick 200 with 10 Flumps; with 3, nobody is alive at tick 1000 and only 3 departures happen across 20 seeds. So the theorem's decision, leaving when a patch's intake falls to the habitat's average, is untestable here. Likely reason: rule M and the utility mind compare the values of sites, not rates of intake, and hold no estimate of the habitat's average rate; and with sight only along rows and columns, a forager that has emptied a patch often has no other patch in sight. The marginal value theorem is left to Minds 4 (planning).",
+            |c| {
+                c.width = 60;
+                c.height = 60;
+                c.population = 10;
+                c.goods[0].map = Map::Peaks {
+                    peaks: (0..3u32)
+                        .flat_map(|i| {
+                            (0..3u32).map(move |j| Peak {
+                                x: 10 + 20 * i,
+                                y: 10 + 20 * j,
+                                radius: 4.0,
+                                height: 4.0,
+                            })
+                        })
+                        .collect(),
+                };
+                c.goods[0].metabolism = URange::new(1, 1);
+                c.goods[0].endowment = URange::new(50, 50);
+                c.vision = URange::new(1, 20);
+                c.growback.rate = 0.25;
+                c.movement.mode = MoveMode::Walk;
+                c.decision.rule = DecisionRule::Utility;
+                c.decision.travel = 0.5;
+                memory(c, 400, 1.0);
+            },
+        ),
+        preset(
+            "goap-mvt",
+            "Planning: when to leave a patch",
+            "Charnov 1976; Orkin 2006; Minds 4",
+            "The marginal value theorem's world, for a planner: 3 Flumps (metabolism 1, endowment 50, vision 1–6) on a 60 × 60 torus with nine equal patches (peaks of radius 3, height 4, 25 sites each) on a square lattice of spacing 20, growback 0.02. They walk, and plan with GOAP: each tick a Flump without a plan searches for the fastest sequence of harvests, among the 8 sites it knows with the most sugar per tick of walking (value ÷ (distance + 1)), that gathers 10 ticks of food, pricing each walk by its length. Every Flump remembers (span 1 000, share 1) and starts knowing the whole map, as the theorem's ideal forager does. The balance is set so a patch runs out under one forager (it takes in 0.5 sugar a tick against a forager's 1) while all nine patches together take in 1.5 times what the population eats (4.5 against 3). Measured (20 seeds, ticks 1–1000, the same world at spacings 12, 16, 20 and 24): longer travel, longer stays, as Charnov's theorem predicts. The fitted slope of mean patch residence on spacing is positive in every seed (a median 0.41 ticks per unit of spacing), though the median residence (18.6, 22.6, 25.7 and 22.8 ticks) dips between spacings 20 and 24, where a median 1 of the 3 Flumps is alive at tick 1000 at both. Survival falls with spacing (a median 3, 2, 1 and 1 alive), so the longest spacings rest on fewer foragers. At spacing 20, 28 of the 60 Flumps are alive at tick 1000. By the literal measure, Flumps overstay at a median 57 % of departures (above half in 18 of 20 seeds): their last tick in the patch gathers less than their average so far. That last tick is likely often a step walking out: counting only the last in-patch tick on which a Flump landed on a plan target, the share is 30 % at spacing 20, above half in no seed (1 % of departures dropped as all transit). Unlike Constantino and Daw's people, they overstay less as travel grows (61 % at spacing 12, 46 % at 24 by the literal measure; 33 % and 20 % without transit). Rule M with the same knowledge (the map, memory) leaves after about 5 ticks at every spacing, its stays shorten as spacing grows in every seed, and at spacings 16 to 24 a median 0 of its 3 Flumps is alive at tick 1000. The planner plans afresh on 12 % of Flump-ticks and falls back on under 1 %. With the value shortlist (the spec's first design: the 8 best known sites by value alone), stays shorten with spacing in every seed and only 4 of 60 are alive at tick 1000 at spacing 20; likely because ranking by value alone leaves only far patch centers to plan over.",
+            |c| mvt_world(c, DecisionRule::Goap),
+        ),
+        preset(
+            "mvt-rule",
+            "The marginal-value rule",
+            "Charnov 1976; Constantino & Daw 2015; Minds 4",
+            "goap-mvt's world under the marginal-value rule instead of planning: each Flump keeps ρ, a running mean of its intake per tick (travel ticks count as 0; smoothing α 0.05; starting at its metabolism). It stays while the best site within one step, its own included, is believed to hold at least ρ, and harvests there; otherwise it leaves for the best site it knows, committed until it arrives. Every Flump knows the whole map from the start and remembers what it sees (span 1 000). Measured (20 seeds, ticks 1–1000, the same world at spacings 12, 16, 20 and 24): stays lengthen with travel in 19 of 20 seeds, but only slightly (median residence 11.8, 12.4, 12.7 and 12.9 ticks); at spacing 20 that's half the planner's 25.7. A median 1 of the 3 Flumps is alive at tick 1000 at spacing 20. It doesn't overstay: at spacing 20 a median 39 % of departures follow a last tick in the patch below the Flump's average so far, under half in every seed, and the share falls as travel grows (56 % at spacing 12, 35 % at 24), against the planner's 57 %. Counting only the last in-patch tick on which it wasn't leaving, the share is 2 % at spacing 20 (9 % of departures dropped as all transit), so the literal figure is likely mostly ticks spent walking out. Likely reason: it leaves as soon as the best site within one step is believed below ρ, a test made before the harvest, so it rarely stays on for a poor last tick.",
+            |c| mvt_world(c, DecisionRule::Mvt),
+        ),
+        preset(
+            "goap-open",
+            "Planning with memory: open sugarscape",
+            "Orkin 2006; Minds 4",
+            "mem-open's world (walk-capacity's Flumps walking to their targets; half of them remember for 100 ticks) with the planner instead of rule M: each Flump without a plan searches for the fastest sequence of harvests, among the 8 sites it sees or remembers with the most sugar per tick of walking (value ÷ (distance + 1)), that gathers 10 ticks of food, pricing each walk by its length. Measured (20 seeds, ticks 200–500): memory pays a planner. Rememberers hold a median 319 sugar against the others' 240, an advantage of +69, positive in 19 of 20 seeds, where under rule M it was −113 on the same seeds; the planner's advantage is higher in every seed. Counting the dead as 0 (sugar held per founding member, mean over ticks 200–500, no survivorship), the advantage is still +35, positive in 18 of 20 seeds. Memory is used, not avoided: 99 % of rememberers' plans include a remembered site out of sight. The planner's others are much poorer than rule M's (240 against 438). Two likely causes, neither isolated: the planner holds more Flumps (a median 200 against 177 over ticks 200–500), so more share the same sugar; and a Flump takes the fallback (too little known sugar for 10 ticks of food) on 40 % of Flump-ticks, likely mostly the non-rememberers, who know only what's in sight. A new plan is made on 22 % of Flump-ticks. In the goap-k sweep, K from 2 to 12 changes the population little (197–208).",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                memory(c, 100, 0.5);
+                c.decision.rule = DecisionRule::Goap;
+            },
+        ),
+        preset(
+            "goap-truffles",
+            "Planning with memory: hidden truffle spots",
+            "Orkin 2006; Minds 4",
+            "mem-truffles's world (walk-capacity's world with truffle spots, invisible until walked onto, worth 5 sugar and regrowing 30 ticks after being picked, on 5 % of sites; half the Flumps remember for 200 ticks) with the planner instead of rule M: each Flump without a plan searches for the fastest sequence of harvests, among the 8 sites it sees or remembers with the most sugar per tick of walking (value ÷ (distance + 1)), that gathers 10 ticks of food, pricing each walk by its length. Measured (20 seeds, ticks 200–500): memory pays a planner. Rememberers hold a median 363 sugar against the others' 254, an advantage of +99, positive in every seed, where under rule M it was −82 on the same seeds. Fewer rememberers survive (41 % alive at tick 500 against 53 %), so part of the gap is survivorship: counting the dead as 0 (sugar per founding member, mean over ticks 200–500), the advantage is +26 but positive in only 14 of 20 seeds, short of the 80 % the survey asks for; so rememberers are richer while they live, not clearly per head of those born. 98 % of rememberers' plans include a remembered site out of sight. In the goap-memory sweep the mean advantage is +90 to +113 at every share remembering from 0.1 to 0.9, against −73 to −98 under rule M (mem-share).",
+            |c| {
+                c.movement.mode = MoveMode::Walk;
+                truffles(c, 0.05, 5.0, 30);
+                memory(c, 200, 0.5);
+                c.decision.rule = DecisionRule::Goap;
+            },
+        ),
+        preset(
+            "goap-walled",
+            "Planning with memory: beyond the wall",
+            "Orkin 2006; Minds 4",
+            "mem-walled's world (the 2.10 : 1 patches with vision 10–20, split by an opaque wall with a central gap; half the Flumps remember for 200 ticks) with the planner instead of rule M: each Flump without a plan searches for the fastest sequence of harvests, among the 8 sites it sees or remembers with the most sugar per tick of walking (value ÷ (distance + 1)), that gathers 10 ticks of food, pricing each walk by its length. Measured (20 seeds, ticks 200–500): in mem-walled, rememberers starved walking to far remembered sites (7 % alive at tick 500 against 74 %, an advantage of −114). Under the planner they don't: rememberers hold a median 106 sugar against the others' 75, an advantage of +33, positive in every seed, and 60 % of them are alive at tick 500 against 74 % of the others. Counting the dead as 0 (sugar per founding member, mean over ticks 200–500), the advantage is +10, positive in only 15 of 20 seeds, short of the 80 % the survey asks for. 99 % of rememberers' plans include a remembered site out of sight. The population is larger than rule M's (a median 67 against 46 over ticks 200–500). Likely cause: the planner counts the walk, so a far remembered site enters a plan only when its sugar repays the ticks of walking.",
+            |c| {
+                two_patches(c, 7.0);
+                c.vision = URange::new(10, 20);
+                c.movement.mode = MoveMode::Walk;
+                fence(c, 0, true);
+                memory(c, 200, 0.5);
+                c.decision.rule = DecisionRule::Goap;
+            },
+        ),
     ]
 }
 
@@ -754,6 +1058,29 @@ pub(crate) fn two_patches(c: &mut Config, second_radius: f64) {
     c.goods[0].metabolism = URange::new(1, 1);
     c.goods[0].endowment = URange::new(50, 50);
     c.growback.rate = 0.25;
+}
+
+/// Minds 2's fences: one-site-wide fences at x = 28 (between the patches)
+/// and x = 2 (closing the route around the torus), from top to bottom
+/// except a two-site gap at rows 20 + `offset` and 21 + `offset`.
+///
+/// A confound, unmeasured: the fences split the torus into 25 columns on
+/// the richer patch's side (x = 3–27) and 33 on the poorer's, so random
+/// placement starts about 57 % of Flumps on the poorer side.
+fn fence(c: &mut Config, offset: u32, opaque: bool) {
+    let rect = |x, y, height| Wall {
+        x,
+        y,
+        width: 1,
+        height,
+        opaque,
+    };
+    c.walls = vec![
+        rect(28, 0, 20 + offset),
+        rect(28, 22 + offset, 18 - offset),
+        rect(2, 0, 20 + offset),
+        rect(2, 22 + offset, 18 - offset),
+    ];
 }
 
 pub fn by_id(id: &str) -> Option<Preset> {
@@ -828,6 +1155,10 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::image::presets());
     out.extend(crate::farol::presets());
     out.extend(crate::ants::presets());
+    out.extend(crate::thresholds::presets());
+    out.extend(crate::retirement::presets());
+    out.extend(crate::punishment::presets());
+    out.extend(crate::zi::presets());
     out
 }
 
@@ -839,7 +1170,7 @@ pub fn find(id: &str) -> Option<ModelPreset> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{DecisionRule, Idle};
+    use crate::config::{DecisionRule, Idle, Movement};
 
     #[test]
     fn the_ifd_presets_share_the_two_patch_world() {
@@ -898,6 +1229,47 @@ mod tests {
             by_id("ifd-no-starving").unwrap().config.goods[0].endowment,
             URange::new(100_000, 100_000)
         );
+    }
+
+    #[test]
+    fn the_walking_presets_walk_and_the_fenced_ones_have_a_gap() {
+        for id in [
+            "walk-capacity",
+            "walk-wealth",
+            "walk-seasons",
+            "walk-waves",
+            "walk-fast",
+            "ifd-fence",
+            "ifd-fence-far",
+            "ifd-wall",
+        ] {
+            let c = by_id(id).unwrap_or_else(|| panic!("{id}")).config;
+            assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
+        }
+        assert_eq!(by_id("walk-fast").unwrap().config.movement.speed, 3);
+        let base = |id: &str| by_id(id).unwrap().config;
+        let mut jumped = base("walk-capacity");
+        jumped.movement = Movement::default();
+        assert_eq!(jumped, base("ii-2-unit"));
+        let gap_rows = |id: &str| {
+            let c = base(id);
+            let covered = |y: u32| {
+                c.walls
+                    .iter()
+                    .any(|w| w.x == 28 && (w.y..w.y + w.height).contains(&y))
+            };
+            (0..40).filter(|&y| !covered(y)).collect::<Vec<_>>()
+        };
+        assert_eq!(gap_rows("ifd-fence"), [20, 21]);
+        assert_eq!(gap_rows("ifd-fence-far"), [35, 36]);
+        assert!(base("ifd-fence").walls.iter().all(|w| !w.opaque));
+        assert!(base("ifd-wall").walls.iter().all(|w| w.opaque));
+        assert_eq!(
+            base("ifd-fence").walls.len(),
+            4,
+            "x = 28 and x = 2, above and below the gap"
+        );
+        assert_eq!(base("ifd-fence").vision, URange::new(10, 20));
     }
 
     #[test]
@@ -964,7 +1336,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 39);
+        assert_eq!(presets.len(), 59);
         for p in presets {
             p.config
                 .validate()
@@ -1168,6 +1540,84 @@ mod tests {
             .map(|g| (g.name.as_str(), g.zeros.min, g.zeros.max))
             .collect();
         assert_eq!(spans, [("Blue", 0, 3), ("Green", 4, 7), ("Red", 8, 11)]);
+    }
+
+    #[test]
+    fn the_memory_presets_walk_and_remember() {
+        let ids = [
+            "mem-open",
+            "mem-catchment",
+            "mem-walled",
+            "mem-seasons",
+            "mem-truffles",
+            "mem-trapline",
+            "mem-mvt",
+        ];
+        for id in ids {
+            let c = by_id(id).unwrap_or_else(|| panic!("{id}")).config;
+            c.validate().unwrap_or_else(|e| panic!("{id}: {e:?}"));
+            assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
+            assert!(c.memory.span > 0, "{id}: no memory");
+        }
+        for id in ["mem-truffles", "mem-trapline"] {
+            assert!(
+                by_id(id).unwrap().config.truffles.share > 0.0,
+                "{id}: no truffles"
+            );
+        }
+        let mvt = by_id("mem-mvt").unwrap().config;
+        let Map::Peaks { peaks } = &mvt.goods[0].map else {
+            panic!("mem-mvt: not a peaks map")
+        };
+        assert_eq!(peaks.len(), 9, "mem-mvt: nine peaks");
+        let mut centers: Vec<(u32, u32)> = peaks.iter().map(|p| (p.x, p.y)).collect();
+        centers.sort();
+        let mut expected: Vec<(u32, u32)> = (0..3u32)
+            .flat_map(|i| (0..3u32).map(move |j| (10 + 20 * i, 10 + 20 * j)))
+            .collect();
+        expected.sort();
+        assert_eq!(centers, expected, "mem-mvt: peak centers");
+        assert!(
+            peaks.iter().all(|p| p.radius == 4.0 && p.height == 4.0),
+            "mem-mvt: peak radius/height"
+        );
+    }
+
+    #[test]
+    fn the_planning_presets_are_minds_3_worlds_under_goap_and_the_mvt_world() {
+        // goap-open, goap-truffles and goap-walled are Minds 3's worlds with
+        // only the decision rule changed.
+        for (goap, mem) in [
+            ("goap-open", "mem-open"),
+            ("goap-truffles", "mem-truffles"),
+            ("goap-walled", "mem-walled"),
+        ] {
+            let g = by_id(goap).unwrap().config;
+            g.validate().unwrap_or_else(|e| panic!("{goap}: {e:?}"));
+            let mut m = by_id(mem).unwrap().config;
+            m.decision.rule = DecisionRule::Goap;
+            assert_eq!(g, m, "{goap}");
+        }
+        // goap-mvt and mvt-rule share one world, balanced per Task 7: a
+        // patch takes in 25 × 0.02 = 0.5 a tick (< one forager's 1), and
+        // nine patches take in 1.5 times the population's need.
+        let goap = by_id("goap-mvt").unwrap().config;
+        let mut mvt = by_id("mvt-rule").unwrap().config;
+        assert_eq!(goap.decision.rule, DecisionRule::Goap);
+        assert_eq!(mvt.decision.rule, DecisionRule::Mvt);
+        mvt.decision.rule = DecisionRule::Goap;
+        assert_eq!(goap, mvt);
+        goap.validate().unwrap();
+        assert_eq!(goap.memory.prior, MemoryPrior::Map);
+        assert_eq!((goap.memory.span, goap.memory.share), (1000, 1.0));
+        assert_eq!(goap.vision, URange::new(1, 6));
+        let w = crate::world::World::new(goap.clone(), 1).unwrap();
+        let sites = w.sites.iter().filter(|s| s.capacity[0] >= 1.0).count();
+        assert_eq!(sites, 9 * 25);
+        let per_patch = 25.0 * goap.growback.rate;
+        assert!((per_patch - 0.5).abs() < 1e-12, "{per_patch}");
+        let need = f64::from(goap.population);
+        assert!((9.0 * per_patch / need - 1.5).abs() < 1e-12);
     }
 
     #[test]

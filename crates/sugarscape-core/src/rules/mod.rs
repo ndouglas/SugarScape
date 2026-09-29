@@ -11,6 +11,7 @@ pub mod pollution;
 pub mod replacement;
 pub mod sex;
 pub mod trade;
+pub mod truffles;
 
 use crate::agent::AgentId;
 use crate::config::{DiseaseCure, MAX_GOODS};
@@ -46,6 +47,9 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     } else {
         crate::minds::decide(world, id)
     };
+    if world.config.memory.span > 0 {
+        crate::minds::memory::observe(world, id);
+    }
     lifecycle::metabolize(world, id, harvest);
     if world.config.credit.enabled {
         credit::record_income(world, id, &harvest);

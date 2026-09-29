@@ -1,0 +1,56 @@
+{
+  "name": "Altruistic Punishment: Fig. 4, fixed against variable costs",
+  "description": "Figure 4: no punishment, a fixed punishing cost (equal to c, paid every period), and the variable cost (k/n per defector). Measured (release, seeds 1–10, the mean cooperation over the last 1 000 of 2 000 periods, recorded 2026-09-28): none: 0.62, 0.33, 0.14, 0.10, 0.09 …; fixed: 0.70, 0.51, 0.21, 0.09, 0.07 …; variable: 0.82, 0.83, 0.78, 0.69, 0.44, 0.17, 0.12 at n 4–256. A fixed cost helps only in the smallest groups and not at all from n 32, as stated (the figure's fixed: 0.84, 0.78, 0.50, 0.10, 0.07 …).",
+  "base": {
+    "preset": "bg-base"
+  },
+  "x": {
+    "label": "Group size (n)",
+    "path": "size",
+    "values": [
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "series": {
+    "label": "Punishment",
+    "values": [
+      {
+        "at": 0,
+        "name": "None",
+        "set": {
+          "fine": 0,
+          "punish_cost": 0
+        }
+      },
+      {
+        "at": 1,
+        "name": "Fixed cost",
+        "set": {
+          "punishing": "fixed"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Variable cost",
+        "set": {
+          "punishing": "variable"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "long_run"
+  }
+}

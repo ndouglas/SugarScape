@@ -137,6 +137,47 @@ fn presets_and_sweeps_are_listed() {
         "ants-pull",
         "ants-sources",
         "am-independent",
+        "gr-sd",
+        "gr-friends",
+        "gr-movement",
+        "gr-ceilings",
+        "watts-window",
+        "watts-hetero",
+        "watts-targeting",
+        "ae-rational",
+        "ae-rational-replace",
+        "ae-threshold",
+        "ae-size",
+        "ae-extent",
+        "ae-policy",
+        "ae-coupling",
+        "ae-coupling-rational",
+        "bg-fig1a",
+        "bg-fig1b",
+        "bg-fig1-caption",
+        "bg-fig1-either",
+        "bg-fig2a",
+        "bg-fig2b",
+        "bg-fig3",
+        "bg-fig4",
+        "bg-baseline",
+        "bg-readings",
+        "bg-mutation",
+        "bg-error",
+        "bg-groups",
+        "bg-benefit",
+        "bg-continuous",
+        "bg-ring",
+        "bg-cooney-fine",
+        "bg-cooney-cost",
+        "gs-efficiency",
+        "gs-dispersion",
+        "gs-shouts",
+        "gs-mechanism",
+        "cliff-prices",
+        "zip-days",
+        "zip-momentum",
+        "zip-shift",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -538,6 +579,103 @@ fn an_ants_run_stops_at_its_last_step() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 25 (its last step)\n");
+}
+
+#[test]
+fn a_thresholds_run_stops_at_its_last_step() {
+    let dir = scratch("thresholds");
+    let config = dir.join("stop.json");
+    std::fs::write(
+        &config,
+        r#"{"model": "thresholds", "repeat": true, "stop_at": 25}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 25 (its last step)\n");
+}
+
+#[test]
+fn a_zi_run_stops_at_its_last_period() {
+    let dir = scratch("zi");
+    let config = dir.join("zi.json");
+    std::fs::write(&config, r#"{"model": "zi", "shouts": 100, "stop_at": 3}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "1000",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 300 (its last period)\n");
+}
+
+#[test]
+fn a_punishment_run_stops_at_its_last_period() {
+    let dir = scratch("punishment");
+    let config = dir.join("punishment.json");
+    std::fs::write(
+        &config,
+        r#"{"model": "punishment", "groups": 8, "size": 4, "stop_at": 30}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 30 (its last period)\n");
+}
+
+#[test]
+fn a_retirement_run_stops_at_the_norm_or_its_last_period() {
+    let dir = scratch("retirement");
+    let config = dir.join("norm.json");
+    std::fs::write(
+        &config,
+        r#"{"model": "retirement", "per_cohort": 20, "rational": 0.3, "stop_at_norm": true}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).ends_with("(the norm set in)\n"),
+        "{}",
+        stderr(&out)
+    );
+    let stop = dir.join("stop.json");
+    std::fs::write(
+        &stop,
+        r#"{"model": "retirement", "per_cohort": 20, "stop_at": 25}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&["run", "--config", stop.to_str().unwrap(), "--ticks", "100"]);
+    assert_eq!(stderr(&out), "finished at tick 25 (its last period)\n");
+    // Stopping at the norm, but no norm by `stop_at`: counting all members.
+    let never = dir.join("never.json");
+    std::fs::write(
+        &never,
+        r#"{"model": "retirement", "per_cohort": 20, "counts": "all", "stop_at_norm": true, "stop_at": 20}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&["run", "--config", never.to_str().unwrap(), "--ticks", "100"]);
+    assert_eq!(stderr(&out), "finished at tick 20 (its last period)\n");
 }
 
 #[test]

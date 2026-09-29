@@ -2,11 +2,11 @@ import { COMPARE_PRESETS } from '../compare-presets';
 import type { Engine } from '../engine';
 import { goodsEditorSignature, pollutionEditorSignature } from '../goods';
 import { groupsEditorSignature } from '../groups';
-import { presetGroups, presetModel, presetOptionLabel, presetReference } from '../models';
+import { presetGroups, presetModel, presetOptionLabel, presetReference, presetSubgroups } from '../models';
 import { errorsFor, getPath, setPath } from '../paths';
 import { GROUPS, type Control, type Group } from '../schema';
 import { scheduleLines } from '../schedule';
-import type { Config, FieldError, URange } from '../types';
+import type { Config, FieldError, ModelKind, URange } from '../types';
 import { h } from './dom';
 import { goodsEditor, type Commit, type Editor } from './goods-editor';
 import { groupsEditor } from './groups-editor';
@@ -29,12 +29,12 @@ export interface RulesOptions {
    * one model, so it is left first — Decision 11).
    */
   beforeModelChange?: () => Promise<boolean>;
-  /** B's panel in Compare: the menu offers only its world's model's presets. */
+  /** B's panel in Compare: the model menu is fixed to its world's model. */
   sameModelOnly?: boolean;
 }
 
 /**
- * The preset picker (grouped by model), then the sugarscape's sections (one per rule, from GROUPS)
+ * The preset picker (a model menu, then its presets), then the sugarscape's sections (one per rule, from GROUPS)
  * or, for another model, its schema-driven panel.
  */
 export class RulesPanel {
@@ -109,49 +109,99 @@ export class RulesPanel {
     return el;
   }
 
+  /**
+   * Two menus: the model, then that model's presets (the sugarscape's grouped by chapter). The model
+   * menu's last entry, Compare, lists the Compare pairs in the second menu instead. Choosing another
+   * model loads its first preset.
+   */
   private presetSection(): HTMLElement {
-    const select = h(
+    const COMPARE = 'compare';
+    const custom = () => h('option', { value: '', disabled: true }, 'Custom');
+    // The model whose presets the second menu lists: the world's, or Compare while browsing its pairs.
+    let listed = '';
+    const load = async (id: string) => {
+      const preset = this.engine.presets.find((p) => p.id === id);
+      const leaving = preset !== undefined && presetModel(preset) !== this.engine.model;
+      if (leaving && this.opts.beforeModelChange && !(await this.opts.beforeModelChange())) {
+        this.sync();
+        return;
+      }
+      this.errors = (await this.engine.loadPreset(id)) ?? [];
+      if (this.errors.length > 0) this.sync();
+      this.renderErrors();
+    };
+    const presetSelect = h('select', {
+      onchange: async () => {
+        if (listed === COMPARE) {
+          const id = presetSelect.value;
+          // Not a rule system of this world: the menus go back to showing the current one.
+          this.sync();
+          this.opts.onCompare?.(id);
+          return;
+        }
+        await load(presetSelect.value);
+      },
+    });
+    const list = (model: string) => {
+      listed = model;
+      if (model === COMPARE) {
+        presetSelect.replaceChildren(
+          h('option', { value: '', disabled: true }, 'Choose two worlds to compare'),
+          ...COMPARE_PRESETS.map((c) => h('option', { value: c.id }, c.label.replace(/ \(Compare\)$/, ''))),
+        );
+        presetSelect.value = '';
+        return;
+      }
+      presetSelect.replaceChildren(
+        custom(),
+        ...presetSubgroups(model as ModelKind, this.engine.presets).map((g) => {
+          const options = g.presets.map((p) => h('option', { value: p.id }, presetOptionLabel(p)));
+          return g.label === null ? options : [h('optgroup', { label: g.label }, ...options)];
+        }).flat(),
+      );
+    };
+    const modelSelect = h(
       'select',
       {
         onchange: async () => {
-          const compare = COMPARE_PRESETS.find((c) => `compare:${c.id}` === select.value);
-          if (compare) {
-            // Not a rule system of this world: the menu goes back to showing the current one.
-            this.sync();
-            this.opts.onCompare?.(compare.id);
+          const model = modelSelect.value;
+          if (model === COMPARE || model === this.engine.model) {
+            list(model);
+            if (model === this.engine.model) this.sync();
             return;
           }
-          const preset = this.engine.presets.find((p) => p.id === select.value);
-          const leaving = preset !== undefined && presetModel(preset) !== this.engine.model;
-          if (leaving && this.opts.beforeModelChange && !(await this.opts.beforeModelChange())) {
-            this.sync();
-            return;
-          }
-          this.errors = (await this.engine.loadPreset(select.value)) ?? [];
-          if (this.errors.length > 0) this.sync();
-          this.renderErrors();
+          const first = presetSubgroups(model as ModelKind, this.engine.presets)[0]?.presets[0];
+          if (first) await load(first.id);
         },
       },
-      h('option', { value: '', disabled: true }, 'Custom'),
-      ...presetGroups(this.engine.presets)
-        .filter((g) => !this.opts.sameModelOnly || g.model === this.engine.model)
-        .map((g) => h('optgroup', { label: g.label }, ...g.presets.map((p) => h('option', { value: p.id }, presetOptionLabel(p))))),
-      this.opts.onCompare
-        ? h('optgroup', { label: 'Compare' }, ...COMPARE_PRESETS.map((c) => h('option', { value: `compare:${c.id}` }, c.label)))
-        : null,
+      ...presetGroups(this.engine.presets).map((g) => h('option', { value: g.model }, g.label)),
+      this.opts.onCompare ? h('option', { value: COMPARE }, 'Compare two worlds…') : null,
     );
+    // B's panel in Compare keeps its world's model.
+    modelSelect.disabled = this.opts.sameModelOnly === true;
     const badge = h('span', { class: 'badge' }, 'modified');
     const reference = h('p', { class: 'hint preset-reference' });
     const desc = h('p', { class: 'hint' });
     this.presetSync = () => {
       const p = this.engine.presets.find((x) => x.id === this.engine.presetId);
-      select.value = p?.id ?? '';
+      modelSelect.value = this.engine.model;
+      if (listed !== this.engine.model) list(this.engine.model);
+      presetSelect.value = p?.id ?? '';
       badge.hidden = !this.engine.isModified();
       reference.textContent = p ? presetReference(p) : '';
       reference.hidden = p === undefined;
       desc.textContent = p ? p.description : 'Custom configuration.';
     };
-    return h('section', { class: 'presets' }, h('label', {}, 'Rule system ', badge), select, reference, desc);
+    return h(
+      'section',
+      { class: 'presets' },
+      h('label', {}, 'Model'),
+      modelSelect,
+      h('label', {}, 'Rule system ', badge),
+      presetSelect,
+      reference,
+      desc,
+    );
   }
 
   private scheduleSection(): HTMLElement {

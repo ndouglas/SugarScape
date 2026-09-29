@@ -230,6 +230,53 @@ IIb's "average about one-half" needs a hundred times the figure's run; the herdi
 colony grows; a random network cures that under Alfarano and Milaković's rule but not Kirman's, and
 their mean field fails on rings. See `docs/superpowers/specs/2026-09-27-ants-design.md`.
 
+## Milestone 25: Threshold Models (done)
+
+Granovetter's threshold model (1978) as a model kind, with the four extensions he sketches — friends,
+crowds sampled from a city, clusters with movement, ceilings — and Watts's cascades on random
+networks (2002). His crowds and Figure 2's continuous jump reproduce, but a crowd of real people has
+no single tipping point, and the city's "equilibrium of 100" happens in 2 % of crowds; the friends
+claims hold under a stated reading; middling movement is most incendiary; ceilings make riots pulse.
+Watts's window and power law reproduce; his upper edge depends on n, his Fig. 4b cannot be built as
+stated, and hubs help in both regimes. See `docs/superpowers/specs/2026-09-27-thresholds-design.md`.
+
+## Milestone 26: The Timing of Retirement (done)
+
+Axtell and Epstein's retirement model (1999; Epstein 2006, ch. 7) as a model kind: cohorts, deaths and
+newborns, rational, random and imitating agents in transient networks, the policy switch from 65 to 62
+and two coupled sub-populations, with the unstated rules — whom an imitator counts, what becomes of a
+dead friend's place, activation order, transition time — as switches. The realizations reproduce in
+shape (a little slower than stated) and the network-size effects as stated, but network extent has no
+effect at 5 % rational; footnote 5 is false (counting every friend, no norm forms); Figure
+6-6's minimum of rationality needs an unstated renewal rule; the policy switch's slow response does
+not reproduce (the new norm comes in 2 periods); coupling slows the rational group as much as it
+speeds the other. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.
+
+## Milestone 27: Altruistic Punishment (done)
+
+Boyd, Gintis, Bowles and Richerson's altruistic punishment (PNAS 2003) as a model kind: groups of
+contributors, defectors and punishers, payoff-biased imitation with mixing, intergroup conflict and
+mutation, with the paper's structural variants (a per-capita benefit with payoff conflict, continuous
+traits, a ring without extinction), Cooney's PDE critique (2024) and Janssen's NetLogo replication's
+readings as switches. The figures' shapes hold under the text's rules, but not their reach; the
+payoff baseline is unstated and Fig. 1's caption and legend disagree on the conflict rates. The
+figures fit about twice the stated conflict rate: pairs fighting at 2ε reproduce all 14 curves of
+Figs. 1–4, the text's rate 2 (either group starting a conflict, a switch here, 13). Continuous traits are not "similar"; the mixing
+calibration is off by five; Cooney's payoff dip appears under every victory rule. See
+`docs/superpowers/specs/2026-09-28-punishment-design.md`.
+
+## Milestone 28: Zero-Intelligence Traders (done)
+
+Gode and Sunder's double auction with zero-intelligence traders (JPE 1993) as a model kind, with
+Cliff's critique, simulator and ZIP traders (HP Labs 1997): their five markets read from the scan
+(Table 2's ZI-U efficiencies pin four of them down exactly), Cliff's markets, shifts and retail
+market, and every unstated rule a switch. Gode and Sunder's efficiencies and dispersions reproduce —
+but only with enough shouts per period, which their "30 seconds" never gives; Cliff's price
+predictions miss the box markets and his 233⅓ is not his formula's, though his critique's direction
+holds even in Gode and Sunder's mechanism; ZIP converges; and his code's momentum and day are not his
+text's.
+See `docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -250,7 +297,14 @@ their mean field fails on rings. See `docs/superpowers/specs/2026-09-27-ants-des
 - **Deffuant et al.'s relative agreement and extremism** (and Meadows & Cliff's replication): done (Milestone 22).
 - **Arthur's El Farol and Challet & Zhang's minority game** (and the memory transition, and Challet, Marsili & Ottino's critique): done (Milestone 23).
 - **Kirman's ants and recruitment** (and Alfarano & Milaković's network critique): done (Milestone 24).
+- **Granovetter's threshold models** (and Watts's global cascades): done (Milestone 25).
+- **Axtell and Epstein's timing of retirement**: done (Milestone 26).
+- **Boyd, Gintis, Bowles and Richerson's altruistic punishment** (and Cooney's PDE critique): done (Milestone 27).
+- **Gode and Sunder's zero-intelligence traders** (and Cliff's critique and ZIP traders): done (Milestone 28).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
+- **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
+- **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.
+- **Minds 4: GOAP and the marginal value theorem; does memory pay a mind that prices travel** (our experiment; docs/studies/2026-09-27-minds.md): done. Planners stay longer when travel is longer; overstaying isn't shown; memory pays a planner among the living. Minds 5 (caching) next.
 - **Credit hierarchy view**: done (Milestone 6).
 
 ## Model extensions

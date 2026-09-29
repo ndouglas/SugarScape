@@ -156,6 +156,10 @@ fn disease_api_lists_infects_and_vaccinates() {
     );
     assert_eq!(sim.vaccinate(p[0], p[1], 0, 10).unwrap(), 1);
     let view: serde_json::Value = serde_json::from_str(&sim.inspect(p[0], p[1]).unwrap()).unwrap();
+    assert!(
+        view["agent"].get("plan").is_some(),
+        "Minds 2: plan appears in the inspection"
+    );
     let carried = view["agent"]["diseases"].as_array().unwrap();
     assert!(
         carried.iter().all(|d| d["id"] != 10),
@@ -340,7 +344,57 @@ fn builtins_and_series_names_are_listed() {
             "ifd-matching",
             "ifd-idle",
             "ifd-crowding",
-            "ifd-travel"
+            "ifd-travel",
+            "gr-sd",
+            "gr-friends",
+            "gr-movement",
+            "gr-ceilings",
+            "watts-window",
+            "watts-hetero",
+            "watts-targeting",
+            "walk-speed",
+            "walk-vision",
+            "ifd-detour",
+            "ae-rational",
+            "ae-rational-replace",
+            "ae-threshold",
+            "ae-size",
+            "ae-extent",
+            "ae-policy",
+            "ae-coupling",
+            "ae-coupling-rational",
+            "bg-fig1a",
+            "bg-fig1b",
+            "bg-fig1-caption",
+            "bg-fig1-either",
+            "bg-fig2a",
+            "bg-fig2b",
+            "bg-fig3",
+            "bg-fig4",
+            "bg-baseline",
+            "bg-readings",
+            "bg-mutation",
+            "bg-error",
+            "bg-groups",
+            "bg-benefit",
+            "bg-continuous",
+            "bg-ring",
+            "bg-cooney-fine",
+            "bg-cooney-cost",
+            "mem-span-recall",
+            "mem-span-project",
+            "mem-share",
+            "gs-efficiency",
+            "gs-dispersion",
+            "gs-shouts",
+            "gs-mechanism",
+            "cliff-prices",
+            "zip-days",
+            "zip-momentum",
+            "zip-shift",
+            "goap-horizon",
+            "goap-k",
+            "goap-memory"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -500,6 +554,131 @@ fn the_utility_minds_crowding_matches_its_golden_entry() {
     sim.step(200);
     // crates/sugarscape-core/tests/golden.rs
     assert_eq!(sim.fingerprint(), "0x5a5e863436971c96");
+}
+
+#[wasm_bindgen_test]
+fn walking_behind_a_fence_matches_its_golden_entry() {
+    // Fences, walls and A* walking: native and wasm must agree.
+    let preset = sugarscape_core::presets::by_id("ifd-fence").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0x6c30002185fdb871");
+}
+
+#[wasm_bindgen_test]
+fn remembered_truffles_matches_its_golden_entry() {
+    // Minds 3: memory and believed truffle spots; native and wasm must agree.
+    let preset = sugarscape_core::presets::by_id("mem-truffles").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0xf511426e092ca85b");
+}
+
+#[wasm_bindgen_test]
+fn planning_the_marginal_value_theorem_matches_its_golden_entry() {
+    // Minds 4: GOAP planning; native and wasm must agree.
+    let preset = sugarscape_core::presets::by_id("goap-mvt").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0x08bc669f7b7ddb21");
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_a_goap_flumps_plan() {
+    let preset = sugarscape_core::presets::by_id("goap-mvt").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(50);
+
+    let (width, height) = (sim.width(), sim.height());
+    let mut found = false;
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let Some(goap) = agent.get("goap").and_then(|g| g.as_object()) else {
+                continue;
+            };
+            let steps = goap.get("steps").and_then(|s| s.as_array()).unwrap();
+            if steps.is_empty() {
+                continue;
+            }
+            assert!(goap.get("gathers").and_then(|g| g.as_f64()).unwrap() > 0.0);
+            assert!(goap.get("goal").and_then(|g| g.as_f64()).unwrap() > 0.0);
+            found = true;
+            break;
+        }
+        if found {
+            break;
+        }
+    }
+    assert!(found, "expected at least one Flump with a plan by tick 50");
+}
+
+#[wasm_bindgen_test]
+fn inspect_memory_lists_a_rememberers_sites_and_is_empty_elsewhere() {
+    let preset = sugarscape_core::presets::by_id("mem-truffles").unwrap();
+    let json = serde_json::to_string(&preset.config).unwrap();
+    let mut sim = Sim::new(&json, 1, JsValue::NULL).unwrap();
+    sim.step(50);
+
+    let (width, height) = (sim.width(), sim.height());
+    let mut found = false;
+    let mut empty_site = None;
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                if empty_site.is_none() {
+                    empty_site = Some((x, y));
+                }
+                continue;
+            };
+            let Some(memory) = agent.get("memory").and_then(|m| m.as_object()) else {
+                continue;
+            };
+            if memory.get("remembers").and_then(|r| r.as_bool()) != Some(true) {
+                continue;
+            }
+            let sites = memory.get("sites").and_then(|s| s.as_u64()).unwrap();
+            let list = sim.inspect_memory(x, y);
+            assert_eq!(list.len() % 4, 0, "a flat list of [x, y, age, spot]");
+            assert_eq!(
+                list.len() as u64,
+                sites * 4,
+                "one [x, y, age, spot] per remembered site"
+            );
+            for entry in list.chunks(4) {
+                let [sx, sy, _age, spot] = entry else {
+                    unreachable!()
+                };
+                assert!(*sx < width && *sy < height, "plausible coordinates");
+                assert!(*spot <= 2, "spot is 0, 1 or 2");
+            }
+            found = true;
+            break;
+        }
+        if found {
+            break;
+        }
+    }
+    assert!(found, "expected at least one rememberer by tick 50");
+
+    let (ex, ey) = empty_site.expect("expected at least one empty site");
+    assert!(
+        sim.inspect_memory(ex, ey).is_empty(),
+        "no Flump there: empty"
+    );
 }
 
 #[wasm_bindgen_test]
@@ -911,6 +1090,89 @@ fn ants_sims_match_the_native_golden_entries() {
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "ants");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn thresholds_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: normal crowds by
+    // quantiles and samples (the portable logarithm), city crowds, friends,
+    // ceilings, clusters and Watts's networks.
+    for (id, fp) in [
+        ("gr-normal-13", "0xcda701fbbdaa19ce"),
+        ("gr-normal-sampled", "0xa9bca3821a0f4774"),
+        ("gr-city", "0xa587dcb16521cf3c"),
+        ("gr-friends", "0x37ae8bba4d07be7c"),
+        ("gr-ceilings", "0x1cc528db96973a5a"),
+        ("gr-clusters", "0xd493a3251cde5fbe"),
+        ("watts-middle", "0x1ed3157ee5e9ac61"),
+        ("watts-hetero", "0x1ebbdf6d37320885"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "thresholds");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn retirement_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the base case,
+    // the policy switch, two groups, and friends replaced.
+    for (id, fp) in [
+        ("ae-base", "0x2d5c384cbc8ebd2f"),
+        ("ae-policy", "0x96c030d4a1280cd4"),
+        ("ae-groups", "0xadde267c611d5392"),
+        ("ae-replace", "0x90d96b846be612f2"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "retirement");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn punishment_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the base case,
+    // either group starting a conflict, payoff conflict, continuous traits,
+    // the ring, and Janssen's readings.
+    for (id, fp) in [
+        ("bg-base", "0x18a87a7bb2ab932d"),
+        ("bg-either", "0xa966f403050db40d"),
+        ("bg-benefit", "0xe5fec27869f67010"),
+        ("bg-continuous", "0xf763b0b75f9a2298"),
+        ("bg-ring", "0xc4e75af13ebdeaed"),
+        ("bg-janssen", "0xe95bb859afd7e9b0"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "punishment");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+    // The tanh victory rule (portable exp_neg): the native CLI's fingerprint.
+    let tanh = r#"{"model": "punishment", "groups": 32, "size": 16, "benefit": 0.4, "victory": "tanh", "sensitivity": 3, "conflict": 0.1}"#;
+    let mut sim = Sim::new(tanh, 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    assert_eq!(sim.fingerprint(), "0x41e7fa5fab5ba690");
+}
+
+#[wasm_bindgen_test]
+fn zi_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the book with
+    // ZI-C and ZI-U, market 5, Cliff's mechanism, and ZIP's margins (f64).
+    for (id, fp) in [
+        ("gs-1", "0xe38d85243d149ae6"),
+        ("gs-4-u", "0xeaabdfdb9910b213"),
+        ("gs-5", "0xdbd5cfd66c153ac1"),
+        ("cliff-excess-demand", "0xede597e74207bcda"),
+        ("zip-symmetric", "0x1f0f2ad1aff93fe8"),
+        ("zip-retail", "0x843e23fc86d35493"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "zi");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }

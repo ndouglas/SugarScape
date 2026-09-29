@@ -76,13 +76,14 @@ describe('SimHost', () => {
     const bare = t.snap(t.send({ type: 'step', n: 1 }));
     expect(bare.tick).toBe(1);
     const keys = [
-      'inspection', 'trail', 'networks', 'charts', 'lorenz', 'wealthHist',
+      'inspection', 'memory', 'trail', 'networks', 'charts', 'lorenz', 'wealthHist',
       'ageHist', 'tagHist', 'lorenzTotal', 'goodWealthHists', 'supplyDemand',
       'creditGraph', 'diseaseList', 'config', 'editedLandscapes', 'display', 'frame',
     ] as const;
     for (const key of keys) expect(bare[key], key).toBeUndefined();
     const all: Wants = {
       select: { x: 0, y: 0, agentId: null },
+      memory: true,
       trail: true,
       networks: ['trade', 'neighbors', 'friends', 'family'],
       charts: { groups: [['population']], max: 10 },
@@ -98,6 +99,8 @@ describe('SimHost', () => {
     };
     const full = t.snap(t.send({ type: 'step', n: 1 }, { wants: all }));
     expect(full.inspection?.view).toMatchObject({ site: { x: 0, y: 0 } });
+    // The site (0, 0) has no agent, so `FakeSim.inspect_memory` gives nothing.
+    expect(full.memory).toEqual(new Uint32Array(0));
     expect(full.trail).toBeDefined();
     expect(full.networks?.trade).toEqual(Uint32Array.of(0, 0, 1, 1));
     expect(Object.keys(full.charts ?? {})).toEqual(['population']);
@@ -211,6 +214,14 @@ describe('SimHost', () => {
     expect(t.snap(t.send({ type: 'inspect', target: { agentId: 1 } })).inspection).toBeNull();
   });
 
+  it("sends the inspected agent's memory alongside its selection, and nothing without it", () => {
+    const t = start();
+    const withMemory = t.snap(t.send({ type: 'step', n: 1 }, { wants: { select: { x: 1, y: 1, agentId: 1 }, memory: true } }));
+    expect(Array.from(withMemory.memory ?? [])).toEqual([2, 1, 7, 2]); // agent 1 walked to (2, 1)
+    const withoutWant = t.snap(t.send({ type: 'step', n: 1 }, { wants: { select: { x: 3, y: 1, agentId: 1 } } }));
+    expect(withoutWant.memory).toBeUndefined();
+  });
+
   it('follows with the trail included, and clamps the display to the config', () => {
     const t = start();
     const followed = t.snap(t.send({ type: 'follow', id: 1 }));
@@ -269,12 +280,14 @@ describe('SimHost with another model', () => {
       networks: ['trade'],
       lorenz: true,
       diseaseList: true,
+      memory: true,
+      select: { x: 0, y: 0, agentId: null },
       charts: { groups: [['population']], max: 10 },
     });
     expect(s.ring?.sugar).toHaveLength(6);
     expect(Array.from(s.ring!.agents)).toEqual([3]);
     expect(s.charts).toBeDefined();
-    for (const key of ['trail', 'networks', 'lorenz', 'diseaseList'] as const) expect(s[key]).toBeUndefined();
+    for (const key of ['trail', 'networks', 'lorenz', 'diseaseList', 'memory'] as const) expect(s[key]).toBeUndefined();
   });
 
   it('sends the ring only for Ring World', () => {

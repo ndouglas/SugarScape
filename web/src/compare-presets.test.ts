@@ -43,6 +43,27 @@ describe('compare presets', () => {
     expect([states.aSeed, states.b.seed]).toEqual([9, 9]);
   });
 
+  it('pairs the budget constraint with its absence, and ZI-C with ZIP', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['gs-1-vs-u', 'gs-1', 'gs-1-u', 'With vs without the budget constraint — Zero-Intelligence Traders (Compare)']);
+    expect(ids).toContainEqual(['zi-c-vs-zip', 'cliff-excess-demand', 'zip-excess-demand', 'ZI-C vs ZIP in a box market — Zero-Intelligence Traders (Compare)']);
+  });
+
+  it('pairs punishment with its absence', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['bg-base-vs-none', 'bg-base', 'bg-none', 'With vs without punishment — Altruistic Punishment (Compare)']);
+  });
+
+  it('pairs 15 % and 5 % rational retirees', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['ae-rapid-vs-slow', 'ae-rapid', 'ae-slow', '15 % vs 5 % rational — Retirement (Compare)']);
+  });
+
+  it('pairs Granovetter’s uniform and perturbed crowds', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['gr-uniform-vs-perturbed', 'gr-uniform', 'gr-perturbed', 'Uniform vs perturbed crowd — Threshold Models (Compare)']);
+  });
+
   it('pairs Kirman’s colony with ten times the ants', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['ants-colony-size', 'ants-2b', 'ants-crowd', 'Colony size — Ants (Compare)']);

@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 223] = [
+pub const TITLES: [(&str, &str); 294] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -156,6 +156,86 @@ pub const TITLES: [(&str, &str); 223] = [
     (
         "ifd-travel",
         "Flumps who prefer nearby sugar stray further from matching the yields",
+    ),
+    (
+        "walk-capacity",
+        "Flumps who walk instead of jump: fewer of them survive",
+    ),
+    (
+        "walk-wealth",
+        "Flumps who walk are born and die, and wealth grows as lopsided as when they jump",
+    ),
+    (
+        "walk-seasons",
+        "Walking through the seasons: Flumps still migrate, but fewer of them",
+    ),
+    (
+        "walk-waves",
+        "Walking doesn't bring back the book's waves",
+    ),
+    (
+        "walk-fast",
+        "Flumps who walk three steps a tick: most of the lost population comes back",
+    ),
+    (
+        "ifd-fence",
+        "A fence with a central gap: no clear change from no fence",
+    ),
+    (
+        "ifd-fence-far",
+        "The gap moves to the far end: a long walk to switch, and across patch sizes Flumps stray further from matching the yields",
+    ),
+    (
+        "ifd-wall",
+        "An opaque wall instead of a fence: no clear difference",
+    ),
+    (
+        "mem-open",
+        "Remembering on the open sugarscape: rememberers end up poorer",
+    ),
+    (
+        "mem-catchment",
+        "Wanderers who remember reach patches sooner but end slightly poorer",
+    ),
+    (
+        "mem-walled",
+        "Remembering beyond the wall: rememberers starve",
+    ),
+    (
+        "mem-seasons",
+        "Remembering the other hemisphere: rememberers end poorer",
+    ),
+    (
+        "mem-truffles",
+        "Hidden truffles: rememberers find over twice as many and still end poorer",
+    ),
+    (
+        "mem-trapline",
+        "Foragers who learn a route between truffle spots",
+    ),
+    (
+        "mem-mvt",
+        "When to leave a patch: foragers who find a rich one never leave",
+    ),
+    (
+        "goap-mvt",
+        "Planners who price travel stay longer when patches are farther apart",
+    ),
+    (
+        "mvt-rule",
+        "Leave when a patch falls below your average: stays lengthen only slightly with travel",
+    ),
+    (
+        "goap-open",
+        "Planners who remember end up richer on the open sugarscape",
+    ),
+    (
+        "goap-truffles",
+        "Planners who remember hidden truffles end up richer while they live",
+    ),
+    (
+        "goap-walled",
+        "Planners who remember what lies beyond the wall end up richer, and most survive",
     ),
     (
         "vi-4-schelling-25",
@@ -856,6 +936,210 @@ pub const TITLES: [(&str, &str); 223] = [
     (
         "am-independent",
         "Five ants in a hundred who ignore everyone calm the whole colony",
+    ),
+    (
+        "gr-uniform",
+        "One instigator, and all 100 riot",
+    ),
+    (
+        "gr-perturbed",
+        "Move one person up one notch, and only the instigator riots",
+    ),
+    (
+        "gr-normal-12",
+        "Mean threshold 25, spread 12: a handful riot",
+    ),
+    (
+        "gr-normal-13",
+        "Mean threshold 25, spread 13: nearly everyone riots",
+    ),
+    (
+        "gr-normal-sampled",
+        "The same crowd drawn from real people: no sharp tipping point",
+    ),
+    (
+        "gr-city",
+        "Crowds drawn from a city that should riot: half end with no rioter or one",
+    ),
+    (
+        "gr-friends",
+        "Count friends double, and the crowd that should riot mostly doesn't",
+    ),
+    (
+        "gr-friends-perturbed",
+        "Close friends rescue the stalled crowd, now and then",
+    ),
+    (
+        "gr-ceilings",
+        "Join a crowd, leave a mob: the riot builds and collapses",
+    ),
+    (
+        "gr-clusters",
+        "Ten crowds with people drifting between them",
+    ),
+    (
+        "watts-lower",
+        "Few links: mostly small cascades, now and then a large one",
+    ),
+    (
+        "watts-middle",
+        "A middling network: most sparks spread everywhere",
+    ),
+    (
+        "watts-upper",
+        "Many links: almost never, then everything",
+    ),
+    (
+        "watts-hetero",
+        "Varied thresholds keep dense networks cascading",
+    ),
+    (
+        "watts-hub",
+        "Light the best-connected node",
+    ),
+    (
+        "ae-rapid",
+        "15 % decide rationally, and retiring at 65 sets in within a few years",
+    ),
+    (
+        "ae-base",
+        "A tenth decide rationally, and retiring at 65 takes hold in about 16 years",
+    ),
+    (
+        "ae-slow",
+        "5 % rational: retiring at 65 spreads slowly, up from the old",
+    ),
+    (
+        "ae-policy",
+        "Congress lowers the age to 62: here the new norm comes in a few years",
+    ),
+    (
+        "ae-groups",
+        "Two communities, one with no rational agents, loosely linked",
+    ),
+    (
+        "ae-all-members",
+        "Count every friend, not just the eligible, and no norm ever forms",
+    ),
+    (
+        "ae-replace",
+        "Replace friends who die, and 5 % rationality is no longer enough",
+    ),
+    (
+        "bg-base",
+        "Punishers keep about 70 % of groups of 32 cooperating",
+    ),
+    (
+        "bg-either",
+        "Either group can start a war, and the paper's figures appear",
+    ),
+    (
+        "bg-none",
+        "Without punishment, groups of 32 fall to defection",
+    ),
+    (
+        "bg-large",
+        "Groups of 128: punishment no longer holds",
+    ),
+    (
+        "bg-weak",
+        "A fine only twice the cost, and cooperation fades",
+    ),
+    (
+        "bg-fixed",
+        "Punishers who pay whether or not anyone defects, and cooperation fails",
+    ),
+    (
+        "bg-mixing",
+        "More mixing between groups, and cooperation falls",
+    ),
+    (
+        "bg-benefit",
+        "Cooperation benefits the group, and groups fight over payoffs",
+    ),
+    (
+        "bg-continuous",
+        "Cooperate and punish by degrees, and nearly everyone cooperates",
+    ),
+    (
+        "bg-ring",
+        "A ring of groups with no wars: cooperation stays low",
+    ),
+    (
+        "bg-janssen",
+        "Janssen's readings of the gaps together",
+    ),
+    (
+        "gs-1",
+        "Random traders who never take a loss capture nearly all the surplus",
+    ),
+    (
+        "gs-2",
+        "Market 2: random traders who never lose reach 99.8 % efficiency",
+    ),
+    (
+        "gs-3",
+        "Market 3: six units worth trading, and random traders find them",
+    ),
+    (
+        "gs-4",
+        "Market 4: loss-averse random traders capture 99.5 %; free ones, half",
+    ),
+    (
+        "gs-5",
+        "Market 5: marginal traders crowd equilibrium, and efficiency dips to 97 %",
+    ),
+    (
+        "gs-1-u",
+        "Traders free to lose money: 90 % efficiency and prices everywhere",
+    ),
+    (
+        "gs-4-u",
+        "Free to lose money in market 4, traders capture less than half",
+    ),
+    (
+        "cliff-symmetric",
+        "Symmetric supply and demand: random prices center on equilibrium",
+    ),
+    (
+        "cliff-flat",
+        "Flat supply: random prices settle well above equilibrium",
+    ),
+    (
+        "cliff-excess-demand",
+        "Too many buyers: random prices sit far below equilibrium",
+    ),
+    (
+        "cliff-excess-supply",
+        "Too many sellers: random prices sit far above equilibrium",
+    ),
+    (
+        "zip-symmetric",
+        "Traders who learn a margin converge on the equilibrium price",
+    ),
+    (
+        "zip-flat",
+        "Learning traders reach equilibrium within days when supply is flat",
+    ),
+    (
+        "zip-excess-demand",
+        "Where buyers abound, learning traders climb to equilibrium from below",
+    ),
+    (
+        "zip-excess-supply",
+        "Where sellers abound, learning traders fall to equilibrium from above",
+    ),
+    (
+        "zip-demand-shift",
+        "Demand jumps after day 10, and learning traders follow it",
+    ),
+    (
+        "zip-supply-shift",
+        "Supply drops after day 10, and learning traders follow it",
+    ),
+    (
+        "zip-retail",
+        "Only sellers post prices, and trades stay below equilibrium",
     ),
 ];
 

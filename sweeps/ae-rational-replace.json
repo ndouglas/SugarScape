@@ -1,0 +1,50 @@
+{
+  "name": "Retirement: rationality when friends who die are replaced",
+  "description": "Figure 6-6 again, with friends who die replaced by agents of about the same age instead of by the newborn in their slot (C 50). Measured (release, seeds 1–5, recorded 2026-09-28): no randoms: never at 0, 5 and 10 %, 20 at 15 %, 13 at 20 %; 5 % random: never at 0 and 5 %, 103 at 10 % (± 75 in the planning measurements), 15, 9. The paper's 'certain minimum proportions of the population must be rational' and its long, highly variable times appear only under this unstated rule.",
+  "base": {
+    "preset": "ae-replace"
+  },
+  "set": {
+    "stop_at_norm": true,
+    "per_cohort": 50
+  },
+  "x": {
+    "label": "Rational share",
+    "path": "rational",
+    "values": [
+      0,
+      0.05,
+      0.1,
+      0.15,
+      0.2
+    ]
+  },
+  "series": {
+    "label": "Random share",
+    "values": [
+      {
+        "at": 0,
+        "name": "No randoms",
+        "set": {
+          "random": 0
+        }
+      },
+      {
+        "at": 0.05,
+        "name": "5 % random",
+        "set": {
+          "random": 0.05
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 600,
+  "metric": {
+    "kind": "final",
+    "series": "transition"
+  }
+}

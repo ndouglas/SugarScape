@@ -1,0 +1,69 @@
+{
+  "name": "Zero-Intelligence Traders: ZI-C mean prices in Cliff's markets",
+  "description": "Cliff's critique: ZI-C mean prices in his four markets (P₀ 200 cents), in his simulator as coded (days of up to 11 sessions) and in Gode and Sunder's book. Measured (release, seeds 1–50, 10 days, recorded 2026-09-28): his mechanism 199.1, 233.7, 137.0, 249.7; the book 200.6, 216.6, 161.8, 232.9 (symmetric, flat supply, excess demand, excess supply). His predictions — 200, 233⅓, 125, 260 — hold for the symmetric and flat markets in his simulator but miss the box markets by 12 and 10; his 233⅓ matches his simulation, not his formula (241⅔). In Gode and Sunder's own mechanism the prices sit about half as far from P₀, but still far: the critique's direction holds.",
+  "base": {
+    "preset": "cliff-symmetric"
+  },
+  "x": {
+    "label": "Market",
+    "values": [
+      {
+        "at": 1,
+        "name": "Symmetric",
+        "set": {
+          "market": "symmetric"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Flat supply",
+        "set": {
+          "market": "flat_supply"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Excess demand",
+        "set": {
+          "market": "excess_demand"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Excess supply",
+        "set": {
+          "market": "excess_supply"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Mechanism",
+    "values": [
+      {
+        "at": 0,
+        "name": "Cliff's mechanism",
+        "set": {}
+      },
+      {
+        "at": 1,
+        "name": "Gode & Sunder's book",
+        "set": {
+          "mechanism": "book",
+          "turns": "trader",
+          "period_end": "shouts",
+          "shouts": 2000
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 50
+  },
+  "ticks": 40000,
+  "metric": {
+    "kind": "final",
+    "series": "avg_price"
+  }
+}

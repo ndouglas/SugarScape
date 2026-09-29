@@ -53,12 +53,71 @@ export interface DiseaseRule {
   outbreaks: Outbreak[];
 }
 
-/** Minds 1's decision seam (absent from older configs: the book's rule M). */
+/**
+ * Minds 1's decision seam (absent from older configs: the book's rule M). Minds 4 adds `goap`
+ * (planning) and `mvt` (the marginal-value rule); both need `movement.mode: 'walk'`.
+ */
 export interface Decision {
-  rule: 'book' | 'utility';
+  rule: 'book' | 'utility' | 'goap' | 'mvt';
   travel: number;
   crowding: number;
   idle: 'stay' | 'wander';
+}
+
+/** Minds 2's movement seam (absent from older configs: the book's rule M jumps at speed 1). */
+export interface Movement {
+  mode: 'jump' | 'walk';
+  speed: number;
+}
+
+/** Minds 2: a rectangle of impassable sites. `opaque` walls (stone) also block sight; fences (wood) don't. */
+export interface Wall {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opaque: boolean;
+}
+
+/** Minds 3: how a Flump reasons about a remembered site it can't currently see. */
+export type Belief = 'recall' | 'project';
+
+/**
+ * Minds 3's memory seam (absent from older configs: the book, no memory). `span` and `share` are
+ * reset-only (`span > 0` needs `movement.mode: 'walk'`); `belief` applies live.
+ */
+export interface Memory {
+  span: number;
+  share: number;
+  belief: Belief;
+  /** Minds 4: what a founder starts knowing (reset-only; absent from older configs: `none`); founders start knowing the map, children start with empty memory. */
+  prior?: 'none' | 'map';
+}
+
+/**
+ * Minds 4's GOAP search (absent from older configs: k 8, horizon 10, shortlist rate); all live.
+ * `k` known sites (1–12) ranked by `shortlist`; a goal of `horizon` ticks of food (1–100).
+ */
+export interface Goap {
+  k: number;
+  horizon: number;
+  shortlist: 'rate' | 'value';
+}
+
+/** Minds 4's marginal-value rule (absent from older configs: α 0.05); `alpha` in (0, 1], live. */
+export interface Mvt {
+  alpha: number;
+}
+
+/**
+ * Minds 3's truffles (absent from older configs: no truffles). `share` and `seed` are reset-only;
+ * `value` and `regrow` apply live.
+ */
+export interface Truffles {
+  share: number;
+  value: number;
+  regrow: number;
+  seed: number;
 }
 
 export interface Config {
@@ -91,11 +150,17 @@ export interface Config {
   foresight: { enabled: boolean; range: URange };
   disease: DiseaseRule;
   decision?: Decision;
+  movement?: Movement;
+  walls?: Wall[];
+  memory?: Memory;
+  truffles?: Truffles;
+  goap?: Goap;
+  mvt?: Mvt;
   schedule: ScheduledChange[];
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -494,7 +559,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -604,6 +669,303 @@ export interface AntsInspection {
   count: number | null;
   theory: number | null;
   member: AntView | null;
+  agent: null;
+}
+
+/**
+ * Granovetter's threshold models (milestone 25): crowds, friends, sampled crowds, clusters and
+ * ceilings, with Watts's cascades on random networks.
+ */
+export interface ThresholdsConfig {
+  model: 'thresholds';
+  actors: number;
+  distribution: 'uniform' | 'perturbed' | 'normal' | 'fixed';
+  mean: number;
+  sd: number;
+  crowd: 'quantiles' | 'sampled';
+  rounding: 'exact' | 'floor' | 'nearest';
+  population: 'fixed' | 'city';
+  network: 'everyone' | 'random' | 'power_law';
+  degree: number;
+  counts_self: boolean;
+  friends: { enabled: boolean; acquaintance: number; weight: number; symmetric: boolean };
+  trigger: 'instigators' | 'random' | 'hub';
+  zero: 'acts' | 'when_reached';
+  update: 'synchronous' | 'asynchronous';
+  ceilings: { share: number; at: number };
+  clusters: { enabled: boolean; count: number; movement: number };
+  repeat: boolean;
+  global: number;
+  max_steps: number;
+  stop_at: number;
+}
+
+export interface ThresholdsStats {
+  tick: number;
+  acting: number;
+  step: number;
+  episodes: number;
+  last_size: number;
+  mean_size: number;
+  global_share: number;
+  /** Granovetter's continuous equilibrium share (a normal crowd seen whole), or null. */
+  theory: number | null;
+  recent_mean: number;
+  swing: number;
+}
+
+export interface ActorView {
+  id: number;
+  threshold: number | null;
+  ceiling: number | null;
+  degree: number | null;
+  sees: number;
+  of: number;
+  acting: boolean;
+  seed: boolean;
+  crowd: number;
+}
+/**
+ * A cell of the thresholds frame: a step of the time panel, a point of Granovetter's Figure 1, a
+ * histogram row, or an actor of the grid (`member`). `agent` is always null.
+ */
+export interface ThresholdsInspection {
+  site: { x: number; y: number };
+  panel: 'time' | 'figure' | 'histogram' | 'actors' | null;
+  step: number | null;
+  crowds: number[] | null;
+  share: number | null;
+  cdf: number | null;
+  count: number | null;
+  member: ActorView | null;
+  agent: null;
+}
+
+/**
+ * Axtell and Epstein's timing of retirement (milestone 26): cohorts, rationals, randoms and
+ * imitators in transient social networks, the policy switch and two coupled sub-populations.
+ */
+export interface RetirementConfig {
+  model: 'retirement';
+  per_cohort: number;
+  rational: number;
+  random: number;
+  p: number;
+  threshold: number;
+  spread: number;
+  size: { min: number; max: number };
+  extent: number;
+  counts: 'eligible' | 'all';
+  renewal: 'slot' | 'replace';
+  order: 'by_cohort' | 'shuffled';
+  initial_deaths: 'literal' | 'survivors';
+  eligibility: number;
+  mandatory: number;
+  policy: { enabled: boolean; to: number };
+  groups: { enabled: boolean; coupling: number };
+  norm: number;
+  stop_at_norm: boolean;
+  stop_at: number;
+}
+
+export interface RetirementStats {
+  tick: number;
+  retired: number;
+  retired_a: number;
+  retired_b: number;
+  /** The period the norm set in, and periods from the policy switch to the new norm (null before). */
+  transition: number | null;
+  transition_new: number | null;
+  /** The period each group reached the norm (both `transition` without groups). */
+  transition_a: number | null;
+  transition_b: number | null;
+  modal_age: number | null;
+  mean_age: number | null;
+  rational_share: number;
+  eligibility: number;
+}
+
+export interface RetireeView {
+  id: number;
+  age: number;
+  kind: 'rational' | 'random' | 'imitator';
+  threshold: number;
+  death_age: number;
+  group: number;
+  network: number;
+  eligible: number;
+  retired_members: number;
+  retired: boolean;
+  retired_at: number | null;
+}
+/**
+ * A cell of the retirement frame: an agent of the population, an age's retirement bar, or a period
+ * of the time panel. `agent` is always null.
+ */
+export interface RetirementInspection {
+  site: { x: number; y: number };
+  panel: 'population' | 'ages' | 'time' | null;
+  age: number | null;
+  retirements: number | null;
+  exposed: number | null;
+  period: number | null;
+  retired: number | null;
+  member: RetireeView | null;
+  agent: null;
+}
+
+/**
+ * Boyd, Gintis, Bowles and Richerson's altruistic punishment (milestone 27): groups of contributors,
+ * defectors and punishers, payoff-biased imitation, intergroup conflict and mutation.
+ */
+export interface PunishmentConfig {
+  model: 'punishment';
+  groups: number;
+  size: number;
+  cost: number;
+  punish_cost: number;
+  fine: number;
+  punishing: 'variable' | 'fixed';
+  fixed_cost: number;
+  benefit: number;
+  baseline: number;
+  error: number;
+  mixing: number;
+  mutation: number;
+  conflict: number;
+  pairing: 'paired' | 'either' | 'challenge';
+  victory: 'defectors' | 'payoff' | 'tanh';
+  sensitivity: number;
+  counted: 'types' | 'acts';
+  erring: 'others' | 'none' | 'self';
+  imitation: 'together' | 'in_turn';
+  refill: 'copy' | 'split';
+  traits: 'discrete' | 'continuous';
+  structure: 'groups' | 'ring';
+  start: 'one_punisher_group' | 'all_defectors';
+  window: number;
+  stop_at: number;
+}
+
+export interface PunishmentStats {
+  tick: number;
+  cooperation: number;
+  contributors: number;
+  punishers: number;
+  defectors: number;
+  punishment: number;
+  /** This period's share cooperating and mean payoff (null before the first period). */
+  acts: number | null;
+  payoff: number | null;
+  conflicts: number;
+  extinctions: number;
+  spread: number;
+  /** The mean cooperation over the long-run window so far (null before it). */
+  long_run: number | null;
+}
+
+export interface PunisherView {
+  id: number;
+  group: number;
+  kind: 'contributor' | 'defector' | 'punisher' | null;
+  cooperate: number;
+  punish: number;
+  cooperated: boolean;
+  punished: boolean;
+  payoff: number;
+}
+
+export interface PunishmentGroupView {
+  index: number;
+  contributors: number;
+  punishers: number;
+  defectors: number;
+  acts: number;
+  payoff: number;
+  last_conflict: number | null;
+  lost: boolean;
+}
+
+/** A cell of the punishment frame: an agent and its group, or a period of the time strip. */
+export interface PunishmentInspection {
+  site: { x: number; y: number };
+  panel: 'groups' | 'time' | null;
+  group: PunishmentGroupView | null;
+  agent: PunisherView | null;
+  period: number | null;
+  cooperation: number | null;
+  punishment: number | null;
+}
+
+/**
+ * Gode and Sunder's zero-intelligence traders (milestone 28), with Cliff's critique, mechanism and
+ * ZIP traders.
+ */
+export interface ZiConfig {
+  model: 'zi';
+  market: 'gs1' | 'gs2' | 'gs3' | 'gs4' | 'gs5' | 'symmetric' | 'flat_supply' | 'excess_demand' | 'excess_supply' | 'retail' | 'custom';
+  buyers: number[][];
+  sellers: number[][];
+  price_max: number;
+  strategy: 'zi_u' | 'zi_c' | 'zip';
+  mechanism: 'book' | 'cliff';
+  nyse: boolean;
+  turns: 'trader' | 'side';
+  sellers_only: boolean;
+  period_end: 'shouts' | 'sessions' | 'failures';
+  shouts: number;
+  sessions: number;
+  momentum: 'code' | 'text';
+  shift: 'none' | 'demand' | 'supply';
+  shift_at: number;
+  stop_at: number;
+}
+
+export interface ZiStats {
+  tick: number;
+  /** This shout's trade price (null if it did not trade). */
+  price: number | null;
+  /** This period so far (the mean price and rmsd null before a trade). */
+  mean_price: number | null;
+  volume: number;
+  efficiency: number | null;
+  rmsd: number | null;
+  alpha: number | null;
+  dispersion: number;
+  period: number;
+  p0: number;
+  /** The last completed period, and means over the completed periods (null before one). */
+  last_price: number | null;
+  last_efficiency: number | null;
+  last_alpha: number | null;
+  last_dispersion: number | null;
+  avg_price: number | null;
+  avg_efficiency: number | null;
+  avg_dispersion: number | null;
+}
+
+export interface ZiTrade { period: number; tick: number; price: number; buyer: number; seller: number; value: number; cost: number }
+
+export interface ZiTraderView {
+  id: number;
+  buyer: boolean;
+  limits: number[];
+  traded: number;
+  profit: number;
+  equilibrium_profit: number;
+  margin: number | null;
+}
+
+/** A cell of the zi frame: a step of the schedules, a trade, or a trader. */
+export interface ZiInspection {
+  site: { x: number; y: number };
+  panel: 'schedules' | 'prices' | 'traders' | null;
+  unit: number | null;
+  demand: number | null;
+  supply: number | null;
+  trade: ZiTrade | null;
+  trader: ZiTraderView | null;
+  /** Always null: cells are read where they are. */
   agent: null;
 }
 
@@ -916,7 +1278,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats;
 
 export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
 export interface LinkView { id: number; alive: boolean }
@@ -949,7 +1311,26 @@ export interface AgentView {
   immune_genome: string;
   diseases: DiseaseView[];
   infected_by: LinkView | null;
+  /**
+   * Minds 2: null until the agent first moves; `path` is empty under jump, once it has arrived, or
+   * when no path was found. `walked`: it walked (or tried to) rather than jumped.
+   */
+  plan?: { target_x: number; target_y: number; path: [number, number][]; walked: boolean } | null;
+  /**
+   * Minds 3: whether the agent remembers, and how many sites and truffle spots it holds in
+   * memory. `null` while memory is off (`span` 0).
+   */
+  memory?: { remembers: boolean; sites: number; spots: number } | null;
+  /**
+   * Minds 4: the GOAP plan, under `decision.rule: 'goap'` while the Flump holds one: the targets
+   * left in order (empty just after the plan finishes), what it was to gather in all, and its goal
+   * G. `null` otherwise.
+   */
+  goap?: GoapView | null;
+  /** Minds 4: the running intake-rate estimate ρ, under `decision.rule: 'mvt'` only. */
+  rate?: number | null;
 }
+export interface GoapView { steps: [number, number][]; gathers: number; goal: number }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 
 export interface SchellingAgentView {
@@ -1241,7 +1622,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1296,7 +1677,17 @@ export type ColorMode =
   | 'memory'
   | 'source'
   | 'independent'
-  | 'degree';
+  | 'degree'
+  | 'state'
+  | 'threshold'
+  | 'crowd'
+  | 'status'
+  | 'type'
+  | 'group'
+  | 'acts'
+  | 'side'
+  | 'profit'
+  | 'margin';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

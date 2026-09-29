@@ -1,0 +1,75 @@
+{
+  "name": "Zero-Intelligence Traders: Gode and Sunder's book against Cliff's mechanism",
+  "description": "Gode and Sunder's book (a crossing shout trades at the standing order's price) against Cliff's mechanism (a random willing trader on the other side takes the shout at its price), ZI-C. Measured (release, seeds 1–20, recorded 2026-09-28): book 99.9, 99.8, 99.7, 99.5, 97.1; Cliff's 99.8, 99.8, 99.5, 99.6, 97.2 in markets 1–5. Efficiency survives the change of mechanism.",
+  "base": {
+    "preset": "gs-1"
+  },
+  "x": {
+    "label": "Market",
+    "values": [
+      {
+        "at": 1,
+        "name": "Market 1",
+        "set": {
+          "market": "gs1"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Market 2",
+        "set": {
+          "market": "gs2"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Market 3",
+        "set": {
+          "market": "gs3"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Market 4",
+        "set": {
+          "market": "gs4"
+        }
+      },
+      {
+        "at": 5,
+        "name": "Market 5",
+        "set": {
+          "market": "gs5"
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Mechanism",
+    "values": [
+      {
+        "at": 0,
+        "name": "Book (Gode & Sunder)",
+        "set": {
+          "mechanism": "book"
+        }
+      },
+      {
+        "at": 1,
+        "name": "Cliff's",
+        "set": {
+          "mechanism": "cliff"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 12000,
+  "metric": {
+    "kind": "final",
+    "series": "avg_efficiency"
+  }
+}

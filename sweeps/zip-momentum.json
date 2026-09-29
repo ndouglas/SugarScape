@@ -1,0 +1,74 @@
+{
+  "name": "Zero-Intelligence Traders: ZIP's momentum, Cliff's code against his text",
+  "description": "Cliff's text draws ZIP's momentum γ from U[0.2, 0.8]; his code overwrites it with U[0, 0.1], which produced his results. Measured (release, seeds 1–50, recorded 2026-09-28), excess demand: code 124, 153, 168, 179, 190 … 198 by day 10; text 127, 161, 179, 190, 195 … 199. Excess supply: code 244, 223, 213, 207, 204 … 202; text 242, 222, 209, 204, 202 … 201. The text's reading converges a day or two sooner; both reach P₀.",
+  "base": {
+    "preset": "zip-excess-demand"
+  },
+  "x": {
+    "label": "Day",
+    "path": "stop_at",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ]
+  },
+  "series": {
+    "label": "Market and momentum",
+    "values": [
+      {
+        "at": 1,
+        "name": "Excess demand, code",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "Excess demand, text",
+        "set": {
+          "momentum": "text"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Excess supply, code",
+        "set": {
+          "market": "excess_supply"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Excess supply, text",
+        "set": {
+          "market": "excess_supply",
+          "momentum": "text"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 50
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "last_price"
+  }
+}

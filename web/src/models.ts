@@ -1,6 +1,13 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  ZiInspection,
+  PunishmentConfig,
+  PunishmentInspection,
+  RetirementConfig,
+  RetirementInspection,
+  ThresholdsConfig,
+  ThresholdsInspection,
   AntsConfig,
   AntsInspection,
   FarolConfig,
@@ -39,7 +46,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -61,12 +68,16 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   image: 'Image Scoring',
   farol: 'El Farol and the Minority Game',
   ants: 'Ants and Recruitment',
+  thresholds: 'Threshold Models',
+  retirement: 'The Timing of Retirement',
+  punishment: 'Altruistic Punishment',
+  zi: 'Zero-Intelligence Traders',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi'
     ? tag
     : 'sugarscape';
 }
@@ -160,6 +171,26 @@ export function isImageView(v: AnyInspection): v is ImageInspection {
   return 'cell' in v && 'group' in v;
 }
 
+/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
+export function isZiView(v: AnyInspection): v is ZiInspection {
+  return 'panel' in v && 'trade' in v && 'supply' in v;
+}
+
+/** A cell of the punishment frame (a panel, an agent and its group, and a period's `punishment`); check it first. */
+export function isPunishmentView(v: AnyInspection): v is PunishmentInspection {
+  return 'panel' in v && 'punishment' in v;
+}
+
+/** A cell of the retirement frame (a panel, an agent as `member`, and an age's `exposed`); check it first. */
+export function isRetirementView(v: AnyInspection): v is RetirementInspection {
+  return 'panel' in v && 'exposed' in v;
+}
+
+/** A cell of the thresholds frame (a panel, an actor as `member`, and Figure 1's `cdf`); check it first. */
+export function isThresholdsView(v: AnyInspection): v is ThresholdsInspection {
+  return 'panel' in v && 'cdf' in v;
+}
+
 /** A cell of the ants frame (a panel, a grid ant as `member`, and each source's `shares`). */
 export function isAntsView(v: AnyInspection): v is AntsInspection {
   return 'panel' in v && 'shares' in v;
@@ -192,6 +223,9 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
   if (modelOf(c) === 'image' && (c as ImageConfig).end > 0) return Math.max(0, (c as ImageConfig).end - tick);
   if (modelOf(c) === 'farol' && (c as FarolConfig).stop_at > 0) return Math.max(0, (c as FarolConfig).stop_at - tick);
   if (modelOf(c) === 'ants' && (c as AntsConfig).stop_at > 0) return Math.max(0, (c as AntsConfig).stop_at - tick);
+  if (modelOf(c) === 'thresholds' && (c as ThresholdsConfig).stop_at > 0) return Math.max(0, (c as ThresholdsConfig).stop_at - tick);
+  if (modelOf(c) === 'retirement' && (c as RetirementConfig).stop_at > 0) return Math.max(0, (c as RetirementConfig).stop_at - tick);
+  if (modelOf(c) === 'punishment' && (c as PunishmentConfig).stop_at > 0) return Math.max(0, (c as PunishmentConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -206,6 +240,7 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   if (model === 'classes') return (c as ClassesConfig).stop_at_equity;
   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
   if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
+  if (model === 'retirement') return (c as RetirementConfig).stop_at_norm;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -222,6 +257,34 @@ export function presetReference(p: Preset): string {
 
 export function presetModel(p: Preset): ModelKind {
   return modelOf(p.config);
+}
+
+/**
+ * A sugarscape preset's chapter of the book, from its source ("Animation II-2", "Figure III-6",
+ * "Chapter IV, footnote 7"), its appendix, "Minds" for the decision-engine experiments built on it,
+ * or "Other sources" (the docking study).
+ */
+export function sugarscapeChapter(p: Preset): string {
+  if (/\bMinds\b/.test(p.source)) return 'Minds';
+  const m = /\b(VI|IV|V|III|II)(?=[-\s,/]|$)/.exec(p.source);
+  if (m) return `Chapter ${m[1]}`;
+  const appendix = /\bAppendix ([A-Z])\b/.exec(p.source);
+  return appendix ? `Appendix ${appendix[1]}` : 'Other sources';
+}
+
+/**
+ * The preset menu's groups within one model: the sugarscape's by chapter (in the order they first
+ * appear), and every other model's as one unlabeled list in list order.
+ */
+export function presetSubgroups(model: ModelKind, presets: Preset[]): { label: string | null; presets: Preset[] }[] {
+  const mine = presets.filter((p) => presetModel(p) === model);
+  if (model !== 'sugarscape') return mine.length > 0 ? [{ label: null, presets: mine }] : [];
+  const groups = new Map<string, Preset[]>();
+  for (const p of mine) {
+    const chapter = sugarscapeChapter(p);
+    groups.set(chapter, [...(groups.get(chapter) ?? []), p]);
+  }
+  return [...groups].map(([label, presets]) => ({ label, presets }));
 }
 
 /** The presets menu's groups: each model with presets, in `MODELS` order, its presets in list order. */
@@ -344,6 +407,33 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['independent', 'Independent'],
     ['degree', 'Degree'],
   ],
+  // Who acts (and the seed); each actor's threshold; how many it watches; its crowd.
+  thresholds: [
+    ['state', 'State'],
+    ['threshold', 'Threshold'],
+    ['degree', 'Degree'],
+    ['crowd', 'Crowd'],
+  ],
+  // Working by type, or retired; each agent's type; its threshold; its sub-population.
+  retirement: [
+    ['status', 'Status'],
+    ['type', 'Type'],
+    ['threshold', 'Threshold'],
+    ['group', 'Group'],
+  ],
+  // Each agent's type (blended for continuous traits); what it did this period; its payoff; its group's share of defectors.
+  punishment: [
+    ['type', 'Type'],
+    ['acts', 'Acts'],
+    ['payoff', 'Payoff'],
+    ['group', 'Group'],
+  ],
+  // Buyers and sellers; each trader's profit against its equilibrium profit; ZIP margins.
+  zi: [
+    ['side', 'Side'],
+    ['profit', 'Profit'],
+    ['margin', 'Margin'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -366,4 +456,8 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   image: [],
   farol: [],
   ants: [],
+  thresholds: [],
+  retirement: [],
+  punishment: [],
+  zi: [],
 };

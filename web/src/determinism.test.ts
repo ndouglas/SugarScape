@@ -13,6 +13,18 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  ZiConfig,
+  ZiInspection,
+  ZiStats,
+  PunishmentConfig,
+  PunishmentInspection,
+  PunishmentStats,
+  RetirementConfig,
+  RetirementInspection,
+  RetirementStats,
+  ThresholdsConfig,
+  ThresholdsInspection,
+  ThresholdsStats,
   AntsConfig,
   AntsInspection,
   AntsStats,
@@ -498,6 +510,12 @@ describe('other models through the engine', () => {
     ['mg-arms-race', '0x4c1e9852373241c9'],
     ['cmo-binary', '0x2081105c24039d0c'],
     ['ants-2b', '0xf9258e5dd9d1d673'],
+    ['gr-normal-sampled', '0xa9bca3821a0f4774'],
+    ['gr-city', '0xa587dcb16521cf3c'],
+    ['gr-friends', '0x37ae8bba4d07be7c'],
+    ['gr-ceilings', '0x1cc528db96973a5a'],
+    ['gr-clusters', '0xd493a3251cde5fbe'],
+    ['watts-middle', '0x1ed3157ee5e9ac61'],
     ['ants-becker', '0x4ebaae97020b8902'],
     ['ants-three', '0x4a2871368f4ab782'],
     ['am-ring', '0x0104a02f3c5f5011'],
@@ -712,6 +730,92 @@ describe('the social-structure model through the engine', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('the zi model through the engine', () => {
+  it('stops after its last period and inspects a step, a trade and a trader', async () => {
+    const r = presets.find((p) => p.id === 'gs-1')!;
+    const config = { ...structuredClone(r.config as ZiConfig), shouts: 200, stop_at: 3 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'profit' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as ZiStats;
+    expect([e.finished, ends, e.tick, s.period]).toEqual([true, 1, 600, 4]);
+    expect(s.last_efficiency).toBeGreaterThan(50);
+    await e.select(0, 100);
+    const v = e.inspection!.view as ZiInspection;
+    expect([v.panel, v.unit, v.demand, v.supply]).toEqual(['schedules', 1, 102, 34]);
+    await e.select(5, 240);
+    expect((e.inspection!.view as ZiInspection).trader?.id).toBe(1);
+  });
+});
+
+describe('the punishment model through the engine', () => {
+  it('stops at its last period and inspects an agent, its group and a period', async () => {
+    const r = presets.find((p) => p.id === 'bg-base')!;
+    const config = { ...structuredClone(r.config as PunishmentConfig), groups: 16, size: 8, stop_at: 50, window: 20 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'acts' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as PunishmentStats;
+    expect([e.finished, ends, e.tick]).toEqual([true, 1, 50]);
+    expect(s.long_run).not.toBeNull();
+    expect(s.contributors + s.punishers + s.defectors).toBeCloseTo(1, 9);
+    // 16 groups of 8: six groups a row, 3 × 3 cells of 8 pixels, the first at (2, 2).
+    await e.select(3, 3);
+    const v = e.inspection!.view as PunishmentInspection;
+    expect([v.panel, v.agent?.id, v.group?.index]).toEqual(['groups', 1, 0]);
+    await e.select(10, 100);
+    expect((e.inspection!.view as PunishmentInspection).panel).toBe('time');
+  });
+});
+
+describe('the retirement model through the engine', () => {
+  it('stops at the norm and inspects an agent, an age and a period', async () => {
+    const r = presets.find((p) => p.id === 'ae-rapid')!;
+    const config = { ...structuredClone(r.config as RetirementConfig), stop_at_norm: true };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'type' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as RetirementStats;
+    expect([e.finished, ends, s.transition]).toEqual([true, 1, e.tick]);
+    expect(s.retired).toBeGreaterThanOrEqual(0.95);
+    // Row 45 (2 pixels an age) is age 65.
+    await e.select(0, 90);
+    const v = e.inspection!.view as RetirementInspection;
+    expect([v.panel, v.age]).toEqual(['population', 65]);
+    expect(e.inspection!.agentId).toBeNull();
+    await e.select(410, 90);
+    expect((e.inspection!.view as RetirementInspection).panel).toBe('ages');
+  });
+});
+
+describe('the thresholds model through the engine', () => {
+  it('stops at its last step and inspects an actor, a step and Figure 1', async () => {
+    const r = presets.find((p) => p.id === 'gr-uniform')!;
+    const config = { ...structuredClone(r.config as ThresholdsConfig), stop_at: 50 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'threshold' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as ThresholdsStats;
+    expect([e.finished, ends, e.tick, s.tick, s.acting]).toEqual([true, 1, 50, 50, 0.5]);
+    // The actor grid starts at x 518; actor 1 (threshold 0) is its top-left cell.
+    await e.select(518, 0);
+    const v = e.inspection!.view as ThresholdsInspection;
+    expect([v.panel, v.member!.id, v.member!.threshold, v.member!.acting]).toEqual(['actors', 1, 0, true]);
+    expect(e.inspection!.agentId).toBeNull();
+    await e.select(459, 100);
+    const f = e.inspection!.view as ThresholdsInspection;
+    expect([f.panel, f.cdf]).toEqual(['figure', 0.51]);
   });
 });
 

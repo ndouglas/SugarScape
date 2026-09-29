@@ -49,7 +49,7 @@ describe('decision', () => {
     expect(rule.kind).toBe('select');
     if (rule.kind !== 'select') return;
     expect(rule.reset).toBe(true);
-    expect(rule.options.map((o) => o.value)).toEqual(['book', 'utility']);
+    expect(rule.options.map((o) => o.value)).toEqual(['book', 'utility', 'goap', 'mvt']);
     const c = {} as unknown as Config;
     expect(rule.current(c)).toBe('book'); // older configs have no decision
     rule.options[1].apply(c);
@@ -77,5 +77,174 @@ describe('decision', () => {
     travel.adjust!(c, before);
     setPath(c, 'decision.travel', 2);
     expect(c.decision).toEqual({ rule: 'book', travel: 2, crowding: 0, idle: 'stay' });
+  });
+});
+
+describe('goap and mvt', () => {
+  it('offers GOAP and the marginal-value rule as decision rules', () => {
+    const rule = control('decision.rule');
+    if (rule.kind !== 'select') throw new Error('rule is a select');
+    const c = {} as unknown as Config;
+    rule.options.find((o) => o.value === 'goap')!.apply(c);
+    expect(c.decision).toEqual({ rule: 'goap', travel: 0, crowding: 0, idle: 'stay' });
+    rule.options.find((o) => o.value === 'mvt')!.apply(c);
+    expect(rule.current(c)).toBe('mvt');
+    expect(rule.options.map((o) => o.label)).toContain('GOAP (plan)');
+    expect(rule.options.map((o) => o.label)).toContain('Marginal value (leave below your average)');
+  });
+
+  it('offers k, horizon, shortlist and α live, in their ranges', () => {
+    const ranges: [string, number, number, number][] = [
+      ['goap.k', 1, 12, 1],
+      ['goap.horizon', 1, 100, 1],
+      ['mvt.alpha', 0.01, 1, 0.01],
+    ];
+    for (const [path, min, max, step] of ranges) {
+      const k = control(path);
+      if (k.kind !== 'number') throw new Error(`${path} is a number`);
+      expect(k.reset).toBeUndefined();
+      expect([k.min, k.max, k.step]).toEqual([min, max, step]);
+    }
+    const shortlist = control('goap.shortlist');
+    if (shortlist.kind !== 'select') throw new Error('shortlist is a select');
+    expect(shortlist.reset).toBeUndefined();
+    expect(shortlist.options.map((o) => [o.value, o.label])).toEqual([
+      ['rate', 'Most sugar per step (rate)'],
+      ['value', 'Most sugar (value)'],
+    ]);
+    const c = {} as unknown as Config;
+    expect(shortlist.current(c)).toBe('rate'); // older configs have no goap
+    shortlist.options[1].apply(c);
+    expect(c.goap).toEqual({ k: 8, horizon: 10, shortlist: 'value' });
+  });
+
+  it('creates complete goap and mvt objects when a number control is set on a config missing them', () => {
+    const c = {} as unknown as Config;
+    for (const [path, value] of [['goap.k', 3], ['goap.horizon', 20], ['mvt.alpha', 0.2]] as const) {
+      const before = structuredClone(c);
+      control(path).adjust!(c, before);
+      setPath(c, path, value);
+    }
+    expect(c.goap).toEqual({ k: 3, horizon: 20, shortlist: 'rate' });
+    expect(c.mvt).toEqual({ alpha: 0.2 });
+  });
+});
+
+describe('movement', () => {
+  it('offers jump and walk, live, defaulting older configs to jump', () => {
+    const mode = control('movement.mode');
+    expect(mode.kind).toBe('select');
+    if (mode.kind !== 'select') return;
+    expect(mode.reset).toBeUndefined();
+    expect(mode.options.map((o) => o.value)).toEqual(['jump', 'walk']);
+    const c = {} as unknown as Config;
+    expect(mode.current(c)).toBe('jump'); // older configs have no movement
+    mode.options[1].apply(c);
+    expect(mode.current(c)).toBe('walk');
+    expect(c.movement).toEqual({ mode: 'walk', speed: 1 });
+
+    const speed = control('movement.speed');
+    expect(speed.kind).toBe('number');
+    if (speed.kind !== 'number') return;
+    expect(speed.reset).toBeUndefined();
+    expect(speed.min).toBe(1);
+    expect(speed.max).toBe(50);
+  });
+
+  it('creates a complete movement object when speed is set on a config missing it', () => {
+    const speed = control('movement.speed');
+    const c = {} as unknown as Config;
+    const before = structuredClone(c);
+    expect(() => setPath(c, 'movement.speed', 5)).toThrow();
+    speed.adjust!(c, before);
+    setPath(c, 'movement.speed', 5);
+    expect(c.movement).toEqual({ mode: 'jump', speed: 5 });
+  });
+});
+
+describe('memory', () => {
+  it('offers span, share (reset-only) and belief (live), defaulting older configs off (span 0, project)', () => {
+    const span = control('memory.span');
+    expect(span.kind).toBe('number');
+    if (span.kind !== 'number') return;
+    expect(span.reset).toBe(true);
+    expect(span.min).toBe(0);
+    expect(span.max).toBe(10_000);
+
+    const share = control('memory.share');
+    expect(share.kind).toBe('number');
+    if (share.kind !== 'number') return;
+    expect(share.reset).toBe(true);
+    expect(share.min).toBe(0);
+    expect(share.max).toBe(1);
+
+    const belief = control('memory.belief');
+    expect(belief.kind).toBe('select');
+    if (belief.kind !== 'select') return;
+    expect(belief.reset).toBeUndefined();
+    expect(belief.options.map((o) => o.value)).toEqual(['recall', 'project']);
+    const c = {} as unknown as Config;
+    expect(belief.current(c)).toBe('project'); // older configs have no memory
+    belief.options[0].apply(c);
+    expect(belief.current(c)).toBe('recall');
+    expect(c.memory).toEqual({ span: 0, share: 1, belief: 'recall', prior: 'none' });
+  });
+
+  it('offers the prior, reset-only, defaulting older configs (and older memory objects) to none', () => {
+    const prior = control('memory.prior');
+    if (prior.kind !== 'select') throw new Error('prior is a select');
+    expect(prior.reset).toBe(true);
+    expect(prior.options.map((o) => o.value)).toEqual(['none', 'map']);
+    expect(prior.current({} as unknown as Config)).toBe('none');
+    const older = { memory: { span: 100, share: 1, belief: 'project' } } as unknown as Config;
+    expect(prior.current(older)).toBe('none');
+    prior.options[1].apply(older);
+    expect(older.memory).toEqual({ span: 100, share: 1, belief: 'project', prior: 'map' });
+  });
+
+  it('creates a complete memory object when a number control is set on a config missing it', () => {
+    const span = control('memory.span');
+    const c = {} as unknown as Config;
+    const before = structuredClone(c);
+    expect(() => setPath(c, 'memory.span', 50)).toThrow();
+    span.adjust!(c, before);
+    setPath(c, 'memory.span', 50);
+    expect(c.memory).toEqual({ span: 50, share: 1, belief: 'project', prior: 'none' });
+  });
+});
+
+describe('truffles', () => {
+  it('offers share and seed (reset-only), value and regrow (live), defaulting older configs off (share 0)', () => {
+    const share = control('truffles.share');
+    expect(share.kind).toBe('number');
+    if (share.kind !== 'number') return;
+    expect(share.reset).toBe(true);
+    expect(share.min).toBe(0);
+    expect(share.max).toBe(1);
+
+    const value = control('truffles.value');
+    expect(value.kind).toBe('number');
+    if (value.kind !== 'number') return;
+    expect(value.reset).toBeUndefined();
+
+    const regrow = control('truffles.regrow');
+    expect(regrow.kind).toBe('number');
+    if (regrow.kind !== 'number') return;
+    expect(regrow.reset).toBeUndefined();
+
+    const seed = control('truffles.seed');
+    expect(seed.kind).toBe('number');
+    if (seed.kind !== 'number') return;
+    expect(seed.reset).toBe(true);
+  });
+
+  it('creates a complete truffles object when a number control is set on a config missing it', () => {
+    const value = control('truffles.value');
+    const c = {} as unknown as Config;
+    const before = structuredClone(c);
+    expect(() => setPath(c, 'truffles.value', 8)).toThrow();
+    value.adjust!(c, before);
+    setPath(c, 'truffles.value', 8);
+    expect(c.truffles).toEqual({ share: 0, value: 8, regrow: 30, seed: 1 });
   });
 });

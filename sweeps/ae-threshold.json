@@ -1,0 +1,31 @@
+{
+  "name": "Retirement: spread of imitation thresholds",
+  "description": "Figure 6-7: transition time against the spread of imitation thresholds around 0.5 (uniformly spread, as all the paper's random variables are). Measured (release, seeds 1–10, recorded 2026-09-28): 16, 34, 20, 12, 8, 8 at spreads 0, 0.05, 0.1, 0.15, 0.2, 0.25. More spread is faster overall, as stated — but a little spread first slows the transition to twice the uniform threshold's.",
+  "base": {
+    "preset": "ae-base"
+  },
+  "set": {
+    "stop_at_norm": true
+  },
+  "x": {
+    "label": "Threshold spread (sd)",
+    "path": "spread",
+    "values": [
+      0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 300,
+  "metric": {
+    "kind": "final",
+    "series": "transition"
+  }
+}

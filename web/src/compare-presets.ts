@@ -164,6 +164,36 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'ants-2b',
     b: 'ants-crowd',
   },
+  {
+    id: 'gr-uniform-vs-perturbed',
+    label: 'Uniform vs perturbed crowd — Threshold Models (Compare)',
+    a: 'gr-uniform',
+    b: 'gr-perturbed',
+  },
+  {
+    id: 'ae-rapid-vs-slow',
+    label: '15 % vs 5 % rational — Retirement (Compare)',
+    a: 'ae-rapid',
+    b: 'ae-slow',
+  },
+  {
+    id: 'bg-base-vs-none',
+    label: 'With vs without punishment — Altruistic Punishment (Compare)',
+    a: 'bg-base',
+    b: 'bg-none',
+  },
+  {
+    id: 'gs-1-vs-u',
+    label: 'With vs without the budget constraint — Zero-Intelligence Traders (Compare)',
+    a: 'gs-1',
+    b: 'gs-1-u',
+  },
+  {
+    id: 'zi-c-vs-zip',
+    label: 'ZI-C vs ZIP in a box market — Zero-Intelligence Traders (Compare)',
+    a: 'cliff-excess-demand',
+    b: 'zip-excess-demand',
+  },
 ];
 
 /**

@@ -1,0 +1,31 @@
+{
+  "name": "Retirement: from 65 to 62",
+  "description": "Figure 6-10: with retirement mandatory at 70, the periods from lowering eligibility to 62 (once the 65 norm is established) until 95 % of those 62 and older have retired, against the share of rationals. The paper: 'about 35 periods if between 1 and 4 percent of the population responds rationally'. Measured (release, seeds 1–10, recorded 2026-09-28): 2.0 periods at 0, 1, 2, 4, 8 %, 1.8 at 14 %. The retired 65-to-67-year-olds in every 62-year-old's network tip the imitators at once.",
+  "base": {
+    "preset": "ae-policy"
+  },
+  "set": {
+    "stop_at_norm": true
+  },
+  "x": {
+    "label": "Rational share",
+    "path": "rational",
+    "values": [
+      0,
+      0.01,
+      0.02,
+      0.04,
+      0.08,
+      0.14
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 200,
+  "metric": {
+    "kind": "final",
+    "series": "transition_new"
+  }
+}

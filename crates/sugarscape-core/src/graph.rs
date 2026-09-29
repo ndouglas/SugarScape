@@ -156,6 +156,70 @@ pub fn gnp(n: usize, p: f64, rng: &mut SimRng) -> Vec<Vec<u32>> {
     adj
 }
 
+/// A random graph drawn in expected time proportional to its links
+/// (Batagelj and Brandes's geometric skipping): each pair (a, b), b < a, in
+/// order, is linked with probability `p`, the gaps between links drawn as
+/// geometric variates with the portable logarithm.
+pub fn gnp_sparse(n: usize, p: f64, rng: &mut SimRng) -> Vec<Vec<u32>> {
+    let mut adj = vec![Vec::new(); n];
+    if p <= 0.0 || n < 2 {
+        return adj;
+    }
+    if p >= 1.0 {
+        for a in 0..n {
+            for b in 0..a {
+                adj[a].push(b as u32);
+                adj[b].push(a as u32);
+            }
+        }
+        return adj;
+    }
+    let lp = crate::portable::ln(1.0 - p);
+    if lp >= 0.0 {
+        // p so small that 1 − p rounds to 1: no links.
+        return adj;
+    }
+    let (mut v, mut w) = (1usize, -1i64);
+    while v < n {
+        let r: f64 = rng.gen();
+        let skip = (crate::portable::ln(1.0 - r) / lp).floor();
+        w += 1 + skip as i64;
+        while w >= v as i64 && v < n {
+            w -= v as i64;
+            v += 1;
+        }
+        if v < n {
+            adj[v].push(w as u32);
+            adj[w as usize].push(v as u32);
+        }
+    }
+    adj
+}
+
+/// The configuration model: each agent gets `degrees[i]` link ends, the
+/// ends are shuffled and paired in order, and self-links and repeated links
+/// are dropped.
+pub fn configuration(degrees: &[u32], rng: &mut SimRng) -> Vec<Vec<u32>> {
+    let n = degrees.len();
+    let mut ends: Vec<u32> = Vec::new();
+    for (i, &d) in degrees.iter().enumerate() {
+        ends.extend(std::iter::repeat_n(i as u32, d as usize));
+    }
+    for i in (1..ends.len()).rev() {
+        let j = rng.gen_range(0..=i as u32) as usize;
+        ends.swap(i, j);
+    }
+    let mut adj = vec![Vec::new(); n];
+    for pair in ends.as_chunks::<2>().0 {
+        let (a, b) = (pair[0], pair[1]);
+        if a != b && !adj[a as usize].contains(&b) {
+            adj[a as usize].push(b);
+            adj[b as usize].push(a);
+        }
+    }
+    adj
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -204,5 +268,38 @@ mod tests {
                 .len(),
             45
         );
+    }
+
+    #[test]
+    fn sparse_random_graphs_link_about_p_of_all_pairs() {
+        let g = Graph::from_lists(gnp_sparse(4000, 0.001, &mut rng::seeded(3)));
+        simple(&g, 4000);
+        let links = g.edges().len() as f64;
+        let want = 0.001 * 4000.0 * 3999.0 / 2.0;
+        assert!((links - want).abs() < 4.0 * want.sqrt(), "{links}");
+        assert!(gnp_sparse(10, 0.0, &mut rng::seeded(3))
+            .iter()
+            .all(Vec::is_empty));
+        let full = Graph::from_lists(gnp_sparse(10, 1.0, &mut rng::seeded(3)));
+        assert_eq!(full.edges().len(), 45);
+        simple(&full, 10);
+    }
+
+    #[test]
+    fn a_vanishing_link_probability_gives_no_links_rather_than_a_panic() {
+        // 1 − 1e-17 rounds to 1, so ln(1 − p) is 0 and the skip would be −∞.
+        assert!(gnp_sparse(20_000, 1e-17, &mut rng::seeded(5))
+            .iter()
+            .all(Vec::is_empty));
+    }
+
+    #[test]
+    fn the_configuration_model_keeps_simple_links_near_the_degrees() {
+        let degrees: Vec<u32> = (0..1000).map(|i| 1 + i % 5).collect();
+        let g = Graph::from_lists(configuration(&degrees, &mut rng::seeded(4)));
+        simple(&g, 1000);
+        let ends: u32 = degrees.iter().sum();
+        let kept = 2 * g.edges().len() as u32;
+        assert!(kept <= ends && kept + 20 >= ends, "{kept} of {ends}");
     }
 }

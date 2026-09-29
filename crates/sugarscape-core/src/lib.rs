@@ -31,7 +31,9 @@ pub mod norms;
 pub mod opinions;
 pub mod portable;
 pub mod presets;
+pub mod punishment;
 pub mod render;
+pub mod retirement;
 pub mod ring;
 pub mod rng;
 pub mod rules;
@@ -43,8 +45,10 @@ pub mod stats;
 pub mod structure;
 pub mod sweep;
 pub mod tags;
+pub mod thresholds;
 pub mod titles;
 pub mod world;
+pub mod zi;
 
 #[cfg(test)]
 pub(crate) mod testkit;

@@ -283,6 +283,17 @@ describe('Engine', () => {
     expect(engine.trail()).toHaveLength(0);
   });
 
+  it("selects an agent and keeps its memory overlay current, clearing it once nothing is selected", async () => {
+    const { engine } = await setup();
+    expect(engine.inspectMemory()).toHaveLength(0);
+    await engine.selectAgent(1); // agent 1 starts at (1, 1); FakeSim answers [1, 1, 7, 2]
+    expect(Array.from(engine.inspectMemory())).toEqual([1, 1, 7, 2]);
+    await engine.advance(1); // walks to (2, 1)
+    expect(Array.from(engine.inspectMemory())).toEqual([2, 1, 7, 2]);
+    await engine.reset();
+    expect(engine.inspectMemory()).toHaveLength(0);
+  });
+
   it('fetches the networks of the overlays that are on', async () => {
     const { engine } = await setup();
     expect(engine.networks('trade')).toHaveLength(0);
@@ -1153,6 +1164,12 @@ describe('Engine with other models', () => {
     expect(finishedNotice({ model: 'norms' } as unknown as ModelConfig, 100)).toBe('This run has reached its last generation (100) — Reset to run it again');
     expect(finishedNotice({ model: 'farol', stop_at: 100 } as unknown as ModelConfig, 100)).toBe('This run has reached its last round (100) — Reset to run it again');
     expect(finishedNotice({ model: 'ants', stop_at: 2000 } as unknown as ModelConfig, 2000)).toBe('This run has reached its last step (2000) — Reset to run it again');
+    expect(finishedNotice({ model: 'thresholds', stop_at: 50 } as unknown as ModelConfig, 50)).toBe('This run has reached its last step (50) — Reset to run it again');
+    expect(finishedNotice({ model: 'zi', stop_at: 6 } as unknown as ModelConfig, 12000)).toBe('This run has reached its last period — Reset to run it again');
+    expect(finishedNotice({ model: 'punishment', stop_at: 2000 } as unknown as ModelConfig, 2000)).toBe('This run has reached its last period (2000) — Reset to run it again');
+    expect(finishedNotice({ model: 'retirement', stop_at: 50 } as unknown as ModelConfig, 50)).toBe('This run has reached its last period (50) — Reset to run it again');
+    expect(finishedNotice({ model: 'retirement', stop_at_norm: true } as unknown as ModelConfig, 16)).toBe('The retirement norm has set in at t = 16 — Reset to run it again');
+    expect(finishedNotice({ model: 'retirement', stop_at_norm: true, stop_at: 20 } as unknown as ModelConfig, 20)).toBe('This run has reached its last period (20) — Reset to run it again');
     expect(finishedNotice({ model: 'agreement', stop_at: 200 } as unknown as ModelConfig, 200)).toBe('This run has reached its last period (200) — Reset to run it again');
     expect(finishedNotice({ model: 'agreement', stop_at: 20000 } as unknown as ModelConfig, 376)).toBe(
       'Stable at t = 376: no opinion or uncertainty moves any more — Reset, or change the rule, to run it again',

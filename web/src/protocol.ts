@@ -58,6 +58,8 @@ export interface Wants {
   ring?: boolean;
   /** The anasazi's water, settlements and farm–home links (its overlays). */
   valley?: boolean;
+  /** Minds 3: the selected site's inspected Flump's remembered sites (the memory overlay). */
+  memory?: boolean;
 }
 
 /** Ring World's state for the ring view: sugar per site (site 0 first) and each agent's site. */
@@ -93,6 +95,8 @@ export interface WorldSnapshot {
   display?: DisplayState;
   /** The selection (from `wants.select` or an `inspect` command); null when an inspect by id found no agent. */
   inspection?: Selected | null;
+  /** Minds 3: `inspect_memory` for the selected site, alongside `inspection` when `wants.memory`. */
+  memory?: Uint32Array;
   trail?: Uint32Array;
   networks?: Partial<Record<NetworkOverlay, Uint32Array>>;
   /** Chart groups, by `chartKey`, that have news since they were last sent. */
@@ -200,6 +204,7 @@ const FLAGS = [
   'diseaseList',
   'ring',
   'valley',
+  'memory',
 ] as const;
 
 /** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */

@@ -104,6 +104,27 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in ef-predictors' axis: how far attendance swings against predictors per agent.
     return { ...form, x: { path: 'strategies', values: '2:24:2' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'fluctuation' } };
   }
+  if (model === 'zi') {
+    // The built-in gs-shouts' axis: efficiency against the period's length (Gode and Sunder's "30 seconds").
+    return { ...form, x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' }, ticks: 12000, metric: { ...form.metric, kind: 'final', series: 'avg_efficiency' } };
+  }
+  if (model === 'punishment') {
+    // The built-in bg-fig1b's axis: the long-run cooperation (the last 1 000 of 2 000 periods) against group size.
+    return { ...form, x: { path: 'size', values: '4,8,16,32,64,128,256' }, ticks: 2000, metric: { ...form.metric, kind: 'final', series: 'long_run' } };
+  }
+  if (model === 'retirement') {
+    // The built-in ae-rational's axis: the period the age 65 norm sets in (kept once reached) against the rational share.
+    return {
+      ...form,
+      x: { path: 'rational', values: '0.02,0.05,0.1,0.15,0.2,0.25' },
+      ticks: 400,
+      metric: { ...form.metric, kind: 'final', series: 'transition' },
+    };
+  }
+  if (model === 'thresholds') {
+    // The built-in gr-sd's axis: the share rioting at equilibrium against the spread of thresholds.
+    return { ...form, x: { path: 'sd', values: '0.1:0.2:0.01' }, ticks: 200, metric: { ...form.metric, kind: 'final', series: 'acting' } };
+  }
   if (model === 'ants') {
     // The built-in ants-flips' axis: flips between sources against self-conversion ε.
     return { ...form, x: { path: 'epsilon', values: '0.001,0.002,0.003,0.005,0.01' }, ticks: 20000, metric: { ...form.metric, kind: 'final', series: 'flips' } };

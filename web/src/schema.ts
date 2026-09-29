@@ -1,8 +1,23 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Config, Decision } from './types';
+import type { Config, Decision, Goap, Memory, Movement, Mvt, Truffles } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
+
+/** A config's movement, or the book's jump at speed 1 for older configs. */
+const movement = (c: Config): Movement => c.movement ?? { mode: 'jump', speed: 1 };
+
+/** A config's memory, or the engine's default (span 0: memory off) for older configs. */
+const memory = (c: Config): Memory => c.memory ?? { span: 0, share: 1, belief: 'project', prior: 'none' };
+
+/** A config's GOAP search, or the engine's default for older configs. */
+const goap = (c: Config): Goap => c.goap ?? { k: 8, horizon: 10, shortlist: 'rate' };
+
+/** A config's marginal-value rule, or the engine's default for older configs. */
+const mvt = (c: Config): Mvt => c.mvt ?? { alpha: 0.05 };
+
+/** A config's truffles, or the engine's default (share 0: no truffles) for older configs. */
+const truffles = (c: Config): Truffles => c.truffles ?? { share: 0, value: 5, regrow: 30, seed: 1 };
 
 interface Base {
   path: string;
@@ -177,8 +192,8 @@ export const GROUPS: Group[] = [
     controls: [{ kind: 'range', path: 'foresight.range', label: 'Foresight φ', min: 0, max: 20 }],
   },
   {
-    title: 'Decision (Minds 1)',
-    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat.',
+    title: 'Decision (Minds 1, 4)',
+    note: 'Which rule decides where a Flump moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average; it also needs one good. Both need walking (Movement: Walk).',
     controls: [
       {
         kind: 'select', path: 'decision.rule', label: 'Rule', reset: true,
@@ -186,6 +201,8 @@ export const GROUPS: Group[] = [
         options: [
           { value: 'book', label: 'Rule M (book)', apply: (c) => { c.decision = { ...decision(c), rule: 'book' }; } },
           { value: 'utility', label: 'Utility mind', apply: (c) => { c.decision = { ...decision(c), rule: 'utility' }; } },
+          { value: 'goap', label: 'GOAP (plan)', apply: (c) => { c.decision = { ...decision(c), rule: 'goap' }; } },
+          { value: 'mvt', label: 'Marginal value (leave below your average)', apply: (c) => { c.decision = { ...decision(c), rule: 'mvt' }; } },
         ],
       },
       {
@@ -203,6 +220,96 @@ export const GROUPS: Group[] = [
           { value: 'stay', label: 'Stay (book)', apply: (c) => { c.decision = { ...decision(c), idle: 'stay' }; } },
           { value: 'wander', label: 'Wander to a random free site in sight', apply: (c) => { c.decision = { ...decision(c), idle: 'wander' }; } },
         ],
+      },
+      {
+        kind: 'number', path: 'goap.k', label: 'GOAP: known sites a plan considers', min: 1, max: 12, step: 1,
+        adjust: (next) => { next.goap = { ...goap(next), ...next.goap }; },
+      },
+      {
+        kind: 'number', path: 'goap.horizon', label: 'GOAP: ticks of food a plan gathers', min: 1, max: 100, step: 1,
+        adjust: (next) => { next.goap = { ...goap(next), ...next.goap }; },
+      },
+      {
+        kind: 'select', path: 'goap.shortlist', label: 'GOAP: which known sites',
+        current: (c) => goap(c).shortlist,
+        options: [
+          { value: 'rate', label: 'Most sugar per step (rate)', apply: (c) => { c.goap = { ...goap(c), shortlist: 'rate' }; } },
+          { value: 'value', label: 'Most sugar (value)', apply: (c) => { c.goap = { ...goap(c), shortlist: 'value' }; } },
+        ],
+      },
+      {
+        kind: 'number', path: 'mvt.alpha', label: 'Marginal value: smoothing α of the average', min: 0.01, max: 1, step: 0.01,
+        adjust: (next) => { next.mvt = { ...mvt(next), ...next.mvt }; },
+      },
+    ],
+  },
+  {
+    title: 'Movement (Minds 2)',
+    note: 'How a Flump reaches the site it chose. The book’s rule M jumps there in one tick. Walking takes that many steps a tick along an A* path around walls and other Flumps, and plans again every tick. Walls and fences come from presets (the Minds 2 fence presets); a wall also blocks sight.',
+    controls: [
+      {
+        kind: 'select', path: 'movement.mode', label: 'Mode',
+        current: (c) => c.movement?.mode ?? 'jump',
+        options: [
+          { value: 'jump', label: 'Jump (book)', apply: (c) => { c.movement = { ...movement(c), mode: 'jump' }; } },
+          { value: 'walk', label: 'Walk', apply: (c) => { c.movement = { ...movement(c), mode: 'walk' }; } },
+        ],
+      },
+      {
+        kind: 'number', path: 'movement.speed', label: 'Speed (cells per tick)', min: 1, max: 50, step: 1,
+        adjust: (next) => { next.movement = { ...movement(next), ...next.movement }; },
+      },
+    ],
+  },
+  {
+    title: 'Memory (Minds 3)',
+    note: 'Memory needs walking (Movement: Walk). A remembered site’s belief is what was seen (recall) or that plus growback since (project).',
+    controls: [
+      {
+        kind: 'number', path: 'memory.span', label: 'Span (ticks a site is remembered)', min: 0, max: 10_000, step: 1, reset: true,
+        adjust: (next) => { next.memory = { ...memory(next), ...next.memory }; },
+      },
+      {
+        kind: 'number', path: 'memory.share', label: 'Share born remembering', min: 0, max: 1, step: 0.05, reset: true,
+        adjust: (next) => { next.memory = { ...memory(next), ...next.memory }; },
+      },
+      {
+        kind: 'select', path: 'memory.belief', label: 'Belief about a remembered site',
+        current: (c) => memory(c).belief,
+        options: [
+          { value: 'recall', label: 'Recall: what it saw there', apply: (c) => { c.memory = { ...memory(c), belief: 'recall' }; } },
+          { value: 'project', label: 'Project: that plus growback since', apply: (c) => { c.memory = { ...memory(c), belief: 'project' }; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'memory.prior', label: 'Founders start knowing', reset: true,
+        current: (c) => memory(c).prior ?? 'none',
+        options: [
+          { value: 'none', label: 'Nothing (book)', apply: (c) => { c.memory = { ...memory(c), prior: 'none' }; } },
+          { value: 'map', label: 'The whole map (needs a span)', apply: (c) => { c.memory = { ...memory(c), prior: 'map' }; } },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Truffles',
+    note: 'Hidden spots, found only by stopping on them; they ripen again a fixed time after a harvest.',
+    controls: [
+      {
+        kind: 'number', path: 'truffles.share', label: 'Share of sites with a spot', min: 0, max: 1, step: 0.01, reset: true,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
+      },
+      {
+        kind: 'number', path: 'truffles.value', label: 'Value when picked', min: 0, max: 50, step: 0.5,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
+      },
+      {
+        kind: 'number', path: 'truffles.regrow', label: 'Regrow time (ticks)', min: 1, max: 10_000, step: 1,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
+      },
+      {
+        kind: 'number', path: 'truffles.seed', label: 'Layout seed', min: 0, max: 999_999, step: 1, reset: true,
+        adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
       },
     ],
   },

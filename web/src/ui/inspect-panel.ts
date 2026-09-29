@@ -3,11 +3,15 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
+  PunishmentInspection,
+  ZiInspection,
+  RetirementInspection,
+  ThresholdsInspection,
   FarolInspection,
   AgreementInspection,
   AnasaziInspection,
@@ -21,6 +25,7 @@ import type {
   NormsInspection,
   EthnoConfig,
   EthnoInspection,
+  GoapView,
   ImageConfig,
   ImageInspection,
   LinkView,
@@ -35,6 +40,43 @@ import { h } from './dom';
 import { percent } from './format';
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+
+/**
+ * The Heading row's text for a walked plan: the target and steps left (singular/plural), "Can't
+ * reach" when no path was found to a target elsewhere, or "Staying" when the agent is at its target.
+ */
+export function headingText(plan: NonNullable<AgentView['plan']>, at: [number, number]): string {
+  const n = plan.path.length;
+  const target = `(${plan.target_x}, ${plan.target_y})`;
+  if (n) return `${target}, ${n} ${n === 1 ? 'step' : 'steps'} left`;
+  return plan.target_x === at[0] && plan.target_y === at[1] ? 'Staying' : `Can't reach ${target}`;
+}
+
+/**
+ * The Remembers row's text (Minds 3): "n site(s) (m truffle spot(s))", singular/plural for each
+ * noun, or "Doesn't remember" for a non-rememberer (or `null`, memory off).
+ */
+export function memoryText(m: AgentView['memory']): string {
+  if (!m?.remembers) return "Doesn't remember";
+  const sites = m.sites === 1 ? 'site' : 'sites';
+  const spots = m.spots === 1 ? 'spot' : 'spots';
+  return `${m.sites} ${sites} (${m.spots} truffle ${spots})`;
+}
+
+/**
+ * The Plan row's text (Minds 4, GOAP): "n step(s), gathers ~x of G", singular at one step, or
+ * "Done (gathers ~x of G)" once no targets are left. `x` is rounded to one decimal.
+ */
+export function planText(goap: GoapView): string {
+  const n = goap.steps.length;
+  const gathers = `gathers ~${Number(goap.gathers.toFixed(1))} of ${fmt(goap.goal)}`;
+  return n ? `${n} ${n === 1 ? 'step' : 'steps'}, ${gathers}` : `Done (${gathers})`;
+}
+
+/** The Average rate row's text (Minds 4, marginal value): ρ in sugar a tick, to two decimals. */
+export function rateText(rate: number): string {
+  return `${rate.toFixed(2)} sugar a tick`;
+}
 
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
@@ -86,6 +128,21 @@ export class InspectPanel {
       ),
       ...(this.engine.sugar.foresight.enabled ? [row('Foresight φ', String(a.foresight))] : []),
       row('Vision', String(a.vision)),
+      ...((this.engine.sugar.memory?.span ?? 0) > 0 ? [row('Remembers', memoryText(a.memory))] : []),
+      ...(a.plan
+        ? [
+            a.plan.walked
+              ? row('Heading', headingText(a.plan, [a.x, a.y]))
+              : row('Moved to', `(${a.plan.target_x}, ${a.plan.target_y})`),
+          ]
+        : []),
+      ...(a.goap
+        ? [
+            row('Plan', planText(a.goap)),
+            ...(a.goap.steps.length ? [row('Next target', `(${a.goap.steps[0][0]}, ${a.goap.steps[0][1]})`)] : []),
+          ]
+        : []),
+      ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
@@ -267,6 +324,92 @@ export class InspectPanel {
       const says = s.forecast !== null ? `forecasts ${s.forecast}` : s.attend ? 'would go' : 'would stay';
       rows.push(row(s.active ? `▶ ${s.label}` : s.label, `${says} · score ${fmt(s.score)}`));
     }
+    return rows;
+  }
+
+  /** A step of the schedules, a trade, or a trader. */
+  private ziRows(view: ZiInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (view.panel === 'schedules')
+      return [row('Unit', String(view.unit)), row('Demand', view.demand === null ? '—' : String(view.demand)), row('Supply', view.supply === null ? '—' : String(view.supply))];
+    if (view.panel === 'prices') {
+      const t = view.trade;
+      if (!t) return [row('Trade', 'none here')];
+      return [
+        row('Trade', `period ${t.period}, shout ${t.tick}`),
+        row('Price', String(t.price)),
+        row('Buyer', `#${t.buyer + 1} (value ${t.value}, profit ${t.value - t.price})`),
+        row('Seller', `#${t.seller + 1} (cost ${t.cost}, profit ${t.price - t.cost})`),
+      ];
+    }
+    const a = view.trader;
+    if (!a) return [row('Point', 'between panels')];
+    const rows = [
+      row('Trader', `#${a.id} · ${a.buyer ? 'buyer' : 'seller'}`),
+      row(a.buyer ? 'Values' : 'Costs', a.limits.join(', ')),
+      row('This period', `${a.traded} traded · profit ${a.profit} (equilibrium ${fmt(a.equilibrium_profit)})`),
+    ];
+    if (a.margin !== null) rows.push(row('Margin (μ)', fmt(a.margin)));
+    return rows;
+  }
+
+  /** An agent and its group, or a period of the time strip. */
+  private punishmentRows(view: PunishmentInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${fmt(100 * x)} %`;
+    if (view.panel === 'time')
+      return [row('Period', String(view.period)), row('Cooperation', pct(view.cooperation ?? 0)), row('Punishment', pct(view.punishment ?? 0))];
+    const a = view.agent;
+    const g = view.group;
+    if (!a || !g) return [row('Point', 'between groups')];
+    const traits = a.kind ?? `cooperates ${pct(a.cooperate)} · punishes ${pct(a.punish)}`;
+    const did = `${a.cooperated ? 'cooperated' : 'defected'}${a.punished ? ' and punished' : ''}`;
+    return [
+      row('Agent', `#${a.id} · ${traits}`),
+      row('This period', `${did} · payoff ${fmt(a.payoff)}`),
+      row('Group', `#${g.index + 1} · ${pct(g.contributors)} contributors · ${pct(g.punishers)} punishers · ${pct(g.defectors)} defectors`),
+      row('Group this period', `${pct(g.acts)} cooperated · mean payoff ${fmt(g.payoff)}`),
+      row('Last conflict', g.last_conflict === null ? 'none yet' : `period ${g.last_conflict} (${g.lost ? 'lost: replaced' : 'won'})`),
+    ];
+  }
+
+  /** An agent of the retirement population, an age's retirements, or a period. */
+  private retirementRows(view: RetirementInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${fmt(100 * x)} %`;
+    if (view.panel === 'time') return [row('Period', String(view.period)), row('Eligible retired', pct(view.retired ?? 0))];
+    if (view.panel === 'ages') {
+      const e = view.exposed ?? 0;
+      return [row('Age', String(view.age)), row('Retired, last 10 periods', `${view.retirements} of ${e}${e > 0 ? ` (${pct((view.retirements ?? 0) / e)})` : ''}`)];
+    }
+    const a = view.member;
+    if (!a) return [row('Age', view.age === null ? '—' : String(view.age)), row('Point', 'an empty place')];
+    const rows = [
+      row('Agent', `#${a.id} · ${a.kind}${a.group > 0 ? ' · second group' : ''}`),
+      row('Age', `${a.age} (dies at ${fmt(a.death_age)})`),
+      row('Status', a.retired ? `retired${a.retired_at !== null ? ` at ${a.retired_at}` : ''}` : 'working'),
+      row('Network', `${a.network} · ${a.eligible} eligible · ${a.retired_members} retired`),
+    ];
+    if (a.kind === 'imitator') rows.push(row('Threshold', pct(a.threshold)));
+    return rows;
+  }
+
+  /** A step of the thresholds' time panel, a point of Figure 1, a histogram row, or an actor. */
+  private thresholdsRows(view: ThresholdsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const pct = (x: number) => `${fmt(100 * x)} %`;
+    if (view.panel === 'time') return [row('Step', String(view.step)), row('Acting', (view.crowds ?? []).map(pct).join(' · '))];
+    if (view.panel === 'figure') return [row('Share acting', pct(view.share ?? 0)), row('Thresholds at or below', pct(view.cdf ?? 0))];
+    if (view.panel === 'histogram') return [row('Final share', `about ${pct(view.share ?? 0)}`), row('Episodes', String(view.count))];
+    const a = view.member;
+    if (!a) return [row('Point', 'between the panels')];
+    const rows = [
+      row('Actor', `#${a.id}${a.seed ? ' · the spark' : ''}${a.crowd > 1 ? ` · crowd ${a.crowd}` : ''}`),
+      row('Threshold', a.threshold === null ? 'never acts' : pct(a.threshold)),
+      row('Sees acting', `${a.sees} of ${a.of}${a.degree !== null ? ` · watches ${a.degree}` : ''}`),
+      row('Now', a.acting ? 'acting' : 'not acting'),
+    ];
+    if (a.ceiling !== null) rows.push(row('Leaves above', pct(a.ceiling)));
     return rows;
   }
 
@@ -467,6 +610,14 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isZiView(view)
+            ? this.ziRows(view)
+          : isPunishmentView(view)
+            ? this.punishmentRows(view)
+          : isRetirementView(view)
+            ? this.retirementRows(view)
+          : isThresholdsView(view)
+            ? this.thresholdsRows(view)
           : isAntsView(view)
             ? this.antsRows(view)
           : isFarolView(view)

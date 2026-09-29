@@ -147,6 +147,26 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('zi')).toMatchObject({
+      x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' },
+      ticks: 12000,
+      metric: { kind: 'final', series: 'avg_efficiency' },
+    });
+    expect(defaultForm('punishment')).toMatchObject({
+      x: { path: 'size', values: '4,8,16,32,64,128,256' },
+      ticks: 2000,
+      metric: { kind: 'final', series: 'long_run' },
+    });
+    expect(defaultForm('retirement')).toMatchObject({
+      x: { path: 'rational', values: '0.02,0.05,0.1,0.15,0.2,0.25' },
+      ticks: 400,
+      metric: { kind: 'final', series: 'transition' },
+    });
+    expect(defaultForm('thresholds')).toMatchObject({
+      x: { path: 'sd', values: '0.1:0.2:0.01' },
+      ticks: 200,
+      metric: { kind: 'final', series: 'acting' },
+    });
     expect(defaultForm('ants')).toMatchObject({
       x: { path: 'epsilon', values: '0.001,0.002,0.003,0.005,0.01' },
       ticks: 20000,

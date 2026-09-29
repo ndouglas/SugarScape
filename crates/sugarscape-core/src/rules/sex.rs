@@ -102,7 +102,14 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         infected_by: None,
         culture: Vec::new(),
         social: Social::default(),
+        plan: crate::agent::Plan::default(),
+        goap_plan: None,
+        remembers: false,
+        memory: crate::minds::memory::Memory::default(),
+        rate: 0.0,
+        leaving: None,
     };
+    child.rate = f64::from(child.metabolism[0]);
     // Goods 1..n pick where Chapter IV picked spice's metabolism.
     for (i, m) in child.metabolism.iter_mut().enumerate().take(n).skip(1) {
         *m = pick(rng, a.metabolism[i], b.metabolism[i]);
@@ -129,6 +136,12 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
             .zip(&b.culture)
             .map(|(&x, &y)| if rng.gen_bool(0.5) { x } else { y })
             .collect();
+    }
+    // Drawn last, and only under memory, so every other run's random stream
+    // is unchanged. The child's memory starts empty; it doesn't inherit
+    // either parent's.
+    if world.config.memory.span > 0 {
+        child.remembers = rng.gen_bool(world.config.memory.share);
     }
     let pa = world.agent_mut(a_id).expect("parent");
     for (have, give) in pa.holdings.iter_mut().zip(&from_a).take(n) {
@@ -232,6 +245,29 @@ mod tests {
         act(&mut w, mom);
         assert_eq!(w.population(), before);
         let _ = dad;
+    }
+
+    #[test]
+    fn a_child_is_never_born_onto_a_wall() {
+        // Every cradle but (4, 2) is a wall: the child lands there, whatever the seed.
+        let wall = |x, y| crate::config::Wall {
+            x,
+            y,
+            width: 1,
+            height: 1,
+            opaque: false,
+        };
+        for seed in 0..20 {
+            let mut c = blank_config(10, 10);
+            c.walls = [(2, 1), (2, 3), (1, 2), (3, 1), (3, 3)]
+                .map(|(x, y)| wall(x, y))
+                .to_vec();
+            let mut w = World::new(c, seed).unwrap();
+            let (mom, _) = couple(&mut w);
+            act(&mut w, mom);
+            let child = w.agents().find(|a| a.parents.is_some()).unwrap();
+            assert_eq!(child.pos, Pos::new(4, 2), "seed {seed}");
+        }
     }
 
     #[test]

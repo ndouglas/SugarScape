@@ -38,6 +38,35 @@ pub type AgentId = u64;
 /// An index into `World::diseases`.
 pub type DiseaseId = u32;
 
+/// Minds 2: where the agent last decided to go and the path it planned
+/// there that it hasn't walked yet (observation only: never hashed,
+/// exported or shared, like `social`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Plan {
+    pub target: Option<Pos>,
+    pub path: Vec<Pos>,
+    /// Whether the agent walked, or tried to (under `walk`), rather than
+    /// jumped: Inspect labels the plan by this, not by the current mode.
+    pub walked: bool,
+}
+
+/// Minds 4: a GOAP Flump's foraging plan (`decision.rule: goap`): the
+/// targets it hasn't reached yet, each with the value it was planned at,
+/// what the whole plan was to gather and the goal G it planned for. Kept
+/// (with empty steps once finished) until it replans; cleared when the next
+/// target is invalidated. It
+/// decides where the Flump goes, but like `plan` it's never hashed,
+/// exported or shared: it's rebuilt from what the Flump sees and remembers.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct GoapPlan {
+    /// Remaining targets in order, each with its value when planned.
+    pub steps: Vec<(Pos, f64)>,
+    /// The plan's total planned value, from its first step.
+    pub gathers: f64,
+    /// The goal: metabolism × `goap.horizon`.
+    pub goal: f64,
+}
+
 /// A cultural tag string of `len` bits (1..=64); bit `i` is tag position `i`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Tags {
@@ -180,6 +209,33 @@ pub struct Agent {
     /// Neighbor list and friends (observation only: never hashed, exported or
     /// shared; see `social`).
     pub social: Social,
+    /// Where the agent last decided to go and the path it planned there that
+    /// it hasn't walked yet (observation only: never hashed, exported or
+    /// shared, like `social`).
+    pub plan: Plan,
+    /// Minds 4: the GOAP plan it's following; `None` until it plans, again
+    /// once a plan is dropped or it takes the fallback, and always under the
+    /// other rules. Observation for Inspect, and
+    /// behavior under GOAP, but never hashed, exported or shared.
+    pub goap_plan: Option<GoapPlan>,
+    /// Minds 3: whether this Flump remembers sites out of sight, drawn from
+    /// `memory.share` when `memory.span > 0` (always false otherwise).
+    pub remembers: bool,
+    /// Minds 3: sites this Flump remembers (observation only: never hashed,
+    /// exported or shared, like `social`; empty unless `remembers`).
+    pub memory: crate::minds::memory::Memory,
+    /// Minds 4: the marginal value theorem's running estimate ρ of the
+    /// habitat's intake rate (`decision.rule: mvt`), updated from good 0's
+    /// harvest after every move; starts at the Flump's own good-0
+    /// metabolism, with no draw. Clamped at ≥ 0 and never NaN. Never
+    /// hashed, exported or shared, like `plan`.
+    pub rate: f64,
+    /// Minds 4: the site a Flump under MVT has committed to leaving for,
+    /// while its own patch's local value has fallen below ρ; `None` under
+    /// every other rule and while a Flump stays. Cleared on arrival or if
+    /// the site becomes occupied. Never hashed, exported or shared, like
+    /// `plan`.
+    pub leaving: Option<Pos>,
 }
 
 impl Agent {
@@ -216,7 +272,14 @@ impl Agent {
             infected_by: None,
             culture: Vec::new(),
             social: Social::default(),
+            plan: Plan::default(),
+            goap_plan: None,
+            remembers: false,
+            memory: crate::minds::memory::Memory::default(),
+            rate: 0.0,
+            leaving: None,
         };
+        agent.rate = f64::from(agent.metabolism[0]);
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
         // endowment then metabolism, in good order.
         for (i, good) in config.goods.iter().enumerate().skip(1) {
@@ -240,6 +303,11 @@ impl Agent {
             agent.culture = (0..config.culture.features)
                 .map(|_| rng.gen_range(0..q) as u8)
                 .collect();
+        }
+        // Drawn last, and only under memory, so every other run's random
+        // stream is unchanged.
+        if config.memory.span > 0 {
+            agent.remembers = rng.gen_bool(config.memory.share);
         }
         agent
     }

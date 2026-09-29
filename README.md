@@ -154,7 +154,7 @@ The presets menu groups its presets by model: **Sugarscape**, **Schelling**, **R
 **Artificial Anasazi**, **Civil Violence**, **Tag Cooperation**, **Spatial Games**, **Axelrod Culture**,
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**,
-**Image Scoring**, **El Farol and the Minority Game** and **Ants and Recruitment**.
+**Image Scoring**, **El Farol and the Minority Game**, **Ants and Recruitment**, **Threshold Models** and **The Timing of Retirement**.
 Each preset is listed by a plain title saying what happens in it; under the menu, the chosen
 preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
@@ -1508,6 +1508,711 @@ Model," *Evol. Ecol. Res.* 4 (2002); D. Mark, *Behavioral Mathematics for Game A
 "Choosing Effective Utility-Based Considerations," *Game AI Pro 3* (2017). See
 `docs/superpowers/specs/2026-09-27-minds-1-utility-design.md`.
 
+### Minds 2: A* and walking
+
+This is our own experiment, not a reproduction: the second step of the Minds program
+(`docs/studies/2026-09-27-minds.md`). Rule M jumps a Flump to the best site in sight in one tick,
+however far away it is. Minds 2 adds an A* engine, walls and fences, and a switch that makes Flumps
+walk instead. Then it measures which of the book's results need the jump, and what happens to the
+ideal free distribution when switching patches truly costs a walk.
+
+**A\*, verified.** A generic A* (Hart, Nilsson and Raphael, 1968) searches any graph with an
+expansion limit. It draws no random numbers. Ties go to the lowest f, then the lowest h, then the
+earliest pushed, and the torus pushes its neighbors north, south, east, west. Two checks:
+
+- **Against Dijkstra:** on 1 000 random walled tori (4-way) and 1 000 random octile maps (8-way,
+  no corner cutting), with 0–40 % walls, A*'s cost equals Dijkstra's, and both agree when there
+  is no path. A case whose start or goal falls on a wall is skipped, so 665 tori and 659 maps
+  (1 324 of 2 000) are checked; the tests assert at least 600 of each. The heuristics, torus
+  Manhattan and octile distance, are consistent, and a closed set keeps any site from being
+  expanded twice. Unit tests pin the tie order and the exact expansion count on a tie case, the
+  start = goal case, an unreachable goal and the limit's exact boundary.
+- **Against Sturtevant's benchmarks** (2012): one random map (`random512-10-0`, 89 scenarios) and
+  one maze (`maze512-4-0`, 106 scenarios) from the Moving AI synthetic sets. A*'s octile cost
+  equals each scenario's published optimal length within 1e-6. The subset is in
+  `crates/sugarscape-core/tests/fixtures/movingai/` under the Open Data Commons Attribution
+  License, with a README giving the source.
+
+**Walls and fences.** `walls` is a list of rectangles (set on reset; presets supply them). A wall
+site holds no sugar, never grows back and never holds a Flump, so placement, moves, children,
+replacement and combat all skip it. Pollution neither lands on it nor diffuses into it. An opaque
+wall also stops each of rule M's four lines of sight; a fence blocks only movement. With no walls,
+sight, placement and diffusion are exactly as before. The grid draws walls in stone and fences in
+wood.
+
+**Walking.** Under `movement.mode: walk`, the decision rule (rule M or the utility mind) picks its
+target as before. Then A* finds a 4-way path around walls and other Flumps, and the Flump takes
+`speed` steps along it (1–50) and gathers only where it stops. It plans again every tick. If there
+is no path within 4 096 expanded sites, it stays and gathers where it is. At vision 1 every target
+is one step away, so walking *is* jumping: every golden Sugarscape preset without combat, with
+vision forced to 1, gives the same fingerprint under walk as under jump. Walking with combat on is
+an error, since rule C jumps. Inspect shows where the Flump is heading and how many steps are left
+(or that it can't reach its target), and draws its planned path as a dashed line.
+
+Measured (20 seeds; the survey unless a sweep is named). "Holds" and "Fails" are the survey's
+verdicts on claims we set before running:
+
+- **The book's carrying capacity needs the jump (Fails, as expected).** On `ii-2-unit` the mean
+  population over ticks 300–500 has median 181 under walking against 228 under the jump. No seed
+  lands within 214–234, around the book's 224. Walking is lower in all 20 seeds, by a median 47
+  Flumps. The sweeps (not a judged claim) show capacity tracking how far a Flump gets in a tick,
+  roughly min(speed, vision): walking at speed 1 and vision 1–6 (181.5) is about jumping at
+  vision 1 (182.7); walking at speed 3 (212.8) is near jumping at vision 1–3 (205.5); walking at
+  speed 6 (225.2) is near jumping at vision 1–6 (228.5).
+- **Speed brings it back (Holds).** Capacity rises toward the jump's as speed rises. The
+  `walk-speed` sweep's means: 181.5 at one step a tick, 201.4 at 2, 212.8 at 3, 218.4 at 4, 225.2
+  at 6 and 227.5 at 10, against 228.5 jumping. In the survey, speed 10 (median 227.4) beats
+  speed 1 in every seed.
+- **Walking wipes out the gain from vision.** In the `walk-vision` sweep, the jump's capacity rises
+  with vision (means 182.7 at vision 1, 205.5 at 1–3, 228.5 at 1–6, 241.5 at 1–10). Walking stays
+  flat (182.7, 188.8, 181.5, 182.2). At vision 1 the two are the same rule.
+- **Skewed wealth doesn't need the jump (Holds).** Under walking the wealth at tick 500 is
+  right-skewed in every seed: skewness median 1.26 against 1.27 jumping, Gini 0.46 against 0.48.
+- **Seasonal migration survives walking, with fewer migrants (Holds).** A median 55 % of the Flumps
+  alive over ticks 100–300 change hemisphere at least twice, against 83 % jumping. Likely cause: a
+  walker needs many ticks to cross, so fewer finish before the season or their target changes.
+- **Walking doesn't bring back the waves (Fails, as expected).** The book's II-6 block sends waves
+  toward the far mountain. At tick 100 a median 0.6 % of Flumps are farther than 25 sites (torus
+  distance) from the starting block's center, against 0.8 % jumping and the quarter the claim
+  asks for. Walking isn't the missing mechanism.
+- **Baum and Kraft's travel claim fails, in the opposite direction.** They found that requiring
+  travel to switch patches slightly reduced undermatching. Here a fence separates Minds 1's two
+  patches (vision 10–20), with a two-site gap. Moving the gap to the far end (`ifd-fence-far`)
+  gives s median 0.85 against 0.90 walking with no fence, lower in 18 of 20 seeds. So undermatching
+  grows. The `ifd-detour` sweep compares gap offsets, not a fence against no fence, so it can't
+  back that comparison, and no test was run on it. Behind a fence the richer patch's share at
+  2.10 : 1 is flat within noise (means 0.6638, 0.6649, 0.6569, 0.6577 at offsets 0, 5, 10, 15;
+  sd 0.007–0.014, n 20). Behind a wall it falls slightly, from 0.668 to 0.652 (about 0.016,
+  roughly 3 standard errors).
+- **A confound in the fenced worlds.** The fences at x = 2 and x = 28 split the torus into 25
+  columns on the richer patch's side and 33 on the poorer's, so random placement starts about
+  57 % of Flumps on the poorer side. Its effect isn't measured.
+- **The visual barrier: Weak.** Baum and Kraft found a visual barrier had no effect. With an opaque
+  wall instead of a fence (same gap), s has median 0.91 against 0.88, and only 10 of 20 seeds are
+  within 0.05 of their fence's s. If anything, the wall raises s.
+- **At the single 2.10 : 1 ratio the walking arms can't be told apart.** At the presets' own ratio
+  (median mean N₁/N₂ over ticks 500–1000): far fence 1.96, near fence 1.99, wall 1.99, walking
+  with no fence 1.97, jumping 1.88. For the far gap the ratio (1.96 against 1.97) and s (0.846
+  against 0.899) point the same way. None of the ratio differences among the walking arms is
+  tested, and their medians are within 0.03 of each other, so at this one ratio they can't be told
+  apart. All of them sit above the jump's 1.88. s measures how the split tracks the input across
+  five patch sizes; the ratio is one point on that line.
+
+**Cost** (µs per Flump-tick: wall-clock over the whole tick with all rules, from the release CLI,
+2 000 ticks, seeds 1–5, divided by the population summed over the ticks):
+
+| Preset | Movement | µs per Flump-tick |
+|---|---|---|
+| `ii-2-unit` | jump (book) | 1.05 |
+| `walk-capacity` | walk, speed 1 | 4.66 |
+| `walk-fast` | walk, speed 3 | 5.10 |
+| `ifd-far-sighted` | jump, vision 10–20 | 2.65 |
+| `ifd-fence` | walk, vision 10–20, fences | 7.77 |
+
+Minds 1's baseline from planning: `ii-2-unit` 1.09 (book) and 1.13 (utility mind). Walking costs
+about 4.4 times the jump on `ii-2-unit`, and about 2.9 times at vision 10–20 behind fences.
+
+Switches (the Rules panel's **Movement (Minds 2)** group): **Mode** (Jump (book) or Walk) and
+**Speed** (cells per tick), both live. Walls come only from presets. Presets: `walk-capacity`,
+`walk-wealth`, `walk-seasons`, `walk-waves`, `walk-fast`, `ifd-fence`, `ifd-fence-far`, `ifd-wall`.
+Built-in sweeps: `walk-speed` (capacity against speed), `walk-vision` (capacity against vision,
+walking and jumping), `ifd-detour` (the richer patch's share against the gap's offset, fence and
+wall).
+
+Credit: P. E. Hart, N. J. Nilsson and B. Raphael, "A Formal Basis for the Heuristic Determination
+of Minimum Cost Paths," *IEEE Trans. Systems Science and Cybernetics* 4(2) (1968); N. R.
+Sturtevant, "Benchmarks for Grid-Based Pathfinding," *IEEE Trans. Computational Intelligence and AI
+in Games* 4(2) (2012), with the Moving AI benchmark data (movingai.com, ODC-By); W. M. Baum and
+J. R. Kraft, "Group Choice: Competition, Travel, and the Ideal Free Distribution," *JEAB* 69
+(1998). See `docs/superpowers/specs/2026-09-27-minds-2-walking-design.md`.
+
+### Minds 3: memory, belief and truffles
+
+This is our own experiment, not a reproduction: the third step of the Minds program
+(`docs/studies/2026-09-27-minds.md`). Rule M sees only what is in sight, and a walker forgets a
+target as soon as it drops out of view. Minds 3 gives Flumps memory of the sites they've seen and a
+belief about what a remembered site holds now. It adds hidden **truffle** spots that only memory can
+exploit. Then it measures memory's value as an information asymmetry: rememberers against
+non-rememberers in the same world, paired seed by seed.
+
+**Memory.** Under `memory.span` > 0 a share of Flumps (`memory.share`, drawn at birth) remember.
+Each tick, after moving, a rememberer records every site in sight and its own site, with the levels
+it saw and the tick. An entry not seen again for `span` ticks is forgotten, and a Flump holds at
+most 4 096 sites: past that, the ones seen longest ago go first. Children start with empty
+memories. Memory needs walking, since a remembered site out of sight can only be walked to.
+
+- **Belief.** `recall` believes a remembered site holds what it held when seen. `project` believes
+  that plus growback since, capped at the most ever seen there (the docking with Hornvale's
+  "dynamics" beliefs).
+- **The choice.** Remembered sites out of sight join the candidates with their believed value, at
+  their torus distance. Rule M and the utility mind then choose as before. The Flump can't see who
+  stands on a remembered site, so occupancy doesn't filter it; if the target turns out occupied, the
+  walker stops one site short, or stays. Remembered sites carry no pollution discount, since the
+  Flump can't see pollution out of sight. Under idle `wander`, a Flump wanders only when nothing in
+  sight or in memory scores above 0, and then only among sites in sight.
+- **The reduction.** With `span` 0 every preset keeps its fingerprint, and memory draws nothing.
+
+**Truffles.** A share of sites (`truffles.share`) hold a hidden spot, placed by a hash of the site
+and `truffles.seed`, never by the world's random numbers. So the layout is the same with memory on
+or off. Nobody sees a spot. A Flump that stops on a ripe one gathers `truffles.value` sugar, and the
+spot ripens again `truffles.regrow` ticks later. Anyone can find one by chance; only a rememberer can
+come back.
+
+Measured (20 seeds, ticks 200–500 unless named; the survey, which judges claims we set before
+running):
+
+- **Memory mostly hurts under rule M.** Rememberers end up poorer in five of the six worlds. On the
+  open sugarscape (`mem-open`) they hold a median 324 sugar against the others' 438, an advantage of
+  −113; we expected about 0, and only 2 of 20 seeds land within 10 %. Behind the wall
+  (`mem-walled`) it's −114, and only 7 % of rememberers are alive at tick 500 against 74 % of the
+  others. Through the seasons it's −48, among truffles −82, and on the two patches out of sight
+  (`mem-catchment`) −90, poorer in every seed, though rememberers reach a patch sooner (median tick
+  27.5 against 33). That −90 is on holdings near 100 000 (an endowment so large nobody starves), so
+  under 0.1 %. Memory pays only on the trapline world: +69, in every seed (measured with half the
+  Flumps remembering; the preset has everyone remember).
+- **Pricing travel removes the loss, largely by using memory less; no gain was shown.** Rule M
+  values a site by its sugar alone, so a far remembered site believed full beats a near one: rule M
+  prices no travel, a likely contributor to the loss. Under the utility mind with travel k = 0.5
+  (memory as before), the advantage on `mem-open` rises in every seed, by a median 119, to about
+  neutral: +7.4 (IQR −18 to +37), rememberers richer in only 10 of 20 seeds (Weak). But the share
+  of rememberers' choices aimed at a remembered site out of sight falls from 0.68 to 0.10 (median
+  over seeds, on ticks 200–500 with any such choice), so the travel price mostly works by leaving
+  memory unused. Across the arms, the loss tracks how often memory is used: `project` uses it about
+  twice as often as `recall` (0.68 against 0.34 on `mem-open`, 0.73 against 0.34 on `mem-truffles`)
+  and loses more (−113 against −34, and −82 against −25). The same switch takes `mem-walled` from
+  −114 to −55 (higher in every seed, still a loss) and `mem-truffles` from −82 to +1.5 (higher in
+  18 of 20), and there too memory is used less: the share falls from 0.96 to 0.65 behind the wall
+  and from 0.73 to 0.25 among truffles.
+- **Projection is worse than recall, the opposite of Hornvale.** On `mem-open` the advantage is −113
+  under `project` against −34 under `recall`, worse in every seed, with a larger belief error (2.67
+  against 2.46 sugar). On `mem-truffles` it's −82 against −25, with twice the belief error (4.99
+  against 2.46). The belief error is measured only on chosen targets, the ones believed best, so it
+  carries a selection bias. Hornvale's goblins gained from projection; likely because Hornvale's planner prices
+  what competitors take in the meantime, and ours doesn't. Staleness alone doesn't separate the two
+  beliefs: on `mem-open`, 93 % of choices of a remembered site out of sight find less there than
+  believed under `project`, and 95 % under `recall`.
+- **Rememberers find the truffles but lose overall.** On `mem-truffles` they gather 0.0147 truffles a
+  Flump-tick against 0.0065 (ticks 1–500), about 2.3 times as many, more in every seed, yet end
+  poorer in 18 of 20 seeds.
+- **Traplining appears, and pays.** On `mem-trapline` (truffle spots the main food, everyone
+  remembering) Thomson, Slatkin and Thomson's index of return variability (0 for a perfect
+  trapliner, 1 for random revisits) has a per-seed median of 0.15, below 0.8 in every seed. With half
+  remembering, the non-rememberers' index is 0.36, also well below 1; likely the sparse map channels
+  anyone's wanderings through the same spots. Rememberers gather 0.050 truffles a Flump-tick against
+  0.011 and hold 144 sugar against 76, in every seed, as Ohashi and Thomson's "more competitive"
+  predicts.
+- **Gill's competition effect fails.** The median interval between visits to the same spot is 50
+  ticks with 5 Flumps and with 20 (regrowth takes 40), and about 12 % of revisits come sooner than
+  40 ticks either way.
+- **Forgetting tracking regrowth isn't shown.** Under `recall` (the `mem-span-recall` sweep,
+  recomputed per seed in the survey) the advantage is negative at every span and growback rate, so
+  the "best" span is only the least-harmful one. At growback 1 it sits at the shortest span tested
+  (10 ticks, IQR 10–10), the floor of the grid; at 0.25 and 0.5 it's 25. The survey scores it Weak
+  for Bracis et al. (shorter at the fast rate in 12 of 20 seeds), but a best span stuck at the floor
+  can't show forgetting tracking regrowth: only that memory hurts least when it's shortest. Under
+  `project` the median advantage is highest at span 10 at every rate, so projection doesn't make
+  longer memories pay (Fails).
+- **Memory doesn't restore walking's lost capacity.** On `walk-capacity` with memory for everyone,
+  the population (mean over ticks 300–500) has median 154 against 181 without memory, lower in every
+  seed (175 under `recall`; 228 jumping).
+- **The marginal value theorem is untestable here.** On `mem-mvt` (nine rich patches, the utility
+  mind with travel) foragers who find a patch never leave: 0 departures over 20 seeds, and a median
+  5 of 10 alive at tick 1000, each settled on a patch. Two depleting redesigns were tried and
+  withdrawn: with 10 Flumps nobody is alive after tick 200, and with 3 nobody is alive at tick 1000
+  and only 3 departures happen across 20 seeds. Likely reason: these minds compare the values of
+  sites, not rates of intake, and hold no estimate of the habitat's average, so the theorem's
+  leave-when-your-rate-falls-to-the-average can't be expressed. With sight only along rows and
+  columns, a forager that has emptied a patch often sees no other. The theorem moves to Minds 4.
+
+The `mem-share` sweep (20 seeds, an observation, not a judged claim) asks whether memory is worth
+more when rare. It isn't, on `mem-truffles`: the mean advantage is −88, −73, −76, −86 and −98 at
+shares 0.1, 0.25, 0.5, 0.75 and 0.9 (sd 46–74), negative at every share. No test was run.
+
+**Cost** (µs per Flump-tick, measured as in Minds 2; the machine was loaded, so Minds 2's presets
+were re-timed in the same session):
+
+| Preset | µs per Flump-tick |
+|---|---|
+| `mem-open` | 19.7 |
+| `mem-truffles` | 28.9 |
+| `mem-mvt` | 14.5 |
+| `mem-walled` | 8.7 |
+| `walk-capacity` (re-timed; 4.66 in Minds 2) | 4.91 |
+| `ifd-fence` (re-timed; 7.77 in Minds 2) | 14.74 |
+| `ii-2-unit` (re-timed; 1.05 in Minds 2) | 1.62 |
+
+Against `walk-capacity` timed now, memory costs 4.0 times on the open sugarscape and 5.9 times with
+truffles. `mem-walled` is cheaper than `ifd-fence` because its rememberers die; `ifd-fence`'s
+figure also looks inflated by the load. `mem-mvt` ran only 39 519 Flump-ticks, since most Flumps die
+early.
+
+Switches: the Rules panel's **Memory (Minds 3)** group (**Span**, **Share born remembering**, both
+on reset, and **Belief**, live) and **Truffles** group (**Share of sites with a spot** and **Layout
+seed** on reset, **Value** and **Regrow time** live; a live change to regrow time applies to future
+harvests only). Inspect shows "Remembers: n sites (m truffle spots)" or "Doesn't remember", and the
+grid draws the inspected Flump's remembered sites as a faint overlay fading with age, with its known
+truffle spots as circles (filled when believed ripe). Charts: **Memory** (`remembered_moves` and
+`stale_choices`, both shares), **Belief error (sugar)**, **Rememberers vs others** and
+**Truffles**. Truffles need rule M's move to be gathered, so they can't be combined with combat
+(rule C). Presets: `mem-open`,
+`mem-catchment`, `mem-walled`, `mem-seasons`, `mem-truffles`, `mem-trapline`, `mem-mvt`. Built-in
+sweeps: `mem-span-recall` and `mem-span-project` (the advantage against span at three growback
+rates) and `mem-share` (the advantage against the share remembering, on `mem-truffles`).
+
+Credit: E. L. Charnov, "Optimal Foraging, the Marginal Value Theorem," *Theoretical Population
+Biology* 9(2) (1976); D. W. Stephens and J. R. Krebs, *Foraging Theory* (1986); C. Bracis, E.
+Gurarie, B. Van Moorter and R. A. Goodwin, "Memory Effects on Movement Behavior in Animal Foraging,"
+*PLoS ONE* 10(8) (2015); D. Boyer and P. D. Walsh, "Modelling the Mobility of Living Organisms in
+Heterogeneous Landscapes," *Phil. Trans. R. Soc. A* 368 (2010); J. D. Thomson, M. Slatkin and B. A.
+Thomson, "Trapline Foraging by Bumble Bees: II," *Behavioral Ecology* 8(2) (1997); K. Ohashi and
+J. D. Thomson, "Efficient Harvesting of Renewing Resources," *Behavioral Ecology* 16(3) (2005); F. B.
+Gill, "Trapline Foraging by Hermit Hummingbirds," *Ecology* 69(6) (1988). See
+`docs/superpowers/specs/2026-09-28-minds-3-memory-design.md`.
+
+### Minds 4: GOAP and the marginal value theorem
+
+This is our own experiment, not a reproduction: the fourth step of the Minds program
+(`docs/studies/2026-09-27-minds.md`). Rule M and the utility mind choose one site at a time and hold
+no estimate of what the habitat yields on average, so Minds 3 couldn't test the marginal value
+theorem, and rule M prices no travel. Minds 4 adds the program's first planner, goal-oriented action
+planning (GOAP), and a learned marginal-value rule. It then runs the theorem's tests and asks Minds
+3's open question again: does memory pay a mind that prices travel?
+
+**GOAP, verified.** A generic planner searches any domain that supplies states, actions
+(preconditions, effects, cost) and an admissible heuristic, with Minds 2's A\* over the state graph
+and an expansion limit. It draws no random numbers. The search runs forward, not backward as in
+Orkin's F.E.A.R.: our states hold amounts of sugar, and regression over numeric effects is awkward.
+Two checks, on a STRIPS encoding (Fikes and Nilsson):
+
+- **Known optimal plan lengths** (Helmert and Mattmüller): gripper, 3n − 1 for even n and 3n for
+  odd, for n = 1–8; two logistics families, 4n (one truck per city for n = 1–6, one truck in one
+  city for n = 1–5; n = 6 runs about a minute and is left to an ignored test, which gives 24); and a
+  blocks-world family, 4n − 2, for n = 1–6. Every plan is replayed from the start.
+- **Against Dijkstra:** on 500 random STRIPS instances (6–12 facts, 4–12 actions, costs 1–3) the
+  plan's cost equals Dijkstra's, or both find none: 130 non-empty plans, 107 starts already at the
+  goal and 263 unsolvable instances.
+
+**The foraging domain.** Under `decision.rule: goap` a Flump plans a run of harvests that gathers
+G = metabolism × `goap.horizon` (H ticks of food, default 10) in the fewest ticks.
+
+- **Candidates:** its own site and K others it sees or remembers (`goap.k`, default 8), at Minds 3's
+  believed values.
+- **Actions:** harvest site i, costing the torus distance + 1 ticks (harvesting where it stands
+  costs 1). Regrowth during a plan is ignored.
+- **State:** where it is and which candidates it has harvested; gathered sugar is derived, so a plan
+  has at most (K + 1)·2^K states.
+- **Heuristic:** ⌈(G − gathered) / the best unharvested value⌉, admissible. On 400 random instances
+  the plan's cost equals an uninformed search's.
+- **Executing.** The Flump walks to the plan's first site and keeps the plan until it's invalidated
+  (the next site is taken, holds less than half what was planned, or can't be reached) or finished.
+  Then it replans, following Orkin.
+- **Fallback.** If the known sugar can't reach G, or the search passes 4 096 expansions, it takes
+  the single site with the best value ÷ (distance + 1). That's its only random draw, rule M's tie
+  draw.
+- **One good only:** G is in sugar, and foresight welfare over several goods isn't.
+- **The reduction.** With travel priced at 0 (a test-only hook), K covering sight and H = 1, GOAP's
+  target has rule M's best value and nearest distance on 200 random neighborhoods (where one harvest
+  meets G). Among equal-cost plans GOAP takes A\*'s fixed order, not rule M's draw, so the two can
+  pick different sites among equals.
+
+**Which sites a plan considers decides the result.** The spec shortlisted the K best known sites by
+value. With the map known, those are the far, full peak centers, so the planner can only plan long
+walks. It shuttles between centers and starves: on the MVT world at spacing 20, 4 of 60 Flumps are
+alive at tick 1000 (20 seeds, 3 each), against 28 of 60 when the shortlist ranks by value ÷
+(distance + 1). So the default is that rate shortlist, and the spec's value ranking is kept as the
+switch `goap.shortlist: value`.
+
+**The marginal-value rule** (`decision.rule: mvt`) is Constantino and Daw's rule at site level. Each
+Flump keeps ρ, a running mean of its gain per tick (travel ticks count 0; ρ ← ρ + α(gain − ρ),
+α = `mvt.alpha`, default 0.05; ρ starts at the metabolism). It stays while the best site within one
+step is believed to yield at least ρ; otherwise it commits to the best site it knows and walks there.
+
+**Knowing the map.** `memory.prior: map` gives every founding rememberer every non-wall site at
+tick 0, with its starting level (the theorem's ideal forager); children start empty. It needs a
+memory span. Past Minds 3's cap of 4 096 sites, the richest are kept.
+
+**The theorem's world** (`goap-mvt`, `mvt-rule`): nine patches (peaks of radius 3, height 4, 25
+sites and 56 sugar each) 20 apart on a 60 × 60 torus, with 3 Flumps of metabolism 1, vision 1–6,
+endowment 50, walking, memory for all (span 1 000, `project`, the map known). The design asked that
+a patch run out under one forager while the whole world feeds everyone. At the spec's growback 0.05
+a patch regrows 1.25 a tick, more than one forager eats, so it never runs out. So growback became
+0.02 (0.5 a tick per patch) and the population 5 became 3 (regrowth 1.5 times the need). A lone
+planner then empties its patch by tick 33 and leaves at tick 36. Even so only 1–2 of the 3 are
+alive at tick 1000 in each seed.
+
+Measured (20 seeds; the survey, which judges claims we set before running, unless a sweep is named).
+The travel tests use the same world at spacings s = 12, 16, 20 and 24 (a 3s × 3s torus):
+
+- **Longer travel, longer stays, under GOAP (Holds).** The per-seed slope of mean patch residence on
+  spacing is positive in 20 of 20 seeds (median 0.41). Median residence is 18.6, 22.6, 25.7 and
+  22.8 ticks at s = 12–24. Under the marginal-value rule it holds too, but the effect is small:
+  positive in 19 of 20 (median 0.096), with 11.8, 12.4, 12.7 and 12.9 ticks. Rule M with the same
+  knowledge reverses the theorem, with shorter stays at longer travel in 20 of 20 seeds (6.3 down to
+  5.0), and so does GOAP with the value shortlist (20 of 20; 7.6, 8.6, 6.8, 5.9). Caveat: survival
+  falls with spacing under every rule, so at s ≥ 20 the residences rest on few Flumps (a median of
+  1 or fewer of the 3 alive at tick 1000), and death cuts visits short.
+- **Overstaying: GOAP Holds as judged, likely only through the walk out; the marginal-value rule
+  Fails.**
+  The measure, set before running: at each departure, the gain on the Flump's last tick in the
+  patch against its mean gain per tick so far. At s = 20, GOAP overstays at a median 57 % of
+  departures, over half in 18 of 20 seeds. The marginal-value rule overstays at 39 %, over half in
+  0 of 20. That last tick is often the first step out. Without the ticks in transit (reported, not
+  judged; fallback ticks that stay put count as transit, 0.1–0.7 % of ticks), GOAP overstays at
+  20–33 % and the marginal-value rule at 2–7 %, and no seed is above half at any spacing under
+  either. So GOAP's literal overstaying is likely the walk out.
+  Overstaying also falls as travel grows under both (GOAP 61 % to 46 %, the marginal-value rule
+  56 % to 35 %, from s = 12 to 24). That's the opposite of Constantino and Daw, whose people
+  overstayed significantly only when travel was long.
+- **Memory pays a planner, among the living (Holds).** Under GOAP the rememberers' wealth advantage
+  (ticks 200–500) is +69 on the open sugarscape (19 of 20 seeds), +99 among truffles (20 of 20) and
+  +33 behind the wall (20 of 20), against rule M's −113, −82 and −114 in the same worlds. Minds 3's
+  travel-priced utility mind (travel 0.5), the fairer comparator, gave about +7 open, +1.5 among
+  truffles and −55 behind the wall. The memory is used: 98–99 % of rememberers' plans include a
+  remembered site out of sight.
+- **Part of it is survivorship.** Counting the dead as 0 (sugar per founding member, ticks
+  200–500), the advantage is +35 open (18 of 20 seeds), +26 among truffles (14 of 20) and +10 behind
+  the wall (15 of 20), short of 80 % of seeds in the last two. Fewer rememberers are alive at tick
+  500 than others in every world (48 % against 50 %, 41 % against 53 %, 60 % against 74 %). The
+  judged advantage is conditional on survival.
+- **The gain is relative to planners who don't remember, not to rule M.** GOAP's non-rememberers
+  are much poorer than rule M's (240 against 438 on the open sugarscape, 254 against 430 among
+  truffles), while a GOAP rememberer on the open sugarscape (319) is no richer than rule M's (324).
+  GOAP also holds more Flumps (population 200.5 against 176.5 open, 67.3 against 45.8 behind the
+  wall); more Flumps sharing the same sugar is a likely cause, not isolated. A possible bias isn't
+  isolated either: a plan's next site must still be a candidate, and a non-rememberer loses an
+  off-axis site from its candidates as soon as it's out of sight, so its plans are dropped sooner.
+
+The sweeps (20 seeds, observations, not judged claims):
+
+- **Horizon** (`goap-horizon`, `ii-2-unit` walking under GOAP, mean population over ticks 300–500):
+  143.3 at H = 2, 159.0 at 5, 206.4 at 10, 206.3 at 20 and 195.7 at 40, against 181 for walking
+  rule M and 224 for the book's jump. So planning ten ticks of food brings back over half of what
+  walking lost. But on `ii-2-unit` most GOAP decisions are the rate fallback (52 % of Flump-ticks
+  against 21 % planned, one seed over 200 ticks), so the gain is likely as much the rate choice as
+  the planning. Not isolated.
+- **K** (`goap-k`): 196.5, 207.9, 206.4 and 204.9 at K = 2, 4, 8 and 12 (sd 9.5–11.5): flat within
+  noise past four sites (untested).
+- **Memory's share** (`goap-memory`, on `goap-truffles`): the mean advantage is +90, +100, +104,
+  +100 and +113 at shares 0.1, 0.25, 0.5, 0.75 and 0.9 (sd 41–52), against Minds 3's `mem-share`
+  under rule M (−73 to −98). Positive at every share, and not worth more when rare. No test was
+  run.
+
+**Cost** (µs per Flump-tick, measured as in Minds 2 and 3; Minds 3's presets re-timed in the same
+run):
+
+| Preset | µs per Flump-tick |
+|---|---|
+| `goap-mvt` | 80.7 |
+| `mvt-rule` | 54.2 |
+| `goap-open` | 82.2 |
+| `goap-truffles` | 74.7 |
+| `goap-walled` | 149.0 |
+| `mem-open` (re-timed) | 14.2 |
+| `mem-truffles` (re-timed) | 24.3 |
+| `mem-mvt` (re-timed) | 14.6 |
+| `mem-walled` (re-timed) | 9.1 |
+| `walk-capacity` (re-timed) | 5.58 |
+| `ii-2-unit` (re-timed) | 1.20 |
+
+Against rule M in the same world, planning costs 5.8 times on the open sugarscape, 3.1 times with
+truffles and 16 times behind the wall, where rule M's rememberers die. The search never passed its
+limit in any survey world. `goap-mvt` and `mvt-rule` run only 3 Flumps on 3 600 sites, which
+inflates both figures.
+
+Switches: the Rules panel's **Decision (Minds 1, 4)** group adds GOAP and the marginal-value rule to
+**Rule** (on reset; both need Movement: Walk), and live **K**, **Horizon**, **Which known sites**
+(rate or value) and **α**. The **Memory** group adds the prior (on reset). Inspect shows a planner's
+"Plan: n steps, gathers ~x of G" and its next target, with its route drawn on the grid, or a
+marginal-value Flump's ρ. Charts: **Planning** (mean plan length) and **Plan use** (plans and
+fallbacks per Flump; plans using memory as a share of plans) under GOAP; **Average rate** and
+**Leaving** under the marginal-value rule. Presets: `goap-mvt`, `mvt-rule`, `goap-open`,
+`goap-truffles`, `goap-walled`.
+Built-in sweeps: `goap-horizon`, `goap-k`, `goap-memory`.
+
+Credit: R. E. Fikes and N. J. Nilsson, "STRIPS: A New Approach to the Application of Theorem Proving
+to Problem Solving," *Artificial Intelligence* 2 (1971); J. Orkin, "Applying Goal-Oriented Action
+Planning to Games," *AI Game Programming Wisdom 2* (2004), "Symbolic Representation of Game World
+State: Toward Real-Time Planning in Games," AAAI workshop WS-04-04 (2004), and "Three States and a
+Plan: The A.I. of F.E.A.R.," GDC (2006); M. Helmert and R. Mattmüller, "Accuracy of Admissible
+Heuristic Functions in Selected Planning Domains" (2007); J. Slaney and S. Thiébaux, "Blocks World
+Revisited," *Artificial Intelligence* 125 (2001); E. L. Charnov, "Optimal Foraging, the Marginal
+Value Theorem," *Theoretical Population Biology* 9(2) (1976); S. M. Constantino and N. D. Daw,
+"Learning the Opportunity Cost of Time in a Patch-Foraging Task," *Cognitive, Affective, &
+Behavioral Neuroscience* 15(4) (2015). See `docs/superpowers/specs/2026-09-28-minds-4-goap-design.md`.
+
+### Threshold Models (Granovetter 1978; Watts 2002)
+
+**The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins
+(Granovetter). An instigator (threshold 0) acts; whoever's threshold that reaches acts next; and so
+on until nobody new is tipped. Everything turns on the exact distribution of thresholds, not its
+average. **Watts** put the same rule on a sparse random network — each person watches only his
+neighbors — and asked when a single spark becomes a cascade that sweeps the network.
+
+Measured (the survey and the presets' descriptions):
+
+- **Granovetter's crowds reproduce.** Thresholds 0 to 99 give a riot of 100; move the person at 1
+  up to 2 and only the instigator riots. His Figure 2's continuous calculation jumps between σ 12.2
+  and 12.3 — "about six" rioters below (5.5), "nearly 100" above, 50 in the limit.
+- **A crowd of real people has no single tipping point.** A crowd of 100 whose thresholds are the
+  normal's quantiles tips at σ 12.23 when thresholds are rounded to whole people (his 12.2), 11.89
+  when rounded down, 12.55 when kept as fractions. And crowds drawn at random from the normal
+  distribution show no jump at all: they riot past half 15 % of the time at σ 12, 25 % at 12.5.
+- **The "equilibrium of 100" is rare.** Of crowds drawn from his uniform city, 36.9 % + 13.7 % =
+  50.5 % end with no rioters or one ("over half … .51"), as he says — but everyone riots in only
+  2.3 %, and the mean is 12 rioters.
+- **The friends claims hold under our reading** (friends at random, counted w times, the actor
+  dividing by the whole crowd with himself included, as in his 63/120 example): the uniform crowd's
+  most common outcome becomes one rioter; the perturbed crowd spreads more often as friends weigh
+  more (0, 0, 43 %, 52 % at weights 1, 2, 5, 10), most at an acquaintance of a quarter, rarely past
+  seven rioters; one-way friendships change little.
+- **A middling movement between crowds is the most incendiary** (12 % rioting with no movement, 41 %
+  at 0.05, 29 % with everyone moving every step), as he suggests.
+- **Ceilings make riots pulse.** With some people leaving once more than 90 % riot (his Figure 3),
+  most crowds never settle — the riot climbs, the cautious leave, it climbs again — but whether a
+  given crowd pulses depends on who holds the ceilings; decided one at a time, it hovers near 90 %.
+- **Watts's window reproduces**: cascades between z ≈ 1 and 6 at threshold 18 % (the analytic window
+  1.02–5.76), global cascades filling the connected network (0.941 against S = 0.940), and a
+  power law of slope ½ at the lower edge (−0.48).
+- **His upper edge depends on network size.** At his n 1 000 and z 6.14, 20 % of sparks go global,
+  not "a single cascade in 1,000 trials" (3 % at n 10 000).
+- **Varied thresholds widen only the dense side of the window**; at the sparse side they narrow it
+  (9 % against 28 % at z 1.2). **His Figure 4b cannot be built as stated**: with τ 2.5 and k ≥ 1 a
+  power law's mean degree cannot exceed 1.95, and at threshold 18 % no such network cascades.
+- **Hubs help in both regimes**: the best-connected spark goes global far more often at z 1.3 (95 %
+  against 39 %) and still twice as often at z 5.5 (89 % against 44 %), where he says it does not.
+
+Switches: **Actors**, **Each crowd** (as drawn, or sampled from the city), **Started by**
+(instigators, one random actor, the hub), **Actors decide** (together, or one at a time), **Count
+oneself in the group**, **Thresholds** (uniform, perturbed, normal, everyone the same), **Mean**,
+**Spread**, **A normal crowd is** (quantiles, or drawn), **Thresholds are** (fractions, or whole
+people rounded down or to the nearest), **A threshold of 0** (acts at once, or once a neighbor does),
+**Friends count more** with **Acquaintance**, **A friend counts as** and **Friendship is mutual**,
+**Who sees whom** (the whole crowd, a random network, a network with hubs) with **Mean degree**,
+**Ceilings** (the share who leave, and above what), **Several crowds** with **Crowds** and **Movement
+per step**, and **Episodes** (start again at each equilibrium; what counts as global; the longest
+episode). The view: the share acting over the last 400 steps (one line per crowd), Granovetter's
+Figure 1 (the thresholds' c.d.f. against the 45° line, with the riot's staircase) for a single crowd
+seen whole or the histogram of episode sizes otherwise, and the actors as a grid. Color modes:
+**State**, **Threshold**, **Degree**, **Crowd**. Charts: Participation (with Granovetter's
+continuous equilibrium); Episodes; Last cascade; Swing. Presets: `gr-uniform`, `gr-perturbed`,
+`gr-normal-12`, `gr-normal-13`, `gr-normal-sampled`, `gr-city`, `gr-friends`,
+`gr-friends-perturbed`, `gr-ceilings`, `gr-clusters`, `watts-lower`, `watts-middle`, `watts-upper`,
+`watts-hetero`, `watts-hub`. **Compare** entry: "Uniform vs perturbed crowd — Threshold Models
+(Compare)". Built-in sweeps: `gr-sd`, `gr-friends`, `gr-movement`, `gr-ceilings`, `watts-window`,
+`watts-hetero`, `watts-targeting`.
+
+Credit: Mark Granovetter, "Threshold Models of Collective Behavior," *American Journal of Sociology*
+83(6) (1978), 1420–1443; Duncan J. Watts, "A Simple Model of Global Cascades on Random Networks,"
+*PNAS* 99(9) (2002), 5766–5771. See `docs/superpowers/specs/2026-09-27-thresholds-design.md`.
+
+### The Timing of Retirement (Axtell & Epstein 1999)
+
+**The model.** In 1961 Congress let workers claim Social Security at 62 instead of 65, yet it took
+nearly three decades for the most common retirement age to follow. Axtell and Epstein's agents live
+in 81 one-year cohorts, die at random between 60 and 100, and are replaced by 20-year-olds. A few are
+rational and retire as soon as they may; a few retire at random; most imitate, retiring once half the
+eligible members of their own small network — people within a few years of their age — have.
+
+Measured (the survey and the presets' descriptions):
+
+- **The realizations reproduce in shape, a little slower.** With 15 % rational, 95 % of those eligible
+  have retired by period 8 on average, rising steadily (the text says "within the first 6 periods"; 4
+  runs of 20 make it by then); with 5 %, retirement
+  stalls, wavers and "percolates up" from the old, finishing near period 61. Larger networks slow the
+  transition, a spread of network sizes speeds it, the cohort size does not matter, and retirement
+  mandatory at 70 speeds it — all as stated. Wider networks speed it at 10 % rational, as stated, but
+  not at 5 % (Figure 6-9), where the narrowest are as fast as the widest.
+- **Footnote 5 is false.** Counting every friend instead of the eligible ones is said to leave the
+  results' "qualitative character" unchanged; counting every friend, no norm ever forms — the young
+  friends hold the share retired below one half.
+- **Figure 6-6 needs an unstated rule.** Under the pseudo-code's reading — a dead friend's place
+  passes to the newborn in its slot — no minimum of rationality is needed (72 periods with no
+  rationals at all) and nothing takes the paper's hundreds of periods. Only if friends who die are
+  replaced by someone of about the same age do the paper's "minimum proportions" and long, erratic
+  transitions appear (no norm at 0 or 5 % rational; at 10 %, 8 runs of 10 reach it after 22 to 279 periods and 2 never
+  do within 600).
+- **The policy switch does not reproduce.** Lowering eligibility to 62 once the norm is established,
+  the paper's new norm "emerges after twenty to thirty periods"; here it comes in 2, at every share of
+  rationals, under either rule: an imitator just turned 62 counts its retired 65-to-67-year-old friends
+  and retires at once. The decades the model was built to explain do not follow from its rules.
+- **Coupling pulls both ways.** A little coupling between a community without rationals and one with
+  them pulls the first into line (75 → 46 periods at 0.1), as the paper says, but slows the second just
+  as much (19 → 34), until both take about 58; the paper's figure keeps the rational group fast. A
+  little spread in the thresholds first doubles the transition time before more spread shortens it.
+
+Switches: **Agents per cohort**, **The first agents' death ages**, **Each period, agents act** (cohort by
+cohort, oldest first, or in one random order), **Rational share**, **Random share**, **Random agents'
+chance**, **Imitation threshold**, **Threshold spread**, **Imitators count** (eligible members, or every
+member), **Network size**, **Extent**, **When a member dies** (the newborn in its slot takes its place,
+or it is replaced within the holder's age range), **Eligibility age**, **Mandatory age**, **Lower the
+age once the norm is reached** with **To**, **The norm is reached at** (the paper never defines its
+transition time; here, the first period with that share of the eligible retired), **Two
+sub-populations** with **Coupling**, and **Stop at the norm**. The view is Axtell and Epstein's: one row
+per age from 20 at the top, agents colored by type while working and red once retired; beside it, the
+share retiring at each age over the last 10 periods, and the share of the eligible retired over time.
+Color modes: **Status**, **Type**, **Threshold**, **Group**. Charts: Retired share (by group with two
+sub-populations); Retirement age; Transition; Group transitions. Presets: `ae-rapid`, `ae-base`,
+`ae-slow`, `ae-policy`, `ae-groups`, `ae-all-members`, `ae-replace`. **Compare** entry: "15 % vs 5 %
+rational — Retirement (Compare)". Built-in sweeps: `ae-rational`, `ae-rational-replace`,
+`ae-threshold`, `ae-size`, `ae-extent`, `ae-policy`, `ae-coupling`, `ae-coupling-rational`.
+
+Credit: Robert L. Axtell and Joshua M. Epstein, "Coordination in Transient Social Networks: An
+Agent-Based Computational Model of the Timing of Retirement," Brookings CSED Working Paper No. 1 (1999),
+in H. Aaron, ed., *Behavioral Dimensions of Retirement Economics* (1999); Joshua M. Epstein, *Generative
+Social Science* (Princeton, 2006), chapter 7. See `docs/superpowers/specs/2026-09-27-retirement-design.md`.
+
+### Altruistic Punishment (Boyd, Gintis, Bowles & Richerson 2003)
+
+**The model.** People punish free riders even when it costs them and brings them nothing, and group
+selection was thought to sustain costly cooperation only in small groups. Boyd, Gintis, Bowles and
+Richerson's answer: punishment is cheap once defectors are rare. 128 groups of contributors, defectors
+and punishers play a one-shot game (cooperating costs c = 0.2; punishers fine each defector p/n = 0.8/n at
+a cost of 0.2/n); everyone copies someone who earns more, sometimes from another group; groups fight,
+the one with fewer defectors more likely to win and replace the loser; a few agents mutate. Their
+figures plot cooperation, averaged over the last 1 000 of 2 000 periods, against group size.
+
+**How this reproduction handles the paper's gaps and contradictions.** Every reading is a named
+switch, every figure was read from the PDF at 300 dpi by marker, and every "reproduces the figure"
+claim uses one rule, fixed in advance: a mean gap of at most 0.05 over group sizes 4–256, reported with
+each curve's worst point (a mean over curves that sit mostly at the 0.09 floor is lenient).
+- **The payoff baseline is never stated.** Imitation needs payoffs above 0; a baseline of 1 fits the
+  paper's own calibration (a trait with advantage c spreads from 10 % to 90 % in about 40 periods;
+  "50" stated).
+- **The conflict rate contradicts itself.** Fig. 1's caption gives 0.075, 0.015, 0.003; its legend 0.0075,
+  0.015, 0.03. Under the text's rules neither reproduces the figure: cooperation collapses a group size
+  or two too soon (0.17 at n 128 where the figure has 0.64). No baseline fixes it — a higher one lets
+  punishment reach larger groups but lifts cooperation without punishment far above the figure.
+- **The figures fit about twice the stated conflict rate.** Of Figs. 1–4's 14 curves, the stated model
+  reproduces 2 (worst points up to 0.47 off). With pairs fighting at 2ε, all 14 reproduce (mean gaps
+  0.006–0.049, worst points at most 0.16) — including the eight curves of Figs. 2–4, which were not used
+  to find the factor. Their Methods derive ε = 0.015 from an extinction rate of 0.0075 because "only one
+  of the two groups entering into a conflict becomes extinct", so the text says pairs fight at ε; the
+  figures look like groups fighting at about ε each — as if their code let either group of a pair start
+  the conflict. That is a switch here, **Groups meet: in random pairs; either can start it (the
+  figures)** (preset `bg-either`: a pair fights at 2ε − ε²), and it reproduces 13 of 14 (Fig. 4's fixed
+  cost at 0.051, where 2ε has 0.049 — noise at the threshold). Janssen's "each group challenges one" is a
+  third way to double it; the data cannot tell these apart, and doubling the victory slope, another way
+  to strengthen group selection, is untested.
+- **Janssen's NetLogo replication** (CoMSES 2223) fills the gaps differently — a benefit, every group
+  challenging one, conflict over this period's acts, imitation in turn; his readings are switches here
+  (not his code). Together they come close too (84 % at n 32) because his pairing also doubles conflict,
+  but his benefit lifts cooperation without punishment above the figure (0.42 at n 16 against 0.20).
+
+Measured (the survey and the presets' descriptions; the text's readings unless stated):
+
+- **The figures' shapes hold.** Without punishment, cooperation survives only in groups of 4 or 8
+  (Fig. 1a); punishment sustains more at every size (Fig. 1b); more conflict, more cooperation; more
+  mixing, less (Fig. 2); a fine only twice the cost gives much less (Fig. 3); a fixed punishing cost gives
+  nothing from n 32 (Fig. 4). Lower mutation raises cooperation substantially, more errors lower it, and
+  where the population starts does not matter — all as stated.
+- **The reach does not, under the text's reading:** "cooperation is sustained in groups on the order of
+  100 individuals" — 17 % at n 128. Under the "either" reading, 59 %.
+- **The mixing calibration is off.** m = 0.01 is said to equalize two groups in about 50 periods; after
+  50, 58 % of the difference remains. A member meets the other group with probability m and copies it
+  half the time, so the gap shrinks by about m a period.
+- **Fewer groups add more than noise:** 0.56 at 8 groups against 0.69 at 128.
+- **Continuous traits are not similar.** Cooperation rises with group size (94 % at n 32, 90 % at 256,
+  against the base model's 69 % and 12 %): uniform mutants keep the mean punishment near ½, and a
+  defector then pays about p/2 = 0.4, more than c.
+- **The ring is not cooperation-free**: about half cooperate in groups of 4 or 8, though little from 32.
+- **The per-capita benefit with payoff conflict** is qualitatively similar, as stated.
+- **Cooney's PDE claims (2024):** a shallow dip in payoff at weak punishment appears — but under every
+  victory rule, not only the normalized one his Remark 6.1 blames; a higher cost of punishing never
+  raises the share of punishers here.
+
+Switches: **Groups (N)**, **Group size (n)**, **At the start**, **Cost of cooperating (c)**, **Cost of being
+punished (p)**, **Punishers pay** (k/n per defector, or a fixed cost), **Cost of punishing (k)**, **Fixed
+cost**, **Errors (e)**, **A punisher who errs** (punishes the others, nobody, or itself too), **Benefit to
+others (b)**, **Baseline payoff**, **Mixing (m)**, **Imitation happens** (all at once, or in turn),
+**Mutation (μ)**, **Conflict (ε)**, **Groups meet** (in random pairs; either can start it; each challenges
+one), **Groups fight over** (defectors, payoffs normalized, payoffs through tanh) with **Sensitivity**,
+**Defectors are counted by** (type, or this period's acts), **A defeated group** (becomes a copy of the
+winners, or is refilled with them from the winners), **Traits** (discrete or continuous), **Groups are**
+(anywhere with conflict, or on a ring without), **Long-run window** and **Stop at period**. The view: every
+group a block of its agents, contributors blue, punishers green, defectors red, a group that just lost
+framed; below, cooperation and punishment over time. Color modes: **Type**, **Acts**, **Payoff**,
+**Group**. Charts: Types; Cooperation (with the long-run average); Payoff; Conflict. Presets: `bg-base`,
+`bg-either`, `bg-none`, `bg-large`, `bg-weak`, `bg-fixed`, `bg-mixing`, `bg-benefit`, `bg-continuous`,
+`bg-ring`, `bg-janssen`. **Compare** entry: "With vs without punishment — Altruistic Punishment
+(Compare)". Built-in sweeps: `bg-fig1a`, `bg-fig1b`, `bg-fig1-caption`, `bg-fig1-either`, `bg-fig2a`,
+`bg-fig2b`, `bg-fig3`, `bg-fig4`, `bg-baseline`, `bg-readings`, `bg-mutation`, `bg-error`, `bg-groups`,
+`bg-benefit`, `bg-continuous`, `bg-ring`, `bg-cooney-fine`, `bg-cooney-cost`.
+
+Credit: Robert Boyd, Herbert Gintis, Samuel Bowles and Peter J. Richerson, "The evolution of altruistic
+punishment," *PNAS* 100(6): 3531–3535 (2003); Daniel B. Cooney, "Exploring the Evolution of Altruistic
+Punishment with a PDE Model of Cultural Multilevel Selection," arXiv:2405.18419 (2024; *Bull. Math.
+Biol.* 2025); Marco Janssen's replication, CoMSES Net 2223 (GPL-3.0, read for its readings only). See
+`docs/superpowers/specs/2026-09-28-punishment-design.md`.
+
+### Zero-Intelligence Traders (Gode & Sunder 1993; Cliff 1997)
+
+**The model.** Are markets efficient because traders are smart? Gode and Sunder replaced human traders
+in a double auction with programs that shout random prices. Unconstrained (ZI-U), they trade at a loss
+and waste surplus; merely forbidden to trade at a loss (ZI-C), they capture almost all of it — "the
+market as a partial substitute for individual rationality." Six buyers and six sellers trade units
+one at a time; a shout that crosses the standing bid or ask trades at the earlier order's price, and
+each trade clears the book. Cliff (1997) argued that ZI-C prices converge on equilibrium only when
+supply and demand are symmetric, and built traders that learn a profit margin (ZIP).
+
+**How the sources were read.** Gode and Sunder's paper is a scan (read by OCR); their five markets
+exist only as step curves in the figures. Because ZI-U traders trade every unit, a market's ZI-U
+efficiency follows arithmetically from its schedules — so Table 2's ZI-U numbers pin markets 1–4 down
+exactly (90.0, 90.0, 76.7, 48.8; market 4's second cost reads 141 by pixel, and 142 gives 48.8),
+alongside the text's P₀ of 69 and 170 and volumes of 24 and 6 — a calibration, not a finding;
+market 5, a fine staircase, is read as well as the scan allows (86.7 against 86.0). Cliff's results
+come from the C code in his appendices, which differs from his text in places; the code is the
+default, the text a switch.
+
+Measured (the survey and the presets' descriptions):
+
+- **Gode and Sunder reproduce, given enough time.** ZI-C efficiency 99.9, 99.8, 99.7, 99.5, 97.1 in
+  markets 1–5 (their 99.9, 99.2, 99.0, 98.2, 97.1); profit dispersion close to Table
+  3; prices tightening within each period (Table 1's negative slopes). The rank correlation of the
+  trading order with the efficient one is higher for ZI-C than ZI-U, as their footnote says, though
+  higher than theirs (0.91 and 0.85 against 0.74 and 0.42).
+- **But "30 seconds" decides it.** Their periods lasted 30 seconds, never translated into shouts. At 100
+  shouts a period ZI-C efficiency is 44–86 %; it needs about 500–1 000 to reach their numbers. The
+  random traders capture the surplus because they get enough chances.
+- **Cliff's critique holds in direction, not in number.** In his simulator (a random willing trader at
+  the shout's price, days of up to 11 sessions as his code runs them) ZI-C mean prices are 199.1,
+  233.7, 137.0, 249.7 in his four markets (P₀ 200): his predictions hold for the symmetric and flat
+  markets but miss the box markets by 12 and 10, and his printed 233⅓ matches his simulation, not his
+  own formula (241⅔). In Gode and Sunder's own mechanism the prices sit
+  about half as far from P₀ (216.6, 161.8, 232.9) — still off, so the critique's direction survives.
+- **ZIP learns its way to equilibrium.** Daily mean prices converge on P₀ in all four markets — the
+  flat one within 4 days, the excess-demand box from below and steadily — and after a demand or supply
+  shift; profit dispersion falls to a tenth of ZI-C's or less; efficiency averages 99.9–100 %. In
+  Smith's retail market, where only sellers
+  post prices, trades stay below P₀ as Cliff says, but rise past $2.00 by day 9.
+- **Cliff's text is not his code.** His text draws ZIP's momentum from U[0.2, 0.8]; his code overwrites
+  it with U[0, 0.1] — the text's reading converges a day or two sooner in the box markets. His text
+  ends a day after 100 failed shouts; his code ends only a *session* there, a day running up to a set
+  number of sessions (11 in his ZI-C runs, 9 in his ZIP control file). The code is the default
+  (**A period ends: after its sessions**); the text's rule cuts ZIP's efficiency to 98.9 % in the
+  symmetric market.
+
+Switches: **Market** (Gode and Sunder's 1–5, Cliff's symmetric, flat supply, excess demand, excess supply
+and retail, or custom), **Highest price**, **Traders** (ZI-C, ZI-U, ZIP) with **ZIP momentum** (his code or
+his text), **Trades happen** (against the standing quote, or with a random willing trader) with **NYSE
+rules**, **Who shouts** (a random trader, or a side then a trader), **Only sellers shout**, **A period
+ends** (after a number of shouts; after its sessions, as Cliff's code; or after 100 failures in a row,
+as his text) with **Shouts a period** and **Sessions a day**, **Shift**
+(demand up or supply down 50) with **Shift from period**, and **Stop after period**. The view follows Gode
+and Sunder's figures: the schedules, the trade prices across periods, and a strip of traders with
+their profits against their equilibrium profits. Color modes: **Side**, **Profit**, **Margin**. Charts:
+Prices; Efficiency; Convergence (Smith's α); Profit dispersion; Volume. Presets: `gs-1`–`gs-5`, `gs-1-u`,
+`gs-4-u`, `cliff-symmetric`, `cliff-flat`, `cliff-excess-demand`, `cliff-excess-supply`, `zip-symmetric`,
+`zip-flat`, `zip-excess-demand`, `zip-excess-supply`, `zip-demand-shift`, `zip-supply-shift`, `zip-retail`.
+**Compare** entries: "With vs without the budget constraint — Zero-Intelligence Traders (Compare)" and
+"ZI-C vs ZIP in a box market — Zero-Intelligence Traders (Compare)". Built-in sweeps: `gs-efficiency`,
+`gs-dispersion`, `gs-shouts`, `gs-mechanism`, `cliff-prices`, `zip-days`, `zip-momentum`, `zip-shift`.
+
+Credit: Dhananjay K. Gode and Shyam Sunder, "Allocative Efficiency of Markets with Zero-Intelligence
+Traders: Market as a Partial Substitute for Individual Rationality," *Journal of Political Economy*
+101(1): 119–137 (1993); Dave Cliff, "Minimal-Intelligence Agents for Bargaining Behaviours in
+Market-Based Environments," HP Laboratories HPL-97-91 (1997). See
+`docs/superpowers/specs/2026-09-28-zi-traders-design.md`.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's
@@ -1696,3 +2401,8 @@ CoMSES Computational Model Library, doi:10.25937/krp4-g724, under the GPL-2.0 (s
 WASM, so the web build also serves those three files at `anasazi-data/NOTICE`,
 `anasazi-data/LICENSE` and `anasazi-data/CITATION.cff` beside the page, and the Rules panel of an
 Artificial Anasazi world credits the data and links the notice.
+
+The A* test fixtures (`crates/sugarscape-core/tests/fixtures/movingai/`) are a subset of Nathan
+Sturtevant's Moving AI grid benchmarks (movingai.com/benchmarks), under the Open Data Commons
+Attribution License; the README there gives the source and what was kept. They are used only by
+the tests.

@@ -227,6 +227,39 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('zi charts', () => {
+  it('chart prices, efficiency, convergence, dispersion and volume over shouts', () => {
+    expect(MODEL_CHARTS.zi.map((c) => c.title)).toEqual(['Prices', 'Efficiency', 'Convergence', 'Profit dispersion', 'Volume']);
+    expect(timeAxisLabel('zi')).toBe('Shouts');
+  });
+});
+
+describe('punishment charts', () => {
+  it('chart the types, cooperation with its long-run average, payoff and conflict over periods', () => {
+    expect(MODEL_CHARTS.punishment.map((c) => c.title)).toEqual(['Types', 'Cooperation', 'Payoff', 'Conflict']);
+    expect(MODEL_CHARTS.punishment[1].lines.map((l) => l.key)).toEqual(['cooperation', 'long_run', 'acts']);
+    expect(timeAxisLabel('punishment')).toBe('Periods');
+  });
+});
+
+describe('retirement charts', () => {
+  it('chart the retired share (by group when there are groups), retirement ages and the transition over periods', () => {
+    expect(MODEL_CHARTS.retirement.map((c) => c.title)).toEqual(['Retired share', 'Retired share', 'Retirement age', 'Transition', 'Group transitions']);
+    const one = { model: 'retirement', groups: { enabled: false } } as unknown as ModelConfig;
+    const two = { model: 'retirement', groups: { enabled: true } } as unknown as ModelConfig;
+    const [byGroup, single] = MODEL_CHARTS.retirement;
+    expect([byGroup.shown!(one), byGroup.shown!(two), single.shown!(one), single.shown!(two)]).toEqual([false, true, true, false]);
+    expect(timeAxisLabel('retirement')).toBe('Periods');
+  });
+});
+
+describe('thresholds charts', () => {
+  it('chart participation against theory, episodes, the last cascade and the swing over steps', () => {
+    expect(MODEL_CHARTS.thresholds.map((c) => c.title)).toEqual(['Participation', 'Episodes', 'Last cascade', 'Swing']);
+    expect(timeAxisLabel('thresholds')).toBe('Steps');
+  });
+});
+
 describe('ants charts', () => {
   it('chart the split, its variance against theory, flips and extremes over steps', () => {
     expect(MODEL_CHARTS.ants.map((c) => c.title)).toEqual(['Share', 'Variance', 'Flips', 'Extremes']);

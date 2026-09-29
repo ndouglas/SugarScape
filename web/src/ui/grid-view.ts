@@ -1,7 +1,11 @@
 import type { Engine } from '../engine';
+import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
+import type { AgentView } from '../types';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
+import { memoryMarks } from './memory-overlay';
 import { arrowHead, wrappedSegments } from './overlay';
+import { planSegments, routeSegments } from './plan-path';
 import { trailSegments } from './trail';
 
 const CELL = 12;
@@ -134,7 +138,47 @@ export class GridView {
       ctx.restore();
     }
 
+    const inspection = this.engine.inspection;
+    const agent = inspection && isSugarView(inspection.view) ? inspection.view.agent : null;
+    this.drawMemory(agent);
     const accent = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
+    if (agent?.plan && agent.plan.path.length) {
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (const [x1, y1, x2, y2] of planSegments([agent.x, agent.y], agent.plan.path, width, height)) {
+        ctx.moveTo((x1 + 0.5) * CELL, (y1 + 0.5) * CELL);
+        ctx.lineTo((x2 + 0.5) * CELL, (y2 + 0.5) * CELL);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+    // Minds 4: a GOAP Flump's plan, a sparser dashed route from the Flump through its targets
+    // (straight lines between targets, the short way around the torus; the walk to the next one is
+    // the A* path above), each target ringed.
+    if (agent?.goap && agent.goap.steps.length) {
+      ctx.save();
+      ctx.setLineDash([2, 5]);
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (const [x1, y1, x2, y2] of routeSegments([agent.x, agent.y], agent.goap.steps, width, height)) {
+        ctx.moveTo((x1 + 0.5) * CELL, (y1 + 0.5) * CELL);
+        ctx.lineTo((x2 + 0.5) * CELL, (y2 + 0.5) * CELL);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1.5;
+      for (const [x, y] of agent.goap.steps) {
+        ctx.beginPath();
+        ctx.arc((x + 0.5) * CELL, (y + 0.5) * CELL, CELL * 0.45, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     const sel = this.engine.selection;
     if (sel) {
       ctx.strokeStyle = '#000';
@@ -154,6 +198,38 @@ export class GridView {
       ctx.stroke();
       ctx.restore();
     }
+  }
+
+  /**
+   * Minds 3: the inspected Flump's remembered sites — small squares (`--c2`), fading with age —
+   * and, among them, known truffle spots as small circles (`--accent`, filled when believed ripe).
+   * Nothing while memory is off, nothing is selected, or the selection has no agent.
+   */
+  private drawMemory(agent: AgentView | null): void {
+    const span = this.engine.sugar.memory?.span ?? 0;
+    if (!agent || span <= 0) return;
+    const marks = memoryMarks(this.engine.inspectMemory(), span);
+    if (marks.length === 0) return;
+    const ctx = this.ctx;
+    const siteColor = getComputedStyle(this.canvas).getPropertyValue('--c2').trim() || '#0f0';
+    const spotColor = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#f80';
+    ctx.save();
+    for (const m of marks) {
+      ctx.globalAlpha = m.alpha;
+      if (m.shape === 'square') {
+        ctx.fillStyle = siteColor;
+        ctx.fillRect((m.x + 0.3) * CELL, (m.y + 0.3) * CELL, CELL * 0.4, CELL * 0.4);
+        continue;
+      }
+      ctx.strokeStyle = spotColor;
+      ctx.fillStyle = spotColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc((m.x + 0.5) * CELL, (m.y + 0.5) * CELL, CELL * 0.28, 0, Math.PI * 2);
+      if (m.filled) ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   /**
