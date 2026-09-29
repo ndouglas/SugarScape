@@ -19,6 +19,8 @@
 //! Sugar is conserved exactly across bury and dig: Σ sites + Σ holdings +
 //! Σ caches + eaten. Nothing here draws.
 
+pub mod episodes;
+
 use crate::agent::AgentId;
 use crate::geometry::Pos;
 use crate::rules::movement::lattice_distance;
