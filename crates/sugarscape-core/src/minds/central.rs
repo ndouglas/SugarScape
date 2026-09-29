@@ -55,9 +55,25 @@
 //!   it commits to going home. It also goes home when what it holds would only just get it
 //!   there (holdings ≤ R × (distance home + 1)).
 //! - **The comparison.** "The best site within distance 1 yields ≥ ρ" sets
-//!   a per-tick gain against a long-run rate, as the marginal value
-//!   theorem's leaving rule does (leave when the marginal gain falls to the
-//!   long-run rate), here with delivered sugar per tick as that rate.
+//!   one site's per-tick yield against a long-run rate. That is the
+//!   marginal value theorem's leaving rule (leave when the marginal gain
+//!   falls to the long-run rate) only where the agent's position doesn't
+//!   change the cost of the walk home. On a lattice it does: a step from
+//!   distance d to d + 1 costs two ticks (the harvest and a longer walk
+//!   home), a step back from d + 1 to d costs none net, and the rule can't
+//!   see either. With ρ held at the true optimal rate, the comparison
+//!   gives loads 45, 60 and 63 on the analytic test's staircase at d = 2,
+//!   5 and 10, where the optima are 51, 60 and 65, and 45 and 63 are
+//!   dominated even loads (`fixed_rho_misses_the_parity`). The learned ρ,
+//!   a pulse average, has decayed below the long-run rate by the time of
+//!   the in-patch decisions (≈ 3.21 against 3.75 at d = 5, ≈ 1.88 against
+//!   2.32 at d = 10), and that underestimate cancels the parity error: the
+//!   loads the rule reaches at d = 5 and 10 are optimal for that reason,
+//!   not because the comparison is the theorem's.
+//! - **Guard bias.** In populated worlds (metabolism > 0, a binding
+//!   capacity), `full` and `low` end trips early and push loads short, and
+//!   provisions cap what's delivered; the analytic test turns all of these
+//!   off (metabolism 0, capacity 2000).
 //!
 //! **Under `goap`** (report only): the goal is "deliver G" (G = good-0
 //! metabolism × `goap.horizon`, Minds 4's goal): Minds 4's foraging plan
@@ -105,6 +121,13 @@ fn provisions(world: &World, id: AgentId, dist: u32) -> f64 {
 /// At home: delivers the trip's load into the larder, keeping `keep` in
 /// hand, or digs the larder up to `keep` when short of it. Resets the trip's
 /// load and returns what was delivered (0 for no delivery).
+///
+/// `delivered` counts gross trip intake: min(holdings − `keep`,
+/// `load_trip`), and `load_trip` is sugar gathered, not net of what the
+/// agent ate on the trip. When it holds an endowment above its provisions,
+/// the sugar eaten on the trip is backfilled from that endowment, so the
+/// whole gross load is buried. That's conserved (the endowment pays), but
+/// it overstates the trip's net contribution.
 fn at_home(world: &mut World, id: AgentId, home: Pos, keep: f64) -> f64 {
     let a = world.agent(id).expect("live agent");
     let (held, load) = (a.holdings[0], a.load_trip);
@@ -696,6 +719,8 @@ mod tests {
         at: Vec<u64>,
         /// The agent's last GOAP plan's steps (under `goap`).
         last_plan: Option<Vec<(Pos, f64)>>,
+        /// ρ at each decision to head home from the patch.
+        rho_at_leave: Vec<f64>,
     }
 
     impl Trips {
@@ -714,7 +739,16 @@ mod tests {
     /// during a visit). Under `mvt` it has metabolism 0, so provisions are 0
     /// and a load is all it brings back; under `goap`, metabolism 1 (G =
     /// `horizon`) and 1000 in hand, so provisions never touch the load.
-    fn run_trips(d: u32, rule: DecisionRule, alpha: f64, horizon: u32, trips: usize) -> Trips {
+    /// With `fixed_rho`, ρ is set to it before every tick (the textbook
+    /// rule with the true long-run rate) instead of being learned.
+    fn run_trips(
+        d: u32,
+        rule: DecisionRule,
+        alpha: f64,
+        horizon: u32,
+        trips: usize,
+        fixed_rho: Option<f64>,
+    ) -> Trips {
         let size = 2 * d + 12;
         let mut w = central_world(size, rule, 2000);
         w.config.mvt.alpha = alpha;
@@ -735,6 +769,7 @@ mod tests {
             loads: Vec::new(),
             at: Vec::new(),
             last_plan: None,
+            rho_at_leave: Vec::new(),
         };
         let mut ticks = 0;
         while out.loads.len() < trips {
@@ -743,7 +778,15 @@ mod tests {
                     set_sugar(&mut w, p.x, p.y, v);
                 }
             }
+            if let Some(rho) = fixed_rho {
+                w.agent_mut(id).unwrap().delivery_rate = rho;
+            }
+            let a = w.agent(id).unwrap();
+            let (rho, was) = (a.delivery_rate, a.leaving);
             turn(&mut w, id);
+            if was != Some(h) && w.agent(id).unwrap().leaving == Some(h) {
+                out.rho_at_leave.push(rho);
+            }
             if w.events.deliveries > 0 {
                 out.loads.push(w.events.delivered);
                 out.at.push(w.tick);
@@ -785,19 +828,30 @@ mod tests {
     // The learned rule (α = 0.05, the default; mean load over deliveries
     // 100–399): 65 at d = 10 and 60 at d = 5, the optimum exactly; 49 at
     // d = 2, two short of 51, cycling 45, 51, 51 (it stops at n = 4 one
-    // trip in three). Its ρ is an exponential average of a pulse (the load
-    // on the delivery tick, 0 on every other), so it's highest just after a
-    // delivery and decays through the trip: at d = 2 the decision on v₅ = 6
-    // comes 6 ticks after a delivery, with ρ between 5.83 and 6.02, and
-    // after a 45-load trip it's above 6. Asserted: within one site's value
-    // (the next site's, vₙ₊₁) of the optimum, and the measured means.
+    // trip in three).
+    //
+    // Why: the comparison (one site's yield ≥ ρ) can't see that a site's
+    // marginal cost depends on parity (d → d + 1 costs two ticks, d + 1 → d
+    // none net). With ρ fixed at the optimal rate it gives 45, 60, 63
+    // (`fixed_rho_misses_the_parity`). The learned ρ, an exponential
+    // average of a pulse (the load on the delivery tick, 0 on every other),
+    // has decayed below the long-run rate by the in-patch decisions, and
+    // that underestimate cancels the parity error at d = 5 and 10. At d = 2
+    // the stop at n = 4 is a dominated even load: v₅ = 6 would be free on
+    // the way home, and the rule, comparing 6 against ρ ≈ 6, can't see it.
+    //
+    // The claim, asserted: within one site's value (vₙ₊₁ = 5, 3, 1) of the
+    // optimum; load rising strictly with distance; and at d = 10 less than
+    // the whole patch (66). The exact means are a regression pin, not the
+    // claim.
     #[test]
     fn the_steady_load_against_the_tangent_construction() {
         assert_eq!(optimum(2), (5, 51.0));
         assert_eq!(optimum(5), (7, 60.0));
         assert_eq!(optimum(10), (9, 65.0));
+        let mut means = Vec::new();
         for (d, measured) in [(2, 49.0), (5, 60.0), (10, 65.0)] {
-            let trips = run_trips(d, DecisionRule::Mvt, 0.05, 10, 400);
+            let trips = run_trips(d, DecisionRule::Mvt, 0.05, 10, 400, None);
             let (mean, rate) = trips.steady(100);
             let (n, best) = optimum(d);
             let best_rate = best / f64::from(round_trip(n, d));
@@ -810,8 +864,41 @@ mod tests {
                 (mean - best).abs() <= CURVE[n],
                 "d = {d}: mean load {mean} vs optimum {best}"
             );
-            assert!((mean - measured).abs() < 1e-9, "d = {d}: {mean}");
             assert!(rate <= best_rate + 1e-9, "nothing beats the optimum");
+            // Regression pin (the measured means), not the claim.
+            assert!((mean - measured).abs() < 1e-9, "d = {d}: {mean}");
+            means.push(mean);
+        }
+        assert!(
+            means[0] < means[1] && means[1] < means[2],
+            "load rises with distance: {means:?}"
+        );
+        assert!(means[2] < 66.0, "not the whole patch at d = 10");
+    }
+
+    // The finding behind the analytic test: with ρ held at the true optimal
+    // rate (the textbook leaving rule), the per-site comparison gives 45,
+    // 60 and 63 at d = 2, 5 and 10, two of them dominated even loads; and
+    // the learned ρ at the decision to leave sits below that rate. Printed
+    // and asserted (`cargo test --release -p sugarscape-core --lib
+    // fixed_rho -- --ignored --nocapture`).
+    #[test]
+    #[ignore]
+    fn fixed_rho_misses_the_parity() {
+        for (d, expected) in [(2, 45.0), (5, 60.0), (10, 63.0)] {
+            let (n, best) = optimum(d);
+            let best_rate = best / f64::from(round_trip(n, d));
+            let fixed = run_trips(d, DecisionRule::Mvt, 0.05, 10, 50, Some(best_rate));
+            let (mean, _) = fixed.steady(10);
+            let learned = run_trips(d, DecisionRule::Mvt, 0.05, 10, 400, None);
+            let rho = &learned.rho_at_leave[100..];
+            let rho_mean = rho.iter().sum::<f64>() / rho.len() as f64;
+            eprintln!(
+                "d = {d}: optimum {best} at {best_rate:.3}/tick; fixed-ρ load {mean:.3}; \
+                 learned ρ at leaving {rho_mean:.3}"
+            );
+            assert_eq!(mean, expected, "d = {d}");
+            assert!(rho_mean < best_rate, "d = {d}: {rho_mean}");
         }
     }
 
@@ -823,7 +910,7 @@ mod tests {
     fn alpha_sweep_for_the_report() {
         for alpha in [0.01, 0.05, 0.1, 0.2, 0.5, 1.0] {
             for d in [2, 5, 10] {
-                let trips = run_trips(d, DecisionRule::Mvt, alpha, 10, 400);
+                let trips = run_trips(d, DecisionRule::Mvt, alpha, 10, 400, None);
                 let (mean, rate) = trips.steady(100);
                 let (_, best) = optimum(d);
                 eprintln!(
@@ -838,7 +925,7 @@ mod tests {
     #[test]
     fn goap_plans_end_at_home_and_deliver() {
         for (horizon, d) in [(10, 2), (10, 5), (10, 10), (20, 2)] {
-            let trips = run_trips(d, DecisionRule::Goap, 0.05, horizon, 30);
+            let trips = run_trips(d, DecisionRule::Goap, 0.05, horizon, 30, None);
             let (mean, rate) = trips.steady(10);
             eprintln!(
                 "goap G = {horizon}, d = {d}: mean load {mean:.3} ({rate:.3}/tick), last {:?}, plan {:?}",
