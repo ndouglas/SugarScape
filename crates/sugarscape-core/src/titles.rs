@@ -259,7 +259,7 @@ pub const TITLES: [(&str, &str); 317] = [
     ),
     (
         "central-near",
-        "Loads grow with distance from home, but likely because the walk lowers the forager's bar",
+        "Loads carried home grow with the patches' distance from home",
     ),
     (
         "central-far",
@@ -275,7 +275,7 @@ pub const TITLES: [(&str, &str); 317] = [
     ),
     (
         "cache-amodio",
-        "Amodio's rotating compartments: each rule leaves its own signature, and the jays' is an even split",
+        "Amodio's rotating compartments: each rule leaves its own signature, and the jays' looks like an even split",
     ),
     (
         "vi-4-schelling-25",

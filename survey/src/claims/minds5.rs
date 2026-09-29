@@ -208,6 +208,11 @@ fn raby_order(v: &[&RabyAgent], label: &str) -> String {
 }
 
 fn raby_claim(rule: CachingRule, seeds: &[u64]) -> Outcome {
+    let expected = if rule == CachingRule::Even {
+        " Expected: the rule predicts a tie (it splits F equally), so this claim is expected to fail."
+    } else {
+        ""
+    };
     let v = raby(rule, seeds);
     let no: Vec<f64> = v.iter().map(|a| a.no_breakfast).collect();
     let bf: Vec<f64> = v.iter().map(|a| a.breakfast).collect();
@@ -233,6 +238,7 @@ fn raby_claim(rule: CachingRule, seeds: &[u64]) -> Outcome {
             raby_order(&first, "Breakfast first (K1, first morning)"),
             raby_order(&second, "Breakfast second (K3)"),
         ))
+        .with(expected)
 }
 
 // -------------------------------------------------------------------- Amodio
@@ -692,6 +698,27 @@ fn amodio_claim(arm: Arm, seeds: &[u64]) -> Outcome {
         })
         .collect();
     let six_own: Vec<f64> = six.iter().map(|p| p[own]).collect();
+    let six_misses: Vec<String> = six
+        .iter()
+        .zip(seeds)
+        .filter(|(p, _)| winner(p) != arm.own)
+        .map(|(p, seed)| {
+            format!(
+                "seed {seed}: {} {:.3} against {} {:.3}",
+                hyp_name(winner(p)),
+                p[HYPS
+                    .iter()
+                    .position(|&h| h == winner(p))
+                    .expect("a hypothesis")],
+                hyp_name(arm.own),
+                p[own]
+            )
+        })
+        .collect();
+    let ceiling = match arm.own {
+        Hyp::Fph1 | Hyp::Fph2 => " Why the planners' posteriors stop where they do: every planner in a group caches the same, so the comparison can't tell the agents from one bird, and more agents don't sharpen it. The constrained models share the evidence with each other: FPH 2's Food-First constraint (r_K2 no larger than r_K1 or r_K3) also holds for K1-only caching (30/0/0), and FPH 1's (r_K1 the largest) holds with half its prior weight for 15/0/15, where K1 and K3 tie; the Empty-First constraints of FPH 1 and FPH 2 are the same. With all planners alike, these are the most the comparison can give: about 0.55 for FPH 1 on lookahead 1 and 0.62 for FPH 2 on lookahead 3.",
+        _ => "",
+    };
     all_of(vec![
         (
             format!("Food-First modal pattern {}", pattern_name(arm.oracle.0)),
@@ -720,7 +747,7 @@ fn amodio_claim(arm: Arm, seeds: &[u64]) -> Outcome {
         constraint_shares(&all_ff, &all_ef)
     ))
     .with(&format!(
-        "The paper's Bayesian comparison (nine models, flat Dirichlet priors, uniform over models; bird-independent rates shared within each group), per seed on its 12 agents: winners {winners:?}; the rule's own hypothesis ({}) median posterior {:.4} (IQR {:.4}–{:.4}). At the paper's size (the first 3 agents of each group per seed): median {:.4}, winner the own hypothesis in {} of {} seeds. Pooled over all seeds ({} agents), by hypothesis: {}; by model: {}. Amodio et al.'s birds (by model): compartment-independent 0.72 (0.997 in Experiment 1), CCH 0.16, FPH 0.002.",
+        "The paper's Bayesian comparison (nine models, flat Dirichlet priors, uniform over models; bird-independent rates shared within each group), per seed on its 12 agents: winners {winners:?}; the rule's own hypothesis ({}) median posterior {:.4} (IQR {:.4}–{:.4}). At the paper's size (the first 3 agents of each group per seed): median {:.4}, winner the own hypothesis in {} of {} seeds (otherwise: {}). Pooled over all seeds ({} agents), by hypothesis: {}; by model: {}. Amodio et al.'s birds (by model): compartment-independent 0.72 (0.997 in Experiment 1), CCH 0.16, FPH 0.002.",
         hyp_name(arm.own),
         median(&own_post),
         stats::quantile(&own_post, 0.25),
@@ -728,10 +755,12 @@ fn amodio_claim(arm: Arm, seeds: &[u64]) -> Outcome {
         median(&six_own),
         six.iter().filter(|p| winner(p) == arm.own).count(),
         six.len(),
+        if six_misses.is_empty() { "none".to_string() } else { six_misses.join("; ") },
         pooled.len(),
         posteriors(&pooled_post),
         model_posteriors(&pooled),
     ))
+    .with(ceiling)
 }
 
 // -------------------------------------------------------------------- Winter
@@ -760,6 +789,8 @@ struct Pre {
     target: Option<Pos>,
     caches: BTreeMap<u32, f64>,
     hungry: bool,
+    /// Ticks of food in hand (holdings ÷ metabolism): the steps it can walk.
+    reach: f64,
 }
 
 /// One winter-world run.
@@ -787,10 +818,18 @@ struct WinterRun {
     /// forecasts' sum and how many forecast under 10 (a tenth of the need).
     forecasts: (usize, f64, usize),
     /// Hungry agents' new choices of a cache: count, Σ distance to it, Σ
-    /// distance to their nearest cache, how many chose their biggest.
-    cache_choices: (u64, u64, u64, u64),
-    /// Deaths of agents holding caches, and of those, heading for one.
-    deaths_with_caches: (u64, u64),
+    /// distance to their nearest cache, how many chose their biggest; and
+    /// among the choices where no biggest cache is also a nearest one, the
+    /// count and how many chose a biggest.
+    cache_choices: (u64, u64, u64, u64, u64, u64),
+    /// Deaths of agents holding caches; of those, heading for one; and of
+    /// those, the target beyond reach (distance > holdings ÷ metabolism)
+    /// while a nearest cache was within it.
+    deaths_with_caches: (u64, u64, u64),
+    /// Of the deaths heading for a cache, those whose last choice of a
+    /// cache was, when made, beyond reach while a nearest cache was within
+    /// it; and those with a recorded choice.
+    deaths_at_choice: (u64, u64),
     /// Per rule (none, even, compensate, plan): founders and alive at 200
     /// and 1000 (the mixed world; one rule elsewhere).
     by_rule: [[f64; 3]; 4],
@@ -829,6 +868,9 @@ fn winter_run(mut w: World) -> WinterRun {
             .map(|a| a.holdings[0] + a.caches.values().sum::<f64>())
             .sum()
     };
+    // Each agent's last choice of a cache: (distance to it, to its nearest
+    // cache, its reach), when made.
+    let mut last_choice: HashMap<AgentId, (u32, u32, f64)> = HashMap::new();
     while w.tick < WINTER_TICKS {
         let pre: HashMap<AgentId, Pre> = w
             .agents()
@@ -841,6 +883,7 @@ fn winter_run(mut w: World) -> WinterRun {
                         target: a.plan.target,
                         caches: a.caches.clone(),
                         hungry: !a.caches.is_empty() && a.holdings[0] < r / 2.0,
+                        reach: a.holdings[0] / f64::from(a.metabolism[0].max(1)),
                     },
                 )
             })
@@ -868,18 +911,22 @@ fn winter_run(mut w: World) -> WinterRun {
             if let Some(t) = a.plan.target {
                 let ti = torus.index(t) as u32;
                 if p.hungry && a.plan.target != p.target && p.caches.contains_key(&ti) {
-                    let nearest = p
-                        .caches
-                        .keys()
-                        .map(|&i| dist(torus, p.pos, torus.pos(i as usize)))
-                        .min()
-                        .expect("has caches");
+                    let d = |i: u32| dist(torus, p.pos, torus.pos(i as usize));
+                    let nearest = p.caches.keys().map(|&i| d(i)).min().expect("has caches");
                     let biggest = p.caches.values().copied().fold(0.0, f64::max);
+                    let differ = p
+                        .caches
+                        .iter()
+                        .all(|(&i, &q)| !(q >= biggest && d(i) == nearest));
+                    let chose_big = p.caches[&ti] >= biggest;
                     let c = &mut run.cache_choices;
                     c.0 += 1;
                     c.1 += u64::from(dist(torus, p.pos, t));
                     c.2 += u64::from(nearest);
-                    c.3 += u64::from(p.caches[&ti] >= biggest);
+                    c.3 += u64::from(chose_big);
+                    c.4 += u64::from(differ);
+                    c.5 += u64::from(differ && chose_big);
+                    last_choice.insert(a.id, (dist(torus, p.pos, t), nearest, p.reach));
                 }
             }
         }
@@ -888,8 +935,24 @@ fn winter_run(mut w: World) -> WinterRun {
                 run.deaths_with_caches.0 += 1;
                 let heading = p
                     .target
-                    .is_some_and(|t| p.caches.contains_key(&(torus.index(t) as u32)));
-                run.deaths_with_caches.1 += u64::from(heading);
+                    .filter(|t| p.caches.contains_key(&(torus.index(*t) as u32)));
+                run.deaths_with_caches.1 += u64::from(heading.is_some());
+                if let Some(t) = heading {
+                    let nearest = p
+                        .caches
+                        .keys()
+                        .map(|&i| dist(torus, p.pos, torus.pos(i as usize)))
+                        .min()
+                        .expect("has caches");
+                    let beyond =
+                        f64::from(dist(torus, p.pos, t)) > p.reach && f64::from(nearest) <= p.reach;
+                    run.deaths_with_caches.2 += u64::from(beyond);
+                    if let Some(&(dt, dn, reach)) = last_choice.get(id) {
+                        run.deaths_at_choice.1 += 1;
+                        run.deaths_at_choice.0 +=
+                            u64::from(f64::from(dt) > reach && f64::from(dn) <= reach);
+                    }
+                }
             }
         }
         match w.tick {
@@ -990,7 +1053,7 @@ fn winter_report(id: &str, r: &[WinterRun]) -> String {
         "nothing buried".to_string()
     } else {
         format!(
-            "burials {burials} agent-ticks and digs {digs} over {} seeds (per seed median {:.0} and {:.0}); buried {buried:.0}, dug {dug:.0} (recovery {:.3}), lost with the dead {lost:.0} ({:.1} %), still cached at tick 1000 {left:.0} ({:.1} %): never dug {:.1} %; mean cache age at digging {:.1} ticks",
+            "burials {burials} agent-ticks and digs {digs} over {} seeds (per seed median {:.0} and {:.0}); buried {buried:.0}, dug {dug:.0} (recovery {:.3}), lost with the dead {lost:.0} ({:.1} %), still buried at tick 1000 {left:.0} ({:.1} %): not dug by tick 1000 (the end of winter 5) {:.1} % (lost {:.1} %, still buried {:.1} %); mean cache age at digging {:.1} ticks",
             r.len(),
             median(&col(r, |x| x.burials as f64)),
             median(&col(r, |x| x.digs as f64)),
@@ -998,28 +1061,42 @@ fn winter_report(id: &str, r: &[WinterRun]) -> String {
             100.0 * lost / buried,
             100.0 * left / buried,
             100.0 * (1.0 - dug / buried),
+            100.0 * lost / buried,
+            100.0 * left / buried,
             ages as f64 / digs.max(1) as f64,
         )
     };
-    let (n, dsum, nsum, big) = r.iter().fold((0, 0, 0, 0), |a, x| {
+    let (n, dsum, nsum, big, differ, differ_big) = r.iter().fold((0, 0, 0, 0, 0, 0), |a, x| {
         let c = x.cache_choices;
-        (a.0 + c.0, a.1 + c.1, a.2 + c.2, a.3 + c.3)
+        (
+            a.0 + c.0,
+            a.1 + c.1,
+            a.2 + c.2,
+            a.3 + c.3,
+            a.4 + c.4,
+            a.5 + c.5,
+        )
     });
     let choices = if n == 0 {
         "no hungry agent chose a cache".to_string()
     } else {
         format!(
-            "hungry agents chose a cache {n} times: mean distance to it {:.1}, to their nearest cache {:.1}; their biggest cache {:.1} % of the time",
+            "hungry agents chose a cache {n} times: mean distance to it {:.1}, to their nearest cache {:.1}; their biggest cache {:.1} % of the time; among the {differ} choices where no biggest cache was also a nearest one, a biggest {:.1} % of the time",
             dsum as f64 / n as f64,
             nsum as f64 / n as f64,
-            pct(big as usize, n as usize)
+            pct(big as usize, n as usize),
+            pct(differ_big as usize, differ as usize),
         )
     };
-    let (dw, dh) = r.iter().fold((0, 0), |a, x| {
-        (a.0 + x.deaths_with_caches.0, a.1 + x.deaths_with_caches.1)
+    let (dw, dh, dbeyond) = r.iter().fold((0, 0, 0), |a, x| {
+        let d = x.deaths_with_caches;
+        (a.0 + d.0, a.1 + d.1, a.2 + d.2)
+    });
+    let (cb, cn) = r.iter().fold((0, 0), |a, x| {
+        (a.0 + x.deaths_at_choice.0, a.1 + x.deaths_at_choice.1)
     });
     format!(
-        "{id} (median over seeds): survival through the first winter {}, after five {}; per founding agent (the dead as 0) alive at 200 {}, at 1000 {}; sugar held and cached per founding agent at 200 {}, at 1000 {}. Usage: {usage}. Mechanism: {choices}; {dw} agents died holding caches, {dh} of them ({:.1} %) heading for one.",
+        "{id} (median over seeds): survival through the first winter {}, after five {}; per founding agent (the dead as 0) alive at 200 {}, at 1000 {}; sugar held and cached per founding agent at 200 {}, at 1000 {}. Usage: {usage}. Mechanism: {choices}; {dw} agents died holding caches, {dh} of them ({:.1} %) heading for one, and {dbeyond} ({:.1} % of those who died holding caches) heading for one farther than their food would carry them while their nearest cache was within reach (judged on the tick of death, when an agent holds under a tick's food); judged when they last chose a cache, {cb} of the {cn} with a recorded choice ({:.1} %) chose one beyond reach while their nearest was within it.",
         med(&col(r, WinterRun::first)),
         med(&col(r, WinterRun::five)),
         med(&col(r, |x| x.founder(2))),
@@ -1027,6 +1104,8 @@ fn winter_report(id: &str, r: &[WinterRun]) -> String {
         med(&col(r, |x| x.wealth[0])),
         med(&col(r, |x| x.wealth[1])),
         pct(dh as usize, dw as usize),
+        pct(dbeyond as usize, dw as usize),
+        pct(cb as usize, cn as usize),
     )
 }
 
@@ -1152,6 +1231,13 @@ fn at_distance(d: u32) -> Config {
 /// 15, one at column 33 (8 columns from home, the near preset's distance)
 /// and one at column 45 (20, the far preset's).
 fn lima_world() -> Config {
+    lima_world_at(45)
+}
+
+/// Lima's habitat with the far patch at column `far_x` (45: east, beyond
+/// the near patch, the pre-registered world; 5: 20 columns west, so no trip
+/// to one patch crosses the other).
+fn lima_world_at(far_x: u32) -> Config {
     let mut c = preset("central-near");
     c.placement = Placement::Block {
         x: 25,
@@ -1166,7 +1252,7 @@ fn lima_world() -> Config {
         height: 4.0,
     };
     c.goods[0].map = Map::Peaks {
-        peaks: vec![peak(33), peak(45)],
+        peaks: vec![peak(33), peak(far_x)],
     };
     c
 }
@@ -1192,6 +1278,9 @@ struct Trip {
     /// On the first such tick: the patch it was in (`usize::MAX` for
     /// none), that patch's standing sugar and the agent's ρ.
     arrival: Option<(usize, f64, f64)>,
+    /// The patch of the site it committed to on leaving home (`None`: no
+    /// patch, or not seen leaving).
+    dest: Option<usize>,
     end: End,
 }
 
@@ -1200,6 +1289,7 @@ struct Current {
     by_patch: [f64; 2],
     stay: u32,
     arrival: Option<(usize, f64, f64)>,
+    dest: Option<usize>,
     end: Option<End>,
 }
 
@@ -1213,6 +1303,8 @@ struct CentralRun {
     /// ρ's change on delivery ticks, and ρ when a trip ended by ρ.
     rho_jumps: Vec<f64>,
     rho_at_leave: Vec<f64>,
+    /// Living agent-ticks (the long-run delivery rate's denominator).
+    agent_ticks: f64,
 }
 
 struct CentralPre {
@@ -1223,7 +1315,16 @@ struct CentralPre {
     rho: f64,
 }
 
-fn central_run(mut w: World) -> CentralRun {
+fn central_run(w: World) -> CentralRun {
+    central_run_with(w, None)
+}
+
+/// [`central_run`], with every agent's ρ (`delivery_rate`) set to `fixed`
+/// before each tick when given: a survey-side override (the engine's rule
+/// is unchanged; it still updates ρ during the tick, and the next tick
+/// starts from `fixed` again), so every in-patch decision compares against
+/// the same ρ.
+fn central_run_with(mut w: World, fixed: Option<f64>) -> CentralRun {
     let torus = w.torus;
     let cap = f64::from(w.config.caching.capacity);
     let peaks = match &w.config.goods[0].map {
@@ -1241,6 +1342,12 @@ fn central_run(mut w: World) -> CentralRun {
     let mut out = CentralRun::default();
     let mut cur: HashMap<AgentId, Current> = HashMap::new();
     for _ in 0..CENTRAL_TICKS {
+        if let Some(f) = fixed {
+            let ids: Vec<AgentId> = w.agents().map(|a| a.id).collect();
+            for id in ids {
+                w.agent_mut(id).expect("live agent").delivery_rate = f;
+            }
+        }
         let stock: Vec<f64> = members
             .iter()
             .map(|m| m.iter().map(|&i| w.sites[i].resource[0]).sum())
@@ -1261,6 +1368,7 @@ fn central_run(mut w: World) -> CentralRun {
             })
             .collect();
         w.step();
+        out.agent_ticks += w.population() as f64;
         for a in w.agents() {
             let Some(p) = pre.get(&a.id) else { continue };
             let home = a.home.expect("a central-place agent has a home");
@@ -1277,11 +1385,13 @@ fn central_run(mut w: World) -> CentralRun {
                         by_patch: c.by_patch,
                         stay: c.stay,
                         arrival: c.arrival,
+                        dest: c.dest,
                         end: c.end.unwrap_or(End::Other),
                     });
                     out.rho_jumps.push(a.delivery_rate - p.rho);
                 }
                 *c = Current::default();
+                c.dest = a.leaving.and_then(|t| patch_of(&peaks, t.x, t.y, gw, gh));
                 gained = a.load_trip;
             }
             if p.pos != home && p.leaving.is_none() {
@@ -1331,14 +1441,15 @@ fn trips_report(name: &str, runs: &[CentralRun]) -> String {
     let count = |e: End| trips.iter().filter(|t| t.end == e).count();
     let gross: Vec<f64> = trips.iter().map(|t| t.gross).collect();
     let delivered: Vec<f64> = trips.iter().map(|t| t.delivered).collect();
-    let at_once = trips.iter().filter(|t| t.stay <= 1).count();
+    let at_once = trips.iter().filter(|t| t.stay == 1).count();
+    let never = trips.iter().filter(|t| t.stay == 0).count();
     let stays: Vec<f64> = trips.iter().map(|t| f64::from(t.stay)).collect();
     let arrival_rho: Vec<f64> = trips
         .iter()
         .filter_map(|t| t.arrival.map(|a| a.2))
         .collect();
     format!(
-        "{name}: {n} trips over {} seeds; ended by full {:.1} %, low (food for the walk home) {:.1} %, ρ or an empty site {:.1} %, not seen deciding {:.1} %; mean gross load {:.1}, delivered {:.1}; ticks deciding in a patch (uncommitted, away from home) median {:.0}, 1 (it left on arrival) in {:.1} % of trips; ρ on arrival median {:.2}; mean_load (ticks 900–1000) median {:.1}; alive at tick {CENTRAL_TICKS}: {} of {}",
+        "{name}: {n} trips over {} seeds; ended by full {:.1} %, low (food for the walk home) {:.1} %, ρ or an empty site {:.1} %, not seen deciding {:.1} %; mean gross load {:.1}, delivered {:.1}; ticks deciding in a patch (uncommitted, away from home) median {:.0}, exactly 1 (it left on arrival) in {:.1} % of trips, 0 (never deciding away from home) in {:.1} %; ρ on arrival median {:.2}; mean_load (ticks 900–1000) median {:.1}; alive at tick {CENTRAL_TICKS}: {} of {}",
         runs.len(),
         pct(count(End::Full), n),
         pct(count(End::Low), n),
@@ -1348,6 +1459,7 @@ fn trips_report(name: &str, runs: &[CentralRun]) -> String {
         if n == 0 { f64::NAN } else { mean(&delivered) },
         med_or_nan(&stays),
         pct(at_once, n),
+        pct(never, n),
         med_or_nan(&arrival_rho),
         median(&runs.iter().map(|r| r.mean_load).collect::<Vec<_>>()),
         runs.iter().map(|r| r.alive).sum::<usize>(),
@@ -1490,14 +1602,16 @@ fn by_patch_report(runs: &[CentralRun]) -> String {
                 .filter(|t| t.gross > 0.0 && t.by_patch[k] > 0.5 * t.gross)
                 .collect();
             let at: Vec<(usize, f64, f64)> = t.iter().filter_map(|t| t.arrival).collect();
+            let here: Vec<&(usize, f64, f64)> = at.iter().filter(|a| a.0 == k).collect();
+            let stock = here.iter().map(|a| a.1).sum::<f64>() / here.len() as f64;
             let m = |f: &dyn Fn(&Trip) -> f64| t.iter().map(|x| f(x)).sum::<f64>() / t.len() as f64;
             let ma = |f: &dyn Fn(&(usize, f64, f64)) -> f64| at.iter().map(f).sum::<f64>() / at.len() as f64;
             format!(
-                "{name} ({} trips): on arrival ρ {:.2} and the patch's standing sugar {:.1} (arrived in this patch {} of {}); ticks deciding in the patch {:.1}; gross load {:.1}, delivered {:.1}; ended by full {:.1} %",
+                "{name} ({} trips): on arrival ρ {:.2}; the patch's standing sugar {:.1} over the {} of {} trips that first decided in this patch; ticks deciding in the patch {:.1}; gross load {:.1}, delivered {:.1}; ended by full {:.1} %",
                 t.len(),
                 ma(&|a| a.2),
-                ma(&|a| a.1),
-                at.iter().filter(|a| a.0 == k).count(),
+                stock,
+                here.len(),
                 at.len(),
                 m(&|x| f64::from(x.stay)),
                 m(&|x| x.gross),
@@ -1507,6 +1621,147 @@ fn by_patch_report(runs: &[CentralRun]) -> String {
         })
         .collect();
     format!("Reported, by patch (all seeds): {}.", rows.join("; "))
+}
+
+/// One row of the Lima follow-ups: near and far delivered loads, by the
+/// pre-registered classification (the patch that gave over half the gross
+/// load) and by destination (the patch of the site committed to on leaving
+/// home), with the cross-tabulation of the two.
+fn lima_row(name: &str, runs: &[CentralRun]) -> String {
+    let trips: Vec<&Trip> = runs.iter().flat_map(|r| &r.trips).collect();
+    let by_half = |k: usize| -> Vec<&Trip> {
+        trips
+            .iter()
+            .copied()
+            .filter(|t| t.gross > 0.0 && t.by_patch[k] > 0.5 * t.gross)
+            .collect()
+    };
+    let by_dest = |k: usize| -> Vec<&Trip> {
+        trips
+            .iter()
+            .copied()
+            .filter(|t| t.dest == Some(k))
+            .collect()
+    };
+    let m = |v: &[&Trip]| {
+        if v.is_empty() {
+            f64::NAN
+        } else {
+            v.iter().map(|t| t.delivered).sum::<f64>() / v.len() as f64
+        }
+    };
+    let full = |v: &[&Trip]| pct(v.iter().filter(|t| t.end == End::Full).count(), v.len());
+    // On the first tick deciding away from home, in the destination patch:
+    // the patch's standing sugar and the agent's ρ.
+    let arrived = |v: &[&Trip], k: usize, f: fn(&(usize, f64, f64)) -> f64| {
+        let a: Vec<f64> = v
+            .iter()
+            .filter_map(|t| t.arrival)
+            .filter(|a| a.0 == k)
+            .map(|a| f(&a))
+            .collect();
+        if a.is_empty() {
+            f64::NAN
+        } else {
+            mean(&a)
+        }
+    };
+    let (hn, hf, dn, df) = (by_half(0), by_half(1), by_dest(0), by_dest(1));
+    let cross = |d: usize, k: usize| {
+        by_dest(d)
+            .iter()
+            .filter(|t| t.gross > 0.0 && t.by_patch[k] > 0.5 * t.gross)
+            .count()
+    };
+    let per_seed: Vec<f64> = runs
+        .iter()
+        .map(|r| {
+            let of =
+                |k: usize| -> Vec<&Trip> { r.trips.iter().filter(|t| t.dest == Some(k)).collect() };
+            let (n, f) = (of(0), of(1));
+            if n.len() < 3 || f.len() < 3 {
+                return f64::NAN;
+            }
+            let both: Vec<&Trip> = n.iter().chain(&f).copied().collect();
+            (m(&n) - m(&f)) / m(&both)
+        })
+        .collect();
+    format!(
+        "{name}: by over half the gross load, near {:.1} ({} trips), far {:.1} ({}); by destination, near {:.1} ({} trips, {:.1} % ended full; on arrival the patch holds {:.1} and ρ is {:.2}), far {:.1} ({}, {:.1} % full; {:.1} and {:.2}), no patch or not seen leaving {}; destination near and over half from far {}, destination far and over half from near {}; per seed by destination, (near − far) ÷ mean median {:.3} (within ±0.10 in {} of {} seeds with a value); alive at tick {CENTRAL_TICKS}: {} of {}",
+        m(&hn),
+        hn.len(),
+        m(&hf),
+        hf.len(),
+        m(&dn),
+        dn.len(),
+        full(&dn),
+        arrived(&dn, 0, |a| a.1),
+        arrived(&dn, 0, |a| a.2),
+        m(&df),
+        df.len(),
+        full(&df),
+        arrived(&df, 1, |a| a.1),
+        arrived(&df, 1, |a| a.2),
+        trips.len() - dn.len() - df.len(),
+        cross(0, 1),
+        cross(1, 0),
+        med_or_nan(&per_seed),
+        per_seed.iter().filter(|x| x.abs() <= 0.10).count(),
+        stats::finite(&per_seed).len(),
+        runs.iter().map(|r| r.alive).sum::<usize>(),
+        5 * runs.len(),
+    )
+}
+
+/// Each seed's long-run delivery rate in `runs` (Σ delivered ÷ living
+/// agent-ticks), by seed.
+fn long_run_rates(seeds: &[u64], runs: &[CentralRun]) -> HashMap<u64, f64> {
+    seeds
+        .iter()
+        .zip(runs)
+        .map(|(&s, r)| {
+            (
+                s,
+                r.trips.iter().map(|t| t.delivered).sum::<f64>() / r.agent_ticks,
+            )
+        })
+        .collect()
+}
+
+/// The Lima follow-ups (reported, not judged, added after the pre-registered
+/// run): the far patch on the other side of home, and ρ held at the seed's
+/// long-run delivery rate in the same world.
+fn lima_followups(seeds: &[u64], main: &[CentralRun]) -> String {
+    let fixed = |c: &Config, rates: &HashMap<u64, f64>| {
+        crate::runner::each_seed_with(c, seeds, |seed, w| central_run_with(w, Some(rates[&seed])))
+    };
+    let main_rates = long_run_rates(seeds, main);
+    let west = lima_world_at(5);
+    let west_runs = central(&west, seeds);
+    let west_rates = long_run_rates(seeds, &west_runs);
+    let rates = |r: &HashMap<u64, f64>| {
+        let v: Vec<f64> = seeds.iter().map(|s| r[s]).collect();
+        format!(
+            "median {:.2} (IQR {:.2}–{:.2})",
+            med_or_nan(&v),
+            q_or_nan(&v, 0.25),
+            q_or_nan(&v, 0.75)
+        )
+    };
+    format!(
+        "Follow-ups, reported and not judged (added after the pre-registered run, which found the near patch lies on the path to the far one: agents harvest where they step, so a trip to the far patch gathers in the near one on the way). Loads are delivered per trip, pooled over seeds. {}. {}. {}. {}. {}. At home an agent commits to the best site it knows, ties to the nearer, so it heads for the far patch only when a far site is strictly richer than every near one.",
+        lima_row("Row 1, the pre-registered habitat (far patch at column 45, east beyond the near one)", main),
+        lima_row("Row 2, the far patch on the other side (column 5, 20 west; no trip crosses the other patch)", &west_runs),
+        lima_row(
+            &format!("Row 3, the pre-registered habitat with ρ held at each seed's long-run delivery rate from row 1 ({})", rates(&main_rates)),
+            &fixed(&lima_world(), &main_rates),
+        ),
+        lima_row(
+            &format!("Row 4, row 2's habitat with ρ held at each seed's long-run rate from row 2 ({})", rates(&west_rates)),
+            &fixed(&west, &west_rates),
+        ),
+        trips_report("Row 2's trips", &west_runs),
+    )
 }
 
 fn lima_claim(seeds: &[u64]) -> Outcome {
@@ -1542,6 +1797,7 @@ fn lima_claim(seeds: &[u64]) -> Outcome {
         ))
         .with(&trips_report("Lima's habitat", &runs))
         .with(&by_patch_report(&runs))
+        .with(&lima_followups(seeds, &runs))
 }
 
 pub fn claims() -> Vec<Claim> {
