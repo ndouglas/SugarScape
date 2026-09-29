@@ -438,7 +438,7 @@ pub enum Shortlist {
     /// The spec's original ranking: believed value alone (then distance,
     /// then site index). Kept as a named switch: with a known map it
     /// shortlists only far full sites, so a planner walks from patch to
-    /// patch and never runs one down (Minds 4, Task 7).
+    /// patch and never runs one down.
     Value,
 }
 
@@ -3598,6 +3598,7 @@ mod tests {
         b.decision.rule = DecisionRule::Goap;
         b.goap.k = 4;
         b.goap.horizon = 20;
+        b.goap.shortlist = Shortlist::Value;
         b.mvt.alpha = 0.2;
         // `decision.rule` is already reset-only (checked elsewhere); the
         // knobs themselves are not.
@@ -3606,6 +3607,7 @@ mod tests {
                 let mut c = a.clone();
                 c.goap.k = 4;
                 c.goap.horizon = 20;
+                c.goap.shortlist = Shortlist::Value;
                 c.mvt.alpha = 0.2;
                 c
             })
@@ -3626,6 +3628,7 @@ mod tests {
                 change(5, "goap.k", serde_json::json!(4)),
                 change(6, "goap.horizon", serde_json::json!(20)),
                 change(7, "mvt.alpha", serde_json::json!(0.2)),
+                change(8, "goap.shortlist", serde_json::json!("value")),
             ],
             ..Default::default()
         };
