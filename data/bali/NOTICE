@@ -1,0 +1,22 @@
+Balinese water temple data files
+================================
+
+subakdata.txt, damdata.txt, subakdamdata.txt and subaksubakdata.txt in this
+directory are copied unmodified from:
+
+  Marco Janssen, "Lansing-Kremer model of the Balinese irrigation system"
+  (version 1.2.0), CoMSES Computational Model Library, 2014.
+  https://www.comses.net/codebases/2221/releases/1.2.0/
+
+tables.txt transcribes the plan, rainfall, crop and dam-network constants of
+the same package's NetLogo code (Bali31.nlogo). All of these are licensed
+under the GNU General Public License, version 2 (GPL-2.0): see LICENSE in this
+directory, and CITATION.cff for how to cite the package. They are separate from
+this repository's code, which is MIT-licensed (see the LICENSE file at the
+repository root); the MIT licence does not apply to them.
+
+The simulation code that reads these files (crates/sugarscape-core/src/bali/)
+was written from the model's published descriptions (Lansing and Kremer,
+American Anthropologist 95(1), 1993; Janssen, Agricultural Systems 93, 2007;
+and Janssen's ODD of the NetLogo implementation), not from the package's
+NetLogo source.

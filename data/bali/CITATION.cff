@@ -1,0 +1,24 @@
+abstract: This is a NetLogo replication of the hill-climbing version of the Lansing-Kremer
+  model of Balinese irrigation.
+authors:
+- affiliation: School of Sustainability
+  email: marco.janssen@asu.edu
+  family-names: Janssen
+  given-names: Marco
+  orcid: https://orcid.org/0000-0002-1240-9052
+cff-version: 1.2.0
+date-released: '2014-12-16'
+identifiers:
+- type: url
+  value: https://www.comses.net/codebases/2221/releases/1.2.0/
+keywords:
+- adaption
+- irrigation
+- landscape
+- network
+license: GPL-2.0
+message: If you use this software, please cite it using the metadata from this file.
+title: Lansing-Kremer model of the Balinese irrigation system
+type: software
+url: https://www.comses.net/codebases/2221/releases/1.2.0/
+version: 1.2.0
