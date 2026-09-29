@@ -5,9 +5,9 @@
 //! the statistics series. Spatial games' shots record each generation's
 //! strategies instead, the demographic Prisoner's Dilemma's each cycle's
 //! agents, births and deaths, ethnocentrism's each period's agents, the tags
-//! model's each generation's agents and gifts, and image scoring's each
-//! generation's agents and meetings (`run`). Other models are not filmed
-//! yet.
+//! model's each generation's agents and gifts, image scoring's each
+//! generation's agents and meetings, and the norms game's each generation's
+//! agents and events (`run`). Other models are not filmed yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,6 +21,7 @@ use crate::edit::AgentOverrides;
 use crate::ethno::{EthnoConfig, EthnoWorld, Strategy, SERIES as ETHNO_SERIES};
 use crate::image::{ImageConfig, ImageWorld, SERIES as IMAGE_SERIES};
 use crate::model::ModelConfig;
+use crate::norms::{NormsConfig, NormsWorld, SERIES as NORMS_SERIES};
 use crate::presets;
 use crate::spatial::{Lattice, SpatialConfig, SpatialWorld, SERIES as SPATIAL_SERIES};
 use crate::stats;
@@ -56,9 +57,18 @@ pub struct Shot {
     /// Spatial games: record every player's score in each frame.
     #[serde(default)]
     pub scores: bool,
-    /// Tags: record each generation's gifts; image scoring: its meetings.
+    /// Tags: record each generation's gifts; image scoring: its meetings; the
+    /// norms game: its events.
     #[serde(default)]
     pub gifts: bool,
+    /// The norms game: record every `every`th generation only (a million
+    /// generations, filmable); frames keep their true generation.
+    #[serde(default = "every_generation")]
+    pub every: u32,
+}
+
+fn every_generation() -> u32 {
+    1
 }
 
 /// An agent placed by hand when the world reaches `tick`, with the given
@@ -159,6 +169,17 @@ impl Shot {
             other => Err(vec![FieldError::new(
                 "model",
                 format!("not a demographic-PD shot: {}", other.kind().as_str()),
+            )]),
+        }
+    }
+
+    /// A norms shot's config with `set` applied, validated.
+    pub fn norms_config(&self) -> Result<NormsConfig, Vec<FieldError>> {
+        match self.model_config()? {
+            ModelConfig::Norms(c) => Ok(c),
+            other => Err(vec![FieldError::new(
+                "model",
+                format!("not a norms shot: {}", other.kind().as_str()),
             )]),
         }
     }
@@ -676,6 +697,43 @@ pub struct ImageDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// `[boldness, vengefulness, payoff, parent | null]`, levels 0–7, in the
+/// generation's list order; the parent is a place in the previous
+/// generation's list.
+pub type NormsRow = (u8, u8, f64, Option<u32>);
+
+/// A norms shot's generation after it played.
+#[derive(Clone, Debug, Serialize)]
+pub struct NormsFrame {
+    /// The true generation (frames are every `every`th).
+    pub tick: u64,
+    pub agents: Vec<NormsRow>,
+    /// This generation's events, by places in `agents` (absent unless the
+    /// shot asks, with `"gifts": true`): each cheat, each punishment as
+    /// `[punisher, cheat]`, each metapunishment as `[punisher, onlooker]`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub cheats: Vec<u32>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub punishments: Vec<(u32, u32)>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub metapunishments: Vec<(u32, u32)>,
+}
+
+/// A whole norms shot, generation 0 (before any play) first.
+#[derive(Clone, Debug, Serialize)]
+pub struct NormsDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    /// Generations run (frames: `ticks / every + 1`).
+    pub ticks: u32,
+    pub every: u32,
+    pub config: NormsConfig,
+    pub frames: Vec<NormsFrame>,
+    /// The series at the recorded generations only.
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -686,6 +744,7 @@ pub enum Dump {
     Ethno(EthnoDump),
     Tags(TagsDump),
     Image(ImageDump),
+    Norms(NormsDump),
 }
 
 /// Runs `shot`, whatever its model.
@@ -695,6 +754,9 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
     };
     match shot.base()? {
         ModelConfig::Sugarscape(_) => {
+            if shot.every != 1 {
+                return Err(only("every", "norms"));
+            }
             if shot.gifts {
                 return Err(only("gifts", "tags and image-scoring"));
             }
@@ -710,12 +772,22 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
         | ModelConfig::Dpd(_)
         | ModelConfig::Ethno(_)
         | ModelConfig::Tags(_)
-        | ModelConfig::Image(_) => {
+        | ModelConfig::Image(_)
+        | ModelConfig::Norms(_) => {
             if !shot.place.is_empty() {
                 return Err(only("place", "sugarscape"));
             }
             if shot.empty {
                 return Err(only("empty", "sugarscape"));
+            }
+            if matches!(shot.base()?, ModelConfig::Norms(_)) {
+                if shot.cells.is_some() || shot.scores {
+                    return Err(only(if shot.scores { "scores" } else { "cells" }, "spatial-games"));
+                }
+                return run_norms(shot).map(Dump::Norms);
+            }
+            if shot.every != 1 {
+                return Err(only("every", "norms"));
             }
             if matches!(shot.base()?, ModelConfig::Image(_)) {
                 if shot.cells.is_some() || shot.scores {
@@ -749,7 +821,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags and image scoring, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring and norms, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -1019,6 +1091,60 @@ pub fn run_image(shot: &Shot) -> Result<ImageDump, Vec<FieldError>> {
         model: "image",
         seed: shot.seed,
         ticks: shot.ticks,
+        config,
+        frames,
+        stats,
+    })
+}
+
+fn norms_frame(world: &NormsWorld) -> NormsFrame {
+    let events = world.events().cloned().unwrap_or_default();
+    NormsFrame {
+        tick: world.tick,
+        agents: world
+            .played()
+            .iter()
+            .map(|a| (a.boldness, a.vengefulness, a.payoff, a.parent))
+            .collect(),
+        cheats: events.cheats,
+        punishments: events.punishments,
+        metapunishments: events.metapunishments,
+    }
+}
+
+/// Runs a norms shot and records every `every`th generation (and the first).
+pub fn run_norms(shot: &Shot) -> Result<NormsDump, Vec<FieldError>> {
+    let config = shot.norms_config()?;
+    if shot.every == 0 {
+        return Err(vec![FieldError::new("every", "must be at least 1")]);
+    }
+    let mut world = NormsWorld::new(config.clone(), shot.seed)?;
+    let mut frames = vec![norms_frame(&world)];
+    let mut kept = vec![0usize];
+    for t in 1..=shot.ticks {
+        // Only a recorded generation's events are kept, so only it records.
+        world.record_events(shot.gifts && t % shot.every == 0);
+        world.step();
+        if t % shot.every == 0 {
+            frames.push(norms_frame(&world));
+            kept.push(t as usize);
+        }
+    }
+    let stats = NORMS_SERIES
+        .iter()
+        .filter_map(|&name| {
+            world
+                .stats
+                .series(name)
+                .map(|s| (name.to_string(), kept.iter().map(|&t| s[t]).collect()))
+        })
+        .collect();
+    Ok(NormsDump {
+        format: FORMAT,
+        model: "norms",
+        seed: shot.seed,
+        ticks: shot.ticks,
+        every: shot.every,
         config,
         frames,
         stats,
@@ -1675,6 +1801,69 @@ mod tests {
                 .iter()
                 .all(|a| a.1.is_some_and(|k| (-5..=6).contains(&k))));
         }
+    }
+
+    fn norms(json: &str) -> NormsDump {
+        match super::run(&Shot::from_json(json).unwrap()).unwrap() {
+            Dump::Norms(d) => d,
+            _ => panic!("a norms shot"),
+        }
+    }
+
+    #[test]
+    fn a_norms_shot_records_events_that_add_up_to_the_payoffs() {
+        let d = norms(r#"{"preset": "ax-metanorms", "ticks": 8, "seed": 2, "gifts": true}"#);
+        assert_eq!((d.model, d.frames.len()), ("norms", 9));
+        let c = &d.config;
+        for f in &d.frames[1..] {
+            assert_eq!(f.agents.len(), 20);
+            // Each Flump's payoff is what the events give it.
+            let mut pay = vec![0.0f64; 20];
+            for &i in &f.cheats {
+                pay[i as usize] += c.temptation;
+                for (j, p) in pay.iter_mut().enumerate() {
+                    if j != i as usize {
+                        *p += c.hurt;
+                    }
+                }
+            }
+            for &(j, i) in &f.punishments {
+                pay[i as usize] += c.punishment;
+                pay[j as usize] += c.enforcement;
+            }
+            for &(k, j) in &f.metapunishments {
+                pay[j as usize] += c.meta_punishment;
+                pay[k as usize] += c.meta_enforcement;
+            }
+            for (a, p) in f.agents.iter().zip(&pay) {
+                assert!((a.2 - p).abs() < 1e-9, "{} vs {p}", a.2);
+            }
+        }
+        assert!(d.frames.iter().any(|f| !f.metapunishments.is_empty()));
+    }
+
+    #[test]
+    fn a_norms_shot_can_keep_every_nth_generation() {
+        let d = norms(
+            r#"{"preset": "ax-metanorms", "ticks": 1000, "seed": 2, "every": 100, "set": {"stop_at": 0}}"#,
+        );
+        assert_eq!(
+            d.frames.iter().map(|f| f.tick).collect::<Vec<_>>(),
+            (0..=10).map(|k| k * 100).collect::<Vec<_>>()
+        );
+        assert_eq!(d.stats["mean_boldness"].len(), 11);
+        let full =
+            norms(r#"{"preset": "ax-metanorms", "ticks": 1000, "seed": 2, "set": {"stop_at": 0}}"#);
+        assert_eq!(d.frames[10].agents, full.frames[1000].agents);
+        assert_eq!(
+            d.stats["mean_boldness"][10],
+            full.stats["mean_boldness"][1000]
+        );
+        let err = |json: &str| fields(super::run(&Shot::from_json(json).unwrap()).unwrap_err());
+        assert_eq!(
+            err(r#"{"preset": "ii-2-unit", "ticks": 1, "every": 2}"#),
+            ["every"]
+        );
     }
 
     #[test]

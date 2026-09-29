@@ -120,7 +120,19 @@ pub struct NormsWorld {
     /// The mean (B, V) of recent generations, newest last.
     trail: VecDeque<(f64, f64)>,
     copied_equal: bool,
+    /// The last generation's events, when recording them (the studio's shots).
+    events: Option<NormsEvents>,
     pub stats: Stats<NormsSnapshot>,
+}
+
+/// What a generation's play did, in order, by places in the agent list:
+/// each cheat, each punishment (punisher, cheat), and each metapunishment
+/// (metapunisher, the one who looked away). Recording draws nothing.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct NormsEvents {
+    pub cheats: Vec<u32>,
+    pub punishments: Vec<(u32, u32)>,
+    pub metapunishments: Vec<(u32, u32)>,
 }
 
 impl NormsWorld {
@@ -150,6 +162,7 @@ impl NormsWorld {
             rng,
             trail: VecDeque::with_capacity(TRAIL),
             copied_equal: false,
+            events: None,
             stats: Stats::default(),
         };
         world.record();
@@ -159,6 +172,17 @@ impl NormsWorld {
     /// The generation that played last (the starting one before any play).
     pub fn played(&self) -> &[Agent] {
         &self.played
+    }
+
+    /// Starts or stops recording each generation's events (from the next
+    /// generation played). Recording draws nothing.
+    pub fn record_events(&mut self, on: bool) {
+        self.events = on.then(NormsEvents::default);
+    }
+
+    /// The last generation's events, if recording.
+    pub fn events(&self) -> Option<&NormsEvents> {
+        self.events.as_ref()
     }
 
     /// The generation that plays next.
@@ -198,6 +222,9 @@ impl NormsWorld {
             ) = (0.0, 0, 0, 0, 0, 0);
         }
         let c = self.config.clone();
+        if let Some(e) = &mut self.events {
+            *e = NormsEvents::default();
+        }
         for _ in 0..c.rounds {
             for i in 0..n {
                 let seen = self.rng.gen::<f64>();
@@ -206,6 +233,9 @@ impl NormsWorld {
                 }
                 self.agents[i].payoff += c.temptation;
                 self.agents[i].defections += 1;
+                if let Some(e) = &mut self.events {
+                    e.cheats.push(i as u32);
+                }
                 for j in (0..n).filter(|&j| j != i) {
                     self.agents[j].payoff += c.hurt;
                 }
@@ -218,6 +248,9 @@ impl NormsWorld {
                         self.agents[i].punished += 1;
                         self.agents[j].payoff += c.enforcement;
                         self.agents[j].punishments += 1;
+                        if let Some(e) = &mut self.events {
+                            e.punishments.push((j as u32, i as u32));
+                        }
                     } else if c.metanorms {
                         for k in (0..n).filter(|&k| k != i && k != j) {
                             if self.chance(seen)
@@ -227,6 +260,9 @@ impl NormsWorld {
                                 self.agents[j].metapunished += 1;
                                 self.agents[k].payoff += c.meta_enforcement;
                                 self.agents[k].metapunishments += 1;
+                                if let Some(e) = &mut self.events {
+                                    e.metapunishments.push((k as u32, j as u32));
+                                }
                             }
                         }
                     }
