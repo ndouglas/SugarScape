@@ -98,13 +98,18 @@ export function cachesText(c: Pick<CachingView, 'caches' | 'total'>): string {
 /**
  * The Minds 5 caching rows, label and text: the agent's own caching rule (its own under mixed rules),
  * what it carries against the limit (good 0, `held`), its caches, and rule plan's forecast shortfall
- * when it is computing one.
+ * when it is computing one. In a central-place world (`home` given) the larder, the cache at home, is
+ * its own row ("Larder: y at home") and the Caches row counts only the caches away from home.
  */
-export function cachingRows(c: CachingView, held: number): [string, string][] {
+export function cachingRows(c: CachingView, held: number, home: [number, number] | null = null): [string, string][] {
+  const atHome = (k: { x: number; y: number }) => home != null && k.x === home[0] && k.y === home[1];
+  const away = c.caches.filter((k) => !atHome(k));
+  const larder = home != null ? c.caches.filter(atHome).reduce((sum, k) => sum + k.amount, 0) : null;
   return [
     ['Caching rule', c.rule],
     ['Carrying', carryingText(held, c.holdings_cap)],
-    ['Caches', cachesText(c)],
+    ['Caches', larder != null ? cachesText({ caches: away, total: away.reduce((sum, k) => sum + k.amount, 0) }) : cachesText(c)],
+    ...(larder != null ? [['Larder', `${fmt(larder)} at home`] as [string, string]] : []),
     ...(c.forecast != null ? [['Forecast shortfall', fmt(c.forecast)] as [string, string]] : []),
   ];
 }
@@ -182,7 +187,7 @@ export class InspectPanel {
           ]
         : []),
       ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
-      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0).map(([k, v]) => row(k, v)) : []),
+      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
       ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),

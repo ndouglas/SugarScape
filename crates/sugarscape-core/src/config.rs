@@ -666,8 +666,9 @@ pub struct Caching {
     pub lookahead: u32,
     /// A quarter of the founders on each rule: founder k (in id order, from
     /// 0) follows `none`, `even`, `compensate`, `plan` by k mod 4, with no
-    /// draw, and children take their parent's rule (`Agent.caching_rule`);
-    /// `rule` is then ignored. Reset-only.
+    /// draw, and a child takes the rule of the parent whose turn it is (the
+    /// parent acting when it's born; `Agent.caching_rule`), not one dealt by
+    /// its id; `rule` is then ignored. Reset-only.
     pub mixed: bool,
 }
 

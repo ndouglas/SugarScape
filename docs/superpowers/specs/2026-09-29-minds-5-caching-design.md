@@ -326,3 +326,93 @@ target), the roadmap line, and this spec's amendments.
   and 4/26 with breakfast in K1; the survey pools both counterbalancings.
 - **Individual differences** come only from `compensate`'s λ in the lab (all F is cached, so
   `share` is unused); `even` and `plan` populations have no spread.
+
+The rulings made while building, and what measuring changed (the full record is the SDD ledger for
+this plan):
+
+- **The lab rig as built** (`minds/caching/lab.rs`). A 13 × 8 rig: compartments K1–K3 (x 1–3, 5–7,
+  9–11; rows 1–3), each with a tray, doorways at row 4 that are walls until the test evening, a
+  corridor, and a perch row. A day is 4 ticks: a morning (ticks 4d and 4d + 1) with each agent
+  carried into the day's compartment, whose sites hold 1 sugar each if the day has food, then an
+  evening in the hall. The schedule runs from `World::step` before anyone's turn, only when
+  `config.lab` is set. Episode places and `compensate`'s weights are keyed by compartment (0–2),
+  not site. On the test evening (tick 4N; N = 6 for Raby, 9 for Amodio) the doorways open
+  (Raby: only K1's and K3's, as Raby et al.'s trays were in A and C, with the food bowl in B), each agent is
+  given F = 30, and agents walk out one at a time, in id order, burying each compartment's share at
+  its tray, then return to the perch. Lab agents have metabolism 0 (the birds' maintenance diet is
+  outside the protocol), endowment 10, vision 1, walking and no lifespan. The reserve is 0 in a lab,
+  so nothing is dug. A lab config must be the rig (13 × 8, its walls, a flat zero map,
+  population 1–9), and `place_agent` and `remove_agent` are refused ("the lab's roster is fixed").
+  `run_population` draws each agent's (share, λ) in id order, share in [0.4, 0.6) and λ in
+  [0.3, 0.7). Share is unused in the lab and is drawn only to keep the order stable. Opened doorways
+  change the world's walls at runtime, so the page draws walls from the world, not the config.
+- **Whole units are an argument:** `allocate_even`, `allocate_compensate` and `allocate_plan` take
+  `whole: bool` (the lab passes true, the field false). The whole-unit split is integer
+  arithmetic, so non-dyadic weights never lose a unit.
+- **Caching walks and doesn't fight.** Caching (a rule other than `none`, or a carrying limit)
+  requires `movement.mode: walk` (a cache out of sight is memory) and can't run with combat.
+- **Dug sugar isn't a harvest.** It makes no pollution (the sugar was polluted when first
+  gathered), earns no credit income, and doesn't feed the marginal-value rule's intake ρ. On
+  arrival at a site holding a cache, the agent takes the larger of the cache and what the site
+  would give, so a merged candidate delivers the value it was ranked at.
+- **Digging below half the reserve** (see Mechanics). With the threshold at R, `plan` buried 44 842
+  and dug back 41 986 in one seed's first summer; at R/2, 14 579 and 58.
+- **`caching.mixed`** (reset-only) deals `none`, `even`, `compensate`, `plan` round-robin by id to
+  founders (`Agent.caching_rule`). A child takes the rule of the parent whose turn it is. The lab
+  presets use it (two agents per rule in Raby's 8; Amodio's 6 are none, even, compensate, plan,
+  none, even). Inspect shows each agent's rule, and there is no tribe coloring.
+- **`plan`'s forecast counts intake from sites only**, so sugar standing when winter starts counts
+  as winter intake. After a winter survived on caches, planners forecast a mean 54 and bury a
+  median 5.4 in the second summer against 82 in the first. Reported as a finding.
+- **The balance, as measured** (5 seeds, no caching, no carrying limit). walk-capacity's own
+  agents (metabolism 1–4) can't meet (a) at any population, β or γ tried (0.39–0.98): a walker
+  harvests at most about 3.5 a tick. Ruled world: walk-capacity's landscape, uniform metabolism 1,
+  175 agents, γ = 100, β = 32, giving (a) 151.0 against 100 (1.51) and (b) 6 466 against 16 580
+  (0.39).
+- **(b) replaced by an empirical test.** (b) counts only regrowth, but every site starts winter
+  full. With no carrying limit 88 % of `none` survived the first winter. The balance test is now:
+  over 5 seeds, `none`'s first-winter survival at least 20 points below `even`'s.
+- **A carrying limit of 50** in the winter presets (half a winter's need). Without one, holdings
+  are an unlimited cache.
+- **`goap.horizon` 20 in every winter preset** (R = 20, digging below 10). At 10, `even` survived
+  the first winter less often than `none` (45.2 % against 48.5 %): under rule M a hungry agent heads
+  for its biggest cache and starves on the way. At 20 (5 seeds): none 48.5 %, even 74.9 %,
+  compensate 73.8 %, plan 88.2 %. `none` doesn't use the horizon.
+- **Central place, as built.**
+  - R is one tick's need, and the larder joins the candidates below R (not R/2).
+  - At home the agent buries min(the trip's load, holdings − R) as the delivery (ρ's currency is
+    the load brought home). It keeps provisions P = R × (2D + 2) for the walk out and back, and
+    digs the difference from the larder when short. "All above one tick's need" starved every agent
+    with metabolism above 0.
+  - The limit caps the trip's load: room is C − load, and full is load + R ≥ C.
+  - A site must yield more than 0 as well as at least ρ (ρ = 0 would hold it on bare ground).
+  - Away from home, it heads home when holdings ≤ R × (distance home + 1).
+  - `mean_load` is Σ delivered ÷ Σ deliveries since tick 0, the mean load per trip.
+- **The analytic finding.** On a staircase patch (yields 15, 12, 10, 8, 6, 5, 4, 3, 2, 1) the
+  tangent construction gives 51, 60 and 65 at d = 2, 5 and 10, and the learned rule (α 0.05) takes
+  49, 60 and 65. The per-tick comparison ignores the lattice's parity (a step out costs 2 ticks, a
+  step back 0 net). With ρ fixed at the optimal rate it takes 45, 60 and 63, and the learned ρ's
+  decay (5.73, 3.21, 1.78 against 6.375, 3.75, 2.32) cancels the error. At α ≥ 0.2 the load stops
+  tracking distance.
+- **GOAP's "deliver G"** is minimal: it plans at home, doesn't replan away from home, and
+  provisions only for the plan's cost.
+- **The survey.**
+  - Raby pools both counterbalancings.
+  - Amodio's comparison is the paper's own, with a bird-independent model's rates shared within
+    each group (the reading that reproduces the paper's 0.72, 0.16 and 0.002 on its Table 2). The
+    judge sums each hypothesis's two variants.
+  - Lima's judge: trips assigned to the patch that gave over half the load; |near − far| ≤ 10 % of
+    the seed's mean delivered load in at least 80 % of seeds. It failed, and the verdict stands.
+    The habitat put the near patch on the way to the far one, so disclosed follow-up rows were
+    added (loads by destination; the far patch on the other side; ρ held at each seed's long-run
+    rate).
+- **The values.**
+
+  | World | Values |
+  |---|---|
+  | winter (`cache-winter-*`) | walk-capacity's landscape; 175 agents, metabolism 1; rule M walking; memory span 100, share 0.5; `seasons.mode: global`, γ 100, β 32; carrying limit 50; `goap.horizon` 20; share 0.5, λ 0.5, lookahead 1 |
+  | central place (`central-*`) | 60 × 30 torus; five peaks (radius 3, height 4) at x 45, y 3–27 every 6; growback 0.25 (`central-linear`: instant); 5 agents, metabolism 1, endowment 60, vision 1–6; homes at x 37 (8 columns) or 25 (20); marginal-value rule, α 0.05; memory span 1 000, the map known; carrying limit 320, the first value tried (80, 120, 160, 240, 320) at which ρ or an empty site ended at least half the trips near and far |
+  | labs (`cache-raby`, `cache-amodio`) | the rig above; 8 agents (Raby, breakfast in K3, so the test morning is K1 without breakfast) or 6 (Amodio, Food-First); `caching.mixed`; F = 30 |
+
+- **The page.** The Seasons group's β maximum is 32. The central larder is listed in Inspect on its
+  own row ("Larder: y at home"), not as one of the agent's caches.

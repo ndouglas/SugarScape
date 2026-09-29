@@ -49,7 +49,8 @@
 //!
 //! Everything else is reported, not judged: every survival and wealth figure
 //! per founding agent (the dead as 0), burying and digging per world, the
-//! share of buried sugar never dug, `cache_lost`, the mechanisms named in
+//! share of buried sugar not dug by the run's end (lost, or still buried),
+//! `cache_lost`, the mechanisms named in
 //! the claims, linear loading, trip endings and GOAP's loads.
 //!
 //! **Patterns** (Amodio). An agent's pattern is the set of compartments

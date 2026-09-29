@@ -121,6 +121,28 @@ describe('cachingRows', () => {
   });
 });
 
+describe('cachingRows in a central-place world', () => {
+  const view = { rule: 'none' as const, holdings_cap: 320, caches: [{ x: 1, y: 2, amount: 3 }, { x: 4, y: 7, amount: 40.5 }, { x: 9, y: 9, amount: 2 }], total: 45.5, forecast: null };
+
+  it('lists the larder at home on its own row, not as one of the agent’s caches', () => {
+    expect(cachingRows(view, 12, [4, 7])).toEqual([
+      ['Caching rule', 'none'],
+      ['Carrying', '12 of 320'],
+      ['Caches', '2 caches, holding 5'],
+      ['Larder', '40.50 at home'],
+    ]);
+  });
+
+  it('gives an empty larder as 0 at home', () => {
+    expect(cachingRows({ ...view, caches: [], total: 0 }, 1, [4, 7])).toEqual([
+      ['Caching rule', 'none'],
+      ['Carrying', '1 of 320'],
+      ['Caches', '0 caches, holding 0'],
+      ['Larder', '0 at home'],
+    ]);
+  });
+});
+
 describe('centralRows', () => {
   it('gives the home and the last load', () => {
     expect(centralRows({ home: [4, 7], last_load: 12.25 })).toEqual([
