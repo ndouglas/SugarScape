@@ -1,0 +1,51 @@
+{
+  "name": "Schelling's tipping: Fig. 18 with Blue moving faster",
+  "description": "Fig. 18 (100 Red, 50 Blue, tolerances from 2.0) from 25 of each, with Blue making up to five moves a step to Red's one. Schelling: which one-color equilibrium occurs \"depends on how the process starts and, perhaps, the relative speeds\". Measured (exact schedules; recorded 2026-09-29): Red ends alone at every speed: here the numbers decide, not the speed.",
+  "base": {
+    "preset": "tipping-fig18"
+  },
+  "x": {
+    "label": "Blue moves a step (Red 1)",
+    "values": [
+      {
+        "at": 1,
+        "set": {
+          "speed_blue": 1
+        }
+      },
+      {
+        "at": 2,
+        "set": {
+          "speed_blue": 2
+        }
+      },
+      {
+        "at": 3,
+        "set": {
+          "speed_blue": 3
+        }
+      },
+      {
+        "at": 4,
+        "set": {
+          "speed_blue": 4
+        }
+      },
+      {
+        "at": 5,
+        "set": {
+          "speed_blue": 5
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 1
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "blue_share"
+  }
+}

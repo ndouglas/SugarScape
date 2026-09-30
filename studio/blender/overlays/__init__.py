@@ -5,7 +5,7 @@ rigs. Screen-space things hang from `Screen` anchors, whose units are half
 the frame's width, so they keep their size on screen as the lens changes."""
 
 from .caption import caption_scene
-from .followers import belly, bequests, labels, rings_hungry, rings_migrants, rings_shuttlers, sight, stacks, trades, traits, loot, warlord, killmap, loanlines, infections
+from .followers import belly, bequests, labels, rings_hungry, rings_migrants, rings_unhappy, rings_shuttlers, sight, stacks, trades, traits, loot, warlord, killmap, loanlines, infections
 from .panels import alike, bars, census, tally, counter, dials, hills, histogram, kills, ladder, ledger, popchart, prices, sick, season_card, wealth
 from .lattice import earnings, helpers, kinds, legend, play, scores
 from .parts import Screen
@@ -26,6 +26,7 @@ BUILDERS = {
     "season-card": season_card,
     "rings-migrants": rings_migrants,
     "rings-hungry": rings_hungry,
+    "rings-unhappy": rings_unhappy,
     "counter": counter,
     "survival": bars,
     "bars": bars,

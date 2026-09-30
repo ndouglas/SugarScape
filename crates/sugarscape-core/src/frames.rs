@@ -21,7 +21,7 @@ use crate::dpd::{DpdConfig, DpdDeath, DpdWorld, SERIES as DPD_SERIES};
 use crate::edit::AgentOverrides;
 use crate::ethno::{EthnoConfig, EthnoWorld, Strategy, SERIES as ETHNO_SERIES};
 use crate::image::{ImageConfig, ImageWorld, SERIES as IMAGE_SERIES};
-use crate::model::ModelConfig;
+use crate::model::{Model, ModelConfig, ModelWorld};
 use crate::norms::{NormsConfig, NormsWorld, SERIES as NORMS_SERIES};
 use crate::presets;
 use crate::spatial::{Lattice, SpatialConfig, SpatialWorld, SERIES as SPATIAL_SERIES};
@@ -778,6 +778,33 @@ pub struct StructureDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// `[id, x, y, red, content]`: a Schelling agent's square, color and
+/// whether it is content there (on the line, x is its place in the row).
+pub type SchellingRow = (u64, u32, u32, bool, bool);
+
+/// A Schelling board or line after one round.
+#[derive(Clone, Debug, Serialize)]
+pub struct SchellingFrame {
+    pub tick: u64,
+    /// Sorted by id.
+    pub agents: Vec<SchellingRow>,
+}
+
+/// A whole Schelling shot (`model` "schelling" for the board, "line" for
+/// the row, laid out `width` places a row), round 0 first.
+#[derive(Clone, Debug, Serialize)]
+pub struct SchellingDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub width: u32,
+    pub height: u32,
+    pub config: ModelConfig,
+    pub frames: Vec<SchellingFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -790,6 +817,7 @@ pub enum Dump {
     Image(ImageDump),
     Norms(NormsDump),
     Structure(StructureDump),
+    Schelling(Box<SchellingDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -870,10 +898,25 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             run_dpd(shot).map(Dump::Dpd)
         }
+        ModelConfig::Schelling(_) | ModelConfig::Line(_) => {
+            for (bad, field) in [
+                (!shot.place.is_empty(), "place"),
+                (shot.empty, "empty"),
+                (shot.gifts, "gifts"),
+                (shot.cells.is_some(), "cells"),
+                (shot.scores, "scores"),
+                (shot.every != 1, "every"),
+            ] {
+                if bad {
+                    return Err(vec![FieldError::new(field, "is not for Schelling shots")]);
+                }
+            }
+            run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
+        }
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms and social structure, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms, social structure and Schelling's board and line, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -1007,6 +1050,70 @@ fn dpd_frame(world: &DpdWorld, before: &BTreeSet<u64>, alive: &mut BTreeSet<u64>
 }
 
 /// Runs a demographic-PD shot and records every cycle.
+/// Runs a Schelling shot (his board, or his line laid out a row at a time)
+/// and records every round.
+pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
+    let config = shot.model_config()?;
+    let mut world = ModelWorld::new(config.clone(), shot.seed)?;
+    let frame = |w: &ModelWorld| -> SchellingFrame {
+        let mut agents: Vec<SchellingRow> = match w {
+            ModelWorld::Schelling(s) => s
+                .agents()
+                .map(|a| (a.id, a.pos.x, a.pos.y, a.red, s.is_satisfied(a)))
+                .collect(),
+            ModelWorld::Line(l) => {
+                let wrap = Model::size(l.as_ref()).0;
+                l.people()
+                    .iter()
+                    .enumerate()
+                    .map(|(k, p)| {
+                        (
+                            p.id,
+                            k as u32 % wrap,
+                            k as u32 / wrap,
+                            p.red,
+                            l.is_satisfied(k),
+                        )
+                    })
+                    .collect()
+            }
+            _ => unreachable!("a schelling shot"),
+        };
+        agents.sort_unstable_by_key(|r| r.0);
+        SchellingFrame {
+            tick: w.model().tick(),
+            agents,
+        }
+    };
+    let mut frames = vec![frame(&world)];
+    for _ in 0..shot.ticks {
+        world.model_mut().run(1);
+        frames.push(frame(&world));
+    }
+    let model = world.model();
+    let stats = model
+        .series_names()
+        .into_iter()
+        .filter_map(|name| model.series(&name).map(|s| (name, s)))
+        .collect();
+    let (width, height) = model.size();
+    Ok(SchellingDump {
+        format: FORMAT,
+        model: if matches!(config, ModelConfig::Line(_)) {
+            "line"
+        } else {
+            "schelling"
+        },
+        seed: shot.seed,
+        ticks: shot.ticks,
+        width,
+        height,
+        config,
+        frames,
+        stats,
+    })
+}
+
 pub fn run_dpd(shot: &Shot) -> Result<DpdDump, Vec<FieldError>> {
     let config = shot.dpd_config()?;
     let mut world = DpdWorld::new(config.clone(), shot.seed)?;
@@ -1746,7 +1853,7 @@ mod tests {
             ["scores"]
         );
         assert_eq!(
-            err(r#"{"preset": "vi-4-schelling-25", "ticks": 1}"#),
+            err(r#"{"preset": "vi-8-ring-world", "ticks": 1}"#),
             ["model"]
         );
     }
@@ -2055,5 +2162,63 @@ mod tests {
         let s =
             shot(r#"{"preset": "ii-2-unit", "ticks": 1, "set": {"population": 999999}}"#).unwrap();
         assert!(fields(s.config().unwrap_err()).contains(&"population".to_string()));
+    }
+    fn schelling(json: &str) -> SchellingDump {
+        match super::run(&Shot::from_json(json).unwrap()).unwrap() {
+            Dump::Schelling(d) => *d,
+            _ => panic!("not a schelling dump"),
+        }
+    }
+
+    #[test]
+    fn a_schelling_shot_records_each_round_its_squares_colors_and_content() {
+        let d = schelling(r#"{"preset": "s71-board", "ticks": 3, "seed": 2}"#);
+        assert_eq!(
+            (d.model, d.width, d.height, d.frames.len()),
+            ("schelling", 16, 13, 4)
+        );
+        let mut w =
+            crate::schelling::SchellingWorld::new(crate::schelling::SchellingConfig::default(), 2)
+                .unwrap();
+        for f in &d.frames {
+            assert_eq!(f.agents.len(), 138);
+            let mut expect: Vec<SchellingRow> = w
+                .agents()
+                .map(|a| (a.id, a.pos.x, a.pos.y, a.red, w.is_satisfied(a)))
+                .collect();
+            expect.sort_unstable_by_key(|r| r.0);
+            assert_eq!(f.agents, expect, "tick {}", f.tick);
+            w.step();
+        }
+        let moved = d.frames[0]
+            .agents
+            .iter()
+            .zip(&d.frames[1].agents)
+            .filter(|(a, b)| (a.1, a.2) != (b.1, b.2))
+            .count();
+        assert_eq!(
+            moved as f64, d.stats["moves"][1],
+            "the frames show the round's moves"
+        );
+    }
+
+    #[test]
+    fn a_line_shot_lays_its_row_out_as_squares() {
+        let d = schelling(r#"{"preset": "s71-line", "ticks": 2, "seed": 3}"#);
+        assert_eq!(
+            (d.model, d.width, d.height, d.frames.len()),
+            ("line", 70, 1, 3)
+        );
+        for f in &d.frames {
+            let mut places: Vec<u32> = f.agents.iter().map(|r| r.1).collect();
+            places.sort_unstable();
+            assert_eq!(
+                places,
+                (0..70).collect::<Vec<_>>(),
+                "everyone has a place, no gaps"
+            );
+            assert!(f.agents.iter().all(|r| r.2 == 0));
+        }
+        assert!(d.stats.contains_key("groups"));
     }
 }

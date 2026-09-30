@@ -14,6 +14,7 @@ import {
   isPunishmentView,
   isZiView,
   isLineView,
+  isTippingView,
   isRetirementView,
   isFarolView,
   isCivilView,
@@ -735,5 +736,15 @@ describe("Schelling's line", () => {
     const schellingSite = { site: { x: 1, y: 2 }, agent: null } as AnyInspection;
     expect(isLineView(person) && isLineView(pastTheEnd)).toBe(true);
     expect(isLineView(schellingSite)).toBe(false);
+  });
+});
+
+describe("Schelling's tipping", () => {
+  it('is read by its tag, drawn as his plane, and its points told apart', () => {
+    expect(modelOf({ model: 'tipping' } as ModelConfig)).toBe('tipping');
+    expect(COLOR_MODES.tipping.map(([m]) => m)).toEqual(['plane']);
+    const point = { red_in: 40, blue_in: 30, red_content: true, blue_content: false, now: false, agent: null } as AnyInspection;
+    expect(isTippingView(point)).toBe(true);
+    expect(isTippingView({ place: 3, agent: null } as AnyInspection)).toBe(false);
   });
 });

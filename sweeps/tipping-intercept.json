@@ -1,0 +1,129 @@
+{
+  "name": "Schelling's tipping: equal numbers against the most tolerant's limit",
+  "description": "Equal numbers (100 each) with straight-line tolerances from the given intercept, started just off the middle (55 Red, 45 Blue: at exactly 50 and 50 nobody moves, stable or not). Schelling (Fig. 21): \"there is no stable intersection of the two parabolas unless the tolerance schedules have vertical intercepts of 3.0\". Measured (exact schedules; recorded 2026-09-29): below 3.0 the area ends all Red; from 3.0 up it holds a mix (Blue's share 0.46 at 3.0, 0.5 from 3.5).",
+  "base": {
+    "preset": "tipping-fig21"
+  },
+  "x": {
+    "label": "Straight-line intercept",
+    "values": [
+      {
+        "at": 1.0,
+        "set": {
+          "red_schedule.intercept": 1.0,
+          "blue_schedule.intercept": 1.0,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 2.0,
+        "set": {
+          "red_schedule.intercept": 2.0,
+          "blue_schedule.intercept": 2.0,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 2.5,
+        "set": {
+          "red_schedule.intercept": 2.5,
+          "blue_schedule.intercept": 2.5,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 2.8,
+        "set": {
+          "red_schedule.intercept": 2.8,
+          "blue_schedule.intercept": 2.8,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 2.9,
+        "set": {
+          "red_schedule.intercept": 2.9,
+          "blue_schedule.intercept": 2.9,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 3.0,
+        "set": {
+          "red_schedule.intercept": 3.0,
+          "blue_schedule.intercept": 3.0,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 3.1,
+        "set": {
+          "red_schedule.intercept": 3.1,
+          "blue_schedule.intercept": 3.1,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 3.2,
+        "set": {
+          "red_schedule.intercept": 3.2,
+          "blue_schedule.intercept": 3.2,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 3.5,
+        "set": {
+          "red_schedule.intercept": 3.5,
+          "blue_schedule.intercept": 3.5,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 4.0,
+        "set": {
+          "red_schedule.intercept": 4.0,
+          "blue_schedule.intercept": 4.0,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 5.0,
+        "set": {
+          "red_schedule.intercept": 5.0,
+          "blue_schedule.intercept": 5.0,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 6.0,
+        "set": {
+          "red_schedule.intercept": 6.0,
+          "blue_schedule.intercept": 6.0,
+          "start.red": 55,
+          "start.blue": 45
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 1
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "blue_share"
+  }
+}

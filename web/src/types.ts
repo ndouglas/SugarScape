@@ -193,7 +193,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -605,7 +605,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1505,6 +1505,30 @@ export interface LineConfig {
 /** A person in the line: its place, color and how many of its neighbors are alike. */
 export interface LinePersonView { id: number; place: number; color: 'red' | 'blue'; like: number; neighbors: number; satisfied: boolean }
 export interface LineInspection { place: number; agent: LinePersonView | null }
+
+/** A tolerance schedule (Schelling 1971, pp. 168–180). */
+export type Schedule = { shape: 'line'; intercept: number } | { shape: 'hyperbola'; k: number } | { shape: 'tiers'; tiers: [number, number][] };
+/** Schelling's bounded neighborhood (1971): one area, each person with a tolerance for the other color. */
+export interface TippingConfig {
+  model: 'tipping';
+  red: number;
+  blue: number;
+  red_schedule: Schedule;
+  blue_schedule: Schedule;
+  intolerant_red: number;
+  intolerant_blue: number;
+  draws: 'schedule' | 'random';
+  start: { kind: 'given'; red: number; blue: number } | { kind: 'random'; chance: number };
+  speed_red: number;
+  speed_blue: number;
+  order: 'alternate' | 'blue_first' | 'simultaneous';
+  entry: 'counting_self' | 'as_is';
+  limit_red: number;
+  limit_blue: number;
+  limit_total: number;
+}
+/** A point of his plane: Red and Blue inside, and whether the most tolerant of each would all be content there. */
+export interface TippingInspection { red_in: number; blue_in: number; red_content: boolean; blue_content: boolean; now: boolean; agent: null }
 export interface RingInspection { site: { x: number; sugar: number; capacity: number }; agent: { id: number; vision: number } | null }
 /** A Long House Valley cell: its zone, this year's PDSI class and yields, water and occupants. */
 export interface ValleyCellView {
@@ -1781,7 +1805,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1852,7 +1876,8 @@ export type ColorMode =
   | 'harvest'
   | 'pests'
   | 'water'
-  | 'crop';
+  | 'crop'
+  | 'plane';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */

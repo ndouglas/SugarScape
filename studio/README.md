@@ -11,7 +11,7 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale).
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale); and Following the Crowd, `neighbors`.
 
 Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring or norms. A spatial shot's dump records each
 generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
@@ -30,7 +30,7 @@ places before its meetings play out one by one (`street.py`). A norms shot's dum
 generation's agents (boldness, vengefulness, payoff) and, with `"gifts": true`, its cheats,
 punishments and metapunishments; `"every": n` keeps every nth generation, so a million generations
 fit a few hundred frames. It loads as a `Plane`: the boldness–vengefulness plane, a Flump per place
-standing on its square (`plane.py`). A social-structure shot's dump records each period's agents (y, p,
+standing on its square (`plane.py`). A Schelling shot (his board, `schelling`, or his line, `line`) records each round's agents (square, color, content); it loads as a `Dump`, the line laid out as a row of squares, so the Flumps walk as the Sugarscape's do (`colors: "strategy"` draws Red and Blue); the `rings-unhappy` overlay rings the discontented. A social-structure shot's dump records each period's agents (y, p,
 q, payoff) and, with `"gifts": true`, each agent's partners; it loads as a `Grid`: a 16 × 16 block,
 each Flump in its friendliness's shade, on its own square under the torus and in index order
 otherwise, with yarn lines to a few followed Flumps' partners (`grid.py`).

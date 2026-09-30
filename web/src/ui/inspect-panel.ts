@@ -3,7 +3,7 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isBaliView, isLineView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -14,6 +14,7 @@ import type {
   ZiInspection,
   BaliInspection,
   LineInspection,
+  TippingInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -227,6 +228,16 @@ export class InspectPanel {
             ),
       ),
       row('Infected by', a.infected_by ? this.links([a.infected_by]) : h('span', { class: 'hint' }, 'nobody')),
+    ];
+  }
+
+  /** A point of Schelling's tipping plane: the state, and whether each color's most tolerant would be content there. */
+  private tippingRows(view: TippingInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    return [
+      row('Inside', `${view.red_in} Red, ${view.blue_in} Blue${view.now ? ' (now)' : ''}`),
+      row('Red', view.red_content ? 'all content' : 'someone would leave'),
+      row('Blue', view.blue_content ? 'all content' : 'someone would leave'),
     ];
   }
 
@@ -693,6 +704,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isTippingView(view)
+            ? this.tippingRows(view)
           : isLineView(view)
             ? this.lineRows(view)
           : isBaliView(view)

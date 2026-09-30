@@ -1,0 +1,105 @@
+{
+  "name": "Schelling's tipping: where Fig. 19 ends from each start",
+  "description": "Fig. 19 (100 of each, straight-line tolerances from 5.0) started with the most tolerant k of each color inside. Schelling: \"As long as half or more of both colors are present—actually, slightly over 40% … the dynamics … will lead to the stable mixture\", and \"Even for very small numbers of both colors present, if the initial ratios are within the slopes of the two curves … the two colors will converge on the 80–80 mixture.\" Measured (exact schedules, so one run each; recorded 2026-09-29): from 5 to 100 of each, every start ends at 80 and 80.",
+  "base": {
+    "preset": "tipping-fig19"
+  },
+  "x": {
+    "label": "Of each color inside at the start",
+    "values": [
+      {
+        "at": 5,
+        "set": {
+          "start.red": 5,
+          "start.blue": 5
+        }
+      },
+      {
+        "at": 10,
+        "set": {
+          "start.red": 10,
+          "start.blue": 10
+        }
+      },
+      {
+        "at": 20,
+        "set": {
+          "start.red": 20,
+          "start.blue": 20
+        }
+      },
+      {
+        "at": 30,
+        "set": {
+          "start.red": 30,
+          "start.blue": 30
+        }
+      },
+      {
+        "at": 35,
+        "set": {
+          "start.red": 35,
+          "start.blue": 35
+        }
+      },
+      {
+        "at": 38,
+        "set": {
+          "start.red": 38,
+          "start.blue": 38
+        }
+      },
+      {
+        "at": 40,
+        "set": {
+          "start.red": 40,
+          "start.blue": 40
+        }
+      },
+      {
+        "at": 42,
+        "set": {
+          "start.red": 42,
+          "start.blue": 42
+        }
+      },
+      {
+        "at": 45,
+        "set": {
+          "start.red": 45,
+          "start.blue": 45
+        }
+      },
+      {
+        "at": 50,
+        "set": {
+          "start.red": 50,
+          "start.blue": 50
+        }
+      },
+      {
+        "at": 70,
+        "set": {
+          "start.red": 70,
+          "start.blue": 70
+        }
+      },
+      {
+        "at": 100,
+        "set": {
+          "start.red": 100,
+          "start.blue": 100
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 1
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "blue_in"
+  }
+}

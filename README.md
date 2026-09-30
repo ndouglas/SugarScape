@@ -268,6 +268,43 @@ size, Like neighbors and Unsatisfied; Inspect shows a person's place and neighbo
   limit), where he found "everybody achieves his desired neighborhood". Sweeps: `line-radius` (groups
   of 4.0, 6.3, 8.4, 10.5, 11.9 and 13.3 for one to six neighbors each side) and `line-reach`.
 
+### Schelling's tipping (Schelling 1971, pp. 167–186; 1969)
+
+Schelling's second model, the "bounded neighborhood": one area everybody prefers to its
+alternatives, each person inside or outside. Each has a **tolerance**, the most of the other color
+per person of their own they will accept inside (his whites and blacks are Red and Blue here); a
+color's tolerances form a **tolerance schedule** (straight lines, as in his Figs. 18 and 19, a
+hyperbola or tiers), and the least tolerant share can be made intolerant. "the least tolerant leave
+first and the most tolerant enter first": each step, each color's least tolerant insider leaves if
+the ratio inside exceeds its tolerance, or else its most tolerant outsider enters if, counting
+itself, the ratio would suit it (his curves: n people tolerate n·R(n) of the other color). The
+relative speeds he leaves open ("we can watch and see how they matter") are switches, with the
+order of moves, the reading of entry and limits on each color or the total. The page draws his own
+picture: Red inside across, Blue inside up, each color's contented region tinted, the path so far.
+
+With his exact schedules the model is deterministic, and everything he states holds (the survey's
+`tipping.*`):
+
+- `tipping-fig18`: only the two one-color states are stable; every start on a grid ends with one
+  color gone.
+- `tipping-fig19`: a stable mixture at 80 and 80, reached from every start with over 40 % of each;
+  from all Red, 28 Blue entering together reach it, 26 do not ("more than 25%").
+- `tipping-fig20`: two to one, and the mixture is lost from every start.
+- `tipping-fig21`: equal numbers, straight lines: from 420 unequal starts, none ends mixed at
+  intercepts up to 2.9; some do from 2.95 (104 at 3.0, 219 at 3.5) — his 3.0, to the step of a
+  discrete count (equal starts sit on the knife edge, where nobody moves, stable or not).
+- `tipping-fig22` (his scale: 100 Red, 50 Blue): Red limited to 40 gives a stable mixture at 40 and
+  40, where his figure's curves cross.
+- `tipping-intolerant` (1969): the least tolerant 60 % intolerant: 40 and 40, exactly.
+- `tipping-minority`: a 5:1 minority with the majority's schedule is always pushed out; five times
+  as tolerant, it can hold a mix ("the minority must be the more tolerant").
+- `tipping-less-tolerant` (Fig. 22's numbers): making the least tolerant two-thirds of Red intolerant
+  holds a mixture (33 Red, 42 Blue) where the same numbers as they are, or all Red less tolerant,
+  end all Red.
+
+Sweeps: `tipping-start`, `tipping-entry`, `tipping-intercept`, `tipping-speeds` (Blue moving up to
+five times as fast still loses Fig. 18: here the numbers decide) and `tipping-limit`.
+
 ### Ring World (animations VI-8 and VI-9)
 
 40 sugar harvesters with vision 15–30 on a ring of 150 sites (sugar 0–4, growing back 1 a tick)
