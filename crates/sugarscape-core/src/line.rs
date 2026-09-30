@@ -467,6 +467,13 @@ impl LineWorld {
                 groups += 1;
             }
         }
+        // On a ring, a run across the join is one group.
+        if self.config.edges == LineEdges::Ring
+            && groups > 1
+            && self.people[0].red == self.people[n - 1].red
+        {
+            groups -= 1;
+        }
         let (mut share, mut unmixed, mut unsatisfied, mut reds) = (0.0, 0usize, 0usize, 0usize);
         let mut by_color = [0.0; 2];
         for i in 0..n {
@@ -807,6 +814,23 @@ pub fn presets() -> Vec<ModelPreset> {
             "Fig. 1: 70 stars (Red) and zeros (Blue) at random; each wants at least half of its four neighbors on either side like itself; the discontented, left to right a round at a time, move to the nearest point that suits them. Schelling: \"six clusters … averaging 12 members\", and from tabletop runs \"from about five groupings with an average of 14 members to seven or eight groupings with an average of 9 or 10\". Measured (20 seeds, 50 rounds, medians): 7 groups of 10, neighbors 0.78 alike (a mean of each person's share; Schelling's 81.5 % pools all neighbors); in about half the seeds one or two people are still moving at round 30.",
             |_| {},
         ),
+        ModelPreset {
+            source: "Pancs & Vriend 2007, 1-D",
+            ..preset(
+            "pv-ring",
+            "Pancs & Vriend: a ring where everyone prefers a mix",
+            "20 on a ring (10 of each), four neighbors each side; one at a time, anyone moves to the point it likes best, liking half and half best (p100). Pancs & Vriend: on the ring every utility ends in complete segregation, two clusters, in all 1,000 runs. Measured (20 seeds, 5,000 steps: 100,000 turns): all 20 end in two groups.",
+            |c| {
+                c.length = 20;
+                c.exact = true;
+                c.edges = LineEdges::Ring;
+                c.movement = LineMovement::Best;
+                c.movers = Movers::Anyone;
+                c.utility = Utility::P100;
+                c.wrap = 20;
+            },
+        )
+        },
         preset(
             "s71-line-3",
             "Schelling's line, three neighbors each side",
@@ -878,6 +902,13 @@ mod tests {
         .unwrap();
         w.set_colors(s);
         w
+    }
+
+    #[test]
+    fn on_a_ring_a_run_across_the_join_is_one_group() {
+        let s = ring_of("RRBBBBRR", 1).stats.latest().unwrap().clone();
+        assert_eq!(s.groups, 2);
+        assert_eq!(ring_of("RRRRRRRR", 1).stats.latest().unwrap().groups, 1);
     }
 
     #[test]

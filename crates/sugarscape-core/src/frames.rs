@@ -2286,19 +2286,32 @@ mod tests {
     }
     #[test]
     fn a_tipping_shot_records_who_is_inside_each_step() {
-        let d = match super::run(&Shot::from_json(r#"{"preset": "tipping-fig19", "ticks": 40, "seed": 1}"#).unwrap()).unwrap() {
+        let d = match super::run(
+            &Shot::from_json(r#"{"preset": "tipping-fig19", "ticks": 40, "seed": 1}"#).unwrap(),
+        )
+        .unwrap()
+        {
             Dump::Tipping(d) => *d,
             _ => panic!("not a tipping dump"),
         };
         assert_eq!((d.red, d.blue, d.frames.len()), (100, 100, 41));
         assert_eq!((d.tolerances[0].len(), d.tolerances[1].len()), (100, 100));
         let first = &d.frames[0];
-        assert_eq!((first.red.len(), first.blue.len()), (50, 50), "the most tolerant 50 of each start inside");
+        assert_eq!(
+            (first.red.len(), first.blue.len()),
+            (50, 50),
+            "the most tolerant 50 of each start inside"
+        );
         assert!(first.red.iter().all(|&(rank, _)| rank < 50));
         let last = d.frames.last().unwrap();
         assert_eq!((last.red.len(), last.blue.len()), (80, 80));
-        assert!(last.red.iter().chain(&last.blue).all(|&(_, content)| content), "at rest, everyone inside is content");
+        assert!(
+            last.red
+                .iter()
+                .chain(&last.blue)
+                .all(|&(_, content)| content),
+            "at rest, everyone inside is content"
+        );
         assert_eq!(d.stats["red_in"][40], 80.0);
     }
-
 }

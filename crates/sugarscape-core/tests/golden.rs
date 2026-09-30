@@ -125,6 +125,13 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("tipping-intolerant", 0x6e204f0626e23a4d),
     ("tipping-minority", 0x3e9d9992d3a167c7),
     ("tipping-less-tolerant", 0x53b4b358243df7be),
+    // Milestone 32: variations on Schelling (the small boards).
+    ("pv-flat", 0x9ec9dad297a2f81d),
+    ("pv-p50", 0x717f0ba10e75dfaf),
+    ("pv-p100", 0xb903a558b48f4235),
+    ("pv-spiked", 0xd9dd6c3a877d37c2),
+    ("pv-ring", 0x14ac53042eb625d9),
+    ("svw-small", 0x17c8cd55b1831276),
     ("vi-4-schelling-25", 0x7a7072c3433f5f6f),
     ("vi-5-schelling-25-residence", 0x9abe1c25e873debd),
     ("vi-6-schelling-50-residence", 0x637412f7af91f684),
@@ -394,6 +401,28 @@ fn model_fingerprint(id: &str) -> u64 {
     world.model().fingerprint()
 }
 
+/// Big boards (50 × 50 and 100 × 100, milestone 32): (id, ticks, fingerprint
+/// from seed 1), 20 ticks so a debug test run stays quick.
+const BIG_GOLDEN: &[(&str, u32, u64)] = &[
+    ("gvn-frozen", 20, 0xc12bbc1f827dec02),
+    ("gvn-segregated", 20, 0xdee4748f1bfb310b),
+    ("gvn-mixed", 20, 0x367617ebe919e13f),
+    ("svw-large", 20, 0xab7f0a875a6994bb),
+    ("svw-t4", 20, 0xbbfbe12164dd29c4),
+    ("zhang-checkerboard", 20, 0xe8aee08d720ff908),
+    ("zhang-random", 20, 0x61b6343a85676408),
+];
+
+#[test]
+fn big_boards_are_unchanged() {
+    for &(id, ticks, expected) in BIG_GOLDEN {
+        let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
+        let mut world = ModelWorld::new(preset.config, 1).unwrap();
+        world.model_mut().run(ticks);
+        assert_eq!(world.model().fingerprint(), expected, "preset {id} changed");
+    }
+}
+
 /// Image scoring's presets: (id, generations, fingerprint from seed 1). The
 /// island presets (100 groups of 100, 50,000 rounds a generation, and with
 /// perception errors a record per pair of members) run 20 generations, the
@@ -453,7 +482,10 @@ fn every_model_preset_has_a_golden_entry() {
     for p in presets::catalog() {
         assert!(
             GOLDEN.iter().chain(MODEL_GOLDEN).any(|&(id, _)| id == p.id)
-                || IMAGE_GOLDEN.iter().any(|&(id, _, _)| id == p.id),
+                || IMAGE_GOLDEN
+                    .iter()
+                    .chain(BIG_GOLDEN)
+                    .any(|&(id, _, _)| id == p.id),
             "record a golden fingerprint for {} (run print_golden)",
             p.id
         );

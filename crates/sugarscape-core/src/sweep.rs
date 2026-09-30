@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 163] = [
+const BUILTINS: [Builtin; 167] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1033,6 +1033,22 @@ const BUILTINS: [Builtin; 163] = [
     Builtin {
         id: "tipping-limit",
         json: include_str!("../../../sweeps/tipping-limit.json"),
+    },
+    Builtin {
+        id: "gvn-phase",
+        json: include_str!("../../../sweeps/gvn-phase.json"),
+    },
+    Builtin {
+        id: "svw-city",
+        json: include_str!("../../../sweeps/svw-city.json"),
+    },
+    Builtin {
+        id: "zhang-beta",
+        json: include_str!("../../../sweeps/zhang-beta.json"),
+    },
+    Builtin {
+        id: "zhang-neighborhood",
+        json: include_str!("../../../sweeps/zhang-neighborhood.json"),
     },
     Builtin {
         id: "lhv-calibration",
@@ -2458,6 +2474,10 @@ mod tests {
                 "tipping-intercept",
                 "tipping-speeds",
                 "tipping-limit",
+                "gvn-phase",
+                "svw-city",
+                "zhang-beta",
+                "zhang-neighborhood",
                 "lhv-calibration",
                 "lhv-quirks",
                 "cv-ratio-rules",

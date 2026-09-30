@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 337] = [
+pub const TITLES: [(&str, &str); 350] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -324,6 +324,58 @@ pub const TITLES: [(&str, &str); 337] = [
     (
         "s71-line-reach",
         "Travel limited: most end content, a few never do",
+    ),
+    (
+        "pv-flat",
+        "Anyone may move to the square they like best: two clusters",
+    ),
+    (
+        "pv-p50",
+        "Liking some mix, up to half: still two clusters",
+    ),
+    (
+        "pv-p100",
+        "Liking half and half best: about five clusters",
+    ),
+    (
+        "pv-spiked",
+        "Only a perfect mix will do: the board stays mixed",
+    ),
+    (
+        "pv-ring",
+        "On a ring, even lovers of a mix end in two groups",
+    ),
+    (
+        "gvn-frozen",
+        "Too little tolerance: nobody can move",
+    ),
+    (
+        "gvn-segregated",
+        "Tolerating half unlike: two big clusters",
+    ),
+    (
+        "gvn-mixed",
+        "Tolerating most unlike: the board stays mixed",
+    ),
+    (
+        "svw-small",
+        "A small city: two clusters",
+    ),
+    (
+        "svw-large",
+        "The same rule in a big city: dozens of clusters",
+    ),
+    (
+        "svw-t4",
+        "Asking 4 of 8 alike in a big city: fewer, solid clusters",
+    ),
+    (
+        "zhang-checkerboard",
+        "Everyone wants a mix, yet from a perfect mix they sort",
+    ),
+    (
+        "zhang-random",
+        "Everyone wants a mix, yet they sort into blobs",
     ),
     (
         "tipping-fig18",
