@@ -297,6 +297,7 @@ fn builtins_and_series_names_are_listed() {
             "ac-traits-transition",
             "ac-drift",
             "dock-mobility",
+            "dock-mountain",
             "aey-memory",
             "aey-population",
             "aey-first-attractor",

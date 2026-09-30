@@ -109,6 +109,15 @@ pub enum Map {
     Flat {
         capacity: f64,
     },
+    /// One bell-shaped mountain (Axtell, Axelrod, Epstein & Cohen's "single
+    /// (Gaussian) sugar mountain"): round(height · e^(−d²/2σ²)), d the torus
+    /// distance from (x, y).
+    Gaussian {
+        x: u32,
+        y: u32,
+        sigma: f64,
+        height: f64,
+    },
     /// Seeded fractal value noise on the torus (Decision 10): octave 0's
     /// features are about `scale` cells across, each further octave is twice
     /// as fine at half the amplitude, and capacity is round(height · v) for
@@ -1301,6 +1310,28 @@ impl Config {
                 );
             }
             Map::Flat { capacity } => e.non_negative(*capacity, &format!("{field}.capacity")),
+            Map::Gaussian {
+                x,
+                y,
+                sigma,
+                height,
+            } => {
+                e.check(
+                    *x < self.width && *y < self.height,
+                    field,
+                    "the mountain's center must lie on the grid",
+                );
+                e.check(
+                    sigma.is_finite() && *sigma > 0.0,
+                    field,
+                    "the mountain's sigma must be > 0",
+                );
+                e.check(
+                    height.is_finite() && (0.0..=10.0).contains(height),
+                    field,
+                    "the mountain's height must be between 0 and 10",
+                );
+            }
             Map::Noise {
                 scale,
                 octaves,
@@ -3197,6 +3228,42 @@ mod tests {
         two.validate().unwrap();
         let next = two.apply_change(&two.schedule[0]).unwrap();
         assert_eq!(next.trade.price, PriceRule::Random);
+    }
+
+    #[test]
+    fn a_gaussian_mountain_needs_a_center_on_the_grid_and_a_positive_sigma() {
+        let with = |x, sigma, height| {
+            let c = Config {
+                width: 37,
+                height: 11,
+                population: 50,
+                vision: URange::new(1, 5),
+                goods: vec![Good {
+                    map: Map::Gaussian {
+                        x,
+                        y: 5,
+                        sigma,
+                        height,
+                    },
+                    ..Good::sugar()
+                }],
+                ..Default::default()
+            };
+            fields(c.validate())
+        };
+        assert!(with(18, 6.0, 4.0).is_empty());
+        for (x, sigma, height) in [
+            (37, 6.0, 4.0),
+            (18, 0.0, 4.0),
+            (18, f64::NAN, 4.0),
+            (18, 6.0, 11.0),
+        ] {
+            assert_eq!(
+                with(x, sigma, height),
+                vec!["goods.0.map"],
+                "{x} {sigma} {height}"
+            );
+        }
     }
 
     #[test]

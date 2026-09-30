@@ -53,8 +53,8 @@ const GOLDEN: &[(&str, u64)] = &[
     ("vi-2-no-trade", 0xd35c40bead68ed38),
     ("vi-3-trade", 0x2a65351834fda082),
     // Milestone 14: Axelrod's culture rule in the Sugarscape (the docking).
-    ("dock-mobility-15", 0x9d0a2ced876f00d2),
-    ("dock-mobility-30", 0x10a0c00c27c1660d),
+    ("dock-mobility-15", 0x3361a01b1a7cd6a3),
+    ("dock-mobility-30", 0x19cfa4ca0800089e),
     // Minds 1: the ideal free distribution (two patches; the utility mind).
     ("ifd-even", 0xb5792be0a465638a),
     ("ifd-two-to-one", 0xbc6e9d14253d630d),

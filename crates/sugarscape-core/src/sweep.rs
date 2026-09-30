@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 167] = [
+const BUILTINS: [Builtin; 168] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1133,6 +1133,10 @@ const BUILTINS: [Builtin; 167] = [
     Builtin {
         id: "dock-mobility",
         json: include_str!("../../../sweeps/dock-mobility.json"),
+    },
+    Builtin {
+        id: "dock-mountain",
+        json: include_str!("../../../sweeps/dock-mountain.json"),
     },
     Builtin {
         id: "aey-memory",
@@ -2499,6 +2503,7 @@ mod tests {
                 "ac-traits-transition",
                 "ac-drift",
                 "dock-mobility",
+                "dock-mountain",
                 "aey-memory",
                 "aey-population",
                 "aey-first-attractor",

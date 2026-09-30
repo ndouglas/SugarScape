@@ -9,7 +9,7 @@ mod presets;
 mod stats;
 mod world;
 
-pub use config::{schema, Activation, Changes, CultureConfig, Edges, Neighborhood};
+pub use config::{schema, Activation, Changes, CultureConfig, Edges, Neighborhood, Pick};
 pub use presets::presets;
 pub use stats::{settle, CultureSnapshot, Sets, SERIES};
 pub use world::{

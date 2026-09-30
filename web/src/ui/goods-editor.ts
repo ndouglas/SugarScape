@@ -18,6 +18,7 @@ const KINDS: [GoodMap['kind'], string][] = [
   ['two_peaks', 'Two peaks (50×50)'],
   ['peaks', 'Peaks'],
   ['flat', 'Flat'],
+  ['gaussian', 'One bell-shaped mountain'],
   ['noise', 'Noise'],
 ];
 
@@ -132,6 +133,31 @@ function mapDetails(config: Config, i: number, commit: Commit, syncs: Sync[]): H
           }, true),
       }, 'Add peak');
       return h('div', { class: 'peaks' }, ...rows, add);
+    }
+    case 'gaussian': {
+      const field = (key: 'x' | 'y' | 'sigma' | 'height', min: number, max: number, step: number) =>
+        h('label', {}, `${key === 'sigma' ? 'σ' : key} `, num(
+          syncs,
+          (c) => {
+            const m = c.goods[i].map;
+            return m.kind === 'gaussian' ? m[key] : 0;
+          },
+          min,
+          max,
+          step,
+          (v) =>
+            setMap((m) => {
+              if (m.kind === 'gaussian') m[key] = v;
+            }),
+        ));
+      return h(
+        'div',
+        { class: 'row peak' },
+        field('x', 0, config.width - 1, 1),
+        field('y', 0, config.height - 1, 1),
+        field('sigma', 0.5, 250, 0.5),
+        field('height', 0, 10, 0.5),
+      );
     }
     case 'noise': {
       const field = (key: 'scale' | 'octaves' | 'height', min: number, max: number, step: number) =>
