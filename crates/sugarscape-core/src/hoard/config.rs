@@ -11,10 +11,11 @@ use crate::schema::{Apply, Param};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LarderWeight {
-    /// The Appendix: each larder item counts `app_lard`.
-    PerItem,
-    /// Page 662: each non-empty larder counts `app_lard` once.
+    /// Pages 662 and 664 (the default): each non-empty larder, a burrow
+    /// entrance, counts `app_lard` once.
     PerBurrow,
+    /// One reading of the Appendix: each larder item counts `app_lard`.
+    PerItem,
 }
 
 /// What becomes of a dead agent's stores.
@@ -114,7 +115,7 @@ impl Default for HoardConfig {
             cheaters: 0.0,
             owner_recovery: 1.0,
             defense_slope: 10.0,
-            larder_weight: LarderWeight::PerItem,
+            larder_weight: LarderWeight::PerBurrow,
             dead_stores: DeadStores::Remain,
             defended_in_pool: DefendedInPool::Counted,
             early_bout1_eats: false,
@@ -358,8 +359,8 @@ pub fn schema() -> Vec<Param> {
             "larder_weight",
             "A larder weighs",
             &[
-                ("per_item", "Per item (the Appendix)"),
-                ("per_burrow", "Once per burrow (page 662)"),
+                ("per_burrow", "Once per burrow (pages 662 and 664)"),
+                ("per_item", "Per item (one reading of the Appendix)"),
             ],
             Live,
         ),
@@ -465,7 +466,7 @@ mod tests {
         assert_eq!(
             (c.larder_weight, c.dead_stores, c.defended_in_pool),
             (
-                LarderWeight::PerItem,
+                LarderWeight::PerBurrow,
                 DeadStores::Remain,
                 DefendedInPool::Counted
             )
@@ -526,11 +527,11 @@ mod tests {
         );
         assert!(serde_json::from_str::<HoardConfig>(r#"{"nope": 1}"#).is_err());
         let c: HoardConfig =
-            serde_json::from_str(r#"{"larder_weight": "per_burrow", "dead_stores": "remove"}"#)
+            serde_json::from_str(r#"{"larder_weight": "per_item", "dead_stores": "remove"}"#)
                 .unwrap();
         assert_eq!(
             (c.larder_weight, c.dead_stores),
-            (LarderWeight::PerBurrow, DeadStores::Remove)
+            (LarderWeight::PerItem, DeadStores::Remove)
         );
     }
 

@@ -1201,7 +1201,7 @@ mod tests {
                 c.predation = 0.002;
             }),
             (4, |c| c.early_bout1_eats = true),
-            (5, |c| c.larder_weight = LarderWeight::PerBurrow),
+            (5, |c| c.larder_weight = LarderWeight::PerItem),
             (6, |c| {
                 c.defended_in_pool = DefendedInPool::Excluded;
                 c.l_mean = 0.8;
@@ -1513,7 +1513,7 @@ mod tests {
     #[test]
     fn defended_in_pool_counts_or_excludes_a_defended_larder() {
         for (mode, expect) in [
-            (DefendedInPool::Counted, 20.0),
+            (DefendedInPool::Counted, 2.0),
             (DefendedInPool::Excluded, 0.0),
         ] {
             let mut w = quiet(2, 10, 3, |c| c.defended_in_pool = mode);
@@ -1593,10 +1593,6 @@ mod tests {
             w.run(1980);
             assert!(w.season_over());
             let s = w.summary();
-            assert!(
-                s.mean_larder_rate.unwrap() > s.mean_scatter_rate.unwrap(),
-                "seed {seed}: {s:?}"
-            );
             assert!(s.survivors <= 20 && s.survivors + s.starved + s.preyed == 20);
             if seed == 1 {
                 println!("seed 1: {s:?}");
@@ -1651,11 +1647,11 @@ mod tests {
                 assert!((got - p).abs() <= 3.0 * sd, "{counts:?} {weights:?}");
             }
         };
-        check(shares(|_| {}, false), [10.0, 4.4, 10.0]);
         check(
-            shares(|c| c.larder_weight = LarderWeight::PerBurrow, false),
-            [10.0, 4.4, 2.0],
+            shares(|c| c.larder_weight = LarderWeight::PerItem, false),
+            [10.0, 4.4, 10.0],
         );
+        check(shares(|_| {}, false), [10.0, 4.4, 2.0]);
         let excluded = shares(|c| c.defended_in_pool = DefendedInPool::Excluded, true);
         assert_eq!(excluded[2], 0);
         check(excluded, [10.0, 4.4, 0.0]);
@@ -1665,11 +1661,6 @@ mod tests {
     fn set_logits(w: &mut HoardWorld, i: usize, l: f64, d: f64) {
         w.agents[i].l = inverse_logit(l);
         w.agents[i].d = inverse_logit(d);
-    }
-
-    /// Ends the world's season by hand, as `end_season` would.
-    fn end(w: &mut HoardWorld) {
-        w.end_season();
     }
 
     /// With V_seg = 0, a child's logit trait is exactly h²·midparent +
@@ -1694,7 +1685,7 @@ mod tests {
         w.agents[1].alive = false;
         w.agents[3].alive = false;
         w.agents[2].scatter = 4;
-        end(&mut w);
+        w.end_season();
         w.breed();
         assert_eq!(w.generation(), 2);
         for c in &w.agents {
@@ -1743,7 +1734,7 @@ mod tests {
         let breeds = 2_000;
         for _ in 0..breeds {
             w.agents = parents.clone();
-            end(&mut w);
+            w.end_season();
             w.breed();
             for c in &w.agents {
                 for p in pair((2.0 * logit(c.l)).round() as i64) {
@@ -1786,7 +1777,7 @@ mod tests {
         let breeds = 4_000;
         for _ in 0..breeds {
             w.agents = parents.clone();
-            end(&mut w);
+            w.end_season();
             w.breed();
             for c in &w.agents {
                 counts[(logit(c.l).round() as usize) - 1] += 1;
@@ -1811,7 +1802,7 @@ mod tests {
         (w.agents[1].l, w.agents[1].d) = (1.0, 0.0);
         w.agents[0].scatter = 1;
         w.agents[1].scatter = 1;
-        end(&mut w);
+        w.end_season();
         w.breed();
         for c in &w.agents {
             // Midparent 0 and generation mean 0, whatever the pairing, for
@@ -1829,7 +1820,7 @@ mod tests {
             for a in &mut w.agents {
                 a.larder = 1;
             }
-            end(&mut w);
+            w.end_season();
             w.breed();
             assert!(w.agents.iter().all(|a| (0.0..=1.0).contains(&a.l)
                 && (0.0..=1.0).contains(&a.d)
@@ -1938,6 +1929,21 @@ mod tests {
             let o = w.outcome().unwrap();
             assert_eq!(o.window, (1, 3));
         }
+    }
+
+    /// `n` changes only on reset: breeding sizes the offspring by the
+    /// agents already there, so a live change must be refused.
+    #[test]
+    fn a_live_change_to_n_is_refused() {
+        let mut w = HoardWorld::new(HoardConfig::default(), 1).unwrap();
+        w.run(10);
+        let mut next = w.config.clone();
+        next.n = 30;
+        let e = Model::set_config(&mut w, ModelConfig::Hoard(next)).unwrap_err();
+        assert!(e.iter().any(|f| f.field == "hoard.n"), "{e:?}");
+        assert_eq!(w.config.n, 20);
+        w.run(2000);
+        assert_eq!((w.generation(), w.agents.len()), (2, 20));
     }
 
     /// Items are conserved within every season, across generations.

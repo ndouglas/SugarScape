@@ -263,12 +263,51 @@ these amendments govern where they differ.
 1. **Clark & Mangel.** V&J write (p. 666): "note that the version of this equation in Clark and Mangel
    [2000, equation 10.35] is incorrect". We implement V&J's printed equation and don't consult Clark &
    Mangel. Their version is not a switch.
-2. **Larder apparency: per burrow or per item?** P. 662 defines app_lard as "the relative probability of
-   detecting a burrow of another individual while searching for food". The Appendix (p. 665) weights items,
-   not burrows: "all larder hoards of other individuals weighted by apparency of larder hoards". Only the
-   Appendix gives a formula. **Default:** per item, following the Appendix. **Possible switch:**
-   `hoard.larder_weight = per_burrow`, which weights each non-empty larder once. This one could decide the
-   threshold (see Concerns).
+2. **Larder apparency: per burrow or per item?** (Rewritten in Task 4's fix round; the default changed.)
+
+   **For per burrow:**
+   - P. 662 defines app_lard as representing "the relative probability of detecting a burrow of another
+     individual while searching for food", and says "A value of 1 implies that the probability of detecting
+     a burrow while foraging is the same as the probability of encountering a food item on the surface of
+     the ground".
+   - P. 664 says individuals "encountered public items, as well as scatter hoards and burrow entrances of
+     other individuals, with probabilities determined by the apparency values for scatter hoards and larder
+     hoards".
+
+   Both passages make the thing detected a burrow (its entrance), not the items inside it.
+
+   **For per item:** the Appendix (p. 665) sums "all scatter hoards of other individuals weighted by
+   apparency of scatter hoards plus all larder hoards of other individuals weighted by apparency of larder
+   hoards". Its parallel with scatter hoards, which are counted by item, can be read as weighting every larder
+   item. The sentence is ambiguous, though. Each individual has one "larder hoard" (p. 662 speaks of an
+   individual's "propensity to defend its larder hoard"), so "all larder hoards of other individuals" can
+   equally mean one term for each other individual's burrow.
+
+   Nothing in the text gives a larder hoarder a pilfering advantage that per-item weighting might stand in
+   for. P. 664: the first trait "simply determined the likelihood that an individual would larder hoard a
+   newly acquired item, regardless of whether that item was harvested from the public supply or stolen from
+   another animal's scatter hoards or larder hoards".
+
+   **Disclosure.** Task 1 first chose per item as the default, on the grounds that only the Appendix gives a
+   formula. The change was prompted by a diagnostic result, not by a new reading alone. Under per item, larder
+   hoarding never took over: 0 of 15 runs of 60 generations at app_scat 0.1, 0.44 and 0.8 with app_lard 2
+   (Task 4's report). A diagnosis found why. Under per item, a larder's detection grows with its size.
+   Searches that hit larders start raids, and raids cause 84 % of larder loss, so larders never grow large
+   enough to be defended. On re-reading the text with that in view, per burrow is the better-supported
+   reading (pp. 662 and 664 above), and the Appendix sentence does not settle it.
+
+   **Default:** `per_burrow`. Each other agent's non-empty larder counts app_lard once in the food
+   available and in the draw. **Named switch:** `hoard.larder_weight = per_item`. The survey runs claims 1, 2
+   and 4 under both readings as full rows, and reports per item as a failure to reproduce.
+
+   **Diagnostic sweep (a probe, not the survey; 6 seeds per cell, 60 generations, takeover as item 11).**
+   It was run when the ruling was made, and it is recorded so the reason for the change is visible. It
+   is not a result.
+   - Under `per_burrow`, takeover in 6 of 6 runs at a scatter-to-larder apparency ratio of 0.4.
+   - Across ratios: 0 of 18 at 0.1, 6 of 18 at 0.2, 15 of 18 at 0.3, and 12 of 12 at 0.45. That puts
+     the threshold close to V&J's 50 % point of 0.22.
+   - Mean L reached about 0.9 by generation 10 in the runs that took over.
+   - `larder_weight` was the only switch that flipped the outcome.
 3. **"186 % per day"** can't be a daily proportion. See item 10.
 4. **"Mean of about 0.15" versus a "logistic distribution".** A logit-normal distribution's mean isn't the
    inverse logit of its center. See item 8.
@@ -429,8 +468,10 @@ the bout.
 
 (b) **Choices:**
 
-- **Weighting.** Food available = public + app_scat·Σ_{j≠i} scatter_j + app_lard·Σ_{j≠i} larder_j, in
-  weighted items. It sets λ and the draw. The agent's own stores are excluded.
+- **Weighting.** Food available = public + app_scat·Σ_{j≠i} scatter_j + app_lard·#{j ≠ i : larder_j > 0},
+  in weighted items (per burrow, the default; contradiction 2). Under `larder_weight = per_item` the last
+  term is app_lard·Σ_{j≠i} larder_j. It sets λ and the draw. The agent's own stores are excluded. A drawn
+  larder yields one item.
 - **Defended larders stay in the pool.** They are still "larder hoards of other individuals". Drawing one
   yields nothing (item 3; switch `hoard.defended_in_pool`).
 - **Nonstorable food isn't modeled** as items. On days 1–5, every agent is satiated from the day's start,
@@ -671,7 +712,7 @@ These are all named switches whose defaults are the choices above. None is judge
 |---|---|
 | `hoard.defense_slope` | 10 |
 | `hoard.v_seg` | 0.5 |
-| `hoard.larder_weight` | `per_item` (alternative `per_burrow`) |
+| `hoard.larder_weight` | `per_burrow` (alternative `per_item`; changed in Task 4's fix round, contradiction 2) |
 | `hoard.dead_stores` | `remain` (alternative `remove`) |
 | `hoard.defended_in_pool` | `counted` (alternative `excluded`) |
 | `hoard.early_bout1_eats` | `false` (true = the literal bout-1 rule on days 2–5) |
@@ -682,8 +723,9 @@ These are all named switches whose defaults are the choices above. None is judge
    - Weighting per item makes a big larder more findable in proportion to its size.
    - Weighting per burrow doesn't.
 
-   That changes the larder-to-scatter detection ratio, which is exactly what the threshold measures. The
-   default follows the Appendix. The switch should be run before any reading of claim 2.
+   That changes the larder-to-scatter detection ratio, which is exactly what the threshold measures. It
+   proved decisive: per item never gave a takeover in the diagnostic runs, and per burrow did (see
+   contradiction 2 for the change of default and its disclosure). The survey reports both.
 2. **The defense target's scale.** A literal "minimum needed to survive" and "maximum available" give
    targets in the hundreds early in the season. So defense after bout 1 is rare until late in the season.
    Larder security then rests mostly on the bout-1 rule. That rule forces a defense only for agents with a
