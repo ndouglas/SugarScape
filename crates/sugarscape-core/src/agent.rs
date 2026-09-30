@@ -264,6 +264,11 @@ pub struct Agent {
     /// `caching.lambda`), drawn per agent by `lab::run_population`; `None`
     /// uses the config's. Never hashed.
     pub cache_params: Option<(f64, f64)>,
+    /// Minds 5, the lab only: this agent's test-evening allocation
+    /// (`lab::allocation`), frozen when the test evening starts so a live
+    /// config change can't strand it mid-evening; `None` before then. Never
+    /// hashed; draws nothing.
+    pub lab_allocation: Option<Vec<(u32, f64)>>,
     /// Minds 5: this agent's caching rule under `caching.mixed` (founders
     /// round-robin by id, children their parent's; see
     /// `minds::caching::rules::rule_of`). Without `mixed` every agent
@@ -340,6 +345,7 @@ impl Agent {
             last_winter: None,
             this_winter: crate::minds::caching::rules::WinterRecord::default(),
             cache_params: None,
+            lab_allocation: None,
             caching_rule: config.caching.rule,
             home: None,
             load_trip: 0.0,

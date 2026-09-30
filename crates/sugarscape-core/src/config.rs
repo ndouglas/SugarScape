@@ -1751,6 +1751,13 @@ impl Config {
             "central.enabled",
             "central-place foraging needs the marginal-value rule or planning, and a carrying limit",
         );
+        // A larder is the central place's own cache; a burying rule would
+        // scatter caches the central rules neither dig nor plan around.
+        e.check(
+            !self.central.enabled || !self.caching.buries(),
+            "central.enabled",
+            "central-place foraging keeps its own larder; set caching.rule to none",
+        );
         e.check(
             self.lab.is_none() || self.caching.buries(),
             "lab",
@@ -4072,6 +4079,21 @@ mod tests {
             c.caching.capacity = 10;
         })
         .is_empty());
+        // …and no burying rule: the larder is its own cache (`mixed` buries too).
+        for mixed in [false, true] {
+            let errs = with(&|c| {
+                c.central.enabled = true;
+                c.decision.rule = DecisionRule::Mvt;
+                c.movement.mode = MoveMode::Walk;
+                c.caching.capacity = 10;
+                if mixed {
+                    c.caching.mixed = true;
+                } else {
+                    c.caching.rule = CachingRule::Even;
+                }
+            });
+            assert_eq!(errs, ["central.enabled"], "mixed {mixed}");
+        }
         let mut c = Config::default();
         c.central.enabled = true;
         let errs = c.validate().unwrap_err();

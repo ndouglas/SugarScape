@@ -246,17 +246,23 @@ pub(crate) fn lattice_distance(torus: Torus, a: Pos, b: Pos) -> u32 {
 /// diagnostics): its counted levels, plus `truffles.value` sugar if it has a
 /// spot that's ripe now, known or not.
 fn true_value(world: &World, id: AgentId, p: Pos) -> f64 {
-    let a = world.agent(id).expect("live agent");
-    let mut levels = counted_levels(&world.config, world.site(p));
-    if world.truffle(p) == Some(true) {
-        levels[0] += world.config.truffles.value;
-    }
-    let value = welfare_of(world, a, &levels);
+    let value = site_value(world, id, p);
     // Minds 5: a hungry agent's own cache counts as its candidate did.
     match crate::minds::caching::cache_value(world, id, p) {
         Some(cache) => value.max(cache),
         None => value,
     }
+}
+
+/// `true_value` without any cache: rule M's welfare of `p`'s counted levels
+/// (pollution-discounted), plus `truffles.value` sugar if its spot is ripe.
+fn site_value(world: &World, id: AgentId, p: Pos) -> f64 {
+    let a = world.agent(id).expect("live agent");
+    let mut levels = counted_levels(&world.config, world.site(p));
+    if world.truffle(p) == Some(true) {
+        levels[0] += world.config.truffles.value;
+    }
+    welfare_of(world, a, &levels)
 }
 
 /// Minds 3's diagnostics for a rememberer's choice of `target` among
@@ -308,8 +314,9 @@ pub(crate) fn record_choice(
 /// - **Dig.** At a site holding its own cache, while it's hungry (holdings
 ///   below half the reserve; the reserve itself in a central-place world,
 ///   `caching::hungry`), the agent takes the larger of the two: it digs when the cache
-///   is at least the site's level (plus a ripe truffle's value, what
-///   harvesting would deliver), and otherwise harvests the site as usual.
+///   is at least the site's welfare (its level discounted by pollution, as
+///   the candidate list counts it, plus a ripe truffle's value), and
+///   otherwise harvests the site as usual.
 ///   So a candidate valued at max(site, cache) delivers that on arrival. A
 ///   dig takes min(cache, room) (room unlimited with C = 0) into its
 ///   holdings and leaves the site and any truffle as they are. It is
@@ -322,15 +329,10 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     let (tags, mut social, remembers) = (a.tags, a.social, a.remembers);
     let capacity = world.config.caching.capacity;
     let site_index = world.torus.index(target) as u32;
+    // Cache against the site's welfare (pollution-discounted, as the
+    // candidate list valued it), not its raw level.
     let digs = a.caches.get(&site_index).is_some_and(|&cache| {
-        let ripe = world.truffle(target) == Some(true);
-        let truffle = if ripe {
-            world.config.truffles.value
-        } else {
-            0.0
-        };
-        cache >= world.site(target).resource[0] + truffle
-            && crate::minds::caching::hungry(world, id)
+        cache >= site_value(world, id, target) && crate::minds::caching::hungry(world, id)
     });
     // Room under the carrying limit; infinite with no limit.
     let room = |held: f64| {

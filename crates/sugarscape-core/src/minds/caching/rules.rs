@@ -174,7 +174,36 @@ pub fn compensate_amount(surplus: f64, share: f64, weights: &Weights, site: u32)
 /// Splits `amount` over `places` (sorted ascending, duplicates dropped) by
 /// `weight`, each place's share its weight over the total (equal shares if
 /// the total isn't positive). With `whole`, see [`apportion_whole`].
+///
+/// One place without `whole` (the field's burial, every tick) takes a fast
+/// path that allocates only its result. It keeps the general path's
+/// arithmetic, amount × w / w, since that needn't round back to the amount.
 fn apportion(
+    amount: f64,
+    places: &[u32],
+    whole: bool,
+    weight: impl Fn(u32) -> f64,
+) -> Vec<(u32, f64)> {
+    if let (&[p], false) = (places, whole) {
+        let amount = amount.max(0.0);
+        let w = sanitize(weight(p));
+        let q = if w > 0.0 { amount * w / w } else { amount };
+        return vec![(p, q)];
+    }
+    apportion_general(amount, places, whole, weight)
+}
+
+/// A weight as [`apportion`] counts it: finite and ≥ 0 (0 otherwise).
+fn sanitize(w: f64) -> f64 {
+    if w.is_finite() {
+        w.max(0.0)
+    } else {
+        0.0
+    }
+}
+
+/// [`apportion`] for any number of places.
+fn apportion_general(
     amount: f64,
     places: &[u32],
     whole: bool,
@@ -187,17 +216,7 @@ fn apportion(
     if k == 0 {
         return Vec::new();
     }
-    let weights: Vec<f64> = places
-        .iter()
-        .map(|&p| {
-            let w = weight(p);
-            if w.is_finite() {
-                w.max(0.0)
-            } else {
-                0.0
-            }
-        })
-        .collect();
+    let weights: Vec<f64> = places.iter().map(|&p| sanitize(weight(p))).collect();
     if whole {
         return places
             .into_iter()
@@ -407,6 +426,25 @@ mod tests {
     use crate::config::{MoveMode, Movement};
     use crate::geometry::Pos;
     use crate::testkit::*;
+
+    #[test]
+    fn one_places_fast_path_equals_the_general_path() {
+        let amounts = [0.0, -3.0, 0.1, 1.0 / 3.0, 7.3, 12.345_678_9, 1e12, f64::NAN];
+        let weights = [1.0, 0.0, -2.0, 0.3, 0.49, 1.0 / 7.0, 3.0, f64::INFINITY];
+        for &amount in &amounts {
+            for &w in &weights {
+                let fast = apportion(amount, &[42], false, |_| w);
+                let general = apportion_general(amount, &[42], false, |_| w);
+                assert_eq!(fast.len(), 1);
+                assert_eq!(fast[0].0, general[0].0);
+                assert_eq!(
+                    fast[0].1.to_bits(),
+                    general[0].1.to_bits(),
+                    "amount {amount}, weight {w}"
+                );
+            }
+        }
+    }
 
     fn map(entries: &[(u32, f64)]) -> BTreeMap<u32, f64> {
         entries.iter().copied().collect()

@@ -175,6 +175,9 @@ pub fn rig_walls() -> Vec<Wall> {
 /// rig (size, walls, a flat zero map) with 1 to [`MAX_AGENTS`] agents.
 pub(crate) fn rig_problem(config: &Config) -> Option<String> {
     config.lab?;
+    if config.central.enabled {
+        return Some("a lab has no central place; set central.enabled to false".into());
+    }
     let flat_zero = matches!(config.goods[0].map, Map::Flat { capacity } if capacity == 0.0);
     if config.width != RIG_WIDTH
         || config.height != RIG_HEIGHT
@@ -379,7 +382,10 @@ fn test_evening(world: &mut World, lab: Lab) {
         world.open_wall(doorway(k));
     }
     for id in roster(world) {
-        world.agent_mut(id).expect("live agent").holdings[0] += F;
+        let alloc = allocation(world, id);
+        let a = world.agent_mut(id).expect("live agent");
+        a.holdings[0] += F;
+        a.lab_allocation = Some(alloc);
     }
 }
 
@@ -411,11 +417,15 @@ pub fn allocation(world: &World, id: AgentId) -> Vec<(u32, f64)> {
     }
 }
 
-/// The next compartment `id` still has to bury in, and how much.
+/// The next compartment `id` still has to bury in, and how much, from its
+/// allocation frozen at the start of the test evening (none before then).
 fn pending(world: &World, id: AgentId) -> Option<(u32, f64)> {
     let a = world.agent(id).expect("live agent");
-    allocation(world, id)
-        .into_iter()
+    a.lab_allocation
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .copied()
         .find(|&(k, q)| q > 0.0 && !a.caches.contains_key(&(world.torus.index(tray(k)) as u32)))
 }
 
@@ -623,6 +633,13 @@ mod tests {
         let mut c = base();
         c.goods[0].map = Map::Flat { capacity: 2.0 };
         assert!(fields(c).contains(&"lab".to_string()));
+        let mut c = base();
+        c.central.enabled = true;
+        assert_eq!(
+            rig_problem(&c).as_deref(),
+            Some("a lab has no central place; set central.enabled to false")
+        );
+        assert!(fields(c).contains(&"lab".to_string()));
     }
 
     #[test]
@@ -677,6 +694,44 @@ mod tests {
             }
         );
         assert_eq!(a.caches.len(), 0, "nothing buried while training");
+    }
+
+    #[test]
+    fn a_live_lookahead_change_leaves_the_test_evening_frozen() {
+        // Amodio, food first: day 9 is K1 without food, day 10 K2 with, day
+        // 11 K3 without. Lookahead 1 caches all of F in K1; lookahead 3 would
+        // split it over K1 and K3. Changing it mid-evening changes nothing.
+        let amodio = Lab {
+            protocol: LabProtocol::Amodio,
+            food_first: true,
+        };
+        let c = rig_config(amodio, CachingRule::Plan, LabParams::default(), 2);
+        let mut straight = World::new(c.clone(), 3).unwrap();
+        let mut w = World::new(c, 3).unwrap();
+        let start = training_days(amodio.protocol) * DAY;
+        while w.tick <= start + 1 {
+            w.step();
+        }
+        let id = roster(&w)[0];
+        let frozen = w.agent(id).unwrap().lab_allocation.clone().unwrap();
+        assert_eq!(frozen, [(0, F)]);
+        let mut next = w.config.clone();
+        next.caching.lookahead = 3;
+        w.set_config(next).unwrap();
+        assert_ne!(allocation(&w, id), frozen, "the live allocation moved");
+        while !finished(&w) {
+            w.step();
+            assert!(w.tick < 400, "stranded");
+        }
+        assert_eq!(
+            w.agent(id).unwrap().lab_allocation.as_deref(),
+            Some(&frozen[..])
+        );
+        while !finished(&straight) {
+            straight.step();
+        }
+        assert_eq!(results(&w), results(&straight));
+        assert_eq!(results(&w)[0].caches, [F as u32, 0, 0]);
     }
 
     #[test]

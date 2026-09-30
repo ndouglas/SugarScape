@@ -395,6 +395,31 @@ mod tests {
         assert_eq!(a.income[0], -1.0, "dug sugar isn't income: 0 − 1 burned");
     }
 
+    #[test]
+    fn a_polluted_site_is_weighed_by_its_welfare_against_the_cache() {
+        // Sugar 6 under pollution 2 is worth 6 / (1 + 2) = 2 to rule M, as
+        // the candidate list counts it: the cache of 4 beats it, so the agent
+        // digs though the raw level exceeds the cache.
+        let mut w = blank_world(11, 11);
+        w.config.pollution.enabled = true;
+        w.config.pollution.pollutants[0].devalues[0] = true;
+        let id = caching_agent(&mut w, 0.0, 0);
+        let here = at(&w, 5, 5);
+        set_sugar(&mut w, 5, 5, 6.0);
+        w.site_mut(Pos::new(5, 5)).pollution[0] = 2.0;
+        w.agent_mut(id).unwrap().caches.insert(here, 4.0);
+        w.agent_mut(id).unwrap().cache_since.insert(here, 0);
+        let listed = candidates(&w, id)[0];
+        assert_eq!((listed.0, listed.2), (Pos::new(5, 5), 4.0), "cache beats 2");
+        let h = go_and_gather(&mut w, id, Pos::new(5, 5));
+        assert_eq!((h.gathered[0], h.dug), (0.0, 4.0));
+        assert_eq!(
+            w.site(Pos::new(5, 5)).resource[0],
+            6.0,
+            "the site untouched"
+        );
+    }
+
     fn walker(w: &mut World) {
         w.config.movement = Movement {
             mode: MoveMode::Walk,

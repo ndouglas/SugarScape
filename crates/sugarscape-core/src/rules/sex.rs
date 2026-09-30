@@ -115,6 +115,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         last_winter: None,
         this_winter: crate::minds::caching::rules::WinterRecord::default(),
         cache_params: None,
+        lab_allocation: None,
         // Minds 5: a child takes the rule of the parent whose turn it is.
         caching_rule: a.caching_rule,
         home: None,
