@@ -130,6 +130,9 @@ pub struct TickEvents {
     pub buried: f64,
     /// Minds 5: sugar dug out of caches this tick.
     pub dug: f64,
+    /// Minds 6: sugar lost to `caching.bury_cost` this tick (counted as
+    /// eaten).
+    pub bury_cost: f64,
     /// Minds 5: sugar left in the caches of agents removed this tick (it
     /// leaves the world with them).
     pub cache_lost: f64,
@@ -185,6 +188,14 @@ pub struct World {
     followed: Option<AgentId>,
     /// Its positions after each tick, oldest first.
     trail: Vec<Pos>,
+    /// Minds 6: every cache's fate, one record per burial event
+    /// (`minds::caching::fates`). Never hashed; empty (and unallocated)
+    /// until something is buried.
+    pub cache_log: Vec<crate::minds::caching::fates::CacheRecord>,
+    /// Minds 6: the log reached `fates::LOG_CAP` and froze.
+    pub cache_log_full: bool,
+    /// Minds 6: the log's open records per (owner, site), oldest first.
+    pub(crate) cache_open: crate::minds::caching::fates::OpenRecords,
 }
 
 impl World {
@@ -297,6 +308,9 @@ impl World {
             config,
             followed: None,
             trail: Vec::new(),
+            cache_log: Vec::new(),
+            cache_log_full: false,
+            cache_open: BTreeMap::new(),
         };
         if world.config.disease.enabled {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
@@ -513,6 +527,10 @@ impl World {
         if self.config.caching.mixed && agent.parents.is_none() {
             agent.caching_rule = self.config.caching.founder_rule(id);
         }
+        // Minds 6: a founder cheats or not by its id, with no draw.
+        if self.config.theft.cheaters > 0.0 && agent.parents.is_none() {
+            agent.cheater = self.config.theft.founder_cheats(id);
+        }
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {
             agent.home = Some(agent.pos);
@@ -681,12 +699,14 @@ impl World {
     /// leave the world with it. An edit between ticks removes caches too,
     /// but that count lands in the finished tick's events after its
     /// statistics were taken, and the next tick resets them: caches removed
-    /// by an edit aren't reported in any tick's `cache_lost`.
+    /// by an edit aren't reported in any tick's `cache_lost`. Minds 6: its
+    /// open fate records close as `Lost`.
     pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
         let agent = self.agents.remove(&id)?;
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
         }
+        crate::minds::caching::fates::close_lost(self, id);
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
         if !self.loans.is_empty() {

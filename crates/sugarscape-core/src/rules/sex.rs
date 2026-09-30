@@ -118,6 +118,8 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         lab_allocation: None,
         // Minds 5: a child takes the rule of the parent whose turn it is.
         caching_rule: a.caching_rule,
+        // Minds 6: and cheats if that parent does.
+        cheater: a.cheater,
         home: None,
         load_trip: 0.0,
         delivery_rate: 0.0,
@@ -214,6 +216,42 @@ mod tests {
         act(&mut w, mom);
         let child = w.agents().find(|a| a.parents.is_some()).unwrap();
         assert_eq!(child.caching_rule, CachingRule::Plan, "not dealt by its id");
+    }
+
+    // Review Focus 3.
+    #[test]
+    fn a_child_cheats_if_and_only_if_the_acting_parent_does() {
+        use crate::config::CachingRule;
+        for (acting_is_dad, cheats) in [(false, false), (true, true)] {
+            let mut w = blank_world(10, 10);
+            w.config.caching.mixed = true;
+            w.config.theft.cheaters = 0.5;
+            let (mom, dad) = couple(&mut w);
+            // Founder 2 cheats; founder 1 doesn't.
+            assert!(!w.agent(mom).unwrap().cheater);
+            assert!(w.agent(dad).unwrap().cheater);
+            w.agent_mut(mom).unwrap().caching_rule = CachingRule::Even;
+            w.agent_mut(dad).unwrap().caching_rule = CachingRule::Plan;
+            if acting_is_dad {
+                let d = w.agent_mut(dad).unwrap();
+                d.holdings[0] = 10.0;
+                d.initial[0] = 10.0;
+                act(&mut w, dad);
+            } else {
+                act(&mut w, mom);
+            }
+            let child = w.agents().find(|a| a.parents.is_some()).unwrap();
+            assert_eq!(child.cheater, cheats, "acting dad: {acting_is_dad}");
+            let rule = if cheats {
+                CachingRule::None
+            } else {
+                CachingRule::Even
+            };
+            assert_eq!(crate::minds::caching::rules::rule_of(&w, child.id), rule);
+            // The child's own rule is still the acting parent's.
+            let parent = if acting_is_dad { dad } else { mom };
+            assert_eq!(child.caching_rule, w.agent(parent).unwrap().caching_rule);
+        }
     }
 
     #[test]

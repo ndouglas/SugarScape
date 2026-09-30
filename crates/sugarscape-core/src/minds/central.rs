@@ -138,7 +138,8 @@ fn at_home(world: &mut World, id: AgentId, home: Pos, keep: f64) -> f64 {
     let q = load.min(held - r);
     let mut delivered = 0.0;
     if q > 0.0 {
-        bury(world, id, q);
+        // With a bury cost, less than q may fit.
+        let q = bury(world, id, q);
         let e = &mut world.events;
         e.deliveries += 1;
         e.delivered += q;

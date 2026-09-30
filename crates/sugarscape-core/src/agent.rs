@@ -275,6 +275,11 @@ pub struct Agent {
     /// follows `caching.rule` and this only records it at birth. Never
     /// hashed, like `rate`.
     pub caching_rule: crate::config::CachingRule,
+    /// Minds 6: a cheater never buries (its caching rule is `none` whatever
+    /// `caching.rule` or `caching.mixed` says; `rule_of`). Founders are
+    /// dealt by id when `theft.cheaters` > 0 (`Theft::founder_cheats`);
+    /// children take the acting parent's. Never hashed, like `caching_rule`.
+    pub cheater: bool,
     /// Minds 5, central-place foraging (`central.enabled`): the site the
     /// agent was placed or born on, where its larder (its cache there) is
     /// and where it delivers its loads; set by `World::insert_agent`, `None`
@@ -347,6 +352,7 @@ impl Agent {
             cache_params: None,
             lab_allocation: None,
             caching_rule: config.caching.rule,
+            cheater: false,
             home: None,
             load_trip: 0.0,
             delivery_rate: 0.0,

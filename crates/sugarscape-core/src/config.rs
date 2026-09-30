@@ -757,6 +757,14 @@ impl Default for Theft {
 }
 
 impl Theft {
+    /// Whether the founder with `id` (ids count from 1) cheats: ⌊i·s⌋ >
+    /// ⌊(i − 1)·s⌋ for s = `cheaters`. Over ids 1..=n that's ⌊n·s⌋ cheaters,
+    /// an exact proportion, with no draw.
+    pub fn founder_cheats(&self, id: u64) -> bool {
+        let s = self.cheaters;
+        s > 0.0 && (id as f64 * s).floor() > (id.saturating_sub(1) as f64 * s).floor()
+    }
+
     /// Whether theft is on at all: a chance to find, or any cheaters.
     pub fn is_on(&self) -> bool {
         self.find > 0.0 || self.cheaters > 0.0

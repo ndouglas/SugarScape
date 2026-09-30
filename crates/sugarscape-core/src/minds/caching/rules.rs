@@ -339,11 +339,15 @@ fn bury_all(world: &mut World, id: AgentId, allocation: Vec<(u32, f64)>) {
     }
 }
 
-/// The caching rule `id` follows: its own (`Agent.caching_rule`) under
+/// The caching rule `id` follows: `none` for a Minds 6 cheater, whatever
+/// the config says; else its own (`Agent.caching_rule`) under
 /// `caching.mixed`, otherwise `caching.rule`.
 pub(crate) fn rule_of(world: &World, id: AgentId) -> CachingRule {
-    if world.config.caching.mixed {
-        world.agent(id).expect("live agent").caching_rule
+    let a = world.agent(id).expect("live agent");
+    if a.cheater {
+        CachingRule::None
+    } else if world.config.caching.mixed {
+        a.caching_rule
     } else {
         world.config.caching.rule
     }
@@ -638,6 +642,79 @@ mod tests {
                 "{rule:?}"
             );
         }
+    }
+
+    #[test]
+    fn cheaters_are_dealt_by_id_in_exact_proportion() {
+        for (s, every) in [(0.25, 4), (0.5, 2), (1.0 / 3.0, 3)] {
+            let mut w = blank_world(11, 11);
+            w.config.caching.rule = CachingRule::Even;
+            w.config.theft.cheaters = s;
+            let ids: Vec<AgentId> = (0..24).map(|k| spawn(&mut w, k % 11, k / 11)).collect();
+            for (n, &id) in ids.iter().enumerate() {
+                let a = w.agent(id).unwrap();
+                assert_eq!(a.cheater, id % every == 0, "s = {s}, id {id}");
+                let cheats = ids[..=n]
+                    .iter()
+                    .filter(|&&i| w.agent(i).unwrap().cheater)
+                    .count();
+                assert_eq!(cheats, ((n + 1) as f64 * s).floor() as usize, "s = {s}");
+                let rule = if a.cheater {
+                    CachingRule::None
+                } else {
+                    CachingRule::Even
+                };
+                assert_eq!(rule_of(&w, id), rule);
+            }
+            // Over many ids the count is ⌊n·s⌋ at every n.
+            let t = w.config.theft;
+            let mut count = 0;
+            for i in 1..=10_000u64 {
+                count += u64::from(t.founder_cheats(i));
+                assert_eq!(count, (i as f64 * s).floor() as u64, "s = {s}, n = {i}");
+            }
+        }
+        // No cheaters: nobody is marked.
+        let mut w = blank_world(11, 11);
+        let id = spawn(&mut w, 1, 1);
+        assert!(!w.agent(id).unwrap().cheater);
+    }
+
+    // Review Focus 3.
+    #[test]
+    fn a_cheater_under_mixed_buries_nothing_whatever_the_round_robin_dealt_it() {
+        // s = 1/3 makes ids 3 and 6 cheaters. The round robin deals ids 2
+        // and 6 `even`: 2 buries as `even`, 6 buries nothing.
+        let mut w = blank_world(11, 11);
+        w.config.caching.mixed = true;
+        w.config.theft.cheaters = 1.0 / 3.0;
+        let ids: Vec<AgentId> = (0..6).map(|k| spawn(&mut w, 1 + k, 5)).collect();
+        for &id in &ids {
+            let a = w.agent_mut(id).unwrap();
+            a.metabolism[0] = 1;
+            a.holdings[0] = 30.0;
+        }
+        let (honest, cheater) = (ids[1], ids[5]);
+        for id in [honest, cheater] {
+            assert_eq!(w.agent(id).unwrap().caching_rule, CachingRule::Even);
+        }
+        assert!(w.agent(cheater).unwrap().cheater);
+        assert!(!w.agent(honest).unwrap().cheater);
+        assert_eq!(rule_of(&w, honest), CachingRule::Even);
+        assert_eq!(rule_of(&w, cheater), CachingRule::None);
+        assert_eq!(rule_of(&w, ids[2]), CachingRule::None, "dealt compensate");
+        turn(&mut w, honest);
+        assert!(w.events.buried > 0.0);
+        turn(&mut w, cheater);
+        assert_eq!(w.events.buried, 0.0);
+        assert!(w.agent(cheater).unwrap().caches.is_empty());
+        // A cheater still digs a cache it has (it never makes one itself).
+        let here = w.torus.index(w.agent(cheater).unwrap().pos) as u32;
+        let a = w.agent_mut(cheater).unwrap();
+        a.holdings[0] = 0.0;
+        a.caches.insert(here, 4.0);
+        turn(&mut w, cheater);
+        assert_eq!(w.events.dug, 4.0);
     }
 
     #[test]
