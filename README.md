@@ -734,11 +734,21 @@ traits and, after moving and eating, copy from one random neighbor as above (the
 their neighbors' tags instead); the Culture color mode draws them, a Distinct cultures chart counts
 them, and "Stop when cultures settle" ends a run once every two agents are identical or share
 nothing. The docking paper's mobility experiment is `dock-mobility-15` and `dock-mobility-30`: 100
-mobile agents with vision 5–10 on one sugar mountain. They report 1.1 ± 0.3 and 2.2 ± 1.2 cultures,
-every run settling; measured, 4.4 ± 1.4 and 5.7 ± 1.6, and most runs never settle — a few stragglers
-that rarely meet anyone keep second and third cultures alive. Mobility does collapse diversity (the
-fixed lattice keeps about 20), as they say; their numbers do not reproduce with the Sugarscape's
-stated movement rule, and their mountain's shape is not given. Sweep: `dock-mobility`.
+mobile agents with vision 5–10 on their "single (Gaussian) sugar mountain" (a **Gaussian** map:
+capacities round(height · e^(−d²/2σ²))). They report 1.1 ± 0.3 and 2.2 ± 1.2 cultures, every run
+settling; with a mountain as wide as the board (σ = 25) at the Sugarscape's usual height of 4,
+measured over 20 seeds: 1.15 ± 0.37 and 2.25 ± 0.85, every run settling. The paper gives neither
+width nor height, and the landscape decides it: any mountain broad or tall enough reproduces their
+number (σ ≥ 20 at height 4, σ ≥ 16 at heights 6–10), while narrow, low ones leave many cultures
+(24 at σ = 25 and height 2; 42 at σ = 8 and height 4). Sweeps: `dock-mobility`, `dock-mountain`.
+
+Axelrod's own sample setup runs a little more diverse here (mean 4.33 regions and median 4 over
+1 000 seeds, against his 3.2 over 10 runs and median 3 over 100), but his samples are within
+sampling error of it (the closest call: 10 of his 100 runs above six regions against 18 % here,
+p = 0.03). His archived demo program (CULTURE.P) copies the first differing feature it meets,
+scanning two at a time, rather than a random one; as a switch (`pick: scan`) it changes nothing.
+Having the neighbor copy instead (`changes: neighbor`) happens to fit his samples more closely
+(mean 3.87, median 3), but his program, like his paper, changes the active site.
 
 Credit: Robert Axelrod, "The Dissemination of Culture: A Model with Local Convergence and Global
 Polarization," *Journal of Conflict Resolution* 41 (1997), 203–226; Robert Axtell, Robert Axelrod,

@@ -875,14 +875,14 @@ pub fn all() -> Vec<Preset> {
             "dock-mobility-15",
             "Docking: Axelrod's culture on the move, 15 traits",
             "Axtell, Axelrod, Epstein & Cohen 1996, §4.3.1",
-            "Axtell, Axelrod, Epstein and Cohen's mobility experiment (1996): 100 agents with vision 5–10 on one sugar mountain in the middle of the 50 × 50 torus move to the richest site they see, eat, then run Axelrod's culture rule (5 features of 15 traits) with one random neighbor; nobody starves. The run stops once every two agents' cultures are identical or share nothing. They report 1.1 ± 0.3 cultures over 10 runs, all of which stopped; their mountain's shape is not given (here: one cone of radius 35, height 4). Measured (20 seeds, 20 000 ticks): 4.4 ± 1.4 cultures, and 17 of 20 runs never stop — one culture takes almost everyone, but a few stragglers that rarely meet anyone keep second and third cultures alive. Mobility still collapses diversity (the fixed 10 × 10 lattice keeps about 20), as they say; their numbers do not reproduce.",
+            "Axtell, Axelrod, Epstein and Cohen's mobility experiment (1996): 100 agents with vision 5–10 on a \"single (Gaussian) sugar mountain\" in the middle of the 50 × 50 torus move to the richest site they see, eat, then run Axelrod's culture rule (5 features of 15 traits) with one random neighbor; nobody starves (our reading: they say only \"a standard version of the Sugarscape\"; with metabolism 1–4, 1.33 cultures over 12 seeds). The run stops once every two agents' cultures are identical or share nothing. They report 1.1 ± 0.3 cultures over 10 runs. The mountain's width and height are not given; here it is as wide as the board (σ = 25) at the Sugarscape's usual height of 4. Measured (20 seeds): 1.15 ± 0.37 cultures (17 runs one, 3 two), every run stopping (median at tick 1,800). The landscape decides it: mountains broad or tall enough reproduce their number; narrow, low ones leave many cultures (sweep dock-mountain).",
             |c| docking(c, 15),
         ),
         preset(
             "dock-mobility-30",
             "Docking: Axelrod's culture on the move, 30 traits",
             "Axtell, Axelrod, Epstein & Cohen 1996, §4.3.1",
-            "The mobility experiment with 30 traits per feature. Axtell et al. 1996: 2.2 ± 1.2 cultures, more than with 15 traits. Measured (20 seeds, 20 000 ticks): 5.7 ± 1.6, and 13 of 20 runs never stop — more than with 15 traits, as they found, but well above their count.",
+            "The mobility experiment with 30 traits per feature. Axtell et al. 1996: 2.2 ± 1.2 cultures, more than with 15 traits. Measured (20 seeds): 2.25 ± 0.85, every run stopping (median at tick 2,300).",
             |c| docking(c, 30),
         ),
         preset(
@@ -1327,13 +1327,13 @@ pub fn all() -> Vec<Preset> {
 fn docking(c: &mut Config, traits: u32) {
     c.population = 100;
     c.vision = URange::new(5, 10);
-    c.goods[0].map = Map::Peaks {
-        peaks: vec![Peak {
-            x: 25,
-            y: 25,
-            radius: 35.0,
-            height: 4.0,
-        }],
+    // Their "single (Gaussian) sugar mountain", its width and height unstated:
+    // as wide as the board (σ = 25), the Sugarscape's usual height of 4.
+    c.goods[0].map = Map::Gaussian {
+        x: 25,
+        y: 25,
+        sigma: 25.0,
+        height: 4.0,
     };
     c.goods[0].metabolism = URange::new(0, 0);
     c.culture.enabled = true;
@@ -1796,7 +1796,11 @@ mod tests {
             );
             assert_eq!((c.culture.features, c.culture.traits), (5, q));
             assert_eq!(c.goods[0].metabolism, URange::new(0, 0));
-            assert!(matches!(&c.goods[0].map, Map::Peaks { peaks } if peaks.len() == 1));
+            // Their "single (Gaussian) sugar mountain", as wide as the board.
+            assert!(matches!(
+                c.goods[0].map,
+                Map::Gaussian { x: 25, y: 25, sigma, height } if sigma == 25.0 && height == 4.0
+            ));
             let w = crate::world::World::new(c, 1).unwrap();
             assert!(w
                 .agents()

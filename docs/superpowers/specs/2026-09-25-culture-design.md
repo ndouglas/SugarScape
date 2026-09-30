@@ -169,3 +169,18 @@ Claims that fail are reported, and the descriptions and README say so.
 ## Docs
 
 README: an Axelrod Culture section (rules, stated choices, switches and sources, presets and what they reproduce, sweeps, the docking) and a note in the Sugarscape section on the `axelrod` culture rule; roadmap: Milestone 14 done.
+
+## Corrections (2026-09-30)
+
+- **Mobility reproduces.** The docking paper (now in `papers/culture/`) calls the mountain "single
+  (Gaussian)"; the cone above (radius 35, height 4) was our choice, and it left 4.4 and 5.7 cultures.
+  A Gaussian map (`Map::Gaussian`, round(height · e^(−d²/2σ²))) at σ = 25, height 4 gives 1.15 ± 0.37
+  and 2.25 ± 0.85 over 20 seeds, every run settling (AAEC: 1.1 ± 0.3, 2.2 ± 1.2). The size is
+  unstated and decides it: mountains broad or tall enough reproduce their number, narrow, low ones
+  don't (sweep `dock-mountain`). "Metabolism 0, as AAEC's agents never die" (line 145) is our
+  reading; they say only "a standard version of the Sugarscape" (metabolism 1–4 gives about the same).
+- **The sample setup** (line 51): his figures come from 10 and 100 runs; tested as whether his
+  samples could come from our 1,000 seeds, all four hold (the closest: more than six, p = 0.03).
+  His archived demo program's copy step (a scan, `pick: scan`) changes nothing.
+- **Neighbor changes** (line 55): over 200 seeds the neighbor-copying variant leaves fewer regions
+  (medians 3 against 4, p = 0.004): the "subtle difference" AAEC describe is there, but small.

@@ -42,6 +42,8 @@ class Frame:
     infections: list = field(default_factory=list)
     # id → kind, as a letter (E, H, S, T): ethnocentrism's strategies.
     kinds: dict = field(default_factory=dict)
+    # id → the site's traits, as a tuple: Axelrod's culture model.
+    traits: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -105,6 +107,17 @@ class Dump:
     stats: dict
     spice_capacity: list = field(default_factory=list)
     model: str = "sugarscape"
+    # Axelrod cultures (traits tuple) still present in the last frame, ranked
+    # 1… by how many hold them (ties by the traits); empty without cultures.
+    culture_rank: dict = field(default_factory=dict)
+
+
+def _culture_rank(last):
+    """Rank each culture in `last` (id → traits) by how many hold it."""
+    sizes = {}
+    for c in last.values():
+        sizes[c] = sizes.get(c, 0) + 1
+    return {c: k + 1 for k, c in enumerate(sorted(sizes, key=lambda c: (-sizes[c], c)))}
 
 
 @dataclass(frozen=True)
@@ -272,6 +285,8 @@ def parse(text):
         return _dpd(raw)
     if raw.get("model") in ("schelling", "line"):
         return _schelling(raw)
+    if raw.get("model") == "culture":
+        return _culture(raw)
     if raw.get("model") == "tipping":
         return _tipping(raw)
     if raw.get("model") == "ethno":
@@ -335,6 +350,8 @@ def parse(text):
             # id → diseases carried, and the tick's infections (disease on).
             diseases=dict(zip((row[0] for row in f["agents"]), f.get("diseases", []))),
             infections=[Infection(*i) for i in f.get("infections", [])],
+            # id → Axelrod traits (rule K Axelrod's only).
+            traits={row[0]: tuple(c) for row, c in zip(f["agents"], f.get("cultures", []))},
         )
         for f in raw["frames"]
     ]
@@ -349,6 +366,7 @@ def parse(text):
         frames=frames,
         stats=raw["stats"],
         spice_capacity=raw.get("spice_capacity", []),
+        culture_rank=_culture_rank(frames[-1].traits) if frames and frames[-1].traits else {},
     )
 
 
@@ -388,9 +406,10 @@ def _schelling(raw):
     colors draw them) and whether it is content in its `sugar` (1 or 0). Nobody
     is born or dies."""
     w, h = raw["width"], raw["height"]
+    # A strided shot (`every`) is filmed a frame a tick: frames count as ticks.
     frames = [
         Frame(
-            tick=f["tick"],
+            tick=k,
             agents={i: Agent(i, x, y, 1.0 if content else 0.0, 0, 0, 0) for i, x, y, _, content in f["agents"]},
             sugar=[0.0] * (w * h),
             deaths={},
@@ -399,11 +418,42 @@ def _schelling(raw):
             births={},
             groups={row[0]: 1 if row[3] else 0 for row in f["agents"]},
         )
-        for f in raw["frames"]
+        for k, f in enumerate(raw["frames"])
     ]
     return Dump(
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
         placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
+    )
+
+
+def _culture(raw):
+    """An Axelrod culture shot as a `Dump`: a still Flump on every site (id =
+    the site, row-major), its traits in `traits`. `groups` colors it: the
+    cultures still present in the last frame are ranked by how many sites
+    hold them (1 the most, ties by the traits) and wear that rank wherever
+    they appear; any other culture is 0. Frames count as ticks (a shot may
+    film every `every`th step)."""
+    w, h, f = raw["width"], raw["height"], raw["features"]
+
+    def sites(frame):
+        t = frame["traits"]
+        return {i: tuple(t[i * f:(i + 1) * f]) for i in range(w * h)}
+
+    rank = _culture_rank(sites(raw["frames"][-1]))
+    frames = []
+    for k, fr in enumerate(raw["frames"]):
+        traits = sites(fr)
+        frames.append(Frame(
+            tick=k,
+            agents={i: Agent(i, i % w, i // w, 1.0, 0, 0, 0) for i in range(w * h)},
+            sugar=[0.0] * (w * h), deaths={}, born=[], pollution=[0.0] * (w * h), births={},
+            groups={i: rank.get(c, 0) for i, c in traits.items()},
+            traits=traits,
+        ))
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=list(range(w * h)), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
+        culture_rank=rank,
     )
 
 

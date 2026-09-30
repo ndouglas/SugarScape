@@ -56,6 +56,25 @@ pub fn generate(map: &Map, width: u32, height: u32) -> Vec<f64> {
             .map(|i| peak_capacity(peaks, i % w, i / w, w, h))
             .collect(),
         Map::Flat { capacity } => vec![*capacity; w * h],
+        &Map::Gaussian {
+            x,
+            y,
+            sigma,
+            height: top,
+        } => {
+            let centre = Peak {
+                x,
+                y,
+                radius: 1.0,
+                height: top,
+            };
+            (0..w * h)
+                .map(|i| {
+                    let d = peak_distance(&centre, (i % w) as u32, (i / w) as u32, width, height);
+                    (top * (-d * d / (2.0 * sigma * sigma)).exp()).round()
+                })
+                .collect()
+        }
         Map::Noise {
             seed,
             scale,
@@ -276,6 +295,40 @@ mod tests {
             10,
         );
         assert_eq!(two[2 * 10 + 2], 3.0, "max(1, ⌈6 · (1 − 1/2)⌉)");
+    }
+
+    #[test]
+    fn a_gaussian_mountain_rounds_height_times_the_bell_curve() {
+        // Axtell et al.'s "single (Gaussian) sugar mountain": round(h · e^(−d²/2σ²)).
+        let caps = generate(
+            &Map::Gaussian {
+                x: 10,
+                y: 10,
+                sigma: 4.0,
+                height: 4.0,
+            },
+            20,
+            20,
+        );
+        let at = |x: usize, y: usize| caps[y * 20 + x];
+        assert_eq!(at(10, 10), 4.0);
+        assert_eq!(at(14, 10), 2.0, "round(4 · e^(−1/2)) = round(2.43)");
+        assert_eq!(at(10, 18), 1.0, "d = 8: round(4 · e^(−2)) = round(0.54)");
+        assert_eq!(at(0, 10), 0.0, "d = 10: 4 · e^(−3.125) = 0.18");
+        let wrap = generate(
+            &Map::Gaussian {
+                x: 0,
+                y: 0,
+                sigma: 4.0,
+                height: 4.0,
+            },
+            20,
+            20,
+        );
+        assert_eq!(
+            wrap[19], 4.0,
+            "(19, 0) is 1 from (0, 0) across the edge: round(3.88)"
+        );
     }
 
     /// `peak_capacity(peaks, x, y, w, h)` for every site of a w×h grid.

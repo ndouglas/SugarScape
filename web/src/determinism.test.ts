@@ -1081,8 +1081,8 @@ describe('the culture model through the engine', () => {
   it('reproduces the docking presets’ golden fingerprints in the Sugarscape', async () => {
     // crates/sugarscape-core/tests/golden.rs, GOLDEN.
     for (const [id, golden] of [
-      ['dock-mobility-15', '0x9d0a2ced876f00d2'],
-      ['dock-mobility-30', '0x10a0c00c27c1660d'],
+      ['dock-mobility-15', '0x3361a01b1a7cd6a3'],
+      ['dock-mobility-30', '0x19cfa4ca0800089e'],
     ]) {
       const preset = presets.find((p) => p.id === id)!;
       const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });

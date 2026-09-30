@@ -20,6 +20,7 @@ export type GoodMap =
   | { kind: 'two_peaks'; transform: Transform }
   | { kind: 'peaks'; peaks: Peak[] }
   | { kind: 'flat'; capacity: number }
+  | { kind: 'gaussian'; x: number; y: number; sigma: number; height: number }
   | { kind: 'noise'; seed: number; scale: number; octaves: number; height: number };
 
 export interface Good { name: string; color: string; map: GoodMap; metabolism: URange; endowment: URange }
