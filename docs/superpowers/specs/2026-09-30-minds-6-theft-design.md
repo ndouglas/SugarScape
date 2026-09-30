@@ -160,7 +160,7 @@ Validation:
 
 When theft is on, the stats record:
 - `pilfered` per tick;
-- `pilferage_rate`: per tick, the share of existing foreign-reachable caches that were pilfered;
+- `pilferage_rate`: caches pilfered this tick ÷ caches existing at the tick's start (a tick stands for a day);
 - `cache_fates`: cumulative shares dug by owner, pilfered, lost and still buried;
 - the mean holdings and survival of hoarders and of cheaters, when there are cheaters.
 
