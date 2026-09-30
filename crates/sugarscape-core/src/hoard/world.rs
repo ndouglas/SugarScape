@@ -83,18 +83,16 @@ use crate::anasazi::random::normal;
 use crate::config::FieldError;
 use crate::export;
 use crate::model::{wrong_model, Model, ModelConfig, ModelKind};
+use crate::opinions::Canvas;
 use crate::portable::{exp_neg, ln};
 use crate::rng::{self, SimRng};
 use crate::stats::Stats;
 
 use super::config::{CheaterFitness, DeadStores, DefendedInPool, HoardConfig, LarderWeight};
 use super::stats::HoardSnapshot;
+use super::view::{self, agent_at, columns, scale};
 
-/// The frame's size in cells.
-pub const WIDE: usize = 64;
-pub const TALL: usize = 32;
-
-const BACKGROUND: [u8; 4] = [16, 18, 24, 255];
+pub use super::view::{TALL, WIDE};
 
 /// How an agent died.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -1111,6 +1109,90 @@ impl HoardWorld {
     }
 }
 
+/// An agent's state for the page: traits, stores and this season's losses
+/// (rates so far, per item per day; `None` before it held any).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct AgentView {
+    pub index: usize,
+    pub l: f64,
+    pub d: f64,
+    pub forage: f64,
+    pub cheater: bool,
+    pub larder: u32,
+    pub scatter: u32,
+    pub alive: bool,
+    pub fed: bool,
+    pub defending: bool,
+    /// The agent whose burrow it is raiding (its last larder find), if any.
+    pub raiding: Option<usize>,
+    pub death: Option<Death>,
+    pub larder_lost: u64,
+    pub scatter_lost: u64,
+    pub larder_rate: Option<f64>,
+    pub scatter_rate: Option<f64>,
+    pub eaten: u64,
+    pub bouts_alive: u64,
+}
+
+/// What a click on the frame finds: where the run is, and the agent there.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct HoardInspection {
+    pub generation: u32,
+    pub day: u32,
+    pub bout: u32,
+    pub public: u64,
+    pub agent: AgentView,
+}
+
+impl HoardWorld {
+    /// Agent `i` for the page.
+    pub fn view(&self, i: usize) -> AgentView {
+        let a = &self.agents[i];
+        let r = &a.record;
+        AgentView {
+            index: i,
+            l: a.l,
+            d: a.d,
+            forage: a.forage,
+            cheater: a.cheater,
+            larder: a.larder,
+            scatter: a.scatter,
+            alive: a.alive,
+            fed: a.fed,
+            defending: a.defending,
+            raiding: a.raid,
+            death: a.death,
+            larder_lost: r.larder_lost,
+            scatter_lost: r.scatter_lost,
+            larder_rate: r.larder_rate(self.config.bouts),
+            scatter_rate: r.scatter_rate(self.config.bouts),
+            eaten: r.eaten,
+            bouts_alive: r.bouts_alive,
+        }
+    }
+
+    /// Every agent, for the population panel.
+    pub fn population_views(&self) -> Vec<AgentView> {
+        (0..self.agents.len()).map(|i| self.view(i)).collect()
+    }
+
+    pub fn inspect(&self, x: u32, y: u32) -> Result<HoardInspection, String> {
+        if x as usize >= WIDE || y as usize >= TALL {
+            return Err(format!("({x}, {y}) is not in the frame"));
+        }
+        if self.agents.is_empty() {
+            return Err("there is no agent to inspect".into());
+        }
+        Ok(HoardInspection {
+            generation: self.generation,
+            day: self.day,
+            bout: self.bout,
+            public: self.public,
+            agent: self.view(agent_at(x as usize, self.agents.len())),
+        })
+    }
+}
+
 impl Model for HoardWorld {
     fn config(&self) -> ModelConfig {
         ModelConfig::Hoard(self.config.clone())
@@ -1168,9 +1250,45 @@ impl Model for HoardWorld {
         if mode != "agents" {
             return Err(format!("unknown color mode {mode:?}"));
         }
-        buf.clear();
-        for _ in 0..WIDE * TALL {
-            buf.extend_from_slice(&BACKGROUND);
+        let mut c = Canvas { buf, wide: 0 };
+        c.clear(WIDE, TALL);
+        for x in 0..WIDE {
+            c.put(x, view::MID, view::MIDLINE);
+        }
+        let n = self.agents.len();
+        for (i, a) in self.agents.iter().enumerate() {
+            let (from, to) = columns(i, n);
+            let status = if !a.alive {
+                view::DEAD
+            } else if a.cheater {
+                view::CHEATER
+            } else if a.raid.is_some() {
+                view::RAIDING
+            } else if a.defending {
+                view::DEFENDING
+            } else if a.fed {
+                view::FED
+            } else {
+                view::HUNGRY
+            };
+            for x in from..to {
+                for y in 0..view::STATUS_ROWS {
+                    c.put(x, y, status);
+                }
+                for (row, t) in [(view::L_ROW, a.l), (view::D_ROW, a.d)] {
+                    let k = scale(t, view::LOW, view::HIGH);
+                    c.put(x, row, k);
+                    c.put(x, row + 1, k);
+                }
+                let up = (a.larder as usize).min(view::SHOWN);
+                let down = (a.scatter as usize).min(view::SHOWN);
+                for y in view::MID - up..view::MID {
+                    c.put(x, y, view::LARDER);
+                }
+                for y in view::MID + 1..=view::MID + down {
+                    c.put(x, y, view::SCATTER);
+                }
+            }
         }
         Ok(())
     }
@@ -1200,12 +1318,18 @@ impl Model for HoardWorld {
         out
     }
 
-    fn inspect_json(&self, _x: u32, _y: u32) -> Result<String, String> {
-        Err("there is nothing to inspect yet".into())
+    fn inspect_json(&self, x: u32, y: u32) -> Result<String, String> {
+        let inspection = self.inspect(x, y)?;
+        Ok(serde_json::to_string(&inspection).expect("inspection serializes"))
     }
 
-    fn locate(&self, _id: u64) -> Option<(u32, u32)> {
-        None
+    /// An agent's id is its index; it is found at the middle of its column.
+    fn locate(&self, id: u64) -> Option<(u32, u32)> {
+        let i = usize::try_from(id)
+            .ok()
+            .filter(|&i| i < self.agents.len())?;
+        let (from, to) = columns(i, self.agents.len());
+        Some((((from + to) / 2) as u32, 0))
     }
 
     fn set_config(&mut self, next: ModelConfig) -> Result<(), Vec<FieldError>> {

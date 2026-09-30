@@ -929,6 +929,13 @@ impl ModelWorld {
         }
     }
 
+    pub fn hoard(&self) -> Option<&HoardWorld> {
+        match self {
+            ModelWorld::Hoard(w) => Some(w),
+            _ => None,
+        }
+    }
+
     pub fn anasazi(&self) -> Option<&AnasaziWorld> {
         match self {
             ModelWorld::Anasazi(w) => Some(w),

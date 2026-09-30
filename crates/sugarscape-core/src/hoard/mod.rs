@@ -8,12 +8,13 @@
 mod config;
 mod presets;
 mod stats;
+mod view;
 mod world;
 
 pub use config::{schema, CheaterFitness, DeadStores, DefendedInPool, HoardConfig, LarderWeight};
 pub use presets::presets;
 pub use stats::{by_generation, HoardSnapshot, GENERATION_SERIES, SERIES};
 pub use world::{
-    Agent, Cause, Death, Fate, HoardWorld, Outcome, Record, Season, SeasonSummary, EPSILON,
-    EXPOSURE_FLOOR, LOW_L, TAKEOVER_L, TALL, WIDE, WINDOW,
+    Agent, AgentView, Cause, Death, Fate, HoardInspection, HoardWorld, Outcome, Record, Season,
+    SeasonSummary, EPSILON, EXPOSURE_FLOOR, LOW_L, TAKEOVER_L, TALL, WIDE, WINDOW,
 };

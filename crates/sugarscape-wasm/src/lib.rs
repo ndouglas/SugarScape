@@ -633,4 +633,25 @@ impl Sim {
     pub fn anasazi_links(&self) -> Vec<u32> {
         self.world.anasazi().map_or(Vec::new(), |a| a.links_xy())
     }
+
+    /// The hoard world's 20 agents as a JSON array (the population panel):
+    /// index, traits, stores, state, raid target and this season's losses.
+    /// `[]` for other models.
+    pub fn hoard_population(&self) -> String {
+        self.world.hoard().map_or("[]".into(), |h| {
+            serde_json::to_string(&h.population_views()).expect("agents serialize")
+        })
+    }
+
+    /// One value per finished season for a hoard generation series
+    /// (`generation`, `mean_larder_prob`, `hoarder_larder_prob`,
+    /// `mean_defense`, `survivors`, `larder_share`, `larder_loss_rate`,
+    /// `scatter_loss_rate`; NaN where a season has none). Empty for other
+    /// models and unknown names.
+    pub fn hoard_generation_series(&self, name: &str) -> Vec<f64> {
+        self.world
+            .hoard()
+            .and_then(|h| h.generation_series(name))
+            .unwrap_or_default()
+    }
 }
