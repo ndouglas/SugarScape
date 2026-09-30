@@ -18,12 +18,32 @@ use crate::model::{wrong_model, Model, ModelConfig, ModelKind};
 use crate::presets::ModelPreset;
 use crate::render::{Rgb, BACKGROUND};
 use crate::rng::{self, SimRng};
+use crate::schelling::{Movers, Utility};
 use crate::schema::{Apply, Param};
 use crate::stats::{Series, Stats};
 
 const RED: Rgb = [0xd9, 0x4a, 0x3f];
 const BLUE: Rgb = [0x3f, 0x7f, 0xd9];
 const DISCONTENT: Rgb = [0xf2, 0xc9, 0x4c];
+
+/// Whether the line has ends (Schelling) or closes into a ring (Pancs & Vriend).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LineEdges {
+    Ends,
+    Ring,
+}
+
+/// Where a mover goes on the line.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LineMovement {
+    /// Schelling: the nearest point that meets the demand.
+    Nearest,
+    /// Pancs & Vriend: the point of highest utility, staying included, ties
+    /// at random.
+    Best,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -48,6 +68,11 @@ pub struct LineConfig {
     pub fallback: f64,
     /// People per row when drawn.
     pub wrap: u32,
+    pub edges: LineEdges,
+    pub movement: LineMovement,
+    pub movers: Movers,
+    /// Weighed under the best move.
+    pub utility: Utility,
 }
 
 impl Default for LineConfig {
@@ -61,6 +86,10 @@ impl Default for LineConfig {
             reach: 0,
             fallback: 0.375,
             wrap: 70,
+            edges: LineEdges::Ends,
+            movement: LineMovement::Nearest,
+            movers: Movers::Discontent,
+            utility: Utility::Flat,
         }
     }
 }
@@ -121,6 +150,10 @@ impl LineConfig {
             ("reach", self.reach == next.reach),
             ("fallback", self.fallback == next.fallback),
             ("wrap", self.wrap == next.wrap),
+            ("edges", self.edges == next.edges),
+            ("movement", self.movement == next.movement),
+            ("movers", self.movers == next.movers),
+            ("utility", self.utility == next.utility),
         ] {
             if !same {
                 out.push(FieldError::new(field, "changes only on reset"));
@@ -268,14 +301,57 @@ impl LineWorld {
     /// and `row[right..]`.
     fn around(&self, row: &[Person], left: usize, right: usize, red: bool) -> (u32, u32) {
         let r = self.config.radius as usize;
+        let (mut like, mut n) = (0, 0);
+        if self.config.edges == LineEdges::Ring && !row.is_empty() {
+            // Round the join: r on each side, fewer when the ring is short.
+            let len = row.len();
+            let others = len - (right - left);
+            let on_left = r.min(others / 2);
+            let on_right = r.min(others - on_left);
+            let picks = (1..=on_left)
+                .map(|d| (left + len - d) % len)
+                .chain((0..on_right).map(|d| (right + d) % len));
+            for k in picks {
+                n += 1;
+                like += u32::from(row[k].red == red);
+            }
+            return (like, n);
+        }
         let lo = left.saturating_sub(r);
         let hi = (right + r).min(row.len());
-        let (mut like, mut n) = (0, 0);
         for p in row[lo..left].iter().chain(&row[right..hi]) {
             n += 1;
             like += u32::from(p.red == red);
         }
         (like, n)
+    }
+
+    /// Each insertion point for the person at `i` (removed) and its utility:
+    /// every gap of the shortened row (on a ring, the join once).
+    fn options(&self, row: &[Person], red: bool) -> Vec<(usize, f64)> {
+        let gaps = if self.config.edges == LineEdges::Ring {
+            row.len().max(1)
+        } else {
+            row.len() + 1
+        };
+        let most = 2 * self.config.radius as usize;
+        (0..gaps)
+            .map(|j| {
+                let (like, n) = self.around(row, j, j, red);
+                (j, self.config.utility.value(like, n, most))
+            })
+            .collect()
+    }
+
+    /// The best utility the person at `i` could have, anywhere (staying
+    /// included).
+    pub fn best_value(&self, i: usize) -> f64 {
+        let mut row = self.people.clone();
+        let me = row.remove(i);
+        self.options(&row, me.red)
+            .into_iter()
+            .map(|(_, v)| v)
+            .fold(f64::NEG_INFINITY, f64::max)
     }
 
     fn content(&self, like: u32, n: u32, share: f64) -> bool {
@@ -293,8 +369,24 @@ impl LineWorld {
     /// nearest gap within reach meeting `fallback`; failing both, it stays.
     /// Whether it moved.
     pub fn turn(&mut self, i: usize) -> bool {
-        if self.is_satisfied(i) {
+        if self.config.movers == Movers::Discontent && self.is_satisfied(i) {
             return false;
+        }
+        if self.config.movement == LineMovement::Best {
+            let me = self.people.remove(i);
+            let options = self.options(&self.people, me.red);
+            let top = options
+                .iter()
+                .map(|o| o.1)
+                .fold(f64::NEG_INFINITY, f64::max);
+            let ties: Vec<usize> = options
+                .iter()
+                .filter(|o| (o.1 - top).abs() <= 1e-12)
+                .map(|o| o.0)
+                .collect();
+            let j = ties[self.rng.gen_range(0..ties.len() as u32) as usize];
+            self.people.insert(j, me);
+            return j != i;
         }
         let me = self.people.remove(i);
         let len = self.people.len();
@@ -333,10 +425,17 @@ impl LineWorld {
     /// One round: the discontented at its start, left to right; each still
     /// discontent when its turn comes moves; one made discontent waits.
     pub fn step(&mut self) {
-        let movers: Vec<u64> = (0..self.people.len())
-            .filter(|&i| !self.is_satisfied(i))
-            .map(|i| self.people[i].id)
-            .collect();
+        let movers: Vec<u64> = if self.config.movers == Movers::Anyone {
+            // Pancs & Vriend: anyone, in a random order.
+            let mut ids: Vec<u64> = self.people.iter().map(|p| p.id).collect();
+            ids.shuffle(&mut self.rng);
+            ids
+        } else {
+            (0..self.people.len())
+                .filter(|&i| !self.is_satisfied(i))
+                .map(|i| self.people[i].id)
+                .collect()
+        };
         let mut moves = 0;
         for id in movers {
             let i = self
@@ -635,6 +734,50 @@ pub fn schema() -> Vec<Param> {
             Reset,
         )
         .with_help("\"the nearest place where three out of eight occur\""),
+        Param::choice(
+            "Neighborhood",
+            "edges",
+            "Ends",
+            &[
+                ("ends", "A line with ends (Schelling)"),
+                ("ring", "A ring (Pancs & Vriend)"),
+            ],
+            Reset,
+        ),
+        Param::choice(
+            "Movement",
+            "movement",
+            "Where movers go",
+            &[
+                ("nearest", "The nearest point that suits (Schelling)"),
+                ("best", "The best point anywhere (Pancs & Vriend)"),
+            ],
+            Reset,
+        ),
+        Param::choice(
+            "Movement",
+            "movers",
+            "Who may move",
+            &[
+                ("discontent", "The discontented (Schelling)"),
+                ("anyone", "Anyone (Pancs & Vriend)"),
+            ],
+            Reset,
+        ),
+        Param::choice(
+            "Movement",
+            "utility",
+            "What a mover weighs",
+            &[
+                ("flat", "Content or not"),
+                ("p50", "Best at half unlike, nothing past it"),
+                ("p100", "Best at half unlike, less either side"),
+                ("spiked", "Only exactly half unlike"),
+                ("tent", "Zhang's tent"),
+            ],
+            Reset,
+        )
+        .shown_if("movement", "best"),
     ]
 }
 
@@ -720,6 +863,58 @@ mod tests {
         assert_eq!(w.stats.latest().unwrap().moves, 1);
         w.step();
         assert_eq!(w.stats.latest().unwrap().moves, 0, "everyone is content");
+    }
+
+    fn ring_of(s: &str, radius: u32) -> LineWorld {
+        let mut w = LineWorld::new(
+            LineConfig {
+                length: s.len() as u32,
+                radius,
+                edges: LineEdges::Ring,
+                ..LineConfig::default()
+            },
+            1,
+        )
+        .unwrap();
+        w.set_colors(s);
+        w
+    }
+
+    #[test]
+    fn on_a_ring_the_ends_are_neighbors() {
+        let w = ring_of("RBBBBBBR", 1);
+        assert_eq!(w.counts(0), (1, 2), "the last R sits beside the first");
+        assert_eq!(w.counts(7), (1, 2));
+        let w4 = ring_of("RRBBBBBBBBRR", 4);
+        assert_eq!(
+            w4.counts(0),
+            (3, 8),
+            "four each side, round the join: R R B B | R B B B"
+        );
+    }
+
+    #[test]
+    fn the_best_move_takes_the_best_point_on_the_ring() {
+        // p100 (best at half unlike): the mover takes the point of highest utility, staying
+        // included; checked against every point by hand.
+        for seed in 1..15 {
+            let mut w = ring_of("RRRRRBBBBBRRBBRB", 2);
+            w.config.movement = LineMovement::Best;
+            w.config.utility = Utility::P100;
+            w.config.movers = Movers::Anyone;
+            w.rng = rng::seeded(seed);
+            let before = w.colors();
+            let best_possible = w.best_value(0);
+            w.turn(0);
+            let at = w.people().iter().position(|p| p.id == 1).unwrap();
+            let (like, n) = w.counts(at);
+            let got = Utility::P100.value(like, n, 4);
+            assert!(
+                (got - best_possible).abs() < 1e-12,
+                "seed {seed}: {before} → {}",
+                w.colors()
+            );
+        }
     }
 
     #[test]
