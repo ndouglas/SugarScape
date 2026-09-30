@@ -16,6 +16,7 @@ use crate::culture::{CultureConfig, CultureWorld};
 use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::farol::{FarolConfig, FarolWorld};
+use crate::firms::{FirmsConfig, FirmsWorld};
 use crate::image::{ImageConfig, ImageWorld};
 use crate::line::{LineConfig, LineWorld};
 use crate::norms::{NormsConfig, NormsWorld};
@@ -68,10 +69,11 @@ pub enum ModelKind {
     Bali,
     Line,
     Tipping,
+    Firms,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 25] = [
+    pub const ALL: [ModelKind; 26] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -97,6 +99,7 @@ impl ModelKind {
         ModelKind::Bali,
         ModelKind::Line,
         ModelKind::Tipping,
+        ModelKind::Firms,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -126,6 +129,7 @@ impl ModelKind {
             ModelKind::Bali => "bali",
             ModelKind::Line => "line",
             ModelKind::Tipping => "tipping",
+            ModelKind::Firms => "firms",
         }
     }
 
@@ -158,6 +162,7 @@ impl ModelKind {
             ModelKind::Bali => bali::schema(),
             ModelKind::Line => crate::line::schema(),
             ModelKind::Tipping => crate::tipping::schema(),
+            ModelKind::Firms => crate::firms::schema(),
         }
     }
 }
@@ -196,6 +201,7 @@ pub enum ModelConfig {
     Bali(BaliConfig),
     Line(LineConfig),
     Tipping(TippingConfig),
+    Firms(FirmsConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -226,6 +232,7 @@ enum Tagged<'a> {
     Bali(&'a BaliConfig),
     Line(&'a LineConfig),
     Tipping(&'a TippingConfig),
+    Firms(&'a FirmsConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -263,6 +270,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Bali(c) => Tagged::Bali(c).serialize(s),
             ModelConfig::Line(c) => Tagged::Line(c).serialize(s),
             ModelConfig::Tipping(c) => Tagged::Tipping(c).serialize(s),
+            ModelConfig::Firms(c) => Tagged::Firms(c).serialize(s),
         }
     }
 }
@@ -295,6 +303,7 @@ impl ModelConfig {
             ModelConfig::Bali(_) => ModelKind::Bali,
             ModelConfig::Line(_) => ModelKind::Line,
             ModelConfig::Tipping(_) => ModelKind::Tipping,
+            ModelConfig::Firms(_) => ModelKind::Firms,
         }
     }
 
@@ -398,6 +407,9 @@ impl ModelConfig {
             "tipping" => serde_json::from_value(value)
                 .map(ModelConfig::Tipping)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "firms" => serde_json::from_value(value)
+                .map(ModelConfig::Firms)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "zi" => serde_json::from_value(value)
                 .map(ModelConfig::Zi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -440,6 +452,7 @@ impl ModelConfig {
             ModelConfig::Bali(c) => c.validate(),
             ModelConfig::Line(c) => c.validate(),
             ModelConfig::Tipping(c) => c.validate(),
+            ModelConfig::Firms(c) => c.validate(),
         }
     }
 
@@ -472,6 +485,7 @@ impl ModelConfig {
             ModelConfig::Bali(c) => set_path(c, path, value).map(ModelConfig::Bali),
             ModelConfig::Line(c) => set_path(c, path, value).map(ModelConfig::Line),
             ModelConfig::Tipping(c) => set_path(c, path, value).map(ModelConfig::Tipping),
+            ModelConfig::Firms(c) => set_path(c, path, value).map(ModelConfig::Firms),
         }
     }
 
@@ -503,7 +517,8 @@ impl ModelConfig {
             | ModelConfig::Zi(_)
             | ModelConfig::Bali(_)
             | ModelConfig::Line(_)
-            | ModelConfig::Tipping(_) => None,
+            | ModelConfig::Tipping(_)
+            | ModelConfig::Firms(_) => None,
         }
     }
 
@@ -544,6 +559,7 @@ impl ModelConfig {
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
+            ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
         }
     }
 }
@@ -738,6 +754,7 @@ pub enum ModelWorld {
     Bali(Box<BaliWorld>),
     Line(Box<LineWorld>),
     Tipping(Box<TippingWorld>),
+    Firms(Box<FirmsWorld>),
 }
 
 impl ModelWorld {
@@ -794,6 +811,7 @@ impl ModelWorld {
             ModelConfig::Bali(c) => ModelWorld::Bali(Box::new(BaliWorld::new(c, seed)?)),
             ModelConfig::Line(c) => ModelWorld::Line(Box::new(LineWorld::new(c, seed)?)),
             ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
+            ModelConfig::Firms(c) => ModelWorld::Firms(Box::new(FirmsWorld::new(c, seed)?)),
         })
     }
 
@@ -824,6 +842,7 @@ impl ModelWorld {
             ModelWorld::Bali(_) => ModelKind::Bali,
             ModelWorld::Line(_) => ModelKind::Line,
             ModelWorld::Tipping(_) => ModelKind::Tipping,
+            ModelWorld::Firms(_) => ModelKind::Firms,
         }
     }
 
@@ -854,6 +873,7 @@ impl ModelWorld {
             ModelWorld::Bali(w) => w.as_ref(),
             ModelWorld::Line(w) => w.as_ref(),
             ModelWorld::Tipping(w) => w.as_ref(),
+            ModelWorld::Firms(w) => w.as_ref(),
         }
     }
 
@@ -884,6 +904,7 @@ impl ModelWorld {
             ModelWorld::Bali(w) => w.as_mut(),
             ModelWorld::Line(w) => w.as_mut(),
             ModelWorld::Tipping(w) => w.as_mut(),
+            ModelWorld::Firms(w) => w.as_mut(),
         }
     }
 
@@ -983,6 +1004,7 @@ impl ModelWorld {
             ModelWorld::Bali(w) => copy_without_history!(Bali, w),
             ModelWorld::Line(w) => copy_without_history!(Line, w),
             ModelWorld::Tipping(w) => copy_without_history!(Tipping, w),
+            ModelWorld::Firms(w) => copy_without_history!(Firms, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -1035,6 +1057,7 @@ impl ModelWorld {
             }
             (ModelWorld::Line(live), ModelWorld::Line(kept)) => restore_into!(live, kept),
             (ModelWorld::Tipping(live), ModelWorld::Tipping(kept)) => restore_into!(live, kept),
+            (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1460,6 +1483,30 @@ mod tests {
     }
 
     #[test]
+    fn firms_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "firms", "agents": 50, "beta": 1.8, "stop_at": 3}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Firms);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["neighbors"].as_u64()),
+            (Some("firms"), Some(2))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["firms", "births"]);
+        let e = ModelConfig::from_json(r#"{"model": "firms", "agents": 1}"#).unwrap_err();
+        assert_eq!(e[0].field, "agents");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Firms);
+        let cp = w.checkpoint().expect("firms worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn bali_configs_round_trip_with_their_tag() {
         let c = ModelConfig::from_json(
             r#"{"model": "bali", "plans": "traditional", "growth": 2.4, "stop_at": 2}"#,
@@ -1555,7 +1602,8 @@ mod tests {
                 "zi",
                 "bali",
                 "line",
-                "tipping"
+                "tipping",
+                "firms"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

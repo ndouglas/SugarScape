@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 337] = [
+pub const TITLES: [(&str, &str); 355] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1312,6 +1312,78 @@ pub const TITLES: [(&str, &str); 337] = [
     (
         "janssen-fewer-links",
         "With half the pest links gone, copying stalls early",
+    ),
+    (
+        "firms-base",
+        "Workers team up, free-ride and scatter: firms stay small",
+    ),
+    (
+        "firms-live",
+        "Seeing others' current effort lets bigger firms form",
+    ),
+    (
+        "firms-uniform",
+        "Activating each worker once a period changes little",
+    ),
+    (
+        "firms-beta-17",
+        "Weaker returns to teamwork keep every firm small",
+    ),
+    (
+        "firms-beta-21",
+        "Stronger returns to teamwork grow firms of hundreds",
+    ),
+    (
+        "firms-b-15",
+        "A bigger team bonus grows bigger firms",
+    ),
+    (
+        "firms-b-random",
+        "Firms with lucky technology grow largest",
+    ),
+    (
+        "firms-theta-075",
+        "Identical workers form many mid-sized firms and are happier",
+    ),
+    (
+        "firms-friends-10",
+        "More friends spread workers over mid-sized firms",
+    ),
+    (
+        "firms-random-firms-10",
+        "Shopping among random firms keeps firms mid-sized",
+    ),
+    (
+        "firms-loyal-10",
+        "Loyal workers keep firms alive ten times longer",
+    ),
+    (
+        "firms-sticky",
+        "Slow-changing effort swallows everyone into one firm",
+    ),
+    (
+        "firms-groping",
+        "Trial-and-error effort swallows everyone into one firm",
+    ),
+    (
+        "firms-seniority-5",
+        "Paying founders most stops anyone from joining",
+    ),
+    (
+        "firms-base-pay-80",
+        "Guaranteed pay keeps firms together but kills effort",
+    ),
+    (
+        "firms-hiring-100",
+        "Hiring only the as-eager keeps firms small",
+    ),
+    (
+        "firms-random-choices",
+        "Random moves never build a big firm",
+    ),
+    (
+        "firms-2013",
+        "Axtell's 2013 settings give Zipf's law and one giant firm",
     ),
 ];
 
