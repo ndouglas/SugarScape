@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { chartKey } from '../protocol';
-import type { Config, ModelConfig } from '../types';
+import type { Config, HoardConfig, ModelConfig } from '../types';
+import type { HoardCharts } from '../protocol';
 import {
+  HOARD_CHARTS,
+  hoardGenerationTable,
+  hoardSeasonTable,
   bandData,
   barsData,
   chartsBehind,
@@ -456,5 +460,58 @@ describe('image scoring’s charts', () => {
     expect(shown(['and', 'q'])).toEqual([true, true, true, false, true]);
     expect(shown(['own_only'])).toEqual([true, false, true, false, true]);
     expect(shown(['binary', 'standing'])).toEqual([true, true, false, true, true]);
+  });
+});
+
+describe('hoard charts (Minds 7)', () => {
+  const generations = (values: Partial<Record<string, number[]>>) =>
+    Object.fromEntries(
+      ['generation', 'mean_larder_prob', 'hoarder_larder_prob', 'mean_defense', 'survivors', 'larder_share', 'larder_loss_rate', 'scatter_loss_rate'].map((k) => [
+        k,
+        Float64Array.from(values[k] ?? [0, 0]),
+      ]),
+    ) as HoardCharts['generations'];
+
+  it('chart L, D, survivors, the larder share and the loss rates by generation, and this season by bout, one unit to a chart', () => {
+    expect(HOARD_CHARTS.map((c) => [c.title, c.season === true])).toEqual([
+      ['Larder probability (L) by generation', false],
+      ['Defense propensity (D) by generation', false],
+      ['Survivors by generation', false],
+      ['Larder share by generation', false],
+      ['Loss rates by generation (per item-day held)', false],
+      ['Larder share this season (per bout)', true],
+    ]);
+    expect(HOARD_CHARTS[0].lines.map((l) => l.key)).toEqual(['mean_larder_prob', 'hoarder_larder_prob']);
+    expect(HOARD_CHARTS[4].lines.map((l) => l.key)).toEqual(['larder_loss_rate', 'scatter_loss_rate']);
+    expect(MODEL_CHARTS.hoard).toEqual([]);
+    expect(timeAxisLabel('hoard')).toBe('Bouts');
+  });
+
+  it('puts generations on x and NaN (all cheaters, nothing held) as gaps', () => {
+    const charts: HoardCharts = {
+      generations: generations({ generation: [1, 2, 3], mean_larder_prob: [0.2, 0.5, 0.9], hoarder_larder_prob: [0.2, NaN, 0.9] }),
+      season: new Float64Array(0),
+    };
+    expect(hoardGenerationTable(charts, ['mean_larder_prob', 'hoarder_larder_prob'])).toEqual([
+      [1, 2, 3],
+      [0.2, 0.5, 0.9],
+      [0.2, null, 0.9],
+    ]);
+    expect(hoardGenerationTable(null, ['survivors'])).toEqual([[], []]);
+  });
+
+  it('counts this season in days from its first bout', () => {
+    const c = { days: 100, bouts: 20 } as HoardConfig;
+    const season = (flat: number[]): HoardCharts => ({ generations: generations({}), season: Float64Array.from(flat) });
+    // Generation 1 starts at tick 0; generation 2's bouts are ticks 2001 to 4000.
+    expect(hoardSeasonTable(season([0, NaN, 1, 0.5, 20, 0.25]), c)).toEqual([
+      [0, 0.05, 1],
+      [null, 0.5, 0.25],
+    ]);
+    expect(hoardSeasonTable(season([2001, 0.1, 2040, 0.2]), c)).toEqual([
+      [0.05, 2],
+      [0.1, 0.2],
+    ]);
+    expect(hoardSeasonTable(null, c)).toEqual([[], []]);
   });
 });

@@ -516,6 +516,31 @@ impl HoardWorld {
         super::stats::by_generation(&self.seasons, name)
     }
 
+    /// The current season's per-bout values of series `name` (one of
+    /// [`super::stats::SERIES`]) as `[tick, value, tick, value, …]`: from the
+    /// season's first bout (tick 0 too in generation 1) to now. The history
+    /// holds one snapshot per tick, and generation g's bouts are ticks
+    /// (g − 1)·days·bouts + 1 to g·days·bouts. `None` for an unknown name.
+    pub fn season_series(&self, name: &str) -> Option<Vec<f64>> {
+        use crate::stats::Series;
+        if !super::SERIES.contains(&name) {
+            return None;
+        }
+        let history = self.stats.history();
+        let season = u64::from(self.config.days) * u64::from(self.config.bouts);
+        let first = match self.generation {
+            0 | 1 => 0,
+            g => u64::from(g - 1) * season + 1,
+        };
+        let from = (first as usize).min(history.len());
+        let mut out = Vec::with_capacity(2 * (history.len() - from));
+        for snap in &history[from..] {
+            out.push(snap.tick as f64);
+            out.push(snap.value(name)?);
+        }
+        Some(out)
+    }
+
     /// The generation in which every agent died, if it has happened.
     pub fn extinct(&self) -> Option<u32> {
         self.extinct
@@ -1109,8 +1134,10 @@ impl HoardWorld {
     }
 }
 
-/// An agent's state for the page: traits, stores and this season's losses
-/// (rates so far, per item per day; `None` before it held any).
+/// An agent's state for the page: traits, stores and this season's losses.
+/// The rates are this season's so far: items lost per item held per day,
+/// lost ÷ item-days held (Σ bout-start stock ÷ bouts), a hazard that can
+/// exceed 1 (amendments item 10); `None` before it held any.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct AgentView {
     pub index: usize,
@@ -1428,20 +1455,23 @@ mod tests {
 
     #[test]
     fn founders_are_logit_normal_around_the_printed_means() {
-        let c = HoardConfig {
-            n: 1000,
-            ..HoardConfig::default()
-        };
-        let w = HoardWorld::new(c, 3).unwrap();
-        let n = w.agents.len() as f64;
-        let mean = |f: fn(&Agent) -> f64| w.agents.iter().map(f).sum::<f64>() / n;
+        // 50 populations of 20 (n is capped at 20): 1000 founders.
+        let agents: Vec<Agent> = (0..50)
+            .flat_map(|seed| {
+                HoardWorld::new(HoardConfig::default(), seed)
+                    .unwrap()
+                    .agents
+            })
+            .collect();
+        let n = agents.len() as f64;
+        let mean = |f: fn(&Agent) -> f64| agents.iter().map(f).sum::<f64>() / n;
         let (l, d, f) = (mean(|a| a.l), mean(|a| a.d), mean(|a| a.forage));
         assert!((0.15..0.19).contains(&l), "mean L {l}");
         assert!((0.47..0.53).contains(&d), "mean D {d}");
         assert!((0.99..1.01).contains(&f), "mean forage {f}");
-        let sd = (w.agents.iter().map(|a| (a.forage - f).powi(2)).sum::<f64>() / n).sqrt();
+        let sd = (agents.iter().map(|a| (a.forage - f).powi(2)).sum::<f64>() / n).sqrt();
         assert!((0.09..0.11).contains(&sd), "forage sd {sd}");
-        assert!(w.agents.iter().all(|a| a.l > 0.0
+        assert!(agents.iter().all(|a| a.l > 0.0
             && a.l < 1.0
             && a.d > 0.0
             && a.d < 1.0
@@ -2327,10 +2357,34 @@ mod tests {
         let mut next = w.config.clone();
         next.n = 30;
         let e = Model::set_config(&mut w, ModelConfig::Hoard(next)).unwrap_err();
-        assert!(e.iter().any(|f| f.field == "hoard.n"), "{e:?}");
+        assert!(e.iter().any(|f| f.field == "n"), "{e:?}");
         assert_eq!(w.config.n, 20);
         w.run(2000);
         assert_eq!((w.generation(), w.agents.len()), (2, 20));
+    }
+
+    /// The season series starts at the season's first bout: tick 0 in
+    /// generation 1, then (g − 1)·2000 + 1.
+    #[test]
+    fn the_season_series_covers_the_current_season() {
+        let mut w = HoardWorld::new(HoardConfig::default(), 1).unwrap();
+        let ticks = |w: &HoardWorld| -> Vec<f64> {
+            w.season_series("larder_share")
+                .unwrap()
+                .chunks(2)
+                .map(|p| p[0])
+                .collect()
+        };
+        assert_eq!(ticks(&w), vec![0.0]);
+        w.run(2000);
+        let t = ticks(&w);
+        assert_eq!((t.len(), t[0], t[t.len() - 1]), (2001, 0.0, 2000.0));
+        w.run(5);
+        assert_eq!(ticks(&w), vec![2001.0, 2002.0, 2003.0, 2004.0, 2005.0]);
+        let s = w.season_series("larder_share").unwrap();
+        let last = w.stats.latest().unwrap().larder_share;
+        assert_eq!(s[9].to_bits(), last.to_bits());
+        assert!(w.season_series("nope").is_none());
     }
 
     /// Items are conserved within every season, across generations.

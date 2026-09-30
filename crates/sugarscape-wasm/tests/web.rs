@@ -1314,6 +1314,42 @@ fn a_hoard_agent_is_inspected_with_its_traits_stores_and_losses() {
     sim.step(2000 - 200);
     assert_eq!(sim.hoard_generation_series("mean_larder_prob").len(), 1);
     assert!(sim.hoard_generation_series("nope").is_empty());
+    // The status line's numbers, and the current season's per-bout series.
+    let st: serde_json::Value = serde_json::from_str(&sim.hoard_status()).unwrap();
+    assert_eq!(
+        (
+            &st["generation"],
+            &st["day"],
+            &st["bout"],
+            &st["season_over"]
+        ),
+        (&1.into(), &101.into(), &1.into(), &true.into())
+    );
+    assert_eq!(sim.hoard_season_series("larder_share").len(), 2 * 2001);
+    sim.step(3);
+    assert_eq!(
+        sim.hoard_season_series("larder_share")
+            .chunks(2)
+            .map(|p| p[0])
+            .collect::<Vec<_>>(),
+        vec![2001.0, 2002.0, 2003.0]
+    );
+    assert!(sim.hoard_season_series("nope").is_empty());
+}
+
+#[wasm_bindgen_test]
+fn hoard_views_are_empty_for_other_models() {
+    // A sugarscape world, and a zi market (gs-1).
+    for id in ["ii-2-unit", "gs-1"] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        sim.step(10);
+        assert_eq!(sim.hoard_population(), "[]", "{id}");
+        assert_eq!(sim.hoard_status(), "null", "{id}");
+        assert!(sim.hoard_season_series("larder_share").is_empty(), "{id}");
+        for name in ["generation", "mean_larder_prob"] {
+            assert!(sim.hoard_generation_series(name).is_empty(), "{id} {name}");
+        }
+    }
 }
 
 #[wasm_bindgen_test]

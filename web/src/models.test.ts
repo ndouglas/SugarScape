@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   calendarYear,
+  hoardSeasonTicks,
+  isHoardView,
+  MENUS,
   COLOR_MODES,
   finishesUnpredictably,
   isAgreementView,
@@ -157,6 +160,29 @@ describe('the Minds menu', () => {
       ['Minds 5: caching', ['cache-raby']],
       ['Minds 6: theft', ['theft-arena-8']],
     ]);
+  });
+
+  it('puts the hoard model (Minds 7) under Minds, in its own group, with no entry of its own', () => {
+    const presets = [
+      p('ii-2', 'Animation II-2'),
+      p('cache-raby', 'Raby et al. 2007; Minds 5', { caching: { rule: 'plan', capacity: 0 } }),
+      p('hoard-threshold', 'Vander Wall & Jenkins 2003; Minds 7', { model: 'hoard' }),
+      p('hoard-larder', 'Vander Wall & Jenkins 2003; Minds 7', { model: 'hoard', app_scat: 0.8 }),
+    ];
+    expect(presets.map(presetMenu)).toEqual(['sugarscape', 'minds', 'minds', 'minds']);
+    expect(presetGroups(presets).map((g) => [g.model, g.presets.map((x) => x.id)])).toEqual([
+      ['sugarscape', ['ii-2']],
+      ['minds', ['cache-raby', 'hoard-threshold', 'hoard-larder']],
+    ]);
+    expect(presetSubgroups('minds', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([
+      ['Minds 5: caching', ['cache-raby']],
+      ['Minds 7: evolution of hoarding', ['hoard-threshold', 'hoard-larder']],
+    ]);
+    // A hoard world without its preset (a share link, a custom setup) is still a Minds world.
+    const hoard = { model: 'hoard' } as unknown as ModelConfig;
+    expect([modelOf(hoard), menuOf(hoard), worldMenu(hoard, undefined)]).toEqual(['hoard', 'minds', 'minds']);
+    expect(MENUS).not.toContain('hoard');
+    expect(MENUS.slice(0, 2)).toEqual(['sugarscape', 'minds']);
   });
 });
 
@@ -751,5 +777,31 @@ describe("Schelling's tipping", () => {
     const point = { red_in: 40, blue_in: 30, red_content: true, blue_content: false, now: false, agent: null } as AnyInspection;
     expect(isTippingView(point)).toBe(true);
     expect(isTippingView({ place: 3, agent: null } as AnyInspection)).toBe(false);
+  });
+});
+
+describe('the hoard model (Minds 7)', () => {
+  const hoard = { model: 'hoard', days: 100, bouts: 20, generations: 60 } as unknown as ModelConfig;
+
+  it('is read by its tag, drawn as one column per agent, and its columns told apart', () => {
+    expect(COLOR_MODES.hoard).toEqual([['agents', 'Agents']]);
+    expect(MODEL_OVERLAYS.hoard).toEqual([]);
+    const column = { generation: 2, day: 11, bout: 1, public: 64, agent: { index: 3 } } as unknown as AnyInspection;
+    expect(isHoardView(column)).toBe(true);
+    const others = [
+      { site: { x: 1, y: 2 }, agent: null },
+      { red_in: 40, blue_in: 30, red_content: true, blue_content: false, now: false, agent: null },
+      { place: 3, agent: null },
+    ] as AnyInspection[];
+    expect(others.map(isHoardView)).toEqual([false, false, false]);
+    expect([isLineView(column), isTippingView(column), isSugarView(column)]).toEqual([false, false, false]);
+  });
+
+  it('ends after its last generation’s season, counted in bouts', () => {
+    expect(hoardSeasonTicks(hoard as never)).toBe(2000);
+    expect(ticksLeft(hoard, 0)).toBe(120_000);
+    expect(ticksLeft(hoard, 119_000)).toBe(1000);
+    expect(ticksLeft(hoard, 130_000)).toBe(0);
+    expect(finishesUnpredictably(hoard)).toBe(false);
   });
 });

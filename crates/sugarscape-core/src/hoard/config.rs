@@ -51,6 +51,9 @@ pub enum CheaterFitness {
     Survival,
 }
 
+/// The most agents a population can hold: the frame draws one column each.
+pub const MAX_AGENTS: u32 = 20;
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct HoardConfig {
@@ -156,117 +159,119 @@ impl HoardConfig {
                 e.push(FieldError::new(field, message));
             }
         };
+        // The frame gives each agent a column of `WIDE / n` cells; at most 20
+        // keeps every column wide enough to draw and click (V&J run 20).
         check(
-            (2..=1000).contains(&self.n),
-            "hoard.n",
-            "must be between 2 and 1000",
+            (2..=MAX_AGENTS).contains(&self.n),
+            "n",
+            "must be between 2 and 20",
         );
         check(
             (1..=1000).contains(&self.days),
-            "hoard.days",
+            "days",
             "must be between 1 and 1000",
         );
         check(
             (1..=1000).contains(&self.bouts),
-            "hoard.bouts",
+            "bouts",
             "must be between 1 and 1000",
         );
         check(
             self.food_days <= self.days,
-            "hoard.food_days",
+            "food_days",
             "must be at most the days in the season",
         );
         check(
             self.food_first.is_finite() && (0.0..=10_000.0).contains(&self.food_first),
-            "hoard.food_first",
+            "food_first",
             "must be between 0 and 10000",
         );
         check(
             self.food_step.is_finite() && (0.0..=1000.0).contains(&self.food_step),
-            "hoard.food_step",
+            "food_step",
             "must be between 0 and 1000",
         );
         check(
             self.food_first - self.food_step * f64::from(self.food_days.saturating_sub(1)) + 0.5
                 >= 0.0,
-            "hoard.food_step",
+            "food_step",
             "must not take the food below 0 by the last day of production",
         );
         check(
             self.nonstorable_days <= self.days,
-            "hoard.nonstorable_days",
+            "nonstorable_days",
             "must be at most the days in the season",
         );
         check(
             (1..=1_000_000).contains(&self.search_items),
-            "hoard.search_items",
+            "search_items",
             "must be between 1 and 1000000",
         );
         check(
             self.search_miss > 0.0 && self.search_miss < 1.0,
-            "hoard.search_miss",
+            "search_miss",
             "must be between 0 and 1, exclusive",
         );
         check(
             self.forage_sd.is_finite() && (0.0..=1.0).contains(&self.forage_sd),
-            "hoard.forage_sd",
+            "forage_sd",
             "must be between 0 and 1",
         );
         check(
             self.app_scat.is_finite() && self.app_scat > 0.0 && self.app_scat <= 100.0,
-            "hoard.app_scat",
+            "app_scat",
             "must be above 0 and at most 100",
         );
         check(
             self.app_lard.is_finite() && self.app_lard > 0.0 && self.app_lard <= 100.0,
-            "hoard.app_lard",
+            "app_lard",
             "must be above 0 and at most 100",
         );
         check(
             (0.0..=1.0).contains(&self.predation),
-            "hoard.predation",
+            "predation",
             "must be between 0 and 1",
         );
         check(
             (0.0..=1.0).contains(&self.heritability),
-            "hoard.heritability",
+            "heritability",
             "must be between 0 and 1",
         );
         check(
             self.v_seg.is_finite() && (0.0..=10.0).contains(&self.v_seg),
-            "hoard.v_seg",
+            "v_seg",
             "must be between 0 and 10",
         );
         check(
             self.l_mean > 0.0 && self.l_mean < 1.0,
-            "hoard.l_mean",
+            "l_mean",
             "must be between 0 and 1, exclusive",
         );
         check(
             self.d_mean > 0.0 && self.d_mean < 1.0,
-            "hoard.d_mean",
+            "d_mean",
             "must be between 0 and 1, exclusive",
         );
         check(
             (1..=10_000).contains(&self.generations),
-            "hoard.generations",
+            "generations",
             "must be between 1 and 10000",
         );
         check(
             (0.0..=1.0).contains(&self.cheaters),
-            "hoard.cheaters",
+            "cheaters",
             "must be between 0 and 1",
         );
         check(
             (0.0..=1.0).contains(&self.owner_recovery),
-            "hoard.owner_recovery",
+            "owner_recovery",
             "must be between 0 and 1",
         );
         check(
             self.defense_slope.is_finite()
                 && self.defense_slope > 0.0
                 && self.defense_slope <= 1000.0,
-            "hoard.defense_slope",
+            "defense_slope",
             "must be above 0 and at most 1000",
         );
         if e.is_empty() {
@@ -298,24 +303,22 @@ impl HoardConfig {
             ("cheaters", self.cheaters == next.cheaters),
         ] {
             if !same {
-                out.push(FieldError::new(
-                    format!("hoard.{field}"),
-                    "changes only on reset",
-                ));
+                out.push(FieldError::new(field, "changes only on reset"));
             }
         }
         out
     }
 }
 
-/// The Rules panel's fields.
+/// The Rules panel's fields, grouped so that every group applies one way:
+/// live (to the running world) or on reset (rebuilding it).
 pub fn schema() -> Vec<Param> {
     use Apply::{Live, Reset};
     vec![
-        Param::integer("Season", "n", "Agents", (2, 1000), Reset),
+        Param::integer("Season", "n", "Agents", (2, 20), Reset),
         Param::integer("Season", "days", "Days in the season", (1, 1000), Reset),
         Param::integer("Season", "bouts", "Foraging bouts a day", (1, 1000), Reset),
-        Param::integer("Season", "generations", "Generations", (1, 10_000), Live),
+        Param::integer("Run", "generations", "Generations", (1, 10_000), Live),
         Param::integer(
             "Food",
             "food_days",
@@ -366,21 +369,21 @@ pub fn schema() -> Vec<Param> {
             Reset,
         ),
         Param::number(
-            "Search",
+            "Apparency",
             "app_scat",
             "Apparency of scattered items",
             (0.01, 100.0, 0.01),
             Live,
         ),
         Param::number(
-            "Search",
+            "Apparency",
             "app_lard",
-            "Apparency of larder items",
+            "Apparency of larders",
             (0.01, 100.0, 0.01),
             Live,
         ),
         Param::choice(
-            "Search",
+            "Apparency",
             "larder_weight",
             "A larder weighs",
             &[
@@ -397,31 +400,38 @@ pub fn schema() -> Vec<Param> {
             Live,
         ),
         Param::number(
-            "Genes",
+            "Inheritance",
             "heritability",
             "Heritability",
             (0.0, 1.0, 0.05),
             Live,
         ),
         Param::number(
-            "Genes",
+            "Inheritance",
             "v_seg",
             "Segregation variance",
             (0.0, 10.0, 0.05),
             Live,
         ),
         Param::number(
-            "Genes",
+            "Founders",
             "l_mean",
             "Founders' larder probability",
             (0.01, 0.99, 0.01),
             Reset,
         ),
         Param::number(
-            "Genes",
+            "Founders",
             "d_mean",
             "Founders' defense propensity",
             (0.01, 0.99, 0.01),
+            Reset,
+        ),
+        Param::number(
+            "Founders",
+            "cheaters",
+            "Share of founders that never cache",
+            (0.0, 1.0, 0.05),
             Reset,
         ),
         Param::number(
@@ -463,13 +473,6 @@ pub fn schema() -> Vec<Param> {
             "Owner finds its scattered items",
             (0.0, 1.0, 0.05),
             Live,
-        ),
-        Param::number(
-            "Switches",
-            "cheaters",
-            "Share of founders that never cache",
-            (0.0, 1.0, 0.05),
-            Reset,
         ),
         Param::choice(
             "Switches",
@@ -523,23 +526,21 @@ mod tests {
     }
 
     #[test]
-    fn bad_values_are_named_hoard_fields() {
+    fn bad_values_name_their_config_fields() {
         for (edit, field) in [
-            (
-                (|c: &mut HoardConfig| c.n = 1) as fn(&mut HoardConfig),
-                "hoard.n",
-            ),
-            (|c| c.bouts = 0, "hoard.bouts"),
-            (|c| c.food_days = 101, "hoard.food_days"),
-            (|c| c.search_miss = 1.0, "hoard.search_miss"),
-            (|c| c.app_lard = 0.0, "hoard.app_lard"),
-            (|c| c.heritability = 1.5, "hoard.heritability"),
-            (|c| c.l_mean = 0.0, "hoard.l_mean"),
-            (|c| c.generations = 0, "hoard.generations"),
-            (|c| c.cheaters = -0.1, "hoard.cheaters"),
-            (|c| c.owner_recovery = 2.0, "hoard.owner_recovery"),
-            (|c| c.defense_slope = 0.0, "hoard.defense_slope"),
-            (|c| c.food_step = f64::NAN, "hoard.food_step"),
+            ((|c: &mut HoardConfig| c.n = 1) as fn(&mut HoardConfig), "n"),
+            (|c| c.n = 21, "n"),
+            (|c| c.bouts = 0, "bouts"),
+            (|c| c.food_days = 101, "food_days"),
+            (|c| c.search_miss = 1.0, "search_miss"),
+            (|c| c.app_lard = 0.0, "app_lard"),
+            (|c| c.heritability = 1.5, "heritability"),
+            (|c| c.l_mean = 0.0, "l_mean"),
+            (|c| c.generations = 0, "generations"),
+            (|c| c.cheaters = -0.1, "cheaters"),
+            (|c| c.owner_recovery = 2.0, "owner_recovery"),
+            (|c| c.defense_slope = 0.0, "defense_slope"),
+            (|c| c.food_step = f64::NAN, "food_step"),
         ] {
             let mut c = HoardConfig::default();
             edit(&mut c);
@@ -592,6 +593,20 @@ mod tests {
         assert_eq!(at(1.0, 20).len(), 20);
         for s in [0.1, 0.3, 0.33, 0.7] {
             assert_eq!(at(s, 100).len(), (100.0 * s).floor() as usize, "{s}");
+        }
+    }
+
+    /// Every group applies one way, so its note (live, or rebuilds the
+    /// world) holds for each field in it.
+    #[test]
+    fn each_schema_group_applies_one_way() {
+        let params = schema();
+        for p in &params {
+            let same = params
+                .iter()
+                .filter(|q| q.group == p.group)
+                .all(|q| q.apply == p.apply);
+            assert!(same, "{} mixes live and reset fields", p.group);
         }
     }
 

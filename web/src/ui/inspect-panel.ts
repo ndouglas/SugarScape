@@ -3,7 +3,8 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { hasCaches, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hoardStatusText } from '../hoard';
+import { hasCaches, isHoardView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -17,6 +18,8 @@ import type {
   BaliInspection,
   LineInspection,
   TippingInspection,
+  HoardConfig,
+  HoardInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -255,6 +258,39 @@ export class InspectPanel {
             ),
       ),
       row('Infected by', a.infected_by ? this.links([a.infected_by]) : h('span', { class: 'hint' }, 'nobody')),
+    ];
+  }
+
+  /**
+   * Minds 7: where the run is, and the agent whose column was clicked: its traits, stores, state and
+   * this season's losses. The loss rates are items lost per item held per day (lost ÷ item-days
+   * held, the season so far), a hazard that can exceed 1; none before it held any.
+   */
+  private hoardRows(view: HoardInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const a = view.agent;
+    const id = (i: number) => `#${i + 1}`;
+    const state = a.alive
+      ? [a.fed ? 'fed today' : 'hungry', a.defending ? 'defending its larder' : null, a.raiding !== null ? `raiding ${id(a.raiding)}'s larder` : null]
+          .filter((x) => x !== null)
+          .join(' · ')
+      : a.death
+        ? `died on day ${a.death.day}, bout ${a.death.bout} (${a.death.cause === 'starvation' ? 'starved' : 'preyed upon'})`
+        : 'dead';
+    const rate = (r: number | null) => (r === null ? 'none yet (it has held none)' : `${fmt(r)} per item-day held`);
+    return [
+      row('Where', hoardStatusText({ ...view, season_over: false, living: 0 }, this.engine.config as HoardConfig)),
+      row('Agent', `${id(a.index)} · ${a.cheater ? 'cheater (never caches)' : 'hoarder'}`),
+      row('State', state),
+      row('Larder probability (L)', a.l.toFixed(3)),
+      row('Defense propensity (D)', a.d.toFixed(3)),
+      row('Foraging efficiency', a.forage.toFixed(3)),
+      row('Stores', `${a.larder} in its larder · ${a.scatter} scattered`),
+      row('Lost this season', `${a.larder_lost} from its larder · ${a.scatter_lost} scattered`),
+      row('Larder loss rate', rate(a.larder_rate)),
+      row('Scatter loss rate', rate(a.scatter_rate)),
+      h('tr', {}, h('td', { colspan: 2, class: 'hint' }, 'Loss rates: items taken ÷ item-days held, this season so far (a hazard, so it can exceed 1).')),
+      row('This season', `ate ${a.eaten} items · alive ${a.bouts_alive} bouts`),
     ];
   }
 
@@ -723,7 +759,9 @@ export class InspectPanel {
             : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
       // First: an empty ethnocentrism or demographic PD site is shaped like an empty Schelling site.
-      const rows = isEthnoView(view, this.engine.model)
+      const rows = isHoardView(view)
+        ? this.hoardRows(view)
+        : isEthnoView(view, this.engine.model)
         ? this.ethnoSiteRows(view, gone)
         : isDpdView(view, this.engine.model)
           ? this.dpdSiteRows(view, gone)

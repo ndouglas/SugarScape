@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  HoardConfig,
+  HoardInspection,
+  HoardStats,
   ZiConfig,
   BaliConfig,
   BaliInspection,
@@ -804,6 +807,39 @@ describe('the bali model through the engine', () => {
     await e.select(5, 521);
     const w = e.inspection!.view as BaliInspection;
     expect([w.panel, w.dam?.id]).toEqual(['strip', 0]);
+  });
+});
+
+describe('the hoard model (Minds 7) through the engine', () => {
+  it('ends after its last generation, says where it is, charts by generation and inspects a column', async () => {
+    const r = presets.find((p) => p.id === 'hoard-threshold')!;
+    expect(presetMenu(r)).toBe('minds');
+    // Two short seasons: 5 days of 4 bouts, 20 bouts each.
+    const config = { ...structuredClone(r.config as HoardConfig), days: 5, bouts: 4, food_days: 5, generations: 2 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.want(() => ({ hoardCharts: true }));
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as HoardStats;
+    expect([e.finished, ends, e.tick, s.generation]).toEqual([true, 1, 40, 2]);
+    expect(e.hoard).toMatchObject({ generation: 2, day: 6, bout: 1, season_over: true });
+    await e.refresh();
+    expect(Array.from(e.hoardCharts!.generations.generation)).toEqual([1, 2]);
+    expect(e.hoardCharts!.generations.mean_larder_prob.length).toBe(2);
+    // This season's larder share: generation 2's bouts, ticks 21 to 40.
+    expect(e.hoardCharts!.season.length).toBe(2 * 20);
+    expect(e.hoardCharts!.season[0]).toBe(21);
+    await e.select(35, 20);
+    const v = e.inspection!.view as HoardInspection;
+    expect([v.generation, v.agent.index, e.inspection!.agentId]).toEqual([2, 3, null]);
+  });
+
+  it('has a Compare pair either side of the threshold, both real hoard presets', () => {
+    const entry = COMPARE_PRESETS.find((c) => c.id === 'hoard-scatter-vs-larder')!;
+    const states = comparePresetStates(presets, entry, 7)!;
+    expect(modelOf(states.b.config)).toBe('hoard');
+    expect((states.b.config as HoardConfig).app_scat).toBe(0.8);
   });
 });
 

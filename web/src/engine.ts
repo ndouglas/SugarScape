@@ -7,6 +7,7 @@ import {
   type ChartGroup,
   type Command,
   type DisplayState,
+  type HoardCharts,
   type LogEntry,
   type Overlay,
   type PlaceOverrides,
@@ -21,11 +22,11 @@ import {
   type WorldSnapshot,
 } from './protocol';
 import { loadedDisplay } from './layers';
-import { calendarYear, hasCaches, isSugar, mindsShown, modelOf, ticksLeft } from './models';
+import { calendarYear, hasCaches, hoardSeasonTicks, isSugar, mindsShown, modelOf, ticksLeft } from './models';
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { AgreementConfig, ColorMode, Config, FieldError, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import type { AgreementConfig, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
 import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -56,6 +57,13 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'bali') return `This run has reached its last year — Reset to run it again`;
+  if (modelOf(config) === 'hoard') {
+    // A run ends at the end of generation `generations`' season, or earlier when every agent died.
+    const c = config as HoardConfig;
+    return tick < hoardSeasonTicks(c) * c.generations
+      ? `Every agent has died, in generation ${Math.floor((tick - 1) / hoardSeasonTicks(c)) + 1} — Reset to run it again`
+      : `This run has reached its last generation (${Math.ceil(tick / hoardSeasonTicks(c))}) — Reset to run it again`;
+  }
   if (modelOf(config) === 'zi') return `This run has reached its last period — Reset to run it again`;
   if (modelOf(config) === 'punishment') return `This run has reached its last period (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'retirement') {
@@ -250,6 +258,10 @@ export class Engine {
   minds: MindsView | null = null;
   /** Minds 5–6: every site holding a cache, flat `[x, y, total, flags, …]`, while the caches overlay is on. */
   cacheSites: Float64Array = NO_CACHES;
+  /** Minds 7: where the hoard run is as of the latest snapshot; null in other models. */
+  hoard: HoardStatus | null = null;
+  /** Minds 7: the hoard charts' data as of the last snapshot that carried it (the charts want it); null in other models. */
+  hoardCharts: HoardCharts | null = null;
   /** The caches-and-homes overlay was turned off by hand: loading a preset keeps it off. */
   private cachesOff = false;
   /** The world has run its course (the anasazi's end year) as of the latest snapshot. */
@@ -773,6 +785,8 @@ export class Engine {
         this.valley = other.valley;
         this.minds = other.minds;
         this.cacheSites = other.cacheSites;
+        this.hoard = other.hoard;
+        this.hoardCharts = other.hoardCharts;
         this.cachesOff = other.cachesOff;
         this.finished = other.finished;
         this.tick = other.tick;
@@ -854,6 +868,7 @@ export class Engine {
     if (networks.length > 0) own.networks = networks;
     if (this.model === 'ring') own.ring = true;
     if (this.model === 'anasazi') own.valley = true;
+    if (this.model === 'hoard') own.hoard = true;
     if (isSugar(this.config) && mindsShown(this.config)) own.minds = true;
     if (this.cachesWanted()) own.caches = true;
     return mergeWants([own, ...Array.from(this.providers, (p) => p(now))]);
@@ -927,6 +942,8 @@ export class Engine {
     this.valley = s.valley ?? (this.model === 'anasazi' ? this.valley : null);
     this.minds = s.minds ?? (isSugar(this.config) && mindsShown(this.config) ? this.minds : null);
     this.cacheSites = s.caches ?? (this.cachesWanted() ? this.cacheSites : NO_CACHES);
+    this.hoard = s.hoard ?? (this.model === 'hoard' ? this.hoard : null);
+    this.hoardCharts = s.hoardCharts ?? (this.model === 'hoard' ? this.hoardCharts : null);
     this.finished = s.finished === true;
     // All null (nothing edited) is the same as none.
     if (s.editedLandscapes) this.landscapes = s.editedLandscapes.some((m) => m !== null) ? s.editedLandscapes : [];

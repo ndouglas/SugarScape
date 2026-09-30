@@ -1550,7 +1550,7 @@ mod tests {
         assert_eq!(ModelConfig::from_value(json).unwrap(), c);
         assert_eq!(c.series_names()[..2], ["generation", "mean_larder_prob"]);
         let e = ModelConfig::from_json(r#"{"model": "hoard", "n": 1}"#).unwrap_err();
-        assert_eq!(e[0].field, "hoard.n");
+        assert_eq!(e[0].field, "n");
         let mut w = ModelWorld::new(c, 1).unwrap();
         assert_eq!(w.kind(), ModelKind::Hoard);
         let cp = w.checkpoint().expect("hoard worlds have keyframes");

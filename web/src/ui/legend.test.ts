@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { COLOR_MODES } from '../models';
 import type { Config, LabView } from '../types';
-import { colorLegend, overlayLegend, RENDER_COLORS, type MapMarks } from './legend';
+import { colorLegend, HOARD_COLORS, hoardLegend, overlayLegend, RENDER_COLORS, type MapMarks } from './legend';
 
 const config = {
   culture: { groups: [{ name: 'Blue', color: '#3d7eff' }, { name: 'Red', color: '#ff4d4d' }] },
@@ -60,5 +60,22 @@ describe('the legend', () => {
     expect(labels({ lab: { ...lab, phase: 'morning' } })).toEqual(['caching tray']);
     const walled = { ...config, walls: [{ x: 0, y: 0, width: 1, height: 1, opaque: true }] } as unknown as Config;
     expect(labels({}, walled)).toEqual(['wall']);
+  });
+});
+
+describe('the hoard legend (Minds 7)', () => {
+  it("uses the hoard frame's own colors", () => {
+    const source = new TextDecoder().decode(readFileSync(new URL('../../../crates/sugarscape-core/src/hoard/view.rs', import.meta.url)));
+    for (const [name, color] of Object.entries(HOARD_COLORS)) {
+      const m = new RegExp(`pub const ${name}: Rgb = \\[0x(..), 0x(..), 0x(..)\\];`).exec(source);
+      expect(m ? `#${m[1]}${m[2]}${m[3]}` : null, name).toBe(color);
+    }
+  });
+
+  it('explains a column: the state colors, the L and D strips, larder up and scatter down', () => {
+    const labels = (cheaters: boolean) => hoardLegend(cheaters).map((i) => i.label);
+    expect(labels(false)).toEqual(['hungry', 'fed', 'defending its larder', 'raiding a larder', 'dead', 'L and D strips, 0 → 1', 'larder items (up)', 'scattered items (down)']);
+    expect(labels(true)).toContain('cheater');
+    expect(hoardLegend(false).find((i) => i.label.startsWith('L and D'))?.mark).toEqual({ kind: 'ramp', from: HOARD_COLORS.LOW, to: HOARD_COLORS.HIGH });
   });
 });

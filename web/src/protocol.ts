@@ -1,6 +1,6 @@
 // Messages between the engine (page) and the SimHost (simulation worker, or the page as a fallback).
 import type { CreditGraph } from './credit';
-import type { AnyInspection, ColorMode, DiseaseEntry, FieldError, Layer, MindsView, ModelConfig, ModelStats } from './types';
+import type { AnyInspection, ColorMode, DiseaseEntry, FieldError, HoardStatus, Layer, MindsView, ModelConfig, ModelStats } from './types';
 
 /** The sugarscape's network overlays (edges the host sends in `networks`). */
 export type NetworkOverlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family';
@@ -67,7 +67,30 @@ export interface Wants {
   minds?: boolean;
   /** Minds 5–6: every site's caches, flat (the caches overlay). */
   caches?: boolean;
+  /** Minds 7: where the hoard run is (generation, day, bout, public food). */
+  hoard?: boolean;
+  /** Minds 7: the hoard run's by-generation series and this season's per-bout larder share (its charts). */
+  hoardCharts?: boolean;
 }
+
+/** The hoard series charted by generation (the core's `hoard::GENERATION_SERIES`). */
+export const HOARD_GENERATION_SERIES = [
+  'generation',
+  'mean_larder_prob',
+  'hoarder_larder_prob',
+  'mean_defense',
+  'survivors',
+  'larder_share',
+  'larder_loss_rate',
+  'scatter_loss_rate',
+] as const;
+export type HoardGenerationSeries = (typeof HOARD_GENERATION_SERIES)[number];
+
+/**
+ * Minds 7's charts: one value per finished season for each by-generation series (NaN where a
+ * season has none), and this season's per-bout larder share, `[tick, value, …]`.
+ */
+export interface HoardCharts { generations: Record<HoardGenerationSeries, Float64Array>; season: Float64Array }
 
 /** Ring World's state for the ring view: sugar per site (site 0 first) and each agent's site. */
 export interface RingState { sugar: Float64Array; agents: Uint32Array }
@@ -127,6 +150,10 @@ export interface WorldSnapshot {
   minds?: MindsView;
   /** Minds 5–6: every site holding a cache, `[x, y, total, flags, …]`, when `wants.caches`. */
   caches?: Float64Array;
+  /** Minds 7: where the hoard run is, when `wants.hoard`. */
+  hoard?: HoardStatus;
+  /** Minds 7: the hoard charts' data, when `wants.hoardCharts`. */
+  hoardCharts?: HoardCharts;
   /** The world has run its course (the anasazi's end year): stepping it does nothing more. */
   finished?: true;
   /** Edits still to replay: after every init and reset, and whenever it changes. */
@@ -218,6 +245,8 @@ const FLAGS = [
   'memory',
   'minds',
   'caches',
+  'hoard',
+  'hoardCharts',
 ] as const;
 
 /** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */
