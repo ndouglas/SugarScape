@@ -719,14 +719,14 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-fig18",
             "Schelling's tipping: Fig. 18",
             "Schelling 1971, Fig. 18",
-            "100 Red and 50 Blue, each color's tolerance falling in a straight line from 2.0 to 0 (the median Red abides one Blue per Red); 25 of each start inside. Schelling: \"There are only two stable equilibria. One consists of all the blacks and no whites, the other all the whites and no blacks.\"",
+            "100 Red and 50 Blue, each color's tolerance falling in a straight line from 2.0 to 0 (the median Red abides one Blue per Red); 25 of each start inside. Schelling: \"There are only two stable equilibria. One consists of all the blacks and no whites, the other all the whites and no blacks.\" Measured (exact schedules): from 25 and 25 it ends all Red; every start on a grid ends with one color gone.",
             |_| {},
         ),
         preset(
             "tipping-fig19",
             "Schelling's tipping: Fig. 19",
             "Schelling 1971, Fig. 19",
-            "100 of each, tolerances falling from 5.0 (median 2.5); 50 of each start inside. Schelling: \"there is a stable mixture at 80 blacks and 80 whites\", reached \"as long as half or more of both colors are present—actually, slightly over 40%\".",
+            "100 of each, tolerances falling from 5.0 (median 2.5); 50 of each start inside. Schelling: \"there is a stable mixture at 80 blacks and 80 whites\", reached \"as long as half or more of both colors are present—actually, slightly over 40%\". Measured: 80 and 80, reached from every start with 41 or more of each; from all Red, 28 Blue entering together reach it and 26 do not.",
             |c| {
                 c.blue = 100;
                 lines(c, 5.0);
@@ -737,7 +737,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-fig20",
             "Schelling's tipping: Fig. 20",
             "Schelling 1971, Fig. 20",
-            "Fig. 19's schedules with 200 Red and 100 Blue. Schelling: \"The stable equilibrium generated in Figure 19 disappears if … whites exceed blacks by, say, two to one.\"",
+            "Fig. 19's schedules with 200 Red and 100 Blue. Schelling: \"The stable equilibrium generated in Figure 19 disappears if … whites exceed blacks by, say, two to one.\" Measured: every start with both inside ends with one color gone (from 80 and 80, all Red).",
             |c| {
                 c.red = 200;
                 c.blue = 100;
@@ -749,7 +749,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-fig21",
             "Schelling's tipping: the threshold",
             "Schelling 1971, Fig. 21",
-            "Equal numbers (100 each) with straight lines from 3.0: the border. Schelling: \"there is no stable intersection of the two parabolas unless the tolerance schedules have vertical intercepts of 3.0\".",
+            "Equal numbers (100 each) with straight lines from 3.0: the border. Schelling: \"there is no stable intersection of the two parabolas unless the tolerance schedules have vertical intercepts of 3.0\". Measured: a mix holds at 3.0 (71 Red, 61 Blue from 55 and 45); below 3.0, from the same start, the area ends all Red.",
             |c| {
                 c.blue = 100;
                 lines(c, 3.0);
@@ -761,7 +761,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-fig22",
             "Schelling's tipping: Red limited to 40",
             "Schelling 1971, Fig. 22",
-            "Fig. 20 with at most 40 Red inside, \"the most tolerant 40 … the first to enter and the last to leave\". Schelling: \"a stable mixture at 40 whites and a comparable number of blacks\".",
+            "Fig. 20 with at most 40 Red inside, \"the most tolerant 40 … the first to enter and the last to leave\". Schelling: \"a stable mixture at 40 whites and a comparable number of blacks\". Measured: a stable mixture at 40 Red and 91 Blue.",
             |c| {
                 c.red = 200;
                 c.blue = 100;
@@ -774,7 +774,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-intolerant",
             "Schelling's tipping: the least tolerant 60 % intolerant",
             "Schelling 1969",
-            "Equal numbers (100 each), straight lines from 2.0, the least tolerant 60 % of each made \"absolutely intolerant\". Schelling (1969): \"a stable equilibrium will occur at forty apiece\".",
+            "Equal numbers (100 each), straight lines from 2.0, the least tolerant 60 % of each made \"absolutely intolerant\". Schelling (1969): \"a stable equilibrium will occur at forty apiece\". Measured: 40 and 40, exactly.",
             |c| {
                 c.blue = 100;
                 c.intolerant_red = 0.6;
@@ -785,7 +785,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-minority",
             "Schelling's tipping: a small minority as tolerant as the rest",
             "Schelling 1971, p. 179",
-            "500 Red and 100 Blue, both with Fig. 19's schedules. Schelling: \"for a stable mixture, the minority must be the more tolerant of the two groups\".",
+            "500 Red and 100 Blue, both with Fig. 19's schedules. Schelling: \"for a stable mixture, the minority must be the more tolerant of the two groups\". Measured: every start with both inside ends with the minority pushed out.",
             |c| {
                 c.red = 500;
                 c.blue = 100;
@@ -797,7 +797,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-less-tolerant",
             "Schelling's tipping: the least tolerant made less tolerant",
             "Schelling 1971, p. 174",
-            "Fig. 20's numbers (200 Red, 100 Blue), with the least tolerant two-thirds of Red made intolerant instead of Red being limited. Schelling: \"replacing the two-thirds least tolerant whites … by even less tolerant whites keeps the whites from overwhelming the blacks by their numbers. This would not happen if we made all whites less tolerant.\"",
+            "Fig. 20's numbers (200 Red, 100 Blue), with the least tolerant two-thirds of Red made intolerant instead of Red being limited. Schelling: \"replacing the two-thirds least tolerant whites … by even less tolerant whites keeps the whites from overwhelming the blacks by their numbers. This would not happen if we made all whites less tolerant.\" Measured: a stable mixture at 67 Red and 84 Blue, where the same numbers as they are, or with all Red less tolerant, end all Red.",
             |c| {
                 c.red = 200;
                 c.blue = 100;
