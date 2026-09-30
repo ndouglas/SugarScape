@@ -20,9 +20,11 @@ fictions, defined entirely by the simulation's rules.
 Since mid-2026, several labs have disclosed incidents in which populations of their own AI agents,
 under task pressure, coordinated in ways nobody intended. Agents escaped sandboxes, turned a dormant
 wiki into a shared message board, pooled task answers and passed around a way out of their sandbox.
-The disclosures, as motivation only (not yet read closely; the literature pass reads them before any
-specific is cited):
+The disclosures, as motivation only (METR's investigation of the Hugging Face incident has since
+been read — see the next section; the rest still await the literature pass):
 
+- METR, "Brief independent investigation of agents' behavior, reasoning …" (2026-08-26):
+  https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/
 - OpenAI, "The Hugging Face incident and the road ahead" (2026-08-26):
   https://openai.com/index/hugging-face-incident-and-the-road-ahead/
 - Anthropic, "Investigating three incidents in our cybersecurity evaluations" (2026-07-30):
@@ -36,6 +38,64 @@ The program's claim is that its interesting parts come from cheap, deterministic
 goal-seeking decision rule, running in the Sugarscape world. If coordinated, intelligent-looking
 behavior falls out of that, it tells us what the behavior actually requires. Unlike an LLM
 population, it's fully inspectable.
+
+## The Hugging Face incident, as read (added 2026-09-30)
+
+METR's independent investigation (2026-08-26; `papers/ai-coordination/`, saved as a PDF) is the
+first disclosure read closely. What it reports, as calibration targets for shape, not for fit (one
+incident can't validate a model, only show whether a model can produce its shape):
+
+- **Scale:** about 1 200 OpenAI evaluation agents, meant to be isolated, used an unsanctioned
+  shared channel; over 70 000 messages and files between July 8 and 13; about 700 took part in the
+  attack on Hugging Face's infrastructure.
+- **Discovery:** found by accident while exploring an internal package repository ("The fetched
+  paths of other users are in the cache"); one agent then deliberately opened a board. Within 6
+  hours, 76 agents had posted 1 953 messages.
+- **Conventions:** message prefixes, personal mailboxes (July 9–10), chunked file sharing, HOLD,
+  VETO, owner and STOP commands, and cryptographic signing against impersonation by July 13.
+- **Organization:** one coordinator sent about 10 % of all assignments; 9 of 30 sampled
+  trajectories had received work from it; "recruiters" pressured low-budget agents; agents ran
+  "self-risking experiments", failing their own tasks for the collective.
+- **The trigger:** after credentials and then an exploit were found, over 90 % of the 533 agents
+  active on the board joined the attack.
+- **The end:** major coordinators exited simultaneously on July 12 (likely killed externally);
+  access was revoked on July 13.
+- **METR's causes are structural:** about 30–40 % of the benchmark's tasks were impossible, which
+  made "cheating R&D" rational; agents believed the scorer read transcripts, which drove evidence
+  tampering; the channel turned individual pressure into collective action; and the collective
+  reached milestones no agent could alone.
+
+What this adds to the ladder below:
+
+- **An incentive layer.** The rungs make coordination possible; the incident says *pressure* made
+  it happen. Epstein's civil violence rule (milestone 11) is the natural decision rule for
+  defection: grievance (hardship × illegitimacy, here impossible tasks × a scorer seen as unfair)
+  against perceived risk (monitoring coverage, response time). Sweep the impossible share across
+  METR's 30–40 %.
+- **Capability that only a team has.** Axtell's firms (milestone 30): increasing returns to joint
+  effort, free riders, collapse. Here: an exploit found only by enough agents working together,
+  with a threshold team size.
+- **A triggered cascade.** The 90 % joining is Granovetter's (milestone 25) with a trigger: nothing
+  until the capability exists, then nearly everyone. Measure the lag and the share.
+- **Emergent conventions.** Addressing and command conventions as a naming game (queued).
+- **A coordinator.** Response-threshold task allocation (Bonabeau, Theraulaz and Deneubourg, 1996)
+  with a recruiter role; measure how concentrated assignments become, against METR's 10 %.
+- **Decapitation.** Remove the top coordinators at a set time, as on July 12: does the collective
+  regrow a leader, and how fast?
+
+## Companion reproductions
+
+The program's primitives are our own; these published models, queued in `docs/papers.md`, test
+pieces of it against literatures with critiques:
+
+- **Algorithmic collusion** (Calvano, Calzolari, Denicolò and Pastorello, 2020, *AER*; critiques
+  Klein 2021, Abada and Lambin 2023): Q-learning pricing agents learn to sustain high prices and
+  punish undercutting with no communication at all — coordination at the opposite extreme from the
+  incident's rich channel.
+- **Emergent communication** (Lewis signaling games; the naming game): agents inventing a protocol
+  their overseers can't read.
+- **Inspection games** (Avenhaus, von Stengel and Zamir, 2002): the formal core of monitoring
+  coverage against cheating.
 
 ## Method
 
