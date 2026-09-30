@@ -42,6 +42,8 @@ class Frame:
     infections: list = field(default_factory=list)
     # id → kind, as a letter (E, H, S, T): ethnocentrism's strategies.
     kinds: dict = field(default_factory=dict)
+    # id → the site's traits, as a tuple: Axelrod's culture model.
+    traits: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -272,6 +274,8 @@ def parse(text):
         return _dpd(raw)
     if raw.get("model") in ("schelling", "line"):
         return _schelling(raw)
+    if raw.get("model") == "culture":
+        return _culture(raw)
     if raw.get("model") == "tipping":
         return _tipping(raw)
     if raw.get("model") == "ethno":
@@ -405,6 +409,40 @@ def _schelling(raw):
     return Dump(
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
         placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
+    )
+
+
+def _culture(raw):
+    """An Axelrod culture shot as a `Dump`: a still Flump on every site (id =
+    the site, row-major), its traits in `traits`. `groups` colors it: the
+    cultures still present in the last frame are ranked by how many sites
+    hold them (1 the most, ties by the traits) and wear that rank wherever
+    they appear; any other culture is 0. Frames count as ticks (a shot may
+    film every `every`th step)."""
+    w, h, f = raw["width"], raw["height"], raw["features"]
+
+    def sites(frame):
+        t = frame["traits"]
+        return {i: tuple(t[i * f:(i + 1) * f]) for i in range(w * h)}
+
+    last = sites(raw["frames"][-1])
+    sizes = {}
+    for c in last.values():
+        sizes[c] = sizes.get(c, 0) + 1
+    rank = {c: k + 1 for k, c in enumerate(sorted(sizes, key=lambda c: (-sizes[c], c)))}
+    frames = []
+    for k, fr in enumerate(raw["frames"]):
+        traits = sites(fr)
+        frames.append(Frame(
+            tick=k,
+            agents={i: Agent(i, i % w, i // w, 1.0, 0, 0, 0) for i in range(w * h)},
+            sugar=[0.0] * (w * h), deaths={}, born=[], pollution=[0.0] * (w * h), births={},
+            groups={i: rank.get(c, 0) for i, c in traits.items()},
+            traits=traits,
+        ))
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=list(range(w * h)), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
     )
 
 
