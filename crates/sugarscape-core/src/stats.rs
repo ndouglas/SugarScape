@@ -2354,9 +2354,11 @@ mod tests {
     }
 
     #[test]
-    fn the_four_fate_shares_sum_to_1_through_a_run_that_reburies_loot() {
-        // theft-winter keeps its loot, and its `even` hoarders bury again
-        // what they pilfer, so reburial runs through every share.
+    fn the_four_fate_shares_sum_to_1_through_a_theft_winter_run_that_keeps_its_loot() {
+        // theft-winter keeps its loot, and its `even` hoarders go on burying
+        // after pilfers begin. Sugar is fungible, so this can't show that
+        // loot itself is buried again; it checks that the shares stay a
+        // partition while pilfers and burials interleave.
         let c = crate::presets::by_id("theft-winter").unwrap().config;
         assert_eq!(c.theft.loot, crate::config::Loot::Keep);
         let mut w = World::new(c, 7).unwrap();

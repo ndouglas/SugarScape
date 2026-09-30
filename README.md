@@ -2366,7 +2366,9 @@ cheater could flourish in mild winters. Strategies are fixed mixes; evolution is
     unchanged).
 - **The owner's memory** (`theft.owner_memory`, on by default). With it off, owners don't know their
   own caches. An owner finds its own cache only by stumbling on it, at rate `find`, like anyone
-  else. This is Andersson and Krebs's equal-recovery case.
+  else. This is Andersson and Krebs's equal-recovery case as an equal chance per draw. Owners bury
+  where they stand, so they still cross their own caches far more often than others do, and
+  without memory their recovery rises (p_s 0.015 → 0.27 in `theft-winter-half`).
 - **Loot** (`theft.loot`).
   - `keep` (the default) puts the take into holdings, up to the carrying limit, where a hoarding
     thief's rule may bury it again. Reciprocal pilfering then arises; it isn't scripted.
@@ -2402,19 +2404,19 @@ to the field.** The survey judges every claim at 0.25 and reports each one acros
 In the arena without theft, agents who don't cache survive the first winter 0–1.4 % of the time,
 against 91–99.5 % for hoarders.
 
-**The survey** (20 seeds, ticks 0–200, a summer and the first winter; claims and thresholds set
+**The survey** (20 seeds, ticks 1–200, a summer and the first winter; claims and thresholds set
 before running; causes "likely" unless isolated). Survival is alive at 200 ÷ alive at 100, and every
 figure is also reported per founding agent.
 
 - **1. Pilferage is visits × find, and it Fails the pre-set tolerance narrowly.** At the anchor 2.3 %
   of caches are pilfered a tick. v, the non-owner draws per cache per tick, is 0.118, so v × `find`
   is 2.94 %. The ratio of the two has a median of 0.789, against a tolerance of 0.8–1.2 (0 of 20 seeds
-  inside). The one-take rule accounts for the shortfall. An arrival on k foreign caches takes one with chance
+  inside). The shortfall matches the one-take rule's prediction (within 3 %). An arrival on k foreign caches takes one with chance
   1 − (1 − `find`)^k, not k × `find`. Summed over arrivals, that predicts the takes within 3 % at
   every `find` (0.997 at the anchor). 85 % of draws at the anchor are on sites with two or more
   foreign caches.
 - **Stumbling can't reach the field's median.** The rate is at most v, reached at `find` 1, and v is
-  set by crowding (0.08 agents per open site), not by `find`. v also falls as `find` rises (0.146 to
+  mostly set by crowding (0.08 agents per open site). v also falls as `find` rises (0.146 to
   0.078), likely because the caches left are on sites fewer agents cross. Even finding every cache
   stood on loses 7.0 % of the caches a tick (10.9 % of the sugar), against Vander Wall and Jenkins's
   median of 9 %. The band is context, not a target. Animals that reach those rates search for
@@ -2437,9 +2439,10 @@ figure is also reported per founding agent.
 - **Cheaters win by transfer.** With nobody finding caches (`find` 0), cheaters survive 48–56 %,
   which is the 49 % of `cache-winter-none`, where nobody caches. Their lead at the anchor is sugar
   taken from hoarders. It isn't zero-sum, though: with a tenth cheaters, hoarders survive 89 %,
-  against 73 % at `find` 0. By amount, hoarders pilfer 5.5–6.9 times as much per founder as cheaters,
-  as Vander Wall and Jenkins predict: "food hoarders are expected to pilfer far more than they can
-  consume, recaching the excess" (p.661).
+  against 73 % at `find` 0. By amount, hoarders pilfer 5.5–6.9 times as much per founder as cheaters
+  in the winter field (the arenas show 1.1–1.7 times at n = 4 and 8 with no bury cost, and none at
+  n = 2, where the cheater has no caches), consistent with Vander Wall and Jenkins (p.661): "food
+  hoarders are expected to pilfer far more than they can consume, recaching the excess".
 - **The owner's advantage goes nearly unused.** In `theft-winter-half`, p_s (owners' share of the
   sugar dug or pilfered) is 0.015, and p_o (thieves' share of all that ended) is 0.977. Owners dig
   only below half their reserve, and 99.7 % of their digging falls in winter. Thieves take caches
@@ -2448,7 +2451,11 @@ figure is also reported per founding agent.
   96 %). This is likely much of the cheaters' lead, but not all of it, since cheaters still lead.
 - **4. Equal recovery Holds.** With owner memory off, cheaters survive better at every share, in
   19–20 of 20 seeds, and at every `find`. The median lead grows from 0.11 at a tenth cheaters to
-  0.57 at nine tenths.
+  0.57 at nine tenths. What is equal is the chance per draw, not recovery: owners bury where they
+  stand, so they still cross their own caches far more often, and without memory their recovery
+  rises. In `theft-winter-half` p_s goes from 0.015 with memory to 0.27 without (p_o 0.98 → 0.71),
+  and owners find their own caches 25 800 times over the 20 seeds, 19 200 of them in summer
+  (reported, not judged).
 - **5. No mixed equilibrium at the anchor (Fails).** The hoarder − cheater advantage never crosses
   zero; its median is −0.09 to −0.18. Andersson and Krebs assume hoarders are poorer thieves. Here
   every agent finds a cache it stands on at the same rate per draw. At `find` 0.02 and 0.05 the
@@ -2463,15 +2470,15 @@ figure is also reported per founding agent.
   most), and nothing in the sweep does either (8.9 % at `find` 1). Hoarders win only at low rates.
   At the anchor that is arena-2 with a bury cost of at most 0.1, around 1.4–1.5 % a day. Counting
   still-buried caches as nothing, hoarders win in none of the 15 arena configurations at the anchor.
-- **8. The mild-winter cheater Fails on wealth, and leans Vander Wall and Jenkins's way on
-  holdings.** On pre-registered wealth, cheaters fall further behind as winter softens: −98 per
+- **8. The mild-winter cheater Fails on wealth; a reported holdings reading (not judged) shows
+  cheaters ahead at every β, gaining slightly as winter softens.** On pre-registered wealth, cheaters fall further behind as winter softens: −98 per
   founder at β 2, against −10 at β 32. The slope on log₂β has a median of +22.3, and 0 of 20 seeds
   are below 0. But wealth counts the hoarders' still-buried caches (123 per founding hoarder at β 2).
   On holdings plus stomach, cheaters lead at every β (25.1, 26.4, 27.1, 25.0 and 19.7 from β 2 to
   32), and they gain slightly as winter softens (a median slope of −1.20, below 0 in 20 of 20
   seeds). Survival ties at β ≤ 8, where everyone survives.
 - **9. Theft acts (Holds):** pilfering happens in 20 of 20 seeds of every preset. In `theft-winter`
-  a seed buries 74 000 and thieves take 66 000, much of it buried again. By tick 200, 88.8 % of the
+  a seed buries 74 000 and thieves take 66 000, likely much of it buried again. By tick 200, 88.8 % of the
   sugar ever buried has been pilfered, 0.3 % dug by its owner, 0.2 % lost with the dead and 10.8 %
   is still buried.
 - **The arena: pilferage rises with n** (1.48, 1.76 and 2.22 % a tick at n = 2, 4 and 8). v rises
@@ -2479,6 +2486,8 @@ figure is also reported per founding agent.
   each cache, as in Andersson and Krebs's reason for their (n − 1). Thieves take 52 %, 82 % and 92 %
   of the ended caches' sugar. In the 2-agent room the hoarder steals nothing, because the cheater
   has no caches.
+
+The valuation rows are reported beside the verdicts; they are not judged and don't change them.
 
 | Claim | Verdict | Depends on valuing still-buried caches? |
 |---|---|---|

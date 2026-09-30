@@ -254,6 +254,11 @@ this plan.
   - Under `owner_memory: off` an owner draws for its own cache in owner-id order with the rest. A
     success is a dig (`owner_finds`, a `Dug` fate, into holdings under either loot rule), whether
     or not the owner is hungry: it stumbled on the cache rather than choosing it.
+  - **Equal recovery is equal chance per draw** (final review). Owners bury where they stand, so
+    they cross their own caches far more often than others do. Without memory their recovery rises:
+    in `theft-winter-half` p_s is 0.015 with memory and 0.27 without, and owners find their own
+    caches 25 800 times over the survey's 20 seeds, 19 200 of them in summer. Claim 4's survey row
+    reports this; the verdict is unchanged.
   - Pilfered sugar is kept apart from dug sugar (`Harvest.pilfered`). Like dug sugar, it isn't a
     harvest.
   - The index of caches by site is built on the first stumble that needs it and dropped when
@@ -276,6 +281,8 @@ this plan.
 - **Refusals.** Theft in a lab or a central-place world is refused on `theft.find`, and cheaters
   alone (`find` 0) in a lab on `theft.cheaters`. A bury cost above 0 is refused there on
   `caching.bury_cost` ("a bury cost applies only in the field").
+- **Valuation rows.** Where still-buried caches are also valued at 0, those rows are reported
+  beside the verdicts; they are not judged and don't change them.
 - **p_s and p_o are amount-weighted:** p_s = sugar dug by owners ÷ (dug + pilfered), and p_o =
   pilfered ÷ (dug + pilfered + lost). Splits and backfill can't shift them. Still-buried sugar has
   met no fate and is excluded.
@@ -288,8 +295,9 @@ this plan.
     `find`, less the one-take-per-arrival shortfall on stacked sites. 2–30 % a day is context only.
   - The cohort fit to (1 − r)^age is reported, not judged.
 - **Stumbling can't reach the field's median.** The rate is at most v × `find`, and at most v at
-  `find` 1. v is set by crowding (0.08 agents per open site in the winter world). Even at `find` 1
-  the winter field loses 7.0 % of its caches a tick (10.9 % of its sugar; the survey, ticks 0–200),
+  `find` 1. v is mostly set by crowding (0.08 agents per open site in the winter world); it falls
+  0.146 → 0.078 as `find` rises. Even at `find` 1
+  the winter field loses 7.0 % of its caches a tick (10.9 % of its sugar; the survey, ticks 1–200),
   below the 9 % median. Animals that reach the field's rates search for caches. Watching others
   cache comes in P2.
 - **The arena's vision scales with the room:** 1–2, 1–3 and 1–4 at n = 2, 4 and 8, half the room's
@@ -320,7 +328,7 @@ alive at 100):
 | 0.5 | 3.93 % | 3.79 % | 94.8 % |
 | 1 | 7.67 % | 5.77 % | 98.3 % |
 
-The survey's figures (20 seeds, ticks 0–200, a summer and a winter) are 2.31 % at 0.25 and 6.96 %
+The survey's figures (20 seeds, ticks 1–200, a summer and a winter) are 2.31 % at 0.25 and 6.96 %
 at 1. Both windows are stated in `presets.rs`.
 
 The arena, without theft (100 seeds per n): first-winter survival with nobody caching was 0.0 %,

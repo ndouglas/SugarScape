@@ -167,6 +167,8 @@ struct Run {
     visits: f64,
     pilfers: f64,
     owner_finds: f64,
+    /// Owner finds (under `owner_memory` off) in summer and winter.
+    owner_finds_season: [f64; 2],
     /// Σ over ticks of the sugar cached at the tick's start.
     cached_at_start: f64,
     /// Deaths in steps from ticks 100–199.
@@ -361,6 +363,7 @@ fn run(mut w: World, probe: bool) -> Run {
         r.draws += f64::from(e.pilfer_draws);
         r.pilfers += f64::from(e.pilfers);
         r.owner_finds += f64::from(e.owner_finds);
+        r.owner_finds_season[season] += f64::from(e.owner_finds);
         if season == 1 {
             r.deaths_winter += e.deaths.len() as f64;
         }
@@ -614,16 +617,22 @@ fn flag(b: bool) -> f64 {
 }
 
 /// Survival, per founder and wealth, both groups, for the detail.
+/// Each group's survival and wealth; a group with no founders in any run
+/// (cheaters in a hoarders-only world) is left out, not printed as NaN.
 fn groups(r: &[Run]) -> String {
-    format!(
-        "hoarders: survival {}, per founder {}, wealth per founder {}; cheaters: survival {}, per founder {}, wealth per founder {}",
-        med(&col(r, |x| x.surv(H))),
-        med(&col(r, |x| x.surv_f(H))),
-        med(&col(r, |x| x.wealth_f(H))),
-        med(&col(r, |x| x.surv(C))),
-        med(&col(r, |x| x.surv_f(C))),
-        med(&col(r, |x| x.wealth_f(C))),
-    )
+    [(H, "hoarders"), (C, "cheaters")]
+        .into_iter()
+        .filter(|&(g, _)| r.iter().any(|x| x.founders[g] > 0.0))
+        .map(|(g, name)| {
+            format!(
+                "{name}: survival {}, per founder {}, wealth per founder {}",
+                med(&col(r, move |x| x.surv(g))),
+                med(&col(r, move |x| x.surv_f(g))),
+                med(&col(r, move |x| x.wealth_f(g))),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 /// A world's theft usage, for the detail.
@@ -986,12 +995,33 @@ fn equal_recovery_claim(seeds: &[u64]) -> Outcome {
             )
         })
         .collect();
+    // Equal chance per draw is not equal recovery: owners bury where they
+    // stand, so they cross their own caches far more often than others do.
+    let half = |r: &[Run]| {
+        let total = |f: fn(&Run) -> f64| col(r, f).iter().sum::<f64>();
+        format!(
+            "p_s {}, p_o {}; over the {} seeds, owner finds {} (summer {}, winter {}), pilfers {}",
+            med(&col(r, Run::p_s)),
+            med(&col(r, Run::p_o)),
+            r.len(),
+            total(|x| x.owner_finds),
+            total(|x| x.owner_finds_season[0]),
+            total(|x| x.owner_finds_season[1]),
+            total(|x| x.pilfers),
+        )
+    };
+    let on = runs(&field(ANCHOR, 0.5), seeds);
     all_of(parts)
         .with(&format!(
             "owner_memory off (an owner finds its own cache only by stumbling on it, at rate find), theft-winter's world at the anchor. By share (medians): {}.",
             share_rows(&worlds)
         ))
         .with(&format!("Across the find sweep: {}.", sweep.join("; ")))
+        .with(&format!(
+            "Reported, not judged (final review): owner_memory off makes the chance per draw equal, not recovery. Owners bury where they stand, so they cross their own caches far more often than others do. theft-winter-half's world at the anchor, ticks 1–200: memory on, {}; memory off, {}.",
+            half(&on),
+            half(&worlds[4]),
+        ))
         .with("Andersson and Krebs: \"if the probability that a stored item is utilized by a certain group member is the same for all items and members (ps = po) then hoarders will have a lower fitness than `cheaters'.\" (p.710)")
 }
 
@@ -1037,7 +1067,7 @@ fn mixed_claim(seeds: &[u64]) -> Outcome {
             list(&off, 3),
         ))
         .with(&format!("Across the find sweep: {}.", sweep.join("; ")))
-        .with("Andersson and Krebs (p.708), assuming hoarders are poorer thieves than non-hoarders (ps > po > pt): \"a stable mixture of hoarders and non-hoarders may result. This is because hoarders are fitter than non-hoarders when at a low proportion in the group, whereas a reversal occurs at some point as hoarders increase in proportion.\" The model has no such difference per draw: hoarders and cheaters find each cache they stand on at the same rate. By amount they differ: in the field hoarders pilfer 5.5–6.9 times as much sugar per founder as cheaters (claim 3's rows), as Vander Wall and Jenkins expect (\"food hoarders are expected to pilfer far more than they can consume, recaching the excess\", p.661), so any crossing here has another cause. Its stability is P1b's.")
+        .with("Andersson and Krebs (p.708), assuming hoarders are poorer thieves than non-hoarders (ps > po > pt): \"a stable mixture of hoarders and non-hoarders may result. This is because hoarders are fitter than non-hoarders when at a low proportion in the group, whereas a reversal occurs at some point as hoarders increase in proportion.\" The model has no such difference per draw: hoarders and cheaters find each cache they stand on at the same rate. By amount they differ: in the winter field hoarders pilfer 5.5–6.9 times as much sugar per founder as cheaters (claim 3's rows; the arenas show 1.1–1.7 times at n = 4 and 8 with no bury cost), consistent with Vander Wall and Jenkins (\"food hoarders are expected to pilfer far more than they can consume, recaching the excess\", p.661), so any crossing here has another cause. Its stability is P1b's.")
 }
 
 // ---------------------------------------------------------- 6. reciprocity
