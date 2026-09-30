@@ -190,7 +190,8 @@ pub struct World {
     trail: Vec<Pos>,
     /// Minds 6: every cache's fate, one record per burial event
     /// (`minds::caching::fates`). Never hashed; empty (and unallocated)
-    /// until something is buried.
+    /// until something is buried under theft (`theft.is_on()`), so every
+    /// world without theft keeps it empty.
     pub cache_log: Vec<crate::minds::caching::fates::CacheRecord>,
     /// Minds 6: the log reached `fates::LOG_CAP` and froze.
     pub cache_log_full: bool,
@@ -706,7 +707,7 @@ impl World {
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
         }
-        crate::minds::caching::fates::close_lost(self, id);
+        crate::minds::caching::fates::close_lost(self, id, &agent.caches, &agent.cache_since);
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
         if !self.loans.is_empty() {

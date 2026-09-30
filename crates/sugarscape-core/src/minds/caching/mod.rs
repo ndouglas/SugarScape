@@ -7,8 +7,9 @@
 //! - **Bury(q)** (`bury`) at the agent's current site: holdings −= q, cache
 //!   += q. It costs no tick. Minds 6's `caching.bury_cost` c takes q × c more
 //!   from holdings, counted as eaten (`events.bury_cost`), and q is clamped
-//!   so that q × (1 + c) fits in holdings. Each burial opens a fate record
-//!   (`fates`), closed by a dig, a pilfer or the owner's death.
+//!   so that q × (1 + c) fits in holdings. Under theft (`theft.is_on()`),
+//!   each burial opens a fate record (`fates`), closed by a dig, a pilfer or
+//!   the owner's death; other worlds keep no log.
 //! - **Dig** (`dig`, called by `movement::go_and_gather`): arriving at its own
 //!   cache while holdings are below half the reserve, the agent takes min(cache,
 //!   room under the carrying limit) instead of harvesting the site.
@@ -81,11 +82,12 @@ pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
 }
 
 /// Buries `q` sugar at the agent's current site and returns what it
-/// buried. With bury cost c (`caching.bury_cost`), q × c more leaves
+/// buried. With bury cost c (`caching.bury_cost`, field worlds only), q × c more leaves
 /// holdings, counted as eaten in `events.bury_cost`; q is clamped to
 /// [0, holdings / (1 + c)], so holdings never go negative (the cost is
 /// capped at what's left, against rounding). Adds to `events.buried` and
-/// opens a fate record; a cache begun on an empty site starts its age now.
+/// (under theft) opens a fate record; a cache begun on an empty site starts
+/// its age now.
 pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     let now = world.tick;
     let torus = world.torus;
@@ -118,8 +120,9 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
 /// Digs `id`'s cache at site index `site`, taking min(cache, `room`), and
 /// returns what it took (0 when there's no cache there). An emptied cache is
 /// removed. A positive dig counts `dug`, `digs` and the cache's age, and
-/// closes that much of its fate records as dug. The
-/// caller adds the take to holdings, as `Harvest::dug` (never `gathered`).
+/// (under theft, Minds 6) closes that much of its fate records as dug
+/// (`fates`). The caller adds the take to holdings, as `Harvest::dug`
+/// (never `gathered`).
 pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     let now = world.tick;
     let a = world.agent_mut(id).expect("live agent");
@@ -131,9 +134,9 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
         return 0.0;
     }
     let since = a.cache_since.get(&site).copied().unwrap_or(now);
-    if take >= *cache {
+    let emptied = take >= *cache;
+    if emptied {
         a.caches.remove(&site);
-        a.cache_since.remove(&site);
     } else {
         *cache -= take;
     }
@@ -141,7 +144,12 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     e.dug += take;
     e.digs += 1;
     e.dig_ages_sum += now.saturating_sub(since);
+    // The fate log reads `cache_since` (for a backfill), so it goes after.
     fates::close_dug(world, id, site, take);
+    if emptied {
+        let a = world.agent_mut(id).expect("live agent");
+        a.cache_since.remove(&site);
+    }
     take
 }
 
