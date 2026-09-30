@@ -101,7 +101,8 @@ pub enum Start {
 pub enum Order {
     /// Red, then Blue, each step.
     Alternate,
-    /// Both decided from the step's start.
+    /// Both colors' moves decided together, move by move (at speed 1, from
+    /// the step's start); two entries into the last free place, Red's first.
     Simultaneous,
     /// Blue, then Red.
     BlueFirst,
@@ -301,17 +302,16 @@ impl TippingWorld {
             match config.draws {
                 Draws::Schedule => s.tolerances(n, cut),
                 Draws::Random => {
+                    // Each at a uniform rank in (0, n], then the least
+                    // tolerant share made intolerant, as the schedule does.
                     let mut v: Vec<f64> = (0..n)
-                        .map(|_| {
-                            let x = rng.gen::<f64>() * f64::from(n) + 0.5;
-                            if rng.gen::<f64>() < cut {
-                                0.0
-                            } else {
-                                s.at(x.min(f64::from(n)), n)
-                            }
-                        })
+                        .map(|_| s.at((1.0 - rng.gen::<f64>()) * f64::from(n), n))
                         .collect();
                     v.sort_by(|a, b| b.total_cmp(a));
+                    let keep = (f64::from(n) * (1.0 - cut)).round() as usize;
+                    for t in v.iter_mut().skip(keep) {
+                        *t = 0.0;
+                    }
                     v
                 }
             }
@@ -432,7 +432,15 @@ impl TippingWorld {
                 for k in 0..sr.max(sb) {
                     let (r, b) = self.inside();
                     let mr = if k < sr { self.decide(1, r, b) } else { None };
-                    let mb = if k < sb { self.decide(0, b, r) } else { None };
+                    let mut mb = if k < sb { self.decide(0, b, r) } else { None };
+                    // Two entries into the last free place: Red's is taken.
+                    let total = self.config.limit_total;
+                    if total > 0
+                        && matches!((mr, mb), (Some((_, true)), Some((_, true))))
+                        && r + b + 2 > total
+                    {
+                        mb = None;
+                    }
                     moved |= self.apply(1, mr) | self.apply(0, mb);
                 }
             }
@@ -680,7 +688,7 @@ pub fn schema() -> Vec<Param> {
             "Moves",
             "entry",
             "An outsider judges",
-            &[("counting_self", "Counting itself (his curves)"), ("as_is", "The ratio as it stands")],
+            &[("counting_self", "Counting itself (his curves)"), ("as_is", "The ratio as it stands (with none of its color inside, as one)")],
             Reset,
         ),
         Param::integer("Limits", "limit_red", "Most Red inside (0: none)", (0, 2000), Reset),
@@ -737,19 +745,19 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-fig20",
             "Schelling's tipping: Fig. 20",
             "Schelling 1971, Fig. 20",
-            "Fig. 19's schedules with 200 Red and 100 Blue. Schelling: \"The stable equilibrium generated in Figure 19 disappears if … whites exceed blacks by, say, two to one.\" Measured: every start with both inside ends with one color gone (from 80 and 80, all Red).",
+            "Fig. 19's schedules with 100 Red and 50 Blue. Schelling: \"The stable equilibrium generated in Figure 19 disappears if … whites exceed blacks by, say, two to one.\" Measured: every start with both inside ends with one color gone (from 60 and 40, all Red).",
             |c| {
-                c.red = 200;
-                c.blue = 100;
+                c.red = 100;
+                c.blue = 50;
                 lines(c, 5.0);
-                c.start = Start::Given { red: 80, blue: 80 };
+                c.start = Start::Given { red: 60, blue: 40 };
             },
         ),
         preset(
             "tipping-fig21",
             "Schelling's tipping: the threshold",
             "Schelling 1971, Fig. 21",
-            "Equal numbers (100 each) with straight lines from 3.0: the border. Schelling: \"there is no stable intersection of the two parabolas unless the tolerance schedules have vertical intercepts of 3.0\". Measured: a mix holds at 3.0 (71 Red, 61 Blue from 55 and 45); below 3.0, from the same start, the area ends all Red.",
+            "Equal numbers (100 each) with straight lines from 3.0: the border. Schelling: \"there is no stable intersection of the two parabolas unless the tolerance schedules have vertical intercepts of 3.0\". Measured: from unequal starts (steps of 5), none ends mixed at intercepts up to 2.9; some do from 2.95 (104 of 420 at 3.0): a mix holds at 3.0 (71 Red, 61 Blue from 55 and 45).",
             |c| {
                 c.blue = 100;
                 lines(c, 3.0);
@@ -761,10 +769,10 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-fig22",
             "Schelling's tipping: Red limited to 40",
             "Schelling 1971, Fig. 22",
-            "Fig. 20 with at most 40 Red inside, \"the most tolerant 40 … the first to enter and the last to leave\". Schelling: \"a stable mixture at 40 whites and a comparable number of blacks\". Measured: a stable mixture at 40 Red and 91 Blue.",
+            "Fig. 20's numbers (100 Red, 50 Blue, Fig. 19's schedules) with at most 40 Red inside, \"the most tolerant 40 … the first to enter and the last to leave\". Schelling: \"a stable mixture at 40 whites and a comparable number of blacks\". Measured: 40 Red and 40 Blue.",
             |c| {
-                c.red = 200;
-                c.blue = 100;
+                c.red = 100;
+                c.blue = 50;
                 lines(c, 5.0);
                 c.limit_red = 40;
                 c.start = Start::Given { red: 40, blue: 40 };
@@ -797,10 +805,10 @@ pub fn presets() -> Vec<ModelPreset> {
             "tipping-less-tolerant",
             "Schelling's tipping: the least tolerant made less tolerant",
             "Schelling 1971, p. 174",
-            "Fig. 20's numbers (200 Red, 100 Blue), with the least tolerant two-thirds of Red made intolerant instead of Red being limited. Schelling: \"replacing the two-thirds least tolerant whites … by even less tolerant whites keeps the whites from overwhelming the blacks by their numbers. This would not happen if we made all whites less tolerant.\" Measured: a stable mixture at 67 Red and 84 Blue, where the same numbers as they are, or with all Red less tolerant, end all Red.",
+            "Fig. 20's numbers (100 Red, 50 Blue), with the least tolerant two-thirds of Red made intolerant instead of Red being limited. Schelling: \"replacing the two-thirds least tolerant whites … by even less tolerant whites keeps the whites from overwhelming the blacks by their numbers. This would not happen if we made all whites less tolerant.\" Measured: a stable mixture at 33 Red and 42 Blue, where the same numbers as they are, or with all Red less tolerant, end all Red.",
             |c| {
-                c.red = 200;
-                c.blue = 100;
+                c.red = 100;
+                c.blue = 50;
                 lines(c, 5.0);
                 c.intolerant_red = 2.0 / 3.0;
                 c.start = Start::Given { red: 40, blue: 40 };
@@ -952,6 +960,39 @@ mod tests {
             a.tolerances(true).windows(2).all(|p| p[0] >= p[1]),
             "most tolerant first"
         );
+    }
+
+    #[test]
+    fn random_draws_make_the_least_tolerant_share_intolerant() {
+        let c = TippingConfig {
+            draws: Draws::Random,
+            intolerant_red: 0.6,
+            ..line(100, 50, 2.0, (0, 0))
+        };
+        let w = TippingWorld::new(c, 3).unwrap();
+        let t = w.tolerances(true);
+        assert!(
+            t[..40].iter().all(|&r| r > 0.0),
+            "the most tolerant 40 % keep a tolerance"
+        );
+        assert!(
+            t[40..].iter().all(|&r| r == 0.0),
+            "the least tolerant 60 % are intolerant"
+        );
+        assert!(t[0] < 2.0, "no draw above the schedule's top");
+    }
+
+    #[test]
+    fn together_the_colors_cannot_overfill_a_total_limit() {
+        let c = TippingConfig {
+            order: Order::Simultaneous,
+            limit_total: 3,
+            ..line(10, 10, 2.0, (1, 1))
+        };
+        let mut w = TippingWorld::new(c, 1).unwrap();
+        w.run(20);
+        let (r, b) = w.inside();
+        assert!(r + b <= 3, "{r} + {b}");
     }
 
     #[test]

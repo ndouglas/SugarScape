@@ -137,13 +137,13 @@ pub fn claims() -> Vec<Claim> {
             item: "tipping-fig20",
             source: Source::Book,
             citation: SCHELLING,
-            text: "Fig. 20: \"The stable equilibrium generated in Figure 19 disappears if … whites exceed blacks by, say, two to one.\" Holds if, with 200 Red and 100 Blue, every start with both colors inside (steps of 20) ends with one color gone",
+            text: "Fig. 20: \"The stable equilibrium generated in Figure 19 disappears if … whites exceed blacks by, say, two to one.\" Holds if, with 100 Red and 50 Blue (his figure's scale), every start with both colors inside (steps of 10) ends with one color gone",
             check: |seeds| {
                 let c = preset("tipping-fig20");
                 let mut kept = 0;
                 let mut n = 0;
-                for r in (20..=200).step_by(20) {
-                    for b in (20..=100).step_by(20) {
+                for r in (10..=100).step_by(10) {
+                    for b in (10..=50).step_by(10) {
                         n += 1;
                         kept += usize::from(mixed(rest(&from(&c, r, b), seeds[0])));
                     }
@@ -156,15 +156,31 @@ pub fn claims() -> Vec<Claim> {
             item: "tipping-intercept",
             source: Source::Book,
             citation: SCHELLING,
-            text: "Fig. 21: \"For straight-line tolerance schedules and equal numbers of the two colors, there is no stable intersection of the two parabolas unless the tolerance schedules have vertical intercepts of 3.0\". Holds if, from 55 Red and 45 Blue, intercepts of 2.5, 2.8 and 2.9 end one-colored and 3.0 and 3.5 end mixed",
+            text: "Fig. 21: \"For straight-line tolerance schedules and equal numbers of the two colors, there is no stable intersection of the two parabolas unless the tolerance schedules have vertical intercepts of 3.0\". From every start with unequal numbers inside (0–100 each, steps of 5; equal starts sit on the knife edge, where nobody moves). Holds if no start ends mixed at intercepts of 2.5, 2.8 or 2.9, and some start does at 3.0",
             check: |seeds| {
                 let c = preset("tipping-fig21");
-                let at = |a: f64| rest(&from(&lines(&c, a, a), 55, 45), seeds[0]);
-                let below = [2.5, 2.8, 2.9].map(at);
-                let above = [3.0, 3.5].map(at);
+                let share = |a: f64| {
+                    let (mut n, mut kept) = (0, 0);
+                    for r in (0..=100).step_by(5) {
+                        for b in (0..=100).step_by(5) {
+                            if r == b {
+                                continue;
+                            }
+                            n += 1;
+                            kept += usize::from(mixed(rest(&from(&lines(&c, a, a), r, b), seeds[0])));
+                        }
+                    }
+                    (kept, n)
+                };
+                let at = [2.5, 2.8, 2.9, 2.95, 3.0, 3.5].map(|a| (a, share(a)));
+                let below = at[..3].iter().all(|(_, (k, _))| *k == 0);
+                let three = at[4].1 .0 > 0;
                 outcome(
-                    below.iter().all(|&e| !mixed(e)) && above.iter().all(|&e| mixed(e)),
-                    format!("below 3: {below:?}; at 3.0 and 3.5: {above:?}"),
+                    below && three,
+                    format!(
+                        "starts ending mixed: {}",
+                        at.iter().map(|(a, (k, n))| format!("{a}: {k} of {n}")).collect::<Vec<_>>().join(", ")
+                    ),
                 )
             },
         },
@@ -173,10 +189,10 @@ pub fn claims() -> Vec<Claim> {
             item: "tipping-fig22",
             source: Source::Book,
             citation: SCHELLING,
-            text: "Fig. 22: with whites limited to 40, \"a stable mixture at 40 whites and a comparable number of blacks\". Holds if Red limited to 40 ends mixed with 40 Red (his \"comparable number\" is not quantified: the Blue count is reported)",
+            text: "Fig. 22: with whites limited to 40, \"a stable mixture at 40 whites and a comparable number of blacks\". Holds if, at his figure's scale (100 Red, 50 Blue), Red limited to 40 ends with 40 Red and Blue within 5 of 40 (his figure's curves cross at about 38–40)",
             check: |seeds| {
                 let (r, b) = rest(&preset("tipping-fig22"), seeds[0]);
-                outcome(r == 40 && b > 0, format!("ends at {r} Red, {b} Blue"))
+                outcome(r == 40 && b.abs_diff(40) <= 5, format!("ends at {r} Red, {b} Blue"))
             },
         },
         Claim {
@@ -195,7 +211,7 @@ pub fn claims() -> Vec<Claim> {
             item: "tipping-minority",
             source: Source::Book,
             citation: SCHELLING,
-            text: "\"for a stable mixture, the minority must be the more tolerant of the two groups\" (p. 179). Holds if a 5:1 minority with the majority's own schedule (Fig. 19's) ends pushed out from every start with both inside (steps of 20)",
+            text: "\"for a stable mixture, the minority must be the more tolerant of the two groups\" (p. 179). Holds if a 5:1 minority with the majority's own schedule (Fig. 19's) ends pushed out from every start with both inside (steps of 20), and a minority five times as tolerant (intercept 25) holds a mix from some start",
             check: |seeds| {
                 let c = preset("tipping-minority");
                 let mut kept = 0;
@@ -206,7 +222,20 @@ pub fn claims() -> Vec<Claim> {
                         kept += usize::from(mixed(rest(&from(&c, r, b), seeds[0])));
                     }
                 }
-                outcome(kept == 0, format!("{n} starts; {kept} end mixed"))
+                let tolerant = TippingConfig {
+                    blue_schedule: Schedule::Line { intercept: 25.0 },
+                    ..c.clone()
+                };
+                let mut mixes = 0;
+                for r in (20..=500).step_by(60) {
+                    for b in (20..=100).step_by(20) {
+                        mixes += usize::from(mixed(rest(&from(&tolerant, r, b), seeds[0])));
+                    }
+                }
+                outcome(
+                    kept == 0 && mixes > 0,
+                    format!("as tolerant: {n} starts, {kept} end mixed; five times as tolerant: {mixes} end mixed"),
+                )
             },
         },
         Claim {
@@ -214,7 +243,7 @@ pub fn claims() -> Vec<Claim> {
             item: "tipping-less-tolerant",
             source: Source::Book,
             citation: SCHELLING,
-            text: "\"replacing the two-thirds least tolerant whites … by even less tolerant whites keeps the whites from overwhelming the blacks by their numbers. This would not happen if we made all whites less tolerant.\" (p. 174). Holds if Fig. 20's numbers from 40 and 40 end mixed with the least tolerant two-thirds of Red intolerant, but one-colored as they are and with all Red less tolerant (the intercept cut to a third, 5/3)",
+            text: "\"replacing the two-thirds least tolerant whites … by even less tolerant whites keeps the whites from overwhelming the blacks by their numbers. This would not happen if we made all whites less tolerant.\" (p. 174). Holds if Fig. 22's numbers (100 Red, 50 Blue) from 40 and 40 end mixed with the least tolerant two-thirds of Red intolerant, but one-colored as they are and with all Red less tolerant (the intercept cut to a third, 5/3)",
             check: |seeds| {
                 let less = preset("tipping-less-tolerant");
                 let plain = TippingConfig {

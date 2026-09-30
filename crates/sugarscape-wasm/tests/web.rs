@@ -1184,8 +1184,8 @@ fn tipping_sims_match_the_native_golden_entries() {
     // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
     for (id, fp) in [
         ("tipping-fig18", "0x09f32cac3d61b2d9"),
-        ("tipping-fig22", "0x69247e261fd9203a"),
-        ("tipping-less-tolerant", "0xd8be827795d49145"),
+        ("tipping-fig22", "0xb58647a99df0e99b"),
+        ("tipping-less-tolerant", "0x53b4b358243df7be"),
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
         assert_eq!(sim.model_kind(), "tipping");

@@ -289,15 +289,17 @@ With his exact schedules the model is deterministic, and everything he states ho
 - `tipping-fig19`: a stable mixture at 80 and 80, reached from every start with over 40 % of each;
   from all Red, 28 Blue entering together reach it, 26 do not ("more than 25%").
 - `tipping-fig20`: two to one, and the mixture is lost from every start.
-- `tipping-fig21`: equal numbers, straight lines: no stable mix below an intercept of 3.0, a mix at
-  3.0 and above (started at 55 and 45: at exactly 50 and 50 nobody moves, stable or not).
-- `tipping-fig22`: Red limited to 40 gives a stable mixture at 40 Red and 91 Blue (his "comparable
-  number" is not quantified).
+- `tipping-fig21`: equal numbers, straight lines: from 420 unequal starts, none ends mixed at
+  intercepts up to 2.9; some do from 2.95 (104 at 3.0, 219 at 3.5) — his 3.0, to the step of a
+  discrete count (equal starts sit on the knife edge, where nobody moves, stable or not).
+- `tipping-fig22` (his scale: 100 Red, 50 Blue): Red limited to 40 gives a stable mixture at 40 and
+  40, where his figure's curves cross.
 - `tipping-intolerant` (1969): the least tolerant 60 % intolerant: 40 and 40, exactly.
-- `tipping-minority`: a 5:1 minority with the majority's schedule is always pushed out ("the
-  minority must be the more tolerant").
-- `tipping-less-tolerant`: making the least tolerant two-thirds of Red intolerant holds a mixture
-  (67 Red, 84 Blue) where the same numbers as they are, or all Red less tolerant, end all Red.
+- `tipping-minority`: a 5:1 minority with the majority's schedule is always pushed out; five times
+  as tolerant, it can hold a mix ("the minority must be the more tolerant").
+- `tipping-less-tolerant` (Fig. 22's numbers): making the least tolerant two-thirds of Red intolerant
+  holds a mixture (33 Red, 42 Blue) where the same numbers as they are, or all Red less tolerant,
+  end all Red.
 
 Sweeps: `tipping-start`, `tipping-entry`, `tipping-intercept`, `tipping-speeds` (Blue moving up to
 five times as fast still loses Fig. 18: here the numbers decide) and `tipping-limit`.
