@@ -267,18 +267,19 @@ fn theft_winter(c: &mut Config, cheaters: f64) {
 /// 0.075 in winter) per agent are the same at every n. Everything else is
 /// the winter world's (walking, one good, metabolism 1, a winter everywhere
 /// at once with γ 100 and β 32, carrying limit 50, horizon 20, half the
-/// agents remembering for 100 ticks, `even` hoarders), except vision 1–2 at
-/// every n, the most the 5 × 5 torus allows (half the grid). Theft is on at
-/// `THEFT_FIND` with half the agents cheaters.
+/// agents remembering for 100 ticks, `even` hoarders), except vision: 1 to
+/// half the room's side (1–2, 1–3 and 1–4 at n = 2, 4 and 8), so every
+/// room is seen alike relative to its size and sight isn't tied to n (half
+/// the room's side is within each torus's cap of half the grid). Theft is
+/// on at `THEFT_FIND` with half the agents cheaters.
 ///
 /// The balance was measured before this was recorded (Task 5; 100 seeds
-/// per n, no theft, first-winter survival = alive at 200 ÷ alive at 100;
-/// nobody died before 100): with nobody caching 0.0 %, 1.3 % and 2.9 %
-/// survive at n = 2, 4 and 8 (each holds exactly the carrying limit, 49 of
-/// its 50, when winter comes), against 99.5 %, 97.0 % and 93.0 % of `even`
+/// per n, first-winter survival = alive at 200 ÷ alive at 100; nobody died
+/// before 100). Without theft, with nobody caching 0.0 %, 0.5 % and 1.4 %
+/// survive at n = 2, 4 and 8, against 99.5 %, 95.8 % and 91.0 % of `even`
 /// hoarders. At `THEFT_FIND` with half cheaters, the daily pilferage rate
-/// over ticks 101–200 is 1.57 %, 1.91 % and 2.36 % at n = 2, 4 and 8 (1.35 %,
-/// 1.76 % and 2.14 % with no cheaters), and 100 %, 99.8 % and 98.6 % of
+/// over ticks 101–200 is 1.57 %, 1.89 % and 2.40 % at n = 2, 4 and 8 (1.35 %,
+/// 1.75 % and 2.17 % with no cheaters), and 100 %, 99.8 % and 98.1 % of
 /// the agents alive at 100 survive the winter.
 fn theft_arena(c: &mut Config, n: u32) {
     winter_world(c, CachingRule::Even, false);
@@ -291,7 +292,7 @@ fn theft_arena(c: &mut Config, n: u32) {
     c.width = side + 1;
     c.height = side + 1;
     c.population = n;
-    c.vision = URange::new(1, 2);
+    c.vision = URange::new(1, side / 2);
     c.goods[0].map = Map::Flat {
         capacity: 4.0 * scale,
     };
@@ -1279,21 +1280,21 @@ pub fn all() -> Vec<Preset> {
             "theft-arena-2",
             "Theft arena: two agents",
             "Andersson & Krebs 1978; Minds 6",
-            "2 agents shut in a walled 4 × 4 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent) through a winter everywhere at once: the room grows back its full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–2, burn 1 a tick and carry at most 50. One is a hoarder, burying half its surplus where it stands; the other, a cheater, never caches. Arriving on a site, an agent finds each cache of the other's there with chance 0.25, and takes what it can carry of it.",
+            "2 agents shut in a walled 4 × 4 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent) through a winter everywhere at once: the room grows back its full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–2, burn 1 a tick and carry at most 50. One is a hoarder, burying half its surplus where it stands; the other, a cheater, never caches. Arriving on a site, an agent finds each cache of the other's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks.",
             |c| theft_arena(c, 2),
         ),
         preset(
             "theft-arena-4",
             "Theft arena: four agents",
             "Andersson & Krebs 1978; Minds 6",
-            "4 agents shut in a walled 6 × 6 room of flat sugar through a winter everywhere at once, with the same sugar per agent as theft-arena-2's room: capacity 32/9 and growback 0.27 a tick at 9 sites an agent (the full rate for 100 ticks, then 1/32 of it for 100). They walk with vision 1–2, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it.",
+            "4 agents shut in a walled 6 × 6 room of flat sugar through a winter everywhere at once, with the same sugar per agent as theft-arena-2's room: capacity 32/9 and growback 0.27 a tick at 9 sites an agent (the full rate for 100 ticks, then 1/32 of it for 100). They walk with vision 1–3, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks.",
             |c| theft_arena(c, 4),
         ),
         preset(
             "theft-arena-8",
             "Theft arena: eight agents",
             "Andersson & Krebs 1978; Minds 6",
-            "8 agents shut in a walled 8 × 8 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent, as in theft-arena-2) through a winter everywhere at once: the full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–2, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it.",
+            "8 agents shut in a walled 8 × 8 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent, as in theft-arena-2) through a winter everywhere at once: the full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–4, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks.",
             |c| theft_arena(c, 8),
         ),
     ]
@@ -2051,6 +2052,19 @@ mod tests {
             assert!((per_agent(capacity) - 32.0).abs() < 1e-9, "{id}");
             assert!((per_agent(c.growback.rate) - 2.4).abs() < 1e-9, "{id}");
             assert_eq!(w.agents().filter(|a| a.cheater).count() as u32, n / 2);
+            // Vision is 1 to half the room's side.
+            assert_eq!(c.vision, URange::new(1, side / 2), "{id}");
+            // The walls: row 0 and column 0, 2k + 1 sites in all.
+            let walls = (0..w.torus.len())
+                .filter(|&i| w.is_wall(w.torus.pos(i)))
+                .count() as u32;
+            assert_eq!(walls, 2 * side + 1, "{id}");
+            // Every agent starts inside the room, off the walls.
+            for a in w.agents() {
+                assert!((1..=side).contains(&a.pos.x), "{id}: {:?}", a.pos);
+                assert!((1..=side).contains(&a.pos.y), "{id}: {:?}", a.pos);
+                assert!(!w.is_wall(a.pos), "{id}");
+            }
         }
         for id in [
             "theft-winter",
