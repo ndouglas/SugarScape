@@ -10,4 +10,4 @@ mod world;
 
 pub use config::{schema, DeadStores, DefendedInPool, HoardConfig, LarderWeight};
 pub use stats::{HoardSnapshot, SERIES};
-pub use world::{HoardWorld, TALL, WIDE};
+pub use world::{Agent, Cause, Death, HoardWorld, Record, SeasonSummary, TALL, WIDE};
