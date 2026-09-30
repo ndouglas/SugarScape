@@ -165,6 +165,12 @@ pub struct TickEvents {
     /// Minds 6: under `owner_memory: off`, owners who found (and dug) their
     /// own cache this tick. Counted in `digs` and `dug` too.
     pub owner_finds: u32,
+    /// Minds 6: find draws made this tick on other agents' caches: each is
+    /// a non-owner's visit to a cache that could find it (an arrival that
+    /// didn't dig its own cache there). Draws on an agent's own cache under
+    /// `owner_memory: off` aren't counted. Observation only (the survey's
+    /// visits per cache); it draws nothing itself.
+    pub pilfer_draws: u32,
     /// Minds 6: of `pilfered`, the sugar eaten under `theft.loot: eat`,
     /// counted as it goes into the thief's stomach (`Agent::fed`). A
     /// transfer, not a ledger term: the stomach is a stock, and the
@@ -227,6 +233,12 @@ pub struct World {
     pub cache_log: Vec<crate::minds::caching::fates::CacheRecord>,
     /// Minds 6: the log reached `fates::LOG_CAP` and froze.
     pub cache_log_full: bool,
+    /// Minds 6, a survey probe: when true, a field agent with caches digs
+    /// below its whole reserve R instead of R / 2 (no hysteresis band;
+    /// `minds::caching::hungry`). Not config: never set by a config, the app
+    /// or an edit, never hashed or exported, and false in every world the
+    /// survey doesn't set it in.
+    pub probe_dig_at_reserve: bool,
     /// Minds 6: the log's open records per (owner, site), oldest first.
     pub(crate) cache_open: crate::minds::caching::fates::OpenRecords,
     /// Minds 6: site index → the owners of caches there, for finding
@@ -350,6 +362,7 @@ impl World {
             trail: Vec::new(),
             cache_log: Vec::new(),
             cache_log_full: false,
+            probe_dig_at_reserve: false,
             cache_open: BTreeMap::new(),
             cache_sites: None,
         };

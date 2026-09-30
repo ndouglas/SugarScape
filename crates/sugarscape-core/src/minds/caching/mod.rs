@@ -71,14 +71,15 @@ pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
 /// an agent that buried down to R ate below R and dug the next tick). In a
 /// central-place world the threshold stays R, one tick's need: an agent
 /// holding between R / 2 and R that didn't dig would eat below zero and die.
-/// False, without computing R, for an agent with no caches.
+/// False, without computing R, for an agent with no caches. The survey's
+/// probe `World::probe_dig_at_reserve` sets the threshold at R everywhere.
 pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
     if a.caches.is_empty() {
         return false;
     }
     let r = reserve(world, id);
-    let threshold = if world.config.central.enabled {
+    let threshold = if world.config.central.enabled || world.probe_dig_at_reserve {
         r
     } else {
         r / 2.0
@@ -268,6 +269,19 @@ mod tests {
 
     fn at(w: &World, x: u32, y: u32) -> u32 {
         w.torus.index(Pos::new(x, y)) as u32
+    }
+
+    #[test]
+    fn the_survey_probe_moves_the_dig_threshold_from_half_the_reserve_to_all_of_it() {
+        let mut w = blank_world(11, 11);
+        let id = caching_agent(&mut w, 7.0, 0);
+        w.agent_mut(id).unwrap().caches.insert(3, 4.0);
+        // R = 10: holding 7 is above R / 2, so not hungry, until the probe.
+        assert!(!hungry(&w, id));
+        w.probe_dig_at_reserve = true;
+        assert!(hungry(&w, id));
+        w.agent_mut(id).unwrap().holdings[0] = 10.0;
+        assert!(!hungry(&w, id), "at R it doesn't dig");
     }
 
     #[test]

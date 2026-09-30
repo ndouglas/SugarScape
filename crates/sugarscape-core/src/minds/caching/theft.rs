@@ -131,6 +131,8 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
         .copied()
         .filter(|&o| o != id || !theft.owner_memory)
         .collect();
+    let foreign = owners.iter().filter(|&&o| o != id).count();
+    world.events.pilfer_draws += u32::try_from(foreign).unwrap_or(u32::MAX);
     let mut found = None;
     for &o in &owners {
         let hit = world.rng.gen_bool(theft.find);
@@ -516,6 +518,7 @@ mod tests {
         assert_eq!(w.agent(owners[1]).unwrap().caches[&here], 4.0);
         assert_eq!(w.agent(owners[2]).unwrap().caches[&here], 5.0);
         // Three draws were made, one per cache, though the first succeeded.
+        assert_eq!(w.events.pilfer_draws, 3, "each counted as a visit");
         for _ in 0..3 {
             rng.gen_bool(1.0);
         }
@@ -555,6 +558,10 @@ mod tests {
         let h = go_and_gather(&mut w, owner, Pos::new(5, 6));
         assert_eq!((h.dug, h.pilfered), (8.0, 0.0));
         assert_eq!(rng, w.rng, "no draw");
+        assert_eq!(
+            w.events.pilfer_draws, 0,
+            "a dig is no visit that could find"
+        );
         assert_eq!(w.agent(other).unwrap().caches[&at(&w, 5, 6)], 5.0);
         // Not hungry, it draws for the foreign cache only, and pilfers it.
         w.move_agent(owner, Pos::new(5, 5));
@@ -566,6 +573,7 @@ mod tests {
         assert_eq!(h.pilfered, 5.0);
         rng.gen_bool(1.0);
         assert_eq!(rng, w.rng, "one draw: its own cache isn't drawn for");
+        assert_eq!(w.events.pilfer_draws, 1);
         assert!(w.agent(other).unwrap().caches.is_empty());
     }
 
@@ -656,6 +664,10 @@ mod tests {
         assert_eq!((h.dug, h.pilfered), (30.0, 0.0));
         assert_eq!((w.events.owner_finds, w.events.digs), (1, 1));
         assert_eq!((w.events.pilfers, w.events.pilfered), (0, 0.0));
+        assert_eq!(
+            w.events.pilfer_draws, 0,
+            "its own cache is no foreign visit"
+        );
         assert!(w
             .cache_log
             .iter()
