@@ -484,14 +484,14 @@ mod tests {
 
     /// Runs `cache-winter-mixed` (175 agents under `caching.mixed`, many
     /// dying in winter) for 300 ticks with `theft.cheaters` = `cheaters`
-    /// and `theft.find` scheduled from 0 to 0.3 at tick 100, and checks the
+    /// and `theft.find` scheduled from 0 to 0.05 at tick 100, and checks the
     /// log's exact statements every tick from the first tick theft is on.
     fn the_log_matches_the_world(cheaters: f64) {
         let mut c = crate::presets::by_id("cache-winter-mixed").unwrap().config;
         c.theft.cheaters = cheaters;
         c.schedule.push(crate::config::ScheduledChange {
             tick: 100,
-            set: [("theft.find".to_string(), serde_json::json!(0.3))]
+            set: [("theft.find".to_string(), serde_json::json!(0.05))]
                 .into_iter()
                 .collect(),
         });
@@ -551,13 +551,10 @@ mod tests {
             assert!(w.cache_log.iter().all(|r| r.amount >= 0.0));
         }
         assert!(!w.cache_log_full);
-        assert!(dug > 0.0 && pilfered > 0.0, "{dug} {pilfered}");
-        // With no cheaters nobody here dies holding caches once theft is on
-        // (pilfering feeds the hungry through the winter), so only the run
-        // with theft on from the start sees `Lost` records.
-        if cheaters > 0.0 {
-            assert!(lost > 0.0, "{lost}");
-        }
+        assert!(
+            dug > 0.0 && lost > 0.0 && pilfered > 0.0,
+            "{dug} {lost} {pilfered}"
+        );
         assert_eq!(on_since, Some(if cheaters > 0.0 { 0 } else { 100 }));
         if cheaters == 0.0 {
             assert!(

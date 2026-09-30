@@ -53,7 +53,12 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
 pub(crate) fn check_death(world: &mut World, id: AgentId) -> bool {
     let agent = world.agent(id).expect("live agent");
     let n = world.config.goods.len();
-    let starving = agent.holdings[..n].iter().any(|&h| h <= 0.0);
+    // Minds 6: a full stomach (`Agent::fed`) keeps an agent at 0 holdings
+    // of good 0 alive (a bury cost can clamp holdings to exactly 0).
+    let starving = agent.holdings[..n]
+        .iter()
+        .enumerate()
+        .any(|(i, &h)| h <= 0.0 && (i > 0 || agent.fed <= 0.0));
     let cause = if starving {
         Some(DeathCause::Starvation)
     } else if world.config.lifespan.enabled && agent.age > agent.max_age {

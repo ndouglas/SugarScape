@@ -22,7 +22,14 @@
 //!   `Harvest::pilfered`, never `gathered` (it was gathered once already:
 //!   no pollution, not income, not the marginal-value rule's intake).
 //!   Under `keep` a success with no room takes nothing, and the agent
-//!   harvests the site as usual (taking nothing either, being full).
+//!   harvests the site as usual (taking nothing either, being full). The
+//!   first success is the one taken, so under `owner_memory: off` a first
+//!   success on the agent's own cache with no room spends the tick's find:
+//!   no later cache is taken.
+//! - **Counts.** `pilfers` counts takes; `caches_pilfered` counts distinct
+//!   caches there at the tick's start that lost any sugar to a thief this
+//!   tick (once each, however many thieves or however partial). The
+//!   pilferage rate is `caches_pilfered / pilfer_candidates`.
 //! - **Loot.** `keep`: the take goes into the thief's holdings, where its
 //!   burial rule may bury it again that tick (recached). `eat`: it's eaten,
 //!   going into the thief's stomach (`Agent::fed`, counted in
@@ -175,7 +182,9 @@ pub(crate) fn pilfer(
     site: u32,
     room: f64,
 ) -> f64 {
+    let now = world.tick;
     let a = world.agent_mut(owner).expect("a cache has a live owner");
+    let at_start = a.cache_since.get(&site).is_some_and(|&t| t < now);
     let Some(cache) = a.caches.get_mut(&site) else {
         debug_assert!(false, "the index lists a cache that isn't there");
         return 0.0;
@@ -190,8 +199,12 @@ pub(crate) fn pilfer(
     } else {
         *cache -= take;
     }
-    world.events.pilfered += take;
-    world.events.pilfers += 1;
+    let e = &mut world.events;
+    e.pilfered += take;
+    e.pilfers += 1;
+    if at_start && e.pilfered_caches.insert((owner, site)) {
+        e.caches_pilfered += 1;
+    }
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     super::fates::close_pilfered(world, owner, site, take, thief);
     if emptied {
@@ -410,6 +423,63 @@ mod tests {
         w.kill(id, crate::world::DeathCause::OldAge);
         assert_eq!(w.events.fed_lost, 3.5);
         assert_eq!(total(&w) + w.events.fed_lost + 4.0, before);
+    }
+
+    #[test]
+    fn a_full_stomach_keeps_an_agent_at_zero_holdings_alive() {
+        let mut w = blank_world(11, 11);
+        w.config.caching.bury_cost = 0.25;
+        let id = agent(&mut w, 5, 5, 5.0);
+        w.agent_mut(id).unwrap().fed = 3.0;
+        // 5 / 1.25 = 4 buried and the cost of 1 clamps holdings to 0.
+        assert_eq!(bury(&mut w, id, 100.0), 4.0);
+        assert_eq!(w.agent(id).unwrap().holdings[0], 0.0);
+        crate::rules::lifecycle::metabolize(&mut w, id, Harvest::default());
+        assert!(!crate::rules::lifecycle::check_death(&mut w, id));
+        assert_eq!(w.agent(id).unwrap().fed, 2.0);
+        // The stomach empty and holdings at 0, it starves.
+        w.agent_mut(id).unwrap().fed = 0.0;
+        assert!(crate::rules::lifecycle::check_death(&mut w, id));
+    }
+
+    #[test]
+    fn two_thieves_on_one_cache_in_a_tick_pilfer_it_once() {
+        // Limit 10; a cache of 20 buried at tick 0; at tick 1 two thieves
+        // with room 4 each take in turn: 2 takes, 1 cache pilfered.
+        let (mut w, owner) = cached_world(1.0, 10, 20.0);
+        w.tick = 1;
+        let a = agent(&mut w, 5, 5, 6.0);
+        let b = agent(&mut w, 4, 6, 6.0);
+        assert_eq!(go_and_gather(&mut w, a, Pos::new(5, 6)).pilfered, 4.0);
+        w.move_agent(a, Pos::new(5, 5));
+        assert_eq!(go_and_gather(&mut w, b, Pos::new(5, 6)).pilfered, 4.0);
+        assert_eq!((w.events.pilfers, w.events.caches_pilfered), (2, 1));
+        assert_eq!(w.agent(owner).unwrap().caches[&at(&w, 5, 6)], 12.0);
+        // A new tick counts it again.
+        w.events = crate::world::TickEvents::default();
+        w.tick = 2;
+        w.move_agent(b, Pos::new(4, 6));
+        w.agent_mut(b).unwrap().holdings[0] = 9.0;
+        assert_eq!(go_and_gather(&mut w, b, Pos::new(5, 6)).pilfered, 1.0);
+        assert_eq!((w.events.pilfers, w.events.caches_pilfered), (1, 1));
+    }
+
+    #[test]
+    fn a_partial_take_counts_the_cache_and_a_cache_begun_this_tick_isnt_counted() {
+        let (mut w, owner) = cached_world(1.0, 10, 6.0);
+        w.tick = 3;
+        let thief = agent(&mut w, 5, 5, 8.0);
+        assert_eq!(go_and_gather(&mut w, thief, Pos::new(5, 6)).pilfered, 2.0);
+        assert_eq!((w.events.pilfers, w.events.caches_pilfered), (1, 1));
+        assert_eq!(w.agent(owner).unwrap().caches[&at(&w, 5, 6)], 4.0);
+        // A cache buried this tick wasn't there at its start.
+        w.events = crate::world::TickEvents::default();
+        let other = agent(&mut w, 8, 8, 10.0);
+        bury(&mut w, other, 5.0);
+        w.move_agent(other, Pos::new(9, 9));
+        let late = agent(&mut w, 8, 7, 0.0);
+        assert_eq!(go_and_gather(&mut w, late, Pos::new(8, 8)).pilfered, 5.0);
+        assert_eq!((w.events.pilfers, w.events.caches_pilfered), (1, 0));
     }
 
     #[test]
@@ -695,6 +765,8 @@ mod tests {
             let caches: usize = w.agents().map(|a| a.caches.len()).sum();
             w.step();
             assert_eq!(w.events.pilfer_candidates as usize, caches);
+            let e = &w.events;
+            assert!(e.caches_pilfered <= e.pilfers.min(e.pilfer_candidates));
             pilfers += w.events.pilfers;
             candidates += w.events.pilfer_candidates;
         }

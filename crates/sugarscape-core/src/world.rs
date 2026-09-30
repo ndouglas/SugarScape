@@ -145,8 +145,18 @@ pub struct TickEvents {
     /// rule; owners finding their own caches under `owner_memory: off` are
     /// digs, not pilfers).
     pub pilfered: f64,
-    /// Minds 6: pilfers this tick (each taking a positive amount).
+    /// Minds 6: pilfers this tick (takes, each of a positive amount).
     pub pilfers: u32,
+    /// Minds 6: distinct caches, (owner, site), that existed at the tick's
+    /// start and were pilfered this tick, in any amount: each counted once,
+    /// however many thieves took from it and whether a take emptied it. The
+    /// spec's pilferage rate is `caches_pilfered / pilfer_candidates`. A
+    /// cache begun this tick (its `cache_since` is the current tick) wasn't
+    /// there at the start and isn't counted.
+    pub caches_pilfered: u32,
+    /// The caches counted in `caches_pilfered` this tick (for the once
+    /// only); empty and unallocated unless something was pilfered.
+    pub(crate) pilfered_caches: std::collections::BTreeSet<(AgentId, u32)>,
     /// Minds 6: caches in the world at the tick's start (after the
     /// schedule), counted under theft (`theft.is_on()`): Σ over agents of
     /// their caches. Each is a foreign cache to every agent but its owner,
