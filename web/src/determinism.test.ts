@@ -112,6 +112,46 @@ describe('determinism through the engine', () => {
     expect(await e.fingerprint()).toBe(GOLDEN);
   });
 
+  it('loads a theft world in Strategy with every cache shown, and drawing them all reaches the native golden', async () => {
+    const e = await engine();
+    expect(await e.loadPreset('theft-winter-half', 1)).toBeNull();
+    expect(e.colorMode).toBe('strategy');
+    expect(e.overlays.caches).toBe(true);
+    e.want(() => ({ charts: { groups: [['population']], max: 50 } }));
+    await e.advance(150);
+    expect(e.minds?.winter).toBe(true);
+    expect(e.cacheSites.length).toBeGreaterThan(0);
+    const [x, y, total] = e.cacheSites;
+    await e.select(x, y);
+    const view = e.inspection!.view as { site: { caches: { amount: number }[] } };
+    expect(view.site.caches.reduce((sum, c) => sum + c.amount, 0)).toBeCloseTo(total);
+    e.setDisplay({ colorMode: 'caching_rule' });
+    await e.advance(25);
+    e.setDisplay({ colorMode: 'memory' });
+    await e.advance(25);
+    expect(e.tick).toBe(200);
+    expect(e.cacheSites.length).toBeGreaterThan(0);
+    // crates/sugarscape-core/tests/golden.rs: theft-winter-half after 200 ticks from seed 1.
+    expect(await e.fingerprint()).toBe('0xd0ee29237c28952f');
+  });
+
+  it('picks each Minds world’s default color mode and keeps the caches overlay off once turned off by hand', async () => {
+    const e = await engine();
+    expect(await e.loadPreset('cache-winter-mixed', 1)).toBeNull();
+    expect(e.colorMode).toBe('caching_rule');
+    expect(await e.loadPreset('cache-winter-even', 1)).toBeNull();
+    expect(e.colorMode).toBe('memory');
+    expect(await e.loadPreset('theft-winter', 1)).toBeNull();
+    expect(e.colorMode).toBe('memory');
+    expect(e.overlays.caches).toBe(true);
+    e.setDisplay({ overlays: { caches: false } });
+    expect(await e.loadPreset('theft-winter-half', 1)).toBeNull();
+    expect([e.colorMode, e.overlays.caches]).toEqual(['strategy', false]);
+    expect(e.cacheSites.length).toBe(0);
+    expect(await e.loadPreset('ii-2-unit', 1)).toBeNull();
+    expect([e.colorMode, e.overlays.caches]).toEqual(['tribe', false]);
+  });
+
   it('seeks through keyframes to the golden world, with edits on both sides of the target', async () => {
     const reference = await engine();
     await reference.advance(60);

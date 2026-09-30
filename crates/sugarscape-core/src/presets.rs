@@ -266,9 +266,13 @@ fn theft_winter(c: &mut Config, cheaters: f64) {
 }
 
 /// Minds 6: the arena. `n` agents (2, 4 or 8) shut in a k × k room, with
-/// k = 4, 6 and 8: a (k + 1) × (k + 1) torus with an opaque wall along row 0
-/// and column 0, which on the torus closes the room on all four sides, so
-/// the group shares one area and Andersson and Krebs's n is exact. The
+/// k = 4, 6 and 8: a (k + 2) × (k + 2) torus with opaque walls along rows 0
+/// and k + 1 and columns 0 and k + 1, so the room is the centered k × k
+/// block, closed on all four sides, the group shares one area and Andersson
+/// and Krebs's n is exact. (Until 2026-09-30 it was a (k + 1)-torus walled
+/// along row 0 and column 0 only: closed on the torus, but drawn with the
+/// room against the bottom and right edges. The numbers below were
+/// re-measured for the four walls.) The
 /// sugar is flat: capacity 4 and growback 0.3 a site, 8 sites an agent at
 /// n = 2 (16 sites) and n = 8 (64). No square gives n = 4 exactly 8 sites
 /// an agent (6 × 6 is 9), so there capacity and growback are × 8/9 (32/9
@@ -282,14 +286,15 @@ fn theft_winter(c: &mut Config, cheaters: f64) {
 /// the room's side is within each torus's cap of half the grid). Theft is
 /// on at `THEFT_FIND` with half the agents cheaters.
 ///
-/// The balance was measured before this was recorded (Task 5; 100 seeds
-/// per n, first-winter survival = alive at 200 ÷ alive at 100; nobody died
-/// before 100). Without theft, with nobody caching 0.0 %, 0.5 % and 1.4 %
-/// survive at n = 2, 4 and 8, against 99.5 %, 95.8 % and 91.0 % of `even`
-/// hoarders. At `THEFT_FIND` with half cheaters, the daily pilferage rate
-/// over ticks 101–200 is 1.57 %, 1.89 % and 2.40 % at n = 2, 4 and 8 (1.35 %,
-/// 1.75 % and 2.17 % with no cheaters), and 100 %, 99.8 % and 98.1 % of
-/// the agents alive at 100 survive the winter.
+/// The balance was measured before this was recorded (Task 5), and again
+/// for the four walls (2026-09-30; 100 seeds per n, first-winter survival =
+/// alive at 200 ÷ alive at 100; nobody died before 100). Without theft,
+/// with nobody caching 0.0 %, 0.2 % and 2.0 % survive at n = 2, 4 and 8,
+/// against 99.5 %, 96.0 % and 92.8 % of `even` hoarders. At `THEFT_FIND`
+/// with half cheaters, the daily pilferage rate over ticks 101–200 (the
+/// mean of `pilferage_rate`) is 1.54 %, 1.92 % and 2.34 % at n = 2, 4 and 8
+/// (1.34 %, 1.74 % and 2.16 % with no cheaters), and 100 %, 99.8 % and
+/// 97.8 % of the agents alive at 100 survive the winter.
 fn theft_arena(c: &mut Config, n: u32) {
     winter_world(c, CachingRule::Even, false);
     let (side, scale) = match n {
@@ -298,8 +303,8 @@ fn theft_arena(c: &mut Config, n: u32) {
         8 => (8, 1.0),
         _ => panic!("the arena holds 2, 4 or 8 agents, not {n}"),
     };
-    c.width = side + 1;
-    c.height = side + 1;
+    c.width = side + 2;
+    c.height = side + 2;
     c.population = n;
     c.vision = URange::new(1, side / 2);
     c.goods[0].map = Map::Flat {
@@ -313,7 +318,12 @@ fn theft_arena(c: &mut Config, n: u32) {
         height,
         opaque: true,
     };
-    c.walls = vec![wall(0, 0, side + 1, 1), wall(0, 1, 1, side)];
+    c.walls = vec![
+        wall(0, 0, side + 2, 1),
+        wall(0, side + 1, side + 2, 1),
+        wall(0, 1, 1, side),
+        wall(side + 1, 1, 1, side),
+    ];
     c.theft.find = THEFT_FIND;
     c.theft.cheaters = 0.5;
 }
@@ -1289,21 +1299,21 @@ pub fn all() -> Vec<Preset> {
             "theft-arena-2",
             "Theft arena: two agents",
             "Andersson & Krebs 1978; Minds 6",
-            "2 agents shut in a walled 4 × 4 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent) through a winter everywhere at once: the room grows back its full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–2, burn 1 a tick and carry at most 50. One is a hoarder, burying half its surplus where it stands; the other, a cheater, never caches. Arriving on a site, an agent finds each cache of the other's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): both agents survive the winter in every seed. The cheater takes 52 % of the hoarder's ended caches' sugar and the hoarder digs 48 % (the hoarder steals nothing: the cheater has no caches), so Andersson and Krebs's condition for hoarding to pay (the ratio above 1 with free burying) holds in only 7 seeds. Who ends richer depends on how still-buried caches are valued: counting them in full, the hoarder is richer in all 20 seeds (76 against 41 per founder, 62 of its 76 still in the ground); counting them as nothing, the cheater is richer in all 20 (41 against 14 held). 1.5 % of the caches are pilfered a tick, four fifths of the sugar in winter.",
+            "2 agents shut in a 4 × 4 room walled on all four sides, with flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent) through a winter everywhere at once: the room grows back its full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–2, burn 1 a tick and carry at most 50. One is a hoarder, burying half its surplus where it stands; the other, a cheater, never caches. Arriving on a site, an agent finds each cache of the other's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): both agents survive the winter in every seed. The cheater takes 51 % of the hoarder's ended caches' sugar and the hoarder digs 49 % (the hoarder steals nothing: the cheater has no caches), so Andersson and Krebs's condition for hoarding to pay (the ratio above 1 with free burying) holds in only 7 seeds. Who ends richer depends on how still-buried caches are valued: counting them in full, the hoarder is richer in all 20 seeds (80 against 41 per founder, 65 of its 80 still in the ground); counting them as nothing, the cheater is richer in all 20 (41 against 14 held). 1.45 % of the caches are pilfered a tick, four fifths of the sugar in winter.",
             |c| theft_arena(c, 2),
         ),
         preset(
             "theft-arena-4",
             "Theft arena: four agents",
             "Andersson & Krebs 1978; Minds 6",
-            "4 agents shut in a walled 6 × 6 room of flat sugar through a winter everywhere at once, with the same sugar per agent as theft-arena-2's room: capacity 32/9 and growback 0.27 a tick at 9 sites an agent (the full rate for 100 ticks, then 1/32 of it for 100). They walk with vision 1–3, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): every agent survives the winter in nearly every seed; thieves take 82 % of the ended caches' sugar and owners dig 18 %, so Andersson and Krebs's condition fails in every seed. Hoarders pilfer about as much as cheaters (1.1 times as much per founder). Counting still-buried caches in full, the hoarders end richer in 15 of 20 seeds (35 against 29 per founder); counting them as nothing, the cheaters are richer in 19 (29 against 10 held). 1.8 % of the caches are pilfered a tick, more than with two agents, likely because more strangers cross each cache (0.07 visits a cache a tick against 0.06).",
+            "4 agents shut in a 6 × 6 room walled on all four sides, with flat sugar, through a winter everywhere at once, with the same sugar per agent as theft-arena-2's room: capacity 32/9 and growback 0.27 a tick at 9 sites an agent (the full rate for 100 ticks, then 1/32 of it for 100). They walk with vision 1–3, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): every agent survives the winter in nearly every seed; thieves take 85 % of the ended caches' sugar and owners dig 15 %, so Andersson and Krebs's condition fails in every seed. Hoarders pilfer 1.2 times as much per founder as cheaters. Counting still-buried caches in full, the hoarders end richer in 12 of 20 seeds (33 against 32 per founder); counting them as nothing, the cheaters are richer in 19 (32 against 11 held). 1.8 % of the caches are pilfered a tick, more than with two agents, likely because more strangers cross each cache (0.075 visits a cache a tick against 0.059).",
             |c| theft_arena(c, 4),
         ),
         preset(
             "theft-arena-8",
             "Theft arena: eight agents",
             "Andersson & Krebs 1978; Minds 6",
-            "8 agents shut in a walled 8 × 8 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent, as in theft-arena-2) through a winter everywhere at once: the full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–4, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): every agent survives the winter in nearly every seed; thieves take 92 % of the ended caches' sugar and owners dig 8 %, so Andersson and Krebs's condition fails in every seed. Hoarders pilfer 1.7 times as much per founder as cheaters. Counting still-buried caches in full, the hoarders end richer in 13 of 20 seeds (38 against 33 per founder); counting them as nothing, the cheaters are richer in all 20 (33 against 11 held). 2.2 % of the caches are pilfered a tick, the most of the three rooms, likely because more strangers cross each cache (0.10 visits a cache a tick), as Andersson and Krebs's reason for their (n − 1) has it.",
+            "8 agents shut in an 8 × 8 room walled on all four sides, with flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent, as in theft-arena-2) through a winter everywhere at once: the full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–4, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): every agent survives the winter in nearly every seed; thieves take 91 % of the ended caches' sugar and owners dig 9 %, so Andersson and Krebs's condition fails in every seed. Hoarders pilfer 1.8 times as much per founder as cheaters. Counting still-buried caches in full, the hoarders end richer in 17 of 20 seeds (37 against 29 per founder); counting them as nothing, the cheaters are richer in all 20 (29 against 12 held). 2.2 % of the caches are pilfered a tick, the most of the three rooms, likely because more strangers cross each cache (0.094 visits a cache a tick), as Andersson and Krebs's reason for their (n − 1) has it.",
             |c| theft_arena(c, 8),
         ),
     ]
@@ -2046,7 +2056,7 @@ mod tests {
         ] {
             let c = by_id(id).unwrap().config;
             assert_eq!(c.population, n, "{id}");
-            assert_eq!((c.width, c.height), (side + 1, side + 1), "{id}");
+            assert_eq!((c.width, c.height), (side + 2, side + 2), "{id}");
             assert_eq!((c.theft.find, c.theft.cheaters), (0.25, 0.5), "{id}");
             assert_eq!(c.caching.rule, CachingRule::Even, "{id}");
             assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
@@ -2063,11 +2073,19 @@ mod tests {
             assert_eq!(w.agents().filter(|a| a.cheater).count() as u32, n / 2);
             // Vision is 1 to half the room's side.
             assert_eq!(c.vision, URange::new(1, side / 2), "{id}");
-            // The walls: row 0 and column 0, 2k + 1 sites in all.
+            // The walls: rows 0 and k + 1 and columns 0 and k + 1, the
+            // (k + 2)-square's border, 4k + 4 sites in all; the room is the
+            // centered k × k block, every site of it open.
             let walls = (0..w.torus.len())
                 .filter(|&i| w.is_wall(w.torus.pos(i)))
                 .count() as u32;
-            assert_eq!(walls, 2 * side + 1, "{id}");
+            assert_eq!(walls, 4 * side + 4, "{id}");
+            for i in 0..w.torus.len() {
+                let p = w.torus.pos(i);
+                let border = p.x == 0 || p.y == 0 || p.x == side + 1 || p.y == side + 1;
+                assert_eq!(w.is_wall(p), border, "{id}: {p:?}");
+                assert_eq!(w.sites[i].capacity[0] > 0.0, !border, "{id}: {p:?}");
+            }
             // Every agent starts inside the room, off the walls.
             for a in w.agents() {
                 assert!((1..=side).contains(&a.pos.x), "{id}: {:?}", a.pos);

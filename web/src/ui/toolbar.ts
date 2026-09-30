@@ -1,6 +1,7 @@
 import type { Lockstep } from '../compare/lockstep';
 import { randomSeed, type Engine, type RunControls, type Speed } from '../engine';
 import { errorMessage } from '../errors';
+import { winterShown } from '../minds';
 import { readoutText } from '../valley';
 import { h } from './dom';
 import { RateMeter } from './rate';
@@ -97,6 +98,8 @@ export class Toolbar {
   private readonly resetButton: HTMLButtonElement;
   private readonly dice: HTMLButtonElement;
   private readonly readout = h('span', { class: 'readout' });
+  /** Minds 5: "Winter" beside the readout while the tick shown ended in a global winter. */
+  private readonly winter = h('span', { class: 'badge winter', title: 'Every site grows back at its winter rate this tick', hidden: true }, 'Winter');
   /** The follow and replay chips: their ✕ is held too (ending a replay edits the world). */
   private readonly chips: HTMLElement;
   /** Hidden in Compare: the headers carry them. */
@@ -151,6 +154,7 @@ export class Toolbar {
       this.stopControl.el,
       h('div', { class: 'group' }, seedLabel, this.resetButton, this.dice),
       this.readout,
+      this.winter,
       chips,
       h('div', { class: 'toolbar-end' }),
     );
@@ -272,6 +276,7 @@ export class Toolbar {
 
   private tick(): void {
     this.readout.textContent = readoutText(this.engine, this.b);
+    this.winter.hidden = !winterShown(this.engine.model === 'sugarscape' ? this.engine.minds : null);
     this.timeline.sync();
   }
 }

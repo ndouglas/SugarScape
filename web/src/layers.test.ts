@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { noOverlays, type DisplayState } from './protocol';
 import type { AnasaziConfig, Config, RingConfig, SchellingConfig } from './types';
-import { clampDisplay, layerOptions, overlayAvailable, overlayAvailableAny, validLayer } from './layers';
+import { clampDisplay, defaultColorMode, layerOptions, loadedDisplay, overlayAvailable, overlayAvailableAny, validLayer } from './layers';
 
 const config = {
   goods: [{ name: 'sugar' }, { name: 'salt' }],
@@ -97,5 +97,64 @@ describe('clampDisplay', () => {
     expect(overlayAvailable('water', rules(true))).toBe(false);
     const back = clampDisplay({ ...clamped, colorMode: 'tribe' }, rules(true));
     expect([back.overlays.water, back.overlays.links]).toEqual([false, false]);
+  });
+});
+
+describe('the Minds color modes and the caches overlay', () => {
+  const minds = (over: Partial<Config>) =>
+    ({ ...config, disease: { enabled: false }, culture: { enabled: false }, sex: { enabled: false }, ...over }) as unknown as Config;
+  const theft = minds({ caching: { rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false }, theft: { find: 0.25, owner_memory: true, loot: 'keep', cheaters: 0.5 } });
+  const mixed = minds({ caching: { rule: 'none', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: true } });
+  const even = minds({ caching: { rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false } });
+  const central = minds({ central: { enabled: true } });
+  const book = minds({});
+  const memory = (share: number) => ({ span: 100, share, belief: 'last_seen', prior: 'none' });
+  const halfRemember = minds({ ...even, memory: memory(0.5) } as Partial<Config>);
+  const theftNoCheaters = minds({ ...theft, theft: { find: 0.25, owner_memory: true, loot: 'keep', cheaters: 0 }, memory: memory(0.5) } as Partial<Config>);
+  const allRemember = minds({ memory: memory(1) } as Partial<Config>);
+  const base: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
+
+  it('defaults to Strategy with cheaters, Caching rule under mixed rules, Memory where some remember, Caching rule with caching on, else Tribe', () => {
+    expect(defaultColorMode(theft)).toBe('strategy');
+    expect(defaultColorMode(mixed)).toBe('caching_rule');
+    expect(defaultColorMode(halfRemember)).toBe('memory');
+    expect(defaultColorMode(theftNoCheaters)).toBe('memory');
+    // A carrying limit alone (central-place worlds, rule none) has no rule to show.
+    const limitOnly = { ...theftNoCheaters, theft: undefined, memory: undefined, caching: { ...(theftNoCheaters.caching ?? {}), rule: 'none', mixed: false, capacity: 320 } } as unknown as Config;
+    expect(defaultColorMode(limitOnly)).toBe('tribe');
+    expect(defaultColorMode(even)).toBe('caching_rule');
+    expect(defaultColorMode(allRemember)).toBe('tribe');
+    expect(defaultColorMode(book)).toBe('tribe');
+  });
+
+  it('keeps Strategy only with theft on and Caching rule only with caching on', () => {
+    expect(clampDisplay({ ...base, colorMode: 'strategy' }, theft).colorMode).toBe('strategy');
+    expect(clampDisplay({ ...base, colorMode: 'strategy' }, mixed).colorMode).toBe('caching_rule');
+    expect(clampDisplay({ ...base, colorMode: 'strategy' }, book).colorMode).toBe('tribe');
+    expect(clampDisplay({ ...base, colorMode: 'caching_rule' }, even).colorMode).toBe('caching_rule');
+    expect(clampDisplay({ ...base, colorMode: 'caching_rule' }, book).colorMode).toBe('tribe');
+    expect(clampDisplay({ ...base, colorMode: 'strategy' }, theftNoCheaters).colorMode).toBe('memory');
+    expect(clampDisplay({ ...base, colorMode: 'memory' }, allRemember).colorMode).toBe('memory');
+    expect(clampDisplay({ ...base, colorMode: 'memory' }, book).colorMode).toBe('tribe');
+  });
+
+  it('offers the caches overlay where there can be caches (a central world’s larders too)', () => {
+    expect(overlayAvailable('caches', even)).toBe(true);
+    expect(overlayAvailable('caches', central)).toBe(true);
+    expect(overlayAvailable('caches', book)).toBe(false);
+  });
+
+  it('starts a loaded world on its default mode with the caches overlay, keeping a mode picked by hand', () => {
+    expect(loadedDisplay(base, theft)).toEqual({ ...base, colorMode: 'strategy', overlays: { ...noOverlays(), caches: true } });
+    expect(loadedDisplay({ ...base, colorMode: 'strategy' }, mixed).colorMode).toBe('caching_rule');
+    expect(loadedDisplay({ ...base, colorMode: 'wealth' }, theft).colorMode).toBe('wealth');
+    const back = loadedDisplay({ ...base, colorMode: 'caching_rule', overlays: { ...noOverlays(), caches: true } }, book);
+    expect(back).toEqual(base);
+    expect(loadedDisplay(base, book)).toBe(base);
+    expect(loadedDisplay({ ...base, colorMode: 'memory' }, theft).colorMode).toBe('strategy');
+    // A caches overlay turned off by hand stays off.
+    expect(loadedDisplay(base, theft, true)).toEqual({ ...base, colorMode: 'strategy' });
+    const schelling = { model: 'schelling' } as SchellingConfig;
+    expect(loadedDisplay(base, schelling)).toBe(base);
   });
 });

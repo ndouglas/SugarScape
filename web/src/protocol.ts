@@ -1,6 +1,6 @@
 // Messages between the engine (page) and the SimHost (simulation worker, or the page as a fallback).
 import type { CreditGraph } from './credit';
-import type { AnyInspection, ColorMode, DiseaseEntry, FieldError, Layer, ModelConfig, ModelStats } from './types';
+import type { AnyInspection, ColorMode, DiseaseEntry, FieldError, Layer, MindsView, ModelConfig, ModelStats } from './types';
 
 /** The sugarscape's network overlays (edges the host sends in `networks`). */
 export type NetworkOverlay = 'trade' | 'credit' | 'disease' | 'neighbors' | 'friends' | 'family';
@@ -8,8 +8,11 @@ export const NETWORKS: NetworkOverlay[] = ['trade', 'credit', 'disease', 'neighb
 /** The anasazi's overlays, drawn from `WorldSnapshot.valley` (milestone 10). */
 export type ValleyOverlay = 'water' | 'settlements' | 'links';
 export const VALLEY_OVERLAYS: ValleyOverlay[] = ['water', 'settlements', 'links'];
-export type Overlay = NetworkOverlay | ValleyOverlay;
-export const OVERLAYS: Overlay[] = [...NETWORKS, ...VALLEY_OVERLAYS];
+/** Minds 5–6: every cache in the world, drawn from `WorldSnapshot.minds`. */
+export type MindsOverlay = 'caches';
+export const MINDS_OVERLAYS: MindsOverlay[] = ['caches'];
+export type Overlay = NetworkOverlay | ValleyOverlay | MindsOverlay;
+export const OVERLAYS: Overlay[] = [...NETWORKS, ...VALLEY_OVERLAYS, ...MINDS_OVERLAYS];
 
 /** Every overlay off (a fresh object each call). */
 export function noOverlays(): Record<Overlay, boolean> {
@@ -60,6 +63,10 @@ export interface Wants {
   valley?: boolean;
   /** Minds 3: the selected site's inspected agent's remembered sites (the memory overlay). */
   memory?: boolean;
+  /** Minds 5–6: every home and larder, the season and the lab's schedule (`MindsView`). */
+  minds?: boolean;
+  /** Minds 5–6: every site's caches, flat (the caches overlay). */
+  caches?: boolean;
 }
 
 /** Ring World's state for the ring view: sugar per site (site 0 first) and each agent's site. */
@@ -116,6 +123,10 @@ export interface WorldSnapshot {
   diseaseList?: DiseaseEntry[];
   ring?: RingState;
   valley?: ValleyState;
+  /** Minds 5–6: the world's homes, season and lab schedule, when `wants.minds`. */
+  minds?: MindsView;
+  /** Minds 5–6: every site holding a cache, `[x, y, total, flags, …]`, when `wants.caches`. */
+  caches?: Float64Array;
   /** The world has run its course (the anasazi's end year): stepping it does nothing more. */
   finished?: true;
   /** Edits still to replay: after every init and reset, and whenever it changes. */
@@ -205,6 +216,8 @@ const FLAGS = [
   'ring',
   'valley',
   'memory',
+  'minds',
+  'caches',
 ] as const;
 
 /** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */

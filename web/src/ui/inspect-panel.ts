@@ -3,10 +3,11 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hasCaches, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
+  ColorMode,
   AntsInspection,
   CachingView,
   CentralView,
@@ -41,6 +42,7 @@ import type {
   SpatialInspection,
   TagsInspection,
 } from '../types';
+import { ageText, allocationText, siteCachesText } from '../minds';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -101,7 +103,7 @@ export function cachesText(c: Pick<CachingView, 'caches' | 'total'>): string {
 /**
  * The Minds 5 caching rows, label and text: the agent's own caching rule (its own under mixed rules),
  * what it carries against the limit (good 0, `held`), its caches, and rule plan's forecast shortfall
- * when it is computing one. In a central-place world (`home` given) the larder, the cache at home, is
+ * when it is computing one, and a lab agent's frozen test-evening allocation. In a central-place world (`home` given) the larder, the cache at home, is
  * its own row ("Larder: y at home") and the Caches row counts only the caches away from home.
  */
 export function cachingRows(c: CachingView, held: number, home: [number, number] | null = null): [string, string][] {
@@ -114,7 +116,17 @@ export function cachingRows(c: CachingView, held: number, home: [number, number]
     ['Caches', larder != null ? cachesText({ caches: away, total: away.reduce((sum, k) => sum + k.amount, 0) }) : cachesText(c)],
     ...(larder != null ? [['Larder', `${fmt(larder)} at home`] as [string, string]] : []),
     ...(c.forecast != null ? [['Forecast shortfall', fmt(c.forecast)] as [string, string]] : []),
+    ...(c.lab_allocation != null ? [['Test allocation', allocationText(c.lab_allocation)] as [string, string]] : []),
   ];
+}
+
+/**
+ * The Agent row's text: "#id · sex · group". Under the Minds color modes (Strategy, Caching rule,
+ * Memory) the map doesn't show the group, whose tags are random there, so it is left out.
+ */
+export function agentText(a: Pick<AgentView, 'id' | 'sex'>, group: string, mode: ColorMode): string {
+  const minds: ColorMode[] = ['strategy', 'caching_rule', 'memory'];
+  return minds.includes(mode) ? `#${a.id} · ${a.sex}` : `#${a.id} · ${a.sex} · ${group}`;
 }
 
 /** The Minds 5 central-place rows, label and text: the agent's home and its last delivered load. */
@@ -143,7 +155,7 @@ export class InspectPanel {
   private visible = false;
 
   constructor(private engine: Engine) {
-    for (const event of ['select', 'tick', 'reset', 'config', 'edit', 'follow'] as const) engine.on(event, () => this.render());
+    for (const event of ['select', 'tick', 'reset', 'config', 'edit', 'follow', 'display'] as const) engine.on(event, () => this.render());
     this.render();
   }
 
@@ -182,7 +194,7 @@ export class InspectPanel {
   private agentRows(a: AgentView): HTMLElement[] {
     const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     return [
-      row('Agent', h('span', {}, `#${a.id} · ${a.sex} · ${this.engine.sugar.culture.groups[a.group]?.name ?? a.tribe} `, this.followButton(a.id))),
+      row('Agent', h('span', {}, `${agentText(a, this.engine.sugar.culture.groups[a.group]?.name ?? a.tribe, this.engine.colorMode)} `, this.followButton(a.id))),
       ...a.holdings.map((held, i) =>
         row(this.goodName(i), `${fmt(held)} (born with ${fmt(a.initial[i])}) · metabolism ${a.metabolism[i]}`),
       ),
@@ -206,7 +218,7 @@ export class InspectPanel {
       ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
       ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
       ...(a.theft ? theftRows(a.theft).map(([k, v]) => row(k, v)) : []),
-      row('Age', `${a.age} / ${a.max_age}`),
+      row('Age', ageText(a.age, a.max_age, this.engine.sugar.lifespan.enabled)),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
       ...(this.engine.sugar.disease.enabled ? this.diseaseRows(a) : []),
@@ -769,6 +781,9 @@ export class InspectPanel {
         row('Site', `(${site.x}, ${site.y})`),
         ...site.resources.map((r, i) => row(`${this.goodName(i)} here`, `${fmt(r)} / ${fmt(site.capacities[i])}`)),
         ...site.pollution.map((p, k) => row(this.engine.sugar.pollution.pollutants[k]?.name ?? `pollutant ${k}`, fmt(p))),
+        ...(site.caches && hasCaches(this.engine.sugar)
+          ? [row('Caches here', siteCachesText(site.caches, (this.engine.sugar.theft?.cheaters ?? 0) > 0))]
+          : []),
         ...(agent && !gone ? this.agentRows(agent) : []),
       ),
     );
