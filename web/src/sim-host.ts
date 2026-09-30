@@ -75,6 +75,8 @@ export interface SimLike {
   anasazi_links(): Uint32Array;
   /** Minds 5–6: JSON `MindsView` (a sugarscape's; `null` otherwise). */
   minds_view(): string;
+  /** Minds 5–6: every site holding a cache, flat `[x, y, total, flags, …]`; empty otherwise. */
+  cache_sites(): Float64Array;
   /** Whether the world has run its course (the anasazi's end year): stepping it does nothing. */
   finished(): boolean;
   fingerprint(): string;
@@ -783,6 +785,7 @@ export class SimHost {
     if (wants.creditGraph) s.creditGraph = JSON.parse(sim.credit_graph()) as CreditGraph;
     if (wants.diseaseList) s.diseaseList = JSON.parse(sim.disease_list()) as DiseaseEntry[];
     if (wants.minds) s.minds = JSON.parse(sim.minds_view()) as MindsView;
+    if (wants.caches) s.caches = sim.cache_sites();
     return s;
   }
 

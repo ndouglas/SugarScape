@@ -7,6 +7,7 @@ import { hasCaches, isAgreementView, isAntsView, isBaliView, isLineView, isTippi
 import { playerRows } from '../spatial';
 import type {
   AgentView,
+  ColorMode,
   AntsInspection,
   CachingView,
   CentralView,
@@ -119,6 +120,15 @@ export function cachingRows(c: CachingView, held: number, home: [number, number]
   ];
 }
 
+/**
+ * The Agent row's text: "#id · sex · group". Under the Minds color modes (Strategy, Caching rule,
+ * Memory) the map doesn't show the group, whose tags are random there, so it is left out.
+ */
+export function agentText(a: Pick<AgentView, 'id' | 'sex'>, group: string, mode: ColorMode): string {
+  const minds: ColorMode[] = ['strategy', 'caching_rule', 'memory'];
+  return minds.includes(mode) ? `#${a.id} · ${a.sex}` : `#${a.id} · ${a.sex} · ${group}`;
+}
+
 /** The Minds 5 central-place rows, label and text: the agent's home and its last delivered load. */
 export function centralRows(c: CentralView): [string, string][] {
   return [
@@ -145,7 +155,7 @@ export class InspectPanel {
   private visible = false;
 
   constructor(private engine: Engine) {
-    for (const event of ['select', 'tick', 'reset', 'config', 'edit', 'follow'] as const) engine.on(event, () => this.render());
+    for (const event of ['select', 'tick', 'reset', 'config', 'edit', 'follow', 'display'] as const) engine.on(event, () => this.render());
     this.render();
   }
 
@@ -184,7 +194,7 @@ export class InspectPanel {
   private agentRows(a: AgentView): HTMLElement[] {
     const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     return [
-      row('Agent', h('span', {}, `#${a.id} · ${a.sex} · ${this.engine.sugar.culture.groups[a.group]?.name ?? a.tribe} `, this.followButton(a.id))),
+      row('Agent', h('span', {}, `${agentText(a, this.engine.sugar.culture.groups[a.group]?.name ?? a.tribe, this.engine.colorMode)} `, this.followButton(a.id))),
       ...a.holdings.map((held, i) =>
         row(this.goodName(i), `${fmt(held)} (born with ${fmt(a.initial[i])}) · metabolism ${a.metabolism[i]}`),
       ),

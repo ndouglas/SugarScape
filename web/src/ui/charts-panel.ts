@@ -659,17 +659,17 @@ export class ChartsPanel {
   }
 
   /**
-   * Shades each winter band (`winterBands` of the world on screen's config) behind the lines, as a
-   * faint blue fill over the plot area; nothing without a global winter.
+   * Shades each winter band behind the lines, as a faint blue fill over the plot area: the bands of
+   * every sugarscape world on the chart (A's, and in Compare B's), from each world's own config;
+   * nothing without a global winter.
    */
   private winterPlugin(): uPlot.Plugin {
     return {
       hooks: {
         drawClear: (u: uPlot) => {
-          if (this.engine.model !== 'sugarscape') return;
           const { min, max } = u.scales.x;
           if (min == null || max == null) return;
-          const bands = winterBands(this.engine.sugar, min, max);
+          const bands = this.worlds.filter((w) => w.model === 'sugarscape').flatMap((w) => winterBands(w.sugar, min, max));
           if (bands.length === 0) return;
           const { top, height } = u.bbox;
           u.ctx.save();

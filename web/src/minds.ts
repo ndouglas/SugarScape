@@ -50,31 +50,36 @@ export function labStatus(lab: LabView): string {
   }
 }
 
-/** How one site's caches draw in the all-caches overlay. */
-export interface SiteCacheMark {
-  x: number;
-  y: number;
-  /** The diamond's half-width as a share of a cell: 0.12 for a near-empty site, up to 0.3 for the fullest. */
-  size: number;
-  /** Tinted as a cheater's when only cheaters own caches here (with cheaters in the world). */
-  owner: 'hoarder' | 'cheater';
-  /** A central world's larder: drawn with the homes, not here. */
-  larder: boolean;
+/** One pass over `cache_sites`' flat `[x, y, total, flags, …]`: the fullest site, and what kinds are there. */
+export interface CacheSummary {
+  /** The largest total at any site (0 with none). */
+  max: number;
+  /** Some site holds caches owned only by cheaters. */
+  cheaterOnly: boolean;
 }
 
+export function cacheSummary(flat: ArrayLike<number>): CacheSummary {
+  let max = 0;
+  let cheaterOnly = false;
+  for (let i = 0; i + 3 < flat.length; i += 4) {
+    if (flat[i + 2] > max) max = flat[i + 2];
+    if (isCheaterOnly(flat[i + 3])) cheaterOnly = true;
+  }
+  return { max, cheaterOnly };
+}
+
+/** Whether a site's flags say only cheaters own caches there (tinted apart). */
+export const isCheaterOnly = (flags: number): boolean => (flags & CACHE_CHEATER) !== 0 && (flags & CACHE_HOARDER) === 0;
+
+/** Whether a site's flags include a larder (drawn with the homes). */
+export const isLarder = (flags: number): boolean => (flags & CACHE_LARDER) !== 0;
+
 /**
- * Every site's caches as marks, from `MindsView.caches`, each sized by the square root of its total
- * against the fullest site (area goes with sugar).
+ * A site's diamond half-width as a share of a cell: 0.12 for a near-empty site, up to 0.3 for the
+ * fullest, by the square root of its total against `max` (area goes with sugar).
  */
-export function siteCacheMarks(caches: MindsView['caches']): SiteCacheMark[] {
-  const most = caches.reduce((m, c) => Math.max(m, c[2]), 0);
-  return caches.map(([x, y, total, flags]) => ({
-    x,
-    y,
-    size: 0.12 + 0.18 * (most > 0 ? Math.sqrt(Math.max(0, total) / most) : 0),
-    owner: flags & CACHE_CHEATER && !(flags & CACHE_HOARDER) ? 'cheater' : 'hoarder',
-    larder: (flags & CACHE_LARDER) !== 0,
-  }));
+export function cacheSize(total: number, max: number): number {
+  return 0.12 + 0.18 * (max > 0 ? Math.sqrt(Math.max(0, total) / max) : 0);
 }
 
 /** A site's "Caches here" text: each owner and amount ("#12: 4.5 · #30 (cheater): 2"), or "none". */

@@ -1444,7 +1444,7 @@ export interface SiteView {
 /** Minds 5–6: a cache at a site: its owner, what it holds, and whether its owner is a cheater. */
 export interface SiteCacheView { owner: number; amount: number; cheater_owner: boolean }
 
-/** Bits of `MindsView.caches`' flags: a hoarder's cache, a cheater's, a larder (the core's `CACHE_*`). */
+/** Bits of each site's flags in `cache_sites`: a hoarder's cache, a cheater's, a larder (the core's `CACHE_*`). */
 export const CACHE_HOARDER = 1;
 export const CACHE_CHEATER = 2;
 export const CACHE_LARDER = 4;
@@ -1468,12 +1468,13 @@ export interface LabView {
   trays: [number, number, number][];
 }
 
-/** Minds 5–6: what the page draws of a Minds world beyond the frame (the core's `MindsView`). */
+/**
+ * Minds 5–6: the small part of what the page draws of a Minds world beyond the frame (the core's
+ * `MindsView`); every site's caches come apart, as a flat array (`WorldSnapshot.caches`).
+ */
 export interface MindsView {
-  /** Whether the tick just computed was a winter tick; null unless `seasons.mode` is global. */
+  /** Whether the tick just computed (tick − 1) was a winter tick; null unless `seasons.mode` is global. */
   winter: boolean | null;
-  /** Every site holding a cache, `[x, y, total, flags]` (`CACHE_*` bits), in site order. */
-  caches: [number, number, number, number][];
   /** Central worlds: every agent's home and what its larder holds. */
   homes: { id: number; x: number; y: number; larder: number }[];
   lab: LabView | null;

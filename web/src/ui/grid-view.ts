@@ -3,7 +3,7 @@ import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
 import type { AgentView } from '../types';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
-import { compartmentName, labStatus, siteCacheMarks } from '../minds';
+import { cacheSize, cacheSummary, compartmentName, isCheaterOnly, isLarder, labStatus } from '../minds';
 import { h } from './dom';
 import { colorLegend, legendElement, overlayLegend, type MapMarks } from './legend';
 import { cacheMarks, memoryMarks } from './memory-overlay';
@@ -37,6 +37,8 @@ export class GridView {
   /** Under the map: a lab's status line, then the legend (the color mode's colors, the overlays shown). */
   readonly legend = h('div', { class: 'map-legend' });
   private legendKey = '';
+  /** The fullest cache site this draw (`marks` finds it in its one pass over the flat array). */
+  private cacheMax = 0;
 
   constructor(readonly canvas: HTMLCanvasElement, private engine: Engine) {
     this.ctx = canvas.getContext('2d')!;
@@ -86,12 +88,18 @@ export class GridView {
 
   draw(): void {
     const { width, height } = this.blit();
-    if (this.canvas.width !== width * CELL || this.canvas.height !== height * CELL) {
-      this.canvas.width = width * CELL;
-      this.canvas.height = height * CELL;
-      this.canvas.style.aspectRatio = `${width} / ${height}`;
+    // The backing store matches the canvas's size on screen (k device pixels per cell-scale pixel),
+    // so overlays and labels are drawn at device resolution rather than upscaled; everything below
+    // draws in cell-scale units (CELL a cell) through the transform.
+    const k = backingScale(this.canvas.clientWidth, width);
+    if (this.canvas.width !== width * CELL * k || this.canvas.height !== height * CELL * k) {
+      this.canvas.width = width * CELL * k;
+      this.canvas.height = height * CELL * k;
     }
+    this.canvas.style.aspectRatio = `${width} / ${height}`;
     const ctx = this.ctx;
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    // The agents' bitmap stays crisp: one sharp block per cell.
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.buffer, 0, 0, width * CELL, height * CELL);
 
@@ -149,9 +157,9 @@ export class GridView {
     const agent = inspection && isSugarView(inspection.view) ? inspection.view.agent : null;
     const marks = this.marks(agent);
     this.drawLab(marks);
-    this.drawMemory(agent, marks);
     this.drawAllCaches(marks);
     this.drawHomes(marks);
+    this.drawMemory(agent, marks);
     this.drawCaches(agent);
     const accent = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
     if (agent?.plan && agent.plan.path.length) {
@@ -221,12 +229,22 @@ export class GridView {
     const sugar = this.engine.model === 'sugarscape';
     const minds = sugar ? this.engine.minds : null;
     const config = this.engine.sugar;
+    const overlay = sugar && this.engine.overlays.caches;
+    const sites = overlay ? this.engine.cacheSites : null;
+    const summary = sites ? cacheSummary(sites) : null;
+    this.cacheMax = summary?.max ?? 0;
+    const homes = overlay ? (minds?.homes ?? []) : [];
+    const span = config.memory?.span ?? 0;
+    const remembered =
+      span > 0 && config.memory?.prior !== 'map' && agent !== null ? memoryMarks(this.engine.inspectMemory(), span) : [];
     return {
-      allCaches: sugar && this.engine.overlays.caches && (minds?.caches.length ?? 0) > 0,
-      cheaters: (config.theft?.cheaters ?? 0) > 0,
+      allCaches: (sites?.length ?? 0) > 0,
+      cheaterCaches: summary?.cheaterOnly ?? false,
       ownCaches: (agent?.caching?.caches.length ?? 0) > 0,
-      homes: (minds?.homes.length ?? 0) > 0,
-      memory: (config.memory?.span ?? 0) > 0 && config.memory?.prior !== 'map' && agent !== null && this.engine.inspectMemory().length > 0,
+      homes: homes.length > 0,
+      larders: homes.some((home) => home.larder > 0),
+      memory: remembered.length > 0,
+      spots: remembered.some((m) => m.shape === 'circle'),
       path: (agent?.plan?.path.length ?? 0) > 0,
       route: (agent?.goap?.steps.length ?? 0) > 0,
       lab: minds?.lab ?? null,
@@ -287,26 +305,29 @@ export class GridView {
    * `--c4` or, where only cheaters own caches, `--red`; a central world's larders draw with the homes.
    */
   private drawAllCaches(marks: MapMarks): void {
-    const minds = this.engine.minds;
-    if (!marks.allCaches || !minds) return;
+    if (!marks.allCaches) return;
+    const flat = this.engine.cacheSites;
     const ctx = this.ctx;
     const style = getComputedStyle(this.canvas);
-    const colors = { hoarder: style.getPropertyValue('--c4').trim() || '#a0f', cheater: style.getPropertyValue('--red').trim() || '#f44' };
+    const hoarder = style.getPropertyValue('--c4').trim() || '#a0f';
+    const cheater = style.getPropertyValue('--red').trim() || '#f44';
     ctx.save();
     ctx.globalAlpha = 0.75;
     ctx.lineWidth = 0.75;
     ctx.strokeStyle = '#000';
-    for (const m of siteCacheMarks(minds.caches)) {
-      if (m.larder && marks.homes) continue;
-      ctx.fillStyle = colors[m.owner];
-      diamond(ctx, (m.x + 0.5) * CELL, (m.y + 0.5) * CELL, m.size * CELL);
+    // Straight from the flat `[x, y, total, flags, …]`: no per-site objects.
+    for (let i = 0; i + 3 < flat.length; i += 4) {
+      const flags = flat[i + 3];
+      if (marks.homes && isLarder(flags)) continue;
+      ctx.fillStyle = isCheaterOnly(flags) ? cheater : hoarder;
+      diamond(ctx, (flat[i] + 0.5) * CELL, (flat[i + 1] + 0.5) * CELL, cacheSize(flat[i + 2], this.cacheMax) * CELL);
     }
     ctx.restore();
   }
 
   /**
-   * Minds 5, central worlds: every agent's home as a faint square (`--c3`) and its larder as a
-   * diamond sized by what it holds against the fullest.
+   * Minds 5, central worlds, with the caches overlay: every agent's home as a faint square (`--c3`)
+   * and its larder as a diamond sized by what it holds against the fullest.
    */
   private drawHomes(marks: MapMarks): void {
     const homes = this.engine.minds?.homes;
@@ -462,4 +483,14 @@ function diamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numbe
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+}
+
+/**
+ * Device pixels per cell-scale pixel for a grid `width` cells wide shown `clientWidth` CSS pixels
+ * wide: at least 1, at most 16 (a small lab rig on a large screen).
+ */
+export function backingScale(clientWidth: number, width: number): number {
+  const dpr = typeof devicePixelRatio === 'number' ? devicePixelRatio : 1;
+  if (!(clientWidth > 0) || !(width > 0)) return 1;
+  return Math.min(16, Math.max(1, Math.round((clientWidth * dpr) / (width * CELL))));
 }

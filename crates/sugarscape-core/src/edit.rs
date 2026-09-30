@@ -59,28 +59,25 @@ pub struct SiteCacheView {
     pub cheater_owner: bool,
 }
 
-/// Minds 5–6: what the page draws of a Minds world beyond the frame, for
-/// every agent at once (`World::minds_view`). Cheap: one pass over the
-/// agents' caches, sized by the sites that hold any.
+/// Minds 5–6: the small part of what the page draws of a Minds world beyond
+/// the frame (`World::minds_view`): the season, homes and larders, and the
+/// lab. Every site's caches, which can run to thousands, come separately as
+/// a flat array (`World::cache_sites`).
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct MindsView {
     /// `Some` while `seasons.mode` is global: whether the tick just computed
     /// (`tick − 1`, the one the frame shows) was a winter tick
     /// (`growback::is_winter`). `None` with seasons off or by hemisphere.
+    /// Every winter shown on the page (badge, chart bands, Inspect's
+    /// forecast) uses this `tick − 1` convention.
     pub winter: Option<bool>,
-    /// Every site holding a cache, in site order: `[x, y, total, flags]`,
-    /// the flags' [`CACHE_HOARDER`] bit set when a hoarder (not a cheater)
-    /// owns a cache there, [`CACHE_CHEATER`] when a cheater does, and
-    /// [`CACHE_LARDER`] when one is its owner's larder (the cache at its
-    /// home, in a central world).
-    pub caches: Vec<[f64; 4]>,
     /// Central worlds: every agent's home and larder, in id order.
     pub homes: Vec<HomeView>,
     /// Lab worlds: the schedule as of the tick just computed.
     pub lab: Option<LabView>,
 }
 
-/// Cache flag bits in `MindsView::caches`.
+/// Cache flag bits in `World::cache_sites`.
 pub const CACHE_HOARDER: u32 = 1;
 pub const CACHE_CHEATER: u32 = 2;
 pub const CACHE_LARDER: u32 = 4;
@@ -188,8 +185,9 @@ pub struct CachingView {
     pub total: f64,
     /// Rule `plan`'s current forecast shortfall (burn × γ − forecast −
     /// cached; `rules::shortfall`): `Some` only under rule `plan`, with
-    /// `seasons.mode: global` on, and outside winter (when the rule isn't
-    /// computing one); `None` otherwise, including for every other rule.
+    /// `seasons.mode: global` on, and outside winter, judged by the tick just
+    /// computed (`tick − 1`, as `MindsView::winter`; the rule isn't computing
+    /// one in winter); `None` otherwise, including for every other rule.
     pub forecast: Option<f64>,
     /// A lab world's test evening: the allocation of F frozen at its start
     /// (`Agent.lab_allocation`), `[compartment, amount]` in K order; `None`
@@ -546,7 +544,7 @@ impl World {
                 let forecast = (rule == crate::config::CachingRule::Plan
                     && seasons.enabled
                     && seasons.mode == crate::config::SeasonMode::Global
-                    && !rules::growback::is_winter(&self.config, self.tick))
+                    && !rules::growback::is_winter(&self.config, self.tick.saturating_sub(1)))
                 .then(|| {
                     let fee = self.config.disease.active_fee();
                     let burn = a.effective_metabolism(0, fee);
@@ -609,43 +607,22 @@ impl World {
         let seasons = self.config.seasons;
         let winter = (seasons.enabled && seasons.mode == crate::config::SeasonMode::Global)
             .then(|| rules::growback::is_winter(&self.config, self.tick.saturating_sub(1)));
-        let central = self.config.central.enabled;
-        let mut sites: std::collections::BTreeMap<u32, (f64, u32)> =
-            std::collections::BTreeMap::new();
-        let mut homes = Vec::new();
-        for a in self.agents() {
-            let home = a
-                .home
-                .filter(|_| central)
-                .map(|p| self.torus.index(p) as u32);
-            for (&site, &amount) in &a.caches {
-                let e = sites.entry(site).or_insert((0.0, 0));
-                e.0 += amount;
-                e.1 |= if a.cheater {
-                    CACHE_CHEATER
-                } else {
-                    CACHE_HOARDER
-                };
-                if home == Some(site) {
-                    e.1 |= CACHE_LARDER;
-                }
-            }
-            if let (Some(p), Some(site)) = (a.home, home) {
-                homes.push(HomeView {
-                    id: a.id,
-                    x: p.x,
-                    y: p.y,
-                    larder: a.caches.get(&site).copied().unwrap_or(0.0),
-                });
-            }
-        }
-        let caches = sites
-            .into_iter()
-            .map(|(site, (total, flags))| {
-                let p = self.torus.pos(site as usize);
-                [f64::from(p.x), f64::from(p.y), total, f64::from(flags)]
-            })
-            .collect();
+        let homes = if self.config.central.enabled {
+            self.agents()
+                .filter_map(|a| {
+                    let p = a.home?;
+                    let site = self.torus.index(p) as u32;
+                    Some(HomeView {
+                        id: a.id,
+                        x: p.x,
+                        y: p.y,
+                        larder: a.caches.get(&site).copied().unwrap_or(0.0),
+                    })
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
         let lab = self.config.lab.map(|l| {
             let days = lab::training_days(l.protocol);
             let (mut phase, mut day, mut place, mut food) = ("start", 1, None, None);
@@ -688,11 +665,43 @@ impl World {
                     .collect(),
             }
         });
-        MindsView {
-            winter,
-            caches,
-            homes,
-            lab,
+        MindsView { winter, homes, lab }
+    }
+
+    /// Minds 5–6: every site holding a cache, in site order, written to `out`
+    /// as `[x, y, total, flags, …]` (flags: [`CACHE_HOARDER`] when a hoarder,
+    /// not a cheater, owns a cache there, [`CACHE_CHEATER`] when a cheater
+    /// does, [`CACHE_LARDER`] when one is its owner's larder, the cache at
+    /// its home in a central world). `scratch` is a per-site tally the caller
+    /// keeps between calls, so a frame allocates nothing once both have grown.
+    pub fn cache_sites(&self, scratch: &mut Vec<(f64, u32)>, out: &mut Vec<f64>) {
+        out.clear();
+        scratch.clear();
+        scratch.resize(self.sites.len(), (0.0, 0));
+        let central = self.config.central.enabled;
+        for a in self.agents() {
+            let home = a
+                .home
+                .filter(|_| central)
+                .map(|p| self.torus.index(p) as u32);
+            for (&site, &amount) in &a.caches {
+                let e = &mut scratch[site as usize];
+                e.0 += amount;
+                e.1 |= if a.cheater {
+                    CACHE_CHEATER
+                } else {
+                    CACHE_HOARDER
+                };
+                if home == Some(site) {
+                    e.1 |= CACHE_LARDER;
+                }
+            }
+        }
+        for (i, &(total, flags)) in scratch.iter().enumerate() {
+            if flags != 0 {
+                let p = self.torus.pos(i);
+                out.extend([f64::from(p.x), f64::from(p.y), total, f64::from(flags)]);
+            }
         }
     }
 
@@ -1094,6 +1103,21 @@ mod tests {
                 .is_none(),
             "no forecast is computed in winter"
         );
+        // The winter of the tick just computed (tick − 1), as the badge and
+        // the chart bands: ticks 101–200 show winter.
+        for (tick, winter) in [(100, false), (101, true), (200, true), (201, false)] {
+            w.tick = tick;
+            let forecast = w
+                .inspect(2, 2)
+                .unwrap()
+                .agent
+                .unwrap()
+                .caching
+                .unwrap()
+                .forecast;
+            assert_eq!(forecast.is_none(), winter, "tick {tick}");
+            assert_eq!(w.minds_view().winter, Some(winter), "tick {tick}");
+        }
     }
 
     #[test]
@@ -1130,15 +1154,23 @@ mod tests {
         w.agent_mut(b).unwrap().caches.insert(here, 2.0);
         w.agent_mut(b).unwrap().caches.insert(there, 1.0);
         w.agent_mut(b).unwrap().cheater = true;
-        let v = w.minds_view();
+        let (mut scratch, mut flat) = (Vec::new(), Vec::new());
+        w.cache_sites(&mut scratch, &mut flat);
         assert_eq!(
-            v.caches,
+            flat,
             vec![
-                [7.0, 3.0, 1.0, f64::from(CACHE_CHEATER)],
-                [5.0, 5.0, 6.0, f64::from(CACHE_HOARDER | CACHE_CHEATER)],
+                7.0,
+                3.0,
+                1.0,
+                f64::from(CACHE_CHEATER),
+                5.0,
+                5.0,
+                6.0,
+                f64::from(CACHE_HOARDER | CACHE_CHEATER),
             ],
             "site order: (7, 3) is row 3"
         );
+        let v = w.minds_view();
         assert!(v.homes.is_empty() && v.lab.is_none() && v.winter.is_none());
         // A central world's homes, and the larder among the caches.
         w.config.central.enabled = true;
@@ -1147,7 +1179,11 @@ mod tests {
         assert_eq!(v.homes.len(), 1, "b has no home");
         assert_eq!((v.homes[0].id, v.homes[0].x, v.homes[0].y), (a, 5, 5));
         assert_eq!(v.homes[0].larder, 4.0);
-        assert_eq!(v.caches[1][3] as u32 & CACHE_LARDER, CACHE_LARDER);
+        // The buffers are reused: a second call gives the same, not twice as much.
+        w.cache_sites(&mut scratch, &mut flat);
+        assert_eq!(flat.len(), 8);
+        assert_eq!(flat[7] as u32 & CACHE_LARDER, CACHE_LARDER);
+        assert_eq!(flat[6], 6.0);
     }
 
     #[test]

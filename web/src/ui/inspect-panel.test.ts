@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText, theftRows } from './inspect-panel';
+import { agentText, cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText, theftRows } from './inspect-panel';
 
 const plan = (path: [number, number][]) => ({ target_x: 3, target_y: 4, path, walked: true });
 const memory = (sites: number, spots: number) => ({ remembers: true, sites, spots });
@@ -175,5 +175,15 @@ describe('theftRows', () => {
       ['Stole', '0'],
       ['Lost to thieves', '7'],
     ]);
+  });
+});
+
+describe('agentText', () => {
+  it('names the group only where the map colors by something other than the Minds modes', () => {
+    const a = { id: 7, sex: 'female' as const };
+    expect(agentText(a, 'Blue', 'tribe')).toBe('#7 · female · Blue');
+    expect(agentText(a, 'Blue', 'wealth')).toBe('#7 · female · Blue');
+    expect(agentText(a, 'Blue', 'strategy')).toBe('#7 · female');
+    expect(agentText(a, 'Blue', 'memory')).toBe('#7 · female');
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ageText, allocationText, labStatus, siteCacheMarks, siteCachesText, winterBands, winterShown } from './minds';
+import { ageText, allocationText, cacheSize, cacheSummary, isCheaterOnly, isLarder, labStatus, siteCachesText, winterBands, winterShown } from './minds';
 import { CACHE_CHEATER, CACHE_HOARDER, CACHE_LARDER, type Config, type LabView } from './types';
 
 const seasons = (mode: 'global' | 'hemispheres', enabled = true) =>
@@ -22,9 +22,9 @@ const lab = (over: Partial<LabView>): LabView => ({
 describe('winter', () => {
   it('shows the badge only for a global winter', () => {
     expect(winterShown(null)).toBe(false);
-    expect(winterShown({ winter: null, caches: [], homes: [], lab: null })).toBe(false);
-    expect(winterShown({ winter: false, caches: [], homes: [], lab: null })).toBe(false);
-    expect(winterShown({ winter: true, caches: [], homes: [], lab: null })).toBe(true);
+    expect(winterShown({ winter: null, homes: [], lab: null })).toBe(false);
+    expect(winterShown({ winter: false, homes: [], lab: null })).toBe(false);
+    expect(winterShown({ winter: true, homes: [], lab: null })).toBe(true);
   });
 
   it('bands the ticks that ended in winter, clipped to the range', () => {
@@ -60,18 +60,21 @@ describe('labStatus', () => {
   });
 });
 
-describe('siteCacheMarks', () => {
-  it('sizes by the square root of each site against the fullest and tints cheater-only sites', () => {
-    const marks = siteCacheMarks([
-      [1, 2, 4, CACHE_HOARDER],
-      [3, 4, 16, CACHE_CHEATER],
-      [5, 6, 0, CACHE_HOARDER | CACHE_CHEATER | CACHE_LARDER],
-    ]);
-    expect(marks.map((m) => m.owner)).toEqual(['hoarder', 'cheater', 'hoarder']);
-    expect(marks.map((m) => m.larder)).toEqual([false, false, true]);
-    expect(marks[1].size).toBeCloseTo(0.3);
-    expect(marks[0].size).toBeCloseTo(0.12 + 0.18 * 0.5);
-    expect(marks[2].size).toBeCloseTo(0.12);
+describe('the flat cache sites', () => {
+  it('finds the fullest site and whether any holds only cheaters’ caches, in one pass', () => {
+    const flat = Float64Array.of(1, 2, 4, CACHE_HOARDER, 3, 4, 16, CACHE_HOARDER | CACHE_CHEATER, 5, 6, 0, CACHE_HOARDER | CACHE_LARDER);
+    expect(cacheSummary(flat)).toEqual({ max: 16, cheaterOnly: false });
+    expect(cacheSummary(Float64Array.of(1, 1, 2, CACHE_CHEATER)).cheaterOnly).toBe(true);
+    expect(cacheSummary(new Float64Array(0))).toEqual({ max: 0, cheaterOnly: false });
+    expect([isCheaterOnly(CACHE_CHEATER), isCheaterOnly(CACHE_CHEATER | CACHE_HOARDER)]).toEqual([true, false]);
+    expect([isLarder(CACHE_HOARDER | CACHE_LARDER), isLarder(CACHE_HOARDER)]).toEqual([true, false]);
+  });
+
+  it('sizes a site by the square root of its total against the fullest', () => {
+    expect(cacheSize(16, 16)).toBeCloseTo(0.3);
+    expect(cacheSize(4, 16)).toBeCloseTo(0.12 + 0.18 * 0.5);
+    expect(cacheSize(0, 16)).toBeCloseTo(0.12);
+    expect(cacheSize(3, 0)).toBeCloseTo(0.12);
   });
 });
 

@@ -63,8 +63,10 @@ export interface Wants {
   valley?: boolean;
   /** Minds 3: the selected site's inspected agent's remembered sites (the memory overlay). */
   memory?: boolean;
-  /** Minds 5–6: every cache, home and larder, the season and the lab's schedule (`MindsView`). */
+  /** Minds 5–6: every home and larder, the season and the lab's schedule (`MindsView`). */
   minds?: boolean;
+  /** Minds 5–6: every site's caches, flat (the caches overlay). */
+  caches?: boolean;
 }
 
 /** Ring World's state for the ring view: sugar per site (site 0 first) and each agent's site. */
@@ -121,8 +123,10 @@ export interface WorldSnapshot {
   diseaseList?: DiseaseEntry[];
   ring?: RingState;
   valley?: ValleyState;
-  /** Minds 5–6: the world's caches, homes, season and lab schedule, when `wants.minds`. */
+  /** Minds 5–6: the world's homes, season and lab schedule, when `wants.minds`. */
   minds?: MindsView;
+  /** Minds 5–6: every site holding a cache, `[x, y, total, flags, …]`, when `wants.caches`. */
+  caches?: Float64Array;
   /** The world has run its course (the anasazi's end year): stepping it does nothing more. */
   finished?: true;
   /** Edits still to replay: after every init and reset, and whenever it changes. */
@@ -213,6 +217,7 @@ const FLAGS = [
   'valley',
   'memory',
   'minds',
+  'caches',
 ] as const;
 
 /** Combines wants: flags OR, networks and chart groups are unioned, the first selection wins. */

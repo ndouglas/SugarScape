@@ -1572,31 +1572,38 @@ fn inspect_reports_the_labs_doorways_open_after_the_test_evening() {
 fn minds_view_lists_every_cache_the_season_and_renders_the_minds_modes() {
     let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
     sim.step(150);
-    let before = sim.fingerprint();
     sim.render("strategy", "sugar").unwrap();
     sim.render("caching_rule", "sugar").unwrap();
-    assert_eq!(sim.fingerprint(), before, "rendering changes nothing");
+    sim.render("memory", "sugar").unwrap();
     let view: serde_json::Value = serde_json::from_str(&sim.minds_view()).unwrap();
     assert_eq!(
         view["winter"],
         serde_json::json!(true),
         "tick 150 is winter"
     );
-    let caches = view["caches"].as_array().unwrap();
-    assert!(!caches.is_empty(), "hoarders have buried by tick 150");
+    let caches = sim.cache_sites().to_vec();
+    assert!(caches.len() >= 4, "hoarders have buried by tick 150");
+    assert_eq!(caches.len() % 4, 0);
+    assert_eq!(
+        sim.cache_sites().to_vec(),
+        caches,
+        "the reused buffers give the same"
+    );
     // Each site's caches match what that site's Inspect lists.
-    let first = caches[0].as_array().unwrap();
-    let (x, y) = (first[0].as_f64().unwrap(), first[1].as_f64().unwrap());
-    let site: serde_json::Value =
-        serde_json::from_str(&sim.inspect(x as u32, y as u32).unwrap()).unwrap();
+    let (x, y) = (caches[0] as u32, caches[1] as u32);
+    let site: serde_json::Value = serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
     let listed: f64 = site["site"]["caches"]
         .as_array()
         .unwrap()
         .iter()
         .map(|c| c["amount"].as_f64().unwrap())
         .sum();
-    assert!((listed - first[2].as_f64().unwrap()).abs() < 1e-9);
+    assert!((listed - caches[2]).abs() < 1e-9);
     assert!(view["lab"].is_null());
+    // Drawing, viewing and inspecting change nothing: the world still reaches
+    // its native golden at tick 200 (crates/sugarscape-core/tests/golden.rs).
+    sim.step(50);
+    assert_eq!(sim.fingerprint(), "0xd0ee29237c28952f");
 
     let mut lab = Sim::new(&preset_json("cache-raby"), 1, JsValue::NULL).unwrap();
     lab.step(1);

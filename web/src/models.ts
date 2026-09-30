@@ -339,7 +339,7 @@ export const hasCaches = (c: Config): boolean => cachingOn(c) || c.central?.enab
  * at once, or a lab.
  */
 export const mindsShown = (c: Config): boolean =>
-  cachingOn(c) || c.central?.enabled === true || c.seasons?.mode === 'global' || (c.lab ?? null) !== null;
+  cachingOn(c) || c.central?.enabled === true || (c.seasons?.enabled === true && c.seasons.mode === 'global') || (c.lab ?? null) !== null;
 
 /** An entry of the model menu: a model, or the Minds (sugarscape worlds using the Minds rules). */
 export type MenuKind = ModelKind | 'minds';
@@ -422,10 +422,11 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['lineage', 'Lineage'],
     // Axelrod's culture rule (milestone 14); agents are gray under the book's rule.
     ['culture', 'Culture'],
-    // Minds 6: hoarder or cheater (the default with theft on); Minds 5: each agent's caching rule
-    // (the default under mixed rules). See `defaultColorMode`.
+    // Minds 6: hoarder or cheater; Minds 5: each agent's caching rule. See `defaultColorMode`.
     ['strategy', 'Strategy'],
     ['caching_rule', 'Caching rule'],
+    // Minds 3: whether each agent remembers.
+    ['memory', 'Memory'],
   ],
   schelling: [
     ['color', 'Color'],

@@ -50,6 +50,10 @@ pub const RULE_NONE: Rgb = NEUTRAL;
 pub const RULE_EVEN: Rgb = [0x3d, 0x7e, 0xff];
 pub const RULE_COMPENSATE: Rgb = [0x36, 0xd6, 0xc3];
 pub const RULE_PLAN: Rgb = [0xff, 0x3d, 0x8b];
+/// Minds 3's memory (`ColorMode::Memory`): an agent that remembers, and one
+/// that doesn't.
+pub const REMEMBERS: Rgb = [0x36, 0xd6, 0xc3];
+pub const FORGETS: Rgb = NEUTRAL;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ColorMode {
@@ -67,6 +71,8 @@ pub enum ColorMode {
     Strategy,
     /// Minds 5: the caching rule each agent follows (`rules::rule_of`).
     CachingRule,
+    /// Minds 3: whether the agent remembers (`Agent.remembers`).
+    Memory,
 }
 
 /// A landscape layer: a good's level or capacity, or a pollutant's level.
@@ -92,6 +98,7 @@ impl FromStr for ColorMode {
             "lineage" => Self::Lineage,
             "strategy" => Self::Strategy,
             "caching_rule" => Self::CachingRule,
+            "memory" => Self::Memory,
             _ => return Err(format!("unknown color mode {s:?}")),
         })
     }
@@ -164,6 +171,13 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
         ),
         // Drawn by `render`, which has the world these need.
         ColorMode::Credit | ColorMode::CachingRule => NEUTRAL,
+        ColorMode::Memory => {
+            if a.remembers {
+                REMEMBERS
+            } else {
+                FORGETS
+            }
+        }
         ColorMode::Strategy => {
             if a.cheater {
                 CHEATER
@@ -560,5 +574,19 @@ mod tests {
         let distinct: std::collections::BTreeSet<Rgb> =
             rules.iter().map(|&r| rule_color(r)).collect();
         assert_eq!(distinct.len(), 4, "one color per rule");
+    }
+
+    #[test]
+    fn memory_mode_colors_rememberers() {
+        let mut w = blank_world(10, 10);
+        let keeps = spawn(&mut w, 1, 1);
+        let forgets = spawn(&mut w, 2, 2);
+        w.agent_mut(keeps).unwrap().remembers = true;
+        w.agent_mut(forgets).unwrap().remembers = false;
+        let mut buf = Vec::new();
+        render(&w, ColorMode::Memory, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(pixel(&buf, &w, 1, 1)[..3], REMEMBERS);
+        assert_eq!(pixel(&buf, &w, 2, 2)[..3], FORGETS);
+        assert_eq!("memory".parse::<ColorMode>().unwrap(), ColorMode::Memory);
     }
 }

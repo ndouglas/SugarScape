@@ -1,6 +1,5 @@
 // The legend under the map: the active color mode's colors and the overlay symbols on screen.
-import { theftOn } from '../models';
-import type { ColorMode, Config, LabView } from '../types';
+import type { CachingRule, ColorMode, Config, LabView } from '../types';
 import { h } from './dom';
 
 /**
@@ -31,6 +30,7 @@ export const RENDER_COLORS = {
   RULE_EVEN: '#3d7eff',
   RULE_COMPENSATE: '#36d6c3',
   RULE_PLAN: '#ff3d8b',
+  REMEMBERS: '#36d6c3',
 } as const;
 
 /** The overlay symbols the legend can show; the grid view draws each the same way. */
@@ -73,30 +73,47 @@ export function colorLegend(mode: ColorMode, config: Config): LegendItem[] {
     case 'culture':
       return [{ label: 'a color per culture', mark: { kind: 'swatch', color: c.NEUTRAL } }];
     case 'strategy':
-      return [swatch('hoarder', c.HOARDER), swatch('cheater', c.CHEATER)];
+      return (config.theft?.cheaters ?? 0) > 0 ? [swatch('hoarder', c.HOARDER), swatch('cheater', c.CHEATER)] : [swatch('hoarder', c.HOARDER)];
     case 'caching_rule':
-      return [
-        swatch(theftOn(config) ? 'none (and cheaters)' : 'none', c.NEUTRAL),
-        swatch('even', c.RULE_EVEN),
-        swatch('compensate', c.RULE_COMPENSATE),
-        swatch('plan', c.RULE_PLAN),
-      ];
+      return cachingRuleLegend(config);
+    case 'memory':
+      return [swatch('remembers', c.REMEMBERS), swatch("doesn't remember", c.NEUTRAL)];
     default:
       return [];
   }
 }
 
+const RULE_COLORS: Record<CachingRule, string> = {
+  none: RENDER_COLORS.NEUTRAL,
+  even: RENDER_COLORS.RULE_EVEN,
+  compensate: RENDER_COLORS.RULE_COMPENSATE,
+  plan: RENDER_COLORS.RULE_PLAN,
+};
+
+/**
+ * The rules agents actually follow: all four under mixed rules, else the config's one; a cheater
+ * follows `none`, so it joins the list where there are cheaters.
+ */
+function cachingRuleLegend(config: Config): LegendItem[] {
+  const rules: CachingRule[] = config.caching?.mixed ? ['none', 'even', 'compensate', 'plan'] : [config.caching?.rule ?? 'none'];
+  const cheaters = (config.theft?.cheaters ?? 0) > 0;
+  if (cheaters && !rules.includes('none')) rules.unshift('none');
+  return rules.map((r) => swatch(r === 'none' && cheaters ? (config.caching?.mixed ? 'none (and cheaters)' : 'none (cheaters)') : r, RULE_COLORS[r]));
+}
+
 /** What is on the map besides agents, as the grid view draws it (`GridView.marks`). */
 export interface MapMarks {
-  /** The all-caches overlay is on, and whether any agent is a cheater (their caches tint apart). */
+  /** The caches overlay shows some cache, and some site's caches are only cheaters' (tinted apart). */
   allCaches: boolean;
-  cheaters: boolean;
+  cheaterCaches: boolean;
   /** The selected agent's own caches (highlighted). */
   ownCaches: boolean;
-  /** A central world's homes and larders. */
+  /** A central world's homes (with the caches overlay), and whether any larder holds sugar. */
   homes: boolean;
-  /** The selected agent's remembered sites and known truffle spots. */
+  larders: boolean;
+  /** The selected agent's remembered sites, and whether any is a known truffle spot. */
   memory: boolean;
+  spots: boolean;
   /** The selected agent's walk (A*) and GOAP route. */
   path: boolean;
   route: boolean;
@@ -111,12 +128,14 @@ export function overlayLegend(m: MapMarks, config: Config): LegendItem[] {
   if (walls.some((w) => w.opaque)) out.push(swatch('wall', RENDER_COLORS.WALL));
   if (walls.some((w) => !w.opaque)) out.push(swatch('fence', RENDER_COLORS.FENCE));
   if (m.allCaches) {
-    out.push(symbol(m.cheaters ? "a hoarder's cache (size: sugar)" : 'a cache (size: sugar)', 'cache'));
-    if (m.cheaters) out.push(symbol("a cheater's cache", 'cheater-cache'));
+    out.push(symbol(m.cheaterCaches ? "a hoarder's cache (size: sugar)" : 'a cache (size: sugar)', 'cache'));
+    if (m.cheaterCaches) out.push(symbol("a cheater's cache", 'cheater-cache'));
   }
   if (m.ownCaches) out.push(symbol("the selected agent's caches", 'own-cache'));
-  if (m.homes) out.push(symbol('home', 'home'), symbol('larder (size: sugar)', 'larder'));
-  if (m.memory) out.push(symbol('remembered site (fades with age)', 'memory'), symbol('known truffle spot (filled: ripe)', 'spot'));
+  if (m.homes) out.push(symbol('home', 'home'));
+  if (m.homes && m.larders) out.push(symbol('larder (size: sugar)', 'larder'));
+  if (m.memory) out.push(symbol('remembered site (fades with age)', 'memory'));
+  if (m.memory && m.spots) out.push(symbol('known truffle spot (filled: ripe)', 'spot'));
   if (m.path) out.push(symbol('planned walk', 'path'));
   if (m.route) out.push(symbol('GOAP route and targets', 'route'));
   if (m.lab) {
