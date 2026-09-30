@@ -136,7 +136,7 @@ caches, and cache visibility (their own untested prediction).
 
 | Field | Default | Meaning |
 |---|---|---|
-| `hoard.app_scat` | 0.5 | Apparency of scattered caches (0.05–0.9) |
+| `hoard.app_scat` | 0.44 | Apparency of scattered caches (0.05–0.9); 0.44 per Amendments item 12 |
 | `hoard.app_lard` | 2.0 | Apparency of larders (1–3) |
 | `hoard.owner_recovery` | 1.0 | Chance an owner finds each of its own scattered caches when it goes to eat from them. 1 is V&J's free recovery. |
 | `hoard.cheaters` | 0 | Share of founders that never cache and eat what they find. V&J's untested non-hoarding cheater. |
@@ -216,7 +216,8 @@ checked against a 150 dpi render of pp. 665–666. What the Appendix adds:
   probability of burrow defense of 0. Otherwise, individuals were identified with a flag that specified that
   the first item they harvested during the day would be used to satisfy their daily food requirement."
 - **Later bouts** (p. 665): "For all bouts after the first daily bout, probabilities of burrow defense for
-  individuals with state = 0 were determined by the ratio of food stored in the burrow to the target value".
+  individuals with state = 0 were determined by the ratio of food stored in the burrow to the target value
+  for size of the larder hoard as described above".
 - **Bout order** (p. 665): "For each bout, the program called a subroutine that determined whether each
   individual was preyed upon. Then individuals that were not defending their burrows were selected for
   foraging in random order. For individuals that had harvested an item from another animal's larder hoard
@@ -231,6 +232,10 @@ checked against a 150 dpi render of pp. 665–666. What the Appendix adds:
   individuals for each of 20 offspring. The probabilities of being picked were proportional to the amount of
   leftover stores (both scatter hoards and larder hoards)". Inheritance is X′ = N[h²X_p + (1 − h²)X̄, V_seg],
   and "We applied the logit transformation to these values to restrict them to the range between 0 and 1."
+  Strictly, the function that maps onto (0, 1) is the inverse logit, so the sentence is a misnomer. We read
+  it as: the equation is applied on the logit scale and the result is mapped back with the inverse logit.
+  The reading this rules out is applying the equation to the raw probabilities and then taking a logit,
+  which would not give values in (0, 1) at all.
 - **Food schedule** (p. 665): "82 items on day 1, 81 on day 2, 79 on day 3, . . ., 2 on day 50 (these
   numbers were based on a linear function but rounded off to integers)". The function isn't given. Five
   distinct rounded sequences fit all four printed values and sum to 2 100. **Choice:** day d gets
@@ -238,7 +243,8 @@ checked against a 150 dpi render of pp. 665–666. What the Appendix adds:
   (50, 2), gives 80 on day 2, so it can't be V&J's. This one is a line that matches every printed value, with
   round-half-up.
 
-**Corrections to the sections above.**
+**Corrections to the sections above.** They are flagged here; the sections above are left as written, and
+these amendments govern where they differ.
 
 - *The model* says that an unfed agent eats from its stores "if it has any". It does, but only in bout 1
   (see item 2).
@@ -247,7 +253,10 @@ checked against a 150 dpi render of pp. 665–666. What the Appendix adds:
 - *The model* says "A fed agent with a larder defends". In fact every satiated agent makes a defense draw
   (item 3).
 - *The model* says an agent "forages to eat". That applies to days 6–100 only. On days 1–5 every agent is
-  satiated all day (item 5).
+  satiated all day (item 5, a stated choice; see contradiction 6).
+- *The model* lists predation last in the bout. The Appendix puts it first, before foraging (item 1).
+- *Survey* claim 1 says "Final mean L". Item 11 redefines it: the mean of the per-generation mean L over
+  generations 51–60, not generation 60 alone.
 
 **Contradictions and errors in the paper, and how we handle them.**
 
@@ -263,10 +272,23 @@ checked against a 150 dpi render of pp. 665–666. What the Appendix adds:
 3. **"186 % per day"** can't be a daily proportion. See item 10.
 4. **"Mean of about 0.15" versus a "logistic distribution".** A logit-normal distribution's mean isn't the
    inverse logit of its center. See item 8.
-5. **The calibration day.** P. 665 calibrates the search on "the first day" and says that early starvation
-   "happened occasionally by failure to find food early in the hoarding season". But no one needs storable
-   food on days 1–5 (item 5), so a day-1 total failure kills no one. We implement both statements as
-   printed. Early starvation can only start on day 6.
+5. **Note, not a contradiction: the calibration day.** P. 665 calibrates the search on "the first day",
+   and p. 664 says early starvation "happened occasionally by failure to find food early in the hoarding
+   season, when new food was being produced each day". No one needs storable food on days 1–5, so a day-1
+   total failure kills no one, but "early … when new food was being produced" fits days 6–50. The two
+   statements are consistent, and we implement both as printed.
+6. **Bout-1 eating "on each day" versus nonstorable food on days 1–5.** P. 665 says "For the first
+   foraging bout on each day, individuals with any items stored … were assumed to use one of these items …"
+   and larder users "were assigned a probability of burrow defense of 1". It also says individuals had
+   "alternative nonstorable food items … available for days 1–5 but relied on storable items … for
+   immediate consumption as well as storage from days 6–100", and resets states to hungry only "For days
+   6–100". Bout 1 on days 1–5 therefore falls under neither the bout-1 rule (read as eating) nor the
+   "later bouts" rule. **Default (a silent choice, not a literal reading):** on days 1–5 no agent eats from
+   stores, and bout 1 uses the ordinary defense draw like any later bout. Reason: the days-1–5 sentence
+   says storable items are not used for immediate consumption then, and eating a stored item on a day the
+   agent is already fed would throw food away. **Switch for the literal reading:**
+   `hoard.early_bout1_eats = true` — on days 2–5 (day 1 has no stores), bout 1 applies the bout-1 rule as
+   printed: an agent with stores eats one (larder first), and a larder eater defends with probability 1.
 
 ### 1. Order within a bout
 
@@ -306,9 +328,10 @@ A hungry agent can't hold stores after bout 1, because it eats its first find. S
 happens only in bout 1.
 
 On days 1–5 (item 5), every agent is satiated all day and never eats from stores. Bout 1 uses the ordinary
-defense draw.
+defense draw. That part is a silent choice, not a literal reading (contradiction 6, with the switch
+`hoard.early_bout1_eats`).
 
-Reason: this is the Appendix's own procedure, taken literally.
+Reason: for days 6–100 this is the Appendix's own procedure.
 
 ### 3. Defense
 
@@ -331,19 +354,24 @@ Reason: this is the Appendix's own procedure, taken literally.
   s = 10, so p is 0.007 when the larder is empty, 0.5 at half the target and 0.993 at the target. Reason:
   s = 10 is the round slope that takes an empty larder to "almost never" and a full one to "almost always".
   It's exposed as `hoard.defense_slope`, a named switch that isn't judged.
-- **The minimum on day d** (satiated today): min = 100 − d, one item for each remaining day.
+- **The minimum on day d** (satiated today): min = min(100 − d, 95), one storable item for each remaining
+  day from day 6 on. Reason: storable food is needed only from day 6, so on days 1–5 the minimum is the 95
+  days 6–100.
 - **The maximum:** max = the foraging bouts left in the season, counting the current one:
   (20 − b + 1) + 20·(100 − d) for bout b. Reason: "all its remaining foraging bouts", with one item per
   successful bout.
 - **The target:** target = max(1, min + D·(max − min)). The floor of 1 avoids dividing by zero in the
   season's last bout. That's a stated choice, not a result lever.
 - **When the draw is made.** Every living, satiated agent draws once per bout (bouts 2–20, and every bout
-  on days 1–5), including agents with an empty larder (p ≈ 0.007). Reason: the text gives the rule for
-  "individuals with state = 0", without exception.
+  on days 1–5), including agents with an empty larder (p ≈ 0.007 at s = 10). Reason: the text states the
+  rule for "individuals with state = 0" and names no exception for an empty larder. Bout 1 on days 1–5 is
+  the silent choice of contradiction 6.
 - **What defense does.** A defending agent doesn't forage, and its larder can't be pilfered that bout. A
   forager whose search draws a defended larder gets nothing that bout. Reason: the text never says what
   happens when a search lands on a defended burrow. Defense has to stop theft, and the Appendix already
-  applies that rule to raid continuations.
+  applies that rule to raid continuations. **Switch:** `hoard.defended_in_pool` — `counted` (default:
+  a defended larder stays in "food available" and in the draw, and yields nothing) or `excluded` (defended
+  larders are left out of both, so the searcher's λ and draw see only open larders).
 - **Predation.** It is the same in or out of the burrow, 0.0001 per bout (p. 665: "set at 0.0001 in the
   open and in the burrow"), so defending carries no predation benefit.
 
@@ -401,7 +429,7 @@ the bout.
 - **Weighting.** Food available = public + app_scat·Σ_{j≠i} scatter_j + app_lard·Σ_{j≠i} larder_j, in
   weighted items. It sets λ and the draw. The agent's own stores are excluded.
 - **Defended larders stay in the pool.** They are still "larder hoards of other individuals". Drawing one
-  yields nothing (item 3).
+  yields nothing (item 3; switch `hoard.defended_in_pool`).
 - **Nonstorable food isn't modeled** as items. On days 1–5, every agent is satiated from the day's start,
   never eats from stores and stores everything it finds. The public pool holds only storable items. Reason:
   that is what "set at −1 … for days 6–100" does.
@@ -423,7 +451,7 @@ recovery stays free, because the food is in its own burrow.
 
 ### 7. Starvation
 
-(a) p. 665: individuals died "because they were not able to acquire a meal each day". The timing is
+(a) p. 664: individuals died "because they were not able to acquire a meal each day". The timing is
 silent.
 
 (b) **Choice:** at the end of each day from day 6 on, every living agent still hungry (state −1) dies
@@ -533,7 +561,12 @@ The start-of-day ratio and the instantaneous rate may be logged as unjudged diag
 - **CV** = SD / mean of those per-agent rates within a run (population SD), averaged across runs. Reason:
   the paper ties the CV to "an individual's larder", so the variation is among individuals.
   **Alternative:** the CV across runs of the run means.
-- **Minimum larder rate** (claim 4) = the minimum per-agent larder rate in generations 1–10.
+- **Minimum larder rate** (claim 4) = the minimum per-agent larder rate in generations 1–10, over agents
+  that meet a pre-registered exposure floor: a mean larder stock of at least 1 item at bout starts while
+  alive. Reason, on exposure grounds only: without a floor, some agent holding a larder item that is never
+  found has rate 0 in almost every run, and the predictor becomes trivially true. The floor is fixed here,
+  before any run, and is not tuned. The survey also reports the share of runs whose minimum is 0, both with
+  and without the floor, and the number of agents that pass the floor.
 - **Average scatter rate** (claim 4) = the pooled mean above.
 
 **How the survey judges it** is separate from how it's measured. The survey judges only:
@@ -587,6 +620,8 @@ These are all named switches whose defaults are the choices above. None is judge
 | `hoard.v_seg` | 0.5 |
 | `hoard.larder_weight` | `per_item` (alternative `per_burrow`) |
 | `hoard.dead_stores` | `remain` (alternative `remove`) |
+| `hoard.defended_in_pool` | `counted` (alternative `excluded`) |
+| `hoard.early_bout1_eats` | `false` (true = the literal bout-1 rule on days 2–5) |
 
 ### Concerns: gaps likely to decide the results
 
@@ -599,8 +634,15 @@ These are all named switches whose defaults are the choices above. None is judge
 2. **The defense target's scale.** A literal "minimum needed to survive" and "maximum available" give
    targets in the hundreds early in the season. So defense after bout 1 is rare until late in the season.
    Larder security then rests mostly on the bout-1 rule. That rule forces a defense only for agents with a
-   larder item.
+   larder item. D is heritable, though, and selection on D (D → 0 puts the target at the minimum, so the
+   midpoint comes within reach) can remove the problem. Mean D is logged per generation to show whether it
+   does.
 3. **V_seg** is unstated. It sets the founders' spread of L, and so the best early larder that claim 4 is
    about. It should be swept, and the answer reported as a sensitivity, not tuned.
 4. **The stores of the dead.** Leaving them (the default) gives pilferers undefended larders late in the
    season. Removing them doesn't. That may shift larder loss rates and takeover.
+5. **The defense slope** is unstated and decisive. It sets how often a nearly empty larder is guarded:
+   with s = 10 an empty larder defends with probability 0.007, with s = 4 with 0.12. Together with the
+   target's scale (concern 2), it sets how exposed larders are. `hoard.defense_slope` is swept beside
+   `hoard.v_seg` in a sensitivity sweep, reported as a sensitivity and never tuned.
+
