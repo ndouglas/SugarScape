@@ -1,0 +1,544 @@
+//! The hoarding model's parameters: Vander Wall and Jenkins's (2003) genetic
+//! algorithm as they print it, with every gap the paper leaves open filled by
+//! a stated choice (the spec's amendments) and exposed as a named switch.
+
+use serde::{Deserialize, Serialize};
+
+use crate::config::FieldError;
+use crate::schema::{Apply, Param};
+
+/// How a larder's apparency weighs into the food available to a searcher.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LarderWeight {
+    /// The Appendix: each larder item counts `app_lard`.
+    PerItem,
+    /// Page 662: each non-empty larder counts `app_lard` once.
+    PerBurrow,
+}
+
+/// What becomes of a dead agent's stores.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DeadStores {
+    /// They stay in the world and stay pilferable.
+    Remain,
+    /// They are removed at death.
+    Remove,
+}
+
+/// Whether a defended larder is part of the food a searcher sees.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DefendedInPool {
+    /// It stays in the pool and the draw, and yields nothing.
+    Counted,
+    /// It is left out of both.
+    Excluded,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct HoardConfig {
+    /// Agents in the population.
+    pub n: u32,
+    /// Days in the season, and foraging bouts in a day.
+    pub days: u32,
+    pub bouts: u32,
+    /// Public food: day d (1 to `food_days`) gets
+    /// floor(`food_first` − `food_step` × (d − 1) + 0.5) items.
+    pub food_days: u32,
+    pub food_first: f64,
+    pub food_step: f64,
+    /// Days at the start of the season on which agents are fed by
+    /// nonstorable food.
+    pub nonstorable_days: u32,
+    /// The search's calibration: with this many items available, the chance
+    /// of finding none in all `bouts` bouts is `search_miss`.
+    pub search_items: u32,
+    pub search_miss: f64,
+    /// The standard deviation of foraging efficiency (mean 1).
+    pub forage_sd: f64,
+    /// Relative detectability of others' scattered items and larder items.
+    pub app_scat: f64,
+    pub app_lard: f64,
+    /// Chance an agent is preyed upon in a bout.
+    pub predation: f64,
+    /// h² for both heritable traits, and the segregation variance on the
+    /// logit scale.
+    pub heritability: f64,
+    pub v_seg: f64,
+    /// The founders' centers for the probability of larder hoarding and the
+    /// propensity to defend.
+    pub l_mean: f64,
+    pub d_mean: f64,
+    /// Generations to run.
+    pub generations: u32,
+    /// Share of founders that never cache and eat what they find.
+    pub cheaters: f64,
+    /// Chance an owner finds its scatter items when it goes to eat from them.
+    pub owner_recovery: f64,
+    /// The defense logistic's slope.
+    pub defense_slope: f64,
+    pub larder_weight: LarderWeight,
+    pub dead_stores: DeadStores,
+    pub defended_in_pool: DefendedInPool,
+    /// On days 2 to `nonstorable_days`, bout 1 applies the bout-1 rule as
+    /// printed.
+    pub early_bout1_eats: bool,
+}
+
+impl Default for HoardConfig {
+    /// Vander Wall and Jenkins's population of 20 over 100 days of 20 bouts,
+    /// with the amendments' gap choices.
+    fn default() -> Self {
+        HoardConfig {
+            n: 20,
+            days: 100,
+            bouts: 20,
+            food_days: 50,
+            food_first: 82.3,
+            food_step: 1.645,
+            nonstorable_days: 5,
+            search_items: 82,
+            search_miss: 0.01,
+            forage_sd: 0.1,
+            app_scat: 0.44,
+            app_lard: 2.0,
+            predation: 0.0001,
+            heritability: 0.8,
+            v_seg: 0.5,
+            l_mean: 0.15,
+            d_mean: 0.5,
+            generations: 60,
+            cheaters: 0.0,
+            owner_recovery: 1.0,
+            defense_slope: 10.0,
+            larder_weight: LarderWeight::PerItem,
+            dead_stores: DeadStores::Remain,
+            defended_in_pool: DefendedInPool::Counted,
+            early_bout1_eats: false,
+        }
+    }
+}
+
+impl HoardConfig {
+    pub fn validate(&self) -> Result<(), Vec<FieldError>> {
+        let mut e = Vec::new();
+        let mut check = |ok: bool, field: &str, message: &str| {
+            if !ok {
+                e.push(FieldError::new(field, message));
+            }
+        };
+        check(
+            (2..=1000).contains(&self.n),
+            "hoard.n",
+            "must be between 2 and 1000",
+        );
+        check(
+            (1..=1000).contains(&self.days),
+            "hoard.days",
+            "must be between 1 and 1000",
+        );
+        check(
+            (1..=1000).contains(&self.bouts),
+            "hoard.bouts",
+            "must be between 1 and 1000",
+        );
+        check(
+            self.food_days <= self.days,
+            "hoard.food_days",
+            "must be at most the days in the season",
+        );
+        check(
+            self.food_first.is_finite() && (0.0..=10_000.0).contains(&self.food_first),
+            "hoard.food_first",
+            "must be between 0 and 10000",
+        );
+        check(
+            self.food_step.is_finite() && (0.0..=1000.0).contains(&self.food_step),
+            "hoard.food_step",
+            "must be between 0 and 1000",
+        );
+        check(
+            self.food_first - self.food_step * f64::from(self.food_days.saturating_sub(1)) + 0.5
+                >= 0.0,
+            "hoard.food_step",
+            "must not take the food below 0 by the last day of production",
+        );
+        check(
+            self.nonstorable_days <= self.days,
+            "hoard.nonstorable_days",
+            "must be at most the days in the season",
+        );
+        check(
+            (1..=1_000_000).contains(&self.search_items),
+            "hoard.search_items",
+            "must be between 1 and 1000000",
+        );
+        check(
+            self.search_miss > 0.0 && self.search_miss < 1.0,
+            "hoard.search_miss",
+            "must be between 0 and 1, exclusive",
+        );
+        check(
+            self.forage_sd.is_finite() && (0.0..=1.0).contains(&self.forage_sd),
+            "hoard.forage_sd",
+            "must be between 0 and 1",
+        );
+        check(
+            self.app_scat.is_finite() && self.app_scat > 0.0 && self.app_scat <= 100.0,
+            "hoard.app_scat",
+            "must be above 0 and at most 100",
+        );
+        check(
+            self.app_lard.is_finite() && self.app_lard > 0.0 && self.app_lard <= 100.0,
+            "hoard.app_lard",
+            "must be above 0 and at most 100",
+        );
+        check(
+            (0.0..=1.0).contains(&self.predation),
+            "hoard.predation",
+            "must be between 0 and 1",
+        );
+        check(
+            (0.0..=1.0).contains(&self.heritability),
+            "hoard.heritability",
+            "must be between 0 and 1",
+        );
+        check(
+            self.v_seg.is_finite() && (0.0..=10.0).contains(&self.v_seg),
+            "hoard.v_seg",
+            "must be between 0 and 10",
+        );
+        check(
+            self.l_mean > 0.0 && self.l_mean < 1.0,
+            "hoard.l_mean",
+            "must be between 0 and 1, exclusive",
+        );
+        check(
+            self.d_mean > 0.0 && self.d_mean < 1.0,
+            "hoard.d_mean",
+            "must be between 0 and 1, exclusive",
+        );
+        check(
+            (1..=10_000).contains(&self.generations),
+            "hoard.generations",
+            "must be between 1 and 10000",
+        );
+        check(
+            (0.0..=1.0).contains(&self.cheaters),
+            "hoard.cheaters",
+            "must be between 0 and 1",
+        );
+        check(
+            (0.0..=1.0).contains(&self.owner_recovery),
+            "hoard.owner_recovery",
+            "must be between 0 and 1",
+        );
+        check(
+            self.defense_slope.is_finite()
+                && self.defense_slope > 0.0
+                && self.defense_slope <= 1000.0,
+            "hoard.defense_slope",
+            "must be above 0 and at most 1000",
+        );
+        if e.is_empty() {
+            Ok(())
+        } else {
+            Err(e)
+        }
+    }
+
+    /// Fields that change only on reset and differ in `next`.
+    pub(crate) fn structural_changes(&self, next: &HoardConfig) -> Vec<FieldError> {
+        let mut out = Vec::new();
+        for (field, same) in [
+            ("n", self.n == next.n),
+            ("days", self.days == next.days),
+            ("bouts", self.bouts == next.bouts),
+            ("food_days", self.food_days == next.food_days),
+            ("food_first", self.food_first == next.food_first),
+            ("food_step", self.food_step == next.food_step),
+            (
+                "nonstorable_days",
+                self.nonstorable_days == next.nonstorable_days,
+            ),
+            ("search_items", self.search_items == next.search_items),
+            ("search_miss", self.search_miss == next.search_miss),
+            ("forage_sd", self.forage_sd == next.forage_sd),
+            ("l_mean", self.l_mean == next.l_mean),
+            ("d_mean", self.d_mean == next.d_mean),
+            ("cheaters", self.cheaters == next.cheaters),
+        ] {
+            if !same {
+                out.push(FieldError::new(
+                    format!("hoard.{field}"),
+                    "changes only on reset",
+                ));
+            }
+        }
+        out
+    }
+}
+
+/// The Rules panel's fields.
+pub fn schema() -> Vec<Param> {
+    use Apply::{Live, Reset};
+    vec![
+        Param::integer("Season", "n", "Agents", (2, 1000), Reset),
+        Param::integer("Season", "days", "Days in the season", (1, 1000), Reset),
+        Param::integer("Season", "bouts", "Foraging bouts a day", (1, 1000), Reset),
+        Param::integer("Season", "generations", "Generations", (1, 10_000), Live),
+        Param::integer(
+            "Food",
+            "food_days",
+            "Days food is produced",
+            (0, 1000),
+            Reset,
+        ),
+        Param::number(
+            "Food",
+            "food_first",
+            "Items on day 1",
+            (0.0, 10_000.0, 0.1),
+            Reset,
+        ),
+        Param::number(
+            "Food",
+            "food_step",
+            "Items lost a day",
+            (0.0, 1000.0, 0.005),
+            Reset,
+        ),
+        Param::integer(
+            "Food",
+            "nonstorable_days",
+            "Days fed by nonstorable food",
+            (0, 1000),
+            Reset,
+        ),
+        Param::integer(
+            "Search",
+            "search_items",
+            "Calibration items",
+            (1, 1_000_000),
+            Reset,
+        ),
+        Param::number(
+            "Search",
+            "search_miss",
+            "Chance of finding nothing in a day",
+            (0.001, 0.999, 0.001),
+            Reset,
+        ),
+        Param::number(
+            "Search",
+            "forage_sd",
+            "Foraging efficiency spread",
+            (0.0, 1.0, 0.01),
+            Reset,
+        ),
+        Param::number(
+            "Search",
+            "app_scat",
+            "Apparency of scattered items",
+            (0.01, 100.0, 0.01),
+            Live,
+        ),
+        Param::number(
+            "Search",
+            "app_lard",
+            "Apparency of larder items",
+            (0.01, 100.0, 0.01),
+            Live,
+        ),
+        Param::choice(
+            "Search",
+            "larder_weight",
+            "A larder weighs",
+            &[
+                ("per_item", "Per item (the Appendix)"),
+                ("per_burrow", "Once per burrow (page 662)"),
+            ],
+            Live,
+        ),
+        Param::number(
+            "Risk",
+            "predation",
+            "Predation a bout",
+            (0.0, 1.0, 0.0001),
+            Live,
+        ),
+        Param::number(
+            "Genes",
+            "heritability",
+            "Heritability",
+            (0.0, 1.0, 0.05),
+            Live,
+        ),
+        Param::number(
+            "Genes",
+            "v_seg",
+            "Segregation variance",
+            (0.0, 10.0, 0.05),
+            Live,
+        ),
+        Param::number(
+            "Genes",
+            "l_mean",
+            "Founders' larder probability",
+            (0.01, 0.99, 0.01),
+            Reset,
+        ),
+        Param::number(
+            "Genes",
+            "d_mean",
+            "Founders' defense propensity",
+            (0.01, 0.99, 0.01),
+            Reset,
+        ),
+        Param::number(
+            "Defense",
+            "defense_slope",
+            "Defense logistic's slope",
+            (0.1, 1000.0, 0.5),
+            Live,
+        ),
+        Param::choice(
+            "Defense",
+            "defended_in_pool",
+            "A defended larder is",
+            &[
+                ("counted", "Still in the food available"),
+                ("excluded", "Left out of the food available"),
+            ],
+            Live,
+        ),
+        Param::bool(
+            "Switches",
+            "early_bout1_eats",
+            "Eat from stores in bout 1 on days 2 to 5",
+            Live,
+        ),
+        Param::choice(
+            "Switches",
+            "dead_stores",
+            "The dead's stores",
+            &[
+                ("remain", "Stay and can be pilfered"),
+                ("remove", "Are removed"),
+            ],
+            Live,
+        ),
+        Param::number(
+            "Switches",
+            "owner_recovery",
+            "Owner finds its scattered items",
+            (0.0, 1.0, 0.05),
+            Live,
+        ),
+        Param::number(
+            "Switches",
+            "cheaters",
+            "Share of founders that never cache",
+            (0.0, 1.0, 0.05),
+            Reset,
+        ),
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{ModelConfig, ModelWorld};
+
+    #[test]
+    fn defaults_are_vander_wall_and_jenkins() {
+        let c = HoardConfig::default();
+        assert_eq!((c.n, c.days, c.bouts, c.generations), (20, 100, 20, 60));
+        assert_eq!((c.heritability, c.predation), (0.8, 0.0001));
+        assert_eq!((c.app_scat, c.app_lard), (0.44, 2.0));
+        assert_eq!((c.l_mean, c.d_mean, c.v_seg), (0.15, 0.5, 0.5));
+        assert_eq!((c.owner_recovery, c.cheaters), (1.0, 0.0));
+        assert_eq!(c.defense_slope, 10.0);
+        assert_eq!(
+            (c.larder_weight, c.dead_stores, c.defended_in_pool),
+            (
+                LarderWeight::PerItem,
+                DeadStores::Remain,
+                DefendedInPool::Counted
+            )
+        );
+        assert!(!c.early_bout1_eats);
+        assert!(c.validate().is_ok());
+    }
+
+    #[test]
+    fn the_food_schedule_matches_the_printed_values() {
+        let c = HoardConfig::default();
+        let day = |d: u32| (c.food_first - c.food_step * f64::from(d - 1) + 0.5).floor() as i64;
+        assert_eq!((day(1), day(2), day(3), day(50)), (82, 81, 79, 2));
+        assert_eq!((1..=c.food_days).map(day).sum::<i64>(), 2100);
+    }
+
+    #[test]
+    fn bad_values_are_named_hoard_fields() {
+        for (edit, field) in [
+            (
+                (|c: &mut HoardConfig| c.n = 1) as fn(&mut HoardConfig),
+                "hoard.n",
+            ),
+            (|c| c.bouts = 0, "hoard.bouts"),
+            (|c| c.food_days = 101, "hoard.food_days"),
+            (|c| c.search_miss = 1.0, "hoard.search_miss"),
+            (|c| c.app_lard = 0.0, "hoard.app_lard"),
+            (|c| c.heritability = 1.5, "hoard.heritability"),
+            (|c| c.l_mean = 0.0, "hoard.l_mean"),
+            (|c| c.generations = 0, "hoard.generations"),
+            (|c| c.cheaters = -0.1, "hoard.cheaters"),
+            (|c| c.owner_recovery = 2.0, "hoard.owner_recovery"),
+            (|c| c.defense_slope = 0.0, "hoard.defense_slope"),
+            (|c| c.food_step = f64::NAN, "hoard.food_step"),
+        ] {
+            let mut c = HoardConfig::default();
+            edit(&mut c);
+            let e = c.validate().unwrap_err();
+            assert!(e.iter().any(|f| f.field == field), "{field}: {e:?}");
+        }
+    }
+
+    #[test]
+    fn older_configs_load_with_the_defaults() {
+        let c: HoardConfig = serde_json::from_str("{}").unwrap();
+        assert_eq!(c, HoardConfig::default());
+        let c: HoardConfig = serde_json::from_str(r#"{"n": 30, "app_lard": 3.0}"#).unwrap();
+        assert_eq!((c.n, c.app_lard, c.app_scat), (30, 3.0, 0.44));
+        assert_eq!(c.owner_recovery, 1.0);
+        let c = ModelConfig::from_json(r#"{"model": "hoard", "cheaters": 0.25}"#).unwrap();
+        let h = match &c {
+            ModelConfig::Hoard(h) => h,
+            _ => panic!("not a hoard config"),
+        };
+        assert_eq!(
+            (h.cheaters, h.generations, h.defense_slope),
+            (0.25, 60, 10.0)
+        );
+        assert!(serde_json::from_str::<HoardConfig>(r#"{"nope": 1}"#).is_err());
+        let c: HoardConfig =
+            serde_json::from_str(r#"{"larder_weight": "per_burrow", "dead_stores": "remove"}"#)
+                .unwrap();
+        assert_eq!(
+            (c.larder_weight, c.dead_stores),
+            (LarderWeight::PerBurrow, DeadStores::Remove)
+        );
+    }
+
+    #[test]
+    fn schema_paths_exist_and_match_what_set_config_allows() {
+        let config = ModelConfig::Hoard(HoardConfig::default());
+        crate::schema::check_schema(&schema(), &config, || {
+            ModelWorld::new(config.clone(), 1).unwrap()
+        });
+    }
+}

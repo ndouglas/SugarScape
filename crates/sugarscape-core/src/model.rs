@@ -16,6 +16,7 @@ use crate::culture::{CultureConfig, CultureWorld};
 use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::farol::{FarolConfig, FarolWorld};
+use crate::hoard::{HoardConfig, HoardWorld};
 use crate::image::{ImageConfig, ImageWorld};
 use crate::line::{LineConfig, LineWorld};
 use crate::norms::{NormsConfig, NormsWorld};
@@ -68,10 +69,11 @@ pub enum ModelKind {
     Bali,
     Line,
     Tipping,
+    Hoard,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 25] = [
+    pub const ALL: [ModelKind; 26] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -97,6 +99,7 @@ impl ModelKind {
         ModelKind::Bali,
         ModelKind::Line,
         ModelKind::Tipping,
+        ModelKind::Hoard,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -126,6 +129,7 @@ impl ModelKind {
             ModelKind::Bali => "bali",
             ModelKind::Line => "line",
             ModelKind::Tipping => "tipping",
+            ModelKind::Hoard => "hoard",
         }
     }
 
@@ -158,6 +162,7 @@ impl ModelKind {
             ModelKind::Bali => bali::schema(),
             ModelKind::Line => crate::line::schema(),
             ModelKind::Tipping => crate::tipping::schema(),
+            ModelKind::Hoard => crate::hoard::schema(),
         }
     }
 }
@@ -196,6 +201,7 @@ pub enum ModelConfig {
     Bali(BaliConfig),
     Line(LineConfig),
     Tipping(TippingConfig),
+    Hoard(HoardConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -226,6 +232,7 @@ enum Tagged<'a> {
     Bali(&'a BaliConfig),
     Line(&'a LineConfig),
     Tipping(&'a TippingConfig),
+    Hoard(&'a HoardConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -263,6 +270,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Bali(c) => Tagged::Bali(c).serialize(s),
             ModelConfig::Line(c) => Tagged::Line(c).serialize(s),
             ModelConfig::Tipping(c) => Tagged::Tipping(c).serialize(s),
+            ModelConfig::Hoard(c) => Tagged::Hoard(c).serialize(s),
         }
     }
 }
@@ -295,6 +303,7 @@ impl ModelConfig {
             ModelConfig::Bali(_) => ModelKind::Bali,
             ModelConfig::Line(_) => ModelKind::Line,
             ModelConfig::Tipping(_) => ModelKind::Tipping,
+            ModelConfig::Hoard(_) => ModelKind::Hoard,
         }
     }
 
@@ -395,6 +404,9 @@ impl ModelConfig {
             "line" => serde_json::from_value(value)
                 .map(ModelConfig::Line)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "hoard" => serde_json::from_value(value)
+                .map(ModelConfig::Hoard)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "tipping" => serde_json::from_value(value)
                 .map(ModelConfig::Tipping)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -407,7 +419,7 @@ impl ModelConfig {
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi or bali)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping or hoard)"
                 ),
             )),
         }
@@ -440,6 +452,7 @@ impl ModelConfig {
             ModelConfig::Bali(c) => c.validate(),
             ModelConfig::Line(c) => c.validate(),
             ModelConfig::Tipping(c) => c.validate(),
+            ModelConfig::Hoard(c) => c.validate(),
         }
     }
 
@@ -472,6 +485,7 @@ impl ModelConfig {
             ModelConfig::Bali(c) => set_path(c, path, value).map(ModelConfig::Bali),
             ModelConfig::Line(c) => set_path(c, path, value).map(ModelConfig::Line),
             ModelConfig::Tipping(c) => set_path(c, path, value).map(ModelConfig::Tipping),
+            ModelConfig::Hoard(c) => set_path(c, path, value).map(ModelConfig::Hoard),
         }
     }
 
@@ -503,7 +517,8 @@ impl ModelConfig {
             | ModelConfig::Zi(_)
             | ModelConfig::Bali(_)
             | ModelConfig::Line(_)
-            | ModelConfig::Tipping(_) => None,
+            | ModelConfig::Tipping(_)
+            | ModelConfig::Hoard(_) => None,
         }
     }
 
@@ -540,6 +555,7 @@ impl ModelConfig {
             ModelConfig::Zi(_) => zi::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Bali(_) => bali::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Line(_) => crate::line::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Hoard(_) => crate::hoard::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Tipping(_) => crate::tipping::SERIES
                 .iter()
                 .map(|s| s.to_string())
@@ -738,6 +754,7 @@ pub enum ModelWorld {
     Bali(Box<BaliWorld>),
     Line(Box<LineWorld>),
     Tipping(Box<TippingWorld>),
+    Hoard(Box<HoardWorld>),
 }
 
 impl ModelWorld {
@@ -794,6 +811,7 @@ impl ModelWorld {
             ModelConfig::Bali(c) => ModelWorld::Bali(Box::new(BaliWorld::new(c, seed)?)),
             ModelConfig::Line(c) => ModelWorld::Line(Box::new(LineWorld::new(c, seed)?)),
             ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
+            ModelConfig::Hoard(c) => ModelWorld::Hoard(Box::new(HoardWorld::new(c, seed)?)),
         })
     }
 
@@ -824,6 +842,7 @@ impl ModelWorld {
             ModelWorld::Bali(_) => ModelKind::Bali,
             ModelWorld::Line(_) => ModelKind::Line,
             ModelWorld::Tipping(_) => ModelKind::Tipping,
+            ModelWorld::Hoard(_) => ModelKind::Hoard,
         }
     }
 
@@ -854,6 +873,7 @@ impl ModelWorld {
             ModelWorld::Bali(w) => w.as_ref(),
             ModelWorld::Line(w) => w.as_ref(),
             ModelWorld::Tipping(w) => w.as_ref(),
+            ModelWorld::Hoard(w) => w.as_ref(),
         }
     }
 
@@ -884,6 +904,7 @@ impl ModelWorld {
             ModelWorld::Bali(w) => w.as_mut(),
             ModelWorld::Line(w) => w.as_mut(),
             ModelWorld::Tipping(w) => w.as_mut(),
+            ModelWorld::Hoard(w) => w.as_mut(),
         }
     }
 
@@ -983,6 +1004,7 @@ impl ModelWorld {
             ModelWorld::Bali(w) => copy_without_history!(Bali, w),
             ModelWorld::Line(w) => copy_without_history!(Line, w),
             ModelWorld::Tipping(w) => copy_without_history!(Tipping, w),
+            ModelWorld::Hoard(w) => copy_without_history!(Hoard, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -1035,6 +1057,7 @@ impl ModelWorld {
             }
             (ModelWorld::Line(live), ModelWorld::Line(kept)) => restore_into!(live, kept),
             (ModelWorld::Tipping(live), ModelWorld::Tipping(kept)) => restore_into!(live, kept),
+            (ModelWorld::Hoard(live), ModelWorld::Hoard(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1508,6 +1531,28 @@ mod tests {
     }
 
     #[test]
+    fn hoard_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(r#"{"model": "hoard", "app_lard": 3.0, "generations": 5}"#)
+            .unwrap();
+        assert_eq!(c.kind(), ModelKind::Hoard);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["n"].as_u64()),
+            (Some("hoard"), Some(20))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["generation", "mean_l"]);
+        let e = ModelConfig::from_json(r#"{"model": "hoard", "n": 1}"#).unwrap_err();
+        assert_eq!(e[0].field, "hoard.n");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Hoard);
+        let cp = w.checkpoint().expect("hoard worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn only_the_anasazi_finishes() {
         let mut w = ModelWorld::new(
             ModelConfig::Anasazi(crate::anasazi::AnasaziConfig {
@@ -1555,7 +1600,8 @@ mod tests {
                 "zi",
                 "bali",
                 "line",
-                "tipping"
+                "tipping",
+                "hoard"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());
