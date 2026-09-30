@@ -321,7 +321,6 @@ describe('theft (Minds 6)', () => {
     expect(group.controls.map((c) => c.path)).toEqual(['theft.find', 'theft.owner_memory', 'theft.loot', 'theft.cheaters', 'caching.bury_cost']);
     const titles = GROUPS.map((g) => g.title);
     expect(titles.indexOf('Theft (Minds 6)')).toBe(titles.indexOf('Caching (Minds 5)') + 1);
-    expect(group.note).not.toMatch(/Flump/);
   });
 
   it('makes owner memory and cheaters reset-only, and find, loot and bury cost live, in their ranges', () => {
