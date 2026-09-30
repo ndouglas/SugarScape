@@ -17,3 +17,12 @@ proptest = "1"
 [profile.release]
 lto = true
 opt-level = 3
+
+# Tests step whole worlds for hundreds of ticks; unoptimized they run 10–30× slower.
+# Optimize them but keep the checks debug builds give: overflow and debug assertions stay on.
+# Floating-point results don't depend on the optimization level, so fingerprints are unchanged.
+[profile.test]
+opt-level = 3
+debug-assertions = true
+overflow-checks = true
+debug = "line-tables-only"
