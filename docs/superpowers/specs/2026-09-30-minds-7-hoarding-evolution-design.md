@@ -491,7 +491,7 @@ described for either kind. They "were assumed to use one of these items".
 (b) **Choice:** larder first, then scatter. Recovery is free and certain for both. Reason: that's the text.
 `hoard.owner_recovery` (below 1) is our switch, and it applies to scatter only. Under it, an owner with only
 scatter items succeeds with probability `owner_recovery`, and on failure it stays hungry and forages. Larder
-recovery stays free, because the food is in its own burrow.
+recovery stays free, because the food is in its own burrow. Task 5 implements it exactly so; see item 14.
 
 ### 7. Starvation
 
@@ -704,6 +704,47 @@ These are stated choices. The paper is silent on all of them.
   of the current season. The window is then the last 10 seasons actually run. Raising it on a finished,
   non-extinct run lets it go on breeding.
 
+### 14. Owner recovery and the non-hoarding cheater (Task 5)
+
+These are new ground, not V&J's model; each is a named switch whose default reproduces the model above bit
+for bit (a test pins the fingerprints of full 60-generation runs taken before the switches existed).
+
+**Owner recovery** (item 6's switch). Each time an owner tries to eat from its own scattered caches in
+bout 1 (it has no larder item, and at least one scatter item), it draws one uniform and finds one with
+probability `owner_recovery`. On a miss it keeps its caches and gets the printed flag of an agent without
+stores: it stays hungry, doesn't defend, forages, and eats its first find (and starves at the day's end if
+it finds nothing). The larder stays exempt, with no draw, because it is at home. At `owner_recovery` = 1
+nothing is drawn. The same rule applies under `early_bout1_eats` on days 2–5. Only bout 1 is affected, since
+eating from stores happens only there (item 2). Tries and misses are recorded per agent.
+
+**The cheater** (V&J p. 661: "because this individual does not store food, the amount of food it can pilfer
+is limited to what it can consume"; untested there).
+
+- **Assignment.** `hoard.cheaters` = s. Founders are assigned by id, with no draw: ids count from 1 (agent
+  index i has id i + 1), and id i is a cheater iff ⌊i·s⌋ > ⌊(i − 1)·s⌋. That is ⌊n·s⌋ cheaters (5 of 20 at
+  0.25: ids 4, 8, 12, 16, 20), Minds 6's convention. Founders' traits are drawn as before, so a cheater
+  carries L and D (unexpressed) and passes them on.
+- **Behavior.** A cheater never stores. It has no stores, so from day 6 on it starts each day hungry,
+  forages (search and raid continuation, as anyone) and eats its first find. Once fed it idles for the
+  rest of the day: it neither forages nor defends, and it makes no defense draw. **Choice:** a fed
+  cheater doesn't forage. Reason: the quote limits what it pilfers to what it can consume, and a fed agent
+  can consume nothing more that day. On days 1–5 it is fed by nonstorable food, so it idles all day.
+- **Inheritance.** A child is a cheater iff its mother is, and the mother is the first parent drawn.
+  **Alternative, not implemented:** a heritable cheater probability.
+- **Fitness: the consequence.** Fitness is leftover stores (item 8), and a cheater's are always 0. So
+  under V&J's rule a cheater is never a parent unless every survivor holds nothing (then parents are
+  uniform among survivors, item 13). **Cheaters vanish in one generation**: as V&J's model implies, their
+  type can't spread through selection on stores, however well it survives. Survival is the meaningful
+  comparison, and the season record reports it.
+- **Default:** `hoard.cheater_fitness = stores` (the literal reading above). **Named switch:**
+  `survival`: a surviving cheater's weight in the parent draw is the mean leftover stores of the
+  surviving hoarders (0 when none survive, which leaves the uniform rule if nothing else is held). Reason:
+  weights are counted in items, so "survived" has to be put on that scale; the scale-free choice is that
+  surviving counts as much as an average surviving hoarder's stores. Weight 1 (one item) would leave the
+  vanishing almost unchanged. The survey reports both.
+- **Records, per generation:** cheaters born, cheater and hoarder survivors and survival rates, and the
+  surviving cheaters' (always 0) and hoarders' leftover stores.
+
 ### New fields from these choices
 
 These are all named switches whose defaults are the choices above. None is judged against V&J.
@@ -716,6 +757,7 @@ These are all named switches whose defaults are the choices above. None is judge
 | `hoard.dead_stores` | `remain` (alternative `remove`) |
 | `hoard.defended_in_pool` | `counted` (alternative `excluded`) |
 | `hoard.early_bout1_eats` | `false` (true = the literal bout-1 rule on days 2–5) |
+| `hoard.cheater_fitness` | `stores` (alternative `survival`; item 14) |
 
 ### Concerns: gaps likely to decide the results
 

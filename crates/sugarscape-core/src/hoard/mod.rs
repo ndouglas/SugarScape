@@ -9,7 +9,7 @@ mod config;
 mod stats;
 mod world;
 
-pub use config::{schema, DeadStores, DefendedInPool, HoardConfig, LarderWeight};
+pub use config::{schema, CheaterFitness, DeadStores, DefendedInPool, HoardConfig, LarderWeight};
 pub use stats::{HoardSnapshot, SERIES};
 pub use world::{
     Agent, Cause, Death, Fate, HoardWorld, Outcome, Record, Season, SeasonSummary, EPSILON,

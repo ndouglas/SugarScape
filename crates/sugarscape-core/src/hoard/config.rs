@@ -38,6 +38,19 @@ pub enum DefendedInPool {
     Excluded,
 }
 
+/// What a cheater's fitness is when parents are drawn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CheaterFitness {
+    /// Leftover stores, as for everyone (the literal default). A cheater
+    /// stores nothing, so it is never a parent unless every survivor holds
+    /// nothing.
+    Stores,
+    /// Survival: a surviving cheater weighs the mean leftover stores of the
+    /// surviving hoarders.
+    Survival,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct HoardConfig {
@@ -75,8 +88,11 @@ pub struct HoardConfig {
     pub d_mean: f64,
     /// Generations to run.
     pub generations: u32,
-    /// Share of founders that never cache and eat what they find.
+    /// Share of founders that never cache and eat what they find. Founders
+    /// are assigned by id, with no draw (`founder_cheats`).
     pub cheaters: f64,
+    /// A cheater's fitness when parents are drawn.
+    pub cheater_fitness: CheaterFitness,
     /// Chance an owner finds its scatter items when it goes to eat from them.
     pub owner_recovery: f64,
     /// The defense logistic's slope.
@@ -113,6 +129,7 @@ impl Default for HoardConfig {
             d_mean: 0.5,
             generations: 60,
             cheaters: 0.0,
+            cheater_fitness: CheaterFitness::Stores,
             owner_recovery: 1.0,
             defense_slope: 10.0,
             larder_weight: LarderWeight::PerBurrow,
@@ -124,6 +141,14 @@ impl Default for HoardConfig {
 }
 
 impl HoardConfig {
+    /// Whether the founder with `id` (ids count from 1, so agent index i has
+    /// id i + 1) is a cheater: ⌊i·s⌋ > ⌊(i − 1)·s⌋ for s = `cheaters`. Over
+    /// ids 1..=n that's ⌊n·s⌋ cheaters, with no draw (Minds 6's convention).
+    pub fn founder_cheats(&self, id: u64) -> bool {
+        let s = self.cheaters;
+        s > 0.0 && (id as f64 * s).floor() > (id.saturating_sub(1) as f64 * s).floor()
+    }
+
     pub fn validate(&self) -> Result<(), Vec<FieldError>> {
         let mut e = Vec::new();
         let mut check = |ok: bool, field: &str, message: &str| {
@@ -446,6 +471,19 @@ pub fn schema() -> Vec<Param> {
             (0.0, 1.0, 0.05),
             Reset,
         ),
+        Param::choice(
+            "Switches",
+            "cheater_fitness",
+            "A cheater's fitness",
+            &[
+                ("stores", "Leftover stores, as for everyone"),
+                (
+                    "survival",
+                    "Survival, weighed as the average surviving hoarder",
+                ),
+            ],
+            Live,
+        ),
     ]
 }
 
@@ -462,6 +500,7 @@ mod tests {
         assert_eq!((c.app_scat, c.app_lard), (0.44, 2.0));
         assert_eq!((c.l_mean, c.d_mean, c.v_seg), (0.15, 0.5, 0.5));
         assert_eq!((c.owner_recovery, c.cheaters), (1.0, 0.0));
+        assert_eq!(c.cheater_fitness, CheaterFitness::Stores);
         assert_eq!(c.defense_slope, 10.0);
         assert_eq!(
             (c.larder_weight, c.dead_stores, c.defended_in_pool),
@@ -533,6 +572,27 @@ mod tests {
             (c.larder_weight, c.dead_stores),
             (LarderWeight::PerItem, DeadStores::Remove)
         );
+        let c: HoardConfig = serde_json::from_str(r#"{"cheater_fitness": "survival"}"#).unwrap();
+        assert_eq!(c.cheater_fitness, CheaterFitness::Survival);
+    }
+
+    /// Founders are cheaters by id (1-based), an exact share with no draw.
+    #[test]
+    fn founders_cheat_by_id() {
+        let at = |s: f64, n: u64| {
+            let c = HoardConfig {
+                cheaters: s,
+                ..HoardConfig::default()
+            };
+            (1..=n).filter(|&i| c.founder_cheats(i)).collect::<Vec<_>>()
+        };
+        assert_eq!(at(0.25, 20), vec![4, 8, 12, 16, 20]);
+        assert_eq!(at(0.5, 6), vec![2, 4, 6]);
+        assert!(at(0.0, 20).is_empty());
+        assert_eq!(at(1.0, 20).len(), 20);
+        for s in [0.1, 0.3, 0.33, 0.7] {
+            assert_eq!(at(s, 100).len(), (100.0 * s).floor() as usize, "{s}");
+        }
     }
 
     #[test]

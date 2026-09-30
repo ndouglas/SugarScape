@@ -3,8 +3,23 @@
 //! (docs/superpowers/specs/2026-09-30-minds-7-hoarding-evolution-design.md,
 //! "Amendments (implementation)"). One tick is one foraging bout: 20 bouts a
 //! day, 100 days a season, one season a generation, `generations` seasons a
-//! run. The switches `owner_recovery` and `cheaters` are Task 5 (read, but
-//! their defaults, free recovery and no cheaters, are what runs here).
+//! run.
+//!
+//! **Switches off their defaults** (Task 5; amendments item 6 and "Cheaters").
+//! At `owner_recovery` 1 and `cheaters` 0 the run is bit for bit the one
+//! without them.
+//! - `owner_recovery` < 1: in bout-1 eating, an owner with scattered caches
+//!   and no larder finds one with that chance; on a miss it is flagged hungry
+//!   like an agent without stores, and eats its first find. Larders are at
+//!   home and stay free.
+//! - `cheaters` > 0: founder id i (index + 1) is a cheater iff ⌊i·s⌋ >
+//!   ⌊(i − 1)·s⌋, with no draw; a child is a cheater iff its mother (the
+//!   first parent drawn) is. A cheater never stores: it starts every day
+//!   after the nonstorable days hungry, forages until its first find, eats
+//!   it, and then idles: once fed it neither forages nor defends (it pilfers
+//!   only what it can consume, p. 661). Its fitness is its leftover stores,
+//!   always 0 (`cheater_fitness = stores`), or, under `survival`, the mean
+//!   leftover stores of the surviving hoarders.
 //!
 //! **A day** (amendments "Methods as read", items 2, 5 and 7). At bout 1 the
 //! day's production is added to the public pool (days 1–`food_days`). On
@@ -16,15 +31,18 @@
 //! **A bout** (item 1), in this order:
 //! 1. bout-1 eating (bout 1 only, days after the nonstorable days, or days
 //!    2–5 under `early_bout1_eats`), agents in index order: an agent with
-//!    stores eats one, larder first; a larder eater defends this bout with
+//!    stores eats one, larder first (scatter only if it recovers one under
+//!    `owner_recovery` < 1); a larder eater defends this bout with
 //!    probability 1, a scatter eater with probability 0 (no draw either way);
 //!    under `early_bout1_eats` an agent without stores on days 2–5 is flagged
 //!    hungry, so its first find that day is eaten (nobody starves then);
-//! 2. a defense draw for every other living, satiated agent, in index order;
+//! 2. a defense draw for every other living, satiated hoarder, in index
+//!    order (cheaters never defend);
 //! 3. a predation draw for every living agent, in index order;
-//! 4. a fresh shuffle of the living agents that aren't defending; each takes
-//!    one foraging turn: a raid continuation if it took a larder item last
-//!    bout (item 4), otherwise (or if that fails) a search (item 5).
+//! 4. a fresh shuffle of the living agents that aren't defending, less fed
+//!    cheaters; each takes one foraging turn: a raid continuation if it took
+//!    a larder item last bout (item 4), otherwise (or if that fails) a search
+//!    (item 5).
 //!
 //! **A generation** (items 8, 9 and 13). A season ends after its last bout,
 //! or at the end of the bout in which its last agent dies. Its per-agent
@@ -32,7 +50,8 @@
 //! reset. The next bout, if the run goes on, first breeds `n` offspring:
 //! mother and father drawn independently, with replacement, in proportion to
 //! the survivors' leftover stores (uniformly among the survivors if they hold
-//! none); L and D inherited on the logit scale, forage drawn fresh. The new
+//! none; a surviving cheater's weight under `cheater_fitness = survival` is
+//! above); L and D inherited on the logit scale, forage drawn fresh. The new
 //! generation starts with empty stores and an empty public pool. The run
 //! ends when the population dies out (it is recorded as extinct) or when the
 //! season of generation `generations` (read live) is over; lowering
@@ -40,10 +59,12 @@
 //! current season.
 //!
 //! **Draw order** (one seeded RNG): founders draw, per agent in index order,
-//! logit L, logit D and forage efficiency (each a standard normal). Each
-//! bout then draws, in the order above: one uniform per defense draw, one
-//! uniform per living agent for predation, the shuffle, and within each
-//! turn: a search draws one uniform for detection (always, even with no food
+//! logit L, logit D and forage efficiency (each a standard normal); cheaters
+//! are assigned by id and draw nothing. Each bout then draws, in the order
+//! above: under `owner_recovery` < 1 only, one uniform per bout-1 agent with
+//! scattered caches and no larder (in index order); one uniform per defense
+//! draw, one uniform per living agent for predation, the shuffle, and within
+//! each turn: a search draws one uniform for detection (always, even with no food
 //! available) and, on a find, one uniform for the item; a stored item draws
 //! one uniform against L. Eating draws nothing. Breeding draws, per offspring
 //! in index order, one uniform for the mother, one for the father, then a
@@ -65,7 +86,7 @@ use crate::portable::{exp_neg, ln};
 use crate::rng::{self, SimRng};
 use crate::stats::Stats;
 
-use super::config::{DeadStores, DefendedInPool, HoardConfig, LarderWeight};
+use super::config::{CheaterFitness, DeadStores, DefendedInPool, HoardConfig, LarderWeight};
 use super::stats::HoardSnapshot;
 
 /// The frame's size in cells.
@@ -112,6 +133,10 @@ pub struct Record {
     pub took_public: u64,
     pub took_scatter: u64,
     pub took_larder: u64,
+    /// Under `owner_recovery` < 1: bout-1 tries to eat from its own
+    /// scattered caches, and the tries that found none.
+    pub recovery_tries: u64,
+    pub recovery_misses: u64,
 }
 
 impl Record {
@@ -162,6 +187,10 @@ pub struct Agent {
     pub d: f64,
     /// Foraging efficiency: N(1, `forage_sd`), floored at 0.
     pub forage: f64,
+    /// A non-hoarding cheater: never stores, eats what it finds while
+    /// hungry, and once fed neither forages nor defends. Founders by id,
+    /// children from their mother.
+    pub cheater: bool,
     pub larder: u32,
     pub scatter: u32,
     pub alive: bool,
@@ -207,6 +236,16 @@ pub struct SeasonSummary {
     /// Means over the agents born into the generation.
     pub mean_l: f64,
     pub mean_d: f64,
+    /// Cheaters born into the generation, and the survivors of each type.
+    pub cheaters: u32,
+    pub cheater_survivors: u32,
+    pub hoarder_survivors: u32,
+    /// Leftover stores of the surviving cheaters (always 0) and hoarders.
+    pub cheater_stores: u64,
+    pub hoarder_stores: u64,
+    /// Survivors ÷ born, per type (`None` when none were born).
+    pub cheater_survival: Option<f64>,
+    pub hoarder_survival: Option<f64>,
 }
 
 /// Claim 4's exposure floor: a mean larder stock of at least 1 item at bout
@@ -299,11 +338,12 @@ pub struct HoardWorld {
 }
 
 /// A newborn agent: no stores, alive, satiated.
-fn newborn(l: f64, d: f64, forage: f64) -> Agent {
+fn newborn(l: f64, d: f64, forage: f64, cheater: bool) -> Agent {
     Agent {
         l,
         d,
         forage,
+        cheater,
         larder: 0,
         scatter: 0,
         alive: true,
@@ -320,26 +360,29 @@ fn clamped_logit(p: f64) -> f64 {
     logit(p.clamp(EPSILON, 1.0 - EPSILON))
 }
 
-/// The parent a uniform `u` picks from `weights` (agent, leftover stores),
-/// the survivors in index order: in proportion to the stores, or uniformly
-/// when they hold none (Review Focus 2).
-fn pick(weights: &[(usize, u64)], u: f64) -> usize {
-    let total: u64 = weights.iter().map(|&(_, w)| w).sum();
-    if total == 0 {
+/// The parent a uniform `u` picks from `weights` (agent, fitness), the
+/// survivors in index order: in proportion to the fitness, or uniformly when
+/// it is 0 for all (Review Focus 2). Fitness is leftover stores, a whole
+/// number of items, except a surviving cheater's under `cheater_fitness =
+/// survival`; with whole numbers the arithmetic is exact, as it was over
+/// integers.
+fn pick(weights: &[(usize, f64)], u: f64) -> usize {
+    let total: f64 = weights.iter().map(|&(_, w)| w).sum();
+    if total <= 0.0 {
         let k = ((u * weights.len() as f64) as usize).min(weights.len() - 1);
         return weights[k].0;
     }
-    let mut x = u * total as f64;
+    let mut x = u * total;
     let mut last = weights[0].0;
     for &(i, w) in weights {
-        if w == 0 {
+        if w <= 0.0 {
             continue;
         }
         last = i;
-        if x < w as f64 {
+        if x < w {
             break;
         }
-        x -= w as f64;
+        x -= w;
     }
     last
 }
@@ -365,11 +408,11 @@ impl HoardWorld {
         let sd = config.v_seg.sqrt();
         let (lc, dc) = (logit(config.l_mean), logit(config.d_mean));
         let agents = (0..config.n)
-            .map(|_| {
+            .map(|i| {
                 let l = inverse_logit(lc + sd * normal(&mut rng));
                 let d = inverse_logit(dc + sd * normal(&mut rng));
                 let forage = (1.0 + config.forage_sd * normal(&mut rng)).max(0.0);
-                newborn(l, d, forage)
+                newborn(l, d, forage, config.founder_cheats(u64::from(i) + 1))
             })
             .collect();
         let items = f64::from(config.search_items);
@@ -564,19 +607,30 @@ impl HoardWorld {
         // 1. Bout-1 eating: Some(defends) for the agents it assigns.
         let mut assigned: Vec<Option<bool>> = vec![None; self.agents.len()];
         if b == 1 && (!early || (self.config.early_bout1_eats && d >= 2)) {
+            let recovery = self.config.owner_recovery;
             for (i, a) in self.agents.iter_mut().enumerate() {
                 if !a.alive || (!early && a.fed) {
                     continue;
                 }
+                // Under `owner_recovery` < 1 an owner with only scattered
+                // caches finds one with that chance (one uniform); at 1 it
+                // is free and nothing is drawn. The larder is at home.
+                let mut recovered = true;
+                if a.larder == 0 && a.scatter > 0 && recovery < 1.0 {
+                    recovered = self.rng.gen::<f64>() < recovery;
+                    a.record.recovery_tries += 1;
+                    a.record.recovery_misses += u64::from(!recovered);
+                }
                 if a.larder > 0 {
                     a.larder -= 1;
                     assigned[i] = Some(true);
-                } else if a.scatter > 0 {
+                } else if a.scatter > 0 && recovered {
                     a.scatter -= 1;
                     assigned[i] = Some(false);
                 } else {
-                    // The printed flag: its first find today is eaten. After
-                    // the nonstorable days it is hungry already; on them, it
+                    // The printed flag (no stores, or its scattered caches
+                    // not found): its first find today is eaten. After the
+                    // nonstorable days it is hungry already; on them, it
                     // can't starve (item 7).
                     a.fed = false;
                     continue;
@@ -592,7 +646,8 @@ impl HoardWorld {
             if !a.alive {
                 continue;
             }
-            let defends = if !a.fed {
+            let defends = if !a.fed || a.cheater {
+                // A cheater has nothing to defend and draws nothing.
                 false
             } else if let Some(x) = fixed {
                 x
@@ -612,9 +667,13 @@ impl HoardWorld {
                 self.kill(i, Cause::Predation);
             }
         }
-        // 4. Foraging, in a fresh random order.
+        // 4. Foraging, in a fresh random order. A fed cheater doesn't forage:
+        // it pilfers only what it can eat.
         let mut order: Vec<usize> = (0..self.agents.len())
-            .filter(|&i| self.agents[i].alive && !self.agents[i].defending)
+            .filter(|&i| {
+                let a = &self.agents[i];
+                a.alive && !a.defending && !(a.cheater && a.fed)
+            })
             .collect();
         order.shuffle(&mut self.rng);
         for i in order {
@@ -683,13 +742,7 @@ impl HoardWorld {
     /// Breeds the next generation from the finished season (items 8 and 9)
     /// and starts its season: empty stores, an empty public pool, day 1.
     fn breed(&mut self) {
-        let weights: Vec<(usize, u64)> = self
-            .agents
-            .iter()
-            .enumerate()
-            .filter(|(_, a)| a.alive)
-            .map(|(i, a)| (i, u64::from(a.larder) + u64::from(a.scatter)))
-            .collect();
+        let weights = self.fitness();
         assert!(!weights.is_empty(), "an extinct run doesn't breed");
         let n = self.agents.len() as f64;
         let l_bar = self.agents.iter().map(|a| clamped_logit(a.l)).sum::<f64>() / n;
@@ -712,9 +765,44 @@ impl HoardWorld {
         self.removed = 0;
     }
 
+    /// The survivors' fitness, in index order: leftover stores (scatter +
+    /// larder). Under `cheater_fitness = survival` a surviving cheater
+    /// weighs the mean leftover stores of the surviving hoarders (0 when
+    /// there are none), so surviving counts as much as an average surviving
+    /// hoarder's stores.
+    fn fitness(&self) -> Vec<(usize, f64)> {
+        let stores = |a: &Agent| u64::from(a.larder) + u64::from(a.scatter);
+        let living = || self.agents.iter().enumerate().filter(|(_, a)| a.alive);
+        let survival = self.config.cheater_fitness == CheaterFitness::Survival
+            && living().any(|(_, a)| a.cheater);
+        let cheater_weight = if survival {
+            let (sum, count) = living()
+                .filter(|(_, a)| !a.cheater)
+                .fold((0u64, 0u64), |(s, c), (_, a)| (s + stores(a), c + 1));
+            if count == 0 {
+                0.0
+            } else {
+                sum as f64 / count as f64
+            }
+        } else {
+            0.0
+        };
+        living()
+            .map(|(i, a)| {
+                let w = if a.cheater && survival {
+                    cheater_weight
+                } else {
+                    stores(a) as f64
+                };
+                (i, w)
+            })
+            .collect()
+    }
+
     /// A child of agents `m` and `f`: on the logit scale, each trait is
     /// N(h²·(midparent) + (1 − h²)·mean, `v_seg`), where the mean is over the
-    /// whole parental generation, dead included; forage is drawn fresh.
+    /// whole parental generation, dead included; forage is drawn fresh. It
+    /// is a cheater if its mother `m` (the first parent drawn) is.
     fn child(&mut self, m: usize, f: usize, l_bar: f64, d_bar: f64) -> Agent {
         let h2 = self.config.heritability;
         let sd = self.config.v_seg.sqrt();
@@ -724,7 +812,7 @@ impl HoardWorld {
         let l = inverse_logit(h2 * l_mid + (1.0 - h2) * l_bar + sd * normal(&mut self.rng));
         let d = inverse_logit(h2 * d_mid + (1.0 - h2) * d_bar + sd * normal(&mut self.rng));
         let forage = (1.0 + self.config.forage_sd * normal(&mut self.rng)).max(0.0);
-        newborn(l, d, forage)
+        newborn(l, d, forage, self.agents[m].cheater)
     }
 
     /// Pushes this bout's snapshot (item 13).
@@ -882,6 +970,7 @@ impl HoardWorld {
             }
         }
         let a = &self.agents[i];
+        debug_assert!(!(a.cheater && a.fed), "a fed cheater doesn't forage");
         if !a.fed {
             let a = &mut self.agents[i];
             a.fed = true;
@@ -923,6 +1012,20 @@ impl HoardWorld {
             .filter_map(|a| a.record.scatter_rate(bouts))
             .collect();
         let n = self.agents.len() as f64;
+        let (mut cheaters, mut cs, mut hs, mut cst, mut hst) = (0u32, 0u32, 0u32, 0u64, 0u64);
+        for a in &self.agents {
+            let stores = u64::from(a.larder) + u64::from(a.scatter);
+            cheaters += u32::from(a.cheater);
+            if a.alive && a.cheater {
+                cs += 1;
+                cst += stores;
+            } else if a.alive {
+                hs += 1;
+                hst += stores;
+            }
+        }
+        let hoarders = self.agents.len() as u32 - cheaters;
+        let share = |alive: u32, born: u32| (born > 0).then(|| f64::from(alive) / f64::from(born));
         let pooled = |lost: fn(&Record) -> u64, stock: fn(&Record) -> u64| {
             let (l, s) = self.agents.iter().fold((0, 0), |(l, s), a| {
                 (l + lost(&a.record), s + stock(&a.record))
@@ -962,6 +1065,13 @@ impl HoardWorld {
                 .count() as u32,
             mean_l: self.agents.iter().map(|a| a.l).sum::<f64>() / n,
             mean_d: self.agents.iter().map(|a| a.d).sum::<f64>() / n,
+            cheaters,
+            cheater_survivors: cs,
+            hoarder_survivors: hs,
+            cheater_stores: cst,
+            hoarder_stores: hst,
+            cheater_survival: share(cs, cheaters),
+            hoarder_survival: share(hs, hoarders),
         }
     }
 }
@@ -1003,7 +1113,13 @@ impl Model for HoardWorld {
             eat(&a.forage.to_bits().to_le_bytes());
             eat(&a.larder.to_le_bytes());
             eat(&a.scatter.to_le_bytes());
-            eat(&[u8::from(a.alive), u8::from(a.fed), u8::from(a.defending)]);
+            // The cheater flag shares the alive byte, so a run without
+            // cheaters hashes as it did before Task 5.
+            eat(&[
+                u8::from(a.alive) | u8::from(a.cheater) << 1,
+                u8::from(a.fed),
+                u8::from(a.defending),
+            ]);
             eat(&a.raid.map_or(u64::MAX, |j| j as u64).to_le_bytes());
         }
         h
@@ -1205,6 +1321,13 @@ mod tests {
             (6, |c| {
                 c.defended_in_pool = DefendedInPool::Excluded;
                 c.l_mean = 0.8;
+            }),
+            (7, |c| c.owner_recovery = 0.3),
+            (8, |c| c.cheaters = 0.25),
+            (9, |c| {
+                c.cheaters = 0.5;
+                c.owner_recovery = 0.5;
+                c.early_bout1_eats = true;
             }),
         ] {
             let mut c = HoardConfig::default();
@@ -1758,11 +1881,11 @@ mod tests {
     /// uniformly among the survivors (never the dead, whatever they hold).
     #[test]
     fn survivors_with_nothing_left_are_drawn_uniformly() {
-        let weights = [(0, 0), (2, 0), (5, 0)];
+        let weights = [(0, 0.0), (2, 0.0), (5, 0.0)];
         assert_eq!(pick(&weights, 0.0), 0);
         assert_eq!(pick(&weights, 0.5), 2);
         assert_eq!(pick(&weights, 0.999_999), 5);
-        assert_eq!(pick(&[(0, 0), (1, 3), (2, 0)], 0.999_999), 1);
+        assert_eq!(pick(&[(0, 0.0), (1, 3.0), (2, 0.0)], 0.999_999), 1);
         let mut w = quiet(3, 1, 1, |c| {
             c.v_seg = 0.0;
             c.heritability = 1.0;
@@ -2108,6 +2231,301 @@ mod tests {
                     last.survivors,
                     m(|s| s.mean_larder_rate),
                     m(|s| s.mean_scatter_rate),
+                );
+            }
+        }
+    }
+
+    /// Task 5: the switches at their defaults leave the run bit for bit as
+    /// Task 4 left it. The fingerprints were taken at f30dacc (before the
+    /// switches existed) after a full run of 60 generations (seed 4 dies out
+    /// in generation 44).
+    #[test]
+    fn the_switches_at_their_defaults_reproduce_the_task_4_run() {
+        for (seed, pin, edit) in [
+            (
+                21,
+                0x7672_4dc7_e6a6_ef40_u64,
+                (|_: &mut HoardConfig| {}) as fn(&mut HoardConfig),
+            ),
+            (21, 0x7672_4dc7_e6a6_ef40, |c| {
+                c.owner_recovery = 1.0;
+                c.cheaters = 0.0;
+                c.cheater_fitness = CheaterFitness::Survival;
+            }),
+            (3, 0x5dcd_81c2_c293_72c4, |c| {
+                c.early_bout1_eats = true;
+                c.app_scat = 0.8;
+            }),
+            (4, 0x7bc0_1025_45d6_374a, |c| {
+                c.larder_weight = LarderWeight::PerItem;
+                c.predation = 0.001;
+            }),
+        ] {
+            let mut c = HoardConfig::default();
+            edit(&mut c);
+            let mut w = HoardWorld::new(c, seed).unwrap();
+            w.run(200_000);
+            assert!(w.is_finished());
+            assert_eq!(Model::fingerprint(&w), pin, "seed {seed}");
+            assert!(w.seasons().iter().all(|s| s.summary.cheaters == 0));
+        }
+    }
+
+    /// Twenty scatter-only owners at bout 1 of day 10 that can't find food
+    /// (forage 0, no public food), so bout-1 eating is the only way to eat.
+    fn scatter_owners(recovery: f64) -> HoardWorld {
+        let mut w = quiet(20, 10, 1, |c| c.owner_recovery = recovery);
+        for a in &mut w.agents {
+            a.forage = 0.0;
+            a.scatter = 5;
+        }
+        w
+    }
+
+    /// `owner_recovery` 0.5: about half the tries to eat from scattered
+    /// caches fail, and a failed owner is left hungry with its caches; the
+    /// larder stays free. 4 000 tries: the binomial SD is 0.0079, and the
+    /// tolerance is 3 SD.
+    #[test]
+    fn owner_recovery_half_misses_about_half_the_scatter_eats() {
+        let mut w = scatter_owners(0.5);
+        let (mut tries, mut misses) = (0u64, 0u64);
+        for _ in 0..200 {
+            (w.day, w.bout) = (10, 1);
+            for a in &mut w.agents {
+                (a.scatter, a.larder, a.record) = (5, 0, Record::default());
+            }
+            w.step();
+            for a in &w.agents {
+                assert_eq!(a.record.recovery_tries, 1);
+                let missed = a.record.recovery_misses == 1;
+                assert_eq!(a.fed, !missed);
+                assert_eq!(a.scatter, if missed { 5 } else { 4 });
+                tries += a.record.recovery_tries;
+                misses += a.record.recovery_misses;
+            }
+        }
+        let f = misses as f64 / tries as f64;
+        let sd = (0.25 / tries as f64).sqrt();
+        assert!((f - 0.5).abs() < 3.0 * sd, "{misses}/{tries}");
+        // A larder is at home: no draw, and it always feeds.
+        let mut w = scatter_owners(0.0);
+        for a in &mut w.agents {
+            a.larder = 1;
+        }
+        w.step();
+        assert!(w
+            .agents
+            .iter()
+            .all(|a| a.fed && a.larder == 0 && a.record.recovery_tries == 0));
+        // At 0, every scatter eat fails and a storeless day starves.
+        let mut w = scatter_owners(0.0);
+        w.run(20);
+        assert!(w.agents.iter().all(|a| !a.alive && a.scatter == 5));
+    }
+
+    /// At `owner_recovery` 1 nothing is drawn: the RNG after a bout-1 in
+    /// which 20 owners eat from scattered caches matches one in which they
+    /// hold nothing (same draws everywhere else). Just below 1 it doesn't.
+    #[test]
+    fn owner_recovery_1_draws_nothing() {
+        let after = |recovery: f64, stores: u32| {
+            let mut w = scatter_owners(recovery);
+            for a in &mut w.agents {
+                a.scatter = stores;
+            }
+            w.step();
+            assert_eq!(w.living(), 20);
+            w.rng
+        };
+        assert!(after(1.0, 5) == after(1.0, 0));
+        assert!(after(0.999, 5) != after(0.999, 0));
+    }
+
+    /// Founders are cheaters by id, with no draw: their traits are the ones
+    /// the same seed gives without cheaters.
+    #[test]
+    fn founders_are_cheaters_by_id_without_a_draw() {
+        let w = HoardWorld::new(
+            HoardConfig {
+                cheaters: 0.25,
+                ..HoardConfig::default()
+            },
+            5,
+        )
+        .unwrap();
+        let plain = HoardWorld::new(HoardConfig::default(), 5).unwrap();
+        let cheaters: Vec<usize> = (0..20).filter(|&i| w.agents[i].cheater).collect();
+        assert_eq!(cheaters, vec![3, 7, 11, 15, 19]);
+        for (a, b) in w.agents.iter().zip(&plain.agents) {
+            assert_eq!((a.l, a.d, a.forage), (b.l, b.d, b.forage));
+        }
+        assert_eq!(w.summary().cheaters, 5);
+    }
+
+    /// A cheater never stores and never defends; it eats at most once a day
+    /// and, once fed, doesn't forage. Items are conserved throughout.
+    #[test]
+    fn cheaters_never_store_and_eat_at_most_once_a_day() {
+        let c = HoardConfig {
+            cheaters: 0.5,
+            cheater_fitness: CheaterFitness::Survival,
+            generations: 3,
+            ..HoardConfig::default()
+        };
+        let mut w = HoardWorld::new(c, 12).unwrap();
+        let mut harvest = vec![0u64; 20];
+        while !w.is_finished() {
+            if w.season_over() {
+                harvest = vec![0; 20];
+            }
+            let fed_before: Vec<bool> = w.agents.iter().map(|a| a.fed).collect();
+            let new_day = w.bout == 1;
+            w.step();
+            assert!(conserved(&w), "tick {}", w.tick);
+            for (i, a) in w.agents.iter().enumerate().filter(|(_, a)| a.cheater) {
+                assert_eq!((a.larder, a.scatter), (0, 0));
+                assert!(!a.defending);
+                let took = a.record.took_public + a.record.took_scatter + a.record.took_larder;
+                if !new_day && fed_before[i] && a.alive {
+                    assert_eq!(took, harvest[i], "a fed cheater foraged");
+                }
+                harvest[i] = took;
+                // Everything it took, it ate.
+                assert_eq!(a.record.eaten, took);
+            }
+        }
+        assert_eq!((w.tick, w.seasons().len()), (6000, 3));
+        assert!(w.seasons().iter().all(|s| s.summary.cheaters > 0));
+        for s in w.seasons() {
+            assert_eq!(s.summary.cheater_stores, 0);
+            for a in s.agents.iter().filter(|a| a.cheater) {
+                assert!(a.record.eaten as f64 <= a.record.days_alive(20).ceil());
+            }
+            let born = s.agents.iter().filter(|a| a.cheater).count() as u32;
+            assert_eq!(s.summary.cheaters, born);
+            assert_eq!(
+                s.summary.cheater_survivors + s.summary.hoarder_survivors,
+                s.summary.survivors
+            );
+        }
+    }
+
+    /// Two survivors: a hoarder (agent 0) and a cheater (agent 1); agent 2
+    /// died. The child's type is its mother's, the first parent drawn.
+    fn a_hoarder_and_a_cheater(fitness: CheaterFitness, stores: u32) -> HoardWorld {
+        let mut w = quiet(3, 1, 1, |c| c.cheater_fitness = fitness);
+        w.agents[0].scatter = stores;
+        w.agents[1].cheater = true;
+        w.agents[2].alive = false;
+        w.agents[2].larder = 9;
+        w
+    }
+
+    #[test]
+    fn a_child_inherits_its_mothers_type() {
+        let mut w = a_hoarder_and_a_cheater(CheaterFitness::Stores, 4);
+        assert!(w.child(1, 0, 0.0, 0.0).cheater);
+        assert!(!w.child(0, 1, 0.0, 0.0).cheater);
+        assert!(w.child(1, 1, 0.0, 0.0).cheater);
+    }
+
+    /// Under `stores` a cheater holds nothing and is never a parent, so
+    /// cheaters vanish in one generation, unless every survivor holds
+    /// nothing (then parents are uniform). Under `survival` a surviving
+    /// cheater weighs the surviving hoarders' mean stores: here, as much as
+    /// the one hoarder, so half the children are cheaters (3 SD over 6 000).
+    #[test]
+    fn cheater_fitness_is_stores_or_survival() {
+        let share = |fitness, stores| {
+            let parents = a_hoarder_and_a_cheater(fitness, stores);
+            let mut cheaters = 0u32;
+            let breeds = 2_000;
+            let mut w = parents.clone();
+            for _ in 0..breeds {
+                w.agents = parents.agents.clone();
+                w.end_season();
+                w.breed();
+                cheaters += w.agents.iter().filter(|a| a.cheater).count() as u32;
+            }
+            f64::from(cheaters) / f64::from(breeds * 3)
+        };
+        let sd = (0.25_f64 / 6000.0).sqrt();
+        assert_eq!(share(CheaterFitness::Stores, 4), 0.0);
+        assert!((share(CheaterFitness::Stores, 0) - 0.5).abs() < 3.0 * sd);
+        assert!((share(CheaterFitness::Survival, 4) - 0.5).abs() < 3.0 * sd);
+        let w = a_hoarder_and_a_cheater(CheaterFitness::Survival, 4);
+        assert_eq!(w.fitness(), vec![(0, 4.0), (1, 4.0)]);
+        let w = a_hoarder_and_a_cheater(CheaterFitness::Stores, 4);
+        assert_eq!(w.fitness(), vec![(0, 4.0), (1, 0.0)]);
+        // Only cheaters survive: every weight is 0 and parents are uniform.
+        let mut w = a_hoarder_and_a_cheater(CheaterFitness::Survival, 4);
+        w.agents[0].alive = false;
+        assert_eq!(w.fitness(), vec![(1, 0.0)]);
+        // The survival weight is the mean over surviving hoarders.
+        let mut w = quiet(4, 1, 1, |c| c.cheater_fitness = CheaterFitness::Survival);
+        (w.agents[0].scatter, w.agents[1].larder) = (3, 6);
+        w.agents[2].cheater = true;
+        w.agents[3].cheater = true;
+        w.agents[3].alive = false;
+        assert_eq!(w.fitness(), vec![(0, 3.0), (1, 6.0), (2, 4.5)]);
+    }
+
+    /// The task report's observations for Task 5: 5 seeds × 60 generations
+    /// at `owner_recovery` 0.5, and at `cheaters` 0.25 under both fitness
+    /// settings. Printed with `--ignored --nocapture`; never judged here.
+    #[test]
+    #[ignore]
+    fn report_task_5_switches() {
+        let settings = [
+            (
+                "defaults",
+                (|_: &mut HoardConfig| {}) as fn(&mut HoardConfig),
+            ),
+            ("owner_recovery 0.5", |c| c.owner_recovery = 0.5),
+            ("cheaters 0.25 stores", |c| c.cheaters = 0.25),
+            ("cheaters 0.25 survival", |c| {
+                c.cheaters = 0.25;
+                c.cheater_fitness = CheaterFitness::Survival;
+            }),
+        ];
+        for (name, edit) in settings {
+            for seed in 1..=5 {
+                let mut c = HoardConfig::default();
+                edit(&mut c);
+                let mut w = HoardWorld::new(c, seed).unwrap();
+                w.run(200_000);
+                let o = w.outcome().unwrap();
+                let ss: Vec<&SeasonSummary> = w.seasons().iter().map(|s| &s.summary).collect();
+                let counts: Vec<u32> = ss.iter().map(|s| s.cheaters).collect();
+                let mean = |f: fn(&SeasonSummary) -> Option<f64>| {
+                    let v: Vec<f64> = ss.iter().filter_map(|s| f(s)).collect();
+                    if v.is_empty() {
+                        f64::NAN
+                    } else {
+                        v.iter().sum::<f64>() / v.len() as f64
+                    }
+                };
+                let (tries, misses) = w
+                    .seasons()
+                    .iter()
+                    .flat_map(|s| &s.agents)
+                    .fold((0u64, 0u64), |(t, m), a| {
+                        (t + a.record.recovery_tries, m + a.record.recovery_misses)
+                    });
+                let survivors =
+                    ss.iter().map(|s| f64::from(s.survivors)).sum::<f64>() / ss.len() as f64;
+                println!(
+                    "{name} seed {seed}: fate {:?}, window L {:.3}, rise {:?}, gens {}, survivors {:.1}, recovery misses {misses}/{tries}, cheaters by gen (1,2,3,10,60) {:?}, cheater survival {:.3} vs hoarder {:.3}",
+                    o.fate,
+                    o.window_mean_l,
+                    o.rise,
+                    ss.len(),
+                    survivors,
+                    [1usize, 2, 3, 10, 60].map(|g| counts.get(g - 1).copied()),
+                    mean(|s| s.cheater_survival),
+                    mean(|s| s.hoarder_survival),
                 );
             }
         }
