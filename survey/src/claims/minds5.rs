@@ -115,7 +115,7 @@ use crate::stats::{self, ln_gamma, mean, median};
 const SPEC: &str = "docs/superpowers/specs/2026-09-29-minds-5-caching-design.md";
 
 /// Mean ± s.e.m. of `v`.
-fn mean_sem(v: &[f64]) -> String {
+pub(crate) fn mean_sem(v: &[f64]) -> String {
     if v.is_empty() {
         return "none".into();
     }
@@ -129,7 +129,7 @@ fn mean_sem(v: &[f64]) -> String {
     format!("{m:.2} ± {sem:.2}")
 }
 
-fn pct(n: usize, d: usize) -> f64 {
+pub(crate) fn pct(n: usize, d: usize) -> f64 {
     if d == 0 {
         f64::NAN
     } else {
@@ -1029,7 +1029,7 @@ fn col(r: &[WinterRun], f: impl Fn(&WinterRun) -> f64) -> Vec<f64> {
     r.iter().map(f).collect()
 }
 
-fn med(v: &[f64]) -> String {
+pub(crate) fn med(v: &[f64]) -> String {
     format!(
         "{:.3} (IQR {:.3}–{:.3})",
         med_or_nan(v),
