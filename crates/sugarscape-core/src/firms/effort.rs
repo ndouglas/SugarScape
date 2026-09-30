@@ -466,8 +466,31 @@ fn bracket(prefs: &Prefs, choice: &Choice, lo: f64, hi: f64) -> f64 {
                 unreachable!("Cobb–Douglas with proportional shares is solved earlier")
             }
         };
-        if slope(a) > 0.0 && slope(b) < 0.0 {
-            candidates.push(root(&slope, a, b));
+        match prefs {
+            Prefs::CobbDouglas { .. } => {
+                // Concave in e; a single sign change is the whole story
+                // (verified against a fine grid; left as-is).
+                if slope(a) > 0.0 && slope(b) < 0.0 {
+                    candidates.push(root(&slope, a, b));
+                }
+            }
+            Prefs::Ces { .. } => {
+                // Not always concave: scan for every + → − sign change in
+                // the piece and refine each with root(), so an interior
+                // maximum between two same-signed endpoints isn't missed.
+                const SCAN: usize = 32;
+                let mut prev_x = a;
+                let mut prev_s = slope(a);
+                for k in 1..=SCAN {
+                    let x = a + (b - a) * (k as f64) / (SCAN as f64);
+                    let s = slope(x);
+                    if prev_s > 0.0 && s < 0.0 {
+                        candidates.push(root(&slope, prev_x, x));
+                    }
+                    prev_x = x;
+                    prev_s = s;
+                }
+            }
         }
     }
     best_of(prefs, choice, &candidates)
@@ -783,4 +806,72 @@ mod tests {
             (0.0, 1.0, 9.0)
         );
     }
+
+    #[test]
+    fn ces_finds_interior_maxima_the_bracket_could_miss() {
+        // A printed-sign CES case (ρ = 0.706, δ = 0.67) where a single
+        // sign-change check per piece missed an interior maximum and
+        // returned the boundary e = 0 instead.
+        let prefs = Prefs::Ces {
+            delta: 0.67,
+            rho: 0.706,
+            minus: false,
+        };
+        let choice = Choice {
+            tech: Tech {
+                a: 0.0,
+                b: 1.4,
+                beta: 1.0,
+            },
+            others: 0.0,
+            share: Share::Fraction(0.25),
+        };
+        let (e, u) = best(&prefs, &choice, 0.0, 1.0, Search::Exact);
+        let (_, ug) = best(&prefs, &choice, 0.0, 1.0, Search::Grid(20_000));
+        assert!(u >= ug - 1e-6, "exact {e} {u} < grid {ug}");
+    }
+
+    #[test]
+    fn ces_with_rho_in_0_1_matches_a_fine_grid_under_printed_sign_and_base_pay() {
+        use crate::rng;
+        use rand::Rng;
+        let mut r = rng::seeded(37);
+        for case in 0..400 {
+            let delta: f64 = r.gen();
+            let rho: f64 = r.gen_range(0.0..1.0);
+            let prefs = Prefs::Ces {
+                delta,
+                rho,
+                minus: false,
+            };
+            let tech = Tech {
+                a: r.gen_range(0.0..1.0),
+                b: r.gen_range(0.5..1.5),
+                beta: r.gen_range(1.0..3.0),
+            };
+            let n: f64 = r.gen_range(1.0..20.0_f64).floor();
+            let share = if r.gen::<bool>() {
+                Share::Fraction(1.0 / n)
+            } else {
+                let own = r.gen_range(0.0..1.0);
+                Share::Base {
+                    own,
+                    others: own * (n - 1.0) * r.gen_range(0.5..1.5),
+                    n,
+                }
+            };
+            let choice = Choice {
+                tech,
+                others: r.gen_range(0.0..(n - 1.0) * 0.8 + 0.01),
+                share,
+            };
+            let (e, u) = best(&prefs, &choice, 0.0, 1.0, Search::Exact);
+            let (g, ug) = best(&prefs, &choice, 0.0, 1.0, Search::Grid(4_000));
+            assert!(
+                u >= ug - 1e-6 * ug.abs().max(1.0),
+                "case {case}: {prefs:?} {choice:?}: exact {e} {u} < grid {g} {ug}"
+            );
+        }
+    }
 }
+
