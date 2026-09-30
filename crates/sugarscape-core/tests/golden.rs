@@ -101,6 +101,13 @@ const GOLDEN: &[(&str, u64)] = &[
     ("central-linear", 0x175e71e582dd82c5),
     ("cache-raby", 0xc30d92bb27b9366b),
     ("cache-amodio", 0xbc5371ef776e55a5),
+    // Minds 6
+    ("theft-winter", 0x8812daf7a717c8d0),
+    ("theft-winter-quarter", 0x4f48f55df13c19e7),
+    ("theft-winter-half", 0xd0ee29237c28952f),
+    ("theft-arena-2", 0xb9504ceca55387d7),
+    ("theft-arena-4", 0xda980c64415ed457),
+    ("theft-arena-8", 0x5be74bce272233c3),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

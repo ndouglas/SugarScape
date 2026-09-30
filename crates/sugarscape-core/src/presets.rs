@@ -213,6 +213,21 @@ fn mvt_world(c: &mut Config, rule: DecisionRule) {
 /// none (45.2 %, compensate 44.6 %, plan 71.5 %): under rule M a hungry
 /// agent heads for its biggest cache, not its nearest, and with a thin
 /// reserve starves on the way (it goes hungry only below R / 2).
+///
+/// Minds 6 turns theft on in this world (`theft_winter`) at `theft.find`
+/// 0.25, chosen by measurement before any preset was recorded (Task 5;
+/// `even` hoarders only, 5 seeds; the daily pilferage rate is the mean of
+/// `pilferage_rate` over ticks 101–200). The rate is about 0.09 × `find`:
+/// 0.12 %, 0.24 %, 0.55 %, 1.02 % and 1.83 % at 0.01, 0.02, 0.05, 0.1 and
+/// 0.2, none of them inside Vander Wall and Jenkins's 2–30 % a day, so the
+/// list was extended mechanically (the smallest of 0.25, 0.3, 0.4 and 0.5
+/// at ≥ 2 %): 0.25 gives 2.21 %. Even at `find` 1.0 the rate is only
+/// 7.7 %, below the literature's median of 9 %: thieves who only stumble on
+/// caches where they happen to stand can't reach it (active search, by
+/// watching others cache, comes in P2). Theft pools stores: first-winter
+/// survival rises from 74.9 % with no theft to 91.7 % at 0.25 (and 98.3 %
+/// at 1.0), since a thief is likely a hungry agent near someone else's
+/// surplus.
 fn winter_world(c: &mut Config, rule: CachingRule, mixed: bool) {
     c.movement.mode = MoveMode::Walk;
     memory(c, 100, 0.5);
@@ -226,6 +241,71 @@ fn winter_world(c: &mut Config, rule: CachingRule, mixed: bool) {
     c.caching.rule = rule;
     c.caching.mixed = mixed;
     c.goap.horizon = 20;
+}
+
+/// Minds 6: the pilfering rate every theft preset uses (see `winter_world`).
+const THEFT_FIND: f64 = 0.25;
+
+/// Minds 6: the winter world (`winter_world`, `even` hoarders) with theft on
+/// at `THEFT_FIND` and a `cheaters` share of agents (by id, no draw) who
+/// never cache and pilfer whatever they find. Loot is kept, owners remember
+/// their caches and burying is free (the defaults).
+fn theft_winter(c: &mut Config, cheaters: f64) {
+    winter_world(c, CachingRule::Even, false);
+    c.theft.find = THEFT_FIND;
+    c.theft.cheaters = cheaters;
+}
+
+/// Minds 6: the arena. `n` agents (2, 4 or 8) shut in a k × k room, with
+/// k = 4, 6 and 8: a (k + 1) × (k + 1) torus with an opaque wall along row 0
+/// and column 0, which on the torus closes the room on all four sides, so
+/// the group shares one area and Andersson and Krebs's n is exact. The
+/// sugar is flat: capacity 4 and growback 0.3 a site, 8 sites an agent at
+/// n = 2 (16 sites) and n = 8 (64). No square gives n = 4 exactly 8 sites
+/// an agent (6 × 6 is 9), so there capacity and growback are × 8/9 (32/9
+/// and 0.2667): standing sugar (32) and regrowth (2.4 a tick in summer,
+/// 0.075 in winter) per agent are the same at every n. Everything else is
+/// the winter world's (walking, one good, metabolism 1, a winter everywhere
+/// at once with γ 100 and β 32, carrying limit 50, horizon 20, half the
+/// agents remembering for 100 ticks, `even` hoarders), except vision 1–2 at
+/// every n, the most the 5 × 5 torus allows (half the grid). Theft is on at
+/// `THEFT_FIND` with half the agents cheaters.
+///
+/// The balance was measured before this was recorded (Task 5; 100 seeds
+/// per n, no theft, first-winter survival = alive at 200 ÷ alive at 100;
+/// nobody died before 100): with nobody caching 0.0 %, 1.3 % and 2.9 %
+/// survive at n = 2, 4 and 8 (each holds exactly the carrying limit, 49 of
+/// its 50, when winter comes), against 99.5 %, 97.0 % and 93.0 % of `even`
+/// hoarders. At `THEFT_FIND` with half cheaters, the daily pilferage rate
+/// over ticks 101–200 is 1.57 %, 1.91 % and 2.36 % at n = 2, 4 and 8 (1.35 %,
+/// 1.76 % and 2.14 % with no cheaters), and 100 %, 99.8 % and 98.6 % of
+/// the agents alive at 100 survive the winter.
+fn theft_arena(c: &mut Config, n: u32) {
+    winter_world(c, CachingRule::Even, false);
+    let (side, scale) = match n {
+        2 => (4, 1.0),
+        4 => (6, 8.0 / 9.0),
+        8 => (8, 1.0),
+        _ => panic!("the arena holds 2, 4 or 8 agents, not {n}"),
+    };
+    c.width = side + 1;
+    c.height = side + 1;
+    c.population = n;
+    c.vision = URange::new(1, 2);
+    c.goods[0].map = Map::Flat {
+        capacity: 4.0 * scale,
+    };
+    c.growback.rate = 0.3 * scale;
+    let wall = |x, y, width, height| Wall {
+        x,
+        y,
+        width,
+        height,
+        opaque: true,
+    };
+    c.walls = vec![wall(0, 0, side + 1, 1), wall(0, 1, 1, side)];
+    c.theft.find = THEFT_FIND;
+    c.theft.cheaters = 0.5;
 }
 
 /// Minds 5: the central-place world. A 60 × 30 torus with a column of
@@ -1174,6 +1254,48 @@ pub fn all() -> Vec<Preset> {
             "Amodio et al.'s Experiment 2 (Food-First) on a 13 × 8 rig of three compartments and a hall. For nine days, 6 agents spend each morning shut in K1, K2, K3, K1, … in turn, with food on the first day and every other day after; each evening they're back in the hall. On the test evening all three doorways open and each agent, given 30 sugar, walks out alone and caches it. The agents take the caching rules round-robin: none, an even split, compensating (weights halved where food was found) and planning (the cycle finder's forecast of the next morning). Measured (20 seeds, 6 agents per group per seed, both groups): each rule leaves its predicted pattern in every seed. Even splitters cache 10/10/10 in K1/K2/K3; compensating agents most in K2 in the Food-First group (a mean 7.9/15.2/6.9) and least in K2 in the Empty-First group (12.5/6.1/11.5); planners 30 in K1, and nothing in the Empty-First group, where tomorrow has food; planners looking three days ahead 15/0/15 and 0/30/0. Amodio et al.'s Bayesian model comparison, written from their Methods and checked on their own Table 2 (it gives their 0.72, 0.16 and 0.002), picks each rule's hypothesis on its data: the compartment-independent model at 0.999 for even splitters, CCH at 0.90 for compensating agents (at the paper's size, three agents a group, CCH wins in 15 of 20 seeds and the compartment-independent model in the other 5), FPH 1 at 0.55 and FPH 2 at 0.62 for planners. Those two are the most the comparison can give planners: every planner caches alike, so it treats them as one bird, and the hypotheses share the evidence (FPH 2's constraint also fits caching only in K1, FPH 1's fits 15/0/15 at half weight, K1 and K3 tied, and the two agree on the Empty-First group). The jays' 0.72 for the compartment-independent model looks like the even splitters' signature.",
             |c| mixed_lab(c, Lab { protocol: LabProtocol::Amodio, food_first: true }, 6),
         ),
+        preset(
+            "theft-winter",
+            "Theft: winter, hoarders who can be robbed",
+            "Vander Wall & Jenkins 2003; Minds 6",
+            "cache-winter-even's world (walk-capacity's landscape, 175 agents of metabolism 1 walking under rule M, half of them remembering for 100 ticks; every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100; a carrying limit of 50 and a caching reserve of 20 ticks' food), where every agent buries half its surplus where it stands, with theft: an agent arriving on a site finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Owners remember their own caches, and burying is free.",
+            |c| theft_winter(c, 0.0),
+        ),
+        preset(
+            "theft-winter-quarter",
+            "Theft: winter, a quarter cheaters",
+            "Vander Wall & Jenkins 2003; Andersson & Krebs 1978; Minds 6",
+            "theft-winter's world (cache-winter-even's winter, with each cache found by a stranger arriving on it with chance 0.25) where a quarter of the agents, dealt by id, are cheaters: they never cache, and take what they can carry of any cache they find. The rest bury half their surplus where they stand.",
+            |c| theft_winter(c, 0.25),
+        ),
+        preset(
+            "theft-winter-half",
+            "Theft: winter, half cheaters",
+            "Vander Wall & Jenkins 2003; Andersson & Krebs 1978; Minds 6",
+            "theft-winter's world (cache-winter-even's winter, with each cache found by a stranger arriving on it with chance 0.25) where half the agents, dealt by id, are cheaters: they never cache, and take what they can carry of any cache they find. The rest bury half their surplus where they stand.",
+            |c| theft_winter(c, 0.5),
+        ),
+        preset(
+            "theft-arena-2",
+            "Theft arena: two agents",
+            "Andersson & Krebs 1978; Minds 6",
+            "2 agents shut in a walled 4 × 4 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent) through a winter everywhere at once: the room grows back its full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–2, burn 1 a tick and carry at most 50. One is a hoarder, burying half its surplus where it stands; the other, a cheater, never caches. Arriving on a site, an agent finds each cache of the other's there with chance 0.25, and takes what it can carry of it.",
+            |c| theft_arena(c, 2),
+        ),
+        preset(
+            "theft-arena-4",
+            "Theft arena: four agents",
+            "Andersson & Krebs 1978; Minds 6",
+            "4 agents shut in a walled 6 × 6 room of flat sugar through a winter everywhere at once, with the same sugar per agent as theft-arena-2's room: capacity 32/9 and growback 0.27 a tick at 9 sites an agent (the full rate for 100 ticks, then 1/32 of it for 100). They walk with vision 1–2, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it.",
+            |c| theft_arena(c, 4),
+        ),
+        preset(
+            "theft-arena-8",
+            "Theft arena: eight agents",
+            "Andersson & Krebs 1978; Minds 6",
+            "8 agents shut in a walled 8 × 8 room of flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent, as in theft-arena-2) through a winter everywhere at once: the full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–2, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it.",
+            |c| theft_arena(c, 8),
+        ),
     ]
 }
 
@@ -1511,7 +1633,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 69);
+        assert_eq!(presets.len(), 75);
         for p in presets {
             p.config
                 .validate()
@@ -1881,6 +2003,65 @@ mod tests {
         ] {
             let p = by_id(id).unwrap();
             assert!(p.source.contains("Minds 5"), "{id}: {}", p.source);
+            p.config
+                .validate()
+                .unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        }
+    }
+
+    #[test]
+    fn the_minds_6_presets_share_their_worlds_and_name_minds_6() {
+        use crate::config::{CachingRule, Loot};
+        // The winter theft presets are cache-winter-even with theft on at
+        // 0.25 and a share of cheaters; nothing else changes.
+        let even = by_id("cache-winter-even").unwrap().config;
+        for (id, cheaters) in [
+            ("theft-winter", 0.0),
+            ("theft-winter-quarter", 0.25),
+            ("theft-winter-half", 0.5),
+        ] {
+            let mut c = by_id(id).unwrap().config;
+            assert_eq!((c.theft.find, c.theft.cheaters), (0.25, cheaters), "{id}");
+            assert!(c.theft.owner_memory && c.theft.loot == Loot::Keep, "{id}");
+            assert_eq!(c.caching.bury_cost, 0.0, "{id}");
+            c.theft = Default::default();
+            assert_eq!(c, even, "{id}");
+        }
+        // The arena: n agents in a k × k room closed by walls, with the same
+        // standing sugar and regrowth per agent at every n.
+        for (id, n, side) in [
+            ("theft-arena-2", 2u32, 4u32),
+            ("theft-arena-4", 4, 6),
+            ("theft-arena-8", 8, 8),
+        ] {
+            let c = by_id(id).unwrap().config;
+            assert_eq!(c.population, n, "{id}");
+            assert_eq!((c.width, c.height), (side + 1, side + 1), "{id}");
+            assert_eq!((c.theft.find, c.theft.cheaters), (0.25, 0.5), "{id}");
+            assert_eq!(c.caching.rule, CachingRule::Even, "{id}");
+            assert_eq!(c.movement.mode, MoveMode::Walk, "{id}");
+            assert_eq!(c.goods.len(), 1, "{id}");
+            let Map::Flat { capacity } = c.goods[0].map else {
+                panic!("{id}: flat sugar");
+            };
+            let w = World::new(c.clone(), 1).unwrap();
+            let open: Vec<_> = w.sites.iter().filter(|s| s.capacity[0] > 0.0).collect();
+            assert_eq!(open.len() as u32, side * side, "{id}: the room's sites");
+            let per_agent = |x: f64| x * f64::from(side * side) / f64::from(n);
+            assert!((per_agent(capacity) - 32.0).abs() < 1e-9, "{id}");
+            assert!((per_agent(c.growback.rate) - 2.4).abs() < 1e-9, "{id}");
+            assert_eq!(w.agents().filter(|a| a.cheater).count() as u32, n / 2);
+        }
+        for id in [
+            "theft-winter",
+            "theft-winter-quarter",
+            "theft-winter-half",
+            "theft-arena-2",
+            "theft-arena-4",
+            "theft-arena-8",
+        ] {
+            let p = by_id(id).unwrap();
+            assert!(p.source.contains("Minds 6"), "{id}: {}", p.source);
             p.config
                 .validate()
                 .unwrap_or_else(|e| panic!("{id}: {e:?}"));
