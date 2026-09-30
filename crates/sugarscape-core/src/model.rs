@@ -30,6 +30,7 @@ use crate::spatial::{SpatialConfig, SpatialWorld};
 use crate::structure::{StructureConfig, StructureWorld};
 use crate::tags::{TagsConfig, TagsWorld};
 use crate::thresholds::{ThresholdsConfig, ThresholdsWorld};
+use crate::tipping::{TippingConfig, TippingWorld};
 use crate::world::World;
 use crate::zi::{ZiConfig, ZiWorld};
 use crate::{
@@ -66,10 +67,11 @@ pub enum ModelKind {
     Zi,
     Bali,
     Line,
+    Tipping,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 24] = [
+    pub const ALL: [ModelKind; 25] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -94,6 +96,7 @@ impl ModelKind {
         ModelKind::Zi,
         ModelKind::Bali,
         ModelKind::Line,
+        ModelKind::Tipping,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -122,6 +125,7 @@ impl ModelKind {
             ModelKind::Zi => "zi",
             ModelKind::Bali => "bali",
             ModelKind::Line => "line",
+            ModelKind::Tipping => "tipping",
         }
     }
 
@@ -153,6 +157,7 @@ impl ModelKind {
             ModelKind::Zi => zi::schema(),
             ModelKind::Bali => bali::schema(),
             ModelKind::Line => crate::line::schema(),
+            ModelKind::Tipping => crate::tipping::schema(),
         }
     }
 }
@@ -190,6 +195,7 @@ pub enum ModelConfig {
     Zi(ZiConfig),
     Bali(BaliConfig),
     Line(LineConfig),
+    Tipping(TippingConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -219,6 +225,7 @@ enum Tagged<'a> {
     Zi(&'a ZiConfig),
     Bali(&'a BaliConfig),
     Line(&'a LineConfig),
+    Tipping(&'a TippingConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -255,6 +262,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Zi(c) => Tagged::Zi(c).serialize(s),
             ModelConfig::Bali(c) => Tagged::Bali(c).serialize(s),
             ModelConfig::Line(c) => Tagged::Line(c).serialize(s),
+            ModelConfig::Tipping(c) => Tagged::Tipping(c).serialize(s),
         }
     }
 }
@@ -286,6 +294,7 @@ impl ModelConfig {
             ModelConfig::Zi(_) => ModelKind::Zi,
             ModelConfig::Bali(_) => ModelKind::Bali,
             ModelConfig::Line(_) => ModelKind::Line,
+            ModelConfig::Tipping(_) => ModelKind::Tipping,
         }
     }
 
@@ -386,6 +395,9 @@ impl ModelConfig {
             "line" => serde_json::from_value(value)
                 .map(ModelConfig::Line)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "tipping" => serde_json::from_value(value)
+                .map(ModelConfig::Tipping)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "zi" => serde_json::from_value(value)
                 .map(ModelConfig::Zi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -427,6 +439,7 @@ impl ModelConfig {
             ModelConfig::Zi(c) => c.validate(),
             ModelConfig::Bali(c) => c.validate(),
             ModelConfig::Line(c) => c.validate(),
+            ModelConfig::Tipping(c) => c.validate(),
         }
     }
 
@@ -458,6 +471,7 @@ impl ModelConfig {
             ModelConfig::Zi(c) => set_path(c, path, value).map(ModelConfig::Zi),
             ModelConfig::Bali(c) => set_path(c, path, value).map(ModelConfig::Bali),
             ModelConfig::Line(c) => set_path(c, path, value).map(ModelConfig::Line),
+            ModelConfig::Tipping(c) => set_path(c, path, value).map(ModelConfig::Tipping),
         }
     }
 
@@ -488,7 +502,8 @@ impl ModelConfig {
             | ModelConfig::Punishment(_)
             | ModelConfig::Zi(_)
             | ModelConfig::Bali(_)
-            | ModelConfig::Line(_) => None,
+            | ModelConfig::Line(_)
+            | ModelConfig::Tipping(_) => None,
         }
     }
 
@@ -525,6 +540,10 @@ impl ModelConfig {
             ModelConfig::Zi(_) => zi::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Bali(_) => bali::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Line(_) => crate::line::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Tipping(_) => crate::tipping::SERIES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
         }
     }
 }
@@ -718,6 +737,7 @@ pub enum ModelWorld {
     Zi(Box<ZiWorld>),
     Bali(Box<BaliWorld>),
     Line(Box<LineWorld>),
+    Tipping(Box<TippingWorld>),
 }
 
 impl ModelWorld {
@@ -773,6 +793,7 @@ impl ModelWorld {
             ModelConfig::Zi(c) => ModelWorld::Zi(Box::new(ZiWorld::new(c, seed)?)),
             ModelConfig::Bali(c) => ModelWorld::Bali(Box::new(BaliWorld::new(c, seed)?)),
             ModelConfig::Line(c) => ModelWorld::Line(Box::new(LineWorld::new(c, seed)?)),
+            ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
         })
     }
 
@@ -802,6 +823,7 @@ impl ModelWorld {
             ModelWorld::Zi(_) => ModelKind::Zi,
             ModelWorld::Bali(_) => ModelKind::Bali,
             ModelWorld::Line(_) => ModelKind::Line,
+            ModelWorld::Tipping(_) => ModelKind::Tipping,
         }
     }
 
@@ -831,6 +853,7 @@ impl ModelWorld {
             ModelWorld::Zi(w) => w.as_ref(),
             ModelWorld::Bali(w) => w.as_ref(),
             ModelWorld::Line(w) => w.as_ref(),
+            ModelWorld::Tipping(w) => w.as_ref(),
         }
     }
 
@@ -860,6 +883,7 @@ impl ModelWorld {
             ModelWorld::Zi(w) => w.as_mut(),
             ModelWorld::Bali(w) => w.as_mut(),
             ModelWorld::Line(w) => w.as_mut(),
+            ModelWorld::Tipping(w) => w.as_mut(),
         }
     }
 
@@ -958,6 +982,7 @@ impl ModelWorld {
             ModelWorld::Zi(w) => copy_without_history!(Zi, w),
             ModelWorld::Bali(w) => copy_without_history!(Bali, w),
             ModelWorld::Line(w) => copy_without_history!(Line, w),
+            ModelWorld::Tipping(w) => copy_without_history!(Tipping, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -1009,6 +1034,7 @@ impl ModelWorld {
                 restore_into!(live, kept)
             }
             (ModelWorld::Line(live), ModelWorld::Line(kept)) => restore_into!(live, kept),
+            (ModelWorld::Tipping(live), ModelWorld::Tipping(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1528,7 +1554,8 @@ mod tests {
                 "punishment",
                 "zi",
                 "bali",
-                "line"
+                "line",
+                "tipping"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

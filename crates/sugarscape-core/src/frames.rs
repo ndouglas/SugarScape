@@ -817,7 +817,7 @@ pub enum Dump {
     Image(ImageDump),
     Norms(NormsDump),
     Structure(StructureDump),
-    Schelling(SchellingDump),
+    Schelling(Box<SchellingDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -911,7 +911,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
                     return Err(vec![FieldError::new(field, "is not for Schelling shots")]);
                 }
             }
-            run_schelling(shot).map(Dump::Schelling)
+            run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
         }
         other => Err(vec![FieldError::new(
             "model",
@@ -1066,7 +1066,15 @@ pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
                 l.people()
                     .iter()
                     .enumerate()
-                    .map(|(k, p)| (p.id, k as u32 % wrap, k as u32 / wrap, p.red, l.is_satisfied(k)))
+                    .map(|(k, p)| {
+                        (
+                            p.id,
+                            k as u32 % wrap,
+                            k as u32 / wrap,
+                            p.red,
+                            l.is_satisfied(k),
+                        )
+                    })
                     .collect()
             }
             _ => unreachable!("a schelling shot"),
@@ -1091,7 +1099,11 @@ pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
     let (width, height) = model.size();
     Ok(SchellingDump {
         format: FORMAT,
-        model: if matches!(config, ModelConfig::Line(_)) { "line" } else { "schelling" },
+        model: if matches!(config, ModelConfig::Line(_)) {
+            "line"
+        } else {
+            "schelling"
+        },
         seed: shot.seed,
         ticks: shot.ticks,
         width,
@@ -2153,7 +2165,7 @@ mod tests {
     }
     fn schelling(json: &str) -> SchellingDump {
         match super::run(&Shot::from_json(json).unwrap()).unwrap() {
-            Dump::Schelling(d) => d,
+            Dump::Schelling(d) => *d,
             _ => panic!("not a schelling dump"),
         }
     }
@@ -2161,31 +2173,52 @@ mod tests {
     #[test]
     fn a_schelling_shot_records_each_round_its_squares_colors_and_content() {
         let d = schelling(r#"{"preset": "s71-board", "ticks": 3, "seed": 2}"#);
-        assert_eq!((d.model, d.width, d.height, d.frames.len()), ("schelling", 16, 13, 4));
-        let mut w = crate::schelling::SchellingWorld::new(crate::schelling::SchellingConfig::default(), 2).unwrap();
+        assert_eq!(
+            (d.model, d.width, d.height, d.frames.len()),
+            ("schelling", 16, 13, 4)
+        );
+        let mut w =
+            crate::schelling::SchellingWorld::new(crate::schelling::SchellingConfig::default(), 2)
+                .unwrap();
         for f in &d.frames {
             assert_eq!(f.agents.len(), 138);
-            let mut expect: Vec<SchellingRow> =
-                w.agents().map(|a| (a.id, a.pos.x, a.pos.y, a.red, w.is_satisfied(a))).collect();
+            let mut expect: Vec<SchellingRow> = w
+                .agents()
+                .map(|a| (a.id, a.pos.x, a.pos.y, a.red, w.is_satisfied(a)))
+                .collect();
             expect.sort_unstable_by_key(|r| r.0);
             assert_eq!(f.agents, expect, "tick {}", f.tick);
             w.step();
         }
-        let moved = d.frames[0].agents.iter().zip(&d.frames[1].agents).filter(|(a, b)| (a.1, a.2) != (b.1, b.2)).count();
-        assert_eq!(moved as f64, d.stats["moves"][1], "the frames show the round's moves");
+        let moved = d.frames[0]
+            .agents
+            .iter()
+            .zip(&d.frames[1].agents)
+            .filter(|(a, b)| (a.1, a.2) != (b.1, b.2))
+            .count();
+        assert_eq!(
+            moved as f64, d.stats["moves"][1],
+            "the frames show the round's moves"
+        );
     }
 
     #[test]
     fn a_line_shot_lays_its_row_out_as_squares() {
         let d = schelling(r#"{"preset": "s71-line", "ticks": 2, "seed": 3}"#);
-        assert_eq!((d.model, d.width, d.height, d.frames.len()), ("line", 70, 1, 3));
+        assert_eq!(
+            (d.model, d.width, d.height, d.frames.len()),
+            ("line", 70, 1, 3)
+        );
         for f in &d.frames {
             let mut places: Vec<u32> = f.agents.iter().map(|r| r.1).collect();
             places.sort_unstable();
-            assert_eq!(places, (0..70).collect::<Vec<_>>(), "everyone has a place, no gaps");
+            assert_eq!(
+                places,
+                (0..70).collect::<Vec<_>>(),
+                "everyone has a place, no gaps"
+            );
             assert!(f.agents.iter().all(|r| r.2 == 0));
         }
         assert!(d.stats.contains_key("groups"));
     }
-
 }

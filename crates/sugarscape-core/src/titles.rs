@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 319] = [
+pub const TITLES: [(&str, &str); 327] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -284,6 +284,38 @@ pub const TITLES: [(&str, &str); 319] = [
     (
         "s71-line-reach",
         "Travel limited: most end content, a few never do",
+    ),
+    (
+        "tipping-fig18",
+        "A mixed area with tolerance to spare still ends all one color",
+    ),
+    (
+        "tipping-fig19",
+        "Wider tolerance: the area settles at 80 and 80",
+    ),
+    (
+        "tipping-fig20",
+        "Twice as many of one color: the mixture is lost",
+    ),
+    (
+        "tipping-fig21",
+        "At the threshold of tolerance, a mix just holds",
+    ),
+    (
+        "tipping-fig22",
+        "Limit one color to 40, and a mixture holds",
+    ),
+    (
+        "tipping-intolerant",
+        "Make the least tolerant 60 % intolerant: a stable 40 and 40",
+    ),
+    (
+        "tipping-minority",
+        "A small minority no more tolerant than the rest is pushed out",
+    ),
+    (
+        "tipping-less-tolerant",
+        "Make the least tolerant less tolerant, and a mixture holds",
     ),
     (
         "vi-4-schelling-25",
