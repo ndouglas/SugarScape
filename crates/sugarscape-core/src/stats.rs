@@ -350,6 +350,13 @@ pub struct CentralStats {
 /// pilfer_candidates` this tick, 0 with no candidates. The `*_total` fields
 /// carry running sums forward from the previous snapshot (`Stats::latest`),
 /// as `recovery` does; they aren't series themselves.
+///
+/// The totals exist only while theft is on. If theft is turned on mid-run
+/// (or off and on again), they start at 0 at that tick while caches buried
+/// earlier still exist. That older sugar is counted in the numerators
+/// (still cached, or dug, pilfered or lost later) but not in Σ buried, so
+/// the four shares sum to more than 1 from then on. With theft on from
+/// tick 0 they sum to 1.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
 pub struct TheftStats {
     /// Sugar pilfered this tick.
@@ -2293,6 +2300,32 @@ mod tests {
         assert_eq!(t.fate_pilfered, 2.0 / 20.0, "carried from tick 1");
         assert_eq!(t.fate_lost, 1.0 / 20.0);
         assert_eq!(t.fate_buried, 4.0 / 20.0);
+    }
+
+    #[test]
+    fn the_four_fate_shares_sum_to_1_through_a_run_that_reburies_loot() {
+        // theft-winter keeps its loot, and its `even` hoarders bury again
+        // what they pilfer, so reburial runs through every share.
+        let c = crate::presets::by_id("theft-winter").unwrap().config;
+        assert_eq!(c.theft.loot, crate::config::Loot::Keep);
+        let mut w = World::new(c, 7).unwrap();
+        let (mut pilfered, mut buried_after_a_pilfer) = (0.0, false);
+        for _ in 0..150 {
+            w.step();
+            if pilfered > 0.0 && w.events.buried > 0.0 {
+                buried_after_a_pilfer = true;
+            }
+            pilfered += w.events.pilfered;
+            let t = w.stats.latest().and_then(|s| s.theft).unwrap();
+            if t.buried_total == 0.0 {
+                continue;
+            }
+            let sum = t.fate_dug + t.fate_pilfered + t.fate_lost + t.fate_buried;
+            assert!((sum - 1.0).abs() < 1e-9, "tick {}: {sum}", w.tick);
+        }
+        assert!(pilfered > 0.0 && buried_after_a_pilfer);
+        let t = w.stats.latest().and_then(|s| s.theft).unwrap();
+        assert!(t.fate_dug > 0.0 && t.fate_pilfered > 0.0 && t.fate_buried > 0.0);
     }
 
     #[test]

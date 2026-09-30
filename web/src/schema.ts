@@ -46,7 +46,8 @@ interface Base {
   adjust?: (next: Config, before: Config) => void;
 }
 export type Control =
-  | (Base & { kind: 'toggle' })
+  /** `current` reads the box through a default when the path may be missing (older configs); without it, the box is the path's value. */
+  | (Base & { kind: 'toggle'; current?: (c: Config) => boolean })
   | (Base & { kind: 'number'; min: number; max: number; step: number })
   | (Base & { kind: 'range'; min: number; max: number })
   | (Base & { kind: 'select'; options: { value: string; label: string; apply: (c: Config) => void }[]; current: (c: Config) => string });
@@ -397,6 +398,7 @@ export const GROUPS: Group[] = [
       },
       {
         kind: 'toggle', path: 'theft.owner_memory', label: 'Owners remember their caches', reset: true,
+        current: (c) => theft(c).owner_memory ?? true,
         adjust: seedTheft,
       },
       {

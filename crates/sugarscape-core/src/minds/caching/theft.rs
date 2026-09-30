@@ -357,6 +357,38 @@ mod tests {
     }
 
     #[test]
+    fn a_take_counts_once_for_the_thief_and_once_against_the_owner() {
+        for loot in [Loot::Keep, Loot::Eat] {
+            // Room 10 − 8 = 2 under keep (a partial take); the whole 6
+            // under eat.
+            let (mut w, owner) = cached_world(1.0, 10, 6.0);
+            w.config.theft.loot = loot;
+            let thief = agent(&mut w, 5, 5, 8.0);
+            let take = go_and_gather(&mut w, thief, Pos::new(5, 6)).pilfered;
+            assert!(take > 0.0, "{loot:?}");
+            assert_eq!(take, if loot == Loot::Keep { 2.0 } else { 6.0 });
+            assert_eq!(w.agent(thief).unwrap().stolen_by_me, take, "{loot:?}");
+            assert_eq!(w.agent(owner).unwrap().stolen_from_me, take, "{loot:?}");
+            assert_eq!(w.agent(thief).unwrap().stolen_from_me, 0.0);
+            assert_eq!(w.agent(owner).unwrap().stolen_by_me, 0.0);
+        }
+    }
+
+    #[test]
+    fn an_owner_find_is_no_theft_to_either_total() {
+        let mut w = blank_world(11, 11);
+        w.config.theft.owner_memory = false;
+        w.config.theft.find = 1.0;
+        let id = agent(&mut w, 5, 6, 30.0);
+        bury(&mut w, id, 30.0);
+        w.move_agent(id, Pos::new(5, 5));
+        let h = go_and_gather(&mut w, id, Pos::new(5, 6));
+        assert_eq!((h.dug, h.pilfered, w.events.owner_finds), (30.0, 0.0, 1));
+        let a = w.agent(id).unwrap();
+        assert_eq!((a.stolen_by_me, a.stolen_from_me), (0.0, 0.0));
+    }
+
+    #[test]
     fn a_stomach_is_hashed_only_when_nonzero() {
         let (mut w, _) = cached_world(1.0, 10, 6.0);
         let thief = agent(&mut w, 5, 5, 9.0);

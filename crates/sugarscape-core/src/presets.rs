@@ -228,6 +228,15 @@ fn mvt_world(c: &mut Config, rule: DecisionRule) {
 /// survival rises from 74.9 % with no theft to 91.7 % at 0.25 (and 98.3 %
 /// at 1.0), since a thief is likely a hungry agent near someone else's
 /// surplus.
+///
+/// Two windows, two measurements. The figures above are Task 5's probe (5
+/// seeds, the winter only: ticks 101–200). The survey (20 seeds, ticks
+/// 0–200, a summer and the first winter) gives a pilferage rate of 2.31 %
+/// at 0.25 and 6.96 % at 1 (10.9 % of the cached sugar), with first-winter
+/// survival 90.4 % and 98.5 %. The probe's summer rate at 1 was 5.77 %
+/// against 7.67 % in the winter, so the whole-run mean sits between them.
+/// Both are below the median of 9 %. `find` is a free parameter; 0.25 is an
+/// anchor, not a fit to the field.
 fn winter_world(c: &mut Config, rule: CachingRule, mixed: bool) {
     c.movement.mode = MoveMode::Walk;
     memory(c, 100, 0.5);

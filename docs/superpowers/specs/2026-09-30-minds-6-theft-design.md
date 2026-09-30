@@ -77,8 +77,9 @@ mixes. The evolutionary claims wait for P1b.
     empirical median of 9% a day (p.663). Their rates assume "the rate of removal over the duration
     of a study was constant" (p.658).
   - Reciprocal pilferage (p.661): "If the pilferer recaches the food, and if pilfering is reciprocal,
-    then long-term scatter hoarding can persist". Eating or lardering stolen food is "the most
-    damaging form of pilferage".
+    then long-term scatter hoarding can persist". Loot that isn't recached (eaten, or put in a
+    larder) fails that condition. (Corrected; see the amendments: "the most damaging form of
+    pilferage" is p.664, about pilferage that isn't reciprocated.)
   - Their model is a genetic algorithm: 20 animals, a 100-day season, 20 foraging bouts a day, 2 100
     food items, heritability 0.8 and 60 generations. Owners recover their own caches at no cost; only
     others search by apparency.
@@ -212,3 +213,121 @@ The judges are committed first.
 The README gets a Minds 6 section. The program document gets its status, results, the campaign
 outline (P1–P4) and the next target, P1b. The roadmap line is updated, and this spec gets its
 amendments.
+
+## Amendments (implementation)
+
+The rulings made while building, and what measuring changed. The full record is the SDD ledger for
+this plan.
+
+- **Eaten loot feeds the thief (the stomach).** This replaces "`eat` … adds nothing to holdings",
+  which starved thieves: under that rule a pilfer was strictly worse than the harvest it replaced.
+  - Under `eat` the thief takes the whole cache, with no room cap, into `Agent.fed`, a stomach.
+    Metabolism draws on the stomach before holdings. An agent starves only when holdings ≤ 0 and
+    the stomach is empty.
+  - Stomach sugar can't be buried, dug or traded. It doesn't count toward the carrying limit, the
+    reserve, the surplus or hunger. What's left in it at death leaves counted (`fed_lost`), and it
+    isn't inherited.
+  - `loot_eaten` counts sugar as it enters the stomach, so it is a transfer, not a term in the ledger.
+    The ledger is sites + holdings + caches + stomachs + eaten (metabolism and bury cost) + what
+    left with the dead = start + growback.
+  - `keep` is unchanged: the take is min(cache, room under the carrying limit), and a success
+    with no room takes nothing, so the agent harvests as usual.
+- **The citation, corrected.** The Source summary cites "the most damaging form of pilferage" as
+  p.661, about eating or lardering. The phrase is on **p.664** and is about pilferage that isn't
+  reciprocated: "Nonreciprocated pilferage, which is often caused by heterospecifics, appears to be
+  the most damaging form of pilferage." What p.661 says is: "What is important is not how much
+  pilfering occurs, but what the pilferer does with the food that it discovers. If the pilferer
+  recaches the food, and if pilfering is reciprocal, then long-term scatter hoarding can persist
+  unless some alternative form of food storage (larder hoarding or internal energy storage)
+  provides more benefits." It also names the larder: "The cheating strategy that seems most likely
+  to be damaging to a population of scatter hoarders is pilferage of scattered caches and storage
+  of pilfered items in a defensible larder." So `eat` is loot that isn't recached, the case that
+  fails p.661's condition. It is not the paper's "most damaging form".
+- **Stumbling, exactly.**
+  - An agent arriving on a site makes one draw per foreign cache there, in owner-id order, even
+    after an earlier success, so the number of draws depends only on the caches present. The first
+    success is taken: **one take per arrival**.
+  - **The dig wins.** An owner that digs its own cache (Minds 5's rule, with `owner_memory` on)
+    makes no draw. An owner that isn't digging draws only for the foreign caches.
+  - Staying on a site counts as arriving, as it does for Minds 5's dig, so an agent standing on
+    foreign caches draws again every tick.
+  - Under `owner_memory: off` an owner draws for its own cache in owner-id order with the rest. A
+    success is a dig (`owner_finds`, a `Dug` fate, into holdings under either loot rule), whether
+    or not the owner is hungry: it stumbled on the cache rather than choosing it.
+  - Pilfered sugar is kept apart from dug sugar (`Harvest.pilfered`). Like dug sugar, it isn't a
+    harvest.
+  - The index of caches by site is built on the first stumble that needs it and dropped when
+    `find` returns to 0. With `find` 0 nothing is drawn or allocated.
+- **The pilferage rate** is `caches_pilfered ÷ pilfer_candidates`. The numerator is the distinct
+  caches that existed at the tick's start and lost any sugar to a thief this tick. The denominator
+  is every cache in the world at the tick's start. Takes (`pilfers`) are kept beside it.
+- **Fates.**
+  - The cache log records only while theft is on. Minds 5 worlds allocate nothing.
+  - **Backfill:** at every touch of a cache under theft (bury, dig, pilfer, death), sugar the log
+    doesn't hold, from before theft came on, is first logged as a record dated `cache_since`.
+    From the tick theft comes on, Σ Dug = Σ dug events, Σ Lost = Σ `cache_lost`, and Σ Pilfered =
+    Σ `pilfered`, every tick (tested).
+  - At 1 000 000 records the log freezes. The survey skips a frozen run for ages; it skipped none.
+  - The stats' fate shares come from the tick events and live caches, not the log. They start at 0
+    when theft is turned on, so a mid-run switch leaves the shares summing to more than 1.
+- **Refusals.** Theft in a lab or a central-place world is refused on `theft.find`, and cheaters
+  alone (`find` 0) in a lab on `theft.cheaters`. A bury cost above 0 is refused there on
+  `caching.bury_cost` ("a bury cost applies only in the field").
+- **p_s and p_o are amount-weighted:** p_s = sugar dug by owners ÷ (dug + pilfered), and p_o =
+  pilfered ÷ (dug + pilfered + lost). Splits and backfill can't shift them. Still-buried sugar has
+  met no fate and is excluded.
+- **`find` is a free parameter; 0.25 is an anchor.** The balance probe found no listed `find`
+  inside the field's band (below), so the list was extended mechanically: the smallest of 0.25,
+  0.3, 0.4 and 0.5 with a winter rate of at least 2 %. That is 0.25, and every preset uses it. After
+  that, the survey reports every claim across `find` 0.02, 0.05, 0.1, 0.25, 0.5 and 1, and judges
+  at 0.25.
+  - **Claim 1 became a decomposition.** Pilferage = non-owner visits per cache per tick (v) ×
+    `find`, less the one-take-per-arrival shortfall on stacked sites. 2–30 % a day is context only.
+  - The cohort fit to (1 − r)^age is reported, not judged.
+- **Stumbling can't reach the field's median.** The rate is at most v × `find`, and at most v at
+  `find` 1. v is set by crowding (0.08 agents per open site in the winter world). Even at `find` 1
+  the winter field loses 7.0 % of its caches a tick (10.9 % of its sugar; the survey, ticks 0–200),
+  below the 9 % median. Animals that reach the field's rates search for caches. Watching others
+  cache comes in P2.
+- **The arena's vision scales with the room:** 1–2, 1–3 and 1–4 at n = 2, 4 and 8, half the room's
+  side. A fixed 1–2 let the 2-agent room be seen whole and the 8-agent room only in part, so it
+  tied sight to n.
+- **Survey-only instrumentation.** `TickEvents::pilfer_draws` counts find draws on other agents'
+  caches. `World::probe_dig_at_reserve` digs below R instead of R/2; it is not config, not hashed,
+  hidden from the docs, and false everywhere but the survey. Neither changes any golden.
+- **The page.** Inspect also shows the stomach when it isn't empty. Holdings get their own chart
+  ("Hoarder and cheater holdings"), so that counts and sugar don't share an axis. The owner-memory
+  box reads through the default, so a config without it shows checked.
+
+**The balance, as measured** (Task 5; `cache-winter-even`'s world with theft, `even` hoarders only,
+5 seeds; the rate is the mean of `pilferage_rate` over ticks 101–200; survival is alive at 200 ÷
+alive at 100):
+
+| find | winter rate | summer rate (ticks 1–100) | first-winter survival |
+|---|---|---|---|
+| 0 | 0 | 0 | 74.9 % |
+| 0.01 | 0.12 % | 0.16 % | 78.4 % |
+| 0.02 | 0.24 % | 0.32 % | 78.6 % |
+| 0.05 | 0.55 % | 0.72 % | 84.2 % |
+| 0.1 | 1.02 % | 1.23 % | 86.2 % |
+| 0.2 | 1.83 % | 2.08 % | 91.0 % |
+| **0.25** | **2.21 %** | 2.38 % | 91.7 % |
+| 0.3 | 2.55 % | 2.71 % | 92.5 % |
+| 0.5 | 3.93 % | 3.79 % | 94.8 % |
+| 1 | 7.67 % | 5.77 % | 98.3 % |
+
+The survey's figures (20 seeds, ticks 0–200, a summer and a winter) are 2.31 % at 0.25 and 6.96 %
+at 1. Both windows are stated in `presets.rs`.
+
+The arena, without theft (100 seeds per n): first-winter survival with nobody caching was 0.0 %,
+0.5 % and 1.4 % at n = 2, 4 and 8, against 99.5 %, 95.8 % and 91.0 % for `even` hoarders. The gap
+is at least 89.6 points at every n. At `find` 0.25 with half cheaters the rate over ticks 101–200
+is 1.57 %, 1.89 % and 2.40 %, and 100 %, 99.8 % and 98.1 % survive.
+
+**The values.**
+
+| World | Values |
+|---|---|
+| winter theft (`theft-winter`, `-quarter`, `-half`) | `cache-winter-even` unchanged, plus `theft.find` 0.25 and cheaters 0, 0.25 or 0.5; owner memory on, loot kept, bury cost 0 |
+| arena (`theft-arena-2`, `-4`, `-8`) | a k × k room (k = 4, 6, 8) on a (k + 1) × (k + 1) torus, opaque walls along row 0 and column 0; flat sugar, capacity 4 and growback 0.3 (× 8/9 at n = 4, where 6 × 6 gives 9 sites an agent), so each agent has 32 standing and 2.4 a tick of regrowth; vision 1 to k/2; otherwise the winter world's settings (walking, metabolism 1, global winter γ 100 and β 32, carrying limit 50, horizon 20, half remembering for 100 ticks, `even`); `find` 0.25 and half cheaters |
+| survey sweeps | `find` 0.02, 0.05, 0.1, 0.25, 0.5, 1 (and 0 for the cheater baseline); cheater shares 0.1–0.9; arena C/G (bury cost) 0, 0.1, 0.25, 0.5, 1; β 2, 4, 8, 16, 32 |

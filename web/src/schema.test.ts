@@ -350,6 +350,14 @@ describe('theft (Minds 6)', () => {
     expect(c.theft).toEqual({ find: 0, owner_memory: true, loot: 'eat', cheaters: 0 });
   });
 
+  it('shows owner memory checked through the default when a config lacks it', () => {
+    const memory = control('theft.owner_memory');
+    if (memory.kind !== 'toggle' || !memory.current) throw new Error('a toggle read through its default');
+    expect(memory.current({} as unknown as Config)).toBe(true);
+    expect(memory.current({ theft: { find: 0.2 } } as unknown as Config)).toBe(true);
+    expect(memory.current({ theft: { find: 0, owner_memory: false, loot: 'keep', cheaters: 0 } } as unknown as Config)).toBe(false);
+  });
+
   it('creates complete theft and caching objects when a control is set on a config missing them', () => {
     const c = {} as unknown as Config;
     expect(() => setPath(structuredClone(c), 'theft.find', 0.5)).toThrow();
