@@ -1,7 +1,7 @@
 # Design: variations on Schelling (milestone 32)
 
 **Date:** 2026-09-30
-**Status:** proposed.
+**Status:** built (milestone 32); amendments below.
 **Why:** episode 3 of Following the Crowd, "Variations on Schelling": what later researchers changed
 in his checkerboard, and what each change does. Each variation keeps its authors' own rules as a
 preset, with every difference from Schelling's a named switch on the `schelling` (and `line`) model.
@@ -50,3 +50,25 @@ Presets: `pv-flat`, `pv-p50`, `pv-p100`, `pv-spiked` (5 × 5), `pv-ring`, `gvn-f
 The survey claims above (decision rules from each paper's numbers, fixed before running), the page
 (the new switches in the Rules panel, a Clusters chart), goldens, docs. Episode 3's spike and
 storyboard follow the build.
+
+## Amendments (as built)
+
+- **Each paper's own cluster count.** `clusters` (side by side) is ours; `pv_clusters` is Pancs &
+  Vriend's (§4.2.1: agents joined side by side or through a zone of blanks bordered by one color
+  only), and `clusters8` is Singh et al.'s N_C (joined at a side or a corner). On the side-by-side
+  count Pancs & Vriend's boards looked less segregated than they report (flat 2.8, p50 2.6); on
+  their own count they match (2.12 and 2.02 against 2.10 and 2.04).
+- **Mixed pairs on Moore's eight.** Zhang measures his potential on the Moore neighborhood whatever
+  the agents' neighborhood, so `mixed_pairs` always counts the eight around. A test pins his §2.2
+  identity: what two traders gain together is 0.6/8 for each mixed pair their trade removes.
+- **The ring's groups.** On `edges: ring` a run across the join counts once.
+- **Goldens.** The 50 × 50 and 100 × 100 presets are fingerprinted after 20 ticks (`BIG_GOLDEN`),
+  as image scoring's island presets are, to keep the debug test run short.
+- **Zhang's cutoff of 600.** Read as mixed pairs (his ρ), it is about the floor for two straight bands on
+  a 100 × 100 torus; our runs round into a blob near 1,200–1,450 and never reach it by 50 million
+  draws at any β. Read as his scaled potential (0.075 ρ, so 8,000 pairs), it is reached in about
+  80,000 draws at β = 10, some 400 times sooner than his Fig. 8. Neither reading gives his times.
+  His trades are a conserved Ising model at 0.0375 β per bond, whose ordering transition lies
+  near β ≈ 5, not 2. The claims report both readings, and the ordering of neighborhoods is tested on
+  the scaled one.
+- **Not built:** Singh et al.'s T = 5 swaps and their scale L; Pancs & Vriend's 100 × 100 runs.
