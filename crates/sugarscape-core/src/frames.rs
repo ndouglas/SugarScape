@@ -797,7 +797,10 @@ pub struct SchellingDump {
     pub format: u32,
     pub model: &'static str,
     pub seed: u64,
+    /// Frames after the first (the shot's `ticks / every`).
     pub ticks: u32,
+    /// Steps between frames (frames keep their true step).
+    pub every: u32,
     pub width: u32,
     pub height: u32,
     pub config: ModelConfig,
@@ -931,13 +934,15 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
                 (shot.gifts, "gifts"),
                 (shot.cells.is_some(), "cells"),
                 (shot.scores, "scores"),
-                (shot.every != 1, "every"),
             ] {
                 if bad {
                     return Err(vec![FieldError::new(field, "is not for Schelling shots")]);
                 }
             }
             if let ModelConfig::Tipping(_) = shot.base()? {
+                if shot.every != 1 {
+                    return Err(only("every", "norms and Schelling-board"));
+                }
                 return run_tipping(shot).map(|d| Dump::Tipping(Box::new(d)));
             }
             run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
@@ -1114,16 +1119,27 @@ pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
             agents,
         }
     };
+    let every = shot.every;
+    if every == 0 || shot.ticks % every != 0 {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
     let mut frames = vec![frame(&world)];
-    for _ in 0..shot.ticks {
-        world.model_mut().run(1);
+    for _ in 0..shot.ticks / every {
+        world.model_mut().run(every);
         frames.push(frame(&world));
     }
     let model = world.model();
     let stats = model
         .series_names()
         .into_iter()
-        .filter_map(|name| model.series(&name).map(|s| (name, s)))
+        .filter_map(|name| {
+            model
+                .series(&name)
+                .map(|s| (name, s.into_iter().step_by(every as usize).collect()))
+        })
         .collect();
     let (width, height) = model.size();
     Ok(SchellingDump {
@@ -1134,7 +1150,8 @@ pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
             "schelling"
         },
         seed: shot.seed,
-        ticks: shot.ticks,
+        ticks: shot.ticks / every,
+        every,
         width,
         height,
         config,
@@ -2263,6 +2280,20 @@ mod tests {
             moved as f64, d.stats["moves"][1],
             "the frames show the round's moves"
         );
+    }
+
+    #[test]
+    fn a_schelling_shot_can_record_every_nth_step() {
+        // A big board over many steps: frames keep their true step, and the
+        // statistics come at the same steps as the frames.
+        let d = schelling(r#"{"preset": "s71-board", "ticks": 12, "seed": 2, "every": 4}"#);
+        let ticks: Vec<u64> = d.frames.iter().map(|f| f.tick).collect();
+        assert_eq!(ticks, [0, 4, 8, 12]);
+        assert_eq!((d.ticks, d.every), (3, 4));
+        let full = schelling(r#"{"preset": "s71-board", "ticks": 12, "seed": 2}"#);
+        assert_eq!(d.frames[2].agents, full.frames[8].agents);
+        assert_eq!(d.stats["segregation"].len(), 4);
+        assert_eq!(d.stats["segregation"][3], full.stats["segregation"][12]);
     }
 
     #[test]

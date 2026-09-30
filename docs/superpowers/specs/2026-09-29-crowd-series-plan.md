@@ -37,7 +37,7 @@ which the user is doing separately.
 |---|---|---|---|---|
 | 1 | Neighbors like me ✅ | Schelling 1969, 1971: the line and the checkerboard | `schelling` (his rules as the default) | Mild demands, exaggerated separation; his tabletop counts are hand-worked examples, to be tested as typical |
 | 2 | The tipping point ✅ | Schelling 1971: the bounded neighborhood | new, small | Only the all-one-color mixes are stable unless tolerance is wide; greater tolerance can hurt |
-| 3 | Variations on Schelling | Epstein & Axtell 1996; Pancs & Vriend 2007; Zhang 2004; Gauvin, Vannimenus & Nadal 2009; Singh, Vainchtein & Weiss 2009 | `schelling` switches | Wanting a mixed street still sorts the town; a frozen, a segregated and a mixed phase; clusters shrink on a big board |
+| 3 | Variations on Schelling ✅ | Epstein & Axtell 1996; Pancs & Vriend 2007; Zhang 2004; Gauvin, Vannimenus & Nadal 2009; Singh, Vainchtein & Weiss 2009 | `schelling` switches | Wanting a mixed street still sorts the town; a frozen, a segregated and a mixed phase; clusters shrink on a big board |
 | 4 | One culture or many | Axelrod 1997 | `culture` | Local convergence, global polarization; the docked mobility result doesn't reproduce |
 | 5 | Listening to the like-minded | Hegselmann & Krause 2002 | `opinions` | Fig. 2b's two camps are the exception |
 | 6 | How extremists win | Deffuant et al. 2000, 2002 | `agreement` | A few confident extremists and a moderate crowd |

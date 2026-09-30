@@ -388,9 +388,10 @@ def _schelling(raw):
     colors draw them) and whether it is content in its `sugar` (1 or 0). Nobody
     is born or dies."""
     w, h = raw["width"], raw["height"]
+    # A strided shot (`every`) is filmed a frame a tick: frames count as ticks.
     frames = [
         Frame(
-            tick=f["tick"],
+            tick=k,
             agents={i: Agent(i, x, y, 1.0 if content else 0.0, 0, 0, 0) for i, x, y, _, content in f["agents"]},
             sugar=[0.0] * (w * h),
             deaths={},
@@ -399,7 +400,7 @@ def _schelling(raw):
             births={},
             groups={row[0]: 1 if row[3] else 0 for row in f["agents"]},
         )
-        for f in raw["frames"]
+        for k, f in enumerate(raw["frames"])
     ]
     return Dump(
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),

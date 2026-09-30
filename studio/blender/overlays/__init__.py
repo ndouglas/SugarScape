@@ -14,13 +14,14 @@ from .grid import payoff, ties
 from .plane import events, generation, mean_traits
 from .street import meetings
 from .tipping import fence, tipplane
+from .variations import figure, paper, ringjoin
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
 
 # The overlays drawn in screen space (on `Screen` anchors).
 SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
-          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff"}
+          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff", "paper", "figure"}
 
 
 BUILDERS = {
@@ -74,4 +75,7 @@ BUILDERS = {
     "mean-traits": mean_traits,
     "ties": ties,
     "payoff": payoff,
+    "paper": paper,
+    "figure": figure,
+    "ringjoin": ringjoin,
 }
