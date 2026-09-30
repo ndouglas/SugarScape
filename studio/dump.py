@@ -272,6 +272,8 @@ def parse(text):
         return _dpd(raw)
     if raw.get("model") in ("schelling", "line"):
         return _schelling(raw)
+    if raw.get("model") == "tipping":
+        return _tipping(raw)
     if raw.get("model") == "ethno":
         return _ethno(raw)
     if raw.get("model") == "structure":
@@ -402,6 +404,41 @@ def _schelling(raw):
     return Dump(
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
         placed=sorted(frames[0].agents), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
+    )
+
+
+def _tipping(raw):
+    """A Schelling bounded-neighborhood shot as a `Dump` on `area.py`'s board:
+    insiders in the area, outsiders in their queues, so the Flumps walk in and
+    out. Red (his whites) are group 1 with ids 1…, Blue group 0 with ids 10001…;
+    an insider who would leave has `sugar` 0 (everyone else 1). The tolerances
+    ride in `config["tolerances"]` (Red's, then Blue's)."""
+    import area
+    red, blue = raw["red"], raw["blue"]
+    keys = [[(True, r) for r, _ in f["red"]] + [(False, b) for b, _ in f["blue"]] for f in raw["frames"]]
+    held = area.layout(keys)
+
+    def ident(is_red, rank):
+        return 1 + rank if is_red else 10001 + rank
+
+    frames = []
+    for f, where in zip(raw["frames"], held):
+        content = {(True, r): c for r, c in f["red"]} | {(False, b): c for b, c in f["blue"]}
+        agents, groups = {}, {}
+        for is_red, n in ((True, red), (False, blue)):
+            for rank in range(n):
+                i = ident(is_red, rank)
+                x, y = where.get((is_red, rank)) or area.queue_spot(is_red, rank)
+                agents[i] = Agent(i, x, y, 0.0 if content.get((is_red, rank)) is False else 1.0, 0, 0, 0)
+                groups[i] = 1 if is_red else 0
+        w, h = area.WIDTH, area.HEIGHT
+        frames.append(Frame(tick=f["tick"], agents=agents, sugar=[0.0] * (w * h), deaths={}, born=[],
+                            pollution=[0.0] * (w * h), births={}, groups=groups))
+    w, h = area.WIDTH, area.HEIGHT
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=sorted(frames[0].agents), config={**raw["config"], "tolerances": raw["tolerances"]}, frames=frames,
+        stats=raw["stats"], model="tipping",
     )
 
 
