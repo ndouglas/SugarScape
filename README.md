@@ -2379,8 +2379,8 @@ cheater could flourish in mild winters. Strategies are fixed mixes; evolution is
   way. Everyone pilfers, hoarders included.
 - **A bury cost** (`caching.bury_cost`, field worlds only). Burying q costs q × cost more, counted
   as eaten. This is Andersson and Krebs's C per unit G.
-- **Every cache's fate** is logged while theft is on, with the tick it was buried and the tick it
-  ended: dug by its owner, pilfered (and by whom), lost with a dead owner, or still buried.
+- **Every cache's fate** can be logged while theft is on (recorded only when a caller asks for it,
+  as the survey does; the app doesn't), with the tick it was buried and the tick it ended: dug by its owner, pilfered (and by whom), lost with a dead owner, or still buried.
   - The log closes records oldest first.
   - Sugar cached before theft came on is backfilled the first time its cache is touched.
   - Sites + holdings + caches + stomachs + eaten + what left with the dead is conserved through
@@ -2499,7 +2499,8 @@ with no ratio, so per-capita comparisons come from the survey.
 
 **Cost** (µs per agent-tick, CPU time, measured as in Minds 2–5). The full table is in the program
 document. `theft-winter` costs 17.9, 1.8 times `cache-winter-even`. That is likely partly the larger
-population theft keeps alive, and partly the find draws and the fate log (not isolated). With a
+population theft keeps alive, and partly the find draws and the fate log (not isolated; the log was
+recorded then, and is now kept only when the survey asks for it). With a
 quarter or half cheaters it costs 15.2 and 11.6. The arenas cost 2.50–3.95, mostly per-tick work
 that doesn't scale with 2–8 agents.
 

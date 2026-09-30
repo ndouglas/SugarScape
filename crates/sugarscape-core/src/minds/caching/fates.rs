@@ -17,10 +17,15 @@
 //!   doesn't closes whole records while they fit and splits the next.
 //! - **Death.** `World::remove` closes all of a dead owner's open records as
 //!   `Lost`.
-//! - **Theft only.** Records open only while `theft.is_on()` (`find` or
-//!   `cheaters` above 0): every other world, Minds 5's caching worlds
-//!   included, leaves the log and its index empty and unallocated. Records
-//!   already open keep closing if theft is turned off.
+//! - **On request.** The log is recorded only when a caller asks for it
+//!   (`World::record_fates`, set by the survey and the tests that read the
+//!   log; never by a config, the app or a sweep). Every other world leaves
+//!   the log and its index empty and unallocated; the theft statistics come
+//!   from the tick events, not from here.
+//! - **Theft only.** Even then, records open only while `theft.is_on()`
+//!   (`find` or `cheaters` above 0): every other world, Minds 5's caching
+//!   worlds included, leaves the log empty. Records already open keep
+//!   closing if theft is turned off.
 //! - **Backfill.** `find` is live, so a cache can hold sugar the log never
 //!   saw (buried while theft was off). While theft is on, every touch of a
 //!   cache (a burial, a dig, a pilfer, its owner's death) first compares the
@@ -129,7 +134,11 @@ fn backfill(world: &mut World, owner: AgentId, site: u32, cache: f64, since: u64
 /// Opens a record for `amount` just buried by `owner` at `site` (under
 /// theft), after backfilling what the cache held before it.
 pub(crate) fn open(world: &mut World, owner: AgentId, site: u32, amount: f64) {
-    if world.cache_log_full || !world.config.theft.is_on() || frozen_by(world, 2) {
+    if !world.record_fates
+        || world.cache_log_full
+        || !world.config.theft.is_on()
+        || frozen_by(world, 2)
+    {
         return;
     }
     let now = world.tick;
@@ -145,7 +154,7 @@ pub(crate) fn open(world: &mut World, owner: AgentId, site: u32, amount: f64) {
 /// cache's `cache_since` is removed (a backfill reads it): if the owner no
 /// longer has a cache there, every open record there closes.
 fn close(world: &mut World, owner: AgentId, site: u32, amount: f64, fate: Fate) {
-    if world.cache_log_full {
+    if !world.record_fates || world.cache_log_full {
         return;
     }
     let theft = world.config.theft.is_on();
@@ -229,7 +238,7 @@ pub(crate) fn close_lost(
     caches: &BTreeMap<u32, f64>,
     since: &BTreeMap<u32, u64>,
 ) {
-    if world.cache_log_full {
+    if !world.record_fates || world.cache_log_full {
         return;
     }
     let now = world.tick;
@@ -264,10 +273,16 @@ mod tests {
     use crate::minds::caching::{bury, dig};
     use crate::testkit::*;
 
-    /// A blank world with theft on (so the log records).
+    /// A blank world with theft on, recording its fates.
     fn theft_world() -> World {
-        let mut w = blank_world(11, 11);
+        let mut w = logging(blank_world(11, 11));
         w.config.theft.find = 0.5;
+        w
+    }
+
+    /// `w`, recording its fates (`World::record_fates`).
+    fn logging(mut w: World) -> World {
+        w.record_fates = true;
         w
     }
 
@@ -430,7 +445,7 @@ mod tests {
         // A cache of 10 buried with theft off; theft comes on; 2 more are
         // buried; 3 are dug; a pilfer empties the other 9. The truth is 3
         // dug and 9 pilfered.
-        let mut w = blank_world(11, 11);
+        let mut w = logging(blank_world(11, 11));
         let id = hoarder(&mut w, 5, 5, 20.0);
         let thief = hoarder(&mut w, 6, 6, 0.0);
         let here = site(&w, 5, 5);
@@ -463,7 +478,7 @@ mod tests {
 
     #[test]
     fn a_dig_or_a_death_backfills_a_cache_untouched_since_theft_came_on() {
-        let mut w = blank_world(11, 11);
+        let mut w = logging(blank_world(11, 11));
         let id = hoarder(&mut w, 5, 5, 20.0);
         let here = site(&w, 5, 5);
         w.tick = 2;
@@ -495,7 +510,7 @@ mod tests {
                 .into_iter()
                 .collect(),
         });
-        let mut w = World::new(c, 4).unwrap();
+        let mut w = logging(World::new(c, 4).unwrap());
         let (mut dug, mut lost, mut buried, mut pilfered) = (0.0, 0.0, 0.0, 0.0);
         let mut on_since = None;
         for _ in 0..300 {
@@ -583,7 +598,7 @@ mod tests {
             mode: crate::config::MoveMode::Walk,
             speed: 1,
         };
-        let mut w = World::new(c, 3).unwrap();
+        let mut w = logging(World::new(c, 3).unwrap());
         for y in 0..12 {
             for x in 0..12 {
                 crate::testkit::set_sugar(&mut w, x, y, 4.0);
@@ -602,6 +617,25 @@ mod tests {
         assert_eq!(w.cache_log.capacity(), 0);
         assert!(w.cache_open.is_empty());
         assert!(!w.cache_log_full);
+    }
+
+    #[test]
+    fn a_theft_world_logs_nothing_unless_asked() {
+        let mut w = blank_world(11, 11);
+        w.config.theft.find = 0.5;
+        assert!(!w.record_fates, "off by default");
+        let id = hoarder(&mut w, 5, 5, 20.0);
+        let here = site(&w, 5, 5);
+        bury(&mut w, id, 3.0);
+        dig(&mut w, id, here, 1.0);
+        w.kill(id, crate::world::DeathCause::OldAge);
+        assert_eq!(w.cache_log.capacity(), 0);
+        assert!(w.cache_open.is_empty());
+        assert_eq!(
+            (w.events.buried, w.events.dug),
+            (3.0, 1.0),
+            "events still count"
+        );
     }
 
     #[test]

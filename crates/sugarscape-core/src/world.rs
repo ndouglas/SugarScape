@@ -227,9 +227,9 @@ pub struct World {
     /// Its positions after each tick, oldest first.
     trail: Vec<Pos>,
     /// Minds 6: every cache's fate, one record per burial event
-    /// (`minds::caching::fates`). Never hashed; empty (and unallocated)
-    /// until something is buried under theft (`theft.is_on()`), so every
-    /// world without theft keeps it empty.
+    /// (`minds::caching::fates`). Recorded only when a caller asks for it
+    /// (`record_fates`), and then only under theft (`theft.is_on()`);
+    /// otherwise empty and unallocated. Never hashed.
     pub cache_log: Vec<crate::minds::caching::fates::CacheRecord>,
     /// Minds 6: the log reached `fates::LOG_CAP` and froze.
     pub cache_log_full: bool,
@@ -240,6 +240,13 @@ pub struct World {
     /// survey doesn't set it in.
     #[doc(hidden)]
     pub probe_dig_at_reserve: bool,
+    /// Minds 6: when true, the world keeps its fate log (`cache_log`) under
+    /// theft. Not config: never set by a config, the app or an edit, never
+    /// hashed or exported, and false unless a caller (the survey, a test)
+    /// sets it, so the app and sweeps never grow the log. The statistics
+    /// come from the tick events, not the log, and don't depend on it.
+    #[doc(hidden)]
+    pub record_fates: bool,
     /// Minds 6: the log's open records per (owner, site), oldest first.
     pub(crate) cache_open: crate::minds::caching::fates::OpenRecords,
     /// Minds 6: site index → the owners of caches there, for finding
@@ -364,6 +371,7 @@ impl World {
             cache_log: Vec::new(),
             cache_log_full: false,
             probe_dig_at_reserve: false,
+            record_fates: false,
             cache_open: BTreeMap::new(),
             cache_sites: None,
         };

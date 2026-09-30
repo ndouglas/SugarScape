@@ -257,6 +257,7 @@ mod tests {
     /// to (1, 1).
     fn cached_world(find: f64, capacity: u32, cached: f64) -> (World, AgentId) {
         let mut w = blank_world(11, 11);
+        w.record_fates = true;
         w.config.theft.find = find;
         w.config.caching.capacity = capacity;
         let owner = agent(&mut w, 5, 6, cached.max(100.0));
@@ -686,6 +687,7 @@ mod tests {
     #[test]
     fn without_owner_memory_an_owner_finds_its_cache_at_rate_find_as_a_dig() {
         let mut w = blank_world(11, 11);
+        w.record_fates = true;
         w.config.theft.owner_memory = false;
         w.config.theft.find = 1.0;
         let id = agent(&mut w, 5, 6, 30.0);
@@ -730,6 +732,7 @@ mod tests {
         c.theft.owner_memory = false;
         c.theft.cheaters = 0.2;
         let mut w = World::new(c, 3).unwrap();
+        w.record_fates = true;
         let (mut buried, mut lost) = (0.0, 0.0);
         for _ in 0..300 {
             w.step();
@@ -842,6 +845,7 @@ mod tests {
             speed: 1,
         };
         let mut w = World::new(c, 11).unwrap();
+        w.record_fates = true;
         for y in 0..12 {
             for x in 0..12 {
                 set_sugar(&mut w, x, y, if (x + y) % 3 == 0 { 4.0 } else { 1.5 });

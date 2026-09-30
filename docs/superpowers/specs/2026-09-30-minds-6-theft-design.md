@@ -262,7 +262,10 @@ this plan.
   caches that existed at the tick's start and lost any sugar to a thief this tick. The denominator
   is every cache in the world at the tick's start. Takes (`pilfers`) are kept beside it.
 - **Fates.**
-  - The cache log records only while theft is on. Minds 5 worlds allocate nothing.
+  - The cache log is recorded only when a caller asks for it (`World::record_fates`: the survey
+    and the tests that read the log set it; no config, the app or a sweep does), and then only
+    while theft is on. Every other world, Minds 5's included, allocates nothing. (Final review:
+    the log grew without bound in long app runs, and nothing but the survey reads it.)
   - **Backfill:** at every touch of a cache under theft (bury, dig, pilfer, death), sugar the log
     doesn't hold, from before theft came on, is first logged as a record dated `cache_since`.
     From the tick theft comes on, Σ Dug = Σ dug events, Σ Lost = Σ `cache_lost`, and Σ Pilfered =
@@ -293,8 +296,9 @@ this plan.
   side. A fixed 1–2 let the 2-agent room be seen whole and the 8-agent room only in part, so it
   tied sight to n.
 - **Survey-only instrumentation.** `TickEvents::pilfer_draws` counts find draws on other agents'
-  caches. `World::probe_dig_at_reserve` digs below R instead of R/2; it is not config, not hashed,
-  hidden from the docs, and false everywhere but the survey. Neither changes any golden.
+  caches. `World::probe_dig_at_reserve` digs below R instead of R/2, and `World::record_fates` keeps the
+  fate log; neither is config, hashed or shown in the docs, and each is false everywhere but the
+  survey (and, for the log, the tests that read it). None changes any golden.
 - **The page.** Inspect also shows the stomach when it isn't empty. Holdings get their own chart
   ("Hoarder and cheater holdings"), so that counts and sugar don't share an axis. The owner-memory
   box reads through the default, so a config without it shows checked.

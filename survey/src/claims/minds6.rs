@@ -317,6 +317,8 @@ fn cohort_fit(records: &[(u64, f64, bool)]) -> (f64, f64) {
 
 fn run(mut w: World, probe: bool) -> Run {
     w.probe_dig_at_reserve = probe;
+    // The fate log is off unless asked for; the cohort fits read it.
+    w.record_fates = true;
     let torus = w.torus;
     let group = |a: &Agent| usize::from(a.cheater);
     let find = w.config.theft.find;
