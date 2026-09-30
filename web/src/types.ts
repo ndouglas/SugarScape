@@ -212,13 +212,20 @@ export interface SchellingConfig {
   neighborhood: 'moore' | 'von_neumann';
   radius: number;
   edges: 'bounded' | 'torus';
-  movement: 'nearest' | 'random';
+  movement: 'nearest' | 'random' | 'best' | 'swap' | 'try';
   order: 'rounds' | 'random';
   sweep: 'reading' | 'center_out';
   red_share: number;
   exact: boolean;
   red_demand: Demand;
   blue_demand: Demand;
+  /** Who may move: the discontented (Schelling) or anyone (Pancs & Vriend, Gauvin et al.). */
+  movers: 'discontent' | 'anyone';
+  /** Pancs & Vriend's utilities over the unlike share, or Zhang's tent. */
+  utility: 'flat' | 'p50' | 'p100' | 'spiked' | 'tent';
+  /** Zhang's logit sharpness for swaps. */
+  beta: number;
+  start: 'random' | 'checkerboard' | 'deleted_checkerboard';
 }
 
 /** Ring World (animations VI-8 and VI-9). */
@@ -1501,6 +1508,11 @@ export interface LineConfig {
   reach: number;
   fallback: number;
   wrap: number;
+  /** A row with ends (Schelling) or a ring (Pancs & Vriend). */
+  edges: 'ends' | 'ring';
+  movement: 'nearest' | 'best';
+  movers: 'discontent' | 'anyone';
+  utility: 'flat' | 'p50' | 'p100' | 'spiked' | 'tent';
 }
 /** A person in the line: its place, color and how many of its neighbors are alike. */
 export interface LinePersonView { id: number; place: number; color: 'red' | 'blue'; like: number; neighbors: number; satisfied: boolean }

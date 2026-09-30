@@ -1,0 +1,93 @@
+{
+  "name": "Zhang's β: how much the trades care about the mix",
+  "description": "Zhang's JEBO rules (100 × 100 torus, no vacancies, random pairs trade homes with odds e^(β·gain) on his tent utility) from a random start, across β. Zhang: \"for β < 2, our computer simulations never reach a state with a potential below 600\"; the waiting time \"declines sharply with β varying in a small range around 2: at β = 4, simulations always end fairly quickly\". Measured (seeds 1–3, mixed pairs after 300 steps: 3 million draws, recorded 2026-09-30; a random board has 20,000): 19,160 at β = 1, 18,010 at 2, 13,920 at 4, 9,370 at 5, 5,360 at 6, 2,730 at 10, near 2,500 at 20–100. The sharp change comes between β = 4 and 8, not near 2: his trades are a conserved Ising model at 0.075 β per mixed pair, which orders near β ≈ 5.",
+  "base": {
+    "preset": "zhang-random"
+  },
+  "x": {
+    "label": "β",
+    "values": [
+      {
+        "at": 0,
+        "set": {
+          "beta": 0
+        }
+      },
+      {
+        "at": 1,
+        "set": {
+          "beta": 1
+        }
+      },
+      {
+        "at": 2,
+        "set": {
+          "beta": 2
+        }
+      },
+      {
+        "at": 3,
+        "set": {
+          "beta": 3
+        }
+      },
+      {
+        "at": 4,
+        "set": {
+          "beta": 4
+        }
+      },
+      {
+        "at": 5,
+        "set": {
+          "beta": 5
+        }
+      },
+      {
+        "at": 6,
+        "set": {
+          "beta": 6
+        }
+      },
+      {
+        "at": 8,
+        "set": {
+          "beta": 8
+        }
+      },
+      {
+        "at": 10,
+        "set": {
+          "beta": 10
+        }
+      },
+      {
+        "at": 20,
+        "set": {
+          "beta": 20
+        }
+      },
+      {
+        "at": 40,
+        "set": {
+          "beta": 40
+        }
+      },
+      {
+        "at": 100,
+        "set": {
+          "beta": 100
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 3
+  },
+  "ticks": 300,
+  "metric": {
+    "kind": "final",
+    "series": "mixed_pairs"
+  }
+}

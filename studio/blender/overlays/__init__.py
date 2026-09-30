@@ -13,6 +13,7 @@ from .ring import gifts, rate, tolerance
 from .grid import payoff, ties
 from .plane import events, generation, mean_traits
 from .street import meetings
+from .tipping import fence, tipplane
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
@@ -27,6 +28,8 @@ BUILDERS = {
     "rings-migrants": rings_migrants,
     "rings-hungry": rings_hungry,
     "rings-unhappy": rings_unhappy,
+    "fence": fence,
+    "tipplane": tipplane,
     "counter": counter,
     "survival": bars,
     "bars": bars,

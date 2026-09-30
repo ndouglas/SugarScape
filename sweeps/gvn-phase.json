@@ -1,0 +1,129 @@
+{
+  "name": "Gauvin et al.'s phase diagram: segregation against tolerance, at three vacancies",
+  "description": "Gauvin, Vannimenus & Nadal's rules (50 × 50 with edges, anyone moves to a random vacancy where at most T of its neighbors are unlike) across tolerance T at 5, 20 and 40 % vacant. Gauvin et al.: a frozen state below T_f (1/2 at 2–4 % vacant, 2/5–1/2 at 6 %, 1/3 at 20 %, 1/5 at 30–40 %), a segregated phase (s near 1) up to T_c near 3/4, mixed above, the change abrupt below 26 % vacant. Measured (seeds 1–3, s averaged over steps 100–200, recorded 2026-09-30): at 5 % vacant s is 0.02–0.05 (frozen) up to T = 0.4, 0.81–0.88 from 0.45 to 0.7, 0.07 at 0.75 and lower above; at 20 % frozen only at 0.2, 0.73–0.97 from 0.3 to 0.7, 0.05 at 0.75; at 40 % no frozen state and s at most 0.38, falling with T (their diluted, fluctuating region). Across vacancies (5–10 seeds, 1,000 steps), our frozen line sits where their Table 1 has it, within one step of T: Their Table 1 puts the first segregating tolerance at 1/2 (2–4 % vacant), 2/5–1/2 (6 %), 3/8 (10–14 %), 1/3 (20 %), 1/4–1/3 (22–24 %) and 1/5 (30–40 %); here, 3/8 at 12 %, 1/3 at 18 %, 2/7 at 20 % (one step below theirs), 1/4 at 24 % and 1/5 at 30 %. Trying one vacancy at random rather than choosing among those that suit (`movement: try`, the other reading of their rule) moves nothing.",
+  "base": {
+    "preset": "gvn-segregated"
+  },
+  "x": {
+    "label": "Tolerance T (the most unlike share allowed)",
+    "values": [
+      {
+        "at": 0.2,
+        "set": {
+          "preference.min": 0.8,
+          "preference.max": 0.8
+        }
+      },
+      {
+        "at": 0.3,
+        "set": {
+          "preference.min": 0.7,
+          "preference.max": 0.7
+        }
+      },
+      {
+        "at": 0.35,
+        "set": {
+          "preference.min": 0.65,
+          "preference.max": 0.65
+        }
+      },
+      {
+        "at": 0.4,
+        "set": {
+          "preference.min": 0.6,
+          "preference.max": 0.6
+        }
+      },
+      {
+        "at": 0.45,
+        "set": {
+          "preference.min": 0.55,
+          "preference.max": 0.55
+        }
+      },
+      {
+        "at": 0.5,
+        "set": {
+          "preference.min": 0.5,
+          "preference.max": 0.5
+        }
+      },
+      {
+        "at": 0.6,
+        "set": {
+          "preference.min": 0.4,
+          "preference.max": 0.4
+        }
+      },
+      {
+        "at": 0.7,
+        "set": {
+          "preference.min": 0.3,
+          "preference.max": 0.3
+        }
+      },
+      {
+        "at": 0.75,
+        "set": {
+          "preference.min": 0.25,
+          "preference.max": 0.25
+        }
+      },
+      {
+        "at": 0.8,
+        "set": {
+          "preference.min": 0.2,
+          "preference.max": 0.2
+        }
+      },
+      {
+        "at": 0.85,
+        "set": {
+          "preference.min": 0.15,
+          "preference.max": 0.15
+        }
+      },
+      {
+        "at": 0.9,
+        "set": {
+          "preference.min": 0.1,
+          "preference.max": 0.1
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Vacancy",
+    "values": [
+      {
+        "at": 0.05,
+        "set": {
+          "population": 2375
+        }
+      },
+      {
+        "at": 0.2,
+        "set": {
+          "population": 2000
+        }
+      },
+      {
+        "at": 0.4,
+        "set": {
+          "population": 1500
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 3
+  },
+  "ticks": 200,
+  "metric": {
+    "kind": "window_mean",
+    "series": "seg_s",
+    "from": 100
+  }
+}

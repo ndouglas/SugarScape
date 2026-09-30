@@ -28,6 +28,7 @@ mod structure;
 mod tags;
 mod thresholds;
 mod tipping;
+mod variations;
 mod zi;
 
 use crate::claim::Claim;
@@ -64,6 +65,7 @@ pub fn all() -> Vec<Claim> {
         tags::claims(),
         thresholds::claims(),
         tipping::claims(),
+        variations::claims(),
         zi::claims(),
     ]
     .into_iter()

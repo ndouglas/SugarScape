@@ -169,6 +169,17 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     { title: 'Unsatisfied', lines: [{ key: 'unsatisfied', label: 'Unsatisfied share', color: '--red' }], range: [0, 1] },
     { title: 'Moves', lines: [{ key: 'moves', label: 'Agents moved', color: '--c1' }] },
     { title: 'Red share', lines: [{ key: 'red_share', label: 'Red', color: '--red' }], range: [0, 1] },
+    // Milestone 32: each variation's own measure.
+    {
+      title: 'Clusters',
+      lines: [
+        { key: 'clusters', label: 'Side by side', color: '--c1' },
+        { key: 'clusters8', label: 'Sides or corners (Singh et al.)', color: '--c2' },
+        { key: 'pv_clusters', label: 'Through blanks (Pancs & Vriend)', color: '--c4' },
+      ],
+    },
+    { title: 'Segregation coefficient', lines: [{ key: 'seg_s', label: 's (Gauvin et al.)', color: '--c3' }], range: [0, 1] },
+    { title: 'Mixed pairs', lines: [{ key: 'mixed_pairs', label: 'Unlike neighbors (Zhang)', color: '--c1' }] },
   ],
   ring: [
     { title: 'Flocks', lines: [{ key: 'flocks', label: 'Flocks', color: '--c1' }] },

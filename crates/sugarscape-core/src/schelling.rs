@@ -93,6 +93,88 @@ pub enum Movement {
     Nearest,
     /// Epstein & Axtell: "an acceptable site at random".
     Random,
+    /// Pancs & Vriend: the empty square of highest utility, staying
+    /// included, ties at random.
+    Best,
+    /// Gauvin, Vannimenus & Nadal, one reading: one vacancy at random, taken
+    /// only if it suits; if not the agent "move[s] back to [its] initial
+    /// position".
+    Try,
+    /// Zhang (JEBO): no empty square needed; a random pair of occupied
+    /// squares not neighbors swaps with logit probability on their summed
+    /// utility (`beta`).
+    Swap,
+}
+
+/// Who may move on their turn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Movers {
+    /// Schelling, Epstein & Axtell: only the discontented.
+    Discontent,
+    /// Pancs & Vriend's "no inertia"; Gauvin, Vannimenus & Nadal: anyone,
+    /// content or not.
+    Anyone,
+}
+
+/// What an agent weighs, under the best move and swaps.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Utility {
+    /// Pancs & Vriend's Schelling: content with half or less unlike (1), else 0.
+    Flat,
+    /// Pancs & Vriend: rising to a peak at half unlike, then 0.
+    P50,
+    /// Pancs & Vriend: a single peak at half unlike, falling either side.
+    P100,
+    /// Pancs & Vriend: only exactly half unlike is good.
+    Spiked,
+    /// Zhang (2004, JEBO): x/n up to half alike (n of 2n), then 1.4 − 0.4·x/n.
+    Tent,
+}
+
+impl Utility {
+    /// The utility of `like` like-colored among `occupied` neighbors, of at
+    /// most `most`. Pancs & Vriend's shapes read the unlike share; an empty
+    /// neighborhood is the least preferred (−1).
+    pub fn value(self, like: u32, occupied: u32, most: usize) -> f64 {
+        if self == Utility::Tent {
+            let n = most as f64 / 2.0;
+            let x = f64::from(like);
+            return if x <= n { x / n } else { 1.4 - 0.4 * x / n };
+        }
+        if occupied == 0 {
+            return -1.0;
+        }
+        let unlike = f64::from(occupied - like) / f64::from(occupied);
+        match self {
+            Utility::Flat => f64::from(u8::from(unlike <= 0.5 + 1e-12)),
+            Utility::P50 => {
+                if unlike <= 0.5 + 1e-12 {
+                    0.5 + unlike
+                } else {
+                    0.0
+                }
+            }
+            Utility::P100 => 1.0 - 2.0 * (unlike - 0.5).abs(),
+            Utility::Spiked => f64::from(u8::from((unlike - 0.5).abs() < 1e-12)),
+            Utility::Tent => unreachable!(),
+        }
+    }
+}
+
+/// How the board is filled at the start.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Start {
+    /// Chips and blanks at random (Schelling).
+    Random,
+    /// Colors alternating like a checkerboard's (Zhang: everyone in a 50–50
+    /// neighborhood); any blanks at random.
+    Checkerboard,
+    /// A checkerboard with the blanks taken half from each color at random
+    /// (Singh, Vainchtein & Weiss, after Schelling 1978).
+    DeletedCheckerboard,
 }
 
 /// Who moves when.
@@ -161,6 +243,12 @@ pub struct SchellingConfig {
     pub exact: bool,
     pub red_demand: Demand,
     pub blue_demand: Demand,
+    pub movers: Movers,
+    /// Weighed under the best move and swaps.
+    pub utility: Utility,
+    /// Swaps' logit sharpness (Zhang's β).
+    pub beta: f64,
+    pub start: Start,
 }
 
 impl Default for SchellingConfig {
@@ -190,6 +278,10 @@ impl Default for SchellingConfig {
             exact: true,
             red_demand: Demand::default(),
             blue_demand: Demand::default(),
+            movers: Movers::Discontent,
+            utility: Utility::Flat,
+            beta: 10.0,
+            start: Start::Random,
         }
     }
 }
@@ -241,8 +333,10 @@ impl SchellingConfig {
             "height",
             "must be between 1 and 500",
         );
+        let sites = u64::from(self.width) * u64::from(self.height);
         check(
-            u64::from(self.population) < u64::from(self.width) * u64::from(self.height),
+            u64::from(self.population) < sites
+                || (self.movement == Movement::Swap && u64::from(self.population) == sites),
             "population",
             "must be less than the number of sites (width × height)",
         );
@@ -262,6 +356,7 @@ impl SchellingConfig {
             "radius",
             "must be between 1 and 3",
         );
+        check(self.beta >= 0.0, "beta", "must not be negative");
         check(
             fraction(self.red_share),
             "red_share",
@@ -316,6 +411,10 @@ impl SchellingConfig {
             ("exact", self.exact == next.exact),
             ("red_demand", self.red_demand == next.red_demand),
             ("blue_demand", self.blue_demand == next.blue_demand),
+            ("movers", self.movers == next.movers),
+            ("utility", self.utility == next.utility),
+            ("beta", self.beta == next.beta),
+            ("start", self.start == next.start),
         ] {
             if !same {
                 out.push(FieldError::new(field, msg));
@@ -326,7 +425,7 @@ impl SchellingConfig {
 }
 
 /// The statistics series, in the order the CSV and the page list them.
-pub const SERIES: [&str; 13] = [
+pub const SERIES: [&str; 18] = [
     "unsatisfied",
     "segregation",
     "moves",
@@ -340,6 +439,11 @@ pub const SERIES: [&str; 13] = [
     "neighbors_red",
     "neighbors_blue",
     "like_near",
+    "clusters",
+    "seg_s",
+    "mixed_pairs",
+    "pv_clusters",
+    "clusters8",
 ];
 
 /// One tick's statistics.
@@ -372,6 +476,20 @@ pub struct SchellingSnapshot {
     /// Mean share of like neighbors among the eight surrounding squares,
     /// whatever the neighborhood: one ruler for comparing neighborhoods.
     pub like_near: f64,
+    /// Like-colored groups of agents joined side by side (4-adjacent).
+    pub clusters: u32,
+    /// Gauvin, Vannimenus & Nadal's segregation coefficient, 2Σn_c² / N²
+    /// over those groups (1: two groups; near 0: many small ones).
+    pub seg_s: f64,
+    /// Pairs of different colors among the eight squares around, whatever
+    /// the neighborhood (Zhang's ρ, which he always measures on Moore's).
+    pub mixed_pairs: u32,
+    /// Pancs & Vriend's clusters: like-colored agents joined side by side,
+    /// or through a zone of blanks that touches only their color.
+    pub pv_clusters: u32,
+    /// Singh, Vainchtein & Weiss's clusters: like-colored groups touching
+    /// by a side or a corner.
+    pub clusters8: u32,
 }
 
 impl Series for SchellingSnapshot {
@@ -395,6 +513,11 @@ impl Series for SchellingSnapshot {
             "neighbors_red" => self.neighbors_red,
             "neighbors_blue" => self.neighbors_blue,
             "like_near" => self.like_near,
+            "clusters" => f64::from(self.clusters),
+            "seg_s" => self.seg_s,
+            "mixed_pairs" => f64::from(self.mixed_pairs),
+            "pv_clusters" => f64::from(self.pv_clusters),
+            "clusters8" => f64::from(self.clusters8),
             _ => return None,
         })
     }
@@ -474,6 +597,11 @@ const UNFILED: u16 = u16::MAX;
 
 fn class(like: u8, occupied: u8) -> usize {
     usize::from(occupied) * (usize::from(occupied) + 1) / 2 + usize::from(like)
+}
+
+/// A checkerboard's color for a square: Red where x + y is even.
+fn parity(p: Pos) -> bool {
+    (p.x + p.y).is_multiple_of(2)
 }
 
 /// Every site's neighbors, as site indices: von Neumann radius 1 on the torus
@@ -597,6 +725,24 @@ impl SchellingWorld {
         }
         let mut cells: Vec<usize> = (0..n).collect();
         cells.shuffle(&mut world.rng);
+        if world.config.start == Start::DeletedCheckerboard {
+            // Keep the checkerboard's colors, with the blanks half from each.
+            let blanks = n - world.config.population as usize;
+            let (reds_out, blues_out) = (blanks.div_ceil(2), blanks / 2);
+            let (mut r, mut b) = (0, 0);
+            let mut kept = Vec::with_capacity(n);
+            for &i in &cells {
+                let red = parity(torus.pos(i));
+                if red && r < reds_out {
+                    r += 1;
+                } else if !red && b < blues_out {
+                    b += 1;
+                } else {
+                    kept.push(i);
+                }
+            }
+            cells = kept;
+        }
         let reds = (f64::from(world.config.population) * world.config.red_share).round() as usize;
         for (k, &i) in cells
             .iter()
@@ -607,6 +753,9 @@ impl SchellingWorld {
             if world.config.exact {
                 // The sites are shuffled, so the first `reds` placed fall at random.
                 agent.red = k < reds;
+            }
+            if world.config.start != Start::Random {
+                agent.red = parity(torus.pos(i));
             }
             world.insert(agent);
         }
@@ -762,6 +911,24 @@ impl SchellingWorld {
         unreachable!("r < total")
     }
 
+    /// One vacancy drawn at random from all of them: `Some` if it suits.
+    fn try_one(&mut self, red: bool, preference: f64) -> Option<usize> {
+        let ok = self.acceptable(red, Some(preference));
+        let pools = &self.pools[usize::from(red)];
+        let total: usize = pools.iter().map(Vec::len).sum();
+        if total == 0 {
+            return None;
+        }
+        let mut r = self.rng.gen_range(0..total as u32) as usize;
+        for (k, pool) in pools.iter().enumerate() {
+            if r < pool.len() {
+                return ok[k].then_some(pool[r] as usize);
+            }
+            r -= pool.len();
+        }
+        unreachable!("r < total")
+    }
+
     pub fn agents(&self) -> impl Iterator<Item = &Resident> {
         self.agents.values()
     }
@@ -854,8 +1021,105 @@ impl SchellingWorld {
         None
     }
 
-    /// This step's movers: under `Rounds`, the discontented now, in `sweep`
-    /// order; under `Random`, every agent in a random order.
+    /// The empty square (or `from`, already vacated) of highest utility for
+    /// an agent of color `red`, ties at random (Pancs & Vriend's best
+    /// response).
+    fn best(&mut self, red: bool, from: usize) -> usize {
+        let (u, most) = (self.config.utility, self.config.max_neighbors());
+        let c = usize::from(red);
+        let mut top = f64::NEG_INFINITY;
+        let mut ties: Vec<usize> = Vec::new();
+        for j in 0..self.grid.len() {
+            if self.grid[j].is_some() && j != from {
+                continue;
+            }
+            let (like, occ) = (self.counts[c][j], self.counts[0][j] + self.counts[1][j]);
+            let v = u.value(u32::from(like), u32::from(occ), most);
+            if v > top + 1e-12 {
+                top = v;
+                ties.clear();
+                ties.push(j);
+            } else if (v - top).abs() <= 1e-12 {
+                ties.push(j);
+            }
+        }
+        ties[self.rng.gen_range(0..ties.len() as u32) as usize]
+    }
+
+    /// The utility of the occupant of `i` standing at `j` (for squares that
+    /// are not neighbors, so neither counts the other).
+    fn utility_at(&self, red: bool, j: usize) -> f64 {
+        let c = usize::from(red);
+        let (like, occ) = (self.counts[c][j], self.counts[0][j] + self.counts[1][j]);
+        self.config
+            .utility
+            .value(u32::from(like), u32::from(occ), self.config.max_neighbors())
+    }
+
+    /// How much the occupants of `i` and `j` (not neighbors) gain, summed,
+    /// by trading places.
+    pub fn swap_gain(&self, i: usize, j: usize) -> f64 {
+        let (a, b) = (
+            self.agents[&self.grid[i].unwrap()].red,
+            self.agents[&self.grid[j].unwrap()].red,
+        );
+        let before = self.utility_at(a, i) + self.utility_at(b, j);
+        let after = self.utility_at(a, j) + self.utility_at(b, i);
+        after - before
+    }
+
+    /// Zhang's chance of a swap: e^{βV} / (e^{βU} + e^{βV}).
+    pub fn swap_chance(&self, i: usize, j: usize) -> f64 {
+        1.0 / (1.0 + (-self.config.beta * self.swap_gain(i, j)).exp())
+    }
+
+    /// One step of swaps: as many tries as there are agents, each a random
+    /// pair of occupied squares, not neighbors and of different colors.
+    fn swaps(&mut self) -> u32 {
+        let ids: Vec<u64> = self.agents.keys().copied().collect();
+        let n = ids.len() as u32;
+        let mut moves = 0;
+        if n < 2 {
+            return 0;
+        }
+        for _ in 0..n {
+            let (x, y) = (
+                self.rng.gen_range(0..n) as usize,
+                self.rng.gen_range(0..n) as usize,
+            );
+            let (a, b) = (self.agents[&ids[x]], self.agents[&ids[y]]);
+            if a.red == b.red {
+                continue;
+            }
+            let (i, j) = (self.torus.index(a.pos), self.torus.index(b.pos));
+            if self.adj[i].contains(&(j as u32)) {
+                continue;
+            }
+            if self.rng.gen::<f64>() < self.swap_chance(i, j) {
+                self.trade(i, j);
+                moves += 2;
+            }
+        }
+        moves
+    }
+
+    /// The occupants of `i` and `j` trade places.
+    fn trade(&mut self, i: usize, j: usize) {
+        let (a, b) = (
+            self.agents[&self.grid[i].unwrap()],
+            self.agents[&self.grid[j].unwrap()],
+        );
+        self.vacate(i, a.red);
+        self.vacate(j, b.red);
+        self.occupy(i, b.id, b.red);
+        self.occupy(j, a.id, a.red);
+        self.agents.get_mut(&a.id).expect("living agent").pos = self.torus.pos(j);
+        self.agents.get_mut(&b.id).expect("living agent").pos = self.torus.pos(i);
+    }
+
+    /// This step's movers: under `Rounds`, the discontented now (or everyone,
+    /// under `Movers::Anyone`), in `sweep` order; under `Random`, every agent
+    /// in a random order.
     fn movers(&mut self) -> Vec<u64> {
         match self.config.order {
             Order::Random => {
@@ -868,7 +1132,7 @@ impl SchellingWorld {
                 let mut v: Vec<(i64, usize, u64)> = self
                     .agents
                     .values()
-                    .filter(|a| !self.is_satisfied(a))
+                    .filter(|a| self.config.movers == Movers::Anyone || !self.is_satisfied(a))
                     .map(|a| {
                         let i = self.torus.index(a.pos);
                         let key = match self.config.sweep {
@@ -899,9 +1163,15 @@ impl SchellingWorld {
     /// replaced.
     pub fn step(&mut self) {
         let mut moves = 0;
-        for id in self.movers() {
+        let movers = if self.config.movement == Movement::Swap {
+            moves = self.swaps();
+            Vec::new()
+        } else {
+            self.movers()
+        };
+        for id in movers {
             let a = self.agents[&id];
-            if self.is_satisfied(&a) {
+            if self.config.movers == Movers::Discontent && self.is_satisfied(&a) {
                 continue;
             }
             let from = self.torus.index(a.pos);
@@ -909,6 +1179,9 @@ impl SchellingWorld {
             let to = match self.config.movement {
                 Movement::Nearest => self.nearest(a.red, a.preference, from),
                 Movement::Random => self.pick(a.red, Some(a.preference)),
+                Movement::Try => self.try_one(a.red, a.preference),
+                Movement::Best => Some(self.best(a.red, from)).filter(|&j| j != from),
+                Movement::Swap => unreachable!("swaps take their own path"),
             };
             match to {
                 Some(to) => {
@@ -964,7 +1237,171 @@ impl SchellingWorld {
         }
     }
 
+    /// The sizes of the like-colored groups joined side by side (4-adjacent,
+    /// across the wrap on a torus).
+    fn cluster_sizes(&self) -> Vec<usize> {
+        let (w, h) = (self.torus.width as usize, self.torus.height as usize);
+        let mut parent: Vec<usize> = (0..w * h).collect();
+        fn root(parent: &mut [usize], mut i: usize) -> usize {
+            while parent[i] != i {
+                parent[i] = parent[parent[i]];
+                i = parent[i];
+            }
+            i
+        }
+        let color = |i: usize| self.grid[i].map(|id| self.agents[&id].red);
+        let torus = self.config.edges == Edges::Torus;
+        for y in 0..h {
+            for x in 0..w {
+                let i = y * w + x;
+                let Some(c) = color(i) else { continue };
+                let right = if x + 1 < w {
+                    Some(i + 1)
+                } else if torus && w > 2 {
+                    Some(y * w)
+                } else {
+                    None
+                };
+                let down = if y + 1 < h {
+                    Some(i + w)
+                } else if torus && h > 2 {
+                    Some(x)
+                } else {
+                    None
+                };
+                for j in [right, down].into_iter().flatten() {
+                    if color(j) == Some(c) {
+                        let (a, b) = (root(&mut parent, i), root(&mut parent, j));
+                        parent[a] = b;
+                    }
+                }
+            }
+        }
+        let mut sizes = std::collections::BTreeMap::new();
+        for i in 0..w * h {
+            if color(i).is_some() {
+                *sizes.entry(root(&mut parent, i)).or_insert(0usize) += 1;
+            }
+        }
+        sizes.into_values().collect()
+    }
+
+    /// Like-colored groups touching by a side or a corner (Singh et al.'s
+    /// N_C), across the wrap on a torus.
+    fn clusters8(&self) -> u32 {
+        let cells = self.grid.len();
+        let mut parent: Vec<usize> = (0..cells).collect();
+        fn root(parent: &mut [usize], mut i: usize) -> usize {
+            while parent[i] != i {
+                parent[i] = parent[parent[i]];
+                i = parent[i];
+            }
+            i
+        }
+        let color = |i: usize| self.grid[i].map(|id| self.agents[&id].red);
+        for i in 0..cells {
+            let Some(c) = color(i) else { continue };
+            for &j in &self.adj8[i] {
+                if color(j as usize) == Some(c) {
+                    let (a, b) = (root(&mut parent, i), root(&mut parent, j as usize));
+                    parent[a] = b;
+                }
+            }
+        }
+        (0..cells)
+            .filter(|&i| color(i).is_some() && root(&mut parent, i) == i)
+            .count() as u32
+    }
+
+    /// Pancs & Vriend's cluster count (their §4.2.1): agents of a color
+    /// linked side by side, directly or through an uncontended zone of
+    /// blanks (blanks joined side by side, bordered by one color only).
+    fn pv_clusters(&self) -> u32 {
+        let (w, h) = (self.torus.width as usize, self.torus.height as usize);
+        let torus = self.config.edges == Edges::Torus;
+        let color = |i: usize| self.grid[i].map(|id| self.agents[&id].red);
+        let side = |i: usize| -> Vec<usize> {
+            let (x, y) = (i % w, i / w);
+            let mut v = Vec::new();
+            for (dx, dy) in [(1i64, 0i64), (-1, 0), (0, 1), (0, -1)] {
+                let (nx, ny) = (x as i64 + dx, y as i64 + dy);
+                let (nx, ny) = if torus {
+                    (nx.rem_euclid(w as i64), ny.rem_euclid(h as i64))
+                } else if nx < 0 || ny < 0 || nx >= w as i64 || ny >= h as i64 {
+                    continue;
+                } else {
+                    (nx, ny)
+                };
+                let j = ny as usize * w + nx as usize;
+                if j != i && !v.contains(&j) {
+                    v.push(j);
+                }
+            }
+            v
+        };
+        let mut parent: Vec<usize> = (0..w * h).collect();
+        fn root(parent: &mut [usize], mut i: usize) -> usize {
+            while parent[i] != i {
+                parent[i] = parent[parent[i]];
+                i = parent[i];
+            }
+            i
+        }
+        // Agents of a color side by side; blanks side by side (the zones).
+        for i in 0..w * h {
+            for j in side(i) {
+                if color(i) == color(j) {
+                    let (a, b) = (root(&mut parent, i), root(&mut parent, j));
+                    parent[a] = b;
+                }
+            }
+        }
+        // Each zone's bordering colors.
+        let mut borders: std::collections::BTreeMap<usize, [bool; 2]> =
+            std::collections::BTreeMap::new();
+        for i in (0..w * h).filter(|&i| color(i).is_none()) {
+            let z = root(&mut parent, i);
+            for j in side(i) {
+                if let Some(c) = color(j) {
+                    borders.entry(z).or_default()[usize::from(c)] = true;
+                }
+            }
+        }
+        // An uncontended zone joins the agents of its one color around it.
+        for i in (0..w * h).filter(|&i| color(i).is_none()) {
+            let z = root(&mut parent, i);
+            let b = borders.get(&z).copied().unwrap_or_default();
+            if b[0] != b[1] {
+                for j in side(i) {
+                    if color(j).is_some() {
+                        let (a, c) = (root(&mut parent, j), root(&mut parent, i));
+                        parent[a] = c;
+                    }
+                }
+            }
+        }
+        let mut roots = std::collections::BTreeSet::new();
+        for i in (0..w * h).filter(|&i| color(i).is_some()) {
+            roots.insert(root(&mut parent, i));
+        }
+        roots.len() as u32
+    }
+
     fn snapshot(&self) -> SchellingSnapshot {
+        let sizes = self.cluster_sizes();
+        let mut mixed_pairs = 0u32;
+        for (i, slot) in self.grid.iter().enumerate() {
+            if let Some(id) = slot {
+                let red = self.agents[id].red;
+                for &j in &self.adj8[i] {
+                    if (j as usize) > i {
+                        if let Some(other) = self.grid[j as usize] {
+                            mixed_pairs += u32::from(self.agents[&other].red != red);
+                        }
+                    }
+                }
+            }
+        }
         let n = self.agents.len();
         let (mut unsatisfied, mut reds, mut shares, mut counted) = (0usize, 0usize, 0.0, 0usize);
         // Per color (`[blue, red]`): agents, those with a neighbor, their like
@@ -1033,6 +1470,15 @@ impl SchellingWorld {
             neighbors_red: mean(near[1] as f64, of[1]),
             neighbors_blue: mean(near[0] as f64, of[0]),
             like_near: mean(near_sum, near_with),
+            clusters: sizes.len() as u32,
+            seg_s: if n == 0 {
+                0.0
+            } else {
+                2.0 * sizes.iter().map(|&k| (k * k) as f64).sum::<f64>() / (n * n) as f64
+            },
+            mixed_pairs,
+            pv_clusters: self.pv_clusters(),
+            clusters8: self.clusters8(),
         }
     }
 
@@ -1248,6 +1694,9 @@ pub fn schema() -> Vec<Param> {
             &[
                 ("nearest", "The nearest square that suits (Schelling)"),
                 ("random", "Any square that suits, at random (Epstein & Axtell)"),
+                ("best", "The best square anywhere (Pancs & Vriend)"),
+                ("swap", "Trading places with someone (Zhang)"),
+                ("try", "One empty square at random, if it suits (Gauvin et al., one reading)"),
             ],
             Reset,
         ),
@@ -1272,6 +1721,44 @@ pub fn schema() -> Vec<Param> {
             Reset,
         )
         .shown_if("order", "rounds"),
+        Param::choice(
+            "Movement",
+            "movers",
+            "Who may move",
+            &[
+                ("discontent", "The discontented (Schelling)"),
+                ("anyone", "Anyone, content or not (Pancs & Vriend; Gauvin et al.)"),
+            ],
+            Reset,
+        ),
+        Param::choice(
+            "Movement",
+            "utility",
+            "What a mover weighs",
+            &[
+                ("flat", "Content or not (Pancs & Vriend's Schelling)"),
+                ("p50", "Best at half unlike, nothing past it"),
+                ("p100", "Best at half unlike, less either side"),
+                ("spiked", "Only exactly half unlike"),
+                ("tent", "Zhang: best at half alike, the majority better than the minority"),
+            ],
+            Reset,
+        )
+        .with_help("Used by the best-square move and by swaps."),
+        Param::number("Movement", "beta", "Swap sharpness (β)", (0.0, 100.0, 0.5), Reset)
+            .with_help("Zhang: the odds of a swap are e^(β·gain); 0 is a coin, large only helps.")
+            .shown_if("movement", "swap"),
+        Param::choice(
+            "Setup",
+            "start",
+            "Start",
+            &[
+                ("random", "At random (Schelling)"),
+                ("checkerboard", "A checkerboard (Zhang)"),
+                ("deleted_checkerboard", "A checkerboard with blanks (Singh et al.)"),
+            ],
+            Reset,
+        ),
         Param::bool("Residence", "residence.enabled", "Maximum residence", Reset),
         Param::range(
             "Residence",
@@ -1331,9 +1818,157 @@ fn at_least(min: [u8; 9]) -> Demand {
     }
 }
 
+/// Pancs & Vriend (2007): a 5 × 5 board with edges, 10 of each and 5 empty;
+/// one at a time, anyone moves to the empty square of highest utility.
+fn pancs_vriend(c: &mut SchellingConfig, utility: Utility) {
+    c.width = 5;
+    c.height = 5;
+    c.population = 20;
+    c.movement = Movement::Best;
+    c.movers = Movers::Anyone;
+    c.order = Order::Random;
+    c.utility = utility;
+}
+
+/// Gauvin, Vannimenus & Nadal (2009): a 50 × 50 board with edges, a share
+/// `vacancy` empty; anyone, content or not, moves to a random vacancy where
+/// at most `tolerance` of its neighbors are unlike.
+fn gauvin(c: &mut SchellingConfig, vacancy: f64, tolerance: f64) {
+    c.width = 50;
+    c.height = 50;
+    c.population = (2500.0 * (1.0 - vacancy)).round() as u32;
+    c.movement = Movement::Random;
+    c.movers = Movers::Anyone;
+    c.order = Order::Random;
+    let like = 1.0 - tolerance;
+    c.preference = FRange {
+        min: like,
+        max: like,
+    };
+}
+
+/// Singh, Vainchtein & Weiss (2009): an `n` × `n` torus, a checkerboard with
+/// a share `vacancy` removed, content with at least `t` like among the eight
+/// squares around (blanks counting against); the discontented move to a
+/// random square that suits.
+fn singh(c: &mut SchellingConfig, n: u32, vacancy: f64, t: u8) {
+    c.width = n;
+    c.height = n;
+    c.population = (f64::from(n * n) * (1.0 - vacancy)).round() as u32;
+    c.edges = Edges::Torus;
+    c.start = Start::DeletedCheckerboard;
+    c.movement = Movement::Random;
+    c.order = Order::Random;
+    let table = Demand {
+        min: vec![t; 9],
+        max: (0..=8).collect(),
+    };
+    c.red_demand = table.clone();
+    c.blue_demand = table;
+}
+
+/// Zhang (2004, JEBO): a 100 × 100 torus, everyone housed, eight neighbors;
+/// random pairs swap on their summed tent utility with β = 10.
+fn zhang(c: &mut SchellingConfig, start: Start) {
+    c.width = 100;
+    c.height = 100;
+    c.population = 10_000;
+    c.edges = Edges::Torus;
+    c.movement = Movement::Swap;
+    c.utility = Utility::Tent;
+    c.beta = 10.0;
+    c.start = start;
+}
+
 /// Schelling's 1971 figures, then Epstein & Axtell's animations VI-4 to VI-7.
 pub fn presets() -> Vec<ModelPreset> {
     vec![
+        preset(
+            "pv-flat",
+            "Pancs & Vriend: Schelling's preferences, best responses",
+            "Pancs & Vriend 2007",
+            "5 × 5 with edges, 10 of each and 5 empty; one at a time, anyone (content or not) moves to the empty square it likes best, ties at random; content with half or fewer unlike (flat). Pancs & Vriend: from 7.82 clusters at random to 2.10 after 100,000 periods, 91 % completely segregated. Measured on their cluster count (40 seeds, 5,000 steps: 100,000 turns): 2.12, 36 of 40 completely segregated; random boards average 7.68 (1,000 boards).",
+            |c| pancs_vriend(c, Utility::Flat),
+        ),
+        preset(
+            "pv-p50",
+            "Pancs & Vriend: liking a mix, up to half",
+            "Pancs & Vriend 2007",
+            "As pv-flat, but utility rises with the unlike share up to half, then drops (p50). Pancs & Vriend: 2.04 clusters, 98 % completely segregated. Measured (40 seeds): 2.02, 39 of 40.",
+            |c| pancs_vriend(c, Utility::P50),
+        ),
+        preset(
+            "pv-p100",
+            "Pancs & Vriend: liking half and half best",
+            "Pancs & Vriend 2007",
+            "As pv-flat, with utility peaked at half unlike, falling either side (p100). Pancs & Vriend: 4.99 clusters. Pancs & Vriend: 854 of 1,000 runs end in a strict equilibrium, where nobody wants to move. Measured (500 seeds): 4.69, from 2 to 10; 425 of 500 end with nobody moving (85 %).",
+            |c| pancs_vriend(c, Utility::P100),
+        ),
+        preset(
+            "pv-spiked",
+            "Pancs & Vriend: only half and half will do",
+            "Pancs & Vriend 2007",
+            "As pv-flat, with only exactly half unlike good (spiked). Measured (500 seeds): 6.99 clusters, near a random board's 7.8, against p100's 4.7 (500 seeds); Pancs & Vriend (footnote 23, not shown) call spiked \"very similar to the p100 function\".",
+            |c| pancs_vriend(c, Utility::Spiked),
+        ),
+        preset(
+            "gvn-frozen",
+            "Gauvin et al.: too little tolerance, and nobody can move",
+            "Gauvin, Vannimenus & Nadal 2009",
+            "50 × 50 with edges, 5 % empty; anyone moves to a random vacancy where at most 30 % of its neighbors are unlike. Gauvin et al. (Table 1): below a tolerance of 1/2 at 2–4 % vacant (2/5–1/2 at 6 %), a frozen state. Measured (20 seeds, 1,000 steps): nobody moves; 79 % discontent; s = 0.03.",
+            |c| gauvin(c, 0.05, 0.3),
+        ),
+        preset(
+            "gvn-segregated",
+            "Gauvin et al.: tolerating half, two clusters",
+            "Gauvin, Vannimenus & Nadal 2009",
+            "As gvn-frozen with at most half unlike (Schelling's demand). Gauvin et al.: the segregated phase, s near 1, \"up to a tolerance T as high as 3/4\". Measured (20 seeds, 1,000 steps): s = 0.98; 11 of 20 in two clusters, none in more than four.",
+            |c| gauvin(c, 0.05, 0.5),
+        ),
+        preset(
+            "gvn-mixed",
+            "Gauvin et al.: tolerating more, mixed",
+            "Gauvin, Vannimenus & Nadal 2009",
+            "As gvn-frozen with at most 80 % unlike. Gauvin et al.: above T about 3/4, the mixed phase. Measured (20 seeds, 1,000 steps): s = 0.06, about 290 clusters.",
+            |c| gauvin(c, 0.05, 0.8),
+        ),
+        preset(
+            "svw-small",
+            "Singh et al.: Schelling's small city",
+            "Singh, Vainchtein & Weiss 2009",
+            "8 × 8 torus, a checkerboard with a third removed, content with at least 3 of the 8 around alike (blanks count against); the discontented move to a random square that suits. Singh et al.: in a small city, most runs end in two clusters (counted, as they do, joined at sides or corners). Measured (20 seeds): all 20 end in two, everyone content.",
+            |c| singh(c, 8, 1.0 / 3.0, 3),
+        ),
+        preset(
+            "svw-large",
+            "Singh et al.: the same rule in a big city",
+            "Singh, Vainchtein & Weiss 2009",
+            "As svw-small on 100 × 100. Singh et al.: \"strictly a small city phenomenon\": 22 clusters at 24 % vacant, 55 at 33 %. Measured (20 seeds, at rest): 57 (44–67) at 33 %, 22 (12–35) at 24 %.",
+            |c| singh(c, 100, 1.0 / 3.0, 3),
+        ),
+        preset(
+            "svw-t4",
+            "Singh et al.: asking for 4 of 8 in a big city",
+            "Singh, Vainchtein & Weiss 2009",
+            "As svw-large with at least 4 of the 8 alike, 5 % vacant. Singh et al.: compact clusters, city-wide at low vacancy. Measured (20 seeds, at rest): 14 clusters (8–22), 70 % with no unlike neighbor.",
+            |c| {
+                singh(c, 100, 0.05, 4);
+            },
+        ),
+        preset(
+            "zhang-checkerboard",
+            "Zhang: everyone wants a mixed street, from a perfect mix",
+            "Zhang 2004 (JEBO)",
+            "100 × 100 torus, no empty homes, a checkerboard (everyone half and half); each step, random pairs from different neighborhoods trade homes with odds e^(β·gain), β = 10, on a tent utility best at half alike (Zhang's Table 4). Zhang: segregation emerges and persists. Measured (8 seeds): mixed pairs fall from 20,000 to 5,000 within 40 steps (400,000 draws) and stand near 2,000 at 1,000 steps.",
+            |c| zhang(c, Start::Checkerboard),
+        ),
+        preset(
+            "zhang-random",
+            "Zhang: everyone wants a mixed street, from a random start",
+            "Zhang 2004 (JEBO)",
+            "As zhang-checkerboard from a random start (exact halves). Zhang (Fig. 8): mixed pairs fall below 600 after about 40 million draws at β = 10. But 600 mixed pairs is the least a 100 × 100 torus split in half can have (two straight bands), so \"below 600\" cannot be literal; read as his scaled potential (0.075 per pair: 8,000 pairs), it is reached in about 100,000 draws (20 seeds), some 400 times sooner. Measured: near 2,000 mixed pairs at 10 million draws, near 1,450 at 50 million (4 seeds), rounded blobs rather than bands.",
+            |c| zhang(c, Start::Random),
+        ),
         preset(
             "s71-board",
             "Schelling's checkerboard",
@@ -1758,6 +2393,263 @@ mod tests {
         w.step();
         w.step();
         assert!(t.elapsed().as_secs_f64() < 2.0, "{:?}", t.elapsed());
+    }
+
+    #[test]
+    fn best_response_takes_the_best_square() {
+        // One row: R · B · _ · _ · R · _ · B, flat utility (content with half or less unlike).
+        // For the red at 0: staying and square 2 see only Blue (utility 0); squares 3 and 5 are
+        // content (1): a tie, broken at random.
+        let spots: std::collections::BTreeSet<usize> = (1..30)
+            .map(|seed| {
+                let mut w = SchellingWorld::new(
+                    SchellingConfig {
+                        width: 7,
+                        height: 1,
+                        population: 0,
+                        movement: Movement::Best,
+                        utility: Utility::Flat,
+                        ..SchellingConfig::default()
+                    },
+                    seed,
+                )
+                .unwrap();
+                put(&mut w, 0, 0, true, 0.5);
+                put(&mut w, 1, 0, false, 0.5);
+                put(&mut w, 4, 0, true, 0.5);
+                put(&mut w, 6, 0, false, 0.5);
+                w.vacate(0, true);
+                w.best(true, 0)
+            })
+            .collect();
+        assert_eq!(spots, [3, 5].into_iter().collect());
+    }
+
+    #[test]
+    fn anyone_moves_even_when_content() {
+        let lone = |movers| {
+            let mut w = SchellingWorld::new(
+                SchellingConfig {
+                    width: 5,
+                    height: 5,
+                    population: 0,
+                    movers,
+                    movement: Movement::Random,
+                    ..SchellingConfig::default()
+                },
+                3,
+            )
+            .unwrap();
+            let a = put(&mut w, 2, 2, true, 0.5);
+            assert!(w.is_satisfied(&agent(&w, a)), "no neighbors: content");
+            w.step();
+            at(&w, a)
+        };
+        assert_eq!(lone(Movers::Discontent), (2, 2));
+        assert_ne!(lone(Movers::Anyone), (2, 2));
+    }
+
+    #[test]
+    fn zhangs_summed_gain_is_his_potential_the_mixed_pairs_undone() {
+        // Zhang's §2.2: on Moore's eight with his tent, what two traders gain
+        // together is M/(2n) = 0.6/8 for each black–white pair their trade removes.
+        let mut w = SchellingWorld::new(
+            SchellingConfig {
+                width: 20,
+                height: 20,
+                population: 400,
+                edges: Edges::Torus,
+                movement: Movement::Swap,
+                utility: Utility::Tent,
+                ..SchellingConfig::default()
+            },
+            3,
+        )
+        .unwrap();
+        let mut rng = crate::rng::seeded(9);
+        let mut tried = 0;
+        while tried < 300 {
+            let (i, j) = (
+                rng.gen_range(0..400u32) as usize,
+                rng.gen_range(0..400u32) as usize,
+            );
+            let (a, b) = (w.grid[i].unwrap(), w.grid[j].unwrap());
+            if w.agents[&a].red == w.agents[&b].red || i == j || w.adj8[i].contains(&(j as u32)) {
+                continue;
+            }
+            let (gain, before) = (w.swap_gain(i, j), w.snapshot().mixed_pairs);
+            w.trade(i, j);
+            let removed = f64::from(before) - f64::from(w.snapshot().mixed_pairs);
+            assert!(
+                (gain - 0.075 * removed).abs() < 1e-9,
+                "gain {gain}, pairs removed {removed}"
+            );
+            tried += 1;
+        }
+    }
+
+    #[test]
+    fn swaps_follow_the_logit_on_summed_utility() {
+        // A 6 × 1 torus of R R B | R B B, eight... four-neighbor rows see left and right only.
+        let c = |beta| SchellingConfig {
+            width: 6,
+            height: 1,
+            population: 0,
+            neighborhood: Neighborhood::VonNeumann,
+            edges: Edges::Torus,
+            movement: Movement::Swap,
+            utility: Utility::Tent,
+            beta,
+            ..SchellingConfig::default()
+        };
+        let build = |beta| {
+            let mut w = SchellingWorld::new(c(beta), 1).unwrap();
+            for (x, red) in [
+                (0, true),
+                (1, true),
+                (2, false),
+                (3, true),
+                (4, false),
+                (5, false),
+            ] {
+                put(&mut w, x, 0, red, 0.5);
+            }
+            w
+        };
+        let w = build(0.0);
+        assert!((w.swap_chance(0, 3) - 0.5).abs() < 1e-12, "β = 0: a coin");
+        let hot = build(50.0);
+        // Red at 0 (one of two alike, 0.5) and Blue at 2 (none alike, 0) trade: Red at 2 has two
+        // alike (1.0), Blue at 0 one (0.5): a gain of 1.
+        assert!((hot.swap_gain(0, 2) - 1.0).abs() < 1e-12);
+        assert!(
+            hot.swap_chance(0, 2) > 0.999_999,
+            "β large: an improving swap all but surely"
+        );
+        assert!(hot.swap_chance(2, 0) > 0.999_999);
+        let mut worse = build(50.0);
+        worse.step();
+        assert!(
+            worse.stats.latest().unwrap().mixed_pairs <= w.snapshot().mixed_pairs,
+            "only improving swaps"
+        );
+    }
+
+    #[test]
+    fn checkerboard_starts_alternate_colors() {
+        let full = SchellingWorld::new(
+            SchellingConfig {
+                width: 6,
+                height: 6,
+                population: 36,
+                start: Start::Checkerboard,
+                movement: Movement::Swap,
+                edges: Edges::Torus,
+                ..SchellingConfig::default()
+            },
+            1,
+        )
+        .unwrap();
+        assert!(full
+            .agents()
+            .all(|a| a.red == (a.pos.x + a.pos.y).is_multiple_of(2)));
+        let holey = SchellingWorld::new(
+            SchellingConfig {
+                width: 10,
+                height: 10,
+                population: 80,
+                start: Start::DeletedCheckerboard,
+                ..SchellingConfig::default()
+            },
+            1,
+        )
+        .unwrap();
+        assert_eq!(holey.agents().filter(|a| a.red).count(), 40);
+        assert!(holey
+            .agents()
+            .all(|a| a.red == (a.pos.x + a.pos.y).is_multiple_of(2)));
+    }
+
+    #[test]
+    fn cluster_counts_and_mixed_pairs_on_a_hand_board() {
+        let mut w = empty71(5, 1, 1);
+        put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 1, 0, true, 0.5);
+        put(&mut w, 2, 0, false, 0.5);
+        put(&mut w, 4, 0, false, 0.5);
+        let s = w.snapshot();
+        assert_eq!((s.clusters, s.mixed_pairs), (3, 1));
+        assert!((s.seg_s - 0.75).abs() < 1e-12, "2 × (4 + 1 + 1) / 16");
+    }
+
+    #[test]
+    fn mixed_pairs_count_the_eight_squares_around_whatever_the_neighborhood() {
+        // Zhang measures his potential on the Moore neighborhood throughout.
+        let mut w = SchellingWorld::new(
+            SchellingConfig {
+                width: 2,
+                height: 2,
+                population: 0,
+                neighborhood: Neighborhood::VonNeumann,
+                ..SchellingConfig::default()
+            },
+            1,
+        )
+        .unwrap();
+        put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 1, 1, false, 0.5);
+        assert_eq!(w.snapshot().mixed_pairs, 1, "a diagonal pair");
+    }
+
+    #[test]
+    fn one_try_takes_a_random_vacancy_only_if_it_suits() {
+        // R · B ·: for a Red wanting half alike, square 1 (R and B around)
+        // suits and square 3 (B only) does not; one try draws either.
+        let mut w = empty71(4, 1, 1);
+        put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 2, 0, false, 0.5);
+        let (mut one, mut none) = (0, 0);
+        for _ in 0..1_000 {
+            match w.try_one(true, 0.5) {
+                Some(1) => one += 1,
+                None => none += 1,
+                other => panic!("took {other:?}"),
+            }
+        }
+        assert!(
+            (400..=600).contains(&one) && one + none == 1_000,
+            "{one} of 1,000"
+        );
+    }
+
+    #[test]
+    fn singhs_clusters_join_at_corners_too() {
+        // R at (0,0) and (1,1) touch at a corner, B at (2,0): three groups
+        // side by side, two counting corners.
+        let mut w = empty71(3, 3, 1);
+        put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 1, 1, true, 0.5);
+        put(&mut w, 2, 0, false, 0.5);
+        let s = w.snapshot();
+        assert_eq!((s.clusters, s.clusters8), (3, 2));
+    }
+
+    #[test]
+    fn pancs_and_vriends_clusters_join_through_uncontended_blanks() {
+        // R · R B B: the blank touches only Red, so the two Reds are one cluster;
+        // side by side they are two.
+        let mut w = empty71(5, 1, 1);
+        put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 2, 0, true, 0.5);
+        put(&mut w, 3, 0, false, 0.5);
+        put(&mut w, 4, 0, false, 0.5);
+        let s = w.snapshot();
+        assert_eq!((s.clusters, s.pv_clusters), (3, 2));
+        // R · B: the blank is contended; nothing joins.
+        let mut v = empty71(3, 1, 1);
+        put(&mut v, 0, 0, true, 0.5);
+        put(&mut v, 2, 0, false, 0.5);
+        assert_eq!(v.snapshot().pv_clusters, 2);
     }
 
     #[test]

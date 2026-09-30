@@ -232,8 +232,8 @@ leaves when it reaches it, and a newcomer of random color takes a random site wh
   three but two of four).
 
 Agents are drawn by **Color**, **Satisfaction** (the unsatisfied in yellow) or **Preference**;
-the charts are Segregation, Like neighbors by color, No opposite neighbor, Unsatisfied, Moves and
-Red share; Inspect shows an agent's color, preference, alike neighbors and residence. Sweeps:
+the charts are Segregation, Like neighbors by color, No opposite neighbor, Unsatisfied, Moves,
+Red share, Clusters (each paper's count), Segregation coefficient and Mixed pairs; Inspect shows an agent's color, preference, alike neighbors and residence. Sweeps:
 `schelling-tipping` (the book's "how little racism is enough to tip a society", on VI-4: with four
 neighbors only the shares 1/4, 1/3, 1/2 and 2/3 can matter, so segregation rises in steps: about
 0.50, 0.63, 0.73, 0.83 and 0.93), and on Schelling's board `s71-demand`, `s71-vacancy`
@@ -304,6 +304,46 @@ With his exact schedules the model is deterministic, and everything he states ho
 
 Sweeps: `tipping-start`, `tipping-entry`, `tipping-intercept`, `tipping-speeds` (Blue moving up to
 five times as fast still loses Fig. 18: here the numbers decide) and `tipping-limit`.
+
+### Variations on Schelling (milestone 32)
+
+Later researchers' versions of Schelling's board, each under its authors' own rules and measured
+with its own cluster count, as switches on `schelling` and `line`: **Who may move** (the
+discontented, or anyone: Pancs & Vriend's "no inertia"), **Where they go** adds **best** (the empty
+square of highest utility, staying included, ties at random) and **swap** (Zhang: two occupied
+squares, not neighbors, trade places with logit odds e^(β·gain) on their summed utility), a
+**Utility** (Pancs & Vriend's flat, p50, p100 and spiked over the unlike share; Zhang's tent,
+best at half alike) with **β**, a **Start** (random, checkerboard, or Singh et al.'s checkerboard
+with the vacancies removed), and on the line a **ring**. New series: `clusters` (side by side),
+`pv_clusters` (Pancs & Vriend's, joined through blanks that touch one color only), `clusters8`
+(Singh et al.'s, joined at sides or corners), `seg_s` (Gauvin et al.'s s) and `mixed_pairs`
+(Zhang's ρ, always on the eight around). The survey (`variations.*`, 20 seeds, rules from each
+paper's numbers):
+
+- Pancs & Vriend 2007 (5 × 5, 10 of each, 100,000 turns): random boards average 7.68 clusters
+  (theirs 7.82); flat 2.15, 17 of 20 completely segregated (2.10, 91 %); p50 2.05, 19 of 20 (2.04,
+  98 %); p100 4.69 over 500 seeds (4.99), 85 % ending in a strict equilibrium (their 854 of 1,000).
+  One of their statements does not reproduce: footnote 23 calls spiked preferences "very similar"
+  to p100, but spiked boards end at 6.99 clusters, near a random board's 7.8 (500 seeds). On the ring of
+  20, even those liking half and half best end in two groups, 20 of 20 (`pv-ring`).
+- Gauvin, Vannimenus & Nadal 2009 (50 × 50, 5 % vacant, anyone moving to a random acceptable
+  vacancy): frozen at a tolerance of 0.35 (nobody can move), s = 1.00 at ½, still 1.00 at 0.7 and
+  0.05 at 0.8: their "segregated phase … up to a tolerance T as high as 3/4". The sweep `gvn-phase`
+  draws their diagram at 5, 20 and 40 % vacant; across vacancies our frozen line sits where their
+  Table 1 has it, within one step of T (2/7 at 20 %, where they have 1/3).
+- Singh, Vainchtein & Weiss 2009 (a torus, 3 of 8 alike with blanks counting against, a deleted
+  checkerboard): two clusters on 8 × 8 in 20 of 20, 20.5 on 100 × 100 at 24 % vacant and 57.5 at
+  33 % (their 22 and 55): "strictly a small city phenomenon" holds. Sweep `svw-city`.
+- Zhang 2004 (JEBO; 100 × 100 torus, no vacancies, everyone liking half and half best): from a
+  checkerboard, mixed pairs fall from 20,000 to about 2,000, and stay there. Zhang's own identity
+  holds exactly: two traders' summed gain is 0.075 per mixed pair removed, so his model is a
+  conserved Ising model. But his waiting times do not reproduce. Fig. 8's cutoff, 600 mixed pairs, is
+  the least a 100 × 100 torus split in half can have (two perfectly straight bands), so "below 600"
+  cannot be literal; runs round into blobs near 2,000 by 10 million draws. Read as his scaled
+  potential (0.075 per pair, so 8,000 pairs), all 20 get there in about 100,000 draws, some 400
+  times sooner than his 40 million. Below β = 2 nothing sorts, as he says, but the sharp change comes between β = 4 and 8,
+  not near 2. More neighbors sort faster (16, 10 and 8.5 steps with four, eight and twelve), but
+  eight take 0.62 of four's time, not "less than half". Sweeps `zhang-beta`, `zhang-neighborhood`.
 
 ### Ring World (animations VI-8 and VI-9)
 

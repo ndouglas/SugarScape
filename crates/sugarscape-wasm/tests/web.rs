@@ -272,6 +272,10 @@ fn builtins_and_series_names_are_listed() {
             "tipping-intercept",
             "tipping-speeds",
             "tipping-limit",
+            "gvn-phase",
+            "svw-city",
+            "zhang-beta",
+            "zhang-neighborhood",
             "lhv-calibration",
             "lhv-quirks",
             "cv-ratio-rules",
@@ -1180,6 +1184,22 @@ fn punishment_sims_match_the_native_golden_entries() {
     let mut sim = Sim::new(tanh, 1, JsValue::NULL).unwrap();
     sim.step(200);
     assert_eq!(sim.fingerprint(), "0x41e7fa5fab5ba690");
+}
+
+#[wasm_bindgen_test]
+fn variation_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN and BIG_GOLDEN.
+    for (id, ticks, fp) in [
+        ("pv-flat", 200, "0x9ec9dad297a2f81d"),
+        ("pv-ring", 200, "0x14ac53042eb625d9"),
+        ("svw-small", 200, "0x17c8cd55b1831276"),
+        ("gvn-segregated", 20, "0xdee4748f1bfb310b"),
+        ("zhang-checkerboard", 20, "0xe8aee08d720ff908"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        sim.step(ticks);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
 }
 
 #[wasm_bindgen_test]

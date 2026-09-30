@@ -267,6 +267,10 @@ describe('sweeps over other models', () => {
       exact: false,
       red_demand: { min: [], max: [] },
       blue_demand: { min: [], max: [] },
+      movers: 'discontent',
+      utility: 'flat',
+      beta: 10,
+      start: 'random',
     };
     expect(numericPaths(schelling)).toEqual([
       'width',
@@ -280,6 +284,7 @@ describe('sweeps over other models', () => {
       'radius',
       'red_share',
       'exact',
+      'beta',
     ]);
     const { sweep } = formToSweep(defaultForm('schelling'), { config: schelling });
     expect(sweep!.base).toEqual({ config: schelling });
