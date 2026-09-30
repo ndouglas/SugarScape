@@ -11,7 +11,7 @@ use serde::Deserialize;
 use crate::config::{
     default_groups, Caching, Central, CombatRule, Config, CreditRule, CultureKind, CultureRule,
     Diffusion, DiseaseRule, FieldError, Foresight, Good, Growback, Lifespan, Map, Placement,
-    Pollutant, Pollution, PriceRule, ScheduledChange, Seasons, SexRule, Toggle, TradeRule,
+    Pollutant, Pollution, PriceRule, ScheduledChange, Seasons, SexRule, Theft, Toggle, TradeRule,
     Transform, URange, SPICE_COLOR, SUGAR_COLOR,
 };
 
@@ -215,6 +215,7 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         goap: crate::config::Goap::default(),
         mvt: crate::config::Mvt::default(),
         caching: Caching::default(),
+        theft: Theft::default(),
         central: Central { enabled: false },
         lab: None,
         schedule,
