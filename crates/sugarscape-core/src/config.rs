@@ -1812,6 +1812,13 @@ impl Config {
             "caching.bury_cost",
             "must be at least 0",
         );
+        e.check(
+            self.caching.bury_cost <= 0.0
+                || self.caching.bury_cost.is_nan()
+                || (self.lab.is_none() && !self.central.enabled),
+            "caching.bury_cost",
+            "a bury cost applies only in the field",
+        );
         let theft_field = if self.theft.find > 0.0 {
             "theft.find"
         } else {
@@ -4451,6 +4458,26 @@ mod tests {
         assert!(e
             .iter()
             .any(|e| e.field == "theft.find" && e.message == "theft can't run in a lab"));
+        // So do they a bury cost.
+        let field_only = "a bury cost applies only in the field";
+        c.theft.find = 0.0;
+        assert!(c.validate().is_ok());
+        c.caching.bury_cost = 0.5;
+        let e = c.validate().unwrap_err();
+        assert_eq!(e.len(), 1, "{e:?}");
+        assert_eq!(
+            (e[0].field.as_str(), e[0].message.as_str()),
+            ("caching.bury_cost", field_only)
+        );
+        let mut c = crate::presets::by_id("central-near").unwrap().config;
+        assert!(c.validate().is_ok());
+        c.caching.bury_cost = 0.5;
+        let e = c.validate().unwrap_err();
+        assert_eq!(e.len(), 1, "{e:?}");
+        assert_eq!(
+            (e[0].field.as_str(), e[0].message.as_str()),
+            ("caching.bury_cost", field_only)
+        );
     }
 
     #[test]

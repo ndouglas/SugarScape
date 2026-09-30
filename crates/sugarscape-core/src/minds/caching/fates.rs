@@ -22,9 +22,13 @@
 //!   record opens, closes or splits after that, so records still open then
 //!   read as buried whatever happened to them. The survey checks the flag
 //!   and doesn't read a full log.
-//! - **Cost.** Nothing is logged unless something is buried: with caching
-//!   off the log and its index stay empty and never allocate. The log is
-//!   never hashed and draws nothing.
+//! - **Theft only.** Records open only while `theft.is_on()` (`find` or
+//!   `cheaters` above 0): every other world, Minds 5's caching worlds
+//!   included, leaves the log and its index empty and unallocated. Since
+//!   `find` is live, a burial made while theft was off has no record, and
+//!   its dig, pilfer or loss closes nothing. Records already open keep
+//!   closing if theft is turned off. The log is never hashed and draws
+//!   nothing.
 
 use std::collections::{BTreeMap, VecDeque};
 
@@ -69,7 +73,7 @@ fn freeze(world: &mut World) {
 
 /// Opens a record for `amount` just buried by `owner` at `site`.
 pub(crate) fn open(world: &mut World, owner: AgentId, site: u32, amount: f64) {
-    if world.cache_log_full {
+    if world.cache_log_full || !world.config.theft.is_on() {
         return;
     }
     if world.cache_log.len() >= LOG_CAP {
@@ -182,6 +186,13 @@ mod tests {
     use crate::minds::caching::{bury, dig};
     use crate::testkit::*;
 
+    /// A blank world with theft on (so the log records).
+    fn theft_world() -> World {
+        let mut w = blank_world(11, 11);
+        w.config.theft.find = 0.5;
+        w
+    }
+
     fn hoarder(w: &mut World, x: u32, y: u32, held: f64) -> AgentId {
         let id = spawn(w, x, y);
         let a = w.agent_mut(id).unwrap();
@@ -206,7 +217,7 @@ mod tests {
 
     #[test]
     fn a_burial_opens_one_record_and_digs_close_them_oldest_first_splitting() {
-        let mut w = blank_world(11, 11);
+        let mut w = theft_world();
         let id = hoarder(&mut w, 5, 5, 20.0);
         let here = site(&w, 5, 5);
         w.tick = 2;
@@ -250,7 +261,7 @@ mod tests {
 
     #[test]
     fn a_pilfer_closes_records_as_pilfered_by_the_thief() {
-        let mut w = blank_world(11, 11);
+        let mut w = theft_world();
         let id = hoarder(&mut w, 5, 5, 20.0);
         let thief = hoarder(&mut w, 6, 6, 0.0);
         let here = site(&w, 5, 5);
@@ -273,7 +284,7 @@ mod tests {
 
     #[test]
     fn a_dead_owners_open_records_are_lost_and_every_record_has_one_fate() {
-        let mut w = blank_world(11, 11);
+        let mut w = theft_world();
         let id = hoarder(&mut w, 5, 5, 30.0);
         let other = hoarder(&mut w, 8, 8, 30.0);
         let thief = hoarder(&mut w, 2, 2, 0.0);
@@ -321,7 +332,7 @@ mod tests {
 
     #[test]
     fn a_full_log_freezes_and_sets_the_flag() {
-        let mut w = blank_world(11, 11);
+        let mut w = theft_world();
         let id = hoarder(&mut w, 5, 5, 20.0);
         let here = site(&w, 5, 5);
         bury(&mut w, id, 1.0);
@@ -337,8 +348,38 @@ mod tests {
     }
 
     #[test]
+    fn a_minds_5_caching_world_logs_nothing() {
+        let mut c = blank_config(12, 12);
+        c.caching.rule = crate::config::CachingRule::Even;
+        c.caching.capacity = 20;
+        c.movement = crate::config::Movement {
+            mode: crate::config::MoveMode::Walk,
+            speed: 1,
+        };
+        let mut w = World::new(c, 3).unwrap();
+        for y in 0..12 {
+            for x in 0..12 {
+                crate::testkit::set_sugar(&mut w, x, y, 4.0);
+            }
+        }
+        let id = hoarder(&mut w, 5, 5, 30.0);
+        let mut buried = 0.0;
+        for _ in 0..20 {
+            w.events = crate::world::TickEvents::default();
+            crate::rules::agent_turn(&mut w, id);
+            buried += w.events.buried;
+            w.tick += 1;
+        }
+        assert!(buried > 0.0, "it buried");
+        w.kill(id, crate::world::DeathCause::OldAge);
+        assert_eq!(w.cache_log.capacity(), 0);
+        assert!(w.cache_open.is_empty());
+        assert!(!w.cache_log_full);
+    }
+
+    #[test]
     fn nothing_buried_nothing_logged() {
-        let mut w = blank_world(11, 11);
+        let mut w = theft_world();
         let id = hoarder(&mut w, 5, 5, 0.0);
         bury(&mut w, id, 3.0);
         w.kill(id, crate::world::DeathCause::OldAge);
