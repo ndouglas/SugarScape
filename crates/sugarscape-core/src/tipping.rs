@@ -275,6 +275,8 @@ pub struct TippingInspection {
     pub red_content: bool,
     pub blue_content: bool,
     pub now: bool,
+    /// No one person to follow on the plane (the page's shared Inspect reads `agent`).
+    pub agent: Option<u64>,
 }
 
 #[derive(Clone)]
@@ -507,6 +509,7 @@ impl TippingWorld {
             red_content: self.curve(1, r, b),
             blue_content: self.curve(0, b, r),
             now: self.inside() == (r, b),
+            agent: None,
         })
     }
 }
