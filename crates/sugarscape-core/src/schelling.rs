@@ -1877,7 +1877,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "pv-p100",
             "Pancs & Vriend: liking half and half best",
             "Pancs & Vriend 2007",
-            "As pv-flat, with utility peaked at half unlike, falling either side (p100). Pancs & Vriend: 4.99 clusters. Measured (40 seeds): 4.83, one of 40 completely segregated.",
+            "As pv-flat, with utility peaked at half unlike, falling either side (p100). Pancs & Vriend: 4.99 clusters. Measured (200 seeds): 4.68, from 2 to 10 (4.25 over seeds 1–20: the board never settles).",
             |c| pancs_vriend(c, Utility::P100),
         ),
         preset(
