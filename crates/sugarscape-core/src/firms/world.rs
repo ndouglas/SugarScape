@@ -1185,8 +1185,16 @@ impl Model for FirmsWorld {
         if !changes.is_empty() {
             return Err(changes);
         }
-        // Base pay follows its settings at once.
-        if (next.base_pay, next.base_share) != (self.config.base_pay, self.config.base_share) {
+        // Base pay follows its settings at once — and everything its
+        // computation reads: the technology, the search that picks a
+        // singleton's best effort, and pay itself (whether it's in use).
+        let recompute_base = (next.base_pay, next.base_share)
+            != (self.config.base_pay, self.config.base_share)
+            || (next.a, next.b, next.beta) != (self.config.a, self.config.b, self.config.beta)
+            || (next.effort_search, next.grid_steps)
+                != (self.config.effort_search, self.config.grid_steps)
+            || next.pay != self.config.pay;
+        if recompute_base {
             let tech = Tech {
                 a: next.a,
                 b: next.b,
@@ -1595,5 +1603,31 @@ mod tests {
         assert!(w.agents.iter().all(|a| a.base > 0.0));
         next.agents = 300;
         assert!(Model::set_config(&mut w, ModelConfig::Firms(next)).is_err());
+    }
+
+    #[test]
+    fn base_pay_follows_live_changes_to_technology_and_effort_search() {
+        // base pay depends on a/b/beta/effort_search/grid_steps/pay too, not
+        // only on base_pay/base_share: a live change to any of those must
+        // recompute it.
+        let edits: [fn(&mut FirmsConfig); 4] = [
+            |c: &mut FirmsConfig| c.b = 2.5,
+            |c: &mut FirmsConfig| c.a = 0.3,
+            |c: &mut FirmsConfig| c.beta = 1.6,
+            |c: &mut FirmsConfig| {
+                c.effort_search = EffortSearch::Grid;
+                c.grid_steps = 50;
+            },
+        ];
+        for edit in edits {
+            let mut w = world(|c| c.pay = Pay::Base);
+            let mut next = w.config.clone();
+            edit(&mut next);
+            Model::set_config(&mut w, ModelConfig::Firms(next.clone())).unwrap();
+            let fresh = FirmsWorld::new(next, 1).unwrap();
+            let got: Vec<f64> = w.agents.iter().map(|a| a.base).collect();
+            let want: Vec<f64> = fresh.agents.iter().map(|a| a.base).collect();
+            assert_eq!(got, want, "base pay stale after a live edit");
+        }
     }
 }
