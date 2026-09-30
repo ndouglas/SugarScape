@@ -95,6 +95,8 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         lab_allocation: None,
         caching_rule: world.config.caching.rule,
         cheater: false,
+        stolen_by_me: 0.0,
+        stolen_from_me: 0.0,
         home: None,
         load_trip: 0.0,
         delivery_rate: 0.0,

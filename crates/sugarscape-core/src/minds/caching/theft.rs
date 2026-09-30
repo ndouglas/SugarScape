@@ -194,10 +194,14 @@ pub(crate) fn pilfer(
         return 0.0;
     }
     let emptied = take >= *cache;
+    a.stolen_from_me += take;
     if emptied {
         a.caches.remove(&site);
     } else {
         *cache -= take;
+    }
+    if let Some(t) = world.agent_mut(thief) {
+        t.stolen_by_me += take;
     }
     let e = &mut world.events;
     e.pilfered += take;

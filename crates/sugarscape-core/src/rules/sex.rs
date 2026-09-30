@@ -121,6 +121,8 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         caching_rule: a.caching_rule,
         // Minds 6: and cheats if that parent does.
         cheater: a.cheater,
+        stolen_by_me: 0.0,
+        stolen_from_me: 0.0,
         home: None,
         load_trip: 0.0,
         delivery_rate: 0.0,

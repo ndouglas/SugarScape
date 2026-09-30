@@ -1444,6 +1444,53 @@ fn inspect_reports_a_caching_agents_fields() {
 }
 
 #[wasm_bindgen_test]
+fn theft_winter_half_matches_native_golden() {
+    let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0xd0ee29237c28952f");
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_a_thiefs_fields() {
+    let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+
+    let (width, height) = (sim.width(), sim.height());
+    let (mut cheaters, mut others, mut by, mut from) = (0, 0, 0.0, 0.0);
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let theft = agent
+                .get("theft")
+                .and_then(|t| t.as_object())
+                .expect("theft is on for every agent in this preset");
+            if theft.get("cheater").and_then(|c| c.as_bool()).unwrap() {
+                cheaters += 1;
+            } else {
+                others += 1;
+            }
+            by += theft.get("stolen_by_me").and_then(|v| v.as_f64()).unwrap();
+            from += theft
+                .get("stolen_from_me")
+                .and_then(|v| v.as_f64())
+                .unwrap();
+            assert!(theft.get("fed").and_then(|v| v.as_f64()).unwrap() >= 0.0);
+        }
+    }
+    assert!(cheaters > 0 && others > 0, "half are cheaters");
+    assert!(by > 0.0, "some sugar was pilfered by 200");
+    // Every take is one thief's gain and one owner's loss (an owner's own
+    // find is a dig, not counted), and the living are a subset of all who
+    // ever took or lost, so the two sums need not match; each is positive.
+    assert!(from > 0.0);
+}
+
+#[wasm_bindgen_test]
 fn inspect_reports_a_mixed_labs_agents_own_rule() {
     // caching.mixed deals rules round-robin by founder id (Task 9): with 8
     // agents, all four rules (none, even, compensate, plan) should show up.

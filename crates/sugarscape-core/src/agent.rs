@@ -286,6 +286,13 @@ pub struct Agent {
     /// dealt by id when `theft.cheaters` > 0 (`Theft::founder_cheats`);
     /// children take the acting parent's. Never hashed, like `caching_rule`.
     pub cheater: bool,
+    /// Minds 6: running total of sugar this agent has pilfered from others'
+    /// caches (the whole take, under either loot rule). For Inspect only:
+    /// not hashed, never draws.
+    pub stolen_by_me: f64,
+    /// Minds 6: running total of sugar taken from this agent's caches by
+    /// thieves. For Inspect only: not hashed, never draws.
+    pub stolen_from_me: f64,
     /// Minds 5, central-place foraging (`central.enabled`): the site the
     /// agent was placed or born on, where its larder (its cache there) is
     /// and where it delivers its loads; set by `World::insert_agent`, `None`
@@ -360,6 +367,8 @@ impl Agent {
             lab_allocation: None,
             caching_rule: config.caching.rule,
             cheater: false,
+            stolen_by_me: 0.0,
+            stolen_from_me: 0.0,
             home: None,
             load_trip: 0.0,
             delivery_rate: 0.0,
