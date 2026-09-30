@@ -289,6 +289,9 @@ these amendments govern where they differ.
    agent is already fed would throw food away. **Switch for the literal reading:**
    `hoard.early_bout1_eats = true` — on days 2–5 (day 1 has no stores), bout 1 applies the bout-1 rule as
    printed: an agent with stores eats one (larder first), and a larder eater defends with probability 1.
+   An agent with no stores gets the printed flag: it is hungry (so it doesn't defend) until its first find
+   that day, which it eats. Nobody starves on days 1–5 (item 7), so an agent that finds nothing is simply
+   hungry for the rest of that day. (Task 4 fixed this: Task 3 had left storeless agents satiated.)
 
 ### 1. Order within a bout
 
@@ -489,7 +492,10 @@ drawn. Reason: "a meal each day" is judged when the day ends.
   use the same segregation variance, which the paper lists alongside the averages. "Logistic distribution"
   is read as logit-normal, and the center is placed at logit(0.15). Its arithmetic mean comes out near 0.17,
   within "about 0.15". The realized founder mean is reported.
-- **The clamp.** Values are clamped to (ε, 1 − ε), with ε = 1e−6, before taking the logit (Task 4).
+- **The clamp.** Values are clamped to (ε, 1 − ε), with ε = 1e−6, before taking the logit (Task 4). It
+  applies to every logit taken in breeding: each parent's trait and every member's trait in the mean X̄.
+  The stored trait itself isn't clamped. A trait of exactly 0 or 1 (set by hand, or an inverse logit that
+  rounds) still breeds a finite child (item 13, Review Focus 3).
 
 ### 9. Traits
 
@@ -596,7 +602,7 @@ The start-of-day ratio and the instantaneous rate may be logged as unjudged diag
 
 Reason: the caption's "by the last 10 generations" names the window, and the text's 0.95 names the level.
 **Possible switch:** judge only generation 60. A run whose population dies out is recorded as extinct, with
-the generation it happened (Task 4 decides what "dies out" does). It isn't counted as a takeover.
+the generation it happened (item 13: the run ends). It isn't counted as a takeover.
 
 ### 12. Default apparencies
 
@@ -609,6 +615,53 @@ combinations are silent.
 it sits at the reported 50 % point, and app_lard is mid-range. This replaces the table's placeholder
 app_scat of 0.5 (ratio 0.25). The survey's ratio grid spans app_lard over {1, 2, 3}, so the threshold is
 tested at more than one absolute apparency.
+
+### 13. Generations, the edge cases, and the statistics (Task 4)
+
+These are stated choices. The paper is silent on all of them.
+
+- **When breeding happens.** A season ends after its last bout. Its per-agent records (traits, stores left,
+  death, and the item-10 loss record) and its summary are kept then, in the world's list of seasons, before
+  anything is reset. The next bout, if the run goes on, first breeds the n offspring and then runs bout 1 of
+  day 1. So a finished season is visible for one tick, and each generation takes exactly `days × bouts`
+  ticks (2 000 at the defaults). Breeding draws, per offspring in index order: one uniform for the mother,
+  one for the father, then a standard normal each for logit L, logit D and forage (the founders' order).
+- **Every agent dies (Review Focus 1).** The season ends at the end of the bout in which its last agent
+  dies. Its record is kept, and the run ends as extinct in that generation. Nothing is bred, and the run
+  doesn't restart. Reason: there are no parents to draw, and restarting from earlier traits would be a model
+  the paper doesn't describe. An extinct run is never a takeover (item 11).
+- **Every survivor has 0 stores left (Review Focus 2).** Parents are then drawn uniformly among the
+  survivors, still independently and with replacement. If any survivor holds anything, the draw is
+  proportional, so a survivor with 0 stores is never a parent. The dead are never parents, whatever they
+  hold. Reason: survival is the only fitness left to select on, and it's the simplest rule that doesn't
+  divide by zero.
+- **Traits at 0 or 1 (Review Focus 3).** The clamp of item 8, ε = 1e−6.
+- **Measurements, per generation.** These are kept in each season's record:
+  - mean L and mean D over all n agents born into it;
+  - survivors, starved and preyed upon;
+  - the larder share of the survivors' stores;
+  - the per-agent larder and scatter loss rates, and the mean over agents with a rate;
+  - the pooled rates (Σ lost ÷ (Σ bout-start stock ÷ bouts) over all its agents);
+  - agents with losses but no rate;
+  - the minimum larder rate over agents with a rate and over agents at the exposure floor (mean larder stock
+    ≥ 1 at bout starts while alive), and the number at the floor.
+- **Takeover (item 11)** is computed once the run is finished. The window is the last 10 completed
+  generations: 51–60 at the default of 60, and all of them if fewer than 10 ran. The fate is extinct,
+  takeover, stayed low or intermediate. The rise generation is reported whatever the fate.
+- **Statistics are one snapshot per bout,** tick 0 included. They are not per generation. Reason: a
+  keyframe restore cuts the statistics history to (tick + 1) entries, so the history must hold exactly one
+  entry per tick, as in ZI and punishment. Each snapshot carries:
+  - the current generation's running values: generation, mean L, mean D, living agents, the living agents'
+    larder share, and the pooled larder and scatter rates so far;
+  - the takeover flag, which is undefined (NaN) until the run is finished and then 1 or 0.
+
+  The snapshot at a season's last tick is that season's end, because breeding happens on the next tick.
+  The per-generation measurements themselves live in the world's season list, which a keyframe carries
+  with the world.
+- **Changing `generations` live.** The run ends at the end of the season in which the current generation
+  is at least `generations`. So lowering it below the current generation, or to it, ends the run at the end
+  of the current season. The window is then the last 10 seasons actually run. Raising it on a finished,
+  non-extinct run lets it go on breeding.
 
 ### New fields from these choices
 

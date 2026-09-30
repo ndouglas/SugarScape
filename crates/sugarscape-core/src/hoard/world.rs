@@ -1,11 +1,10 @@
-//! The hoarding world: one season of Vander Wall and Jenkins's (2003) model,
+//! The hoarding world: Vander Wall and Jenkins's (2003) genetic algorithm,
 //! exactly as the spec's amendments fix it
 //! (docs/superpowers/specs/2026-09-30-minds-7-hoarding-evolution-design.md,
 //! "Amendments (implementation)"). One tick is one foraging bout: 20 bouts a
-//! day, 100 days a season. The season stops at its end; breeding the next
-//! generation is Task 4, and the switches `owner_recovery` and `cheaters`
-//! are Task 5 (read, but their defaults, free recovery and no cheaters, are
-//! what runs here).
+//! day, 100 days a season, one season a generation, `generations` seasons a
+//! run. The switches `owner_recovery` and `cheaters` are Task 5 (read, but
+//! their defaults, free recovery and no cheaters, are what runs here).
 //!
 //! **A day** (amendments "Methods as read", items 2, 5 and 7). At bout 1 the
 //! day's production is added to the public pool (days 1–`food_days`). On
@@ -19,11 +18,26 @@
 //!    2–5 under `early_bout1_eats`), agents in index order: an agent with
 //!    stores eats one, larder first; a larder eater defends this bout with
 //!    probability 1, a scatter eater with probability 0 (no draw either way);
+//!    under `early_bout1_eats` an agent without stores on days 2–5 is flagged
+//!    hungry, so its first find that day is eaten (nobody starves then);
 //! 2. a defense draw for every other living, satiated agent, in index order;
 //! 3. a predation draw for every living agent, in index order;
 //! 4. a fresh shuffle of the living agents that aren't defending; each takes
 //!    one foraging turn: a raid continuation if it took a larder item last
 //!    bout (item 4), otherwise (or if that fails) a search (item 5).
+//!
+//! **A generation** (items 8, 9 and 13). A season ends after its last bout,
+//! or at the end of the bout in which its last agent dies. Its per-agent
+//! records and measurements are kept then, in `seasons`, before anything is
+//! reset. The next bout, if the run goes on, first breeds `n` offspring:
+//! mother and father drawn independently, with replacement, in proportion to
+//! the survivors' leftover stores (uniformly among the survivors if they hold
+//! none); L and D inherited on the logit scale, forage drawn fresh. The new
+//! generation starts with empty stores and an empty public pool. The run
+//! ends when the population dies out (it is recorded as extinct) or when the
+//! season of generation `generations` (read live) is over; lowering
+//! `generations` below the current generation ends the run at the end of the
+//! current season.
 //!
 //! **Draw order** (one seeded RNG): founders draw, per agent in index order,
 //! logit L, logit D and forage efficiency (each a standard normal). Each
@@ -31,7 +45,11 @@
 //! uniform per living agent for predation, the shuffle, and within each
 //! turn: a search draws one uniform for detection (always, even with no food
 //! available) and, on a find, one uniform for the item; a stored item draws
-//! one uniform against L. Eating draws nothing.
+//! one uniform against L. Eating draws nothing. Breeding draws, per offspring
+//! in index order, one uniform for the mother, one for the father, then a
+//! standard normal each for logit L, logit D and forage.
+//!
+//! **Statistics** are one snapshot per bout, and tick 0 (item 13).
 
 use std::fmt::Write;
 
@@ -176,8 +194,71 @@ pub struct SeasonSummary {
     /// start (counted, not dropped silently; item 10).
     pub larder_unrated_losses: u32,
     pub scatter_unrated_losses: u32,
+    /// The pooled rates: Σ lost ÷ (Σ bout-start stock ÷ bouts a day) over
+    /// all agents, or `None` when none held any.
+    pub pooled_larder_rate: Option<f64>,
+    pub pooled_scatter_rate: Option<f64>,
+    /// Claim 4's exposure floor (item 10): agents whose mean larder stock at
+    /// bout starts while alive is at least `EXPOSURE_FLOOR`, and the minimum
+    /// larder rate among them and among every agent with a rate.
+    pub larder_exposed: u32,
+    pub min_exposed_larder_rate: Option<f64>,
+    pub min_larder_rate: Option<f64>,
+    /// Means over the agents born into the generation.
     pub mean_l: f64,
     pub mean_d: f64,
+}
+
+/// Claim 4's exposure floor: a mean larder stock of at least 1 item at bout
+/// starts while alive (amendments item 10, fixed before any run).
+pub const EXPOSURE_FLOOR: f64 = 1.0;
+
+/// Traits are clamped to (ε, 1 − ε) before the logit (item 8; Review Focus 3).
+pub const EPSILON: f64 = 1e-6;
+
+/// Item 11's thresholds and window.
+pub const TAKEOVER_L: f64 = 0.95;
+pub const LOW_L: f64 = 0.2;
+pub const WINDOW: usize = 10;
+
+/// One finished season, kept before breeding resets the agents.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct Season {
+    /// The generation (1-based).
+    pub generation: u32,
+    pub summary: SeasonSummary,
+    /// Every agent born into it, as the season left them: traits, stores
+    /// left, death and loss records.
+    pub agents: Vec<Agent>,
+}
+
+/// How a finished run ended (item 11).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Fate {
+    /// Mean L above 0.95, averaged over the window.
+    Takeover,
+    /// Mean L below 0.2 in every generation of the window.
+    StayedLow,
+    /// Neither.
+    Intermediate,
+    /// Every agent died; never a takeover.
+    Extinct,
+}
+
+/// A finished run's outcome (item 11). The window is the last `WINDOW`
+/// completed generations (51–60 at the default 60).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct Outcome {
+    pub fate: Fate,
+    /// The first and last generation of the window.
+    pub window: (u32, u32),
+    /// Mean L averaged over the window.
+    pub window_mean_l: f64,
+    /// The first generation whose mean L is above 0.95.
+    pub rise: Option<u32>,
+    /// The generation in which the population died out.
+    pub extinct: Option<u32>,
 }
 
 /// One entry of the food a searcher sees (amendments item 5).
@@ -211,6 +292,56 @@ pub struct HoardWorld {
     removed: u64,
     /// −ln(`search_miss`) ÷ (`bouts` × `search_items`^1.5).
     calibration: f64,
+    /// Every finished season, in order.
+    seasons: Vec<Season>,
+    /// The generation in which every agent died.
+    extinct: Option<u32>,
+}
+
+/// A newborn agent: no stores, alive, satiated.
+fn newborn(l: f64, d: f64, forage: f64) -> Agent {
+    Agent {
+        l,
+        d,
+        forage,
+        larder: 0,
+        scatter: 0,
+        alive: true,
+        fed: true,
+        defending: false,
+        raid: None,
+        death: None,
+        record: Record::default(),
+    }
+}
+
+/// The logit of a trait clamped to (ε, 1 − ε).
+fn clamped_logit(p: f64) -> f64 {
+    logit(p.clamp(EPSILON, 1.0 - EPSILON))
+}
+
+/// The parent a uniform `u` picks from `weights` (agent, leftover stores),
+/// the survivors in index order: in proportion to the stores, or uniformly
+/// when they hold none (Review Focus 2).
+fn pick(weights: &[(usize, u64)], u: f64) -> usize {
+    let total: u64 = weights.iter().map(|&(_, w)| w).sum();
+    if total == 0 {
+        let k = ((u * weights.len() as f64) as usize).min(weights.len() - 1);
+        return weights[k].0;
+    }
+    let mut x = u * total as f64;
+    let mut last = weights[0].0;
+    for &(i, w) in weights {
+        if w == 0 {
+            continue;
+        }
+        last = i;
+        if x < w as f64 {
+            break;
+        }
+        x -= w as f64;
+    }
+    last
 }
 
 /// The logit and its inverse.
@@ -238,25 +369,13 @@ impl HoardWorld {
                 let l = inverse_logit(lc + sd * normal(&mut rng));
                 let d = inverse_logit(dc + sd * normal(&mut rng));
                 let forage = (1.0 + config.forage_sd * normal(&mut rng)).max(0.0);
-                Agent {
-                    l,
-                    d,
-                    forage,
-                    larder: 0,
-                    scatter: 0,
-                    alive: true,
-                    fed: true,
-                    defending: false,
-                    raid: None,
-                    death: None,
-                    record: Record::default(),
-                }
+                newborn(l, d, forage)
             })
             .collect();
         let items = f64::from(config.search_items);
         let calibration =
             -ln(config.search_miss) / (f64::from(config.bouts) * items * items.sqrt());
-        Ok(HoardWorld {
+        let mut w = HoardWorld {
             config,
             tick: 0,
             rng,
@@ -271,7 +390,11 @@ impl HoardWorld {
             eaten: 0,
             removed: 0,
             calibration,
-        })
+            seasons: Vec::new(),
+            extinct: None,
+        };
+        w.record();
+        Ok(w)
     }
 
     pub fn agents(&self) -> &[Agent] {
@@ -320,9 +443,56 @@ impl HoardWorld {
         self.agents.iter().filter(|a| a.alive).count()
     }
 
-    /// Whether the season has ended (the next generation is Task 4).
-    pub fn is_finished(&self) -> bool {
+    /// Whether the current season has ended (its record is kept; the next
+    /// bout breeds, if the run goes on).
+    pub fn season_over(&self) -> bool {
         self.season_over
+    }
+
+    /// Whether the run has ended: its population died out, or the season of
+    /// generation `generations` (read now) is over.
+    pub fn is_finished(&self) -> bool {
+        self.season_over && (self.extinct.is_some() || self.generation >= self.config.generations)
+    }
+
+    /// Every finished season, in order.
+    pub fn seasons(&self) -> &[Season] {
+        &self.seasons
+    }
+
+    /// The generation in which every agent died, if it has happened.
+    pub fn extinct(&self) -> Option<u32> {
+        self.extinct
+    }
+
+    /// The run's outcome (item 11), once it is finished.
+    pub fn outcome(&self) -> Option<Outcome> {
+        if !self.is_finished() || self.seasons.is_empty() {
+            return None;
+        }
+        let window = &self.seasons[self.seasons.len().saturating_sub(WINDOW)..];
+        let window_mean_l =
+            window.iter().map(|s| s.summary.mean_l).sum::<f64>() / window.len() as f64;
+        let fate = if self.extinct.is_some() {
+            Fate::Extinct
+        } else if window_mean_l > TAKEOVER_L {
+            Fate::Takeover
+        } else if window.iter().all(|s| s.summary.mean_l < LOW_L) {
+            Fate::StayedLow
+        } else {
+            Fate::Intermediate
+        };
+        Some(Outcome {
+            fate,
+            window: (window[0].generation, window[window.len() - 1].generation),
+            window_mean_l,
+            rise: self
+                .seasons
+                .iter()
+                .find(|s| s.summary.mean_l > TAKEOVER_L)
+                .map(|s| s.generation),
+            extinct: self.extinct,
+        })
     }
 
     /// Public food produced on day `d` (1-based): ⌊first − step·(d − 1) +
@@ -365,17 +535,21 @@ impl HoardWorld {
 
     pub fn run(&mut self, ticks: u32) {
         for _ in 0..ticks {
-            if self.season_over {
+            if self.is_finished() {
                 break;
             }
             self.step();
         }
     }
 
-    /// One bout.
+    /// One bout; after a finished season (and if the run goes on), the next
+    /// generation is bred first.
     pub fn step(&mut self) {
-        if self.season_over {
+        if self.is_finished() {
             return;
+        }
+        if self.season_over {
+            self.breed();
         }
         let (d, b) = (self.day, self.bout);
         let early = d <= self.config.nonstorable_days;
@@ -389,7 +563,7 @@ impl HoardWorld {
         }
         // 1. Bout-1 eating: Some(defends) for the agents it assigns.
         let mut assigned: Vec<Option<bool>> = vec![None; self.agents.len()];
-        if b == 1 && (!early || self.config.early_bout1_eats) {
+        if b == 1 && (!early || (self.config.early_bout1_eats && d >= 2)) {
             for (i, a) in self.agents.iter_mut().enumerate() {
                 if !a.alive || (!early && a.fed) {
                     continue;
@@ -401,6 +575,10 @@ impl HoardWorld {
                     a.scatter -= 1;
                     assigned[i] = Some(false);
                 } else {
+                    // The printed flag: its first find today is eaten. After
+                    // the nonstorable days it is hungry already; on them, it
+                    // can't starve (item 7).
+                    a.fed = false;
                     continue;
                 }
                 a.fed = true;
@@ -448,6 +626,10 @@ impl HoardWorld {
         } else {
             self.bout += 1;
         }
+        if !self.season_over && self.living() == 0 {
+            self.end_season();
+        }
+        self.record();
     }
 
     fn start_day(&mut self) {
@@ -476,8 +658,111 @@ impl HoardWorld {
         self.bout = 1;
         self.day += 1;
         if self.day > self.config.days {
-            self.season_over = true;
+            self.end_season();
         }
+    }
+
+    /// Ends the season: its record is kept before anything is reset, and a
+    /// season with no survivors marks the run extinct (Review Focus 1).
+    fn end_season(&mut self) {
+        self.season_over = true;
+        for a in &mut self.agents {
+            a.raid = None;
+            a.defending = false;
+        }
+        if self.living() == 0 {
+            self.extinct = Some(self.generation);
+        }
+        self.seasons.push(Season {
+            generation: self.generation,
+            summary: self.summary(),
+            agents: self.agents.clone(),
+        });
+    }
+
+    /// Breeds the next generation from the finished season (items 8 and 9)
+    /// and starts its season: empty stores, an empty public pool, day 1.
+    fn breed(&mut self) {
+        let weights: Vec<(usize, u64)> = self
+            .agents
+            .iter()
+            .enumerate()
+            .filter(|(_, a)| a.alive)
+            .map(|(i, a)| (i, u64::from(a.larder) + u64::from(a.scatter)))
+            .collect();
+        assert!(!weights.is_empty(), "an extinct run doesn't breed");
+        let n = self.agents.len() as f64;
+        let l_bar = self.agents.iter().map(|a| clamped_logit(a.l)).sum::<f64>() / n;
+        let d_bar = self.agents.iter().map(|a| clamped_logit(a.d)).sum::<f64>() / n;
+        let next = (0..self.agents.len())
+            .map(|_| {
+                let m = pick(&weights, self.rng.gen::<f64>());
+                let f = pick(&weights, self.rng.gen::<f64>());
+                self.child(m, f, l_bar, d_bar)
+            })
+            .collect();
+        self.agents = next;
+        self.generation += 1;
+        self.day = 1;
+        self.bout = 1;
+        self.season_over = false;
+        self.public = 0;
+        self.produced = 0;
+        self.eaten = 0;
+        self.removed = 0;
+    }
+
+    /// A child of agents `m` and `f`: on the logit scale, each trait is
+    /// N(h²·(midparent) + (1 − h²)·mean, `v_seg`), where the mean is over the
+    /// whole parental generation, dead included; forage is drawn fresh.
+    fn child(&mut self, m: usize, f: usize, l_bar: f64, d_bar: f64) -> Agent {
+        let h2 = self.config.heritability;
+        let sd = self.config.v_seg.sqrt();
+        let (pm, pf) = (&self.agents[m], &self.agents[f]);
+        let l_mid = (clamped_logit(pm.l) + clamped_logit(pf.l)) / 2.0;
+        let d_mid = (clamped_logit(pm.d) + clamped_logit(pf.d)) / 2.0;
+        let l = inverse_logit(h2 * l_mid + (1.0 - h2) * l_bar + sd * normal(&mut self.rng));
+        let d = inverse_logit(h2 * d_mid + (1.0 - h2) * d_bar + sd * normal(&mut self.rng));
+        let forage = (1.0 + self.config.forage_sd * normal(&mut self.rng)).max(0.0);
+        newborn(l, d, forage)
+    }
+
+    /// Pushes this bout's snapshot (item 13).
+    fn record(&mut self) {
+        let n = self.agents.len() as f64;
+        let (mut sl, mut ss) = (0u64, 0u64);
+        let (mut ll, mut ls, mut sk, mut kk) = (0u64, 0u64, 0u64, 0u64);
+        for a in &self.agents {
+            if a.alive {
+                sl += u64::from(a.larder);
+                ss += u64::from(a.scatter);
+            }
+            ll += a.record.larder_lost;
+            ls += a.record.larder_stock;
+            sk += a.record.scatter_lost;
+            kk += a.record.scatter_stock;
+        }
+        let rate = |lost: u64, stock: u64| {
+            Record::rate(lost, stock, self.config.bouts).unwrap_or(f64::NAN)
+        };
+        let snapshot = HoardSnapshot {
+            tick: self.tick,
+            generation: u64::from(self.generation),
+            mean_l: self.agents.iter().map(|a| a.l).sum::<f64>() / n,
+            mean_d: self.agents.iter().map(|a| a.d).sum::<f64>() / n,
+            survivors: self.living() as u32,
+            larder_share: if sl + ss > 0 {
+                sl as f64 / (sl + ss) as f64
+            } else {
+                f64::NAN
+            },
+            larder_rate: rate(ll, ls),
+            scatter_rate: rate(sk, kk),
+            takeover: self
+                .outcome()
+                .map_or(f64::NAN, |o| f64::from(u8::from(o.fate == Fate::Takeover))),
+        };
+        self.stats.push(snapshot);
     }
 
     fn kill(&mut self, i: usize, cause: Cause) {
@@ -638,6 +923,19 @@ impl HoardWorld {
             .filter_map(|a| a.record.scatter_rate(bouts))
             .collect();
         let n = self.agents.len() as f64;
+        let pooled = |lost: fn(&Record) -> u64, stock: fn(&Record) -> u64| {
+            let (l, s) = self.agents.iter().fold((0, 0), |(l, s), a| {
+                (l + lost(&a.record), s + stock(&a.record))
+            });
+            Record::rate(l, s, bouts)
+        };
+        let min = |v: &[f64]| v.iter().copied().reduce(f64::min);
+        let exposed: Vec<f64> = self
+            .agents
+            .iter()
+            .filter(|a| a.record.mean_larder_stock() >= EXPOSURE_FLOOR)
+            .filter_map(|a| a.record.larder_rate(bouts))
+            .collect();
         SeasonSummary {
             survivors: self.living() as u32,
             starved: dead(Cause::Starvation),
@@ -645,6 +943,11 @@ impl HoardWorld {
             larder_share: (sl + ss > 0).then(|| sl as f64 / (sl + ss) as f64),
             larder_rated: larder.len() as u32,
             scatter_rated: scatter.len() as u32,
+            pooled_larder_rate: pooled(|r| r.larder_lost, |r| r.larder_stock),
+            pooled_scatter_rate: pooled(|r| r.scatter_lost, |r| r.scatter_stock),
+            larder_exposed: exposed.len() as u32,
+            min_exposed_larder_rate: min(&exposed),
+            min_larder_rate: min(&larder),
             mean_larder_rate: mean(larder),
             mean_scatter_rate: mean(scatter),
             larder_unrated_losses: self
@@ -701,6 +1004,7 @@ impl Model for HoardWorld {
             eat(&a.larder.to_le_bytes());
             eat(&a.scatter.to_le_bytes());
             eat(&[u8::from(a.alive), u8::from(a.fed), u8::from(a.defending)]);
+            eat(&a.raid.map_or(u64::MAX, |j| j as u64).to_le_bytes());
         }
         h
     }
@@ -906,23 +1210,36 @@ mod tests {
             let mut c = HoardConfig::default();
             edit(&mut c);
             let mut w = HoardWorld::new(c, seed).unwrap();
-            while !w.is_finished() {
+            while !w.season_over() {
                 w.step();
                 assert!(conserved(&w), "seed {seed}, tick {}", w.tick);
             }
-            assert_eq!(w.tick, 2000);
+            // A season ends early only if every agent has died.
+            assert!(w.tick == 2000 || w.extinct() == Some(1), "seed {seed}");
         }
     }
 
     #[test]
     fn the_season_stops_at_its_end() {
-        let mut w = HoardWorld::new(HoardConfig::default(), 9).unwrap();
+        let one = HoardConfig {
+            generations: 1,
+            ..HoardConfig::default()
+        };
+        let mut w = HoardWorld::new(one, 9).unwrap();
         w.run(5000);
-        assert!(w.is_finished());
+        assert!(w.season_over() && w.is_finished());
         assert_eq!((w.tick, w.day, w.bout), (2000, 101, 1));
         let f = Model::fingerprint(&w);
         w.run(10);
         assert_eq!(Model::fingerprint(&w), f);
+        // With generations to go, the season still stops, and the next bout
+        // breeds.
+        let mut w = HoardWorld::new(HoardConfig::default(), 9).unwrap();
+        w.run(2000);
+        assert!(w.season_over() && !w.is_finished());
+        assert_eq!((w.generation(), w.seasons().len()), (1, 1));
+        w.step();
+        assert_eq!((w.generation(), w.day(), w.bout(), w.tick), (2, 1, 2, 2001));
     }
 
     #[test]
@@ -1125,19 +1442,57 @@ mod tests {
             .count();
         assert!(holders > 0);
         w.step();
-        assert_eq!(w.eaten() as usize, holders);
+        let mut finders = 0;
         for (a, b) in w.agents.iter().zip(&before).filter(|(a, _)| a.alive) {
-            assert!(a.fed);
             if b.larder > 0 {
-                assert!(a.defending);
+                assert!(a.fed && a.defending);
                 assert_eq!(a.larder, b.larder - 1);
+            } else if b.scatter > 0 {
+                assert!(a.fed && !a.defending);
+            } else {
+                // Flagged hungry: fed only if it found something, which it ate.
+                let found = a.record.took_public + a.record.took_scatter + a.record.took_larder
+                    > b.record.took_public + b.record.took_scatter + b.record.took_larder;
+                assert_eq!(a.fed, found);
+                assert_eq!((a.larder, a.scatter), (0, 0));
+                finders += usize::from(found);
             }
         }
+        assert_eq!(w.eaten() as usize, holders + finders);
         w.run(79);
         assert!(w.eaten() as usize > holders);
         let mut d = HoardWorld::new(HoardConfig::default(), 5).unwrap();
         d.run(100);
         assert_eq!(d.eaten(), 0);
+    }
+
+    /// Under `early_bout1_eats`, a storeless agent on days 2–5 is flagged
+    /// hungry (it doesn't defend, and eats its first find), but nobody
+    /// starves on those days. Day 1 flags nobody.
+    #[test]
+    fn early_bout1_eats_flags_the_storeless_hungry_without_starving_them() {
+        let mut w = quiet(2, 1, 1, |c| c.early_bout1_eats = true);
+        w.agents[1].forage = 0.0;
+        w.step();
+        assert!(w.agents[1].fed, "day 1 flags nobody");
+        w.run(19);
+        for _ in 2..=5 {
+            w.step();
+            assert!(!w.agents[1].fed && !w.agents[1].defending);
+            w.run(19);
+            assert!(w.agents[1].alive, "no starvation on day {}", w.day - 1);
+        }
+        assert_eq!(w.day, 6);
+        // A storeless agent that finds food on day 2 eats it.
+        let mut w = quiet(2, 2, 1, |c| c.early_bout1_eats = true);
+        w.agents[0].forage = 1e6;
+        w.public = 3;
+        w.produced = 3;
+        w.step();
+        let a = &w.agents[0];
+        assert!(a.fed);
+        assert_eq!((a.record.eaten, a.larder + a.scatter), (1, 0));
+        assert!(conserved(&w));
     }
 
     #[test]
@@ -1184,17 +1539,18 @@ mod tests {
     #[test]
     fn dead_stores_remain_pilferable_or_are_removed() {
         for (mode, left) in [(DeadStores::Remain, 4), (DeadStores::Remove, 0)] {
+            // No scattered caches: the searcher's certain find is the larder.
             let mut w = quiet(2, 30, 3, |c| c.dead_stores = mode);
             w.agents[1].larder = 5;
-            w.agents[1].scatter = 2;
-            w.produced = 7;
+            w.agents[1].scatter = 0;
+            w.produced = 5;
             w.kill(1, Cause::Predation);
             w.agents[0].forage = 1e6;
             w.step();
             assert_eq!(w.agents[1].larder, left);
             assert!(conserved(&w));
             if mode == DeadStores::Remove {
-                assert_eq!(w.removed(), 7);
+                assert_eq!(w.removed(), 5);
             } else {
                 assert_eq!(w.agents[0].raid, Some(1), "the dead never defend");
                 assert_eq!(w.agents[1].record.larder_lost, 0, "no loss after death");
@@ -1234,9 +1590,13 @@ mod tests {
                 .filter(|a| a.record.took_public == 0)
                 .count() as u32;
             day1_fail.1 += w.agents.len() as u32;
-            w.run(2000);
-            assert!(w.is_finished());
+            w.run(1980);
+            assert!(w.season_over());
             let s = w.summary();
+            assert!(
+                s.mean_larder_rate.unwrap() > s.mean_scatter_rate.unwrap(),
+                "seed {seed}: {s:?}"
+            );
             assert!(s.survivors <= 20 && s.survivors + s.starved + s.preyed == 20);
             if seed == 1 {
                 println!("seed 1: {s:?}");
@@ -1252,5 +1612,498 @@ mod tests {
             "20 seeds: survivors {:.2}, larder share {:.3}, larder rate {:.3}, scatter rate {:.3}, starved {:.2}; day-1 failures {}/{}",
             m[0], m[1], m[2], m[3], m[4], day1_fail.0, day1_fail.1
         );
+    }
+
+    /// Task 3 minor: the search draws each entry in proportion to its
+    /// weight. Public 10, one scatter of 10 (weight 4.4) and one larder of 5
+    /// (weight 10 per item, 2 per burrow); shares within 3 SD over 20 000
+    /// certain finds. Under `defended_in_pool = excluded` a defended larder
+    /// is never drawn.
+    #[test]
+    fn the_search_draws_in_proportion_to_the_weights() {
+        let trials = 20_000;
+        let shares = |edit: fn(&mut HoardConfig), defended: bool| {
+            let mut w = quiet(3, 30, 3, edit);
+            w.agents[0].forage = 1e6;
+            let mut counts = [0u32; 3];
+            for _ in 0..trials {
+                w.public = 10;
+                w.agents[1].scatter = 10;
+                w.agents[2].larder = 5;
+                w.agents[2].defending = defended;
+                let r = w.agents[0].record.clone();
+                w.search(0);
+                let a = &mut w.agents[0];
+                a.raid = None;
+                (a.larder, a.scatter) = (0, 0);
+                counts[0] += (a.record.took_public - r.took_public) as u32;
+                counts[1] += (a.record.took_scatter - r.took_scatter) as u32;
+                counts[2] += (a.record.took_larder - r.took_larder) as u32;
+            }
+            counts
+        };
+        let check = |counts: [u32; 3], weights: [f64; 3]| {
+            let total: f64 = weights.iter().sum();
+            for (c, w) in counts.iter().zip(weights) {
+                let p = w / total;
+                let sd = (p * (1.0 - p) / f64::from(trials)).sqrt();
+                let got = f64::from(*c) / f64::from(trials);
+                assert!((got - p).abs() <= 3.0 * sd, "{counts:?} {weights:?}");
+            }
+        };
+        check(shares(|_| {}, false), [10.0, 4.4, 10.0]);
+        check(
+            shares(|c| c.larder_weight = LarderWeight::PerBurrow, false),
+            [10.0, 4.4, 2.0],
+        );
+        let excluded = shares(|c| c.defended_in_pool = DefendedInPool::Excluded, true);
+        assert_eq!(excluded[2], 0);
+        check(excluded, [10.0, 4.4, 0.0]);
+    }
+
+    /// Sets agent `i`'s traits on the logit scale.
+    fn set_logits(w: &mut HoardWorld, i: usize, l: f64, d: f64) {
+        w.agents[i].l = inverse_logit(l);
+        w.agents[i].d = inverse_logit(d);
+    }
+
+    /// Ends the world's season by hand, as `end_season` would.
+    fn end(w: &mut HoardWorld) {
+        w.end_season();
+    }
+
+    /// With V_seg = 0, a child's logit trait is exactly h²·midparent +
+    /// (1 − h²)·mean, the mean over the whole parental generation (dead
+    /// included).
+    #[test]
+    fn inheritance_regresses_to_the_generation_mean_on_the_logit_scale() {
+        let mut w = quiet(4, 1, 1, |c| c.v_seg = 0.0);
+        for (i, (l, d)) in [(-2.0, 0.5), (1.0, -1.0), (3.0, 2.0), (-4.0, 0.0)]
+            .into_iter()
+            .enumerate()
+        {
+            set_logits(&mut w, i, l, d);
+        }
+        let (l_bar, d_bar) = (-0.5, 0.375);
+        let h2 = 0.8;
+        let c = w.child(0, 1, l_bar, d_bar);
+        assert!((logit(c.l) - (h2 * -0.5 + (1.0 - h2) * l_bar)).abs() < 1e-9);
+        assert!((logit(c.d) - (h2 * -0.25 + (1.0 - h2) * d_bar)).abs() < 1e-9);
+        // Breeding: agent 2 is the only survivor with stores, so it is both
+        // parents of every child; agent 3 is dead but in the mean.
+        w.agents[1].alive = false;
+        w.agents[3].alive = false;
+        w.agents[2].scatter = 4;
+        end(&mut w);
+        w.breed();
+        assert_eq!(w.generation(), 2);
+        for c in &w.agents {
+            assert!((logit(c.l) - (h2 * 3.0 + (1.0 - h2) * l_bar)).abs() < 1e-9);
+            assert!((logit(c.d) - (h2 * 2.0 + (1.0 - h2) * d_bar)).abs() < 1e-9);
+            assert!(c.alive && c.fed && c.larder + c.scatter == 0);
+            assert_eq!(c.record, Record::default());
+        }
+        assert_eq!((w.day, w.bout, w.public, w.produced), (1, 1, 0, 0));
+    }
+
+    /// Parents are drawn independently, with replacement, in proportion to
+    /// the survivors' leftover stores; the dead are never drawn, whatever
+    /// they hold. With h² = 1 and V_seg = 0 a child's logit L is its
+    /// midparent, and logit Ls 0, 1 and 4 make every pair's sum distinct.
+    #[test]
+    fn selection_is_proportional_to_leftover_stores_in_expectation() {
+        let mut w = quiet(4, 1, 1, |c| {
+            c.v_seg = 0.0;
+            c.heritability = 1.0;
+        });
+        for (i, (l, larder, scatter, alive)) in [
+            (0.0, 1, 0, true),
+            (1.0, 1, 2, true),
+            (9.0, 10, 10, false),
+            (4.0, 2, 4, true),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            set_logits(&mut w, i, l, 0.0);
+            let a = &mut w.agents[i];
+            (a.larder, a.scatter, a.alive) = (larder, scatter, alive);
+        }
+        let parents = w.agents.clone();
+        let pair = |sum: i64| match sum {
+            0 => [0, 0],
+            1 => [0, 1],
+            4 => [0, 3],
+            2 => [1, 1],
+            5 => [1, 3],
+            8 => [3, 3],
+            _ => panic!("no pair sums to {sum}"),
+        };
+        let mut slots = [0u32; 4];
+        let breeds = 2_000;
+        for _ in 0..breeds {
+            w.agents = parents.clone();
+            end(&mut w);
+            w.breed();
+            for c in &w.agents {
+                for p in pair((2.0 * logit(c.l)).round() as i64) {
+                    slots[p] += 1;
+                }
+            }
+        }
+        let n = f64::from(breeds * 4 * 2);
+        for (i, expect) in [0.1, 0.3, 0.0, 0.6].into_iter().enumerate() {
+            let got = f64::from(slots[i]) / n;
+            let sd = (expect * (1.0 - expect) / n).sqrt();
+            assert!(
+                (got - expect).abs() <= 3.0 * sd,
+                "agent {i}: {got} {slots:?}"
+            );
+        }
+        assert_eq!(slots[2], 0);
+    }
+
+    /// Review Focus 2: when every survivor holds nothing, parents are drawn
+    /// uniformly among the survivors (never the dead, whatever they hold).
+    #[test]
+    fn survivors_with_nothing_left_are_drawn_uniformly() {
+        let weights = [(0, 0), (2, 0), (5, 0)];
+        assert_eq!(pick(&weights, 0.0), 0);
+        assert_eq!(pick(&weights, 0.5), 2);
+        assert_eq!(pick(&weights, 0.999_999), 5);
+        assert_eq!(pick(&[(0, 0), (1, 3), (2, 0)], 0.999_999), 1);
+        let mut w = quiet(3, 1, 1, |c| {
+            c.v_seg = 0.0;
+            c.heritability = 1.0;
+        });
+        set_logits(&mut w, 0, 1.0, 0.0);
+        set_logits(&mut w, 1, 3.0, 0.0);
+        set_logits(&mut w, 2, 9.0, 0.0);
+        w.agents[2].alive = false;
+        w.agents[2].larder = 50;
+        let parents = w.agents.clone();
+        let mut counts = [0u32; 3]; // midparent logit 1, 2, 3
+        let breeds = 4_000;
+        for _ in 0..breeds {
+            w.agents = parents.clone();
+            end(&mut w);
+            w.breed();
+            for c in &w.agents {
+                counts[(logit(c.l).round() as usize) - 1] += 1;
+            }
+        }
+        let n = f64::from(breeds * 3);
+        for (c, p) in counts.iter().zip([0.25, 0.5, 0.25]) {
+            let sd = (p * (1.0 - p) / n).sqrt();
+            assert!((f64::from(*c) / n - p).abs() < 3.0 * sd, "{counts:?}");
+        }
+    }
+
+    /// Review Focus 3: traits at exactly 0 or 1 are clamped to (ε, 1 − ε)
+    /// before the logit, so breeding stays finite.
+    #[test]
+    fn traits_at_0_or_1_breed_finite_children() {
+        assert_eq!(clamped_logit(0.0), logit(EPSILON));
+        assert_eq!(clamped_logit(1.0), logit(1.0 - EPSILON));
+        assert!(clamped_logit(0.0).is_finite() && clamped_logit(1.0).is_finite());
+        let mut w = quiet(2, 1, 1, |c| c.v_seg = 0.0);
+        (w.agents[0].l, w.agents[0].d) = (0.0, 1.0);
+        (w.agents[1].l, w.agents[1].d) = (1.0, 0.0);
+        w.agents[0].scatter = 1;
+        w.agents[1].scatter = 1;
+        end(&mut w);
+        w.breed();
+        for c in &w.agents {
+            // Midparent 0 and generation mean 0, whatever the pairing, for
+            // symmetric pairs; asymmetric pairs land at ±0.8·logit(1 − ε).
+            assert!(c.l.is_finite() && c.d.is_finite());
+            assert!(c.l > 0.0 && c.l < 1.0 && c.d > 0.0 && c.d < 1.0, "{c:?}");
+        }
+        // With the default V_seg, many generations from traits at 0 and 1.
+        let mut w = quiet(20, 1, 1, |_| {});
+        for (i, a) in w.agents.iter_mut().enumerate() {
+            (a.l, a.d) = if i % 2 == 0 { (0.0, 1.0) } else { (1.0, 0.0) };
+            a.larder = 1;
+        }
+        for _ in 0..50 {
+            for a in &mut w.agents {
+                a.larder = 1;
+            }
+            end(&mut w);
+            w.breed();
+            assert!(w.agents.iter().all(|a| (0.0..=1.0).contains(&a.l)
+                && (0.0..=1.0).contains(&a.d)
+                && a.l.is_finite()
+                && a.d.is_finite()));
+        }
+    }
+
+    /// Review Focus 1: when every agent dies, the season ends at the end of
+    /// that bout, its record is kept, and the run ends as extinct: nothing is
+    /// bred and further steps do nothing.
+    #[test]
+    fn a_generation_where_every_agent_dies_ends_the_run() {
+        let c = HoardConfig {
+            predation: 1.0,
+            ..HoardConfig::default()
+        };
+        let mut w = HoardWorld::new(c, 1).unwrap();
+        w.step();
+        assert_eq!(w.living(), 0);
+        assert!(w.season_over() && w.is_finished());
+        assert_eq!((w.extinct(), w.seasons().len(), w.tick), (Some(1), 1, 1));
+        let f = Model::fingerprint(&w);
+        w.run(100);
+        w.step();
+        assert_eq!((Model::fingerprint(&w), w.tick), (f, 1));
+        let o = w.outcome().unwrap();
+        assert_eq!(
+            (o.fate, o.extinct, o.window),
+            (Fate::Extinct, Some(1), (1, 1))
+        );
+        assert_eq!(w.stats.latest().unwrap().takeover, 0.0);
+        // Dying out in a later generation: the earlier seasons stay.
+        let mut w = HoardWorld::new(HoardConfig::default(), 2).unwrap();
+        w.run(2000);
+        let mut next = w.config.clone();
+        next.predation = 1.0;
+        Model::set_config(&mut w, ModelConfig::Hoard(next)).unwrap();
+        w.run(5000);
+        assert_eq!((w.extinct(), w.seasons().len(), w.tick), (Some(2), 2, 2001));
+        assert_eq!(w.outcome().unwrap().fate, Fate::Extinct);
+    }
+
+    /// Item 11's classification over the last 10 generations.
+    #[test]
+    fn the_outcome_classifies_the_last_10_generations() {
+        let fate = |means: &[f64]| {
+            let mut w = quiet(2, 1, 1, |c| c.generations = means.len() as u32);
+            let summary = w.summary();
+            w.seasons = means
+                .iter()
+                .enumerate()
+                .map(|(g, &m)| Season {
+                    generation: g as u32 + 1,
+                    summary: SeasonSummary {
+                        mean_l: m,
+                        ..summary.clone()
+                    },
+                    agents: Vec::new(),
+                })
+                .collect();
+            w.generation = means.len() as u32;
+            w.season_over = true;
+            w.outcome().unwrap()
+        };
+        let mut up = vec![0.15; 50];
+        up.extend([0.97; 10]);
+        up[20] = 0.96;
+        let o = fate(&up);
+        assert_eq!(
+            (o.fate, o.window, o.rise),
+            (Fate::Takeover, (51, 60), Some(21))
+        );
+        let mut low = vec![0.15; 60];
+        low[55] = 0.19;
+        assert_eq!(fate(&low).fate, Fate::StayedLow);
+        low[55] = 0.21;
+        assert_eq!(fate(&low).fate, Fate::Intermediate);
+        let mut mid = vec![0.99; 60];
+        mid[59] = 0.5; // window mean 0.941
+        let o = fate(&mid);
+        assert_eq!((o.fate, o.rise), (Fate::Intermediate, Some(1)));
+        // Fewer than 10 generations: the window is all of them.
+        assert_eq!(fate(&[0.1, 0.1, 0.1]).window, (1, 3));
+        // Not finished: no outcome.
+        let w = HoardWorld::new(HoardConfig::default(), 1).unwrap();
+        assert_eq!(w.outcome(), None);
+    }
+
+    /// Lowering `generations` live below the current generation ends the run
+    /// at the end of the current season; so does lowering it to the current
+    /// one.
+    #[test]
+    fn lowering_generations_live_ends_the_run_at_the_seasons_end() {
+        for to in [1, 3] {
+            let mut w = HoardWorld::new(HoardConfig::default(), 4).unwrap();
+            w.run(4500); // generation 3, mid-season
+            assert_eq!(w.generation(), 3);
+            let mut next = w.config.clone();
+            next.generations = to;
+            Model::set_config(&mut w, ModelConfig::Hoard(next)).unwrap();
+            assert!(!w.is_finished());
+            w.run(10_000);
+            assert!(w.is_finished());
+            assert_eq!((w.tick, w.seasons().len(), w.generation()), (6000, 3, 3));
+            let o = w.outcome().unwrap();
+            assert_eq!(o.window, (1, 3));
+        }
+    }
+
+    /// Items are conserved within every season, across generations.
+    #[test]
+    fn items_are_conserved_within_each_season_across_generations() {
+        let c = HoardConfig {
+            generations: 4,
+            ..HoardConfig::default()
+        };
+        let mut w = HoardWorld::new(c, 8).unwrap();
+        while !w.is_finished() {
+            w.step();
+            assert!(conserved(&w), "tick {}", w.tick);
+            if w.season_over() {
+                assert_eq!(w.produced(), 2100);
+            }
+        }
+        assert_eq!((w.tick, w.seasons().len()), (8000, 4));
+    }
+
+    /// Each finished season keeps its agents and measurements before
+    /// breeding resets them; the history holds one snapshot per bout.
+    #[test]
+    fn seasons_keep_their_records_and_the_history_one_snapshot_a_bout() {
+        let c = HoardConfig {
+            generations: 3,
+            ..HoardConfig::default()
+        };
+        let mut w = HoardWorld::new(c, 6).unwrap();
+        assert_eq!(w.stats.history().len(), 1);
+        w.run(2000);
+        let kept = w.agents.clone();
+        let summary = w.summary();
+        w.run(10_000);
+        assert_eq!(w.stats.history().len(), 6001);
+        assert_eq!(w.seasons().len(), 3);
+        let s = &w.seasons()[0];
+        assert_eq!((s.generation, &s.agents, &s.summary), (1, &kept, &summary));
+        let n = kept.len() as f64;
+        assert_eq!(s.summary.mean_l, kept.iter().map(|a| a.l).sum::<f64>() / n);
+        let exposed = kept
+            .iter()
+            .filter(|a| a.record.mean_larder_stock() >= EXPOSURE_FLOOR)
+            .count() as u32;
+        assert_eq!(s.summary.larder_exposed, exposed);
+        let h = w.stats.history();
+        assert_eq!((h[2000].generation, h[2001].generation), (1, 2));
+        assert_eq!(h[2000].survivors, s.summary.survivors);
+        assert_eq!(h[2000].mean_l, s.summary.mean_l);
+        assert_eq!(
+            h[2000].larder_rate.to_bits(),
+            s.summary.pooled_larder_rate.unwrap_or(f64::NAN).to_bits()
+        );
+        assert!(h[..6000].iter().all(|x| x.takeover.is_nan()));
+        assert!(!h[6000].takeover.is_nan());
+        assert!(h.iter().enumerate().all(|(t, x)| x.tick == t as u64));
+    }
+
+    fn model(c: HoardConfig) -> crate::model::ModelWorld {
+        crate::model::ModelWorld::new(ModelConfig::Hoard(c), 3).unwrap()
+    }
+
+    fn bits(w: &crate::model::ModelWorld) -> Vec<Vec<u64>> {
+        let m = w.model();
+        let mut names = m.series_names();
+        names.push("tick".into());
+        names
+            .iter()
+            .map(|n| m.series(n).unwrap().into_iter().map(f64::to_bits).collect())
+            .collect()
+    }
+
+    /// A keyframe taken mid-season, at a season's end (before breeding) and
+    /// just after breeding restores a world that runs on as the straight run.
+    #[test]
+    fn keyframes_restore_mid_season_and_at_generation_boundaries() {
+        let c = HoardConfig {
+            generations: 4,
+            ..HoardConfig::default()
+        };
+        let end = 6500;
+        let mut straight = model(c.clone());
+        straight.model_mut().run(end);
+        for at in [1000, 2000, 2001, 4000, 5555] {
+            let mut w = model(c.clone());
+            w.model_mut().run(at);
+            let cp = w.checkpoint().unwrap();
+            w.model_mut().run(1234);
+            w.restore(&cp).unwrap();
+            assert_eq!(w.model().tick(), u64::from(at));
+            assert_eq!(
+                w.model().series("tick").unwrap().len(),
+                at as usize + 1,
+                "{at}"
+            );
+            w.model_mut().run(end - at);
+            assert_eq!(
+                w.model().fingerprint(),
+                straight.model().fingerprint(),
+                "{at}"
+            );
+            assert_eq!(bits(&w), bits(&straight), "{at}");
+            let (crate::model::ModelWorld::Hoard(a), crate::model::ModelWorld::Hoard(b)) =
+                (&w, &straight)
+            else {
+                unreachable!()
+            };
+            assert_eq!(a.seasons(), b.seasons(), "{at}");
+        }
+    }
+
+    /// A 60-generation run at the defaults is deterministic, and ends.
+    #[test]
+    fn a_60_generation_run_is_deterministic() {
+        let run = |seed| {
+            let mut w = HoardWorld::new(HoardConfig::default(), seed).unwrap();
+            w.run(200_000);
+            assert!(w.is_finished());
+            (
+                Model::fingerprint(&w),
+                w.seasons().to_vec(),
+                w.outcome(),
+                Model::series_csv(&w),
+            )
+        };
+        let a = run(21);
+        assert_eq!(a, run(21));
+        let seasons = a.1.len();
+        assert!(seasons == 60 || a.2.as_ref().unwrap().extinct.is_some());
+        assert_ne!(a.0, run(22).0);
+    }
+
+    /// The task report's observations: 60 generations at the defaults and at
+    /// app_scat 0.1 and 0.8 (app_lard 2), 5 seeds each. Printed with
+    /// `--ignored --nocapture`; observations only, never judged here.
+    #[test]
+    #[ignore]
+    fn report_60_generations() {
+        for app_scat in [0.44, 0.1, 0.8] {
+            for seed in 1..=5 {
+                let c = HoardConfig {
+                    app_scat,
+                    ..HoardConfig::default()
+                };
+                let mut w = HoardWorld::new(c, seed).unwrap();
+                w.run(200_000);
+                let o = w.outcome().unwrap();
+                let last = &w.seasons().last().unwrap().summary;
+                let early: Vec<&SeasonSummary> =
+                    w.seasons().iter().take(10).map(|s| &s.summary).collect();
+                let m = |f: fn(&SeasonSummary) -> Option<f64>| {
+                    let v: Vec<f64> = early.iter().filter_map(|s| f(s)).collect();
+                    v.iter().sum::<f64>() / v.len() as f64
+                };
+                println!(
+                    "app_scat {app_scat} seed {seed}: gen-60 mean L {:.3}, window mean L {:.3}, mean D {:.3}, fate {:?}, rise {:?}, survivors(60) {}, gens 1-10 larder {:.2} scatter {:.2}",
+                    last.mean_l,
+                    o.window_mean_l,
+                    last.mean_d,
+                    o.fate,
+                    o.rise,
+                    last.survivors,
+                    m(|s| s.mean_larder_rate),
+                    m(|s| s.mean_scatter_rate),
+                );
+            }
+        }
     }
 }
