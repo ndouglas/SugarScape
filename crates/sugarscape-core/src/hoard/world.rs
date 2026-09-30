@@ -2670,4 +2670,48 @@ mod tests {
             }
         }
     }
+
+    /// FNV-1a over the bits of every per-generation series, in
+    /// `GENERATION_SERIES` order: the season records the fingerprint leaves
+    /// out.
+    fn series_hash(w: &HoardWorld) -> u64 {
+        let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+        for name in super::super::stats::GENERATION_SERIES {
+            for v in w.generation_series(name).unwrap() {
+                for b in v.to_bits().to_le_bytes() {
+                    h ^= u64::from(b);
+                    h = h.wrapping_mul(0x0100_0000_01b3);
+                }
+            }
+        }
+        h
+    }
+
+    /// The five presets after 2 x 2000 + 1 bouts: two full seasons, the
+    /// breeding between them, and the first bout of generation 3. The short
+    /// goldens stop inside generation 1 and never reach a breed step.
+    #[test]
+    fn the_presets_after_two_seasons_are_pinned() {
+        let pinned: [(&str, u64, u64); 5] = [
+            ("hoard-threshold", 0xe882ab9bd7826287, 0x67029ef1aa7547f4),
+            ("hoard-scatter", 0xd47e05e25aa73c71, 0x1fa82328d76f02e8),
+            ("hoard-larder", 0x42aeeb2e04c8cd39, 0xdd6d77ce5909c47b),
+            (
+                "hoard-no-free-recovery",
+                0xefb5ef275db90af2,
+                0x1da52c4d7920ea51,
+            ),
+            ("hoard-cheaters", 0xc226fb4a96dfa49, 0xd39e838c0d89d90c),
+        ];
+        for (id, fingerprint, series) in pinned {
+            let ModelConfig::Hoard(c) = crate::presets::find(id).unwrap().config else {
+                unreachable!()
+            };
+            let mut w = HoardWorld::new(c, 1).unwrap();
+            w.run(4001);
+            assert_eq!((w.seasons().len(), w.generation), (2, 3), "{id}");
+            let got = (Model::fingerprint(&w), series_hash(&w));
+            assert_eq!(got, (fingerprint, series), "{id} changed");
+        }
+    }
 }

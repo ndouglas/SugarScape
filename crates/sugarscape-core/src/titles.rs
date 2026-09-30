@@ -1388,7 +1388,8 @@ pub const TITLES: [(&str, &str); 361] = [
     (
         "janssen-fewer-links",
         "With half the pest links gone, copying stalls early",
-    ),    (
+    ),
+    (
         "hoard-threshold",
         "Hoarders near the tipping point between larders and scattered caches",
     ),

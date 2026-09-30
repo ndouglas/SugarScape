@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 170] = [
+const BUILTINS: [Builtin; 173] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1645,6 +1645,18 @@ const BUILTINS: [Builtin; 170] = [
     Builtin {
         id: "theft-winter",
         json: include_str!("../../../sweeps/theft-winter.json"),
+    },
+    Builtin {
+        id: "hoard-ratio",
+        json: include_str!("../../../sweeps/hoard-ratio.json"),
+    },
+    Builtin {
+        id: "hoard-recovery",
+        json: include_str!("../../../sweeps/hoard-recovery.json"),
+    },
+    Builtin {
+        id: "hoard-cheaters",
+        json: include_str!("../../../sweeps/hoard-cheaters.json"),
     },
 ];
 
@@ -2638,7 +2650,10 @@ mod tests {
                 "central-distance",
                 "theft-find",
                 "theft-cheaters",
-                "theft-winter"
+                "theft-winter",
+                "hoard-ratio",
+                "hoard-recovery",
+                "hoard-cheaters"
             ]
         );
         for b in builtins() {

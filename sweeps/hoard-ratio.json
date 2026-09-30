@@ -1,0 +1,32 @@
+{
+  "name": "Minds 7: does hoarding take over, against how findable scattered caches are",
+  "description": "The mean L among the hoarders of generation 50 (hoarder_larder_prob; window_mean, ticks 98001–100000) in hoard-threshold's world against app_scat, how findable each scattered item is, at a fixed app_lard of 2: 0.05, 0.1, 0.2, 0.3, 0.44, 0.6, 0.8 or 0.9, ratios app_scat/app_lard of 0.025 to 0.45, Fig. 2B's axis. The sweep format stops at 100 000 ticks, so the run is 50 of the paper's 60 generations of 2000 bouts, and takeover, which is classified only at generation 60, can't be read; the survey reads it from full runs. Ten seeds keep the CLI run short.",
+  "base": {
+    "preset": "hoard-threshold"
+  },
+  "x": {
+    "label": "Scattered-cache apparency app_scat (app_lard 2)",
+    "path": "app_scat",
+    "values": [
+      0.05,
+      0.1,
+      0.2,
+      0.3,
+      0.44,
+      0.6,
+      0.8,
+      0.9
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "hoarder_larder_prob",
+    "from": 98001,
+    "to": 100000
+  }
+}

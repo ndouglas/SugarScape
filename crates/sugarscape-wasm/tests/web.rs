@@ -424,7 +424,10 @@ fn builtins_and_series_names_are_listed() {
             "central-distance",
             "theft-find",
             "theft-cheaters",
-            "theft-winter"
+            "theft-winter",
+            "hoard-ratio",
+            "hoard-recovery",
+            "hoard-cheaters"
         ]
     );
     assert!(list[0]["sweep"]["name"]
