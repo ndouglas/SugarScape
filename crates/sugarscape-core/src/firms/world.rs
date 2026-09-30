@@ -160,6 +160,11 @@ pub struct FirmsWorld {
     births: u32,
     deaths: u32,
     records: Records,
+    /// Count and sum of lifetimes recorded since the burn-in (the same
+    /// deaths `records.lifetimes` sees), kept running so the `lifetime`
+    /// series doesn't walk the whole histogram every period.
+    lifetime_count: u64,
+    lifetime_sum: u64,
     pub stats: Stats<FirmsSnapshot>,
 }
 
@@ -302,6 +307,8 @@ impl FirmsWorld {
             births: 0,
             deaths: 0,
             records: Records::default(),
+            lifetime_count: 0,
+            lifetime_sum: 0,
             stats: Stats::default(),
         };
         // The starting firms.
@@ -439,6 +446,8 @@ impl FirmsWorld {
             let (lifetime, team) = (self.tick.saturating_sub(firm.born), firm.team);
             if self.tick > u64::from(self.config.burn_in) {
                 self.records.died(lifetime, team);
+                self.lifetime_count += 1;
+                self.lifetime_sum += lifetime;
             }
             self.deaths += 1;
             // Out of the live list.
@@ -844,7 +853,11 @@ impl FirmsWorld {
             .iter()
             .map(|&f| &self.firms[f])
             .max_by_key(|f| (f.members.len(), std::cmp::Reverse(f.id)));
-        let (_, mean, _, _) = super::fit::lifetimes(&self.records.lifetimes);
+        let mean = if self.lifetime_count == 0 {
+            f64::NAN
+        } else {
+            self.lifetime_sum as f64 / self.lifetime_count as f64
+        };
         self.stats.push(FirmsSnapshot {
             tick: self.tick,
             firms: firms as u32,
@@ -1517,6 +1530,35 @@ mod tests {
         assert_eq!(w.records.lifetimes.iter().sum::<u64>(), 0);
         w.run(50);
         assert!(w.records.lifetimes.iter().sum::<u64>() > 0);
+    }
+
+    #[test]
+    fn the_lifetime_series_matches_fit_lifetimes_mean() {
+        let mut w = world(|c| c.burn_in = 5);
+        w.run(150);
+        let (_, mean, _, _) = super::super::fit::lifetimes(&w.records.lifetimes);
+        assert!(mean.is_finite(), "expected some deaths recorded by tick 150");
+        assert_eq!(w.stats.latest().unwrap().lifetime, mean);
+    }
+
+    #[test]
+    fn recording_a_period_stays_cheap_even_with_a_long_lived_firm_in_the_histogram() {
+        // A death at a very large lifetime makes `records.lifetimes` a huge
+        // histogram. record() must not walk it every period: it should stay
+        // O(1), not O(histogram length) per call.
+        let mut w = world(|_| {});
+        w.records.died(200_000, false);
+        let start = std::time::Instant::now();
+        for _ in 0..5_000 {
+            w.record();
+        }
+        let elapsed = start.elapsed();
+        assert!(
+            elapsed.as_millis() < 300,
+            "5 000 record() calls took {elapsed:?} with a 200 000-bin lifetime \
+             histogram; record() must track the running mean instead of \
+             recomputing it from the whole histogram every period"
+        );
     }
 
     #[test]
