@@ -279,27 +279,27 @@ pub const TITLES: [(&str, &str); 343] = [
     ),
     (
         "theft-winter",
-        "Hoarders who can be robbed",
+        "Hoarders who can be robbed: theft spreads the stores, and more agents survive the winter",
     ),
     (
         "theft-winter-quarter",
-        "A quarter of the agents never cache and steal",
+        "A quarter never cache and live off the others' caches, outliving the hoarders",
     ),
     (
         "theft-winter-half",
-        "Half the agents never cache and steal",
+        "Half never cache and outlive the hoarders, who dig back barely 1 % of what they bury",
     ),
     (
         "theft-arena-2",
-        "Two agents share a winter's caches",
+        "Two agents in a room: the hoarder ends the winter richer, though the other takes half its caches",
     ),
     (
         "theft-arena-4",
-        "Four agents share a winter's caches",
+        "Four agents in a room: thieves take four fifths of the caches, yet hoarders mostly end richer",
     ),
     (
         "theft-arena-8",
-        "Eight agents share a winter's caches",
+        "Eight agents in a room: thieves take nine tenths of the caches, yet hoarders end richer two times in three",
     ),
     (
         "s71-board",
