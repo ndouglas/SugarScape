@@ -1,0 +1,13 @@
+{
+  "name": "Minds 5: survival against the winter's period",
+  "description": "The mean population late in the run (window_mean, ticks 400–500) of the winter world under the planning rule (cache-winter-plan: 175 agents, β = 32, capacity 50, goap.horizon 20) against the winter's period γ (seasons.period): 50, 75, 100, 150 or 200 ticks of summer before as many of winter. The first winter ends at tick 2γ, which the sweep format can't follow: a fixed window from tick 400 sits right after the first winter's end at γ = 200, but after several winters have already passed at γ = 50 or 75 (2, 3 full cycles by tick 400), and mid-way through the second cycle at γ = 100 or 150. Read the small-γ points as survival after repeated winters, not strictly the first. Seeds 1–20.",
+  "base": { "preset": "cache-winter-plan" },
+  "x": {
+    "label": "Winter period γ",
+    "path": "seasons.period",
+    "values": [50, 75, 100, 150, 200]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 500,
+  "metric": { "kind": "window_mean", "series": "population", "from": 400 }
+}

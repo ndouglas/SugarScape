@@ -90,6 +90,17 @@ const GOLDEN: &[(&str, u64)] = &[
     ("goap-open", 0xb392facfc7a398e6),
     ("goap-truffles", 0xc41e161ff2270496),
     ("goap-walled", 0xce63e7e69fa6b37b),
+    // Minds 5
+    ("cache-winter-none", 0xcfa8d29ca799daab),
+    ("cache-winter-even", 0x1d316fffdb074b5e),
+    ("cache-winter-compensate", 0x40a9f0b62d0894cc),
+    ("cache-winter-plan", 0x79ec96490bcb0eb),
+    ("cache-winter-mixed", 0x118657e436a33b14),
+    ("central-near", 0x8d4aae8003a9c344),
+    ("central-far", 0x7a9e5541f980a69f),
+    ("central-linear", 0x175e71e582dd82c5),
+    ("cache-raby", 0xc30d92bb27b9366b),
+    ("cache-amodio", 0xbc5371ef776e55a5),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

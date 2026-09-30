@@ -3,7 +3,7 @@ import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
 import type { AgentView } from '../types';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
-import { memoryMarks } from './memory-overlay';
+import { cacheMarks, memoryMarks } from './memory-overlay';
 import { arrowHead, wrappedSegments } from './overlay';
 import { planSegments, routeSegments } from './plan-path';
 import { trailSegments } from './trail';
@@ -141,6 +141,7 @@ export class GridView {
     const inspection = this.engine.inspection;
     const agent = inspection && isSugarView(inspection.view) ? inspection.view.agent : null;
     this.drawMemory(agent);
+    this.drawCaches(agent);
     const accent = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#fff';
     if (agent?.plan && agent.plan.path.length) {
       ctx.save();
@@ -228,6 +229,42 @@ export class GridView {
       ctx.arc((m.x + 0.5) * CELL, (m.y + 0.5) * CELL, CELL * 0.28, 0, Math.PI * 2);
       if (m.filled) ctx.fill();
       ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Minds 5: the inspected agent's caches as small diamonds (`--c4`, outlined in black), sized by
+   * how much each holds, and, in a central-place world, its home as an outlined square.
+   */
+  private drawCaches(agent: AgentView | null): void {
+    if (!agent) return;
+    const marks = cacheMarks(agent.caching?.caches ?? []);
+    const home = agent.central?.home;
+    if (marks.length === 0 && !home) return;
+    const ctx = this.ctx;
+    const color = getComputedStyle(this.canvas).getPropertyValue('--c4').trim() || '#a0f';
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#000';
+    ctx.fillStyle = color;
+    for (const m of marks) {
+      const cx = (m.x + 0.5) * CELL;
+      const cy = (m.y + 0.5) * CELL;
+      const r = m.size * CELL;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - r);
+      ctx.lineTo(cx + r, cy);
+      ctx.lineTo(cx, cy + r);
+      ctx.lineTo(cx - r, cy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    if (home) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect((home[0] + 0.1) * CELL, (home[1] + 0.1) * CELL, CELL * 0.8, CELL * 0.8);
     }
     ctx.restore();
   }

@@ -8,6 +8,8 @@ import { playerRows } from '../spatial';
 import type {
   AgentView,
   AntsInspection,
+  CachingView,
+  CentralView,
   PunishmentInspection,
   ZiInspection,
   BaliInspection,
@@ -80,6 +82,47 @@ export function rateText(rate: number): string {
   return `${rate.toFixed(2)} sugar a tick`;
 }
 
+/**
+ * The Carrying row's text (Minds 5): the agent's good-0 holding against its carrying limit, "x of C",
+ * or just "x" when there is no limit (C = 0).
+ */
+export function carryingText(held: number, cap: number): string {
+  return cap > 0 ? `${fmt(held)} of ${fmt(cap)}` : fmt(held);
+}
+
+/** The Caches row's text (Minds 5): "n cache(s), holding y", singular at one cache. */
+export function cachesText(c: Pick<CachingView, 'caches' | 'total'>): string {
+  const n = c.caches.length;
+  return `${n} ${n === 1 ? 'cache' : 'caches'}, holding ${fmt(c.total)}`;
+}
+
+/**
+ * The Minds 5 caching rows, label and text: the agent's own caching rule (its own under mixed rules),
+ * what it carries against the limit (good 0, `held`), its caches, and rule plan's forecast shortfall
+ * when it is computing one. In a central-place world (`home` given) the larder, the cache at home, is
+ * its own row ("Larder: y at home") and the Caches row counts only the caches away from home.
+ */
+export function cachingRows(c: CachingView, held: number, home: [number, number] | null = null): [string, string][] {
+  const atHome = (k: { x: number; y: number }) => home != null && k.x === home[0] && k.y === home[1];
+  const away = c.caches.filter((k) => !atHome(k));
+  const larder = home != null ? c.caches.filter(atHome).reduce((sum, k) => sum + k.amount, 0) : null;
+  return [
+    ['Caching rule', c.rule],
+    ['Carrying', carryingText(held, c.holdings_cap)],
+    ['Caches', larder != null ? cachesText({ caches: away, total: away.reduce((sum, k) => sum + k.amount, 0) }) : cachesText(c)],
+    ...(larder != null ? [['Larder', `${fmt(larder)} at home`] as [string, string]] : []),
+    ...(c.forecast != null ? [['Forecast shortfall', fmt(c.forecast)] as [string, string]] : []),
+  ];
+}
+
+/** The Minds 5 central-place rows, label and text: the agent's home and its last delivered load. */
+export function centralRows(c: CentralView): [string, string][] {
+  return [
+    ['Home', `(${c.home[0]}, ${c.home[1]})`],
+    ['Last load', fmt(c.last_load)],
+  ];
+}
+
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
   private visible = false;
@@ -145,6 +188,8 @@ export class InspectPanel {
           ]
         : []),
       ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
+      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
+      ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),

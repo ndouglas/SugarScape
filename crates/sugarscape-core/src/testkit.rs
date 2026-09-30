@@ -84,6 +84,19 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         memory: crate::minds::memory::Memory::default(),
         rate: 0.0,
         leaving: None,
+        caches: std::collections::BTreeMap::new(),
+        cache_since: std::collections::BTreeMap::new(),
+        weights: crate::minds::caching::rules::Weights::default(),
+        episodes: None,
+        last_winter: None,
+        this_winter: crate::minds::caching::rules::WinterRecord::default(),
+        cache_params: None,
+        lab_allocation: None,
+        caching_rule: world.config.caching.rule,
+        home: None,
+        load_trip: 0.0,
+        delivery_rate: 0.0,
+        last_load: 0.0,
     }
 }
 

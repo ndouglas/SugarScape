@@ -119,6 +119,16 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
+    if config.caching.is_on() {
+        for s in ["cached", "buried", "dug", "recovery", "mean_cache_age"] {
+            names.push(s.into());
+        }
+    }
+    if config.central.enabled {
+        for s in ["mean_load", "trips"] {
+            names.push(s.into());
+        }
+    }
     names
 }
 
@@ -183,6 +193,14 @@ pub struct Snapshot {
     /// Minds 4's marginal-value series, present when `decision.rule` is `mvt`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mvt: Option<MvtStats>,
+    /// Minds 5's caching series, present when caching is on (`caching.rule
+    /// != none` or `caching.capacity > 0`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caching: Option<CachingStats>,
+    /// Minds 5's central-place foraging series, present when
+    /// `central.enabled`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub central: Option<CentralStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -253,6 +271,45 @@ pub struct MvtStats {
     pub replans: f64,
     /// Mean ρ over the living.
     pub mean_rate: f64,
+}
+
+/// Minds 5's caching series (see the module's series list). Every ratio is 0
+/// when its denominator (sugar buried since tick 0, or this tick's digs) is
+/// 0. `buried_total` and `dug_total` carry `recovery`'s running sums forward
+/// from the previous snapshot (`Stats::latest`); they aren't series
+/// themselves.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct CachingStats {
+    /// Σ over living agents' caches, read from the world (not this tick's
+    /// events).
+    pub cached: f64,
+    /// Sugar buried into caches this tick.
+    pub buried: f64,
+    /// Sugar dug out of caches this tick.
+    pub dug: f64,
+    /// Cumulative Σ dug ÷ Σ buried since tick 0.
+    pub recovery: f64,
+    /// Mean age (ticks since a cache's first burial) of this tick's digs.
+    pub mean_cache_age: f64,
+    buried_total: f64,
+    dug_total: f64,
+}
+
+/// Minds 5's central-place foraging series (see the module's series list).
+/// `delivered`, and so `mean_load`, counts a trip's gross intake, not net of
+/// what the agent ate on the way (`minds::central`'s `at_home`). `mean_load`
+/// is 0 before the first delivery; `trips` is 0 when nobody is alive.
+/// `delivered_total` and `deliveries_total` carry `mean_load`'s running sums
+/// forward from the previous snapshot (`Stats::latest`), the way `recovery`
+/// does; they aren't series themselves.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct CentralStats {
+    /// Cumulative Σ delivered ÷ Σ deliveries since tick 0.
+    pub mean_load: f64,
+    /// `deliveries ÷ alive` this tick.
+    pub trips: f64,
+    delivered_total: f64,
+    deliveries_total: f64,
 }
 
 impl Snapshot {
@@ -477,6 +534,62 @@ impl Snapshot {
                     mean_rate: mean(&|a| a.rate),
                 }
             }),
+            caching: world.config.caching.is_on().then(|| {
+                let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+                let (prev_buried, prev_dug) = world
+                    .stats
+                    .latest()
+                    .and_then(|s| s.caching)
+                    .map(|c| (c.buried_total, c.dug_total))
+                    .unwrap_or((0.0, 0.0));
+                let buried_total = prev_buried + events.buried;
+                let dug_total = prev_dug + events.dug;
+                let recovery = if buried_total == 0.0 {
+                    0.0
+                } else {
+                    dug_total / buried_total
+                };
+                let mean_cache_age = if events.digs == 0 {
+                    0.0
+                } else {
+                    events.dig_ages_sum as f64 / f64::from(events.digs)
+                };
+                CachingStats {
+                    cached,
+                    buried: events.buried,
+                    dug: events.dug,
+                    recovery,
+                    mean_cache_age,
+                    buried_total,
+                    dug_total,
+                }
+            }),
+            central: world.config.central.enabled.then(|| {
+                let (prev_delivered, prev_deliveries) = world
+                    .stats
+                    .latest()
+                    .and_then(|s| s.central)
+                    .map(|c| (c.delivered_total, c.deliveries_total))
+                    .unwrap_or((0.0, 0.0));
+                let delivered_total = prev_delivered + events.delivered;
+                let deliveries_total = prev_deliveries + f64::from(events.deliveries);
+                let mean_load = if deliveries_total == 0.0 {
+                    0.0
+                } else {
+                    delivered_total / deliveries_total
+                };
+                let trips = if n == 0 {
+                    0.0
+                } else {
+                    f64::from(events.deliveries) / n as f64
+                };
+                CentralStats {
+                    mean_load,
+                    trips,
+                    delivered_total,
+                    deliveries_total,
+                }
+            }),
         }
     }
 
@@ -582,6 +695,23 @@ impl Snapshot {
                     match name {
                         "replans" => return Some(m.replans),
                         "mean_rate" => return Some(m.mean_rate),
+                        _ => {}
+                    }
+                }
+                if let Some(c) = self.caching {
+                    match name {
+                        "cached" => return Some(c.cached),
+                        "buried" => return Some(c.buried),
+                        "dug" => return Some(c.dug),
+                        "recovery" => return Some(c.recovery),
+                        "mean_cache_age" => return Some(c.mean_cache_age),
+                        _ => {}
+                    }
+                }
+                if let Some(c) = self.central {
+                    match name {
+                        "mean_load" => return Some(c.mean_load),
+                        "trips" => return Some(c.trips),
                         _ => {}
                     }
                 }
@@ -934,6 +1064,7 @@ pub fn supply_demand(world: &World) -> SupplyDemand {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::CachingRule;
     use crate::config::Config;
     use crate::config::Pollutant;
 
@@ -1739,5 +1870,202 @@ mod tests {
         let names = series_names(&mvt);
         assert_eq!(names.len(), base + MVT_SERIES.len());
         assert_eq!(&names[base..], MVT_SERIES.as_slice());
+    }
+
+    const CACHING_SERIES: [&str; 5] = ["cached", "buried", "dug", "recovery", "mean_cache_age"];
+    const CENTRAL_SERIES: [&str; 2] = ["mean_load", "trips"];
+
+    #[test]
+    fn caching_and_central_series_exist_only_under_their_switch() {
+        let book = Config::default();
+        let names = series_names(&book);
+        for s in CACHING_SERIES.iter().chain(CENTRAL_SERIES.iter()) {
+            assert!(!names.contains(&s.to_string()), "{s}");
+        }
+        let snap = Snapshot::of(&World::new(book, 1).unwrap());
+        assert!(snap.caching.is_none());
+        assert!(snap.central.is_none());
+        for s in CACHING_SERIES.iter().chain(CENTRAL_SERIES.iter()) {
+            assert_eq!(snap.value(s), None, "{s}");
+        }
+
+        // A carrying limit alone (no named rule) still turns caching on.
+        let mut capacity_only = Config::default();
+        capacity_only.caching.capacity = 5;
+        let names = series_names(&capacity_only);
+        for s in CACHING_SERIES {
+            assert!(names.contains(&s.to_string()), "{s}");
+        }
+        for s in CENTRAL_SERIES {
+            assert!(!names.contains(&s.to_string()), "{s}");
+        }
+
+        let mut central = Config::default();
+        central.central.enabled = true;
+        let names = series_names(&central);
+        for s in CENTRAL_SERIES {
+            assert!(names.contains(&s.to_string()), "{s}");
+        }
+        for s in CACHING_SERIES {
+            assert!(!names.contains(&s.to_string()), "{s}");
+        }
+    }
+
+    #[test]
+    fn caching_series_reads_the_tick_events_and_world_caches() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.caching.rule = CachingRule::Even;
+        let a = spawn(&mut w, 0, 0);
+        let b = spawn(&mut w, 1, 0);
+        w.agent_mut(a).unwrap().caches.insert(2, 3.0);
+        w.agent_mut(b).unwrap().caches.insert(7, 4.5);
+        w.events.buried = 6.0;
+        w.events.dug = 2.0;
+        w.events.digs = 2;
+        w.events.dig_ages_sum = 9;
+        let s = Snapshot::of(&w);
+        let c = s.caching.expect("caching stats present");
+        assert_eq!(c.cached, 7.5, "Σ over living agents' caches");
+        assert_eq!(c.buried, 6.0);
+        assert_eq!(c.dug, 2.0);
+        assert_eq!(c.mean_cache_age, 4.5, "9 ticks over 2 digs");
+        assert_eq!(c.recovery, 2.0 / 6.0, "first tick's Σ dug ÷ Σ buried");
+        assert!(s.central.is_none());
+        for name in CACHING_SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+    }
+
+    #[test]
+    fn caching_recovery_is_cumulative_since_tick_zero() {
+        use crate::testkit::*;
+        use crate::world::TickEvents;
+        let mut w = blank_world(5, 5);
+        w.config.caching.rule = CachingRule::Even;
+
+        w.events.buried = 10.0;
+        let s1 = Snapshot::of(&w);
+        assert_eq!(s1.caching.unwrap().recovery, 0.0, "nothing dug yet");
+        w.stats.push(s1);
+
+        w.events = TickEvents::default();
+        w.events.dug = 4.0;
+        let s2 = Snapshot::of(&w);
+        assert_eq!(
+            s2.caching.unwrap().recovery,
+            0.4,
+            "4 of the 10 buried so far"
+        );
+        w.stats.push(s2);
+
+        w.events = TickEvents::default();
+        w.events.buried = 10.0;
+        w.events.dug = 1.0;
+        let s3 = Snapshot::of(&w);
+        assert_eq!(
+            s3.caching.unwrap().recovery,
+            5.0 / 20.0,
+            "5 dug of 20 buried, cumulative since tick 0"
+        );
+    }
+
+    #[test]
+    fn caching_series_zero_denominators_are_zero_not_nan() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        w.config.caching.rule = CachingRule::Even;
+        // Nothing buried yet, no digs, nobody caching: 0, not NaN.
+        let s = Snapshot::of(&w);
+        let c = s.caching.unwrap();
+        assert_eq!((c.recovery, c.mean_cache_age, c.cached), (0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn central_series_reads_the_tick_events() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.central.enabled = true;
+        spawn(&mut w, 0, 0);
+        spawn(&mut w, 1, 0);
+        w.events.deliveries = 3;
+        w.events.delivered = 12.0;
+        let s = Snapshot::of(&w);
+        let c = s.central.expect("central stats present");
+        assert_eq!(c.mean_load, 4.0, "12 delivered over 3 deliveries so far");
+        assert_eq!(c.trips, 1.5, "3 deliveries over 2 living agents");
+        assert!(s.caching.is_none());
+        for name in CENTRAL_SERIES {
+            assert!(s.value(name).is_some(), "{name}");
+        }
+    }
+
+    #[test]
+    fn central_series_zero_denominators_are_zero_not_nan() {
+        let mut w = crate::testkit::blank_world(5, 5);
+        w.config.central.enabled = true;
+        // Nobody alive, nothing delivered: 0, not NaN.
+        let s = Snapshot::of(&w);
+        let c = s.central.unwrap();
+        assert_eq!((c.mean_load, c.trips), (0.0, 0.0));
+    }
+
+    #[test]
+    fn central_mean_load_is_cumulative_since_tick_zero() {
+        use crate::testkit::*;
+        use crate::world::TickEvents;
+        let mut w = blank_world(5, 5);
+        w.config.central.enabled = true;
+        spawn(&mut w, 0, 0);
+        spawn(&mut w, 1, 0);
+
+        w.events.deliveries = 3;
+        w.events.delivered = 12.0;
+        let s1 = Snapshot::of(&w);
+        assert_eq!(s1.central.unwrap().mean_load, 4.0, "12 over 3, tick 1");
+        w.stats.push(s1);
+
+        w.events = TickEvents::default();
+        w.events.deliveries = 1;
+        w.events.delivered = 2.0;
+        let s2 = Snapshot::of(&w);
+        assert_eq!(
+            s2.central.unwrap().mean_load,
+            14.0 / 4.0,
+            "14 delivered of 4 deliveries, cumulative since tick 0"
+        );
+    }
+
+    #[test]
+    fn caching_and_central_series_names_come_after_mvt() {
+        let base = series_names(&Config::default()).len();
+
+        let mut caching = Config::default();
+        caching.caching.rule = CachingRule::Even;
+        let names = series_names(&caching);
+        assert_eq!(names.len(), base + CACHING_SERIES.len());
+        assert_eq!(&names[base..], CACHING_SERIES.as_slice());
+
+        let mut central = Config::default();
+        central.central.enabled = true;
+        let names = series_names(&central);
+        assert_eq!(names.len(), base + CENTRAL_SERIES.len());
+        assert_eq!(&names[base..], CENTRAL_SERIES.as_slice());
+
+        let mut both = Config::default();
+        both.caching.rule = CachingRule::Even;
+        both.central.enabled = true;
+        let names = series_names(&both);
+        assert_eq!(
+            names.len(),
+            base + CACHING_SERIES.len() + CENTRAL_SERIES.len()
+        );
+        assert_eq!(
+            &names[base..base + CACHING_SERIES.len()],
+            CACHING_SERIES.as_slice()
+        );
+        assert_eq!(
+            &names[base + CACHING_SERIES.len()..],
+            CENTRAL_SERIES.as_slice()
+        );
     }
 }

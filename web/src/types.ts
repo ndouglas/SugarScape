@@ -120,6 +120,35 @@ export interface Truffles {
   seed: number;
 }
 
+/** Minds 5: which hypothesis a caching agent's burying and digging follow. */
+export type CachingRule = 'none' | 'even' | 'compensate' | 'plan';
+
+/**
+ * Minds 5's caching (absent from older configs: rule none, no carrying limit). `rule`, `capacity`
+ * and `mixed` are reset-only; `share`, `lambda` and `lookahead` apply live. Needs one good.
+ */
+export interface Caching {
+  rule: CachingRule;
+  /** Most good 0 an agent may hold (0 = no limit). */
+  capacity: number;
+  share: number;
+  lambda: number;
+  lookahead: number;
+  /** A quarter of the founders on each rule, by id; `rule` is then ignored. */
+  mixed: boolean;
+}
+
+/** Minds 5: central-place foraging (absent from older configs: off); reset-only. */
+export interface Central {
+  enabled: boolean;
+}
+
+/** Minds 5: a scripted lab harness (only from the lab presets; not editable on the page). */
+export interface Lab {
+  protocol: 'raby' | 'amodio';
+  food_first: boolean;
+}
+
 export interface Config {
   width: number;
   height: number;
@@ -129,7 +158,8 @@ export interface Config {
   tag_length: number;
   goods: Good[];
   growback: { rate: number; instant: boolean };
-  seasons: { enabled: boolean; winter_divisor: number; period: number };
+  /** `mode` is Minds 5's (absent from older configs: `hemispheres`, the book's); reset-only. */
+  seasons: { enabled: boolean; winter_divisor: number; period: number; mode?: 'hemispheres' | 'global' };
   pollution: { enabled: boolean; pollutants: Pollutant[] };
   diffusion: { enabled: boolean; every: number };
   lifespan: { enabled: boolean; max_age: URange; founders?: 'newborn' | 'random' };
@@ -156,6 +186,9 @@ export interface Config {
   truffles?: Truffles;
   goap?: Goap;
   mvt?: Mvt;
+  caching?: Caching;
+  central?: Central;
+  lab?: Lab | null;
   schedule: ScheduledChange[];
 }
 
@@ -1370,7 +1403,15 @@ export interface AgreementStats {
 
 export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats;
 
-export interface SiteView { x: number; y: number; resources: number[]; capacities: number[]; pollution: number[] }
+export interface SiteView {
+  x: number;
+  y: number;
+  resources: number[];
+  capacities: number[];
+  pollution: number[];
+  /** Minds 5: the live wall state here (0 free, 1 a fence, 2 opaque); absent from older builds. */
+  wall?: number;
+}
 export interface LinkView { id: number; alive: boolean }
 export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; good: number; due: number; due_tick: number }
 export interface DiseaseView { id: number; bits: string; distance: number }
@@ -1419,7 +1460,19 @@ export interface AgentView {
   goap?: GoapView | null;
   /** Minds 4: the running intake-rate estimate ρ, under `decision.rule: 'mvt'` only. */
   rate?: number | null;
+  /** Minds 5: caching state, while caching is on (a rule or a carrying limit). */
+  caching?: CachingView | null;
+  /** Minds 5: central-place state, while `central.enabled`. */
+  central?: CentralView | null;
 }
+export interface CacheView { x: number; y: number; amount: number }
+/**
+ * Minds 5: the agent's own caching rule, its carrying limit (0 for none), its caches in site order and
+ * their total, and rule plan's forecast shortfall (null when the rule isn't computing one).
+ */
+export interface CachingView { rule: CachingRule; holdings_cap: number; caches: CacheView[]; total: number; forecast: number | null }
+/** Minds 5: the agent's home and the load it delivered on its last delivering trip. */
+export interface CentralView { home: [number, number]; last_load: number }
 export interface GoapView { steps: [number, number][]; gathers: number; goal: number }
 export interface Inspection { site: SiteView; agent: AgentView | null }
 

@@ -4,6 +4,8 @@
 //! values only what rule M does.
 
 pub mod astar;
+pub mod caching;
+pub mod central;
 pub mod goap;
 pub mod grid;
 pub mod memory;
@@ -18,6 +20,10 @@ use crate::world::World;
 /// Rule M's step under the configured decision rule: moves `id` and returns
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
+    // Minds 5: central-place foraging (under `mvt` or `goap`, validated).
+    if world.config.central.enabled {
+        return central::act(world, id);
+    }
     match world.config.decision.rule {
         DecisionRule::Book => movement::act(world, id),
         DecisionRule::Utility => utility::act(world, id),

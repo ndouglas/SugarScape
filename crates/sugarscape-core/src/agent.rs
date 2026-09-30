@@ -1,5 +1,7 @@
 //! Agents and their genetic and cultural attributes.
 
+use std::collections::BTreeMap;
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -236,6 +238,64 @@ pub struct Agent {
     /// the site becomes occupied. Never hashed, exported or shared, like
     /// `plan`.
     pub leaving: Option<Pos>,
+    /// Minds 5: this agent's caches, site index → sugar buried there
+    /// (`minds::caching`). Nobody else sees or takes them; they don't decay,
+    /// die with the agent and aren't inherited. Hashed only when non-empty.
+    pub caches: BTreeMap<u32, f64>,
+    /// Minds 5: for each cache, the tick of the first unit buried there since
+    /// the site's cache was last empty (for the age of what's dug).
+    pub cache_since: BTreeMap<u32, u64>,
+    /// Minds 5, rule `compensate`: its known sites (those it has harvested
+    /// from), site index → weight w (starting at 1, × (1 − λ) each time it
+    /// finds food there), capped at `MEMORY_CAP`. Empty under every other
+    /// rule. Never hashed, exported or shared, like `rate`.
+    pub weights: crate::minds::caching::rules::Weights,
+    /// Minds 5: what-where-when memory for the lab's day-by-day protocols
+    /// (Task 6's harness fills it); `None` in the field, where rule `plan`
+    /// plans from its winter record instead. Never hashed.
+    pub episodes: Option<crate::minds::caching::episodes::Episodes>,
+    /// Minds 5, rule `plan`: its last complete winter's record (`None`
+    /// before its first winter ends). Never hashed.
+    pub last_winter: Option<crate::minds::caching::rules::WinterRecord>,
+    /// Minds 5, rule `plan`: the winter it's in, being recorded (empty in
+    /// summer); moved to `last_winter` on the first tick of summer.
+    pub this_winter: crate::minds::caching::rules::WinterRecord,
+    /// Minds 5, the lab only: this agent's own (`caching.share`,
+    /// `caching.lambda`), drawn per agent by `lab::run_population`; `None`
+    /// uses the config's. Never hashed.
+    pub cache_params: Option<(f64, f64)>,
+    /// Minds 5, the lab only: this agent's test-evening allocation
+    /// (`lab::allocation`), frozen when the test evening starts so a live
+    /// config change can't strand it mid-evening; `None` before then. Never
+    /// hashed; draws nothing.
+    pub lab_allocation: Option<Vec<(u32, f64)>>,
+    /// Minds 5: this agent's caching rule under `caching.mixed` (founders
+    /// round-robin by id, children their parent's; see
+    /// `minds::caching::rules::rule_of`). Without `mixed` every agent
+    /// follows `caching.rule` and this only records it at birth. Never
+    /// hashed, like `rate`.
+    pub caching_rule: crate::config::CachingRule,
+    /// Minds 5, central-place foraging (`central.enabled`): the site the
+    /// agent was placed or born on, where its larder (its cache there) is
+    /// and where it delivers its loads; set by `World::insert_agent`, `None`
+    /// in every other world. Never hashed, like `rate`.
+    pub home: Option<Pos>,
+    /// Minds 5, central-place foraging: good 0 gathered since the agent
+    /// last left home (the load it's carrying back); 0 in other worlds.
+    /// Never hashed.
+    pub load_trip: f64,
+    /// Minds 5, central-place foraging: ρ over round trips, the running
+    /// estimate of sugar delivered home per tick (`minds::central`); starts
+    /// at the agent's good-0 metabolism, with no draw, as Minds 4's `rate`
+    /// does. Never hashed.
+    pub delivery_rate: f64,
+    /// Minds 5, central-place foraging: the load delivered on the last trip
+    /// that delivered anything (`minds::central::at_home`'s `q`), for
+    /// Inspect; 0 before a first delivery and in every other world. Not
+    /// updated on a trip that delivers nothing, so it holds while an agent
+    /// sits home between trips. Never hashed, exported or shared, like
+    /// `rate`.
+    pub last_load: f64,
 }
 
 impl Agent {
@@ -278,8 +338,22 @@ impl Agent {
             memory: crate::minds::memory::Memory::default(),
             rate: 0.0,
             leaving: None,
+            caches: BTreeMap::new(),
+            cache_since: BTreeMap::new(),
+            weights: crate::minds::caching::rules::Weights::default(),
+            episodes: None,
+            last_winter: None,
+            this_winter: crate::minds::caching::rules::WinterRecord::default(),
+            cache_params: None,
+            lab_allocation: None,
+            caching_rule: config.caching.rule,
+            home: None,
+            load_trip: 0.0,
+            delivery_rate: 0.0,
+            last_load: 0.0,
         };
         agent.rate = f64::from(agent.metabolism[0]);
+        agent.delivery_rate = agent.rate;
         // Goods 1..n draw where Chapter IV drew spice: after the tags,
         // endowment then metabolism, in good order.
         for (i, good) in config.goods.iter().enumerate().skip(1) {

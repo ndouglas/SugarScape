@@ -1,5 +1,5 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Config, Decision, Goap, Memory, Movement, Mvt, Truffles } from './types';
+import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Truffles } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
@@ -18,6 +18,13 @@ const mvt = (c: Config): Mvt => c.mvt ?? { alpha: 0.05 };
 
 /** A config's truffles, or the engine's default (share 0: no truffles) for older configs. */
 const truffles = (c: Config): Truffles => c.truffles ?? { share: 0, value: 5, regrow: 30, seed: 1 };
+
+/** A config's caching, or the engine's default (rule none, no carrying limit) for older configs. */
+const caching = (c: Config): Caching =>
+  c.caching ?? { rule: 'none', capacity: 0, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false };
+
+/** A config's central-place foraging, or the engine's default (off) for older configs. */
+const central = (c: Config): Central => c.central ?? { enabled: false };
 
 interface Base {
   path: string;
@@ -95,7 +102,7 @@ export const GROUPS: Group[] = [
     title: 'Seasons', enable: 'seasons.enabled',
     controls: [
       { kind: 'number', path: 'seasons.period', label: 'Season length γ', min: 1, max: 500, step: 1 },
-      { kind: 'number', path: 'seasons.winter_divisor', label: 'Winter slowdown β', min: 1, max: 20, step: 1 },
+      { kind: 'number', path: 'seasons.winter_divisor', label: 'Winter slowdown β', min: 1, max: 32, step: 1 },
     ],
   },
   {
@@ -316,6 +323,55 @@ export const GROUPS: Group[] = [
       {
         kind: 'number', path: 'truffles.seed', label: 'Layout seed', min: 0, max: 999_999, step: 1, reset: true,
         adjust: (next) => { next.truffles = { ...truffles(next), ...next.truffles }; },
+      },
+    ],
+  },
+  {
+    title: 'Caching (Minds 5)',
+    minds: true,
+    note: 'A carrying limit, and caches an agent buries and digs back when it runs short. Even buries a share of its surplus wherever it is; compensate buries more where it has found food less often (each find lowers a place’s weight by λ); plan remembers where it was and what it found and buries for the shortfall it foresees, up to the lookahead in days, or, in a winter everywhere, for the winter ahead. Caching needs one good and walking, and no combat. With the Seasons rule on, the seasons mode can put winter on every row at once, with the same γ and β. Central-place foraging gives each agent a home to carry loads back to; it needs the marginal-value rule or GOAP, and a carrying limit.',
+    controls: [
+      {
+        kind: 'select', path: 'caching.rule', label: 'Caching rule', reset: true,
+        current: (c) => caching(c).rule,
+        options: [
+          { value: 'none', label: 'None (no caching)', apply: (c) => { c.caching = { ...caching(c), rule: 'none' }; } },
+          { value: 'even', label: 'Even: bury a share of any surplus', apply: (c) => { c.caching = { ...caching(c), rule: 'even' }; } },
+          { value: 'compensate', label: 'Compensate: more where food was scarce', apply: (c) => { c.caching = { ...caching(c), rule: 'compensate' }; } },
+          { value: 'plan', label: 'Plan: for the shortfall it foresees', apply: (c) => { c.caching = { ...caching(c), rule: 'plan' }; } },
+        ],
+      },
+      {
+        kind: 'toggle', path: 'caching.mixed', label: 'Mix the rules (a quarter each, by id)', reset: true,
+        adjust: (next) => { next.caching = { ...caching(next), ...next.caching }; },
+      },
+      {
+        kind: 'number', path: 'caching.capacity', label: 'Carrying limit (0 for none)', min: 0, max: 500, step: 1, reset: true,
+        adjust: (next) => { next.caching = { ...caching(next), ...next.caching }; },
+      },
+      {
+        kind: 'number', path: 'caching.share', label: 'Share of surplus buried', min: 0.05, max: 1, step: 0.05,
+        adjust: (next) => { next.caching = { ...caching(next), ...next.caching }; },
+      },
+      {
+        kind: 'number', path: 'caching.lambda', label: 'Compensate: weight lost per find λ', min: 0.05, max: 1, step: 0.05,
+        adjust: (next) => { next.caching = { ...caching(next), ...next.caching }; },
+      },
+      {
+        kind: 'number', path: 'caching.lookahead', label: 'Plan: days looked ahead', min: 1, max: 10, step: 1,
+        adjust: (next) => { next.caching = { ...caching(next), ...next.caching }; },
+      },
+      {
+        kind: 'select', path: 'seasons.mode', label: 'Seasons', reset: true,
+        current: (c) => c.seasons.mode ?? 'hemispheres',
+        options: [
+          { value: 'hemispheres', label: 'North and south take turns (book)', apply: (c) => { c.seasons = { ...c.seasons, mode: 'hemispheres' }; } },
+          { value: 'global', label: 'Winter everywhere at once', apply: (c) => { c.seasons = { ...c.seasons, mode: 'global' }; } },
+        ],
+      },
+      {
+        kind: 'toggle', path: 'central.enabled', label: 'Central-place foraging (a home to carry loads to)', reset: true,
+        adjust: (next) => { next.central = { ...central(next), ...next.central }; },
       },
     ],
   },

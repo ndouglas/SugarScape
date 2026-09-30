@@ -40,7 +40,7 @@ use super::goap::forage::reachable_candidates;
 /// result can't go negative on its own, but the clamp guards the arithmetic
 /// regardless; `f64::max` returns its non-NaN argument when the other is
 /// NaN, so this can't produce NaN either.
-fn updated_rate(rate: f64, alpha: f64, gain: f64) -> f64 {
+pub(crate) fn updated_rate(rate: f64, alpha: f64, gain: f64) -> f64 {
     (rate + alpha * (gain - rate)).max(0.0)
 }
 

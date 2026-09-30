@@ -409,7 +409,10 @@ fn builtins_and_series_names_are_listed() {
             "bali-two-node",
             "bali-gamma",
             "bali-adaptive",
-            "bali-links"
+            "bali-links",
+            "cache-capacity",
+            "cache-winter",
+            "central-distance"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -1348,4 +1351,129 @@ fn checkpoint_restores_the_same_world() {
         sim.latest_value("population"),
         Some(f64::from(sim.population()))
     );
+}
+
+#[wasm_bindgen_test]
+fn caching_winter_planning_matches_its_golden_entry() {
+    // Minds 5: caching's rule `plan` in the winter field; native and wasm must agree.
+    let mut sim = Sim::new(&preset_json("cache-winter-plan"), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0x079ec96490bcb0eb");
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_a_caching_agents_fields() {
+    let mut sim = Sim::new(&preset_json("cache-winter-plan"), 1, JsValue::NULL).unwrap();
+    sim.step(260);
+
+    let (width, height) = (sim.width(), sim.height());
+    let mut found = false;
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let caching = agent
+                .get("caching")
+                .and_then(|c| c.as_object())
+                .expect("caching is on for every agent in this preset");
+            let caches = caching.get("caches").and_then(|c| c.as_array()).unwrap();
+            if caches.is_empty() {
+                continue;
+            }
+            assert_eq!(
+                caching.get("rule").and_then(|r| r.as_str()),
+                Some("plan"),
+                "this preset's rule is plan"
+            );
+            assert_eq!(
+                caching.get("holdings_cap").and_then(|h| h.as_f64()),
+                Some(50.0)
+            );
+            let total = caching.get("total").and_then(|t| t.as_f64()).unwrap();
+            assert!(total > 0.0);
+            let sum: f64 = caches
+                .iter()
+                .map(|c| c.get("amount").and_then(|a| a.as_f64()).unwrap())
+                .sum();
+            assert!((sum - total).abs() < 1e-9, "total is the sum of the caches");
+            for c in caches {
+                assert!(c.get("x").and_then(|v| v.as_u64()).is_some());
+                assert!(c.get("y").and_then(|v| v.as_u64()).is_some());
+            }
+            // Tick 260 is in the second summer (the winter world's γ = 100,
+            // ended tick 200): rule `plan` computes a forecast there.
+            assert!(
+                caching.get("forecast").and_then(|f| f.as_f64()).is_some(),
+                "the second summer has a forecast"
+            );
+            found = true;
+            break;
+        }
+        if found {
+            break;
+        }
+    }
+    assert!(found, "expected at least one caching agent by tick 260");
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_a_mixed_labs_agents_own_rule() {
+    // caching.mixed deals rules round-robin by founder id (Task 9): with 8
+    // agents, all four rules (none, even, compensate, plan) should show up.
+    let mut sim = Sim::new(&preset_json("cache-raby"), 1, JsValue::NULL).unwrap();
+    sim.step(1);
+
+    let (width, height) = (sim.width(), sim.height());
+    let mut rules = std::collections::BTreeSet::new();
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let caching = agent
+                .get("caching")
+                .and_then(|c| c.as_object())
+                .expect("caching is on in this lab");
+            let rule = caching
+                .get("rule")
+                .and_then(|r| r.as_str())
+                .expect("every agent has its own rule under mixed");
+            rules.insert(rule.to_string());
+        }
+    }
+    assert_eq!(
+        rules,
+        ["none", "even", "compensate", "plan"]
+            .into_iter()
+            .map(String::from)
+            .collect(),
+        "8 agents dealt round-robin over 4 rules should show all of them"
+    );
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_the_labs_doorways_open_after_the_test_evening() {
+    // Raby's protocol (crates/sugarscape-core/src/minds/caching/lab.rs): K1's
+    // and K3's doorways open on the test evening (tick 4 × 6 training days =
+    // 24); K2's stays shut. `SiteView.wall` reads the world's own wall
+    // state, not `config.walls` (which lists every doorway shut).
+    let mut sim = Sim::new(&preset_json("cache-raby"), 1, JsValue::NULL).unwrap();
+    sim.step(25);
+
+    let wall_at = |sim: &Sim, x: u32, y: u32| -> u64 {
+        let view: serde_json::Value = serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+        view.get("site")
+            .and_then(|s| s.get("wall"))
+            .and_then(|w| w.as_u64())
+            .unwrap()
+    };
+    assert_eq!(wall_at(&sim, 2, 4), 0, "K1's doorway is open");
+    assert_eq!(wall_at(&sim, 6, 4), 2, "K2's doorway stays shut (opaque)");
+    assert_eq!(wall_at(&sim, 10, 4), 0, "K3's doorway is open");
 }

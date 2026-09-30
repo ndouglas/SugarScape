@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 155] = [
+const BUILTINS: [Builtin; 158] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1585,6 +1585,18 @@ const BUILTINS: [Builtin; 155] = [
     Builtin {
         id: "bali-links",
         json: include_str!("../../../sweeps/bali-links.json"),
+    },
+    Builtin {
+        id: "cache-capacity",
+        json: include_str!("../../../sweeps/cache-capacity.json"),
+    },
+    Builtin {
+        id: "cache-winter",
+        json: include_str!("../../../sweeps/cache-winter.json"),
+    },
+    Builtin {
+        id: "central-distance",
+        json: include_str!("../../../sweeps/central-distance.json"),
     },
 ];
 
@@ -2563,7 +2575,10 @@ mod tests {
                 "bali-two-node",
                 "bali-gamma",
                 "bali-adaptive",
-                "bali-links"
+                "bali-links",
+                "cache-capacity",
+                "cache-winter",
+                "central-distance"
             ]
         );
         for b in builtins() {

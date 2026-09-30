@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { memoryDrawSpec, memoryMarks } from './memory-overlay';
+import { cacheMarks, memoryDrawSpec, memoryMarks } from './memory-overlay';
 
 describe('memoryDrawSpec', () => {
   it('is fully opaque (0.4) for a site seen this tick (age 0)', () => {
@@ -42,5 +42,19 @@ describe('memoryMarks', () => {
 
   it('gives no marks for an empty list', () => {
     expect(memoryMarks(new Uint32Array(0), 20)).toEqual([]);
+  });
+});
+
+describe('cacheMarks', () => {
+  it('draws each cache at its site, sized by the square root of its share of the largest', () => {
+    expect(cacheMarks([{ x: 1, y: 2, amount: 16 }, { x: 3, y: 4, amount: 4 }])).toEqual([
+      { x: 1, y: 2, size: 0.35 },
+      { x: 3, y: 4, size: 0.25 },
+    ]);
+  });
+
+  it('draws nothing for no caches, and the smallest mark for an empty one', () => {
+    expect(cacheMarks([])).toEqual([]);
+    expect(cacheMarks([{ x: 0, y: 0, amount: 0 }])).toEqual([{ x: 0, y: 0, size: 0.15 }]);
   });
 });

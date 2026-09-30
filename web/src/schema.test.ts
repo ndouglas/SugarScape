@@ -248,3 +248,67 @@ describe('truffles', () => {
     expect(c.truffles).toEqual({ share: 0, value: 8, regrow: 30, seed: 1 });
   });
 });
+
+describe('caching (Minds 5)', () => {
+  const group = GROUPS.find((g) => g.title === 'Caching (Minds 5)')!;
+
+  it('is a Minds group holding the caching controls, the seasons mode and central-place foraging', () => {
+    expect(group.minds).toBe(true);
+    expect(group.controls.map((c) => c.path)).toEqual([
+      'caching.rule', 'caching.mixed', 'caching.capacity', 'caching.share', 'caching.lambda', 'caching.lookahead', 'seasons.mode', 'central.enabled',
+    ]);
+    // The book's Seasons group keeps its own controls; the mode lives here.
+    const seasons = GROUPS.find((g) => g.title === 'Seasons')!;
+    expect(seasons.minds).toBeUndefined();
+    expect(seasons.controls.map((c) => c.path)).toEqual(['seasons.period', 'seasons.winter_divisor']);
+  });
+
+  it('raises the winter slowdown β to 32, which the winter presets use', () => {
+    const beta = control('seasons.winter_divisor');
+    if (beta.kind !== 'number') throw new Error('β is a number');
+    expect([beta.min, beta.max]).toEqual([1, 32]);
+  });
+
+  it('makes rule, mixed, capacity, seasons mode and central reset-only, and share, λ and lookahead live, in their ranges', () => {
+    for (const path of ['caching.rule', 'caching.mixed', 'caching.capacity', 'seasons.mode', 'central.enabled']) expect(control(path).reset).toBe(true);
+    const ranges: [string, number, number, number][] = [
+      ['caching.capacity', 0, 500, 1],
+      ['caching.share', 0.05, 1, 0.05],
+      ['caching.lambda', 0.05, 1, 0.05],
+      ['caching.lookahead', 1, 10, 1],
+    ];
+    for (const [path, min, max, step] of ranges) {
+      const k = control(path);
+      if (k.kind !== 'number') throw new Error(`${path} is a number`);
+      expect([k.min, k.max, k.step]).toEqual([min, max, step]);
+      if (path !== 'caching.capacity') expect(k.reset).toBeUndefined();
+    }
+    expect(control('caching.mixed').label).toBe('Mix the rules (a quarter each, by id)');
+  });
+
+  it('reads older configs as rule none, hemispheres, and seeds complete objects when set', () => {
+    const rule = control('caching.rule');
+    const mode = control('seasons.mode');
+    if (rule.kind !== 'select' || mode.kind !== 'select') throw new Error('selects');
+    const c = { seasons: { enabled: true, winter_divisor: 8, period: 50 } } as unknown as Config;
+    expect(rule.current(c)).toBe('none');
+    expect(mode.current(c)).toBe('hemispheres');
+    expect(rule.options.map((o) => o.value)).toEqual(['none', 'even', 'compensate', 'plan']);
+    rule.options.find((o) => o.value === 'plan')!.apply(c);
+    expect(c.caching).toEqual({ rule: 'plan', capacity: 0, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false });
+    mode.options.find((o) => o.value === 'global')!.apply(c);
+    expect(c.seasons).toEqual({ enabled: true, winter_divisor: 8, period: 50, mode: 'global' });
+  });
+
+  it('creates complete caching and central objects when a control is set on a config missing them', () => {
+    const c = {} as unknown as Config;
+    expect(() => setPath(structuredClone(c), 'caching.capacity', 20)).toThrow();
+    expect(() => setPath(structuredClone(c), 'central.enabled', true)).toThrow();
+    for (const [path, value] of [['caching.capacity', 20], ['caching.lookahead', 3], ['caching.mixed', true], ['central.enabled', true]] as const) {
+      control(path).adjust!(c, structuredClone(c));
+      setPath(c, path, value);
+    }
+    expect(c.caching).toEqual({ rule: 'none', capacity: 20, share: 0.5, lambda: 0.5, lookahead: 3, mixed: true });
+    expect(c.central).toEqual({ enabled: true });
+  });
+});

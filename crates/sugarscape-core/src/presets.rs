@@ -4,10 +4,11 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, Config, CultureKind, DecisionRule, Good, Idle, Map, MemoryPrior, MoveMode,
-    Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange, Transform, URange, Wall,
-    SPICE_COLOR,
+    three_tribes, CachingRule, Config, CultureKind, DecisionRule, Good, Idle, Lab, LabProtocol,
+    Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange,
+    SeasonMode, Transform, URange, Wall, SPICE_COLOR,
 };
+use crate::minds::caching::lab::{rig_config, LabParams};
 use crate::model::ModelConfig;
 
 #[derive(Clone, Debug, Serialize)]
@@ -189,6 +190,107 @@ fn mvt_world(c: &mut Config, rule: DecisionRule) {
     c.decision.rule = rule;
     memory(c, 1000, 1.0);
     c.memory.prior = MemoryPrior::Map;
+}
+
+/// Minds 5: the winter world. walk-capacity's landscape (the default
+/// sugarscape, rule M's agents walking, mem-open's memory: half of them
+/// remember for 100 ticks) with a winter everywhere at once
+/// (`seasons.mode: global`, γ = 100, β = 32), 175 agents of metabolism 1,
+/// a carrying limit of 50 (half a winter's need: without a limit, holdings
+/// are an unlimited cache), `goap.horizon` 20 (R = 20 for every rule) and
+/// caching `rule` (`mixed` deals the four rules round-robin instead).
+///
+/// The balance was measured before this was recorded (Task 9; 5 seeds):
+/// (a) the first summer's surplus, measured with no caching and no carrying
+/// limit, is 151.0 per agent against a winter need of 100 (1.51 ≥ 1.5),
+/// and (b) winter regrowth (sites with
+/// capacity × α γ / β = 6 466) is 0.39 of the population's winter need
+/// (165.8 alive × 100). walk-capacity's own traits (metabolism 1–4) can't
+/// meet (a) at any population, β or γ tried (a walker harvests at most
+/// about 3.5 a tick), hence metabolism 1. Survival through the first winter
+/// (alive at 200 ÷ alive at 100): none 48.5 %, even 74.9 %, compensate
+/// 73.8 %, plan 88.2 %. At the default horizon (R = 10) even did worse than
+/// none (45.2 %, compensate 44.6 %, plan 71.5 %): under rule M a hungry
+/// agent heads for its biggest cache, not its nearest, and with a thin
+/// reserve starves on the way (it goes hungry only below R / 2).
+fn winter_world(c: &mut Config, rule: CachingRule, mixed: bool) {
+    c.movement.mode = MoveMode::Walk;
+    memory(c, 100, 0.5);
+    c.population = 175;
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.seasons.enabled = true;
+    c.seasons.mode = SeasonMode::Global;
+    c.seasons.period = 100;
+    c.seasons.winter_divisor = 32;
+    c.caching.capacity = 50;
+    c.caching.rule = rule;
+    c.caching.mixed = mixed;
+    c.goap.horizon = 20;
+}
+
+/// Minds 5: the central-place world. A 60 × 30 torus with a column of
+/// five patches (peaks of radius 3 and height 4 at x = 45, y = 3, 9, 15,
+/// 21, 27) growing back 0.25 a tick (`instant` for linear loading: every
+/// site refills at once, so a load grows in step with the ticks spent
+/// gathering it). 5 agents of metabolism 1, endowment 60 and vision 1–6
+/// have their homes at random rows of the column x = `home_x`, so the
+/// patches are 45 − `home_x` columns east of home (and at most 3 rows off a
+/// patch center). They walk, know the whole map (memory span 1 000, `prior:
+/// map`), carry loads of at most 320 (the limit caps a trip's load, not
+/// load plus provisions) and forage in round trips under the marginal-value
+/// rule (`mvt.alpha` 0.05). Near is `home_x` 37 (8 columns), far is 25 (20
+/// columns).
+///
+/// The limit was raised (80, 120, 160, 240, 320) until ρ or an empty site,
+/// not a full load, ended at least half the trips at both distances (seeds
+/// 1–3, ticks 1–1000): at 320, full ends 35 % near, 49 % far and 33 %
+/// linear; the guard for food to get home ends under 1 %. Mean gross load
+/// (gathered on the trip) and delivered load (brought home, after what was
+/// eaten of it on the way): near 127.7 and 84.0, far 178.0 and 109.2,
+/// linear 169.8 and 131.5; every agent alive at tick 1000. Far loads are
+/// larger than near ones, the direction central-place theory predicts. A
+/// first try with one patch and the homes in a 5-row block starved: the
+/// agents all made for the one best site, and an endowment above the
+/// carrying limit left no room to gather.
+fn central_world(c: &mut Config, home_x: u32, instant: bool) {
+    c.width = 60;
+    c.height = 30;
+    c.population = 5;
+    c.placement = Placement::Block {
+        x: home_x,
+        y: 0,
+        width: 1,
+        height: 30,
+    };
+    c.goods[0].map = Map::Peaks {
+        peaks: (0..5u32)
+            .map(|j| Peak {
+                x: 45,
+                y: 3 + 6 * j,
+                radius: 3.0,
+                height: 4.0,
+            })
+            .collect(),
+    };
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.goods[0].endowment = URange::new(60, 60);
+    c.vision = URange::new(1, 6);
+    c.growback.rate = 0.25;
+    c.growback.instant = instant;
+    c.movement.mode = MoveMode::Walk;
+    c.decision.rule = DecisionRule::Mvt;
+    memory(c, 1000, 1.0);
+    c.memory.prior = MemoryPrior::Map;
+    c.caching.capacity = 320;
+    c.central.enabled = true;
+}
+
+/// Minds 5: a lab (`lab::rig_config`) with `n` agents under
+/// `caching.mixed`: agents 1, 2, 3, 4, 5, … follow none, even, compensate,
+/// plan, none, … (the config's own rule, `even`, is ignored).
+fn mixed_lab(c: &mut Config, lab: Lab, n: u32) {
+    *c = rig_config(lab, CachingRule::Even, LabParams::default(), n);
+    c.caching.mixed = true;
 }
 
 /// Minds 3: truffle spots covering `share` of non-wall sites, worth `value`
@@ -1002,6 +1104,76 @@ pub fn all() -> Vec<Preset> {
                 c.decision.rule = DecisionRule::Goap;
             },
         ),
+        preset(
+            "cache-winter-none",
+            "Caching: winter, nothing put away",
+            "Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need; every winter world sets the caching reserve to 20 ticks' food. Nobody caches: whatever an agent can't carry, it leaves. Measured (20 seeds, ticks 0–1000): half of those alive when winter comes die in it (49 % survive the first winter, from tick 100 to 200), and later winters barely thin the rest (49 % of those alive at tick 100 are alive at 1000), likely because the survivors are those who can find winter's scarce sugar. Of the 175 founders, 47 % are alive at tick 200 and 46 % at tick 1000.",
+            |c| winter_world(c, CachingRule::None, false),
+        ),
+        preset(
+            "cache-winter-even",
+            "Caching: winter, an even share",
+            "Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need; every winter world sets the caching reserve to 20 ticks' food. Each agent buries half its surplus (what it holds above its reserve) where it stands, every tick it has any, and digs its caches when it holds less than half its reserve. Measured (20 seeds, ticks 0–1000): 74 % survive the first winter against 49 % with no caching in the same world (higher in all 20 seeds), and 57 % of those alive at tick 100 are alive after five winters, against 49 %. Of the 175 founders (the dead counted), 70 % are alive at tick 200 and 54 % at 1000. Agents bury often but dig back only a quarter of it: by tick 1000, the end of the fifth winter, 25 % of the sugar buried has been dug (a mean 220 ticks after the cache was begun); of the 75 % not dug by then, 16 % of all buried died with its owner and 59 % is still buried, so sugar held and cached per founder climbs to 387. A hungry agent heads for its biggest cache (70 % of its choices, and 70 % of those where no biggest cache is also a nearest one), a mean 6.5 steps away when its nearest is 1.4. 89 % of the agents who die holding caches die heading for one, and 41 % of those, when they last chose a cache, chose one beyond the reach of their food while a nearer one was within it: likely one cause of the deaths, not isolated.",
+            |c| winter_world(c, CachingRule::Even, false),
+        ),
+        preset(
+            "cache-winter-compensate",
+            "Caching: winter, compensating",
+            "Amodio et al. 2021; Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need; every winter world sets the caching reserve to 20 ticks' food. Each agent buries a share of its surplus where it stands, weighted by where food has been scarce: a site's weight halves each time it finds food there, and it buries half its surplus × the site's weight ÷ the mean weight of the sites it knows. It digs its caches when it holds less than half its reserve. Measured (20 seeds, ticks 0–1000): 74 % survive the first winter against 49 % with no caching (higher in all 20 seeds), about as many as with an even share, and 55 % of those alive at tick 100 are alive after five winters, against 49 %. Of the 175 founders, 70 % are alive at tick 200 and 53 % at 1000. By tick 1000, the end of the fifth winter, 25 % of the sugar buried has been dug; of the 75 % not dug by then, 18 % of all buried died with its owner and 57 % is still buried. A hungry agent heads for its biggest cache (70 % of its choices, and 70 % of those where no biggest cache is also a nearest one), a mean 6.6 steps away when its nearest is 1.4. 91 % of the agents who die holding caches die heading for one, and 44 % of those, when they last chose a cache, chose one beyond the reach of their food while a nearer one was within it.",
+            |c| winter_world(c, CachingRule::Compensate, false),
+        ),
+        preset(
+            "cache-winter-plan",
+            "Caching: winter, planning",
+            "Raby et al. 2007; Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need; every winter world sets the caching reserve to 20 ticks' food. Each agent knows the calendar and plans: through the summer it buries toward its forecast shortfall (100 ticks' food, less the winter intake it recorded last winter, less what it has cached), at sites it foraged last winter (anywhere before its first winter, when it forecasts no winter intake). It digs its caches when it holds less than half its reserve. Measured (20 seeds, ticks 0–1000): 88 % survive the first winter, against 49 % with no caching, 74 % with an even share and 74 % compensating (higher than each in all 20 seeds), and 70 % of those alive at tick 100 are alive after five winters, against 49 %, 57 % and 55 %. Of the 175 founders, 84 % are alive at tick 200 and 67 % at 1000. Planners bury a sixth as much sugar as even-share agents, and by tick 1000, the end of the fifth winter, have dug back 44 % of it (a mean 312 ticks after the cache was begun); of the 56 % not dug by then, 12 % of all buried died with its owner and 44 % is still buried. They bury a median 82 per agent in the first summer, forecasting no winter intake, and 5.4 in the second: the survivors of the first winter forecast a mean 54 of winter intake from the sugar they gathered at sites (likely the sugar standing when winter came), and the rule counts what they still have cached against the shortfall. A hungry planner heads for its biggest cache (76 % of its choices, and 76 % of those where no biggest cache is also a nearest one), a mean 5.0 steps away when its nearest is 2.1. 94 % of the planners who die holding caches die heading for one, and 41 % of those, when they last chose a cache, chose one beyond the reach of their food while a nearer one was within it.",
+            |c| winter_world(c, CachingRule::Plan, false),
+        ),
+        preset(
+            "cache-winter-mixed",
+            "Caching: winter, four rules side by side",
+            "Minds 5",
+            "The winter world: walk-capacity's landscape with 175 agents of metabolism 1 (half of them remembering for 100 ticks) walking under rule M, and a winter everywhere at once: every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100. An agent carries at most 50 sugar, half a winter's need; every winter world sets the caching reserve to 20 ticks' food. A quarter of the agents on each caching rule, dealt round-robin by id: none, an even share, compensating and planning. Measured (20 seeds, ticks 0–1000): planners are a quarter of the founders but 32 % of the survivors at tick 200 and 31 % at tick 1000; agents who don't cache are 18 % and 19 %. Of each rule's founders, alive at tick 200 and 1000: planning 84 % and 70 %, compensating 68 % and 52 %, an even share 65 % and 56 %, none 47 % and 41 %. Each rule fares about as it does in a world of its own, likely because nobody sees or takes another's caches.",
+            |c| winter_world(c, CachingRule::None, true),
+        ),
+        preset(
+            "central-near",
+            "Central-place foraging: a near patch",
+            "Orians & Pearson 1979; Stephens & Krebs 1986; Minds 5",
+            "5 agents with homes 8 columns west of a column of five sugar patches (a 60 × 30 torus; the patches grow back 0.25 a tick) forage in round trips and carry their loads home to a larder. Each keeps ρ, its delivered sugar per tick over its trips; in a patch it stays while the best site within one step yields at least ρ (and it isn't full, or low on food for the walk home), then walks home, delivers and leaves again, keeping enough in hand for the walk out and back. They know the whole map, carry loads of at most 320 and burn 1 a tick. central-far is the same world with homes 20 columns away. Measured (20 seeds, ticks 1–1000): every agent lives; a trip gathers a mean 128 sugar and brings 84 home, having eaten the rest on the way. 64 % of trips end when no site nearby yields ρ, and 36 % with a full load. On 40 % of trips the agent turns home on its first tick deciding in the patch: a delivery lifts ρ by about 0.05 × the load (4.1 here), as much as the best site yields, and ρ hasn't decayed much by the time it gets back (a median 2.4 on arrival). Loads rise with the patches' distance from home, as central-place theory predicts: a mean 68 per trip at 4 columns, 84 at 8, 100 at 12, 107 at 16, 108 at 20 and 110 at 24, rising in all 20 seeds. ρ on arrival is lower after a longer walk (0.73 at 20 columns), likely a contributor, not isolated; and far out the carrying limit sets the loads (53 % of trips end full at 20 columns). Lima's prediction, that a near and a far patch in one habitat give the same load, fails as it was set out: sorting trips by the patch that gave most of the load, far trips bring home 120 and near ones 54, and the carrying limit ends 75 % of those far trips. But the near patch lay on the way to the far one, and agents harvest where they step. Sorted by where the agent was headed, the loads are 75 far and 71 near; with ρ held fixed, 82 and 85, though fewer agents live (88 of 100 at tick 1000, against 97 with ρ learned). With the far patch on the other side of home, so no trip crosses the other patch, they are 83 and 73, and with ρ held fixed there, 100 and 74 (80 of 100 alive, against 99). There the far patch holds more sugar when an agent arrives (37.5 against 33.6): an agent heads for the far patch only when a site there is strictly richer than every near one (ties go to the nearer), likely part of why; but that 12 % difference in standing sugar only partly explains a 35 % difference in loads, and the rest isn't isolated. In no arrangement are near and far within 10 % of each other in most seeds.",
+            |c| central_world(c, 37, false),
+        ),
+        preset(
+            "central-far",
+            "Central-place foraging: a far patch",
+            "Orians & Pearson 1979; Stephens & Krebs 1986; Minds 5",
+            "central-near's world with the homes 20 columns west of the patches instead of 8: 5 agents forage in round trips under the marginal-value rule and carry their loads home to a larder, loads of at most 320. Measured (20 seeds, ticks 1–1000): every agent lives; a trip gathers a mean 176 sugar and brings 108 home (central-near: 128 and 84). The carrying limit sets these loads: 53 % of trips end with a full load, and 47 % when no site nearby yields ρ. The agent's ρ has decayed to a median 0.73 by the time it reaches the patch (2.4 in central-near), and it stays a median 117 ticks, harvesting what the sites regrow, likely because the long walk has eroded ρ, not because the patch is richer.",
+            |c| central_world(c, 25, false),
+        ),
+        preset(
+            "central-linear",
+            "Central-place foraging: linear loading",
+            "Orians & Pearson 1979; Stephens & Krebs 1986; Minds 5",
+            "central-near's world (homes 8 columns from the patches) with instant growback: every site refills at once, so a patch never runs down and a load grows in step with the time spent gathering it. Measured (20 seeds, ticks 1–1000): every agent lives; a trip brings home a mean 121 sugar. Trips come in two kinds: 54 % end almost at once (36 % on the agent's first tick deciding in the patch, and 17 % before it decides there at all, likely because its target was taken on the way), and 46 % fill to the limit. A delivery lifts ρ by about 0.05 × the load (5.9 here), above the most any site yields (4), so the next trip turns back at once; with little delivered, ρ likely decays and the trip after fills up. The marginal-value theorem predicts no effect of distance with linear loading, but here, as with Kacelnik and Cuthill's starlings, loads grow with distance: 151 per trip with the homes 20 columns away, likely because ρ decays over the longer walk.",
+            |c| central_world(c, 37, true),
+        ),
+        preset(
+            "cache-raby",
+            "Caching lab: Raby's breakfast test",
+            "Raby et al. 2007; Minds 5",
+            "Raby et al.'s \"planning for breakfast\" protocol on a 13 × 8 rig of three compartments and a hall. For six days, 8 agents spend each morning shut in K1 or K3 in turn (K1 first), with breakfast only in K3; each evening they're back in the hall. On the test evening the doorways of K1 and K3 open and each agent, given 30 sugar, walks out alone and caches it. The agents take the caching rules round-robin: none, an even split, compensating (weights halved where food was found) and planning (the cycle finder's forecast of the next morning), two agents each. In the other order (breakfast first), a planner looking one day ahead caches nothing: tomorrow has breakfast. Measured (20 seeds, 8 agents per seed in each order, 320 agents per rule): compensating agents cache 26.4 ± 0.1 in the compartment without breakfast against 3.6 ± 0.1 in the other (mean ± s.e.m.; Raby et al.'s birds: 16.3 ± 1.8 against 5.4 ± 1.8), every one of them more where breakfast was missing. Planners cache all 30 there in this order and nothing at all in the other, so half of all planners cache nothing. Even splitters cache 15 in each, as their rule predicts.",
+            |c| mixed_lab(c, Lab { protocol: LabProtocol::Raby, food_first: false }, 8),
+        ),
+        preset(
+            "cache-amodio",
+            "Caching lab: Amodio's rotating compartments",
+            "Amodio et al. 2021; Minds 5",
+            "Amodio et al.'s Experiment 2 (Food-First) on a 13 × 8 rig of three compartments and a hall. For nine days, 6 agents spend each morning shut in K1, K2, K3, K1, … in turn, with food on the first day and every other day after; each evening they're back in the hall. On the test evening all three doorways open and each agent, given 30 sugar, walks out alone and caches it. The agents take the caching rules round-robin: none, an even split, compensating (weights halved where food was found) and planning (the cycle finder's forecast of the next morning). Measured (20 seeds, 6 agents per group per seed, both groups): each rule leaves its predicted pattern in every seed. Even splitters cache 10/10/10 in K1/K2/K3; compensating agents most in K2 in the Food-First group (a mean 7.9/15.2/6.9) and least in K2 in the Empty-First group (12.5/6.1/11.5); planners 30 in K1, and nothing in the Empty-First group, where tomorrow has food; planners looking three days ahead 15/0/15 and 0/30/0. Amodio et al.'s Bayesian model comparison, written from their Methods and checked on their own Table 2 (it gives their 0.72, 0.16 and 0.002), picks each rule's hypothesis on its data: the compartment-independent model at 0.999 for even splitters, CCH at 0.90 for compensating agents (at the paper's size, three agents a group, CCH wins in 15 of 20 seeds and the compartment-independent model in the other 5), FPH 1 at 0.55 and FPH 2 at 0.62 for planners. Those two are the most the comparison can give planners: every planner caches alike, so it treats them as one bird, and the hypotheses share the evidence (FPH 2's constraint also fits caching only in K1, FPH 1's fits 15/0/15 at half weight, K1 and K3 tied, and the two agree on the Empty-First group). The jays' 0.72 for the compartment-independent model looks like the even splitters' signature.",
+            |c| mixed_lab(c, Lab { protocol: LabProtocol::Amodio, food_first: true }, 6),
+        ),
     ]
 }
 
@@ -1338,7 +1510,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 59);
+        assert_eq!(presets.len(), 69);
         for p in presets {
             p.config
                 .validate()
@@ -1620,6 +1792,98 @@ mod tests {
         assert!((per_patch - 0.5).abs() < 1e-12, "{per_patch}");
         let need = f64::from(goap.population);
         assert!((9.0 * per_patch / need - 1.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn the_minds_5_presets_share_their_worlds_and_name_minds_5() {
+        use crate::config::{Caching, CachingRule, SeasonMode};
+        // The winter presets differ only in the caching rule (or mixed).
+        let base = by_id("cache-winter-none").unwrap().config;
+        assert_eq!(base.population, 175);
+        assert_eq!(base.goods[0].metabolism, URange::new(1, 1));
+        assert!(base.seasons.enabled && base.seasons.mode == SeasonMode::Global);
+        assert_eq!(
+            (base.seasons.period, base.seasons.winter_divisor),
+            (100, 32)
+        );
+        assert_eq!((base.caching.capacity, base.goap.horizon), (50, 20));
+        assert_eq!(base.movement.mode, MoveMode::Walk);
+        assert_eq!((base.memory.span, base.memory.share), (100, 0.5));
+        let walk = by_id("walk-capacity").unwrap().config;
+        assert_eq!(
+            walk.goods[0].map, base.goods[0].map,
+            "walk-capacity's landscape"
+        );
+        for (id, rule, mixed) in [
+            ("cache-winter-even", CachingRule::Even, false),
+            ("cache-winter-compensate", CachingRule::Compensate, false),
+            ("cache-winter-plan", CachingRule::Plan, false),
+            ("cache-winter-mixed", CachingRule::None, true),
+        ] {
+            let mut c = by_id(id).unwrap().config;
+            assert_eq!((c.caching.rule, c.caching.mixed), (rule, mixed), "{id}");
+            c.caching.rule = CachingRule::None;
+            c.caching.mixed = false;
+            assert_eq!(c, base, "{id}");
+        }
+        // Mixed deals a quarter of the founders to each rule.
+        let w = World::new(by_id("cache-winter-mixed").unwrap().config, 1).unwrap();
+        for rule in Caching::MIXED {
+            let n = w.agents().filter(|a| a.caching_rule == rule).count();
+            assert!((43..=44).contains(&n), "{rule:?}: {n}");
+        }
+        // Central: near and far differ only in where the homes are; linear
+        // is near with instant growback.
+        let near = by_id("central-near").unwrap().config;
+        let mut far = by_id("central-far").unwrap().config;
+        let mut linear = by_id("central-linear").unwrap().config;
+        assert!(near.central.enabled && near.decision.rule == DecisionRule::Mvt);
+        assert_eq!(
+            (near.placement, far.placement),
+            (
+                Placement::Block {
+                    x: 37,
+                    y: 0,
+                    width: 1,
+                    height: 30
+                },
+                Placement::Block {
+                    x: 25,
+                    y: 0,
+                    width: 1,
+                    height: 30
+                }
+            )
+        );
+        far.placement = near.placement;
+        assert_eq!(far, near);
+        assert!(linear.growback.instant && !near.growback.instant);
+        linear.growback.instant = false;
+        assert_eq!(linear, near);
+        // The labs are the rig with mixed rules.
+        for (id, n) in [("cache-raby", 8), ("cache-amodio", 6)] {
+            let c = by_id(id).unwrap().config;
+            assert!(c.caching.mixed && c.lab.is_some(), "{id}");
+            assert_eq!(c.population, n, "{id}");
+        }
+        for id in [
+            "cache-winter-none",
+            "cache-winter-even",
+            "cache-winter-compensate",
+            "cache-winter-plan",
+            "cache-winter-mixed",
+            "central-near",
+            "central-far",
+            "central-linear",
+            "cache-raby",
+            "cache-amodio",
+        ] {
+            let p = by_id(id).unwrap();
+            assert!(p.source.contains("Minds 5"), "{id}: {}", p.source);
+            p.config
+                .validate()
+                .unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        }
     }
 
     #[test]

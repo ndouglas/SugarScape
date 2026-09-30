@@ -7,6 +7,9 @@ use sugarscape_core::presets;
 /// One preset per model kind, and a second for the spatial games' asynchronous updating.
 /// Image scoring's is AND strategies with observers (private records, mutation).
 /// Minds 3's `mem-truffles` checks that memory and truffle spots come back too.
+/// Minds 5's `cache-raby` has its test evening at tick 24, inside the 20 → 60
+/// window (walls opened by `open_wall`, frozen allocations), and
+/// `central-near` checks homes and loads.
 const IDS: &[&str] = &[
     "vi-1-everything",
     "vi-4-schelling-25",
@@ -19,6 +22,8 @@ const IDS: &[&str] = &[
     "dpd-rr-best",
     "ns-fig-4b",
     "mem-truffles",
+    "cache-raby",
+    "central-near",
 ];
 
 fn world(id: &str) -> ModelWorld {

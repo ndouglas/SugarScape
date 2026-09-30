@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 319] = [
+pub const TITLES: [(&str, &str); 329] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -236,6 +236,46 @@ pub const TITLES: [(&str, &str); 319] = [
     (
         "goap-walled",
         "Planners who remember what lies beyond the wall end up richer, and most survive",
+    ),
+    (
+        "cache-winter-none",
+        "Winter with nothing put away: half the population dies in the first winter",
+    ),
+    (
+        "cache-winter-even",
+        "Burying half of every surplus: three in four survive the first winter",
+    ),
+    (
+        "cache-winter-compensate",
+        "Burying more where food was scarce survives winter no better than an even share",
+    ),
+    (
+        "cache-winter-plan",
+        "Agents who plan for winter: nearly nine in ten survive the first, burying a sixth as much",
+    ),
+    (
+        "cache-winter-mixed",
+        "Four ways to face winter side by side: planners are a third of the survivors",
+    ),
+    (
+        "central-near",
+        "Loads carried home grow with the patches' distance from home",
+    ),
+    (
+        "central-far",
+        "Carrying loads home from a far patch: bigger loads, and half the trips fill up",
+    ),
+    (
+        "central-linear",
+        "A patch that never runs down: trips either turn back at once or fill up",
+    ),
+    (
+        "cache-raby",
+        "Raby's breakfast test: compensators and planners cache where breakfast was missing",
+    ),
+    (
+        "cache-amodio",
+        "Amodio's rotating compartments: each rule leaves its own signature, and the jays' looks like an even split",
     ),
     (
         "s71-board",

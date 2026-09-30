@@ -126,6 +126,25 @@ pub struct TickEvents {
     /// Minds 4: MVT agents that set `leaving` this tick (their local value
     /// fell below ρ).
     pub leaves: u32,
+    /// Minds 5: sugar buried into caches this tick.
+    pub buried: f64,
+    /// Minds 5: sugar dug out of caches this tick.
+    pub dug: f64,
+    /// Minds 5: sugar left in the caches of agents removed this tick (it
+    /// leaves the world with them).
+    pub cache_lost: f64,
+    /// Minds 5: Σ over this tick's `digs` of the dug cache's age (ticks since
+    /// its first unit was buried).
+    pub dig_ages_sum: u64,
+    /// Minds 5: digs this tick (each taking a positive amount).
+    pub digs: u32,
+    /// Minds 5, central-place foraging: loads delivered home this tick (a
+    /// delivery is a positive burial into the larder by an agent back from
+    /// a trip).
+    pub deliveries: u32,
+    /// Minds 5, central-place foraging: Σ over this tick's `deliveries` of
+    /// the load buried (each trip's load size).
+    pub delivered: f64,
 }
 
 #[derive(Clone)]
@@ -146,12 +165,14 @@ pub struct World {
     agents: BTreeMap<AgentId, Agent>,
     occupancy: Vec<Option<AgentId>>,
     /// Row-major, one entry per site: 0 free, 1 a fence, 2 opaque. Built once
-    /// from `config.walls` (walls change only on reset); all zero when there
-    /// are none.
+    /// from `config.walls` (walls change only on reset, except the Minds 5
+    /// lab's doorways, which `open_wall` opens on the test evening); all zero
+    /// when there are none.
     pub(crate) walls: Vec<u8>,
     /// Row-major: each non-wall site's connected component among the
     /// non-wall sites (4-way, on the torus); walls get `u32::MAX`. Built once
-    /// with `walls`; empty when there are none, and then never consulted.
+    /// with `walls` (and again by `open_wall`); empty when there are none,
+    /// and then never consulted.
     pub(crate) regions: Vec<u32>,
     pub(crate) rng: SimRng,
     next_id: AgentId,
@@ -387,6 +408,19 @@ impl World {
             && self.regions[self.torus.index(a)] != self.regions[self.torus.index(b)]
     }
 
+    /// Opens the wall at `pos` (it becomes a free, empty site) and relabels
+    /// the regions. Only the Minds 5 lab calls this, to open its doorways on
+    /// the test evening; everywhere else walls change only on reset. A site
+    /// that isn't a wall is left alone.
+    pub(crate) fn open_wall(&mut self, pos: Pos) {
+        let i = self.torus.index(pos);
+        if self.walls[i] == 0 {
+            return;
+        }
+        self.walls[i] = 0;
+        self.regions = label_regions(self.torus, &self.walls);
+    }
+
     /// Whether `pos` is an opaque wall: it also stops sight.
     pub fn is_opaque(&self, pos: Pos) -> bool {
         self.walls[self.torus.index(pos)] == 2
@@ -475,6 +509,14 @@ impl World {
         let id = self.next_id;
         self.next_id += 1;
         agent.id = id;
+        // Minds 5: under `caching.mixed` a founder's rule is dealt by its id.
+        if self.config.caching.mixed && agent.parents.is_none() {
+            agent.caching_rule = self.config.caching.founder_rule(id);
+        }
+        // Minds 5: a central-place forager's home is where it starts life.
+        if self.config.central.enabled && agent.home.is_none() {
+            agent.home = Some(agent.pos);
+        }
         self.occupancy[i] = Some(id);
         self.agents.insert(id, agent);
         Ok(id)
@@ -594,6 +636,15 @@ impl World {
                     eat(u64::from(t));
                 }
             }
+            // Minds 5: caches only when there are any, so every world
+            // without caching hashes as before.
+            if !a.caches.is_empty() {
+                eat(a.caches.len() as u64);
+                for (&site, &amount) in &a.caches {
+                    eat(u64::from(site));
+                    eat(amount.to_bits());
+                }
+            }
             if disease {
                 eat(u64::from(a.immune.len()));
                 eat(a.immune.bits());
@@ -625,8 +676,17 @@ impl World {
     }
 
     /// Takes an agent off the grid with no death event and no inheritance.
+    /// Every removal (every cause of death, and an edit) passes here, so a
+    /// Minds 5 agent's caches are counted into `events.cache_lost` once and
+    /// leave the world with it. An edit between ticks removes caches too,
+    /// but that count lands in the finished tick's events after its
+    /// statistics were taken, and the next tick resets them: caches removed
+    /// by an edit aren't reported in any tick's `cache_lost`.
     pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
         let agent = self.agents.remove(&id)?;
+        if !agent.caches.is_empty() {
+            self.events.cache_lost += agent.caches.values().sum::<f64>();
+        }
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
         if !self.loans.is_empty() {
@@ -734,6 +794,11 @@ impl World {
     pub fn step(&mut self) {
         self.events = TickEvents::default();
         self.apply_schedule();
+        // Minds 5: a lab world applies its protocol's day (placement, food,
+        // doorways, the test evening's burying) before anyone moves.
+        if self.config.lab.is_some() {
+            crate::minds::caching::lab::apply(self);
+        }
         if self.config.disease.enabled {
             rules::disease::outbreaks(self);
         }
