@@ -2802,6 +2802,8 @@ mod tests {
         let mut h: u64 = 0xcbf2_9ce4_8422_2325;
         for name in super::super::stats::GENERATION_SERIES {
             for v in w.generation_series(name).unwrap() {
+                // Canonical NaN: a NaN's payload bits can differ by platform.
+                let v = if v.is_nan() { f64::NAN } else { v };
                 for b in v.to_bits().to_le_bytes() {
                     h ^= u64::from(b);
                     h = h.wrapping_mul(0x0100_0000_01b3);

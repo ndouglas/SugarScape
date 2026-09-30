@@ -1,6 +1,6 @@
 {
   "name": "Minds 7: the first season against the share of cheaters",
-  "description": "The mean number of survivors over the first generation (survivors; window_mean, ticks 1 to 2000) in hoard-cheaters' world (ratio 0.22) against the share of founders who are cheaters (hoard.cheaters): 0.1, 0.25 or 0.5, dealt by id. Under the default cheater_fitness (stores) a cheater's fitness is 0, so cheaters leave no children and are gone after one generation; later generations have none, and any later metric would be blind to the share. The first season is the one where cheaters exist, so this reads what they cost it. The run is 50 generations because sweeps stop at 100 000 ticks. Ten seeds; the survey does more.",
+  "description": "The mean number of survivors over the first generation (survivors; window_mean, ticks 1 to 2000) in hoard-cheaters' world (ratio 0.22) against the share of founders who are cheaters (cheaters): 0.1, 0.25 or 0.5, dealt by id. Under the default cheater_fitness (stores) a cheater's fitness is 0, so cheaters leave no children and are gone after one generation; later generations have none, so only the first season sees the share. Cheaters still eat, so survivors counts them too: this is a low-power probe of what they cost that season, not a comparison of the two types. The run is one generation (2000 ticks). Ten seeds; the survey does more.",
   "base": {
     "preset": "hoard-cheaters"
   },
@@ -17,7 +17,7 @@
     "from": 1,
     "count": 10
   },
-  "ticks": 100000,
+  "ticks": 2000,
   "metric": {
     "kind": "window_mean",
     "series": "survivors",
