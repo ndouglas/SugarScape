@@ -425,6 +425,15 @@ impl Sim {
         })
     }
 
+    /// Minds 5–6: JSON `{ winter, caches, homes, lab }` (`World::minds_view`):
+    /// the season, every cache (per site), every home and larder and the
+    /// lab's schedule. `null` for a non-sugarscape model.
+    pub fn minds_view(&self) -> String {
+        self.sugar_or("null".into(), |w| {
+            serde_json::to_string(&w.minds_view()).expect("views serialize")
+        })
+    }
+
     pub fn locate(&self, id: f64) -> Option<Vec<u32>> {
         self.model().locate(id as u64).map(|(x, y)| vec![x, y])
     }

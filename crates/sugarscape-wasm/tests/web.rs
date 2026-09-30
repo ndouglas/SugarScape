@@ -1567,3 +1567,41 @@ fn inspect_reports_the_labs_doorways_open_after_the_test_evening() {
     assert_eq!(wall_at(&sim, 6, 4), 2, "K2's doorway stays shut (opaque)");
     assert_eq!(wall_at(&sim, 10, 4), 0, "K3's doorway is open");
 }
+
+#[wasm_bindgen_test]
+fn minds_view_lists_every_cache_the_season_and_renders_the_minds_modes() {
+    let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
+    sim.step(150);
+    let before = sim.fingerprint();
+    sim.render("strategy", "sugar").unwrap();
+    sim.render("caching_rule", "sugar").unwrap();
+    assert_eq!(sim.fingerprint(), before, "rendering changes nothing");
+    let view: serde_json::Value = serde_json::from_str(&sim.minds_view()).unwrap();
+    assert_eq!(
+        view["winter"],
+        serde_json::json!(true),
+        "tick 150 is winter"
+    );
+    let caches = view["caches"].as_array().unwrap();
+    assert!(!caches.is_empty(), "hoarders have buried by tick 150");
+    // Each site's caches match what that site's Inspect lists.
+    let first = caches[0].as_array().unwrap();
+    let (x, y) = (first[0].as_f64().unwrap(), first[1].as_f64().unwrap());
+    let site: serde_json::Value =
+        serde_json::from_str(&sim.inspect(x as u32, y as u32).unwrap()).unwrap();
+    let listed: f64 = site["site"]["caches"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["amount"].as_f64().unwrap())
+        .sum();
+    assert!((listed - first[2].as_f64().unwrap()).abs() < 1e-9);
+    assert!(view["lab"].is_null());
+
+    let mut lab = Sim::new(&preset_json("cache-raby"), 1, JsValue::NULL).unwrap();
+    lab.step(1);
+    let view: serde_json::Value = serde_json::from_str(&lab.minds_view()).unwrap();
+    assert_eq!(view["lab"]["phase"], "morning");
+    assert_eq!(view["lab"]["day"], 1);
+    assert!(view["winter"].is_null());
+}

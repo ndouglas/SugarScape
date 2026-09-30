@@ -4,7 +4,7 @@
 use std::str::FromStr;
 
 use crate::agent::{Agent, Sex};
-use crate::config::Group;
+use crate::config::{CachingRule, Group};
 use crate::network::CreditRole;
 use crate::social::Lineage;
 use crate::world::World;
@@ -40,6 +40,16 @@ pub const BORN_PARENT: Rgb = [0xff, 0xe0, 0x4d];
 pub const WALL: Rgb = [0x5a, 0x55, 0x4c];
 /// A fence site (wood): passable to sight, not to agents.
 pub const FENCE: Rgb = [0x8a, 0x6d, 0x3b];
+/// Minds 6's strategies (`ColorMode::Strategy`): a hoarder buries, a
+/// cheater never does and pilfers what it finds.
+pub const HOARDER: Rgb = [0x3d, 0x7e, 0xff];
+pub const CHEATER: Rgb = [0xff, 0x4d, 0x4d];
+/// Minds 5's caching rules (`ColorMode::CachingRule`), one color each; a
+/// Minds 6 cheater follows `none`.
+pub const RULE_NONE: Rgb = NEUTRAL;
+pub const RULE_EVEN: Rgb = [0x3d, 0x7e, 0xff];
+pub const RULE_COMPENSATE: Rgb = [0x36, 0xd6, 0xc3];
+pub const RULE_PLAN: Rgb = [0xff, 0x3d, 0x8b];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ColorMode {
@@ -53,6 +63,10 @@ pub enum ColorMode {
     Lineage,
     /// Axelrod's culture (milestone 14): a color per culture.
     Culture,
+    /// Minds 6: hoarder or cheater (`Agent.cheater`).
+    Strategy,
+    /// Minds 5: the caching rule each agent follows (`rules::rule_of`).
+    CachingRule,
 }
 
 /// A landscape layer: a good's level or capacity, or a pollutant's level.
@@ -76,6 +90,8 @@ impl FromStr for ColorMode {
             "disease" => Self::Disease,
             "culture" => Self::Culture,
             "lineage" => Self::Lineage,
+            "strategy" => Self::Strategy,
+            "caching_rule" => Self::CachingRule,
             _ => return Err(format!("unknown color mode {s:?}")),
         })
     }
@@ -146,7 +162,15 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
             HOT,
             (f64::from(a.vision) - s.vision_min) / s.vision_span,
         ),
-        ColorMode::Credit => NEUTRAL,
+        // Drawn by `render`, which has the world these need.
+        ColorMode::Credit | ColorMode::CachingRule => NEUTRAL,
+        ColorMode::Strategy => {
+            if a.cheater {
+                CHEATER
+            } else {
+                HOARDER
+            }
+        }
         ColorMode::Disease => {
             if a.diseases.is_empty() {
                 HEALTHY
@@ -162,6 +186,16 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
             Lineage::Born => BORN,
             Lineage::BornParent => BORN_PARENT,
         },
+    }
+}
+
+/// A caching rule's color (`ColorMode::CachingRule`).
+pub fn rule_color(rule: CachingRule) -> Rgb {
+    match rule {
+        CachingRule::None => RULE_NONE,
+        CachingRule::Even => RULE_EVEN,
+        CachingRule::Compensate => RULE_COMPENSATE,
+        CachingRule::Plan => RULE_PLAN,
     }
 }
 
@@ -252,6 +286,8 @@ pub fn render(
                 CreditRole::Both => BOTH,
                 CreditRole::None => NEUTRAL,
             }
+        } else if mode == ColorMode::CachingRule {
+            rule_color(crate::minds::caching::rules::rule_of(world, a.id))
         } else {
             agent_color(a, mode, &scales)
         };
@@ -466,5 +502,63 @@ mod tests {
         assert_eq!(pixel(&buf, &w, 3, 3)[..3], BORN);
         assert_eq!(pixel(&buf, &w, 4, 4)[..3], BORN_PARENT);
         assert_eq!("lineage".parse::<ColorMode>().unwrap(), ColorMode::Lineage);
+    }
+
+    #[test]
+    fn strategy_mode_colors_hoarders_and_cheaters() {
+        let mut w = blank_world(10, 10);
+        let cheat = spawn(&mut w, 1, 1);
+        spawn(&mut w, 2, 2);
+        w.agent_mut(cheat).unwrap().cheater = true;
+        let mut buf = Vec::new();
+        render(&w, ColorMode::Strategy, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(pixel(&buf, &w, 1, 1)[..3], CHEATER);
+        assert_eq!(pixel(&buf, &w, 2, 2)[..3], HOARDER);
+        assert_eq!(
+            "strategy".parse::<ColorMode>().unwrap(),
+            ColorMode::Strategy
+        );
+    }
+
+    #[test]
+    fn caching_rule_mode_colors_each_agents_rule() {
+        let mut w = blank_world(10, 10);
+        w.config.caching.mixed = true;
+        let rules = [
+            CachingRule::None,
+            CachingRule::Even,
+            CachingRule::Compensate,
+            CachingRule::Plan,
+        ];
+        let ids: Vec<_> = (0..4).map(|x| spawn(&mut w, x, 0)).collect();
+        for (&id, &rule) in ids.iter().zip(&rules) {
+            w.agent_mut(id).unwrap().caching_rule = rule;
+        }
+        // A cheater follows `none` whatever its own rule says.
+        let cheat = spawn(&mut w, 5, 5);
+        w.agent_mut(cheat).unwrap().caching_rule = CachingRule::Plan;
+        w.agent_mut(cheat).unwrap().cheater = true;
+        let mut buf = Vec::new();
+        render(&w, ColorMode::CachingRule, Layer::Resource(0), &mut buf).unwrap();
+        for (x, &rule) in rules.iter().enumerate() {
+            assert_eq!(
+                pixel(&buf, &w, x as u32, 0)[..3],
+                rule_color(rule),
+                "{rule:?}"
+            );
+        }
+        assert_eq!(pixel(&buf, &w, 5, 5)[..3], RULE_NONE);
+        // Without `mixed`, every agent follows `caching.rule`.
+        w.config.caching.mixed = false;
+        w.config.caching.rule = CachingRule::Even;
+        render(&w, ColorMode::CachingRule, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(pixel(&buf, &w, 3, 0)[..3], RULE_EVEN);
+        assert_eq!(
+            "caching_rule".parse::<ColorMode>().unwrap(),
+            ColorMode::CachingRule
+        );
+        let distinct: std::collections::BTreeSet<Rgb> =
+            rules.iter().map(|&r| rule_color(r)).collect();
+        assert_eq!(distinct.len(), 4, "one color per rule");
     }
 }

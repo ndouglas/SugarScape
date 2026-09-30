@@ -46,6 +46,78 @@ pub struct SiteView {
     /// so this is how Inspect and drawing see it change; everywhere else
     /// walls change only on reset and this matches `config.walls`.
     pub wall: u8,
+    /// Minds 5–6: every cache buried here, in owner-id order.
+    pub caches: Vec<SiteCacheView>,
+}
+
+/// Minds 5–6: one cache at a site, for a site's Inspect.
+#[derive(Clone, Debug, Serialize)]
+pub struct SiteCacheView {
+    pub owner: AgentId,
+    pub amount: f64,
+    /// Whether its owner is a Minds 6 cheater (`Agent.cheater`).
+    pub cheater_owner: bool,
+}
+
+/// Minds 5–6: what the page draws of a Minds world beyond the frame, for
+/// every agent at once (`World::minds_view`). Cheap: one pass over the
+/// agents' caches, sized by the sites that hold any.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct MindsView {
+    /// `Some` while `seasons.mode` is global: whether the tick just computed
+    /// (`tick − 1`, the one the frame shows) was a winter tick
+    /// (`growback::is_winter`). `None` with seasons off or by hemisphere.
+    pub winter: Option<bool>,
+    /// Every site holding a cache, in site order: `[x, y, total, flags]`,
+    /// the flags' [`CACHE_HOARDER`] bit set when a hoarder (not a cheater)
+    /// owns a cache there, [`CACHE_CHEATER`] when a cheater does, and
+    /// [`CACHE_LARDER`] when one is its owner's larder (the cache at its
+    /// home, in a central world).
+    pub caches: Vec<[f64; 4]>,
+    /// Central worlds: every agent's home and larder, in id order.
+    pub homes: Vec<HomeView>,
+    /// Lab worlds: the schedule as of the tick just computed.
+    pub lab: Option<LabView>,
+}
+
+/// Cache flag bits in `MindsView::caches`.
+pub const CACHE_HOARDER: u32 = 1;
+pub const CACHE_CHEATER: u32 = 2;
+pub const CACHE_LARDER: u32 = 4;
+
+/// Minds 5: a central-place forager's home and what its larder holds.
+#[derive(Clone, Debug, Serialize)]
+pub struct HomeView {
+    pub id: AgentId,
+    pub x: u32,
+    pub y: u32,
+    pub larder: f64,
+}
+
+/// Minds 5: where a lab world is in its schedule (`minds::caching::lab`),
+/// as of the tick just computed (`tick − 1`: the frame shows its end).
+#[derive(Clone, Debug, Serialize)]
+pub struct LabView {
+    pub protocol: crate::config::LabProtocol,
+    /// Training days before the test evening.
+    pub days: u64,
+    /// `start` (nothing run yet), `morning`, `evening`, `test` (the test
+    /// evening, agents taking turns) or `done` (every agent finished).
+    pub phase: &'static str,
+    /// The day, from 1; `days + 1` on the test evening.
+    pub day: u64,
+    /// The day's compartment (0–2 for K1–K3), during training.
+    pub place: Option<u32>,
+    /// Whether the day's compartment had food, during training.
+    pub food: Option<bool>,
+    /// On the test evening, the agent whose turn it is (the next to move),
+    /// and where it stands.
+    pub turn: Option<AgentId>,
+    pub turn_at: Option<[u32; 2]>,
+    /// K1–K3: each compartment's `[x, y, width, height]`.
+    pub compartments: Vec<[u32; 4]>,
+    /// The trays of the protocol's caching compartments: `[k, x, y]`.
+    pub trays: Vec<[u32; 3]>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -119,6 +191,10 @@ pub struct CachingView {
     /// `seasons.mode: global` on, and outside winter (when the rule isn't
     /// computing one); `None` otherwise, including for every other rule.
     pub forecast: Option<f64>,
+    /// A lab world's test evening: the allocation of F frozen at its start
+    /// (`Agent.lab_allocation`), `[compartment, amount]` in K order; `None`
+    /// before then and outside a lab.
+    pub lab_allocation: Option<Vec<(u32, f64)>>,
 }
 
 /// Minds 6: an agent's theft state, for Inspect.
@@ -487,6 +563,7 @@ impl World {
                     caches,
                     total,
                     forecast,
+                    lab_allocation: a.lab_allocation.clone(),
                 }
             }),
             central: self.config.central.enabled.then(|| CentralView {
@@ -508,9 +585,115 @@ impl World {
                 capacities: s.capacity[..n].to_vec(),
                 pollution: s.pollution[..m].to_vec(),
                 wall: self.walls[self.torus.index(pos)],
+                caches: {
+                    let site = self.torus.index(pos) as u32;
+                    self.agents()
+                        .filter_map(|a| {
+                            a.caches.get(&site).map(|&amount| SiteCacheView {
+                                owner: a.id,
+                                amount,
+                                cheater_owner: a.cheater,
+                            })
+                        })
+                        .collect()
+                },
             },
             agent,
         })
+    }
+
+    /// Minds 5–6: the page's view of every cache, home and larder, the
+    /// season and the lab's schedule (see [`MindsView`]).
+    pub fn minds_view(&self) -> MindsView {
+        use crate::minds::caching::lab;
+        let seasons = self.config.seasons;
+        let winter = (seasons.enabled && seasons.mode == crate::config::SeasonMode::Global)
+            .then(|| rules::growback::is_winter(&self.config, self.tick.saturating_sub(1)));
+        let central = self.config.central.enabled;
+        let mut sites: std::collections::BTreeMap<u32, (f64, u32)> =
+            std::collections::BTreeMap::new();
+        let mut homes = Vec::new();
+        for a in self.agents() {
+            let home = a
+                .home
+                .filter(|_| central)
+                .map(|p| self.torus.index(p) as u32);
+            for (&site, &amount) in &a.caches {
+                let e = sites.entry(site).or_insert((0.0, 0));
+                e.0 += amount;
+                e.1 |= if a.cheater {
+                    CACHE_CHEATER
+                } else {
+                    CACHE_HOARDER
+                };
+                if home == Some(site) {
+                    e.1 |= CACHE_LARDER;
+                }
+            }
+            if let (Some(p), Some(site)) = (a.home, home) {
+                homes.push(HomeView {
+                    id: a.id,
+                    x: p.x,
+                    y: p.y,
+                    larder: a.caches.get(&site).copied().unwrap_or(0.0),
+                });
+            }
+        }
+        let caches = sites
+            .into_iter()
+            .map(|(site, (total, flags))| {
+                let p = self.torus.pos(site as usize);
+                [f64::from(p.x), f64::from(p.y), total, f64::from(flags)]
+            })
+            .collect();
+        let lab = self.config.lab.map(|l| {
+            let days = lab::training_days(l.protocol);
+            let (mut phase, mut day, mut place, mut food) = ("start", 1, None, None);
+            if self.tick > 0 {
+                let t = self.tick - 1;
+                let d = t / lab::DAY;
+                day = d + 1;
+                if d < days {
+                    phase = if t % lab::DAY < lab::MORNING {
+                        "morning"
+                    } else {
+                        "evening"
+                    };
+                    place = Some(lab::place(l.protocol, d));
+                    food = Some(lab::has_food(l, d));
+                } else {
+                    day = days + 1;
+                    phase = if lab::finished(self) { "done" } else { "test" };
+                }
+            }
+            let turn = (phase == "test").then(|| lab::turn(self)).flatten();
+            LabView {
+                protocol: l.protocol,
+                days,
+                phase,
+                day,
+                place,
+                food,
+                turn,
+                turn_at: turn
+                    .and_then(|id| self.agent(id))
+                    .map(|a| [a.pos.x, a.pos.y]),
+                compartments: (0..3).map(lab::compartment).collect(),
+                trays: lab::caching_places(l.protocol)
+                    .iter()
+                    .map(|&k| {
+                        let p = lab::tray(k);
+                        [k, p.x, p.y]
+                    })
+                    .collect(),
+            }
+        });
+        MindsView {
+            winter,
+            caches,
+            homes,
+            lab,
+        }
     }
 
     /// Minds 3: the agent at `pos`'s remembered sites, in the memory's own
@@ -911,6 +1094,139 @@ mod tests {
                 .is_none(),
             "no forecast is computed in winter"
         );
+    }
+
+    #[test]
+    fn a_sites_inspect_lists_every_cache_buried_there() {
+        let mut w = blank_world(10, 10);
+        let a = spawn(&mut w, 1, 1);
+        let b = spawn(&mut w, 2, 2);
+        spawn(&mut w, 3, 3);
+        let site = w.torus.index(Pos::new(5, 5)) as u32;
+        w.agent_mut(a).unwrap().caches.insert(site, 4.0);
+        w.agent_mut(b).unwrap().caches.insert(site, 2.5);
+        w.agent_mut(b).unwrap().cheater = true;
+        let caches = w.inspect(5, 5).unwrap().site.caches;
+        assert_eq!(caches.len(), 2);
+        assert_eq!(
+            (caches[0].owner, caches[0].amount, caches[0].cheater_owner),
+            (a, 4.0, false)
+        );
+        assert_eq!(
+            (caches[1].owner, caches[1].amount, caches[1].cheater_owner),
+            (b, 2.5, true)
+        );
+        assert!(w.inspect(6, 6).unwrap().site.caches.is_empty());
+    }
+
+    #[test]
+    fn minds_view_sums_caches_per_site_with_owner_flags() {
+        let mut w = blank_world(10, 10);
+        let a = spawn(&mut w, 1, 1);
+        let b = spawn(&mut w, 2, 2);
+        let here = w.torus.index(Pos::new(5, 5)) as u32;
+        let there = w.torus.index(Pos::new(7, 3)) as u32;
+        w.agent_mut(a).unwrap().caches.insert(here, 4.0);
+        w.agent_mut(b).unwrap().caches.insert(here, 2.0);
+        w.agent_mut(b).unwrap().caches.insert(there, 1.0);
+        w.agent_mut(b).unwrap().cheater = true;
+        let v = w.minds_view();
+        assert_eq!(
+            v.caches,
+            vec![
+                [7.0, 3.0, 1.0, f64::from(CACHE_CHEATER)],
+                [5.0, 5.0, 6.0, f64::from(CACHE_HOARDER | CACHE_CHEATER)],
+            ],
+            "site order: (7, 3) is row 3"
+        );
+        assert!(v.homes.is_empty() && v.lab.is_none() && v.winter.is_none());
+        // A central world's homes, and the larder among the caches.
+        w.config.central.enabled = true;
+        w.agent_mut(a).unwrap().home = Some(Pos::new(5, 5));
+        let v = w.minds_view();
+        assert_eq!(v.homes.len(), 1, "b has no home");
+        assert_eq!((v.homes[0].id, v.homes[0].x, v.homes[0].y), (a, 5, 5));
+        assert_eq!(v.homes[0].larder, 4.0);
+        assert_eq!(v.caches[1][3] as u32 & CACHE_LARDER, CACHE_LARDER);
+    }
+
+    #[test]
+    fn minds_view_reports_the_winter_of_the_tick_just_computed() {
+        let mut w = blank_world(10, 10);
+        w.config.seasons.enabled = true;
+        w.config.seasons.period = 100;
+        assert_eq!(
+            w.minds_view().winter,
+            None,
+            "by hemisphere: no global winter"
+        );
+        w.config.seasons.mode = crate::config::SeasonMode::Global;
+        for (tick, winter) in [
+            (0, false),
+            (100, false),
+            (101, true),
+            (200, true),
+            (201, false),
+        ] {
+            w.tick = tick;
+            assert_eq!(w.minds_view().winter, Some(winter), "tick {tick}");
+        }
+    }
+
+    #[test]
+    fn minds_view_follows_the_labs_schedule_and_turns() {
+        use crate::config::{CachingRule, Lab, LabProtocol};
+        use crate::minds::caching::lab;
+        let raby = Lab {
+            protocol: LabProtocol::Raby,
+            food_first: true,
+        };
+        let c = lab::rig_config(raby, CachingRule::Even, lab::LabParams::default(), 3);
+        let mut w = World::new(c, 1).unwrap();
+        let v = w.minds_view().lab.unwrap();
+        assert_eq!((v.phase, v.day, v.days), ("start", 1, 6));
+        assert_eq!(
+            v.compartments,
+            vec![[1, 1, 3, 3], [5, 1, 3, 3], [9, 1, 3, 3]]
+        );
+        assert_eq!(
+            v.trays,
+            vec![[0, 2, 3], [2, 10, 3]],
+            "Raby caches in K1 and K3"
+        );
+        w.step();
+        let v = w.minds_view().lab.unwrap();
+        assert_eq!(
+            (v.phase, v.day, v.place, v.food),
+            ("morning", 1, Some(0), Some(true))
+        );
+        w.run(2);
+        let v = w.minds_view().lab.unwrap();
+        assert_eq!((v.phase, v.day), ("evening", 1));
+        w.run(2);
+        let v = w.minds_view().lab.unwrap();
+        assert_eq!(
+            (v.phase, v.day, v.place, v.food),
+            ("morning", 2, Some(2), Some(false))
+        );
+        w.run(lab::DAY as u32 * 5 - 1);
+        assert!(w.agents().all(|a| a.lab_allocation.is_none()));
+        w.step();
+        let v = w.minds_view().lab.unwrap();
+        let first = w.agents().next().unwrap();
+        assert_eq!((v.phase, v.day, v.turn), ("test", 7, Some(first.id)));
+        assert_eq!(v.turn_at, Some([first.pos.x, first.pos.y]));
+        let (x, y) = (first.pos.x, first.pos.y);
+        let alloc = w.inspect(x, y).unwrap().agent.unwrap().caching.unwrap();
+        assert_eq!(alloc.lab_allocation, Some(vec![(0, 15.0), (2, 15.0)]));
+        for _ in 0..500 {
+            if lab::finished(&w) {
+                break;
+            }
+            w.step();
+        }
+        let v = w.minds_view().lab.unwrap();
+        assert_eq!((v.phase, v.turn), ("done", None));
     }
 
     #[test]
