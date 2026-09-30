@@ -15,6 +15,7 @@ from .plane import events, generation, mean_traits
 from .street import meetings
 from .tipping import fence, tipplane
 from .variations import figure, paper, ringjoin
+from .culture import lanes
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
@@ -78,4 +79,5 @@ BUILDERS = {
     "paper": paper,
     "figure": figure,
     "ringjoin": ringjoin,
+    "lanes": lanes,
 }

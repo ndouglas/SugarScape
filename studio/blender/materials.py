@@ -14,6 +14,13 @@ YARN = {
     "red": (0.88, 0.26, 0.24),
     # A Flump carrying a disease (colors="sick"): sickly green.
     "sick": (0.55, 0.72, 0.2),
+    # More yarns for Axelrod's cultures (colors="culture").
+    "moss": (0.42, 0.55, 0.22),
+    "rose": (0.93, 0.55, 0.70),
+    "sky": (0.50, 0.75, 0.95),
+    "plum": (0.50, 0.25, 0.50),
+    "tangerine": (0.98, 0.58, 0.18),
+    "slate": (0.38, 0.44, 0.52),
 }
 # Crowds and families wear these; Blue and Red are kept for the book's two
 # tribes, by group index (0 Blue, 1 Red).
@@ -21,6 +28,10 @@ CROWD_YARN = ("cream", "coral", "teal", "lilac", "butter")
 TRIBE_YARN = ("blue", "red")
 # Ethnocentrism's four colors (tags), by index.
 TAG_YARN = ("coral", "teal", "lilac", "blue")
+# Axelrod's surviving cultures, by rank (1 the largest); cultures that die
+# out wear cream.
+CULTURE_YARN = ("coral", "teal", "lilac", "butter", "blue", "red", "moss", "rose", "sky", "plum", "tangerine",
+                "slate")
 
 
 def _principled(name):

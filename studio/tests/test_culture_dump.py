@@ -36,3 +36,21 @@ class CultureDumpTest(unittest.TestCase):
         first = d.frames[0]
         for i, ts in first.traits.items():
             self.assertEqual(first.groups[i], ranked.index(ts) + 1 if ts in sizes else 0)
+
+
+class CultureRankTest(unittest.TestCase):
+    def test_a_culture_dump_ranks_its_surviving_cultures(self):
+        d = dump.load(HERE / "culture.frames.json")
+        last = d.frames[-1]
+        for i, ts in last.traits.items():
+            self.assertEqual(d.culture_rank[ts], last.groups[i])
+
+    def test_a_docked_sugarscape_dump_carries_each_agents_culture(self):
+        # Made by `sugarscape shot tests/fixtures/docked.json` (dock-mobility-15, seed 1, 3 ticks).
+        d = dump.load(HERE / "docked.frames.json")
+        f = d.frames[0]
+        self.assertEqual(set(f.traits), set(f.agents))
+        self.assertTrue(all(len(ts) == 5 for ts in f.traits.values()))
+        last = d.frames[-1]
+        self.assertEqual(set(d.culture_rank), set(last.traits.values()))
+        self.assertEqual(sorted(d.culture_rank.values()), list(range(1, len(d.culture_rank) + 1)))

@@ -1,0 +1,19 @@
+{
+  "medians": {
+    "big_map": 5.0,
+    "drift": 5.5,
+    "f15": 1.0,
+    "four": 4.5,
+    "no_drift": 17.0,
+    "q15": 21.0,
+    "q25_20": 206.5,
+    "q25_30": 424.0,
+    "sample": 4.5,
+    "sample_stable": 744.0,
+    "small_map": 17.0,
+    "twelve": 1.0,
+    "wander": 1.0,
+    "wander_stop": 1798.5
+  },
+  "seeds": 20
+}

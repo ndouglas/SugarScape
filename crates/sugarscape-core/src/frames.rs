@@ -323,6 +323,10 @@ pub struct Frame {
     /// disease]`, null for an outbreak (absent when none).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub infections: Vec<(Option<u64>, u64, u32)>,
+    /// Each agent's Axelrod culture (its traits), in `agents`' order (absent
+    /// unless rule K is Axelrod's).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub cultures: Vec<Vec<u8>>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -440,10 +444,16 @@ fn frame(
     } else {
         (Vec::new(), Vec::new())
     };
+    let cultures = if world.config.culture.axelrod() {
+        world.agents().map(|a| a.culture.clone()).collect()
+    } else {
+        Vec::new()
+    };
     Frame {
         tick: world.tick,
         tags,
         groups,
+        cultures,
         spice,
         spice_agents,
         trades,
@@ -1930,6 +1940,22 @@ mod tests {
         )
         .unwrap();
         assert_eq!(fields(run_shot(&off).unwrap_err()), ["place.0"]);
+    }
+
+    #[test]
+    fn a_docked_shot_records_each_agents_axelrod_culture() {
+        let d = run_shot(&shot(r#"{"preset": "dock-mobility-15", "ticks": 2}"#).unwrap()).unwrap();
+        let f = &d.frames[0];
+        assert_eq!(f.cultures.len(), f.agents.len());
+        assert!(f
+            .cultures
+            .iter()
+            .all(|c| c.len() == 5 && c.iter().all(|&t| t < 15)));
+        let plain = run_shot(&shot(r#"{"preset": "ii-2-unit", "ticks": 1}"#).unwrap()).unwrap();
+        assert!(
+            plain.frames[0].cultures.is_empty(),
+            "only under Axelrod's rule"
+        );
     }
 
     #[test]

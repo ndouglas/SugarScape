@@ -547,7 +547,7 @@ pub const TITLES: [(&str, &str); 350] = [
     ),
     (
         "ac-neighbor-changes",
-        "Who copies whom, reversed: no measurable difference here",
+        "Who copies whom, reversed: slightly fewer regions",
     ),
     (
         "ac-soup",

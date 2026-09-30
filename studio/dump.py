@@ -107,6 +107,17 @@ class Dump:
     stats: dict
     spice_capacity: list = field(default_factory=list)
     model: str = "sugarscape"
+    # Axelrod cultures (traits tuple) still present in the last frame, ranked
+    # 1… by how many hold them (ties by the traits); empty without cultures.
+    culture_rank: dict = field(default_factory=dict)
+
+
+def _culture_rank(last):
+    """Rank each culture in `last` (id → traits) by how many hold it."""
+    sizes = {}
+    for c in last.values():
+        sizes[c] = sizes.get(c, 0) + 1
+    return {c: k + 1 for k, c in enumerate(sorted(sizes, key=lambda c: (-sizes[c], c)))}
 
 
 @dataclass(frozen=True)
@@ -339,6 +350,8 @@ def parse(text):
             # id → diseases carried, and the tick's infections (disease on).
             diseases=dict(zip((row[0] for row in f["agents"]), f.get("diseases", []))),
             infections=[Infection(*i) for i in f.get("infections", [])],
+            # id → Axelrod traits (rule K Axelrod's only).
+            traits={row[0]: tuple(c) for row, c in zip(f["agents"], f.get("cultures", []))},
         )
         for f in raw["frames"]
     ]
@@ -353,6 +366,7 @@ def parse(text):
         frames=frames,
         stats=raw["stats"],
         spice_capacity=raw.get("spice_capacity", []),
+        culture_rank=_culture_rank(frames[-1].traits) if frames and frames[-1].traits else {},
     )
 
 
@@ -425,11 +439,7 @@ def _culture(raw):
         t = frame["traits"]
         return {i: tuple(t[i * f:(i + 1) * f]) for i in range(w * h)}
 
-    last = sites(raw["frames"][-1])
-    sizes = {}
-    for c in last.values():
-        sizes[c] = sizes.get(c, 0) + 1
-    rank = {c: k + 1 for k, c in enumerate(sorted(sizes, key=lambda c: (-sizes[c], c)))}
+    rank = _culture_rank(sites(raw["frames"][-1]))
     frames = []
     for k, fr in enumerate(raw["frames"]):
         traits = sites(fr)
@@ -443,6 +453,7 @@ def _culture(raw):
     return Dump(
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
         placed=list(range(w * h)), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
+        culture_rank=rank,
     )
 
 

@@ -1,7 +1,7 @@
 # Spike: Axelrod's culture (Following the Crowd, episode 4, "One culture or many")
 
 **Date:** 2026-09-30
-**Status:** proposed.
+**Status:** approved and built as `studio/episodes/culture` (all fourteen captions hold; 84 s). The "ours" beat was dropped; beat 8 split in two ("a map of 50 by 50: a handful", measured).
 **Sources:** Axelrod 1997 ("The Dissemination of Culture", *J. Conflict Resolution* 41; a scan),
 his archived demo program CULTURE.P, and the docking paper (Axtell, Axelrod, Epstein & Cohen 1996),
 all in `papers/culture/`; milestone 14 (`culture`) and its 2026-09-30 corrections
