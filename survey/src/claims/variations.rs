@@ -4,8 +4,8 @@
 //! cluster count. Each rule takes its numbers from the paper. Pilot runs came
 //! first for two measures, and the claims say how: Pancs & Vriend's clusters
 //! (counted through uncontended blanks, as their §4.2.1 defines them) and
-//! Zhang's cutoff of 600 (read as mixed pairs, his ρ, with his scaled
-//! potential, 0.075 ρ, reported beside it).
+//! Zhang's cutoff of 600 (as mixed pairs, his ρ, it is the least possible on
+//! his board, so it is read as his scaled potential, 0.075 ρ: 8,000 pairs).
 
 use sugarscape_core::model::{ModelConfig, ModelWorld};
 use sugarscape_core::schelling::{Neighborhood, SchellingConfig};
@@ -171,13 +171,37 @@ pub fn claims() -> Vec<Claim> {
             item: "pv-p100",
             source: Source::Book,
             citation: PV,
-            text: "Preferring half and half most (p100): 4.99 clusters. Holds if the mean is within 10 % of 4.99",
-            check: |seeds| {
-                let m = mean(&last(&model_preset("pv-p100"), seeds, PV_TICKS, "pv_clusters"));
-                Outcome {
-                    detail: "p100 never settles, so the count at 100,000 periods varies widely from seed to seed; over 200 seeds the mean is 4.68, within 10 %".into(),
-                    ..outcome((m - 4.99).abs() <= 0.499, format!("mean {m:.2}"))
-                }
+            text: "Preferring half and half most (p100): 4.99 clusters after 100,000 periods (1,000 runs), and 854 of the 1,000 runs end in a strict equilibrium, where nobody wants to move. Holds if over 500 seeds (a spread this wide needs more than 20) the mean is within 10 % of 4.99 and between 75 % and 95 % of seeds end with nobody moving for their last 100 steps",
+            check: |_| {
+                let seeds: Vec<u64> = (1..=500).collect();
+                let ends = model_after(&model_preset("pv-p100"), &seeds, PV_TICKS, |w: &ModelWorld| {
+                    let m = w.model();
+                    let moves = m.series("moves").unwrap();
+                    let still = moves[moves.len() - 100..].iter().all(|&v| v == 0.0);
+                    (m.latest_value("pv_clusters").unwrap(), still)
+                });
+                let m = mean(&ends.iter().map(|e| e.0).collect::<Vec<_>>());
+                let still = ends.iter().filter(|e| e.1).count();
+                outcome(
+                    (m - 4.99).abs() <= 0.499 && (375..=475).contains(&still),
+                    format!("mean {m:.2}; {still} of 500 still"),
+                )
+            },
+        },
+        Claim {
+            id: "variations.pv.spiked",
+            item: "pv-spiked",
+            source: Source::Book,
+            citation: PV,
+            text: "Footnote 23: \"for the 2D setup the findings for the spiked utility function are very similar to the p100 function\" (not shown). Holds if over 500 seeds the mean clusters under spiked are within 10 % of those under p100",
+            check: |_| {
+                let seeds: Vec<u64> = (1..=500).collect();
+                let at = |id| mean(&last(&model_preset(id), &seeds, PV_TICKS, "pv_clusters"));
+                let (spiked, p100) = (at("pv-spiked"), at("pv-p100"));
+                outcome(
+                    (spiked - p100).abs() <= 0.1 * p100,
+                    format!("mean {spiked:.2} spiked, {p100:.2} p100 (a random board: 7.8)"),
+                )
             },
         },
         Claim {
@@ -197,7 +221,7 @@ pub fn claims() -> Vec<Claim> {
             item: "gvn-frozen",
             source: Source::Book,
             citation: GVN,
-            text: "Below T_f (3/8 to 1/2 at 2–6 % vacant) the state is frozen: nobody can move. Holds if at 5 % vacant every seed ends with nobody moving at T = 0.35 and s under 0.1, and no seed at T = 0.5",
+            text: "Below T_f (1/2 at 2–4 % vacant, 2/5 to 1/2 at 6 %, their Table 1) the state is frozen: nobody can move. Holds if at 5 % vacant every seed ends with nobody moving at T = 0.35 and s under 0.1, and no seed at T = 0.5",
             check: |seeds| {
                 let (s_low, still_low) = gvn(0.35, seeds);
                 let (_, still_half) = gvn(0.5, seeds);
@@ -286,12 +310,11 @@ pub fn claims() -> Vec<Claim> {
             item: "zhang-beta",
             source: Source::Book,
             citation: ZHANG,
-            text: "\"for β < 2, our computer simulations never reach a state with a potential below 600\". Holds if at β = 1.5 no seed's mixed pairs fall to 600 in 1,000 steps (10 million draws; also none to 8,000, the reading of 600 as his scaled potential 0.075 ρ)",
+            text: "\"for β < 2, our computer simulations never reach a state with a potential below 600\". Read literally, 600 mixed pairs is the least a 100 × 100 torus split in half can have (two straight bands, 300 pairs each), so \"below 600\" can never happen; read as his scaled potential, 0.075 ρ below 600, it is 8,000 mixed pairs. Holds if at β = 1.5 no seed falls to 8,000 in 1,000 steps (10 million draws)",
             check: |seeds| {
                 let c = zhang(1.5, Neighborhood::Moore, 1);
-                let (raw, _) = reached(&first_at_most(&c, seeds, 1_000, "mixed_pairs", 600.0));
                 let (scaled, _) = reached(&first_at_most(&c, seeds, 1_000, "mixed_pairs", 8_000.0));
-                outcome(raw == 0, format!("{raw} of {} reach 600; {scaled} reach 8,000", seeds.len()))
+                outcome(scaled == 0, format!("{scaled} of {} reach 8,000", seeds.len()))
             },
         },
         Claim {
@@ -299,25 +322,21 @@ pub fn claims() -> Vec<Claim> {
             item: "zhang-random",
             source: Source::Book,
             citation: ZHANG,
-            text: "Fig. 8: with eight neighbors and β = 10 the expected wait for the potential ρ (mixed pairs) to fall below 600 is about 40 million draws. Holds if the median seed gets there within 60 million (6,000 steps)",
+            text: "Fig. 8: with eight neighbors and β = 10 the expected wait for the potential to fall below 600 is about 40 million draws. Literally 600 mixed pairs is the least possible (see variations.zhang.low-beta), so read as his scaled potential (8,000 mixed pairs). Holds if the median seed first gets there between 20 and 80 million draws (2,000 to 8,000 steps)",
             check: |seeds| {
                 let c = zhang(10.0, Neighborhood::Moore, 1);
-                let runs = model_after(&c, seeds, 6_000, |w: &ModelWorld| {
+                let runs = model_after(&c, seeds, 1_000, |w: &ModelWorld| {
                     let s = w.model().series("mixed_pairs").unwrap();
-                    let first = |x: f64| s.iter().position(|&v| v <= x);
-                    (first(600.0), first(8_000.0), *s.last().unwrap())
+                    (s.iter().position(|&v| v <= 8_000.0), *s.last().unwrap())
                 });
                 let (n, t) = reached(&runs.iter().map(|r| r.0).collect::<Vec<_>>());
-                let (n8, t8) = reached(&runs.iter().map(|r| r.1).collect::<Vec<_>>());
-                let end = median(runs.iter().map(|r| r.2).collect());
+                let end = median(runs.iter().map(|r| r.1).collect());
                 outcome(
-                    n * 2 > seeds.len(),
+                    n * 2 > seeds.len() && (2_000.0..=8_000.0).contains(&t),
                     format!(
-                        "{n} of {} below 600{}; median {end} mixed pairs at step 6,000. Read as his scaled potential (8,000 pairs): {n8} of {} there, median step {t8} ({} draws)",
+                        "{n} of {} reach 8,000, median step {t} ({} draws); median {end} mixed pairs at step 1,000 (10 million draws), against the floor of 600",
                         seeds.len(),
-                        if n == 0 { String::new() } else { format!(" (median step {t})") },
-                        seeds.len(),
-                        t8 * 10_000.0
+                        t * 10_000.0
                     ),
                 )
             },
@@ -327,7 +346,7 @@ pub fn claims() -> Vec<Claim> {
             item: "zhang-neighborhood",
             source: Source::Book,
             citation: ZHANG,
-            text: "\"a bigger neighborhood actually decreases the waiting time for segregation\": twelve neighbors sort faster than eight, eight faster than four (β = 10, mixed pairs counted on the eight around). Holds if the median first step at or below 8,000 mixed pairs (his 600 as the scaled potential; 600 itself is out of reach, see variations.zhang.waiting) falls strictly from four to eight to twelve",
+            text: "\"a bigger neighborhood actually decreases the waiting time for segregation\": twelve neighbors sort faster than eight, eight faster than four (β = 10, mixed pairs counted on the eight around). Holds if the median first step at or below 8,000 mixed pairs (his 600 as the scaled potential; 600 itself is the least possible, see variations.zhang.low-beta) falls strictly from four to eight to twelve",
             check: |seeds| {
                 let wait = |n, r| reached(&first_at_most(&zhang(10.0, n, r), seeds, 60, "mixed_pairs", 8_000.0)).1;
                 let (four, eight, twelve) = (

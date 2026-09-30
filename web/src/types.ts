@@ -212,7 +212,7 @@ export interface SchellingConfig {
   neighborhood: 'moore' | 'von_neumann';
   radius: number;
   edges: 'bounded' | 'torus';
-  movement: 'nearest' | 'random' | 'best' | 'swap';
+  movement: 'nearest' | 'random' | 'best' | 'swap' | 'try';
   order: 'rounds' | 'random';
   sweep: 'reading' | 'center_out';
   red_share: number;

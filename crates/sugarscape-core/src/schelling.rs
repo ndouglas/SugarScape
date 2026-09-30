@@ -96,6 +96,10 @@ pub enum Movement {
     /// Pancs & Vriend: the empty square of highest utility, staying
     /// included, ties at random.
     Best,
+    /// Gauvin, Vannimenus & Nadal, one reading: one vacancy at random, taken
+    /// only if it suits; if not the agent "move[s] back to [its] initial
+    /// position".
+    Try,
     /// Zhang (JEBO): no empty square needed; a random pair of occupied
     /// squares not neighbors swaps with logit probability on their summed
     /// utility (`beta`).
@@ -907,6 +911,24 @@ impl SchellingWorld {
         unreachable!("r < total")
     }
 
+    /// One vacancy drawn at random from all of them: `Some` if it suits.
+    fn try_one(&mut self, red: bool, preference: f64) -> Option<usize> {
+        let ok = self.acceptable(red, Some(preference));
+        let pools = &self.pools[usize::from(red)];
+        let total: usize = pools.iter().map(Vec::len).sum();
+        if total == 0 {
+            return None;
+        }
+        let mut r = self.rng.gen_range(0..total as u32) as usize;
+        for (k, pool) in pools.iter().enumerate() {
+            if r < pool.len() {
+                return ok[k].then_some(pool[r] as usize);
+            }
+            r -= pool.len();
+        }
+        unreachable!("r < total")
+    }
+
     pub fn agents(&self) -> impl Iterator<Item = &Resident> {
         self.agents.values()
     }
@@ -1157,6 +1179,7 @@ impl SchellingWorld {
             let to = match self.config.movement {
                 Movement::Nearest => self.nearest(a.red, a.preference, from),
                 Movement::Random => self.pick(a.red, Some(a.preference)),
+                Movement::Try => self.try_one(a.red, a.preference),
                 Movement::Best => Some(self.best(a.red, from)).filter(|&j| j != from),
                 Movement::Swap => unreachable!("swaps take their own path"),
             };
@@ -1673,6 +1696,7 @@ pub fn schema() -> Vec<Param> {
                 ("random", "Any square that suits, at random (Epstein & Axtell)"),
                 ("best", "The best square anywhere (Pancs & Vriend)"),
                 ("swap", "Trading places with someone (Zhang)"),
+                ("try", "One empty square at random, if it suits (Gauvin et al., one reading)"),
             ],
             Reset,
         ),
@@ -1877,21 +1901,21 @@ pub fn presets() -> Vec<ModelPreset> {
             "pv-p100",
             "Pancs & Vriend: liking half and half best",
             "Pancs & Vriend 2007",
-            "As pv-flat, with utility peaked at half unlike, falling either side (p100). Pancs & Vriend: 4.99 clusters. Measured (200 seeds): 4.68, from 2 to 10 (4.25 over seeds 1–20: the board never settles).",
+            "As pv-flat, with utility peaked at half unlike, falling either side (p100). Pancs & Vriend: 4.99 clusters. Pancs & Vriend: 854 of 1,000 runs end in a strict equilibrium, where nobody wants to move. Measured (500 seeds): 4.69, from 2 to 10; 425 of 500 end with nobody moving (85 %).",
             |c| pancs_vriend(c, Utility::P100),
         ),
         preset(
             "pv-spiked",
             "Pancs & Vriend: only half and half will do",
             "Pancs & Vriend 2007",
-            "As pv-flat, with only exactly half unlike good (spiked). Measured (40 seeds): 7.1 clusters, near a random board's 7.7.",
+            "As pv-flat, with only exactly half unlike good (spiked). Measured (500 seeds): 6.99 clusters, near a random board's 7.8, against p100's 4.7 (500 seeds); Pancs & Vriend (footnote 23, not shown) call spiked \"very similar to the p100 function\".",
             |c| pancs_vriend(c, Utility::Spiked),
         ),
         preset(
             "gvn-frozen",
             "Gauvin et al.: too little tolerance, and nobody can move",
             "Gauvin, Vannimenus & Nadal 2009",
-            "50 × 50 with edges, 5 % empty; anyone moves to a random vacancy where at most 30 % of its neighbors are unlike. Gauvin et al.: below a tolerance of about 3/8–1/2 at low vacancy, a frozen state. Measured (20 seeds, 1,000 steps): nobody moves; 79 % discontent; s = 0.03.",
+            "50 × 50 with edges, 5 % empty; anyone moves to a random vacancy where at most 30 % of its neighbors are unlike. Gauvin et al. (Table 1): below a tolerance of 1/2 at 2–4 % vacant (2/5–1/2 at 6 %), a frozen state. Measured (20 seeds, 1,000 steps): nobody moves; 79 % discontent; s = 0.03.",
             |c| gauvin(c, 0.05, 0.3),
         ),
         preset(
@@ -1942,7 +1966,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "zhang-random",
             "Zhang: everyone wants a mixed street, from a random start",
             "Zhang 2004 (JEBO)",
-            "As zhang-checkerboard from a random start (exact halves). Zhang (Fig. 8): mixed pairs fall below 600 after about 40 million draws at β = 10. Measured (4 seeds, 5,000 steps: 50 million draws): they stand near 1,450, never below 600 at any β up to 100; two straight bands, the least a 100 × 100 torus allows, have 600.",
+            "As zhang-checkerboard from a random start (exact halves). Zhang (Fig. 8): mixed pairs fall below 600 after about 40 million draws at β = 10. But 600 mixed pairs is the least a 100 × 100 torus split in half can have (two straight bands), so \"below 600\" cannot be literal; read as his scaled potential (0.075 per pair: 8,000 pairs), it is reached in about 100,000 draws (20 seeds), some 400 times sooner. Measured: near 2,000 mixed pairs at 10 million draws, near 1,450 at 50 million (4 seeds), rounded blobs rather than bands.",
             |c| zhang(c, Start::Random),
         ),
         preset(
@@ -2575,6 +2599,27 @@ mod tests {
         put(&mut w, 0, 0, true, 0.5);
         put(&mut w, 1, 1, false, 0.5);
         assert_eq!(w.snapshot().mixed_pairs, 1, "a diagonal pair");
+    }
+
+    #[test]
+    fn one_try_takes_a_random_vacancy_only_if_it_suits() {
+        // R · B ·: for a Red wanting half alike, square 1 (R and B around)
+        // suits and square 3 (B only) does not; one try draws either.
+        let mut w = empty71(4, 1, 1);
+        put(&mut w, 0, 0, true, 0.5);
+        put(&mut w, 2, 0, false, 0.5);
+        let (mut one, mut none) = (0, 0);
+        for _ in 0..1_000 {
+            match w.try_one(true, 0.5) {
+                Some(1) => one += 1,
+                None => none += 1,
+                other => panic!("took {other:?}"),
+            }
+        }
+        assert!(
+            (400..=600).contains(&one) && one + none == 1_000,
+            "{one} of 1,000"
+        );
     }
 
     #[test]

@@ -14,7 +14,7 @@ below for Zhang's JEBO paper.
 |---|---|---|
 | Epstein & Axtell 1996 | four neighbors, torus, a random acceptable square, random order (already switches) | (episode 1's survey) |
 | Pancs & Vriend 2007 | one agent at a time **best-responds** over every empty square, **content agents move too** (no inertia), ties at random; utilities over the unlike share: *flat* (Schelling's), *p50*, *p100* (single-peaked at half), *spiked*; empty neighborhoods least preferred; bounded, Moore; 5 × 5 with 10 + 10 and 100 × 100 with 40 % each; a **ring** in 1-D | 5 × 5: random boards average 7.82 clusters; after 100 000 periods flat 2.10 (91 % complete segregation), p50 2.04 (98 %), p100 4.99; the ring (10 + 10, four each side): every utility ends completely segregated |
-| Gauvin, Vannimenus & Nadal 2009 | a **random agent, content or not**, moves to a random vacancy where it would be content; bounded, Moore; tolerance T the most unlike share allowed; vacancy ρ | a frozen phase (T below about 3/8–1/2 at low vacancy), a segregated one up to T about 3/4, and a mixed one above; abrupt below ρ ≈ 26 % |
+| Gauvin, Vannimenus & Nadal 2009 | a **random agent, content or not**, moves to a random vacancy where it would be content; bounded, Moore; tolerance T the most unlike share allowed; vacancy ρ | a frozen phase (T below 1/2 at 2–4 % vacant, 2/5–1/2 at 6 %), a segregated one up to T about 3/4, and a mixed one above; abrupt below ρ ≈ 26 % |
 | Singh, Vainchtein & Weiss 2009 | torus, Moore, an **absolute** threshold (T of the 8 squares alike, blanks counting against: a demand table), a **deleted-checkerboard** start, board sizes 8–200 | at T = 3 the "striking global aggregation … is strictly a small city phenomenon": two clusters on 8 × 8, 22 to 55 clusters on 100 × 100 as vacancy goes 24 % → 33 %; T = 4 aggregates city-wide at low vacancy |
 | Zhang 2004 (JEBO) | **no vacancies**; each period a random pair from different neighborhoods **swaps** with logit probability on their summed utility (β); a **tent** utility: rising to a peak at half alike, falling to 0.6 at all alike (his Table 4); torus; checkerboard or random start | from a checkerboard (100 × 100, Moore, β = 10) segregation emerges and persists; for β < 2 never below his cutoff (black–white pairs under 600); eight neighbors segregate in under half the time of four, twelve faster still |
 
@@ -64,11 +64,22 @@ storyboard follow the build.
 - **The ring's groups.** On `edges: ring` a run across the join counts once.
 - **Goldens.** The 50 × 50 and 100 × 100 presets are fingerprinted after 20 ticks (`BIG_GOLDEN`),
   as image scoring's island presets are, to keep the debug test run short.
-- **Zhang's cutoff of 600.** Read as mixed pairs (his ρ), it is about the floor for two straight bands on
-  a 100 × 100 torus; our runs round into a blob near 1,200–1,450 and never reach it by 50 million
-  draws at any β. Read as his scaled potential (0.075 ρ, so 8,000 pairs), it is reached in about
-  80,000 draws at β = 10, some 400 times sooner than his Fig. 8. Neither reading gives his times.
+- **Zhang's cutoff of 600.** As mixed pairs (his ρ), 600 is exactly the least a 100 × 100 Moore
+  torus split in half can have (two straight bands, 300 pairs each), so "below 600" cannot be
+  literal; our runs round into blobs near 1,200–2,000. The claims read it as his scaled potential
+  (0.075 ρ, so 8,000 pairs), reached in about 100,000 draws at β = 10, some 400 times sooner than
+  his Fig. 8.
   His trades are a conserved Ising model at 0.0375 β per bond, whose ordering transition lies
   near β ≈ 5, not 2. The claims report both readings, and the ordering of neighborhoods is tested on
   the scaled one.
-- **Not built:** Singh et al.'s T = 5 swaps and their scale L; Pancs & Vriend's 100 × 100 runs.
+- **Pancs & Vriend p100** is tested over 500 seeds (a single run's count ranges from 2 to 10), with
+  their share of strict equilibria; spiked, which their footnote 23 calls "very similar" to p100,
+  is a claim of its own (it isn't: 7.0 clusters against 4.7). Empty neighborhoods score −1, strictly
+  lowest, as their footnote 13 says; their formula would score them 0, tied with an unacceptable
+  neighborhood (no measurable effect).
+- **Gauvin et al.'s move rule** reads two ways: a random vacancy among those that suit (`random`,
+  the default) or one vacancy tried at random, moving back if it doesn't suit (`try`). The frozen
+  line is the same under both, and within one step of T of their Table 1.
+- **Not built:** Singh et al.'s T = 5 swaps and their scale L, and their start's two permuted 3 × 3
+  blocks (and with an odd number of blanks the deleted checkerboard's colors differ by one);
+  Pancs & Vriend's 100 × 100 runs.
