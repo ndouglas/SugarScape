@@ -185,6 +185,20 @@ struct Run {
     /// The cohort fit: r and the RMS residual of the survival curve.
     km_r: f64,
     km_rms: f64,
+    /// Reported (fix round 1): holdings + stomach, and caches, of the
+    /// living at 200, by group (wealth with caches valued at 0, and the
+    /// caches themselves).
+    held200: [f64; 2],
+    cached200: [f64; 2],
+    /// Σ over arrivals of 1 − (1 − find)^k, k the foreign caches on the
+    /// arrival's site at the tick's start: the takes predicted when an
+    /// arrival takes at most one of the k caches on a site.
+    pred_takes: f64,
+    /// Foreign caches on arrivals' sites (Σ k), those on sites with k ≥ 2,
+    /// and arrivals with k > 0 at the carrying limit at the tick's start.
+    k_sum: f64,
+    k_stacked: f64,
+    full_arrivals: f64,
 }
 
 fn nan_div(a: f64, b: f64) -> f64 {
@@ -239,6 +253,10 @@ impl Run {
     /// Sugar pilfered per sugar cached, per tick.
     fn loss(&self) -> f64 {
         nan_div(self.pilfered, self.cached_at_start)
+    }
+    /// Reported: holdings + stomach per founder at 200 (caches valued at 0).
+    fn held_f(&self, g: usize) -> f64 {
+        nan_div(self.held200[g], self.founders[g])
     }
     fn density(&self) -> f64 {
         nan_div(self.agent_ticks / TICKS as f64, self.open_sites)
@@ -301,6 +319,8 @@ fn run(mut w: World, probe: bool) -> Run {
     w.probe_dig_at_reserve = probe;
     let torus = w.torus;
     let group = |a: &Agent| usize::from(a.cheater);
+    let find = w.config.theft.find;
+    let cap = f64::from(w.config.caching.capacity);
     let mut r = Run {
         open_sites: w.sites.iter().filter(|s| s.capacity[0] > 0.0).count() as f64,
         ..Run::default()
@@ -314,6 +334,7 @@ fn run(mut w: World, probe: bool) -> Run {
         let mut per_site: HashMap<u32, u32> = HashMap::new();
         let mut own: HashSet<(AgentId, u32)> = HashSet::new();
         let mut stolen: HashMap<AgentId, f64> = HashMap::new();
+        let mut held: HashMap<AgentId, f64> = HashMap::new();
         for a in w.agents() {
             for (&site, &q) in &a.caches {
                 *per_site.entry(site).or_default() += 1;
@@ -321,6 +342,7 @@ fn run(mut w: World, probe: bool) -> Run {
                 r.cached_at_start += q;
             }
             stolen.insert(a.id, a.stolen_by_me);
+            held.insert(a.id, a.holdings[0]);
         }
         w.step();
         let e = w.events();
@@ -347,7 +369,18 @@ fn run(mut w: World, probe: bool) -> Run {
             r.stolen[group(a)] += a.stolen_by_me - before;
             let site = torus.index(a.pos) as u32;
             let n = per_site.get(&site).copied().unwrap_or(0);
-            r.visits += f64::from(n - u32::from(own.contains(&(a.id, site))));
+            let k = n - u32::from(own.contains(&(a.id, site)));
+            r.visits += f64::from(k);
+            if k > 0 {
+                r.pred_takes += 1.0 - (1.0 - find).powi(k as i32);
+                r.k_sum += f64::from(k);
+                if k >= 2 {
+                    r.k_stacked += f64::from(k);
+                }
+                if cap > 0.0 && held[&a.id] >= cap {
+                    r.full_arrivals += 1.0;
+                }
+            }
         }
         r.agent_ticks += w.population() as f64;
         match w.tick {
@@ -361,6 +394,8 @@ fn run(mut w: World, probe: bool) -> Run {
                 for a in w.agents() {
                     r.alive200[group(a)] += 1.0;
                     r.wealth200[group(a)] += wealth(a);
+                    r.held200[group(a)] += a.holdings[0] + a.fed;
+                    r.cached200[group(a)] += a.caches.values().sum::<f64>();
                 }
             }
             _ => {}
@@ -596,7 +631,7 @@ fn usage(label: &str, r: &[Run]) -> String {
     let dug = sum(|x| x.dug);
     let full = r.iter().filter(|x| x.log_full).count();
     format!(
-        "{label}: pilfers per seed {}, owner finds per seed {}; pilferage rate {}, v {}; sugar buried per seed {}, dug {}, pilfered {}, lost {}; fate shares at 200 (stats series) dug {}, pilfered {}, lost {}, still buried {}; p_s {}, p_o {}; pilfered sugar taken in summer {:.1} %, in winter {:.1} % (dug: {:.1} % and {:.1} %); mean cache age (amount-weighted, from the log) when dug {} and when pilfered {} ticks; logs skipped as full: {full} of {}",
+        "{label}: pilfers per seed {}, owner finds per seed {}; pilferage rate {}, v {}; sugar buried per seed {}, dug {}, pilfered {}, lost {}; fate shares at 200 (stats series) dug {}, pilfered {}, lost {}, still buried {}; p_s {}, p_o {}; pilfered sugar taken in summer {:.1} %, in winter {:.1} % (dug: {:.1} % and {:.1} %); mean cache age (amount-weighted, from the log) when dug {} and when pilfered {} ticks (loot buried again opens fresh records, which lowers the pilfered age); logs skipped as full: {full} of {}",
         med(&col(r, |x| x.pilfers)),
         med(&col(r, |x| x.owner_finds)),
         medp(&col(r, Run::rate)),
@@ -626,7 +661,7 @@ fn usage(label: &str, r: &[Run]) -> String {
 fn pilferage_row(label: &str, find: f64, r: &[Run]) -> String {
     let ratio = col(r, |x| x.rate() / (x.v() * find));
     format!(
-        "{label} at find {find}: rate {}; v {} (non-owner agents on a cache's site per cache per tick, drawing or not: {}); v × find {}; rate ÷ (v × find) {}; sugar pilfered per sugar cached per tick {}; agents per open site {}; the cohort fit r {} (RMS residual {})",
+        "{label} at find {find}: rate {}; v {} (non-owner agents on a cache's site per cache per tick, drawing or not: {}); v × find {}; rate ÷ (v × find) {}; sugar pilfered per sugar cached per tick {}; agents per open site {}; the cohort fit r {} (RMS residual {}); reported (fix round 1): takes ÷ Σ over arrivals of 1 − (1 − find)^k (k the foreign caches on the site at the tick's start) {}, draws on sites with two or more foreign caches {}, arrivals on a cache at the carrying limit per seed {}",
         medp(&col(r, Run::rate)),
         med(&col(r, Run::v)),
         med(&col(r, Run::raw_v)),
@@ -636,6 +671,9 @@ fn pilferage_row(label: &str, find: f64, r: &[Run]) -> String {
         med(&col(r, Run::density)),
         medp(&col(r, |x| x.km_r)),
         med(&col(r, |x| x.km_rms)),
+        med(&col(r, |x| x.pilfers / x.pred_takes)),
+        medp(&col(r, |x| x.k_stacked / x.k_sum)),
+        med(&col(r, |x| x.full_arrivals)),
     )
 }
 
@@ -673,7 +711,7 @@ fn pilferage_claim(seeds: &[u64]) -> Outcome {
         .with(&format!("Across the find sweep (medians over seeds): {}.", sweep.join("; ")))
         .with(&format!("The arenas (half cheaters, no bury cost): {}.", arenas.join("; ")))
         .with(&format!(
-            "Context, not judged. Vander Wall and Jenkins: \"Most pilferage rates for long-term hoarders fall between 2–30% per day\" (p.656), with \"the median empirical rate of loss for long-term scatter hoarders of 9%\" (p.663); their rates assume \"the rate of removal over the duration of a study was constant\" (p.658). The cohort fit above is that assumption tested on the log: an amount-weighted Kaplan–Meier curve of cached sugar against pilfering (digging, a dead owner and tick 200 censor), fitted to (1 − r)^age. Why stumbling can't reach the field's rates: a cache is found only when a non-owner ends a tick on its site and draws, so a cache's chance of being pilfered in a tick is at most 1 − (1 − find)^k for the k visitors it gets, and the rate is at most v × find, and at most v at find 1. v is set by how crowded the sites are, not by find: at find 1 in theft-winter v is {} with {} agents per open site. The field's 2–30 % a day are reached by animals that search for caches (by smell, or by watching others cache, which P2 adds).",
+            "Context, not judged. Vander Wall and Jenkins: \"Most pilferage rates for long-term hoarders fall between 2–30% per day\" (p.656), with \"the median empirical rate of loss for long-term scatter hoarders of 9%\" (p.663); their rates assume \"the rate of removal over the duration of a study was constant\" (p.658). The cohort fit above is that assumption tested on the log: an amount-weighted Kaplan–Meier curve of cached sugar against pilfering (digging, a dead owner and tick 200 censor), fitted to (1 − r)^age. Why stumbling can't reach the field's rates: a cache is found only when a non-owner ends a tick on its site and draws, and an arrival takes at most one of the k caches on a site, so it takes one with chance 1 − (1 − find)^k, not k × find; the rate is at most v × find, and at most v at find 1. That one-take rule on stacked sites is the gap between the rate and v × find: in the winter field the takes match Σ 1 − (1 − find)^k over arrivals within 3 % at every find (the reported ratio above; the arenas, with few caches, are noisier at low find), while draws on sites with two or more foreign caches fall as find rises, and no thief arrived on a cache at the carrying limit. v is set by how crowded the sites are, not by find: at find 1 in theft-winter v is {} with {} agents per open site. The field's 2–30 % a day are reached by animals that search for caches (by smell, or by watching others cache, which P2 adds).",
             med(&col(&at_one, Run::v)),
             med(&col(&at_one, Run::density)),
         ))
@@ -729,6 +767,29 @@ fn agreement(cells: &[(u32, f64, Vec<Run>)], find: f64) -> (Vec<f64>, String) {
     (flags, text)
 }
 
+/// Reported (fix round 1): the ruled reading of condition (3) against
+/// fitness with still-buried caches valued at 0 (holdings + stomach per
+/// founder at 200).
+fn held_agreement(cells: &[(u32, f64, Vec<Run>)], find: f64) -> String {
+    let (mut agree, mut rich, mut rich_not_cond, mut n_all) = (0, 0, 0, 0);
+    for (n, cost, rs) in cells {
+        for r in rs {
+            let Some((cond, _)) = threshold(r, *n, *cost) else {
+                continue;
+            };
+            let richer = r.held_f(H) - r.held_f(C) > 0.0;
+            n_all += 1;
+            agree += usize::from(cond == richer);
+            rich += usize::from(richer);
+            rich_not_cond += usize::from(richer && !cond);
+        }
+    }
+    format!(
+        "at find {find}, caches valued at 0: {agree} of {n_all} agree ({:.1} %); hoarders richer in {rich}, of which {rich_not_cond} where the condition fails",
+        pct(agree, n_all)
+    )
+}
+
 fn pct(n: usize, d: usize) -> f64 {
     crate::claims::minds5::pct(n, d)
 }
@@ -751,7 +812,7 @@ fn threshold_claim(seeds: &[u64]) -> Outcome {
         .map(|(n, cost, r)| {
             let t: Vec<(bool, bool)> = r.iter().filter_map(|x| threshold(x, *n, *cost)).collect();
             format!(
-                "n {n}, C/G {cost}: p_s {}, p_o {}, p_s ÷ p_o {} against {:.2}; condition holds in {} of {}, hoarders richer in {}, agree in {}; {}; everyone alive at 200 of those at 100 {}",
+                "n {n}, C/G {cost}: p_s {}, p_o {}, p_s ÷ p_o {} against {:.2}; condition holds in {} of {}, hoarders richer in {}, agree in {}; {}; everyone alive at 200 of those at 100 {}; reported: holdings + stomach per founder (caches at 0) hoarders {}, cheaters {}, hoarders richer so in {}; caches per founding hoarder at 200 {}; sugar pilfered per founder, hoarders {}, cheaters {}",
                 med(&col(r, Run::p_s)),
                 med(&col(r, Run::p_o)),
                 med(&col(r, |x| x.p_s() / x.p_o())),
@@ -762,7 +823,23 @@ fn threshold_claim(seeds: &[u64]) -> Outcome {
                 t.iter().filter(|x| x.0 == x.1).count(),
                 groups(r),
                 med(&col(r, Run::surv_all)),
+                med(&col(r, |x| x.held_f(H))),
+                med(&col(r, |x| x.held_f(C))),
+                r.iter().filter(|x| x.held_f(H) > x.held_f(C)).count(),
+                med(&col(r, |x| nan_div(x.cached200[H], x.founders[H]))),
+                med(&col(r, |x| nan_div(x.stolen[H], x.founders[H]))),
+                med(&col(r, |x| nan_div(x.stolen[C], x.founders[C]))),
             )
+        })
+        .collect();
+    let held: Vec<String> = FINDS
+        .iter()
+        .map(|&f| {
+            if f == ANCHOR {
+                held_agreement(&cells, f)
+            } else {
+                held_agreement(&arena_cells(f, seeds), f)
+            }
         })
         .collect();
     let others: Vec<String> = FINDS
@@ -788,6 +865,10 @@ fn threshold_claim(seeds: &[u64]) -> Outcome {
             rows.join("; ")
         ))
         .with(&format!("Across the find sweep: {}.", others.join("; ")))
+        .with(&format!(
+            "Reported, not judged (fix round 1): p_s and p_o leave out still-buried sugar, while the judged fitness counts it at full value. With caches valued at 0 instead: {}. Whether condition (3) is necessary here depends on how still-buried sugar is valued.",
+            held.join("; ")
+        ))
         .with(&format!(
             "Andersson and Krebs's reasoning for the (n − 1): \"the probability that another individual will find the food before the one that hoarded it increases with group size\" (p.708). The arenas' pilferage at the anchor, no bury cost: {}. The paper's p_s and p_o are per visit (\"let ps = the visiting hoarder's probability of finding it, and let po = any other visiting individual's probability of finding it\", p.708); the ruled measure is each cache's fate, which the per-visit reading above sets beside it. Condition (3) is \"a necessary condition for hoarders to be more fit than non-hoarding group-members\" (p.711), so a run where hoarders are richer and it fails counts against it; one where it holds and cheaters are richer does not.",
             rates.join("; ")
@@ -954,7 +1035,7 @@ fn mixed_claim(seeds: &[u64]) -> Outcome {
             list(&off, 3),
         ))
         .with(&format!("Across the find sweep: {}.", sweep.join("; ")))
-        .with("Andersson and Krebs (p.708), assuming hoarders are poorer thieves than non-hoarders (ps > po > pt): \"a stable mixture of hoarders and non-hoarders may result. This is because hoarders are fitter than non-hoarders when at a low proportion in the group, whereas a reversal occurs at some point as hoarders increase in proportion.\" The model has no such difference: hoarders and cheaters find others' caches at the same rate, so any crossing here has another cause. Its stability is P1b's.")
+        .with("Andersson and Krebs (p.708), assuming hoarders are poorer thieves than non-hoarders (ps > po > pt): \"a stable mixture of hoarders and non-hoarders may result. This is because hoarders are fitter than non-hoarders when at a low proportion in the group, whereas a reversal occurs at some point as hoarders increase in proportion.\" The model has no such difference per draw: hoarders and cheaters find each cache they stand on at the same rate. By amount they differ: in the field hoarders pilfer 5.5–6.9 times as much sugar per founder as cheaters (claim 3's rows), as Vander Wall and Jenkins expect (\"food hoarders are expected to pilfer far more than they can consume, recaching the excess\", p.661), so any crossing here has another cause. Its stability is P1b's.")
 }
 
 // ---------------------------------------------------------- 6. reciprocity
@@ -1058,6 +1139,34 @@ fn loss_configs(find: f64, seeds: &[u64]) -> Vec<(String, f64, f64, bool)> {
     out
 }
 
+/// Reported (fix round 1): the arena configurations where hoarders win
+/// on holdings + stomach per founder (caches valued at 0).
+fn held_wins(find: f64, seeds: &[u64]) -> String {
+    let wins: Vec<String> = arena_cells(find, seeds)
+        .into_iter()
+        .filter(|(_, _, r)| {
+            paired_greater(&col(r, |x| x.held_f(H)), &col(r, |x| x.held_f(C)), "h", "c").verdict
+                == Verdict::Holds
+        })
+        .map(|(n, cost, r)| {
+            format!(
+                "arena n {n}, C/G {cost} ({:.2} %)",
+                100.0 * m(&col(&r, Run::rate))
+            )
+        })
+        .collect();
+    format!(
+        "find {find}: hoarders win on holdings in {} of {} arena configurations{}",
+        wins.len(),
+        NS.len() * COSTS.len(),
+        if wins.is_empty() {
+            String::new()
+        } else {
+            format!(": {}", wins.join(", "))
+        }
+    )
+}
+
 fn loss_summary(find: f64, v: &[(String, f64, f64, bool)]) -> String {
     let max = v.iter().map(|x| x.1).fold(f64::NAN, f64::max);
     let wins: Vec<String> = v
@@ -1128,6 +1237,14 @@ fn loss_claim(seeds: &[u64]) -> Outcome {
         table.join("; ")
     ))
     .with(&format!("Across the find sweep: {}.", sweep.join("; ")))
+    .with(&format!(
+        "Reported, not judged (fix round 1): the arenas' wins with still-buried caches valued at 0 (holdings + stomach per founder at 200): {}.",
+        FINDS
+            .iter()
+            .map(|&f| held_wins(f, seeds))
+            .collect::<Vec<_>>()
+            .join("; ")
+    ))
     .with("Vander Wall and Jenkins: \"In our simulations, the average daily rate of loss of scatter hoards was 18% in cases in which larder hoarding did not become established.\" (p.663). Their hoarders compete with larder-hoarding cheaters; ours with agents that never store.")
 }
 
@@ -1145,14 +1262,19 @@ fn mild_claim(seeds: &[u64]) -> Outcome {
     let w = worlds(ANCHOR);
     let slopes = seed_slopes(&xs, &w, cheat);
     let surv_slopes = seed_slopes(&xs, &w, |x| x.surv(C) - x.surv(H));
+    let held_slopes = seed_slopes(&xs, &w, |x| x.held_f(C) - x.held_f(H));
     let rows: Vec<String> = BETAS
         .iter()
         .zip(&w)
         .map(|(b, r)| {
             format!(
-                "β {b}: {}; cheater advantage in wealth {}",
+                "β {b}: {}; cheater advantage in wealth {}; reported: caches per founding hoarder at 200 {}, holdings + stomach per founder hoarders {}, cheaters {}, cheater advantage so {}",
                 groups(r),
-                med(&col(r, cheat))
+                med(&col(r, cheat)),
+                med(&col(r, |x| nan_div(x.cached200[H], x.founders[H]))),
+                med(&col(r, |x| x.held_f(H))),
+                med(&col(r, |x| x.held_f(C))),
+                med(&col(r, |x| x.held_f(C) - x.held_f(H))),
             )
         })
         .collect();
@@ -1178,6 +1300,12 @@ fn mild_claim(seeds: &[u64]) -> Outcome {
             rows.join("; "),
         ))
         .with(&format!("Across the find sweep: {}.", sweep.join("; ")))
+        .with(&format!(
+            "Reported, not judged (fix round 1): the pre-registered wealth counts the hoarders' still-buried caches at full value. With caches valued at 0 (holdings + stomach per founder at 200), the per-seed slope of the cheater advantage on log₂ β has median {:.3}, below 0 in {} of {} seeds.",
+            med_or_nan(&held_slopes),
+            held_slopes.iter().filter(|&&x| x < 0.0).count(),
+            stats::finite(&held_slopes).len(),
+        ))
         .with("Vander Wall and Jenkins, untested in their paper: \"It is conceivable that under ideal conditions (e.g., mild winters), a nonhoarding cheater could survive and even flourish at the expense of conspecific hoarders.\" (p.661)")
 }
 
@@ -1247,6 +1375,11 @@ fn usage_claim(seeds: &[u64]) -> Outcome {
             usage("as recorded", &half),
             usage("digging below R", &probe),
             groups(&probe),
+        ))
+        .with(&format!(
+            "Reported (fix round 1), cheaters with nobody finding caches (find 0): a quarter cheaters, {}; half cheaters, {}.",
+            groups(&runs(&field(0.0, 0.25), seeds)),
+            groups(&runs(&field(0.0, 0.5), seeds)),
         ))
 }
 

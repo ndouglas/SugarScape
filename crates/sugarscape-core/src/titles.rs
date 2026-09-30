@@ -291,15 +291,15 @@ pub const TITLES: [(&str, &str); 343] = [
     ),
     (
         "theft-arena-2",
-        "Two agents in a room: the hoarder ends the winter richer, though the other takes half its caches",
+        "Two agents in a room: the other takes half the hoarder's caches, and the hoarder ends the winter with a third as much in hand",
     ),
     (
         "theft-arena-4",
-        "Four agents in a room: thieves take four fifths of the caches, yet hoarders mostly end richer",
+        "Four agents in a room: thieves take four fifths of the caches, and hoarders end the winter with a third as much in hand",
     ),
     (
         "theft-arena-8",
-        "Eight agents in a room: thieves take nine tenths of the caches, yet hoarders end richer two times in three",
+        "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with a third as much in hand",
     ),
     (
         "s71-board",

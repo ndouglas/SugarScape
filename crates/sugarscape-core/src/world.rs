@@ -238,6 +238,7 @@ pub struct World {
     /// `minds::caching::hungry`). Not config: never set by a config, the app
     /// or an edit, never hashed or exported, and false in every world the
     /// survey doesn't set it in.
+    #[doc(hidden)]
     pub probe_dig_at_reserve: bool,
     /// Minds 6: the log's open records per (owner, site), oldest first.
     pub(crate) cache_open: crate::minds::caching::fates::OpenRecords,
