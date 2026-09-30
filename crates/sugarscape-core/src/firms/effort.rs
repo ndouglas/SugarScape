@@ -109,15 +109,33 @@ pub enum Share {
     /// A fixed fraction of output (1/N for equal shares, a seniority weight).
     Fraction(f64),
     /// Base pay `own` plus an equal share of max(0, O − `own` − `others`)
-    /// among `n` members.
-    Base { own: f64, others: f64, n: f64 },
+    /// among `n` members — or, below the kink under `scaled`, `own` scaled
+    /// to keep total pay at O (the `base_shortfall` switch, A99 eq. (21)).
+    Base {
+        own: f64,
+        others: f64,
+        n: f64,
+        scaled: bool,
+    },
 }
 
 impl Share {
     pub fn income(&self, output: f64) -> f64 {
         match *self {
             Share::Fraction(w) => w * output,
-            Share::Base { own, others, n } => own + ((output - own - others) / n).max(0.0),
+            Share::Base {
+                own,
+                others,
+                n,
+                scaled,
+            } => {
+                let total = own + others;
+                if scaled && output < total {
+                    own * output / total
+                } else {
+                    own + ((output - own - others) / n).max(0.0)
+                }
+            }
         }
     }
 }
@@ -370,18 +388,31 @@ fn bracket(prefs: &Prefs, choice: &Choice, lo: f64, hi: f64) -> f64 {
         }
         let bonus = t.output(0.5 * (a + b) + choice.others) >= floor;
         let slope: Box<dyn Fn(f64) -> f64> = match (prefs, choice.share) {
-            (Prefs::CobbDouglas { theta }, Share::Base { n, .. }) => {
+            (
+                Prefs::CobbDouglas { theta },
+                Share::Base {
+                    own,
+                    others,
+                    n,
+                    scaled,
+                },
+            ) => {
                 let theta = *theta;
+                let total = own + others;
                 Box::new(move |e: f64| {
                     let big = e + choice.others;
                     let y = choice.share.income(t.output(big));
+                    let o1 = if big > 0.0 {
+                        t.a + t.b * t.beta * powf(big, t.beta) / big
+                    } else {
+                        t.a
+                    };
                     let dy = if bonus {
-                        let p = if big > 0.0 { powf(big, t.beta) } else { 0.0 };
-                        (t.a + if big > 0.0 {
-                            t.b * t.beta * p / big
-                        } else {
-                            0.0
-                        }) / n
+                        o1 / n
+                    } else if scaled && total > 0.0 {
+                        // Below the kink under Scaled, income = own × O / ΣΦ:
+                        // it tracks output, not a flat base.
+                        o1 * own / total
                     } else {
                         0.0
                     };
@@ -416,9 +447,16 @@ fn bracket(prefs: &Prefs, choice: &Choice, lo: f64, hi: f64) -> f64 {
                     };
                     let dy = match share {
                         Share::Fraction(w) => w * o1,
-                        Share::Base { n, .. } => {
+                        Share::Base {
+                            n,
+                            own,
+                            others,
+                            scaled,
+                        } => {
                             if bonus {
                                 o1 / n
+                            } else if scaled && own + others > 0.0 {
+                                o1 * own / (own + others)
                             } else {
                                 0.0
                             }
@@ -698,6 +736,7 @@ mod tests {
                     own: 0.4,
                     others: 1.0,
                     n: 4.0,
+                    scaled: false,
                 },
             },
         ];
@@ -739,6 +778,7 @@ mod tests {
                     own,
                     others: own * (n - 1.0) * r.gen_range(0.5..1.5),
                     n,
+                    scaled: r.gen::<bool>(),
                 }
             };
             let choice = Choice {
@@ -808,6 +848,42 @@ mod tests {
     }
 
     #[test]
+    fn scaled_base_pay_maximizes_correctly_below_the_kink() {
+        // Below the kink under Scaled, income = own × O / ΣΦ tracks
+        // output, not a flat own: the chosen effort must maximize *that*,
+        // for both Cobb–Douglas and CES. Output never reaches the kink
+        // (ΣΦ = 10, max output well under 1) so the whole search stays
+        // below it.
+        let share = Share::Base {
+            own: 5.0,
+            others: 5.0,
+            n: 2.0,
+            scaled: true,
+        };
+        let choice = Choice {
+            tech: Tech {
+                a: 0.1,
+                b: 0.1,
+                beta: 2.0,
+            },
+            others: 0.0,
+            share,
+        };
+        for theta in [0.2, 0.5, 0.8] {
+            let prefs = cd(theta);
+            let (e, u) = best(&prefs, &choice, 0.0, 1.0, Search::Exact);
+            let (_, ug) = best(&prefs, &choice, 0.0, 1.0, Search::Grid(20_000));
+            assert!(u >= ug - 1e-6, "CD θ={theta}: exact {e} {u} < grid {ug}");
+        }
+        for (delta, rho, minus) in [(0.3, -0.5, true), (0.6, 0.5, false)] {
+            let prefs = Prefs::Ces { delta, rho, minus };
+            let (e, u) = best(&prefs, &choice, 0.0, 1.0, Search::Exact);
+            let (_, ug) = best(&prefs, &choice, 0.0, 1.0, Search::Grid(20_000));
+            assert!(u >= ug - 1e-6, "CES {prefs:?}: exact {e} {u} < grid {ug}");
+        }
+    }
+
+    #[test]
     fn ces_finds_interior_maxima_the_bracket_could_miss() {
         // A printed-sign CES case (ρ = 0.706, δ = 0.67) where a single
         // sign-change check per piece missed an interior maximum and
@@ -858,6 +934,7 @@ mod tests {
                     own,
                     others: own * (n - 1.0) * r.gen_range(0.5..1.5),
                     n,
+                    scaled: r.gen::<bool>(),
                 }
             };
             let choice = Choice {

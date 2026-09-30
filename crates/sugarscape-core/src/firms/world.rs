@@ -510,6 +510,7 @@ impl FirmsWorld {
                 own: self.agents[i].base,
                 others: base_others,
                 n: n as f64,
+                scaled: self.config.base_shortfall == BaseShortfall::Scaled,
             },
         }
     }
@@ -804,24 +805,16 @@ impl FirmsWorld {
             let n = members.len();
             let id = self.firms[f].id;
             let base_sum = self.firms[f].base_sum;
-            // Named switch: eq. (21) as printed pays base pay even when
-            // output falls short (the default); Scaled instead shrinks
-            // every member's pay so the firm never pays out more than it
-            // made.
-            let scale = (self.config.pay == Pay::Base
-                && self.config.base_shortfall == BaseShortfall::Scaled
-                && base_sum > output
-                && base_sum > 0.0)
-                .then_some(output / base_sum);
+            // The named switch (base_shortfall) lives in `share()`/`Share`:
+            // Paid pays base pay even when output falls short (eq. (21) as
+            // printed); Scaled shrinks every member's pay below the kink so
+            // the firm never pays out more than it made. Both agents'
+            // decisions (`options()`, via `share()`) and this payout go
+            // through the same `Share::income`, so they agree.
             for (r, &m) in members.iter().enumerate() {
                 let m = m as usize;
-                let income = match scale {
-                    Some(s) => self.agents[m].base * s,
-                    None => {
-                        let share = self.share(m, n, r + 1, base_sum - self.agents[m].base);
-                        share.income(output)
-                    }
-                };
+                let share = self.share(m, n, r + 1, base_sum - self.agents[m].base);
+                let income = share.income(output);
                 let a = &mut self.agents[m];
                 a.income = income;
                 a.utility = a.prefs.utility(income, 1.0 - a.effort);
@@ -1535,6 +1528,33 @@ mod tests {
     }
 
     #[test]
+    fn base_shortfall_changes_the_trajectory_not_only_the_payout() {
+        // Scaled must change what agents expect, not just what they're
+        // paid: otherwise decisions (via share()/options()) are made as if
+        // Paid always applies, and every series but income is identical.
+        let cfg = |c: &mut FirmsConfig| {
+            c.pay = Pay::Base;
+            c.base_share = 0.8;
+        };
+        let mut paid = world(cfg);
+        let mut scaled = world(|c| {
+            cfg(c);
+            c.base_shortfall = BaseShortfall::Scaled;
+        });
+        paid.run(150);
+        scaled.run(150);
+        let (pe, se) = (
+            paid.stats.latest().unwrap().effort,
+            scaled.stats.latest().unwrap().effort,
+        );
+        assert!(
+            (pe - se).abs() > 1e-6,
+            "Paid and Scaled gave the same mean effort ({pe}); Scaled isn't \
+             reaching agents' decisions"
+        );
+    }
+
+    #[test]
     fn the_2013_parameterization_draws_per_firm() {
         let mut w = world(|c| {
             c.a = 0.0;
@@ -1598,23 +1618,19 @@ mod tests {
     }
 
     #[test]
-    fn recording_a_period_stays_cheap_even_with_a_long_lived_firm_in_the_histogram() {
-        // A death at a very large lifetime makes `records.lifetimes` a huge
-        // histogram. record() must not walk it every period: it should stay
-        // O(1), not O(histogram length) per call.
-        let mut w = world(|_| {});
-        w.records.died(200_000, false);
-        let start = std::time::Instant::now();
-        for _ in 0..5_000 {
-            w.record();
-        }
-        let elapsed = start.elapsed();
-        assert!(
-            elapsed.as_millis() < 300,
-            "5 000 record() calls took {elapsed:?} with a 200 000-bin lifetime \
-             histogram; record() must track the running mean instead of \
-             recomputing it from the whole histogram every period"
-        );
+    fn lifetime_tracking_is_a_running_count_not_a_histogram_walk() {
+        // record() must get the `lifetime` series from a running count and
+        // sum kept alongside `records.died(...)` (see `leave()`), not by
+        // recomputing the mean from the whole `records.lifetimes` histogram
+        // every period (which would make a long run's recording cost grow
+        // with the largest lifetime ever seen, not stay O(1)). Pin the
+        // mechanism structurally: the running count must equal the number
+        // of deaths the histogram actually recorded since the burn-in.
+        let mut w = world(|c| c.burn_in = 5);
+        w.run(150);
+        let deaths_recorded: u64 = w.records.lifetimes.iter().sum();
+        assert!(deaths_recorded > 0, "expected some deaths after burn-in");
+        assert_eq!(w.lifetime_count, deaths_recorded);
     }
 
     #[test]

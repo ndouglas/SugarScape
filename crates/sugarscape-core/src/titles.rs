@@ -1371,7 +1371,7 @@ pub const TITLES: [(&str, &str); 355] = [
     ),
     (
         "firms-base-pay-80",
-        "Guaranteed pay keeps firms together by paying more than they make",
+        "Guaranteed pay collapses effort, and firms pay out about three times what they make",
     ),
     (
         "firms-hiring-100",
