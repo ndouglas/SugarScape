@@ -750,7 +750,8 @@ pub fn presets() -> Vec<ModelPreset> {
             |c| {
                 c.blue = 100;
                 lines(c, 3.0);
-                c.start = Start::Given { red: 50, blue: 50 };
+                // Off the knife edge: at exactly 50 and 50 nobody moves, stable or not.
+                c.start = Start::Given { red: 55, blue: 45 };
             },
         ),
         preset(

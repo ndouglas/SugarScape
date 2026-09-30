@@ -109,7 +109,7 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("tipping-fig18", 0x09f32cac3d61b2d9),
     ("tipping-fig19", 0x8183f2d74a5354c9),
     ("tipping-fig20", 0x59451cec6e615ef7),
-    ("tipping-fig21", 0x3877b26c7e734960),
+    ("tipping-fig21", 0x7720dc7b462269cd),
     ("tipping-fig22", 0x69247e261fd9203a),
     ("tipping-intolerant", 0x6e204f0626e23a4d),
     ("tipping-minority", 0x3e9d9992d3a167c7),

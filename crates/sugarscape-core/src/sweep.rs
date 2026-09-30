@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 155] = [
+const BUILTINS: [Builtin; 160] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1013,6 +1013,26 @@ const BUILTINS: [Builtin; 155] = [
     Builtin {
         id: "line-reach",
         json: include_str!("../../../sweeps/line-reach.json"),
+    },
+    Builtin {
+        id: "tipping-start",
+        json: include_str!("../../../sweeps/tipping-start.json"),
+    },
+    Builtin {
+        id: "tipping-entry",
+        json: include_str!("../../../sweeps/tipping-entry.json"),
+    },
+    Builtin {
+        id: "tipping-intercept",
+        json: include_str!("../../../sweeps/tipping-intercept.json"),
+    },
+    Builtin {
+        id: "tipping-speeds",
+        json: include_str!("../../../sweeps/tipping-speeds.json"),
+    },
+    Builtin {
+        id: "tipping-limit",
+        json: include_str!("../../../sweeps/tipping-limit.json"),
     },
     Builtin {
         id: "lhv-calibration",
@@ -2421,6 +2441,11 @@ mod tests {
                 "s71-order",
                 "line-radius",
                 "line-reach",
+                "tipping-start",
+                "tipping-entry",
+                "tipping-intercept",
+                "tipping-speeds",
+                "tipping-limit",
                 "lhv-calibration",
                 "lhv-quirks",
                 "cv-ratio-rules",

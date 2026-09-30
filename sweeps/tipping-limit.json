@@ -1,0 +1,77 @@
+{
+  "name": "Schelling's tipping: Fig. 20 with Red limited",
+  "description": "Fig. 20 (200 Red, 100 Blue, Fig. 19's schedules) with at most this many Red inside, the most tolerant first to enter and last to leave. Schelling (Fig. 22): with 40, \"a stable mixture at 40 whites and a comparable number of blacks\". Measured (exact schedules; recorded 2026-09-29): Blue inside at the end 100, 93, 91, 88, 86, 80 and 72 with Red limited to 20–100; with 150, Blue is pushed out.",
+  "base": {
+    "preset": "tipping-fig20"
+  },
+  "x": {
+    "label": "Most Red inside",
+    "values": [
+      {
+        "at": 20,
+        "set": {
+          "limit_red": 20,
+          "start.red": 20
+        }
+      },
+      {
+        "at": 30,
+        "set": {
+          "limit_red": 30,
+          "start.red": 30
+        }
+      },
+      {
+        "at": 40,
+        "set": {
+          "limit_red": 40,
+          "start.red": 40
+        }
+      },
+      {
+        "at": 50,
+        "set": {
+          "limit_red": 50,
+          "start.red": 50
+        }
+      },
+      {
+        "at": 60,
+        "set": {
+          "limit_red": 60,
+          "start.red": 60
+        }
+      },
+      {
+        "at": 80,
+        "set": {
+          "limit_red": 80,
+          "start.red": 80
+        }
+      },
+      {
+        "at": 100,
+        "set": {
+          "limit_red": 100,
+          "start.red": 80
+        }
+      },
+      {
+        "at": 150,
+        "set": {
+          "limit_red": 150,
+          "start.red": 80
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 1
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "blue_in"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "name": "Schelling's tipping: Blue entering an all-Red Fig. 19 together",
+  "description": "Fig. 19 started all Red (100 inside) with k Blue entering together. Schelling: starting from one color, \"it would require the concerted entry of more than 25% of the other color\". Measured (exact schedules; recorded 2026-09-29): 26 or fewer are pushed out again; 28 or more reach the 80–80 mixture.",
+  "base": {
+    "preset": "tipping-fig19"
+  },
+  "x": {
+    "label": "Blue entering at once",
+    "values": [
+      {
+        "at": 5,
+        "set": {
+          "start.red": 100,
+          "start.blue": 5
+        }
+      },
+      {
+        "at": 10,
+        "set": {
+          "start.red": 100,
+          "start.blue": 10
+        }
+      },
+      {
+        "at": 15,
+        "set": {
+          "start.red": 100,
+          "start.blue": 15
+        }
+      },
+      {
+        "at": 20,
+        "set": {
+          "start.red": 100,
+          "start.blue": 20
+        }
+      },
+      {
+        "at": 22,
+        "set": {
+          "start.red": 100,
+          "start.blue": 22
+        }
+      },
+      {
+        "at": 24,
+        "set": {
+          "start.red": 100,
+          "start.blue": 24
+        }
+      },
+      {
+        "at": 25,
+        "set": {
+          "start.red": 100,
+          "start.blue": 25
+        }
+      },
+      {
+        "at": 26,
+        "set": {
+          "start.red": 100,
+          "start.blue": 26
+        }
+      },
+      {
+        "at": 28,
+        "set": {
+          "start.red": 100,
+          "start.blue": 28
+        }
+      },
+      {
+        "at": 30,
+        "set": {
+          "start.red": 100,
+          "start.blue": 30
+        }
+      },
+      {
+        "at": 40,
+        "set": {
+          "start.red": 100,
+          "start.blue": 40
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 1
+  },
+  "ticks": 2000,
+  "metric": {
+    "kind": "final",
+    "series": "blue_in"
+  }
+}

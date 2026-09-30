@@ -267,6 +267,11 @@ fn builtins_and_series_names_are_listed() {
             "s71-order",
             "line-radius",
             "line-reach",
+            "tipping-start",
+            "tipping-entry",
+            "tipping-intercept",
+            "tipping-speeds",
+            "tipping-limit",
             "lhv-calibration",
             "lhv-quirks",
             "cv-ratio-rules",
@@ -1172,6 +1177,21 @@ fn punishment_sims_match_the_native_golden_entries() {
     let mut sim = Sim::new(tanh, 1, JsValue::NULL).unwrap();
     sim.step(200);
     assert_eq!(sim.fingerprint(), "0x41e7fa5fab5ba690");
+}
+
+#[wasm_bindgen_test]
+fn tipping_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
+    for (id, fp) in [
+        ("tipping-fig18", "0x09f32cac3d61b2d9"),
+        ("tipping-fig22", "0x69247e261fd9203a"),
+        ("tipping-less-tolerant", "0xd8be827795d49145"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "tipping");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
 }
 
 #[wasm_bindgen_test]
