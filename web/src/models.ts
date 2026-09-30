@@ -301,7 +301,8 @@ export function sugarscapeChapter(p: Preset): string {
 /**
  * Whether `c` is a Minds world (docs/studies/2026-09-27-minds.md): a sugarscape config that uses any rule
  * the Minds experiments added — a decision other than rule M, walking, memory, walls, truffles, caching,
- * a carrying limit, central-place foraging or a winter everywhere at once.
+ * a carrying limit, central-place foraging, a winter everywhere at once, or theft (a chance to find caches
+ * or any cheaters).
  * The Minds run on the sugarscape model but have their own entry in the model menu.
  */
 export function usesMinds(c: ModelConfig): boolean {
@@ -317,7 +318,9 @@ export function usesMinds(c: ModelConfig): boolean {
     s.caching?.mixed === true ||
     (s.caching?.capacity ?? 0) > 0 ||
     s.central?.enabled === true ||
-    s.seasons?.mode === 'global'
+    s.seasons?.mode === 'global' ||
+    (s.theft?.find ?? 0) > 0 ||
+    (s.theft?.cheaters ?? 0) > 0
   );
 }
 
@@ -354,6 +357,7 @@ const MINDS_TITLES: Record<string, string> = {
   '3': 'Minds 3: memory',
   '4': 'Minds 4: planning',
   '5': 'Minds 5: caching',
+  '6': 'Minds 6: theft',
 };
 
 /**

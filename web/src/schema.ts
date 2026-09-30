@@ -1,5 +1,5 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Truffles } from './types';
+import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Theft, Truffles } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
@@ -25,6 +25,17 @@ const caching = (c: Config): Caching =>
 
 /** A config's central-place foraging, or the engine's default (off) for older configs. */
 const central = (c: Config): Central => c.central ?? { enabled: false };
+
+/** A config's theft, or the engine's default (no finds, owner memory on, loot kept, no cheaters) for older configs. */
+const theft = (c: Config): Theft => c.theft ?? { find: 0, owner_memory: true, loot: 'keep', cheaters: 0 };
+
+/** Seeds a complete theft object (and a bury cost of 0 on a caching object lacking one) on `next`. */
+const seedTheft = (next: Config) => {
+  next.theft = { ...theft(next), ...next.theft };
+};
+const seedBuryCost = (next: Config) => {
+  next.caching = { ...caching(next), ...next.caching, bury_cost: next.caching?.bury_cost ?? 0 };
+};
 
 interface Base {
   path: string;
@@ -372,6 +383,37 @@ export const GROUPS: Group[] = [
       {
         kind: 'toggle', path: 'central.enabled', label: 'Central-place foraging (a home to carry loads to)', reset: true,
         adjust: (next) => { next.central = { ...central(next), ...next.central }; },
+      },
+    ],
+  },
+  {
+    title: 'Theft (Minds 6)',
+    minds: true,
+    note: 'Agents stumble on each other’s caches and pilfer them. An agent arriving on a site finds each cache another agent buried there with the chance to find, and takes at most one cache a tick; with owner memory off, it must find its own caches the same way. Kept loot goes into its holdings, up to the carrying limit; eaten loot goes into its stomach, which its metabolism draws on first. Cheaters, a share of the founders by id, never bury; a child takes its acting parent’s way. Each cache buried costs the bury cost in sugar. Theft needs caching, and isn’t offered in the labs or with central-place foraging. Owner memory and the share of cheaters rebuild the world; the rest applies to the running world.',
+    controls: [
+      {
+        kind: 'number', path: 'theft.find', label: 'Chance to find a cache', min: 0, max: 1, step: 0.01,
+        adjust: seedTheft,
+      },
+      {
+        kind: 'toggle', path: 'theft.owner_memory', label: 'Owners remember their caches', reset: true,
+        adjust: seedTheft,
+      },
+      {
+        kind: 'select', path: 'theft.loot', label: 'Loot',
+        current: (c) => theft(c).loot,
+        options: [
+          { value: 'keep', label: 'Keep it (up to the carrying limit)', apply: (c) => { c.theft = { ...theft(c), loot: 'keep' }; } },
+          { value: 'eat', label: 'Eat it on the spot', apply: (c) => { c.theft = { ...theft(c), loot: 'eat' }; } },
+        ],
+      },
+      {
+        kind: 'number', path: 'theft.cheaters', label: 'Share of cheaters', min: 0, max: 1, step: 0.05, reset: true,
+        adjust: seedTheft,
+      },
+      {
+        kind: 'number', path: 'caching.bury_cost', label: 'Bury cost (sugar a cache)', min: 0, max: 2, step: 0.05,
+        adjust: seedBuryCost,
       },
     ],
   },

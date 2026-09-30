@@ -136,6 +136,25 @@ export interface Caching {
   lookahead: number;
   /** A quarter of the founders on each rule, by id; `rule` is then ignored. */
   mixed: boolean;
+  /** Minds 6: good 0 lost for each cache buried (absent from older configs: 0); live. */
+  bury_cost?: number;
+}
+
+/** Minds 6: what a thief does with the good it pilfers. */
+export type Loot = 'eat' | 'keep';
+
+/**
+ * Minds 6's theft (absent from older configs: find 0, owner memory on, loot keep, no cheaters). `find`
+ * and `loot` apply live; `owner_memory` and `cheaters` are reset-only. Needs caching.
+ */
+export interface Theft {
+  /** Chance an arriving agent finds each foreign cache on its site, in [0, 1]. */
+  find: number;
+  /** Whether an agent knows where its own caches are. */
+  owner_memory: boolean;
+  loot: Loot;
+  /** Share of the founders that are cheaters (never bury), by id, in [0, 1]. */
+  cheaters: number;
 }
 
 /** Minds 5: central-place foraging (absent from older configs: off); reset-only. */
@@ -188,6 +207,7 @@ export interface Config {
   mvt?: Mvt;
   caching?: Caching;
   central?: Central;
+  theft?: Theft;
   lab?: Lab | null;
   schedule: ScheduledChange[];
 }
@@ -1464,7 +1484,11 @@ export interface AgentView {
   caching?: CachingView | null;
   /** Minds 5: central-place state, while `central.enabled`. */
   central?: CentralView | null;
+  /** Minds 6: theft state, while theft is on (`theft.find` or `theft.cheaters` above 0). */
+  theft?: TheftView | null;
 }
+/** Minds 6: whether the agent cheats, what it has stolen and lost to thieves, and loot in its stomach. */
+export interface TheftView { cheater: boolean; stolen_by_me: number; stolen_from_me: number; fed: number }
 export interface CacheView { x: number; y: number; amount: number }
 /**
  * Minds 5: the agent's own caching rule, its carrying limit (0 for none), its caches in site order and

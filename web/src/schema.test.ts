@@ -312,3 +312,60 @@ describe('caching (Minds 5)', () => {
     expect(c.central).toEqual({ enabled: true });
   });
 });
+
+describe('theft (Minds 6)', () => {
+  const group = GROUPS.find((g) => g.title === 'Theft (Minds 6)')!;
+
+  it('is a Minds group holding find, owner memory, loot, cheaters and bury cost, right after caching', () => {
+    expect(group.minds).toBe(true);
+    expect(group.controls.map((c) => c.path)).toEqual(['theft.find', 'theft.owner_memory', 'theft.loot', 'theft.cheaters', 'caching.bury_cost']);
+    const titles = GROUPS.map((g) => g.title);
+    expect(titles.indexOf('Theft (Minds 6)')).toBe(titles.indexOf('Caching (Minds 5)') + 1);
+    expect(group.note).not.toMatch(/Flump/);
+  });
+
+  it('makes owner memory and cheaters reset-only, and find, loot and bury cost live, in their ranges', () => {
+    expect(control('theft.owner_memory').kind).toBe('toggle');
+    expect(control('theft.loot').kind).toBe('select');
+    for (const path of ['theft.owner_memory', 'theft.cheaters']) expect(control(path).reset).toBe(true);
+    for (const path of ['theft.find', 'theft.loot', 'caching.bury_cost']) expect(control(path).reset).toBeUndefined();
+    const ranges: [string, number, number, number][] = [
+      ['theft.find', 0, 1, 0.01],
+      ['theft.cheaters', 0, 1, 0.05],
+      ['caching.bury_cost', 0, 2, 0.05],
+    ];
+    for (const [path, min, max, step] of ranges) {
+      const k = control(path);
+      if (k.kind !== 'number') throw new Error(`${path} is a number`);
+      expect([k.min, k.max, k.step]).toEqual([min, max, step]);
+    }
+  });
+
+  it('reads older configs as loot keep, and seeds a complete theft object when loot is set', () => {
+    const loot = control('theft.loot');
+    if (loot.kind !== 'select') throw new Error('a select');
+    const c = {} as unknown as Config;
+    expect(loot.current(c)).toBe('keep');
+    expect(loot.options.map((o) => o.value)).toEqual(['keep', 'eat']);
+    loot.options.find((o) => o.value === 'eat')!.apply(c);
+    expect(c.theft).toEqual({ find: 0, owner_memory: true, loot: 'eat', cheaters: 0 });
+  });
+
+  it('creates complete theft and caching objects when a control is set on a config missing them', () => {
+    const c = {} as unknown as Config;
+    expect(() => setPath(structuredClone(c), 'theft.find', 0.5)).toThrow();
+    expect(() => setPath(structuredClone(c), 'caching.bury_cost', 0.5)).toThrow();
+    for (const [path, value] of [['theft.find', 0.25], ['theft.owner_memory', false], ['theft.cheaters', 0.5], ['caching.bury_cost', 0.1]] as const) {
+      control(path).adjust!(c, structuredClone(c));
+      setPath(c, path, value);
+    }
+    expect(c.theft).toEqual({ find: 0.25, owner_memory: false, loot: 'keep', cheaters: 0.5 });
+    expect(c.caching).toEqual({ rule: 'none', capacity: 0, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false, bury_cost: 0.1 });
+  });
+
+  it('adds a bury cost of 0 to a caching object lacking one, and keeps the rest', () => {
+    const c = { caching: { rule: 'plan', capacity: 20, share: 0.3, lambda: 0.5, lookahead: 2, mixed: false } } as unknown as Config;
+    control('caching.bury_cost').adjust!(c, structuredClone(c));
+    expect(c.caching).toEqual({ rule: 'plan', capacity: 20, share: 0.3, lambda: 0.5, lookahead: 2, mixed: false, bury_cost: 0 });
+  });
+});

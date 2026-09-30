@@ -10,6 +10,7 @@ import type {
   AntsInspection,
   CachingView,
   CentralView,
+  TheftView,
   PunishmentInspection,
   ZiInspection,
   BaliInspection,
@@ -124,6 +125,19 @@ export function centralRows(c: CentralView): [string, string][] {
   ];
 }
 
+/**
+ * The Minds 6 theft rows, label and text: whether the agent cheats, the sugar it has pilfered, the sugar
+ * thieves have taken from its caches, and loot in its stomach (only while there is some).
+ */
+export function theftRows(t: TheftView): [string, string][] {
+  return [
+    ['Cheater', t.cheater ? 'yes' : 'no'],
+    ['Stole', fmt(t.stolen_by_me)],
+    ['Lost to thieves', fmt(t.stolen_from_me)],
+    ...(t.fed > 0 ? [['Stomach', fmt(t.fed)] as [string, string]] : []),
+  ];
+}
+
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
   private visible = false;
@@ -191,6 +205,7 @@ export class InspectPanel {
       ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
       ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
       ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
+      ...(a.theft ? theftRows(a.theft).map(([k, v]) => row(k, v)) : []),
       row('Age', `${a.age} / ${a.max_age}`),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
