@@ -127,6 +127,19 @@ pub enum BasePay {
     Mean,
 }
 
+/// What happens when a firm's output falls short of its total base pay
+/// (eq. (21) does not say).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BaseShortfall {
+    /// Eq. (21) as printed: base pay is paid even when output falls short,
+    /// so total pay can exceed output (the default).
+    Paid,
+    /// When output is below the total base pay, every member's pay is
+    /// scaled so total pay equals output.
+    Scaled,
+}
+
 /// A99 §4.1's random behavior.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -190,6 +203,7 @@ pub struct FirmsConfig {
     pub seniority_order: SeniorityOrder,
     pub base_pay: BasePay,
     pub base_share: f64,
+    pub base_shortfall: BaseShortfall,
     /// φ: a firm admits only θ ≥ φ·θ of its longest-serving member.
     pub hiring: f64,
     pub hiring_max: f64,
@@ -236,6 +250,7 @@ impl Default for FirmsConfig {
             seniority_order: SeniorityOrder::SeniorFirst,
             base_pay: BasePay::Own,
             base_share: 0.5,
+            base_shortfall: BaseShortfall::Paid,
             hiring: 0.0,
             hiring_max: 0.0,
             random_behavior: RandomBehavior::None,
@@ -621,6 +636,22 @@ pub fn schema() -> Vec<Param> {
             Live,
         )
         .shown_if("pay", "base"),
+        Param::choice(
+            "Pay",
+            "base_shortfall",
+            "When output falls short of base pay",
+            &[
+                ("paid", "Base pay is still paid (eq. 21 as printed)"),
+                ("scaled", "Everyone's pay is scaled down to match output"),
+            ],
+            Live,
+        )
+        .shown_if("pay", "base")
+        .with_help(
+            "Paid: base pay is paid even when output falls short, so pay can exceed \
+             output (eq. 21 literally). Scaled: when output is below the total base \
+             pay, every member's pay is scaled so total pay equals output.",
+        ),
         Param::number("Pay", "hiring", "Hiring standard φ", (0.0, 1.0, 0.05), Live),
         Param::number(
             "Pay",
@@ -683,7 +714,20 @@ mod tests {
                 Pay::Equal
             )
         );
+        assert_eq!(c.base_shortfall, BaseShortfall::Paid);
         assert!(c.validate().is_ok());
+    }
+
+    #[test]
+    fn base_shortfall_round_trips_through_json() {
+        let c = FirmsConfig {
+            base_shortfall: BaseShortfall::Scaled,
+            ..FirmsConfig::default()
+        };
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(json["base_shortfall"].as_str(), Some("scaled"));
+        let back: FirmsConfig = serde_json::from_value(json).unwrap();
+        assert_eq!(back, c);
     }
 
     #[test]

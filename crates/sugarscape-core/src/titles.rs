@@ -1339,7 +1339,7 @@ pub const TITLES: [(&str, &str); 355] = [
     ),
     (
         "firms-b-random",
-        "Firms with lucky technology grow largest",
+        "Random firm technology grows bigger firms too",
     ),
     (
         "firms-theta-075",
@@ -1371,7 +1371,7 @@ pub const TITLES: [(&str, &str); 355] = [
     ),
     (
         "firms-base-pay-80",
-        "Guaranteed pay keeps firms together but kills effort",
+        "Guaranteed pay keeps firms together by paying more than they make",
     ),
     (
         "firms-hiring-100",

@@ -13,8 +13,8 @@ mod view;
 mod world;
 
 pub use config::{
-    schema, Activation, AdjustScope, BasePay, CesSign, EffortSearch, FirmsConfig, Initial, Network,
-    OthersEffort, Pay, Preferences, RandomBehavior, SeniorityOrder,
+    schema, Activation, AdjustScope, BasePay, BaseShortfall, CesSign, EffortSearch, FirmsConfig,
+    Initial, Network, OthersEffort, Pay, Preferences, RandomBehavior, SeniorityOrder,
 };
 pub use presets::presets;
 pub use stats::{FirmsSnapshot, SERIES};

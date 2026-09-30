@@ -10,8 +10,8 @@ use rand::Rng;
 use serde::Serialize;
 
 use super::config::{
-    Activation, AdjustScope, BasePay, CesSign, EffortSearch, FirmsConfig, Initial, Network,
-    OthersEffort, Pay, Preferences, RandomBehavior, SeniorityOrder,
+    Activation, AdjustScope, BasePay, BaseShortfall, CesSign, EffortSearch, FirmsConfig, Initial,
+    Network, OthersEffort, Pay, Preferences, RandomBehavior, SeniorityOrder,
 };
 use super::effort::{best, Choice, Prefs, Search, Share, Tech};
 use super::fit::{mu_mle, mu_ols, ols, Records};
@@ -804,10 +804,24 @@ impl FirmsWorld {
             let n = members.len();
             let id = self.firms[f].id;
             let base_sum = self.firms[f].base_sum;
+            // Named switch: eq. (21) as printed pays base pay even when
+            // output falls short (the default); Scaled instead shrinks
+            // every member's pay so the firm never pays out more than it
+            // made.
+            let scale = (self.config.pay == Pay::Base
+                && self.config.base_shortfall == BaseShortfall::Scaled
+                && base_sum > output
+                && base_sum > 0.0)
+                .then_some(output / base_sum);
             for (r, &m) in members.iter().enumerate() {
                 let m = m as usize;
-                let share = self.share(m, n, r + 1, base_sum - self.agents[m].base);
-                let income = share.income(output);
+                let income = match scale {
+                    Some(s) => self.agents[m].base * s,
+                    None => {
+                        let share = self.share(m, n, r + 1, base_sum - self.agents[m].base);
+                        share.income(output)
+                    }
+                };
                 let a = &mut self.agents[m];
                 a.income = income;
                 a.utility = a.prefs.utility(income, 1.0 - a.effort);
@@ -1490,6 +1504,37 @@ mod tests {
     }
 
     #[test]
+    fn base_shortfall_scaled_pays_exactly_the_firms_output() {
+        let mut w = world(|c| {
+            c.pay = Pay::Base;
+            c.base_share = 0.8;
+            c.base_shortfall = BaseShortfall::Scaled;
+        });
+        w.run(50);
+        let mut saw_a_shortfall = false;
+        for &f in &w.live {
+            let firm = &w.firms[f];
+            let paid: f64 = firm
+                .members
+                .iter()
+                .map(|&m| w.agents[m as usize].income)
+                .sum();
+            assert!(
+                (paid - firm.output).abs() < 1e-9 * firm.output.max(1.0),
+                "firm paid {paid} against output {}",
+                firm.output
+            );
+            if firm.base_sum > firm.output {
+                saw_a_shortfall = true;
+            }
+        }
+        assert!(
+            saw_a_shortfall,
+            "expected at least one firm whose base pay exceeded its output"
+        );
+    }
+
+    #[test]
     fn the_2013_parameterization_draws_per_firm() {
         let mut w = world(|c| {
             c.a = 0.0;
@@ -1545,7 +1590,10 @@ mod tests {
         let mut w = world(|c| c.burn_in = 5);
         w.run(150);
         let (_, mean, _, _) = super::super::fit::lifetimes(&w.records.lifetimes);
-        assert!(mean.is_finite(), "expected some deaths recorded by tick 150");
+        assert!(
+            mean.is_finite(),
+            "expected some deaths recorded by tick 150"
+        );
         assert_eq!(w.stats.latest().unwrap().lifetime, mean);
     }
 
