@@ -1,7 +1,9 @@
 # Design: Schelling's bounded neighborhood (milestone 31)
 
 **Date:** 2026-09-29
-**Status:** proposed.
+**Status:** built. Amendments from the build: presets are `tipping-*` (`s71-minority` was taken);
+`order` is `alternate` (Red then Blue), `blue_first` or `simultaneous`; Fig. 21 starts at 55 and 45
+(at exactly 50 and 50 nobody moves); Inspect reports `agent: null` for the page's shared code.
 **Why:** episode 2 of Following the Crowd, "The tipping point", films Schelling's second model
 (1971, pp. 167–186; 1969, pp. 491–493): one bounded area, everyone inside or outside, each person
 with a tolerance for the other color. The rules, results and page references are in
