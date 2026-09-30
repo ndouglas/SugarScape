@@ -1756,7 +1756,7 @@ impl Config {
         e.check(
             !self.central.enabled || !self.caching.buries(),
             "central.enabled",
-            "central-place foraging keeps its own larder; set caching.rule to none",
+            "central-place foraging keeps its own larder; set caching.rule to none and turn off caching.mixed",
         );
         e.check(
             self.lab.is_none() || self.caching.buries(),
