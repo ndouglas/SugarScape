@@ -20,7 +20,7 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { parseErrors, type AnyInspection, type CivilConfig, type DiseaseEntry, type ModelConfig, type ModelStats } from './types';
+import { parseErrors, type AnyInspection, type CivilConfig, type DiseaseEntry, type MindsView, type ModelConfig, type ModelStats } from './types';
 
 /** A keyframe the host holds (the WASM `Checkpoint`); freed when dropped. */
 export interface CheckpointLike {
@@ -73,6 +73,8 @@ export interface SimLike {
   anasazi_water(): Uint32Array;
   anasazi_settlements(): Uint32Array;
   anasazi_links(): Uint32Array;
+  /** Minds 5–6: JSON `MindsView` (a sugarscape's; `null` otherwise). */
+  minds_view(): string;
   /** Whether the world has run its course (the anasazi's end year): stepping it does nothing. */
   finished(): boolean;
   fingerprint(): string;
@@ -780,6 +782,7 @@ export class SimHost {
     if (wants.supplyDemand) s.supplyDemand = sim.supply_demand();
     if (wants.creditGraph) s.creditGraph = JSON.parse(sim.credit_graph()) as CreditGraph;
     if (wants.diseaseList) s.diseaseList = JSON.parse(sim.disease_list()) as DiseaseEntry[];
+    if (wants.minds) s.minds = JSON.parse(sim.minds_view()) as MindsView;
     return s;
   }
 

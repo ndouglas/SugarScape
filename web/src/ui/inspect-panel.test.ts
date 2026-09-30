@@ -112,6 +112,12 @@ describe('cachingRows', () => {
     ]);
   });
 
+  it('adds a lab agent’s frozen test-evening allocation once it has one', () => {
+    const rows = cachingRows({ ...view(null), rule: 'even', lab_allocation: [[0, 15], [2, 15]] }, 9);
+    expect(rows[rows.length - 1]).toEqual(['Test allocation', 'K1 15 · K3 15']);
+    expect(cachingRows({ ...view(null), lab_allocation: null }, 9).map(([k]) => k)).not.toContain('Test allocation');
+  });
+
   it('leaves the forecast out when there is none (other rules, or winter)', () => {
     expect(cachingRows({ ...view(null), rule: 'even', holdings_cap: 0 }, 9)).toEqual([
       ['Caching rule', 'even'],

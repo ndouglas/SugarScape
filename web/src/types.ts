@@ -1438,6 +1438,45 @@ export interface SiteView {
   pollution: number[];
   /** Minds 5: the live wall state here (0 free, 1 a fence, 2 opaque); absent from older builds. */
   wall?: number;
+  /** Minds 5–6: every cache buried here, in owner-id order; absent from older builds. */
+  caches?: SiteCacheView[];
+}
+/** Minds 5–6: a cache at a site: its owner, what it holds, and whether its owner is a cheater. */
+export interface SiteCacheView { owner: number; amount: number; cheater_owner: boolean }
+
+/** Bits of `MindsView.caches`' flags: a hoarder's cache, a cheater's, a larder (the core's `CACHE_*`). */
+export const CACHE_HOARDER = 1;
+export const CACHE_CHEATER = 2;
+export const CACHE_LARDER = 4;
+
+/** Minds 5: a lab world's schedule as of the tick just computed (the core's `LabView`). */
+export interface LabView {
+  protocol: 'raby' | 'amodio';
+  days: number;
+  phase: 'start' | 'morning' | 'evening' | 'test' | 'done';
+  /** From 1; `days + 1` on the test evening. */
+  day: number;
+  /** The day's compartment (0–2 for K1–K3) and whether it had food, during training. */
+  place: number | null;
+  food: boolean | null;
+  /** The test evening: the agent whose turn it is, and where it stands. */
+  turn: number | null;
+  turn_at: [number, number] | null;
+  /** K1–K3 as `[x, y, width, height]`. */
+  compartments: [number, number, number, number][];
+  /** The caching compartments' trays, `[k, x, y]`. */
+  trays: [number, number, number][];
+}
+
+/** Minds 5–6: what the page draws of a Minds world beyond the frame (the core's `MindsView`). */
+export interface MindsView {
+  /** Whether the tick just computed was a winter tick; null unless `seasons.mode` is global. */
+  winter: boolean | null;
+  /** Every site holding a cache, `[x, y, total, flags]` (`CACHE_*` bits), in site order. */
+  caches: [number, number, number, number][];
+  /** Central worlds: every agent's home and what its larder holds. */
+  homes: { id: number; x: number; y: number; larder: number }[];
+  lab: LabView | null;
 }
 export interface LinkView { id: number; alive: boolean }
 export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; good: number; due: number; due_tick: number }
@@ -1501,7 +1540,15 @@ export interface CacheView { x: number; y: number; amount: number }
  * Minds 5: the agent's own caching rule, its carrying limit (0 for none), its caches in site order and
  * their total, and rule plan's forecast shortfall (null when the rule isn't computing one).
  */
-export interface CachingView { rule: CachingRule; holdings_cap: number; caches: CacheView[]; total: number; forecast: number | null }
+export interface CachingView {
+  rule: CachingRule;
+  holdings_cap: number;
+  caches: CacheView[];
+  total: number;
+  forecast: number | null;
+  /** A lab's test evening: the allocation of F frozen at its start, `[compartment, amount]`; absent from older builds. */
+  lab_allocation?: [number, number][] | null;
+}
 /** Minds 5: the agent's home and the load it delivered on its last delivering trip. */
 export interface CentralView { home: [number, number]; last_load: number }
 export interface GoapView { steps: [number, number][]; gathers: number; goal: number }
@@ -1886,6 +1933,7 @@ export type ColorMode =
   | 'friendliness'
   | 'provocability'
   | 'strategy'
+  | 'caching_rule'
   | 'surrounded'
   | 'agents'
   | 'uncertainty'

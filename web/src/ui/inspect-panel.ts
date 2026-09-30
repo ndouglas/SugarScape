@@ -3,7 +3,7 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hasCaches, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -41,6 +41,7 @@ import type {
   SpatialInspection,
   TagsInspection,
 } from '../types';
+import { ageText, allocationText, siteCachesText } from '../minds';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -101,7 +102,7 @@ export function cachesText(c: Pick<CachingView, 'caches' | 'total'>): string {
 /**
  * The Minds 5 caching rows, label and text: the agent's own caching rule (its own under mixed rules),
  * what it carries against the limit (good 0, `held`), its caches, and rule plan's forecast shortfall
- * when it is computing one. In a central-place world (`home` given) the larder, the cache at home, is
+ * when it is computing one, and a lab agent's frozen test-evening allocation. In a central-place world (`home` given) the larder, the cache at home, is
  * its own row ("Larder: y at home") and the Caches row counts only the caches away from home.
  */
 export function cachingRows(c: CachingView, held: number, home: [number, number] | null = null): [string, string][] {
@@ -114,6 +115,7 @@ export function cachingRows(c: CachingView, held: number, home: [number, number]
     ['Caches', larder != null ? cachesText({ caches: away, total: away.reduce((sum, k) => sum + k.amount, 0) }) : cachesText(c)],
     ...(larder != null ? [['Larder', `${fmt(larder)} at home`] as [string, string]] : []),
     ...(c.forecast != null ? [['Forecast shortfall', fmt(c.forecast)] as [string, string]] : []),
+    ...(c.lab_allocation != null ? [['Test allocation', allocationText(c.lab_allocation)] as [string, string]] : []),
   ];
 }
 
@@ -206,7 +208,7 @@ export class InspectPanel {
       ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
       ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
       ...(a.theft ? theftRows(a.theft).map(([k, v]) => row(k, v)) : []),
-      row('Age', `${a.age} / ${a.max_age}`),
+      row('Age', ageText(a.age, a.max_age, this.engine.sugar.lifespan.enabled)),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
       ...(this.engine.sugar.disease.enabled ? this.diseaseRows(a) : []),
@@ -769,6 +771,9 @@ export class InspectPanel {
         row('Site', `(${site.x}, ${site.y})`),
         ...site.resources.map((r, i) => row(`${this.goodName(i)} here`, `${fmt(r)} / ${fmt(site.capacities[i])}`)),
         ...site.pollution.map((p, k) => row(this.engine.sugar.pollution.pollutants[k]?.name ?? `pollutant ${k}`, fmt(p))),
+        ...(site.caches && hasCaches(this.engine.sugar)
+          ? [row('Caches here', siteCachesText(site.caches, (this.engine.sugar.theft?.cheaters ?? 0) > 0))]
+          : []),
         ...(agent && !gone ? this.agentRows(agent) : []),
       ),
     );

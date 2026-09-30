@@ -20,11 +20,12 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { calendarYear, isSugar, modelOf, ticksLeft } from './models';
+import { loadedDisplay } from './layers';
+import { calendarYear, isSugar, mindsShown, modelOf, ticksLeft } from './models';
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { AgreementConfig, ColorMode, Config, FieldError, Layer, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import type { AgreementConfig, ColorMode, Config, FieldError, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
 import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -244,6 +245,8 @@ export class Engine {
   ring: RingState | null = null;
   /** The anasazi's water, settlements and links as of the latest snapshot; null in other models. */
   valley: ValleyState | null = null;
+  /** Minds 5–6: the world's caches, homes, season and lab schedule as of the latest snapshot; null where not drawn. */
+  minds: MindsView | null = null;
   /** The world has run its course (the anasazi's end year) as of the latest snapshot. */
   finished = false;
   /**
@@ -357,6 +360,9 @@ export class Engine {
     const config = initial?.config ?? structuredClone(fallback.config);
     // Until the init snapshot brings the normalized config, `wants()` reads the model from this one.
     engine.config = config;
+    const shown = loadedDisplay(engine.displayState(), config);
+    engine.colorMode = shown.colorMode;
+    engine.overlays = shown.overlays;
     const landscapes = initial?.landscapes ?? [];
     const log = initial?.log ?? [];
     const result = await engine.send(
@@ -505,7 +511,18 @@ export class Engine {
   async loadPreset(id: string, seed?: number): Promise<FieldError[] | null> {
     const preset = this.presets.find((p) => p.id === id);
     if (!preset) return [{ field: 'preset', message: `unknown preset ${id}` }];
-    return this.quiet(() => this.rebuild(structuredClone(preset.config), seed ?? this.seed, [], { presetId: id }));
+    return this.quiet(async () => {
+      const errors = await this.rebuild(structuredClone(preset.config), seed ?? this.seed, [], { presetId: id });
+      if (!errors) this.applyLoadedDisplay();
+      return errors;
+    });
+  }
+
+  /** A freshly loaded world's own display (`loadedDisplay`: its default color mode, the caches overlay). */
+  private applyLoadedDisplay(): void {
+    const d = this.displayState();
+    const next = loadedDisplay(d, this.config);
+    if (next !== d) this.setDisplay(next);
   }
 
   /** True when the base config differs from the last chosen preset or a landscape is custom. */
@@ -742,6 +759,7 @@ export class Engine {
         this.lastSugar = other.lastSugar;
         this.ring = other.ring;
         this.valley = other.valley;
+        this.minds = other.minds;
         this.finished = other.finished;
         this.tick = other.tick;
         this.population = other.population;
@@ -822,6 +840,7 @@ export class Engine {
     if (networks.length > 0) own.networks = networks;
     if (this.model === 'ring') own.ring = true;
     if (this.model === 'anasazi') own.valley = true;
+    if (isSugar(this.config) && mindsShown(this.config)) own.minds = true;
     return mergeWants([own, ...Array.from(this.providers, (p) => p(now))]);
   }
 
@@ -891,6 +910,7 @@ export class Engine {
     // the anasazi its valley's).
     this.ring = s.ring ?? (this.model === 'ring' ? this.ring : null);
     this.valley = s.valley ?? (this.model === 'anasazi' ? this.valley : null);
+    this.minds = s.minds ?? (isSugar(this.config) && mindsShown(this.config) ? this.minds : null);
     this.finished = s.finished === true;
     // All null (nothing edited) is the same as none.
     if (s.editedLandscapes) this.landscapes = s.editedLandscapes.some((m) => m !== null) ? s.editedLandscapes : [];

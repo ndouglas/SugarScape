@@ -14,6 +14,8 @@ const OVERLAY_LABELS: [Overlay, string][] = [
   ['neighbors', 'Neighbor network'],
   ['friends', 'Friends network'],
   ['family', 'Family network'],
+  // Minds 5–6: everyone's caches, not just the selected agent's.
+  ['caches', 'All caches'],
 ];
 /** The display controls' element, and (Decision 10) which worlds' configs its checkboxes offer for. */
 export interface Display {

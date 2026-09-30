@@ -1,0 +1,100 @@
+import { describe, expect, it } from 'vitest';
+import { ageText, allocationText, labStatus, siteCacheMarks, siteCachesText, winterBands, winterShown } from './minds';
+import { CACHE_CHEATER, CACHE_HOARDER, CACHE_LARDER, type Config, type LabView } from './types';
+
+const seasons = (mode: 'global' | 'hemispheres', enabled = true) =>
+  ({ seasons: { enabled, winter_divisor: 32, period: 100, mode } }) as unknown as Config;
+
+const lab = (over: Partial<LabView>): LabView => ({
+  protocol: 'raby',
+  days: 6,
+  phase: 'morning',
+  day: 1,
+  place: 0,
+  food: true,
+  turn: null,
+  turn_at: null,
+  compartments: [],
+  trays: [],
+  ...over,
+});
+
+describe('winter', () => {
+  it('shows the badge only for a global winter', () => {
+    expect(winterShown(null)).toBe(false);
+    expect(winterShown({ winter: null, caches: [], homes: [], lab: null })).toBe(false);
+    expect(winterShown({ winter: false, caches: [], homes: [], lab: null })).toBe(false);
+    expect(winterShown({ winter: true, caches: [], homes: [], lab: null })).toBe(true);
+  });
+
+  it('bands the ticks that ended in winter, clipped to the range', () => {
+    expect(winterBands(seasons('global'), 0, 450)).toEqual([
+      [100, 200],
+      [300, 400],
+    ]);
+    expect(winterBands(seasons('global'), 150, 320)).toEqual([
+      [150, 200],
+      [300, 320],
+    ]);
+    expect(winterBands(seasons('global'), 200, 300)).toEqual([]);
+  });
+
+  it('has no bands by hemisphere, with seasons off, or over an empty range', () => {
+    expect(winterBands(seasons('hemispheres'), 0, 450)).toEqual([]);
+    expect(winterBands(seasons('global', false), 0, 450)).toEqual([]);
+    expect(winterBands(seasons('global'), 50, 50)).toEqual([]);
+  });
+});
+
+describe('labStatus', () => {
+  it('names the day, the compartment and whether it has food', () => {
+    expect(labStatus(lab({}))).toBe('Day 1 of 6 · morning in K1 · food');
+    expect(labStatus(lab({ day: 2, place: 2, food: false }))).toBe('Day 2 of 6 · morning in K3 · none');
+    expect(labStatus(lab({ phase: 'evening', day: 4 }))).toBe('Day 4 of 6 · evening, on the perches');
+    expect(labStatus(lab({ phase: 'start' }))).toBe('Day 1 of 6 · before the first morning');
+  });
+
+  it("says whose turn it is on the test evening, and when it's done", () => {
+    expect(labStatus(lab({ phase: 'test', day: 7, turn: 3 }))).toBe("Test evening · agent #3's turn");
+    expect(labStatus(lab({ phase: 'done', day: 7 }))).toBe('Test evening · done');
+  });
+});
+
+describe('siteCacheMarks', () => {
+  it('sizes by the square root of each site against the fullest and tints cheater-only sites', () => {
+    const marks = siteCacheMarks([
+      [1, 2, 4, CACHE_HOARDER],
+      [3, 4, 16, CACHE_CHEATER],
+      [5, 6, 0, CACHE_HOARDER | CACHE_CHEATER | CACHE_LARDER],
+    ]);
+    expect(marks.map((m) => m.owner)).toEqual(['hoarder', 'cheater', 'hoarder']);
+    expect(marks.map((m) => m.larder)).toEqual([false, false, true]);
+    expect(marks[1].size).toBeCloseTo(0.3);
+    expect(marks[0].size).toBeCloseTo(0.12 + 0.18 * 0.5);
+    expect(marks[2].size).toBeCloseTo(0.12);
+  });
+});
+
+describe('Inspect texts', () => {
+  it("lists a site's caches by owner, marking cheaters only where there are any", () => {
+    const caches = [
+      { owner: 12, amount: 4.5, cheater_owner: false },
+      { owner: 30, amount: 2, cheater_owner: true },
+    ];
+    expect(siteCachesText(caches, true)).toBe('#12: 4.50 · #30 (cheater): 2');
+    expect(siteCachesText(caches, false)).toBe('#12: 4.50 · #30: 2');
+    expect(siteCachesText([], true)).toBe('none');
+    expect(siteCachesText(caches, false, 1)).toBe('#12: 4.50 · and 1 more');
+  });
+
+  it('writes the frozen allocation by compartment', () => {
+    expect(allocationText([[0, 15], [2, 15]])).toBe('K1 15 · K3 15');
+    expect(allocationText([[0, 0], [1, 30], [2, 0]])).toBe('K2 30');
+    expect(allocationText([])).toBe('nothing');
+  });
+
+  it('shows the maximum age only where agents die of old age', () => {
+    expect(ageText(150, 63, false)).toBe('150');
+    expect(ageText(50, 63, true)).toBe('50 / 63');
+  });
+});

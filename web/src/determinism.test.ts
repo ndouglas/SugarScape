@@ -112,6 +112,29 @@ describe('determinism through the engine', () => {
     expect(await e.fingerprint()).toBe(GOLDEN);
   });
 
+  it('loads a theft world in Strategy with every cache shown, and drawing them changes nothing', async () => {
+    const theft = presets.find((p) => p.id === 'theft-winter-half')!;
+    const plain = await Engine.create({ config: structuredClone(theft.config), seed: 1 }, { presets, transport: inline() });
+    await plain.advance(150);
+    const e = await engine();
+    expect(await e.loadPreset('theft-winter-half', 1)).toBeNull();
+    expect(e.colorMode).toBe('strategy');
+    expect(e.overlays.caches).toBe(true);
+    await e.advance(150);
+    expect(e.minds?.winter).toBe(true);
+    expect(e.minds?.caches.length).toBeGreaterThan(0);
+    const [x, y] = e.minds!.caches[0];
+    await e.select(x, y);
+    const view = e.inspection!.view as { site: { caches: { amount: number }[] } };
+    const listed = view.site.caches.reduce((sum, c) => sum + c.amount, 0);
+    expect(listed).toBeCloseTo(e.minds!.caches[0][2]);
+    expect(await e.fingerprint()).toBe(await plain.fingerprint());
+    expect(await e.loadPreset('cache-winter-mixed', 1)).toBeNull();
+    expect(e.colorMode).toBe('caching_rule');
+    expect(await e.loadPreset('ii-2-unit', 1)).toBeNull();
+    expect([e.colorMode, e.overlays.caches]).toEqual(['tribe', false]);
+  });
+
   it('seeks through keyframes to the golden world, with edits on both sides of the target', async () => {
     const reference = await engine();
     await reference.advance(60);

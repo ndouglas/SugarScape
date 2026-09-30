@@ -244,6 +244,13 @@ export class FakeSim implements SimLike {
     const a = this.agents.get(1);
     return this.config.model === 'anasazi' && a ? Uint32Array.of(a[0], a[1], a[0], 0) : new Uint32Array(0);
   }
+  /** One cache under agent #1's site, the tick's season as winter on odd ticks; `null` for other models. */
+  minds_view(): string {
+    if (this.config.model) return 'null';
+    const a = this.agents.get(1);
+    const caches = a ? [[a[0], a[1], 3, 1]] : [];
+    return JSON.stringify({ winter: this.ticks % 2 === 1, caches, homes: [], lab: null });
+  }
   finished(): boolean {
     return this.config.finish !== undefined && this.ticks >= this.config.finish;
   }
