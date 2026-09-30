@@ -372,7 +372,13 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("janssen-two-node", 0xf87c8032f908abcc),
     ("janssen-generalized", 0xa2ae0ad93a97f180),
     ("janssen-adaptive", 0xea4877048a644fad),
-    ("janssen-fewer-links", 0x878f982a182d0672),
+    ("janssen-fewer-links", 0x878f982a182d0672), // Minds 7: the evolution of larder hoarding (200 bouts: day 10 of
+    // generation 1).
+    ("hoard-threshold", 0x83dbd8ba0dd130e0),
+    ("hoard-scatter", 0xa077bede082fc87e),
+    ("hoard-larder", 0x3da0a5fcbbe0803e),
+    ("hoard-no-free-recovery", 0xaf76c42dbbd8c97c),
+    ("hoard-cheaters", 0xd9fe57875f2c6602),
 ];
 
 fn fingerprint(id: &str) -> u64 {

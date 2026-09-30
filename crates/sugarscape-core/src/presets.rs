@@ -1466,6 +1466,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::bali::presets());
     out.extend(crate::line::presets());
     out.extend(crate::tipping::presets());
+    out.extend(crate::hoard::presets());
     out
 }
 

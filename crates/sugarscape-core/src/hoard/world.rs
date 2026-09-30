@@ -70,7 +70,8 @@
 //! in index order, one uniform for the mother, one for the father, then a
 //! standard normal each for logit L, logit D and forage.
 //!
-//! **Statistics** are one snapshot per bout, and tick 0 (item 13).
+//! **Statistics** are one snapshot per bout, and tick 0 (item 13); the
+//! by-generation values come from the season records (`generation_series`).
 
 use std::fmt::Write;
 
@@ -236,6 +237,10 @@ pub struct SeasonSummary {
     /// Means over the agents born into the generation.
     pub mean_l: f64,
     pub mean_d: f64,
+    /// Mean L over the generation's hoarders only (`None` when all are
+    /// cheaters). A cheater's L is never expressed, so this is the mean item
+    /// 11's takeover is classified on; without cheaters it is `mean_l`.
+    pub hoarder_mean_l: Option<f64>,
     /// Cheaters born into the generation, and the survivors of each type.
     pub cheaters: u32,
     pub cheater_survivors: u32,
@@ -292,9 +297,13 @@ pub struct Outcome {
     pub fate: Fate,
     /// The first and last generation of the window.
     pub window: (u32, u32),
-    /// Mean L averaged over the window.
+    /// Mean L over all agents born, averaged over the window.
     pub window_mean_l: f64,
-    /// The first generation whose mean L is above 0.95.
+    /// Expressed mean L (hoarders only; 0 in a generation of cheaters only),
+    /// averaged over the window: the fate is classified on this. Without
+    /// cheaters it equals `window_mean_l`.
+    pub window_hoarder_mean_l: f64,
+    /// The first generation whose expressed mean L is above 0.95.
     pub rise: Option<u32>,
     /// The generation in which the population died out.
     pub extinct: Option<u32>,
@@ -503,24 +512,36 @@ impl HoardWorld {
         &self.seasons
     }
 
+    /// One value per finished season for a name in
+    /// [`super::stats::GENERATION_SERIES`]: the page's by-generation charts.
+    pub fn generation_series(&self, name: &str) -> Option<Vec<f64>> {
+        super::stats::by_generation(&self.seasons, name)
+    }
+
     /// The generation in which every agent died, if it has happened.
     pub fn extinct(&self) -> Option<u32> {
         self.extinct
     }
 
-    /// The run's outcome (item 11), once it is finished.
+    /// The run's outcome (item 11), once it is finished. The fate is
+    /// classified on the expressed mean L, over hoarders only: a cheater's L
+    /// is never expressed, and would dilute it (a generation of cheaters
+    /// only expresses none, 0). Without cheaters it is the mean over all.
     pub fn outcome(&self) -> Option<Outcome> {
         if !self.is_finished() || self.seasons.is_empty() {
             return None;
         }
+        let expressed = |s: &Season| s.summary.hoarder_mean_l.unwrap_or(0.0);
         let window = &self.seasons[self.seasons.len().saturating_sub(WINDOW)..];
-        let window_mean_l =
-            window.iter().map(|s| s.summary.mean_l).sum::<f64>() / window.len() as f64;
+        let average =
+            |f: &dyn Fn(&Season) -> f64| window.iter().map(f).sum::<f64>() / window.len() as f64;
+        let window_mean_l = average(&|s| s.summary.mean_l);
+        let window_hoarder_mean_l = average(&expressed);
         let fate = if self.extinct.is_some() {
             Fate::Extinct
-        } else if window_mean_l > TAKEOVER_L {
+        } else if window_hoarder_mean_l > TAKEOVER_L {
             Fate::Takeover
-        } else if window.iter().all(|s| s.summary.mean_l < LOW_L) {
+        } else if window.iter().all(|s| expressed(s) < LOW_L) {
             Fate::StayedLow
         } else {
             Fate::Intermediate
@@ -529,10 +550,11 @@ impl HoardWorld {
             fate,
             window: (window[0].generation, window[window.len() - 1].generation),
             window_mean_l,
+            window_hoarder_mean_l,
             rise: self
                 .seasons
                 .iter()
-                .find(|s| s.summary.mean_l > TAKEOVER_L)
+                .find(|s| expressed(s) > TAKEOVER_L)
                 .map(|s| s.generation),
             extinct: self.extinct,
         })
@@ -836,21 +858,33 @@ impl HoardWorld {
         let snapshot = HoardSnapshot {
             tick: self.tick,
             generation: u64::from(self.generation),
-            mean_l: self.agents.iter().map(|a| a.l).sum::<f64>() / n,
-            mean_d: self.agents.iter().map(|a| a.d).sum::<f64>() / n,
+            mean_larder_prob: self.agents.iter().map(|a| a.l).sum::<f64>() / n,
+            hoarder_larder_prob: self.hoarder_mean_l().unwrap_or(f64::NAN),
+            mean_defense: self.agents.iter().map(|a| a.d).sum::<f64>() / n,
             survivors: self.living() as u32,
             larder_share: if sl + ss > 0 {
                 sl as f64 / (sl + ss) as f64
             } else {
                 f64::NAN
             },
-            larder_rate: rate(ll, ls),
-            scatter_rate: rate(sk, kk),
+            larder_loss_rate: rate(ll, ls),
+            scatter_loss_rate: rate(sk, kk),
             takeover: self
                 .outcome()
                 .map_or(f64::NAN, |o| f64::from(u8::from(o.fate == Fate::Takeover))),
         };
         self.stats.push(snapshot);
+    }
+
+    /// Mean L over the hoarders (`None` when every agent is a cheater), in
+    /// index order: with no cheaters, exactly the mean over all.
+    fn hoarder_mean_l(&self) -> Option<f64> {
+        let (sum, count) = self
+            .agents
+            .iter()
+            .filter(|a| !a.cheater)
+            .fold((0.0, 0usize), |(s, c), a| (s + a.l, c + 1));
+        (count > 0).then(|| sum / count as f64)
     }
 
     fn kill(&mut self, i: usize, cause: Cause) {
@@ -1065,6 +1099,7 @@ impl HoardWorld {
                 .count() as u32,
             mean_l: self.agents.iter().map(|a| a.l).sum::<f64>() / n,
             mean_d: self.agents.iter().map(|a| a.d).sum::<f64>() / n,
+            hoarder_mean_l: self.hoarder_mean_l(),
             cheaters,
             cheater_survivors: cs,
             hoarder_survivors: hs,
@@ -2000,6 +2035,7 @@ mod tests {
                     generation: g as u32 + 1,
                     summary: SeasonSummary {
                         mean_l: m,
+                        hoarder_mean_l: Some(m),
                         ..summary.clone()
                     },
                     agents: Vec::new(),
@@ -2031,6 +2067,110 @@ mod tests {
         // Not finished: no outcome.
         let w = HoardWorld::new(HoardConfig::default(), 1).unwrap();
         assert_eq!(w.outcome(), None);
+    }
+
+    /// With cheaters, the fate is classified on the hoarders' mean L: the
+    /// cheaters' unexpressed L would dilute it. The all-agent mean is kept.
+    #[test]
+    fn the_takeover_is_classified_on_the_hoarders_mean_l() {
+        let outcome = |all: f64, hoarders: Option<f64>| {
+            let mut w = quiet(2, 1, 1, |c| c.generations = 12);
+            let summary = w.summary();
+            w.seasons = (1..=12)
+                .map(|g| Season {
+                    generation: g,
+                    summary: SeasonSummary {
+                        mean_l: all,
+                        hoarder_mean_l: hoarders,
+                        ..summary.clone()
+                    },
+                    agents: Vec::new(),
+                })
+                .collect();
+            w.generation = 12;
+            w.season_over = true;
+            w.outcome().unwrap()
+        };
+        // 15 hoarders at 0.96875 and 5 cheaters near 0.1 (all-agent 0.75;
+        // both exact in binary, so the window's averages are too).
+        let o = outcome(0.75, Some(0.96875));
+        assert_eq!((o.fate, o.rise), (Fate::Takeover, Some(1)));
+        assert_eq!((o.window_mean_l, o.window_hoarder_mean_l), (0.75, 0.96875));
+        // Cheaters at 0.9 can't lift low hoarders out of "stayed low".
+        assert_eq!(outcome(0.4, Some(0.1)).fate, Fate::StayedLow);
+        // A generation of cheaters only expresses no larder hoarding.
+        let o = outcome(0.99, None);
+        assert_eq!(
+            (o.fate, o.window_hoarder_mean_l, o.rise),
+            (Fate::StayedLow, 0.0, None)
+        );
+    }
+
+    /// The hoarders' mean L is the mean over all agents, bit for bit, without
+    /// cheaters, and over the non-cheaters with them.
+    #[test]
+    fn the_hoarders_mean_l_skips_the_cheaters() {
+        let w = HoardWorld::new(HoardConfig::default(), 5).unwrap();
+        let h = w.stats.latest().unwrap();
+        assert_eq!(
+            h.hoarder_larder_prob.to_bits(),
+            h.mean_larder_prob.to_bits()
+        );
+        let c = HoardConfig {
+            cheaters: 0.25,
+            ..HoardConfig::default()
+        };
+        let w = HoardWorld::new(c, 5).unwrap();
+        let hoarders: Vec<f64> = w
+            .agents
+            .iter()
+            .filter(|a| !a.cheater)
+            .map(|a| a.l)
+            .collect();
+        assert_eq!(hoarders.len(), 15);
+        let mean = hoarders.iter().sum::<f64>() / 15.0;
+        let h = w.stats.latest().unwrap();
+        assert!((h.hoarder_larder_prob - mean).abs() < 1e-12);
+        assert_ne!(h.hoarder_larder_prob, h.mean_larder_prob);
+        assert_eq!(w.summary().hoarder_mean_l, Some(h.hoarder_larder_prob));
+    }
+
+    /// Each per-generation value equals the season's last per-bout snapshot
+    /// of the same name, and the page's names are all there.
+    #[test]
+    fn per_generation_series_are_each_seasons_last_snapshot() {
+        use crate::stats::Series;
+        let c = HoardConfig {
+            generations: 3,
+            cheaters: 0.25,
+            ..HoardConfig::default()
+        };
+        let mut w = HoardWorld::new(c, 2).unwrap();
+        w.run(10_000);
+        assert!(w.is_finished());
+        let h = w.stats.history();
+        for name in super::super::GENERATION_SERIES {
+            let per = w.generation_series(name).unwrap();
+            assert_eq!(per.len(), 3, "{name}");
+            for (g, v) in per.iter().enumerate() {
+                let last = h[2000 * (g + 1)].value(name).unwrap();
+                assert_eq!(v.to_bits(), last.to_bits(), "{name}, generation {}", g + 1);
+            }
+        }
+        assert_eq!(w.generation_series("takeover"), None);
+        for name in [
+            "mean_larder_prob",
+            "mean_defense",
+            "larder_loss_rate",
+            "scatter_loss_rate",
+            "survivors",
+            "larder_share",
+            "generation",
+        ] {
+            assert!(super::super::SERIES.contains(&name), "{name}");
+        }
+        // The snapshot stays small: the tick and nine numbers.
+        assert_eq!(super::super::SERIES.len(), 9);
     }
 
     /// Lowering `generations` live below the current generation ends the run
@@ -2115,9 +2255,9 @@ mod tests {
         let h = w.stats.history();
         assert_eq!((h[2000].generation, h[2001].generation), (1, 2));
         assert_eq!(h[2000].survivors, s.summary.survivors);
-        assert_eq!(h[2000].mean_l, s.summary.mean_l);
+        assert_eq!(h[2000].mean_larder_prob, s.summary.mean_l);
         assert_eq!(
-            h[2000].larder_rate.to_bits(),
+            h[2000].larder_loss_rate.to_bits(),
             s.summary.pooled_larder_rate.unwrap_or(f64::NAN).to_bits()
         );
         assert!(h[..6000].iter().all(|x| x.takeover.is_nan()));

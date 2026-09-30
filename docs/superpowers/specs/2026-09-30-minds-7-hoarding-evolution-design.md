@@ -642,6 +642,14 @@ The start-of-day ratio and the instantaneous rate may be logged as unjudged diag
 - Runs meeting neither condition are "intermediate", which counts against claim 1.
 
 Reason: the caption's "by the last 10 generations" names the window, and the text's 0.95 names the level.
+
+**With cheaters (Task 6, from the Task 5 review).** The mean L that the fate and the rise generation are
+judged on is the hoarders' mean, over the non-cheaters born into the generation. A cheater never stores,
+so its L is never expressed, and counting it would dilute the classification (with 5 cheaters of 20 at
+L ≈ 0.15, a hoarder takeover at 0.98 averages 0.77). A generation of cheaters only expresses no larder
+hoarding and counts as 0. Without cheaters the two means are the same number, bit for bit. The outcome
+keeps both: the window's all-agent mean L and its hoarder mean L; the season record keeps both per
+generation.
 **Possible switch:** judge only generation 60. A run whose population dies out is recorded as extinct, with
 the generation it happened (item 13: the run ends). It isn't counted as a takeover.
 
@@ -699,6 +707,17 @@ These are stated choices. The paper is silent on all of them.
   The snapshot at a season's last tick is that season's end, because breeding happens on the next tick.
   The per-generation measurements themselves live in the world's season list, which a keyframe carries
   with the world.
+- **Series and the page (Task 6).** A 60-generation run is 120 000 bouts, so the per-bout snapshot stays
+  small: the tick and nine numbers. The names are `generation`, `mean_larder_prob` (mean L),
+  `hoarder_larder_prob` (mean L over hoarders, item 11), `mean_defense` (mean D), `survivors`,
+  `larder_share`, `larder_loss_rate`, `scatter_loss_rate` (the pooled rates so far) and `takeover`. The
+  trait means hold constant across a season; survivors and the larder share are live; the rates converge
+  to the season's pooled rates. **Choice:** the page's by-generation charts (mean L and D, the loss rates,
+  survivors, the larder share) read the world's per-generation records, not the bout history:
+  `HoardWorld::generation_series(name)` gives one value per finished season, under the same names less
+  `takeover`. A test pins each value to the season's last snapshot of the same name, bit for bit. Reason:
+  it carries the per-generation values without repeating them 2 000 times a season, and it keeps the
+  per-bout history one entry per tick for keyframes.
 - **Changing `generations` live.** The run ends at the end of the season in which the current generation
   is at least `generations`. So lowering it below the current generation, or to it, ends the run at the end
   of the current season. The window is then the last 10 seasons actually run. Raising it on a finished,
@@ -741,7 +760,11 @@ is limited to what it can consume"; untested there).
   surviving hoarders (0 when none survive, which leaves the uniform rule if nothing else is held). Reason:
   weights are counted in items, so "survived" has to be put on that scale; the scale-free choice is that
   surviving counts as much as an average surviving hoarder's stores. Weight 1 (one item) would leave the
-  vanishing almost unchanged. The survey reports both.
+  vanishing almost unchanged. The survey reports both. A surviving cheater's weight therefore moves with
+  the hoarders' mean stores: the more the surviving hoarders hold, the more a surviving cheater weighs,
+  though its own stores stay 0.
+- **Takeover.** A cheater's L is never expressed, so item 11's classification uses the hoarders' mean L
+  (Task 6).
 - **Records, per generation:** cheaters born, cheater and hoarder survivors and survival rates, and the
   surviving cheaters' (always 0) and hoarders' leftover stores.
 

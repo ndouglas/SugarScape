@@ -1541,7 +1541,7 @@ mod tests {
             (Some("hoard"), Some(20))
         );
         assert_eq!(ModelConfig::from_value(json).unwrap(), c);
-        assert_eq!(c.series_names()[..2], ["generation", "mean_l"]);
+        assert_eq!(c.series_names()[..2], ["generation", "mean_larder_prob"]);
         let e = ModelConfig::from_json(r#"{"model": "hoard", "n": 1}"#).unwrap_err();
         assert_eq!(e[0].field, "hoard.n");
         let mut w = ModelWorld::new(c, 1).unwrap();
