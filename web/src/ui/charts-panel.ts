@@ -2,7 +2,8 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
-import { calendarYear } from '../models';
+import { cachingOn, calendarYear, theftOn } from '../models';
+import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
 import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
 import type { Config, ModelConfig, ModelKind } from '../types';
@@ -62,6 +63,8 @@ interface ChartDef {
 }
 
 const HEIGHT = 150;
+/** The winter bands' fill (the Winter badge's blue, faint). */
+const WINTER_FILL = 'rgba(79, 157, 255, 0.14)';
 /** The distributions (Lorenz curves, wealth, age and tag histograms, supply & demand) are fetched at most this often (per world). */
 const REFRESH_MS = 250;
 const POLLUTANT_COLORS = ['--c1', '--c2', '--c3', '--c4'];
@@ -86,13 +89,6 @@ const X_LABEL: Record<Kind, string> = {
 const fixed = (lines: Line[]) => () => lines;
 const perGood = (prefix: string) => (c: Config): Line[] =>
   c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
-
-/** Minds 5: caching is on (a rule that buries, mixed rules, or a carrying limit), as the core's `Caching::is_on`. */
-const cachingOn = (c: Config): boolean =>
-  (c.caching?.rule ?? 'none') !== 'none' || c.caching?.mixed === true || (c.caching?.capacity ?? 0) > 0;
-
-/** Minds 6: theft is on (a chance to find caches, or any cheaters), as the core's `Theft::is_on`. */
-const theftOn = (c: Config): boolean => (c.theft?.find ?? 0) > 0 || (c.theft?.cheaters ?? 0) > 0;
 
 /** Minds 6: the world has cheaters, so the hoarder and cheater series exist. */
 const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;
@@ -657,7 +653,36 @@ export class ChartsPanel {
     const legend = multi || def.kind === 'band' || def.kind === 'supplyDemand' || lines > 1;
     // The anasazi's x axis counts calendar years: no digit grouping ("1000", not "1,000").
     const axes = def.model === 'anasazi' ? [{ ...this.axes[0], values: (_self: uPlot, splits: number[]) => yearTickLabels(splits) }, this.axes[1]] : this.axes;
-    return { scales: { x, y }, axes, legend: { show: legend }, series };
+    // Minds 5: a sugarscape's time charts shade the ticks that ended in a global winter.
+    const plugins = !def.model && (def.kind === 'time' || def.kind === 'band') ? [this.winterPlugin()] : [];
+    return { scales: { x, y }, axes, legend: { show: legend }, series, plugins };
+  }
+
+  /**
+   * Shades each winter band behind the lines, as a faint blue fill over the plot area: the bands of
+   * every sugarscape world on the chart (A's, and in Compare B's), from each world's own config;
+   * nothing without a global winter.
+   */
+  private winterPlugin(): uPlot.Plugin {
+    return {
+      hooks: {
+        drawClear: (u: uPlot) => {
+          const { min, max } = u.scales.x;
+          if (min == null || max == null) return;
+          const bands = this.worlds.filter((w) => w.model === 'sugarscape').flatMap((w) => winterBands(w.sugar, min, max));
+          if (bands.length === 0) return;
+          const { top, height } = u.bbox;
+          u.ctx.save();
+          u.ctx.fillStyle = WINTER_FILL;
+          for (const [start, end] of bands) {
+            const x0 = u.valToPos(start, 'x', true);
+            const x1 = u.valToPos(end, 'x', true);
+            u.ctx.fillRect(x0, top, Math.max(1, x1 - x0), height);
+          }
+          u.ctx.restore();
+        },
+      },
+    };
   }
 
   /** One world's series: labeled "A · …"/"B · …" in Compare, B dashed and its points hollow. */

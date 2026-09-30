@@ -303,6 +303,27 @@ this plan.
 - **The arena's vision scales with the room:** 1–2, 1–3 and 1–4 at n = 2, 4 and 8, half the room's
   side. A fixed 1–2 let the 2-agent room be seen whole and the 8-agent room only in part, so it
   tied sight to n.
+- **The arenas walled on all four sides (2026-09-30).** Each arena had been a (k + 1)-torus with
+  an opaque wall along row 0 and column 0 only. That closed the room on the torus, but on the page
+  the room sat against the bottom and right edges and looked shifted one cell down and to the
+  right. Each is now a (k + 2)-torus with walls along rows 0 and k + 1 and columns 0 and k + 1, and
+  the room is the centered k × k block. Room size, capacity, growback, vision, `find` and cheaters
+  are unchanged. Placement draws changed, so the three arena goldens were re-recorded and every
+  arena number re-measured:
+  - The balance (100 seeds per n) still holds: nobody caching survives 0.0 %, 0.2 % and 2.0 %
+    against `even`'s 99.5 %, 96.0 % and 92.8 % (was 0.0/0.5/1.4 against 99.5/95.8/91.0).
+  - Survey, arenas at the anchor with no bury cost: pilferage 1.45, 1.77 and 2.18 % a tick (was
+    1.48, 1.76, 2.22); v 0.059, 0.075 and 0.094 (was 0.059, 0.074, 0.096); thieves take 51 %, 85 %
+    and 91 % of the ended sugar (was 52, 82, 92); hoarders pilfer 1.2 and 1.8 times as much per
+    founder as cheaters at n = 4 and 8 (was 1.1 and 1.7).
+  - Claim 2 stays Weak: 186 of 300 runs agree, 62.0 % (was 195, 65 %); the condition holds in 13
+    runs, all at n = 2 (was 15); hoarders are richer in 127, 114 where it fails (was 120 and 105);
+    with caches at 0, 90.7 % agree and hoarders are richer in 17 (was 92.3 % and 14).
+  - Claim 7 stays Untestable (the highest median rate at the anchor is still 2.6 %), but hoarders
+    now win in 3 of 24 configurations at the anchor, not 2: arena n = 2 with C/G 0 and 0.1 (1.45 %)
+    and, new, arena n = 8 with C/G 0 (2.18 %; hoarders richer in 17 of 20 seeds, 12 before). With
+    still-buried caches at 0 they still win in none.
+  - No verdict changed, and nothing outside the arenas moved (the field rows are identical).
 - **Survey-only instrumentation.** `TickEvents::pilfer_draws` counts find draws on other agents'
   caches. `World::probe_dig_at_reserve` digs below R instead of R/2, and `World::record_fates` keeps the
   fate log; neither is config, hashed or shown in the docs, and each is false everywhere but the
@@ -331,15 +352,18 @@ alive at 100):
 The survey's figures (20 seeds, ticks 1–200, a summer and a winter) are 2.31 % at 0.25 and 6.96 %
 at 1. Both windows are stated in `presets.rs`.
 
-The arena, without theft (100 seeds per n): first-winter survival with nobody caching was 0.0 %,
-0.5 % and 1.4 % at n = 2, 4 and 8, against 99.5 %, 95.8 % and 91.0 % for `even` hoarders. The gap
-is at least 89.6 points at every n. At `find` 0.25 with half cheaters the rate over ticks 101–200
-is 1.57 %, 1.89 % and 2.40 %, and 100 %, 99.8 % and 98.1 % survive.
+The arena, without theft (100 seeds per n; re-measured 2026-09-30 for the four-walled room, see
+the amendment above): first-winter survival with nobody caching is 0.0 %, 0.2 % and 2.0 % at n = 2, 4 and 8,
+against 99.5 %, 96.0 % and 92.8 % for `even` hoarders. The gap is at least 90.8 points at every n.
+At `find` 0.25 with half cheaters the rate over ticks 101–200 is 1.54 %, 1.92 % and 2.34 %, and
+100 %, 99.8 % and 97.8 % survive. (The two-walled room gave 0.0 %, 0.5 % and 1.4 % against 99.5 %,
+95.8 % and 91.0 %, a gap of at least 89.6; 1.57 %, 1.89 % and 2.40 %; and 100 %, 99.8 % and
+98.1 %.)
 
 **The values.**
 
 | World | Values |
 |---|---|
 | winter theft (`theft-winter`, `-quarter`, `-half`) | `cache-winter-even` unchanged, plus `theft.find` 0.25 and cheaters 0, 0.25 or 0.5; owner memory on, loot kept, bury cost 0 |
-| arena (`theft-arena-2`, `-4`, `-8`) | a k × k room (k = 4, 6, 8) on a (k + 1) × (k + 1) torus, opaque walls along row 0 and column 0; flat sugar, capacity 4 and growback 0.3 (× 8/9 at n = 4, where 6 × 6 gives 9 sites an agent), so each agent has 32 standing and 2.4 a tick of regrowth; vision 1 to k/2; otherwise the winter world's settings (walking, metabolism 1, global winter γ 100 and β 32, carrying limit 50, horizon 20, half remembering for 100 ticks, `even`); `find` 0.25 and half cheaters |
+| arena (`theft-arena-2`, `-4`, `-8`) | a k × k room (k = 4, 6, 8), centered on a (k + 2) × (k + 2) torus with opaque walls along rows 0 and k + 1 and columns 0 and k + 1 (until 2026-09-30, a (k + 1)-torus walled along row 0 and column 0); flat sugar, capacity 4 and growback 0.3 (× 8/9 at n = 4, where 6 × 6 gives 9 sites an agent), so each agent has 32 standing and 2.4 a tick of regrowth; vision 1 to k/2; otherwise the winter world's settings (walking, metabolism 1, global winter γ 100 and β 32, carrying limit 50, horizon 20, half remembering for 100 ticks, `even`); `find` 0.25 and half cheaters |
 | survey sweeps | `find` 0.02, 0.05, 0.1, 0.25, 0.5, 1 (and 0 for the cheater baseline); cheater shares 0.1–0.9; arena C/G (bury cost) 0, 0.1, 0.25, 0.5, 1; β 2, 4, 8, 16, 32 |

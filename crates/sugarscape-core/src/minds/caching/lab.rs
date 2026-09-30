@@ -130,6 +130,11 @@ fn left(k: u32) -> u32 {
     1 + 4 * k
 }
 
+/// Compartment `k`'s sites as `[x, y, width, height]` (3 × 3).
+pub fn compartment(k: u32) -> [u32; 4] {
+    [left(k), 1, 3, 3]
+}
+
 /// Compartment `k`'s tray: the site just inside its doorway.
 pub fn tray(k: u32) -> Pos {
     Pos::new(left(k) + 1, 3)
@@ -471,6 +476,22 @@ fn walk(world: &mut World) {
             super::bury(world, id, q);
         }
     }
+}
+
+/// The agent whose turn it is on the test evening: the first not yet done,
+/// who moves at the start of the next tick. `None` before the test evening
+/// has begun (and outside a lab), and once every agent is done.
+pub fn turn(world: &World) -> Option<AgentId> {
+    let lab = world.config.lab?;
+    if world.tick <= training_days(lab.protocol) * DAY {
+        return None;
+    }
+    roster(world)
+        .into_iter()
+        .enumerate()
+        .take(MAX_AGENTS as usize)
+        .find(|&(i, id)| !done(world, id, i as u32))
+        .map(|(_, id)| id)
 }
 
 /// Whether the test evening has begun and every agent is done.

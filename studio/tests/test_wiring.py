@@ -12,7 +12,7 @@ import unittest
 import episode
 
 OVERLAYS = pathlib.Path(__file__).resolve().parent.parent / "blender" / "overlays"
-COLOR_MODES = {"family", "tribe", "sick", "strategy", "tag"}
+COLOR_MODES = {"family", "tribe", "sick", "strategy", "tag", "culture"}
 
 
 def overlay_sources():

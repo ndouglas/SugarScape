@@ -297,6 +297,7 @@ fn builtins_and_series_names_are_listed() {
             "ac-traits-transition",
             "ac-drift",
             "dock-mobility",
+            "dock-mountain",
             "aey-memory",
             "aey-population",
             "aey-first-attractor",
@@ -1624,4 +1625,49 @@ fn inspect_reports_the_labs_doorways_open_after_the_test_evening() {
     assert_eq!(wall_at(&sim, 2, 4), 0, "K1's doorway is open");
     assert_eq!(wall_at(&sim, 6, 4), 2, "K2's doorway stays shut (opaque)");
     assert_eq!(wall_at(&sim, 10, 4), 0, "K3's doorway is open");
+}
+
+#[wasm_bindgen_test]
+fn minds_view_lists_every_cache_the_season_and_renders_the_minds_modes() {
+    let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
+    sim.step(150);
+    sim.render("strategy", "sugar").unwrap();
+    sim.render("caching_rule", "sugar").unwrap();
+    sim.render("memory", "sugar").unwrap();
+    let view: serde_json::Value = serde_json::from_str(&sim.minds_view()).unwrap();
+    assert_eq!(
+        view["winter"],
+        serde_json::json!(true),
+        "tick 150 is winter"
+    );
+    let caches = sim.cache_sites().to_vec();
+    assert!(caches.len() >= 4, "hoarders have buried by tick 150");
+    assert_eq!(caches.len() % 4, 0);
+    assert_eq!(
+        sim.cache_sites().to_vec(),
+        caches,
+        "the reused buffers give the same"
+    );
+    // Each site's caches match what that site's Inspect lists.
+    let (x, y) = (caches[0] as u32, caches[1] as u32);
+    let site: serde_json::Value = serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+    let listed: f64 = site["site"]["caches"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["amount"].as_f64().unwrap())
+        .sum();
+    assert!((listed - caches[2]).abs() < 1e-9);
+    assert!(view["lab"].is_null());
+    // Drawing, viewing and inspecting change nothing: the world still reaches
+    // its native golden at tick 200 (crates/sugarscape-core/tests/golden.rs).
+    sim.step(50);
+    assert_eq!(sim.fingerprint(), "0xd0ee29237c28952f");
+
+    let mut lab = Sim::new(&preset_json("cache-raby"), 1, JsValue::NULL).unwrap();
+    lab.step(1);
+    let view: serde_json::Value = serde_json::from_str(&lab.minds_view()).unwrap();
+    assert_eq!(view["lab"]["phase"], "morning");
+    assert_eq!(view["lab"]["day"], 1);
+    assert!(view["winter"].is_null());
 }

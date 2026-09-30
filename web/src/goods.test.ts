@@ -83,6 +83,7 @@ describe('goods', () => {
   it('builds a noise map with the given seed, in the core key order', () => {
     const c = config();
     expect(defaultMap(c, 'noise', 42)).toEqual({ kind: 'noise', seed: 42, scale: 8, octaves: 3, height: 4 });
+    expect(defaultMap(c, 'gaussian')).toEqual({ kind: 'gaussian', x: 25, y: 25, sigma: 12.5, height: 4 });
     expect(JSON.stringify(defaultMap(c, 'noise'))).toBe('{"kind":"noise","seed":1,"scale":8,"octaves":3,"height":4}');
   });
 });

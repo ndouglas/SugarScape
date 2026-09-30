@@ -42,6 +42,18 @@ pub enum Activation {
     Sweep,
 }
 
+/// Which differing feature an interaction copies.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Pick {
+    /// "selecting at random a feature on which the active site and its
+    /// neighbor differ" (the paper).
+    Random,
+    /// His program (CULTURE.P): from a random feature, the first that differs
+    /// stepping (b + 1) mod F + 1, 1-based: two features at a time, F tries.
+    Scan,
+}
+
 /// Which site of an interacting pair changes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -65,6 +77,7 @@ pub struct CultureConfig {
     pub boundary: Edges,
     pub activation: Activation,
     pub changes: Changes,
+    pub pick: Pick,
     /// Per event, the probability that the active site instead gets a random
     /// trait on a random feature (cultural drift; Klemm et al. 2003).
     pub drift: f64,
@@ -85,6 +98,7 @@ impl Default for CultureConfig {
             boundary: Edges::Bounded,
             activation: Activation::Random,
             changes: Changes::Active,
+            pick: Pick::Random,
             drift: 0.0,
             stop_when_stable: true,
         }

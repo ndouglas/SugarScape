@@ -734,11 +734,21 @@ traits and, after moving and eating, copy from one random neighbor as above (the
 their neighbors' tags instead); the Culture color mode draws them, a Distinct cultures chart counts
 them, and "Stop when cultures settle" ends a run once every two agents are identical or share
 nothing. The docking paper's mobility experiment is `dock-mobility-15` and `dock-mobility-30`: 100
-mobile agents with vision 5–10 on one sugar mountain. They report 1.1 ± 0.3 and 2.2 ± 1.2 cultures,
-every run settling; measured, 4.4 ± 1.4 and 5.7 ± 1.6, and most runs never settle — a few stragglers
-that rarely meet anyone keep second and third cultures alive. Mobility does collapse diversity (the
-fixed lattice keeps about 20), as they say; their numbers do not reproduce with the Sugarscape's
-stated movement rule, and their mountain's shape is not given. Sweep: `dock-mobility`.
+mobile agents with vision 5–10 on their "single (Gaussian) sugar mountain" (a **Gaussian** map:
+capacities round(height · e^(−d²/2σ²))). They report 1.1 ± 0.3 and 2.2 ± 1.2 cultures, every run
+settling; with a mountain as wide as the board (σ = 25) at the Sugarscape's usual height of 4,
+measured over 20 seeds: 1.15 ± 0.37 and 2.25 ± 0.85, every run settling. The paper gives neither
+width nor height, and the landscape decides it: any mountain broad or tall enough reproduces their
+number (σ ≥ 20 at height 4, σ ≥ 16 at heights 6–10), while narrow, low ones leave many cultures
+(24 at σ = 25 and height 2; 42 at σ = 8 and height 4). Sweeps: `dock-mobility`, `dock-mountain`.
+
+Axelrod's own sample setup runs a little more diverse here (mean 4.33 regions and median 4 over
+1 000 seeds, against his 3.2 over 10 runs and median 3 over 100), but his samples are within
+sampling error of it (the closest call: 10 of his 100 runs above six regions against 18 % here,
+p = 0.03). His archived demo program (CULTURE.P) copies the first differing feature it meets,
+scanning two at a time, rather than a random one; as a switch (`pick: scan`) it changes nothing.
+Having the neighbor copy instead (`changes: neighbor`) happens to fit his samples more closely
+(mean 3.87, median 3), but his program, like his paper, changes the active site.
 
 Credit: Robert Axelrod, "The Dissemination of Culture: A Model with Local Convergence and Global
 Polarization," *Journal of Conflict Resolution* 41 (1997), 203–226; Robert Axtell, Robert Axelrod,
@@ -2438,11 +2448,17 @@ to the field.** The survey judges every claim at 0.25 and reports each one acros
 0.1, 0.25, 0.5 and 1. The worlds are:
 
 - **The winter field:** Minds 5's `cache-winter-even` unchanged, plus theft.
-- **The arena:** 2, 4 or 8 agents shut in a walled room, with each agent's sugar and regrowth equal
-  at every n and vision scaled to the room. Half the agents are cheaters.
+- **The arena:** 2, 4 or 8 agents shut in a room walled on all four sides, with each agent's sugar
+  and regrowth equal at every n and vision scaled to the room. Half the agents are cheaters.
 
-In the arena without theft, agents who don't cache survive the first winter 0–1.4 % of the time,
-against 91–99.5 % for hoarders.
+In the arena without theft, agents who don't cache survive the first winter 0–2.0 % of the time,
+against 92.8–99.5 % for hoarders (100 seeds per n).
+
+*2026-09-30: the arenas are now walled on all four sides.* Each room had been a (k + 1)-torus with a
+wall along row 0 and column 0 only. That closed the room on the torus, but on the page the room sat
+against the bottom and right edges and looked offset. Each is now a (k + 2)-torus with walls along
+every edge and the room centered. Every arena number below was re-measured; no verdict changed
+(claim 7's arena wins at the anchor went from two configurations to three).
 
 **The survey** (20 seeds, ticks 1–200, a summer and the first winter; claims and thresholds set
 before running; causes "likely" unless isolated). Survival is alive at 200 ÷ alive at 100, and every
@@ -2466,11 +2482,11 @@ figure is also reported per founding agent.
   that a thief is often a hungry agent walking onto someone else's surplus. It isn't monotone
   everywhere: in `cache-winter-mixed`, winter deaths fall from 51.5 to 10.5 at `find` 0.5 but rise
   to 20.5 at 1.
-- **2. Andersson and Krebs's threshold is Weak** (195 of 300 arena runs agree, 65 %). Their condition
-  is p_s/p_o > (C/G)(n − 1) + 1, with p_s and p_o measured from cache fates. It holds in only 15
-  runs, all at n = 2. Hoarders end richer in 120 runs, 105 of them where it fails. **This depends on
-  valuing still-buried caches.** Counting them as nothing, agreement is 92.3 % and hoarders are
-  richer in 14 runs, not 120. As a fitness measure, wealth per founder (the dead as 0) is
+- **2. Andersson and Krebs's threshold is Weak** (186 of 300 arena runs agree, 62 %). Their condition
+  is p_s/p_o > (C/G)(n − 1) + 1, with p_s and p_o measured from cache fates. It holds in only 13
+  runs, all at n = 2. Hoarders end richer in 127 runs, 114 of them where it fails. **This depends on
+  valuing still-buried caches.** Counting them as nothing, agreement is 90.7 % and hoarders are
+  richer in 17 runs, not 127. As a fitness measure, wealth per founder (the dead as 0) is
   pre-registered, because nearly every agent survives the arenas.
 - **3. Frequency independence Fails.** The hoarder's survival advantage falls as cheaters grow more
   common. Its slope is −0.17 per unit share (95 % CI −0.22 to −0.12), and 0 of 20 seed slopes are
@@ -2480,7 +2496,7 @@ figure is also reported per founding agent.
   which is the 49 % of `cache-winter-none`, where nobody caches. Their lead at the anchor is sugar
   taken from hoarders. It isn't zero-sum, though: with a tenth cheaters, hoarders survive 89 %,
   against 73 % at `find` 0. By amount, hoarders pilfer 5.5–6.9 times as much per founder as cheaters
-  in the winter field (the arenas show 1.1–1.7 times at n = 4 and 8 with no bury cost, and none at
+  in the winter field (the arenas show 1.2–1.8 times at n = 4 and 8 with no bury cost, and none at
   n = 2, where the cheater has no caches), consistent with Vander Wall and Jenkins (p.661): "food
   hoarders are expected to pilfer far more than they can consume, recaching the excess".
 - **The owner's advantage goes nearly unused.** In `theft-winter-half`, p_s (owners' share of the
@@ -2508,8 +2524,9 @@ figure is also reported per founding agent.
   while kept loot is buried again and pilfered again.
 - **7. Vander Wall and Jenkins's 18 % is Untestable.** Nothing at the anchor reaches it (2.6 % at
   most), and nothing in the sweep does either (8.9 % at `find` 1). Hoarders win only at low rates.
-  At the anchor that is arena-2 with a bury cost of at most 0.1, around 1.4–1.5 % a day. Counting
-  still-buried caches as nothing, hoarders win in none of the 15 arena configurations at the anchor.
+  At the anchor that is arena-2 with a bury cost of at most 0.1 (1.45 % a day) and arena-8 with none
+  (2.18 %). Counting still-buried caches as nothing, hoarders win in none of the 15 arena
+  configurations at the anchor.
 - **8. The mild-winter cheater Fails on wealth; a reported holdings reading (not judged) shows
   cheaters ahead at every β, gaining slightly as winter softens.** On pre-registered wealth, cheaters fall further behind as winter softens: −98 per
   founder at β 2, against −10 at β 32. The slope on log₂β has a median of +22.3, and 0 of 20 seeds
@@ -2521,9 +2538,9 @@ figure is also reported per founding agent.
   a seed buries 74 000 and thieves take 66 000, likely much of it buried again. By tick 200, 88.8 % of the
   sugar ever buried has been pilfered, 0.3 % dug by its owner, 0.2 % lost with the dead and 10.8 %
   is still buried.
-- **The arena: pilferage rises with n** (1.48, 1.76 and 2.22 % a tick at n = 2, 4 and 8). v rises
-  from 0.059 to 0.074 to 0.096, while agents per open site stay at 0.11–0.125. More strangers cross
-  each cache, as in Andersson and Krebs's reason for their (n − 1). Thieves take 52 %, 82 % and 92 %
+- **The arena: pilferage rises with n** (1.45, 1.77 and 2.18 % a tick at n = 2, 4 and 8). v rises
+  from 0.059 to 0.075 to 0.094, while agents per open site stay at 0.11–0.125. More strangers cross
+  each cache, as in Andersson and Krebs's reason for their (n − 1). Thieves take 51 %, 85 % and 91 %
   of the ended caches' sugar. In the 2-agent room the hoarder steals nothing, because the cheater
   has no caches.
 
@@ -2532,12 +2549,12 @@ The valuation rows are reported beside the verdicts; they are not judged and don
 | Claim | Verdict | Depends on valuing still-buried caches? |
 |---|---|---|
 | 1. Pilferage = visits × find | Fails (0.789 against 0.8) | no |
-| 2. Andersson and Krebs's threshold | Weak (65 %) | yes: 92.3 % with caches at 0 |
+| 2. Andersson and Krebs's threshold | Weak (62 %) | yes: 90.7 % with caches at 0 |
 | 3. Frequency independence | Fails (slope −0.17) | no (survival) |
 | 4. Equal recovery | Holds | no (survival) |
 | 5. A mixed equilibrium | Fails at the anchor (crossings at `find` 0.02 and 0.05) | no (survival) |
 | 6. Reciprocity | Fails (stores Hold, survival Fails) | no |
-| 7. The 18 % hoarding withstands | Untestable (max 8.9 %) | yes: arena wins 2 → 0 at the anchor |
+| 7. The 18 % hoarding withstands | Untestable (max 8.9 %) | yes: arena wins 3 → 0 at the anchor |
 | 8. The mild-winter cheater | Fails on wealth | yes: on holdings cheaters gain as winter softens, 20 of 20 |
 | 9. Usage | Holds | no |
 
@@ -2551,7 +2568,8 @@ document. `theft-winter` costs 17.9, 1.8 times `cache-winter-even`. That is like
 population theft keeps alive, and partly the find draws and the fate log (not isolated; the log was
 recorded then, and is now kept only when the survey asks for it). With a
 quarter or half cheaters it costs 15.2 and 11.6. The arenas cost 2.50–3.95, mostly per-tick work
-that doesn't scale with 2–8 agents.
+that doesn't scale with 2–8 agents (timed with the two-walled rooms; the four-walled ones timed
+alongside, under load, within noise of them).
 
 Switches: the Rules panel's **Theft (Minds 6)** group has **Chance to find a cache**, **Loot**
 (keep it, or eat it on the spot) and **Bury cost**, all live. **Owners remember their caches** and

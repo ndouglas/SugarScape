@@ -53,8 +53,8 @@ const GOLDEN: &[(&str, u64)] = &[
     ("vi-2-no-trade", 0xd35c40bead68ed38),
     ("vi-3-trade", 0x2a65351834fda082),
     // Milestone 14: Axelrod's culture rule in the Sugarscape (the docking).
-    ("dock-mobility-15", 0x9d0a2ced876f00d2),
-    ("dock-mobility-30", 0x10a0c00c27c1660d),
+    ("dock-mobility-15", 0x3361a01b1a7cd6a3),
+    ("dock-mobility-30", 0x19cfa4ca0800089e),
     // Minds 1: the ideal free distribution (two patches; the utility mind).
     ("ifd-even", 0xb5792be0a465638a),
     ("ifd-two-to-one", 0xbc6e9d14253d630d),
@@ -105,9 +105,10 @@ const GOLDEN: &[(&str, u64)] = &[
     ("theft-winter", 0x8812daf7a717c8d0),
     ("theft-winter-quarter", 0x4f48f55df13c19e7),
     ("theft-winter-half", 0xd0ee29237c28952f),
-    ("theft-arena-2", 0xb9504ceca55387d7),
-    ("theft-arena-4", 0xf0fb2f9cf0642c0c),
-    ("theft-arena-8", 0x235e1358914b64d2),
+    // 2026-09-30: the arenas walled on all four sides (a (k + 2)-torus).
+    ("theft-arena-2", 0x403d0fd47b215e1d),
+    ("theft-arena-4", 0x5aab49c65af8928d),
+    ("theft-arena-8", 0x24f7fb0d39bfc02),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

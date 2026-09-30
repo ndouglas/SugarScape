@@ -1,5 +1,5 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
-import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
+import { MINDS_OVERLAYS, NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   LineInspection,
   TippingInspection,
@@ -324,6 +324,23 @@ export function usesMinds(c: ModelConfig): boolean {
   );
 }
 
+/** Minds 5: caching is on (a rule that buries, mixed rules, or a carrying limit), as the core's `Caching::is_on`. */
+export const cachingOn = (c: Config): boolean =>
+  (c.caching?.rule ?? 'none') !== 'none' || c.caching?.mixed === true || (c.caching?.capacity ?? 0) > 0;
+
+/** Minds 6: theft is on (a chance to find caches, or any cheaters), as the core's `Theft::is_on`. */
+export const theftOn = (c: Config): boolean => (c.theft?.find ?? 0) > 0 || (c.theft?.cheaters ?? 0) > 0;
+
+/** Minds 5–6: whether `c` can hold caches (caching on, or a central world's larders). */
+export const hasCaches = (c: Config): boolean => cachingOn(c) || c.central?.enabled === true;
+
+/**
+ * Minds 5–6: whether the page draws a `MindsView` for `c` — caches or larders, a winter everywhere
+ * at once, or a lab.
+ */
+export const mindsShown = (c: Config): boolean =>
+  cachingOn(c) || c.central?.enabled === true || (c.seasons?.enabled === true && c.seasons.mode === 'global') || (c.lab ?? null) !== null;
+
 /** An entry of the model menu: a model, or the Minds (sugarscape worlds using the Minds rules). */
 export type MenuKind = ModelKind | 'minds';
 
@@ -405,6 +422,11 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['lineage', 'Lineage'],
     // Axelrod's culture rule (milestone 14); agents are gray under the book's rule.
     ['culture', 'Culture'],
+    // Minds 6: hoarder or cheater; Minds 5: each agent's caching rule. See `defaultColorMode`.
+    ['strategy', 'Strategy'],
+    ['caching_rule', 'Caching rule'],
+    // Minds 3: whether each agent remembers.
+    ['memory', 'Memory'],
   ],
   schelling: [
     ['color', 'Color'],
@@ -552,7 +574,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
 export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
-  sugarscape: NETWORKS,
+  sugarscape: [...NETWORKS, ...MINDS_OVERLAYS],
   schelling: [],
   ring: [],
   anasazi: VALLEY_OVERLAYS,

@@ -195,6 +195,9 @@ fn landscapes_from_js(value: &JsValue) -> Result<Vec<Option<Vec<f64>>>, JsValue>
 pub struct Sim {
     world: ModelWorld,
     frame: Vec<u8>,
+    /// `cache_sites`' per-site tally and output, kept between frames.
+    cache_scratch: Vec<(f64, u32)>,
+    cache_flat: Vec<f64>,
 }
 
 /// A keyframe of a `Sim`'s world (`ModelWorld::checkpoint`): the host keeps a few and frees them.
@@ -247,6 +250,8 @@ impl Sim {
         Ok(Sim {
             world,
             frame: Vec::new(),
+            cache_scratch: Vec::new(),
+            cache_flat: Vec::new(),
         })
     }
 
@@ -286,7 +291,7 @@ impl Sim {
     /// Renders into the internal frame and returns a pointer into WASM memory.
     /// Re-create any JS view after each call: memory may have grown.
     pub fn render(&mut self, color_mode: &str, layer: &str) -> Result<usize, JsValue> {
-        let Sim { world, frame } = self;
+        let Sim { world, frame, .. } = self;
         world
             .model()
             .render(color_mode, layer, frame)
@@ -423,6 +428,34 @@ impl Sim {
                 .flatten()
                 .collect()
         })
+    }
+
+    /// Minds 5–6: JSON `{ winter, homes, lab }` (`World::minds_view`): the
+    /// season, every home and larder and the lab's schedule. `null` for a
+    /// non-sugarscape model.
+    pub fn minds_view(&self) -> String {
+        self.sugar_or("null".into(), |w| {
+            serde_json::to_string(&w.minds_view()).expect("views serialize")
+        })
+    }
+
+    /// Minds 5–6: every site holding a cache, `[x, y, total, flags, …]`
+    /// (`World::cache_sites`), built in buffers the `Sim` keeps; empty for a
+    /// non-sugarscape model.
+    pub fn cache_sites(&mut self) -> js_sys::Float64Array {
+        let Sim {
+            world,
+            cache_scratch,
+            cache_flat,
+            ..
+        } = self;
+        match world.sugarscape() {
+            Some(w) => {
+                w.cache_sites(cache_scratch, cache_flat);
+                js_sys::Float64Array::from(&cache_flat[..])
+            }
+            None => js_sys::Float64Array::new_with_length(0),
+        }
     }
 
     pub fn locate(&self, id: f64) -> Option<Vec<u32>> {

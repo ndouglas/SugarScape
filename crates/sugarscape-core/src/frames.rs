@@ -323,6 +323,10 @@ pub struct Frame {
     /// disease]`, null for an outbreak (absent when none).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub infections: Vec<(Option<u64>, u64, u32)>,
+    /// Each agent's Axelrod culture (its traits), in `agents`' order (absent
+    /// unless rule K is Axelrod's).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub cultures: Vec<Vec<u8>>,
 }
 
 /// A whole shot, tick 0 first. Stats are the engine's series as recorded
@@ -440,10 +444,16 @@ fn frame(
     } else {
         (Vec::new(), Vec::new())
     };
+    let cultures = if world.config.culture.axelrod() {
+        world.agents().map(|a| a.culture.clone()).collect()
+    } else {
+        Vec::new()
+    };
     Frame {
         tick: world.tick,
         tags,
         groups,
+        cultures,
         spice,
         spice_agents,
         trades,
@@ -797,7 +807,10 @@ pub struct SchellingDump {
     pub format: u32,
     pub model: &'static str,
     pub seed: u64,
+    /// Frames after the first (the shot's `ticks / every`).
     pub ticks: u32,
+    /// Steps between frames (frames keep their true step).
+    pub every: u32,
     pub width: u32,
     pub height: u32,
     pub config: ModelConfig,
@@ -830,6 +843,32 @@ pub struct TippingDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// One recorded step of Axelrod's culture model: every site's traits,
+/// row-major, `features` per site.
+#[derive(Clone, Debug, Serialize)]
+pub struct CultureFrame {
+    pub tick: u64,
+    pub traits: Vec<u8>,
+}
+
+/// A culture shot: the lattice's traits every `every`th step (frames keep
+/// their true step) and the model's statistics at the same steps.
+#[derive(Clone, Debug, Serialize)]
+pub struct CultureDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    /// Frames after the first (the shot's `ticks / every`).
+    pub ticks: u32,
+    pub every: u32,
+    pub width: u32,
+    pub height: u32,
+    pub features: u32,
+    pub config: ModelConfig,
+    pub frames: Vec<CultureFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -844,6 +883,7 @@ pub enum Dump {
     Structure(StructureDump),
     Schelling(Box<SchellingDump>),
     Tipping(Box<TippingDump>),
+    Culture(Box<CultureDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -931,21 +971,37 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
                 (shot.gifts, "gifts"),
                 (shot.cells.is_some(), "cells"),
                 (shot.scores, "scores"),
-                (shot.every != 1, "every"),
             ] {
                 if bad {
                     return Err(vec![FieldError::new(field, "is not for Schelling shots")]);
                 }
             }
             if let ModelConfig::Tipping(_) = shot.base()? {
+                if shot.every != 1 {
+                    return Err(only("every", "norms and Schelling-board"));
+                }
                 return run_tipping(shot).map(|d| Dump::Tipping(Box::new(d)));
             }
             run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
         }
+        ModelConfig::Culture(_) => {
+            for (bad, field) in [
+                (!shot.place.is_empty(), "place"),
+                (shot.empty, "empty"),
+                (shot.gifts, "gifts"),
+                (shot.cells.is_some(), "cells"),
+                (shot.scores, "scores"),
+            ] {
+                if bad {
+                    return Err(vec![FieldError::new(field, "is not for culture shots")]);
+                }
+            }
+            run_culture(shot).map(|d| Dump::Culture(Box::new(d)))
+        }
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms, social structure and Schelling's board and line, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms, social structure, Schelling's board and line and Axelrod's culture, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -1079,6 +1135,71 @@ fn dpd_frame(world: &DpdWorld, before: &BTreeSet<u64>, alive: &mut BTreeSet<u64>
 }
 
 /// Runs a demographic-PD shot and records every cycle.
+/// Runs a culture shot, recording every `every`th step.
+pub fn run_culture(shot: &Shot) -> Result<CultureDump, Vec<FieldError>> {
+    let config = shot.model_config()?;
+    let ModelConfig::Culture(c) = &config else {
+        unreachable!("a culture shot")
+    };
+    let every = shot.every;
+    if every == 0 || !shot.ticks.is_multiple_of(every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
+    let mut world = ModelWorld::new(config.clone(), shot.seed)?;
+    let (features, sites) = (c.features, c.sites());
+    let frame = |w: &ModelWorld| -> CultureFrame {
+        let ModelWorld::Culture(cw) = w else {
+            unreachable!("a culture world")
+        };
+        CultureFrame {
+            tick: w.model().tick(),
+            traits: (0..sites).flat_map(|i| cw.culture(i).to_vec()).collect(),
+        }
+    };
+    let mut frames = vec![frame(&world)];
+    for k in 1..=shot.ticks / every {
+        world.model_mut().run(every);
+        let mut f = frame(&world);
+        // A stable world stops; its frames keep counting steps.
+        f.tick = u64::from(k * every);
+        frames.push(f);
+    }
+    let model = world.model();
+    let stats = model
+        .series_names()
+        .into_iter()
+        .filter_map(|name| {
+            model.series(&name).map(|s| {
+                let every = every as usize;
+                let last = *s.last().unwrap_or(&0.0);
+                // Past stability the series stops too; hold its last value.
+                let picked = (0..=shot.ticks as usize / every)
+                    .map(|k| s.get(k * every).copied().unwrap_or(last))
+                    .collect();
+                (name, picked)
+            })
+        })
+        .collect();
+    // Sites, not the page's grid (which draws lanes between them).
+    let (width, height) = (c.width, c.height);
+    Ok(CultureDump {
+        format: FORMAT,
+        model: "culture",
+        seed: shot.seed,
+        ticks: shot.ticks / every,
+        every,
+        width,
+        height,
+        features,
+        config,
+        frames,
+        stats,
+    })
+}
+
 /// Runs a Schelling shot (his board, or his line laid out a row at a time)
 /// and records every round.
 pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
@@ -1114,16 +1235,27 @@ pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
             agents,
         }
     };
+    let every = shot.every;
+    if every == 0 || !shot.ticks.is_multiple_of(every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
     let mut frames = vec![frame(&world)];
-    for _ in 0..shot.ticks {
-        world.model_mut().run(1);
+    for _ in 0..shot.ticks / every {
+        world.model_mut().run(every);
         frames.push(frame(&world));
     }
     let model = world.model();
     let stats = model
         .series_names()
         .into_iter()
-        .filter_map(|name| model.series(&name).map(|s| (name, s)))
+        .filter_map(|name| {
+            model
+                .series(&name)
+                .map(|s| (name, s.into_iter().step_by(every as usize).collect()))
+        })
         .collect();
     let (width, height) = model.size();
     Ok(SchellingDump {
@@ -1134,7 +1266,8 @@ pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
             "schelling"
         },
         seed: shot.seed,
-        ticks: shot.ticks,
+        ticks: shot.ticks / every,
+        every,
         width,
         height,
         config,
@@ -1810,6 +1943,22 @@ mod tests {
     }
 
     #[test]
+    fn a_docked_shot_records_each_agents_axelrod_culture() {
+        let d = run_shot(&shot(r#"{"preset": "dock-mobility-15", "ticks": 2}"#).unwrap()).unwrap();
+        let f = &d.frames[0];
+        assert_eq!(f.cultures.len(), f.agents.len());
+        assert!(f
+            .cultures
+            .iter()
+            .all(|c| c.len() == 5 && c.iter().all(|&t| t < 15)));
+        let plain = run_shot(&shot(r#"{"preset": "ii-2-unit", "ticks": 1}"#).unwrap()).unwrap();
+        assert!(
+            plain.frames[0].cultures.is_empty(),
+            "only under Axelrod's rule"
+        );
+    }
+
+    #[test]
     fn a_preset_shot_resolves_to_its_config_with_overrides() {
         let s = shot(r#"{"preset": "ii-2-unit", "ticks": 5, "set": {"population": 10}}"#).unwrap();
         let c = s.config().unwrap();
@@ -2234,6 +2383,55 @@ mod tests {
     }
 
     #[test]
+    fn a_culture_shot_records_every_sites_traits() {
+        let d = match super::run(
+            &Shot::from_json(r#"{"preset": "ac-sample-run", "ticks": 20, "seed": 1, "every": 10}"#)
+                .unwrap(),
+        )
+        .unwrap()
+        {
+            Dump::Culture(d) => *d,
+            _ => panic!("not a culture dump"),
+        };
+        assert_eq!(
+            (d.model, d.width, d.height, d.features, d.ticks, d.every),
+            ("culture", 10, 10, 5, 2, 10)
+        );
+        let ticks: Vec<u64> = d.frames.iter().map(|f| f.tick).collect();
+        assert_eq!(ticks, [0, 10, 20]);
+        let mut w =
+            crate::culture::CultureWorld::new(crate::culture::CultureConfig::default(), 1).unwrap();
+        for f in &d.frames {
+            assert_eq!(f.traits.len(), 100 * 5);
+            let expect: Vec<u8> = (0..100).flat_map(|i| w.culture(i).to_vec()).collect();
+            assert_eq!(f.traits, expect, "tick {}", f.tick);
+            w.run(10);
+        }
+        assert_eq!(d.stats["regions"].len(), 3);
+    }
+
+    #[test]
+    fn a_culture_shot_past_stability_holds_its_last_state() {
+        // The sample run settles near step 800; the shot keeps counting.
+        let d = match super::run(
+            &Shot::from_json(
+                r#"{"preset": "ac-sample-run", "ticks": 4000, "seed": 1, "every": 100}"#,
+            )
+            .unwrap(),
+        )
+        .unwrap()
+        {
+            Dump::Culture(d) => *d,
+            _ => panic!("not a culture dump"),
+        };
+        assert_eq!(d.frames.len(), 41);
+        assert_eq!(d.frames.last().unwrap().tick, 4000);
+        assert_eq!(d.frames[39].traits, d.frames[40].traits);
+        assert_eq!(d.stats["regions"].len(), 41);
+        assert_eq!(d.stats["active_bonds"][40], 0.0, "stable at the end");
+    }
+
+    #[test]
     fn a_schelling_shot_records_each_round_its_squares_colors_and_content() {
         let d = schelling(r#"{"preset": "s71-board", "ticks": 3, "seed": 2}"#);
         assert_eq!(
@@ -2263,6 +2461,20 @@ mod tests {
             moved as f64, d.stats["moves"][1],
             "the frames show the round's moves"
         );
+    }
+
+    #[test]
+    fn a_schelling_shot_can_record_every_nth_step() {
+        // A big board over many steps: frames keep their true step, and the
+        // statistics come at the same steps as the frames.
+        let d = schelling(r#"{"preset": "s71-board", "ticks": 12, "seed": 2, "every": 4}"#);
+        let ticks: Vec<u64> = d.frames.iter().map(|f| f.tick).collect();
+        assert_eq!(ticks, [0, 4, 8, 12]);
+        assert_eq!((d.ticks, d.every), (3, 4));
+        let full = schelling(r#"{"preset": "s71-board", "ticks": 12, "seed": 2}"#);
+        assert_eq!(d.frames[2].agents, full.frames[8].agents);
+        assert_eq!(d.stats["segregation"].len(), 4);
+        assert_eq!(d.stats["segregation"][3], full.stats["segregation"][12]);
     }
 
     #[test]

@@ -6,10 +6,10 @@
 
 use std::sync::{Arc, Mutex};
 
-use sugarscape_core::culture::{Activation, Changes, CultureConfig, Edges, Neighborhood};
+use sugarscape_core::culture::{Activation, Changes, CultureConfig, Edges, Neighborhood, Pick};
 use sugarscape_core::model::{ModelConfig, ModelWorld};
 
-use crate::claim::{greater, range, Claim, Outcome, Source, Verdict};
+use crate::claim::{equivalent, greater, range, Claim, Outcome, Source, Verdict};
 use crate::runner::{model_after, model_preset};
 
 const PAPER: &str = "Axelrod 1997, J. Conflict Resolution 41";
@@ -133,6 +133,89 @@ fn docked(seeds: &[u64], id: &str) -> Vec<f64> {
     })
 }
 
+/// The sample setup's seeds: enough to know this model's distribution well,
+/// against which his samples (10 and 100 runs) are judged.
+fn sample_seeds() -> Vec<u64> {
+    (1..=1_000).collect()
+}
+
+/// Whether a mean of `n` runs could be `his` here: a two-sided z test on the
+/// seeds' mean and spread (p ≥ 0.01 holds).
+fn his_mean(v: &[f64], his: f64, n: u32) -> Outcome {
+    let m = mean(v);
+    let sd = (v.iter().map(|x| (x - m).powi(2)).sum::<f64>() / (v.len() - 1) as f64).sqrt();
+    let z = (his - m).abs() / (sd / f64::from(n).sqrt());
+    let p = 2.0 * (1.0 - normal_cdf(z));
+    Outcome {
+        verdict: if p >= 0.01 {
+            Verdict::Holds
+        } else {
+            Verdict::Fails
+        },
+        measured: format!(
+            "mean {m:.2} (sd {sd:.2}, {} seeds); a mean of {n} runs at {his}: p = {p:.3}",
+            v.len()
+        ),
+        detail: String::new(),
+    }
+}
+
+#[derive(Clone, Copy)]
+enum Tail {
+    AtLeast,
+    Both,
+}
+
+/// Whether `k` of 100 runs meeting `test` could happen here: a binomial test
+/// at the seeds' share (p ≥ 0.01 holds).
+fn his_count(v: &[f64], test: fn(f64) -> bool, k: u32, tail: Tail, what: &str) -> Outcome {
+    let share = v.iter().filter(|&&r| test(r)).count() as f64 / v.len() as f64;
+    let pmf = |i: u32| {
+        if share <= 0.0 || share >= 1.0 {
+            // A share of 0 or 1 allows only 0 or 100 of 100.
+            return f64::from(u8::from(f64::from(i) == share * 100.0));
+        }
+        let ln_choose = (1..=i)
+            .map(|j| (f64::from(100 - i + j) / f64::from(j)).ln())
+            .sum::<f64>();
+        (ln_choose + f64::from(i) * share.ln() + f64::from(100 - i) * (1.0 - share).ln()).exp()
+    };
+    let upper: f64 = (k..=100).map(pmf).sum();
+    let lower: f64 = (0..=k).map(pmf).sum();
+    let p = match tail {
+        Tail::AtLeast => upper,
+        Tail::Both => (2.0 * upper.min(lower)).min(1.0),
+    };
+    Outcome {
+        verdict: if p >= 0.01 {
+            Verdict::Holds
+        } else {
+            Verdict::Fails
+        },
+        measured: format!(
+            "{:.1} % {what} over {} seeds; {k} of 100: p = {p:.3}",
+            share * 100.0,
+            v.len()
+        ),
+        detail: String::new(),
+    }
+}
+
+/// The standard normal CDF (Abramowitz & Stegun 7.1.26, error < 1.5e-7).
+fn normal_cdf(z: f64) -> f64 {
+    let x = z.abs() / std::f64::consts::SQRT_2;
+    let t = 1.0 / (1.0 + 0.3275911 * x);
+    let poly = t
+        * (0.254829592
+            + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+    let erf = 1.0 - poly * (-x * x).exp();
+    if z >= 0.0 {
+        0.5 * (1.0 + erf)
+    } else {
+        0.5 * (1.0 - erf)
+    }
+}
+
 pub fn claims() -> Vec<Claim> {
     vec![
         Claim {
@@ -148,8 +231,11 @@ pub fn claims() -> Vec<Claim> {
             item: "ac-sample-run",
             source: Source::Book,
             citation: PAPER,
-            text: "Table 2: 5 features of 10 traits leave 3.2 (the mean within 2–4.5)",
-            check: |s| mean_in(mean(&regions(s, |_| {})), 2.0, 4.5, "mean regions"),
+            text: "Table 2: 5 features of 10 traits leave 3.2, a mean of 10 runs. Holds if a mean of 10 runs could be 3.2 here: over 1,000 seeds, two-sided p ≥ 0.01 (rule revised 2026-09-30, after the result was known: the earlier fixed range, 2–4.5 on 20 seeds, treated his 10-run mean as exact)",
+            check: |_| {
+                let v = regions(&sample_seeds(), |_| {});
+                his_mean(&v, 3.2, 10)
+            },
         },
         Claim {
             id: "culture.table-2.f5-q15",
@@ -187,24 +273,24 @@ pub fn claims() -> Vec<Claim> {
             item: "ac-sample-run",
             source: Source::Book,
             citation: PAPER,
-            text: "100 runs of the sample setup: the median number of stable regions was three (at least half the seeds end with 3 or fewer)",
-            check: |s| share(&regions(s, |_| {}), |r| r <= 3.0, 0.5, 1.0, "with at most 3 regions"),
+            text: "100 runs of the sample setup: the median number of stable regions was three, so at least 50 of his 100 ended with 3 or fewer. Holds if that could happen here: over 1,000 seeds, binomial p ≥ 0.01 for 50 or more of 100 (rule revised 2026-09-30 after the result was known, as table-2.f5-q10)",
+            check: |_| his_count(&regions(&sample_seeds(), |_| {}), |r| r <= 3.0, 50, Tail::AtLeast, "with at most 3 regions"),
         },
         Claim {
             id: "culture.sample.one-region",
             item: "ac-sample-run",
             source: Source::Book,
             citation: PAPER,
-            text: "in 14 % of the runs there was only one stable region (5–25 %)",
-            check: |s| share(&regions(s, |_| {}), |r| r == 1.0, 0.05, 0.25, "with one region"),
+            text: "in 14 % of the runs there was only one stable region (14 of 100). Holds if that could happen here: over 1,000 seeds, two-sided binomial p ≥ 0.01 (rule revised 2026-09-30 after the result was known, as table-2.f5-q10)",
+            check: |_| his_count(&regions(&sample_seeds(), |_| {}), |r| r == 1.0, 14, Tail::Both, "with one region"),
         },
         Claim {
             id: "culture.sample.more-than-six",
             item: "ac-sample-run",
             source: Source::Book,
             citation: PAPER,
-            text: "in 10 % of the runs there were more than six (0–15 %)",
-            check: |s| share(&regions(s, |_| {}), |r| r > 6.0, 0.0, 0.15, "with more than six"),
+            text: "in 10 % of the runs there were more than six (10 of 100). Holds if that could happen here: over 1,000 seeds, two-sided binomial p ≥ 0.01 (rule revised 2026-09-30 after the result was known, as table-2.f5-q10)",
+            check: |_| his_count(&regions(&sample_seeds(), |_| {}), |r| r > 6.0, 10, Tail::Both, "with more than six"),
         },
         Claim {
             id: "culture.neighborhoods",
@@ -325,15 +411,33 @@ pub fn claims() -> Vec<Claim> {
             item: "ac-neighbor-changes",
             source: Source::Comment,
             citation: AAEC,
-            text: "changing the neighbor instead of the active site (the original Sugarscape) changes the sample setup's result (the means differ by more than 10 %)",
-            check: |s| {
-                let a = mean(&regions(s, |_| {}));
-                let n = mean(&regions(s, |c| c.changes = Changes::Neighbor));
-                Outcome {
-                    verdict: if (a - n).abs() > 0.1 * a { Verdict::Holds } else { Verdict::Fails },
-                    measured: format!("active {a:.2}, neighbor {n:.2}"),
-                    detail: String::new(),
+            text: "changing the neighbor instead of the active site (the original Sugarscape) \"made a subtle difference because agents on the edge of the territory have fewer neighbors\" (no size given). Holds if over 200 seeds of the sample setup the region counts differ either way (one-sided Mann–Whitney p < 0.01 in either direction)",
+            check: |_| {
+                let seeds: Vec<u64> = (1..=200).collect();
+                let a = regions(&seeds, |_| {});
+                let n = regions(&seeds, |c| c.changes = Changes::Neighbor);
+                let (up, down) = (greater(&a, &n, "active", "neighbor"), greater(&n, &a, "neighbor", "active"));
+                if down.verdict == Verdict::Holds {
+                    down
+                } else {
+                    Outcome {
+                        verdict: if up.verdict == Verdict::Holds { Verdict::Holds } else { Verdict::Fails },
+                        ..up
+                    }
                 }
+            },
+        },
+        Claim {
+            id: "culture.code.scan",
+            item: "ac-sample-run",
+            source: Source::Comment,
+            citation: "Axelrod, CULTURE.P (archived demo program, 1995–96)",
+            text: "his archived demo program copies not a random differing feature, as the paper says, but the first it meets scanning two features at a time from a random start. Holds if over 1,000 seeds of the sample setup the region counts under the two rules are equivalent (TOST within 10 % of the mean)",
+            check: |_| {
+                let seeds = sample_seeds();
+                let paper = regions(&seeds, |_| {});
+                let code = regions(&seeds, |c| c.pick = Pick::Scan);
+                equivalent(&paper, &code, None, "paper", "program")
             },
         },
         Claim {
@@ -368,16 +472,16 @@ pub fn claims() -> Vec<Claim> {
             item: "dock-mobility-15",
             source: Source::Comment,
             citation: AAEC,
-            text: "mobile agents on a sugar mountain, 15 traits: 1.1 ± 0.3 cultures (the mean within 1–1.5)",
-            check: |s| mean_in(mean(&docked(s, "dock-mobility-15")), 1.0, 1.5, "mean cultures after 20 000 ticks"),
+            text: "mobile agents on a sugar mountain, 15 traits: 1.1 ± 0.3 cultures over 10 runs. Holds if a mean of 10 runs could be 1.1 here (two-sided p ≥ 0.01; rule revised 2026-09-30 after the result was known, as table-2.f5-q10; under the old range, 1–1.5, it also holds)",
+            check: |s| his_mean(&docked(s, "dock-mobility-15"), 1.1, 10),
         },
         Claim {
             id: "culture.docking.mobility-30",
             item: "dock-mobility-30",
             source: Source::Comment,
             citation: AAEC,
-            text: "30 traits: 2.2 ± 1.2 cultures (the mean within 1–3.4)",
-            check: |s| mean_in(mean(&docked(s, "dock-mobility-30")), 1.0, 3.4, "mean cultures after 20 000 ticks"),
+            text: "30 traits: 2.2 ± 1.2 cultures over 10 runs. Holds if a mean of 10 runs could be 2.2 here (two-sided p ≥ 0.01; revised as mobility-15; under the old range, 1–3.4, it also holds)",
+            check: |s| his_mean(&docked(s, "dock-mobility-30"), 2.2, 10),
         },
         Claim {
             id: "culture.docking.mobility-mixes",

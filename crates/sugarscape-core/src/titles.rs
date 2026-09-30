@@ -119,11 +119,11 @@ pub const TITLES: [(&str, &str); 361] = [
     ),
     (
         "dock-mobility-15",
-        "Culture on the move: one culture takes almost everyone, but stragglers hold out",
+        "Culture on the move: one culture takes everyone",
     ),
     (
         "dock-mobility-30",
-        "Culture on the move with more traits: more cultures survive than the paper reports",
+        "Culture on the move with more traits: one or a few cultures",
     ),
     (
         "ifd-even",
@@ -295,11 +295,11 @@ pub const TITLES: [(&str, &str); 361] = [
     ),
     (
         "theft-arena-4",
-        "Four agents in a room: thieves take four fifths of the caches, and hoarders end the winter with a third as much in hand",
+        "Four agents in a room: thieves take more than four fifths of the caches, and hoarders end the winter with a third as much in hand",
     ),
     (
         "theft-arena-8",
-        "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with a third as much in hand",
+        "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with two fifths as much in hand",
     ),
     (
         "s71-board",
@@ -571,7 +571,7 @@ pub const TITLES: [(&str, &str); 361] = [
     ),
     (
         "ac-neighbor-changes",
-        "Who copies whom, reversed: no measurable difference here",
+        "Who copies whom, reversed: slightly fewer regions",
     ),
     (
         "ac-soup",
