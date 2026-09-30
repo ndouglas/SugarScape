@@ -31,8 +31,7 @@ pub struct Harvest {
     /// `dug`, it isn't newly gathered: no pollution, not income, not the
     /// marginal-value rule's intake, and a tick that pilfered harvested no
     /// site. Under `theft.loot: keep` it is in the thief's holdings; under
-    /// `eat` it was eaten on the spot (`TickEvents::loot_eaten`) and never
-    /// reached them.
+    /// `eat` it went into the thief's stomach (`Agent::fed`), not them.
     pub pilfered: f64,
 }
 

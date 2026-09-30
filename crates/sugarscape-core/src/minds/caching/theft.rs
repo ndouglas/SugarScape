@@ -12,20 +12,26 @@
 //!   Every such cache gets its draw, whatever the earlier ones gave, so the
 //!   number of draws depends only on the caches present. The first success
 //!   is the one taken; at most one cache is taken a tick.
-//! - **A pilfer.** The thief takes min(cache, room under the carrying
-//!   limit) (the whole cache with no limit) from the owner's cache, the
-//!   same under either loot rule; the rest stays the owner's, and an
+//! - **A pilfer.** Under `loot: keep` the thief takes min(cache, room
+//!   under the carrying limit) (the whole cache with no limit); under
+//!   `eat` it takes the whole cache, whatever its room. The rest stays the
+//!   owner's, and an
 //!   emptied cache is removed with its age. The owner's fate records close
 //!   as `Pilfered { by }` (`fates`). It replaces the tick's harvest, as a
 //!   dig does: the site and any truffle stay as they are. The take is
 //!   `Harvest::pilfered`, never `gathered` (it was gathered once already:
 //!   no pollution, not income, not the marginal-value rule's intake).
-//!   A success with no room takes nothing, and the agent harvests the site
-//!   as usual (taking nothing either, being full).
+//!   Under `keep` a success with no room takes nothing, and the agent
+//!   harvests the site as usual (taking nothing either, being full).
 //! - **Loot.** `keep`: the take goes into the thief's holdings, where its
-//!   burial rule may bury it again that tick. `eat`: it's eaten on the spot,
-//!   counted as eaten in `events.loot_eaten` (as `bury_cost` is) and never
-//!   reaching holdings.
+//!   burial rule may bury it again that tick (recached). `eat`: it's eaten,
+//!   going into the thief's stomach (`Agent::fed`, counted in
+//!   `events.loot_eaten` as it goes in), which its metabolism draws on
+//!   before its holdings; so consumed loot still feeds the thief. This
+//!   amends the spec's "`eat` adds nothing to holdings": it still adds
+//!   nothing to holdings, but it isn't wasted. The stomach can't be buried,
+//!   dug or traded and counts toward neither the carrying limit nor the
+//!   reserve; what's left in it at death is `events.fed_lost`.
 //! - **An owner's own find** (`owner_memory: off`): a success on its own
 //!   cache is a dig (`caching::dig`: `dug`, `digs`, a `Dug` fate, into its
 //!   holdings under either loot rule), counted in `owner_finds`, not in
@@ -40,7 +46,10 @@
 //!   to 0.
 //!
 //! Sugar is conserved: a pilfer moves the same f64 from a cache to holdings
-//! (or to eaten), and an owner's find is a dig.
+//! (or to a stomach), and an owner's find is a dig. The ledger: Σ sites +
+//! holdings + caches + stomachs + eaten (metabolism, from stomach or
+//! holdings, and bury cost) + what left with the dead (holdings,
+//! `cache_lost`, `fed_lost`) = start + growback.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -134,13 +143,21 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
         harvest.dug = take;
         return Some(harvest);
     }
+    let room = match theft.loot {
+        Loot::Keep => room,
+        Loot::Eat => f64::INFINITY,
+    };
     let take = pilfer(world, owner, id, site, room);
     if take <= 0.0 {
         return None;
     }
+    let a = world.agent_mut(id).expect("live agent");
     match theft.loot {
-        Loot::Keep => world.agent_mut(id).expect("live agent").holdings[0] += take,
-        Loot::Eat => world.events.loot_eaten += take,
+        Loot::Keep => a.holdings[0] += take,
+        Loot::Eat => {
+            a.fed += take;
+            world.events.loot_eaten += take;
+        }
     }
     harvest.pilfered = take;
     Some(harvest)
@@ -203,7 +220,8 @@ mod tests {
         let sites: f64 = w.sites.iter().map(|s| s.resource[0]).sum();
         let held: f64 = w.agents().map(|a| a.holdings[0]).sum();
         let cached: f64 = w.agents().flat_map(|a| a.caches.values()).sum();
-        sites + held + cached
+        let fed: f64 = w.agents().map(|a| a.fed).sum();
+        sites + held + cached + fed
     }
 
     /// An agent at (x, y) with metabolism 1 and `held` sugar.
@@ -296,17 +314,102 @@ mod tests {
     }
 
     #[test]
-    fn eaten_loot_is_counted_as_eaten_and_never_held() {
+    fn eaten_loot_goes_whole_into_the_stomach_whatever_the_room() {
         let (mut w, owner) = cached_world(1.0, 10, 6.0);
         w.config.theft.loot = Loot::Eat;
-        let thief = agent(&mut w, 5, 5, 7.0);
+        let thief = agent(&mut w, 5, 5, 9.0);
         let before = total(&w);
         let h = go_and_gather(&mut w, thief, Pos::new(5, 6));
-        assert_eq!(h.pilfered, 3.0, "capped by the room, 10 − 7");
-        assert_eq!(w.agent(thief).unwrap().holdings[0], 7.0);
-        assert_eq!(w.agent(owner).unwrap().caches[&at(&w, 5, 6)], 3.0);
-        assert_eq!((w.events.pilfered, w.events.loot_eaten), (3.0, 3.0));
-        assert_eq!(total(&w) + w.events.loot_eaten, before);
+        assert_eq!(h.pilfered, 6.0, "the whole cache, though room is 1");
+        let t = w.agent(thief).unwrap();
+        assert_eq!((t.holdings[0], t.fed), (9.0, 6.0));
+        assert!(w.agent(owner).unwrap().caches.is_empty());
+        assert_eq!((w.events.pilfered, w.events.loot_eaten), (6.0, 6.0));
+        assert_eq!(total(&w), before, "the stomach is a stock");
+        // Metabolism draws on the stomach first: 1 a tick.
+        crate::rules::lifecycle::metabolize(&mut w, thief, Harvest::default());
+        let t = w.agent(thief).unwrap();
+        assert_eq!((t.holdings[0], t.fed), (9.0, 5.0));
+        // A burn larger than the stomach takes the rest from holdings.
+        w.agent_mut(thief).unwrap().metabolism[0] = 7;
+        crate::rules::lifecycle::metabolize(&mut w, thief, Harvest::default());
+        let t = w.agent(thief).unwrap();
+        assert_eq!((t.holdings[0], t.fed), (7.0, 0.0));
+    }
+
+    #[test]
+    fn a_stomach_is_hashed_only_when_nonzero() {
+        let (mut w, _) = cached_world(1.0, 10, 6.0);
+        let thief = agent(&mut w, 5, 5, 9.0);
+        let plain = w.fingerprint();
+        w.agent_mut(thief).unwrap().fed = 2.0;
+        assert_ne!(w.fingerprint(), plain);
+        w.agent_mut(thief).unwrap().fed = 0.0;
+        assert_eq!(w.fingerprint(), plain);
+    }
+
+    #[test]
+    fn a_thief_eating_its_loot_survives_on_its_stomach() {
+        // A thief with 1 sugar, burning 1 a tick, on a bare landscape: it
+        // eats a cache of 20 and lives 20 more ticks on it, holdings
+        // untouched; without the loot it would die at once.
+        let (mut w, _) = cached_world(1.0, 10, 20.0);
+        w.config.theft.loot = Loot::Eat;
+        set_sugar(&mut w, 5, 6, 0.0);
+        // Standing on the cache (staying put draws each tick).
+        let thief = agent(&mut w, 5, 6, 1.0);
+        let mut starved = w.clone();
+        starved.config.theft.find = 0.0;
+        crate::rules::agent_turn(&mut starved, thief);
+        assert!(starved.agent(thief).is_none(), "no loot: it starves");
+        crate::rules::agent_turn(&mut w, thief);
+        assert_eq!(w.events.pilfers, 1);
+        for tick in 0..19 {
+            w.tick += 1;
+            crate::rules::agent_turn(&mut w, thief);
+            let t = w.agent(thief).expect("fed by its stomach");
+            assert_eq!(t.holdings[0], 1.0, "{tick}");
+        }
+        assert_eq!(w.agent(thief).unwrap().fed, 0.0);
+        w.tick += 1;
+        crate::rules::agent_turn(&mut w, thief);
+        assert!(w.agent(thief).is_none(), "the stomach empty, it starves");
+    }
+
+    #[test]
+    fn a_stomach_is_never_buried_or_counted_toward_the_limit_or_reserve() {
+        let mut w = blank_world(11, 11);
+        w.config.caching.capacity = 10;
+        w.config.caching.rule = crate::config::CachingRule::Even;
+        w.config.caching.share = 1.0;
+        let id = agent(&mut w, 5, 5, 4.0);
+        w.agent_mut(id).unwrap().fed = 50.0;
+        // R = 10: holdings 4, a stomach of 50, and no surplus.
+        assert_eq!(crate::minds::caching::surplus(&w, id), 0.0);
+        assert_eq!(bury(&mut w, id, 100.0), 4.0, "only holdings");
+        assert_eq!(w.agent(id).unwrap().fed, 50.0);
+        // Holdings 0 < R / 2 with a cache: hungry, whatever its stomach.
+        assert!(crate::minds::caching::hungry(&w, id));
+        // The carrying limit counts holdings only.
+        set_sugar(&mut w, 5, 6, 20.0);
+        let h = go_and_gather(&mut w, id, Pos::new(5, 6));
+        assert_eq!(h.gathered[0], 10.0, "room is 10 − 0, the stomach aside");
+        // The burial hook buries surplus from holdings only (R = 10).
+        w.agent_mut(id).unwrap().holdings[0] = 14.0;
+        crate::minds::caching::rules::act(&mut w, id, &Harvest::default());
+        let a = w.agent(id).unwrap();
+        assert_eq!((a.holdings[0], a.fed), (10.0, 50.0));
+    }
+
+    #[test]
+    fn a_dead_thiefs_stomach_leaves_counted() {
+        let mut w = blank_world(11, 11);
+        let id = agent(&mut w, 5, 5, 4.0);
+        w.agent_mut(id).unwrap().fed = 3.5;
+        let before = total(&w);
+        w.kill(id, crate::world::DeathCause::OldAge);
+        assert_eq!(w.events.fed_lost, 3.5);
+        assert_eq!(total(&w) + w.events.fed_lost + 4.0, before);
     }
 
     #[test]
@@ -601,8 +704,9 @@ mod tests {
         );
     }
 
-    /// Σ sites + holdings + caches + eaten (metabolism, bury cost and eaten
-    /// loot) + what left with the dead = start + growback, over 300 ticks
+    /// Σ sites + holdings + caches + stomachs + eaten (metabolism, from
+    /// stomach or holdings, and bury cost) + what left with the dead
+    /// (holdings, caches, stomachs) = start + growback, over 300 ticks
     /// of five walkers burying by script under `find` 0.5, one killed at
     /// tick 150 with its caches.
     fn conserved_through_theft(loot: Loot) {
@@ -633,6 +737,7 @@ mod tests {
         let (mut eaten, mut grown, mut left) = (0.0, 0.0, 0.0);
         let (mut pilfered, mut pilfers, mut dug) = (0.0, 0, 0.0);
         let doomed = ids[0];
+        let mut fed_max: f64 = 0.0;
         for _ in 0..300 {
             w.events = crate::world::TickEvents::default();
             if w.tick == 150 {
@@ -649,8 +754,7 @@ mod tests {
                 crate::rules::agent_turn(&mut w, id);
                 assert!(w.agent(id).is_some(), "the landscape is rich");
                 // Every fifth tick it buries all but 2.5, below R / 2 = 3,
-                // so it goes hungry and digs (and survives two ticks
-                // without food, as eaten loot is).
+                // so it goes hungry and digs.
                 let q = if w.tick.is_multiple_of(5) {
                     w.agent(id).unwrap().holdings[0] - 2.5
                 } else if w.tick.is_multiple_of(2) {
@@ -658,14 +762,17 @@ mod tests {
                 } else {
                     0.0
                 };
+                let fed = w.agent(id).unwrap().fed;
                 bury(&mut w, id, q);
+                assert_eq!(w.agent(id).unwrap().fed, fed, "never buried");
+                fed_max = fed_max.max(fed);
             }
             let before: f64 = w.sites.iter().map(|s| s.resource[0]).sum();
             crate::rules::growback::apply(&mut w);
             grown += w.sites.iter().map(|s| s.resource[0]).sum::<f64>() - before;
             w.tick += 1;
-            left += w.events.cache_lost;
-            eaten += w.events.bury_cost + w.events.loot_eaten;
+            left += w.events.cache_lost + w.events.fed_lost;
+            eaten += w.events.bury_cost;
             pilfered += w.events.pilfered;
             pilfers += w.events.pilfers;
             dug += w.events.dug;
@@ -694,6 +801,7 @@ mod tests {
             pilfered > 0.0 && pilfers > 0 && dug > 0.0,
             "{pilfered} {dug}"
         );
+        assert_eq!(fed_max > 0.0, loot == Loot::Eat);
         // The log agrees: Σ pilfered records = Σ pilfered.
         let logged: f64 = w
             .cache_log

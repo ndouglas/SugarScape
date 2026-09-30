@@ -155,9 +155,14 @@ pub struct TickEvents {
     /// Minds 6: under `owner_memory: off`, owners who found (and dug) their
     /// own cache this tick. Counted in `digs` and `dug` too.
     pub owner_finds: u32,
-    /// Minds 6: of `pilfered`, the sugar eaten on the spot under
-    /// `theft.loot: eat` (counted as eaten, as `bury_cost` is).
+    /// Minds 6: of `pilfered`, the sugar eaten under `theft.loot: eat`,
+    /// counted as it goes into the thief's stomach (`Agent::fed`). A
+    /// transfer, not a ledger term: the stomach is a stock, and the
+    /// metabolism drawing on it is what's eaten.
     pub loot_eaten: f64,
+    /// Minds 6: sugar left in the stomachs (`Agent::fed`) of agents removed
+    /// this tick (it leaves the world with them, like `cache_lost`).
+    pub fed_lost: f64,
     /// Minds 5, central-place foraging: loads delivered home this tick (a
     /// delivery is a positive burial into the larder by an agent back from
     /// a trip).
@@ -689,6 +694,10 @@ impl World {
                     eat(amount.to_bits());
                 }
             }
+            // Minds 6: a stomach only when there's something in it.
+            if a.fed != 0.0 {
+                eat(a.fed.to_bits());
+            }
             if disease {
                 eat(u64::from(a.immune.len()));
                 eat(a.immune.bits());
@@ -732,6 +741,7 @@ impl World {
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
         }
+        self.events.fed_lost += agent.fed;
         crate::minds::caching::fates::close_lost(self, id, &agent.caches, &agent.cache_since);
         if self.cache_sites.is_some() {
             for &site in agent.caches.keys() {

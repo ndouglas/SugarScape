@@ -245,6 +245,12 @@ pub struct Agent {
     /// Minds 5: for each cache, the tick of the first unit buried there since
     /// the site's cache was last empty (for the age of what's dug).
     pub cache_since: BTreeMap<u32, u64>,
+    /// Minds 6: its stomach, loot eaten under `theft.loot: eat` and not yet
+    /// burned. Metabolism draws good 0 from it before holdings. It can't be
+    /// buried, dug or traded, counts toward neither the carrying limit nor
+    /// the caching reserve, isn't inherited, and what's left at death is
+    /// `events.fed_lost`. Hashed only when nonzero.
+    pub fed: f64,
     /// Minds 5, rule `compensate`: its known sites (those it has harvested
     /// from), site index → weight w (starting at 1, × (1 − λ) each time it
     /// finds food there), capped at `MEMORY_CAP`. Empty under every other
@@ -345,6 +351,7 @@ impl Agent {
             leaving: None,
             caches: BTreeMap::new(),
             cache_since: BTreeMap::new(),
+            fed: 0.0,
             weights: crate::minds::caching::rules::Weights::default(),
             episodes: None,
             last_winter: None,
