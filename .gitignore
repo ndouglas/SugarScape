@@ -32,3 +32,6 @@ __pycache__/
 
 # Local copies of source papers (see docs/papers.md); never committed
 papers/
+
+# Survey runs by prefix (--only …); the full run's results.json, table.md and triage.md are tracked
+survey/out/results-*.json
