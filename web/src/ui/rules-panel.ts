@@ -294,7 +294,17 @@ export class RulesPanel {
       case 'toggle': {
         const box = h('input', {
           type: 'checkbox',
-          onchange: () => this.commit((cfg) => setPath(cfg, c.path, box.checked), reset),
+          onchange: () =>
+            this.commit((cfg) => {
+              // As for a number control: adjust seeds a missing parent (central.enabled on an older config).
+              try {
+                setPath(cfg, c.path, box.checked);
+              } catch (err) {
+                if (!c.adjust) throw err;
+                c.adjust(cfg, structuredClone(cfg));
+                setPath(cfg, c.path, box.checked);
+              }
+            }, reset),
         });
         this.syncers.push(() => (box.checked = getPath(this.engine.sugar, c.path) === true));
         return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${c.label}`), this.errorSlot(c.path));

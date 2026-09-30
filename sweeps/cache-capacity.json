@@ -1,0 +1,22 @@
+{
+  "name": "Minds 5: survival through the first winter against the carrying limit",
+  "description": "The mean population over ticks 190–200 of the winter world (cache-winter-none's landscape, 175 agents, γ = 100, β = 32; the first winter ends at tick 200), against the carrying limit and the caching rule together: capacity 0, 20, 50, 80 or 120, crossed with rule none, even, compensate or plan. Capacity 0 is a valid point for every rule (the carrying limit is simply off: a caching rule still buries and digs by its reserve, none still never does); at capacity 0 rule none reproduces Minds 4's unlimited-holdings baseline. Seeds 1–20.",
+  "base": { "preset": "cache-winter-none" },
+  "x": {
+    "label": "Carrying limit",
+    "path": "caching.capacity",
+    "values": [0, 20, 50, 80, 120]
+  },
+  "series": {
+    "label": "Caching rule",
+    "values": [
+      { "at": 1, "name": "none", "set": { "caching.rule": "none" } },
+      { "at": 2, "name": "even", "set": { "caching.rule": "even" } },
+      { "at": 3, "name": "compensate", "set": { "caching.rule": "compensate" } },
+      { "at": 4, "name": "plan", "set": { "caching.rule": "plan" } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 200,
+  "metric": { "kind": "window_mean", "series": "population", "from": 190 }
+}

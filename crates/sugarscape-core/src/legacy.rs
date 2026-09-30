@@ -9,10 +9,10 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 
 use crate::config::{
-    default_groups, CombatRule, Config, CreditRule, CultureKind, CultureRule, Diffusion,
-    DiseaseRule, FieldError, Foresight, Good, Growback, Lifespan, Map, Placement, Pollutant,
-    Pollution, PriceRule, ScheduledChange, Seasons, SexRule, Toggle, TradeRule, Transform, URange,
-    SPICE_COLOR, SUGAR_COLOR,
+    default_groups, Caching, Central, CombatRule, Config, CreditRule, CultureKind, CultureRule,
+    Diffusion, DiseaseRule, FieldError, Foresight, Good, Growback, Lifespan, Map, Placement,
+    Pollutant, Pollution, PriceRule, ScheduledChange, Seasons, SexRule, Toggle, TradeRule,
+    Transform, URange, SPICE_COLOR, SUGAR_COLOR,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
@@ -214,6 +214,9 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         truffles: crate::config::Truffles::default(),
         goap: crate::config::Goap::default(),
         mvt: crate::config::Mvt::default(),
+        caching: Caching::default(),
+        central: Central { enabled: false },
+        lab: None,
         schedule,
     })
 }

@@ -65,7 +65,7 @@ pub fn normal_cdf(z: f64) -> f64 {
 }
 
 /// Lanczos approximation (g = 7, n = 9).
-fn ln_gamma(x: f64) -> f64 {
+pub fn ln_gamma(x: f64) -> f64 {
     const C: [f64; 9] = [
         0.999_999_999_999_809_9,
         676.520_368_121_885_1,

@@ -97,12 +97,17 @@ describe('the Minds menu', () => {
       { memory: { span: 100, share: 1, belief: 'recall' } },
       { walls: [{ x: 1, y: 1, width: 2, height: 2, opaque: true }] },
       { truffles: { share: 0.1, value: 10, regrow: 50, seed: 1 } },
+      { caching: { rule: 'plan', capacity: 0 } },
+      { caching: { rule: 'none', capacity: 20 } },
+      { central: { enabled: true } },
+      { seasons: { enabled: true, mode: 'global' } },
     ];
     expect(minds.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(minds.map(() => true));
     const book = [
       {},
       { decision: { rule: 'book' }, movement: { mode: 'jump', speed: 1 }, memory: { span: 0, share: 0, belief: 'recall' }, walls: [] },
       { truffles: { share: 0, value: 10, regrow: 50, seed: 1 } },
+      { caching: { rule: 'none', capacity: 0 }, central: { enabled: false }, seasons: { enabled: true, mode: 'hemispheres' } },
       { model: 'ring', movement: { mode: 'walk' } },
     ];
     expect(book.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(book.map(() => false));
@@ -133,10 +138,11 @@ describe('the Minds menu', () => {
       p('ifd-even', 'Fretwell & Lucas 1969; Minds 1', { decision: { rule: 'book' } }),
       p('walk-capacity', 'Epstein & Axtell II-2; Minds 2', { movement: { mode: 'walk', speed: 1 } }),
       p('ifd-fence', 'Baum & Kraft 1998; Minds 2', { decision: { rule: 'utility' }, walls: [{ x: 0, y: 0, width: 1, height: 1, opaque: false }] }),
+      p('cache-raby', 'Raby et al. 2007; Minds 5', { caching: { rule: 'plan', capacity: 0 } }),
     ];
     expect(presetGroups(presets).map((g) => [g.model, g.label, g.presets.map((x) => x.id)])).toEqual([
       ['sugarscape', 'Sugarscape', ['ii-2']],
-      ['minds', 'Minds', ['goap-open', 'ifd-even', 'walk-capacity', 'ifd-fence']],
+      ['minds', 'Minds', ['goap-open', 'ifd-even', 'walk-capacity', 'ifd-fence', 'cache-raby']],
       ['ring', 'Ring World', ['ring-1']],
     ]);
     expect(presetSubgroups('sugarscape', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([['Chapter II', ['ii-2']]]);
@@ -144,6 +150,7 @@ describe('the Minds menu', () => {
       ['Minds 1: the utility mind', ['ifd-even']],
       ['Minds 2: walking', ['walk-capacity', 'ifd-fence']],
       ['Minds 4: planning', ['goap-open']],
+      ['Minds 5: caching', ['cache-raby']],
     ]);
   });
 });

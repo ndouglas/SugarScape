@@ -1,0 +1,19 @@
+{
+  "name": "Minds 5: mean load against the patch's mean distance",
+  "description": "The cumulative mean load delivered home since tick 0 (mean_load: Σdelivered ÷ Σdeliveries; window_mean, ticks 900–1000, near the run's end) on central-near's world (5 agents, marginal-value rule, carrying limit 320) against the patches' distance from home: 4, 8, 12, 16, 20 or 24 columns, set through the home block's column (placement.x = 45 minus the distance; central-near itself is distance 8, central-far distance 20). Distance is a placement property, not a config scalar, so the x axis sets placement.x directly rather than a distance field. Seeds 1–20.",
+  "base": { "preset": "central-near" },
+  "x": {
+    "label": "Patch distance (columns)",
+    "values": [
+      { "at": 4, "set": { "placement.x": 41 } },
+      { "at": 8, "set": { "placement.x": 37 } },
+      { "at": 12, "set": { "placement.x": 33 } },
+      { "at": 16, "set": { "placement.x": 29 } },
+      { "at": 20, "set": { "placement.x": 25 } },
+      { "at": 24, "set": { "placement.x": 21 } }
+    ]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 1000,
+  "metric": { "kind": "window_mean", "series": "mean_load", "from": 900 }
+}

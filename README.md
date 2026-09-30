@@ -161,9 +161,10 @@ preset's source (the book's figure or animation, or the paper) and its rules sit
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. **Minds** runs on the sugarscape model but is its own entry: it holds the Minds experiments'
-presets (grouped Minds 1–4), and its Rules panel adds the Decision, Movement, Memory and Truffles
-sections, which the book's Sugarscape entry leaves out. A world counts as Minds if it came from a Minds
-preset or uses any Minds rule (a decision other than rule M, walking, memory, walls or truffles), so
+presets (grouped Minds 1–5), and its Rules panel adds the Decision, Movement, Memory, Truffles and
+Caching sections, which the book's Sugarscape entry leaves out. A world counts as Minds if it came from a Minds
+preset or uses any Minds rule (a decision other than rule M, walking, memory, walls, truffles,
+caching, a carrying limit, central-place foraging or a winter everywhere at once), so
 a Minds share link opens under Minds. A config without a `model` key is a sugarscape config, so every older config, link, session
 file and sweep reads as before. The other models' Rules panels are built from their parameter
 schemas (each section says whether its fields rebuild the world or apply as it runs, and live
@@ -2054,6 +2055,290 @@ Revisited," *Artificial Intelligence* 125 (2001); E. L. Charnov, "Optimal Foragi
 Value Theorem," *Theoretical Population Biology* 9(2) (1976); S. M. Constantino and N. D. Daw,
 "Learning the Opportunity Cost of Time in a Patch-Foraging Task," *Cognitive, Affective, &
 Behavioral Neuroscience* 15(4) (2015). See `docs/superpowers/specs/2026-09-28-minds-4-goap-design.md`.
+
+### Minds 5: caching for the future
+
+This is our own experiment, not a reproduction: the fifth step of the Minds program
+(`docs/studies/2026-09-27-minds.md`). Two laboratory studies of jays read caching differently. Raby
+et al. (2007) found scrub-jays caching more where they had gone without breakfast, and read it as
+planning for a future need. Amodio et al. (2021) tested that planning hypothesis against a
+compensatory one, and their Eurasian jays' caches were best fit by neither: the model in which
+caching doesn't depend on the compartment won. Minds 5 gives agents a carrying limit, caches they
+bury and dig, and a winter everywhere at once. It builds three caching rules, each the mechanism one
+hypothesis names, runs each through both labs' protocols, and asks whether each rule leaves its
+predicted signature and which signature the birds' data resemble. Then it puts the same rules in a
+winter field. The same mechanics make central-place foraging possible, so Minds 5 tests that too.
+Pilfering, being watched and re-caching (anything that needs one agent to perceive another's
+caches) are left for a future campaign.
+
+**What was built.**
+
+- **A carrying limit** (`caching.capacity`, 0 = none, the default). An agent never holds more sugar
+  than the limit; harvest beyond it stays on the site. Caching needs exactly one good and walking
+  (a cache out of sight is memory, and Minds memory already walks), and it can't run with combat.
+- **Caches.** Each agent owns its caches (site → amount). Nobody else sees or takes them, they don't
+  decay, and they die with it (counted as lost). Burying where it stands costs no tick.
+- **Digging is foraging, with hysteresis.** When an agent holds less than half its reserve R
+  (R = metabolism × `goap.horizon`), its caches join its candidate sites, valued at their amounts,
+  under any decision rule, and arriving at one digs it. Burying stops at R, so the band between R/2
+  and R keeps an agent from digging back what it just buried. With the threshold at R, `plan` buried
+  44 842 and dug back 41 986 in one seed's first summer; with R/2, it buried 14 579 and dug 58. A
+  central-place world keeps the threshold at R, one tick's need there, because an agent between R/2
+  and R that didn't dig would starve. Dug sugar isn't a new harvest: it makes no pollution, earns
+  no credit income and doesn't feed a marginal-value agent's ρ. Sites, holdings, caches and what was
+  eaten are conserved across bury and dig (tested over 300 ticks).
+- **Three caching rules** (`caching.rule`; `none` is the default):
+  - `even` (Amodio et al.'s compartment-independent model) buries a share (`caching.share`, 0.5) of
+    its surplus above R where it stands, every tick it has any.
+  - `compensate` (their compensatory mechanism) keeps a weight for each site it has harvested,
+    starting at 1 and multiplied by 1 − λ (`caching.lambda`, 0.5) each time it finds food there. It
+    buries share × surplus × w ÷ w̄, where w̄ is the mean weight of the sites it knows, capped at the
+    surplus.
+  - `plan` (the Future Planning Hypothesis) keeps a what-where-when memory of its days (where it
+    was, and whether it found food). A **cycle finder** takes the smallest period each sequence
+    repeats with and extrapolates it; with no period, it predicts nothing, and the agent buries
+    nothing. In the lab it provisions for the next `caching.lookahead` days (1 is FPH 1, 3 is
+    FPH 2), splitting its food over the places it predicts will lack food. In the field (global
+    seasons only) it knows the calendar and buries through the summer toward its forecast
+    shortfall: a winter's need, less the intake from sites it recorded last winter, less what it
+    has cached. It buries at sites it foraged last winter, and before its first winter it forecasts
+    no winter intake.
+  - `caching.mixed` deals the four rules round-robin by id. A child takes the rule of the parent
+    whose turn it is.
+- **Global winter** (`seasons.mode: global`): every site grows back at 1/β of its rate at once. The
+  book's hemispheres stay the default, and global winter with β = 1 equals seasons off (tested).
+- **The lab as a world mode** (`lab`, reset-only; the spec had planned a harness outside the world).
+  The rig is 13 × 8: three compartments, K1–K3, whose doorways open onto a hall. The world applies
+  the schedule itself (walls, each morning's food, which compartment the agents are shut in), so
+  tests, survey and presets share one code path. A day is 4 ticks: a morning shut in one
+  compartment, with or without food, then an evening in the hall. On the test evening the doorways
+  open (only K1's and K3's for Raby, whose trays were in two compartments). Each agent in turn is
+  given 30 sugar and walks out alone to cache all of it, in whole units, with remainders in K
+  order. The schedule draws nothing. A population's λ is drawn per agent in [0.3, 0.7), through the
+  world's existing draws.
+- **Central-place provisioning** (`central.enabled`, under the marginal-value rule). Each agent has
+  a home and a larder there. Its ρ is its delivery rate: ρ ← ρ + α(delivered this tick − ρ), with
+  α = `mvt.alpha` (0.05), so walking and harvesting ticks count 0. At home it buries the trip's load
+  in the larder and leaves for the best site it knows (ties go to the nearer). It keeps enough in
+  hand for the walk out and back (metabolism × (2D + 2), dug from the larder if short). In a patch it
+  harvests while the best site within a step yields at least ρ, its load has room under the limit,
+  and it has food for the walk home. Then it walks home. The limit caps a trip's load, not load plus
+  provisions.
+
+**The labs** (the survey, 20 seeds; claims and thresholds set before running).
+
+- **Oracles first.** Every rule's test-evening caches match a hand derivation in both protocols and
+  both of Amodio's groups. These are tests, not claims.
+  - **Raby:** `even` 15/15. `compensate` 27/3, or 26/4 in the other counterbalancing (the K-order
+    remainder). `plan` looking one day ahead puts all 30 in the no-breakfast compartment, or caches
+    nothing when breakfast came first.
+  - **Amodio,** Food-First and Empty-First (K1/K2/K3): `even` 10/10/10 in both. `compensate`
+    8/15/7 and 12/6/12. `plan` looking one day ahead 30/0/0, and nothing. `plan` looking three
+    days ahead 15/0/15 and 0/30/0.
+- **FPH 2 and the Figure 6 caption.** For Food-First planners looking three days ahead, the next
+  days are K1 without food (day 10), K2 with food (11) and K3 without (12), so our planners cache in
+  K1 and K3. The paper's Figure 6 caption says "K1 and K2". But its Methods constrain FPH 2 for the
+  Food-First group as r_K2 ≤ r_K1 and r_K2 ≤ r_K3, which is K1 and K3. So the caption slips, the
+  comparison the paper ran tested the right pattern, and ours matches it.
+- **Provisioning for tomorrow caches nothing when tomorrow has food.** A planner looking one day
+  ahead caches nothing in Amodio's Empty-First group or in Raby's breakfast-first order. The paper's
+  FPH 1 means "the next day without food", while ours is literally tomorrow. We state this rather
+  than patch it.
+- **Raby: `compensate` Holds, `plan` is Weak, and `even` Fails, as it should.**
+  - Compensating agents cache 26.4 ± 0.1 in the compartment without breakfast against 3.6 ± 0.1
+    in the other (mean ± s.e.m., both orders, 320 agents), every one of them more where breakfast
+    was missing. Raby et al.'s birds cached 16.3 ± 1.8 against 5.4 ± 1.8.
+  - Planners cache all 30 there in one order and nothing in the other. So only 160 of 320 cache
+    more where breakfast was missing, and the claim is Weak: breakfast-first planners cache
+    nothing.
+  - Even splitters cache 15 in each. That's the rule's predicted tie, the expected control, not a
+    failure of the rule.
+  - Individual differences come only from `compensate`'s λ. Even and plan populations have none.
+- **Amodio: all four Hold.** Each rule leaves its predicted pattern in 20 of 20 seeds, in both
+  groups. Compensating agents cache a mean 7.9/15.2/6.9 (Food-First) and 12.5/6.1/11.5
+  (Empty-First).
+- **The paper's Bayesian comparison, reproduced.** We wrote it from the Experiment 2 Methods: nine
+  models, multinomial counts, flat Dirichlet priors truncated to each hypothesis's constraint
+  region, rates integrated out, and a uniform prior over models. The text leaves one reading open,
+  and we share a bird-independent model's rates within each group. With that reading, the paper's
+  own Table 2 gives the compartment-independent model 0.719, CCH 0.160, FPH 1 0.0023 and FPH 2
+  0.0018. Those are the published 0.72, 0.16 and 0.002, and a unit test checks them. On our agents
+  it picks each rule's own hypothesis:
+  - the compartment-independent model at 0.999 for even splitters;
+  - CCH at 0.90 for compensating agents (at the paper's size, three agents a group, CCH wins in 15
+    of 20 seeds and the compartment-independent model in the other 5);
+  - FPH 1 at 0.55 and FPH 2 at 0.62 for planners.
+- **The planners' 0.55 and 0.62 are ceilings, not weak evidence.** Every planner caches alike, so
+  the comparison treats them as one bird, and more agents don't raise the figures. The hypotheses
+  also share the evidence. FPH 2's constraint also fits caching only in K1, FPH 1's fits 15/0/15 at
+  half weight, and the two agree on the Empty-First group.
+- **The jays' pattern looks like the even splitters'.** Amodio et al.'s 0.72 for the
+  compartment-independent model is the signature our even-share rule leaves, not the planners' or
+  the compensators'. That's a resemblance, not a test of what the jays do.
+
+**The winter world, balanced as measured.** The spec asked for a world where (a) an agent's summer
+surplus is at least 1.5 times its winter need, and (b) winter regrowth is under half the
+population's winter need, with the settings adjusted mechanically. walk-capacity's own agents
+(metabolism 1–4) can't meet (a) at any population, β or γ tried (0.38–0.98), because a walker
+harvests at most about 3.5 a tick. The ruled world is walk-capacity's landscape with 175 agents of
+metabolism 1 (half remembering for 100 ticks), rule M walking, γ = 100 and β = 32. There (a) is
+151.0 against 100 (1.51) and (b) is 6 466 against 16 580 (0.39), both measured with no caching and
+no carrying limit. Three more rulings came from measuring:
+
+- **A carrying limit of 50,** half a winter's need. Without a limit, holdings are an unlimited cache
+  and caching is moot.
+- **An empirical balance test.** (b) counts only regrowth, but every site starts winter full, and
+  that standing sugar feeds many: without a limit, 88 % of agents who don't cache survived the first
+  winter. So the test became: over 5 seeds, `none`'s first-winter survival must be at least 20
+  points below `even`'s.
+- **A horizon of 20** (R = 20, digging below 10) for every rule. At the default 10, `even` did worse
+  than `none` (45.2 % against 48.5 %): a hungry agent under rule M heads for its biggest cache,
+  goes hungry only below 5, and starves on the way. At 20 the 5-seed probe gave `none` 48.5 %,
+  `even` 74.9 %, `compensate` 73.8 % and `plan` 88.2 %. `none` doesn't use the horizon, and neither
+  (a) nor (b) depends on it.
+
+**The winter** (the survey, 20 seeds; first-winter survival is alive at tick 200 ÷ alive at 100):
+
+- **Caching gets agents through winter (all Hold, 20 of 20 seeds each).** First-winter survival is
+  49 % with no caching, 74 % with an even share, 74 % compensating and 88 % planning. After five
+  winters (alive at 1000 ÷ alive at 100) it's 49 %, 57 %, 55 % and 70 %. Planning beats both other
+  rules after one winter and after five, in 20 of 20 seeds. Per founding agent (the dead counted),
+  alive at ticks 200 and 1000:
+  - none: 47 % and 46 %;
+  - even: 70 % and 54 %;
+  - compensate: 70 % and 53 %;
+  - plan: 84 % and 67 %.
+- **Much of what's buried is not dug by tick 1000** (the end of the fifth winter, a snapshot at the
+  run's end):
+
+  | World | Not dug by tick 1000 | Lost with the dead | Still buried |
+  |---|---|---|---|
+  | even | 74.7 % | 15.8 % | 58.9 % |
+  | compensate | 75.0 % | 18.3 % | 56.7 % |
+  | plan | 55.6 % | 11.5 % | 44.1 % |
+  | mixed | 75.6 % | 13.9 % | 61.6 % |
+
+  Planners bury a sixth as much as even splitters. The mean age of a cache when it's dug is 212–312
+  ticks.
+- **Rule M heads for the biggest cache.** Take the choices where no biggest cache is also a nearest
+  one. There, a hungry agent choosing a cache takes its biggest 70 % of the time (even), 70 %
+  (compensate) and 76 % (plan). That cache is a mean 6.5, 6.6 and 5.0 steps away, when the nearest
+  is 1.4, 1.4 and 2.1. Of the agents who die holding caches, 89 %, 91 % and 94 % die heading for
+  one. At their last choice of a cache, 41.5 %, 44.3 % and 40.7 % chose one beyond the reach of
+  their food while a nearer one was within it. This is likely one cause of the deaths, not isolated.
+- **The expected planner mechanism isn't seen.** We expected planners who lived through a winter on
+  their caches to forecast little winter intake, and to re-bury a full winter's need each summer.
+  They don't. Survivors forecast a mean 54 of winter intake from sites (0 of 2 932 forecast under
+  10). They bury a median 5.4 each in the second summer against 82 in the first. Likely cause: the
+  sugar standing when winter starts counts as intake from sites. The forecast is measured on
+  survivors only.
+- **The mixed world** (a quarter on each rule). Planners are 25 % of the founders but 32 % of the
+  survivors at tick 200 (31 % at 1000); agents who don't cache are 18 % (19 %). Of each rule's
+  founders, alive at ticks 200 and 1000:
+  - plan: 84 % and 70 %;
+  - compensate: 68 % and 52 %;
+  - even: 65 % and 56 %;
+  - none: 47 % and 41 %.
+
+  Each rule fares about as it does in a world of its own, likely because nobody sees or takes
+  another's caches.
+
+**Central place** (the survey, 20 seeds). The world is a 60 × 30 torus with a column of five patches
+(peaks of radius 3 and height 4) growing back 0.25 a tick. Five agents of metabolism 1, endowment
+60 and vision 1–6 know the map and carry loads of at most 320. Their homes are 8 columns west
+(`central-near`) or 20 (`central-far`), and `central-linear` is near with instant growback. The
+limit was raised from 80 to 320 until ρ or an empty site, not a full load, ended at least half the
+trips at both distances. Nothing else was tuned.
+
+- **Loads rise with distance (Holds, 20 of 20 seeds).** The mean load per trip is 68, 84, 100, 107,
+  108 and 110 with the patches 4, 8, 12, 16, 20 and 24 columns from home. Near, a trip gathers a
+  mean 128 and brings 84 home; far, it gathers 176 and brings 108. Every agent lives.
+- **The analytic result, and a cancellation.** The test patch is a staircase of ten sites around
+  home, yielding 15, 12, 10, 8, 6, 5, 4, 3, 2 and 1 in harvest order. There the tangent
+  construction gives optimal loads of 51, 60 and 65 at distances 2, 5 and 10, and the learned rule
+  takes 49, 60 and 65. But that match is a cancellation, not the theorem at work.
+  - A staircase site's cost depends on its parity: a step out costs 2 ticks, a step back 0 net. The
+    rule's per-tick comparison with ρ can't see that.
+  - With ρ fixed at the true optimal rate, the rule takes 45, 60 and 63.
+  - The learned ρ is a pulse average. By the decision to leave it has decayed below the optimal
+    rate (5.73, 3.21 and 1.78 against 6.375, 3.75 and 2.32), and at distances 5 and 10 that
+    underestimate cancels the parity error.
+  - The distance effect exists only at small α. At α 0.2 the load is 65–66 at every distance.
+- **Lima's prediction fails as pre-registered.** Lima's point (Stephens and Krebs): the leaving rule
+  depends on the habitat's long-run rate, so a forager alternating between a near and a far patch
+  with the same loading curve should take the same load from both. The judge, set before running:
+  |near − far| within 10 % of the seed's mean load in at least 80 % of seeds, with each trip
+  assigned to the patch that gave over half its load. Far trips bring home 120 and near ones 54,
+  and 0 of 20 seeds are within. The verdict stands.
+- **But the habitat confounded it.** The near patch lay on the way to the far one, and agents
+  harvest where they step: 202 trips headed for the far patch took over half their load from the
+  near one. Follow-up rows (reported, not judged; delivered per trip, pooled over seeds, trips sorted
+  by where the agent was headed):
+
+  | Row | Habitat | Near | Far | Seeds within 10 % | Alive at 1000 |
+  |---|---|---|---|---|---|
+  | 1 (pre-registered) | far patch beyond the near one | 71 | 75 | 5 of 20 | 97 of 100 |
+  | 2 | far patch on the other side of home; no trip crosses the other | 73 | 83 | 8 of 20 | 99 of 100 |
+  | 3 | row 1, ρ held at each seed's long-run rate (median 0.61) | 85 | 82 | 4 of 20 | 88 of 100 |
+  | 4 | row 2, ρ held the same way | 74 | 100 | 1 of 20 | 80 of 100 |
+
+  - Without the crossing, far loads are 14 % larger, and with ρ fixed as well, 35 % larger. So ρ's
+    decay over the walk isn't needed for the gap.
+  - In rows 2 and 4 the far patch holds more sugar when an agent arrives (37.7 and 37.5 against
+    34.5 and 33.6). An agent heads far only when a far site is strictly richer than every near one
+    (ties go to the nearer). That selection is the likely cause, not isolated. In row 4 a 12 %
+    difference in standing sugar explains a 35 % gap in loads only in part.
+  - Holding ρ fixed also costs lives (88 and 80 of 100).
+  - In no arrangement are near and far within 10 % of each other in most seeds.
+- **So the distance effect likely Holds for reasons the theory doesn't use.** ρ on arrival is lower
+  after a longer walk (a median 2.4 near and 0.73 far). Far out, the carrying limit sets the loads:
+  53 % of far trips end full, and the limit ends 75 % of the pre-registered habitat's majority-far
+  trips. Both are likely contributors, neither isolated.
+- **Linear loading and the pulse.** With instant growback a load grows with the time spent
+  gathering it. A delivery lifts ρ by about α × the load (5.9 here), above the most any site yields
+  (4), so the next trip turns back almost at once. 54 % of trips end almost at once: 36 % on the
+  first tick deciding in the patch, and 17 % before deciding there, likely because the target was
+  taken on the way. The other 46 % fill to the limit. The theorem predicts no effect of distance
+  under linear loading, yet loads grow with it (121 near, 151 at 20 columns), as with Kacelnik and
+  Cuthill's starlings. The likely cause is ρ decaying over the longer walk.
+- **GOAP's "deliver G"** (G = 10; reported, not judged). It delivers about G at any distance
+  (17.8 near, 10.3 far, 19.1 linear), and 28, 0 and 52 of 100 agents are alive at tick 1000. It has
+  no reason to carry more, and it starves far from home.
+
+**The sweeps** (built in; observations, not judged). `central-distance` is the load-on-distance
+series above. `cache-capacity` (population at the end of the first winter against the carrying
+limit, per rule) and `cache-winter` (population against the season length under `plan`) had only a 3-seed
+check. In it, every rule came out about the same at a limit of 20, the reserve, where the surplus
+above R is near zero. Population fell as γ grew, in a fixed window that reads several winters at
+small γ. Neither has been run at 20 seeds.
+
+**Cost** (µs per agent-tick, CPU time, measured as in Minds 2–4). The full table, with Minds 4's
+presets re-timed and the machine's load, is in the program document. No caching costs 2.94. An
+even share costs 10.5 and compensating 10.4, likely because those agents hold many caches and each
+hungry tick adds all of them to the candidates. Planning costs 5.90 and the mixed world 6.88. The
+central-place worlds cost 15.8–19.2 (5 agents on 1 800 sites, which inflates the figure). The labs
+cost under 1, mostly process start and idle ticks.
+
+Switches: the Rules panel's **Caching (Minds 5)** group has **Caching rule**, **Mix the rules**,
+**Carrying limit**, **Seasons** (north and south take turns, or winter everywhere at once) and
+**Central-place foraging**, all on reset, and live **Share**, **λ** and **Days looked ahead**. The
+Seasons group's β now reaches 32. Inspect shows an agent's caching rule, what it carries against the
+limit, its caches (count and total) and a planner's forecast shortfall. In a central-place world it
+also shows the larder at home on its own row, the home, and the last load. The map draws the
+inspected agent's caches as diamonds and its home as an outlined square. Charts: **Caching**
+(cached, buried, dug) and **Recovery** when caching is on; **Loads** and **Trips** in central-place
+worlds. Presets: `cache-winter-none`, `cache-winter-even`, `cache-winter-compensate`,
+`cache-winter-plan`, `cache-winter-mixed`, `central-near`, `central-far`, `central-linear`,
+`cache-raby` and `cache-amodio` (the labs, whose roster is fixed, with the four rules
+dealt round-robin). Built-in sweeps: `cache-capacity`, `cache-winter`, `central-distance`.
+
+Credit: N. J. Raby, D. M. Alexis, A. Dickinson and N. S. Clayton, "Planning for the future by
+western scrub-jays," *Nature* 445 (2007), 919–921; P. Amodio, J. Brea, B. G. Farrar, L. Ostojić and
+N. S. Clayton, "Testing two competing hypotheses for Eurasian jays' caching for the future,"
+*Scientific Reports* 11 (2021), 835; D. W. Stephens and J. R. Krebs, *Foraging Theory* (1986),
+§3.5 (central-place foraging, after Orians and Pearson, 1979; Lima's point on individual trips)
+and §9.4–9.5 (Kacelnik and Houston, 1984; Kacelnik and Cuthill, 1986). See
+`docs/superpowers/specs/2026-09-29-minds-5-caching-design.md`.
 
 ### Threshold Models (Granovetter 1978; Watts 2002)
 
