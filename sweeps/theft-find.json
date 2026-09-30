@@ -1,0 +1,13 @@
+{
+  "name": "Minds 6: pilferage against the chance of finding a cache",
+  "description": "The share of caches pilfered per tick (pilferage_rate: caches pilfered ÷ caches at the tick's start; window_mean, ticks 100–200, the first winter) in theft-winter's world (hoarders only, cache-winter-even's winter, γ = 100, β = 32) against the chance a stranger arriving on a site finds each foreign cache there (theft.find): 0.01, 0.02, 0.05, 0.1, 0.25, 0.5 or 1 (0 is left out: with no finds and no cheaters theft is off and the series does not exist; its rate is 0 by construction). The sweep format takes one metric, so it reports the pilferage rate; whether the hoarders survive at each find comes from the survey (population at 190–200), not from this sweep. Seeds 1–20.",
+  "base": { "preset": "theft-winter" },
+  "x": {
+    "label": "Chance to find a cache",
+    "path": "theft.find",
+    "values": [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 200,
+  "metric": { "kind": "window_mean", "series": "pilferage_rate", "from": 100, "to": 200 }
+}

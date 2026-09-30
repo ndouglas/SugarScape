@@ -1,0 +1,13 @@
+{
+  "name": "Minds 6: hoarders alive against the winter's severity",
+  "description": "The number of hoarders alive at the end of the first winter (hoarder_alive; window_mean, ticks 190–200) in theft-winter-half's world (half the agents cheat; each cache found with chance 0.25; γ = 100) against the winter's severity β (seasons.winter_divisor): 2, 4, 8, 16 or 32, the divisor the summer's growth back-rate is cut by in winter. The sweep format takes one metric and no ratio, so it reports the hoarders' head count; the cheater advantage (per-capita hoarder and cheater survival) comes from the survey. Seeds 1–20.",
+  "base": { "preset": "theft-winter-half" },
+  "x": {
+    "label": "Winter severity β",
+    "path": "seasons.winter_divisor",
+    "values": [2, 4, 8, 16, 32]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 200,
+  "metric": { "kind": "window_mean", "series": "hoarder_alive", "from": 190, "to": 200 }
+}

@@ -417,7 +417,10 @@ fn builtins_and_series_names_are_listed() {
             "bali-links",
             "cache-capacity",
             "cache-winter",
-            "central-distance"
+            "central-distance",
+            "theft-find",
+            "theft-cheaters",
+            "theft-winter"
         ]
     );
     assert!(list[0]["sweep"]["name"]
