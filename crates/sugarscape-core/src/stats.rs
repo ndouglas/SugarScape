@@ -130,29 +130,35 @@ pub fn series_names(config: &Config) -> Vec<String> {
         }
     }
     if config.theft.is_on() {
-        for s in [
-            "pilfered",
-            "pilferage_rate",
-            "fate_dug",
-            "fate_pilfered",
-            "fate_lost",
-            "fate_buried",
-        ] {
+        for s in THEFT_SERIES {
             names.push(s.into());
         }
     }
     if config.theft.cheaters > 0.0 {
-        for s in [
-            "hoarder_holdings",
-            "cheater_holdings",
-            "hoarder_alive",
-            "cheater_alive",
-        ] {
+        for s in CHEATER_SERIES {
             names.push(s.into());
         }
     }
     names
 }
+
+/// Minds 6's theft series, named while `theft.is_on()`.
+const THEFT_SERIES: [&str; 6] = [
+    "pilfered",
+    "pilferage_rate",
+    "fate_dug",
+    "fate_pilfered",
+    "fate_lost",
+    "fate_buried",
+];
+
+/// Minds 6's hoarder/cheater series, named while `theft.cheaters > 0`.
+const CHEATER_SERIES: [&str; 4] = [
+    "hoarder_holdings",
+    "cheater_holdings",
+    "hoarder_alive",
+    "cheater_alive",
+];
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct Snapshot {
@@ -867,6 +873,13 @@ impl Snapshot {
                         "cheater_alive" => return Some(f64::from(c.cheater_alive)),
                         _ => {}
                     }
+                }
+                // `theft.find` is live, so theft can come on mid-run and the
+                // names reach back past snapshots that lack the group: NaN
+                // there (a gap in a chart, a cell in a CSV), not an unknown
+                // series. The cheater names are covered the same way.
+                if THEFT_SERIES.contains(&name) || CHEATER_SERIES.contains(&name) {
+                    return Some(f64::NAN);
                 }
                 return None;
             }
@@ -2230,7 +2243,12 @@ mod tests {
         w.config.caching.rule = CachingRule::Even;
         let s = Snapshot::of(&w);
         assert!(s.theft.is_none() && s.cheaters.is_none());
-        assert!(s.value("pilfered").is_none());
+        // Known names all the same, NaN where the group is absent: a snapshot
+        // from before theft came on mid-run.
+        for n in THEFT_SERIES.iter().chain(&CHEATER_SERIES) {
+            assert!(s.value(n).unwrap().is_nan(), "{n}");
+        }
+        assert!(s.value("pilfered_nonsense").is_none());
 
         let mut c = Config::default();
         c.caching.rule = CachingRule::Even;
@@ -2251,6 +2269,39 @@ mod tests {
         let s = Snapshot::of(&w);
         for n in series_names(&w.config) {
             assert!(s.value(&n).is_some(), "{n}");
+        }
+    }
+
+    #[test]
+    fn theft_switched_on_and_off_mid_run_exports_every_tick() {
+        // `theft.find` is live: on at tick 5, off at tick 20. The snapshots
+        // outside that window have no theft group, and the export and the
+        // series must cover them (NaN), not panic or drop the history.
+        let c = crate::presets::by_id("cache-winter-even").unwrap().config;
+        assert!(!c.theft.is_on());
+        let mut w = World::new(c, 3).unwrap();
+        for t in 1..=30 {
+            if t == 5 {
+                w.config.theft.find = 0.25;
+            }
+            if t == 20 {
+                w.config.theft.find = 0.0;
+            }
+            w.step();
+        }
+        let csv = crate::export::series_csv(&w);
+        assert_eq!(csv.lines().count(), 1 + 31, "a header and ticks 0–30");
+        w.config.theft.find = 0.25; // name the theft series again
+        let csv = crate::export::series_csv(&w);
+        assert!(csv.lines().next().unwrap().contains(",pilfered,"));
+        assert_eq!(csv.lines().count(), 1 + 31);
+        for name in THEFT_SERIES {
+            let v = w.stats.series(name).expect(name);
+            assert_eq!(v.len(), 31, "{name}: every tick");
+            let theft_on = |t: usize| (5..20).contains(&t);
+            for (t, x) in v.iter().enumerate() {
+                assert_eq!(x.is_nan(), !theft_on(t), "{name} at tick {t}: {x}");
+            }
         }
     }
 
