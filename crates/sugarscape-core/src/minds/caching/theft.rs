@@ -11,7 +11,9 @@
 //!   agent's cache there, and under `owner_memory: off` its own as well.
 //!   Every such cache gets its draw, whatever the earlier ones gave, so the
 //!   number of draws depends only on the caches present. The first success
-//!   is the one taken; at most one cache is taken a tick.
+//!   is the one taken; at most one cache is taken a tick. At f = 1,
+//!   `gen_bool(1.0)` returns true without consuming the rng, so nothing is
+//!   drawn; the run stays deterministic, it just advances the rng less.
 //! - **A pilfer.** Under `loot: keep` the thief takes min(cache, room
 //!   under the carrying limit) (the whole cache with no limit); under
 //!   `eat` it takes the whole cache, whatever its room. The rest stays the
@@ -123,23 +125,20 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
         return None;
     }
     ensure_index(world);
-    let owners: Vec<AgentId> = world
-        .cache_sites
-        .as_ref()
-        .and_then(|x| x.get(&site))?
-        .iter()
-        .copied()
-        .filter(|&o| o != id || !theft.owner_memory)
-        .collect();
-    let foreign = owners.iter().filter(|&&o| o != id).count();
-    world.events.pilfer_draws += u32::try_from(foreign).unwrap_or(u32::MAX);
-    let mut found = None;
-    for &o in &owners {
+    // The index and the rng are disjoint fields, so the owners are read in
+    // place (no per-arrival Vec).
+    let owners = world.cache_sites.as_ref().and_then(|x| x.get(&site))?;
+    let (mut foreign, mut found) = (0u32, None);
+    for &o in owners.iter().filter(|&&o| o != id || !theft.owner_memory) {
+        if o != id {
+            foreign = foreign.saturating_add(1);
+        }
         let hit = world.rng.gen_bool(theft.find);
         if hit && found.is_none() {
             found = Some(o);
         }
     }
+    world.events.pilfer_draws += foreign;
     let owner = found?;
     let mut harvest = Harvest::default();
     if owner == id {

@@ -91,7 +91,10 @@ pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
 /// buried. With bury cost c (`caching.bury_cost`, field worlds only), q × c more leaves
 /// holdings, counted as eaten in `events.bury_cost`; q is clamped to
 /// [0, holdings / (1 + c)], so holdings never go negative (the cost is
-/// capped at what's left, against rounding). Adds to `events.buried` and
+/// capped at what's left, against rounding). The burial rules size q
+/// ignoring the cost, so an agent that meant to keep R ends at R − q·c;
+/// no summer churn (digging back what the cost ate) was measured at c ≤ 1.
+/// Adds to `events.buried` and
 /// (under theft) opens a fate record; a cache begun on an empty site starts
 /// its age now.
 pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {

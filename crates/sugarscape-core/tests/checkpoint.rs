@@ -24,6 +24,7 @@ const IDS: &[&str] = &[
     "mem-truffles",
     "cache-raby",
     "central-near",
+    "theft-winter-half",
 ];
 
 fn world(id: &str) -> ModelWorld {
