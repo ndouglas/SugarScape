@@ -57,14 +57,15 @@ const someRemember = (c: Config): boolean => (c.memory?.span ?? 0) > 0 && (c.mem
  * A sugarscape's own color mode for `config`: what actually tells its agents apart. In order:
  * Strategy where some are cheaters; Caching rule under mixed rules; Memory where only some agents
  * remember (the `cache-winter-*` worlds under one rule, theft without cheaters); Caching rule where
- * caching is on under one rule (one color); else Tribe (whose groups are random in the Minds
+ * one burying rule is on (one color; a carrying limit alone, as in the central worlds, doesn't count); else Tribe (whose groups are random in the Minds
  * worlds). Loading a preset picks it; `clampDisplay` falls back to it.
  */
 export function defaultColorMode(config: Config): ColorMode {
   if (hasCheaters(config)) return 'strategy';
   if (config.caching?.mixed === true) return 'caching_rule';
   if (someRemember(config)) return 'memory';
-  if (cachingOn(config)) return 'caching_rule';
+  // A carrying limit alone (central-place worlds) makes no rule to show; only a burying rule does.
+  if (cachingOn(config) && (config.caching?.rule ?? 'none') !== 'none') return 'caching_rule';
   return 'tribe';
 }
 

@@ -119,6 +119,9 @@ describe('the Minds color modes and the caches overlay', () => {
     expect(defaultColorMode(mixed)).toBe('caching_rule');
     expect(defaultColorMode(halfRemember)).toBe('memory');
     expect(defaultColorMode(theftNoCheaters)).toBe('memory');
+    // A carrying limit alone (central-place worlds, rule none) has no rule to show.
+    const limitOnly = { ...theftNoCheaters, theft: undefined, memory: undefined, caching: { ...(theftNoCheaters.caching ?? {}), rule: 'none', mixed: false, capacity: 320 } } as unknown as Config;
+    expect(defaultColorMode(limitOnly)).toBe('tribe');
     expect(defaultColorMode(even)).toBe('caching_rule');
     expect(defaultColorMode(allRemember)).toBe('tribe');
     expect(defaultColorMode(book)).toBe('tribe');
