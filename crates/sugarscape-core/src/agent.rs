@@ -245,6 +245,12 @@ pub struct Agent {
     /// Minds 5: for each cache, the tick of the first unit buried there since
     /// the site's cache was last empty (for the age of what's dug).
     pub cache_since: BTreeMap<u32, u64>,
+    /// Minds 6: its stomach, loot eaten under `theft.loot: eat` and not yet
+    /// burned. Metabolism draws good 0 from it before holdings. It can't be
+    /// buried, dug or traded, counts toward neither the carrying limit nor
+    /// the caching reserve, isn't inherited, and what's left at death is
+    /// `events.fed_lost`. Hashed only when nonzero.
+    pub fed: f64,
     /// Minds 5, rule `compensate`: its known sites (those it has harvested
     /// from), site index → weight w (starting at 1, × (1 − λ) each time it
     /// finds food there), capped at `MEMORY_CAP`. Empty under every other
@@ -275,6 +281,18 @@ pub struct Agent {
     /// follows `caching.rule` and this only records it at birth. Never
     /// hashed, like `rate`.
     pub caching_rule: crate::config::CachingRule,
+    /// Minds 6: a cheater never buries (its caching rule is `none` whatever
+    /// `caching.rule` or `caching.mixed` says; `rule_of`). Founders are
+    /// dealt by id when `theft.cheaters` > 0 (`Theft::founder_cheats`);
+    /// children take the acting parent's. Never hashed, like `caching_rule`.
+    pub cheater: bool,
+    /// Minds 6: running total of sugar this agent has pilfered from others'
+    /// caches (the whole take, under either loot rule). For Inspect only:
+    /// not hashed, never draws.
+    pub stolen_by_me: f64,
+    /// Minds 6: running total of sugar taken from this agent's caches by
+    /// thieves. For Inspect only: not hashed, never draws.
+    pub stolen_from_me: f64,
     /// Minds 5, central-place foraging (`central.enabled`): the site the
     /// agent was placed or born on, where its larder (its cache there) is
     /// and where it delivers its loads; set by `World::insert_agent`, `None`
@@ -340,6 +358,7 @@ impl Agent {
             leaving: None,
             caches: BTreeMap::new(),
             cache_since: BTreeMap::new(),
+            fed: 0.0,
             weights: crate::minds::caching::rules::Weights::default(),
             episodes: None,
             last_winter: None,
@@ -347,6 +366,9 @@ impl Agent {
             cache_params: None,
             lab_allocation: None,
             caching_rule: config.caching.rule,
+            cheater: false,
+            stolen_by_me: 0.0,
+            stolen_from_me: 0.0,
             home: None,
             load_trip: 0.0,
             delivery_rate: 0.0,

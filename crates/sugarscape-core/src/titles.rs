@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 350] = [
+pub const TITLES: [(&str, &str); 356] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -276,6 +276,30 @@ pub const TITLES: [(&str, &str); 350] = [
     (
         "cache-amodio",
         "Amodio's rotating compartments: each rule leaves its own signature, and the jays' looks like an even split",
+    ),
+    (
+        "theft-winter",
+        "Hoarders who can be robbed: theft spreads the stores, and more agents survive the winter",
+    ),
+    (
+        "theft-winter-quarter",
+        "A quarter never cache and live off the others' caches, outliving the hoarders",
+    ),
+    (
+        "theft-winter-half",
+        "Half never cache and outlive the hoarders, who dig back barely 1 % of what they bury",
+    ),
+    (
+        "theft-arena-2",
+        "Two agents in a room: the other takes half the hoarder's caches, and the hoarder ends the winter with a third as much in hand",
+    ),
+    (
+        "theft-arena-4",
+        "Four agents in a room: thieves take four fifths of the caches, and hoarders end the winter with a third as much in hand",
+    ),
+    (
+        "theft-arena-8",
+        "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with a third as much in hand",
     ),
     (
         "s71-board",

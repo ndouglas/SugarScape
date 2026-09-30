@@ -91,6 +91,12 @@ const perGood = (prefix: string) => (c: Config): Line[] =>
 const cachingOn = (c: Config): boolean =>
   (c.caching?.rule ?? 'none') !== 'none' || c.caching?.mixed === true || (c.caching?.capacity ?? 0) > 0;
 
+/** Minds 6: theft is on (a chance to find caches, or any cheaters), as the core's `Theft::is_on`. */
+const theftOn = (c: Config): boolean => (c.theft?.find ?? 0) > 0 || (c.theft?.cheaters ?? 0) > 0;
+
+/** Minds 6: the world has cheaters, so the hoarder and cheater series exist. */
+const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;
+
 const SECTIONS: { id: Section; title?: string; shown: (c: Config) => boolean }[] = [
   { id: 'top', shown: () => true },
   { id: 'goods', title: 'Goods', shown: () => true },
@@ -269,6 +275,50 @@ const CHARTS: ChartDef[] = [
     section: 'top',
     lines: fixed([{ key: 'trips', label: 'Deliveries per agent', color: '--c2' }]),
     shown: (c) => c.central?.enabled === true,
+  },
+  {
+    // Minds 6: the share of the caches at the tick's start that lost sugar to a thief this tick.
+    title: 'Pilferage',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'pilferage_rate', label: 'Share of caches pilfered', color: '--c1' }]),
+    range: [0, 1],
+    shown: theftOn,
+  },
+  {
+    // Cumulative shares of all sugar ever buried: dug by its owner, pilfered, lost with a dead owner, still buried.
+    title: 'Cache fates',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'fate_dug', label: 'Dug', color: '--c1' },
+      { key: 'fate_pilfered', label: 'Pilfered', color: '--c2' },
+      { key: 'fate_lost', label: 'Lost', color: '--c3' },
+      { key: 'fate_buried', label: 'Still buried', color: '--c4' },
+    ]),
+    range: [0, 1],
+    shown: theftOn,
+  },
+  {
+    // Counts alone; the holdings (sugar) get their own chart so the axes don't mix units.
+    title: 'Hoarders vs cheaters',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'hoarder_alive', label: 'Hoarders alive', color: '--c1' },
+      { key: 'cheater_alive', label: 'Cheaters alive', color: '--c2' },
+    ]),
+    shown: hasCheaters,
+  },
+  {
+    title: 'Hoarder and cheater holdings',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'hoarder_holdings', label: 'Hoarders (mean sugar held)', color: '--c1' },
+      { key: 'cheater_holdings', label: 'Cheaters (mean sugar held)', color: '--c2' },
+    ]),
+    shown: hasCheaters,
   },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },

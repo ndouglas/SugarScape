@@ -323,6 +323,16 @@ pub(crate) fn record_choice(
 ///   `Harvest::dug`, not `gathered`: it was gathered once already, so it
 ///   forms no pollution. In a central-place world a dig takes no more than
 ///   the reserve less holdings (`minds::central`).
+///
+/// Minds 6 (`minds::caching::theft`), under `theft.find` > 0:
+/// - **Stumbling on caches.** An agent that doesn't dig here draws once per
+///   cache on the site it doesn't know about, in owner-id order, and takes
+///   the first found (min(cache, room)) instead of harvesting the site: a
+///   pilfer (`Harvest::pilfered`, kept or eaten by `theft.loot`), or under
+///   `owner_memory: off` its own cache found, which is a dig.
+/// - **The dig wins.** If its own cache here would be dug, it digs and draws
+///   nothing. Under `owner_memory: off` it never digs this way (it doesn't
+///   know where its caches are).
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
@@ -331,9 +341,10 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     let site_index = world.torus.index(target) as u32;
     // Cache against the site's welfare (pollution-discounted, as the
     // candidate list valued it), not its raw level.
-    let digs = a.caches.get(&site_index).is_some_and(|&cache| {
-        cache >= site_value(world, id, target) && crate::minds::caching::hungry(world, id)
-    });
+    let digs = world.config.theft.owner_memory
+        && a.caches.get(&site_index).is_some_and(|&cache| {
+            cache >= site_value(world, id, target) && crate::minds::caching::hungry(world, id)
+        });
     // Room under the carrying limit; infinite with no limit.
     let room = |held: f64| {
         if capacity > 0 {
@@ -365,6 +376,14 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         a.holdings[0] += harvest.dug;
         a.social = social;
         return harvest;
+    }
+    if world.config.theft.find > 0.0 {
+        if let Some(taken) =
+            crate::minds::caching::theft::stumble(world, id, site_index, room(used))
+        {
+            world.agent_mut(id).expect("live agent").social = social;
+            return taken;
+        }
     }
     let site = world.site_mut(target);
     for (got, level) in harvest

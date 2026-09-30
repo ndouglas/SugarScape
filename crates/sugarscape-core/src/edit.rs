@@ -121,6 +121,19 @@ pub struct CachingView {
     pub forecast: Option<f64>,
 }
 
+/// Minds 6: an agent's theft state, for Inspect.
+#[derive(Clone, Debug, Serialize)]
+pub struct TheftView {
+    /// Whether this agent is a cheater (never buries, pilfers what it finds).
+    pub cheater: bool,
+    /// Running total of sugar it has pilfered from others' caches.
+    pub stolen_by_me: f64,
+    /// Running total of sugar thieves have taken from its caches.
+    pub stolen_from_me: f64,
+    /// Its stomach: loot eaten under `theft.loot: eat` and not yet burned.
+    pub fed: f64,
+}
+
 /// Minds 5: a central-place forager's state, for Inspect.
 #[derive(Clone, Debug, Serialize)]
 pub struct CentralView {
@@ -188,6 +201,8 @@ pub struct AgentView {
     /// Minds 5: central-place foraging state. `Some` only while
     /// `central.enabled`.
     pub central: Option<CentralView>,
+    /// Minds 6: theft state. `Some` only while `theft.is_on()`.
+    pub theft: Option<TheftView>,
 }
 
 /// Minds 3: what an agent remembers, for display.
@@ -477,6 +492,12 @@ impl World {
             central: self.config.central.enabled.then(|| CentralView {
                 home: a.home.map_or([a.pos.x, a.pos.y], |p| [p.x, p.y]),
                 last_load: a.last_load,
+            }),
+            theft: self.config.theft.is_on().then_some(TheftView {
+                cheater: a.cheater,
+                stolen_by_me: a.stolen_by_me,
+                stolen_from_me: a.stolen_from_me,
+                fed: a.fed,
             }),
         });
         Ok(Inspection {

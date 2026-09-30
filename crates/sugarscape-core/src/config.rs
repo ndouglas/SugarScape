@@ -670,6 +670,9 @@ pub struct Caching {
     /// parent acting when it's born; `Agent.caching_rule`), not one dealt by
     /// its id; `rule` is then ignored. Reset-only.
     pub mixed: bool,
+    /// Minds 6: good 0 lost (counted as eaten) for each cache buried, at
+    /// least 0. Live.
+    pub bury_cost: f64,
 }
 
 impl Default for Caching {
@@ -681,6 +684,7 @@ impl Default for Caching {
             lambda: 0.5,
             lookahead: 1,
             mixed: false,
+            bury_cost: 0.0,
         }
     }
 }
@@ -711,6 +715,59 @@ impl Caching {
         } else {
             self.rule
         }
+    }
+}
+
+/// Minds 6: what a thief does with the good it pilfers.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Loot {
+    /// Eat it on the spot.
+    Eat,
+    /// Hold it (up to the carrying limit).
+    #[default]
+    Keep,
+}
+
+/// Minds 6: agents that stumble on each other's caches and pilfer them.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Theft {
+    /// Chance, in [0, 1], that an agent arriving on a site finds each foreign
+    /// cache there. Live.
+    pub find: f64,
+    /// Whether an agent knows where its own caches are and needn't find
+    /// them. Reset-only.
+    pub owner_memory: bool,
+    /// What a thief does with the loot. Live.
+    pub loot: Loot,
+    /// Share of agents, in [0, 1], that cheat (dealt by id, no draw). Reset-only.
+    pub cheaters: f64,
+}
+
+impl Default for Theft {
+    fn default() -> Self {
+        Self {
+            find: 0.0,
+            owner_memory: true,
+            loot: Loot::Keep,
+            cheaters: 0.0,
+        }
+    }
+}
+
+impl Theft {
+    /// Whether the founder with `id` (ids count from 1) cheats: ⌊i·s⌋ >
+    /// ⌊(i − 1)·s⌋ for s = `cheaters`. Over ids 1..=n that's ⌊n·s⌋ cheaters,
+    /// an exact proportion, with no draw.
+    pub fn founder_cheats(&self, id: u64) -> bool {
+        let s = self.cheaters;
+        s > 0.0 && (id as f64 * s).floor() > (id.saturating_sub(1) as f64 * s).floor()
+    }
+
+    /// Whether theft is on at all: a chance to find, or any cheaters.
+    pub fn is_on(&self) -> bool {
+        self.find > 0.0 || self.cheaters > 0.0
     }
 }
 
@@ -903,7 +960,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 28] = [
+pub const RESET_ONLY_PATHS: [&str; 31] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -930,6 +987,9 @@ pub const RESET_ONLY_PATHS: [&str; 28] = [
     "caching.rule",
     "caching.capacity",
     "caching.mixed",
+    "theft",
+    "theft.owner_memory",
+    "theft.cheaters",
     "central",
     "central.enabled",
 ];
@@ -1026,6 +1086,8 @@ pub struct Config {
     pub goap: Goap,
     pub mvt: Mvt,
     pub caching: Caching,
+    #[serde(default)]
+    pub theft: Theft,
     pub central: Central,
     #[serde(default)]
     pub lab: Option<Lab>,
@@ -1111,6 +1173,7 @@ impl Default for Config {
             goap: Goap::default(),
             mvt: Mvt::default(),
             caching: Caching::default(),
+            theft: Theft::default(),
             central: Central { enabled: false },
             lab: None,
             schedule: Vec::new(),
@@ -1745,6 +1808,48 @@ impl Config {
             "caching and combat can't run together",
         );
         e.check(
+            self.caching.bury_cost.is_finite() && self.caching.bury_cost >= 0.0,
+            "caching.bury_cost",
+            "must be at least 0",
+        );
+        e.check(
+            self.caching.bury_cost <= 0.0
+                || self.caching.bury_cost.is_nan()
+                || (self.lab.is_none() && !self.central.enabled),
+            "caching.bury_cost",
+            "a bury cost applies only in the field",
+        );
+        let theft_field = if self.theft.find > 0.0 {
+            "theft.find"
+        } else {
+            "theft.cheaters"
+        };
+        e.check(
+            self.theft.find.is_finite() && (0.0..=1.0).contains(&self.theft.find),
+            "theft.find",
+            "must be between 0 and 1",
+        );
+        e.check(
+            self.theft.cheaters.is_finite() && (0.0..=1.0).contains(&self.theft.cheaters),
+            "theft.cheaters",
+            "must be between 0 and 1",
+        );
+        e.check(
+            !self.theft.is_on() || self.caching.is_on(),
+            theft_field,
+            "theft needs caching (a caching rule or a carrying limit)",
+        );
+        e.check(
+            !self.theft.is_on() || self.lab.is_none(),
+            theft_field,
+            "theft can't run in a lab",
+        );
+        e.check(
+            !self.theft.is_on() || !self.central.enabled,
+            theft_field,
+            "theft can't run in a central-place world",
+        );
+        e.check(
             !self.central.enabled
                 || (matches!(self.decision.rule, DecisionRule::Mvt | DecisionRule::Goap)
                     && self.caching.capacity > 0),
@@ -2044,6 +2149,12 @@ impl Config {
         }
         if self.caching.mixed != next.caching.mixed {
             out.push(FieldError::new("caching.mixed", msg));
+        }
+        if self.theft.owner_memory != next.theft.owner_memory {
+            out.push(FieldError::new("theft.owner_memory", msg));
+        }
+        if self.theft.cheaters != next.theft.cheaters {
+            out.push(FieldError::new("theft.cheaters", msg));
         }
         if self.central.enabled != next.central.enabled {
             out.push(FieldError::new("central.enabled", msg));
@@ -3884,6 +3995,16 @@ mod tests {
                 lambda: 0.5,
                 lookahead: 1,
                 mixed: false,
+                bury_cost: 0.0,
+            }
+        );
+        assert_eq!(
+            d.theft,
+            Theft {
+                find: 0.0,
+                owner_memory: true,
+                loot: Loot::Keep,
+                cheaters: 0.0,
             }
         );
         assert_eq!(d.central, Central { enabled: false });
@@ -3893,6 +4014,7 @@ mod tests {
         let mut v = serde_json::to_value(Config::default()).unwrap();
         let o = v.as_object_mut().unwrap();
         o.remove("caching");
+        o.remove("theft");
         o.remove("central");
         o.remove("lab");
         o.get_mut("seasons")
@@ -3918,6 +4040,7 @@ mod tests {
                 lambda: 0.5,
                 lookahead: 1,
                 mixed: false,
+                bury_cost: 0.0,
             }
         );
 
@@ -4204,6 +4327,9 @@ mod tests {
             ("seasons.mode", serde_json::json!("global")),
             ("central.enabled", serde_json::json!(true)),
             ("caching.mixed", serde_json::json!(true)),
+            ("theft.owner_memory", serde_json::json!(false)),
+            ("theft.cheaters", serde_json::json!(0.5)),
+            ("theft", serde_json::json!({ "find": 0.5 })),
         ] {
             let c = Config {
                 schedule: vec![change(5, path, value)],
@@ -4214,6 +4340,189 @@ mod tests {
                 errs[0].message.contains("only on reset"),
                 "{path}: {errs:?}"
             );
+        }
+    }
+
+    #[test]
+    fn theft_older_configs_load_and_partial_objects_fill_in() {
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["caching"].as_object_mut().unwrap().remove("bury_cost");
+        v.as_object_mut().unwrap().remove("theft");
+        let c = Config::from_value(v).unwrap();
+        assert_eq!(c.caching.bury_cost, 0.0);
+        assert_eq!(c.theft, Theft::default());
+        assert!(!c.theft.is_on());
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["theft"] = serde_json::json!({ "loot": "eat" });
+        let t = Config::from_value(v).unwrap().theft;
+        assert_eq!(t.loot, Loot::Eat);
+        assert!(t.owner_memory);
+        assert!(Theft {
+            find: 0.1,
+            ..Theft::default()
+        }
+        .is_on());
+        assert!(Theft {
+            cheaters: 0.1,
+            ..Theft::default()
+        }
+        .is_on());
+    }
+
+    #[test]
+    fn theft_is_validated() {
+        let caching = |c: &mut Config| {
+            c.caching.rule = CachingRule::Even;
+            c.movement.mode = MoveMode::Walk;
+        };
+        let errs = |f: &dyn Fn(&mut Config)| {
+            let mut c = Config::default();
+            f(&mut c);
+            c.validate().err().unwrap_or_default()
+        };
+        let one = |f: &dyn Fn(&mut Config), field: &str, msg: &str| {
+            let e = errs(f);
+            assert_eq!(e.len(), 1, "{e:?}");
+            assert_eq!((e[0].field.as_str(), e[0].message.as_str()), (field, msg));
+        };
+        assert!(errs(&|c| {
+            caching(c);
+            c.theft.find = 0.3;
+            c.theft.cheaters = 0.5;
+            c.caching.bury_cost = 0.5;
+        })
+        .is_empty());
+        let need = "theft needs caching (a caching rule or a carrying limit)";
+        one(&|c| c.theft.find = 0.3, "theft.find", need);
+        one(&|c| c.theft.cheaters = 0.3, "theft.cheaters", need);
+        one(
+            &|c| {
+                caching(c);
+                c.theft.find = 1.5;
+            },
+            "theft.find",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| {
+                caching(c);
+                c.theft.find = -0.1;
+            },
+            "theft.find",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| {
+                caching(c);
+                c.theft.cheaters = 1.1;
+            },
+            "theft.cheaters",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| c.caching.bury_cost = -1.0,
+            "caching.bury_cost",
+            "must be at least 0",
+        );
+        assert!(errs(&|c| c.caching.bury_cost = f64::NAN)
+            .iter()
+            .any(|e| e.field == "caching.bury_cost"));
+        // A lab and a central-place world refuse theft.
+        let e = errs(&|c| {
+            c.central.enabled = true;
+            c.theft.find = 0.3;
+            c.theft.cheaters = 0.2;
+        });
+        assert!(e
+            .iter()
+            .any(|e| e.field == "theft.find"
+                && e.message == "theft can't run in a central-place world"));
+        let e = errs(&|c| {
+            c.central.enabled = true;
+            c.theft.cheaters = 0.2;
+        });
+        assert!(e.iter().any(|e| e.field == "theft.cheaters"
+            && e.message == "theft can't run in a central-place world"));
+        use crate::minds::caching::lab::{rig_config, LabParams};
+        let mut c = rig_config(
+            Lab {
+                protocol: LabProtocol::Raby,
+                food_first: true,
+            },
+            CachingRule::Compensate,
+            LabParams::default(),
+            6,
+        );
+        c.theft.find = 0.3;
+        let e = c.validate().unwrap_err();
+        assert!(e
+            .iter()
+            .any(|e| e.field == "theft.find" && e.message == "theft can't run in a lab"));
+        // So do they a bury cost.
+        let field_only = "a bury cost applies only in the field";
+        c.theft.find = 0.0;
+        assert!(c.validate().is_ok());
+        c.caching.bury_cost = 0.5;
+        let e = c.validate().unwrap_err();
+        assert_eq!(e.len(), 1, "{e:?}");
+        assert_eq!(
+            (e[0].field.as_str(), e[0].message.as_str()),
+            ("caching.bury_cost", field_only)
+        );
+        let mut c = crate::presets::by_id("central-near").unwrap().config;
+        assert!(c.validate().is_ok());
+        c.caching.bury_cost = 0.5;
+        let e = c.validate().unwrap_err();
+        assert_eq!(e.len(), 1, "{e:?}");
+        assert_eq!(
+            (e[0].field.as_str(), e[0].message.as_str()),
+            ("caching.bury_cost", field_only)
+        );
+    }
+
+    #[test]
+    fn theft_find_loot_and_bury_cost_are_live_the_rest_reset_only() {
+        let a = Config::default();
+        let f = a.structural_changes(&{
+            let mut c = a.clone();
+            c.theft.find = 0.3;
+            c.theft.loot = Loot::Eat;
+            c.caching.bury_cost = 1.0;
+            c
+        });
+        assert!(f.is_empty(), "{f:?}");
+        let c = Config {
+            schedule: vec![
+                change(5, "theft.find", serde_json::json!(0.2)),
+                change(6, "theft.loot", serde_json::json!("eat")),
+                change(7, "caching.bury_cost", serde_json::json!(1.0)),
+            ],
+            caching: Caching {
+                rule: CachingRule::Even,
+                ..Caching::default()
+            },
+            movement: Movement {
+                mode: MoveMode::Walk,
+                ..Movement::default()
+            },
+            ..Default::default()
+        };
+        c.validate().unwrap();
+        for (field, edit) in [
+            (
+                "theft.owner_memory",
+                (|c: &mut Config| c.theft.owner_memory = false) as fn(&mut Config),
+            ),
+            ("theft.cheaters", |c| c.theft.cheaters = 0.5),
+        ] {
+            let mut n = a.clone();
+            edit(&mut n);
+            let f: Vec<String> = a
+                .structural_changes(&n)
+                .into_iter()
+                .map(|e| e.field)
+                .collect();
+            assert_eq!(f, [field]);
         }
     }
 

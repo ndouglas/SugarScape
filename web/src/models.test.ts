@@ -101,6 +101,8 @@ describe('the Minds menu', () => {
       { caching: { rule: 'none', capacity: 20 } },
       { central: { enabled: true } },
       { seasons: { enabled: true, mode: 'global' } },
+      { theft: { find: 0.2, owner_memory: true, loot: 'keep', cheaters: 0 } },
+      { theft: { find: 0, owner_memory: true, loot: 'keep', cheaters: 0.5 } },
     ];
     expect(minds.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(minds.map(() => true));
     const book = [
@@ -109,6 +111,7 @@ describe('the Minds menu', () => {
       { truffles: { share: 0, value: 10, regrow: 50, seed: 1 } },
       { caching: { rule: 'none', capacity: 0 }, central: { enabled: false }, seasons: { enabled: true, mode: 'hemispheres' } },
       { model: 'ring', movement: { mode: 'walk' } },
+      { theft: { find: 0, owner_memory: false, loot: 'eat', cheaters: 0 } },
     ];
     expect(book.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(book.map(() => false));
     expect([menuOf({ decision: { rule: 'goap' } } as unknown as ModelConfig), menuOf({} as ModelConfig), menuOf({ model: 'ring' } as unknown as ModelConfig)]).toEqual([
@@ -139,10 +142,11 @@ describe('the Minds menu', () => {
       p('walk-capacity', 'Epstein & Axtell II-2; Minds 2', { movement: { mode: 'walk', speed: 1 } }),
       p('ifd-fence', 'Baum & Kraft 1998; Minds 2', { decision: { rule: 'utility' }, walls: [{ x: 0, y: 0, width: 1, height: 1, opaque: false }] }),
       p('cache-raby', 'Raby et al. 2007; Minds 5', { caching: { rule: 'plan', capacity: 0 } }),
+      p('theft-arena-8', 'Andersson & Krebs 1978; Minds 6', { caching: { rule: 'even', capacity: 0 }, theft: { find: 0.3, owner_memory: true, loot: 'keep', cheaters: 0.125 } }),
     ];
     expect(presetGroups(presets).map((g) => [g.model, g.label, g.presets.map((x) => x.id)])).toEqual([
       ['sugarscape', 'Sugarscape', ['ii-2']],
-      ['minds', 'Minds', ['goap-open', 'ifd-even', 'walk-capacity', 'ifd-fence', 'cache-raby']],
+      ['minds', 'Minds', ['goap-open', 'ifd-even', 'walk-capacity', 'ifd-fence', 'cache-raby', 'theft-arena-8']],
       ['ring', 'Ring World', ['ring-1']],
     ]);
     expect(presetSubgroups('sugarscape', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([['Chapter II', ['ii-2']]]);
@@ -151,6 +155,7 @@ describe('the Minds menu', () => {
       ['Minds 2: walking', ['walk-capacity', 'ifd-fence']],
       ['Minds 4: planning', ['goap-open']],
       ['Minds 5: caching', ['cache-raby']],
+      ['Minds 6: theft', ['theft-arena-8']],
     ]);
   });
 });

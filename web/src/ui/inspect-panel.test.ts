@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText } from './inspect-panel';
+import { cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText, theftRows } from './inspect-panel';
 
 const plan = (path: [number, number][]) => ({ target_x: 3, target_y: 4, path, walked: true });
 const memory = (sites: number, spots: number) => ({ remembers: true, sites, spots });
@@ -150,5 +150,24 @@ describe('centralRows', () => {
       ['Last load', '12.25'],
     ]);
     expect(centralRows({ home: [0, 0], last_load: 0 })).toEqual([['Home', '(0, 0)'], ['Last load', '0']]);
+  });
+});
+
+describe('theftRows', () => {
+  it('gives a cheater its takes, its losses and its stomach while it holds loot', () => {
+    expect(theftRows({ cheater: true, stolen_by_me: 12.5, stolen_from_me: 0, fed: 3.25 })).toEqual([
+      ['Cheater', 'yes'],
+      ['Stole', '12.50'],
+      ['Lost to thieves', '0'],
+      ['Stomach', '3.25'],
+    ]);
+  });
+
+  it('leaves the stomach out when it is empty', () => {
+    expect(theftRows({ cheater: false, stolen_by_me: 0, stolen_from_me: 7, fed: 0 })).toEqual([
+      ['Cheater', 'no'],
+      ['Stole', '0'],
+      ['Lost to thieves', '7'],
+    ]);
   });
 });
