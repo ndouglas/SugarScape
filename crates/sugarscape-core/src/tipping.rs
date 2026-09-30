@@ -366,6 +366,17 @@ impl TippingWorld {
         self.inside[c].iter().filter(|&&x| x).count() as u32
     }
 
+    /// A color's insiders as `(rank, content)`, most tolerant first.
+    pub fn insiders(&self, red: bool) -> Vec<(u32, bool)> {
+        let c = usize::from(red);
+        let (r, b) = self.inside();
+        let (own, other) = if red { (r, b) } else { (b, r) };
+        (0..self.tolerance[c].len())
+            .filter(|&i| self.inside[c][i])
+            .map(|i| (i as u32, Self::content(self.tolerance[c][i], own, other)))
+            .collect()
+    }
+
     /// A color's tolerances, most tolerant first.
     pub fn tolerances(&self, red: bool) -> &[f64] {
         &self.tolerance[usize::from(red)]

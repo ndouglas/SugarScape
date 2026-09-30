@@ -805,6 +805,31 @@ pub struct SchellingDump {
     pub stats: BTreeMap<String, Vec<f64>>,
 }
 
+/// One step of Schelling's bounded neighborhood: the insiders of each
+/// color as `[rank, content]` (rank 0 the most tolerant).
+#[derive(Clone, Debug, Serialize)]
+pub struct TippingFrame {
+    pub tick: u64,
+    pub red: Vec<(u32, bool)>,
+    pub blue: Vec<(u32, bool)>,
+}
+
+/// A whole tipping shot, step 0 first, with each color's tolerances (Red's
+/// first, most tolerant first).
+#[derive(Clone, Debug, Serialize)]
+pub struct TippingDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub red: u32,
+    pub blue: u32,
+    pub tolerances: [Vec<f64>; 2],
+    pub config: crate::tipping::TippingConfig,
+    pub frames: Vec<TippingFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
 /// A shot's dump, of whichever model it runs.
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
@@ -818,6 +843,7 @@ pub enum Dump {
     Norms(NormsDump),
     Structure(StructureDump),
     Schelling(Box<SchellingDump>),
+    Tipping(Box<TippingDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -898,7 +924,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             run_dpd(shot).map(Dump::Dpd)
         }
-        ModelConfig::Schelling(_) | ModelConfig::Line(_) => {
+        ModelConfig::Schelling(_) | ModelConfig::Line(_) | ModelConfig::Tipping(_) => {
             for (bad, field) in [
                 (!shot.place.is_empty(), "place"),
                 (shot.empty, "empty"),
@@ -910,6 +936,9 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
                 if bad {
                     return Err(vec![FieldError::new(field, "is not for Schelling shots")]);
                 }
+            }
+            if let ModelConfig::Tipping(_) = shot.base()? {
+                return run_tipping(shot).map(|d| Dump::Tipping(Box::new(d)));
             }
             run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
         }
@@ -1108,6 +1137,40 @@ pub fn run_schelling(shot: &Shot) -> Result<SchellingDump, Vec<FieldError>> {
         ticks: shot.ticks,
         width,
         height,
+        config,
+        frames,
+        stats,
+    })
+}
+
+/// Runs a tipping shot and records every step.
+pub fn run_tipping(shot: &Shot) -> Result<TippingDump, Vec<FieldError>> {
+    let ModelConfig::Tipping(config) = shot.model_config()? else {
+        return Err(vec![FieldError::new("model", "not a tipping shot")]);
+    };
+    let mut w = crate::tipping::TippingWorld::new(config.clone(), shot.seed)?;
+    let frame = |w: &crate::tipping::TippingWorld| TippingFrame {
+        tick: w.tick,
+        red: w.insiders(true),
+        blue: w.insiders(false),
+    };
+    let mut frames = vec![frame(&w)];
+    for _ in 0..shot.ticks {
+        w.step();
+        frames.push(frame(&w));
+    }
+    let stats = crate::tipping::SERIES
+        .iter()
+        .filter_map(|&name| w.stats.series(name).map(|s| (name.to_string(), s)))
+        .collect();
+    Ok(TippingDump {
+        format: FORMAT,
+        model: "tipping",
+        seed: shot.seed,
+        ticks: shot.ticks,
+        red: config.red,
+        blue: config.blue,
+        tolerances: [w.tolerances(true).to_vec(), w.tolerances(false).to_vec()],
         config,
         frames,
         stats,
@@ -2221,4 +2284,21 @@ mod tests {
         }
         assert!(d.stats.contains_key("groups"));
     }
+    #[test]
+    fn a_tipping_shot_records_who_is_inside_each_step() {
+        let d = match super::run(&Shot::from_json(r#"{"preset": "tipping-fig19", "ticks": 40, "seed": 1}"#).unwrap()).unwrap() {
+            Dump::Tipping(d) => *d,
+            _ => panic!("not a tipping dump"),
+        };
+        assert_eq!((d.red, d.blue, d.frames.len()), (100, 100, 41));
+        assert_eq!((d.tolerances[0].len(), d.tolerances[1].len()), (100, 100));
+        let first = &d.frames[0];
+        assert_eq!((first.red.len(), first.blue.len()), (50, 50), "the most tolerant 50 of each start inside");
+        assert!(first.red.iter().all(|&(rank, _)| rank < 50));
+        let last = d.frames.last().unwrap();
+        assert_eq!((last.red.len(), last.blue.len()), (80, 80));
+        assert!(last.red.iter().chain(&last.blue).all(|&(_, content)| content), "at rest, everyone inside is content");
+        assert_eq!(d.stats["red_in"][40], 80.0);
+    }
+
 }
