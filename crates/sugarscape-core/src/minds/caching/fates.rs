@@ -211,7 +211,6 @@ pub(crate) fn close_dug(world: &mut World, owner: AgentId, site: u32, amount: f6
 /// Closes `amount` of `owner`'s records at `site` as pilfered by `by`. The
 /// caller takes the amount from the cache first, and removes an emptied
 /// cache's `cache_since` only after this call.
-#[allow(dead_code)] // until the pilfer calls it
 pub(crate) fn close_pilfered(
     world: &mut World,
     owner: AgentId,
@@ -497,7 +496,7 @@ mod tests {
                 .collect(),
         });
         let mut w = World::new(c, 4).unwrap();
-        let (mut dug, mut lost, mut buried) = (0.0, 0.0, 0.0);
+        let (mut dug, mut lost, mut buried, mut pilfered) = (0.0, 0.0, 0.0, 0.0);
         let mut on_since = None;
         for _ in 0..300 {
             w.step();
@@ -510,7 +509,8 @@ mod tests {
             dug += w.events.dug;
             lost += w.events.cache_lost;
             buried += w.events.buried;
-            let tol = 1e-9 * (1.0 + buried + dug + lost);
+            pilfered += w.events.pilfered;
+            let tol = 1e-9 * (1.0 + buried + dug + lost + pilfered);
             let closed = |f: Fate| -> f64 {
                 w.cache_log
                     .iter()
@@ -521,6 +521,13 @@ mod tests {
             let t = w.tick;
             assert!((closed(Fate::Dug) - dug).abs() <= tol, "{t}: dug");
             assert!((closed(Fate::Lost) - lost).abs() <= tol, "{t}: lost");
+            let taken: f64 = w
+                .cache_log
+                .iter()
+                .filter(|r| matches!(r.fate, Some((_, Fate::Pilfered { .. }))))
+                .map(|r| r.amount)
+                .sum();
+            assert!((taken - pilfered).abs() <= tol, "{t}: pilfered");
             // Each (owner, site) with open records holds their sum.
             let (mut open, mut held) = (0.0, 0.0);
             for (&(owner, site), q) in &w.cache_open {
@@ -544,7 +551,13 @@ mod tests {
             assert!(w.cache_log.iter().all(|r| r.amount >= 0.0));
         }
         assert!(!w.cache_log_full);
-        assert!(dug > 0.0 && lost > 0.0, "{dug} {lost}");
+        assert!(dug > 0.0 && pilfered > 0.0, "{dug} {pilfered}");
+        // With no cheaters nobody here dies holding caches once theft is on
+        // (pilfering feeds the hungry through the winter), so only the run
+        // with theft on from the start sees `Lost` records.
+        if cheaters > 0.0 {
+            assert!(lost > 0.0, "{lost}");
+        }
         assert_eq!(on_since, Some(if cheaters > 0.0 { 0 } else { 100 }));
         if cheaters == 0.0 {
             assert!(

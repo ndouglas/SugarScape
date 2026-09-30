@@ -141,6 +141,23 @@ pub struct TickEvents {
     pub dig_ages_sum: u64,
     /// Minds 5: digs this tick (each taking a positive amount).
     pub digs: u32,
+    /// Minds 6: sugar pilfered from caches this tick (under either loot
+    /// rule; owners finding their own caches under `owner_memory: off` are
+    /// digs, not pilfers).
+    pub pilfered: f64,
+    /// Minds 6: pilfers this tick (each taking a positive amount).
+    pub pilfers: u32,
+    /// Minds 6: caches in the world at the tick's start (after the
+    /// schedule), counted under theft (`theft.is_on()`): Σ over agents of
+    /// their caches. Each is a foreign cache to every agent but its owner,
+    /// so `pilfers / pilfer_candidates` is the per-cache pilfer rate.
+    pub pilfer_candidates: u32,
+    /// Minds 6: under `owner_memory: off`, owners who found (and dug) their
+    /// own cache this tick. Counted in `digs` and `dug` too.
+    pub owner_finds: u32,
+    /// Minds 6: of `pilfered`, the sugar eaten on the spot under
+    /// `theft.loot: eat` (counted as eaten, as `bury_cost` is).
+    pub loot_eaten: f64,
     /// Minds 5, central-place foraging: loads delivered home this tick (a
     /// delivery is a positive burial into the larder by an agent back from
     /// a trip).
@@ -197,6 +214,13 @@ pub struct World {
     pub cache_log_full: bool,
     /// Minds 6: the log's open records per (owner, site), oldest first.
     pub(crate) cache_open: crate::minds::caching::fates::OpenRecords,
+    /// Minds 6: site index → the owners of caches there, for finding
+    /// foreign caches on arrival (`minds::caching::theft`). `None` until the
+    /// first arrival that needs it under `theft.find > 0`, which builds it
+    /// from every agent's caches; then kept by bury, dig, pilfer and
+    /// removal, and dropped (back to `None`) by the first of those after
+    /// `find` goes to 0. Never hashed; worlds without theft never build it.
+    pub(crate) cache_sites: Option<crate::minds::caching::theft::CacheSites>,
 }
 
 impl World {
@@ -312,6 +336,7 @@ impl World {
             cache_log: Vec::new(),
             cache_log_full: false,
             cache_open: BTreeMap::new(),
+            cache_sites: None,
         };
         if world.config.disease.enabled {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
@@ -708,6 +733,11 @@ impl World {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
         }
         crate::minds::caching::fates::close_lost(self, id, &agent.caches, &agent.cache_since);
+        if self.cache_sites.is_some() {
+            for &site in agent.caches.keys() {
+                crate::minds::caching::theft::note(self, id, site, false);
+            }
+        }
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
         if !self.loans.is_empty() {
@@ -815,6 +845,9 @@ impl World {
     pub fn step(&mut self) {
         self.events = TickEvents::default();
         self.apply_schedule();
+        if self.config.theft.is_on() {
+            crate::minds::caching::theft::count_candidates(self);
+        }
         // Minds 5: a lab world applies its protocol's day (placement, food,
         // doorways, the test evening's burying) before anyone moves.
         if self.config.lab.is_some() {

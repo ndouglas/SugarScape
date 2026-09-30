@@ -26,6 +26,10 @@
 //!   so an agent back from a delivery isn't hungry for its own larder and
 //!   doesn't dig the load it just buried (`minds::central`).
 //!
+//! - **Theft** (Minds 6, `theft`): under `theft.find` > 0 an arriving agent
+//!   may find and pilfer other agents' caches; under `theft.owner_memory:
+//!   off` its own caches aren't candidates and it finds them only by chance.
+//!
 //! Sugar is conserved exactly across bury and dig: Σ sites + Σ holdings +
 //! Σ caches + eaten (bury cost included). Nothing here draws.
 
@@ -33,6 +37,7 @@ pub mod episodes;
 pub mod fates;
 pub mod lab;
 pub mod rules;
+pub mod theft;
 
 use crate::agent::AgentId;
 use crate::geometry::Pos;
@@ -114,6 +119,7 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     world.events.buried += q;
     world.events.bury_cost += cost;
     fates::open(world, id, site, q);
+    theft::note(world, id, site, true);
     q
 }
 
@@ -149,6 +155,7 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     if emptied {
         let a = world.agent_mut(id).expect("live agent");
         a.cache_since.remove(&site);
+        theft::note(world, id, site, false);
     }
     take
 }
@@ -171,13 +178,15 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
 ///   valued at the larger of the two.
 ///
 /// No caches, or not hungry: the list is untouched and nothing allocates.
+/// Under Minds 6's `theft.owner_memory: off` the agent doesn't know where
+/// its caches are: none joins (it finds them only by chance, `theft`).
 pub(crate) fn join_caches(
     world: &World,
     id: AgentId,
     out: &mut Vec<(Pos, u32, f64)>,
     start: &mut usize,
 ) {
-    if !hungry(world, id) {
+    if !world.config.theft.owner_memory || !hungry(world, id) {
         return;
     }
     let a = world.agent(id).expect("live agent");
@@ -212,10 +221,11 @@ pub(crate) fn join_caches(
 }
 
 /// `id`'s cache at `p`, when it's hungry (Minds 3's true value of a
-/// candidate counts it, as the candidate did).
+/// candidate counts it, as the candidate did). `None` under
+/// `theft.owner_memory: off`, where no cache is a candidate.
 pub(crate) fn cache_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
     let a = world.agent(id).expect("live agent");
-    if a.caches.is_empty() {
+    if a.caches.is_empty() || !world.config.theft.owner_memory {
         return None;
     }
     let amount = *a.caches.get(&(world.torus.index(p) as u32))?;

@@ -17,7 +17,8 @@
 //!     them ([`Weights`]). Each tick it first updates the weight of the site
 //!     it just harvested (w starts at 1 when the site becomes known; w ← w ×
 //!     (1 − λ) when it found food, i.e. gathered good 0 > 0 from the site).
-//!     A tick where it dug (`harvest.dug > 0`) harvested no site: no weight
+//!     A tick where it dug (`harvest.dug > 0`) or pilfered (Minds 6,
+//!     `harvest.pilfered > 0`) harvested no site: no weight
 //!     is added or changed. It then buries min(surplus, share × surplus × w
 //!     / w̄) at its current site, w̄ the mean weight over its known sites
 //!     (and w = 1 for a site it doesn't know). If every weight has decayed
@@ -374,8 +375,9 @@ pub(crate) fn act(world: &mut World, id: AgentId, harvest: &Harvest) {
             bury_all(world, id, allocate_even(amount, &[here], false));
         }
         CachingRule::Compensate => {
-            // A dig harvested no site: the known sites stay as they were.
-            if harvest.dug <= 0.0 {
+            // A dig or a pilfer harvested no site: the known sites stay
+            // as they were.
+            if harvest.dug <= 0.0 && harvest.pilfered <= 0.0 {
                 let found = harvest.gathered[0] > 0.0;
                 let a = world.agent_mut(id).expect("live agent");
                 a.weights.harvested(here, found, caching.lambda);

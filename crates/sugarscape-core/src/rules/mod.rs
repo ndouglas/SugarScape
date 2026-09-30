@@ -27,6 +27,13 @@ pub struct Harvest {
     /// gathered, so it forms no pollution, isn't income and doesn't feed
     /// the marginal-value rule's estimate of the habitat's intake rate.
     pub dug: f64,
+    /// Minds 6: good 0 pilfered from another agent's cache this turn. Like
+    /// `dug`, it isn't newly gathered: no pollution, not income, not the
+    /// marginal-value rule's intake, and a tick that pilfered harvested no
+    /// site. Under `theft.loot: keep` it is in the thief's holdings; under
+    /// `eat` it was eaten on the spot (`TickEvents::loot_eaten`) and never
+    /// reached them.
+    pub pilfered: f64,
 }
 
 impl Harvest {
@@ -34,7 +41,11 @@ impl Harvest {
     pub fn of(amounts: &[f64]) -> Self {
         let mut gathered = [0.0; MAX_GOODS];
         gathered[..amounts.len()].copy_from_slice(amounts);
-        Self { gathered, dug: 0.0 }
+        Self {
+            gathered,
+            dug: 0.0,
+            pilfered: 0.0,
+        }
     }
 }
 
