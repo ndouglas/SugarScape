@@ -249,13 +249,14 @@ pub(crate) fn lattice_distance(torus: Torus, a: Pos, b: Pos) -> u32 {
 /// spot that's ripe now, known or not.
 fn true_value(world: &World, id: AgentId, p: Pos) -> f64 {
     let value = site_value(world, id, p);
-    // Minds 5: a hungry agent's own cache counts as its candidate did, and
-    // Minds 8: so does a cache it saw buried there.
+    // Minds 5: a hungry agent's own cache counts as its candidate did.
+    // Minds 8: so do the caches it saw buried there, at what is truly
+    // left of them now (not what it believes), so an emptied one is stale.
     let value = match crate::minds::caching::cache_value(world, id, p) {
         Some(cache) => value.max(cache),
         None => value,
     };
-    match crate::minds::caching::watching::seen_value(world, id, p) {
+    match crate::minds::caching::watching::seen_truth(world, id, p) {
         Some(seen) => value.max(seen),
         None => value,
     }

@@ -38,7 +38,8 @@
 //!   skipped and merged as for its own caches (`caching::join_sites`).
 //!   Under `raid_when: hungry` they join only while it holds less than
 //!   R / 2 (with or without caches of its own). Minds 3's true value of a
-//!   candidate counts them the same way ([`seen_value`]).
+//!   candidate counts them, under the same gates, at what is truly left of
+//!   them ([`seen_truth`]), so a choice of an emptied one reads as stale.
 //! - **A raid** ([`raid`], called by `movement::go_and_gather` on every
 //!   arrival under `watching.on`, after the dig and before Minds 6's
 //!   stumble). The dig wins: an owner digging its own cache there doesn't
@@ -199,6 +200,9 @@ pub(crate) fn join_seen(
 /// What `id` believes is buried at `p` by others it saw (summed over
 /// owners), when seen caches are candidates now. `None` with no fresh entry
 /// there, with watching off, or under `raid_when: hungry` at or above R / 2.
+/// The value `join_seen` lists; tests read it (the diagnostics read
+/// [`seen_truth`] instead).
+#[cfg(test)]
 pub(crate) fn seen_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
     if !world.config.watching.on {
         return None;
@@ -216,7 +220,9 @@ pub(crate) fn seen_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
 
 /// Whether `id`'s seen caches are places to go now: always, or under
 /// `raid_when: hungry` while it holds less than R / 2 (Minds 5's threshold,
-/// without `hungry`'s requirement that it has caches of its own).
+/// without `hungry`'s requirement that it has caches of its own). It stays
+/// R / 2 under the survey probe `probe_dig_at_reserve`, by design: the
+/// spec's threshold.
 fn raiding(world: &World, id: AgentId) -> bool {
     match world.config.watching.raid_when {
         RaidWhen::Always => true,
@@ -225,6 +231,30 @@ fn raiding(world: &World, id: AgentId) -> bool {
             held < super::reserve(world, id) / 2.0
         }
     }
+}
+
+/// What is truly at `p` of the caches `id` remembers there (Minds 3's true
+/// value of a candidate): the sum, over its fresh entries there, of each
+/// owner's cache still at the site (0 if gone or the owner is dead). Under
+/// the gates of [`seen_value`]; `None` where that is `None`.
+pub(crate) fn seen_truth(world: &World, id: AgentId, p: Pos) -> Option<f64> {
+    if !world.config.watching.on {
+        return None;
+    }
+    let a = world.agent(id).expect("live agent");
+    if a.seen.is_empty() || !raiding(world, id) {
+        return None;
+    }
+    let site = world.torus.index(p) as u32;
+    at_site(&a.seen, site)
+        .filter(|(_, e)| fresh(world, e.tick))
+        .map(|(owner, _)| {
+            world
+                .agent(owner)
+                .and_then(|o| o.caches.get(&site).copied())
+                .unwrap_or(0.0)
+        })
+        .reduce(|x, y| x + y)
 }
 
 /// The entries at site index `site`, in owner-id order.
@@ -789,19 +819,19 @@ mod tests {
         assert_eq!(w.agent(watcher).unwrap().seen.len(), 2);
         let h = go_and_gather(&mut w, watcher, Pos::new(5, 6));
         assert_eq!(h.pilfered, 6.0, "the lower id first");
+        assert!(!w.agent(owner).unwrap().caches.contains_key(&here));
         assert_eq!(w.agent(second).unwrap().caches[&here], 4.0);
         assert!(w.agent(watcher).unwrap().seen.is_empty(), "all forgotten");
         assert_eq!(raid_counts(&w), (1, 6.0, 0, 1));
         // The first gone, the next remembered owner's is taken.
-        let (mut w, owner2, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
         let second = walker(&mut w, 5, 6, 50.0, 1, false);
         bury(&mut w, second, 4.0);
         w.move_agent(second, Pos::new(2, 2));
-        crate::minds::caching::dig(&mut w, owner2, here, f64::INFINITY);
+        crate::minds::caching::dig(&mut w, owner, here, f64::INFINITY);
         let h = go_and_gather(&mut w, watcher, Pos::new(5, 6));
         assert_eq!(h.pilfered, 4.0);
         assert_eq!(raid_counts(&w), (1, 4.0, 0, 1));
-        let _ = owner;
     }
 
     #[test]
@@ -896,13 +926,14 @@ mod tests {
         assert_eq!((h.gathered[0], h.pilfered), (2.0, 0.0));
         assert_eq!(raid_counts(&w), (0, 0.0, 1, 1));
         assert!(w.agent(watcher).unwrap().seen.is_empty());
-        // A dead watcher takes its entries with it: the owner's cache stays.
-        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        // A dead watcher takes its entries with it: none is held after.
+        let (mut w, _, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        sweep(&mut w);
+        assert_eq!(w.events.seen_entries, 1);
         w.kill(watcher, crate::world::DeathCause::OldAge);
-        for _ in 0..3 {
-            w.step();
-        }
-        assert_eq!(w.agent(owner).unwrap().caches[&at(&w, 5, 6)], 6.0);
+        sweep(&mut w);
+        assert_eq!(w.events.seen_entries, 0);
+        assert!(w.agents().all(|a| a.seen.is_empty()));
     }
 
     #[test]
@@ -954,6 +985,44 @@ mod tests {
         w.config.watching.on = false;
         assert!(!candidates(&w, watcher).iter().any(|c| c.0 == target));
         assert_eq!(seen_value(&w, watcher, target), None);
+    }
+
+    /// Minds 3's diagnostics value a chosen seen-cache site at what is
+    /// truly left there, not the watcher's belief: a choice of a cache
+    /// emptied since is stale, a still-full one isn't.
+    #[test]
+    fn the_diagnostics_value_a_seen_cache_at_what_is_truly_left() {
+        let target = Pos::new(5, 6);
+        for emptied in [false, true] {
+            let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+            w.config.memory.span = 5;
+            w.agent_mut(watcher).unwrap().remembers = true;
+            w.move_agent(watcher, Pos::new(0, 0));
+            if emptied {
+                let here = at(&w, 5, 6);
+                crate::minds::caching::dig(&mut w, owner, here, f64::INFINITY);
+            }
+            let truth = if emptied { 0.0 } else { 6.0 };
+            assert_eq!(seen_truth(&w, watcher, target), Some(truth));
+            assert_eq!(seen_value(&w, watcher, target), Some(6.0), "believed");
+            // Chosen as a remembered entry believed worth 6.
+            let list = [(target, 5, 6.0)];
+            crate::rules::movement::record_choice(&mut w, watcher, &list, 0, target);
+            let e = &w.events;
+            assert_eq!(e.remembered_moves, 1);
+            if emptied {
+                // The site's sugar 2 is all that's left: off by 4.
+                assert_eq!((e.stale_choices, e.belief_error_sum), (1, 4.0));
+            } else {
+                assert_eq!((e.stale_choices, e.belief_error_sum), (0, 0.0));
+            }
+        }
+        // A dead owner's cache is truly gone too; watching off, no value.
+        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        w.kill(owner, crate::world::DeathCause::OldAge);
+        assert_eq!(seen_truth(&w, watcher, target), Some(0.0));
+        w.config.watching.on = false;
+        assert_eq!(seen_truth(&w, watcher, target), None);
     }
 
     #[test]
