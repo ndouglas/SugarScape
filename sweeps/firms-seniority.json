@@ -1,0 +1,102 @@
+{
+  "name": "The Emergence of Firms: seniority pay (Table 11)",
+  "description": "Axtell's Table 11: µ under seniority shares ∝ p^−rank. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: 5^−rank 10.12, 4^−rank 8.55, 3^−rank 8.39, 2^−rank 5.41, equal shares 2.51; 2^−(rank+1), 2^−(rank+2), 2^−(rank+3): 5.41, 5.41, 5.41 — identical, since normalized shares are the same (the table's 0.89, 0.99, 1.07, 1.04 for them is its run-to-run noise); paying the newest most, 5^−rank 0.22 and 2^−rank 0.18. With the longest-serving paid most (the text), joiners get too little and firms barely form; the table's 1.11–0.89 comes from neither ordering.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Shares",
+    "values": [
+      {
+        "at": 1,
+        "name": "5^−rank",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 5.0
+        }
+      },
+      {
+        "at": 2,
+        "name": "4^−rank",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 4.0
+        }
+      },
+      {
+        "at": 3,
+        "name": "3^−rank",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 3.0
+        }
+      },
+      {
+        "at": 4,
+        "name": "2^−rank",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 2.0
+        }
+      },
+      {
+        "at": 5,
+        "name": "Equal shares (1^−rank)",
+        "set": {
+          "pay": "equal"
+        }
+      },
+      {
+        "at": 6,
+        "name": "2^−(rank+1) (the same shares as 2^−rank)",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 2.0
+        }
+      },
+      {
+        "at": 7,
+        "name": "2^−(rank+2) (the same shares as 2^−rank)",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 2.0
+        }
+      },
+      {
+        "at": 8,
+        "name": "2^−(rank+3) (the same shares as 2^−rank)",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 2.0
+        }
+      },
+      {
+        "at": 9,
+        "name": "5^−rank, newest first",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 5.0,
+          "seniority_order": "junior_first"
+        }
+      },
+      {
+        "at": 10,
+        "name": "2^−rank, newest first",
+        "set": {
+          "pay": "seniority",
+          "seniority_base": 2.0,
+          "seniority_order": "junior_first"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

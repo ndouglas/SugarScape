@@ -1,0 +1,64 @@
+{
+  "name": "The Emergence of Firms: friends ν (Table 6)",
+  "description": "Axtell's Table 6: µ against the number of fixed friends ν. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: ν 2, 4, 6, 8, 10: 2.51, 2.59, 2.69, 2.71, 2.66; ν drawn per agent from 2–10: 2.69. µ rises with ν — the opposite of the table (1.28, 1.11, 1.08, 1.08, 0.99; drawn 1.11), whose text says larger networks 'stabilize large firms'.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Friends",
+    "values": [
+      {
+        "at": 1,
+        "name": "ν = 2",
+        "set": {
+          "neighbors": 2
+        }
+      },
+      {
+        "at": 2,
+        "name": "ν = 4",
+        "set": {
+          "neighbors": 4
+        }
+      },
+      {
+        "at": 3,
+        "name": "ν = 6",
+        "set": {
+          "neighbors": 6
+        }
+      },
+      {
+        "at": 4,
+        "name": "ν = 8",
+        "set": {
+          "neighbors": 8
+        }
+      },
+      {
+        "at": 5,
+        "name": "ν = 10",
+        "set": {
+          "neighbors": 10
+        }
+      },
+      {
+        "at": 6,
+        "name": "ν drawn per agent, 2–10",
+        "set": {
+          "neighbors": 2,
+          "neighbors_max": 10
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

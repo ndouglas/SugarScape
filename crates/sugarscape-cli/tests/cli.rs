@@ -187,6 +187,19 @@ fn presets_and_sweeps_are_listed() {
         "bali-gamma",
         "bali-adaptive",
         "bali-links",
+        "firms-beta",
+        "firms-b",
+        "firms-preferences",
+        "firms-friends",
+        "firms-random-firms",
+        "firms-loyalty",
+        "firms-sticky",
+        "firms-groping",
+        "firms-seniority",
+        "firms-base-pay",
+        "firms-hiring",
+        "firms-readings",
+        "firms-population",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -624,6 +637,22 @@ fn a_zi_run_stops_at_its_last_period() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 300 (its last period)\n");
+}
+
+#[test]
+fn a_firms_run_stops_at_its_last_period() {
+    let dir = scratch("firms");
+    let config = dir.join("firms.json");
+    std::fs::write(&config, r#"{"model": "firms", "agents": 50, "stop_at": 7}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "1000",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 7 (its last period)\n");
 }
 
 #[test]

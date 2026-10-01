@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 163] = [
+const BUILTINS: [Builtin; 176] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1617,6 +1617,58 @@ const BUILTINS: [Builtin; 163] = [
     Builtin {
         id: "central-distance",
         json: include_str!("../../../sweeps/central-distance.json"),
+    },
+    Builtin {
+        id: "firms-beta",
+        json: include_str!("../../../sweeps/firms-beta.json"),
+    },
+    Builtin {
+        id: "firms-b",
+        json: include_str!("../../../sweeps/firms-b.json"),
+    },
+    Builtin {
+        id: "firms-preferences",
+        json: include_str!("../../../sweeps/firms-preferences.json"),
+    },
+    Builtin {
+        id: "firms-friends",
+        json: include_str!("../../../sweeps/firms-friends.json"),
+    },
+    Builtin {
+        id: "firms-random-firms",
+        json: include_str!("../../../sweeps/firms-random-firms.json"),
+    },
+    Builtin {
+        id: "firms-loyalty",
+        json: include_str!("../../../sweeps/firms-loyalty.json"),
+    },
+    Builtin {
+        id: "firms-sticky",
+        json: include_str!("../../../sweeps/firms-sticky.json"),
+    },
+    Builtin {
+        id: "firms-groping",
+        json: include_str!("../../../sweeps/firms-groping.json"),
+    },
+    Builtin {
+        id: "firms-seniority",
+        json: include_str!("../../../sweeps/firms-seniority.json"),
+    },
+    Builtin {
+        id: "firms-base-pay",
+        json: include_str!("../../../sweeps/firms-base-pay.json"),
+    },
+    Builtin {
+        id: "firms-hiring",
+        json: include_str!("../../../sweeps/firms-hiring.json"),
+    },
+    Builtin {
+        id: "firms-readings",
+        json: include_str!("../../../sweeps/firms-readings.json"),
+    },
+    Builtin {
+        id: "firms-population",
+        json: include_str!("../../../sweeps/firms-population.json"),
     },
 ];
 
@@ -2603,7 +2655,20 @@ mod tests {
                 "bali-links",
                 "cache-capacity",
                 "cache-winter",
-                "central-distance"
+                "central-distance",
+                "firms-beta",
+                "firms-b",
+                "firms-preferences",
+                "firms-friends",
+                "firms-random-firms",
+                "firms-loyalty",
+                "firms-sticky",
+                "firms-groping",
+                "firms-seniority",
+                "firms-base-pay",
+                "firms-hiring",
+                "firms-readings",
+                "firms-population"
             ]
         );
         for b in builtins() {

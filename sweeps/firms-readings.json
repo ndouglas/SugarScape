@@ -1,0 +1,70 @@
+{
+  "name": "The Emergence of Firms: readings of the paper",
+  "description": "The paper's unstated rules, read each way. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: literal (others' effort from last period's output, random activation) 2.51; others' effort live 1.98; uniform activation 2.54; live and uniform 1.79; a 10-step line search 2.48; starting in random groups 2.49; starting in one firm 2.50. No reading comes near Axtell's 1.28; the start does not matter, as he says.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Reading",
+    "values": [
+      {
+        "at": 1,
+        "name": "Literal: last period's effort, random activation",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "Others' effort live",
+        "set": {
+          "others_effort": "live"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Uniform activation",
+        "set": {
+          "activation": "uniform"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Live and uniform",
+        "set": {
+          "others_effort": "live",
+          "activation": "uniform"
+        }
+      },
+      {
+        "at": 5,
+        "name": "A coarse line search (10 steps)",
+        "set": {
+          "effort_search": "grid",
+          "grid_steps": 10
+        }
+      },
+      {
+        "at": 6,
+        "name": "Start in random groups",
+        "set": {
+          "initial": "random_groups"
+        }
+      },
+      {
+        "at": 7,
+        "name": "Start in one firm",
+        "set": {
+          "initial": "one_firm"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "name": "The Emergence of Firms: base pay plus a bonus (Table 12)",
+  "description": "Axtell's Table 12: µ with base pay plus an equal bonus from output above it. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: none 2.51; 20, 50, 80 % of each agent's singleton income: 2.31, 2.03, 1.73; the median agent's singleton income 2.45; the mean agent's 2.43. Under the literal reading (eq. 21), base pay is paid even when a firm's output falls short, so at 80 % firms pay out about 2.85× what they make (Task 1); scaling base pay down to output below the kink instead gives µ 1.75, close to the literal reading's 1.73 — the overpay changes little else. It falls with the base, as the table's does (1.28, 1.26, 1.06, 0.85, 0.99, 1.01), while effort and output collapse at 80 %.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Base pay",
+    "values": [
+      {
+        "at": 1,
+        "name": "None (equal shares)",
+        "set": {
+          "pay": "equal"
+        }
+      },
+      {
+        "at": 2,
+        "name": "20 % of own singleton income",
+        "set": {
+          "pay": "base",
+          "base_pay": "own",
+          "base_share": 0.2
+        }
+      },
+      {
+        "at": 3,
+        "name": "50 % of own singleton income",
+        "set": {
+          "pay": "base",
+          "base_pay": "own",
+          "base_share": 0.5
+        }
+      },
+      {
+        "at": 4,
+        "name": "80 % of own singleton income",
+        "set": {
+          "pay": "base",
+          "base_pay": "own",
+          "base_share": 0.8
+        }
+      },
+      {
+        "at": 5,
+        "name": "The median agent's singleton income",
+        "set": {
+          "pay": "base",
+          "base_pay": "median",
+          "base_share": 1.0
+        }
+      },
+      {
+        "at": 6,
+        "name": "The mean agent's singleton income",
+        "set": {
+          "pay": "base",
+          "base_pay": "mean",
+          "base_share": 1.0
+        }
+      },
+      {
+        "at": 7,
+        "name": "Base pay 80 %, scaled to output",
+        "set": {
+          "pay": "base",
+          "base_pay": "own",
+          "base_share": 0.8,
+          "base_shortfall": "scaled"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "The Emergence of Firms: increasing returns β (Table 3)",
+  "description": "Axtell's Table 3: the size exponent µ against increasing returns β. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: β 1.7, 1.8, 1.9, 2.0, 2.1: 3.63, 3.29, 2.93, 2.51, 2.02; β drawn per firm from 1.7–2.1: 2.55. It falls as β rises, as the table's does (2.06, 1.62, 1.32, 1.28, 0.95; drawn 1.12) — about 1 higher throughout. The β ≠ 2 cells need a numeric effort solve: about a minute a run.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "β",
+    "values": [
+      {
+        "at": 1,
+        "name": "β = 1.7",
+        "set": {
+          "beta": 1.7
+        }
+      },
+      {
+        "at": 2,
+        "name": "β = 1.8",
+        "set": {
+          "beta": 1.8
+        }
+      },
+      {
+        "at": 3,
+        "name": "β = 1.9",
+        "set": {
+          "beta": 1.9
+        }
+      },
+      {
+        "at": 4,
+        "name": "β = 2.0",
+        "set": {
+          "beta": 2.0
+        }
+      },
+      {
+        "at": 5,
+        "name": "β = 2.1",
+        "set": {
+          "beta": 2.1
+        }
+      },
+      {
+        "at": 6,
+        "name": "β drawn per firm, 1.7–2.1",
+        "set": {
+          "beta": 1.7,
+          "beta_max": 2.1
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

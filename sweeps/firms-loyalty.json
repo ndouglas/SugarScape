@@ -1,0 +1,57 @@
+{
+  "name": "The Emergence of Firms: loyalty λ (Table 8)",
+  "description": "Axtell's Table 8: µ against loyalty λ (an agent moves only after wanting to more than λ times). Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: λ 0, 2, 5, 10: 2.51, 2.12, 2.01, 1.97; λ drawn 0–10: 2.18. It falls, as the table's does (1.28, 1.14, 0.85, 0.77; drawn 0.79), less steeply.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Loyalty",
+    "values": [
+      {
+        "at": 1,
+        "name": "λ = 0",
+        "set": {
+          "loyalty": 0
+        }
+      },
+      {
+        "at": 2,
+        "name": "λ = 2",
+        "set": {
+          "loyalty": 2
+        }
+      },
+      {
+        "at": 3,
+        "name": "λ = 5",
+        "set": {
+          "loyalty": 5
+        }
+      },
+      {
+        "at": 4,
+        "name": "λ = 10",
+        "set": {
+          "loyalty": 10
+        }
+      },
+      {
+        "at": 5,
+        "name": "λ drawn per agent, 0–10",
+        "set": {
+          "loyalty": 0,
+          "loyalty_max": 10
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}
