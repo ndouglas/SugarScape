@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 356] = [
+pub const TITLES: [(&str, &str); 361] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1388,6 +1388,26 @@ pub const TITLES: [(&str, &str); 356] = [
     (
         "janssen-fewer-links",
         "With half the pest links gone, copying stalls early",
+    ),
+    (
+        "hoard-threshold",
+        "At the tipping point: larders take over in about two runs of five",
+    ),
+    (
+        "hoard-scatter",
+        "Scattered caches stay hidden: larders never take over",
+    ),
+    (
+        "hoard-larder",
+        "Conspicuous caches: larders take over almost every time, and half the agents die each season",
+    ),
+    (
+        "hoard-no-free-recovery",
+        "Owners find their own caches half the time, and larders still take over in about half the runs",
+    ),
+    (
+        "hoard-cheaters",
+        "A quarter never cache, and are gone after one generation",
     ),
 ];
 

@@ -152,6 +152,11 @@ describe('sweeps over other models', () => {
       ticks: 360,
       metric: { kind: 'final', series: 'scored' },
     });
+    expect(defaultForm('hoard')).toMatchObject({
+      x: { path: 'app_scat', values: '0.05,0.1,0.2,0.3,0.44,0.6,0.8,0.9' },
+      ticks: 100000,
+      metric: { kind: 'window_mean', series: 'hoarder_larder_prob', from: 98001, to: 100000 },
+    });
     expect(defaultForm('zi')).toMatchObject({
       x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' },
       ticks: 12000,

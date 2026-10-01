@@ -214,7 +214,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -633,7 +633,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1429,7 +1429,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats;
 
 export interface SiteView {
   x: number;
@@ -1614,6 +1614,96 @@ export interface TippingConfig {
 }
 /** A point of his plane: Red and Blue inside, and whether the most tolerant of each would all be content there. */
 export interface TippingInspection { red_in: number; blue_in: number; red_content: boolean; blue_content: boolean; now: boolean; agent: null }
+/**
+ * Vander Wall and Jenkins's genetic algorithm (Minds 7): a population storing food through a season
+ * of days and foraging bouts, bred over generations (the core's `hoard::HoardConfig`).
+ */
+export interface HoardConfig {
+  model: 'hoard';
+  n: number;
+  days: number;
+  bouts: number;
+  food_days: number;
+  food_first: number;
+  food_step: number;
+  nonstorable_days: number;
+  search_items: number;
+  search_miss: number;
+  forage_sd: number;
+  app_scat: number;
+  app_lard: number;
+  predation: number;
+  heritability: number;
+  v_seg: number;
+  l_mean: number;
+  d_mean: number;
+  generations: number;
+  cheaters: number;
+  cheater_fitness: 'stores' | 'survival';
+  owner_recovery: number;
+  defense_slope: number;
+  larder_weight: 'per_burrow' | 'per_item';
+  dead_stores: 'remain' | 'remove';
+  defended_in_pool: 'counted' | 'excluded';
+  early_bout1_eats: boolean;
+}
+
+/** One bout's statistics (NaN in the core arrives as null). */
+export interface HoardStats {
+  tick: number;
+  generation: number;
+  /** Mean L over the generation, and over its hoarders only (null when all are cheaters). */
+  mean_larder_prob: number;
+  hoarder_larder_prob: number | null;
+  mean_defense: number;
+  survivors: number;
+  larder_share: number | null;
+  /** The season's pooled loss rates so far: items lost per item held per day. */
+  larder_loss_rate: number | null;
+  scatter_loss_rate: number | null;
+  /** 1 or 0 once the run is finished, null before. */
+  takeover: number | null;
+}
+
+/** How an agent died: the day and bout, and whether it starved or was preyed upon. */
+export interface HoardDeath { day: number; bout: number; cause: 'predation' | 'starvation' }
+
+/** An agent for the page: its traits, stores, state and this season's losses. */
+export interface HoardAgentView {
+  index: number;
+  l: number;
+  d: number;
+  forage: number;
+  cheater: boolean;
+  larder: number;
+  scatter: number;
+  alive: boolean;
+  fed: boolean;
+  defending: boolean;
+  /** The agent whose larder it is raiding, if any. */
+  raiding: number | null;
+  death: HoardDeath | null;
+  larder_lost: number;
+  scatter_lost: number;
+  /** Items lost per item held per day this season so far (lost ÷ item-days held); null before it held any. */
+  larder_rate: number | null;
+  scatter_rate: number | null;
+  eaten: number;
+  bouts_alive: number;
+}
+
+/** A click on the hoard frame: where the run is, and the agent whose column it is. */
+export interface HoardInspection {
+  generation: number;
+  day: number;
+  bout: number;
+  public: number;
+  agent: HoardAgentView;
+}
+
+/** Where a hoard run is (`day` and `bout` are the next to run). */
+export interface HoardStatus { generation: number; day: number; bout: number; public: number; season_over: boolean; living: number }
+
 export interface RingInspection { site: { x: number; sugar: number; capacity: number }; agent: { id: number; vision: number } | null }
 /** A Long House Valley cell: its zone, this year's PDSI class and yields, water and occupants. */
 export interface ValleyCellView {
@@ -1890,7 +1980,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)

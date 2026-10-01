@@ -425,7 +425,10 @@ fn builtins_and_series_names_are_listed() {
             "central-distance",
             "theft-find",
             "theft-cheaters",
-            "theft-winter"
+            "theft-winter",
+            "hoard-ratio",
+            "hoard-recovery",
+            "hoard-cheaters"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -1255,6 +1258,97 @@ fn zi_sims_match_the_native_golden_entries() {
         assert_eq!(sim.model_kind(), "zi");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn hoard_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: day 10 of
+    // generation 1 (200 bouts), f64 traits and all.
+    for (id, fp) in [
+        ("hoard-threshold", "0x83dbd8ba0dd130e0"),
+        ("hoard-scatter", "0xa077bede082fc87e"),
+        ("hoard-larder", "0x3da0a5fcbbe0803e"),
+        ("hoard-no-free-recovery", "0xaf76c42dbbd8c97c"),
+        ("hoard-cheaters", "0xd9fe57875f2c6602"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "hoard");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn a_hoard_agent_is_inspected_with_its_traits_stores_and_losses() {
+    let mut sim = Sim::new(&preset_json("hoard-threshold"), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    sim.render("agents", "").unwrap();
+    assert_eq!(sim.frame_len(), (sim.width() * sim.height() * 4) as usize);
+    let pop: serde_json::Value = serde_json::from_str(&sim.hoard_population()).unwrap();
+    assert_eq!(pop.as_array().unwrap().len(), 20);
+    // Clicking the middle of agent 3's column finds agent 3.
+    let v: serde_json::Value = serde_json::from_str(&sim.inspect(35, 20).unwrap()).unwrap();
+    assert_eq!(
+        (v["generation"].as_u64(), v["day"].as_u64()),
+        (Some(1), Some(11))
+    );
+    assert_eq!(v["bout"], 1);
+    let a = &v["agent"];
+    assert_eq!(a["index"], 3);
+    assert_eq!(*a, pop[3]);
+    for key in ["l", "d", "forage"] {
+        assert!(a[key].as_f64().unwrap() >= 0.0, "{key}");
+    }
+    for key in ["larder", "scatter", "larder_lost", "scatter_lost"] {
+        assert!(a[key].as_u64().is_some(), "{key}");
+    }
+    for key in ["cheater", "alive", "fed", "defending"] {
+        assert!(a[key].is_boolean(), "{key}");
+    }
+    assert!(a.get("raiding").is_some() && a.get("larder_rate").is_some());
+    assert!(sim.inspect(200, 0).is_err());
+    assert_eq!(sim.locate(3.0), Some(vec![34, 0]));
+    // Generation series stay empty until a season ends.
+    assert!(sim.hoard_generation_series("mean_larder_prob").is_empty());
+    sim.step(2000 - 200);
+    assert_eq!(sim.hoard_generation_series("mean_larder_prob").len(), 1);
+    assert!(sim.hoard_generation_series("nope").is_empty());
+    // The status line's numbers, and the current season's per-bout series.
+    let st: serde_json::Value = serde_json::from_str(&sim.hoard_status()).unwrap();
+    assert_eq!(
+        (
+            &st["generation"],
+            &st["day"],
+            &st["bout"],
+            &st["season_over"]
+        ),
+        (&1.into(), &101.into(), &1.into(), &true.into())
+    );
+    assert_eq!(sim.hoard_season_series("larder_share").len(), 2 * 2001);
+    sim.step(3);
+    assert_eq!(
+        sim.hoard_season_series("larder_share")
+            .chunks(2)
+            .map(|p| p[0])
+            .collect::<Vec<_>>(),
+        vec![2001.0, 2002.0, 2003.0]
+    );
+    assert!(sim.hoard_season_series("nope").is_empty());
+}
+
+#[wasm_bindgen_test]
+fn hoard_views_are_empty_for_other_models() {
+    // A sugarscape world, and a zi market (gs-1).
+    for id in ["ii-2-unit", "gs-1"] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        sim.step(10);
+        assert_eq!(sim.hoard_population(), "[]", "{id}");
+        assert_eq!(sim.hoard_status(), "null", "{id}");
+        assert!(sim.hoard_season_series("larder_share").is_empty(), "{id}");
+        for name in ["generation", "mean_larder_prob"] {
+            assert!(sim.hoard_generation_series(name).is_empty(), "{id} {name}");
+        }
     }
 }
 

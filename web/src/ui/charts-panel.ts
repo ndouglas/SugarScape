@@ -5,8 +5,8 @@ import { MAX_GOODS } from '../goods';
 import { cachingOn, calendarYear, theftOn } from '../models';
 import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
-import { CHART_POINTS, type ChartGroup, type Wants } from '../protocol';
-import type { Config, ModelConfig, ModelKind } from '../types';
+import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
+import type { Config, HoardConfig, ModelConfig, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
 import {
@@ -17,6 +17,9 @@ import {
   distributionWants,
   emptyTable,
   histTable,
+  HOARD_CHARTS,
+  hoardGenerationTable,
+  hoardSeasonTable,
   lineData,
   MODEL_CHARTS,
   overlayData,
@@ -40,7 +43,7 @@ import {
 
 type Line = ChartLine;
 type Section = 'top' | 'goods' | 'pollution' | 'economy' | 'disease';
-type Kind = 'time' | 'band' | 'lorenz' | 'lorenzTotal' | 'wealth' | 'goodWealth' | 'age' | 'tags' | 'supplyDemand';
+type Kind = 'time' | 'band' | 'lorenz' | 'lorenzTotal' | 'wealth' | 'goodWealth' | 'age' | 'tags' | 'supplyDemand' | 'generation' | 'season';
 
 /**
  * One chart: its lines follow a world's config; it shows when a world on screen runs its model
@@ -61,6 +64,9 @@ interface ChartDef {
   /** A `goodWealth` chart's good: the caption names it. */
   good?: number;
 }
+
+/** Minds 7's charts: by generation, and this season's bouts (from `Engine.hoardCharts`). */
+const isHoardKind = (k: Kind): boolean => k === 'generation' || k === 'season';
 
 const HEIGHT = 150;
 /** The winter bands' fill (the Winter badge's blue, faint). */
@@ -84,6 +90,8 @@ const X_LABEL: Record<Kind, string> = {
   age: 'Age',
   tags: 'Tag position',
   supplyDemand: 'Price',
+  generation: 'Generation',
+  season: 'Day of the season',
 };
 
 const fixed = (lines: Line[]) => () => lines;
@@ -400,6 +408,7 @@ const CHARTS: ChartDef[] = [
   ...(Object.entries(MODEL_CHARTS) as [ModelKind, (typeof MODEL_CHARTS)['ring']][]).flatMap(([model, charts]) =>
     charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), range: c.range, modelShown: c.shown })),
   ),
+  ...HOARD_CHARTS.map((c): ChartDef => ({ title: c.title, kind: c.season ? 'season' : 'generation', section: 'top', model: 'hoard', lines: fixed(c.lines), range: c.range })),
 ];
 
 /**
@@ -424,6 +433,8 @@ interface Plot {
   drawn: (ChartGroup | undefined)[];
   /** The distribution versions last drawn. */
   drawnDist: string;
+  /** Minds 7: each world's hoard charts as last drawn. */
+  drawnHoard: (HoardCharts | null)[];
 }
 
 /** A world's latest distributions, and when (and at which tick) they arrived. */
@@ -551,6 +562,7 @@ export class ChartsPanel {
     if (!this.visible || !w) return {};
     const groups = this.plots.filter((p) => !p.figure.hidden && p.groups[i].length > 0).map((p) => p.groups[i]);
     const out: Wants = {};
+    if (w.model === 'hoard' && this.plots.some((p) => isHoardKind(p.def.kind) && !p.figure.hidden)) out.hoardCharts = true;
     if (groups.length > 0 && chartsBehind(groups, w.tick, (g) => w.chartGroup(g))) out.charts = { groups, max: CHART_POINTS };
     // Distributions exist only in a sugarscape.
     if (w.model === 'sugarscape' && distributionsDue(this.dist[i], w.tick, now, REFRESH_MS)) Object.assign(out, distributionWants(w.sugar));
@@ -630,16 +642,17 @@ export class ChartsPanel {
     const caption = h('figcaption', {}, def.title);
     const figure = h('figure', { class: 'chart' }, caption);
     const groups = this.worlds.map((w, i) => groupOf(def, w.sugar, i));
-    const counts = groups.map((g) => (def.kind === 'band' ? 3 : g.length));
-    const data = def.kind === 'time' || def.kind === 'band' ? this.merge(counts.map(emptyTable)) : this.distData(def);
+    const hoardLines = isHoardKind(def.kind) ? def.lines!(this.engine.sugar).length : 0;
+    const counts = groups.map((g) => (def.kind === 'band' ? 3 : isHoardKind(def.kind) ? hoardLines : g.length));
+    const data = def.kind === 'time' || def.kind === 'band' || isHoardKind(def.kind) ? this.merge(counts.map(emptyTable)) : this.distData(def);
     const plot = new uPlot({ ...this.options(def), width: this.width(), height: HEIGHT }, data, figure);
-    this.plots.push({ def, plot, figure, caption, groups, counts, drawn: this.worlds.map(() => undefined), drawnDist: '' });
+    this.plots.push({ def, plot, figure, caption, groups, counts, drawn: this.worlds.map(() => undefined), drawnDist: '', drawnHoard: this.worlds.map(() => null) });
     return figure;
   }
 
   private options(def: ChartDef): Omit<uPlot.Options, 'width' | 'height'> {
     const multi = this.worlds.length > 1;
-    const series: uPlot.Series[] = [{ label: def.model ? timeAxisLabel(def.model) : X_LABEL[def.kind] }];
+    const series: uPlot.Series[] = [{ label: def.model && def.kind === 'time' ? timeAxisLabel(def.model) : X_LABEL[def.kind] }];
     const lorenz = def.kind === 'lorenz' || def.kind === 'lorenzTotal';
     if (lorenz) series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
     this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.sugar, multi ? `${LABELS[i]} · ` : '', i === 1)));
@@ -649,10 +662,16 @@ export class ChartsPanel {
     const y: uPlot.Scale = {};
     if (lorenz) y.range = [0, 1];
     else if (def.range) y.range = def.range;
-    const lines = def.kind === 'time' ? def.lines!(this.engine.sugar).length : 0;
+    const lines = def.kind === 'time' || isHoardKind(def.kind) ? def.lines!(this.engine.sugar).length : 0;
     const legend = multi || def.kind === 'band' || def.kind === 'supplyDemand' || lines > 1;
     // The anasazi's x axis counts calendar years: no digit grouping ("1000", not "1,000").
-    const axes = def.model === 'anasazi' ? [{ ...this.axes[0], values: (_self: uPlot, splits: number[]) => yearTickLabels(splits) }, this.axes[1]] : this.axes;
+    // Minds 7: generations are whole numbers, so their axis steps by whole numbers.
+    const axes =
+      def.model === 'anasazi'
+        ? [{ ...this.axes[0], values: (_self: uPlot, splits: number[]) => yearTickLabels(splits) }, this.axes[1]]
+        : def.kind === 'generation'
+          ? [{ ...this.axes[0], incrs: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000] }, this.axes[1]]
+          : this.axes;
     // Minds 5: a sugarscape's time charts shade the ticks that ended in a global winter.
     const plugins = !def.model && (def.kind === 'time' || def.kind === 'band') ? [this.winterPlugin()] : [];
     return { scales: { x, y }, axes, legend: { show: legend }, series, plugins };
@@ -689,6 +708,9 @@ export class ChartsPanel {
   private seriesFor(def: ChartDef, c: Config, tag: string, b: boolean): uPlot.Series[] {
     const dash = b ? B_DASH : undefined;
     switch (def.kind) {
+      case 'generation':
+      case 'season':
+        return def.lines!(c).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash, points: { show: def.kind === 'generation' && !b, size: 4 } }));
       case 'time':
         return worldLines(def.lines!(c), b ? 1 : 0).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash }));
       case 'band': {
@@ -762,6 +784,16 @@ export class ChartsPanel {
   }
 
   private draw(p: Plot): void {
+    if (isHoardKind(p.def.kind)) {
+      const charts = this.worlds.map((w) => (w.model === 'hoard' ? w.hoardCharts : null));
+      if (charts.every((c, i) => c === p.drawnHoard[i])) return;
+      p.drawnHoard = charts;
+      const keys = p.def.lines!(this.engine.sugar).map((l) => l.key as HoardGenerationSeries);
+      const table = (c: HoardCharts | null, i: number) =>
+        p.def.kind === 'season' ? hoardSeasonTable(c, this.worlds[i].config as HoardConfig) : hoardGenerationTable(c, keys);
+      p.plot.setData(this.merge(charts.map(table)));
+      return;
+    }
     if (p.def.kind === 'time' || p.def.kind === 'band') {
       const groups = this.worlds.map((w, i) => w.chartGroup(p.groups[i]));
       if (groups.every((g, i) => g === p.drawn[i])) return;

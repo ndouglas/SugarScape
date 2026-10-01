@@ -1,5 +1,5 @@
-import type { ChartGroup, Wants } from '../protocol';
-import type { Config, ModelConfig, ModelKind } from '../types';
+import type { ChartGroup, HoardCharts, HoardGenerationSeries, Wants } from '../protocol';
+import type { Config, HoardConfig, ModelConfig, ModelKind } from '../types';
 
 /** uPlot data: x values, then one array per line (null is a gap). */
 export type LineData = [number[], ...(number | null)[][]];
@@ -746,6 +746,8 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
     { title: 'Like neighbors', lines: [{ key: 'like_share', label: 'Mean share alike', color: '--c3' }], range: [0, 1] },
     { title: 'Unsatisfied', lines: [{ key: 'unsatisfied', label: 'Unsatisfied share', color: '--red' }], range: [0, 1] },
   ],
+  // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
+  hoard: [],
   tipping: [
     {
       title: 'Inside',
@@ -769,7 +771,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'hoard' ? 'Bouts' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */
@@ -843,4 +845,67 @@ export function supplyDemandTable(sd: Float64Array | null | undefined): LineData
     return column;
   };
   return [prices, demand, supply, point(eqP, eqQ), point(actP, actQ)];
+}
+
+/**
+ * A Minds 7 chart: by generation (one point per finished season, from the world's season records),
+ * or this season's bouts (`season`: the larder share). One unit to a chart.
+ */
+export interface HoardChart { title: string; lines: (ChartLine & { key: HoardGenerationSeries })[]; range?: [number, number]; season?: true }
+
+export const HOARD_CHARTS: HoardChart[] = [
+  {
+    title: 'Larder probability (L) by generation',
+    lines: [
+      { key: 'mean_larder_prob', label: 'Mean L, all agents', color: '--c1' },
+      { key: 'hoarder_larder_prob', label: 'Mean L, hoarders only', color: '--c3' },
+    ],
+    range: [0, 1],
+  },
+  { title: 'Defense propensity (D) by generation', lines: [{ key: 'mean_defense', label: 'Mean D', color: '--c2' }], range: [0, 1] },
+  { title: 'Survivors by generation', lines: [{ key: 'survivors', label: 'Agents alive at the season’s end', color: '--c1' }] },
+  {
+    title: 'Larder share by generation',
+    lines: [{ key: 'larder_share', label: 'Larder items ÷ all items the survivors hold', color: '--c4' }],
+    range: [0, 1],
+  },
+  {
+    title: 'Loss rates by generation (per item-day held)',
+    lines: [
+      { key: 'larder_loss_rate', label: 'Larder', color: '--red' },
+      { key: 'scatter_loss_rate', label: 'Scattered', color: '--c1' },
+    ],
+  },
+  {
+    title: 'Larder share this season (per bout)',
+    lines: [{ key: 'larder_share', label: 'Larder items ÷ all items the living hold', color: '--c4' }],
+    range: [0, 1],
+    season: true,
+  },
+];
+
+/** A by-generation chart's data: generations as x, then each line's value per finished season (NaN a gap). */
+export function hoardGenerationTable(charts: HoardCharts | null, keys: HoardGenerationSeries[]): LineData {
+  if (!charts) return emptyTable(keys.length);
+  return [Array.from(charts.generations.generation), ...keys.map((k) => Array.from(charts.generations[k], gap))];
+}
+
+/**
+ * This season's chart: `[tick, value, …]` with x the day of the season (bout b of day d at
+ * d − 1 + b / bouts), counted from the season's first tick.
+ */
+export function hoardSeasonTable(charts: HoardCharts | null, c: HoardConfig): LineData {
+  const flat = charts?.season;
+  if (!flat || flat.length === 0) return emptyTable(1);
+  const season = c.days * c.bouts;
+  const first = flat[0];
+  // Generation g's bouts are ticks (g − 1)·season + 1 to g·season (tick 0 starts generation 1).
+  const start = first === 0 ? 0 : Math.floor((first - 1) / season) * season;
+  const xs: number[] = [];
+  const ys: (number | null)[] = [];
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    xs.push((flat[i] - start) / c.bouts);
+    ys.push(gap(flat[i + 1]));
+  }
+  return [xs, ys];
 }

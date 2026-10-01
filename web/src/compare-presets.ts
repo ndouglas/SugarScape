@@ -195,6 +195,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     b: 'zip-excess-demand',
   },
   {
+    id: 'hoard-scatter-vs-larder',
+    label: 'Scattered caches hard vs easy to find — Minds 7 (Compare)',
+    a: 'hoard-scatter',
+    b: 'hoard-larder',
+  },
+  {
     id: 'lk-random-vs-fixed',
     label: 'Imitating neighbors vs fixed random plans — Balinese Water Temples (Compare)',
     a: 'lk-random',

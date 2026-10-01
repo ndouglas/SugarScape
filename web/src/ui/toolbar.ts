@@ -2,6 +2,8 @@ import type { Lockstep } from '../compare/lockstep';
 import { randomSeed, type Engine, type RunControls, type Speed } from '../engine';
 import { errorMessage } from '../errors';
 import { winterShown } from '../minds';
+import { hoardStatusText } from '../hoard';
+import type { HoardConfig } from '../types';
 import { readoutText } from '../valley';
 import { h } from './dom';
 import { RateMeter } from './rate';
@@ -100,6 +102,8 @@ export class Toolbar {
   private readonly readout = h('span', { class: 'readout' });
   /** Minds 5: "Winter" beside the readout while the tick shown ended in a global winter. */
   private readonly winter = h('span', { class: 'badge winter', title: 'Every site grows back at its winter rate this tick', hidden: true }, 'Winter');
+  /** Minds 7: where the hoard run is (A's, in Compare): generation, day, bout and public food. */
+  private readonly hoardStatus = h('span', { class: 'readout hoard-status', hidden: true });
   /** The follow and replay chips: their ✕ is held too (ending a replay edits the world). */
   private readonly chips: HTMLElement;
   /** Hidden in Compare: the headers carry them. */
@@ -154,6 +158,7 @@ export class Toolbar {
       this.stopControl.el,
       h('div', { class: 'group' }, seedLabel, this.resetButton, this.dice),
       this.readout,
+      this.hoardStatus,
       this.winter,
       chips,
       h('div', { class: 'toolbar-end' }),
@@ -276,6 +281,9 @@ export class Toolbar {
 
   private tick(): void {
     this.readout.textContent = readoutText(this.engine, this.b);
+    const hoard = this.engine.model === 'hoard' ? this.engine.hoard : null;
+    this.hoardStatus.hidden = hoard === null;
+    if (hoard) this.hoardStatus.textContent = hoardStatusText(hoard, this.engine.config as HoardConfig);
     this.winter.hidden = !winterShown(this.engine.model === 'sugarscape' ? this.engine.minds : null);
     this.timeline.sync();
   }

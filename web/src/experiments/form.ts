@@ -108,6 +108,16 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in bali-imitation-growth's axis: the scored harvest against pest growth.
     return { ...form, x: { path: 'growth', values: '2:2.4:0.1' }, ticks: 360, metric: { ...form.metric, kind: 'final', series: 'scored' } };
   }
+  if (model === 'hoard') {
+    // The built-in hoard-ratio's axis: the hoarders' mean L in generation 50 (the sweep format's
+    // 100 000 ticks) against how findable scattered caches are, at app_lard 2.
+    return {
+      ...form,
+      x: { path: 'app_scat', values: '0.05,0.1,0.2,0.3,0.44,0.6,0.8,0.9' },
+      ticks: 100000,
+      metric: { ...form.metric, kind: 'window_mean', series: 'hoarder_larder_prob', from: 98001, to: 100000 },
+    };
+  }
   if (model === 'zi') {
     // The built-in gs-shouts' axis: efficiency against the period's length (Gode and Sunder's "30 seconds").
     return { ...form, x: { path: 'shouts', values: '25,50,100,200,500,1000,2000' }, ticks: 12000, metric: { ...form.metric, kind: 'final', series: 'avg_efficiency' } };

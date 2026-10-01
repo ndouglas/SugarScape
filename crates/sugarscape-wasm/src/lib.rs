@@ -255,7 +255,8 @@ impl Sim {
         })
     }
 
-    /// `"sugarscape"`, `"schelling"`, `"ring"` or `"anasazi"`.
+    /// The world's model, as a config's `model` key names it
+    /// (`"sugarscape"`, `"schelling"`, …, `"hoard"`; `ModelKind::as_str`).
     pub fn model_kind(&self) -> String {
         self.world.kind().as_str().to_string()
     }
@@ -665,5 +666,53 @@ impl Sim {
     /// The anasazi's farm–home links, `[farm x, farm y, home x, home y, …]`.
     pub fn anasazi_links(&self) -> Vec<u32> {
         self.world.anasazi().map_or(Vec::new(), |a| a.links_xy())
+    }
+
+    /// The hoard world's 20 agents as a JSON array (the population panel):
+    /// index, traits, stores, state, raid target and this season's losses.
+    /// `[]` for other models.
+    pub fn hoard_population(&self) -> String {
+        self.world.hoard().map_or("[]".into(), |h| {
+            serde_json::to_string(&h.population_views()).expect("agents serialize")
+        })
+    }
+
+    /// Where the hoard run is, as JSON `{generation, day, bout, public,
+    /// season_over, living}` (`day` and `bout` are the next to run, both
+    /// 1-based); `null` for other models.
+    pub fn hoard_status(&self) -> String {
+        self.world.hoard().map_or("null".into(), |h| {
+            serde_json::json!({
+                "generation": h.generation(),
+                "day": h.day(),
+                "bout": h.bout(),
+                "public": h.public(),
+                "season_over": h.season_over(),
+                "living": h.living(),
+            })
+            .to_string()
+        })
+    }
+
+    /// The current season's per-bout values of a hoard series as `[tick,
+    /// value, tick, value, …]` (from the season's first bout). Empty for
+    /// other models and unknown names.
+    pub fn hoard_season_series(&self, name: &str) -> Vec<f64> {
+        self.world
+            .hoard()
+            .and_then(|h| h.season_series(name))
+            .unwrap_or_default()
+    }
+
+    /// One value per finished season for a hoard generation series
+    /// (`generation`, `mean_larder_prob`, `hoarder_larder_prob`,
+    /// `mean_defense`, `survivors`, `larder_share`, `larder_loss_rate`,
+    /// `scatter_loss_rate`; NaN where a season has none). Empty for other
+    /// models and unknown names.
+    pub fn hoard_generation_series(&self, name: &str) -> Vec<f64> {
+        self.world
+            .hoard()
+            .and_then(|h| h.generation_series(name))
+            .unwrap_or_default()
     }
 }

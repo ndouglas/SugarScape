@@ -1,11 +1,12 @@
 import type { Engine } from '../engine';
 import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
-import type { AgentView } from '../types';
+import type { AgentView, HoardConfig } from '../types';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
 import { cacheSize, cacheSummary, compartmentName, isCheaterOnly, isLarder, labStatus } from '../minds';
 import { h } from './dom';
-import { colorLegend, legendElement, overlayLegend, type MapMarks } from './legend';
+import { hoardColumn } from '../hoard';
+import { colorLegend, HOARD_STATUS, hoardLegend, legendElement, overlayLegend, type MapMarks } from './legend';
 import { cacheMarks, memoryMarks } from './memory-overlay';
 import { arrowHead, wrappedSegments } from './overlay';
 import { planSegments, routeSegments } from './plan-path';
@@ -201,12 +202,22 @@ export class GridView {
 
     const sel = this.engine.selection;
     if (sel) {
+      // Minds 7: a click selects an agent's whole column, so the whole column is outlined.
+      const [x, y, w, hgt] =
+        this.engine.model === 'hoard'
+          ? (() => {
+              const [from, to] = hoardColumn(sel.x, (this.engine.config as HoardConfig).n, width);
+              return [from, 0, to - from, height];
+            })()
+          : [sel.x, sel.y, 1, 1];
+      // The hoard frame is drawn small (200 cells across), so its outline is drawn thicker.
+      const thick = this.engine.model === 'hoard' ? 3 : 1;
       ctx.strokeStyle = '#000';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(sel.x * CELL - 2, sel.y * CELL - 2, CELL + 4, CELL + 4);
+      ctx.lineWidth = 4 * thick;
+      ctx.strokeRect(x * CELL - 2, y * CELL - 2, w * CELL + 4, hgt * CELL + 4);
       ctx.strokeStyle = accent;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(sel.x * CELL - 2, sel.y * CELL - 2, CELL + 4, CELL + 4);
+      ctx.lineWidth = 2 * thick;
+      ctx.strokeRect(x * CELL - 2, y * CELL - 2, w * CELL + 4, hgt * CELL + 4);
     }
     this.drawLegend(marks);
     if (this.hover && this.brushRadius !== null) {
@@ -254,8 +265,14 @@ export class GridView {
   /** The lab's status line and the legend, rebuilt only when their contents change. */
   private drawLegend(marks: MapMarks): void {
     const sugar = this.engine.model === 'sugarscape';
-    const status = sugar && marks.lab ? labStatus(marks.lab) : '';
-    const items = sugar ? [...colorLegend(this.engine.colorMode, this.engine.sugar), ...overlayLegend(marks, this.engine.sugar)] : [];
+    // Minds 7: the frame is a population panel, one column per agent.
+    const hoard = this.engine.model === 'hoard';
+    const status = sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '';
+    const items = sugar
+      ? [...colorLegend(this.engine.colorMode, this.engine.sugar), ...overlayLegend(marks, this.engine.sugar)]
+      : hoard
+        ? hoardLegend(((this.engine.config as HoardConfig).cheaters ?? 0) > 0)
+        : [];
     const key = JSON.stringify([status, items]);
     if (key === this.legendKey) return;
     this.legendKey = key;

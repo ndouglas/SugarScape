@@ -59,6 +59,12 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
   const brushed = () => tool === 'paint' || tool === 'vaccinate';
   const diseaseOn = () => targets.some((t) => t.engine.model === 'sugarscape' && t.engine.sugar.disease.enabled);
   const grids = () => targets.map((t) => t.grid);
+  // A hoard frame is one column per agent and has no sites, so its hint names only agents.
+  const inspectHint = h('span', { class: 'hint' });
+  const syncInspectHint = () => {
+    const hoard = targets.length > 0 && targets.every((t) => t.engine.model === 'hoard');
+    inspectHint.textContent = hoard ? 'Click an agent.' : 'Click an agent or site.';
+  };
 
   const buttons = TOOLS.map(([t, label]) => h('button', { onclick: () => choose(t) }, label));
   const options = h('div', { class: 'tool-options' });
@@ -143,6 +149,7 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
 
   function choose(next: Tool): void {
     tool = next;
+    syncInspectHint();
     buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(TOOLS[i][0] === tool)));
     for (const g of grids()) g.brushRadius = brushed() ? radius : null;
     if (tool === 'paint') {
@@ -164,7 +171,7 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
             : tool === 'vaccinate'
               ? [number('Radius', 0, 10, () => radius, (v) => (radius = v)), pick]
               : tool === 'inspect'
-                ? [h('span', { class: 'hint' }, 'Click an agent or site.')]
+                ? [inspectHint]
                 : [h('span', { class: 'hint' }, 'Click or drag over agents to remove them.')]),
     );
     refreshPicker(true);
@@ -186,6 +193,7 @@ export function buildTools(primary: ToolTarget, onInspect: (engine: Engine) => v
   function syncAvailability(): void {
     const sugar = targets.some((t) => t.engine.model === 'sugarscape');
     const on = diseaseOn();
+    syncInspectHint();
     buttons.forEach((b, i) => {
       const t = TOOLS[i][0];
       b.hidden = t !== 'inspect' && (!sugar || (DISEASE_TOOLS.includes(t) && !on));

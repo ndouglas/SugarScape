@@ -253,7 +253,7 @@ describe('SimHost', () => {
 
 describe('SimHost with another model', () => {
   /** A host whose world is a fake of `model`. */
-  function other(model: 'schelling' | 'ring' | 'anasazi', finish?: number) {
+  function other(model: 'schelling' | 'ring' | 'anasazi' | 'hoard', finish?: number) {
     const host = new SimHost(fakeModule());
     const config = { model, width: 6, height: 4, finish } as unknown as ModelConfig;
     let id = 0;
@@ -303,6 +303,21 @@ describe('SimHost with another model', () => {
     expect(Array.from(s.valley!.links)).toEqual([2, 1, 2, 0]);
     expect(send({ type: 'refresh' }).valley).toBeUndefined();
     expect(other('ring').send({ type: 'refresh' }, { valley: true }).valley).toBeUndefined();
+  });
+
+  it('sends where a hoard run is, and its charts only when wanted, only for the hoard model', () => {
+    const { init, send } = other('hoard');
+    expect(init.display?.colorMode ?? 'agents').toBe('agents');
+    const s = send({ type: 'step', n: 25 }, { hoard: true });
+    expect(s.hoard).toEqual({ generation: 1, day: 2, bout: 6, public: 82, season_over: false, living: 1 });
+    expect(s.hoardCharts).toBeUndefined();
+    const c = send({ type: 'refresh' }, { hoardCharts: true });
+    expect(c.hoardCharts).toBeDefined();
+    expect(Array.from(c.hoardCharts!.generations.generation)).toEqual([1, 2]);
+    expect(Array.from(c.hoardCharts!.generations.survivors)).toEqual([0.1, 0.2]);
+    expect(c.hoardCharts!.season.slice(0, 4)).toEqual(Float64Array.of(0, 0.5, 1, 0.5));
+    expect(c.hoard).toBeUndefined();
+    expect(other('anasazi').send({ type: 'refresh' }, { hoard: true, hoardCharts: true })).not.toHaveProperty('hoard');
   });
 
   it('says when the world is finished, and a step there changes nothing', () => {

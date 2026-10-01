@@ -33,6 +33,42 @@ export const RENDER_COLORS = {
   REMEMBERS: '#36d6c3',
 } as const;
 
+/**
+ * Minds 7's frame colors (crates/sugarscape-core/src/hoard/view.rs), as `#rrggbb`; legend.test.ts
+ * checks each against view.rs.
+ */
+export const HOARD_COLORS = {
+  DEAD: '#3a3630',
+  CHEATER: '#b06ad8',
+  DEFENDING: '#4a7cd8',
+  RAIDING: '#e03c31',
+  FED: '#3ca85a',
+  HUNGRY: '#f29a3a',
+  LARDER: '#f2c14e',
+  SCATTER: '#7ab05a',
+  LOW: '#2a2620',
+  HIGH: '#6ad8f6',
+} as const;
+
+/** The hoard frame's one-line key: what a column is. */
+export const HOARD_STATUS =
+  'One column per agent, #1 at the left. Top: its state. Then its L and D strips. From the midline: its larder items up and its scattered items down, one cell an item (up to 40).';
+
+/** Minds 7's legend: the state strip's colors (in the renderer's order of precedence), the trait strips and the stores. */
+export function hoardLegend(cheaters: boolean): LegendItem[] {
+  const c = HOARD_COLORS;
+  return [
+    swatch('hungry', c.HUNGRY),
+    swatch('fed', c.FED),
+    swatch('defending its larder', c.DEFENDING),
+    swatch('raiding a larder', c.RAIDING),
+    ...(cheaters ? [swatch('cheater', c.CHEATER)] : []),
+    swatch('dead', c.DEAD),
+    { label: 'L and D strips, 0 → 1', mark: { kind: 'ramp', from: c.LOW, to: c.HIGH } },
+    swatch('larder items (up)', c.LARDER),
+    swatch('scattered items (down)', c.SCATTER),
+  ];
+}
 /** The overlay symbols the legend can show; the grid view draws each the same way. */
 export type LegendSymbol = 'cache' | 'cheater-cache' | 'own-cache' | 'home' | 'larder' | 'memory' | 'spot' | 'path' | 'route' | 'tray' | 'turn';
 

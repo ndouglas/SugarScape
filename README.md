@@ -2585,6 +2585,193 @@ Credit: M. Andersson and J. Krebs, "On the evolution of hoarding behaviour," *An
 food-hoarding behavior," *Behavioral Ecology* 14 (2003), 656–667. See
 `docs/superpowers/specs/2026-09-30-minds-6-theft-design.md`.
 
+### Minds 7: the evolution of hoarding
+
+The seventh step of the Minds program (`docs/studies/2026-09-27-minds.md`) and P1b of its pilfering
+campaign. Unlike Minds 1–6 it starts as a reproduction. Vander Wall and Jenkins (2003) argued that
+scatter hoarding persists despite heavy pilferage because pilfering is reciprocal, and that the
+cheater most likely to damage scatter hoarders is one who pilfers and keeps the loot "in a
+defensible larder" (p.661). They tested this with a genetic algorithm: 20 animals, a 100-day season,
+60 generations, and heritable probabilities of larder hoarding (L) and of defending the larder (D).
+Their result is a threshold in how visible scattered caches are relative to larders: "For ratios
+less than 0.2, high probabilities of larder hoarding never evolved; for ratios greater than 0.3,
+high probabilities of larder hoarding almost invariably evolved" (p.663). Minds 7 builds that model
+as written, tests what they report, and then varies what they held fixed.
+
+**What was built.**
+
+- **A new model kind, `hoard`, built from the paper's Appendix** (pp. 664–666). It is non-spatial,
+  and nothing in the Sugarscape world changed. One tick is one foraging bout: 20 bouts a day, 100
+  days a season, one season a generation. Public food is 82 items on day 1 falling to 2 on day 50,
+  2 100 in all (p.665). On days 1–5 everyone is fed by food that can't be stored; from day 6 an agent
+  that eats nothing all day starves.
+- **A bout:** owners eat from their stores in the day's first bout (larder first; a larder eater
+  stays home and defends), satiated agents draw whether to defend, predation strikes at 0.0001 a
+  bout, and everyone else forages in a fresh random order. A search finds an item with
+  P = 1 − e^(−λ), λ growing with the food available to that agent: public food, plus others'
+  scattered items × app_scat, plus others' larders × app_lard. A found larder is raided one item a
+  bout until the day ends or its owner stays home. What an agent doesn't eat it stores, in its
+  larder with probability L, otherwise scattered.
+- **Breeding:** parents drawn in proportion to the survivors' leftover stores; L and D inherited on
+  the logit scale with heritability 0.8 and segregation variance V_seg.
+- **Gaps filled as stated choices.** The paper doesn't print the defense logistic's slope (we use
+  10), V_seg ("a moderate amount of genetic variation", p.662; we use 0.5), what a search that lands
+  on a defended larder gets (nothing), the stores of the dead (they stay, open to raids), the food
+  line's exact form, or how "larders take over" is measured (the hoarders' mean L above 0.95 over
+  generations 51–60). Each choice is recorded in the spec's amendments, with its reason, before any
+  survey run. The paper's 186 % daily larder loss can't be a proportion; we measure loss as items
+  lost per item-day held, a hazard that can exceed 1.
+- **Named switches**, defaults reproducing the above bit for bit: `larder_weight` (per burrow or per
+  item, below), `defense_slope`, `v_seg`, `defended_in_pool`, `dead_stores` and `early_bout1_eats`
+  (the gap choices); and as new ground, `owner_recovery` (an owner finds its own scattered cache only
+  with this chance; Vander Wall and Jenkins give free recovery), `cheaters` (a share of founders that
+  never store, Minds 6's cheater, dealt by id) and `cheater_fitness` (leftover stores, as for
+  everyone, or survival weighed as an average surviving hoarder's stores).
+
+**Per burrow, and why the default changed.** The paper can be read two ways on how a larder is
+found. The Appendix sums "all larder hoards of other individuals weighted by apparency of larder
+hoards" (p.665), which can weigh every item in a larder. But p.662 defines app_lard as "the relative
+probability of detecting a burrow of another individual while searching for food", and p.664 has
+foragers encounter "public items, as well as scatter hoards and burrow entrances of other
+individuals, with probabilities determined by the apparency values". We first chose per item, on the
+grounds that only the Appendix gives a formula. Under per item, larders never took over in 0 of 15
+diagnostic runs at app_scat 0.1, 0.44 and 0.8, and those runs prompted the change (the survey, run
+after it, kept per item as a full row: 0 of 1 350 runs at ratios up to 0.45). A diagnosis found why: a larder's chance of being found grows with its size, raids start from
+those finds and cause 84 % of larder loss, and so larders never grow large enough to be defended.
+Re-reading the text with that in view, per burrow (each other agent's non-empty larder counts
+app_lard once) is the better-supported reading, and the Appendix sentence doesn't settle it, since
+each animal has one "larder hoard". **Per burrow became the default, and the change was prompted by
+the result.** Per item stays as the named switch, and the survey runs its claims under both readings
+as full rows.
+
+**The survey** (50 runs a condition, seeds 1–50, every run the full 60 generations; Vander Wall and
+Jenkins report 35 runs. The grid is app_lard 1, 2 and 3 by app_scat/app_lard 0.05–0.45 with app_scat
+≤ 0.9, their range: 27 cells, 1 350 runs per reading. Judges and thresholds were committed before
+any run; causes are "likely" unless isolated; per burrow unless stated.)
+
+- **1. All-or-nothing, but slower: Fails on speed.** "In 35 runs of the model, average probability
+  of larder hoarding always remained less than 0.2 or increased rapidly to more than 0.95, usually
+  within 10 generations (Figure 2A)" (p.663). The ending reproduces: 1 331 of 1 350 runs (98.6 %)
+  end below 0.2 or above 0.95, and the other 19 are intermediate (11 of them average below 0.2 but
+  cross it in some generation). The speed doesn't. Only 68 of 634
+  takeovers pass 0.95 by generation 10 (10.7 %); the median is generation 15 (IQR 12–20). Read the
+  other way, within 10 generations of lifting above 0.2, it is 239 of 634 (37.7 %), still not
+  "usually". Their own Fig. 2A example passes 0.95 near generation 16, and in that cell (app_lard 1,
+  ratio 0.30) ours pass at a median 16.5. V_seg likely sets the speed: at ratio 0.4, the takeovers
+  passing 0.95 by generation 10 are 0 of 31 at V_seg 0.25, 6 of 49 at 0.5 and 35 of 50 at 1.
+- **2. The threshold is Weak.** A logistic fit of takeover on the ratio gives logit = −5.98 +
+  25.45 × ratio (McFadden's ρ² 0.50), with its 50 % point at **0.235** (SE 0.003) against their
+  **0.219** (Fig. 2B: "logit = −8.00 + 36.59 × ratio; McFadden's ρ2 = 0.61", p.662). That is within
+  the pre-set ±0.03, so the 50 % point Holds, though our curve is shallower. Above 0.3, 285 of 300
+  runs took over (95 %, Holds). Below 0.2, 7 of 450 did, all at 0.15, where they report none
+  (Weak). Fitted per app_lard, the 50 % point is 0.232, 0.237 and 0.236, so the ratio alone nearly
+  sets it.
+- **3. Larder loss above scatter loss: Weak** (1 266 of 1 350 runs, 93.8 %; they report "all 35
+  simulations"). All 84 misses are takeover runs at ratios 0.35–0.45. Over generations 1–10 the
+  medians are 90 % a day for larders and 27 % for scatter. Their 186 % and 24 % are context only,
+  since their rate is undefined.
+- **The CV judge was omitted, and is disclosed.** The spec's amendments called for judging the
+  spread of loss rates ("the coefficient of variation in rate of loss of larder-hoarded items (57%)
+  was almost twice that of scattered caches (33%)", p.663). The judge commit left it reported, an
+  omission made before any run, and no judge was added after. The larder/scatter CV ratio is 2.85
+  within runs (1.49 across runs) against their 1.73: not matched under our primary definition.
+- **4. The predictor Holds, against a weak baseline.** "If one or more individuals in the first 10
+  generations lost items from larders at a lower rate than the average rate of loss of scattered
+  caches in the population, then larder hoarding usually became established" (p.663). With a
+  pre-registered floor (an agent counts only if its larder averaged at least one item), that rule
+  is 84.5 % accurate against takeover, against 59.3 % for comparing the means, and takeover follows
+  in 76 % of the 811 runs it predicts. But the ratio alone (takeover at ratio ≥ 0.25) is 83.7 %
+  accurate, and generation 1 alone gives 76.5 %. The predictor is also partly circular, since early
+  takeovers make larders large and defended. So it is not claimed to explain the outcome.
+- **5. Scatter withstands about the loss they report.** In runs without takeover, scattered caches
+  lose 20.5 % a day over generations 1–10 (20.8 % over 1–60), against "18% in cases in which larder
+  hoarding did not become established" (p.663). Reported, not judged.
+- **Neither reading of the larder reproduces both.** Per item reproduces the loss statistics: larder
+  loss above scatter in 1 350 of 1 350 runs, a CV ratio of 1.75 against their 1.73, and a 210 %
+  median larder loss against their 186 %. But larders never take over (threshold and predictor
+  Fail). Per burrow gets the outcome and misses those. Likely their detection or defense differs
+  from both readings in some unstated way, and per burrow may stand in for that difference rather
+  than being their rule.
+- **The reproduction is contingent on three choices.** Larders weighted per burrow (chosen after per
+  item failed), a defense slope of 10 and V_seg 0.5 (both fixed before any run, and neither printed).
+  At app_lard 2 the fitted 50 % point in the sensitivity runs is 0.236 at those values, 0.351 at
+  V_seg 0.25, 0.174 at V_seg 1, and about 0.09–0.14 at slope 4 (two of the three fits
+  near-separated), where larder loss also falls below scatter loss in most
+  runs. Every other pair tried misses 0.219 by more than ±0.03. And the V_seg that speeds the rise
+  (1) moves the 50 % point to 0.174, so no single value fits both. Vander Wall and Jenkins explored
+  this: "Results of a full sensitivity analysis will be reported elsewhere" (p.665). Three searches
+  did not find it, so it is unfound.
+
+| Claim | Verdict | Per item |
+|---|---|---|
+| 1. All-or-nothing | Fails (98.6 % end low or high; 10.7 % rise by generation 10) | Weak, vacuously (nothing takes over) |
+| 2. Threshold | Weak (50 % point 0.235 against 0.219; 7 of 450 below 0.2) | Fails (no takeover) |
+| 3. Larder loss above scatter | Weak (93.8 %) | reported: 1 350 of 1 350 |
+| CV ratio about 1.7 | Not judged (omission disclosed): 2.85 | 1.75 |
+| 4. The best early larder predicts | Holds (84.5 % against 59.3 %; the ratio alone 83.7 %) | Fails |
+| 5. Scatter withstands 18 % | Reported: 20.5 % | |
+
+**New ground** (reported, not judged).
+
+- **Visibility.** Vander Wall and Jenkins predicted, untested, that "the prevalence of scatter
+  hoarding in communities should depend on environmental conditions that affect the apparency of
+  scattered caches and larders" (p.663). Takeover rises with app_scat at every app_lard, apart from
+  small dips, from none at the lowest values (app_scat up to 0.15, 0.2 and 0.3 for app_lard 1, 2
+  and 3) to 78–100 % at the top of each row. At a fixed app_lard this is the ratio axis again; at a
+  given ratio the three app_lard values give similar shares (at 0.25: 70, 66 and 58 %).
+- **Owner recovery.** Making owners find their own scattered caches doesn't clearly change the
+  outcome. At ratio 0.22 takeovers are 23, 28, 21 and 21 of 50 for recovery 0.25, 0.5, 0.75 and 1,
+  with no trend. At ratio 0.1 nothing takes over at any recovery, and survival falls from 82 % a
+  season with free recovery to 74 % at 0.25, likely because a missed meal late in the season is a
+  starved agent.
+- **The cheater.** Vander Wall and Jenkins suggested, untested, that "under ideal conditions (e.g.,
+  mild winters), a nonhoarding cheater could survive and even flourish" (p.661). Under their fitness
+  rule (leftover stores) a cheater holds nothing and is never a parent: cheaters are gone by
+  generation 2 in all 50 runs, though in generation 1 they survive about as well as hoarders (a
+  median 80 % against 87 %). If a surviving cheater instead weighs as much as an average surviving
+  hoarder's stores (`cheater_fitness = survival`), cheaters persist at about 6 % of births by
+  generation 60 (never gone in 3 of 50 runs), survive somewhat less well than hoarders (0.71 against
+  0.80), and larders take over in 33 of 50 runs against 21 without cheaters and 22 under `stores`.
+- **Where larders take over, about half the agents die each season, mostly starving.** In
+  `hoard-larder` survival is 0.50 a season, against about 0.82 where scatter holds; predation alone
+  takes about 18 %. A review probe found 92 % of the starvations after day 50, the starved having lost
+  a median 478 larder items to raiders. Likely, larders raided empty after public food ends on day 50
+  leave their owners nothing, as the paper notes: "Starvation also occurred in the second half of the
+  hoarding season if the food stores of an individual were depleted" (p.664). The cause is not
+  isolated.
+
+**The presets** (50 runs each, 60 generations). `hoard-threshold` (ratio 0.22): 21 takeovers.
+`hoard-scatter` (0.1): none; scattered caches lose 18 % a day and larders 180 %. `hoard-larder`
+(0.4): 49 takeovers, rising a median 13 generations in. `hoard-no-free-recovery` (recovery 0.5): 28.
+`hoard-cheaters` (a quarter cheaters): 22.
+
+**The sweeps** (built in; observations, not judged). Built-in sweeps cap at 100 000 ticks, so they
+read the hoarders' mean L in generation 50, not the generation-60 takeover. `hoard-ratio` sweeps
+app_scat at app_lard 2; `hoard-recovery` sweeps owner recovery; `hoard-cheaters` reads survivors in
+generation 1 against the share of cheaters, since under Vander Wall and Jenkins's fitness rule the cheaters are gone after it.
+
+**Cost** (µs per agent-bout, CPU time, the full 60 generations; the table is in the program
+document). 0.30–0.47, a fifth or less of the cheapest Sugarscape figure in the Minds tables, since
+there is no grid: a bout is a few draws and one weighted pick. A full run of about 2 million
+agent-bouts takes under a second. `hoard-larder` is the cheapest, likely because agents who stay
+home to defend don't search (not isolated).
+
+The page: Minds 7 sits in the Minds menu as "Minds 7: evolution of hoarding". The frame is one column
+per agent: its state on top (hungry, fed, defending, raiding, cheater, dead), its L and D, and its
+larder as a bar up and its scattered caches down. The toolbar shows the generation, day, bout and
+public food. Charts: **Larder probability (L) by generation** (all agents and hoarders only),
+**Defense propensity (D)**, **Survivors**, **Larder share** and **Loss rates** by generation, and
+**Larder share this season** by bout. Inspect shows an agent's traits, stores, losses and loss rates,
+and how it died. The Rules panel groups the parameters (Season, Run, Food, Search, Apparency, Risk,
+Inheritance, Founders, Defense, Switches) and says which apply live and which rebuild the world.
+Presets: `hoard-threshold`, `hoard-scatter`, `hoard-larder`, `hoard-no-free-recovery` and
+`hoard-cheaters`. **Compare** entry: "Scattered caches hard vs easy to find — Minds 7 (Compare)".
+Built-in sweeps: `hoard-ratio`, `hoard-recovery`, `hoard-cheaters`.
+
+Credit: S. B. Vander Wall and S. H. Jenkins, "Reciprocal pilferage and the evolution of
+food-hoarding behavior," *Behavioral Ecology* 14 (2003), 656–667. See
+`docs/superpowers/specs/2026-09-30-minds-7-hoarding-evolution-design.md`.
+
 ### Threshold Models (Granovetter 1978; Watts 2002)
 
 **The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins

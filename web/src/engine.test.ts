@@ -1166,6 +1166,9 @@ describe('Engine with other models', () => {
     expect(finishedNotice({ model: 'ants', stop_at: 2000 } as unknown as ModelConfig, 2000)).toBe('This run has reached its last step (2000) — Reset to run it again');
     expect(finishedNotice({ model: 'thresholds', stop_at: 50 } as unknown as ModelConfig, 50)).toBe('This run has reached its last step (50) — Reset to run it again');
     expect(finishedNotice({ model: 'bali', stop_at: 30 } as unknown as ModelConfig, 360)).toBe('This run has reached its last year — Reset to run it again');
+    const hoard = { model: 'hoard', days: 100, bouts: 20, generations: 60 } as unknown as ModelConfig;
+    expect(finishedNotice(hoard, 120_000)).toBe('This run has reached its last generation (60) — Reset to run it again');
+    expect(finishedNotice(hoard, 4_321)).toBe('Every agent has died, in generation 3 — Reset to run it again');
     expect(finishedNotice({ model: 'zi', stop_at: 6 } as unknown as ModelConfig, 12000)).toBe('This run has reached its last period — Reset to run it again');
     expect(finishedNotice({ model: 'punishment', stop_at: 2000 } as unknown as ModelConfig, 2000)).toBe('This run has reached its last period (2000) — Reset to run it again');
     expect(finishedNotice({ model: 'retirement', stop_at: 50 } as unknown as ModelConfig, 50)).toBe('This run has reached its last period (50) — Reset to run it again');

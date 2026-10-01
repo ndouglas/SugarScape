@@ -1,6 +1,8 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
 import { MINDS_OVERLAYS, NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  HoardConfig,
+  HoardInspection,
   LineInspection,
   TippingInspection,
   ZiInspection,
@@ -50,7 +52,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -79,12 +81,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   bali: 'Balinese Water Temples',
   line: "Schelling's line",
   tipping: "Schelling's tipping",
+  hoard: 'The evolution of hoarding',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard'
     ? tag
     : 'sugarscape';
 }
@@ -183,7 +186,11 @@ export function isBaliView(v: AnyInspection): v is BaliInspection {
   return 'panel' in v && 'subak' in v && 'dam' in v;
 }
 
-/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
+/** A column of the hoard frame: the run's generation, day and bout, and an agent by index. */
+export function isHoardView(v: AnyInspection): v is HoardInspection {
+  return 'bout' in v && 'public' in v;
+}
+
 /** A point of Schelling's tipping plane. */
 export function isTippingView(v: AnyInspection): v is TippingInspection {
   return 'red_content' in v && 'blue_content' in v;
@@ -194,6 +201,7 @@ export function isLineView(v: AnyInspection): v is LineInspection {
   return 'place' in v && 'agent' in v;
 }
 
+/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
 export function isZiView(v: AnyInspection): v is ZiInspection {
   return 'panel' in v && 'trade' in v && 'supply' in v;
 }
@@ -252,13 +260,27 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     const b = c as BaliConfig;
     return Math.max(0, b.stop_at * (b.watershed === 'two_node' ? b.node_periods : 12) - tick);
   }
+  if (modelOf(c) === 'hoard') {
+    // The core finishes the season in progress even if `generations` is lowered below it live, so
+    // count to the later of the last generation's end and the current season's end.
+    const h = c as HoardConfig;
+    const s = hoardSeasonTicks(h);
+    return Math.max(h.generations, Math.max(1, Math.ceil(tick / s))) * s - tick;
+  }
   return Infinity;
+}
+
+/** A hoard season's bouts (ticks): generation g's are (g − 1)·days·bouts + 1 to g·days·bouts. */
+export function hoardSeasonTicks(c: HoardConfig): number {
+  return c.days * c.bouts;
 }
 
 /**
  * Whether a world of `c` can finish at a tick nobody knows in advance: civil Model II stopping when
  * a group dies out (its `ticksLeft` is Infinity until then). Compare steps such a pair one tick at a
- * time, so neither world runs past the tick at which the other finished.
+ * time, so neither world runs past the tick at which the other finished. A hoard run can also die
+ * out in any season, but that is rare and it ends the run for good, so it isn't counted here: Compare
+ * steps a hoard pair in batches, and a pair whose world died out stops at the end of that batch.
  */
 export function finishesUnpredictably(c: ModelConfig): boolean {
   const model = modelOf(c);
@@ -344,14 +366,17 @@ export const mindsShown = (c: Config): boolean =>
 /** An entry of the model menu: a model, or the Minds (sugarscape worlds using the Minds rules). */
 export type MenuKind = ModelKind | 'minds';
 
+/** Models of their own that belong to the Minds entry (Minds 7's hoarding), not an entry of their own. */
+export const MINDS_MODELS: ModelKind[] = ['hoard'];
+
 /** The model menu's entries in order: the Minds right after the Sugarscape. */
-export const MENUS: MenuKind[] = ['sugarscape', 'minds', ...MODELS.filter((m) => m !== 'sugarscape')];
+export const MENUS: MenuKind[] = ['sugarscape', 'minds', ...MODELS.filter((m) => m !== 'sugarscape' && !MINDS_MODELS.includes(m))];
 
 export const MENU_LABELS: Record<MenuKind, string> = { ...MODEL_LABELS, minds: 'Minds' };
 
 /** The model menu's entry for config `c` by its rules alone. */
 export function menuOf(c: ModelConfig): MenuKind {
-  return usesMinds(c) ? 'minds' : modelOf(c);
+  return usesMinds(c) || MINDS_MODELS.includes(modelOf(c)) ? 'minds' : modelOf(c);
 }
 
 /**
@@ -375,6 +400,7 @@ const MINDS_TITLES: Record<string, string> = {
   '4': 'Minds 4: planning',
   '5': 'Minds 5: caching',
   '6': 'Minds 6: theft',
+  '7': 'Minds 7: evolution of hoarding',
 };
 
 /**
@@ -570,6 +596,8 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
   ],
   // His plane: Red inside across, Blue inside up; where each color is content tinted.
   tipping: [['plane', 'Plane']],
+  // One column per agent: status, L and D, larder up and scatter down (the population panel).
+  hoard: [['agents', 'Agents']],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -599,4 +627,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   bali: [],
   line: [],
   tipping: [],
+  hoard: [],
 };
