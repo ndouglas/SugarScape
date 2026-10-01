@@ -347,7 +347,9 @@ fn run(mut w: World, setup: Setup) -> Run {
         let s = usize::from(t0 >= 100);
         // The tick's start: wealth, stolen, metabolism; caches; fresh
         // entries.
-        let mut before: HashMap<AgentId, (f64, f64, f64)> = HashMap::new();
+        // A BTreeMap, so the sums over it run in id order and are
+        // bit-reproducible.
+        let mut before: BTreeMap<AgentId, (f64, f64, f64)> = BTreeMap::new();
         let mut caches0: HashMap<(AgentId, u32), f64> = HashMap::new();
         let mut fresh: HashMap<AgentId, BTreeMap<(u32, AgentId), u64>> = HashMap::new();
         for a in w.agents() {
@@ -1030,11 +1032,13 @@ fn usage_claim(seeds: &[u64]) -> Outcome {
             spans.join("; ")
         ))
         .with(&format!(
-            "The check world (watch-arena, not judged: its rules are pinned by Rust tests): rate {}; {}; {}; {}.",
+            "The check world (watch-arena, not judged: its rules are pinned by Rust tests): rate {}; {}; {}; {}; every agent alive at 200 in {} of {} seeds.",
             medp(&col(&arena, Run::rate)),
             decomposition(&arena),
             sources(&arena),
             groups(&arena),
+            arena.iter().filter(|x| x.surv_all() == 1.0).count(),
+            arena.len(),
         ))
         .with(&format!(
             "The mechanism (reported; causes likely unless a switch isolates them): {}; {}; {}.",

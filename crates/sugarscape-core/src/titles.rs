@@ -315,7 +315,7 @@ pub const TITLES: [(&str, &str); 385] = [
     ),
     (
         "watch-scroungers",
-        "Half watch others bury and do slightly better, however many watch",
+        "Half watch others bury and do slightly better than those who don't",
     ),
     (
         "watch-scroungers-only",
