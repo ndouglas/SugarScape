@@ -631,14 +631,14 @@ impl World {
         if self.config.theft.cheaters > 0.0 && agent.parents.is_none() {
             agent.cheater = self.config.theft.founder_cheats(id);
         }
-        // Minds 8: so does a founder watch.
+        // Minds 8: so does a founder watch, after its cheater flag (above):
+        // `who: hoarders` and `cheaters` deal by that flag. The guard skips
+        // only `share` with no watchers, where nobody would watch; the other
+        // two ignore `watchers`, so they deal whatever it says.
         if (self.config.watching.watchers > 0.0 || self.config.watching.who != Who::Share)
             && agent.parents.is_none()
         {
-            agent.watches = self
-                .config
-                .watching
-                .founder_watches(id, self.config.theft.founder_cheats(id));
+            agent.watches = self.config.watching.founder_watches(id, agent.cheater);
         }
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {

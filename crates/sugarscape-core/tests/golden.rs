@@ -109,13 +109,15 @@ const GOLDEN: &[(&str, u64)] = &[
     ("theft-arena-2", 0x403d0fd47b215e1d),
     ("theft-arena-4", 0x5aab49c65af8928d),
     ("theft-arena-8", 0x24f7fb0d39bfc02),
-    // Minds 8
-    ("watch-winter", 0xd0ecb91d218578c7),
-    ("watch-winter-stumble", 0xa0b7cb66da3d47d),
-    ("watch-half", 0x7cb57a26cb1e11eb),
-    ("watch-scroungers", 0x62e2e28754762b67),
-    ("watch-scroungers-only", 0x1c3c1d3d371800f5),
-    ("watch-arena", 0x1bc4cc1082848f9b),
+    // Minds 8, re-recorded for Minds 8b's default `raid_if: better`. The
+    // first round's watch-winter (0xd0ecb91d218578c7) is reproduced under
+    // `raid_if: always` (minds/caching/watching.rs).
+    ("watch-winter", 0xa57ae7d89c3fb6d),
+    ("watch-winter-stumble", 0xcf858c2b12679f0c),
+    ("watch-half", 0x6adc8be6bd1d0fde),
+    ("watch-scroungers", 0x14a1f4f2cfe8b7af),
+    ("watch-scroungers-only", 0x5d5bfa38a76c9368),
+    ("watch-arena", 0x35bf42deadfb8424),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).

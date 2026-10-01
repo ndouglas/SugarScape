@@ -1,8 +1,12 @@
 //! Minds 8: watchers who see a burial, remember the cache and raid it.
 //!
-//! - **Who watches.** `Agent.watches`: founders dealt by id under
-//!   `watching.watchers` (`Watching::founder_watches`, the rule of
-//!   `Theft::founder_cheats`), with no draw. An agent born later doesn't
+//! - **Who watches** (`who`, reset-only). `Agent.watches`, dealt to
+//!   founders with no draw by `Watching::founder_watches`, after the
+//!   founder's cheater flag. `share` (the default): by id under
+//!   `watching.watchers` (the rule of `Theft::founder_cheats`). `hoarders`:
+//!   every founder who doesn't cheat; `cheaters`: every founder who does;
+//!   both ignore `watchers`, so with no cheaters configured `hoarders` makes
+//!   everyone watch and `cheaters` no one. An agent born later doesn't
 //!   watch.
 //! - **Seeing a burial** ([`see`], called by `caching::bury` after a
 //!   positive burial). Only under `watching.on`. Every living watcher other
@@ -29,9 +33,11 @@
 //!   watcher's entries die with it. Entries about an owner who has died
 //!   stay until read. An arrival on a site forgets every entry there
 //!   ([`forget`]), whatever the agent did there (a dig, a raid or a
-//!   harvest), except a fed arrival under `raid_when: hungry` that doesn't
-//!   dig: it doesn't raid, so it keeps them (see below). A walk that finds
-//!   no path to its target forgets every entry at the target ([`give_up`]).
+//!   harvest), except an arrival that doesn't dig and declines to raid: a
+//!   fed one under `raid_when: hungry`, or one under `raid_if: better`
+//!   remembering less than the site is worth. It keeps them (see below). A
+//!   walk that finds no path to its target forgets every entry at the
+//!   target ([`give_up`]).
 //! - **Going to a seen cache** ([`join_seen`], called after
 //!   `caching::join_caches` wherever rule M's candidates are built). Each
 //!   site with fresh entries joins the candidates after the agent's own
@@ -39,8 +45,11 @@
 //!   remembered there summed over owners: what it believes, so a cache dug
 //!   or taken since still looks full until it arrives. The same sites are
 //!   skipped and merged as for its own caches (`caching::join_sites`).
-//!   Under `raid_when: hungry` they join only while it holds less than
-//!   R / 2 (with or without caches of its own). Minds 3's true value of a
+//!   Under `value: room` each site's value is capped at the agent's room
+//!   under the carrying limit (C − holdings, at least 0; no cap with no
+//!   limit or under `loot: eat`), so with no room a seen cache is worth 0
+//!   and never out-ranks a site. Under `raid_when: hungry` they join only
+//!   while it holds less than R / 2 (with or without caches of its own). Minds 3's true value of a
 //!   candidate counts them, under the same gates, at what is truly left of
 //!   them ([`seen_truth`]), so a choice of an emptied one reads as stale.
 //! - **Giving up** ([`give_up`], called by `movement::arrive` where a walk
@@ -56,7 +65,13 @@
 //!   raid. Under `raid_when: hungry` the raid has the joining gate too, on
 //!   the owners' terms: an agent at or above R / 2 doesn't raid, forgets
 //!   nothing, counts nothing, and stumbles and harvests as if it had no
-//!   entries (under `always` every arrival may raid). Otherwise the agent
+//!   entries (under `always` every arrival may raid). Under `raid_if:
+//!   better` (the default) the same holds for an arrival whose remembered
+//!   amount there, summed over its fresh entries, is less than the site's
+//!   welfare as rule M counts it (`movement::site_value`, the dig's test):
+//!   it keeps its entries, counts nothing, and stumbles and harvests as
+//!   usual; equal raids. `raid_if: always` is the first round's rule.
+//!   Otherwise the agent
 //!   takes from the first owner, in id order, of a fresh entry at the site
 //!   whose cache is still there, with no draw: a pilfer by Minds 6's rules
 //!   (`theft::loot`: min(cache, room) kept, or the whole cache eaten;
@@ -71,6 +86,22 @@
 //!   Under the survey probe `World::probe_raid_harvests` (not config) a
 //!   raid that took something also harvests the site, under the carrying
 //!   limit with kept loot counted against it, and still draws no stumble.
+//! - **Scroungers who forgo** (`scrounge: forgo`; the default `harvest`
+//!   changes nothing). A scrounger, an agent who watches and cheats, that
+//!   holds a fresh entry while its seen caches are places to go ([`forgoes`];
+//!   so not a fed one under `raid_when: hungry`) doesn't produce: its
+//!   candidates (`movement::candidates_with_memory`) are staying put, worth
+//!   0, then its seen caches as [`join_seen`] adds them, with the same
+//!   skips; no sites in sight, no caches of its own, no Minds 3 memories.
+//!   Staying put (`movement::go_and_gather`, judged before the move), it
+//!   gathers nothing that tick: no harvest, no stumble, no truffle; it still
+//!   pays metabolism. A dig of its own cache there, and a raid of a seen
+//!   one there, still happen. Since the site it forgoes is worth nothing to
+//!   it, `raid_if: better` never stops its raid. A walk that finds no path
+//!   gives up the target's entries after the gather, so the stay is judged
+//!   as chosen. These two touch points (the list and the stay) are the
+//!   fewest: the utility mind shares both. Holding no fresh entry, it
+//!   forages as usual.
 //! - **Counts.** `burials_seen` counts burials with at least one watcher;
 //!   `sightings` counts (watcher, burial) pairs; `seen_entries` is the
 //!   entries held, summed over agents, after the sweep. `seen_arrivals`
@@ -87,7 +118,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::agent::AgentId;
-use crate::config::RaidWhen;
+use crate::config::{Loot, RaidIf, RaidWhen, Scrounge, SeenValue};
 use crate::geometry::{Pos, DIRECTIONS};
 use crate::rules::Harvest;
 use crate::world::World;
@@ -210,8 +241,42 @@ pub(crate) fn join_seen(
         }
     }
     if !sites.is_empty() {
-        super::join_sites(world, id, sites.into_iter(), out, start);
+        let cap = room_cap(world, id);
+        let sites = sites.into_iter().map(|(s, v)| (s, v.min(cap)));
+        super::join_sites(world, id, sites, out, start);
     }
+}
+
+/// The cap on a seen cache's candidate value: under `value: room`, `id`'s
+/// room under the carrying limit (C − holdings, at least 0); infinite under
+/// `amount`, with no limit, or under `loot: eat` (eaten loot needs no room).
+fn room_cap(world: &World, id: AgentId) -> f64 {
+    let c = &world.config;
+    let capacity = c.caching.capacity;
+    if c.watching.value != SeenValue::Room || capacity == 0 || c.theft.loot == Loot::Eat {
+        return f64::INFINITY;
+    }
+    let held = world.agent(id).expect("live agent").holdings[0];
+    (f64::from(capacity) - held).max(0.0)
+}
+
+/// Whether `id` is a scrounger forgoing its harvest now (`scrounge:
+/// forgo`): watching on, it watches and cheats, its seen caches are places
+/// to go ([`raiding`]), and it holds at least one fresh entry. Its
+/// candidates are then only staying put (worth 0: it gathers nothing
+/// there) and its seen caches (`movement::candidates_with_memory`), and
+/// on staying put it gathers nothing (`movement::go_and_gather`).
+pub(crate) fn forgoes(world: &World, id: AgentId) -> bool {
+    let w = &world.config.watching;
+    if !w.on || w.scrounge != Scrounge::Forgo {
+        return false;
+    }
+    let a = world.agent(id).expect("live agent");
+    a.watches
+        && a.cheater
+        && !a.seen.is_empty()
+        && raiding(world, id)
+        && a.seen.values().any(|e| fresh(world, e.tick))
 }
 
 /// What `id` believes is buried at `p` by others it saw (summed over
@@ -319,7 +384,9 @@ pub(crate) fn forget(world: &mut World, id: AgentId, site: u32) -> bool {
 ///
 /// Under `raid_when: hungry` an agent at or above R / 2 ([`raiding`])
 /// doesn't raid: it forgets nothing, counts nothing and returns `None`, as
-/// with no entries. Otherwise it takes from the first owner, in id order,
+/// with no entries. Nor, under `raid_if: better`, does an agent whose
+/// fresh entries here sum to less than the site's welfare
+/// (`movement::site_value`), unless it [`forgoes`]. Otherwise it takes from the first owner, in id order,
 /// of a fresh entry at the site whose cache is still there, through
 /// `theft::loot` (min(cache, `room`) kept, or the whole cache eaten),
 /// counting `raids` and `raided`; the entries at the site are forgotten
@@ -330,6 +397,20 @@ pub(crate) fn raid(world: &mut World, id: AgentId, site: u32, room: f64) -> Opti
     if a.seen.is_empty() || !raiding(world, id) {
         return None;
     }
+    // `raid_if: better`: a cache believed worth less than the site is left
+    // for later (equal raids). A forgoing scrounger forgoes the site, so it
+    // always raids.
+    if world.config.watching.raid_if == RaidIf::Better && !forgoes(world, id) {
+        let remembered = at_site(&a.seen, site)
+            .filter(|(_, e)| fresh(world, e.tick))
+            .map(|(_, e)| e.amount)
+            .reduce(|x, y| x + y);
+        let here = world.torus.pos(site as usize);
+        if remembered.is_some_and(|r| r < crate::rules::movement::site_value(world, id, here)) {
+            return None;
+        }
+    }
+    let a = world.agent(id).expect("live agent");
     let target = {
         let mut owners = at_site(&a.seen, site)
             .filter(|(_, e)| fresh(world, e.tick))
@@ -361,7 +442,7 @@ mod tests {
     use crate::config::{Config, Wall};
     use crate::geometry::Pos;
     use crate::minds::caching::bury;
-    use crate::rules::movement::{candidates, candidates_with_memory, go_and_gather};
+    use crate::rules::movement::{candidates, candidates_with_memory, choose, go_and_gather};
     use crate::testkit::*;
     use rand::{Rng, SeedableRng};
 
@@ -1275,6 +1356,16 @@ mod tests {
     }
 
     fn conserved_through_raids_probe(loot: crate::config::Loot, find: f64, harvests: bool) {
+        let (raids, raided) = conserved_through_raids_with(loot, find, harvests, |_| {});
+        assert!(raids > 0 && raided > 0.0, "{raids} {raided}");
+    }
+
+    fn conserved_through_raids_with(
+        loot: crate::config::Loot,
+        find: f64,
+        harvests: bool,
+        tweak: impl Fn(&mut World),
+    ) -> (u32, f64) {
         use crate::config::{Loot, MoveMode, Movement};
         let mut c = blank_config(12, 12);
         c.theft.find = find;
@@ -1300,6 +1391,7 @@ mod tests {
         for (x, y) in [(1, 1), (6, 2), (3, 8), (9, 9), (10, 4)] {
             ids.push(walker(&mut w, x, y, 5.0, 3, true));
         }
+        tweak(&mut w);
         let start = total(&w);
         let (mut eaten, mut grown, mut left) = (0.0, 0.0, 0.0);
         let (mut pilfered, mut pilfers, mut raids, mut raided) = (0.0, 0, 0, 0.0);
@@ -1350,7 +1442,6 @@ mod tests {
             assert!((lhs - rhs).abs() <= 1e-9 * rhs, "{lhs} vs {rhs}");
         }
         assert_eq!(w.population(), 4);
-        assert!(raids > 0 && raided > 0.0, "{raids} {raided}");
         assert!(pilfers >= raids && pilfered >= raided);
         if find > 0.0 {
             assert!(pilfers > raids, "stumbles too: {pilfers} {raids}");
@@ -1367,6 +1458,7 @@ mod tests {
             .map(|r| r.amount)
             .sum();
         assert!((logged - pilfered).abs() <= 1e-9 * (1.0 + pilfered));
+        (raids, raided)
     }
 
     #[test]
@@ -1451,5 +1543,321 @@ mod tests {
         let id = w.agents().next().unwrap().id;
         let p = w.agent(id).unwrap().pos;
         assert!(w.inspect(p.x, p.y).unwrap().agent.unwrap().theft.is_some());
+    }
+
+    // Minds 8b: the second round's switches.
+
+    fn raid_if(w: &mut World, r: crate::config::RaidIf) {
+        w.config.watching.raid_if = r;
+    }
+
+    // Review Focus 1.
+    #[test]
+    fn raid_if_better_declines_a_cache_worth_less_than_the_site_and_keeps_it() {
+        use crate::config::RaidIf;
+        let target = Pos::new(5, 6);
+        // Remembered 6 against a site worth 7: it harvests and keeps the entry.
+        let (mut w, owner, watcher) = seen_world(1e-12, 0, 6.0, 3.0);
+        assert_eq!(w.config.watching.raid_if, RaidIf::Better, "the default");
+        let here = at(&w, 5, 6);
+        set_sugar(&mut w, 5, 6, 7.0);
+        let (before, seen) = (total(&w), entry(&w, watcher, here, owner));
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (7.0, 0.0), "harvests");
+        assert_eq!(w.agent(owner).unwrap().caches[&here], 6.0);
+        assert_eq!(entry(&w, watcher, here, owner), seen, "kept");
+        assert_eq!(raid_counts(&w), (0, 0.0, 0, 0), "counts nothing");
+        assert_eq!(w.events.pilfer_draws, 1, "stumbles as with no entries");
+        assert_eq!(total(&w), before);
+        // Equal raids.
+        let (mut w, _, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        set_sugar(&mut w, 5, 6, 6.0);
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (0.0, 6.0));
+        assert_eq!(raid_counts(&w), (1, 6.0, 0, 1));
+        // `always` raids the 6 against the site's 7: the first round's rule.
+        let (mut w, _, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        set_sugar(&mut w, 5, 6, 7.0);
+        raid_if(&mut w, RaidIf::Always);
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (0.0, 6.0));
+        assert_eq!(raid_counts(&w), (1, 6.0, 0, 1));
+    }
+
+    #[test]
+    fn raid_if_better_sums_the_fresh_entries_over_owners() {
+        let target = Pos::new(5, 6);
+        // 6 + 4 seen = 10 against 8: it raids, the lower id first.
+        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        let here = at(&w, 5, 6);
+        let second = walker(&mut w, 5, 6, 50.0, 1, false);
+        bury(&mut w, second, 4.0);
+        w.move_agent(second, Pos::new(2, 2));
+        set_sugar(&mut w, 5, 6, 8.0);
+        assert_eq!(go_and_gather(&mut w, watcher, target).pilfered, 6.0);
+        assert!(!w.agent(owner).unwrap().caches.contains_key(&here));
+        // The second entry stale: 6 alone against 8 declines.
+        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        let second = walker(&mut w, 5, 6, 50.0, 1, false);
+        bury(&mut w, second, 4.0);
+        w.move_agent(second, Pos::new(2, 2));
+        w.tick = 20;
+        w.agent_mut(watcher)
+            .unwrap()
+            .seen
+            .get_mut(&(here, owner))
+            .unwrap()
+            .tick = 20;
+        set_sugar(&mut w, 5, 6, 8.0);
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (8.0, 0.0));
+        assert_eq!(raid_counts(&w), (0, 0.0, 0, 0));
+        assert_eq!(w.agent(watcher).unwrap().seen.len(), 2, "kept");
+    }
+
+    #[test]
+    fn raid_if_better_values_the_site_as_rule_m_does() {
+        // A ripe truffle worth 5 on the site's 2: 7 > 6, declined.
+        let mut c = blank_config(11, 11);
+        c.truffles.share = 1.0;
+        c.truffles.value = 5.0;
+        let mut w = World::new(c, 7).unwrap();
+        w.config.watching.on = true;
+        let owner = walker(&mut w, 5, 6, 100.0, 1, false);
+        let watcher = walker(&mut w, 5, 4, 3.0, 3, true);
+        bury(&mut w, owner, 6.0);
+        w.move_agent(owner, Pos::new(1, 1));
+        set_sugar(&mut w, 5, 6, 2.0);
+        assert_eq!(w.truffle(Pos::new(5, 6)), Some(true));
+        let h = go_and_gather(&mut w, watcher, Pos::new(5, 6));
+        assert_eq!((h.gathered[0], h.pilfered), (7.0, 0.0));
+    }
+
+    fn seen_listed(w: &World, id: AgentId, p: Pos) -> Option<f64> {
+        candidates(w, id).iter().find(|c| c.0 == p).map(|c| c.2)
+    }
+
+    // Review Focus 2.
+    #[test]
+    fn value_room_caps_a_seen_cache_at_the_room_under_the_limit() {
+        use crate::config::{Loot, SeenValue};
+        let target = Pos::new(5, 6);
+        // C = 10, holding 7: room 3 for a remembered 6.
+        let (mut w, _, watcher) = seen_world(0.0, 10, 6.0, 7.0);
+        w.move_agent(watcher, Pos::new(0, 0));
+        assert_eq!(seen_listed(&w, watcher, target), Some(6.0), "amount");
+        w.config.watching.value = SeenValue::Room;
+        assert_eq!(seen_listed(&w, watcher, target), Some(3.0), "room");
+        // Under `loot: eat` the cap is infinite.
+        w.config.theft.loot = Loot::Eat;
+        assert_eq!(seen_listed(&w, watcher, target), Some(6.0));
+        w.config.theft.loot = Loot::Keep;
+        // With no limit, infinite.
+        w.config.caching.capacity = 0;
+        assert_eq!(seen_listed(&w, watcher, target), Some(6.0));
+        // Room 0: worth 0, so it never out-ranks staying put on bare ground.
+        w.config.caching.capacity = 10;
+        w.agent_mut(watcher).unwrap().holdings[0] = 10.0;
+        assert_eq!(seen_listed(&w, watcher, target), Some(0.0));
+        let mut rng = w.rng.clone();
+        let list = candidates(&w, watcher);
+        assert_eq!(choose(&list, &mut rng), Pos::new(0, 0));
+    }
+
+    /// watch-scroungers-only's founders dealt by `who`, `watchers` and
+    /// `cheaters`.
+    fn founded(who: crate::config::Who, watchers: f64, cheaters: f64) -> World {
+        let mut c = crate::presets::by_id("watch-scroungers-only")
+            .unwrap()
+            .config;
+        c.theft.cheaters = cheaters;
+        c.watching.watchers = watchers;
+        c.watching.who = who;
+        World::new(c, 7).unwrap()
+    }
+
+    // Review Focus 3.
+    #[test]
+    fn who_deals_watching_by_the_founders_cheater_flag() {
+        use crate::config::Who;
+        for watchers in [0.0, 0.5, 1.0] {
+            let w = founded(Who::Hoarders, watchers, 0.5);
+            assert!(w.agents().any(|a| a.cheater) && w.agents().any(|a| !a.cheater));
+            assert!(w.agents().all(|a| a.watches == !a.cheater), "{watchers}");
+            let w = founded(Who::Cheaters, watchers, 0.5);
+            assert!(w.agents().all(|a| a.watches == a.cheater), "{watchers}");
+            // With no cheaters configured: everyone, or no one.
+            let w = founded(Who::Hoarders, watchers, 0.0);
+            assert!(w.agents().all(|a| a.watches && !a.cheater));
+            let w = founded(Who::Cheaters, watchers, 0.0);
+            assert!(w.agents().all(|a| !a.watches));
+        }
+        // `share` keeps the id rule, whoever cheats.
+        let w = founded(Who::Share, 0.5, 0.5);
+        assert!(w
+            .agents()
+            .all(|a| a.watches == w.config.watching.founder_watches(a.id, a.cheater)));
+        assert_eq!(
+            w.agents().filter(|a| a.watches).count(),
+            w.agents().count() / 2
+        );
+    }
+
+    /// `seen_world` with the watcher a scrounger (it cheats) under
+    /// `scrounge: forgo`, and a rich site (5, 3) in its sight.
+    fn scrounger_world() -> (World, AgentId, AgentId) {
+        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        w.config.watching.scrounge = crate::config::Scrounge::Forgo;
+        w.agent_mut(watcher).unwrap().cheater = true;
+        set_sugar(&mut w, 5, 3, 9.0);
+        set_sugar(&mut w, 5, 4, 1.0);
+        (w, owner, watcher)
+    }
+
+    // Review Focus 4.
+    #[test]
+    fn a_forgoing_scrounger_lists_only_its_seen_caches_and_staying() {
+        use crate::config::Scrounge;
+        let (mut w, _, watcher) = scrounger_world();
+        let target = Pos::new(5, 6);
+        let (list, start) = candidates_with_memory(&w, watcher);
+        // Staying yields nothing, so it's worth 0; no remembered sites follow.
+        assert_eq!(list, vec![(Pos::new(5, 4), 0, 0.0), (target, 2, 6.0)]);
+        assert_eq!(start, 2);
+        // Under `harvest`, or not cheating, or not watching: rule M's list.
+        for undo in 0..3 {
+            let mut v = w.clone();
+            match undo {
+                0 => v.config.watching.scrounge = Scrounge::Harvest,
+                1 => v.agent_mut(watcher).unwrap().cheater = false,
+                _ => v.agent_mut(watcher).unwrap().watches = false,
+            }
+            let list = candidates(&v, watcher);
+            assert_eq!(list[0], (Pos::new(5, 4), 0, 1.0), "{undo}");
+            assert!(list.iter().any(|c| c.0 == Pos::new(5, 3)), "{undo}");
+        }
+        // With no fresh entry it forages as usual.
+        w.tick = 8;
+        let list = candidates(&w, watcher);
+        assert_eq!(list[0], (Pos::new(5, 4), 0, 1.0));
+        assert!(list.iter().any(|c| c.0 == Pos::new(5, 3)));
+    }
+
+    #[test]
+    fn a_forgoing_scrounger_staying_put_gathers_nothing_but_still_eats() {
+        let (mut w, _, watcher) = scrounger_world();
+        let target = Pos::new(5, 6);
+        // Its only seen cache occupied: staying put is all that's left.
+        let squatter = walker(&mut w, 5, 6, 50.0, 1, false);
+        w.agent_mut(squatter).unwrap().watches = false;
+        assert_eq!(candidates(&w, watcher), vec![(Pos::new(5, 4), 0, 0.0)]);
+        let rng = w.rng.clone();
+        let h = go_and_gather(&mut w, watcher, Pos::new(5, 4));
+        assert_eq!(h, Harvest::default(), "nothing gathered");
+        assert_eq!(w.site(Pos::new(5, 4)).resource[0], 1.0, "left on the site");
+        assert_eq!(w.agent(watcher).unwrap().holdings[0], 3.0);
+        assert_eq!(rng, w.rng, "no draw");
+        // Its turn still pays metabolism (1).
+        crate::rules::agent_turn(&mut w, watcher);
+        assert_eq!(w.agent(watcher).unwrap().holdings[0], 2.0);
+        assert_eq!(w.agent(watcher).unwrap().pos, Pos::new(5, 4));
+        assert_eq!(w.site(Pos::new(5, 4)).resource[0], 1.0);
+        // The squatter gone, it goes for the cache.
+        w.move_agent(squatter, Pos::new(9, 9));
+        assert_eq!(crate::rules::movement::act(&mut w, watcher).pilfered, 6.0);
+        assert_eq!(w.agent(watcher).unwrap().pos, target);
+    }
+
+    #[test]
+    fn a_forgoing_scrounger_raids_whatever_the_site_is_worth() {
+        // The site it forgoes is worth nothing to it: it raids the 6 on 7.
+        let (mut w, _, watcher) = scrounger_world();
+        set_sugar(&mut w, 5, 6, 7.0);
+        let h = go_and_gather(&mut w, watcher, Pos::new(5, 6));
+        assert_eq!((h.gathered[0], h.pilfered), (0.0, 6.0));
+        // A wasted raid: it moved, so it harvests as usual.
+        let (mut w, owner, watcher) = scrounger_world();
+        let here = at(&w, 5, 6);
+        crate::minds::caching::dig(&mut w, owner, here, f64::INFINITY);
+        let h = go_and_gather(&mut w, watcher, Pos::new(5, 6));
+        assert_eq!((h.gathered[0], h.pilfered), (2.0, 0.0));
+        assert_eq!(raid_counts(&w), (0, 0.0, 1, 1));
+    }
+
+    #[test]
+    fn a_forgoing_scrounger_with_its_cache_sealed_off_stays_and_gathers_nothing() {
+        use crate::rules::movement::arrive;
+        let (mut w, owner, watcher) = sealed_world();
+        w.config.watching.scrounge = crate::config::Scrounge::Forgo;
+        w.agent_mut(watcher).unwrap().cheater = true;
+        // Only the sealed cache remembered.
+        let open = at(&w, 8, 1);
+        w.agent_mut(watcher).unwrap().seen.remove(&(open, owner));
+        set_sugar(&mut w, 5, 1, 3.0);
+        let h = arrive(&mut w, watcher, Pos::new(5, 6));
+        assert_eq!(w.agent(watcher).unwrap().pos, Pos::new(5, 1), "stays");
+        assert_eq!(h, Harvest::default(), "gathers nothing");
+        assert_eq!(w.site(Pos::new(5, 1)).resource[0], 3.0);
+        assert!(w.agent(watcher).unwrap().seen.is_empty(), "given up");
+        // A plain watcher in its place harvests where it stays.
+        let (mut w, _, watcher) = sealed_world();
+        w.config.watching.scrounge = crate::config::Scrounge::Forgo;
+        set_sugar(&mut w, 5, 1, 3.0);
+        assert_eq!(arrive(&mut w, watcher, Pos::new(5, 6)).gathered[0], 3.0);
+    }
+
+    #[test]
+    fn sugar_is_conserved_under_each_switch() {
+        use crate::config::{Loot, RaidIf, Scrounge, SeenValue, Who};
+        // Raids happen under each switch, if not in every run.
+        let mut raids = [0; 4];
+        for loot in [Loot::Keep, Loot::Eat] {
+            for find in [0.0, 0.25] {
+                raids[0] += conserved_through_raids_with(loot, find, false, |w| {
+                    w.config.watching.raid_if = RaidIf::Always;
+                })
+                .0;
+                raids[1] += conserved_through_raids_with(loot, find, false, |w| {
+                    w.config.watching.value = SeenValue::Room;
+                })
+                .0;
+                raids[2] += conserved_through_raids_with(loot, find, false, |w| {
+                    // Two of the five scroungers, forgoing (metabolism 0,
+                    // so the script's world stays alive).
+                    w.config.watching.scrounge = Scrounge::Forgo;
+                    for id in [2, 4] {
+                        let a = w.agent_mut(id).unwrap();
+                        a.cheater = true;
+                        a.metabolism[0] = 0;
+                    }
+                })
+                .0;
+                raids[3] += conserved_through_raids_with(loot, find, false, |w| {
+                    // `who: hoarders` with 2 and 4 cheating: they don't watch.
+                    w.config.watching.who = Who::Hoarders;
+                    for id in 1..=5 {
+                        let a = w.agent_mut(id).unwrap();
+                        a.cheater = id % 2 == 0;
+                        a.watches = !a.cheater;
+                    }
+                })
+                .0;
+            }
+        }
+        assert!(raids.iter().all(|&r| r > 0), "{raids:?}");
+    }
+
+    /// Controller ruling (Task 2): the first round's rule, `raid_if:
+    /// always`, reproduces the first round's watch-winter: its golden
+    /// before this round, 200 ticks from seed 1.
+    #[test]
+    fn raid_if_always_reproduces_the_first_rounds_watch_winter() {
+        let mut c = crate::presets::by_id("watch-winter").unwrap().config;
+        c.watching.raid_if = crate::config::RaidIf::Always;
+        let mut w = World::new(c, 1).unwrap();
+        for _ in 0..200 {
+            w.step();
+        }
+        assert_eq!(w.fingerprint(), 0xd0ecb91d218578c7);
     }
 }
