@@ -1245,6 +1245,24 @@ impl Model for FirmsWorld {
                     .sum();
             }
         }
+        // A fixed technology or hiring standard (its maximum at or below
+        // it) reaches every live firm; a drawn one applies to firms founded
+        // from now on.
+        for &f in &self.live {
+            let firm = &mut self.firms[f];
+            if next.a_max <= next.a {
+                firm.tech.a = next.a;
+            }
+            if next.b_max <= next.b {
+                firm.tech.b = next.b;
+            }
+            if next.beta_max <= next.beta {
+                firm.tech.beta = next.beta;
+            }
+            if next.hiring_max <= next.hiring {
+                firm.hiring = next.hiring;
+            }
+        }
         self.config = next;
         Ok(())
     }
@@ -1693,5 +1711,92 @@ mod tests {
             let want: Vec<f64> = fresh.agents.iter().map(|a| a.base).collect();
             assert_eq!(got, want, "base pay stale after a live edit");
         }
+    }
+    #[test]
+    fn a_live_edit_to_a_fixed_technology_reaches_existing_firms() {
+        let mut w = world(|c| c.pay = Pay::Base);
+        w.run(20);
+        let mut next = w.config.clone();
+        next.a = 0.3;
+        next.b = 1.5;
+        next.beta = 1.8;
+        Model::set_config(&mut w, ModelConfig::Firms(next.clone())).unwrap();
+        let want = Tech {
+            a: 0.3,
+            b: 1.5,
+            beta: 1.8,
+        };
+        assert!(w.live.iter().all(|&f| w.firms[f].tech == want));
+        // Base pay follows the same technology.
+        let fresh = FirmsWorld::new(next, 1).unwrap();
+        let got: Vec<f64> = w.agents.iter().map(|a| a.base).collect();
+        let want: Vec<f64> = fresh.agents.iter().map(|a| a.base).collect();
+        assert_eq!(got, want);
+        for &f in &w.live {
+            let sum: f64 = w.firms[f]
+                .members
+                .iter()
+                .map(|&m| w.agents[m as usize].base)
+                .sum();
+            assert_eq!(w.firms[f].base_sum, sum);
+        }
+        check_invariants(&w);
+    }
+
+    #[test]
+    fn a_live_edit_to_a_drawn_range_leaves_existing_firms_alone() {
+        let mut w = world(|c| {
+            c.beta = 1.6;
+            c.beta_max = 2.0;
+            c.hiring = 0.1;
+            c.hiring_max = 0.5;
+        });
+        w.run(20);
+        let before: Vec<(Tech, f64)> = w
+            .live
+            .iter()
+            .map(|&f| (w.firms[f].tech, w.firms[f].hiring))
+            .collect();
+        let mut next = w.config.clone();
+        next.beta = 1.7;
+        next.beta_max = 2.2;
+        next.hiring = 0.2;
+        next.hiring_max = 0.6;
+        Model::set_config(&mut w, ModelConfig::Firms(next)).unwrap();
+        let after: Vec<(Tech, f64)> = w
+            .live
+            .iter()
+            .map(|&f| (w.firms[f].tech, w.firms[f].hiring))
+            .collect();
+        assert_eq!(before, after);
+    }
+
+    #[test]
+    fn a_live_edit_to_a_fixed_hiring_standard_reaches_existing_firms() {
+        let mut w = world(|c| {
+            c.hiring = 0.1;
+            c.hiring_max = 0.5;
+        });
+        w.run(20);
+        let mut next = w.config.clone();
+        next.hiring = 0.4;
+        next.hiring_max = 0.0;
+        Model::set_config(&mut w, ModelConfig::Firms(next)).unwrap();
+        assert!(w.live.iter().all(|&f| w.firms[f].hiring == 0.4));
+    }
+    #[test]
+    fn beta_drawn_per_firm_reaches_the_pinned_fingerprint() {
+        // No golden entry draws β per firm (firms-b-random draws b at β 2),
+        // so this pins one directly; `crates/sugarscape-wasm/tests/web.rs`
+        // checks WASM against the same value (portable powers, per-firm β).
+        let c = FirmsConfig {
+            agents: 200,
+            beta: 1.8,
+            beta_max: 2.2,
+            ..FirmsConfig::default()
+        };
+        let mut w = FirmsWorld::new(c, 1).unwrap();
+        w.run(100);
+        assert_eq!(Model::fingerprint(&w), 0x8d1b_43dd_0c2b_2cdb);
     }
 }

@@ -1317,6 +1317,21 @@ fn firms_sims_match_the_native_golden_entries() {
 }
 
 #[wasm_bindgen_test]
+fn firms_with_beta_drawn_per_firm_match_the_native_fingerprint() {
+    // No golden entry draws β per firm (portable powers on per-firm draws);
+    // `firms::world::tests::beta_drawn_per_firm_reaches_the_pinned_fingerprint`
+    // pins the same config and value natively.
+    let mut config: serde_json::Value = serde_json::from_str(&preset_json("firms-base")).unwrap();
+    config["agents"] = serde_json::json!(200);
+    config["beta"] = serde_json::json!(1.8);
+    config["beta_max"] = serde_json::json!(2.2);
+    let mut sim = Sim::new(&config.to_string(), 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.model_kind(), "firms");
+    sim.step(100);
+    assert_eq!(sim.fingerprint(), "0x8d1b43dd0c2b2cdb");
+}
+
+#[wasm_bindgen_test]
 fn a_hoard_agent_is_inspected_with_its_traits_stores_and_losses() {
     let mut sim = Sim::new(&preset_json("hoard-threshold"), 1, JsValue::NULL).unwrap();
     sim.step(200);

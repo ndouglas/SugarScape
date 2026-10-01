@@ -415,7 +415,10 @@ pub fn schema() -> Vec<Param> {
             (0.0, 10.0, 0.05),
             Live,
         )
-        .with_help("Above a: each firm draws its a at founding."),
+        .with_help(
+            "Above a: each firm draws its a at founding, and the range applies to firms \
+             founded from now on. At or below a: every firm has a, existing ones included.",
+        ),
         Param::number(
             "Production",
             "b",
@@ -430,7 +433,11 @@ pub fn schema() -> Vec<Param> {
             (0.0, 10.0, 0.05),
             Live,
         )
-        .with_help("Above b: each firm draws its b at founding (Axtell §4.2)."),
+        .with_help(
+            "Above b: each firm draws its b at founding (Axtell §4.2), and the range \
+             applies to firms founded from now on. At or below b: every firm has b, \
+             existing ones included.",
+        ),
         Param::number("Production", "beta", "Exponent β", (1.0, 3.0, 0.05), Live),
         Param::number(
             "Production",
@@ -439,7 +446,11 @@ pub fn schema() -> Vec<Param> {
             (0.0, 3.0, 0.05),
             Live,
         )
-        .with_help("Above β: each firm draws its β at founding (our reading of §4.2)."),
+        .with_help(
+            "Above β: each firm draws its β at founding (our reading of §4.2), and the \
+             range applies to firms founded from now on. At or below β: every firm has β, \
+             existing ones included.",
+        ),
         Param::choice(
             "Preferences",
             "preferences",
@@ -463,8 +474,8 @@ pub fn schema() -> Vec<Param> {
         Param::number(
             "Preferences",
             "rho_max",
-            "ρ up to (0: fixed)",
-            (0.0, 10.0, 0.1),
+            "ρ up to (at or below ρ: fixed)",
+            (-1.0, 10.0, 0.1),
             Reset,
         )
         .shown_if("preferences", "ces"),
@@ -659,6 +670,10 @@ pub fn schema() -> Vec<Param> {
             "φ up to (0: fixed)",
             (0.0, 1.0, 0.05),
             Live,
+        )
+        .with_help(
+            "Above φ: each firm draws its φ at founding, and the range applies to firms \
+             founded from now on. At or below φ: every firm has φ, existing ones included.",
         ),
         Param::integer(
             "Measurement",
@@ -797,5 +812,20 @@ mod tests {
         crate::schema::check_schema(&schema(), &config, || {
             ModelWorld::new(config.clone(), 1).unwrap()
         });
+    }
+    #[test]
+    fn the_schema_allows_every_rho_max_validation_allows() {
+        let p = schema().into_iter().find(|p| p.path == "rho_max").unwrap();
+        assert_eq!(p.min, Some(-1.0));
+        // The default draws ρ on [−1, 0]: 0 is a range there, not "fixed".
+        assert!(!p.label.contains("0: fixed"), "{}", p.label);
+        assert!(FirmsConfig {
+            preferences: Preferences::Ces,
+            rho: -1.0,
+            rho_max: -0.5,
+            ..FirmsConfig::default()
+        }
+        .validate()
+        .is_ok());
     }
 }
