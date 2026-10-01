@@ -260,6 +260,14 @@ pub struct World {
     /// survey doesn't set it in.
     #[doc(hidden)]
     pub probe_dig_at_reserve: bool,
+    /// Minds 8, a survey probe: when true, a raid that took something
+    /// (`minds::caching::watching::raid`) also harvests the site that tick,
+    /// as the ordinary harvest does (under the carrying limit, the rest left
+    /// on the site, counted in `gathered`), instead of replacing it. Not
+    /// config: never set by a config, the app or an edit, never hashed or
+    /// exported, and false in every world the survey doesn't set it in.
+    #[doc(hidden)]
+    pub probe_raid_harvests: bool,
     /// Minds 6: when true, the world keeps its fate log (`cache_log`) under
     /// theft. Not config: never set by a config, the app or an edit, never
     /// hashed or exported, and false unless a caller (the survey, a test)
@@ -391,6 +399,7 @@ impl World {
             cache_log: Vec::new(),
             cache_log_full: false,
             probe_dig_at_reserve: false,
+            probe_raid_harvests: false,
             record_fates: false,
             cache_open: BTreeMap::new(),
             cache_sites: None,

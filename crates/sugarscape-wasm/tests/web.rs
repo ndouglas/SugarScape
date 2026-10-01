@@ -1766,8 +1766,8 @@ fn minds_view_lists_every_cache_the_season_and_renders_the_minds_modes() {
 fn watch_presets_match_native_goldens() {
     // crates/sugarscape-core/tests/golden.rs
     for (name, hex) in [
-        ("watch-winter", "0x67d976dd7d36983a"),
-        ("watch-arena", "0x1d8680f53efa5079"),
+        ("watch-winter", "0xd0ecb91d218578c7"),
+        ("watch-arena", "0x1bc4cc1082848f9b"),
     ] {
         let mut sim = Sim::new(&preset_json(name), 1, JsValue::NULL).unwrap();
         sim.step(200);

@@ -28,7 +28,10 @@
 //!   under a longer `span`, is forgotten as soon as it's read again. A
 //!   watcher's entries die with it. Entries about an owner who has died
 //!   stay until read. An arrival on a site forgets every entry there
-//!   ([`forget`]), whatever the agent did there (a dig, a raid or a harvest).
+//!   ([`forget`]), whatever the agent did there (a dig, a raid or a
+//!   harvest), except a fed arrival under `raid_when: hungry` that doesn't
+//!   dig: it doesn't raid, so it keeps them (see below). A walk that finds
+//!   no path to its target forgets every entry at the target ([`give_up`]).
 //! - **Going to a seen cache** ([`join_seen`], called after
 //!   `caching::join_caches` wherever rule M's candidates are built). Each
 //!   site with fresh entries joins the candidates after the agent's own
@@ -40,10 +43,21 @@
 //!   R / 2 (with or without caches of its own). Minds 3's true value of a
 //!   candidate counts them, under the same gates, at what is truly left of
 //!   them ([`seen_truth`]), so a choice of an emptied one reads as stale.
+//! - **Giving up** ([`give_up`], called by `movement::arrive` where a walk
+//!   finds no path, the one place that outcome is decided). A seen cache
+//!   in a pocket other agents seal off, or walled apart, can't be reached;
+//!   `join_sites` skips only the last failed target, so without this an
+//!   agent would chain from one unreachable seen cache to the next. The
+//!   walker forgets its entries at the target (every owner's) and counts
+//!   nothing. Its own caches keep Minds 5's rule.
 //! - **A raid** ([`raid`], called by `movement::go_and_gather` on every
 //!   arrival under `watching.on`, after the dig and before Minds 6's
 //!   stumble). The dig wins: an owner digging its own cache there doesn't
-//!   raid. Otherwise the agent takes from the first owner, in id order, of
+//!   raid. Under `raid_when: hungry` the raid has the joining gate too, on
+//!   the owners' terms: an agent at or above R / 2 doesn't raid, forgets
+//!   nothing, counts nothing, and stumbles and harvests as if it had no
+//!   entries (under `always` every arrival may raid). Otherwise the agent
+//!   takes from the first owner, in id order, of
 //!   a fresh entry at the site whose cache is still there, with no draw:
 //!   a pilfer by Minds 6's rules (`theft::loot`: min(cache, room) kept, or
 //!   the whole cache eaten; `pilfered`, `pilfers`, `caches_pilfered` and a
@@ -54,10 +68,14 @@
 //!   the raid is wasted and the agent goes on to stumble and harvest. A
 //!   watcher with no room under `keep` takes nothing (the cache stays its
 //!   owner's) and harvests as usual; that is neither a raid nor wasted.
+//!   Under the survey probe `World::probe_raid_harvests` (not config) a
+//!   raid that took something also harvests the site, under the carrying
+//!   limit with kept loot counted against it, and still draws no stumble.
 //! - **Counts.** `burials_seen` counts burials with at least one watcher;
 //!   `sightings` counts (watcher, burial) pairs; `seen_entries` is the
 //!   entries held, summed over agents, after the sweep. `seen_arrivals`
-//!   counts arrivals with a fresh entry at the site, `raids` and `raided`
+//!   counts arrivals that may raid with a fresh entry at the site, `raids`
+//!   and `raided`
 //!   the takes (also in `pilfers` and `pilfered`), and `raids_wasted` the
 //!   arrivals whose remembered caches were all gone. Minds 6's pilfering
 //!   bookkeeping (candidates, the fate log, the theft stats) runs under
@@ -218,7 +236,7 @@ pub(crate) fn seen_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
         .reduce(|x, y| x + y)
 }
 
-/// Whether `id`'s seen caches are places to go now: always, or under
+/// Whether `id`'s seen caches are places to go, and to raid, now: always, or under
 /// `raid_when: hungry` while it holds less than R / 2 (Minds 5's threshold,
 /// without `hungry`'s requirement that it has caches of its own). It stays
 /// R / 2 under the survey probe `probe_dig_at_reserve`, by design: the
@@ -257,6 +275,17 @@ pub(crate) fn seen_truth(world: &World, id: AgentId, p: Pos) -> Option<f64> {
         .reduce(|x, y| x + y)
 }
 
+/// `id`'s walk found no path to site index `site` (`movement::arrive`):
+/// forgets its entries there, every owner's, fresh or not, counting
+/// nothing. Its own caches keep Minds 5's rule (`caching::join_sites` skips
+/// only the last failed target).
+pub(crate) fn give_up(world: &mut World, id: AgentId, site: u32) {
+    let a = world.agent_mut(id).expect("live agent");
+    if !a.seen.is_empty() {
+        a.seen.retain(|&(s, _), _| s != site);
+    }
+}
+
 /// The entries at site index `site`, in owner-id order.
 fn at_site(
     seen: &BTreeMap<(u32, AgentId), SeenCache>,
@@ -289,7 +318,9 @@ pub(crate) fn forget(world: &mut World, id: AgentId, site: u32) -> bool {
 /// On arrival: raid a remembered cache at `site`. `None` = nothing taken,
 /// so go on to stumbling.
 ///
-/// Takes from the first owner, in id order, of a fresh entry at the site
+/// Under `raid_when: hungry` an agent at or above R / 2 ([`raiding`])
+/// doesn't raid: it forgets nothing, counts nothing and returns `None`, as
+/// with no entries. Otherwise it takes from the first owner, in id order, of a fresh entry at the site
 /// whose cache is still there, through `theft::loot` (min(cache, `room`)
 /// kept, or the whole cache eaten), counting `raids` and `raided`; the
 /// entries at the site are forgotten either way. None still there (dug,
@@ -297,7 +328,7 @@ pub(crate) fn forget(world: &mut World, id: AgentId, site: u32) -> bool {
 /// room under `keep`) is neither.
 pub(crate) fn raid(world: &mut World, id: AgentId, site: u32, room: f64) -> Option<Harvest> {
     let a = world.agent(id).expect("live agent");
-    if a.seen.is_empty() {
+    if a.seen.is_empty() || !raiding(world, id) {
         return None;
     }
     let target = {
@@ -1039,16 +1070,212 @@ mod tests {
         w.agent_mut(watcher).unwrap().holdings[0] = 4.0;
         assert!(listed(&w), "below R / 2, with no caches of its own");
         assert_eq!(seen_value(&w, watcher, target), Some(6.0));
-        // A fed hungry-mode watcher arriving all the same still raids.
-        w.agent_mut(watcher).unwrap().holdings[0] = 8.0;
+    }
+
+    /// Controller ruling (Task 5b): under `raid_when: hungry` the raid on
+    /// arrival has the joining gate too. A fed watcher arriving takes
+    /// nothing, keeps its entry, counts nothing and harvests (and stumbles)
+    /// as if it had none; a hungry one takes; under `always` a fed one takes.
+    #[test]
+    fn raid_when_hungry_gates_the_raid_too() {
+        use crate::config::RaidWhen;
+        let target = Pos::new(5, 6);
+        // Fed (8 ≥ R / 2 = 5) under hungry, with an unseen cache to stumble on.
+        let (mut w, owner, watcher) = seen_world(1e-12, 0, 6.0, 8.0);
+        let other = unseen_cache(&mut w, watcher, 3.0);
+        w.config.watching.raid_when = RaidWhen::Hungry;
+        let here = at(&w, 5, 6);
+        let (before, seen) = (total(&w), entry(&w, watcher, here, owner));
         let h = go_and_gather(&mut w, watcher, target);
-        assert_eq!(h.pilfered, 6.0);
+        assert_eq!((h.gathered[0], h.pilfered), (2.0, 0.0), "harvests");
+        assert_eq!(w.agent(owner).unwrap().caches.get(&here), Some(&6.0));
+        assert_eq!(w.agent(other).unwrap().caches.get(&here), Some(&3.0));
+        assert_eq!(entry(&w, watcher, here, owner), seen, "kept");
+        assert_eq!(raid_counts(&w), (0, 0.0, 0, 0), "counts nothing");
+        assert_eq!(w.events.pilfer_draws, 2, "stumbles as with no entries");
+        assert_eq!(total(&w), before);
+        // Hungry (4 < 5): takes it.
+        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 4.0);
+        w.config.watching.raid_when = RaidWhen::Hungry;
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (0.0, 6.0));
+        assert!(!w.agent(owner).unwrap().caches.contains_key(&here));
+        assert_eq!(raid_counts(&w), (1, 6.0, 0, 1));
+        assert!(w.agent(watcher).unwrap().seen.is_empty());
+        // Always: a fed one takes it.
+        let (mut w, _, watcher) = seen_world(0.0, 0, 6.0, 8.0);
+        assert_eq!(w.config.watching.raid_when, RaidWhen::Always);
+        assert_eq!(go_and_gather(&mut w, watcher, target).pilfered, 6.0);
+        assert_eq!(raid_counts(&w), (1, 6.0, 0, 1));
+    }
+
+    /// A walking watcher at (5, 1) (vision 1) remembering a cache of 6 at
+    /// (5, 6), which four other agents seal off, and one of 4 at (8, 1),
+    /// reachable. No sugar anywhere.
+    fn sealed_world() -> (World, AgentId, AgentId) {
+        use crate::config::{MoveMode, Movement};
+        let mut w = watching(blank_config(11, 11));
+        w.config.movement = Movement {
+            mode: MoveMode::Walk,
+            speed: 1,
+        };
+        let owner = walker(&mut w, 0, 0, 100.0, 1, false);
+        for (x, y, q) in [(5, 6, 6.0), (8, 1, 4.0)] {
+            let site = at(&w, x, y);
+            w.agent_mut(owner).unwrap().caches.insert(site, q);
+        }
+        let watcher = walker(&mut w, 5, 1, 3.0, 1, true);
+        for (x, y, q) in [(5, 6, 6.0), (8, 1, 4.0)] {
+            let site = at(&w, x, y);
+            let e = SeenCache { amount: q, tick: 0 };
+            w.agent_mut(watcher).unwrap().seen.insert((site, owner), e);
+        }
+        for (x, y) in [(5, 5), (5, 7), (4, 6), (6, 6)] {
+            walker(&mut w, x, y, 100.0, 1, false);
+        }
+        (w, owner, watcher)
+    }
+
+    fn lists(w: &World, id: AgentId, p: Pos) -> bool {
+        candidates(w, id).iter().any(|c| c.0 == p)
+    }
+
+    /// Controller ruling (Task 5b): a walk that finds no path to a seen
+    /// cache gives it up, so the watcher doesn't target it again.
+    #[test]
+    fn a_seen_cache_sealed_off_is_given_up_after_a_failed_walk() {
+        use crate::agent::Plan;
+        use crate::rules::movement::arrive;
+        let (mut w, owner, watcher) = sealed_world();
+        let (sealed, open) = (Pos::new(5, 6), Pos::new(8, 1));
+        assert!(lists(&w, watcher, sealed) && lists(&w, watcher, open));
+        let h = arrive(&mut w, watcher, sealed);
+        assert_eq!(w.agent(watcher).unwrap().pos, Pos::new(5, 1), "stays");
+        assert_eq!(h.pilfered, 0.0);
+        let s = at(&w, 5, 6);
+        assert_eq!(entry(&w, watcher, s, owner), None, "given up");
+        assert!(entry(&w, watcher, at(&w, 8, 1), owner).is_some());
+        assert_eq!(raid_counts(&w), (0, 0.0, 0, 0), "counts nothing");
+        // Not a candidate on later ticks, once the failed target is no
+        // longer the last one.
+        w.agent_mut(watcher).unwrap().plan = Plan::default();
+        assert!(!lists(&w, watcher, sealed));
+        assert!(lists(&w, watcher, open), "the reachable one is still there");
+        for _ in 0..3 {
+            w.tick += 1;
+            crate::rules::movement::act(&mut w, watcher);
+            assert_ne!(w.agent(watcher).unwrap().plan.target, Some(sealed));
+        }
+    }
+
+    #[test]
+    fn a_walk_toward_a_reachable_seen_cache_keeps_it() {
+        use crate::rules::movement::arrive;
+        let (mut w, owner, watcher) = sealed_world();
+        arrive(&mut w, watcher, Pos::new(8, 1));
+        assert_eq!(w.agent(watcher).unwrap().pos, Pos::new(6, 1), "one step");
+        assert!(entry(&w, watcher, at(&w, 8, 1), owner).is_some());
+        assert!(entry(&w, watcher, at(&w, 5, 6), owner).is_some());
+    }
+
+    #[test]
+    fn a_seen_cache_walled_apart_is_given_up_and_never_targeted() {
+        use crate::config::{MoveMode, Movement};
+        use crate::rules::movement::arrive;
+        let mut c = blank_config(11, 11);
+        c.walls = vec![
+            Wall {
+                x: 3,
+                y: 0,
+                width: 1,
+                height: 11,
+                opaque: false,
+            },
+            Wall {
+                x: 8,
+                y: 0,
+                width: 1,
+                height: 11,
+                opaque: false,
+            },
+        ];
+        let mut w = watching(c);
+        w.config.movement = Movement {
+            mode: MoveMode::Walk,
+            speed: 1,
+        };
+        let owner = walker(&mut w, 5, 0, 100.0, 1, false);
+        let watcher = walker(&mut w, 1, 5, 3.0, 1, true);
+        let (target, s) = (Pos::new(5, 5), at(&w, 5, 5));
+        w.agent_mut(owner).unwrap().caches.insert(s, 6.0);
+        let e = SeenCache {
+            amount: 6.0,
+            tick: 0,
+        };
+        w.agent_mut(watcher).unwrap().seen.insert((s, owner), e);
+        assert!(w.walled_apart(Pos::new(1, 5), target));
+        assert!(!lists(&w, watcher, target), "never a candidate");
+        arrive(&mut w, watcher, target);
+        assert_eq!(entry(&w, watcher, s, owner), None, "given up");
+    }
+
+    /// Survey probe `World::probe_raid_harvests`: a raid that took
+    /// something also harvests the site that tick, under the carrying limit.
+    #[test]
+    fn under_the_probe_a_raid_also_harvests_the_site() {
+        let target = Pos::new(5, 6);
+        // Off (the default): the raid replaces the harvest.
+        let (mut w, _, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        assert!(!w.probe_raid_harvests);
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (0.0, 6.0));
+        assert_eq!(w.site(target).resource[0], 2.0);
+        // On: it gathers the site too, and no stumble follows.
+        let (mut w, _, watcher) = seen_world(1e-12, 0, 6.0, 3.0);
+        unseen_cache(&mut w, watcher, 3.0);
+        w.probe_raid_harvests = true;
+        let (rng, before) = (w.rng.clone(), total(&w));
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.dug, h.pilfered), (2.0, 0.0, 6.0));
+        assert_eq!(w.agent(watcher).unwrap().holdings[0], 11.0);
+        assert_eq!(w.site(target).resource[0], 0.0);
+        assert_eq!(raid_counts(&w), (1, 6.0, 0, 1));
+        assert_eq!((w.events.pilfers, w.events.pilfer_draws), (1, 0));
+        assert_eq!(rng, w.rng, "no draw");
+        assert_eq!(total(&w), before);
+        // Under the limit C = 10: holds 3, takes 6, so room 1 for the site's
+        // 2; the other 1 stays on it.
+        let (mut w, _, watcher) = seen_world(0.0, 10, 6.0, 3.0);
+        w.probe_raid_harvests = true;
+        let before = total(&w);
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (1.0, 6.0));
+        assert_eq!(w.agent(watcher).unwrap().holdings[0], 10.0);
+        assert_eq!(w.site(target).resource[0], 1.0);
+        assert_eq!(total(&w), before);
+        // Loot eaten doesn't count against the limit: room 7 for the 2.
+        let (mut w, _, watcher) = seen_world(0.0, 10, 6.0, 3.0);
+        w.config.theft.loot = crate::config::Loot::Eat;
+        w.probe_raid_harvests = true;
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (2.0, 6.0));
+        assert_eq!(w.agent(watcher).unwrap().holdings[0], 5.0);
+        // A wasted raid harvests as usual, probe or not.
+        let (mut w, owner, watcher) = seen_world(0.0, 0, 6.0, 3.0);
+        w.agent_mut(owner).unwrap().caches.clear();
+        w.probe_raid_harvests = true;
+        let h = go_and_gather(&mut w, watcher, target);
+        assert_eq!((h.gathered[0], h.pilfered), (2.0, 0.0));
     }
 
     /// Σ sites + holdings + caches + stomachs + eaten + what left with the
     /// dead = start + growback, over 300 ticks of five watching walkers
     /// burying by script, one killed at tick 150.
     fn conserved_through_raids(loot: crate::config::Loot, find: f64) {
+        conserved_through_raids_probe(loot, find, false);
+    }
+
+    fn conserved_through_raids_probe(loot: crate::config::Loot, find: f64, harvests: bool) {
         use crate::config::{Loot, MoveMode, Movement};
         let mut c = blank_config(12, 12);
         c.theft.find = find;
@@ -1064,6 +1291,7 @@ mod tests {
         };
         let mut w = World::new(c, 11).unwrap();
         w.record_fates = true;
+        w.probe_raid_harvests = harvests;
         for y in 0..12 {
             for x in 0..12 {
                 set_sugar(&mut w, x, y, if (x + y) % 3 == 0 { 4.0 } else { 1.5 });
@@ -1160,6 +1388,15 @@ mod tests {
     #[test]
     fn sugar_is_conserved_through_raids_eaten_with_find() {
         conserved_through_raids(crate::config::Loot::Eat, 0.25);
+    }
+
+    #[test]
+    fn sugar_is_conserved_through_raids_that_also_harvest() {
+        for loot in [crate::config::Loot::Keep, crate::config::Loot::Eat] {
+            for find in [0.0, 0.25] {
+                conserved_through_raids_probe(loot, find, true);
+            }
+        }
     }
 
     /// Watching on with no watchers is the run without watching, bit for

@@ -347,6 +347,10 @@ pub(crate) fn record_choice(
 ///   buried here takes from the first still there, in owner-id order, with
 ///   no draw, as a pilfer; only if it took nothing does it go on to
 ///   stumbling. Either way it forgets what it saw buried here (a dig too).
+///   Under `raid_when: hungry` a fed agent (at or above R / 2) doesn't
+///   raid, and keeps what it saw here. Under the survey probe
+///   `World::probe_raid_harvests` a raid that took something also harvests
+///   the site as below, and draws no stumble.
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
@@ -372,7 +376,7 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     // the trip's load alone (the limit caps a load, not load plus
     // provisions).
     let central = world.config.central.enabled;
-    let used = if central { a.load_trip } else { held };
+    let mut used = if central { a.load_trip } else { held };
     world.move_agent(id, target);
     social.moved(world, Seen::at(world, target), tags);
     let mut harvest = Harvest::default();
@@ -399,11 +403,18 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         if let Some(taken) =
             crate::minds::caching::watching::raid(world, id, site_index, room(used))
         {
-            world.agent_mut(id).expect("live agent").social = social;
-            return taken;
+            if !world.probe_raid_harvests {
+                world.agent_mut(id).expect("live agent").social = social;
+                return taken;
+            }
+            // The survey probe: the raid doesn't replace the harvest. Kept
+            // loot now counts against the limit (watching never runs in a
+            // central-place world, so that is the holdings).
+            harvest.pilfered = taken.pilfered;
+            used = world.agent(id).expect("live agent").holdings[0];
         }
     }
-    if world.config.theft.find > 0.0 {
+    if world.config.theft.find > 0.0 && harvest.pilfered == 0.0 {
         if let Some(taken) =
             crate::minds::caching::theft::stumble(world, id, site_index, room(used))
         {
@@ -463,7 +474,9 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
 /// impassable, except the target) and stays when there is none within
 /// `WALK_LIMIT`. A remembered target (Minds 3) may be occupied: the walker
 /// then stops one site short of it on the path, or stays when that's where
-/// it stands. Records the agent's plan; draws nothing.
+/// it stands. Records the agent's plan; draws nothing. Minds 8: a walker
+/// that stays for want of a path forgets the caches it saw buried at the
+/// target (`watching::give_up`, under `watching.on`).
 pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let pos = world.agent(id).expect("live agent").pos;
     let m = world.config.movement;
@@ -501,7 +514,14 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
             let rest = s.path[steps + 1..].iter().map(|&i| torus.pos(i)).collect();
             (torus.pos(s.path[steps]), rest)
         }
-        None => (pos, Vec::new()),
+        None => {
+            // Minds 8: a seen cache it can't reach is given up.
+            if world.config.watching.on {
+                let site = torus.index(target) as u32;
+                crate::minds::caching::watching::give_up(world, id, site);
+            }
+            (pos, Vec::new())
+        }
     };
     world.agent_mut(id).expect("live agent").plan = Plan {
         target: Some(target),
