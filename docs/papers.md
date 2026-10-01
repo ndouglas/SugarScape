@@ -71,9 +71,9 @@ worth doing; "size" is a guess at the milestone's scale.
 | 20 | Differentiation without distancing | `social-psych/mas-flache-2013-plos-one-differentiation-without-distancing.pdf` | `social-psych/smaldino-epstein-2015-…` (conformity from distinctiveness); Antal et al. 2005 (social balance) | small | bipolarization without negative influence |
 | 21 | Agent_Zero | `social-psych/epstein-chelen-2016-strungmann-advancing-agent-zero.pdf` (the book wanted) | — | medium | affect, deliberation and social contagion in one agent |
 | 22 | The garbage can | Cohen, March & Olsen 1972 wanted; their Fortran in `organizations/garbage-can-code/` | `organizations/`: Fioretti & Lomi 2008 (agent-based), 2009 (buck-passing), Glynn et al. 2020; Bendor, Moe & Shotts 2001 wanted (code ≠ theory; their code saved) | medium | decisions by oversight and flight |
-| 23 | Exploration and exploitation | March 1991 wanted | `organizations/jo-2024-arxiv-exact-solutions-simplified-march-model.pdf`; Chanda & Miller 2019 replication wanted | small | slow learners and turnover help the code |
+| 23 | Exploration and exploitation | `organizations/march-1991-org-science-exploration-exploitation.pdf` (a re-post) | `organizations/jo-2024-arxiv-exact-solutions-simplified-march-model.pdf`; Chanda & Miller 2019 replication wanted | small | slow learners and turnover help the code |
 | 24 | Santa Fe artificial stock market | `markets/palmer-arthur-holland-lebaron-tayler-1994-physica-d-artificial-economic-life.pdf`; `markets/arthur-holland-lebaron-palmer-tayler-1996-sfi-wp-…` | `markets/lebaron-2002-…`; Ehrentreich 2008 wanted (the mutation operator's bias) | large | classifier-system traders; the complex regime |
-| 25 | Leadership in animal groups | `collective-motion/couzin-krause-franks-levin-2005-nature-effective-leadership-animal-groups.pdf` | `collective-motion/vicsek-…-1995-prl-…`; Couzin et al. 2002 wanted | medium | an informed minority steers; Vicsek's transition |
+| 25 | Leadership in animal groups | `collective-motion/couzin-krause-franks-levin-2005-nature-effective-leadership-animal-groups.pdf` | `collective-motion/vicsek-…-1995-prl-…`, `collective-motion/couzin-krause-james-ruxton-franks-2002-jtb-collective-memory-spatial-sorting.pdf` (a re-post) | medium | an informed minority steers; Vicsek's transition |
 | 26 | Adaptive parties | `politics/kollman-miller-page-1992-sfi-wp-adaptive-parties-in-spatial-elections.pdf` | `politics/kollman-miller-page-1993-sfi-wp-…`; Laver 2005 wanted | medium | parties climbing an electoral landscape |
 | 27 | Division of labor | `multi-agent-coordination/theraulaz-bonabeau-deneubourg-1998-sfi-wp-response-threshold-reinforcement.pdf` | Bonabeau et al. 1996 wanted | small | response thresholds; specialists emerge |
 | 28 | Sequential social dilemmas | `multi-agent-coordination/leibo-et-al-2017-arxiv-marl-in-sequential-social-dilemmas.pdf` | `multi-agent-coordination/`: Perolat et al. 2017 (commons), Hughes et al. 2018 (inequity aversion) | medium | learners in gathering and commons games |
@@ -99,15 +99,13 @@ archaeology, agriculture, migration and terrain); what it couldn't find free:
 - **AI coordination:** Abada & Lambin (2023), *Management Science*, doi:10.1287/mnsc.2022.4623;
   Waltman & Kaymak (2008), *JEDC*.
 - **Language and belief:** Beck & Forstmeier (2007), *Human Nature* 18, doi:10.1007/BF02820845;
-  Daley & Kendall (1964), *Nature* 204; Skyrms, *Signals* (2010), beyond its first chapter;
-  Staddon & Simmelhag (1971), the critique of Skinner's superstition.
+  Daley & Kendall (1964), *Nature* 204; Skyrms, *Signals* (2010), beyond its first chapter.
 - **Social psychology:** Nowak, Szamrej & Latané (1990), *Psychological Review* 97(3),
   doi:10.1037/0033-295X.97.3.362; Epstein, *Agent_Zero* (2014).
 - **Organizations:** Cohen, March & Olsen (1972), *ASQ* 17(1); Bendor, Moe & Shotts (2001), *APSR*
-  95(1); Olsen (2001); March (1991), *Organization Science* 2(1); Chanda & Miller (2019),
+  95(1); Olsen (2001); Chanda & Miller (2019),
   *Strategic Organization* 17(4); Levin (2021) on the garbage can's non-reproducibility.
-- **Markets, motion, politics:** Ehrentreich (2008) on the SFI market; Couzin et al. (2002),
-  *J. Theor. Biol.* 218; Laver (2005), *APSR* 99(2); Bonabeau, Theraulaz & Deneubourg (1996).
+- **Markets, motion, politics:** Ehrentreich (2008) on the SFI market; Laver (2005), *APSR* 99(2); Bonabeau, Theraulaz & Deneubourg (1996).
 - **Archaeology and agriculture:** Carneiro (1970), *Science* 169; Kohler et al. (2012),
   *Ecological Modelling* 241; Kohler, Cole & Ciupe (2009); Neiman (1995), *American Antiquity* 60;
   Ammerman & Cavalli-Sforza (1971), *Man* 6(4).
@@ -116,19 +114,17 @@ archaeology, agriculture, migration and terrain); what it couldn't find free:
 - **Terrain:** Perlin (1985); O'Callaghan & Mark (1984); Horton (1945); Braun & Willett (2013),
   *Geomorphology* 180.
 
-A second search (2026-09-30) added, still missing or found only as re-posts:
+A second search (2026-09-30) added, still missing:
 
-- **Firms:** Axtell (2018), *Handbook of Computational Economics* 4 ch. 3,
-  doi:10.1016/bs.hescom.2018.05.001 (his latest statement of the rules); Axtell (2001), "Zipf
-  distribution of U.S. firm sizes", *Science* 293:1818 — both found only as re-posts.
 - **Belief and social psychology:** Abbott & Sherratt (2011), *Animal Behaviour* 82:85,
-  doi:10.1016/j.anbehav.2011.04.002; Staddon & Simmelhag (1971) and Enquist, Eriksson & Ghirlanda
-  (2007), *American Anthropologist* 109:727 — re-posts only.
+  doi:10.1016/j.anbehav.2011.04.002.
 - **Collective motion:** Conradt & Roper (2003), *Nature* 421:155.
 - **Archaeology:** Reynolds (2000) on raiding in the Valley of Oaxaca; Barceló, Capuzzo &
   Bogdanović (2014), *J. Archaeological Method and Theory* 21:486; Rogers et al. (2012), *Ecological
   Modelling* 241:5; Ullah's AgModel article (submitted 2023).
 - **Terrain:** Tucker & Hancock (2010), *Earth Surface Processes and Landforms* 35:28.
+
+Kept from third-party re-posts (2026-10-01; local copies, not the publishers'): Axtell (2018), *Handbook of Computational Economics* 4 ch. 3, and Axtell (2001), *Science* 293:1818, in `firms/`; March (1991) in `organizations/`; Couzin et al. (2002) in `collective-motion/`; Staddon & Simmelhag (1971) in `belief/`; Enquist, Eriksson & Ghirlanda (2007) in `culture/`.
 
 Earlier:
 
