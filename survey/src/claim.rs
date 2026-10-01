@@ -16,8 +16,8 @@ pub enum Verdict {
     Holds,
     Weak,
     /// Neither held nor failed by a judge that names a third outcome (Minds
-    /// 8b's claim 3a: the slope's interval neither lies below 0 nor sits
-    /// within the flat band). Like Weak, it is not a hold.
+    /// 8b's claim 3a: the slope's interval neither lies below 0, nor sits
+    /// within the flat band, nor lies above 0). Like Weak, it is not a hold.
     Inconclusive,
     Fails,
     Untestable,

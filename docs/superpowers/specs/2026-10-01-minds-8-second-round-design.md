@@ -189,6 +189,7 @@ Floors, ceilings and caps checked:
 - **Holds** when the 95 % CI lies wholly below 0.
 - **Flat** (reported as Fails, labeled "flat") when the 90 % CI lies within ±0.05.
 - **Inconclusive** otherwise.
+- A 95 % CI wholly above 0 is Fails (rising), as the pre-mortem's 'flat or rises' states (clarified before any run).
 
 **3b. A stable mix** (`watch-scroungers.mix`, variant forgo only):
 - The advantage is above 0 at s = 0.1 and below 0 at s = 0.9.

@@ -211,10 +211,12 @@
 //!   **Holds** when the 95 % interval lies wholly below 0 (upper < 0);
 //!   otherwise **Flat**, reported as Fails labeled "flat", when the 90 %
 //!   interval lies within ±0.05 (−0.05 ≤ lower and upper ≤ 0.05); otherwise
-//!   **Inconclusive**, which by the spec's words includes a slope whose
-//!   interval lies wholly above 0.05 (labeled "rising"). Holds is checked
-//!   first, so a tight negative slope inside ±0.05 Holds. Fewer than 5
-//!   finite slopes: Untestable.
+//!   **Fails, labeled "rising"**, when the 95 % interval lies wholly above 0
+//!   (the pre-mortem's "flat or rises"; clarified in the spec before any
+//!   run); otherwise **Inconclusive**. The order is Holds, flat, rising,
+//!   Inconclusive: a tight negative slope inside ±0.05 Holds, and an
+//!   interval both flat and above 0 (all inside (0, 0.05]) reads flat.
+//!   Fewer than 5 finite slopes: Untestable.
 //! - **3b** (`watch-scroungers.mix`, forgo only): the advantage > 0 at
 //!   s = 0.1 in ≥ 48 of 60 seeds, and < 0 at s = 0.9 in ≥ 48 of 60 seeds;
 //!   both. The per-seed crossing (Minds 8's `down_crossing`: the first sign
@@ -1525,7 +1527,7 @@ pub(crate) fn frequency_verdict(slopes: &[f64]) -> Outcome {
     } else if -FLAT <= lo90 && hi90 <= FLAT {
         (Verdict::Fails, "flat")
     } else if lo > 0.0 {
-        (Verdict::Inconclusive, "rising")
+        (Verdict::Fails, "rising")
     } else {
         (Verdict::Inconclusive, "inconclusive")
     };
@@ -1698,7 +1700,7 @@ fn frequency_claim_for(forgo: bool) -> Outcome {
             share_rows(&worlds),
         ))
         .with(&share_reported(forgo, &seeds))
-        .with("Barnard and Sibly (1981): the payoff to scroungers falls as they become common. Holds when the 95 % CI of the mean per-seed slope lies below 0; Flat (Fails) when the 90 % CI lies within ±0.05; Inconclusive otherwise.")
+        .with("Barnard and Sibly (1981): the payoff to scroungers falls as they become common. Holds when the 95 % CI of the mean per-seed slope lies below 0; Flat (Fails) when the 90 % CI lies within ±0.05; rising (Fails) when the 95 % CI lies above 0; Inconclusive otherwise.")
 }
 
 fn frequency_forgo_claim(_seeds: &[u64]) -> Outcome {
@@ -1856,7 +1858,7 @@ pub fn claims() -> Vec<Claim> {
         item: "watch-scroungers-forgo",
         source: Source::Book,
         citation: "Barnard & Sibly 1981; the spec, claim 3a",
-        text: "Scrounger advantage falls with share (scroungers who forgo producing): the 95 % CI of the mean per-seed slope of the advantage on s (0.1–0.9, seeds 1–60) lies wholly below 0; flat when the 90 % CI lies within ±0.05; inconclusive otherwise",
+        text: "Scrounger advantage falls with share (scroungers who forgo producing): the 95 % CI of the mean per-seed slope of the advantage on s (0.1–0.9, seeds 1–60) lies wholly below 0; fails as flat when the 90 % CI lies within ±0.05, and as rising when the 95 % CI lies wholly above 0; inconclusive otherwise",
         check: frequency_forgo_claim,
     },
     Claim {
@@ -1864,7 +1866,7 @@ pub fn claims() -> Vec<Claim> {
         item: "watch-scroungers",
         source: Source::Book,
         citation: "Barnard & Sibly 1981; the spec, claim 3a",
-        text: "Watcher advantage falls with share (watchers who also bury): the 95 % CI of the mean per-seed slope of the advantage on s (0.1–0.9, seeds 1–60) lies wholly below 0; flat when the 90 % CI lies within ±0.05; inconclusive otherwise",
+        text: "Watcher advantage falls with share (watchers who also bury): the 95 % CI of the mean per-seed slope of the advantage on s (0.1–0.9, seeds 1–60) lies wholly below 0; fails as flat when the 90 % CI lies within ±0.05, and as rising when the 95 % CI lies wholly above 0; inconclusive otherwise",
         check: frequency_bury_claim,
     },
     Claim {
@@ -2301,7 +2303,16 @@ mod tests {
         );
         assert_eq!(
             v(frequency_verdict(&[0.1; 6])),
-            (Verdict::Inconclusive, "rising".into())
+            (Verdict::Fails, "rising".into())
+        );
+        // Flat and above 0 at once (inside (0, 0.05]): flat comes first.
+        let low = [0.02, 0.021, 0.019, 0.02, 0.02];
+        assert_eq!(v(frequency_verdict(&low)), (Verdict::Fails, "flat".into()));
+        // Rising, but noisy enough that the 95 % CI reaches 0: neither.
+        let noisy_up = [0.3, -0.05, 0.4, 0.0, 0.35, -0.02];
+        assert_eq!(
+            v(frequency_verdict(&noisy_up)),
+            (Verdict::Inconclusive, "inconclusive".into())
         );
         // A tight small fall inside the flat band: Holds comes first.
         let small = [-0.01, -0.012, -0.011, -0.009, -0.01];
