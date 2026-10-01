@@ -110,6 +110,8 @@ class Dump:
     # Axelrod cultures (traits tuple) still present in the last frame, ranked
     # 1… by how many hold them (ties by the traits); empty without cultures.
     culture_rank: dict = field(default_factory=dict)
+    # Bounded confidence: each agent's rank by starting opinion (0 the lowest).
+    start_rank: dict = field(default_factory=dict)
 
 
 def _culture_rank(last):
@@ -287,6 +289,8 @@ def parse(text):
         return _schelling(raw)
     if raw.get("model") == "culture":
         return _culture(raw)
+    if raw.get("model") == "opinions":
+        return _opinions(raw)
     if raw.get("model") == "tipping":
         return _tipping(raw)
     if raw.get("model") == "ethno":
@@ -454,6 +458,56 @@ def _culture(raw):
         seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
         placed=list(range(w * h)), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
         culture_rank=rank,
+    )
+
+
+# Bounded confidence on the felt: opinion 0…1 across this many bins, or
+# half as many for a small crowd (under SMALL_CROWD agents).
+OPINION_COLUMNS = 40
+SMALL_CROWD = 200
+# Each opinion bin is a block this many Flumps wide.
+BLOCK = 3
+# Colors by start, red at 0 to magenta at 1 (Hegselmann & Krause's figures).
+START_BINS = 10
+
+
+def _opinions(raw):
+    """A bounded-confidence shot as a `Dump`, a histogram lying on the felt:
+    each agent a Flump in its opinion's bin (one of OPINION_COLUMNS across),
+    the bin a block BLOCK wide filled row by row from the front in order of
+    where they started, so the start is an even carpet and a camp a big
+    block. The board is as deep as the biggest block. `groups` is the start's tenth (0 red … 9 magenta). Frames
+    count as ticks (a shot may film every `every`th period)."""
+    n = raw["agents"]
+    bins_across = OPINION_COLUMNS if n >= SMALL_CROWD else OPINION_COLUMNS // 2
+    w = bins_across * BLOCK
+    starts = raw["starts"]
+    rank = {i: r for r, i in enumerate(sorted(range(n), key=lambda i: (starts[i], i)))}
+    groups = {i: min(int(starts[i] * START_BINS), START_BINS - 1) for i in range(n)}
+
+    def layout(opinions):
+        bins = {}
+        for i, x in enumerate(opinions):
+            bins.setdefault(min(int(x * bins_across), bins_across - 1), []).append(i)
+        return {i: (b * BLOCK + j % BLOCK, j // BLOCK)
+                for b, members in bins.items() for j, i in enumerate(sorted(members, key=rank.get))}
+
+    spots = [layout(fr["opinions"]) for fr in raw["frames"]]
+    h = max(max(r for _, r in sp.values()) + 1 for sp in spots)
+    # Row 0 at the front: cell rows run from the back (y = 0) forward.
+    spots = [{i: (x, h - 1 - r) for i, (x, r) in sp.items()} for sp in spots]
+    frames = [
+        Frame(
+            tick=k,
+            agents={i: Agent(i, x, y, 1.0, 0, 0, 0) for i, (x, y) in sp.items()},
+            sugar=[0.0] * (w * h), deaths={}, born=[], pollution=[0.0] * (w * h), births={}, groups=groups,
+        )
+        for k, sp in enumerate(spots)
+    ]
+    return Dump(
+        seed=raw["seed"], ticks=raw["ticks"], width=w, height=h, capacity=[0.0] * (w * h),
+        placed=list(range(n)), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
+        start_rank=rank,
     )
 
 

@@ -1,0 +1,1 @@
+{"preset": "hk-lattice", "ticks": 2800, "seed": 16, "every": 25, "set": {"epsilon": 0.2, "lattice.neighborhood": "von_neumann"}}

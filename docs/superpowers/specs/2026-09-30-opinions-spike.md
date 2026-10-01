@@ -1,7 +1,7 @@
 # Spike: bounded confidence (Following the Crowd, episode 5, "Listening to the like-minded")
 
 **Date:** 2026-09-30
-**Status:** proposed.
+**Status:** approved and built as `studio/episodes/opinions` (all thirteen captions hold; 84 s). The lattice beat says "two camps become rare", measured over the survey's grid; filmed as a histogram on the felt.
 **Sources:** Hegselmann & Krause 2002 (*JASSS* 5(3) 2, in `papers/bounded-confidence/`), Lorenz 2006
 (*JASSS* 9(1) 8, also there); milestone 17 (`opinions`), rechecked 2026-09-30: Fig. 3 rebuilt from 2,000
 runs and set beside theirs, and ε = 0.15 cross-checked with a separate implementation. Every caption's

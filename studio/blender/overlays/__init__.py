@@ -16,13 +16,14 @@ from .street import meetings
 from .tipping import fence, tipplane
 from .variations import figure, paper, ringjoin
 from .culture import lanes
+from .opinions import diagram
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
 
 # The overlays drawn in screen space (on `Screen` anchors).
 SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
-          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff", "paper", "figure"}
+          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff", "paper", "figure", "diagram"}
 
 
 BUILDERS = {
@@ -80,4 +81,5 @@ BUILDERS = {
     "figure": figure,
     "ringjoin": ringjoin,
     "lanes": lanes,
+    "diagram": diagram,
 }

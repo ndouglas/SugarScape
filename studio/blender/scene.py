@@ -76,7 +76,8 @@ def _agents(beat, d, tracks, timing, corners):
     (the demographic PD), blue for a helper and red for a cheat; with
     colors="tag" (ethnocentrism), its tag's yarn; with colors="culture"
     (Axelrod's), its culture's yarn if that culture survives to the shot's
-    end (by size), cream if not."""
+    end (by size), cream if not; with colors="start" (bounded confidence),
+    the tenth its opinion started in, red at 0 to magenta at 1."""
     w, h = d.width, d.height
     colors = list(materials.CROWD_YARN)
     RIGS.clear()
@@ -89,11 +90,14 @@ def _agents(beat, d, tracks, timing, corners):
         key = family.get(id_, id_)
         return colors[order.get(key, key) % len(colors)]
 
-    live = mode in ("tribe", "sick", "strategy", "tag", "culture")
+    live = mode in ("tribe", "sick", "strategy", "tag", "culture", "start")
 
     def live_color(id_, frame):
         """The color the tick shown gives a Flump (None: its own)."""
         f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
+        if mode == "start":
+            g = f.groups.get(id_)
+            return materials.START_YARN[g] if g is not None else None
         if mode == "culture":
             traits = f.traits.get(id_)
             rank = d.culture_rank.get(traits) if traits is not None else None

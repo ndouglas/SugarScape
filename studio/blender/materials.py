@@ -28,6 +28,8 @@ CROWD_YARN = ("cream", "coral", "teal", "lilac", "butter")
 TRIBE_YARN = ("blue", "red")
 # Ethnocentrism's four colors (tags), by index.
 TAG_YARN = ("coral", "teal", "lilac", "blue")
+# Bounded confidence: where a Flump started, red at 0 to magenta at 1, by tenths.
+START_YARN = ("red", "tangerine", "butter", "moss", "teal", "sky", "blue", "lilac", "plum", "rose")
 # Axelrod's surviving cultures, by rank (1 the largest); cultures that die
 # out wear cream.
 CULTURE_YARN = ("coral", "teal", "lilac", "butter", "blue", "red", "moss", "rose", "sky", "plum", "tangerine",
