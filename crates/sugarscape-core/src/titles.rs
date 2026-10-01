@@ -303,35 +303,35 @@ pub const TITLES: [(&str, &str); 387] = [
     ),
     (
         "watch-winter",
-        "Everyone watches others bury: raids replace the summer harvest, and nearly half die in the winter",
+        "Everyone watches others bury: fresh caches go twice as fast as by stumbling, and fewer survive the winter than without watching",
     ),
     (
         "watch-winter-stumble",
-        "Watching and stumbling: raids take over twice the stumbles' sugar, and over a third die in the winter",
+        "Watching and stumbling: fresh caches go three times as fast as by stumbling alone, and a quarter fewer survive the winter",
     ),
     (
         "watch-half",
-        "Half never cache and everyone watches: two hoarders in three die, against one cheater in five",
+        "Half never cache and everyone watches: nearly two hoarders in three die, against one cheater in six",
     ),
     (
         "watch-scroungers",
-        "Half watch others bury and do slightly better than those who don't",
+        "Half watch others bury: watchers come out slightly ahead, and the more watch, the worse everyone does",
     ),
     (
         "watch-scroungers-only",
-        "Half only watch and steal, and do worse than the hoarders whatever their share",
+        "Half only watch and steal: fewer of them survive the winter than of the hoarders",
     ),
     (
         "watch-scroungers-forgo",
-        "Scroungers who forgo foraging and eat what they raid",
+        "Scroungers who forgo foraging trail the hoarders, and trail further the more of them there are",
     ),
     (
         "watch-ak",
-        "Half cheaters, everyone watching, owners digging below their whole reserve",
+        "Owners who dig early, and everyone watching: thieves now take more than owners dig back, and fewer hoarders survive",
     ),
     (
         "watch-arena",
-        "Four agents in a room, half watching: watchers raid what they see, and everyone survives",
+        "Four agents in a room, half watching: everyone survives, and the room ends the winter poorer",
     ),
     (
         "s71-board",
