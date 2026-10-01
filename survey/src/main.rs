@@ -9,6 +9,10 @@
 //!
 //! `cargo run --release -- --usage` runs only Minds 8b's usage check (seeds
 //! 1–20 always; a check, not a claim) and writes `out/minds8b-usage.md`.
+//!
+//! `cargo run --release -- --presets` measures every watching preset
+//! (seeds 1–20 always; reported, not judged) and writes
+//! `out/minds8b-presets.md`.
 
 mod claim;
 mod claims;
@@ -75,6 +79,10 @@ fn main() {
     };
     if args.iter().any(|a| a == "--calibration") {
         print!("{}", claims::minds8b::calibration_report());
+        return;
+    }
+    if args.iter().any(|a| a == "--presets") {
+        print!("{}", claims::minds8b::presets_report());
         return;
     }
     if args.iter().any(|a| a == "--usage") {

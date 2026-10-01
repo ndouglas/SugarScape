@@ -1,8 +1,12 @@
 # Survey triage
 
-Every Weak, Fails and Untestable verdict from `results.json` (156 claims: 125 Holds, 11 Weak, 15 Fails,
-5 Untestable, 0 Error), with the cause assigned after reading the check and, where marked, confirming the
-result independently.
+Every Weak, Fails, Inconclusive and Untestable verdict from `results.json` (156 claims: 125 Holds, 11 Weak,
+15 Fails, 0 Inconclusive, 5 Untestable, 0 Error), with the cause assigned after reading the check and, where
+marked, confirming the result independently.
+
+Inconclusive is a verdict since Minds 8's second round (claim 3a only: its interval neither lies below 0, nor
+within the flat band, nor above 0). Like Weak it is not a hold. No claim has read it: the second round's results
+(`minds8b-results.md`) have none, and `results.json` predates the verdict.
 
 Causes: the spec's three (**model bug**, **description**, **book**), plus two the triage needed: **setup** (the
 rules work but the preset's configuration can't produce what it describes, so from a user's view the preset is
