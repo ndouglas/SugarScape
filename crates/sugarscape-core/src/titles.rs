@@ -1391,21 +1391,24 @@ pub const TITLES: [(&str, &str); 361] = [
     ),
     (
         "hoard-threshold",
-        "Hoarders near the tipping point between larders and scattered caches",
+        "At the tipping point: larders take over in about two runs of five",
     ),
     (
         "hoard-scatter",
-        "Scattered caches stay hidden: larders rarely take over",
+        "Scattered caches stay hidden: larders never take over",
     ),
     (
         "hoard-larder",
-        "Conspicuous caches: larders usually take over",
+        "Conspicuous caches: larders take over almost every time, and half the agents die each season",
     ),
     (
         "hoard-no-free-recovery",
-        "Owners who must search for their own caches",
+        "Owners find their own caches half the time, and larders still take over in about half the runs",
     ),
-    ("hoard-cheaters", "A quarter of the founders never cache"),
+    (
+        "hoard-cheaters",
+        "A quarter never cache, and are gone after one generation",
+    ),
 ];
 
 /// The title of preset `id`, or "" if it has none.
