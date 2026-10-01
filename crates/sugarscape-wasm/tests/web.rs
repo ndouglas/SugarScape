@@ -426,6 +426,8 @@ fn builtins_and_series_names_are_listed() {
             "theft-find",
             "theft-cheaters",
             "theft-winter",
+            "watch-span",
+            "watch-scroungers",
             "hoard-ratio",
             "hoard-recovery",
             "hoard-cheaters",

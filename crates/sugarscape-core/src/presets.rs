@@ -265,6 +265,17 @@ fn theft_winter(c: &mut Config, cheaters: f64) {
     c.theft.cheaters = cheaters;
 }
 
+/// Minds 8: theft-winter's world (`theft_winter`) with a `cheaters` share,
+/// stumbling at `find` and watching on, a `watchers` share of founders
+/// (dealt by id, as cheaters are) watching. Span 7 and `raid_when: always`
+/// (the defaults).
+fn watch_winter(c: &mut Config, cheaters: f64, find: f64, watchers: f64) {
+    theft_winter(c, cheaters);
+    c.theft.find = find;
+    c.watching.on = true;
+    c.watching.watchers = watchers;
+}
+
 /// Minds 6: the arena. `n` agents (2, 4 or 8) shut in a k × k room, with
 /// k = 4, 6 and 8: a (k + 2) × (k + 2) torus with opaque walls along rows 0
 /// and k + 1 and columns 0 and k + 1, so the room is the centered k × k
@@ -1316,6 +1327,53 @@ pub fn all() -> Vec<Preset> {
             "8 agents shut in an 8 × 8 room walled on all four sides, with flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent, as in theft-arena-2) through a winter everywhere at once: the full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–4, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): every agent survives the winter in nearly every seed; thieves take 91 % of the ended caches' sugar and owners dig 9 %, so Andersson and Krebs's condition fails in every seed. Hoarders pilfer 1.8 times as much per founder as cheaters. Counting still-buried caches in full, the hoarders end richer in 17 of 20 seeds (37 against 29 per founder); counting them as nothing, the cheaters are richer in all 20 (29 against 12 held). 2.2 % of the caches are pilfered a tick, the most of the three rooms, likely because more strangers cross each cache (0.094 visits a cache a tick), as Andersson and Krebs's reason for their (n − 1) has it.",
             |c| theft_arena(c, 8),
         ),
+        preset(
+            "watch-winter",
+            "Watching: winter, every agent a watcher",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
+            "theft-winter's world (cache-winter-even's winter: walk-capacity's landscape, 175 agents of metabolism 1 walking under rule M, half of them remembering for 100 ticks; every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100; a carrying limit of 50 and a caching reserve of 20 ticks' food; every agent burying half its surplus where it stands), with no stumbling on caches (find 0) and every agent a watcher. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving takes what it can carry of the first remembered cache still there, or finds them all gone. An owner digging its own cache comes first. Owners remember their own caches, burying is free and loot is kept.",
+            |c| watch_winter(c, 0.0, 0.0, 1.0),
+        ),
+        preset(
+            "watch-winter-stumble",
+            "Watching: winter, watching and stumbling",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
+            "watch-winter's world (theft-winter's winter, every agent a watcher) with Minds 6's stumbling added back: an agent arriving on a site also finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving takes what it can carry of the first remembered cache still there, or finds them all gone. An owner digging its own cache comes first.",
+            |c| watch_winter(c, 0.0, THEFT_FIND, 1.0),
+        ),
+        preset(
+            "watch-half",
+            "Watching: winter, half cheaters, everyone watching",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Andersson & Krebs 1978; Minds 8",
+            "theft-winter-half's world (theft-winter's winter, with each cache found by a stranger arriving on it with chance 0.25, where half the agents, dealt by id, are cheaters who never cache) with every agent a watcher. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving takes what it can carry of the first remembered cache still there, or finds them all gone. An owner digging its own cache comes first. The rest bury half their surplus where they stand.",
+            |c| watch_winter(c, 0.5, THEFT_FIND, 1.0),
+        ),
+        preset(
+            "watch-scroungers",
+            "Watching: winter, half the agents watchers",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Barnard & Sibly 1981; Minds 8",
+            "watch-winter's world (theft-winter's winter, no stumbling on caches, every agent burying half its surplus where it stands) where half the agents, dealt by id, are watchers and the rest never watch. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving takes what it can carry of the first remembered cache still there, or finds them all gone. An owner digging its own cache comes first.",
+            |c| watch_winter(c, 0.0, 0.0, 0.5),
+        ),
+        preset(
+            "watch-scroungers-only",
+            "Watching: winter, half the agents only watch and steal",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Barnard & Sibly 1981; Minds 8",
+            "watch-scroungers' world (theft-winter's winter, no stumbling on caches, half the agents watchers) where the watchers are also cheaters: watchers and cheaters are dealt by the same id rule, so at half each they are the same agents, who never cache and live by watching. The rest bury half their surplus where they stand and never watch. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving takes what it can carry of the first remembered cache still there, or finds them all gone. An owner digging its own cache comes first.",
+            |c| watch_winter(c, 0.5, 0.0, 0.5),
+        ),
+        preset(
+            "watch-arena",
+            "Watching arena: four agents, half watchers",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
+            "theft-arena-4's room (4 agents shut in a 6 × 6 room walled on all four sides, with flat sugar through a winter everywhere at once; vision 1–3, a carrying limit of 50) with no cheaters: every agent buries half its surplus where it stands. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Half the agents, dealt by id, are watchers. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving takes what it can carry of the first remembered cache still there, or finds them all gone. An owner digging its own cache comes first.",
+            |c| {
+                theft_arena(c, 4);
+                c.theft.cheaters = 0.0;
+                c.watching.on = true;
+                c.watching.watchers = 0.5;
+            },
+        ),
     ]
 }
 
@@ -1655,7 +1713,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 75);
+        assert_eq!(presets.len(), 81);
         for p in presets {
             p.config
                 .validate()
@@ -2113,6 +2171,65 @@ mod tests {
                 .validate()
                 .unwrap_or_else(|e| panic!("{id}: {e:?}"));
         }
+    }
+
+    #[test]
+    fn the_minds_8_presets_add_watching_to_the_minds_6_worlds_and_name_minds_8() {
+        use crate::config::{RaidWhen, Watching};
+        // (id, base, cheaters, find, watchers): each is a Minds 6 world with
+        // watching on (span 7, raid_when always) and nothing else changed.
+        for (id, base, cheaters, find, watchers) in [
+            ("watch-winter", "theft-winter", 0.0, 0.0, 1.0),
+            ("watch-winter-stumble", "theft-winter", 0.0, 0.25, 1.0),
+            ("watch-half", "theft-winter-half", 0.5, 0.25, 1.0),
+            ("watch-scroungers", "theft-winter", 0.0, 0.0, 0.5),
+            ("watch-scroungers-only", "theft-winter-half", 0.5, 0.0, 0.5),
+            ("watch-arena", "theft-arena-4", 0.0, 0.25, 0.5),
+        ] {
+            let p = by_id(id).unwrap();
+            let mut c = p.config.clone();
+            assert_eq!((c.theft.cheaters, c.theft.find), (cheaters, find), "{id}");
+            assert_eq!(
+                c.watching,
+                Watching {
+                    on: true,
+                    span: 7,
+                    watchers,
+                    raid_when: RaidWhen::Always,
+                },
+                "{id}"
+            );
+            let mut b = by_id(base).unwrap().config;
+            c.watching = Default::default();
+            c.theft.find = 0.0;
+            c.theft.cheaters = 0.0;
+            b.theft.find = 0.0;
+            b.theft.cheaters = 0.0;
+            assert_eq!(c, b, "{id} is {base} with watching");
+            assert!(p.source.contains("Minds 8"), "{id}: {}", p.source);
+            assert!(p.source.contains("Bugnyar & Kotrschal 2002"), "{id}");
+            assert!(p.source.contains("Heinrich & Pepper 1998"), "{id}");
+            assert_eq!(
+                p.source.contains("Andersson & Krebs 1978"),
+                id == "watch-half",
+                "{id}"
+            );
+            assert_eq!(
+                p.source.contains("Barnard & Sibly 1981"),
+                id.starts_with("watch-scroungers"),
+                "{id}"
+            );
+            p.config
+                .validate()
+                .unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        }
+        // Pure scroungers: at equal shares the watchers are the cheaters.
+        let w = World::new(by_id("watch-scroungers-only").unwrap().config, 1).unwrap();
+        assert!(w.agents().all(|a| a.watches == a.cheater));
+        assert_eq!(w.agents().filter(|a| a.watches).count(), 87);
+        let w = World::new(by_id("watch-arena").unwrap().config, 1).unwrap();
+        assert_eq!(w.agents().filter(|a| a.watches).count(), 2);
+        assert!(w.agents().all(|a| !a.cheater));
     }
 
     #[test]

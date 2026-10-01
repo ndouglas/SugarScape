@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 379] = [
+pub const TITLES: [(&str, &str); 385] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -300,6 +300,30 @@ pub const TITLES: [(&str, &str); 379] = [
     (
         "theft-arena-8",
         "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with two fifths as much in hand",
+    ),
+    (
+        "watch-winter",
+        "Agents who watch others bury",
+    ),
+    (
+        "watch-winter-stumble",
+        "Watching, and stumbling on caches too",
+    ),
+    (
+        "watch-half",
+        "Half the agents never cache, and everyone watches",
+    ),
+    (
+        "watch-scroungers",
+        "Half the agents watch others bury",
+    ),
+    (
+        "watch-scroungers-only",
+        "Half the agents only watch and steal",
+    ),
+    (
+        "watch-arena",
+        "Four agents in a room, half of them watching",
     ),
     (
         "s71-board",

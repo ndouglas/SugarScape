@@ -1,0 +1,13 @@
+{
+  "name": "Minds 8: pilferage against how long a seen cache is remembered",
+  "description": "The share of caches pilfered per tick (pilferage_rate: caches pilfered ÷ caches at the tick's start; window_mean, ticks 100–200, the first winter) in watch-winter's world (theft-winter's winter, every agent a watcher, no stumbling on caches, so every pilfer is a raid on a seen cache) against the ticks a seen cache stays remembered (watching.span): 1, 3, 7 or 13. Heinrich and Pepper's ravens recovered seen caches the next day and none at 14 days; 7 is the default, about midway. Seeds 1–20.",
+  "base": { "preset": "watch-winter" },
+  "x": {
+    "label": "Ticks a seen cache is remembered",
+    "path": "watching.span",
+    "values": [1, 3, 7, 13]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 200,
+  "metric": { "kind": "window_mean", "series": "pilferage_rate", "from": 100, "to": 200 }
+}

@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 187] = [
+const BUILTINS: [Builtin; 189] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1649,6 +1649,14 @@ const BUILTINS: [Builtin; 187] = [
     Builtin {
         id: "theft-winter",
         json: include_str!("../../../sweeps/theft-winter.json"),
+    },
+    Builtin {
+        id: "watch-span",
+        json: include_str!("../../../sweeps/watch-span.json"),
+    },
+    Builtin {
+        id: "watch-scroungers",
+        json: include_str!("../../../sweeps/watch-scroungers.json"),
     },
     Builtin {
         id: "hoard-ratio",
@@ -2708,6 +2716,8 @@ mod tests {
                 "theft-find",
                 "theft-cheaters",
                 "theft-winter",
+                "watch-span",
+                "watch-scroungers",
                 "hoard-ratio",
                 "hoard-recovery",
                 "hoard-cheaters",
