@@ -7,7 +7,7 @@
 //! - **Bury(q)** (`bury`) at the agent's current site: holdings −= q, cache
 //!   += q. It costs no tick. Minds 6's `caching.bury_cost` c takes q × c more
 //!   from holdings, counted as eaten (`events.bury_cost`), and q is clamped
-//!   so that q × (1 + c) fits in holdings. Under theft (`theft.is_on()`),
+//!   so that q × (1 + c) fits in holdings. Under theft or watching (`pilfering_on()`),
 //!   each burial opens a fate record (`fates`), closed by a dig, a pilfer or
 //!   the owner's death; other worlds keep no log.
 //! - **Dig** (`dig`, called by `movement::go_and_gather`): arriving at its own
@@ -30,7 +30,8 @@
 //!   may find and pilfer other agents' caches; under `theft.owner_memory:
 //!   off` its own caches aren't candidates and it finds them only by chance.
 //! - **Watching** (Minds 8, `watching`): under `watching.on`, watchers who
-//!   see a burial remember the cache.
+//!   see a burial remember the cache, go to it as a candidate and raid it
+//!   on arrival.
 //!
 //! Sugar is conserved exactly across bury and dig: Σ sites + Σ holdings +
 //! Σ caches + eaten (bury cost included). Nothing here draws.
@@ -198,6 +199,28 @@ pub(crate) fn join_caches(
         return;
     }
     let a = world.agent(id).expect("live agent");
+    join_sites(
+        world,
+        id,
+        a.caches.iter().map(|(&i, &amount)| (i, amount)),
+        out,
+        start,
+    );
+}
+
+/// Joins `sites` (site index, value), in the order given, to `id`'s
+/// candidates at `start` by `join_caches`'s rules: the same sites skipped,
+/// a site listed before `start` merged by the larger value, and the rest
+/// inserted at `start` (a remembered entry moved there and merged).
+/// `watching::join_seen` joins seen caches the same way.
+pub(crate) fn join_sites(
+    world: &World,
+    id: AgentId,
+    sites: impl Iterator<Item = (u32, f64)>,
+    out: &mut Vec<(Pos, u32, f64)>,
+    start: &mut usize,
+) {
+    let a = world.agent(id).expect("live agent");
     let torus = world.torus;
     let pos = a.pos;
     let failed = a
@@ -205,7 +228,7 @@ pub(crate) fn join_caches(
         .target
         .filter(|&t| a.plan.path.is_empty() && t != pos);
     let mut extra = Vec::new();
-    for (&i, &amount) in &a.caches {
+    for (i, amount) in sites {
         let q = torus.pos(i as usize);
         if world.is_wall(q)
             || world.walled_apart(pos, q)

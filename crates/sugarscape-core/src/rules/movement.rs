@@ -201,6 +201,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
     let mut start = out.len();
     if !known {
         crate::minds::caching::join_caches(world, id, &mut out, &mut start);
+        crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
         return (out, start);
     }
     let torus = world.torus;
@@ -232,6 +233,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
         out.push((q, lattice_distance(torus, pos, q), welfare.of(&levels)));
     }
     crate::minds::caching::join_caches(world, id, &mut out, &mut start);
+    crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
     (out, start)
 }
 
@@ -247,9 +249,14 @@ pub(crate) fn lattice_distance(torus: Torus, a: Pos, b: Pos) -> u32 {
 /// spot that's ripe now, known or not.
 fn true_value(world: &World, id: AgentId, p: Pos) -> f64 {
     let value = site_value(world, id, p);
-    // Minds 5: a hungry agent's own cache counts as its candidate did.
-    match crate::minds::caching::cache_value(world, id, p) {
+    // Minds 5: a hungry agent's own cache counts as its candidate did, and
+    // Minds 8: so does a cache it saw buried there.
+    let value = match crate::minds::caching::cache_value(world, id, p) {
         Some(cache) => value.max(cache),
+        None => value,
+    };
+    match crate::minds::caching::watching::seen_value(world, id, p) {
+        Some(seen) => value.max(seen),
         None => value,
     }
 }
@@ -333,6 +340,12 @@ pub(crate) fn record_choice(
 /// - **The dig wins.** If its own cache here would be dug, it digs and draws
 ///   nothing. Under `owner_memory: off` it never digs this way (it doesn't
 ///   know where its caches are).
+///
+/// Minds 8 (`minds::caching::watching`), under `watching.on`:
+/// - **Raids.** An agent that doesn't dig here and remembers caches it saw
+///   buried here takes from the first still there, in owner-id order, with
+///   no draw, as a pilfer; only if it took nothing does it go on to
+///   stumbling. Either way it forgets what it saw buried here (a dig too).
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
@@ -372,10 +385,22 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
             room(used)
         };
         harvest.dug = crate::minds::caching::dig(world, id, site_index, room);
+        // Minds 8: an arrival forgets what it saw buried here, dig or not.
+        if world.config.watching.on {
+            crate::minds::caching::watching::forget(world, id, site_index);
+        }
         let a = world.agent_mut(id).expect("live agent");
         a.holdings[0] += harvest.dug;
         a.social = social;
         return harvest;
+    }
+    if world.config.watching.on {
+        if let Some(taken) =
+            crate::minds::caching::watching::raid(world, id, site_index, room(used))
+        {
+            world.agent_mut(id).expect("live agent").social = social;
+            return taken;
+        }
     }
     if world.config.theft.find > 0.0 {
         if let Some(taken) =

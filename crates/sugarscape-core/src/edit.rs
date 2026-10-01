@@ -275,7 +275,8 @@ pub struct AgentView {
     /// Minds 5: central-place foraging state. `Some` only while
     /// `central.enabled`.
     pub central: Option<CentralView>,
-    /// Minds 6: theft state. `Some` only while `theft.is_on()`.
+    /// Minds 6: theft state. `Some` only while `pilfering_on()` (theft, or
+    /// Minds 8's watching).
     pub theft: Option<TheftView>,
 }
 
@@ -568,7 +569,7 @@ impl World {
                 home: a.home.map_or([a.pos.x, a.pos.y], |p| [p.x, p.y]),
                 last_load: a.last_load,
             }),
-            theft: self.config.theft.is_on().then_some(TheftView {
+            theft: self.config.pilfering_on().then_some(TheftView {
                 cheater: a.cheater,
                 stolen_by_me: a.stolen_by_me,
                 stolen_from_me: a.stolen_from_me,

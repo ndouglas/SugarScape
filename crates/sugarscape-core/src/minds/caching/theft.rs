@@ -31,7 +31,10 @@
 //! - **Counts.** `pilfers` counts takes; `caches_pilfered` counts distinct
 //!   caches there at the tick's start that lost any sugar to a thief this
 //!   tick (once each, however many thieves or however partial). The
-//!   pilferage rate is `caches_pilfered / pilfer_candidates`.
+//!   pilferage rate is `caches_pilfered / pilfer_candidates`. This
+//!   bookkeeping (the candidates count, the fate log, the theft stats) runs
+//!   under `Config::pilfering_on`: theft, or Minds 8's watching, whose raids
+//!   are pilfers too (`watching`).
 //! - **Loot.** `keep`: the take goes into the thief's holdings, where its
 //!   burial rule may bury it again that tick (recached). `eat`: it's eaten,
 //!   going into the thief's stomach (`Agent::fed`, counted in
@@ -108,7 +111,7 @@ fn ensure_index(world: &mut World) {
 }
 
 /// Counts the caches in the world into `events.pilfer_candidates` (called
-/// at the tick's start under theft).
+/// at the tick's start under theft or watching, `Config::pilfering_on`).
 pub(crate) fn count_candidates(world: &mut World) {
     let n: usize = world.agents().map(|a| a.caches.len()).sum();
     world.events.pilfer_candidates = u32::try_from(n).unwrap_or(u32::MAX);
@@ -151,24 +154,38 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
         harvest.dug = take;
         return Some(harvest);
     }
-    let room = match theft.loot {
-        Loot::Keep => room,
-        Loot::Eat => f64::INFINITY,
-    };
-    let take = pilfer(world, owner, id, site, room);
+    let take = loot(world, owner, id, site, room);
     if take <= 0.0 {
         return None;
     }
-    let a = world.agent_mut(id).expect("live agent");
-    match theft.loot {
+    harvest.pilfered = take;
+    Some(harvest)
+}
+
+/// `thief` pilfers `owner`'s cache at `site` under `theft.loot`, with
+/// `room` left under the carrying limit, and returns the take (0 for none):
+/// under `keep` min(cache, room) into its holdings, under `eat` the whole
+/// cache into its stomach (`fed`, counted in `loot_eaten`). Minds 6's
+/// stumble and Minds 8's raid both take this way.
+pub(crate) fn loot(world: &mut World, owner: AgentId, thief: AgentId, site: u32, room: f64) -> f64 {
+    let rule = world.config.theft.loot;
+    let room = match rule {
+        Loot::Keep => room,
+        Loot::Eat => f64::INFINITY,
+    };
+    let take = pilfer(world, owner, thief, site, room);
+    if take <= 0.0 {
+        return 0.0;
+    }
+    let a = world.agent_mut(thief).expect("live agent");
+    match rule {
         Loot::Keep => a.holdings[0] += take,
         Loot::Eat => {
             a.fed += take;
             world.events.loot_eaten += take;
         }
     }
-    harvest.pilfered = take;
-    Some(harvest)
+    take
 }
 
 /// Takes min(cache, `room`) from `owner`'s cache at `site` for `thief` and

@@ -158,7 +158,7 @@ pub struct TickEvents {
     /// only); empty and unallocated unless something was pilfered.
     pub(crate) pilfered_caches: std::collections::BTreeSet<(AgentId, u32)>,
     /// Minds 6: caches in the world at the tick's start (after the
-    /// schedule), counted under theft (`theft.is_on()`): Σ over agents of
+    /// schedule), counted under theft or watching (`pilfering_on()`): Σ over agents of
     /// their caches. Each is a foreign cache to every agent but its owner,
     /// so `pilfers / pilfer_candidates` is the per-cache pilfer rate.
     pub pilfer_candidates: u32,
@@ -194,6 +194,17 @@ pub struct TickEvents {
     /// tick-start sweep (entries forgotten later in the tick, or made
     /// during it, aren't reflected). 0 with `watching.on` false.
     pub seen_entries: u32,
+    /// Minds 8: takes from a seen cache (raids) this tick. Each is also a
+    /// pilfer, counted in `pilfers`.
+    pub raids: u32,
+    /// Minds 8: the sugar raids took this tick, also counted in `pilfered`.
+    pub raided: f64,
+    /// Minds 8: arrivals whose remembered caches at the site were all gone
+    /// (wasted raids), once per arrival.
+    pub raids_wasted: u32,
+    /// Minds 8: arrivals on a site where the agent remembered a seen cache
+    /// (each forgets its entries there, whether it took or not).
+    pub seen_arrivals: u32,
 }
 
 #[derive(Clone)]
@@ -236,7 +247,8 @@ pub struct World {
     trail: Vec<Pos>,
     /// Minds 6: every cache's fate, one record per burial event
     /// (`minds::caching::fates`). Recorded only when a caller asks for it
-    /// (`record_fates`), and then only under theft (`theft.is_on()`);
+    /// (`record_fates`), and then only under theft or watching
+    /// (`pilfering_on()`);
     /// otherwise empty and unallocated. Never hashed.
     pub cache_log: Vec<crate::minds::caching::fates::CacheRecord>,
     /// Minds 6: the log reached `fates::LOG_CAP` and froze.
@@ -904,7 +916,7 @@ impl World {
     pub fn step(&mut self) {
         self.events = TickEvents::default();
         self.apply_schedule();
-        if self.config.theft.is_on() {
+        if self.config.pilfering_on() {
             crate::minds::caching::theft::count_candidates(self);
         }
         // Minds 8: forget seen caches older than `span`, before anyone moves.

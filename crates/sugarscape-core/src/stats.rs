@@ -129,7 +129,7 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
-    if config.theft.is_on() {
+    if config.pilfering_on() {
         for s in THEFT_SERIES {
             names.push(s.into());
         }
@@ -142,7 +142,8 @@ pub fn series_names(config: &Config) -> Vec<String> {
     names
 }
 
-/// Minds 6's theft series, named while `theft.is_on()`.
+/// Minds 6's theft series, named while `pilfering_on()` (theft, or Minds
+/// 8's watching, whose raids are pilfers).
 const THEFT_SERIES: [&str; 6] = [
     "pilfered",
     "pilferage_rate",
@@ -229,7 +230,8 @@ pub struct Snapshot {
     /// `central.enabled`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub central: Option<CentralStats>,
-    /// Minds 6's theft series, present when `theft.is_on()`.
+    /// Minds 6's theft series, present when `pilfering_on()` (theft or
+    /// watching).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub theft: Option<TheftStats>,
     /// Minds 6's hoarder/cheater series, present when `theft.cheaters > 0`.
@@ -673,7 +675,7 @@ impl Snapshot {
                     deliveries_total,
                 }
             }),
-            theft: world.config.theft.is_on().then(|| {
+            theft: world.config.pilfering_on().then(|| {
                 let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
                 let (pb, pd, pp, pl) = world
                     .stats
