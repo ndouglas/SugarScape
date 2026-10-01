@@ -1,0 +1,14 @@
+{
+  "medians": {
+    "agree_1000": 1.0,
+    "agree_50": 0.0,
+    "everyone_polar": 3.0,
+    "extremes_range": 1.0,
+    "few": 37.5,
+    "lattice_clusters": 52.0,
+    "lattice_polar": 0.0,
+    "lean_mean": 0.9445636147596232,
+    "many": 1.0
+  },
+  "seeds": 20
+}

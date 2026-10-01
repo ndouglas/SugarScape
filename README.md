@@ -964,9 +964,11 @@ What reproduces (20 seeds unless stated): Fig. 2a's "exactly 38" surviving opini
 (median 37.5); consensus at 0.25; Fig. 3's walk along ε — plurality, then camps, then a consensus
 that takes over between 0.21 and 0.25 (50 runs: 13, 30 and 50 in consensus at 0.21, 0.22, 0.25),
 always above 0.4; the evenly spaced figures exactly (50 opinions at 0.2 split in period 6 and are
-still from period 8; 100 at 0.05 split 8 times; 100 at 0.25 agree). What does not: **Fig. 2b's two
-camps at ε = 0.15 are the exception — 6 runs of 20; 14 end with a third camp in the middle, usually
-as large** (two camps are the rule only from 0.16 to 0.21); and "less than 15 periods to a stable
+still from period 8; 100 at 0.05 split 8 times; 100 at 0.25 agree). What does not quite: **Fig. 2b's
+two camps at ε = 0.15, which the paper calls "a fairly typical result", come up in about a third of
+runs** (16 of 50 end with exactly two opinions); most keep a third camp in the middle, about 30 % of
+the agents — a central ridge the paper's own Fig. 3 shows as well, and a separate implementation
+gives the same (two camps are the rule only from 0.16 to 0.21); and "less than 15 periods to a stable
 pattern" holds for 53 runs of 60, the slowest taking 168 while two nearly merged camps close.
 
 The paper's asymmetries are settings. **Asymmetric** confidence, the same for everyone (§4.2.1):

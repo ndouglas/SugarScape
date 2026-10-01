@@ -884,6 +884,7 @@ pub enum Dump {
     Schelling(Box<SchellingDump>),
     Tipping(Box<TippingDump>),
     Culture(Box<CultureDump>),
+    Opinions(Box<OpinionsDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -984,6 +985,20 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
             }
             run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
         }
+        ModelConfig::Opinions(_) => {
+            for (bad, field) in [
+                (!shot.place.is_empty(), "place"),
+                (shot.empty, "empty"),
+                (shot.gifts, "gifts"),
+                (shot.cells.is_some(), "cells"),
+                (shot.scores, "scores"),
+            ] {
+                if bad {
+                    return Err(vec![FieldError::new(field, "is not for opinions shots")]);
+                }
+            }
+            run_opinions(shot).map(|d| Dump::Opinions(Box::new(d)))
+        }
         ModelConfig::Culture(_) => {
             for (bad, field) in [
                 (!shot.place.is_empty(), "place"),
@@ -1001,7 +1016,7 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
         other => Err(vec![FieldError::new(
             "model",
             format!(
-                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms, social structure, Schelling's board and line and Axelrod's culture, not {}",
+                "shots run the sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms, social structure, Schelling's board and line, Axelrod's culture and bounded confidence, not {}",
                 other.kind().as_str()
             ),
         )]),
@@ -1135,6 +1150,94 @@ fn dpd_frame(world: &DpdWorld, before: &BTreeSet<u64>, alive: &mut BTreeSet<u64>
 }
 
 /// Runs a demographic-PD shot and records every cycle.
+/// Every series at steps 0, `every`, 2·`every` … `ticks`; a model that stopped
+/// early (stable) holds its last value.
+fn stats_every(model: &dyn Model, ticks: u32, every: u32) -> BTreeMap<String, Vec<f64>> {
+    model
+        .series_names()
+        .into_iter()
+        .filter_map(|name| {
+            model.series(&name).map(|s| {
+                let every = every as usize;
+                let last = *s.last().unwrap_or(&0.0);
+                let picked = (0..=ticks as usize / every)
+                    .map(|k| s.get(k * every).copied().unwrap_or(last))
+                    .collect();
+                (name, picked)
+            })
+        })
+        .collect()
+}
+
+/// One recorded period of bounded confidence: every agent's opinion.
+#[derive(Clone, Debug, Serialize)]
+pub struct OpinionsFrame {
+    pub tick: u64,
+    pub opinions: Vec<f64>,
+}
+
+/// An opinions shot: every agent's opinion every `every`th period (frames
+/// keep their true period), the starting opinions and the statistics.
+#[derive(Clone, Debug, Serialize)]
+pub struct OpinionsDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    /// Frames after the first (the shot's `ticks / every`).
+    pub ticks: u32,
+    pub every: u32,
+    pub agents: usize,
+    pub starts: Vec<f64>,
+    pub config: ModelConfig,
+    pub frames: Vec<OpinionsFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
+/// Runs an opinions shot, recording every `every`th period.
+pub fn run_opinions(shot: &Shot) -> Result<OpinionsDump, Vec<FieldError>> {
+    let config = shot.model_config()?;
+    let every = shot.every;
+    if every == 0 || !shot.ticks.is_multiple_of(every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
+    let mut world = ModelWorld::new(config.clone(), shot.seed)?;
+    let ModelWorld::Opinions(first) = &world else {
+        unreachable!("an opinions world")
+    };
+    let starts = first.starts().to_vec();
+    let frame = |w: &ModelWorld, tick: u64| -> OpinionsFrame {
+        let ModelWorld::Opinions(o) = w else {
+            unreachable!("an opinions world")
+        };
+        OpinionsFrame {
+            tick,
+            opinions: o.opinions().to_vec(),
+        }
+    };
+    let mut frames = vec![frame(&world, 0)];
+    for k in 1..=shot.ticks / every {
+        world.model_mut().run(every);
+        // A stable world stops; its frames keep counting periods.
+        frames.push(frame(&world, u64::from(k * every)));
+    }
+    let stats = stats_every(world.model(), shot.ticks, every);
+    Ok(OpinionsDump {
+        format: FORMAT,
+        model: "opinions",
+        seed: shot.seed,
+        ticks: shot.ticks / every,
+        every,
+        agents: starts.len(),
+        starts,
+        config,
+        frames,
+        stats,
+    })
+}
+
 /// Runs a culture shot, recording every `every`th step.
 pub fn run_culture(shot: &Shot) -> Result<CultureDump, Vec<FieldError>> {
     let config = shot.model_config()?;
@@ -1167,22 +1270,7 @@ pub fn run_culture(shot: &Shot) -> Result<CultureDump, Vec<FieldError>> {
         f.tick = u64::from(k * every);
         frames.push(f);
     }
-    let model = world.model();
-    let stats = model
-        .series_names()
-        .into_iter()
-        .filter_map(|name| {
-            model.series(&name).map(|s| {
-                let every = every as usize;
-                let last = *s.last().unwrap_or(&0.0);
-                // Past stability the series stops too; hold its last value.
-                let picked = (0..=shot.ticks as usize / every)
-                    .map(|k| s.get(k * every).copied().unwrap_or(last))
-                    .collect();
-                (name, picked)
-            })
-        })
-        .collect();
+    let stats = stats_every(world.model(), shot.ticks, every);
     // Sites, not the page's grid (which draws lanes between them).
     let (width, height) = (c.width, c.height);
     Ok(CultureDump {
@@ -2380,6 +2468,32 @@ mod tests {
             Dump::Schelling(d) => *d,
             _ => panic!("not a schelling dump"),
         }
+    }
+
+    #[test]
+    fn an_opinions_shot_records_every_agents_opinion_each_period() {
+        let d = match super::run(
+            &Shot::from_json(r#"{"preset": "hk-polarisation", "ticks": 30, "seed": 1}"#).unwrap(),
+        )
+        .unwrap()
+        {
+            Dump::Opinions(d) => *d,
+            _ => panic!("not an opinions dump"),
+        };
+        assert_eq!(
+            (d.model, d.agents, d.ticks, d.every, d.frames.len()),
+            ("opinions", 625, 30, 1, 31)
+        );
+        assert_eq!(d.starts.len(), 625);
+        assert_eq!(d.frames[0].opinions, d.starts, "period 0 is the start");
+        let mut w =
+            crate::opinions::OpinionsWorld::new(crate::opinions::OpinionsConfig::default(), 1)
+                .unwrap();
+        w.run(5);
+        assert_eq!(d.frames[5].opinions, w.opinions());
+        // Stable by period 7 here: the rest hold the last state.
+        assert_eq!(d.frames[29].opinions, d.frames[30].opinions);
+        assert_eq!(d.stats["clusters"].len(), 31);
     }
 
     #[test]
