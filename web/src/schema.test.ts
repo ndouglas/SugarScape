@@ -376,3 +376,35 @@ describe('theft (Minds 6)', () => {
     expect(c.caching).toEqual({ rule: 'plan', capacity: 20, share: 0.3, lambda: 0.5, lookahead: 2, mixed: false, bury_cost: 0 });
   });
 });
+
+describe('watching (Minds 8)', () => {
+  const group = GROUPS.find((g) => g.title === 'Watching (Minds 8)')!;
+
+  it('is a Minds group with watching and span live, watchers reset-only, and raid when a live select', () => {
+    expect(group.minds).toBe(true);
+    expect(group.controls.map((c) => c.path)).toEqual(['watching.on', 'watching.span', 'watching.watchers', 'watching.raid_when']);
+    expect(control('watching.on').kind).toBe('toggle');
+    expect(control('watching.raid_when').kind).toBe('select');
+    expect(control('watching.watchers').reset).toBe(true);
+    for (const path of ['watching.on', 'watching.span', 'watching.raid_when']) expect(control(path).reset).toBeUndefined();
+    const span = control('watching.span');
+    const watchers = control('watching.watchers');
+    if (span.kind !== 'number' || watchers.kind !== 'number') throw new Error('numbers');
+    expect([span.min, span.max, span.step]).toEqual([1, 30, 1]);
+    expect([watchers.min, watchers.max, watchers.step]).toEqual([0, 1, 0.05]);
+  });
+
+  it('seeds a complete watching object on a config missing one', () => {
+    const c = {} as unknown as Config;
+    control('watching.on').adjust!(c, structuredClone(c));
+    setPath(c, 'watching.on', true);
+    expect(c.watching).toEqual({ on: true, span: 7, watchers: 1, raid_when: 'always' });
+  });
+
+  it('notes the shared id rule only where both shares are strictly between 0 and 1', () => {
+    const note = group.conditionalNote!;
+    const c = (cheaters: number, watchers: number) => ({ theft: { cheaters }, watching: { watchers } }) as unknown as Config;
+    expect([note.when(c(0.5, 0.5)), note.when(c(0, 0.5)), note.when(c(0.5, 1)), note.when(c(1, 0.5))]).toEqual([true, false, false, false]);
+    expect(note.text).toBe('Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents.');
+  });
+});

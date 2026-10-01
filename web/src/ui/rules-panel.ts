@@ -251,12 +251,16 @@ export class RulesPanel {
       this.syncers.push(() => (box.checked = getPath(this.engine.sugar, path) === true));
       header.replaceChildren(h('label', { class: 'switch' }, box, ` ${group.title}`));
     }
+    const extra = group.conditionalNote;
+    const extraEl = extra ? h('p', { class: 'hint' }, extra.text) : null;
+    if (extra && extraEl) this.syncers.push(() => (extraEl.hidden = !extra.when(this.engine.sugar)));
     return h(
       'section',
       { class: 'group' },
       header,
       group.enable ? this.errorSlot(group.enable) : null,
       group.note ? h('p', { class: 'hint' }, group.note) : null,
+      extraEl,
       ...group.controls.map((c) => this.control(c)),
       ...(group.custom ? this.customEditor(group.custom) : []),
     );

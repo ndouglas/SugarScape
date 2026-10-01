@@ -333,7 +333,7 @@ export function sugarscapeChapter(p: Preset): string {
  * Whether `c` is a Minds world (docs/studies/2026-09-27-minds.md): a sugarscape config that uses any rule
  * the Minds experiments added — a decision other than rule M, walking, memory, walls, truffles, caching,
  * a carrying limit, central-place foraging, a winter everywhere at once, or theft (a chance to find caches
- * or any cheaters).
+ * or any cheaters), or watching.
  * The Minds run on the sugarscape model but have their own entry in the model menu.
  */
 export function usesMinds(c: ModelConfig): boolean {
@@ -351,7 +351,8 @@ export function usesMinds(c: ModelConfig): boolean {
     s.central?.enabled === true ||
     s.seasons?.mode === 'global' ||
     (s.theft?.find ?? 0) > 0 ||
-    (s.theft?.cheaters ?? 0) > 0
+    (s.theft?.cheaters ?? 0) > 0 ||
+    s.watching?.on === true
   );
 }
 
@@ -361,6 +362,12 @@ export const cachingOn = (c: Config): boolean =>
 
 /** Minds 6: theft is on (a chance to find caches, or any cheaters), as the core's `Theft::is_on`. */
 export const theftOn = (c: Config): boolean => (c.theft?.find ?? 0) > 0 || (c.theft?.cheaters ?? 0) > 0;
+
+/** Minds 8: watching is on. */
+export const watchingOn = (c: Config): boolean => c.watching?.on === true;
+
+/** Minds 6 and 8: caches get pilfered, by theft or by watchers' raids (the core's `Config::pilfering_on`). */
+export const pilferingOn = (c: Config): boolean => theftOn(c) || watchingOn(c);
 
 /** Minds 5–6: whether `c` can hold caches (caching on, or a central world's larders). */
 export const hasCaches = (c: Config): boolean => cachingOn(c) || c.central?.enabled === true;
@@ -410,6 +417,7 @@ const MINDS_TITLES: Record<string, string> = {
   '5': 'Minds 5: caching',
   '6': 'Minds 6: theft',
   '7': 'Minds 7: evolution of hoarding',
+  '8': 'Minds 8: watching',
 };
 
 /**
@@ -460,6 +468,8 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     // Minds 6: hoarder or cheater; Minds 5: each agent's caching rule. See `defaultColorMode`.
     ['strategy', 'Strategy'],
     ['caching_rule', 'Caching rule'],
+    // Minds 8: watchers who bury, scroungers, others.
+    ['watching', 'Watching'],
     // Minds 3: whether each agent remembers.
     ['memory', 'Memory'],
   ],

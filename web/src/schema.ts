@@ -1,5 +1,5 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Theft, Truffles } from './types';
+import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Theft, Truffles, Watching } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
@@ -33,6 +33,14 @@ const theft = (c: Config): Theft => c.theft ?? { find: 0, owner_memory: true, lo
 const seedTheft = (next: Config) => {
   next.theft = { ...theft(next), ...next.theft };
 };
+/** A config's watching, or the engine's default (off, 7 ticks, every founder, raid always) for older configs. */
+const watching = (c: Config): Watching => c.watching ?? { on: false, span: 7, watchers: 1, raid_when: 'always' };
+
+/** Seeds a complete watching object on `next`. */
+const seedWatching = (next: Config) => {
+  next.watching = { ...watching(next), ...next.watching };
+};
+
 const seedBuryCost = (next: Config) => {
   next.caching = { ...caching(next), ...next.caching, bury_cost: next.caching?.bury_cost ?? 0 };
 };
@@ -62,6 +70,8 @@ export interface Group {
   controls: Control[];
   /** A hand-built editor shown after the controls. */
   custom?: 'goods' | 'pollution' | 'groups';
+  /** A note shown only while `when` holds for the running config. */
+  conditionalNote?: { when: (c: Config) => boolean; text: string };
   /** One of the Minds rules: shown only for a Minds world (the model menu's Minds entry). */
   minds?: true;
 }
@@ -416,6 +426,28 @@ export const GROUPS: Group[] = [
       {
         kind: 'number', path: 'caching.bury_cost', label: 'Bury cost (sugar a cache)', min: 0, max: 2, step: 0.05,
         adjust: seedBuryCost,
+      },
+    ],
+  },
+  {
+    title: 'Watching (Minds 8)',
+    minds: true,
+    note: 'Agents who watch see the burials near them and remember each cache they saw buried for the span, in ticks. An arriving watcher whose remembered cache is on the site raids it on purpose, with no chance to find; a cache already gone is a wasted raid. Raid when says whether a seen cache is a place to go always, or only when hungry. Watchers who also bury and scroungers who never bury are told apart by the Theft rules’ share of cheaters. Watching needs caching, and isn’t offered in the labs or with central-place foraging. The share of watchers rebuilds the world; the rest applies to the running world.',
+    conditionalNote: {
+      when: (c) => (c.theft?.cheaters ?? 0) > 0 && (c.theft?.cheaters ?? 0) < 1 && (c.watching?.watchers ?? 1) > 0 && (c.watching?.watchers ?? 1) < 1,
+      text: 'Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents.',
+    },
+    controls: [
+      { kind: 'toggle', path: 'watching.on', label: 'Watching', current: (c) => watching(c).on, adjust: seedWatching },
+      { kind: 'number', path: 'watching.span', label: 'Span (ticks a seen cache is remembered)', min: 1, max: 30, step: 1, adjust: seedWatching },
+      { kind: 'number', path: 'watching.watchers', label: 'Share of watchers', min: 0, max: 1, step: 0.05, reset: true, adjust: seedWatching },
+      {
+        kind: 'select', path: 'watching.raid_when', label: 'Raid when',
+        current: (c) => watching(c).raid_when,
+        options: [
+          { value: 'always', label: 'Always, at a seen cache', apply: (c) => { c.watching = { ...watching(c), raid_when: 'always' }; } },
+          { value: 'hungry', label: 'Only when hungry', apply: (c) => { c.watching = { ...watching(c), raid_when: 'hungry' }; } },
+        ],
       },
     ],
   },

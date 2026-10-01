@@ -114,6 +114,16 @@ describe('the Minds color modes and the caches overlay', () => {
   const allRemember = minds({ memory: memory(1) } as Partial<Config>);
   const base: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
 
+  it('defaults to Watching wherever watching is on, before Strategy and Caching rule', () => {
+    const watch = { on: true, span: 7, watchers: 1, raid_when: 'always' };
+    expect(defaultColorMode({ ...even, watching: watch } as unknown as Config)).toBe('watching');
+    expect(defaultColorMode({ ...theft, watching: watch } as unknown as Config)).toBe('watching');
+    expect(defaultColorMode({ ...even, watching: { ...watch, on: false } } as unknown as Config)).toBe('caching_rule');
+    const d = { ...base, colorMode: 'watching' as const };
+    expect(clampDisplay(d, { ...even, watching: watch } as unknown as Config).colorMode).toBe('watching');
+    expect(clampDisplay(d, even).colorMode).toBe('caching_rule');
+  });
+
   it('defaults to Strategy with cheaters, Caching rule under mixed rules, Memory where some remember, Caching rule with caching on, else Tribe', () => {
     expect(defaultColorMode(theft)).toBe('strategy');
     expect(defaultColorMode(mixed)).toBe('caching_rule');

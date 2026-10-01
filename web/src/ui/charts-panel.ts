@@ -2,7 +2,7 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
-import { cachingOn, calendarYear, theftOn } from '../models';
+import { cachingOn, calendarYear, pilferingOn, watchingOn } from '../models';
 import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
 import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
@@ -31,6 +31,7 @@ import {
   showsGoodWealth,
   showsTagHist,
   showsTotalWealth,
+  stumbledData,
   supplyDemandTable,
   timeAxisLabel,
   twoGoods,
@@ -59,6 +60,8 @@ interface ChartDef {
   shown?: (c: Config) => boolean;
   /** Another model's chart: whether it shows for a world's config (civil Model II's groups and kills). */
   modelShown?: (c: ModelConfig) => boolean;
+  /** Reshapes a time chart's table (ticks, then a column per line) before it is drawn. */
+  derive?: (data: LineData) => LineData;
   /** The caption names the traded pair (goods 0 and 1). */
   pair?: boolean;
   /** A `goodWealth` chart's good: the caption names it. */
@@ -97,6 +100,9 @@ const X_LABEL: Record<Kind, string> = {
 const fixed = (lines: Line[]) => () => lines;
 const perGood = (prefix: string) => (c: Config): Line[] =>
   c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
+
+/** Minds 8: both kinds of founder exist under watching (the core's `watchers_split`). */
+const hasWatcherSplit = (c: Config): boolean => watchingOn(c) && (c.watching?.watchers ?? 1) > 0 && (c.watching?.watchers ?? 1) < 1;
 
 /** Minds 6: the world has cheaters, so the hoarder and cheater series exist. */
 const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;
@@ -287,7 +293,7 @@ const CHARTS: ChartDef[] = [
     section: 'top',
     lines: fixed([{ key: 'pilferage_rate', label: 'Share of caches pilfered', color: '--c1' }]),
     range: [0, 1],
-    shown: theftOn,
+    shown: pilferingOn,
   },
   {
     // Cumulative shares of all sugar ever buried: dug by its owner, pilfered, lost with a dead owner, still buried.
@@ -301,7 +307,7 @@ const CHARTS: ChartDef[] = [
       { key: 'fate_buried', label: 'Still buried', color: '--c4' },
     ]),
     range: [0, 1],
-    shown: theftOn,
+    shown: pilferingOn,
   },
   {
     // Counts alone; the holdings (sugar) get their own chart so the axes don't mix units.
@@ -323,6 +329,46 @@ const CHARTS: ChartDef[] = [
       { key: 'cheater_holdings', label: 'Cheaters (mean sugar held)', color: '--c2' },
     ]),
     shown: hasCheaters,
+  },
+  {
+    // Minds 8: sugar pilfered each tick, split by how the thief came to the cache. The core's `pilfered`
+    // includes `raided`, so what was stumbled on is the difference.
+    title: 'Pilfers by source',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'raided', label: 'Seen, then raided (sugar a tick)', color: '--c1' },
+      { key: 'pilfered', label: 'Stumbled on (sugar a tick)', color: '--c2' },
+    ]),
+    derive: stumbledData,
+    shown: watchingOn,
+  },
+  {
+    title: 'Wasted raids',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'raids_wasted', label: 'Arrivals where every seen cache was gone', color: '--c1' }]),
+    shown: watchingOn,
+  },
+  {
+    title: 'Watchers vs others',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'watcher_alive', label: 'Watchers alive', color: '--c1' },
+      { key: 'other_alive', label: 'Others alive', color: '--c2' },
+    ]),
+    shown: hasWatcherSplit,
+  },
+  {
+    title: 'Watcher and other holdings',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'watcher_holdings', label: 'Watchers (mean sugar held)', color: '--c1' },
+      { key: 'other_holdings', label: 'Others (mean sugar held)', color: '--c2' },
+    ]),
+    shown: hasWatcherSplit,
   },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },
@@ -801,7 +847,7 @@ export class ChartsPanel {
       const band = p.def.kind === 'band';
       // The anasazi's time charts count years from each world's start year.
       const offset = (i: number) => (p.def.model ? (calendarYear(this.worlds[i].config, 0) ?? 0) : 0);
-      p.plot.setData(this.merge(groups.map((g, i) => (g ? (band ? bandData(g) : lineData(g, offset(i))) : emptyTable(p.counts[i])))));
+      p.plot.setData(this.merge(groups.map((g, i) => (g ? (band ? bandData(g) : (p.def.derive ?? ((d: LineData) => d))(lineData(g, offset(i)))) : emptyTable(p.counts[i])))));
       return;
     }
     const version = this.dist.map((d) => d.version).join();

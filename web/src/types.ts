@@ -158,6 +158,21 @@ export interface Theft {
   cheaters: number;
 }
 
+/** Minds 8: when a seen cache is a place to go. */
+export type RaidWhen = 'always' | 'hungry';
+
+/**
+ * Minds 8's watching (absent from older configs: off). `on`, `span` and `raid_when` apply live;
+ * `watchers` (the share of founders who watch, by id) is reset-only.
+ */
+export interface Watching {
+  on: boolean;
+  /** Ticks a seen cache stays remembered. */
+  span: number;
+  watchers: number;
+  raid_when: RaidWhen;
+}
+
 /** Minds 5: central-place foraging (absent from older configs: off); reset-only. */
 export interface Central {
   enabled: boolean;
@@ -209,6 +224,7 @@ export interface Config {
   caching?: Caching;
   central?: Central;
   theft?: Theft;
+  watching?: Watching;
   lab?: Lab | null;
   schedule: ScheduledChange[];
 }
@@ -1534,8 +1550,20 @@ export interface AgentView {
   central?: CentralView | null;
   /** Minds 6: theft state, while theft is on (`theft.find` or `theft.cheaters` above 0). */
   theft?: TheftView | null;
+  /** Minds 8: watching state, while `watching.on`. */
+  watching?: WatchingView | null;
 }
 /** Minds 6: whether the agent cheats, what it has stolen and lost to thieves, and loot in its stomach. */
+/**
+ * Minds 8: whether the agent watches, whether it is a scrounger (watches and never buries), and the
+ * caches it remembers seeing buried. Only while `watching.on`.
+ */
+export interface WatchingView {
+  watches: boolean;
+  scrounger: boolean;
+  /** Each `site` is an index (`y * width + x`). */
+  seen: { site: number; owner: number; amount: number; age: number }[];
+}
 export interface TheftView { cheater: boolean; stolen_by_me: number; stolen_from_me: number; fed: number }
 export interface CacheView { x: number; y: number; amount: number }
 /**
@@ -2107,6 +2135,7 @@ export type ColorMode =
   | 'provocability'
   | 'strategy'
   | 'caching_rule'
+  | 'watching'
   | 'surrounded'
   | 'agents'
   | 'uncertainty'

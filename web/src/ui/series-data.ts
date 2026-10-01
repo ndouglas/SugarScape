@@ -12,6 +12,15 @@ export function lineData(g: ChartGroup, offset = 0): LineData {
   return [Array.from(g.ticks, (t) => t + offset), ...g.columns.map((c) => Array.from(c, gap))];
 }
 
+/**
+ * The "Pilfers by source" table (`[raided, pilfered]`): the second column becomes what was stumbled on,
+ * `pilfered − raided` (raids are pilfers), never below 0 against rounding; a gap stays a gap.
+ */
+export function stumbledData(data: LineData): LineData {
+  const [ticks, raided, pilfered] = data as [number[], (number | null)[], (number | null)[]];
+  return [ticks as number[], raided, pilfered.map((p, i) => (p == null || raided[i] == null ? null : Math.max(0, p - raided[i]!)))];
+}
+
 /** The Trade price chart (`[mean_log_price, sd_log_price]`): the mean, mean + SD and mean − SD. */
 export function bandData(g: ChartGroup): LineData {
   const [mean, sd] = g.columns;

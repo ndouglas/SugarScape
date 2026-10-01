@@ -20,6 +20,7 @@ import {
   positionBars,
   positionSteps,
   shownCharts,
+  stumbledData,
   showsAgeHist,
   showsGoodWealth,
   showsTagHist,
@@ -520,5 +521,11 @@ describe('hoard charts (Minds 7)', () => {
       [0.1, 0.2],
     ]);
     expect(hoardSeasonTable(null, c)).toEqual([[], []]);
+  });
+});
+
+describe('stumbledData', () => {
+  it('turns the pilfered column into what was stumbled on (pilfered − raided), keeping gaps', () => {
+    expect(stumbledData([[1, 2, 3], [0, 1, null], [2, 1, 4]])).toEqual([[1, 2, 3], [0, 1, null], [2, 0, null]]);
   });
 });
