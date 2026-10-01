@@ -1,0 +1,54 @@
+{
+  "name": "The Emergence of Firms: groping for effort (Table 10)",
+  "description": "Axtell's Table 10: µ against β when agents grope for effort (one random try, kept if better), read two ways. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: optimal: 3.63, 3.29, 2.93, 2.51, 2.02; groping in any firm (other firms weighed at the current effort): 2.67, 0.07, −0.22, −0.23, −0.20 — one firm swallows the population; groping only in the agent's own firm: 3.57, 3.22, 2.84, 2.41, 1.89. The table: 1.69, 1.49, 1.33, 1.19, 1.00 — and its text's 'more pronounced' than stickiness contradicts it.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "β",
+    "path": "beta",
+    "values": [
+      1.7,
+      1.8,
+      1.9,
+      2.0,
+      2.1
+    ]
+  },
+  "series": {
+    "label": "Effort",
+    "values": [
+      {
+        "at": 1,
+        "name": "Optimal",
+        "set": {
+          "groping": false
+        }
+      },
+      {
+        "at": 2,
+        "name": "Groping, in any firm",
+        "set": {
+          "groping": true
+        }
+      },
+      {
+        "at": 3,
+        "name": "Groping, own firm only",
+        "set": {
+          "groping": true,
+          "adjust_scope": "own_firm"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

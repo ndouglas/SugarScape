@@ -155,7 +155,7 @@ The presets menu groups its presets by model: **Sugarscape**, **Minds**, **Schel
 **Emergence of Classes**, **Ethnocentrism**, **Bounded Confidence**, **Social Structure**,
 **Demographic PD**, **Norms and Metanorms**, **Relative Agreement**,
 **Image Scoring**, **El Farol and the Minority Game**, **Ants and Recruitment**, **Threshold Models**,
-**The Timing of Retirement**, **Altruistic Punishment**, **Zero-Intelligence Traders** and **Balinese Water Temples**.
+**The Timing of Retirement**, **Altruistic Punishment**, **Zero-Intelligence Traders**, **Balinese Water Temples** and **The Emergence of Firms**.
 Each preset is listed by a plain title saying what happens in it; under the menu, the chosen
 preset's source (the book's figure or animation, or the paper) and its rules sit above its description.
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
@@ -3140,6 +3140,107 @@ Credit: J. Stephen Lansing and James N. Kremer, "Emergent Properties of Balinese
 An Analysis of the Lansing–Kremer Model of Bali," *Agricultural Systems* 93: 170–190 (2007); the
 watershed data from Janssen's "Lansing–Kremer model" (CoMSES Net 2221, v1.2.0, GPL-2.0). See
 `docs/superpowers/specs/2026-09-28-bali-water-temples-design.md`.
+
+### The Emergence of Firms (Axtell 1999; Axtell 2013)
+
+**The model.** Why do firms exist, and why are their sizes spread like a power law? Axtell's agents
+each prefer income and leisure in their own proportion (θ, uniform on [0, 1]). A firm's output grows
+faster than its members' total effort (a·E + b·E², increasing returns), and is shared equally — so
+working together pays, but each member's share is only weakly tied to its own effort, and free
+riders creep in. Each period every agent, activated at random, weighs re-choosing its effort at
+home, starting a firm alone, and joining one of its two friends' firms, and takes the best. Firms
+form, grow, fill with free riders and collapse. One tick is a period.
+
+**How the paper was read.** It is a 108-page working paper with the rules in prose, a text layer, and
+no code. Its §2 analytics — each agent's best effort (a closed form), the Nash equilibria of a group
+of like agents, the size beyond which that equilibrium turns unstable (Table 1) — are exact, and
+Table 1 reproduces to three decimals; his other §2 claim, optimal group sizes "less than 10" for
+θ < 0.85, misses by a hair (θ = 0.84 already optimizes at 11). Its simulation leaves much unstated,
+and each gap is a switch: what an agent sees of others' effort (last period's, inferred from output,
+as the text says; or live), how agents are activated (at random with replacement, or once each), how
+finely effort is searched, and for §4: whether sticky effort and groping apply in a firm an agent
+joins or founds, which way seniority pay runs, and who covers a shortfall when base pay exceeds
+output. Its own figures, tables and text disagree in places — firm counts, mean sizes and lifetimes
+that can't all be true of 1 000 agents; output levels half of what the all-alone start already gives;
+four rows of Table 11 that are one model (so their spread, 0.89–1.07, is the paper's noise); text
+that says a table rises where it falls; and a table captioned for a rule ("target output") that
+appears nowhere. Axtell's 2013 paper recasts the model (per-firm a, b and β; 2–6 friends; 4 % of
+agents activated a period, a month) and is a preset.
+
+Measured (the survey — 25 claims, 15 hold and 10 fail — and the presets' and sweeps' descriptions):
+
+- **The base case does not reproduce the paper's numbers, under any reading.** Firm sizes fall off
+  with µ ≈ 2.5 by Axtell's own OLS (1.4 by maximum likelihood), not 1.28; firms live about 4
+  periods, not 23.4; the largest firm reaches 62–150 over the survey's 10 seeds (his typical run: about 205); output runs
+  about 750 — below the all-alone start's 934, but still above his 450–600; productivity shows
+  decreasing returns (output ∝ size^0.67), not his near-constant ones (s^1.15). Reading others'
+  effort live and activating each agent once comes closest (µ 1.79). Population size and the start
+  don't matter, as he says.
+- **The growth of firms passes, but on thin grounds.** Growth rates fit a Laplace better than a
+  Gaussian in 10 of 10 seeds, as his figure 20 says — but 38–41 % of them are exactly zero (firms
+  that kept their size, singletons included), and that spike is what the Laplace fits: on the
+  nonzero rates alone the Gaussian wins in 10 of 10 (mean log-likelihood −1.16 against −1.32).
+  Their spread falls with size as s^−γ with median γ 0.171 over 10 seeds — his is 0.174 ± 0.004 —
+  but the seeds run from 0.12 to 0.24.
+- **Most of §4's directions hold, two reverse.** µ falls as increasing returns (β, b) strengthen,
+  as random-firm networks widen, as loyalty grows and as base pay rises, and as hiring standards
+  first steady large firms and then undo them, all as his tables say — roughly 1 to 2 above his
+  values (random-firm networks widest, about 1.8–2.0 above: 3.29 against 1.28, 2.81 against 1.03;
+  the rest nearer 1, though b = 1.5 and β = 1.7 run further out still, 2.09 against 0.53 and 3.63
+  against 2.06). His "breaks down" at full hiring standards does not: the largest firm stays at
+  20–52, not under 20.
+  More fixed friends *raise* µ, where his Table 6 lowers it, and seniority pay raises µ far more
+  sharply (2.49 to 10.03) where his Table 11 only slightly lowers it (1.28 to 1.11). Loyalty is the
+  one change that gives his long lifetimes (about 35 periods at λ = 10).
+- **Three unstated details decide whole tables.** Sticky effort (±0.05 a step) and groping, applied
+  to effort in any firm, pull the whole population into one firm at times, in every seed; the
+  survey counts that a Hold only because µ turns negative there — a one-giant-firm regime, not a
+  power law — while applied only at home, they barely matter. The text calls groping's effect "more
+  pronounced," but the paper's own tables say sticky effort's is. Seniority pay with the founder
+  paid most (the text's order) keeps every firm to four or fewer (a joiner's share of a pair's
+  output under 5^−rank is 1/6); with the newest paid most, near-giant firms form. His modest Table 11 effect
+  comes from neither. Base pay, paid even when a firm's output falls short (eq. 21,
+  our literal default), has firms-base-pay-80 paying out about 2.85× what it makes; scaling pay down
+  to output instead, so agents expect it, lifts effort from 0.10 to about 0.24 and output from 290
+  to about 674, in smaller firms.
+- **Random choices of firm hold; random effort's "fail" is a borrowed threshold, not a
+  contradiction.** Random choices keep every firm small, as he reports. Random effort instead
+  pulls all 1 000 agents into one firm in every seed; his own words, "nothing like power law size
+  distributions," are satisfied by that too, so the survey's Fail there comes only from reusing
+  random choices' "rarely above 9 or 10" threshold, which he states only for random choices.
+- **Myopic agents join even without increasing returns.** His footnote 19 says working together
+  never pays under constant returns — true at equilibrium; an agent taking others' effort as given
+  still gains by joining an identical one, and firms form.
+- **His 2013 parameterization gives Zipf's law, and one giant firm.** µ ≈ 1.0 (his 2013 α ≈ 1.06),
+  but the largest firm peaks at 3 000–5 800 of the 10 000 agents after the burn-in (5 seeds), though most of the time it stays under about 1 000 (median 780–955). Firms live about 77 periods, but a 2013 period activates only
+  4 % of agents: that is about 3.1 activations per agent, against the 1999 base case's 3.9 periods
+  at one activation per agent a period on average (about 3.9) — so 2013's firms are not
+  longer-lived per decision. The famous size distribution belongs to the later model, not the 1999
+  one.
+
+Switches: **Agents** and **Start**; **Constant returns a**, **Increasing returns b**, **Exponent β**
+(each fixed, or drawn per firm up to a maximum); **Preferences** (nine distributions, including CES
+with **CES exponent** convention); **Agents look at** (friends' firms or random firms) and **Friends
+or firms ν**; **Activation**, **Activations a period ÷ agents**, **Others' effort**, **Best effort**,
+**Effort changes by at most**, **Grope for effort**, **Sticky effort and groping apply**, **Loyalty
+λ**, **Random behavior**; **Output is shared** (equally, by seniority with **The largest share goes
+to**, or base pay plus a bonus with **When output falls short of base pay**), **Hiring standard φ**;
+and the measurement's burn-in, sampling and stop. The view follows Axtell's Animation 1 — each firm a row, its longest-serving member first, the
+largest firms first — beside the firm-size distribution on log-log axes with its OLS line. Color modes: **Founder**, **θ
+(income)**, **Effort**, **Income**. Charts: Firms; Sizes; Effort and pay; Output; Scaling. Presets:
+`firms-base`, `firms-live`, `firms-uniform`, `firms-beta-17`, `firms-beta-21`, `firms-b-15`,
+`firms-b-random`, `firms-theta-075`, `firms-friends-10`, `firms-random-firms-10`, `firms-loyal-10`,
+`firms-sticky`, `firms-groping`, `firms-seniority-5`, `firms-base-pay-80`, `firms-hiring-100`,
+`firms-random-choices`, `firms-2013`. **Compare** entry: "Last period's effort vs live effort — The
+Emergence of Firms (Compare)". Built-in sweeps: `firms-beta`, `firms-b`, `firms-preferences`,
+`firms-friends`, `firms-random-firms`, `firms-loyalty`, `firms-sticky`, `firms-groping`,
+`firms-seniority`, `firms-base-pay`, `firms-hiring`, `firms-readings`, `firms-population`.
+
+Credit: Robert L. Axtell, "The Emergence of Firms in a Population of Agents: Local Increasing
+Returns, Unstable Nash Equilibria, and Power Law Size Distributions," Brookings Institution CSED
+Working Paper 3 (1999); Robert L. Axtell, "Endogenous Dynamics of Firms and Labor with Large Numbers
+of Simple Agents" (working paper, 2013). See
+`docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 
 ## Experiments
 

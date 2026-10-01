@@ -1,0 +1,71 @@
+{
+  "name": "The Emergence of Firms: hiring standards (Table 13)",
+  "description": "Axtell's Table 13 (captioned 'target output' but about hiring standards): µ when firms admit only θ at least φ times their longest-serving member's. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: φ 0, 20, 40, 60, 80, 100 %: 2.51, 2.30, 2.01, 1.99, 2.33, 2.49; φ drawn per firm 0–100 %: 2.40 — falling, then rising again, as the table's (1.28, 1.27, 1.22, 1.03, 1.17, no power law; drawn 1.13).",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Hiring",
+    "values": [
+      {
+        "at": 1,
+        "name": "φ = 0 %",
+        "set": {
+          "hiring": 0
+        }
+      },
+      {
+        "at": 2,
+        "name": "φ = 20 %",
+        "set": {
+          "hiring": 0.2
+        }
+      },
+      {
+        "at": 3,
+        "name": "φ = 40 %",
+        "set": {
+          "hiring": 0.4
+        }
+      },
+      {
+        "at": 4,
+        "name": "φ = 60 %",
+        "set": {
+          "hiring": 0.6
+        }
+      },
+      {
+        "at": 5,
+        "name": "φ = 80 %",
+        "set": {
+          "hiring": 0.8
+        }
+      },
+      {
+        "at": 6,
+        "name": "φ = 100 %",
+        "set": {
+          "hiring": 1.0
+        }
+      },
+      {
+        "at": 7,
+        "name": "φ drawn per firm, 0–100 %",
+        "set": {
+          "hiring": 0.0,
+          "hiring_max": 1.0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "The Emergence of Firms: random firms ν (Table 7)",
+  "description": "Axtell's Table 7: µ when agents look at ν random firms, redrawn at each activation, instead of friends' firms. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: ν 2, 4, 6, 8, 10: 3.29, 2.96, 2.89, 2.86, 2.81; ν drawn 2–10: 2.97. It falls with ν, as the table's does (1.28, 1.22, 1.18, 1.07, 1.03; drawn 1.02). The table's ν = 2 row repeats the base case's 1.28 though the rule differs; here the rules give 3.29 against 2.51.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Random firms",
+    "values": [
+      {
+        "at": 1,
+        "name": "ν = 2",
+        "set": {
+          "network": "random_firms",
+          "neighbors": 2
+        }
+      },
+      {
+        "at": 2,
+        "name": "ν = 4",
+        "set": {
+          "network": "random_firms",
+          "neighbors": 4
+        }
+      },
+      {
+        "at": 3,
+        "name": "ν = 6",
+        "set": {
+          "network": "random_firms",
+          "neighbors": 6
+        }
+      },
+      {
+        "at": 4,
+        "name": "ν = 8",
+        "set": {
+          "network": "random_firms",
+          "neighbors": 8
+        }
+      },
+      {
+        "at": 5,
+        "name": "ν = 10",
+        "set": {
+          "network": "random_firms",
+          "neighbors": 10
+        }
+      },
+      {
+        "at": 6,
+        "name": "ν drawn per agent, 2–10",
+        "set": {
+          "network": "random_firms",
+          "neighbors": 2,
+          "neighbors_max": 10
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

@@ -18,6 +18,9 @@ import type {
   HoardStats,
   ZiConfig,
   BaliConfig,
+  FirmsConfig,
+  FirmsInspection,
+  FirmsStats,
   BaliInspection,
   BaliStats,
   ZiInspection,
@@ -784,6 +787,29 @@ describe('the Minds menu over the real presets', () => {
     const minds = presets.filter((p) => /\bMinds \d/.test(p.source)).map((p) => p.id);
     expect(minds.length).toBeGreaterThanOrEqual(28);
     expect(presets.filter((p) => presetMenu(p) === 'minds').map((p) => p.id)).toEqual(minds);
+  });
+});
+
+describe('the firms model through the engine', () => {
+  it('stops after its last period and inspects a firm, its member and the size plot', async () => {
+    const r = presets.find((p) => p.id === 'firms-base')!;
+    const config = { ...structuredClone(r.config as FirmsConfig), agents: 60, burn_in: 5, stop_at: 30 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'founder' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as FirmsStats;
+    expect([e.finished, ends, e.tick, s.period]).toEqual([true, 1, 30, 30]);
+    expect(s.firms).toBeLessThan(60);
+    // The first row is the largest firm; its first cell its longest-serving member.
+    await e.select(0, 0);
+    const v = e.inspection!.view as FirmsInspection;
+    expect(v.panel).toBe('firms');
+    expect(v.member?.firm).toBe(v.firm?.id);
+    // The size plot starts 8 pixels right of the 600-pixel rows.
+    await e.select(700, 50);
+    expect((e.inspection!.view as FirmsInspection).panel).toBe('sizes');
   });
 });
 

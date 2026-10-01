@@ -1,0 +1,89 @@
+{
+  "name": "The Emergence of Firms: preferences (Table 5)",
+  "description": "Axtell's Table 5: µ under nine distributions of preferences. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: θ uniform on [0, 1] 2.51; on [0.25, 0.75] 3.30; triangular (mode 0.5) 3.06; triangular (mode 0.75) 2.52; truncated normal 2.55; Beta(1, 2) 3.29; all θ = 0.75 1.25; CES with ρ on [−1, 0] 0.82 from 6 seeds — in the other 4 the population merges into one firm before the burn-in window opens (by tick 29–172, against its start at 500), leaving the pooled size histogram a single point, so µ is undefined there — with sd 0.95 against every other cell's 0.04–0.15 (min −1.01, max 1.40); CES with ρ on [0, 10] 0.73. The table: 1.28, 1.21, 1.31, 1.01, 1.30, 0.99, 0.91, 1.56, 1.26. Homogeneous (1.25) sits closest to its 0.91; the CES rows are off by over half a unit each (0.82 against 1.56, 0.73 against 1.26) — closer than every ordinary preference row (1.23–2.30 off), but not near.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "Preferences",
+    "values": [
+      {
+        "at": 1,
+        "name": "θ uniform on [0, 1]",
+        "set": {
+          "preferences": "uniform"
+        }
+      },
+      {
+        "at": 2,
+        "name": "θ uniform on [0.25, 0.75]",
+        "set": {
+          "preferences": "middle"
+        }
+      },
+      {
+        "at": 3,
+        "name": "θ triangular, mode 0.5",
+        "set": {
+          "preferences": "triangular"
+        }
+      },
+      {
+        "at": 4,
+        "name": "θ triangular, mode 0.75",
+        "set": {
+          "preferences": "triangular_high"
+        }
+      },
+      {
+        "at": 5,
+        "name": "θ truncated normal",
+        "set": {
+          "preferences": "normal"
+        }
+      },
+      {
+        "at": 6,
+        "name": "θ Beta(1, 2)",
+        "set": {
+          "preferences": "beta"
+        }
+      },
+      {
+        "at": 7,
+        "name": "θ = 0.75 for all",
+        "set": {
+          "preferences": "fixed",
+          "theta": 0.75
+        }
+      },
+      {
+        "at": 8,
+        "name": "CES, ρ on [−1, 0]",
+        "set": {
+          "preferences": "ces",
+          "rho": -1.0,
+          "rho_max": 0.0
+        }
+      },
+      {
+        "at": 9,
+        "name": "CES, ρ on [0, 10]",
+        "set": {
+          "preferences": "ces",
+          "rho": 0.0,
+          "rho_max": 10.0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "The Emergence of Firms: increasing returns b (Table 4)",
+  "description": "Axtell's Table 4: µ against the increasing-returns coefficient b. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: b 0.5, 0.75, 1.0, 1.25, 1.5: 3.38, 2.83, 2.51, 2.26, 2.09; b drawn per firm from 0.5–1.5: 1.83 — below b = 1.25's, so 'much more like b = 1.25, not b = 1.0' holds. The table: 2.09, 1.33, 1.28, 0.91, 0.53; drawn 0.89.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "b",
+    "values": [
+      {
+        "at": 1,
+        "name": "b = 0.5",
+        "set": {
+          "b": 0.5
+        }
+      },
+      {
+        "at": 2,
+        "name": "b = 0.75",
+        "set": {
+          "b": 0.75
+        }
+      },
+      {
+        "at": 3,
+        "name": "b = 1.0",
+        "set": {
+          "b": 1.0
+        }
+      },
+      {
+        "at": 4,
+        "name": "b = 1.25",
+        "set": {
+          "b": 1.25
+        }
+      },
+      {
+        "at": 5,
+        "name": "b = 1.5",
+        "set": {
+          "b": 1.5
+        }
+      },
+      {
+        "at": 6,
+        "name": "b drawn per firm, 0.5–1.5",
+        "set": {
+          "b": 0.5,
+          "b_max": 1.5
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}

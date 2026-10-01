@@ -49,6 +49,11 @@ describe('compare presets', () => {
     expect(ids).toContainEqual(['zi-c-vs-zip', 'cliff-excess-demand', 'zip-excess-demand', 'ZI-C vs ZIP in a box market — Zero-Intelligence Traders (Compare)']);
   });
 
+  it('pairs the literal reading of others’ effort with the live one', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['firms-last-vs-live', 'firms-base', 'firms-live', "Last period's effort vs live effort — The Emergence of Firms (Compare)"]);
+  });
+
   it('pairs imitation with the same plans fixed', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['lk-random-vs-fixed', 'lk-random', 'lk-random-fixed', 'Imitating neighbors vs fixed random plans — Balinese Water Temples (Compare)']);

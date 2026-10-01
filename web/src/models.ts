@@ -5,6 +5,8 @@ import type {
   HoardInspection,
   LineInspection,
   TippingInspection,
+  FirmsConfig,
+  FirmsInspection,
   ZiInspection,
   BaliConfig,
   BaliInspection,
@@ -52,7 +54,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -82,12 +84,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   line: "Schelling's line",
   tipping: "Schelling's tipping",
   hoard: 'The evolution of hoarding',
+  firms: 'The Emergence of Firms',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms'
     ? tag
     : 'sugarscape';
 }
@@ -191,6 +194,11 @@ export function isHoardView(v: AnyInspection): v is HoardInspection {
   return 'bout' in v && 'public' in v;
 }
 
+/** A cell of the firms frame (a panel, a `firm` and a `member`); check it before the others with a panel. */
+export function isFirmsView(v: AnyInspection): v is FirmsInspection {
+  return 'panel' in v && 'firm' in v && 'member' in v;
+}
+
 /** A point of Schelling's tipping plane. */
 export function isTippingView(v: AnyInspection): v is TippingInspection {
   return 'red_content' in v && 'blue_content' in v;
@@ -267,6 +275,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     const s = hoardSeasonTicks(h);
     return Math.max(h.generations, Math.max(1, Math.ceil(tick / s))) * s - tick;
   }
+  if (modelOf(c) === 'firms' && (c as FirmsConfig).stop_at > 0) return Math.max(0, (c as FirmsConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -598,6 +607,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
   tipping: [['plane', 'Plane']],
   // One column per agent: status, L and D, larder up and scatter down (the population panel).
   hoard: [['agents', 'Agents']],
+  // Axtell's red founders and blue members first; then preference, effort and pay.
+  firms: [
+    ['founder', 'Founder'],
+    ['theta', 'θ (income)'],
+    ['effort', 'Effort'],
+    ['income', 'Income'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -628,4 +644,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   line: [],
   tipping: [],
   hoard: [],
+  firms: [],
 };

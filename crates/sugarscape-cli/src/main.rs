@@ -239,6 +239,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Punishment | ModelKind::Zi => "its last period",
             ModelKind::Bali => "its last year",
             ModelKind::Hoard => "its last generation",
+            ModelKind::Firms => "its last period",
             ModelKind::Retirement => match &config {
                 ModelConfig::Retirement(c)
                     if c.stop_at_norm

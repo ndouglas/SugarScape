@@ -81,5 +81,5 @@ Hornvale gains from the other direction too: validation against the laws above.
 
 ## Not now
 
-The model queue, milestone 30 (firms) and the other studies continue as planned. This program starts
+The model queue, milestone 33 (firms) and the other studies continue as planned. This program starts
 with the Hornvale inventory whenever it's picked up.

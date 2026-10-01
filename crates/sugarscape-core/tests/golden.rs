@@ -380,6 +380,25 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("hoard-larder", 0x3da0a5fcbbe0803e),
     ("hoard-no-free-recovery", 0xaf76c42dbbd8c97c),
     ("hoard-cheaters", 0xd9fe57875f2c6602),
+    // Milestone 33: The Emergence of Firms (200 periods).
+    ("firms-base", 0xf289726485a9084c),
+    ("firms-live", 0x8cb9364c43b4d2ad),
+    ("firms-uniform", 0xa8f9007712e0714),
+    ("firms-beta-17", 0x51a0c706a25d803a),
+    ("firms-beta-21", 0x967e02c2d9f1f5b),
+    ("firms-b-15", 0xb9b2b6650eb6c678),
+    ("firms-b-random", 0xd82d8e6ac458f55b),
+    ("firms-theta-075", 0xf13e84290fb10535),
+    ("firms-friends-10", 0x61a9eadb71f6d389),
+    ("firms-random-firms-10", 0xef5ffd52a915ef40),
+    ("firms-loyal-10", 0x7f561840895caf83),
+    ("firms-sticky", 0x4ce2e768347c9fb2),
+    ("firms-groping", 0x317cb37372a9b66f),
+    ("firms-seniority-5", 0x493639d792f2a77b),
+    ("firms-base-pay-80", 0x6ed803ed3a45d863),
+    ("firms-hiring-100", 0xd8fb44c3f2acfa13),
+    ("firms-random-choices", 0xd5650a4bd4548db4),
+    ("firms-2013", 0xc7acf4a34472ca50),
 ];
 
 fn fingerprint(id: &str) -> u64 {

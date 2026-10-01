@@ -428,7 +428,20 @@ fn builtins_and_series_names_are_listed() {
             "theft-winter",
             "hoard-ratio",
             "hoard-recovery",
-            "hoard-cheaters"
+            "hoard-cheaters",
+            "firms-beta",
+            "firms-b",
+            "firms-preferences",
+            "firms-friends",
+            "firms-random-firms",
+            "firms-loyalty",
+            "firms-sticky",
+            "firms-groping",
+            "firms-seniority",
+            "firms-base-pay",
+            "firms-hiring",
+            "firms-readings",
+            "firms-population"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -1277,6 +1290,45 @@ fn hoard_sims_match_the_native_golden_entries() {
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
     }
+}
+
+#[wasm_bindgen_test]
+fn firms_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the closed-form
+    // optimum, general β (portable powers), per-firm draws, base pay,
+    // groping and random behavior.
+    for (id, fp) in [
+        ("firms-base", "0xf289726485a9084c"),
+        ("firms-live", "0x8cb9364c43b4d2ad"),
+        ("firms-beta-21", "0x0967e02c2d9f1f5b"),
+        ("firms-b-random", "0xd82d8e6ac458f55b"),
+        ("firms-theta-075", "0xf13e84290fb10535"),
+        ("firms-random-firms-10", "0xef5ffd52a915ef40"),
+        ("firms-seniority-5", "0x493639d792f2a77b"),
+        ("firms-base-pay-80", "0x6ed803ed3a45d863"),
+        ("firms-groping", "0x317cb37372a9b66f"),
+        ("firms-random-choices", "0xd5650a4bd4548db4"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "firms");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn firms_with_beta_drawn_per_firm_match_the_native_fingerprint() {
+    // No golden entry draws β per firm (portable powers on per-firm draws);
+    // `firms::world::tests::beta_drawn_per_firm_reaches_the_pinned_fingerprint`
+    // pins the same config and value natively.
+    let mut config: serde_json::Value = serde_json::from_str(&preset_json("firms-base")).unwrap();
+    config["agents"] = serde_json::json!(200);
+    config["beta"] = serde_json::json!(1.8);
+    config["beta_max"] = serde_json::json!(2.2);
+    let mut sim = Sim::new(&config.to_string(), 1, JsValue::NULL).unwrap();
+    assert_eq!(sim.model_kind(), "firms");
+    sim.step(100);
+    assert_eq!(sim.fingerprint(), "0x8d1b43dd0c2b2cdb");
 }
 
 #[wasm_bindgen_test]

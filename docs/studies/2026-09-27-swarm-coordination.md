@@ -72,7 +72,7 @@ What this adds to the ladder below:
   defection: grievance (hardship × illegitimacy, here impossible tasks × a scorer seen as unfair)
   against perceived risk (monitoring coverage, response time). Sweep the impossible share across
   METR's 30–40 %.
-- **Capability that only a team has.** Axtell's firms (milestone 30): increasing returns to joint
+- **Capability that only a team has.** Axtell's firms (milestone 33): increasing returns to joint
   effort, free riders, collapse. Here: an exploit found only by enough agents working together,
   with a threshold team size.
 - **A triggered cascade.** The 90 % joining is Granovetter's (milestone 25) with a trigger: nothing

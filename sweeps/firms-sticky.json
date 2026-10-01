@@ -1,0 +1,54 @@
+{
+  "name": "The Emergence of Firms: sticky effort (Table 9)",
+  "description": "Axtell's Table 9: µ against β with sticky effort (a new effort within ±0.05 of the current one), read two ways. Measured (release, seeds 1–10, 5 000 periods, burn-in 500, recorded 2026-09-30), µ by the paper's OLS: free: 3.63, 3.29, 2.93, 2.51, 2.02 (β 1.7–2.1); sticky in any firm: 3.06, 0.57, −0.03, −0.11, −0.13 — from β 1.8 on, the whole population merges into one firm at times and the OLS fit loses meaning; sticky only in the agent's own firm: 3.53, 3.23, 2.82, 2.41, 1.88, a mild lowering like the table's (µ_sticky 1.54, 1.25, 1.17, 0.92, 0.95). About 25 minutes.",
+  "base": {
+    "preset": "firms-base"
+  },
+  "x": {
+    "label": "β",
+    "path": "beta",
+    "values": [
+      1.7,
+      1.8,
+      1.9,
+      2.0,
+      2.1
+    ]
+  },
+  "series": {
+    "label": "Effort",
+    "values": [
+      {
+        "at": 1,
+        "name": "Free",
+        "set": {
+          "effort_window": 1.0
+        }
+      },
+      {
+        "at": 2,
+        "name": "Sticky (±0.05), in any firm",
+        "set": {
+          "effort_window": 0.1
+        }
+      },
+      {
+        "at": 3,
+        "name": "Sticky (±0.05), own firm only",
+        "set": {
+          "effort_window": 0.1,
+          "adjust_scope": "own_firm"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 5000,
+  "metric": {
+    "kind": "final",
+    "series": "mu"
+  }
+}
