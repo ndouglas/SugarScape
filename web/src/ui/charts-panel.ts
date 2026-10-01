@@ -351,22 +351,25 @@ const CHARTS: ChartDef[] = [
     shown: watchingOn,
   },
   {
-    title: 'Watchers vs others',
+    title: 'Watcher survival advantage',
     kind: 'time',
     section: 'top',
     lines: fixed([
-      { key: 'watcher_alive', label: 'Watchers alive', color: '--c1' },
-      { key: 'other_alive', label: 'Others alive', color: '--c2' },
+      {
+        key: 'watcher_advantage',
+        label: 'Watcher minus other survival per founder',
+        color: '--c1',
+      },
     ]),
     shown: hasWatcherSplit,
   },
   {
-    title: 'Watcher and other holdings',
+    title: 'Watcher and other wealth per founder',
     kind: 'time',
     section: 'top',
     lines: fixed([
-      { key: 'watcher_holdings', label: 'Watchers (mean sugar held)', color: '--c1' },
-      { key: 'other_holdings', label: 'Others (mean sugar held)', color: '--c2' },
+      { key: 'watcher_wealth', label: 'Watchers (held, cached and fed, per founder)', color: '--c1' },
+      { key: 'other_wealth', label: 'Others (held, cached and fed, per founder)', color: '--c2' },
     ]),
     shown: hasWatcherSplit,
   },

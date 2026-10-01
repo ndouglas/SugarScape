@@ -50,19 +50,22 @@ export function overlayAvailableAny(kind: Overlay, configs: Config[]): boolean {
 
 /** Minds 6: some founders are cheaters. */
 const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;
+/** Minds 8: some founders watch and others don't (`0 < watchers < 1`). */
+const someWatch = (c: Config): boolean => (c.watching?.watchers ?? 1) > 0 && (c.watching?.watchers ?? 1) < 1;
 /** Minds 3: memory is on for some agents and not others (`0 < share < 1`). */
 const someRemember = (c: Config): boolean => (c.memory?.span ?? 0) > 0 && (c.memory?.share ?? 0) > 0 && (c.memory?.share ?? 0) < 1;
 
 /**
  * A sugarscape's own color mode for `config`: what actually tells its agents apart. In order:
- * Watching where watching is on (watchers, scroungers, others);
+ * Watching where watching is on and tells agents apart (some but not all watch, or some are cheaters:
+ * watchers, scroungers, others);
  * Strategy where some are cheaters; Caching rule under mixed rules; Memory where only some agents
  * remember (the `cache-winter-*` worlds under one rule, theft without cheaters); Caching rule where
  * one burying rule is on (one color; a carrying limit alone, as in the central worlds, doesn't count); else Tribe (whose groups are random in the Minds
  * worlds). Loading a preset picks it; `clampDisplay` falls back to it.
  */
 export function defaultColorMode(config: Config): ColorMode {
-  if (watchingOn(config)) return 'watching';
+  if (watchingOn(config) && (someWatch(config) || hasCheaters(config))) return 'watching';
   if (hasCheaters(config)) return 'strategy';
   if (config.caching?.mixed === true) return 'caching_rule';
   if (someRemember(config)) return 'memory';

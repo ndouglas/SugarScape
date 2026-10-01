@@ -2813,8 +2813,10 @@ strategy, worth less as it becomes common (Barnard and Sibly 1981).
   - **When to raid** (`watching.raid_when`). `always` (the default; ravens raided within minutes),
     or `hungry`: only while the watcher holds less than R / 2, on the owners' terms.
 - **The counts:** burials seen, sightings, raids, sugar raided and wasted raids, pilfers split into
-  seen and stumbled, and watcher against non-watcher survival and wealth per founder. Sugar is
-  conserved through raids, as through theft (tested over 300 ticks).
+  seen and stumbled, and watcher against non-watcher survival and wealth per founder (wealth is the
+  holdings, caches and stomach of the living of each kind over that kind's founders, the dead as 0;
+  founders are the first `population` ids). Sugar is conserved through raids, as through theft
+  (tested over 300 ticks).
 - **A survey-only probe.** A raid that took something also harvests the site that tick. It is not a
   setting, and it serves to measure what replacing the harvest costs.
 
@@ -2832,16 +2834,18 @@ founding agent (the dead as 0), with survival of those alive at tick 100 in brac
   raided, and at span 7 that is 19.6 % of the caches in summer and 3.6 % in winter, when few
   agents bury. The rate rises with span: 0.09, 0.51, 0.95 and 1.20 % at span 1, 3, 7 and 13.
   Almost every arrival with a fresh memory raids; in a 5-seed investigation the one-take rule and
-  the carrying limit rarely bound. Stumbling has no such bound: it reaches a cache of any age, all year.
+  the carrying limit rarely bound. Stumbling has no such bound: it reaches a cache of any age, all
+  year.
 - **Watching costs lives.** 52.6 % survive the first winter (55.1 %), against 70.0 % (74.4 %) in the
-  same world without theft and 85.7 % (90.4 %) with Minds 6's stumbling. Two causes, each isolated
-  at least in part by a switch:
-  - **Raids replace the summer harvest.** Seen caches are valued above every site, and 62 % of
-    summer moves head for one, and a raid gathers nothing from the site. Agents gather 29 700 sugar from sites
-    in the summer against 42 300 without theft (estimated from a wealth ledger, within 83 a seed),
-    and enter the winter with 95 sugar each against 169. With the probe, summer gathering recovers
-    only to 34 800 and survival to 67.4 % (71.4 %): the replaced harvest is part of the gap, not
-    all of it. The rest is likely the moves spent walking to seen caches (not isolated).
+  same world without theft and 85.7 % (90.4 %) with Minds 6's stumbling. Two causes, each
+  isolated at least in part by a switch:
+  - **Raids replace the summer harvest.** A remembered cache is usually valued above the sites in
+    sight; 62 % of summer moves head for one, and a raid gathers nothing from the site. Agents
+    gather 29 700 sugar from sites in the summer against 42 300 without theft (estimated from a
+    wealth ledger, within 83 a seed), and enter the winter with 95 sugar each against 169. With the
+    probe, summer gathering recovers only to 34 800 and survival to 67.4 % (71.4 %): the replaced
+    harvest is part of the gap, not all of it. The rest is likely the moves spent walking to seen
+    caches (not isolated).
   - **Watching misses the winter pooling.** Raids fall from 4 119 a seed in summer to 999 in
     winter. Minds 6's survival came from winter stumbling on old caches: in `theft-winter`, turning
     stumbling off at tick 100 drops survival from 85.7 % to 58.6 %, below no theft. Turning

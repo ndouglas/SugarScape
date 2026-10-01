@@ -435,7 +435,7 @@ export const GROUPS: Group[] = [
     note: 'Agents who watch see the burials near them and remember each cache they saw buried for the span, in ticks. An arriving watcher whose remembered cache is on the site raids it on purpose, with no chance to find; a cache already gone is a wasted raid. Raid when says whether a seen cache is a place to go always, or only when hungry. Watchers who also bury and scroungers who never bury are told apart by the Theft rules’ share of cheaters. Watching needs caching, and isn’t offered in the labs or with central-place foraging. The share of watchers rebuilds the world; the rest applies to the running world.',
     conditionalNote: {
       when: (c) => (c.theft?.cheaters ?? 0) > 0 && (c.theft?.cheaters ?? 0) < 1 && (c.watching?.watchers ?? 1) > 0 && (c.watching?.watchers ?? 1) < 1,
-      text: 'Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents.',
+      text: 'Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents; at unequal shares they overlap as the rule gives.',
     },
     controls: [
       { kind: 'toggle', path: 'watching.on', label: 'Watching', current: (c) => watching(c).on, adjust: seedWatching },

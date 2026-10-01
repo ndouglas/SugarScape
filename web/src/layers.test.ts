@@ -114,14 +114,21 @@ describe('the Minds color modes and the caches overlay', () => {
   const allRemember = minds({ memory: memory(1) } as Partial<Config>);
   const base: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
 
-  it('defaults to Watching wherever watching is on, before Strategy and Caching rule', () => {
+  it('defaults to Watching where watching is on and some but not all watch, or some are cheaters', () => {
     const watch = { on: true, span: 7, watchers: 1, raid_when: 'always' };
-    expect(defaultColorMode({ ...even, watching: watch } as unknown as Config)).toBe('watching');
+    const some = { ...watch, watchers: 0.5 };
+    expect(defaultColorMode({ ...even, watching: some } as unknown as Config)).toBe('watching');
     expect(defaultColorMode({ ...theft, watching: watch } as unknown as Config)).toBe('watching');
-    expect(defaultColorMode({ ...even, watching: { ...watch, on: false } } as unknown as Config)).toBe('caching_rule');
+    expect(defaultColorMode({ ...theft, watching: some } as unknown as Config)).toBe('watching');
+    // Everyone watching and no cheaters: nothing to tell apart, so the earlier defaults.
+    expect(defaultColorMode({ ...even, watching: watch } as unknown as Config)).toBe('caching_rule');
+    expect(defaultColorMode({ ...even, watching: { ...watch, watchers: 0 } } as unknown as Config)).toBe('caching_rule');
+    expect(defaultColorMode({ ...halfRemember, watching: watch } as unknown as Config)).toBe('memory');
+    expect(defaultColorMode({ ...even, watching: { ...some, on: false } } as unknown as Config)).toBe('caching_rule');
     const d = { ...base, colorMode: 'watching' as const };
     expect(clampDisplay(d, { ...even, watching: watch } as unknown as Config).colorMode).toBe('watching');
     expect(clampDisplay(d, even).colorMode).toBe('caching_rule');
+    expect(loadedDisplay(d, { ...even, watching: watch } as unknown as Config).colorMode).toBe('caching_rule');
   });
 
   it('defaults to Strategy with cheaters, Caching rule under mixed rules, Memory where some remember, Caching rule with caching on, else Tribe', () => {

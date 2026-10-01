@@ -171,8 +171,8 @@ const WATCH_SERIES: [&str; 7] = [
 /// Minds 8's watcher/other series, named while `watching.on` and
 /// `0 < watchers < 1`.
 const WATCHER_SERIES: [&str; 5] = [
-    "watcher_holdings",
-    "other_holdings",
+    "watcher_wealth",
+    "other_wealth",
     "watcher_alive",
     "other_alive",
     "watcher_advantage",
@@ -452,19 +452,25 @@ pub struct WatchStats {
     pub seen_entries: u32,
 }
 
-/// Minds 8's watcher/other series, as `CheaterStats`: holdings (`holdings[0]`)
-/// as a mean over the living of each kind, 0 if none is alive; `*_alive`
-/// are counts.
+/// Minds 8's watcher/other series. `*_wealth` is wealth per founder of each
+/// kind: Σ (holdings[0] + Σ caches + the stomach `fed`) over the living of
+/// that kind ÷ that kind's founders, so the dead count as 0 (0 for a kind
+/// with no founders). `*_alive` are counts of the living.
+///
+/// Founders are ids 1..=population, dealt by the id rule (⌊population·s⌋
+/// watchers, the rest others): agents born or placed later count among the
+/// living (their wealth and their `*_alive`) but not among the founders. The
+/// presets have none.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
 pub struct WatcherStats {
-    pub watcher_holdings: f64,
-    pub other_holdings: f64,
+    pub watcher_wealth: f64,
+    pub other_wealth: f64,
     pub watcher_alive: u32,
     pub other_alive: u32,
     /// `watcher_alive` ÷ watcher founders − `other_alive` ÷ other founders,
-    /// the founders counted from the config by the id rule (⌊population·s⌋
-    /// watchers, the rest others), so the dead count as 0. A group with no
-    /// founders contributes 0.
+    /// the founders being ids 1..=population counted by the id rule, so the
+    /// dead count as 0 (and agents born or placed later count as living but
+    /// not as founders). A group with no founders contributes 0.
     pub watcher_advantage: f64,
 }
 
@@ -814,11 +820,12 @@ impl Snapshot {
             watchers: (world.config.watching.on && watchers_split(&world.config)).then(|| {
                 let (mut ws, mut wn, mut os, mut on) = (0.0, 0u32, 0.0, 0u32);
                 for a in world.agents() {
+                    let wealth = a.holdings[0] + a.caches.values().sum::<f64>() + a.fed;
                     if a.watches {
-                        ws += a.holdings[0];
+                        ws += wealth;
                         wn += 1;
                     } else {
-                        os += a.holdings[0];
+                        os += wealth;
                         on += 1;
                     }
                 }
@@ -830,8 +837,8 @@ impl Snapshot {
                     .count() as u32;
                 let of = founders - wf;
                 WatcherStats {
-                    watcher_holdings: m(ws, wn),
-                    other_holdings: m(os, on),
+                    watcher_wealth: m(ws, wf),
+                    other_wealth: m(os, of),
                     watcher_alive: wn,
                     other_alive: on,
                     watcher_advantage: m(f64::from(wn), wf) - m(f64::from(on), of),
@@ -996,8 +1003,8 @@ impl Snapshot {
                 }
                 if let Some(c) = self.watchers {
                     match name {
-                        "watcher_holdings" => return Some(c.watcher_holdings),
-                        "other_holdings" => return Some(c.other_holdings),
+                        "watcher_wealth" => return Some(c.watcher_wealth),
+                        "other_wealth" => return Some(c.other_wealth),
                         "watcher_alive" => return Some(f64::from(c.watcher_alive)),
                         "other_alive" => return Some(f64::from(c.other_alive)),
                         "watcher_advantage" => return Some(c.watcher_advantage),
@@ -2605,32 +2612,48 @@ mod tests {
     }
 
     #[test]
-    fn watcher_series_split_the_living_by_kind() {
+    fn watcher_wealth_is_per_founder_by_kind() {
         use crate::testkit::*;
         let mut w = blank_world(5, 5);
         w.config.watching.on = true;
         w.config.watching.watchers = 0.5;
+        // No founders: every group contributes 0.
+        w.config.population = 0;
         let c = Snapshot::of(&w).watchers.unwrap();
-        assert_eq!((c.watcher_holdings, c.other_holdings), (0.0, 0.0));
+        assert_eq!((c.watcher_wealth, c.other_wealth), (0.0, 0.0));
         assert_eq!((c.watcher_alive, c.other_alive), (0, 0));
+        // 4 founders: ids 2 and 4 watch under the id rule (⌊4·0.5⌋ = 2).
+        // Ids 1–3 are alive; founder 4 (a watcher) is not, so counts as 0.
+        w.config.population = 4;
         let mut ids = vec![];
         for x in 0..3 {
             ids.push(spawn(&mut w, x, 0));
         }
-        for (id, h, wa) in [
-            (ids[0], 10.0, false),
-            (ids[1], 20.0, false),
-            (ids[2], 7.0, true),
+        assert_eq!(ids, vec![1, 2, 3]);
+        for (id, h, caches, fed) in [
+            (1, 10.0, vec![(5, 2.0)], 1.0),
+            (2, 7.0, vec![(6, 1.5), (7, 0.5)], 3.0),
+            (3, 20.0, vec![], 0.0),
         ] {
+            let watches = w.config.watching.founder_watches(id);
             let ag = w.agent_mut(id).unwrap();
             ag.holdings[0] = h;
-            ag.watches = wa;
-            ag.fed = 99.0;
+            ag.caches = caches.into_iter().collect();
+            ag.fed = fed;
+            ag.watches = watches;
         }
         let c = Snapshot::of(&w).watchers.unwrap();
-        assert_eq!(c.other_holdings, 15.0);
-        assert_eq!(c.watcher_holdings, 7.0);
+        // Others: (10 + 2 + 1) + 20 over 2 founders.
+        assert_eq!(c.other_wealth, 16.5);
+        // Watchers: 7 + 2 + 3 over 2 founders, the dead one counting 0.
+        assert_eq!(c.watcher_wealth, 6.0);
         assert_eq!((c.watcher_alive, c.other_alive), (1, 2));
+        let s = Snapshot::of(&w);
+        assert_eq!(s.value("watcher_wealth"), Some(6.0));
+        assert_eq!(s.value("other_wealth"), Some(16.5));
+        // Past the gate, the names reach back as NaN.
+        w.config.watching.watchers = 1.0;
+        assert!(Snapshot::of(&w).value("other_wealth").unwrap().is_nan());
     }
 
     #[test]

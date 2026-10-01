@@ -405,6 +405,6 @@ describe('watching (Minds 8)', () => {
     const note = group.conditionalNote!;
     const c = (cheaters: number, watchers: number) => ({ theft: { cheaters }, watching: { watchers } }) as unknown as Config;
     expect([note.when(c(0.5, 0.5)), note.when(c(0, 0.5)), note.when(c(0.5, 1)), note.when(c(1, 0.5))]).toEqual([true, false, false, false]);
-    expect(note.text).toBe('Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents.');
+    expect(note.text).toBe('Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents; at unequal shares they overlap as the rule gives.');
   });
 });

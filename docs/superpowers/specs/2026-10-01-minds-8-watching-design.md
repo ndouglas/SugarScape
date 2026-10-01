@@ -374,8 +374,10 @@ or threshold.
 **The page.**
 
 13. **The Watching color mode wins over Strategy** in the default color mode. Pure scroungers are
-    cheaters, so Strategy would hide the three-way split. A world with theft and watching opens in
-    Watching colors.
+    cheaters, so Strategy would hide the three-way split. A world with watching opens in Watching
+    colors only where they tell agents apart: some but not all agents watch (0 < `watchers` < 1),
+    or some are cheaters (`theft.cheaters` > 0). Otherwise (every agent or none watching, and no
+    cheaters) it falls through to the earlier defaults (Caching rule, Memory and so on).
 14. **No TypeScript mirrors of the watching stats.** The page reads series by name, and has no mirror
     of Minds 6's theft stats either.
 15. **No browser check was made** (none was available in the session). Unit tests cover the Rules
@@ -409,8 +411,8 @@ survey code was written. No judge or threshold was changed because of them.
     to `cache-winter-even`. Every arrival with an entry forgets it, and the tick-start sweep keeps
     memory bounded.
 18. **Watching's survival cost has two causes, each read as isolated at least in part by a switch.**
-    - **Raids replace the summer harvest.** Seen caches are valued above every site (62 % of summer
-      moves head for one), and a raid gathers nothing from its site. Summer gathering falls to 29 700 a
+    - **Raids replace the summer harvest.** A remembered cache is usually valued above the sites in
+      sight; 62 % of summer moves head for one, and a raid gathers nothing from its site. Summer gathering falls to 29 700 a
       seed against 42 300 without theft (a ledger estimate, within 83 a seed). The probe of ruling 7
       recovers it only to 34 800, so the replaced harvest is part of the gap, not all of it; the
       rest is likely the moves spent walking to seen caches. (Before rulings 4 and 5, the
@@ -435,3 +437,10 @@ survey code was written. No judge or threshold was changed because of them.
     limit. So that variant likely measures watchers with little room, not watching alone. No switch
     isolates it. The expectation recorded before the run (pure scroungers show the prediction) was
     refuted, and is reported as refuted.
+22. **Wealth per founder by kind.** `watcher_wealth` and `other_wealth` (in place of the plan's
+    mean holdings of the living) are Σ (`holdings[0]` + Σ caches + the stomach `fed`) over the
+    living of each kind ÷ that kind's founders, the dead counting 0 and a kind with no founders
+    giving 0. Founders are ids 1..=population dealt by the id rule, as for `watcher_advantage`;
+    agents born or placed later count among the living but not among the founders (the presets
+    have none). The page charts them as "Watcher and other wealth per founder", and its survival
+    chart plots `watcher_advantage`, not the raw counts alive, which follow the group sizes.
