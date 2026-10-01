@@ -44,11 +44,12 @@ Local copies are in `papers/caching/`.
 - M. Andersson and J. Krebs, "On the evolution of hoarding behaviour", *Animal Behaviour* 26 (1978),
   707–711 (A&K).
 - C. J. Barnard and R. M. Sibly, "Producers and scroungers: a general model and its application to captive
-  flocks of house sparrows", *Animal Behaviour* 29 (1981), 543–550. **To fetch.** If it can't be found, claim 3
-  cites producer–scrounger theory through whichever source we do find (Giraldeau and Caraco's *Social
-  Foraging Theory*, 2000, or a review), and the spec's amendments say which.
-- To look for, as context only: P. A. Bednekoff and R. P. Balda (1996a, b), cited by B&K for
-  observational spatial memory in pinyon jays, Clark's nutcrackers and Mexican jays.
+  flocks of house sparrows", *Animal Behaviour* 29 (1981), 543–550 (a scan with a text layer): "the
+  hypothetical pay-off to scroungers increases with the number of producers", with a stable mix at the ESS
+  point. Context: W. L. Vickery, L.-A. Giraldeau, J. J. Templeton, D. L. Kramer and C. A. Chapman, "Producers,
+  scroungers, and group foraging", *American Naturalist* 137 (1991), 847–863.
+- Context only: P. A. Bednekoff and R. P. Balda (1996a, b), *Behaviour* 133, 807–826 and *Animal Behaviour* 52,
+  833–839, cited by B&K for observational spatial memory in pinyon jays, Clark's nutcrackers and Mexican jays.
 
 ## Source summary
 
