@@ -186,7 +186,6 @@ export function isBaliView(v: AnyInspection): v is BaliInspection {
   return 'panel' in v && 'subak' in v && 'dam' in v;
 }
 
-/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
 /** A cell of the firms frame (a panel, a `firm` and a `member`); check it before the others with a panel. */
 export function isFirmsView(v: AnyInspection): v is FirmsInspection {
   return 'panel' in v && 'firm' in v && 'member' in v;
@@ -202,6 +201,7 @@ export function isLineView(v: AnyInspection): v is LineInspection {
   return 'place' in v && 'agent' in v;
 }
 
+/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
 export function isZiView(v: AnyInspection): v is ZiInspection {
   return 'panel' in v && 'trade' in v && 'supply' in v;
 }

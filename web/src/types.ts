@@ -1555,10 +1555,14 @@ export interface FirmsConfig {
   grid_steps: number;
   effort_window: number;
   groping: boolean;
+  /** Where sticky effort's window and groping apply: in any firm, or only the agent's own. */
+  adjust_scope: 'everywhere' | 'own_firm';
   loyalty: number;
   loyalty_max: number;
   pay: 'equal' | 'seniority' | 'base';
   seniority_base: number;
+  /** Which way seniority shares run: the founder largest (the text), or the newest member largest. */
+  seniority_order: 'senior_first' | 'junior_first';
   base_pay: 'own' | 'median' | 'mean';
   base_share: number;
   /** Whether base pay is still paid when a firm's output falls short of it, or scaled down to match output. */
