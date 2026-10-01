@@ -102,7 +102,7 @@ describe('clampDisplay', () => {
 
 describe('the Minds color modes and the caches overlay', () => {
   const minds = (over: Partial<Config>) =>
-    ({ ...config, disease: { enabled: false }, culture: { enabled: false }, sex: { enabled: false }, ...over }) as unknown as Config;
+    ({ ...config, disease: { enabled: false }, culture: { enabled: false }, sex: { enabled: false }, population: 100, ...over }) as unknown as Config;
   const theft = minds({ caching: { rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false }, theft: { find: 0.25, owner_memory: true, loot: 'keep', cheaters: 0.5 } });
   const mixed = minds({ caching: { rule: 'none', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: true } });
   const even = minds({ caching: { rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false } });
@@ -118,6 +118,8 @@ describe('the Minds color modes and the caches overlay', () => {
     const watch = { on: true, span: 7, watchers: 1, raid_when: 'always' };
     const some = { ...watch, watchers: 0.5 };
     expect(defaultColorMode({ ...even, watching: some } as unknown as Config)).toBe('watching');
+    // Exact, not approximate: four founders at share 0.1 deal none, so no split to tell apart.
+    expect(defaultColorMode({ ...even, population: 4, watching: { ...watch, watchers: 0.1 } } as unknown as Config)).toBe('caching_rule');
     expect(defaultColorMode({ ...theft, watching: watch } as unknown as Config)).toBe('watching');
     expect(defaultColorMode({ ...theft, watching: some } as unknown as Config)).toBe('watching');
     // Everyone watching and no cheaters: nothing to tell apart, so the earlier defaults.

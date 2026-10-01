@@ -102,7 +102,6 @@ const perGood = (prefix: string) => (c: Config): Line[] =>
   c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
 
 /** Minds 8: both kinds of founder exist under watching (the core's `watchers_split`). */
-const hasWatcherSplit = watcherSplit;
 
 /** Minds 6: the world has cheaters, so the hoarder and cheater series exist. */
 const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;
@@ -361,7 +360,7 @@ const CHARTS: ChartDef[] = [
         color: '--c1',
       },
     ]),
-    shown: hasWatcherSplit,
+    shown: watcherSplit,
   },
   {
     title: 'Watcher and other wealth per founder',
@@ -371,7 +370,7 @@ const CHARTS: ChartDef[] = [
       { key: 'watcher_wealth', label: 'Watchers (held, cached and fed, per founder)', color: '--c1' },
       { key: 'other_wealth', label: 'Others (held, cached and fed, per founder)', color: '--c2' },
     ]),
-    shown: hasWatcherSplit,
+    shown: watcherSplit,
   },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },
