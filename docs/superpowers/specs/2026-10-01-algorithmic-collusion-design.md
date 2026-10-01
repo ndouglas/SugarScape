@@ -6,8 +6,8 @@
 **Reading notes:** `2026-10-01-collusion-reading-notes.md`.
 **Source texts** (local copies in `papers/ai-coordination/`):
 - Emilio Calvano, Giacomo Calzolari, Vincenzo Denicolò & Sergio Pastorello, "Artificial Intelligence, Algorithmic Pricing, and Collusion," *AER* 110(10): 3267–97 (2020) (CCDP below), with its online appendix (CCDP-A) and the authors' replication package (Intel Fortran with OpenMP, R scripts, the published outputs; MIT license; from a verbatim GitHub mirror of openICPSR E119462V1).
-- The critiques whose tests are switches here: Asker, Fershtman & Pakes (2021 NBER w28535; 2022 *AEA P&P*) (AFP); Waltman & Kaymak (2006 ERIM; 2008 *JEDC*); Epivent & Lambin (2024, *Economics Letters*) and Abada & Lambin (2023, *Management Science*), both known only from abstracts and citing papers until found; Eschenbaum, Mellgren & Zahn (2022); Schildknecht (2026, *JCRE*), the published replication.
-- For later milestones in the same kind, not built here: Klein (2021, *RAND*), Calvano et al. (2021, *IJIO*).
+- The critiques whose tests are switches here: Asker, Fershtman & Pakes (2021 NBER w28535; 2022 *AEA P&P*) (AFP); Waltman & Kaymak (2006 ERIM; 2008 *JEDC*); Epivent & Lambin (SSRN 4227229, the February 2023 working paper of their 2024 *Economics Letters* article) (E&L); Lambin, "Less than meets the eye" (SSRN 4498926, July 2024) (L24); den Boer, Meylahn & Schinkel, "Artificial Collusion" (Amsterdam Law School RP 2022-25, the revision of 19 February 2026) (dBMS); Abada & Lambin (2023, *Management Science*), known only from its abstract and citing papers; Eschenbaum, Mellgren & Zahn (2022); Schildknecht (2026, *JCRE*), the published replication.
+- For later milestones in the same kind, not built here: Klein (2021, *RAND*), Calvano et al. (2021, *IJIO*), and the parts of L24 and dBMS listed under "Next in this kind".
 
 ## Goal
 
@@ -74,21 +74,26 @@ One tick is one period. Environments are enums from the start (`demand = logit`;
 | `prices` | 15 | reset | m |
 | `xi` | 0.1 | reset | the grid's extension beyond p^N and p^M |
 | `cost`, `quality`, `outside`, `mu` | 1, 2, 0, 0.25 | reset | cᵢ, aᵢ, a₀, μ (one value for all firms; asymmetric costs as `cost2` for firm 2, default equal) |
-| `memory` | 1 | reset | k: 0 (no state — test B1), 1 or 2 |
+| `memory` | 1 | reset | k: 0 (one state — test B1), 1 or 2; `memory = 0` keeps `delta` (L24's key test); CCDP-A's memoryless case is `memory = 0` with `delta = 0` |
+| `grid` | `calvano` | reset | `calvano` (ξ beyond p^N and p^M), `symmetric` (dBMS's Ã: ξ = 0), `below_nash` (E&L App. C: 15 prices from 1.25 to `below_top`) |
+| `below_top` | 1.47 | reset | the `below_nash` grid's top: 1.47 as E&L's text, or p^N (1.47293); the survey reports which reproduces their shares |
 | `alpha` | 0.15 | live | learning rate |
 | `beta` | 4 × 10⁻⁶ | reset | exploration decay per period |
 | `delta` | 0.95 | live | discount factor (0 — test B2) |
-| `exploration` | `decaying` | reset | `decaying` (ε = e^(−βt)), `constant` (ε fixed at `epsilon`), `boltzmann` (the code's type 2: choice probabilities ∝ exp((Q − max Q)/T), T starting at `temperature` and multiplied by (1 − `cooling`) each period) |
+| `exploration` | `decaying` | reset | `decaying` (ε = e^(−βt)), `constant` (ε fixed at `epsilon`), `boltzmann` (the code's type 2: choice probabilities ∝ exp((Q − max Q)/T), T starting at `temperature` and multiplied by (1 − `cooling`) each period), `two_phase` (L24: ε = 1 for `explore_for` periods, then 0) |
+| `explore_for` | 1 000 | reset | for `two_phase` (L24) |
 | `epsilon`, `temperature`, `cooling` | 0.05, 1 000, 10⁻⁵ | reset | for `constant` and `boltzmann` (the code starts T at 1 000 and takes the cooling as 10^x from its input; 10⁻⁵ is our default, CCDP-A's values used in its presets) |
 | `update` | `asynchronous` | reset | `asynchronous` (only the price charged: CCDP) or `synchronous` (every price, toward the profit it would have earned against the rival's actual price and the state that would have followed: AFP; which next state a counterfactual price leads to is AFP's open point, read as the state with the firm's own price replaced) |
-| `q_init` | `calvano` | reset | `calvano` (eq. 8), `zero`, `optimistic` (uniform on [`q_low`, `q_high`], AFP's reading) |
+| `q_init` | `calvano` | reset | `calvano` (eq. 8), `zero`, `optimistic` (uniform on [`q_low`, `q_high`], AFP's reading), `random` (uniform on [`q_low`, `q_high`] per cell: L24's theory, fn 8; L24's figures start at the grid's mean price, which fits `zero` or `random`, not eq. 8 — an inference, reported) |
+| `q_low`, `q_high` | 10, 20 | reset | the range for `optimistic` (AFP's values) and `random` |
 | `ties` | `lowest` | reset | `lowest` (the paper) or `random` (the code) |
 | `rng` | `ours` | reset | `ours` (the project's generator) or `calvano` (RAN2 seeded as the code, for docking) |
 | `session` | 1 | reset | the session number (the code's seeds are −session) |
 | `cap` | 10⁹ | reset | the stop (the code: 1.25 × 10⁹) |
 | `window` | 100 000 | reset | periods of unchanged strategies that count as convergence |
 | `equilibrium_check` | `best_response` | live | `best_response` (true Q by value iteration against the rival's strategy: the paper) or `one_shot` (the code's policy evaluation) |
-| `impulse` | `best_response_down` | live | `best_response_down` (the paper: one period at the static best response), `up` (one period one grid step above the pre-deviation price: Epivent & Lambin's reading, the step is ours), `every_price` (CCDP-A's) |
+| `impulse` | `best_response_down` | live | `best_response_down` (the paper: one period at the static best response), `every_price` (CCDP-A's and E&L's Table 1: one period at each grid price, below and above the pre-deviation price; E&L measure each firm's relative price change at τ + 1 against τ), `invitation` (E&L's Fig. 2: the deviator one grid step up for one period, the rival forced to match from the next period, the deviator regaining control after `invitation_hold` periods), `up` (one step up for one period: a convenience, not a paper's protocol). Deviations come after 10 periods of on-path play (E&L's τ = 10) |
+| `invitation_hold` | 5 | live | E&L: the deviator regains control at τ = 16 |
 
 ## Step (one period)
 
@@ -96,7 +101,7 @@ Each firm draws its exploration uniform, then its price uniform (in the code's o
 
 ## Statistics
 
-`SERIES`: `price_1`, `price_2` (prices charged), `profit_gain` (Δ of this period's profits), `epsilon`, `stable` (the convergence counter), `explored` (share of firms exploring this period), `greedy_changes` (greedy changes this period). After the session finishes: `cycle_length`, `cycle_gain` (Δ over the limit cycle), `equilibrium_on_path`, `equilibrium_off_path` (shares of states), `converged`, `periods`. Long sessions thin the per-period series for display (every 1 000th period after the first 10 000); the statistics themselves use every period.
+`SERIES`: `price_1`, `price_2` (prices charged), `profit_gain` (Δ of this period's profits), `epsilon`, `stable` (the convergence counter), `explored` (share of firms exploring this period), `greedy_changes` (greedy changes this period). `greedy_price` (the mean over firms of the greedy price at the visited state: L24's measure). After the session finishes: `cycle_length`, `cycle_gain` (Δ over the limit cycle), `window_gain` (realized profit over the last 100 000 periods, exploration included: dBMS's and E&L's reading of π̄), `discounted_gain` (dBMS's Δ̃ from period 1 over T_δ periods, T_δ = 165 at δ = 0.95), `equilibrium_on_path`, `equilibrium_off_path` (shares of states), `rp_complete` (below), `stale_greedy` (the share of off-path states whose greedy price is still eq. 8's initial one: learning inertia), `fumbling` (periods between ε falling below 0.01 and the last greedy change), `converged`, `periods`. Long sessions thin the per-period series for display (every 1 000th period after the first 10 000); the statistics themselves use every period.
 
 ## Views
 
@@ -114,15 +119,16 @@ Titles describe what happens (final wording while building, in `titles.rs`):
 |---|---|
 | `calvano` | Two pricing algorithms learn to keep prices high |
 | `calvano-code` | …as the authors' code ran it |
-| `no-memory` | Pricing algorithms that remember nothing (B1) |
+| `no-memory` | Pricing algorithms that remember nothing (B1: L24's test, δ = 0.95) |
 | `myopic` | Pricing algorithms that ignore the future (B2) |
 | `synchronous` | Algorithms that learn from every price, not only the one they charged (B4) |
 | `explore-more` | Pricing algorithms that keep experimenting (B5) |
 | `price-war` | One firm undercuts once; the other responds (impulse) |
+| `invitation` | One firm raises its price and the other follows (E&L's invitation, B3c) |
 
 ## Experiments and CLI
 
-Built-in sweeps (`sweep.rs` BUILTINS), each a set of sessions reporting mean, standard error and distribution: `collusion-table-i` (1 000 sessions), `collusion-alpha-beta` (a 10 × 10 subgrid of Figures 1–2, 100 sessions a cell), `collusion-delta` (Figure 6's δ), `collusion-impulse` (Figure 4), and one per B test (`collusion-memory`, `collusion-myopic`, `collusion-upward`, `collusion-synchronous`, `collusion-exploration`, `collusion-repair`). Sessions run in parallel natively.
+Built-in sweeps (`sweep.rs` BUILTINS), each a set of sessions reporting mean, standard error and distribution: `collusion-table-i` (1 000 sessions), `collusion-alpha-beta` (a 10 × 10 subgrid of Figures 1–2, 100 sessions a cell), `collusion-delta` (Figure 6's δ), `collusion-impulse` (Figure 4), and one per B test (`collusion-memory`, `collusion-myopic`, `collusion-two-phase`, `collusion-every-price`, `collusion-below-nash`, `collusion-invitation`, `collusion-synchronous`, `collusion-exploration`, `collusion-repair`, `collusion-timescale`, `collusion-rp-complete`). Sessions run in parallel natively.
 
 ## Survey
 
@@ -138,20 +144,26 @@ The reference for each A claim is the authors' code where it can run the configu
 | A4 | Figure 4's impulse response: the rival from 1.795 to 1.551 in period 2, back near 1.79 by period 10; punishment 5.7 periods on average | each within 2 SE |
 | A5 | Δ against δ (Figure 6), minimum 0.156 at δ = 0.34 | as A3 |
 | A6 | The paper against its code | reported, not scored: each item of "The paper against its code" |
+| A7 | The critics' own baselines | reported, not scored: E&L's census of outcomes (one symmetric point 27.9 %, one asymmetric point 36.2 %, period-2 cycles 18.3 %, longer 11.0 %, hybrid 6.5 %) and their mean price 1.79; L24's greedy-price paths (Fig. 1); dBMS's Δ against δ with `window_gain` (Fig. 10) — each against ours under the same measure |
+| A8 | The critics against themselves | reported, not scored: L24's Lemma 2, eq. 9 and Theorem 2 contract by α where his recursion contracts by 1 − α(1 − δ), and Fig. 2's caption puts the switch at t = 10 against the text's 1 000; E&L never state δ or Fig. 1's deviation size, and their fn 4 restriction conflicts with Table 1's top rows; dBMS's Exp3 rate in Theorem 2 differs from its proof's, and their π̄ is a window average, not CCDP's limit cycle |
 
 ### B. Is it collusion?
 
-A **punishment-like response** (fixed now): in the period after a one-period deviation, the rival's price is at least one grid step below its pre-deviation price, and both prices return to the pre-deviation cycle within 25 periods.
+A **punishment-like response** (fixed now): in the period after a one-period deviation, the rival's price is at least one grid step below its pre-deviation price, and both prices return to the pre-deviation cycle within 25 periods. A session is **RP-complete** (dBMS p. 21) if every one-period deviation by either firm to any other grid price, from every state of the limit cycle, gives a punishment-like response. The B rules below were set before measuring; those marked *ours* fill a threshold the paper does not give, and E&L's, L24's and dBMS's own criteria are used where they state one.
 
 | # | Test | Supports the critique if |
 |---|---|---|
-| B1 | memory 0 (no state, so no punishment is possible) | Δ(k = 0) ≥ ½ Δ(k = 1) |
+| B1 | L24's key test: memory 0 with δ = 0.95, other parameters as baseline; CCDP-A's reading (memory 0, δ = 0) beside it | L24's claim: the mean greedy price at 1.5 × 10⁶ and 2 × 10⁶ periods **and** the converged Δ are each at least as high at k = 0 as at k = 1 (difference ≥ −2 SE). The weaker critique (set first, kept as the secondary verdict): Δ(k = 0) ≥ ½ Δ(k = 1) |
 | B2 | δ = 0 (no future to protect) | Δ(δ = 0) > 0.1; Δ(δ) − Δ(0) is then reported as the part strategies can explain |
-| B3 | an upward deviation | punishment-like responses after an upward deviation in at least half as many sessions as after the paper's downward one |
-| B3b | sessions that settle below p^N (Epivent & Lambin) | punishment-like responses in them at least half as often as in sessions above |
+| B2b | L24's Theorem 1: `exploration = two_phase` (1 000 periods), memory 0 and 1, at δ = 0 and 0.95 | the theorem predicts both firms at 1.6990 (Δ = 0.707) at δ = 0 and at 1.7377 (Δ = 0.794) at δ = 0.95 on our grid (computed in planning); holds if at least 80 % of sessions end there (*ours*) |
+| B3 | E&L's Table 1: from each converged session, one period at every grid price above and below the pre-deviation price (increments excluded where the pre-deviation price is at or above p^M; cuts excluded from the grid minimum) | E&L's claim: in every (pre-deviation price, upward deviation) cell with at least 30 sessions (*ours*), the non-deviator's mean relative change at τ + 1 is negative, and the mean over upward cells is at least half the mean over downward cells (*ours*). The first rule (punishment-like responses after upward deviations at least half as often as after the paper's downward one) is reported beside it |
+| B3b | E&L App. C: `grid = below_nash`, 10 000 sessions | the shares converging to the top price, to cycles and to singletons below it, against E&L's 53 / 9 / 38 % (reported); in the below-Nash singletons, upward deviations get punishment-like responses at least half as often as downward ones |
+| B3c | E&L's invitation (Fig. 2), on sessions that converged to a point | the deviator's mean price in the period it regains control is at least one grid step below its pre-deviation price |
 | B4 | synchronous updating (AFP) | Δ falls by more than half |
 | B5 | more exploration: `constant` ε = 0.05, and β ten times lower | Δ falls by more than half under either |
-| B6 | re-pairing: each firm trained in session s against the rival trained in session s + 1, greedy play from a random state | the cross pairs' Δ < ½ the original pairs' Δ |
+| B6 | re-pairing (Eschenbaum et al.; dBMS App. B is the same exercise): each firm trained in session s against the rival trained in session s + 1, greedy play from a random state | the cross pairs' Δ < ½ the original pairs' Δ |
+| B7 | dBMS's timescale: `discounted_gain` over the first 165 periods, 1 000 baseline sessions | within 2 SE of uniformly random pricing's 0.497 on our grid (dBMS; checked in planning), and of −0.510 on `grid = symmetric`; also reported: the share of Q-cells updated by period 165, and the first period at which Δ̃ over a sliding 165-period window exceeds 0.547 |
+| B8 | dBMS's "pattern is not a scheme": among baseline sessions that pass CCDP's test (the paper's deviation gives a punishment-like response), the share that are not RP-complete | at least a quarter (*ours*) |
 
 Each verdict stays on whichever side of its threshold it lands. The survey's write-up states for each critique what its test found, and, where B2 holds, how much of the paper's Δ remains attributable to strategies.
 
@@ -166,9 +178,17 @@ Each verdict stays on whichever side of its threshold it lands. The survey's wri
 - **RAN2:** the port against the Fortran's first draws for seeds −1 and −7.
 - **Learner:** the update on hand-worked cells; incremental greedy maintenance against a full recompute over a long random run; ties under both readings.
 - **Docking (A2):** a fixture of a few sessions' converged strategies and periods from the authors' code, checked into the test data (MIT).
-- **Analysis:** the limit cycle and Δ on constructed strategies; both equilibrium checks on a strategy pair known to be (and not to be) an equilibrium; impulse responses on a hand-built punishment strategy.
+- **L24's Theorem 1:** its fixed points on our grid (1.6990 at δ = 0, 1.7377 at δ = 0.95) computed from the payoff table, and `two_phase` sessions reaching them.
+- **dBMS's timescale:** uniformly random pricing's Δ̃ = 0.497 on our grid and −0.510 on `symmetric`, T_δ = 165 at δ = 0.95.
+- **Analysis:** the limit cycle and Δ on constructed strategies; RP-completeness on a hand-built grim-trigger pair (complete) and on a pair that punishes only cuts (not); both equilibrium checks on a strategy pair known to be (and not to be) an equilibrium; impulse responses on a hand-built punishment strategy.
 - **Determinism:** golden fingerprints for the presets, native and WASM.
+
+## Next in this kind (not built here)
+
+- **Lambin's remedies** (L24 §5): an exploration floor on one firm after convergence, and sequential entry with the incumbent no longer exploring; and his n-step approximations of the decaying ε (Figs. 3 and 10; the step construction is unstated).
+- **dBMS's two-price game:** m = 2, every strategy classified (grim trigger, win-stay-lose-shift, always defect, other), against their final shares (40.9 / 2.4 / 3.6 / 53.1 %) and their bounds on when each strategy can first exist (periods 6 633 and 12 308).
+- **Klein (2021)**, **Calvano et al. (2021)**, **AFP's homogeneous Bertrand**.
 
 ## Docs
 
-`docs/papers.md` (the Reproduced row; the Queue's #1 removed; Wanted gains the four critiques to fetch by hand — den Boer, Meylahn & Schinkel 2026; Epivent & Lambin 2024; Lambin 2024; Calvano et al. 2023 — and Klein's and Calvano 2021's code, available from the authors on request), the README's model list, and the module docs. The swarm-coordination study (`docs/studies/2026-09-27-swarm-coordination.md`) cites the milestone as its no-communication reference.
+`docs/papers.md` (the Reproduced row; the Queue's #1 removed; Wanted gains Calvano et al. 2023 ("Genuine or spurious?") and Abada & Lambin 2023, still unfound, and Klein's and Calvano 2021's code, available from the authors on request), the README's model list, and the module docs. The swarm-coordination study (`docs/studies/2026-09-27-swarm-coordination.md`) cites the milestone as its no-communication reference.

@@ -4,7 +4,8 @@ Research notes for the algorithmic-collusion milestone (`2026-10-01-algorithmic-
 Section 1 is Calvano, Calzolari, Denicolò & Pastorello (2020, *AER*) with its online appendix and
 the authors' Fortran replication package (MIT); section 2 the follow-ups Calvano et al. (2021,
 *IJIO*) and Klein (2021, *RAND*); section 3 the critiques and foundations (Asker, Fershtman & Pakes
-2021–22; Waltman & Kaymak 2006–08; Sandholm & Crites 1996); section 4 the literature since. Each was
+2021–22; Waltman & Kaymak 2006–08; Sandholm & Crites 1996); section 4 the literature since; section 5
+Epivent & Lambin (2023), Lambin (2024) and den Boer, Meylahn & Schinkel (2026) read against the spec. Each was
 written by a separate reader on 2026-10-01. Scripts and renders mentioned were throwaway and not kept.
 Local copies are in `papers/ai-coordination/`.
 
@@ -1527,3 +1528,386 @@ Also noticed, not fetched:
 13. Assad et al. JPE 2024 final version (the 2021 WP is saved). Brown & MacKay is saved as the published version.
 
 Highest priority to get by hand: **#2, #3, #4, #7**. These are the papers that make specific, testable claims against Calvano's own environment.
+
+---------------------------------------------------------------------------------------------------
+
+## 5. Three critiques of Calvano et al. (2020): reading notes for the collusion spec
+
+Read 2026-10-01 from the local copies in `papers/ai-coordination/`. Page numbers are the papers' printed numbers. In den Boer et al. the PDF page is the printed page + 1, because of the cover sheet. Equations were checked against page renders wherever the text extraction was garbled. "Computed here" marks numbers I recomputed with `scratchpad/lambin_thm1.py`, using the spec's demand, grid and p^N/p^M.
+
+---
+
+### 1. Epivent & Lambin, "On algorithmic collusion and reward-punishment schemes" (SSRN 4227229, version of 17 Feb 2023; 19 pp.; published 2024 in *Economics Letters* 237:111661)
+
+#### 1.1 Setup relative to CCDP
+- **Model:** "faithfully replicates the setting in Calvano et al." (p. 4). Logit demand with outside good, c = 1, p^N ≈ 1.47, p^M ≈ 1.92, n = 2, one-period memory (p. 5).
+- **Hyperparameters, p. 5 fn 3:** α = 0.15 and ε = exp(−βt) with β = 4 × 10⁻⁶. **δ is never stated.** The text implies 0.95 ("standard hyperparameters") but does not say so.
+- **Convergence:** optimal strategy unchanged for 100 000 consecutive periods for each agent; cap of one billion iterations, which is the paper's 10⁹ and not the code's 1.25 × 10⁹ (p. 5).
+- **Sessions:** **10 000**, against CCDP's 1 000. The paper says this is "the only difference" (p. 5).
+- **Code:** not named and not said to be CCDP's Fortran. It says "We refer the reader to Calvano et al. [2020b] for further implementation details." The plots look like seaborn/matplotlib, so this is probably a Python re-implementation. Tie-breaking, Q-initialization and the RNG are all unstated.
+
+#### 1.2 Protocols (exact)
+**P1, the impulse response in both directions (p. 5; Fig. 1, p. 7).**
+- For each session, take the converged prices at τ = 0. Play the learned strategies for τ < 10.
+- At τ = 10, "exogenously force one of the algorithms to lower or raise its price (by an arbitrary amount)".
+- Observe both agents from τ = 11 on, and average over sessions.
+- Fig. 1 does not say how big the deviation is. Read off the figure, the average deviation price is about 1.565 for the cut, which looks like CCDP's static best response, and about 1.89 for the increase.
+- Restrictions (fn 4, p. 6):
+  - (i) "we restrict our exercises to the simulations that converge on a pre-shock price lower than the monopoly price". On our grid that drops pre-shock prices 1.93144 and 1.97019. Yet Table 1 still has rows for 1.93 and 1.97, so the restriction probably applies only to Fig. 1.
+  - (ii) Cuts are excluded when the pre-shock price is already the grid minimum.
+- How a pre-shock "price" is assigned for asymmetric points and cycles is **not stated**.
+
+**P2, the full deviation matrix (Table 1, p. 8).** This is the counterpart of CCDP's Table 2.
+- Rows are the pre-shock price: 1.62, 1.66, …, 1.97 (10 rows), each with a frequency column.
+- Columns are every deviation price on the grid: 1.43 … 1.97 (15 columns).
+- The cells come in two panels:
+  - **(a)** the *relative* price change of the non-deviating agent at τ = 11 relative to τ = 10;
+  - **(b)** the deviating agent's relative change at τ = 11 relative to its τ = 10 (deviation) price.
+- The upper-right triangle (increments) is the new part. **This is the protocol for an upward deviation: every grid price above the pre-shock price, held for one period, with the response measured as the τ = 11 relative change.** It is not a one-step deviation.
+
+**P3, the "invitation to collude" (p. 10, Fig. 2).**
+- At τ = 10 the deviator is forced **one grid step up**.
+- From τ = 11 the non-deviator is *exogenously forced to match* that price. Per the figure, it stays matched through τ = 30.
+- At τ = 16 the deviator regains control.
+- Also reported: "reversion to low prices is also observed when the nondeviating agent regains control in period 12 or later" (p. 10).
+- Only sessions that converged to a point (cycles excluded) are used (fn 6, p. 10). The caption says "simulation run", but the jagged post-τ-16 curve looks like an average over the point sessions.
+
+**P4, convergence below Nash (App. C, pp. 18–19).**
+- The grid is shifted to "15 actions evenly distributed between 1.25 and 1.47". The upper bound is described as the Bertrand–Nash price, and everything else is as in the main text.
+- P1 is repeated on the sessions that converge to singletons strictly below Nash.
+
+#### 1.3 Quantitative results to reproduce or digitize
+- **Average converged price p̃ = 1.79** (p. 5).
+- **Table 1 (p. 8)** is fully legible in the text extraction. Transcribe it, don't digitize.
+  - Row frequencies: 1.62: .02, 1.66: .05, 1.70: .10, 1.74: .15, 1.78: .16, 1.82: .16, 1.85: .14, 1.89: .10, 1.93: .06, 1.97: .03 (sum .97).
+  - Panel (a), the non-deviator: **every** cell is negative, cuts and increments alike. Magnitudes run from −0.05 (row 1.62, deviation 1.97) to −0.18 (row 1.97, deviation 1.43). Increment cells are about −0.05 to −0.16.
+  - Panel (b), the deviator: positive after large cuts (+0.08 to +0.10 after a deviation to 1.43) and negative after small cuts and all increments (down to −0.19).
+  - In levels, both agents land near 1.55–1.62 at τ = 11 whatever the deviation (App. B, Fig. 5, p. 18). That figure plots the τ = 11 prices against the deviation price for pre-shock 1.66, 1.74, 1.82 and 1.89.
+- **Fig. 1 (p. 7), digitized by eye.**
+  - Fig. 1a, the cut: pre-shock ≈ 1.795 for both. At τ = 10 the deviator is ≈ 1.565. At τ = 11 the non-deviator is ≈ 1.555 and the deviator ≈ 1.57. τ = 12 ≈ 1.58, τ = 13 ≈ 1.64, τ = 14 ≈ 1.70, τ = 15 ≈ 1.74. Prices are back to ≈ 1.79 by τ ≈ 18–20.
+  - Fig. 1b, the increment: pre-shock ≈ 1.785. Deviator ≈ 1.89 at τ = 10. Both ≈ 1.60 at τ = 11–12, then ≈ 1.65, 1.70, 1.74, back near 1.78 by τ ≈ 18.
+- **Fig. 2 (p. 10):** pre-shock ≈ 1.785. At τ = 10 the deviator is at ≈ 1.825. τ = 11–15 both ≈ 1.825. **At τ = 16 the deviator drops to ≈ 1.59** and stays at 1.57–1.59 through τ = 30, while the forced non-deviator holds 1.825.
+- **App. A, Table 2 (p. 16), the cycle census of 10 000 sessions:** 1-sym 2791, 1-asym 3622, period 2: 1833, period ≥ 3: 1100, "hybrid" (cycles of varying length) 654. Points therefore make up 64.1 %. Figs. 3–4 (p. 17) show that the point and cycle subsets give the same impulse shapes.
+- **App. C (shifted grid):** **53 %** converge to Nash, **9 %** to cycles and **38 %** to singletons strictly below Nash. Fig. 6 uses **3831** sessions.
+  - Fig. 6a, the cut: ≈ 1.465 → 1.438 at τ = 11, recovering by τ ≈ 16.
+  - Fig. 6b, the increment: ≈ 1.465 → 1.43 at τ = 11, recovering by τ ≈ 17.
+  - **Inconsistency to report:** sessions "strictly below Nash" should sit at or below the second-highest price, ≈ 1.454 (step 0.0157), yet Fig. 6's pre-shock average is ≈ 1.465. Either the top grid price is 1.47 < p^N = 1.47293, so top-price sessions count as "below Nash", or the grid is something other than stated.
+
+#### 1.4 Testable claims
+- E1: increments are followed by a price war. The non-deviator cuts at τ = 11 after every upward deviation, by 5–16 %, which is similar to after cuts (−9 to −18 %).
+- E2: the deviator "self-punishes" at τ = 11 after every increment and every mild cut, but not after large cuts.
+- E3: in the invitation protocol (P3), the deviator abandons the matched higher price immediately on regaining control and goes to ≈ 1.58.
+- E4: the responses do not depend on recurrent-class size (points vs cycles).
+- E5: on the shifted grid, 53/9/38 % converge to Nash / cycle / below Nash, and upward deviations toward Nash are punished there too.
+- E6: 64.1 % of sessions converge to a point (27.9 % symmetric, 36.2 % asymmetric).
+
+---
+
+### 2. Lambin, "Less than meets the eye: simultaneous experiments as a source of algorithmic seeming collusion" (SSRN 4498926, 12 July 2024; 38 pp.)
+
+#### 2.1 Setup relative to CCDP
+- **Model:** "faithfully" / "exact replication" of CCDP (pp. 4, 5). Section 3 uses a general symmetric discrete game, with CCDP's numbers in Section 4.
+- **Hyperparameters:**
+  - δ = 0.95 throughout (fn 4, p. 5).
+  - α = 0.15 (fn 12, p. 33).
+  - β = 4 × 10⁻⁶ (fn 9, p. 21), except the entry experiment, which uses β = 4 × 10⁻⁵.
+- **Code:** not stated. There is no mention of CCDP's Fortran.
+- **Sessions:**
+  - Fig. 3 and Fig. 10: 1 000.
+  - Fig. 5: 1 000.
+  - Fig. 6: 200.
+  - Fig. 1: unstated.
+  - Figs. 2, 4 and 9 are single runs.
+- **Horizon:** fixed-length runs (1.5 × 10⁶ periods in Figs. 3 and 10; 2 × 10⁶ in Fig. 1; 4 × 10⁶ in Fig. 6), not stopped at convergence. The outcome is the **average greedy price over time**, not the converged Δ.
+- **Q-initialization:**
+  - The theory section (fn 8, p. 11) says "We choose random initialization …", calling it a linear increasing transform of CCDP's.
+  - **Inferred from the figures:** the numerical runs also start from a non-CCDP initialization. At t = 0, Figs. 1, 3, 6 and 10 start at an average greedy price of ≈ 1.70, which is the mean of the grid (computed here: 1.69895). That is what random or zero (tied) initialization gives. CCDP's eq. 8 would start at 1.58271.
+  - This contradicts "exact replication". Report it as an inference, since the paper never states it.
+
+#### 2.2 The "key robustness test" (pp. 4–6)
+- The test is **memoryless agents (k = 0, a single state) with δ kept at 0.95.**
+- CCDP-A tested k = 0 only *jointly* with δ = 0. It wrote "With memoryless algorithms (k = 0), there is no loss of generality in setting the discount factor δ to 0." Lambin says that statement is "incorrect": a positive δ changes the Q-update dynamics even with one state (fn 4, p. 5).
+- Result, Fig. 1 (p. 6), the average greedy price over 0–2 × 10⁶ periods:
+  - (a) k = 1: ≈ 1.70 at t = 0, a dip to ≈ 1.60, a hump ≈ 1.64 at 0.4 × 10⁶, a trough ≈ 1.61 at 0.6 × 10⁶, then a rise to ≈ 1.75–1.76 by 2 × 10⁶.
+  - (b) k = 0: ≈ 1.70 at t = 0, a dip to ≈ 1.59 at 0.2 × 10⁶, a steady rise to ≈ 1.80 at 1 × 10⁶, and ≈ 1.85 at 2 × 10⁶.
+  - The claim: "the memoryless version … seem[s] to collude even more effectively than algorithms with memory" (p. 6).
+- The same holds in App. A for Klein (2021) and Calvano et al. (2023). In Fig. 8 (p. 32), at δ = 0.95 the memoryless final price is ≈ 1.73 against ≈ 1.56 with memory (the two curves cross near δ ≈ 0.77), under rectangular demand with WTP 2, c = 1 and 15 prices.
+
+#### 2.3 Theory: equations (pp. 9–14)
+- **Update (eq. 1):** CCDP's eq. 4, asynchronous, with ε-greedy uniform exploration.
+- **Mean-field assumption (p. 9; theory only):** an agent receives the expected profit against the rival's exploration distribution.
+- **Definitions:**
+  - π̃(p) = E_q π(p, q), the profit against a uniformly random rival.
+  - Actions are ranked so that π̃(a₁) > π̃(a₂) > … and π̃ = π̃(a₁).
+- **Two-phase exploration:** ε = 1 for T₁ periods, then ε = 0 for T₂ periods.
+- **Lemma 1 (ε = 1, T₁ → ∞):** Q(aᵢ) → π̃(aᵢ) + δ/(1−δ)·π̃, so the greedy action is a₁.
+- **Lemma 2 (ε = 0):** Q(a₁) → π(a₁, a₁)/(1−δ), while the other Q-values are frozen at their Lemma-1 values.
+- **Theorem 1:** let J be the smallest j with max_{i≤j} π(aᵢ, aᵢ) > (1−δ)π̃(a_{j+1}) + δπ̃ (eq. 5). Agents then converge to **I = argmax_{i≤J} π(aᵢ, aᵢ)** (eq. 6). Supra-competitive play needs no reward–punishment and survives δ = 0.
+- **Eq. 7, the reaction function after learning:**
+  - from a symmetric state below I, play the next action on the path;
+  - from the symmetric state at I, play a_I;
+  - from **any asymmetric state, or a symmetric state with i > I, play a₁** (the stale greedy action from the exploration phase).
+  - So any unilateral deviation produces a₁, then a walk up to a_I. This is the "seeming punishment".
+- **Computed here for the CCDP grid:**
+  - a₁ = 1.58271 (grid index 4).
+  - The π̃ ranking is grid indices 4, 3, 5, 2, 6, 7, 1, 8, ….
+  - δ = 0.95: J = 8 and **I = 1.73770 (index 8), π(a_I, a_I) = 0.31389, Δ = 0.794**. This matches the paper's "p_conv = 1.74".
+  - δ = 0: J = 6 and I = 1.69895 (index 7), **Δ = 0.707**.
+- **App. B, eq. (9), the fumbling bound:** t̃ᵢ < ⌊ln[((1−δ)π̃(aᵢ) + δπ̃ − π(aᵢ, aᵢ)) / ((1−δ)(π(a_I, a_I) − π(aᵢ, aᵢ)))] / ln(1/α)⌋ + 1. The total is T_fum = Σ_{i≤J, i≠I} t̃ᵢ.
+- **Internal inconsistency to report:** the proof of Lemma 2 writes Qᵗ = α^{t−T₁}(…) + …, and eqs. 8–9 and Theorem 2 inherit that ln(1/α). But eq. 2's own recursion contracts by (1 − α(1 − δ)) = 0.9925 per visit, not by α = 0.15. Eq. 9's denominator also carries an extra (1 − δ).
+  - With the bound as printed, I get T_fum = 14 periods.
+  - With the contraction factor corrected and the denominator as printed, I get ≈ 2 775.
+  - With both corrected, each action needs about 1 visit.
+  - The qualitative "fumbling is short" claim survives. Eq. 9 itself should not be used as a prediction; measure fumbling directly.
+- **App. C, turn-based exploration (Def. 1):** agents alternate, in blocks of T periods, which one may explore with probability ε. Theorem 2: if T > ln(2η̄_ε/η_ε)/ln(1/α) (the same α issue) and play converges to a fixed point, that point is the static Nash.
+
+#### 2.4 Numerical protocols and results
+- **Fig. 2 (p. 16), stateless two-phase.**
+  - The text gives ε = 1 for 1 000 steps; the caption says "switch … at time t = 10", which is a plotting offset or an inconsistency.
+  - The initial Q-values match the Lemma-1 values (computed here: 1.58 → 6.2780, 1.43 → 6.2536, 1.78 → 6.2437, all as in the plot).
+  - The greedy action starts at 1.58 and "after less than 30 periods" settles at **1.74**, whose Q then rises toward π(1.74, 1.74)/(1−δ) = 6.2777.
+- **Fig. 3 (p. 18) and Fig. 10 (p. 38), the n-step approximations of e^{−βt}.**
+  - n = 2, 3, 5, 20 and 50 steps, 1 000 sessions, 1.5 × 10⁶ periods; Fig. 3 is k = 0 and Fig. 10 is k = 1.
+  - The step construction is **not stated**. Read from the plots: the horizon 1.5 × 10⁶ is cut into n equal intervals, the first at ε = 1 and interval k ≥ 2 at e^{−β·midpoint}. For n = 3 the second step is ≈ 0.05 = e^{−3}, and for n = 5 it is ≈ 0.165 = e^{−1.8}.
+  - k = 0 endpoints (average greedy price at 1.5 × 10⁶): 2-step ≈ 1.88 (band 1.80–1.93); 3-step ≈ 1.83; 5-step ≈ 1.85; 20-step ≈ 1.86; 50-step ≈ 1.87.
+  - k = 1 endpoints: 2-step ≈ 1.87; 3-step ≈ 1.88; 5-step ≈ 1.85; 20-step ≈ 1.80; 50-step ≈ 1.79.
+  - Before the first step, every panel sits flat at ≈ 1.60–1.61.
+- **Fig. 4 (p. 20), seeming punishments.**
+  - One session, k = 1, δ = 0.95, T₁ = T₂ = 1 000, pre-deviation price 1.74 for both.
+  - Agent 1 is forced at t = 3 to 1.54, 1.62, 1.70, 1.79, 1.85 or 1.93.
+  - **Whatever the deviation, the path is identical afterward:** t = 4 both at 1.58, t = 5 both at ≈ 1.70, t = 6 both at 1.74. Agent 2 holds 1.74 at t = 3.
+- **"These patterns are also observed when the discount factor δ is zero"** (p. 20). No figure is given.
+- **Fig. 9 (p. 36), k = 1 two-phase:** noisy play until **t = 224**, then 1.74 (the text says "after about 250 periods").
+- **§5.1 and Fig. 5 (pp. 21–22), sequential entry.**
+  - The incumbent learns alone; entry comes at T = 100 000, with β = 4 × 10⁻⁵ (fn 9) and k = 1.
+  - After entry the incumbent cannot explore but keeps updating.
+  - Average over 1 000 sessions: ≈ 1.88–1.89 before entry, falling to ≈ 1.58 by 150 000 and ≈ 1.52 by 250 000.
+  - Unstated: the pre-entry demand (a monopoly logit with the outside good?), whether the entrant's ε clock starts at entry, and what the incumbent's state is before entry.
+- **§5.2 and Fig. 6 (pp. 22–23), turn-based remedy.**
+  - CCDP is run for 2 × 10⁶ periods. From then on **agent 2 only** explores with constant ε_min = 0.005 (6a) or 0.05 (6b). 200 sessions, k = 1.
+  - 6a: peak ≈ 1.85 at ≈ 1.2–1.5 × 10⁶, declining to ≈ 1.51 by 3.5–4 × 10⁶.
+  - 6b: drops to ≈ 1.50 within about 0.1 × 10⁶ of the switch.
+- **Appendix A:** Fig. 7 (Klein 2021: six prices, linear demand, homogeneous goods) shows stateless profits above k = 1. Fig. 8 (Calvano et al. 2023) shows the k = 0 price above k = 1 for δ ≳ 0.75.
+
+#### 2.5 Testable claims
+- L1: k = 0 with δ = 0.95 gives prices **at least as high as** k = 1 (Fig. 1).
+- L2: under two-phase exploration, both agents converge to I from Theorem 1: 1.7377 at δ = 0.95 and 1.6990 at δ = 0.
+- L3: after any unilateral deviation from a symmetric fixed point, the next play is a₁ = 1.58271 by both, then a walk back to I (Fig. 4). This holds for upward deviations and at δ = 0.
+- L4: under two-phase exploration, convergence takes tens of periods (k = 0) or a few hundred (k = 1).
+- L5: as the number of steps grows, the step approximation recovers CCDP's greedy-price path (Figs. 3 and 10).
+- L6: sequential entry and turn-based exploration (one-sided ε floor) both bring prices close to Nash.
+- L7, the overreach to check: E&L's punishment price "is always the same … 1.58" (p. 19). E&L's own Table 1 puts the non-deviator's τ = 11 price between ≈ 1.46 and ≈ 1.69 depending on the row, so that claim needs checking.
+
+---
+
+### 3. den Boer, Meylahn & Schinkel, "Artificial Collusion: Examining Supracompetitive Pricing by Q-learning Algorithms" (Amsterdam Law School RP 2022-25 / ACLE WP 2022-06; **version dated 19 Feb 2026**; 47 pp.)
+
+The local filename says 2022; the docs' Wanted list says "2026". It is the same paper, and the copy we hold is the 2026 revision.
+
+#### 3.1 Setup relative to CCDP
+- **Model (pp. 6–8):**
+  - Logit demand with the 1 in the denominator (a₀ = 0 is WLOG).
+  - c = 1, a = 2, μ = ¼, δ = 0.95.
+  - p^N = 1.4729 and p^M = 1.9250 in closed form, via the Li & Huh V(·) and Lambert-W expressions.
+  - π^N = 0.2229, π^M = 0.3375.
+  - Grid Aᵢ = {pᴺ − ξ(pᴹ − pᴺ) + k(1 + 2ξ)(pᴹ − pᴺ)/(m − 1)}, which for CCDP gives {1.4277, … step 0.0387 …, 1.9702}.
+  - Q₀ from CCDP's eq. 8.
+  - **Ties broken uniformly at random**, as the code does (p. 7).
+  - ε_t = exp(−βt).
+- **Grid sweep (p. 8):** α ∈ [0.025, 0.25] and β ∈ [0, 2 × 10⁻⁵], 100 × 100 points, 1 000 sessions each. Results are not shown as such.
+- **Code:** their own. Validated by reproducing CCDP's Fig. 3 (Δ vs δ, 100 trajectories per δ; App. A, Fig. 5, p. 33). Nothing indicates the Fortran.
+- **Convergence (fn 10, p. 9):** CCDP's criterion with t₀ ≤ 10⁹ − 10⁵.
+- **π̄ (fn 11):** "the observed average profit over the time periods t₀+1, …, t₀+100 000". That is the realized profit with residual exploration, **not** CCDP's limit-cycle replay. Fig. 10 likewise computes "Δ over the last 10⁵ time periods". This is a definitional difference from CCDP and from our spec.
+- **The m = 2 reduction (§4.2, pp. 12–17):** prices {D = pᴺ, C = pᴹ} (m = 2, ξ = 0), β = 10⁻⁴, α = 0.15, δ = 0.95, CCDP initialization, 1 000 sessions.
+  - Payoffs: R = 0.3375, S = 0.1180, T = 0.3679, P = 0.2229 (verified here).
+  - Strategies are 4-letter words over the states (CC, CD, DC, DD).
+
+#### 3.2 Definitions and equations
+- **Collusive equilibrium (fn 4, p. 3):** a strategy profile that is an equilibrium (mutual best responses) **and** contains a reward–punishment scheme.
+- **Three-plus-two criteria (p. 5):**
+  1. learned on timescales relevant to the firm's objective;
+  2. not by mistake or incomplete learning (close to equilibrium);
+  3. contains a reward–punishment scheme;
+  4. performs well against reasonable alternative algorithms;
+  5. needs no coordination by the firms.
+- **Discounted gain from the start (p. 9):** Δ̃ = (1 − δ)E[Σ_{t≥1} δ^{t−1}π_i(t) − π^N] / (π^M − π^N). Compare CCDP's Δ = (π̄ − π^N)/(π^M − π^N).
+- **Effective horizon (p. 10):** T_δ = log(π_min/(1000 π_max))/log δ. Profits after T_δ contribute < 0.1 %.
+  - π_min = 0.0911, π_max = 0.4270, so **T_0.95 = 165** (computed here: 164.8).
+  - T_0.99 = 842, T_0.999 = 8449, T_0.9999 = 84516 (computed: 841.0, 8447.8, 84516.0; the small mismatches are rounding).
+  - With 15³ = 3 375 Q-values per firm, **at most ≈ 5 % can be updated within T_δ**.
+- **Within T_δ, Q-learning ≈ uniform random pricing (p. 11):** the chance of any greedy choice in the first 165 periods is ≤ 1 − e^{−2×10⁻⁵·165} ≈ 0.0033 (for β = 4 × 10⁻⁶ it is ≈ 0.00066).
+  - Uniform random pricing on CCDP's grid gives an average price of **1.69895** and profit **0.279906**, so Δ̃ = **0.497** (Table 5, p. 40; verified here).
+  - On the symmetric grids: Ã (ξ = 0) gives price 1.47293, profit 0.164479, Δ̃ = −0.510. Â gives 1.47293, 0.172288, Δ̃ = −0.442.
+  - Grids (App. F, p. 39): Ã = {pᴺ − (ξ+1)ζ + k·2(1+ξ)ζ/(m−1)}, k = 0..m−1, and Â = {c + k·2(pᴺ − c)/(m+1)}, k = 1..m, where ζ = pᴹ − pᴺ.
+- **(δ, ε)-best response and equilibrium (eqs. 3–4, p. 12):** a Bellman equation in which the rival plays its strategy with probability 1 − ε and is uniform with probability ε. The firm's *own* exploration is excluded (fn 17).
+- **Table 1 (p. 13), equilibrium conditions for m = 2.** The formulas are taken from the render and reproduce the paper's critical values here.
+  - AD always.
+  - GT (CDDD): [ε(S+T−R−P) + 2(R−T)] / [(ε²−3ε+2)(P−T)] < δ < [ε(S+T−R−P) + 2(P−S)] / [(1−ε)(ε(T−P) + 2(P−S))].
+  - WSLS (CDDC): δ > [ε(P+R−S−T) + 2(T−R)] / [(1−ε)(ε(P+S−T−R) + 2(R−P))].
+  - At δ = 0.95: **GT exists for ε < 0.515126 and WSLS for ε < 0.292042.** With β = 10⁻⁴ that means t > **6 633** and t > **12 308** (verified here: 6633.4 and 12308.6).
+- **Theorem 1 (p. 14; proof in App. G):** for every δ there is ε(δ) < 1 such that, for ε above it, the only (δ, ε)-equilibrium is σ* ≡ p* = 1.58271, the best price against a uniform rival (which is CCDP's initial greedy price).
+- **Reward–punishment, the operational definitions:**
+  - **RP strategy (m = 2, p. 18):** plays C in (C, C) and D in (C, D).
+  - **CCDP's pattern (a, b, c), as den Boer describes it (p. 18):** (a) a forced cut is followed by a rival price decrease; (b) prices return to the original level after some periods; (c) the deviator's total discounted profit is lower than without the deviation.
+  - **Their systematic criterion (p. 21):** a session is supported by a reward–punishment scheme only if "**all possible unilateral deviations by both players** lead to a path through the strategy graph that contains a punishment phase and a phase in which the supra-competitive prices are reestablished (forgiveness)".
+  - **§5, fourth point (p. 26):** "all possible deviations from a collusive price should be followed by a path that returns to a supra-competitive price". This excludes GT, which has no recovery.
+- **Exp3 (App. H, pp. 43–45):**
+  - Pₜ,ₚ ∝ exp(η Σ_{s<t} δ^s X̂_{s,p}), with X̂ = 1 − Ŷ, Ŷ = Yₜ·1{pₜ = p}/Pₜ,ₚ, and Yₜ = 1 − πᵢ(pₜ).
+  - Theorem 2 gives η = √(log|A|·(1−δ)² / (δ²|A|)), with regret ≤ 2√(δ²/(1−δ²)·|A| log|A|).
+  - **Inconsistency to report:** the proof's final step (log|A|/η + η|A|δ²/(1−δ²)) is minimized at η = √(log|A|·(1−δ²)/(δ²|A|)), not at (1−δ)². For |A| = 15 and δ = 0.95 the two give η = 0.0224 (theorem) against 0.1396 (proof).
+  - The δ^s weights mean that late observations count exponentially less, so the policy effectively freezes after ~1/(1−δ) periods.
+
+#### 3.3 Quantitative results
+- **m = 2, Fig. 2 (p. 15), digitized by eye.** Profile fractions over t ∈ [0, 80 000], 1 000 sessions.
+  - AD rises to ≈ 0.82 before t = 12 308, then falls to ≈ 0.04 by 40 000.
+  - "Other" peaks at ≈ 0.62 near 20 000 and ends at ≈ 0.53.
+  - WSLS is ≈ 0 before 12 308 and plateaus at ≈ 0.41 from about 50 000.
+  - GT stays ≈ 0.02.
+  - The (C, C) share of the last 1 000 periods rises to ≈ 0.74.
+  - The right panel is player 1 only: AD ≈ 0.88 peak, ending at 0.048; other ≈ 0.48; WSLS + GT ≈ 0.47.
+- **m = 2 final numbers (p. 17):**
+  - Profiles: WSLS **40.9 %**, GT **2.4 %**, AD **3.6 %**, other **53.1 %**.
+  - Per player: AD 4.8 %, other 48.1 %.
+  - Both players RP: **46 %**.
+  - (C, C) limit share: **74 %**.
+  - "44.7 % of supra-competitive limit prices are not generated by collusive equilibria".
+- **Table 3 (p. 36), α sweep (m = 2, Wilson intervals):**
+
+  | α | WSLS | GT |
+  |---|---|---|
+  | 0.05 | 0.28 ± .03 | 0.002 ± .002 |
+  | 0.10 | 0.50 | 0.03 |
+  | 0.15 | 0.43 | 0.03 |
+  | 0.20 | 0.39 | 0.02 |
+  | 0.25 | 0.34 | 0.02 |
+
+- **Table 4 (p. 36), β sweep:** WSLS + GT is 0.55 at β = 10⁻⁶, 0.54 at 10⁻⁵, 0.46 at 10⁻⁴, 0.16 at 10⁻³ and 0.01 at 10⁻². The corresponding T_ε₀,β are 1 230 860, 123 086, 12 309, 1 231 and 123. Figure 8 (p. 37) shows the time paths.
+- **Variant (i), ε₀ e^{−βt} with ε₀ = 0.292042 (Fig. 7):** WSLS ≈ 36 %.
+- **Variant (iii), constant ε = 0.1 (Fig. 9):** collusive profiles < 20 %.
+- **Fig. 11 (p. 39), m = 2 fractions against δ ∈ [0.80, 1).**
+  - Left, β = 10⁻⁴: AD is .94 at .80, .80 at .85, .47 at .90, .20 at .925 and ≈ .03 at .95. WSLS is ≈ .01 at .80, .16 at .90, .30 at .925, **.41 at .95**, .31 at .98 and .29 at .99, then ≈ .04 at the last point. GT peaks at ≈ .10 around .90–.925.
+  - Right, β = 10⁻⁵: AD is ≈ 1.0 until .85, .86 at .90, .15 at .95 and 0 at .98. WSLS is .09 at .90, .50 at .95, **.62 at .98**, then ≈ .18 at the last point.
+- **Fig. 10 (p. 38), m = 15, Δ over the last 10⁵ periods, 1 000 sessions per δ.**
+  - Left, the CCDP grid: Δ ≈ 0.927 flat from δ = 0.9975 to 0.999, then 0.885 at ≈ 0.9999, ≈ 0.83 at ≈ 0.99999 and ≈ 0.78 at 0.999999 (2.4 % of sessions unconverged there).
+  - Right, the Ã grid with ξ = 0, δ ∈ [0.975, 1): 0.55, 0.53 (0.99), 0.42 (0.995), 0.27 (0.999), ≈ 0.16 (last point).
+  - **Note:** the left panel's ≈ 0.93 is above CCDP's ≈ 0.85–0.87 at δ = 0.95, which fits Δ being measured with residual exploration over a window.
+- **Fig. 5 (p. 33):** a replication of CCDP's Fig. 3 (Δ against δ, 100 sessions per δ), with the minimum near δ ≈ 0.3 and > 0.8 at high δ.
+- **Fig. 4 (p. 20), one m = 15 trajectory with β = 10⁻⁵:** the limit point is (6, 5), where index 0 is the lowest grid price (the paper calls it "the Nash price", but it is 1.4277).
+  - Paths: (6,5)→(1,5)→(4,2)→(5,2)→(1,2)→(2,1)→(6,5), which punishes and forgives.
+  - (6,5)→(6,2)→(9,2)→(6,5): the rival *raises* its price.
+  - (6,5)→(2,5)→(1,0)→(9,1): punished, but never returns.
+- **Table 2 (p. 24), Δ̃ over T_δ for row against column, m = 15, α = 0.15, β = 4 × 10⁻⁶, 1 000 sessions, 95 % CI:**
+
+  | δ | Exp3–Exp3 | Exp3–Q | Q–Exp3 | Q–Q |
+  |---|---|---|---|---|
+  | 0.95 | .49 | .50 | .48 | .50 |
+  | 0.99 | .47 | .52 | .46 | .50 |
+  | 0.999 | .44 | .56 | .38 | .50 |
+  | 0.9999 | .37 | .62 | .26 | .49 |
+
+  - Tables 6 and 7 (pp. 40–41) give the same for the Ã and Â grids. All entries are negative; for Q–Q at δ = 0.95 they are −0.51 (Ã) and −0.45 (Â).
+- **App. B, Fig. 6 (p. 35), offline-trained cross-play:** moving-average Δ over 500 periods. Exp3 uses η = √(log M/(MT)). It is a prisoner's dilemma before ≈ 13 500 and a stag hunt after. Whether learning continues during the test is not stated.
+- **Counterexample (p. 18):** strategies CCDC against CDCC give pattern (a, b, c) for δ > 0.2653 without being an equilibrium or an RP profile.
+
+#### 3.4 Testable claims
+- D1: within T_δ, baseline Q-learning earns Δ̃ ≈ the uniform-random 0.497. On grid Ã it earns ≈ −0.51.
+- D2 (m = 2): no GT before t = 6 633 and no WSLS before t = 12 308 (β = 10⁻⁴). The final profile shares are 40.9 / 2.4 / 3.6 / 53.1 %, with 46 % RP and 74 % (C, C).
+- D3: the β, α and δ dependencies in Tables 3–4 and Fig. 11 (collusive equilibria vanish as δ → 1).
+- D4 (m = 15): Δ falls as δ → 1 (Fig. 10).
+- D5: a one-shot-deviation pattern (a, b, c) does not imply an RP or equilibrium profile. Many converged profiles fail "all deviations punished and forgiven".
+- D6: Exp3 beats Q-learning against Q-learning for δ ≥ 0.99 (Table 2), so Q-learning is not an equilibrium of the algorithm meta-game.
+
+---
+
+### 4. Recommended changes to the spec
+
+Each item quotes the current spec line and gives a replacement or addition.
+
+#### 4.1 Source texts
+- Current: "Epivent & Lambin (2024, *Economics Letters*) and Abada & Lambin (2023, *Management Science*), both known only from abstracts and citing papers until found"
+  - Replace with: "Epivent & Lambin (SSRN 4227229, Feb 2023 version, the working paper of the 2024 *Economics Letters* article; local copy), Lambin (2024, SSRN 4498926; local copy), den Boer, Meylahn & Schinkel (Amsterdam LSRP 2022-25, revision of 19 Feb 2026; local copy). Abada & Lambin (2023) is still known only from abstracts."
+- The Docs "Wanted" list should drop these three.
+
+#### 4.2 Config: new fields and changed readings
+- **`impulse`.** Current: "`up` (one period one grid step above the pre-deviation price: Epivent & Lambin's reading, the step is ours)".
+  - Replace with: "`every_price` (CCDP-A's, and Epivent & Lambin's Table 1: one period at each grid price, below and above; their measure is each agent's relative price change at τ+1 against τ), `invitation` (Epivent & Lambin's Fig. 2: the deviator goes one grid step up for one period, the rival is forced to match from the next period on, and the deviator regains control after `invitation_hold` = 5 periods; `invitation_release` = `deviator` (the default) or `rival` (their 'period 12 or later' variant))".
+  - Keep `up` only as a named convenience (one step up). It is not the paper's protocol.
+  - Run `impulse` from τ = 0 with 10 periods of on-path play before the deviation (E&L's τ = 10), so that their figures align. For cycles the deviation phase is then fixed, so state it.
+- **`exploration`.** Add:
+  - `two_phase`: ε = 1 for `t1` periods, then 0; Lambin uses `t1` = 1 000, and T₂ = 1 000 in Fig. 4.
+  - `steps`: an n-step approximation of e^{−βt} over a horizon H. Our reading of Lambin's Figs. 3 and 10, which the paper does not state: n equal intervals of [0, H], the first at ε = 1 and interval k ≥ 2 at e^{−β·midpoint}, with H = 1.5 × 10⁶ and n ∈ {2, 3, 5, 20, 50}.
+- **`epsilon_floor`, `floor_firm` and `floor_from`** (Lambin §5.2, turn-based remedy): from period `floor_from` (2 × 10⁶), firm `floor_firm` (2) explores with at least ε_min (0.005 or 0.05). Optionally add `turns` = T (Lambin's Def. 1: firms take turns exploring in blocks of T periods).
+- **`entry`** (Lambin §5.1): firm 2 enters at `entry_at` (100 000); after entry the incumbent does not explore.
+  - Our reading of what the paper leaves unstated: before entry, the incumbent faces logit demand with only its own product and the outside good, and its state is (own price, a fixed placeholder for the absent rival). The entrant's ε clock starts at entry.
+  - Lambin uses β = 4 × 10⁻⁵ here.
+- **`grid`:** `calvano` (the default), `symmetric` (den Boer's Ã, ξ = 0), `cost_to_nash` (den Boer's Â) and `below_nash` (Epivent & Lambin App. C: 15 prices evenly from 1.25 to the upper bound).
+  - Default the upper bound to 1.47, as their text has it; switch `below_nash_top = nash` to use 1.47293. Report which one reproduces their 53/9/38 %.
+- **`q_init`:** add `random`, Lambin's theory, footnote 8. His numerical figures start at the grid mean, which is consistent with random or zero initialization (see 2.1). The range is unstated, so use `optimistic`'s [`q_low`, `q_high`] with a stated default.
+- **`delta` with `memory = 0`:** state explicitly that `memory` = 0 keeps δ, which is Lambin's key test. CCDP-A's memoryless case is `memory = 0` with `delta = 0` (and β = 10⁻³ as in the code, 10⁻⁴ as in the text).
+- **New statistics:**
+  - `greedy_price`: the mean over firms of the greedy price at the visited state. For k = 0 there is only one state. Add the variant `greedy_price_all`, averaged over all states.
+  - `discounted_gain` (den Boer's Δ̃ from t = 1, truncated at T_δ, with T_δ reported).
+  - `window_gain` (den Boer's and Epivent & Lambin's reading of π̄: realized profit over the last 10⁵ periods, against our limit-cycle Δ).
+  - **Learning-inertia measures:**
+    - (i) `stale_share`: the share of each firm's (state, price) cells last updated while ε > ½, and while ε > 0.01, at convergence.
+    - (ii) `stale_greedy`: the share of off-path states whose greedy price is still a₁ = 1.58271, the initial greedy price.
+    - (iii) `q_bias`: the mean of Q(s, a) − Q^true(s, a) over non-greedy cells, where Q^true comes from value iteration against the rival's converged strategy (we already compute it for `equilibrium_check = best_response`).
+    - (iv) `fumbling`: the periods between the end of exploration and the last greedy change.
+
+#### 4.3 Survey B: protocol changes and thresholds
+- **The "punishment-like response" definition.** Keep it as written as the per-deviation unit. Also report:
+  - (a) Epivent & Lambin's continuous measure: the mean relative change of each agent at τ + 1, by (pre-shock price, deviation price) cell.
+  - (b) den Boer's condition (c): the deviator's discounted profit over the response is lower than without the deviation.
+  - (c) den Boer's session-level criterion. Add: "A session is **RP-complete** (den Boer et al., p. 21) if every unilateral one-period deviation by either firm to any other grid price, from every state of the limit cycle, gives a punishment-like response; it is **recovering** (their §5) if every such deviation is followed within 25 periods by a return to a cycle with Δ > 0."
+- **B1.** Current: "| B1 | memory 0 (no state, so no punishment is possible) | Δ(k = 0) ≥ ½ Δ(k = 1) |"
+  - Replace with: "| B1 | memory 0 with δ = 0.95 (Lambin's 'key robustness test'), β and α as baseline; the CCDP-A reading (memory 0, δ = 0) reported beside it | Lambin's claim holds if the mean greedy price at 1.5 × 10⁶ and 2 × 10⁶ periods **and** the converged Δ are each at least as high at k = 0 as at k = 1 (difference ≥ −2 SE); the weaker critique holds if Δ(k = 0) ≥ ½ Δ(k = 1) |"
+  - Lambin's own criterion is "≥", not "≥ ½". Keep the ½ rule as the secondary verdict, since it was set before measuring.
+- **B2.** Current: "| B2 | δ = 0 (no future to protect) | Δ(δ = 0) > 0.1 … |"
+  - Add a row **B2b**: "δ = 0 under `exploration = two_phase` (t1 = 1 000), memory 0 and 1: Lambin's Theorem 1 predicts convergence to 1.6990 (Δ = 0.707); at δ = 0.95 to 1.7377 (Δ = 0.794). Holds if ≥ 80 % of sessions end with both firms at I [threshold ours]; Lambin's 'patterns also observed when δ is zero' (p. 20) is tested with `impulse = every_price` under the punishment-like rule."
+- **B3.** Current: "| B3 | an upward deviation | punishment-like responses after an upward deviation in at least half as many sessions as after the paper's downward one |"
+  - Replace with: "| B3 | Epivent & Lambin's Table 1: from each converged session, a one-period deviation to every grid price above and below the pre-shock price (sessions with pre-shock ≥ p^M excluded from the increments; cuts from the grid minimum excluded) | their claim holds if, in every (pre-shock row, upward deviation) cell with ≥ 30 sessions, the non-deviator's mean relative change at τ+1 is negative, and the mean across upward cells is at least half the mean across downward cells; the original rule (punishment-like responses after an upward deviation in at least half as many sessions as after the downward one) is reported beside it |"
+  - E&L give no threshold, so "≥ 30 sessions" and "half" are ours. They are written now, before measuring.
+  - Add a row **B3c**: "Epivent & Lambin's invitation (Fig. 2): `impulse = invitation` on point sessions; holds if the deviator's mean price in the period it regains control is below its pre-shock price by at least one grid step."
+- **B3b.** Current: "| B3b | sessions that settle below p^N (Epivent & Lambin) | punishment-like responses in them at least half as often as in sessions above |"
+  - This misreads the paper. E&L get below-Nash sessions only on a **shifted grid**; on CCDP's grid only one price (1.4277) is below p^N.
+  - Replace with: "| B3b | `grid = below_nash` (15 prices from 1.25 to 1.47), 10 000 sessions as the paper | report the shares converging to the top price / cycles / singletons below it against their 53 / 9 / 38 %; in the below-Nash singletons, their claim holds if upward deviations get punishment-like responses at least half as often as downward ones |"
+- **B5.** Current: "| B5 | more exploration: `constant` ε = 0.05, and β ten times lower | Δ falls by more than half under either |"
+  - Add a row **B5b**: "Lambin's turn-based remedy: baseline to 2 × 10⁶, then `epsilon_floor` 0.005 or 0.05 on firm 2 only; holds if Δ at 4 × 10⁶ is less than half its value at 2 × 10⁶."
+  - Add a row **B5c**: "Lambin's sequential entry (`entry_at` = 100 000, β = 4 × 10⁻⁵): holds if Δ at 250 000 is below ½ the baseline Δ."
+  - Note for the write-up: den Boer's constant ε = 0.1 (m = 2) drops collusive profiles below 20 %.
+- **B6.** No change to the rule. Cite den Boer's App. B, which is the same exercise with an Exp3 arm. Our reading of "greedy play from a random state" differs from their (unstated) test-time learning.
+- **New B7, den Boer's timescale claim:** "Δ̃ over T_0.95 = 165 periods, baseline 1 000 sessions: holds if mean Δ̃ is within 2 SE of the uniform-random 0.497 (and of −0.510 on `grid = symmetric`)."
+  - Also report the share of Q-cells updated by T_δ (their bound is ≤ 5 %).
+  - Also report the period at which mean Δ̃ over a sliding T_δ window first exceeds Δ_random + 0.05.
+- **New B8, den Boer's m = 2 game:** a preset `two-prices` (`prices` = 2, `xi` = 0, β = 10⁻⁴, ties random), with an analysis that classifies each firm's strategy (16 words) and the profile (AD / GT / WSLS / other / RP).
+  - It reproduces if the final shares are within 2 Wilson SE of 40.9 / 2.4 / 3.6 / 53.1 %, both-RP 46 %, and (C, C) 74 %.
+  - The phase-transition claim holds if the share of sessions in WSLS before t = 12 308 is < 1 % and in GT before t = 6 633 is < 1 % [thresholds ours].
+  - Sweeps: Table 3 (α), Table 4 (β) and Fig. 11 (δ) as A-style comparisons.
+- **New B9, den Boer's "pattern ≠ scheme":** the share of baseline sessions that pass CCDP's one-deviation test (the paper's best-response cut gives a punishment-like response) but are **not** RP-complete.
+  - Holds if that share is ≥ ¼ of the sessions that pass [threshold ours].
+- **A-tests from these papers.** Add as reported comparisons, not scored A claims:
+  - E&L's census: 1-sym 27.9 %, 1-asym 36.2 %, period 2: 18.3 %, ≥ 3: 11.0 %, hybrid 6.5 %. Lambin cites 64 % fixed points.
+  - E&L's p̃ = 1.79.
+  - den Boer's Fig. 10 Δ near δ → 1, computed with `window_gain` so that it matches their measure.
+
+#### 4.4 Items for the A6-style "against the paper" list (reported, not scored)
+- **Lambin:**
+  - Lemma 2, eqs. 8–9 and Theorem 2 use α^n where the recursion implies (1 − α(1 − δ))^n, and eq. 9 has an extra (1 − δ) in the denominator.
+  - Fig. 2's caption says the switch is at t = 10, while the text says 1 000 steps.
+  - The numerics start at the grid-mean greedy price, which implies a non-CCDP initialization in an "exact replication".
+  - "The punishment price is always 1.58" does not match E&L's Table 1.
+- **Epivent & Lambin:**
+  - δ is never stated.
+  - Fig. 1's deviation size is not stated.
+  - The pre-shock restriction (fn 4) conflicts with Table 1's rows 1.93 and 1.97.
+  - App. C's "strictly below Nash" average of ≈ 1.465 is inconsistent with a top price of 1.47.
+- **den Boer:**
+  - Exp3's η in Theorem 2 has (1−δ)², while the proof's optimum has (1−δ²).
+  - π̄ is read as a window average, not CCDP's limit cycle.
+  - T_δ values are off by one or two periods from the stated formula.
+  - Fig. 4 calls grid index 0 "the Nash price".
+
+### Digitizing list
+- E&L: Fig. 1a/b (both agents, τ = 0–30); Figs. 3–4 (point vs set); Fig. 5a–d (τ = 11 prices against deviation price); Fig. 6a/b (shifted grid). Table 1 and Table 2 are text, so transcribe them.
+- Lambin: Fig. 1a/b (greedy price, 0–2 × 10⁶); Figs. 3 and 10 (ten panels each, plus the ε steps to confirm the step construction); Fig. 2 (Q-values, periods 0–80); Fig. 4 (six paths, which are exact grid values); Fig. 5 (entry, 0–250 000); Fig. 6a/b (floor, 0–4 × 10⁶); Fig. 9b; Figs. 7–8 (if later milestones take on Klein or Calvano 2023).
+- den Boer: Fig. 2 left/right (strategy fractions and the (C, C) share, 0–80 000); Figs. 7–9 (variants); Fig. 10 left/right; Fig. 11 left/right; Fig. 5 (CCDP Fig. 3 replication); App. B Fig. 6. Tables 1–7 are text.
