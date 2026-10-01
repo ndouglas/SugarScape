@@ -2722,46 +2722,56 @@ form, grow, fill with free riders and collapse. One tick is a period.
 **How the paper was read.** It is a 108-page working paper with the rules in prose, a text layer, and
 no code. Its §2 analytics — each agent's best effort (a closed form), the Nash equilibria of a group
 of like agents, the size beyond which that equilibrium turns unstable (Table 1) — are exact, and
-reproduce to three decimals. Its simulation leaves much unstated, and each gap is a switch: what an
-agent sees of others' effort (last period's, inferred from output, as the text says; or live), how
-agents are activated (at random with replacement, or once each), how finely effort is searched, and
-for §4: whether sticky effort and groping apply in a firm an agent joins or founds, which way
-seniority pay runs, and who covers a shortfall when base pay exceeds output. Its own figures, tables
-and text disagree in places — firm counts, mean sizes
-and lifetimes that can't all be true of 1 000 agents; output levels half of what the all-alone start
-already gives; four rows of Table 11 that are one model (so their spread, 0.89–1.07, is the paper's
-noise); text that says a table rises where it falls; and a table captioned for a rule ("target
-output") that appears nowhere. Axtell's 2013 paper recasts the model (per-firm a, b and β; 2–6
-friends; 4 % of agents activated a period, a month) and is a preset.
+Table 1 reproduces to three decimals; his other §2 claim, optimal group sizes "less than 10" for
+θ < 0.85, misses by a hair (θ = 0.84 already optimizes at 11). Its simulation leaves much unstated,
+and each gap is a switch: what an agent sees of others' effort (last period's, inferred from output,
+as the text says; or live), how agents are activated (at random with replacement, or once each), how
+finely effort is searched, and for §4: whether sticky effort and groping apply in a firm an agent
+joins or founds, which way seniority pay runs, and who covers a shortfall when base pay exceeds
+output. Its own figures, tables and text disagree in places — firm counts, mean sizes and lifetimes
+that can't all be true of 1 000 agents; output levels half of what the all-alone start already gives;
+four rows of Table 11 that are one model (so their spread, 0.89–1.07, is the paper's noise); text
+that says a table rises where it falls; and a table captioned for a rule ("target output") that
+appears nowhere. Axtell's 2013 paper recasts the model (per-firm a, b and β; 2–6 friends; 4 % of
+agents activated a period, a month) and is a preset.
 
 Measured (the survey — 25 claims, 15 hold and 10 fail — and the presets' and sweeps' descriptions):
 
 - **The base case does not reproduce the paper's numbers, under any reading.** Firm sizes fall off
   with µ ≈ 2.5 by Axtell's own OLS (1.4 by maximum likelihood), not 1.28; firms live about 4
   periods, not 23.4; the largest firm reaches 60–140 (his typical run: about 205); output runs
-  near the all-alone level, 750, not his 450–600; productivity shows decreasing returns (output ∝
-  size^0.67), not his near-constant ones (s^1.15). Reading others' effort live and activating each
-  agent once comes closest (µ 1.79). Population size and the start don't matter, as he says.
+  about 750 — below the all-alone start's 934, but still above his 450–600; productivity shows
+  decreasing returns (output ∝ size^0.67), not his near-constant ones (s^1.15). Reading others'
+  effort live and activating each agent once comes closest (µ 1.79). Population size and the start
+  don't matter, as he says.
 - **But the growth of firms reproduces.** Growth rates are Laplace-distributed, not Gaussian (10 of
   10 seeds), and their spread falls with size as s^−0.171 — his γ is 0.174 ± 0.004.
-- **Most of §4's directions hold, one reverses.** µ falls as increasing returns (β, b) strengthen,
-  as random-firm networks widen, as loyalty grows and as base pay rises, as his tables say, and
-  hiring standards first steady large firms and then undo them — all about 1 above his values.
-  More fixed friends *raise* µ, where his Table 6 lowers it. Loyalty is the one change that gives
-  his long lifetimes (about 35 periods at λ = 10).
+- **Most of §4's directions hold, two reverse.** µ falls as increasing returns (β, b) strengthen,
+  as random-firm networks widen, as loyalty grows and as base pay rises, and as hiring standards
+  first steady large firms and then undo them, all as his tables say — roughly 1 to 2 above his
+  values (random-firm networks widest, about 1.8–2.0 above: 3.29 against 1.28, 2.81 against 1.03;
+  the rest nearer 1, though b = 1.5 and β = 1.7 run further out still, 2.09 against 0.53 and 3.63
+  against 2.06). His "breaks down" at full hiring standards does not: the largest firm stays at
+  20–52, not under 20.
+  More fixed friends *raise* µ, where his Table 6 lowers it, and seniority pay raises µ far more
+  sharply (2.49 to 10.03) where his Table 11 only slightly lowers it (1.28 to 1.11). Loyalty is the
+  one change that gives his long lifetimes (about 35 periods at λ = 10).
 - **Three unstated details decide whole tables.** Sticky effort (±0.05 a step) and groping, applied
-  to effort in any firm, pull the whole population into one firm at times, in every seed — µ turns
-  negative there, not a power law — while applied only at home, they barely matter; the text calls
-  groping's effect "more pronounced," but the paper's own tables say sticky effort's is. Seniority
-  pay with the founder paid most (the text's order) stops firms forming (a joiner's share of a
-  pair's output under 5^−rank is 1/6); with the newest paid most, near-giant firms form. His modest
-  Table 11 effect comes from neither. Base pay, paid even when a firm's output falls short (eq. 21,
+  to effort in any firm, pull the whole population into one firm at times, in every seed; the
+  survey counts that a Hold only because µ turns negative there — a one-giant-firm regime, not a
+  power law — while applied only at home, they barely matter. The text calls groping's effect "more
+  pronounced," but the paper's own tables say sticky effort's is. Seniority pay with the founder
+  paid most (the text's order) stops firms forming (a joiner's share of a pair's output under
+  5^−rank is 1/6); with the newest paid most, near-giant firms form. His modest Table 11 effect
+  comes from neither. Base pay, paid even when a firm's output falls short (eq. 21,
   our literal default), has firms-base-pay-80 paying out about 2.85× what it makes; scaling pay down
   to output instead, so agents expect it, lifts effort from 0.10 to about 0.24 and output from 290
   to about 674, in smaller firms.
-- **Random behavior fails differently than he says.** Random choices of firm keep every firm small,
-  as he reports; random effort pulls all 1 000 agents into one firm in every seed — not a power law,
-  as he says, but of the opposite kind.
+- **Random choices of firm hold; random effort's "fail" is a borrowed threshold, not a
+  contradiction.** Random choices keep every firm small, as he reports. Random effort instead
+  pulls all 1 000 agents into one firm in every seed; his own words, "nothing like power law size
+  distributions," are satisfied by that too, so the survey's Fail there comes only from reusing
+  random choices' "rarely above 9 or 10" threshold, which he states only for random choices.
 - **Myopic agents join even without increasing returns.** His footnote 19 says working together
   never pays under constant returns — true at equilibrium; an agent taking others' effort as given
   still gains by joining an identical one, and firms form.

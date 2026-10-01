@@ -291,13 +291,14 @@ physical one — never Janssen's +30 %, and the temple scale is never best; his 
 exactly.
 See `docs/superpowers/specs/2026-09-28-bali-water-temples-design.md`.
 
-## Milestone 30: The Emergence of Firms (done)
+## Milestone 33: The Emergence of Firms (done)
 
 Axtell's emergence of firms (Brookings working paper, 1999) as a model kind, with his 2013
 parameterization: agents with preferences between income and leisure choose their effort in teams
 with increasing returns and equal shares, moving between their firm, a start-up and their friends'
-firms; every variation of his §4 and every unstated rule a switch. The §2 analytics reproduce
-exactly, but the base case does not: firm sizes fall off far faster than his µ = 1.28 and firms
+firms; every variation of his §4 and every unstated rule a switch. Table 1's §2 analytics reproduce
+exactly (his other §2 claim, optimal group sizes under 10 below θ = 0.85, misses by a hair), but
+the base case does not: firm sizes fall off far faster than his µ = 1.28 and firms
 live about 4 periods rather than 23.4, under every reading. Most of §4's tables hold in direction;
 three unstated details — whether sticky effort applies in a new firm, which way seniority pay runs,
 and who covers a base-pay shortfall — decide whole tables; and his 2013 parameterization gives
@@ -329,7 +330,7 @@ See `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 - **Boyd, Gintis, Bowles and Richerson's altruistic punishment** (and Cooney's PDE critique): done (Milestone 27).
 - **Gode and Sunder's zero-intelligence traders** (and Cliff's critique and ZIP traders): done (Milestone 28).
 - **Lansing and Kremer's Balinese water temples** (and Janssen's reanalysis): done (Milestone 29).
-- **Axtell's emergence of firms** (and his 2013 parameterization): done (Milestone 30).
+- **Axtell's emergence of firms** (and his 2013 parameterization): done (Milestone 33).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.

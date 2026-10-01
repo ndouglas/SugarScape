@@ -1,4 +1,4 @@
-//! The Emergence of Firms (milestone 30): Axtell, "The Emergence of Firms in a
+//! The Emergence of Firms (milestone 33): Axtell, "The Emergence of Firms in a
 //! Population of Agents" (Brookings CSED Working Paper 3, 1999), with his
 //! 2013 parameterization ("Endogenous Dynamics of Firms and Labor with Large
 //! Numbers of Simple Agents"). See

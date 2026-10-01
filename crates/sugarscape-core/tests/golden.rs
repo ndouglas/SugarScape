@@ -359,7 +359,7 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("janssen-generalized", 0xa2ae0ad93a97f180),
     ("janssen-adaptive", 0xea4877048a644fad),
     ("janssen-fewer-links", 0x878f982a182d0672),
-    // Milestone 30: The Emergence of Firms (200 periods).
+    // Milestone 33: The Emergence of Firms (200 periods).
     ("firms-base", 0xf289726485a9084c),
     ("firms-live", 0x8cb9364c43b4d2ad),
     ("firms-uniform", 0xa8f9007712e0714),

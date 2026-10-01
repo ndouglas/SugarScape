@@ -1528,7 +1528,7 @@ export interface TippingConfig {
   limit_total: number;
 }
 /**
- * Axtell's emergence of firms (milestone 30): agents choosing effort in teams with increasing returns and
+ * Axtell's emergence of firms (milestone 33): agents choosing effort in teams with increasing returns and
  * equal shares, moving between their firm, a start-up and their friends' firms. One tick is a period.
  */
 export interface FirmsConfig {

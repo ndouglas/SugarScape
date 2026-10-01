@@ -1,7 +1,7 @@
-# SugarScape Milestone 30 — The Emergence of Firms — Design
+# SugarScape Milestone 33 — The Emergence of Firms — Design
 
 **Date:** 2026-09-30
-**Builds on:** the milestone 1–29 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds, the literal-default-plus-named-switch pattern of milestones 11–29, the preset titles of `crates/sugarscape-core/src/titles.rs`, and milestones 27–29's method (one fit rule fixed before measuring; where a source's text and its figures or tables disagree, both are reported; decision rules written before measuring).
+**Builds on:** the milestone 1–32 specs in `docs/superpowers/specs/`; all remain binding where not changed here, in particular milestone 9's model kinds, the literal-default-plus-named-switch pattern of milestones 11–29, the preset titles of `crates/sugarscape-core/src/titles.rs`, and milestones 27–29's method (one fit rule fixed before measuring; where a source's text and its figures or tables disagree, both are reported; decision rules written before measuring).
 **Source texts** (local copies):
 - Robert L. Axtell, "The Emergence of Firms in a Population of Agents: Local Increasing Returns, Unstable Nash Equilibria, and Power Law Size Distributions," Brookings CSED Working Paper 3 (1999), `papers/firms/axtell-1999-emergence-of-firms.pdf` (A99 below; 108 pages, with a text layer; page numbers are the printed ones, PDF page = printed + 7).
 - The follow-up: Robert L. Axtell, "Endogenous Dynamics of Firms and Labor with Large Numbers of Simple Agents" (LEM working paper; dated 2014, circulated 2013), `papers/firms/axtell-2013-lem-endogenous-dynamics-of-firms-and-labor.pdf` (A13 below; 51 pages). Its 2018 handbook chapter (*Handbook of Computational Economics* 4, ch. 3) is wanted but not in hand.
@@ -125,7 +125,7 @@ The presets menu gains **The Emergence of Firms**; the Rules panel is generated 
 
 ## Docs
 
-README: an Emergence of Firms section (the model, how the paper was read, its contradictions, switches, presets, sweeps, findings). `docs/papers.md`: the milestone's row; the Queue's first entry removed; roadmap: Milestone 30 done.
+README: an Emergence of Firms section (the model, how the paper was read, its contradictions, switches, presets, sweeps, findings). `docs/papers.md`: the milestone's row; the Queue's first entry removed; roadmap: Milestone 33 done.
 
 ## Amendments (implementation planning)
 
@@ -139,4 +139,4 @@ README: an Emergence of Firms section (the model, how the paper was read, its co
 - **Axtell 2013 as a claim:** its parameterization gives µ ≈ 1.0 (Zipf's law, as A13 reports α ≈ 1.06) with mean lifetimes near 77 periods — where the 1999 base case gives µ 2.3–2.8 and lifetimes near 4. The survey adds it (`firms.a13.zipf`) with the two readings above (`firms.ours.adjust-scope`, `firms.ours.seniority-order`), each rule written after the planning runs and saying so.
 - **Page:** the sweeps list adds the new readings (the sticky and groping sweeps each gain an own-firm line; the seniority sweep gains newest-first rows).
 - **The view:** rows are the largest firms first (3-pixel cells, up to 166 firms of up to 200 members), not in order of founding: with about 400 firms, mostly of one or two, founding order showed old pairs and dropped the large firms off the frame.
-- **Measured in implementation:** the survey has 25 claims: 15 hold and 10 fail (the base case's µ, output and productivity, lifetimes and levels; §2's 'less than 10 for θ < 0.85' by a hair; the friends table, which reverses; the preferences table's spread; seniority; the hiring standard's breakdown; random effort, which gives one giant firm).
+- **Measured in implementation:** the survey has 25 claims: 15 hold and 10 fail (the base case's µ, output and productivity, lifetimes and levels; §2's 'less than 10 for θ < 0.85' by a hair; the friends table, which reverses; the preferences table's spread; seniority; the hiring standard's breakdown — µ falls as the table's does, but the power law never breaks down at full standards as his does; random effort — its giant-firm regime meets the paper's own literal words, but fails the size threshold borrowed from random choices).

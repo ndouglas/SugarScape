@@ -1,4 +1,4 @@
-//! The Emergence of Firms (milestone 30): Axtell (1999). The simulation
+//! The Emergence of Firms (milestone 33): Axtell (1999). The simulation
 //! claims run 10 seeds × 5 000 periods (burn-in 500) of 1 000 agents unless
 //! stated; µ is the paper's OLS on the log-log size pmf (size 1 and
 //! frequencies below 10⁻⁵ dropped) unless the claim says maximum likelihood.
