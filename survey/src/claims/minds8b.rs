@@ -557,6 +557,41 @@ mod tests {
     }
 
     #[test]
+    fn a_founder_counts_each_tick_it_is_alive_and_nothing_after_it_starves() {
+        // The two-agent arena with no sugar: both founders starve within a
+        // few ticks. The last tick each is alive after a step is found by
+        // stepping the same world independently.
+        let mut c = preset("theft-arena-2");
+        c.goods[0].map = sugarscape_core::config::Map::Flat { capacity: 0.0 };
+        c.goods[0].endowment = sugarscape_core::config::URange::new(3, 8);
+        let mut w = World::new(c.clone(), 1).unwrap();
+        let ids: Vec<(u64, usize)> = w.agents().map(|a| (a.id, usize::from(a.cheater))).collect();
+        let mut last = [0u64; 2];
+        while w.tick < TICKS {
+            w.step();
+            for &(id, g) in &ids {
+                if w.agent(id).is_some() {
+                    last[g] = w.tick;
+                }
+            }
+        }
+        assert!(
+            last[H] > 0 && last[H] < 20,
+            "the hoarder starves early: {last:?}"
+        );
+        assert!(
+            last[C] > 0 && last[C] < 20,
+            "the cheater starves early: {last:?}"
+        );
+        let r = &runs(&c, &[1])[0];
+        assert_eq!(r.founders_c, [1.0, 1.0]);
+        assert_eq!(r.ticks_alive_c, [last[H] as f64, last[C] as f64]);
+        assert_eq!(r.fit_c(Fitness::Field, H), last[H] as f64 / 200.0);
+        assert_eq!(r.wealth200_c, [0.0, 0.0], "the dead have no wealth at 200");
+        assert_eq!(r.fit_c(Fitness::Arena, C), 0.0);
+    }
+
+    #[test]
     fn a_world_where_nobody_dies_has_field_fitness_1() {
         // The two-agent arena: both survive the winter in every seed.
         let r = &runs(&preset("theft-arena-2"), &[1])[0];

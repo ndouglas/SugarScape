@@ -327,7 +327,7 @@ pub const TITLES: [(&str, &str); 387] = [
     ),
     (
         "watch-ak",
-        "Half cheaters, everyone watching, where owners dig back most of what they bury",
+        "Half cheaters, everyone watching, owners digging below their whole reserve",
     ),
     (
         "watch-arena",
