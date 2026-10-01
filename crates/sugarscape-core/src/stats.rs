@@ -139,8 +139,43 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
+    if config.watching.on {
+        for s in WATCH_SERIES {
+            names.push(s.into());
+        }
+        if watchers_split(config) {
+            for s in WATCHER_SERIES {
+                names.push(s.into());
+            }
+        }
+    }
     names
 }
+
+/// Whether both kinds of founder exist under watching: `0 < watchers < 1`.
+fn watchers_split(config: &Config) -> bool {
+    0.0 < config.watching.watchers && config.watching.watchers < 1.0
+}
+
+/// Minds 8's watching series, named while `watching.on`.
+const WATCH_SERIES: [&str; 7] = [
+    "raids",
+    "raided",
+    "raids_wasted",
+    "seen_arrivals",
+    "burials_seen",
+    "sightings",
+    "seen_entries",
+];
+
+/// Minds 8's watcher/other series, named while `watching.on` and
+/// `0 < watchers < 1`.
+const WATCHER_SERIES: [&str; 4] = [
+    "watcher_holdings",
+    "other_holdings",
+    "watcher_alive",
+    "other_alive",
+];
 
 /// Minds 6's theft series, named while `pilfering_on()` (theft, or Minds
 /// 8's watching, whose raids are pilfers).
@@ -237,6 +272,13 @@ pub struct Snapshot {
     /// Minds 6's hoarder/cheater series, present when `theft.cheaters > 0`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cheaters: Option<CheaterStats>,
+    /// Minds 8's watching series, present when `watching.on`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub watching: Option<WatchStats>,
+    /// Minds 8's watcher/other series, present when `watching.on` and
+    /// `0 < watchers < 1`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub watchers: Option<WatcherStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -395,6 +437,29 @@ pub struct CheaterStats {
     pub cheater_holdings: f64,
     pub hoarder_alive: u32,
     pub cheater_alive: u32,
+}
+
+/// Minds 8's watching series, per tick (see `TickEvents`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct WatchStats {
+    pub raids: u32,
+    pub raided: f64,
+    pub raids_wasted: u32,
+    pub seen_arrivals: u32,
+    pub burials_seen: u32,
+    pub sightings: u32,
+    pub seen_entries: u32,
+}
+
+/// Minds 8's watcher/other series, as `CheaterStats`: holdings (`holdings[0]`)
+/// as a mean over the living of each kind, 0 if none is alive; `*_alive`
+/// are counts.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct WatcherStats {
+    pub watcher_holdings: f64,
+    pub other_holdings: f64,
+    pub watcher_alive: u32,
+    pub other_alive: u32,
 }
 
 impl Snapshot {
@@ -731,6 +796,34 @@ impl Snapshot {
                     cheater_alive: cn,
                 }
             }),
+            watching: world.config.watching.on.then_some(WatchStats {
+                raids: events.raids,
+                raided: events.raided,
+                raids_wasted: events.raids_wasted,
+                seen_arrivals: events.seen_arrivals,
+                burials_seen: events.burials_seen,
+                sightings: events.sightings,
+                seen_entries: events.seen_entries,
+            }),
+            watchers: (world.config.watching.on && watchers_split(&world.config)).then(|| {
+                let (mut ws, mut wn, mut os, mut on) = (0.0, 0u32, 0.0, 0u32);
+                for a in world.agents() {
+                    if a.watches {
+                        ws += a.holdings[0];
+                        wn += 1;
+                    } else {
+                        os += a.holdings[0];
+                        on += 1;
+                    }
+                }
+                let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                WatcherStats {
+                    watcher_holdings: m(ws, wn),
+                    other_holdings: m(os, on),
+                    watcher_alive: wn,
+                    other_alive: on,
+                }
+            }),
         }
     }
 
@@ -876,11 +969,36 @@ impl Snapshot {
                         _ => {}
                     }
                 }
+                if let Some(t) = self.watching {
+                    match name {
+                        "raids" => return Some(f64::from(t.raids)),
+                        "raided" => return Some(t.raided),
+                        "raids_wasted" => return Some(f64::from(t.raids_wasted)),
+                        "seen_arrivals" => return Some(f64::from(t.seen_arrivals)),
+                        "burials_seen" => return Some(f64::from(t.burials_seen)),
+                        "sightings" => return Some(f64::from(t.sightings)),
+                        "seen_entries" => return Some(f64::from(t.seen_entries)),
+                        _ => {}
+                    }
+                }
+                if let Some(c) = self.watchers {
+                    match name {
+                        "watcher_holdings" => return Some(c.watcher_holdings),
+                        "other_holdings" => return Some(c.other_holdings),
+                        "watcher_alive" => return Some(f64::from(c.watcher_alive)),
+                        "other_alive" => return Some(f64::from(c.other_alive)),
+                        _ => {}
+                    }
+                }
                 // `theft.find` is live, so theft can come on mid-run and the
                 // names reach back past snapshots that lack the group: NaN
                 // there (a gap in a chart, a cell in a CSV), not an unknown
                 // series. The cheater names are covered the same way.
-                if THEFT_SERIES.contains(&name) || CHEATER_SERIES.contains(&name) {
+                if THEFT_SERIES.contains(&name)
+                    || CHEATER_SERIES.contains(&name)
+                    || WATCH_SERIES.contains(&name)
+                    || WATCHER_SERIES.contains(&name)
+                {
                     return Some(f64::NAN);
                 }
                 return None;
@@ -2410,5 +2528,94 @@ mod tests {
         assert_eq!(c.hoarder_holdings, 15.0);
         assert_eq!(c.cheater_holdings, 7.0, "holdings only, not fed");
         assert_eq!((c.hoarder_alive, c.cheater_alive), (2, 1));
+    }
+
+    #[test]
+    fn watching_series_exist_only_under_their_gates() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        let base = series_names(&w.config).len();
+        let s = Snapshot::of(&w);
+        assert!(s.watching.is_none() && s.watchers.is_none());
+        w.config.watching.on = true;
+        let s = Snapshot::of(&w);
+        assert!(s.watching.is_some() && s.watchers.is_none(), "watchers = 1");
+        w.config.watching.watchers = 0.5;
+        assert!(Snapshot::of(&w).watchers.is_some());
+        w.config.watching.watchers = 0.0;
+        assert!(Snapshot::of(&w).watchers.is_none());
+        w.config.watching.watchers = 0.5;
+        let names = series_names(&w.config);
+        assert!(names.len() > base);
+        for n in WATCH_SERIES.iter().chain(WATCHER_SERIES.iter()) {
+            assert!(names.iter().any(|x| x == n), "{n}");
+            assert!(Snapshot::of(&w).value(n).is_some(), "{n}");
+        }
+        w.config.watching.on = false;
+        assert_eq!(series_names(&w.config).len(), base);
+        // Names reach back past snapshots that lack the group: NaN.
+        assert!(Snapshot::of(&w).value("raids").unwrap().is_nan());
+        assert!(Snapshot::of(&w).value("watcher_alive").unwrap().is_nan());
+    }
+
+    #[test]
+    fn watch_series_match_the_events() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        {
+            let e = &mut w.events;
+            e.raids = 3;
+            e.raided = 4.5;
+            e.raids_wasted = 1;
+            e.seen_arrivals = 2;
+            e.burials_seen = 6;
+            e.sightings = 7;
+            e.seen_entries = 8;
+        }
+        let s = Snapshot::of(&w).watching.unwrap();
+        assert_eq!(
+            s,
+            WatchStats {
+                raids: 3,
+                raided: 4.5,
+                raids_wasted: 1,
+                seen_arrivals: 2,
+                burials_seen: 6,
+                sightings: 7,
+                seen_entries: 8
+            }
+        );
+        assert_eq!(Snapshot::of(&w).value("raided"), Some(4.5));
+        assert_eq!(Snapshot::of(&w).value("seen_entries"), Some(8.0));
+    }
+
+    #[test]
+    fn watcher_series_split_the_living_by_kind() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        w.config.watching.watchers = 0.5;
+        let c = Snapshot::of(&w).watchers.unwrap();
+        assert_eq!((c.watcher_holdings, c.other_holdings), (0.0, 0.0));
+        assert_eq!((c.watcher_alive, c.other_alive), (0, 0));
+        let mut ids = vec![];
+        for x in 0..3 {
+            ids.push(spawn(&mut w, x, 0));
+        }
+        for (id, h, wa) in [
+            (ids[0], 10.0, false),
+            (ids[1], 20.0, false),
+            (ids[2], 7.0, true),
+        ] {
+            let ag = w.agent_mut(id).unwrap();
+            ag.holdings[0] = h;
+            ag.watches = wa;
+            ag.fed = 99.0;
+        }
+        let c = Snapshot::of(&w).watchers.unwrap();
+        assert_eq!(c.other_holdings, 15.0);
+        assert_eq!(c.watcher_holdings, 7.0);
+        assert_eq!((c.watcher_alive, c.other_alive), (1, 2));
     }
 }
