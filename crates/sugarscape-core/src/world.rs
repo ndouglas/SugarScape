@@ -266,6 +266,9 @@ pub struct World {
     /// on the site, counted in `gathered`), instead of replacing it. Not
     /// config: never set by a config, the app or an edit, never hashed or
     /// exported, and false in every world the survey doesn't set it in.
+    /// Under it a tick can both pilfer and gather (`Harvest::pilfered` and
+    /// `gathered` both positive), and Compensate's weight update is skipped
+    /// on such ticks, as on every tick that pilfered.
     #[doc(hidden)]
     pub probe_raid_harvests: bool,
     /// Minds 6: when true, the world keeps its fate log (`cache_log`) under

@@ -303,27 +303,27 @@ pub const TITLES: [(&str, &str); 385] = [
     ),
     (
         "watch-winter",
-        "Agents who watch others bury",
+        "Everyone watches others bury: raids replace the summer harvest, and nearly half die in the winter",
     ),
     (
         "watch-winter-stumble",
-        "Watching, and stumbling on caches too",
+        "Watching and stumbling: raids take over twice the stumbles' sugar, and over a third die in the winter",
     ),
     (
         "watch-half",
-        "Half the agents never cache, and everyone watches",
+        "Half never cache and everyone watches: two hoarders in three die, against one cheater in five",
     ),
     (
         "watch-scroungers",
-        "Half the agents watch others bury",
+        "Half watch others bury and do slightly better, however many watch",
     ),
     (
         "watch-scroungers-only",
-        "Half the agents only watch and steal",
+        "Half only watch and steal, and do worse than the hoarders whatever their share",
     ),
     (
         "watch-arena",
-        "Four agents in a room, half of them watching",
+        "Four agents in a room, half watching: watchers raid what they see, and everyone survives",
     ),
     (
         "s71-board",
