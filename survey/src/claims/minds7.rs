@@ -49,6 +49,8 @@
 //!    takeovers, the share whose rise is at generation 10 or earlier: Holds
 //!    above 50 % ("usually within 10 generations"), Fails otherwise,
 //!    Untestable with fewer than 5 takeovers. Both parts (`all_of`).
+//!    (Note, fix round 1: the 100 % bar of (a) is stricter than V&J's own
+//!    Fig. 2B, which shows an intermediate point near 0.22 at ratio 0.2.)
 //! 2. **Threshold** (`hoard-threshold.threshold`): a logistic regression of
 //!    takeover (1) against not (0: stayed low, intermediate or extinct) on
 //!    the ratio, by maximum likelihood over the grid's runs. (a) Its 50 %
@@ -56,7 +58,8 @@
 //!    ±0.03, Weak within ±0.06, Fails beyond or when the slope is not
 //!    above 0. Reason for ±0.03: V&J's fit rests on 35 runs, and with their
 //!    slope the delta-method standard error of the 50 % point is about
-//!    0.015–0.02 for 35 runs spread over 0.05–0.9, so ±0.03 is about two of
+//!    0.015–0.02 for 35 runs spread over ratios 0.05–0.45 (our grid's
+//!    span), so ±0.03 is about two of
 //!    their standard errors; it is also under a third of the 0.2–0.3 band
 //!    their text names. (b) No takeover at ratios below 0.2 (0.05, 0.10,
 //!    0.15): Holds at 0 takeovers ("never evolved"), Weak at 5 % or fewer,
@@ -71,6 +74,9 @@
 //!    mean over runs of the larder CV ÷ the mean of the scatter CV) is
 //!    reported against 57 ÷ 33 = 1.73, not judged; 186 % and 24 % a day are
 //!    context only (the paper's definition is unknown, item 10).
+//!    **Disclosed omission (fix round 1):** amendments item 10 called for a
+//!    CV-ratio judge; the judge commit left it reported, an omission made
+//!    before any run. No judge is added after the runs.
 //! 4. **Predictor** (`hoard-threshold.predictor`): per run, "min" predicts
 //!    takeover when the minimum larder loss (at the floor) in generations
 //!    1–10 is below the mean scatter loss there; "means" predicts it when the
@@ -571,6 +577,8 @@ struct Fit {
     /// McFadden's ρ²: 1 − LL ÷ LL(intercept only).
     rho2: f64,
     n: usize,
+    /// Runs that took over (outcome 1).
+    ones: usize,
     /// Whether the outcomes are completely separated by the predictor (the
     /// slope then grows without bound; the 50 % point is still located).
     separated: bool,
@@ -675,12 +683,21 @@ fn logistic(xs: &[f64], ys: &[f64]) -> Fit {
         se_x50,
         rho2: if ll0 == 0.0 { f64::NAN } else { 1.0 - ll / ll0 },
         n,
+        ones: ys.iter().filter(|&&y| y > 0.5).count(),
         separated: max0 < min1,
     }
 }
 
 impl Fit {
     fn text(&self) -> String {
+        // A display fix after the runs (fix round 1), not a judge: with no
+        // takeover the maximum-likelihood fit is degenerate.
+        if self.ones == 0 {
+            return format!(
+                "no fit: no run took over (n = {}; display fix after the runs, the verdict is the judge's)",
+                self.n
+            );
+        }
         format!(
             "logit = {:.2} + {:.2} × ratio, McFadden's ρ² {:.2}, 50 % point {:.3} (SE {:.3}), n = {}{}",
             self.b0,
@@ -870,6 +887,11 @@ fn all_or_nothing(weight: LarderWeight, seeds: &[u64]) -> Outcome {
         med(&span),
         if odd.is_empty() { "none".into() } else { odd.join("; ") },
     ))
+    .with(if weight == LarderWeight::PerItem {
+        "Note (fix round 1): under per item nothing rises, so part (a) only says every run stayed low or wavered below 0.95; its Weak is vacuous as a test of all-or-nothing, and part (b) is untestable."
+    } else {
+        ""
+    })
     .with("Vander Wall and Jenkins: \"In 35 runs of the model, average probability of larder hoarding always remained less than 0.2 or increased rapidly to more than 0.95, usually within 10 generations (Figure 2A).\" (p.663)")
 }
 
@@ -997,6 +1019,19 @@ fn loss_numbers(g: &[Cell]) -> String {
     )
 }
 
+/// The CV ratio (larder ÷ scatter) within runs (the mean over runs of
+/// each CV) and across runs (the CV of the run means).
+fn cv_ratios(g: &[Cell]) -> (f64, f64) {
+    let r = all_runs(g);
+    let within = mean_or_nan(&stats::finite(&col(r.iter().copied(), Run::cv_larder)))
+        / mean_or_nan(&stats::finite(&col(r.iter().copied(), Run::cv_scatter)));
+    let across = cv(&stats::finite(&col(r.iter().copied(), |x| x.larder(EARLY))))
+        / cv(&stats::finite(&col(r.iter().copied(), |x| {
+            x.scatter(EARLY)
+        })));
+    (within, across)
+}
+
 fn larder_loss_claim(seeds: &[u64]) -> Outcome {
     let g = grid(LarderWeight::PerBurrow, seeds);
     let r = all_runs(&g);
@@ -1043,6 +1078,7 @@ fn larder_loss_claim(seeds: &[u64]) -> Outcome {
                 })
         })
         .collect();
+    let (r_above, r_n) = (r.iter().filter(|x| x.larder_above()).count(), r.len());
     let item = grid(LarderWeight::PerItem, seeds);
     let ri = all_runs(&item);
     let above_i = ri.iter().filter(|x| x.larder_above()).count();
@@ -1056,6 +1092,19 @@ fn larder_loss_claim(seeds: &[u64]) -> Outcome {
         ri.len(),
         loss_numbers(&item)
     ))
+    .with(&{
+        let (w, a) = cv_ratios(&g);
+        let (wi, ai) = cv_ratios(&item);
+        let med_l = |gg: &[Cell]| med_or_nan(&col(all_runs(gg), |x| x.larder(EARLY)));
+        format!(
+            "Disclosed (fix round 1): item 10 called for a CV-ratio judge; the judge commit left it reported, an omission made before any run. The ratio is {w:.2} within runs ({a:.2} across runs) against V&J's {:.2}: \"almost twice\" is not matched under our primary definition. Neither reading reproduces both the outcome and the loss statistics: per item has larder above scatter in {above_i} of {} runs (V&J: \"all 35\"), a CV ratio of {wi:.2} within runs ({ai:.2} across) and a median larder loss of {} a day (V&J 186 %), but larders never take over; per burrow reproduces the outcome but has larder above scatter in {} and a CV ratio of {w:.2} (median larder loss {}). Likely V&J's detection or defense differs from both readings in some unstated way; per burrow may stand in for that difference rather than being their rule.",
+            VJ_CV_LARDER / VJ_CV_SCATTER,
+            ri.len(),
+            pct(med_l(&item)),
+            pct(frac(r_above, r_n)),
+            pct(med_l(&g)),
+        )
+    })
     .with("Vander Wall and Jenkins: items in larders \"were lost at a much greater rate (mean = 186% per day) than were scattered caches (24%/day). In addition, the coefficient of variation in rate of loss of larder-hoarded items (57%) was almost twice that of scattered caches (33%).\" \"the average daily rate of loss of larder-hoarded items exceeded that of scatter-hoarded items in all 35 simulations\" (p.663)")
 }
 
@@ -1157,6 +1206,108 @@ fn predictor_claim(weight: LarderWeight, seeds: &[u64]) -> Outcome {
         context.join("; ")
     ))
     .with("Vander Wall and Jenkins: \"If one or more individuals in the first 10 generations lost items from larders at a lower rate than the average rate of loss of scattered caches in the population, then larder hoarding usually became established at high levels in these simulations (Figure 3).\" (p.663)")
+}
+
+// ------------------------------------------- reported rows (fix round 1)
+
+/// The sensitivity sweep's config.
+fn sens(slope: f64, v_seg: f64, ratio: f64) -> HoardConfig {
+    HoardConfig {
+        defense_slope: slope,
+        v_seg,
+        ..world(ratio, 2.0, LarderWeight::PerBurrow)
+    }
+}
+
+/// Takeovers rising by generation 10, and within 10 generations of the
+/// lift above 0.2: (by 10, within 10 of the lift, takeovers).
+fn rise_counts<'a>(r: impl IntoIterator<Item = &'a Run>) -> (usize, usize, usize) {
+    let ups: Vec<&Run> = r.into_iter().filter(|x| x.takeover()).collect();
+    let by = ups
+        .iter()
+        .filter(|x| x.rise.is_some_and(|g| g <= EARLY))
+        .count();
+    let lifted = ups
+        .iter()
+        .filter(|x| opt_u(x.rise) - opt_u(x.lift) <= f64::from(EARLY))
+        .count();
+    (by, lifted, ups.len())
+}
+
+/// Reported, not judged (fix round 1): the two readings of "within 10
+/// generations", per cell, and by V_seg.
+fn rise_claim(seeds: &[u64]) -> Outcome {
+    let g = grid(LarderWeight::PerBurrow, seeds);
+    let (by, lifted, n) = rise_counts(all_runs(&g));
+    let cells: Vec<String> = g
+        .iter()
+        .filter(|c| c.runs.iter().any(Run::takeover))
+        .map(|c| {
+            let ups: Vec<&Run> = c.runs.iter().filter(|x| x.takeover()).collect();
+            let (b, l, k) = rise_counts(c.runs.iter());
+            format!(
+                "app_lard {} ratio {:.2}: rise median {:.1}, lift median {:.1}, by 10 {b}/{k}, within 10 of the lift {l}/{k}",
+                c.lard,
+                c.ratio,
+                med_or_nan(&col(ups.iter().copied(), |x| opt_u(x.rise))),
+                med_or_nan(&col(ups.iter().copied(), |x| opt_u(x.lift))),
+            )
+        })
+        .collect();
+    let seeds = seeds_for(seeds);
+    let vsegs: Vec<String> = VSEGS
+        .iter()
+        .map(|&v| {
+            let configs: Vec<HoardConfig> = SENS_RATIOS.iter().map(|&q| sens(10.0, v, q)).collect();
+            let out = batch(&configs, &seeds);
+            let (b4, l4, k4) = rise_counts(out[3].iter());
+            let (b, l, k) = rise_counts(out.iter().flatten());
+            format!(
+                "V_seg {v}: at ratio 0.4 by 10 {b4}/{k4}, within 10 of the lift {l4}/{k4}; at ratios 0.1–0.4 by 10 {b}/{k}, within 10 of the lift {l}/{k}"
+            )
+        })
+        .collect();
+    reported(format!(
+        "Takeovers (per burrow grid) rising above 0.95 by generation 10: {by} of {n} ({}); within 10 generations of lifting above 0.2: {lifted} of {n} ({})",
+        pct(frac(by, n)),
+        pct(frac(lifted, n))
+    ))
+    .with(&format!(
+        "Per cell with a takeover: {}. By V_seg (defense slope 10, app_lard 2, the sensitivity runs): {}. V&J's own Fig. 2A example (app_lard 1.0) passes 0.95 near generation 16. The shape: L lifts early and saturates slowly; likely the segregation variance, which the paper doesn't print, sets the speed.",
+        cells.join("; "),
+        vsegs.join("; ")
+    ))
+}
+
+/// Reported, not judged (fix round 1): the predictor beside baselines.
+fn baselines_claim(seeds: &[u64]) -> Outcome {
+    let rows: Vec<String> = [LarderWeight::PerBurrow, LarderWeight::PerItem]
+        .iter()
+        .map(|&w| {
+            let g = grid(w, seeds);
+            let n: usize = g.iter().map(|c| c.runs.len()).sum();
+            let acc = |p: &dyn Fn(f64, &Run) -> bool| {
+                let k: usize = g
+                    .iter()
+                    .map(|c| c.runs.iter().filter(|x| p(c.ratio, x) == x.takeover()).count())
+                    .sum();
+                pct(frac(k, n))
+            };
+            format!(
+                "{}: min at the floor below mean scatter {}; mean larder below mean scatter {}; ratio ≥ 0.25 {}; always no takeover {}",
+                weight_name(w),
+                acc(&|_, x| x.predicts_min(EARLY)),
+                acc(&|_, x| x.predicts_means(EARLY)),
+                acc(&|q, _| q >= 0.25 - 1e-9),
+                acc(&|_, _| false),
+            )
+        })
+        .collect();
+    reported(format!(
+        "Accuracy against takeover over the grid's runs: {}",
+        rows.join(". ")
+    ))
+    .with("The minimum-larder predictor is barely more accurate than the ratio alone, so it is not claimed to explain the outcome.")
 }
 
 // ------------------------------------------------- 5. scatter withstands loss
@@ -1401,13 +1552,7 @@ fn sensitivity_claim(seeds: &[u64]) -> Outcome {
     }
     let configs: Vec<HoardConfig> = combos
         .iter()
-        .flat_map(|&(s, v)| {
-            SENS_RATIOS.iter().map(move |&q| HoardConfig {
-                defense_slope: s,
-                v_seg: v,
-                ..world(q, 2.0, LarderWeight::PerBurrow)
-            })
-        })
+        .flat_map(|&(s, v)| SENS_RATIOS.iter().map(move |&q| sens(s, v, q)))
         .collect();
     let out = batch(&configs, &seeds);
     let rows: Vec<String> = combos
@@ -1543,6 +1688,22 @@ pub fn claims() -> Vec<Claim> {
             citation: "Vander Wall & Jenkins 2003, p.663, Fig. 3; the spec's contradiction 2",
             text: "The best early larder predicts takeover, with larders weighted per item (reported as a failure to reproduce)",
             check: |s| predictor_claim(LarderWeight::PerItem, s),
+        },
+        Claim {
+            id: "hoard-threshold.predictor-baselines",
+            item: "hoard-threshold",
+            source: Source::Comment,
+            citation: SPEC,
+            text: "The predictor beside baselines: a ratio-only rule (takeover at ratio ≥ 0.25) and always-no (reported, fix round 1)",
+            check: baselines_claim,
+        },
+        Claim {
+            id: "hoard-threshold.rise",
+            item: "hoard-threshold",
+            source: Source::Book,
+            citation: "Vander Wall & Jenkins 2003, p.663, Fig. 2A",
+            text: "\"Usually within 10 generations\", two readings: by generation 10, and within 10 generations of lifting above 0.2, per cell and by V_seg (reported, fix round 1)",
+            check: rise_claim,
         },
         Claim {
             id: "hoard-scatter.withstands",

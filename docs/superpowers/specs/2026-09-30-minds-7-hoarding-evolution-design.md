@@ -623,6 +623,11 @@ The start-of-day ratio and the instantaneous rate may be logged as unjudged diag
 
 186 % and 24 % are reported beside our values, and never judged, because the paper's definition is unknown.
 
+**Note (Task 10, fix round 1).** This item called for a CV-ratio judge; the survey's judge commit
+(62f1cce) left it reported, an omission made before any run, and no judge was added after the runs.
+The ratio is 2.85 within runs (1.49 across runs) against V&J's 1.73: "almost twice" is not matched
+under our primary definition. Under `per_item` it is 1.75 within runs (0.92 across).
+
 ### 11. "Larders take over"
 
 (a) What the paper says:
