@@ -1761,3 +1761,47 @@ fn minds_view_lists_every_cache_the_season_and_renders_the_minds_modes() {
     assert_eq!(view["lab"]["day"], 1);
     assert!(view["winter"].is_null());
 }
+
+#[wasm_bindgen_test]
+fn watch_presets_match_native_goldens() {
+    // crates/sugarscape-core/tests/golden.rs
+    for (name, hex) in [
+        ("watch-winter", "0x67d976dd7d36983a"),
+        ("watch-arena", "0x1d8680f53efa5079"),
+    ] {
+        let mut sim = Sim::new(&preset_json(name), 1, JsValue::NULL).unwrap();
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), hex, "{name}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_watching_and_renders_its_color_mode() {
+    let mut sim = Sim::new(&preset_json("watch-winter"), 1, JsValue::NULL).unwrap();
+    sim.step(100);
+    sim.render("watching", "sugar").unwrap();
+    let (width, height) = (sim.width(), sim.height());
+    let mut watchers = 0;
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let w = agent
+                .get("watching")
+                .and_then(|t| t.as_object())
+                .expect("watching is on for every agent in this preset");
+            assert!(w.get("scrounger").unwrap().is_boolean());
+            for s in w.get("seen").and_then(|s| s.as_array()).unwrap() {
+                assert!(s["site"].is_u64() && s["owner"].is_u64() && s["age"].is_u64());
+                assert!(s["amount"].as_f64().unwrap() >= 0.0);
+            }
+            if w["watches"].as_bool().unwrap() {
+                watchers += 1;
+            }
+        }
+    }
+    assert!(watchers > 0);
+}
