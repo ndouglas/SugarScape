@@ -4,9 +4,14 @@
 //! equal share (or a seniority share, or base pay plus a bonus); utility is
 //! Cobb–Douglas, (income)^θ (1 − e)^(1−θ), or CES. For the base case (β = 2,
 //! Cobb–Douglas, shares proportional to output) the optimum is A99's
-//! closed form (5); for constant returns it is (6); otherwise a bisection on
-//! the first-order condition (Cobb–Douglas) or a bracketed search (base pay,
-//! CES). Non-integer powers go through the portable ln and exp.
+//! closed form (5); for constant returns it is (6); otherwise, with
+//! proportional shares, a safeguarded Newton solve of the first-order
+//! condition (Cobb–Douglas). Base pay and CES split the range at base pay's
+//! kink and look for sign changes of the utility's slope in each piece — one
+//! for Cobb–Douglas, every one found by a 32-point scan for CES — refining
+//! each by Illinois regula falsi with a bisection fallback; the best
+//! candidate, endpoints included, wins. Non-integer powers go through the
+//! portable ln and exp.
 
 use crate::portable::{exp_neg, ln};
 
@@ -356,9 +361,10 @@ fn best_of(prefs: &Prefs, choice: &Choice, candidates: &[f64]) -> f64 {
 }
 
 /// Base pay or CES: the maximum on [lo, hi], split where the bonus starts
-/// (income is kinked there). Cobb–Douglas solves its first-order condition
-/// analytically in each piece; CES by the sign of its utility's slope (a
-/// central difference). Endpoints are always candidates.
+/// (income is kinked there). The slope of utility is analytic in both:
+/// Cobb–Douglas, concave, has at most one sign change in a piece; CES is
+/// scanned at 32 points for every sign change. Each is refined by `root`
+/// (Illinois, bisection fallback). Endpoints are always candidates.
 fn bracket(prefs: &Prefs, choice: &Choice, lo: f64, hi: f64) -> f64 {
     if hi <= lo {
         return lo;
@@ -374,9 +380,11 @@ fn bracket(prefs: &Prefs, choice: &Choice, lo: f64, hi: f64) -> f64 {
     }
     cuts.push(hi);
     let mut candidates = cuts.clone();
-    // Whether income rises with output on a piece: always for proportional
-    // shares; for base pay, above the kink (decided per piece, not per
-    // point, so rounding at the kink cannot hide a piece's slope).
+    // Which side of base pay's kink a piece is on: above it, income rises
+    // with output through the bonus; below it, income is flat base pay
+    // under Paid but still rises with output under Scaled (pay scaled down
+    // to output). Proportional shares always rise. Decided per piece, not
+    // per point, so rounding at the kink cannot hide a piece's slope.
     let floor = match choice.share {
         Share::Base { own, others, .. } => own + others,
         Share::Fraction(_) => f64::NEG_INFINITY,

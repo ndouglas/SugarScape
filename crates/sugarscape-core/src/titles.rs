@@ -1451,7 +1451,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "firms-loyal-10",
-        "Loyal workers keep firms alive ten times longer",
+        "Loyal workers keep firms alive about nine times longer",
     ),
     (
         "firms-sticky",
@@ -1463,7 +1463,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "firms-seniority-5",
-        "Paying founders most stops anyone from joining",
+        "Paying founders most keeps every firm to four or fewer",
     ),
     (
         "firms-base-pay-80",

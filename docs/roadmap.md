@@ -302,7 +302,7 @@ the base case does not: firm sizes fall off far faster than his µ = 1.28 and fi
 live about 4 periods rather than 23.4, under every reading. Most of §4's tables hold in direction;
 three unstated details — whether sticky effort applies in a new firm, which way seniority pay runs,
 and who covers a base-pay shortfall — decide whole tables; and his 2013 parameterization gives
-Zipf's law.
+Zipf's law, with one giant firm holding about 3 000–5 900 of the 10 000 agents.
 See `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 
 ## Experiments and science

@@ -3171,13 +3171,17 @@ Measured (the survey — 25 claims, 15 hold and 10 fail — and the presets' and
 
 - **The base case does not reproduce the paper's numbers, under any reading.** Firm sizes fall off
   with µ ≈ 2.5 by Axtell's own OLS (1.4 by maximum likelihood), not 1.28; firms live about 4
-  periods, not 23.4; the largest firm reaches 60–140 (his typical run: about 205); output runs
+  periods, not 23.4; the largest firm reaches 62–150 over the survey's 10 seeds (his typical run: about 205); output runs
   about 750 — below the all-alone start's 934, but still above his 450–600; productivity shows
   decreasing returns (output ∝ size^0.67), not his near-constant ones (s^1.15). Reading others'
   effort live and activating each agent once comes closest (µ 1.79). Population size and the start
   don't matter, as he says.
-- **But the growth of firms reproduces.** Growth rates are Laplace-distributed, not Gaussian (10 of
-  10 seeds), and their spread falls with size as s^−0.171 — his γ is 0.174 ± 0.004.
+- **The growth of firms passes, but on thin grounds.** Growth rates fit a Laplace better than a
+  Gaussian in 10 of 10 seeds, as his figure 20 says — but 38–41 % of them are exactly zero (firms
+  that kept their size, singletons included), and that spike is what the Laplace fits: on the
+  nonzero rates alone the Gaussian wins in 10 of 10 (mean log-likelihood −1.16 against −1.32).
+  Their spread falls with size as s^−γ with median γ 0.171 over 10 seeds — his is 0.174 ± 0.004 —
+  but the seeds run from 0.12 to 0.24.
 - **Most of §4's directions hold, two reverse.** µ falls as increasing returns (β, b) strengthen,
   as random-firm networks widen, as loyalty grows and as base pay rises, and as hiring standards
   first steady large firms and then undo them, all as his tables say — roughly 1 to 2 above his
@@ -3193,8 +3197,8 @@ Measured (the survey — 25 claims, 15 hold and 10 fail — and the presets' and
   survey counts that a Hold only because µ turns negative there — a one-giant-firm regime, not a
   power law — while applied only at home, they barely matter. The text calls groping's effect "more
   pronounced," but the paper's own tables say sticky effort's is. Seniority pay with the founder
-  paid most (the text's order) stops firms forming (a joiner's share of a pair's output under
-  5^−rank is 1/6); with the newest paid most, near-giant firms form. His modest Table 11 effect
+  paid most (the text's order) keeps every firm to four or fewer (a joiner's share of a pair's
+  output under 5^−rank is 1/6); with the newest paid most, near-giant firms form. His modest Table 11 effect
   comes from neither. Base pay, paid even when a firm's output falls short (eq. 21,
   our literal default), has firms-base-pay-80 paying out about 2.85× what it makes; scaling pay down
   to output instead, so agents expect it, lifts effort from 0.10 to about 0.24 and output from 290
@@ -3207,8 +3211,13 @@ Measured (the survey — 25 claims, 15 hold and 10 fail — and the presets' and
 - **Myopic agents join even without increasing returns.** His footnote 19 says working together
   never pays under constant returns — true at equilibrium; an agent taking others' effort as given
   still gains by joining an identical one, and firms form.
-- **His 2013 parameterization gives Zipf's law.** µ ≈ 1.0 (his 2013 α ≈ 1.06), with firms living
-  about 77 periods — the famous result belongs to the later model, not the 1999 one.
+- **His 2013 parameterization gives Zipf's law, and one giant firm.** µ ≈ 1.0 (his 2013 α ≈ 1.06),
+  but one firm holds about 3 000–5 900 of the 10 000 agents (3 000–5 800 over the preset's 5 seeds,
+  4 987–5 882 over the survey's 3). Firms live about 77 periods, but a 2013 period activates only
+  4 % of agents: that is about 3.1 activations per agent, against the 1999 base case's 3.9 periods
+  at one activation per agent a period on average (about 3.9) — so 2013's firms are not
+  longer-lived per decision. The famous size distribution belongs to the later model, not the 1999
+  one.
 
 Switches: **Agents** and **Start**; **Constant returns a**, **Increasing returns b**, **Exponent β**
 (each fixed, or drawn per firm up to a maximum); **Preferences** (nine distributions, including CES
