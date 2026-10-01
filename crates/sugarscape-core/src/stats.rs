@@ -833,7 +833,7 @@ impl Snapshot {
                 let watching = &world.config.watching;
                 let founders = world.config.population;
                 let wf = (1..=u64::from(founders))
-                    .filter(|&i| watching.founder_watches(i))
+                    .filter(|&i| watching.founder_watches(i, world.config.theft.founder_cheats(i)))
                     .count() as u32;
                 let of = founders - wf;
                 WatcherStats {
@@ -2635,7 +2635,10 @@ mod tests {
             (2, 7.0, vec![(6, 1.5), (7, 0.5)], 3.0),
             (3, 20.0, vec![], 0.0),
         ] {
-            let watches = w.config.watching.founder_watches(id);
+            let watches = w
+                .config
+                .watching
+                .founder_watches(id, w.config.theft.founder_cheats(id));
             let ag = w.agent_mut(id).unwrap();
             ag.holdings[0] = h;
             ag.caches = caches.into_iter().collect();
@@ -2669,7 +2672,10 @@ mod tests {
             ids.push(spawn(&mut w, x, 0));
         }
         for &id in &ids {
-            let watches = w.config.watching.founder_watches(id);
+            let watches = w
+                .config
+                .watching
+                .founder_watches(id, w.config.theft.founder_cheats(id));
             let ag = w.agent_mut(id).unwrap();
             ag.watches = watches;
             ag.fed = 99.0;

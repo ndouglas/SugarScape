@@ -7,7 +7,7 @@ use rand::Rng;
 
 use crate::agent::{Agent, AgentId, DiseaseId, Tribe};
 use crate::bits::Bits;
-use crate::config::{Config, FieldError, FounderAges, Placement, MAX_GOODS};
+use crate::config::{Config, FieldError, FounderAges, Placement, Who, MAX_GOODS};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
 use crate::rng::{self, SimRng};
@@ -632,8 +632,13 @@ impl World {
             agent.cheater = self.config.theft.founder_cheats(id);
         }
         // Minds 8: so does a founder watch.
-        if self.config.watching.watchers > 0.0 && agent.parents.is_none() {
-            agent.watches = self.config.watching.founder_watches(id);
+        if (self.config.watching.watchers > 0.0 || self.config.watching.who != Who::Share)
+            && agent.parents.is_none()
+        {
+            agent.watches = self
+                .config
+                .watching
+                .founder_watches(id, self.config.theft.founder_cheats(id));
         }
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {

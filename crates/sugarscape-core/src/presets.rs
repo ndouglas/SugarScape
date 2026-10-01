@@ -2196,6 +2196,7 @@ mod tests {
                     span: 7,
                     watchers,
                     raid_when: RaidWhen::Always,
+                    ..Watching::default()
                 },
                 "{id}"
             );
