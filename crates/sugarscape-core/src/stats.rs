@@ -170,11 +170,12 @@ const WATCH_SERIES: [&str; 7] = [
 
 /// Minds 8's watcher/other series, named while `watching.on` and
 /// `0 < watchers < 1`.
-const WATCHER_SERIES: [&str; 4] = [
+const WATCHER_SERIES: [&str; 5] = [
     "watcher_holdings",
     "other_holdings",
     "watcher_alive",
     "other_alive",
+    "watcher_advantage",
 ];
 
 /// Minds 6's theft series, named while `pilfering_on()` (theft, or Minds
@@ -460,6 +461,11 @@ pub struct WatcherStats {
     pub other_holdings: f64,
     pub watcher_alive: u32,
     pub other_alive: u32,
+    /// `watcher_alive` ÷ watcher founders − `other_alive` ÷ other founders,
+    /// the founders counted from the config by the id rule (⌊population·s⌋
+    /// watchers, the rest others), so the dead count as 0. A group with no
+    /// founders contributes 0.
+    pub watcher_advantage: f64,
 }
 
 impl Snapshot {
@@ -817,11 +823,18 @@ impl Snapshot {
                     }
                 }
                 let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                let watching = &world.config.watching;
+                let founders = world.config.population;
+                let wf = (1..=u64::from(founders))
+                    .filter(|&i| watching.founder_watches(i))
+                    .count() as u32;
+                let of = founders - wf;
                 WatcherStats {
                     watcher_holdings: m(ws, wn),
                     other_holdings: m(os, on),
                     watcher_alive: wn,
                     other_alive: on,
+                    watcher_advantage: m(f64::from(wn), wf) - m(f64::from(on), of),
                 }
             }),
         }
@@ -987,6 +1000,7 @@ impl Snapshot {
                         "other_holdings" => return Some(c.other_holdings),
                         "watcher_alive" => return Some(f64::from(c.watcher_alive)),
                         "other_alive" => return Some(f64::from(c.other_alive)),
+                        "watcher_advantage" => return Some(c.watcher_advantage),
                         _ => {}
                     }
                 }
@@ -2617,5 +2631,58 @@ mod tests {
         assert_eq!(c.other_holdings, 15.0);
         assert_eq!(c.watcher_holdings, 7.0);
         assert_eq!((c.watcher_alive, c.other_alive), (1, 2));
+    }
+
+    #[test]
+    fn watcher_advantage_is_survival_per_founder_by_kind() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        w.config.watching.watchers = 0.5;
+        // 4 founders: ids 2 and 4 watch under the id rule (⌊4·0.5⌋ = 2).
+        w.config.population = 4;
+        let mut ids = vec![];
+        for x in 0..4 {
+            ids.push(spawn(&mut w, x, 0));
+        }
+        for &id in &ids {
+            let watches = w.config.watching.founder_watches(id);
+            let ag = w.agent_mut(id).unwrap();
+            ag.watches = watches;
+            ag.fed = 99.0;
+        }
+        assert_eq!(w.agents().filter(|a| a.watches).count(), 2);
+        let s = Snapshot::of(&w);
+        assert_eq!(s.watchers.unwrap().watcher_advantage, 0.0);
+        assert_eq!(s.value("watcher_advantage"), Some(0.0));
+        // Kill one watcher: 1/2 − 2/2 = −0.5.
+        let watcher = *ids
+            .iter()
+            .find(|&&id| w.agent(id).unwrap().watches)
+            .unwrap();
+        w.kill(watcher, crate::world::DeathCause::Starvation);
+        let s = Snapshot::of(&w);
+        assert_eq!(s.value("watcher_advantage"), Some(-0.5));
+        // The gate: only while watching is on with 0 < watchers < 1.
+        assert!(series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        w.config.watching.watchers = 1.0;
+        assert!(!series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        assert!(Snapshot::of(&w)
+            .value("watcher_advantage")
+            .unwrap()
+            .is_nan());
+        w.config.watching.watchers = 0.5;
+        w.config.watching.on = false;
+        assert!(!series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        assert!(Snapshot::of(&w)
+            .value("watcher_advantage")
+            .unwrap()
+            .is_nan());
     }
 }
