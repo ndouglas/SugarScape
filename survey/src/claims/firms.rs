@@ -8,7 +8,8 @@
 
 use sugarscape_core::firms::effort::{eigenvalue, max_stable_size, nash, optimal_size};
 use sugarscape_core::firms::fit::{
-    gamma, growth_fit, lifetimes, mu_mle, mu_ols, output_exponent, productivity,
+    gamma, growth_fit, growth_fit_nonzero, lifetimes, mu_mle, mu_ols, output_exponent,
+    productivity, GrowthFit,
 };
 use sugarscape_core::firms::{
     Activation, AdjustScope, EffortSearch, FirmsConfig, FirmsWorld, Initial, Network, OthersEffort,
@@ -189,10 +190,19 @@ pub fn claims() -> Vec<Claim> {
                 let fits: Vec<_> = ws.iter().map(|w| growth_fit(&w.records().growth)).collect();
                 let laplace = fits.iter().filter(|f| f.laplace_ll > f.gauss_ll).count();
                 let g: Vec<f64> = ws.iter().map(|w| gamma(&w.records().growth_by_size, 3, 300, 30)).collect();
+                // Not part of the rule: how much of the Laplace's win is the
+                // spike of firms that kept their size (r = 0).
+                let zero: Vec<f64> = ws.iter().zip(&fits).map(|(w, f)| w.records().zero_growth as f64 / f.n as f64).collect();
+                let nonzero: Vec<_> = ws.iter().map(|w| growth_fit_nonzero(w.records())).collect();
+                let nz_laplace = nonzero.iter().filter(|f| f.laplace_ll > f.gauss_ll).count();
+                let nz_ll = |pick: fn(&GrowthFit) -> f64| mean(&nonzero.iter().map(pick).collect::<Vec<_>>());
+                let range = |v: &[f64]| (v.iter().copied().fold(f64::INFINITY, f64::min), v.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+                let ((z_lo, z_hi), (g_lo, g_hi)) = (range(&zero), range(&g));
                 all_of(vec![
-                    ("Laplace".into(), outcome(laplace >= 8, format!("{laplace} of 10 seeds; mean sd of r {:.3}", mean(&fits.iter().map(|f| f.sd).collect::<Vec<_>>())))),
-                    ("γ".into(), outcome((median(&g) - 0.174).abs() <= 0.008, format!("{} (median {:.3})", show(&g), median(&g)))),
+                    ("Laplace".into(), outcome(laplace >= 8, format!("{laplace} of 10 seeds; mean sd of r {:.3}; {:.0}–{:.0} % of rates are zero; without them the Laplace wins {nz_laplace} of 10 (mean log-likelihood {:.2} Laplace, {:.2} Gaussian)", mean(&fits.iter().map(|f| f.sd).collect::<Vec<_>>()), 100.0 * z_lo, 100.0 * z_hi, nz_ll(|f| f.laplace_ll), nz_ll(|f| f.gauss_ll)))),
+                    ("γ".into(), outcome((median(&g) - 0.174).abs() <= 0.008, format!("{} (median {:.3}, seeds {g_lo:.2}–{g_hi:.2})", show(&g), median(&g)))),
                 ])
+                .with(&format!("The Laplace's Holds rests on the zero growth rates: {:.0}–{:.0} % of observations are firms that kept their size, singletons included, and on the nonzero rates alone the Laplace wins {nz_laplace} of 10 seeds. Per seed, γ runs from {g_lo:.2} to {g_hi:.2}, against the paper's ± 0.004.", 100.0 * z_lo, 100.0 * z_hi))
             },
         },
         Claim {
@@ -483,6 +493,7 @@ pub fn claims() -> Vec<Claim> {
                 let largest: Vec<f64> = ws.iter().map(|w| w.stats.history().iter().map(|s| f64::from(s.largest)).fold(0.0, f64::max)).collect();
                 outcome((median(&m) - 1.06).abs() <= 0.15, format!("µ {} (median {:.2}); the largest firm {}", show(&m), median(&m), show(&largest)))
                     .with("The rule was written after the planning runs had measured µ 0.98–1.05.")
+                    .with("Lifetimes are in periods, and a period is not the same unit: the firms-2013 preset's mean of 77 periods, at 4 % activated a period, is about 3.1 activations per agent, against the 1999 base case's 3.9 periods at one activation per agent a period on average (about 3.9).")
             },
         },
         Claim {

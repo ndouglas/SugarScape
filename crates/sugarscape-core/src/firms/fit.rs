@@ -22,6 +22,8 @@ pub struct Records {
     /// Growth rates r = ln(s_t / s_{t−1}): a histogram, and per prior size
     /// the count, Σr and Σr².
     pub growth: Vec<u64>,
+    /// How many of those rates are exactly zero (the firm kept its size).
+    pub zero_growth: u64,
     pub growth_by_size: Vec<(u64, f64, f64)>,
     /// Lifetimes (periods) of firms that died, by lifetime; and the same for
     /// firms that ever had a second member.
@@ -62,6 +64,9 @@ impl Records {
             self.growth.resize(R_BINS, 0);
         }
         self.growth[bin] += 1;
+        if after == before {
+            self.zero_growth += 1;
+        }
         let cell = bump(&mut self.growth_by_size, before as usize);
         cell.0 += 1;
         cell.1 += r;
@@ -261,6 +266,17 @@ pub fn growth_fit(growth: &[u64]) -> GrowthFit {
     }
 }
 
+/// The growth-rate fit without the rates that are exactly zero. Those share
+/// a histogram bin with small positive rates, so the bin keeps the rest.
+pub fn growth_fit_nonzero(records: &Records) -> GrowthFit {
+    let mut growth = records.growth.clone();
+    if records.zero_growth > 0 {
+        let zero = (R_BINS as f64 * 0.5) as usize;
+        growth[zero] -= records.zero_growth;
+    }
+    growth_fit(&growth)
+}
+
 /// σ_r by prior size, and γ in σ_r ∝ s^−γ by OLS over sizes from `from` to
 /// `to` with at least `min_n` observations (A99 drops the first two sizes and
 /// the noisy large ones).
@@ -388,6 +404,25 @@ mod tests {
         let (fl, fg) = (growth_fit(&lap.growth), growth_fit(&gau.growth));
         assert!(fl.laplace_ll > fl.gauss_ll, "{fl:?}");
         assert!(fg.gauss_ll > fg.laplace_ll, "{fg:?}");
+    }
+
+    #[test]
+    fn the_nonzero_fit_drops_exactly_the_zero_growth_rates() {
+        let (mut with, mut without) = (Records::default(), Records::default());
+        // r = ln(301/300) ≈ 0.0033 shares the zero's histogram bin but is kept.
+        for (b, a) in [(300, 301), (4, 6), (6, 4), (10, 7), (2, 3), (5, 5)] {
+            with.grow(b, a);
+            if a != b {
+                without.grow(b, a);
+            }
+        }
+        for _ in 0..20 {
+            with.grow(3, 3);
+        }
+        assert_eq!(with.zero_growth, 21);
+        assert_eq!(without.zero_growth, 0);
+        assert_eq!(growth_fit_nonzero(&with), growth_fit(&without.growth));
+        assert_eq!(growth_fit_nonzero(&with).n, 5);
     }
 
     #[test]
