@@ -203,7 +203,7 @@ struct Run {
     full_arrivals: f64,
 }
 
-fn nan_div(a: f64, b: f64) -> f64 {
+pub(crate) fn nan_div(a: f64, b: f64) -> f64 {
     if b == 0.0 {
         f64::NAN
     } else {
@@ -520,12 +520,12 @@ fn arena(n: u32, find: f64, cost: f64) -> Config {
 
 // ----------------------------------------------------------------- helpers
 
-fn col(r: &[Run], f: impl Fn(&Run) -> f64) -> Vec<f64> {
+pub(crate) fn col<R>(r: &[R], f: impl Fn(&R) -> f64) -> Vec<f64> {
     r.iter().map(f).collect()
 }
 
 /// Median and IQR as percentages.
-fn medp(v: &[f64]) -> String {
+pub(crate) fn medp(v: &[f64]) -> String {
     format!(
         "{:.2} % (IQR {:.2}–{:.2} %)",
         100.0 * med_or_nan(v),
@@ -534,7 +534,7 @@ fn medp(v: &[f64]) -> String {
     )
 }
 
-fn m(v: &[f64]) -> f64 {
+pub(crate) fn m(v: &[f64]) -> f64 {
     med_or_nan(v)
 }
 
@@ -553,7 +553,7 @@ fn t_crit(p: f64, df: f64) -> f64 {
 }
 
 /// (mean, lower, upper) of the 95 % t interval of the finite `v`.
-fn ci95(v: &[f64]) -> (f64, f64, f64) {
+pub(crate) fn ci95(v: &[f64]) -> (f64, f64, f64) {
     let v = stats::finite(v);
     let n = v.len() as f64;
     let mu = mean(&v);
@@ -591,7 +591,7 @@ fn ci_includes_zero(slopes: &[f64]) -> Outcome {
 
 /// Per seed, the slope of `y(run)` on `xs` across `worlds` (one run list per
 /// x, seeds aligned).
-fn seed_slopes(xs: &[f64], worlds: &[Vec<Run>], y: impl Fn(&Run) -> f64) -> Vec<f64> {
+pub(crate) fn seed_slopes<R>(xs: &[f64], worlds: &[Vec<R>], y: impl Fn(&R) -> f64) -> Vec<f64> {
     (0..worlds[0].len())
         .map(|i| {
             let ys: Vec<f64> = worlds.iter().map(|w| y(&w[i])).collect();
@@ -601,14 +601,14 @@ fn seed_slopes(xs: &[f64], worlds: &[Vec<Run>], y: impl Fn(&Run) -> f64) -> Vec<
 }
 
 /// The first sign change of `ys` from below 0 to at least 0, interpolated.
-fn crossing(xs: &[f64], ys: &[f64]) -> Option<f64> {
+pub(crate) fn crossing(xs: &[f64], ys: &[f64]) -> Option<f64> {
     (0..xs.len().saturating_sub(1)).find_map(|i| {
         let (y0, y1) = (ys[i], ys[i + 1]);
         (y0 < 0.0 && y1 >= 0.0).then(|| xs[i] + (0.0 - y0) * (xs[i + 1] - xs[i]) / (y1 - y0))
     })
 }
 
-fn flag(b: bool) -> f64 {
+pub(crate) fn flag(b: bool) -> f64 {
     if b {
         1.0
     } else {
