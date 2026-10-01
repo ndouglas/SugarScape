@@ -3,7 +3,7 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { isAgreementView, isAntsView, isBaliView, isFirmsView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -15,6 +15,7 @@ import type {
   BaliInspection,
   LineInspection,
   TippingInspection,
+  FirmsInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -229,6 +230,22 @@ export class InspectPanel {
       ),
       row('Infected by', a.infected_by ? this.links([a.infected_by]) : h('span', { class: 'hint' }, 'nobody')),
     ];
+  }
+
+  /** A firm and the member at the cell, or the size plot. */
+  private firmsRows(view: FirmsInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    if (view.panel === 'sizes') return [row('Plot', 'firm sizes since the burn-in, log-log, with the OLS fit')];
+    const f = view.firm;
+    if (!f) return [row('Row', 'no firm here')];
+    const rows = [
+      row('Firm', `#${f.id} · ${f.size} member${f.size === 1 ? '' : 's'} · age ${f.age}`),
+      row('Output', `${fmt(f.output)} (a ${fmt(f.a)}, b ${fmt(f.b)}, β ${fmt(f.beta)})`),
+      row('Members', `mean θ ${fmt(f.mean_theta)} · mean effort ${fmt(f.mean_effort)} · ${f.free_riders} free rider${f.free_riders === 1 ? '' : 's'}`),
+    ];
+    const m = view.member;
+    if (m) rows.push(row('Agent', `#${m.id} · θ ${fmt(m.theta)} · effort ${fmt(m.effort)} · income ${fmt(m.income)} · utility ${fmt(m.utility)} · tenure ${m.tenure}`));
+    return rows;
   }
 
   /** A point of Schelling's tipping plane: the state, and whether each color's most tolerant would be content there. */
@@ -704,6 +721,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isFirmsView(view)
+            ? this.firmsRows(view)
           : isTippingView(view)
             ? this.tippingRows(view)
           : isLineView(view)

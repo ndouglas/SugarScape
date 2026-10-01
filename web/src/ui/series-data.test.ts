@@ -227,6 +227,13 @@ describe('the anasazi’s charts', () => {
   });
 });
 
+describe('firms charts', () => {
+  it('chart firms, sizes, effort and pay, output and the scaling exponent over periods', () => {
+    expect(MODEL_CHARTS.firms.map((c) => c.title)).toEqual(['Firms', 'Sizes', 'Effort and pay', 'Output', 'Scaling']);
+    expect(timeAxisLabel('firms')).toBe('Periods');
+  });
+});
+
 describe('bali charts', () => {
   it('chart harvest, changing plans, water and pests, patches and the temple match over months', () => {
     expect(MODEL_CHARTS.bali.map((c) => c.title)).toEqual(['Harvest', 'Changing plans', 'Water and pests', 'Patches', 'Temple match']);

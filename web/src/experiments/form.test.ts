@@ -147,6 +147,11 @@ describe('sweeps over other models', () => {
       ticks: 550,
       metric: { kind: 'final', series: 'fit' },
     });
+    expect(defaultForm('firms')).toMatchObject({
+      x: { path: 'beta', values: '1.7:2.1:0.1' },
+      ticks: 5000,
+      metric: { kind: 'final', series: 'mu' },
+    });
     expect(defaultForm('bali')).toMatchObject({
       x: { path: 'growth', values: '2:2.4:0.1' },
       ticks: 360,

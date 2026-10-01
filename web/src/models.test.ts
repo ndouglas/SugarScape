@@ -10,6 +10,7 @@ import {
   usesMinds,
   worldMenu,
   isBaliView,
+  isFirmsView,
   isThresholdsView,
   isPunishmentView,
   isZiView,
@@ -227,6 +228,25 @@ describe('the presets menu', () => {
     const p = { id: 'ii-2-unit', title: 'Sugar grows back slowly', name: '({G₁}, {M})', source: 'Animation II-2', description: '', config: {} } as unknown as Preset;
     expect(presetOptionLabel(p)).toBe('Sugar grows back slowly');
     expect(presetReference(p)).toBe('Animation II-2 · ({G₁}, {M})');
+  });
+});
+
+describe('the firms model', () => {
+  it('is read by its tag, and its inspections by `firm` and `member`, before the others with a panel', () => {
+    expect(modelOf({ model: 'firms' } as unknown as ModelConfig)).toBe('firms');
+    const cell = { site: { x: 1, y: 2 }, panel: 'firms', firm: null, member: null, agent: null } as unknown as AnyInspection;
+    const bali = { site: { x: 1, y: 2 }, panel: 'map', subak: null, dam: null, month: null, stress: null, agent: null } as unknown as AnyInspection;
+    expect([cell, bali].map(isFirmsView)).toEqual([true, false]);
+    expect([isBaliView(cell), isZiView(cell), isPunishmentView(cell), isRetirementView(cell), isThresholdsView(cell)]).toEqual([false, false, false, false, false]);
+  });
+
+  it('colors four ways, has no overlays, and ends after its periods', () => {
+    expect(COLOR_MODES.firms.map(([m]) => m)).toEqual(['founder', 'theta', 'effort', 'income']);
+    expect(MODEL_OVERLAYS.firms).toEqual([]);
+    const c = { model: 'firms', stop_at: 5000 } as unknown as ModelConfig;
+    expect(ticksLeft(c, 4990)).toBe(10);
+    expect(ticksLeft({ ...c, stop_at: 0 } as unknown as ModelConfig, 50)).toBe(Infinity);
+    expect(finishesUnpredictably(c)).toBe(false);
   });
 });
 

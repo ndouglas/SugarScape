@@ -3,6 +3,8 @@ import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
   LineInspection,
   TippingInspection,
+  FirmsConfig,
+  FirmsInspection,
   ZiInspection,
   BaliConfig,
   BaliInspection,
@@ -50,7 +52,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'firms'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -79,12 +81,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   bali: 'Balinese Water Temples',
   line: "Schelling's line",
   tipping: "Schelling's tipping",
+  firms: 'The Emergence of Firms',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'firms'
     ? tag
     : 'sugarscape';
 }
@@ -184,6 +187,11 @@ export function isBaliView(v: AnyInspection): v is BaliInspection {
 }
 
 /** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
+/** A cell of the firms frame (a panel, a `firm` and a `member`); check it before the others with a panel. */
+export function isFirmsView(v: AnyInspection): v is FirmsInspection {
+  return 'panel' in v && 'firm' in v && 'member' in v;
+}
+
 /** A point of Schelling's tipping plane. */
 export function isTippingView(v: AnyInspection): v is TippingInspection {
   return 'red_content' in v && 'blue_content' in v;
@@ -252,6 +260,7 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     const b = c as BaliConfig;
     return Math.max(0, b.stop_at * (b.watershed === 'two_node' ? b.node_periods : 12) - tick);
   }
+  if (modelOf(c) === 'firms' && (c as FirmsConfig).stop_at > 0) return Math.max(0, (c as FirmsConfig).stop_at - tick);
   return Infinity;
 }
 
@@ -544,6 +553,13 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
   ],
   // His plane: Red inside across, Blue inside up; where each color is content tinted.
   tipping: [['plane', 'Plane']],
+  // Axtell's red founders and blue members first; then preference, effort and pay.
+  firms: [
+    ['founder', 'Founder'],
+    ['theta', 'θ (income)'],
+    ['effort', 'Effort'],
+    ['income', 'Income'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -573,4 +589,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   bali: [],
   line: [],
   tipping: [],
+  firms: [],
 };

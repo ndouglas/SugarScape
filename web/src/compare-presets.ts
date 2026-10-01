@@ -200,6 +200,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'lk-random',
     b: 'lk-random-fixed',
   },
+  {
+    id: 'firms-last-vs-live',
+    label: "Last period's effort vs live effort — The Emergence of Firms (Compare)",
+    a: 'firms-base',
+    b: 'firms-live',
+  },
 ];
 
 /**

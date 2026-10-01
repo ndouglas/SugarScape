@@ -193,7 +193,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'firms';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -605,7 +605,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | FirmsConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1401,7 +1401,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | FirmsStats;
 
 export interface SiteView {
   x: number;
@@ -1526,6 +1526,83 @@ export interface TippingConfig {
   limit_red: number;
   limit_blue: number;
   limit_total: number;
+}
+/**
+ * Axtell's emergence of firms (milestone 30): agents choosing effort in teams with increasing returns and
+ * equal shares, moving between their firm, a start-up and their friends' firms. One tick is a period.
+ */
+export interface FirmsConfig {
+  model: 'firms';
+  agents: number;
+  a: number;
+  a_max: number;
+  b: number;
+  b_max: number;
+  beta: number;
+  beta_max: number;
+  preferences: 'uniform' | 'middle' | 'triangular' | 'triangular_high' | 'normal' | 'beta' | 'fixed' | 'ces';
+  theta: number;
+  rho: number;
+  rho_max: number;
+  ces_sign: 'text' | 'printed';
+  network: 'friends' | 'random_firms';
+  neighbors: number;
+  neighbors_max: number;
+  activation: 'random' | 'uniform';
+  activation_rate: number;
+  others_effort: 'last_period' | 'live';
+  effort_search: 'exact' | 'grid';
+  grid_steps: number;
+  effort_window: number;
+  groping: boolean;
+  loyalty: number;
+  loyalty_max: number;
+  pay: 'equal' | 'seniority' | 'base';
+  seniority_base: number;
+  base_pay: 'own' | 'median' | 'mean';
+  base_share: number;
+  /** Whether base pay is still paid when a firm's output falls short of it, or scaled down to match output. */
+  base_shortfall: 'paid' | 'scaled';
+  hiring: number;
+  hiring_max: number;
+  random_behavior: 'none' | 'choices' | 'effort';
+  initial: 'alone' | 'random_groups' | 'one_firm';
+  burn_in: number;
+  sample_every: number;
+  stop_at: number;
+}
+
+/** A period's statistics (µ, its maximum-likelihood twin and the mean lifetime are null before the burn-in). */
+export interface FirmsStats {
+  tick: number;
+  firms: number;
+  births: number;
+  deaths: number;
+  mean_size: number;
+  largest: number;
+  singletons: number;
+  effort: number;
+  output: number;
+  income: number;
+  utility: number;
+  largest_output_share: number | null;
+  mu: number | null;
+  mu_mle: number | null;
+  lifetime: number | null;
+  period: number;
+}
+
+export interface FirmsFirmView { id: number; size: number; output: number; age: number; a: number; b: number; beta: number; mean_theta: number; mean_effort: number; free_riders: number }
+export interface FirmsMemberView { id: number; theta: number; effort: number; income: number; utility: number; tenure: number; firm: number }
+
+/** A cell of the firms frame: a firm's row and the member at it, or the size plot. */
+export interface FirmsInspection {
+  site: { x: number; y: number };
+  panel: 'firms' | 'sizes' | null;
+  firm: FirmsFirmView | null;
+  member: FirmsMemberView | null;
+  /** Always null: cells are read where they are. */
+  agent: null;
 }
 /** A point of his plane: Red and Blue inside, and whether the most tolerant of each would all be content there. */
 export interface TippingInspection { red_in: number; blue_in: number; red_content: boolean; blue_content: boolean; now: boolean; agent: null }
@@ -1805,7 +1882,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | FirmsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1877,7 +1954,11 @@ export type ColorMode =
   | 'pests'
   | 'water'
   | 'crop'
-  | 'plane';
+  | 'plane'
+  | 'founder'
+  | 'theta'
+  | 'effort'
+  | 'income';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
