@@ -29,6 +29,8 @@
 //! - **Theft** (Minds 6, `theft`): under `theft.find` > 0 an arriving agent
 //!   may find and pilfer other agents' caches; under `theft.owner_memory:
 //!   off` its own caches aren't candidates and it finds them only by chance.
+//! - **Watching** (Minds 8, `watching`): under `watching.on`, watchers who
+//!   see a burial remember the cache.
 //!
 //! Sugar is conserved exactly across bury and dig: Σ sites + Σ holdings +
 //! Σ caches + eaten (bury cost included). Nothing here draws.
@@ -38,6 +40,7 @@ pub mod fates;
 pub mod lab;
 pub mod rules;
 pub mod theft;
+pub mod watching;
 
 use crate::agent::AgentId;
 use crate::geometry::Pos;
@@ -124,6 +127,7 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     world.events.bury_cost += cost;
     fates::open(world, id, site, q);
     theft::note(world, id, site, true);
+    watching::see(world, id, site, q);
     q
 }
 

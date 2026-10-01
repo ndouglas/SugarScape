@@ -186,6 +186,14 @@ pub struct TickEvents {
     /// Minds 5, central-place foraging: Σ over this tick's `deliveries` of
     /// the load buried (each trip's load size).
     pub delivered: f64,
+    /// Minds 8: burials this tick seen by at least one watcher.
+    pub burials_seen: u32,
+    /// Minds 8: (watcher, burial) pairs this tick.
+    pub sightings: u32,
+    /// Minds 8: seen-cache entries held, summed over agents, after the
+    /// tick-start sweep (entries forgotten later in the tick, or made
+    /// during it, aren't reflected). 0 with `watching.on` false.
+    pub seen_entries: u32,
 }
 
 #[derive(Clone)]
@@ -446,6 +454,11 @@ impl World {
         self.agents.values()
     }
 
+    /// Living agents in id order, mutably.
+    pub(crate) fn agents_mut(&mut self) -> impl Iterator<Item = &mut Agent> {
+        self.agents.values_mut()
+    }
+
     pub(crate) fn agent_ids(&self) -> Vec<AgentId> {
         self.agents.keys().copied().collect()
     }
@@ -593,6 +606,10 @@ impl World {
         // Minds 6: a founder cheats or not by its id, with no draw.
         if self.config.theft.cheaters > 0.0 && agent.parents.is_none() {
             agent.cheater = self.config.theft.founder_cheats(id);
+        }
+        // Minds 8: so does a founder watch.
+        if self.config.watching.watchers > 0.0 && agent.parents.is_none() {
+            agent.watches = self.config.watching.founder_watches(id);
         }
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {
@@ -889,6 +906,10 @@ impl World {
         self.apply_schedule();
         if self.config.theft.is_on() {
             crate::minds::caching::theft::count_candidates(self);
+        }
+        // Minds 8: forget seen caches older than `span`, before anyone moves.
+        if self.config.watching.on {
+            crate::minds::caching::watching::sweep(self);
         }
         // Minds 5: a lab world applies its protocol's day (placement, food,
         // doorways, the test evening's burying) before anyone moves.
