@@ -126,7 +126,9 @@ use sugarscape_core::world::World;
 use crate::claim::{all_of, range, untestable, Claim, Outcome, Source, Verdict};
 use crate::claims::minds4::list;
 use crate::claims::minds5::med;
-use crate::claims::minds6::{ci95, col, crossing, flag, m, medp, nan_div, seed_slopes};
+use crate::claims::minds6::{
+    ci95, col, crossing, flag, m, medp, nan_div, p_o, p_s, seed_slopes, wealth,
+};
 use crate::runner::{each_seed, preset};
 use crate::stats;
 
@@ -251,13 +253,10 @@ impl Run {
         Self::total(self.pilfered)
     }
     fn p_s(&self) -> f64 {
-        nan_div(self.dug_all(), self.dug_all() + self.pilfered_all())
+        p_s(self.dug_all(), self.pilfered_all())
     }
     fn p_o(&self) -> f64 {
-        nan_div(
-            self.pilfered_all(),
-            self.dug_all() + self.pilfered_all() + Self::total(self.lost),
-        )
+        p_o(self.dug_all(), self.pilfered_all(), Self::total(self.lost))
     }
     /// p_s ÷ p_o: infinite when p_o = 0 with p_s > 0, NaN when either is
     /// undefined (no ended sugar) or both are 0.
@@ -317,10 +316,6 @@ impl Run {
             .sum();
         nan_div(part, total)
     }
-}
-
-fn wealth(a: &Agent) -> f64 {
-    a.holdings[0] + a.caches.values().sum::<f64>() + a.fed
 }
 
 fn run(mut w: World, setup: Setup) -> Run {

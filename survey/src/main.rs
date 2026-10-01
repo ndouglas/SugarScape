@@ -2,6 +2,10 @@
 //! app say it shows? See docs/superpowers/specs/2026-09-24-model-survey-design.md.
 //!
 //! `cargo run --release -- [--only <id prefix>] [--seeds N]`
+//!
+//! `cargo run --release -- --calibration` runs only Minds 8b's claim 2
+//! calibration (seeds 1–20 always) and writes its per-seed table to
+//! `out/minds8b-calibration.md` (tracked).
 
 mod claim;
 mod claims;
@@ -66,6 +70,10 @@ fn main() {
             .and_then(|i| args.get(i + 1))
             .cloned()
     };
+    if args.iter().any(|a| a == "--calibration") {
+        print!("{}", claims::minds8b::calibration_report());
+        return;
+    }
     let only = flag("--only");
     let n: u64 = flag("--seeds").map_or(20, |s| s.parse().expect("--seeds takes a number"));
     let seeds: Vec<u64> = (1..=n).collect();

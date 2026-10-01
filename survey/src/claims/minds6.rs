@@ -247,10 +247,10 @@ impl Run {
         nan_div(self.visits, self.candidates)
     }
     fn p_s(&self) -> f64 {
-        nan_div(self.dug, self.dug + self.pilfered)
+        p_s(self.dug, self.pilfered)
     }
     fn p_o(&self) -> f64 {
-        nan_div(self.pilfered, self.dug + self.pilfered + self.lost)
+        p_o(self.dug, self.pilfered, self.lost)
     }
     /// Sugar pilfered per sugar cached, per tick.
     fn loss(&self) -> f64 {
@@ -265,7 +265,21 @@ impl Run {
     }
 }
 
-fn wealth(a: &Agent) -> f64 {
+/// Andersson and Krebs's p_s, amount-weighted (see the module's list):
+/// sugar dug by its owner ÷ (dug + pilfered); NaN when nothing ended so.
+pub(crate) fn p_s(dug: f64, pilfered: f64) -> f64 {
+    nan_div(dug, dug + pilfered)
+}
+
+/// Andersson and Krebs's p_o, amount-weighted: pilfered ÷ (dug + pilfered
+/// + lost with a dead owner); NaN when no sugar ended. Sugar still buried
+/// is in neither.
+pub(crate) fn p_o(dug: f64, pilfered: f64, lost: f64) -> f64 {
+    nan_div(pilfered, dug + pilfered + lost)
+}
+
+/// An agent's wealth: holdings + caches + stomach.
+pub(crate) fn wealth(a: &Agent) -> f64 {
     a.holdings[0] + a.caches.values().sum::<f64>() + a.fed
 }
 
