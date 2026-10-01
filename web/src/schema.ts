@@ -354,7 +354,7 @@ export const GROUPS: Group[] = [
   {
     title: 'Caching (Minds 5)',
     minds: true,
-    note: 'A carrying limit, and caches an agent buries and digs back when it runs short. Even buries a share of its surplus wherever it is; compensate buries more where it has found food less often (each find lowers a place’s weight by λ); plan remembers where it was and what it found and buries for the shortfall it foresees, up to the lookahead in days, or, in a winter everywhere, for the winter ahead. Caching needs one good and walking, and no combat. With the Seasons rule on, the seasons mode can put winter on every row at once, with the same γ and β. Central-place foraging gives each agent a home to carry loads back to; it needs the marginal-value rule or GOAP, and a carrying limit.',
+    note: 'A carrying limit, and caches an agent buries and digs back when it runs short. Even buries a share of its surplus wherever it is; compensate buries more where it has found food less often (each find lowers a place’s weight by λ); plan remembers where it was and what it found and buries for the shortfall it foresees, up to the lookahead in days, or, in a winter everywhere, for the winter ahead. An agent digs a cache back when it holds less than half its reserve (its metabolism times the planning horizon), or, with dig below set to the whole reserve, less than all of it. Caching needs one good and walking, and no combat. With the Seasons rule on, the seasons mode can put winter on every row at once, with the same γ and β. Central-place foraging gives each agent a home to carry loads back to; it needs the marginal-value rule or GOAP, and a carrying limit.',
     controls: [
       {
         kind: 'select', path: 'caching.rule', label: 'Caching rule', reset: true,
@@ -385,6 +385,14 @@ export const GROUPS: Group[] = [
       {
         kind: 'number', path: 'caching.lookahead', label: 'Plan: days looked ahead', min: 1, max: 10, step: 1,
         adjust: (next) => { next.caching = { ...caching(next), ...next.caching }; },
+      },
+      {
+        kind: 'select', path: 'caching.dig_below', label: 'Dig below',
+        current: (c) => caching(c).dig_below ?? 'half',
+        options: [
+          { value: 'half', label: 'Half the reserve', apply: (c) => { c.caching = { ...caching(c), dig_below: 'half' }; } },
+          { value: 'reserve', label: 'The whole reserve', apply: (c) => { c.caching = { ...caching(c), dig_below: 'reserve' }; } },
+        ],
       },
       {
         kind: 'select', path: 'seasons.mode', label: 'Seasons', reset: true,

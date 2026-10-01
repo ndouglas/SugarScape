@@ -139,7 +139,12 @@ export interface Caching {
   mixed: boolean;
   /** Minds 6: good 0 lost for each cache buried (absent from older configs: 0); live. */
   bury_cost?: number;
+  /** Minds 8b: an owner digs below half its reserve or its whole reserve (absent from older configs: half); live. */
+  dig_below?: DigBelow;
 }
+
+/** Minds 8b: below what an owner with caches digs one up. */
+export type DigBelow = 'half' | 'reserve';
 
 /** Minds 6: what a thief does with the good it pilfers. */
 export type Loot = 'eat' | 'keep';

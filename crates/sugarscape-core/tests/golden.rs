@@ -118,6 +118,7 @@ const GOLDEN: &[(&str, u64)] = &[
     ("watch-scroungers", 0x14a1f4f2cfe8b7af),
     ("watch-scroungers-only", 0x5d5bfa38a76c9368),
     ("watch-scroungers-forgo", 0xb1abef5e1f2bfac1),
+    ("watch-ak", 0x7d3e4e1903e7d55f),
     ("watch-arena", 0x35bf42deadfb8424),
 ];
 

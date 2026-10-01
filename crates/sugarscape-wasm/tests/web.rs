@@ -1769,6 +1769,7 @@ fn watch_presets_match_native_goldens() {
         ("watch-winter", "0x0a57ae7d89c3fb6d"),
         ("watch-arena", "0x35bf42deadfb8424"),
         ("watch-scroungers-forgo", "0xb1abef5e1f2bfac1"),
+        ("watch-ak", "0x7d3e4e1903e7d55f"),
     ] {
         let mut sim = Sim::new(&preset_json(name), 1, JsValue::NULL).unwrap();
         sim.step(200);

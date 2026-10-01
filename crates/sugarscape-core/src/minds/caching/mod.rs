@@ -44,6 +44,7 @@ pub mod theft;
 pub mod watching;
 
 use crate::agent::AgentId;
+use crate::config::DigBelow;
 use crate::geometry::Pos;
 use crate::rules::movement::lattice_distance;
 use crate::world::World;
@@ -76,14 +77,18 @@ pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
 /// central-place world the threshold stays R, one tick's need: an agent
 /// holding between R / 2 and R that didn't dig would eat below zero and die.
 /// False, without computing R, for an agent with no caches. The survey's
-/// probe `World::probe_dig_at_reserve` sets the threshold at R everywhere.
+/// probe `World::probe_dig_at_reserve` sets the threshold at R everywhere,
+/// as `caching.dig_below: reserve` does (Minds 8b, the probe as a setting).
 pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
     if a.caches.is_empty() {
         return false;
     }
     let r = reserve(world, id);
-    let threshold = if world.config.central.enabled || world.probe_dig_at_reserve {
+    let threshold = if world.config.central.enabled
+        || world.probe_dig_at_reserve
+        || world.config.caching.dig_below == DigBelow::Reserve
+    {
         r
     } else {
         r / 2.0
@@ -312,6 +317,43 @@ mod tests {
         assert!(hungry(&w, id));
         w.agent_mut(id).unwrap().holdings[0] = 10.0;
         assert!(!hungry(&w, id), "at R it doesn't dig");
+    }
+
+    #[test]
+    fn dig_below_reserve_moves_the_threshold_as_the_probe_does() {
+        let mut w = blank_world(11, 11);
+        let id = caching_agent(&mut w, 7.0, 0);
+        w.agent_mut(id).unwrap().caches.insert(3, 4.0);
+        assert_eq!(w.config.caching.dig_below, DigBelow::Half, "the default");
+        assert!(!hungry(&w, id));
+        w.config.caching.dig_below = DigBelow::Reserve;
+        assert!(hungry(&w, id));
+        w.agent_mut(id).unwrap().holdings[0] = 10.0;
+        assert!(!hungry(&w, id), "at R it doesn't dig");
+    }
+
+    #[test]
+    fn dig_below_reserve_runs_exactly_as_the_probe() {
+        // theft-winter-half at find 0.02, 200 ticks from seed 1: the setting
+        // and the survey probe give the same world; the default gives the
+        // preset's.
+        let mut c = crate::presets::by_id("theft-winter-half").unwrap().config;
+        c.theft.find = 0.02;
+        let run = |c: &crate::config::Config, probe: bool| {
+            let mut w = World::new(c.clone(), 1).unwrap();
+            w.probe_dig_at_reserve = probe;
+            w.run(200);
+            w.fingerprint()
+        };
+        let half = run(&c, false);
+        let probe = run(&c, true);
+        let mut r = c.clone();
+        r.caching.dig_below = DigBelow::Reserve;
+        assert_eq!(run(&r, false), probe);
+        assert_ne!(half, probe);
+        let mut h = c.clone();
+        h.caching.dig_below = DigBelow::Half;
+        assert_eq!(run(&h, false), half);
     }
 
     #[test]

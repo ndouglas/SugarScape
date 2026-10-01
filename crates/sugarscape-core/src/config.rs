@@ -660,6 +660,18 @@ pub enum CachingRule {
     Plan,
 }
 
+/// Minds 6 and 8b: below what an owner with caches digs one up. Before
+/// Minds 8b this was only a survey probe (`World::probe_dig_at_reserve`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DigBelow {
+    /// Below half its reserve, R / 2 (Minds 5's threshold).
+    #[default]
+    Half,
+    /// Below its whole reserve R.
+    Reserve,
+}
+
 /// Minds 5: a carrying limit, plus caches agents bury and dig, under `rule`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -682,6 +694,10 @@ pub struct Caching {
     /// Minds 6: good 0 lost (counted as eaten) for each cache buried, at
     /// least 0. Live.
     pub bury_cost: f64,
+    /// Minds 8b: an owner with caches digs below half its reserve R / 2
+    /// (`half`) or below its whole reserve R (`reserve`). A central-place
+    /// world always digs below R. Live.
+    pub dig_below: DigBelow,
 }
 
 impl Default for Caching {
@@ -694,6 +710,7 @@ impl Default for Caching {
             lookahead: 1,
             mixed: false,
             bury_cost: 0.0,
+            dig_below: DigBelow::Half,
         }
     }
 }
@@ -4227,6 +4244,7 @@ mod tests {
                 lookahead: 1,
                 mixed: false,
                 bury_cost: 0.0,
+                dig_below: DigBelow::Half,
             }
         );
         assert_eq!(
@@ -4272,6 +4290,7 @@ mod tests {
                 lookahead: 1,
                 mixed: false,
                 bury_cost: 0.0,
+                dig_below: DigBelow::Half,
             }
         );
 
@@ -4709,6 +4728,43 @@ mod tests {
             (e[0].field.as_str(), e[0].message.as_str()),
             ("caching.bury_cost", field_only)
         );
+    }
+
+    #[test]
+    fn dig_below_defaults_to_half_loads_from_older_configs_and_is_live() {
+        assert_eq!(Config::default().caching.dig_below, DigBelow::Half);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        assert_eq!(v["caching"]["dig_below"], serde_json::json!("half"));
+        v["caching"].as_object_mut().unwrap().remove("dig_below");
+        assert_eq!(
+            Config::from_value(v.clone()).unwrap().caching.dig_below,
+            DigBelow::Half
+        );
+        v["caching"]["dig_below"] = serde_json::json!("reserve");
+        assert_eq!(
+            Config::from_value(v).unwrap().caching.dig_below,
+            DigBelow::Reserve
+        );
+        let a = Config::default();
+        let f = a.structural_changes(&{
+            let mut c = a.clone();
+            c.caching.dig_below = DigBelow::Reserve;
+            c
+        });
+        assert!(f.is_empty(), "{f:?}");
+        let c = Config {
+            schedule: vec![change(5, "caching.dig_below", serde_json::json!("reserve"))],
+            caching: Caching {
+                rule: CachingRule::Even,
+                ..Caching::default()
+            },
+            movement: Movement {
+                mode: MoveMode::Walk,
+                ..Movement::default()
+            },
+            ..Default::default()
+        };
+        c.validate().unwrap();
     }
 
     #[test]

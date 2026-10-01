@@ -257,7 +257,8 @@ pub struct World {
     /// below its whole reserve R instead of R / 2 (no hysteresis band;
     /// `minds::caching::hungry`). Not config: never set by a config, the app
     /// or an edit, never hashed or exported, and false in every world the
-    /// survey doesn't set it in.
+    /// survey doesn't set it in. Minds 8b made it a setting too,
+    /// `caching.dig_below: reserve`, which runs identically.
     #[doc(hidden)]
     pub probe_dig_at_reserve: bool,
     /// Minds 8, a survey probe: when true, a raid that took something

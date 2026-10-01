@@ -4,8 +4,8 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, CachingRule, Config, CultureKind, DecisionRule, Good, Idle, Lab, LabProtocol,
-    Loot, Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution,
+    three_tribes, CachingRule, Config, CultureKind, DecisionRule, DigBelow, Good, Idle, Lab,
+    LabProtocol, Loot, Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution,
     ScheduledChange, Scrounge, SeasonMode, Transform, URange, Wall, SPICE_COLOR,
 };
 use crate::minds::caching::lab::{rig_config, LabParams};
@@ -1374,6 +1374,16 @@ pub fn all() -> Vec<Preset> {
             },
         ),
         preset(
+            "watch-ak",
+            "Watching: winter, half cheaters, owners who dig early, everyone watching",
+            "Andersson & Krebs 1978; Bugnyar & Kotrschal 2002; Minds 8",
+            "theft-winter-half's world (theft-winter's winter, where half the agents, dealt by id, are cheaters who never cache, and the rest bury half their surplus where they stand) with two changes, and every agent a watcher. A stranger arriving on a site finds each cache there with chance 0.02, not 0.25. And an owner digs up one of its caches whenever it holds less than its whole reserve of 20 ticks' food, not half of it. This is item 4 of the calibration list for Andersson and Krebs's claim under watching: the first world on the list where, without watching, owners dig back more of their caches' ended sugar than thieves take (p_s > p_o) in at least 16 of 20 seeds. It did so in all 20, and the items before it in 7, 0 and 0. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; it raids a remembered cache on arriving only when the cache holds at least what the site would give. An owner digging its own cache comes first.",
+            |c| {
+                watch_winter(c, 0.5, 0.02, 1.0);
+                c.caching.dig_below = DigBelow::Reserve;
+            },
+        ),
+        preset(
             "watch-arena",
             "Watching arena: four agents, half watchers",
             "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
@@ -1724,7 +1734,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 82);
+        assert_eq!(presets.len(), 83);
         for p in presets {
             p.config
                 .validate()
@@ -2268,6 +2278,43 @@ mod tests {
             "Bugnyar & Kotrschal 2002",
             "Barnard & Sibly 1981",
             "Vickery et al. 1991",
+            "Minds 8",
+        ] {
+            assert!(p.source.contains(s), "{}", p.source);
+        }
+    }
+
+    #[test]
+    fn watch_ak_is_the_calibrated_world_with_everyone_watching() {
+        use crate::config::{DigBelow, Who};
+        let p = by_id("watch-ak").unwrap();
+        let c = &p.config;
+        assert_eq!((c.theft.cheaters, c.theft.find), (0.5, 0.02));
+        assert_eq!(c.caching.dig_below, DigBelow::Reserve);
+        assert!(c.watching.on);
+        assert_eq!((c.watching.who, c.watching.watchers), (Who::Share, 1.0));
+        let mut b = by_id("theft-winter-half").unwrap().config;
+        b.theft.find = 0.02;
+        b.caching.dig_below = DigBelow::Reserve;
+        b.watching = crate::config::Watching {
+            on: true,
+            ..Default::default()
+        };
+        assert_eq!(
+            *c, b,
+            "theft-winter-half at find 0.02, dig below R, watching on"
+        );
+        for other in all().iter().filter(|q| q.id != "watch-ak") {
+            assert_eq!(
+                other.config.caching.dig_below,
+                DigBelow::Half,
+                "{}",
+                other.id
+            );
+        }
+        for s in [
+            "Andersson & Krebs 1978",
+            "Bugnyar & Kotrschal 2002",
             "Minds 8",
         ] {
             assert!(p.source.contains(s), "{}", p.source);

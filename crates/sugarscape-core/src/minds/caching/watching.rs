@@ -307,8 +307,8 @@ pub(crate) fn seen_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
 /// Whether `id`'s seen caches are places to go, and to raid, now: always,
 /// or under `raid_when: hungry` while it holds less than R / 2 (Minds 5's
 /// threshold, without `hungry`'s requirement that it has caches of its
-/// own). It stays R / 2 under the survey probe `probe_dig_at_reserve`, by
-/// design: the spec's threshold.
+/// own). It stays R / 2 under the survey probe `probe_dig_at_reserve` and
+/// under `caching.dig_below: reserve`, by design: the spec's threshold.
 fn raiding(world: &World, id: AgentId) -> bool {
     match world.config.watching.raid_when {
         RaidWhen::Always => true,

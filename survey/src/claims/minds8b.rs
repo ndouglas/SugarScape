@@ -38,7 +38,9 @@
 //!   2. `theft-winter-half` at `find` 0.02;
 //!   3. `theft-winter-half` at `find` 0.05;
 //!   4. `theft-winter-half` at `find` 0.02, with owners digging below their
-//!      whole reserve (the survey probe `World::probe_dig_at_reserve`);
+//!      whole reserve (the survey probe `World::probe_dig_at_reserve`,
+//!      since made the setting `caching.dig_below: reserve`, which runs
+//!      identically and is what these items set);
 //!   5. the same at `find` 0.05.
 //! - A seed whose p_s or p_o is undefined (no sugar ended) does not have
 //!   p_s > p_o.
@@ -55,7 +57,7 @@ use std::collections::HashSet;
 use std::fmt::Write as _;
 
 use sugarscape_core::agent::{Agent, AgentId};
-use sugarscape_core::config::Config;
+use sugarscape_core::config::{Config, DigBelow};
 use sugarscape_core::world::World;
 
 use crate::claim::{untestable, Claim, Outcome, Source, Verdict};
@@ -92,13 +94,6 @@ pub(crate) enum Fitness {
 }
 
 // ------------------------------------------------------------------- the run
-
-/// What a run sets beyond its config.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub(crate) struct Setup {
-    /// `World::probe_dig_at_reserve`.
-    pub(crate) dig_at_reserve: bool,
-}
 
 /// One run's measures. Arrays of two are by group: `_c` by caching (H, C),
 /// `_w` by watching (W, O).
@@ -184,8 +179,7 @@ impl Run {
     }
 }
 
-pub(crate) fn run(mut w: World, setup: Setup) -> Run {
-    w.probe_dig_at_reserve = setup.dig_at_reserve;
+pub(crate) fn run(mut w: World) -> Run {
     let gc = |a: &Agent| usize::from(a.cheater);
     let gw = |a: &Agent| usize::from(!a.watches);
     let mut r = Run::default();
@@ -212,8 +206,8 @@ pub(crate) fn run(mut w: World, setup: Setup) -> Run {
     r
 }
 
-pub(crate) fn runs(c: &Config, setup: Setup, seeds: &[u64]) -> Vec<Run> {
-    each_seed(c, seeds, |w| run(w, setup))
+pub(crate) fn runs(c: &Config, seeds: &[u64]) -> Vec<Run> {
+    each_seed(c, seeds, run)
 }
 
 // ----------------------------------------------------------- the calibration
@@ -224,7 +218,9 @@ pub(crate) struct Candidate {
     pub(crate) preset: &'static str,
     /// `theft.find` set, or the preset's.
     pub(crate) find: Option<f64>,
-    pub(crate) setup: Setup,
+    /// Owners dig below their whole reserve (`caching.dig_below:
+    /// reserve`), the spec's "survey probe" as a setting.
+    pub(crate) dig_at_reserve: bool,
     pub(crate) fitness: Fitness,
 }
 
@@ -234,6 +230,9 @@ impl Candidate {
         if let Some(f) = self.find {
             c.theft.find = f;
         }
+        if self.dig_at_reserve {
+            c.caching.dig_below = DigBelow::Reserve;
+        }
         c
     }
     pub(crate) fn label(&self) -> String {
@@ -241,8 +240,8 @@ impl Candidate {
         if let Some(f) = self.find {
             write!(s, " at `find` {f}").unwrap();
         }
-        if self.setup.dig_at_reserve {
-            s.push_str(", owners digging below their whole reserve (probe)");
+        if self.dig_at_reserve {
+            s.push_str(", owners digging below their whole reserve (`dig_below: reserve`)");
         }
         s
     }
@@ -252,7 +251,7 @@ const fn field_item(find: f64, dig_at_reserve: bool) -> Candidate {
     Candidate {
         preset: "theft-winter-half",
         find: Some(find),
-        setup: Setup { dig_at_reserve },
+        dig_at_reserve,
         fitness: Fitness::Field,
     }
 }
@@ -262,9 +261,7 @@ pub(crate) const CALIBRATION: [Candidate; 5] = [
     Candidate {
         preset: "theft-arena-2",
         find: None,
-        setup: Setup {
-            dig_at_reserve: false,
-        },
+        dig_at_reserve: false,
         fitness: Fitness::Arena,
     },
     field_item(0.02, false),
@@ -306,7 +303,7 @@ fn calibrate() -> Calibration {
         .map(|item| {
             let c = item.config();
             assert!(!c.watching.on, "the calibration runs without watching");
-            (*item, runs(&c, item.setup, &seeds))
+            (*item, runs(&c, &seeds))
         })
         .collect()
 }
@@ -533,8 +530,8 @@ mod tests {
                 "`theft-arena-2`",
                 "`theft-winter-half` at `find` 0.02",
                 "`theft-winter-half` at `find` 0.05",
-                "`theft-winter-half` at `find` 0.02, owners digging below their whole reserve (probe)",
-                "`theft-winter-half` at `find` 0.05, owners digging below their whole reserve (probe)",
+                "`theft-winter-half` at `find` 0.02, owners digging below their whole reserve (`dig_below: reserve`)",
+                "`theft-winter-half` at `find` 0.05, owners digging below their whole reserve (`dig_below: reserve`)",
             ]
         );
         assert_eq!(CALIBRATION[0].config(), preset("theft-arena-2"));
@@ -545,15 +542,24 @@ mod tests {
             assert!(!c.watching.on);
             let mut back = c.clone();
             back.theft.find = preset("theft-winter-half").theft.find;
+            back.caching.dig_below = DigBelow::Half;
             assert_eq!(back, preset("theft-winter-half"));
             assert_eq!(item.fitness, Fitness::Field);
         }
     }
 
     #[test]
+    fn watch_ak_is_the_chosen_item_with_everyone_watching() {
+        let mut c = preset("watch-ak");
+        assert!(c.watching.on);
+        c.watching = Default::default();
+        assert_eq!(c, CALIBRATION[3].config());
+    }
+
+    #[test]
     fn a_world_where_nobody_dies_has_field_fitness_1() {
         // The two-agent arena: both survive the winter in every seed.
-        let r = &runs(&preset("theft-arena-2"), Setup::default(), &[1])[0];
+        let r = &runs(&preset("theft-arena-2"), &[1])[0];
         assert_eq!(r.founders_c, [1.0, 1.0]);
         assert_eq!(r.fit_c(Fitness::Field, H), 1.0);
         assert_eq!(r.fit_c(Fitness::Field, C), 1.0);

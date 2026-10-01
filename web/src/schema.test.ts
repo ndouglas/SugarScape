@@ -255,7 +255,8 @@ describe('caching (Minds 5)', () => {
   it('is a Minds group holding the caching controls, the seasons mode and central-place foraging', () => {
     expect(group.minds).toBe(true);
     expect(group.controls.map((c) => c.path)).toEqual([
-      'caching.rule', 'caching.mixed', 'caching.capacity', 'caching.share', 'caching.lambda', 'caching.lookahead', 'seasons.mode', 'central.enabled',
+      'caching.rule', 'caching.mixed', 'caching.capacity', 'caching.share', 'caching.lambda', 'caching.lookahead', 'caching.dig_below',
+      'seasons.mode', 'central.enabled',
     ]);
     // The book's Seasons group keeps its own controls; the mode lives here.
     const seasons = GROUPS.find((g) => g.title === 'Seasons')!;
@@ -284,6 +285,22 @@ describe('caching (Minds 5)', () => {
       if (path !== 'caching.capacity') expect(k.reset).toBeUndefined();
     }
     expect(control('caching.mixed').label).toBe('Mix the rules (a quarter each, by id)');
+  });
+
+  it('offers dig below as a live select, half by default, setting only that field', () => {
+    const dig = control('caching.dig_below');
+    if (dig.kind !== 'select') throw new Error('select');
+    expect(dig.reset).toBeUndefined();
+    expect(dig.options.map((o) => o.value)).toEqual(['half', 'reserve']);
+    expect(dig.current({} as unknown as Config)).toBe('half');
+    const c = { caching: { rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false, bury_cost: 0 } } as unknown as Config;
+    expect(dig.current(c)).toBe('half');
+    dig.options.find((o) => o.value === 'reserve')!.apply(c);
+    expect(c.caching).toEqual({ rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false, bury_cost: 0, dig_below: 'reserve' });
+    expect(dig.current(c)).toBe('reserve');
+    const bare = {} as unknown as Config;
+    dig.options.find((o) => o.value === 'half')!.apply(bare);
+    expect(bare.caching).toEqual({ rule: 'none', capacity: 0, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false, dig_below: 'half' });
   });
 
   it('reads older configs as rule none, hemispheres, and seeds complete objects when set', () => {
