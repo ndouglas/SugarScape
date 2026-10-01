@@ -216,6 +216,7 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         mvt: crate::config::Mvt::default(),
         caching: Caching::default(),
         theft: Theft::default(),
+        watching: crate::config::Watching::default(),
         central: Central { enabled: false },
         lab: None,
         schedule,
