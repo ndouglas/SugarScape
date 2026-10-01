@@ -454,7 +454,7 @@ pub fn schema() -> Vec<Param> {
         Param::bool(
             "Switches",
             "early_bout1_eats",
-            "Eat from stores in bout 1 on days 2 to 5",
+            "Eat from stores in bout 1 on the early days",
             Live,
         ),
         Param::choice(

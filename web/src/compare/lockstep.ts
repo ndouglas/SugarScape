@@ -28,7 +28,9 @@ export type LockstepEvent = 'run' | 'tick' | 'finished' | 'stopped';
  * replies before the next, so their ticks are always equal. The worlds never run on their own
  * meanwhile. Neither runs past the tick at which the other finished: a known end (the anasazi's
  * end year) caps each step, and a pair where a world can finish unpredictably (civil Model II
- * stopping at extinction) is stepped one tick per request. Once either world is finished, Play and
+ * stopping at extinction) is stepped one tick per request. A hoard pair is stepped in batches even
+ * though a hoard world can die out in any season, so after a die-out its partner can end up to one
+ * batch ahead. Once either world is finished, Play and
  * Step step neither and say so. When one world is rebuilt (a 'reset' the coordinator did not cause), every world not at
  * t = 0 rewinds by replaying its session.
  */

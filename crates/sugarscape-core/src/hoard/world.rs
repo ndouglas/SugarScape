@@ -2355,7 +2355,8 @@ mod tests {
         let mut w = HoardWorld::new(HoardConfig::default(), 1).unwrap();
         w.run(10);
         let mut next = w.config.clone();
-        next.n = 30;
+        // 19 is within the cap of 20, so this is refused only because n rebuilds the world.
+        next.n = 19;
         let e = Model::set_config(&mut w, ModelConfig::Hoard(next)).unwrap_err();
         assert!(e.iter().any(|f| f.field == "n"), "{e:?}");
         assert_eq!(w.config.n, 20);

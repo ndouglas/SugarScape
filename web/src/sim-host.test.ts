@@ -312,7 +312,7 @@ describe('SimHost with another model', () => {
     expect(s.hoard).toEqual({ generation: 1, day: 2, bout: 6, public: 82, season_over: false, living: 1 });
     expect(s.hoardCharts).toBeUndefined();
     const c = send({ type: 'refresh' }, { hoardCharts: true });
-    expect(s.hoard).toBeDefined();
+    expect(c.hoardCharts).toBeDefined();
     expect(Array.from(c.hoardCharts!.generations.generation)).toEqual([1, 2]);
     expect(Array.from(c.hoardCharts!.generations.survivors)).toEqual([0.1, 0.2]);
     expect(c.hoardCharts!.season.slice(0, 4)).toEqual(Float64Array.of(0, 0.5, 1, 0.5));

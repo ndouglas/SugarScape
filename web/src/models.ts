@@ -186,7 +186,6 @@ export function isBaliView(v: AnyInspection): v is BaliInspection {
   return 'panel' in v && 'subak' in v && 'dam' in v;
 }
 
-/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
 /** A column of the hoard frame: the run's generation, day and bout, and an agent by index. */
 export function isHoardView(v: AnyInspection): v is HoardInspection {
   return 'bout' in v && 'public' in v;
@@ -202,6 +201,7 @@ export function isLineView(v: AnyInspection): v is LineInspection {
   return 'place' in v && 'agent' in v;
 }
 
+/** A cell of the zi frame (a panel, a `trade` and a step's `supply`); check it first. */
 export function isZiView(v: AnyInspection): v is ZiInspection {
   return 'panel' in v && 'trade' in v && 'supply' in v;
 }
@@ -272,7 +272,9 @@ export function hoardSeasonTicks(c: HoardConfig): number {
 /**
  * Whether a world of `c` can finish at a tick nobody knows in advance: civil Model II stopping when
  * a group dies out (its `ticksLeft` is Infinity until then). Compare steps such a pair one tick at a
- * time, so neither world runs past the tick at which the other finished.
+ * time, so neither world runs past the tick at which the other finished. A hoard run can also die
+ * out in any season, but that is rare and it ends the run for good, so it isn't counted here: Compare
+ * steps a hoard pair in batches, and a pair whose world died out stops at the end of that batch.
  */
 export function finishesUnpredictably(c: ModelConfig): boolean {
   const model = modelOf(c);
@@ -281,8 +283,6 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
   if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
   if (model === 'retirement') return (c as RetirementConfig).stop_at_norm;
-  // A hoard run can die out in any season, but that is rare and it ends the run for good: Compare
-  // steps it in batches, and a pair whose world died out stops at the end of that batch.
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }

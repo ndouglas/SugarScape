@@ -300,6 +300,10 @@ these amendments govern where they differ.
    available and in the draw. **Named switch:** `hoard.larder_weight = per_item`. The survey runs claims 1, 2
    and 4 under both readings as full rows, and reports per item as a failure to reproduce.
 
+   **The ruling's cost if wrong** (recorded with it): a bias toward reproducing, since the reading that
+   reproduces was adopted after the other failed. It is mitigated by reporting both readings in full.
+   **Outcome (Task 10):** per item took over in 0 of 1 350 survey runs; see item 15.
+
    **Diagnostic sweep (a probe, not the survey; 6 seeds per cell, 60 generations, takeover as item 11).**
    It was run when the ruling was made, and it is recorded so the reason for the change is visible. It
    is not a result.
@@ -772,6 +776,47 @@ is limited to what it can consume"; untested there).
   (Task 6).
 - **Records, per generation:** cheaters born, cheater and hoarder survivors and survival rates, and the
   surviving cheaters' (always 0) and hoarders' leftover stores.
+
+### 15. The survey and the docs (Tasks 7, 9, 10 and 11)
+
+These are recorded after the fact; none changed a judge or a threshold.
+
+- **Sweeps (Task 7).** Built-in sweeps cap at 100 000 ticks, 50 of the 60 generations, so the
+  generation-60 takeover can't be their metric. `hoard-ratio` and `hoard-recovery` read the hoarders'
+  mean L over generation 50; `hoard-cheaters` reads survivors in generation 1, since under `stores`
+  the cheaters are gone after it. Sweep paths are flat (`app_scat`, not `hoard.app_scat`).
+- **n is capped at 20 (Task 9).** Validation and the schema allow n ≤ 20 (`MAX_AGENTS`), the paper's
+  population, which is all the page's frame (one column per agent) draws. `n` rebuilds the world.
+- **The survey design (Task 10, the judge commit 62f1cce, before any run).** 50 runs per condition,
+  seeds 1–50, each a full 60-generation run, takeover as item 11. The grid is app_lard 1, 2 and 3 by
+  ratio 0.05–0.45, app_scat ≤ 0.9 (p.665's range): 27 cells, 1 350 runs per weighting. Thresholds:
+  claim 1 ends low or high in every run (Holds) or ≥ 95 % (Weak), and more than half of takeovers rise
+  by generation 10; claim 2's 50 % point within ±0.03 of 0.219 (Holds) or ±0.06 (Weak), no takeover
+  below 0.2 (Weak at ≤ 5 %), and ≥ 90 % takeover above 0.3 (Weak at ≥ 75 %); claim 3 larder above
+  scatter in every run (Holds) or ≥ 90 % (Weak); claim 4 Holds when min is more accurate than means,
+  at least 80 % accurate, with takeover in more than half the runs it predicts, and is Weak when min
+  only beats means.
+  The CV ratio was left reported, not judged: an omission against item 10, disclosed there.
+- **Results (per burrow).** Claim 1 Fails on speed (98.6 % end low or high; 10.7 % of takeovers rise
+  by generation 10, 37.7 % within 10 generations of lifting above 0.2; the paper's own Fig. 2A example
+  passes 0.95 near generation 16). Claim 2 is Weak (logit = −5.98 + 25.45 × ratio, ρ² 0.50, 50 % point
+  0.235 against 0.219; 7 of 450 below 0.2; 285 of 300 above 0.3). Claim 3 is Weak (93.8 %; CV ratio
+  2.85 within runs, 1.49 across, against 1.73). Claim 4 Holds (84.5 % against 59.3 %), but the ratio
+  alone (≥ 0.25) gives 83.7 %, and generation 1 alone 76.5 %. Claim 5: 20.5 % against 18 %.
+- **Per item** takes over in 0 of 1 350 runs (claims 2 and 4 Fail; claim 1 Weak, vacuously), yet
+  reproduces the loss statistics (larder above scatter in 1 350 of 1 350, CV ratio 1.75, median 210 %).
+  Neither reading reproduces both the outcome and the loss statistics.
+- **Concerns 3 and 5 proved decisive.** At app_lard 2 the 50 % point is 0.236 at the defaults (slope
+  10, V_seg 0.5), 0.351 at V_seg 0.25, 0.174 at V_seg 1, and about 0.09–0.14 at slope 4. The
+  reproduction is contingent on three choices: per burrow (after per item failed), slope 10 and V_seg
+  0.5 (both fixed in Task 1, before any run). The paper's sensitivity analysis ("Results of a full
+  sensitivity analysis will be reported elsewhere", p.665) was searched for three times and is
+  unfound.
+- **New ground.** Visibility: takeover rises with app_scat in every app_lard row. Owner recovery: no
+  clear effect on takeover at ratio 0.22; survival falls at ratio 0.1. The cheater: gone by generation
+  2 under `stores` in all 50 runs; about 6 % of births by generation 60 under `survival`, with
+  takeover 33 of 50 against 21. Where larders take over about half the agents die each season, mostly
+  starving after day 50 with their larders raided (likely; not isolated).
 
 ### New fields from these choices
 
