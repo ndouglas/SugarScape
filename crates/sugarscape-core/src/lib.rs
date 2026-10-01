@@ -23,6 +23,7 @@ pub mod firms;
 pub mod frames;
 pub mod geometry;
 pub mod graph;
+pub mod hoard;
 pub mod image;
 pub mod landscape;
 mod legacy;

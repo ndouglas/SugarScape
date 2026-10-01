@@ -3,18 +3,23 @@ import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
-import { isAgreementView, isAntsView, isBaliView, isFirmsView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hoardStatusText } from '../hoard';
+import { hasCaches, isHoardView, isFirmsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
+  ColorMode,
   AntsInspection,
   CachingView,
   CentralView,
+  TheftView,
   PunishmentInspection,
   ZiInspection,
   BaliInspection,
   LineInspection,
   TippingInspection,
+  HoardConfig,
+  HoardInspection,
   FirmsInspection,
   RetirementInspection,
   ThresholdsInspection,
@@ -41,6 +46,7 @@ import type {
   SpatialInspection,
   TagsInspection,
 } from '../types';
+import { ageText, allocationText, siteCachesText } from '../minds';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -101,7 +107,7 @@ export function cachesText(c: Pick<CachingView, 'caches' | 'total'>): string {
 /**
  * The Minds 5 caching rows, label and text: the agent's own caching rule (its own under mixed rules),
  * what it carries against the limit (good 0, `held`), its caches, and rule plan's forecast shortfall
- * when it is computing one. In a central-place world (`home` given) the larder, the cache at home, is
+ * when it is computing one, and a lab agent's frozen test-evening allocation. In a central-place world (`home` given) the larder, the cache at home, is
  * its own row ("Larder: y at home") and the Caches row counts only the caches away from home.
  */
 export function cachingRows(c: CachingView, held: number, home: [number, number] | null = null): [string, string][] {
@@ -114,7 +120,17 @@ export function cachingRows(c: CachingView, held: number, home: [number, number]
     ['Caches', larder != null ? cachesText({ caches: away, total: away.reduce((sum, k) => sum + k.amount, 0) }) : cachesText(c)],
     ...(larder != null ? [['Larder', `${fmt(larder)} at home`] as [string, string]] : []),
     ...(c.forecast != null ? [['Forecast shortfall', fmt(c.forecast)] as [string, string]] : []),
+    ...(c.lab_allocation != null ? [['Test allocation', allocationText(c.lab_allocation)] as [string, string]] : []),
   ];
+}
+
+/**
+ * The Agent row's text: "#id · sex · group". Under the Minds color modes (Strategy, Caching rule,
+ * Memory) the map doesn't show the group, whose tags are random there, so it is left out.
+ */
+export function agentText(a: Pick<AgentView, 'id' | 'sex'>, group: string, mode: ColorMode): string {
+  const minds: ColorMode[] = ['strategy', 'caching_rule', 'memory'];
+  return minds.includes(mode) ? `#${a.id} · ${a.sex}` : `#${a.id} · ${a.sex} · ${group}`;
 }
 
 /** The Minds 5 central-place rows, label and text: the agent's home and its last delivered load. */
@@ -125,12 +141,25 @@ export function centralRows(c: CentralView): [string, string][] {
   ];
 }
 
+/**
+ * The Minds 6 theft rows, label and text: whether the agent cheats, the sugar it has pilfered, the sugar
+ * thieves have taken from its caches, and loot in its stomach (only while there is some).
+ */
+export function theftRows(t: TheftView): [string, string][] {
+  return [
+    ['Cheater', t.cheater ? 'yes' : 'no'],
+    ['Stole', fmt(t.stolen_by_me)],
+    ['Lost to thieves', fmt(t.stolen_from_me)],
+    ...(t.fed > 0 ? [['Stomach', fmt(t.fed)] as [string, string]] : []),
+  ];
+}
+
 export class InspectPanel {
   readonly el = h('div', { class: 'inspect' });
   private visible = false;
 
   constructor(private engine: Engine) {
-    for (const event of ['select', 'tick', 'reset', 'config', 'edit', 'follow'] as const) engine.on(event, () => this.render());
+    for (const event of ['select', 'tick', 'reset', 'config', 'edit', 'follow', 'display'] as const) engine.on(event, () => this.render());
     this.render();
   }
 
@@ -169,7 +198,7 @@ export class InspectPanel {
   private agentRows(a: AgentView): HTMLElement[] {
     const row = (k: string, v: HTMLElement | string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
     return [
-      row('Agent', h('span', {}, `#${a.id} · ${a.sex} · ${this.engine.sugar.culture.groups[a.group]?.name ?? a.tribe} `, this.followButton(a.id))),
+      row('Agent', h('span', {}, `${agentText(a, this.engine.sugar.culture.groups[a.group]?.name ?? a.tribe, this.engine.colorMode)} `, this.followButton(a.id))),
       ...a.holdings.map((held, i) =>
         row(this.goodName(i), `${fmt(held)} (born with ${fmt(a.initial[i])}) · metabolism ${a.metabolism[i]}`),
       ),
@@ -192,7 +221,8 @@ export class InspectPanel {
       ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
       ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
       ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
-      row('Age', `${a.age} / ${a.max_age}`),
+      ...(a.theft ? theftRows(a.theft).map(([k, v]) => row(k, v)) : []),
+      row('Age', ageText(a.age, a.max_age, this.engine.sugar.lifespan.enabled)),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
       ...(this.engine.sugar.disease.enabled ? this.diseaseRows(a) : []),
@@ -229,6 +259,39 @@ export class InspectPanel {
             ),
       ),
       row('Infected by', a.infected_by ? this.links([a.infected_by]) : h('span', { class: 'hint' }, 'nobody')),
+    ];
+  }
+
+  /**
+   * Minds 7: where the run is, and the agent whose column was clicked: its traits, stores, state and
+   * this season's losses. The loss rates are items lost per item held per day (lost ÷ item-days
+   * held, the season so far), a hazard that can exceed 1; none before it held any.
+   */
+  private hoardRows(view: HoardInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const a = view.agent;
+    const id = (i: number) => `#${i + 1}`;
+    const state = a.alive
+      ? [a.fed ? 'fed today' : 'hungry', a.defending ? 'defending its larder' : null, a.raiding !== null ? `raiding ${id(a.raiding)}'s larder` : null]
+          .filter((x) => x !== null)
+          .join(' · ')
+      : a.death
+        ? `died on day ${a.death.day}, bout ${a.death.bout} (${a.death.cause === 'starvation' ? 'starved' : 'preyed upon'})`
+        : 'dead';
+    const rate = (r: number | null) => (r === null ? 'none yet (it has held none)' : `${fmt(r)} per item-day held`);
+    return [
+      row('Where', hoardStatusText({ ...view, season_over: false, living: 0 }, this.engine.config as HoardConfig)),
+      row('Agent', `${id(a.index)} · ${a.cheater ? 'cheater (never caches)' : 'hoarder'}`),
+      row('State', state),
+      row('Larder probability (L)', a.l.toFixed(3)),
+      row('Defense propensity (D)', a.d.toFixed(3)),
+      row('Foraging efficiency', a.forage.toFixed(3)),
+      row('Stores', `${a.larder} in its larder · ${a.scatter} scattered`),
+      row('Lost this season', `${a.larder_lost} from its larder · ${a.scatter_lost} scattered`),
+      row('Larder loss rate', rate(a.larder_rate)),
+      row('Scatter loss rate', rate(a.scatter_rate)),
+      h('tr', {}, h('td', { colspan: 2, class: 'hint' }, 'Loss rates: items taken ÷ item-days held, this season so far (a hazard, so it can exceed 1).')),
+      row('This season', `ate ${a.eaten} items · alive ${a.bouts_alive} bouts`),
     ];
   }
 
@@ -713,7 +776,9 @@ export class InspectPanel {
             : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
       // First: an empty ethnocentrism or demographic PD site is shaped like an empty Schelling site.
-      const rows = isEthnoView(view, this.engine.model)
+      const rows = isHoardView(view)
+        ? this.hoardRows(view)
+        : isEthnoView(view, this.engine.model)
         ? this.ethnoSiteRows(view, gone)
         : isDpdView(view, this.engine.model)
           ? this.dpdSiteRows(view, gone)
@@ -773,6 +838,9 @@ export class InspectPanel {
         row('Site', `(${site.x}, ${site.y})`),
         ...site.resources.map((r, i) => row(`${this.goodName(i)} here`, `${fmt(r)} / ${fmt(site.capacities[i])}`)),
         ...site.pollution.map((p, k) => row(this.engine.sugar.pollution.pollutants[k]?.name ?? `pollutant ${k}`, fmt(p))),
+        ...(site.caches && hasCaches(this.engine.sugar)
+          ? [row('Caches here', siteCachesText(site.caches, (this.engine.sugar.theft?.cheaters ?? 0) > 0))]
+          : []),
         ...(agent && !gone ? this.agentRows(agent) : []),
       ),
     );

@@ -20,6 +20,7 @@ export type GoodMap =
   | { kind: 'two_peaks'; transform: Transform }
   | { kind: 'peaks'; peaks: Peak[] }
   | { kind: 'flat'; capacity: number }
+  | { kind: 'gaussian'; x: number; y: number; sigma: number; height: number }
   | { kind: 'noise'; seed: number; scale: number; octaves: number; height: number };
 
 export interface Good { name: string; color: string; map: GoodMap; metabolism: URange; endowment: URange }
@@ -136,6 +137,25 @@ export interface Caching {
   lookahead: number;
   /** A quarter of the founders on each rule, by id; `rule` is then ignored. */
   mixed: boolean;
+  /** Minds 6: good 0 lost for each cache buried (absent from older configs: 0); live. */
+  bury_cost?: number;
+}
+
+/** Minds 6: what a thief does with the good it pilfers. */
+export type Loot = 'eat' | 'keep';
+
+/**
+ * Minds 6's theft (absent from older configs: find 0, owner memory on, loot keep, no cheaters). `find`
+ * and `loot` apply live; `owner_memory` and `cheaters` are reset-only. Needs caching.
+ */
+export interface Theft {
+  /** Chance an arriving agent finds each foreign cache on its site, in [0, 1]. */
+  find: number;
+  /** Whether an agent knows where its own caches are. */
+  owner_memory: boolean;
+  loot: Loot;
+  /** Share of the founders that are cheaters (never bury), by id, in [0, 1]. */
+  cheaters: number;
 }
 
 /** Minds 5: central-place foraging (absent from older configs: off); reset-only. */
@@ -188,12 +208,13 @@ export interface Config {
   mvt?: Mvt;
   caching?: Caching;
   central?: Central;
+  theft?: Theft;
   lab?: Lab | null;
   schedule: ScheduledChange[];
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'firms';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -212,13 +233,20 @@ export interface SchellingConfig {
   neighborhood: 'moore' | 'von_neumann';
   radius: number;
   edges: 'bounded' | 'torus';
-  movement: 'nearest' | 'random';
+  movement: 'nearest' | 'random' | 'best' | 'swap' | 'try';
   order: 'rounds' | 'random';
   sweep: 'reading' | 'center_out';
   red_share: number;
   exact: boolean;
   red_demand: Demand;
   blue_demand: Demand;
+  /** Who may move: the discontented (Schelling) or anyone (Pancs & Vriend, Gauvin et al.). */
+  movers: 'discontent' | 'anyone';
+  /** Pancs & Vriend's utilities over the unlike share, or Zhang's tent. */
+  utility: 'flat' | 'p50' | 'p100' | 'spiked' | 'tent';
+  /** Zhang's logit sharpness for swaps. */
+  beta: number;
+  start: 'random' | 'checkerboard' | 'deleted_checkerboard';
 }
 
 /** Ring World (animations VI-8 and VI-9). */
@@ -605,7 +633,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | FirmsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1401,7 +1429,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | FirmsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats;
 
 export interface SiteView {
   x: number;
@@ -1411,6 +1439,46 @@ export interface SiteView {
   pollution: number[];
   /** Minds 5: the live wall state here (0 free, 1 a fence, 2 opaque); absent from older builds. */
   wall?: number;
+  /** Minds 5–6: every cache buried here, in owner-id order; absent from older builds. */
+  caches?: SiteCacheView[];
+}
+/** Minds 5–6: a cache at a site: its owner, what it holds, and whether its owner is a cheater. */
+export interface SiteCacheView { owner: number; amount: number; cheater_owner: boolean }
+
+/** Bits of each site's flags in `cache_sites`: a hoarder's cache, a cheater's, a larder (the core's `CACHE_*`). */
+export const CACHE_HOARDER = 1;
+export const CACHE_CHEATER = 2;
+export const CACHE_LARDER = 4;
+
+/** Minds 5: a lab world's schedule as of the tick just computed (the core's `LabView`). */
+export interface LabView {
+  protocol: 'raby' | 'amodio';
+  days: number;
+  phase: 'start' | 'morning' | 'evening' | 'test' | 'done';
+  /** From 1; `days + 1` on the test evening. */
+  day: number;
+  /** The day's compartment (0–2 for K1–K3) and whether it had food, during training. */
+  place: number | null;
+  food: boolean | null;
+  /** The test evening: the agent whose turn it is, and where it stands. */
+  turn: number | null;
+  turn_at: [number, number] | null;
+  /** K1–K3 as `[x, y, width, height]`. */
+  compartments: [number, number, number, number][];
+  /** The caching compartments' trays, `[k, x, y]`. */
+  trays: [number, number, number][];
+}
+
+/**
+ * Minds 5–6: the small part of what the page draws of a Minds world beyond the frame (the core's
+ * `MindsView`); every site's caches come apart, as a flat array (`WorldSnapshot.caches`).
+ */
+export interface MindsView {
+  /** Whether the tick just computed (tick − 1) was a winter tick; null unless `seasons.mode` is global. */
+  winter: boolean | null;
+  /** Central worlds: every agent's home and what its larder holds. */
+  homes: { id: number; x: number; y: number; larder: number }[];
+  lab: LabView | null;
 }
 export interface LinkView { id: number; alive: boolean }
 export interface LoanView { id: number; role: 'lender' | 'borrower'; counterparty: LinkView; good: number; due: number; due_tick: number }
@@ -1464,13 +1532,25 @@ export interface AgentView {
   caching?: CachingView | null;
   /** Minds 5: central-place state, while `central.enabled`. */
   central?: CentralView | null;
+  /** Minds 6: theft state, while theft is on (`theft.find` or `theft.cheaters` above 0). */
+  theft?: TheftView | null;
 }
+/** Minds 6: whether the agent cheats, what it has stolen and lost to thieves, and loot in its stomach. */
+export interface TheftView { cheater: boolean; stolen_by_me: number; stolen_from_me: number; fed: number }
 export interface CacheView { x: number; y: number; amount: number }
 /**
  * Minds 5: the agent's own caching rule, its carrying limit (0 for none), its caches in site order and
  * their total, and rule plan's forecast shortfall (null when the rule isn't computing one).
  */
-export interface CachingView { rule: CachingRule; holdings_cap: number; caches: CacheView[]; total: number; forecast: number | null }
+export interface CachingView {
+  rule: CachingRule;
+  holdings_cap: number;
+  caches: CacheView[];
+  total: number;
+  forecast: number | null;
+  /** A lab's test evening: the allocation of F frozen at its start, `[compartment, amount]`; absent from older builds. */
+  lab_allocation?: [number, number][] | null;
+}
 /** Minds 5: the agent's home and the load it delivered on its last delivering trip. */
 export interface CentralView { home: [number, number]; last_load: number }
 export interface GoapView { steps: [number, number][]; gathers: number; goal: number }
@@ -1501,6 +1581,11 @@ export interface LineConfig {
   reach: number;
   fallback: number;
   wrap: number;
+  /** A row with ends (Schelling) or a ring (Pancs & Vriend). */
+  edges: 'ends' | 'ring';
+  movement: 'nearest' | 'best';
+  movers: 'discontent' | 'anyone';
+  utility: 'flat' | 'p50' | 'p100' | 'spiked' | 'tent';
 }
 /** A person in the line: its place, color and how many of its neighbors are alike. */
 export interface LinePersonView { id: number; place: number; color: 'red' | 'blue'; like: number; neighbors: number; satisfied: boolean }
@@ -1610,6 +1695,96 @@ export interface FirmsInspection {
 }
 /** A point of his plane: Red and Blue inside, and whether the most tolerant of each would all be content there. */
 export interface TippingInspection { red_in: number; blue_in: number; red_content: boolean; blue_content: boolean; now: boolean; agent: null }
+/**
+ * Vander Wall and Jenkins's genetic algorithm (Minds 7): a population storing food through a season
+ * of days and foraging bouts, bred over generations (the core's `hoard::HoardConfig`).
+ */
+export interface HoardConfig {
+  model: 'hoard';
+  n: number;
+  days: number;
+  bouts: number;
+  food_days: number;
+  food_first: number;
+  food_step: number;
+  nonstorable_days: number;
+  search_items: number;
+  search_miss: number;
+  forage_sd: number;
+  app_scat: number;
+  app_lard: number;
+  predation: number;
+  heritability: number;
+  v_seg: number;
+  l_mean: number;
+  d_mean: number;
+  generations: number;
+  cheaters: number;
+  cheater_fitness: 'stores' | 'survival';
+  owner_recovery: number;
+  defense_slope: number;
+  larder_weight: 'per_burrow' | 'per_item';
+  dead_stores: 'remain' | 'remove';
+  defended_in_pool: 'counted' | 'excluded';
+  early_bout1_eats: boolean;
+}
+
+/** One bout's statistics (NaN in the core arrives as null). */
+export interface HoardStats {
+  tick: number;
+  generation: number;
+  /** Mean L over the generation, and over its hoarders only (null when all are cheaters). */
+  mean_larder_prob: number;
+  hoarder_larder_prob: number | null;
+  mean_defense: number;
+  survivors: number;
+  larder_share: number | null;
+  /** The season's pooled loss rates so far: items lost per item held per day. */
+  larder_loss_rate: number | null;
+  scatter_loss_rate: number | null;
+  /** 1 or 0 once the run is finished, null before. */
+  takeover: number | null;
+}
+
+/** How an agent died: the day and bout, and whether it starved or was preyed upon. */
+export interface HoardDeath { day: number; bout: number; cause: 'predation' | 'starvation' }
+
+/** An agent for the page: its traits, stores, state and this season's losses. */
+export interface HoardAgentView {
+  index: number;
+  l: number;
+  d: number;
+  forage: number;
+  cheater: boolean;
+  larder: number;
+  scatter: number;
+  alive: boolean;
+  fed: boolean;
+  defending: boolean;
+  /** The agent whose larder it is raiding, if any. */
+  raiding: number | null;
+  death: HoardDeath | null;
+  larder_lost: number;
+  scatter_lost: number;
+  /** Items lost per item held per day this season so far (lost ÷ item-days held); null before it held any. */
+  larder_rate: number | null;
+  scatter_rate: number | null;
+  eaten: number;
+  bouts_alive: number;
+}
+
+/** A click on the hoard frame: where the run is, and the agent whose column it is. */
+export interface HoardInspection {
+  generation: number;
+  day: number;
+  bout: number;
+  public: number;
+  agent: HoardAgentView;
+}
+
+/** Where a hoard run is (`day` and `bout` are the next to run). */
+export interface HoardStatus { generation: number; day: number; bout: number; public: number; season_over: boolean; living: number }
+
 export interface RingInspection { site: { x: number; sugar: number; capacity: number }; agent: { id: number; vision: number } | null }
 /** A Long House Valley cell: its zone, this year's PDSI class and yields, water and occupants. */
 export interface ValleyCellView {
@@ -1886,7 +2061,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | FirmsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -1931,6 +2106,7 @@ export type ColorMode =
   | 'friendliness'
   | 'provocability'
   | 'strategy'
+  | 'caching_rule'
   | 'surrounded'
   | 'agents'
   | 'uncertainty'

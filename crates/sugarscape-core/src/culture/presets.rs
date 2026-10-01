@@ -39,7 +39,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ac-sample-run",
             "Sample run: 10 × 10, 5 features of 10 traits",
             PAPER,
-            "Axelrod's sample run: 100 sites on a 10 × 10 lattice (edges bounded, four neighbors), each with 5 features of 10 traits drawn at random. An event picks a random site and one of its neighbors; with probability equal to the share of features they already have in common, the site copies one feature on which they differ. The run stops when every two neighbors are identical or share nothing. The paper: 3.2 stable regions on average (10 runs), and over 100 runs a median of 3, 14% with one region and 10% with more than six. Measured (1000 seeds, recorded 2026-09-25): a mean of 4.3, a median of 4, 10% with one and 18% with more than six — a little more diverse than the paper reports.",
+            "Axelrod's sample run: 100 sites on a 10 × 10 lattice (edges bounded, four neighbors), each with 5 features of 10 traits drawn at random. An event picks a random site and one of its neighbors; with probability equal to the share of features they already have in common, the site copies one feature on which they differ. The run stops when every two neighbors are identical or share nothing. The paper: 3.2 stable regions on average (10 runs), and over 100 runs a median of 3, 14% with one region and 10% with more than six. Measured (1000 seeds, recorded 2026-09-25): a mean of 4.3, a median of 4, 10% with one and 18% with more than six — a little more diverse, but his runs are within sampling of it (the closest call: more than six, p = 0.03).",
             |_| {},
         ),
         preset(
@@ -92,7 +92,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ac-neighbor-changes",
             "Sample run, the neighbor changes",
             AAEC,
-            "The sample run with the original Sugarscape's transmission, which Axtell et al. 1996 caught two months into the docking: the chosen neighbor copies the active site, instead of the other way round. Measured (20 seeds): 4.9 regions against 5.15 — at this size it makes no measurable difference.",
+            "The sample run with the original Sugarscape's transmission, which Axtell et al. 1996 caught two months into the docking: the chosen neighbor copies the active site, instead of the other way round. They say it \"made a subtle difference\" (edge sites have fewer neighbors). Measured (200 seeds): medians of 3 regions against 4 (p = 0.004) — small, but there.",
             |c| {
                 c.changes = Changes::Neighbor;
             },

@@ -19,6 +19,8 @@ mod minds2;
 mod minds3;
 mod minds4;
 mod minds5;
+mod minds6;
+mod minds7;
 mod norms;
 mod opinions;
 mod punishment;
@@ -29,6 +31,7 @@ mod structure;
 mod tags;
 mod thresholds;
 mod tipping;
+mod variations;
 mod zi;
 
 use crate::claim::Claim;
@@ -57,6 +60,8 @@ pub fn all() -> Vec<Claim> {
         minds3::claims(),
         minds4::claims(),
         minds5::claims(),
+        minds6::claims(),
+        minds7::claims(),
         opinions::claims(),
         punishment::claims(),
         retirement::claims(),
@@ -66,6 +71,7 @@ pub fn all() -> Vec<Claim> {
         tags::claims(),
         thresholds::claims(),
         tipping::claims(),
+        variations::claims(),
         zi::claims(),
     ]
     .into_iter()

@@ -272,6 +272,10 @@ fn builtins_and_series_names_are_listed() {
             "tipping-intercept",
             "tipping-speeds",
             "tipping-limit",
+            "gvn-phase",
+            "svw-city",
+            "zhang-beta",
+            "zhang-neighborhood",
             "lhv-calibration",
             "lhv-quirks",
             "cv-ratio-rules",
@@ -293,6 +297,7 @@ fn builtins_and_series_names_are_listed() {
             "ac-traits-transition",
             "ac-drift",
             "dock-mobility",
+            "dock-mountain",
             "aey-memory",
             "aey-population",
             "aey-first-attractor",
@@ -418,6 +423,12 @@ fn builtins_and_series_names_are_listed() {
             "cache-capacity",
             "cache-winter",
             "central-distance",
+            "theft-find",
+            "theft-cheaters",
+            "theft-winter",
+            "hoard-ratio",
+            "hoard-recovery",
+            "hoard-cheaters",
             "firms-beta",
             "firms-b",
             "firms-preferences",
@@ -1196,6 +1207,22 @@ fn punishment_sims_match_the_native_golden_entries() {
 }
 
 #[wasm_bindgen_test]
+fn variation_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN and BIG_GOLDEN.
+    for (id, ticks, fp) in [
+        ("pv-flat", 200, "0x9ec9dad297a2f81d"),
+        ("pv-ring", 200, "0x14ac53042eb625d9"),
+        ("svw-small", 200, "0x17c8cd55b1831276"),
+        ("gvn-segregated", 20, "0xdee4748f1bfb310b"),
+        ("zhang-checkerboard", 20, "0xe8aee08d720ff908"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        sim.step(ticks);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
 fn tipping_sims_match_the_native_golden_entries() {
     // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN.
     for (id, fp) in [
@@ -1248,6 +1275,24 @@ fn zi_sims_match_the_native_golden_entries() {
 }
 
 #[wasm_bindgen_test]
+fn hoard_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: day 10 of
+    // generation 1 (200 bouts), f64 traits and all.
+    for (id, fp) in [
+        ("hoard-threshold", "0x83dbd8ba0dd130e0"),
+        ("hoard-scatter", "0xa077bede082fc87e"),
+        ("hoard-larder", "0x3da0a5fcbbe0803e"),
+        ("hoard-no-free-recovery", "0xaf76c42dbbd8c97c"),
+        ("hoard-cheaters", "0xd9fe57875f2c6602"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "hoard");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
 fn firms_sims_match_the_native_golden_entries() {
     // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the closed-form
     // optimum, general β (portable powers), per-firm draws, base pay,
@@ -1268,6 +1313,79 @@ fn firms_sims_match_the_native_golden_entries() {
         assert_eq!(sim.model_kind(), "firms");
         sim.step(200);
         assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn a_hoard_agent_is_inspected_with_its_traits_stores_and_losses() {
+    let mut sim = Sim::new(&preset_json("hoard-threshold"), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    sim.render("agents", "").unwrap();
+    assert_eq!(sim.frame_len(), (sim.width() * sim.height() * 4) as usize);
+    let pop: serde_json::Value = serde_json::from_str(&sim.hoard_population()).unwrap();
+    assert_eq!(pop.as_array().unwrap().len(), 20);
+    // Clicking the middle of agent 3's column finds agent 3.
+    let v: serde_json::Value = serde_json::from_str(&sim.inspect(35, 20).unwrap()).unwrap();
+    assert_eq!(
+        (v["generation"].as_u64(), v["day"].as_u64()),
+        (Some(1), Some(11))
+    );
+    assert_eq!(v["bout"], 1);
+    let a = &v["agent"];
+    assert_eq!(a["index"], 3);
+    assert_eq!(*a, pop[3]);
+    for key in ["l", "d", "forage"] {
+        assert!(a[key].as_f64().unwrap() >= 0.0, "{key}");
+    }
+    for key in ["larder", "scatter", "larder_lost", "scatter_lost"] {
+        assert!(a[key].as_u64().is_some(), "{key}");
+    }
+    for key in ["cheater", "alive", "fed", "defending"] {
+        assert!(a[key].is_boolean(), "{key}");
+    }
+    assert!(a.get("raiding").is_some() && a.get("larder_rate").is_some());
+    assert!(sim.inspect(200, 0).is_err());
+    assert_eq!(sim.locate(3.0), Some(vec![34, 0]));
+    // Generation series stay empty until a season ends.
+    assert!(sim.hoard_generation_series("mean_larder_prob").is_empty());
+    sim.step(2000 - 200);
+    assert_eq!(sim.hoard_generation_series("mean_larder_prob").len(), 1);
+    assert!(sim.hoard_generation_series("nope").is_empty());
+    // The status line's numbers, and the current season's per-bout series.
+    let st: serde_json::Value = serde_json::from_str(&sim.hoard_status()).unwrap();
+    assert_eq!(
+        (
+            &st["generation"],
+            &st["day"],
+            &st["bout"],
+            &st["season_over"]
+        ),
+        (&1.into(), &101.into(), &1.into(), &true.into())
+    );
+    assert_eq!(sim.hoard_season_series("larder_share").len(), 2 * 2001);
+    sim.step(3);
+    assert_eq!(
+        sim.hoard_season_series("larder_share")
+            .chunks(2)
+            .map(|p| p[0])
+            .collect::<Vec<_>>(),
+        vec![2001.0, 2002.0, 2003.0]
+    );
+    assert!(sim.hoard_season_series("nope").is_empty());
+}
+
+#[wasm_bindgen_test]
+fn hoard_views_are_empty_for_other_models() {
+    // A sugarscape world, and a zi market (gs-1).
+    for id in ["ii-2-unit", "gs-1"] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        sim.step(10);
+        assert_eq!(sim.hoard_population(), "[]", "{id}");
+        assert_eq!(sim.hoard_status(), "null", "{id}");
+        assert!(sim.hoard_season_series("larder_share").is_empty(), "{id}");
+        for name in ["generation", "mean_larder_prob"] {
+            assert!(sim.hoard_generation_series(name).is_empty(), "{id} {name}");
+        }
     }
 }
 
@@ -1478,6 +1596,53 @@ fn inspect_reports_a_caching_agents_fields() {
 }
 
 #[wasm_bindgen_test]
+fn theft_winter_half_matches_native_golden() {
+    let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    // crates/sugarscape-core/tests/golden.rs
+    assert_eq!(sim.fingerprint(), "0xd0ee29237c28952f");
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_a_thiefs_fields() {
+    let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+
+    let (width, height) = (sim.width(), sim.height());
+    let (mut cheaters, mut others, mut by, mut from) = (0, 0, 0.0, 0.0);
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let theft = agent
+                .get("theft")
+                .and_then(|t| t.as_object())
+                .expect("theft is on for every agent in this preset");
+            if theft.get("cheater").and_then(|c| c.as_bool()).unwrap() {
+                cheaters += 1;
+            } else {
+                others += 1;
+            }
+            by += theft.get("stolen_by_me").and_then(|v| v.as_f64()).unwrap();
+            from += theft
+                .get("stolen_from_me")
+                .and_then(|v| v.as_f64())
+                .unwrap();
+            assert!(theft.get("fed").and_then(|v| v.as_f64()).unwrap() >= 0.0);
+        }
+    }
+    assert!(cheaters > 0 && others > 0, "half are cheaters");
+    assert!(by > 0.0, "some sugar was pilfered by 200");
+    // Every take is one thief's gain and one owner's loss (an owner's own
+    // find is a dig, not counted), and the living are a subset of all who
+    // ever took or lost, so the two sums need not match; each is positive.
+    assert!(from > 0.0);
+}
+
+#[wasm_bindgen_test]
 fn inspect_reports_a_mixed_labs_agents_own_rule() {
     // caching.mixed deals rules round-robin by founder id (Task 9): with 8
     // agents, all four rules (none, even, compensate, plan) should show up.
@@ -1533,4 +1698,49 @@ fn inspect_reports_the_labs_doorways_open_after_the_test_evening() {
     assert_eq!(wall_at(&sim, 2, 4), 0, "K1's doorway is open");
     assert_eq!(wall_at(&sim, 6, 4), 2, "K2's doorway stays shut (opaque)");
     assert_eq!(wall_at(&sim, 10, 4), 0, "K3's doorway is open");
+}
+
+#[wasm_bindgen_test]
+fn minds_view_lists_every_cache_the_season_and_renders_the_minds_modes() {
+    let mut sim = Sim::new(&preset_json("theft-winter-half"), 1, JsValue::NULL).unwrap();
+    sim.step(150);
+    sim.render("strategy", "sugar").unwrap();
+    sim.render("caching_rule", "sugar").unwrap();
+    sim.render("memory", "sugar").unwrap();
+    let view: serde_json::Value = serde_json::from_str(&sim.minds_view()).unwrap();
+    assert_eq!(
+        view["winter"],
+        serde_json::json!(true),
+        "tick 150 is winter"
+    );
+    let caches = sim.cache_sites().to_vec();
+    assert!(caches.len() >= 4, "hoarders have buried by tick 150");
+    assert_eq!(caches.len() % 4, 0);
+    assert_eq!(
+        sim.cache_sites().to_vec(),
+        caches,
+        "the reused buffers give the same"
+    );
+    // Each site's caches match what that site's Inspect lists.
+    let (x, y) = (caches[0] as u32, caches[1] as u32);
+    let site: serde_json::Value = serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+    let listed: f64 = site["site"]["caches"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["amount"].as_f64().unwrap())
+        .sum();
+    assert!((listed - caches[2]).abs() < 1e-9);
+    assert!(view["lab"].is_null());
+    // Drawing, viewing and inspecting change nothing: the world still reaches
+    // its native golden at tick 200 (crates/sugarscape-core/tests/golden.rs).
+    sim.step(50);
+    assert_eq!(sim.fingerprint(), "0xd0ee29237c28952f");
+
+    let mut lab = Sim::new(&preset_json("cache-raby"), 1, JsValue::NULL).unwrap();
+    lab.step(1);
+    let view: serde_json::Value = serde_json::from_str(&lab.minds_view()).unwrap();
+    assert_eq!(view["lab"]["phase"], "morning");
+    assert_eq!(view["lab"]["day"], 1);
+    assert!(view["winter"].is_null());
 }

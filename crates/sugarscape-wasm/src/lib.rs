@@ -195,6 +195,9 @@ fn landscapes_from_js(value: &JsValue) -> Result<Vec<Option<Vec<f64>>>, JsValue>
 pub struct Sim {
     world: ModelWorld,
     frame: Vec<u8>,
+    /// `cache_sites`' per-site tally and output, kept between frames.
+    cache_scratch: Vec<(f64, u32)>,
+    cache_flat: Vec<f64>,
 }
 
 /// A keyframe of a `Sim`'s world (`ModelWorld::checkpoint`): the host keeps a few and frees them.
@@ -247,10 +250,13 @@ impl Sim {
         Ok(Sim {
             world,
             frame: Vec::new(),
+            cache_scratch: Vec::new(),
+            cache_flat: Vec::new(),
         })
     }
 
-    /// `"sugarscape"`, `"schelling"`, `"ring"` or `"anasazi"`.
+    /// The world's model, as a config's `model` key names it
+    /// (`"sugarscape"`, `"schelling"`, …, `"hoard"`; `ModelKind::as_str`).
     pub fn model_kind(&self) -> String {
         self.world.kind().as_str().to_string()
     }
@@ -286,7 +292,7 @@ impl Sim {
     /// Renders into the internal frame and returns a pointer into WASM memory.
     /// Re-create any JS view after each call: memory may have grown.
     pub fn render(&mut self, color_mode: &str, layer: &str) -> Result<usize, JsValue> {
-        let Sim { world, frame } = self;
+        let Sim { world, frame, .. } = self;
         world
             .model()
             .render(color_mode, layer, frame)
@@ -423,6 +429,34 @@ impl Sim {
                 .flatten()
                 .collect()
         })
+    }
+
+    /// Minds 5–6: JSON `{ winter, homes, lab }` (`World::minds_view`): the
+    /// season, every home and larder and the lab's schedule. `null` for a
+    /// non-sugarscape model.
+    pub fn minds_view(&self) -> String {
+        self.sugar_or("null".into(), |w| {
+            serde_json::to_string(&w.minds_view()).expect("views serialize")
+        })
+    }
+
+    /// Minds 5–6: every site holding a cache, `[x, y, total, flags, …]`
+    /// (`World::cache_sites`), built in buffers the `Sim` keeps; empty for a
+    /// non-sugarscape model.
+    pub fn cache_sites(&mut self) -> js_sys::Float64Array {
+        let Sim {
+            world,
+            cache_scratch,
+            cache_flat,
+            ..
+        } = self;
+        match world.sugarscape() {
+            Some(w) => {
+                w.cache_sites(cache_scratch, cache_flat);
+                js_sys::Float64Array::from(&cache_flat[..])
+            }
+            None => js_sys::Float64Array::new_with_length(0),
+        }
     }
 
     pub fn locate(&self, id: f64) -> Option<Vec<u32>> {
@@ -632,5 +666,53 @@ impl Sim {
     /// The anasazi's farm–home links, `[farm x, farm y, home x, home y, …]`.
     pub fn anasazi_links(&self) -> Vec<u32> {
         self.world.anasazi().map_or(Vec::new(), |a| a.links_xy())
+    }
+
+    /// The hoard world's 20 agents as a JSON array (the population panel):
+    /// index, traits, stores, state, raid target and this season's losses.
+    /// `[]` for other models.
+    pub fn hoard_population(&self) -> String {
+        self.world.hoard().map_or("[]".into(), |h| {
+            serde_json::to_string(&h.population_views()).expect("agents serialize")
+        })
+    }
+
+    /// Where the hoard run is, as JSON `{generation, day, bout, public,
+    /// season_over, living}` (`day` and `bout` are the next to run, both
+    /// 1-based); `null` for other models.
+    pub fn hoard_status(&self) -> String {
+        self.world.hoard().map_or("null".into(), |h| {
+            serde_json::json!({
+                "generation": h.generation(),
+                "day": h.day(),
+                "bout": h.bout(),
+                "public": h.public(),
+                "season_over": h.season_over(),
+                "living": h.living(),
+            })
+            .to_string()
+        })
+    }
+
+    /// The current season's per-bout values of a hoard series as `[tick,
+    /// value, tick, value, …]` (from the season's first bout). Empty for
+    /// other models and unknown names.
+    pub fn hoard_season_series(&self, name: &str) -> Vec<f64> {
+        self.world
+            .hoard()
+            .and_then(|h| h.season_series(name))
+            .unwrap_or_default()
+    }
+
+    /// One value per finished season for a hoard generation series
+    /// (`generation`, `mean_larder_prob`, `hoarder_larder_prob`,
+    /// `mean_defense`, `survivors`, `larder_share`, `larder_loss_rate`,
+    /// `scatter_loss_rate`; NaN where a season has none). Empty for other
+    /// models and unknown names.
+    pub fn hoard_generation_series(&self, name: &str) -> Vec<f64> {
+        self.world
+            .hoard()
+            .and_then(|h| h.generation_series(name))
+            .unwrap_or_default()
     }
 }

@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 355] = [
+pub const TITLES: [(&str, &str); 379] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -119,11 +119,11 @@ pub const TITLES: [(&str, &str); 355] = [
     ),
     (
         "dock-mobility-15",
-        "Culture on the move: one culture takes almost everyone, but stragglers hold out",
+        "Culture on the move: one culture takes everyone",
     ),
     (
         "dock-mobility-30",
-        "Culture on the move with more traits: more cultures survive than the paper reports",
+        "Culture on the move with more traits: one or a few cultures",
     ),
     (
         "ifd-even",
@@ -278,6 +278,30 @@ pub const TITLES: [(&str, &str); 355] = [
         "Amodio's rotating compartments: each rule leaves its own signature, and the jays' looks like an even split",
     ),
     (
+        "theft-winter",
+        "Hoarders who can be robbed: theft spreads the stores, and more agents survive the winter",
+    ),
+    (
+        "theft-winter-quarter",
+        "A quarter never cache and live off the others' caches, outliving the hoarders",
+    ),
+    (
+        "theft-winter-half",
+        "Half never cache and outlive the hoarders, who dig back barely 1 % of what they bury",
+    ),
+    (
+        "theft-arena-2",
+        "Two agents in a room: the other takes half the hoarder's caches, and the hoarder ends the winter with a third as much in hand",
+    ),
+    (
+        "theft-arena-4",
+        "Four agents in a room: thieves take more than four fifths of the caches, and hoarders end the winter with a third as much in hand",
+    ),
+    (
+        "theft-arena-8",
+        "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with two fifths as much in hand",
+    ),
+    (
         "s71-board",
         "Wanting half your neighbors alike: four in five end up alike",
     ),
@@ -324,6 +348,58 @@ pub const TITLES: [(&str, &str); 355] = [
     (
         "s71-line-reach",
         "Travel limited: most end content, a few never do",
+    ),
+    (
+        "pv-flat",
+        "Anyone may move to the square they like best: two clusters",
+    ),
+    (
+        "pv-p50",
+        "Liking some mix, up to half: still two clusters",
+    ),
+    (
+        "pv-p100",
+        "Liking half and half best: about five clusters",
+    ),
+    (
+        "pv-spiked",
+        "Only a perfect mix will do: the board stays mixed",
+    ),
+    (
+        "pv-ring",
+        "On a ring, even lovers of a mix end in two groups",
+    ),
+    (
+        "gvn-frozen",
+        "Too little tolerance: nobody can move",
+    ),
+    (
+        "gvn-segregated",
+        "Tolerating half unlike: two big clusters",
+    ),
+    (
+        "gvn-mixed",
+        "Tolerating most unlike: the board stays mixed",
+    ),
+    (
+        "svw-small",
+        "A small city: two clusters",
+    ),
+    (
+        "svw-large",
+        "The same rule in a big city: dozens of clusters",
+    ),
+    (
+        "svw-t4",
+        "Asking 4 of 8 alike in a big city: fewer, solid clusters",
+    ),
+    (
+        "zhang-checkerboard",
+        "Everyone wants a mix, yet from a perfect mix they sort",
+    ),
+    (
+        "zhang-random",
+        "Everyone wants a mix, yet they sort into blobs",
     ),
     (
         "tipping-fig18",
@@ -495,7 +571,7 @@ pub const TITLES: [(&str, &str); 355] = [
     ),
     (
         "ac-neighbor-changes",
-        "Who copies whom, reversed: no measurable difference here",
+        "Who copies whom, reversed: slightly fewer regions",
     ),
     (
         "ac-soup",
@@ -1312,6 +1388,26 @@ pub const TITLES: [(&str, &str); 355] = [
     (
         "janssen-fewer-links",
         "With half the pest links gone, copying stalls early",
+    ),
+    (
+        "hoard-threshold",
+        "At the tipping point: larders take over in about two runs of five",
+    ),
+    (
+        "hoard-scatter",
+        "Scattered caches stay hidden: larders never take over",
+    ),
+    (
+        "hoard-larder",
+        "Conspicuous caches: larders take over almost every time, and half the agents die each season",
+    ),
+    (
+        "hoard-no-free-recovery",
+        "Owners find their own caches half the time, and larders still take over in about half the runs",
+    ),
+    (
+        "hoard-cheaters",
+        "A quarter never cache, and are gone after one generation",
     ),
     (
         "firms-base",

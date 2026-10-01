@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText } from './inspect-panel';
+import { agentText, cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText, theftRows } from './inspect-panel';
 
 const plan = (path: [number, number][]) => ({ target_x: 3, target_y: 4, path, walked: true });
 const memory = (sites: number, spots: number) => ({ remembers: true, sites, spots });
@@ -112,6 +112,12 @@ describe('cachingRows', () => {
     ]);
   });
 
+  it('adds a lab agent’s frozen test-evening allocation once it has one', () => {
+    const rows = cachingRows({ ...view(null), rule: 'even', lab_allocation: [[0, 15], [2, 15]] }, 9);
+    expect(rows[rows.length - 1]).toEqual(['Test allocation', 'K1 15 · K3 15']);
+    expect(cachingRows({ ...view(null), lab_allocation: null }, 9).map(([k]) => k)).not.toContain('Test allocation');
+  });
+
   it('leaves the forecast out when there is none (other rules, or winter)', () => {
     expect(cachingRows({ ...view(null), rule: 'even', holdings_cap: 0 }, 9)).toEqual([
       ['Caching rule', 'even'],
@@ -150,5 +156,34 @@ describe('centralRows', () => {
       ['Last load', '12.25'],
     ]);
     expect(centralRows({ home: [0, 0], last_load: 0 })).toEqual([['Home', '(0, 0)'], ['Last load', '0']]);
+  });
+});
+
+describe('theftRows', () => {
+  it('gives a cheater its takes, its losses and its stomach while it holds loot', () => {
+    expect(theftRows({ cheater: true, stolen_by_me: 12.5, stolen_from_me: 0, fed: 3.25 })).toEqual([
+      ['Cheater', 'yes'],
+      ['Stole', '12.50'],
+      ['Lost to thieves', '0'],
+      ['Stomach', '3.25'],
+    ]);
+  });
+
+  it('leaves the stomach out when it is empty', () => {
+    expect(theftRows({ cheater: false, stolen_by_me: 0, stolen_from_me: 7, fed: 0 })).toEqual([
+      ['Cheater', 'no'],
+      ['Stole', '0'],
+      ['Lost to thieves', '7'],
+    ]);
+  });
+});
+
+describe('agentText', () => {
+  it('names the group only where the map colors by something other than the Minds modes', () => {
+    const a = { id: 7, sex: 'female' as const };
+    expect(agentText(a, 'Blue', 'tribe')).toBe('#7 · female · Blue');
+    expect(agentText(a, 'Blue', 'wealth')).toBe('#7 · female · Blue');
+    expect(agentText(a, 'Blue', 'strategy')).toBe('#7 · female');
+    expect(agentText(a, 'Blue', 'memory')).toBe('#7 · female');
   });
 });

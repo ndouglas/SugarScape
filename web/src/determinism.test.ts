@@ -13,6 +13,9 @@ import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
   AgreementConfig,
+  HoardConfig,
+  HoardInspection,
+  HoardStats,
   ZiConfig,
   BaliConfig,
   FirmsConfig,
@@ -113,6 +116,46 @@ describe('determinism through the engine', () => {
     e.want(() => ({ charts: { groups: [['population', 'gini']], max: 50 }, lorenz: true, wealthHist: true, networks }));
     for (let i = 0; i < 20; i++) await e.advance(10);
     expect(await e.fingerprint()).toBe(GOLDEN);
+  });
+
+  it('loads a theft world in Strategy with every cache shown, and drawing them all reaches the native golden', async () => {
+    const e = await engine();
+    expect(await e.loadPreset('theft-winter-half', 1)).toBeNull();
+    expect(e.colorMode).toBe('strategy');
+    expect(e.overlays.caches).toBe(true);
+    e.want(() => ({ charts: { groups: [['population']], max: 50 } }));
+    await e.advance(150);
+    expect(e.minds?.winter).toBe(true);
+    expect(e.cacheSites.length).toBeGreaterThan(0);
+    const [x, y, total] = e.cacheSites;
+    await e.select(x, y);
+    const view = e.inspection!.view as { site: { caches: { amount: number }[] } };
+    expect(view.site.caches.reduce((sum, c) => sum + c.amount, 0)).toBeCloseTo(total);
+    e.setDisplay({ colorMode: 'caching_rule' });
+    await e.advance(25);
+    e.setDisplay({ colorMode: 'memory' });
+    await e.advance(25);
+    expect(e.tick).toBe(200);
+    expect(e.cacheSites.length).toBeGreaterThan(0);
+    // crates/sugarscape-core/tests/golden.rs: theft-winter-half after 200 ticks from seed 1.
+    expect(await e.fingerprint()).toBe('0xd0ee29237c28952f');
+  });
+
+  it('picks each Minds world’s default color mode and keeps the caches overlay off once turned off by hand', async () => {
+    const e = await engine();
+    expect(await e.loadPreset('cache-winter-mixed', 1)).toBeNull();
+    expect(e.colorMode).toBe('caching_rule');
+    expect(await e.loadPreset('cache-winter-even', 1)).toBeNull();
+    expect(e.colorMode).toBe('memory');
+    expect(await e.loadPreset('theft-winter', 1)).toBeNull();
+    expect(e.colorMode).toBe('memory');
+    expect(e.overlays.caches).toBe(true);
+    e.setDisplay({ overlays: { caches: false } });
+    expect(await e.loadPreset('theft-winter-half', 1)).toBeNull();
+    expect([e.colorMode, e.overlays.caches]).toEqual(['strategy', false]);
+    expect(e.cacheSites.length).toBe(0);
+    expect(await e.loadPreset('ii-2-unit', 1)).toBeNull();
+    expect([e.colorMode, e.overlays.caches]).toEqual(['tribe', false]);
   });
 
   it('seeks through keyframes to the golden world, with edits on both sides of the target', async () => {
@@ -793,6 +836,39 @@ describe('the bali model through the engine', () => {
   });
 });
 
+describe('the hoard model (Minds 7) through the engine', () => {
+  it('ends after its last generation, says where it is, charts by generation and inspects a column', async () => {
+    const r = presets.find((p) => p.id === 'hoard-threshold')!;
+    expect(presetMenu(r)).toBe('minds');
+    // Two short seasons: 5 days of 4 bouts, 20 bouts each.
+    const config = { ...structuredClone(r.config as HoardConfig), days: 5, bouts: 4, food_days: 5, generations: 2 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.want(() => ({ hoardCharts: true }));
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(1_000_000);
+    const s = e.latest as HoardStats;
+    expect([e.finished, ends, e.tick, s.generation]).toEqual([true, 1, 40, 2]);
+    expect(e.hoard).toMatchObject({ generation: 2, day: 6, bout: 1, season_over: true });
+    await e.refresh();
+    expect(Array.from(e.hoardCharts!.generations.generation)).toEqual([1, 2]);
+    expect(e.hoardCharts!.generations.mean_larder_prob.length).toBe(2);
+    // This season's larder share: generation 2's bouts, ticks 21 to 40.
+    expect(e.hoardCharts!.season.length).toBe(2 * 20);
+    expect(e.hoardCharts!.season[0]).toBe(21);
+    await e.select(35, 20);
+    const v = e.inspection!.view as HoardInspection;
+    expect([v.generation, v.agent.index, e.inspection!.agentId]).toEqual([2, 3, null]);
+  });
+
+  it('has a Compare pair either side of the threshold, both real hoard presets', () => {
+    const entry = COMPARE_PRESETS.find((c) => c.id === 'hoard-scatter-vs-larder')!;
+    const states = comparePresetStates(presets, entry, 7)!;
+    expect(modelOf(states.b.config)).toBe('hoard');
+    expect((states.b.config as HoardConfig).app_scat).toBe(0.8);
+  });
+});
+
 describe('the zi model through the engine', () => {
   it('stops after its last period and inspects a step, a trade and a trader', async () => {
     const r = presets.find((p) => p.id === 'gs-1')!;
@@ -1067,8 +1143,8 @@ describe('the culture model through the engine', () => {
   it('reproduces the docking presets’ golden fingerprints in the Sugarscape', async () => {
     // crates/sugarscape-core/tests/golden.rs, GOLDEN.
     for (const [id, golden] of [
-      ['dock-mobility-15', '0x9d0a2ced876f00d2'],
-      ['dock-mobility-30', '0x10a0c00c27c1660d'],
+      ['dock-mobility-15', '0x3361a01b1a7cd6a3'],
+      ['dock-mobility-30', '0x19cfa4ca0800089e'],
     ]) {
       const preset = presets.find((p) => p.id === id)!;
       const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });

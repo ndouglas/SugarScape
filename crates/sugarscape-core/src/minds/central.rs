@@ -138,6 +138,8 @@ fn at_home(world: &mut World, id: AgentId, home: Pos, keep: f64) -> f64 {
     let q = load.min(held - r);
     let mut delivered = 0.0;
     if q > 0.0 {
+        // No bury cost in a central-place world (validation refuses one), so
+        // all of q is buried and `delivered` keeps its Minds 5 meaning.
         bury(world, id, q);
         let e = &mut world.events;
         e.deliveries += 1;

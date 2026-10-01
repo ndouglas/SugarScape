@@ -74,7 +74,7 @@ pub fn model_after<T: Send>(
 
 /// `f(seed)` for every seed on a thread pool, in seed order (see
 /// `each_seed` for panics).
-fn on_threads<T: Send>(seeds: &[u64], f: impl Fn(u64) -> T + Sync) -> Vec<T> {
+pub(crate) fn on_threads<T: Send>(seeds: &[u64], f: impl Fn(u64) -> T + Sync) -> Vec<T> {
     let next = AtomicUsize::new(0);
     type Slot<T> = Mutex<Option<std::thread::Result<T>>>;
     let slots: Vec<Slot<T>> = seeds.iter().map(|_| Mutex::new(None)).collect();

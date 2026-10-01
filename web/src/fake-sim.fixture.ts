@@ -19,9 +19,9 @@ export class FakeCheckpoint {
 interface FakeConfig {
   /**
    * Absent for a sugarscape; `'ring'` also answers `ring_sugar`/`ring_agents`, `'anasazi'` the
-   * `anasazi_*` overlays; `'civil'` carries `ramps`.
+   * `anasazi_*` overlays; `'civil'` carries `ramps`; `'hoard'` answers the `hoard_*` calls.
    */
-  model?: 'schelling' | 'ring' | 'anasazi' | 'civil';
+  model?: 'schelling' | 'ring' | 'anasazi' | 'civil' | 'hoard';
   /** Civil violence's ramps (the host watches their ticks). */
   ramps?: { path: string; start: number; end: number; to: number }[];
   /** The tick at which the world is finished (it steps no further); none by default. */
@@ -243,6 +243,31 @@ export class FakeSim implements SimLike {
   anasazi_links(): Uint32Array {
     const a = this.agents.get(1);
     return this.config.model === 'anasazi' && a ? Uint32Array.of(a[0], a[1], a[0], 0) : new Uint32Array(0);
+  }
+  /** The tick's season as winter on odd ticks; `null` for other models. */
+  minds_view(): string {
+    if (this.config.model) return 'null';
+    return JSON.stringify({ winter: this.ticks % 2 === 1, homes: [], lab: null });
+  }
+  /** One hoarder's cache of 3 under agent #1's site; empty for other models. */
+  cache_sites(): Float64Array {
+    const a = this.agents.get(1);
+    return !this.config.model && a ? Float64Array.of(a[0], a[1], 3, 1) : new Float64Array(0);
+  }
+  /** A hoard run 20 bouts a day: generation 1, the day and bout from the tick; `null` for other models. */
+  hoard_status(): string {
+    if (this.config.model !== 'hoard') return 'null';
+    return JSON.stringify({ generation: 1, day: Math.floor(this.ticks / 20) + 1, bout: (this.ticks % 20) + 1, public: 82, season_over: false, living: this.agents.size });
+  }
+  /** One finished season per 10 ticks, each worth its generation; empty for other models. */
+  hoard_generation_series(name: string): Float64Array {
+    if (this.config.model !== 'hoard') return new Float64Array(0);
+    return Float64Array.from({ length: Math.floor(this.ticks / 10) }, (_, i) => (name === 'generation' ? i + 1 : (i + 1) / 10));
+  }
+  /** Every tick so far, at half. */
+  hoard_season_series(): Float64Array {
+    if (this.config.model !== 'hoard') return new Float64Array(0);
+    return Float64Array.from({ length: 2 * (this.ticks + 1) }, (_, i) => (i % 2 === 0 ? i / 2 : 0.5));
   }
   finished(): boolean {
     return this.config.finish !== undefined && this.ticks >= this.config.finish;

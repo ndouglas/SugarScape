@@ -4,7 +4,8 @@ import unittest
 import dump
 
 # Made by `sugarscape shot tests/fixtures/schelling.json` (s71-board, seed 2,
-# 3 rounds) and `… line.json` (s71-line, seed 3, 3 rounds).
+# 3 rounds), `… line.json` (s71-line, seed 3, 3 rounds) and
+# `… schelling-every.json` (s71-board, seed 2, 8 rounds filmed every 4th).
 HERE = pathlib.Path(__file__).parent / "fixtures"
 
 
@@ -40,3 +41,9 @@ class SchellingDumpTest(unittest.TestCase):
         self.assertEqual((d.model, d.width, d.height), ("line", 70, 1))
         for f in d.frames:
             self.assertEqual(sorted(a.x for a in f.agents.values()), list(range(70)))
+
+    def test_a_strided_dump_counts_its_frames_as_ticks(self):
+        d = dump.load(HERE / "schelling-every.frames.json")
+        self.assertEqual(d.ticks, 2)
+        self.assertEqual([f.tick for f in d.frames], [0, 1, 2])
+        self.assertEqual(len(d.stats["segregation"]), 3)

@@ -59,6 +59,11 @@ describe('compare presets', () => {
     expect(ids).toContainEqual(['lk-random-vs-fixed', 'lk-random', 'lk-random-fixed', 'Imitating neighbors vs fixed random plans — Balinese Water Temples (Compare)']);
   });
 
+  it('pairs the hoard worlds either side of the threshold', () => {
+    const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
+    expect(ids).toContainEqual(['hoard-scatter-vs-larder', 'hoard-scatter', 'hoard-larder', 'Scattered caches hard vs easy to find — Minds 7 (Compare)']);
+  });
+
   it('pairs punishment with its absence', () => {
     const ids = COMPARE_PRESETS.map((c) => [c.id, c.a, c.b, c.label]);
     expect(ids).toContainEqual(['bg-base-vs-none', 'bg-base', 'bg-none', 'With vs without punishment — Altruistic Punishment (Compare)']);

@@ -129,8 +129,36 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
+    if config.theft.is_on() {
+        for s in THEFT_SERIES {
+            names.push(s.into());
+        }
+    }
+    if config.theft.cheaters > 0.0 {
+        for s in CHEATER_SERIES {
+            names.push(s.into());
+        }
+    }
     names
 }
+
+/// Minds 6's theft series, named while `theft.is_on()`.
+const THEFT_SERIES: [&str; 6] = [
+    "pilfered",
+    "pilferage_rate",
+    "fate_dug",
+    "fate_pilfered",
+    "fate_lost",
+    "fate_buried",
+];
+
+/// Minds 6's hoarder/cheater series, named while `theft.cheaters > 0`.
+const CHEATER_SERIES: [&str; 4] = [
+    "hoarder_holdings",
+    "cheater_holdings",
+    "hoarder_alive",
+    "cheater_alive",
+];
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct Snapshot {
@@ -201,6 +229,12 @@ pub struct Snapshot {
     /// `central.enabled`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub central: Option<CentralStats>,
+    /// Minds 6's theft series, present when `theft.is_on()`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub theft: Option<TheftStats>,
+    /// Minds 6's hoarder/cheater series, present when `theft.cheaters > 0`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cheaters: Option<CheaterStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -310,6 +344,55 @@ pub struct CentralStats {
     pub trips: f64,
     delivered_total: f64,
     deliveries_total: f64,
+}
+
+/// Minds 6's theft series (see the module's series list). The fate shares
+/// are amount-weighted and cumulative since tick 0, computed from the tick
+/// events and live caches (not the fate log, which can be capped): `fate_dug`,
+/// `fate_pilfered` and `fate_lost` are Σ amounts ÷ Σ buried, and `fate_buried`
+/// is the sugar still cached ÷ Σ buried. Σ buried counts `events.buried`
+/// from tick 0 (it counts whenever caching is on, theft or not). All are 0
+/// when nothing has been buried. `pilferage_rate` is `caches_pilfered ÷
+/// pilfer_candidates` this tick, 0 with no candidates. The `*_total` fields
+/// carry running sums forward from the previous snapshot (`Stats::latest`),
+/// as `recovery` does; they aren't series themselves.
+///
+/// The totals exist only while theft is on. If theft is turned on mid-run
+/// (or off and on again), they start at 0 at that tick while caches buried
+/// earlier still exist. That older sugar is counted in the numerators
+/// (still cached, or dug, pilfered or lost later) but not in Σ buried, so
+/// the four shares sum to more than 1 from then on. With theft on from
+/// tick 0 they sum to 1.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct TheftStats {
+    /// Sugar pilfered this tick.
+    pub pilfered: f64,
+    /// Share of the caches that existed at this tick's start that were
+    /// pilfered this tick.
+    pub pilferage_rate: f64,
+    /// Cumulative Σ dug ÷ Σ buried.
+    pub fate_dug: f64,
+    /// Cumulative Σ pilfered ÷ Σ buried.
+    pub fate_pilfered: f64,
+    /// Cumulative Σ lost with their owners ÷ Σ buried.
+    pub fate_lost: f64,
+    /// Sugar still cached ÷ Σ buried.
+    pub fate_buried: f64,
+    buried_total: f64,
+    dug_total: f64,
+    pilfered_total: f64,
+    lost_total: f64,
+}
+
+/// Minds 6's hoarder/cheater series. Holdings are sugar held (`holdings[0]`
+/// only: not the stomach `fed`, and not caches), as a mean over the living
+/// of each kind, 0 if none is alive; `*_alive` are counts.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct CheaterStats {
+    pub hoarder_holdings: f64,
+    pub cheater_holdings: f64,
+    pub hoarder_alive: u32,
+    pub cheater_alive: u32,
 }
 
 impl Snapshot {
@@ -590,6 +673,62 @@ impl Snapshot {
                     deliveries_total,
                 }
             }),
+            theft: world.config.theft.is_on().then(|| {
+                let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+                let (pb, pd, pp, pl) = world
+                    .stats
+                    .latest()
+                    .and_then(|s| s.theft)
+                    .map(|t| (t.buried_total, t.dug_total, t.pilfered_total, t.lost_total))
+                    .unwrap_or((0.0, 0.0, 0.0, 0.0));
+                let buried_total = pb + events.buried;
+                let dug_total = pd + events.dug;
+                let pilfered_total = pp + events.pilfered;
+                let lost_total = pl + events.cache_lost;
+                let share = |x: f64| {
+                    if buried_total == 0.0 {
+                        0.0
+                    } else {
+                        x / buried_total
+                    }
+                };
+                let pilferage_rate = if events.pilfer_candidates == 0 {
+                    0.0
+                } else {
+                    f64::from(events.caches_pilfered) / f64::from(events.pilfer_candidates)
+                };
+                TheftStats {
+                    pilfered: events.pilfered,
+                    pilferage_rate,
+                    fate_dug: share(dug_total),
+                    fate_pilfered: share(pilfered_total),
+                    fate_lost: share(lost_total),
+                    fate_buried: share(cached),
+                    buried_total,
+                    dug_total,
+                    pilfered_total,
+                    lost_total,
+                }
+            }),
+            cheaters: (world.config.theft.cheaters > 0.0).then(|| {
+                let (mut hs, mut hn, mut cs, mut cn) = (0.0, 0u32, 0.0, 0u32);
+                for a in world.agents() {
+                    if a.cheater {
+                        cs += a.holdings[0];
+                        cn += 1;
+                    } else {
+                        hs += a.holdings[0];
+                        hn += 1;
+                    }
+                }
+                let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                CheaterStats {
+                    hoarder_holdings: m(hs, hn),
+                    cheater_holdings: m(cs, cn),
+                    hoarder_alive: hn,
+                    cheater_alive: cn,
+                }
+            }),
         }
     }
 
@@ -714,6 +853,33 @@ impl Snapshot {
                         "trips" => return Some(c.trips),
                         _ => {}
                     }
+                }
+                if let Some(t) = self.theft {
+                    match name {
+                        "pilfered" => return Some(t.pilfered),
+                        "pilferage_rate" => return Some(t.pilferage_rate),
+                        "fate_dug" => return Some(t.fate_dug),
+                        "fate_pilfered" => return Some(t.fate_pilfered),
+                        "fate_lost" => return Some(t.fate_lost),
+                        "fate_buried" => return Some(t.fate_buried),
+                        _ => {}
+                    }
+                }
+                if let Some(c) = self.cheaters {
+                    match name {
+                        "hoarder_holdings" => return Some(c.hoarder_holdings),
+                        "cheater_holdings" => return Some(c.cheater_holdings),
+                        "hoarder_alive" => return Some(f64::from(c.hoarder_alive)),
+                        "cheater_alive" => return Some(f64::from(c.cheater_alive)),
+                        _ => {}
+                    }
+                }
+                // `theft.find` is live, so theft can come on mid-run and the
+                // names reach back past snapshots that lack the group: NaN
+                // there (a gap in a chart, a cell in a CSV), not an unknown
+                // series. The cheater names are covered the same way.
+                if THEFT_SERIES.contains(&name) || CHEATER_SERIES.contains(&name) {
+                    return Some(f64::NAN);
                 }
                 return None;
             }
@@ -2067,5 +2233,180 @@ mod tests {
             &names[base + CACHING_SERIES.len()..],
             CENTRAL_SERIES.as_slice()
         );
+    }
+
+    #[test]
+    fn theft_series_exist_only_under_their_switch() {
+        use crate::testkit::*;
+        let base = series_names(&Config::default()).len();
+        let mut w = blank_world(5, 5);
+        w.config.caching.rule = CachingRule::Even;
+        let s = Snapshot::of(&w);
+        assert!(s.theft.is_none() && s.cheaters.is_none());
+        // Known names all the same, NaN where the group is absent: a snapshot
+        // from before theft came on mid-run.
+        for n in THEFT_SERIES.iter().chain(&CHEATER_SERIES) {
+            assert!(s.value(n).unwrap().is_nan(), "{n}");
+        }
+        assert!(s.value("pilfered_nonsense").is_none());
+
+        let mut c = Config::default();
+        c.caching.rule = CachingRule::Even;
+        c.theft.find = 0.5;
+        let names = series_names(&c);
+        assert_eq!(names.len(), base + 5 + 6, "caching, then theft");
+        assert_eq!(names[base + 5], "pilfered");
+        assert!(!names.contains(&"hoarder_alive".to_string()));
+        c.theft.cheaters = 0.5;
+        let names = series_names(&c);
+        assert_eq!(names.len(), base + 5 + 6 + 4);
+        assert_eq!(names.last().unwrap(), "cheater_alive");
+
+        w.config.theft.find = 0.5;
+        let s = Snapshot::of(&w);
+        assert!(s.theft.is_some() && s.cheaters.is_none());
+        w.config.theft.cheaters = 0.5;
+        let s = Snapshot::of(&w);
+        for n in series_names(&w.config) {
+            assert!(s.value(&n).is_some(), "{n}");
+        }
+    }
+
+    #[test]
+    fn theft_switched_on_and_off_mid_run_exports_every_tick() {
+        // `theft.find` is live: on at tick 5, off at tick 20. The snapshots
+        // outside that window have no theft group, and the export and the
+        // series must cover them (NaN), not panic or drop the history.
+        let c = crate::presets::by_id("cache-winter-even").unwrap().config;
+        assert!(!c.theft.is_on());
+        let mut w = World::new(c, 3).unwrap();
+        for t in 1..=30 {
+            if t == 5 {
+                w.config.theft.find = 0.25;
+            }
+            if t == 20 {
+                w.config.theft.find = 0.0;
+            }
+            w.step();
+        }
+        let csv = crate::export::series_csv(&w);
+        assert_eq!(csv.lines().count(), 1 + 31, "a header and ticks 0–30");
+        w.config.theft.find = 0.25; // name the theft series again
+        let csv = crate::export::series_csv(&w);
+        assert!(csv.lines().next().unwrap().contains(",pilfered,"));
+        assert_eq!(csv.lines().count(), 1 + 31);
+        for name in THEFT_SERIES {
+            let v = w.stats.series(name).expect(name);
+            assert_eq!(v.len(), 31, "{name}: every tick");
+            let theft_on = |t: usize| (5..20).contains(&t);
+            for (t, x) in v.iter().enumerate() {
+                assert_eq!(x.is_nan(), !theft_on(t), "{name} at tick {t}: {x}");
+            }
+        }
+    }
+
+    #[test]
+    fn theft_fate_shares_are_cumulative_and_zero_guarded() {
+        use crate::testkit::*;
+        use crate::world::TickEvents;
+        let mut w = blank_world(5, 5);
+        w.config.caching.rule = CachingRule::Even;
+        w.config.theft.find = 0.5;
+        let s0 = Snapshot::of(&w).theft.unwrap();
+        assert_eq!(
+            (
+                s0.pilferage_rate,
+                s0.fate_dug,
+                s0.fate_pilfered,
+                s0.fate_lost,
+                s0.fate_buried
+            ),
+            (0.0, 0.0, 0.0, 0.0, 0.0),
+            "nothing buried: 0, not NaN"
+        );
+
+        let a = spawn(&mut w, 0, 0);
+        w.agent_mut(a).unwrap().caches.insert(2, 4.0);
+        w.events.buried = 10.0;
+        w.events.pilfer_candidates = 4;
+        w.events.caches_pilfered = 1;
+        w.events.pilfers = 3;
+        w.events.pilfered = 2.0;
+        let s1 = Snapshot::of(&w);
+        let t = s1.theft.unwrap();
+        assert_eq!(t.pilfered, 2.0);
+        assert_eq!(t.pilferage_rate, 0.25, "one cache of four, not takes");
+        assert_eq!(t.fate_pilfered, 0.2);
+        assert_eq!(t.fate_buried, 0.4);
+        w.stats.push(s1);
+
+        w.events = TickEvents::default();
+        w.events.buried = 10.0;
+        w.events.dug = 5.0;
+        w.events.cache_lost = 1.0;
+        let t = Snapshot::of(&w).theft.unwrap();
+        assert_eq!(t.pilferage_rate, 0.0, "no candidates");
+        assert_eq!(t.pilfered, 0.0);
+        assert_eq!(t.fate_dug, 5.0 / 20.0);
+        assert_eq!(t.fate_pilfered, 2.0 / 20.0, "carried from tick 1");
+        assert_eq!(t.fate_lost, 1.0 / 20.0);
+        assert_eq!(t.fate_buried, 4.0 / 20.0);
+    }
+
+    #[test]
+    fn the_four_fate_shares_sum_to_1_through_a_theft_winter_run_that_keeps_its_loot() {
+        // theft-winter keeps its loot, and its `even` hoarders go on burying
+        // after pilfers begin. Sugar is fungible, so this can't show that
+        // loot itself is buried again; it checks that the shares stay a
+        // partition while pilfers and burials interleave.
+        let c = crate::presets::by_id("theft-winter").unwrap().config;
+        assert_eq!(c.theft.loot, crate::config::Loot::Keep);
+        let mut w = World::new(c, 7).unwrap();
+        let (mut pilfered, mut buried_after_a_pilfer) = (0.0, false);
+        for _ in 0..150 {
+            w.step();
+            if pilfered > 0.0 && w.events.buried > 0.0 {
+                buried_after_a_pilfer = true;
+            }
+            pilfered += w.events.pilfered;
+            let t = w.stats.latest().and_then(|s| s.theft).unwrap();
+            if t.buried_total == 0.0 {
+                continue;
+            }
+            let sum = t.fate_dug + t.fate_pilfered + t.fate_lost + t.fate_buried;
+            assert!((sum - 1.0).abs() < 1e-9, "tick {}: {sum}", w.tick);
+        }
+        assert!(pilfered > 0.0 && buried_after_a_pilfer);
+        let t = w.stats.latest().and_then(|s| s.theft).unwrap();
+        assert!(t.fate_dug > 0.0 && t.fate_pilfered > 0.0 && t.fate_buried > 0.0);
+    }
+
+    #[test]
+    fn cheater_series_split_the_living_by_kind() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.caching.rule = CachingRule::Even;
+        w.config.theft.cheaters = 0.5;
+        let c = Snapshot::of(&w).cheaters.unwrap();
+        assert_eq!((c.hoarder_holdings, c.cheater_holdings), (0.0, 0.0));
+        assert_eq!((c.hoarder_alive, c.cheater_alive), (0, 0));
+        let mut ids = vec![];
+        for x in 0..3 {
+            ids.push(spawn(&mut w, x, 0));
+        }
+        for (id, h, ch) in [
+            (ids[0], 10.0, false),
+            (ids[1], 20.0, false),
+            (ids[2], 7.0, true),
+        ] {
+            let ag = w.agent_mut(id).unwrap();
+            ag.holdings[0] = h;
+            ag.cheater = ch;
+            ag.fed = 99.0;
+        }
+        let c = Snapshot::of(&w).cheaters.unwrap();
+        assert_eq!(c.hoarder_holdings, 15.0);
+        assert_eq!(c.cheater_holdings, 7.0, "holdings only, not fed");
+        assert_eq!((c.hoarder_alive, c.cheater_alive), (2, 1));
     }
 }

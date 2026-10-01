@@ -7,6 +7,7 @@ import {
   type ChartGroup,
   type Command,
   type DisplayState,
+  type HoardCharts,
   type LogEntry,
   type Overlay,
   type PlaceOverrides,
@@ -20,11 +21,12 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { calendarYear, isSugar, modelOf, ticksLeft } from './models';
+import { loadedDisplay } from './layers';
+import { calendarYear, hasCaches, hoardSeasonTicks, isSugar, mindsShown, modelOf, ticksLeft } from './models';
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { AgreementConfig, ColorMode, Config, FieldError, Layer, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import type { AgreementConfig, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
 import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -56,6 +58,13 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'firms') return `This run has reached its last period (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'bali') return `This run has reached its last year — Reset to run it again`;
+  if (modelOf(config) === 'hoard') {
+    // A run ends at the end of generation `generations`' season, or earlier when every agent died.
+    const c = config as HoardConfig;
+    return tick < hoardSeasonTicks(c) * c.generations
+      ? `Every agent has died, in generation ${Math.floor((tick - 1) / hoardSeasonTicks(c)) + 1} — Reset to run it again`
+      : `This run has reached its last generation (${Math.ceil(tick / hoardSeasonTicks(c))}) — Reset to run it again`;
+  }
   if (modelOf(config) === 'zi') return `This run has reached its last period — Reset to run it again`;
   if (modelOf(config) === 'punishment') return `This run has reached its last period (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'retirement') {
@@ -150,6 +159,7 @@ const REFRESH_MS = 250;
 /** Frame buffers kept for reuse besides the one on screen. */
 const MAX_SPARE = 4;
 const NO_CELLS: Uint32Array = new Uint32Array(0);
+const NO_CACHES: Float64Array = new Float64Array(0);
 
 /** A sugarscape Rules-panel edit, refused (thrown) on another model's config. */
 function sugarOnly(mutate: (c: Config) => void): (c: ModelConfig) => void {
@@ -245,6 +255,16 @@ export class Engine {
   ring: RingState | null = null;
   /** The anasazi's water, settlements and links as of the latest snapshot; null in other models. */
   valley: ValleyState | null = null;
+  /** Minds 5–6: the world's caches, homes, season and lab schedule as of the latest snapshot; null where not drawn. */
+  minds: MindsView | null = null;
+  /** Minds 5–6: every site holding a cache, flat `[x, y, total, flags, …]`, while the caches overlay is on. */
+  cacheSites: Float64Array = NO_CACHES;
+  /** Minds 7: where the hoard run is as of the latest snapshot; null in other models. */
+  hoard: HoardStatus | null = null;
+  /** Minds 7: the hoard charts' data as of the last snapshot that carried it (the charts want it); null in other models. */
+  hoardCharts: HoardCharts | null = null;
+  /** The caches-and-homes overlay was turned off by hand: loading a preset keeps it off. */
+  private cachesOff = false;
   /** The world has run its course (the anasazi's end year) as of the latest snapshot. */
   finished = false;
   /**
@@ -358,6 +378,9 @@ export class Engine {
     const config = initial?.config ?? structuredClone(fallback.config);
     // Until the init snapshot brings the normalized config, `wants()` reads the model from this one.
     engine.config = config;
+    const shown = loadedDisplay(engine.displayState(), config);
+    engine.colorMode = shown.colorMode;
+    engine.overlays = shown.overlays;
     const landscapes = initial?.landscapes ?? [];
     const log = initial?.log ?? [];
     const result = await engine.send(
@@ -506,7 +529,23 @@ export class Engine {
   async loadPreset(id: string, seed?: number): Promise<FieldError[] | null> {
     const preset = this.presets.find((p) => p.id === id);
     if (!preset) return [{ field: 'preset', message: `unknown preset ${id}` }];
-    return this.quiet(() => this.rebuild(structuredClone(preset.config), seed ?? this.seed, [], { presetId: id }));
+    return this.quiet(async () => {
+      const errors = await this.rebuild(structuredClone(preset.config), seed ?? this.seed, [], { presetId: id });
+      if (!errors) this.applyLoadedDisplay();
+      return errors;
+    });
+  }
+
+  /** A freshly loaded world's own display (`loadedDisplay`: its default color mode, the caches overlay). */
+  private applyLoadedDisplay(): void {
+    const d = this.displayState();
+    const next = loadedDisplay(d, this.config, this.cachesOff);
+    if (next !== d) this.setDisplay(next, false);
+  }
+
+  /** Whether snapshots should carry every site's caches: the overlay is on in a world with caches. */
+  private cachesWanted(): boolean {
+    return this.overlays.caches && isSugar(this.config) && hasCaches(this.config);
   }
 
   /** True when the base config differs from the last chosen preset or a landscape is custom. */
@@ -552,7 +591,9 @@ export class Engine {
     });
   }
 
-  setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<Record<Overlay, boolean>> }): void {
+  /** `byHand` (the default): a person chose this, so a caches overlay turned off stays off across presets. */
+  setDisplay(d: { colorMode?: ColorMode; layer?: Layer; overlays?: Partial<Record<Overlay, boolean>> }, byHand = true): void {
+    if (byHand && d.overlays?.caches !== undefined) this.cachesOff = !d.overlays.caches;
     if (d.colorMode) this.colorMode = d.colorMode;
     if (d.layer) this.layer = d.layer;
     if (d.overlays) this.overlays = { ...this.overlays, ...d.overlays };
@@ -743,6 +784,11 @@ export class Engine {
         this.lastSugar = other.lastSugar;
         this.ring = other.ring;
         this.valley = other.valley;
+        this.minds = other.minds;
+        this.cacheSites = other.cacheSites;
+        this.hoard = other.hoard;
+        this.hoardCharts = other.hoardCharts;
+        this.cachesOff = other.cachesOff;
         this.finished = other.finished;
         this.tick = other.tick;
         this.population = other.population;
@@ -823,6 +869,9 @@ export class Engine {
     if (networks.length > 0) own.networks = networks;
     if (this.model === 'ring') own.ring = true;
     if (this.model === 'anasazi') own.valley = true;
+    if (this.model === 'hoard') own.hoard = true;
+    if (isSugar(this.config) && mindsShown(this.config)) own.minds = true;
+    if (this.cachesWanted()) own.caches = true;
     return mergeWants([own, ...Array.from(this.providers, (p) => p(now))]);
   }
 
@@ -892,6 +941,10 @@ export class Engine {
     // the anasazi its valley's).
     this.ring = s.ring ?? (this.model === 'ring' ? this.ring : null);
     this.valley = s.valley ?? (this.model === 'anasazi' ? this.valley : null);
+    this.minds = s.minds ?? (isSugar(this.config) && mindsShown(this.config) ? this.minds : null);
+    this.cacheSites = s.caches ?? (this.cachesWanted() ? this.cacheSites : NO_CACHES);
+    this.hoard = s.hoard ?? (this.model === 'hoard' ? this.hoard : null);
+    this.hoardCharts = s.hoardCharts ?? (this.model === 'hoard' ? this.hoardCharts : null);
     this.finished = s.finished === true;
     // All null (nothing edited) is the same as none.
     if (s.editedLandscapes) this.landscapes = s.editedLandscapes.some((m) => m !== null) ? s.editedLandscapes : [];

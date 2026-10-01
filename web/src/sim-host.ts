@@ -3,11 +3,13 @@ import { clampDisplay } from './layers';
 import { isSugar, modelOf } from './models';
 import {
   chartKey,
+  HOARD_GENERATION_SERIES,
   noOverlays,
   transfers,
   type ChartGroup,
   type DisplayState,
   type EditCommand,
+  type HoardCharts,
   type HostMessage,
   type HostReply,
   type HostRequest,
@@ -20,7 +22,7 @@ import {
   type Wants,
   type WorldSnapshot,
 } from './protocol';
-import { parseErrors, type AnyInspection, type CivilConfig, type DiseaseEntry, type ModelConfig, type ModelStats } from './types';
+import { parseErrors, type AnyInspection, type CivilConfig, type DiseaseEntry, type HoardStatus, type MindsView, type ModelConfig, type ModelStats } from './types';
 
 /** A keyframe the host holds (the WASM `Checkpoint`); freed when dropped. */
 export interface CheckpointLike {
@@ -73,6 +75,16 @@ export interface SimLike {
   anasazi_water(): Uint32Array;
   anasazi_settlements(): Uint32Array;
   anasazi_links(): Uint32Array;
+  /** Minds 5–6: JSON `MindsView` (a sugarscape's; `null` otherwise). */
+  minds_view(): string;
+  /** Minds 5–6: every site holding a cache, flat `[x, y, total, flags, …]`; empty otherwise. */
+  cache_sites(): Float64Array;
+  /** Minds 7: JSON `HoardStatus` (`null` for other models). */
+  hoard_status(): string;
+  /** Minds 7: one value per finished season of a by-generation series; empty for other models. */
+  hoard_generation_series(name: string): Float64Array;
+  /** Minds 7: this season's per-bout values of a series, `[tick, value, …]`; empty for other models. */
+  hoard_season_series(name: string): Float64Array;
   /** Whether the world has run its course (the anasazi's end year): stepping it does nothing. */
   finished(): boolean;
   fingerprint(): string;
@@ -763,6 +775,13 @@ export class SimHost {
     if (wants.valley && modelOf(config) === 'anasazi') {
       s.valley = { water: sim.anasazi_water(), settlements: sim.anasazi_settlements(), links: sim.anasazi_links() };
     }
+    if (modelOf(config) === 'hoard') {
+      if (wants.hoard) s.hoard = JSON.parse(sim.hoard_status()) as HoardStatus;
+      if (wants.hoardCharts) {
+        const generations = Object.fromEntries(HOARD_GENERATION_SERIES.map((k) => [k, sim.hoard_generation_series(k)]));
+        s.hoardCharts = { generations: generations as HoardCharts['generations'], season: sim.hoard_season_series('larder_share') };
+      }
+    }
     // The rest exist only in a sugarscape (Decision 7): a wish for them in another model is ignored.
     if (!sugar) return s;
     if (wants.trail) s.trail = sim.trail();
@@ -780,6 +799,8 @@ export class SimHost {
     if (wants.supplyDemand) s.supplyDemand = sim.supply_demand();
     if (wants.creditGraph) s.creditGraph = JSON.parse(sim.credit_graph()) as CreditGraph;
     if (wants.diseaseList) s.diseaseList = JSON.parse(sim.disease_list()) as DiseaseEntry[];
+    if (wants.minds) s.minds = JSON.parse(sim.minds_view()) as MindsView;
+    if (wants.caches) s.caches = sim.cache_sites();
     return s;
   }
 
@@ -794,7 +815,8 @@ export class SimHost {
 
   private selectAt(sim: SimLike, x: number, y: number): Selected {
     const view = JSON.parse(sim.inspect(x, y)) as AnyInspection;
-    const agentId = view.agent?.id ?? null;
+    // A hoard column's agent has an index, not an id: it is selected by its column.
+    const agentId = view.agent && 'id' in view.agent ? view.agent.id : null;
     return { x, y, agentId, alive: agentId !== null, view };
   }
 

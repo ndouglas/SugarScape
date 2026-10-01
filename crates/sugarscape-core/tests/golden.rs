@@ -53,8 +53,8 @@ const GOLDEN: &[(&str, u64)] = &[
     ("vi-2-no-trade", 0xd35c40bead68ed38),
     ("vi-3-trade", 0x2a65351834fda082),
     // Milestone 14: Axelrod's culture rule in the Sugarscape (the docking).
-    ("dock-mobility-15", 0x9d0a2ced876f00d2),
-    ("dock-mobility-30", 0x10a0c00c27c1660d),
+    ("dock-mobility-15", 0x3361a01b1a7cd6a3),
+    ("dock-mobility-30", 0x19cfa4ca0800089e),
     // Minds 1: the ideal free distribution (two patches; the utility mind).
     ("ifd-even", 0xb5792be0a465638a),
     ("ifd-two-to-one", 0xbc6e9d14253d630d),
@@ -101,6 +101,14 @@ const GOLDEN: &[(&str, u64)] = &[
     ("central-linear", 0x175e71e582dd82c5),
     ("cache-raby", 0xc30d92bb27b9366b),
     ("cache-amodio", 0xbc5371ef776e55a5),
+    // Minds 6
+    ("theft-winter", 0x8812daf7a717c8d0),
+    ("theft-winter-quarter", 0x4f48f55df13c19e7),
+    ("theft-winter-half", 0xd0ee29237c28952f),
+    // 2026-09-30: the arenas walled on all four sides (a (k + 2)-torus).
+    ("theft-arena-2", 0x403d0fd47b215e1d),
+    ("theft-arena-4", 0x5aab49c65af8928d),
+    ("theft-arena-8", 0x24f7fb0d39bfc02),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
@@ -125,6 +133,13 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("tipping-intolerant", 0x6e204f0626e23a4d),
     ("tipping-minority", 0x3e9d9992d3a167c7),
     ("tipping-less-tolerant", 0x53b4b358243df7be),
+    // Milestone 32: variations on Schelling (the small boards).
+    ("pv-flat", 0x9ec9dad297a2f81d),
+    ("pv-p50", 0x717f0ba10e75dfaf),
+    ("pv-p100", 0xb903a558b48f4235),
+    ("pv-spiked", 0xd9dd6c3a877d37c2),
+    ("pv-ring", 0x14ac53042eb625d9),
+    ("svw-small", 0x17c8cd55b1831276),
     ("vi-4-schelling-25", 0x7a7072c3433f5f6f),
     ("vi-5-schelling-25-residence", 0x9abe1c25e873debd),
     ("vi-6-schelling-50-residence", 0x637412f7af91f684),
@@ -359,6 +374,12 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("janssen-generalized", 0xa2ae0ad93a97f180),
     ("janssen-adaptive", 0xea4877048a644fad),
     ("janssen-fewer-links", 0x878f982a182d0672),
+    // Minds 7: the evolution of larder hoarding (200 bouts: day 10 of generation 1).
+    ("hoard-threshold", 0x83dbd8ba0dd130e0),
+    ("hoard-scatter", 0xa077bede082fc87e),
+    ("hoard-larder", 0x3da0a5fcbbe0803e),
+    ("hoard-no-free-recovery", 0xaf76c42dbbd8c97c),
+    ("hoard-cheaters", 0xd9fe57875f2c6602),
     // Milestone 33: The Emergence of Firms (200 periods).
     ("firms-base", 0xf289726485a9084c),
     ("firms-live", 0x8cb9364c43b4d2ad),
@@ -411,6 +432,28 @@ fn model_fingerprint(id: &str) -> u64 {
     let mut world = ModelWorld::new(preset.config, 1).unwrap();
     world.model_mut().run(200);
     world.model().fingerprint()
+}
+
+/// Big boards (50 × 50 and 100 × 100, milestone 32): (id, ticks, fingerprint
+/// from seed 1), 20 ticks so a debug test run stays quick.
+const BIG_GOLDEN: &[(&str, u32, u64)] = &[
+    ("gvn-frozen", 20, 0xc12bbc1f827dec02),
+    ("gvn-segregated", 20, 0xdee4748f1bfb310b),
+    ("gvn-mixed", 20, 0x367617ebe919e13f),
+    ("svw-large", 20, 0xab7f0a875a6994bb),
+    ("svw-t4", 20, 0xbbfbe12164dd29c4),
+    ("zhang-checkerboard", 20, 0xe8aee08d720ff908),
+    ("zhang-random", 20, 0x61b6343a85676408),
+];
+
+#[test]
+fn big_boards_are_unchanged() {
+    for &(id, ticks, expected) in BIG_GOLDEN {
+        let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
+        let mut world = ModelWorld::new(preset.config, 1).unwrap();
+        world.model_mut().run(ticks);
+        assert_eq!(world.model().fingerprint(), expected, "preset {id} changed");
+    }
 }
 
 /// Image scoring's presets: (id, generations, fingerprint from seed 1). The
@@ -472,7 +515,10 @@ fn every_model_preset_has_a_golden_entry() {
     for p in presets::catalog() {
         assert!(
             GOLDEN.iter().chain(MODEL_GOLDEN).any(|&(id, _)| id == p.id)
-                || IMAGE_GOLDEN.iter().any(|&(id, _, _)| id == p.id),
+                || IMAGE_GOLDEN
+                    .iter()
+                    .chain(BIG_GOLDEN)
+                    .any(|&(id, _, _)| id == p.id),
             "record a golden fingerprint for {} (run print_golden)",
             p.id
         );

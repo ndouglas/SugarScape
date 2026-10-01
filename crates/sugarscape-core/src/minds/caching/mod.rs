@@ -5,7 +5,11 @@
 //!   else sees or takes them, they don't decay, and they die with the agent
 //!   (counted into `events.cache_lost` by `World::remove`).
 //! - **Bury(q)** (`bury`) at the agent's current site: holdings −= q, cache
-//!   += q. It costs no tick.
+//!   += q. It costs no tick. Minds 6's `caching.bury_cost` c takes q × c more
+//!   from holdings, counted as eaten (`events.bury_cost`), and q is clamped
+//!   so that q × (1 + c) fits in holdings. Under theft (`theft.is_on()`),
+//!   each burial opens a fate record (`fates`), closed by a dig, a pilfer or
+//!   the owner's death; other worlds keep no log.
 //! - **Dig** (`dig`, called by `movement::go_and_gather`): arriving at its own
 //!   cache while holdings are below half the reserve, the agent takes min(cache,
 //!   room under the carrying limit) instead of harvesting the site.
@@ -22,12 +26,18 @@
 //!   so an agent back from a delivery isn't hungry for its own larder and
 //!   doesn't dig the load it just buried (`minds::central`).
 //!
+//! - **Theft** (Minds 6, `theft`): under `theft.find` > 0 an arriving agent
+//!   may find and pilfer other agents' caches; under `theft.owner_memory:
+//!   off` its own caches aren't candidates and it finds them only by chance.
+//!
 //! Sugar is conserved exactly across bury and dig: Σ sites + Σ holdings +
-//! Σ caches + eaten. Nothing here draws.
+//! Σ caches + eaten (bury cost included). Nothing here draws.
 
 pub mod episodes;
+pub mod fates;
 pub mod lab;
 pub mod rules;
+pub mod theft;
 
 use crate::agent::AgentId;
 use crate::geometry::Pos;
@@ -61,14 +71,15 @@ pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
 /// an agent that buried down to R ate below R and dug the next tick). In a
 /// central-place world the threshold stays R, one tick's need: an agent
 /// holding between R / 2 and R that didn't dig would eat below zero and die.
-/// False, without computing R, for an agent with no caches.
+/// False, without computing R, for an agent with no caches. The survey's
+/// probe `World::probe_dig_at_reserve` sets the threshold at R everywhere.
 pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
     if a.caches.is_empty() {
         return false;
     }
     let r = reserve(world, id);
-    let threshold = if world.config.central.enabled {
+    let threshold = if world.config.central.enabled || world.probe_dig_at_reserve {
         r
     } else {
         r / 2.0
@@ -76,28 +87,52 @@ pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     a.holdings[0] < threshold
 }
 
-/// Buries `q` sugar (clamped to [0, holdings]) at the agent's current site.
-/// Adds to `events.buried`; a cache begun on an empty site starts its age
-/// now.
-pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) {
+/// Buries `q` sugar at the agent's current site and returns what it
+/// buried. With bury cost c (`caching.bury_cost`, field worlds only), q × c more leaves
+/// holdings, counted as eaten in `events.bury_cost`; q is clamped to
+/// [0, holdings / (1 + c)], so holdings never go negative (the cost is
+/// capped at what's left, against rounding). The burial rules size q
+/// ignoring the cost, so an agent that meant to keep R ends at R − q·c;
+/// no summer churn (digging back what the cost ate) was measured at c ≤ 1.
+/// Adds to `events.buried` and
+/// (under theft) opens a fate record; a cache begun on an empty site starts
+/// its age now.
+pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     let now = world.tick;
     let torus = world.torus;
+    let c = world.config.caching.bury_cost;
     let a = world.agent_mut(id).expect("live agent");
-    let q = q.min(a.holdings[0]).max(0.0);
+    let cap = if c > 0.0 {
+        a.holdings[0] / (1.0 + c)
+    } else {
+        a.holdings[0]
+    };
+    let q = q.min(cap).max(0.0);
     if q <= 0.0 {
-        return;
+        return 0.0;
     }
     let site = torus.index(a.pos) as u32;
     a.holdings[0] -= q;
+    let mut cost = 0.0;
+    if c > 0.0 {
+        cost = (q * c).min(a.holdings[0]);
+        a.holdings[0] -= cost;
+    }
     *a.caches.entry(site).or_insert(0.0) += q;
     a.cache_since.entry(site).or_insert(now);
     world.events.buried += q;
+    world.events.bury_cost += cost;
+    fates::open(world, id, site, q);
+    theft::note(world, id, site, true);
+    q
 }
 
 /// Digs `id`'s cache at site index `site`, taking min(cache, `room`), and
 /// returns what it took (0 when there's no cache there). An emptied cache is
-/// removed. A positive dig counts `dug`, `digs` and the cache's age. The
-/// caller adds the take to holdings, as `Harvest::dug` (never `gathered`).
+/// removed. A positive dig counts `dug`, `digs` and the cache's age, and
+/// (under theft, Minds 6) closes that much of its fate records as dug
+/// (`fates`). The caller adds the take to holdings, as `Harvest::dug`
+/// (never `gathered`).
 pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     let now = world.tick;
     let a = world.agent_mut(id).expect("live agent");
@@ -109,9 +144,9 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
         return 0.0;
     }
     let since = a.cache_since.get(&site).copied().unwrap_or(now);
-    if take >= *cache {
+    let emptied = take >= *cache;
+    if emptied {
         a.caches.remove(&site);
-        a.cache_since.remove(&site);
     } else {
         *cache -= take;
     }
@@ -119,6 +154,13 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     e.dug += take;
     e.digs += 1;
     e.dig_ages_sum += now.saturating_sub(since);
+    // The fate log reads `cache_since` (for a backfill), so it goes after.
+    fates::close_dug(world, id, site, take);
+    if emptied {
+        let a = world.agent_mut(id).expect("live agent");
+        a.cache_since.remove(&site);
+        theft::note(world, id, site, false);
+    }
     take
 }
 
@@ -140,13 +182,15 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
 ///   valued at the larger of the two.
 ///
 /// No caches, or not hungry: the list is untouched and nothing allocates.
+/// Under Minds 6's `theft.owner_memory: off` the agent doesn't know where
+/// its caches are: none joins (it finds them only by chance, `theft`).
 pub(crate) fn join_caches(
     world: &World,
     id: AgentId,
     out: &mut Vec<(Pos, u32, f64)>,
     start: &mut usize,
 ) {
-    if !hungry(world, id) {
+    if !world.config.theft.owner_memory || !hungry(world, id) {
         return;
     }
     let a = world.agent(id).expect("live agent");
@@ -181,10 +225,11 @@ pub(crate) fn join_caches(
 }
 
 /// `id`'s cache at `p`, when it's hungry (Minds 3's true value of a
-/// candidate counts it, as the candidate did).
+/// candidate counts it, as the candidate did). `None` under
+/// `theft.owner_memory: off`, where no cache is a candidate.
 pub(crate) fn cache_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
     let a = world.agent(id).expect("live agent");
-    if a.caches.is_empty() {
+    if a.caches.is_empty() || !world.config.theft.owner_memory {
         return None;
     }
     let amount = *a.caches.get(&(world.torus.index(p) as u32))?;
@@ -227,6 +272,19 @@ mod tests {
 
     fn at(w: &World, x: u32, y: u32) -> u32 {
         w.torus.index(Pos::new(x, y)) as u32
+    }
+
+    #[test]
+    fn the_survey_probe_moves_the_dig_threshold_from_half_the_reserve_to_all_of_it() {
+        let mut w = blank_world(11, 11);
+        let id = caching_agent(&mut w, 7.0, 0);
+        w.agent_mut(id).unwrap().caches.insert(3, 4.0);
+        // R = 10: holding 7 is above R / 2, so not hungry, until the probe.
+        assert!(!hungry(&w, id));
+        w.probe_dig_at_reserve = true;
+        assert!(hungry(&w, id));
+        w.agent_mut(id).unwrap().holdings[0] = 10.0;
+        assert!(!hungry(&w, id), "at R it doesn't dig");
     }
 
     #[test]
@@ -655,7 +713,48 @@ mod tests {
     /// bit for bit.
     #[test]
     fn sugar_is_conserved_over_300_ticks_of_scripted_burying() {
+        conserved_with_bury_cost(0.0);
+    }
+
+    #[test]
+    fn sugar_is_conserved_through_a_bury_cost() {
+        conserved_with_bury_cost(0.4);
+    }
+
+    #[test]
+    fn a_bury_cost_comes_out_of_holdings_as_eaten_and_bury_clamps_to_pay_it() {
+        let mut w = blank_world(11, 11);
+        w.config.caching.bury_cost = 0.25;
+        let id = caching_agent(&mut w, 10.0, 0);
+        let here = at(&w, 5, 5);
+        let before = total(&w);
+        assert_eq!(bury(&mut w, id, 4.0), 4.0);
+        assert_eq!(w.agent(id).unwrap().holdings[0], 5.0, "10 − 4 − 4 × 0.25");
+        assert_eq!(w.agent(id).unwrap().caches[&here], 4.0);
+        assert_eq!((w.events.buried, w.events.bury_cost), (4.0, 1.0));
+        assert_eq!(total(&w) + w.events.bury_cost, before);
+        // Asked for more than it can pay for, it buries 5 / 1.25 = 4.
+        assert_eq!(bury(&mut w, id, 100.0), 4.0);
+        assert_eq!(w.agent(id).unwrap().holdings[0], 0.0);
+        assert_eq!((w.events.buried, w.events.bury_cost), (8.0, 2.0));
+        assert_eq!(total(&w) + w.events.bury_cost, before);
+        assert_eq!(bury(&mut w, id, 1.0), 0.0, "nothing left to bury");
+        // An awkward ratio never takes holdings below 0.
+        w.config.caching.bury_cost = 0.3;
+        for held in [1.0, 0.7, 13.0 / 3.0, 1e-9] {
+            w.agent_mut(id).unwrap().holdings[0] = held;
+            let cost = w.events.bury_cost;
+            let q = bury(&mut w, id, 50.0);
+            let left = w.agent(id).unwrap().holdings[0];
+            assert!(left >= 0.0, "{held}: {left}");
+            assert!((q + (w.events.bury_cost - cost) + left - held).abs() < 1e-15);
+        }
+    }
+
+    /// The conservation run below, with bury cost `c` (counted as eaten).
+    fn conserved_with_bury_cost(bury_cost: f64) {
         let mut c = blank_config(12, 12);
+        c.caching.bury_cost = bury_cost;
         c.growback.rate = 0.3;
         c.goap.horizon = 3;
         c.caching.capacity = 8;
@@ -719,6 +818,7 @@ mod tests {
             grown += sites_sum(&w) - before;
             w.tick += 1;
             left += w.events.cache_lost;
+            eaten += w.events.bury_cost;
             buried += w.events.buried;
             dug += w.events.dug;
             digs += w.events.digs;

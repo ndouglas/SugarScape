@@ -306,7 +306,7 @@ export class RulesPanel {
               }
             }, reset),
         });
-        this.syncers.push(() => (box.checked = getPath(this.engine.sugar, c.path) === true));
+        this.syncers.push(() => (box.checked = c.current ? c.current(this.engine.sugar) : getPath(this.engine.sugar, c.path) === true));
         return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${c.label}`), this.errorSlot(c.path));
       }
       case 'number': {

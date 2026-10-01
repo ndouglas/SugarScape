@@ -1,0 +1,55 @@
+{
+  "name": "Zhang's neighborhoods: four, eight or twelve neighbors",
+  "description": "Zhang's JEBO rules at β = 10 with four, eight or twelve neighbors, mixed pairs always counted on the eight around (as he does). Zhang: with eight neighbors \"the expected waiting time is less than half of that under the von Neumann neighborhood\"; twelve is \"even a shorter waiting time, although not much shorter\". Measured (seeds 1–5, recorded 2026-09-30): the order holds throughout: at step 20, 7,460 mixed pairs with four, 6,230 with eight and 5,420 with twelve; the first step below 8,000 (his potential at 600) is about 17, 10 and 9 (8 seeds), so eight takes 0.6 of four's time, not under half.",
+  "base": {
+    "preset": "zhang-random"
+  },
+  "x": {
+    "label": "All runs",
+    "values": [
+      {
+        "at": 0,
+        "set": {}
+      }
+    ]
+  },
+  "series": {
+    "label": "Neighborhood",
+    "values": [
+      {
+        "at": 4,
+        "name": "Four (von Neumann)",
+        "set": {
+          "neighborhood": "von_neumann",
+          "radius": 1
+        }
+      },
+      {
+        "at": 8,
+        "name": "Eight (Moore)",
+        "set": {
+          "neighborhood": "moore",
+          "radius": 1
+        }
+      },
+      {
+        "at": 12,
+        "name": "Twelve (radius 2)",
+        "set": {
+          "neighborhood": "von_neumann",
+          "radius": 2
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 40,
+  "metric": {
+    "kind": "timeseries",
+    "series": "mixed_pairs",
+    "every": 2
+  }
+}

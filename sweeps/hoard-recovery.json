@@ -1,0 +1,28 @@
+{
+  "name": "Minds 7: hoarding against how often owners find their own caches",
+  "description": "The mean L among the hoarders of generation 50 (hoarder_larder_prob; window_mean, ticks 98001–100000) in hoard-threshold's world (ratio 0.22, the paper's 50 % point) against owner_recovery, the chance an owner finds one of its own scattered caches when it looks: 0.25, 0.5, 0.75 or 1 (the paper's free recall). The run is 50 of the 60 generations because sweeps stop at 100 000 ticks. Ten seeds; the survey does more.",
+  "base": {
+    "preset": "hoard-threshold"
+  },
+  "x": {
+    "label": "Owner recovery chance",
+    "path": "owner_recovery",
+    "values": [
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 10
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "hoarder_larder_prob",
+    "from": 98001,
+    "to": 100000
+  }
+}

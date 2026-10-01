@@ -1,6 +1,8 @@
 // Which model a config is (milestones 9–21), and what each model offers the page.
-import { NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
+import { MINDS_OVERLAYS, NETWORKS, VALLEY_OVERLAYS, type Overlay } from './protocol';
 import type {
+  HoardConfig,
+  HoardInspection,
   LineInspection,
   TippingInspection,
   FirmsConfig,
@@ -52,7 +54,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'firms'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -81,13 +83,14 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   bali: 'Balinese Water Temples',
   line: "Schelling's line",
   tipping: "Schelling's tipping",
+  hoard: 'The evolution of hoarding',
   firms: 'The Emergence of Firms',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'firms'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms'
     ? tag
     : 'sugarscape';
 }
@@ -186,6 +189,11 @@ export function isBaliView(v: AnyInspection): v is BaliInspection {
   return 'panel' in v && 'subak' in v && 'dam' in v;
 }
 
+/** A column of the hoard frame: the run's generation, day and bout, and an agent by index. */
+export function isHoardView(v: AnyInspection): v is HoardInspection {
+  return 'bout' in v && 'public' in v;
+}
+
 /** A cell of the firms frame (a panel, a `firm` and a `member`); check it before the others with a panel. */
 export function isFirmsView(v: AnyInspection): v is FirmsInspection {
   return 'panel' in v && 'firm' in v && 'member' in v;
@@ -260,14 +268,28 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     const b = c as BaliConfig;
     return Math.max(0, b.stop_at * (b.watershed === 'two_node' ? b.node_periods : 12) - tick);
   }
+  if (modelOf(c) === 'hoard') {
+    // The core finishes the season in progress even if `generations` is lowered below it live, so
+    // count to the later of the last generation's end and the current season's end.
+    const h = c as HoardConfig;
+    const s = hoardSeasonTicks(h);
+    return Math.max(h.generations, Math.max(1, Math.ceil(tick / s))) * s - tick;
+  }
   if (modelOf(c) === 'firms' && (c as FirmsConfig).stop_at > 0) return Math.max(0, (c as FirmsConfig).stop_at - tick);
   return Infinity;
+}
+
+/** A hoard season's bouts (ticks): generation g's are (g − 1)·days·bouts + 1 to g·days·bouts. */
+export function hoardSeasonTicks(c: HoardConfig): number {
+  return c.days * c.bouts;
 }
 
 /**
  * Whether a world of `c` can finish at a tick nobody knows in advance: civil Model II stopping when
  * a group dies out (its `ticksLeft` is Infinity until then). Compare steps such a pair one tick at a
- * time, so neither world runs past the tick at which the other finished.
+ * time, so neither world runs past the tick at which the other finished. A hoard run can also die
+ * out in any season, but that is rare and it ends the run for good, so it isn't counted here: Compare
+ * steps a hoard pair in batches, and a pair whose world died out stops at the end of that batch.
  */
 export function finishesUnpredictably(c: ModelConfig): boolean {
   const model = modelOf(c);
@@ -310,7 +332,8 @@ export function sugarscapeChapter(p: Preset): string {
 /**
  * Whether `c` is a Minds world (docs/studies/2026-09-27-minds.md): a sugarscape config that uses any rule
  * the Minds experiments added — a decision other than rule M, walking, memory, walls, truffles, caching,
- * a carrying limit, central-place foraging or a winter everywhere at once.
+ * a carrying limit, central-place foraging, a winter everywhere at once, or theft (a chance to find caches
+ * or any cheaters).
  * The Minds run on the sugarscape model but have their own entry in the model menu.
  */
 export function usesMinds(c: ModelConfig): boolean {
@@ -326,21 +349,43 @@ export function usesMinds(c: ModelConfig): boolean {
     s.caching?.mixed === true ||
     (s.caching?.capacity ?? 0) > 0 ||
     s.central?.enabled === true ||
-    s.seasons?.mode === 'global'
+    s.seasons?.mode === 'global' ||
+    (s.theft?.find ?? 0) > 0 ||
+    (s.theft?.cheaters ?? 0) > 0
   );
 }
+
+/** Minds 5: caching is on (a rule that buries, mixed rules, or a carrying limit), as the core's `Caching::is_on`. */
+export const cachingOn = (c: Config): boolean =>
+  (c.caching?.rule ?? 'none') !== 'none' || c.caching?.mixed === true || (c.caching?.capacity ?? 0) > 0;
+
+/** Minds 6: theft is on (a chance to find caches, or any cheaters), as the core's `Theft::is_on`. */
+export const theftOn = (c: Config): boolean => (c.theft?.find ?? 0) > 0 || (c.theft?.cheaters ?? 0) > 0;
+
+/** Minds 5–6: whether `c` can hold caches (caching on, or a central world's larders). */
+export const hasCaches = (c: Config): boolean => cachingOn(c) || c.central?.enabled === true;
+
+/**
+ * Minds 5–6: whether the page draws a `MindsView` for `c` — caches or larders, a winter everywhere
+ * at once, or a lab.
+ */
+export const mindsShown = (c: Config): boolean =>
+  cachingOn(c) || c.central?.enabled === true || (c.seasons?.enabled === true && c.seasons.mode === 'global') || (c.lab ?? null) !== null;
 
 /** An entry of the model menu: a model, or the Minds (sugarscape worlds using the Minds rules). */
 export type MenuKind = ModelKind | 'minds';
 
+/** Models of their own that belong to the Minds entry (Minds 7's hoarding), not an entry of their own. */
+export const MINDS_MODELS: ModelKind[] = ['hoard'];
+
 /** The model menu's entries in order: the Minds right after the Sugarscape. */
-export const MENUS: MenuKind[] = ['sugarscape', 'minds', ...MODELS.filter((m) => m !== 'sugarscape')];
+export const MENUS: MenuKind[] = ['sugarscape', 'minds', ...MODELS.filter((m) => m !== 'sugarscape' && !MINDS_MODELS.includes(m))];
 
 export const MENU_LABELS: Record<MenuKind, string> = { ...MODEL_LABELS, minds: 'Minds' };
 
 /** The model menu's entry for config `c` by its rules alone. */
 export function menuOf(c: ModelConfig): MenuKind {
-  return usesMinds(c) ? 'minds' : modelOf(c);
+  return usesMinds(c) || MINDS_MODELS.includes(modelOf(c)) ? 'minds' : modelOf(c);
 }
 
 /**
@@ -363,6 +408,8 @@ const MINDS_TITLES: Record<string, string> = {
   '3': 'Minds 3: memory',
   '4': 'Minds 4: planning',
   '5': 'Minds 5: caching',
+  '6': 'Minds 6: theft',
+  '7': 'Minds 7: evolution of hoarding',
 };
 
 /**
@@ -410,6 +457,11 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['lineage', 'Lineage'],
     // Axelrod's culture rule (milestone 14); agents are gray under the book's rule.
     ['culture', 'Culture'],
+    // Minds 6: hoarder or cheater; Minds 5: each agent's caching rule. See `defaultColorMode`.
+    ['strategy', 'Strategy'],
+    ['caching_rule', 'Caching rule'],
+    // Minds 3: whether each agent remembers.
+    ['memory', 'Memory'],
   ],
   schelling: [
     ['color', 'Color'],
@@ -553,6 +605,8 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
   ],
   // His plane: Red inside across, Blue inside up; where each color is content tinted.
   tipping: [['plane', 'Plane']],
+  // One column per agent: status, L and D, larder up and scatter down (the population panel).
+  hoard: [['agents', 'Agents']],
   // Axtell's red founders and blue members first; then preference, effort and pay.
   firms: [
     ['founder', 'Founder'],
@@ -564,7 +618,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
 export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
-  sugarscape: NETWORKS,
+  sugarscape: [...NETWORKS, ...MINDS_OVERLAYS],
   schelling: [],
   ring: [],
   anasazi: VALLEY_OVERLAYS,
@@ -589,5 +643,6 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   bali: [],
   line: [],
   tipping: [],
+  hoard: [],
   firms: [],
 };

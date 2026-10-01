@@ -1,0 +1,61 @@
+{
+  "name": "Singh et al.'s city size: clusters as the board grows",
+  "description": "Singh, Vainchtein & Weiss's rules (a torus, a checkerboard with a third removed, content with 3 of the 8 around alike, blanks counting against) on boards of side 8 to 100, clusters counted as they do (joined at sides or corners). Singh et al.: \"the striking global aggregation Schelling observed is strictly a small city phenomenon\": two clusters on 8 × 8, 55 on 100 × 100 at this vacancy. Measured (seeds 1–5, at rest by 300 steps, recorded 2026-09-30): 2 clusters at 8, 2.8 at 16, 6.2 at 30, 14.4 at 50 and 58 at 100.",
+  "base": {
+    "preset": "svw-small"
+  },
+  "x": {
+    "label": "Board side N",
+    "values": [
+      {
+        "at": 8,
+        "set": {
+          "width": 8,
+          "height": 8,
+          "population": 43
+        }
+      },
+      {
+        "at": 16,
+        "set": {
+          "width": 16,
+          "height": 16,
+          "population": 171
+        }
+      },
+      {
+        "at": 30,
+        "set": {
+          "width": 30,
+          "height": 30,
+          "population": 600
+        }
+      },
+      {
+        "at": 50,
+        "set": {
+          "width": 50,
+          "height": 50,
+          "population": 1667
+        }
+      },
+      {
+        "at": 100,
+        "set": {
+          "width": 100,
+          "height": 100,
+          "population": 6667
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 300,
+  "metric": {
+    "kind": "final",
+    "series": "clusters8"
+  }
+}

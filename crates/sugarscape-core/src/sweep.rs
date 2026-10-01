@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 176] = [
+const BUILTINS: [Builtin; 187] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1033,6 +1033,22 @@ const BUILTINS: [Builtin; 176] = [
     Builtin {
         id: "tipping-limit",
         json: include_str!("../../../sweeps/tipping-limit.json"),
+    },
+    Builtin {
+        id: "gvn-phase",
+        json: include_str!("../../../sweeps/gvn-phase.json"),
+    },
+    Builtin {
+        id: "svw-city",
+        json: include_str!("../../../sweeps/svw-city.json"),
+    },
+    Builtin {
+        id: "zhang-beta",
+        json: include_str!("../../../sweeps/zhang-beta.json"),
+    },
+    Builtin {
+        id: "zhang-neighborhood",
+        json: include_str!("../../../sweeps/zhang-neighborhood.json"),
     },
     Builtin {
         id: "lhv-calibration",
@@ -1117,6 +1133,10 @@ const BUILTINS: [Builtin; 176] = [
     Builtin {
         id: "dock-mobility",
         json: include_str!("../../../sweeps/dock-mobility.json"),
+    },
+    Builtin {
+        id: "dock-mountain",
+        json: include_str!("../../../sweeps/dock-mountain.json"),
     },
     Builtin {
         id: "aey-memory",
@@ -1617,6 +1637,30 @@ const BUILTINS: [Builtin; 176] = [
     Builtin {
         id: "central-distance",
         json: include_str!("../../../sweeps/central-distance.json"),
+    },
+    Builtin {
+        id: "theft-find",
+        json: include_str!("../../../sweeps/theft-find.json"),
+    },
+    Builtin {
+        id: "theft-cheaters",
+        json: include_str!("../../../sweeps/theft-cheaters.json"),
+    },
+    Builtin {
+        id: "theft-winter",
+        json: include_str!("../../../sweeps/theft-winter.json"),
+    },
+    Builtin {
+        id: "hoard-ratio",
+        json: include_str!("../../../sweeps/hoard-ratio.json"),
+    },
+    Builtin {
+        id: "hoard-recovery",
+        json: include_str!("../../../sweeps/hoard-recovery.json"),
+    },
+    Builtin {
+        id: "hoard-cheaters",
+        json: include_str!("../../../sweeps/hoard-cheaters.json"),
     },
     Builtin {
         id: "firms-beta",
@@ -2510,6 +2554,10 @@ mod tests {
                 "tipping-intercept",
                 "tipping-speeds",
                 "tipping-limit",
+                "gvn-phase",
+                "svw-city",
+                "zhang-beta",
+                "zhang-neighborhood",
                 "lhv-calibration",
                 "lhv-quirks",
                 "cv-ratio-rules",
@@ -2531,6 +2579,7 @@ mod tests {
                 "ac-traits-transition",
                 "ac-drift",
                 "dock-mobility",
+                "dock-mountain",
                 "aey-memory",
                 "aey-population",
                 "aey-first-attractor",
@@ -2656,6 +2705,12 @@ mod tests {
                 "cache-capacity",
                 "cache-winter",
                 "central-distance",
+                "theft-find",
+                "theft-cheaters",
+                "theft-winter",
+                "hoard-ratio",
+                "hoard-recovery",
+                "hoard-cheaters",
                 "firms-beta",
                 "firms-b",
                 "firms-preferences",

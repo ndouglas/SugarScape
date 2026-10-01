@@ -9,7 +9,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::Serialize;
 
-use super::config::{Activation, Changes, CultureConfig, Edges, Neighborhood};
+use super::config::{Activation, Changes, CultureConfig, Edges, Neighborhood, Pick};
 use super::stats::{CultureSnapshot, Sets};
 use crate::config::FieldError;
 use crate::export;
@@ -357,18 +357,27 @@ impl CultureWorld {
         if self.traits[s * f + probe] != self.traits[n * f + probe] {
             return;
         }
-        let mut differ = [0u8; 32];
-        let mut k = 0;
-        for g in 0..f {
-            if self.traits[s * f + g] != self.traits[n * f + g] {
-                differ[k] = g as u8;
-                k += 1;
+        let g = if self.config.pick == Pick::Scan {
+            let start = self.rng.gen_range(0..f as u32) as usize;
+            let traits = &self.traits;
+            match scan_pick(start, f, |g| traits[s * f + g] != traits[n * f + g]) {
+                Some(g) => g,
+                None => return,
             }
-        }
-        if k == 0 {
-            return;
-        }
-        let g = differ[self.rng.gen_range(0..k as u32) as usize] as usize;
+        } else {
+            let mut differ = [0u8; 32];
+            let mut k = 0;
+            for g in 0..f {
+                if self.traits[s * f + g] != self.traits[n * f + g] {
+                    differ[k] = g as u8;
+                    k += 1;
+                }
+            }
+            if k == 0 {
+                return;
+            }
+            differ[self.rng.gen_range(0..k as u32) as usize] as usize
+        };
         let (to, from) = match changes {
             Changes::Active => (s, n),
             Changes::Neighbor => (n, s),
@@ -783,9 +792,39 @@ impl Model for CultureWorld {
     }
 }
 
+/// Axelrod's CULTURE.P search: from `start`, the first feature that `differs`,
+/// stepping two at a time (his `(b + 1) mod F + 1`, 1-based), F tries.
+fn scan_pick(start: usize, f: usize, differs: impl Fn(usize) -> bool) -> Option<usize> {
+    let mut g = start;
+    for _ in 0..f {
+        if differs(g) {
+            return Some(g);
+        }
+        g = (g + 2) % f;
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn axelrods_scan_takes_the_first_differing_feature_two_at_a_time() {
+        // His program starts at a random feature and steps (b + 1) mod F + 1
+        // (1-based): two features at a time, F tries.
+        fn differ(gs: &[usize]) -> impl Fn(usize) -> bool + '_ {
+            move |g| gs.contains(&g)
+        }
+        assert_eq!(scan_pick(0, 5, differ(&[1])), Some(1), "0, 2, 4, 1");
+        assert_eq!(scan_pick(3, 5, differ(&[1, 4])), Some(4), "3, 0, 2, 4");
+        assert_eq!(
+            scan_pick(0, 4, differ(&[1, 3])),
+            None,
+            "0, 2, 0, 2: the odd features are out of reach"
+        );
+        assert_eq!(scan_pick(1, 4, differ(&[3])), Some(3));
+    }
 
     fn config(edit: impl FnOnce(&mut CultureConfig)) -> CultureConfig {
         let mut c = CultureConfig::default();

@@ -1,0 +1,97 @@
+{
+  "name": "Docking: the sugar mountain's width and height",
+  "description": "Axtell et al. 1996's mobility experiment (15 traits) across the width σ and height of its \"single (Gaussian) sugar mountain\" (capacities round(height · e^(−d²/2σ²))); the paper gives neither. They report 1.1 ± 0.3 cultures. Measured (seeds 1–5, mean cultures, recorded 2026-09-30), σ = 8, 12, 16, 20, 25, 50: height 2: 75, 68, 56, 41, 24, 1.4; height 3: 54, 42, 24, 8, 1.6, 1.6; height 4: 42, 30, 11, 2, 1, 1.2; height 6: 31, 17, 2.6, 1, 1.2, 1.2; height 10: 22, 6.4, 1, 1.2, 1.4. Their result reproduces on any mountain broad or tall enough (σ ≥ 20 at height 4, σ ≥ 16 at height 6–10, σ = 50 at any height) and not on narrow, low ones.",
+  "base": {
+    "preset": "dock-mobility-15"
+  },
+  "x": {
+    "label": "Mountain width (σ)",
+    "values": [
+      {
+        "at": 8,
+        "set": {
+          "goods.0.map.sigma": 8
+        }
+      },
+      {
+        "at": 12,
+        "set": {
+          "goods.0.map.sigma": 12
+        }
+      },
+      {
+        "at": 16,
+        "set": {
+          "goods.0.map.sigma": 16
+        }
+      },
+      {
+        "at": 20,
+        "set": {
+          "goods.0.map.sigma": 20
+        }
+      },
+      {
+        "at": 25,
+        "set": {
+          "goods.0.map.sigma": 25
+        }
+      },
+      {
+        "at": 50,
+        "set": {
+          "goods.0.map.sigma": 50
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "Mountain height",
+    "values": [
+      {
+        "at": 2,
+        "name": "height 2",
+        "set": {
+          "goods.0.map.height": 2
+        }
+      },
+      {
+        "at": 3,
+        "name": "height 3",
+        "set": {
+          "goods.0.map.height": 3
+        }
+      },
+      {
+        "at": 4,
+        "name": "height 4",
+        "set": {
+          "goods.0.map.height": 4
+        }
+      },
+      {
+        "at": 6,
+        "name": "height 6",
+        "set": {
+          "goods.0.map.height": 6
+        }
+      },
+      {
+        "at": 10,
+        "name": "height 10",
+        "set": {
+          "goods.0.map.height": 10
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 5
+  },
+  "ticks": 20000,
+  "metric": {
+    "kind": "final",
+    "series": "distinct_cultures"
+  }
+}

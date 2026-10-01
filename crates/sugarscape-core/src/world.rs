@@ -130,6 +130,9 @@ pub struct TickEvents {
     pub buried: f64,
     /// Minds 5: sugar dug out of caches this tick.
     pub dug: f64,
+    /// Minds 6: sugar lost to `caching.bury_cost` this tick (counted as
+    /// eaten).
+    pub bury_cost: f64,
     /// Minds 5: sugar left in the caches of agents removed this tick (it
     /// leaves the world with them).
     pub cache_lost: f64,
@@ -138,6 +141,44 @@ pub struct TickEvents {
     pub dig_ages_sum: u64,
     /// Minds 5: digs this tick (each taking a positive amount).
     pub digs: u32,
+    /// Minds 6: sugar pilfered from caches this tick (under either loot
+    /// rule; owners finding their own caches under `owner_memory: off` are
+    /// digs, not pilfers).
+    pub pilfered: f64,
+    /// Minds 6: pilfers this tick (takes, each of a positive amount).
+    pub pilfers: u32,
+    /// Minds 6: distinct caches, (owner, site), that existed at the tick's
+    /// start and were pilfered this tick, in any amount: each counted once,
+    /// however many thieves took from it and whether a take emptied it. The
+    /// spec's pilferage rate is `caches_pilfered / pilfer_candidates`. A
+    /// cache begun this tick (its `cache_since` is the current tick) wasn't
+    /// there at the start and isn't counted.
+    pub caches_pilfered: u32,
+    /// The caches counted in `caches_pilfered` this tick (for the once
+    /// only); empty and unallocated unless something was pilfered.
+    pub(crate) pilfered_caches: std::collections::BTreeSet<(AgentId, u32)>,
+    /// Minds 6: caches in the world at the tick's start (after the
+    /// schedule), counted under theft (`theft.is_on()`): Σ over agents of
+    /// their caches. Each is a foreign cache to every agent but its owner,
+    /// so `pilfers / pilfer_candidates` is the per-cache pilfer rate.
+    pub pilfer_candidates: u32,
+    /// Minds 6: under `owner_memory: off`, owners who found (and dug) their
+    /// own cache this tick. Counted in `digs` and `dug` too.
+    pub owner_finds: u32,
+    /// Minds 6: find draws made this tick on other agents' caches: each is
+    /// a non-owner's visit to a cache that could find it (an arrival that
+    /// didn't dig its own cache there). Draws on an agent's own cache under
+    /// `owner_memory: off` aren't counted. Observation only (the survey's
+    /// visits per cache); it draws nothing itself.
+    pub pilfer_draws: u32,
+    /// Minds 6: of `pilfered`, the sugar eaten under `theft.loot: eat`,
+    /// counted as it goes into the thief's stomach (`Agent::fed`). A
+    /// transfer, not a ledger term: the stomach is a stock, and the
+    /// metabolism drawing on it is what's eaten.
+    pub loot_eaten: f64,
+    /// Minds 6: sugar left in the stomachs (`Agent::fed`) of agents removed
+    /// this tick (it leaves the world with them, like `cache_lost`).
+    pub fed_lost: f64,
     /// Minds 5, central-place foraging: loads delivered home this tick (a
     /// delivery is a positive burial into the larder by an agent back from
     /// a trip).
@@ -185,6 +226,36 @@ pub struct World {
     followed: Option<AgentId>,
     /// Its positions after each tick, oldest first.
     trail: Vec<Pos>,
+    /// Minds 6: every cache's fate, one record per burial event
+    /// (`minds::caching::fates`). Recorded only when a caller asks for it
+    /// (`record_fates`), and then only under theft (`theft.is_on()`);
+    /// otherwise empty and unallocated. Never hashed.
+    pub cache_log: Vec<crate::minds::caching::fates::CacheRecord>,
+    /// Minds 6: the log reached `fates::LOG_CAP` and froze.
+    pub cache_log_full: bool,
+    /// Minds 6, a survey probe: when true, a field agent with caches digs
+    /// below its whole reserve R instead of R / 2 (no hysteresis band;
+    /// `minds::caching::hungry`). Not config: never set by a config, the app
+    /// or an edit, never hashed or exported, and false in every world the
+    /// survey doesn't set it in.
+    #[doc(hidden)]
+    pub probe_dig_at_reserve: bool,
+    /// Minds 6: when true, the world keeps its fate log (`cache_log`) under
+    /// theft. Not config: never set by a config, the app or an edit, never
+    /// hashed or exported, and false unless a caller (the survey, a test)
+    /// sets it, so the app and sweeps never grow the log. The statistics
+    /// come from the tick events, not the log, and don't depend on it.
+    #[doc(hidden)]
+    pub record_fates: bool,
+    /// Minds 6: the log's open records per (owner, site), oldest first.
+    pub(crate) cache_open: crate::minds::caching::fates::OpenRecords,
+    /// Minds 6: site index → the owners of caches there, for finding
+    /// foreign caches on arrival (`minds::caching::theft`). `None` until the
+    /// first arrival that needs it under `theft.find > 0`, which builds it
+    /// from every agent's caches; then kept by bury, dig, pilfer and
+    /// removal, and dropped (back to `None`) by the first of those after
+    /// `find` goes to 0. Never hashed; worlds without theft never build it.
+    pub(crate) cache_sites: Option<crate::minds::caching::theft::CacheSites>,
 }
 
 impl World {
@@ -297,6 +368,12 @@ impl World {
             config,
             followed: None,
             trail: Vec::new(),
+            cache_log: Vec::new(),
+            cache_log_full: false,
+            probe_dig_at_reserve: false,
+            record_fates: false,
+            cache_open: BTreeMap::new(),
+            cache_sites: None,
         };
         if world.config.disease.enabled {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
@@ -513,6 +590,10 @@ impl World {
         if self.config.caching.mixed && agent.parents.is_none() {
             agent.caching_rule = self.config.caching.founder_rule(id);
         }
+        // Minds 6: a founder cheats or not by its id, with no draw.
+        if self.config.theft.cheaters > 0.0 && agent.parents.is_none() {
+            agent.cheater = self.config.theft.founder_cheats(id);
+        }
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {
             agent.home = Some(agent.pos);
@@ -645,6 +726,10 @@ impl World {
                     eat(amount.to_bits());
                 }
             }
+            // Minds 6: a stomach only when there's something in it.
+            if a.fed != 0.0 {
+                eat(a.fed.to_bits());
+            }
             if disease {
                 eat(u64::from(a.immune.len()));
                 eat(a.immune.bits());
@@ -681,11 +766,19 @@ impl World {
     /// leave the world with it. An edit between ticks removes caches too,
     /// but that count lands in the finished tick's events after its
     /// statistics were taken, and the next tick resets them: caches removed
-    /// by an edit aren't reported in any tick's `cache_lost`.
+    /// by an edit aren't reported in any tick's `cache_lost`. Minds 6: its
+    /// open fate records close as `Lost`.
     pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
         let agent = self.agents.remove(&id)?;
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
+        }
+        self.events.fed_lost += agent.fed;
+        crate::minds::caching::fates::close_lost(self, id, &agent.caches, &agent.cache_since);
+        if self.cache_sites.is_some() {
+            for &site in agent.caches.keys() {
+                crate::minds::caching::theft::note(self, id, site, false);
+            }
         }
         let i = self.torus.index(agent.pos);
         self.occupancy[i] = None;
@@ -794,6 +887,9 @@ impl World {
     pub fn step(&mut self) {
         self.events = TickEvents::default();
         self.apply_schedule();
+        if self.config.theft.is_on() {
+            crate::minds::caching::theft::count_candidates(self);
+        }
         // Minds 5: a lab world applies its protocol's day (placement, food,
         // doorways, the test evening's burying) before anyone moves.
         if self.config.lab.is_some() {
