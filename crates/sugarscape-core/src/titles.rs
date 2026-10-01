@@ -1479,7 +1479,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "firms-2013",
-        "Axtell's 2013 settings give Zipf's law and one giant firm",
+        "Axtell's 2013 settings give Zipf's law, with brief giant firms",
     ),
 ];
 

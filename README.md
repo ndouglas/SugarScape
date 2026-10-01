@@ -3212,8 +3212,7 @@ Measured (the survey — 25 claims, 15 hold and 10 fail — and the presets' and
   never pays under constant returns — true at equilibrium; an agent taking others' effort as given
   still gains by joining an identical one, and firms form.
 - **His 2013 parameterization gives Zipf's law, and one giant firm.** µ ≈ 1.0 (his 2013 α ≈ 1.06),
-  but one firm holds about 3 000–5 900 of the 10 000 agents (3 000–5 800 over the preset's 5 seeds,
-  4 987–5 882 over the survey's 3). Firms live about 77 periods, but a 2013 period activates only
+  but the largest firm peaks at 3 000–5 800 of the 10 000 agents after the burn-in (5 seeds), though most of the time it stays under about 1 000 (median 780–955). Firms live about 77 periods, but a 2013 period activates only
   4 % of agents: that is about 3.1 activations per agent, against the 1999 base case's 3.9 periods
   at one activation per agent a period on average (about 3.9) — so 2013's firms are not
   longer-lived per decision. The famous size distribution belongs to the later model, not the 1999
