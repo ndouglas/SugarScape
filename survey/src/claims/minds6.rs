@@ -553,7 +553,7 @@ pub(crate) fn m(v: &[f64]) -> f64 {
 }
 
 /// The two-sided t quantile, by bisection on the CDF.
-fn t_crit(p: f64, df: f64) -> f64 {
+pub(crate) fn t_crit(p: f64, df: f64) -> f64 {
     let (mut lo, mut hi) = (0.0, 1000.0);
     for _ in 0..200 {
         let mid = 0.5 * (lo + hi);

@@ -6,6 +6,9 @@
 //! `cargo run --release -- --calibration` runs only Minds 8b's claim 2
 //! calibration (seeds 1–20 always) and writes its per-seed table to
 //! `out/minds8b-calibration.md` (tracked).
+//!
+//! `cargo run --release -- --usage` runs only Minds 8b's usage check (seeds
+//! 1–20 always; a check, not a claim) and writes `out/minds8b-usage.md`.
 
 mod claim;
 mod claims;
@@ -72,6 +75,10 @@ fn main() {
     };
     if args.iter().any(|a| a == "--calibration") {
         print!("{}", claims::minds8b::calibration_report());
+        return;
+    }
+    if args.iter().any(|a| a == "--usage") {
+        print!("{}", claims::minds8b::usage_report());
         return;
     }
     let only = flag("--only");

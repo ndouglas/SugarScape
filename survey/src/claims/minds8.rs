@@ -261,18 +261,7 @@ impl Run {
     /// p_s ÷ p_o: infinite when p_o = 0 with p_s > 0, NaN when either is
     /// undefined (no ended sugar) or both are 0.
     fn ps_po(&self) -> f64 {
-        let (ps, po) = (self.p_s(), self.p_o());
-        if !ps.is_finite() || !po.is_finite() {
-            f64::NAN
-        } else if po == 0.0 {
-            if ps > 0.0 {
-                f64::INFINITY
-            } else {
-                f64::NAN
-            }
-        } else {
-            ps / po
-        }
+        ps_po(self.p_s(), self.p_o())
     }
     fn seen_per_burial(&self) -> f64 {
         nan_div(Self::total(self.burials_seen), Self::total(self.burials))
@@ -519,6 +508,22 @@ fn find_from_100(c: &Config, find: f64, seeds: &[u64]) -> Vec<Run> {
     )
 }
 
+/// p_s ÷ p_o: infinite when p_o = 0 with p_s > 0, NaN when either is
+/// undefined (no ended sugar) or both are 0.
+pub(crate) fn ps_po(ps: f64, po: f64) -> f64 {
+    if !ps.is_finite() || !po.is_finite() {
+        f64::NAN
+    } else if po == 0.0 {
+        if ps > 0.0 {
+            f64::INFINITY
+        } else {
+            f64::NAN
+        }
+    } else {
+        ps / po
+    }
+}
+
 // ------------------------------------------------------------------ worlds
 
 /// A preset at `span`.
@@ -717,7 +722,7 @@ fn ci_below_zero(slopes: &[f64]) -> Outcome {
 }
 
 /// The first sign change of `ys` from above 0 to at most 0, interpolated.
-fn down_crossing(xs: &[f64], ys: &[f64]) -> Option<f64> {
+pub(crate) fn down_crossing(xs: &[f64], ys: &[f64]) -> Option<f64> {
     let neg: Vec<f64> = ys.iter().map(|y| -y).collect();
     crossing(xs, &neg)
 }
