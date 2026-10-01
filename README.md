@@ -2794,7 +2794,7 @@ strategy, worth less as it becomes common (Barnard and Sibly 1981).
   drawn, and every world is its Minds 7 self (the goldens are unchanged).
   - **Who watches** (`watching.watchers`, a share of the founders, default 1). Agent i watches iff
     ⌊i·s⌋ > ⌊(i − 1)·s⌋, Minds 6's cheater rule, so at equal shares the watchers and the cheaters
-    are the same agents. An agent born later doesn't watch.
+    are the same agents. A child born to parents doesn't watch.
   - **Seeing a burial.** When an agent buries, every living watcher other than the owner whose
     sight covers the site remembers the cache: the site is on one of the four lattice lines from
     it, within its vision, and not behind an opaque wall. The owner never knows it was seen.
@@ -2829,15 +2829,15 @@ founding agent (the dead as 0), with survival of those alive at tick 100 in brac
   wasted). With stumbling added back (`watch-winter-stumble`) the rate is 3.60 %, against 2.31 % for
   Minds 6's stumbling alone.
 - **Pilferage is bounded by what watchers know.** Only caches seen buried within the span can be
-  raided, and at span 7 that is 19.6 % of the caches in summer and 3.6 % in winter, when hardly
-  anyone buries. The rate rises with span: 0.09, 0.51, 0.95 and 1.20 % at span 1, 3, 7 and 13.
-  Almost every arrival with a fresh memory raids; the one-take rule and the carrying limit rarely
-  bind. Stumbling has no such bound: it reaches a cache of any age, all year.
+  raided, and at span 7 that is 19.6 % of the caches in summer and 3.6 % in winter, when few
+  agents bury. The rate rises with span: 0.09, 0.51, 0.95 and 1.20 % at span 1, 3, 7 and 13.
+  Almost every arrival with a fresh memory raids; in a 5-seed investigation the one-take rule and
+  the carrying limit rarely bound. Stumbling has no such bound: it reaches a cache of any age, all year.
 - **Watching costs lives.** 52.6 % survive the first winter (55.1 %), against 70.0 % (74.4 %) in the
   same world without theft and 85.7 % (90.4 %) with Minds 6's stumbling. Two causes, each isolated
-  by a switch:
-  - **Raids replace the summer harvest.** Seen caches out-rank every site, so 62 % of summer moves
-    head for one, and a raid gathers nothing from the site. Agents gather 29 700 sugar from sites
+  at least in part by a switch:
+  - **Raids replace the summer harvest.** Seen caches are valued above every site, and 62 % of
+    summer moves head for one, and a raid gathers nothing from the site. Agents gather 29 700 sugar from sites
     in the summer against 42 300 without theft (estimated from a wealth ledger, within 83 a seed),
     and enter the winter with 95 sugar each against 169. With the probe, summer gathering recovers
     only to 34 800 and survival to 67.4 % (71.4 %): the replaced harvest is part of the gap, not

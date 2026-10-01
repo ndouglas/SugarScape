@@ -58,9 +58,10 @@
 //!   nothing, counts nothing, and stumbles and harvests as if it had no
 //!   entries (under `always` every arrival may raid). Otherwise the agent
 //!   takes from the first owner, in id order, of a fresh entry at the site
-//!   whose cache is still there, with no draw: a pilfer by Minds 6's rules (`theft::loot`: min(cache, room) kept, or
-//!   the whole cache eaten; `pilfered`, `pilfers`, `caches_pilfered` and a
-//!   `Pilfered { by }` fate). A raid that took something replaces the
+//!   whose cache is still there, with no draw: a pilfer by Minds 6's rules
+//!   (`theft::loot`: min(cache, room) kept, or the whole cache eaten;
+//!   `pilfered`, `pilfers`, `caches_pilfered` and a `Pilfered { by }`
+//!   fate). A raid that took something replaces the
 //!   tick's harvest, and nothing is drawn for the other caches there: at
 //!   most one take an arrival. If none of the remembered caches is still
 //!   there (dug, taken, or lost with a dead owner, who is never looked up),
@@ -75,9 +76,9 @@
 //!   entries held, summed over agents, after the sweep. `seen_arrivals`
 //!   counts arrivals that may raid with a fresh entry at the site, `raids`
 //!   and `raided` the takes (also in `pilfers` and `pilfered`), and
-//!   `raids_wasted` the arrivals whose remembered caches were all gone. Minds 6's pilfering
-//!   bookkeeping (candidates, the fate log, the theft stats) runs under
-//!   watching as under theft (`Config::pilfering_on`).
+//!   `raids_wasted` the arrivals whose remembered caches were all gone.
+//!   Minds 6's pilfering bookkeeping (candidates, the fate log, the theft
+//!   stats) runs under watching as under theft (`Config::pilfering_on`).
 //!
 //! Nothing here draws. Sugar is conserved: a raid is a pilfer, moving the
 //! same f64 from a cache to holdings or a stomach. With `watching.on` false

@@ -408,9 +408,9 @@ survey code was written. No judge or threshold was changed because of them.
     7e-12 over about 154 000 turns). `watchers` 0, and `theft-winter` with `find` 0, are bit-identical
     to `cache-winter-even`. Every arrival with an entry forgets it, and the tick-start sweep keeps
     memory bounded.
-18. **Watching's survival cost has two causes, each read as isolated by a switch.**
-    - **Raids replace the summer harvest.** Seen caches out-rank every site (62 % of summer moves
-      head for one), and a raid gathers nothing from its site. Summer gathering falls to 29 700 a
+18. **Watching's survival cost has two causes, each read as isolated at least in part by a switch.**
+    - **Raids replace the summer harvest.** Seen caches are valued above every site (62 % of summer
+      moves head for one), and a raid gathers nothing from its site. Summer gathering falls to 29 700 a
       seed against 42 300 without theft (a ledger estimate, within 83 a seed). The probe of ruling 7
       recovers it only to 34 800, so the replaced harvest is part of the gap, not all of it; the
       rest is likely the moves spent walking to seen caches. (Before rulings 4 and 5, the
