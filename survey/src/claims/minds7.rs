@@ -217,6 +217,8 @@ struct Run {
     preyed: f64,
     /// Generations 1–10, per agent.
     early: Vec<Loss>,
+    /// Bouts a day: stock is summed over bout starts, so ÷ bouts is item-days.
+    bouts: u32,
     /// Means of the per-agent rates over every generation.
     larder_all: f64,
     scatter_all: f64,
@@ -279,7 +281,7 @@ impl Run {
     fn cv_scatter(&self) -> f64 {
         cv(&self.scatter_rates(EARLY))
     }
-    /// The pooled rates, generations 1–10: Σ lost ÷ (Σ stock ÷ 20).
+    /// The pooled rates, generations 1–10: Σ lost ÷ (Σ stock ÷ bouts).
     fn pooled(&self, larder: bool) -> f64 {
         let (lost, stock) = self.early.iter().fold((0u64, 0u64), |(l, s), a| {
             if larder {
@@ -291,7 +293,7 @@ impl Run {
         if stock == 0 {
             f64::NAN
         } else {
-            lost as f64 / (stock as f64 / 20.0)
+            lost as f64 / (stock as f64 / f64::from(self.bouts))
         }
     }
     /// The least larder rate in generations 1–k, at the floor or over every
@@ -390,6 +392,7 @@ fn measure(w: &HoardWorld) -> Run {
         starved: s.iter().map(|x| f64::from(x.summary.starved)).sum(),
         preyed: s.iter().map(|x| f64::from(x.summary.preyed)).sum(),
         early,
+        bouts,
         larder_all: mean_or_nan(&larder_all),
         scatter_all: mean_or_nan(&scatter_all),
         tries,
@@ -1894,6 +1897,7 @@ mod tests {
                     scatter_stock: 0,
                 })
                 .collect(),
+            bouts: 20,
             larder_all: 0.0,
             scatter_all: 0.0,
             tries: 0.0,

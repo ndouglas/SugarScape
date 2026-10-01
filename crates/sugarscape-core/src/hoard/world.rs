@@ -1187,7 +1187,10 @@ impl HoardWorld {
             alive: a.alive,
             fed: a.fed,
             defending: a.defending,
-            raiding: a.raid,
+            // A cheater that raided for its meal keeps `raid` until the day
+            // ends (clearing it would change the fingerprint), but a fed
+            // cheater idles, so the page doesn't show it raiding.
+            raiding: if a.cheater && a.fed { None } else { a.raid },
             death: a.death,
             larder_lost: r.larder_lost,
             scatter_lost: r.scatter_lost,
@@ -1339,7 +1342,8 @@ impl Model for HoardWorld {
     fn agents_csv(&self) -> String {
         let mut out = String::from("id,larder_probability,defense_propensity,larder,scatter\n");
         for (i, a) in self.agents.iter().enumerate().filter(|(_, a)| a.alive) {
-            writeln!(out, "{i},{},{},{},{}", a.l, a.d, a.larder, a.scatter)
+            // Ids count from 1, as the page and the preset text do.
+            writeln!(out, "{},{},{},{},{}", i + 1, a.l, a.d, a.larder, a.scatter)
                 .expect("writing to a string");
         }
         out
@@ -1624,6 +1628,30 @@ mod tests {
         assert_eq!(w.agents[1].larder, 4);
         assert_eq!(w.agents[0].raid, None);
         assert!(conserved(&w));
+    }
+
+    /// A fed cheater idles: the page doesn't show its last raid.
+    #[test]
+    fn a_fed_cheater_is_not_shown_raiding() {
+        let mut w = quiet(2, 10, 3, |_| {});
+        w.agents[0].raid = Some(1);
+        assert_eq!(w.view(0).raiding, Some(1));
+        w.agents[0].cheater = true;
+        assert_eq!(w.view(0).raiding, None);
+        w.agents[0].fed = false;
+        assert_eq!(w.view(0).raiding, Some(1));
+    }
+
+    /// The CSV counts ids from 1, as the page and the preset text do.
+    #[test]
+    fn the_agents_csv_counts_ids_from_1() {
+        let csv = quiet(2, 10, 3, |_| {}).agents_csv();
+        let ids: Vec<&str> = csv
+            .lines()
+            .skip(1)
+            .map(|l| l.split(',').next().unwrap())
+            .collect();
+        assert_eq!(ids, ["1", "2"]);
     }
 
     #[test]
