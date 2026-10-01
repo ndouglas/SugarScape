@@ -260,7 +260,13 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     const b = c as BaliConfig;
     return Math.max(0, b.stop_at * (b.watershed === 'two_node' ? b.node_periods : 12) - tick);
   }
-  if (modelOf(c) === 'hoard') return Math.max(0, hoardSeasonTicks(c as HoardConfig) * (c as HoardConfig).generations - tick);
+  if (modelOf(c) === 'hoard') {
+    // The core finishes the season in progress even if `generations` is lowered below it live, so
+    // count to the later of the last generation's end and the current season's end.
+    const h = c as HoardConfig;
+    const s = hoardSeasonTicks(h);
+    return Math.max(h.generations, Math.max(1, Math.ceil(tick / s))) * s - tick;
+  }
   return Infinity;
 }
 

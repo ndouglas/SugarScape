@@ -801,7 +801,11 @@ describe('the hoard model (Minds 7)', () => {
     expect(hoardSeasonTicks(hoard as never)).toBe(2000);
     expect(ticksLeft(hoard, 0)).toBe(120_000);
     expect(ticksLeft(hoard, 119_000)).toBe(1000);
-    expect(ticksLeft(hoard, 130_000)).toBe(0);
+    expect(ticksLeft(hoard, 120_000)).toBe(0);
+    // Lowered live below the current generation, the season in progress still runs to its end.
+    expect(ticksLeft({ ...hoard, generations: 1 } as ModelConfig, 4500)).toBe(1500);
+    expect(ticksLeft({ ...hoard, generations: 1 } as ModelConfig, 6000)).toBe(0);
+    expect(ticksLeft(hoard, 130_500)).toBe(1500);
     expect(finishesUnpredictably(hoard)).toBe(false);
   });
 });
