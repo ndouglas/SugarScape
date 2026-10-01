@@ -11,6 +11,7 @@ import {
   menuOf,
   presetMenu,
   pilferingOn,
+  watcherSplit,
   watchingOn,
   usesMinds,
   worldMenu,
@@ -833,6 +834,22 @@ describe('the hoard model (Minds 7)', () => {
     expect(ticksLeft({ ...hoard, generations: 1 } as ModelConfig, 6000)).toBe(0);
     expect(ticksLeft(hoard, 130_500)).toBe(1500);
     expect(finishesUnpredictably(hoard)).toBe(false);
+  });
+});
+
+describe('watcher split (Minds 8b)', () => {
+  const c = (over: object) => over as unknown as Config;
+  it('follows the share under who = share, and the cheaters under hoarders and cheaters', () => {
+    const w = (watching: object, cheaters = 0) => c({ watching: { on: true, ...watching }, theft: { find: 0, cheaters } });
+    expect([0, 0.5, 1].map((watchers) => watcherSplit(w({ watchers, who: 'share' }, 0.5)))).toEqual([false, true, false]);
+    expect(watcherSplit(w({ watchers: 0.5 }))).toBe(true);
+    // The share is ignored: a half share is no split without cheaters, and a full share is one with them.
+    for (const who of ['hoarders', 'cheaters']) {
+      expect([0, 0.5, 1].map((ch) => watcherSplit(w({ watchers: who === 'hoarders' ? 0.5 : 1, who }, ch)))).toEqual([false, true, false]);
+    }
+    expect(watcherSplit(w({ watchers: 1, who: 'hoarders' }, 0.25))).toBe(true);
+    expect(watcherSplit(c({ watching: { on: false, watchers: 0.5 } }))).toBe(false);
+    expect(watcherSplit(c({}))).toBe(false);
   });
 });
 

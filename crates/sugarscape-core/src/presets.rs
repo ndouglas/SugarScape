@@ -5,8 +5,8 @@ use serde::Serialize;
 
 use crate::config::{
     three_tribes, CachingRule, Config, CultureKind, DecisionRule, Good, Idle, Lab, LabProtocol,
-    Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange,
-    SeasonMode, Transform, URange, Wall, SPICE_COLOR,
+    Loot, Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution,
+    ScheduledChange, Scrounge, SeasonMode, Transform, URange, Wall, SPICE_COLOR,
 };
 use crate::minds::caching::lab::{rig_config, LabParams};
 use crate::model::ModelConfig;
@@ -1363,6 +1363,17 @@ pub fn all() -> Vec<Preset> {
             |c| watch_winter(c, 0.5, 0.0, 0.5),
         ),
         preset(
+            "watch-scroungers-forgo",
+            "Watching: winter, scroungers who only watch, steal and eat",
+            "Bugnyar & Kotrschal 2002; Barnard & Sibly 1981; Vickery et al. 1991; Minds 8",
+            "watch-scroungers-only's world (theft-winter's winter, no stumbling on caches, half the agents watchers who are also cheaters, dealt by the same id rule so at half each they are the same agents) with two changes. A scrounger holding a remembered cache it saw buried considers only those caches and staying put: it harvests no site that tick, as a pure scrounger gives up foraging for its own food. And loot is eaten on the spot, not carried, so a scrounger's raid never fills its carrying limit. The rest bury half their surplus where they stand and never watch. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; it raids a remembered cache on arriving only when the cache holds at least what the site would give. An owner digging its own cache comes first.",
+            |c| {
+                watch_winter(c, 0.5, 0.0, 0.5);
+                c.watching.scrounge = Scrounge::Forgo;
+                c.theft.loot = Loot::Eat;
+            },
+        ),
+        preset(
             "watch-arena",
             "Watching arena: four agents, half watchers",
             "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
@@ -1713,7 +1724,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 81);
+        assert_eq!(presets.len(), 82);
         for p in presets {
             p.config
                 .validate()
@@ -2231,6 +2242,36 @@ mod tests {
         let w = World::new(by_id("watch-arena").unwrap().config, 1).unwrap();
         assert_eq!(w.agents().filter(|a| a.watches).count(), 2);
         assert!(w.agents().all(|a| !a.cheater));
+    }
+
+    #[test]
+    fn watch_scroungers_forgo_is_the_only_scrounger_with_forgo_and_eaten_loot() {
+        use crate::config::{Loot, Scrounge};
+        let p = by_id("watch-scroungers-forgo").unwrap();
+        let c = &p.config;
+        assert_eq!((c.theft.cheaters, c.theft.find), (0.5, 0.0));
+        assert_eq!(c.theft.loot, Loot::Eat);
+        assert!(c.watching.on && c.watching.watchers == 0.5);
+        assert_eq!(c.watching.scrounge, Scrounge::Forgo);
+        assert_eq!(c.watching.who, crate::config::Who::Share);
+        for id in ["watch-scroungers-only", "watch-winter", "watch-arena"] {
+            let o = by_id(id).unwrap().config;
+            assert_eq!(o.watching.scrounge, Scrounge::Harvest, "{id}");
+            assert_eq!(o.theft.loot, Loot::Keep, "{id}");
+        }
+        // Otherwise watch-scroungers-only's world.
+        let mut b = by_id("watch-scroungers-only").unwrap().config;
+        b.watching.scrounge = Scrounge::Forgo;
+        b.theft.loot = Loot::Eat;
+        assert_eq!(*c, b);
+        for s in [
+            "Bugnyar & Kotrschal 2002",
+            "Barnard & Sibly 1981",
+            "Vickery et al. 1991",
+            "Minds 8",
+        ] {
+            assert!(p.source.contains(s), "{}", p.source);
+        }
     }
 
     #[test]

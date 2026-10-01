@@ -1,4 +1,4 @@
-import { cachingOn, COLOR_MODES, hasCaches, isSugar, MODEL_OVERLAYS, modelOf, watchingOn } from './models';
+import { cachingOn, COLOR_MODES, hasCaches, isSugar, MODEL_OVERLAYS, modelOf, watcherSplit, watchingOn } from './models';
 import { OVERLAYS, type DisplayState, type Overlay } from './protocol';
 import type { ColorMode, Config, Layer, ModelConfig } from './types';
 
@@ -50,8 +50,6 @@ export function overlayAvailableAny(kind: Overlay, configs: Config[]): boolean {
 
 /** Minds 6: some founders are cheaters. */
 const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;
-/** Minds 8: some founders watch and others don't (`0 < watchers < 1`). */
-const someWatch = (c: Config): boolean => (c.watching?.watchers ?? 1) > 0 && (c.watching?.watchers ?? 1) < 1;
 /** Minds 3: memory is on for some agents and not others (`0 < share < 1`). */
 const someRemember = (c: Config): boolean => (c.memory?.span ?? 0) > 0 && (c.memory?.share ?? 0) > 0 && (c.memory?.share ?? 0) < 1;
 
@@ -65,7 +63,7 @@ const someRemember = (c: Config): boolean => (c.memory?.span ?? 0) > 0 && (c.mem
  * worlds). Loading a preset picks it; `clampDisplay` falls back to it.
  */
 export function defaultColorMode(config: Config): ColorMode {
-  if (watchingOn(config) && (someWatch(config) || hasCheaters(config))) return 'watching';
+  if (watchingOn(config) && (watcherSplit(config) || hasCheaters(config))) return 'watching';
   if (hasCheaters(config)) return 'strategy';
   if (config.caching?.mixed === true) return 'caching_rule';
   if (someRemember(config)) return 'memory';

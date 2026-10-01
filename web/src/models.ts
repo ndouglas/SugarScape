@@ -366,6 +366,18 @@ export const theftOn = (c: Config): boolean => (c.theft?.find ?? 0) > 0 || (c.th
 /** Minds 8: watching is on. */
 export const watchingOn = (c: Config): boolean => c.watching?.on === true;
 
+/**
+ * Minds 8: watching is on and tells founders apart, some watching and some not (the core's
+ * `watchers_split`). Under `who: share`, `0 < watchers < 1`; under `hoarders` the watchers are the
+ * non-cheaters and under `cheaters` the cheaters, so a split needs `0 < cheaters < 1`.
+ */
+export const watcherSplit = (c: Config): boolean => {
+  if (!watchingOn(c)) return false;
+  const who = c.watching?.who ?? 'share';
+  const share = who === 'share' ? (c.watching?.watchers ?? 1) : (c.theft?.cheaters ?? 0);
+  return share > 0 && share < 1;
+};
+
 /** Minds 6 and 8: caches get pilfered, by theft or by watchers' raids (the core's `Config::pilfering_on`). */
 export const pilferingOn = (c: Config): boolean => theftOn(c) || watchingOn(c);
 

@@ -377,16 +377,62 @@ describe('theft (Minds 6)', () => {
   });
 });
 
+describe('watching switches (Minds 8b)', () => {
+  const group = GROUPS.find((g) => g.title === 'Watching (Minds 8)')!;
+  const sel = (path: string) => {
+    const c = control(path);
+    if (c.kind !== 'select') throw new Error('select');
+    return c;
+  };
+
+  it('offers each switch\'s values, the engine defaults first or named', () => {
+    expect(sel('watching.raid_if').options.map((o) => o.value)).toEqual(['better', 'always']);
+    expect(sel('watching.value').options.map((o) => o.value)).toEqual(['amount', 'room']);
+    expect(sel('watching.who').options.map((o) => o.value)).toEqual(['share', 'hoarders', 'cheaters']);
+    expect(sel('watching.scrounge').options.map((o) => o.value)).toEqual(['harvest', 'forgo']);
+    const bare = {} as unknown as Config;
+    expect(['watching.raid_if', 'watching.value', 'watching.who', 'watching.scrounge'].map((p) => sel(p).current(bare))).toEqual(['better', 'amount', 'share', 'harvest']);
+  });
+
+  it('applies each option to the config without touching the other fields', () => {
+    for (const [path, value, key] of [
+      ['watching.raid_if', 'always', 'raid_if'],
+      ['watching.value', 'room', 'value'],
+      ['watching.who', 'cheaters', 'who'],
+      ['watching.scrounge', 'forgo', 'scrounge'],
+    ] as const) {
+      const c = { watching: { on: true, span: 9, watchers: 0.5, raid_when: 'hungry', raid_if: 'better', value: 'amount', who: 'share', scrounge: 'harvest' } } as unknown as Config;
+      sel(path).options.find((o) => o.value === value)!.apply(c);
+      expect(c.watching).toEqual({ on: true, span: 9, watchers: 0.5, raid_when: 'hungry', raid_if: 'better', value: 'amount', who: 'share', scrounge: 'harvest', [key]: value });
+    }
+  });
+
+  it('notes that the watcher share is ignored whenever who is not share', () => {
+    const notes = group.conditionalNotes!;
+    expect(notes).toHaveLength(1);
+    const c = (who?: string) => ({ watching: who ? { who } : {} }) as unknown as Config;
+    expect([notes[0].when(c()), notes[0].when(c('share')), notes[0].when(c('hoarders')), notes[0].when(c('cheaters'))]).toEqual([false, false, true, true]);
+    expect(notes[0].text).toBe('Who watches is set by kind; the watcher share is ignored.');
+  });
+});
+
 describe('watching (Minds 8)', () => {
   const group = GROUPS.find((g) => g.title === 'Watching (Minds 8)')!;
 
   it('is a Minds group with watching and span live, watchers reset-only, and raid when a live select', () => {
     expect(group.minds).toBe(true);
-    expect(group.controls.map((c) => c.path)).toEqual(['watching.on', 'watching.span', 'watching.watchers', 'watching.raid_when']);
+    expect(group.controls.map((c) => c.path)).toEqual([
+      'watching.on', 'watching.span', 'watching.watchers', 'watching.raid_when',
+      'watching.raid_if', 'watching.value', 'watching.who', 'watching.scrounge',
+    ]);
     expect(control('watching.on').kind).toBe('toggle');
     expect(control('watching.raid_when').kind).toBe('select');
     expect(control('watching.watchers').reset).toBe(true);
-    for (const path of ['watching.on', 'watching.span', 'watching.raid_when']) expect(control(path).reset).toBeUndefined();
+    for (const path of ['watching.on', 'watching.span', 'watching.raid_when', 'watching.raid_if', 'watching.value', 'watching.scrounge']) {
+      expect(control(path).reset).toBeUndefined();
+    }
+    expect(control('watching.who').reset).toBe(true);
+    for (const path of ['watching.raid_if', 'watching.value', 'watching.who', 'watching.scrounge']) expect(control(path).kind).toBe('select');
     const span = control('watching.span');
     const watchers = control('watching.watchers');
     if (span.kind !== 'number' || watchers.kind !== 'number') throw new Error('numbers');
@@ -398,13 +444,18 @@ describe('watching (Minds 8)', () => {
     const c = {} as unknown as Config;
     control('watching.on').adjust!(c, structuredClone(c));
     setPath(c, 'watching.on', true);
-    expect(c.watching).toEqual({ on: true, span: 7, watchers: 1, raid_when: 'always' });
+    expect(c.watching).toEqual({
+      on: true, span: 7, watchers: 1, raid_when: 'always', raid_if: 'better', value: 'amount', who: 'share', scrounge: 'harvest',
+    });
   });
 
   it('notes the shared id rule only where both shares are strictly between 0 and 1', () => {
     const note = group.conditionalNote!;
     const c = (cheaters: number, watchers: number) => ({ theft: { cheaters }, watching: { watchers } }) as unknown as Config;
     expect([note.when(c(0.5, 0.5)), note.when(c(0, 0.5)), note.when(c(0.5, 1)), note.when(c(1, 0.5))]).toEqual([true, false, false, false]);
+    // Under who = hoarders or cheaters the share is ignored, so the id-rule note doesn't apply.
+    const kind = (who: string) => ({ theft: { cheaters: 0.5 }, watching: { watchers: 0.5, who } }) as unknown as Config;
+    expect([note.when(kind('share')), note.when(kind('hoarders')), note.when(kind('cheaters'))]).toEqual([true, false, false]);
     expect(note.text).toBe('Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents; at unequal shares they overlap as the rule gives.');
   });
 });

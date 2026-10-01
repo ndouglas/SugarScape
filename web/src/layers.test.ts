@@ -125,6 +125,14 @@ describe('the Minds color modes and the caches overlay', () => {
     expect(defaultColorMode({ ...even, watching: { ...watch, watchers: 0 } } as unknown as Config)).toBe('caching_rule');
     expect(defaultColorMode({ ...halfRemember, watching: watch } as unknown as Config)).toBe('memory');
     expect(defaultColorMode({ ...even, watching: { ...some, on: false } } as unknown as Config)).toBe('caching_rule');
+    // Who watches by kind: a split exists iff there are some cheaters and some not.
+    const kind = (who: string, cheaters: number) => ({ ...even, theft: { find: 0, cheaters }, watching: { ...watch, watchers: 1, who } }) as unknown as Config;
+    expect(defaultColorMode(kind('hoarders', 0.5))).toBe('watching');
+    expect(defaultColorMode(kind('cheaters', 0.5))).toBe('watching');
+    expect(defaultColorMode(kind('hoarders', 0))).toBe('caching_rule');
+    // All cheaters under who = hoarders: nobody watches, but cheaters still tell the world apart.
+    expect(defaultColorMode(kind('hoarders', 1))).toBe('watching');
+    expect(defaultColorMode({ ...even, watching: { ...some, who: 'hoarders' } } as unknown as Config)).toBe('caching_rule');
     const d = { ...base, colorMode: 'watching' as const };
     expect(clampDisplay(d, { ...even, watching: watch } as unknown as Config).colorMode).toBe('watching');
     expect(clampDisplay(d, even).colorMode).toBe('caching_rule');

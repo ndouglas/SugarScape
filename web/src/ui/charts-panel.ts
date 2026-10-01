@@ -2,7 +2,7 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
-import { cachingOn, calendarYear, pilferingOn, watchingOn } from '../models';
+import { cachingOn, calendarYear, pilferingOn, watcherSplit, watchingOn } from '../models';
 import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
 import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
@@ -102,7 +102,7 @@ const perGood = (prefix: string) => (c: Config): Line[] =>
   c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
 
 /** Minds 8: both kinds of founder exist under watching (the core's `watchers_split`). */
-const hasWatcherSplit = (c: Config): boolean => watchingOn(c) && (c.watching?.watchers ?? 1) > 0 && (c.watching?.watchers ?? 1) < 1;
+const hasWatcherSplit = watcherSplit;
 
 /** Minds 6: the world has cheaters, so the hoarder and cheater series exist. */
 const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;

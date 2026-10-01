@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 385] = [
+pub const TITLES: [(&str, &str); 386] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -320,6 +320,10 @@ pub const TITLES: [(&str, &str); 385] = [
     (
         "watch-scroungers-only",
         "Half only watch and steal, and do worse than the hoarders whatever their share",
+    ),
+    (
+        "watch-scroungers-forgo",
+        "Scroungers who forgo foraging and eat what they raid",
     ),
     (
         "watch-arena",

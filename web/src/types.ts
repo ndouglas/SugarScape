@@ -160,10 +160,14 @@ export interface Theft {
 
 /** Minds 8: when a seen cache is a place to go. */
 export type RaidWhen = 'always' | 'hungry';
+export type RaidIf = 'better' | 'always';
+export type SeenValue = 'amount' | 'room';
+export type Who = 'share' | 'hoarders' | 'cheaters';
+export type Scrounge = 'harvest' | 'forgo';
 
 /**
- * Minds 8's watching (absent from older configs: off). `on`, `span` and `raid_when` apply live;
- * `watchers` (the share of founders who watch, by id) is reset-only.
+ * Minds 8's watching (absent from older configs: off). `on`, `span`, `raid_when`, `raid_if`, `value` and
+ * `scrounge` apply live; `watchers` (the share of founders who watch, by id) and `who` are reset-only.
  */
 export interface Watching {
   on: boolean;
@@ -171,6 +175,14 @@ export interface Watching {
   span: number;
   watchers: number;
   raid_when: RaidWhen;
+  /** Minds 8b: raid on arrival only when the remembered amount is at least the site's value, or always. */
+  raid_if: RaidIf;
+  /** Minds 8b: a seen cache's value as a candidate: the amount remembered, or the room to carry it. */
+  value: SeenValue;
+  /** Minds 8b: which founders watch (reset-only); `watchers` is ignored unless `share`. */
+  who: Who;
+  /** Minds 8b: what a scrounger holding a fresh entry does: harvest as usual, or forgo harvesting. */
+  scrounge: Scrounge;
 }
 
 /** Minds 5: central-place foraging (absent from older configs: off); reset-only. */
