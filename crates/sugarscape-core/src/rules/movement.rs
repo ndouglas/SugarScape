@@ -258,7 +258,8 @@ fn true_value(world: &World, id: AgentId, p: Pos) -> f64 {
     let value = site_value(world, id, p);
     // Minds 5: a hungry agent's own cache counts as its candidate did.
     // Minds 8: so do the caches it saw buried there, at what is truly
-    // left of them now (not what it believes), so an emptied one is stale.
+    // left of them now (not what it believes), so an emptied one is stale;
+    // under `value: room` capped as the belief was.
     let value = match crate::minds::caching::cache_value(world, id, p) {
         Some(cache) => value.max(cache),
         None => value,
@@ -379,9 +380,10 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         }
     };
     let held = a.holdings[0];
-    // Minds 8b: a forgoing scrounger staying put gathers nothing (decided
-    // before the move, while its entries are as they were at choosing).
-    let forgoes = target == a.pos && crate::minds::caching::watching::forgoes(world, id);
+    // Minds 8b: a forgoing scrounger gathers nothing on a tick it doesn't
+    // raid: staying put, a walking step, or a wasted raid (decided before
+    // the move, while its entries are as they were at choosing).
+    let forgoes = crate::minds::caching::watching::forgoes(world, id);
     // What counts against the limit: holdings, or in a central-place world
     // the trip's load alone (the limit caps a load, not load plus
     // provisions).
@@ -424,7 +426,7 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
             used = world.agent(id).expect("live agent").holdings[0];
         }
     }
-    if forgoes {
+    if forgoes && harvest.pilfered == 0.0 {
         world.agent_mut(id).expect("live agent").social = social;
         return harvest;
     }
