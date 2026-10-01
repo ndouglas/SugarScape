@@ -134,14 +134,18 @@ caches, and cache visibility (their own untested prediction).
 
 ## Switches (reported as new ground, never judged against V&J)
 
+Field names are the plain ones that the config, validation and sweeps use (`app_scat`); this table
+and the one under "New fields" first wrote them prefixed (`hoard.app_scat`), changed in the final
+review's fix wave.
+
 | Field | Default | Meaning |
 |---|---|---|
-| `hoard.app_scat` | 0.44 | Apparency of scattered caches (0.05–0.9); 0.44 per Amendments item 12 |
-| `hoard.app_lard` | 2.0 | Apparency of larders (1–3) |
-| `hoard.owner_recovery` | 1.0 | Chance an owner finds each of its own scattered caches when it goes to eat from them. 1 is V&J's free recovery. |
-| `hoard.cheaters` | 0 | Share of founders that never cache and eat what they find. V&J's untested non-hoarding cheater. |
-| `hoard.generations` | 60 | Generations per run |
-| `hoard.heritability` | 0.8 | h² |
+| `app_scat` | 0.44 | Apparency of scattered caches (0.05–0.9); 0.44 per Amendments item 12 |
+| `app_lard` | 2.0 | Apparency of larders (1–3) |
+| `owner_recovery` | 1.0 | Chance an owner finds each of its own scattered caches when it goes to eat from them. 1 is V&J's free recovery. |
+| `cheaters` | 0 | Share of founders that never cache and eat what they find. V&J's untested non-hoarding cheater. |
+| `generations` | 60 | Generations per run |
+| `heritability` | 0.8 | h² |
 
 The exact defaults for app_scat and app_lard are chosen in the plan so that the default preset sits at the
 threshold.
@@ -756,7 +760,9 @@ is limited to what it can consume"; untested there).
   forages (search and raid continuation, as anyone) and eats its first find. Once fed it idles for the
   rest of the day: it neither forages nor defends, and it makes no defense draw. **Choice:** a fed
   cheater doesn't forage. Reason: the quote limits what it pilfers to what it can consume, and a fed agent
-  can consume nothing more that day. On days 1–5 it is fed by nonstorable food, so it idles all day.
+  can consume nothing more that day. On days 1–5 it is fed by nonstorable food, so it idles all day,
+  except under `early_bout1_eats`: there a storeless cheater is flagged hungry in bout 1 of days
+  2–5 and forages until its first find, as any storeless agent does (contradiction 6).
 - **Inheritance.** A child is a cheater iff its mother is, and the mother is the first parent drawn.
   **Alternative, not implemented:** a heritable cheater probability.
 - **Fitness: the consequence.** Fitness is leftover stores (item 8), and a cheater's are always 0. So
@@ -806,8 +812,9 @@ These are recorded after the fact; none changed a judge or a threshold.
 - **Per item** takes over in 0 of 1 350 runs (claims 2 and 4 Fail; claim 1 Weak, vacuously), yet
   reproduces the loss statistics (larder above scatter in 1 350 of 1 350, CV ratio 1.75, median 210 %).
   Neither reading reproduces both the outcome and the loss statistics.
-- **Concerns 3 and 5 proved decisive.** At app_lard 2 the 50 % point is 0.236 at the defaults (slope
-  10, V_seg 0.5), 0.351 at V_seg 0.25, 0.174 at V_seg 1, and about 0.09–0.14 at slope 4. The
+- **Concerns 3 and 5 proved decisive.** At app_lard 2 the 50 % point in the sensitivity runs is 0.236
+  at the defaults (slope 10, V_seg 0.5; the grid's app_lard 2 fit is 0.237), 0.351 at V_seg 0.25,
+  0.174 at V_seg 1, and about 0.09–0.14 at slope 4 (two of the three fits near-separated). The
   reproduction is contingent on three choices: per burrow (after per item failed), slope 10 and V_seg
   0.5 (both fixed in Task 1, before any run). The paper's sensitivity analysis ("Results of a full
   sensitivity analysis will be reported elsewhere", p.665) was searched for three times and is
@@ -820,17 +827,18 @@ These are recorded after the fact; none changed a judge or a threshold.
 
 ### New fields from these choices
 
-These are all named switches whose defaults are the choices above. None is judged against V&J.
+These are all named switches whose defaults are the choices above. None is judged against V&J. The
+names are the plain field names (see the note on the Switches table).
 
 | Field | Default |
 |---|---|
-| `hoard.defense_slope` | 10 |
-| `hoard.v_seg` | 0.5 |
-| `hoard.larder_weight` | `per_burrow` (alternative `per_item`; changed in Task 4's fix round, contradiction 2) |
-| `hoard.dead_stores` | `remain` (alternative `remove`) |
-| `hoard.defended_in_pool` | `counted` (alternative `excluded`) |
-| `hoard.early_bout1_eats` | `false` (true = the literal bout-1 rule on days 2–5) |
-| `hoard.cheater_fitness` | `stores` (alternative `survival`; item 14) |
+| `defense_slope` | 10 |
+| `v_seg` | 0.5 |
+| `larder_weight` | `per_burrow` (alternative `per_item`; changed in Task 4's fix round, contradiction 2) |
+| `dead_stores` | `remain` (alternative `remove`) |
+| `defended_in_pool` | `counted` (alternative `excluded`) |
+| `early_bout1_eats` | `false` (true = the literal bout-1 rule on days 2–5) |
+| `cheater_fitness` | `stores` (alternative `survival`; item 14) |
 
 ### Concerns: gaps likely to decide the results
 

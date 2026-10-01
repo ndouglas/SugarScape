@@ -2634,9 +2634,9 @@ hoards" (p.665), which can weigh every item in a larder. But p.662 defines app_l
 probability of detecting a burrow of another individual while searching for food", and p.664 has
 foragers encounter "public items, as well as scatter hoards and burrow entrances of other
 individuals, with probabilities determined by the apparency values". We first chose per item, on the
-grounds that only the Appendix gives a formula. Under per item, larders never took over: 0 of 15
-diagnostic runs at app_scat 0.1, 0.44 and 0.8, and later 0 of 1 350 survey runs at ratios up to
-0.45. A diagnosis found why: a larder's chance of being found grows with its size, raids start from
+grounds that only the Appendix gives a formula. Under per item, larders never took over in 0 of 15
+diagnostic runs at app_scat 0.1, 0.44 and 0.8, and those runs prompted the change (the survey, run
+after it, kept per item as a full row: 0 of 1 350 runs at ratios up to 0.45). A diagnosis found why: a larder's chance of being found grows with its size, raids start from
 those finds and cause 84 % of larder loss, and so larders never grow large enough to be defended.
 Re-reading the text with that in view, per burrow (each other agent's non-empty larder counts
 app_lard once) is the better-supported reading, and the Appendix sentence doesn't settle it, since
@@ -2652,7 +2652,8 @@ any run; causes are "likely" unless isolated; per burrow unless stated.)
 - **1. All-or-nothing, but slower: Fails on speed.** "In 35 runs of the model, average probability
   of larder hoarding always remained less than 0.2 or increased rapidly to more than 0.95, usually
   within 10 generations (Figure 2A)" (p.663). The ending reproduces: 1 331 of 1 350 runs (98.6 %)
-  end below 0.2 or above 0.95, and the other 19 sit between. The speed doesn't. Only 68 of 634
+  end below 0.2 or above 0.95, and the other 19 are intermediate (11 of them average below 0.2 but
+  cross it in some generation). The speed doesn't. Only 68 of 634
   takeovers pass 0.95 by generation 10 (10.7 %); the median is generation 15 (IQR 12–20). Read the
   other way, within 10 generations of lifting above 0.2, it is 239 of 634 (37.7 %), still not
   "usually". Their own Fig. 2A example passes 0.95 near generation 16, and in that cell (app_lard 1,
@@ -2693,8 +2694,9 @@ any run; causes are "likely" unless isolated; per burrow unless stated.)
   than being their rule.
 - **The reproduction is contingent on three choices.** Larders weighted per burrow (chosen after per
   item failed), a defense slope of 10 and V_seg 0.5 (both fixed before any run, and neither printed).
-  At app_lard 2 the fitted 50 % point is 0.236 at those values, 0.351 at V_seg 0.25, 0.174 at
-  V_seg 1, and about 0.09–0.14 at slope 4, where larder loss also falls below scatter loss in most
+  At app_lard 2 the fitted 50 % point in the sensitivity runs is 0.236 at those values, 0.351 at
+  V_seg 0.25, 0.174 at V_seg 1, and about 0.09–0.14 at slope 4 (two of the three fits
+  near-separated), where larder loss also falls below scatter loss in most
   runs. Every other pair tried misses 0.219 by more than ±0.03. And the V_seg that speeds the rise
   (1) moves the 50 % point to 0.174, so no single value fits both. Vander Wall and Jenkins explored
   this: "Results of a full sensitivity analysis will be reported elsewhere" (p.665). Three searches
@@ -2729,7 +2731,7 @@ any run; causes are "likely" unless isolated; per burrow unless stated.)
   median 80 % against 87 %). If a surviving cheater instead weighs as much as an average surviving
   hoarder's stores (`cheater_fitness = survival`), cheaters persist at about 6 % of births by
   generation 60 (never gone in 3 of 50 runs), survive somewhat less well than hoarders (0.71 against
-  0.80), and larders take over in 33 of 50 runs against 21 to 22 without them.
+  0.80), and larders take over in 33 of 50 runs against 21 without cheaters and 22 under `stores`.
 - **Where larders take over, about half the agents die each season, mostly starving.** In
   `hoard-larder` survival is 0.50 a season, against about 0.82 where scatter holds; predation alone
   takes about 18 %. A review probe found 92 % of the starvations after day 50, the starved having lost
