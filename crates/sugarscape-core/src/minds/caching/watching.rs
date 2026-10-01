@@ -57,9 +57,8 @@
 //!   the owners' terms: an agent at or above R / 2 doesn't raid, forgets
 //!   nothing, counts nothing, and stumbles and harvests as if it had no
 //!   entries (under `always` every arrival may raid). Otherwise the agent
-//!   takes from the first owner, in id order, of
-//!   a fresh entry at the site whose cache is still there, with no draw:
-//!   a pilfer by Minds 6's rules (`theft::loot`: min(cache, room) kept, or
+//!   takes from the first owner, in id order, of a fresh entry at the site
+//!   whose cache is still there, with no draw: a pilfer by Minds 6's rules (`theft::loot`: min(cache, room) kept, or
 //!   the whole cache eaten; `pilfered`, `pilfers`, `caches_pilfered` and a
 //!   `Pilfered { by }` fate). A raid that took something replaces the
 //!   tick's harvest, and nothing is drawn for the other caches there: at
@@ -75,9 +74,8 @@
 //!   `sightings` counts (watcher, burial) pairs; `seen_entries` is the
 //!   entries held, summed over agents, after the sweep. `seen_arrivals`
 //!   counts arrivals that may raid with a fresh entry at the site, `raids`
-//!   and `raided`
-//!   the takes (also in `pilfers` and `pilfered`), and `raids_wasted` the
-//!   arrivals whose remembered caches were all gone. Minds 6's pilfering
+//!   and `raided` the takes (also in `pilfers` and `pilfered`), and
+//!   `raids_wasted` the arrivals whose remembered caches were all gone. Minds 6's pilfering
 //!   bookkeeping (candidates, the fate log, the theft stats) runs under
 //!   watching as under theft (`Config::pilfering_on`).
 //!
@@ -236,11 +234,11 @@ pub(crate) fn seen_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
         .reduce(|x, y| x + y)
 }
 
-/// Whether `id`'s seen caches are places to go, and to raid, now: always, or under
-/// `raid_when: hungry` while it holds less than R / 2 (Minds 5's threshold,
-/// without `hungry`'s requirement that it has caches of its own). It stays
-/// R / 2 under the survey probe `probe_dig_at_reserve`, by design: the
-/// spec's threshold.
+/// Whether `id`'s seen caches are places to go, and to raid, now: always,
+/// or under `raid_when: hungry` while it holds less than R / 2 (Minds 5's
+/// threshold, without `hungry`'s requirement that it has caches of its
+/// own). It stays R / 2 under the survey probe `probe_dig_at_reserve`, by
+/// design: the spec's threshold.
 fn raiding(world: &World, id: AgentId) -> bool {
     match world.config.watching.raid_when {
         RaidWhen::Always => true,
@@ -320,12 +318,12 @@ pub(crate) fn forget(world: &mut World, id: AgentId, site: u32) -> bool {
 ///
 /// Under `raid_when: hungry` an agent at or above R / 2 ([`raiding`])
 /// doesn't raid: it forgets nothing, counts nothing and returns `None`, as
-/// with no entries. Otherwise it takes from the first owner, in id order, of a fresh entry at the site
-/// whose cache is still there, through `theft::loot` (min(cache, `room`)
-/// kept, or the whole cache eaten), counting `raids` and `raided`; the
-/// entries at the site are forgotten either way. None still there (dug,
-/// pilfered, or lost with a dead owner): a wasted raid. A take of 0 (no
-/// room under `keep`) is neither.
+/// with no entries. Otherwise it takes from the first owner, in id order,
+/// of a fresh entry at the site whose cache is still there, through
+/// `theft::loot` (min(cache, `room`) kept, or the whole cache eaten),
+/// counting `raids` and `raided`; the entries at the site are forgotten
+/// either way. None still there (dug, pilfered, or lost with a dead owner):
+/// a wasted raid. A take of 0 (no room under `keep`) is neither.
 pub(crate) fn raid(world: &mut World, id: AgentId, site: u32, room: f64) -> Option<Harvest> {
     let a = world.agent(id).expect("live agent");
     if a.seen.is_empty() || !raiding(world, id) {

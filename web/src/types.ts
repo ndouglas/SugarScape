@@ -1553,7 +1553,6 @@ export interface AgentView {
   /** Minds 8: watching state, while `watching.on`. */
   watching?: WatchingView | null;
 }
-/** Minds 6: whether the agent cheats, what it has stolen and lost to thieves, and loot in its stomach. */
 /**
  * Minds 8: whether the agent watches, whether it is a scrounger (watches and never buries), and the
  * caches it remembers seeing buried. Only while `watching.on`.
@@ -1564,6 +1563,7 @@ export interface WatchingView {
   /** Each `site` is an index (`y * width + x`). */
   seen: { site: number; owner: number; amount: number; age: number }[];
 }
+/** Minds 6: whether the agent cheats, what it has stolen and lost to thieves, and loot in its stomach. */
 export interface TheftView { cheater: boolean; stolen_by_me: number; stolen_from_me: number; fed: number }
 export interface CacheView { x: number; y: number; amount: number }
 /**
