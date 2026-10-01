@@ -1871,6 +1871,16 @@ fn md(v: &[f64]) -> String {
     }
 }
 
+/// The lowest finite value, or "—".
+fn lowest(v: &[f64]) -> String {
+    let f = stats::finite(v);
+    if f.is_empty() {
+        "—".into()
+    } else {
+        format!("{:.3}", f.iter().copied().fold(f64::INFINITY, f64::min))
+    }
+}
+
 /// The mean paired difference `b − a` with its 95 % t interval, and the
 /// seeds where it is above 0, or "—".
 fn paired(a: &[f64], b: &[f64]) -> String {
@@ -1936,11 +1946,11 @@ pub(crate) fn presets_report() -> String {
             md(&col(r0, |x| x.founders_w[O])),
         )
         .unwrap();
-        writeln!(s, "| world | fitness: all | hoarders | cheaters | watchers | others | survival: all | hoarders | cheaters | watchers | others | all, of those alive at 100 |\n|---|---|---|---|---|---|---|---|---|---|---|---|").unwrap();
+        writeln!(s, "| world | fitness: all | hoarders | cheaters | watchers | others | survival: all | hoarders | cheaters | watchers | others | all, of those alive at 100 | survival: all, lowest seed |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|").unwrap();
         for (l, r) in &worlds {
             writeln!(
                 s,
-                "| {l} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+                "| {l} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
                 md(&col(r, |x| x.fit_all(k))),
                 md(&col(r, |x| x.fit_c(k, H))),
                 md(&col(r, |x| x.fit_c(k, C))),
@@ -1952,14 +1962,15 @@ pub(crate) fn presets_report() -> String {
                 md(&col(r, |x| surv(x.alive200_w, x.founders_w, Some(W)))),
                 md(&col(r, |x| surv(x.alive200_w, x.founders_w, Some(O)))),
                 md(&col(r, |x| surv(x.alive200_c, x.alive100_c, None))),
+                lowest(&col(r, |x| surv(x.alive200_c, x.founders_c, None))),
             )
             .unwrap();
         }
-        writeln!(s, "\n| world | pilferage % a tick | raids | raided sugar | stumbled sugar | dug | p_s | p_o |\n|---|---|---|---|---|---|---|---|").unwrap();
+        writeln!(s, "\n| world | pilferage % a tick | raids | raided sugar | stumbled sugar | dug | p_s | p_o | seeds with p_s > p_o |\n|---|---|---|---|---|---|---|---|---|").unwrap();
         for (l, r) in &worlds {
             writeln!(
                 s,
-                "| {l} | {} | {} | {} | {} | {} | {} | {} |",
+                "| {l} | {} | {} | {} | {} | {} | {} | {} | {} of {} |",
                 md(&col(r, |x| 100.0 * x.stock_rate())),
                 md(&col(r, |x| x.raids)),
                 md(&col(r, |x| x.raided)),
@@ -1967,6 +1978,8 @@ pub(crate) fn presets_report() -> String {
                 md(&col(r, |x| x.dug)),
                 md(&col(r, Run::p_s)),
                 md(&col(r, Run::p_o)),
+                r.iter().filter(|x| x.p_s() > x.p_o()).count(),
+                r.len(),
             )
             .unwrap();
         }

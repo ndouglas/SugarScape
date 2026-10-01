@@ -38,6 +38,16 @@ The first round's claims (survey/src/claims/minds8.rs) are unchanged; only the p
 | `watch-scroungers-only.frequency` | Fails | mean per-seed slope 0.0299, 95 % CI -0.0332 to 0.0930 (t, df 19); 8 of 20 slopes below 0 |
 | `watch-winter.usage` | Holds | [watch-winter: Holds] median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000] [watch-winter-stumble: Holds] median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000] [watch-half: Holds] median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000] [watch-scroungers: Holds] median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000] [watch-scroungers-only: Holds] median 1.0000 (IQR 1.0000–1.0000); 20/20 in [1.0000, 1.0000] |
 
+### `watch-scroungers-only.frequency` by share (first round's claim under the new defaults)
+
+Seeds 1–20, span 7; watchers and cheaters at the same share s (the same agents, who never bury); the advantage is watcher − non-watcher survival per founder (alive at 200 ÷ founders). Result: mean per-seed slope 0.0299, 95 % CI -0.0332 to 0.0930 (t, df 19); 8 of 20 slopes below 0.
+
+| s | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 |
+|---|---|---|---|---|---|---|---|---|---|
+| median advantage | -0.198 | -0.207 | -0.225 | -0.198 | -0.171 | -0.212 | -0.166 | -0.196 | -0.161 |
+
+Without watching (watching off, same agents, at half; `minds8b-presets.md`): the cheaters survive 0.477 and the hoarders 0.699 per founder, a gap of 22 points; with watching, 0.489 and 0.653, a gap of 16.
+
 ## Claim 1: fresh caches (`watch-winter.fresh`)
 
 **Holds**: h(watch-winter) > h(theft-winter) in 20 of 20 seeds (need 16; 0 without a value).
@@ -144,6 +154,8 @@ Per seed hoarder fitness (2d needs off − hoarders ≥ 0.05):
 | watching off | 0.914 | 0.935 | 0.913 | 0.928 | 0.981 | 0.936 | 0.955 | 0.932 | 0.955 | 0.920 | 0.932 | 0.926 | 0.967 | 0.965 | 0.928 | 0.974 | 0.968 | 0.951 | 0.895 | 0.925 |
 | who: hoarders | 0.909 | 0.943 | 0.918 | 0.922 | 0.968 | 0.933 | 0.944 | 0.936 | 0.949 | 0.919 | 0.898 | 0.933 | 0.971 | 0.966 | 0.925 | 0.973 | 0.961 | 0.957 | 0.895 | 0.925 |
 
+Paired over seeds 1–20 (computed from the per-seed lists above; reported, not judged): 2c, watching off − who: cheaters in the hoarders' advantage, mean 0.012, 95 % t interval 0.008 to 0.017, above 0 in 18 of 20 seeds, at most 0.027 in any seed; 2d, watching off − who: hoarders in hoarder fitness, mean 0.003, 95 % t interval −0.002 to 0.007, above 0 in 11 of 20, at most 0.034. Both are well under the 0.05 the claims asked for in each seed.
+
 ### 2b: the signs by run set (judged setting)
 
 | runs | signs agree | p_s ÷ p_o | hoarders' advantage | hoarder fitness | cheater fitness | raided sugar per seed |
@@ -241,7 +253,7 @@ Under the reported settings (each judge rerun on that setting's worlds, seeds 1�
 | span 2 | Fails (rising) | 0.1256; 0.0997 to 0.1514; 0.1040 to 0.1472; 5 of 60 below 0 | 3b Fails: [above 0 at s = 0.1: Fails] advantage > 0 in 1 of 60 seeds (need 48; 0 without a value) [below 0 at s = 0.9: Fails] advantage < 0 in 33 of 60 seeds (need 48; 0 without a value) | -0.188 -0.190 -0.182 -0.198 -0.211 -0.217 -0.212 -0.147 -0.012 |
 | span 3 | Holds (falls) | -0.0327; -0.0585 to -0.0070; -0.0542 to -0.0112; 39 of 60 below 0 | 3b Fails: [above 0 at s = 0.1: Fails] advantage > 0 in 4 of 60 seeds (need 48; 0 without a value) [below 0 at s = 0.9: Fails] advantage < 0 in 47 of 60 seeds (need 48; 0 without a value) | -0.087 -0.115 -0.121 -0.148 -0.150 -0.181 -0.206 -0.176 -0.042 |
 | span 7 (judged) | Holds (falls) | -0.2012; -0.2283 to -0.1740; -0.2238 to -0.1785; 59 of 60 below 0 | 3b Fails: [above 0 at s = 0.1: Fails] advantage > 0 in 13 of 60 seeds (need 48; 0 without a value) [below 0 at s = 0.9: Holds] advantage < 0 in 60 of 60 seeds (need 48; 0 without a value) | -0.042 -0.060 -0.079 -0.080 -0.112 -0.148 -0.181 -0.228 -0.169 |
-| span 13 | Holds (falls) | -0.2282; -0.2555 to -0.2009; -0.2510 to -0.2054; 58 of 60 below 0 | 3b Fails: [above 0 at s = 0.1: Fails] advantage > 0 in 13 of 60 seeds (need 48; 0 without a value) [below 0 at s = 0.9: Holds] advantage < 0 in 60 of 60 seeds (need 48; 0 without a value) | -0.052 -0.057 -0.061 -0.080 -0.094 -0.116 -0.164 -0.222 -0.234. |
+| span 13 | Holds (falls) | -0.2282; -0.2555 to -0.2009; -0.2510 to -0.2054; 58 of 60 below 0 | 3b Fails: [above 0 at s = 0.1: Fails] advantage > 0 in 13 of 60 seeds (need 48; 0 without a value) [below 0 at s = 0.9: Holds] advantage < 0 in 60 of 60 seeds (need 48; 0 without a value) | -0.052 -0.057 -0.061 -0.080 -0.094 -0.116 -0.164 -0.222 -0.234 |
 
 ### Variant bury (watchers who also bury)
 
@@ -273,13 +285,15 @@ Under the reported settings (each judge rerun on that setting's worlds, seeds 1�
 | span 2 | Fails (flat) | -0.0056; -0.0224 to 0.0112; -0.0196 to 0.0084; 34 of 60 below 0 | 3c Fails: [watchers ahead: Fails] pooled watcher advantage: mean -0.0015, 95 % CI -0.0079 to 0.0049 (t, df 59) [the world's fitness falls with s: Holds] per-seed slope of world fitness on s: mean -0.0062, 95 % CI -0.0082 to -0.0042 (t, df 59) | -0.003 0.005 0.002 -0.004 -0.003 -0.005 0.002 -0.006 -0.007 |
 | span 3 | Fails (flat) | -0.0083; -0.0260 to 0.0094; -0.0230 to 0.0065; 35 of 60 below 0 | 3c Fails: [watchers ahead: Fails] pooled watcher advantage: mean -0.0027, 95 % CI -0.0093 to 0.0039 (t, df 59) [the world's fitness falls with s: Holds] per-seed slope of world fitness on s: mean -0.0042, 95 % CI -0.0063 to -0.0021 (t, df 59) | 0.007 0.001 0.005 -0.009 -0.003 -0.005 -0.006 -0.008 -0.011 |
 | span 7 (judged) | Fails (flat) | 0.0112; -0.0075 to 0.0300; -0.0044 to 0.0269; 26 of 60 below 0 | 3c Holds: [watchers ahead: Holds] pooled watcher advantage: mean 0.0093, 95 % CI 0.0027 to 0.0159 (t, df 59) [the world's fitness falls with s: Holds] per-seed slope of world fitness on s: mean -0.0081, 95 % CI -0.0104 to -0.0058 (t, df 59) | 0.012 0.014 0.013 0.009 0.007 0.003 0.019 0.005 0.015 |
-| span 13 | Fails (flat) | 0.0102; -0.0087 to 0.0291; -0.0056 to 0.0260; 28 of 60 below 0 | 3c Holds: [watchers ahead: Holds] pooled watcher advantage: mean 0.0243, 95 % CI 0.0180 to 0.0306 (t, df 59) [the world's fitness falls with s: Holds] per-seed slope of world fitness on s: mean -0.0074, 95 % CI -0.0099 to -0.0049 (t, df 59) | 0.024 0.028 0.024 0.024 0.018 0.026 0.025 0.026 0.029. |
+| span 13 | Fails (flat) | 0.0102; -0.0087 to 0.0291; -0.0056 to 0.0260; 28 of 60 below 0 | 3c Holds: [watchers ahead: Holds] pooled watcher advantage: mean 0.0243, 95 % CI 0.0180 to 0.0306 (t, df 59) [the world's fitness falls with s: Holds] per-seed slope of world fitness on s: mean -0.0074, 95 % CI -0.0099 to -0.0049 (t, df 59) | 0.024 0.028 0.024 0.024 0.018 0.026 0.025 0.026 0.029 |
 
 ### 3b per seed (variant forgo)
 
-Advantage at s = 0.1 (seeds 1–60): -0.127 -0.124 -0.099 -0.046 0.079 -0.059 0.041 -0.007 -0.130 -0.078 -0.180 -0.032 0.082 -0.042 0.020 -0.262 -0.111 -0.107 0.068 0.000 -0.016 -0.012 -0.037 -0.151 -0.011 0.015 -0.048 -0.020 -0.154 -0.176 -0.145 0.017 -0.032 -0.174 0.037 -0.042 -0.116 -0.067 -0.028 -0.035 -0.084 -0.034 -0.066 0.035 -0.112 -0.002 -0.032 -0.007 -0.095 0.014 -0.172 -0.190 0.017 -0.104 -0.002 -0.081 -0.152 -0.041 -0.097 0.133. Above 0 in 12 of 60.
+Advantage at s = 0.1 (seeds 1–60): -0.127 -0.124 -0.099 -0.046 0.079 -0.059 0.041 -0.007 -0.130 -0.078 -0.180 -0.032 0.082 -0.042 0.020 -0.262 -0.111 -0.107 0.068 0.000 -0.016 -0.012 -0.037 -0.151 -0.011 0.015 -0.048 -0.020 -0.154 -0.176 -0.145 0.017 -0.032 -0.174 0.037 -0.042 -0.116 -0.067 -0.028 -0.035 -0.084 -0.034 -0.066 0.035 -0.112 -0.002 -0.032 -0.007 -0.095 0.014 -0.172 -0.190 0.017 -0.104 -0.002 -0.081 -0.152 -0.041 -0.097 0.133. Above 0 in 13 of 60 (the judge's count, on unrounded values: seed 20's advantage prints as 0.000 at three decimals but is above 0, so a count of the printed values gives 12).
 
 Advantage at s = 0.9 (seeds 1–60): -0.164 -0.104 -0.103 -0.218 -0.273 -0.234 -0.179 -0.226 -0.244 -0.100 -0.194 -0.132 -0.072 -0.170 -0.124 -0.188 -0.141 -0.313 -0.040 -0.153 -0.127 -0.132 -0.064 -0.176 -0.139 -0.091 -0.087 -0.155 -0.279 -0.137 -0.272 -0.100 -0.162 -0.197 -0.317 -0.001 -0.238 -0.159 -0.176 -0.136 -0.223 -0.130 -0.178 -0.258 -0.146 -0.283 -0.230 -0.278 -0.105 -0.246 -0.241 -0.016 -0.210 -0.241 -0.101 -0.168 -0.207 -0.220 -0.126 -0.174. Below 0 in 60 of 60.
+
+The first round's probe is reported for claims 1 and 2 only, as the spec's "Also reported" list fixes it; claim 3 has none.
 
 ### 3c per seed (variant bury)
 
@@ -292,7 +306,7 @@ Partly seen before the run (the spec's pre-mortem): under `raid_if: always` the 
 ## Notes on reading these results
 
 - **Variant forgo is identical under `raid_if: always` and `value: room`.** By construction: a forgoing scrounger skips the `better` test (the site it forgoes is worth nothing to it; a Task 2 ruling), and under `loot: eat` its room is infinite, so `room` equals `amount`. The rows repeat the judged one exactly.
-- **Spans 1 and 2 behave differently.** In `watch-winter`, h is below `theft-winter`'s in every seed at spans 1 and 2 (0.85 % and 2.49 % a day against 3.00 %), and above it at spans 3, 7 and 13. In `watch-ak`, p_s ÷ p_o stays above 1 at spans 1 and 2 (1.72 and 1.10) and falls below 1 at 3, 7 and 13. In variant forgo, 3a reads rising at spans 1 and 2 (scroungers who forgo while holding a memory that lapses in a tick or two lose most at low share) and falls at 3, 7 and 13.
+- **Spans 1 and 2 behave differently.** In `watch-winter`, h is below `theft-winter`'s in every seed at spans 1 and 2 (0.85 % and 2.49 % a day against 3.00 %), and above it at spans 3, 7 and 13. In `watch-ak`, p_s ÷ p_o stays above 1 at spans 1 and 2 (1.72 and 1.10) and falls below 1 at 3, 7 and 13. In variant forgo, 3a reads rising at spans 1 and 2 (the scroungers' shortfall is largest at low share) and falls at 3, 7 and 13. In variant bury, 3c's watcher lead fails at spans 1, 2 and 3 (pooled 0.0007, 95 % CI −0.0062 to 0.0077; −0.0015; −0.0027) and holds only at 7 and 13.
 - **The bottleneck is action-bound in every world and setting:** watchers see 85–90 % of burials, and raid 10–63 % of the caches they see.
 - **2b's 62 of 100 under all three span-7 settings is a coincidence of totals,** checked by recount: judged 9 + 10 + 12 + 15 + 16; `raid_if: always` 9 + 8 + 13 + 16 + 16; `value: room` 9 + 9 + 12 + 15 + 17 (watching off, then spans 1, 3, 7, 13).
 - **Fitness in the field is compressed:** ticks alive per founder ÷ 200 sits near 0.9 because most agents who die do so in the winter (in `watch-winter`, from the medians, at about tick 150 on average), so a 0.05 drop (2c, 2d) is large on this scale; survival at 200 per founder moves several times as much (see `minds8b-presets.md`).

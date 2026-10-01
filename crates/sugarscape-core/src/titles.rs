@@ -303,7 +303,7 @@ pub const TITLES: [(&str, &str); 387] = [
     ),
     (
         "watch-winter",
-        "Everyone watches others bury: fresh caches go twice as fast as by stumbling, and fewer survive the winter than without watching",
+        "Everyone watches others bury: with a 7-tick memory fresh caches go twice as fast as by stumbling, and fewer survive the winter than without watching",
     ),
     (
         "watch-winter-stumble",
@@ -315,11 +315,11 @@ pub const TITLES: [(&str, &str); 387] = [
     ),
     (
         "watch-scroungers",
-        "Half watch others bury: watchers come out slightly ahead, and the more watch, the worse everyone does",
+        "Half watch others bury: with a 7-tick memory watchers come out slightly ahead, and the more watch, the worse everyone does",
     ),
     (
         "watch-scroungers-only",
-        "Half only watch and steal: fewer of them survive the winter than of the hoarders",
+        "Half never cache but watch and steal: they trail the hoarders with or without watching, a little less with it",
     ),
     (
         "watch-scroungers-forgo",
