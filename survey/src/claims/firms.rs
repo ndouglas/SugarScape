@@ -77,6 +77,17 @@ fn show(v: &[f64]) -> String {
     )
 }
 
+/// A median, plus how many of its (seed) values were finite — `median` itself
+/// drops non-finite ones silently, so this surfaces how many it kept.
+fn median_with_n(v: &[f64]) -> String {
+    let n = v.iter().filter(|x| x.is_finite()).count();
+    if n == v.len() {
+        format!("{:.2} ({n})", median(v))
+    } else {
+        format!("{:.2} ({n} of {})", median(v), v.len())
+    }
+}
+
 /// Each seed's µ (the paper's OLS).
 fn mus(ws: &[FirmsWorld]) -> Vec<f64> {
     ws.iter().map(|w| mu_ols(&w.records().sizes)).collect()
@@ -264,8 +275,9 @@ pub fn claims() -> Vec<Claim> {
                 let results: Vec<(&str, Vec<f64>)> = rows.into_iter().map(|(n, c)| (n, mus_of(c))).collect();
                 let medians: Vec<f64> = results.iter().map(|(_, m)| median(m)).collect();
                 let character = medians.iter().all(|m| (0.5..=3.0).contains(m));
+                let with_n: Vec<String> = results.iter().map(|(_, m)| median_with_n(m)).collect();
                 all_of(vec![
-                    ("power-law character".into(), outcome(character, format!("medians {} (the paper: 1.28, 1.21, 1.31, 1.01, 1.30, 0.99, 0.91, 1.56, 1.26)", show(&medians)))),
+                    ("power-law character".into(), outcome(character, format!("medians [{}] (the paper: 1.28, 1.21, 1.31, 1.01, 1.30, 0.99, 0.91, 1.56, 1.26)", with_n.join(", ")))),
                     ("homogeneous".into(), falls(results[0].1.clone(), results[6].1.clone(), "uniform", "θ 0.75", "1.28 and 0.91")),
                 ])
             },
@@ -305,6 +317,8 @@ pub fn claims() -> Vec<Claim> {
                     ("groping".into(), falls(free, groping.clone(), "free", "groping", "1.28 and 1.19")),
                     ("more pronounced".into(), falls(sticky, groping, "sticky", "groping", "0.92 and 1.19 — the table contradicts the text")),
                 ])
+                .with("The sub-checks hold, but our sticky and groping µ (−0.11, −0.23) are negative: not a power law, but a one-giant-firm regime — under the literal adjust_scope = everywhere, the largest firm holds all 1 000 agents in every seed (see firms.ours.adjust-scope), while the paper's 0.92 and 1.19 are power laws.")
+                .with("This claim tests the text's 'groping … more pronounced'; the spec and the paper's own tables give the opposite direction (sticky 0.92 against groping 1.19), and under that direction the third sub-check would fail.")
             },
         },
         Claim {
@@ -362,7 +376,8 @@ pub fn claims() -> Vec<Claim> {
                 let largest: Vec<f64> = el.iter().map(|x| x.1).collect();
                 all_of(vec![
                     ("random choices".into(), outcome(median(&choices) < 0.01, format!("share above 10: {}", show(&choices.iter().map(|x| 100.0 * x).collect::<Vec<_>>())) + " %")),
-                    ("random effort".into(), outcome(median(&effort) < 0.01, format!("share above 10: {}", show(&effort.iter().map(|x| 100.0 * x).collect::<Vec<_>>())) + " %")),
+                    ("random effort".into(), outcome(median(&effort) < 0.01, format!("share above 10: {}", show(&effort.iter().map(|x| 100.0 * x).collect::<Vec<_>>())) + " %")
+                        .with("The paper says only that random effort gives 'nothing like power law size distributions' (§4.1, §5); our run, where one firm holds everyone, satisfies that literal statement. The Fails here comes from reusing random choices' 'rarely greater than 9 or 10' threshold, which the paper states only for random choices.")),
                 ])
                 .with(&format!("Under random effort the largest firm reaches {} of 1 000 agents: not a power law, but of the opposite kind — agents gather in giant firms.", show(&largest)))
             },
