@@ -91,7 +91,7 @@ pieces of it against literatures with critiques:
 - **Algorithmic collusion** (Calvano, Calzolari, Denicolò and Pastorello, 2020, *AER*; critiques
   Klein 2021, Abada and Lambin 2023): Q-learning pricing agents learn to sustain high prices and
   punish undercutting with no communication at all — coordination at the opposite extreme from the
-  incident's rich channel.
+  incident's rich channel. Reproduced as model kind `collusion` (milestone 34): under the critics' tests much of its 'collusion' needs no memory, no future and no punishment scheme.
 - **Emergent communication** (Lewis signaling games; the naming game): agents inventing a protocol
   their overseers can't read.
 - **Inspection games** (Avenhaus, von Stengel and Zamir, 2002): the formal core of monitoring

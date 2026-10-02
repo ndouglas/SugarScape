@@ -192,3 +192,18 @@ Each verdict stays on whichever side of its threshold it lands. The survey's wri
 ## Docs
 
 `docs/papers.md` (the Reproduced row; the Queue's #1 removed; Wanted gains Calvano et al. 2023 ("Genuine or spurious?") and Abada & Lambin 2023, still unfound, and Klein's and Calvano 2021's code, available from the authors on request), the README's model list, and the module docs. The swarm-coordination study (`docs/studies/2026-09-27-swarm-coordination.md`) cites the milestone as its no-communication reference.
+
+## Amendments (implementation planning)
+
+The plan (`docs/superpowers/plans/2026-10-01-algorithmic-collusion.md`, Decisions) changed or filled in:
+
+- **A tick is `periods_per_tick` periods** (1 000), not one: the page stops a run at 10⁶ ticks and sweeps at 10⁵, and a session needs about 1.8 × 10⁶ periods. Each charted point sums one tick; `sample_every` is gone.
+- **The seed is the session number** under `rng = calvano`; the `session` field is dropped.
+- **Benchmarks are rounded to 5 decimals**, as the authors' inputs are.
+- **`q_init` is `calvano`, `zero` or `random`** (AFP's optimistic start is `random` with their 10–20).
+- **`grid = symmetric`** is [p^N − (1 + ξ)ζ, p^N + (1 + ξ)ζ].
+- **New switch `best_response_to`** (`path` | `code`): the code's impulse-response routine passes the cycle position where it means the state; Fig. 4 uses it, Table A5 does not.
+- **Responses carry the code's `ShockLength`** (Table A5's punishment length); **`rp_complete` is a series**; re-pairing has no sweep; sweeps run at most 100 seeds and 10⁵ ticks.
+- **A4 is Table A5's statistics**, pooled over its rows as its script pools them (the −0.127, 0.936 and 5.705 the spec quotes are Table A5's).
+- **B5 is two claims**, the constant-ε arm read at 10⁷ periods with 100 sessions (set after measuring: no such session settled in 10⁸ periods).
+- **A3 compares the paper's readings with the figure's cells**; A6's scorable items are claims (`collusion.ccdp.equilibrium`, `collusion.ccdp.figure-4-reading`), the rest reported in the README.
