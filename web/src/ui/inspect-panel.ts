@@ -1,10 +1,11 @@
+import { auctionRows } from '../auctions';
 import { citizenRows, shownCitizen } from '../civil';
 import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
 import { hoardStatusText } from '../hoard';
-import { hasCaches, isHoardView, isFirmsView, isCollusionView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hasCaches, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -830,6 +831,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isAuctionsView(view)
+            ? auctionRows(view, this.engine.colorMode).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
           : isCollusionView(view)
             ? this.collusionRows(view)
           : isFirmsView(view)

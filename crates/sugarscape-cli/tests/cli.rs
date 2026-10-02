@@ -213,6 +213,18 @@ fn presets_and_sweeps_are_listed() {
         "collusion-exploration",
         "collusion-timescale",
         "collusion-rp-complete",
+        "auctions-formats",
+        "auctions-feedback",
+        "auctions-initialization",
+        "auctions-ties",
+        "auctions-hindsight",
+        "auctions-local",
+        "auctions-biased",
+        "auctions-downward",
+        "auctions-market",
+        "auctions-bidders",
+        "auctions-persistent",
+        "auctions-duration",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -666,6 +678,26 @@ fn a_firms_run_stops_at_its_last_period() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 7 (its last period)\n");
+}
+
+#[test]
+fn an_auction_session_finishes_its_partial_final_batch() {
+    let dir = scratch("auctions");
+    let config = dir.join("auctions.json");
+    std::fs::write(
+        &config,
+        r#"{"model":"auctions","horizon":23,"window":5,"periods_per_tick":7}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 4 (its last auction)\n");
 }
 
 #[test]

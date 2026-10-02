@@ -1,0 +1,72 @@
+{
+  "name": "Q-learning Auctions: bidders",
+  "description": "Figure 8 compares three bidders and discount .99 versus .999; two bidders provide a control. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "2 bidders / 0.99",
+        "set": {
+          "bidders": 2,
+          "discount": 0.99
+        }
+      },
+      {
+        "at": 2,
+        "name": "2 bidders / 0.999",
+        "set": {
+          "bidders": 2,
+          "discount": 0.999
+        }
+      },
+      {
+        "at": 3,
+        "name": "3 bidders / 0.99",
+        "set": {
+          "bidders": 3,
+          "discount": 0.99
+        }
+      },
+      {
+        "at": 4,
+        "name": "3 bidders / 0.999",
+        "set": {
+          "bidders": 3,
+          "discount": 0.999
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "series": {
+    "label": "Auction",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  }
+}

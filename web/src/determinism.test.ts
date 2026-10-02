@@ -20,6 +20,9 @@ import type {
   BaliConfig,
   FirmsConfig,
   CollusionConfig,
+  AuctionsConfig,
+  AuctionsInspection,
+  AuctionsStats,
   CollusionInspection,
   CollusionStats,
   FirmsInspection,
@@ -643,7 +646,8 @@ describe('preset titles', () => {
 describe('model charts', () => {
   it('draw only series their model records', () => {
     for (const [model, charts] of Object.entries(MODEL_CHARTS)) {
-      const preset = presets.find((p) => modelOf(p.config) === model)!;
+      // Auctions declare three bidder lines, unavailable in their two-bidder default.
+      const preset = presets.find((p) => modelOf(p.config) === model && (model !== 'auctions' || (p.config as AuctionsConfig).bidders === 3))!;
       const names = JSON.parse(config_series_names(JSON.stringify(preset.config))) as string[];
       for (const c of charts) for (const line of c.lines) expect(names, `${model}: ${c.title}`).toContain(line.key);
     }
@@ -1588,3 +1592,32 @@ describe('civil violence’s schedule and ramps reach the page', () => {
   });
 });
 
+
+
+describe('Q-learning auctions through the engine', () => {
+  it('runs the fixed horizon including a partial tick and exports both views', async () => {
+    const preset = presets.find((p) => p.id === 'auctions-first-price');
+    expect(preset).toBeDefined();
+    const config = { ...structuredClone(preset!.config as AuctionsConfig), horizon: 15, window: 3, periods_per_tick: 7 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(2);
+    expect([e.tick, e.finished, (e.latest as AuctionsStats).periods]).toEqual([2, false, 14]);
+    await e.advance(8);
+    expect([e.tick, e.finished, ends, (e.latest as AuctionsStats).periods]).toEqual([3, true, 1, 15]);
+    await e.select(0, 0);
+    const bids = e.inspection!.view as AuctionsInspection;
+    expect(bids.whole_count).toBe(15);
+    expect(bids.late_count).toBe(3);
+    expect(bids.outcome?.periods).toBe(15);
+    e.setDisplay({ colorMode: 'values' });
+    await e.select(12, 0);
+    const values = e.inspection!.view as AuctionsInspection;
+    expect([values.bidder, values.action]).toEqual([0, 1]);
+    expect(values.learners[0].q).toHaveLength(19);
+    const fp = e.tick;
+    await e.advance(1);
+    expect([e.tick, (e.latest as AuctionsStats).periods]).toEqual([fp, 15]);
+  });
+});

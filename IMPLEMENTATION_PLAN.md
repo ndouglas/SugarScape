@@ -10,7 +10,7 @@
 **Goal**: CLI/WASM/web integration, thirteen presets and twelve sweeps.
 **Success Criteria**: Exact horizons, Inspect, conditional charts and finite sweeps agree with core.
 **Tests**: CLI, WASM, web tests, TypeScript and production build.
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 3: Preregistered survey
 **Goal**: Fixed-count source checks, controls and complete session exports.

@@ -1,0 +1,70 @@
+{
+  "name": "Q-learning Auctions: local",
+  "description": "Local exploration uses neighboring actions; boundary and global exploration readings are explicit. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "All",
+        "set": {
+          "exploration_set": "all"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Other",
+        "set": {
+          "exploration_set": "other"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Neighbors available",
+        "set": {
+          "exploration_set": "neighbors",
+          "neighbor_boundary": "available"
+        }
+      },
+      {
+        "at": 4,
+        "name": "Neighbors clamped",
+        "set": {
+          "exploration_set": "neighbors",
+          "neighbor_boundary": "clamp"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "series": {
+    "label": "Auction",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  }
+}

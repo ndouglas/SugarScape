@@ -1,0 +1,41 @@
+{
+  "name": "Q-learning Auctions: persistent",
+  "description": "Figure 9 is one 100-million-period run per format with constant exploration .001. At least 100 million auction periods per arm; this is a long workload. The metric is whole-run realized seller revenue; played-pair occupancy remains available in Inspect and session export. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 1
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "window_mean",
+    "series": "revenue",
+    "from": 1
+  },
+  "set": {
+    "exploration": "constant",
+    "epsilon": 0.001,
+    "horizon": 100000000
+  }
+}

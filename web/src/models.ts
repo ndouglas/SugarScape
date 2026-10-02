@@ -8,6 +8,8 @@ import type {
   FirmsConfig,
   FirmsInspection,
   CollusionConfig,
+  AuctionsConfig,
+  AuctionsInspection,
   CollusionInspection,
   ZiInspection,
   BaliConfig,
@@ -56,7 +58,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -88,12 +90,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   hoard: 'The evolution of hoarding',
   firms: 'The Emergence of Firms',
   collusion: 'Algorithmic Collusion',
+  auctions: 'Q-learning Auctions',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions'
     ? tag
     : 'sugarscape';
 }
@@ -202,7 +205,12 @@ export function isFirmsView(v: AnyInspection): v is FirmsInspection {
   return 'panel' in v && 'firm' in v && 'member' in v;
 }
 
-/** A cell of the collusion frame (a panel, a `state` and the session's `outcome`); check it before the others with a panel. */
+/** An auction cell carries action values and played-pair occupancy. */
+export function isAuctionsView(v: AnyInspection): v is AuctionsInspection {
+  return 'panel' in v && 'occupancy' in v && 'learners' in v;
+}
+
+/** A collusion cell carries the session outcome and monopoly benchmark. */
 export function isCollusionView(v: AnyInspection): v is CollusionInspection {
   return 'panel' in v && 'outcome' in v && 'monopoly' in v;
 }
@@ -284,7 +292,12 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     return Math.max(h.generations, Math.max(1, Math.ceil(tick / s))) * s - tick;
   }
   if (modelOf(c) === 'firms' && (c as FirmsConfig).stop_at > 0) return Math.max(0, (c as FirmsConfig).stop_at - tick);
-  // A session ends when its strategies settle, at the latest one period past the cap.
+  // Auctions always reach the horizon, including a partial final tick.
+  if (modelOf(c) === 'auctions') {
+    const a = c as AuctionsConfig;
+    return Math.max(0, Math.ceil(a.horizon / a.periods_per_tick) - tick);
+  }
+  // A pricing session ends when its strategies settle, at most one period past the cap.
   if (modelOf(c) === 'collusion') {
     const k = c as CollusionConfig;
     return Math.max(0, Math.ceil((k.cap + 1) / k.periods_per_tick) - tick);
@@ -653,7 +666,8 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['effort', 'Effort'],
     ['income', 'Income'],
   ],
-  // Each firm's strategy map: the price it would charge, or how often each state was visited.
+  auctions: [['bids', 'Bids · whole run'], ['late', 'Bids · final 20%'], ['values', 'Values']],
+  // Each firm's strategy map: price or how often each state was visited.
   collusion: [
     ['price', 'Price'],
     ['visits', 'Visits'],
@@ -689,5 +703,7 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   tipping: [],
   hoard: [],
   firms: [],
+  // Each firm's strategy map: price or how often each state was visited.
   collusion: [],
+  auctions: [],
 };

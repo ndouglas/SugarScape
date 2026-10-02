@@ -1,0 +1,61 @@
+{
+  "name": "Q-learning Auctions: duration",
+  "description": "Footnote 13 leaves session counts unstated. Twenty seeds at 1m, 10m, and 100m periods are our duration study; over four billion auction periods total. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "1000000 periods",
+        "set": {
+          "horizon": 1000000
+        }
+      },
+      {
+        "at": 2,
+        "name": "10000000 periods",
+        "set": {
+          "horizon": 10000000
+        }
+      },
+      {
+        "at": 3,
+        "name": "100000000 periods",
+        "set": {
+          "horizon": 100000000
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 20
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "series": {
+    "label": "Auction",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  }
+}

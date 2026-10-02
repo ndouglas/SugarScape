@@ -26,7 +26,7 @@ import { calendarYear, hasCaches, hoardSeasonTicks, isSugar, mindsShown, modelOf
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { AgreementConfig, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import type { AgreementConfig, AuctionsConfig, AuctionsStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
 import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -52,11 +52,17 @@ export type EngineEvent =
 export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its history holds here — export its data, or Reset to start again';
 
 /** What the page says when a world has run its course (the engine pauses and fires 'finished'). */
-export function finishedNotice(config: ModelConfig, tick: number): string {
+export function finishedNotice(config: ModelConfig, tick: number, latest?: ModelStats | null): string {
   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'firms') return `This run has reached its last period (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'auctions') {
+    const c = config as AuctionsConfig;
+    const stable = (latest as AuctionsStats | undefined)?.converged;
+    const status = stable === 1 ? 'final strategy window stable' : stable === 0 ? 'final strategy window unstable' : 'Inspect shows final strategy stability';
+    return `This session has reached its fixed horizon of ${c.horizon} periods · ${status} — Reset to run it again`;
+  }
   if (modelOf(config) === 'collusion') return `This session has finished at tick ${tick} — Reset to run it again`;
   if (modelOf(config) === 'bali') return `This run has reached its last year — Reset to run it again`;
   if (modelOf(config) === 'hoard') {

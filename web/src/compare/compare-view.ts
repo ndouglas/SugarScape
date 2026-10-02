@@ -147,7 +147,7 @@ export class CompareView {
         // once the pair's step has settled: the two replies land in either order.
         b.on('finished', () => {
           void this.lock.settled().then(() => {
-            if (this.lock.finishedWorld() === 1) showNotice(`B: ${finishedNotice(b.config, b.tick)}`, 10_000);
+            if (this.lock.finishedWorld() === 1) showNotice(`B: ${finishedNotice(b.config, b.tick, b.latest)}`, 10_000);
           });
         }),
         // The pair has no ticks left: Play or Step would otherwise no-op silently (the world's own
@@ -155,8 +155,8 @@ export class CompareView {
         this.lock.on('finished', () =>
           showNotice(
             this.lock.finishedWorld() === 1
-              ? `B: ${finishedNotice(b.config, b.tick)}`
-              : `${finishesUnpredictably(a.config) ? 'A: ' : ''}${finishedNotice(a.config, a.tick)}`,
+              ? `B: ${finishedNotice(b.config, b.tick, b.latest)}`
+              : `${finishesUnpredictably(a.config) ? 'A: ' : ''}${finishedNotice(a.config, a.tick, a.latest)}`,
             10_000,
           ),
         ),
