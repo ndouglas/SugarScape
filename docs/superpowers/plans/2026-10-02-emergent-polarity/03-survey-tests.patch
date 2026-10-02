@@ -1,0 +1,54 @@
+diff --git a/survey/polarity/run.py b/survey/polarity/run.py
+new file mode 100644
+--- /dev/null
++++ b/survey/polarity/run.py
+@@ -0,0 +1,5 @@
++"""Test-first native survey boundary."""
++import subprocess
++
++def run_native(binary, manifest, out, arm=None, validate=False):
++    return subprocess.CompletedProcess([str(binary)], 1, "", "native execution not connected")
+diff --git a/survey/polarity/test_run.py b/survey/polarity/test_run.py
+new file mode 100644
+--- /dev/null
++++ b/survey/polarity/test_run.py
+@@ -0,0 +1,39 @@
++import hashlib
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from run import run_native
++
++
++class NativeBoundaryTests(unittest.TestCase):
++    def test_exact_manifest_hash_and_space_containing_paths_reach_executable(self):
++        with tempfile.TemporaryDirectory(prefix='polarity fixture ') as directory:
++            root=Path(directory)
++            manifest=root/'frozen manifest.json'
++            manifest.write_text('{"arms":[]}\n')
++            executable=root/'fake-native'
++            executable.write_text('#!/usr/bin/env python3\nimport sys,json\nprint(json.dumps(sys.argv[1:]))\n')
++            executable.chmod(0o755)
++            out=root/'raw sessions.jsonl'
++            result=run_native(executable,manifest,out,arm='precision.',validate=True)
++            self.assertEqual(result.returncode,0)
++            argv=json.loads(result.stdout)
++            self.assertEqual(argv[argv.index('--manifest-sha256')+1],
++                             hashlib.sha256(manifest.read_bytes()).hexdigest())
++            self.assertEqual(argv[argv.index('--manifest')+1],str(manifest.resolve()))
++            self.assertEqual(argv[argv.index('--out')+1],str(out.resolve()))
++            self.assertIn('--validate',argv)
++
++    def test_native_failure_is_returned_for_caller_to_propagate(self):
++        with tempfile.TemporaryDirectory() as d:
++            root=Path(d)
++            manifest=root/'m.json'
++            manifest.write_text('{}')
++            exe=root/'fail'
++            exe.write_text('#!/bin/sh\nexit 2\n')
++            exe.chmod(0o755)
++            self.assertEqual(run_native(exe,manifest,root/'out').returncode,2)
++
++if __name__=='__main__':
++    unittest.main()

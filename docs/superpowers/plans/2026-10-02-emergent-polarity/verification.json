@@ -1,0 +1,171 @@
+{
+  "base": "614858ed5d7b0bc612a366054553542431beae1f",
+  "checks": [
+    {
+      "command": "cargo test -p sugarscape-core --test polarity_discovery",
+      "exit_code": 101,
+      "log_bytes": 1372,
+      "log_sha256": "3816220d47c86dabf1d3c59f672fb77cf062a2b140f3fb5a4c11ee973ac32095",
+      "name": "core boundary RED"
+    },
+    {
+      "command": "cargo test -p sugarscape-core",
+      "exit_code": 0,
+      "log_bytes": 150809,
+      "log_sha256": "7ffe73af43d0cfb0b520cf9a08eee379a8a79fead7b08d9ba906b673a01a07f9",
+      "name": "core GREEN"
+    },
+    {
+      "command": "cargo test -p sugarscape-cli polarity_cli_reports_economic_periods_instead_of_only_batched_ticks",
+      "exit_code": 101,
+      "log_bytes": 1451,
+      "log_sha256": "a766a7ad718a3b4fec93863bd2e3c1f37e2206f473ea1e3e023d45d083b10a8c",
+      "name": "CLI boundary RED"
+    },
+    {
+      "command": "cargo test -p sugarscape-cli polarity_cli_reports_economic_periods_instead_of_only_batched_ticks",
+      "exit_code": 0,
+      "log_bytes": 886,
+      "log_sha256": "0271f82be9d7194c5d329fa480c9faa469fffa12d4114344187eec9bd5d1e4f1",
+      "name": "CLI boundary GREEN"
+    },
+    {
+      "command": "python3 -m unittest discover -s survey/polarity -p test_run.py",
+      "exit_code": 1,
+      "log_bytes": 1446,
+      "log_sha256": "0913a0ed9601e37ed8e095a9ef5daec927496b8de4a3c8046666df97e1add040",
+      "name": "native driver RED"
+    },
+    {
+      "command": "python3 -m unittest discover -s survey/polarity -p test_*.py",
+      "exit_code": 0,
+      "log_bytes": 125,
+      "log_sha256": "df480b6e0ad20e95cfacb3e07df9e4ae19d3fd4b8b936b0197521ca448b1f2da",
+      "name": "Python fixtures GREEN"
+    },
+    {
+      "command": "cargo test --manifest-path survey/Cargo.toml",
+      "exit_code": 0,
+      "log_bytes": 8913,
+      "log_sha256": "447383574c5ad950f1cbd1ad62bd36c9df4da1ca327a915238e917d25ca45702",
+      "name": "survey crate GREEN"
+    },
+    {
+      "command": "cargo clippy --workspace --all-targets -- -D warnings",
+      "exit_code": 0,
+      "log_bytes": 470,
+      "log_sha256": "c3d928effdcd17d65e527ae2bc7c89360798bc2cd826281acf841c32020014c1",
+      "name": "workspace Clippy"
+    },
+    {
+      "command": "npm run build",
+      "exit_code": 0,
+      "log_bytes": 2846,
+      "log_sha256": "c49cad0a5b9902073f200712f52492b7d42345f08fb4a0e0b2b7b31b4a8a83c4",
+      "name": "release web build"
+    },
+    {
+      "command": "npm test",
+      "exit_code": 0,
+      "log_bytes": 285,
+      "log_sha256": "a9dc9c3ee0a759f34d60305b07591126ab95cdeb4cf7e03247b5a2566d2e5d3e",
+      "name": "final release web suite"
+    },
+    {
+      "command": "cargo test --workspace",
+      "exit_code": 0,
+      "log_bytes": 153995,
+      "log_sha256": "b4487eacb2ca3ff9b56f5153f33dd299bacb919992a371472c345c6bab94f8fa",
+      "name": "final workspace GREEN"
+    },
+    {
+      "command": "cargo clippy --manifest-path survey/Cargo.toml --bin polarity -- -D warnings",
+      "exit_code": 101,
+      "log_bytes": 820,
+      "log_sha256": "cc70ee715ec52415781da12b53d2940ebb2a233482725931adbe18213619c6a6",
+      "name": "runner Clippy RED"
+    },
+    {
+      "command": "cargo clippy --manifest-path survey/Cargo.toml --bin polarity -- -D warnings",
+      "exit_code": 0,
+      "log_bytes": 180,
+      "log_sha256": "01b02eb7076dec5c03df44030cdb84ddc502f8d66b32a4e28d6db43e29877407",
+      "name": "runner Clippy GREEN"
+    },
+    {
+      "command": "cargo test --manifest-path survey/Cargo.toml --bin polarity",
+      "exit_code": 0,
+      "log_bytes": 723,
+      "log_sha256": "0a45996900f4f623ed6c7045f9de640eb49cbcc1d822d427eed415ddaa278fa7",
+      "name": "runner tests after style correction"
+    },
+    {
+      "command": "cargo build --manifest-path survey/Cargo.toml --bin polarity",
+      "exit_code": 0,
+      "log_bytes": 180,
+      "log_sha256": "4dc62ea3f2e6733d9d9b1b6bf7dde7b382f07995d911d9a8725369ba0ded93a5",
+      "name": "final native build"
+    },
+    {
+      "command": "python3 survey/polarity/run.py --validate --manifest survey/polarity/studies.json --out survey/out/polarity-sessions.jsonl",
+      "exit_code": 0,
+      "log_bytes": 56,
+      "log_sha256": "2c81df4c8e33b6deccdbf93eed86b7ae23bf92eecc06feca42eee21af6b7ff82",
+      "name": "zero-period manifest validation"
+    }
+  ],
+  "formatting": {
+    "diff_check": true,
+    "native_runner_rustfmt": true,
+    "workspace_fmt": true
+  },
+  "limits": [
+    "No original EPM executable recovered; no author-code docking.",
+    "Some scratch motif tests characterize previously written code; strict TDD is not claimed.",
+    "Full native scientific workloads await written-plan review; short fixture and fingerprint verification is not source reproduction."
+  ],
+  "manifest_sha256": "1333cdb887bc5cc193aa9eb8cb46197ce357f3598de94e7976456b0bac18c35c",
+  "product_files": 48,
+  "replay": {
+    "automatic_complete_replay": true,
+    "direct_scratch_bytes_equal": true,
+    "files": 48,
+    "staged_red_green": true
+  },
+  "self_review": {
+    "draw_schedule_frozen": true,
+    "five_review_focus_cases_tested": true,
+    "placeholder_scan_clean": true,
+    "public_interfaces_checked": true,
+    "spec_coverage": true
+  },
+  "source": {
+    "admissible_category_vectors": 312,
+    "exact_text_vector": [
+      5,
+      9,
+      5,
+      0,
+      1
+    ],
+    "positions": 72,
+    "tax_abscissae": "inferred with recorded uncertainty"
+  },
+  "summary": {
+    "existing_goldens_changed": false,
+    "existing_survey_tests": 101,
+    "native_runner_tests": 4,
+    "new_native_wasm_fingerprints": 6,
+    "polarity_core_tests": 76,
+    "python_tests": 26,
+    "web_files": 59,
+    "web_tests": 900
+  },
+  "workload": {
+    "analysis_draws": 100000,
+    "analysis_seed": 2026100202,
+    "arms": 572,
+    "native_studies_executed": false,
+    "sessions": 28520
+  }
+}
