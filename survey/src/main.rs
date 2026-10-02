@@ -43,13 +43,23 @@ struct Row<'a> {
 }
 
 fn select(claims: Vec<Claim>, only: Option<&str>) -> Result<Vec<Claim>, String> {
-    let Some(prefix) = only else { return Ok(claims) };
-    let mut items: Vec<&str> = claims.iter().map(|c| c.id.split('.').next().unwrap()).collect();
+    let Some(prefix) = only else {
+        return Ok(claims);
+    };
+    let mut items: Vec<&str> = claims
+        .iter()
+        .map(|c| c.id.split('.').next().unwrap())
+        .collect();
     items.dedup();
     let known = items.join(", ");
-    let chosen: Vec<Claim> = claims.into_iter().filter(|c| c.id.starts_with(prefix)).collect();
+    let chosen: Vec<Claim> = claims
+        .into_iter()
+        .filter(|c| c.id.starts_with(prefix))
+        .collect();
     if chosen.is_empty() {
-        Err(format!("no claim id starts with {prefix:?}; known: {known}"))
+        Err(format!(
+            "no claim id starts with {prefix:?}; known: {known}"
+        ))
     } else {
         Ok(chosen)
     }
@@ -75,6 +85,22 @@ fn run_claim(c: &Claim, seeds: &[u64]) -> Outcome {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--minds9") {
+        let route: Vec<String> = args[1..]
+            .iter()
+            .filter(|a| a.as_str() != "--minds9")
+            .cloned()
+            .collect();
+        if let Err(e) = claims::minds9::cli(&route) {
+            eprintln!("{e}");
+            std::process::exit(2);
+        }
+        return;
+    }
+    if args.iter().any(|a| a == "--help") {
+        println!("survey [--only PREFIX] [--seeds N]\nsurvey --minds9 --help (declared measured campaign)");
+        return;
+    }
     let flag = |name: &str| {
         args.iter()
             .position(|a| a == name)
@@ -146,7 +172,14 @@ mod tests {
     use crate::claim::{untestable, Source, Verdict};
 
     fn fake(id: &'static str, check: fn(&[u64]) -> Outcome) -> Claim {
-        Claim { id, item: "x", source: Source::App, citation: "", text: "", check }
+        Claim {
+            id,
+            item: "x",
+            source: Source::App,
+            citation: "",
+            text: "",
+            check,
+        }
     }
 
     #[test]
@@ -159,7 +192,12 @@ mod tests {
 
     #[test]
     fn only_filters_by_prefix_and_rejects_no_match() {
-        let make = || vec![fake("ii-2.a", |_| untestable("")), fake("iii-6.b", |_| untestable(""))];
+        let make = || {
+            vec![
+                fake("ii-2.a", |_| untestable("")),
+                fake("iii-6.b", |_| untestable("")),
+            ]
+        };
         assert_eq!(select(make(), Some("ii-")).unwrap().len(), 1);
         assert_eq!(select(make(), None).unwrap().len(), 2);
         let err = select(make(), Some("vii")).err().unwrap();
