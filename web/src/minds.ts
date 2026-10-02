@@ -105,7 +105,7 @@ export function ageText(age: number, maxAge: number, lifespan: boolean): string 
 export function spatialHoardingRows(s: SpatialHoardingInspect): [string, string][] {
   return [
     ['Home', `(${s.home.x}, ${s.home.y})`],
-    ['Larder probability L', fmt(s.larder_trait)], ['Defense propensity D', fmt(s.defense_trait)],
+    ['Larder probability L', fmt(s.larder_trait)], ['Defense target D', fmt(s.defense_trait)],
     ['Larder', `${fmt(s.larder)} at home`],
     ['Delivery', s.delivery == null ? 'none' : `${fmt(s.delivery)} pending (still carried)`],
     ['Guarding', s.guarding ? 'yes' : 'no'], ['Observed larders', String(s.observed_larders)],

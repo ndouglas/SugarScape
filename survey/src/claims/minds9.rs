@@ -720,6 +720,17 @@ pub fn summarize_run(m: &Manifest, row: &RunRow) -> Result<SeedSummary, String> 
     let mut trajectory = Vec::new();
     for (i, g) in e.generations.iter().enumerate() {
         check_record_numbers(&serde_json::to_value(g).map_err(|e| e.to_string())?, "")?;
+        for (kind, exposure) in [
+            ("scatter", &g.scatter_exposure),
+            ("larder", &g.larder_exposure),
+        ] {
+            if exposure.stock_ticks < 0.0 {
+                return Err(format!(
+                    "negative stock_ticks exposure: {} seed {} generation {} kind {} ({})",
+                    c.id, row.seed, g.generation, kind, exposure.stock_ticks
+                ));
+            }
+        }
         if g.generation != i as u32
             || g.founders.len() != n
             || g.episode_seed != row.seed
@@ -2529,6 +2540,59 @@ mod tests {
         bad = row;
         bad.envelope.generations[0].survivors = 174;
         assert!(summarize_run(&m, &bad).is_err());
+    }
+
+    #[test]
+    fn minds9_rejects_saved_negative_stock_exposure_with_run_and_kind_context() {
+        let errors: Vec<_> = ["scatter", "larder"]
+            .into_iter()
+            .map(|kind| {
+                let (m, row) = fixture(None);
+                let mut saved = serde_json::to_value(&row).unwrap();
+                saved["envelope"]["generations"][0][format!("{kind}_exposure")]["stock_ticks"] =
+                    serde_json::json!(-1.0);
+                let malformed: RunRow = serde_json::from_value(saved).unwrap();
+                (kind, row.condition_id, summarize_run(&m, &malformed).err())
+            })
+            .collect();
+        assert!(
+            errors.iter().all(|(kind, condition_id, error)| {
+                error.as_ref().is_some_and(|error| {
+                    error.contains(condition_id)
+                        && error.contains("seed 1")
+                        && error.contains("generation 0")
+                        && error.contains(kind)
+                        && error.contains("negative stock_ticks")
+                })
+            }),
+            "missing negative exposure context: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn minds9_saved_nonnegative_stock_exposure_keeps_kind_metrics_and_ratios() {
+        for kind in ["scatter", "larder"] {
+            for (stock_ticks, expected_loss_rate) in [(0.0, None), (30.0, Some(0.1))] {
+                let (m, row) = fixture(None);
+                let mut saved = serde_json::to_value(&row).unwrap();
+                saved["envelope"]["generations"][0][format!("{kind}_exposure")]["stock_ticks"] =
+                    serde_json::json!(stock_ticks);
+                saved["envelope"]["generations"][0]["events"][kind]["pilfered"] =
+                    serde_json::json!(2.0);
+                saved["envelope"]["generations"][0]["events"][kind]["lost"] =
+                    serde_json::json!(1.0);
+                let decoded: RunRow = serde_json::from_value(saved).unwrap();
+                let summary = summarize_run(&m, &decoded).unwrap();
+                assert_eq!(
+                    (
+                        summary.endpoint.metrics[&format!("{kind}_stock_ticks")],
+                        summary.endpoint.metrics[&format!("{kind}_loss_rate")],
+                    ),
+                    (Some(stock_ticks), expected_loss_rate),
+                    "{kind} exposure {stock_ticks}"
+                );
+            }
+        }
     }
 
     #[test]

@@ -1387,7 +1387,7 @@ pub fn all() -> Vec<Preset> {
             "spatial-scatter",
             "Spatial scatter",
             "Minds 9 spatial hoarding",
-            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=0.0 and defense propensity D=0.5. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
+            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=0.0 and Defense target D=0.5. A larger D requires more stored food for the same guard probability. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
             |c| {
                 theft_winter(c, 0.0);
                 c.watching.span = 2;
@@ -1400,7 +1400,7 @@ pub fn all() -> Vec<Preset> {
             "spatial-larder",
             "Spatial larder",
             "Minds 9 spatial hoarding",
-            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=1.0 and defense propensity D=0.5. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
+            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=1.0 and Defense target D=0.5. A larger D requires more stored food for the same guard probability. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
             |c| {
                 theft_winter(c, 0.0);
                 c.watching.span = 2;
@@ -1413,7 +1413,7 @@ pub fn all() -> Vec<Preset> {
             "spatial-larder-guard",
             "Spatial larder with guard",
             "Minds 9 spatial hoarding",
-            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=1.0 and defense propensity D=0.5. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
+            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=1.0 and Defense target D=0.5. A larger D requires more stored food for the same guard probability. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
             |c| {
                 theft_winter(c, 0.0);
                 c.watching.span = 2;

@@ -448,11 +448,11 @@ export const GROUPS: Group[] = [
   },
   {
     title: 'Spatial hoarding (Minds 9)', minds: true,
-    note: 'An ordinary spatial episode with fixed founder traits. L chooses scatter burial or a delivery to home. Pending food remains carried and can be consumed on the return journey. Guarding a home costs a foraging turn. These fields rebuild the episode.',
+    note: 'An ordinary spatial episode with fixed founder traits. L chooses scatter burial or a delivery to home. Pending food remains carried and can be consumed on the return journey. Guarding a home costs a foraging turn. A larger Defense target D requires more stored food for the same guard probability. These fields rebuild the episode.',
     controls: [
       { kind: 'toggle', path: 'spatial_hoarding.enabled', label: 'Spatial hoarding', reset: true, current: (c) => spatialHoarding(c).enabled, adjust: seedSpatialHoarding },
       { kind: 'number', path: 'spatial_hoarding.larder', label: 'Larder probability L', min: 0, max: 1, step: 0.05, reset: true, current: (c) => spatialHoarding(c).larder, adjust: seedSpatialHoarding },
-      { kind: 'number', path: 'spatial_hoarding.defense', label: 'Defense propensity D', min: 0, max: 1, step: 0.05, reset: true, current: (c) => spatialHoarding(c).defense, adjust: seedSpatialHoarding },
+      { kind: 'number', path: 'spatial_hoarding.defense', label: 'Defense target D', min: 0, max: 1, step: 0.05, reset: true, current: (c) => spatialHoarding(c).defense, adjust: seedSpatialHoarding },
       { kind: 'toggle', path: 'spatial_hoarding.guard', label: 'Guard homes', reset: true, current: (c) => spatialHoarding(c).guard, adjust: seedSpatialHoarding },
       { kind: 'number', path: 'spatial_hoarding.defense_slope', label: 'Defense slope', min: 0.1, max: 50, step: 0.1, reset: true, current: (c) => spatialHoarding(c).defense_slope, adjust: seedSpatialHoarding },
       { kind: 'number', path: 'spatial_hoarding.find_larder', label: 'Chance to find a larder', min: 0, max: 1, step: 0.01, reset: true, current: (c) => spatialHoarding(c).find_larder, adjust: seedSpatialHoarding },

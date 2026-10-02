@@ -105,7 +105,7 @@ describe('Inspect texts', () => {
 describe('spatial inspection', () => {
   it('discloses carried pending delivery and guard state independently of scatter caches', () => {
     expect(spatialHoardingRows({ home: { x: 2, y: 3 }, larder_trait: 1, defense_trait: 0.5, larder: 8, delivery: 4, guarding: true, observed_larders: 2 })).toEqual([
-      ['Home', '(2, 3)'], ['Larder probability L', '1'], ['Defense propensity D', '0.50'], ['Larder', '8 at home'], ['Delivery', '4 pending (still carried)'], ['Guarding', 'yes'], ['Observed larders', '2'],
+      ['Home', '(2, 3)'], ['Larder probability L', '1'], ['Defense target D', '0.50'], ['Larder', '8 at home'], ['Delivery', '4 pending (still carried)'], ['Guarding', 'yes'], ['Observed larders', '2'],
     ]);
   });
 });
