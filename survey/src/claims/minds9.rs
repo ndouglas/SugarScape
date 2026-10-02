@@ -1136,6 +1136,8 @@ struct CampaignIndex {
     amendment_revision: String,
     amendment_path: String,
     manifest: Manifest,
+    #[serde(default)]
+    comparison_workers: Option<usize>,
     files: Vec<RawRef>,
 }
 #[derive(Serialize)]
@@ -1144,6 +1146,7 @@ struct CampaignAnalysis {
     code_revision: String,
     amendment_revision: String,
     raw_index: String,
+    comparison_workers: Option<usize>,
     measured: Analysis,
     timings: Vec<TimingSummary>,
 }
@@ -1168,6 +1171,13 @@ fn raw_name(role: &Role, id: &str, seed: u64) -> String {
     )
 }
 fn save_json(path: &std::path::Path, value: &impl Serialize) -> Result<(), String> {
+    save_json_synced(path, value, std::fs::File::sync_all)
+}
+fn save_json_synced(
+    path: &std::path::Path,
+    value: &impl Serialize,
+    sync_file: impl FnOnce(&std::fs::File) -> std::io::Result<()>,
+) -> Result<(), String> {
     use std::io::Write;
     let file = std::fs::OpenOptions::new()
         .write(true)
@@ -1177,7 +1187,7 @@ fn save_json(path: &std::path::Path, value: &impl Serialize) -> Result<(), Strin
     let mut out = std::io::BufWriter::new(file);
     serde_json::to_writer(&mut out, value).map_err(|e| e.to_string())?;
     out.flush().map_err(|e| e.to_string())?;
-    out.get_ref().sync_all().map_err(|e| e.to_string())
+    sync_file(out.get_ref()).map_err(|e| format!("{}: {e}", path.display()))
 }
 fn save_index(dir: &std::path::Path, index: &CampaignIndex) -> Result<(), String> {
     let tmp = dir.join("index.next.json");
@@ -1200,6 +1210,150 @@ fn git_output(args: &[&str]) -> Result<String, String> {
     }
     Ok(String::from_utf8_lossy(&o.stdout).trim().into())
 }
+fn run_comparison(c: &Condition, seed: u64) -> Result<RunRow, String> {
+    let a = c.materialize(seed)?;
+    let mut envelope = runner::run(&a.config, &a.initial)?;
+    envelope.initial_sampling = a.initial_sampling;
+    Ok(RunRow {
+        condition_id: c.id.clone(),
+        seed,
+        envelope,
+    })
+}
+/// A rendezvous channel bounds completed envelopes to one per worker plus the
+/// coordinator's current write. Only the coordinator invokes persistence.
+/// Dropping the receiver on error unblocks senders; every worker is joined before
+/// returning, including failures, so serial timing can start only afterward.
+fn parallel_jobs<J: Sync, T: Send>(
+    jobs: &[J],
+    workers: usize,
+    run: impl Fn(&J) -> Result<T, String> + Sync,
+    mut persist: impl FnMut(usize, T) -> Result<(), String>,
+) -> Result<(), String> {
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    use std::sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        mpsc,
+    };
+    let next = AtomicUsize::new(0);
+    let stopped = AtomicBool::new(false);
+    std::thread::scope(|scope| {
+        let (tx, rx) = mpsc::sync_channel(0);
+        let mut handles = Vec::new();
+        for _ in 0..workers.max(1).min(jobs.len()) {
+            let tx = tx.clone();
+            let (next, stopped, run) = (&next, &stopped, &run);
+            handles.push(scope.spawn(move || {
+                while !stopped.load(Ordering::Acquire) {
+                    let slot = next.fetch_add(1, Ordering::Relaxed);
+                    let Some(job) = jobs.get(slot) else { break };
+                    let result = catch_unwind(AssertUnwindSafe(|| run(job)))
+                        .unwrap_or_else(|payload| {
+                            Err(format!("worker panic: {}", panic_message(&payload)))
+                        })
+                        .map_err(|e| format!("comparison job {slot}: {e}"));
+                    if result.is_err() {
+                        stopped.store(true, Ordering::Release);
+                    }
+                    if tx.send((slot, result)).is_err() {
+                        break;
+                    }
+                }
+            }));
+        }
+        drop(tx);
+        let mut done = 0;
+        let mut result = Ok(());
+        for (slot, completed) in &rx {
+            result = completed.and_then(|value| persist(slot, value));
+            if result.is_err() {
+                stopped.store(true, Ordering::Release);
+                break;
+            }
+            done += 1;
+        }
+        drop(rx);
+        for handle in handles {
+            if let Err(payload) = handle.join() {
+                if result.is_ok() {
+                    result = Err(format!(
+                        "comparison worker panic: {}",
+                        panic_message(&payload)
+                    ));
+                }
+            }
+        }
+        result?;
+        if done != jobs.len() {
+            return Err(format!("incomplete comparisons: {done}/{}", jobs.len()));
+        }
+        Ok(())
+    })
+}
+fn panic_message(payload: &Box<dyn std::any::Any + Send>) -> &str {
+    payload
+        .downcast_ref::<String>()
+        .map(String::as_str)
+        .or_else(|| payload.downcast_ref::<&str>().copied())
+        .unwrap_or("non-string panic payload")
+}
+fn persist_comparison(
+    dir: &std::path::Path,
+    index: &mut CampaignIndex,
+    completed: &mut [Option<RawRef>],
+    slot: usize,
+    row: RunRow,
+    save_raw: impl FnOnce(&std::path::Path, &RawFile) -> Result<(), String>,
+) -> Result<(), String> {
+    let path = raw_name(&Role::Comparison, &row.condition_id, row.seed);
+    let reference = RawRef {
+        role: Role::Comparison,
+        condition_id: row.condition_id.clone(),
+        seed: row.seed,
+        path: path.clone(),
+    };
+    let raw = RawFile {
+        schema: SCHEMA.into(),
+        code_revision: index.code_revision.clone(),
+        amendment_revision: index.amendment_revision.clone(),
+        detailed_ledger: "not_collected".into(),
+        role: Role::Comparison,
+        row,
+        timing: None,
+    };
+    // save_json exclusively creates, flushes and fsyncs the complete raw before
+    // the reference can appear in either the in-memory or persisted index.
+    save_raw(&dir.join(path), &raw)?;
+    completed[slot] = Some(reference);
+    index.files = completed.iter().flatten().cloned().collect();
+    save_index(dir, index)
+}
+fn execute_comparisons(
+    dir: &std::path::Path,
+    index: &mut CampaignIndex,
+    workers: usize,
+    run: impl Fn(&Condition, u64) -> Result<RunRow, String> + Sync,
+) -> Result<(), String> {
+    let m = index.manifest.clone();
+    let jobs: Vec<_> = m
+        .conditions
+        .iter()
+        .flat_map(|c| m.seeds.iter().map(move |&seed| (c, seed)))
+        .collect();
+    let workers = workers.max(1).min(jobs.len().max(1));
+    index.comparison_workers = Some(workers);
+    save_index(dir, index)?;
+    let mut completed: Vec<Option<RawRef>> = vec![None; jobs.len()];
+    parallel_jobs(
+        &jobs,
+        workers,
+        |&(c, seed)| {
+            eprintln!("Minds 9 Comparison: {} seed {seed}", c.id);
+            run(c, seed)
+        },
+        |slot, row| persist_comparison(dir, index, &mut completed, slot, row, save_json),
+    )
+}
 fn execute(dir: &std::path::Path, amendment_revision: &str) -> Result<(), String> {
     let m = manifest();
     validate_manifest(&m)?;
@@ -1220,57 +1374,53 @@ fn execute(dir: &std::path::Path, amendment_revision: &str) -> Result<(), String
         amendment_revision: amendment_revision.into(),
         amendment_path: AMENDMENT.into(),
         manifest: m.clone(),
+        comparison_workers: None,
         files: Vec::new(),
     };
-    save_index(dir, &index)?;
-    for role in [Role::Comparison, Role::Timing] {
-        for c in &m.conditions {
-            if role == Role::Timing && !m.timing_conditions.contains(&c.id) {
-                continue;
-            }
-            let seeds = if role == Role::Comparison {
-                &m.seeds
-            } else {
-                &m.timing_seeds
+    let workers = std::thread::available_parallelism().map_or(1, |n| n.get().min(8));
+    execute_comparisons(dir, &mut index, workers, run_comparison)?;
+    // All scoped comparison workers have joined. These timing runs and their
+    // tick replays remain serial, with the same measurement boundaries.
+    let role = Role::Timing;
+    for c in &m.conditions {
+        if !m.timing_conditions.contains(&c.id) {
+            continue;
+        }
+        for &seed in &m.timing_seeds {
+            eprintln!("Minds 9 {role:?}: {} seed {seed}", c.id);
+            let a = c.materialize(seed)?;
+            let start = std::time::Instant::now();
+            let mut envelope = runner::run(&a.config, &a.initial)?;
+            let runner_seconds = start.elapsed().as_secs_f64();
+            envelope.initial_sampling = a.initial_sampling;
+            let row = RunRow {
+                condition_id: c.id.clone(),
+                seed,
+                envelope,
             };
-            for &seed in seeds {
-                eprintln!("Minds 9 {role:?}: {} seed {seed}", c.id);
-                let a = c.materialize(seed)?;
-                let start = std::time::Instant::now();
-                let mut envelope = runner::run(&a.config, &a.initial)?;
-                let runner_seconds = start.elapsed().as_secs_f64();
-                envelope.initial_sampling = a.initial_sampling;
-                let row = RunRow {
-                    condition_id: c.id.clone(),
-                    seed,
-                    envelope,
-                };
-                // Save the completed run before any analysis or timing replay.
-                let name = raw_name(&role, &c.id, seed);
-                let mut raw = RawFile {
-                    schema: SCHEMA.into(),
-                    code_revision: index.code_revision.clone(),
-                    amendment_revision: amendment_revision.into(),
-                    detailed_ledger: "not_collected".into(),
-                    role: role.clone(),
-                    row,
-                    timing: None,
-                };
-                save_json(&dir.join(&name), &raw)?;
-                if role == Role::Timing {
-                    raw.timing = Some(time_ticks(&raw.row.envelope, runner_seconds)?);
-                    let temporary = dir.join(format!("{name}.next"));
-                    save_json(&temporary, &raw)?;
-                    std::fs::rename(temporary, dir.join(&name)).map_err(|e| e.to_string())?;
-                }
-                index.files.push(RawRef {
-                    role: role.clone(),
-                    condition_id: c.id.clone(),
-                    seed,
-                    path: name,
-                });
-                save_index(dir, &index)?;
-            }
+            // Save the completed run before any analysis or timing replay.
+            let name = raw_name(&role, &c.id, seed);
+            let mut raw = RawFile {
+                schema: SCHEMA.into(),
+                code_revision: index.code_revision.clone(),
+                amendment_revision: amendment_revision.into(),
+                detailed_ledger: "not_collected".into(),
+                role: role.clone(),
+                row,
+                timing: None,
+            };
+            save_json(&dir.join(&name), &raw)?;
+            raw.timing = Some(time_ticks(&raw.row.envelope, runner_seconds)?);
+            let temporary = dir.join(format!("{name}.next"));
+            save_json(&temporary, &raw)?;
+            std::fs::rename(temporary, dir.join(&name)).map_err(|e| e.to_string())?;
+            index.files.push(RawRef {
+                role: role.clone(),
+                condition_id: c.id.clone(),
+                seed,
+                path: name,
+            });
+            save_index(dir, &index)?;
         }
     }
     render_saved(&dir.join("index.json"), dir)
@@ -1416,6 +1566,7 @@ fn render_saved(index_path: &std::path::Path, out: &std::path::Path) -> Result<(
         code_revision: index.code_revision,
         amendment_revision: index.amendment_revision,
         raw_index: index_path.display().to_string(),
+        comparison_workers: index.comparison_workers,
         measured: analysis,
         timings,
     };
@@ -1428,7 +1579,11 @@ fn markdown(
     index: &CampaignIndex,
 ) -> String {
     use std::fmt::Write;
-    let mut s=format!("# Minds 9 measured results\n\nCode `{}`; amendment `{}`; raw index `{}`. Protocol: `{AMENDMENT}`.\n\nNo Holds/Fails verdicts. Run seed is the sample unit. Endpoints use the last observed archived cohort, including dead founders; terminal endpoints are never extended to generation 59. All trajectories and parent-weight distributions are in analysis.json; complete founders, lineage, weights, initial sampling and draw order are in raw files.\n\n## Declared paired contrasts\n\nA minus B; no multiplicity-adjusted inference or sweep-cell selection. Intervals are descriptive Student t intervals. Unavailable means at least one undefined/unused metric; no unmatched seeds are dropped.\n\n| Contrast | Metric | Primary | n | Mean | 95% t interval | + / 0 / − | Missing seeds |\n|---|---|---|---:|---:|---|---|---|\n",index.code_revision,index.amendment_revision,path.display());
+    let execution = match index.comparison_workers {
+        Some(workers) => format!("Comparison execution used {workers} workers. Timing runs and tick replays ran serially after all comparison workers joined."),
+        None => "Comparison worker count was not recorded in this legacy index. Timing runs and tick replays ran serially.".into(),
+    };
+    let mut s=format!("# Minds 9 measured results\n\nCode `{}`; amendment `{}`; raw index `{}`. Protocol: `{AMENDMENT}`.\n\n{execution}\n\nNo Holds/Fails verdicts. Run seed is the sample unit. Endpoints use the last observed archived cohort, including dead founders; terminal endpoints are never extended to generation 59. All trajectories and parent-weight distributions are in analysis.json; complete founders, lineage, weights, initial sampling and draw order are in raw files.\n\n## Declared paired contrasts\n\nA minus B; no multiplicity-adjusted inference or sweep-cell selection. Intervals are descriptive Student t intervals. Unavailable means at least one undefined/unused metric; no unmatched seeds are dropped.\n\n| Contrast | Metric | Primary | n | Mean | 95% t interval | + / 0 / − | Missing seeds |\n|---|---|---|---:|---:|---|---|---|\n",index.code_revision,index.amendment_revision,path.display());
     for c in &a.contrasts {
         if let Some(p) = &c.summary {
             let ci = p
@@ -1728,6 +1883,444 @@ mod tests {
             .file_type()
             .is_symlink());
     }
+    // A serial pool, an unordered index, a skipped seed, or a detached worker
+    // must break these behavior tests. Channels force order without sleeps.
+    #[test]
+    fn minds9_parallel_forced_completion_order_is_received_before_slow_job() {
+        use std::sync::{mpsc, Mutex};
+        let (release, wait) = mpsc::channel();
+        let wait = Mutex::new(wait);
+        let mut completed = Vec::new();
+        parallel_jobs(
+            &[0, 1],
+            2,
+            |job| {
+                if *job == 0 {
+                    wait.lock()
+                        .unwrap()
+                        .recv_timeout(std::time::Duration::from_secs(5))
+                        .map_err(|e| e.to_string())?;
+                }
+                Ok(*job)
+            },
+            |slot, value| {
+                completed.push((slot, value));
+                if slot == 1 {
+                    release.send(()).unwrap();
+                }
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(completed, vec![(1, 1), (0, 0)]);
+    }
+
+    #[test]
+    fn minds9_parallel_bounds_workers_and_joins_before_serial_phase() {
+        use std::sync::{
+            atomic::{AtomicUsize, Ordering},
+            Condvar, Mutex,
+        };
+        let exited = std::sync::Arc::new(AtomicUsize::new(0));
+        let worker_starts = AtomicUsize::new(0);
+        let active = AtomicUsize::new(0);
+        let peak = AtomicUsize::new(0);
+        let started = (Mutex::new(0), Condvar::new());
+        parallel_jobs(
+            &(0..9).collect::<Vec<_>>(),
+            3,
+            |job| {
+                track_worker_exit(&worker_starts, &exited);
+                let n = active.fetch_add(1, Ordering::SeqCst) + 1;
+                peak.fetch_max(n, Ordering::SeqCst);
+                if *job < 3 {
+                    let (lock, wake) = &started;
+                    let mut count = lock.lock().unwrap();
+                    *count += 1;
+                    wake.notify_all();
+                    let (count, timeout) = wake
+                        .wait_timeout_while(count, std::time::Duration::from_secs(5), |count| {
+                            *count < 3
+                        })
+                        .unwrap();
+                    assert!(
+                        !timeout.timed_out() && *count == 3,
+                        "three independent workers must start"
+                    );
+                }
+                active.fetch_sub(1, Ordering::SeqCst);
+                Ok(*job)
+            },
+            |_, _| Ok(()),
+        )
+        .unwrap();
+        // This is the same return boundary execute uses before serial timing.
+        assert_eq!(active.load(Ordering::SeqCst), 0);
+        assert_eq!(exited.load(Ordering::SeqCst), 3);
+        assert_eq!(peak.load(Ordering::SeqCst), 3);
+    }
+
+    fn tiny_comparison_manifest() -> Manifest {
+        let mut m = manifest();
+        m.conditions
+            .retain(|c| c.id == "continuous-survival-w2" || c.id == "contest-scrounger-s50-w2");
+        m.conditions.truncate(2);
+        assert_eq!(m.conditions.len(), 2);
+        for c in &mut m.conditions {
+            c.config.founders = 6;
+            c.config.episode.population = 6;
+            c.config.ticks = 12;
+            c.config.generations = 3;
+        }
+        m.seeds = vec![1, 2, 3];
+        m.timing_conditions.clear();
+        m.timing_seeds.clear();
+        m.contrasts.clear();
+        m
+    }
+    fn comparison_index(m: Manifest) -> CampaignIndex {
+        CampaignIndex {
+            schema: SCHEMA.into(),
+            code_revision: "a".repeat(40),
+            amendment_revision: "b".repeat(40),
+            amendment_path: AMENDMENT.into(),
+            manifest: m,
+            comparison_workers: None,
+            files: Vec::new(),
+        }
+    }
+
+    struct WorkerExit(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+    impl Drop for WorkerExit {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+    std::thread_local! {
+        static WORKER_EXIT: std::cell::RefCell<Option<WorkerExit>> = const { std::cell::RefCell::new(None) };
+    }
+    fn track_worker_exit(
+        started: &std::sync::atomic::AtomicUsize,
+        finished: &std::sync::Arc<std::sync::atomic::AtomicUsize>,
+    ) {
+        WORKER_EXIT.with(|slot| {
+            if slot.borrow().is_none() {
+                started.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                *slot.borrow_mut() = Some(WorkerExit(finished.clone()));
+            }
+        });
+    }
+
+    #[test]
+    fn minds9_parallel_bounds_completed_envelopes_while_coordinator_writes() {
+        use std::sync::{
+            atomic::{AtomicUsize, Ordering},
+            Condvar, Mutex,
+        };
+        struct Envelope<'a>(&'a AtomicUsize);
+        impl Drop for Envelope<'_> {
+            fn drop(&mut self) {
+                self.0.fetch_sub(1, Ordering::SeqCst);
+            }
+        }
+        let live = AtomicUsize::new(0);
+        let peak = AtomicUsize::new(0);
+        let created = (Mutex::new(0), Condvar::new());
+        let mut writes = 0;
+        parallel_jobs(
+            &(0..8).collect::<Vec<_>>(),
+            2,
+            |_| {
+                let n = live.fetch_add(1, Ordering::SeqCst) + 1;
+                peak.fetch_max(n, Ordering::SeqCst);
+                let (lock, wake) = &created;
+                *lock.lock().unwrap() += 1;
+                wake.notify_all();
+                Ok(Envelope(&live))
+            },
+            |_, _envelope| {
+                if writes == 0 {
+                    let (lock, wake) = &created;
+                    let (count, timeout) = wake
+                        .wait_timeout_while(
+                            lock.lock().unwrap(),
+                            std::time::Duration::from_secs(5),
+                            |count| *count < 3,
+                        )
+                        .unwrap();
+                    assert!(
+                        !timeout.timed_out(),
+                        "two workers must continue while coordinator writes"
+                    );
+                    assert_eq!(
+                        *count, 3,
+                        "rendezvous must stop workers from producing more envelopes"
+                    );
+                    assert_eq!(live.load(Ordering::SeqCst), 3);
+                }
+                writes += 1;
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(writes, 8);
+        assert_eq!(peak.load(Ordering::SeqCst), 3);
+        assert_eq!(live.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn minds9_parallel_persists_raw_before_incremental_canonical_index() {
+        use std::sync::{mpsc, Mutex};
+        let dir = FilesystemFixture::new("canonical-index");
+        let (mut m, row) = fixture(None);
+        m.seeds = vec![1, 2];
+        let mut index = comparison_index(m);
+        save_index(&dir.0, &index).unwrap();
+        let mut completed = vec![None; 2];
+        let (release, wait) = mpsc::channel();
+        let wait = Mutex::new(wait);
+        let coordinator = std::thread::current().id();
+        let mut order = Vec::new();
+        parallel_jobs(
+            &[1, 2],
+            2,
+            |seed| {
+                if *seed == 1 {
+                    wait.lock()
+                        .unwrap()
+                        .recv_timeout(std::time::Duration::from_secs(5))
+                        .map_err(|e| e.to_string())?;
+                }
+                let mut result = row.clone();
+                result.seed = *seed;
+                Ok(result)
+            },
+            |slot, result| {
+                assert_eq!(std::thread::current().id(), coordinator);
+                let seed = result.seed;
+                persist_comparison(&dir.0, &mut index, &mut completed, slot, result, save_json)?;
+                let saved: CampaignIndex = load_json(&dir.0.join("index.json"))?;
+                // Every published entry must already point to a complete raw file.
+                for reference in &saved.files {
+                    let raw: RawFile = load_json(&dir.0.join(&reference.path))?;
+                    assert_eq!(raw.row.seed, reference.seed);
+                    assert_eq!(raw.row.envelope, row.envelope);
+                }
+                if seed == 2 {
+                    assert_eq!(
+                        saved.files.iter().map(|r| r.seed).collect::<Vec<_>>(),
+                        vec![2]
+                    );
+                    release.send(()).unwrap();
+                }
+                order.push(seed);
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(order, vec![2, 1]);
+        let saved: CampaignIndex = load_json(&dir.0.join("index.json")).unwrap();
+        assert_eq!(
+            saved.files.iter().map(|r| r.seed).collect::<Vec<_>>(),
+            vec![1, 2]
+        );
+    }
+
+    #[test]
+    fn minds9_parallel_write_failure_preserves_raw_and_leaves_incomplete_index() {
+        let dir = FilesystemFixture::new("write-failure");
+        let (m, row) = fixture(None);
+        let mut index = comparison_index(m);
+        let path = dir
+            .0
+            .join(raw_name(&Role::Comparison, &row.condition_id, row.seed));
+        std::fs::write(&path, "existing raw").unwrap();
+        let error = execute_comparisons(&dir.0, &mut index, 8, |_, _| Ok(row.clone())).unwrap_err();
+        assert!(error.contains(&path.display().to_string()), "{error}");
+        assert_eq!(std::fs::read_to_string(path).unwrap(), "existing raw");
+        let saved: CampaignIndex = load_json(&dir.0.join("index.json")).unwrap();
+        assert_eq!(saved.comparison_workers, Some(1));
+        assert!(saved.files.is_empty());
+        assert!(!dir.0.join("analysis.json").exists());
+        assert!(!dir.0.join("results.md").exists());
+    }
+
+    #[test]
+    fn minds9_parallel_worker_failure_leaves_index_incomplete_and_joins_workers() {
+        use std::sync::{
+            atomic::{AtomicUsize, Ordering},
+            Arc,
+        };
+        for panic in [false, true] {
+            let dir = FilesystemFixture::new("worker-failure");
+            let (mut m, row) = fixture(None);
+            m.seeds = vec![1, 2, 3, 4];
+            let mut index = comparison_index(m);
+            let started = AtomicUsize::new(0);
+            let finished = Arc::new(AtomicUsize::new(0));
+            let error = execute_comparisons(&dir.0, &mut index, 2, |_, seed| {
+                track_worker_exit(&started, &finished);
+                if seed == 2 {
+                    if panic {
+                        panic!("fixture panic");
+                    }
+                    return Err("fixture failure".into());
+                }
+                let mut result = row.clone();
+                result.seed = seed;
+                Ok(result)
+            })
+            .unwrap_err();
+            assert!(
+                error.contains(if panic {
+                    "fixture panic"
+                } else {
+                    "fixture failure"
+                }),
+                "{error}"
+            );
+            assert_eq!(
+                finished.load(Ordering::SeqCst),
+                started.load(Ordering::SeqCst)
+            );
+            let saved: CampaignIndex = load_json(&dir.0.join("index.json")).unwrap();
+            assert!(saved.files.len() < 4);
+            assert!(!saved.files.iter().any(|r| r.seed == 2));
+            assert!(!dir.0.join("analysis.json").exists());
+        }
+    }
+
+    #[test]
+    fn minds9_parallel_raw_sync_precedes_index_and_sync_error_stays_incomplete() {
+        for fail in [false, true] {
+            let dir = FilesystemFixture::new("raw-sync");
+            let (m, row) = fixture(None);
+            let mut index = comparison_index(m);
+            save_index(&dir.0, &index).unwrap();
+            let mut synced = false;
+            let result =
+                persist_comparison(&dir.0, &mut index, &mut [None], 0, row, |path, raw| {
+                    save_json_synced(path, raw, |file| {
+                        let previous: CampaignIndex = load_json(&dir.0.join("index.json")).unwrap();
+                        assert!(
+                            previous.files.is_empty(),
+                            "raw must sync before publishing its entry"
+                        );
+                        let complete: RawFile = load_json(path).unwrap();
+                        assert_eq!(complete, *raw, "raw must flush completely before fsync");
+                        if fail {
+                            return Err(std::io::Error::other("fixture sync failure"));
+                        }
+                        file.sync_all()?;
+                        synced = true;
+                        Ok(())
+                    })
+                });
+            let saved: CampaignIndex = load_json(&dir.0.join("index.json")).unwrap();
+            if fail {
+                assert!(result.unwrap_err().contains("fixture sync failure"));
+                assert!(!synced);
+                assert!(saved.files.is_empty());
+                assert!(index.files.is_empty());
+            } else {
+                result.unwrap();
+                assert!(synced);
+                assert_eq!(saved.files.len(), 1);
+            }
+        }
+    }
+
+    #[test]
+    fn minds9_parallel_index_failure_does_not_publish_unsaved_entry() {
+        let dir = FilesystemFixture::new("index-failure");
+        let (m, row) = fixture(None);
+        let mut index = comparison_index(m);
+        save_index(&dir.0, &index).unwrap();
+        // A failed replacement leaves the prior index authoritative even if the
+        // exclusive raw creation and fsync already succeeded.
+        std::fs::write(dir.0.join("index.next.json"), "existing temporary").unwrap();
+        let error = persist_comparison(&dir.0, &mut index, &mut [None], 0, row.clone(), save_json)
+            .unwrap_err();
+        assert!(error.contains("index.next.json"), "{error}");
+        let saved: CampaignIndex = load_json(&dir.0.join("index.json")).unwrap();
+        assert!(saved.files.is_empty());
+        let raw: RawFile = load_json(&dir.0.join(raw_name(
+            &Role::Comparison,
+            &row.condition_id,
+            row.seed,
+        )))
+        .unwrap();
+        assert_eq!(raw.row, row);
+        assert_eq!(
+            std::fs::read_to_string(dir.0.join("index.next.json")).unwrap(),
+            "existing temporary"
+        );
+    }
+
+    #[test]
+    fn minds9_parallel_real_full_envelopes_equal_serial_for_every_seed() {
+        let serial_dir = FilesystemFixture::new("serial-envelopes");
+        let parallel_dir = FilesystemFixture::new("parallel-envelopes");
+        let mut serial = comparison_index(tiny_comparison_manifest());
+        let mut parallel = serial.clone();
+        execute_comparisons(&serial_dir.0, &mut serial, 1, run_comparison).unwrap();
+        execute_comparisons(&parallel_dir.0, &mut parallel, 3, run_comparison).unwrap();
+        assert_eq!(serial.files, parallel.files);
+        assert_eq!(serial.comparison_workers, Some(1));
+        assert_eq!(parallel.comparison_workers, Some(3));
+        for reference in &serial.files {
+            let a: RawFile = load_json(&serial_dir.0.join(&reference.path)).unwrap();
+            let b: RawFile = load_json(&parallel_dir.0.join(&reference.path)).unwrap();
+            assert_eq!(a, b, "full raw envelope {}", reference.path);
+            // Independently call the original runner on the coordinator thread,
+            // rather than relying only on one-worker vs many-worker agreement.
+            let condition = serial
+                .manifest
+                .conditions
+                .iter()
+                .find(|c| c.id == reference.condition_id)
+                .unwrap();
+            let materialized = condition.materialize(reference.seed).unwrap();
+            let mut direct = runner::run(&materialized.config, &materialized.initial).unwrap();
+            direct.initial_sampling = materialized.initial_sampling;
+            assert_eq!(a.row.envelope, direct);
+            if matches!(condition.cohort, CohortSpec::Contest { .. }) {
+                let initial = &a.row.envelope.initial;
+                assert!(initial.iter().any(|f| f.cheater && f.watches));
+                assert!(initial.iter().any(|f| !f.cheater && !f.watches));
+            }
+            assert_eq!(a.row.envelope.generations.len(), 3);
+            assert!(a.row.envelope.generations[1]
+                .founders
+                .iter()
+                .all(|f| f.parents.is_some()));
+            assert!(a.timing.is_none());
+        }
+    }
+
+    #[test]
+    fn minds9_parallel_metadata_roundtrips_and_legacy_indexes_remain_readable() {
+        let (m, row) = fixture(Some(Terminal::Extinct));
+        let analysis = analyze_rows(&m, vec![row]).unwrap();
+        let mut index = comparison_index(m);
+        index.comparison_workers = Some(3);
+        let encoded = serde_json::to_value(&index).unwrap();
+        assert_eq!(encoded["comparison_workers"], 3);
+        assert_eq!(
+            serde_json::from_value::<CampaignIndex>(encoded.clone()).unwrap(),
+            index
+        );
+        let report = markdown(&analysis, &[], std::path::Path::new("index.json"), &index);
+        assert!(report.contains("Comparison execution used 3 workers."));
+        assert!(report.contains(
+            "Timing runs and tick replays ran serially after all comparison workers joined."
+        ));
+        let mut legacy = encoded;
+        legacy.as_object_mut().unwrap().remove("comparison_workers");
+        let decoded: CampaignIndex = serde_json::from_value(legacy).unwrap();
+        assert_eq!(decoded.comparison_workers, None);
+    }
+
     #[test]
     fn minds9_manifest_materializes_every_declared_cell_without_worlds() {
         let m = manifest();
@@ -2078,6 +2671,7 @@ mod tests {
             amendment_revision: "b".repeat(40),
             amendment_path: AMENDMENT.into(),
             manifest: m,
+            comparison_workers: None,
             files: vec![],
         };
         let report = markdown(&a, &[], std::path::Path::new("index.json"), &index);
