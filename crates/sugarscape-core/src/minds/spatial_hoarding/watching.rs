@@ -285,7 +285,10 @@ pub(crate) fn skip_scatter_draws(world: &mut World, id: AgentId, at: Pos) {
     let site = world.torus.index(at) as u32;
     let skipped = world
         .agents()
-        .filter(|a| a.id != id && a.caches.get(&site).is_some_and(|&v| v > 0.0))
+        .filter(|a| {
+            (a.id != id || !world.config.theft.owner_memory)
+                && a.caches.get(&site).is_some_and(|&v| v > 0.0)
+        })
         .count();
     stores::tick_events(world)
         .expect("enabled")
@@ -687,6 +690,32 @@ mod tests {
         let h = crate::rules::movement::go_and_gather(&mut w, owner, Pos::new(5, 5));
         assert_eq!((h.dug, h.gathered[0]), (5.0, 0.0));
         assert_eq!(w.site(Pos::new(5, 5)).resource[0], 3.0);
+    }
+
+    #[test]
+    fn spatial_hoarding_own_larder_counts_displaced_unknown_own_scatter_draw() {
+        for (owner_memory, expected_skipped) in [(false, 1), (true, 0)] {
+            let (mut w, owner, _) = fixture();
+            w.config.theft.find = 1.0;
+            w.config.theft.owner_memory = owner_memory;
+            assert_eq!(caching::bury(&mut w, owner, 2.0), 2.0);
+            w.agent_mut(owner).unwrap().metabolism[0] = 1;
+            w.agent_mut(owner).unwrap().holdings[0] = 0.0;
+            w.agent_mut(owner).unwrap().spatial.as_mut().unwrap().larder = 4.0;
+            set_sugar(&mut w, 5, 5, 3.0); // Known scatter loses the own dig comparison.
+            let h = crate::rules::movement::go_and_gather(&mut w, owner, Pos::new(5, 5));
+            assert_eq!((h.dug, h.gathered[0]), (4.0, 0.0));
+            assert_eq!(w.events.owner_finds, 0);
+            assert_eq!(w.site(Pos::new(5, 5)).resource[0], 3.0);
+            assert_eq!(
+                stores::tick_events(&mut w)
+                    .unwrap()
+                    .observation
+                    .scatter_draws_skipped,
+                expected_skipped,
+                "owner_memory={owner_memory}"
+            );
+        }
     }
 
     #[test]
