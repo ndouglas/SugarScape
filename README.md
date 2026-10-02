@@ -2864,7 +2864,7 @@ agent-ticks alive per founder over ticks 1–200 ÷ 200.
   at every share, a median 0.015 at 0.1. Per seed, watching adds a median 0.034 to the shortfall at
   0.1 (in 47 of 60 seeds) and 0.204 at 0.8, so the shortfall when rare is mostly scrounging's, and
   its growth with share entirely so. Within scrounging, forgoing is the cost, since letting them
-  harvest too raises their fitness by 0.13. Among watchers who also bury, **no fall in their lead
+  harvest too raises their fitness by 0.13 (at half, seeds 1–20). Among watchers who also bury, **no fall in their lead
   was detected (Fails, flat)**: slope 0.011, 90 % CI −0.004 to 0.027. Instead it is **a mild social
   dilemma (Holds)**: watchers are ahead by 0.009 (95 % CI 0.003 to 0.016) while everyone's fitness
   falls as more watch.
