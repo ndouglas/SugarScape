@@ -55,6 +55,7 @@
   },
   "limits": [
     "Registered ensembles and duration studies remain for plan execution; no claimed paper reproduction yet.",
-    "Standalone survey strict clippy encounters seven pre-existing lints in unrelated modules; auctions introduced none."
+    "Standalone survey strict clippy encounters seven pre-existing lints in unrelated modules; auctions introduced none.",
+    "Standalone survey cargo fmt --check fails with 42 existing sections, reproduced on archived pre-Task3 dc1c635 and scratch; auctions.rs edition2021 rustfmt check passes. Workspace formatting remains clean. Baseline logs: /tmp/auctions-survey-fmt-baseline.log and /tmp/auctions-scratch-fmt-recheck.log."
   ]
 }

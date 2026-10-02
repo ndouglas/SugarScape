@@ -5,7 +5,7 @@ const view: AuctionsInspection = {
   x: 0, y: 12, panel: 'bids', bidder: null, action: null, count: 4, frequency: .4, q: null, chosen: null, updated: null, hypothetical_reward: null,
   tick: 2, period: 10, horizon: 11, grid: [.05, .10], greedy: [.1, .1, .05], played: [.05, .1, .1], shares: [0, .5, .5], fringe_bid: null, fringe_share: null, payment: .1, epsilon: .025, stable: 4,
   occupancy: [4, 1, 2, 3], late_occupancy: [1, 0, 1, 0], whole_count: 10, late_count: 2,
-  learners: [{ q: [2, 3], greedy: 1, chosen: [3, 7], updated: [3, 7] }], outcome: null, agent: null,
+  learners: [{ q: [2, 3], greedy: 1, chosen: [3, 7], updated: [3, 7] }], equilibria: [], outcome: null, agent: null,
 };
 describe('auction inspection', () => {
   it('uses the selected histogram and its economic denominator', () => {

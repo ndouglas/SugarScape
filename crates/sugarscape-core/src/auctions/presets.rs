@@ -142,7 +142,7 @@ pub fn presets() -> Vec<ModelPreset> {
             id: "auctions-three-patient",
             name: "Three bidders put more weight on future rewards",
             source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
-            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 8/Figure 11: 500 three-bidder terminal-policy sessions; initial Q=1/(1-.999), approximately 1,000.",
+            description: "Starting Q=1/(1-discount), approximately 1,000 at .999; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 8/Figure 11: 500 three-bidder terminal-policy sessions; initial Q=1/(1-.999), approximately 1,000.",
             config: ModelConfig::Auctions(c),
         });
     }

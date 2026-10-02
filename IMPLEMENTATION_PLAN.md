@@ -22,4 +22,4 @@
 **Goal**: Measure registered workloads, document outcomes, review and publish.
 **Success Criteria**: Findings preserve source discrepancies and unknown conventions; required checks and deployed Pages pass.
 **Tests**: Native ensembles outside CI, fresh review, CI and deployment smoke.
-**Status**: Not Started
+**Status**: In Progress

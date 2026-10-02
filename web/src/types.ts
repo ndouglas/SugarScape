@@ -2336,5 +2336,5 @@ export interface AuctionsInspection {
   hypothetical_reward: number | null; tick: number; period: number; horizon: number; grid: number[];
   greedy: number[]; played: number[]; shares: number[]; fringe_bid: number | null; fringe_share: number | null; payment: number; epsilon: number; stable: number;
   occupancy: number[]; late_occupancy: number[]; whole_count: number; late_count: number; learners: AuctionLearnerView[];
-  outcome: AuctionsOutcome | null; agent: null;
+  equilibria: number[][]; outcome: AuctionsOutcome | null; agent: null;
 }
