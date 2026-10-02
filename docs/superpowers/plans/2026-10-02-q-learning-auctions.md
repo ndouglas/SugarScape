@@ -284,7 +284,7 @@ cargo fmt --manifest-path survey/Cargo.toml -- --check
 git diff --check
 ```
 
-Expected: pass, including coverage boundaries, unequal convergence subsets, unordered off-diagonal TV, single/empty/all-success Wilson cases, whole-played-pair occupancy and ten short unused-feedback seeds. Standalone survey strict clippy has seven pre-existing warnings in other modules; record that baseline rather than making unrelated changes. Workspace clippy remains required and clean.
+Expected: survey tests pass, including coverage boundaries, unequal convergence subsets, unordered off-diagonal TV, single/empty/all-success Wilson cases, whole-played-pair occupancy and ten short unused-feedback seeds. Standalone survey formatting has 42 pre-existing failing sections (reproduced on dc1c635 and scratch); direct `rustfmt --edition 2021 --check survey/src/claims/auctions.rs` passes. Standalone survey strict clippy has seven pre-existing warnings in other modules; record that baseline rather than making unrelated changes. Workspace clippy remains required and clean.
 
 - [ ] **Step 4: Run documentary controls without an ensemble.**
 
@@ -371,6 +371,6 @@ Update the roadmap heading from prepared to the assigned milestone, append the R
 
 ## Planning verification record
 
-See adjacent `verification.json` for commands, counts and manifest hashes. Both the staged red/green replay and automated replay reconstructed all 57 files byte for byte. Final checks passed: 1,710 native workspace tests, 79 WASM tests, 881 web tests, 100 survey tests, TypeScript, production build, formatting and workspace clippy. A fresh independent code reviewer confirmed all findings resolved. Full registered ensembles remain for Task 4.
+See adjacent `verification.json` for commands, counts and manifest hashes. Both the staged red/green replay and automated replay reconstructed all 57 files byte for byte. Final checks passed: 1,710 native workspace tests, 79 WASM tests, 881 web tests, 100 survey tests, TypeScript, production build, workspace formatting and workspace clippy. Standalone survey formatting fails on 42 pre-existing sections (baseline reproduced on dc1c635 and scratch); auctions.rs edition2021 rustfmt passes. A fresh independent code reviewer confirmed all findings resolved. Full registered ensembles remain for Task 4.
 
 The plan's self-review checked every spec section against the tasks/patches, verified exact API names, scanned for placeholders and pinned the five Review Focus cases. Implementation execution remains subagent-driven as requested.
