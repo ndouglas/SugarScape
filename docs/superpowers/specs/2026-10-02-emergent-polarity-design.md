@@ -126,9 +126,12 @@ this milestone.
 | `event_log`, `event_log_limit` | false,1000; cap 0..1,000,000, positive when logging. Include monotonic event IDs and dropped-record count |
 
 Means must be finite, SDs nonnegative, rates/shares/taxes/discounts in [0,1], exponent positive,
-trust parameters within [−1000,1000], horizon 1..1,000,000,000. Reject irrelevant/inconsistent
-combinations such as provincial variants with equal allocation, or stochastic combat outside
-overextension, or sequential updates with after-harvest victory. Validation messages identify fields and corrective choices. The plan will
+trust parameters within [−1000,1000], horizon 1..1,000,000,000. Dormant numeric fields still
+receive finite/range validation; differing from their defaults is not itself an error.
+The variant selects deterministic versus stochastic combat. Reject inconsistent combinations
+such as provincial variants with equal allocation, two-level `tax_discount` other than 1,
+or sequential updates with after-harvest victory. Distance controls are dormant outside
+overextension. Validation messages identify fields and corrective choices. The plan will
 record exact schema field representations without changing these semantics.
 
 ### Decisions, paths and allocation
@@ -250,7 +253,9 @@ obligations → allocate → resolve dyads/damage/harvest → randomized structu
 rebuild fronts → form coalitions → record statistics. Sequential alternative uses one shuffled
 capital list and recomputes that actor's actions and allocations against the current state,
 resolving each unordered foreign dyad once at its first visit and applying its claims
-immediately. Trust/coalitions remain period-boundary operations; primitive harvest happens
+immediately. Initiation excludes already resolved dyads; allocations preserve commitments
+used by those dyads. A late actor cannot queue an attack for another period. Trust/coalitions
+remain period-boundary operations; primitive harvest happens
 once at period end. Preserve the same number of actor opportunities; do not label Duffy's
 one-conflict-per-iteration protocol as this update-order control.
 
