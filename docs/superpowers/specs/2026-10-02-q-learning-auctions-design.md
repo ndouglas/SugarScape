@@ -141,6 +141,7 @@ documented reconstruction**, not an inferred author implementation.
 | `exploration_set` | `all` | `all`, `other` (exclude cached greedy), `neighbors` |
 | `neighbor_boundary` | `available` | Uniform over existing neighbors, or `clamp` a missing neighbor to the edge action |
 | `period_origin` | `zero` | `zero` or `one`; origin for the first auction's epsilon |
+| `convergence_phase` | `post_update` | `post_update` or `pre_update`; greedy profile observed for stability |
 | `downward_trigger` | `off` | `off`, `stable`, `period`; enable the extra low-bid choice once |
 | `downward_at` | 100,000 | Positive period threshold for `period` trigger |
 | `downward_clock` | `activation` | `activation` or `global` |
@@ -224,8 +225,9 @@ Epsilon is evaluated from the global completed-period count plus the configured 
 use `epsilon*exp_neg(-beta*t)` for decay and `epsilon` for constant exploration. Calculate
 from t rather than repeatedly multiplying a decay factor; the paper supplies no code convention.
 
-`stable` downward activation occurs on the next auction after a post-update greedy profile
-has persisted for `window` observations. `period` starts at the next auction when the number
+`stable` downward activation occurs on the next auction after a greedy profile, observed
+under `convergence_phase`, has persisted for `window` observations. `period` starts at the
+next auction when the number
 of completed periods reaches `downward_at`. Record activation period tau, activate once, and
 continue for the horizon. After activation, with probability
 `downward_chi*exp_neg(-downward_beta*s)`, choose the lowest action whose Q lies within
@@ -251,16 +253,20 @@ emulation. The draw schedule is fixed for reproducibility and paired ambiguity t
    treatment makes unused-feedback and reward-noise comparisons use the same base draws.
 
 Uniform action/tie selection maps a draw u to `floor(u*set_length)` on the ordered candidate
-set. Do not draw additional conditional randomness. Both bidders select from cached old Q,
+set. Do not draw additional conditional randomness. All bidders select from cached old Q,
 then the auction clears, then each Q vector updates using its own pre-update maximum.
 Record played bids/rewards/occupancy, recompute post-update greedy choices, update stability,
 and increment period. All-action updating freezes the maximum for the entire vector update.
 Construct each grid point by direct integer-to-`f64` division once, including out actions.
 Use exact bid equality for allocation, and absolute 1e-12 to resolve `bias_bid` to a canonical
 grid index. Q updates follow the displayed weighted-sum order, without fused multiply-add.
+Probability tests use `uniform < probability`, so probability zero never selects that branch.
 
-Stability is a count of identical consecutive **post-update profiles**, starting at 1 for the
-first observation; a different profile resets it to 1. At the horizon, `converged` is true iff
+Stability counts identical consecutive **post-update profiles** by default; `pre_update`
+instead observes the cached profile used at that period's start. Terminal policies are always
+the post-update greedy profile after the final auction, with the stability phase named in the
+export. Start the streak at 1 for the first observation; a different profile resets it to 1.
+At the horizon, `converged` is true iff
 the streak is at least `window`. A run that settles early and changes later can fail this check.
 Finish exactly at the horizon; the final tick may be short. A finished world is immutable under
 subsequent `step`/`run` calls. Report `tick`, economic `period`, and actual periods in the last tick.
