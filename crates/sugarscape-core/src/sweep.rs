@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 187] = [
+const BUILTINS: [Builtin; 200] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1713,6 +1713,58 @@ const BUILTINS: [Builtin; 187] = [
     Builtin {
         id: "firms-population",
         json: include_str!("../../../sweeps/firms-population.json"),
+    },
+    Builtin {
+        id: "collusion-table-i",
+        json: include_str!("../../../sweeps/collusion-table-i.json"),
+    },
+    Builtin {
+        id: "collusion-alpha-beta",
+        json: include_str!("../../../sweeps/collusion-alpha-beta.json"),
+    },
+    Builtin {
+        id: "collusion-delta",
+        json: include_str!("../../../sweeps/collusion-delta.json"),
+    },
+    Builtin {
+        id: "collusion-memory",
+        json: include_str!("../../../sweeps/collusion-memory.json"),
+    },
+    Builtin {
+        id: "collusion-myopic",
+        json: include_str!("../../../sweeps/collusion-myopic.json"),
+    },
+    Builtin {
+        id: "collusion-two-phase",
+        json: include_str!("../../../sweeps/collusion-two-phase.json"),
+    },
+    Builtin {
+        id: "collusion-every-price",
+        json: include_str!("../../../sweeps/collusion-every-price.json"),
+    },
+    Builtin {
+        id: "collusion-below-nash",
+        json: include_str!("../../../sweeps/collusion-below-nash.json"),
+    },
+    Builtin {
+        id: "collusion-invitation",
+        json: include_str!("../../../sweeps/collusion-invitation.json"),
+    },
+    Builtin {
+        id: "collusion-synchronous",
+        json: include_str!("../../../sweeps/collusion-synchronous.json"),
+    },
+    Builtin {
+        id: "collusion-exploration",
+        json: include_str!("../../../sweeps/collusion-exploration.json"),
+    },
+    Builtin {
+        id: "collusion-timescale",
+        json: include_str!("../../../sweeps/collusion-timescale.json"),
+    },
+    Builtin {
+        id: "collusion-rp-complete",
+        json: include_str!("../../../sweeps/collusion-rp-complete.json"),
     },
 ];
 
@@ -2723,7 +2775,20 @@ mod tests {
                 "firms-base-pay",
                 "firms-hiring",
                 "firms-readings",
-                "firms-population"
+                "firms-population",
+                "collusion-table-i",
+                "collusion-alpha-beta",
+                "collusion-delta",
+                "collusion-memory",
+                "collusion-myopic",
+                "collusion-two-phase",
+                "collusion-every-price",
+                "collusion-below-nash",
+                "collusion-invitation",
+                "collusion-synchronous",
+                "collusion-exploration",
+                "collusion-timescale",
+                "collusion-rp-complete"
             ]
         );
         for b in builtins() {

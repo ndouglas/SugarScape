@@ -1,0 +1,42 @@
+{
+  "name": "Algorithmic Collusion: more exploration",
+  "description": "More exploration: ε = e^(−βt) with β ten times smaller, and a constant ε = 0.05 (it never settles, so read at 10⁷ periods). Measured (release, sessions 1–100, recorded 2026-10-01): Δ 0.862, 0.741 and 0.559 — lower, but neither halves it.",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Exploration",
+    "values": [
+      {
+        "at": 1,
+        "name": "ε = e^(−βt), β = 4 × 10⁻⁶",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "β = 4 × 10⁻⁷",
+        "set": {
+          "beta": 4e-07
+        }
+      },
+      {
+        "at": 3,
+        "name": "ε = 0.05 (stopped at 10⁷)",
+        "set": {
+          "exploration": "constant",
+          "epsilon": 0.05,
+          "cap": 10000000
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "cycle_gain"
+  }
+}

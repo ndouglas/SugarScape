@@ -1,0 +1,41 @@
+{
+  "name": "Algorithmic Collusion: memory and the future (Lambin's test)",
+  "description": "Lambin's key test: memoryless firms (one state, so no punishment is possible) keeping δ = 0.95, beside the paper's appendix reading (memoryless with δ = 0, which its code forces). Measured (release, sessions 1–100, recorded 2026-10-01): Δ 0.862 with one period of memory, 0.958 with none, 0.244 with none and δ = 0. Memoryless firms price higher (1 000 sessions in the survey: 0.958 against 0.851).",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Memory",
+    "values": [
+      {
+        "at": 1,
+        "name": "One period, δ = 0.95",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "None, δ = 0.95",
+        "set": {
+          "memory": 0
+        }
+      },
+      {
+        "at": 3,
+        "name": "None, δ = 0 (CCDP-A)",
+        "set": {
+          "memory": 0,
+          "delta": 0.0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "cycle_gain"
+  }
+}

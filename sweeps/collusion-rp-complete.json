@@ -1,0 +1,37 @@
+{
+  "name": "Algorithmic Collusion: every deviation punished? (den Boer et al.)",
+  "description": "den Boer, Meylahn & Schinkel's RP-completeness: does every one-period deviation, by either firm to any price, draw a punishment-like response? Measured (release, sessions 1–100, recorded 2026-10-01): 9 % of sessions under the paper's readings, 10 % under the code's (the survey: 8.8 % of 1 000).",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Readings",
+    "values": [
+      {
+        "at": 1,
+        "name": "The paper's",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "The code's",
+        "set": {
+          "ties": "random",
+          "rng": "calvano",
+          "cap": 1250000000,
+          "equilibrium_check": "one_shot",
+          "best_response_to": "code"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "rp_complete"
+  }
+}

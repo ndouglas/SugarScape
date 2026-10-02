@@ -1,0 +1,105 @@
+{
+  "name": "Algorithmic Collusion: the profit gain against δ (Fig. 6)",
+  "description": "Calvano et al.'s Fig. 3: Δ against the discount factor δ. Measured (release, sessions 1–100, recorded 2026-10-01): 0.228 at δ = 0, lowest 0.157 at 0.3, 0.483 at 0.8, 0.861 at 0.95, 0.940 at 0.99 — the figure's 0.212, 0.156 at 0.34, 0.849 and 0.934. At δ = 0 no reward–punishment scheme can pay, yet Δ is a quarter of the baseline's, in the paper's own figure too.",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "δ",
+    "values": [
+      {
+        "at": 1,
+        "name": "δ = 0.0",
+        "set": {
+          "delta": 0.0
+        }
+      },
+      {
+        "at": 2,
+        "name": "δ = 0.1",
+        "set": {
+          "delta": 0.1
+        }
+      },
+      {
+        "at": 3,
+        "name": "δ = 0.2",
+        "set": {
+          "delta": 0.2
+        }
+      },
+      {
+        "at": 4,
+        "name": "δ = 0.3",
+        "set": {
+          "delta": 0.3
+        }
+      },
+      {
+        "at": 5,
+        "name": "δ = 0.4",
+        "set": {
+          "delta": 0.4
+        }
+      },
+      {
+        "at": 6,
+        "name": "δ = 0.5",
+        "set": {
+          "delta": 0.5
+        }
+      },
+      {
+        "at": 7,
+        "name": "δ = 0.6",
+        "set": {
+          "delta": 0.6
+        }
+      },
+      {
+        "at": 8,
+        "name": "δ = 0.7",
+        "set": {
+          "delta": 0.7
+        }
+      },
+      {
+        "at": 9,
+        "name": "δ = 0.8",
+        "set": {
+          "delta": 0.8
+        }
+      },
+      {
+        "at": 10,
+        "name": "δ = 0.9",
+        "set": {
+          "delta": 0.9
+        }
+      },
+      {
+        "at": 11,
+        "name": "δ = 0.95",
+        "set": {
+          "delta": 0.95
+        }
+      },
+      {
+        "at": 12,
+        "name": "δ = 0.99",
+        "set": {
+          "delta": 0.99
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "cycle_gain"
+  }
+}

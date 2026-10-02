@@ -1,0 +1,40 @@
+{
+  "name": "Algorithmic Collusion: deviations down and up",
+  "description": "Epivent & Lambin: are price increases punished like cuts? The share of one-period deviations answered by a punishment-like response (the rival a grid step lower the next period, back on the cycle within 25 periods). Measured (release, sessions 1–100, recorded 2026-10-01): 0.917 after the paper's deviation (the static best response), 0.877 after a one-step rise, 0.904 over deviations to every price.",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Deviation",
+    "values": [
+      {
+        "at": 1,
+        "name": "To the static best response",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "Up one step",
+        "set": {
+          "impulse": "up"
+        }
+      },
+      {
+        "at": 3,
+        "name": "To every price",
+        "set": {
+          "impulse": "every_price"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "punishment_like"
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "name": "Algorithmic Collusion: the profit gain over α and β (Figs. 1–2)",
+  "description": "Calvano et al.'s Figs. 1–2: the profit gain Δ over the learning rate α and the exploration decay β, on a 10 × 10 subgrid of their 91 × 100. Measured (release, sessions 1–100, recorded 2026-10-01), the paper's readings: Δ from 0.71 (α 0.025, β 2 × 10⁻⁵) to 0.89 (α 0.05, β 0.2 × 10⁻⁵); 0.86 at the baseline cell. Against Fig. 1's cells (read from the package's vector figure) the mean gap is 0.008 and the worst 0.040 (the survey). About 10 000 sessions: several minutes.",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "α",
+    "values": [
+      {
+        "at": 1,
+        "name": "α = 0.025",
+        "set": {
+          "alpha": 0.025
+        }
+      },
+      {
+        "at": 2,
+        "name": "α = 0.05",
+        "set": {
+          "alpha": 0.05
+        }
+      },
+      {
+        "at": 3,
+        "name": "α = 0.075",
+        "set": {
+          "alpha": 0.075
+        }
+      },
+      {
+        "at": 4,
+        "name": "α = 0.1",
+        "set": {
+          "alpha": 0.1
+        }
+      },
+      {
+        "at": 5,
+        "name": "α = 0.125",
+        "set": {
+          "alpha": 0.125
+        }
+      },
+      {
+        "at": 6,
+        "name": "α = 0.15",
+        "set": {
+          "alpha": 0.15
+        }
+      },
+      {
+        "at": 7,
+        "name": "α = 0.175",
+        "set": {
+          "alpha": 0.175
+        }
+      },
+      {
+        "at": 8,
+        "name": "α = 0.2",
+        "set": {
+          "alpha": 0.2
+        }
+      },
+      {
+        "at": 9,
+        "name": "α = 0.225",
+        "set": {
+          "alpha": 0.225
+        }
+      },
+      {
+        "at": 10,
+        "name": "α = 0.25",
+        "set": {
+          "alpha": 0.25
+        }
+      }
+    ]
+  },
+  "series": {
+    "label": "β × 10⁵",
+    "values": [
+      {
+        "at": 1,
+        "name": "β = 0.2 × 10⁻⁵",
+        "set": {
+          "beta": 2.0000000000000003e-06
+        }
+      },
+      {
+        "at": 2,
+        "name": "β = 0.4 × 10⁻⁵",
+        "set": {
+          "beta": 4.000000000000001e-06
+        }
+      },
+      {
+        "at": 3,
+        "name": "β = 0.6 × 10⁻⁵",
+        "set": {
+          "beta": 6e-06
+        }
+      },
+      {
+        "at": 4,
+        "name": "β = 0.8 × 10⁻⁵",
+        "set": {
+          "beta": 8.000000000000001e-06
+        }
+      },
+      {
+        "at": 5,
+        "name": "β = 1.0 × 10⁻⁵",
+        "set": {
+          "beta": 1e-05
+        }
+      },
+      {
+        "at": 6,
+        "name": "β = 1.2 × 10⁻⁵",
+        "set": {
+          "beta": 1.2e-05
+        }
+      },
+      {
+        "at": 7,
+        "name": "β = 1.4 × 10⁻⁵",
+        "set": {
+          "beta": 1.4e-05
+        }
+      },
+      {
+        "at": 8,
+        "name": "β = 1.6 × 10⁻⁵",
+        "set": {
+          "beta": 1.6000000000000003e-05
+        }
+      },
+      {
+        "at": 9,
+        "name": "β = 1.8 × 10⁻⁵",
+        "set": {
+          "beta": 1.8e-05
+        }
+      },
+      {
+        "at": 10,
+        "name": "β = 2.0 × 10⁻⁵",
+        "set": {
+          "beta": 2e-05
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "cycle_gain"
+  }
+}

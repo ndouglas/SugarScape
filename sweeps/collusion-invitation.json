@@ -1,0 +1,35 @@
+{
+  "name": "Algorithmic Collusion: an invitation to raise prices",
+  "description": "Epivent & Lambin's invitation: one firm raises its price a step and the rival is made to follow; does the first firm keep the higher price when it decides again? Against a plain one-step rise. Measured (release, sessions 1–100, recorded 2026-10-01): a punishment-like response follows 0.877 of one-step rises; after an invitation the deviator cuts below its old price in 0.815 of the 62 sessions that settled on one price pair. (With one period of memory the hold does not matter: whenever released, the state is both firms at the raised price.)",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Deviation",
+    "values": [
+      {
+        "at": 1,
+        "name": "A step up for one period",
+        "set": {
+          "impulse": "up"
+        }
+      },
+      {
+        "at": 2,
+        "name": "An invitation (held 5 periods)",
+        "set": {
+          "impulse": "invitation"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "punishment_like"
+  }
+}

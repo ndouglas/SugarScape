@@ -1,0 +1,53 @@
+{
+  "name": "Algorithmic Collusion: explore first, then never (Lambin's Theorem 1)",
+  "description": "Lambin's Theorem 1: prices at random for 1 000 periods, then never; the theorem puts both firms at 1.6990 (Δ 0.707) when δ = 0 and at 1.7377 (Δ 0.794) when δ = 0.95. Measured (release, sessions 1–100, recorded 2026-10-01): Δ 0.683 (memory, δ = 0), 0.670 (none, δ = 0), 0.709 (memory, δ = 0.95), 0.924 (none, δ = 0.95). The averages near 0.7 hide spread: the survey finds the theorem's point in 27 %, 13 %, 0.4 % and 3.6 % of sessions.",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Memory and δ",
+    "values": [
+      {
+        "at": 1,
+        "name": "One period, δ = 0",
+        "set": {
+          "exploration": "two_phase",
+          "delta": 0.0
+        }
+      },
+      {
+        "at": 2,
+        "name": "None, δ = 0",
+        "set": {
+          "exploration": "two_phase",
+          "delta": 0.0,
+          "memory": 0
+        }
+      },
+      {
+        "at": 3,
+        "name": "One period, δ = 0.95",
+        "set": {
+          "exploration": "two_phase"
+        }
+      },
+      {
+        "at": 4,
+        "name": "None, δ = 0.95",
+        "set": {
+          "exploration": "two_phase",
+          "memory": 0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "cycle_gain"
+  }
+}

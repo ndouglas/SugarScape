@@ -441,7 +441,20 @@ fn builtins_and_series_names_are_listed() {
             "firms-base-pay",
             "firms-hiring",
             "firms-readings",
-            "firms-population"
+            "firms-population",
+            "collusion-table-i",
+            "collusion-alpha-beta",
+            "collusion-delta",
+            "collusion-memory",
+            "collusion-myopic",
+            "collusion-two-phase",
+            "collusion-every-price",
+            "collusion-below-nash",
+            "collusion-invitation",
+            "collusion-synchronous",
+            "collusion-exploration",
+            "collusion-timescale",
+            "collusion-rp-complete"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -1329,6 +1342,45 @@ fn firms_with_beta_drawn_per_firm_match_the_native_fingerprint() {
     assert_eq!(sim.model_kind(), "firms");
     sim.step(100);
     assert_eq!(sim.fingerprint(), "0x8d1b43dd0c2b2cdb");
+}
+
+#[wasm_bindgen_test]
+fn collusion_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the paper's
+    // readings, the authors' RAN2, no memory, two-phase exploration,
+    // synchronous updates and the shifted grid.
+    for (id, fp) in [
+        ("collusion-calvano", "0xbfdc574972d2efcd"),
+        ("collusion-code", "0xa6ab4cce772a8a70"),
+        ("collusion-no-memory", "0x172d003af01b8b94"),
+        ("collusion-two-phase", "0xff7d1eb24dd21e2f"),
+        ("collusion-synchronous", "0xcbb6eed6a17dd495"),
+        ("collusion-below-nash", "0x4b11e4afb4a24a8c"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "collusion");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn collusion_boltzmann_and_three_firms_match_the_native_fingerprints() {
+    // `collusion::world::tests::boltzmann_and_three_firms_reach_their_pinned_fingerprints`
+    // pins the same configs and values natively.
+    let mut b: serde_json::Value = serde_json::from_str(&preset_json("collusion-calvano")).unwrap();
+    b["exploration"] = serde_json::json!("boltzmann");
+    b["temperature"] = serde_json::json!(0.01);
+    b["cooling"] = serde_json::json!(1e-4);
+    let mut sim = Sim::new(&b.to_string(), 1, JsValue::NULL).unwrap();
+    sim.step(500);
+    assert_eq!(sim.fingerprint(), "0xffb749a8db1a5481");
+    let mut t: serde_json::Value = serde_json::from_str(&preset_json("collusion-calvano")).unwrap();
+    t["q_init"] = serde_json::json!("random");
+    t["firms"] = serde_json::json!(3);
+    let mut sim = Sim::new(&t.to_string(), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    assert_eq!(sim.fingerprint(), "0x0bab95a370db18eb");
 }
 
 #[wasm_bindgen_test]
