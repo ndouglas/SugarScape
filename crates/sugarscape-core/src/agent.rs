@@ -308,6 +308,8 @@ pub struct Agent {
     /// and where it delivers its loads; set by `World::insert_agent`, `None`
     /// in every other world. Never hashed, like `rate`.
     pub home: Option<Pos>,
+    /// Minds 9: fixed founder traits and episode-local spatial hoarding state.
+    pub spatial: Option<crate::minds::spatial_hoarding::state::SpatialState>,
     /// Minds 5, central-place foraging: good 0 gathered since the agent
     /// last left home (the load it's carrying back); 0 in other worlds.
     /// Never hashed.
@@ -382,6 +384,7 @@ impl Agent {
             stolen_by_me: 0.0,
             stolen_from_me: 0.0,
             home: None,
+            spatial: None,
             load_trip: 0.0,
             delivery_rate: 0.0,
             last_load: 0.0,

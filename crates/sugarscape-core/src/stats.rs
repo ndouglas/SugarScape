@@ -134,7 +134,7 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
-    if config.theft.cheaters > 0.0 {
+    if config.theft.cheaters > 0.0 || config.spatial_hoarding.enabled {
         for s in CHEATER_SERIES {
             names.push(s.into());
         }
@@ -143,7 +143,7 @@ pub fn series_names(config: &Config) -> Vec<String> {
         for s in WATCH_SERIES {
             names.push(s.into());
         }
-        if watchers_split(config) {
+        if watchers_split(config) || config.spatial_hoarding.enabled {
             for s in WATCHER_SERIES {
                 names.push(s.into());
             }
@@ -806,25 +806,26 @@ impl Snapshot {
                     lost_total,
                 }
             }),
-            cheaters: (world.config.theft.cheaters > 0.0).then(|| {
-                let (mut hs, mut hn, mut cs, mut cn) = (0.0, 0u32, 0.0, 0u32);
-                for a in world.agents() {
-                    if a.cheater {
-                        cs += a.holdings[0];
-                        cn += 1;
-                    } else {
-                        hs += a.holdings[0];
-                        hn += 1;
+            cheaters: (world.config.theft.cheaters > 0.0 || world.config.spatial_hoarding.enabled)
+                .then(|| {
+                    let (mut hs, mut hn, mut cs, mut cn) = (0.0, 0u32, 0.0, 0u32);
+                    for a in world.agents() {
+                        if a.cheater {
+                            cs += a.holdings[0];
+                            cn += 1;
+                        } else {
+                            hs += a.holdings[0];
+                            hn += 1;
+                        }
                     }
-                }
-                let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
-                CheaterStats {
-                    hoarder_holdings: m(hs, hn),
-                    cheater_holdings: m(cs, cn),
-                    hoarder_alive: hn,
-                    cheater_alive: cn,
-                }
-            }),
+                    let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                    CheaterStats {
+                        hoarder_holdings: m(hs, hn),
+                        cheater_holdings: m(cs, cn),
+                        hoarder_alive: hn,
+                        cheater_alive: cn,
+                    }
+                }),
             watching: world.config.watching.on.then_some(WatchStats {
                 raids: events.raids,
                 raided: events.raided,
@@ -834,33 +835,42 @@ impl Snapshot {
                 sightings: events.sightings,
                 seen_entries: events.seen_entries,
             }),
-            watchers: watchers_split(&world.config).then(|| {
-                let (mut ws, mut wn, mut os, mut on) = (0.0, 0u32, 0.0, 0u32);
-                for a in world.agents() {
-                    let wealth = a.holdings[0] + a.caches.values().sum::<f64>() + a.fed;
-                    if a.watches {
-                        ws += wealth;
-                        wn += 1;
-                    } else {
-                        os += wealth;
-                        on += 1;
+            watchers: (watchers_split(&world.config)
+                || (world.config.spatial_hoarding.enabled && world.config.watching.on))
+                .then(|| {
+                    let (mut ws, mut wn, mut os, mut on) = (0.0, 0u32, 0.0, 0u32);
+                    for a in world.agents() {
+                        let wealth = a.holdings[0] + a.caches.values().sum::<f64>() + a.fed;
+                        if a.watches {
+                            ws += wealth;
+                            wn += 1;
+                        } else {
+                            os += wealth;
+                            on += 1;
+                        }
                     }
-                }
-                let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
-                let watching = &world.config.watching;
-                let founders = world.config.population;
-                let wf = (1..=u64::from(founders))
-                    .filter(|&i| watching.founder_watches(i, world.config.theft.founder_cheats(i)))
-                    .count() as u32;
-                let of = founders - wf;
-                WatcherStats {
-                    watcher_wealth: m(ws, wf),
-                    other_wealth: m(os, of),
-                    watcher_alive: wn,
-                    other_alive: on,
-                    watcher_advantage: m(f64::from(wn), wf) - m(f64::from(on), of),
-                }
-            }),
+                    let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                    let watching = &world.config.watching;
+                    let founders = world.config.population;
+                    let wf = match world.spatial_cohort.as_ref() {
+                        Some(cohort) if world.config.spatial_hoarding.enabled => {
+                            cohort.iter().filter(|traits| traits.watches).count() as u32
+                        }
+                        _ => (1..=u64::from(founders))
+                            .filter(|&i| {
+                                watching.founder_watches(i, world.config.theft.founder_cheats(i))
+                            })
+                            .count() as u32,
+                    };
+                    let of = founders - wf;
+                    WatcherStats {
+                        watcher_wealth: m(ws, wf),
+                        other_wealth: m(os, of),
+                        watcher_alive: wn,
+                        other_alive: on,
+                        watcher_advantage: m(f64::from(wn), wf) - m(f64::from(on), of),
+                    }
+                }),
         }
     }
 

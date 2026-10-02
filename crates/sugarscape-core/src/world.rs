@@ -10,6 +10,7 @@ use crate::bits::Bits;
 use crate::config::{Config, FieldError, FounderAges, Placement, Who, MAX_GOODS};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
+use crate::minds::spatial_hoarding::state::{FounderTraits, SpatialState};
 use crate::rng::{self, SimRng};
 use crate::rules;
 use crate::stats::{Snapshot, Stats};
@@ -223,6 +224,9 @@ pub struct World {
     /// Chapter V's master list of diseases; a disease's id is its index.
     pub diseases: Vec<Bits>,
     agents: BTreeMap<AgentId, Agent>,
+    /// Checked supplied traits, retained for founder statistics after deaths.
+    /// None in ordinary worlds; slot order is ascending founder id.
+    pub(crate) spatial_cohort: Option<Vec<FounderTraits>>,
     occupancy: Vec<Option<AgentId>>,
     /// Row-major, one entry per site: 0 free, 1 a fence, 2 opaque. Built once
     /// from `config.walls` (walls change only on reset, except the Minds 5
@@ -295,6 +299,16 @@ impl World {
         Self::with_capacities(config, seed, None)
     }
 
+    /// A spatial episode with checked per-slot traits and strategy flags.
+    /// Slots follow ascending founder ids and are applied before tick zero.
+    pub fn new_with_spatial_cohort(
+        config: Config,
+        seed: u64,
+        cohort: &[FounderTraits],
+    ) -> Result<Self, Vec<FieldError>> {
+        Self::initialize(config, seed, &[], Some(cohort))
+    }
+
     /// Like `new`, with good 0's capacities supplied (a painted map from a
     /// pre-N-goods share link).
     pub fn with_capacities(
@@ -312,7 +326,48 @@ impl World {
         seed: u64,
         landscapes: &[Option<Vec<f64>>],
     ) -> Result<Self, Vec<FieldError>> {
+        Self::initialize(config, seed, landscapes, None)
+    }
+
+    fn initialize(
+        config: Config,
+        seed: u64,
+        landscapes: &[Option<Vec<f64>>],
+        cohort: Option<&[FounderTraits]>,
+    ) -> Result<Self, Vec<FieldError>> {
         config.validate()?;
+        if let Some(cohort) = cohort {
+            let mut errors = Vec::new();
+            if !config.spatial_hoarding.enabled {
+                errors.push(FieldError::new(
+                    "spatial_hoarding.enabled",
+                    "a supplied cohort needs spatial hoarding enabled",
+                ));
+            }
+            if cohort.len() != config.population as usize {
+                errors.push(FieldError::new(
+                    "spatial_hoarding.cohort",
+                    format!(
+                        "expected {} founder slots, got {}",
+                        config.population,
+                        cohort.len()
+                    ),
+                ));
+            }
+            for (slot, traits) in cohort.iter().enumerate() {
+                for (name, value) in [("larder", traits.larder), ("defense", traits.defense)] {
+                    if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+                        errors.push(FieldError::new(
+                            format!("spatial_hoarding.cohort.{slot}.{name}"),
+                            "must be finite and between 0 and 1",
+                        ));
+                    }
+                }
+            }
+            if !errors.is_empty() {
+                return Err(errors);
+            }
+        }
         let torus = Torus::new(config.width, config.height);
         let n = config.goods.len();
         if landscapes.len() > n {
@@ -388,6 +443,7 @@ impl World {
             truffles,
             diseases: Vec::new(),
             agents: BTreeMap::new(),
+            spatial_cohort: cohort.map(<[FounderTraits]>::to_vec),
             occupancy: vec![None; torus.len()],
             walls,
             regions,
@@ -644,6 +700,22 @@ impl World {
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {
             agent.home = Some(agent.pos);
+        }
+        if self.config.spatial_hoarding.enabled {
+            let traits = self
+                .spatial_cohort
+                .as_ref()
+                .and_then(|cohort| cohort.get((id - 1) as usize))
+                .copied()
+                .unwrap_or(FounderTraits {
+                    larder: self.config.spatial_hoarding.larder,
+                    defense: self.config.spatial_hoarding.defense,
+                    cheater: agent.cheater,
+                    watches: agent.watches,
+                });
+            agent.cheater = traits.cheater;
+            agent.watches = traits.watches;
+            agent.spatial = Some(SpatialState::new(agent.pos, traits));
         }
         self.occupancy[i] = Some(id);
         self.agents.insert(id, agent);
