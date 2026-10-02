@@ -757,6 +757,26 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
   ],
   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
   hoard: [],
+  collusion: [
+    {
+      title: 'Prices',
+      lines: [
+        { key: 'price_1', label: 'Firm 1', color: '--c1' },
+        { key: 'price_2', label: 'Firm 2', color: '--c2' },
+        { key: 'greedy_price', label: 'Greedy price (mean)', color: '--c4' },
+      ],
+    },
+    { title: 'Profit gain', lines: [{ key: 'profit_gain', label: 'Δ this period', color: '--c1' }] },
+    {
+      title: 'Learning',
+      lines: [
+        { key: 'epsilon', label: 'Exploration rate', color: '--c1' },
+        { key: 'explored', label: 'Firms exploring', color: '--c3' },
+        { key: 'greedy_changes', label: 'Strategy changes', color: '--red' },
+      ],
+    },
+    { title: 'Settling', lines: [{ key: 'stable', label: 'Periods unchanged', color: '--c2' }] },
+  ],
   firms: [
     {
       title: 'Firms',
@@ -813,7 +833,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'hoard' ? 'Bouts' : model === 'firms' ? 'Periods' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'hoard' ? 'Bouts' : model === 'firms' ? 'Periods' : model === 'collusion' ? 'Ticks' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

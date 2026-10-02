@@ -7,6 +7,7 @@ mod ch4;
 mod ch5;
 mod ch6;
 mod civil;
+mod collusion;
 mod classes;
 mod culture;
 mod dpd;
@@ -55,6 +56,7 @@ pub fn all() -> Vec<Claim> {
         ethno::claims(),
         farol::claims(),
         firms::claims(),
+        collusion::claims(),
         norms::claims(),
         image::claims(),
         minds1::claims(),

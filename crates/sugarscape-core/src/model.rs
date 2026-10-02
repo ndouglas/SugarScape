@@ -11,6 +11,7 @@ use crate::ants::{AntsConfig, AntsWorld};
 use crate::bali::{BaliConfig, BaliWorld};
 use crate::civil::{CivilConfig, CivilWorld};
 use crate::classes::{ClassesConfig, ClassesWorld};
+use crate::collusion::{CollusionConfig, CollusionWorld};
 use crate::config::{Config, FieldError};
 use crate::culture::{CultureConfig, CultureWorld};
 use crate::dpd::{DpdConfig, DpdWorld};
@@ -72,10 +73,11 @@ pub enum ModelKind {
     Tipping,
     Hoard,
     Firms,
+    Collusion,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 27] = [
+    pub const ALL: [ModelKind; 28] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -103,6 +105,7 @@ impl ModelKind {
         ModelKind::Tipping,
         ModelKind::Hoard,
         ModelKind::Firms,
+        ModelKind::Collusion,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -134,6 +137,7 @@ impl ModelKind {
             ModelKind::Tipping => "tipping",
             ModelKind::Hoard => "hoard",
             ModelKind::Firms => "firms",
+            ModelKind::Collusion => "collusion",
         }
     }
 
@@ -168,6 +172,7 @@ impl ModelKind {
             ModelKind::Tipping => crate::tipping::schema(),
             ModelKind::Hoard => crate::hoard::schema(),
             ModelKind::Firms => crate::firms::schema(),
+            ModelKind::Collusion => crate::collusion::schema(),
         }
     }
 }
@@ -208,6 +213,7 @@ pub enum ModelConfig {
     Tipping(TippingConfig),
     Hoard(HoardConfig),
     Firms(FirmsConfig),
+    Collusion(CollusionConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -240,6 +246,7 @@ enum Tagged<'a> {
     Tipping(&'a TippingConfig),
     Hoard(&'a HoardConfig),
     Firms(&'a FirmsConfig),
+    Collusion(&'a CollusionConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -279,6 +286,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Tipping(c) => Tagged::Tipping(c).serialize(s),
             ModelConfig::Hoard(c) => Tagged::Hoard(c).serialize(s),
             ModelConfig::Firms(c) => Tagged::Firms(c).serialize(s),
+            ModelConfig::Collusion(c) => Tagged::Collusion(c).serialize(s),
         }
     }
 }
@@ -313,6 +321,7 @@ impl ModelConfig {
             ModelConfig::Tipping(_) => ModelKind::Tipping,
             ModelConfig::Hoard(_) => ModelKind::Hoard,
             ModelConfig::Firms(_) => ModelKind::Firms,
+            ModelConfig::Collusion(_) => ModelKind::Collusion,
         }
     }
 
@@ -422,6 +431,9 @@ impl ModelConfig {
             "firms" => serde_json::from_value(value)
                 .map(ModelConfig::Firms)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "collusion" => serde_json::from_value(value)
+                .map(ModelConfig::Collusion)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "zi" => serde_json::from_value(value)
                 .map(ModelConfig::Zi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -431,7 +443,7 @@ impl ModelConfig {
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard or firms)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms or collusion)"
                 ),
             )),
         }
@@ -466,6 +478,7 @@ impl ModelConfig {
             ModelConfig::Tipping(c) => c.validate(),
             ModelConfig::Hoard(c) => c.validate(),
             ModelConfig::Firms(c) => c.validate(),
+            ModelConfig::Collusion(c) => c.validate(),
         }
     }
 
@@ -500,6 +513,7 @@ impl ModelConfig {
             ModelConfig::Tipping(c) => set_path(c, path, value).map(ModelConfig::Tipping),
             ModelConfig::Hoard(c) => set_path(c, path, value).map(ModelConfig::Hoard),
             ModelConfig::Firms(c) => set_path(c, path, value).map(ModelConfig::Firms),
+            ModelConfig::Collusion(c) => set_path(c, path, value).map(ModelConfig::Collusion),
         }
     }
 
@@ -533,7 +547,8 @@ impl ModelConfig {
             | ModelConfig::Line(_)
             | ModelConfig::Tipping(_)
             | ModelConfig::Hoard(_)
-            | ModelConfig::Firms(_) => None,
+            | ModelConfig::Firms(_)
+            | ModelConfig::Collusion(_) => None,
         }
     }
 
@@ -576,6 +591,10 @@ impl ModelConfig {
                 .map(|s| s.to_string())
                 .collect(),
             ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Collusion(_) => crate::collusion::SERIES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
         }
     }
 }
@@ -772,6 +791,7 @@ pub enum ModelWorld {
     Tipping(Box<TippingWorld>),
     Hoard(Box<HoardWorld>),
     Firms(Box<FirmsWorld>),
+    Collusion(Box<CollusionWorld>),
 }
 
 impl ModelWorld {
@@ -830,6 +850,9 @@ impl ModelWorld {
             ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
             ModelConfig::Hoard(c) => ModelWorld::Hoard(Box::new(HoardWorld::new(c, seed)?)),
             ModelConfig::Firms(c) => ModelWorld::Firms(Box::new(FirmsWorld::new(c, seed)?)),
+            ModelConfig::Collusion(c) => {
+                ModelWorld::Collusion(Box::new(CollusionWorld::new(c, seed)?))
+            }
         })
     }
 
@@ -862,6 +885,7 @@ impl ModelWorld {
             ModelWorld::Tipping(_) => ModelKind::Tipping,
             ModelWorld::Hoard(_) => ModelKind::Hoard,
             ModelWorld::Firms(_) => ModelKind::Firms,
+            ModelWorld::Collusion(_) => ModelKind::Collusion,
         }
     }
 
@@ -894,6 +918,7 @@ impl ModelWorld {
             ModelWorld::Tipping(w) => w.as_ref(),
             ModelWorld::Hoard(w) => w.as_ref(),
             ModelWorld::Firms(w) => w.as_ref(),
+            ModelWorld::Collusion(w) => w.as_ref(),
         }
     }
 
@@ -926,6 +951,7 @@ impl ModelWorld {
             ModelWorld::Tipping(w) => w.as_mut(),
             ModelWorld::Hoard(w) => w.as_mut(),
             ModelWorld::Firms(w) => w.as_mut(),
+            ModelWorld::Collusion(w) => w.as_mut(),
         }
     }
 
@@ -1034,6 +1060,7 @@ impl ModelWorld {
             ModelWorld::Tipping(w) => copy_without_history!(Tipping, w),
             ModelWorld::Hoard(w) => copy_without_history!(Hoard, w),
             ModelWorld::Firms(w) => copy_without_history!(Firms, w),
+            ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -1088,6 +1115,7 @@ impl ModelWorld {
             (ModelWorld::Tipping(live), ModelWorld::Tipping(kept)) => restore_into!(live, kept),
             (ModelWorld::Hoard(live), ModelWorld::Hoard(kept)) => restore_into!(live, kept),
             (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
+            (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1537,6 +1565,30 @@ mod tests {
     }
 
     #[test]
+    fn collusion_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "collusion", "memory": 0, "delta": 0.5, "window": 50}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Collusion);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["prices"].as_u64()),
+            (Some("collusion"), Some(15))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["price_1", "price_2"]);
+        let e = ModelConfig::from_json(r#"{"model": "collusion", "firms": 9}"#).unwrap_err();
+        assert_eq!(e[0].field, "firms");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Collusion);
+        let cp = w.checkpoint().expect("collusion worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn bali_configs_round_trip_with_their_tag() {
         let c = ModelConfig::from_json(
             r#"{"model": "bali", "plans": "traditional", "growth": 2.4, "stop_at": 2}"#,
@@ -1656,7 +1708,8 @@ mod tests {
                 "line",
                 "tipping",
                 "hoard",
-                "firms"
+                "firms",
+                "collusion"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

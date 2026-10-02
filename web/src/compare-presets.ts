@@ -212,6 +212,12 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'firms-base',
     b: 'firms-live',
   },
+  {
+    id: 'collusion-async-vs-sync',
+    label: 'Learning from the price charged vs every price — Algorithmic Collusion (Compare)',
+    a: 'collusion-calvano',
+    b: 'collusion-synchronous',
+  },
 ];
 
 /**

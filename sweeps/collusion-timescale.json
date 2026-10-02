@@ -1,0 +1,34 @@
+{
+  "name": "Algorithmic Collusion: the first T_δ periods (den Boer et al.)",
+  "description": "den Boer, Meylahn & Schinkel: over the first T_δ = 165 periods — the horizon that matters at δ = 0.95 — Q-learning prices like uniform random play. The discounted profit gain Δ̃ of the first 165 periods (one tick). Measured (release, sessions 1–100, recorded 2026-10-01): 0.492 on CCDP's grid (random play: 0.497) and −0.523 on a grid centered on Nash (−0.510).",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Grid",
+    "values": [
+      {
+        "at": 1,
+        "name": "CCDP's",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "Centered on Nash, ξ = 0",
+        "set": {
+          "grid": "symmetric",
+          "xi": 0.0
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1,
+  "metric": {
+    "kind": "final",
+    "series": "discounted_gain"
+  }
+}

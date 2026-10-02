@@ -108,6 +108,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
   }
+  if (model === 'collusion') {
+    // The built-in collusion-delta's axis: the profit gain against the discount factor (CCDP Fig. 6).
+    return { ...form, x: { path: 'delta', values: '0:0.9:0.15' }, ticks: 100_000, metric: { ...form.metric, kind: 'final', series: 'cycle_gain' } };
+  }
   if (model === 'bali') {
     // The built-in bali-imitation-growth's axis: the scored harvest against pest growth.
     return { ...form, x: { path: 'growth', values: '2:2.4:0.1' }, ticks: 360, metric: { ...form.metric, kind: 'final', series: 'scored' } };

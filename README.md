@@ -3408,6 +3408,82 @@ Working Paper 3 (1999); Robert L. Axtell, "Endogenous Dynamics of Firms and Labo
 of Simple Agents" (working paper, 2013). See
 `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 
+### Algorithmic Collusion (Calvano, Calzolari, Denicolò & Pastorello 2020; and its critics)
+
+**The model.** Can pricing algorithms learn to collude without being told to and without talking?
+Two firms sell differentiated goods (logit demand) and each picks one of 15 prices a period, a grid
+from a little below the competitive (Bertrand–Nash) price to a little above the joint-monopoly
+price. Each firm learns by Q-learning on the state "both firms' prices last period": it keeps a
+value for every price in every state, updates the value of the price it charged toward the profit
+it earned plus the discounted value of the best price next period, and picks the best price —
+except, with a probability that falls over time (ε = e^(−βt)), a price at random. A session ends
+when neither firm's strategy has changed for 100 000 periods. The paper reports that the firms
+settle far above the competitive price (profit gain Δ = 0.849 of the way from the Nash profit to
+the monopoly profit) and punish a rival's price cut, then return: a reward–punishment scheme
+learned from scratch. A tick is 1 000 periods; a session takes about 1 800 ticks.
+
+**How the paper was read, and its code.** The paper comes with its authors' Fortran (MIT). Built
+here with gfortran, it reproduces Table I; and under the code's own readings — ties broken at
+random, its RAN2 generator seeded by session number (the seed), its cap, its tests — this model
+reproduces the code's sessions exactly: the same strategies in the same period, 100 of 100. Where
+the paper's text and its code differ, the text is the default and the code's choice a switch
+(`collusion-code` turns them all on): ties to the lowest price; a cap of 10⁹ periods, not
+1.25 × 10⁹; an equilibrium is a best response against the rival's strategy (the paper's
+description) rather than "no one-period deviation pays" (the code's test); and the deviation in
+Fig. 4 answers the rival's price at the state itself — the code's impulse-response routine passes
+the cycle position where it means the state. The critics' tests are switches too: no memory
+(Lambin), no future (δ = 0), synchronous updates of every price (Asker, Fershtman & Pakes),
+exploration that decays more slowly, stays constant, or stops after a random phase (Lambin), a grid
+below the Nash price and deviations up as well as down (Epivent & Lambin), RP-completeness and the
+first periods' discounted gain (den Boer, Meylahn & Schinkel), and firms re-paired across sessions
+(Eschenbaum, Mellgren & Zahn).
+
+Measured (the survey — 20 claims, 15 hold and 5 fail — and the presets' and sweeps' descriptions):
+
+- **The paper reproduces, exactly.** Under the code's readings, sessions 1–1 000 are the authors'
+  own: Table I to the digit (Δ 0.849, 50.5 % in equilibrium on path; one-price cycles 64.3 %,
+  two 23.8 %, longer 11.9 %) and Table A5's responses to a deviation (the rival's price −12.7 %,
+  deviations unprofitable 93.6 %, punishment 5.7 periods). The paper's own readings give the same
+  Δ (0.851). The α × β heat map (mean gap 0.008) and Δ against δ (minimum near δ = 0.34) match.
+- **The text overstates its tables.** "In more than 95 % of the cases the punishment makes the
+  deviation unprofitable" is 93.6 % in its own Table A5. And the equilibrium the paper describes —
+  each firm's strategy a best response to the other's — holds on the path in 0.2 % of sessions;
+  the code's test, which checks only one-period deviations, passes 49.7 %. A firm that re-optimizes
+  against its rival's learned strategy gains 5–41 % of its value: the strategies punish a single
+  deviation but can be exploited by longer ones.
+- **High prices without strategies.** Firms with no memory, which cannot punish anything, price
+  higher still (Δ 0.958 against 0.851; Lambin's test holds — the authors' code cannot run it, as
+  it sets δ = 0 whenever memory is 0). Firms that value only the present (δ = 0) reach Δ 0.212, as
+  the paper's own Fig. 3 shows: a quarter of the baseline needs no future at all.
+- **The "punishment" is not specific to cuts.** A rival's price *increase* is answered by a price
+  cut too, in all 25 cells Epivent & Lambin's Table 1 covers (9.9 % against 13.0 % after a cut); an
+  invitation to raise prices is met by a cut in 84 % of sessions; in 91 % of the sessions that
+  punish a cut, some other deviation goes unpunished (den Boer et al.'s RP-completeness).
+- **It does not transfer, and it does not start early.** A firm paired with a rival trained in
+  another session earns Δ 0.125, not 0.851. Over the first 165 periods — the horizon that matters
+  at δ = 0.95 — the algorithms earn exactly what uniform random pricing earns (Δ̃ 0.498 against
+  0.497).
+- **How firms learn matters most.** Updating every price toward what it would have earned
+  (synchronous learning) halves Δ (0.345). Exploration decaying ten times more slowly barely lowers
+  it (0.727); a constant ε = 0.05 never settles.
+- **Lambin's Theorem 1 does not predict the simulations.** After a random phase and none after,
+  the theorem says the firms settle at 1.6990 (δ = 0) or 1.7377 (δ = 0.95); at the paper's α they
+  do in 27 %, 13 %, 0.4 % and 3.6 % of sessions across memory and δ — the theorem is a mean-field
+  limit and the Q-values stay noisy.
+
+Presets: `collusion-calvano`, `collusion-code`, `collusion-no-memory`, `collusion-myopic`,
+`collusion-two-phase`, `collusion-synchronous`, `collusion-explore-more`, `collusion-every-price`,
+`collusion-invitation`, `collusion-below-nash`. Sweeps: `collusion-table-i`,
+`collusion-alpha-beta`, `collusion-delta`, `collusion-memory`, `collusion-myopic`,
+`collusion-two-phase`, `collusion-every-price`, `collusion-below-nash`, `collusion-invitation`,
+`collusion-synchronous`, `collusion-exploration`, `collusion-timescale`, `collusion-rp-complete`.
+Compare: **Learning from the price charged vs every price**. The view: each firm's strategy as a
+map (its own last price across, the rival's down, the price it would charge as the color — or how
+often each state was visited), the last 240 periods' prices between the Nash (green) and monopoly
+(red) lines, and, once the session has finished, the response to a deviation. Inspect a map cell
+for both firms' Q-values there, and any cell for the session's results.
+See `docs/superpowers/specs/2026-10-01-algorithmic-collusion-design.md`.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's

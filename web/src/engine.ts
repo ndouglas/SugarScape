@@ -57,6 +57,7 @@ export function finishedNotice(config: ModelConfig, tick: number): string {
   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'firms') return `This run has reached its last period (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'collusion') return `This session has finished at tick ${tick} — Reset to run it again`;
   if (modelOf(config) === 'bali') return `This run has reached its last year — Reset to run it again`;
   if (modelOf(config) === 'hoard') {
     // A run ends at the end of generation `generations`' season, or earlier when every agent died.

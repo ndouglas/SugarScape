@@ -305,6 +305,19 @@ and who covers a base-pay shortfall — decide whole tables; and his 2013 parame
 Zipf's law, though the largest firm peaks at 3 000–5 800 of the 10 000 agents after the burn-in (5 seeds), though most of the time it stays under about 1 000 (median 780–955).
 See `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 
+## Milestone 34: Algorithmic Collusion (done)
+
+Calvano, Calzolari, Denicolò and Pastorello's Q-learning pricing algorithms (AER 2020) as a model
+kind, checked against the authors' own Fortran: under the code's readings the sessions are theirs,
+period for period, and Table I and Table A5 reproduce to the digit. The paper's text overstates its
+tables (deviations unprofitable 93.6 %, not "more than 95 %"), and its equilibrium — a best response
+— holds in 0.2 % of sessions where the code's one-period test passes half. The critics' tests are
+switches, and most hold: memoryless firms price higher, myopic firms reach a quarter of the profit
+gain, price increases draw the same "punishments" as cuts, synchronous learning halves the gain,
+collusion does not survive a new rival, and the first 165 periods look like random pricing. Slower
+exploration and Lambin's Theorem 1 do not hold up.
+See `docs/superpowers/specs/2026-10-01-algorithmic-collusion-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -331,6 +344,7 @@ See `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 - **Gode and Sunder's zero-intelligence traders** (and Cliff's critique and ZIP traders): done (Milestone 28).
 - **Lansing and Kremer's Balinese water temples** (and Janssen's reanalysis): done (Milestone 29).
 - **Axtell's emergence of firms** (and his 2013 parameterization): done (Milestone 33).
+- **Calvano, Calzolari, Denicolò and Pastorello's algorithmic collusion** (and its critics: Asker, Fershtman & Pakes; Lambin; Epivent & Lambin; den Boer, Meylahn & Schinkel; Eschenbaum, Mellgren & Zahn): done (Milestone 34).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.

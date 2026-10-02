@@ -1,0 +1,33 @@
+{
+  "name": "Algorithmic Collusion: learning from every price (Asker, Fershtman & Pakes)",
+  "description": "Asker, Fershtman & Pakes: each firm updates the value of every price toward what it would have earned against the rival's actual price. Measured (release, sessions 1–100, recorded 2026-10-01): Δ 0.348 against 0.862 (1 000 sessions in the survey: 0.345 against 0.851).",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Update",
+    "values": [
+      {
+        "at": 1,
+        "name": "The price charged",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "Every price",
+        "set": {
+          "update": "synchronous"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "cycle_gain"
+  }
+}

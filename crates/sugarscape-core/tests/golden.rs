@@ -410,6 +410,18 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("firms-hiring-100", 0xd8fb44c3f2acfa13),
     ("firms-random-choices", 0xd5650a4bd4548db4),
     ("firms-2013", 0xc7acf4a34472ca50),
+    // Algorithmic Collusion (200 ticks of 1 000 periods). The deviation presets learn as the
+    // baseline does (they differ only in the analysis after convergence).
+    ("collusion-calvano", 0xbfdc574972d2efcd),
+    ("collusion-code", 0xa6ab4cce772a8a70),
+    ("collusion-no-memory", 0x172d003af01b8b94),
+    ("collusion-myopic", 0xf53b3963ec92f7f8),
+    ("collusion-two-phase", 0xff7d1eb24dd21e2f),
+    ("collusion-synchronous", 0xcbb6eed6a17dd495),
+    ("collusion-explore-more", 0x90e7c74eb3f03d51),
+    ("collusion-every-price", 0xbfdc574972d2efcd),
+    ("collusion-invitation", 0xbfdc574972d2efcd),
+    ("collusion-below-nash", 0x4b11e4afb4a24a8c),
 ];
 
 fn fingerprint(id: &str) -> u64 {

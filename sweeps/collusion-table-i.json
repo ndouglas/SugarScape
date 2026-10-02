@@ -1,0 +1,37 @@
+{
+  "name": "Algorithmic Collusion: Table I, the paper's readings and the code's",
+  "description": "Calvano et al.'s Table I baseline under the paper's readings (ties to the lowest price, the best-response equilibrium test) and under the authors' code's (random ties, their RAN2 seeded by session, their cap): seeds 1–100 under the code's readings are the authors' own sessions 1–100. Measured (release, sessions 1–100, recorded 2026-10-01): Δ 0.861 (paper's readings) and 0.849 (code's). Over 1 000 sessions (the survey) both give the paper's 0.849–0.851.",
+  "base": {
+    "preset": "collusion-calvano"
+  },
+  "x": {
+    "label": "Readings",
+    "values": [
+      {
+        "at": 1,
+        "name": "The paper's",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "The code's",
+        "set": {
+          "ties": "random",
+          "rng": "calvano",
+          "cap": 1250000000,
+          "equilibrium_check": "one_shot",
+          "best_response_to": "code"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 100000,
+  "metric": {
+    "kind": "final",
+    "series": "cycle_gain"
+  }
+}

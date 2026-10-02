@@ -17,6 +17,7 @@ import {
   worldMenu,
   isBaliView,
   isFirmsView,
+  isCollusionView,
   isThresholdsView,
   isPunishmentView,
   isZiView,
@@ -285,6 +286,25 @@ describe('the firms model', () => {
     expect(ticksLeft(c, 4990)).toBe(10);
     expect(ticksLeft({ ...c, stop_at: 0 } as unknown as ModelConfig, 50)).toBe(Infinity);
     expect(finishesUnpredictably(c)).toBe(false);
+  });
+});
+
+describe('the collusion model', () => {
+  it('is read by its tag, and its inspections by `outcome` and `monopoly`, before the others with a panel', () => {
+    expect(modelOf({ model: 'collusion' } as unknown as ModelConfig)).toBe('collusion');
+    const cell = { x: 1, y: 2, panel: 'strategy', firm: 0, state: null, tick: 5, nash: [1.47293, 1.47293], period: 5000, monopoly: [1.92498, 1.92498], outcome: null, agent: null } as unknown as AnyInspection;
+    const firms = { site: { x: 1, y: 2 }, panel: 'firms', firm: null, member: null, agent: null } as unknown as AnyInspection;
+    expect([cell, firms].map(isCollusionView)).toEqual([true, false]);
+    expect([isFirmsView(cell), isBaliView(cell), isZiView(cell), isPunishmentView(cell), isThresholdsView(cell)]).toEqual([false, false, false, false, false]);
+  });
+
+  it('colors two ways, has no overlays, and finishes when its strategies settle', () => {
+    expect(COLOR_MODES.collusion.map(([m]) => m)).toEqual(['price', 'visits']);
+    expect(MODEL_OVERLAYS.collusion).toEqual([]);
+    // The 10⁹-period cap in ticks of 1 000 periods: one past it is tick 1 000 001.
+    const c = { model: 'collusion', cap: 1_000_000_000, periods_per_tick: 1000 } as unknown as ModelConfig;
+    expect(ticksLeft(c, 999_990)).toBe(11);
+    expect(finishesUnpredictably(c)).toBe(true);
   });
 });
 

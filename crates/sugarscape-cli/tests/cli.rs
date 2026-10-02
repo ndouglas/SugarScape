@@ -200,6 +200,19 @@ fn presets_and_sweeps_are_listed() {
         "firms-hiring",
         "firms-readings",
         "firms-population",
+        "collusion-table-i",
+        "collusion-alpha-beta",
+        "collusion-delta",
+        "collusion-memory",
+        "collusion-myopic",
+        "collusion-two-phase",
+        "collusion-every-price",
+        "collusion-below-nash",
+        "collusion-invitation",
+        "collusion-synchronous",
+        "collusion-exploration",
+        "collusion-timescale",
+        "collusion-rp-complete",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -653,6 +666,30 @@ fn a_firms_run_stops_at_its_last_period() {
     ]);
     assert!(out.status.success(), "{}", stderr(&out));
     assert_eq!(stderr(&out), "finished at tick 7 (its last period)\n");
+}
+
+#[test]
+fn a_collusion_session_stops_when_it_converges() {
+    let dir = scratch("collusion");
+    let config = dir.join("collusion.json");
+    std::fs::write(
+        &config,
+        r#"{"model": "collusion", "beta": 0.0002, "window": 2000}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "5000",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let err = stderr(&out);
+    assert!(
+        err.starts_with("finished at tick ") && err.ends_with(" (it converged)\n"),
+        "{err}"
+    );
 }
 
 #[test]
