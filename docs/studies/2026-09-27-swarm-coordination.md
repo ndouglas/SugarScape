@@ -2,6 +2,10 @@
 
 **Date:** 2026-09-27
 **Status:** an idea, persisted for later. Nothing is scheduled or built.
+**Long-term campaign design:** [Minds and collective agency](../superpowers/specs/2026-10-02-minds-collective-agency-program-design.md)
+extends this program with manipulable environments, private networks, alternative shared minds,
+learning, distributed research and incident-shaped oversight experiments. Proposed for review;
+the campaign map does not schedule implementation.
 **Separate from:** the reproductions (`docs/papers.md`), Flump Studio (`studio/`) and the war
 program (`2026-09-26-war-and-society.md`). Like the war program, these are our own experiments,
 built on a model we have reproduced.
@@ -188,12 +192,16 @@ enough that ablation means something. Each is a named switch in the Sugarscape c
    without a separate primitive.
 4. **Who benefits** (`beneficiary`). This replaces the prompt's reward-accounting switch; the reason
    is the most important design correction here.
-   - **A planner doesn't learn from reward.** A GOAP agent pursues the goals it's given. If its goal
-     is "the tribe eats," sharing is written in, not emergent. If its goal is "I eat," it never
-     shares at a cost.
-   - **So self-sacrificial sharing can only emerge through selection.** The willingness to deposit
+   - **A fixed-model GOAP planner doesn't learn goals from reward.** It pursues the goals it's
+     given. If its goal is "the tribe eats," concern for the group is supplied, even if the sharing
+     plan is found. If it values only its own intake, costly sharing needs an expected personal
+     return within its model and horizon; otherwise it will not choose it.
+   - **This rung tests selection as the source of costly sharing.** The willingness to deposit
      (a goal weight, or the cost it will pay) becomes a heritable trait, passed on under the sex rule
-     like vision and metabolism. Selection decides whether it spreads.
+     like vision and metabolism. Selection decides whether it spreads. The long-term campaign also
+     compares supplied social preferences, learned cooperation, reciprocity and recruitment pressure;
+     these make different claims about why an agent helps. A fixed-goal planner alone does not
+     explain the origin of its preferences.
    - **"Who benefits" is then set by who can read a deposit:** everyone, kin only (lineage) or the
      depositor's tag. Hamilton's rule (*rB > C*) becomes measurable: *r* from lineage, *B* the
      value readers gain, *C* the depositor's lost harvest. The Price equation splits the change in
