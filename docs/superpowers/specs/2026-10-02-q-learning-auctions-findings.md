@@ -51,7 +51,7 @@ The safety connection is an interaction outcome: independent reward-seeking tabu
 
 Workspace formatting, strict workspace clippy, 1,710 native tests, 79 WASM tests, 101 survey tests, 881 web tests, production web build and TypeScript passed. Standalone survey formatting has 42 independently reproduced pre-existing sections; direct auctions.rs edition2021 formatting passes. Standalone strict survey clippy has seven unrelated baseline warnings. These limits correct the original verification narrative without mass-formatting unrelated modules.
 
-Stage 4 remains **In Progress** until the controller's fresh whole-branch review, main integration, milestone assignment, CI/Pages deployment and deployed-page smoke. These findings do not claim those publication gates have passed.
+Fresh whole-branch review approved the implementation; two copy corrections were resolved at `67ca4ac`. Milestone 35 merged to main at `e600c6f`, with [all CI jobs passing](https://github.com/ndouglas/SugarScape/actions/runs/37040710066) and [Pages deploying that exact commit](https://github.com/ndouglas/SugarScape/actions/runs/37041335823). The deployed page passed Inspect, exact 1m-period completion, Compare at completion, and a three-treatment feedback sweep with one full-horizon session each (chosen/unused revenue .20, all-action .90). This browser smoke verifies the deployed host; it does not replace or reduce the registered native ensembles. All four implementation stages are complete; the temporary stage tracker has been removed.
 
 ## All 24 registered records
 
