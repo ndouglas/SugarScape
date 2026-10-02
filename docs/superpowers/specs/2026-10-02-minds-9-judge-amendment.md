@@ -1,6 +1,8 @@
 # Minds 9: declared measured-analysis amendment
 
-Status: **proposed for separate user review; campaign execution is not authorized until approval**.
+Status: **approved by the user for campaign execution**.
+
+Approval recorded from the user’s response, “Yeah, let's continue!”, to the separate amendment-review gate. The declared protocol below is unchanged.
 This amendment binds the analysis before any campaign, diagnostic, pilot, seed search or timing run.
 Correctness tests use deterministic synthetic records and pure configuration/cohort construction.
 The [approved design](2026-10-02-minds-9-spatial-hoarding-design.md) remains binding.
