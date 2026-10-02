@@ -102,7 +102,7 @@ describe('clampDisplay', () => {
 
 describe('the Minds color modes and the caches overlay', () => {
   const minds = (over: Partial<Config>) =>
-    ({ ...config, disease: { enabled: false }, culture: { enabled: false }, sex: { enabled: false }, ...over }) as unknown as Config;
+    ({ ...config, disease: { enabled: false }, culture: { enabled: false }, sex: { enabled: false }, population: 100, ...over }) as unknown as Config;
   const theft = minds({ caching: { rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false }, theft: { find: 0.25, owner_memory: true, loot: 'keep', cheaters: 0.5 } });
   const mixed = minds({ caching: { rule: 'none', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: true } });
   const even = minds({ caching: { rule: 'even', capacity: 50, share: 0.5, lambda: 0.5, lookahead: 1, mixed: false } });
@@ -113,6 +113,33 @@ describe('the Minds color modes and the caches overlay', () => {
   const theftNoCheaters = minds({ ...theft, theft: { find: 0.25, owner_memory: true, loot: 'keep', cheaters: 0 }, memory: memory(0.5) } as Partial<Config>);
   const allRemember = minds({ memory: memory(1) } as Partial<Config>);
   const base: DisplayState = { colorMode: 'tribe', layer: 'resource:0', overlays: noOverlays() };
+
+  it('defaults to Watching where watching is on and some but not all watch, or some are cheaters', () => {
+    const watch = { on: true, span: 7, watchers: 1, raid_when: 'always' };
+    const some = { ...watch, watchers: 0.5 };
+    expect(defaultColorMode({ ...even, watching: some } as unknown as Config)).toBe('watching');
+    // Exact, not approximate: four founders at share 0.1 deal none, so no split to tell apart.
+    expect(defaultColorMode({ ...even, population: 4, watching: { ...watch, watchers: 0.1 } } as unknown as Config)).toBe('caching_rule');
+    expect(defaultColorMode({ ...theft, watching: watch } as unknown as Config)).toBe('watching');
+    expect(defaultColorMode({ ...theft, watching: some } as unknown as Config)).toBe('watching');
+    // Everyone watching and no cheaters: nothing to tell apart, so the earlier defaults.
+    expect(defaultColorMode({ ...even, watching: watch } as unknown as Config)).toBe('caching_rule');
+    expect(defaultColorMode({ ...even, watching: { ...watch, watchers: 0 } } as unknown as Config)).toBe('caching_rule');
+    expect(defaultColorMode({ ...halfRemember, watching: watch } as unknown as Config)).toBe('memory');
+    expect(defaultColorMode({ ...even, watching: { ...some, on: false } } as unknown as Config)).toBe('caching_rule');
+    // Who watches by kind: a split exists iff there are some cheaters and some not.
+    const kind = (who: string, cheaters: number) => ({ ...even, theft: { find: 0, cheaters }, watching: { ...watch, watchers: 1, who } }) as unknown as Config;
+    expect(defaultColorMode(kind('hoarders', 0.5))).toBe('watching');
+    expect(defaultColorMode(kind('cheaters', 0.5))).toBe('watching');
+    expect(defaultColorMode(kind('hoarders', 0))).toBe('caching_rule');
+    // All cheaters under who = hoarders: nobody watches, but cheaters still tell the world apart.
+    expect(defaultColorMode(kind('hoarders', 1))).toBe('watching');
+    expect(defaultColorMode({ ...even, watching: { ...some, who: 'hoarders' } } as unknown as Config)).toBe('caching_rule');
+    const d = { ...base, colorMode: 'watching' as const };
+    expect(clampDisplay(d, { ...even, watching: watch } as unknown as Config).colorMode).toBe('watching');
+    expect(clampDisplay(d, even).colorMode).toBe('caching_rule');
+    expect(loadedDisplay(d, { ...even, watching: watch } as unknown as Config).colorMode).toBe('caching_rule');
+  });
 
   it('defaults to Strategy with cheaters, Caching rule under mixed rules, Memory where some remember, Caching rule with caching on, else Tribe', () => {
     expect(defaultColorMode(theft)).toBe('strategy');

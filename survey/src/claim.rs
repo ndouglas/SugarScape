@@ -15,6 +15,10 @@ pub enum Source {
 pub enum Verdict {
     Holds,
     Weak,
+    /// Neither held nor failed by a judge that names a third outcome (Minds
+    /// 8b's claim 3a: the slope's interval neither lies below 0, nor sits
+    /// within the flat band, nor lies above 0). Like Weak, it is not a hold.
+    Inconclusive,
     Fails,
     Untestable,
     Error,
@@ -186,12 +190,14 @@ pub fn equivalent(
 }
 
 /// Several judged parts of one statement ("at every vision"): the worst
-/// verdict wins (Fails, then Weak, then Untestable, then Holds; Error first).
+/// verdict wins (Fails, then Weak, then Inconclusive, then Untestable, then
+/// Holds; Error first).
 pub fn all_of(parts: Vec<(String, Outcome)>) -> Outcome {
     let rank = |v: Verdict| match v {
-        Verdict::Error => 4,
-        Verdict::Fails => 3,
-        Verdict::Weak => 2,
+        Verdict::Error => 5,
+        Verdict::Fails => 4,
+        Verdict::Weak => 3,
+        Verdict::Inconclusive => 2,
         Verdict::Untestable => 1,
         Verdict::Holds => 0,
     };
@@ -217,6 +223,22 @@ pub fn all_of(parts: Vec<(String, Outcome)>) -> Outcome {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn all_of_ranks_inconclusive_between_weak_and_untestable() {
+        use Verdict::{Fails, Holds, Inconclusive, Untestable, Weak};
+        let o = |verdict| Outcome {
+            verdict,
+            measured: String::new(),
+            detail: String::new(),
+        };
+        let worst =
+            |vs: &[Verdict]| all_of(vs.iter().map(|&v| (String::new(), o(v))).collect()).verdict;
+        assert_eq!(worst(&[Holds, Inconclusive]), Inconclusive);
+        assert_eq!(worst(&[Untestable, Inconclusive]), Inconclusive);
+        assert_eq!(worst(&[Weak, Inconclusive]), Weak);
+        assert_eq!(worst(&[Fails, Inconclusive]), Fails);
+    }
 
     #[test]
     fn count_holds_only_inside_its_bounds() {

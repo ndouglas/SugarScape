@@ -1,6 +1,12 @@
 # Minds 8: watching (design)
 
 **Date:** 2026-10-01
+**Superseded in part** by the second round, `docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`
+(same branch, before merging). Four audits found that three of this design's five judged results were
+foreseeable from Minds 6's numbers: claim 1's band was a strawman, claim 2's ratio sat at a floor, and claim 3's
+"pure scroungers" still produced their own food. The second round adds tests that can tell the hypotheses
+apart, and makes `raid_if: better` the default. This design's verdicts stay on record as what it measured. The
+statements marked **Superseded** in the amendments below are corrected there and in the program document.
 **Program:** Minds (`docs/studies/2026-09-27-minds.md`), step 8. It is P2 of the pilfering campaign:
 
 - P1: theft (Minds 6, done).
@@ -128,7 +134,9 @@ take it on purpose. Then ask three questions:
   bury. At unequal shares the overlap is whatever the rule gives, and the page says so where both are set.
 - **`span` 7 is a gap choice.** H&P show observers recovering seen caches the next day and none at 14 days,
   and nothing between. We take 7, about midway, and every claim is reported across span 1, 3, 7 and 13. A
-  tick stands for a day, as in Minds 6.
+  tick stands for a day, as in Minds 6. **Superseded (second round):** "nothing between" is false. Bednekoff
+  and Balda's pinyon jays relocated exact sites at 2 days and only general areas at 7 (1996a, p. 823), so 7
+  is at the generous end of what's known, and the second round reports spans 1, 2, 3, 7 and 13.
 - **`raid_when: always` is the default.** Ravens raided within minutes (B&K), and Minds 6's thieves take
   caches all year. `hungry` puts raiders on the owners' terms: a seen cache is a place to go only while the
   watcher holds less than R / 2. This is the same threshold as Minds 5's hunger, but it doesn't require the
@@ -188,7 +196,7 @@ These are new tick events and stats, all zero and unallocated with watching off:
 - `raids`: takes from a seen cache, also counted in `pilfers`.
 - `raided`: the sugar raids took, also counted in `pilfered`.
 - `raids_wasted`: arrivals whose remembered caches were all gone.
-- `seen_entries`: entries held at the tick's end, summed over agents.
+- `seen_entries`: entries held after the tick-start sweep, summed over agents (see the amendments).
 - Pilfers split by source: seen (`raids`) and stumbled (`pilfers − raids`).
 - Group stats for watchers against everyone else, the pattern of Minds 6's `CheaterStats`: alive, survival,
   and wealth per founder (holdings, caches and stomach of the living; the dead count as 0).
@@ -305,3 +313,168 @@ come from the field studies Minds 6 used.
 - The program document: status, results, and the next step (Minds 9, spatial P1b).
 - A roadmap line.
 - Spec amendments for every ruling made in planning or execution.
+
+## Amendments (implementation)
+
+Rulings made while building and surveying Minds 8, each with its reason. None changed a survey judge
+or threshold.
+
+**Mechanism.**
+
+1. **`seen_entries` is counted after the tick-start sweep**, not at the tick's end. The plan placed
+   the count there, where the sweep already visits every agent. The two differ only by that tick's
+   expiries. It is a reported measure, never judged.
+2. **Chapter II replacement agents are dealt `watches` by id, like founders.** A replacement has no
+   parents, and Minds 6 deals `cheater` to it the same way. Consistency matters because watchers
+   and cheaters must be the same agents at equal shares (pure scroungers). No watching preset uses
+   replacement. A child born to parents still never watches.
+3. **A dig also forgets the digger's seen entries at the site**, and counts in `seen_arrivals` if
+   one was fresh. The spec forgets entries on any arrival on the site, and a dig is an arrival. So
+   `seen_arrivals` can exceed raids + wasted raids + takes of 0 slightly.
+4. **`raid_when: hungry` gates the raid, not only the going.** Under `hungry`, an arrival at or above
+   R / 2 doesn't raid: it forgets nothing, counts nothing, and stumbles and harvests as if it had no
+   entries. The spec puts `hungry` raiders "on the owners' terms", and owners dig only when hungry.
+   As first built (by a dispatch that contradicted the spec), a fed watcher still raided whenever it
+   arrived on a seen cache for the site's sugar. A 5-seed investigation counted 2 955 such summer
+   raids a seed under `hungry`, each replacing a harvest, so `hungry` was not a no-summer-raiding
+   switch. No preset uses `hungry`, so no preset moved.
+5. **A seen cache the watcher's walk can't reach is given up.** Where a walk finds no path
+   (`movement::arrive`), the walker forgets every owner's entry at the target, fresh or not, and
+   counts nothing. The same investigation found 15 % of summer moves in `watch-winter` (2 508 a
+   seed) targeting a seen cache with no path, mostly in pockets sealed off by crowds, since caches
+   are buried where their owners stand. `join_sites` skips only the last failed target, so agents
+   chained from one unreachable seen cache to the next. Own caches keep Minds 5's rule. The cost:
+   a watcher gives up on a cache a later path might reach, and it gives up whenever a walk to a site
+   holding its entries fails, even when the site was chosen for its sugar. Survival in the six
+   presets moved by −2.1 to +5.0 points (5 seeds), mostly within noise.
+6. **Minds 3's true value of a seen site** is the sum of the remembered (fresh) owners' caches
+   still at the site, under the same gates as the believed value. The plan said the believed value,
+   which would have made the stale-choice diagnostic blind to exactly what the spec stresses: an
+   emptied cache still looks full.
+7. **A survey-only probe, `World::probe_raid_harvests`** (hidden, not config, not hashed, off by
+   default, like Minds 6's `probe_dig_at_reserve`). A raid that took something also harvests the
+   site that tick, under the carrying limit with kept loot counted against it, and still draws no
+   stumble. It is reported, never judged, and exists to measure what replacing the harvest costs.
+   Under it, `Harvest::pilfered` and `gathered` can both be positive in one tick.
+
+**Measures, tests and fixtures.**
+
+8. **A `watcher_advantage` series** (watcher survival per founder minus everyone else's, founders by
+   the id rule, the dead counting as 0, a group with no founders as 0). The `watch-scroungers`
+   sweep reads it, because a sweep takes one metric and the raw count of watchers alive rises with
+   the share by construction. It is claim 3's measure. A second sweep, `watch-span`, reads the
+   first winter's pilferage rate against the span.
+9. **Claim 3 is two claim ids**, `watch-scroungers.frequency` (watchers who bury) and
+   `watch-scroungers-only.frequency` (pure scroungers), since the spec judges each variant
+   separately.
+10. **Reading the judges.** Under claim 2, a seed with p_o = 0 in only one world makes that world's
+    ratio infinite; only p_o = 0 in both has no value (no seed had either). For the `range` claims
+    (1 and 4), Weak (50–80 % of seeds) means the claim does not hold.
+11. **The no-trajectory-change test was narrowed.** With watching on, a world is identical to the
+    same world with watching off only until the first entry is remembered, since raids now change
+    trajectories by design. Every with-watching-off identity (fingerprints, rng state, no
+    allocation) still holds.
+12. **Golden entries for all six presets**, not two, because `every_preset_has_a_golden_entry`
+    requires one per preset. All are new; no existing entry moved. WASM pins repeat `watch-winter` and
+    `watch-arena` as specified. The `watch-*` entries, which never existed on main, were re-recorded
+    after rulings 4 and 5, natively and in `web.rs`.
+
+**The page.**
+
+13. **The Watching color mode wins over Strategy** in the default color mode. Pure scroungers are
+    cheaters, so Strategy would hide the three-way split. A world with watching opens in Watching
+    colors only where they tell agents apart: some but not all agents watch (0 < `watchers` < 1),
+    or some are cheaters (`theft.cheaters` > 0). Otherwise (every agent or none watching, and no
+    cheaters) it falls through to the earlier defaults (Caching rule, Memory and so on).
+14. **No TypeScript mirrors of the watching stats.** The page reads series by name, and has no mirror
+    of Minds 6's theft stats either.
+15. **No browser check was made** (none was available in the session). Unit tests cover the Rules
+    group, the color mode, the legend, the inspector rows and the charts; a visual problem would
+    show first on the deployed page.
+
+**Sources.**
+
+16. **Barnard and Sibly (1981)** are cited, in the sources of `watch-scroungers` and
+    `watch-scroungers-only` and in claim 3's two claims, for "the hypothetical pay-off to scroungers
+    increases with the number of producers" (p.543), with a stable mix at the ESS point. Andersson
+    and Krebs (1978) are added to `watch-half`'s source. **Vickery et al. (1991)** stayed context
+    and are cited nowhere in the model. Their "opportunistic forager that can both produce and
+    scrounge but with reduced efficiency" (p.847) is the closest the theory comes to our watcher who
+    also buries. Their finding that "when there is little incompatibility between producing and
+    scrounging, opportunists will always be present, unless the producer is able to consume most of
+    the patch without sharing" (p.847) fits our pre-run reason for expecting no fall in that variant
+    (watching costs them nothing); it was not tested.
+    **Superseded (second round):** the rationale was wrong on mechanism. Watching isn't free, since a raid
+    replaces a harvest and walking to seen caches spends moves. And the second round found watchers who
+    bury individually ahead (pooled 0.009, 95 % interval 0.003 to 0.016) while the world's fitness falls
+    with their share: a mild social dilemma (3c Holds).
+
+**The order of runs, disclosed.** The survey's judges and thresholds were in this spec from its
+first commit (57ec71c), and the survey module transcribed them (8b1bf8c) before its first run. But
+sanity runs came before that module: Task 5's (seeds 1–5, 200 ticks: pilferage, raids, wasted raids
+and first-winter survival in each preset, e.g. `watch-winter` 0.90 % and 54.7 %), a mechanism
+investigation (5 seeds) and Task 5b's re-run after rulings 4 and 5. Those numbers were seen before the
+survey code was written. No judge or threshold was changed because of them.
+
+**What the mechanism findings changed in how claims are read** (not their thresholds).
+
+17. **The 5-seed investigation found no bug.** Sugar was conserved per agent turn (largest error
+    7e-12 over about 154 000 turns). `watchers` 0, and `theft-winter` with `find` 0, are bit-identical
+    to `cache-winter-even`. Every arrival with an entry forgets it, and the tick-start sweep keeps
+    memory bounded.
+18. **Watching's survival cost has two causes, each read as isolated at least in part by a switch.**
+    - **Raids replace the summer harvest.** A remembered cache is usually valued above the sites in
+      sight; 62 % of summer moves head for one, and a raid gathers nothing from its site. Summer gathering falls to 29 700 a
+      seed against 42 300 without theft (a ledger estimate, within 83 a seed). The probe of ruling 7
+      recovers it only to 34 800, so the replaced harvest is part of the gap, not all of it; the
+      rest is likely the moves spent walking to seen caches. (Before rulings 4 and 5, the
+      investigation recovered all of it on 5 seeds by also turning off summer targeting with
+      `hungry`; that switch now behaves differently, so the rest is not claimed as isolated.)
+    - **Watching gives little winter pooling.** Raids need a burial seen within the span, and few
+      agents bury in winter. Turning stumbling on at tick 100 lifts `watch-winter`'s survival per
+      founder from 0.526 to 0.817, and turning it off at tick 100 drops `theft-winter`'s from 0.857
+      to 0.586, below no theft (0.700).
+
+    So survival-based claims (2 and 3) are read as the net of what raids bring and what they
+    displace, not as the value of information alone.
+19. **Claim 1 is read as bounded by knowledge, not by action.** Almost every arrival with a fresh
+    entry raids; the one-take rule and the carrying limit hardly ever bind (5 seeds). What bounds the
+    rate is the share of caches seen buried within the span (19.6 % in summer, 3.6 % in winter at
+    span 7), so the rate is reported across span (0.09–1.20 % at span 1–13).
+    **Superseded (second round):** this was over-stated. Watchers saw 88 % of burials, but raids per
+    burial were about 0.30 (the design audit). By the second round's rule, fixed before its run, the
+    pilferage is action-bound in every world and setting: P(seen) 0.85–0.90 against P(raid | seen)
+    0.10–0.63 (0.88 against 0.62 under this design's `raid_if: always` at span 7). The low share of caches
+    known is mostly old stock that nobody saw recently. Nor was "watching can't reach the field's rates"
+    shown: the stock rate dilutes fresh caches with the winter stock, and on fresh caches watching's
+    hazard is 6.1 % a day against stumbling's 3.0 % (1a Holds; 8.1 % under `always`).
+20. **Claim 2's ratio half had a floor.** p_s ÷ p_o was already near 0 without watching (0.016), so
+    it could hardly fall. The advantage half carries the information, and claim 2 is read as
+    watching hurting hoarders through survival.
+    **Superseded (second round):** "Fails" was an artifact of the floor and `all_of`. The ratio actually
+    rose a little (lower in only 5 of 20 seeds). The hoarders' loss mixes being raided with paying the
+    raider's own costs, since everyone watches and hoarders, having room, are likely the effective
+    raiders. In a world where the condition held (`watch-ak`), watching flips it (2a Holds), but fitness
+    follows the condition's sign in only 62 of 100 runs (2b Fails). Neither being watched nor the
+    hoarders' own raiding costs them 0.05 in any seed (2c, 2d Fail).
+21. **Claim 3's pure scroungers take little.** A pure scrounger's raid takes 1.1 sugar on average,
+    against 5.2 for a watcher who buries, likely because agents that never bury carry close to their
+    limit. So that variant likely measures watchers with little room, not watching alone. No switch
+    isolates it. The expectation recorded before the run (pure scroungers show the prediction) was
+    refuted, and is reported as refuted.
+    **Superseded (second round):** "pure scroungers did worse at every share" is not a fact about
+    scrounging. The shortfall predates watching: with watching off, the same agents, who never cache,
+    survive 48 % against the hoarders' 70 % (49 % against 65 % with watching), and the trend across shares
+    was not detected (it is not "absent"). `value: room` isolates part of the carrying cause, raising
+    their fitness by 0.018 in 20 of 20 seeds. Where scrounging excludes producing (`scrounge: forgo`,
+    `loot: eat`), the scroungers' shortfall grows with their share (3a Holds), but they trail even when
+    rare, so no stable mix forms (3b Fails). For watchers who also bury, the first design's "no frequency
+    dependence" was "not detected": the slope was negative at every span, with the judge's power about the
+    size of the effect.
+22. **Wealth per founder by kind.** `watcher_wealth` and `other_wealth` (in place of the plan's
+    mean holdings of the living) are Σ (`holdings[0]` + Σ caches + the stomach `fed`) over the
+    living of each kind ÷ that kind's founders, the dead counting 0 and a kind with no founders
+    giving 0. Founders are ids 1..=population dealt by the id rule, as for `watcher_advantage`;
+    agents born or placed later count among the living but not among the founders (the presets
+    have none). The page charts them as "Watcher and other wealth per founder", and its survival
+    chart plots `watcher_advantage`, not the raw counts alive, which follow the group sizes.

@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 379] = [
+pub const TITLES: [(&str, &str); 387] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -300,6 +300,38 @@ pub const TITLES: [(&str, &str); 379] = [
     (
         "theft-arena-8",
         "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with two fifths as much in hand",
+    ),
+    (
+        "watch-winter",
+        "Everyone watches others bury: with a 7-tick memory fresh caches go twice as fast as by stumbling, and fewer survive the winter than without watching",
+    ),
+    (
+        "watch-winter-stumble",
+        "Watching and stumbling: fresh caches go three times as fast as by stumbling alone, and a quarter fewer survive the winter",
+    ),
+    (
+        "watch-half",
+        "Half never cache and everyone watches: nearly two hoarders in three die, against one cheater in six",
+    ),
+    (
+        "watch-scroungers",
+        "Half watch others bury: with a 7-tick memory watchers come out slightly ahead, and the more watch, the worse everyone does",
+    ),
+    (
+        "watch-scroungers-only",
+        "Half never cache but watch and steal: they trail the hoarders with or without watching, a little less with it",
+    ),
+    (
+        "watch-scroungers-forgo",
+        "Scroungers who forgo foraging: with a 7-tick memory they trail the hoarders further the more of them there are, mostly from scrounging rather than from never caching",
+    ),
+    (
+        "watch-ak",
+        "Owners who dig early, and everyone watching with a 7-tick memory: thieves now take more than owners dig back, and fewer hoarders survive",
+    ),
+    (
+        "watch-arena",
+        "Four agents in a room, half watching: everyone survives, and the room ends the winter poorer",
     ),
     (
         "s71-board",

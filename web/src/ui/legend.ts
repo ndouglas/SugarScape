@@ -112,6 +112,8 @@ export function colorLegend(mode: ColorMode, config: Config): LegendItem[] {
       return (config.theft?.cheaters ?? 0) > 0 ? [swatch('hoarder', c.HOARDER), swatch('cheater', c.CHEATER)] : [swatch('hoarder', c.HOARDER)];
     case 'caching_rule':
       return cachingRuleLegend(config);
+    case 'watching':
+      return [swatch('watcher who buries', c.HOARDER), swatch('scrounger (watches, never buries)', c.CHEATER), swatch('does not watch', c.NEUTRAL)];
     case 'memory':
       return [swatch('remembers', c.REMEMBERS), swatch("doesn't remember", c.NEUTRAL)];
     default:

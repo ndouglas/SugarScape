@@ -10,6 +10,9 @@ import {
   isAntsView,
   menuOf,
   presetMenu,
+  pilferingOn,
+  watcherSplit,
+  watchingOn,
   usesMinds,
   worldMenu,
   isBaliView,
@@ -107,6 +110,7 @@ describe('the Minds menu', () => {
       { seasons: { enabled: true, mode: 'global' } },
       { theft: { find: 0.2, owner_memory: true, loot: 'keep', cheaters: 0 } },
       { theft: { find: 0, owner_memory: true, loot: 'keep', cheaters: 0.5 } },
+      { watching: { on: true, span: 7, watchers: 1, raid_when: 'always' } },
     ];
     expect(minds.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(minds.map(() => true));
     const book = [
@@ -116,6 +120,7 @@ describe('the Minds menu', () => {
       { caching: { rule: 'none', capacity: 0 }, central: { enabled: false }, seasons: { enabled: true, mode: 'hemispheres' } },
       { model: 'ring', movement: { mode: 'walk' } },
       { theft: { find: 0, owner_memory: false, loot: 'eat', cheaters: 0 } },
+      { watching: { on: false, span: 7, watchers: 0.5, raid_when: 'hungry' } },
     ];
     expect(book.map((c) => usesMinds(c as unknown as ModelConfig))).toEqual(book.map(() => false));
     expect([menuOf({ decision: { rule: 'goap' } } as unknown as ModelConfig), menuOf({} as ModelConfig), menuOf({ model: 'ring' } as unknown as ModelConfig)]).toEqual([
@@ -146,11 +151,12 @@ describe('the Minds menu', () => {
       p('walk-capacity', 'Epstein & Axtell II-2; Minds 2', { movement: { mode: 'walk', speed: 1 } }),
       p('ifd-fence', 'Baum & Kraft 1998; Minds 2', { decision: { rule: 'utility' }, walls: [{ x: 0, y: 0, width: 1, height: 1, opaque: false }] }),
       p('cache-raby', 'Raby et al. 2007; Minds 5', { caching: { rule: 'plan', capacity: 0 } }),
+      p('watch-scroungers', 'Giraldeau & Caraco 2000; Minds 8', { caching: { rule: 'even', capacity: 0 }, watching: { on: true, span: 7, watchers: 1, raid_when: 'always' } }),
       p('theft-arena-8', 'Andersson & Krebs 1978; Minds 6', { caching: { rule: 'even', capacity: 0 }, theft: { find: 0.3, owner_memory: true, loot: 'keep', cheaters: 0.125 } }),
     ];
     expect(presetGroups(presets).map((g) => [g.model, g.label, g.presets.map((x) => x.id)])).toEqual([
       ['sugarscape', 'Sugarscape', ['ii-2']],
-      ['minds', 'Minds', ['goap-open', 'ifd-even', 'walk-capacity', 'ifd-fence', 'cache-raby', 'theft-arena-8']],
+      ['minds', 'Minds', ['goap-open', 'ifd-even', 'walk-capacity', 'ifd-fence', 'cache-raby', 'watch-scroungers', 'theft-arena-8']],
       ['ring', 'Ring World', ['ring-1']],
     ]);
     expect(presetSubgroups('sugarscape', presets).map((g) => [g.label, g.presets.map((x) => x.id)])).toEqual([['Chapter II', ['ii-2']]]);
@@ -160,6 +166,7 @@ describe('the Minds menu', () => {
       ['Minds 4: planning', ['goap-open']],
       ['Minds 5: caching', ['cache-raby']],
       ['Minds 6: theft', ['theft-arena-8']],
+      ['Minds 8: watching', ['watch-scroungers']],
     ]);
   });
 
@@ -827,5 +834,39 @@ describe('the hoard model (Minds 7)', () => {
     expect(ticksLeft({ ...hoard, generations: 1 } as ModelConfig, 6000)).toBe(0);
     expect(ticksLeft(hoard, 130_500)).toBe(1500);
     expect(finishesUnpredictably(hoard)).toBe(false);
+  });
+});
+
+describe('watcher split (Minds 8b)', () => {
+  const c = (over: object) => over as unknown as Config;
+  it('follows the share under who = share, and the cheaters under hoarders and cheaters', () => {
+    const w = (watching: object, cheaters = 0, population = 100) => c({ population, watching: { on: true, ...watching }, theft: { find: 0, cheaters } });
+    expect([0, 0.5, 1].map((watchers) => watcherSplit(w({ watchers, who: 'share' }, 0.5)))).toEqual([false, true, false]);
+    expect(watcherSplit(w({ watchers: 0.5 }))).toBe(true);
+    // The share is ignored: a half share is no split without cheaters, and a full share is one with them.
+    for (const who of ['hoarders', 'cheaters']) {
+      expect([0, 0.5, 1].map((ch) => watcherSplit(w({ watchers: who === 'hoarders' ? 0.5 : 1, who }, ch)))).toEqual([false, true, false]);
+    }
+    expect(watcherSplit(w({ watchers: 1, who: 'hoarders' }, 0.25))).toBe(true);
+    // Exact at small populations and extreme shares: a split needs 0 < floor(n * share) < n.
+    expect(watcherSplit(w({ watchers: 0.1 }, 0, 4))).toBe(false);
+    expect(watcherSplit(w({ watchers: 0.1 }, 0, 10))).toBe(true);
+    expect(watcherSplit(w({ watchers: 0.99 }, 0, 50))).toBe(true);
+    expect(watcherSplit(w({ watchers: 0.99 }, 0, 100))).toBe(true);
+    expect(watcherSplit(w({ watchers: 0.99 }, 0, 1))).toBe(false);
+    expect(watcherSplit(w({ watchers: 1, who: 'hoarders' }, 0.1, 4))).toBe(false);
+    expect(watcherSplit(w({ watchers: 1, who: 'cheaters' }, 0.1, 10))).toBe(true);
+    expect(watcherSplit(c({ watching: { on: false, watchers: 0.5 } }))).toBe(false);
+    expect(watcherSplit(c({}))).toBe(false);
+  });
+});
+
+describe('pilfering (Minds 6 and 8)', () => {
+  it('is on under theft or watching, which gates the pilferage charts', () => {
+    const c = (over: object) => over as unknown as Config;
+    expect([{ theft: { find: 0.2, cheaters: 0 } }, { theft: { find: 0, cheaters: 0.5 } }, { watching: { on: true } }].map((x) => pilferingOn(c(x)))).toEqual([true, true, true]);
+    expect([{}, { watching: { on: false } }, { theft: { find: 0, cheaters: 0 } }].map((x) => pilferingOn(c(x)))).toEqual([false, false, false]);
+    expect(watchingOn(c({ watching: { on: true } }))).toBe(true);
+    expect(watchingOn(c({}))).toBe(false);
   });
 });

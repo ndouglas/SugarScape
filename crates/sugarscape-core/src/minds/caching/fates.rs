@@ -22,10 +22,12 @@
 //!   log; never by a config, the app or a sweep). Every other world leaves
 //!   the log and its index empty and unallocated; the theft statistics come
 //!   from the tick events, not from here.
-//! - **Theft only.** Even then, records open only while `theft.is_on()`
-//!   (`find` or `cheaters` above 0): every other world, Minds 5's caching
-//!   worlds included, leaves the log empty. Records already open keep
-//!   closing if theft is turned off.
+//! - **Theft only.** Even then, records open only while
+//!   `Config::pilfering_on()`: theft (`find` or `cheaters` above 0) or
+//!   Minds 8's watching, whose raids are pilfers. Every other world, Minds
+//!   5's caching worlds included, leaves the log empty. Records already
+//!   open keep closing if theft is turned off. (Below, "theft" means
+//!   either.)
 //! - **Backfill.** `find` is live, so a cache can hold sugar the log never
 //!   saw (buried while theft was off). While theft is on, every touch of a
 //!   cache (a burial, a dig, a pilfer, its owner's death) first compares the
@@ -136,7 +138,7 @@ fn backfill(world: &mut World, owner: AgentId, site: u32, cache: f64, since: u64
 pub(crate) fn open(world: &mut World, owner: AgentId, site: u32, amount: f64) {
     if !world.record_fates
         || world.cache_log_full
-        || !world.config.theft.is_on()
+        || !world.config.pilfering_on()
         || frozen_by(world, 2)
     {
         return;
@@ -157,7 +159,7 @@ fn close(world: &mut World, owner: AgentId, site: u32, amount: f64, fate: Fate) 
     if !world.record_fates || world.cache_log_full {
         return;
     }
-    let theft = world.config.theft.is_on();
+    let theft = world.config.pilfering_on();
     if !theft && world.cache_open.is_empty() {
         return;
     }
@@ -242,7 +244,7 @@ pub(crate) fn close_lost(
         return;
     }
     let now = world.tick;
-    if world.config.theft.is_on() && !caches.is_empty() {
+    if world.config.pilfering_on() && !caches.is_empty() {
         if frozen_by(world, caches.len()) {
             return;
         }

@@ -1,5 +1,5 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Theft, Truffles } from './types';
+import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Theft, Truffles, Watching } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
@@ -33,6 +33,15 @@ const theft = (c: Config): Theft => c.theft ?? { find: 0, owner_memory: true, lo
 const seedTheft = (next: Config) => {
   next.theft = { ...theft(next), ...next.theft };
 };
+/** A config's watching, or the engine's default (off, 7 ticks, every founder, raid always, only if better) for older configs. */
+const watching = (c: Config): Watching =>
+  c.watching ?? { on: false, span: 7, watchers: 1, raid_when: 'always', raid_if: 'better', value: 'amount', who: 'share', scrounge: 'harvest' };
+
+/** Seeds a complete watching object on `next`. */
+const seedWatching = (next: Config) => {
+  next.watching = { ...watching(next), ...next.watching };
+};
+
 const seedBuryCost = (next: Config) => {
   next.caching = { ...caching(next), ...next.caching, bury_cost: next.caching?.bury_cost ?? 0 };
 };
@@ -62,6 +71,10 @@ export interface Group {
   controls: Control[];
   /** A hand-built editor shown after the controls. */
   custom?: 'goods' | 'pollution' | 'groups';
+  /** A note shown only while `when` holds for the running config. */
+  conditionalNote?: { when: (c: Config) => boolean; text: string };
+  /** Further notes, each shown only while its `when` holds. */
+  conditionalNotes?: { when: (c: Config) => boolean; text: string }[];
   /** One of the Minds rules: shown only for a Minds world (the model menu's Minds entry). */
   minds?: true;
 }
@@ -341,7 +354,7 @@ export const GROUPS: Group[] = [
   {
     title: 'Caching (Minds 5)',
     minds: true,
-    note: 'A carrying limit, and caches an agent buries and digs back when it runs short. Even buries a share of its surplus wherever it is; compensate buries more where it has found food less often (each find lowers a place’s weight by λ); plan remembers where it was and what it found and buries for the shortfall it foresees, up to the lookahead in days, or, in a winter everywhere, for the winter ahead. Caching needs one good and walking, and no combat. With the Seasons rule on, the seasons mode can put winter on every row at once, with the same γ and β. Central-place foraging gives each agent a home to carry loads back to; it needs the marginal-value rule or GOAP, and a carrying limit.',
+    note: 'A carrying limit, and caches an agent buries and digs back when it runs short. Even buries a share of its surplus wherever it is; compensate buries more where it has found food less often (each find lowers a place’s weight by λ); plan remembers where it was and what it found and buries for the shortfall it foresees, up to the lookahead in days, or, in a winter everywhere, for the winter ahead. An agent digs a cache back when it holds less than half its reserve (its metabolism times the planning horizon), or, with dig below set to the whole reserve, less than all of it. Caching needs one good and walking, and no combat. With the Seasons rule on, the seasons mode can put winter on every row at once, with the same γ and β. Central-place foraging gives each agent a home to carry loads back to; it needs the marginal-value rule or GOAP, and a carrying limit.',
     controls: [
       {
         kind: 'select', path: 'caching.rule', label: 'Caching rule', reset: true,
@@ -372,6 +385,14 @@ export const GROUPS: Group[] = [
       {
         kind: 'number', path: 'caching.lookahead', label: 'Plan: days looked ahead', min: 1, max: 10, step: 1,
         adjust: (next) => { next.caching = { ...caching(next), ...next.caching }; },
+      },
+      {
+        kind: 'select', path: 'caching.dig_below', label: 'Dig below',
+        current: (c) => caching(c).dig_below ?? 'half',
+        options: [
+          { value: 'half', label: 'Half the reserve', apply: (c) => { c.caching = { ...caching(c), dig_below: 'half' }; } },
+          { value: 'reserve', label: 'The whole reserve', apply: (c) => { c.caching = { ...caching(c), dig_below: 'reserve' }; } },
+        ],
       },
       {
         kind: 'select', path: 'seasons.mode', label: 'Seasons', reset: true,
@@ -416,6 +437,64 @@ export const GROUPS: Group[] = [
       {
         kind: 'number', path: 'caching.bury_cost', label: 'Bury cost (sugar a cache)', min: 0, max: 2, step: 0.05,
         adjust: seedBuryCost,
+      },
+    ],
+  },
+  {
+    title: 'Watching (Minds 8)',
+    minds: true,
+    note: 'Agents who watch see the burials near them and remember each cache they saw buried for the span, in ticks. An arriving watcher whose remembered cache is on the site raids it on purpose, with no chance to find; a cache already gone is a wasted raid. Raid when says whether a seen cache is a place to go always, or only when hungry; raid if says whether a watcher on a seen cache raids only when it holds at least what the site would give; seen cache value says whether a cache counts as the amount remembered or the room left to carry it; who watches picks the watchers by share, or makes every hoarder or every cheater one; scroungers who forgo harvest nothing while a seen cache is in mind. Watchers who also bury and scroungers who never bury are told apart by the Theft rules’ share of cheaters. Watching needs caching, and isn’t offered in the labs or with central-place foraging. Who watches and the share of watchers rebuild the world; the rest applies to the running world.',
+    conditionalNote: {
+      when: (c) => (c.watching?.who ?? 'share') === 'share' && (c.theft?.cheaters ?? 0) > 0 && (c.theft?.cheaters ?? 0) < 1 && (c.watching?.watchers ?? 1) > 0 && (c.watching?.watchers ?? 1) < 1,
+      text: 'Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents; at unequal shares they overlap as the rule gives.',
+    },
+    conditionalNotes: [
+      { when: (c) => (c.watching?.who ?? 'share') !== 'share', text: 'Who watches is set by kind; the watcher share is ignored.' },
+    ],
+    controls: [
+      { kind: 'toggle', path: 'watching.on', label: 'Watching', current: (c) => watching(c).on, adjust: seedWatching },
+      { kind: 'number', path: 'watching.span', label: 'Span (ticks a seen cache is remembered)', min: 1, max: 30, step: 1, adjust: seedWatching },
+      { kind: 'number', path: 'watching.watchers', label: 'Share of watchers', min: 0, max: 1, step: 0.05, reset: true, adjust: seedWatching },
+      {
+        kind: 'select', path: 'watching.raid_when', label: 'Raid when',
+        current: (c) => watching(c).raid_when,
+        options: [
+          { value: 'always', label: 'Always, at a seen cache', apply: (c) => { c.watching = { ...watching(c), raid_when: 'always' }; } },
+          { value: 'hungry', label: 'Only when hungry', apply: (c) => { c.watching = { ...watching(c), raid_when: 'hungry' }; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'watching.raid_if', label: 'Raid if',
+        current: (c) => watching(c).raid_if ?? 'better',
+        options: [
+          { value: 'better', label: 'Better: the cache holds at least the site’s value', apply: (c) => { c.watching = { ...watching(c), raid_if: 'better' }; } },
+          { value: 'always', label: 'Always, whatever the site offers', apply: (c) => { c.watching = { ...watching(c), raid_if: 'always' }; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'watching.value', label: 'Seen cache value',
+        current: (c) => watching(c).value ?? 'amount',
+        options: [
+          { value: 'amount', label: 'Amount remembered', apply: (c) => { c.watching = { ...watching(c), value: 'amount' }; } },
+          { value: 'room', label: 'Room to carry it', apply: (c) => { c.watching = { ...watching(c), value: 'room' }; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'watching.who', label: 'Who watches', reset: true,
+        current: (c) => watching(c).who ?? 'share',
+        options: [
+          { value: 'share', label: 'The share of watchers, by id', apply: (c) => { c.watching = { ...watching(c), who: 'share' }; } },
+          { value: 'hoarders', label: 'Every hoarder (non-cheater)', apply: (c) => { c.watching = { ...watching(c), who: 'hoarders' }; } },
+          { value: 'cheaters', label: 'Every cheater', apply: (c) => { c.watching = { ...watching(c), who: 'cheaters' }; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'watching.scrounge', label: 'Scroungers',
+        current: (c) => watching(c).scrounge ?? 'harvest',
+        options: [
+          { value: 'harvest', label: 'Harvest as usual', apply: (c) => { c.watching = { ...watching(c), scrounge: 'harvest' }; } },
+          { value: 'forgo', label: 'Forgo harvesting while a seen cache is in mind', apply: (c) => { c.watching = { ...watching(c), scrounge: 'forgo' }; } },
+        ],
       },
     ],
   },

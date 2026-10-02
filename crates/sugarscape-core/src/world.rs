@@ -7,7 +7,7 @@ use rand::Rng;
 
 use crate::agent::{Agent, AgentId, DiseaseId, Tribe};
 use crate::bits::Bits;
-use crate::config::{Config, FieldError, FounderAges, Placement, MAX_GOODS};
+use crate::config::{Config, FieldError, FounderAges, Placement, Who, MAX_GOODS};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
 use crate::rng::{self, SimRng};
@@ -158,7 +158,7 @@ pub struct TickEvents {
     /// only); empty and unallocated unless something was pilfered.
     pub(crate) pilfered_caches: std::collections::BTreeSet<(AgentId, u32)>,
     /// Minds 6: caches in the world at the tick's start (after the
-    /// schedule), counted under theft (`theft.is_on()`): Σ over agents of
+    /// schedule), counted under theft or watching (`pilfering_on()`): Σ over agents of
     /// their caches. Each is a foreign cache to every agent but its owner,
     /// so `pilfers / pilfer_candidates` is the per-cache pilfer rate.
     pub pilfer_candidates: u32,
@@ -186,6 +186,25 @@ pub struct TickEvents {
     /// Minds 5, central-place foraging: Σ over this tick's `deliveries` of
     /// the load buried (each trip's load size).
     pub delivered: f64,
+    /// Minds 8: burials this tick seen by at least one watcher.
+    pub burials_seen: u32,
+    /// Minds 8: (watcher, burial) pairs this tick.
+    pub sightings: u32,
+    /// Minds 8: seen-cache entries held, summed over agents, after the
+    /// tick-start sweep (entries forgotten later in the tick, or made
+    /// during it, aren't reflected). 0 with `watching.on` false.
+    pub seen_entries: u32,
+    /// Minds 8: takes from a seen cache (raids) this tick. Each is also a
+    /// pilfer, counted in `pilfers`.
+    pub raids: u32,
+    /// Minds 8: the sugar raids took this tick, also counted in `pilfered`.
+    pub raided: f64,
+    /// Minds 8: arrivals whose remembered caches at the site were all gone
+    /// (wasted raids), once per arrival.
+    pub raids_wasted: u32,
+    /// Minds 8: arrivals on a site where the agent remembered a seen cache
+    /// (each forgets its entries there, whether it took or not).
+    pub seen_arrivals: u32,
 }
 
 #[derive(Clone)]
@@ -228,7 +247,8 @@ pub struct World {
     trail: Vec<Pos>,
     /// Minds 6: every cache's fate, one record per burial event
     /// (`minds::caching::fates`). Recorded only when a caller asks for it
-    /// (`record_fates`), and then only under theft (`theft.is_on()`);
+    /// (`record_fates`), and then only under theft or watching
+    /// (`pilfering_on()`);
     /// otherwise empty and unallocated. Never hashed.
     pub cache_log: Vec<crate::minds::caching::fates::CacheRecord>,
     /// Minds 6: the log reached `fates::LOG_CAP` and froze.
@@ -237,9 +257,21 @@ pub struct World {
     /// below its whole reserve R instead of R / 2 (no hysteresis band;
     /// `minds::caching::hungry`). Not config: never set by a config, the app
     /// or an edit, never hashed or exported, and false in every world the
-    /// survey doesn't set it in.
+    /// survey doesn't set it in. Minds 8b made it a setting too,
+    /// `caching.dig_below: reserve`, which runs identically.
     #[doc(hidden)]
     pub probe_dig_at_reserve: bool,
+    /// Minds 8, a survey probe: when true, a raid that took something
+    /// (`minds::caching::watching::raid`) also harvests the site that tick,
+    /// as the ordinary harvest does (under the carrying limit, the rest left
+    /// on the site, counted in `gathered`), instead of replacing it. Not
+    /// config: never set by a config, the app or an edit, never hashed or
+    /// exported, and false in every world the survey doesn't set it in.
+    /// Under it a tick can both pilfer and gather (`Harvest::pilfered` and
+    /// `gathered` both positive), and Compensate's weight update is skipped
+    /// on such ticks, as on every tick that pilfered.
+    #[doc(hidden)]
+    pub probe_raid_harvests: bool,
     /// Minds 6: when true, the world keeps its fate log (`cache_log`) under
     /// theft. Not config: never set by a config, the app or an edit, never
     /// hashed or exported, and false unless a caller (the survey, a test)
@@ -371,6 +403,7 @@ impl World {
             cache_log: Vec::new(),
             cache_log_full: false,
             probe_dig_at_reserve: false,
+            probe_raid_harvests: false,
             record_fates: false,
             cache_open: BTreeMap::new(),
             cache_sites: None,
@@ -444,6 +477,11 @@ impl World {
     /// Living agents in id order.
     pub fn agents(&self) -> impl Iterator<Item = &Agent> {
         self.agents.values()
+    }
+
+    /// Living agents in id order, mutably.
+    pub(crate) fn agents_mut(&mut self) -> impl Iterator<Item = &mut Agent> {
+        self.agents.values_mut()
     }
 
     pub(crate) fn agent_ids(&self) -> Vec<AgentId> {
@@ -593,6 +631,15 @@ impl World {
         // Minds 6: a founder cheats or not by its id, with no draw.
         if self.config.theft.cheaters > 0.0 && agent.parents.is_none() {
             agent.cheater = self.config.theft.founder_cheats(id);
+        }
+        // Minds 8: so does a founder watch, after its cheater flag (above):
+        // `who: hoarders` and `cheaters` deal by that flag. The guard skips
+        // only `share` with no watchers, where nobody would watch; the other
+        // two ignore `watchers`, so they deal whatever it says.
+        if (self.config.watching.watchers > 0.0 || self.config.watching.who != Who::Share)
+            && agent.parents.is_none()
+        {
+            agent.watches = self.config.watching.founder_watches(id, agent.cheater);
         }
         // Minds 5: a central-place forager's home is where it starts life.
         if self.config.central.enabled && agent.home.is_none() {
@@ -887,8 +934,12 @@ impl World {
     pub fn step(&mut self) {
         self.events = TickEvents::default();
         self.apply_schedule();
-        if self.config.theft.is_on() {
+        if self.config.pilfering_on() {
             crate::minds::caching::theft::count_candidates(self);
+        }
+        // Minds 8: forget seen caches older than `span`, before anyone moves.
+        if self.config.watching.on {
+            crate::minds::caching::watching::sweep(self);
         }
         // Minds 5: a lab world applies its protocol's day (placement, food,
         // doorways, the test evening's burying) before anyone moves.

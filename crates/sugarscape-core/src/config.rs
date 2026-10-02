@@ -660,6 +660,18 @@ pub enum CachingRule {
     Plan,
 }
 
+/// Minds 6 and 8b: below what an owner with caches digs one up. Before
+/// Minds 8b this was only a survey probe (`World::probe_dig_at_reserve`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DigBelow {
+    /// Below half its reserve, R / 2 (Minds 5's threshold).
+    #[default]
+    Half,
+    /// Below its whole reserve R.
+    Reserve,
+}
+
 /// Minds 5: a carrying limit, plus caches agents bury and dig, under `rule`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -682,6 +694,10 @@ pub struct Caching {
     /// Minds 6: good 0 lost (counted as eaten) for each cache buried, at
     /// least 0. Live.
     pub bury_cost: f64,
+    /// Minds 8b: an owner with caches digs below half its reserve R / 2
+    /// (`half`) or below its whole reserve R (`reserve`). A central-place
+    /// world always digs below R. Live.
+    pub dig_below: DigBelow,
 }
 
 impl Default for Caching {
@@ -694,6 +710,7 @@ impl Default for Caching {
             lookahead: 1,
             mixed: false,
             bury_cost: 0.0,
+            dig_below: DigBelow::Half,
         }
     }
 }
@@ -770,13 +787,134 @@ impl Theft {
     /// ⌊(i − 1)·s⌋ for s = `cheaters`. Over ids 1..=n that's ⌊n·s⌋ cheaters,
     /// an exact proportion, with no draw.
     pub fn founder_cheats(&self, id: u64) -> bool {
-        let s = self.cheaters;
-        s > 0.0 && (id as f64 * s).floor() > (id.saturating_sub(1) as f64 * s).floor()
+        dealt_by_id(self.cheaters, id)
     }
 
     /// Whether theft is on at all: a chance to find, or any cheaters.
     pub fn is_on(&self) -> bool {
         self.find > 0.0 || self.cheaters > 0.0
+    }
+}
+
+/// The id rule that deals a trait to a share of founders: id i (counting
+/// from 1) has it iff ⌊i·s⌋ > ⌊(i − 1)·s⌋. Over ids 1..=n that's ⌊n·s⌋
+/// agents, an exact proportion, with no draw. Minds 6's cheaters and Minds
+/// 8's watchers are both dealt by it, so at equal shares they're the same
+/// agents.
+pub(crate) fn dealt_by_id(share: f64, id: u64) -> bool {
+    share > 0.0 && (id as f64 * share).floor() > (id.saturating_sub(1) as f64 * share).floor()
+}
+
+/// Minds 8: when a seen cache is a place to go.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RaidWhen {
+    /// Always.
+    #[default]
+    Always,
+    /// Only while the watcher holds less than R / 2.
+    Hungry,
+}
+
+/// Minds 8b: whether a watcher at a site with fresh entries raids only when
+/// the remembered amount is at least the site's welfare value.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RaidIf {
+    /// Raid only when the remembered amount there is at least the site's value.
+    #[default]
+    Better,
+    /// Always raid (the first round's rule).
+    Always,
+}
+
+/// Minds 8b: a seen cache's candidate value.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SeenValue {
+    /// The remembered amount, summed over owners.
+    #[default]
+    Amount,
+    /// That amount capped at the agent's room under the carrying limit.
+    Room,
+}
+
+/// Minds 8b: which founders watch.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Who {
+    /// `watchers`, dealt by id.
+    #[default]
+    Share,
+    /// Every non-cheater, whatever `watchers` says.
+    Hoarders,
+    /// Every cheater, whatever `watchers` says.
+    Cheaters,
+}
+
+/// Minds 8b: what a scrounger (watches and cheats) does holding a fresh entry.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Scrounge {
+    /// Harvest candidates stay as they are.
+    #[default]
+    Harvest,
+    /// Only seen caches and staying put, harvesting nothing on staying.
+    Forgo,
+}
+
+/// Minds 8: agents that watch others bury food and raid the cache on purpose.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Watching {
+    /// Watching at all. Live.
+    pub on: bool,
+    /// Ticks a seen cache stays remembered. Live.
+    pub span: u32,
+    /// Share of founders, in [0, 1], who watch (dealt by id, no draw).
+    /// Reset-only.
+    pub watchers: f64,
+    /// When a seen cache is a place to go. Live.
+    pub raid_when: RaidWhen,
+    /// Raid on arrival only when the remembered amount is at least the
+    /// site's value (`better`), or always. Live.
+    pub raid_if: RaidIf,
+    /// A seen cache's candidate value. Live.
+    pub value: SeenValue,
+    /// Which founders watch. Reset-only. Under `hoarders` and `cheaters`,
+    /// `watchers` is ignored.
+    pub who: Who,
+    /// What a scrounger does holding a fresh entry. Live.
+    pub scrounge: Scrounge,
+}
+
+impl Default for Watching {
+    fn default() -> Self {
+        Self {
+            on: false,
+            span: 7,
+            watchers: 1.0,
+            raid_when: RaidWhen::Always,
+            raid_if: RaidIf::Better,
+            value: SeenValue::Amount,
+            who: Who::Share,
+            scrounge: Scrounge::Harvest,
+        }
+    }
+}
+
+impl Watching {
+    /// Whether the founder with `id` (ids count from 1) watches. Under
+    /// `share`, the same id rule as `Theft::founder_cheats`, for s =
+    /// `watchers`. Under `hoarders` every non-cheater watches, under
+    /// `cheaters` every cheater (`cheats` is the founder's cheater flag,
+    /// `Theft::founder_cheats(id)`).
+    pub fn founder_watches(&self, id: u64, cheats: bool) -> bool {
+        match self.who {
+            Who::Share => dealt_by_id(self.watchers, id),
+            Who::Hoarders => !cheats,
+            Who::Cheaters => cheats,
+        }
     }
 }
 
@@ -969,7 +1107,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 31] = [
+pub const RESET_ONLY_PATHS: [&str; 34] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -999,6 +1137,9 @@ pub const RESET_ONLY_PATHS: [&str; 31] = [
     "theft",
     "theft.owner_memory",
     "theft.cheaters",
+    "watching",
+    "watching.watchers",
+    "watching.who",
     "central",
     "central.enabled",
 ];
@@ -1097,6 +1238,8 @@ pub struct Config {
     pub caching: Caching,
     #[serde(default)]
     pub theft: Theft,
+    #[serde(default)]
+    pub watching: Watching,
     pub central: Central,
     #[serde(default)]
     pub lab: Option<Lab>,
@@ -1183,6 +1326,7 @@ impl Default for Config {
             mvt: Mvt::default(),
             caching: Caching::default(),
             theft: Theft::default(),
+            watching: Watching::default(),
             central: Central { enabled: false },
             lab: None,
             schedule: Vec::new(),
@@ -1246,6 +1390,12 @@ impl Errors {
 }
 
 impl Config {
+    /// Minds 6's pilfering bookkeeping (candidate counts, fates, theft
+    /// series) runs under theft or watching.
+    pub fn pilfering_on(&self) -> bool {
+        self.theft.is_on() || self.watching.on
+    }
+
     pub fn from_json(json: &str) -> Result<Self, Vec<FieldError>> {
         let value: serde_json::Value = serde_json::from_str(json)
             .map_err(|e| vec![FieldError::new("config", e.to_string())])?;
@@ -1881,6 +2031,31 @@ impl Config {
             "theft can't run in a central-place world",
         );
         e.check(
+            self.watching.watchers.is_finite() && (0.0..=1.0).contains(&self.watching.watchers),
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        e.check(
+            self.watching.span >= 1,
+            "watching.span",
+            "must be at least 1",
+        );
+        e.check(
+            !self.watching.on || self.caching.is_on(),
+            "watching.on",
+            "watching needs caching (a caching rule or a carrying limit)",
+        );
+        e.check(
+            !self.watching.on || self.lab.is_none(),
+            "watching.on",
+            "watching can't run in a lab",
+        );
+        e.check(
+            !self.watching.on || !self.central.enabled,
+            "watching.on",
+            "watching can't run in a central-place world",
+        );
+        e.check(
             !self.central.enabled
                 || (matches!(self.decision.rule, DecisionRule::Mvt | DecisionRule::Goap)
                     && self.caching.capacity > 0),
@@ -2186,6 +2361,12 @@ impl Config {
         }
         if self.theft.cheaters != next.theft.cheaters {
             out.push(FieldError::new("theft.cheaters", msg));
+        }
+        if self.watching.who != next.watching.who {
+            out.push(FieldError::new("watching.who", msg));
+        }
+        if self.watching.watchers != next.watching.watchers {
+            out.push(FieldError::new("watching.watchers", msg));
         }
         if self.central.enabled != next.central.enabled {
             out.push(FieldError::new("central.enabled", msg));
@@ -4063,6 +4244,7 @@ mod tests {
                 lookahead: 1,
                 mixed: false,
                 bury_cost: 0.0,
+                dig_below: DigBelow::Half,
             }
         );
         assert_eq!(
@@ -4108,6 +4290,7 @@ mod tests {
                 lookahead: 1,
                 mixed: false,
                 bury_cost: 0.0,
+                dig_below: DigBelow::Half,
             }
         );
 
@@ -4548,6 +4731,43 @@ mod tests {
     }
 
     #[test]
+    fn dig_below_defaults_to_half_loads_from_older_configs_and_is_live() {
+        assert_eq!(Config::default().caching.dig_below, DigBelow::Half);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        assert_eq!(v["caching"]["dig_below"], serde_json::json!("half"));
+        v["caching"].as_object_mut().unwrap().remove("dig_below");
+        assert_eq!(
+            Config::from_value(v.clone()).unwrap().caching.dig_below,
+            DigBelow::Half
+        );
+        v["caching"]["dig_below"] = serde_json::json!("reserve");
+        assert_eq!(
+            Config::from_value(v).unwrap().caching.dig_below,
+            DigBelow::Reserve
+        );
+        let a = Config::default();
+        let f = a.structural_changes(&{
+            let mut c = a.clone();
+            c.caching.dig_below = DigBelow::Reserve;
+            c
+        });
+        assert!(f.is_empty(), "{f:?}");
+        let c = Config {
+            schedule: vec![change(5, "caching.dig_below", serde_json::json!("reserve"))],
+            caching: Caching {
+                rule: CachingRule::Even,
+                ..Caching::default()
+            },
+            movement: Movement {
+                mode: MoveMode::Walk,
+                ..Movement::default()
+            },
+            ..Default::default()
+        };
+        c.validate().unwrap();
+    }
+
+    #[test]
     fn theft_find_loot_and_bury_cost_are_live_the_rest_reset_only() {
         let a = Config::default();
         let f = a.structural_changes(&{
@@ -4638,5 +4858,249 @@ mod tests {
         c.caching.mixed = false;
         c.caching.rule = CachingRule::Plan;
         assert_eq!(c.caching.founder_rule(1), CachingRule::Plan);
+    }
+
+    #[test]
+    fn watching_older_configs_load_with_defaults() {
+        let d = Config::default().watching;
+        assert_eq!(
+            d,
+            Watching {
+                on: false,
+                span: 7,
+                watchers: 1.0,
+                raid_when: RaidWhen::Always,
+                raid_if: RaidIf::Better,
+                value: SeenValue::Amount,
+                who: Who::Share,
+                scrounge: Scrounge::Harvest,
+            }
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["watching"] = serde_json::json!({ "raid_if": "always", "value": "room", "who": "cheaters", "scrounge": "forgo" });
+        let w = Config::from_value(v).unwrap().watching;
+        assert_eq!(
+            (w.raid_if, w.value, w.who, w.scrounge),
+            (
+                RaidIf::Always,
+                SeenValue::Room,
+                Who::Cheaters,
+                Scrounge::Forgo
+            )
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v.as_object_mut().unwrap().remove("watching");
+        assert_eq!(Config::from_value(v).unwrap().watching, d);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["watching"] = serde_json::json!({ "raid_when": "hungry" });
+        let w = Config::from_value(v).unwrap().watching;
+        assert_eq!(w.raid_when, RaidWhen::Hungry);
+        assert_eq!((w.span, w.watchers, w.on), (7, 1.0, false));
+    }
+
+    #[test]
+    fn watching_is_validated() {
+        let ok = || {
+            let mut c = Config::default();
+            c.movement.mode = MoveMode::Walk;
+            c.caching.capacity = 50;
+            c.watching.on = true;
+            c
+        };
+        ok().validate().unwrap();
+        let one = |edit: &dyn Fn(&mut Config), field: &str, msg: &str| {
+            let mut c = ok();
+            edit(&mut c);
+            let e = c.validate().unwrap_err();
+            assert_eq!(e.len(), 1, "{e:?}");
+            assert_eq!((e[0].field.as_str(), e[0].message.as_str()), (field, msg));
+        };
+        one(
+            &|c| c.caching.capacity = 0,
+            "watching.on",
+            "watching needs caching (a caching rule or a carrying limit)",
+        );
+        one(
+            &|c| c.watching.watchers = 1.1,
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| c.watching.watchers = -0.1,
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| c.watching.watchers = f64::NAN,
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| c.watching.span = 0,
+            "watching.span",
+            "must be at least 1",
+        );
+        // Off, the same bad numbers still fail; a lab and a central-place
+        // world refuse watching when it's on.
+        let mut c = Config::default();
+        c.watching.span = 0;
+        assert_eq!(c.validate().unwrap_err()[0].field, "watching.span");
+        let mut c = ok();
+        c.central.enabled = true;
+        assert!(c
+            .validate()
+            .unwrap_err()
+            .iter()
+            .any(|e| e.field == "watching.on"
+                && e.message == "watching can't run in a central-place world"));
+        let mut c = ok();
+        c.lab = Some(Lab {
+            protocol: LabProtocol::Raby,
+            food_first: false,
+        });
+        assert!(c
+            .validate()
+            .unwrap_err()
+            .iter()
+            .any(|e| e.field == "watching.on" && e.message == "watching can't run in a lab"));
+    }
+
+    #[test]
+    fn watching_on_span_and_raid_when_are_live_watchers_reset_only() {
+        let a = Config::default();
+        let f = a.structural_changes(&{
+            let mut c = a.clone();
+            c.watching.on = true;
+            c.watching.span = 3;
+            c.watching.raid_when = RaidWhen::Hungry;
+            c.watching.raid_if = RaidIf::Always;
+            c.watching.value = SeenValue::Room;
+            c.watching.scrounge = Scrounge::Forgo;
+            c
+        });
+        assert!(f.is_empty(), "{f:?}");
+        let mut n = a.clone();
+        n.watching.who = Who::Hoarders;
+        assert_eq!(
+            a.structural_changes(&n)
+                .into_iter()
+                .map(|e| e.field)
+                .collect::<Vec<_>>(),
+            ["watching.who"]
+        );
+        let mut n = a.clone();
+        n.watching.watchers = 0.5;
+        let f: Vec<String> = a
+            .structural_changes(&n)
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert_eq!(f, ["watching.watchers"]);
+        // A schedule may set the live fields but not the rest.
+        let mut c = Config {
+            caching: Caching {
+                rule: CachingRule::Even,
+                ..Caching::default()
+            },
+            movement: Movement {
+                mode: MoveMode::Walk,
+                ..Movement::default()
+            },
+            schedule: vec![
+                change(5, "watching.on", serde_json::json!(true)),
+                change(6, "watching.span", serde_json::json!(3)),
+                change(7, "watching.raid_when", serde_json::json!("hungry")),
+                change(8, "watching.raid_if", serde_json::json!("always")),
+                change(9, "watching.value", serde_json::json!("room")),
+                change(10, "watching.scrounge", serde_json::json!("forgo")),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+        for (path, value) in [
+            ("watching.watchers", serde_json::json!(0.5)),
+            ("watching.who", serde_json::json!("hoarders")),
+            ("watching", serde_json::json!({ "span": 3 })),
+        ] {
+            c.schedule = vec![change(5, path, value)];
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn watchers_are_dealt_by_id_exactly_and_match_cheaters() {
+        for (s, n) in [(0.25, 100u64), (0.5, 100), (1.0 / 3.0, 99)] {
+            let w = Watching {
+                watchers: s,
+                ..Watching::default()
+            };
+            let got = (1..=n).filter(|&i| w.founder_watches(i, false)).count();
+            assert_eq!(got as u64, (n as f64 * s).floor() as u64, "s = {s}");
+        }
+        let none = Watching {
+            watchers: 0.0,
+            ..Watching::default()
+        };
+        assert!((1..=50).all(|i| !none.founder_watches(i, false)));
+        for s in [0.0, 0.1, 0.25, 0.5, 1.0 / 3.0, 0.9, 1.0] {
+            let w = Watching {
+                watchers: s,
+                ..Watching::default()
+            };
+            let t = Theft {
+                cheaters: s,
+                ..Theft::default()
+            };
+            for id in 1..=200 {
+                assert_eq!(
+                    w.founder_watches(id, t.founder_cheats(id)),
+                    t.founder_cheats(id),
+                    "s={s} id={id}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn who_decides_which_founders_watch() {
+        let w = |who, watchers| Watching {
+            who,
+            watchers,
+            ..Watching::default()
+        };
+        // share: the id rule, whatever the cheater flag says.
+        let share = w(Who::Share, 0.5);
+        for id in 1..=20 {
+            assert_eq!(
+                share.founder_watches(id, true),
+                share.founder_watches(id, false)
+            );
+        }
+        // hoarders: every non-cheater, whatever `watchers` says.
+        for watchers in [0.0, 0.5] {
+            let h = w(Who::Hoarders, watchers);
+            assert!(h.founder_watches(3, false) && !h.founder_watches(3, true));
+            let c = w(Who::Cheaters, watchers);
+            assert!(!c.founder_watches(3, false) && c.founder_watches(3, true));
+        }
+        // No cheaters configured: hoarders is everyone, cheaters is nobody.
+        let t = Theft::default();
+        assert!((1..=50).all(|i| w(Who::Hoarders, 0.0).founder_watches(i, t.founder_cheats(i))));
+        assert!((1..=50).all(|i| !w(Who::Cheaters, 1.0).founder_watches(i, t.founder_cheats(i))));
+    }
+
+    #[test]
+    fn pilfering_runs_under_theft_or_watching() {
+        let mut c = Config::default();
+        assert!(!c.pilfering_on());
+        c.theft.find = 0.2;
+        assert!(c.pilfering_on());
+        c.theft.find = 0.0;
+        c.watching.on = true;
+        assert!(c.pilfering_on());
     }
 }

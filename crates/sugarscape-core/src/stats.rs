@@ -129,7 +129,7 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
-    if config.theft.is_on() {
+    if config.pilfering_on() {
         for s in THEFT_SERIES {
             names.push(s.into());
         }
@@ -139,10 +139,64 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
+    if config.watching.on {
+        for s in WATCH_SERIES {
+            names.push(s.into());
+        }
+        if watchers_split(config) {
+            for s in WATCHER_SERIES {
+                names.push(s.into());
+            }
+        }
+    }
     names
 }
 
-/// Minds 6's theft series, named while `theft.is_on()`.
+/// Whether both kinds of founder exist under watching: watching is on and,
+/// over founder ids 1..=population, some watch and some don't
+/// (`Watching::founder_watches`, so `who` counts, not just `watchers`).
+fn watchers_split(config: &Config) -> bool {
+    let w = &config.watching;
+    if !w.on {
+        return false;
+    }
+    let (mut watch, mut not) = (false, false);
+    for id in 1..=u64::from(config.population) {
+        if w.founder_watches(id, config.theft.founder_cheats(id)) {
+            watch = true;
+        } else {
+            not = true;
+        }
+        if watch && not {
+            return true;
+        }
+    }
+    false
+}
+
+/// Minds 8's watching series, named while `watching.on`.
+const WATCH_SERIES: [&str; 7] = [
+    "raids",
+    "raided",
+    "raids_wasted",
+    "seen_arrivals",
+    "burials_seen",
+    "sightings",
+    "seen_entries",
+];
+
+/// Minds 8's watcher/other series, named while some founders watch and
+/// some don't (`watchers_split`).
+const WATCHER_SERIES: [&str; 5] = [
+    "watcher_wealth",
+    "other_wealth",
+    "watcher_alive",
+    "other_alive",
+    "watcher_advantage",
+];
+
+/// Minds 6's theft series, named while `pilfering_on()` (theft, or Minds
+/// 8's watching, whose raids are pilfers).
 const THEFT_SERIES: [&str; 6] = [
     "pilfered",
     "pilferage_rate",
@@ -229,12 +283,20 @@ pub struct Snapshot {
     /// `central.enabled`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub central: Option<CentralStats>,
-    /// Minds 6's theft series, present when `theft.is_on()`.
+    /// Minds 6's theft series, present when `pilfering_on()` (theft or
+    /// watching).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub theft: Option<TheftStats>,
     /// Minds 6's hoarder/cheater series, present when `theft.cheaters > 0`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cheaters: Option<CheaterStats>,
+    /// Minds 8's watching series, present when `watching.on`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub watching: Option<WatchStats>,
+    /// Minds 8's watcher/other series, present when `watching.on` and some
+    /// founders watch and some don't (`who` and `watchers`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub watchers: Option<WatcherStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -393,6 +455,40 @@ pub struct CheaterStats {
     pub cheater_holdings: f64,
     pub hoarder_alive: u32,
     pub cheater_alive: u32,
+}
+
+/// Minds 8's watching series, per tick (see `TickEvents`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct WatchStats {
+    pub raids: u32,
+    pub raided: f64,
+    pub raids_wasted: u32,
+    pub seen_arrivals: u32,
+    pub burials_seen: u32,
+    pub sightings: u32,
+    pub seen_entries: u32,
+}
+
+/// Minds 8's watcher/other series. `*_wealth` is wealth per founder of each
+/// kind: Σ (holdings[0] + Σ caches + the stomach `fed`) over the living of
+/// that kind ÷ that kind's founders, so the dead count as 0 (0 for a kind
+/// with no founders). `*_alive` are counts of the living.
+///
+/// Founders are ids 1..=population, dealt by the id rule (⌊population·s⌋
+/// watchers, the rest others): agents born or placed later count among the
+/// living (their wealth and their `*_alive`) but not among the founders. The
+/// presets have none.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct WatcherStats {
+    pub watcher_wealth: f64,
+    pub other_wealth: f64,
+    pub watcher_alive: u32,
+    pub other_alive: u32,
+    /// `watcher_alive` ÷ watcher founders − `other_alive` ÷ other founders,
+    /// the founders being ids 1..=population counted by the id rule, so the
+    /// dead count as 0 (and agents born or placed later count as living but
+    /// not as founders). A group with no founders contributes 0.
+    pub watcher_advantage: f64,
 }
 
 impl Snapshot {
@@ -673,7 +769,7 @@ impl Snapshot {
                     deliveries_total,
                 }
             }),
-            theft: world.config.theft.is_on().then(|| {
+            theft: world.config.pilfering_on().then(|| {
                 let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
                 let (pb, pd, pp, pl) = world
                     .stats
@@ -727,6 +823,42 @@ impl Snapshot {
                     cheater_holdings: m(cs, cn),
                     hoarder_alive: hn,
                     cheater_alive: cn,
+                }
+            }),
+            watching: world.config.watching.on.then_some(WatchStats {
+                raids: events.raids,
+                raided: events.raided,
+                raids_wasted: events.raids_wasted,
+                seen_arrivals: events.seen_arrivals,
+                burials_seen: events.burials_seen,
+                sightings: events.sightings,
+                seen_entries: events.seen_entries,
+            }),
+            watchers: watchers_split(&world.config).then(|| {
+                let (mut ws, mut wn, mut os, mut on) = (0.0, 0u32, 0.0, 0u32);
+                for a in world.agents() {
+                    let wealth = a.holdings[0] + a.caches.values().sum::<f64>() + a.fed;
+                    if a.watches {
+                        ws += wealth;
+                        wn += 1;
+                    } else {
+                        os += wealth;
+                        on += 1;
+                    }
+                }
+                let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                let watching = &world.config.watching;
+                let founders = world.config.population;
+                let wf = (1..=u64::from(founders))
+                    .filter(|&i| watching.founder_watches(i, world.config.theft.founder_cheats(i)))
+                    .count() as u32;
+                let of = founders - wf;
+                WatcherStats {
+                    watcher_wealth: m(ws, wf),
+                    other_wealth: m(os, of),
+                    watcher_alive: wn,
+                    other_alive: on,
+                    watcher_advantage: m(f64::from(wn), wf) - m(f64::from(on), of),
                 }
             }),
         }
@@ -874,11 +1006,37 @@ impl Snapshot {
                         _ => {}
                     }
                 }
+                if let Some(t) = self.watching {
+                    match name {
+                        "raids" => return Some(f64::from(t.raids)),
+                        "raided" => return Some(t.raided),
+                        "raids_wasted" => return Some(f64::from(t.raids_wasted)),
+                        "seen_arrivals" => return Some(f64::from(t.seen_arrivals)),
+                        "burials_seen" => return Some(f64::from(t.burials_seen)),
+                        "sightings" => return Some(f64::from(t.sightings)),
+                        "seen_entries" => return Some(f64::from(t.seen_entries)),
+                        _ => {}
+                    }
+                }
+                if let Some(c) = self.watchers {
+                    match name {
+                        "watcher_wealth" => return Some(c.watcher_wealth),
+                        "other_wealth" => return Some(c.other_wealth),
+                        "watcher_alive" => return Some(f64::from(c.watcher_alive)),
+                        "other_alive" => return Some(f64::from(c.other_alive)),
+                        "watcher_advantage" => return Some(c.watcher_advantage),
+                        _ => {}
+                    }
+                }
                 // `theft.find` is live, so theft can come on mid-run and the
                 // names reach back past snapshots that lack the group: NaN
                 // there (a gap in a chart, a cell in a CSV), not an unknown
                 // series. The cheater names are covered the same way.
-                if THEFT_SERIES.contains(&name) || CHEATER_SERIES.contains(&name) {
+                if THEFT_SERIES.contains(&name)
+                    || CHEATER_SERIES.contains(&name)
+                    || WATCH_SERIES.contains(&name)
+                    || WATCHER_SERIES.contains(&name)
+                {
                     return Some(f64::NAN);
                 }
                 return None;
@@ -2408,5 +2566,200 @@ mod tests {
         assert_eq!(c.hoarder_holdings, 15.0);
         assert_eq!(c.cheater_holdings, 7.0, "holdings only, not fed");
         assert_eq!((c.hoarder_alive, c.cheater_alive), (2, 1));
+    }
+
+    #[test]
+    fn watching_series_exist_only_under_their_gates() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.population = 4;
+        let base = series_names(&w.config).len();
+        let s = Snapshot::of(&w);
+        assert!(s.watching.is_none() && s.watchers.is_none());
+        w.config.watching.on = true;
+        let s = Snapshot::of(&w);
+        assert!(s.watching.is_some() && s.watchers.is_none(), "watchers = 1");
+        w.config.watching.watchers = 0.5;
+        assert!(Snapshot::of(&w).watchers.is_some());
+        w.config.watching.watchers = 0.0;
+        assert!(Snapshot::of(&w).watchers.is_none());
+        w.config.watching.watchers = 0.5;
+        let names = series_names(&w.config);
+        assert!(names.len() > base);
+        for n in WATCH_SERIES.iter().chain(WATCHER_SERIES.iter()) {
+            assert!(names.iter().any(|x| x == n), "{n}");
+            assert!(Snapshot::of(&w).value(n).is_some(), "{n}");
+        }
+        w.config.watching.on = false;
+        assert_eq!(series_names(&w.config).len(), base);
+        // Names reach back past snapshots that lack the group: NaN.
+        assert!(Snapshot::of(&w).value("raids").unwrap().is_nan());
+        assert!(Snapshot::of(&w).value("watcher_alive").unwrap().is_nan());
+    }
+
+    /// Controller ruling (Task 2): the watcher/other split is a real founder
+    /// split, so `who` counts as well as `watchers`.
+    #[test]
+    fn the_watcher_split_follows_who_watches_among_the_founders() {
+        use crate::config::Who;
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.population = 10;
+        w.config.watching.on = true;
+        let split = |w: &World| {
+            let named = series_names(&w.config)
+                .iter()
+                .any(|n| n == "watcher_advantage");
+            let present = Snapshot::of(w).watchers.is_some();
+            assert_eq!(named, present);
+            present
+        };
+        w.config.watching.who = Who::Hoarders;
+        w.config.theft.cheaters = 0.5;
+        assert!(split(&w), "hoarders, half cheating");
+        w.config.theft.cheaters = 0.0;
+        assert!(!split(&w), "hoarders, no cheaters: everyone watches");
+        w.config.watching.who = Who::Share;
+        w.config.watching.watchers = 0.5;
+        assert!(split(&w), "share 0.5");
+        w.config.watching.watchers = 1.0;
+        assert!(!split(&w), "share 1");
+        w.config.watching.watchers = 0.5;
+        w.config.watching.on = false;
+        assert!(!split(&w), "off");
+    }
+
+    #[test]
+    fn watch_series_match_the_events() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        {
+            let e = &mut w.events;
+            e.raids = 3;
+            e.raided = 4.5;
+            e.raids_wasted = 1;
+            e.seen_arrivals = 2;
+            e.burials_seen = 6;
+            e.sightings = 7;
+            e.seen_entries = 8;
+        }
+        let s = Snapshot::of(&w).watching.unwrap();
+        assert_eq!(
+            s,
+            WatchStats {
+                raids: 3,
+                raided: 4.5,
+                raids_wasted: 1,
+                seen_arrivals: 2,
+                burials_seen: 6,
+                sightings: 7,
+                seen_entries: 8
+            }
+        );
+        assert_eq!(Snapshot::of(&w).value("raided"), Some(4.5));
+        assert_eq!(Snapshot::of(&w).value("seen_entries"), Some(8.0));
+    }
+
+    #[test]
+    fn watcher_wealth_is_per_founder_by_kind() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        w.config.watching.watchers = 0.5;
+        // No founders: no split, so no group.
+        w.config.population = 0;
+        assert!(Snapshot::of(&w).watchers.is_none());
+        // 4 founders: ids 2 and 4 watch under the id rule (⌊4·0.5⌋ = 2).
+        // Ids 1–3 are alive; founder 4 (a watcher) is not, so counts as 0.
+        w.config.population = 4;
+        let mut ids = vec![];
+        for x in 0..3 {
+            ids.push(spawn(&mut w, x, 0));
+        }
+        assert_eq!(ids, vec![1, 2, 3]);
+        for (id, h, caches, fed) in [
+            (1, 10.0, vec![(5, 2.0)], 1.0),
+            (2, 7.0, vec![(6, 1.5), (7, 0.5)], 3.0),
+            (3, 20.0, vec![], 0.0),
+        ] {
+            let watches = w
+                .config
+                .watching
+                .founder_watches(id, w.config.theft.founder_cheats(id));
+            let ag = w.agent_mut(id).unwrap();
+            ag.holdings[0] = h;
+            ag.caches = caches.into_iter().collect();
+            ag.fed = fed;
+            ag.watches = watches;
+        }
+        let c = Snapshot::of(&w).watchers.unwrap();
+        // Others: (10 + 2 + 1) + 20 over 2 founders.
+        assert_eq!(c.other_wealth, 16.5);
+        // Watchers: 7 + 2 + 3 over 2 founders, the dead one counting 0.
+        assert_eq!(c.watcher_wealth, 6.0);
+        assert_eq!((c.watcher_alive, c.other_alive), (1, 2));
+        let s = Snapshot::of(&w);
+        assert_eq!(s.value("watcher_wealth"), Some(6.0));
+        assert_eq!(s.value("other_wealth"), Some(16.5));
+        // Past the gate, the names reach back as NaN.
+        w.config.watching.watchers = 1.0;
+        assert!(Snapshot::of(&w).value("other_wealth").unwrap().is_nan());
+    }
+
+    #[test]
+    fn watcher_advantage_is_survival_per_founder_by_kind() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        w.config.watching.watchers = 0.5;
+        // 4 founders: ids 2 and 4 watch under the id rule (⌊4·0.5⌋ = 2).
+        w.config.population = 4;
+        let mut ids = vec![];
+        for x in 0..4 {
+            ids.push(spawn(&mut w, x, 0));
+        }
+        for &id in &ids {
+            let watches = w
+                .config
+                .watching
+                .founder_watches(id, w.config.theft.founder_cheats(id));
+            let ag = w.agent_mut(id).unwrap();
+            ag.watches = watches;
+            ag.fed = 99.0;
+        }
+        assert_eq!(w.agents().filter(|a| a.watches).count(), 2);
+        let s = Snapshot::of(&w);
+        assert_eq!(s.watchers.unwrap().watcher_advantage, 0.0);
+        assert_eq!(s.value("watcher_advantage"), Some(0.0));
+        // Kill one watcher: 1/2 − 2/2 = −0.5.
+        let watcher = *ids
+            .iter()
+            .find(|&&id| w.agent(id).unwrap().watches)
+            .unwrap();
+        w.kill(watcher, crate::world::DeathCause::Starvation);
+        let s = Snapshot::of(&w);
+        assert_eq!(s.value("watcher_advantage"), Some(-0.5));
+        // The gate: only while some founders watch and some do not.
+        assert!(series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        w.config.watching.watchers = 1.0;
+        assert!(!series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        assert!(Snapshot::of(&w)
+            .value("watcher_advantage")
+            .unwrap()
+            .is_nan());
+        w.config.watching.watchers = 0.5;
+        w.config.watching.on = false;
+        assert!(!series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        assert!(Snapshot::of(&w)
+            .value("watcher_advantage")
+            .unwrap()
+            .is_nan());
     }
 }

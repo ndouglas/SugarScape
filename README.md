@@ -161,10 +161,10 @@ preset's source (the book's figure or animation, or the paper) and its rules sit
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. **Minds** runs on the sugarscape model but is its own entry: it holds the Minds experiments'
-presets (grouped Minds 1–5), and its Rules panel adds the Decision, Movement, Memory, Truffles and
-Caching sections, which the book's Sugarscape entry leaves out. A world counts as Minds if it came from a Minds
+presets (grouped by milestone, Minds 1–8), and its Rules panel adds the Decision, Movement, Memory, Truffles,
+Caching, Theft and Watching sections, which the book's Sugarscape entry leaves out. A world counts as Minds if it came from a Minds
 preset or uses any Minds rule (a decision other than rule M, walking, memory, walls, truffles,
-caching, a carrying limit, central-place foraging or a winter everywhere at once), so
+caching, a carrying limit, central-place foraging, a winter everywhere at once, theft or watching), so
 a Minds share link opens under Minds. A config without a `model` key is a sugarscape config, so every older config, link, session
 file and sweep reads as before. The other models' Rules panels are built from their parameter
 schemas (each section says whether its fields rebuild the world or apply as it runs, and live
@@ -2773,6 +2773,170 @@ Built-in sweeps: `hoard-ratio`, `hoard-recovery`, `hoard-cheaters`.
 Credit: S. B. Vander Wall and S. H. Jenkins, "Reciprocal pilferage and the evolution of
 food-hoarding behavior," *Behavioral Ecology* 14 (2003), 656–667. See
 `docs/superpowers/specs/2026-09-30-minds-7-hoarding-evolution-design.md`.
+
+### Minds 8: watching
+
+This is our own experiment, not a reproduction: the eighth step of the Minds program
+(`docs/studies/2026-09-27-minds.md`) and P2 of its pilfering campaign. Minds 6's thieves only
+stumble on caches. Ravens do better by watching. Bugnyar and Kotrschal (2002) found that of 29
+caches made in front of observers and not taken back at once, "all were found during retrieval
+sessions by conspecifics that had been in the pathway during caching", against one of 13 made
+unobserved. Heinrich and Pepper (1998) found that ravens "recovered none of 40 artificial caches",
+and that observers raided seen caches the next day but none at 14 days. Minds 8 gives agents that
+observational memory: an agent who sees another bury remembers the cache, and goes to take it on
+purpose. It asks whether watching takes fresh caches faster than stumbling, whether it breaks
+Andersson and Krebs's condition where that condition held, and whether scrounging on what others
+bury is worth less as it becomes common (Barnard and Sibly 1981).
+
+Minds 8 ran in two rounds before merging. Four audits found that three of the first design's five
+judged results were foreseeable from Minds 6's numbers, so they weren't tests. The second round
+(`docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`) replaced them, after a
+pre-mortem of what each hypothesis predicts. Its results are the milestone's.
+
+**What was built.**
+
+- **Watching** (`watching.on`, off by default). With it off nothing is observed, allocated or drawn,
+  and every world is its Minds 7 self (the goldens are unchanged).
+  - **Who watches** (`watching.watchers`, a share of the founders, default 1). Agent i watches iff
+    ⌊i·s⌋ > ⌊(i − 1)·s⌋, Minds 6's cheater rule, so at equal shares the watchers and the cheaters
+    are the same agents. A child born to parents doesn't watch. `watching.who` (reset-only) can
+    instead make every hoarder (`hoarders`) or every cheater (`cheaters`) a watcher.
+  - **Seeing a burial.** When an agent buries, every living watcher other than the owner whose sight
+    covers the site remembers the cache: the site is on one of the four lattice lines from it,
+    within its vision, and not behind an opaque wall. The owner never knows it was seen.
+  - **Memory** (`watching.span`, default 7 ticks). Heinrich and Pepper give recovery the next day
+    and none at 14 days. Bednekoff and Balda's pinyon jays relocated exact sites at 2 days but only
+    general areas at 7 (1996a, p. 823), and Bugnyar and Kotrschal summarize observational memory as
+    "a few days" (p. 189). So 7 is at the generous end of what's known. Every claim is reported at
+    span 1, 2, 3, 7 and 13. An entry is forgotten when it is older than the span, when its watcher
+    arrives on the site, or when its watcher dies.
+  - **Going to a seen cache.** Remembered caches join the watcher's candidates like its own caches,
+    valued at the amount it saw buried (`value: amount`, the default), or at that capped by its room
+    under the carrying limit (`value: room`). A cache emptied since still looks full. A walk that
+    finds no path to a seen cache gives it up.
+  - **A raid.** On arrival, after an owner's dig and before Minds 6's stumbling, a watcher takes
+    from the first remembered cache still there, in owner-id order, with no draw, by Minds 6's
+    `loot` and carrying-limit rules. A raid is a pilfer, and it replaces that tick's harvest. Under
+    `raid_if: better` (the default) it raids only when the remembered amount there is at least what
+    the site would give it, and otherwise harvests and keeps the memory. `raid_if: always` was the
+    first design's rule. If every remembered cache there is gone, the raid is wasted.
+  - **When to raid** (`watching.raid_when`). `always` (the default), or `hungry`: only while the
+    watcher holds less than R / 2, on the owners' terms.
+  - **Scroungers who forgo** (`watching.scrounge: forgo`; default `harvest`). A scrounger (a watcher
+    who is a cheater, so never caches) holding a fresh memory chooses only between its seen caches
+    and staying put, and harvests nothing on any tick it doesn't raid. This is Barnard and Sibly's
+    assumption that scrounging excludes producing.
+  - **Digging earlier** (`caching.dig_below: reserve`; default `half`). Owners dig when they hold
+    less than their whole reserve R, not R / 2. Claim 2's calibrated world needed it.
+- **The counts:** burials seen, sightings, raids, sugar raided and wasted raids, pilfers split into
+  seen and stumbled, and watcher against non-watcher survival and wealth per founder. Sugar is
+  conserved through raids under every switch.
+- **A survey-only probe.** A raid that took something also harvests the site that tick. It is not a
+  setting; it measures what replacing the harvest costs.
+
+**The survey** (`survey/out/minds8b-results.md`; claims, thresholds and a calibration rule committed
+before any run; causes "likely" unless isolated). It covers ticks 1–200, a summer and the first
+winter. Seeds 1–20 for claims 1 and 2, and 1–60 for claim 3. Span 7 is judged. Fitness is
+agent-ticks alive per founder over ticks 1–200 ÷ 200.
+
+- **1. Watching takes fresh caches faster than stumbling (Holds).** Of the caches buried in ticks
+  1–90 of `watch-winter` (everyone watching, no stumbling), 6.6 % are taken within a day and 36 %
+  within a week: a hazard of 6.1 % a day, against 3.0 % for Minds 6's stumbling, higher in 20 of 20
+  seeds. Watchers see 88 % of burials and raid 54 % of the caches they see, so the limit is acting
+  on what they see, not seeing it: action-bound by the rule fixed before the run, in every world and
+  setting. Watching costs lives. 59 % of the founders survive the first winter, against 70 % without
+  watching. About two thirds of that cost is the harvest a raid replaces (the probe lifts it to
+  66 %).
+- **2. Andersson and Krebs.** A calibration, its rule committed first, found the first world on a
+  fixed list where p_s > p_o held without watching: `theft-winter-half` at `find` 0.02 with owners
+  digging below their whole reserve (20 of 20 seeds). With everyone watching (`watch-ak`), the
+  condition **flips (Holds)**: p_s ÷ p_o falls from 3.57 to 0.67, below 1 in 20 of 20 seeds. But
+  **fitness doesn't follow (Fails)**: across watching off and spans 1, 3, 7 and 13, the sign of the
+  hoarders' advantage matches the condition's in 62 of 100 runs. Neither **being watched (Fails)**
+  nor **the hoarders' own raiding (Fails)** costs them 0.05 in any seed. Watching only by the
+  cheaters costs the hoarders 0.012 of advantage (95 % interval 0.008 to 0.017), and watching only
+  by the hoarders changes their fitness by no detectable amount.
+- **3. Producers and scroungers.** Where scrounging excludes producing (`watch-scroungers-forgo`),
+  the scroungers trail, and **trail further as they become common (Holds)**: the mean per-seed slope
+  on their share is −0.20 (95 % CI −0.23 to −0.17). But **no stable mix forms (Fails)**: they are
+  ahead at a share of 0.1 in only 13 of 60 seeds. Never caching costs a little on its own: with
+  watching off (a baseline added after the run, reported only) the same agents trail by about 0.02
+  at every share, a median 0.015 at 0.1. Per seed, watching adds a median 0.034 to the shortfall at
+  0.1 (in 47 of 60 seeds) and 0.204 at 0.8, so the shortfall when rare is mostly scrounging's, and
+  its growth with share entirely so. Within scrounging, forgoing is the cost, since letting them
+  harvest too raises their fitness by 0.13 (at half, seeds 1–20). Among watchers who also bury,
+  **no fall in their lead
+  was detected (Fails, flat)**: slope 0.011, 90 % CI −0.004 to 0.027. Instead it is **a mild social
+  dilemma (Holds)**: watchers are ahead by 0.009 (95 % CI 0.003 to 0.016) while everyone's fitness
+  falls as more watch.
+- **The switches.** `raid_if: always` costs 6 points of survival in `watch-winter` and changes no
+  verdict. `value: room` pays where agents carry close to their limit (+6 to +7 points in
+  `watch-half` and `watch-ak`) and changes no verdict.
+- **An upper bound, sensitive to the span.** Watchers here see every burial in sight and remember it
+  exactly, cachers never hide and owners never defend (both P3), and a 7-tick memory is at the
+  generous end of what's known. With a memory of 1 or 2 ticks, three results reverse and the dilemma
+  goes undetected (through span 3). Watching's hazard falls below stumbling's (0.85 % and 2.49 % a
+  day), the condition doesn't flip (1.72 and 1.10), the forgoing scroungers' shortfall shrinks as
+  they become common, and the burying watchers' lead isn't detected (pooled 0.0007 and −0.0015; also
+  −0.0027 at span 3), so 3c holds only at spans 7 and 13. Bednekoff and Balda's pinyon jays
+  relocated exact sites after two days and only the general areas after seven (1996a, p. 823).
+
+Judged at span 7; the span notes are from the reported spans 1, 2, 3, 7 and 13.
+
+| Claim | Verdict |
+|---|---|
+| 1a. Watching takes fresh caches faster than stumbling | Holds (6.1 % against 3.0 % a day; 20 of 20 seeds). Holds at 3–13; reverses at 1–2 |
+| 2a. Watching flips Andersson and Krebs's condition (`watch-ak`) | Holds (p_s ÷ p_o 0.67 against 3.57; 20 of 20). Reverses at 1–2 |
+| 2b. Fitness follows the condition | Fails (62 of 100 runs) |
+| 2c. Being watched costs hoarders 0.05 | Fails (0 of 20; mean 0.012) |
+| 2d. Their own raiding costs hoarders 0.05 | Fails (0 of 20; mean 0.003, not detected) |
+| 3a. Scroungers who forgo: shortfall grows with share | Holds (slope −0.20). Reverses at 1–2 |
+| 3a. Watchers who bury: lead falls with share | Fails, flat (0.011; no fall detected) |
+| 3b. A stable mix | Fails (ahead when rare in 13 of 60 seeds; at 0.1 the mean shortfall, 0.056, is 0.021 without watching plus 0.035 that watching adds) |
+| 3c. A social dilemma | Holds (lead 0.009; world slope −0.008). Holds at 7 and 13; not detected at 1–3 |
+
+**The first design, superseded.** Its verdicts (the field band, Andersson and Krebs in `watch-half`,
+and producers and scroungers in two variants, all Fails; usage Holds) are kept in the program
+document with the audits' explanation. The band was a strawman, the ratio sat at a floor, and its
+"pure scroungers" still produced their own food. Its write-up over-stated four things, now
+withdrawn. Watching wasn't shown unable to reach field rates, and it was action-bound, not
+knowledge-bound. Frequency dependence among watchers who bury was not detected, which doesn't make
+it absent. And the never-caching agents' shortfall predates watching (48 % against the hoarders'
+70 % with watching off), so it isn't a fact about scrounging.
+
+**The sweeps** (built in; observations, not judged). `watch-span` is the first winter's pilferage
+rate against the span in `watch-winter`'s world. `watch-scroungers` is the watcher advantage at the
+end of the first winter against the share of watchers.
+
+**Cost** (µs per agent-tick; not re-timed in the second round; the table, measured under the first
+design's rule, is in the program document). `watch-winter` cost 37.0, about 2.2 times `theft-winter`
+(17.1 re-timed), likely from walking the lines out from each burial, ranking seen caches and the
+walks to them (not isolated). `watch-scroungers-forgo` and `watch-ak` weren't timed.
+
+Switches: the Rules panel's **Watching (Minds 8)** group has **Watching**, **Span**, **Raid when**,
+**Raid if**, **Seen cache value** and **Scroungers**, all live, and **Share of watchers** and **Who
+watches**, which rebuild the world. The Caching group has **Dig below**, live. Watchers who bury and
+scroungers who never bury are told apart by the Theft group's share of cheaters. The **Watching**
+color mode (the default when watching is on) shows watchers who bury, scroungers and agents who
+don't watch. Inspect shows whether an agent watches (and is a scrounger) and each cache it remembers
+seeing buried: site, owner, amount and how long ago. Charts: **Pilfers by source** (seen, then
+raided, against stumbled on) and **Wasted raids** while watching is on; **Watcher survival
+advantage** and **Watcher and other wealth per founder** when some founders watch and some don't.
+Presets: `watch-winter`, `watch-winter-stumble`, `watch-half`, `watch-scroungers`,
+`watch-scroungers-only`, `watch-scroungers-forgo`, `watch-ak` and `watch-arena`. Built-in sweeps:
+`watch-span`, `watch-scroungers`.
+
+Credit: T. Bugnyar and K. Kotrschal, "Observational learning and the raiding of food caches in
+ravens, *Corvus corax*: is it 'tactical' deception?", *Animal Behaviour* 64 (2002), 185–195; B.
+Heinrich and J. W. Pepper, "Influence of competitors on caching behaviour in the common raven,
+*Corvus corax*", *Animal Behaviour* 56 (1998), 1083–1090; M. Andersson and J. Krebs, "On the
+evolution of hoarding behaviour," *Animal Behaviour* 26 (1978), 707–711; C. J. Barnard and R. M.
+Sibly, "Producers and scroungers: a general model and its application to captive flocks of house
+sparrows", *Animal Behaviour* 29 (1981), 543–550; W. L. Vickery, L.-A. Giraldeau, J. J. Templeton,
+D. L. Kramer and C. A. Chapman, "Producers, scroungers, and group foraging", *American Naturalist*
+137 (1991), 847–863; P. A. Bednekoff and R. P. Balda (1996a, b), *Behaviour* 133, 807–826 and
+*Animal Behaviour* 52, 833–839. See `docs/superpowers/specs/2026-10-01-minds-8-watching-design.md`
+and `docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`.
 
 ### Threshold Models (Granovetter 1978; Watts 2002)
 

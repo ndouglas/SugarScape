@@ -44,6 +44,11 @@ pub const FENCE: Rgb = [0x8a, 0x6d, 0x3b];
 /// cheater never does and pilfers what it finds.
 pub const HOARDER: Rgb = [0x3d, 0x7e, 0xff];
 pub const CHEATER: Rgb = [0xff, 0x4d, 0x4d];
+/// Minds 8's watching (`ColorMode::Watching`): a watcher who also buries
+/// (blue, as a hoarder), a scrounger who watches and never buries (red, as
+/// a cheater); everyone else is neutral.
+pub const WATCHER: Rgb = HOARDER;
+pub const SCROUNGER: Rgb = CHEATER;
 /// Minds 5's caching rules (`ColorMode::CachingRule`), one color each; a
 /// Minds 6 cheater follows `none`.
 pub const RULE_NONE: Rgb = NEUTRAL;
@@ -73,6 +78,8 @@ pub enum ColorMode {
     CachingRule,
     /// Minds 3: whether the agent remembers (`Agent.remembers`).
     Memory,
+    /// Minds 8: watchers who bury, scroungers (watch and never bury), others.
+    Watching,
 }
 
 /// A landscape layer: a good's level or capacity, or a pollutant's level.
@@ -99,6 +106,7 @@ impl FromStr for ColorMode {
             "strategy" => Self::Strategy,
             "caching_rule" => Self::CachingRule,
             "memory" => Self::Memory,
+            "watching" => Self::Watching,
             _ => return Err(format!("unknown color mode {s:?}")),
         })
     }
@@ -178,6 +186,11 @@ fn agent_color(a: &Agent, mode: ColorMode, s: &Scales) -> Rgb {
                 FORGETS
             }
         }
+        ColorMode::Watching => match (a.watches, a.cheater) {
+            (true, false) => WATCHER,
+            (true, true) => SCROUNGER,
+            (false, _) => NEUTRAL,
+        },
         ColorMode::Strategy => {
             if a.cheater {
                 CHEATER
@@ -588,5 +601,29 @@ mod tests {
         assert_eq!(pixel(&buf, &w, 1, 1)[..3], REMEMBERS);
         assert_eq!(pixel(&buf, &w, 2, 2)[..3], FORGETS);
         assert_eq!("memory".parse::<ColorMode>().unwrap(), ColorMode::Memory);
+    }
+
+    #[test]
+    fn watching_mode_colors_buriers_scroungers_and_others() {
+        let mut w = blank_world(10, 10);
+        let (b, s, o) = (
+            spawn(&mut w, 1, 1),
+            spawn(&mut w, 2, 2),
+            spawn(&mut w, 3, 3),
+        );
+        w.agent_mut(b).unwrap().watches = true;
+        w.agent_mut(o).unwrap().watches = false;
+        let a = w.agent_mut(s).unwrap();
+        a.watches = true;
+        a.cheater = true;
+        let mut buf = Vec::new();
+        render(&w, ColorMode::Watching, Layer::Resource(0), &mut buf).unwrap();
+        assert_eq!(pixel(&buf, &w, 1, 1)[..3], WATCHER);
+        assert_eq!(pixel(&buf, &w, 2, 2)[..3], SCROUNGER);
+        assert_eq!(pixel(&buf, &w, 3, 3)[..3], NEUTRAL);
+        assert_eq!(
+            "watching".parse::<ColorMode>().unwrap(),
+            ColorMode::Watching
+        );
     }
 }

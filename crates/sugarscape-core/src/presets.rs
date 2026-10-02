@@ -4,9 +4,9 @@
 use serde::Serialize;
 
 use crate::config::{
-    three_tribes, CachingRule, Config, CultureKind, DecisionRule, Good, Idle, Lab, LabProtocol,
-    Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution, ScheduledChange,
-    SeasonMode, Transform, URange, Wall, SPICE_COLOR,
+    three_tribes, CachingRule, Config, CultureKind, DecisionRule, DigBelow, Good, Idle, Lab,
+    LabProtocol, Loot, Map, MemoryPrior, MoveMode, Outbreak, Peak, Placement, Pollutant, Pollution,
+    ScheduledChange, Scrounge, SeasonMode, Transform, URange, Wall, SPICE_COLOR,
 };
 use crate::minds::caching::lab::{rig_config, LabParams};
 use crate::model::ModelConfig;
@@ -263,6 +263,17 @@ fn theft_winter(c: &mut Config, cheaters: f64) {
     winter_world(c, CachingRule::Even, false);
     c.theft.find = THEFT_FIND;
     c.theft.cheaters = cheaters;
+}
+
+/// Minds 8: theft-winter's world (`theft_winter`) with a `cheaters` share,
+/// stumbling at `find` and watching on, a `watchers` share of founders
+/// (dealt by id, as cheaters are) watching. Span 7 and `raid_when: always`
+/// (the defaults).
+fn watch_winter(c: &mut Config, cheaters: f64, find: f64, watchers: f64) {
+    theft_winter(c, cheaters);
+    c.theft.find = find;
+    c.watching.on = true;
+    c.watching.watchers = watchers;
 }
 
 /// Minds 6: the arena. `n` agents (2, 4 or 8) shut in a k × k room, with
@@ -1292,7 +1303,7 @@ pub fn all() -> Vec<Preset> {
             "theft-winter-half",
             "Theft: winter, half cheaters",
             "Vander Wall & Jenkins 2003; Andersson & Krebs 1978; Minds 6",
-            "theft-winter's world (cache-winter-even's winter, with each cache found by a stranger arriving on it with chance 0.25) where half the agents, dealt by id, are cheaters: they never cache, and take what they can carry of any cache they find. The rest bury half their surplus where they stand. Measured (20 seeds, ticks 1–200): of those alive at tick 100, 95 % of the cheaters survive the first winter against 82 % of the hoarders (90 % and 78 % of the founders); with nobody finding caches the cheaters survive 50 %. The owner's advantage is almost never used: owners dig back 1.5 % of their ended caches' sugar and thieves take 98 %. Owners dig only below half their reserve, in practice in winter (99.7 % of digging), while thieves take caches all year (47 % in summer), so the sugar owners dig is a mean 80 ticks old and the sugar pilfered 30 (lowered because loot buried again counts as new). Likely much of the cheaters' lead: with owners digging below their whole reserve instead (a survey probe, not a setting, which removes the band between half the reserve and all of it, so the sugar dug is a mean 27 ticks old), they dig 26 % of what they bury and survive 93 % against the cheaters' 96 %.",
+            "theft-winter's world (cache-winter-even's winter, with each cache found by a stranger arriving on it with chance 0.25) where half the agents, dealt by id, are cheaters: they never cache, and take what they can carry of any cache they find. The rest bury half their surplus where they stand. Measured (20 seeds, ticks 1–200): of those alive at tick 100, 95 % of the cheaters survive the first winter against 82 % of the hoarders (90 % and 78 % of the founders); with nobody finding caches the cheaters survive 50 %. The owner's advantage is almost never used: owners dig back 1.5 % of their ended caches' sugar and thieves take 98 %. Owners dig only below half their reserve, in practice in winter (99.7 % of digging), while thieves take caches all year (47 % in summer), so the sugar owners dig is a mean 80 ticks old and the sugar pilfered 30 (lowered because loot buried again counts as new). Likely much of the cheaters' lead: with owners digging below their whole reserve instead (`caching.dig_below: reserve`, which removes the band between half the reserve and all of it, so the sugar dug is a mean 27 ticks old), they dig 26 % of what they bury and survive 93 % against the cheaters' 96 %.",
             |c| theft_winter(c, 0.5),
         ),
         preset(
@@ -1315,6 +1326,74 @@ pub fn all() -> Vec<Preset> {
             "Andersson & Krebs 1978; Minds 6",
             "8 agents shut in an 8 × 8 room walled on all four sides, with flat sugar (capacity 4, growing back 0.3 a tick; 8 sites an agent, as in theft-arena-2) through a winter everywhere at once: the full rate for 100 ticks, then 1/32 of it for 100. They walk with vision 1–4, burn 1 a tick and carry at most 50. Half are hoarders, burying half their surplus where they stand; half are cheaters and never cache. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Every agent remembers where its own caches are, burying is free and loot is kept; half the agents, as in the winter world, remember what they've seen for 100 ticks. Measured (20 seeds, ticks 1–200): every agent survives the winter in nearly every seed; thieves take 91 % of the ended caches' sugar and owners dig 9 %, so Andersson and Krebs's condition fails in every seed. Hoarders pilfer 1.8 times as much per founder as cheaters. Counting still-buried caches in full, the hoarders end richer in 17 of 20 seeds (37 against 29 per founder); counting them as nothing, the cheaters are richer in all 20 (29 against 12 held). 2.2 % of the caches are pilfered a tick, the most of the three rooms, likely because more strangers cross each cache (0.094 visits a cache a tick), as Andersson and Krebs's reason for their (n − 1) has it.",
             |c| theft_arena(c, 8),
+        ),
+        preset(
+            "watch-winter",
+            "Watching: winter, every agent a watcher",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
+            "theft-winter's world (cache-winter-even's winter: walk-capacity's landscape, 175 agents of metabolism 1 walking under rule M, half of them remembering for 100 ticks; every site grows back 1 a tick for 100 ticks, then 1/32 a tick for 100; a carrying limit of 50 and a caching reserve of 20 ticks' food; every agent burying half its surplus where it stands), with no stumbling on caches (find 0) and every agent a watcher. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving it raids only if it remembers at least as much sugar there as the site would give it, taking what it can carry of the first remembered cache still there (or finding them all gone); otherwise it harvests as usual and keeps the memory. An owner digging its own cache comes first. Owners remember their own caches, burying is free and loot is kept. Measured (20 seeds, ticks 1–200): of the caches buried in ticks 1–90, 6.6 % are taken within a day and 36 % within a week, a hazard of 6.1 % a day, against 0.8 %, 19 % and 3.0 % with Minds 6's stumbling alone (theft-winter); watching's hazard is higher in all 20 seeds. That holds for a memory of 3 ticks or more: with a memory of 1 or 2 ticks, watching's hazard is lower than stumbling's in every seed (0.85 % and 2.49 % a day). Watchers see 88 % of burials and raid 54 % of the caches they see, so what limits theft here is acting on what they see, not seeing it. Watching costs lives: 59 % of the founders survive the first winter, against 70 % in the same world without watching (fewer in all 20 seeds; fitness, the share of ticks 1–200 a founder is alive, 0.891 against 0.907). About two thirds of the cost is the harvest a raid replaces: with a raid also harvesting its site (a survey probe, not a setting), 66 % survive. Raiding whatever the site would give (`raid_if: always`, the first round's rule) costs more: 53 % survive. Capping a cache's value at the room under the carrying limit (`value: room`) changes survival by no detectable amount (−0.1 points, 95 % interval −1.8 to 1.5).",
+            |c| watch_winter(c, 0.0, 0.0, 1.0),
+        ),
+        preset(
+            "watch-winter-stumble",
+            "Watching: winter, watching and stumbling",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
+            "watch-winter's world (theft-winter's winter, every agent a watcher) with Minds 6's stumbling added back: an agent arriving on a site also finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving it raids only if it remembers at least as much sugar there as the site would give it, taking what it can carry of the first remembered cache still there (or finding them all gone); otherwise it harvests as usual and keeps the memory. An owner digging its own cache comes first. Measured (20 seeds, ticks 1–200): of the caches buried in ticks 1–90, 7.8 % are taken within a day and 50 % within a week, a hazard of 9.6 % a day, three times stumbling's alone (3.0 %, theft-winter). 3.5 % of the caches present are pilfered a tick, against 2.3 % with stumbling alone. Raids take 44 700 sugar a seed and stumbling 20 900, where stumbling alone takes 66 100. 64 % of the founders survive the first winter, against 86 % with stumbling alone (fewer in all 20 seeds; fitness, the share of ticks 1–200 a founder is alive, 0.921 against 0.942). The harvest a raid replaces is the whole cost: with a raid also harvesting its site (a survey probe, not a setting), 89 % survive. Raiding whatever the site would give (`raid_if: always`) leaves 61 %.",
+            |c| watch_winter(c, 0.0, THEFT_FIND, 1.0),
+        ),
+        preset(
+            "watch-half",
+            "Watching: winter, half cheaters, everyone watching",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Andersson & Krebs 1978; Minds 8",
+            "theft-winter-half's world (theft-winter's winter, with each cache found by a stranger arriving on it with chance 0.25, where half the agents, dealt by id, are cheaters who never cache) with every agent a watcher. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving it raids only if it remembers at least as much sugar there as the site would give it, taking what it can carry of the first remembered cache still there (or finding them all gone); otherwise it harvests as usual and keeps the memory. An owner digging its own cache comes first. The rest bury half their surplus where they stand. Measured (20 seeds, ticks 1–200): watching hits the hoarders hardest. 36 % of the hoarders survive the first winter against 84 % of the cheaters (per founder), where without watching it is 78 % against 90 %. The hoarders' fitness, the share of ticks 1–200 a founder is alive, falls from 0.929 to 0.876 while the cheaters' stays near 0.95 (0.948 to 0.949), so the hoarders' shortfall grows, in all 20 seeds. Andersson and Krebs's ratio p_s ÷ p_o stays near 0 either way: owners dig 1.8 % of their ended caches' sugar and thieves take 97 % (1.5 % and 98 % without watching), and p_s > p_o in no seed. 4.0 % of the caches are pilfered a tick (2.6 % without watching); raids take 10 800 sugar a seed and stumbling 10 300. Valuing a remembered cache beyond what an agent can carry costs lives: capped at the room under the carrying limit (`value: room`), 65 % of everyone survive instead of 59 % (more in 19 of 20 seeds). With a raid also harvesting its site (a survey probe, not a setting), 46 % of the hoarders survive.",
+            |c| watch_winter(c, 0.5, THEFT_FIND, 1.0),
+        ),
+        preset(
+            "watch-scroungers",
+            "Watching: winter, half the agents watchers",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Barnard & Sibly 1981; Minds 8",
+            "watch-winter's world (theft-winter's winter, no stumbling on caches, every agent burying half its surplus where it stands) where half the agents, dealt by id, are watchers and the rest never watch. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving it raids only if it remembers at least as much sugar there as the site would give it, taking what it can carry of the first remembered cache still there (or finding them all gone); otherwise it harvests as usual and keeps the memory. An owner digging its own cache comes first. Measured (ticks 1–200; watcher shares 0.1 to 0.9 over seeds 1–60, the rest seeds 1–20): watchers come out slightly ahead. Pooled over the shares, their fitness, the share of ticks 1–200 a founder is alive, leads the others' by 0.009 (95 % interval 0.003 to 0.016). No fall in the lead was detected as watching becomes common: the per-seed slope on the share is 0.011 (90 % interval −0.004 to 0.027), within the ±0.05 the survey reads as flat. Meanwhile everyone's fitness falls as more watch (slope −0.008, 95 % interval −0.010 to −0.006): a mild social dilemma. The lead depends on the memory: it holds with a memory of 7 or 13 ticks, but with 1, 2 or 3 ticks no lead is detected (pooled 0.001, −0.002 and −0.003). At half, 68 % of the watchers survive the first winter against 67 % of the others (per founder), and 67 % of everyone against 70 % without watching (fewer in 16 of 20 seeds). 0.26 % of the caches are raided a tick.",
+            |c| watch_winter(c, 0.0, 0.0, 0.5),
+        ),
+        preset(
+            "watch-scroungers-only",
+            "Watching: winter, half the agents only watch and steal",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Barnard & Sibly 1981; Minds 8",
+            "watch-scroungers' world (theft-winter's winter, no stumbling on caches, half the agents watchers) where the watchers are also cheaters: watchers and cheaters are dealt by the same id rule, so at half each they are the same agents, who never cache and live by watching. The rest bury half their surplus where they stand and never watch. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving it raids only if it remembers at least as much sugar there as the site would give it, taking what it can carry of the first remembered cache still there (or finding them all gone); otherwise it harvests as usual and keeps the memory. An owner digging its own cache comes first. Measured (20 seeds, ticks 1–200): the scroungers trail the hoarders, but the shortfall is there without watching. With watching off, 48 % of the same agents survive the first winter against 70 % of the hoarders (per founder); with watching, 49 % against 65 %, so watching narrows the gap (the hoarders' lead in fitness, the share of ticks 1–200 a founder is alive, falls by 0.009, 95 % interval 0.002 to 0.016). The scroungers live about as long on average as the hoarders (fitness 0.890 against 0.894). A raid takes 1.1 sugar on average, against 5.8 for watchers who also bury. Valuing caches they have no room to carry costs the scroungers: with a cache's value capped at the room under the carrying limit (`value: room`) they raid a fifth as often and their fitness rises by 0.018 (in all 20 seeds), to 54 % surviving. Across scrounger shares from 0.1 to 0.9 they survive 16 to 23 points less than the hoarders (medians), with no trend detected (the 95 % interval of the mean per-seed slope, −0.03 to 0.09, includes 0). 0.24 % of the caches are raided a tick.",
+            |c| watch_winter(c, 0.5, 0.0, 0.5),
+        ),
+        preset(
+            "watch-scroungers-forgo",
+            "Watching: winter, scroungers who only watch, steal and eat",
+            "Bugnyar & Kotrschal 2002; Barnard & Sibly 1981; Vickery et al. 1991; Minds 8",
+            "watch-scroungers-only's world (theft-winter's winter, no stumbling on caches, half the agents watchers who are also cheaters, dealt by the same id rule so at half each they are the same agents) with two changes. A scrounger holding a fresh memory of a cache it saw buried considers only those caches and staying put, and harvests no site on any tick it holds one and doesn't raid, as a pure scrounger gives up foraging for its own food. And loot is eaten on the spot, not carried, so a scrounger's raid never fills its carrying limit. The rest bury half their surplus where they stand and never watch. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; a scrounger raids a remembered cache on arriving whatever the site would give, since it would not harvest the site anyway, and eats what it takes of the first remembered cache still there (or finds them all gone). An owner digging its own cache comes first. Measured (ticks 1–200; scrounger shares 0.1 to 0.9 over seeds 1–60, the rest seeds 1–20): forgoing doesn't pay. At half, the scroungers' fitness, the share of ticks 1–200 a founder is alive, is 0.784 against the hoarders' 0.893; 53 % of them survive the first winter against 55 % (per founder), so those that die, die sooner. Their shortfall grows as they become common, as Barnard and Sibly's producer–scrounger game has it (per-seed slope on the share −0.20, 95 % interval −0.23 to −0.17, below 0 in 59 of 60 seeds), from 0.04 at a share of 0.1 up to 0.23 at 0.8 (0.17 at 0.9; medians). But no stable mix forms: the scroungers are ahead at a share of 0.1 in only 13 of 60 seeds, and the median scrounger trails at every share. Never caching costs them a little on its own: in the same worlds with watching off they trail by about 0.02 at every share (a median 0.015 at a share of 0.1; at half, fitness 0.888 against 0.911 and 48 % against 70 % surviving the first winter). Watching adds the rest: per seed, the shortfall with watching less that without is a median 0.034 at a share of 0.1 (in 47 of 60 seeds) and 0.20 at 0.8, so the shortfall when rare is mostly scrounging's, and its growth with share entirely so. Within scrounging, forgoing is the cost: letting scroungers harvest too (`scrounge: harvest`) raises their fitness by 0.13 (in all 20 seeds), above the hoarders'. With a memory of 1 or 2 ticks instead of 7, their shortfall shrinks as they become common instead.",
+            |c| {
+                watch_winter(c, 0.5, 0.0, 0.5);
+                c.watching.scrounge = Scrounge::Forgo;
+                c.theft.loot = Loot::Eat;
+            },
+        ),
+        preset(
+            "watch-ak",
+            "Watching: winter, half cheaters, owners who dig early, everyone watching",
+            "Andersson & Krebs 1978; Bugnyar & Kotrschal 2002; Minds 8",
+            "theft-winter-half's world (theft-winter's winter, where half the agents, dealt by id, are cheaters who never cache, and the rest bury half their surplus where they stand) with two changes, and every agent a watcher. A stranger arriving on a site finds each cache there with chance 0.02, not 0.25. And an owner digs up one of its caches whenever it holds less than its whole reserve of 20 ticks' food, not half of it. This is item 4 of the calibration list for Andersson and Krebs's claim under watching: the first world on the list where, without watching, owners dig back more of their caches' ended sugar than thieves take (p_s > p_o) in at least 16 of 20 seeds. It did so in all 20, and the items before it in 7, 0 and 0. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving it raids only if it remembers at least as much sugar there as the site would give it, taking what it can carry of the first remembered cache still there (or finding them all gone); otherwise it harvests as usual and keeps the memory. An owner digging its own cache comes first. Measured (20 seeds, ticks 1–200): watching flips Andersson and Krebs's condition. Without watching, owners dig back 78 % of their ended caches' sugar and thieves take 22 % (p_s ÷ p_o 3.6); with everyone watching, 39 % and 59 % (0.67), below 1 in all 20 seeds. It flips with a memory of 3, 7 or 13 ticks, but not of 1 or 2 (1.72 and 1.10). Fitness hardly follows. The hoarders' fitness, the share of ticks 1–200 a founder is alive, falls from 0.933 to 0.916 and the cheaters' rises from 0.938 to 0.943, so the hoarders' shortfall grows by 0.023 (in all 20 seeds); but across watching off and memories of 1, 3, 7 and 13 ticks the sign of their advantage matches the condition's in only 62 of 100 runs. Survival moves more: 67 % of the hoarders survive the first winter against 76 % of the cheaters (per founder), where without watching it is 87 % against 75 %. Watching only by the cheaters costs the hoarders 0.012 of advantage (95 % interval 0.008 to 0.017), well under the 0.05 the claim asked for; watching only by the hoarders changes their own fitness by no detectable amount (0.003 lower, interval −0.002 to 0.007).",
+            |c| {
+                watch_winter(c, 0.5, 0.02, 1.0);
+                c.caching.dig_below = DigBelow::Reserve;
+            },
+        ),
+        preset(
+            "watch-arena",
+            "Watching arena: four agents, half watchers",
+            "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
+            "theft-arena-4's room (4 agents shut in a 6 × 6 room walled on all four sides, with flat sugar through a winter everywhere at once; vision 1–3, a carrying limit of 50) with no cheaters: every agent buries half its surplus where it stands. Arriving on a site, an agent finds each cache of someone else's there with chance 0.25, and takes what it can carry of it. Half the agents, dealt by id, are watchers. An agent who watches and sees another bury (the site on one of the four lattice lines from it, within its vision and not behind an opaque wall) remembers the cache for 7 ticks; while it remembers one it may walk there, and on arriving it raids only if it remembers at least as much sugar there as the site would give it, taking what it can carry of the first remembered cache still there (or finding them all gone); otherwise it harvests as usual and keeps the memory. An owner digging its own cache comes first. Measured (20 seeds, ticks 1–200): every agent survives the winter in every seed. Raids are few: 44 a seed, taking 198 sugar, against 750 found by stumbling; 1.9 % of the caches are pilfered a tick (1.6 % without watching). The room ends poorer: wealth per founder at tick 200 (holdings, caches and stomach) is 46 against 53 without watching (95 % interval of the difference 2.9 to 9.9). The watchers end with 47 per founder and the others with 38, but no change in the same agents' gap was detected against watching off (1.1 larger with watching, 95 % interval −13 to 15).",
+            |c| {
+                theft_arena(c, 4);
+                c.theft.cheaters = 0.0;
+                c.watching.on = true;
+                c.watching.watchers = 0.5;
+            },
         ),
     ]
 }
@@ -1655,7 +1734,7 @@ mod tests {
     #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 75);
+        assert_eq!(presets.len(), 83);
         for p in presets {
             p.config
                 .validate()
@@ -2112,6 +2191,133 @@ mod tests {
             p.config
                 .validate()
                 .unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        }
+    }
+
+    #[test]
+    fn the_minds_8_presets_add_watching_to_the_minds_6_worlds_and_name_minds_8() {
+        use crate::config::{RaidWhen, Watching};
+        // (id, base, cheaters, find, watchers): each is a Minds 6 world with
+        // watching on (span 7, raid_when always) and nothing else changed.
+        for (id, base, cheaters, find, watchers) in [
+            ("watch-winter", "theft-winter", 0.0, 0.0, 1.0),
+            ("watch-winter-stumble", "theft-winter", 0.0, 0.25, 1.0),
+            ("watch-half", "theft-winter-half", 0.5, 0.25, 1.0),
+            ("watch-scroungers", "theft-winter", 0.0, 0.0, 0.5),
+            ("watch-scroungers-only", "theft-winter-half", 0.5, 0.0, 0.5),
+            ("watch-arena", "theft-arena-4", 0.0, 0.25, 0.5),
+        ] {
+            let p = by_id(id).unwrap();
+            let mut c = p.config.clone();
+            assert_eq!((c.theft.cheaters, c.theft.find), (cheaters, find), "{id}");
+            assert_eq!(
+                c.watching,
+                Watching {
+                    on: true,
+                    span: 7,
+                    watchers,
+                    raid_when: RaidWhen::Always,
+                    ..Watching::default()
+                },
+                "{id}"
+            );
+            let mut b = by_id(base).unwrap().config;
+            c.watching = Default::default();
+            c.theft.find = 0.0;
+            c.theft.cheaters = 0.0;
+            b.theft.find = 0.0;
+            b.theft.cheaters = 0.0;
+            assert_eq!(c, b, "{id} is {base} with watching");
+            assert!(p.source.contains("Minds 8"), "{id}: {}", p.source);
+            assert!(p.source.contains("Bugnyar & Kotrschal 2002"), "{id}");
+            assert!(p.source.contains("Heinrich & Pepper 1998"), "{id}");
+            assert_eq!(
+                p.source.contains("Andersson & Krebs 1978"),
+                id == "watch-half",
+                "{id}"
+            );
+            assert_eq!(
+                p.source.contains("Barnard & Sibly 1981"),
+                id.starts_with("watch-scroungers"),
+                "{id}"
+            );
+            p.config
+                .validate()
+                .unwrap_or_else(|e| panic!("{id}: {e:?}"));
+        }
+        // Pure scroungers: at equal shares the watchers are the cheaters.
+        let w = World::new(by_id("watch-scroungers-only").unwrap().config, 1).unwrap();
+        assert!(w.agents().all(|a| a.watches == a.cheater));
+        assert_eq!(w.agents().filter(|a| a.watches).count(), 87);
+        let w = World::new(by_id("watch-arena").unwrap().config, 1).unwrap();
+        assert_eq!(w.agents().filter(|a| a.watches).count(), 2);
+        assert!(w.agents().all(|a| !a.cheater));
+    }
+
+    #[test]
+    fn watch_scroungers_forgo_is_the_only_scrounger_with_forgo_and_eaten_loot() {
+        use crate::config::{Loot, Scrounge};
+        let p = by_id("watch-scroungers-forgo").unwrap();
+        let c = &p.config;
+        assert_eq!((c.theft.cheaters, c.theft.find), (0.5, 0.0));
+        assert_eq!(c.theft.loot, Loot::Eat);
+        assert!(c.watching.on && c.watching.watchers == 0.5);
+        assert_eq!(c.watching.scrounge, Scrounge::Forgo);
+        assert_eq!(c.watching.who, crate::config::Who::Share);
+        for id in ["watch-scroungers-only", "watch-winter", "watch-arena"] {
+            let o = by_id(id).unwrap().config;
+            assert_eq!(o.watching.scrounge, Scrounge::Harvest, "{id}");
+            assert_eq!(o.theft.loot, Loot::Keep, "{id}");
+        }
+        // Otherwise watch-scroungers-only's world.
+        let mut b = by_id("watch-scroungers-only").unwrap().config;
+        b.watching.scrounge = Scrounge::Forgo;
+        b.theft.loot = Loot::Eat;
+        assert_eq!(*c, b);
+        for s in [
+            "Bugnyar & Kotrschal 2002",
+            "Barnard & Sibly 1981",
+            "Vickery et al. 1991",
+            "Minds 8",
+        ] {
+            assert!(p.source.contains(s), "{}", p.source);
+        }
+    }
+
+    #[test]
+    fn watch_ak_is_the_calibrated_world_with_everyone_watching() {
+        use crate::config::{DigBelow, Who};
+        let p = by_id("watch-ak").unwrap();
+        let c = &p.config;
+        assert_eq!((c.theft.cheaters, c.theft.find), (0.5, 0.02));
+        assert_eq!(c.caching.dig_below, DigBelow::Reserve);
+        assert!(c.watching.on);
+        assert_eq!((c.watching.who, c.watching.watchers), (Who::Share, 1.0));
+        let mut b = by_id("theft-winter-half").unwrap().config;
+        b.theft.find = 0.02;
+        b.caching.dig_below = DigBelow::Reserve;
+        b.watching = crate::config::Watching {
+            on: true,
+            ..Default::default()
+        };
+        assert_eq!(
+            *c, b,
+            "theft-winter-half at find 0.02, dig below R, watching on"
+        );
+        for other in all().iter().filter(|q| q.id != "watch-ak") {
+            assert_eq!(
+                other.config.caching.dig_below,
+                DigBelow::Half,
+                "{}",
+                other.id
+            );
+        }
+        for s in [
+            "Andersson & Krebs 1978",
+            "Bugnyar & Kotrschal 2002",
+            "Minds 8",
+        ] {
+            assert!(p.source.contains(s), "{}", p.source);
         }
     }
 

@@ -139,7 +139,12 @@ export interface Caching {
   mixed: boolean;
   /** Minds 6: good 0 lost for each cache buried (absent from older configs: 0); live. */
   bury_cost?: number;
+  /** Minds 8b: an owner digs below half its reserve or its whole reserve (absent from older configs: half); live. */
+  dig_below?: DigBelow;
 }
+
+/** Minds 8b: below what an owner with caches digs one up. */
+export type DigBelow = 'half' | 'reserve';
 
 /** Minds 6: what a thief does with the good it pilfers. */
 export type Loot = 'eat' | 'keep';
@@ -156,6 +161,33 @@ export interface Theft {
   loot: Loot;
   /** Share of the founders that are cheaters (never bury), by id, in [0, 1]. */
   cheaters: number;
+}
+
+/** Minds 8: when a seen cache is a place to go. */
+export type RaidWhen = 'always' | 'hungry';
+export type RaidIf = 'better' | 'always';
+export type SeenValue = 'amount' | 'room';
+export type Who = 'share' | 'hoarders' | 'cheaters';
+export type Scrounge = 'harvest' | 'forgo';
+
+/**
+ * Minds 8's watching (absent from older configs: off). `on`, `span`, `raid_when`, `raid_if`, `value` and
+ * `scrounge` apply live; `watchers` (the share of founders who watch, by id) and `who` are reset-only.
+ */
+export interface Watching {
+  on: boolean;
+  /** Ticks a seen cache stays remembered. */
+  span: number;
+  watchers: number;
+  raid_when: RaidWhen;
+  /** Minds 8b: raid on arrival only when the remembered amount is at least the site's value, or always. */
+  raid_if: RaidIf;
+  /** Minds 8b: a seen cache's value as a candidate: the amount remembered, or the room to carry it. */
+  value: SeenValue;
+  /** Minds 8b: which founders watch (reset-only); `watchers` is ignored unless `share`. */
+  who: Who;
+  /** Minds 8b: what a scrounger holding a fresh entry does: harvest as usual, or forgo harvesting. */
+  scrounge: Scrounge;
 }
 
 /** Minds 5: central-place foraging (absent from older configs: off); reset-only. */
@@ -209,6 +241,7 @@ export interface Config {
   caching?: Caching;
   central?: Central;
   theft?: Theft;
+  watching?: Watching;
   lab?: Lab | null;
   schedule: ScheduledChange[];
 }
@@ -1534,6 +1567,18 @@ export interface AgentView {
   central?: CentralView | null;
   /** Minds 6: theft state, while theft is on (`theft.find` or `theft.cheaters` above 0). */
   theft?: TheftView | null;
+  /** Minds 8: watching state, while `watching.on`. */
+  watching?: WatchingView | null;
+}
+/**
+ * Minds 8: whether the agent watches, whether it is a scrounger (watches and never buries), and the
+ * caches it remembers seeing buried. Only while `watching.on`.
+ */
+export interface WatchingView {
+  watches: boolean;
+  scrounger: boolean;
+  /** Each `site` is an index (`y * width + x`). */
+  seen: { site: number; owner: number; amount: number; age: number }[];
 }
 /** Minds 6: whether the agent cheats, what it has stolen and lost to thieves, and loot in its stomach. */
 export interface TheftView { cheater: boolean; stolen_by_me: number; stolen_from_me: number; fed: number }
@@ -2107,6 +2152,7 @@ export type ColorMode =
   | 'provocability'
   | 'strategy'
   | 'caching_rule'
+  | 'watching'
   | 'surrounded'
   | 'agents'
   | 'uncertainty'
