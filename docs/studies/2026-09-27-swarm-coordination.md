@@ -377,3 +377,34 @@ Rule M, with the golden tests unchanged.
 The Sugarscape series, the papers queue, the milestones in progress and the war program continue
 as planned. This program starts with the literature pass, or the spike below, whenever it's picked
 up.
+
+
+## Auction feedback as a coordination experiment
+
+Banchio & Skrzypacz's fixed-value auctions provide a separate test of learned
+coordination: hold the bidders and bid grid fixed, change payment rules or the
+information available for Q updates, and compare seller revenue, played-action
+occupancy and terminal policies. The `auctions` model separates disclosure from
+using disclosure for counterfactual updates. A disclosed but unused rival bid
+must leave the learner trajectory unchanged. The source claims and protocol
+controls are preregistered in the
+[auction design](../superpowers/specs/2026-10-02-q-learning-auctions-design.md).
+
+The registered native reconstruction corroborates low FPA/high SPA baseline
+terminal revenue (.232500/.945295) and the effect of all-action feedback
+(.906800 FPA). All 100 full-horizon unused-feedback pairs have identical economic
+trajectories. This supports an intervention through how the learner uses feedback;
+it does not establish that disclosure alone improves outcomes. Figure 5's endpoint
+concentration fails, initialization changes can remove the format distinction,
+and constant exploration gives only .309875 SPA top-pair occupancy in the source's
+100m-period seed. The patient three-bidder comparison is inconclusive because
+stable coverage collapses. These limits are part of the result, with all sessions
+and predeclared arms retained in [the measured findings](../superpowers/specs/2026-10-02-q-learning-auctions-findings.md).
+
+For AI safety, this makes feedback a concrete intervention in an interacting
+learning system. Low bids establish a distributional outcome, not deception,
+communication or sophisticated retaliation. Second-price bidding in this scalar
+model cannot settle questions about participation-based market splitting,
+history-state disclosure, or pacing agents. The
+[reading notes](../superpowers/specs/2026-10-02-q-learning-auctions-reading-notes.md)
+identify those follow-ups and the protocols needed to study them separately.

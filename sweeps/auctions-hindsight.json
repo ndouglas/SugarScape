@@ -1,0 +1,57 @@
+{
+  "name": "Q-learning Auctions: hindsight",
+  "description": "Counterfactual tie conventions are unspecified; realized priorities couple hypothetical auctions. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "sampled / expected",
+        "set": {
+          "auction_ties": "sampled",
+          "hindsight_ties": "expected"
+        }
+      },
+      {
+        "at": 2,
+        "name": "sampled / realized",
+        "set": {
+          "auction_ties": "sampled",
+          "hindsight_ties": "realized"
+        }
+      },
+      {
+        "at": 3,
+        "name": "expected / expected",
+        "set": {
+          "auction_ties": "expected",
+          "hindsight_ties": "expected"
+        }
+      },
+      {
+        "at": 4,
+        "name": "expected / realized",
+        "set": {
+          "auction_ties": "expected",
+          "hindsight_ties": "realized"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "set": {
+    "feedback": "rival_bids",
+    "update": "all"
+  }
+}

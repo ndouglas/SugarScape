@@ -259,7 +259,7 @@ async function main(): Promise<void> {
   // out on its own (B's speaks only when B finished and A did not: see CompareView).
   engine.on('finished', () => {
     const who = compare && finishesUnpredictably(engine.config) ? 'A: ' : '';
-    showNotice(`${who}${finishedNotice(engine.config, engine.tick)}`, 10_000);
+    showNotice(`${who}${finishedNotice(engine.config, engine.tick, engine.latest)}`, 10_000);
   });
   // A stop rule paused the run by itself (outside Compare, where the lockstep says so instead).
   engine.on('stopped', () => showNotice(engine.lastStop ?? 'Stopped', 10_000));

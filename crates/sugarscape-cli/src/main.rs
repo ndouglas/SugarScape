@@ -240,6 +240,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Bali => "its last year",
             ModelKind::Hoard => "its last generation",
             ModelKind::Firms => "its last period",
+            ModelKind::Auctions => "its last auction",
             // A session stops when its strategies settle, or at its cap.
             ModelKind::Collusion => {
                 if world.latest_value("converged") == Some(0.0) {

@@ -3677,3 +3677,68 @@ The A* test fixtures (`crates/sugarscape-core/tests/fixtures/movingai/`) are a s
 Sturtevant's Moving AI grid benchmarks (movingai.com/benchmarks), under the Open Data Commons
 Attribution License; the README there gives the source and what was kept. They are used only by
 the tests.
+
+
+### Q-learning Auctions (Banchio & Skrzypacz 2022)
+
+Two or three bidders learn bids on a discrete grid. Each bidder values the item at 1;
+first price charges the winning bid, second price charges the highest competing bid,
+and a mixture interpolates between them. The source claims low first-price bids,
+high second-price bids, and higher seller revenue when rival bids support updating
+every action. This reconstruction exposes those claims as experiments with fixed
+rules; it does not assume their conclusions.
+
+`auctions-first-price` uses the paper's 19 bids (.05–.95), learning rate .05,
+discount .99, and exploration `.025 * exp(-.0002 * t)` for one million auctions.
+One tick runs 1,000 auctions. A session always completes its horizon; its final
+1,000 greedy policies determine stability. Terminal survey comparisons select
+stable sessions and also report all sessions and discarded seeds. The default
+numerical optimistic initialization (100), sampled auction ties, and lowest-bid greedy-tie
+choice are explicit reconstruction choices: the paper does not specify them.
+No original simulator was located in the checked public author sources.
+
+The Bids canvas shows one session's **played-pair occupancy**, with a final-20%
+view. It is a different statistic from Figure 1's ensemble of **terminal greedy
+policies**. Three-bidder occupancy projects onto the first two bidders. Values
+and Inspect show each Q vector, chosen/update counts, competing-bid hypothetical
+rewards, payment, stability, and completed periods. Tick-mean played bids and
+rewards are distinguished from end-of-tick greedy bids in the charts.
+
+Feedback and learning are separate switches: `auctions-unused-feedback` receives
+rival bids but keeps chosen-action updates; `auctions-feedback` uses that information
+to update every action against the same old continuation value. Other presets
+cover local exploration, biased initial values, a downward nudge, nonparticipation,
+a .20 reserve, three bidders, a uniform fringe bidder, and persistent exploration.
+The biased values and downward trigger/clock are named readings of unspecified
+source details. Twelve `auctions-*` sweeps expose initialization, ties, information,
+market variants, and duration. The persistent preset runs 100 million auctions;
+long surveys are separate from CI.
+Native chart/CSV history beyond one million ticks retains the initial prefix and
+latest snapshot; actual tick stamps show the gap. Full economic outcomes and both
+occupancy histograms still count every auction.
+
+The complete registered native studies give 14 Holds, four Fails, one Inconclusive
+and five descriptive Untestable controls. Baseline terminal revenue is .232500 FPA
+(1,000/1,000 stable) and .945295 SPA (999/1,000 stable); all-action feedback raises
+FPA revenue to .906800 but misses Figure 5's .90-profile concentration rule.
+The primary downward, fringe-concentration and persistent-occupancy checks fail;
+three-bidder discount .999 has insufficient stable coverage. Initialization can
+remove the baseline format distinction. All workloads and primary choices remain
+fixed; [the full findings](docs/superpowers/specs/2026-10-02-q-learning-auctions-findings.md)
+include conditional/unconditional outcomes, every sensitivity arm and provenance.
+
+Source comparisons retain documentary differences: Figure 1's FPA counts imply
+revenue .2265 whereas the text says .24; SPA includes six exceptions to the
+(.95,.95) profile, including an off-diagonal pair. Full feedback's Figure 5 targets
+(.90,.90), which is a weak first-price Nash equilibrium on this grid. Below-top
+bids alone do not imply a profitable deviation. The survey separately judges the
+figure, prose, source readings and protocol controls, using the preregistered
+coverage and tolerance rules.
+
+Low bids measure seller revenue loss and bidder benefit. They do not establish
+communication, intent or punishment. Follow-ups show that information, updates,
+participation, memory and pricing constraints can change coordination; the scalar
+second-price result is therefore a statement about this model and protocol.
+
+See [the design](docs/superpowers/specs/2026-10-02-q-learning-auctions-design.md)
+and [reading notes](docs/superpowers/specs/2026-10-02-q-learning-auctions-reading-notes.md).

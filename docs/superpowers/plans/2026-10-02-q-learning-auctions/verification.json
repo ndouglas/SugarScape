@@ -1,0 +1,61 @@
+{
+  "verified_at_utc": "2026-10-02T14:00:41.490645+00:00",
+  "base": "4b72b039bd1bd0352f948a533d2ebb2815dd817c",
+  "manifest_sha256": "1de9b8e831ec36973c049bb81543cd742e74c4abc2f00a18a8b369f30b11a78a",
+  "product_files": 57,
+  "scratch": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions-scratch",
+  "staged_replay": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions-plan-replay",
+  "automated_replay": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions-plan-automation",
+  "replay": "All 57 files match scratch SHA-256; all three model/host/registry red-green boundaries executed; automated replay.py also applied all six patches and verified bytes.",
+  "checks": [
+    {
+      "command": "cargo test --workspace",
+      "passed": 1710,
+      "exit_code": 0
+    },
+    {
+      "command": "wasm-pack test --node crates/sugarscape-wasm",
+      "passed": 79,
+      "exit_code": 0
+    },
+    {
+      "command": "npm test (fresh WASM)",
+      "passed": 881,
+      "exit_code": 0
+    },
+    {
+      "command": "npm run typecheck; npx vite build",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo test --manifest-path survey/Cargo.toml",
+      "passed": 100,
+      "exit_code": 0
+    },
+    {
+      "command": "cargo fmt --all --check",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo clippy --workspace --all-targets -- -D warnings",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "review": "Fresh independent reviewer: four initial reporting/view gaps resolved; no unresolved issues on focused recheck.",
+  "performance_smoke": {
+    "periods": 1000000,
+    "ticks": 1000,
+    "snapshots_including_initial": 1001,
+    "seconds": 0.752,
+    "scope": "One native seed; workload smoke, no ensemble reproduction verdict."
+  },
+  "limits": [
+    "Registered ensembles and duration studies remain for plan execution; no claimed paper reproduction yet.",
+    "Standalone survey strict clippy encounters seven pre-existing lints in unrelated modules; auctions introduced none.",
+    "Standalone survey cargo fmt --check fails with 42 existing sections, reproduced on archived pre-Task3 dc1c635 and scratch; auctions.rs edition2021 rustfmt check passes. Workspace formatting remains clean. Baseline logs: /tmp/auctions-survey-fmt-baseline.log and /tmp/auctions-scratch-fmt-recheck.log."
+  ]
+}

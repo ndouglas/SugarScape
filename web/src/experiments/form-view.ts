@@ -134,6 +134,7 @@ export class FormView {
       h('datalist', { id: PATH_LIST }, ...this.paths.map((p) => h('option', { value: p }))),
       this.control('Name', 'name', this.text(f.name, (v) => (f.name = v), 'Untitled sweep')),
       h('p', { class: 'hint' }, `Base: ${this.baseNote}`),
+      f.description ? h('p', { class: 'hint' }, f.description) : null,
       timeseries
         ? h('p', { class: 'hint' }, 'A time series is plotted against the tick; the optional axis below gives one line per value.')
         : this.axis('x axis', 'x', f.x),

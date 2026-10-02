@@ -1,0 +1,15 @@
+//! Config dispatch must reach the auction clock through the shared model boundary.
+use sugarscape_core::model::{ModelConfig, ModelWorld};
+
+#[test]
+fn auction_config_routes_to_a_fixed_horizon_world() {
+    let config = ModelConfig::from_json(
+        r#"{"model":"auctions","horizon":23,"window":5,"periods_per_tick":7}"#,
+    )
+    .unwrap();
+    let mut world = ModelWorld::new(config, 1).unwrap();
+    world.model_mut().run(100);
+    assert_eq!(world.model().latest_value("periods"), Some(23.0));
+    assert!(world.model().finished());
+    assert!(world.model().series("profit_3").is_none());
+}

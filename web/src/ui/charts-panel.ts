@@ -1,3 +1,4 @@
+import { auctionChartCaption, auctionChartLines } from '../auctions';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
@@ -6,7 +7,7 @@ import { cachingOn, calendarYear, pilferingOn, watcherSplit, watchingOn } from '
 import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
 import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
-import type { Config, HoardConfig, ModelConfig, ModelKind } from '../types';
+import type { AuctionsConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
 import {
@@ -56,6 +57,7 @@ interface ChartDef {
   section: Section;
   model?: ModelKind;
   lines?: (c: Config) => Line[];
+  configLines?: (c: ModelConfig) => Line[];
   range?: [number, number];
   shown?: (c: Config) => boolean;
   /** Another model's chart: whether it shows for a world's config (civil Model II's groups and kills). */
@@ -452,7 +454,7 @@ const CHARTS: ChartDef[] = [
   },
   // The other models' time charts (Decision 13), in the top section.
   ...(Object.entries(MODEL_CHARTS) as [ModelKind, (typeof MODEL_CHARTS)['ring']][]).flatMap(([model, charts]) =>
-    charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), range: c.range, modelShown: c.shown })),
+    charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), configLines: model === 'auctions' ? (config) => auctionChartLines(c.lines, config as AuctionsConfig) : undefined, range: c.range, modelShown: c.shown })),
   ),
   ...HOARD_CHARTS.map((c): ChartDef => ({ title: c.title, kind: c.season ? 'season' : 'generation', section: 'top', model: 'hoard', lines: fixed(c.lines), range: c.range })),
 ];
@@ -461,9 +463,9 @@ const CHARTS: ChartDef[] = [
  * The host chart group a chart draws for world `i` (7a Decision 4); none for the distributions.
  * B leaves out reference lines (A draws them).
  */
-function groupOf(def: ChartDef, c: Config, i: number): string[] {
+function groupOf(def: ChartDef, c: Config, i: number, config: ModelConfig): string[] {
   if (def.kind === 'band') return PRICE_GROUP;
-  return def.kind === 'time' ? worldLines(def.lines!(c), i).map((l) => l.key) : [];
+  return def.kind === 'time' ? worldLines(def.configLines?.(config) ?? def.lines!(c), i).map((l) => l.key) : [];
 }
 
 interface Plot {
@@ -645,7 +647,7 @@ export class ChartsPanel {
    * shows the charts and sections either world would show and names the traded pair.
    */
   private sync(): void {
-    const signature = JSON.stringify(this.worlds.map((w) => [w.model, CHARTS.map((d) => d.lines?.(w.sugar) ?? null)]));
+    const signature = JSON.stringify(this.worlds.map((w) => [w.model, CHARTS.map((d) => d.configLines?.(w.config) ?? d.lines?.(w.sugar) ?? null)]));
     if (signature !== this.built) {
       this.built = signature;
       this.build();
@@ -661,7 +663,9 @@ export class ChartsPanel {
       const good = p.def.good;
       const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
       p.caption.textContent =
-        p.def.pair && goods
+        p.def.model === 'auctions'
+          ? auctionChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'auctions').map((w) => w.config as AuctionsConfig))
+          : p.def.pair && goods
           ? `${p.def.title} · ${goods[0].name}/${goods[1].name}`
           : named
             ? `${p.def.title} · ${named.name}`
@@ -687,7 +691,7 @@ export class ChartsPanel {
   private plotFor(def: ChartDef): HTMLElement {
     const caption = h('figcaption', {}, def.title);
     const figure = h('figure', { class: 'chart' }, caption);
-    const groups = this.worlds.map((w, i) => groupOf(def, w.sugar, i));
+    const groups = this.worlds.map((w, i) => groupOf(def, w.sugar, i, w.config));
     const hoardLines = isHoardKind(def.kind) ? def.lines!(this.engine.sugar).length : 0;
     const counts = groups.map((g) => (def.kind === 'band' ? 3 : isHoardKind(def.kind) ? hoardLines : g.length));
     const data = def.kind === 'time' || def.kind === 'band' || isHoardKind(def.kind) ? this.merge(counts.map(emptyTable)) : this.distData(def);
@@ -701,7 +705,7 @@ export class ChartsPanel {
     const series: uPlot.Series[] = [{ label: def.model && def.kind === 'time' ? timeAxisLabel(def.model) : X_LABEL[def.kind] }];
     const lorenz = def.kind === 'lorenz' || def.kind === 'lorenzTotal';
     if (lorenz) series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
-    this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.sugar, multi ? `${LABELS[i]} · ` : '', i === 1)));
+    this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.sugar, multi ? `${LABELS[i]} · ` : '', i === 1, w.config)));
     const x: uPlot.Scale = { time: false };
     if (lorenz) x.range = [0, 1];
     if (def.kind === 'supplyDemand') x.distr = 3;
@@ -751,14 +755,14 @@ export class ChartsPanel {
   }
 
   /** One world's series: labeled "A · …"/"B · …" in Compare, B dashed and its points hollow. */
-  private seriesFor(def: ChartDef, c: Config, tag: string, b: boolean): uPlot.Series[] {
+  private seriesFor(def: ChartDef, c: Config, tag: string, b: boolean, config: ModelConfig): uPlot.Series[] {
     const dash = b ? B_DASH : undefined;
     switch (def.kind) {
       case 'generation':
       case 'season':
         return def.lines!(c).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash, points: { show: def.kind === 'generation' && !b, size: 4 } }));
       case 'time':
-        return worldLines(def.lines!(c), b ? 1 : 0).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash }));
+        return worldLines(def.configLines?.(config) ?? def.lines!(c), b ? 1 : 0).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash }));
       case 'band': {
         const sd = b ? [2, 3] : [4, 4];
         return [

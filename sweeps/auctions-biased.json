@@ -1,0 +1,60 @@
+{
+  "name": "Q-learning Auctions: biased",
+  "description": "Figure 3 does not specify its biased Q vector; compare two declared reconstructions. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "Other Q = 0",
+        "set": {
+          "bias_rest": 0
+        }
+      },
+      {
+        "at": 2,
+        "name": "Other Q = 29.7",
+        "set": {
+          "bias_rest": 29.7
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "series": {
+    "label": "Auction",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  },
+  "set": {
+    "q_init": "biased",
+    "bias_bid": 0.4,
+    "bias_q": 30,
+    "epsilon": 0.25
+  }
+}

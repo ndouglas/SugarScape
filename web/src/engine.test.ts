@@ -1232,3 +1232,13 @@ describe('Engine at the end year at Max', () => {
     expect([e.tick, e.running, ends]).toEqual([50, false, 1]);
   });
 });
+
+
+describe('auction completion notices', () => {
+  it('reports the fixed economic horizon and final window status', () => {
+    const config = { model: 'auctions', horizon: 10001 } as unknown as ModelConfig;
+    expect(finishedNotice(config, 11, { converged: 1 } as never)).toContain('10001 periods · final strategy window stable');
+    expect(finishedNotice(config, 11, { converged: 0 } as never)).toContain('final strategy window unstable');
+    expect(finishedNotice(config, 11)).toContain('Inspect shows final strategy stability');
+  });
+});

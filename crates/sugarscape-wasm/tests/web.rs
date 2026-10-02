@@ -456,7 +456,19 @@ fn builtins_and_series_names_are_listed() {
             "collusion-synchronous",
             "collusion-exploration",
             "collusion-timescale",
-            "collusion-rp-complete"
+            "collusion-rp-complete",
+            "auctions-formats",
+            "auctions-feedback",
+            "auctions-initialization",
+            "auctions-ties",
+            "auctions-hindsight",
+            "auctions-local",
+            "auctions-biased",
+            "auctions-downward",
+            "auctions-market",
+            "auctions-bidders",
+            "auctions-persistent",
+            "auctions-duration"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -1879,4 +1891,54 @@ fn inspect_reports_watching_and_renders_its_color_mode() {
         }
     }
     assert!(watchers > 0);
+}
+
+#[wasm_bindgen_test]
+fn auction_partial_batches_reach_exact_horizon_and_then_hold() {
+    let config = r#"{"model":"auctions","horizon":23,"window":5,"periods_per_tick":7}"#;
+    let mut sim = Sim::new(config, 1, JsValue::NULL).unwrap();
+    sim.step(3);
+    assert!(!sim.finished());
+    sim.step(1);
+    assert!(sim.finished());
+    assert_eq!(sim.tick(), 4.0);
+    let view: serde_json::Value = serde_json::from_str(&sim.inspect(0, 0).unwrap()).unwrap();
+    assert_eq!(view["period"], 23);
+    assert_eq!(view["late_count"], 5);
+    let before = sim.fingerprint();
+    for mode in ["bids", "late", "values"] {
+        assert_ne!(sim.render(mode, "sugar").unwrap(), 0);
+    }
+    sim.step(100);
+    assert_eq!(sim.fingerprint(), before);
+}
+
+#[wasm_bindgen_test]
+fn auction_short_sessions_match_native_protocol_fingerprints() {
+    // auctions::world::tests::short_native_fingerprints: same exact horizon and seed.
+    for (edits, expected) in [
+        (serde_json::json!({}), "0x8736a8664d834a2d"),
+        (
+            serde_json::json!({"auction":"second_price"}),
+            "0x1ba7cb1e9d3ff993",
+        ),
+        (
+            serde_json::json!({"feedback":"rival_bids","update":"all"}),
+            "0x949a7d400b127f20",
+        ),
+        (
+            serde_json::json!({"fringe":"uniform"}),
+            "0x5f621ad6482502e7",
+        ),
+        (serde_json::json!({"bidders":3}), "0x5c5c0013fee7f42b"),
+    ] {
+        let mut config =
+            serde_json::json!({"model":"auctions","horizon":23,"window":5,"periods_per_tick":7});
+        for (key, value) in edits.as_object().unwrap() {
+            config[key] = value.clone();
+        }
+        let mut sim = Sim::new(&config.to_string(), 1, JsValue::NULL).unwrap();
+        sim.step(4);
+        assert_eq!(sim.fingerprint(), expected);
+    }
 }

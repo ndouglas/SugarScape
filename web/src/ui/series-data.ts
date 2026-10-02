@@ -757,6 +757,29 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
   ],
   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
   hoard: [],
+  auctions: [
+    { title: 'Bids', lines: [
+      { key: 'bid_1', label: 'Bidder 1 played (tick mean)', color: '--c1' },
+      { key: 'bid_2', label: 'Bidder 2 played (tick mean)', color: '--c2' },
+      { key: 'bid_3', label: 'Bidder 3 played (tick mean)', color: '--c3' },
+      { key: 'greedy_1', label: 'Bidder 1 greedy (tick end)', color: '--c4' },
+      { key: 'greedy_2', label: 'Bidder 2 greedy (tick end)', color: '--red' },
+      { key: 'greedy_3', label: 'Bidder 3 greedy (tick end)', color: '--muted' },
+    ] },
+    { title: 'Seller revenue', lines: [{ key: 'revenue', label: 'Realized payment (tick mean)', color: '--c1' }, { key: 'terminal_revenue', label: 'Final policy expected revenue', color: '--c4' }] },
+    { title: 'Bidder rewards', lines: [
+      { key: 'profit_1', label: 'Bidder 1 (tick mean)', color: '--c1' },
+      { key: 'profit_2', label: 'Bidder 2 (tick mean)', color: '--c2' },
+      { key: 'profit_3', label: 'Bidder 3 (tick mean)', color: '--c3' },
+    ] },
+    { title: 'Learning', lines: [
+      { key: 'epsilon', label: 'Exploration probability', color: '--c1' },
+      { key: 'explored', label: 'Exploring share (tick mean)', color: '--c2' },
+      { key: 'downward', label: 'Downward share (tick mean)', color: '--c3' },
+      { key: 'greedy_changes', label: 'Policy changes (tick count)', color: '--red' },
+      { key: 'stable', label: 'Stable periods (tick end)', color: '--c4' },
+    ] },
+  ],
   collusion: [
     {
       title: 'Prices',
@@ -833,7 +856,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'hoard' ? 'Bouts' : model === 'firms' ? 'Periods' : model === 'collusion' ? 'Ticks' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'hoard' ? 'Bouts' : model === 'firms' ? 'Periods' : model === 'collusion' || model === 'auctions' ? 'Ticks' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

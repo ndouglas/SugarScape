@@ -1,7 +1,8 @@
+import { auctionLegend } from '../auctions';
 import type { Engine } from '../engine';
 import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
-import type { AgentView, HoardConfig } from '../types';
+import type { AgentView, AuctionsConfig, AuctionsStats, HoardConfig } from '../types';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
 import { cacheSize, cacheSummary, compartmentName, isCheaterOnly, isLarder, labStatus } from '../minds';
 import { h } from './dom';
@@ -267,8 +268,9 @@ export class GridView {
     const sugar = this.engine.model === 'sugarscape';
     // Minds 7: the frame is a population panel, one column per agent.
     const hoard = this.engine.model === 'hoard';
-    const status = sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '';
-    const items = sugar
+    const auction = this.engine.model === 'auctions' ? auctionLegend(this.engine.config as AuctionsConfig, this.engine.colorMode, (this.engine.latest as AuctionsStats | null)?.periods ?? 0) : null;
+    const status = auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '';
+    const items = auction ? auction.items : sugar
       ? [...colorLegend(this.engine.colorMode, this.engine.sugar), ...overlayLegend(marks, this.engine.sugar)]
       : hoard
         ? hoardLegend(((this.engine.config as HoardConfig).cheaters ?? 0) > 0)

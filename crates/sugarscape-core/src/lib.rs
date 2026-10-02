@@ -7,6 +7,7 @@ pub mod agent;
 pub mod agreement;
 pub mod anasazi;
 pub mod ants;
+pub mod auctions;
 pub mod bali;
 pub mod bits;
 pub mod civil;

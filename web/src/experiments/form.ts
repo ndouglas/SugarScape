@@ -1,4 +1,4 @@
-import type { FieldError, ModelConfig, ModelKind, Param } from '../types';
+import type { AuctionsConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -8,6 +8,8 @@ export interface SweepForm {
   name: string;
   /** Kept as opened; the form does not edit it. */
   description?: string;
+  /** Fixed treatment fields retained by a model's suggested experiment. */
+  set?: Record<string, unknown>;
   x: AxisForm;
   /** The second axis: one line per value. */
   series: AxisForm | null;
@@ -108,6 +110,9 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
   }
+  if (model === 'auctions') {
+    return { ...form, set: { auction: 'mixture' }, description: 'Formats from first price (1) to second price (2), using mixture payment. Terminal policy revenue after the fixed horizon; one tick executes periods_per_tick auctions.', x: { path: 'auction_alpha', values: '1:2:0.1' }, ticks: config ? Math.ceil((config as AuctionsConfig).horizon / (config as AuctionsConfig).periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'terminal_revenue' } };
+  }
   if (model === 'collusion') {
     // The built-in collusion-delta's axis: the profit gain against the discount factor (CCDP Fig. 6).
     return { ...form, x: { path: 'delta', values: '0:0.9:0.15' }, ticks: 100_000, metric: { ...form.metric, kind: 'final', series: 'cycle_gain' } };
@@ -197,6 +202,7 @@ export function formToSweep(form: SweepForm, base: SweepBase): { sweep: Sweep | 
     ticks: form.ticks,
     metric,
   };
+  if (form.set) sweep.set = structuredClone(form.set);
   if (series) sweep.series = series;
   if (form.description !== undefined) sweep.description = form.description;
   return { sweep, errors: [] };

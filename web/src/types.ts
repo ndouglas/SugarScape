@@ -247,7 +247,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -666,7 +666,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1462,7 +1462,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats;
 
 export interface SiteView {
   x: number;
@@ -2202,7 +2202,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -2212,6 +2212,9 @@ export type AnyInspection = Inspection | SchellingInspection | RingInspection | 
  * `payoff`.
  */
 export type ColorMode =
+  | 'bids'
+  | 'late'
+  | 'values'
   | 'tribe'
   | 'wealth'
   | 'sex'
@@ -2295,4 +2298,43 @@ export function parseErrors(e: unknown, field = 'config'): FieldError[] {
     // not JSON
   }
   return [{ field, message: text }];
+}
+
+/** Fixed-horizon, memoryless bidding (Banchio & Skrzypacz 2022). */
+export interface AuctionsConfig {
+  model: 'auctions'; bidders: number; bids: number;
+  auction: 'first_price' | 'second_price' | 'mixture'; auction_alpha: number;
+  reserve: number; reserve_payment: 'floor' | 'eligibility_only'; out_bids: number; fringe: 'none' | 'uniform';
+  learning_rate: number; discount: number; feedback: 'outcome' | 'rival_bids'; update: 'chosen' | 'all';
+  auction_ties: 'sampled' | 'expected'; hindsight_ties: 'expected' | 'realized';
+  greedy_ties: 'lowest' | 'highest' | 'random' | 'incumbent'; q_tolerance: number;
+  q_init: 'optimistic' | 'constant' | 'biased'; optimism: 'discounted' | 'stage'; q_scale: number; q_level: number;
+  bias_bid: number; bias_q: number; bias_rest: number; exploration: 'decaying' | 'constant'; epsilon: number; beta: number;
+  exploration_set: 'all' | 'other' | 'neighbors'; neighbor_boundary: 'available' | 'clamp';
+  period_origin: 'zero' | 'one'; convergence_phase: 'post_update' | 'pre_update';
+  downward_trigger: 'off' | 'stable' | 'period'; downward_at: number; downward_clock: 'activation' | 'global';
+  downward_chi: number; downward_beta: number; downward_gap: number; horizon: number; window: number; periods_per_tick: number;
+}
+export interface AuctionsStats {
+  tick: number; bid_1: number | null; bid_2: number | null; bid_3: number | null;
+  greedy_1: number | null; greedy_2: number | null; greedy_3: number | null;
+  revenue: number | null; profit_1: number | null; profit_2: number | null; profit_3: number | null;
+  epsilon: number | null; explored: number | null; downward: number | null; greedy_changes: number; stable: number;
+  converged: number | null; terminal_revenue: number | null; terminal_deviation_gain: number | null; top_profile: number | null; periods: number | null;
+}
+export interface AuctionLearnerView { q: number[]; greedy: number; chosen: number[]; updated: number[] }
+export interface AuctionsOutcome {
+  periods: number; converged: boolean; stable: number; greedy: number[]; greedy_actions: number[];
+  terminal_revenue: number; terminal_profits: number[]; deviation_gain: number[];
+  top_profile: boolean; below_top: boolean; low_non_nash: boolean;
+  whole_revenue: number; late_revenue: number; whole_profits: number[]; late_profits: number[];
+  occupancy: number[]; late_occupancy: number[]; grid: number[]; whole_count: number; late_count: number; activation: number | null;
+}
+export interface AuctionsInspection {
+  x: number; y: number; panel: 'bids' | 'values'; bidder: number | null; action: number | null;
+  count: number | null; frequency: number | null; q: number | null; chosen: number | null; updated: number | null;
+  hypothetical_reward: number | null; tick: number; period: number; horizon: number; grid: number[];
+  greedy: number[]; played: number[]; shares: number[]; fringe_bid: number | null; fringe_share: number | null; payment: number; epsilon: number; stable: number;
+  occupancy: number[]; late_occupancy: number[]; whole_count: number; late_count: number; learners: AuctionLearnerView[];
+  equilibria: number[][]; outcome: AuctionsOutcome | null; agent: null;
 }

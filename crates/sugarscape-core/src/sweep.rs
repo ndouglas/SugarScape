@@ -965,7 +965,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 202] = [
+const BUILTINS: [Builtin; 214] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1773,6 +1773,54 @@ const BUILTINS: [Builtin; 202] = [
     Builtin {
         id: "collusion-rp-complete",
         json: include_str!("../../../sweeps/collusion-rp-complete.json"),
+    },
+    Builtin {
+        id: "auctions-formats",
+        json: include_str!("../../../sweeps/auctions-formats.json"),
+    },
+    Builtin {
+        id: "auctions-feedback",
+        json: include_str!("../../../sweeps/auctions-feedback.json"),
+    },
+    Builtin {
+        id: "auctions-initialization",
+        json: include_str!("../../../sweeps/auctions-initialization.json"),
+    },
+    Builtin {
+        id: "auctions-ties",
+        json: include_str!("../../../sweeps/auctions-ties.json"),
+    },
+    Builtin {
+        id: "auctions-hindsight",
+        json: include_str!("../../../sweeps/auctions-hindsight.json"),
+    },
+    Builtin {
+        id: "auctions-local",
+        json: include_str!("../../../sweeps/auctions-local.json"),
+    },
+    Builtin {
+        id: "auctions-biased",
+        json: include_str!("../../../sweeps/auctions-biased.json"),
+    },
+    Builtin {
+        id: "auctions-downward",
+        json: include_str!("../../../sweeps/auctions-downward.json"),
+    },
+    Builtin {
+        id: "auctions-market",
+        json: include_str!("../../../sweeps/auctions-market.json"),
+    },
+    Builtin {
+        id: "auctions-bidders",
+        json: include_str!("../../../sweeps/auctions-bidders.json"),
+    },
+    Builtin {
+        id: "auctions-persistent",
+        json: include_str!("../../../sweeps/auctions-persistent.json"),
+    },
+    Builtin {
+        id: "auctions-duration",
+        json: include_str!("../../../sweeps/auctions-duration.json"),
     },
 ];
 
@@ -2798,7 +2846,19 @@ mod tests {
                 "collusion-synchronous",
                 "collusion-exploration",
                 "collusion-timescale",
-                "collusion-rp-complete"
+                "collusion-rp-complete",
+                "auctions-formats",
+                "auctions-feedback",
+                "auctions-initialization",
+                "auctions-ties",
+                "auctions-hindsight",
+                "auctions-local",
+                "auctions-biased",
+                "auctions-downward",
+                "auctions-market",
+                "auctions-bidders",
+                "auctions-persistent",
+                "auctions-duration"
             ]
         );
         for b in builtins() {

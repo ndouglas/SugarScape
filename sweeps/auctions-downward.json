@@ -1,0 +1,72 @@
+{
+  "name": "Q-learning Auctions: downward",
+  "description": "Trigger and clock for the paper's downward nudge are unspecified. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "stable / activation",
+        "set": {
+          "downward_trigger": "stable",
+          "downward_clock": "activation"
+        }
+      },
+      {
+        "at": 2,
+        "name": "stable / global",
+        "set": {
+          "downward_trigger": "stable",
+          "downward_clock": "global"
+        }
+      },
+      {
+        "at": 3,
+        "name": "period / activation",
+        "set": {
+          "downward_trigger": "period",
+          "downward_clock": "activation"
+        }
+      },
+      {
+        "at": 4,
+        "name": "period / global",
+        "set": {
+          "downward_trigger": "period",
+          "downward_clock": "global"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "series": {
+    "label": "Auction",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  }
+}

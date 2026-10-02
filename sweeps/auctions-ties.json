@@ -1,0 +1,104 @@
+{
+  "name": "Q-learning Auctions: ties",
+  "description": "Allocation rewards and greedy Q ties are unspecified in the source. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "sampled / lowest",
+        "set": {
+          "auction_ties": "sampled",
+          "greedy_ties": "lowest"
+        }
+      },
+      {
+        "at": 2,
+        "name": "sampled / highest",
+        "set": {
+          "auction_ties": "sampled",
+          "greedy_ties": "highest"
+        }
+      },
+      {
+        "at": 3,
+        "name": "sampled / random",
+        "set": {
+          "auction_ties": "sampled",
+          "greedy_ties": "random"
+        }
+      },
+      {
+        "at": 4,
+        "name": "sampled / incumbent",
+        "set": {
+          "auction_ties": "sampled",
+          "greedy_ties": "incumbent"
+        }
+      },
+      {
+        "at": 5,
+        "name": "expected / lowest",
+        "set": {
+          "auction_ties": "expected",
+          "greedy_ties": "lowest"
+        }
+      },
+      {
+        "at": 6,
+        "name": "expected / highest",
+        "set": {
+          "auction_ties": "expected",
+          "greedy_ties": "highest"
+        }
+      },
+      {
+        "at": 7,
+        "name": "expected / random",
+        "set": {
+          "auction_ties": "expected",
+          "greedy_ties": "random"
+        }
+      },
+      {
+        "at": 8,
+        "name": "expected / incumbent",
+        "set": {
+          "auction_ties": "expected",
+          "greedy_ties": "incumbent"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "series": {
+    "label": "Auction",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  }
+}
