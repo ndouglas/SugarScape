@@ -293,6 +293,11 @@ impl CollusionConfig {
             "too many states for this many firms and prices (states × prices × firms must be at most 2^24)",
         );
         check(
+            u64::from(self.prices).saturating_pow(self.firms) * u64::from(self.firms) <= Q_BUDGET,
+            "prices",
+            "too many price profiles for this many firms (prices^firms × firms must be at most 2^24)",
+        );
+        check(
             self.alpha > 0.0 && self.alpha <= 1.0,
             "alpha",
             "must be above 0 and at most 1",
@@ -492,7 +497,7 @@ pub fn schema() -> Vec<Param> {
             ],
             Reset,
         )
-        .with_help("The authors' generator and seeding: a session runs period for period as in their code."),
+        .with_help("The authors' generator and seeding: a session runs period for period as in their code. Seed s is their session s, wrapping every 10⁶ sessions."),
         Param::integer("Session", "cap", "Stop at most at period", (1, 4_000_000_000), Reset)
             .with_help("The paper: 10⁹. The code: 1.25 × 10⁹."),
         Param::integer("Session", "window", "Converged after", (1, 10_000_000), Reset)
@@ -603,6 +608,19 @@ mod tests {
             .states(),
             1
         );
+    }
+
+    #[test]
+    fn payoff_tables_too_big_to_build_are_refused() {
+        // Without memory the states are few, but the payoff table holds
+        // prices^firms profiles: 4 firms of 100 prices would be 10⁸.
+        let c = CollusionConfig {
+            firms: 4,
+            prices: 100,
+            memory: 0,
+            ..CollusionConfig::default()
+        };
+        assert_eq!(c.validate().unwrap_err()[0].field, "prices");
     }
 
     #[test]

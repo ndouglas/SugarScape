@@ -1365,6 +1365,27 @@ fn collusion_sims_match_the_native_golden_entries() {
 }
 
 #[wasm_bindgen_test]
+fn a_finished_collusion_session_matches_the_native_results() {
+    // `collusion::world::tests::a_finished_session_reaches_its_pinned_results`
+    // pins the same session natively: the analysis after convergence (the
+    // cycle, Δ, both equilibrium tests, the responses) is portable too.
+    let mut c: serde_json::Value = serde_json::from_str(&preset_json("collusion-calvano")).unwrap();
+    c["beta"] = serde_json::json!(2e-4);
+    c["window"] = serde_json::json!(2000);
+    let mut sim = Sim::new(&c.to_string(), 1, JsValue::NULL).unwrap();
+    while !sim.finished() {
+        sim.step(100);
+    }
+    assert_eq!(sim.tick(), 44.0);
+    assert_eq!(
+        sim.latest_value("cycle_gain").unwrap().to_bits(),
+        4604541580735232753
+    );
+    assert_eq!(sim.latest_value("equilibrium_on_path"), Some(0.0));
+    assert_eq!(sim.latest_value("punishment_like"), Some(0.0));
+}
+
+#[wasm_bindgen_test]
 fn collusion_boltzmann_and_three_firms_match_the_native_fingerprints() {
     // `collusion::world::tests::boltzmann_and_three_firms_reach_their_pinned_fingerprints`
     // pins the same configs and values natively.

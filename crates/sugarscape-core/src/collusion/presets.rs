@@ -52,7 +52,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "collusion-code",
             "As the authors' code ran it",
             CCDP,
-            "The paper's model as its authors' Fortran runs it: ties broken at random, their RAN2 generator seeded by session number (the seed), a cap of 1.25 × 10⁹, an equilibrium test that checks only one-period deviations, and Fig. 4's deviation as the code computes it. Every session is theirs exactly: the first 100 match the code built from their replication package in the same period and all 450 strategy cells. Measured (sessions 1–1 000): Table I to the digit — Δ 0.849, 50.5 % in equilibrium on the path (by the code's test), cycles of 1, 2 and 3+ periods 64.3 / 23.8 / 11.9 %; Table A5's responses — the rival's price change −0.127, deviations unprofitable in 0.936 (the text says 'more than 95 %'), punishment 5.705 periods.",
+            "The paper's model as its authors' Fortran runs it: ties broken at random, their RAN2 generator seeded by session number (the seed; seeds wrap every 10⁶ sessions), a cap of 1.25 × 10⁹, an equilibrium test that checks only one-period deviations, and Fig. 4's deviation as the code computes it. Every session is theirs exactly: the first 100 match the code built from their replication package in the same period and all 450 strategy cells. Measured (sessions 1–1 000): Table I to the digit — Δ 0.849, 50.5 % in equilibrium on the path (by the code's test), cycles of 1, 2 and 3+ periods 64.3 / 23.8 / 11.9 %; Table A5's responses — the rival's price change −0.127, deviations unprofitable in 0.936 (the text says 'more than 95 %'), punishment 5.705 periods.",
             as_coded,
         ),
         preset(

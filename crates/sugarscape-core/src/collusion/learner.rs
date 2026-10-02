@@ -96,7 +96,7 @@ impl Draws {
         match c.rng {
             super::config::RngKind::Ours => Draws::Ours(rng::seeded(seed)),
             super::config::RngKind::Calvano => {
-                let session = -(seed.clamp(1, i32::MAX as u64) as i32);
+                let session = -(session(seed) as i32);
                 Draws::Calvano(Box::new([Ran2::new(session), Ran2::new(session)]))
             }
         }
@@ -132,6 +132,16 @@ impl Draws {
     }
 }
 
+/// Sessions the code's RNG numbers: seed s is session ((s − 1) mod 10⁶) + 1,
+/// so any 32-bit seed starts at once (session s skips (s − 1)·k·n
+/// starting-price draws).
+pub const SESSIONS: u64 = 1_000_000;
+
+/// The session number a seed runs under `rng = calvano`.
+pub fn session(seed: u64) -> u64 {
+    (seed.max(1) - 1) % SESSIONS + 1
+}
+
 /// The starting prices: under `calvano`, the code's shared stream seeded −1,
 /// session s taking draws after the (s − 1)·k·n before it; otherwise drawn.
 pub fn initial_prices(c: &CollusionConfig, seed: u64, draws: &mut Draws) -> Vec<Vec<u8>> {
@@ -140,7 +150,7 @@ pub fn initial_prices(c: &CollusionConfig, seed: u64, draws: &mut Draws) -> Vec<
     match draws {
         Draws::Calvano(_) => {
             let mut stream = Ran2::new(-1);
-            let skip = (seed.max(1) - 1) * (depth * n) as u64;
+            let skip = (session(seed) - 1) * (depth * n) as u64;
             for _ in 0..skip {
                 stream.next_f64();
             }

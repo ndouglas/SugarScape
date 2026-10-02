@@ -81,6 +81,8 @@ pub struct CollusionWorld {
     streak_len: u64,
     discounted: Vec<f64>,
     weight: f64,
+    /// The weights' sum so far, Σ δ^(t−1) over the periods counted.
+    weight_sum: f64,
     horizon: u32,
     last_change: u64,
     quiet_from: Option<u64>,
@@ -155,19 +157,18 @@ impl CollusionWorld {
         let tables: Vec<Vec<f64>> = (0..n)
             .map(|i| match config.q_init {
                 QInit::Calvano => {
+                    // One pass over the profiles: each price's mean profit
+                    // against uniformly random rivals, over (1 − δ).
+                    let mut sum = vec![0.0; m];
+                    let mut count = vec![0u32; m];
+                    let place = m.pow((n - 1 - i) as u32);
+                    for profile in 0..m.pow(n as u32) {
+                        let own = profile / place % m;
+                        sum[own] += game.payoff[profile * n + i];
+                        count[own] += 1;
+                    }
                     let row: Vec<f64> = (0..m)
-                        .map(|a| {
-                            let mut sum = 0.0;
-                            let mut count = 0u32;
-                            for profile in 0..m.pow(n as u32) {
-                                let own = profile / m.pow((n - 1 - i) as u32) % m;
-                                if own == a {
-                                    sum += game.payoff[profile * n + i];
-                                    count += 1;
-                                }
-                            }
-                            sum / (f64::from(count) * (1.0 - config.delta))
-                        })
+                        .map(|a| sum[a] / (f64::from(count[a]) * (1.0 - config.delta)))
                         .collect();
                     row.repeat(space.states)
                 }
@@ -202,6 +203,7 @@ impl CollusionWorld {
             streak_len: 0,
             discounted: vec![0.0; n],
             weight: 1.0,
+            weight_sum: 0.0,
             horizon,
             last_change: 0,
             quiet_from: None,
@@ -298,6 +300,11 @@ impl CollusionWorld {
                         f.eps *= self.decay;
                     }
                     a
+                }
+                // A temperature cooled to 0 is greedy choice.
+                Exploration::Boltzmann if f.eps <= 0.0 => {
+                    f.eps *= 1.0 - self.config.cooling;
+                    greedy
                 }
                 Exploration::Boltzmann => {
                     let row = f.row(s, m);
@@ -422,6 +429,7 @@ impl CollusionWorld {
             for (d, p) in self.discounted.iter_mut().zip(&profits) {
                 *d += self.weight * p;
             }
+            self.weight_sum += self.weight;
             self.weight *= delta;
         }
         if self.quiet_from.is_none()
@@ -604,12 +612,8 @@ impl CollusionWorld {
         if t_d == 0 || (self.period < u64::from(self.horizon) && !self.is_finished()) {
             return f64::NAN;
         }
-        let d = self.config.delta;
-        let sum_w = if d > 0.0 {
-            (1.0 - d.powi(t_d as i32)) / (1.0 - d)
-        } else {
-            1.0
-        };
+        // The run's own weights: a δ changed later does not rescale them.
+        let sum_w = self.weight_sum;
         (0..self.space.firms)
             .map(|i| self.game.gain(i, self.discounted[i] / sum_w))
             .sum::<f64>()
@@ -1132,6 +1136,71 @@ mod tests {
         });
         three.run(200);
         assert_eq!(three.fingerprint(), 0x0bab95a370db18eb);
+    }
+
+    #[test]
+    fn the_authors_sessions_wrap_at_a_million() {
+        // The page draws 32-bit seeds; under the code's RNG the seed is the
+        // session number, wrapping every 10⁶ sessions so any seed starts at once.
+        let c = CollusionConfig {
+            rng: RngKind::Calvano,
+            ..CollusionConfig::default()
+        };
+        let fp = |seed| {
+            let mut w = CollusionWorld::new(c.clone(), seed).unwrap();
+            w.run(1);
+            w.fingerprint()
+        };
+        assert_eq!(fp(1_000_001), fp(1));
+        assert_eq!(fp(4_000_000_000), fp(1_000_000));
+        assert_ne!(fp(2), fp(1));
+    }
+
+    #[test]
+    fn a_boltzmann_temperature_that_reaches_zero_plays_greedily() {
+        let mut w = world(|c| {
+            c.exploration = Exploration::Boltzmann;
+            c.temperature = 1e-300;
+            c.cooling = 0.9;
+            c.periods_per_tick = 100;
+        });
+        w.run(2);
+        assert_eq!(w.stats.latest().unwrap().explored, 0.0);
+    }
+
+    #[test]
+    fn the_discounted_gain_keeps_the_runs_delta() {
+        let mut w = world(|c| {
+            c.beta = 2e-4;
+            c.window = 2_000;
+        });
+        w.run(2_000_000);
+        let before = w.discounted_gain();
+        let mut next = w.config.clone();
+        next.delta = 0.5;
+        w.set_config(ModelConfig::Collusion(next)).unwrap();
+        assert_eq!(w.discounted_gain(), before);
+    }
+
+    #[test]
+    fn a_finished_session_reaches_its_pinned_results() {
+        // crates/sugarscape-wasm/tests/web.rs repeats this: the analysis after
+        // convergence (cycle, Δ, both equilibrium tests) is portable too.
+        let mut w = world(|c| {
+            c.beta = 2e-4;
+            c.window = 2_000;
+        });
+        w.run(2_000_000);
+        let s = w.stats.latest().unwrap();
+        assert_eq!(
+            (
+                s.cycle_gain.to_bits(),
+                s.equilibrium_on_path,
+                s.punishment_like.to_bits(),
+                w.tick
+            ),
+            (4604541580735232753, 0.0, 0, 44)
+        );
     }
 
     #[test]
