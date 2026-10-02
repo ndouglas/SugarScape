@@ -240,3 +240,85 @@ audits' explanation and a pointer to this round.
 - **The calibration for claim 2 runs first,** under its fixed rule, and is committed with its result before
   claims 2a–2d run.
 - **A final whole-branch review.**
+
+## Amendments (implementation)
+
+Rulings made while building and surveying the second round, each with its reason. Only ruling 6 touches a
+judge, and it was made and committed (55a8c23) after the judges (e4edce3) and before any survey run. No
+threshold was changed. The results are in `survey/out/minds8b-results.md`, `minds8b-calibration.md`,
+`minds8b-presets.md` and `minds8b-usage.md`.
+
+**Mechanism.**
+
+1. **The watcher statistics need a real founder split.** The core's watcher-against-others series were gated
+   on 0 < `watchers` < 1, which ignores `who`. They now need some founders who watch and some who don't,
+   counted with the same rule that deals watching (`who` and the cheater id rule). The page's gates (the
+   charts and the Watching color mode) use the same split, exactly: the id rule deals ⌊n·s⌋ of n founders, so
+   a split needs 0 < ⌊n·s⌋ < n. The survey computes from the agents, so only the page's series are affected.
+2. **A forgoing scrounger that is fed, under `raid_when: hungry`, forages as usual.** Its seen caches aren't
+   places to go while it is fed, and the literal "holding a fresh entry" would leave it no choice but to sit
+   and starve. No preset combines `hungry` with `forgo`.
+3. **In the forgo list, staying put is valued 0, and a forgoing scrounger skips the `better` test.** The site
+   it forgoes is worth nothing to it, which follows from "scrounging excludes producing". The cost if wrong:
+   forgoing scroungers raid a little more readily. It is also why variant forgo is identical under `raid_if:
+   always`, and, with `loot: eat` making room infinite, under `value: room`.
+4. **A forgoing scrounger harvests nothing on any tick it holds a fresh entry and doesn't raid,** including
+   the walking ticks on the way to a seen cache and a wasted raid. The first build harvested on those walking
+   steps. A reviewer's minor point was promoted to a fix because the spec's `forgo` is "no harvest" while an
+   entry is fresh. Its own dig is unaffected, and under the survey probe a raid that took something still
+   harvests.
+5. **Minds 3's diagnostics apply the same cap under `value: room`.** A seen cache's true value is capped at
+   the room, as its believed value is, so a capped choice isn't miscounted as a stale one.
+6. **`caching.dig_below: half | reserve`** (default `half`, live). The calibration's first qualifying world
+   was item 4, which uses the survey probe (`probe_dig_at_reserve`) to make owners dig below their whole
+   reserve. A probe is not config, so a preset couldn't express that world, and the app's `watch-ak` would
+   have differed from the survey's. `dig_below: reserve` makes `hungry()` use R, as the probe and
+   central-place foraging already did. The probe is kept, and `raiding()` stays at R / 2 under both values.
+   Main's worlds are unchanged at the default. `theft-winter-half`'s description names the setting, and the
+   Rules panel offers it as **Dig below**.
+
+**Judges and measures.**
+
+7. **3a: a 95 % CI wholly above 0 reads Fails ("rising"), not Inconclusive.** The pre-mortem lists "flat or
+   rises" as the outcome if the claim is false, so a clear contradiction of the prediction is a failure. The
+   judge's text has been amended to say so. The order of precedence is Holds, then flat, then rising, then
+   Inconclusive, so an interval inside (0, 0.05] reads flat. Ruled before any run.
+8. **Untestable when fewer than 5 seeds (or runs) have a value,** the convention of Minds 6–8, as well as when
+   the precondition isn't met. No claim read Untestable.
+9. **"Raided within span" is counted from the raider's sighting,** when its memory starts, not from the
+   cache's creation. The span runs from the sighting, and sightings happen at burial, so the two are nearly
+   identical. It affects only the reported P(raid | seen).
+10. **The bottleneck compares the medians of the per-seed P(seen) and P(raid | seen).** The class is printed
+    beside a count of the seeds that are knowledge-bound (0 of 20 in every world and setting).
+11. **The cohort counts cache instances.** A (site, owner) cache runs from the burial that creates it until it
+    is emptied, and a later cache at the same site is a new one. A cache emptied and buried again on the same
+    tick reads as one, which is rare.
+12. **The usage check needs raids to take sugar in at least 16 of 20 seeds** in each watching preset. The
+    implementer set this threshold, and it is disclosed here. Every preset passed in 20 of 20.
+13. **The calibration ran once, under its committed rule** (9ec279e, result b966312), before claims 2a–2d ran.
+    The judges read its result as a constant (`WATCH_AK_ITEM`, item 4), and the claim run reproduced it (20 of
+    20).
+14. **A reported-only `--presets` section was added after the run.** It measures each watching preset as set,
+    beside the same world with one switch changed, so that the presets' descriptions rest on measured figures.
+    It touches no judge. Survival counts at ticks 100 and 200 were added to the survey's per-run record for
+    it.
+15. **The first round's five claims were rerun under the new defaults,** as context. Their judges are
+    unchanged.
+
+**What the results changed in how claims are read** (not their verdicts).
+
+16. **Fitness in the field is compressed.** Ticks alive per founder ÷ 200 sits near 0.9, because most agents
+    who die do so in the winter (in `watch-winter`, at about tick 150 on average). So 2c's and 2d's 0.05 per
+    seed was a large effect on this scale, and survival at 200 moves several times as much. The paired means
+    (2c 0.012, 95 % interval 0.008 to 0.017; 2d 0.003, −0.002 to 0.007) are reported beside the verdicts.
+17. **2b's 62 of 100 under all three span-7 settings is a coincidence of totals.** The runs were recounted,
+    and the per-run-set counts differ.
+18. **Spans 1 and 2 reverse three results.** Watching's fresh-cache hazard falls below stumbling's (1a), the
+    condition doesn't flip (2a), and variant forgo's shortfall shrinks with share (3a, rising). Span 7 sits at
+    the generous end of what the sources support, so the docs present the judged results as an upper bound.
+19. **`watch-scroungers-only`'s shortfall predates watching.** With watching off, the same agents survive 48 %
+    against the hoarders' 70 %, and with it 49 % against 65 %. The first round's "pure scroungers trail at
+    every share" describes agents who never cache, not scrounging. The preset's title and description say so.
+
+**Not re-timed.** The second round measured no costs. The first round's cost table stands, labeled as the
+first design's (`raid_if: always`), and `watch-scroungers-forgo` and `watch-ak` have no cost figure.

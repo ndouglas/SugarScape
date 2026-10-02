@@ -1,6 +1,12 @@
 # Minds 8: watching (design)
 
 **Date:** 2026-10-01
+**Superseded in part** by the second round, `docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`
+(same branch, before merging). Four audits found that three of this design's five judged results were
+foreseeable from Minds 6's numbers: claim 1's band was a strawman, claim 2's ratio sat at a floor, and claim 3's
+"pure scroungers" still produced their own food. The second round adds tests that can tell the hypotheses
+apart, and makes `raid_if: better` the default. This design's verdicts stay on record as what it measured. The
+statements marked **Superseded** in the amendments below are corrected there and in the program document.
 **Program:** Minds (`docs/studies/2026-09-27-minds.md`), step 8. It is P2 of the pilfering campaign:
 
 - P1: theft (Minds 6, done).
@@ -396,6 +402,10 @@ or threshold.
     scrounging, opportunists will always be present, unless the producer is able to consume most of
     the patch without sharing" (p.847) fits our pre-run reason for expecting no fall in that variant
     (watching costs them nothing); it was not tested.
+    **Superseded (second round):** the rationale was wrong on mechanism. Watching isn't free, since a raid
+    replaces a harvest and walking to seen caches spends moves. And the second round found watchers who
+    bury individually ahead (pooled 0.009, 95 % interval 0.003 to 0.016) while the world's fitness falls
+    with their share: a mild social dilemma (3c Holds).
 
 **The order of runs, disclosed.** The survey's judges and thresholds were in this spec from its
 first commit (57ec71c), and the survey module transcribed them (8b1bf8c) before its first run. But
@@ -429,14 +439,36 @@ survey code was written. No judge or threshold was changed because of them.
     entry raids; the one-take rule and the carrying limit hardly ever bind (5 seeds). What bounds the
     rate is the share of caches seen buried within the span (19.6 % in summer, 3.6 % in winter at
     span 7), so the rate is reported across span (0.09–1.20 % at span 1–13).
+    **Superseded (second round):** this was over-stated. Watchers saw 88 % of burials, but raids per
+    burial were about 0.30 (the design audit). By the second round's rule, fixed before its run, the
+    pilferage is action-bound in every world and setting: P(seen) 0.85–0.90 against P(raid | seen)
+    0.10–0.63 (0.88 against 0.62 under this design's `raid_if: always` at span 7). The low share of caches
+    known is mostly old stock that nobody saw recently. Nor was "watching can't reach the field's rates"
+    shown: the stock rate dilutes fresh caches with the winter stock, and on fresh caches watching's
+    hazard is 6.1 % a day against stumbling's 3.0 % (1a Holds; 8.1 % under `always`).
 20. **Claim 2's ratio half had a floor.** p_s ÷ p_o was already near 0 without watching (0.016), so
     it could hardly fall. The advantage half carries the information, and claim 2 is read as
     watching hurting hoarders through survival.
+    **Superseded (second round):** "Fails" was an artifact of the floor and `all_of`. The ratio actually
+    rose a little (lower in only 5 of 20 seeds). The hoarders' loss mixes being raided with paying the
+    raider's own costs, since everyone watches and hoarders, having room, are likely the effective
+    raiders. In a world where the condition held (`watch-ak`), watching flips it (2a Holds), but fitness
+    follows the condition's sign in only 62 of 100 runs (2b Fails). Neither being watched nor the
+    hoarders' own raiding costs them 0.05 in any seed (2c, 2d Fail).
 21. **Claim 3's pure scroungers take little.** A pure scrounger's raid takes 1.1 sugar on average,
     against 5.2 for a watcher who buries, likely because agents that never bury carry close to their
     limit. So that variant likely measures watchers with little room, not watching alone. No switch
     isolates it. The expectation recorded before the run (pure scroungers show the prediction) was
     refuted, and is reported as refuted.
+    **Superseded (second round):** "pure scroungers did worse at every share" is not a fact about
+    scrounging. The shortfall predates watching: with watching off, the same agents, who never cache,
+    survive 48 % against the hoarders' 70 % (49 % against 65 % with watching), and the trend across shares
+    was not detected (it is not "absent"). `value: room` isolates part of the carrying cause, raising
+    their fitness by 0.018 in 20 of 20 seeds. Where scrounging excludes producing (`scrounge: forgo`,
+    `loot: eat`), the scroungers' shortfall grows with their share (3a Holds), but they trail even when
+    rare, so no stable mix forms (3b Fails). For watchers who also bury, the first design's "no frequency
+    dependence" was "not detected": the slope was negative at every span, with the judge's power about the
+    size of the effect.
 22. **Wealth per founder by kind.** `watcher_wealth` and `other_wealth` (in place of the plan's
     mean holdings of the living) are Σ (`holdings[0]` + Σ caches + the stomach `fed`) over the
     living of each kind ÷ that kind's founders, the dead counting 0 and a kind with no founders
