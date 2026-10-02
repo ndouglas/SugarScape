@@ -1,6 +1,6 @@
 {
   "name": "Q-learning Auctions: bidders",
-  "description": "Figure 8 compares three bidders and discount .99 versus .999; two bidders provide a control. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "description": "Result 8 / Figure 11 compares three bidders and discount .99 versus .999; two bidders provide a control. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
   "base": {
     "preset": "auctions-first-price"
   },

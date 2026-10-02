@@ -170,7 +170,7 @@ pub fn presets() -> Vec<ModelPreset> {
             id: "auctions-persistent",
             name: "Bidders keep experimenting for a hundred million auctions",
             source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
-            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Figure 9: one 100m-period session per format; whole-run played occupancy. This long experiment may take substantial time. Native seed-1 100m study: FPA realized revenue .225344, SPA top-pair occupancy .309875; fixed occupancy check fails.",
+            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon; final stability is reported separately and does not select occupancy or revenue. Figure 9: one 100m-period session per format; whole-run played occupancy. This long experiment may take substantial time. Native seed-1 100m study: FPA realized revenue .225344, SPA top-pair occupancy .309875; fixed occupancy check fails.",
             config: ModelConfig::Auctions(c),
         });
     }
