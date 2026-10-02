@@ -2859,14 +2859,15 @@ agent-ticks alive per founder over ticks 1–200 ÷ 200.
 - **3. Producers and scroungers.** Where scrounging excludes producing (`watch-scroungers-forgo`),
   the scroungers trail, and **trail further as they become common (Holds)**: the mean per-seed slope
   on their share is −0.20 (95 % CI −0.23 to −0.17). But **no stable mix forms (Fails)**: they are
-  ahead at a share of 0.1 in only 13 of 60 seeds. About half of their median shortfall there (0.042)
-  is present with watching off (at half), where the same never-caching agents' fitness is 0.888
-  against the hoarders' 0.911 (48 % against 70 % surviving the first winter): likely the cost of not
-  caching in a winter world, not of scrounging. Forgoing is the cost of scrounging, since letting
-  them harvest too raises their fitness by 0.13. Among watchers who also bury, **no fall in their
-  lead was detected (Fails, flat)**: slope 0.011, 90 % CI −0.004 to 0.027. Instead it is **a mild
-  social dilemma (Holds)**: watchers are ahead by 0.009 (95 % CI 0.003 to 0.016) while everyone's
-  fitness falls as more watch.
+  ahead at a share of 0.1 in only 13 of 60 seeds. Never caching costs a little on its own: with
+  watching off (a baseline added after the run, reported only) the same agents trail by about 0.02
+  at every share, a median 0.015 at 0.1. Per seed, watching adds a median 0.034 to the shortfall at
+  0.1 (in 47 of 60 seeds) and 0.204 at 0.8, so the shortfall when rare is mostly scrounging's, and
+  its growth with share entirely so. Within scrounging, forgoing is the cost, since letting them
+  harvest too raises their fitness by 0.13. Among watchers who also bury, **no fall in their lead
+  was detected (Fails, flat)**: slope 0.011, 90 % CI −0.004 to 0.027. Instead it is **a mild social
+  dilemma (Holds)**: watchers are ahead by 0.009 (95 % CI 0.003 to 0.016) while everyone's fitness
+  falls as more watch.
 - **The switches.** `raid_if: always` costs 6 points of survival in `watch-winter` and changes no
   verdict. `value: room` pays where agents carry close to their limit (+6 to +7 points in
   `watch-half` and `watch-ak`) and changes no verdict.
@@ -2890,7 +2891,7 @@ Judged at span 7; the span notes are from the reported spans 1, 2, 3, 7 and 13.
 | 2d. Their own raiding costs hoarders 0.05 | Fails (0 of 20; mean 0.003, not detected) |
 | 3a. Scroungers who forgo: shortfall grows with share | Holds (slope −0.20). Reverses at 1–2 |
 | 3a. Watchers who bury: lead falls with share | Fails, flat (0.011; no fall detected) |
-| 3b. A stable mix | Fails (ahead when rare in 13 of 60 seeds; about half the shortfall at 0.1 is there without watching) |
+| 3b. A stable mix | Fails (ahead when rare in 13 of 60 seeds; at 0.1 the mean shortfall, 0.056, is 0.021 without watching plus 0.035 that watching adds) |
 | 3c. A social dilemma | Holds (lead 0.009; world slope −0.008). Holds at 7 and 13; not detected at 1–3 |
 
 **The first design, superseded.** Its verdicts (the field band, Andersson and Krebs in `watch-half`,

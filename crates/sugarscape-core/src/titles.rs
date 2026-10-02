@@ -323,7 +323,7 @@ pub const TITLES: [(&str, &str); 387] = [
     ),
     (
         "watch-scroungers-forgo",
-        "Scroungers who forgo foraging: with a 7-tick memory they trail the hoarders further the more of them there are, and never caching costs them some even without watching",
+        "Scroungers who forgo foraging: with a 7-tick memory they trail the hoarders further the more of them there are, mostly from scrounging rather than from never caching",
     ),
     (
         "watch-ak",

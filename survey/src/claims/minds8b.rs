@@ -1756,6 +1756,69 @@ fn dilemma_claim(_seeds: &[u64]) -> Outcome {
         .with("Watchers who also bury are Vickery et al.'s cost-free opportunists, not Barnard and Sibly's scroungers. Partly seen before the run: under raid_if always the design audit saw world survival fall from 0.714 to 0.551; under better its variant cut the watchers' lead to 1 point.")
 }
 
+// ------------------------------------- 3b's baseline (reported, not judged)
+
+/// 3b's never-caching baseline, per share: the per-seed advantage without
+/// watching (`off`), with it (`on`, claim 3's judged worlds), and their
+/// difference (`on − off`, what watching adds at that share). Medians, 95 %
+/// t intervals of the means, and the seeds below 0 without watching.
+pub(crate) fn baseline_rows(on: &[Vec<f64>], off: &[Vec<f64>]) -> String {
+    let ci = |v: &[f64]| {
+        let f = stats::finite(v);
+        if f.len() < MIN_VALUES {
+            return "—".to_string();
+        }
+        let (mu, lo, hi) = ci95(&f);
+        format!("{mu:+.3} ({lo:+.3} to {hi:+.3})")
+    };
+    let mut s = String::from(
+        "| s | advantage without watching: median | mean, 95 % CI | seeds below 0 | advantage with watching (claim 3): median | mean, 95 % CI | with − without: median | mean, 95 % CI | seeds below 0 |\n|---|---|---|---|---|---|---|---|---|\n",
+    );
+    for ((sh, a), b) in SHARES.iter().zip(on).zip(off) {
+        let d: Vec<f64> = a.iter().zip(b).map(|(x, y)| x - y).collect();
+        let below = |v: &[f64]| {
+            let f = stats::finite(v);
+            format!("{} of {}", f.iter().filter(|&&x| x < 0.0).count(), f.len())
+        };
+        writeln!(
+            s,
+            "| {sh} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            md(b),
+            ci(b),
+            below(b),
+            md(a),
+            ci(a),
+            md(&d),
+            ci(&d),
+            below(&d),
+        )
+        .unwrap();
+    }
+    s
+}
+
+/// `survey --baseline`: claim 3's variant forgo at every share with
+/// watching off (cheaters = watchers = s, seeds 1–60), against claim 3's
+/// judged worlds. Reported, not judged; added after the run. Returns the
+/// table as Markdown.
+pub(crate) fn baseline_report() -> String {
+    let seeds = seeds_upto(SEEDS_3);
+    let on = share_runs(true, JUDGED, &seeds);
+    let off: Vec<Vec<Run>> = SHARES
+        .iter()
+        .map(|&s| {
+            let mut c = JUDGED.apply(share_world(true, s));
+            c.watching.on = false;
+            runs(&c, &seeds)
+        })
+        .collect();
+    let adv = |w: &[Vec<Run>]| w.iter().map(|r| col(r, adv3)).collect::<Vec<_>>();
+    format!(
+        "Variant forgo (`watch-scroungers-forgo` with cheaters = watchers = s), span {ANCHOR}, seeds 1–{SEEDS_3}, ticks 1–200; the advantage is scrounger − other fitness (ticks alive per founder ÷ 200). Without watching is the same world with `watching.on = false`: the same agents never cache and never watch.\n\n{}",
+        baseline_rows(&adv(&on), &adv(&off)),
+    )
+}
+
 // ------------------------------------------------------------------ usage
 
 /// The presets with watching on.
@@ -2094,6 +2157,27 @@ pub fn claims() -> Vec<Claim> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn baseline_rows_difference_on_minus_off_per_seed() {
+        let on: Vec<Vec<f64>> = SHARES
+            .iter()
+            .map(|_| vec![-0.10, -0.05, 0.02, -0.04, -0.06])
+            .collect();
+        let off: Vec<Vec<f64>> = SHARES
+            .iter()
+            .map(|_| vec![-0.02, -0.01, 0.01, -0.02, -0.03])
+            .collect();
+        let t = baseline_rows(&on, &off);
+        let row = t.lines().find(|l| l.starts_with("| 0.1 |")).unwrap();
+        // off: median −0.02, below 0 in 4 of 5; on: median −0.05;
+        // on − off: −0.08 −0.04 0.01 −0.02 −0.03, median −0.03, 4 of 5 below 0.
+        assert!(row.starts_with("| 0.1 | -0.020 |"), "{row}");
+        assert!(row.contains("| 4 of 5 | -0.050 |"), "{row}");
+        assert!(row.contains("| -0.030 | -0.032 ("), "{row}");
+        assert!(row.ends_with("| 4 of 5 |"), "{row}");
+        assert_eq!(t.lines().count(), 2 + SHARES.len());
+    }
 
     fn hand_built() -> Run {
         Run {

@@ -291,9 +291,27 @@ Under the reported settings (each judge rerun on that setting's worlds, seeds 1�
 
 Advantage at s = 0.1 (seeds 1–60): -0.127 -0.124 -0.099 -0.046 0.079 -0.059 0.041 -0.007 -0.130 -0.078 -0.180 -0.032 0.082 -0.042 0.020 -0.262 -0.111 -0.107 0.068 0.000 -0.016 -0.012 -0.037 -0.151 -0.011 0.015 -0.048 -0.020 -0.154 -0.176 -0.145 0.017 -0.032 -0.174 0.037 -0.042 -0.116 -0.067 -0.028 -0.035 -0.084 -0.034 -0.066 0.035 -0.112 -0.002 -0.032 -0.007 -0.095 0.014 -0.172 -0.190 0.017 -0.104 -0.002 -0.081 -0.152 -0.041 -0.097 0.133. Above 0 in 13 of 60 (the judge's count, on unrounded values: seed 20's advantage prints as 0.000 at three decimals but is above 0, so a count of the printed values gives 12).
 
-Without watching, the same agents trail already (reported, not judged; `minds8b-presets.md`, `watch-scroungers-forgo` with watching off, seeds 1–20, at half): fitness 0.888 against the hoarders' 0.911, a gap of 0.023, and 48 % against 70 % surviving the first winter (per founder). That is roughly half the judged median shortfall of 0.042 at s = 0.1, so part of 3b's "trail even when rare" is likely the cost of never caching in a winter world rather than of scrounging. The verdict is unchanged.
-
 Advantage at s = 0.9 (seeds 1–60): -0.164 -0.104 -0.103 -0.218 -0.273 -0.234 -0.179 -0.226 -0.244 -0.100 -0.194 -0.132 -0.072 -0.170 -0.124 -0.188 -0.141 -0.313 -0.040 -0.153 -0.127 -0.132 -0.064 -0.176 -0.139 -0.091 -0.087 -0.155 -0.279 -0.137 -0.272 -0.100 -0.162 -0.197 -0.317 -0.001 -0.238 -0.159 -0.176 -0.136 -0.223 -0.130 -0.178 -0.258 -0.146 -0.283 -0.230 -0.278 -0.105 -0.246 -0.241 -0.016 -0.210 -0.241 -0.101 -0.168 -0.207 -0.220 -0.126 -0.174. Below 0 in 60 of 60.
+
+#### 3b's baseline without watching (added after the run; reported, not judged)
+
+Added after the run as a reported-only baseline, with no judge, threshold or verdict touched: `cargo run --release -- --baseline` in `survey/` (`baseline_report` in `survey/src/claims/minds8b.rs`), which reruns claim 3's judged worlds unchanged (the "with watching" medians reproduce the table above) and the same worlds with watching off. With watching off the forgo switch does nothing (it acts only on a fresh memory), so the scroungers are simply agents who never cache. "With − without" is the per-seed difference in the advantage, at the same share and seed: what watching (here, scrounging with forgoing) adds to the scroungers' shortfall at that share.
+
+Variant forgo (`watch-scroungers-forgo` with cheaters = watchers = s), span 7, seeds 1–60, ticks 1–200; the advantage is scrounger − other fitness (ticks alive per founder ÷ 200). Without watching is the same world with `watching.on = false`: the same agents never cache and never watch.
+
+| s | advantage without watching: median | mean, 95 % CI | seeds below 0 | advantage with watching (claim 3): median | mean, 95 % CI | with − without: median | mean, 95 % CI | seeds below 0 |
+|---|---|---|---|---|---|---|---|---|
+| 0.1 | -0.015 | -0.021 (-0.036 to -0.006) | 33 of 60 | -0.042 | -0.056 (-0.076 to -0.036) | -0.034 | -0.035 (-0.050 to -0.020) | 47 of 60 |
+| 0.2 | -0.017 | -0.021 (-0.033 to -0.009) | 38 of 60 | -0.060 | -0.070 (-0.086 to -0.054) | -0.046 | -0.049 (-0.061 to -0.036) | 47 of 60 |
+| 0.3 | -0.019 | -0.021 (-0.029 to -0.012) | 44 of 60 | -0.079 | -0.079 (-0.091 to -0.066) | -0.066 | -0.058 (-0.069 to -0.048) | 53 of 60 |
+| 0.4 | -0.025 | -0.021 (-0.031 to -0.011) | 43 of 60 | -0.080 | -0.088 (-0.100 to -0.075) | -0.069 | -0.067 (-0.078 to -0.055) | 59 of 60 |
+| 0.5 | -0.021 | -0.022 (-0.031 to -0.013) | 42 of 60 | -0.112 | -0.111 (-0.122 to -0.101) | -0.083 | -0.089 (-0.098 to -0.081) | 60 of 60 |
+| 0.6 | -0.020 | -0.018 (-0.026 to -0.010) | 44 of 60 | -0.148 | -0.144 (-0.155 to -0.133) | -0.123 | -0.126 (-0.135 to -0.117) | 60 of 60 |
+| 0.7 | -0.022 | -0.020 (-0.029 to -0.012) | 45 of 60 | -0.181 | -0.188 (-0.199 to -0.178) | -0.163 | -0.168 (-0.179 to -0.157) | 60 of 60 |
+| 0.8 | -0.018 | -0.020 (-0.030 to -0.009) | 40 of 60 | -0.228 | -0.227 (-0.241 to -0.212) | -0.204 | -0.207 (-0.217 to -0.197) | 60 of 60 |
+| 0.9 | -0.010 | -0.014 (-0.027 to -0.000) | 36 of 60 | -0.169 | -0.172 (-0.190 to -0.153) | -0.153 | -0.158 (-0.171 to -0.145) | 60 of 60 |
+
+Without watching the never-caching agents trail by about 0.02 at every share (means −0.014 to −0.022, no trend), below 0 in 33 of 60 seeds at s = 0.1 and 36 of 60 at s = 0.9. At s = 0.1 the median without watching is 0.015 against the judged median 0.042 with it, and the median per-seed difference is 0.034; in means, which add, the shortfall of 0.056 is 0.021 without watching plus 0.035 that watching adds (95 % CI 0.020 to 0.050; below 0 in 47 of 60 seeds). So the scroungers' shortfall when rare is mostly what watching adds, not the cost of never caching, and its growth with share (3a) is all in what watching adds (0.034 at 0.1 to 0.204 at 0.8). 3b's verdict is unchanged.
 
 The first round's probe is reported for claims 1 and 2 only, as the spec's "Also reported" list fixes it; claim 3 has none.
 

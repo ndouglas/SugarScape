@@ -13,6 +13,10 @@
 //! `cargo run --release -- --presets` measures every watching preset
 //! (seeds 1–20 always; reported, not judged) and writes
 //! `out/minds8b-presets.md`.
+//!
+//! `cargo run --release -- --baseline` measures claim 3's variant forgo at
+//! every share with watching off (seeds 1–60; reported, not judged, added
+//! after the run) and prints the table appended to `out/minds8b-results.md`.
 
 mod claim;
 mod claims;
@@ -83,6 +87,10 @@ fn main() {
     }
     if args.iter().any(|a| a == "--presets") {
         print!("{}", claims::minds8b::presets_report());
+        return;
+    }
+    if args.iter().any(|a| a == "--baseline") {
+        print!("{}", claims::minds8b::baseline_report());
         return;
     }
     if args.iter().any(|a| a == "--usage") {
