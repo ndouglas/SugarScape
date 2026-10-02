@@ -318,23 +318,22 @@ collusion does not survive a new rival, and the first 165 periods look like rand
 exploration and Lambin's Theorem 1 do not hold up.
 See `docs/superpowers/specs/2026-10-01-algorithmic-collusion-design.md`.
 
-## Q-learning Auctions (implementation prepared; milestone assigned at merge)
+## Milestone 35: Q-learning Auctions (publication pending)
 
 Banchio & Skrzypacz (2022) is a separate `auctions` kind: fixed-value bidders,
 first/second-price and mixture payments, disclosure versus counterfactual learning,
 and the paper's market and exploration extensions. Initialization, ties and
 underspecified source protocols are named reconstruction switches. The design
 fixes histogram comparisons, coverage gates and decision rules before measuring;
-full ensembles and long duration controls stay outside CI. Queue #1 remains in
-`docs/papers.md` until integration and findings are complete. See
+full ensembles and long duration controls stay outside CI. See
 `docs/superpowers/specs/2026-10-02-q-learning-auctions-design.md`.
 
 The full registered native studies are measured: 11 source/reading checks hold,
 four fail and the patient three-bidder check is inconclusive. Protocol/documentary
 controls hold; initialization, ties, hindsight and duration remain descriptive.
 [Findings and provenance](superpowers/specs/2026-10-02-q-learning-auctions-findings.md)
-retain failed criteria and every declared arm. Final review, milestone assignment
-and publication remain integration gates.
+retain failed criteria and every declared arm. Final review and publication
+remain integration gates.
 
 ## Experiments and science
 
@@ -363,6 +362,7 @@ and publication remain integration gates.
 - **Lansing and Kremer's Balinese water temples** (and Janssen's reanalysis): done (Milestone 29).
 - **Axtell's emergence of firms** (and his 2013 parameterization): done (Milestone 33).
 - **Calvano, Calzolari, Denicolò and Pastorello's algorithmic collusion** (and its critics: Asker, Fershtman & Pakes; Lambin; Epivent & Lambin; den Boer, Meylahn & Schinkel; Eschenbaum, Mellgren & Zahn): done (Milestone 34).
+- **Banchio & Skrzypacz’s Q-learning auctions**: measured (Milestone 35); baseline and feedback direction hold, four extension/endpoint criteria fail, and patient three-bidder coverage is inconclusive.
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.
