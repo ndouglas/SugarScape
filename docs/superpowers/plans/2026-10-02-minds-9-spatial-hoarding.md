@@ -353,7 +353,7 @@ Pin serialized field names in core render tests and TypeScript inspect tests. Ke
 **Consumes:** Entire episode state; existing clone keyframes.
 **Produces:** Disabled-world compatibility and enabled-world exact replay.
 
-- [ ] Add red checkpoint tests at pending delivery, active guard and fresh observed larder; clone/restore then step both branches and compare complete fingerprints, snapshots, inspection and stocks. Mutating each authoritative extension field must change enabled fingerprint. State irrelevant while disabled must not change the legacy fingerprint.
+- [x] Add red checkpoint tests at pending delivery, active guard and fresh observed larder; clone/restore then step both branches and compare complete fingerprints, snapshots, inspection and stocks. Mutating each authoritative extension field must change enabled fingerprint. State irrelevant while disabled must not change the legacy fingerprint.
 
 ```rust
 // Extend tests/checkpoint.rs using its existing checkpoint/restore helpers.
@@ -364,11 +364,11 @@ restored.step();
 assert_eq!(original.fingerprint(), restored.fingerprint());
 ```
 
-- [ ] Run `cargo test -p sugarscape-core --test checkpoint` for red. Use deterministic hand-crafted fixtures, not a search over campaign seeds.
-- [ ] Hash enabled home/traits/larder/age/intent/guard/observations in deterministic field/key order. Keep fates out of hashes as existing optional diagnostics. Keyframe cloning must retain full extension state; no rebuild that loses intentions or observations.
-- [ ] Extend existing real WASM determinism tests with all three spatial presets and an explicit cohort fixture if WASM constructor exposure is needed; compare native CLI and WASM tick traces including tick zero and tick 200. Ensure portable inheritance math has native deterministic tests even though generation playback is outside frontend scope.
-- [ ] Run `cargo fmt --all -- --check`, `cargo test --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `npm run build --prefix web`, `npm test --prefix web`. Diagnose failures; do not rebaseline old fingerprints.
-- [ ] Commit: `test(minds): verify spatial hoarding restoration and wasm parity`.
+- [x] Run `cargo test -p sugarscape-core --test checkpoint` for red. Use deterministic hand-crafted fixtures, not a search over campaign seeds.
+- [x] Hash enabled home/traits/larder/age/intent/guard/observations in deterministic field/key order. Keep fates out of hashes as existing optional diagnostics. Keyframe cloning must retain full extension state; no rebuild that loses intentions or observations.
+- [x] Extend existing real WASM determinism tests with all three spatial presets and an explicit cohort fixture if WASM constructor exposure is needed; compare native CLI and WASM tick traces including tick zero and tick 200. Ensure portable inheritance math has native deterministic tests even though generation playback is outside frontend scope.
+- [x] Run `cargo fmt --all -- --check`, `cargo test --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `npm run build --prefix web`, `npm test --prefix web`. Diagnose failures; do not rebaseline old fingerprints.
+- [x] Commit: `test(minds): verify spatial hoarding restoration and wasm parity`.
 
 ### Task 8: Declared panels, strict analysis and judge amendment
 

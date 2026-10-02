@@ -24,10 +24,10 @@ Detailed approved plan: [spatial hoarding](docs/superpowers/plans/2026-10-02-min
 **Goal**: Single-episode presets, inspection and exact keyframe/native/WASM replay
 **Success Criteria**: All assigned tasks pass their tests and independent review; scientific runs require the reviewed amendment.
 **Tests**: Core export/checkpoint, web controls, real WASM parity/build/tests
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 5: Research protocol and results
 **Goal**: Reviewed judging amendment, full panels and reproducible results
 **Success Criteria**: All assigned tasks pass their tests and independent review; scientific runs require the reviewed amendment.
 **Tests**: Analysis/manifest fixtures, amendment approval, 40-seed panels and timing probes
-**Status**: Not Started
+**Status**: In Progress
