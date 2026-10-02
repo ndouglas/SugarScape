@@ -31,3 +31,5 @@ Detailed approved plan: [spatial hoarding](docs/superpowers/plans/2026-10-02-min
 **Success Criteria**: All assigned tasks pass their tests and independent review; scientific runs require the reviewed amendment.
 **Tests**: Analysis/manifest fixtures, amendment approval, 40-seed panels and timing probes
 **Status**: In Progress
+
+Tasks 8 implementation and independent review are finished. The committed judging amendment awaits the separate user approval required by the approved plan; Task 9 campaign runs have not started.

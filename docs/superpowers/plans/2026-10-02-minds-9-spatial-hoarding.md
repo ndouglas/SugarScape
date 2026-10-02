@@ -377,7 +377,7 @@ assert_eq!(original.fingerprint(), restored.fingerprint());
 **Consumes:** Runner records and initial cohort sampler; full approved panel list.
 **Produces:** Measured `--minds9` report route independent of existing Holds/Fails registry; deterministic panel manifests with condition ids/config/cohort/seeds; pure strict pairing function and protocol amendment. Formal verdicts only if amendment defines and user approves them.
 
-- [ ] Add red analysis tests and panel manifest tests without running simulations: all five approved panels, spans 2/7 plus watching off, discovery settings, rare/common shares, survival/stores/neutral inheritance controls, fixed traits and probes are present exactly. Reject duplicate condition/seed pairs, missing terminal rows, missing comparison partners and nonfinite measured inputs.
+- [x] Add red analysis tests and panel manifest tests without running simulations: all five approved panels, spans 2/7 plus watching off, discovery settings, rare/common shares, survival/stores/neutral inheritance controls, fixed traits and probes are present exactly. Reject duplicate condition/seed pairs, missing terminal rows, missing comparison partners and nonfinite measured inputs.
 
 ```rust
 pub struct PairedSummary {
@@ -396,10 +396,10 @@ fn identical_pairs_have_zero_width_interval() {
 ```
 
 Also test differences `[1,2,3]` give mean2/positive3, CI using Student t df2; n1 yields no CI; unmatched seed is an error; undefined per-kind exposure ratio stays absent.
-- [ ] Run `cargo test --manifest-path survey/Cargo.toml minds9` for red.
-- [ ] Implement pure manifest and report analysis. Use existing `student_t_cdf` to invert two-sided .975 quantile with bounded bisection; no normal approximation for 40 seeds. Keep terminal counts, all trajectories, endpoint/parent-weight distributions and denominator/missingness metadata. Return machine-readable envelopes with config/cohort/seed/probe/version/draw-order information and Markdown summary.
-- [ ] Draft amendment before invoking any campaign run. Define primary paired contrasts, units/denominators, seedwise signs/95% intervals, incomplete-ledger handling, extinction/zero-fitness reporting, undefined/unused mechanisms, sensitivity separation and timing procedure. Prefer measured contrasts with no Holds/Fails claims; if claims are proposed, explicitly define Untestable and thresholds and get approval. Include rare/common frozen-trait requirements for any frequency-dependence language. No imported .219 threshold or Minds 7 endpoint classification.
-- [ ] Run survey analysis tests and formatting/clippy for the separate crate. Commit: `feat(survey): declare spatial hoarding panels and judging protocol`.
+- [x] Run `cargo test --manifest-path survey/Cargo.toml minds9` for red.
+- [x] Implement pure manifest and report analysis. Use existing `student_t_cdf` to invert two-sided .975 quantile with bounded bisection; no normal approximation for 40 seeds. Keep terminal counts, all trajectories, endpoint/parent-weight distributions and denominator/missingness metadata. Return machine-readable envelopes with config/cohort/seed/probe/version/draw-order information and Markdown summary.
+- [x] Draft amendment before invoking any campaign run. Define primary paired contrasts, units/denominators, seedwise signs/95% intervals, incomplete-ledger handling, extinction/zero-fitness reporting, undefined/unused mechanisms, sensitivity separation and timing procedure. Prefer measured contrasts with no Holds/Fails claims; if claims are proposed, explicitly define Untestable and thresholds and get approval. Include rare/common frozen-trait requirements for any frequency-dependence language. No imported .219 threshold or Minds 7 endpoint classification.
+- [x] Run survey analysis tests and formatting/clippy for the separate crate. Commit: `feat(survey): declare spatial hoarding panels and judging protocol`.
 - [ ] Present the concrete amendment for review and wait for approval before Task 9. This is a specific scientific gate in the approved spec, separate from ordinary implementation review. Commit any approved revisions before running diagnostics. Do not mark Stage 5 complete while this gate is pending.
 
 ### Task 9: Run, report and close the campaign
