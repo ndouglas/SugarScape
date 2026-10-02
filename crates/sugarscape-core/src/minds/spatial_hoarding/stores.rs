@@ -1,5 +1,7 @@
 //! Conserved larder transfers; callers must not credit the returned amount again.
 
+use serde::{Deserialize, Serialize};
+
 use super::{access::in_contact, state::StoreKind};
 use crate::agent::AgentId;
 use crate::config::Loot;
@@ -7,17 +9,26 @@ use crate::minds::caching::fates::{self, Fate};
 use crate::world::World;
 
 /// Extension-only per-kind tick accounting. `None` on ordinary worlds.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct StoreEvents {
     pub scatter: StoreFlow,
     pub larder: StoreFlow,
     pub delivery: DeliveryEvents,
     pub guard: GuardEvents,
     pub observation: ObservationEvents,
+    pub metabolism: MetabolismEvents,
+}
+
+/// Effective metabolic demand and actual food consumed, excluding burial costs.
+/// Starvation can subtract more than available; consumption is capped before that subtraction.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct MetabolismEvents {
+    pub demand: f64,
+    pub consumed: f64,
 }
 
 /// Kind-specific watched deposits and encounter outcomes for episode reports.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct ObservationEvents {
     pub burials_seen: u32,
     pub sightings: u32,
@@ -38,7 +49,7 @@ pub struct ObservationEvents {
 
 /// Selected larder batches start once, including batches deposited immediately.
 /// Return turns count actions begun pending; cancellations exclude owner deaths.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct DeliveryEvents {
     pub starts: u32,
     pub completions: u32,
@@ -50,7 +61,7 @@ pub struct DeliveryEvents {
 
 /// Intentions are tick-start successes; execution is an actual paid action.
 /// Task 4 records blocked raids/discoveries at their distinct attempt sites.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct GuardEvents {
     pub intended: u32,
     pub executed: u32,
@@ -61,7 +72,7 @@ pub struct GuardEvents {
 }
 
 /// Amounts are food units; counts describe positive takes and tick-start stock exposure.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct StoreFlow {
     pub buried: f64,
     pub dug: f64,

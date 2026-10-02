@@ -363,7 +363,7 @@ fn newborn(l: f64, d: f64, forage: f64, cheater: bool) -> Agent {
 }
 
 /// The logit of a trait clamped to (ε, 1 − ε).
-fn clamped_logit(p: f64) -> f64 {
+pub(crate) fn clamped_logit(p: f64) -> f64 {
     logit(p.clamp(EPSILON, 1.0 - EPSILON))
 }
 
@@ -399,7 +399,7 @@ fn logit(p: f64) -> f64 {
     ln(p / (1.0 - p))
 }
 
-fn inverse_logit(x: f64) -> f64 {
+pub(crate) fn inverse_logit(x: f64) -> f64 {
     if x >= 0.0 {
         1.0 / (1.0 + exp_neg(-x))
     } else {

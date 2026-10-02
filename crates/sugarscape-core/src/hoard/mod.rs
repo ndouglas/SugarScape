@@ -18,3 +18,5 @@ pub use world::{
     Agent, AgentView, Cause, Death, Fate, HoardInspection, HoardWorld, Outcome, Record, Season,
     SeasonSummary, EPSILON, EXPOSURE_FLOOR, LOW_L, TAKEOVER_L, TALL, WIDE, WINDOW,
 };
+
+pub(crate) use world::{clamped_logit, inverse_logit};

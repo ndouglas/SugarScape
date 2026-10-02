@@ -21,7 +21,7 @@ pub struct EpisodeProbe {
     pub scatter_first: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FounderTraits {
     pub larder: f64,
     pub defense: f64,
