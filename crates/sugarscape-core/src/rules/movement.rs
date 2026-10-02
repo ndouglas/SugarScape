@@ -411,6 +411,15 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         a.social = social;
         return harvest;
     }
+    // Minds 9 own-larder recovery seam. Task 4 extends the remaining arrival
+    // sequence here; scatter digging above has already won this action.
+    if world.config.spatial_hoarding.enabled {
+        harvest.dug = crate::minds::spatial_hoarding::recover_own(world, id);
+        if harvest.dug > 0.0 {
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+    }
     if world.config.watching.on {
         if let Some(taken) =
             crate::minds::caching::watching::raid(world, id, site_index, room(used))

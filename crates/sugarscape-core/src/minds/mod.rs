@@ -21,6 +21,24 @@ use crate::world::World;
 /// Rule M's step under the configured decision rule: moves `id` and returns
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
+    if world.config.spatial_hoarding.enabled {
+        let dug_before = world.events.dug;
+        if spatial_hoarding::guard::guard_turn(world, id) {
+            return Harvest {
+                dug: world.events.dug - dug_before,
+                ..Harvest::default()
+            };
+        }
+        let a = world.agent(id).expect("live agent");
+        if a.spatial.as_ref().is_some_and(|s| s.delivery.is_some()) {
+            let target = spatial_hoarding::delivery::delivery_target(world, id).unwrap_or(a.pos);
+            spatial_hoarding::stores::tick_events(world)
+                .expect("enabled")
+                .delivery
+                .return_turns += 1;
+            return movement::arrive(world, id, target);
+        }
+    }
     // Minds 5: central-place foraging (under `mvt` or `goap`, validated).
     if world.config.central.enabled {
         return central::act(world, id);

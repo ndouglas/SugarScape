@@ -15,7 +15,6 @@ pub(crate) fn in_contact(world: &World, at: Pos, home: Pos) -> bool {
 }
 
 /// Tasks 3–4 route delivery and observed raids through this bounded search.
-#[allow(dead_code)]
 pub(crate) fn return_endpoint(world: &World, id: AgentId) -> Option<Pos> {
     let a = world.agent(id)?;
     endpoint(world, id, a.spatial.as_ref()?.home)

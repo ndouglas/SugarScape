@@ -1,8 +1,29 @@
 //! Minds 9: spatial hoarding episode state and checked founder cohorts.
 
 pub(crate) mod access;
+pub(crate) mod delivery;
+pub(crate) mod guard;
 pub mod state;
 pub mod stores;
+
+use crate::agent::AgentId;
+use crate::minds::caching;
+use crate::world::World;
+
+/// Shared hungry-owner arrival/guard seam; transfers credit holdings internally.
+pub(crate) fn recover_own(world: &mut World, id: AgentId) -> f64 {
+    if !world.config.spatial_hoarding.enabled || !caching::hungry(world, id) {
+        return 0.0;
+    }
+    let amount = world
+        .agent(id)
+        .and_then(|a| a.spatial.as_ref())
+        .map_or(0.0, |s| s.larder);
+    stores::recover(world, id, amount)
+}
+
+#[cfg(test)]
+mod controller_tests;
 
 #[cfg(test)]
 mod tests {

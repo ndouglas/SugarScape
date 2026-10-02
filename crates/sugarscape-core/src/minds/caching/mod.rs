@@ -81,7 +81,10 @@ pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
 /// as `caching.dig_below: reserve` does (Minds 8b, the probe as a setting).
 pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
-    if a.caches.is_empty() {
+    if a.caches.is_empty()
+        && !(world.config.spatial_hoarding.enabled
+            && a.spatial.as_ref().is_some_and(|s| s.larder > 0.0))
+    {
         return false;
     }
     let r = reserve(world, id);

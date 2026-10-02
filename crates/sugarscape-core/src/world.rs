@@ -1047,6 +1047,7 @@ impl World {
         if self.config.disease.enabled {
             rules::disease::outbreaks(self);
         }
+        crate::minds::spatial_hoarding::guard::prepare_guards(self);
         let mut order = self.agent_ids();
         order.shuffle(&mut self.rng);
         for id in order {

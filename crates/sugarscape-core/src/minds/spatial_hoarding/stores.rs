@@ -11,6 +11,31 @@ use crate::world::World;
 pub struct StoreEvents {
     pub scatter: StoreFlow,
     pub larder: StoreFlow,
+    pub delivery: DeliveryEvents,
+    pub guard: GuardEvents,
+}
+
+/// Selected larder batches start once, including batches deposited immediately.
+/// Return turns count actions begun pending; cancellations exclude owner deaths.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct DeliveryEvents {
+    pub starts: u32,
+    pub completions: u32,
+    pub cancellations: u32,
+    pub return_turns: u32,
+    pub delivered: f64,
+    pub bury_cost: f64,
+}
+
+/// Intentions are tick-start successes; execution is an actual paid action.
+/// Task 4 records blocked raids/discoveries at their distinct attempt sites.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct GuardEvents {
+    pub intended: u32,
+    pub executed: u32,
+    pub recovered: f64,
+    pub blocked_raids: u32,
+    pub blocked_discoveries: u32,
 }
 
 /// Amounts are food units; counts describe positive takes and tick-start stock exposure.
@@ -29,17 +54,23 @@ pub struct StoreFlow {
 }
 
 pub(crate) fn events(world: &mut World, kind: StoreKind) -> Option<&mut StoreFlow> {
-    if !world.config.spatial_hoarding.enabled {
-        return None;
-    }
-    let e = world
-        .events
-        .spatial_stores
-        .get_or_insert_with(StoreEvents::default);
+    let e = tick_events(world)?;
     Some(match kind {
         StoreKind::Scatter => &mut e.scatter,
         StoreKind::Larder => &mut e.larder,
     })
+}
+
+pub(crate) fn tick_events(world: &mut World) -> Option<&mut StoreEvents> {
+    if !world.config.spatial_hoarding.enabled {
+        return None;
+    }
+    Some(
+        world
+            .events
+            .spatial_stores
+            .get_or_insert_with(StoreEvents::default),
+    )
 }
 
 fn valid(world: &World, id: AgentId, amount: f64) -> bool {
@@ -50,7 +81,6 @@ fn valid(world: &World, id: AgentId, amount: f64) -> bool {
 }
 
 /// Task 3 calls this after a completed return; no remote deposit is accepted.
-#[allow(dead_code)]
 pub(crate) fn deposit(world: &mut World, owner: AgentId, amount: f64) -> f64 {
     if !valid(world, owner, amount) {
         return 0.0;
@@ -85,7 +115,6 @@ pub(crate) fn deposit(world: &mut World, owner: AgentId, amount: f64) -> f64 {
 }
 
 /// Task 3 applies the hunger threshold before calling; this enforces geometry and room.
-#[allow(dead_code)]
 pub(crate) fn recover(world: &mut World, owner: AgentId, amount: f64) -> f64 {
     if !valid(world, owner, amount) {
         return 0.0;
