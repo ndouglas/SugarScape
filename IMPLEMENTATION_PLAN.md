@@ -6,13 +6,13 @@ Detailed approved plan: [spatial hoarding](docs/superpowers/plans/2026-10-02-min
 **Goal**: Checked config, distinct conserved store kinds and deterministic home contact
 **Success Criteria**: All assigned tasks pass their tests and independent review; scientific runs require the reviewed amendment.
 **Tests**: Config defaults/rejection/off golden checks; kind FIFO and geometry fixtures
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 2: Episode behavior
 **Goal**: Real delivery, paid guarding and unified observation/arrival precedence
 **Success Criteria**: All assigned tasks pass their tests and independent review; scientific runs require the reviewed amendment.
 **Tests**: Delivery depletion/contact/cost; guard timing/death; watcher gates; L=0 reduction
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 3: Seasonal runner
 **Goal**: Checked tick-zero cohorts, archived terminal episodes and reproducible inheritance

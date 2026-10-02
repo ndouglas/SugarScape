@@ -107,7 +107,7 @@ Use a fresh implementation subagent for each task and the required fresh reviewe
 
 **Produces:** `SpatialHoarding` config struct; `FounderTraits`, `SpatialState`, `Delivery`, `StoreKind`; `World::new_with_spatial_cohort(config: Config, seed: u64, cohort: &[FounderTraits]) -> Result<World, Vec<FieldError>>`. Ordinary `World::new` uses uniform config traits when enabled. Both paths initialize before the first snapshot.
 
-- [ ] Add failing default/partial JSON tests through existing `Config::from_json`; test invalid finite probabilities, NaN via direct config, slope 0, wrong cohort length, and every incompatible rule named under Global Constraints. Assert scheduled changes to each extension field are rejected as reset-only.
+- [x] Add failing default/partial JSON tests through existing `Config::from_json`; test invalid finite probabilities, NaN via direct config, slope 0, wrong cohort length, and every incompatible rule named under Global Constraints. Assert scheduled changes to each extension field are rejected as reset-only.
 
 ```rust
 #[test]
@@ -124,8 +124,8 @@ fn invalid_defense_slope_is_rejected() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core spatial_hoarding`; confirm the new field/API is missing or the intended validation assertion fails.
-- [ ] Add serde-default config fields and schema entries. Validate scalars before enabled-only compatibility checks. Add the `Agent` option to all construction sites discovered with `rg 'Agent \{'`. Refactor initialization internally so the checked constructor assigns homes/traits/flags before initial Snapshot; do not patch a world after recording tick zero.
+- [x] Run `cargo test -p sugarscape-core spatial_hoarding`; confirm the new field/API is missing or the intended validation assertion fails.
+- [x] Add serde-default config fields and schema entries. Validate scalars before enabled-only compatibility checks. Add the `Agent` option to all construction sites discovered with `rg 'Agent \{'`. Refactor initialization internally so the checked constructor assigns homes/traits/flags before initial Snapshot; do not patch a world after recording tick zero.
 
 ```rust
 pub struct SpatialHoarding {
@@ -139,8 +139,8 @@ pub struct SpatialHoarding {
 ```
 
 Defaults are exactly those in Global Constraints. Keep the constructor's generation-slot assignment in existing ascending founder-id order. Reject invalid traits with field paths including cohort slot.
-- [ ] Add initialization tests asserting per-slot traits, home equal to founder position, empty stores/intents/memory, flags present in tick-zero snapshot. Run `cargo test -p sugarscape-core` and preserve existing golden expectations.
-- [ ] Commit explicit changed files: `feat(minds): configure checked spatial hoarding cohorts`.
+- [x] Add initialization tests asserting per-slot traits, home equal to founder position, empty stores/intents/memory, flags present in tick-zero snapshot. Run `cargo test -p sugarscape-core` and preserve existing golden expectations.
+- [x] Commit explicit changed files: `feat(minds): configure checked spatial hoarding cohorts`.
 
 ### Task 2: Kind-aware stores, conservation and contact
 
@@ -149,7 +149,7 @@ Defaults are exactly those in Global Constraints. Keep the constructor's generat
 **Consumes:** Task 1 state and `StoreKind`.
 **Produces:** `pub(crate) fn in_contact(world: &World, at: Pos, home: Pos) -> bool`; `pub(crate) fn return_endpoint(world: &World, id: AgentId) -> Option<Pos>`; `deposit(world: &mut World, owner: AgentId, amount: f64) -> f64`; `recover(world: &mut World, owner: AgentId, amount: f64) -> f64`; `take(world: &mut World, owner: AgentId, taker: AgentId, amount: f64) -> f64` in stores. Transfer functions enforce contact, room, guard and positive finite quantities themselves, not just in callers. Returned quantity is actual stored/transferred food; caller must not add holdings twice.
 
-- [ ] Add failing fixtures: same owner/site with scatter 4 and larder 6; partial owner recovery 2 leaves larder 4/scatter 4; foreign keep/eat loot; burial cost; death; saturated ledger status. Check per-kind open + dug + pilfered + lost equals buried within relative tolerance. Use existing `testkit::blank_world`, `spawn`, and config setup from Task 1.
+- [x] Add failing fixtures: same owner/site with scatter 4 and larder 6; partial owner recovery 2 leaves larder 4/scatter 4; foreign keep/eat loot; burial cost; death; saturated ledger status. Check per-kind open + dug + pilfered + lost equals buried within relative tolerance. Use existing `testkit::blank_world`, `spawn`, and config setup from Task 1.
 
 ```rust
 #[test]
@@ -161,8 +161,8 @@ fn home_contact_excludes_diagonals() {
 ```
 
 Add wall-separated component fixtures, torus-edge contact, occupied home with accessible neighbor, all endpoints occupied/unreachable, unequal path lengths and equal-length index ties. Use existing bounded pathfinder and wall/region APIs.
-- [ ] Run `cargo test -p sugarscape-core spatial_hoarding`; confirm missing functions/failed conservation before implementation.
-- [ ] Add `kind` to `CacheRecord` and `(owner,site,kind)` FIFO keys; retain scatter wrappers, old log cap/backfill semantics and gated allocation. Generalize shared FIFO internals; do not duplicate a second ledger. Larder death closes Lost before deleting stock. Extend `pilfering_on` for enabled larder discovery even with scatter find 0 and watching off.
+- [x] Run `cargo test -p sugarscape-core spatial_hoarding`; confirm missing functions/failed conservation before implementation.
+- [x] Add `kind` to `CacheRecord` and `(owner,site,kind)` FIFO keys; retain scatter wrappers, old log cap/backfill semantics and gated allocation. Generalize shared FIFO internals; do not duplicate a second ledger. Larder death closes Lost before deleting stock. Extend `pilfering_on` for enabled larder discovery even with scatter find 0 and watching off.
 
 ```rust
 // Shared ledger identity, including stores at the same home cell.
@@ -171,8 +171,8 @@ pub(crate) type OpenRecords = std::collections::BTreeMap<
 ```
 
 Select reachable free home/contact endpoints by `(path_length, site_index)`, using the existing search bound; `None` means stay/retry, never teleport. Entry geometry itself does not depend on occupancy.
-- [ ] Run new transfer/access fixtures plus `cargo test -p sugarscape-core`; assert disabled worlds retain empty extension index/log and unchanged aggregate scatter counters.
-- [ ] Commit: `feat(minds): add separate spatial larders and contact accounting`.
+- [x] Run new transfer/access fixtures plus `cargo test -p sugarscape-core`; assert disabled worlds retain empty extension index/log and unchanged aggregate scatter counters.
+- [x] Commit: `feat(minds): add separate spatial larders and contact accounting`.
 
 ### Task 3: Delivery state machine and paid tick-start guards
 
