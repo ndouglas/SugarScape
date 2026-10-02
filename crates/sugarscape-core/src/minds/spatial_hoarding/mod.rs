@@ -1,6 +1,8 @@
 //! Minds 9: spatial hoarding episode state and checked founder cohorts.
 
+pub(crate) mod access;
 pub mod state;
+pub mod stores;
 
 #[cfg(test)]
 mod tests {

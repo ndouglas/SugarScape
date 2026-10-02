@@ -491,6 +491,20 @@ pub struct WatcherStats {
     pub watcher_advantage: f64,
 }
 
+/// Preserve the original scatter accumulation order on ordinary worlds.
+fn cached_stock(world: &World) -> f64 {
+    let scatter: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+    if world.config.spatial_hoarding.enabled {
+        scatter
+            + world
+                .agents()
+                .map(|a| a.spatial.as_ref().map_or(0.0, |s| s.larder))
+                .sum::<f64>()
+    } else {
+        scatter
+    }
+}
+
 impl Snapshot {
     pub fn of(world: &World) -> Self {
         let n = world.population();
@@ -714,7 +728,7 @@ impl Snapshot {
                 }
             }),
             caching: world.config.caching.is_on().then(|| {
-                let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+                let cached = cached_stock(world);
                 let (prev_buried, prev_dug) = world
                     .stats
                     .latest()
@@ -770,7 +784,7 @@ impl Snapshot {
                 }
             }),
             theft: world.config.pilfering_on().then(|| {
-                let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+                let cached = cached_stock(world);
                 let (pb, pd, pp, pl) = world
                     .stats
                     .latest()
@@ -840,7 +854,14 @@ impl Snapshot {
                 .then(|| {
                     let (mut ws, mut wn, mut os, mut on) = (0.0, 0u32, 0.0, 0u32);
                     for a in world.agents() {
-                        let wealth = a.holdings[0] + a.caches.values().sum::<f64>() + a.fed;
+                        let wealth = a.holdings[0]
+                            + a.caches.values().sum::<f64>()
+                            + a.fed
+                            + if world.config.spatial_hoarding.enabled {
+                                a.spatial.as_ref().map_or(0.0, |s| s.larder)
+                            } else {
+                                0.0
+                            };
                         if a.watches {
                             ws += wealth;
                             wn += 1;

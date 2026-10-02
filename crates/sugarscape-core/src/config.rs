@@ -1429,7 +1429,9 @@ impl Config {
     /// Minds 6's pilfering bookkeeping (candidate counts, fates, theft
     /// series) runs under theft or watching.
     pub fn pilfering_on(&self) -> bool {
-        self.theft.is_on() || self.watching.on
+        self.theft.is_on()
+            || self.watching.on
+            || (self.spatial_hoarding.enabled && self.spatial_hoarding.find_larder > 0.0)
     }
 
     pub fn from_json(json: &str) -> Result<Self, Vec<FieldError>> {

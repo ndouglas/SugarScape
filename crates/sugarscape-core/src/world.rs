@@ -137,6 +137,8 @@ pub struct TickEvents {
     /// Minds 5: sugar left in the caches of agents removed this tick (it
     /// leaves the world with them).
     pub cache_lost: f64,
+    /// Minds 9 per-kind flows; absent on ordinary worlds.
+    pub spatial_stores: Option<crate::minds::spatial_hoarding::stores::StoreEvents>,
     /// Minds 5: Σ over this tick's `digs` of the dug cache's age (ticks since
     /// its first unit was buried).
     pub dig_ages_sum: u64,
@@ -157,7 +159,11 @@ pub struct TickEvents {
     pub caches_pilfered: u32,
     /// The caches counted in `caches_pilfered` this tick (for the once
     /// only); empty and unallocated unless something was pilfered.
-    pub(crate) pilfered_caches: std::collections::BTreeSet<(AgentId, u32)>,
+    pub(crate) pilfered_caches: std::collections::BTreeSet<(
+        AgentId,
+        u32,
+        crate::minds::spatial_hoarding::state::StoreKind,
+    )>,
     /// Minds 6: caches in the world at the tick's start (after the
     /// schedule), counted under theft or watching (`pilfering_on()`): Σ over agents of
     /// their caches. Each is a foreign cache to every agent but its owner,
@@ -891,6 +897,26 @@ impl World {
         let agent = self.agents.remove(&id)?;
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
+        }
+        if self.config.spatial_hoarding.enabled {
+            use crate::minds::spatial_hoarding::{state::StoreKind, stores};
+            let scatter_lost = agent.caches.values().sum::<f64>();
+            stores::events(self, StoreKind::Scatter)
+                .expect("enabled")
+                .lost += scatter_lost;
+            if let Some(s) = &agent.spatial {
+                self.events.cache_lost += s.larder;
+                stores::events(self, StoreKind::Larder)
+                    .expect("enabled")
+                    .lost += s.larder;
+                crate::minds::caching::fates::lose_larder(
+                    self,
+                    id,
+                    self.torus.index(s.home) as u32,
+                    s.larder,
+                    s.larder_since.unwrap_or(self.tick),
+                );
+            }
         }
         self.events.fed_lost += agent.fed;
         crate::minds::caching::fates::close_lost(self, id, &agent.caches, &agent.cache_since);

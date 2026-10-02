@@ -114,6 +114,27 @@ fn ensure_index(world: &mut World) {
 /// at the tick's start under theft or watching, `Config::pilfering_on`).
 pub(crate) fn count_candidates(world: &mut World) {
     let n: usize = world.agents().map(|a| a.caches.len()).sum();
+    let larders = if world.config.spatial_hoarding.enabled {
+        world
+            .agents()
+            .filter(|a| a.spatial.as_ref().is_some_and(|s| s.larder > 0.0))
+            .count()
+    } else {
+        0
+    };
+    if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+        world,
+        crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.pilfer_candidates = u32::try_from(n).unwrap_or(u32::MAX);
+    }
+    if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+        world,
+        crate::minds::spatial_hoarding::state::StoreKind::Larder,
+    ) {
+        e.pilfer_candidates = u32::try_from(larders).unwrap_or(u32::MAX);
+    }
+    let n = n.saturating_add(larders);
     world.events.pilfer_candidates = u32::try_from(n).unwrap_or(u32::MAX);
 }
 
@@ -183,6 +204,12 @@ pub(crate) fn loot(world: &mut World, owner: AgentId, thief: AgentId, site: u32,
         Loot::Eat => {
             a.fed += take;
             world.events.loot_eaten += take;
+            if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+                world,
+                crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+            ) {
+                e.loot_eaten += take;
+            }
         }
     }
     take
@@ -224,8 +251,22 @@ pub(crate) fn pilfer(
     let e = &mut world.events;
     e.pilfered += take;
     e.pilfers += 1;
-    if at_start && e.pilfered_caches.insert((owner, site)) {
+    let distinct = at_start
+        && e.pilfered_caches.insert((
+            owner,
+            site,
+            crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+        ));
+    if distinct {
         e.caches_pilfered += 1;
+    }
+    if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+        world,
+        crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.pilfered += take;
+        e.pilfers += 1;
+        e.caches_pilfered += u32::from(distinct);
     }
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     super::fates::close_pilfered(world, owner, site, take, thief);
@@ -333,7 +374,11 @@ mod tests {
             "owner unchanged"
         );
         assert_eq!(pilfered_by(&w, thief), 2.0);
-        let open: f64 = w.cache_open[&(owner, here)]
+        let open: f64 = w.cache_open[&(
+            owner,
+            here,
+            crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+        )]
             .iter()
             .map(|&i| w.cache_log[i].amount)
             .sum();
