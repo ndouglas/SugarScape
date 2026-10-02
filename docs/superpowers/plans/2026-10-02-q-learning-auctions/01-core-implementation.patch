@@ -1,0 +1,2783 @@
+diff --git a/crates/sugarscape-core/src/auctions/analysis.rs b/crates/sugarscape-core/src/auctions/analysis.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/analysis.rs
+@@ -0,0 +1,91 @@
++//! Expected terminal policies, with exact affine integration of a uniform fringe.
++use super::{config::*, mechanism};
++use serde::Serialize;
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Evaluation {
++    pub revenue: f64,
++    pub profits: Vec<f64>,
++    pub deviation_gain: Vec<f64>,
++}
++fn payoff(c: &AuctionsConfig, bids: &[f64]) -> (f64, Vec<f64>) {
++    if c.fringe == Fringe::None {
++        let o = mechanism::clear(c, bids, &vec![0.0f64; bids.len()], true);
++        return (o.revenue, o.rewards);
++    }
++    let mut cuts = vec![0.0, 1.0, c.reserve];
++    cuts.extend(bids.iter().copied().filter(|b| *b > 0.0 && *b < 1.0));
++    cuts.sort_by(f64::total_cmp);
++    cuts.dedup();
++    let mut revenue = 0.0;
++    let mut profits = vec![0.0f64; bids.len()];
++    let mut profile = bids.to_vec();
++    profile.push(0.0);
++    let priorities = vec![0.0; profile.len()];
++    for edge in cuts.windows(2) {
++        let width = edge[1] - edge[0];
++        for fraction in [0.25, 0.75] {
++            *profile.last_mut().unwrap() = edge[0] + width * fraction;
++            let o = mechanism::clear(c, &profile, &priorities, true);
++            revenue += width * 0.5 * o.revenue;
++            for (p, r) in profits.iter_mut().zip(o.rewards) {
++                *p += width * 0.5 * r;
++            }
++        }
++    }
++    (revenue, profits)
++}
++pub fn evaluate(c: &AuctionsConfig, bids: &[f64]) -> Evaluation {
++    let (revenue, profits) = payoff(c, bids);
++    let mut deviation_gain = vec![0.0f64; bids.len()];
++    let actions = mechanism::grid(c);
++    for i in 0..bids.len() {
++        let mut profile = bids.to_vec();
++        for b in &actions {
++            profile[i] = *b;
++            deviation_gain[i] = deviation_gain[i].max(payoff(c, &profile).1[i] - profits[i]);
++        }
++    }
++    Evaluation {
++        revenue,
++        profits,
++        deviation_gain,
++    }
++}
++pub fn equilibria(c: &AuctionsConfig) -> Vec<Vec<f64>> {
++    if c.fringe != Fringe::None {
++        return vec![];
++    }
++    mechanism::grid(c)
++        .into_iter()
++        .filter(|b| *b > 0.0 && *b >= c.reserve)
++        .map(|b| vec![b; c.bidders as usize])
++        .filter(|b| evaluate(c, b).deviation_gain.iter().all(|g| *g <= 1e-12))
++        .collect()
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn weak_first_price_equilibrium_is_distinct_from_below_top_non_nash() {
++        assert_eq!(
++            equilibria(&AuctionsConfig::default()),
++            vec![vec![0.9, 0.9], vec![0.95, 0.95]]
++        );
++        let c = AuctionsConfig {
++            auction: Auction::SecondPrice,
++            ..Default::default()
++        };
++        assert_eq!(equilibria(&c), vec![vec![0.95, 0.95]]);
++        assert!((evaluate(&c, &[0.9, 0.9]).deviation_gain[0] - 0.05).abs() < 1e-12);
++    }
++    #[test]
++    fn uniform_fringe_integrates_winning_and_losing_regions() {
++        let c = AuctionsConfig {
++            fringe: Fringe::Uniform,
++            ..Default::default()
++        };
++        let o = evaluate(&c, &[0.5, 0.5]);
++        assert!((o.revenue - 0.625).abs() < 1e-12);
++        assert_eq!(o.profits, vec![0.125, 0.125]);
++    }
++}
+diff --git a/crates/sugarscape-core/src/auctions/config.rs b/crates/sugarscape-core/src/auctions/config.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/config.rs
+@@ -0,0 +1,683 @@
++//! Every experimental convention is serialized and applies at reset.
++use crate::{
++    config::FieldError,
++    schema::{Apply, Param},
++};
++use serde::{Deserialize, Serialize};
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Auction {
++    FirstPrice,
++    SecondPrice,
++    Mixture,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ReservePayment {
++    Floor,
++    EligibilityOnly,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Fringe {
++    None,
++    Uniform,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Feedback {
++    Outcome,
++    RivalBids,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Update {
++    Chosen,
++    All,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum AuctionTies {
++    Sampled,
++    Expected,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum HindsightTies {
++    Expected,
++    Realized,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum GreedyTies {
++    Lowest,
++    Highest,
++    Random,
++    Incumbent,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum QInit {
++    Optimistic,
++    Constant,
++    Biased,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Optimism {
++    Discounted,
++    Stage,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Exploration {
++    Decaying,
++    Constant,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ExplorationSet {
++    All,
++    Other,
++    Neighbors,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum NeighborBoundary {
++    Available,
++    Clamp,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum PeriodOrigin {
++    Zero,
++    One,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ConvergencePhase {
++    PostUpdate,
++    PreUpdate,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DownwardTrigger {
++    Off,
++    Stable,
++    Period,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DownwardClock {
++    Activation,
++    Global,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(default, deny_unknown_fields)]
++pub struct AuctionsConfig {
++    pub bidders: u32,
++    pub bids: u32,
++    pub auction: Auction,
++    pub auction_alpha: f64,
++    pub reserve: f64,
++    pub reserve_payment: ReservePayment,
++    pub out_bids: u32,
++    pub fringe: Fringe,
++    pub learning_rate: f64,
++    pub discount: f64,
++    pub feedback: Feedback,
++    pub update: Update,
++    pub auction_ties: AuctionTies,
++    pub hindsight_ties: HindsightTies,
++    pub greedy_ties: GreedyTies,
++    pub q_tolerance: f64,
++    pub q_init: QInit,
++    pub optimism: Optimism,
++    pub q_scale: f64,
++    pub q_level: f64,
++    pub bias_bid: f64,
++    pub bias_q: f64,
++    pub bias_rest: f64,
++    pub exploration: Exploration,
++    pub epsilon: f64,
++    pub beta: f64,
++    pub exploration_set: ExplorationSet,
++    pub neighbor_boundary: NeighborBoundary,
++    pub period_origin: PeriodOrigin,
++    pub convergence_phase: ConvergencePhase,
++    pub downward_trigger: DownwardTrigger,
++    pub downward_at: u32,
++    pub downward_clock: DownwardClock,
++    pub downward_chi: f64,
++    pub downward_beta: f64,
++    pub downward_gap: f64,
++    pub horizon: u32,
++    pub window: u32,
++    pub periods_per_tick: u32,
++}
++impl Default for AuctionsConfig {
++    fn default() -> Self {
++        Self {
++            bidders: 2,
++            bids: 19,
++            auction: Auction::FirstPrice,
++            auction_alpha: 1.0,
++            reserve: 0.0,
++            reserve_payment: ReservePayment::Floor,
++            out_bids: 0,
++            fringe: Fringe::None,
++            learning_rate: 0.05,
++            discount: 0.99,
++            feedback: Feedback::Outcome,
++            update: Update::Chosen,
++            auction_ties: AuctionTies::Sampled,
++            hindsight_ties: HindsightTies::Expected,
++            greedy_ties: GreedyTies::Lowest,
++            q_tolerance: 0.0,
++            q_init: QInit::Optimistic,
++            optimism: Optimism::Discounted,
++            q_scale: 1.0,
++            q_level: 100.0,
++            bias_bid: 0.4,
++            bias_q: 30.0,
++            bias_rest: 0.0,
++            exploration: Exploration::Decaying,
++            epsilon: 0.025,
++            beta: 0.0002,
++            exploration_set: ExplorationSet::All,
++            neighbor_boundary: NeighborBoundary::Available,
++            period_origin: PeriodOrigin::Zero,
++            convergence_phase: ConvergencePhase::PostUpdate,
++            downward_trigger: DownwardTrigger::Off,
++            downward_at: 100_000,
++            downward_clock: DownwardClock::Activation,
++            downward_chi: 0.62,
++            downward_beta: 0.002,
++            downward_gap: 0.3,
++            horizon: 1_000_000,
++            window: 1000,
++            periods_per_tick: 1000,
++        }
++    }
++}
++impl AuctionsConfig {
++    pub fn alpha(&self) -> f64 {
++        match self.auction {
++            Auction::FirstPrice => 1.0,
++            Auction::SecondPrice => 2.0,
++            Auction::Mixture => self.auction_alpha,
++        }
++    }
++    pub fn validate(&self) -> Result<(), Vec<FieldError>> {
++        let mut errors = vec![];
++        let mut check = |ok: bool, field: &str, msg: &str| {
++            if !ok {
++                errors.push(FieldError::new(field, msg));
++            }
++        };
++        check(
++            (2..=3).contains(&self.bidders),
++            "bidders",
++            "must be finite and between 2 and 3",
++        );
++        check(
++            (2..=99).contains(&self.bids),
++            "bids",
++            "must be finite and between 2 and 99",
++        );
++        check(
++            self.auction_alpha.is_finite() && (1.0..=2.0).contains(&self.auction_alpha),
++            "auction_alpha",
++            "must be finite and between 1 and 2",
++        );
++        check(
++            self.reserve.is_finite() && (0.0..=0.99).contains(&self.reserve),
++            "reserve",
++            "must be finite and between 0 and 0.99",
++        );
++        check(
++            (0..=16).contains(&self.out_bids),
++            "out_bids",
++            "must be finite and between 0 and 16",
++        );
++        check(
++            self.learning_rate.is_finite() && (0.0..=1.0).contains(&self.learning_rate),
++            "learning_rate",
++            "must be finite and between 0 and 1",
++        );
++        check(
++            self.discount.is_finite() && (0.0..=0.9999).contains(&self.discount),
++            "discount",
++            "must be finite and between 0 and 0.9999",
++        );
++        check(
++            self.q_tolerance.is_finite() && (0.0..=1e-08).contains(&self.q_tolerance),
++            "q_tolerance",
++            "must be finite and between 0 and 1e-08",
++        );
++        check(
++            self.q_scale.is_finite() && (1.0..=10.0).contains(&self.q_scale),
++            "q_scale",
++            "must be finite and between 1 and 10",
++        );
++        check(
++            self.q_level.is_finite() && (0.0..=1000000.0).contains(&self.q_level),
++            "q_level",
++            "must be finite and between 0 and 1000000.0",
++        );
++        check(
++            self.bias_bid.is_finite() && (0.0..=1.0).contains(&self.bias_bid),
++            "bias_bid",
++            "must be finite and between 0 and 1",
++        );
++        check(
++            self.bias_q.is_finite() && (0.0..=1000000.0).contains(&self.bias_q),
++            "bias_q",
++            "must be finite and between 0 and 1000000.0",
++        );
++        check(
++            self.bias_rest.is_finite() && (0.0..=1000000.0).contains(&self.bias_rest),
++            "bias_rest",
++            "must be finite and between 0 and 1000000.0",
++        );
++        check(
++            self.epsilon.is_finite() && (0.0..=1.0).contains(&self.epsilon),
++            "epsilon",
++            "must be finite and between 0 and 1",
++        );
++        check(
++            self.beta.is_finite() && (0.0..=1.0).contains(&self.beta),
++            "beta",
++            "must be finite and between 0 and 1",
++        );
++        check(
++            (1..=u32::MAX).contains(&self.downward_at),
++            "downward_at",
++            "must be positive",
++        );
++        check(
++            self.downward_chi.is_finite() && (0.0..=1.0).contains(&self.downward_chi),
++            "downward_chi",
++            "must be finite and between 0 and 1",
++        );
++        check(
++            self.downward_beta.is_finite() && (0.0..=1.0).contains(&self.downward_beta),
++            "downward_beta",
++            "must be finite and between 0 and 1",
++        );
++        check(
++            self.downward_gap.is_finite() && (0.0..=1000000.0).contains(&self.downward_gap),
++            "downward_gap",
++            "must be finite and between 0 and 1000000.0",
++        );
++        check(
++            (1..=100000000).contains(&self.horizon),
++            "horizon",
++            "must be finite and between 1 and 100000000",
++        );
++        check(
++            (1..=100000000).contains(&self.window),
++            "window",
++            "must be finite and between 1 and 100000000",
++        );
++        check(
++            (1..=1000000).contains(&self.periods_per_tick),
++            "periods_per_tick",
++            "must be finite and between 1 and 1000000",
++        );
++        check(
++            self.learning_rate > 0.0,
++            "learning_rate",
++            "must be positive",
++        );
++        check(
++            self.reserve <= f64::from(self.bids) / (f64::from(self.bids) + 1.0),
++            "reserve",
++            "must not exceed highest positive bid",
++        );
++        check(
++            self.window <= self.horizon,
++            "window",
++            "must not exceed horizon",
++        );
++        check(
++            self.update != Update::All || self.feedback == Feedback::RivalBids,
++            "feedback",
++            "all-action updates require rival_bids",
++        );
++        if self.q_init == QInit::Biased && (2..=99).contains(&self.bids) {
++            check(
++                (1..=self.bids).any(|k| {
++                    (f64::from(k) / (f64::from(self.bids) + 1.0) - self.bias_bid).abs() <= 1e-12
++                }),
++                "bias_bid",
++                "must be a positive grid action",
++            );
++        }
++        if errors.is_empty() {
++            Ok(())
++        } else {
++            Err(errors)
++        }
++    }
++}
++pub fn schema() -> Vec<Param> {
++    use Apply::Reset;
++    vec![
++        Param::integer("Auction", "bidders", "Bidders", (2, 3), Reset),
++        Param::integer("Bids", "bids", "Bids", (2, 99), Reset),
++        Param::choice(
++            "Auction",
++            "auction",
++            "Auction",
++            &[
++                ("first_price", "FirstPrice"),
++                ("second_price", "SecondPrice"),
++                ("mixture", "Mixture"),
++            ],
++            Reset,
++        ),
++        Param::number(
++            "Auction",
++            "auction_alpha",
++            "Auction alpha",
++            (1.0, 2.0, 0.001),
++            Reset,
++        )
++        .shown_if("auction", "mixture")
++        .with_help("Active when auction is mixture; applies at reset."),
++        Param::number("Auction", "reserve", "Reserve", (0.0, 0.99, 0.001), Reset),
++        Param::choice(
++            "Auction",
++            "reserve_payment",
++            "Reserve payment",
++            &[("floor", "Floor"), ("eligibility_only", "EligibilityOnly")],
++            Reset,
++        ),
++        Param::integer("Bids", "out_bids", "Out bids", (0, 16), Reset),
++        Param::choice(
++            "Auction",
++            "fringe",
++            "Fringe",
++            &[("none", "None"), ("uniform", "Uniform")],
++            Reset,
++        ),
++        Param::number(
++            "Learning",
++            "learning_rate",
++            "Learning rate",
++            (0.0, 1.0, 0.001),
++            Reset,
++        ),
++        Param::number(
++            "Learning",
++            "discount",
++            "Discount",
++            (0.0, 0.9999, 0.001),
++            Reset,
++        ),
++        Param::choice(
++            "Information",
++            "feedback",
++            "Feedback",
++            &[("outcome", "Outcome"), ("rival_bids", "RivalBids")],
++            Reset,
++        ),
++        Param::choice(
++            "Information",
++            "update",
++            "Update",
++            &[("chosen", "Chosen"), ("all", "All")],
++            Reset,
++        ),
++        Param::choice(
++            "Auction",
++            "auction_ties",
++            "Auction ties",
++            &[("sampled", "Sampled"), ("expected", "Expected")],
++            Reset,
++        ),
++        Param::choice(
++            "Information",
++            "hindsight_ties",
++            "Hindsight ties",
++            &[("expected", "Expected"), ("realized", "Realized")],
++            Reset,
++        )
++        .shown_if("update", "all")
++        .with_help("Active when update is all; applies at reset."),
++        Param::choice(
++            "Learning",
++            "greedy_ties",
++            "Greedy ties",
++            &[
++                ("lowest", "Lowest"),
++                ("highest", "Highest"),
++                ("random", "Random"),
++                ("incumbent", "Incumbent"),
++            ],
++            Reset,
++        ),
++        Param::number(
++            "Learning",
++            "q_tolerance",
++            "Q tolerance",
++            (0.0, 1e-08, 1e-09),
++            Reset,
++        ),
++        Param::choice(
++            "Learning",
++            "q_init",
++            "Q init",
++            &[
++                ("optimistic", "Optimistic"),
++                ("constant", "Constant"),
++                ("biased", "Biased"),
++            ],
++            Reset,
++        ),
++        Param::choice(
++            "Learning",
++            "optimism",
++            "Optimism",
++            &[("discounted", "Discounted"), ("stage", "Stage")],
++            Reset,
++        )
++        .shown_if("q_init", "optimistic")
++        .with_help("Active when q_init is optimistic; applies at reset."),
++        Param::number("Learning", "q_scale", "Q scale", (1.0, 10.0, 0.001), Reset)
++            .shown_if("q_init", "optimistic")
++            .with_help("Active when q_init is optimistic; applies at reset."),
++        Param::number(
++            "Learning",
++            "q_level",
++            "Q level",
++            (0.0, 1000000.0, 0.001),
++            Reset,
++        )
++        .shown_if("q_init", "constant")
++        .with_help("Active when q_init is constant; applies at reset."),
++        Param::number("Learning", "bias_bid", "Bias bid", (0.0, 1.0, 0.001), Reset)
++            .shown_if("q_init", "biased")
++            .with_help("Active when q_init is biased; applies at reset."),
++        Param::number(
++            "Learning",
++            "bias_q",
++            "Bias q",
++            (0.0, 1000000.0, 0.001),
++            Reset,
++        )
++        .shown_if("q_init", "biased")
++        .with_help("Active when q_init is biased; applies at reset."),
++        Param::number(
++            "Learning",
++            "bias_rest",
++            "Bias rest",
++            (0.0, 1000000.0, 0.001),
++            Reset,
++        )
++        .shown_if("q_init", "biased")
++        .with_help("Active when q_init is biased; applies at reset."),
++        Param::choice(
++            "Exploration",
++            "exploration",
++            "Exploration",
++            &[("decaying", "Decaying"), ("constant", "Constant")],
++            Reset,
++        ),
++        Param::number(
++            "Exploration",
++            "epsilon",
++            "Epsilon",
++            (0.0, 1.0, 0.001),
++            Reset,
++        ),
++        Param::number("Exploration", "beta", "Beta", (0.0, 1.0, 0.001), Reset)
++            .shown_if("exploration", "decaying")
++            .with_help("Active when exploration is decaying; applies at reset."),
++        Param::choice(
++            "Exploration",
++            "exploration_set",
++            "Exploration set",
++            &[
++                ("all", "All"),
++                ("other", "Other"),
++                ("neighbors", "Neighbors"),
++            ],
++            Reset,
++        ),
++        Param::choice(
++            "Exploration",
++            "neighbor_boundary",
++            "Neighbor boundary",
++            &[("available", "Available"), ("clamp", "Clamp")],
++            Reset,
++        )
++        .shown_if("exploration_set", "neighbors")
++        .with_help("Active when exploration_set is neighbors; applies at reset."),
++        Param::choice(
++            "Session",
++            "period_origin",
++            "Period origin",
++            &[("zero", "Zero"), ("one", "One")],
++            Reset,
++        ),
++        Param::choice(
++            "Session",
++            "convergence_phase",
++            "Convergence phase",
++            &[("post_update", "PostUpdate"), ("pre_update", "PreUpdate")],
++            Reset,
++        ),
++        Param::choice(
++            "Exploration",
++            "downward_trigger",
++            "Downward trigger",
++            &[("off", "Off"), ("stable", "Stable"), ("period", "Period")],
++            Reset,
++        ),
++        Param::integer(
++            "Exploration",
++            "downward_at",
++            "Downward at",
++            (1, u32::MAX),
++            Reset,
++        )
++        .shown_if("downward_trigger", "period")
++        .with_help("Active when downward_trigger is period; applies at reset."),
++        Param::choice(
++            "Exploration",
++            "downward_clock",
++            "Downward clock",
++            &[("activation", "Activation"), ("global", "Global")],
++            Reset,
++        ),
++        Param::number(
++            "Exploration",
++            "downward_chi",
++            "Downward chi",
++            (0.0, 1.0, 0.001),
++            Reset,
++        ),
++        Param::number(
++            "Exploration",
++            "downward_beta",
++            "Downward beta",
++            (0.0, 1.0, 0.001),
++            Reset,
++        ),
++        Param::number(
++            "Exploration",
++            "downward_gap",
++            "Downward gap",
++            (0.0, 1000000.0, 0.001),
++            Reset,
++        ),
++        Param::integer("Session", "horizon", "Horizon", (1, 100000000), Reset),
++        Param::integer("Session", "window", "Window", (1, 100000000), Reset),
++        Param::integer(
++            "Session",
++            "periods_per_tick",
++            "Periods per tick",
++            (1, 1000000),
++            Reset,
++        ),
++    ]
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::model::{ModelConfig, ModelWorld};
++    #[test]
++    fn oversized_grid_returns_field_error_without_overflow_or_membership_search() {
++        let c = AuctionsConfig {
++            bids: u32::MAX,
++            q_init: QInit::Biased,
++            ..Default::default()
++        };
++        assert!(c.validate().unwrap_err().iter().any(|e| e.field == "bids"));
++    }
++    #[test]
++    fn all_action_learning_requires_observable_rival_bids() {
++        let c = AuctionsConfig {
++            update: Update::All,
++            ..Default::default()
++        };
++        assert!(c
++            .validate()
++            .unwrap_err()
++            .iter()
++            .any(|e| e.field == "feedback"));
++    }
++    #[test]
++    fn finite_ranges_validate_unused_fields_and_biased_requires_canonical_action() {
++        let c = AuctionsConfig {
++            q_scale: f64::NAN,
++            q_level: f64::INFINITY,
++            window: 1_000_001,
++            ..Default::default()
++        };
++        let fields: Vec<_> = c
++            .validate()
++            .unwrap_err()
++            .into_iter()
++            .map(|e| e.field)
++            .collect();
++        assert!(fields.contains(&"q_scale".into()));
++        assert!(fields.contains(&"q_level".into()));
++        assert!(fields.contains(&"window".into()));
++        let c = AuctionsConfig {
++            q_init: QInit::Biased,
++            bias_bid: 0.41,
++            ..Default::default()
++        };
++        assert_eq!(c.validate().unwrap_err()[0].field, "bias_bid");
++    }
++    #[test]
++    fn schema_round_trips_and_every_field_applies_at_reset() {
++        let config = ModelConfig::Auctions(AuctionsConfig::default());
++        crate::schema::check_schema(&schema(), &config, || {
++            ModelWorld::new(config.clone(), 1).unwrap()
++        });
++    }
++}
+diff --git a/crates/sugarscape-core/src/auctions/learner.rs b/crates/sugarscape-core/src/auctions/learner.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/learner.rs
+@@ -0,0 +1,228 @@
++//! Stateless Q choices, using explicit draws and a frozen bootstrap maximum.
++use super::config::*;
++use serde::Serialize;
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Learner {
++    pub q: Vec<f64>,
++    pub greedy: usize,
++    pub chosen: Vec<u64>,
++    pub updated: Vec<u64>,
++}
++impl Learner {
++    pub fn new(c: &AuctionsConfig, grid: &[f64], draw: f64) -> Self {
++        let initial = match c.q_init {
++            QInit::Optimistic => {
++                c.q_scale
++                    / if c.optimism == Optimism::Discounted {
++                        1.0 - c.discount
++                    } else {
++                        1.0
++                    }
++            }
++            QInit::Constant => c.q_level,
++            QInit::Biased => c.bias_rest,
++        };
++        let mut out = Self {
++            q: vec![initial; grid.len()],
++            greedy: 0,
++            chosen: vec![0; grid.len()],
++            updated: vec![0; grid.len()],
++        };
++        if c.q_init == QInit::Biased {
++            let index = grid
++                .iter()
++                .position(|b| (*b - c.bias_bid).abs() <= 1e-12)
++                .unwrap();
++            out.q[index] = c.bias_q;
++        }
++        out.refresh(c, draw);
++        out
++    }
++    pub fn maximum(&self) -> f64 {
++        self.q.iter().copied().fold(f64::NEG_INFINITY, f64::max)
++    }
++    pub fn refresh(&mut self, c: &AuctionsConfig, draw: f64) {
++        let max = self.maximum();
++        let ties: Vec<usize> = self
++            .q
++            .iter()
++            .enumerate()
++            .filter_map(|(i, q)| ((max - q) <= c.q_tolerance).then_some(i))
++            .collect();
++        self.greedy = match c.greedy_ties {
++            GreedyTies::Lowest => ties[0],
++            GreedyTies::Highest => *ties.last().unwrap(),
++            GreedyTies::Random => ties[(draw * ties.len() as f64).floor() as usize],
++            GreedyTies::Incumbent => {
++                if ties.contains(&self.greedy) {
++                    self.greedy
++                } else {
++                    ties[0]
++                }
++            }
++        };
++    }
++    pub fn explore(&self, c: &AuctionsConfig, u: f64) -> usize {
++        let m = self.q.len();
++        match c.exploration_set {
++            ExplorationSet::All => (u * m as f64).floor() as usize,
++            ExplorationSet::Other => {
++                let k = (u * (m - 1) as f64).floor() as usize;
++                k + usize::from(k >= self.greedy)
++            }
++            ExplorationSet::Neighbors => {
++                if c.neighbor_boundary == NeighborBoundary::Clamp {
++                    if u < 0.5 {
++                        self.greedy.saturating_sub(1)
++                    } else {
++                        (self.greedy + 1).min(m - 1)
++                    }
++                } else {
++                    let mut actions = vec![];
++                    if self.greedy > 0 {
++                        actions.push(self.greedy - 1);
++                    }
++                    if self.greedy + 1 < m {
++                        actions.push(self.greedy + 1);
++                    }
++                    actions[(u * actions.len() as f64).floor() as usize]
++                }
++            }
++        }
++    }
++    pub fn update(&mut self, c: &AuctionsConfig, action: usize, rewards: &[f64], draw: f64) {
++        let max = self.maximum();
++        self.chosen[action] += 1;
++        match c.update {
++            Update::Chosen => {
++                self.q[action] = (1.0 - c.learning_rate) * self.q[action]
++                    + c.learning_rate * (rewards[action] + c.discount * max);
++                self.updated[action] += 1;
++            }
++            Update::All => {
++                for (i, q) in self.q.iter_mut().enumerate() {
++                    *q = (1.0 - c.learning_rate) * *q
++                        + c.learning_rate * (rewards[i] + c.discount * max);
++                    self.updated[i] += 1;
++                }
++            }
++        }
++        self.refresh(c, draw);
++    }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn greedy_tolerance_and_incumbent_select_only_maximizers() {
++        let mut f = Learner {
++            q: vec![1.0, 1.0 - 1e-9, 1.0],
++            greedy: 1,
++            chosen: vec![0; 3],
++            updated: vec![0; 3],
++        };
++        let mut c = AuctionsConfig {
++            q_tolerance: 1e-8,
++            greedy_ties: GreedyTies::Incumbent,
++            ..Default::default()
++        };
++        f.refresh(&c, 0.8);
++        assert_eq!(f.greedy, 1);
++        c.q_tolerance = 0.0;
++        f.refresh(&c, 0.8);
++        assert_eq!(f.greedy, 0);
++        c.greedy_ties = GreedyTies::Highest;
++        f.refresh(&c, 0.0);
++        assert_eq!(f.greedy, 2);
++        c.greedy_ties = GreedyTies::Random;
++        f.refresh(&c, 0.75);
++        assert_eq!(f.greedy, 2);
++    }
++    #[test]
++    fn neighbor_boundary_and_other_exploration_keep_distinct_choices() {
++        let f = Learner {
++            q: vec![1.0; 3],
++            greedy: 0,
++            chosen: vec![0; 3],
++            updated: vec![0; 3],
++        };
++        let mut c = AuctionsConfig {
++            exploration_set: ExplorationSet::Neighbors,
++            ..Default::default()
++        };
++        assert_eq!(f.explore(&c, 0.1), 1);
++        assert_eq!(f.explore(&c, 0.9), 1);
++        c.neighbor_boundary = NeighborBoundary::Clamp;
++        assert_eq!(f.explore(&c, 0.1), 0);
++        assert_eq!(f.explore(&c, 0.9), 1);
++        c.exploration_set = ExplorationSet::Other;
++        assert_eq!(f.explore(&c, 0.1), 1);
++        assert_eq!(f.explore(&c, 0.9), 2);
++    }
++    #[test]
++    fn stage_and_discounted_optimism_and_bias_initialize_distinct_values() {
++        let grid = vec![0.2, 0.4, 0.6];
++        let c = AuctionsConfig {
++            discount: 0.5,
++            ..Default::default()
++        };
++        assert_eq!(Learner::new(&c, &grid, 0.0).q, vec![2.0; 3]);
++        assert_eq!(
++            Learner::new(
++                &AuctionsConfig {
++                    optimism: Optimism::Stage,
++                    ..c.clone()
++                },
++                &grid,
++                0.0
++            )
++            .q,
++            vec![1.0; 3]
++        );
++        let f = Learner::new(
++            &AuctionsConfig {
++                q_init: QInit::Biased,
++                bias_rest: 2.0,
++                ..c
++            },
++            &grid,
++            0.0,
++        );
++        assert_eq!(f.q, vec![2.0, 30.0, 2.0]);
++        assert_eq!(f.greedy, 1);
++    }
++    #[test]
++    fn all_updates_freeze_old_maximum() {
++        let c = AuctionsConfig {
++            learning_rate: 0.5,
++            discount: 0.5,
++            feedback: Feedback::RivalBids,
++            update: Update::All,
++            ..Default::default()
++        };
++        let mut f = Learner {
++            q: vec![4.0, 2.0],
++            greedy: 0,
++            chosen: vec![0; 2],
++            updated: vec![0; 2],
++        };
++        f.update(&c, 0, &[1.0, 0.0], 0.0);
++        assert_eq!(f.q, vec![3.5, 2.0]);
++    }
++    #[test]
++    fn chosen_update_leaves_other_actions_untouched() {
++        let c = AuctionsConfig {
++            learning_rate: 0.5,
++            discount: 0.5,
++            ..Default::default()
++        };
++        let mut f = Learner {
++            q: vec![2.0, 4.0],
++            greedy: 1,
++            chosen: vec![0; 2],
++            updated: vec![0; 2],
++        };
++        f.update(&c, 0, &[1.0, 0.0], 0.0);
++        assert_eq!(f.q, vec![2.5, 4.0]);
++    }
++}
+diff --git a/crates/sugarscape-core/src/auctions/mechanism.rs b/crates/sugarscape-core/src/auctions/mechanism.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/mechanism.rs
+@@ -0,0 +1,149 @@
++//! Allocation and payment, independent of learning and random generation.
++use super::config::*;
++#[derive(Clone, Debug, PartialEq)]
++pub struct Clearing {
++    pub revenue: f64,
++    pub rewards: Vec<f64>,
++    pub shares: Vec<f64>,
++}
++pub fn grid(c: &AuctionsConfig) -> Vec<f64> {
++    (1 - i32::try_from(c.out_bids).unwrap()..=i32::try_from(c.bids).unwrap())
++        .map(|j| f64::from(j) / f64::from(c.bids + 1))
++        .collect()
++}
++pub fn clear(c: &AuctionsConfig, bids: &[f64], priorities: &[f64], expected: bool) -> Clearing {
++    let n = bids.len();
++    let mut out = Clearing {
++        revenue: 0.0,
++        rewards: vec![0.0; n],
++        shares: vec![0.0; n],
++    };
++    let top = bids
++        .iter()
++        .copied()
++        .filter(|b| *b > 0.0 && *b >= c.reserve)
++        .fold(0.0, f64::max);
++    if top == 0.0 {
++        return out;
++    }
++    let tied: Vec<usize> = bids
++        .iter()
++        .enumerate()
++        .filter_map(|(i, b)| (*b == top).then_some(i))
++        .collect();
++    let winner = *tied
++        .iter()
++        .min_by(|a, b| priorities[**a].total_cmp(&priorities[**b]).then(a.cmp(b)))
++        .unwrap();
++    let competing = bids
++        .iter()
++        .enumerate()
++        .filter(|(i, b)| *i != winner && **b > 0.0)
++        .map(|(_, b)| *b)
++        .fold(0.0, f64::max);
++    let second = if c.reserve_payment == ReservePayment::Floor {
++        competing.max(c.reserve)
++    } else {
++        competing
++    };
++    out.revenue = (2.0 - c.alpha()) * top + (c.alpha() - 1.0) * second;
++    if expected {
++        for i in tied.iter().copied() {
++            out.shares[i] = 1.0 / tied.len() as f64;
++            out.rewards[i] = out.shares[i] * (1.0 - out.revenue);
++        }
++    } else {
++        out.shares[winner] = 1.0;
++        out.rewards[winner] = 1.0 - out.revenue;
++    }
++    out
++}
++pub fn hypothetical(
++    c: &AuctionsConfig,
++    bids: &[f64],
++    priorities: &[f64],
++    bidder: usize,
++    candidate: f64,
++) -> f64 {
++    let mut profile = bids.to_vec();
++    profile[bidder] = candidate;
++    let expected =
++        c.hindsight_ties == HindsightTies::Expected || c.auction_ties == AuctionTies::Expected;
++    clear(c, &profile, priorities, expected).rewards[bidder]
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn mixture_and_three_way_expected_ties_conserve_reward() {
++        let c = AuctionsConfig {
++            auction: Auction::Mixture,
++            auction_alpha: 1.5,
++            bidders: 3,
++            ..Default::default()
++        };
++        let o = clear(&c, &[0.8, 0.4, 0.3], &[0.2, 0.1, 0.9], false);
++        assert!((o.revenue - 0.6).abs() < 1e-12);
++        let o = clear(&c, &[0.6, 0.6, 0.6], &[0.2, 0.1, 0.9], true);
++        assert!((o.rewards.iter().sum::<f64>() + o.revenue - 1.0).abs() < 1e-12);
++        assert_eq!(o.shares, vec![1.0 / 3.0; 3]);
++    }
++    #[test]
++    fn realized_hindsight_reuses_priorities_and_expected_hindsight_splits() {
++        let mut c = AuctionsConfig {
++            hindsight_ties: HindsightTies::Realized,
++            ..Default::default()
++        };
++        assert!((hypothetical(&c, &[0.4, 0.6], &[0.1, 0.9], 0, 0.6) - 0.4).abs() < 1e-12);
++        assert_eq!(hypothetical(&c, &[0.4, 0.6], &[0.9, 0.1], 0, 0.6), 0.0);
++        c.hindsight_ties = HindsightTies::Expected;
++        assert!((hypothetical(&c, &[0.4, 0.6], &[0.9, 0.1], 0, 0.6) - 0.2).abs() < 1e-12);
++        c.hindsight_ties = HindsightTies::Realized;
++        c.auction_ties = AuctionTies::Expected;
++        assert!((hypothetical(&c, &[0.4, 0.6], &[0.9, 0.1], 0, 0.6) - 0.2).abs() < 1e-12);
++    }
++    #[test]
++    fn out_actions_are_distinct_canonical_divisions_and_reserve_equality_is_eligible() {
++        let c = AuctionsConfig {
++            out_bids: 7,
++            reserve: 0.2,
++            ..Default::default()
++        };
++        let g = grid(&c);
++        assert_eq!(&g[..7], &[-0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0.0]);
++        assert_eq!(clear(&c, &[0.2, 0.0], &[0.9, 0.1], false).revenue, 0.2);
++    }
++    #[test]
++    fn first_price_winner_pays_own_bid() {
++        let o = clear(&AuctionsConfig::default(), &[0.8, 0.4], &[0.1, 0.9], false);
++        assert_eq!(o.revenue, 0.8);
++        assert!((o.rewards[0] - 0.2).abs() < 1e-12);
++    }
++    #[test]
++    fn second_price_and_tie_rewards() {
++        let c = AuctionsConfig {
++            auction: Auction::SecondPrice,
++            ..Default::default()
++        };
++        let o = clear(&c, &[0.8, 0.4], &[0.1, 0.9], true);
++        assert_eq!(o.revenue, 0.4);
++        assert_eq!(o.rewards, vec![0.6, 0.0]);
++        let o = clear(&c, &[0.8, 0.8], &[0.1, 0.9], true);
++        assert!((o.rewards[0] - 0.1).abs() < 1e-12);
++    }
++    #[test]
++    fn nonparticipation_never_wins_and_reserve_changes_second_payment() {
++        let c = AuctionsConfig {
++            auction: Auction::SecondPrice,
++            reserve: 0.2,
++            ..Default::default()
++        };
++        assert_eq!(clear(&c, &[0.0, -0.1], &[0.0, 0.0], false).revenue, 0.0);
++        assert_eq!(clear(&c, &[0.3, 0.1], &[0.0, 0.0], false).revenue, 0.2);
++        let c = AuctionsConfig {
++            reserve_payment: ReservePayment::EligibilityOnly,
++            ..c
++        };
++        assert_eq!(clear(&c, &[0.3, 0.1], &[0.0, 0.0], false).revenue, 0.1);
++    }
++}
+diff --git a/crates/sugarscape-core/src/auctions/mod.rs b/crates/sugarscape-core/src/auctions/mod.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/mod.rs
+@@ -0,0 +1,14 @@
++//! Fixed-value memoryless Q-learning auctions (Banchio and Skrzypacz, 2022).
++//! Optimistic initialization and tie conventions are explicit reconstruction choices.
++pub mod analysis;
++mod config;
++pub mod learner;
++pub mod mechanism;
++mod presets;
++mod stats;
++mod view;
++mod world;
++pub use config::*;
++pub use presets::presets;
++pub use stats::{series_names, AuctionsSnapshot, SERIES};
++pub use world::{AuctionsWorld, Outcome};
+diff --git a/crates/sugarscape-core/src/auctions/presets.rs b/crates/sugarscape-core/src/auctions/presets.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/presets.rs
+@@ -0,0 +1,178 @@
++//! Source-labelled experiments, all with explicit reconstruction conventions.
++use super::config::*;
++use crate::{model::ModelConfig, presets::ModelPreset};
++pub fn presets() -> Vec<ModelPreset> {
++    let mut out = vec![];
++    {
++        let c = AuctionsConfig::default();
++        out.push(ModelPreset {
++            id: "auctions-first-price",
++            name: "Two bidders learn how much to pay",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Figure 1a: 1,000 terminal-policy sessions; plotted mean .2265, prose .24.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            auction: Auction::SecondPrice,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-second-price",
++            name: "The winner pays the other bidder’s bid",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Figure 1b: 1,000 terminal-policy sessions; plotted mean .9471, prose .95.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            feedback: Feedback::RivalBids,
++            update: Update::All,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-feedback",
++            name: "Bidders learn from every bid they could have made",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Figure 5a: 500 terminal-policy sessions at (.90,.90).",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            feedback: Feedback::RivalBids,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-unused-feedback",
++            name: "Bidders receive information they do not use",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Project information-unused control for Figure 5; terminal-policy sessions.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            exploration_set: ExplorationSet::Neighbors,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-local",
++            name: "Bidders try the next bid up or down",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 3/Figure 10: 100 terminal-policy sessions per format; boundary rule reconstructed as available neighbors.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            q_init: QInit::Biased,
++            epsilon: 0.25,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-biased",
++            name: "Bidders start with a preference for low bids",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q(.40)=30, others 0; epsilon=.25. The unpublished Q vector is reconstructed. Sampled auction ties, expected hindsight ties. Fixed horizon, final stability selection. Figure 3 supplies one example trajectory; terminal-policy ensembles here score our specified bias reading.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            downward_trigger: DownwardTrigger::Stable,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-downward",
++            name: "Bidders are nudged toward lower bids",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 4/Figure 4: terminal-policy distribution; stable-window trigger and activation clock are our reading.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            out_bids: 7,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-nonparticipation",
++            name: "Bidders can choose to sit out",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 6/Figure 6: terminal-policy distribution; added -.30 through 0 mesh is our reading.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            reserve: 0.2,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-reserve",
++            name: "The seller sets a minimum bid",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 7/Figure 7: terminal-policy distribution; eligibility and reserve payment floor are explicit readings.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            bidders: 3,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-three",
++            name: "Three bidders learn together",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 8/Figure 11: 500 three-bidder terminal-policy sessions; canvas projects bidders 1 and 2.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            bidders: 3,
++            discount: 0.999,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-three-patient",
++            name: "Three bidders put more weight on future rewards",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 8/Figure 11: 500 three-bidder terminal-policy sessions; initial Q=1/(1-.999), approximately 1,000.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            fringe: Fringe::Uniform,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-fringe",
++            name: "A random bid joins the auction",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Result 9/Figure 8: terminal-policy distribution; source FPA bids .60/.65, compared with symmetric optimum .50.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    {
++        let c = AuctionsConfig {
++            exploration: Exploration::Constant,
++            epsilon: 0.001,
++            horizon: 100_000_000,
++            ..Default::default()
++        };
++        out.push(ModelPreset {
++            id: "auctions-persistent",
++            name: "Bidders keep experimenting for a hundred million auctions",
++            source: "Banchio & Skrzypacz 2022, arXiv 2202.05947v1",
++            description: "Starting Q=1/(1-discount), approximately 100 at .99; sampled auction ties, expected hindsight ties. Numerical initialization and tie conventions are our reconstruction. Fixed horizon, final stability selection. Figure 9: one 100m-period session per format; whole-run played occupancy. This long experiment may take substantial time.",
++            config: ModelConfig::Auctions(c),
++        });
++    }
++    out
++}
+diff --git a/crates/sugarscape-core/src/auctions/stats.rs b/crates/sugarscape-core/src/auctions/stats.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/stats.rs
+@@ -0,0 +1,117 @@
++//! Tick means and terminal policy statistics.
++use crate::stats::Series;
++use serde::Serialize;
++pub const SERIES: [&str; 20] = [
++    "bid_1",
++    "bid_2",
++    "bid_3",
++    "greedy_1",
++    "greedy_2",
++    "greedy_3",
++    "revenue",
++    "profit_1",
++    "profit_2",
++    "profit_3",
++    "epsilon",
++    "explored",
++    "downward",
++    "greedy_changes",
++    "stable",
++    "converged",
++    "terminal_revenue",
++    "terminal_deviation_gain",
++    "top_profile",
++    "periods",
++];
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct AuctionsSnapshot {
++    pub tick: u64,
++    pub periods_in_tick: u32,
++    pub bid_1: f64,
++    pub bid_2: f64,
++    pub bid_3: f64,
++    pub greedy_1: f64,
++    pub greedy_2: f64,
++    pub greedy_3: f64,
++    pub revenue: f64,
++    pub profit_1: f64,
++    pub profit_2: f64,
++    pub profit_3: f64,
++    pub epsilon: f64,
++    pub explored: f64,
++    pub downward: f64,
++    pub greedy_changes: f64,
++    pub stable: f64,
++    pub converged: f64,
++    pub terminal_revenue: f64,
++    pub terminal_deviation_gain: f64,
++    pub top_profile: f64,
++    pub periods: f64,
++}
++impl Default for AuctionsSnapshot {
++    fn default() -> Self {
++        Self {
++            tick: 0,
++            periods_in_tick: 0,
++            bid_1: f64::NAN,
++            bid_2: f64::NAN,
++            bid_3: f64::NAN,
++            greedy_1: f64::NAN,
++            greedy_2: f64::NAN,
++            greedy_3: f64::NAN,
++            revenue: f64::NAN,
++            profit_1: f64::NAN,
++            profit_2: f64::NAN,
++            profit_3: f64::NAN,
++            epsilon: f64::NAN,
++            explored: f64::NAN,
++            downward: f64::NAN,
++            greedy_changes: f64::NAN,
++            stable: f64::NAN,
++            converged: f64::NAN,
++            terminal_revenue: f64::NAN,
++            terminal_deviation_gain: f64::NAN,
++            top_profile: f64::NAN,
++            periods: f64::NAN,
++        }
++    }
++}
++impl Series for AuctionsSnapshot {
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn value(&self, name: &str) -> Option<f64> {
++        Some(match name {
++            "tick" => self.tick as f64,
++            "bid_1" => self.bid_1,
++            "bid_2" => self.bid_2,
++            "bid_3" => self.bid_3,
++            "greedy_1" => self.greedy_1,
++            "greedy_2" => self.greedy_2,
++            "greedy_3" => self.greedy_3,
++            "revenue" => self.revenue,
++            "profit_1" => self.profit_1,
++            "profit_2" => self.profit_2,
++            "profit_3" => self.profit_3,
++            "epsilon" => self.epsilon,
++            "explored" => self.explored,
++            "downward" => self.downward,
++            "greedy_changes" => self.greedy_changes,
++            "stable" => self.stable,
++            "converged" => self.converged,
++            "terminal_revenue" => self.terminal_revenue,
++            "terminal_deviation_gain" => self.terminal_deviation_gain,
++            "top_profile" => self.top_profile,
++            "periods" => self.periods,
++            _ => return None,
++        })
++    }
++}
++
++pub fn series_names(bidders: u32) -> Vec<String> {
++    SERIES
++        .iter()
++        .filter(|s| bidders == 3 || !["bid_3", "greedy_3", "profit_3"].contains(s))
++        .map(|s| s.to_string())
++        .collect()
++}
+diff --git a/crates/sugarscape-core/src/auctions/view.rs b/crates/sugarscape-core/src/auctions/view.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/view.rs
+@@ -0,0 +1,3 @@
++//! Occupancy and action-value cells; first two bidders form the pair projection.
++pub const CELL: usize = 12;
++pub const BIDDER_HEIGHT: usize = 36;
+diff --git a/crates/sugarscape-core/src/auctions/world.rs b/crates/sugarscape-core/src/auctions/world.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/auctions/world.rs
+@@ -0,0 +1,914 @@
++//! Sequential auctions and the fixed-horizon observation protocol.
++use super::{analysis, config::*, learner::Learner, mechanism, stats::AuctionsSnapshot};
++use crate::{
++    config::FieldError,
++    model::{wrong_model, Model, ModelConfig, ModelKind},
++    portable::exp_neg,
++    rng::{self, SimRng},
++    stats::{Series, Stats},
++};
++use rand::Rng;
++use serde::Serialize;
++use std::fmt::Write;
++/// Retains full page history, then the first million snapshots plus latest for longer native runs.
++pub const MAX_HISTORY: usize = 1_000_001;
++fn bounded_push(stats: &mut Stats<AuctionsSnapshot>, snapshot: AuctionsSnapshot, cap: usize) {
++    if stats.history().len() >= cap {
++        stats.truncate(cap - 1);
++    }
++    stats.push(snapshot);
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Outcome {
++    pub config: AuctionsConfig,
++    pub seed: u64,
++    pub equilibria: Vec<Vec<f64>>,
++    pub periods: u64,
++    pub converged: bool,
++    pub greedy: Vec<f64>,
++    pub greedy_actions: Vec<usize>,
++    pub terminal_revenue: f64,
++    pub terminal_profits: Vec<f64>,
++    pub deviation_gain: Vec<f64>,
++    pub top_profile: bool,
++    pub below_top: bool,
++    pub low_non_nash: bool,
++    pub whole_revenue: f64,
++    pub late_revenue: f64,
++    pub whole_profits: Vec<f64>,
++    pub late_profits: Vec<f64>,
++    pub occupancy: Vec<u64>,
++    pub late_occupancy: Vec<u64>,
++    pub grid: Vec<f64>,
++    pub whole_count: u64,
++    pub late_count: u64,
++    pub stable: u64,
++    pub activation: Option<u64>,
++    pub q: Vec<Vec<f64>>,
++    pub chosen: Vec<Vec<u64>>,
++    pub updated: Vec<Vec<u64>>,
++    pub win_shares: Vec<f64>,
++}
++#[derive(Clone)]
++pub struct AuctionsWorld {
++    pub config: AuctionsConfig,
++    pub tick: u64,
++    seed: u64,
++    period: u64,
++    rng: SimRng,
++    grid: Vec<f64>,
++    equilibria: Vec<Vec<f64>>,
++    learners: Vec<Learner>,
++    stable: u64,
++    observed: Option<Vec<usize>>,
++    activation: Option<u64>,
++    occupancy: Vec<u64>,
++    late_occupancy: Vec<u64>,
++    revenue: f64,
++    late_revenue: f64,
++    profits: Vec<f64>,
++    late_profits: Vec<f64>,
++    wins: Vec<f64>,
++    late_count: u64,
++    played: Vec<usize>,
++    last_bids: Vec<f64>,
++    priorities: Vec<f64>,
++    shares: Vec<f64>,
++    payment: f64,
++    epsilon: f64,
++    outcome: Option<Outcome>,
++    pub stats: Stats<AuctionsSnapshot>,
++}
++impl AuctionsWorld {
++    pub fn new(config: AuctionsConfig, seed: u64) -> Result<Self, Vec<FieldError>> {
++        config.validate()?;
++        let grid = mechanism::grid(&config);
++        let equilibria = analysis::equilibria(&config);
++        let mut rng = rng::seeded(seed);
++        let n = config.bidders as usize;
++        let learners = (0..n)
++            .map(|_| Learner::new(&config, &grid, rng.gen::<f64>()))
++            .collect();
++        let m = grid.len();
++        let last_bids = vec![grid[0]; n];
++        let mut out = Self {
++            config,
++            tick: 0,
++            seed,
++            period: 0,
++            rng,
++            grid,
++            equilibria,
++            learners,
++            stable: 0,
++            observed: None,
++            activation: None,
++            occupancy: vec![0; m * m],
++            late_occupancy: vec![0; m * m],
++            revenue: 0.0,
++            late_revenue: 0.0,
++            profits: vec![0.0; n],
++            late_profits: vec![0.0; n],
++            wins: vec![0.0; n],
++            late_count: 0,
++            played: vec![0; n],
++            last_bids,
++            priorities: vec![0.0; n + 1],
++            shares: vec![0.0; n],
++            payment: 0.0,
++            epsilon: 0.0,
++            outcome: None,
++            stats: Stats::default(),
++        };
++        let mut s = AuctionsSnapshot {
++            periods: 0.0,
++            stable: 0.0,
++            ..Default::default()
++        };
++        out.policies(&mut s);
++        out.stats.push(s);
++        Ok(out)
++    }
++    pub fn period(&self) -> u64 {
++        self.period
++    }
++    pub fn grid(&self) -> &[f64] {
++        &self.grid
++    }
++    pub fn learners(&self) -> &[Learner] {
++        &self.learners
++    }
++    pub fn outcome(&self) -> Option<&Outcome> {
++        self.outcome.as_ref()
++    }
++    pub fn is_finished(&self) -> bool {
++        self.period >= u64::from(self.config.horizon)
++    }
++    fn policies(&self, s: &mut AuctionsSnapshot) {
++        s.greedy_1 = self.grid[self.learners[0].greedy];
++        s.greedy_2 = self.grid[self.learners[1].greedy];
++        s.greedy_3 = self
++            .learners
++            .get(2)
++            .map_or(f64::NAN, |f| self.grid[f.greedy]);
++    }
++    fn one_period(&mut self) -> (Vec<f64>, Vec<f64>, f64, f64, u32) {
++        let c = &self.config;
++        let n = self.learners.len();
++        if self.activation.is_none()
++            && match c.downward_trigger {
++                DownwardTrigger::Off => false,
++                DownwardTrigger::Stable => self.stable >= u64::from(c.window),
++                DownwardTrigger::Period => self.period >= u64::from(c.downward_at),
++            }
++        {
++            self.activation = Some(self.period);
++        }
++        let clock = self.period + u64::from(c.period_origin == PeriodOrigin::One);
++        let epsilon = if c.exploration == Exploration::Constant {
++            c.epsilon
++        } else {
++            c.epsilon * exp_neg(-c.beta * clock as f64)
++        };
++        self.epsilon = epsilon;
++        let chi = self.activation.map_or(0.0, |tau| {
++            c.downward_chi
++                * exp_neg(
++                    -c.downward_beta
++                        * if c.downward_clock == DownwardClock::Activation {
++                            (self.period - tau) as f64
++                        } else {
++                            clock as f64
++                        },
++                )
++        });
++        let previous: Vec<usize> = self.learners.iter().map(|f| f.greedy).collect();
++        let mut tie_draws = vec![0.0; n];
++        let mut explored = 0.0;
++        let mut downward = 0.0;
++        for (i, f) in self.learners.iter().enumerate() {
++            let down = self.rng.gen::<f64>();
++            let explore = self.rng.gen::<f64>();
++            let action = self.rng.gen::<f64>();
++            tie_draws[i] = self.rng.gen::<f64>();
++            self.played[i] = if down < chi {
++                downward += 1.0;
++                let max = f.maximum();
++                f.q.iter().position(|q| max - q <= c.downward_gap).unwrap()
++            } else if explore < epsilon {
++                explored += 1.0;
++                f.explore(c, action)
++            } else {
++                f.greedy
++            };
++        }
++        let fringe = self.rng.gen::<f64>();
++        for priority in &mut self.priorities {
++            *priority = self.rng.gen::<f64>();
++        }
++        self.last_bids = self.played.iter().map(|a| self.grid[*a]).collect();
++        if c.fringe == Fringe::Uniform {
++            self.last_bids.push(fringe);
++        }
++        let result = mechanism::clear(
++            c,
++            &self.last_bids,
++            &self.priorities,
++            c.auction_ties == AuctionTies::Expected,
++        );
++        self.payment = result.revenue;
++        self.shares = result.shares.clone();
++        for (i, f) in self.learners.iter_mut().enumerate() {
++            let mut rewards = vec![0.0; self.grid.len()];
++            if c.update == Update::Chosen {
++                rewards[self.played[i]] = result.rewards[i];
++            } else {
++                for (a, r) in rewards.iter_mut().enumerate() {
++                    *r = mechanism::hypothetical(
++                        c,
++                        &self.last_bids,
++                        &self.priorities,
++                        i,
++                        self.grid[a],
++                    );
++                }
++            }
++            f.update(c, self.played[i], &rewards, tie_draws[i]);
++        }
++        let current: Vec<usize> = self.learners.iter().map(|f| f.greedy).collect();
++        let changes = current
++            .iter()
++            .zip(&previous)
++            .filter(|(a, b)| a != b)
++            .count() as u32;
++        let observed = if c.convergence_phase == ConvergencePhase::PostUpdate {
++            current
++        } else {
++            previous
++        };
++        if self.observed.as_ref() == Some(&observed) {
++            self.stable += 1;
++        } else {
++            self.stable = 1;
++            self.observed = Some(observed);
++        }
++        let cell = self.played[0] * self.grid.len() + self.played[1];
++        self.occupancy[cell] += 1;
++        self.revenue += result.revenue;
++        for i in 0..n {
++            self.profits[i] += result.rewards[i];
++            self.wins[i] += result.shares[i];
++        }
++        self.period += 1;
++        if self.period > u64::from(c.horizon) * 4 / 5 {
++            self.late_count += 1;
++            self.late_occupancy[cell] += 1;
++            self.late_revenue += result.revenue;
++            for i in 0..n {
++                self.late_profits[i] += result.rewards[i];
++            }
++        }
++        (
++            self.last_bids[..n].to_vec(),
++            result.rewards[..n].to_vec(),
++            explored / n as f64,
++            downward / n as f64,
++            changes,
++        )
++    }
++    pub fn step(&mut self) {
++        if self.is_finished() {
++            return;
++        }
++        let count = u64::from(self.config.periods_per_tick)
++            .min(u64::from(self.config.horizon) - self.period);
++        let n = self.learners.len();
++        let mut bids = vec![0.0; n];
++        let mut profits = vec![0.0; n];
++        let mut revenue = 0.0;
++        let mut explored = 0.0;
++        let mut downward = 0.0;
++        let mut eps = 0.0;
++        let mut changes = 0u64;
++        for _ in 0..count {
++            let (b, p, e, d, g) = self.one_period();
++            for i in 0..n {
++                bids[i] += b[i];
++                profits[i] += p[i];
++            }
++            revenue += self.payment;
++            eps += self.epsilon;
++            explored += e;
++            downward += d;
++            changes += u64::from(g);
++        }
++        self.tick += 1;
++        let div = count as f64;
++        let mut s = AuctionsSnapshot {
++            tick: self.tick,
++            periods_in_tick: count as u32,
++            bid_1: bids[0] / div,
++            bid_2: bids[1] / div,
++            bid_3: bids.get(2).map_or(f64::NAN, |b| b / div),
++            profit_1: profits[0] / div,
++            profit_2: profits[1] / div,
++            profit_3: profits.get(2).map_or(f64::NAN, |p| p / div),
++            revenue: revenue / div,
++            epsilon: eps / div,
++            explored: explored / div,
++            downward: downward / div,
++            greedy_changes: changes as f64,
++            stable: self.stable as f64,
++            periods: self.period as f64,
++            ..Default::default()
++        };
++        self.policies(&mut s);
++        if self.is_finished() {
++            self.outcome = Some(self.analyze());
++            let o = self.outcome.as_ref().unwrap();
++            s.converged = f64::from(o.converged);
++            s.terminal_revenue = o.terminal_revenue;
++            s.terminal_deviation_gain = o.deviation_gain.iter().copied().fold(0.0, f64::max);
++            s.top_profile = f64::from(o.top_profile);
++        }
++        bounded_push(&mut self.stats, s, MAX_HISTORY);
++    }
++    pub fn run(&mut self, ticks: u32) {
++        for _ in 0..ticks {
++            if self.is_finished() {
++                break;
++            }
++            self.step();
++        }
++    }
++    fn analyze(&self) -> Outcome {
++        let greedy_actions: Vec<usize> = self.learners.iter().map(|f| f.greedy).collect();
++        let greedy: Vec<f64> = greedy_actions.iter().map(|a| self.grid[*a]).collect();
++        let evaluated = analysis::evaluate(&self.config, &greedy);
++        let top = *self.grid.last().unwrap();
++        let below_top = greedy.iter().all(|b| *b < top);
++        Outcome {
++            config: self.config.clone(),
++            seed: self.seed,
++            equilibria: self.equilibria.clone(),
++            periods: self.period,
++            converged: self.stable >= u64::from(self.config.window),
++            top_profile: greedy.iter().all(|b| *b == top),
++            below_top,
++            low_non_nash: below_top && evaluated.deviation_gain.iter().any(|g| *g > 1e-12),
++            greedy,
++            greedy_actions,
++            terminal_revenue: evaluated.revenue,
++            terminal_profits: evaluated.profits,
++            deviation_gain: evaluated.deviation_gain,
++            whole_revenue: self.revenue / self.period as f64,
++            late_revenue: self.late_revenue / self.late_count as f64,
++            whole_profits: self
++                .profits
++                .iter()
++                .map(|p| p / self.period as f64)
++                .collect(),
++            late_profits: self
++                .late_profits
++                .iter()
++                .map(|p| p / self.late_count as f64)
++                .collect(),
++            occupancy: self.occupancy.clone(),
++            late_occupancy: self.late_occupancy.clone(),
++            grid: self.grid.clone(),
++            whole_count: self.period,
++            late_count: self.late_count,
++            stable: self.stable,
++            activation: self.activation,
++            q: self.learners.iter().map(|f| f.q.clone()).collect(),
++            chosen: self.learners.iter().map(|f| f.chosen.clone()).collect(),
++            updated: self.learners.iter().map(|f| f.updated.clone()).collect(),
++            win_shares: self.wins.clone(),
++        }
++    }
++}
++impl Model for AuctionsWorld {
++    fn config(&self) -> ModelConfig {
++        ModelConfig::Auctions(self.config.clone())
++    }
++    fn run(&mut self, ticks: u32) {
++        AuctionsWorld::run(self, ticks)
++    }
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn population(&self) -> usize {
++        self.learners.len()
++    }
++    fn fingerprint(&self) -> u64 {
++        let state = serde_json::json!({"config":self.config,"seed":self.seed,"tick":self.tick,"period":self.period,"grid":self.grid,"learners":self.learners,"stable":self.stable,"observed":self.observed,"activation":self.activation,"occupancy":self.occupancy,"late_occupancy":self.late_occupancy,"revenue":self.revenue,"late_revenue":self.late_revenue,"profits":self.profits,"late_profits":self.late_profits,"wins":self.wins,"late_count":self.late_count,"played":self.played,"last_bids":self.last_bids,"priorities":self.priorities,"shares":self.shares,"payment":self.payment,"epsilon":self.epsilon,"outcome":self.outcome});
++        let bytes = serde_json::to_vec(&state).unwrap();
++        let mut h = 0xcbf2_9ce4_8422_2325u64;
++        for byte in bytes {
++            h ^= u64::from(byte);
++            h = h.wrapping_mul(0x0100_0000_01b3);
++        }
++        let mut stream = self.rng.clone();
++        for _ in 0..2 {
++            for byte in stream.gen::<u64>().to_le_bytes() {
++                h ^= u64::from(byte);
++                h = h.wrapping_mul(0x0100_0000_01b3);
++            }
++        }
++        h
++    }
++
++    fn size(&self) -> (u32, u32) {
++        let m = self.grid.len();
++        (
++            (m * super::view::CELL) as u32,
++            (m * super::view::CELL).max(self.learners.len() * super::view::BIDDER_HEIGHT) as u32,
++        )
++    }
++    fn render(&self, mode: &str, _layer: &str, buf: &mut Vec<u8>) -> Result<(), String> {
++        if !["", "bids", "late", "values"].contains(&mode) {
++            return Err(format!(
++                "unknown color mode {mode:?} (expected bids, late or values)"
++            ));
++        }
++        let (w, h) = self.size();
++        let mut canvas = crate::opinions::Canvas { buf, wide: 0 };
++        canvas.clear(w as usize, h as usize);
++        let m = self.grid.len();
++        let cell = super::view::CELL;
++        if mode == "values" {
++            for (i, f) in self.learners.iter().enumerate() {
++                let max = f.maximum();
++                for a in 0..m {
++                    for row in 0..3 {
++                        let value = match row {
++                            0 => {
++                                if max.abs() > 0.0 {
++                                    f.q[a] / max
++                                } else {
++                                    0.0
++                                }
++                            }
++                            1 => f.chosen[a] as f64 / self.period.max(1) as f64,
++                            _ => f.updated[a] as f64 / self.period.max(1) as f64,
++                        }
++                        .clamp(0.0, 1.0);
++                        let color = [
++                            (30.0 + 190.0 * value) as u8,
++                            (40.0 + 110.0 * value) as u8,
++                            100,
++                        ];
++                        for dy in 0..cell {
++                            for dx in 0..cell {
++                                let mark = a == f.greedy && (dx == 0 || dy == 0);
++                                canvas.put(
++                                    a * cell + dx,
++                                    i * 36 + row * cell + dy,
++                                    if mark {
++                                        [240, 210, 70]
++                                    } else if self.period > 0
++                                        && self.played[i] == a
++                                        && (dx + 1 == cell || dy + 1 == cell)
++                                    {
++                                        [70, 220, 230]
++                                    } else {
++                                        color
++                                    },
++                                );
++                            }
++                        }
++                    }
++                }
++            }
++        } else {
++            let counts = if mode == "late" {
++                &self.late_occupancy
++            } else {
++                &self.occupancy
++            };
++            let most = counts.iter().copied().max().unwrap_or(1).max(1) as f64;
++            for a in 0..m {
++                for b in 0..m {
++                    let value = counts[a * m + b] as f64 / most;
++                    let color = [
++                        (20.0 + 210.0 * value) as u8,
++                        (35.0 + 120.0 * value) as u8,
++                        (60.0 + 80.0 * value) as u8,
++                    ];
++                    for dy in 0..cell {
++                        for dx in 0..cell {
++                            let mark = self.period > 0
++                                && self.played[0] == a
++                                && self.played[1] == b
++                                && (dx == 0 || dy == 0 || dx + 1 == cell || dy + 1 == cell);
++                            canvas.put(
++                                a * cell + dx,
++                                (m - 1 - b) * cell + dy,
++                                if mark { [240, 210, 70] } else { color },
++                            );
++                        }
++                    }
++                }
++            }
++        }
++        Ok(())
++    }
++    fn latest_json(&self) -> String {
++        serde_json::to_string(&self.stats.latest()).unwrap()
++    }
++    fn series_names(&self) -> Vec<String> {
++        super::series_names(self.config.bidders)
++    }
++    fn series(&self, name: &str) -> Option<Vec<f64>> {
++        if self.config.bidders == 2 && ["bid_3", "greedy_3", "profit_3"].contains(&name) {
++            None
++        } else {
++            self.stats.series(name)
++        }
++    }
++    fn latest_value(&self, name: &str) -> Option<f64> {
++        if self.config.bidders == 2 && ["bid_3", "greedy_3", "profit_3"].contains(&name) {
++            None
++        } else {
++            self.stats.latest().and_then(|s| s.value(name))
++        }
++    }
++    fn series_csv(&self) -> String {
++        crate::export::history_csv(&self.series_names(), self.stats.history())
++    }
++    fn agents_csv(&self) -> String {
++        let mut out = "bidder,action,bid,q,chosen,updated,greedy\n".to_string();
++        for (i, f) in self.learners.iter().enumerate() {
++            for (a, q) in f.q.iter().enumerate() {
++                writeln!(
++                    out,
++                    "{},{},{},{},{},{},{}",
++                    i + 1,
++                    a,
++                    self.grid[a],
++                    q,
++                    f.chosen[a],
++                    f.updated[a],
++                    a == f.greedy
++                )
++                .unwrap();
++            }
++        }
++        out
++    }
++    fn inspect_json(&self, x: u32, y: u32) -> Result<String, String> {
++        let (w, h) = self.size();
++        if x >= w || y >= h {
++            return Err(format!("({x}, {y}) is not in the frame"));
++        }
++        let action = x as usize / 12;
++        let bidder = y as usize / 36;
++        let rival = self.grid.len().checked_sub(1 + y as usize / 12);
++        let cell = rival.map(|r| action * self.grid.len() + r);
++        let f = self.learners.get(bidder);
++        let hypothetical_reward = f.map(|_| {
++            mechanism::hypothetical(
++                &self.config,
++                &self.last_bids,
++                &self.priorities,
++                bidder,
++                self.grid[action],
++            )
++        });
++        Ok(serde_json::json!({"x":x,"y":y,"panel":"bids","bidder":f.map(|_|bidder),"action":action,"count":cell.map(|k|self.occupancy[k]),"frequency":cell.map(|k|self.occupancy[k] as f64/self.period.max(1) as f64),"q":f.map(|f|f.q[action]),"chosen":f.map(|f|f.chosen[action]),"updated":f.map(|f|f.updated[action]),"hypothetical_reward":hypothetical_reward,"tick":self.tick,"period":self.period,"horizon":self.config.horizon,"equilibria":self.equilibria,"grid":self.grid,"greedy":self.learners.iter().map(|f|self.grid[f.greedy]).collect::<Vec<_>>(),"played":self.played.iter().map(|a|self.grid[*a]).collect::<Vec<_>>(),"shares":self.shares,"fringe_bid":self.last_bids.get(self.learners.len()).copied(),"fringe_share":self.shares.get(self.learners.len()).copied(),"payment":self.payment,"epsilon":self.epsilon,"stable":self.stable,"occupancy":self.occupancy,"late_occupancy":self.late_occupancy,"whole_count":self.period,"late_count":self.late_count,"learners":self.learners,"outcome":self.outcome,"agent":null}).to_string())
++    }
++    fn locate(&self, _id: u64) -> Option<(u32, u32)> {
++        None
++    }
++    fn set_config(&mut self, next: ModelConfig) -> Result<(), Vec<FieldError>> {
++        let ModelConfig::Auctions(next) = next else {
++            return Err(wrong_model(ModelKind::Auctions, &next));
++        };
++        next.validate()?;
++        let old = serde_json::to_value(&self.config).unwrap();
++        let new = serde_json::to_value(&next).unwrap();
++        let errors: Vec<FieldError> = old
++            .as_object()
++            .unwrap()
++            .iter()
++            .filter(|(key, value)| new[*key] != **value)
++            .map(|(key, _)| FieldError::new(key, "changes only on reset"))
++            .collect();
++        if errors.is_empty() {
++            Ok(())
++        } else {
++            Err(errors)
++        }
++    }
++    fn finished(&self) -> bool {
++        self.is_finished()
++    }
++    fn holds_when_finished(&self) -> bool {
++        true
++    }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn short(ppt: u32) -> AuctionsWorld {
++        AuctionsWorld::new(
++            AuctionsConfig {
++                horizon: 23,
++                window: 5,
++                periods_per_tick: ppt,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap()
++    }
++    #[test]
++    fn values_view_marks_played_and_greedy_actions_with_distinct_edges() {
++        let mut w = short(1);
++        w.step();
++        let mut buf = vec![];
++        w.render("values", "", &mut buf).unwrap();
++        let width = w.size().0 as usize;
++        let at = (11 * width + 11) * 4;
++        assert_eq!(&buf[at..at + 3], &[70, 220, 230]);
++        let greedy = w.learners[0].greedy * 12 * 4;
++        assert_eq!(&buf[greedy..greedy + 3], &[240, 210, 70]);
++        let mut w = AuctionsWorld::new(
++            AuctionsConfig {
++                q_init: QInit::Constant,
++                q_level: 0.0,
++                epsilon: 0.0,
++                horizon: 2,
++                window: 1,
++                periods_per_tick: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.step();
++        w.render("values", "", &mut buf).unwrap();
++        assert_eq!(&buf[..3], &[240, 210, 70]);
++        assert_eq!(&buf[at..at + 3], &[70, 220, 230]);
++    }
++    #[test]
++    fn inspection_exposes_the_actual_fringe_competitor_and_its_share() {
++        let mut w = AuctionsWorld::new(
++            AuctionsConfig {
++                fringe: Fringe::Uniform,
++                horizon: 2,
++                window: 1,
++                periods_per_tick: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        let before: serde_json::Value =
++            serde_json::from_str(&w.inspect_json(0, 0).unwrap()).unwrap();
++        assert!(before["fringe_bid"].is_null());
++        w.step();
++        let after: serde_json::Value =
++            serde_json::from_str(&w.inspect_json(0, 0).unwrap()).unwrap();
++        assert_eq!(after["fringe_bid"].as_f64(), Some(w.last_bids[2]));
++        assert_eq!(after["fringe_share"].as_f64(), Some(w.shares[2]));
++    }
++    #[test]
++    fn bounded_history_keeps_prefix_and_latest_with_actual_tick_stamps() {
++        let mut stats = Stats::default();
++        for tick in 0..5 {
++            bounded_push(
++                &mut stats,
++                AuctionsSnapshot {
++                    tick,
++                    ..Default::default()
++                },
++                3,
++            );
++        }
++        assert_eq!(
++            stats.history().iter().map(|s| s.tick).collect::<Vec<_>>(),
++            vec![0, 1, 4]
++        );
++    }
++    #[test]
++    fn clock_origin_and_fixed_draw_budget_do_not_depend_on_treatment_branches() {
++        let base = AuctionsConfig {
++            horizon: 2,
++            window: 1,
++            periods_per_tick: 1,
++            epsilon: 0.5,
++            beta: 1.0,
++            ..Default::default()
++        };
++        let mut zero = AuctionsWorld::new(base.clone(), 7).unwrap();
++        let mut one = AuctionsWorld::new(
++            AuctionsConfig {
++                period_origin: PeriodOrigin::One,
++                auction_ties: AuctionTies::Expected,
++                fringe: Fringe::Uniform,
++                ..base
++            },
++            7,
++        )
++        .unwrap();
++        zero.step();
++        one.step();
++        assert_eq!(zero.epsilon, 0.5);
++        assert_eq!(one.epsilon, 0.5 * exp_neg(-1.0));
++        assert_eq!(zero.rng.clone().gen::<f64>(), one.rng.clone().gen::<f64>());
++        let mut expected = rng::seeded(7);
++        for _ in 0..14 {
++            expected.gen::<f64>();
++        }
++        assert_eq!(zero.rng.gen::<f64>(), expected.gen::<f64>());
++    }
++    #[test]
++    fn stability_phase_observes_cached_or_updated_profile_without_changing_learning() {
++        let base = AuctionsConfig {
++            horizon: 2,
++            window: 1,
++            periods_per_tick: 1,
++            epsilon: 0.0,
++            ..Default::default()
++        };
++        let mut post = AuctionsWorld::new(base.clone(), 1).unwrap();
++        let mut pre = AuctionsWorld::new(
++            AuctionsConfig {
++                convergence_phase: ConvergencePhase::PreUpdate,
++                ..base
++            },
++            1,
++        )
++        .unwrap();
++        post.step();
++        pre.step();
++        assert_eq!(pre.observed, Some(vec![0, 0]));
++        assert_eq!(post.observed, Some(vec![1, 1]));
++        assert_eq!(pre.learners, post.learners);
++    }
++    #[test]
++    fn third_bidder_series_are_unavailable_in_two_bidder_runs() {
++        let w = short(7);
++        assert!(w.series("bid_3").is_none());
++        assert!(w.latest_value("greedy_3").is_none());
++        assert!(!w.series_names().contains(&"profit_3".to_string()));
++        let w = AuctionsWorld::new(
++            AuctionsConfig {
++                bidders: 3,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        assert!(w.latest_value("greedy_3").unwrap().is_finite());
++    }
++    #[test]
++    fn tiny_three_bidder_views_and_inspection_cover_all_value_rows() {
++        let w = AuctionsWorld::new(
++            AuctionsConfig {
++                bids: 2,
++                bidders: 3,
++                horizon: 2,
++                window: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        assert_eq!(w.size(), (24, 108));
++        for mode in ["bids", "late", "values"] {
++            let mut buf = vec![];
++            w.render(mode, "", &mut buf).unwrap();
++            assert_eq!(buf.len(), 24 * 108 * 4);
++        }
++        let inspection: serde_json::Value =
++            serde_json::from_str(&w.inspect_json(13, 85).unwrap()).unwrap();
++        assert_eq!(inspection["bidder"], 2);
++        assert!(inspection["q"].is_number());
++        assert!(inspection["count"].is_null());
++    }
++    #[test]
++    fn short_native_fingerprints() {
++        let base = AuctionsConfig {
++            horizon: 23,
++            window: 5,
++            periods_per_tick: 7,
++            ..Default::default()
++        };
++        for (c, want) in [
++            base.clone(),
++            AuctionsConfig {
++                auction: Auction::SecondPrice,
++                ..base.clone()
++            },
++            AuctionsConfig {
++                feedback: Feedback::RivalBids,
++                update: Update::All,
++                ..base.clone()
++            },
++            AuctionsConfig {
++                fringe: Fringe::Uniform,
++                ..base.clone()
++            },
++            AuctionsConfig { bidders: 3, ..base },
++        ]
++        .into_iter()
++        .zip([
++            0x8736a8664d834a2du64,
++            0x1ba7cb1e9d3ff993,
++            0x949a7d400b127f20,
++            0x5f621ad6482502e7,
++            0x5c5c0013fee7f42b,
++        ]) {
++            let mut w = AuctionsWorld::new(c, 1).unwrap();
++            w.run(4);
++            assert_eq!(w.fingerprint(), want);
++        }
++    }
++    #[test]
++    fn batching_preserves_economic_state_and_finishes_partial_tick() {
++        let mut a = short(1);
++        let mut b = short(7);
++        let mut c = short(1000);
++        a.run(23);
++        b.run(4);
++        c.run(1);
++        assert_eq!(a.learners, b.learners);
++        assert_eq!(a.learners, c.learners);
++        assert_eq!(a.occupancy, b.occupancy);
++        assert_eq!(a.stable, b.stable);
++        assert_eq!((b.period, b.tick, b.late_count), (23, 4, 5));
++        let before = b.fingerprint();
++        b.run(20);
++        assert_eq!(b.fingerprint(), before);
++    }
++    #[test]
++    fn unused_feedback_cannot_change_learning() {
++        for seed in 1..=10 {
++            let c = AuctionsConfig {
++                horizon: 101,
++                window: 5,
++                periods_per_tick: 7,
++                ..Default::default()
++            };
++            let mut a = AuctionsWorld::new(c.clone(), seed).unwrap();
++            let mut b = AuctionsWorld::new(
++                AuctionsConfig {
++                    feedback: Feedback::RivalBids,
++                    ..c
++                },
++                seed,
++            )
++            .unwrap();
++            a.run(15);
++            b.run(15);
++            assert_eq!(a.learners, b.learners);
++            assert_eq!(a.occupancy, b.occupancy);
++            assert_eq!(a.profits, b.profits);
++        }
++    }
++    #[test]
++    fn transient_stability_does_not_finish_session() {
++        let mut w = AuctionsWorld::new(
++            AuctionsConfig {
++                q_init: QInit::Biased,
++                bias_bid: 0.4,
++                bias_q: 30.0,
++                epsilon: 0.0,
++                horizon: 20,
++                window: 2,
++                periods_per_tick: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.run(5);
++        assert!(w.stable >= 2);
++        assert!(!w.is_finished());
++        assert!(w.outcome().is_none());
++    }
++    #[test]
++    fn period_downward_activation_uses_next_period_and_activation_clock() {
++        let mut w = AuctionsWorld::new(
++            AuctionsConfig {
++                horizon: 5,
++                window: 1,
++                periods_per_tick: 1,
++                downward_trigger: DownwardTrigger::Period,
++                downward_at: 2,
++                downward_chi: 1.0,
++                downward_beta: 1.0,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.run(2);
++        assert_eq!(w.activation, None);
++        w.step();
++        assert_eq!(w.activation, Some(2));
++        assert_eq!(w.stats.latest().unwrap().downward, 1.0);
++    }
++}
+diff --git a/crates/sugarscape-core/src/lib.rs b/crates/sugarscape-core/src/lib.rs
+index 735223d..ee34656 100644
+--- a/crates/sugarscape-core/src/lib.rs
++++ b/crates/sugarscape-core/src/lib.rs
+@@ -7,6 +7,7 @@ pub mod agent;
+ pub mod agreement;
+ pub mod anasazi;
+ pub mod ants;
++pub mod auctions;
+ pub mod bali;
+ pub mod bits;
+ pub mod civil;
+diff --git a/crates/sugarscape-core/src/model.rs b/crates/sugarscape-core/src/model.rs
+index 2b4ecfb..7a4a264 100644
+--- a/crates/sugarscape-core/src/model.rs
++++ b/crates/sugarscape-core/src/model.rs
+@@ -8,6 +8,7 @@ use serde::{Serialize, Serializer};
+ use crate::agreement::{AgreementConfig, AgreementWorld};
+ use crate::anasazi::{AnasaziConfig, AnasaziWorld};
+ use crate::ants::{AntsConfig, AntsWorld};
++use crate::auctions::{AuctionsConfig, AuctionsWorld};
+ use crate::bali::{BaliConfig, BaliWorld};
+ use crate::civil::{CivilConfig, CivilWorld};
+ use crate::classes::{ClassesConfig, ClassesWorld};
+@@ -74,10 +75,11 @@ pub enum ModelKind {
+     Hoard,
+     Firms,
+     Collusion,
++    Auctions,
+ }
+ 
+ impl ModelKind {
+-    pub const ALL: [ModelKind; 28] = [
++    pub const ALL: [ModelKind; 29] = [
+         ModelKind::Sugarscape,
+         ModelKind::Schelling,
+         ModelKind::Ring,
+@@ -106,6 +108,7 @@ impl ModelKind {
+         ModelKind::Hoard,
+         ModelKind::Firms,
+         ModelKind::Collusion,
++        ModelKind::Auctions,
+     ];
+ 
+     pub fn as_str(self) -> &'static str {
+@@ -138,6 +141,7 @@ impl ModelKind {
+             ModelKind::Hoard => "hoard",
+             ModelKind::Firms => "firms",
+             ModelKind::Collusion => "collusion",
++            ModelKind::Auctions => "auctions",
+         }
+     }
+ 
+@@ -173,6 +177,7 @@ impl ModelKind {
+             ModelKind::Hoard => crate::hoard::schema(),
+             ModelKind::Firms => crate::firms::schema(),
+             ModelKind::Collusion => crate::collusion::schema(),
++            ModelKind::Auctions => crate::auctions::schema(),
+         }
+     }
+ }
+@@ -214,6 +219,7 @@ pub enum ModelConfig {
+     Hoard(HoardConfig),
+     Firms(FirmsConfig),
+     Collusion(CollusionConfig),
++    Auctions(AuctionsConfig),
+ }
+ 
+ /// Another model's config on the wire: its fields and `"model": "<kind>"`.
+@@ -247,6 +253,7 @@ enum Tagged<'a> {
+     Hoard(&'a HoardConfig),
+     Firms(&'a FirmsConfig),
+     Collusion(&'a CollusionConfig),
++    Auctions(&'a AuctionsConfig),
+ }
+ 
+ impl From<Config> for ModelConfig {
+@@ -287,6 +294,7 @@ impl Serialize for ModelConfig {
+             ModelConfig::Hoard(c) => Tagged::Hoard(c).serialize(s),
+             ModelConfig::Firms(c) => Tagged::Firms(c).serialize(s),
+             ModelConfig::Collusion(c) => Tagged::Collusion(c).serialize(s),
++            ModelConfig::Auctions(c) => Tagged::Auctions(c).serialize(s),
+         }
+     }
+ }
+@@ -322,6 +330,7 @@ impl ModelConfig {
+             ModelConfig::Hoard(_) => ModelKind::Hoard,
+             ModelConfig::Firms(_) => ModelKind::Firms,
+             ModelConfig::Collusion(_) => ModelKind::Collusion,
++            ModelConfig::Auctions(_) => ModelKind::Auctions,
+         }
+     }
+ 
+@@ -431,6 +440,9 @@ impl ModelConfig {
+             "firms" => serde_json::from_value(value)
+                 .map(ModelConfig::Firms)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
++            "auctions" => serde_json::from_value(value)
++                .map(ModelConfig::Auctions)
++                .map_err(|e| FieldError::new("config", e.to_string())),
+             "collusion" => serde_json::from_value(value)
+                 .map(ModelConfig::Collusion)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
+@@ -443,7 +455,7 @@ impl ModelConfig {
+             _ => Err(FieldError::new(
+                 "model",
+                 format!(
+-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms or collusion)"
++                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms, collusion or auctions)"
+                 ),
+             )),
+         }
+@@ -479,6 +491,7 @@ impl ModelConfig {
+             ModelConfig::Hoard(c) => c.validate(),
+             ModelConfig::Firms(c) => c.validate(),
+             ModelConfig::Collusion(c) => c.validate(),
++            ModelConfig::Auctions(c) => c.validate(),
+         }
+     }
+ 
+@@ -514,6 +527,7 @@ impl ModelConfig {
+             ModelConfig::Hoard(c) => set_path(c, path, value).map(ModelConfig::Hoard),
+             ModelConfig::Firms(c) => set_path(c, path, value).map(ModelConfig::Firms),
+             ModelConfig::Collusion(c) => set_path(c, path, value).map(ModelConfig::Collusion),
++            ModelConfig::Auctions(c) => set_path(c, path, value).map(ModelConfig::Auctions),
+         }
+     }
+ 
+@@ -548,7 +562,8 @@ impl ModelConfig {
+             | ModelConfig::Tipping(_)
+             | ModelConfig::Hoard(_)
+             | ModelConfig::Firms(_)
+-            | ModelConfig::Collusion(_) => None,
++            | ModelConfig::Collusion(_)
++            | ModelConfig::Auctions(_) => None,
+         }
+     }
+ 
+@@ -591,6 +606,7 @@ impl ModelConfig {
+                 .map(|s| s.to_string())
+                 .collect(),
+             ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
++            ModelConfig::Auctions(c) => crate::auctions::series_names(c.bidders),
+             ModelConfig::Collusion(_) => crate::collusion::SERIES
+                 .iter()
+                 .map(|s| s.to_string())
+@@ -792,6 +808,7 @@ pub enum ModelWorld {
+     Hoard(Box<HoardWorld>),
+     Firms(Box<FirmsWorld>),
+     Collusion(Box<CollusionWorld>),
++    Auctions(Box<AuctionsWorld>),
+ }
+ 
+ impl ModelWorld {
+@@ -850,6 +867,9 @@ impl ModelWorld {
+             ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
+             ModelConfig::Hoard(c) => ModelWorld::Hoard(Box::new(HoardWorld::new(c, seed)?)),
+             ModelConfig::Firms(c) => ModelWorld::Firms(Box::new(FirmsWorld::new(c, seed)?)),
++            ModelConfig::Auctions(c) => {
++                ModelWorld::Auctions(Box::new(AuctionsWorld::new(c, seed)?))
++            }
+             ModelConfig::Collusion(c) => {
+                 ModelWorld::Collusion(Box::new(CollusionWorld::new(c, seed)?))
+             }
+@@ -886,6 +906,7 @@ impl ModelWorld {
+             ModelWorld::Hoard(_) => ModelKind::Hoard,
+             ModelWorld::Firms(_) => ModelKind::Firms,
+             ModelWorld::Collusion(_) => ModelKind::Collusion,
++            ModelWorld::Auctions(_) => ModelKind::Auctions,
+         }
+     }
+ 
+@@ -919,6 +940,7 @@ impl ModelWorld {
+             ModelWorld::Hoard(w) => w.as_ref(),
+             ModelWorld::Firms(w) => w.as_ref(),
+             ModelWorld::Collusion(w) => w.as_ref(),
++            ModelWorld::Auctions(w) => w.as_ref(),
+         }
+     }
+ 
+@@ -952,6 +974,7 @@ impl ModelWorld {
+             ModelWorld::Hoard(w) => w.as_mut(),
+             ModelWorld::Firms(w) => w.as_mut(),
+             ModelWorld::Collusion(w) => w.as_mut(),
++            ModelWorld::Auctions(w) => w.as_mut(),
+         }
+     }
+ 
+@@ -1061,6 +1084,15 @@ impl ModelWorld {
+             ModelWorld::Hoard(w) => copy_without_history!(Hoard, w),
+             ModelWorld::Firms(w) => copy_without_history!(Firms, w),
+             ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
++            ModelWorld::Auctions(w) => {
++                let stats = std::mem::take(&mut w.stats);
++                let mut copy = (**w).clone();
++                if let Some(last) = stats.latest() {
++                    copy.stats.push(last.clone());
++                }
++                w.stats = stats;
++                ModelWorld::Auctions(Box::new(copy))
++            }
+             _ => return None,
+         };
+         Some(Checkpoint { world, tick })
+@@ -1116,6 +1148,19 @@ impl ModelWorld {
+             (ModelWorld::Hoard(live), ModelWorld::Hoard(kept)) => restore_into!(live, kept),
+             (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
+             (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
++            (ModelWorld::Auctions(live), ModelWorld::Auctions(kept)) => {
++                let mut stats = std::mem::take(&mut live.stats);
++                let len = stats.history().partition_point(|s| s.tick <= kept.tick);
++                stats.truncate(len);
++                if stats.latest().is_none_or(|s| s.tick != kept.tick) {
++                    if let Some(last) = kept.stats.latest() {
++                        stats.push(last.clone());
++                    }
++                }
++                let mut next = (**kept).clone();
++                next.stats = stats;
++                **live = next;
++            }
+             _ => return Err("the keyframe is of another model".into()),
+         }
+         Ok(())
+@@ -1564,6 +1609,56 @@ mod tests {
+         assert_eq!(w.model().tick(), 0);
+     }
+ 
++    #[test]
++    fn auctions_checkpoint_restores_latest_snapshot_across_truncated_history_gap() {
++        let config = ModelConfig::Auctions(crate::auctions::AuctionsConfig {
++            horizon: 23,
++            window: 5,
++            periods_per_tick: 1,
++            ..Default::default()
++        });
++        let mut w = ModelWorld::new(config, 1).unwrap();
++        w.model_mut().run(4);
++        let checkpoint = w.checkpoint().unwrap();
++        w.model_mut().run(3);
++        let expected = w.model().fingerprint();
++        let ModelWorld::Auctions(a) = &mut w else {
++            unreachable!()
++        };
++        let latest = a.stats.latest().cloned().unwrap();
++        a.stats.truncate(2);
++        a.stats.push(latest);
++        w.restore(&checkpoint).unwrap();
++        let ModelWorld::Auctions(a) = &w else {
++            unreachable!()
++        };
++        assert_eq!(
++            a.stats.history().iter().map(|s| s.tick).collect::<Vec<_>>(),
++            vec![0, 1, 4]
++        );
++        w.model_mut().run(3);
++        assert_eq!(w.model().fingerprint(), expected);
++    }
++    #[test]
++    fn auctions_configs_round_trip_and_checkpoint_restores_random_stream() {
++        let config = ModelConfig::from_json(
++            r#"{"model":"auctions","horizon":23,"window":5,"periods_per_tick":7}"#,
++        )
++        .unwrap();
++        assert_eq!(config.kind(), ModelKind::Auctions);
++        assert_eq!(
++            ModelConfig::from_json(&serde_json::to_string(&config).unwrap()).unwrap(),
++            config
++        );
++        let mut w = ModelWorld::new(config, 1).unwrap();
++        w.model_mut().run(1);
++        let checkpoint = w.checkpoint().unwrap();
++        w.model_mut().run(1);
++        let expected = w.model().fingerprint();
++        w.restore(&checkpoint).unwrap();
++        w.model_mut().run(1);
++        assert_eq!(w.model().fingerprint(), expected);
++    }
+     #[test]
+     fn collusion_configs_round_trip_with_their_tag() {
+         let c = ModelConfig::from_json(
+@@ -1709,7 +1804,8 @@ mod tests {
+                 "tipping",
+                 "hoard",
+                 "firms",
+-                "collusion"
++                "collusion",
++                "auctions"
+             ]
+         );
+         assert!(ModelKind::Sugarscape.schema().is_empty());
+diff --git a/crates/sugarscape-core/src/presets.rs b/crates/sugarscape-core/src/presets.rs
+index b09ef4b..32cb66d 100644
+--- a/crates/sugarscape-core/src/presets.rs
++++ b/crates/sugarscape-core/src/presets.rs
+@@ -1558,6 +1558,7 @@ pub fn catalog() -> Vec<ModelPreset> {
+     out.extend(crate::tipping::presets());
+     out.extend(crate::hoard::presets());
+     out.extend(crate::collusion::presets());
++    out.extend(crate::auctions::presets());
+     out
+ }
+ 
+diff --git a/crates/sugarscape-core/src/titles.rs b/crates/sugarscape-core/src/titles.rs
+index 4c3c4aa..da4d0b0 100644
+--- a/crates/sugarscape-core/src/titles.rs
++++ b/crates/sugarscape-core/src/titles.rs
+@@ -3,7 +3,7 @@
+ //! paper (`source`) stay on the preset as its reference.
+ 
+ /// Titles by preset id, in catalog order.
+-pub const TITLES: [(&str, &str); 397] = [
++pub const TITLES: [(&str, &str); 410] = [
+     (
+         "ii-1-instant",
+         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
+@@ -1513,6 +1513,19 @@ pub const TITLES: [(&str, &str); 397] = [
+         "firms-2013",
+         "Axtell's 2013 settings give Zipf's law, with brief giant firms",
+     ),
++    ("auctions-first-price", "Two bidders learn how much to pay"),
++    ("auctions-second-price", "The winner pays the other bidder’s bid"),
++    ("auctions-feedback", "Bidders learn from every bid they could have made"),
++    ("auctions-unused-feedback", "Bidders receive information they do not use"),
++    ("auctions-local", "Bidders try the next bid up or down"),
++    ("auctions-biased", "Bidders start with a preference for low bids"),
++    ("auctions-downward", "Bidders are nudged toward lower bids"),
++    ("auctions-nonparticipation", "Bidders can choose to sit out"),
++    ("auctions-reserve", "The seller sets a minimum bid"),
++    ("auctions-three", "Three bidders learn together"),
++    ("auctions-three-patient", "Three bidders put more weight on future rewards"),
++    ("auctions-fringe", "A random bid joins the auction"),
++    ("auctions-persistent", "Bidders keep experimenting for a hundred million auctions"),
+     (
+         "collusion-calvano",
+         "Two pricing algorithms learn to keep prices high, but not as a best response",
+diff --git a/crates/sugarscape-core/tests/golden.rs b/crates/sugarscape-core/tests/golden.rs
+index f017d2e..821ca7a 100644
+--- a/crates/sugarscape-core/tests/golden.rs
++++ b/crates/sugarscape-core/tests/golden.rs
+@@ -422,6 +422,20 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
+     ("collusion-every-price", 0xbfdc574972d2efcd),
+     ("collusion-invitation", 0xbfdc574972d2efcd),
+     ("collusion-below-nash", 0x4b11e4afb4a24a8c),
++    // Fixed-value auctions: 200 ticks = 200,000 sequential periods, seed 1.
++    ("auctions-first-price", 0xd6f95485bf58b982),
++    ("auctions-second-price", 0xab1d9e3ead922ca6),
++    ("auctions-feedback", 0xe58e059e872861fc),
++    ("auctions-unused-feedback", 0xf6982f42d0402707),
++    ("auctions-local", 0x5eef4250fb3c289b),
++    ("auctions-biased", 0x1cf42e64fa1cd854),
++    ("auctions-downward", 0xa3b3d1d58df1d7a9),
++    ("auctions-nonparticipation", 0x1f458eab202bd4b8),
++    ("auctions-reserve", 0xf8f7251341f734eb),
++    ("auctions-three", 0xcc94c68dbee95532),
++    ("auctions-three-patient", 0xe888da5e81c4a9f9),
++    ("auctions-fringe", 0xa40e0d5efdbf0c2),
++    ("auctions-persistent", 0x3a3f369d629840af),
+ ];
+ 
+ fn fingerprint(id: &str) -> u64 {
