@@ -1,7 +1,7 @@
 # Minds 9: spatial evolution of hoarding (design)
 
 **Date:** 2026-10-02
-**Status:** proposed for review; no implementation or diagnostic simulation runs yet.
+**Status:** approved on 2026-10-02; implementation plan prepared for review. No implementation or diagnostic simulation runs yet.
 **Program:** [Minds](../../studies/2026-09-27-minds.md), step 9; C1 of the
 [collective-agency campaign map](2026-10-02-minds-collective-agency-program-design.md).
 **Builds on:** Minds 5's caching, Minds 6's theft, Minds 7's inheritance and Minds 8's watching.
