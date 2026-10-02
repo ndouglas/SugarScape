@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 397] = [
+pub const TITLES: [(&str, &str); 410] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1513,6 +1513,19 @@ pub const TITLES: [(&str, &str); 397] = [
         "firms-2013",
         "Axtell's 2013 settings give Zipf's law, with brief giant firms",
     ),
+    ("auctions-first-price", "Two bidders learn how much to pay"),
+    ("auctions-second-price", "The winner pays the other bidder’s bid"),
+    ("auctions-feedback", "Bidders learn from every bid they could have made"),
+    ("auctions-unused-feedback", "Bidders receive information they do not use"),
+    ("auctions-local", "Bidders try the next bid up or down"),
+    ("auctions-biased", "Bidders start with a preference for low bids"),
+    ("auctions-downward", "Bidders are nudged toward lower bids"),
+    ("auctions-nonparticipation", "Bidders can choose to sit out"),
+    ("auctions-reserve", "The seller sets a minimum bid"),
+    ("auctions-three", "Three bidders learn together"),
+    ("auctions-three-patient", "Three bidders put more weight on future rewards"),
+    ("auctions-fringe", "A random bid joins the auction"),
+    ("auctions-persistent", "Bidders keep experimenting for a hundred million auctions"),
     (
         "collusion-calvano",
         "Two pricing algorithms learn to keep prices high, but not as a best response",

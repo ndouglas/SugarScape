@@ -422,6 +422,20 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("collusion-every-price", 0xbfdc574972d2efcd),
     ("collusion-invitation", 0xbfdc574972d2efcd),
     ("collusion-below-nash", 0x4b11e4afb4a24a8c),
+    // Fixed-value auctions: 200 ticks = 200,000 sequential periods, seed 1.
+    ("auctions-first-price", 0xd6f95485bf58b982),
+    ("auctions-second-price", 0xab1d9e3ead922ca6),
+    ("auctions-feedback", 0xe58e059e872861fc),
+    ("auctions-unused-feedback", 0xf6982f42d0402707),
+    ("auctions-local", 0x5eef4250fb3c289b),
+    ("auctions-biased", 0x1cf42e64fa1cd854),
+    ("auctions-downward", 0xa3b3d1d58df1d7a9),
+    ("auctions-nonparticipation", 0x1f458eab202bd4b8),
+    ("auctions-reserve", 0xf8f7251341f734eb),
+    ("auctions-three", 0xcc94c68dbee95532),
+    ("auctions-three-patient", 0xe888da5e81c4a9f9),
+    ("auctions-fringe", 0xa40e0d5efdbf0c2),
+    ("auctions-persistent", 0x3a3f369d629840af),
 ];
 
 fn fingerprint(id: &str) -> u64 {
