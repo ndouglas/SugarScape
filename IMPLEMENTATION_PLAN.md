@@ -16,7 +16,7 @@
 **Goal**: Fixed-count source checks, controls and complete session exports.
 **Success Criteria**: Coverage, statistic definitions and uncertainty match the approved spec.
 **Tests**: Synthetic judging fixtures and short identity checks.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 4: Findings and integration
 **Goal**: Measure registered workloads, document outcomes, review and publish.

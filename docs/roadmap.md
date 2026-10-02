@@ -318,6 +318,17 @@ collusion does not survive a new rival, and the first 165 periods look like rand
 exploration and Lambin's Theorem 1 do not hold up.
 See `docs/superpowers/specs/2026-10-01-algorithmic-collusion-design.md`.
 
+## Q-learning Auctions (implementation prepared; milestone assigned at merge)
+
+Banchio & Skrzypacz (2022) is a separate `auctions` kind: fixed-value bidders,
+first/second-price and mixture payments, disclosure versus counterfactual learning,
+and the paper's market and exploration extensions. Initialization, ties and
+underspecified source protocols are named reconstruction switches. The design
+fixes histogram comparisons, coverage gates and decision rules before measuring;
+full ensembles and long duration controls stay outside CI. Queue #1 remains in
+`docs/papers.md` until integration and findings are complete. See
+`docs/superpowers/specs/2026-10-02-q-learning-auctions-design.md`.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).

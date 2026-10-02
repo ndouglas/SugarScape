@@ -1,5 +1,6 @@
 mod agreement;
 mod ants;
+mod auctions;
 mod bali;
 mod ch2;
 mod ch3;
@@ -42,6 +43,7 @@ use crate::claim::Claim;
 pub fn all() -> Vec<Claim> {
     [
         agreement::claims(),
+        auctions::claims(),
         ants::claims(),
         bali::claims(),
         ch2::claims(),

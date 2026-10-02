@@ -377,3 +377,23 @@ Rule M, with the golden tests unchanged.
 The Sugarscape series, the papers queue, the milestones in progress and the war program continue
 as planned. This program starts with the literature pass, or the spike below, whenever it's picked
 up.
+
+
+## Auction feedback as a coordination experiment
+
+Banchio & Skrzypacz's fixed-value auctions provide a separate test of learned
+coordination: hold the bidders and bid grid fixed, change payment rules or the
+information available for Q updates, and compare seller revenue, played-action
+occupancy and terminal policies. The `auctions` model separates disclosure from
+using disclosure for counterfactual updates. A disclosed but unused rival bid
+must leave the learner trajectory unchanged. The source claims and protocol
+controls are preregistered in the
+[auction design](../superpowers/specs/2026-10-02-q-learning-auctions-design.md).
+
+For AI safety, this makes feedback a concrete intervention in an interacting
+learning system. Low bids establish a distributional outcome, not deception,
+communication or sophisticated retaliation. Second-price bidding in this scalar
+model cannot settle questions about participation-based market splitting,
+history-state disclosure, or pacing agents. The
+[reading notes](../superpowers/specs/2026-10-02-q-learning-auctions-reading-notes.md)
+identify those follow-ups and the protocols needed to study them separately.

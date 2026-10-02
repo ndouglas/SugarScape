@@ -150,6 +150,12 @@ mod tests {
     }
 
     #[test]
+    fn the_registered_auction_baseline_can_be_selected_without_running_it() {
+        let selected = select(claims::all(), Some("auctions.bs.baseline-direction")).unwrap();
+        assert_eq!(selected[0].id, "auctions.bs.baseline-direction");
+    }
+
+    #[test]
     fn a_panicking_check_is_an_error_not_a_crash() {
         let c = fake("x.boom", |_| panic!("empty population"));
         let o = run_claim(&c, &[1]);
