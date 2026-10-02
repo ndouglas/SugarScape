@@ -40,7 +40,7 @@ which the user is doing separately.
 | 3 | Variations on Schelling ✅ | Epstein & Axtell 1996; Pancs & Vriend 2007; Zhang 2004; Gauvin, Vannimenus & Nadal 2009; Singh, Vainchtein & Weiss 2009 | `schelling` switches | Wanting a mixed street still sorts the town; a frozen, a segregated and a mixed phase; clusters shrink on a big board |
 | 4 | One culture or many ✅ | Axelrod 1997 | `culture` | Local convergence, global polarization; the docked mobility result reproduces on a broad or tall enough mountain |
 | 5 | Listening to the like-minded ✅ | Hegselmann & Krause 2002 | `opinions` | Fig. 2b's two camps come up in about a third of runs; most keep a middle camp |
-| 6 | How extremists win | Deffuant et al. 2000, 2002 | `agreement` | A few confident extremists and a moderate crowd |
+| 6 | How extremists win ✅ | Deffuant et al. 2000, 2002 | `agreement` | A few confident extremists and a moderate crowd |
 | 7 | The riot that needs one person | Granovetter 1978; Watts 2002 | `thresholds` | One threshold decides the riot; cascades on networks |
 | 8 | Ants at two food piles | Kirman 1993; Alfarano & Milaković | `ants` | The ants never rest at 80–20 |
 | 9 | Nobody goes, it's too crowded | Arthur 1994; Challet & Zhang 1997 | `farol` | Coordination without communication |

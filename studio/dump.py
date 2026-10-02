@@ -44,6 +44,9 @@ class Frame:
     kinds: dict = field(default_factory=dict)
     # id → the site's traits, as a tuple: Axelrod's culture model.
     traits: dict = field(default_factory=dict)
+    opinions: dict = field(default_factory=dict)
+    uncertainties: dict = field(default_factory=dict)
+    period: int | None = None
 
 
 @dataclass(frozen=True)
@@ -112,6 +115,7 @@ class Dump:
     culture_rank: dict = field(default_factory=dict)
     # Bounded confidence: each agent's rank by starting opinion (0 the lowest).
     start_rank: dict = field(default_factory=dict)
+    roles: dict = field(default_factory=dict)
 
 
 def _culture_rank(last):
@@ -289,6 +293,8 @@ def parse(text):
         return _schelling(raw)
     if raw.get("model") == "culture":
         return _culture(raw)
+    if raw.get("model") == "agreement":
+        return _agreement(raw)
     if raw.get("model") == "opinions":
         return _opinions(raw)
     if raw.get("model") == "tipping":
@@ -509,6 +515,24 @@ def _opinions(raw):
         placed=list(range(n)), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
         start_rank=rank,
     )
+
+
+def _agreement(raw):
+    """Use the opinion histogram with the agreement scale mapped from −1…1.
+
+    Keep the exact state and true period alongside the animation frame index.
+    """
+    from dataclasses import replace
+
+    normalized = {**raw, "starts": [(x + 1) / 2 for x in raw["starts"]],
+                  "frames": [{**f, "opinions": [(x + 1) / 2 for x in f["opinions"]]}
+                             for f in raw["frames"]]}
+    d = _opinions(normalized)
+    frames = [replace(f, period=original["tick"],
+                      opinions=dict(enumerate(original["opinions"])),
+                      uncertainties=dict(enumerate(original["uncertainties"])))
+              for f, original in zip(d.frames, raw["frames"])]
+    return replace(d, frames=frames, roles=dict(enumerate(raw["roles"])))
 
 
 def _tipping(raw):

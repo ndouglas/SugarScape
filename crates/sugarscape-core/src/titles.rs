@@ -906,7 +906,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "dnaw-lattice",
-        "Opinions on a lattice: one big cluster and scattered holdouts, eventually",
+        "Opinions on a lattice: broad central agreement with scattered holdouts",
     ),
     (
         "dnaw-lattice-clusters",
@@ -918,7 +918,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ra-central",
-        "Confident extremists at both ends: most of the population stays central",
+        "Confident extremists with less uncertain moderates: several opinion groups remain",
     ),
     (
         "ra-both",
@@ -926,19 +926,19 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ra-single",
-        "The paper's single-extreme run: at its stated speed, both extremes instead",
+        "The paper's single-extreme settings mostly split the population in our samples",
     ),
     (
         "ra-literal",
-        "A few extremists pull everyone to one extreme, as the paper states it",
+        "A few confident extremists often draw moderates to one side",
     ),
     (
         "ra-meadows-cliff",
-        "Measured too early, cut too strict: Meadows and Cliff see no extremists",
+        "Meadows and Cliff's horizon and cutoff give few extreme readings",
     ),
     (
         "ra-deffuant-2013",
-        "The authors' reply: run longer, count looser, and the single extreme appears",
+        "The authors' longer run and lower cutoff give frequent single-extreme readings",
     ),
     (
         "ra-bc-extremists",
@@ -954,7 +954,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ad-small-world",
-        "Extremists in a small world: one extreme or the center, run by run",
+        "Extremists in a small world: outcomes depend on the run and the cutoff",
     ),
     (
         "w-scale-free",

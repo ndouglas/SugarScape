@@ -273,8 +273,8 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("ra-deffuant-2013", 0x4b9cf5817bc155d6),
     ("ra-bc-extremists", 0xc304b87400a0bb46),
     ("ra-bc-printed", 0xef17ca06b9646fad),
-    ("ad-moore", 0xd39d77107d873634),
-    ("ad-small-world", 0xd29498f3ac055d5d),
+    ("ad-moore", 0x066706c15f1e18d0),
+    ("ad-small-world", 0x4f5519802c3bbb22),
     ("w-scale-free", 0xed9e58b01a7987d8),
     // Milestone 23: El Farol and the minority game.
     ("ef-arthur", 0x21d68cd385f4c107),

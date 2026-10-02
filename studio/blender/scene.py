@@ -162,6 +162,7 @@ def build_beat(beat, d, preview, compare=None, measured=None):
     """Builds the beat's scene; returns its per-frame updaters."""
     scene = bpy.context.scene
     reset(scene, preview)
+    scene.render.use_motion_blur = beat.params.get('motion_blur', True)
     scene.frame_start, scene.frame_end = 1, beat.frames
     # Motion blur smears into ghosts once Flumps hop more than once a frame:
     # it fades out as the beat speeds past one tick a frame.

@@ -16,14 +16,15 @@ from .street import meetings
 from .tipping import fence, tipplane
 from .variations import figure, paper, ringjoin
 from .culture import lanes
-from .opinions import diagram
+from .opinions import diagram, agreement_diagram
+from .agreement import agreement_markers, agreement_pair, agreement_cutoff, agreement_results, agreement_comparison, agreement_horizon
 
 __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
 
 # The overlays drawn in screen space (on `Screen` anchors).
 SCREEN = {"season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
-          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff", "paper", "figure", "diagram"}
+          "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff", "paper", "figure", "diagram", "agreement-diagram", "agreement-pair", "agreement-cutoff", "agreement-results", "agreement-markers", "agreement-comparison", "agreement-horizon"}
 
 
 BUILDERS = {
@@ -82,4 +83,11 @@ BUILDERS = {
     "ringjoin": ringjoin,
     "lanes": lanes,
     "diagram": diagram,
+    "agreement-diagram": agreement_diagram,
+    "agreement-markers": agreement_markers,
+    "agreement-pair": agreement_pair,
+    "agreement-cutoff": agreement_cutoff,
+    "agreement-results": agreement_results,
+    "agreement-comparison": agreement_comparison,
+    "agreement-horizon": agreement_horizon,
 }

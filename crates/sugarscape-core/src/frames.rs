@@ -885,6 +885,7 @@ pub enum Dump {
     Tipping(Box<TippingDump>),
     Culture(Box<CultureDump>),
     Opinions(Box<OpinionsDump>),
+    Agreement(Box<AgreementDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -984,6 +985,9 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
                 return run_tipping(shot).map(|d| Dump::Tipping(Box::new(d)));
             }
             run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
+        }
+        ModelConfig::Agreement(_) => {
+            run_agreement(shot).map(|d| Dump::Agreement(Box::new(d)))
         }
         ModelConfig::Opinions(_) => {
             for (bad, field) in [
@@ -1232,6 +1236,88 @@ pub fn run_opinions(shot: &Shot) -> Result<OpinionsDump, Vec<FieldError>> {
         every,
         agents: starts.len(),
         starts,
+        config,
+        frames,
+        stats,
+    })
+}
+
+/// One recorded period of relative agreement, retaining both state variables.
+#[derive(Clone, Debug, Serialize)]
+pub struct AgreementFrame {
+    pub tick: u64,
+    pub opinions: Vec<f64>,
+    pub uncertainties: Vec<f64>,
+}
+
+/// Relative agreement's initial identities and sampled evolution.
+#[derive(Clone, Debug, Serialize)]
+pub struct AgreementDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub every: u32,
+    pub agents: usize,
+    pub starts: Vec<f64>,
+    pub roles: Vec<crate::agreement::Role>,
+    pub config: ModelConfig,
+    pub frames: Vec<AgreementFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
+/// Records every requested period, holding the state after stabilization.
+pub fn run_agreement(shot: &Shot) -> Result<AgreementDump, Vec<FieldError>> {
+    for (bad, field) in [
+        (!shot.place.is_empty(), "place"),
+        (shot.empty, "empty"),
+        (shot.gifts, "gifts"),
+        (shot.cells.is_some(), "cells"),
+        (shot.scores, "scores"),
+    ] {
+        if bad {
+            return Err(vec![FieldError::new(field, "is not for agreement shots")]);
+        }
+    }
+    let every = shot.every;
+    if every == 0 || !shot.ticks.is_multiple_of(every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
+    let config = shot.model_config()?;
+    let mut world = ModelWorld::new(config.clone(), shot.seed)?;
+    let ModelWorld::Agreement(first) = &world else {
+        unreachable!("an agreement world")
+    };
+    let starts = first.starts().to_vec();
+    let roles = first.roles().to_vec();
+    let frame = |w: &ModelWorld, tick: u64| -> AgreementFrame {
+        let ModelWorld::Agreement(a) = w else {
+            unreachable!("an agreement world")
+        };
+        AgreementFrame {
+            tick,
+            opinions: a.opinions().to_vec(),
+            uncertainties: a.uncertainties().to_vec(),
+        }
+    };
+    let mut frames = vec![frame(&world, 0)];
+    for k in 1..=shot.ticks / every {
+        world.model_mut().run(every);
+        frames.push(frame(&world, u64::from(k * every)));
+    }
+    let stats = stats_every(world.model(), shot.ticks, every);
+    Ok(AgreementDump {
+        format: FORMAT,
+        model: "agreement",
+        seed: shot.seed,
+        ticks: shot.ticks / every,
+        every,
+        agents: starts.len(),
+        starts,
+        roles,
         config,
         frames,
         stats,
@@ -2468,6 +2554,72 @@ mod tests {
             Dump::Schelling(d) => *d,
             _ => panic!("not a schelling dump"),
         }
+    }
+
+    #[test]
+    fn agreement_dump_preserves_the_world_and_requested_clock() {
+        let shot = Shot::from_json(
+            r#"{"config":{"model":"agreement","agents":20},"ticks":12,"every":3,"seed":7}"#,
+        )
+        .unwrap();
+        let raw = serde_json::to_value(super::run(&shot).unwrap()).unwrap();
+        assert_eq!(raw["model"], "agreement");
+        assert_eq!(raw["ticks"], 4);
+        assert_eq!(raw["every"], 3);
+        let ModelConfig::Agreement(c) = shot.model_config().unwrap() else {
+            panic!("agreement config")
+        };
+        let mut world = crate::agreement::AgreementWorld::new(c, shot.seed).unwrap();
+        assert_eq!(raw["starts"], serde_json::json!(world.starts()));
+        assert_eq!(raw["roles"], serde_json::json!(world.roles()));
+        for (k, frame) in raw["frames"].as_array().unwrap().iter().enumerate() {
+            assert_eq!(frame["tick"], k * 3);
+            assert_eq!(frame["opinions"], serde_json::json!(world.opinions()));
+            assert_eq!(
+                frame["uncertainties"],
+                serde_json::json!(world.uncertainties())
+            );
+            world.run(3);
+        }
+        for series in raw["stats"].as_object().unwrap().values() {
+            assert_eq!(series.as_array().unwrap().len(), 5);
+        }
+    }
+
+    #[test]
+    fn agreement_shot_rejects_unsupported_fields_and_bad_stride() {
+        for (field, value) in [
+            ("place", serde_json::json!([{"x":0,"y":0}])),
+            ("empty", serde_json::json!(true)),
+            ("gifts", serde_json::json!(true)),
+            ("cells", serde_json::json!(["C"])),
+            ("scores", serde_json::json!(true)),
+            ("every", serde_json::json!(0)),
+            ("every", serde_json::json!(4)),
+        ] {
+            let mut value_shot =
+                serde_json::json!({"config":{"model":"agreement","agents":20},"ticks":6});
+            value_shot[field] = value;
+            let shot = Shot::from_json(&value_shot.to_string()).unwrap();
+            assert_eq!(super::run(&shot).unwrap_err()[0].field, field);
+        }
+        assert!(
+            Shot::from_json(r#"{"config":{"model":"agreement"},"ticks":0,"unknown":true}"#)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn stable_agreement_frames_keep_counting_periods() {
+        let shot = Shot::from_json(
+            r#"{"config":{"model":"agreement","agents":2,"mu":0},"ticks":200,"every":10}"#,
+        )
+        .unwrap();
+        let raw = serde_json::to_value(super::run(&shot).unwrap()).unwrap();
+        let frames = raw["frames"].as_array().unwrap();
+        assert_eq!(frames.last().unwrap()["tick"], 200);
+        assert_eq!(frames[19]["opinions"], frames[20]["opinions"]);
+        assert_eq!(frames[19]["uncertainties"], frames[20]["uncertainties"]);
     }
 
     #[test]

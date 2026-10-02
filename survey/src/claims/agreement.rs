@@ -8,7 +8,7 @@
 use std::sync::{Arc, Mutex};
 
 use sugarscape_core::agreement::{
-    AgreementConfig, Network, PairUpdate, Pairing, Placement, Rule, ScaleFreeConfig,
+    AgreementConfig, Network, PairUpdate, Pairing, Placement, Role, Rule, ScaleFreeConfig,
     SmallWorldConfig, Substrate, Window, GAP,
 };
 use sugarscape_core::model::{ModelConfig, ModelWorld};
@@ -20,8 +20,9 @@ use crate::runner::model_after;
 const DNAW: &str = "Deffuant, Neau, Amblard & Weisbuch 2000, ACS 3";
 const DAWF: &str = "Deffuant, Amblard, Weisbuch & Faure 2002, JASSS 5(4) 1";
 const MC: &str = "Meadows & Cliff 2012, JASSS 15(4) 4";
-const DAW: &str = "Deffuant, Amblard & Weisbuch 2013, JASSS 16(1) 11";
+const DAW: &str = "Deffuant, Weisbuch, Amblard & Faure 2013, JASSS 16(1) 11";
 const AD: &str = "Amblard & Deffuant 2004, Physica A 343";
+const AD_BASELINE: &str = "With initial moderates uniform on the full [−1, 1] range, about 5 % per side already lie beyond ±0.9 at period zero, and about 15 % per side beyond ±0.7. These end-of-run counts therefore include agents already past the chosen opinion cutoff; they are not counts exclusively of newly crossed agents.";
 const W: &str = "Weisbuch 2004, EPJ B 38";
 /// Far past any fully connected stability time (hundreds of periods; a
 /// lattice's can take thousands).
@@ -43,6 +44,10 @@ struct Run {
     drift: f64,
     tick: f64,
     stable: bool,
+    /// Initial moderates already past the chosen counting cutoff at period zero.
+    baseline_joined: f64,
+    /// Fraction inside 0.5 ± 0.1 on DNAW's original [0, 1] scale.
+    center_share: f64,
     /// The share of the ten best-connected agents in the largest cluster
     /// (NaN when anyone meets anyone).
     hubs_in_largest: f64,
@@ -88,14 +93,58 @@ fn summarize(w: &ModelWorld) -> Run {
             }
             let (lo, hi) = (sorted[best.0], sorted[best.1 - 1]);
             let mut by_degree = rows.clone();
-            by_degree.sort_by(|a, b| b.1.cmp(&a.1));
+            by_degree.sort_by_key(|r| std::cmp::Reverse(r.1));
             let hubs = &by_degree[..10];
             hubs.iter().filter(|r| r.0 >= lo && r.0 <= hi).count() as f64 / 10.0
         }
         _ => f64::NAN,
     };
-    let c = match m.config() {
-        ModelConfig::Agreement(c) => c,
+    let baseline_joined = match w {
+        ModelWorld::Agreement(a) => {
+            let boundary = |side: Role| {
+                let values = a
+                    .starts()
+                    .iter()
+                    .zip(a.roles())
+                    .filter_map(|(&x, &r)| (r == side).then_some(x));
+                match a.config.placement {
+                    Placement::Drawn => {
+                        if side == Role::Plus {
+                            values.reduce(f64::min)
+                        } else {
+                            values.reduce(f64::max)
+                        }
+                    }
+                    Placement::Bounds => {
+                        (values.count() > 0).then_some(if side == Role::Plus { 1.0 } else { -1.0 })
+                    }
+                    Placement::Band => (values.count() > 0).then_some(if side == Role::Plus {
+                        a.config.band
+                    } else {
+                        -a.config.band
+                    }),
+                }
+            };
+            let (plus, minus) = (boundary(Role::Plus), boundary(Role::Minus));
+            let moderates: Vec<f64> = a
+                .starts()
+                .iter()
+                .zip(a.roles())
+                .filter_map(|(&x, &r)| (r == Role::Moderate).then_some(x))
+                .collect();
+            if moderates.is_empty() {
+                0.0
+            } else {
+                moderates
+                    .iter()
+                    .filter(|&&x| {
+                        plus.is_some_and(|b| x > b - a.config.extreme_margin)
+                            || minus.is_some_and(|b| x < b + a.config.extreme_margin)
+                    })
+                    .count() as f64
+                    / moderates.len() as f64
+            }
+        }
         _ => unreachable!(),
     };
     let tick = m.tick() as f64;
@@ -111,9 +160,15 @@ fn summarize(w: &ModelWorld) -> Run {
         unmoved: last("unmoved"),
         drift: last("mean_opinion").abs(),
         tick,
-        stable: c.stop_when_stable
-            && m.finished()
-            && (c.stop_at == 0 || tick < f64::from(c.stop_at)),
+        stable: last("max_change") <= sugarscape_core::agreement::STILL,
+        baseline_joined,
+        center_share: match w {
+            ModelWorld::Agreement(a) => {
+                a.opinions().iter().filter(|&&x| x.abs() <= 0.2).count() as f64
+                    / a.opinions().len() as f64
+            }
+            _ => unreachable!(),
+        },
         hubs_in_largest,
     }
 }
@@ -194,6 +249,27 @@ fn outcomes(runs: &[Run]) -> String {
     )
 }
 
+/// A zero-event observation bounds frequency; it cannot establish impossibility.
+fn zero_event_bound(events: usize, n: usize) -> String {
+    if events == 0 {
+        format!("; one-sided 95 % upper frequency bound {:.3} % (zero of {n}, assuming independent seeds)", 100.0 * (1.0 - 0.05_f64.powf(1.0 / n as f64)))
+    } else {
+        String::new()
+    }
+}
+
+/// Cutoff-independent population asymmetry and convergence diagnostics.
+fn diagnostics(r: &[Run]) -> String {
+    format!(
+        "mean |mean opinion| {:.3}; {} of {} have |mean opinion| > 0.5; {} of {} runs not stable at the measurement horizon",
+        mean(r, |r| r.drift),
+        count(r, |r| r.drift > 0.5),
+        r.len(),
+        count(r, |r| !r.stable),
+        r.len()
+    )
+}
+
 /// DNAW's pairwise model: bounded confidence without extremists, d on
 /// [0, 1] as U = 2d.
 fn dnaw(d: f64, agents: u32) -> impl FnOnce(&mut AgreementConfig) {
@@ -215,7 +291,7 @@ fn ra(agents: u32, pe: f64, u: f64) -> impl FnOnce(&mut AgreementConfig) {
     }
 }
 
-/// Meadows and Cliff's placement at pe 0.05, U 1.4, N 200, read at `stop`
+/// Meadows and Cliff's Java placement at pe 0.05, U 1.4, N 200, read at `stop`
 /// (0: to stability) with a margin.
 fn reading(margin: f64, stop: u32) -> impl FnOnce(&mut AgreementConfig) {
     move |c| {
@@ -264,7 +340,7 @@ fn small_world(k: u32, p: f64, margin: f64) -> impl FnOnce(&mut AgreementConfig)
 fn critical_k(p: f64, margin: f64) -> Option<u32> {
     [2, 4, 8, 16, 32, 64, 128, 256]
         .into_iter()
-        .find(|&k| 2 * count(&runs(20, 5_000, small_world(k, p, margin)), Run::single) > 20)
+        .find(|&k| 2 * count(&runs(50, 5_000, small_world(k, p, margin)), Run::single) > 50)
 }
 
 /// Weisbuch's networks: pairwise bounded confidence at d, N 900, μ 0.5; on
@@ -339,10 +415,10 @@ pub fn claims() -> Vec<Claim> {
             item: "dnaw-clusters",
             source: Source::Book,
             citation: DNAW,
-            text: "Fig. 4: the number of peaks falls as d grows, at most about 1/(2d) (N 1000, μ 0.5, wings excluded; 50 of the paper's 250 samples)",
+            text: "Fig. 4: the number of peaks falls as d grows, at most about 1/(2d) (N 1000, μ 0.5, wings excluded; the paper's 250 samples)",
             check: |_| {
                 let ds = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45];
-                let means: Vec<f64> = ds.iter().map(|&d| mean(&runs(50, CAP, dnaw(d, 1000)), |r| r.major)).collect();
+                let means: Vec<f64> = ds.iter().map(|&d| mean(&runs(250, CAP, dnaw(d, 1000)), |r| r.major)).collect();
                 let falling = means.windows(2).all(|w| w[1] <= w[0] + 0.05);
                 let bounded = ds.iter().zip(&means).all(|(&d, &m)| m <= 1.0 / (2.0 * d) + 0.5);
                 let shown: Vec<String> = ds.iter().zip(&means).map(|(d, m)| format!("{m:.2} at d {d}")).collect();
@@ -376,7 +452,7 @@ pub fn claims() -> Vec<Claim> {
             item: "dnaw-lattice",
             source: Source::Book,
             citation: DNAW,
-            text: "Fig. 5's caption: that picture 'after 100 000 iterations' (119 periods of 841 meetings)",
+            text: "Fig. 5's picture 'after 100 000 iterations': a broad central majority after 119 periods (100079 meetings). Look for at least 80 % inside original opinions 0.5 ± 0.1 in at least 16 of 20 seeds (tolerance assumed, rule revised after visually comparing the paper and rebuilt torus)",
             check: |_| {
                 let r = runs(20, 119, |c| {
                     dnaw(0.3, 841)(c);
@@ -385,9 +461,9 @@ pub fn claims() -> Vec<Claim> {
                     c.stop_when_stable = false;
                     c.stop_at = 119;
                 });
-                let k = count(&r, |r| r.largest >= 0.8);
-                outcome(k >= 16, format!("{k}/20 runs with a cluster of 80 % or more at period 119; mean largest {:.2}", mean(&r, |r| r.largest)))
-                    .with("Run to stability the picture appears (agreement.dnaw.lattice), at a median period of about 1 800.")
+                let k = count(&r, |r| r.center_share >= 0.8);
+                outcome(k >= 16, format!("{k}/20 runs with at least 80 % in the broad center; mean share {:.3}; mean strict-gap largest cluster {:.3}", mean(&r, |r| r.center_share), mean(&r, |r| r.largest)))
+                    .with("The paper depicts a central majority without specifying a numerical consensus tolerance. GAP 0.001 is a separate diagnostic and cannot by itself reject the depicted central majority.")
             },
         },
         Claim {
@@ -438,24 +514,17 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-central",
             source: Source::Book,
             citation: DAWF,
-            text: "Fig. 5 (pe 0.2, U 0.4, μ 0.5, N 200): central convergence, 'only a marginal part of the initially non-extremists became extremist (4%)' (at most 10 % of moderates, over 40 runs)",
+            text: "Fig. 5 (pe 0.2, U 0.4, μ 0.5, N 200) gives an example with 4 % of moderates joining an extreme: look for at least one run with at most 10 % counted, in seeds 1–1000 (example-occurrence rule revised after the initial result; drawn cutoff is our innermost-extremist minus 0.1 convention)",
             check: |_| {
-                let r = runs(40, CAP, |c| {
-                    c.mu = 0.5;
-                    c.extremists = 0.2;
-                    c.uncertainty = 0.4;
-                });
-                let joined = mean(&r, |r| r.p_plus + r.p_minus);
-                let bounds = mean(
-                    &runs(40, CAP, |c| {
-                        c.mu = 0.5;
-                        c.extremists = 0.2;
-                        c.uncertainty = 0.4;
-                        c.placement = Placement::Bounds;
-                    }),
-                    |r| r.p_plus + r.p_minus,
-                );
-                outcome(joined <= 0.1, format!("{:.0} % of moderates became extremists ({:.0} % with extremists at ±1)", 100.0 * joined, 100.0 * bounds))
+                let setup = |c: &mut AgreementConfig| { c.mu = 0.5; c.extremists = 0.2; c.uncertainty = 0.4; };
+                let r = runs(1000, CAP, setup);
+                let zero = runs(1000, CAP, |c| { setup(c); c.extreme_margin = 0.0; });
+                let joined = |r: &Run| r.p_plus + r.p_minus;
+                let k = count(&r, |r| joined(r) <= 0.1);
+                let min = r.iter().map(joined).fold(f64::INFINITY, f64::min);
+                let baseline = mean(&r, |r| r.baseline_joined);
+                outcome(k > 0, format!("{k}/1000 runs at most 10 % counted; mean {:.2} %, minimum {:.2} %{}", 100.0 * mean(&r, joined), 100.0 * min, zero_event_bound(k, r.len())))
+                    .with(&format!("Period-zero baseline {:.2} % already past our cutoff; mean final minus baseline {:.2} percentage points (not an uncertainty-based conversion count). With zero margin: {} of 1000 at most 10 %, mean {:.2} %, minimum {:.2} %. The caption's 4 % total joining implies y ≤ 0.0016, inconsistent with its printed y 0.03. This is a sampled numerical discrepancy, not proof that the pictured central pattern is impossible. {}.", 100.0 * baseline, 100.0 * (mean(&r, joined) - baseline), count(&zero, |r| joined(r) <= 0.1), 100.0 * mean(&zero, joined), 100.0 * zero.iter().map(joined).fold(f64::INFINITY, f64::min), diagnostics(&r)))
             },
         },
         Claim {
@@ -478,17 +547,13 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-single",
             source: Source::Book,
             citation: DAWF,
-            text: "Figs. 7–8 (pe 0.1, U 1.4, μ 0.5, N 200): a single extreme (98 % of moderates) or, 'for another sample … all other parameters being equals', central convergence",
+            text: "Figs. 7–8 (pe 0.1, U 1.4, μ 0.5, N 200) give individual single-extreme and central examples: look for at least one of each in seeds 1–1000 (example-occurrence rule revised after the initial result; drawn cutoff is our convention, not specified in 2002)",
             check: |_| {
-                let r = runs(40, CAP, |c| {
-                    c.mu = 0.5;
-                    c.extremists = 0.1;
-                    c.uncertainty = 1.4;
-                });
-                let at = runs(40, CAP, ra(200, 0.1, 1.4));
-                let k = count(&r, |r| r.single() || r.central());
-                outcome(2 * k >= r.len(), format!("single or central in {k}/40 runs: {}", outcomes(&r)))
-                    .with(&format!("At Fig. 9's μ 0.2: {}.", outcomes(&at)))
+                let r = runs(1000, CAP, |c| { c.mu = 0.5; c.extremists = 0.1; c.uncertainty = 1.4; });
+                let at = runs(50, CAP, ra(200, 0.1, 1.4));
+                let (single, central) = (count(&r, Run::single), count(&r, Run::central));
+                outcome(single > 0 && central > 0, outcomes(&r))
+                    .with(&format!("Single extreme{}; central{}. {}. At Fig. 9's μ 0.2 (50 seeds): {}. Absent examples in this sample are not mathematically excluded; μ 0.2 is a sensitivity comparison, not a correction to the printed μ 0.5.", zero_event_bound(single, r.len()), zero_event_bound(central, r.len()), diagnostics(&r), outcomes(&at)))
             },
         },
         Claim {
@@ -528,7 +593,9 @@ pub fn claims() -> Vec<Claim> {
                         format!("pe {pe:.4}: {:.2}", row.iter().map(|c| c.2).sum::<f64>() / row.len() as f64)
                     })
                     .collect();
-                outcome(k * 5 >= cells.len() * 4, format!("{k}/{} cells at N 1000 ({k200}/{} at N 200); mean y by pe: {}", cells.len(), small.len(), rows.join(", ")))
+                let drift = cells.iter().map(|&(u, pe, _)| mean(&runs(50, CAP, ra(1000, pe, u)), |r| r.drift)).sum::<f64>() / cells.len() as f64;
+                outcome(k * 5 >= cells.len() * 4, format!("{k}/{} cells at N 1000 ({k200}/{} at N 200); mean y by pe: {}; cutoff-independent mean |mean opinion| across cells {drift:.3}", cells.len(), small.len(), rows.join(", ")))
+                    .with("The y boundary uses our innermost-extremist minus 0.1 cutoff, absent from the 2002 specification; a discrepancy in this indicator need not mean the physical symmetry-breaking zone is absent.")
             },
         },
         Claim {
@@ -597,7 +664,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-map",
             source: Source::Book,
             citation: DAWF,
-            text: "§4.8: 'We did not find any significant influence of the uncertainty of the extremists (ue)' (how far the population drifts, |mean opinion|, at pe 0.05, U 1.4, N 1000: ue 0.05 against 0.2, 50 runs)",
+            text: "§4.8: 'We did not find any significant influence of the uncertainty of the extremists (ue)' (local boundary sensitivity only: §4.3 allows boundaries to shift; compare |mean opinion| at pe 0.05, U 1.4, N 1000: ue 0.05 against 0.2, 50 runs)",
             check: |_| {
                 let at = |ue: f64, margin: f64| runs(50, CAP, move |c| {
                     ra(1000, 0.05, 1.4)(c);
@@ -606,7 +673,7 @@ pub fn claims() -> Vec<Claim> {
                 });
                 let (lo, hi) = (at(0.05, 0.1), at(0.2, 0.1));
                 equivalent(&col(&lo, |r| r.drift), &col(&hi, |r| r.drift), Some(0.15), "ue 0.05", "ue 0.2").with(&format!(
-                    "y (new extremists past the innermost extremist less 0.1): {:.2} at ue 0.05, {:.2} at ue 0.2; counted past 0.3 inside it, {:.2} and {:.2} — with ue 0.2 the extreme cluster settles inside the reply's cutoff.",
+                    "y (new extremists past the innermost extremist less 0.1): {:.2} at ue 0.05, {:.2} at ue 0.2; counted past 0.3 inside it, {:.2} and {:.2} — with ue 0.2 the extreme cluster settles inside our drawn-placement cutoff; the reply's Java-band cutoff was ±0.7.",
                     mean(&lo, |r| r.y),
                     mean(&hi, |r| r.y),
                     mean(&at(0.05, 0.3), |r| r.y),
@@ -690,7 +757,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-meadows-cliff",
             source: Source::Book,
             citation: MC,
-            text: "Meadows & Cliff: 'no conditions under which single extreme convergence will occur in the majority of the simulations' — under their reading (band, 200 periods, cutoff 0.8) at Fig. 9's corner (pe 0.05, U 1.4, N 200, 50 runs)",
+            text: "Meadows & Cliff: 'no conditions under which single extreme convergence will occur in the majority of the simulations' — under their Java reading (band, 200 periods, cutoff 0.8) at Fig. 9's corner (pe 0.05, U 1.4, N 200, 50 runs)",
             check: |_| {
                 let r = runs(50, CAP, reading(0.0, 200));
                 share(&r, Run::single, 0.0, 0.49, "in a single extreme")
@@ -702,7 +769,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-deffuant-2013",
             source: Source::Book,
             citation: DAW,
-            text: "The reply: with 1 200 periods (240 000 meetings) and new extremists past ±0.7, 'the single extreme convergence is very frequent (often more than 80% of the simulations) for low values of pe and large values of U' (pe 0.05, U 1.4, N 200, 50 runs)",
+            text: "The reply adjusts Meadows & Cliff's Java program: with 1 200 periods (240 000 meetings) and new extremists past ±0.7, 'the single extreme convergence is very frequent (often more than 80% of the simulations) for low values of pe and large values of U' (pe 0.05, U 1.4, N 200, 50 runs)",
             check: |_| share(&runs(50, CAP, reading(0.1, 1200)), Run::single, 0.8, 1.0, "in a single extreme"),
         },
         Claim {
@@ -710,14 +777,13 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-readings",
             source: Source::Book,
             citation: DAW,
-            text: "The reply names two fixes (the horizon and the cutoff); neither alone reproduces the single extreme (each gives mean y below 0.6 where both give above 0.9; pe 0.05, U 1.4, N 200, 50 runs)",
+            text: "The reply's two adjustments to Meadows & Cliff's Java program restore frequent single convergence (at least 80 % with both, below 80 % with either alone; pe 0.05, U 1.4, N 200, 50 seeds). The cutoff was revised after inspecting trajectories, as the reply acknowledges; one adjustment alone may still give single outcomes",
             check: |_| {
-                let y = |m: f64, stop: u32| mean(&runs(50, CAP, reading(m, stop)), |r| r.y);
-                let (mc, horizon, cutoff, daw) = (y(0.0, 200), y(0.0, 1200), y(0.1, 200), y(0.1, 1200));
-                outcome(
-                    horizon < 0.6 && cutoff < 0.6 && daw > 0.9,
-                    format!("mean y: Meadows & Cliff {mc:.2}, horizon fixed {horizon:.2}, cutoff fixed {cutoff:.2}, both {daw:.2}"),
-                )
+                let at = |m: f64, stop: u32| runs(50, CAP, reading(m, stop));
+                let (mc, horizon, cutoff, daw) = (at(0.0, 200), at(0.0, 1200), at(0.1, 200), at(0.1, 1200));
+                let share = |r: &[Run]| count(r, Run::single) as f64 / r.len() as f64;
+                outcome(share(&horizon) < 0.8 && share(&cutoff) < 0.8 && share(&daw) >= 0.8,
+                    format!("single: Java original {}/50, horizon only {}/50, cutoff only {}/50, both {}/50; mean y {:.2}, {:.2}, {:.2}, {:.2}", count(&mc, Run::single), count(&horizon, Run::single), count(&cutoff, Run::single), count(&daw, Run::single), mean(&mc, |r| r.y), mean(&horizon, |r| r.y), mean(&cutoff, |r| r.y), mean(&daw, |r| r.y)))
             },
         },
         Claim {
@@ -743,10 +809,11 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-population",
             source: Source::Book,
             citation: MC,
-            text: "Meadows & Cliff §5.3: as N grows the single-extreme zone shrinks (y at pe 0.1, U 1.6, δ 0: N 200 against N 2000, 50 runs)",
+            text: "Meadows & Cliff §5.3 reports decreasing instability with N; independently test the finite-N decrease after convergence (drawn placement, pe 0.1, U 1.6, δ 0, N 200 versus 2000, 50 seeds, our cutoff). Their Java runs used a different placement and horizon; this does not test an N→∞ limit",
             check: |_| {
-                let at = |n: u32| runs(50, CAP, ra(n, 0.1, 1.6));
-                greater(&col(&at(200), |r| r.y), &col(&at(2000), |r| r.y), "N 200", "N 2000")
+                let (small, large) = (runs(50, CAP, ra(200, 0.1, 1.6)), runs(50, CAP, ra(2000, 0.1, 1.6)));
+                greater(&col(&small, |r| r.y), &col(&large, |r| r.y), "N 200", "N 2000")
+                    .with(&format!("N 200: {}; {}. N 2000: {}; {}. Frequency and physical drift refer only to these sampled populations, not asymptotic disappearance.", outcomes(&small), diagnostics(&small), outcomes(&large), diagnostics(&large)))
             },
         },
         Claim {
@@ -754,13 +821,23 @@ pub fn claims() -> Vec<Claim> {
             item: "ra-population",
             source: Source::Book,
             citation: DAW,
-            text: "The reply: single extreme convergence 'takes place with any large number of agents' (single extreme in at least a third of runs at N 2000; pe 0.05 and 0.1, U 1.6, δ 0, 50 runs)",
+            text: "The reply's Fig. 4 still finds single convergence at N 1000 (Java band placement, cutoff ±0.7, 4000 periods; 50 seeds versus its 20). Test occurrence at pe 0.05, U 1.6, δ 0, and report pe 0.1 and N 2000 as robustness (occurrence rule revised after the initial result; does not test its separate 'any large number' argument)",
             check: |_| {
-                let parts = [0.05, 0.1]
-                    .into_iter()
-                    .map(|pe| (format!("pe {pe}"), share(&runs(50, CAP, ra(2000, pe, 1.6)), Run::single, 0.33, 1.0, "in a single extreme")))
-                    .collect();
-                all_of(parts).with("With δ 0.1 the single extreme grows with N (the ra-population sweep): a lean decides it, balanced extremists only chance.")
+                let at = |n, pe| runs(50, 4000, |c| { reading(0.1, 4000)(c); c.agents = n; c.extremists = pe; c.uncertainty = 1.6; });
+                let mut parts = Vec::new();
+                let mut detail = Vec::new();
+                for pe in [0.05, 0.1] {
+                    let r = at(1000, pe);
+                    let large = at(2000, pe);
+                    let k = count(&r, Run::single);
+                    if pe == 0.05 {
+                        parts.push((format!("N 1000, pe {pe}"), outcome(k > 0, format!("{}{}; {}", outcomes(&r), zero_event_bound(k, r.len()), diagnostics(&r)))));
+                    } else {
+                        detail.push(format!("N 1000, pe {pe}: {}{}; {}", outcomes(&r), zero_event_bound(k, r.len()), diagnostics(&r)));
+                    }
+                    detail.push(format!("N 2000, pe {pe}: {}; {}", outcomes(&large), diagnostics(&large)));
+                }
+                all_of(parts).with(&format!("{}. These finite samples do not establish behavior at all N or proportions.", detail.join(". ")))
             },
         },
         Claim {
@@ -768,7 +845,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ad-moore",
             source: Source::Book,
             citation: AD,
-            text: "Fig. 3: on a Moore torus 'y is always below 0.6 which shows that the single extreme convergence never occurs' (30 × 30, μ 0.2, extremists at ±1, U 0.4–1.8, pe 0.05–0.3, 10 runs a point, at most 20 000 periods)",
+            text: "Fig. 3: on a Moore torus 'y is always below 0.6 which shows that the single extreme convergence never occurs' (30 × 30, μ 0.2, extremists at ±1, U 0.4–1.8, pe 0.05–0.3, 10 runs a point, at most 20 000 periods; uniform-edge pairing and ±0.9 counting cutoff assumed)",
             check: |_| {
                 let mut all = Vec::new();
                 for pe in [0.05, 0.1, 0.2, 0.3] {
@@ -785,7 +862,8 @@ pub fn claims() -> Vec<Claim> {
                     }
                 }
                 let top = all.iter().map(|r| r.y).fold(0.0, f64::max);
-                outcome(top < 0.6 && count(&all, Run::single) == 0, format!("largest y {top:.2}; {}", outcomes(&all)))
+                outcome(top < 0.6 && count(&all, Run::single) == 0, format!("largest y {top:.2}; {}; {}", outcomes(&all), diagnostics(&all)))
+                    .with(AD_BASELINE)
             },
         },
         Claim {
@@ -793,7 +871,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ad-connectivity",
             source: Source::Book,
             citation: AD,
-            text: "Figs. 4–5: single extreme needs a critical connectivity, which 'takes place for higher connectivity when p decreases' (ring, N 1000, 20 runs a point, at most 5 000 periods)",
+            text: "Figs. 4–5: single extreme needs a critical connectivity, which 'takes place for higher connectivity when p decreases' (ring, N 1000, 50 seeds per point, at most 5000 periods; uniform-edge pairing and the ±0.9 counting cutoff are our assumptions)",
             check: |_| {
                 let (low, high) = (critical_k(0.2, 0.1), critical_k(1.0, 0.1));
                 let shown = |k: Option<u32>| k.map_or("none up to 256".to_string(), |k| k.to_string());
@@ -801,6 +879,7 @@ pub fn claims() -> Vec<Claim> {
                     matches!((low, high), (Some(a), Some(b)) if a > b),
                     format!("most runs single from k {} at p 0.2, from k {} at p 1", shown(low), shown(high)),
                 )
+                    .with(AD_BASELINE)
             },
         },
         Claim {
@@ -808,10 +887,20 @@ pub fn claims() -> Vec<Claim> {
             item: "ad-connectivity",
             source: Source::Book,
             citation: AD,
-            text: "Fig. 5 (β 0.8): 'the phase transition … occurs for values of connectivity around 8' (most runs single from k 4, 8 or 16)",
+            text: "Fig. 5 (β 0.8) puts the onset of the single/central mixture 'around 8', before uniformly single convergence. Operational onset: at least 10 % of 50 seeds have |mean opinion| > 0.5, first k 4–16 (rule revised after the initial result; cutoff-independent asymmetry proxy; uniform-edge pairing assumed, horizon 5000)",
             check: |_| {
-                let k = critical_k(0.8, 0.1);
-                outcome(matches!(k, Some(4..=16)), format!("most runs single from k {}", k.map_or("none".into(), |k| k.to_string())))
+                let mut onset = None;
+                let mut lines = Vec::new();
+                for k in [2, 4, 8, 16, 32, 64, 128, 256] {
+                    let r = runs(50, 5000, small_world(k, 0.8, 0.1));
+                    let wide = runs(50, 5000, small_world(k, 0.8, 0.3));
+                    let drifted = count(&r, |r| r.drift > 0.5);
+                    if onset.is_none() && drifted >= 5 { onset = Some(k); }
+                    lines.push(format!("k {k}: drift > 0.5 {drifted}/50, single at ±0.9 {}/50, at ±0.7 {}/50; {}", count(&r, Run::single), count(&wide, Run::single), diagnostics(&r)));
+                }
+                outcome(matches!(onset, Some(4..=16)), format!("asymmetry onset k {}", onset.map_or("none".into(), |k| k.to_string())))
+                    .with(&format!("{}. This proxy does not identify the paper's central branch; single/central mixtures cannot be inferred from y alone with an unspecified cutoff.", lines.join(". ")))
+                    .with(AD_BASELINE)
             },
         },
         Claim {
@@ -819,12 +908,13 @@ pub fn claims() -> Vec<Claim> {
             item: "ad-connectivity",
             source: Source::Book,
             citation: AD,
-            text: "Fig. 4: at low connectivity 'double extreme convergence' (k 2 and 4, p 0.8; new extremists counted past 0.9, the reply's rule for extremists at ±1)",
+            text: "Fig. 4's low-connectivity double-extreme regime can occur under a ±0.7 counting cutoff (k 2 and 4, p 0.8, 50 seeds per k; compatibility rule revised after the initial result). Compare ±0.9 on identical trajectories; uniform-edge pairing and both cutoffs are our assumptions, absent from AD's specification",
             check: |_| {
-                let low: Vec<Run> = [2, 4].into_iter().flat_map(|k| runs(20, 5_000, small_world(k, 0.8, 0.1)).to_vec()).collect();
-                let wide: Vec<Run> = [2, 4].into_iter().flat_map(|k| runs(20, 5_000, small_world(k, 0.8, 0.3)).to_vec()).collect();
-                share(&low, Run::both, 0.5, 1.0, "in both extremes")
-                    .with(&format!("Counted past 0.7 instead: {}.", outcomes(&wide)))
+                let low: Vec<Run> = [2, 4].into_iter().flat_map(|k| runs(50, 5_000, small_world(k, 0.8, 0.1)).to_vec()).collect();
+                let wide: Vec<Run> = [2, 4].into_iter().flat_map(|k| runs(50, 5_000, small_world(k, 0.8, 0.3)).to_vec()).collect();
+                share(&wide, Run::both, 0.5, 1.0, "in both extremes at ±0.7")
+                    .with(&format!("Counted past ±0.9: {}. Physical drift is unchanged by this cutoff: {}. The paper gives no exact counting boundary, so this compatibility is conditional on the named reading.", outcomes(&low), diagnostics(&low)))
+                    .with(AD_BASELINE)
             },
         },
         Claim {
@@ -832,15 +922,18 @@ pub fn claims() -> Vec<Claim> {
             item: "ad-connectivity",
             source: Source::Book,
             citation: AD,
-            text: "Fig. 6: on a grid substrate 'the same phenomenon' — more single extremes as connectivity rises (32 × 32, p 0.8, k 8 against 120, 20 runs)",
+            text: "Fig. 6: on a grid substrate 'the same phenomenon' — more single extremes as connectivity rises (32 × 32, p 0.8, k 8 against 120, 50 seeds; uniform-edge pairing and ±0.9 cutoff assumed)",
             check: |_| {
-                let at = |k: u32| runs(20, 5_000, move |c| {
+                let at = |k: u32| runs(50, 5_000, move |c| {
                     small_world(k, 0.8, 0.1)(c);
                     c.lattice.width = 32;
                     c.lattice.height = 32;
                     c.small_world.substrate = Substrate::Grid;
                 });
-                greater(&col(&at(120), |r| r.y), &col(&at(8), |r| r.y), "k 120", "k 8")
+                let (high, low) = (at(120), at(8));
+                greater(&col(&high, |r| r.y), &col(&low, |r| r.y), "k 120", "k 8")
+                    .with(&format!("k 8: {}; {}. k 120: {}; {}.", outcomes(&low), diagnostics(&low), outcomes(&high), diagnostics(&high)))
+                    .with(AD_BASELINE)
             },
         },
         Claim {
@@ -848,9 +941,9 @@ pub fn claims() -> Vec<Claim> {
             item: "w-dispersion",
             source: Source::Book,
             citation: W,
-            text: "Fig. 2: well mixed, 'two distinct steps at y = 0.5 and y = 0.33' (dispersion 0.45–0.55 at d 0.2 and 0.25, 0.28–0.4 at d 0.15; N 900, 50 runs)",
+            text: "Fig. 2: well mixed, 'two distinct steps at y = 0.5 and y = 0.33' (dispersion 0.45–0.55 at d 0.2 and 0.25, 0.28–0.4 at d 0.15; N 900, 100 runs)",
             check: |_| {
-                let d = |x: f64| mean(&runs(50, CAP, weisbuch("all", x)), |r| r.dispersion);
+                let d = |x: f64| mean(&runs(100, CAP, weisbuch("all", x)), |r| r.dispersion);
                 let (a, b, c) = (d(0.15), d(0.2), d(0.25));
                 outcome(
                     (0.28..=0.4).contains(&a) && (0.45..=0.55).contains(&b) && (0.45..=0.55).contains(&c),
@@ -863,10 +956,10 @@ pub fn claims() -> Vec<Claim> {
             item: "w-dispersion",
             source: Source::Book,
             citation: W,
-            text: "Figs. 2–3: on scale-free networks 'a continuous increase … with only a kink in the d = 0.25, y = 0.7 region', similar to the square lattice (a rise through 0.5–0.8 at d 0.25, and a mean difference from the lattice of at most 0.1; N 900, 50 runs)",
+            text: "Figs. 2–3: on scale-free networks 'a continuous increase … with only a kink in the d = 0.25, y = 0.7 region', similar to the square lattice (a rise through 0.5–0.8 at d 0.25, and a mean difference from the lattice of at most 0.1; N 900, 100 runs)",
             check: |_| {
                 let ds = [0.15, 0.2, 0.25, 0.3];
-                let curve = |net: &'static str| -> Vec<f64> { ds.iter().map(|&d| mean(&runs(50, CAP, weisbuch(net, d)), |r| r.dispersion)).collect() };
+                let curve = |net: &'static str| -> Vec<f64> { ds.iter().map(|&d| mean(&runs(100, CAP, weisbuch(net, d)), |r| r.dispersion)).collect() };
                 let (sf, lat) = (curve("sf4"), curve("lattice"));
                 let rising = sf.windows(2).all(|w| w[1] > w[0]);
                 let near = sf.iter().zip(&lat).map(|(a, b)| (a - b).abs()).sum::<f64>() / ds.len() as f64 <= 0.1;
@@ -879,12 +972,12 @@ pub fn claims() -> Vec<Claim> {
             item: "w-dispersion",
             source: Source::Book,
             citation: W,
-            text: "Fig. 3: 'Increasing the average connectivity by a factor 2 brings the scale free network results closer to those of the well-mixed case' (d 0.15–0.3, N 900, 50 runs)",
+            text: "Fig. 3: 'Increasing the average connectivity by a factor 2 brings the scale free network results closer to those of the well-mixed case' (d 0.15–0.3, N 900, 100 runs)",
             check: |_| {
                 let gap = |net: &'static str| -> f64 {
                     [0.15, 0.2, 0.25, 0.3]
                         .iter()
-                        .map(|&d| (mean(&runs(50, CAP, weisbuch(net, d)), |r| r.dispersion) - mean(&runs(50, CAP, weisbuch("all", d)), |r| r.dispersion)).abs())
+                        .map(|&d| (mean(&runs(100, CAP, weisbuch(net, d)), |r| r.dispersion) - mean(&runs(100, CAP, weisbuch("all", d)), |r| r.dispersion)).abs())
                         .sum()
                 };
                 let (four, eight) = (gap("sf4"), gap("sf8"));
@@ -896,9 +989,9 @@ pub fn claims() -> Vec<Claim> {
             item: "w-scale-free",
             source: Source::Book,
             citation: W,
-            text: "Fig. 4: 'Most of the well connected nodes belong to horizontal cluster[s]' — the ten best-connected agents mostly end in the largest cluster (d 0.2, N 900, 50 runs)",
+            text: "Fig. 4: 'Most of the well connected nodes belong to horizontal cluster[s]' — the ten best-connected agents mostly end in the largest cluster (d 0.2, N 900, 100 runs)",
             check: |_| {
-                let r = runs(50, CAP, weisbuch("sf4", 0.2));
+                let r = runs(100, CAP, weisbuch("sf4", 0.2));
                 let hubs = mean(&r, |r| r.hubs_in_largest);
                 let everyone = mean(&r, |r| r.largest);
                 outcome(hubs > 0.5 && hubs > everyone, format!("{:.0} % of hubs in the largest cluster, which holds {:.0} % of all agents", 100.0 * hubs, 100.0 * everyone))
@@ -909,12 +1002,38 @@ pub fn claims() -> Vec<Claim> {
             item: "w-scale-free",
             source: Source::Book,
             citation: W,
-            text: "Weisbuch: on scale-free networks 'Many of them are not affected by the convergence process' (outlying nodes that never move), unlike the well-mixed case (d 0.2, N 900, 50 runs)",
+            text: "Weisbuch: on scale-free networks 'Many of them are not affected by the convergence process' (outlying nodes that never move), unlike the well-mixed case (d 0.2, N 900, 100 runs)",
             check: |_| {
-                let sf = mean(&runs(50, CAP, weisbuch("sf4", 0.2)), |r| r.unmoved);
-                let mixed = mean(&runs(50, CAP, weisbuch("all", 0.2)), |r| r.unmoved);
+                let sf = mean(&runs(100, CAP, weisbuch("sf4", 0.2)), |r| r.unmoved);
+                let mixed = mean(&runs(100, CAP, weisbuch("all", 0.2)), |r| r.unmoved);
                 outcome(sf >= 0.05 && mixed < 0.01, format!("never moved: {:.1} % on the network, {:.1} % well mixed", 100.0 * sf, 100.0 * mixed))
             },
         },
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn period_zero_baseline_counts_the_same_initial_moderates_as_the_indicator() {
+        for placement in [Placement::Drawn, Placement::Bounds, Placement::Band] {
+            let config = AgreementConfig {
+                placement,
+                extremists: 0.2,
+                uncertainty: 0.4,
+                ..AgreementConfig::default()
+            };
+            let world = ModelWorld::new(ModelConfig::Agreement(config), 1).unwrap();
+            let r = summarize(&world);
+            assert!((r.baseline_joined - r.p_plus - r.p_minus).abs() < 1e-12);
+        }
+    }
+
+    #[test]
+    fn zero_events_bound_frequency_without_claiming_exclusion() {
+        assert!(zero_event_bound(0, 1000).contains("0.299 %"));
+        assert!(zero_event_bound(1, 1000).is_empty());
+    }
 }

@@ -1387,55 +1387,67 @@ Lotem, Michael A. Fishman and Lewi Stone, "Evolution of cooperation between indi
 Random pairs meet, N meetings a period. In Deffuant, Neau, Amblard and Weisbuch's pairwise bounded
 confidence (2000), two agents whose opinions differ by less than d each move a fraction μ of the way
 toward the other. In Deffuant, Amblard, Weisbuch and Faure's **relative agreement** (2002) each agent
-also has an uncertainty — a segment around its opinion — and a partner moves it by μ times the overlap
-of their segments beyond half the influencer's width, divided by that width: confident agents sway
-uncertain ones, and uncertainties move too. A few **extremists** — the most extreme opinions, very
+also has an uncertainty u — the half-width of a segment around its opinion. When the overlap h
+exceeds the influencer's u, the partner moves its opinion and uncertainty toward the influencer's
+by the fraction μ(h/u − 1): confident agents can sway uncertain ones. A few **extremists** — the most extreme opinions, very
 confident — can then leave the majority in the center, split it between the two extremes, or pull it
 all to one extreme. The paper maps which happens with an indicator y (the squared shares of moderates
 that end up extremists at each end, summed: 0 central, 0.5 both extremes, 1 a single extreme) over
 the moderates' uncertainty U and the share of extremists pe (Fig. 9). Opinions run from −1 to 1;
 Deffuant 2000's d on [0, 1] is U = 2d here.
 
-Meadows and Cliff (2012) reimplemented the model twice and could not reproduce Fig. 9; the authors
-replied (2013) that Meadows and Cliff measured y before the model converged, and counted too few
-moderates as extremists — neither detail is in the 2002 paper. Both readings are presets, and the
-paper as stated is the default. Measured (planning and the survey):
+Meadows and Cliff (2012) reimplemented the model twice and could not reproduce Fig. 9. The
+2013 reply changes their Java program: wait longer, and count initially moderate agents beyond
+±0.7 instead of ±0.8. The authors acknowledge that these measurement details were not specified
+in 2002; the cutoff was adjusted after inspecting the trajectories. Their Java and Python
+programs use different updating conventions, so the reply comparison here follows Java.
 
-- **Both fixes are needed.** At Fig. 9's corner (pe 0.05, U 1.4, 200 agents) Meadows and Cliff's
-  reading gives y 0.00; their horizon fixed, 0.40; their cutoff fixed, 0.27; both fixed, 0.98. The
-  majority has drifted most of the way to one extreme by their stop and settles between 0.7 and 0.8.
-  The paper as stated — the extremists drawn, run until nothing moves — agrees with the reply.
-- **The single extreme is a finite-size effect when the extremists are balanced.** At pe 0.1, U 1.6
-  it comes in 79 % of runs with 100 agents, 16 % with 1000 and none with 4000; Fig. 9's single-extreme
-  zone at its stated 1000 agents covers 14 of the 35 cells it shows at pe ≤ 0.075, U ≥ 1.4, and all 35
-  with 200 agents. With a lean (δ 0.1) it holds and strengthens with N. Meadows and Cliff were right
-  that it shrinks with N; the reply's 'any large number of agents' holds only at the smallest pe.
-- **Figs. 5 and 7 do not reproduce at their stated parameters.** Fig. 5's 'only … 4%' of moderates
-  becoming extremists is 48 % (22 % with extremists at ±1). Fig. 7's single extreme — and Fig. 8's
-  central convergence 'for the same parameters' — never appear at the stated μ = 0.5: both extremes in
-  39 of 40 runs. At Fig. 9's μ = 0.2 the pair appears (single 24, central 16), as §4.8's own μ result
-  predicts.
-- **Eq. 11 as printed reproduces none of §6.** The bounded-confidence window 'If |x − x′| < u′', u′
-  being the influencer's uncertainty, lets uncertain moderates pull the confident extremists in: y is
-  0.00 everywhere. With the listener's own uncertainty (**BC window** switch) §6's claims hold: a single
-  extreme only around U = 1, a central band at U 0.8 with averaged uncertainties, none with the variance
-  rule.
-- **ue matters, and the cutoff misreads it.** §4.8 finds no influence of the extremists' uncertainty;
-  at N 1000 (pe 0.05, U 1.4) the population drifts to one extreme far less often at ue 0.05 than at 0.2
-  (median |mean opinion| 0.03 against 0.75) — and at 0.2 the
-  extreme cluster settles at ±0.75, inside the reply's 'innermost extremist less 0.1', so y reads 0.
-- **Networks.** On a Moore lattice there is never a single extreme (Amblard and Deffuant, 2004). On
-  small-world rings it needs a critical number of neighbors that falls as rewiring rises — as they say,
-  but at k 32 to 256 (most runs single from k 32 at p 0.8, 64 at p 1, 256 at p 0.2) rather than
-  'around 8' — and whether sparse rings end in both extremes or the center
-  depends, again, on the unstated cutoff. Weisbuch's scale-free networks (2004) reproduce: no steps in
-  the dispersion, close to the square lattice, closer to well mixed with twice the links; hubs end in
-  the big cluster; 16 % of agents never move. Deffuant 2000's lattice picture appears only when run to
-  stability (a median period of about 1 800), not after the caption's '100 000 iterations' (119
-  periods).
+The default uses the 2002 opinion initialization and relative agreement equations. Its stopping
+tolerance, outcome categories and new-extremist margin are explicit implementation choices;
+"became extremists" was not defined numerically in 2002. A moderate already inside a counting
+threshold contributes to y from the start: crossing a threshold and becoming more confident are
+separate measurements. Source recheck, independent numerical implementation, figure comparisons
+and survey verdicts: `docs/superpowers/specs/2026-10-01-agreement-spike.md`.
+
+- **The reply's two adjustments work together.** At pe 0.05, U 1.4, N 200, the Java reading gives
+  mean y 0.00; waiting 1,200 periods gives 0.40; using the 0.7 cutoff at 200 periods gives 0.27;
+  both give 0.98 (50 seeds). Either adjustment alone can produce single extremes; together they
+  recover the reply's frequent single-extreme regime. A separate implementation gives 188 of
+  200 runs single with both adjustments.
+- **Population size changes the frequency at measured settings.** With balanced extremists,
+  pe 0.1 and U 1.6, single extremes become rarer between N 200 and 2,000. In an independent
+  100-seed check there are 60, 16, 5 and 0 single outcomes at N 200, 1,000, 2,000 and 4,000;
+  at pe 0.05 there are still 52 of 100 at N 4,000. These finite samples do not establish
+  disappearance as N tends to infinity or refute the reply's claim of survival at low pe.
+- **Published examples need example tests.** Figs. 5 and 7–8 are individual runs, not claims
+  about typical frequencies. Fig. 5's caption gives both 4 % joining and y = 0.03, which cannot
+  both satisfy its stated indicator. In 1,000 runs at Fig. 7's printed μ = 0.5, neither a single
+  nor a central outcome was observed under the stated counting convention; both appear at
+  μ = 0.2. Zero observations bound frequency in this sample, not mathematical possibility;
+  the exact cutoff and the source's iteration normalization remain unspecified.
+- **The printed BC window misses Fig. 20's single-extreme band in the tested slice.** Eq. 11
+  uses the influencer's uncertainty. At pe 0.05, N 1,000, μ 0.2, six U values from 0.4 to 1.6,
+  δ 0 and 0.1, it gives y = 0 in all 600 runs (50 per cell). The alternate listener window
+  gives a single extreme in all 50 runs at U 1.0 for either δ. This is a discrepancy with
+  the printed equation, not a claim that every result in §6 fails.
+- **Uncertainty and counting deserve separate checks.** At pe 0.05, U 1.4 and N 1,000,
+  changing extremist uncertainty from 0.05 to 0.2 changes the measured population drift.
+  This is a local comparison near a regime boundary, not a parameter-wide refutation of the
+  paper. A cluster near ±0.75 can be counted differently by 0.7 and a threshold above 0.8.
+- **Networks.** Amblard and Deffuant (2004) place extremists at ±1 and draw moderates
+  independently across [−1, 1]. Balanced runs on the measured Moore lattice do not reach a
+  single extreme. Small-world comparisons name the pair-sampling assumption, counting cutoff,
+  cap and transition definition: an onset is different from a majority of runs being single.
+  The unspecified counting cutoff changes how sparse-ring clusters are classified, not their
+  trajectories. Weisbuch's scale-free model uses a different, one-way meeting rule; its mean
+  dispersion curve is smooth, and more links bring it closer to well mixed.
+- **The 2000 lattice picture is visually compatible at its horizon.** At about 100,000 meetings
+  a broad central majority and isolated extremes are already visible. Tight numerical clusters
+  continue settling later. The paper's picture supplies no exact tolerance for its central
+  symbol, so a strict 10⁻³ cluster gap alone cannot judge that picture.
 
 Switches for what the papers leave open: **Placement** (the most extreme draws; set to ±1; Meadows and
-Cliff's band), **New-extremist margin** (the reply's 0.1; 0 for Meadows and Cliff), **A meeting
+Cliff's band), **New-extremist margin** (0.1 gives the reply's ±0.7 on that band; 0 gives M&C's ±0.8), **A meeting
 updates** (both from their old values; one after the other; only the first, as Weisbuch), **Pairs** on
 a network (a random link; an agent then a neighbor), **BC window**, and the stop (**Stop when stable**,
 **Stop at period**). Networks: anyone, a lattice (four or eight neighbors), a small world grown from a
@@ -1460,7 +1472,7 @@ Agreement Interaction Model," *JASSS* 5(4) 1 (2002); Frédéric Amblard and Guil
 Role of Network Topology on Extremism Propagation with the Relative Agreement Opinion Dynamics,"
 *Physica A* 343 (2004); Gérard Weisbuch, "Bounded Confidence and Social Networks," *European Physical
 Journal B* 38 (2004); Michael Meadows and Dave Cliff, "Reexamining the Relative Agreement Model of
-Opinion Dynamics," *JASSS* 15(4) 4 (2012); Guillaume Deffuant, Frédéric Amblard and Gérard Weisbuch,
+Opinion Dynamics," *JASSS* 15(4) 4 (2012); Guillaume Deffuant, Gérard Weisbuch, Frédéric Amblard and Thierry Faure,
 "The Results of Meadows and Cliff Are Wrong Because They Compute Indicator y Before Model
 Convergence," *JASSS* 16(1) 11 (2013). See `docs/superpowers/specs/2026-09-26-relative-agreement-design.md`.
 

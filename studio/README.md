@@ -11,7 +11,7 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale); and Following the Crowd, `neighbors` and `tipping`.
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale); and Following the Crowd, `neighbors`, `tipping`, `variations`, `culture`, `opinions`, and `agreement` ("How extremists win").
 
 Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring or norms. A spatial shot's dump records each
 generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
@@ -125,3 +125,17 @@ that follow Flumps), `panels.py` (screen-space displays) and `caption.py`; a new
 `BUILDERS` in `__init__.py`.
 
 Baloo 2 is © The Baloo 2 Project Authors, under the SIL Open Font License (`fonts/OFL.txt`).
+
+### Relative agreement
+
+`agreement` records each agent's opinion and uncertainty, starting opinion, and initial
+role. Its felt histogram spans −1 to +1. Starting-opinion yarn colors preserve identity;
+cream marker lengths show current uncertainty. The opinion × time diagram retains true
+simulation periods when shots sample every several periods. The pair explanation uses
+actual initial opinions and uncertainty intervals, labeled as a rule example.
+
+The episode's *The Certain Few* is an original D-minor piece in 6/8 for bassoon,
+clarinet, marimba and cello. Its persistent outer figures spread into a flexible middle
+phrase as the crowd changes. Caption rules and samples are in
+`episodes/agreement/measurements.md`; source assumptions and reconstruction checks are
+in `docs/superpowers/specs/2026-10-01-agreement-spike.md`.
