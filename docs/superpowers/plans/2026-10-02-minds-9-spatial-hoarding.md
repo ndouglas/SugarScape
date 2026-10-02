@@ -70,6 +70,8 @@ pub struct FounderTraits {
 pub enum StoreKind { Scatter, Larder }
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Delivery { pub amount: f64 }
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SeenLarder { pub home: crate::geometry::Pos, pub amount: f64, pub tick: u64 }
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpatialState {
     pub home: crate::geometry::Pos,
@@ -78,12 +80,11 @@ pub struct SpatialState {
     pub larder_since: Option<u64>,
     pub delivery: Option<Delivery>,
     pub guarding: bool,
-    pub seen_larders: std::collections::BTreeMap<crate::agent::AgentId,
-        crate::minds::caching::watching::SeenCache>,
+    pub seen_larders: std::collections::BTreeMap<crate::agent::AgentId, SeenLarder>,
 }
 ```
 
-`SeenCache` is already public and stores amount/tick; reuse it for the separate larder memory map. Keep `SpatialState` public because the existing `Agent` is public; inspection uses the explicit representation in Task 6. Public `FounderTraits` is required for runner callers. Store authoritative cheating/watching on the existing agent fields; `traits` must match them at construction and breeding. No live editing of founder flags in this extension.
+`SeenLarder` retains only observed home coordinates, amount and tick, including a fresh empty/dead-owner target until an attempted raid or expiry clears it. This execution ruling corrects the original owner-only `SeenCache` map; see the task ledger. Keep `SpatialState` public because the existing `Agent` is public; inspection uses the explicit representation in Task 6. Public `FounderTraits` is required for runner callers. Store authoritative cheating/watching on the existing agent fields; `traits` must match them at construction and breeding. No live editing of founder flags in this extension.
 
 `Agent` gains `spatial: Option<SpatialState>`; existing `home` remains the central controller's state. Ordinary agents get `None`.
 
@@ -179,9 +180,9 @@ Select reachable free home/contact endpoints by `(path_length, site_index)`, usi
 **Files:** Create `delivery.rs`, `guard.rs`; modify `mod.rs`, `world.rs`, `rules/mod.rs`, `minds/mod.rs`, `stats.rs`; unit fixtures alongside new helpers.
 
 **Consumes:** Task 2 contact/transfers; existing `caching::{reserve,surplus,hungry}`, movement arrival.
-**Produces:** `prepare_guards(world: &mut World)` before shuffle; `guard_turn(world: &mut World, id: AgentId) -> bool` returns whether action consumed; `delivery_target(world: &World, id: AgentId) -> Option<Pos>`; `finish_turn(world: &mut World, id: AgentId)` clamps/deposits/allocates once. Explicitly pass the completion-turn flag internally so no second allocation occurs.
+**Produces:** `prepare_guards(world: &mut World)` before shuffle; `guard_turn(world: &mut World, id: AgentId) -> Option<Harvest>` returns the consumed guard action (extended in Task 4 to carry probe intake); `delivery_target(world: &World, id: AgentId) -> Option<Pos>`; `finish_turn(world: &mut World, id: AgentId)` clamps/deposits/allocates once. Explicitly pass the completion-turn flag internally so no second allocation occurs.
 
-- [ ] Add red behavior fixtures: L=1 away from home creates an intent without reducing holdings; movement takes successive ordinary steps; metabolism shrinks/cancels intent; later food does not enlarge it; contact deposit charges burial cost once; contact on allocation turn deposits immediately; pending intent prevents further batches; no return endpoint means no transfer. Test capacity and exact-zero surplus.
+- [x] Add red behavior fixtures: L=1 away from home creates an intent without reducing holdings; movement takes successive ordinary steps; metabolism shrinks/cancels intent; later food does not enlarge it; contact deposit charges burial cost once; contact on allocation turn deposits immediately; pending intent prevents further batches; no return endpoint means no transfer. Test capacity and exact-zero surplus.
 
 ```rust
 // Extract this pure helper in delivery.rs and exercise the state boundary.
@@ -196,9 +197,9 @@ fn delivery_cannot_expand_after_new_harvest() {
 }
 ```
 
-- [ ] Add guard fixtures with forced/near-certain intention and explicit state: intention frozen before shuffled turns; guarding displaces harvest and foreign theft; hungry own recovery allowed; metabolism still occurs; owner dies and subsequent take is unprotected. Guard off + occupied home allows theft. Assert intended/executed counts and recovery quantities separately.
-- [ ] Run `cargo test -p sugarscape-core spatial_hoarding` for red.
-- [ ] Implement the action state machine. Allocation is one L Bernoulli per positive ordinary batch, with no draws at L=0/1. Before deposit cap by current surplus and burial-cost affordability; otherwise keep food in ordinary holdings. Select return endpoint via Task 2 and use ordinary walk/arrival. Leave metabolism in `agent_turn` and clamp intent again afterward.
+- [x] Add guard fixtures with forced/near-certain intention and explicit state: intention frozen before shuffled turns; guarding displaces harvest and foreign theft; hungry own recovery allowed; metabolism still occurs; owner dies and subsequent take is unprotected. Guard off + occupied home allows theft. Assert intended/executed counts and recovery quantities separately.
+- [x] Run `cargo test -p sugarscape-core spatial_hoarding` for red.
+- [x] Implement the action state machine. Allocation is one L Bernoulli per positive ordinary batch, with no draws at L=0/1. Before deposit cap by current surplus and burial-cost affordability; otherwise keep food in ordinary holdings. Select return endpoint via Task 2 and use ordinary walk/arrival. Leave metabolism in `agent_turn` and clamp intent again afterward.
 
 ```rust
 fn clamped_delivery(old: Option<Delivery>, surplus: f64) -> Option<Delivery> {
@@ -210,8 +211,8 @@ fn clamped_delivery(old: Option<Delivery>, surplus: f64) -> Option<Delivery> {
 ```
 
 For guards use `T=max(R,1)+D*capacity` and portable logistic of `slope*(stock/T-0.5)`. Clear all previous intentions, then draw eligible agents in id order before shuffling. Transfer helpers check owner still alive. Ordinary guard turns skip new allocation. Record delivery starts/completions/cancellations, return turns, deposit quantities/cost and guard outcomes.
-- [ ] Run focused fixtures and all core tests. Add L=0/guard-off/no-larder comparison against existing scatter controller including subsequent RNG-dependent trace, not only stock totals.
-- [ ] Commit: `feat(minds): charge spatial delivery and guarding action costs`.
+- [x] Run focused fixtures and all core tests. Add L=0/guard-off/no-larder comparison against existing scatter controller including subsequent RNG-dependent trace, not only stock totals.
+- [x] Commit: `feat(minds): charge spatial delivery and guarding action costs`.
 
 ### Task 4: Observation, larder raids and unified arrival precedence
 
@@ -220,7 +221,7 @@ For guards use `T=max(R,1)+D*capacity` and portable logistic of `slope*(stock/T-
 **Consumes:** Contact, guarded transfers and tick intentions.
 **Produces:** `observe_deposit(world: &mut World, owner: AgentId, amount: f64)`; `raid(world: &mut World, id: AgentId, at: Pos) -> f64`; `stumble(world: &mut World, id: AgentId, at: Pos) -> f64`; spatial arrival hook returning whether food was positively recovered/taken. All transfer functions return quantities already accounted for in holdings/loot.
 
-- [ ] Add failing scenarios with both kinds at one home; simultaneous fresh targets; denied guarded raid clears only larder entry; empty target clears; span exactly 2 vs 3; opaque wall; deposit observation reports deposit 2 despite total stock 20; no watcher means no remembered foreign home; carrying room 0; hungry/better raid gates; owner-id tie ordering. Assert no site harvest or later stumble after positive recovery.
+- [x] Add failing scenarios with both kinds at one home; simultaneous fresh targets; denied guarded raid clears only larder entry; empty target clears; span exactly 2 vs 3; opaque wall; deposit observation reports deposit 2 despite total stock 20; no watcher means no remembered foreign home; carrying room 0; hungry/better raid gates; owner-id tie ordering. Assert no site harvest or later stumble after positive recovery.
 
 ```rust
 #[test]
@@ -234,8 +235,8 @@ fn fresh_larder(observed: u64, now: u64, span: u64) -> bool {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core spatial_hoarding` for red.
-- [ ] Factor movement's existing gathering phase just enough to insert the approved sequence: own scatter, own larder, observed larder, observed scatter, larder stumble, scatter stumble, harvest. Preserve old path exactly when disabled. Route delivery arrivals through the same hook. Reuse ordinary raid gates and visibility geometry; sum fresh larder observations by accessible endpoint without leaking current stocks. Draw larder discovery once per nonempty contacting owner in id order until a take; blocked hits continue. Record skipped scatter draws and denied/empty/blocked attempts separately.
+- [x] Run `cargo test -p sugarscape-core spatial_hoarding` for red.
+- [x] Factor movement's existing gathering phase just enough to insert the approved sequence: own scatter, own larder, observed larder, observed scatter, larder stumble, scatter stumble, harvest. Preserve old path exactly when disabled. Route delivery arrivals through the same hook. Reuse ordinary raid gates and visibility geometry; sum fresh larder observations by accessible endpoint without leaking current stocks. Draw larder discovery once per nonempty contacting owner in id order until a take; blocked hits continue. Record skipped scatter draws and denied/empty/blocked attempts separately.
 
 ```rust
 // Controller boundary: only positive transfers consume arrival food action.
@@ -246,15 +247,15 @@ found > 0.0
 ```
 
 The snippet belongs after own recovery and before scatter fallbacks; it does not replace the full normative ordering.
-- [ ] Define the following runner-only probe in `state.rs`, deriving Clone, Copy, Debug, Default, PartialEq and serde traits:
+- [x] Define the following runner-only probe in `state.rs`, deriving Clone, Copy, Debug, Default, PartialEq and serde traits:
 
 ```rust
 pub struct EpisodeProbe { pub guard_harvest: bool, pub scatter_first: bool }
 ```
 
 Both defaults are false; expose `World::new_with_spatial_probe(config, seed, cohort, probe)` with the same checked initialization as Task 1. Probe guard harvest only after zero own recovery; track it separately. Test both stumble orders with explicit inventories and seeded outcomes; probe cannot affect disabled worlds.
-- [ ] Run all core tests and existing Minds 8 watching/arrival reductions.
-- [ ] Commit: `feat(minds): observe and raid spatial larders through ordinary arrivals`.
+- [x] Run all core tests and existing Minds 8 watching/arrival reductions.
+- [x] Commit: `feat(minds): observe and raid spatial larders through ordinary arrivals`.
 
 ### Task 5: Archived seasonal cohorts and inheritance
 
