@@ -390,6 +390,17 @@ must leave the learner trajectory unchanged. The source claims and protocol
 controls are preregistered in the
 [auction design](../superpowers/specs/2026-10-02-q-learning-auctions-design.md).
 
+The registered native reconstruction corroborates low FPA/high SPA baseline
+terminal revenue (.232500/.945295) and the effect of all-action feedback
+(.906800 FPA). All 100 full-horizon unused-feedback pairs have identical economic
+trajectories. This supports an intervention through how the learner uses feedback;
+it does not establish that disclosure alone improves outcomes. Figure 5's endpoint
+concentration fails, initialization changes can remove the format distinction,
+and constant exploration gives only .309875 SPA top-pair occupancy in the source's
+100m-period seed. The patient three-bidder comparison is inconclusive because
+stable coverage collapses. These limits are part of the result, with all sessions
+and predeclared arms retained in [the measured findings](../superpowers/specs/2026-10-02-q-learning-auctions-findings.md).
+
 For AI safety, this makes feedback a concrete intervention in an interacting
 learning system. Low bids establish a distributional outcome, not deception,
 communication or sophisticated retaliation. Second-price bidding in this scalar

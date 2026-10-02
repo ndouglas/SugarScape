@@ -3717,6 +3717,16 @@ Native chart/CSV history beyond one million ticks retains the initial prefix and
 latest snapshot; actual tick stamps show the gap. Full economic outcomes and both
 occupancy histograms still count every auction.
 
+The complete registered native studies give 14 Holds, four Fails, one Inconclusive
+and five descriptive Untestable controls. Baseline terminal revenue is .232500 FPA
+(1,000/1,000 stable) and .945295 SPA (999/1,000 stable); all-action feedback raises
+FPA revenue to .906800 but misses Figure 5's .90-profile concentration rule.
+The primary downward, fringe-concentration and persistent-occupancy checks fail;
+three-bidder discount .999 has insufficient stable coverage. Initialization can
+remove the baseline format distinction. All workloads and primary choices remain
+fixed; [the full findings](docs/superpowers/specs/2026-10-02-q-learning-auctions-findings.md)
+include conditional/unconditional outcomes, every sensitivity arm and provenance.
+
 Source comparisons retain documentary differences: Figure 1's FPA counts imply
 revenue .2265 whereas the text says .24; SPA includes six exceptions to the
 (.95,.95) profile, including an off-diagonal pair. Full feedback's Figure 5 targets

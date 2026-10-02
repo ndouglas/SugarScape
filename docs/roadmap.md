@@ -329,6 +329,13 @@ full ensembles and long duration controls stay outside CI. Queue #1 remains in
 `docs/papers.md` until integration and findings are complete. See
 `docs/superpowers/specs/2026-10-02-q-learning-auctions-design.md`.
 
+The full registered native studies are measured: 11 source/reading checks hold,
+four fail and the patient three-bidder check is inconclusive. Protocol/documentary
+controls hold; initialization, ties, hindsight and duration remain descriptive.
+[Findings and provenance](superpowers/specs/2026-10-02-q-learning-auctions-findings.md)
+retain failed criteria and every declared arm. Final review, milestone assignment
+and publication remain integration gates.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).

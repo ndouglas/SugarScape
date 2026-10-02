@@ -1,0 +1,210 @@
+{
+  "revision": "eb31336e9d6a7802e15a6108077fb02eca7d3f0b",
+  "clean_status": "",
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "logical_cpus": 10,
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+  "target_dir": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions-scratch/survey/target",
+  "runs": [
+    {
+      "command": [
+        "cargo",
+        "run",
+        "--release",
+        "--",
+        "--only",
+        "auctions.bs."
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions/survey",
+      "start_utc": "2026-10-02T15:21:44.846685+00:00",
+      "log": "/tmp/auctions-native-bs.log",
+      "exit_code": 0,
+      "end_utc": "2026-10-02T16:39:20.085203+00:00",
+      "elapsed_seconds": 4655.213898167014,
+      "output_sha256": "c0d2f3ca2e7b5a876695d62be2783ce2a6cfe912627eb1423e184eebb3f22f0d"
+    },
+    {
+      "command": [
+        "cargo",
+        "run",
+        "--release",
+        "--",
+        "--only",
+        "auctions.controls."
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions/survey",
+      "start_utc": "2026-10-02T16:39:20.086482+00:00",
+      "log": "/tmp/auctions-native-controls.log",
+      "exit_code": 0,
+      "end_utc": "2026-10-02T17:00:06.519042+00:00",
+      "elapsed_seconds": 1246.4231059169397,
+      "output_sha256": "2b94e9e2a7b9dfec706ea11fea45b737dce1e73a84a4582169ca7b5ac328cf61"
+    }
+  ],
+  "thread_policy": "std::thread::available_parallelism(), bounded by seed count, from survey/src/runner.rs",
+  "raw_birth_utc": "2026-10-02T15:22:35.984671+00:00",
+  "raw_initial_note": "Parent independently inspected macOS birthtime after start: inode was created after source invocation start, so export starts with native source sessions. No pre-run count/hash captured; final records audited and source-end boundary captured separately.",
+  "machine_model": "MacBookPro18,4",
+  "memory_bytes": 68719476736,
+  "worker_threads": "10 for ensembles; min(available_parallelism, number of seeds), hence one for each single-seed persistent source run",
+  "scientific_rules": "Approved design unchanged; no postmeasurement rule amendment or default selection by fit.",
+  "revision_note": "eb31336 was clean at source launch and supplied compiled native learning code for both sequential invocations. Later73adedf only corrects the written formatter baseline; no learning code changed during measurements.",
+  "raw_audit": {
+    "records": 33922,
+    "sha256": "e965dee9f92cd4dbfcf7a8696a29448778cc5c3872ce8838ed59e7d43eca0a5b",
+    "size_bytes": 194858716,
+    "source_boundary_records": 30702,
+    "source_boundary_bytes": 177498688,
+    "source_boundary_sha256": "cb0b7d07600754356b53f808b31d459b48b6a675928fc779e189f3ea0c2f040a",
+    "source_boundary_rule": "Unique persistent SPA seed1 at100m/constant epsilon.001 is final source record; controls have no matching configuration. Source file is exact byte prefix ending at that record.",
+    "boundary_observer": {
+      "captured_utc": "2026-10-02T16:39:20.562153+00:00",
+      "raw_bytes": 177498688,
+      "raw_records": 30702,
+      "raw_sha256": "cb0b7d07600754356b53f808b31d459b48b6a675928fc779e189f3ea0c2f040a",
+      "birth_utc": "2026-10-02T15:22:35.984671+00:00",
+      "note": "Captured immediately after source provenance record appeared; controls starts immediately after that record. Sessions take >0.5 seconds; final config audit checks exact source prefix."
+    },
+    "observer_matches_exact_boundary": true,
+    "config_groups": 71,
+    "unique_config_seed_pairs": 33622,
+    "cohort_config_groups": {
+      "source": 37,
+      "controls": 37
+    },
+    "cohort_periods": {
+      "source": 30900000000,
+      "controls": 7900000000
+    },
+    "fixed_count_audit": "All37source and37control exact configurations contain full registered contiguous seed sets;71unique configurations and33,622unique config/seed pairs.300records repeat across invocations, with identical complete outcome hashes.",
+    "audits": "All records: matching outer/inner config and seed; exact horizon, whole/late counts and histogram sums; convergence flag matches final stable window. Duplicate seeds across two invocations retained; summaries use unique seed per exact config."
+  },
+  "verification": [
+    {
+      "name": "workspace-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--check"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions",
+      "exit_code": 0,
+      "seconds": 34.880687915720046,
+      "log": "/tmp/auctions-final-workspace-fmt.log"
+    },
+    {
+      "name": "workspace-clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions",
+      "exit_code": 0,
+      "seconds": 35.94518574979156,
+      "log": "/tmp/auctions-final-workspace-clippy.log"
+    },
+    {
+      "name": "workspace-tests",
+      "command": [
+        "cargo",
+        "test",
+        "--workspace"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions",
+      "exit_code": 0,
+      "seconds": 359.8664244581014,
+      "log": "/tmp/auctions-final-workspace-tests.log"
+    },
+    {
+      "name": "wasm-tests",
+      "command": [
+        "wasm-pack",
+        "test",
+        "--node",
+        "crates/sugarscape-wasm"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions",
+      "exit_code": 0,
+      "seconds": 153.44356154091656,
+      "log": "/tmp/auctions-final-wasm-tests.log"
+    },
+    {
+      "name": "survey-tests",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "survey/Cargo.toml"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions",
+      "exit_code": 0,
+      "seconds": 24.520136499777436,
+      "log": "/tmp/auctions-final-survey-tests.log"
+    },
+    {
+      "name": "web-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions/web",
+      "exit_code": 0,
+      "seconds": 55.60132245812565,
+      "log": "/tmp/auctions-final-web-build.log"
+    },
+    {
+      "name": "web-tests",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions/web",
+      "exit_code": 0,
+      "seconds": 36.318514875136316,
+      "log": "/tmp/auctions-final-web-tests.log"
+    },
+    {
+      "name": "web-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/auctions/web",
+      "exit_code": 0,
+      "seconds": 0.5466705840080976,
+      "log": "/tmp/auctions-final-web-typecheck.log"
+    }
+  ],
+  "historical_replay": "57 product files verified byte for byte at7e8c371 before declared reviewed cache/copy/type corrections; original patch/manifest artifacts remain historical and immutable.",
+  "postmeasurement_copy_verification": [
+    {
+      "command": "cargo fmt --all --check",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo test -p sugarscape-core --test auctions_discovery",
+      "exit_code": 0,
+      "passed": 1,
+      "log": "/tmp/auctions-final-copy-tests.log"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 (24-row, hashes, unavailable rendering and local auction links audit)",
+      "exit_code": 0
+    }
+  ],
+  "copy_note": "After native studies, README/study/roadmap and neutral preset descriptions were updated with measured findings; these are copy-only changes and do not change learning/configuration/protocol rules."
+}
