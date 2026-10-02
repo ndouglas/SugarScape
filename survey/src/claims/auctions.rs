@@ -3,7 +3,7 @@
 //! than the survey CLI's generic seed count. Sessions are cached by full
 //! configuration and seed and appended to a raw JSONL export before judging.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Write;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -38,8 +38,69 @@ struct Run {
     late_count: u64,
 }
 
-type Cache = HashMap<String, Arc<Run>>;
-static MEMO: OnceLock<Mutex<Cache>> = OnceLock::new();
+#[derive(Clone, Debug, PartialEq)]
+struct EconomicState {
+    outcome: Value,
+    series_csv: String,
+    agents_csv: String,
+}
+
+#[derive(Clone, Debug)]
+struct CachedSession {
+    run: Run,
+    comparison: Option<EconomicState>,
+}
+
+type Sessions = HashMap<String, Arc<OnceLock<Arc<CachedSession>>>>;
+
+struct SessionCache {
+    sessions: Mutex<Sessions>,
+    comparison_configs: HashSet<String>,
+}
+
+impl SessionCache {
+    fn with_comparison_configs(configs: impl IntoIterator<Item = AuctionsConfig>) -> Self {
+        Self {
+            sessions: Mutex::new(HashMap::new()),
+            comparison_configs: configs
+                .into_iter()
+                .map(|c| serde_json::to_string(&c).unwrap())
+                .collect(),
+        }
+    }
+
+    fn get_or_run(
+        &self,
+        config: &AuctionsConfig,
+        seed: u64,
+        execute: impl FnOnce(bool) -> (CachedSession, Value),
+        export: impl FnOnce(&Value),
+    ) -> Arc<CachedSession> {
+        let config_key = serde_json::to_string(config).unwrap();
+        let key = format!("{config_key}|{seed}");
+        let retain_comparison = self.comparison_configs.contains(&config_key);
+        let slot = {
+            let mut sessions = self.sessions.lock().unwrap();
+            sessions
+                .entry(key)
+                .or_insert_with(|| Arc::new(OnceLock::new()))
+                .clone()
+        };
+        slot.get_or_init(|| {
+            let (session, raw) = execute(retain_comparison);
+            assert_eq!(
+                session.comparison.is_some(),
+                retain_comparison,
+                "cached session comparison retention must match its registered config"
+            );
+            export(&raw);
+            Arc::new(session)
+        })
+        .clone()
+    }
+}
+
+static MEMO: OnceLock<SessionCache> = OnceLock::new();
 static EXPORT: OnceLock<Mutex<std::fs::File>> = OnceLock::new();
 
 fn config(edits: Value) -> AuctionsConfig {
@@ -50,27 +111,49 @@ fn config(edits: Value) -> AuctionsConfig {
     serde_json::from_value(value).expect("declared auction configuration")
 }
 
-fn runs(edits: Value, n: u64) -> Vec<Run> {
-    let c = config(edits);
-    let config_json = serde_json::to_string(&c).unwrap();
+fn session_cache() -> &'static SessionCache {
+    MEMO.get_or_init(|| {
+        SessionCache::with_comparison_configs([
+            AuctionsConfig::default(),
+            config(json!({"feedback":"rival_bids"})),
+        ])
+    })
+}
+
+fn execute_session(
+    c: &AuctionsConfig,
+    seed: u64,
+    retain_comparison: bool,
+) -> (CachedSession, Value) {
+    let mut world = AuctionsWorld::new(c.clone(), seed).expect("valid registered config");
+    while !world.is_finished() {
+        world.run(100_000);
+    }
+    let raw = serde_json::to_value(world.outcome().expect("finished outcome")).unwrap();
+    let mut run: Run = serde_json::from_value(raw.clone()).expect("auction outcome contract");
+    run.seed = seed;
+    let comparison = retain_comparison.then(|| economic_state(&world));
+    (CachedSession { run, comparison }, raw)
+}
+
+fn sessions(c: &AuctionsConfig, n: u64) -> Vec<Arc<CachedSession>> {
     let seeds: Vec<_> = (1..=n).collect();
     on_threads(&seeds, |seed| {
-        let key = format!("{config_json}|{seed}");
-        let cache = MEMO.get_or_init(Default::default);
-        if let Some(r) = cache.lock().unwrap().get(&key) {
-            return (**r).clone();
-        }
-        let mut world = AuctionsWorld::new(c.clone(), seed).expect("valid registered config");
-        while !world.is_finished() {
-            world.run(100_000);
-        }
-        let raw = serde_json::to_value(world.outcome().expect("finished outcome")).unwrap();
-        let mut run: Run = serde_json::from_value(raw.clone()).expect("auction outcome contract");
-        run.seed = seed;
-        export_session(&c, seed, raw);
-        cache.lock().unwrap().insert(key, Arc::new(run.clone()));
-        run
+        session_cache().get_or_run(
+            c,
+            seed,
+            |retain_comparison| execute_session(c, seed, retain_comparison),
+            |raw| export_session(c, seed, raw.clone()),
+        )
     })
+}
+
+fn runs(edits: Value, n: u64) -> Vec<Run> {
+    let c = config(edits);
+    sessions(&c, n)
+        .into_iter()
+        .map(|session| session.run.clone())
+        .collect()
 }
 
 fn export_session(config: &AuctionsConfig, seed: u64, raw: Value) {
@@ -90,13 +173,19 @@ fn export_session(config: &AuctionsConfig, seed: u64, raw: Value) {
     writeln!(file).expect("finish raw auction session");
 }
 
-fn same_economic_state(a: &AuctionsWorld, b: &AuctionsWorld) -> bool {
+fn economic_state(world: &AuctionsWorld) -> EconomicState {
     use sugarscape_core::model::Model;
-    let mut oa = serde_json::to_value(a.outcome()).unwrap();
-    let mut ob = serde_json::to_value(b.outcome()).unwrap();
-    oa.as_object_mut().unwrap().remove("config");
-    ob.as_object_mut().unwrap().remove("config");
-    oa == ob && a.series_csv() == b.series_csv() && a.agents_csv() == b.agents_csv()
+    let mut outcome = serde_json::to_value(world.outcome()).unwrap();
+    outcome.as_object_mut().unwrap().remove("config");
+    EconomicState {
+        outcome,
+        series_csv: world.series_csv(),
+        agents_csv: world.agents_csv(),
+    }
+}
+
+fn same_economic_state(a: &AuctionsWorld, b: &AuctionsWorld) -> bool {
+    economic_state(a) == economic_state(b)
 }
 
 fn selected(r: &[Run]) -> Vec<&Run> {
@@ -642,19 +731,14 @@ fn control(id: &str) -> Outcome {
                 "At .90 FPA, tie payoff .05 equals a .95 deviation payoff .05 (weak equilibrium). At .95 the tie payoff .025 strictly exceeds every alternative's zero. Documentary stage-game check; no learning selection.")
         }
         "unused-feedback" => {
+            let baseline = sessions(&config(json!({})), 100);
+            let rival_bids = sessions(&config(json!({"feedback":"rival_bids"})), 100);
+            let matches: Vec<_> = baseline
+                .iter()
+                .zip(&rival_bids)
+                .map(|(a, b)| a.comparison == b.comparison)
+                .collect();
             let seeds: Vec<_> = (1..=100).collect();
-            let matches = on_threads(&seeds, |seed| {
-                let mut a = AuctionsWorld::new(config(json!({})), seed).unwrap();
-                let mut b =
-                    AuctionsWorld::new(config(json!({"feedback":"rival_bids"})), seed).unwrap();
-                while !a.is_finished() {
-                    a.run(100_000);
-                    b.run(100_000);
-                }
-                export_session(&a.config, seed, serde_json::to_value(a.outcome()).unwrap());
-                export_session(&b.config, seed, serde_json::to_value(b.outcome()).unwrap());
-                same_economic_state(&a, &b)
-            });
             let mismatches: Vec<_> = seeds
                 .iter()
                 .zip(matches)
@@ -850,6 +934,65 @@ mod tests {
                 late_count: 20,
             })
             .collect()
+    }
+
+    #[test]
+    fn cached_identity_sessions_are_reused_in_either_consumption_order() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        fn exercise(reverse: bool) {
+            let baseline = config(json!({"horizon":37,"window":5,"periods_per_tick":7}));
+            let rival_bids = config(
+                json!({"horizon":37,"window":5,"periods_per_tick":7,"feedback":"rival_bids"}),
+            );
+            let cache =
+                SessionCache::with_comparison_configs([baseline.clone(), rival_bids.clone()]);
+            let executions = AtomicUsize::new(0);
+            let exports = AtomicUsize::new(0);
+            let ordered = if reverse {
+                [(&rival_bids, "rival_bids"), (&baseline, "baseline")]
+            } else {
+                [(&baseline, "baseline"), (&rival_bids, "rival_bids")]
+            };
+            let mut first = HashMap::new();
+            for (c, name) in ordered {
+                let cached = cache.get_or_run(
+                    c,
+                    1,
+                    |retain_comparison| {
+                        executions.fetch_add(1, Ordering::SeqCst);
+                        execute_session(c, 1, retain_comparison)
+                    },
+                    |_| {
+                        exports.fetch_add(1, Ordering::SeqCst);
+                    },
+                );
+                first.insert(name, cached);
+            }
+            let a = cache.get_or_run(
+                &baseline,
+                1,
+                |_| panic!("baseline session reran"),
+                |_| panic!("baseline re-exported"),
+            );
+            let b = cache.get_or_run(
+                &rival_bids,
+                1,
+                |_| panic!("rival-bids session reran"),
+                |_| panic!("rival-bids re-exported"),
+            );
+            assert!(Arc::ptr_eq(&first["baseline"], &a));
+            assert!(Arc::ptr_eq(&first["rival_bids"], &b));
+            assert_eq!(
+                a.comparison, b.comparison,
+                "complete economic comparison must remain identical"
+            );
+            assert_eq!(executions.load(Ordering::SeqCst), 2);
+            assert_eq!(exports.load(Ordering::SeqCst), 2);
+        }
+
+        exercise(false);
+        exercise(true);
     }
 
     #[test]
