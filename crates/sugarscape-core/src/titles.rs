@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 379] = [
+pub const TITLES: [(&str, &str); 389] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1480,6 +1480,46 @@ pub const TITLES: [(&str, &str); 379] = [
     (
         "firms-2013",
         "Axtell's 2013 settings give Zipf's law, with brief giant firms",
+    ),
+    (
+        "collusion-calvano",
+        "Two pricing algorithms learn to keep prices high, but not as a best response",
+    ),
+    (
+        "collusion-code",
+        "The authors' own sessions, period for period",
+    ),
+    (
+        "collusion-no-memory",
+        "Algorithms that remember nothing price even higher",
+    ),
+    (
+        "collusion-myopic",
+        "Algorithms that ignore the future still price above Nash",
+    ),
+    (
+        "collusion-two-phase",
+        "Explore at random, then never: prices settle above Nash, but not where Lambin's theorem says",
+    ),
+    (
+        "collusion-synchronous",
+        "Learning from every price brings prices down",
+    ),
+    (
+        "collusion-explore-more",
+        "Ten times slower exploration decay barely lowers prices",
+    ),
+    (
+        "collusion-every-price",
+        "Prices are cut after a rival's price rise too",
+    ),
+    (
+        "collusion-invitation",
+        "An invitation to raise prices is met with a price cut",
+    ),
+    (
+        "collusion-below-nash",
+        "On a grid with no room above Nash, prices settle at the top",
     ),
 ];
 
