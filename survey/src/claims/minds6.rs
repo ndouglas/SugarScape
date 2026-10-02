@@ -271,9 +271,9 @@ pub(crate) fn p_s(dug: f64, pilfered: f64) -> f64 {
     nan_div(dug, dug + pilfered)
 }
 
-/// Andersson and Krebs's p_o, amount-weighted: pilfered ÷ (dug + pilfered
-/// + lost with a dead owner); NaN when no sugar ended. Sugar still buried
-/// is in neither.
+/// Andersson and Krebs's p_o, amount-weighted: pilfered ÷ (dug +
+/// pilfered + lost with a dead owner); NaN when no sugar ended. Sugar still
+/// buried is in neither.
 pub(crate) fn p_o(dug: f64, pilfered: f64, lost: f64) -> f64 {
     nan_div(pilfered, dug + pilfered + lost)
 }

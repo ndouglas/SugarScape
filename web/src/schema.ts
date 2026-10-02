@@ -465,7 +465,7 @@ export const GROUPS: Group[] = [
       },
       {
         kind: 'select', path: 'watching.raid_if', label: 'Raid if',
-        current: (c) => watching(c).raid_if,
+        current: (c) => watching(c).raid_if ?? 'better',
         options: [
           { value: 'better', label: 'Better: the cache holds at least the site’s value', apply: (c) => { c.watching = { ...watching(c), raid_if: 'better' }; } },
           { value: 'always', label: 'Always, whatever the site offers', apply: (c) => { c.watching = { ...watching(c), raid_if: 'always' }; } },
@@ -473,7 +473,7 @@ export const GROUPS: Group[] = [
       },
       {
         kind: 'select', path: 'watching.value', label: 'Seen cache value',
-        current: (c) => watching(c).value,
+        current: (c) => watching(c).value ?? 'amount',
         options: [
           { value: 'amount', label: 'Amount remembered', apply: (c) => { c.watching = { ...watching(c), value: 'amount' }; } },
           { value: 'room', label: 'Room to carry it', apply: (c) => { c.watching = { ...watching(c), value: 'room' }; } },
@@ -481,7 +481,7 @@ export const GROUPS: Group[] = [
       },
       {
         kind: 'select', path: 'watching.who', label: 'Who watches', reset: true,
-        current: (c) => watching(c).who,
+        current: (c) => watching(c).who ?? 'share',
         options: [
           { value: 'share', label: 'The share of watchers, by id', apply: (c) => { c.watching = { ...watching(c), who: 'share' }; } },
           { value: 'hoarders', label: 'Every hoarder (non-cheater)', apply: (c) => { c.watching = { ...watching(c), who: 'hoarders' }; } },
@@ -490,7 +490,7 @@ export const GROUPS: Group[] = [
       },
       {
         kind: 'select', path: 'watching.scrounge', label: 'Scroungers',
-        current: (c) => watching(c).scrounge,
+        current: (c) => watching(c).scrounge ?? 'harvest',
         options: [
           { value: 'harvest', label: 'Harvest as usual', apply: (c) => { c.watching = { ...watching(c), scrounge: 'harvest' }; } },
           { value: 'forgo', label: 'Forgo harvesting while a seen cache is in mind', apply: (c) => { c.watching = { ...watching(c), scrounge: 'forgo' }; } },

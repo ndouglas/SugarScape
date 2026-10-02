@@ -411,6 +411,11 @@ describe('watching switches (Minds 8b)', () => {
     expect(['watching.raid_if', 'watching.value', 'watching.who', 'watching.scrounge'].map((p) => sel(p).current(bare))).toEqual(['better', 'amount', 'share', 'harvest']);
   });
 
+  it('reads the engine defaults from an older saved watching config that lacks the second round\'s fields', () => {
+    const old = { watching: { on: true, span: 7, watchers: 0.5, raid_when: 'always' } } as unknown as Config;
+    expect(['watching.raid_if', 'watching.value', 'watching.who', 'watching.scrounge'].map((p) => sel(p).current(old))).toEqual(['better', 'amount', 'share', 'harvest']);
+  });
+
   it('applies each option to the config without touching the other fields', () => {
     for (const [path, value, key] of [
       ['watching.raid_if', 'always', 'raid_if'],

@@ -323,11 +323,11 @@ pub const TITLES: [(&str, &str); 387] = [
     ),
     (
         "watch-scroungers-forgo",
-        "Scroungers who forgo foraging trail the hoarders, and trail further the more of them there are",
+        "Scroungers who forgo foraging: with a 7-tick memory they trail the hoarders further the more of them there are, and never caching costs them some even without watching",
     ),
     (
         "watch-ak",
-        "Owners who dig early, and everyone watching: thieves now take more than owners dig back, and fewer hoarders survive",
+        "Owners who dig early, and everyone watching with a 7-tick memory: thieves now take more than owners dig back, and fewer hoarders survive",
     ),
     (
         "watch-arena",

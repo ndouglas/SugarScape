@@ -2859,34 +2859,39 @@ agent-ticks alive per founder over ticks 1–200 ÷ 200.
 - **3. Producers and scroungers.** Where scrounging excludes producing (`watch-scroungers-forgo`),
   the scroungers trail, and **trail further as they become common (Holds)**: the mean per-seed slope
   on their share is −0.20 (95 % CI −0.23 to −0.17). But **no stable mix forms (Fails)**: they are
-  ahead at a share of 0.1 in only 13 of 60 seeds. Forgoing is the cost, since letting them harvest
-  too raises their fitness by 0.13. Among watchers who also bury, **no fall in their lead was
-  detected (Fails, flat)**: slope 0.011, 90 % CI −0.004 to 0.027. Instead it is **a mild social
-  dilemma (Holds)**: watchers are ahead by 0.009 (95 % CI 0.003 to 0.016) while everyone's fitness
-  falls as more watch.
+  ahead at a share of 0.1 in only 13 of 60 seeds. About half of their median shortfall there (0.042)
+  is present with watching off (at half), where the same never-caching agents' fitness is 0.888
+  against the hoarders' 0.911 (48 % against 70 % surviving the first winter): likely the cost of not
+  caching in a winter world, not of scrounging. Forgoing is the cost of scrounging, since letting
+  them harvest too raises their fitness by 0.13. Among watchers who also bury, **no fall in their
+  lead was detected (Fails, flat)**: slope 0.011, 90 % CI −0.004 to 0.027. Instead it is **a mild
+  social dilemma (Holds)**: watchers are ahead by 0.009 (95 % CI 0.003 to 0.016) while everyone's
+  fitness falls as more watch.
 - **The switches.** `raid_if: always` costs 6 points of survival in `watch-winter` and changes no
   verdict. `value: room` pays where agents carry close to their limit (+6 to +7 points in
   `watch-half` and `watch-ak`) and changes no verdict.
 - **An upper bound, sensitive to the span.** Watchers here see every burial in sight and remember it
   exactly, cachers never hide and owners never defend (both P3), and a 7-tick memory is at the
-  generous end of what's known. With a memory of 1 or 2 ticks, four results reverse. Watching's
-  hazard falls below stumbling's (0.85 % and 2.49 % a day), the condition doesn't flip (1.72 and
-  1.10), the forgoing scroungers' shortfall shrinks as they become common, and the burying watchers'
-  lead isn't detected (pooled 0.0007 and −0.0015; also −0.0027 at span 3), so 3c holds only at spans
-  7 and 13. Bednekoff and Balda's pinyon jays relocated exact sites after two days and only the
-  general areas after seven (1996a, p. 823).
+  generous end of what's known. With a memory of 1 or 2 ticks, three results reverse and the dilemma
+  goes undetected (through span 3). Watching's hazard falls below stumbling's (0.85 % and 2.49 % a
+  day), the condition doesn't flip (1.72 and 1.10), the forgoing scroungers' shortfall shrinks as
+  they become common, and the burying watchers' lead isn't detected (pooled 0.0007 and −0.0015; also
+  −0.0027 at span 3), so 3c holds only at spans 7 and 13. Bednekoff and Balda's pinyon jays
+  relocated exact sites after two days and only the general areas after seven (1996a, p. 823).
+
+Judged at span 7; the span notes are from the reported spans 1, 2, 3, 7 and 13.
 
 | Claim | Verdict |
 |---|---|
-| 1a. Watching takes fresh caches faster than stumbling | Holds (6.1 % against 3.0 % a day; 20 of 20 seeds) |
-| 2a. Watching flips Andersson and Krebs's condition (`watch-ak`) | Holds (p_s ÷ p_o 0.67 against 3.57; 20 of 20) |
+| 1a. Watching takes fresh caches faster than stumbling | Holds (6.1 % against 3.0 % a day; 20 of 20 seeds). Holds at 3–13; reverses at 1–2 |
+| 2a. Watching flips Andersson and Krebs's condition (`watch-ak`) | Holds (p_s ÷ p_o 0.67 against 3.57; 20 of 20). Reverses at 1–2 |
 | 2b. Fitness follows the condition | Fails (62 of 100 runs) |
 | 2c. Being watched costs hoarders 0.05 | Fails (0 of 20; mean 0.012) |
 | 2d. Their own raiding costs hoarders 0.05 | Fails (0 of 20; mean 0.003, not detected) |
-| 3a. Scroungers who forgo: shortfall grows with share | Holds (slope −0.20) |
+| 3a. Scroungers who forgo: shortfall grows with share | Holds (slope −0.20). Reverses at 1–2 |
 | 3a. Watchers who bury: lead falls with share | Fails, flat (0.011; no fall detected) |
-| 3b. A stable mix | Fails (ahead when rare in 13 of 60 seeds) |
-| 3c. A social dilemma | Holds (lead 0.009; world slope −0.008) |
+| 3b. A stable mix | Fails (ahead when rare in 13 of 60 seeds; about half the shortfall at 0.1 is there without watching) |
+| 3c. A social dilemma | Holds (lead 0.009; world slope −0.008). Holds at 7 and 13; not detected at 1–3 |
 
 **The first design, superseded.** Its verdicts (the field band, Andersson and Krebs in `watch-half`,
 and producers and scroungers in two variants, all Fails; usage Holds) are kept in the program

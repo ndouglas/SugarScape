@@ -101,8 +101,6 @@ const fixed = (lines: Line[]) => () => lines;
 const perGood = (prefix: string) => (c: Config): Line[] =>
   c.goods.map((g, i) => ({ key: `${prefix}${i}`, label: g.name, color: g.color }));
 
-/** Minds 8: both kinds of founder exist under watching (the core's `watchers_split`). */
-
 /** Minds 6: the world has cheaters, so the hoarder and cheater series exist. */
 const hasCheaters = (c: Config): boolean => (c.theft?.cheaters ?? 0) > 0;
 
