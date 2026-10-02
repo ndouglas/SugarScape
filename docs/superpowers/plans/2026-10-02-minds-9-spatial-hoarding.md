@@ -419,7 +419,7 @@ Also test differences `[1,2,3]` give mean2/positive3, CI using Student t df2; n1
 > Controller closure: all eight checks and the report commit below are complete. Completed staging removal is reserved until the whole-branch review clears.
 
 - [x] Run final required checks (`cargo fmt --all -- --check`, `cargo test --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt --manifest-path survey/Cargo.toml -- --check`, `cargo test --manifest-path survey/Cargo.toml`, `cargo clippy --manifest-path survey/Cargo.toml --all-targets -- -D warnings`, `npm run build --prefix web`, `npm test --prefix web`), review final diff and status, remove completed staging file, and commit: `docs(minds): report spatial hoarding campaign outcomes`.
-- [ ] Conduct required whole-branch review and resolve findings. Deliver commit/report links, scientific conclusions with limitations, verification and next campaign. Integrate only with user authorization or established repository workflow; never overwrite unrelated changes.
+- [x] Conduct required whole-branch review and resolve findings. Deliver commit/report links, scientific conclusions with limitations, verification and next campaign. Integrate only with user authorization or established repository workflow; never overwrite unrelated changes.
 
 ## Plan self-review
 
@@ -427,3 +427,7 @@ Also test differences `[1,2,3]` give mean2/positive3, CI using Student t df2; n1
 - Contracts: transfer quantities include holdings effects; own scatter helper's existing return convention is adapted only at the arrival seam. Delivery completion and post-metabolism clamping have separate hooks. Cohorts are checked before initial snapshots.
 - Review Focus: all five failure classes have named fixtures in their owning tasks.
 - Research boundary: no diagnostic campaign simulations until Task 8 amendment review; no claim threshold selected from observed output.
+
+## Completed execution
+
+All nine tasks and the whole-branch review are complete. The campaign/report commit is `25c7d0e`; final review corrections are `fefb15b` (OS temporary parity traces, malformed negative-exposure rejection, and Defense target D wording). The scoped re-review addressed all three minor findings with no new breakage. Full campaign execution used `a23d29a` under approved amendment `db0d8338`, and all 3,345 raw envelopes remain in the ignored output directories documented by the tracked results. Final checks passed: 1,770 workspace tests before the copy-only core correction, then 119 survey and 878 web tests, all 603 native/WASM comparisons, formatting, strict Clippy, builds, and focused preset verification. No simulation or scientific parameter changed in the correction. Completed staging is removed; branch integration remains the user’s decision.
