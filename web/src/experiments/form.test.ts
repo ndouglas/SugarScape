@@ -152,6 +152,11 @@ describe('sweeps over other models', () => {
       ticks: 5000,
       metric: { kind: 'final', series: 'mu' },
     });
+    expect(defaultForm('collusion')).toMatchObject({
+      x: { path: 'delta', values: '0:0.9:0.15' },
+      ticks: 100_000,
+      metric: { kind: 'final', series: 'cycle_gain' },
+    });
     expect(defaultForm('bali')).toMatchObject({
       x: { path: 'growth', values: '2:2.4:0.1' },
       ticks: 360,

@@ -238,6 +238,13 @@ describe('firms charts', () => {
   });
 });
 
+describe('collusion charts', () => {
+  it('chart prices, the profit gain, learning and settling over ticks', () => {
+    expect(MODEL_CHARTS.collusion.map((c) => c.title)).toEqual(['Prices', 'Profit gain', 'Learning', 'Settling']);
+    expect(timeAxisLabel('collusion')).toBe('Ticks');
+  });
+});
+
 describe('bali charts', () => {
   it('chart harvest, changing plans, water and pests, patches and the temple match over months', () => {
     expect(MODEL_CHARTS.bali.map((c) => c.title)).toEqual(['Harvest', 'Changing plans', 'Water and pests', 'Patches', 'Temple match']);

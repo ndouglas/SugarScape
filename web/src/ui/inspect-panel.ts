@@ -4,7 +4,7 @@ import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
 import { hoardStatusText } from '../hoard';
-import { hasCaches, isHoardView, isFirmsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hasCaches, isHoardView, isFirmsView, isCollusionView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -21,6 +21,7 @@ import type {
   HoardConfig,
   HoardInspection,
   FirmsInspection,
+  CollusionInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -308,6 +309,33 @@ export class InspectPanel {
     ];
     const m = view.member;
     if (m) rows.push(row('Agent', `#${m.id} · θ ${fmt(m.theta)} · effort ${fmt(m.effort)} · income ${fmt(m.income)} · utility ${fmt(m.utility)} · tenure ${m.tenure}`));
+    return rows;
+  }
+
+  /** A state of a firm's strategy map (its Q-values), or the session's results once it has finished. */
+  private collusionRows(view: CollusionInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const rows = [row('Benchmarks', `Nash ${view.nash.map(fmt).join(', ')} · monopoly ${view.monopoly.map(fmt).join(', ')}`)];
+    const st = view.state;
+    if (st) {
+      const last = st.prices.length ? st.prices[0].map(fmt).join(' and ') : 'none (no memory)';
+      rows.push(row('State', `#${st.state} · last prices ${last} · visited ${st.visits} times`));
+      st.q.forEach((q, i) => {
+        const best = Math.max(...q);
+        rows.push(row(`Firm ${i + 1}`, `charges ${fmt(st.greedy[i])} · Q from ${fmt(Math.min(...q))} to ${fmt(best)}`));
+      });
+    }
+    const o = view.outcome;
+    if (!o) {
+      rows.push(row('Session', `period ${view.period}: still learning`));
+      return rows;
+    }
+    rows.push(
+      row('Session', `${o.converged ? 'converged' : 'stopped at the cap'} after ${o.periods} periods · cycle of ${o.cycle.states.length}`),
+      row('Profit gain Δ', `${fmt(o.gain)} (firms ${o.gains.map(fmt).join(', ')}) · last window ${fmt(o.window_gain)} · first T_δ ${fmt(o.discounted_gain)}`),
+      row('Equilibrium', `${o.equilibrium.on_path ? 'on the path' : 'not on the path'} · ${fmt(100 * o.equilibrium.off_path_share)}% of other states`),
+      row('Deviations', `${o.punishment_like === null ? 'none' : `${fmt(100 * o.punishment_like)}%`} answered by a punishment-like response · ${o.rp_complete ? 'every one (RP-complete)' : 'not every one'}`),
+    );
     return rows;
   }
 
@@ -786,6 +814,8 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isCollusionView(view)
+            ? this.collusionRows(view)
           : isFirmsView(view)
             ? this.firmsRows(view)
           : isTippingView(view)

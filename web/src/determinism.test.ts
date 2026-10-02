@@ -19,6 +19,9 @@ import type {
   ZiConfig,
   BaliConfig,
   FirmsConfig,
+  CollusionConfig,
+  CollusionInspection,
+  CollusionStats,
   FirmsInspection,
   FirmsStats,
   BaliInspection,
@@ -810,6 +813,31 @@ describe('the firms model through the engine', () => {
     // The size plot starts 8 pixels right of the 600-pixel rows.
     await e.select(700, 50);
     expect((e.inspection!.view as FirmsInspection).panel).toBe('sizes');
+  });
+});
+
+describe('the collusion model through the engine', () => {
+  it('finishes when its strategies settle and inspects a strategy cell and the session', async () => {
+    const r = presets.find((p) => p.id === 'collusion-calvano')!;
+    // Fast exploration decay and a short window: a session in a few seconds.
+    const config = { ...structuredClone(r.config as CollusionConfig), beta: 2e-4, window: 2000 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'price' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    while (!e.finished) await e.advance(5_000);
+    const s = e.latest as CollusionStats;
+    expect([e.finished, ends, s.converged]).toEqual([true, 1, 1]);
+    expect(s.cycle_gain).toBeGreaterThan(-1);
+    // The top-left cell of firm 1's map: its own lowest price against the rival's highest.
+    await e.select(0, 0);
+    const v = e.inspection!.view as CollusionInspection;
+    expect([v.panel, v.firm]).toEqual(['strategy', 0]);
+    expect(v.state!.q).toHaveLength(2);
+    expect(v.outcome!.converged).toBe(true);
+    // The price panel starts 8 pixels right of the second firm's 120-pixel map.
+    await e.select(260, 50);
+    expect((e.inspection!.view as CollusionInspection).panel).toBe('prices');
   });
 });
 

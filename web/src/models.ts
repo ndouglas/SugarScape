@@ -7,6 +7,8 @@ import type {
   TippingInspection,
   FirmsConfig,
   FirmsInspection,
+  CollusionConfig,
+  CollusionInspection,
   ZiInspection,
   BaliConfig,
   BaliInspection,
@@ -54,7 +56,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -85,12 +87,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   tipping: "Schelling's tipping",
   hoard: 'The evolution of hoarding',
   firms: 'The Emergence of Firms',
+  collusion: 'Algorithmic Collusion',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion'
     ? tag
     : 'sugarscape';
 }
@@ -199,6 +202,11 @@ export function isFirmsView(v: AnyInspection): v is FirmsInspection {
   return 'panel' in v && 'firm' in v && 'member' in v;
 }
 
+/** A cell of the collusion frame (a panel, a `state` and the session's `outcome`); check it before the others with a panel. */
+export function isCollusionView(v: AnyInspection): v is CollusionInspection {
+  return 'panel' in v && 'outcome' in v && 'monopoly' in v;
+}
+
 /** A point of Schelling's tipping plane. */
 export function isTippingView(v: AnyInspection): v is TippingInspection {
   return 'red_content' in v && 'blue_content' in v;
@@ -276,6 +284,11 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     return Math.max(h.generations, Math.max(1, Math.ceil(tick / s))) * s - tick;
   }
   if (modelOf(c) === 'firms' && (c as FirmsConfig).stop_at > 0) return Math.max(0, (c as FirmsConfig).stop_at - tick);
+  // A session ends when its strategies settle, at the latest one period past the cap.
+  if (modelOf(c) === 'collusion') {
+    const k = c as CollusionConfig;
+    return Math.max(0, Math.ceil((k.cap + 1) / k.periods_per_tick) - tick);
+  }
   return Infinity;
 }
 
@@ -298,6 +311,7 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
   if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
   if (model === 'retirement') return (c as RetirementConfig).stop_at_norm;
+  if (model === 'collusion') return true;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -614,6 +628,11 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['effort', 'Effort'],
     ['income', 'Income'],
   ],
+  // Each firm's strategy map: the price it would charge, or how often each state was visited.
+  collusion: [
+    ['price', 'Price'],
+    ['visits', 'Visits'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -645,4 +664,5 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   tipping: [],
   hoard: [],
   firms: [],
+  collusion: [],
 };

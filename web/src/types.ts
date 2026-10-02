@@ -214,7 +214,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -633,7 +633,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1429,7 +1429,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats;
 
 export interface SiteView {
   x: number;
@@ -1691,6 +1691,102 @@ export interface FirmsInspection {
   firm: FirmsFirmView | null;
   member: FirmsMemberView | null;
   /** Always null: cells are read where they are. */
+  agent: null;
+}
+/**
+ * Calvano, Calzolari, Denicolò & Pastorello's algorithmic collusion: n firms pricing with Q-learning on
+ * a grid of prices until their strategies settle; the critics' tests as switches. One tick is a period.
+ */
+export interface CollusionConfig {
+  model: 'collusion';
+  firms: number;
+  prices: number;
+  grid: 'calvano' | 'symmetric' | 'below_nash';
+  xi: number;
+  below_top: number;
+  cost: number;
+  /** Firm 2's cost, or null for the same as the others. */
+  cost2: number | null;
+  quality: number;
+  outside: number;
+  mu: number;
+  memory: number;
+  alpha: number;
+  beta: number;
+  delta: number;
+  exploration: 'decaying' | 'constant' | 'boltzmann' | 'two_phase';
+  epsilon: number;
+  temperature: number;
+  cooling: number;
+  explore_for: number;
+  update: 'asynchronous' | 'synchronous';
+  q_init: 'calvano' | 'zero' | 'random';
+  q_low: number;
+  q_high: number;
+  ties: 'lowest' | 'random';
+  rng: 'ours' | 'calvano';
+  cap: number;
+  window: number;
+  equilibrium_check: 'best_response' | 'one_shot';
+  impulse: 'best_response_down' | 'every_price' | 'invitation' | 'up';
+  best_response_to: 'path' | 'code';
+  invitation_hold: number;
+  /** Periods a tick runs (charts count ticks). */
+  periods_per_tick: number;
+}
+
+/** A charted period; the session's results are null until it has finished. */
+export interface CollusionStats {
+  tick: number;
+  price_1: number | null;
+  price_2: number | null;
+  profit_gain: number | null;
+  greedy_price: number | null;
+  epsilon: number | null;
+  explored: number | null;
+  greedy_changes: number;
+  stable: number;
+  converged: number | null;
+  cycle_length: number | null;
+  cycle_gain: number | null;
+  window_gain: number | null;
+  discounted_gain: number | null;
+  equilibrium_on_path: number | null;
+  punishment_like: number | null;
+  rp_complete: number | null;
+  periods: number | null;
+}
+
+export interface CollusionStateView { state: number; prices: number[][]; q: number[][]; greedy: number[]; visits: number }
+export interface CollusionOutcome {
+  converged: boolean;
+  periods: number;
+  cycle: { states: number[]; actions: number[][]; profits: number[]; prices: number[] };
+  gains: number[];
+  gain: number;
+  window_gain: number;
+  discounted_gain: number;
+  equilibrium: { on_path: boolean; off_path_share: number; all_share: number };
+  punishment_like: number | null;
+  rp_complete: boolean;
+  stale_greedy: number;
+  fumbling: number | null;
+  touched: number;
+}
+
+/** A cell of the collusion frame: a strategy map's state, the price panel, or the response panel. */
+export interface CollusionInspection {
+  x: number;
+  y: number;
+  panel: 'strategy' | 'prices' | 'response' | null;
+  firm: number | null;
+  state: CollusionStateView | null;
+  tick: number;
+  period: number;
+  nash: number[];
+  monopoly: number[];
+  outcome: CollusionOutcome | null;
+  /** Always null: there are no agents to follow, only firms. */
   agent: null;
 }
 /** A point of his plane: Red and Blue inside, and whether the most tolerant of each would all be content there. */
@@ -2061,7 +2157,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -2138,7 +2234,9 @@ export type ColorMode =
   | 'founder'
   | 'theta'
   | 'effort'
-  | 'income';
+  | 'income'
+  | 'price'
+  | 'visits';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
