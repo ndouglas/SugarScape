@@ -26,7 +26,9 @@ fn walk(c: &mut Config) {
 
 /// Mean population over ticks 300–500.
 fn capacity(c: &Config, seeds: &[u64]) -> Vec<f64> {
-    after(c, seeds, 500, |w| window_mean(&series(w, "population"), 300, 500))
+    after(c, seeds, 500, |w| {
+        window_mean(&series(w, "population"), 300, 500)
+    })
 }
 
 /// Claim: `a` exceeds `b` seed by seed. Holds when a − b > 0 in at least 80 %
@@ -145,11 +147,18 @@ pub fn claims() -> Vec<Claim> {
             id: "walk-capacity.book",
             item: "walk-capacity",
             source: Source::Book,
-            citation: "Animation II-2: \"a carrying capacity of approximately 224 is eventually reached\"",
+            citation:
+                "Animation II-2: \"a carrying capacity of approximately 224 is eventually reached\"",
             text: "The population stabilizes at about 224 (Animation II-2), when agents walk",
             check: |seeds| {
                 let jump = capacity(&preset("ii-2-unit"), seeds);
-                range(&capacity(&preset("walk-capacity"), seeds), 214.0, 234.0, false).with(&format!(
+                range(
+                    &capacity(&preset("walk-capacity"), seeds),
+                    214.0,
+                    234.0,
+                    false,
+                )
+                .with(&format!(
                     "Mean population over ticks 300–500. Jump (ii-2-unit): median {:.1}.",
                     median(&jump)
                 ))

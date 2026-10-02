@@ -2342,6 +2342,7 @@ mod tests {
 
     fn rec(owner: AgentId, site: u32, buried: u64, fate: Option<(u64, Fate)>) -> CacheRecord {
         CacheRecord {
+            kind: sugarscape_core::minds::spatial_hoarding::state::StoreKind::Scatter,
             owner,
             site,
             amount: 1.0,

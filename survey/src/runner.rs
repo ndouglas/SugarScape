@@ -40,7 +40,10 @@ pub fn each_seed_with<T: Send>(
     f: impl Fn(u64, World) -> T + Sync,
 ) -> Vec<T> {
     on_threads(seeds, |seed| {
-        f(seed, World::new(config.clone(), seed).expect("a valid config"))
+        f(
+            seed,
+            World::new(config.clone(), seed).expect("a valid config"),
+        )
     })
 }
 
