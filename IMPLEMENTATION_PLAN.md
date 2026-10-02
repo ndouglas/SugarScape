@@ -18,13 +18,13 @@ Detailed approved plan: [spatial hoarding](docs/superpowers/plans/2026-10-02-min
 **Goal**: Checked tick-zero cohorts, archived terminal episodes and reproducible inheritance
 **Success Criteria**: All assigned tasks pass their tests and independent review; scientific runs require the reviewed amendment.
 **Tests**: Weights/termination, reset, finite logit inheritance and repeat-run fixtures
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 4: User surfaces and replay
 **Goal**: Single-episode presets, inspection and exact keyframe/native/WASM replay
 **Success Criteria**: All assigned tasks pass their tests and independent review; scientific runs require the reviewed amendment.
 **Tests**: Core export/checkpoint, web controls, real WASM parity/build/tests
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 5: Research protocol and results
 **Goal**: Reviewed judging amendment, full panels and reproducible results

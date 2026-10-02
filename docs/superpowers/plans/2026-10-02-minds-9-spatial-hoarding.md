@@ -289,7 +289,7 @@ pub fn run_generations(config: &RunnerConfig,
 
 Add per-generation summary fields for actual mean L/D, shares, per-kind flows/exposure, guards/deliveries and elapsed/completed ticks. Record lineage `(generation,slot)` and both parent slots; local ids alone are insufficient. Keep full config/initial cohort in serialized run envelope.
 
-- [ ] Write red tests for exact weights and termination using this extracted pure boundary:
+- [x] Write red tests for exact weights and termination using this extracted pure boundary:
 
 ```rust
 pub fn parent_weights(selection: Selection, founders: &[FounderRecord])
@@ -297,9 +297,9 @@ pub fn parent_weights(selection: Selection, founders: &[FounderRecord])
 ```
 
 Construct two survivors (scatter/larder 0/0 and 3/4) plus one dead founder with positive closing stock: Survival weights `[1,1,0]`, Stores `[0,7,0]`, Neutral `[1,1,1]`. All survivors with zero stores return ZeroFitness under Stores; all dead return Extinct before selection even under Neutral. One survivor is a valid mating pool.
-- [ ] Add red inheritance/reset tests: zero variance/h²=1 yields exact parent logit midpoint; h²=0 reference mean includes dead founders; endpoints remain finite; flags both follow first parent; fixed traits do not regress/mutate; fresh episode restores endowment and clears all stores/memories/paths/guards/intents. Terminal generation stays in returned records. Reject 0 founders/ticks/generations, malformed cohorts, invalid h²/variance.
-- [ ] Run `cargo test -p sugarscape-core spatial_hoarding` for red.
-- [ ] Expose/reuse the finite clamp, portable inverse logit and normal sampler from Minds 7; preserve its draw order and old golden behavior. Do not reuse its zero-weight uniform fallback or cheater subsidy. Weighted parents sampled independently with replacement in founder-slot order; categorical inheritance from first parent. Document draws: parent1, parent2, L normal, D normal, then next slot. Zero variance consumes no normal draws. Initial L then D samples per slot follow Minds 7 initialization.
+- [x] Add red inheritance/reset tests: zero variance/h²=1 yields exact parent logit midpoint; h²=0 reference mean includes dead founders; endpoints remain finite; flags both follow first parent; fixed traits do not regress/mutate; fresh episode restores endowment and clears all stores/memories/paths/guards/intents. Terminal generation stays in returned records. Reject 0 founders/ticks/generations, malformed cohorts, invalid h²/variance.
+- [x] Run `cargo test -p sugarscape-core spatial_hoarding` for red.
+- [x] Expose/reuse the finite clamp, portable inverse logit and normal sampler from Minds 7; preserve its draw order and old golden behavior. Do not reuse its zero-weight uniform fallback or cheater subsidy. Weighted parents sampled independently with replacement in founder-slot order; categorical inheritance from first parent. Document draws: parent1, parent2, L normal, D normal, then next slot. Zero variance consumes no normal draws. Initial L then D samples per slot follow Minds 7 initialization.
 
 ```rust
 fn regressed_logit(midparent: f64, mean: f64, h2: f64, noise: f64) -> f64 {
@@ -308,8 +308,8 @@ fn regressed_logit(midparent: f64, mean: f64, h2: f64, noise: f64) -> f64 {
 ```
 
 Archive every founder including removals and time alive. Execute 200 steps for reporting unless cohort extinct; retain completed ticks. Episode boundaries report closing stock without recording loss. Breeding uses independent PCG stream, same recorded episode seed every generation. Add deterministic repeat-run and serialized cohort replay tests without campaign diagnostics.
-- [ ] Run all core tests; verify old hoard sampler/inheritance fixtures and goldens.
-- [ ] Commit: `feat(minds): breed archived spatial cohorts between seasons`.
+- [x] Run all core tests; verify old hoard sampler/inheritance fixtures and goldens.
+- [x] Commit: `feat(minds): breed archived spatial cohorts between seasons`.
 
 ### Task 6: Presets, inspection and browser controls
 
