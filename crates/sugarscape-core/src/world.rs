@@ -140,6 +140,9 @@ pub struct TickEvents {
     pub cache_lost: f64,
     /// Minds 9 per-kind flows; absent on ordinary worlds.
     pub spatial_stores: Option<crate::minds::spatial_hoarding::stores::StoreEvents>,
+    /// Actual positive tick-start stores, scatter then larder; independent of discovery.
+    /// Diagnostic only: captured before actions, absent on ordinary worlds.
+    pub spatial_exposure: Option<[crate::minds::spatial_hoarding::runner::ExposureTotals; 2]>,
     /// Minds 5: Σ over this tick's `digs` of the dug cache's age (ticks since
     /// its first unit was buried).
     pub dig_ages_sum: u64,
@@ -1047,6 +1050,9 @@ impl World {
     /// environment updates and everyone ages.
     pub fn step(&mut self) {
         self.events = TickEvents::default();
+        if self.config.spatial_hoarding.enabled {
+            self.events.spatial_exposure = Some(crate::stats::spatial_store_exposure(self));
+        }
         self.apply_schedule();
         if self.config.pilfering_on() {
             crate::minds::caching::theft::count_candidates(self);

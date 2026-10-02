@@ -1588,3 +1588,11 @@ describe('civil violence’s schedule and ramps reach the page', () => {
   });
 });
 
+
+describe('spatial episode presets', () => {
+  it('offers the three fixed ordinary-world episodes through real WASM', () => {
+    const presets = JSON.parse(presets_json()) as { id: string }[];
+    const spatialPresetIds = presets.map(p => p.id).filter(id => id.startsWith('spatial-'));
+    expect(spatialPresetIds).toEqual(['spatial-scatter', 'spatial-larder', 'spatial-larder-guard']);
+  });
+});

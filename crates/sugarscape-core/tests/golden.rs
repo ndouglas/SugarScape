@@ -119,6 +119,11 @@ const GOLDEN: &[(&str, u64)] = &[
     ("watch-scroungers-only", 0x5d5bfa38a76c9368),
     ("watch-scroungers-forgo", 0xb1abef5e1f2bfac1),
     ("watch-ak", 0x7d3e4e1903e7d55f),
+    // Enabled spatial episode correctness references; the dedicated hashing task
+    // will extend these fingerprints with authoritative extension state.
+    ("spatial-scatter", 0x8812daf7a717c8d0),
+    ("spatial-larder", 0xb45b3efd72dd2386),
+    ("spatial-larder-guard", 0xa3b1807a6e6adf9e),
     ("watch-arena", 0x35bf42deadfb8424),
 ];
 

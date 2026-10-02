@@ -149,7 +149,250 @@ pub fn series_names(config: &Config) -> Vec<String> {
             }
         }
     }
+    if config.spatial_hoarding.enabled {
+        names.extend(spatial_series_names());
+    }
     names
+}
+
+/// Only the ordinary spatial episode exposes these extra columns.
+fn spatial_series_names() -> Vec<String> {
+    let mut names = Vec::new();
+    for kind in ["scatter", "larder"] {
+        for field in [
+            "cached",
+            "caches",
+            "buried",
+            "dug",
+            "pilfered",
+            "lost",
+            "bury_cost",
+            "loot_eaten",
+            "digs",
+            "pilfers",
+            "pilfer_candidates",
+            "caches_pilfered",
+            "cache_ticks",
+            "stock_ticks",
+            "recovery",
+            "pilferage_rate",
+            "loss_rate",
+        ] {
+            names.push(format!("{kind}_{field}"));
+        }
+    }
+    for field in [
+        "starts",
+        "completions",
+        "cancellations",
+        "return_turns",
+        "delivered",
+        "bury_cost",
+    ] {
+        names.push(format!("delivery_{field}"));
+    }
+    for field in [
+        "intended",
+        "executed",
+        "recovered",
+        "probe_harvest",
+        "blocked_raids",
+        "blocked_discoveries",
+    ] {
+        names.push(format!("guard_{field}"));
+    }
+    for field in [
+        "burials_seen",
+        "sightings",
+        "seen_entries",
+        "seen_arrivals",
+        "contacts",
+        "discovery_draws",
+        "discovery_hits",
+        "raid_attempts",
+        "raids",
+        "raided",
+        "raids_empty",
+        "raids_no_room",
+        "raids_blocked",
+        "discoveries_blocked",
+        "scatter_draws_skipped",
+    ] {
+        names.push(format!("larder_{field}"));
+    }
+    names.extend(["metabolic_demand".into(), "metabolic_consumed".into()]);
+    names
+}
+
+/// Per-tick spatial fields plus cumulative tick-start exposure and fate ratios.
+/// A missing denominator is NaN (a CSV NaN / chart gap / JSON null).
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+pub struct SpatialStats {
+    #[serde(flatten)]
+    pub values: std::collections::BTreeMap<String, f64>,
+    #[serde(skip)]
+    totals: std::collections::BTreeMap<String, f64>,
+}
+
+/// Capture live positive stock before a tick, including supported edits since the last snapshot.
+pub(crate) fn spatial_store_exposure(
+    world: &World,
+) -> [crate::minds::spatial_hoarding::runner::ExposureTotals; 2] {
+    use crate::minds::spatial_hoarding::runner::ExposureTotals;
+    let mut out = [ExposureTotals::default(); 2];
+    for a in world.agents() {
+        for &amount in a.caches.values().filter(|amount| **amount > 0.0) {
+            out[0].cache_ticks += 1;
+            out[0].stock_ticks += amount;
+        }
+        if let Some(s) = &a.spatial {
+            if s.larder > 0.0 {
+                out[1].cache_ticks += 1;
+                out[1].stock_ticks += s.larder;
+            }
+        }
+    }
+    out
+}
+
+impl SpatialStats {
+    fn of(world: &World) -> Self {
+        let elapsed = world.stats.latest().is_some_and(|s| s.tick < world.tick);
+        let prev = world
+            .stats
+            .latest()
+            .and_then(|s| s.spatial_hoarding.as_ref());
+        let mut out = Self {
+            totals: prev.map(|s| s.totals.clone()).unwrap_or_default(),
+            ..Self::default()
+        };
+        let events = world.events().spatial_stores.unwrap_or_default();
+        let exposure = world.events().spatial_exposure.unwrap_or_default();
+        for (kind, flow, sampled) in [
+            ("scatter", events.scatter, exposure[0]),
+            ("larder", events.larder, exposure[1]),
+        ] {
+            let stocks: Vec<f64> = if kind == "scatter" {
+                world
+                    .agents()
+                    .flat_map(|a| a.caches.values().copied())
+                    .collect()
+            } else {
+                world
+                    .agents()
+                    .filter_map(|a| a.spatial.as_ref().map(|s| s.larder))
+                    .collect()
+            };
+            out.values
+                .insert(format!("{kind}_cached"), stocks.iter().sum());
+            out.values.insert(
+                format!("{kind}_caches"),
+                stocks.iter().filter(|v| **v > 0.0).count() as f64,
+            );
+            for (field, value) in [
+                ("buried", flow.buried),
+                ("dug", flow.dug),
+                ("pilfered", flow.pilfered),
+                ("lost", flow.lost),
+                ("bury_cost", flow.bury_cost),
+                ("loot_eaten", flow.loot_eaten),
+                ("digs", f64::from(flow.digs)),
+                ("pilfers", f64::from(flow.pilfers)),
+                ("pilfer_candidates", f64::from(flow.pilfer_candidates)),
+                ("caches_pilfered", f64::from(flow.caches_pilfered)),
+            ] {
+                let key = format!("{kind}_{field}");
+                out.values.insert(key.clone(), value);
+                if elapsed || prev.is_none() {
+                    *out.totals.entry(key).or_default() += value;
+                }
+            }
+            for (field, increment) in [
+                ("cache_ticks", sampled.cache_ticks as f64),
+                ("stock_ticks", sampled.stock_ticks),
+            ] {
+                let key = format!("{kind}_{field}");
+                let previous = prev.map_or(0.0, |p| p.values[&key]);
+                out.values
+                    .insert(key, previous + if elapsed { increment } else { 0.0 });
+            }
+            let ratio = |numerator: f64, denominator: f64| {
+                if denominator > 0.0 {
+                    numerator / denominator
+                } else {
+                    f64::NAN
+                }
+            };
+            out.values.insert(
+                format!("{kind}_recovery"),
+                ratio(
+                    out.totals[&format!("{kind}_dug")],
+                    out.totals[&format!("{kind}_buried")],
+                ),
+            );
+            out.values.insert(
+                format!("{kind}_pilferage_rate"),
+                ratio(
+                    out.totals[&format!("{kind}_caches_pilfered")],
+                    out.values[&format!("{kind}_cache_ticks")],
+                ),
+            );
+            out.values.insert(
+                format!("{kind}_loss_rate"),
+                ratio(
+                    out.totals[&format!("{kind}_pilfered")] + out.totals[&format!("{kind}_lost")],
+                    out.values[&format!("{kind}_stock_ticks")],
+                ),
+            );
+        }
+        let d = events.delivery;
+        for (field, value) in [
+            ("starts", f64::from(d.starts)),
+            ("completions", f64::from(d.completions)),
+            ("cancellations", f64::from(d.cancellations)),
+            ("return_turns", f64::from(d.return_turns)),
+            ("delivered", d.delivered),
+            ("bury_cost", d.bury_cost),
+        ] {
+            out.values.insert(format!("delivery_{field}"), value);
+        }
+        let g = events.guard;
+        for (field, value) in [
+            ("intended", f64::from(g.intended)),
+            ("executed", f64::from(g.executed)),
+            ("recovered", g.recovered),
+            ("probe_harvest", g.probe_harvest),
+            ("blocked_raids", f64::from(g.blocked_raids)),
+            ("blocked_discoveries", f64::from(g.blocked_discoveries)),
+        ] {
+            out.values.insert(format!("guard_{field}"), value);
+        }
+        let o = events.observation;
+        for (field, value) in [
+            ("burials_seen", f64::from(o.burials_seen)),
+            ("sightings", f64::from(o.sightings)),
+            ("seen_entries", f64::from(o.seen_entries)),
+            ("seen_arrivals", f64::from(o.seen_arrivals)),
+            ("contacts", f64::from(o.contacts)),
+            ("discovery_draws", f64::from(o.discovery_draws)),
+            ("discovery_hits", f64::from(o.discovery_hits)),
+            ("raid_attempts", f64::from(o.raid_attempts)),
+            ("raids", f64::from(o.raids)),
+            ("raided", o.raided),
+            ("raids_empty", f64::from(o.raids_empty)),
+            ("raids_no_room", f64::from(o.raids_no_room)),
+            ("raids_blocked", f64::from(o.raids_blocked)),
+            ("discoveries_blocked", f64::from(o.discoveries_blocked)),
+            ("scatter_draws_skipped", f64::from(o.scatter_draws_skipped)),
+        ] {
+            out.values.insert(format!("larder_{field}"), value);
+        }
+        out.values
+            .insert("metabolic_demand".into(), events.metabolism.demand);
+        out.values
+            .insert("metabolic_consumed".into(), events.metabolism.consumed);
+        out
+    }
 }
 
 /// Whether both kinds of founder exist under watching: watching is on and,
@@ -297,6 +540,8 @@ pub struct Snapshot {
     /// founders watch and some don't (`who` and `watchers`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub watchers: Option<WatcherStats>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spatial_hoarding: Option<SpatialStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -727,6 +972,11 @@ impl Snapshot {
                     mean_rate: mean(&|a| a.rate),
                 }
             }),
+            spatial_hoarding: world
+                .config
+                .spatial_hoarding
+                .enabled
+                .then(|| SpatialStats::of(world)),
             caching: world.config.caching.is_on().then(|| {
                 let cached = cached_stock(world);
                 let (prev_buried, prev_dug) = world
@@ -924,6 +1174,11 @@ impl Snapshot {
             "trade_pairs" => f64::from(self.trade_pairs),
             "gini_total" => self.gini_total,
             _ => {
+                if let Some(spatial) = &self.spatial_hoarding {
+                    if let Some(v) = spatial.values.get(name) {
+                        return Some(*v);
+                    }
+                }
                 let index = |prefix: &str| name.strip_prefix(prefix)?.parse::<usize>().ok();
                 if let Some(i) = index("mean_holding_") {
                     return self.goods.get(i).map(|g| g.mean_holding);
@@ -1422,6 +1677,143 @@ mod tests {
     use crate::config::CachingRule;
     use crate::config::Config;
     use crate::config::Pollutant;
+
+    #[test]
+    fn spatial_hoarding_tick_one_uses_positive_tick_zero_stores_without_discovery() {
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 1;
+        c.goods[0].endowment = crate::config::URange::new(50, 50);
+        c.theft.find = 0.0;
+        c.spatial_hoarding.enabled = true;
+        c.spatial_hoarding.find_larder = 0.0;
+        c.spatial_hoarding.guard = false;
+        let mut w = World::new(c, 1).unwrap();
+        let id = w.agents().next().unwrap().id;
+        let site = w.torus.index(w.agent(id).unwrap().pos) as u32;
+        let a = w.agent_mut(id).unwrap();
+        a.caches.insert(site, 3.0);
+        a.spatial.as_mut().unwrap().larder = 5.0;
+        assert_eq!(
+            w.stats.latest().unwrap().value("larder_stock_ticks"),
+            Some(0.0)
+        );
+        w.step();
+        let tick = w.stats.latest().unwrap();
+        assert_eq!(tick.value("scatter_stock_ticks"), Some(3.0));
+        assert_eq!(tick.value("larder_stock_ticks"), Some(5.0));
+        assert_eq!(tick.value("scatter_cache_ticks"), Some(1.0));
+        assert_eq!(tick.value("larder_cache_ticks"), Some(1.0));
+    }
+
+    #[test]
+    fn spatial_hoarding_exposure_excludes_stores_removed_by_supported_edit_between_ticks() {
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 2;
+        c.goods[0].endowment = crate::config::URange::new(50, 50);
+        c.theft.find = 0.0;
+        c.spatial_hoarding.enabled = true;
+        c.spatial_hoarding.find_larder = 0.0;
+        c.spatial_hoarding.guard = false;
+        let mut w = World::new(c, 1).unwrap();
+        let ids: Vec<_> = w.agents().map(|a| a.id).collect();
+        for (id, scatter, larder) in [(ids[0], 3.0, 5.0), (ids[1], 7.0, 11.0)] {
+            let site = w.torus.index(w.agent(id).unwrap().pos) as u32;
+            let a = w.agent_mut(id).unwrap();
+            a.caches.insert(site, scatter);
+            a.spatial.as_mut().unwrap().larder = larder;
+        }
+        w.step();
+        let pos = w.agent(ids[0]).unwrap().pos;
+        w.remove_agent(pos.x, pos.y).unwrap();
+        let scatter = w
+            .agents()
+            .flat_map(|a| a.caches.values())
+            .filter(|v| **v > 0.0)
+            .copied()
+            .collect::<Vec<_>>();
+        let larder = w
+            .agents()
+            .map(|a| a.spatial.as_ref().unwrap().larder)
+            .filter(|v| *v > 0.0)
+            .collect::<Vec<_>>();
+        w.step();
+        let tick = w.stats.latest().unwrap();
+        assert_eq!(
+            tick.value("scatter_stock_ticks"),
+            Some(10.0 + scatter.iter().sum::<f64>())
+        );
+        assert_eq!(
+            tick.value("larder_stock_ticks"),
+            Some(16.0 + larder.iter().sum::<f64>())
+        );
+        assert_eq!(
+            tick.value("scatter_cache_ticks"),
+            Some(2.0 + scatter.len() as f64)
+        );
+        assert_eq!(
+            tick.value("larder_cache_ticks"),
+            Some(2.0 + larder.len() as f64)
+        );
+        assert_eq!(
+            Snapshot::of(&w).value("larder_stock_ticks"),
+            tick.value("larder_stock_ticks")
+        );
+    }
+
+    #[test]
+    fn spatial_hoarding_series_distinguish_stocks_flows_and_undefined_ratios() {
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 1;
+        c.theft.find = 0.0;
+        c.spatial_hoarding.enabled = true;
+        c.spatial_hoarding.find_larder = 0.0;
+        c.spatial_hoarding.guard = false;
+        c.spatial_hoarding.larder = 0.0;
+        let mut w = World::new(c, 1).unwrap();
+        let initial = w.stats.latest().unwrap();
+        assert!(initial.value("scatter_recovery").unwrap().is_nan());
+        assert_eq!(initial.value("scatter_stock_ticks"), Some(0.0));
+        w.run(3);
+        let history = w.stats.history();
+        let expected: f64 = history[..history.len() - 1]
+            .iter()
+            .map(|s| s.value("scatter_cached").unwrap())
+            .sum();
+        assert!(expected > 0.0);
+        assert_eq!(
+            w.stats.latest().unwrap().value("scatter_stock_ticks"),
+            Some(expected)
+        );
+        assert_eq!(
+            Snapshot::of(&w).value("scatter_stock_ticks"),
+            Some(expected),
+            "a fresh view of the same tick adds no exposure"
+        );
+        assert_eq!(
+            w.stats.latest().unwrap().value("larder_stock_ticks"),
+            Some(0.0)
+        );
+        assert!(w
+            .stats
+            .latest()
+            .unwrap()
+            .value("larder_loss_rate")
+            .unwrap()
+            .is_nan());
+        for s in history {
+            assert_eq!(
+                s.value("scatter_cached").unwrap() + s.value("larder_cached").unwrap(),
+                s.value("cached").unwrap()
+            );
+            assert_eq!(
+                s.value("scatter_buried").unwrap() + s.value("larder_buried").unwrap(),
+                s.value("buried").unwrap()
+            );
+        }
+        assert!(!series_names(&Config::default())
+            .iter()
+            .any(|n| n.starts_with("scatter_")));
+    }
 
     #[test]
     fn per_good_and_per_pollutant_series() {

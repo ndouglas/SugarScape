@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 397] = [
+pub const TITLES: [(&str, &str); 400] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -329,6 +329,9 @@ pub const TITLES: [(&str, &str); 397] = [
         "watch-ak",
         "Owners who dig early, and everyone watching with a 7-tick memory: thieves now take more than owners dig back, and fewer hoarders survive",
     ),
+    ("spatial-scatter", "Spatial scatter: fixed L=0, with no guard"),
+    ("spatial-larder", "Spatial larder: fixed L=1, with no guard"),
+    ("spatial-larder-guard", "Spatial larder: fixed L=1, with guarding"),
     (
         "watch-arena",
         "Four agents in a room, half watching: everyone survives, and the room ends the winter poorer",

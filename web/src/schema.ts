@@ -1,5 +1,5 @@
 import { defaultGroups, sameGroups } from './groups';
-import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Theft, Truffles, Watching } from './types';
+import type { Caching, Central, Config, Decision, Goap, Memory, Movement, Mvt, Theft, Truffles, Watching, SpatialHoarding } from './types';
 
 /** A config's decision, or the book's for older configs. */
 const decision = (c: Config): Decision => c.decision ?? { rule: 'book', travel: 0, crowding: 0, idle: 'stay' };
@@ -46,6 +46,12 @@ const seedBuryCost = (next: Config) => {
   next.caching = { ...caching(next), ...next.caching, bury_cost: next.caching?.bury_cost ?? 0 };
 };
 
+const spatialHoarding = (c: Config): SpatialHoarding => ({
+  enabled: false, larder: 0.15, defense: 0.5, guard: true, defense_slope: 10, find_larder: 0.25,
+  ...c.spatial_hoarding,
+});
+const seedSpatialHoarding = (next: Config) => { next.spatial_hoarding = spatialHoarding(next); };
+
 interface Base {
   path: string;
   label: string;
@@ -57,7 +63,7 @@ interface Base {
 export type Control =
   /** `current` reads the box through a default when the path may be missing (older configs); without it, the box is the path's value. */
   | (Base & { kind: 'toggle'; current?: (c: Config) => boolean })
-  | (Base & { kind: 'number'; min: number; max: number; step: number })
+  | (Base & { kind: 'number'; min: number; max: number; step: number; current?: (c: Config) => number })
   | (Base & { kind: 'range'; min: number; max: number })
   | (Base & { kind: 'select'; options: { value: string; label: string; apply: (c: Config) => void }[]; current: (c: Config) => string });
 
@@ -438,6 +444,18 @@ export const GROUPS: Group[] = [
         kind: 'number', path: 'caching.bury_cost', label: 'Bury cost (sugar a cache)', min: 0, max: 2, step: 0.05,
         adjust: seedBuryCost,
       },
+    ],
+  },
+  {
+    title: 'Spatial hoarding (Minds 9)', minds: true,
+    note: 'An ordinary spatial episode with fixed founder traits. L chooses scatter burial or a delivery to home. Pending food remains carried and can be consumed on the return journey. Guarding a home costs a foraging turn. These fields rebuild the episode.',
+    controls: [
+      { kind: 'toggle', path: 'spatial_hoarding.enabled', label: 'Spatial hoarding', reset: true, current: (c) => spatialHoarding(c).enabled, adjust: seedSpatialHoarding },
+      { kind: 'number', path: 'spatial_hoarding.larder', label: 'Larder probability L', min: 0, max: 1, step: 0.05, reset: true, current: (c) => spatialHoarding(c).larder, adjust: seedSpatialHoarding },
+      { kind: 'number', path: 'spatial_hoarding.defense', label: 'Defense propensity D', min: 0, max: 1, step: 0.05, reset: true, current: (c) => spatialHoarding(c).defense, adjust: seedSpatialHoarding },
+      { kind: 'toggle', path: 'spatial_hoarding.guard', label: 'Guard homes', reset: true, current: (c) => spatialHoarding(c).guard, adjust: seedSpatialHoarding },
+      { kind: 'number', path: 'spatial_hoarding.defense_slope', label: 'Defense slope', min: 0.1, max: 50, step: 0.1, reset: true, current: (c) => spatialHoarding(c).defense_slope, adjust: seedSpatialHoarding },
+      { kind: 'number', path: 'spatial_hoarding.find_larder', label: 'Chance to find a larder', min: 0, max: 1, step: 0.01, reset: true, current: (c) => spatialHoarding(c).find_larder, adjust: seedSpatialHoarding },
     ],
   },
   {

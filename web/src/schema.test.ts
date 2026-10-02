@@ -481,3 +481,22 @@ describe('watching (Minds 8)', () => {
     expect(note.text).toBe('Watchers and cheaters are dealt by the same id rule: at equal shares they are the same agents; at unequal shares they overlap as the rule gives.');
   });
 });
+
+describe('spatial hoarding episode controls', () => {
+  it('rebuilds the episode for every spatial field', () => {
+    for (const field of ['enabled', 'larder', 'defense', 'guard', 'defense_slope', 'find_larder']) {
+      expect(control(`spatial_hoarding.${field}`)?.reset).toBe(true);
+    }
+  });
+  it('shows default trait and slope values when the disabled extension is omitted', () => {
+    for (const [field, expected] of [['larder', 0.15], ['defense', 0.5], ['defense_slope', 10], ['find_larder', 0.25]] as const) {
+      const c = control(`spatial_hoarding.${field}`);
+      expect(c.kind === 'number' && c.current?.({} as Config)).toBe(expected);
+    }
+  });
+  it('seeds defaults while retaining a changed field on an older config', () => {
+    const c = { spatial_hoarding: { larder: 1 } } as unknown as Config;
+    control('spatial_hoarding.larder').adjust!(c, {} as Config);
+    expect(c.spatial_hoarding).toEqual({ enabled: false, larder: 1, defense: 0.5, guard: true, defense_slope: 10, find_larder: 0.25 });
+  });
+});

@@ -48,7 +48,7 @@ import type {
   SpatialInspection,
   TagsInspection,
 } from '../types';
-import { ageText, allocationText, siteCachesText } from '../minds';
+import { ageText, allocationText, spatialHoardingRows, siteCachesText } from '../minds';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -235,8 +235,9 @@ export class InspectPanel {
           ]
         : []),
       ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
-      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
+      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(a.spatial_hoarding && k === 'Caches' ? 'Scatter caches' : k, v)) : []),
       ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
+      ...(a.spatial_hoarding ? spatialHoardingRows(a.spatial_hoarding).map(([k, v]) => row(k, v)) : []),
       ...(a.theft ? theftRows(a.theft).map(([k, v]) => row(k, v)) : []),
       ...(a.watching ? watchingRows(a.watching, this.engine.sugar.width).map(([k, v]) => row(k, v)) : []),
       row('Age', ageText(a.age, a.max_age, this.engine.sugar.lifespan.enabled)),

@@ -253,6 +253,7 @@ export class GridView {
       cheaterCaches: summary?.cheaterOnly ?? false,
       ownCaches: (agent?.caching?.caches.length ?? 0) > 0,
       homes: homes.length > 0,
+      guarding: homes.some((home) => home.guarding),
       larders: homes.some((home) => home.larder > 0),
       memory: remembered.length > 0,
       spots: remembered.some((m) => m.shape === 'circle'),
@@ -365,6 +366,13 @@ export class GridView {
       if (home.larder <= 0) continue;
       const r = (0.12 + 0.2 * Math.sqrt(home.larder / most)) * CELL;
       diamond(ctx, (home.x + 0.5) * CELL, (home.y + 0.5) * CELL, r);
+    }
+    // A solid outer frame marks an owner who guarded this tick.
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#ffb000';
+    ctx.lineWidth = 2.5;
+    for (const home of homes) {
+      if (home.guarding) ctx.strokeRect((home.x + 0.03) * CELL, (home.y + 0.03) * CELL, CELL * 0.94, CELL * 0.94);
     }
     ctx.restore();
   }

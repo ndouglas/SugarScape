@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ageText, allocationText, cacheSize, cacheSummary, isCheaterOnly, isLarder, labStatus, siteCachesText, winterBands, winterShown } from './minds';
+import { ageText, spatialHoardingRows, allocationText, cacheSize, cacheSummary, isCheaterOnly, isLarder, labStatus, siteCachesText, winterBands, winterShown } from './minds';
 import { CACHE_CHEATER, CACHE_HOARDER, CACHE_LARDER, type Config, type LabView } from './types';
 
 const seasons = (mode: 'global' | 'hemispheres', enabled = true) =>
@@ -99,5 +99,13 @@ describe('Inspect texts', () => {
   it('shows the maximum age only where agents die of old age', () => {
     expect(ageText(150, 63, false)).toBe('150');
     expect(ageText(50, 63, true)).toBe('50 / 63');
+  });
+});
+
+describe('spatial inspection', () => {
+  it('discloses carried pending delivery and guard state independently of scatter caches', () => {
+    expect(spatialHoardingRows({ home: { x: 2, y: 3 }, larder_trait: 1, defense_trait: 0.5, larder: 8, delivery: 4, guarding: true, observed_larders: 2 })).toEqual([
+      ['Home', '(2, 3)'], ['Larder probability L', '1'], ['Defense propensity D', '0.50'], ['Larder', '8 at home'], ['Delivery', '4 pending (still carried)'], ['Guarding', 'yes'], ['Observed larders', '2'],
+    ]);
   });
 });
