@@ -4,6 +4,8 @@
 **Replaces:** queue entry "Emergent actors in world politics" (the whole 1997 book as one very large milestone).
 **Reading notes:** `2026-10-01-cederman-reading-notes.md` (the book chapter by chapter, and the literature after it).
 **Builds on:** the milestone specs in this directory; each phase below gets its own design spec before it is built.
+**Research corrections:** `2026-10-02-emergent-polarity-reading-notes.md` supersedes affected
+October 1 readings of persistence, replication coverage, source-code lineage and critic statistics.
 
 ## The decision
 
@@ -14,8 +16,10 @@ democratic-peace models, Turchin's and Gavrilets's models inherit. Its own model
 
 - **Emergent polarity (ch. 4–5)** gives existence proofs ("hegemonic takeoff can come from positive
   feedback") on a 10 × 10 grid, 20 seeds a setting, outcomes in coarse bands, with no data. Two of
-  its three propositions are contradicted by its own figures; as printed, wars cannot persist; the
-  only replication (Störmer 2018) found about three-quarters of random parameter settings inert.
+  its three propositions are contradicted by its own figures. Printed TFT and predator
+  reinitiation leave persistence sensitive to the initiation guard. Radax (2010) reported
+  replication difficulties; Störmer (2018) found roughly three-quarters of configuration
+  means near unchanged state counts in a materially different reconstruction.
 - **Nationalist mobilization (ch. 7)** is a four-state deterministic Markov chain, not an
   agent-based model.
 - **Nationalist coordination (ch. 8)** is a 24-province toy with no empirical anchor, and the book
@@ -40,9 +44,10 @@ carries the questions about war itself; this campaign need not model war well, o
 - **Base:** 10 × 10 grid of primitive units, predators and status quo states, capitals and provinces,
   N(50, 10) resources and N(2, 5) harvests, the Fig. 4.7 decisions, Fig. 4.8 combat, conquest and
   collapse, and the trust-based alliances; the Fig. 4.10, 4.11 and 4.13 designs (8 predator shares ×
-  offense/defense × 20 seeds, to t = 1000 or hegemony), digitized by marker.
-- **Named switches for the readings that decide results:** how a war persists (the literal Fig. 4.7
-  rule alternates attack and restraint forever; the text says every attack is war until victory);
+  offense/defense × 20 seeds, to t = 1000 or hegemony), digitized at the stated settings
+  (the original curves have no point markers).
+- **Named switches for the readings that decide results:** how a war persists (previous-action
+  TFT, separately specified predator reinitiation guard, or explicit persistence until victory);
   whether one-sided attacks destroy resources (ch. 4 yes, ch. 5 fn 1 no); update order (Duffy 1992:
   serial against simultaneous); bounded grid against torus; victory checked before or after losses.
 - **Variants from ch. 5:** two-level action (tax and provincial revolt) and overextension
@@ -50,8 +55,10 @@ carries the questions about war itself; this campaign need not model war well, o
   wrong worked example (Fig. 5.5) reported; proportional allocation, for one test only (below).
 - **Claims tested:** the three propositions (anarchy gives power politics; defense dominance helps;
   defensive alliances help), hegemonic takeoff, survivors mostly predators, and **ch. 5 fn 5's doubt**
-  — that the alliance result depends on how resources are allocated — which Cederman never ran.
-  Störmer's inertness checked under random parameters.
+  — that the alliance result depends on how resources are allocated — for which Cederman
+  reports preliminary runs but no numerical factorial results. Störmer's text/listing
+  protocols and an explicitly labeled adaptation must be distinguished; exact 75% inertness
+  is not a recovered quantitative target.
 - **Measured beyond the paper,** in keeping with the war study: resources destroyed, wars, their
   durations and what ended them.
 - **GeoSim0's GPL code** (`papers/geopolitics/cederman-icr-2004-geosim0-repast-source.zip`) is read
