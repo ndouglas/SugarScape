@@ -1,4 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
@@ -1590,6 +1592,29 @@ describe('civil violence’s schedule and ramps reach the page', () => {
 
 
 describe('spatial episode presets', () => {
+  // npm pretest builds this binary from the current checkout; each case
+  // generates an independent native trace rather than frozen WASM output.
+  for (const id of ['spatial-scatter', 'spatial-larder', 'spatial-larder-guard']) {
+    it(`matches the native ${id} fingerprint at every tick from zero through 200`, async () => {
+      const root = fileURLToPath(new URL('../../', import.meta.url));
+      const scratch = `${root}.superpowers/sdd/2026-10-02-minds-9-spatial-hoarding/scratch`;
+      mkdirSync(scratch, { recursive: true });
+      const tracePath = `${scratch}/task-7-native-${id}.json`;
+      execFileSync(`${root}target/release/sugarscape`, [
+        'run', '--preset', id, '--seed', '1', '--ticks', '200',
+        '--fingerprint-trace', tracePath,
+      ], { cwd: root, encoding: 'utf8' });
+      const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+      expect(trace.map(row => row.tick)).toEqual(Array.from({ length: 201 }, (_, tick) => tick));
+      const preset = presets.find(p => p.id === id)!;
+      const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });
+      for (const row of trace) {
+        if (row.tick > 0) await e.advance(1);
+        expect(e.tick).toBe(row.tick);
+        expect(await e.fingerprint(), `${id} tick ${row.tick}`).toBe(row.fingerprint);
+      }
+    });
+  }
   it('offers the three fixed ordinary-world episodes through real WASM', () => {
     const presets = JSON.parse(presets_json()) as { id: string }[];
     const spatialPresetIds = presets.map(p => p.id).filter(id => id.startsWith('spatial-'));

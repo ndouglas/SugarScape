@@ -901,6 +901,66 @@ impl World {
                 eat(l.good as u64);
             }
         }
+        // Minds 9: append the complete authoritative extension only while enabled.
+        // Keep the legacy byte stream untouched; fate/event/exposure histories
+        // remain optional diagnostics and never enter this hash.
+        if self.config.spatial_hoarding.enabled {
+            let c = &self.config.spatial_hoarding;
+            eat(0x5350_4154_4941_4c39); // SPATIAL9 domain separator / enabled gate
+            eat(c.larder.to_bits());
+            eat(c.defense.to_bits());
+            eat(u64::from(c.guard));
+            eat(c.defense_slope.to_bits());
+            eat(c.find_larder.to_bits());
+            eat(u64::from(self.spatial_probe.guard_harvest));
+            eat(u64::from(self.spatial_probe.scatter_first));
+            eat(self.agents.len() as u64);
+            for a in self.agents.values() {
+                eat(a.id);
+                eat(u64::from(a.cheater));
+                eat(u64::from(a.watches));
+                eat(a.cache_since.len() as u64);
+                for (&site, &tick) in &a.cache_since {
+                    eat(u64::from(site));
+                    eat(tick);
+                }
+                eat(a.seen.len() as u64);
+                for (&(site, owner), seen) in &a.seen {
+                    eat(u64::from(site));
+                    eat(owner);
+                    eat(seen.amount.to_bits());
+                    eat(seen.tick);
+                }
+                eat(u64::from(a.spatial.is_some()));
+                if let Some(s) = &a.spatial {
+                    eat(u64::from(s.home.x));
+                    eat(u64::from(s.home.y));
+                    eat(s.traits.larder.to_bits());
+                    eat(s.traits.defense.to_bits());
+                    eat(u64::from(s.traits.cheater));
+                    eat(u64::from(s.traits.watches));
+                    eat(s.larder.to_bits());
+                    eat(u64::from(s.larder_since.is_some()));
+                    if let Some(tick) = s.larder_since {
+                        eat(tick);
+                    }
+                    eat(u64::from(s.delivery.is_some()));
+                    if let Some(delivery) = s.delivery {
+                        eat(delivery.amount.to_bits());
+                    }
+                    eat(u64::from(s.guarding));
+                    eat(s.seen_larders.len() as u64);
+                    // BTreeMap preserves owner-id order, including dead owners.
+                    for (&owner, seen) in &s.seen_larders {
+                        eat(owner);
+                        eat(u64::from(seen.home.x));
+                        eat(u64::from(seen.home.y));
+                        eat(seen.amount.to_bits());
+                        eat(seen.tick);
+                    }
+                }
+            }
+        }
         h
     }
 
@@ -1383,6 +1443,38 @@ mod tests {
             .unwrap()
             .diseases
             .is_empty());
+    }
+
+    #[test]
+    fn spatial_clone_preserves_exposure_and_hash_ignores_optional_diagnostics() {
+        let config = crate::presets::all()
+            .into_iter()
+            .find(|p| p.id == "spatial-larder-guard")
+            .unwrap()
+            .config;
+        let mut w = World::new(config, 7).unwrap();
+        w.step();
+        let fingerprint = w.fingerprint();
+        w.events.spatial_exposure = Some([
+            crate::minds::spatial_hoarding::runner::ExposureTotals {
+                cache_ticks: 3,
+                stock_ticks: 7.0,
+            },
+            crate::minds::spatial_hoarding::runner::ExposureTotals {
+                cache_ticks: 5,
+                stock_ticks: 11.0,
+            },
+        ]);
+        w.record_fates = true;
+        w.cache_log_full = true;
+        assert_eq!(w.fingerprint(), fingerprint);
+        let kept = w.clone();
+        assert_eq!(kept.events.spatial_exposure, w.events.spatial_exposure);
+        assert_eq!(
+            serde_json::to_string(&Snapshot::of(&kept)).unwrap(),
+            serde_json::to_string(&Snapshot::of(&w)).unwrap()
+        );
+        assert_eq!(kept.fingerprint(), fingerprint);
     }
 
     #[test]

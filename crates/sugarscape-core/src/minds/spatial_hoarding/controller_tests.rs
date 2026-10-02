@@ -363,9 +363,14 @@ fn spatial_hoarding_l_zero_guard_off_matches_scatter_physics_and_rng() {
     for tick in 0..15 {
         scatter.step();
         spatial.step();
+        // Compare the entire legacy physical hash after removing only the
+        // enabled extension's hash additions. The live spatial controller
+        // continues running enabled, and its RNG is compared independently.
+        let mut physical = spatial.clone();
+        physical.config.spatial_hoarding.enabled = false;
         assert_eq!(
             scatter.fingerprint(),
-            spatial.fingerprint(),
+            physical.fingerprint(),
             "physical tick {tick}"
         );
         let mut a = scatter.rng.clone();

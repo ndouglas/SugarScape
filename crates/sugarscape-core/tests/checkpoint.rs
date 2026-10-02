@@ -185,3 +185,399 @@ fn latest_value_is_the_last_element_of_every_series() {
         assert_eq!(m.latest_value("no-such-series"), None, "{id}");
     }
 }
+
+use sugarscape_core::config::{Map, Placement, URange};
+use sugarscape_core::geometry::Pos;
+use sugarscape_core::minds::spatial_hoarding::state::{
+    Delivery, EpisodeProbe, FounderTraits, SeenLarder,
+};
+use sugarscape_core::stats::Snapshot;
+use sugarscape_core::world::World;
+
+fn spatial_fixture() -> World {
+    let sugarscape_core::model::ModelConfig::Sugarscape(mut c) =
+        presets::find("spatial-larder-guard").unwrap().config
+    else {
+        panic!("sugarscape preset")
+    };
+    c.width = 9;
+    c.height = 9;
+    c.population = 2;
+    c.placement = Placement::Block {
+        x: 4,
+        y: 4,
+        width: 2,
+        height: 1,
+    };
+    c.vision = URange::new(1, 1);
+    c.goods[0].metabolism = URange::new(1, 1);
+    c.goods[0].map = Map::Flat { capacity: 0.0 };
+    c.watching.on = true;
+    c.theft.find = 0.0;
+    c.spatial_hoarding.find_larder = 0.0;
+    World::new_with_spatial_probe(
+        c,
+        7,
+        &[
+            FounderTraits {
+                larder: 1.0,
+                defense: 0.5,
+                cheater: false,
+                watches: true,
+            },
+            FounderTraits {
+                larder: 0.5,
+                defense: 0.25,
+                cheater: true,
+                watches: true,
+            },
+        ],
+        EpisodeProbe {
+            guard_harvest: true,
+            scatter_first: true,
+        },
+    )
+    .unwrap()
+}
+
+fn sugar(w: &ModelWorld) -> &World {
+    let ModelWorld::Sugarscape(w) = w else {
+        panic!("sugarscape fixture")
+    };
+    w
+}
+
+fn compare_spatial(a: &ModelWorld, b: &ModelWorld) {
+    assert_eq!(a.model().fingerprint(), b.model().fingerprint());
+    assert_eq!(a.model().latest_json(), b.model().latest_json());
+    assert_eq!(
+        serde_json::to_string(&Snapshot::of(sugar(a))).unwrap(),
+        serde_json::to_string(&Snapshot::of(sugar(b))).unwrap()
+    );
+    assert_eq!(all_series(a), all_series(b));
+    assert_eq!(inspect_all(a), inspect_all(b));
+    assert_eq!(a.model().agents_csv(), b.model().agents_csv());
+    assert_eq!(sugar(a).spatial_probe, sugar(b).spatial_probe);
+    for id in sugar(a).agents().map(|a| a.id) {
+        let aa = sugar(a).agent(id).unwrap();
+        let bb = sugar(b).agent(id).unwrap();
+        assert_eq!(aa.spatial, bb.spatial);
+        assert_eq!(aa.caches, bb.caches);
+        assert_eq!(aa.cache_since, bb.cache_since);
+        assert_eq!(aa.seen, bb.seen);
+        assert_eq!(aa.holdings, bb.holdings);
+    }
+}
+
+#[test]
+fn spatial_delivery_guard_and_fresh_dead_owner_sighting_restore_exactly() {
+    for fixture in ["delivery", "guard", "sighting"] {
+        let mut w = spatial_fixture();
+        let ids: Vec<_> = w.agents().map(|a| a.id).collect();
+        w.agent_mut(ids[0]).unwrap().caches.insert(0, 3.0);
+        w.agent_mut(ids[0]).unwrap().cache_since.insert(0, 0);
+        let home = w.agent(ids[1]).unwrap().spatial.as_ref().unwrap().home;
+        match fixture {
+            "delivery" => {
+                let a = w.agent_mut(ids[0]).unwrap();
+                a.holdings[0] = 20.0;
+                a.spatial.as_mut().unwrap().home = Pos::new(1, 1);
+                a.spatial.as_mut().unwrap().delivery = Some(Delivery { amount: 8.0 });
+            }
+            "guard" => {
+                let a = w.agent_mut(ids[0]).unwrap();
+                a.holdings[0] = 30.0;
+                let s = a.spatial.as_mut().unwrap();
+                s.larder = 10.0;
+                s.larder_since = Some(0);
+                s.guarding = true;
+            }
+            "sighting" => {
+                // Recorded coordinates must survive the owner's removal.
+                w.agent_mut(ids[0])
+                    .unwrap()
+                    .spatial
+                    .as_mut()
+                    .unwrap()
+                    .seen_larders
+                    .insert(
+                        ids[1],
+                        SeenLarder {
+                            home,
+                            amount: 6.0,
+                            tick: 0,
+                        },
+                    );
+                let pos = w.agent(ids[1]).unwrap().pos;
+                w.remove_agent(pos.x, pos.y).unwrap();
+            }
+            _ => unreachable!(),
+        }
+        let mut restored = ModelWorld::Sugarscape(Box::new(w.clone()));
+        let mut original = ModelWorld::Sugarscape(Box::new(w));
+        let cp = restored.checkpoint().unwrap();
+        restored.model_mut().run(3);
+        restored.restore(&cp).unwrap();
+        compare_spatial(&original, &restored);
+        for _ in 0..6 {
+            original.model_mut().run(1);
+            restored.model_mut().run(1);
+            compare_spatial(&original, &restored);
+        }
+    }
+}
+
+#[test]
+fn every_authoritative_spatial_field_changes_only_enabled_fingerprints() {
+    type Mutation = (&'static str, fn(&mut World));
+    let changes: &[Mutation] = &[
+        ("config larder", |w| w.config.spatial_hoarding.larder = 0.3),
+        ("config defense", |w| {
+            w.config.spatial_hoarding.defense = 0.3
+        }),
+        ("config guard", |w| w.config.spatial_hoarding.guard = false),
+        ("config slope", |w| {
+            w.config.spatial_hoarding.defense_slope = 4.0
+        }),
+        ("config find", |w| {
+            w.config.spatial_hoarding.find_larder = 0.2
+        }),
+        ("guard probe", |w| w.spatial_probe.guard_harvest = false),
+        ("scatter probe", |w| w.spatial_probe.scatter_first = false),
+        ("state presence", |w| w.agent_mut(1).unwrap().spatial = None),
+        ("home x", |w| {
+            w.agent_mut(1).unwrap().spatial.as_mut().unwrap().home.x += 1
+        }),
+        ("home y", |w| {
+            w.agent_mut(1).unwrap().spatial.as_mut().unwrap().home.y += 1
+        }),
+        ("trait larder", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .traits
+                .larder = 0.2
+        }),
+        ("trait defense", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .traits
+                .defense = 0.2
+        }),
+        ("trait cheater", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .traits
+                .cheater = true
+        }),
+        ("trait watches", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .traits
+                .watches = false
+        }),
+        ("cheater", |w| w.agent_mut(1).unwrap().cheater = true),
+        ("watches", |w| w.agent_mut(1).unwrap().watches = false),
+        ("larder", |w| {
+            w.agent_mut(1).unwrap().spatial.as_mut().unwrap().larder += 1.0
+        }),
+        ("age presence", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .larder_since = None
+        }),
+        ("age tick", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .larder_since = Some(1)
+        }),
+        ("delivery presence", |w| {
+            w.agent_mut(1).unwrap().spatial.as_mut().unwrap().delivery = None
+        }),
+        ("delivery amount", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .delivery
+                .as_mut()
+                .unwrap()
+                .amount += 1.0
+        }),
+        ("guarding", |w| {
+            w.agent_mut(1).unwrap().spatial.as_mut().unwrap().guarding = true
+        }),
+        ("sighting presence", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .seen_larders
+                .clear()
+        }),
+        ("sighting owner", |w| {
+            let s = w.agent_mut(1).unwrap().spatial.as_mut().unwrap();
+            let seen = s.seen_larders.remove(&99).unwrap();
+            s.seen_larders.insert(98, seen);
+        }),
+        ("sighting home x", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .seen_larders
+                .get_mut(&99)
+                .unwrap()
+                .home
+                .x += 1
+        }),
+        ("sighting home y", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .seen_larders
+                .get_mut(&99)
+                .unwrap()
+                .home
+                .y += 1
+        }),
+        ("sighting amount", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .seen_larders
+                .get_mut(&99)
+                .unwrap()
+                .amount += 1.0
+        }),
+        ("sighting tick", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .seen_larders
+                .get_mut(&99)
+                .unwrap()
+                .tick += 1
+        }),
+        ("scatter age presence", |w| {
+            w.agent_mut(1).unwrap().cache_since.clear()
+        }),
+        ("scatter age site", |w| {
+            let a = w.agent_mut(1).unwrap();
+            a.cache_since.remove(&0);
+            a.cache_since.insert(1, 0);
+        }),
+        ("scatter age tick", |w| {
+            w.agent_mut(1).unwrap().cache_since.insert(0, 1);
+        }),
+        ("scatter seen presence", |w| {
+            w.agent_mut(1).unwrap().seen.clear()
+        }),
+        ("scatter seen site", |w| {
+            let a = w.agent_mut(1).unwrap();
+            let v = a.seen.remove(&(0, 99)).unwrap();
+            a.seen.insert((1, 99), v);
+        }),
+        ("scatter seen owner", |w| {
+            let a = w.agent_mut(1).unwrap();
+            let v = a.seen.remove(&(0, 99)).unwrap();
+            a.seen.insert((0, 98), v);
+        }),
+        ("scatter seen amount", |w| {
+            w.agent_mut(1)
+                .unwrap()
+                .seen
+                .get_mut(&(0, 99))
+                .unwrap()
+                .amount += 1.0
+        }),
+        ("scatter seen tick", |w| {
+            w.agent_mut(1).unwrap().seen.get_mut(&(0, 99)).unwrap().tick += 1
+        }),
+    ];
+    let mut base = spatial_fixture();
+    let a = base.agent_mut(1).unwrap();
+    a.cache_since.insert(0, 0);
+    a.seen.insert(
+        (0, 99),
+        sugarscape_core::minds::caching::watching::SeenCache {
+            amount: 3.0,
+            tick: 0,
+        },
+    );
+    let s = a.spatial.as_mut().unwrap();
+    s.larder = 10.0;
+    s.larder_since = Some(0);
+    s.delivery = Some(Delivery { amount: 5.0 });
+    s.seen_larders.insert(
+        99,
+        SeenLarder {
+            home: Pos::new(2, 3),
+            amount: 4.0,
+            tick: 0,
+        },
+    );
+    for &(name, change) in changes {
+        let mut altered = base.clone();
+        change(&mut altered);
+        assert_ne!(base.fingerprint(), altered.fingerprint(), "enabled {name}");
+        altered.config.spatial_hoarding.enabled = false;
+        let mut off = base.clone();
+        off.config.spatial_hoarding.enabled = false;
+        assert_eq!(off.fingerprint(), altered.fingerprint(), "disabled {name}");
+    }
+    let mut off = base.clone();
+    off.config.spatial_hoarding.enabled = false;
+    assert_ne!(base.fingerprint(), off.fingerprint(), "enabled gate");
+}
+
+#[test]
+fn spatial_memory_insertion_order_does_not_change_the_hash() {
+    let mut a = spatial_fixture();
+    let mut b = a.clone();
+    for (w, owners) in [(&mut a, [88, 99]), (&mut b, [99, 88])] {
+        for owner in owners {
+            w.agent_mut(1)
+                .unwrap()
+                .spatial
+                .as_mut()
+                .unwrap()
+                .seen_larders
+                .insert(
+                    owner,
+                    SeenLarder {
+                        home: Pos::new(2, 3),
+                        amount: owner as f64,
+                        tick: 0,
+                    },
+                );
+        }
+    }
+    assert_eq!(a.fingerprint(), b.fingerprint());
+}
