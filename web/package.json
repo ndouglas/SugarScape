@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "pretest": "cargo build --release -p sugarscape-cli --manifest-path ../Cargo.toml",
     "test": "vitest run",
     "wasm": "wasm-pack build ../crates/sugarscape-wasm --target web --release --out-dir ../../web/src/wasm-pkg --out-name sugarscape",
     "wasm:dev": "wasm-pack build ../crates/sugarscape-wasm --target web --dev --out-dir ../../web/src/wasm-pkg --out-name sugarscape",

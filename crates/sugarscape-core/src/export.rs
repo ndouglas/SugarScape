@@ -42,6 +42,9 @@ pub fn agents_csv(world: &World) -> String {
     for k in 0..m {
         write!(out, ",site_pollution_{k}").unwrap();
     }
+    if world.config.spatial_hoarding.enabled {
+        out.push_str(",home_x,home_y,larder_trait,defense_trait,scatter,larder,delivery,guarding,observed_larders");
+    }
     out.push('\n');
     for a in world.agents() {
         write!(
@@ -77,6 +80,26 @@ pub fn agents_csv(world: &World) -> String {
         for p in &world.site(a.pos).pollution[..m] {
             write!(out, ",{p}").unwrap();
         }
+        if world.config.spatial_hoarding.enabled {
+            let s = a.spatial.as_ref().expect("spatial agent");
+            write!(
+                out,
+                ",{},{},{},{},{},{},{},{},{}",
+                s.home.x,
+                s.home.y,
+                s.traits.larder,
+                s.traits.defense,
+                a.caches.values().sum::<f64>(),
+                s.larder,
+                s.delivery.map(|d| d.amount.to_string()).unwrap_or_default(),
+                s.guarding,
+                s.seen_larders
+                    .values()
+                    .filter(|v| crate::minds::caching::watching::fresh(world, v.tick))
+                    .count()
+            )
+            .unwrap();
+        }
         out.push('\n');
     }
     out
@@ -86,6 +109,21 @@ pub fn agents_csv(world: &World) -> String {
 mod tests {
     use super::*;
     use crate::config::Config;
+
+    #[test]
+    fn spatial_hoarding_agents_csv_has_conditional_store_and_delivery_columns() {
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 1;
+        c.spatial_hoarding.enabled = true;
+        let w = World::new(c, 1).unwrap();
+        let csv = agents_csv(&w);
+        assert!(csv.lines().next().unwrap().ends_with(",home_x,home_y,larder_trait,defense_trait,scatter,larder,delivery,guarding,observed_larders"));
+        assert_eq!(
+            csv.lines().next().unwrap().split(',').count(),
+            csv.lines().nth(1).unwrap().split(',').count()
+        );
+        assert!(!agents_csv(&World::new(Config::default(), 1).unwrap()).contains("larder_trait"));
+    }
 
     #[test]
     fn series_csv_has_a_header_and_a_row_per_tick() {

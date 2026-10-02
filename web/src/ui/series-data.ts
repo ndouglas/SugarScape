@@ -123,6 +123,35 @@ export interface ChartLine { key: string; label: string; color: string; referenc
 /** A time chart of another model: its title, lines and y range, and (civil Model II's) when it shows. */
 export interface ModelChart { title: string; lines: ChartLine[]; range?: [number, number]; shown?: (c: ModelConfig) => boolean }
 
+/** Ordinary episode charts; unavailable denominators arrive as NaN and draw as gaps. */
+export const SPATIAL_HOARDING_CHARTS: { title: string; lines: ChartLine[] }[] = [
+  ...[
+    ['cached', 'Stored food'], ['buried', 'Burials per tick'], ['dug', 'Recovery per tick'],
+    ['pilfered', 'Pilferage per tick'], ['lost', 'Food lost on death per tick'],
+    ['cache_ticks', 'Positive cache-ticks'], ['stock_ticks', 'Food-unit-ticks'],
+    ['recovery', 'Cumulative recovery share'], ['loss_rate', 'Loss per food-unit-tick'],
+  ].map(([field,title]) => ({ title: `Spatial ${title.toLowerCase()}`, lines: [
+    { key: `scatter_${field}`, label: 'Scatter', color: '--c1' },
+    { key: `larder_${field}`, label: 'Larder', color: '--c3' },
+  ] })),
+  { title: 'Spatial deliveries', lines: [
+    { key: 'delivery_starts', label: 'Starts', color: '--c1' },
+    { key: 'delivery_completions', label: 'Completions', color: '--c3' },
+    { key: 'delivery_cancellations', label: 'Cancellations', color: '--red' },
+    { key: 'delivery_return_turns', label: 'Return turns', color: '--c4' },
+  ] },
+  { title: 'Spatial guards', lines: [
+    { key: 'guard_intended', label: 'Intentions', color: '--c2' },
+    { key: 'guard_executed', label: 'Paid guard actions', color: '--c3' },
+    { key: 'guard_blocked_raids', label: 'Blocked raids', color: '--red' },
+    { key: 'guard_blocked_discoveries', label: 'Blocked discoveries', color: '--c4' },
+  ] },
+  { title: 'Spatial food consumed', lines: [
+    { key: 'metabolic_demand', label: 'Demand', color: '--c2' },
+    { key: 'metabolic_consumed', label: 'Consumed', color: '--c1' },
+  ] },
+];
+
 /** A civil config of Model II (its groups and kills have charts). */
 /** A classes config with two tags (its per-tag charts show). */
 export const hasTags = (c: ModelConfig): boolean => 'tags' in c && (c as { tags: unknown }).tags === true;

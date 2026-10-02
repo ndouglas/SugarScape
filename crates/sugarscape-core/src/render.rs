@@ -329,6 +329,49 @@ mod tests {
     use crate::geometry::Pos;
     use crate::testkit::*;
 
+    #[test]
+    fn spatial_hoarding_inspection_serializes_distinct_stores_and_home_guard() {
+        use crate::minds::spatial_hoarding::state::Delivery;
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 1;
+        c.spatial_hoarding.enabled = true;
+        let mut w = World::new(c, 1).unwrap();
+        let id = w.agents().next().unwrap().id;
+        let pos = w.agent(id).unwrap().pos;
+        let site = w.torus.index(pos) as u32;
+        let a = w.agent_mut(id).unwrap();
+        a.caches.insert(site, 3.0);
+        let s = a.spatial.as_mut().unwrap();
+        s.larder = 8.0;
+        s.delivery = Some(Delivery { amount: 4.0 });
+        s.guarding = true;
+        let v = serde_json::to_value(w.inspect(pos.x, pos.y).unwrap()).unwrap();
+        assert_eq!(
+            v["agent"]["spatial_hoarding"],
+            serde_json::json!({"home": {"x": pos.x,"y":pos.y}, "larder_trait": 0.15,"defense_trait":0.5,"larder":8.0,"delivery":4.0,"guarding":true,"observed_larders":0})
+        );
+        assert_eq!(
+            v["site"]["caches"],
+            serde_json::json!([
+                {"owner": id,"amount":3.0,"cheater_owner":false,"kind":"scatter"},
+                {"owner": id,"amount":8.0,"cheater_owner":false,"kind":"larder"}
+            ])
+        );
+        let homes = serde_json::to_value(w.minds_view()).unwrap();
+        assert_eq!(homes["homes"][0]["guarding"], true);
+        let mut scratch = Vec::new();
+        let mut flat = Vec::new();
+        w.cache_sites(&mut scratch, &mut flat);
+        assert_eq!(
+            flat[2], 3.0,
+            "scatter diamond does not include separately drawn larder"
+        );
+        let off = World::new(crate::config::Config::default(), 1).unwrap();
+        let p = off.agents().next().unwrap().pos;
+        let old = serde_json::to_value(off.inspect(p.x, p.y).unwrap()).unwrap();
+        assert!(old["agent"].get("spatial_hoarding").is_none());
+    }
+
     fn pixel(buf: &[u8], w: &World, x: u32, y: u32) -> [u8; 4] {
         let i = w.torus.index(Pos::new(x, y)) * 4;
         [buf[i], buf[i + 1], buf[i + 2], buf[i + 3]]

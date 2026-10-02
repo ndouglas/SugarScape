@@ -119,6 +119,11 @@ const GOLDEN: &[(&str, u64)] = &[
     ("watch-scroungers-only", 0x5d5bfa38a76c9368),
     ("watch-scroungers-forgo", 0xb1abef5e1f2bfac1),
     ("watch-ak", 0x7d3e4e1903e7d55f),
+    // Enabled spatial episodes include authoritative spatial configuration,
+    // stores, intentions, guard state and recorded observations.
+    ("spatial-scatter", 0xc7e8bffd577af990),
+    ("spatial-larder", 0x1cf19eed5ef4bae4),
+    ("spatial-larder-guard", 0x1293b223b1add84e),
     ("watch-arena", 0x35bf42deadfb8424),
 ];
 

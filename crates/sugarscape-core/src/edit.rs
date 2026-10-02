@@ -57,6 +57,8 @@ pub struct SiteCacheView {
     pub amount: f64,
     /// Whether its owner is a Minds 6 cheater (`Agent.cheater`).
     pub cheater_owner: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<&'static str>,
 }
 
 /// Minds 5–6: the small part of what the page draws of a Minds world beyond
@@ -89,6 +91,8 @@ pub struct HomeView {
     pub x: u32,
     pub y: u32,
     pub larder: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guarding: Option<bool>,
 }
 
 /// Minds 5: where a lab world is in its schedule (`minds::caching::lab`),
@@ -304,6 +308,20 @@ pub struct AgentView {
     pub theft: Option<TheftView>,
     /// Minds 8: watching state. `Some` only while `watching.on`.
     pub watching: Option<WatchView>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spatial_hoarding: Option<SpatialHoardingInspect>,
+}
+
+/// Extension-only inspection; pending delivery remains in ordinary holdings.
+#[derive(Clone, Debug, Serialize)]
+pub struct SpatialHoardingInspect {
+    pub home: Pos,
+    pub larder_trait: f64,
+    pub defense_trait: f64,
+    pub larder: f64,
+    pub delivery: Option<f64>,
+    pub guarding: bool,
+    pub observed_larders: usize,
 }
 
 /// Minds 3: what an agent remembers, for display.
@@ -601,6 +619,23 @@ impl World {
                 stolen_from_me: a.stolen_from_me,
                 fed: a.fed,
             }),
+            spatial_hoarding: a
+                .spatial
+                .as_ref()
+                .filter(|_| self.config.spatial_hoarding.enabled)
+                .map(|s| SpatialHoardingInspect {
+                    home: s.home,
+                    larder_trait: s.traits.larder,
+                    defense_trait: s.traits.defense,
+                    larder: s.larder,
+                    delivery: s.delivery.map(|d| d.amount),
+                    guarding: s.guarding,
+                    observed_larders: s
+                        .seen_larders
+                        .values()
+                        .filter(|v| crate::minds::caching::watching::fresh(self, v.tick))
+                        .count(),
+                }),
             watching: self.config.watching.on.then(|| WatchView {
                 watches: a.watches,
                 scrounger: a.watches && a.cheater,
@@ -628,12 +663,28 @@ impl World {
                 caches: {
                     let site = self.torus.index(pos) as u32;
                     self.agents()
-                        .filter_map(|a| {
-                            a.caches.get(&site).map(|&amount| SiteCacheView {
+                        .flat_map(|a| {
+                            let scatter = a.caches.get(&site).map(|&amount| SiteCacheView {
                                 owner: a.id,
                                 amount,
                                 cheater_owner: a.cheater,
-                            })
+                                kind: self.config.spatial_hoarding.enabled.then_some("scatter"),
+                            });
+                            let larder = a
+                                .spatial
+                                .as_ref()
+                                .filter(|s| {
+                                    self.config.spatial_hoarding.enabled
+                                        && self.torus.index(s.home) as u32 == site
+                                        && s.larder > 0.0
+                                })
+                                .map(|s| SiteCacheView {
+                                    owner: a.id,
+                                    amount: s.larder,
+                                    cheater_owner: a.cheater,
+                                    kind: Some("larder"),
+                                });
+                            scatter.into_iter().chain(larder)
                         })
                         .collect()
                 },
@@ -659,6 +710,19 @@ impl World {
                         x: p.x,
                         y: p.y,
                         larder: a.caches.get(&site).copied().unwrap_or(0.0),
+                        guarding: None,
+                    })
+                })
+                .collect()
+        } else if self.config.spatial_hoarding.enabled {
+            self.agents()
+                .filter_map(|a| {
+                    a.spatial.as_ref().map(|s| HomeView {
+                        id: a.id,
+                        x: s.home.x,
+                        y: s.home.y,
+                        larder: s.larder,
+                        guarding: Some(s.guarding),
                     })
                 })
                 .collect()

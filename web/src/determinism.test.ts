@@ -1,4 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
@@ -1619,5 +1622,84 @@ describe('Q-learning auctions through the engine', () => {
     const fp = e.tick;
     await e.advance(1);
     expect([e.tick, (e.latest as AuctionsStats).periods]).toEqual([fp, 15]);
+  });
+});
+
+async function withNativeTraceDirectory(check: (directory: string) => Promise<void>): Promise<void> {
+  const directory = mkdtempSync(`${tmpdir()}/sugarscape-native-parity-`);
+  try {
+    await check(directory);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+describe('native trace directory cleanup', () => {
+  it('removes the directory and trace after a successful check', async () => {
+    let directory = '';
+    try {
+      await withNativeTraceDirectory(async path => {
+        directory = path;
+        writeFileSync(`${path}/final-fix-cleanup-test.json`, '[]');
+        expect(existsSync(path)).toBe(true);
+        expect(path.startsWith(`${tmpdir()}/sugarscape-native-parity-`)).toBe(true);
+      });
+      expect(existsSync(directory)).toBe(false);
+    } finally {
+      rmSync(`${directory}/final-fix-cleanup-test.json`, { force: true });
+    }
+  });
+
+  it('removes the directory and trace when a check throws', async () => {
+    let directory = '';
+    try {
+      await expect(withNativeTraceDirectory(async path => {
+        directory = path;
+        writeFileSync(`${path}/final-fix-cleanup-test.json`, '[]');
+        throw new Error('trace check failed');
+      })).rejects.toThrow('trace check failed');
+      expect(existsSync(directory)).toBe(false);
+    } finally {
+      rmSync(`${directory}/final-fix-cleanup-test.json`, { force: true });
+    }
+  });
+
+  it('gives overlapping checks distinct directories', async () => {
+    await withNativeTraceDirectory(async first => {
+      await withNativeTraceDirectory(async second => {
+        expect(second).not.toBe(first);
+      });
+    });
+  });
+});
+
+describe('spatial episode presets', () => {
+  // npm pretest builds this binary from the current checkout; each case
+  // generates an independent native trace rather than frozen WASM output.
+  for (const id of ['spatial-scatter', 'spatial-larder', 'spatial-larder-guard']) {
+    it(`matches the native ${id} fingerprint at every tick from zero through 200`, async () => {
+      const root = fileURLToPath(new URL('../../', import.meta.url));
+      await withNativeTraceDirectory(async scratch => {
+        const tracePath = `${scratch}/task-7-native-${id}.json`;
+        execFileSync(`${root}target/release/sugarscape`, [
+          'run', '--preset', id, '--seed', '1', '--ticks', '200',
+          '--fingerprint-trace', tracePath,
+        ], { cwd: root, encoding: 'utf8' });
+        const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+        expect(trace.map(row => row.tick)).toEqual(Array.from({ length: 201 }, (_, tick) => tick));
+        const preset = presets.find(p => p.id === id)!;
+        const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });
+        for (const row of trace) {
+          if (row.tick > 0) await e.advance(1);
+          expect(e.tick).toBe(row.tick);
+          expect(await e.fingerprint(), `${id} tick ${row.tick}`).toBe(row.fingerprint);
+        }
+      });
+    });
+  }
+  it('offers the three fixed ordinary-world episodes through real WASM', () => {
+    const presets = JSON.parse(presets_json()) as { id: string }[];
+    const spatialPresetIds = presets.map(p => p.id).filter(id => id.startsWith('spatial-'));
+    expect(spatialPresetIds).toEqual(['spatial-scatter', 'spatial-larder', 'spatial-larder-guard']);
   });
 });

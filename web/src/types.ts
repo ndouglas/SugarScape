@@ -201,6 +201,14 @@ export interface Lab {
   food_first: boolean;
 }
 
+export interface SpatialHoarding {
+  enabled: boolean; larder: number; defense: number; guard: boolean; defense_slope: number; find_larder: number;
+}
+export type SpatialHoardingInspect = {
+  home: { x: number; y: number };
+  larder_trait: number; defense_trait: number; larder: number;
+  delivery: number | null; guarding: boolean; observed_larders: number;
+};
 export interface Config {
   width: number;
   height: number;
@@ -242,6 +250,7 @@ export interface Config {
   central?: Central;
   theft?: Theft;
   watching?: Watching;
+  spatial_hoarding?: SpatialHoarding;
   lab?: Lab | null;
   schedule: ScheduledChange[];
 }
@@ -1211,6 +1220,8 @@ export interface Snapshot {
   goods: { mean_holding: number; mean_metabolism: number; traded: number }[];
   pollution: number[];
   groups: number[];
+  /** Enabled spatial episode series; undefined ratios serialize as null. */
+  spatial_hoarding?: Record<string, number | null>;
   /** Under Axelrod's culture rule (milestone 14). */
   axelrod?: { distinct_cultures: number; settled: boolean };
   /** Minds 1's patch counts, on peaks maps with two or more peaks. */
@@ -1476,7 +1487,7 @@ export interface SiteView {
   caches?: SiteCacheView[];
 }
 /** Minds 5–6: a cache at a site: its owner, what it holds, and whether its owner is a cheater. */
-export interface SiteCacheView { owner: number; amount: number; cheater_owner: boolean }
+export interface SiteCacheView { owner: number; amount: number; cheater_owner: boolean; kind?: 'scatter' | 'larder' }
 
 /** Bits of each site's flags in `cache_sites`: a hoarder's cache, a cheater's, a larder (the core's `CACHE_*`). */
 export const CACHE_HOARDER = 1;
@@ -1510,7 +1521,7 @@ export interface MindsView {
   /** Whether the tick just computed (tick − 1) was a winter tick; null unless `seasons.mode` is global. */
   winter: boolean | null;
   /** Central worlds: every agent's home and what its larder holds. */
-  homes: { id: number; x: number; y: number; larder: number }[];
+  homes: { id: number; x: number; y: number; larder: number; guarding?: boolean }[];
   lab: LabView | null;
 }
 export interface LinkView { id: number; alive: boolean }
@@ -1569,6 +1580,7 @@ export interface AgentView {
   theft?: TheftView | null;
   /** Minds 8: watching state, while `watching.on`. */
   watching?: WatchingView | null;
+  spatial_hoarding?: SpatialHoardingInspect;
 }
 /**
  * Minds 8: whether the agent watches, whether it is a scrounger (watches and never buries), and the

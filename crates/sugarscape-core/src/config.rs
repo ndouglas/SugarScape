@@ -925,6 +925,38 @@ pub struct Central {
     pub enabled: bool,
 }
 
+/// Minds 9: reset-only spatial hoarding episode parameters.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SpatialHoarding {
+    pub enabled: bool,
+    pub larder: f64,
+    pub defense: f64,
+    pub guard: bool,
+    pub defense_slope: f64,
+    pub find_larder: f64,
+}
+
+impl Default for SpatialHoarding {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            larder: 0.15,
+            defense: 0.5,
+            guard: true,
+            defense_slope: 10.0,
+            find_larder: 0.25,
+        }
+    }
+}
+
+impl SpatialHoarding {
+    /// Omit the default extension from old-world exports.
+    fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
 /// Minds 5: which lab's protocol the scripted harness runs (Task 6).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -1163,6 +1195,7 @@ fn reset_only(path: &str) -> bool {
             | ["culture", "groups", _]
             | ["culture", "groups", _, "zeros", ..]
             | ["lab", ..]
+            | ["spatial_hoarding", ..]
             | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
 }
@@ -1241,6 +1274,8 @@ pub struct Config {
     #[serde(default)]
     pub watching: Watching,
     pub central: Central,
+    #[serde(default, skip_serializing_if = "SpatialHoarding::is_default")]
+    pub spatial_hoarding: SpatialHoarding,
     #[serde(default)]
     pub lab: Option<Lab>,
     pub schedule: Vec<ScheduledChange>,
@@ -1328,6 +1363,7 @@ impl Default for Config {
             theft: Theft::default(),
             watching: Watching::default(),
             central: Central { enabled: false },
+            spatial_hoarding: SpatialHoarding::default(),
             lab: None,
             schedule: Vec::new(),
         }
@@ -1393,7 +1429,9 @@ impl Config {
     /// Minds 6's pilfering bookkeeping (candidate counts, fates, theft
     /// series) runs under theft or watching.
     pub fn pilfering_on(&self) -> bool {
-        self.theft.is_on() || self.watching.on
+        self.theft.is_on()
+            || self.watching.on
+            || (self.spatial_hoarding.enabled && self.spatial_hoarding.find_larder > 0.0)
     }
 
     pub fn from_json(json: &str) -> Result<Self, Vec<FieldError>> {
@@ -2000,6 +2038,56 @@ impl Config {
             "caching.bury_cost",
             "a bury cost applies only in the field",
         );
+        for (name, value) in [
+            ("larder", self.spatial_hoarding.larder),
+            ("defense", self.spatial_hoarding.defense),
+            ("find_larder", self.spatial_hoarding.find_larder),
+        ] {
+            e.check(
+                value.is_finite() && (0.0..=1.0).contains(&value),
+                &format!("spatial_hoarding.{name}"),
+                "must be finite and between 0 and 1",
+            );
+        }
+        e.check(
+            self.spatial_hoarding.defense_slope.is_finite()
+                && self.spatial_hoarding.defense_slope > 0.0,
+            "spatial_hoarding.defense_slope",
+            "must be finite and positive",
+        );
+        if self.spatial_hoarding.enabled {
+            for (ok, message) in [
+                (self.goods.len() == 1, "goods must contain exactly one good"),
+                (
+                    self.movement.mode == MoveMode::Walk,
+                    "movement.mode must be walk",
+                ),
+                (self.movement.speed == 1, "movement.speed must be 1"),
+                (
+                    self.caching.capacity > 0,
+                    "caching.capacity must be positive",
+                ),
+                (!self.central.enabled, "central.enabled must be false"),
+                (self.lab.is_none(), "lab must be absent"),
+                (!self.caching.mixed, "caching.mixed must be false"),
+                (
+                    self.caching.rule == CachingRule::Even,
+                    "caching.rule must be even",
+                ),
+                (!self.sex.enabled, "sex.enabled must be false"),
+                (
+                    !self.replacement.enabled,
+                    "replacement.enabled must be false",
+                ),
+                (!self.combat.enabled, "combat.enabled must be false"),
+                (!self.disease.enabled, "disease.enabled must be false"),
+                (!self.credit.enabled, "credit.enabled must be false"),
+                (!self.trade.enabled, "trade.enabled must be false"),
+                (!self.lifespan.enabled, "lifespan.enabled must be false"),
+            ] {
+                e.check(ok, "spatial_hoarding.enabled", message);
+            }
+        }
         let theft_field = if self.theft.find > 0.0 {
             "theft.find"
         } else {
@@ -2218,6 +2306,10 @@ impl Config {
     /// Decision 7).
     pub fn with_path(&self, path: &str, value: &serde_json::Value) -> Result<Config, FieldError> {
         let mut json = serde_json::to_value(self).expect("config serializes");
+        // The default extension is omitted from exports, but reset controls
+        // still need to address every field through the dotted-path API.
+        json["spatial_hoarding"] =
+            serde_json::to_value(self.spatial_hoarding).expect("spatial hoarding serializes");
         let unknown = || FieldError::new("schedule", format!("unknown field {path}"));
         let mut slot = &mut json;
         for key in path.split('.') {
@@ -2371,6 +2463,36 @@ impl Config {
         if self.central.enabled != next.central.enabled {
             out.push(FieldError::new("central.enabled", msg));
         }
+        for (changed, path) in [
+            (
+                self.spatial_hoarding.enabled != next.spatial_hoarding.enabled,
+                "enabled",
+            ),
+            (
+                self.spatial_hoarding.larder != next.spatial_hoarding.larder,
+                "larder",
+            ),
+            (
+                self.spatial_hoarding.defense != next.spatial_hoarding.defense,
+                "defense",
+            ),
+            (
+                self.spatial_hoarding.guard != next.spatial_hoarding.guard,
+                "guard",
+            ),
+            (
+                self.spatial_hoarding.defense_slope != next.spatial_hoarding.defense_slope,
+                "defense_slope",
+            ),
+            (
+                self.spatial_hoarding.find_larder != next.spatial_hoarding.find_larder,
+                "find_larder",
+            ),
+        ] {
+            if changed {
+                out.push(FieldError::new(format!("spatial_hoarding.{path}"), msg));
+            }
+        }
         if self.lab != next.lab {
             out.push(FieldError::new("lab", msg));
         }
@@ -2388,6 +2510,139 @@ mod tests {
             .into_iter()
             .map(|e| e.field)
             .collect()
+    }
+
+    fn spatial_config() -> Config {
+        let mut c = Config::default();
+        c.spatial_hoarding.enabled = true;
+        c.movement.mode = MoveMode::Walk;
+        c.caching.rule = CachingRule::Even;
+        c.caching.capacity = 50;
+        c
+    }
+
+    #[test]
+    fn spatial_hoarding_older_and_partial_configs_load_defaults() {
+        let older = Config::from_json("{}").unwrap();
+        assert!(!older.spatial_hoarding.enabled);
+        assert_eq!(older.spatial_hoarding.larder, 0.15);
+        assert!(serde_json::to_value(&older)
+            .unwrap()
+            .get("spatial_hoarding")
+            .is_none());
+        for mut json in [
+            serde_json::json!({}),
+            serde_json::to_value(Config::default()).unwrap(),
+        ] {
+            json["spatial_hoarding"] = serde_json::json!({"guard": false});
+            let c = Config::from_json(&json.to_string()).unwrap();
+            assert!(!c.spatial_hoarding.guard);
+            assert_eq!(c.spatial_hoarding.defense, 0.5);
+            assert_eq!(c.spatial_hoarding.defense_slope, 10.0);
+            assert_eq!(c.spatial_hoarding.find_larder, 0.25);
+        }
+    }
+
+    #[test]
+    fn spatial_hoarding_invalid_scalars_are_rejected_even_when_disabled() {
+        for path in ["larder", "defense", "find_larder"] {
+            for value in [-0.1, 1.1] {
+                let mut json = serde_json::to_value(Config::default()).unwrap();
+                json["spatial_hoarding"] = serde_json::json!({path: value});
+                let errors = Config::from_json(&json.to_string()).unwrap_err();
+                assert!(errors
+                    .iter()
+                    .any(|e| e.field == format!("spatial_hoarding.{path}")));
+            }
+        }
+        for value in [f64::NAN, f64::INFINITY] {
+            for field in ["larder", "defense", "find_larder", "defense_slope"] {
+                let mut c = Config::default();
+                match field {
+                    "larder" => c.spatial_hoarding.larder = value,
+                    "defense" => c.spatial_hoarding.defense = value,
+                    "find_larder" => c.spatial_hoarding.find_larder = value,
+                    _ => c.spatial_hoarding.defense_slope = value,
+                }
+                assert!(fields(c.validate()).contains(&format!("spatial_hoarding.{field}")));
+            }
+        }
+        for slope in [0.0, -1.0] {
+            let mut c = Config::default();
+            c.spatial_hoarding.defense_slope = slope;
+            assert!(fields(c.validate()).contains(&"spatial_hoarding.defense_slope".to_owned()));
+        }
+    }
+
+    #[test]
+    fn spatial_hoarding_rejects_each_incompatible_rule() {
+        type Edit = fn(&mut Config);
+        let cases: [(&str, Edit); 15] = [
+            ("goods", |c| c.add_good(Good::sugar())),
+            ("movement.mode", |c| c.movement.mode = MoveMode::Jump),
+            ("movement.speed", |c| c.movement.speed = 2),
+            ("caching.capacity", |c| c.caching.capacity = 0),
+            ("central.enabled", |c| c.central.enabled = true),
+            ("lab", |c| {
+                c.lab = Some(Lab {
+                    protocol: LabProtocol::Raby,
+                    food_first: true,
+                })
+            }),
+            ("caching.mixed", |c| c.caching.mixed = true),
+            ("caching.rule", |c| c.caching.rule = CachingRule::None),
+            ("sex.enabled", |c| c.sex.enabled = true),
+            ("replacement.enabled", |c| c.replacement.enabled = true),
+            ("combat.enabled", |c| c.combat.enabled = true),
+            ("disease.enabled", |c| c.disease.enabled = true),
+            ("credit.enabled", |c| c.credit.enabled = true),
+            ("trade.enabled", |c| c.trade.enabled = true),
+            ("lifespan.enabled", |c| c.lifespan.enabled = true),
+        ];
+        spatial_config().validate().unwrap();
+        for (path, edit) in cases {
+            let mut c = spatial_config();
+            edit(&mut c);
+            assert!(
+                c.validate()
+                    .unwrap_err()
+                    .iter()
+                    .any(|e| e.field == "spatial_hoarding.enabled" && e.message.contains(path)),
+                "{path}"
+            );
+        }
+    }
+
+    #[test]
+    fn spatial_hoarding_all_fields_are_reset_only() {
+        let c = Config::default();
+        for (path, value) in [
+            ("spatial_hoarding", serde_json::json!({})),
+            ("spatial_hoarding.enabled", serde_json::json!(true)),
+            ("spatial_hoarding.larder", serde_json::json!(0.3)),
+            ("spatial_hoarding.defense", serde_json::json!(0.7)),
+            ("spatial_hoarding.guard", serde_json::json!(false)),
+            ("spatial_hoarding.defense_slope", serde_json::json!(20.0)),
+            ("spatial_hoarding.find_larder", serde_json::json!(0.5)),
+        ] {
+            let mut scheduled = c.clone();
+            scheduled.schedule = vec![change(1, path, value.clone())];
+            assert!(
+                scheduled
+                    .validate()
+                    .unwrap_err()
+                    .iter()
+                    .any(|e| e.message.contains("only on reset")),
+                "{path}"
+            );
+            if path != "spatial_hoarding" {
+                let next = c.with_path(path, &value).unwrap();
+                assert!(
+                    c.structural_changes(&next).iter().any(|e| e.field == path),
+                    "{path}"
+                );
+            }
+        }
     }
 
     #[test]

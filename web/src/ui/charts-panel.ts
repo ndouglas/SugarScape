@@ -23,6 +23,7 @@ import {
   hoardSeasonTable,
   lineData,
   MODEL_CHARTS,
+  SPATIAL_HOARDING_CHARTS,
   overlayData,
   positionBars,
   positionSteps,
@@ -116,6 +117,10 @@ const SECTIONS: { id: Section; title?: string; shown: (c: Config) => boolean }[]
 ];
 
 const CHARTS: ChartDef[] = [
+  ...SPATIAL_HOARDING_CHARTS.map((chart): ChartDef => ({
+    title: chart.title, kind: 'time', section: 'top', lines: fixed(chart.lines),
+    shown: (c) => c.spatial_hoarding?.enabled === true,
+  })),
   { title: 'Population', kind: 'time', section: 'top', lines: fixed([{ key: 'population', label: 'Agents', color: '--c1' }]) },
   { title: 'Gini coefficient', kind: 'time', section: 'top', lines: fixed([{ key: 'gini', label: 'Gini', color: '--c2' }]), range: [0, 1] },
   {

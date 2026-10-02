@@ -10,6 +10,8 @@ use crate::bits::Bits;
 use crate::config::{Config, FieldError, FounderAges, Placement, Who, MAX_GOODS};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
+pub use crate::minds::spatial_hoarding::state::EpisodeProbe;
+use crate::minds::spatial_hoarding::state::{FounderTraits, SpatialState};
 use crate::rng::{self, SimRng};
 use crate::rules;
 use crate::stats::{Snapshot, Stats};
@@ -136,6 +138,11 @@ pub struct TickEvents {
     /// Minds 5: sugar left in the caches of agents removed this tick (it
     /// leaves the world with them).
     pub cache_lost: f64,
+    /// Minds 9 per-kind flows; absent on ordinary worlds.
+    pub spatial_stores: Option<crate::minds::spatial_hoarding::stores::StoreEvents>,
+    /// Actual positive tick-start stores, scatter then larder; independent of discovery.
+    /// Diagnostic only: captured before actions, absent on ordinary worlds.
+    pub spatial_exposure: Option<[crate::minds::spatial_hoarding::runner::ExposureTotals; 2]>,
     /// Minds 5: Σ over this tick's `digs` of the dug cache's age (ticks since
     /// its first unit was buried).
     pub dig_ages_sum: u64,
@@ -156,7 +163,11 @@ pub struct TickEvents {
     pub caches_pilfered: u32,
     /// The caches counted in `caches_pilfered` this tick (for the once
     /// only); empty and unallocated unless something was pilfered.
-    pub(crate) pilfered_caches: std::collections::BTreeSet<(AgentId, u32)>,
+    pub(crate) pilfered_caches: std::collections::BTreeSet<(
+        AgentId,
+        u32,
+        crate::minds::spatial_hoarding::state::StoreKind,
+    )>,
     /// Minds 6: caches in the world at the tick's start (after the
     /// schedule), counted under theft or watching (`pilfering_on()`): Σ over agents of
     /// their caches. Each is a foreign cache to every agent but its owner,
@@ -223,6 +234,11 @@ pub struct World {
     /// Chapter V's master list of diseases; a disease's id is its index.
     pub diseases: Vec<Bits>,
     agents: BTreeMap<AgentId, Agent>,
+    /// Checked supplied traits, retained for founder statistics after deaths.
+    /// None in ordinary worlds; slot order is ascending founder id.
+    pub(crate) spatial_cohort: Option<Vec<FounderTraits>>,
+    /// Runner-only episode sensitivity settings.
+    pub spatial_probe: EpisodeProbe,
     occupancy: Vec<Option<AgentId>>,
     /// Row-major, one entry per site: 0 free, 1 a fence, 2 opaque. Built once
     /// from `config.walls` (walls change only on reset, except the Minds 5
@@ -295,6 +311,28 @@ impl World {
         Self::with_capacities(config, seed, None)
     }
 
+    /// A spatial episode with checked per-slot traits and strategy flags.
+    /// Slots follow ascending founder ids and are applied before tick zero.
+    pub fn new_with_spatial_cohort(
+        config: Config,
+        seed: u64,
+        cohort: &[FounderTraits],
+    ) -> Result<Self, Vec<FieldError>> {
+        Self::initialize(config, seed, &[], Some(cohort))
+    }
+
+    /// Checked spatial cohort with explicit sensitivity settings.
+    pub fn new_with_spatial_probe(
+        config: Config,
+        seed: u64,
+        cohort: &[FounderTraits],
+        probe: EpisodeProbe,
+    ) -> Result<Self, Vec<FieldError>> {
+        let mut world = Self::initialize(config, seed, &[], Some(cohort))?;
+        world.spatial_probe = probe;
+        Ok(world)
+    }
+
     /// Like `new`, with good 0's capacities supplied (a painted map from a
     /// pre-N-goods share link).
     pub fn with_capacities(
@@ -312,7 +350,48 @@ impl World {
         seed: u64,
         landscapes: &[Option<Vec<f64>>],
     ) -> Result<Self, Vec<FieldError>> {
+        Self::initialize(config, seed, landscapes, None)
+    }
+
+    fn initialize(
+        config: Config,
+        seed: u64,
+        landscapes: &[Option<Vec<f64>>],
+        cohort: Option<&[FounderTraits]>,
+    ) -> Result<Self, Vec<FieldError>> {
         config.validate()?;
+        if let Some(cohort) = cohort {
+            let mut errors = Vec::new();
+            if !config.spatial_hoarding.enabled {
+                errors.push(FieldError::new(
+                    "spatial_hoarding.enabled",
+                    "a supplied cohort needs spatial hoarding enabled",
+                ));
+            }
+            if cohort.len() != config.population as usize {
+                errors.push(FieldError::new(
+                    "spatial_hoarding.cohort",
+                    format!(
+                        "expected {} founder slots, got {}",
+                        config.population,
+                        cohort.len()
+                    ),
+                ));
+            }
+            for (slot, traits) in cohort.iter().enumerate() {
+                for (name, value) in [("larder", traits.larder), ("defense", traits.defense)] {
+                    if !value.is_finite() || !(0.0..=1.0).contains(&value) {
+                        errors.push(FieldError::new(
+                            format!("spatial_hoarding.cohort.{slot}.{name}"),
+                            "must be finite and between 0 and 1",
+                        ));
+                    }
+                }
+            }
+            if !errors.is_empty() {
+                return Err(errors);
+            }
+        }
         let torus = Torus::new(config.width, config.height);
         let n = config.goods.len();
         if landscapes.len() > n {
@@ -388,6 +467,8 @@ impl World {
             truffles,
             diseases: Vec::new(),
             agents: BTreeMap::new(),
+            spatial_cohort: cohort.map(<[FounderTraits]>::to_vec),
+            spatial_probe: EpisodeProbe::default(),
             occupancy: vec![None; torus.len()],
             walls,
             regions,
@@ -645,6 +726,22 @@ impl World {
         if self.config.central.enabled && agent.home.is_none() {
             agent.home = Some(agent.pos);
         }
+        if self.config.spatial_hoarding.enabled {
+            let traits = self
+                .spatial_cohort
+                .as_ref()
+                .and_then(|cohort| cohort.get((id - 1) as usize))
+                .copied()
+                .unwrap_or(FounderTraits {
+                    larder: self.config.spatial_hoarding.larder,
+                    defense: self.config.spatial_hoarding.defense,
+                    cheater: agent.cheater,
+                    watches: agent.watches,
+                });
+            agent.cheater = traits.cheater;
+            agent.watches = traits.watches;
+            agent.spatial = Some(SpatialState::new(agent.pos, traits));
+        }
         self.occupancy[i] = Some(id);
         self.agents.insert(id, agent);
         Ok(id)
@@ -804,6 +901,66 @@ impl World {
                 eat(l.good as u64);
             }
         }
+        // Minds 9: append the complete authoritative extension only while enabled.
+        // Keep the legacy byte stream untouched; fate/event/exposure histories
+        // remain optional diagnostics and never enter this hash.
+        if self.config.spatial_hoarding.enabled {
+            let c = &self.config.spatial_hoarding;
+            eat(0x5350_4154_4941_4c39); // SPATIAL9 domain separator / enabled gate
+            eat(c.larder.to_bits());
+            eat(c.defense.to_bits());
+            eat(u64::from(c.guard));
+            eat(c.defense_slope.to_bits());
+            eat(c.find_larder.to_bits());
+            eat(u64::from(self.spatial_probe.guard_harvest));
+            eat(u64::from(self.spatial_probe.scatter_first));
+            eat(self.agents.len() as u64);
+            for a in self.agents.values() {
+                eat(a.id);
+                eat(u64::from(a.cheater));
+                eat(u64::from(a.watches));
+                eat(a.cache_since.len() as u64);
+                for (&site, &tick) in &a.cache_since {
+                    eat(u64::from(site));
+                    eat(tick);
+                }
+                eat(a.seen.len() as u64);
+                for (&(site, owner), seen) in &a.seen {
+                    eat(u64::from(site));
+                    eat(owner);
+                    eat(seen.amount.to_bits());
+                    eat(seen.tick);
+                }
+                eat(u64::from(a.spatial.is_some()));
+                if let Some(s) = &a.spatial {
+                    eat(u64::from(s.home.x));
+                    eat(u64::from(s.home.y));
+                    eat(s.traits.larder.to_bits());
+                    eat(s.traits.defense.to_bits());
+                    eat(u64::from(s.traits.cheater));
+                    eat(u64::from(s.traits.watches));
+                    eat(s.larder.to_bits());
+                    eat(u64::from(s.larder_since.is_some()));
+                    if let Some(tick) = s.larder_since {
+                        eat(tick);
+                    }
+                    eat(u64::from(s.delivery.is_some()));
+                    if let Some(delivery) = s.delivery {
+                        eat(delivery.amount.to_bits());
+                    }
+                    eat(u64::from(s.guarding));
+                    eat(s.seen_larders.len() as u64);
+                    // BTreeMap preserves owner-id order, including dead owners.
+                    for (&owner, seen) in &s.seen_larders {
+                        eat(owner);
+                        eat(u64::from(seen.home.x));
+                        eat(u64::from(seen.home.y));
+                        eat(seen.amount.to_bits());
+                        eat(seen.tick);
+                    }
+                }
+            }
+        }
         h
     }
 
@@ -819,6 +976,26 @@ impl World {
         let agent = self.agents.remove(&id)?;
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
+        }
+        if self.config.spatial_hoarding.enabled {
+            use crate::minds::spatial_hoarding::{state::StoreKind, stores};
+            let scatter_lost = agent.caches.values().sum::<f64>();
+            stores::events(self, StoreKind::Scatter)
+                .expect("enabled")
+                .lost += scatter_lost;
+            if let Some(s) = &agent.spatial {
+                self.events.cache_lost += s.larder;
+                stores::events(self, StoreKind::Larder)
+                    .expect("enabled")
+                    .lost += s.larder;
+                crate::minds::caching::fates::lose_larder(
+                    self,
+                    id,
+                    self.torus.index(s.home) as u32,
+                    s.larder,
+                    s.larder_since.unwrap_or(self.tick),
+                );
+            }
         }
         self.events.fed_lost += agent.fed;
         crate::minds::caching::fates::close_lost(self, id, &agent.caches, &agent.cache_since);
@@ -933,6 +1110,9 @@ impl World {
     /// environment updates and everyone ages.
     pub fn step(&mut self) {
         self.events = TickEvents::default();
+        if self.config.spatial_hoarding.enabled {
+            self.events.spatial_exposure = Some(crate::stats::spatial_store_exposure(self));
+        }
         self.apply_schedule();
         if self.config.pilfering_on() {
             crate::minds::caching::theft::count_candidates(self);
@@ -940,6 +1120,7 @@ impl World {
         // Minds 8: forget seen caches older than `span`, before anyone moves.
         if self.config.watching.on {
             crate::minds::caching::watching::sweep(self);
+            crate::minds::spatial_hoarding::watching::sweep(self);
         }
         // Minds 5: a lab world applies its protocol's day (placement, food,
         // doorways, the test evening's burying) before anyone moves.
@@ -949,6 +1130,7 @@ impl World {
         if self.config.disease.enabled {
             rules::disease::outbreaks(self);
         }
+        crate::minds::spatial_hoarding::guard::prepare_guards(self);
         let mut order = self.agent_ids();
         order.shuffle(&mut self.rng);
         for id in order {
@@ -1261,6 +1443,38 @@ mod tests {
             .unwrap()
             .diseases
             .is_empty());
+    }
+
+    #[test]
+    fn spatial_clone_preserves_exposure_and_hash_ignores_optional_diagnostics() {
+        let config = crate::presets::all()
+            .into_iter()
+            .find(|p| p.id == "spatial-larder-guard")
+            .unwrap()
+            .config;
+        let mut w = World::new(config, 7).unwrap();
+        w.step();
+        let fingerprint = w.fingerprint();
+        w.events.spatial_exposure = Some([
+            crate::minds::spatial_hoarding::runner::ExposureTotals {
+                cache_ticks: 3,
+                stock_ticks: 7.0,
+            },
+            crate::minds::spatial_hoarding::runner::ExposureTotals {
+                cache_ticks: 5,
+                stock_ticks: 11.0,
+            },
+        ]);
+        w.record_fates = true;
+        w.cache_log_full = true;
+        assert_eq!(w.fingerprint(), fingerprint);
+        let kept = w.clone();
+        assert_eq!(kept.events.spatial_exposure, w.events.spatial_exposure);
+        assert_eq!(
+            serde_json::to_string(&Snapshot::of(&kept)).unwrap(),
+            serde_json::to_string(&Snapshot::of(&w)).unwrap()
+        );
+        assert_eq!(kept.fingerprint(), fingerprint);
     }
 
     #[test]
