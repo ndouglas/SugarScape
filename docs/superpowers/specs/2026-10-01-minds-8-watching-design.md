@@ -134,7 +134,9 @@ take it on purpose. Then ask three questions:
   bury. At unequal shares the overlap is whatever the rule gives, and the page says so where both are set.
 - **`span` 7 is a gap choice.** H&P show observers recovering seen caches the next day and none at 14 days,
   and nothing between. We take 7, about midway, and every claim is reported across span 1, 3, 7 and 13. A
-  tick stands for a day, as in Minds 6.
+  tick stands for a day, as in Minds 6. **Superseded (second round):** "nothing between" is false. Bednekoff
+  and Balda's pinyon jays relocated exact sites at 2 days and only general areas at 7 (1996a, p. 823), so 7
+  is at the generous end of what's known, and the second round reports spans 1, 2, 3, 7 and 13.
 - **`raid_when: always` is the default.** Ravens raided within minutes (B&K), and Minds 6's thieves take
   caches all year. `hungry` puts raiders on the owners' terms: a seen cache is a place to go only while the
   watcher holds less than R / 2. This is the same threshold as Minds 5's hunger, but it doesn't require the

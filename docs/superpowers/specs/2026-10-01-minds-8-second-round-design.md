@@ -313,9 +313,10 @@ threshold was changed. The results are in `survey/out/minds8b-results.md`, `mind
     (2c 0.012, 95 % interval 0.008 to 0.017; 2d 0.003, −0.002 to 0.007) are reported beside the verdicts.
 17. **2b's 62 of 100 under all three span-7 settings is a coincidence of totals.** The runs were recounted,
     and the per-run-set counts differ.
-18. **Spans 1 and 2 reverse three results.** Watching's fresh-cache hazard falls below stumbling's (1a), the
-    condition doesn't flip (2a), and variant forgo's shortfall shrinks with share (3a, rising). Span 7 sits at
-    the generous end of what the sources support, so the docs present the judged results as an upper bound.
+18. **Spans 1 and 2 reverse four results.** Watching's fresh-cache hazard falls below stumbling's (1a), the
+    condition doesn't flip (2a), variant forgo's shortfall shrinks with share (3a, rising), and variant bury's
+    watcher lead isn't detected (3c fails at spans 1, 2 and 3: pooled 0.0007, −0.0015, −0.0027). Span 7 sits
+    at the generous end of what the sources support, so the docs present the judged results as an upper bound.
 19. **`watch-scroungers-only`'s shortfall predates watching.** With watching off, the same agents survive 48 %
     against the hoarders' 70 %, and with it 49 % against 65 %. The first round's "pure scroungers trail at
     every share" describes agents who never cache, not scrounging. The preset's title and description say so.

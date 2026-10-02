@@ -2805,9 +2805,11 @@ pre-mortem of what each hypothesis predicts. Its results are the milestone's.
     covers the site remembers the cache: the site is on one of the four lattice lines from it,
     within its vision, and not behind an opaque wall. The owner never knows it was seen.
   - **Memory** (`watching.span`, default 7 ticks). Heinrich and Pepper give recovery the next day
-    and none at 14 days, and nothing between; 7 is about midway, a gap choice. Every claim is
-    reported at span 1, 2, 3, 7 and 13. An entry is forgotten when it is older than the span, when
-    its watcher arrives on the site, or when its watcher dies.
+    and none at 14 days. Bednekoff and Balda's pinyon jays relocated exact sites at 2 days but only
+    general areas at 7 (1996a, p. 823), and Bugnyar and Kotrschal summarize observational memory as
+    "a few days" (p. 189). So 7 is at the generous end of what's known. Every claim is reported at
+    span 1, 2, 3, 7 and 13. An entry is forgotten when it is older than the span, when its watcher
+    arrives on the site, or when its watcher dies.
   - **Going to a seen cache.** Remembered caches join the watcher's candidates like its own caches,
     valued at the amount it saw buried (`value: amount`, the default), or at that capped by its room
     under the carrying limit (`value: room`). A cache emptied since still looks full. A walk that
@@ -2867,11 +2869,12 @@ agent-ticks alive per founder over ticks 1–200 ÷ 200.
   `watch-half` and `watch-ak`) and changes no verdict.
 - **An upper bound, sensitive to the span.** Watchers here see every burial in sight and remember it
   exactly, cachers never hide and owners never defend (both P3), and a 7-tick memory is at the
-  generous end of what's known. With a memory of 1 or 2 ticks, three results reverse. Watching's
+  generous end of what's known. With a memory of 1 or 2 ticks, four results reverse. Watching's
   hazard falls below stumbling's (0.85 % and 2.49 % a day), the condition doesn't flip (1.72 and
-  1.10), and the forgoing scroungers' shortfall shrinks as they become common. Bednekoff and Balda's
-  pinyon jays relocated exact sites after two days, and after seven days, in a larger room, found
-  only the general areas (1996b, a).
+  1.10), the forgoing scroungers' shortfall shrinks as they become common, and the burying watchers'
+  lead isn't detected (pooled 0.0007 and −0.0015; also −0.0027 at span 3), so 3c holds only at spans
+  7 and 13. Bednekoff and Balda's pinyon jays relocated exact sites after two days and only the
+  general areas after seven (1996a, p. 823).
 
 | Claim | Verdict |
 |---|---|
