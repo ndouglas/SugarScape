@@ -22,12 +22,8 @@ use crate::world::World;
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
     if world.config.spatial_hoarding.enabled {
-        let dug_before = world.events.dug;
-        if spatial_hoarding::guard::guard_turn(world, id) {
-            return Harvest {
-                dug: world.events.dug - dug_before,
-                ..Harvest::default()
-            };
+        if let Some(harvest) = spatial_hoarding::guard::guard_turn(world, id) {
+            return harvest;
         }
         let a = world.agent(id).expect("live agent");
         if a.spatial.as_ref().is_some_and(|s| s.delivery.is_some()) {

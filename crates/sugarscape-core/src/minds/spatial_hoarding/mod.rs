@@ -5,6 +5,7 @@ pub(crate) mod delivery;
 pub(crate) mod guard;
 pub mod state;
 pub mod stores;
+pub(crate) mod watching;
 
 use crate::agent::AgentId;
 use crate::minds::caching;
@@ -27,7 +28,7 @@ mod controller_tests;
 
 #[cfg(test)]
 mod tests {
-    use super::state::FounderTraits;
+    use super::state::{EpisodeProbe, FounderTraits};
     use crate::config::{CachingRule, Config, MoveMode};
     use crate::stats::Snapshot;
     use crate::world::World;
@@ -168,6 +169,50 @@ mod tests {
                     "spatial_hoarding.cohort.2.defense"
                 ]
             );
+        }
+    }
+
+    #[test]
+    fn spatial_hoarding_probe_constructor_preserves_checked_cohort_validation() {
+        let probe = EpisodeProbe {
+            guard_harvest: true,
+            scatter_first: true,
+        };
+        let world = World::new_with_spatial_probe(config(), 7, &cohort(), probe).unwrap();
+        assert_eq!(world.spatial_probe, probe);
+        assert_eq!(world.agents().count(), 3);
+        let mut disabled = config();
+        disabled.spatial_hoarding.enabled = false;
+        assert_eq!(
+            World::new_with_spatial_probe(disabled, 7, &cohort(), probe)
+                .err()
+                .unwrap()[0]
+                .field,
+            "spatial_hoarding.enabled"
+        );
+        assert_eq!(
+            World::new_with_spatial_probe(config(), 7, &cohort()[..2], probe)
+                .err()
+                .unwrap()[0]
+                .field,
+            "spatial_hoarding.cohort"
+        );
+    }
+
+    #[test]
+    fn spatial_hoarding_probe_flags_do_not_change_disabled_world() {
+        let mut c = config();
+        c.spatial_hoarding.enabled = false;
+        let mut ordinary = World::new(c, 7).unwrap();
+        let mut probed = ordinary.clone();
+        probed.spatial_probe = EpisodeProbe {
+            guard_harvest: true,
+            scatter_first: true,
+        };
+        for _ in 0..3 {
+            ordinary.step();
+            probed.step();
+            assert_eq!(ordinary.fingerprint(), probed.fingerprint());
         }
     }
 }

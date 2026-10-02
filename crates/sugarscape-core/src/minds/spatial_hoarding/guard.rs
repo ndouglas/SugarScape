@@ -6,6 +6,7 @@ use super::{access, recover_own, stores};
 use crate::agent::AgentId;
 use crate::minds::caching;
 use crate::portable::exp_neg;
+use crate::rules::Harvest;
 use crate::world::World;
 
 fn probability(x: f64) -> f64 {
@@ -57,18 +58,32 @@ pub(crate) fn prepare_guards(world: &mut World) {
     }
 }
 
-/// True consumes the action. Caller reports own recovery as Harvest::dug.
-pub(crate) fn guard_turn(world: &mut World, id: AgentId) -> bool {
+/// A guard action reports own recovery and, only under the probe, site harvest.
+pub(crate) fn guard_turn(world: &mut World, id: AgentId) -> Option<Harvest> {
     let guarding = world
         .agent(id)
         .and_then(|a| a.spatial.as_ref())
         .is_some_and(|s| s.guarding);
     if !guarding {
-        return false;
+        return None;
     }
     let recovered = recover_own(world, id);
     let e = &mut stores::tick_events(world).expect("enabled").guard;
     e.executed += 1;
     e.recovered += recovered;
-    true
+    let mut harvest = Harvest {
+        dug: recovered,
+        ..Harvest::default()
+    };
+    if recovered == 0.0 && world.spatial_probe.guard_harvest {
+        let a = world.agent(id).expect("live guard");
+        let (at, used, remembers) = (a.pos, a.holdings[0], a.remembers);
+        let gathered = crate::rules::movement::gather_site(world, id, at, used, remembers);
+        stores::tick_events(world)
+            .expect("enabled")
+            .guard
+            .probe_harvest += gathered.gathered[0];
+        harvest.gathered = gathered.gathered;
+    }
+    Some(harvest)
 }

@@ -162,7 +162,7 @@ pub(crate) fn see(world: &mut World, owner: AgentId, site: u32, q: f64) {
 /// The watchers other than `owner` whose sight covers site index `site`:
 /// the four lattice lines walked out from the site, each stopped at an
 /// opaque wall, up to the largest vision any watcher has.
-fn watchers_of(world: &World, owner: AgentId, site: u32) -> BTreeSet<AgentId> {
+pub(crate) fn watchers_of(world: &World, owner: AgentId, site: u32) -> BTreeSet<AgentId> {
     let mut out = BTreeSet::new();
     let reach = world
         .agents()
@@ -251,7 +251,7 @@ pub(crate) fn join_seen(
 /// The cap on a seen cache's candidate value: under `value: room`, `id`'s
 /// room under the carrying limit (C − holdings, at least 0); infinite under
 /// `amount`, with no limit, or under `loot: eat` (eaten loot needs no room).
-fn room_cap(world: &World, id: AgentId) -> f64 {
+pub(crate) fn room_cap(world: &World, id: AgentId) -> f64 {
     let c = &world.config;
     let capacity = c.caching.capacity;
     if c.watching.value != SeenValue::Room || capacity == 0 || c.theft.loot == Loot::Eat {
@@ -275,9 +275,11 @@ pub(crate) fn forgoes(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
     a.watches
         && a.cheater
-        && !a.seen.is_empty()
         && raiding(world, id)
-        && a.seen.values().any(|e| fresh(world, e.tick))
+        && (a.seen.values().any(|e| fresh(world, e.tick))
+            || a.spatial
+                .as_ref()
+                .is_some_and(|s| s.seen_larders.values().any(|e| fresh(world, e.tick))))
 }
 
 /// What `id` believes is buried at `p` by others it saw (summed over
@@ -309,7 +311,7 @@ pub(crate) fn seen_value(world: &World, id: AgentId, p: Pos) -> Option<f64> {
 /// threshold, without `hungry`'s requirement that it has caches of its
 /// own). It stays R / 2 under the survey probe `probe_dig_at_reserve` and
 /// under `caching.dig_below: reserve`, by design: the spec's threshold.
-fn raiding(world: &World, id: AgentId) -> bool {
+pub(crate) fn raiding(world: &World, id: AgentId) -> bool {
     match world.config.watching.raid_when {
         RaidWhen::Always => true,
         RaidWhen::Hungry => {

@@ -10,6 +10,7 @@ use crate::bits::Bits;
 use crate::config::{Config, FieldError, FounderAges, Placement, Who, MAX_GOODS};
 use crate::geometry::{Pos, Torus};
 use crate::landscape::{self, Site};
+pub use crate::minds::spatial_hoarding::state::EpisodeProbe;
 use crate::minds::spatial_hoarding::state::{FounderTraits, SpatialState};
 use crate::rng::{self, SimRng};
 use crate::rules;
@@ -233,6 +234,8 @@ pub struct World {
     /// Checked supplied traits, retained for founder statistics after deaths.
     /// None in ordinary worlds; slot order is ascending founder id.
     pub(crate) spatial_cohort: Option<Vec<FounderTraits>>,
+    /// Runner-only episode sensitivity settings.
+    pub spatial_probe: EpisodeProbe,
     occupancy: Vec<Option<AgentId>>,
     /// Row-major, one entry per site: 0 free, 1 a fence, 2 opaque. Built once
     /// from `config.walls` (walls change only on reset, except the Minds 5
@@ -313,6 +316,18 @@ impl World {
         cohort: &[FounderTraits],
     ) -> Result<Self, Vec<FieldError>> {
         Self::initialize(config, seed, &[], Some(cohort))
+    }
+
+    /// Checked spatial cohort with explicit sensitivity settings.
+    pub fn new_with_spatial_probe(
+        config: Config,
+        seed: u64,
+        cohort: &[FounderTraits],
+        probe: EpisodeProbe,
+    ) -> Result<Self, Vec<FieldError>> {
+        let mut world = Self::initialize(config, seed, &[], Some(cohort))?;
+        world.spatial_probe = probe;
+        Ok(world)
     }
 
     /// Like `new`, with good 0's capacities supplied (a painted map from a
@@ -450,6 +465,7 @@ impl World {
             diseases: Vec::new(),
             agents: BTreeMap::new(),
             spatial_cohort: cohort.map(<[FounderTraits]>::to_vec),
+            spatial_probe: EpisodeProbe::default(),
             occupancy: vec![None; torus.len()],
             walls,
             regions,
@@ -1038,6 +1054,7 @@ impl World {
         // Minds 8: forget seen caches older than `span`, before anyone moves.
         if self.config.watching.on {
             crate::minds::caching::watching::sweep(self);
+            crate::minds::spatial_hoarding::watching::sweep(self);
         }
         // Minds 5: a lab world applies its protocol's day (placement, food,
         // doorways, the test evening's burying) before anyone moves.

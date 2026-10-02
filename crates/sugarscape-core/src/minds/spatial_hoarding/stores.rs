@@ -13,6 +13,27 @@ pub struct StoreEvents {
     pub larder: StoreFlow,
     pub delivery: DeliveryEvents,
     pub guard: GuardEvents,
+    pub observation: ObservationEvents,
+}
+
+/// Kind-specific watched deposits and encounter outcomes for episode reports.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct ObservationEvents {
+    pub burials_seen: u32,
+    pub sightings: u32,
+    pub seen_entries: u32,
+    pub seen_arrivals: u32,
+    pub contacts: u32,
+    pub discovery_draws: u32,
+    pub discovery_hits: u32,
+    pub raid_attempts: u32,
+    pub raids: u32,
+    pub raided: f64,
+    pub raids_empty: u32,
+    pub raids_no_room: u32,
+    pub raids_blocked: u32,
+    pub discoveries_blocked: u32,
+    pub scatter_draws_skipped: u32,
 }
 
 /// Selected larder batches start once, including batches deposited immediately.
@@ -34,6 +55,7 @@ pub struct GuardEvents {
     pub intended: u32,
     pub executed: u32,
     pub recovered: f64,
+    pub probe_harvest: f64,
     pub blocked_raids: u32,
     pub blocked_discoveries: u32,
 }
@@ -111,6 +133,7 @@ pub(crate) fn deposit(world: &mut World, owner: AgentId, amount: f64) -> f64 {
     e.buried += q;
     e.bury_cost += paid;
     fates::open_store(world, owner, site, StoreKind::Larder, q, before);
+    super::watching::observe_deposit(world, owner, q);
     q
 }
 
@@ -142,7 +165,6 @@ pub(crate) fn recover(world: &mut World, owner: AgentId, amount: f64) -> f64 {
 }
 
 /// Task 4's observed raids and discoveries share this guard/contact/loot enforcement.
-#[allow(dead_code)]
 pub(crate) fn take(world: &mut World, owner: AgentId, taker: AgentId, amount: f64) -> f64 {
     if owner == taker || !valid(world, owner, amount) || !valid(world, taker, amount) {
         return 0.0;

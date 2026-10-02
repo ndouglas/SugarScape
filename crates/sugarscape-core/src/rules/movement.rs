@@ -171,6 +171,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
     if crate::minds::caching::watching::forgoes(world, id) {
         let (mut out, mut start) = (vec![(pos, 0, 0.0)], 1);
         crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
+        crate::minds::spatial_hoarding::watching::join_larders(world, id, &mut out, &mut start);
         return (out, start);
     }
     let welfare = Welfare::new(world, a);
@@ -209,6 +210,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
     if !known {
         crate::minds::caching::join_caches(world, id, &mut out, &mut start);
         crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
+        crate::minds::spatial_hoarding::watching::join_larders(world, id, &mut out, &mut start);
         return (out, start);
     }
     let torus = world.torus;
@@ -241,6 +243,7 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
     }
     crate::minds::caching::join_caches(world, id, &mut out, &mut start);
     crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
+    crate::minds::spatial_hoarding::watching::join_larders(world, id, &mut out, &mut start);
     (out, start)
 }
 
@@ -360,7 +363,6 @@ pub(crate) fn record_choice(
 ///   `World::probe_raid_harvests` a raid that took something also harvests
 ///   the site as below, and draws no stumble.
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
-    let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
     let (tags, mut social, remembers) = (a.tags, a.social, a.remembers);
     let capacity = world.config.caching.capacity;
@@ -409,6 +411,9 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         let a = world.agent_mut(id).expect("live agent");
         a.holdings[0] += harvest.dug;
         a.social = social;
+        if world.config.spatial_hoarding.enabled {
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+        }
         return harvest;
     }
     // Minds 9 own-larder recovery seam. Task 4 extends the remaining arrival
@@ -416,6 +421,14 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     if world.config.spatial_hoarding.enabled {
         harvest.dug = crate::minds::spatial_hoarding::recover_own(world, id);
         if harvest.dug > 0.0 {
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+        let taken = crate::minds::spatial_hoarding::watching::raid(world, id, target);
+        if taken > 0.0 {
+            harvest.pilfered = taken;
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
             world.agent_mut(id).expect("live agent").social = social;
             return harvest;
         }
@@ -425,6 +438,9 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
             crate::minds::caching::watching::raid(world, id, site_index, room(used))
         {
             if !world.probe_raid_harvests {
+                if world.config.spatial_hoarding.enabled {
+                    crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+                }
                 world.agent_mut(id).expect("live agent").social = social;
                 return taken;
             }
@@ -439,6 +455,18 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         world.agent_mut(id).expect("live agent").social = social;
         return harvest;
     }
+    if world.config.spatial_hoarding.enabled
+        && !world.spatial_probe.scatter_first
+        && harvest.pilfered == 0.0
+    {
+        let taken = crate::minds::spatial_hoarding::watching::stumble(world, id, target);
+        if taken > 0.0 {
+            harvest.pilfered = taken;
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+    }
     if world.config.theft.find > 0.0 && harvest.pilfered == 0.0 {
         if let Some(taken) =
             crate::minds::caching::theft::stumble(world, id, site_index, room(used))
@@ -447,6 +475,41 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
             return taken;
         }
     }
+    if world.config.spatial_hoarding.enabled
+        && world.spatial_probe.scatter_first
+        && harvest.pilfered == 0.0
+    {
+        let taken = crate::minds::spatial_hoarding::watching::stumble(world, id, target);
+        if taken > 0.0 {
+            harvest.pilfered = taken;
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+    }
+    let gathered = gather_site(world, id, target, used, remembers);
+    world.agent_mut(id).expect("live agent").social = social;
+    harvest.gathered = gathered.gathered;
+    harvest
+}
+
+/// Gather the current site without movement or cache actions (also used by the guard probe).
+pub(crate) fn gather_site(
+    world: &mut World,
+    id: AgentId,
+    target: Pos,
+    used: f64,
+    remembers: bool,
+) -> Harvest {
+    let n = world.config.goods.len();
+    let capacity = world.config.caching.capacity;
+    let room = |held: f64| {
+        if capacity > 0 {
+            (f64::from(capacity) - held).max(0.0)
+        } else {
+            f64::INFINITY
+        }
+    };
+    let mut harvest = Harvest::default();
     let site = world.site_mut(target);
     for (got, level) in harvest
         .gathered
@@ -489,10 +552,8 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     for (have, got) in a.holdings.iter_mut().zip(&harvest.gathered).take(n) {
         *have += got;
     }
-    a.social = social;
     harvest
 }
-
 /// Reaches `target` by the configured movement, then gathers where the
 /// agent stops. `jump` (rule M) goes there in one tick. `walk` takes `speed`
 /// steps along an A* path on the 4-way torus (walls and occupied sites

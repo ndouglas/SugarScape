@@ -4,7 +4,22 @@ use std::collections::BTreeMap;
 
 use crate::agent::AgentId;
 use crate::geometry::Pos;
-use crate::minds::caching::watching::SeenCache;
+use serde::{Deserialize, Serialize};
+
+/// A deposit actually seen at a foreign home, without current-stock knowledge.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SeenLarder {
+    pub home: Pos,
+    pub amount: f64,
+    pub tick: u64,
+}
+
+/// Runner-only sensitivity switches; both ordinary defaults are false.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct EpisodeProbe {
+    pub guard_harvest: bool,
+    pub scatter_first: bool,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FounderTraits {
@@ -33,7 +48,7 @@ pub struct SpatialState {
     pub larder_since: Option<u64>,
     pub delivery: Option<Delivery>,
     pub guarding: bool,
-    pub seen_larders: BTreeMap<AgentId, SeenCache>,
+    pub seen_larders: BTreeMap<AgentId, SeenLarder>,
 }
 
 impl SpatialState {
