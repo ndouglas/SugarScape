@@ -1309,6 +1309,29 @@ fn time_ticks(e: &RunEnvelope, runner_seconds: f64) -> Result<Timing, String> {
     }
     Ok(t)
 }
+/// Standalone analysis reserves its destination before reading any campaign files.
+fn reserve_analysis_output(out: &std::path::Path) -> Result<(), String> {
+    std::fs::create_dir(out).map_err(|e| format!("new analysis directory {}: {e}", out.display()))
+}
+/// Both a freshly reserved analysis directory and an existing campaign directory
+/// use exclusive output files: neither report nor symlink targets may be replaced.
+fn write_report_files(
+    out: &std::path::Path,
+    value: &impl Serialize,
+    report: &str,
+) -> Result<(), String> {
+    use std::io::Write;
+    save_json(&out.join("analysis.json"), value)?;
+    let path = out.join("results.md");
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    file.write_all(report.as_bytes())
+        .and_then(|()| file.sync_all())
+        .map_err(|e| format!("{}: {e}", path.display()))
+}
 fn render_saved(index_path: &std::path::Path, out: &std::path::Path) -> Result<(), String> {
     let index: CampaignIndex = load_json(index_path)?;
     if index.schema != SCHEMA
@@ -1396,9 +1419,7 @@ fn render_saved(index_path: &std::path::Path, out: &std::path::Path) -> Result<(
         measured: analysis,
         timings,
     };
-    std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
-    save_json(&out.join("analysis.json"), &result)?;
-    std::fs::write(out.join("results.md"), report).map_err(|e| e.to_string())
+    write_report_files(out, &result, &report)
 }
 fn markdown(
     a: &Analysis,
@@ -1538,6 +1559,7 @@ pub fn cli(args: &[String]) -> Result<(), String> {
             );
         }
         Command::Analyze { index, out } => {
+            reserve_analysis_output(std::path::Path::new(&out))?;
             render_saved(std::path::Path::new(&index), std::path::Path::new(&out))?
         }
         Command::Run {
@@ -1555,6 +1577,157 @@ mod tests {
         EpisodeEvents, ExposureTotals, FounderRecord, GenerationRecord, Lineage, Terminal,
     };
 
+    struct FilesystemFixture(std::path::PathBuf);
+    impl FilesystemFixture {
+        fn new(name: &str) -> Self {
+            static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+            let parent = std::path::Path::new(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../.superpowers/sdd/2026-10-02-minds-9-spatial-hoarding/task-8-fix1-tests"
+            ));
+            std::fs::create_dir_all(parent).unwrap();
+            let path = parent.join(format!(
+                "{}-{}-{name}",
+                std::process::id(),
+                NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+            ));
+            std::fs::create_dir(&path).unwrap();
+            Self(path)
+        }
+    }
+    impl Drop for FilesystemFixture {
+        fn drop(&mut self) {
+            std::fs::remove_dir_all(&self.0).unwrap();
+        }
+    }
+    #[test]
+    fn minds9_i1_analysis_route_rejects_existing_destination_before_reading_input() {
+        let f = FilesystemFixture::new("existing-route");
+        let report = f.0.join("results.md");
+        std::fs::write(&report, "previous report").unwrap();
+        let error = cli(&[
+            "--analyze".into(),
+            f.0.join("missing-index.json").display().to_string(),
+            "--out".into(),
+            f.0.display().to_string(),
+        ])
+        .unwrap_err();
+        assert!(error.contains("new analysis directory"), "{error}");
+        assert!(error.contains(&f.0.display().to_string()), "{error}");
+        assert_eq!(std::fs::read_to_string(report).unwrap(), "previous report");
+        assert!(!f.0.join("analysis.json").exists());
+    }
+    #[test]
+    fn minds9_i1_fresh_destination_saves_synthetic_reports() {
+        let f = FilesystemFixture::new("fresh");
+        let out = f.0.join("new-output");
+        reserve_analysis_output(&out).unwrap();
+        write_report_files(
+            &out,
+            &serde_json::json!({"synthetic":true}),
+            "synthetic report",
+        )
+        .unwrap();
+        assert_eq!(
+            load_json::<serde_json::Value>(&out.join("analysis.json")).unwrap(),
+            serde_json::json!({"synthetic":true})
+        );
+        assert_eq!(
+            std::fs::read_to_string(out.join("results.md")).unwrap(),
+            "synthetic report"
+        );
+    }
+
+    #[test]
+    fn minds9_i1_campaign_writer_saves_in_its_already_reserved_directory() {
+        let f = FilesystemFixture::new("campaign-success");
+        write_report_files(
+            &f.0,
+            &serde_json::json!({"synthetic":true}),
+            "synthetic campaign report",
+        )
+        .unwrap();
+        assert_eq!(
+            load_json::<serde_json::Value>(&f.0.join("analysis.json")).unwrap(),
+            serde_json::json!({"synthetic":true})
+        );
+        assert_eq!(
+            std::fs::read_to_string(f.0.join("results.md")).unwrap(),
+            "synthetic campaign report"
+        );
+    }
+    #[test]
+    fn minds9_i1_campaign_writer_preserves_existing_markdown() {
+        let f = FilesystemFixture::new("existing-markdown");
+        let report = f.0.join("results.md");
+        std::fs::write(&report, "original report").unwrap();
+        let result = write_report_files(
+            &f.0,
+            &serde_json::json!({"synthetic":true}),
+            "replacement report",
+        );
+        assert_eq!(std::fs::read_to_string(&report).unwrap(), "original report");
+        let error = result.unwrap_err();
+        assert!(error.contains(&report.display().to_string()), "{error}");
+    }
+
+    #[test]
+    fn minds9_i1_campaign_writer_preserves_both_existing_outputs() {
+        let f = FilesystemFixture::new("existing-pair");
+        let analysis = f.0.join("analysis.json");
+        let report = f.0.join("results.md");
+        std::fs::write(&analysis, "original analysis").unwrap();
+        std::fs::write(&report, "original report").unwrap();
+        let error = write_report_files(
+            &f.0,
+            &serde_json::json!({"synthetic":true}),
+            "replacement report",
+        )
+        .unwrap_err();
+        assert_eq!(
+            std::fs::read_to_string(&analysis).unwrap(),
+            "original analysis"
+        );
+        assert_eq!(std::fs::read_to_string(&report).unwrap(), "original report");
+        assert!(error.contains(&analysis.display().to_string()), "{error}");
+    }
+    #[test]
+    fn minds9_i1_fresh_analysis_route_retains_input_error_context() {
+        let f = FilesystemFixture::new("fresh-route-error");
+        let out = f.0.join("new-output");
+        let input = f.0.join("missing-index.json");
+        let error = cli(&[
+            "--analyze".into(),
+            input.display().to_string(),
+            "--out".into(),
+            out.display().to_string(),
+        ])
+        .unwrap_err();
+        assert!(error.contains(&input.display().to_string()), "{error}");
+        assert!(out.is_dir());
+        assert!(!out.join("analysis.json").exists());
+        assert!(!out.join("results.md").exists());
+    }
+    #[cfg(unix)]
+    #[test]
+    fn minds9_i1_campaign_writer_does_not_follow_markdown_symlink() {
+        let f = FilesystemFixture::new("symlink-markdown");
+        let target = f.0.join("target.md");
+        let report = f.0.join("results.md");
+        std::fs::write(&target, "original target").unwrap();
+        std::os::unix::fs::symlink(&target, &report).unwrap();
+        let result = write_report_files(
+            &f.0,
+            &serde_json::json!({"synthetic":true}),
+            "replacement report",
+        );
+        assert_eq!(std::fs::read_to_string(&target).unwrap(), "original target");
+        assert!(result.is_err());
+        assert!(std::fs::symlink_metadata(report)
+            .unwrap()
+            .file_type()
+            .is_symlink());
+    }
     #[test]
     fn minds9_manifest_materializes_every_declared_cell_without_worlds() {
         let m = manifest();
