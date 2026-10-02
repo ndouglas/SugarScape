@@ -318,7 +318,7 @@ Archive every founder including removals and time alive. Execute 200 steps for r
 **Consumes:** Config/state/counters; ordinary ModelWorld dispatch.
 **Produces:** Presets `spatial-scatter`, `spatial-larder`, `spatial-larder-guard`; conditional inspect object `spatial_hoarding` with home, L/D, larder, delivery, guard and observed-larder count. Per-kind stock, burial, recovery, pilferage, loss, exposure and delivery/guard series; retain legacy totals.
 
-- [ ] Add red preset tests: derive all three from `theft-winter`, apply approved capacity/horizon/season/share settings; L=0/1/1, guard false/false/true, D=.5. Existing preset count-dependent tests must filter their original model/preset domains rather than excluding new behavior arbitrarily. Add frontend schema/preset tests for reset-only fields and older configs lacking extension object.
+- [x] Add red preset tests: derive all three from `theft-winter`, apply approved capacity/horizon/season/share settings; L=0/1/1, guard false/false/true, D=.5. Existing preset count-dependent tests must filter their original model/preset domains rather than excluding new behavior arbitrarily. Add frontend schema/preset tests for reset-only fields and older configs lacking extension object.
 
 ```ts
 // In the real-WASM preset test in determinism.test.ts:
@@ -330,8 +330,8 @@ expect(spatialPresetIds).toEqual([
 ```
 
 Use the existing real WASM initialization and imported `presets_json` in that file; rebuilding WASM is required before its test run. Keep presentation-helper tests in `minds.test.ts`.
-- [ ] Run core preset tests and `npm run wasm:dev --prefix web`, then `npm test --prefix web -- determinism.test.ts minds.test.ts` for red.
-- [ ] Extend existing config/schema/preset route, conditional CSV columns and inspect rendering. Home marker/guard indication should be legible and use existing grid overlay conventions. Display scatter/larder separately and disclose pending amount remains carried. No generation controls or new model menu. Reuse CLI `--config` route; verify actual argument syntax from `--help` at execution rather than inventing a flag.
+- [x] Run core preset tests and `npm run wasm:dev --prefix web`, then `npm test --prefix web -- determinism.test.ts minds.test.ts` for red.
+- [x] Extend existing config/schema/preset route, conditional CSV columns and inspect rendering. Home marker/guard indication should be legible and use existing grid overlay conventions. Display scatter/larder separately and disclose pending amount remains carried. No generation controls or new model menu. Reuse CLI `--config` route; verify actual argument syntax from `--help` at execution rather than inventing a flag.
 
 ```ts
 // Extension inspect fields are optional for old recordings/configs.
@@ -343,8 +343,8 @@ type SpatialHoardingInspect = {
 ```
 
 Pin serialized field names in core render tests and TypeScript inspect tests. Keep disabled CSV headers/series unchanged; kind totals should agree with aggregates where applicable. Include unused/zero exposure as undefined ratios, not fabricated zeros.
-- [ ] Run focused core/export tests, `npm run build --prefix web`, `npm test --prefix web`. Inspect one deterministic handcrafted episode's home/guard/store display; use visual companion only if showing a concrete visual, per user preference.
-- [ ] Commit: `feat(minds): expose spatial hoarding episodes and inspection`.
+- [x] Run focused core/export tests, `npm run build --prefix web`, `npm test --prefix web`. Inspect one deterministic handcrafted episode's home/guard/store display; use visual companion only if showing a concrete visual, per user preference.
+- [x] Commit: `feat(minds): expose spatial hoarding episodes and inspection`.
 
 ### Task 7: Checkpoint, hash and native/WASM replay
 
