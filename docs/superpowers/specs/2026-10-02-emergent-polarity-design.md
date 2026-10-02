@@ -116,17 +116,19 @@ this milestone.
 | `threat_observation` | `neighbor_aggression`; alternative `dyadic_aggression` |
 | `obligation_timing` | `same_period`; alternative `next_period` |
 | `pra_attack_rule` | `diagram`; alternative `literal_prose` |
+| `pra_alliance_support` | `front_commitments`; alternative `stocks`, defined below |
 | `tax_rate`, `tax_discount` | .4,.7; only extended variants use taxes, two-level discount defaults to 1 |
 | `tax_distance` | `manhattan`; alternative `territorial_path` |
 | `stochastic_threshold`, `stochastic_exponent` | 3,5 for overextension; threshold is an explicitly inferred run setting from Fig.5.9 |
 | `stochastic_resolution` | `single_draw`; alternative `independent_draws` |
 | `horizon`, `stop_at_hegemony` | 1000,true for EPM/two-level; 4000,false for overextension (4000 is our observation horizon) |
 | `periods_per_tick` | 1; integer 1..10,000, executing complete periods |
+| `event_log`, `event_log_limit` | false,1000; cap 0..1,000,000, positive when logging. Include monotonic event IDs and dropped-record count |
 
 Means must be finite, SDs nonnegative, rates/shares/taxes/discounts in [0,1], exponent positive,
 trust parameters within [−1000,1000], horizon 1..1,000,000,000. Reject irrelevant/inconsistent
 combinations such as provincial variants with equal allocation, or stochastic combat outside
-overextension. Validation messages identify fields and corrective choices. The plan will
+overextension, or sequential updates with after-harvest victory. Validation messages identify fields and corrective choices. The plan will
 record exact schema field representations without changing these semantics.
 
 ### Decisions, paths and allocation
@@ -164,6 +166,15 @@ stock equally across active fronts, or announce full stock on a passive front wh
 active fronts exist. Signed-denominator arithmetic otherwise follows the displayed equations.
 A newly created relation receives equal-allocation old commitment. PRA commitments on
 passive fronts are conditional; do not normalize them to an additive budget.
+
+For PRA deterrence, `front_commitments` sums coalition members' conditional commitments
+toward the aggressor; a member without that front contributes zero. Attacker support is
+eligible only when its coalition names the victim as threat. `stocks` instead adds other
+eligible members' total stocks to the focal actor's front commitment. With no coalition,
+both retain the focal commitment. Actual combat and stock accounting remain individual.
+The source gives no PRA/alliance pooling formula; these are explicit reconstruction readings.
+A small stocks-support control repeats the chapter5 allocation/PRA/alliance strata with20
+seeds; the200-seed interaction uses front commitments and reports its selected reading.
 
 PRA initiation maximizes the front ratio and uses strict `>` (`diagram`). `literal_prose`
 instead minimizes and uses `<`, reproducing the printed inconsistency. Both choices retain
@@ -256,8 +267,9 @@ center's commitment toward it; it initiates revolt at strict ratio above 2 and t
 previous-action TFT. The center retaliates on domestic fronts. Foreign initiation is blocked
 by domestic D or an unresolved revolt under the selected guard. Domestic victory by a
 province grants independence; victory by the center ends the revolt without annexing an
-extra cell. Disconnecting provinces preserves their own stocks. A conquered capital transfers
-its own stock if captured under the selected capital policy; it does not transfer the sum
+extra cell. Disconnecting provinces preserves their own stocks. A conquered corporate capital transfers
+its own stock if captured under the selected capital policy; a primitive sovereign captured
+as a province retains its stock; it does not transfer the sum
 of independent provincial stocks.
 
 Two-level uses constant tax; overextension uses `tax_rate * tax_discount^distance` and
@@ -299,7 +311,7 @@ second-largest territory, predator capital share, total/capital/province stocks,
 stock count, positive destruction and negative-damage creation, attacks, DD encounters,
 conquests, capital collapses, disconnections, revolts, coalitions and open episodes.
 Tick-end state series remain distinct from summed tick events. Terminal category is unavailable
-until completion. Hegemonic termination contributes count 1. Invalid sessions are retained
+until completion, and remains unavailable for counts above100 on larger non-source grids. Hegemonic termination contributes count 1. Invalid sessions are retained
 outside valid category denominators and reported prominently.
 
 A conflict episode begins on first D on a foreign front; ends on a CC period, decisive victory,
@@ -434,3 +446,12 @@ negative stocks, collapse/accounting and all hosts before integration. Completio
 findings docs, queue/index update, war-study handoff, CI and Pages at the final integrated
 head. Remove the stage ledger when all stages are complete; retain the durable plan and
 research artifacts. No source-fidelity claim exceeds the recovered evidence.
+
+## Implementation clarifications before measurement (2026-10-02)
+
+During approved scratch preparation, variant-aware JSON defaults were made explicit: missing
+fields use the selected variant defaults; explicitly incompatible fields are rejected. Event
+log caps/IDs/drop counts, source categories above100, provincial primitive-versus-corporate
+capital accounting, PRA coalition support and the sequential/after-harvest validation rule
+were clarified above. No native studies were run before these additions. They resolve
+implementation gaps; source claims and statistical decision thresholds are unchanged.
