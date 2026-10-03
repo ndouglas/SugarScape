@@ -13,7 +13,7 @@ Design approved; this implementation plan and the proposed protocol await review
 **Goal**: One retrieval/transport/redeposit attempt per eligible source with real action and food costs.
 **Success Criteria**: Separate action stages, no gathering during transport, no duplicated food, named terminal cancellations and default golden reductions.
 **Tests**: Retrieval/walk/deposit ordering, partial capacity, metabolism clamp, source loss, blocked paths, witness return, unaffordable deposit, expiry and no chain relocation.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 3: Laboratory records and original-food ledger
 **Goal**: Exact scheduled opportunities and conserved source-cohort outcomes.

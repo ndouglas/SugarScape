@@ -253,6 +253,7 @@ pub struct World {
     pub(crate) rng: SimRng,
     next_id: AgentId,
     pub(crate) events: TickEvents,
+    pub(crate) relocation_events: Option<crate::minds::protection::state::RelocationEvents>,
     pub stats: Stats,
     loans: BTreeMap<LoanId, Loan>,
     next_loan_id: LoanId,
@@ -474,6 +475,7 @@ impl World {
             regions,
             rng: rng::seeded(seed),
             next_id: 1,
+            relocation_events: config.protection_lab.as_ref().map(|_| Default::default()),
             events: TickEvents::default(),
             stats: Stats::default(),
             loans: BTreeMap::new(),
@@ -965,6 +967,38 @@ impl World {
                 }
             }
         }
+        if self.config.protection_lab.is_some() {
+            eat(0x5052_4f54_4543_5433);
+            let config =
+                serde_json::to_vec(&self.config).expect("serializable protection configuration");
+            eat(config.len() as u64);
+            for byte in config {
+                eat(u64::from(byte));
+            }
+            for a in self.agents.values() {
+                eat(a.id);
+                eat(u64::from(a.cheater));
+                eat(u64::from(a.watches));
+                eat(u64::from(a.remembers));
+                eat(a.rate.to_bits());
+                eat(u64::from(a.foresight));
+                eat(u64::from(a.vision));
+                eat(u64::from(a.metabolism[0]));
+                let state =
+                    serde_json::to_vec(&a.protection).expect("serializable protection state");
+                eat(state.len() as u64);
+                for byte in state {
+                    eat(u64::from(byte));
+                }
+                eat(a.seen.len() as u64);
+                for (&(site, owner), seen) in &a.seen {
+                    eat(u64::from(site));
+                    eat(owner);
+                    eat(seen.amount.to_bits());
+                    eat(seen.tick);
+                }
+            }
+        }
         h
     }
 
@@ -1020,6 +1054,11 @@ impl World {
     /// remaining sugar is split equally among its living children. A dead
     /// lender's outstanding claims pass to its living children as well.
     pub(crate) fn kill(&mut self, id: AgentId, cause: DeathCause) -> Option<Agent> {
+        crate::minds::protection::controller::cancel(
+            self,
+            id,
+            crate::minds::protection::state::CancelReason::OwnerDied,
+        );
         let claims: Vec<Loan> = if self.config.inheritance.enabled {
             self.loans
                 .values()
@@ -1114,6 +1153,11 @@ impl World {
     /// environment updates and everyone ages.
     pub fn step(&mut self) {
         self.events = TickEvents::default();
+        self.relocation_events = self
+            .config
+            .protection_lab
+            .as_ref()
+            .map(|_| Default::default());
         if self.config.spatial_hoarding.enabled {
             self.events.spatial_exposure = Some(crate::stats::spatial_store_exposure(self));
         }

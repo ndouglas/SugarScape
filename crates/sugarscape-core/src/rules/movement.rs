@@ -554,16 +554,31 @@ pub(crate) fn gather_site(
     }
     harvest
 }
-/// Reaches `target` by the configured movement, then gathers where the
-/// agent stops. `jump` (rule M) goes there in one tick. `walk` takes `speed`
-/// steps along an A* path on the 4-way torus (walls and occupied sites
-/// impassable, except the target) and stays when there is none within
-/// `WALK_LIMIT`. A remembered target (Minds 3) may be occupied: the walker
-/// then stops one site short of it on the path, or stays when that's where
-/// it stands. Records the agent's plan; draws nothing. Minds 8: a walker
-/// that stays for want of a path forgets the caches it saw buried at the
-/// target (`watching::give_up`, under `watching.on`).
-pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum WalkOutcome {
+    Arrived,
+    Advanced,
+    Blocked,
+    Unreachable,
+}
+
+/// Advance through the ordinary path planner without touching any food.
+pub(crate) fn walk_without_gather(world: &mut World, id: AgentId, target: Pos) -> WalkOutcome {
+    let before = world.agent(id).expect("live agent").pos;
+    let (stop, unreachable) = walking_stop(world, id, target);
+    world.move_agent(id, stop);
+    if unreachable {
+        WalkOutcome::Unreachable
+    } else if stop == target {
+        WalkOutcome::Arrived
+    } else if stop == before {
+        WalkOutcome::Blocked
+    } else {
+        WalkOutcome::Advanced
+    }
+}
+
+fn walking_stop(world: &mut World, id: AgentId, target: Pos) -> (Pos, bool) {
     let pos = world.agent(id).expect("live agent").pos;
     let m = world.config.movement;
     if m.mode == MoveMode::Jump || target == pos {
@@ -572,7 +587,7 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
             path: Vec::new(),
             walked: m.mode == MoveMode::Walk,
         };
-        return go_and_gather(world, id, target);
+        return (target, false);
     }
     let torus = world.torus;
     // Walls split the non-wall sites into components labeled at build. A
@@ -608,6 +623,21 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
         path: rest,
         walked: true,
     };
+    (stop, unreachable)
+}
+
+/// Reaches `target` by the configured movement, then gathers where the
+/// agent stops. `jump` (rule M) goes there in one tick. `walk` takes `speed`
+/// steps along an A* path on the 4-way torus (walls and occupied sites
+/// impassable, except the target) and stays when there is none within
+/// `WALK_LIMIT`. A remembered target (Minds 3) may be occupied: the walker
+/// then stops one site short of it on the path, or stays when that's where
+/// it stands. Records the agent's plan; draws nothing. Minds 8: a walker
+/// that stays for want of a path forgets the caches it saw buried at the
+/// target (`watching::give_up`, under `watching.on`).
+pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+    let torus = world.torus;
+    let (stop, unreachable) = walking_stop(world, id, target);
     let harvest = go_and_gather(world, id, stop);
     // Minds 8: a seen cache it can't reach is given up, after the gather so
     // a forgoing scrounger staying put is judged as it chose (the gather

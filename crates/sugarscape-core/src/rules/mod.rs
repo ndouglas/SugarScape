@@ -68,10 +68,11 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     // Minds 5: burying, after the move and harvest and before eating.
     if world.config.spatial_hoarding.enabled {
         crate::minds::spatial_hoarding::delivery::finish_turn(world, id);
-    } else if world.config.caching.buries() {
+    } else if world.config.protection_lab.is_none() && world.config.caching.buries() {
         crate::minds::caching::rules::act(world, id, &harvest);
     }
     lifecycle::metabolize(world, id, harvest);
+    crate::minds::protection::controller::clamp_after_metabolism(world, id);
     if world.config.spatial_hoarding.enabled {
         crate::minds::spatial_hoarding::delivery::clamp(world, id);
     }

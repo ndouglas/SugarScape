@@ -181,7 +181,7 @@ pub struct RelocationEvents {
 
 `act` returns None only when this owner has no protective action this turn. A cancellation after starting consumes the action and returns zero Harvest. No destination/current privacy means no start: let ordinary behavior act, rather than invent a waiting action. Use `Source.attempted` to exhaust a selected source immediately on starting; intent continues to carry the source id. Selective needs a fresh true entry; Erased uses that same predicate; Indiscriminate uses fresh prepared-source metadata; Off never starts. All source spans use inclusive freshness. Expiry during intent cancels it. Source and destination selection obey the spec's oldest-tick/site and distance/site orders.
 
-- [ ] Add a failing action sequence test. Task 1's `rig` creates observed Single/source `(3,3)`; use this explicit setup in controller tests (setup mutation is not a campaign schedule):
+- [x] Add a failing action sequence test. Task 1's `rig` creates observed Single/source `(3,3)`; use this explicit setup in controller tests (setup mutation is not a campaign schedule):
 
 ```rust
 #[test]
@@ -202,9 +202,9 @@ fn protection_retrieval_walk_and_deposit_are_separate_actions() {
 }
 ```
 
-- [ ] Add behavior tests for partial capacity, no room, source taken before arrival, a blocked source/destination, zero surplus after metabolism, visible witness at deposit, zero/positive/unaffordable cost, retained holdings after cancellation, expiry, no chain relocation, dead owner and destination exclusions. Tests for capacity/consumption must assert actual balances, not just event counters.
-- [ ] Run `cargo test -p sugarscape-core protection_` red. Extract the existing A* movement/plan/occupied-target arithmetic into a helper used by ordinary `arrive` and `walk_without_gather`; preserve `arrive` gathering and unreachable-memory cleanup order exactly. Ordinary movement RNG/golden traces must remain unchanged. Do not call `arrive` and then undo its harvest.
-- [ ] Implement the stage machine. At source underfoot, retrieval is this action; reaching a source by walking defers retrieval to the next action. Credit the scalar returned by scatter dig exactly once. Reaching destination by walking defers deposit. Use zero Harvest for all protective actions; after `lifecycle::metabolize`, clamp intent to current surplus before death checks. Suppress generic surplus burial whenever the protection lab is active, including Off; preparation/relocation bury explicitly.
+- [x] Add behavior tests for partial capacity, no room, source taken before arrival, a blocked source/destination, zero surplus after metabolism, visible witness at deposit, zero/positive/unaffordable cost, retained holdings after cancellation, expiry, no chain relocation, dead owner and destination exclusions. Tests for capacity/consumption must assert actual balances, not just event counters.
+- [x] Run `cargo test -p sugarscape-core protection_` red. Extract the existing A* movement/plan/occupied-target arithmetic into a helper used by ordinary `arrive` and `walk_without_gather`; preserve `arrive` gathering and unreachable-memory cleanup order exactly. Ordinary movement RNG/golden traces must remain unchanged. Do not call `arrive` and then undo its harvest.
+- [x] Implement the stage machine. At source underfoot, retrieval is this action; reaching a source by walking defers retrieval to the next action. Credit the scalar returned by scatter dig exactly once. Reaching destination by walking defers deposit. Use zero Harvest for all protective actions; after `lifecycle::metabolize`, clamp intent to current surplus before death checks. Suppress generic surplus burial whenever the protection lab is active, including Off; preparation/relocation bury explicitly.
 Use this clamping logic after physiology; travel to a source has no carried batch yet:
 
 ```rust
@@ -224,8 +224,8 @@ pub(crate) fn clamp_after_metabolism(world: &mut World, owner: AgentId) {
 }
 ```
 
-- [ ] Introduce World optional per-tick relocation events. Initialize them only while lab-enabled, use them for export later, and never hash them. Add a protection domain to `fingerprint` only when lab is Some: config, roles/flags/visions/metabolisms, full exposure/source/intent state, observer seen entries and current cost/discovery settings. Existing cache stocks are already hashed; do not append anything when None. Tick derives immutable schedule phase; hash any mutable phase state actually introduced.
-- [ ] Run core movement/golden/checkpoint tests and strict Clippy, update Stage 2 and commit: `feat(minds): relocate exposed food through paid physical actions`.
+- [x] Introduce World optional per-tick relocation events. Initialize them only while lab-enabled, use them for export later, and never hash them. Add a protection domain to `fingerprint` only when lab is Some: config, roles/flags/visions/metabolisms, full exposure/source/intent state, observer seen entries and current cost/discovery settings. Existing cache stocks are already hashed; do not append anything when None. Tick derives immutable schedule phase; hash any mutable phase state actually introduced.
+- [x] Run core movement/golden/checkpoint tests and strict Clippy, update Stage 2 and commit: `feat(minds): relocate exposed food through paid physical actions`.
 
 ### Task 3: original-food ledger, fixed lab schedules and episode records
 

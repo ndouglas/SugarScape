@@ -22,6 +22,9 @@ use crate::world::World;
 /// Rule M's step under the configured decision rule: moves `id` and returns
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
+    if let Some(harvest) = protection::controller::act(world, id) {
+        return harvest;
+    }
     if world.config.spatial_hoarding.enabled {
         if let Some(harvest) = spatial_hoarding::guard::guard_turn(world, id) {
             return harvest;

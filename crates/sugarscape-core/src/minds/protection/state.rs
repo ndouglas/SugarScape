@@ -105,3 +105,35 @@ pub struct ProtectionState {
     pub exposure: ExposureMemory,
     pub intent: Option<Intent>,
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize)]
+pub enum CancelReason {
+    NoRoom,
+    SourceMissing,
+    Unreachable,
+    Occupied,
+    SurplusExhausted,
+    WitnessVisible,
+    Expired,
+    OwnerDied,
+}
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct SourceEvent {
+    pub source: u32,
+    pub started: bool,
+    pub withdrawn: f64,
+    pub redeposited: f64,
+    pub cancellation: Option<CancelReason>,
+}
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct RelocationEvents {
+    pub source_events: Vec<SourceEvent>,
+    pub starts: u32,
+    pub completions: u32,
+    pub action_ticks: u32,
+    pub distance: u32,
+    pub withdrawn: f64,
+    pub redeposited: f64,
+    pub burial_cost: f64,
+    pub cancellations: BTreeMap<CancelReason, u32>,
+}
