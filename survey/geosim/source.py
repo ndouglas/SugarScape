@@ -4,9 +4,12 @@ import math
 import statistics
 import numpy as np
 from .manifest import TARGETS
-from .records import completed_censuses, history_availability
+from .records import completed_censuses, history_availability, java_int100
 
 def source_fit(selected_exports):
+    return _source_fit(selected_exports,'strict_unique_positive')
+
+def _source_fit(selected_exports,convention):
     """All selected completed exports, including zero; unavailable != zero."""
     if any(not math.isfinite(s) or s < 0 for s in selected_exports):
         raise ValueError('completed exported severity must be finite and nonnegative')
@@ -15,11 +18,17 @@ def source_fit(selected_exports):
             'slope':None,'r2':None,'log_range':None,'fit_points':[],'fit_status':'unavailable'}
     if not positive:return result
     result['log_range']=math.log10(positive[-1])-math.log10(positive[0])
-    for s in sorted(set(positive)):
-        count=n-bisect.bisect_right(positive,s); x=math.log10(s)
-        if count and x>=2.5:result['fit_points'].append([x,math.log10(count/n)])
+    if convention=='descending_observation_rank':
+        for rank,s in enumerate(reversed(positive),1):
+            x=math.log10(s)
+            if x>=2.5:result['fit_points'].append([x,math.log10(rank/n)])
+    else:
+        for s in sorted(set(positive)):
+            count=n-(bisect.bisect_right(positive,s) if convention=='strict_unique_positive' else bisect.bisect_left(positive,s))
+            x=math.log10(s)
+            if count and x>=2.5:result['fit_points'].append([x,math.log10(count/n)])
     points=result['fit_points']
-    if len(points)<3:return result
+    if len({p[0] for p in points})<3:return result
     xbar=math.fsum(p[0] for p in points)/len(points);ybar=math.fsum(p[1] for p in points)/len(points)
     xx=math.fsum((x-xbar)**2 for x,y in points); yy=math.fsum((y-ybar)**2 for x,y in points)
     xy=math.fsum((x-xbar)*(y-ybar) for x,y in points)
@@ -29,6 +38,21 @@ def source_fit(selected_exports):
         raise ValueError('nonfinite or invalid OLS')
     result.update(slope=slope,intercept=ybar-slope*xbar,r2=min(1.,max(0.,r2)),fit_status='available')
     return result
+
+def source_definition_checks(wars):
+    """Frozen inferred descriptive alternatives; never supply primary vectors."""
+    def checks(sizes,include_strict=False):
+        tail=[s for s in sizes if s>0 and math.log10(s)>=2.5]
+        result={'inclusive_unique':_source_fit(sizes,'inclusive_unique_positive'),
+                'descending_rank':_source_fit(sizes,'descending_observation_rank'),
+                'fit_tail':{'count':len(tail),'positive_distinct_count':len(set(tail)),
+                            'log_range':math.log10(max(tail))-math.log10(min(tail)) if tail else None}}
+        if include_strict:result['strict']=source_fit(sizes)
+        return result
+    return {'status':'inferred_descriptive_source_equivalence_unresolved',
+            'exported':checks([w['exported_severity'] for w in wars]),
+            'integer100':checks([java_int100(w['raw_severity']) for w in wars],True)}
+
 
 def eight_summaries(vectors):
     if not vectors or any(len(v)!=4 or any(not math.isfinite(x) for x in v) for v in vectors):
@@ -115,14 +139,16 @@ def independent_contrast(base,control,rng,draws=100000):
 
 def history_source(row):
     availability=history_availability(row)
-    if row.get('outcome') is None:return {'availability':availability,'fit':None,'vector':None,'census':None,'partial_diagnostic':None}
+    if row.get('outcome') is None:return {'availability':availability,'fit':None,'vector':None,'census':None,'partial_diagnostic':None,'definition_checks':None,'partial_definition_checks':None}
     census=completed_censuses(row['outcome'],availability)
     primary=census['source_selected'];partial=census['partial_source_selected']
     fit=source_fit([w['exported_severity'] for w in primary]) if availability['complete'] else None
     diagnostic=source_fit([w['exported_severity'] for w in partial]) if partial else None
     vector=None
     if fit and fit['fit_status']=='available':vector=(fit['slope'],fit['r2'],fit['log_range'],fit['war_count'])
-    return {'availability':availability,'fit':fit,'vector':vector,'census':census,'partial_diagnostic':diagnostic}
+    return {'availability':availability,'fit':fit,'vector':vector,'census':census,'partial_diagnostic':diagnostic,
+            'definition_checks':source_definition_checks(primary) if availability['complete'] else None,
+            'partial_definition_checks':source_definition_checks(partial) if not availability['complete'] else None}
 
 
 def complete_vectors(histories,expected):

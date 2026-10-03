@@ -62,12 +62,25 @@ def lognormal_logj(a,b,with_moments=False):
     j=integ(0); logj=hm+math.log(j)-math.log(scale)
     return (logj,integ(1)/j/scale,integ(2)/j/(scale*scale)) if with_moments else logj
 
+def centered_log_ratios(x,xmin):
+    """Accurate near xmin; avoid overflow for far-separated finite supports."""
+    x=np.asarray(x,dtype=float)
+    if x.ndim!=1 or not math.isfinite(xmin) or xmin<=0 or np.any(~np.isfinite(x)) or np.any(x<xmin):
+        raise NumericFailure('invalid Pareto support')
+    close=x/2<=xmin;y=np.empty_like(x)
+    y[close]=np.log1p((x[close]-xmin)/xmin)
+    y[~close]=np.log(x[~close])-math.log(xmin)
+    return y
+
+
 def pareto_at(x,xmin):
-    y=np.log(x)-math.log(xmin); s=float(np.mean(y))
+    x=np.sort(np.asarray(x,dtype=float));y=centered_log_ratios(x,xmin);s=float(np.mean(y))
     if len(x)<50 or s<=0 or not math.isfinite(s):raise NumericFailure('insufficient or degenerate Pareto')
     alpha=1+1/s
+    if not math.isfinite(alpha) or alpha<=1:raise NumericFailure('unrepresentable Pareto alpha')
     lp=math.log(alpha-1)-math.log(xmin)-alpha*y
-    return {'alpha':alpha,'xmin':float(xmin),'n_tail':len(x),'loglike':float(lp.sum()),'logpdf':lp}
+    if not np.all(np.isfinite(lp)):raise NumericFailure('unrepresentable Pareto density')
+    return {'alpha':alpha,'xmin':float(xmin),'n_tail':len(x),'loglike':float(lp.sum()),'logpdf':lp,'log_ratios':y}
 
 def fit_exp(y,logxmin):
     excess=np.expm1(y);m=float(np.mean(excess))
@@ -158,21 +171,23 @@ def fit_cutoff(y,logxmin):
     return {'status':'converged','alpha':alpha,'k':k,'loglike':float(lp.sum()),'logpdf':lp,'attempts':attempts,'per_observation_gain':gain}
 
 def grid_pareto(x,grid=True):
-    x=np.sort(np.asarray(x,dtype=float));logs=np.log(x)
+    x=np.sort(np.asarray(x,dtype=float))
     values,first,counts=np.unique(x,return_index=True,return_counts=True);nt=len(x)-first
     eligible=np.flatnonzero(nt>=50)
     if grid and len(eligible)>100:
         eligible=eligible[np.array([j*(len(eligible)-1)//99 for j in range(100)])]
-    suffix=np.cumsum(logs[::-1])[::-1];best=None
-    # Both ECDF sides at each distinct tied support value.
+    best=None
+    # One fitted distribution supplies both ECDF-side KS and final likelihood.
+    # Degenerate supports are skipped; unsupported numerical fits fail closed.
     for ci in eligible:
-        start=int(first[ci]);n=int(nt[ci]);logmin=float(logs[start]);total=float(suffix[start]-n*logmin)
-        if total<=0 or not math.isfinite(total):continue
-        a=n/total;tailvals=np.log(values[ci:])-logmin
-        cdf=-np.expm1(-a*tailvals)
+        start=int(first[ci]);n=int(nt[ci]);xmin=float(values[ci])
+        if x[-1]==xmin:continue
+        pure=pareto_at(x[start:],xmin)
+        tailvals=pure['log_ratios'][first[ci:]-start]
+        cdf=-np.expm1(-(pure['alpha']-1)*tailvals)
         right=np.cumsum(counts[ci:])/n;left=right-counts[ci:]/n
         D=float(max(np.max(np.abs(cdf-left)),np.max(np.abs(right-cdf))))
-        item={'xmin':float(values[ci]),'alpha':1+a,'ks':D,'n_tail':n,'candidate_count':len(eligible)}
+        item={**pure,'ks':D,'candidate_count':len(eligible)}
         if best is None or D<best['ks']:best=item
     if best is None:raise NumericFailure('no nondegenerate eligible cutoff')
     return best

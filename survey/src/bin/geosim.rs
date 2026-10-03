@@ -1348,7 +1348,19 @@ fn run_cli(args: Args) -> Result<(), String> {
     }
     let out = Path::new(option(&args, "--out")?);
     let seen = resume(out, &prepared, &binding)?;
-    atomic_json(Path::new(option(&args, "--resolved-out")?), &export)?;
+    let resolved_out = args.values.get("--resolved-out").map_or_else(
+        || {
+            let mut name = out.as_os_str().to_owned();
+            name.push(".resolved.json");
+            std::path::PathBuf::from(name)
+        },
+        std::path::PathBuf::from,
+    );
+    require(
+        resolved_out != out,
+        "resolved output must differ from history output",
+    )?;
+    atomic_json(&resolved_out, &export)?;
     if args.validate {
         println!(
             "validated {} arms/{} keys without world construction; provenance={}",

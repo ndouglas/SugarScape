@@ -52,14 +52,14 @@ def fit_sizes(sizes,cutoff_search='all_observed',alternatives=True):
     try:
         with np.errstate(over='raise',invalid='raise',divide='raise'):
             selected=numerics.grid_pareto(x,grid=cutoff_search=='grid100')
-            tail=x[x>=selected['xmin']];pure=numerics.pareto_at(tail,selected['xmin'])
+            pure=selected
         if not math.isfinite(pure['alpha']) or pure['alpha']<=1 or not np.all(np.isfinite(pure['logpdf'])):
             raise numerics.NumericFailure('nonfinite Pareto fit')
     except (numerics.NumericFailure,OverflowError,FloatingPointError,ValueError) as exc:
         return {**base,'status':'Unresolved','reason':_numeric_error(exc)}
-    result={**base,**selected,'status':'Available','loglike':pure['loglike'],'iid_limit':'dependent histories are not iid validation'}
+    result={**base,**{k:v for k,v in selected.items() if k not in ('logpdf','log_ratios')},'status':'Available','loglike':pure['loglike'],'iid_limit':'dependent histories are not iid validation'}
     if alternatives:
-        y=np.log(tail)-math.log(selected['xmin'])
+        y=pure['log_ratios']
         for name,fitter in ALTERNATIVES.items():
             try:
                 with np.errstate(over='raise',invalid='raise',divide='raise'):
@@ -87,7 +87,8 @@ def history_modern(row,alternatives=True):
     return {**fit,'complete':available['complete'],'raw_sizes':raw,
             'partial_diagnostic':fit_sizes(partial,alternatives=alternatives) if partial else None,
             'zero_completed_count':sum(w['raw_severity']==0 for w in census['primary_completed']),
-            'excluded':census['excluded'],'censored_count':census['censored_count'],'backlog_count':census['backlog_count']}
+            'excluded':census['excluded'],'censored_count':census['censored_count'],'backlog_count':census['backlog_count'],
+            'export_diagnostics':census['export_diagnostics']}
 
 
 def fit_pool(histories,expected,alternatives=True):
@@ -109,8 +110,10 @@ def ks_refit_test(fit,sizes,rng,draws=1000):
         try:
             nt=int(rng.binomial(n,prob));nb=n-nt
             lower=body[rng.integers(0,len(body),size=nb,dtype=np.int64)] if nb else np.empty(0)
-            logtail=math.log(fit['xmin'])+rng.exponential(1/(fit['alpha']-1),nt)
-            with np.errstate(over='raise',invalid='raise'):tail=np.exp(logtail)
+            logratios=rng.exponential(1/(fit['alpha']-1),nt)
+            with np.errstate(over='raise',invalid='raise'):
+                # Preserve near-cutoff resolution instead of adding tiny draws to a large log(xmin).
+                tail=fit['xmin']*np.exp(logratios)
             simulated=fit_sizes(np.concatenate((lower,tail)),cutoff_search='grid100',alternatives=False)
             if simulated['status']!='Available':raise numerics.NumericFailure(simulated.get('reason',simulated['status']))
             Ds.append(simulated['ks']);cutoffs.append(simulated['xmin'])

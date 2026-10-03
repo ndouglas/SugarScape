@@ -50,7 +50,7 @@ def verify_source_inventory(root,inventory):
     return hashlib.sha256(canonical_bytes(inventory)).hexdigest()
 
 
-def _uint(value):return type(value) is int and value>=0
+def _uint(value):return type(value) is int and 0<=value<=2**64-1
 
 def _finite_nonnegative(value):
     return type(value) in (int,float) and math.isfinite(value) and value>=0
@@ -169,7 +169,22 @@ def completed_censuses(outcome,availability=None):
             'source_selected':selected if availability['complete'] else [],
             'partial_source_selected':selected if not availability['complete'] else [],
             'excluded':excluded,'completed_record_count':len(outcome['completed_wars']),
-            'censored_count':len(outcome['censored_wars']),'backlog_count':len(outcome['exporter_backlog'])}
+            'censored_count':len(outcome['censored_wars']),'backlog_count':len(outcome['exporter_backlog']),
+            'export_diagnostics':{label:export_diagnostics(wars) for label,wars in {
+                'complete_all':accepted if availability['complete'] else [],
+                'complete_selected':selected if availability['complete'] else [],
+                'partial_all':accepted if not availability['complete'] else [],
+                'partial_selected':selected if not availability['complete'] else [],
+                'completed_records':outcome['completed_wars'],'censored':outcome['censored_wars'],
+                'backlog':outcome['exporter_backlog'],'legacy_visible':outcome['legacy_visible_wars']}.items()}}
+
+def export_diagnostics(wars):
+    known=[w['raw_severity'] for w in wars if _finite_nonnegative(w['raw_severity'])]
+    return {'record_count':len(wars),'emitted_java_saturated':sum(w['java_saturated'] for w in wars),
+            'emitted_java_subunit_zero':sum(w['java_subunit_zero'] for w in wars),
+            'integer100_saturated':sum(raw>2147483647/100 for raw in known),
+            'integer100_subunit_zero':sum(raw>0 and java_int100(raw)==0 for raw in known),
+            'integer100_unavailable':len(wars)-len(known)}
 
 BINDING_FIELDS=('manifest_sha256','binary_sha256','source_inventory_sha256','build_receipt_sha256','resolved_configs_sha256')
 RECORD_FIELDS={'schema_version','model','arm','seed','arm_index','repeat_index','config','attempt','outcome',*BINDING_FIELDS}
@@ -198,22 +213,144 @@ def validate_build_receipt(receipt,manifest_sha256,binary_sha256,source_inventor
     return True
 
 
+# Mirrors the native validate_outcome field checks and Rust Outcome field types.
+# Nullable required floats are permitted only on invalid outcomes, in exactly the
+# fields normalized by native normalize_invalid_floats; the evidence is not changed.
+STATE_ID={'capital_cell':'uint','sovereignty_generation':'uint'}
+WAR_SCHEMA={**dict.fromkeys(('id','start_period','last_active_period','active_periods','elapsed_periods'),'uint'),
+    'parents':['uint'],'end_period':('optional','uint'),'raw_severity':'partial_nonnegative',
+    'exported_severity':'partial_nonnegative','participants':[{'state':STATE_ID,'last_fighting_period':'uint'}],
+    'end_cause':('optional','str'),'java_saturated':'bool','java_subunit_zero':'bool','fighting_periods':['uint']}
+STATE_SCHEMA={'id':STATE_ID,'capacity':('optional','float'),'threshold':'float','alert':'bool',
+    'campaign':('optional',STATE_ID),'previous_damage':'partial_float','newly_independent':'bool',
+    'extracted_yield':'partial_float','recurrence_residual':'partial_float'}
+LEDGER_SCHEMA={**dict.fromkeys(('attacks','fighting_front_periods','mutual_front_periods','conquests','collapses',
+    'disconnections','stale_claims','locked_claims','double_successes','path_collisions','shocks'),'uint'),
+    **dict.fromkeys(('damage','measured_damage','capacity_increase','capacity_decrease','clipping',
+    'retirement_capacity','reemergence_capacity','recurrence_residual'),'partial_float')}
+FRONT_SCHEMA={'states':('pair',STATE_ID),'previous':('pair','bool'),'actions':('pair','bool'),
+    'old_commitments':('pair','partial_float'),'commitments':('pair','partial_float'),
+    'path':('optional',('pair','uint')),'initiator':('optional','uint'),
+    'last_damage':('pair','partial_float'),'last_victory_probabilities':('pair',('optional','float'))}
+UPDATE_SCHEMA={'state':STATE_ID,'period':'uint','reset':'bool','clipping':'partial_float',
+    **dict.fromkeys(('old_capacity','extracted_yield','applied_damage','target_capacity','new_capacity','residual'),('optional','float'))}
+
+
+def _schema(value,schema,valid,path):
+    if isinstance(schema,dict):
+        if not isinstance(value,dict) or set(value)!=set(schema):
+            raise ValueError(f'{path}: unknown or missing fields')
+        for key,child in schema.items():_schema(value[key],child,valid,f'{path}.{key}')
+        return
+    if isinstance(schema,list):
+        if not isinstance(value,list):raise ValueError(f'{path}: expected array')
+        for i,item in enumerate(value):_schema(item,schema[0],valid,f'{path}[{i}]')
+        return
+    if isinstance(schema,tuple):
+        kind,child=schema
+        if kind=='optional':
+            if value is not None:_schema(value,child,valid,path)
+        else:
+            if not isinstance(value,list) or len(value)!=2:raise ValueError(f'{path}: expected pair')
+            for i,item in enumerate(value):_schema(item,child,valid,f'{path}[{i}]')
+        return
+    if schema.startswith('partial_'):
+        if value is None and not valid:return
+        schema=schema.removeprefix('partial_')
+    good={'uint':lambda:_uint(value) and value<=2**64-1,
+          'bool':lambda:type(value) is bool,'str':lambda:isinstance(value,str),
+          'float':lambda:type(value) in (int,float) and math.isfinite(value),
+          'nonnegative':lambda:_finite_nonnegative(value)}[schema]()
+    if not good:raise ValueError(f'{path}: invalid {schema}')
+
+
+def validate_outcome_schema(out):
+    if not isinstance(out,dict) or set(out)!=OUTCOME_FIELDS:raise ValueError('unknown or missing Outcome fields')
+    valid=out['valid'];c=out['config'];cells=c['width']*c['height']
+    schema={**dict.fromkeys(('seed','periods','attempted_period','counting_start','sovereign_count'),'uint'),
+        'valid':'bool','state_available':'bool','rng_mode':'str','finish_reason':'str','invalid_reason':('optional','str'),
+        **dict.fromkeys(('completed_wars','censored_wars','legacy_visible_wars','exporter_backlog'),[WAR_SCHEMA]),
+        'states':[STATE_SCHEMA],'cells':[{'id':'uint','owner':STATE_ID,'last_threshold':'float','next_generation':'uint'}],
+        'retired_states':[STATE_ID],'merges':[{'period':'uint','survivor':'uint','absorbed':'uint'}],
+        'ledger':LEDGER_SCHEMA,'fronts':[FRONT_SCHEMA],'resource_updates':[UPDATE_SCHEMA]}
+    for key,child in schema.items():_schema(out[key],child,valid,f'Outcome.{key}')
+    if out['rng_mode']!='portable_pcg64_mcg':raise ValueError('invalid Outcome RNG mode')
+    if not valid and not out['invalid_reason']:raise ValueError('invalid Outcome lacks reason')
+    def identities(value):
+        if isinstance(value,dict):
+            if set(value)==set(STATE_ID) and value['capital_cell']>=cells:raise ValueError('generation identity outside grid')
+            for child in value.values():identities(child)
+        elif isinstance(value,list):
+            for child in value:identities(child)
+    identities(out)
+    states=[(state['id']['capital_cell'],state['id']['sovereignty_generation']) for state in out['states']]
+    if len(set(states))!=len(states) or len(states)!=out['sovereign_count']:raise ValueError('duplicate sovereign identities/count mismatch')
+    if sorted(cell['id'] for cell in out['cells'])!=list(range(cells)):raise ValueError('duplicate/missing grid cells')
+    for field in ('merges','resource_updates'):
+        if any(item['period']>out['attempted_period'] for item in out[field]):raise ValueError('event outside attempted clock')
+    fights=out['partial_period_fights']
+    if not isinstance(fights,list):raise ValueError('partial fights must be array')
+    for fight in fights:
+        if not isinstance(fight,list) or len(fight)!=3:raise ValueError('invalid partial fight tuple')
+        _schema(fight[0],STATE_ID,valid,'partial fight state');_schema(fight[1],STATE_ID,valid,'partial fight state')
+        identities(fight);_schema(fight[2],'partial_nonnegative',valid,'partial fight damage')
+    for field in ('completed_wars','censored_wars'):
+        for war in out[field]:
+            start=war['start_period'];last=war['last_active_period']
+            end=out['attempted_period'] if field=='censored_wars' else war['end_period']
+            if end is None or not out['counting_start']<=start<=last<=end<=out['attempted_period']:
+                raise ValueError('war clocks outside attempted history')
+            fights=war['fighting_periods']
+            if fights!=sorted(set(fights)) or any(not start<=p<=end for p in fights):raise ValueError('invalid fighting period order/range')
+            if war['active_periods']!=len(fights) or (fights and fights[-1]!=last) or war['elapsed_periods']!=end-start+1:
+                raise ValueError('war active/elapsed clock mismatch')
+            participants=set()
+            for part in war['participants']:
+                identity=(part['state']['capital_cell'],part['state']['sovereignty_generation'])
+                if identity in participants or not start<=part['last_fighting_period']<=end:raise ValueError('invalid participant identity/clock')
+                participants.add(identity)
+            if field=='completed_wars' and not war['end_cause']:raise ValueError('completed war has no cause')
+            raw=war['raw_severity']
+            if raw is not None:
+                expected=raw if c['severity_export']=='raw_damage' else java_int100(raw)
+                if war['exported_severity']!=expected:raise ValueError('resolved severity export mismatch')
+
+
+def java_int100(raw):
+    return float(min(2147483647,math.trunc(raw*100))) if raw<=2147483647/100 else 2147483647.
+
+
+def _same_json_types(value,expected):
+    if type(value) is not type(expected):return False
+    if isinstance(expected,dict):
+        return set(value)==set(expected) and all(_same_json_types(value[k],v) for k,v in expected.items())
+    if isinstance(expected,list):
+        return len(value)==len(expected) and all(_same_json_types(v,e) for v,e in zip(value,expected))
+    return value==expected
+
+
 def validate_record(row,arm,binding):
-    if set(row)!=RECORD_FIELDS or row['schema_version']!=1 or row['model']!='geosim':
+    if set(row)!=RECORD_FIELDS or type(row['schema_version']) is not int or row['schema_version']!=1 or row['model']!='geosim':
         raise ValueError('unknown or missing record/model fields')
     if any(row[k]!=binding[k] for k in BINDING_FIELDS):raise ValueError('record provenance mismatch')
     seed=row['seed'];repeat=row['repeat_index']
-    if row['arm']!=arm['id'] or row['arm_index']!=arm['index'] or not _uint(seed) or not _uint(repeat) or not 0<=repeat<arm['sessions'] or seed!=arm['first_seed']+repeat:
+    if row['arm']!=arm['id'] or not _uint(row['arm_index']) or row['arm_index']!=arm['index'] or not _uint(seed) or not _uint(repeat) or not 0<=repeat<arm['sessions'] or seed!=arm['first_seed']+repeat:
         raise ValueError('record key differs from registered arm')
-    if row['config']!=arm['config']:raise ValueError('record config differs from authoritative resolved config')
+    if not _same_json_types(row['config'],arm['config']):raise ValueError('record config differs from authoritative resolved config')
     attempt=row['attempt']
     if set(attempt)!= {'status','construction_errors','panic_context','recorder_error'}:
         raise ValueError('unknown or missing attempt fields')
     if attempt['status'] not in ('completed','invalid','construction_error','construction_panic','implementation_panic','incomplete'):
         raise ValueError('unknown attempt status')
+    _schema(attempt,{'status':'str','construction_errors':[{'field':'str','message':'str'}],
+        'panic_context':('optional','str'),'recorder_error':('optional','str')},True,'attempt')
+    if attempt['status']=='completed' and attempt['panic_context'] is not None:raise ValueError('completed attempt contains panic')
+    if attempt['status']=='construction_error' and not attempt['construction_errors']:raise ValueError('construction_error lacks errors')
+    if row['outcome'] is not None:
+        if not isinstance(row['outcome'],dict) or not _same_json_types(row['outcome'].get('config'),arm['config']):raise ValueError('Outcome config differs from authoritative resolved config')
+        validate_outcome_schema(row['outcome'])
     history_availability(row,arm)
     if row['outcome'] is not None:
-        if set(row['outcome'])!=OUTCOME_FIELDS:raise ValueError('unknown or missing Outcome fields')
         completed_censuses(row['outcome'],history_availability(row,arm))
     return row['arm'],seed
 
@@ -226,9 +363,10 @@ def read_sessions(path,manifest,resolved,binding):
     if set(configs)!={a['id'] for a in manifest['arms']}:raise ValueError('resolved arm family mismatch')
     arms={a['id']:{**a,'config':configs[a['id']]} for a in manifest['arms']}
     result={}
-    with Path(path).open(encoding='utf-8') as file:
+    with Path(path).open(encoding='utf-8',newline='') as file:
         for number,line in enumerate(file,1):
             try:
+                if not line.endswith('\n'):raise ValueError('interrupted append: missing final newline')
                 row=strict_json(line)
                 if row['arm'] not in arms:raise ValueError('unregistered raw arm')
                 key=validate_record(row,arms[row['arm']],binding)

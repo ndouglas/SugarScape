@@ -55,3 +55,27 @@ class MarkdownFindingsTests(unittest.TestCase):
             self.assertIn(expected,text)
 
 if __name__=='__main__':unittest.main()
+
+class ExportDiagnosticsTests(unittest.TestCase):
+    def test_compact_histories_keep_conversion_counts_and_definition_checks(self):
+        import copy
+        from survey.geosim import source,modern
+        from survey.geosim.test_records import EnvelopeTests
+        row,_,_=EnvelopeTests().fixture();out=row['outcome'];template=out['completed_wars'][0]
+        out['completed_wars']=[]
+        for i,size in enumerate((.001,1e308)):
+            w=copy.deepcopy(template);w.update(id=i,raw_severity=size,exported_severity=size,java_saturated=i==1,java_subunit_zero=i==0)
+            out['completed_wars'].append(w)
+        out['legacy_visible_wars']=copy.deepcopy(out['completed_wars'])
+        for status in ('completed','implementation_panic'):
+            row['attempt'].update(status=status,panic_context=None if status=='completed' else 'after finish')
+            s=analysis._compact_source(source.history_source(row));m=analysis._compact_modern(modern.history_modern(row,alternatives=False))
+            label='complete_selected' if status=='completed' else 'partial_selected'
+            counters=s['census']['export_diagnostics'][label]
+            self.assertEqual(counters['emitted_java_saturated'],1)
+            self.assertEqual(counters['emitted_java_subunit_zero'],1)
+            self.assertEqual(counters['integer100_saturated'],1)
+            self.assertEqual(counters['integer100_subunit_zero'],1)
+            self.assertEqual(m['export_diagnostics'],s['census']['export_diagnostics'])
+            key='definition_checks' if status=='completed' else 'partial_definition_checks'
+            self.assertEqual(s[key]['integer100']['strict']['zero_count'],1)

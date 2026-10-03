@@ -61,3 +61,32 @@ class NumericTests(unittest.TestCase):
         self.assertEqual(r['status'],'unresolved_zero_variance')
 
 if __name__=='__main__':unittest.main()
+
+class NarrowTailTests(unittest.TestCase):
+    def test_narrow_tail_uses_one_fit_and_exact_power_two_rescaling(self):
+        from survey.geosim import modern
+        from survey.geosim.methods import METHOD_CONTRACT
+        tolerance=METHOD_CONTRACT['reference_agreement']
+        for base in (1.,1000.,1e100):
+            x=base*np.exp(np.linspace(0,1e-12,100))
+            f=modern.fit_sizes(x,alternatives=False)
+            self.assertEqual(f['status'],'Available')
+            tail=x[x>=f['xmin']]
+            ref=numerics.pareto_at(tail,f['xmin'])
+            self.assertEqual(f['alpha'],ref['alpha'])
+            self.assertEqual(f['loglike'],ref['loglike'])
+            y=np.array([math.log1p((float(v)-f['xmin'])/f['xmin']) for v in tail])
+            lp=math.log(f['alpha']-1)-math.log(f['xmin'])-f['alpha']*y
+            self.assertAlmostEqual(f['loglike']/len(tail),float(lp.mean()),delta=tolerance['nll_per_observation_absolute'])
+            for exponent in (-300,300):
+                g=modern.fit_sizes(np.ldexp(x,exponent),alternatives=False)
+                self.assertEqual(g['status'],'Available')
+                self.assertAlmostEqual(f['alpha'],g['alpha'],delta=tolerance['rescaling_alpha_ks_absolute'])
+                self.assertAlmostEqual(f['ks'],g['ks'],delta=tolerance['rescaling_alpha_ks_absolute'])
+                self.assertEqual(g['xmin'],math.ldexp(f['xmin'],exponent))
+
+    def test_density_rejects_unrepresentable_alpha_instead_of_infinite_fit(self):
+        x=np.r_[np.ones(49),np.nextafter(1.,2.)]
+        # A valid representable narrow fit remains finite; a collapsed tail is unavailable.
+        self.assertTrue(math.isfinite(numerics.pareto_at(x,1.)['alpha']))
+        with self.assertRaises(numerics.NumericFailure):numerics.pareto_at(np.ones(50),1.)

@@ -56,3 +56,23 @@ class SourceTests(unittest.TestCase):
         self.assertEqual(source.contrast_verdict(None,None),'Unresolved')
 
 if __name__=='__main__':unittest.main()
+
+class DefinitionChecksTests(unittest.TestCase):
+    def test_inclusive_rank_tail_and_integer100_are_separate_from_primary(self):
+        wars=[{'raw_severity':x,'exported_severity':x} for x in [0,.001,100,1000,1000,10000,100000]]
+        primary=source.source_fit([w['exported_severity'] for w in wars])
+        checks=source.source_definition_checks(wars)
+        self.assertEqual(checks['status'],'inferred_descriptive_source_equivalence_unresolved')
+        exported=checks['exported']
+        self.assertEqual(exported['fit_tail'],{'count':4,'positive_distinct_count':3,'log_range':2.})
+        self.assertEqual(exported['inclusive_unique']['fit_points'][0],[3.,math.log10(4/6)])
+        self.assertEqual(exported['descending_rank']['fit_points'],[[5.,math.log10(1/6)],[4.,math.log10(2/6)],[3.,math.log10(3/6)],[3.,math.log10(4/6)]])
+        self.assertEqual(checks['integer100']['strict']['zero_count'],2)
+        self.assertEqual(checks['integer100']['fit_tail']['count'],5)
+        self.assertEqual(primary,source.source_fit([w['exported_severity'] for w in wars]))
+        self.assertEqual(len(primary['fit_points']),2)
+        self.assertEqual(exported['inclusive_unique']['fit_status'],'available')
+
+    def test_rank_fit_requires_three_distinct_x_despite_repeated_observations(self):
+        checks=source.source_definition_checks([{'raw_severity':x,'exported_severity':x} for x in [1000]*5+[10000]*5])
+        self.assertEqual(checks['exported']['descending_rank']['fit_status'],'unavailable')

@@ -315,3 +315,25 @@ fn actual_native_frozen_fixture_recomputes_inventory_and_pre_post_receipt_bindin
     assert!(!out.status.success());
     assert!(String::from_utf8_lossy(&out.stderr).contains("omits required"));
 }
+
+#[test]
+fn omitted_resolved_output_defaults_adjacent_to_sessions_without_worlds() {
+    let f = Fixture::new();
+    let manifest = f.manifest(false);
+    let out = Command::new(env!("CARGO_BIN_EXE_geosim"))
+        .arg("--manifest")
+        .arg(&manifest)
+        .args(["--manifest-sha256", &hash(&fs::read(&manifest).unwrap())])
+        .arg("--source-root")
+        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap())
+        .arg("--out")
+        .arg(f.path("sessions.jsonl"))
+        .arg("--validate")
+        .output()
+        .unwrap();
+    success(out);
+    let export: Value =
+        serde_json::from_slice(&fs::read(f.path("sessions.jsonl.resolved.json")).unwrap()).unwrap();
+    assert_eq!(export["arms"].as_array().unwrap().len(), 37);
+    assert!(!f.path("sessions.jsonl").exists());
+}

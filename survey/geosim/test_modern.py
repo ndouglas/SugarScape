@@ -85,3 +85,27 @@ class FinalDiagnosticsTests(unittest.TestCase):
         self.assertIn('loglike',result['unavailable_numeric_fields'])
 
 if __name__=='__main__':unittest.main()
+
+class NarrowObservedNullTests(unittest.TestCase):
+    def test_narrow_likelihood_ratio_uses_exported_pareto_shape(self):
+        import math
+        from survey.geosim import numerics
+        from survey.geosim.methods import METHOD_CONTRACT
+        x=1e100*np.exp(np.linspace(0,1e-12,100));f=modern.fit_sizes(x)
+        self.assertEqual(f['status'],'Available')
+        tail=np.sort(x[x>=f['xmin']]);y=np.log1p((tail-f['xmin'])/f['xmin'])
+        lp=math.log(f['alpha']-1)-math.log(f['xmin'])-f['alpha']*y
+        alternate=numerics.fit_exp(y,math.log(f['xmin']))
+        expected=numerics.likelihood_ratios({'alpha':f['alpha'],'logpdf':lp},alternate)
+        self.assertEqual(f['alternatives']['exponential']['ratio'],expected)
+
+    def test_generated_refits_preserve_power_two_scaling_of_narrow_tail(self):
+        import math
+        x=1e100*np.exp(np.linspace(0,1e-12,100));scaled=np.ldexp(x,-300)
+        fits=[modern.fit_sizes(s,cutoff_search='grid100',alternatives=False) for s in (x,scaled)]
+        results=[modern.ks_refit_test(f,s,np.random.default_rng(13),draws=8) for f,s in zip(fits,(x,scaled))]
+        self.assertEqual(results[0]['failed_replicates'],0)
+        self.assertEqual(results[1]['failed_replicates'],0)
+        self.assertEqual([math.ldexp(v,-300) for v in results[0]['refitted_xmins']],results[1]['refitted_xmins'])
+        self.assertEqual({k:v for k,v in results[0].items() if k!='refitted_xmins'},
+                         {k:v for k,v in results[1].items() if k!='refitted_xmins'})

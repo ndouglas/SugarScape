@@ -15,7 +15,7 @@ class RecordsTests(unittest.TestCase):
                 'attempted_period':10500 if valid else 522,'counting_start':501,'valid':valid,'state_available':True,
                 'finish_reason':'horizon' if valid else 'invalid','invalid_reason':None if valid else 'nonfinite cumulative science ledger',
                 'completed_wars':[war],'censored_wars':[],'legacy_visible_wars':[copy.deepcopy(war)],'exporter_backlog':[],
-                'merges':[],'retired_states':[],'sovereign_count':0,'states':[],'cells':[],'ledger':{},'fronts':[],'resource_updates':[],
+                'merges':[],'retired_states':[],'sovereign_count':0,'states':[],'cells':[{'id':i,'owner':{'capital_cell':0,'sovereignty_generation':0},'last_threshold':3.,'next_generation':1} for i in range(4)],'ledger':{**dict.fromkeys(('attacks','fighting_front_periods','mutual_front_periods','conquests','collapses','disconnections','stale_claims','locked_claims','double_successes','path_collisions','shocks'),0),**dict.fromkeys(('damage','measured_damage','capacity_increase','capacity_decrease','clipping','retirement_capacity','reemergence_capacity','recurrence_residual'),0.)},'fronts':[],'resource_updates':[],
                 'partial_period_fights':[]}
     def test_attempted_period_completion_is_excluded_even_from_partial_diagnostics(self):
         out=self.outcome();bad=copy.deepcopy(out['completed_wars'][0]);bad.update(id=1,end_period=522,elapsed_periods=22)
@@ -190,3 +190,82 @@ class CoreCensoredShapeTests(unittest.TestCase):
         self.assertEqual(out['censored_wars'][0]['end_cause'],'horizon_censored')
 
 if __name__=='__main__':unittest.main()
+
+class StrictNestedTests(unittest.TestCase):
+    def test_interrupted_append_with_complete_json_but_no_newline_is_rejected(self):
+        row,m,r,b=ReadSessionsTests().reader_fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/'raw.jsonl';p.write_text(json.dumps(row))
+            with self.assertRaisesRegex(ValueError,'raw line 1.*newline'):
+                records.read_sessions(p,m,r,b)
+
+    def test_unknown_or_missing_nested_fields_and_wrong_types_are_rejected(self):
+        row,arm,binding=EnvelopeTests().fixture()
+        sid={'capital_cell':0,'sovereignty_generation':0}
+        out=row['outcome']
+        out['states']=[{'id':sid,'capacity':1.,'threshold':3.,'alert':False,'campaign':None,
+            'previous_damage':0.,'newly_independent':False,'extracted_yield':1.,'recurrence_residual':0.}]
+        out['sovereign_count']=1
+        out['fronts']=[{'states':[sid,{**sid,'capital_cell':1}],'previous':[False,False],'actions':[False,False],
+            'old_commitments':[0.,0.],'commitments':[0.,0.],'path':None,'initiator':None,'last_damage':[0.,0.],
+            'last_victory_probabilities':[None,None]}]
+        out['resource_updates']=[{'state':sid,'period':1,'old_capacity':1.,'extracted_yield':1.,'applied_damage':0.,
+            'target_capacity':1.,'new_capacity':1.,'clipping':0.,'residual':0.,'reset':False}]
+        out['merges']=[{'period':1,'survivor':0,'absorbed':1}]
+        self.assertEqual(records.validate_record(row,arm,binding),('original.base',370000001))
+        paths=[('completed_wars',0),('completed_wars',0,'participants',0),
+               ('completed_wars',0,'participants',0,'state'),('states',0),('states',0,'id'),
+               ('cells',0),('ledger',),('fronts',0),('resource_updates',0),('merges',0)]
+        for path in paths:
+            for mode in ('extra','missing','type'):
+                with self.subTest(path=path,mode=mode):
+                    bad=copy.deepcopy(row);obj=bad['outcome']
+                    for key in path:obj=obj[key]
+                    if mode=='extra':obj['unexpected']='corrupt'
+                    elif mode=='missing':del obj[next(iter(obj))]
+                    else:obj[next(iter(obj))]=True
+                    bad['outcome']['legacy_visible_wars']=copy.deepcopy(bad['outcome']['completed_wars'])
+                    with self.assertRaises(ValueError):records.validate_record(bad,arm,binding)
+
+    def test_nested_availability_clocks_and_array_shapes_fail_closed(self):
+        mutations=[('rng_mode','other'),('counting_start',True),('sovereign_count',1),('cells',[]),
+                   ('partial_period_fights',[[{'capital_cell':0,'sovereignty_generation':0}]]),
+                   ('ledger',{'damage':0.})]
+        for key,value in mutations:
+            with self.subTest(key=key):
+                row,arm,b=EnvelopeTests().fixture();row['outcome'][key]=value
+                with self.assertRaises(ValueError):records.validate_record(row,arm,b)
+        for field,value in [('java_saturated',1),('parents',[True]),('raw_severity',None),('last_active_period',True)]:
+            with self.subTest(field=field):
+                row,arm,b=EnvelopeTests().fixture();row['outcome']['completed_wars'][0][field]=value
+                row['outcome']['legacy_visible_wars']=copy.deepcopy(row['outcome']['completed_wars'])
+                with self.assertRaises(ValueError):records.validate_record(row,arm,b)
+
+class InvalidNestedTests(unittest.TestCase):
+    def test_invalid_outcome_still_rejects_corrupt_war_clocks_and_participants(self):
+        for field,value in [('fighting_periods',[501,501]),('active_periods',2),('elapsed_periods',1),
+                            ('participants',[{'state':{'capital_cell':0,'sovereignty_generation':0},'last_fighting_period':600}])]:
+            with self.subTest(field=field):
+                row,arm,b=EnvelopeTests().fixture();out=row['outcome']
+                row['attempt']['status']='invalid';out.update(valid=False,periods=521,attempted_period=522,finish_reason='invalid',invalid_reason='fixture')
+                out['completed_wars'][0][field]=value;out['legacy_visible_wars']=copy.deepcopy(out['completed_wars'])
+                with self.assertRaises(ValueError):records.validate_record(row,arm,b)
+
+    def test_invalid_required_float_nulls_preserved_but_valid_nulls_rejected(self):
+        row,arm,b=EnvelopeTests().fixture();out=row['outcome'];out['ledger']['damage']=None
+        with self.assertRaises(ValueError):records.validate_record(row,arm,b)
+        row['attempt']['status']='invalid';out.update(valid=False,periods=521,attempted_period=522,finish_reason='invalid',invalid_reason='fixture')
+        self.assertEqual(records.validate_record(row,arm,b),('original.base',370000001))
+        self.assertIsNone(out['ledger']['damage'])
+
+class NativeBoundaryParityTests(unittest.TestCase):
+    def test_bare_carriage_return_is_not_native_complete_line(self):
+        row,m,r,b=ReadSessionsTests().reader_fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/'raw.jsonl';p.write_bytes(json.dumps(row).encode()+b'\r')
+            with self.assertRaisesRegex(ValueError,'newline'):records.read_sessions(p,m,r,b)
+
+    def test_integer_config_cannot_be_replaced_by_equal_float(self):
+        row,arm,b=EnvelopeTests().fixture();row=copy.deepcopy(row)
+        row['config']['width']=2.;row['outcome']['config']['width']=2.
+        with self.assertRaises(ValueError):records.validate_record(row,arm,b)
