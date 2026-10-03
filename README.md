@@ -3826,4 +3826,13 @@ versus same defender thresholds and attacked-party versus acting-party damage.
 See the [approved design](docs/superpowers/specs/2026-10-03-geosim-design.md),
 [source readings](docs/superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md)
 and [artifact certification audit](docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md).
-No scientific result is inferred from the host integration checks.
+The offline study retains 37 arms / 1,490 attempts (1,486 complete, 4 invalid).
+Ten conditional source comparisons remain Unresolved; the 75×75 grid is
+Incompatible. Exact source equivalence and all six fixed technology/context
+contrasts remain Unresolved. Modern pooled iid checks yield 15 rejections,
+5 nonrejections and 2 inconclusive results; these do not establish historical
+reproduction. See the [findings](docs/superpowers/specs/2026-10-03-geosim-findings.md)
+and [execution provenance](docs/superpowers/specs/2026-10-03-geosim-provenance.json).
+Measurements remain bound to the preserved original source/binary; the
+[recorder amendment](docs/superpowers/specs/2026-10-03-geosim-postmeasurement-recorder-amendment.md)
+and integrated builds have separate identities.

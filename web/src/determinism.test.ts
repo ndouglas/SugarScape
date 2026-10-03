@@ -86,7 +86,7 @@ import type {
 } from './types';
 import { InspectPanel } from './ui/inspect-panel';
 import { MODEL_CHARTS } from './ui/series-data';
-import { config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
+import { Sim, protection_config_json, protection_episode_json, config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
 const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
@@ -1702,4 +1702,53 @@ describe('spatial episode presets', () => {
     const spatialPresetIds = presets.map(p => p.id).filter(id => id.startsWith('spatial-'));
     expect(spatialPresetIds).toEqual(['spatial-scatter', 'spatial-larder', 'spatial-larder-guard']);
   });
+});
+
+describe('protection checked WASM boundary', () => {
+  const lab = (policy: string, observed: boolean) => JSON.stringify({ policy, fixture: { kind: 'single', initial_observed: true, redeposit_observed: observed }, mirrored: false, reburial_cost: 0.25, discovery: 0, exposure_span: 64, observer_span: 64 });
+  it('rejects nondecimal and overflowing seeds and invalid rigs', () => {
+    for (const seed of ['', '-1', '+7', '7.0', ' 7', '18446744073709551616']) expect(() => protection_episode_json(lab('selective', false), seed)).toThrow();
+    expect(() => protection_config_json(lab('selective', false).replace('0.25', '-1'))).toThrow();
+  });
+  it('retains withdrawn food when a constructed blocker cancels transport', () => {
+    const sim = new Sim(protection_config_json(lab('selective', false)), 7, null);
+    try {
+      sim.step(9); // retrieve completed; destination remains (3,2).
+      const before = JSON.parse(sim.inspect(3, 3));
+      sim.place_agent(3, 2, JSON.stringify({ vision: 0, metabolism: 0, sugar: 100 }));
+      sim.step(1);
+      expect(Array.from(sim.locate(1)!)).toEqual([3, 3]);
+      const after = JSON.parse(sim.inspect(3, 3));
+      expect(after.agent.holdings[0]).toBe(before.agent.holdings[0] - 1);
+      expect(JSON.parse(sim.inspect(3, 2)).site.caches).toEqual([]);
+      sim.step(1);
+      expect(JSON.parse(sim.inspect(3, 2)).site.caches).toEqual([]);
+    } finally { sim.free(); }
+  });
+  for (const [policy, observed] of [['selective', true], ['selective', false], ['erased', false], ['indiscriminate', false]] as const) {
+    it(`replays ${policy} with observed redeposit=${observed} against native ticks and cohort records`, async () => {
+      const root = fileURLToPath(new URL('../../', import.meta.url));
+      const config = JSON.parse(protection_config_json(lab(policy, observed)));
+      const episode = JSON.parse(protection_episode_json(lab(policy, observed), '7'));
+      expect(episode.ledger_errors).toEqual([]);
+      expect(episode.fixture_errors).toEqual([]);
+      expect(Object.keys(episode.cohorts.cohorts)).toHaveLength(1);
+      const actions = episode.frames.flatMap((frame: { actions: { action: string }[] }) => frame.actions.map(a => a.action));
+      if (policy === 'erased') expect(actions).not.toContain('retrieve');
+      else expect(actions).toContain('retrieve');
+      await withNativeTraceDirectory(async scratch => {
+        const configPath = `${scratch}/config.json`, tracePath = `${scratch}/trace.json`;
+        writeFileSync(configPath, JSON.stringify(config));
+        execFileSync(`${root}target/release/sugarscape`, ['run', '--config', configPath, '--seed', '7', '--ticks', '64', '--fingerprint-trace', tracePath], { cwd: root, encoding: 'utf8' });
+        const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+        expect(trace.map(row => row.tick)).toEqual(Array.from({ length: 65 }, (_, t) => t));
+        const e = await Engine.create({ config, seed: 7 }, { presets, transport: inline() });
+        for (const row of trace) {
+          if (row.tick > 0) await e.advance(1);
+          expect(await e.fingerprint()).toBe(row.fingerprint);
+          expect(`0x${episode.frames[row.tick].fingerprint}`).toBe(row.fingerprint);
+        }
+      });
+    });
+  }
 });

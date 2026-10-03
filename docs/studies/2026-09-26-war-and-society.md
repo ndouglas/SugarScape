@@ -242,8 +242,8 @@ must reduce to it when every switch is off.
 - **War weariness.** Public support falls with the logarithm of casualties (Mueller).
 - **Adaptation.** Measure and countermeasure, and generals fighting the last war.
 - **The size of wars.** Richardson's power-law claim for deadly quarrels and Cederman's
-  GeoSim claim, now the next paper-queue item. The polarity reconstruction below
-  does not establish a war-size fit.
+  GeoSim claim, measured separately in Milestone 37 below. The polarity
+  reconstruction does not establish a war-size fit.
 
 ## The headline questions
 
@@ -307,10 +307,49 @@ actions across 81,739 domestic episodes, with positive domestic combat damage.
 Actions, DD encounters and episodes remain distinct counts. No replacement seeds,
 new resource cap or post-measurement judge changes were used.
 
-The next GeoSim study must freeze its own war-size measure, technology shocks,
-termination/censoring and empirical fit before execution. Carry these episode and
-accounting observables forward; do not turn them into casualties, AI intent or
-proof of a real-world power law.
+## Measured GeoSim handoff (2026-10-03)
+
+Milestone 37's [findings](../superpowers/specs/2026-10-03-geosim-findings.md) retain
+all 37 arms / 1,490 attempts: 1,486 complete and 4 invalid. Ten conditional source-arm
+comparisons are Unresolved; the 75×75 grid is Incompatible. Only 8 of 88 source
+targets have complete predictive inference; 80 retain unavailable slots. Exact
+source equivalence remains Unresolved because severity scale, range/count
+conventions and original executable identity are unverified.
+
+All six fixed baseline-minus-no-shock and baseline-minus-context-off slope,
+R² and range contrasts are Unresolved: their joint source-fit populations are
+incomplete. The two separately declared modern descriptive contrasts are
+available. Baseline-minus-no-shock mean alpha is−0.868 (95% interval−0.940 to−0.799)
+and baseline-minus-context-off−0.980 (−1.029 to−0.935), consistent with a heavier
+adaptive fitted baseline tail within this reconstruction. Cutoff changes differ:
+mean xmin+1.322 (+0.967 to+1.724) against no shocks, but−1.521 (−2.003 to−1.026)
+against no context. These whole-history descriptive comparisons add no mechanism
+verdict or historical causal claim.
+
+The original pooled baseline is not rejected by its iid KS diagnostic(p≈0.266);
+the independent precision pool rejects(p≈0.002). Across 22 pools there are 15
+rejections,5 nonrejections and 2 inconclusive results, with 1,000 successful
+refitted draws per pool. There are 1,478 individual fits,8 insufficient tails and
+4 invalid histories;36 of 37 whole-history parameter summaries are available.
+Pooled iid fits/tests do not validate dependent histories. The declared nested
+cutoff-Pareto half-chi-square calibration remains unvalidated. Keep original,
+precision and alternative-reading populations distinct.
+
+No regime-type or democratic-peace experiment ran. CoWv4 participant data was
+recovered, but Thailand's war 170 death code −9 is unknown; the exact Clauset 2018
+SupplementS1 and Cederman 1820–1997 input remain unavailable. Known-sum endpoints
+cannot substitute for an empirical reproduction. GeoSim0 GPL-2.0-or-later differs from the
+framework's LGPL-2.1-or-later and unresolved nested GeoSim2 model license; all recovered
+code remains reference-only. The [author audit](../superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md)
+and [artifact audit](../superpowers/specs/2026-10-03-geosim-artifact-audit.md) retain
+these limits.
+
+The [execution provenance](../superpowers/specs/2026-10-03-geosim-provenance.json)
+and [postmeasurement recorder amendment](../superpowers/specs/2026-10-03-geosim-postmeasurement-recorder-amendment.md)
+keep the measured source/binary and original raw/full/compact results separate
+from repaired and integrated builds. Carry the explicit front/territory/cluster
+and completed/censored/queued observables into future studies. Abstract resource
+damage does not measure casualties, AI intent or a real-world power law.
 
 ## Open questions
 

@@ -5,8 +5,14 @@
 their mechanisms, empirical targets and implementation plans require individual designs.
 **Builds on:** [Minds](../../studies/2026-09-27-minds.md) and
 [swarm coordination](../../studies/2026-09-27-swarm-coordination.md).
-**Immediate next step:** Minds 9 remains the spatial evolution of hoarding. Protection and
-deception follow; behavior trees and HTN retain their place after that campaign.
+**Immediate next step:** Minds 9 is complete and the
+[P3 costly re-caching implementation](../plans/2026-10-02-minds-protection.md) is complete,
+reviewed and merged. Scientific execution of its
+[protocol](2026-10-02-minds-protection-protocol.md) awaits committed manifest/opportunity review;
+deception follows. [Hornvale's repaired asks request](../../studies/prompts/2026-10-03-hornvale-asks-prompt-v2.md)
+adds an independent exchange-design branch using the existing identity, memory and valuation
+foundation; it does not require finishing P4 or implementing general communication first.
+Behavior trees and HTN retain their place after the pilfering campaign.
 
 ## Purpose and scope
 
@@ -70,9 +76,10 @@ build every direction. They form a dependency map, not a ten-step implementation
 ### C1. Finish the pilfering campaign
 
 **Question:** when do heritable hoarding, defense, protection and deception pay?
-**Foundation:** Minds 1–8; Minds 9 is next under the existing program.
+**Foundation:** Minds 1–9, including completed spatial hoarding and paid-defense comparisons.
 **Work:** spatial heritable larders, defense, concealment, re-caching and misleading observers.
-**First experiments:** those selected by the Minds 9 and subsequent protection/deception designs.
+**First experiments:** Minds 9 is complete; the next designed experiment is costly,
+cache-specific re-caching under the [P3 design](2026-10-02-minds-protection-design.md).
 **Comparisons:** stumbling versus watching; short versus long observational memory; cue-based
 protection versus an explicit estimate of what others saw.
 **Evidence to report:** individual and cohort outcomes, cache fate, travel and displaced harvest,
@@ -138,6 +145,19 @@ definitions, including the commitment or expectation breached in a betrayal clai
 **Evidence to report:** assistance, reciprocity, reneging, trust calibration, knowledge-sensitive
 choices and transfer. Neither re-caching nor deception alone establishes theory of mind.
 **Feeds:** C7–C9 and the later exchange program.
+
+**Concrete design input:** [Hornvale's asks prompt v2](../../studies/prompts/2026-10-03-hornvale-asks-prompt-v2.md)
+requests comparisons of local response strategies with private, fading per-partner histories,
+paid asking and perceivable-need controls. It repairs the earlier formulas and supplies a
+one-sided fallback based on witnessed answers or initial cooperation. An initial consumable-food
+transfer study can start independently of the gate/message-board world and contribute to C7.
+Tools and exclusive access should follow C2's verified object/control mechanics. This request
+still needs its own bounded design: observable information, common valuation units, ordered
+answer/outcome memory, the meaning of a Pavlov win, action costs, circulation and population
+replacement/selection must be fixed before judged runs. Neither a private history nor witnessed
+third-party answers implies a global reputation score; unobserved costs remain researcher truth.
+Distinguish selfish valuation and expected reciprocity from supplied prosocial preferences:
+recipient gain alone does not establish a personal return to the giver.
 
 ### C6. Teams, shared minds and organization
 
@@ -213,9 +233,21 @@ traditions; new cohorts, capabilities and environments.
 artifacts, adaptation and distribution of benefits. This is the longest horizon, not a prerequisite
 for the incident-shaped scenario.
 
+**Expanded parallel programme:** [Cultures, construction and underworlds](../../studies/2026-10-03-cultures-construction-and-underworlds.md)
+preserves seven research families covering embodiment, construction, institutions, transmission,
+beliefs, astronomy and language. The user selected collective burrow construction as its first
+branch to refine, motivated by rich and diverse Hornvale underworlds. Literature and environment
+design can proceed in separate sessions alongside Minds; integration follows explicit capability
+dependencies. This is a living research outline, not an approved excavation implementation spec,
+and does not change the P3/P4 or incident-shaped integration sequence.
+
 ## Dependency and sequencing decisions
 
 - **Continue now:** C1 under the existing Minds order.
+- **Independent exchange design:** Hornvale's repaired request can use the existing individual
+  foundation before behavior trees/HTN. Begin with bounded food transfers and private relation
+  memory; register the response rules and asking policy separately. Its later tools/access
+  experiments join C2, and its reciprocity/need comparisons feed C5/C7.
 - **Next designs that can proceed independently:** C2's gate and affordance experiment, C3's
   persistent-message experiment, and C4's small uncertainty/learning experiment.
 - **First integration:** C2 + C3, with explicit observation and cost accounting for C9.
@@ -321,6 +353,8 @@ A campaign is ready for implementation only after a reviewed design supplies:
 - Appropriate measures, a judging pre-mortem and a computational-budget comparison.
 - Integration boundaries, replay requirements and a staged implementation plan.
 
-The immediate planning deliverable after review is C2's gate/affordance design or C3's persistent
-message design, selected alongside continuing Minds 9. There is enough direction to begin those
-designs; broader brainstorming is reserved for unresolved decisions within each one.
+The next design can be Hornvale's bounded exchange study, C2's gate/affordance experiment or C3's
+persistent-message experiment, alongside P3 scientific execution review and P4 design. These are
+proposed alternatives, not approval to implement them or run scientific campaigns. There is
+enough direction to begin individual designs; broader brainstorming is reserved for unresolved
+decisions within each one.

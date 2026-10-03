@@ -52,6 +52,16 @@ impl Harvest {
 /// (if still alive) mate with each neighbor, spread culture to them, trade,
 /// borrow, and (rule E) train its immune system and pass on disease.
 pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
+    if world.config.protection_lab.is_some() {
+        world
+            .protection_actions
+            .push(crate::minds::protection::runner::ActionRecord {
+                id,
+                phase: "ordinary".into(),
+                action: "foraging".into(),
+                ..Default::default()
+            });
+    }
     // The book's worked example: a disease learned last turn is gone now,
     // before it can cost another fee or be passed on again.
     if world.config.disease.enabled && world.config.disease.cure == DiseaseCure::NextTick {
@@ -62,22 +72,25 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     } else {
         crate::minds::decide(world, id)
     };
+    crate::minds::protection::ledger::reconcile_world(world);
     if world.config.memory.span > 0 {
         crate::minds::memory::observe(world, id);
     }
     // Minds 5: burying, after the move and harvest and before eating.
     if world.config.spatial_hoarding.enabled {
         crate::minds::spatial_hoarding::delivery::finish_turn(world, id);
-    } else if world.config.caching.buries() {
+    } else if world.config.protection_lab.is_none() && world.config.caching.buries() {
         crate::minds::caching::rules::act(world, id, &harvest);
     }
     lifecycle::metabolize(world, id, harvest);
+    crate::minds::protection::controller::clamp_after_metabolism(world, id);
     if world.config.spatial_hoarding.enabled {
         crate::minds::spatial_hoarding::delivery::clamp(world, id);
     }
     if world.config.credit.enabled {
         credit::record_income(world, id, &harvest);
     }
+    crate::minds::protection::ledger::reconcile_world(world);
     if lifecycle::check_death(world, id) {
         return;
     }
