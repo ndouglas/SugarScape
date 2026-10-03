@@ -1,0 +1,3 @@
+# Python 3.13.5; offline scientific protocol only, never a browser/core dependency.
+numpy==2.4.6
+scipy==1.17.1

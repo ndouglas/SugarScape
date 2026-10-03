@@ -10,13 +10,13 @@
 **Goal**: CLI/WASM/playground/Compare/Experiments.
 **Success Criteria**: Actual resolved states and source clocks agree.
 **Tests**: Native/WASM parity, UI fixtures and browser smoke.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 3: Scientific protocol
 **Goal**: Authoritative recorder, frozen sources and offline judges.
 **Success Criteria**:37 arms/1490 keys validate without periods.
 **Tests**: Resume/integrity and deterministic estimator fixtures.
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 4: Findings and publication
 **Goal**: Complete registered matrix, review and integration.
