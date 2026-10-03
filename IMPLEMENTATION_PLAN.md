@@ -16,7 +16,7 @@
 **Goal**: Authoritative recorder, frozen sources and offline judges.
 **Success Criteria**:37 arms/1490 keys validate without periods.
 **Tests**: Resume/integrity and deterministic estimator fixtures.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 4: Findings and publication
 **Goal**: Complete registered matrix, review and integration.
