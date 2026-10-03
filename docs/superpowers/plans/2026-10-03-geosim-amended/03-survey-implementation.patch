@@ -1,0 +1,2943 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 52bf281abecb27c8d20aabefc6fac24880c9ba5f..c7c23e20bff1142338c4814b1c97634f462fad62 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -76,3 +76,26 @@ jobs:
+       - run: npm ci
+       - run: npm run build
+       - run: npm test
++
++  # Tiny native/estimator fixtures only; registered histories stay outside CI.
++  geosim:
++    runs-on: ubuntu-latest
++    env:
++      OPENBLAS_NUM_THREADS: "1"
++      OMP_NUM_THREADS: "1"
++      MKL_NUM_THREADS: "1"
++      PYTHONDONTWRITEBYTECODE: "1"
++    steps:
++      - uses: actions/checkout@v7
++      - uses: dtolnay/rust-toolchain@stable
++      - uses: Swatinem/rust-cache@v2
++        with:
++          workspaces: survey -> target
++      - uses: actions/setup-python@v7
++        with:
++          python-version: 3.13.5
++          cache: pip
++          cache-dependency-path: survey/geosim/requirements.txt
++      - run: python -m pip install -r survey/geosim/requirements.txt
++      - run: cargo test --manifest-path survey/Cargo.toml --bin geosim --test geosim_native
++      - run: python -m unittest discover -s survey/geosim -p 'test_*.py'
+diff --git a/survey/geosim/.python-version b/survey/geosim/.python-version
+new file mode 100644
+index 0000000000000000000000000000000000000000..86f8c02eb210e162e13395323abd0d02e8d7d223
+--- /dev/null
++++ b/survey/geosim/.python-version
+@@ -0,0 +1 @@
++3.13.5
+diff --git a/survey/geosim/NUMERICAL_METHODS.md b/survey/geosim/NUMERICAL_METHODS.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b85a5bb425a3bcc2c5276f55c699703641aa52dc
+--- /dev/null
++++ b/survey/geosim/NUMERICAL_METHODS.md
+@@ -0,0 +1,43 @@
++# Frozen GeoSim offline numerical methods
++
++The executable contract is `methods.py::METHOD_CONTRACT`, serialized exactly as `method_contract_json` and SHA256-bound before measurement. Python3.13.5, NumPy2.4.6 and SciPy1.17.1 are pinned by `.python-version`/`requirements.txt`; installed versioned source/docs were inspected during synthetic preparation. These libraries are offline only. NumPy metadata reports `BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0`; SciPy's main license is BSD-3-Clause with its distributed build-dependent OpenBLAS/LAPACK/GCC-runtime notices. Preserve exact installed metadata/license hashes in execution provenance.
++
++These kernels are independently authored. Original GPL-2.0 MATLAB and custom-license R fitting sources remain isolated reference-only files and are neither imported nor copied into product code. Primary fitting reference: [Clauset, Shalizi and Newman (2009), Power-law distributions in empirical data](https://arxiv.org/abs/0706.1062), including maximum-likelihood, generated/refitted KS and normalized likelihood-ratio procedures. [Author fitting distribution](https://aaronclauset.github.io/powerlaws/) records reference options that differ from our declared grid/tie/RNG choices. Numerical guard/stopping/sufficiency choices below are our premeasurement choices, not parameters claimed from Cederman's paper or unavailable Clauset SupplementS1.
++
++## Support and density equations
++
++All four alternatives use the same Pareto-selected **inclusive** support x>=m=xmin. Let y=log(x)-log(m), t=x/m, and k be a positive dimensionless rate.
++
++- Pareto: f(x)=(alpha−1)/m * t^(−alpha), alpha>1; MLE alpha=1+1/mean(y).
++- Exponential: f(x)=k/m * exp[−k(t−1)]; k=1/mean(expm1(y)), physical rate lambda=k/m.
++- Lognormal: f(x)=NormalDensity(log(x);mu,sigma)/(x*NormalSurvival(log(m);mu,sigma)), sigma>0. Use natural coordinates s=mean(y), u=y/s, a=−(mu−log(m))*s/sigma², b=s²/(2sigma²)>0. Then f(x)=exp(−a*u−b*u²)/(x*s*J), J=integral0∞exp(−a*u−b*u²)du. Profile/converge using moment-gradient differences. mu=log(m)−a*s/(2b), sigma=s/sqrt(2b).
++- Stretched exponential (Weibull): f(x)=beta*k/m * t^(beta−1)*exp[−k(t^beta−1)], beta>0; beta>1 is allowed and explicitly a compressed exponential. Profile k=n/sum(expm1(beta*y)); solve the one-dimensional score root.
++- Exponential-cutoff Pareto: f(x)=t^(−alpha)*exp[−k(t−1)]/(m*J), J=integral0∞exp[(1−alpha)u−k*expm1(u)]du. For positive k, alpha may be any real value; at k=0 normalizability requires alpha>1. This dimensionless positive integral avoids SciPy incomplete-gamma functions at negative shape. Scale around its mode and remove coordinate scale outside quadrature.
++
++Data-selected Pareto xmin minimizes KS on eligible observed cutoffs with at least50 inclusive tail observations. Individual histories use all observed unique eligible values; pools use every value up to100 or integer index `j*(M−1)//99`, j0..99, from the ascending M eligible values. Include endpoints/no duplicates. At each unique tied tail value use both left and right ECDF limits. Exact KS ties choose the smallest xmin. All-equal/insufficient/nonfinite inputs are explicit unavailable fits. A selected Pareto fit is descriptive when event data are dependent.
++
++## Numerical starts, guards and failure semantics
++
++Positive normalizer quadrature: SciPy `quad`, epsabs1e−11, epsrel1e−10, limit250. Reject warnings, nonpositive/nonfinite result/error and estimated relative error>1e−8. These are quadrature estimates, not certified error bounds. Mode-shift/scale integrands so the absolute tolerance applies to an order-one integral. Retain exact k0 normalizer.
++
++Lognormal L-BFGS-B starts(a,b)=(-1,.5),(0,.5),(1,.1),(1,.01), guards a[-100,100], b[1e−8,1e4]. Scaled second moment>=2 means unattained Pareto-limit MLE, not a favorable fitted lognormal. Guard-contact tests match the public kernel. Cutoff starts alpha=[min(99,alphaPareto),1,0] crossed with k=[1,.1,.01]/mean(expm1(y)); logk starts clipped[-31,31], guards alpha[-100,100]/logk[-32,32]. Both optimizers use ftol1e−13, gtol1e−8, maxiter1000, maxls50; successful finite final objective with gradient infinity norm<1e−6 is required. Exact-NLL ties preserve start order. Exploration sentinels cannot become a likelihood. Guard bounds are numerical protection, not scientific restrictions; contacting them is Unresolved.
++
++Weibull uses analytic profiled score, stable small-beta series/scaled exponential sums and brentq beta[1e−8,100] with upper doubling from1; xtol/rtol1e−10, maxiter200. Nonpositive endpoint score is an unattained Pareto limit. Guard contact/unconverged/underflowed zero rate is Unresolved. Evaluate the final k*(exp(beta*y)−1) as exp(logk+beta*y)−k to avoid an overflowing unscaled exponential.
++
++Cutoff exact boundary: alphaPareto>2 and mean(expm1(y))>=1/(alphaPareto−2) supplies the convex likelihood KKT certificate for k0. Return equal Pareto likelihood/T0/p1. Interior gain<=1e−10 per observation is unresolved near-boundary, not manufactured equality. All failed/nonfinite final evaluations/parameters retain telemetry and Unresolved status. Null unavailable numeric diagnostic fields have explicit `unavailable_numeric_fields` paths; finite fitted numbers are never silently coerced.
++
++Reference fixture tolerances: normalization relative<=1e−9, logdensity absolute<=1e−8, independent-optimizer parameter absolute<=2e−5, NLL absolute<=1e−9 per observation, tied KS absolute<=1e−12, alpha/KS rescaling absolute<=1e−10. These check numerical implementation, not equality to generating parameters. They were selected from synthetic/reference preparation before scientific measurement.
++
++## Ratios and calibration qualification
++
++Nonnested R=sum(log fPareto−log fAlternative); variance=mean((difference−mean difference)²), divisor n; normalized R=R/sqrt(n*variance), two-sided erfc p at.1. Nonfinite/variance<=1e−24 and unsuccessful alternative fits are Unresolved. Keep exponential/lognormal/Weibull/cutoff separately, including disagreement.
++
++Declared nested cutoff calibration is half point mass0/half chi-square1; positive T=−2R gets p=.5*chi2.sf(T,1), exact KKT equality p1. Preserve `calibration=declared_half_chi_square_1`, **calibration_validity=unvalidated**. The boundary score contains X; under pure Pareto its first moment fails for alpha<=2 and second moment/Fisher information fails for alpha<=3. Alpha>3 is necessary for that moment condition, not validation of all regularity conditions, cutoff selection, dependence or finite-n calibration. The [Self–Liang boundary likelihood reference](https://doi.org/10.1080/01621459.1987.10478472) does not justify silently applying regular finite-information asymptotics outside its assumptions. No new dependent-null or calibrated empirical S1 test is invented.
++
++## Resampling and incomplete populations
++
++22 fixed original/precision pools receive1000 generated/refitted iid KS replicates only when the whole arm is complete and fit eligible. Draw Binomial tail count, empirical-body indices, Pareto exponential logtail values in that fixed order; refit grid100/alpha in every replicate. `b=count(Dstar>=Dobs)`, p=(b+1)/(B+1),95% Clopper–Pearson from b/B without pseudo count. CI touching/straddling.1 is Inconclusive; wholly above is not rejected under iid diagnostic, wholly below rejected under iid diagnostic. Any predetermined failed replicate makes the test Unresolved; retain all attempts/failures without replacements. This is not treatment inference or dependent-history validation.
++
++72 fixed NumPy PCG64 jobs derive independent children via `SeedSequence(2026100301,spawn_key=(job_index,))`: eleven joint source predictions, two joint source contrasts,22KS pools and37arm parameter bootstraps. Missing jobs retain indices. Source predictions draw15 joint precision histories; source contrasts independently draw100 rows per treatment/control group. Batch size1024 is fixed; base block precedes control block. Inclusive +1 two-tail p-values and closed source rounding interval maximization feed fixed88/6 Holm families with unavailable entries internally p1; adjusted p<.05 rejects. Linear95% quantiles and arithmetic medians are frozen.
++
++Parameter100000 draws resample all registered history rows with joint Pareto alpha/xmin eligibility masks. Max-scaled positive means and arithmetic median midpoints with overflow-safe branch preserve finite large parameters. Any incomplete underlying population or zero-eligible replicate makes primary uncertainty Unresolved; optional conditional nonempty intervals are descriptive with exclusions. Base−shock0/context-off parameter contrasts subtract independent fixed per-arm replicate arrays at the same index, with descriptive95% intervals for alpha/xmin means/medians; no new RNG job, war bootstrap, optimizer refits or invented p-family. Primary invalid histories never enter pools/bootstraps. Raw completions after the successful clock are preserved but excluded from **every** fit, including partial diagnostics.
+diff --git a/survey/geosim/README.md b/survey/geosim/README.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..d16e1446f4c9983376c84293afcbe072a6bc283a
+--- /dev/null
++++ b/survey/geosim/README.md
+@@ -0,0 +1,37 @@
++# GeoSim scientific protocol
++
++This offline protocol consumes the real Rust `GeosimConfig`, `GeosimWorld` and `Outcome`. Python never recreates engine defaults. The standalone native recorder is `survey/src/bin/geosim.rs`; the survey crate remains outside the workspace. Source definitions, method contract and actual source inventory must be frozen before registered execution.
++
++Pin Python3.13.5 and the libraries in `requirements.txt`. `NUMERICAL_METHODS.md` and `methods.py` give the full premeasurement estimator/resampling contract and license/reference limits. Run small tests from the repository root:
++
++```sh
++OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s survey/geosim -p 'test_*.py'
++```
++
++Generate a **provisional** declaration (no periods or source inventory freeze):
++
++```sh
++python3 -m survey.geosim.manifest --source docs/superpowers/specs/2026-10-03-geosim-source-table.json --output survey/out/geosim-provisional-manifest.json
++```
++
++The declaration has37 arms/1490 keys and72 fixed analysis jobs. Original11×15 and precision11×100 remain separate; fourteen one-field readings and the named artifact reference each have15 histories. All configs have common periods_per_tick100; Rust resolves the paper/artifact presets. Row7 includes both thresholds2.5 and shock10. Reciprocal defender/attacked-party damage are corrected paper defaults; same-threshold/acting-party alternatives are exposed but unmeasured.
++
++After all product writers stop, the controller freezes actual scientific sources:
++
++```sh
++python3 -m survey.geosim.provenance --manifest survey/out/geosim-provisional-manifest.json --source docs/superpowers/specs/2026-10-03-geosim-source-table.json --source-root . --output survey/out/geosim-frozen-manifest.json
++```
++
++`provenance.py::REQUIRED_FILES` is the normative path policy. `required_inventory_paths(root)` adds complete Rust core source/tests, native integration tests, authored protocol Python/Java, and existing Cargo/toolchain build configuration. It excludes reference raw downloads/cache, process ledgers, plan packets, replay directories and generated outputs. Normative source/spec/audit documents use an explicit roster so publishing later findings/provenance does not alter this inventory. `source_inventory(root)` captures sorted path/bytes/SHA256 entries; `freeze_manifest(provisional,root,source_bytes)` verifies the exact registered declaration/method payload and table bytes before binding them. Required files must exist without source or directory symlinks. Verifiers reject empty, unsorted or truncated scientific inventories; modified normative sources or newly added runtime code invalidate old bindings.
++
++`run.py::make_build_receipt` binds a supplied completed build and equal pre/post source snapshots; it executes no compiler. Native independently checks exact manifest/method bytes, current source files, own executable, resolved configs and every existing row before resume. Preserve `resolved_configs_json` exact native UTF8 bytes instead of guessing Rust float JSON spelling. Construction failure/incomplete Outcome stays explicit unavailable state; invalid attempted keys are never replaced. One process owns each JSONL output path.
++
++`python3 -m survey.geosim.run --help` shows native invocation flags. `python3 -m survey.geosim.analysis --help` shows required manifest/source/raw/resolved/build/binary/source-root/output inputs. Registered analysis refuses provisional sources, changed libraries/methods/jobs/bindings and malformed/duplicate/nonfinite evidence. It has no reduced-draw CLI:100000 history bootstraps/1000generated-refitted KS diagnostics remain outside CI. Source freeze, native benchmark and registered execution are separate controller-authorized stages, not consequences of green fixtures.
++
++Every registered slot is exported, including missing, invalid, insufficient, degenerate and unresolved fits. Completed wars at end_period>Outcome.periods belong to an invalid partial period and enter no fit; earlier completed wars of an invalid world remain separate partial diagnostics. Positive raw completions partition visible/backlog; integer subunit export0 still has positive raw collector membership. Completed/censored identities are disjoint. Source strict-CCDF/OLS uses selected visible/all-completed export; modern diagnostics use complete biological raw damage, including completed FIFO backlog once. Censored/partial events never become completed-fit observations.
++
++A recorder implementation panic after a valid terminal engine Outcome retains that Outcome verbatim with nonempty panic context. Attempt availability is primary Unresolved despite complete engine clocks; its completed events remain partial diagnostics and cannot enter source, pooled KS or parameter-bootstrap populations. Censored elapsed clocks use the attempted period, while completed-fit eligibility uses the successful period.
++
++Fixed88 source and6 mechanism families remain full-sized when entries are unavailable. Conditional Compatible is distinct from source equivalence, which stays Unresolved for unverified printed definitions. Modern pooled KS/ratios are iid diagnostics; nested half-mixture calibration remains declared/unvalidated, especially alpha<=3. Parameter treatment comparisons give descriptive independent whole-history intervals. Source extrema have finite bootstrap support, not impossible-model-event interpretation.
++
++CoW v4 input/codebook are available; Thailand war170 fatalities−9 remain unknown. Exact Clauset95-war/SupplementS1 reconstruction is Unresolved, and Cederman's older historical population is separate. Runnable later-port GeoSim2 evidence does not establish full archived mechanics or PCG/two-MT seed identity. Reference-only artifacts/large logs stay ignored under `survey/out/geosim-*`; preserve their original bytes/hashes before cleanup.
+diff --git a/survey/geosim/analysis.py b/survey/geosim/analysis.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..529e7514af059492b1b4a2faf54978d24e0e1ee1
+--- /dev/null
++++ b/survey/geosim/analysis.py
+@@ -0,0 +1,120 @@
++"""Fixed source and modern matrices; no reduced registered resampling entry point."""
++from collections import Counter
++import hashlib
++import json
++from pathlib import Path
++from . import manifest as population
++from . import modern,source
++from .methods import method_contract,contract_sha256
++
++
++def _compact_parameter(result):
++    return {**{k:v for k,v in result.items() if k not in ('replicates','eligibility_counts')},
++            'eligibility_count_histogram':dict(sorted(Counter(result.get('eligibility_counts',[])).items()))}
++
++
++def _compact_source(history):
++    result={k:v for k,v in history.items() if k!='census'}
++    census=history.get('census')
++    if census is not None:
++        result['census']={k:v for k,v in census.items() if k not in ('primary_completed','partial_completed','source_selected','partial_source_selected','excluded')}
++        result['census']['exclusions']=[{'war_id':e['war']['id'],'reasons':e['reasons']} for e in census['excluded']]
++    return result
++
++
++def _compact_modern(history):
++    result={k:v for k,v in history.items() if k not in ('raw_sizes','excluded')}
++    result['exclusions']=[{'war_id':e['war']['id'],'reasons':e['reasons']} for e in history.get('excluded',[])]
++    return result
++
++
++def report(manifest,table,records,resolved=None,binding=None,*,fixture_draws=None,alternatives=True,data_sha256=None):
++    if manifest['method_contract']!=method_contract() or manifest['method_contract_sha256']!=contract_sha256():
++        raise ValueError('method contract differs from frozen implementation')
++    payload=manifest.get('method_contract_json')
++    if not isinstance(payload,str) or hashlib.sha256(payload.encode()).hexdigest()!=contract_sha256() or json.loads(payload)!=method_contract():
++        raise ValueError('exact method contract payload mismatch')
++    fixture=fixture_draws is not None
++    if not fixture and manifest['provenance_status']!='frozen':raise ValueError('registered analysis requires frozen source provenance')
++    if not fixture and (resolved is None or binding is None or data_sha256 is None):raise ValueError('registered analysis requires full data/resolved provenance')
++    if not fixture and not alternatives:raise ValueError('registered analysis requires all four alternatives')
++    draws={'source':100000,'ks':1000,'parameters':100000} if not fixture else fixture_draws
++    if set(draws)!={'source','ks','parameters'} or any(type(v) is not int or v<=0 for v in draws.values()):raise ValueError('invalid fixed draw counts')
++    keys=population.expected_keys(manifest);registered=set(keys)
++    if set(records)-registered:raise ValueError('unregistered raw session keys')
++    if resolved is not None:
++        from .records import validate_record,resolved_payload
++        resolved_payload(resolved);configs={a['id']:a['config'] for a in resolved['arms']}
++        indexed={a['id']:{**a,'config':configs[a['id']]} for a in manifest['arms']}
++        for key,row in records.items():
++            if validate_record(row,indexed[key[0]],binding)!=key:raise ValueError('raw dictionary key differs from envelope')
++    expected_jobs=population.analysis_jobs(manifest)
++    if manifest['analysis_jobs']!=expected_jobs:raise ValueError('fixed analysis job payload mismatch')
++    jobs={j['id']:j for j in expected_jobs}
++    sh={a['id']:[] for a in manifest['arms']};mh={a['id']:[] for a in manifest['arms']};history_rows=[]
++    for arm,seed in keys:
++        if (arm,seed) not in records:
++            history_rows.append({'arm':arm,'seed':seed,'status':'missing','source':None,'modern':None})
++            continue
++        row=records[(arm,seed)];s=source.history_source(row);m=modern.history_modern(row,alternatives=alternatives)
++        sh[arm].append(s);mh[arm].append(m)
++        history_rows.append({'arm':arm,'seed':seed,'status':s['availability']['status'],'source':_compact_source(s),'modern':_compact_modern(m)})
++    source_result=source.source_findings(table,sh,jobs,draws['source']);contrasts=source.contrast_findings(sh,jobs,draws['source'])
++    pools={};parameters={}
++    for arm in manifest['arms']:
++        aid=arm['id'];histories=mh[aid]
++        if arm['family'] in ('original','precision'):
++            pool=modern.fit_pool(histories,arm['sessions'],alternatives=alternatives)
++            raw=[x for h in histories for x in h['raw_sizes']]
++            pool['ks_test']=modern.ks_refit_test(pool,raw,population.job_rng(jobs[f'ks.{aid}']),draws['ks'])
++            pools[aid]=pool
++        parameters[aid]=modern.parameter_bootstrap(histories,population.job_rng(jobs[f'parameters.{aid}']),arm['sessions'],draws['parameters'])
++    parameter_contrasts={name:modern.parameter_contrast(parameters['precision.base'],parameters[f'precision.{control}'])
++                        for name,control in [('base_minus_shock0','shock0'),('base_minus_context_off','context_off')]}
++    return {'schema_version':1,'model':'geosim','classification':'synthetic_fixture' if fixture else 'registered_offline_findings',
++            'registered_histories':1490,'received_histories':len(records),'history_status_counts':dict(Counter(h['status'] for h in history_rows)),
++            'histories':history_rows,'source':source_result,'source_contrasts':contrasts,'modern_pools':pools,
++            'modern_parameters':{k:_compact_parameter(v) for k,v in parameters.items()},'modern_parameter_contrasts':parameter_contrasts,
++            'analysis_jobs':manifest['analysis_jobs'],'method_contract_sha256':manifest['method_contract_sha256'],'draws':draws,
++            'provenance':{'data_sha256':data_sha256,'binding':binding,'source_table_sha256':manifest['source_table_sha256']},
++            'empirical':{'cow_v4':{'status':'Available_documented_preparation_input','runtime_input_verification':'Unresolved_not_supplied_to_analysis','unknown_fatalities':[{'war_id':170,'participant':'Thailand','code':-9}],
++                                    'missing_policy':'unknown_not_zero; exact aggregation awaits source protocol'},
++                         'clauset_s1':{'status':'Unresolved','reason':'Supplement_S1_estimator_bootstrap_missing_participant_handling_unavailable'},
++                         'cederman_historical':{'status':'Unresolved','reason':'distinct1820_1997_input_unavailable_no_modern_substitution'}},
++            'artifact_reference':{'execution':'Available_documented_isolated_later_port','runtime_trace_verification':'Unresolved_not_supplied_to_analysis','identity':'Unresolved','rng':'PCG_does_not_match_two_MT_streams_by_seed'}}
++
++
++def main():
++    import argparse
++    import platform
++    import numpy
++    import scipy
++    from .records import strict_json,verify_source_inventory,validate_build_receipt,read_sessions
++    from .run import sha256_file
++    from .reporting import serialize_report,markdown_report
++    parser=argparse.ArgumentParser(description=__doc__)
++    for name in ('manifest','source','sessions','resolved','build-receipt','binary','source-root','output'):
++        parser.add_argument('--'+name,required=True,type=Path)
++    args=parser.parse_args();manifest_bytes=args.manifest.read_bytes();m=strict_json(manifest_bytes)
++    if m['provenance_status']!='frozen':raise ValueError('registered analysis requires frozen source provenance')
++    wanted=method_contract()['runtime'];actual={'python':platform.python_version(),'numpy':numpy.__version__,'scipy':scipy.__version__}
++    if actual!=wanted:raise ValueError(f'analysis runtime differs from pinned contract: {actual}')
++    source_bytes=args.source.read_bytes()
++    if hashlib.sha256(source_bytes).hexdigest()!=m['source_table_sha256']:raise ValueError('source table byte SHA256 mismatch')
++    inventory=verify_source_inventory(args.source_root,m['source_inventory'])
++    if inventory!=m['source_inventory_sha256']:raise ValueError('source inventory digest mismatch')
++    manifest_hash=hashlib.sha256(manifest_bytes).hexdigest();binary_hash=sha256_file(args.binary)
++    receipt_bytes=args.build_receipt.read_bytes();receipt=strict_json(receipt_bytes)
++    validate_build_receipt(receipt,manifest_hash,binary_hash,inventory,args.source_root)
++    resolved=strict_json(args.resolved.read_bytes())
++    binding={'manifest_sha256':manifest_hash,'binary_sha256':binary_hash,'source_inventory_sha256':inventory,
++             'build_receipt_sha256':hashlib.sha256(receipt_bytes).hexdigest(),'resolved_configs_sha256':resolved['resolved_configs_sha256']}
++    data_hash=sha256_file(args.sessions);records=read_sessions(args.sessions,m,resolved,binding)
++    if sha256_file(args.sessions)!=data_hash:raise ValueError('raw dataset changed during validation')
++    result=report(m,strict_json(source_bytes),records,resolved,binding,data_sha256=data_hash)
++    if verify_source_inventory(args.source_root,m['source_inventory'])!=inventory:raise ValueError('scientific source bytes changed during analysis')
++    args.output.parent.mkdir(parents=True,exist_ok=True)
++    args.output.with_suffix('.json').write_text(serialize_report(result),encoding='utf-8')
++    args.output.with_suffix('.md').write_text(markdown_report(result),encoding='utf-8')
++
++if __name__=='__main__':main()
+diff --git a/survey/geosim/manifest.py b/survey/geosim/manifest.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..5436af0ab85359a7588389cd2d5a3994152e3123
+--- /dev/null
++++ b/survey/geosim/manifest.py
+@@ -0,0 +1,102 @@
++"""Partial configurations and fixed jobs; Rust alone resolves engine defaults."""
++from copy import deepcopy
++import hashlib
++import json
++import numpy as np
++from .methods import canonical_bytes, contract_sha256, method_contract
++
++CONTROLS = (
++ ('printed_increasing','distance_formula','printed_increasing'),
++ ('manhattan','distance_metric','manhattan'),
++ ('attacker_first','path_sampling','attacker_first'),
++ ('global_no_action','initiation_guard','global_no_action'),
++ ('all_fronts','enemy_total','all_fronts'),
++ ('own_commitment','damage_basis','own_commitment'),
++ ('exclusive','victory_draws','exclusive'),
++ ('collapse_only','capital_capture','collapse_only'),
++ ('affected_states','locking','affected_states'),
++ ('adjacent_active_states','cluster_linkage','adjacent_active_states'),
++ ('add_losses','damage_feedback','add_losses'),
++ ('initiator_curve','attack_projection','initiator_curve'),
++ ('mutual_only','severity_damage','mutual_only'),
++ ('java_int100','severity_export','java_int100'),
++)
++
++TARGETS=('slope_min','slope_median','slope_max','r2_min','r2_median','r2_max','log_range_median','war_count_median')
++
++
++def build_manifest(source,source_bytes=None):
++    rows=source.get('rows',[])
++    ids=[r.get('id') for r in rows]
++    if len(rows)!=11 or len(set(ids))!=11 or [r.get('row') for r in rows]!=list(range(1,12)):
++        raise ValueError('source table must have eleven unique ordered rows')
++    if any(r.get('source_histories')!=15 or set(r.get('targets',{}))!=set(TARGETS) for r in rows):
++        raise ValueError('source table must have fifteen histories and eight targets per row')
++    arms=[]
++    def add(family,name,partial,n,preset='paper'):
++        index=len(arms)
++        arms.append({'id':f'{family}.{name}','family':family,'index':index,'preset':preset,
++                     'config_overrides':{'periods_per_tick':100,**deepcopy(partial)},
++                     'sessions':n,'first_seed':370000001+index*10000})
++    for family,n in [('original',15),('precision',100)]:
++        for row in rows:add(family,row['id'],row['config_overrides'],n)
++    for name,field,value in CONTROLS:add('reading',name,{field:value},15)
++    add('artifact','reference_2017',{},15,'artifact_2017')
++    if source_bytes is not None and json.loads(source_bytes)!=source:
++        raise ValueError('source table bytes do not match parsed source')
++    manifest={'schema_version':1,'model':'geosim','execution_mode':'registered',
++              'provenance_status':'provisional_unfrozen',
++              'spec':'docs/superpowers/specs/2026-10-03-geosim-design.md',
++              'source_draws':100000,'ks_draws':1000,'analysis_seed':2026100301,
++              'source_table_sha256':None if source_bytes is None else hashlib.sha256(source_bytes).hexdigest(),
++              'method_contract':method_contract(),'method_contract_json':canonical_bytes(method_contract()).decode('utf-8'),
++              'method_contract_sha256':contract_sha256(),
++              'source_inventory':None,'source_inventory_sha256':None,'arms':arms}
++    manifest['analysis_jobs']=analysis_jobs(manifest)
++    return manifest
++
++
++def expected_keys(manifest):
++    result=[]
++    for index,a in enumerate(manifest['arms']):
++        if a['index']!=index or a['sessions'] not in (15,100) or a['first_seed']!=370000001+index*10000:
++            raise ValueError('registered arm key contract changed')
++        result.extend((a['id'],a['first_seed']+r) for r in range(a['sessions']))
++    if len(manifest['arms'])!=37 or len(result)!=1490 or len(set(result))!=1490:
++        raise ValueError('registered workload must contain37 arms/1490 unique keys')
++    return result
++
++
++def analysis_jobs(manifest):
++    arms=manifest['arms']
++    ids=[f"predictive.source.{a['id'].split('.',1)[1]}" for a in arms if a['family']=='original']
++    ids+=['contrast.base_minus_shock0','contrast.base_minus_context_off']
++    ids+=[f"ks.{a['id']}" for a in arms if a['family'] in ('original','precision')]
++    ids+=[f"parameters.{a['id']}" for a in arms]
++    if len(ids)!=72 or len(set(ids))!=72:raise ValueError('fixed analysis job family changed')
++    return [{'index':i,'id':job,'root_entropy':2026100301,'spawn_key':[i],
++             'state_u32':np.random.SeedSequence(2026100301,spawn_key=(i,)).generate_state(4).tolist()}
++            for i,job in enumerate(ids)]
++
++
++def job_rng(job):
++    if job['root_entropy']!=2026100301 or job['spawn_key']!=[job['index']]:
++        raise ValueError('analysis seed derivation mismatch')
++    seed=np.random.SeedSequence(2026100301,spawn_key=(job['index'],))
++    if job.get('state_u32')!=seed.generate_state(4).tolist():raise ValueError('child seed state mismatch')
++    return np.random.Generator(np.random.PCG64(seed))
++
++
++def main():
++    import argparse
++    from pathlib import Path
++    from .records import strict_json
++    parser=argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--source',required=True,type=Path)
++    parser.add_argument('--output',required=True,type=Path)
++    args=parser.parse_args();data=args.source.read_bytes();result=build_manifest(strict_json(data),data)
++    args.output.parent.mkdir(parents=True,exist_ok=True)
++    args.output.write_text(json.dumps(result,indent=2,allow_nan=False)+'\n',encoding='utf-8')
++    print('Generated provisional37-arm/1490-key/72-job manifest; source freeze required before execution')
++
++if __name__=='__main__':main()
+diff --git a/survey/geosim/methods.py b/survey/geosim/methods.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..36b11fa1a36afd7cf02cd03a3d1d18899ca5bc1d
+--- /dev/null
++++ b/survey/geosim/methods.py
+@@ -0,0 +1,71 @@
++"""Premeasurement numerical and resampling contract; never fitted from outcomes."""
++from copy import deepcopy
++import hashlib
++import json
++
++METHOD_CONTRACT = {
++    'revision':'geosim-offline-v1',
++    'runtime':{'python':'3.13.5','numpy':'2.4.6','scipy':'1.17.1'},
++    'source':{'cutoff_log10':2.5,'ccdf':'strict_unique_positive',
++              'minimum_fit_points':3,'range':'full_positive_selected_census',
++              'count':'all_selected_completed_including_zero','ols_roundoff_tolerance':1e-12,
++              'prediction_history_count':15,'precision_history_count':100,
++              'draws':100000,'family_size':88,'holm_reject_below':.05,
++              'p':'inclusive_two_sided_plus_one_maximize_closed_source_interval'},
++    'contrasts':{'ids':['base_minus_shock0','base_minus_context_off'],
++                 'metrics':['slope','r2','log_range'],'draws':100000,
++                 'resampling':'independent_whole_history','family_size':6,'holm_reject_below':.05},
++    'rng':{'root':2026100301,'jobs':72,'generator':'PCG64',
++           'child':'SeedSequence(root,spawn_key=(fixed_job_index,))',
++           'batch_size':1024,'contrast_order':'base_block_then_control_block',
++           'ks_order':'binomial_tail_count,body_indices,tail_exponential'},
++    'interval':{'level':.95,'quantile_method':'linear'},
++    'pareto':{'minimum_tail':50,'individual_search':'all_observed','pool_search':'grid100',
++              'grid_indices':'j*(M-1)//99 for j=0..99 when M>100',
++              'ks':'max_left_and_right_ecdf_at_unique_ties','cutoff_ties':'smallest_xmin_exact'},
++    'ks_test':{'draws':1000,'level':.1,'exceedance':'Dstar>=Dobs',
++               'p':'(b+1)/(B+1)','interval':'95%_Clopper_Pearson_b_of_B',
++               'failure':'any_predetermined_failed_replicate_unresolved_no_replacements',
++               'calibration':'iid_semiparametric_generated_refitted_grid100'},
++    'quadrature':{'epsabs':1e-11,'epsrel':1e-10,'limit':250,'max_relative_error':1e-8,
++                  'normalizer':'scaled_positive_dimensionless_integral'},
++    'optimizer':{'method':'L-BFGS-B','ftol':1e-13,'gtol':1e-8,'maxiter':1000,
++                  'maxls':50,'accept_gradient_inf_below':1e-6,'guard_contact':'unresolved'},
++    'lognormal':{'coordinates':'mean_scaled_natural_a_b',
++                 'starts':[[-1.,.5],[0.,.5],[1.,.1],[1.,.01]],
++                 'bounds':[[-100.,100.],[1e-8,1e4]],'nonexistence':'scaled_second_moment>=2'},
++    'stretched':{'beta_bounds':[1e-8,100.],'brent_xtol':1e-10,'brent_rtol':1e-10,
++                 'maxiter':200,'domain':'beta>0_including_beta>1','nonexistence':'endpoint_score<=0'},
++    'cutoff':{'bounds':[[-100.,100.],[-32.,32.]],
++              'starts':'alpha=[min(99,pareto_alpha),1,0] x k=[1,.1,.01]/mean_excess; clip_logk[-31,31]',
++              'boundary':'exact_convex_KKT_alpha>2_and_mean_excess>=1/(alpha-2)',
++              'near_boundary_gain_per_observation':1e-10,'near_boundary':'unresolved'},
++    'ratios':{'level':.1,'nonnested':'CSN_normalized_two_sided','variance_divisor':'n',
++              'variance_floor':1e-24,'nested':'declared_half_chi_square_1',
++              'exact_equal_p':1.,'calibration_validity':'unvalidated',
++              'qualification':'alpha<=3_lacks_finite_boundary_information; alpha>3_not_validation'},
++    'parameter_bootstrap':{'draws':100000,'metrics':['alpha_mean','alpha_median','xmin_mean','xmin_median'],
++                           'sampling':'all_registered_history_rows_with_joint_eligibility_masks',
++                           'positive_mean':'max_scaled_mean','positive_median':'arithmetic_midpoint_with_overflow_safe_branch',
++                           'empty_or_incomplete':'primary_unresolved',
++                           'conditional_eligible_interval':'descriptive_only',
++                           'rng':'independent_fixed_per_arm_parameter_child',
++                           'contrasts':['precision.base-minus-precision.shock0','precision.base-minus-precision.context_off'],
++                           'contrast_method':'same_index_independent_arm_replicate_array_differences',
++                           'contrast_inference':'descriptive_linear95_interval_no_p_family_or_verdict'},
++    'availability':{'successful_completion':'end_period<=Outcome.periods',
++                    'invalid_history':'partial_diagnostics_only_no_primary_pool_or_bootstrap',
++                    'incomplete_pool':'unresolved_reserved_ks_slot',
++                    'zero_eligible_parameter_replicate':'unresolved_no_replacements'},
++    'reference_agreement':{'parameters_absolute':2e-5,'log_density_absolute':1e-8,
++                            'ks_absolute':1e-12,'relative_normalization_error':1e-9,'nll_per_observation_absolute':1e-9,'rescaling_alpha_ks_absolute':1e-10},
++}
++
++def canonical_bytes(value):
++    return json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode('utf-8')
++
++def method_contract():
++    return deepcopy(METHOD_CONTRACT)
++
++def contract_sha256():
++    return hashlib.sha256(canonical_bytes(METHOD_CONTRACT)).hexdigest()
+diff --git a/survey/geosim/modern.py b/survey/geosim/modern.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..b5be2f74fc07f8fa960fdb2836e3fc8ebed4ddc8
+--- /dev/null
++++ b/survey/geosim/modern.py
+@@ -0,0 +1,190 @@
++"""Offline iid diagnostics and separate whole-history parameter uncertainty."""
++import math
++import numpy as np
++from scipy import stats
++from . import numerics
++from .records import completed_censuses,history_availability
++
++ALTERNATIVES={'exponential':numerics.fit_exp,'lognormal':numerics.fit_lognormal,
++              'stretched_exponential':numerics.fit_stretched,'cutoff_pareto':numerics.fit_cutoff}
++PARAMETER_METRICS=('alpha_mean','alpha_median','xmin_mean','xmin_median')
++
++
++def _numeric_error(exc):return f'{type(exc).__name__}: {exc}'
++
++
++def _final_fit(fit):
++    status=fit['status']
++    if status in ('converged','boundary_pareto'):
++        if not math.isfinite(fit['loglike']) or not np.all(np.isfinite(fit['logpdf'])):
++            status='unresolved_nonfinite_final_density'
++        for name in ('k','sigma','beta'):
++            if name in fit and (not math.isfinite(fit[name]) or fit[name]<=0):
++                if not (name=='k' and fit[name]==0 and fit['status']=='boundary_pareto'):
++                    status='unresolved_nonpositive_parameter'
++        if any(name in fit and not math.isfinite(fit[name]) for name in ('alpha','mu','a','b')):
++            status='unresolved_nonfinite_parameter'
++    unavailable=[]
++    def clean(value,path):
++        if isinstance(value,dict):return {k:clean(v,f'{path}.{k}' if path else k) for k,v in value.items()}
++        if isinstance(value,(list,tuple)):return [clean(v,f'{path}[{i}]') for i,v in enumerate(value)]
++        if isinstance(value,np.ndarray):
++            if not np.all(np.isfinite(value)):
++                unavailable.append(path);return None
++            return value
++        if isinstance(value,np.generic):value=value.item()
++        if isinstance(value,float) and not math.isfinite(value):
++            unavailable.append(path);return None
++        return value
++    result=clean({**fit,'status':status},'')
++    if unavailable:result['unavailable_numeric_fields']=unavailable
++    return result
++
++
++def fit_sizes(sizes,cutoff_search='all_observed',alternatives=True):
++    if cutoff_search not in ('all_observed','grid100'):raise ValueError('unknown cutoff search')
++    x=np.asarray(sizes,dtype=float)
++    base={'n':int(x.size),'cutoff_search':cutoff_search,'minimum_tail':50,'alternatives':{}}
++    if x.ndim!=1 or np.any(~np.isfinite(x)) or np.any(x<=0):
++        return {**base,'status':'Unresolved','reason':'nonfinite_or_nonpositive_sizes'}
++    if len(x)<50:return {**base,'status':'Insufficient_tail','reason':'fewer_than50_positive_completed_sizes'}
++    if np.all(x==x[0]):return {**base,'status':'Degenerate_tail','reason':'all_equal_positive_sizes'}
++    try:
++        with np.errstate(over='raise',invalid='raise',divide='raise'):
++            selected=numerics.grid_pareto(x,grid=cutoff_search=='grid100')
++            tail=x[x>=selected['xmin']];pure=numerics.pareto_at(tail,selected['xmin'])
++        if not math.isfinite(pure['alpha']) or pure['alpha']<=1 or not np.all(np.isfinite(pure['logpdf'])):
++            raise numerics.NumericFailure('nonfinite Pareto fit')
++    except (numerics.NumericFailure,OverflowError,FloatingPointError,ValueError) as exc:
++        return {**base,'status':'Unresolved','reason':_numeric_error(exc)}
++    result={**base,**selected,'status':'Available','loglike':pure['loglike'],'iid_limit':'dependent histories are not iid validation'}
++    if alternatives:
++        y=np.log(tail)-math.log(selected['xmin'])
++        for name,fitter in ALTERNATIVES.items():
++            try:
++                with np.errstate(over='raise',invalid='raise',divide='raise'):
++                    f=_final_fit(fitter(y,math.log(selected['xmin'])))
++            except (numerics.NumericFailure,OverflowError,FloatingPointError,ValueError) as exc:
++                f={'status':'unresolved_numeric_failure','reason':_numeric_error(exc)}
++            ratio=numerics.likelihood_ratios(pure,f,nested=name=='cutoff_pareto')
++            if name=='cutoff_pareto':ratio.update(calibration='declared_half_chi_square_1',calibration_validity='unvalidated',regular_boundary_information=pure['alpha']>3)
++            verdict='Unresolved'
++            if ratio.get('status')=='available':
++                verdict='Inconclusive'
++                if ratio['p']<.1:verdict='Alternative_favored_under_iid_diagnostic' if ratio['R']<0 else 'Pareto_favored_under_iid_diagnostic'
++            result['alternatives'][name]={k:v for k,v in f.items() if k!='logpdf'}
++            result['alternatives'][name].update(xmin=selected['xmin'],n_tail=selected['n_tail'],ratio=ratio,diagnostic_verdict=verdict)
++    return result
++
++
++def history_modern(row,alternatives=True):
++    available=history_availability(row)
++    if row.get('outcome') is None:return {'status':'Unresolved','reason':available['status'],'complete':False,'raw_sizes':[],'partial_diagnostic':None}
++    census=completed_censuses(row['outcome'],available)
++    raw=[w['raw_severity'] for w in census['primary_completed'] if w['raw_severity']>0]
++    partial=[w['raw_severity'] for w in census['partial_completed'] if w['raw_severity']>0]
++    fit=fit_sizes(raw,alternatives=alternatives) if available['complete'] else {'status':'Unresolved','reason':available['status']}
++    return {**fit,'complete':available['complete'],'raw_sizes':raw,
++            'partial_diagnostic':fit_sizes(partial,alternatives=alternatives) if partial else None,
++            'zero_completed_count':sum(w['raw_severity']==0 for w in census['primary_completed']),
++            'excluded':census['excluded'],'censored_count':census['censored_count'],'backlog_count':census['backlog_count']}
++
++
++def fit_pool(histories,expected,alternatives=True):
++    if len(histories)!=expected or any(not h['complete'] for h in histories):
++        return {'status':'Unresolved','reason':'incomplete_registered_history_population',
++                'registered_history_count':expected,'received_count':len(histories),'complete_history_count':sum(h['complete'] for h in histories)}
++    fit=fit_sizes([x for h in histories for x in h['raw_sizes']],cutoff_search='grid100',alternatives=alternatives)
++    return {**fit,'registered_history_count':expected,'complete_history_count':expected,
++            'individual_eligible_history_count':sum(h['status']=='Available' for h in histories),
++            'censored_count':sum(h.get('censored_count',0) for h in histories),'backlog_count':sum(h.get('backlog_count',0) for h in histories)}
++
++
++def ks_refit_test(fit,sizes,rng,draws=1000):
++    if type(draws) is not int or draws<=0:raise ValueError('positive fixed KS replicate count required')
++    if fit['status']!='Available':return {'status':'Unresolved','reason':'pooled_fit_unavailable','replicates_attempted':0}
++    x=np.asarray(sizes,dtype=float);n=len(x);body=x[x<fit['xmin']];prob=fit['n_tail']/n
++    failures=[];Ds=[];cutoffs=[]
++    for index in range(draws):
++        try:
++            nt=int(rng.binomial(n,prob));nb=n-nt
++            lower=body[rng.integers(0,len(body),size=nb,dtype=np.int64)] if nb else np.empty(0)
++            logtail=math.log(fit['xmin'])+rng.exponential(1/(fit['alpha']-1),nt)
++            with np.errstate(over='raise',invalid='raise'):tail=np.exp(logtail)
++            simulated=fit_sizes(np.concatenate((lower,tail)),cutoff_search='grid100',alternatives=False)
++            if simulated['status']!='Available':raise numerics.NumericFailure(simulated.get('reason',simulated['status']))
++            Ds.append(simulated['ks']);cutoffs.append(simulated['xmin'])
++        except (ValueError,OverflowError,FloatingPointError,numerics.NumericFailure) as exc:
++            failures.append({'index':index,'reason':_numeric_error(exc)})
++    out={'replicates_attempted':draws,'successful_replicates':len(Ds),'failed_replicates':len(failures),
++         'failures':failures,'refitted_cutoff_search':'grid100','refitted_xmins':cutoffs,
++         'iid_limit':'semiparametric iid diagnostic, not dependent-world validation'}
++    if failures:return {**out,'status':'Unresolved','reason':'predetermined_refit_failures','p':None,'interval':None}
++    b=sum(d>=fit['ks'] for d in Ds)
++    lo=0. if b==0 else float(stats.beta.ppf(.025,b,draws-b+1))
++    hi=1. if b==draws else float(stats.beta.ppf(.975,b+1,draws-b))
++    verdict='Inconclusive' if lo<=.1<=hi else 'rejected_under_iid_diagnostic' if hi<.1 else 'not_rejected_under_iid_diagnostic'
++    return {**out,'status':'Available','exceedances':b,'p':(b+1)/(draws+1),'interval':[lo,hi],
++            'interval_method':'95%_Clopper_Pearson_b_of_B','verdict':verdict}
++
++
++def _positive_mean(values):
++    scale=float(np.max(values))
++    return float(np.mean(values/scale)*scale)
++
++
++def _positive_midpoints(lower,upper):
++    lower=np.asarray(lower);upper=np.asarray(upper);out=np.empty_like(lower,dtype=float)
++    safe=lower<=np.finfo(float).max-upper
++    out[safe]=(lower[safe]+upper[safe])/2
++    out[~safe]=lower[~safe]/2+upper[~safe]/2
++    return out
++
++
++def _positive_median(values):
++    ordered=np.sort(values);n=len(values)
++    return float(_positive_midpoints(np.array([ordered[(n-1)//2]]),np.array([ordered[n//2]]))[0])
++
++
++def parameter_bootstrap(histories,rng,expected,draws=100000):
++    if type(draws) is not int or draws<=0:raise ValueError('positive parameter bootstrap draw count required')
++    eligible=[h['status']=='Available' and math.isfinite(h.get('alpha',math.nan)) and h['alpha']>1 and math.isfinite(h.get('xmin',math.nan)) and h['xmin']>0 for h in histories]
++    out={'registered_history_count':expected,'received_count':len(histories),'eligible_history_count':sum(eligible),
++         'resamples':draws,'empty_replicates':0,'intervals':{},'estimates':{},'replicates':None,
++         'resampling':'whole_registered_history_rows_with_eligibility_masks'}
++    if len(histories)!=expected or any(not h['complete'] for h in histories):
++        return {**out,'status':'Unresolved','reason':'incomplete_registered_history_population'}
++    if not any(eligible):return {**out,'status':'Unresolved','reason':'no_eligible_history_fits','empty_replicates':draws}
++    vals=np.array([[h['alpha'],h['xmin']] if ok else [np.nan,np.nan] for h,ok in zip(histories,eligible)])
++    observed=vals[np.asarray(eligible)]
++    out['estimates']=dict(zip(PARAMETER_METRICS,[_positive_mean(observed[:,0]),_positive_median(observed[:,0]),_positive_mean(observed[:,1]),_positive_median(observed[:,1])]))
++    values=[];counts=[]
++    for start in range(0,draws,1024):
++        idx=rng.integers(0,expected,size=(min(1024,draws-start),expected),dtype=np.int64)
++        v=vals[idx];mask=np.isfinite(v[:,:,0]);count=mask.sum(axis=1);nonempty=count>0
++        block=np.full((len(v),4),np.nan)
++        for mean_column,median_column,j in [(0,1,0),(2,3,1)]:
++            finite=np.where(mask,v[:,:,j],0)[nonempty];scale=finite.max(axis=1)
++            block[nonempty,mean_column]=(finite/scale[:,None]).sum(axis=1)/count[nonempty]*scale
++            ordered=np.sort(v[nonempty,:,j],axis=1);rows=np.arange(len(ordered));c=count[nonempty]
++            block[nonempty,median_column]=_positive_midpoints(ordered[rows,(c-1)//2],ordered[rows,c//2])
++        values.append(block);counts.extend(count.tolist())
++    rep=np.concatenate(values);good=np.all(np.isfinite(rep),axis=1);empty=int((~good).sum())
++    intervals={name:np.quantile(rep[good,i],[.025,.975],method='linear').tolist() for i,name in enumerate(PARAMETER_METRICS)} if good.any() else {}
++    return {**out,'status':'Unresolved' if empty else 'Available','reason':'empty_eligibility_replicates' if empty else None,
++            'empty_replicates':empty,'nonempty_replicates':int(good.sum()),'eligibility_counts':counts,
++            'eligibility_frequency':sum(eligible)/expected,'replicates':rep,
++            'intervals':intervals if not empty else {},'conditional_nonempty_intervals':intervals if empty else {}}
++
++
++def parameter_contrast(base,control):
++    out={'inference':'descriptive_independent_whole_history','intervals':{},'estimate':{},
++         'base_eligible':base['eligible_history_count'],'control_eligible':control['eligible_history_count'],
++         'base_registered':base['registered_history_count'],'control_registered':control['registered_history_count']}
++    if base['status']!='Available' or control['status']!='Available':
++        return {**out,'status':'Unresolved','reason':'incomplete_or_empty_parameter_bootstrap'}
++    if base['replicates'].shape!=control['replicates'].shape:raise ValueError('parameter contrast replicate counts mismatch')
++    diff=base['replicates']-control['replicates']
++    return {**out,'status':'Available','estimate':{k:base['estimates'][k]-control['estimates'][k] for k in PARAMETER_METRICS},
++            'intervals':{k:np.quantile(diff[:,i],[.025,.975],method='linear').tolist() for i,k in enumerate(PARAMETER_METRICS)},
++            'empty_replicates':0,'resamples':base['resamples']}
+diff --git a/survey/geosim/numerics.py b/survey/geosim/numerics.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f4c662065dd9cf2887c9251a2ee3ce7128028ea2
+--- /dev/null
++++ b/survey/geosim/numerics.py
+@@ -0,0 +1,200 @@
++"""Independent authored offline density kernels, adopted from verified preparation.
++
++Reference-only author R/MATLAB code is not imported or copied. All methods,
++starts, guards and tolerances are frozen by methods.METHOD_CONTRACT.
++"""
++import math
++import warnings
++import numpy as np
++from scipy import integrate,optimize,special,stats
++
++class NumericFailure(Exception): pass
++
++def checked_quad(fun, a, b):
++    with warnings.catch_warnings(record=True) as caught:
++        warnings.simplefilter('always',integrate.IntegrationWarning)
++        value,error=integrate.quad(fun,a,b,epsabs=1e-11,epsrel=1e-10,limit=250)
++    if caught or not math.isfinite(value) or value<=0 or not math.isfinite(error) or error>1e-8*value:
++        raise NumericFailure(f'quadrature {value=} {error=} {caught=}')
++    return value,error
++
++def cutoff_logj(alpha,k,with_mean=False):
++    """J=integral exp((1-alpha)*y-k*expm1(y)) dy, y>=0."""
++    if k==0:
++        if alpha<=1: raise NumericFailure('improper zero-cutoff density')
++        return (-math.log(alpha-1),1/(alpha-1)) if with_mean else -math.log(alpha-1)
++    a=alpha-1
++    mode=math.log(-a/k) if a<0 and k < -a else 0.
++    def h(y):
++        if y>700: return -math.inf
++        return -a*y-k*math.expm1(y)
++    hm=h(mode)
++    scale=math.sqrt(-a) if mode else max(1.,a+k)
++    def integral(moment):
++        def right(u):
++            y=mode+u/scale; z=h(y)-hm
++            return (math.exp(z)*((scale*y)**moment)) if z>-745 else 0.
++        r,err=checked_quad(right,0,math.inf)
++        if mode:
++            def left(u):
++                y=mode-u/scale;z=h(y)-hm
++                return math.exp(z)*((scale*y)**moment) if z>-745 else 0.
++            l,le=checked_quad(left,0,mode*scale);r+=l;err+=le
++        return r
++    j=integral(0); result=hm+math.log(j)-math.log(scale)
++    return (result,integral(1)/j/scale) if with_mean else result
++
++def lognormal_logj(a,b,with_moments=False):
++    if b<=0: raise NumericFailure('lognormal curvature must be positive')
++    mode=max(0.,-a/(2*b)); hm=-a*mode-b*mode*mode
++    scale=max(1.,a) if mode==0 else max(1.,math.sqrt(2*b))
++    def integ(j):
++        def right(u):
++            t=mode+u/scale;z=-a*t-b*t*t-hm
++            return math.exp(z)*(scale*t)**j if z>-745 else 0.
++        value,_=checked_quad(right,0,math.inf)
++        if mode:
++            def left(u):
++                t=mode-u/scale;z=-a*t-b*t*t-hm
++                return math.exp(z)*(scale*t)**j if z>-745 else 0.
++            leftv,_=checked_quad(left,0,mode*scale);value+=leftv
++        return value
++    j=integ(0); logj=hm+math.log(j)-math.log(scale)
++    return (logj,integ(1)/j/scale,integ(2)/j/(scale*scale)) if with_moments else logj
++
++def pareto_at(x,xmin):
++    y=np.log(x)-math.log(xmin); s=float(np.mean(y))
++    if len(x)<50 or s<=0 or not math.isfinite(s):raise NumericFailure('insufficient or degenerate Pareto')
++    alpha=1+1/s
++    lp=math.log(alpha-1)-math.log(xmin)-alpha*y
++    return {'alpha':alpha,'xmin':float(xmin),'n_tail':len(x),'loglike':float(lp.sum()),'logpdf':lp}
++
++def fit_exp(y,logxmin):
++    excess=np.expm1(y);m=float(np.mean(excess))
++    if not math.isfinite(m) or m<=0: raise NumericFailure('degenerate exponential')
++    k=1/m;lp=math.log(k)-logxmin-k*excess
++    return {'status':'converged','k':k,'loglike':float(lp.sum()),'logpdf':lp}
++
++def fit_lognormal(y,logxmin):
++    s=float(np.mean(y));t=y/s;m2=float(np.mean(t*t))
++    if m2>=2: return {'status':'unattained_pareto_limit','m2_scaled':m2}
++    def fun(theta):
++        a,b=theta
++        try:lj,e1,e2=lognormal_logj(a,b,True)
++        except NumericFailure:return 1e100,np.zeros(2)
++        return a+b*m2+lj,np.array([1-e1,m2-e2])
++    attempts=[]
++    bounds=[(-100.,100.),(1e-8,1e4)]
++    for start in [(-1.,.5),(0.,.5),(1.,.1),(1.,.01)]:
++        r=optimize.minimize(fun,start,method='L-BFGS-B',jac=True,bounds=bounds,options={'ftol':1e-13,'gtol':1e-8,'maxiter':1000,'maxls':50})
++        grad=float(np.max(np.abs(fun(r.x)[1])))
++        attempts.append({'x':r.x.tolist(),'success':bool(r.success),'message':str(r.message),'objective':float(r.fun),'gradient':grad,'nit':int(r.nit),'nfev':int(r.nfev)})
++    good=[r for r in attempts if r['success'] and r['gradient']<1e-6 and r['objective']<1e90]
++    if not good:return {'status':'unconverged','attempts':attempts}
++    best=min(good,key=lambda r:r['objective']);a,b=best['x']
++    if a<=-99.999 or a>=99.999 or b<=1.01e-8 or b>=9999:return {'status':'bound_hit','attempts':attempts}
++    sig=s/math.sqrt(2*b);mu=logxmin-a*s/(2*b);lj=lognormal_logj(a,b)
++    lp=-logxmin-y-math.log(s)-a*t-b*t*t-lj
++    return {'status':'converged','a':a,'b':b,'mu':mu,'sigma':sig,'loglike':float(lp.sum()),'logpdf':lp,'attempts':attempts}
++
++def fit_stretched(y,logxmin):
++    s=float(np.mean(y));m2=float(np.mean(y*y));boundary=s-m2/(2*s)
++    def stats_beta(beta):
++        v=beta*y; vmax=float(v.max())
++        scaled=np.exp(v-vmax);den=float(np.sum(scaled))-len(y)*math.exp(-vmax)
++        if den<=0:raise NumericFailure('unresolved expm1 sum')
++        logden=vmax+math.log(den)
++        if vmax < .01:
++            # v*exp(v)-expm1(v), evaluated without its small-v cancellation.
++            numer=float(np.sum(v*v*(.5+v*(1/3+v*(1/8+v*(1/30+v*(1/144+v/840)))))))
++            score=s-numer/(beta*float(np.sum(np.expm1(v))))
++        else:
++            numer=float(np.sum((v-1)*scaled))+len(y)*math.exp(-vmax)
++            score=s-numer/(beta*den)
++        return logden,score
++    # Endpoint score is exact in the beta->0 limit. A nonpositive value puts supremum at beta=0.
++    if boundary<=0:return {'status':'unattained_pareto_limit','boundary_score':boundary}
++    lo=1e-8;hi=1.
++    # Tiny beta score evaluated from its analytic limit avoids cancellation.
++    def score(beta):
++        return stats_beta(beta)[1] if beta>=lo else boundary
++    while score(hi)>0 and hi<100:hi=min(100.,hi*2)
++    if score(lo)<=0 or score(hi)>=0:return {'status':'bound_hit','bracket':[lo,hi]}
++    beta,r=optimize.brentq(score,lo,hi,xtol=1e-10,rtol=1e-10,maxiter=200,full_output=True,disp=False)
++    if not r.converged:return {'status':'unconverged'}
++    logden,_=stats_beta(beta);logk=math.log(len(y))-logden;k=math.exp(logk)
++    if k<=0 or not math.isfinite(k):return {'status':'unresolved_rate_underflow','iterations':r.iterations}
++    lp=math.log(beta)+logk-logxmin+(beta-1)*y-(np.exp(logk+beta*y)-k)
++    return {'status':'converged','beta':beta,'k':k,'loglike':float(lp.sum()),'logpdf':lp,'iterations':r.iterations,'score':score(beta)}
++
++def fit_cutoff(y,logxmin):
++    mean_y=float(np.mean(y));mean_excess=float(np.mean(np.expm1(y)));ap=1+1/mean_y
++    pure_lp=math.log(ap-1)-logxmin-ap*y;pure_nll=-float(np.mean(pure_lp))
++    # Convex natural-parameter likelihood: exact KKT certificate at k=0.
++    if ap>2 and mean_excess>=1/(ap-2):
++        return {'status':'boundary_pareto','alpha':ap,'k':0.,'loglike':float(pure_lp.sum()),'logpdf':pure_lp,'boundary_score':mean_excess-1/(ap-2),'certificate':'convex_likelihood_KKT'}
++    def fun(theta):
++        alpha,logk=theta;k=math.exp(logk)
++        try:
++            lj,ey=cutoff_logj(alpha,k,True);ez=math.exp(cutoff_logj(alpha-1,k)-lj)
++        except (NumericFailure,OverflowError):return 1e100,np.zeros(2)
++        f=logxmin+alpha*mean_y+k*mean_excess+lj
++        g=np.array([mean_y-ey,k*(mean_excess-(ez-1))])
++        return f,g
++    bounds=[(-100.,100.),(-32.,32.)];attempts=[]
++    for alpha in [min(99.,ap),1.,0.]:
++        for factor in [1.,.1,.01]:
++            start=(alpha,float(np.clip(math.log(factor/mean_excess),-31.,31.)))
++            r=optimize.minimize(fun,start,method='L-BFGS-B',jac=True,bounds=bounds,options={'ftol':1e-13,'gtol':1e-8,'maxiter':1000,'maxls':50})
++            attempts.append({'x':r.x.tolist(),'success':bool(r.success),'message':str(r.message),'objective':float(r.fun),'gradient':float(np.max(np.abs(fun(r.x)[1]))),'nit':int(r.nit),'nfev':int(r.nfev)})
++    good=[r for r in attempts if r['success'] and r['gradient']<1e-6 and r['objective']<1e90]
++    if not good:return {'status':'unconverged','attempts':attempts}
++    best=min(good,key=lambda r:r['objective']);alpha,logk=best['x'];gain=pure_nll-best['objective']
++    if gain<=1e-10:
++        return {'status':'unresolved_near_boundary','attempts':attempts,'per_observation_gain':gain}
++    if any(abs(v-b[0])<1e-5 or abs(v-b[1])<1e-5 for v,b in zip(best['x'],bounds)):
++        return {'status':'bound_hit','attempts':attempts,'per_observation_gain':gain}
++    k=math.exp(logk);lp=-logxmin-alpha*y-k*np.expm1(y)-cutoff_logj(alpha,k)
++    return {'status':'converged','alpha':alpha,'k':k,'loglike':float(lp.sum()),'logpdf':lp,'attempts':attempts,'per_observation_gain':gain}
++
++def grid_pareto(x,grid=True):
++    x=np.sort(np.asarray(x,dtype=float));logs=np.log(x)
++    values,first,counts=np.unique(x,return_index=True,return_counts=True);nt=len(x)-first
++    eligible=np.flatnonzero(nt>=50)
++    if grid and len(eligible)>100:
++        eligible=eligible[np.array([j*(len(eligible)-1)//99 for j in range(100)])]
++    suffix=np.cumsum(logs[::-1])[::-1];best=None
++    # Both ECDF sides at each distinct tied support value.
++    for ci in eligible:
++        start=int(first[ci]);n=int(nt[ci]);logmin=float(logs[start]);total=float(suffix[start]-n*logmin)
++        if total<=0 or not math.isfinite(total):continue
++        a=n/total;tailvals=np.log(values[ci:])-logmin
++        cdf=-np.expm1(-a*tailvals)
++        right=np.cumsum(counts[ci:])/n;left=right-counts[ci:]/n
++        D=float(max(np.max(np.abs(cdf-left)),np.max(np.abs(right-cdf))))
++        item={'xmin':float(values[ci]),'alpha':1+a,'ks':D,'n_tail':n,'candidate_count':len(eligible)}
++        if best is None or D<best['ks']:best=item
++    if best is None:raise NumericFailure('no nondegenerate eligible cutoff')
++    return best
++
++def likelihood_ratios(pure,alt,nested=False):
++    if alt['status'] not in ('converged','boundary_pareto'):
++        return {'status':'unresolved','fit_status':alt['status']}
++    diff=np.asarray(pure['logpdf'])-np.asarray(alt['logpdf'])
++    if diff.ndim!=1 or not len(diff) or not np.all(np.isfinite(diff)):
++        return {'status':'unresolved_nonfinite_likelihood'}
++    R=float(diff.sum())
++    if not math.isfinite(R):return {'status':'unresolved_nonfinite_likelihood'}
++    if nested:
++        calibration={'calibration':'declared_half_chi_square_1','calibration_validity':'unvalidated',
++                     'regular_boundary_information':pure['alpha']>3,
++                     'calibration_limit':'alpha<=3 lacks finite second moment; alpha>3 alone is not validation'}
++        if alt['status']=='boundary_pareto' and alt.get('certificate')=='convex_likelihood_KKT':
++            return {'status':'available','R':0.,'T':0.,'p':1.,**calibration}
++        T=-2*R
++        if T<=0:return {'status':'unresolved_near_boundary','R':R,**calibration}
++        return {'status':'available','R':R,'T':T,'p':float(.5*stats.chi2.sf(T,1)),**calibration}
++    variance=float(np.mean((diff-np.mean(diff))**2))
++    if variance<=1e-24 or not math.isfinite(variance):return {'status':'unresolved_zero_variance','R':R}
++    z=R/math.sqrt(len(diff)*variance)
++    return {'status':'available','R':R,'normalized_R':z,'p':float(special.erfc(abs(z)/math.sqrt(2))),'variance_divisor':'n'}
+diff --git a/survey/geosim/provenance.py b/survey/geosim/provenance.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..86a6958b023d01a9ae382bb9fae2fc91b90ee88e
+--- /dev/null
++++ b/survey/geosim/provenance.py
+@@ -0,0 +1,93 @@
++"""Comprehensive scientific source inventory and an explicit post-writer freeze."""
++from copy import deepcopy
++import hashlib
++from pathlib import Path
++from .methods import canonical_bytes
++
++TABLE='docs/superpowers/specs/2026-10-03-geosim-source-table.json'
++SPEC='docs/superpowers/specs/2026-10-03-geosim-design.md'
++REQUIRED_FILES=(
++    'Cargo.toml','Cargo.lock','crates/sugarscape-core/Cargo.toml',
++    'crates/sugarscape-core/assets/sugar-map.txt',
++    'crates/sugarscape-core/tests/geosim_discovery.rs',
++    'crates/sugarscape-core/tests/geosim_host_sweep.rs',
++    'crates/sugarscape-core/tests/geosim_invalid_sweep.rs',
++    'survey/Cargo.toml','survey/Cargo.lock','survey/src/bin/geosim.rs',
++    'survey/tests/geosim_native.rs','survey/tests/fixtures/geosim-registered-manifest.json',
++    'survey/geosim/.python-version','survey/geosim/requirements.txt',
++    'survey/geosim/README.md','survey/geosim/NUMERICAL_METHODS.md',
++    'survey/geosim/reference/extract.py','survey/geosim/reference/test_extract.py',
++    'survey/geosim/reference/test_launch.py','survey/geosim/reference/GeoSimReferenceProbe.java',
++    TABLE,SPEC,
++    *('docs/superpowers/specs/2026-10-03-geosim-'+name+'.md' for name in (
++        'source-extraction','reading-notes','author-code-reading-notes','mechanics-reading-notes',
++        'defender-threshold-amendment','damage-incidence-audit','artifact-audit',
++        'finite-technology-amendment','portability-amendment')),
++)
++
++
++def safe_source_path(root,name):
++    root=Path(root).resolve();path=Path(name)
++    if not isinstance(name,str) or not name or path.is_absolute() or '..' in path.parts or path.as_posix()!=name:
++        raise ValueError(f'unsafe inventory path: {name}')
++    current=root
++    for component in path.parts:
++        current=current/component
++        if current.is_symlink():raise ValueError(f'source symlink is forbidden: {name}')
++    if not current.is_file():raise ValueError(f'missing inventory source: {name}')
++    return current
++
++
++def required_inventory_paths(root):
++    """Sorted required roster; process ledgers, raw downloads and outputs excluded."""
++    root=Path(root).resolve();required=set(REQUIRED_FILES)
++    for directory,suffixes in (
++        ('crates/sugarscape-core/src',{'.rs'}),('survey/geosim',{'.py','.java'}),
++        ('crates/sugarscape-core/tests',{'.rs'}),('survey/tests',{'.rs'})):
++        base=root/directory
++        if not base.is_dir():raise ValueError(f'missing scientific source directory: {directory}')
++        for path in base.rglob('*'):
++            relative=path.relative_to(root).as_posix()
++            if relative.startswith('survey/geosim/reference/raw/') or '__pycache__' in path.parts:continue
++            if path.is_symlink():raise ValueError(f'source symlink is forbidden: {relative}')
++            if path.is_file() and path.suffix in suffixes:required.add(relative)
++    for name in ('.cargo/config','.cargo/config.toml','rust-toolchain','rust-toolchain.toml',
++                 'build.rs','crates/sugarscape-core/build.rs','survey/build.rs'):
++        if (root/name).exists() or (root/name).is_symlink():required.add(name)
++    for name in required:safe_source_path(root,name)
++    return sorted(required)
++
++
++def source_inventory(root):
++    entries=[]
++    for name in required_inventory_paths(root):
++        data=safe_source_path(root,name).read_bytes()
++        entries.append({'path':name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()})
++    return entries
++
++
++def freeze_manifest(provisional,root,source_bytes):
++    """Bind current required source bytes; call only after all writers stop."""
++    from .manifest import build_manifest
++    from .records import strict_json
++    source=strict_json(source_bytes)
++    if provisional!=build_manifest(source,source_bytes):raise ValueError('provisional manifest differs from exact registered contract')
++    if safe_source_path(root,TABLE).read_bytes()!=source_bytes:raise ValueError('source table/root bytes mismatch')
++    result=deepcopy(provisional);inventory=source_inventory(root)
++    result.update(provenance_status='frozen',source_inventory=inventory,
++                  source_inventory_sha256=hashlib.sha256(canonical_bytes(inventory)).hexdigest())
++    return result
++
++
++def main():
++    import argparse,json
++    from .records import strict_json
++    parser=argparse.ArgumentParser(description=__doc__)
++    for name in ('manifest','source','source-root','output'):parser.add_argument('--'+name,required=True,type=Path)
++    args=parser.parse_args()
++    result=freeze_manifest(strict_json(args.manifest.read_bytes()),args.source_root,args.source.read_bytes())
++    args.output.parent.mkdir(parents=True,exist_ok=True)
++    args.output.write_text(json.dumps(result,indent=2,allow_nan=False)+'\n',encoding='utf-8')
++    print(f"Frozen {len(result['source_inventory'])} scientific sources; source SHA256 {result['source_inventory_sha256']}")
++
++if __name__=='__main__':main()
+diff --git a/survey/geosim/records.py b/survey/geosim/records.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..74d12bd030485fdfa260a1e78f84ec82f9e90c61
+--- /dev/null
++++ b/survey/geosim/records.py
+@@ -0,0 +1,239 @@
++"""Strict evidence integrity and successful-period censuses; no engine defaults."""
++import hashlib
++import json
++import math
++from pathlib import Path
++from .methods import canonical_bytes
++
++
++def strict_json(text):
++    def pairs(items):
++        result={}
++        for key,value in items:
++            if key in result:raise ValueError(f'duplicate JSON field: {key}')
++            result[key]=value
++        return result
++    def constant(value):raise ValueError(f'nonfinite JSON number: {value}')
++    def parsed_float(value):
++        result=float(value)
++        if not math.isfinite(result):raise ValueError(f'nonfinite JSON numeric exponent: {value}')
++        return result
++    try:return json.loads(text,object_pairs_hook=pairs,parse_constant=constant,parse_float=parsed_float)
++    except (json.JSONDecodeError,UnicodeDecodeError) as exc:raise ValueError(f'invalid JSON: {exc}') from exc
++
++
++def resolved_payload(export):
++    payload=export.get('resolved_configs_json')
++    if not isinstance(payload,str):raise ValueError('missing exact native config payload')
++    if hashlib.sha256(payload.encode('utf-8')).hexdigest()!=export.get('resolved_configs_sha256'):
++        raise ValueError('native resolved config payload SHA256 mismatch')
++    parsed=strict_json(payload)
++    if parsed!=[{'id':a['id'],'config':a['config']} for a in export['arms']]:
++        raise ValueError('native resolved payload/config equality mismatch')
++    return parsed
++
++
++def verify_source_inventory(root,inventory):
++    from .provenance import required_inventory_paths,safe_source_path
++    root=Path(root).resolve();seen=set();previous=None
++    if not isinstance(inventory,list) or not inventory:raise ValueError('source inventory must be nonempty and sorted')
++    for entry in inventory:
++        if set(entry)!= {'path','bytes','sha256'}:raise ValueError('unknown source inventory field')
++        name=entry['path']
++        if previous is not None and previous>=name:raise ValueError('source inventory must be unique and path sorted')
++        previous=name;seen.add(name);file=safe_source_path(root,name)
++        if type(entry['bytes']) is not int or entry['bytes']<0:raise ValueError('invalid inventory byte count')
++        data=file.read_bytes()
++        if len(data)!=entry['bytes'] or hashlib.sha256(data).hexdigest()!=entry['sha256']:
++            raise ValueError(f'source bytes/SHA256 mismatch: {name}')
++    if not set(required_inventory_paths(root))<=seen:raise ValueError('source inventory omits required scientific sources')
++    return hashlib.sha256(canonical_bytes(inventory)).hexdigest()
++
++
++def _uint(value):return type(value) is int and value>=0
++
++def _finite_nonnegative(value):
++    return type(value) in (int,float) and math.isfinite(value) and value>=0
++
++
++def history_availability(row,arm=None):
++    attempt=row.get('attempt',{});status=attempt.get('status');out=row.get('outcome')
++    if status in ('construction_panic','implementation_panic') and (not isinstance(attempt.get('panic_context'),str) or not attempt['panic_context'].strip()):
++        raise ValueError('panic attempt needs nonempty panic_context')
++    if out is None:
++        if status not in ('construction_error','construction_panic','incomplete'):
++            raise ValueError('missing Outcome without explicit unavailable attempt status')
++        if status=='incomplete' and not attempt.get('recorder_error'):
++            raise ValueError('incomplete attempt needs recorder_error')
++        return {'status':status,'complete':False,'state_available':False,'reason':attempt.get('recorder_error') or attempt.get('panic_context') or attempt.get('construction_errors')}
++    config=row.get('config',out['config'])
++    if out['config']!=config or ('seed' in row and out['seed']!=row['seed']):raise ValueError('Outcome config/seed mismatch')
++    periods=out['periods'];attempted=out['attempted_period'];horizon=config['initialization_periods']+config['observation_periods']
++    if not _uint(periods) or not _uint(attempted) or not periods<=attempted<=min(horizon,periods+1):
++        raise ValueError('invalid completed/attempted clocks')
++    if type(out['valid']) is not bool or type(out['state_available']) is not bool:raise ValueError('invalid availability flags')
++    if out['finish_reason']=='implementation_panic' and status not in (None,'implementation_panic'):
++        raise ValueError('inner panic requires outer panic attempt')
++    if out['valid']:
++        if periods!=horizon or attempted!=horizon or not out['state_available'] or out['finish_reason']!='horizon' or out['invalid_reason'] is not None:
++            raise ValueError('valid outcome is not a complete registered horizon')
++        if status=='implementation_panic':
++            return {'status':'implementation_panic','complete':False,'state_available':True,'reason':attempt['panic_context']}
++        if status not in (None,'completed'):raise ValueError('completed Outcome/attempt status mismatch')
++        return {'status':'completed','complete':True,'state_available':True,'reason':None}
++    if status not in (None,'invalid','implementation_panic'):raise ValueError('invalid Outcome/attempt status mismatch')
++    return {'status':'implementation_panic' if status=='implementation_panic' else 'invalid_partial','complete':False,
++            'state_available':out['state_available'],'reason':attempt.get('panic_context') if status=='implementation_panic' else out['invalid_reason']}
++
++
++def completed_censuses(outcome,availability=None):
++    intrinsic=history_availability({'outcome':outcome})
++    availability=intrinsic if availability is None else availability
++    if availability['complete'] and not intrinsic['complete']:raise ValueError('attempt cannot promote an invalid Outcome')
++    c=outcome['config'];successful=outcome['periods'];attempted=outcome['attempted_period'];boundary=outcome['counting_start']
++    expected_boundary=max(1,c['initialization_periods']) if c['count_boundary']=='at_initialization' else c['initialization_periods']+1
++    if boundary!=expected_boundary:raise ValueError('counting boundary differs from resolved config')
++    seen=set();accepted=[];excluded=[]
++    for war in outcome['completed_wars']:
++        wid=war['id']
++        if not _uint(wid) or wid in seen:raise ValueError('invalid or duplicate completed war id')
++        seen.add(wid);reasons=[];start=war['start_period'];end=war['end_period']
++        clocks=_uint(start) and _uint(end) and start<=end<=attempted
++        if not clocks:reasons.append('invalid_completion_clock')
++        elif end>successful:reasons.append('invalid_partial_period_completion')
++        if not _uint(start) or start<boundary:reasons.append('before_counting_start')
++        raw=war['raw_severity'];exported=war['exported_severity']
++        if not _finite_nonnegative(raw):reasons.append('invalid_raw_severity')
++        if not _finite_nonnegative(exported):reasons.append('invalid_exported_severity')
++        elif _finite_nonnegative(raw):
++            expected=raw if c['severity_export']=='raw_damage' else float(min(2147483647,math.trunc(raw*100))) if raw<=2147483647/100 else 2147483647.
++            if exported!=expected:reasons.append('resolved_export_mismatch')
++        if not war.get('end_cause'):reasons.append('missing_end_cause')
++        participants=set()
++        for p in war['participants']:
++            state=p['state'];identity=(state['capital_cell'],state['sovereignty_generation'])
++            if not all(_uint(v) for v in identity) or identity[0]>=c['width']*c['height']:
++                reasons.append('invalid_generation_identity')
++            if identity in participants:reasons.append('duplicate_participant_generation_identity')
++            participants.add(identity)
++            if not _uint(p['last_fighting_period']) or not clocks or not start<=p['last_fighting_period']<=end:
++                reasons.append('invalid_participant_clock')
++        fights=war['fighting_periods']
++        if not isinstance(fights,list) or any(not _uint(p) for p in fights) or fights!=sorted(set(fights)):
++            reasons.append('invalid_fighting_periods')
++        elif not clocks or any(not start<=p<=end for p in fights):reasons.append('invalid_fighting_periods')
++        elif war['active_periods']!=len(fights) or (fights and war['last_active_period']!=fights[-1]):
++            reasons.append('invalid_active_period_clock')
++        if clocks and war['elapsed_periods']!=end-start+1:reasons.append('invalid_elapsed_period_clock')
++        if reasons:excluded.append({'war':war,'reasons':sorted(set(reasons))})
++        else:accepted.append(war)
++    by_id={w['id']:w for w in outcome['completed_wars']};visible_ids=set();backlog_ids=set()
++    for label,ids in [('legacy_visible_wars',visible_ids),('exporter_backlog',backlog_ids)]:
++        for war in outcome[label]:
++            if war['id'] in ids or by_id.get(war['id'])!=war:raise ValueError('export census duplicate or mismatched completed identity')
++            ids.add(war['id'])
++    if visible_ids&backlog_ids:raise ValueError('exporter backlog overlaps visible census')
++    positive_ids={w['id'] for w in outcome['completed_wars'] if _finite_nonnegative(w['raw_severity']) and w['raw_severity']>0}
++    queued_ids=visible_ids|backlog_ids
++    # Null raw severity can represent a genuine nonfinite partial artifact; preserve
++    # that unknown membership only on invalid rows, with its fit exclusion reason.
++    unknown_ids={w['id'] for w in outcome['completed_wars'] if w['raw_severity'] is None and not intrinsic['complete']}
++    if queued_ids-unknown_ids!=positive_ids:raise ValueError('positive raw collector partition is not conserved')
++    if c['completed_export']=='all_completed' and backlog_ids:raise ValueError('all_completed retains exporter backlog')
++    censored_ids=set()
++    for war in outcome['censored_wars']:
++        wid=war['id'];start=war['start_period'];last=war['last_active_period']
++        if not _uint(wid) or wid in seen or wid in censored_ids:raise ValueError('duplicate or completed/censored war identity')
++        censored_ids.add(wid)
++        if war['end_period'] is not None or war['end_cause']!='horizon_censored' or not _uint(start) or not boundary<=start<=last<=attempted:
++            raise ValueError('invalid censored war clocks/cause')
++        identities=set()
++        for part in war['participants']:
++            identity=(part['state']['capital_cell'],part['state']['sovereignty_generation'])
++            if not all(_uint(v) for v in identity) or identity[0]>=c['width']*c['height'] or identity in identities:
++                raise ValueError('invalid censored participant generation identity')
++            identities.add(identity)
++            if not _uint(part['last_fighting_period']) or not start<=part['last_fighting_period']<=attempted:
++                raise ValueError('invalid censored participant clock')
++        fights=war['fighting_periods']
++        if not isinstance(fights,list) or fights!=sorted(set(fights)) or any(not _uint(v) or not start<=v<=attempted for v in fights):
++            raise ValueError('invalid censored fighting periods')
++        if war['active_periods']!=len(fights) or (fights and last!=fights[-1]) or war['elapsed_periods']!=attempted-start+1:
++            raise ValueError('invalid censored active/elapsed clocks')
++        if intrinsic['complete'] and not _finite_nonnegative(war['raw_severity']):
++            raise ValueError('invalid censored raw severity')
++    if intrinsic['complete'] and excluded:raise ValueError('valid horizon contains invalid completed census')
++    selected=accepted if c['completed_export']=='all_completed' else [w for w in accepted if w['id'] in visible_ids]
++    return {'availability':availability,'primary_completed':accepted if availability['complete'] else [],
++            'partial_completed':accepted if not availability['complete'] else [],
++            'source_selected':selected if availability['complete'] else [],
++            'partial_source_selected':selected if not availability['complete'] else [],
++            'excluded':excluded,'completed_record_count':len(outcome['completed_wars']),
++            'censored_count':len(outcome['censored_wars']),'backlog_count':len(outcome['exporter_backlog'])}
++
++BINDING_FIELDS=('manifest_sha256','binary_sha256','source_inventory_sha256','build_receipt_sha256','resolved_configs_sha256')
++RECORD_FIELDS={'schema_version','model','arm','seed','arm_index','repeat_index','config','attempt','outcome',*BINDING_FIELDS}
++OUTCOME_FIELDS={'config','seed','rng_mode','periods','attempted_period','counting_start','valid','state_available','finish_reason','invalid_reason','completed_wars','censored_wars','legacy_visible_wars','exporter_backlog','merges','retired_states','sovereign_count','states','cells','ledger','fronts','resource_updates','partial_period_fights'}
++
++
++def validate_build_receipt(receipt,manifest_sha256,binary_sha256,source_inventory_sha256,source_root=None):
++    required={'schema_version','model','manifest_sha256','source_inventory_sha256','prebuild_inventory_sha256',
++              'postbuild_inventory_sha256','binary_sha256','build_command','cwd','target','rustc_version',
++              'cargo_version','lockfile_hashes','features','build_flags'}
++    if set(receipt)!=required or receipt['schema_version']!=1 or receipt['model']!='geosim':
++        raise ValueError('unknown or missing build receipt/model fields')
++    for name,want in [('manifest_sha256',manifest_sha256),('binary_sha256',binary_sha256),
++                      ('source_inventory_sha256',source_inventory_sha256),('prebuild_inventory_sha256',source_inventory_sha256),
++                      ('postbuild_inventory_sha256',source_inventory_sha256)]:
++        if receipt[name]!=want:raise ValueError(f'build receipt {name} mismatch')
++    if not receipt['build_command'] or not all(isinstance(s,str) for s in receipt['build_command']):
++        raise ValueError('missing explicit build command')
++    locks=receipt['lockfile_hashes']
++    if not isinstance(locks,dict) or not {'Cargo.lock','survey/Cargo.lock'}<=set(locks):raise ValueError('receipt omits required Cargo locks')
++    if source_root is not None:
++        from .provenance import safe_source_path
++        for name,digest in locks.items():
++            if hashlib.sha256(safe_source_path(source_root,name).read_bytes()).hexdigest()!=digest:
++                raise ValueError('build receipt lockfile SHA256 mismatch')
++    return True
++
++
++def validate_record(row,arm,binding):
++    if set(row)!=RECORD_FIELDS or row['schema_version']!=1 or row['model']!='geosim':
++        raise ValueError('unknown or missing record/model fields')
++    if any(row[k]!=binding[k] for k in BINDING_FIELDS):raise ValueError('record provenance mismatch')
++    seed=row['seed'];repeat=row['repeat_index']
++    if row['arm']!=arm['id'] or row['arm_index']!=arm['index'] or not _uint(seed) or not _uint(repeat) or not 0<=repeat<arm['sessions'] or seed!=arm['first_seed']+repeat:
++        raise ValueError('record key differs from registered arm')
++    if row['config']!=arm['config']:raise ValueError('record config differs from authoritative resolved config')
++    attempt=row['attempt']
++    if set(attempt)!= {'status','construction_errors','panic_context','recorder_error'}:
++        raise ValueError('unknown or missing attempt fields')
++    if attempt['status'] not in ('completed','invalid','construction_error','construction_panic','implementation_panic','incomplete'):
++        raise ValueError('unknown attempt status')
++    history_availability(row,arm)
++    if row['outcome'] is not None:
++        if set(row['outcome'])!=OUTCOME_FIELDS:raise ValueError('unknown or missing Outcome fields')
++        completed_censuses(row['outcome'],history_availability(row,arm))
++    return row['arm'],seed
++
++
++def read_sessions(path,manifest,resolved,binding):
++    resolved_payload(resolved)
++    if any(resolved[k]!=binding[k] for k in BINDING_FIELDS):raise ValueError('resolved export provenance mismatch')
++    configs={a['id']:a['config'] for a in resolved['arms']}
++    if len(configs)!=len(resolved['arms']):raise ValueError('duplicate resolved arm id')
++    if set(configs)!={a['id'] for a in manifest['arms']}:raise ValueError('resolved arm family mismatch')
++    arms={a['id']:{**a,'config':configs[a['id']]} for a in manifest['arms']}
++    result={}
++    with Path(path).open(encoding='utf-8') as file:
++        for number,line in enumerate(file,1):
++            try:
++                row=strict_json(line)
++                if row['arm'] not in arms:raise ValueError('unregistered raw arm')
++                key=validate_record(row,arms[row['arm']],binding)
++                if key in result:raise ValueError('duplicate registered key')
++                result[key]=row
++            except (KeyError,TypeError,ValueError) as exc:
++                raise ValueError(f'raw line {number}: {exc}') from exc
++    return result
+diff --git a/survey/geosim/reporting.py b/survey/geosim/reporting.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..96659e26fb30cfc9c361a3a12e9f187fdac326dd
+--- /dev/null
++++ b/survey/geosim/reporting.py
+@@ -0,0 +1,72 @@
++"""Strict compact exports; presentation never calculates scientific judges."""
++import json
++import math
++import numpy as np
++
++PRIVATE_FIELDS={'replicates','raw_sizes','logpdf','eligibility_counts','refitted_xmins'}
++
++
++def _json_value(value,path='$'):
++    if isinstance(value,dict):return {k:_json_value(v,f'{path}.{k}') for k,v in value.items() if k not in PRIVATE_FIELDS}
++    if isinstance(value,(list,tuple)):return [_json_value(v,f'{path}[{i}]') for i,v in enumerate(value)]
++    if isinstance(value,np.ndarray):return _json_value(value.tolist(),path)
++    if isinstance(value,np.generic):return _json_value(value.item(),path)
++    if isinstance(value,float) and not math.isfinite(value):raise ValueError(f'nonfinite report value at {path}')
++    return value
++
++
++def serialize_report(report):
++    return json.dumps(_json_value(report),indent=2,allow_nan=False)+'\n'
++
++
++def markdown_report(report):
++    def cell(value):
++        if value is None:return 'Unavailable'
++        return str(value).replace('|','\\|').replace('\n',' ')
++    lines=['# GeoSim offline findings','',f"Classification: {report['classification']}. Received {report['received_histories']} / {report['registered_histories']} registered history slots.",
++           '', 'Source equivalence remains Unresolved where the printed severity scale/range/count definitions are unverified. Conditional reconstruction compatibility is distinct.',
++           '', '| Source arm | Conditional verdict | Source equivalence | Original joint eligible | Precision joint eligible |',
++           '|---|---|---|---:|---:|']
++    for name,a in report['source']['arms'].items():
++        lines.append(f"| {name} | {a['conditional_verdict']} | {a['source_equivalence']} | {a['original_joint_eligible']}/15 | {a['precision_joint_eligible']}/100 |")
++    lines+=['','Fixed source family: 88 targets; mechanism contrasts: six targets. Unavailable slots remain in multiplicity. Bootstrap extrema have finite support, not impossible-model-event meaning.',
++            '', '| Source target | Printed rounding interval | Original estimate | Predictive 95% interval | Raw p | Holm p | Availability reason |',
++            '|---|---|---:|---|---:|---:|---|']
++    for t in report['source']['targets']:
++        values=(t['id'],t['source_interval'],t['original'],(t['result'] or {}).get('predictive_interval'),t['p'],t['holm_p'],t['unavailable_reason'])
++        lines.append('| '+' | '.join(cell(v) for v in values)+' |')
++    lines+=['','| Source contrast | Verdict/reason | Estimate | 95% interval | Raw p | Holm p |','|---|---|---:|---|---:|---:|']
++    for f in report['source_contrasts']:
++        values=(f['id'],f['verdict']+((': '+f['unavailable_reason']) if f['unavailable_reason'] else ''),f['estimate'],f['interval'],f['p'],f['holm_p'])
++        lines.append('| '+' | '.join(cell(v) for v in values)+' |')
++    lines+=['','Modern pooled fits and generated/refitted tests are iid diagnostics; nonrejection does not validate dependent histories. The declared half-chi-square cutoff calibration remains unvalidated, especially for alpha<=3.',
++            '', '| Modern pool | Fit availability/reason | Alpha | xmin | Tail n | KS D | KS test/reason | KS p | 95% MC interval | KS verdict |',
++            '|---|---|---:|---:|---:|---:|---|---:|---|---|']
++    for name,p in report['modern_pools'].items():
++        ks=p['ks_test']
++        values=(name,p['status']+((': '+p['reason']) if p.get('reason') else ''),p.get('alpha'),p.get('xmin'),p.get('n_tail'),p.get('ks'),
++                ks['status']+((': '+ks['reason']) if ks.get('reason') else ''),ks.get('p'),ks.get('interval'),ks.get('verdict'))
++        lines.append('| '+' | '.join(cell(v) for v in values)+' |')
++    lines+=['','| Pool | Alternative | Fit status/reason | LR R | LR p | Preference |','|---|---|---|---:|---:|---|']
++    for name,p in report['modern_pools'].items():
++        for alternative,a in p.get('alternatives',{}).items():
++            ratio=a.get('ratio',{})
++            values=(name,alternative,a['status']+((': '+a['reason']) if a.get('reason') else ''),ratio.get('R'),ratio.get('p'),a.get('diagnostic_verdict'))
++            lines.append('| '+' | '.join(cell(v) for v in values)+' |')
++    lines+=['','Whole-history parameter estimates and 95% intervals sample registered rows with eligibility masks. Conditional nonempty intervals are descriptive when empty draws prevent primary availability.',
++            '', '| Arm | Availability/reason | Eligible/registered histories | Empty draws | Metric | Estimate | Primary 95% interval | Conditional nonempty 95% interval |',
++            '|---|---|---:|---:|---|---:|---|---|']
++    for name,p in report['modern_parameters'].items():
++        for metric in ('alpha_mean','alpha_median','xmin_mean','xmin_median'):
++            values=(name,p['status']+((': '+p['reason']) if p.get('reason') else ''),f"{p['eligible_history_count']}/{p['registered_history_count']}",
++                    p['empty_replicates'],metric,p['estimates'].get(metric),p['intervals'].get(metric),p.get('conditional_nonempty_intervals',{}).get(metric))
++            lines.append('| '+' | '.join(cell(v) for v in values)+' |')
++    lines+=['','| Parameter contrast | Availability/reason | Base/control eligible histories | Metric | Difference estimate | Descriptive 95% interval |',
++            '|---|---|---:|---|---:|---|']
++    for name,p in report['modern_parameter_contrasts'].items():
++        for metric in ('alpha_mean','alpha_median','xmin_mean','xmin_median'):
++            values=(name,p['status']+((': '+p['reason']) if p.get('reason') else ''),f"{p['base_eligible']}/{p['base_registered']} versus {p['control_eligible']}/{p['control_registered']}",metric,p['estimate'].get(metric),p['intervals'].get(metric))
++            lines.append('| '+' | '.join(cell(v) for v in values)+' |')
++    lines+=['','Individual fits retain all four alternative outcomes, insufficiency and optimizer failures. Parameter contrasts use independent whole-history replicate arrays and descriptive intervals, with no invented p-family.',
++            '', 'Exact Clauset Supplement S1 reproduction is Unresolved; CoW missing fatalities (-9 for Thailand, war170) are unknown, not zero. Cederman historical input is separate. Runnable GeoSim2 reference is not full archived-mechanics or seed-identical docking.', '']
++    return '\n'.join(lines)
+diff --git a/survey/geosim/requirements.txt b/survey/geosim/requirements.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..09ddfec81212858b1320ca517f731819b2bd49a2
+--- /dev/null
++++ b/survey/geosim/requirements.txt
+@@ -0,0 +1,3 @@
++# Python 3.13.5; offline scientific protocol only, never a browser/core dependency.
++numpy==2.4.6
++scipy==1.17.1
+diff --git a/survey/geosim/run.py b/survey/geosim/run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..06ee8b971de4205891b0a39feed16a6c6755a19c
+--- /dev/null
++++ b/survey/geosim/run.py
+@@ -0,0 +1,63 @@
++"""Exact native invocation and post-build binding; this module never builds Rust."""
++import argparse
++import hashlib
++from pathlib import Path
++import subprocess
++import sys
++from .records import strict_json,verify_source_inventory
++
++
++def sha256_file(path):
++    digest=hashlib.sha256()
++    with Path(path).open('rb') as file:
++        for chunk in iter(lambda:file.read(1024*1024),b''):digest.update(chunk)
++    return digest.hexdigest()
++
++
++def run_native(binary,manifest,out,*,arm=None,validate=False,resolved_out=None,build_receipt=None,source_root=None,allow_unfrozen_fixture=False):
++    binary=Path(binary).resolve();manifest=Path(manifest).resolve();out=Path(out).resolve()
++    command=[str(binary),'--manifest',str(manifest),'--manifest-sha256',sha256_file(manifest),
++             '--out',str(out),'--source-root',str(Path(source_root or '.').resolve())]
++    if arm is not None:command+=['--arm',arm]
++    if resolved_out is not None:command+=['--resolved-out',str(Path(resolved_out).resolve())]
++    if build_receipt is not None:command+=['--build-receipt',str(Path(build_receipt).resolve())]
++    if validate:command+=['--validate']
++    if allow_unfrozen_fixture:command+=['--allow-unfrozen-fixture']
++    return subprocess.run(command,capture_output=True,text=True,check=True)
++
++
++def make_build_receipt(manifest_path,binary_path,source_root,*,prebuild_inventory_sha256,build_command,build_exit_code,toolchain,lockfile_paths,features=None,build_flags=None):
++    if build_exit_code!=0:raise ValueError('failed build cannot create binding receipt')
++    manifest=strict_json(Path(manifest_path).read_bytes());root=Path(source_root).resolve()
++    if manifest.get('model')!='geosim' or manifest.get('provenance_status')!='frozen':raise ValueError('build receipt requires frozen GeoSim sources')
++    inventory=manifest['source_inventory'];post=verify_source_inventory(root,inventory)
++    if prebuild_inventory_sha256!=post or manifest['source_inventory_sha256']!=post:
++        raise ValueError('pre/post build source inventories changed')
++    if not build_command or any(not isinstance(s,str) for s in build_command):raise ValueError('explicit build command required')
++    if not {'Cargo.lock','survey/Cargo.lock'}<=set(lockfile_paths):raise ValueError('build receipt omits required Cargo locks')
++    locks={}
++    for name in lockfile_paths:
++        path=(root/name).resolve()
++        if Path(name).is_absolute() or '..' in Path(name).parts or not path.is_relative_to(root):raise ValueError('unsafe lockfile path')
++        locks[name]=sha256_file(path)
++    return {'schema_version':1,'model':'geosim','manifest_sha256':sha256_file(manifest_path),
++            'source_inventory_sha256':post,'prebuild_inventory_sha256':prebuild_inventory_sha256,'postbuild_inventory_sha256':post,
++            'binary_sha256':sha256_file(binary_path),'build_command':list(build_command),'cwd':str(root),
++            'target':toolchain['target'],'rustc_version':toolchain['rustc_version'],'cargo_version':toolchain['cargo_version'],
++            'lockfile_hashes':locks,'features':features or [],'build_flags':build_flags or []}
++
++
++def main():
++    parser=argparse.ArgumentParser(description=__doc__)
++    for name in ('binary','manifest','out','source-root'):parser.add_argument('--'+name,required=True,type=Path)
++    parser.add_argument('--arm');parser.add_argument('--validate',action='store_true')
++    parser.add_argument('--resolved-out',type=Path);parser.add_argument('--build-receipt',type=Path)
++    parser.add_argument('--allow-unfrozen-fixture',action='store_true')
++    args=parser.parse_args()
++    result=run_native(args.binary,args.manifest,args.out,arm=args.arm,validate=args.validate,
++                      resolved_out=args.resolved_out,build_receipt=args.build_receipt,source_root=args.source_root,
++                      allow_unfrozen_fixture=args.allow_unfrozen_fixture)
++    print(result.stdout,end='')
++    if result.stderr:print(result.stderr,end='',file=sys.stderr)
++
++if __name__=='__main__':main()
+diff --git a/survey/geosim/source.py b/survey/geosim/source.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..edccd5b875527973db8affcf479f47f03402810f
+--- /dev/null
++++ b/survey/geosim/source.py
+@@ -0,0 +1,182 @@
++"""Source reconstruction statistics on whole histories and fixed families."""
++import bisect
++import math
++import statistics
++import numpy as np
++from .manifest import TARGETS
++from .records import completed_censuses, history_availability
++
++def source_fit(selected_exports):
++    """All selected completed exports, including zero; unavailable != zero."""
++    if any(not math.isfinite(s) or s < 0 for s in selected_exports):
++        raise ValueError('completed exported severity must be finite and nonnegative')
++    positive=sorted(s for s in selected_exports if s>0); n=len(positive)
++    result={'war_count':len(selected_exports),'positive_count':n,'zero_count':len(selected_exports)-n,
++            'slope':None,'r2':None,'log_range':None,'fit_points':[],'fit_status':'unavailable'}
++    if not positive:return result
++    result['log_range']=math.log10(positive[-1])-math.log10(positive[0])
++    for s in sorted(set(positive)):
++        count=n-bisect.bisect_right(positive,s); x=math.log10(s)
++        if count and x>=2.5:result['fit_points'].append([x,math.log10(count/n)])
++    points=result['fit_points']
++    if len(points)<3:return result
++    xbar=math.fsum(p[0] for p in points)/len(points);ybar=math.fsum(p[1] for p in points)/len(points)
++    xx=math.fsum((x-xbar)**2 for x,y in points); yy=math.fsum((y-ybar)**2 for x,y in points)
++    xy=math.fsum((x-xbar)*(y-ybar) for x,y in points)
++    if xx<=0 or yy<=0:return result
++    slope=xy/xx; r2=xy*xy/(xx*yy)
++    if not math.isfinite(slope) or not math.isfinite(r2) or not -1e-12<=r2<=1+1e-12:
++        raise ValueError('nonfinite or invalid OLS')
++    result.update(slope=slope,intercept=ybar-slope*xbar,r2=min(1.,max(0.,r2)),fit_status='available')
++    return result
++
++def eight_summaries(vectors):
++    if not vectors or any(len(v)!=4 or any(not math.isfinite(x) for x in v) for v in vectors):
++        raise ValueError('complete finite joint four-metric vectors required')
++    cols=list(zip(*vectors));s,r,g,w=cols
++    return dict(zip(TARGETS,[min(s),statistics.median(s),max(s),min(r),statistics.median(r),max(r),statistics.median(g),statistics.median(w)]))
++
++def inclusive_p(sorted_draws,target):
++    n=len(sorted_draws)
++    if not n:raise ValueError('empty bootstrap')
++    left=bisect.bisect_right(sorted_draws,target);right=n-bisect.bisect_left(sorted_draws,target)
++    return min(1.,2*(min(left,right)+1)/(n+1))
++
++def maximize_interval_p(sorted_draws,interval):
++    lo,hi=interval
++    if not math.isfinite(lo) or not math.isfinite(hi) or lo>hi:raise ValueError('invalid interval')
++    if not sorted_draws or any(not math.isfinite(x) for x in sorted_draws):raise ValueError('invalid draws')
++    if any(a>b for a,b in zip(sorted_draws,sorted_draws[1:])):raise ValueError('draws must be sorted')
++    candidates={lo,hi};a=bisect.bisect_left(sorted_draws,lo);b=bisect.bisect_right(sorted_draws,hi)
++    if a<b:candidates.add(sorted_draws[max(a,min(b-1,len(sorted_draws)//2))])
++    values=[(inclusive_p(sorted_draws,t),t) for t in sorted(candidates)]
++    p=max(p for p,t in values)
++    return {'p':p,'maximizer':min(t for q,t in values if q==p),'tested':sorted(candidates)}
++
++def fixed_holm(values,expected):
++    if len(values)!=expected:raise ValueError('fixed hypothesis family size mismatch')
++    ps=[1. if p is None else p for p in values]
++    if any(not math.isfinite(p) or not 0<=p<=1 for p in ps):raise ValueError('invalid p-value')
++    adjusted=[None]*len(values);running=0.
++    for rank,i in enumerate(sorted(range(expected),key=lambda i:(ps[i],i))):
++        running=min(1.,max(running,(expected-rank)*ps[i]))
++        if values[i] is not None:adjusted[i]=running
++    return adjusted
++
++def arm_verdict(adjusted,complete):
++    if any(p is not None and p<.05 for p in adjusted):return 'Incompatible'
++    if complete and all(p is not None for p in adjusted):return 'Compatible'
++    return 'Unresolved'
++
++
++def contrast_verdict(estimate,adjusted_p):
++    if estimate is None or adjusted_p is None:return 'Unresolved'
++    if adjusted_p<.05 and estimate>0:return 'Holds'
++    if adjusted_p<.05 and estimate<0:return 'Fails'
++    return 'Inconclusive'
++
++
++def _vectors(vectors,columns):
++    value=np.asarray(vectors,dtype=float)
++    if value.shape!=(100,columns) or not np.all(np.isfinite(value)):
++        raise ValueError('one hundred complete finite joint history vectors required')
++    return value
++
++
++def predictive_targets(vectors,rng,draws=100000):
++    vectors=_vectors(vectors,4)
++    if type(draws) is not int or draws<=0:raise ValueError('positive bootstrap draw count required')
++    result=[]
++    for start in range(0,draws,1024):
++        indices=rng.integers(0,100,size=(min(1024,draws-start),15),dtype=np.int64)
++        v=vectors[indices];s=v[:,:,0];r=v[:,:,1]
++        result.append(np.column_stack((s.min(axis=1),np.median(s,axis=1),s.max(axis=1),r.min(axis=1),np.median(r,axis=1),r.max(axis=1),np.median(v[:,:,2],axis=1),np.median(v[:,:,3],axis=1))))
++    values=np.concatenate(result)
++    return {'replicates':values,'targets':{name:{'draws':sorted(values[:,i].tolist()),
++            'predictive_interval':np.quantile(values[:,i],[.025,.975],method='linear').tolist()}
++            for i,name in enumerate(TARGETS)},'resamples':draws,'source_batch_size':15,'precision_history_count':100}
++
++
++def independent_contrast(base,control,rng,draws=100000):
++    base=_vectors(base,3);control=_vectors(control,3)
++    if type(draws) is not int or draws<=0:raise ValueError('positive bootstrap draw count required')
++    result=[]
++    for start in range(0,draws,1024):
++        n=min(1024,draws-start)
++        ib=rng.integers(0,100,size=(n,100),dtype=np.int64)
++        ic=rng.integers(0,100,size=(n,100),dtype=np.int64)
++        result.append(base[ib].mean(axis=1)-control[ic].mean(axis=1))
++    values=np.concatenate(result)
++    return {'estimate':(base.mean(axis=0)-control.mean(axis=0)).tolist(),
++            'replicates':values,'intervals':np.quantile(values,[.025,.975],axis=0,method='linear').T.tolist(),
++            'p':[inclusive_p(sorted(values[:,i].tolist()),0.) for i in range(3)],
++            'resamples':draws,'resampling':'independent_whole_history'}
++
++
++def history_source(row):
++    availability=history_availability(row)
++    if row.get('outcome') is None:return {'availability':availability,'fit':None,'vector':None,'census':None,'partial_diagnostic':None}
++    census=completed_censuses(row['outcome'],availability)
++    primary=census['source_selected'];partial=census['partial_source_selected']
++    fit=source_fit([w['exported_severity'] for w in primary]) if availability['complete'] else None
++    diagnostic=source_fit([w['exported_severity'] for w in partial]) if partial else None
++    vector=None
++    if fit and fit['fit_status']=='available':vector=(fit['slope'],fit['r2'],fit['log_range'],fit['war_count'])
++    return {'availability':availability,'fit':fit,'vector':vector,'census':census,'partial_diagnostic':diagnostic}
++
++
++def complete_vectors(histories,expected):
++    if len(histories)!=expected or any(not h['availability']['complete'] or h['vector'] is None for h in histories):return None
++    v=np.asarray([h['vector'] for h in histories],dtype=float)
++    return v if v.shape==(expected,4) and np.all(np.isfinite(v)) else None
++
++
++def source_findings(table,histories,jobs,draws=100000):
++    from .manifest import job_rng
++    targets=[];arms={}
++    for row in table['rows']:
++        rid=row['id'];original=histories.get(f'original.{rid}',[]);precision=histories.get(f'precision.{rid}',[])
++        ov=complete_vectors(original,15);pv=complete_vectors(precision,100)
++        original_summary=None if ov is None else eight_summaries(ov.tolist())
++        prediction=None if pv is None else predictive_targets(pv,job_rng(jobs[f'predictive.source.{rid}']),draws)
++        arms[rid]={'conditional_verdict':None,'source_equivalence':'Unresolved',
++                   'original_received':len(original),'precision_received':len(precision),
++                   'original_joint_eligible':sum(h['availability']['complete'] and h['vector'] is not None for h in original),
++                   'precision_joint_eligible':sum(h['availability']['complete'] and h['vector'] is not None for h in precision),
++                   'population_complete':ov is not None and pv is not None,'original_summary':original_summary}
++        for name in TARGETS:
++            target=row['targets'][name];computed=None
++            if prediction is not None:
++                d=prediction['targets'][name]
++                computed={**maximize_interval_p(d['draws'],target['interval']),
++                          'predictive_interval':d['predictive_interval'],'resamples':draws,'source_batch_size':15,
++                          'finite_support_limit':'bootstrap extrema are not impossible-model-event claims'}
++            targets.append({'id':f'source.{rid}.{name}','row':rid,'target':name,'source_interval':target['interval'],
++                            'printed':target['printed'],'definition_status':target['definition_status'],
++                            'source_equivalence':'Unresolved','original':None if original_summary is None else original_summary[name],
++                            'p':None if computed is None else computed['p'],'result':computed,'holm_p':None,
++                            'unavailable_reason':'incomplete_precision_fit_population' if computed is None else None})
++    adjusted=fixed_holm([t['p'] for t in targets],88)
++    for t,p in zip(targets,adjusted):t['holm_p']=p
++    for rid,arm in arms.items():
++        arm['conditional_verdict']=arm_verdict([t['holm_p'] for t in targets if t['row']==rid],arm['population_complete'])
++    return {'family_size':88,'targets':targets,'arms':arms,'draws':draws}
++
++
++def contrast_findings(histories,jobs,draws=100000):
++    from .manifest import job_rng
++    findings=[];base=complete_vectors(histories.get('precision.base',[]),100)
++    for cid,control in [('base_minus_shock0','shock0'),('base_minus_context_off','context_off')]:
++        cv=complete_vectors(histories.get(f'precision.{control}',[]),100)
++        result=None if base is None or cv is None else independent_contrast(base[:,:3],cv[:,:3],job_rng(jobs[f'contrast.{cid}']),draws)
++        for i,metric in enumerate(('slope','r2','log_range')):
++            findings.append({'id':f'contrast.{cid}.{metric}','metric':metric,
++                             'estimate':None if result is None else result['estimate'][i],
++                             'interval':None if result is None else result['intervals'][i],
++                             'p':None if result is None else result['p'][i],
++                             'unavailable_reason':'incomplete_precision_fit_population' if result is None else None,
++                             'family_size':6,'resampling':'independent_whole_history','draws':draws})
++    adjusted=fixed_holm([f['p'] for f in findings],6)
++    for f,p in zip(findings,adjusted):
++        f['holm_p']=p;f['verdict']=contrast_verdict(f['estimate'],p)
++    return findings
+diff --git a/survey/src/bin/geosim.rs b/survey/src/bin/geosim.rs
+index 5103c56b7498137925894fd333473a9c5bb425bd..dcd037fd5c2762a134276e475226d1e2e91e6d09 100644
+--- a/survey/src/bin/geosim.rs
++++ b/survey/src/bin/geosim.rs
+@@ -1,3 +1,1407 @@
++//! Native GeoSim recorder: Rust owns configs; exact bytes bind scientific evidence.
++use serde_json::Value;
++use sugarscape_core::geosim::{GeosimConfig, GeosimWorld};
++
++use serde::de::{self, MapAccess, SeqAccess, Visitor};
++use serde::{Deserialize, Deserializer};
++use sha2::{Digest, Sha256};
++use std::fmt;
++
++struct Strict(Value);
++impl<'de> Deserialize<'de> for Strict {
++    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
++        struct JsonVisitor;
++        impl<'de> Visitor<'de> for JsonVisitor {
++            type Value = Strict;
++            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
++                f.write_str("finite JSON with unique fields")
++            }
++            fn visit_bool<E: de::Error>(self, v: bool) -> Result<Strict, E> {
++                Ok(Strict(Value::Bool(v)))
++            }
++            fn visit_i64<E: de::Error>(self, v: i64) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_u64<E: de::Error>(self, v: u64) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_f64<E: de::Error>(self, v: f64) -> Result<Strict, E> {
++                serde_json::Number::from_f64(v)
++                    .map(|n| Strict(Value::Number(n)))
++                    .ok_or_else(|| E::custom("nonfinite JSON number"))
++            }
++            fn visit_str<E: de::Error>(self, v: &str) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_string<E: de::Error>(self, v: String) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_none<E: de::Error>(self) -> Result<Strict, E> {
++                Ok(Strict(Value::Null))
++            }
++            fn visit_unit<E: de::Error>(self) -> Result<Strict, E> {
++                Ok(Strict(Value::Null))
++            }
++            fn visit_seq<A: SeqAccess<'de>>(self, mut a: A) -> Result<Strict, A::Error> {
++                let mut values = Vec::new();
++                while let Some(v) = a.next_element::<Strict>()? {
++                    values.push(v.0);
++                }
++                Ok(Strict(Value::Array(values)))
++            }
++            fn visit_map<A: MapAccess<'de>>(self, mut a: A) -> Result<Strict, A::Error> {
++                let mut values = serde_json::Map::new();
++                while let Some(k) = a.next_key::<String>()? {
++                    if values.contains_key(&k) {
++                        return Err(de::Error::custom(format!("duplicate JSON field: {k}")));
++                    }
++                    let v = a.next_value::<Strict>()?;
++                    values.insert(k, v.0);
++                }
++                Ok(Strict(Value::Object(values)))
++            }
++        }
++        d.deserialize_any(JsonVisitor)
++    }
++}
++fn strict_json(bytes: &[u8]) -> Result<Value, String> {
++    let mut d = serde_json::Deserializer::from_slice(bytes);
++    let v = Strict::deserialize(&mut d).map_err(|e| e.to_string())?;
++    d.end().map_err(|e| e.to_string())?;
++    Ok(v.0)
++}
++fn digest(bytes: &[u8]) -> String {
++    format!("{:x}", Sha256::digest(bytes))
++}
++fn resolve_config(preset: &str, overrides: &Value) -> Result<GeosimConfig, String> {
++    let id = match preset {
++        "paper" => "geosim-paper",
++        "artifact_2017" => "geosim-artifact-2017",
++        _ => return Err(format!("unknown GeoSim preset {preset}")),
++    };
++    let p = sugarscape_core::geosim::presets()
++        .into_iter()
++        .find(|p| p.id == id)
++        .ok_or("actual Rust preset unavailable")?;
++    let sugarscape_core::model::ModelConfig::Geosim(c) = p.config else {
++        return Err("preset is not GeoSim".into());
++    };
++    let mut value = serde_json::to_value(c).map_err(|e| e.to_string())?;
++    for (key, v) in overrides
++        .as_object()
++        .ok_or("config_overrides must be an object")?
++    {
++        value[key] = v.clone();
++    }
++    let c: GeosimConfig =
++        serde_json::from_value(value).map_err(|e| format!("invalid GeoSim config: {e}"))?;
++    c.validate().map_err(|e| format!("{e:?}"))?;
++    Ok(c)
++}
++
++use serde::Serialize;
++use std::collections::{BTreeMap, BTreeSet};
++use std::path::{Path, PathBuf};
++const TABLE: &str = "docs/superpowers/specs/2026-10-03-geosim-source-table.json";
++const SPEC: &str = "docs/superpowers/specs/2026-10-03-geosim-design.md";
++#[derive(Clone, Debug, Deserialize, Serialize)]
++#[serde(deny_unknown_fields)]
++struct SourceEntry {
++    path: String,
++    sha256: String,
++    bytes: u64,
++}
++#[derive(Clone, Debug, Deserialize)]
++#[serde(deny_unknown_fields)]
++struct Arm {
++    id: String,
++    index: usize,
++    family: String,
++    preset: String,
++    config_overrides: Value,
++    sessions: u64,
++    first_seed: u64,
++}
++#[derive(Clone, Debug, Deserialize)]
++#[serde(deny_unknown_fields)]
++struct Job {
++    index: usize,
++    id: String,
++    root_entropy: u64,
++    spawn_key: Vec<u32>,
++    state_u32: Vec<u32>,
++}
++#[derive(Clone, Debug, Deserialize)]
++#[serde(deny_unknown_fields)]
++struct Manifest {
++    schema_version: u32,
++    model: String,
++    execution_mode: String,
++    provenance_status: String,
++    spec: String,
++    source_draws: u64,
++    ks_draws: u64,
++    analysis_seed: u64,
++    source_table_sha256: Option<String>,
++    method_contract: Value,
++    method_contract_json: String,
++    method_contract_sha256: String,
++    source_inventory: Option<Vec<SourceEntry>>,
++    source_inventory_sha256: Option<String>,
++    arms: Vec<Arm>,
++    analysis_jobs: Vec<Job>,
++}
++#[derive(Clone, Debug, Serialize)]
++struct ResolvedArm {
++    id: String,
++    index: usize,
++    family: String,
++    preset: String,
++    sessions: u64,
++    first_seed: u64,
++    config: GeosimConfig,
++}
++struct Prepared {
++    manifest: Manifest,
++    arms: Vec<ResolvedArm>,
++    payload: String,
++    payload_sha: String,
++}
++const REGISTERED_TEMPLATE: &str =
++    include_str!("../../tests/fixtures/geosim-registered-manifest.json");
++fn require(condition: bool, reason: &str) -> Result<(), String> {
++    if condition {
++        Ok(())
++    } else {
++        Err(reason.into())
++    }
++}
++fn keys(value: &Value, expected: &[&str]) -> Result<(), String> {
++    let got = value
++        .as_object()
++        .ok_or("expected JSON object")?
++        .keys()
++        .map(String::as_str)
++        .collect::<BTreeSet<_>>();
++    require(
++        got == expected.iter().copied().collect(),
++        "unknown or missing JSON fields",
++    )
++}
++fn read(path: &Path) -> Result<Vec<u8>, String> {
++    std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))
++}
++const REQUIRED_FILES: &[&str] = &[
++    "Cargo.toml",
++    "Cargo.lock",
++    "crates/sugarscape-core/Cargo.toml",
++    "crates/sugarscape-core/assets/sugar-map.txt",
++    "crates/sugarscape-core/tests/geosim_discovery.rs",
++    "crates/sugarscape-core/tests/geosim_host_sweep.rs",
++    "crates/sugarscape-core/tests/geosim_invalid_sweep.rs",
++    "survey/Cargo.toml",
++    "survey/Cargo.lock",
++    "survey/src/bin/geosim.rs",
++    "survey/tests/geosim_native.rs",
++    "survey/tests/fixtures/geosim-registered-manifest.json",
++    "survey/geosim/.python-version",
++    "survey/geosim/requirements.txt",
++    "survey/geosim/README.md",
++    "survey/geosim/NUMERICAL_METHODS.md",
++    "survey/geosim/reference/extract.py",
++    "survey/geosim/reference/test_extract.py",
++    "survey/geosim/reference/test_launch.py",
++    "survey/geosim/reference/GeoSimReferenceProbe.java",
++    "docs/superpowers/specs/2026-10-03-geosim-source-table.json",
++    "docs/superpowers/specs/2026-10-03-geosim-design.md",
++    "docs/superpowers/specs/2026-10-03-geosim-source-extraction.md",
++    "docs/superpowers/specs/2026-10-03-geosim-reading-notes.md",
++    "docs/superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md",
++    "docs/superpowers/specs/2026-10-03-geosim-mechanics-reading-notes.md",
++    "docs/superpowers/specs/2026-10-03-geosim-defender-threshold-amendment.md",
++    "docs/superpowers/specs/2026-10-03-geosim-damage-incidence-audit.md",
++    "docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md",
++    "docs/superpowers/specs/2026-10-03-geosim-finite-technology-amendment.md",
++    "docs/superpowers/specs/2026-10-03-geosim-portability-amendment.md",
++];
++fn safe_path(root: &Path, name: &str) -> Result<PathBuf, String> {
++    require(
++        !name.is_empty()
++            && Path::new(name)
++                .components()
++                .all(|c| matches!(c, std::path::Component::Normal(_)))
++            && Path::new(name)
++                .components()
++                .map(|c| c.as_os_str().to_str().unwrap())
++                .collect::<Vec<_>>()
++                .join("/")
++                == name,
++        "unsafe source path",
++    )?;
++    let root = root.canonicalize().map_err(|e| e.to_string())?;
++    let mut current = root;
++    for component in Path::new(name).components() {
++        current.push(component);
++        require(
++            !std::fs::symlink_metadata(&current)
++                .map_err(|e| format!("{name}: {e}"))?
++                .file_type()
++                .is_symlink(),
++            "source symlink is forbidden",
++        )?;
++    }
++    require(current.is_file(), "inventory source is not a file")?;
++    Ok(current)
++}
++fn collect_sources(
++    root: &Path,
++    directory: &str,
++    suffixes: &[&str],
++    out: &mut BTreeSet<String>,
++) -> Result<(), String> {
++    for entry in std::fs::read_dir(root.join(directory)).map_err(|e| e.to_string())? {
++        let entry = entry.map_err(|e| e.to_string())?;
++        let path = entry.path();
++        let relative = path
++            .strip_prefix(root)
++            .map_err(|e| e.to_string())?
++            .to_str()
++            .ok_or("non-UTF8 source path")?
++            .to_owned();
++        if relative.starts_with("survey/geosim/reference/raw/")
++            || path.components().any(|c| c.as_os_str() == "__pycache__")
++        {
++            continue;
++        }
++        let kind = entry.file_type().map_err(|e| e.to_string())?;
++        require(!kind.is_symlink(), "source symlink is forbidden")?;
++        if kind.is_dir() {
++            if relative != "survey/geosim/reference/raw" {
++                collect_sources(root, &relative, suffixes, out)?;
++            }
++        } else if suffixes.iter().any(|suffix| relative.ends_with(suffix)) {
++            out.insert(relative);
++        }
++    }
++    Ok(())
++}
++fn required_inventory_paths(root: &Path) -> Result<BTreeSet<String>, String> {
++    let root = root.canonicalize().map_err(|e| e.to_string())?;
++    let mut required = REQUIRED_FILES
++        .iter()
++        .map(|s| s.to_string())
++        .collect::<BTreeSet<_>>();
++    for (directory, suffixes) in [
++        ("crates/sugarscape-core/src", vec![".rs"]),
++        ("survey/geosim", vec![".py", ".java"]),
++        ("crates/sugarscape-core/tests", vec![".rs"]),
++        ("survey/tests", vec![".rs"]),
++    ] {
++        collect_sources(&root, directory, &suffixes, &mut required)?;
++    }
++    for name in [
++        ".cargo/config",
++        ".cargo/config.toml",
++        "rust-toolchain",
++        "rust-toolchain.toml",
++        "build.rs",
++        "crates/sugarscape-core/build.rs",
++        "survey/build.rs",
++    ] {
++        if std::fs::symlink_metadata(root.join(name)).is_ok() {
++            required.insert(name.into());
++        }
++    }
++    for name in &required {
++        safe_path(&root, name)?;
++    }
++    Ok(required)
++}
++fn inventory_digest(root: &Path, entries: &[SourceEntry]) -> Result<String, String> {
++    let required = required_inventory_paths(root)?;
++    let mut seen = BTreeSet::new();
++    let mut previous = None;
++    for e in entries {
++        require(
++            previous.is_none_or(|p: &str| p < e.path.as_str()),
++            "source inventory must be unique and path sorted",
++        )?;
++        previous = Some(&e.path);
++        seen.insert(e.path.clone());
++        let b = read(&safe_path(root, &e.path)?)?;
++        require(
++            b.len() as u64 == e.bytes && digest(&b) == e.sha256,
++            "source inventory byte/hash mismatch",
++        )?;
++    }
++    require(
++        required.is_subset(&seen),
++        "source inventory omits required relevant engine/protocol/contract sources",
++    )?;
++    // Value's sorted map keys exactly match Python's canonical JSON for this integer/string inventory.
++    let canonical = serde_json::to_vec(&serde_json::to_value(entries).map_err(|e| e.to_string())?)
++        .map_err(|e| e.to_string())?;
++    Ok(digest(&canonical))
++}
++fn prepare(bytes: &[u8], root: &Path, expected_sha: &str) -> Result<Prepared, String> {
++    require(
++        digest(bytes) == expected_sha,
++        "actual manifest-byte SHA256 mismatch",
++    )?;
++    let v = strict_json(bytes)?;
++    let template = strict_json(REGISTERED_TEMPLATE.as_bytes())?;
++    require(
++        v.as_object().map(|o| o.keys().collect::<BTreeSet<_>>())
++            == template
++                .as_object()
++                .map(|o| o.keys().collect::<BTreeSet<_>>()),
++        "unknown or missing manifest fields",
++    )?;
++    let manifest: Manifest = serde_json::from_value(v.clone()).map_err(|e| e.to_string())?;
++    require(
++        manifest.schema_version == 1 && manifest.model == "geosim" && manifest.spec == SPEC,
++        "invalid manifest version/model/spec",
++    )?;
++    require(
++        manifest.source_draws == 100000
++            && manifest.ks_draws == 1000
++            && manifest.analysis_seed == 2026100301,
++        "analysis workload changed",
++    )?;
++    let table_bytes = read(&root.join(TABLE))?;
++    require(
++        template["source_table_sha256"] == digest(&table_bytes),
++        "source table differs from compiled approved contract",
++    )?;
++    require(
++        manifest.source_table_sha256.as_deref() == Some(digest(&table_bytes).as_str()),
++        "source table exact byte hash mismatch",
++    )?;
++    require(
++        digest(manifest.method_contract_json.as_bytes()) == manifest.method_contract_sha256
++            && strict_json(manifest.method_contract_json.as_bytes())? == manifest.method_contract,
++        "method payload hash/equality mismatch",
++    )?;
++    require(
++        manifest.method_contract == template["method_contract"],
++        "unapproved method contract",
++    )?;
++    require(
++        v["analysis_jobs"] == template["analysis_jobs"],
++        "analysis job identities or child seed states changed",
++    )?;
++    // Typed children also reject unknown fields; values above bind the pinned SeedSequence outputs.
++    require(
++        manifest.analysis_jobs.iter().enumerate().all(|(i, j)| {
++            j.index == i
++                && j.root_entropy == manifest.analysis_seed
++                && j.spawn_key == [i as u32]
++                && j.state_u32.len() == 4
++                && !j.id.is_empty()
++        }),
++        "invalid job contract",
++    )?;
++    match manifest.execution_mode.as_str() {
++        "registered" => require(
++            v["arms"] == template["arms"],
++            "registered37-arm/1490-key contract changed",
++        )?,
++        "synthetic_unregistered" => {
++            require(!manifest.arms.is_empty(), "synthetic manifest has no arms")?;
++            require(
++                manifest.arms.iter().all(|a| {
++                    a.sessions > 0
++                        && a.first_seed
++                            .checked_add(a.sessions - 1)
++                            .is_some_and(|end| end < 370000001 || a.first_seed > 370369999)
++                }),
++                "synthetic seeds overlap registered ranges or overflow",
++            )?;
++        }
++        _ => return Err("unknown execution mode".into()),
++    }
++    match manifest.provenance_status.as_str() {
++        "provisional_unfrozen" => require(
++            manifest.source_inventory.is_none() && manifest.source_inventory_sha256.is_none(),
++            "provisional manifest must explicitly lack frozen inventory",
++        )?,
++        "frozen" => {
++            let entries = manifest
++                .source_inventory
++                .as_ref()
++                .ok_or("frozen manifest lacks inventory")?;
++            require(
++                manifest.source_inventory_sha256.as_deref()
++                    == Some(inventory_digest(root, entries)?.as_str()),
++                "source inventory digest mismatch",
++            )?;
++        }
++        _ => return Err("unknown provenance status".into()),
++    }
++    let mut ids = BTreeSet::new();
++    let mut seeds = BTreeSet::new();
++    let mut arms = Vec::new();
++    for (i, a) in manifest.arms.iter().enumerate() {
++        require(
++            a.index == i && !a.id.is_empty() && ids.insert(a.id.clone()),
++            "duplicate or invalid arm index/id",
++        )?;
++        for r in 0..a.sessions {
++            require(
++                seeds.insert((a.id.clone(), a.first_seed + r)),
++                "duplicate arm/seed key",
++            )?;
++        }
++        arms.push(ResolvedArm {
++            id: a.id.clone(),
++            index: a.index,
++            family: a.family.clone(),
++            preset: a.preset.clone(),
++            sessions: a.sessions,
++            first_seed: a.first_seed,
++            config: resolve_config(&a.preset, &a.config_overrides)?,
++        });
++    }
++    let payload = serde_json::to_string(
++        &arms
++            .iter()
++            .map(|a| serde_json::json!({"id":a.id,"config":a.config}))
++            .collect::<Vec<_>>(),
++    )
++    .map_err(|e| e.to_string())?;
++    let payload_sha = digest(payload.as_bytes());
++    Ok(Prepared {
++        manifest,
++        arms,
++        payload,
++        payload_sha,
++    })
++}
++#[derive(Clone, Debug, Serialize, Deserialize)]
++#[serde(deny_unknown_fields)]
++struct Bindings {
++    manifest_sha256: String,
++    binary_sha256: String,
++    source_inventory_sha256: Option<String>,
++    build_receipt_sha256: Option<String>,
++    resolved_configs_sha256: String,
++}
++fn panic_text(p: &(dyn std::any::Any + Send)) -> String {
++    p.downcast_ref::<String>()
++        .cloned()
++        .or_else(|| p.downcast_ref::<&str>().map(|s| s.to_string()))
++        .unwrap_or_else(|| "non-string implementation panic".into())
++}
++fn execute_with<C, A>(
++    arm: &ResolvedArm,
++    repeat: u64,
++    binding: &Bindings,
++    construct: C,
++    advance: A,
++) -> Result<Value, String>
++where
++    C: FnOnce(GeosimConfig, u64) -> Result<GeosimWorld, Vec<sugarscape_core::config::FieldError>>,
++    A: FnOnce(&mut GeosimWorld),
++{
++    let seed = arm.first_seed.checked_add(repeat).ok_or("seed overflow")?;
++    let mut attempt = serde_json::json!({"status":"incomplete","construction_errors":[],"panic_context":null,"recorder_error":null});
++    let mut outcome = Value::Null;
++    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
++        construct(arm.config.clone(), seed)
++    })) {
++        Err(p) => {
++            attempt["status"] = "construction_panic".into();
++            attempt["panic_context"] = panic_text(&*p).into();
++        }
++        Ok(Err(errors)) => {
++            attempt["status"] = "construction_error".into();
++            attempt["construction_errors"] =
++                serde_json::to_value(errors).map_err(|e| e.to_string())?;
++        }
++        Ok(Ok(mut world)) => {
++            if let Err(p) =
++                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| advance(&mut world)))
++            {
++                let message = panic_text(&*p);
++                attempt["panic_context"] = message.clone().into();
++                world.invalidate_after_panic(message);
++            }
++            if let Some(result) = world.outcome() {
++                attempt["status"] = if !attempt["panic_context"].is_null()
++                    || result.finish_reason == "implementation_panic"
++                {
++                    "implementation_panic"
++                } else if result.valid {
++                    "completed"
++                } else {
++                    "invalid"
++                }
++                .into();
++                if result.finish_reason == "implementation_panic"
++                    && attempt["panic_context"].is_null()
++                {
++                    attempt["panic_context"] = result
++                        .invalid_reason
++                        .clone()
++                        .unwrap_or_else(|| "inner implementation panic".into())
++                        .into();
++                }
++                outcome = serde_json::to_value(result)
++                    .map_err(|e| format!("serialize actual Outcome: {e}"))?;
++            } else {
++                attempt["recorder_error"] =
++                    "world advance returned without a terminal Outcome".into();
++            }
++        }
++    }
++    let mut row = serde_json::json!({"schema_version":1,"model":"geosim","arm":arm.id,"seed":seed,"arm_index":arm.index,"repeat_index":repeat,"config":arm.config,"attempt":attempt,"outcome":outcome});
++    for (k, v) in serde_json::to_value(binding)
++        .map_err(|e| e.to_string())?
++        .as_object()
++        .unwrap()
++    {
++        row[k] = v.clone();
++    }
++    Ok(row)
++}
++fn array(v: &Value) -> Result<&Vec<Value>, String> {
++    v.as_array().ok_or_else(|| "expected array".into())
++}
++fn state_identity(v: &Value, cells: usize) -> Result<sugarscape_core::geosim::StateId, String> {
++    keys(v, &["capital_cell", "sovereignty_generation"])?;
++    let id: sugarscape_core::geosim::StateId =
++        serde_json::from_value(v.clone()).map_err(|e| e.to_string())?;
++    require(id.capital_cell < cells, "generation identity outside grid")?;
++    Ok(id)
++}
++fn uint(v: &Value) -> Result<u64, String> {
++    v.as_u64()
++        .ok_or_else(|| "expected nonnegative integer".into())
++}
++fn validate_war(
++    v: &Value,
++    c: &GeosimConfig,
++    boundary: u64,
++    attempted: u64,
++    censored: bool,
++    valid: bool,
++) -> Result<(), String> {
++    keys(
++        v,
++        &[
++            "id",
++            "parents",
++            "start_period",
++            "end_period",
++            "last_active_period",
++            "active_periods",
++            "elapsed_periods",
++            "raw_severity",
++            "exported_severity",
++            "participants",
++            "end_cause",
++            "java_saturated",
++            "java_subunit_zero",
++            "fighting_periods",
++        ],
++    )?;
++    let start = uint(&v["start_period"])?;
++    let last = uint(&v["last_active_period"])?;
++    let end = if censored {
++        require(
++            v["end_period"].is_null() && v["end_cause"] == "horizon_censored",
++            "censored war has completion",
++        )?;
++        attempted
++    } else {
++        require(
++            v["end_cause"].as_str().is_some_and(|s| !s.is_empty()),
++            "completed war has no cause",
++        )?;
++        uint(&v["end_period"])?
++    };
++    require(
++        boundary <= start && start <= last && last <= end && end <= attempted,
++        "war clocks outside attempted history",
++    )?;
++    let fights = array(&v["fighting_periods"])?;
++    let mut prior = None;
++    for p in fights {
++        let p = uint(p)?;
++        require(
++            start <= p && p <= end && prior.is_none_or(|old| old < p),
++            "invalid fighting period order/range",
++        )?;
++        prior = Some(p);
++    }
++    require(
++        uint(&v["active_periods"])? == fights.len() as u64
++            && prior.is_none_or(|p| p == last)
++            && uint(&v["elapsed_periods"])? == end - start + 1,
++        "war active/elapsed clock mismatch",
++    )?;
++    let mut identities = BTreeSet::new();
++    for p in array(&v["participants"])? {
++        keys(p, &["state", "last_fighting_period"])?;
++        require(
++            identities.insert(state_identity(&p["state"], (c.width * c.height) as usize)?),
++            "duplicate participant generation",
++        )?;
++        let period = uint(&p["last_fighting_period"])?;
++        require(
++            start <= period && period <= end,
++            "participant clock outside war",
++        )?;
++    }
++    for name in ["raw_severity", "exported_severity"] {
++        require(
++            v[name].as_f64().is_some_and(|x| x >= 0.0) || (!valid && v[name].is_null()),
++            "invalid severity",
++        )?;
++    }
++    if let Some(raw) = v["raw_severity"].as_f64() {
++        let expected = if c.severity_export == sugarscape_core::geosim::SeverityExport::RawDamage {
++            raw
++        } else {
++            f64::from((raw * 100.0) as i32)
++        };
++        require(
++            v["exported_severity"].as_f64() == Some(expected),
++            "resolved severity export mismatch",
++        )?;
++    }
++    Ok(())
++}
++fn normalize_invalid_floats(v: &mut Value) {
++    // Only required f64 fields may have null from a genuine nonfinite partial diagnostic.
++    // This validation clone never replaces the raw serialized Outcome.
++    const FLOATS: &[&str] = &[
++        "raw_severity",
++        "exported_severity",
++        "previous_damage",
++        "extracted_yield",
++        "recurrence_residual",
++        "damage",
++        "measured_damage",
++        "capacity_increase",
++        "capacity_decrease",
++        "clipping",
++        "retirement_capacity",
++        "reemergence_capacity",
++    ];
++    match v {
++        Value::Object(map) => {
++            for (k, v) in map {
++                if FLOATS.contains(&k.as_str()) && v.is_null() {
++                    *v = serde_json::json!(0.0);
++                } else if ["old_commitments", "commitments", "last_damage"].contains(&k.as_str()) {
++                    if let Some(a) = v.as_array_mut() {
++                        for x in a {
++                            if x.is_null() {
++                                *x = serde_json::json!(0.0);
++                            }
++                        }
++                    }
++                }
++                normalize_invalid_floats(v);
++            }
++        }
++        Value::Array(a) => {
++            for x in a {
++                normalize_invalid_floats(x);
++            }
++        }
++        _ => {}
++    }
++}
++fn validate_outcome(v: &Value, c: &GeosimConfig, seed: u64, status: &str) -> Result<(), String> {
++    keys(
++        v,
++        &[
++            "config",
++            "seed",
++            "rng_mode",
++            "periods",
++            "attempted_period",
++            "counting_start",
++            "valid",
++            "state_available",
++            "finish_reason",
++            "invalid_reason",
++            "completed_wars",
++            "censored_wars",
++            "legacy_visible_wars",
++            "exporter_backlog",
++            "merges",
++            "retired_states",
++            "sovereign_count",
++            "states",
++            "cells",
++            "ledger",
++            "fronts",
++            "resource_updates",
++            "partial_period_fights",
++        ],
++    )?;
++    require(
++        v["config"] == serde_json::to_value(c).unwrap() && uint(&v["seed"])? == seed,
++        "Outcome config/seed mismatch",
++    )?;
++    let valid = v["valid"].as_bool().ok_or("invalid availability flag")?;
++    let periods = uint(&v["periods"])?;
++    let attempted = uint(&v["attempted_period"])?;
++    let boundary = uint(&v["counting_start"])?;
++    require(
++        periods <= attempted && attempted <= c.horizon().min(periods.saturating_add(1)),
++        "invalid completed/attempted clocks",
++    )?;
++    let expected_boundary =
++        if c.count_boundary == sugarscape_core::geosim::CountBoundary::AtInitialization {
++            c.initialization_periods.max(1)
++        } else {
++            c.initialization_periods + 1
++        };
++    require(boundary == expected_boundary, "counting boundary mismatch")?;
++    require(
++        v["state_available"].is_boolean() && v["rng_mode"] == "portable_pcg64_mcg",
++        "invalid state/RNG availability",
++    )?;
++    if valid {
++        require(
++            ["completed", "implementation_panic"].contains(&status)
++                && periods == c.horizon()
++                && attempted == periods
++                && v["state_available"] == true
++                && v["finish_reason"] == "horizon"
++                && v["invalid_reason"].is_null(),
++            "valid Outcome is not successful horizon",
++        )?;
++    } else {
++        require(
++            ["invalid", "implementation_panic"].contains(&status)
++                && v["invalid_reason"].as_str().is_some_and(|s| !s.is_empty()),
++            "invalid Outcome/attempt mismatch",
++        )?;
++        require(
++            v["finish_reason"] != "implementation_panic" || status == "implementation_panic",
++            "inner panic finish/status mismatch",
++        )?;
++    }
++    let mut completed = BTreeMap::new();
++    for w in array(&v["completed_wars"])? {
++        validate_war(w, c, boundary, attempted, false, valid)?;
++        let id = uint(&w["id"])?;
++        require(completed.insert(id, w).is_none(), "duplicate completed war")?;
++        if valid {
++            require(
++                uint(&w["end_period"])? <= periods,
++                "valid history contains partial completion",
++            )?;
++        }
++    }
++    let mut censored = BTreeSet::new();
++    for w in array(&v["censored_wars"])? {
++        validate_war(w, c, boundary, attempted, true, valid)?;
++        let id = uint(&w["id"])?;
++        require(
++            !completed.contains_key(&id) && censored.insert(id),
++            "completed/censored identity overlap or duplicate",
++        )?;
++    }
++    let mut queued = BTreeSet::new();
++    for label in ["legacy_visible_wars", "exporter_backlog"] {
++        for w in array(&v[label])? {
++            let id = uint(&w["id"])?;
++            require(
++                completed.get(&id).is_some_and(|x| *x == w) && queued.insert(id),
++                "collector mismatch/duplicate/overlap",
++            )?;
++        }
++    }
++    let positive = completed
++        .iter()
++        .filter(|(_, w)| w["raw_severity"].as_f64().is_some_and(|x| x > 0.0))
++        .map(|(id, _)| *id)
++        .collect::<BTreeSet<_>>();
++    let known = queued
++        .iter()
++        .filter(|id| !completed[id]["raw_severity"].is_null())
++        .copied()
++        .collect::<BTreeSet<_>>();
++    require(
++        positive == known,
++        "positive raw collector partition not conserved",
++    )?;
++    if c.completed_export == sugarscape_core::geosim::CompletedExport::AllCompleted {
++        require(
++            array(&v["exporter_backlog"])?.is_empty(),
++            "all_completed has backlog",
++        )?;
++    }
++    let cells = (c.width * c.height) as usize;
++    let state_ids = array(&v["states"])?
++        .iter()
++        .map(|s| state_identity(&s["id"], cells))
++        .collect::<Result<BTreeSet<_>, _>>()?;
++    require(
++        state_ids.len() == array(&v["states"])?.len()
++            && uint(&v["sovereign_count"])? == state_ids.len() as u64,
++        "duplicate sovereign identities/count mismatch",
++    )?;
++    let cell_ids = array(&v["cells"])?
++        .iter()
++        .map(|x| uint(&x["id"]))
++        .collect::<Result<BTreeSet<_>, _>>()?;
++    require(
++        cell_ids.len() == cells && array(&v["cells"])?.len() == cells,
++        "duplicate/missing grid cells",
++    )?;
++    for fight in array(&v["partial_period_fights"])? {
++        let f = array(fight)?;
++        require(f.len() == 3, "invalid partial fight tuple")?;
++        state_identity(&f[0], cells)?;
++        state_identity(&f[1], cells)?;
++        require(
++            f[2].as_f64().is_some_and(|x| x >= 0.0) || (!valid && f[2].is_null()),
++            "invalid partial fight damage",
++        )?;
++    }
++
++    for x in array(&v["states"])? {
++        keys(
++            x,
++            &[
++                "id",
++                "capacity",
++                "threshold",
++                "alert",
++                "campaign",
++                "previous_damage",
++                "newly_independent",
++                "extracted_yield",
++                "recurrence_residual",
++            ],
++        )?;
++        state_identity(&x["id"], cells)?;
++        if !x["campaign"].is_null() {
++            state_identity(&x["campaign"], cells)?;
++        }
++    }
++    for x in array(&v["cells"])? {
++        keys(x, &["id", "owner", "last_threshold", "next_generation"])?;
++        state_identity(&x["owner"], cells)?;
++        require(uint(&x["id"])? < cells as u64, "cell id outside grid")?;
++    }
++    for x in array(&v["retired_states"])? {
++        state_identity(x, cells)?;
++    }
++    for x in array(&v["merges"])? {
++        keys(x, &["period", "survivor", "absorbed"])?;
++        require(
++            uint(&x["period"])? <= attempted,
++            "merge outside attempted clock",
++        )?;
++    }
++    for x in array(&v["fronts"])? {
++        keys(
++            x,
++            &[
++                "states",
++                "previous",
++                "actions",
++                "old_commitments",
++                "commitments",
++                "path",
++                "initiator",
++                "last_damage",
++                "last_victory_probabilities",
++            ],
++        )?;
++        for id in array(&x["states"])? {
++            state_identity(id, cells)?;
++        }
++    }
++    for x in array(&v["resource_updates"])? {
++        keys(
++            x,
++            &[
++                "state",
++                "period",
++                "old_capacity",
++                "extracted_yield",
++                "applied_damage",
++                "target_capacity",
++                "new_capacity",
++                "clipping",
++                "residual",
++                "reset",
++            ],
++        )?;
++        state_identity(&x["state"], cells)?;
++        require(
++            uint(&x["period"])? <= attempted,
++            "resource update outside attempted clock",
++        )?;
++    }
++    keys(
++        &v["ledger"],
++        &[
++            "attacks",
++            "fighting_front_periods",
++            "mutual_front_periods",
++            "conquests",
++            "collapses",
++            "disconnections",
++            "stale_claims",
++            "locked_claims",
++            "double_successes",
++            "path_collisions",
++            "shocks",
++            "damage",
++            "measured_damage",
++            "capacity_increase",
++            "capacity_decrease",
++            "clipping",
++            "retirement_capacity",
++            "reemergence_capacity",
++            "recurrence_residual",
++        ],
++    )?;
++    let mut typed = v.clone();
++    if !valid {
++        normalize_invalid_floats(&mut typed);
++        if let Some(fights) = typed["partial_period_fights"].as_array_mut() {
++            for f in fights {
++                if f[2].is_null() {
++                    f[2] = serde_json::json!(0.0);
++                }
++            }
++        }
++    }
++    let _: sugarscape_core::geosim::Outcome =
++        serde_json::from_value(typed).map_err(|e| format!("invalid Outcome fields/types: {e}"))?;
++    Ok(())
++}
++fn validate_record(
++    v: &Value,
++    arm: &ResolvedArm,
++    binding: &Bindings,
++) -> Result<(String, u64), String> {
++    keys(
++        v,
++        &[
++            "schema_version",
++            "model",
++            "arm",
++            "seed",
++            "arm_index",
++            "repeat_index",
++            "config",
++            "attempt",
++            "outcome",
++            "manifest_sha256",
++            "binary_sha256",
++            "source_inventory_sha256",
++            "build_receipt_sha256",
++            "resolved_configs_sha256",
++        ],
++    )?;
++    require(
++        v["schema_version"] == 1 && v["model"] == "geosim",
++        "invalid record schema/model",
++    )?;
++    for (k, want) in serde_json::to_value(binding).unwrap().as_object().unwrap() {
++        require(&v[k] == want, "record provenance binding mismatch")?;
++    }
++    let repeat = uint(&v["repeat_index"])?;
++    let seed = uint(&v["seed"])?;
++    require(
++        v["arm"] == arm.id
++            && uint(&v["arm_index"])? == arm.index as u64
++            && repeat < arm.sessions
++            && arm.first_seed.checked_add(repeat) == Some(seed),
++        "record exact arm/seed key mismatch",
++    )?;
++    require(
++        v["config"] == serde_json::to_value(&arm.config).unwrap(),
++        "record config differs from Rust authority",
++    )?;
++    let a = &v["attempt"];
++    keys(
++        a,
++        &[
++            "status",
++            "construction_errors",
++            "panic_context",
++            "recorder_error",
++        ],
++    )?;
++    let status = a["status"].as_str().ok_or("missing attempt status")?;
++    require(
++        [
++            "completed",
++            "invalid",
++            "construction_error",
++            "construction_panic",
++            "implementation_panic",
++            "incomplete",
++        ]
++        .contains(&status),
++        "unknown attempt status",
++    )?;
++    array(&a["construction_errors"])?;
++    if status == "implementation_panic" {
++        require(
++            a["panic_context"].as_str().is_some_and(|s| !s.is_empty()),
++            "implementation_panic requires explicit context",
++        )?;
++    }
++    if status == "completed" {
++        require(
++            a["panic_context"].is_null(),
++            "completed attempt contains a caught panic",
++        )?;
++    }
++
++    for name in ["panic_context", "recorder_error"] {
++        require(
++            a[name].is_null() || a[name].is_string(),
++            "invalid attempt diagnostic",
++        )?;
++    }
++    if v["outcome"].is_null() {
++        require(
++            ["construction_error", "construction_panic", "incomplete"].contains(&status),
++            "missing Outcome without unavailable status",
++        )?;
++        match status {
++            "construction_error" => require(
++                !array(&a["construction_errors"])?.is_empty(),
++                "construction_error lacks errors",
++            )?,
++            "construction_panic" => require(
++                a["panic_context"].is_string(),
++                "construction_panic lacks context",
++            )?,
++            "incomplete" => require(
++                a["recorder_error"].is_string(),
++                "incomplete lacks recorder error",
++            )?,
++            _ => {}
++        }
++    } else {
++        validate_outcome(&v["outcome"], &arm.config, seed, status)?;
++    }
++    Ok((arm.id.clone(), seed))
++}
++#[derive(Debug, Deserialize)]
++#[serde(deny_unknown_fields)]
++struct BuildReceipt {
++    schema_version: u32,
++    model: String,
++    manifest_sha256: String,
++    source_inventory_sha256: String,
++    prebuild_inventory_sha256: String,
++    postbuild_inventory_sha256: String,
++    binary_sha256: String,
++    build_command: Vec<String>,
++    cwd: String,
++    target: String,
++    rustc_version: String,
++    cargo_version: String,
++    lockfile_hashes: BTreeMap<String, String>,
++    features: Vec<String>,
++    build_flags: Vec<String>,
++}
++fn tool_version(name: &str) -> Result<String, String> {
++    let output = std::process::Command::new(name)
++        .arg("--version")
++        .output()
++        .map_err(|e| e.to_string())?;
++    require(output.status.success(), "tool version command failed")?;
++    String::from_utf8(output.stdout)
++        .map(|s| s.trim().to_owned())
++        .map_err(|e| e.to_string())
++}
++fn receipt_binding(
++    bytes: &[u8],
++    root: &Path,
++    manifest_sha: &str,
++    binary_sha: &str,
++    inventory_sha: &str,
++) -> Result<String, String> {
++    let receipt: BuildReceipt =
++        serde_json::from_value(strict_json(bytes)?).map_err(|e| e.to_string())?;
++    require(
++        receipt.schema_version == 1 && receipt.model == "geosim",
++        "receipt schema/model mismatch",
++    )?;
++    require(
++        receipt.manifest_sha256 == manifest_sha
++            && receipt.binary_sha256 == binary_sha
++            && receipt.source_inventory_sha256 == inventory_sha
++            && receipt.prebuild_inventory_sha256 == inventory_sha
++            && receipt.postbuild_inventory_sha256 == inventory_sha,
++        "receipt actual manifest/binary/pre-post/current source binding mismatch",
++    )?;
++    require(
++        Path::new(&receipt.cwd)
++            .canonicalize()
++            .map_err(|e| e.to_string())?
++            == root.canonicalize().map_err(|e| e.to_string())?,
++        "receipt build cwd differs from source root",
++    )?;
++    require(
++        receipt
++            .build_command
++            .iter()
++            .any(|s| Path::new(s).file_name().is_some_and(|n| n == "cargo"))
++            && receipt.build_command.iter().any(|s| s == "geosim")
++            && receipt
++                .build_command
++                .iter()
++                .any(|s| s.ends_with("survey/Cargo.toml")),
++        "receipt lacks explicit native recorder build command",
++    )?;
++    require(
++        !receipt.target.is_empty()
++            && receipt.rustc_version == tool_version("rustc")?
++            && receipt.cargo_version == tool_version("cargo")?,
++        "receipt target/toolchain version mismatch",
++    )?;
++    require(
++        receipt
++            .features
++            .iter()
++            .chain(&receipt.build_flags)
++            .all(|s| !s.is_empty()),
++        "invalid receipt feature/build flag",
++    )?;
++    require(
++        ["Cargo.lock", "survey/Cargo.lock"]
++            .iter()
++            .all(|name| receipt.lockfile_hashes.contains_key(*name)),
++        "receipt omits required Cargo locks",
++    )?;
++    for (name, want) in &receipt.lockfile_hashes {
++        require(
++            digest(&read(&safe_path(root, name)?)?) == *want,
++            "receipt lockfile actual-byte mismatch",
++        )?;
++    }
++    Ok(digest(bytes))
++}
++#[derive(Default)]
++struct Args {
++    values: BTreeMap<String, String>,
++    validate: bool,
++    allow_fixture: bool,
++}
++fn args() -> Result<Args, String> {
++    let mut result = Args::default();
++    let mut input = std::env::args().skip(1);
++    while let Some(flag) = input.next() {
++        match flag.as_str() {
++            "--validate" => {
++                require(!result.validate, "duplicate --validate")?;
++                result.validate = true;
++            }
++            "--allow-unfrozen-fixture" => {
++                require(!result.allow_fixture, "duplicate fixture opt-in")?;
++                result.allow_fixture = true;
++            }
++            "--manifest" | "--manifest-sha256" | "--source-root" | "--build-receipt"
++            | "--resolved-out" | "--out" | "--arm" => {
++                let value = input
++                    .next()
++                    .ok_or_else(|| format!("missing {flag} value"))?;
++                require(
++                    !value.starts_with("--") && result.values.insert(flag.clone(), value).is_none(),
++                    "missing or duplicate option",
++                )?;
++            }
++            _ => return Err(format!("unknown option {flag}")),
++        }
++    }
++    Ok(result)
++}
++fn option<'a>(args: &'a Args, name: &str) -> Result<&'a str, String> {
++    args.values
++        .get(name)
++        .map(String::as_str)
++        .ok_or_else(|| format!("required option {name}"))
++}
++fn resume(
++    path: &Path,
++    prepared: &Prepared,
++    binding: &Bindings,
++) -> Result<BTreeSet<(String, u64)>, String> {
++    use std::io::BufRead;
++    let mut keys = BTreeSet::new();
++    let file = match std::fs::File::open(path) {
++        Ok(f) => f,
++        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(keys),
++        Err(e) => return Err(e.to_string()),
++    };
++    let arms = prepared
++        .arms
++        .iter()
++        .map(|a| (a.id.as_str(), a))
++        .collect::<BTreeMap<_, _>>();
++    let mut reader = std::io::BufReader::new(file);
++    let mut line = Vec::new();
++    let mut number = 0;
++    loop {
++        line.clear();
++        if reader
++            .read_until(b'\n', &mut line)
++            .map_err(|e| e.to_string())?
++            == 0
++        {
++            break;
++        }
++        number += 1;
++        require(
++            line.last() == Some(&b'\n'),
++            "resume has incomplete trailing JSON line",
++        )?;
++        let row = strict_json(&line).map_err(|e| format!("raw line {number}: {e}"))?;
++        let arm = arms
++            .get(row["arm"].as_str().ok_or("record arm missing")?)
++            .ok_or("unregistered resumed arm")?;
++        let key =
++            validate_record(&row, arm, binding).map_err(|e| format!("raw line {number}: {e}"))?;
++        require(keys.insert(key), "duplicate resumed exact arm/seed key")?;
++    }
++    Ok(keys)
++}
++fn atomic_json(path: &Path, value: &Value) -> Result<(), String> {
++    if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
++        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
++    }
++    let temporary = path.with_extension(format!("tmp-{}", std::process::id()));
++    let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
++    std::fs::write(&temporary, bytes).map_err(|e| e.to_string())?;
++    std::fs::rename(&temporary, path).map_err(|e| e.to_string())
++}
++fn run_cli(args: Args) -> Result<(), String> {
++    use std::io::Write;
++    let root = Path::new(option(&args, "--source-root")?);
++    let bytes = read(Path::new(option(&args, "--manifest")?))?;
++    let manifest_sha = option(&args, "--manifest-sha256")?;
++    let prepared = prepare(&bytes, root, manifest_sha)?;
++    let frozen = prepared.manifest.provenance_status == "frozen";
++    let registered = prepared.manifest.execution_mode == "registered";
++    if registered {
++        require(
++            !args.allow_fixture,
++            "fixture bypass is forbidden for registered manifests",
++        )?;
++        require(
++            args.validate || frozen,
++            "registered execution requires frozen source/build bindings",
++        )?;
++    } else if !frozen {
++        require(
++            args.allow_fixture,
++            "synthetic unfrozen execution/validation requires explicit --allow-unfrozen-fixture",
++        )?;
++    }
++    let selected = args.values.get("--arm");
++    if let Some(id) = selected {
++        require(
++            prepared.arms.iter().any(|a| &a.id == id),
++            "--arm must match an exact registered id",
++        )?;
++    }
++    let binary_sha = digest(&read(&std::env::current_exe().map_err(|e| e.to_string())?)?);
++    let receipt_sha = if frozen {
++        let receipt = read(Path::new(option(&args, "--build-receipt")?))?;
++        Some(receipt_binding(
++            &receipt,
++            root,
++            manifest_sha,
++            &binary_sha,
++            prepared
++                .manifest
++                .source_inventory_sha256
++                .as_deref()
++                .ok_or("frozen inventory missing")?,
++        )?)
++    } else {
++        require(
++            !args.values.contains_key("--build-receipt"),
++            "unfrozen manifest cannot claim a frozen build receipt",
++        )?;
++        None
++    };
++    let binding = Bindings {
++        manifest_sha256: manifest_sha.into(),
++        binary_sha256: binary_sha,
++        source_inventory_sha256: prepared.manifest.source_inventory_sha256.clone(),
++        build_receipt_sha256: receipt_sha,
++        resolved_configs_sha256: prepared.payload_sha.clone(),
++    };
++    let mut export = serde_json::json!({"schema_version":1,"model":"geosim","resolved_configs_json":prepared.payload,"arms":prepared.arms});
++    for (k, v) in serde_json::to_value(&binding).unwrap().as_object().unwrap() {
++        export[k] = v.clone();
++    }
++    let out = Path::new(option(&args, "--out")?);
++    let seen = resume(out, &prepared, &binding)?;
++    atomic_json(Path::new(option(&args, "--resolved-out")?), &export)?;
++    if args.validate {
++        println!(
++            "validated {} arms/{} keys without world construction; provenance={}",
++            prepared.arms.len(),
++            prepared.arms.iter().map(|a| a.sessions).sum::<u64>(),
++            prepared.manifest.provenance_status
++        );
++        return Ok(());
++    }
++    if let Some(parent) = out.parent().filter(|p| !p.as_os_str().is_empty()) {
++        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
++    }
++    let mut file = std::fs::OpenOptions::new()
++        .create(true)
++        .append(true)
++        .open(out)
++        .map_err(|e| e.to_string())?;
++    for arm in &prepared.arms {
++        if selected.is_some_and(|id| id != &arm.id) {
++            continue;
++        }
++        for repeat in 0..arm.sessions {
++            let seed = arm.first_seed + repeat;
++            if seen.contains(&(arm.id.clone(), seed)) {
++                continue;
++            }
++            let row = execute_with(arm, repeat, &binding, GeosimWorld::new, |w| {
++                w.run(
++                    w.config
++                        .horizon()
++                        .div_ceil(u64::from(w.config.periods_per_tick)) as u32,
++                )
++            })?;
++            validate_record(&row, arm, &binding)?;
++            let encoded = serde_json::to_vec(&row).map_err(|e| e.to_string())?;
++            file.write_all(&encoded)
++                .and_then(|()| file.write_all(b"\n"))
++                .and_then(|()| file.flush())
++                .map_err(|e| e.to_string())?;
++            if row["attempt"]["status"] == "incomplete" {
++                return Err("incomplete attempt preserved; no terminal Outcome available".into());
++            }
++        }
++    }
++    Ok(())
++}
++fn main() {
++    if let Err(error) = args().and_then(run_cli) {
++        eprintln!("GeoSim recorder: {error}");
++        std::process::exit(1);
++    }
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
