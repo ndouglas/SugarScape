@@ -64,7 +64,7 @@ carries the questions about war itself; this campaign need not model war well, o
 - **GeoSim0's GPL code** (`papers/geopolitics/cederman-icr-2004-geosim0-repast-source.zip`) is read
   for comparison only, never copied.
 
-**2026-10-03 measured handoff (Milestone 36; publication pending):** all 572 arms /
+**2026-10-03 measured handoff (Milestone 36; published):** all 572 arms /
 28,520 registered sessions and 100,000-draw judges are complete, with 28,281 valid
 and 239 retained invalid outcomes. Source mean/category judgments:
 45 Compatible, 24 Incompatible, 3 Unresolved; Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. The
