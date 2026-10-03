@@ -1058,3 +1058,177 @@ mod panic_export {
         assert_eq!(w.outcome().unwrap(), &frozen);
     }
 }
+
+#[cfg(test)]
+mod domestic_amendment {
+    use super::*;
+    use crate::polarity::{analysis::Ledger, resources};
+    use rand::Rng;
+
+    fn open_domestic(variant: Variant) -> (PolarityWorld, FrontKey) {
+        let mut w = PolarityWorld::new(
+            PolarityConfig {
+                width: 2,
+                height: 2,
+                predator_share: 0.0,
+                initial_mean: 60.0,
+                initial_sd: 0.0,
+                harvest_mean: 0.0,
+                harvest_sd: 0.0,
+                horizon: 2,
+                ..PolarityConfig::for_variant(variant)
+            },
+            1,
+        )
+        .unwrap();
+        w.cells[1].capital = 0;
+        w.cells[1].stock = 121.0;
+        w.rebuild();
+        let key = FrontKey {
+            domestic: true,
+            a: 0,
+            b: 1,
+        };
+        let f = w.fronts.get_mut(&key).unwrap();
+        f.actions = [false, true];
+        f.previous = [false, true];
+        f.path = Some([0, 1]);
+        w.episode_period(key, [0.0, 0.0]);
+        (w, key)
+    }
+
+    #[test]
+    fn open_domestic_episode_rechecks_ratio_and_counts_revolt_action() {
+        let (mut w, key) = open_domestic(Variant::TwoLevel);
+        w.prepare();
+        let mut e = Ledger::default();
+        w.decide_actor(0, &mut e);
+        assert_eq!(w.fronts[&key].actions, [true, true]);
+        assert_eq!(e.revolts, 1);
+        assert_eq!(w.next_episode, 1);
+        assert_eq!(w.fronts[&key].episode.as_ref().unwrap().duration, 1);
+    }
+
+    #[test]
+    fn stochastic_open_domestic_episode_draws_and_reinitiates_at_certain_endpoint() {
+        let (mut w, key) = open_domestic(Variant::Overextension);
+        w.prepare();
+        w.fronts.get_mut(&key).unwrap().commitments[0] = 0.0;
+        let mut expected = w.rng.clone();
+        expected.gen::<f64>();
+        let mut e = Ledger::default();
+        w.decide_actor(0, &mut e);
+        assert_eq!(w.fronts[&key].actions, [true, true]);
+        assert_eq!(e.revolts, 1);
+        assert_eq!(w.rng.gen::<u64>(), expected.gen::<u64>());
+    }
+
+    #[test]
+    fn stochastic_open_episode_zero_probability_keeps_c_and_still_consumes_decision_draw() {
+        let (mut w, key) = open_domestic(Variant::Overextension);
+        w.cells[1].stock = 0.0;
+        w.prepare();
+        let mut expected = w.rng.clone();
+        expected.gen::<f64>();
+        let mut e = Ledger::default();
+        w.decide_actor(0, &mut e);
+        assert_eq!(w.fronts[&key].actions, [true, false]);
+        assert_eq!(e.revolts, 0);
+        assert_eq!(w.rng.gen::<u64>(), expected.gen::<u64>());
+    }
+
+    #[test]
+    fn domestic_reinitiation_adds_dd_damage_and_one_complete_period_to_existing_episode() {
+        let (mut w, _) = open_domestic(Variant::TwoLevel);
+        w.run(1);
+        assert_eq!(w.completed_periods(), 1);
+        assert_eq!(w.totals.dd_encounters, 1);
+        assert_eq!(w.totals.destruction, 9.05);
+        assert_eq!(w.episodes.len(), 1);
+        assert_eq!(w.episodes[0].duration, 2);
+        assert_eq!(w.episodes[0].positive_loss, 9.05);
+        assert_eq!(w.totals.revolts, 1);
+    }
+
+    #[test]
+    fn selected_war_memory_keeps_domestic_defection_without_voluntary_revolt() {
+        let (mut w, key) = open_domestic(Variant::TwoLevel);
+        w.config.action_memory = ActionMemory::WarUntilVictory;
+        w.prepare();
+        let mut e = Ledger::default();
+        w.decide_actor(0, &mut e);
+        assert_eq!(w.fronts[&key].actions, [true, true]);
+        assert_eq!(e.revolts, 0);
+        assert_eq!(
+            resources::damage([true, true], [60.0, 121.0], 0.05, false),
+            [6.050000000000001, 3.0]
+        );
+    }
+
+    fn tie_world(tie_break: TieBreak) -> PolarityWorld {
+        PolarityWorld::new(
+            PolarityConfig {
+                width: 2,
+                height: 2,
+                predator_share: 1.0,
+                initial_mean: 60.0,
+                initial_sd: 0.0,
+                tie_break,
+                ..Default::default()
+            },
+            7,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn singleton_random_attack_candidate_preserves_next_draw_like_lowest_id() {
+        let mut random = tie_world(TieBreak::Random);
+        random.cells[1].stock = 10.0;
+        random.cells[2].stock = 20.0;
+        let mut lowest = random.clone();
+        lowest.config.tie_break = TieBreak::LowestId;
+        random.prepare();
+        lowest.prepare();
+        let mut e = Ledger::default();
+        random.decide_actor(0, &mut e);
+        lowest.decide_actor(0, &mut Ledger::default());
+        assert_eq!(
+            random.fronts[&FrontKey::foreign(0, 1)].actions,
+            [true, false]
+        );
+        assert_eq!(random.rng.gen::<u64>(), lowest.rng.gen::<u64>());
+    }
+
+    #[test]
+    fn singleton_random_prime_threat_preserves_next_draw_like_lowest_id() {
+        let mut random = tie_world(TieBreak::Random);
+        random.config.alliances = true;
+        for (&(a, b), value) in &mut random.trust {
+            *value = if b == territory::neighbors(&random.config, &random.cells, a)[0] {
+                -100.0
+            } else {
+                100.0
+            };
+        }
+        let mut lowest = random.clone();
+        lowest.config.tie_break = TieBreak::LowestId;
+        random.form_coalitions();
+        lowest.form_coalitions();
+        assert_eq!(random.threats, lowest.threats);
+        assert_eq!(random.rng.gen::<u64>(), lowest.rng.gen::<u64>());
+    }
+
+    #[test]
+    fn actual_random_attack_tie_consumes_one_bounded_draw() {
+        let mut w = tie_world(TieBreak::Random);
+        w.cells[1].stock = 10.0;
+        w.cells[2].stock = 10.0;
+        w.prepare();
+        let mut expected = w.rng.clone();
+        let candidate = [1, 2][index(&mut expected, 2)];
+        w.decide_actor(0, &mut Ledger::default());
+        assert_eq!(w.rng.gen::<u64>(), expected.gen::<u64>());
+        assert!(w.fronts[&FrontKey::foreign(0, candidate)].initiated[0]);
+    }
+}

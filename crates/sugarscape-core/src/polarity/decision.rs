@@ -122,7 +122,9 @@ impl PolarityWorld {
                 .collect();
             for key in domestic {
                 let f = &self.fronts[&key];
-                if !f.actions[1] && f.episode.is_none() {
+                // Figure 5.7 reevaluates the province whenever its provisional action is C.
+                // Episode bookkeeping records conflict; it does not veto this decision.
+                if !f.actions[1] {
                     if resources::ratio_overflows(self.cells[key.b].stock, f.commitments[0]) {
                         self.finish("invalid",Some(format!("period {} domestic front {:?}: nonfinite revolt ratio; config {:?}",self.period,key,self.config)));
                         return;
@@ -216,7 +218,7 @@ impl PolarityWorld {
         if tied.is_empty() {
             return;
         }
-        let victim = if self.config.tie_break == TieBreak::Random {
+        let victim = if self.config.tie_break == TieBreak::Random && tied.len() > 1 {
             tied[index(&mut self.rng, tied.len())]
         } else {
             tied[0]

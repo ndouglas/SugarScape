@@ -11,6 +11,51 @@ import { wasmSimModule } from './sim-module';
 import { initSync, presets_json } from './wasm-pkg/sugarscape.js';
 import type { PolarityConfig, PolarityInspection, PolarityStats, Preset } from './types';
 describe('polarity through the shared WASM host', () => {
+  it('retains real invalid WASM stock values as nullable and visibly unavailable', async () => {
+    const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
+    const presets = JSON.parse(presets_json()) as Preset[];
+    const config = { model: 'polarity', width: 2, height: 2, predator_share: 0, initial_mean: 1e308, initial_sd: 1e308 } as PolarityConfig;
+    const engine = await Engine.create({ config, seed: 1 }, { presets, transport: new InlineTransport(new SimHost(wasmSimModule(wasm.memory))) });
+    const latest = engine.latest as PolarityStats;
+    const unavailable: Pick<PolarityStats, 'total_stock' | 'capital_stock' | 'province_stock' | 'destruction' | 'signed_creation' | 'harvest' | 'taxes' | 'transfers' | 'clipping'> = {
+      total_stock: null, capital_stock: null, province_stock: null, destruction: null, signed_creation: null,
+      harvest: null, taxes: null, transfers: null, clipping: null,
+    };
+    expect(latest.total_stock).toBe(unavailable.total_stock);
+    expect(latest.capital_stock).toBeNull();
+    expect(latest.invalidity).toContain('invalid stock');
+    expect(engine.finished).toBe(true);
+    await engine.select(9, 3);
+    expect(polarityRows(engine.inspection!.view as PolarityInspection)).toContainEqual(['Resources', 'Province 0.000 · corporate unavailable']);
+    expect(polarityRows(engine.inspection!.view as PolarityInspection).some(([label]) => label === 'Invalid reconstruction')).toBe(true);
+  });
+  it.each([
+    ['overextension review trace', { model: 'polarity', variant: 'overextension', width: 4, height: 4, predator_share: 1, horizon: 500, periods_per_tick: 20 }, 1, 25],
+    ['registered overextension', { model: 'polarity', variant: 'overextension', predator_share: 1, horizon: 4000, periods_per_tick: 100 }, 446000001, 40],
+  ])('%s matches native at every tick after domestic reevaluation', async (_label, partial, seed, ticks) => {
+    const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
+    const presets = JSON.parse(presets_json()) as Preset[];
+    const config = partial as PolarityConfig;
+    const scratch = mkdtempSync(`${tmpdir()}/polarity-domestic-`);
+    try {
+      const configPath = `${scratch}/config.json`;
+      const tracePath = `${scratch}/trace.json`;
+      writeFileSync(configPath, JSON.stringify(config));
+      execFileSync(fileURLToPath(new URL('../../target/release/sugarscape', import.meta.url)), [
+        'run', '--config', configPath, '--seed', String(seed), '--ticks', String(ticks), '--fingerprint-trace', tracePath,
+      ], { cwd: fileURLToPath(new URL('../../', import.meta.url)), encoding: 'utf8' });
+      const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+      const engine = await Engine.create({ config, seed }, { presets, transport: new InlineTransport(new SimHost(wasmSimModule(wasm.memory))) });
+      for (const row of trace) {
+        if (row.tick > 0) await engine.advance(1);
+        expect(await engine.fingerprint(), `domestic trace tick ${row.tick}`).toBe(row.fingerprint);
+      }
+      expect(engine.finished).toBe(true);
+      expect((engine.latest as PolarityStats).invalidity).toBeNull();
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 30_000);
   it('matches native sequential registered seed 128000002 through the corrected endpoint', async () => {
     const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
     const presets = JSON.parse(presets_json()) as Preset[];
@@ -43,7 +88,7 @@ describe('polarity through the shared WASM host', () => {
     ['polarity-alliances', '0x93f744fba37cb327'],
     ['polarity-pra', '0xd1b184350e70d728'],
     ['polarity-two-level', '0x999de30e70e8da90'],
-    ['polarity-overextension', '0x5a75f9a4214f4e17'],
+    ['polarity-overextension', '0xfb0f1a4e1a11adc7'],
   ])('%s matches its native 200-tick fingerprint', async (id, expected) => {
     const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
     const presets = JSON.parse(presets_json()) as Preset[];

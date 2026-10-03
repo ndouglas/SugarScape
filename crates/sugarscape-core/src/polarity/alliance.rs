@@ -49,7 +49,7 @@ impl PolarityWorld {
                 }
             }
             if !candidates.is_empty() {
-                let b = if self.config.tie_break == TieBreak::Random {
+                let b = if self.config.tie_break == TieBreak::Random && candidates.len() > 1 {
                     candidates[index(&mut self.rng, candidates.len())]
                 } else {
                     candidates[0]

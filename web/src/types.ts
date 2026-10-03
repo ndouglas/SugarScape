@@ -2375,9 +2375,9 @@ export interface PolarityConfig {
 export interface PolarityStats {
   tick: number; period: number; periods: number; last_tick_periods: number; finish_reason: string | null; invalidity: string | null;
   sovereign_count: number; largest_territory: number; second_largest_territory: number; predator_capital_share: number;
-  total_stock: number; capital_stock: number; province_stock: number; nonpositive_stocks: number; destruction: number; signed_creation: number;
+  total_stock: number | null; capital_stock: number | null; province_stock: number | null; nonpositive_stocks: number; destruction: number | null; signed_creation: number | null;
   attacks: number; dd_encounters: number; conquests: number; capital_collapses: number; disconnections: number; revolts: number; coalitions: number; open_episodes: number;
-  harvest: number; taxes: number; transfers: number; clipping: number; stale_claims: number; locked_claims: number; double_successes: number; path_collisions: number;
+  harvest: number | null; taxes: number | null; transfers: number | null; clipping: number | null; stale_claims: number; locked_claims: number; double_successes: number; path_collisions: number;
 }
 export interface PolarityCoalition {
   threat: number;
