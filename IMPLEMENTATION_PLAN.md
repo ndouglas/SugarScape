@@ -16,7 +16,7 @@
 **Goal**: Native fixed-count recording and source-aware offline judges.
 **Success Criteria**: Manifest validates without periods; synthetic fixtures preserve every evidence boundary.
 **Tests**: Native runner fixtures, Python tests, manifest reproducibility.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 4: Findings and integration
 **Goal**: Execute registered studies, report results, review, integrate and publish.
