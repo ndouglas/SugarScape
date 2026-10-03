@@ -31,6 +31,12 @@ destination paths, sizes, page counts and hashes are retained locally in
 `papers/architecture/alexander-local-provenance.json`. The PDFs and local provenance remain
 gitignored under the existing personal-library convention.
 
+The first burrow branch has an [initial excavation reading](studies/2026-10-03-burrow-excavation-reading.md)
+and [proposed lab design](superpowers/specs/2026-10-03-burrow-1-excavation-design.md).
+Pielström and Roces (2013), PLOS ONE e57040, is the selected transport/cue anchor; Green et al.
+(2017), Proceedings B 20162730, and Prasath et al. (version of record 2023), eLife 79638, are
+alternative/later leads. These articles were accessed online and are not yet copied into `papers/`.
+
 ## Reproduced
 
 | Milestone | Model kind | Sources | Headline |

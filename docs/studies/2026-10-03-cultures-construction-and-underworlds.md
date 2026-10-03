@@ -373,6 +373,10 @@ inventing implementation commitments during archival work.
 
 ## Decision record
 
+- **2026-10-03:** initial [excavation research and code reading](2026-10-03-burrow-excavation-reading.md)
+  selected sequential soil transport and local spoil cues as the proposed first anchor. The
+  [Burrow 1 design](../superpowers/specs/2026-10-03-burrow-1-excavation-design.md) is ready for
+  review; its controller rules are supplied abstractions and no runtime or judged campaign exists yet.
 - **2026-10-03:** preserve all seven campaign families as a living research programme.
 - **2026-10-03:** select collective burrow construction as the first branch to refine; retain
   rich, diverse, individual underworlds as the long-term creative target.
