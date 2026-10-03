@@ -253,6 +253,13 @@ pub struct World {
     pub(crate) rng: SimRng,
     next_id: AgentId,
     pub(crate) events: TickEvents,
+    pub(crate) relocation_events: Option<crate::minds::protection::state::RelocationEvents>,
+    pub(crate) protection_ledger: Option<crate::minds::protection::ledger::Ledger>,
+    pub(crate) protection_ledger_errors: Vec<String>,
+    pub(crate) protection_actions: Vec<crate::minds::protection::runner::ActionRecord>,
+    pub(crate) protection_deaths: Vec<crate::minds::protection::runner::DeathRecord>,
+    pub(crate) protection_fixture_errors: Vec<String>,
+    pub(crate) protection_restrictions: BTreeMap<AgentId, u64>,
     pub stats: Stats,
     loans: BTreeMap<LoanId, Loan>,
     next_loan_id: LoanId,
@@ -474,6 +481,13 @@ impl World {
             regions,
             rng: rng::seeded(seed),
             next_id: 1,
+            relocation_events: config.protection_lab.as_ref().map(|_| Default::default()),
+            protection_ledger: None,
+            protection_ledger_errors: Vec::new(),
+            protection_actions: Vec::new(),
+            protection_deaths: Vec::new(),
+            protection_fixture_errors: Vec::new(),
+            protection_restrictions: BTreeMap::new(),
             events: TickEvents::default(),
             stats: Stats::default(),
             loans: BTreeMap::new(),
@@ -492,7 +506,11 @@ impl World {
         if world.config.disease.enabled {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
         }
-        world.populate();
+        if world.config.protection_lab.is_some() {
+            crate::minds::protection::lab::initialize(&mut world);
+        } else {
+            world.populate();
+        }
         // Minds 4: `memory.prior: map` gives founders that remember a
         // memory of every non-wall site as the world starts; a no-op
         // otherwise. Runs once here, after placement, so children and
@@ -961,6 +979,38 @@ impl World {
                 }
             }
         }
+        if self.config.protection_lab.is_some() {
+            eat(0x5052_4f54_4543_5433);
+            let config =
+                serde_json::to_vec(&self.config).expect("serializable protection configuration");
+            eat(config.len() as u64);
+            for byte in config {
+                eat(u64::from(byte));
+            }
+            for a in self.agents.values() {
+                eat(a.id);
+                eat(u64::from(a.cheater));
+                eat(u64::from(a.watches));
+                eat(u64::from(a.remembers));
+                eat(a.rate.to_bits());
+                eat(u64::from(a.foresight));
+                eat(u64::from(a.vision));
+                eat(u64::from(a.metabolism[0]));
+                let state =
+                    serde_json::to_vec(&a.protection).expect("serializable protection state");
+                eat(state.len() as u64);
+                for byte in state {
+                    eat(u64::from(byte));
+                }
+                eat(a.seen.len() as u64);
+                for (&(site, owner), seen) in &a.seen {
+                    eat(u64::from(site));
+                    eat(owner);
+                    eat(seen.amount.to_bits());
+                    eat(seen.tick);
+                }
+            }
+        }
         h
     }
 
@@ -973,6 +1023,12 @@ impl World {
     /// by an edit aren't reported in any tick's `cache_lost`. Minds 6: its
     /// open fate records close as `Lost`.
     pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
+        if self.agent(id).is_some() {
+            crate::minds::protection::ledger::update(self, id, |l| {
+                l.lose_owner();
+                l.reconcile()
+            });
+        }
         let agent = self.agents.remove(&id)?;
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
@@ -1016,6 +1072,26 @@ impl World {
     /// remaining sugar is split equally among its living children. A dead
     /// lender's outstanding claims pass to its living children as well.
     pub(crate) fn kill(&mut self, id: AgentId, cause: DeathCause) -> Option<Agent> {
+        if self.config.protection_lab.is_some() {
+            if let Some(a) = self.agent(id) {
+                self.protection_deaths
+                    .push(crate::minds::protection::runner::DeathRecord {
+                        id,
+                        pos: a.pos,
+                        cause: match cause {
+                            DeathCause::Starvation => "starvation",
+                            DeathCause::OldAge => "old_age",
+                            DeathCause::Combat => "combat",
+                        }
+                        .into(),
+                    });
+            }
+        }
+        crate::minds::protection::controller::cancel(
+            self,
+            id,
+            crate::minds::protection::state::CancelReason::OwnerDied,
+        );
         let claims: Vec<Loan> = if self.config.inheritance.enabled {
             self.loans
                 .values()
@@ -1110,9 +1186,17 @@ impl World {
     /// environment updates and everyone ages.
     pub fn step(&mut self) {
         self.events = TickEvents::default();
+        self.relocation_events = self
+            .config
+            .protection_lab
+            .as_ref()
+            .map(|_| Default::default());
         if self.config.spatial_hoarding.enabled {
             self.events.spatial_exposure = Some(crate::stats::spatial_store_exposure(self));
         }
+        self.protection_actions.clear();
+        self.protection_deaths.clear();
+        crate::minds::protection::lab::begin_tick(self);
         self.apply_schedule();
         if self.config.pilfering_on() {
             crate::minds::caching::theft::count_candidates(self);

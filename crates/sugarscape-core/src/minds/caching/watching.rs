@@ -138,6 +138,15 @@ pub(crate) fn see(world: &mut World, owner: AgentId, site: u32, q: f64) {
         return;
     }
     let watchers = watchers_of(world, owner, site);
+    if let Some(a) = world
+        .protection_actions
+        .last_mut()
+        .filter(|a| a.id == owner)
+    {
+        a.actual_watchers.extend(watchers.iter().copied());
+        a.actual_watchers.sort_unstable();
+        a.actual_watchers.dedup();
+    }
     if watchers.is_empty() {
         return;
     }
@@ -431,6 +440,10 @@ pub(crate) fn raid(world: &mut World, id: AgentId, site: u32, room: f64) -> Opti
     }
     let Some(owner) = target else {
         world.events.raids_wasted += 1;
+        if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+            a.raid_site = Some(site);
+            a.raid_wasted = true;
+        }
         return None;
     };
     let take = super::theft::loot(world, owner, id, site, room);
@@ -439,6 +452,10 @@ pub(crate) fn raid(world: &mut World, id: AgentId, site: u32, room: f64) -> Opti
     }
     world.events.raids += 1;
     world.events.raided += take;
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.raid_site = Some(site);
+        a.raid_amount += take;
+    }
     Some(Harvest {
         pilfered: take,
         ..Harvest::default()

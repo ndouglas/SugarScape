@@ -164,6 +164,9 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
     }
     world.events.pilfer_draws += foreign;
     let owner = found?;
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.discovery_site = Some(site);
+    }
     let mut harvest = Harvest::default();
     if owner == id {
         let take = super::dig(world, id, site, room);
@@ -178,6 +181,10 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
     let take = loot(world, owner, id, site, room);
     if take <= 0.0 {
         return None;
+    }
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.discovery_site = Some(site);
+        a.discovery_amount += take;
     }
     harvest.pilfered = take;
     Some(harvest)
@@ -268,6 +275,8 @@ pub(crate) fn pilfer(
         e.pilfers += 1;
         e.caches_pilfered += u32::from(distinct);
     }
+    crate::minds::protection::ledger::update(world, owner, |l| l.pilfer(site, take));
+    crate::minds::protection::ledger::reconcile_world(world);
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     super::fates::close_pilfered(world, owner, site, take, thief);
     if emptied {

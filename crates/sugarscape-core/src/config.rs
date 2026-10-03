@@ -1195,6 +1195,7 @@ fn reset_only(path: &str) -> bool {
             | ["culture", "groups", _]
             | ["culture", "groups", _, "zeros", ..]
             | ["lab", ..]
+            | ["protection_lab", ..]
             | ["spatial_hoarding", ..]
             | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
@@ -1278,6 +1279,8 @@ pub struct Config {
     pub spatial_hoarding: SpatialHoarding,
     #[serde(default)]
     pub lab: Option<Lab>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_lab: Option<crate::minds::protection::state::LabConfig>,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -1365,6 +1368,7 @@ impl Default for Config {
             central: Central { enabled: false },
             spatial_hoarding: SpatialHoarding::default(),
             lab: None,
+            protection_lab: None,
             schedule: Vec::new(),
         }
     }
@@ -1887,7 +1891,9 @@ impl Config {
         );
         self.check_groups(&mut e);
         e.check(
-            self.growback.rate.is_finite() && self.growback.rate > 0.0,
+            self.growback.rate.is_finite()
+                && (self.growback.rate > 0.0
+                    || (self.protection_lab.is_some() && self.growback.rate == 0.0)),
             "growback.rate",
             "must be a number > 0",
         );
@@ -2280,6 +2286,7 @@ impl Config {
             "disease.outbreaks",
             "an outbreak's length override must be 1 ≤ min ≤ max < immune_length",
         );
+        e.0.extend(crate::minds::protection::lab::validation_errors(self));
         e.finish()
     }
 
@@ -2492,6 +2499,9 @@ impl Config {
             if changed {
                 out.push(FieldError::new(format!("spatial_hoarding.{path}"), msg));
             }
+        }
+        if self.protection_lab != next.protection_lab {
+            out.push(FieldError::new("protection_lab", msg));
         }
         if self.lab != next.lab {
             out.push(FieldError::new("lab", msg));

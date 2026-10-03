@@ -144,6 +144,36 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     fates::open(world, id, site, q);
     theft::note(world, id, site, true);
     watching::see(world, id, site, q);
+    let was_prepared = world
+        .agent(id)
+        .and_then(|a| a.protection.as_ref())
+        .is_some_and(|s| s.sources.contains_key(&site));
+    super::protection::lab::note_prepared_deposit(world, id, site, q);
+    let prepared = !was_prepared
+        && world
+            .agent(id)
+            .and_then(|a| a.protection.as_ref())
+            .is_some_and(|s| s.sources.contains_key(&site));
+    super::protection::ledger::update(world, id, |l| {
+        if prepared {
+            l.prepare(site, q)?;
+        } else {
+            l.outflow(q, super::protection::ledger::Outflow::Deposit { site })?;
+        }
+        l.outflow(cost, super::protection::ledger::Outflow::BurialCost)
+    });
+    if world.config.protection_lab.is_some() {
+        let exposed = super::protection::controller::perceived_exposure(world, id);
+        if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+            a.gross_buried += q;
+            a.burial_cost += cost;
+            a.perceived_exposure = Some(exposed);
+            if prepared {
+                a.source = Some(site);
+            }
+        }
+    }
+    super::protection::ledger::reconcile_world(world);
     q
 }
 
@@ -180,6 +210,10 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     ) {
         e.dug += take;
         e.digs += 1;
+    }
+    super::protection::ledger::update(world, id, |l| l.withdraw(site, take));
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.gross_dug += take;
     }
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     fates::close_dug(world, id, site, take);

@@ -10,6 +10,7 @@ pub mod goap;
 pub mod grid;
 pub mod memory;
 pub mod mvt;
+pub mod protection;
 pub mod spatial_hoarding;
 pub mod utility;
 
@@ -21,6 +22,12 @@ use crate::world::World;
 /// Rule M's step under the configured decision rule: moves `id` and returns
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
+    if let Some(harvest) = protection::lab::scripted_action(world, id) {
+        return harvest;
+    }
+    if let Some(harvest) = protection::controller::act(world, id) {
+        return harvest;
+    }
     if world.config.spatial_hoarding.enabled {
         if let Some(harvest) = spatial_hoarding::guard::guard_turn(world, id) {
             return harvest;

@@ -128,6 +128,7 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         stolen_from_me: 0.0,
         home: None,
         spatial: None,
+        protection: None,
         load_trip: 0.0,
         delivery_rate: 0.0,
         last_load: 0.0,

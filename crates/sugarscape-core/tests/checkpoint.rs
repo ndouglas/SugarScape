@@ -581,3 +581,57 @@ fn spatial_memory_insertion_order_does_not_change_the_hash() {
     }
     assert_eq!(a.fingerprint(), b.fingerprint());
 }
+
+#[test]
+fn protection_checkpoints_cover_prepared_memory_and_every_stage() {
+    use sugarscape_core::minds::protection::{lab::rig_config, state::*};
+    let mut stages = Vec::new();
+    for fixture in [
+        Fixture::Single {
+            initial_observed: true,
+            redeposit_observed: false,
+        },
+        Fixture::Mixed {
+            observed_first: true,
+        },
+    ] {
+        let config = rig_config(LabConfig {
+            policy: Policy::Selective,
+            fixture,
+            ..Default::default()
+        });
+        let mut straight = ModelWorld::Sugarscape(Box::new(World::new(config, 7).unwrap()));
+        for tick in 0..64 {
+            if (8..=11).contains(&tick) {
+                let state = sugar(&straight).agent(1).unwrap().protection.clone();
+                if let Some(stage) = state
+                    .as_ref()
+                    .and_then(|s| s.intent.as_ref())
+                    .map(|i| i.stage.clone())
+                {
+                    stages.push(stage);
+                }
+                let cp = straight.checkpoint().unwrap();
+                let mut restored = ModelWorld::Sugarscape(Box::new(sugar(&straight).clone()));
+                restored.model_mut().run(2);
+                restored.restore(&cp).unwrap();
+                assert_eq!(sugar(&restored).agent(1).unwrap().protection, state);
+                let mut expected = ModelWorld::Sugarscape(Box::new(sugar(&straight).clone()));
+                for _ in tick..64 {
+                    expected.model_mut().run(1);
+                    restored.model_mut().run(1);
+                    assert_eq!(
+                        expected.model().fingerprint(),
+                        restored.model().fingerprint()
+                    );
+                    assert_eq!(inspect_all(&expected), inspect_all(&restored));
+                }
+                assert_eq!(all_series(&expected), all_series(&restored));
+            }
+            straight.model_mut().run(1);
+        }
+    }
+    for stage in [Stage::Retrieve, Stage::ToDestination, Stage::Deposit] {
+        assert!(stages.contains(&stage), "missing {stage:?}");
+    }
+}
