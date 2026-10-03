@@ -1,8 +1,9 @@
 # Minds P3: costly re-caching after observation
 
 **Date:** 2026-10-02
-**Status:** proposed architectural design, ready for written-spec review. No implementation or scientific runs authorized by this document.
+**Status:** written spec approved by the user. The implementation plan and exact campaign protocol are prepared for their next review; no product implementation or scientific runs have begun.
 **Baseline:** main `1223c47`, after the completed Minds 9 campaign.
+**Plan/protocol:** [implementation plan](../plans/2026-10-02-minds-protection.md), [proposed measured protocol](2026-10-02-minds-protection-protocol.md).
 **Related:** [Minds study](../../studies/2026-09-27-minds.md), [collective agency program](2026-10-02-minds-collective-agency-program-design.md), [research notes](../../studies/2026-10-02-minds-protection-reading.md).
 
 ## Decision and question
