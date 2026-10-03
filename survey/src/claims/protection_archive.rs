@@ -520,11 +520,12 @@ pub(super) fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
         ) {
             return fail("relocation diagnostics disagree with actions");
         }
+        validate_effort(prev, f)?;
         for event in &f.relocation.source_events {
             if !f
                 .actions
                 .iter()
-                .any(|a| a.id == 1 && a.source == Some(event.source))
+                .any(|a| a.id == 1 && a.phase == "relocation" && a.source == Some(event.source))
             {
                 return fail("source event without matching protective action");
             }
@@ -692,7 +693,12 @@ pub(super) fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
                 if a.action == "walk" && (a.gross_dug != 0.0 || a.gross_buried != 0.0) {
                     return fail("protective walk gathered food");
                 }
-                if a.action == "redeposit" && a.gross_buried > 0.0 && !mixed {
+                if a.gross_buried > 0.0 && a.target != Some(after) {
+                    return fail(
+                        "redeposit target missing or different from actual action-end position",
+                    );
+                }
+                if a.gross_buried > 0.0 && !mixed {
                     let expected = matches!(
                         lab.fixture,
                         Fixture::Single {
@@ -970,6 +976,52 @@ pub(super) fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
         }
     } else if r.thief_transferred.is_some() {
         return fail("food endpoint without lineage");
+    }
+    Ok(())
+}
+/// Cancellation can rename a completed walk after metabolism or owner death.
+/// Effort follows the recorded phase and physical result, not that final name.
+fn validate_effort(before: &FrameRecord, after: &FrameRecord) -> Result<(), String> {
+    let protective: Vec<_> = after
+        .actions
+        .iter()
+        .filter(|a| a.phase == "relocation")
+        .collect();
+    let mut distance = 0_u64;
+    for action in &protective {
+        let start = role(before, action.id)
+            .ok_or("protective effort has no starting role")?
+            .pos;
+        let end = role(after, action.id)
+            .map(|r| r.pos)
+            .or_else(|| {
+                after
+                    .deaths
+                    .iter()
+                    .find(|d| d.id == action.id)
+                    .map(|d| d.pos)
+            })
+            .ok_or("protective effort has no action-end/death position")?;
+        distance += u64::from(start.x.abs_diff(end.x) + start.y.abs_diff(end.y));
+    }
+    let mut cancellations = BTreeMap::new();
+    for event in &after.relocation.source_events {
+        if let Some(reason) = event.cancellation {
+            *cancellations.entry(reason).or_insert(0_u64) += 1;
+        }
+    }
+    let declared: BTreeMap<_, _> = after
+        .relocation
+        .cancellations
+        .iter()
+        .map(|(&reason, &n)| (reason, u64::from(n)))
+        .collect();
+    if u64::from(after.relocation.action_ticks) != protective.len() as u64
+        || u64::from(after.relocation.distance) != distance
+        || declared != cancellations
+        || (protective.is_empty() && !cancellations.is_empty())
+    {
+        return Err("protective effort/cancellation diagnostics disagree with recorded actions and positions".into());
     }
     Ok(())
 }
@@ -1389,6 +1441,254 @@ pub(super) mod tests {
             frames,
             fixture_errors: vec![],
         }
+    }
+    fn mixed_redeposit_wire() -> EpisodeRecord {
+        use sugarscape_core::minds::protection::state::{Intent, SourceEvent, Stage};
+        let mut r = synthetic(
+            LabConfig {
+                policy: Policy::Selective,
+                fixture: Fixture::Mixed {
+                    observed_first: true,
+                },
+                reburial_cost: 0.0,
+                ..Default::default()
+            },
+            10001,
+        );
+        let source = site(Pos::new(3, 3));
+        let destination = Pos::new(3, 2);
+        for f in r.frames.iter_mut().skip(9) {
+            if let Some(owner) = f.roles.iter_mut().find(|a| a.id == 1) {
+                owner.pos = if f.tick <= 10 {
+                    Pos::new(3, 3)
+                } else {
+                    destination
+                };
+                let state = owner.protection.as_mut().unwrap();
+                state.sources.get_mut(&source).unwrap().attempted = true;
+                state.intent = match f.tick {
+                    9 => Some(Intent {
+                        source,
+                        destination,
+                        amount: 0.0,
+                        stage: Stage::Retrieve,
+                    }),
+                    10 => Some(Intent {
+                        source,
+                        destination,
+                        amount: 6.0,
+                        stage: Stage::ToDestination,
+                    }),
+                    11 => Some(Intent {
+                        source,
+                        destination,
+                        amount: 6.0,
+                        stage: Stage::Deposit,
+                    }),
+                    _ => None,
+                };
+                if f.tick == 10 || f.tick == 11 {
+                    owner.holdings += 6.0;
+                    owner.caches.remove(&source);
+                }
+                if f.tick >= 12 {
+                    owner.caches.remove(&source);
+                    owner.caches.insert(site(destination), 6.0);
+                }
+            }
+            if let Some(death) = f.deaths.iter_mut().find(|d| d.id == 1) {
+                death.pos = destination;
+            }
+            if (9..=12).contains(&f.tick) {
+                let a = f.actions.iter_mut().find(|a| a.id == 1).unwrap();
+                a.phase = "relocation".into();
+                a.source = Some(source);
+                a.target = Some(if f.tick <= 10 {
+                    Pos::new(3, 3)
+                } else {
+                    destination
+                });
+                a.action = match f.tick {
+                    9 | 11 => "walk",
+                    10 => "retrieve",
+                    _ => "redeposit",
+                }
+                .into();
+                f.relocation.action_ticks = 1;
+                if f.tick == 9 {
+                    f.relocation.starts = 1;
+                    f.relocation.source_events.push(SourceEvent {
+                        source,
+                        started: true,
+                        ..Default::default()
+                    });
+                }
+                if f.tick == 9 || f.tick == 11 {
+                    f.relocation.distance = 1;
+                }
+                if f.tick == 10 {
+                    a.gross_dug = 6.0;
+                    f.relocation.withdrawn = 6.0;
+                    f.relocation.source_events.push(SourceEvent {
+                        source,
+                        withdrawn: 6.0,
+                        ..Default::default()
+                    });
+                }
+                if f.tick == 12 {
+                    a.gross_buried = 6.0;
+                    a.perceived_exposure = Some(false);
+                    f.relocation.redeposited = 6.0;
+                    f.relocation.completions = 1;
+                    f.relocation.source_events.push(SourceEvent {
+                        source,
+                        redeposited: 6.0,
+                        ..Default::default()
+                    });
+                }
+            }
+        }
+        // The six tagged units mix with 23 unlabelled units on retrieval.
+        // Reburial moves 6*(6/29) tagged units; the rest are consumed by death.
+        let cohort = r
+            .cohorts
+            .as_mut()
+            .unwrap()
+            .cohorts
+            .get_mut(&source)
+            .unwrap();
+        cohort.consumed = 6.0 - 36.0 / 29.0;
+        cohort.lost_cached = BTreeMap::from([(site(destination), 36.0 / 29.0)]);
+        r
+    }
+    #[test]
+    fn protection_archive_requires_actual_mixed_redeposit_target() {
+        let r = mixed_redeposit_wire();
+        validate_episode(&r).unwrap();
+        for target in [None, Some(Pos::new(6, 2))] {
+            let mut bad = r.clone();
+            bad.frames[12]
+                .actions
+                .iter_mut()
+                .find(|a| a.id == 1)
+                .unwrap()
+                .target = target;
+            assert!(
+                validate_episode(&bad).is_err(),
+                "malformed target {target:?} accepted"
+            );
+        }
+    }
+    #[test]
+    fn protection_archive_malformed_mixed_redeposit_analysis_returns_error() {
+        let mut index = complete_index();
+        let r = mixed_redeposit_wire();
+        let condition = index
+            .manifest
+            .conditions
+            .iter()
+            .find(|c| c.lab == r.lab)
+            .unwrap()
+            .id
+            .clone();
+        let i = index
+            .runs
+            .iter()
+            .position(|raw| raw.condition == condition && raw.seed == r.seed)
+            .unwrap();
+        index.runs.swap(0, i);
+        for target in [None, Some(Pos::new(6, 2))] {
+            let mut bad = r.clone();
+            bad.frames[12]
+                .actions
+                .iter_mut()
+                .find(|a| a.id == 1)
+                .unwrap()
+                .target = target;
+            // Later records are deliberately unreadable: malformed target must be
+            // rejected at the first registered record, before report rendering.
+            let mut records = vec![bad.clone(); index.runs.len()];
+            records[0] = bad;
+            let error = super::super::protection_report::analyze(&index, &records).unwrap_err();
+            assert!(error.contains("redeposit target"), "{error}");
+        }
+    }
+    #[test]
+    fn protection_archive_cancellation_effort_keeps_post_metabolism_and_death_movement() {
+        use sugarscape_core::minds::protection::{
+            runner::DeathRecord,
+            state::{CancelReason, SourceEvent},
+        };
+        let r = mixed_redeposit_wire();
+        for reason in [CancelReason::SurplusExhausted, CancelReason::OwnerDied] {
+            // Mirror the engine's actual record order: protective walk, metabolism,
+            // then cancel overwrites only the action name (and death removes role).
+            let mut before = r.frames[10].clone();
+            let mut after = r.frames[11].clone();
+            let source = site(Pos::new(3, 3));
+            let destination = Pos::new(3, 2);
+            before
+                .roles
+                .iter_mut()
+                .find(|a| a.id == 1)
+                .unwrap()
+                .holdings = if reason == CancelReason::OwnerDied {
+                1.0
+            } else {
+                5.0
+            };
+            after.actions.iter_mut().find(|a| a.id == 1).unwrap().action = "cancel".into();
+            after.relocation.cancellations.insert(reason, 1);
+            after.relocation.source_events.push(SourceEvent {
+                source,
+                cancellation: Some(reason),
+                ..Default::default()
+            });
+            if reason == CancelReason::OwnerDied {
+                after.roles.retain(|a| a.id != 1);
+                after.deaths.push(DeathRecord {
+                    id: 1,
+                    pos: destination,
+                    cause: "starvation".into(),
+                });
+            } else {
+                after.roles.iter_mut().find(|a| a.id == 1).unwrap().holdings = 4.0;
+            }
+            assert!(validate_effort(&before, &after).is_ok());
+            let mut bad = after.clone();
+            bad.relocation.distance = 0;
+            assert!(validate_effort(&before, &bad).is_err());
+            let mut bad = after.clone();
+            bad.relocation.action_ticks = 0;
+            assert!(validate_effort(&before, &bad).is_err());
+            let mut bad = after.clone();
+            bad.relocation.cancellations.insert(reason, 2);
+            assert!(validate_effort(&before, &bad).is_err());
+            let mut bad = after;
+            bad.relocation.source_events.clear();
+            assert!(validate_effort(&before, &bad).is_err());
+        }
+    }
+    #[test]
+    fn protection_archive_rejects_off_action_ticks_mutation() {
+        let mut r = synthetic(LabConfig::default(), 10001);
+        r.frames[9].relocation.action_ticks = 1;
+        assert!(validate_episode(&r).is_err());
+    }
+    #[test]
+    fn protection_archive_rejects_off_distance_mutation() {
+        let mut r = synthetic(LabConfig::default(), 10001);
+        r.frames[9].relocation.distance = 1;
+        assert!(validate_episode(&r).is_err());
+    }
+    #[test]
+    fn protection_archive_rejects_off_cancellation_map_mutation() {
+        let mut r = synthetic(LabConfig::default(), 10001);
+        r.frames[9].relocation.cancellations.insert(
+            sugarscape_core::minds::protection::state::CancelReason::Expired,
+            1,
+        );
+        assert!(validate_episode(&r).is_err());
     }
     #[test]
     fn protection_synthetic_wire_fixtures_validate_without_running_episodes() {
