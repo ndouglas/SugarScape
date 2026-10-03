@@ -157,25 +157,25 @@
     },
     {
       "path": "independent/seeds_enriched.csv",
-      "sha256": "22e9feae90f10e05d9a301573250d454ce2cb6503d7d4e99e7024203365e02bc",
+      "sha256": "744b898efd5fab067fbe8e729eb166f024cbb180d2382d72661d15798d895a4d",
       "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/seeds_enriched.csv",
       "source_sha256": "22e9feae90f10e05d9a301573250d454ce2cb6503d7d4e99e7024203365e02bc"
     },
     {
       "path": "independent/selected_trace.csv",
-      "sha256": "452c1420a2e2a582c8dd21596f56ce141d54b1f417d05e6c9ea6425998bf31f1",
+      "sha256": "1968d46a59c5fa8be796a37bd2cd9de129ce5c3ba40acedeabc01c2c133c4027",
       "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/selected_trace.csv",
       "source_sha256": "452c1420a2e2a582c8dd21596f56ce141d54b1f417d05e6c9ea6425998bf31f1"
     },
     {
       "path": "independent/summarize.py",
-      "sha256": "46facdf26a884434607089db5160df5eee4435c25792b83bbe858c435f147449",
+      "sha256": "5dcea701be50ab7b7e5b7ca220e9deb1b8edd55e3e2780280c8bb3f89bb3b59d",
       "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/summarize.py",
       "source_sha256": "46facdf26a884434607089db5160df5eee4435c25792b83bbe858c435f147449"
     },
     {
       "path": "independent/summary.csv",
-      "sha256": "9eae813aa7ad87e4edf1d6e674f4164c0f92adcff41c2a3f8c49af70d1f6cf1e",
+      "sha256": "23a003533b5b7ad8e46c0b1ceb4fdfaa44348b426d1850b3dc08f7536a9fca26",
       "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/summary.csv",
       "source_sha256": "9eae813aa7ad87e4edf1d6e674f4164c0f92adcff41c2a3f8c49af70d1f6cf1e"
     },
@@ -523,13 +523,13 @@
     },
     {
       "path": "native/summarize.py",
-      "sha256": "2975b449a8e390bd361be2652212c6530e94fd38a882b741830ead23c6c573d5",
+      "sha256": "5a23d2de5efd5da20caa0a76fd40e39b794674b23527b79664cbce7ccdf3b761",
       "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/summarize.py",
       "source_sha256": "58c54faced2250f7e0a533fae16555b26fc5d9d0cdbd2d739ec2126491efb254"
     },
     {
       "path": "native/summary.csv",
-      "sha256": "ce4371c19de80c19ccb9d9c6113e757978cbd096a56dd004878cbea9da7cf445",
+      "sha256": "0d986593f031a1a060d3e7c7c5a88b91d72b903244c58355596fffce0cd0536c",
       "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/summary.csv",
       "source_sha256": "e4adeb5fb95a18d206ab9ff378b56a9015cc627afe072bd61b3ac7b72dfdf2e4"
     },
@@ -589,7 +589,7 @@
     },
     {
       "path": "select-results.py",
-      "sha256": "eede72f00999dae297bfd46c25c5078c0aff2dd8d1f75cc8ca2db999dfa4ab26"
+      "sha256": "213b88c13df8f73332526ff9705cd35fe813307299b2cefedeb670c37532390b"
     }
   ]
 }

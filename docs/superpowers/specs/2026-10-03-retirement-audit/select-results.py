@@ -10,7 +10,7 @@ for f in sorted(p.glob('*-seeds.csv')):
 keys=[(r['case'],r['seed']) for r in rows]
 assert len(keys)==len(set(keys)), 'Duplicate case/seed rows'
 with (p/'selected-seeds.csv').open('w') as stream:
- w=csv.DictWriter(stream,fieldnames=rows[0].keys());w.writeheader();w.writerows(rows)
+ w=csv.DictWriter(stream,fieldnames=rows[0].keys(),lineterminator='\n');w.writeheader();w.writerows(rows)
 # Use package summarizer against selected output directory, preserving its logic.
 script=(Path(__file__).parent/'native/summarize.py').read_text().replace('p=Path(__file__).parent','p=Path('+repr(str(p.resolve()))+')')
 exec(compile(script,'native/summarize.py','exec'),{'__file__':str(Path(__file__).resolve())})

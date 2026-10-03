@@ -23,7 +23,7 @@ for r in rows:
  r['final10_imitator_fraction']=r['last10_imitator_events']/r['last10_events'] if r['last10_events'] else 0
  r['post_last10_target_mode_rounds']=sum(int(x['mode10'])==elig for x in ts[-10:])
 with open('seeds_enriched.csv','w') as f:
- w=csv.DictWriter(f,fieldnames=rows[0].keys());w.writeheader();w.writerows(rows)
+ w=csv.DictWriter(f,fieldnames=rows[0].keys(),lineterminator='\n');w.writeheader();w.writerows(rows)
 summary=[]
 for case in dict.fromkeys(r['case'] for r in rows):
  rr=[r for r in rows if r['case']==case]
@@ -32,9 +32,9 @@ for case in dict.fromkeys(r['case'] for r in rows):
   q=lambda p: sv[int((len(sv)-1)*p)] if sv else ''
   summary.append(dict(case=case,metric=metric,n=len(rr),attained=len(vals),censored=len(rr)-len(vals),mean_conditional=s.mean(vals) if vals else '',sd_conditional=s.stdev(vals) if len(vals)>1 else '',min=q(0),q05=q(.05),median=s.median(vals) if vals else '',q95=q(.95),max=q(1)))
 with open('summary.csv','w') as f:
- w=csv.DictWriter(f,fieldnames=summary[0].keys());w.writeheader();w.writerows(summary)
+ w=csv.DictWriter(f,fieldnames=summary[0].keys(),lineterminator='\n');w.writeheader();w.writerows(summary)
 with open('selected_trace.csv','w') as f:
- w=csv.DictWriter(f,fieldnames=ts[0].keys());w.writeheader()
+ w=csv.DictWriter(f,fieldnames=ts[0].keys(),lineterminator='\n');w.writeheader()
  for (case,seed),ts in traces.items():
   if seed=='2001':w.writerows(ts)
 print('\n'.join(str(r) for r in summary if r['metric'] in ('first95','post95','mode_at_switch','ten_consecutive_target_mode10','final10_elig_event_fraction','final_share')))
