@@ -57,3 +57,32 @@ and host execution panics. A construction panic preserves configuration, seed an
 reason with `state_available:false`; unknown clocks/counts/accounting are null,
 never measured zeros. Execution panics export the complete available core Outcome.
 Signed ledger totals retain negative and zero contributions using precise summation.
+
+## 2026-10-03 diagnostic telemetry amendment
+
+The first workload was interrupted after 4,272 complete records because native
+Outcome did not export the binding design's nonpositive-stock frequency. Those
+original bytes, executable and provenance remain local and unchanged; no complete
+original result or judge verdict existed. A separate full rerun uses every same
+registered seed, unchanged core mechanics, configuration resolution, manifest,
+source extraction and scientific judges. No invalid session receives a replacement.
+
+Native records now add versioned `stock_diagnostics` outside unchanged Outcome.
+Initial and terminal observations read the existing shared snapshots without
+advancing the world or consuming RNG. EPM counts sovereign-capital stocks;
+provincial variants count all primitive-cell stocks. A terminal observation is
+available only when both snapshot clocks match Outcome. Construction panic and
+stale state retain unavailable/null observations with reasons.
+
+After the separate full telemetry run, produce the reproducible descriptive summary:
+
+```bash
+python3 survey/polarity/stock_diagnostics.py --manifest survey/polarity/studies.json --resolved survey/out/polarity-telemetry-resolved.json --sessions survey/out/polarity-telemetry-sessions.jsonl --output survey/out/polarity-telemetry-stock-diagnostics.json
+```
+
+The helper binds exact manifest and data hashes, authoritative complete configs,
+units, counts and clocks. It reports stock frequency as summed nonpositive stocks
+/ summed observed stocks and session frequency as sessions with any / sessions
+with an available observation. Valid and invalid end states are separate;
+unavailable observations are never measured zeros. These are endpoint frequencies,
+not period-exposure rates. Registered analysis.py judges remain byte-identical.

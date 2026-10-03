@@ -56,6 +56,27 @@ class NativeBoundaryTests(unittest.TestCase):
                     self.assertEqual(out.read_bytes(),before)
 
     @unittest.skipUnless(os.environ.get('POLARITY_BINARY'),'requires built native binary')
+    def test_actual_native_stock_diagnostics_and_resume_contract(self):
+        from stock_diagnostics import summarize
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);manifest=root/'manifest.json';out=root/'raw.jsonl';resolved=root/'resolved.json'
+            m={'schema_version':1,'arms':[{'id':'stocks','family':'ambiguity',
+                'config':{'model':'polarity','width':2,'height':2,'predator_share':0,'initial_mean':1,
+                    'initial_sd':0,'harvest_mean':-2,'harvest_sd':0,'horizon':1},'first_seed':7,'sessions':1}]}
+            manifest.write_text(json.dumps(m));binary=os.environ['POLARITY_BINARY']
+            self.assertEqual(run_native(binary,manifest,out,validate=True,resolved_out=resolved).returncode,0)
+            self.assertEqual(run_native(binary,manifest,out).returncode,0)
+            row=json.loads(out.read_text());authority=json.loads(resolved.read_text())
+            s=summarize(m,authority,[row],manifest.read_bytes(),out.read_bytes())
+            self.assertEqual(s['arms'][0]['terminal']['valid_sessions']['stock_frequency'],1)
+            self.assertEqual(run_native(binary,manifest,out).returncode,0)
+            for change in [{'nonpositive_stocks':5},{'stock_count':100},{'attempted_period':0}]:
+                broken=json.loads(json.dumps(row));broken['stock_diagnostics']['terminal'].update(change)
+                out.write_text(json.dumps(broken)+'\n');before=out.read_bytes()
+                self.assertEqual(run_native(binary,manifest,out).returncode,2)
+                self.assertEqual(out.read_bytes(),before)
+
+    @unittest.skipUnless(os.environ.get('POLARITY_BINARY'),'requires built native binary')
     def test_native_resolution_is_complete_authority_for_offline_report(self):
         from analysis import report
         with tempfile.TemporaryDirectory() as directory:

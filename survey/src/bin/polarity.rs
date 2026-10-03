@@ -86,6 +86,32 @@ fn panic_message(panic: &(dyn std::any::Any + Send)) -> String {
         .unwrap_or_else(|| "unknown panic".into())
 }
 
+fn unavailable_stock_observation(reason: &str) -> Value {
+    json!({"available":false,"nonpositive_stocks":null,"stock_count":null,
+        "periods":null,"attempted_period":null,"unavailable_reason":reason})
+}
+
+fn stock_observation(snapshot: &Value, c: &PolarityConfig, periods: u64, attempted: u64) -> Value {
+    if snapshot["periods"] != periods || snapshot["attempted_period"] != attempted {
+        return unavailable_stock_observation("snapshot clocks do not match observed state");
+    }
+    let Some(nonpositive) = snapshot["nonpositive_stocks"].as_u64() else {
+        return unavailable_stock_observation("snapshot nonpositive count unavailable");
+    };
+    let denominator = if c.provincial() {
+        u64::from(c.width) * u64::from(c.height)
+    } else if let Some(count) = snapshot["sovereign_count"].as_u64() {
+        count
+    } else {
+        return unavailable_stock_observation("snapshot sovereign count unavailable");
+    };
+    if denominator == 0 || nonpositive > denominator {
+        return unavailable_stock_observation("snapshot stock counts inconsistent");
+    }
+    json!({"available":true,"nonpositive_stocks":nonpositive,"stock_count":denominator,
+        "periods":periods,"attempted_period":attempted,"unavailable_reason":null})
+}
+
 fn execute_with<C, R>(
     arm: &str,
     seed: u64,
@@ -103,27 +129,52 @@ where
 {
     let construction =
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| construct(c.clone(), seed)));
-    let outcome = match construction {
+    let (outcome, initial_stocks, terminal_stocks) = match construction {
         Ok(result) => {
             let mut world = result.map_err(|e| format!("{e:?}"))?;
+            let initial_snapshot: Value =
+                serde_json::from_str(&world.latest_json()).map_err(|e| e.to_string())?;
+            let initial_stocks = stock_observation(&initial_snapshot, c, 0, 0);
             if let Err(panic) =
                 std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| advance(&mut world)))
             {
                 world.invalidate_after_panic(panic_message(&*panic));
             }
-            serde_json::to_value(world.outcome().ok_or("finished model omitted outcome")?)
-                .map_err(|e| e.to_string())?
+            let final_outcome = world.outcome().ok_or("finished model omitted outcome")?;
+            let terminal_snapshot: Value =
+                serde_json::from_str(&world.latest_json()).map_err(|e| e.to_string())?;
+            let terminal_stocks = stock_observation(
+                &terminal_snapshot,
+                c,
+                final_outcome.periods,
+                final_outcome.attempted_period,
+            );
+            (
+                serde_json::to_value(final_outcome).map_err(|e| e.to_string())?,
+                initial_stocks,
+                terminal_stocks,
+            )
         }
-        Err(panic) => json!({"config":c,"seed":seed,"valid":false,
+        Err(panic) => (
+            json!({"config":c,"seed":seed,"valid":false,
             "invalid_reason":format!("native construction panic: {}",panic_message(&*panic)),
             "finish_reason":"panic","state_available":false,
             "periods":null,"attempted_period":null,"sovereign_count":null,"terminal_category":null,
             "initial_predator_share":null,"predator_capital_share":null,"destruction":null,
             "signed_creation":null,"events":null,"episodes":null}),
+            unavailable_stock_observation("native construction panic; state unavailable"),
+            unavailable_stock_observation("native construction panic; state unavailable"),
+        ),
     };
     let mut resolved = serde_json::to_value(c).map_err(|e| e.to_string())?;
     resolved["model"] = json!("polarity");
-    Ok(json!({"arm":arm,"seed":seed,"config":resolved,"outcome":outcome,"manifest_sha256":hash}))
+    let diagnostics = json!({"schema_version":1,
+        "unit":if c.provincial() {"primitive_cell_stocks"} else {"sovereign_capital_stocks"},
+        "initial":initial_stocks,"terminal":terminal_stocks});
+    Ok(
+        json!({"arm":arm,"seed":seed,"config":resolved,"outcome":outcome,"manifest_sha256":hash,
+        "stock_diagnostics":diagnostics}),
+    )
 }
 
 fn valid_outcome(row: &Value, resolved: &Value) -> bool {
@@ -246,6 +297,74 @@ fn valid_outcome(row: &Value, resolved: &Value) -> bool {
             && o["terminal_category"].is_null()
             && o["invalid_reason"].as_str().is_some_and(|s| !s.is_empty())
     }
+}
+
+fn valid_stock_diagnostics(row: &Value, resolved: &Value) -> bool {
+    let d = &row["stock_diagnostics"];
+    let provincial =
+        ["two_level", "overextension"].contains(&resolved["variant"].as_str().unwrap_or(""));
+    let unit = if provincial {
+        "primitive_cell_stocks"
+    } else {
+        "sovereign_capital_stocks"
+    };
+    if d["schema_version"] != 1 || d["unit"] != unit {
+        return false;
+    }
+    for phase in ["initial", "terminal"] {
+        let observation = &d[phase];
+        if observation["available"] == false {
+            if row["outcome"]["valid"] == true
+                || !observation["unavailable_reason"]
+                    .as_str()
+                    .is_some_and(|s| !s.is_empty())
+                || [
+                    "nonpositive_stocks",
+                    "stock_count",
+                    "periods",
+                    "attempted_period",
+                ]
+                .iter()
+                .any(|k| !observation[k].is_null())
+            {
+                return false;
+            }
+            continue;
+        }
+        if observation["available"] != true || !observation["unavailable_reason"].is_null() {
+            return false;
+        }
+        let expected_count = if phase == "initial" || provincial {
+            resolved["width"].as_u64().unwrap() * resolved["height"].as_u64().unwrap()
+        } else {
+            row["outcome"]["sovereign_count"].as_u64().unwrap_or(0)
+        };
+        let (Some(n), Some(count)) = (
+            observation["nonpositive_stocks"].as_u64(),
+            observation["stock_count"].as_u64(),
+        ) else {
+            return false;
+        };
+        if count == 0 || count != expected_count || n > count {
+            return false;
+        }
+        let expected_periods = if phase == "initial" {
+            json!(0)
+        } else {
+            row["outcome"]["periods"].clone()
+        };
+        let expected_attempted = if phase == "initial" {
+            json!(0)
+        } else {
+            row["outcome"]["attempted_period"].clone()
+        };
+        if observation["periods"] != expected_periods
+            || observation["attempted_period"] != expected_attempted
+        {
+            return false;
+        }
+    }
+    true
 }
 
 fn existing(rows: Vec<Value>, hash: &str) -> Result<BTreeSet<(String, u64)>, String> {
@@ -373,6 +492,7 @@ fn run() -> Result<(), String> {
             || seed - first >= n
             || row["config"] != arm["resolved_config"]
             || !valid_outcome(row, &arm["resolved_config"])
+            || !valid_stock_diagnostics(row, &arm["resolved_config"])
         {
             return Err("existing raw session violates resolved manifest contract".into());
         }
@@ -475,6 +595,14 @@ mod tests {
         assert_eq!(construction["outcome"]["state_available"], false);
         assert_eq!(construction["outcome"]["periods"], Value::Null);
         assert_eq!(construction["outcome"]["seed"], 7);
+        assert_eq!(
+            construction["stock_diagnostics"]["initial"]["available"],
+            false
+        );
+        assert_eq!(
+            construction["stock_diagnostics"]["terminal"]["nonpositive_stocks"],
+            Value::Null
+        );
         assert!(valid_outcome(&construction, &construction["config"]));
         let running = execute_with("a", 7, &c, "hash", PolarityWorld::new, |world| {
             world.run(1);
@@ -488,6 +616,125 @@ mod tests {
         assert!(running["outcome"]["episodes"].is_array());
         assert_eq!(running["outcome"]["seed"], 7);
         assert!(valid_outcome(&running, &running["config"]));
+    }
+    #[test]
+    fn terminal_stock_diagnostics_count_signed_floor_and_rejected_stocks_directly() {
+        for policy in ["signed", "floor_zero", "reject_nonpositive"] {
+            let c = config(&json!({"model":"polarity","width":2,"height":2,
+                "predator_share":0,"initial_mean":1,"initial_sd":0,
+                "harvest_mean":-2,"harvest_sd":0,"horizon":1,
+                "resource_policy":policy}))
+            .unwrap();
+            let row = execute("stocks", 7, &c, "hash").unwrap();
+            assert_eq!(row["stock_diagnostics"]["initial"]["nonpositive_stocks"], 0);
+            assert_eq!(
+                row["stock_diagnostics"]["terminal"]["nonpositive_stocks"],
+                4
+            );
+            assert_eq!(row["stock_diagnostics"]["terminal"]["stock_count"], 4);
+            assert_eq!(
+                row["stock_diagnostics"]["terminal"]["periods"],
+                row["outcome"]["periods"]
+            );
+            assert_eq!(
+                row["stock_diagnostics"]["terminal"]["attempted_period"],
+                row["outcome"]["attempted_period"]
+            );
+        }
+    }
+    #[test]
+    fn provincial_stock_diagnostics_use_primitive_cells_as_denominator() {
+        let c = config(&json!({"model":"polarity","variant":"two_level",
+            "width":2,"height":2,"predator_share":0,"horizon":1}))
+        .unwrap();
+        let row = execute("province", 7, &c, "hash").unwrap();
+        assert_eq!(row["stock_diagnostics"]["unit"], "primitive_cell_stocks");
+        assert_eq!(row["stock_diagnostics"]["terminal"]["stock_count"], 4);
+    }
+    #[test]
+    fn diagnostics_observation_preserves_direct_core_outcome_and_fingerprint() {
+        let c = config(&json!({"model":"polarity","width":2,"height":2,
+            "predator_share":0,"horizon":3,"periods_per_tick":2}))
+        .unwrap();
+        let mut direct = PolarityWorld::new(c.clone(), 7).unwrap();
+        while !direct.finished() {
+            direct.run(1);
+        }
+        let expected_fingerprint = direct.fingerprint();
+        let row = execute_with("same", 7, &c, "hash", PolarityWorld::new, |world| {
+            while !world.finished() {
+                world.run(1);
+            }
+            assert_eq!(world.fingerprint(), expected_fingerprint);
+        })
+        .unwrap();
+        assert_eq!(
+            row["outcome"],
+            serde_json::to_value(direct.outcome().unwrap()).unwrap()
+        );
+        assert_eq!(row["stock_diagnostics"]["schema_version"], 1);
+    }
+    #[test]
+    fn diagnostics_preserve_all_six_preset_outcomes_and_fingerprints() {
+        for preset in sugarscape_core::polarity::presets() {
+            let ModelConfig::Polarity(c) = preset.config else {
+                unreachable!()
+            };
+            let mut direct = PolarityWorld::new(c.clone(), 7).unwrap();
+            while !direct.finished() {
+                direct.run(1);
+            }
+            let expected_fingerprint = direct.fingerprint();
+            let row = execute_with(preset.id, 7, &c, "hash", PolarityWorld::new, |world| {
+                while !world.finished() {
+                    world.run(1);
+                }
+                assert_eq!(world.fingerprint(), expected_fingerprint, "{}", preset.id);
+            })
+            .unwrap();
+            assert_eq!(
+                row["outcome"],
+                serde_json::to_value(direct.outcome().unwrap()).unwrap(),
+                "{}",
+                preset.id
+            );
+            assert!(valid_stock_diagnostics(&row, &row["config"]));
+            if !c.provincial() {
+                assert_eq!(
+                    row["stock_diagnostics"]["terminal"]["stock_count"],
+                    row["outcome"]["sovereign_count"]
+                );
+            }
+        }
+    }
+    #[test]
+    fn stale_snapshot_diagnostics_are_explicitly_unavailable() {
+        let c = PolarityConfig::default();
+        let snapshot =
+            json!({"periods":0,"attempted_period":0,"nonpositive_stocks":0,"sovereign_count":100});
+        let observed = stock_observation(&snapshot, &c, 0, 1);
+        assert_eq!(observed["available"], false);
+        assert_eq!(observed["nonpositive_stocks"], Value::Null);
+    }
+    #[test]
+    fn resume_stock_diagnostics_reject_bad_counts_and_clocks() {
+        let c = config(
+            &json!({"model":"polarity","width":2,"height":2,"predator_share":0,"horizon":1}),
+        )
+        .unwrap();
+        let row = execute("stocks", 7, &c, "hash").unwrap();
+        assert!(valid_stock_diagnostics(&row, &row["config"]));
+        for change in [
+            json!({"nonpositive_stocks":5}),
+            json!({"stock_count":100}),
+            json!({"attempted_period":0}),
+        ] {
+            let mut corrupted = row.clone();
+            for (key, value) in change.as_object().unwrap() {
+                corrupted["stock_diagnostics"]["terminal"][key] = value.clone();
+            }
+            assert!(!valid_stock_diagnostics(&corrupted, &corrupted["config"]));
+        }
     }
     #[test]
     fn duplicate_arm_ids_are_rejected_before_execution() {
