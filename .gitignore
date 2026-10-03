@@ -38,3 +38,6 @@ survey/out/results-*.json
 
 # Emergent polarity raw sessions, resolved authority and run logs remain local
 survey/out/polarity-*
+
+# GeoSim raw sessions, reference dependencies and execution receipts stay local
+survey/out/geosim-*
