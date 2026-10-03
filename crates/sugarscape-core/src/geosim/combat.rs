@@ -75,18 +75,14 @@ pub fn losses(
     fraction: f64,
     basis: DamageBasis,
 ) -> [f64; 2] {
-    std::array::from_fn(|side| {
-        if actions[1 - side] {
-            fraction
-                * if basis == DamageBasis::OpponentProjected {
-                    projected[1 - side]
-                } else {
-                    commitments[side]
-                }
-        } else {
-            0.0
-        }
-    })
+    losses_with_incidence(
+        actions,
+        commitments,
+        projected,
+        fraction,
+        basis,
+        DamageIncidence::AttackedParty,
+    )
 }
 #[cfg(test)]
 mod tests {

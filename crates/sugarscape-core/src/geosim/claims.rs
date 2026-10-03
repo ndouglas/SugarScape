@@ -7,6 +7,43 @@ pub(crate) struct Claim {
     pub attacker: usize,
 }
 impl GeosimWorld {
+    fn prospective_owner_changes(
+        &self,
+        loser: StateId,
+        target: usize,
+        before_loser: &[usize],
+    ) -> std::collections::BTreeSet<usize> {
+        let mut changed = std::collections::BTreeSet::from([target]);
+        if target == loser.capital_cell {
+            if before_loser.len() > 1 {
+                changed.extend(before_loser.iter().copied().filter(|&cell| {
+                    cell != target || self.config.capital_capture == CapitalCapture::CollapseOnly
+                }));
+            }
+        } else {
+            let mut reached = std::collections::BTreeSet::new();
+            let mut pending = vec![loser.capital_cell];
+            while let Some(cell) = pending.pop() {
+                if !reached.insert(cell) {
+                    continue;
+                }
+                for next in super::territory::adjacent(&self.config, cell) {
+                    if next != target && self.cells[next].owner == loser && !reached.contains(&next)
+                    {
+                        pending.push(next);
+                    }
+                }
+            }
+            changed.extend(
+                before_loser
+                    .iter()
+                    .copied()
+                    .filter(|&cell| cell != target && !reached.contains(&cell)),
+            );
+        }
+        changed
+    }
+
     fn release(&mut self, cell: usize) -> StateId {
         self.cells[cell].next_generation += 1;
         let id = StateId {
@@ -55,13 +92,16 @@ impl GeosimWorld {
                 self.log_event("stale_claim", claim.states.to_vec(), claim.path.to_vec());
                 continue;
             }
-            if [agent, target].iter().any(|id| locked.contains(id)) {
+            let before_winner = self.members[&winner].clone();
+            let before_loser = self.members[&loser].clone();
+            let prospective_changes = self.prospective_owner_changes(loser, target, &before_loser);
+            if locked.contains(&agent)
+                || prospective_changes.iter().any(|cell| locked.contains(cell))
+            {
                 self.ledger.locked_claims += 1;
                 self.log_event("locked_claim", claim.states.to_vec(), claim.path.to_vec());
                 continue;
             }
-            let before_winner = self.members[&winner].clone();
-            let before_loser = self.members[&loser].clone();
             let mut changed = vec![target, winner.capital_cell, loser.capital_cell];
             if target == loser.capital_cell {
                 let old = self.states.remove(&loser).unwrap();
@@ -214,6 +254,40 @@ mod tests {
         assert_eq!(w.retired.iter().filter(|&&s| s == states[1]).count(), 1);
         assert_eq!(w.ledger.stale_claims, 1);
         assert!(!w.states.contains_key(&states[1]));
+    }
+
+    #[test]
+    fn later_claim_cannot_release_a_province_locked_by_an_earlier_claim() {
+        let mut w = prescribed(&[0, 0, 0, 4, 4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7], 5);
+        let a = w.cells[0].owner;
+        let b = w.cells[4].owner;
+        let c = w.cells[7].owner;
+        let claims = vec![
+            Claim {
+                states: [a, b],
+                path: [2, 3],
+                attacker: 0,
+            },
+            Claim {
+                states: [a, c],
+                path: [2, 7],
+                attacker: 1,
+            },
+        ];
+        let seed = (0..1000)
+            .find(|&seed| {
+                let mut order = [0, 1];
+                super::super::world::shuffle(&mut order, &mut crate::rng::seeded(seed));
+                order == [0, 1]
+            })
+            .unwrap();
+        w.rng = crate::rng::seeded(seed);
+
+        w.apply_claims(claims).unwrap();
+
+        assert_eq!(w.cells[3].owner, a);
+        assert_eq!(w.ledger.locked_claims, 1);
+        assert_eq!(w.ledger.conquests, 1);
     }
 }
 #[cfg(test)]
