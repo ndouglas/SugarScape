@@ -1,0 +1,36 @@
+# Reading for Minds P3 protection
+
+**Date:** 2026-10-02  
+**Purpose:** choose a discriminating first protection mechanism after Minds 9. This is a focused evidence review, not a systematic review. Cached PDFs listed below were read from the primary workspace; they are ignored local research assets, not files carried into this design worktree. See the [proposed design](../superpowers/specs/2026-10-02-minds-protection-design.md).
+
+## Evidence and design consequences
+
+**Emery & Clayton (2001), prospective caching.** Compared observed and private initial caching, followed by recovery in private after a three-hour interval with old and new trays available. The experienced observer/pilferer group was tested at Davis and Cambridge using the same birds, so those rounds were not independent samples. Interleaved observed/private episodes tested whether relocation tracked a particular caching history rather than general recent observation. These motivate delayed relocation, distinct exposure histories and separate experience controls; P3 supplies a controller and does not claim to reproduce experience-dependent learning. A 2002 erratum exists; its contents could not be verified from the accessible publisher preview. Do not use the original numerical effects as calibration pending that check. [Article](https://doi.org/10.1038/35106560), [erratum](https://doi.org/10.1038/416349a). Local reference copy: `papers/caching/emery-clayton-2001-nature-prospective-caching.pdf`.
+
+**Dally, Emery & Clayton (2004), shade.** Nine experienced hand-raised western scrub-jays received well-lit/shaded trays, observed/private caching and private recovery. The reported preference for shade appeared under observation. Recovery was low, limiting recovery/re-caching analysis; the experiment did not directly demonstrate that shade improved a pilferer's recovery accuracy or the owner's survival. Therefore shade motivates a later perceptual/affordance experiment, not a calibrated theft-probability multiplier in P3. [Article](https://doi.org/10.1098/rsbl.2004.0190). Local reference copy: `papers/caching/dally-emery-clayton-2004-prsb-hiding-food-in-the-shade.pdf`.
+
+**Dally, Emery & Clayton (2006), who watched when.** Manipulated social relationships and the identity of observers across caching/recovery. An observer-control experiment addressed whether the observer's current behavior could cue the storer. It motivates identity/history controls once identity-specific memory is introduced. Our first P3 remembers visible presence at a source, not who knows which cache; it cannot inherit the paper's stronger interpretation simply by exposing researcher ground truth to an agent. [Article](https://doi.org/10.1126/science.1126539). Local reference copy: `papers/caching/dally-emery-clayton-2006-science-who-was-watching-when.pdf`.
+
+**van der Vaart, Verbrugge & Hemelrijk (2012), computational alternative.** A virtual bird with a memory system, a previously learned preference and stress assumptions reproduced several reported re-caching patterns without mental-state attribution. This is a mechanistic counterexample, not empirical confirmation of its stress assumptions. P3 should compare simple sufficient controllers and distinguish matching a behavior from identifying its cause. The indiscriminate relocation policy is deliberately simpler than this published model. [Article](https://doi.org/10.1371/journal.pone.0032904).
+
+**Thom & Clayton (2013), discriminating test.** Eight western scrub-jays cached marked food during observed and private sessions in the same tray, then could move it to another tray. Previously observed items were preferentially retrieved/re-cached. A separate sham-versus-unexpected-cache-loss comparison found no increased subsequent caching, challenging a central prediction of the stress account. This motivates food/history-specific measurement, separating new caching from re-caching, and testing alternatives using predictions rather than labels. Small samples and reported one-tailed replication analyses limit how strongly to generalize; the study does not establish a universal cognitive explanation. P3 initially uses distinct source sites, so it does not reproduce the same-tray discrimination. [Article](https://doi.org/10.1371/journal.pone.0052936).
+
+**Amodio et al. (2021), reliability caution.** Five Eurasian-jay experiments investigated visual perspective/desire cues and included attempts to replicate earlier effects. They found little supporting evidence; the discussion considers low power and changes in reused, older birds. This is a different species and set of tasks from the 2001 scrub-jay re-caching study. Carry the methodological caution into pre-registration, complete reporting and opportunity/motivation measurements; do not call it a direct failed replication of that study. [Article](https://doi.org/10.7554/eLife.69647), [full-text repository](https://europepmc.org/articles/PMC8536255).
+
+The locally cached **Amodio, Brea, Farrar, Ostojić & Clayton (2021)** paper on two future-caching hypotheses is a different article about future food availability. Its null result does not establish a null social-protection effect. [Article](https://doi.org/10.1038/s41598-020-80515-7).
+
+## Research still to cover
+
+P3's supplied exposure rule leaves learning from actual theft experience untested. Later work should distinguish cue association, event-specific memory and observer-identity knowledge; independently manipulate access, visibility, observer memory and motivation; and measure actual food/survival benefit rather than protective appearance alone.
+
+Ecological psychology needs its own evidence review before C2: agent-relative affordances, perception–action calibration and exploration under changed abilities/load, rather than labelling any door an affordance. Private communication, stigmergy, collective memory, helping, distributed discovery and oversight similarly require separate primary-source reviews and controls for supplied knowledge and incentives. No incident-specific fidelity claim is made here; identifying and sourcing the precise motivating incident remains an integration-stage prerequisite.
+
+## Code seams checked
+
+- `minds/caching/watching.rs`: current observers remember deposits; the owner currently does not know a deposit was seen. Four lattice sight lines and opaque walls constrain observation.
+- `minds/caching/mod.rs`: scatter digging returns food for the caller to credit; burial subtracts holdings and charges cost. Retrieval is not new harvest.
+- `minds/caching/fates.rs`: optional FIFO records end on `Dug`, pilfering or death, and can freeze at their cap. They do not track original food through relocation.
+- `minds/spatial_hoarding/delivery.rs`: ordinary holdings with clamped intent provide a useful transport precedent. P3 excludes larders rather than assuming their transfer contracts equal scatter digging.
+- `rules/movement.rs`: arrival order and legal movement must remain explicit when a protective action replaces ordinary gathering.
+
+These inspections motivate a small dedicated relocation action and survey cohort accounting. They do not imply the existing modules already implement P3.

@@ -5,8 +5,9 @@
 their mechanisms, empirical targets and implementation plans require individual designs.
 **Builds on:** [Minds](../../studies/2026-09-27-minds.md) and
 [swarm coordination](../../studies/2026-09-27-swarm-coordination.md).
-**Immediate next step:** Minds 9 remains the spatial evolution of hoarding. Protection and
-deception follow; behavior trees and HTN retain their place after that campaign.
+**Immediate next step:** Minds 9 is complete. Review the
+[P3 costly re-caching design](2026-10-02-minds-protection-design.md); deception follows.
+Behavior trees and HTN retain their place after the pilfering campaign.
 
 ## Purpose and scope
 
@@ -70,9 +71,10 @@ build every direction. They form a dependency map, not a ten-step implementation
 ### C1. Finish the pilfering campaign
 
 **Question:** when do heritable hoarding, defense, protection and deception pay?
-**Foundation:** Minds 1–8; Minds 9 is next under the existing program.
+**Foundation:** Minds 1–9, including completed spatial hoarding and paid-defense comparisons.
 **Work:** spatial heritable larders, defense, concealment, re-caching and misleading observers.
-**First experiments:** those selected by the Minds 9 and subsequent protection/deception designs.
+**First experiments:** Minds 9 is complete; the next proposed experiment is costly,
+cache-specific re-caching under the [P3 design](2026-10-02-minds-protection-design.md).
 **Comparisons:** stumbling versus watching; short versus long observational memory; cue-based
 protection versus an explicit estimate of what others saw.
 **Evidence to report:** individual and cohort outcomes, cache fate, travel and displaced harvest,
