@@ -3836,3 +3836,5 @@ and [execution provenance](docs/superpowers/specs/2026-10-03-geosim-provenance.j
 Measurements remain bound to the preserved original source/binary; the
 [recorder amendment](docs/superpowers/specs/2026-10-03-geosim-postmeasurement-recorder-amendment.md)
 and integrated builds have separate identities.
+
+Integration and deployment evidence is retained in the [publication receipt](docs/superpowers/specs/2026-10-03-geosim-publication.md).

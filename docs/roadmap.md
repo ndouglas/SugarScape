@@ -357,7 +357,7 @@ Fresh local Rust/native/Python/release WASM/web/typecheck gates, independent
 whole-branch review and rereview, integrated CI and deployed Pages smoke checks passed.
 See the [publication receipt](superpowers/specs/2026-10-03-emergent-polarity-publication.md).
 
-## Milestone 37: GeoSim war sizes (measured; publication pending)
+## Milestone 37: GeoSim war sizes (published)
 
 `geosim` reconstructs technological shocks, territorial conquest, contingent front
 commitments and connected war clusters in the shared native/WASM engine. Five
@@ -417,7 +417,7 @@ retained in history. Final-head CI/Pages and deployed smoke remain publication g
 - **Calvano, Calzolari, Denicolò and Pastorello's algorithmic collusion** (and its critics: Asker, Fershtman & Pakes; Lambin; Epivent & Lambin; den Boer, Meylahn & Schinkel; Eschenbaum, Mellgren & Zahn): done (Milestone 34).
 - **Banchio & Skrzypacz’s Q-learning auctions**: done (Milestone 35); baseline and feedback direction hold, four extension/endpoint criteria fail, and patient three-bidder coverage is inconclusive.
 - **Cederman emergent polarity and provincial variants**: measured (Milestone 36; published). 572 arms / 28,520 sessions retained; 45 Compatible, 24 Incompatible, 3 Unresolved; Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. See [findings](superpowers/specs/2026-10-02-emergent-polarity-findings.md). GeoSim war-size findings are measured separately (Milestone 37).
-- **Cederman GeoSim war sizes**: measured (Milestone 37; publication pending). 37 arms / 1,490 attempts: 1,486 complete, 4 invalid; 10 conditional Unresolved, 1 Incompatible, all source-equivalence and six mechanism slots Unresolved. [Findings](superpowers/specs/2026-10-03-geosim-findings.md).
+- **Cederman GeoSim war sizes**: published (Milestone 37). 37 arms / 1,490 attempts: 1,486 complete, 4 invalid; 10 conditional Unresolved, 1 Incompatible, all source-equivalence and six mechanism slots Unresolved. [Findings](superpowers/specs/2026-10-03-geosim-findings.md).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.
