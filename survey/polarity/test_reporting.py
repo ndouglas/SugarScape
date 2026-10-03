@@ -2,7 +2,40 @@
 import hashlib
 import json
 import unittest
-from analysis import report, predictive_mean, predictive_categories
+from analysis import report as actual_report, predictive_mean, predictive_categories
+
+
+def resolved_fixture(manifest, raw):
+    """Synthetic authority for fixtures; product resolution comes from native Rust."""
+    return {'schema_version':1,'manifest_sha256':hashlib.sha256(raw).hexdigest(),
+        'arms':[{'id':a['id'],'config':{'model':'polarity','resource_policy':'signed',
+            'horizon':1,'stop_at_hegemony':True,'width':10,'height':10,**a['config']}} for a in manifest['arms']]}
+
+
+def complete_fixture(manifest, raw, records):
+    authority=resolved_fixture(manifest,raw)
+    expected={a['id']:a['config'] for a in authority['arms']}
+    records=json.loads(json.dumps(records))
+    for row in records:
+        row['config']={**expected.get(row['arm'],expected[authority['arms'][0]['id']]),**row.get('config',{})}
+        out=row.setdefault('outcome',{})
+        out.setdefault('config',{k:v for k,v in row['config'].items() if k!='model'})
+        out.setdefault('seed',row['seed'])
+        out.setdefault('attempted_period',out.get('periods',1))
+        out.setdefault('finish_reason','horizon' if out.get('valid') else 'invalid')
+        out.setdefault('invalid_reason',None if out.get('valid') else 'invalid')
+        out.setdefault('terminal_category','two' if out.get('valid') else None)
+        out.setdefault('destruction',0);out.setdefault('signed_creation',0);out.setdefault('episodes',[])
+        out.setdefault('events',{})
+        for key in ['attacks','dd_encounters','conquests','capital_collapses','disconnections','revolts',
+            'stale_claims','locked_claims','path_collisions','double_successes','destruction',
+            'signed_creation','harvest','taxes','transfers','clipping']:out['events'].setdefault(key,0)
+    return authority,records
+
+
+def report(manifest,source,records,raw):
+    authority,records=complete_fixture(manifest,raw,records)
+    return actual_report(manifest,source,records,raw,authority)
 
 
 class ReportingTests(unittest.TestCase):
@@ -161,5 +194,52 @@ class ReportingTests(unittest.TestCase):
         incomplete=report(m,s,r[:2],b)
         remaining=[f for f in incomplete['rows'] if f['family']=='selection']
         self.assertEqual([f['measured']['holm_p'] if f['measured'] else None for f in remaining],[.04,None])
+
+
+    def test_uniform_wrong_omitted_default_and_missing_model_are_unresolved(self):
+        m,b,r,s=self.source_fixture();authority,r=complete_fixture(m,b,r)
+        for row in r:row['config']['resource_policy']='floor_zero'
+        self.assertTrue(all(a['verdict']=='Unresolved' for a in actual_report(m,s,r,b,authority)['arms']))
+        authority,r=complete_fixture(m,b,self.source_fixture()[2])
+        for row in r:del row['config']['model']
+        self.assertTrue(all(a['verdict']=='Unresolved' for a in actual_report(m,s,r,b,authority)['arms']))
+
+    def test_missing_resolved_field_and_missing_authority_are_unresolved(self):
+        m,b,r,s=self.source_fixture();authority,r=complete_fixture(m,b,r)
+        for row in r:del row['config']['resource_policy']
+        self.assertTrue(all(a['verdict']=='Unresolved' for a in actual_report(m,s,r,b,authority)['arms']))
+        self.assertTrue(all(a['verdict']=='Unresolved' for a in actual_report(m,s,r,b)['arms']))
+
+    def test_embedded_seed_config_clocks_status_and_category_are_checked(self):
+        m,b,r,s=self.source_fixture();authority,rows=complete_fixture(m,b,r)
+        changes=[{'seed':999},{'config':{}},{'periods':0,'attempted_period':1},
+            {'valid':'true'},{'terminal_category':'one'},{'finish_reason':'hegemony'}]
+        for change in changes:
+            with self.subTest(change=change):
+                changed=json.loads(json.dumps(rows));changed[0]['outcome'].update(change)
+                out=actual_report(m,s,changed,b,authority)
+                self.assertEqual(out['arms'][0]['verdict'],'Unresolved')
+                self.assertEqual(out['raw_record_count'],4)
+
+    def test_construction_panic_retains_unknown_state_without_measured_zero(self):
+        m,b,r=self.fixture();authority,r=complete_fixture(m,b,r)
+        out=r[0]['outcome'];out.update(valid=False,finish_reason='panic',
+            invalid_reason='native construction panic: injected',state_available=False)
+        for key in ['periods','attempted_period','sovereign_count','terminal_category',
+            'initial_predator_share','predator_capital_share','destruction','signed_creation','events','episodes']:out[key]=None
+        result=actual_report(m,{},r,b,authority)
+        self.assertEqual(result['arms'][0]['invalid_sessions'],1)
+        self.assertEqual(result['arms'][0]['category_denominator'],1)
+        self.assertEqual(result['raw_records'][0]['outcome']['periods'],None)
+        self.assertNotIn('construction panic availability mismatch',result['arms'][0]['issues'])
+
+    def test_signed_ledger_totals_preserve_negative_zero_and_record_order(self):
+        m,b,r=self.fixture()
+        r[0]['outcome']['events']={'harvest':-10,'taxes':-4,'transfers':-3,'conquests':0}
+        r[1]['outcome']['events']={'harvest':4,'taxes':4,'transfers':1,'conquests':0}
+        forward=report(m,{},r,b)['arms'][0]['events_totals']
+        reverse=report(m,{},list(reversed(r)),b)['arms'][0]['events_totals']
+        self.assertEqual({k:forward[k] for k in ['harvest','taxes','transfers','conquests']},{'harvest':-6,'taxes':0,'transfers':-2,'conquests':0})
+        self.assertEqual(reverse,forward)
 
 if __name__=='__main__':unittest.main()

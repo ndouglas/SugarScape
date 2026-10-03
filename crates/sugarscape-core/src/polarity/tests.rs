@@ -981,3 +981,33 @@ mod review_round1 {
         assert!(w.pending.is_empty());
     }
 }
+
+#[cfg(test)]
+mod panic_export {
+    use super::*;
+    #[test]
+    fn panic_inside_second_batched_period_keeps_first_completed_and_partial_ledger() {
+        let c = PolarityConfig {
+            predator_share: 0.0,
+            initial_sd: 0.0,
+            harvest_mean: 2.0,
+            harvest_sd: 0.0,
+            horizon: 3,
+            periods_per_tick: 3,
+            ..Default::default()
+        };
+        let mut w = PolarityWorld::new(c, 7).unwrap();
+        w.panic_on_period = Some(2);
+        w.run(1);
+        let o = w.outcome().unwrap();
+        assert!(!o.valid);
+        assert_eq!((o.periods, o.attempted_period), (1, 2));
+        assert_eq!(o.events.harvest, 400.0);
+        assert_eq!(o.finish_reason, "panic");
+        assert!(o.invalid_reason.as_ref().unwrap().contains("injected"));
+        assert_eq!(o.seed, 7);
+        let frozen = o.clone();
+        w.invalidate_after_panic("later host panic".into());
+        assert_eq!(w.outcome().unwrap(), &frozen);
+    }
+}

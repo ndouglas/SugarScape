@@ -8,9 +8,9 @@ From the repository root:
 
 ```bash
 cargo build --release --manifest-path survey/Cargo.toml --bin polarity
-python3 survey/polarity/run.py --validate --manifest survey/polarity/studies.json --out survey/out/polarity-sessions.jsonl
+python3 survey/polarity/run.py --validate --resolved-out survey/out/polarity-resolved.json --manifest survey/polarity/studies.json --out survey/out/polarity-sessions.jsonl
 python3 survey/polarity/run.py --manifest survey/polarity/studies.json --out survey/out/polarity-sessions.jsonl
-python3 survey/polarity/analysis.py --manifest survey/polarity/studies.json --source docs/superpowers/specs/2026-10-02-emergent-polarity-source-figures.json --sessions survey/out/polarity-sessions.jsonl --output survey/out/polarity-findings
+python3 survey/polarity/analysis.py --resolved survey/out/polarity-resolved.json --manifest survey/polarity/studies.json --source docs/superpowers/specs/2026-10-02-emergent-polarity-source-figures.json --sessions survey/out/polarity-sessions.jsonl --output survey/out/polarity-findings
 ```
 
 The wrapper's default binary is `survey/target/release/polarity`. Pass `--binary`
@@ -42,3 +42,18 @@ limits. Python version and analysis draws are recorded in results. Mean/count
 compatibility is not equivalence; source and adapted critic protocols remain
 separate. Generated sessions/results stay in ignored `survey/out/` until the
 findings note deliberately commits the reviewable summary.
+
+Native `--resolved-out PATH` exports every fully resolved arm with the exact manifest
+SHA during validation, before measurement. Preserve that file for analysis and pass
+it with `--resolved`; missing or mismatched resolution leaves arms unresolved.
+Python does not reconstruct Rust defaults. Reports require exact outer resolved
+configs and consistent embedded Outcome config/seed, clocks, finish/status, category
+and accounting. Resume rejects inconsistent records without modifying the file;
+valid invalid-session records remain completed keys and are never replaced.
+
+Core catches period panics while retaining its live completed/attempted clocks,
+partial-period ledger and episodes. The native boundary also catches construction
+and host execution panics. A construction panic preserves configuration, seed and
+reason with `state_available:false`; unknown clocks/counts/accounting are null,
+never measured zeros. Execution panics export the complete available core Outcome.
+Signed ledger totals retain negative and zero contributions using precise summation.

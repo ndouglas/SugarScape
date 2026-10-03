@@ -20,6 +20,10 @@ pub struct PolarityWorld {
     pub tick: u64,
     pub stats: Stats<PolaritySnapshot>,
     pub(crate) period: u64,
+    completed: u64,
+    period_ledger_accumulated: bool,
+    #[cfg(test)]
+    pub(super) panic_on_period: Option<u64>,
     pub(crate) cells: Vec<Cell>,
     pub(crate) fronts: BTreeMap<FrontKey, Front>,
     pub(super) seed: u64,
@@ -76,6 +80,10 @@ impl PolarityWorld {
             tick: 0,
             stats: Stats::default(),
             period: 0,
+            completed: 0,
+            period_ledger_accumulated: false,
+            #[cfg(test)]
+            panic_on_period: None,
             cells,
             fronts: BTreeMap::new(),
             seed,
@@ -109,7 +117,7 @@ impl PolarityWorld {
         self.outcome
             .as_ref()
             .map(|o| o.periods)
-            .unwrap_or(self.period)
+            .unwrap_or(self.completed)
     }
     pub fn outcome(&self) -> Option<&Outcome> {
         self.outcome.as_ref()
@@ -126,7 +134,19 @@ impl PolarityWorld {
                     break;
                 }
                 let completed = self.completed_periods();
-                let one = self.period();
+                let mut one = Ledger::default();
+                self.period_ledger_accumulated = false;
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    self.period(&mut one)
+                }));
+                if let Err(panic) = result {
+                    if !self.period_ledger_accumulated {
+                        self.accumulate(&one);
+                    }
+                    self.invalidate_after_panic(panic_message(&*panic));
+                } else if self.outcome.as_ref().is_none_or(|o| o.valid) {
+                    self.completed = self.period;
+                }
                 e.add(&one);
                 count += (self.completed_periods() - completed) as u32;
             }
@@ -135,6 +155,7 @@ impl PolarityWorld {
         }
     }
     pub(super) fn accumulate(&mut self, e: &Ledger) {
+        self.period_ledger_accumulated = true;
         self.totals.add(e);
         if !self.totals.all_finite() && self.outcome.is_none() {
             self.finish(
@@ -169,6 +190,10 @@ impl PolarityWorld {
             self.events.push(event);
         }
     }
+    /// Preserve live accounting and clocks when an external host catches a panic.
+    pub fn invalidate_after_panic(&mut self, message: String) {
+        self.finish("panic", Some(message));
+    }
     pub(super) fn finish(&mut self, reason: &str, invalid: Option<String>) {
         if self.outcome.is_some() {
             return;
@@ -185,7 +210,7 @@ impl PolarityWorld {
             config: self.config.clone(),
             seed: self.seed,
             periods: if invalid.is_some() {
-                self.period.saturating_sub(1)
+                self.completed
             } else {
                 self.period
             },
@@ -290,32 +315,31 @@ impl PolarityWorld {
                 .or_insert(self.config.trust_initial);
         }
     }
-    fn period(&mut self) -> Ledger {
+    fn period(&mut self, e: &mut Ledger) {
         self.period += 1;
         self.period_locks.clear();
         self.resolved_fronts.clear();
-        let mut e = Ledger::default();
         self.update_trust();
         self.prepare();
         let caps = territory::capitals(&self.cells);
         self.aggression.clear();
         self.dyadic_aggression.clear();
         if self.config.update == Update::Sequential {
-            self.sequential(caps, &mut e);
+            self.sequential(caps, e);
             if self.outcome.is_some() {
-                self.accumulate(&e);
-                return e;
+                self.accumulate(e);
+                return;
             }
         } else {
             for actor in caps {
-                self.decide_actor(actor, &mut e);
+                self.decide_actor(actor, e);
                 if self.outcome.is_some() {
-                    self.accumulate(&e);
-                    return e;
+                    self.accumulate(e);
+                    return;
                 }
             }
             self.obligations();
-            self.paths(&mut e);
+            self.paths(e);
             let stocks: Vec<f64> = self.cells.iter().map(|c| c.stock).collect();
             let frozen = self.allocate(&stocks);
             for (&k, &v) in &frozen {
@@ -332,8 +356,8 @@ impl PolarityWorld {
                         self.period, k, self.config
                     )),
                 );
-                self.accumulate(&e);
-                return e;
+                self.accumulate(e);
+                return;
             }
             let keys: Vec<FrontKey> = self.fronts.keys().copied().collect();
             let mut damage = vec![0.0; self.cells.len()];
@@ -363,11 +387,11 @@ impl PolarityWorld {
             if self.config.victory_timing == VictoryTiming::BeforeDamage {
                 for &key in &keys {
                     if self.fronts[&key].actions.iter().any(|x| *x) {
-                        let win = self.victory(key, frozen[&key], &mut e);
+                        let win = self.victory(key, frozen[&key], e);
                         victories.insert(key, win);
                         if self.outcome.is_some() {
-                            self.accumulate(&e);
-                            return e;
+                            self.accumulate(e);
+                            return;
                         }
                     }
                 }
@@ -376,20 +400,20 @@ impl PolarityWorld {
                 cell.stock -= loss;
             }
             if !self.intermediate_valid() {
-                self.accumulate(&e);
+                self.accumulate(e);
                 if let Some(o) = &mut self.outcome {
                     o.events = self.totals.clone();
                     o.destruction = self.totals.destruction;
                     o.signed_creation = self.totals.signed_creation;
                 }
-                return e;
+                return;
             }
             if self.config.victory_timing == VictoryTiming::AfterDamage {
                 let stocks = self.cells.iter().map(|c| c.stock).collect::<Vec<_>>();
                 let values = self.allocate(&stocks);
                 for &key in &keys {
                     if self.fronts[&key].actions.iter().any(|x| *x) {
-                        let win = self.victory(key, values[&key], &mut e);
+                        let win = self.victory(key, values[&key], e);
                         victories.insert(key, win);
                         if self.outcome.is_some() {
                             break;
@@ -398,23 +422,27 @@ impl PolarityWorld {
                 }
             }
             if self.outcome.is_some() {
-                self.accumulate(&e);
-                return e;
+                self.accumulate(e);
+                return;
             }
-            self.harvest(&mut e);
+            self.harvest(e);
+            #[cfg(test)]
+            if self.panic_on_period == Some(self.period) {
+                panic!("injected period panic after harvest");
+            }
             if !self.intermediate_valid() {
-                self.accumulate(&e);
+                self.accumulate(e);
                 if let Some(o) = &mut self.outcome {
                     o.events = self.totals.clone();
                 }
-                return e;
+                return;
             }
             if self.config.victory_timing == VictoryTiming::AfterHarvest {
                 let stocks = self.cells.iter().map(|c| c.stock).collect::<Vec<_>>();
                 let values = self.allocate(&stocks);
                 for &key in &keys {
                     if self.fronts[&key].actions.iter().any(|x| *x) {
-                        let win = self.victory(key, values[&key], &mut e);
+                        let win = self.victory(key, values[&key], e);
                         victories.insert(key, win);
                         if self.outcome.is_some() {
                             break;
@@ -423,8 +451,8 @@ impl PolarityWorld {
                 }
             }
             if self.outcome.is_some() {
-                self.accumulate(&e);
-                return e;
+                self.accumulate(e);
+                return;
             }
             let mut claims = Vec::new();
             for (key, win) in victories {
@@ -438,7 +466,7 @@ impl PolarityWorld {
             }
             self.note_aggression();
             shuffle(&mut claims, &mut self.rng);
-            self.structural(&claims, &mut e);
+            self.structural(&claims, e);
         }
         for f in self.fronts.values_mut() {
             f.previous = f.actions;
@@ -447,8 +475,8 @@ impl PolarityWorld {
         }
         self.rebuild();
         self.form_coalitions();
-        self.policy(&mut e);
-        self.accumulate(&e);
+        self.policy(e);
+        self.accumulate(e);
         // Policy invalidation happens before totals were added; retain complete ledgers.
         if let Some(o) = &mut self.outcome {
             o.events = self.totals.clone();
@@ -462,7 +490,6 @@ impl PolarityWorld {
                 self.finish("horizon", None);
             }
         }
-        e
     }
     fn record(&mut self, events: Ledger, last_tick_periods: u32) {
         let caps = territory::capitals(&self.cells);
@@ -550,4 +577,12 @@ pub(super) fn discount(base: f64, n: u32) -> f64 {
         value *= base;
     }
     value
+}
+
+fn panic_message(panic: &(dyn std::any::Any + Send)) -> String {
+    panic
+        .downcast_ref::<String>()
+        .cloned()
+        .or_else(|| panic.downcast_ref::<&str>().map(|s| s.to_string()))
+        .unwrap_or_else(|| "unknown panic".into())
 }

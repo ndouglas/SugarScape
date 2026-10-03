@@ -179,7 +179,50 @@ def metric(outcomes, name):
     raise ValueError(name)
 
 
-def report(manifest, source, records, manifest_bytes):
+def outcome_issues(row, config):
+    out=row.get('outcome')
+    fields={'config','seed','periods','attempted_period','finish_reason','valid','invalid_reason',
+            'sovereign_count','terminal_category','initial_predator_share','predator_capital_share',
+            'destruction','signed_creation','events','episodes'}
+    if not isinstance(out,dict) or not fields<=out.keys():return ['incomplete outcome contract']
+    issues=[]
+    if type(out['seed']) is not int or type(row.get('seed')) is not int:issues.append('outcome seed must be integer')
+    if out['seed']!=row.get('seed') or out['config']!={k:v for k,v in config.items() if k!='model'}:
+        issues.append('embedded outcome provenance mismatch')
+    if type(out['valid']) is not bool:issues.append('outcome valid must be boolean')
+    reason=out['finish_reason'];valid=out['valid'] is True
+    if out.get('state_available') is False:
+        unavailable=fields-{'config','seed','valid','invalid_reason','finish_reason'}
+        if valid or reason!='panic' or not isinstance(out['invalid_reason'],str) or not out['invalid_reason'] or any(out[k] is not None for k in unavailable):
+            issues.append('construction panic availability mismatch')
+        return issues
+    p,a,n=out['periods'],out['attempted_period'],out['sovereign_count']
+    if any(type(v) is not int for v in [p,a,n]) or not (0<=p<=a<=config.get('horizon',-1) and a-p<=1 and 1<=n<=config.get('width',0)*config.get('height',0)):
+        issues.append('outcome clocks or count inconsistent')
+    counters={'attacks','dd_encounters','conquests','capital_collapses','disconnections','revolts',
+        'stale_claims','locked_claims','path_collisions','double_successes'}
+    signed={'destruction','signed_creation','harvest','taxes','transfers','clipping'}
+    ledger=out['events']
+    if not isinstance(ledger,dict) or not (counters|signed)<=ledger.keys() or any(
+        type(ledger.get(k)) is not int or ledger[k]<0 for k in counters) or any(
+        type(ledger.get(k)) not in [int,float] or not math.isfinite(ledger[k]) for k in signed if valid):
+        issues.append('outcome accounting unavailable or inconsistent')
+    if not isinstance(out['episodes'],list) or any(not isinstance(e,dict) for e in out['episodes']):issues.append('outcome episodes inconsistent')
+    if valid and any(type(out[k]) not in [int,float] or not math.isfinite(out[k]) for k in
+        ['initial_predator_share','predator_capital_share','destruction','signed_creation']):issues.append('outcome measures inconsistent')
+    if valid and isinstance(ledger,dict) and any(out[k]!=ledger.get(k) for k in ['destruction','signed_creation']):issues.append('outcome ledger totals inconsistent')
+    if valid:
+        try:terminal=['one','two','three_to_ten','eleven_to_ninety','ninety_one_to_hundred'][category(n)]
+        except ValueError:terminal=None
+        if out['invalid_reason'] is not None or p!=a or out['terminal_category']!=terminal or not (
+            reason=='horizon' and p==config.get('horizon') or reason=='hegemony' and n==1 and config.get('stop_at_hegemony') is True):
+            issues.append('outcome finish or category inconsistent')
+    elif reason not in ['invalid','panic'] or out['terminal_category'] is not None or not isinstance(out['invalid_reason'],str) or not out['invalid_reason']:
+        issues.append('invalid outcome status inconsistent')
+    return issues
+
+
+def report(manifest, source, records, manifest_bytes, resolved=None):
     """Retain integrity failures and mark affected comparisons unresolved."""
     import hashlib
     import sys
@@ -188,6 +231,14 @@ def report(manifest, source, records, manifest_bytes):
     seed = manifest.get('analysis_seed',2026100202)
     if draws < 1:raise ValueError('analysis_draws must be positive')
     registered={a['id']:a for a in manifest['arms']}
+    authoritative={}
+    resolution_ok=isinstance(resolved,dict) and resolved.get('schema_version')==1 and resolved.get('manifest_sha256')==expected_hash
+    if resolution_ok:
+        entries=resolved.get('arms',[])
+        authoritative={a.get('id'):a.get('config') for a in entries if isinstance(a,dict)}
+        resolution_ok=(len(authoritative)==len(entries) and set(authoritative)==set(registered) and all(
+            isinstance(authoritative[aid],dict) and authoritative[aid].get('model')=='polarity'
+            and all(authoritative[aid].get(k)==v for k,v in arm['config'].items()) for aid,arm in registered.items()))
     grouped=defaultdict(list)
     for row in records:grouped[row.get('arm','<missing arm>')].append(row)
     findings=[]; summaries=[]; clean={}; serial=0
@@ -205,17 +256,24 @@ def report(manifest, source, records, manifest_bytes):
     for aid,arm in registered.items():
         rows=grouped.get(aid,[]);issues=[]
         expected=set(range(arm['first_seed'],arm['first_seed']+arm['sessions']))
-        actual=[r.get('seed') for r in rows]
+        actual=[r.get('seed') for r in rows if type(r.get('seed')) is int and 0<=r['seed']<=2**64-1]
+        if len(actual)!=len(rows):issues.append('session seed missing or not u64 integer')
         if len(set(actual))!=len(actual):issues.append('duplicate session seeds retained')
         if set(actual)!=expected or len(rows)!=arm['sessions']:issues.append('incomplete arm or unexpected seeds')
         outcomes=[];invalid=[]
         for row in rows:
             if row.get('manifest_sha256')!=expected_hash:issues.append('manifest hash mismatch or missing')
             config=row.get('config',{})
-            if config.get('model','polarity')!='polarity':issues.append('config model mismatch')
-            if any(config.get(k)!=v for k,v in arm['config'].items() if k!='model'):issues.append('config mismatch')
+            expected_config=authoritative.get(aid) if resolution_ok else None
+            if expected_config is None:issues.append('missing or inconsistent authoritative native resolution')
+            elif config!=expected_config:issues.append('complete resolved config mismatch')
+            contract=outcome_issues(row,expected_config) if expected_config is not None else ['outcome lacks authoritative resolution']
+            issues.extend(contract)
             out=row.get('outcome',{})
-            if not out.get('valid',False):invalid.append(out.get('invalid_reason','unspecified invalidity'));continue
+            if contract or out.get('valid') is not True:
+                reason=out.get('invalid_reason') if isinstance(out,dict) else None
+                invalid.append(reason if isinstance(reason,str) and reason else 'inconsistent outcome contract' if contract else 'unspecified invalidity')
+                continue
             try:category(out.get('sovereign_count'))
             except ValueError:issues.append('invalid terminal category');invalid.append('invalid terminal category');continue
             outcomes.append(out)
@@ -234,7 +292,8 @@ def report(manifest, source, records, manifest_bytes):
         for field in ['destruction','signed_creation','periods']:
             vals=[o[field] for o in outcomes if isinstance(o.get(field),(int,float)) and math.isfinite(o[field])]
             summary[field]={'mean':sum(vals)/len(vals) if vals else None,'available_sessions':len(vals)}
-        summary['events_totals']=dict(sum((Counter(o.get('events',{})) for o in outcomes),Counter()))
+        ledger_keys={k for o in outcomes for k in o.get('events',{})}
+        summary['events_totals']={k:(sum if all(type(o.get('events',{}).get(k,0)) is int for o in outcomes) else math.fsum)(o.get('events',{}).get(k,0) for o in outcomes) for k in sorted(ledger_keys)}
         summary['episode_count']=sum(len(o.get('episodes',[])) for o in outcomes)
         episodes=[e for o in outcomes for e in o.get('episodes',[])]
         summary['episode_end_causes']=dict(Counter(e.get('end_cause',e.get('end_reason','unreported')) for e in episodes))
@@ -433,9 +492,9 @@ def report(manifest, source, records, manifest_bytes):
            'verdict':f['verdict'],'citation':f['source_citation'],'judge':f['judge'],
            'measured':f['result'],'uncertainty':f['uncertainty'],'limitations':f['limitations'],'issues':f['issues'],
            'source_contrast_interval':f.get('source_contrast_interval')} for f in findings]
-    return {'schema_version':1,'manifest_sha256':expected_hash,'rows':rows,'raw_record_count':len(records),
+    return {'schema_version':1,'manifest_sha256':expected_hash,'resolved_config_sha256':hashlib.sha256(json.dumps(resolved,sort_keys=True).encode()).hexdigest() if resolution_ok else None,'rows':rows,'raw_record_count':len(records),
             'unknown_arms':unknown,'integrity_issue_counts':dict(Counter(issue for arm in summaries for issue in arm['issues'])),
-            'unregistered_record_count':sum(len(grouped[a]) for a in unknown),'global_issues':([] if source_ok else ['source hash mismatch'])+(['unregistered records retained'] if unknown else []),
+            'unregistered_record_count':sum(len(grouped[a]) for a in unknown),'global_issues':([] if source_ok else ['source hash mismatch'])+([] if resolution_ok else ['missing or inconsistent authoritative native resolution'])+(['unregistered records retained'] if unknown else []),
             'analysis_seed':seed,'analysis_draws':draws,'analysis_runtime':{'python':sys.version,'binomial_sampler':'random.binomialvariate' if hasattr(random.Random(),'binomialvariate') else 'Bernoulli fallback'},'arms':summaries,'findings':findings,
             'stoermer':{'unit':'configuration mean across registered repeats','configuration_count':len(configurations),
                        'configurations':configurations,'limitations':['Do not treat1100 repeats as independent configurations; no75% exact-inert gate.']},
@@ -460,11 +519,11 @@ def markdown_report(result):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    for name in ['manifest','source','sessions','output']:parser.add_argument('--'+name,required=True,type=Path)
+    for name in ['manifest','source','sessions','resolved','output']:parser.add_argument('--'+name,required=True,type=Path)
     args=parser.parse_args()
     manifest_bytes=args.manifest.read_bytes()
     records=[json.loads(line) for line in args.sessions.read_text().splitlines() if line.strip()]
-    result=report(json.loads(manifest_bytes),json.loads(args.source.read_text()),records,manifest_bytes)
+    result=report(json.loads(manifest_bytes),json.loads(args.source.read_text()),records,manifest_bytes,json.loads(args.resolved.read_text()))
     args.output.parent.mkdir(parents=True,exist_ok=True)
     Path(str(args.output)+'.json').write_text(json.dumps(result,indent=2,sort_keys=True,allow_nan=False)+'\n')
     Path(str(args.output)+'.md').write_text(markdown_report(result))

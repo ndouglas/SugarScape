@@ -71,26 +71,181 @@ fn config(value: &Value) -> Result<PolarityConfig, String> {
 }
 
 fn execute(arm: &str, seed: u64, c: &PolarityConfig, hash: &str) -> Result<Value, String> {
-    let mut world = PolarityWorld::new(c.clone(), seed).map_err(|e| format!("{e:?}"))?;
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+    execute_with(arm, seed, c, hash, PolarityWorld::new, |world| {
         while !world.finished() {
             world.run(10_000);
         }
-    }));
-    let outcome = if let Err(panic) = result {
-        let message = panic
-            .downcast_ref::<String>()
-            .cloned()
-            .or_else(|| panic.downcast_ref::<&str>().map(|s| s.to_string()))
-            .unwrap_or_else(|| "unknown panic".into());
-        json!({"valid":false,"invalid_reason":format!("native session panic: {message}"),"finish_reason":"panic","snapshot":serde_json::from_str::<Value>(&world.latest_json()).ok()})
-    } else {
-        serde_json::to_value(world.outcome().ok_or("finished model omitted outcome")?)
-            .map_err(|e| e.to_string())?
+    })
+}
+
+fn panic_message(panic: &(dyn std::any::Any + Send)) -> String {
+    panic
+        .downcast_ref::<String>()
+        .cloned()
+        .or_else(|| panic.downcast_ref::<&str>().map(|s| s.to_string()))
+        .unwrap_or_else(|| "unknown panic".into())
+}
+
+fn execute_with<C, R>(
+    arm: &str,
+    seed: u64,
+    c: &PolarityConfig,
+    hash: &str,
+    construct: C,
+    advance: R,
+) -> Result<Value, String>
+where
+    C: FnOnce(
+        PolarityConfig,
+        u64,
+    ) -> Result<PolarityWorld, Vec<sugarscape_core::config::FieldError>>,
+    R: FnOnce(&mut PolarityWorld),
+{
+    let construction =
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| construct(c.clone(), seed)));
+    let outcome = match construction {
+        Ok(result) => {
+            let mut world = result.map_err(|e| format!("{e:?}"))?;
+            if let Err(panic) =
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| advance(&mut world)))
+            {
+                world.invalidate_after_panic(panic_message(&*panic));
+            }
+            serde_json::to_value(world.outcome().ok_or("finished model omitted outcome")?)
+                .map_err(|e| e.to_string())?
+        }
+        Err(panic) => json!({"config":c,"seed":seed,"valid":false,
+            "invalid_reason":format!("native construction panic: {}",panic_message(&*panic)),
+            "finish_reason":"panic","state_available":false,
+            "periods":null,"attempted_period":null,"sovereign_count":null,"terminal_category":null,
+            "initial_predator_share":null,"predator_capital_share":null,"destruction":null,
+            "signed_creation":null,"events":null,"episodes":null}),
     };
     let mut resolved = serde_json::to_value(c).map_err(|e| e.to_string())?;
     resolved["model"] = json!("polarity");
     Ok(json!({"arm":arm,"seed":seed,"config":resolved,"outcome":outcome,"manifest_sha256":hash}))
+}
+
+fn valid_outcome(row: &Value, resolved: &Value) -> bool {
+    let o = &row["outcome"];
+    let required = [
+        "config",
+        "seed",
+        "periods",
+        "attempted_period",
+        "finish_reason",
+        "valid",
+        "invalid_reason",
+        "sovereign_count",
+        "terminal_category",
+        "initial_predator_share",
+        "predator_capital_share",
+        "destruction",
+        "signed_creation",
+        "events",
+        "episodes",
+    ];
+    if required.iter().any(|k| o.get(k).is_none()) {
+        return false;
+    }
+    let mut embedded = resolved.clone();
+    embedded.as_object_mut().unwrap().remove("model");
+    if o["seed"] != row["seed"] || o["config"] != embedded || !o["valid"].is_boolean() {
+        return false;
+    }
+    let valid = o["valid"] == true;
+    let reason = o["finish_reason"].as_str().unwrap_or("");
+    if o["state_available"] == false {
+        return !valid
+            && reason == "panic"
+            && o["invalid_reason"].as_str().is_some_and(|s| !s.is_empty())
+            && required[2..]
+                .iter()
+                .filter(|k| !["valid", "invalid_reason", "finish_reason"].contains(k))
+                .all(|k| o[k].is_null());
+    }
+    let (Some(periods), Some(attempted), Some(count)) = (
+        o["periods"].as_u64(),
+        o["attempted_period"].as_u64(),
+        o["sovereign_count"].as_u64(),
+    ) else {
+        return false;
+    };
+    if count == 0
+        || count > resolved["width"].as_u64().unwrap() * resolved["height"].as_u64().unwrap()
+        || periods > attempted
+        || attempted - periods > 1
+        || attempted > resolved["horizon"].as_u64().unwrap()
+        || !o["events"].is_object()
+        || !o["episodes"].is_array()
+    {
+        return false;
+    }
+    let counters = [
+        "attacks",
+        "dd_encounters",
+        "conquests",
+        "capital_collapses",
+        "disconnections",
+        "revolts",
+        "stale_claims",
+        "locked_claims",
+        "path_collisions",
+        "double_successes",
+    ];
+    let signed = [
+        "destruction",
+        "signed_creation",
+        "harvest",
+        "taxes",
+        "transfers",
+        "clipping",
+    ];
+    if counters.iter().any(|k| o["events"][k].as_u64().is_none())
+        || signed
+            .iter()
+            .any(|k| o["events"].get(k).is_none() || (valid && o["events"][k].as_f64().is_none()))
+    {
+        return false;
+    }
+    if valid
+        && ([
+            "initial_predator_share",
+            "predator_capital_share",
+            "destruction",
+            "signed_creation",
+        ]
+        .iter()
+        .any(|k| o[k].as_f64().is_none())
+            || o["destruction"] != o["events"]["destruction"]
+            || o["signed_creation"] != o["events"]["signed_creation"])
+    {
+        return false;
+    }
+    if valid {
+        let category = if count == 1 {
+            json!("one")
+        } else if count == 2 {
+            json!("two")
+        } else if count <= 10 {
+            json!("three_to_ten")
+        } else if count <= 90 {
+            json!("eleven_to_ninety")
+        } else if count <= 100 {
+            json!("ninety_one_to_hundred")
+        } else {
+            Value::Null
+        };
+        o["invalid_reason"].is_null()
+            && periods == attempted
+            && o["terminal_category"] == category
+            && ((reason == "horizon" && periods == resolved["horizon"].as_u64().unwrap())
+                || (reason == "hegemony" && count == 1 && resolved["stop_at_hegemony"] == true))
+    } else {
+        ["invalid", "panic"].contains(&reason)
+            && o["terminal_category"].is_null()
+            && o["invalid_reason"].as_str().is_some_and(|s| !s.is_empty())
+    }
 }
 
 fn existing(rows: Vec<Value>, hash: &str) -> Result<BTreeSet<(String, u64)>, String> {
@@ -126,6 +281,7 @@ fn run() -> Result<(), String> {
         "--out",
         "--arm",
         "--validate",
+        "--resolved-out",
     ];
     let mut i = 0;
     while i < args.len() {
@@ -164,6 +320,22 @@ fn run() -> Result<(), String> {
     if selected.is_empty() {
         return Err("arm prefix matches nothing".into());
     }
+    if args.iter().any(|s| s == "--resolved-out") {
+        let destination = value("--resolved-out")?;
+        if let Some(parent) = Path::new(&destination)
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+        {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        let resolution = json!({"schema_version":1,"manifest_sha256":hash,
+            "arms":all.iter().map(|a| json!({"id":a["id"],"config":a["resolved_config"]})).collect::<Vec<_>>()});
+        std::fs::write(
+            destination,
+            serde_json::to_vec_pretty(&resolution).map_err(|e| e.to_string())?,
+        )
+        .map_err(|e| e.to_string())?;
+    }
     if args.iter().any(|s| s == "--validate") {
         println!(
             "Validated {} arms, {} sessions; no periods executed",
@@ -200,7 +372,7 @@ fn run() -> Result<(), String> {
         if seed < first
             || seed - first >= n
             || row["config"] != arm["resolved_config"]
-            || !row["outcome"]["valid"].is_boolean()
+            || !valid_outcome(row, &arm["resolved_config"])
         {
             return Err("existing raw session violates resolved manifest contract".into());
         }
@@ -284,6 +456,39 @@ fn main() {
 mod tests {
     use super::*;
     use serde_json::json;
+    #[test]
+    fn injected_construction_and_execution_panics_retain_available_state() {
+        let c = config(
+            &json!({"model":"polarity","predator_share":0,"horizon":3,"periods_per_tick":1}),
+        )
+        .unwrap();
+        let construction = execute_with(
+            "a",
+            7,
+            &c,
+            "hash",
+            |_, _| panic!("injected construction"),
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!(construction["outcome"]["valid"], false);
+        assert_eq!(construction["outcome"]["state_available"], false);
+        assert_eq!(construction["outcome"]["periods"], Value::Null);
+        assert_eq!(construction["outcome"]["seed"], 7);
+        assert!(valid_outcome(&construction, &construction["config"]));
+        let running = execute_with("a", 7, &c, "hash", PolarityWorld::new, |world| {
+            world.run(1);
+            panic!("injected execution");
+        })
+        .unwrap();
+        assert_eq!(running["outcome"]["valid"], false);
+        assert_eq!(running["outcome"]["periods"], 1);
+        assert_eq!(running["outcome"]["attempted_period"], 1);
+        assert!(running["outcome"]["events"]["harvest"].is_number());
+        assert!(running["outcome"]["episodes"].is_array());
+        assert_eq!(running["outcome"]["seed"], 7);
+        assert!(valid_outcome(&running, &running["config"]));
+    }
     #[test]
     fn duplicate_arm_ids_are_rejected_before_execution() {
         let arm = json!({"id":"a","family":"original","config":{"model":"polarity"},"first_seed":1,"sessions":20});
