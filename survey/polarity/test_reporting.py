@@ -1,5 +1,6 @@
 """Reporting fixtures are synthetic; no model studies run here."""
 import hashlib
+import itertools
 import json
 import unittest
 from analysis import report as actual_report, predictive_mean, predictive_categories
@@ -241,5 +242,50 @@ class ReportingTests(unittest.TestCase):
         reverse=report(m,{},list(reversed(r)),b)['arms'][0]['events_totals']
         self.assertEqual({k:forward[k] for k in ['harvest','taxes','transfers','conquests']},{'harvest':-6,'taxes':0,'transfers':-2,'conquests':0})
         self.assertEqual(reverse,forward)
+
+
+    def extreme_ledger_fixture(self, values):
+        m,_,r=self.fixture();m['arms'][0]['sessions']=len(values)
+        b=json.dumps(m).encode();digest=hashlib.sha256(b).hexdigest()
+        rows=[]
+        for seed,value in enumerate(values,1):
+            row=json.loads(json.dumps(r[0]));row.update(seed=seed,manifest_sha256=digest)
+            row['outcome']['events']['harvest']=value
+            rows.append(row)
+        return m,b,rows
+
+    def test_extreme_cancelling_signed_ledgers_have_identical_total_for_all_orderings(self):
+        cases=[([1e308,1e308,-1e308],1e308),([-1e308,-1e308,1e308],-1e308),
+               ([1e308,1e308,-1e308,-1e308],0.0)]
+        for values,expected in [(v,e) for base,e in cases for v in set(itertools.permutations(base))]:
+            with self.subTest(values=values):
+                m,b,r=self.extreme_ledger_fixture(values);result=report(m,{},r,b)
+                self.assertEqual(result['arms'][0]['events_totals']['harvest'],expected)
+                self.assertEqual(result['arms'][0]['verdict'],'Descriptive')
+                json.dumps(result,allow_nan=False)
+
+    def test_true_signed_total_overflow_is_unavailable_raw_retained_and_judges_unresolved(self):
+        cases=[[1e308,1e308,-1.0],[-1e308,-1e308,1.0]]
+        for values in {v for base in cases for v in itertools.permutations(base)}:
+            with self.subTest(values=values):
+                m,b,r=self.extreme_ledger_fixture(values);result=report(m,{},r,b)
+                arm=result['arms'][0]
+                self.assertIsNone(arm['events_totals']['harvest'])
+                self.assertEqual(arm['verdict'],'Unresolved')
+                self.assertEqual((arm['valid_sessions'],arm['invalid_sessions'],result['raw_record_count']),(3,0,3))
+                self.assertIn('harvest',arm['events_totals_unavailable'])
+                selection=[f for f in result['rows'] if f['family']=='selection']
+                self.assertEqual(selection[0]['verdict'],'Unresolved')
+                self.assertEqual([row['outcome']['events']['harvest'] for row in result['raw_records']],list(values))
+                json.dumps(result,allow_nan=False)
+
+    def test_extreme_descriptive_ledger_mean_stays_finite_when_total_overflows(self):
+        m,b,r=self.extreme_ledger_fixture([1e308,1e308])
+        for row in r:
+            row['outcome']['destruction']=1e308
+            row['outcome']['events']['destruction']=1e308
+        result=report(m,{},r,b)
+        self.assertEqual(result['arms'][0]['destruction']['mean'],1e308)
+        json.dumps(result,allow_nan=False)
 
 if __name__=='__main__':unittest.main()

@@ -1,5 +1,6 @@
 """Offline, preregistered EPM analysis. Uses only Python's standard library."""
 from collections import Counter, defaultdict
+from fractions import Fraction
 from pathlib import Path
 import argparse
 import bisect
@@ -179,6 +180,14 @@ def metric(outcomes, name):
     raise ValueError(name)
 
 
+def accounting_sum(values, divisor=1):
+    """Sum finite accounting exactly before converting the final result to float."""
+    if divisor==1 and all(type(v) is int for v in values):return sum(values)
+    total=sum((Fraction(v) for v in values),Fraction())/divisor
+    try:return float(total)
+    except OverflowError:return None
+
+
 def outcome_issues(row, config):
     out=row.get('outcome')
     fields={'config','seed','periods','attempted_period','finish_reason','valid','invalid_reason',
@@ -291,9 +300,15 @@ def report(manifest, source, records, manifest_bytes, resolved=None):
         # Descriptions use all available valid records, explicitly conditional on validity.
         for field in ['destruction','signed_creation','periods']:
             vals=[o[field] for o in outcomes if isinstance(o.get(field),(int,float)) and math.isfinite(o[field])]
-            summary[field]={'mean':sum(vals)/len(vals) if vals else None,'available_sessions':len(vals)}
+            summary[field]={'mean':accounting_sum(vals,len(vals)) if vals else None,'available_sessions':len(vals)}
         ledger_keys={k for o in outcomes for k in o.get('events',{})}
-        summary['events_totals']={k:(sum if all(type(o.get('events',{}).get(k,0)) is int for o in outcomes) else math.fsum)(o.get('events',{}).get(k,0) for o in outcomes) for k in sorted(ledger_keys)}
+        summary['events_totals']={k:accounting_sum([o.get('events',{}).get(k,0) for o in outcomes]) for k in sorted(ledger_keys)}
+        unavailable={k:'exact signed total exceeds finite float range' for k,v in summary['events_totals'].items() if v is None}
+        summary['events_totals_unavailable']=unavailable
+        if unavailable:
+            issues.extend('unavailable aggregate accounting: '+k for k in unavailable)
+            summary['issues']=sorted(set(issues))
+            summary['verdict']='Unresolved'
         summary['episode_count']=sum(len(o.get('episodes',[])) for o in outcomes)
         episodes=[e for o in outcomes for e in o.get('episodes',[])]
         summary['episode_end_causes']=dict(Counter(e.get('end_cause',e.get('end_reason','unreported')) for e in episodes))
