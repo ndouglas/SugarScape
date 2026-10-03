@@ -35,8 +35,9 @@ impl Fixture {
         fs::write(&p, serde_json::to_vec(&v).unwrap()).unwrap();
         p
     }
-    fn run(&self, manifest: &Path, flags: &[&str]) -> Output {
-        Command::new(env!("CARGO_BIN_EXE_geosim"))
+    fn command(&self, manifest: &Path, out: &Path, resolved: &Path) -> Command {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_geosim"));
+        command
             .args(["--manifest"])
             .arg(manifest)
             .args([
@@ -46,12 +47,20 @@ impl Fixture {
             ])
             .arg(Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap())
             .arg("--resolved-out")
-            .arg(self.path("resolved.json"))
+            .arg(resolved)
             .arg("--out")
-            .arg(self.path("sessions.jsonl"))
-            .args(flags)
-            .output()
-            .unwrap()
+            .arg(out);
+        command
+    }
+    fn run(&self, manifest: &Path, flags: &[&str]) -> Output {
+        self.command(
+            manifest,
+            &self.path("sessions.jsonl"),
+            &self.path("resolved.json"),
+        )
+        .args(flags)
+        .output()
+        .unwrap()
     }
 }
 impl Drop for Fixture {
@@ -68,6 +77,251 @@ fn success(out: Output) {
         "{}",
         String::from_utf8_lossy(&out.stderr)
     );
+}
+#[test]
+fn output_aliases_reject_before_writes_in_validation_and_execution() {
+    let mut failures = Vec::new();
+    for validate in [true, false] {
+        let f = Fixture::new();
+        let m = f.manifest(true);
+        success(f.run(&m, &["--allow-unfrozen-fixture"]));
+        let out = f.path("sessions.jsonl");
+        let before = fs::read(&out).unwrap();
+        fs::create_dir(f.path("sub")).unwrap();
+        let mut aliases = vec![
+            f.path("sub/../sessions.jsonl"),
+            PathBuf::from("sessions.jsonl"),
+            f.path("missing/../sessions.jsonl"),
+        ];
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(&out, f.path("history-link")).unwrap();
+            std::os::unix::fs::symlink(&f.0, f.path("directory-link")).unwrap();
+            aliases.push(f.path("history-link"));
+            aliases.push(f.path("directory-link/sessions.jsonl"));
+        }
+        for alias in aliases {
+            // Restore only the temporary fixture after an unfixed recorder destroys it.
+            fs::write(&out, &before).unwrap();
+            let mut command = f.command(&m, &out, &alias);
+            command.current_dir(&f.0).arg("--allow-unfrozen-fixture");
+            if validate {
+                command.arg("--validate");
+            }
+            let result = command.output().unwrap();
+            if result.status.success() || fs::read(&out).unwrap() != before {
+                failures.push(format!(
+                    "validate={validate}, alias={alias:?}: exit={:?}, preserved={}",
+                    result.status.code(),
+                    fs::read(&out).unwrap() == before
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn missing_output_aliases_reject_without_creating_ancestors() {
+    for validate in [true, false] {
+        let f = Fixture::new();
+        let m = f.manifest(true);
+        let out = f.path("missing/nested/sessions.jsonl");
+        let resolved = f.path("missing/nested/../nested/sessions.jsonl");
+        let mut command = f.command(&m, &out, &resolved);
+        command.arg("--allow-unfrozen-fixture");
+        if validate {
+            command.arg("--validate");
+        }
+        let result = command.output().unwrap();
+        assert!(
+            !result.status.success(),
+            "aliased missing destinations accepted"
+        );
+        assert!(
+            !f.path("missing").exists(),
+            "ancestor created before rejection"
+        );
+    }
+}
+
+#[test]
+fn missing_distinct_destinations_work_and_unresolvable_ancestors_fail_before_writes() {
+    let f = Fixture::new();
+    let m = f.manifest(true);
+    success(
+        f.command(
+            &m,
+            &f.path("histories/nested/sessions.jsonl"),
+            &f.path("receipts/nested/resolved.json"),
+        )
+        .arg("--allow-unfrozen-fixture")
+        .output()
+        .unwrap(),
+    );
+    assert!(f.path("histories/nested/sessions.jsonl").is_file());
+    assert!(f.path("receipts/nested/resolved.json").is_file());
+    fs::write(f.path("not-directory"), b"preserved ancestor file").unwrap();
+    let mut invalid_outs = vec![f.path("not-directory/sessions.jsonl")];
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(f.path("absent-target"), f.path("dangling-link")).unwrap();
+        invalid_outs.push(f.path("dangling-link/sessions.jsonl"));
+    }
+    for out in invalid_outs {
+        for validate in [true, false] {
+            let mut command = f.command(&m, &out, &f.path("must-not-be-written.json"));
+            command.arg("--allow-unfrozen-fixture");
+            if validate {
+                command.arg("--validate");
+            }
+            assert!(!command.output().unwrap().status.success());
+            assert!(!f.path("must-not-be-written.json").exists());
+            assert!(!f.path("absent-target").exists());
+            assert_eq!(
+                fs::read(f.path("not-directory")).unwrap(),
+                b"preserved ancestor file"
+            );
+        }
+    }
+}
+
+#[test]
+fn atomic_temporary_history_collision_rejects_and_preserves_actual_process_bytes() {
+    for validate in [true, false] {
+        let f = Fixture::new();
+        let m = f.manifest(true);
+        success(f.run(&m, &["--allow-unfrozen-fixture"]));
+        let before = fs::read(f.path("sessions.jsonl")).unwrap();
+        // exec retains Bash's PID, so this is the recorder's actual temporary pathname.
+        let mut command = Command::new("bash");
+        command.arg("-c").arg("history=\"$1/export.tmp-$$\"; cp \"$1/sessions.jsonl\" \"$history\"; shift; exec \"$@\" --out \"$history\"")
+            .arg("geosim-temp-collision").arg(&f.0)
+            .arg(env!("CARGO_BIN_EXE_geosim"))
+            .arg("--manifest").arg(&m)
+            .args(["--manifest-sha256", &hash(&fs::read(&m).unwrap())])
+            .arg("--source-root").arg(Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap())
+            .arg("--resolved-out").arg(f.path("export.json"))
+            .arg("--allow-unfrozen-fixture");
+        if validate {
+            command.arg("--validate");
+        }
+        let result = command.output().unwrap();
+        assert!(
+            !result.status.success(),
+            "history/atomic temporary collision accepted"
+        );
+        let history = fs::read_dir(&f.0)
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .find(|p| {
+                p.file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .starts_with("export.tmp-")
+            })
+            .unwrap();
+        assert_eq!(fs::read(history).unwrap(), before);
+        assert!(!f.path("export.json").exists());
+    }
+}
+
+#[test]
+fn malformed_attempt_diagnostics_reject_before_any_write() {
+    let f = Fixture::new();
+    let m = f.manifest(true);
+    success(f.run(&m, &["--allow-unfrozen-fixture"]));
+    let bytes = fs::read_to_string(f.path("sessions.jsonl")).unwrap();
+    let baseline: Value = serde_json::from_str(bytes.lines().next().unwrap()).unwrap();
+    let resolved_before = fs::read(f.path("resolved.json")).unwrap();
+    let mut attempts = Vec::new();
+    for errors in [
+        json!([17]),
+        json!([null]),
+        json!([[]]),
+        json!([{}]),
+        json!([{"field":"config"}]),
+        json!([{"message":"failure"}]),
+        json!([{"field":17,"message":"failure"}]),
+        json!([{"field":"config","message":false}]),
+        json!([{"field":"config","message":"failure","unexpected":true}]),
+    ] {
+        attempts.push(
+            json!({"status":"construction_error","construction_errors":errors,
+            "panic_context":null,"recorder_error":null}),
+        );
+    }
+    for context in [
+        json!(null),
+        json!(17),
+        json!(""),
+        json!(" \t\n"),
+        json!("\u{0085}\u{001c}"),
+    ] {
+        for status in ["construction_panic", "implementation_panic", "incomplete"] {
+            attempts.push(json!({"status":status,"construction_errors":[],
+                "panic_context":if status=="incomplete" { Value::Null } else { context.clone() },
+                "recorder_error":if status=="incomplete" { context.clone() } else { Value::Null }}));
+        }
+    }
+    let mut failures = Vec::new();
+    for attempt in attempts {
+        let mut row = baseline.clone();
+        row["outcome"] = Value::Null;
+        row["attempt"] = attempt.clone();
+        if attempt["status"] == "implementation_panic" {
+            row["outcome"] = baseline["outcome"].clone();
+        }
+        let corrupt = format!("{row}\n");
+        for validate in [true, false] {
+            fs::write(f.path("sessions.jsonl"), &corrupt).unwrap();
+            let flags = if validate {
+                vec!["--allow-unfrozen-fixture", "--validate"]
+            } else {
+                vec!["--allow-unfrozen-fixture"]
+            };
+            let result = f.run(&m, &flags);
+            if result.status.success()
+                || fs::read_to_string(f.path("sessions.jsonl")).unwrap() != corrupt
+                || fs::read(f.path("resolved.json")).unwrap() != resolved_before
+            {
+                failures.push(format!(
+                    "validate={validate}, attempt={attempt}: exit={:?}",
+                    result.status.code()
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn valid_unavailable_attempts_remain_resumable_without_replacing_keys() {
+    let f = Fixture::new();
+    let m = f.manifest(true);
+    success(f.run(&m, &["--allow-unfrozen-fixture"]));
+    let bytes = fs::read_to_string(f.path("sessions.jsonl")).unwrap();
+    let baseline: Value = serde_json::from_str(bytes.lines().next().unwrap()).unwrap();
+    for attempt in [
+        json!({"status":"construction_error","construction_errors":[{"field":"config","message":"failure"}],"panic_context":null,"recorder_error":null}),
+        json!({"status":"construction_panic","construction_errors":[],"panic_context":"constructor failure","recorder_error":null}),
+        json!({"status":"incomplete","construction_errors":[],"panic_context":null,"recorder_error":"missing Outcome"}),
+    ] {
+        let mut row = baseline.clone();
+        row["outcome"] = Value::Null;
+        row["attempt"] = attempt;
+        let retained = format!("{row}\n");
+        fs::write(f.path("sessions.jsonl"), &retained).unwrap();
+        success(f.run(&m, &["--allow-unfrozen-fixture", "--validate"]));
+        success(f.run(
+            &m,
+            &["--allow-unfrozen-fixture", "--arm", "fixture.invalid"],
+        ));
+        assert_eq!(
+            fs::read_to_string(f.path("sessions.jsonl")).unwrap(),
+            retained
+        );
+    }
 }
 #[test]
 fn actual_native_registered_validation_resolves_all_configs_without_histories() {

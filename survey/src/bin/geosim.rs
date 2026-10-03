@@ -1049,11 +1049,21 @@ fn validate_record(
         .contains(&status),
         "unknown attempt status",
     )?;
-    array(&a["construction_errors"])?;
-    if status == "implementation_panic" {
+    let errors = array(&a["construction_errors"])?;
+    for error in errors {
+        keys(error, &["field", "message"])?;
         require(
-            a["panic_context"].as_str().is_some_and(|s| !s.is_empty()),
-            "implementation_panic requires explicit context",
+            error["field"].is_string() && error["message"].is_string(),
+            "construction errors require string field and message",
+        )?;
+    }
+    if status == "construction_error" {
+        require(!errors.is_empty(), "construction_error lacks errors")?;
+    }
+    if ["construction_panic", "implementation_panic"].contains(&status) {
+        require(
+            meaningful_context(&a["panic_context"]),
+            "panic attempt requires nonempty panic_context",
         )?;
     }
     if status == "completed" {
@@ -1074,25 +1084,23 @@ fn validate_record(
             ["construction_error", "construction_panic", "incomplete"].contains(&status),
             "missing Outcome without unavailable status",
         )?;
-        match status {
-            "construction_error" => require(
-                !array(&a["construction_errors"])?.is_empty(),
-                "construction_error lacks errors",
-            )?,
-            "construction_panic" => require(
-                a["panic_context"].is_string(),
-                "construction_panic lacks context",
-            )?,
-            "incomplete" => require(
-                a["recorder_error"].is_string(),
-                "incomplete lacks recorder error",
-            )?,
-            _ => {}
+        if status == "incomplete" {
+            require(
+                meaningful_context(&a["recorder_error"]),
+                "incomplete requires nonempty recorder_error",
+            )?;
         }
     } else {
         validate_outcome(&v["outcome"], &arm.config, seed, status)?;
     }
     Ok((arm.id.clone(), seed))
+}
+fn meaningful_context(value: &Value) -> bool {
+    value.as_str().is_some_and(|s| {
+        // Python str.strip also treats these four ASCII separators as whitespace.
+        s.chars()
+            .any(|c| !c.is_whitespace() && !('\u{001c}'..='\u{001f}').contains(&c))
+    })
 }
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -1276,13 +1284,69 @@ fn resume(
     Ok(keys)
 }
 fn atomic_json(path: &Path, value: &Value) -> Result<(), String> {
+    use std::io::Write;
     if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
     let temporary = path.with_extension(format!("tmp-{}", std::process::id()));
     let bytes = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
-    std::fs::write(&temporary, bytes).map_err(|e| e.to_string())?;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temporary)
+        .map_err(|e| format!("cannot create atomic output {}: {e}", temporary.display()))?;
+    file.write_all(&bytes).map_err(|e| e.to_string())?;
+    drop(file);
     std::fs::rename(&temporary, path).map_err(|e| e.to_string())
+}
+fn output_destination(path: &Path) -> Result<PathBuf, String> {
+    use std::path::Component;
+    require(
+        !path.as_os_str().is_empty(),
+        "output path must not be empty",
+    )?;
+    let absolute = if path.is_absolute() {
+        path.to_owned()
+    } else {
+        std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join(path)
+    };
+    let mut destination = PathBuf::new();
+    let mut components = absolute.components().peekable();
+    while let Some(component) = components.next() {
+        match component {
+            Component::Prefix(_) | Component::RootDir => destination.push(component.as_os_str()),
+            Component::CurDir => {}
+            Component::ParentDir => {
+                destination.pop();
+            }
+            Component::Normal(name) => {
+                destination.push(name);
+                match std::fs::symlink_metadata(&destination) {
+                    Ok(_) => {
+                        destination = std::fs::canonicalize(&destination).map_err(|e| {
+                            format!("cannot resolve output {}: {e}", destination.display())
+                        })?;
+                        let metadata =
+                            std::fs::metadata(&destination).map_err(|e| e.to_string())?;
+                        require(
+                            if components.peek().is_some() { metadata.is_dir() } else { metadata.is_file() },
+                            "output ancestor must be a directory and existing destination a regular file",
+                        )?;
+                    }
+                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                    Err(e) => {
+                        return Err(format!(
+                            "cannot inspect output {}: {e}",
+                            destination.display()
+                        ))
+                    }
+                }
+            }
+        }
+    }
+    Ok(destination)
 }
 fn run_cli(args: Args) -> Result<(), String> {
     use std::io::Write;
@@ -1347,7 +1411,6 @@ fn run_cli(args: Args) -> Result<(), String> {
         export[k] = v.clone();
     }
     let out = Path::new(option(&args, "--out")?);
-    let seen = resume(out, &prepared, &binding)?;
     let resolved_out = args.values.get("--resolved-out").map_or_else(
         || {
             let mut name = out.as_os_str().to_owned();
@@ -1357,9 +1420,10 @@ fn run_cli(args: Args) -> Result<(), String> {
         std::path::PathBuf::from,
     );
     require(
-        resolved_out != out,
+        output_destination(&resolved_out)? != output_destination(out)?,
         "resolved output must differ from history output",
     )?;
+    let seen = resume(out, &prepared, &binding)?;
     atomic_json(&resolved_out, &export)?;
     if args.validate {
         println!(
@@ -1418,6 +1482,52 @@ fn main() {
 mod tests {
     use super::*;
     use serde_json::json;
+    #[test]
+    fn atomic_export_never_clobbers_an_existing_temporary_destination() {
+        let directory = std::env::temp_dir().join(format!(
+            "geosim-atomic-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir(&directory).unwrap();
+        let resolved = directory.join("resolved.json");
+        let temporary = resolved.with_extension(format!("tmp-{}", std::process::id()));
+        std::fs::write(&resolved, b"existing resolved receipt").unwrap();
+        std::fs::write(&temporary, b"existing history bytes").unwrap();
+        let result = atomic_json(&resolved, &json!({"resolved_configs_json":"new export"}));
+        assert!(
+            result.is_err(),
+            "existing atomic temporary destination accepted"
+        );
+        assert_eq!(
+            std::fs::read(&temporary).unwrap(),
+            b"existing history bytes"
+        );
+        assert_eq!(
+            std::fs::read(&resolved).unwrap(),
+            b"existing resolved receipt"
+        );
+        #[cfg(unix)]
+        {
+            std::fs::remove_file(&temporary).unwrap();
+            let history = directory.join("history.jsonl");
+            std::fs::write(&history, b"existing history through symlink").unwrap();
+            std::os::unix::fs::symlink(&history, &temporary).unwrap();
+            assert!(atomic_json(&resolved, &json!({"x":1})).is_err());
+            assert_eq!(
+                std::fs::read(&history).unwrap(),
+                b"existing history through symlink"
+            );
+            assert!(std::fs::symlink_metadata(&temporary)
+                .unwrap()
+                .file_type()
+                .is_symlink());
+        }
+        std::fs::remove_dir_all(directory).unwrap();
+    }
     #[test]
     fn hash_is_actual_sha256_not_a_caller_label() {
         assert_eq!(

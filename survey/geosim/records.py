@@ -63,8 +63,8 @@ def history_availability(row,arm=None):
     if out is None:
         if status not in ('construction_error','construction_panic','incomplete'):
             raise ValueError('missing Outcome without explicit unavailable attempt status')
-        if status=='incomplete' and not attempt.get('recorder_error'):
-            raise ValueError('incomplete attempt needs recorder_error')
+        if status=='incomplete' and (not isinstance(attempt.get('recorder_error'),str) or not attempt['recorder_error'].strip()):
+            raise ValueError('incomplete attempt needs nonempty recorder_error')
         return {'status':status,'complete':False,'state_available':False,'reason':attempt.get('recorder_error') or attempt.get('panic_context') or attempt.get('construction_errors')}
     config=row.get('config',out['config'])
     if out['config']!=config or ('seed' in row and out['seed']!=row['seed']):raise ValueError('Outcome config/seed mismatch')

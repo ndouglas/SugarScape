@@ -89,6 +89,33 @@ class EnvelopeTests(unittest.TestCase):
         self.assertEqual(records.validate_record(row,arm,binding),('original.base',370000001))
         row['attempt']['recorder_error']=None
         with self.assertRaises(ValueError):records.validate_record(row,arm,binding)
+    def test_required_unavailable_context_rejects_blank_and_wrong_types(self):
+        for status in ('construction_panic','implementation_panic','incomplete'):
+            for context in (None,17,'',' \t\n','\u0085\u001c'):
+                with self.subTest(status=status,context=context):
+                    row,arm,binding=self.fixture()
+                    if status!='implementation_panic':row['outcome']=None
+                    row['attempt']={'status':status,'construction_errors':[],
+                        'panic_context':None if status=='incomplete' else context,
+                        'recorder_error':context if status=='incomplete' else None}
+                    with self.assertRaises(ValueError):records.validate_record(row,arm,binding)
+    def test_construction_error_members_require_exact_string_fields(self):
+        for errors in ([17],[None],[[]],[{}],[{'field':'config'}],[{'message':'failure'}],
+                [{'field':17,'message':'failure'}],[{'field':'config','message':False}],
+                [{'field':'config','message':'failure','unexpected':True}]):
+            with self.subTest(errors=errors):
+                row,arm,binding=self.fixture();row['outcome']=None
+                row['attempt']={'status':'construction_error','construction_errors':errors,
+                    'panic_context':None,'recorder_error':None}
+                with self.assertRaises(ValueError):records.validate_record(row,arm,binding)
+    def test_valid_unavailable_diagnostics_are_retained(self):
+        for attempt in (
+                {'status':'construction_error','construction_errors':[{'field':'config','message':'failure'}],'panic_context':None,'recorder_error':None},
+                {'status':'construction_panic','construction_errors':[],'panic_context':'constructor failure','recorder_error':None},
+                {'status':'incomplete','construction_errors':[],'panic_context':None,'recorder_error':'missing Outcome'}):
+            with self.subTest(status=attempt['status']):
+                row,arm,binding=self.fixture();row['outcome']=None;row['attempt']=attempt
+                self.assertEqual(records.validate_record(row,arm,binding),('original.base',370000001))
     def test_postfinish_panic_preserves_valid_outcome_as_partial_only(self):
         from survey.geosim import source,modern
         row,arm,binding=self.fixture();row['attempt'].update(status='implementation_panic',panic_context='after native advance')
