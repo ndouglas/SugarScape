@@ -1,8 +1,8 @@
 # Minds P3: costly re-caching after observation
 
-**Date:** 2026-10-02  
-**Status:** proposed architectural design, ready for written-spec review. No implementation or scientific runs authorized by this document.  
-**Baseline:** main `1223c47`, after the completed Minds 9 campaign.  
+**Date:** 2026-10-02
+**Status:** proposed architectural design, ready for written-spec review. No implementation or scientific runs authorized by this document.
+**Baseline:** main `1223c47`, after the completed Minds 9 campaign.
 **Related:** [Minds study](../../studies/2026-09-27-minds.md), [collective agency program](2026-10-02-minds-collective-agency-program-design.md), [research notes](../../studies/2026-10-02-minds-protection-reading.md).
 
 ## Decision and question

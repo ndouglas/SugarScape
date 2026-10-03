@@ -1,6 +1,6 @@
 # Reading for Minds P3 protection
 
-**Date:** 2026-10-02  
+**Date:** 2026-10-02
 **Purpose:** choose a discriminating first protection mechanism after Minds 9. This is a focused evidence review, not a systematic review. Cached PDFs listed below were read from the primary workspace; they are ignored local research assets, not files carried into this design worktree. See the [proposed design](../superpowers/specs/2026-10-02-minds-protection-design.md).
 
 ## Evidence and design consequences
