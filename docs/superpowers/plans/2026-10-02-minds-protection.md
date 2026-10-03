@@ -383,7 +383,7 @@ pub struct Analysis { pub schema: String, pub estimates: Vec<Estimate> }
 
 Analysis must also retain per-cell endpoints, secondary metrics, cue/lineage/phase/opportunity validation and duplicate-trajectory counts; add typed rows next to Estimate. It is not sufficient to render only a favorable contrast. Existing PairedSummary/other imported types may need serde derives; retain arithmetic and tests. Own serde wire DTOs if importing a nonserializable diagnostic type would broaden unrelated exports.
 
-- [ ] Write failing manifest tests:
+- [x] Write failing manifest tests:
 
 ```rust
 #[test]
@@ -396,12 +396,12 @@ fn protection_manifest_contains_the_complete_registered_matrix() {
 }
 ```
 
-- [ ] Declare canonical IDs such as `single/p=selective/i=observed/r=private/c=0.25/m=0`; seed-qualified filenames use ordinal condition index and numeric seed, never raw slash-bearing IDs. Assert panel counts 64/32/32/64 and all factor combinations. Test help/default manifest does not execute; unknown/duplicate flags, seed overrides, truncated revisions and occupied output paths fail.
-- [ ] Run `cargo test --manifest-path survey/Cargo.toml protection_` red, then implement matrix generation and a measured route independent of the Holds/Fails registry. `--run` requires full committed protocol provenance, clean tracked tree and new directory; no overwrite, automatic resume, seed override or hidden scientific pilot.
-- [ ] Add archive-validation tests for missing/duplicate/wrong seed, wrong condition/config, path escape, missing raw file, false completion, inconsistent tick counts, an owner-death frame, invalid cue/schedule, nonfinite outcome and broken cohort reconciliation. A frame-only archive with 7,680 arbitrary records must not pass. One affected lineage seed makes that contrast unavailable without silently discarding the seed.
-- [ ] Save raw envelope before the next serial episode. Record exact code/protocol revisions, full manifest, times, schema and condition/seed identities. Atomic file replacement can finish a just-created file but must not overwrite an existing completed run. Write completion only when the full matrix is present. Copy only the small provenance/path/CLI conventions from Minds 9; avoid moving or refactoring its established route.
-- [ ] Add synthetic **analysis** fixtures with hand-calculated pairs (no generated scientific episode seeds), assert exact mean/sign/interval inputs and original-food denominators, all 64 primary estimates and unavailable-seed reporting. Test serial saved-data reanalysis byte equality of `analysis.json` and `results.md`; paths/times must not inject unstable output. Preserve terminal episodes. Scientific success is not inferred from programmed selectivity or from an interval alone.
-- [ ] Run survey tests/format/strict Clippy, update Stage 4 and commit: `feat(survey): archive and analyze the registered protection campaign`.
+- [x] Declare canonical IDs such as `single/p=selective/i=observed/r=private/c=0.25/m=0`; seed-qualified filenames use ordinal condition index and numeric seed, never raw slash-bearing IDs. Assert panel counts 64/32/32/64 and all factor combinations. Test help/default manifest does not execute; unknown/duplicate flags, seed overrides, truncated revisions and occupied output paths fail.
+- [x] Run `cargo test --manifest-path survey/Cargo.toml protection_` red, then implement matrix generation and a measured route independent of the Holds/Fails registry. `--run` requires full committed protocol provenance, clean tracked tree and new directory; no overwrite, automatic resume, seed override or hidden scientific pilot.
+- [x] Add archive-validation tests for missing/duplicate/wrong seed, wrong condition/config, path escape, missing raw file, false completion, inconsistent tick counts, an owner-death frame, invalid cue/schedule, nonfinite outcome and broken cohort reconciliation. A frame-only archive with 7,680 arbitrary records must not pass. One affected lineage seed makes that contrast unavailable without silently discarding the seed.
+- [x] Save raw envelope before the next serial episode. Record exact code/protocol revisions, full manifest, times, schema and condition/seed identities. Atomic file replacement can finish a just-created file but must not overwrite an existing completed run. Write completion only when the full matrix is present. Copy only the small provenance/path/CLI conventions from Minds 9; avoid moving or refactoring its established route.
+- [x] Add synthetic **analysis** fixtures with hand-calculated pairs (no generated scientific episode seeds), assert exact mean/sign/interval inputs and original-food denominators, all 64 primary estimates and unavailable-seed reporting. Test serial saved-data reanalysis byte equality of `analysis.json` and `results.md`; paths/times must not inject unstable output. Preserve terminal episodes. Scientific success is not inferred from programmed selectivity or from an interval alone.
+- [x] Run survey tests/format/strict Clippy, update Stage 4 and commit: `feat(survey): archive and analyze the registered protection campaign`.
 
 ### Task 5: persistence, native/WASM agreement and execution readiness
 

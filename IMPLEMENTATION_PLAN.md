@@ -25,7 +25,7 @@ Design approved; this implementation plan and the proposed protocol await review
 **Goal**: Complete fixed manifest, validated raw archive and deterministic saved-data analysis.
 **Success Criteria**: 192 conditions × 40 exact seeds; no simulations on help/manifest; malformed archives fail; every registered outcome remains visible.
 **Tests**: Matrix uniqueness, CLI errors, wrong seeds/configs/paths/horizons, missing lineage, known paired estimates, byte-identical reanalysis.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 5: Replay and readiness review
 **Goal**: Preserve checkpoints, default reductions and native/WASM agreement before any scientific run.
