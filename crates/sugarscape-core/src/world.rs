@@ -492,7 +492,11 @@ impl World {
         if world.config.disease.enabled {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
         }
-        world.populate();
+        if world.config.protection_lab.is_some() {
+            crate::minds::protection::lab::initialize(&mut world);
+        } else {
+            world.populate();
+        }
         // Minds 4: `memory.prior: map` gives founders that remember a
         // memory of every non-wall site as the world starts; a no-op
         // otherwise. Runs once here, after placement, so children and

@@ -7,7 +7,7 @@ Design approved; this implementation plan and the proposed protocol await review
 **Goal**: Checked bounded lab configuration, fixed role construction and owner-local exposure memory.
 **Success Criteria**: None preserves defaults; invalid combinations fail; local cues use only owner sight; expiry and eviction are deterministic.
 **Tests**: Config omission/round-trip/errors, exact role placement, visible nonwatcher/unseen watcher, expiry and cap eviction.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 2: Paid physical relocation
 **Goal**: One retrieval/transport/redeposit attempt per eligible source with real action and food costs.

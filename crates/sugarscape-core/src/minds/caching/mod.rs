@@ -144,6 +144,7 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     fates::open(world, id, site, q);
     theft::note(world, id, site, true);
     watching::see(world, id, site, q);
+    super::protection::lab::note_prepared_deposit(world, id, site, q);
     q
 }
 

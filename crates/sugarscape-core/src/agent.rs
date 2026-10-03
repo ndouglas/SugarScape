@@ -170,6 +170,7 @@ impl Tags {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Agent {
+    pub protection: Option<crate::minds::protection::state::ProtectionState>,
     pub id: AgentId,
     pub pos: Pos,
     pub vision: u32,
@@ -385,6 +386,7 @@ impl Agent {
             stolen_from_me: 0.0,
             home: None,
             spatial: None,
+            protection: None,
             load_trip: 0.0,
             delivery_rate: 0.0,
             last_load: 0.0,

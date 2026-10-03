@@ -10,6 +10,7 @@ pub mod goap;
 pub mod grid;
 pub mod memory;
 pub mod mvt;
+pub mod protection;
 pub mod spatial_hoarding;
 pub mod utility;
 

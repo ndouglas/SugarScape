@@ -102,7 +102,7 @@ Add `Config.protection_lab: Option<LabConfig>` with `serde(default, skip_seriali
 
 Validation requires the rig's exact dimensions/population/one good, Book/Walk speed 1, finite nonnegative costs, discovery in [0,1], positive spans, and the specified inactive modules. Reject spatial larders, existing `lab`, central, non-Book decision, Jump, extra goods, arbitrary schedules and unrelated active rules with a field-specific error. Keep ordinary validators unchanged when None. The runner will enforce the fixed campaign values; unit fixtures may use positive shorter spans and varied costs/discovery.
 
-- [ ] Write failing pure-memory tests and local-cue tests. For example:
+- [x] Write failing pure-memory tests and local-cue tests. For example:
 
 ```rust
 #[test]
@@ -122,8 +122,8 @@ fn protection_visible_nonwatcher_is_a_possible_witness() {
 }
 ```
 
-- [ ] Add cap eviction test with `MEMORY_CAP+1` entries: oldest tick then lowest site loses; replacing a site does not consume another slot. Test unseen watcher, opaque wall, own-agent exclusion, no watcher-private-state reads, None-config round-trip omission, invalid combinations and exact role positions/holdings at tick zero.
-- [ ] Run `cargo test -p sugarscape-core protection_`; expect compile failures for the new API, then implement memory/cue/checked rig construction and rerun to pass. `perceived_exposure` walks `world.sight(owner.pos, owner.vision)` and checks occupancy only; it never filters on watches/cheater.
+- [x] Add cap eviction test with `MEMORY_CAP+1` entries: oldest tick then lowest site loses; replacing a site does not consume another slot. Test unseen watcher, opaque wall, own-agent exclusion, no watcher-private-state reads, None-config round-trip omission, invalid combinations and exact role positions/holdings at tick zero.
+- [x] Run `cargo test -p sugarscape-core protection_`; expect compile failures for the new API, then implement memory/cue/checked rig construction and rerun to pass. `perceived_exposure` walks `world.sight(owner.pos, owner.vision)` and checks occupancy only; it never filters on watches/cheater.
 The memory implementation is a small deterministic map:
 
 ```rust
@@ -143,8 +143,8 @@ impl ExposureMemory {
 }
 ```
 
-- [ ] Hook initial positive `caching::bury` into `note_prepared_deposit` after the existing watching operation. Only scheduled preparation owner/site/ticks register a source; reburials never register. Preserve legacy gross flows and default-off fast paths.
-- [ ] Format, run core tests/strict Clippy, update Stage 1 and commit: `feat(minds): add bounded protection lab and local exposure memory`.
+- [x] Hook initial positive `caching::bury` into `note_prepared_deposit` after the existing watching operation. Only scheduled preparation owner/site/ticks register a source; reburials never register. Preserve legacy gross flows and default-off fast paths.
+- [x] Format, run core tests/strict Clippy, update Stage 1 and commit: `feat(minds): add bounded protection lab and local exposure memory`.
 
 ### Task 2: paid physical relocation and turn integration
 
