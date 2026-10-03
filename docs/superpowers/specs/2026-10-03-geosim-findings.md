@@ -102,14 +102,14 @@ Fixed source family: 88 targets; mechanism contrasts: six targets. Unavailable s
 | source.distance_exponent5.r2_max | [0.9905, 0.9915] | 0.9702945113637638 | Unavailable | Unavailable | Unavailable | incomplete_precision_fit_population |
 | source.distance_exponent5.log_range_median | [4.25, 4.35] | 4.783251396239723 | Unavailable | Unavailable | Unavailable | incomplete_precision_fit_population |
 | source.distance_exponent5.war_count_median | [217, 217] | 483.0 | Unavailable | Unavailable | Unavailable | incomplete_precision_fit_population |
-| source.grid75.slope_min | [-0.675, -0.665] | -0.8259633756223512 | [-1.0912504262198353, -0.7700327173779339] | 7.999920000799993e-05 | 0.006639933600663994 | Unavailable |
-| source.grid75.slope_median | [-0.595, -0.585] | -0.6750236516092933 | [-0.7568323916182964, -0.5946573788263146] | 0.052659473405265944 | 1.0 | Unavailable |
-| source.grid75.slope_max | [-0.545, -0.535] | -0.44972278040795566 | [-0.5634603285092902, -0.3997311259143233] | 0.17127828721712782 | 1.0 | Unavailable |
-| source.grid75.r2_min | [0.9865, 0.9875] | 0.7780304363485788 | [0.7224854984111381, 0.8751746767321206] | 1.999980000199998e-05 | 0.0017599824001759985 | Unavailable |
-| source.grid75.r2_median | [0.9925, 0.9935] | 0.9498602862990279 | [0.8822802427066262, 0.9524594424946033] | 1.999980000199998e-05 | 0.0017599824001759985 | Unavailable |
-| source.grid75.r2_max | [0.9955, 0.9965] | 0.9849383988169167 | [0.9567222268518931, 0.9874379442390178] | 1.999980000199998e-05 | 0.0017599824001759985 | Unavailable |
-| source.grid75.log_range_median | [4.55, 4.65] | 5.2520564424854195 | [5.026869578361355, 5.324683495937205] | 1.999980000199998e-05 | 0.0017599824001759985 | Unavailable |
-| source.grid75.war_count_median | [502, 502] | 975.0 | [951.0, 1062.0] | 1.999980000199998e-05 | 0.0017599824001759985 | Unavailable |
+| source.grid75.slope_min | [-0.675, -0.665] | -0.8259633756223512 | [-1.0912504262198353, -0.7700327173779339] | 7.999920000799993e-05 | 0.006639933600663994 | Available |
+| source.grid75.slope_median | [-0.595, -0.585] | -0.6750236516092933 | [-0.7568323916182964, -0.5946573788263146] | 0.052659473405265944 | 1.0 | Available |
+| source.grid75.slope_max | [-0.545, -0.535] | -0.44972278040795566 | [-0.5634603285092902, -0.3997311259143233] | 0.17127828721712782 | 1.0 | Available |
+| source.grid75.r2_min | [0.9865, 0.9875] | 0.7780304363485788 | [0.7224854984111381, 0.8751746767321206] | 1.999980000199998e-05 | 0.0017599824001759985 | Available |
+| source.grid75.r2_median | [0.9925, 0.9935] | 0.9498602862990279 | [0.8822802427066262, 0.9524594424946033] | 1.999980000199998e-05 | 0.0017599824001759985 | Available |
+| source.grid75.r2_max | [0.9955, 0.9965] | 0.9849383988169167 | [0.9567222268518931, 0.9874379442390178] | 1.999980000199998e-05 | 0.0017599824001759985 | Available |
+| source.grid75.log_range_median | [4.55, 4.65] | 5.2520564424854195 | [5.026869578361355, 5.324683495937205] | 1.999980000199998e-05 | 0.0017599824001759985 | Available |
+| source.grid75.war_count_median | [502, 502] | 975.0 | [951.0, 1062.0] | 1.999980000199998e-05 | 0.0017599824001759985 | Available |
 
 | Source contrast | Verdict/reason | Estimate | 95% interval | Raw p | Holm p |
 |---|---|---:|---|---:|---:|
@@ -408,8 +408,10 @@ Exact Clauset Supplement S1 reproduction is Unresolved; CoW missing fatalities (
 
 ## Execution and complete matrix
 
-The complete registered run retained1490 attempted keys across37 arms: {'completed': 1486, 'invalid': 4}. Native elapsed 3344.903s; full pinned analysis elapsed 2239.471s. All72 declared child-job slots and fixed source/parameter100000, pooled KS1000 draw settings were retained. Unavailable jobs retain their assigned slots and reasons instead of fabricated resamples. The separate unregistered10500-period runtime benchmark was never fitted or included.
+The complete registered run retained1490 attempted keys across37 arms: {'completed': 1486, 'invalid': 4}. Native elapsed 3344.903s; full pinned analysis elapsed 2239.471s. All72 reserved child-job slots were retained. Eligible source and parameter jobs used the prescribed100000 resamples; unavailable jobs generated no resamples and retain their assigned slots and reasons. All22 pooled KS jobs used1000 successful generated-and-refitted replicates each. The separate unregistered10500-period runtime benchmark was never fitted or included.
 
 The [complete compact matrix](2026-10-03-geosim-findings.json) retains1490 individual slots,88 source targets,six mechanism comparisons,22 modern pools,37 parameter summaries and two descriptive parameter contrasts. All fit availability, four-alternative outcomes, inferred source-definition checks, export saturation and war/queue/censoring/shadow counters remain recorded. Only source OLS plot-point arrays are omitted; the full ignored analysis and exact omission paths are bound by the [provenance inventory](2026-10-03-geosim-provenance.json).
 
 Model severity measures abstract resource damage; empirical battle fatalities have a different definition. Preparation reference/empirical bytes and failed retrievals remain retained evidence. They do not establish archived source identity, seed docking, SupplementS1 reproduction or equivalence to Cederman historical input.
+
+Presentation amended 2026-10-03: eight available `source.grid75` targets now show `Available` in the reason column, and the execution appendix distinguishes reserved slots from eligible resampling. This manual correction preserves every statistic and verdict; original generated and original committed reports remain separately hash-bound in the [postmeasurement amendment](2026-10-03-geosim-postmeasurement-recorder-amendment.md).
