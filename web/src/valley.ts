@@ -54,7 +54,7 @@ export interface ReadoutWorld { config: ModelConfig; tick: number; population: n
  * households (`AD 1142 · 213 households`); in Compare both worlds' counts.
  */
 export function readoutText(a: ReadoutWorld, b: ReadoutWorld | null): string {
-  if (modelOf(a.config) === 'polarity') {
+  if (modelOf(a.config) === 'polarity' || modelOf(a.config) === 'geosim') {
     const periods = (w: ReadoutWorld) => (w.latest as PolarityStats | null)?.periods ?? 0;
     return b ? `t = ${a.tick} · A ${periods(a)} periods, ${a.population} · B ${periods(b)} periods, ${b.population} sovereign governments` : `t = ${a.tick} · ${periods(a)} periods · ${a.population} sovereign governments`;
   }

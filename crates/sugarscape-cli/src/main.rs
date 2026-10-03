@@ -231,7 +231,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
         world.model_mut().run(args.ticks);
     }
     let world = world.model();
-    if world.finished() && config.kind() == ModelKind::Polarity {
+    if world.finished() && matches!(config.kind(), ModelKind::Polarity | ModelKind::Geosim) {
         let latest: serde_json::Value =
             serde_json::from_str(&world.latest_json()).expect("core snapshot is JSON");
         let periods = latest["periods"].as_u64().unwrap_or(0);

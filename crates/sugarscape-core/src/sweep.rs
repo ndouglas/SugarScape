@@ -391,6 +391,12 @@ impl Sweep {
         })?;
         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
             let why = match config.kind() {
+                crate::model::ModelKind::Geosim => {
+                    let crate::model::ModelConfig::Geosim(c) = &config else {
+                        unreachable!()
+                    };
+                    format!("GeoSim source horizon of {} periods requires {max} display ticks in this config", c.horizon())
+                }
                 crate::model::ModelKind::Polarity => {
                     format!("polarity reaches its economic horizon after {max} display ticks in this config")
                 }

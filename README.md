@@ -3794,3 +3794,36 @@ and [native protocol](survey/polarity/README.md).
 The [dated domestic amendment](docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md)
 reruns all 1,180 provincial sessions with the original seeds; all 27,340
 nonprovincial raw lines and the reviewed pre-domestic findings remain preserved.
+
+
+### GeoSim war sizes (Cederman 2003)
+
+`geosim` reconstructs sovereign states, mobile resource commitments, conquest,
+technological shocks and connected war episodes on a bounded cardinal lattice.
+Five presets expose the paper reconstruction, the separately attributed 2017
+artifact readings, no technology, no context and smaller shocks. The artifact
+preset is an uncertified reading bundle; it does not establish identity with the
+archived executable or reproduce the APSR study.
+
+The web offers territory, capacity, technology, alert and war views. Inspect
+retains front decisions, resource accounting, the latest structural event and a
+complete terminal census of completed and censored episodes. Exported episodes
+and completed episodes awaiting export remain separate. Severity measures abstract
+resource damage, not battle deaths. Compare presents each world's source clock;
+Experiments captures the resolved configuration and defaults to its full source
+horizon. These experiments are exploratory, not registered study execution.
+
+One display tick can group several source periods. The paper preset starts with
+500 initialization periods and 10,000 observation periods; the default grouping
+is one period per tick. To inspect a resolved configuration without advancing it:
+
+```sh
+cargo run --release -p sugarscape-cli -- run --preset geosim-paper --ticks 0 --config-out geosim.json
+```
+
+Named controls expose source ambiguities independently, including reciprocal
+versus same defender thresholds and attacked-party versus acting-party damage.
+See the [approved design](docs/superpowers/specs/2026-10-03-geosim-design.md),
+[source readings](docs/superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md)
+and [artifact certification audit](docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md).
+No scientific result is inferred from the host integration checks.

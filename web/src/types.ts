@@ -256,7 +256,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity' | 'geosim';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -675,7 +675,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig | GeosimConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1473,7 +1473,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats | GeosimStats;
 
 export interface SiteView {
   x: number;
@@ -2214,7 +2214,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection | GeosimInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -2224,6 +2224,10 @@ export type AnyInspection = Inspection | SchellingInspection | RingInspection | 
  * `payoff`.
  */
 export type ColorMode =
+  | 'capacity'
+  | 'technology'
+  | 'alert'
+  | 'wars'
   | 'territory'
   | 'resources'
   | 'coalitions'
@@ -2389,4 +2393,84 @@ export interface PolarityInspection {
   cell: { id: number; capital: number; predator: boolean; stock: number | null }; capital: number; province_stock: number | null; corporate_stock: number | null; members: number[]; neighbors: number[];
   trust: unknown; threat: number | null; coalition: PolarityCoalition | null; foreign_fronts: unknown; domestic_fronts: unknown; last_event: unknown;
   agent: null;
+}
+
+/** Resolved GeoSim readings; alternative values remain serialized even when inactive. */
+export interface GeosimConfig {
+  model: 'geosim'; width: number; height: number; initial_states: number;
+  initialization_periods: number; observation_periods: number; periods_per_tick: number;
+  resource_adjustment: number; mobile_share: number; campaign_drop_probability: number;
+  attack_probability: number; deactivation_probability: number; superiority_threshold: number;
+  victory_threshold: number; superiority_exponent: number; victory_exponent: number;
+  damage_fraction: number; distance_offset: number; distance_threshold: number; distance_exponent: number;
+  shock_probability: number; shock_shift: number; war_shadow: number; context_activation: boolean;
+  event_log: boolean; event_log_limit: number;
+  topology: 'bounded' | 'torus'; founder_growth: 'ordered_round_robin' | 'shuffled_round_robin';
+  initial_capacity: 'extracted_capacity' | 'artifact_random_100_1'; distance_metric: 'euclidean' | 'manhattan';
+  distance_formula: 'decreasing' | 'printed_increasing'; enemy_total: 'active_fronts' | 'all_fronts';
+  initiation_guard: 'literal_precedence' | 'global_no_action'; campaign_drop_timing: 'each_decision' | 'after_battle';
+  path_sampling: 'target_first' | 'attacker_first'; attack_projection: 'respective_states' | 'initiator_curve';
+  damage_basis: 'opponent_projected' | 'own_commitment'; damage_feedback: 'subtract_losses' | 'add_losses';
+  damage_incidence: 'attacked_party' | 'acting_party'; severity_damage: 'all_damaged_fronts' | 'mutual_only';
+  victory_draws: 'independent_defender_priority' | 'exclusive'; defender_threshold: 'reciprocal' | 'same_threshold';
+  capital_capture: 'capture_and_fragment' | 'collapse_only'; locking: 'affected_cells' | 'affected_states';
+  technology_inheritance: 'reset_on_reemergence' | 'retain_cell_threshold';
+  cluster_linkage: 'conflict_edges' | 'adjacent_active_states'; retired_participants: 'retain_shadow' | 'drop_immediately';
+  count_boundary: 'after_initialization' | 'at_initialization'; severity_export: 'raw_damage' | 'java_int100';
+  completed_export: 'all_completed' | 'one_per_period'; numerical_policy: 'reject_nonpositive' | 'floor_zero';
+}
+export interface GeosimStateId { capital_cell: number; sovereignty_generation: number }
+export interface GeosimCell { id: number; owner: GeosimStateId; last_threshold: number | null; next_generation: number }
+export interface GeosimState {
+  id: GeosimStateId; capacity: number | null; threshold: number | null; alert: boolean;
+  campaign: GeosimStateId | null; previous_damage: number | null; newly_independent: boolean;
+  extracted_yield: number | null; recurrence_residual: number | null;
+}
+export interface GeosimFront {
+  states: [GeosimStateId, GeosimStateId]; previous: [boolean,boolean]; actions: [boolean,boolean];
+  old_commitments: [number | null,number | null]; commitments: [number | null,number | null];
+  path: [number,number] | null; initiator: number | null; last_damage: [number | null,number | null];
+  last_victory_probabilities: [number | null,number | null];
+}
+export interface GeosimWar {
+  id: number; parents: number[]; start_period: number; end_period: number | null;
+  last_active_period: number; active_periods: number; elapsed_periods: number;
+  raw_severity: number | null; exported_severity: number | null;
+  participants: {state: GeosimStateId; last_fighting_period: number}[];
+  end_cause: string | null; java_saturated: boolean; java_subunit_zero: boolean; fighting_periods: number[];
+}
+export interface GeosimEvent { id: number; period: number; kind: string; states: GeosimStateId[]; cells: number[] }
+export interface GeosimResourceUpdate {
+  state: GeosimStateId; period: number; old_capacity: number | null; extracted_yield: number | null;
+  applied_damage: number | null; target_capacity: number | null; new_capacity: number | null;
+  clipping: number | null; residual: number | null; reset: boolean;
+}
+export interface GeosimLedger {
+  attacks: number; fighting_front_periods: number; mutual_front_periods: number; conquests: number;
+  collapses: number; disconnections: number; stale_claims: number; locked_claims: number; double_successes: number;
+  path_collisions: number; shocks: number; damage: number | null; measured_damage: number | null;
+  capacity_increase: number | null; capacity_decrease: number | null; clipping: number | null;
+  retirement_capacity: number | null; reemergence_capacity: number | null; recurrence_residual: number | null;
+}
+export interface GeosimOutcome {
+  config: Omit<GeosimConfig, 'model'>; seed: number; rng_mode: string; periods: number; attempted_period: number;
+  counting_start: number; valid: boolean; state_available: boolean; finish_reason: string; invalid_reason: string | null;
+  completed_wars: GeosimWar[]; censored_wars: GeosimWar[]; legacy_visible_wars: GeosimWar[];
+  exporter_backlog: GeosimWar[]; merges: {period: number; survivor: number; absorbed: number}[];
+  retired_states: GeosimStateId[]; sovereign_count: number; states: GeosimState[]; cells: GeosimCell[];
+  ledger: GeosimLedger; fronts: GeosimFront[]; resource_updates: GeosimResourceUpdate[];
+  partial_period_fights: [GeosimStateId, GeosimStateId, number | null][];
+}
+export interface GeosimStats {
+  tick: number; period: number; periods: number; attempted_period: number; last_tick_periods: number;
+  sovereign_count: number; total_capacity: number | null; largest_territory: number; alerted_states: number;
+  mean_threshold: number | null; completed_wars: number; active_wars: number; collector_backlog: number;
+  damage: number | null; conquests: number; shocks: number; finish_reason: string | null; invalidity: string | null;
+}
+export interface GeosimInspection {
+  model: 'geosim'; cell: GeosimCell; state: GeosimState; members: number[]; distance: number | null;
+  projection: number | null; resource_recurrence: GeosimResourceUpdate | null; fronts: GeosimFront[];
+  wars: GeosimWar[]; period: number; periods: number; attempted_period: number; counting_start: number;
+  finish_reason: string | null; invalidity: string | null; outcome: GeosimOutcome | null;
+  last_structural_event: GeosimEvent | null; events: GeosimEvent[]; events_dropped: number; agent: null;
 }

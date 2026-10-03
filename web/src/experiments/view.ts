@@ -17,7 +17,7 @@ import { SweepChart } from './chart';
 import { chartData } from './chart-data';
 import { readOpened, slug, type OpenCore } from './file';
 import { FixedPanel } from './fixed-panel';
-import { defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
+import { captureExperimentBase, defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
 import { FormView } from './form-view';
 import { baseLabel } from './labels';
 import { poolSize, WorkerPool, type WorkerLike } from './pool';
@@ -203,7 +203,7 @@ export class ExperimentsView {
   /** The current world as a base: its preset when unmodified, otherwise its config (Decision 17). */
   private currentBase(): SweepBase {
     const e = this.engine;
-    return e.presetId !== null && !e.isModified() ? { preset: e.presetId } : { config: structuredClone(e.baseConfig) };
+    return captureExperimentBase(e.presetId, e.isModified(), e.baseConfig);
   }
 
   private configOf(base: SweepBase): ModelConfig | null {

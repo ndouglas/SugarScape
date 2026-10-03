@@ -8,6 +8,8 @@ import type {
   FirmsConfig,
   FirmsInspection,
   CollusionConfig,
+  GeosimConfig,
+  GeosimInspection,
   PolarityConfig,
   PolarityInspection,
   AuctionsConfig,
@@ -60,7 +62,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity', 'geosim'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -94,12 +96,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   collusion: 'Algorithmic Collusion',
   auctions: 'Q-learning Auctions',
   polarity: 'Emergent Polarity',
+  geosim: 'GeoSim: The Size of Wars',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity' || tag === 'geosim'
     ? tag
     : 'sugarscape';
 }
@@ -269,6 +272,10 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
  * last generation); Infinity for a model that never finishes.
  */
 export function ticksLeft(c: ModelConfig, tick: number): number {
+  if (modelOf(c) === 'geosim') {
+    const g = c as GeosimConfig;
+    return Math.max(0, Math.ceil((g.initialization_periods + g.observation_periods) / g.periods_per_tick) - tick);
+  }
   if (modelOf(c) === 'polarity') {
     const p = c as PolarityConfig;
     return Math.max(0, Math.ceil(p.horizon / p.periods_per_tick) - tick);
@@ -673,6 +680,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['effort', 'Effort'],
     ['income', 'Income'],
   ],
+  geosim: [['territory', 'Ownership'], ['capacity', 'Resource capacity'], ['technology', 'Technology'], ['alert', 'Alert and campaign'], ['wars', 'War membership']],
   polarity: [['territory', 'Territory'], ['resources', 'Resources'], ['strategy', 'Latent strategy'], ['coalitions', 'Coalitions']],
   auctions: [['bids', 'Bids · whole run'], ['late', 'Bids · final 20%'], ['values', 'Values']],
   // Each firm's strategy map: price or how often each state was visited.
@@ -713,10 +721,15 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   firms: [],
   // Each firm's strategy map: price or how often each state was visited.
   collusion: [],
+  geosim: [],
   polarity: [],
   auctions: [],
 };
 
 export function isPolarityView(v: AnyInspection): v is PolarityInspection {
   return 'model' in v && v.model === 'polarity';
+}
+
+export function isGeosimView(v: AnyInspection): v is GeosimInspection {
+  return 'model' in v && v.model === 'geosim';
 }

@@ -786,6 +786,13 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
   ],
   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
   hoard: [],
+  geosim: [
+    { title: 'Governments and territory', lines: [{key:'sovereign_count',label:'Sovereign governments',color:'--c1'}, {key:'largest_territory',label:'Largest territory (cells)',color:'--c2'}] },
+    { title: 'Resources and technology', lines: [{key:'total_capacity',label:'Total resource capacity',color:'--c1'}, {key:'mean_threshold',label:'Mean technology threshold',color:'--c2'}] },
+    { title: 'War census', lines: [{key:'completed_wars',label:'Completed clusters',color:'--c1'}, {key:'active_wars',label:'Active clusters (censored at termination)',color:'--red'}, {key:'collector_backlog',label:'Completed awaiting export',color:'--c2'}] },
+    { title: 'Abstract conflict damage', lines: [{key:'damage',label:'Cumulative resource damage',color:'--red'}] },
+    { title: 'Source clock', lines: [{key:'periods',label:'Completed source periods',color:'--c1'}, {key:'last_tick_periods',label:'Periods in last display tick',color:'--c2'}] },
+  ],
   polarity: [
     { title: 'Polarity', lines: [{ key: 'sovereign_count', label: 'Sovereign states (tick end)', color: '--c1' }, { key: 'largest_territory', label: 'Largest territory', color: '--c2' }, { key: 'second_largest_territory', label: 'Second largest', color: '--c3' }] },
     { title: 'Resources', lines: [{ key: 'total_stock', label: 'Total stock (tick end)', color: '--c1' }, { key: 'capital_stock', label: 'Capital stock', color: '--c2' }, { key: 'province_stock', label: 'Province stock', color: '--c3' }] },

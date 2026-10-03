@@ -828,6 +828,22 @@ fn presets_list_every_model_with_sugarscape_configs_untagged() {
             .map(String::from)
     };
     assert_eq!(model("ii-2-unit"), None);
+    let geosim_ids = list
+        .iter()
+        .filter(|p| p["config"]["model"] == "geosim")
+        .map(|p| p["id"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        geosim_ids,
+        vec![
+            "geosim-paper",
+            "geosim-no-technology",
+            "geosim-no-context",
+            "geosim-smaller-shocks",
+            "geosim-artifact-2017"
+        ]
+    );
+    assert_eq!(model("geosim-paper").as_deref(), Some("geosim"));
     assert_eq!(model("vi-4-schelling-25").as_deref(), Some("schelling"));
     assert_eq!(model("vi-9-ring-megagroup").as_deref(), Some("ring"));
     // Sugarscape presets serialize as before, plus the menu's title.
@@ -842,6 +858,21 @@ fn presets_list_every_model_with_sugarscape_configs_untagged() {
 fn schemas_are_listed_for_the_other_models() {
     let schemas: serde_json::Value = serde_json::from_str(&model_schemas_json()).unwrap();
     assert!(schemas.get("sugarscape").is_none());
+    let geosim = schemas["geosim"].as_array().unwrap();
+    for path in [
+        "damage_incidence",
+        "defender_threshold",
+        "severity_export",
+        "completed_export",
+        "numerical_policy",
+    ] {
+        assert!(
+            geosim
+                .iter()
+                .any(|p| p["path"] == path && p["kind"] == "choice" && p["apply"] == "reset"),
+            "missing GeoSim reading {path}"
+        );
+    }
     let schelling = schemas["schelling"].as_array().unwrap();
     assert!(schelling
         .iter()

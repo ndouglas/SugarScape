@@ -1,4 +1,4 @@
-import type { AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
+import type { GeosimConfig, AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -109,6 +109,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
   if (model === 'firms') {
     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
+  }
+  if (model === 'geosim') {
+    const g = config as GeosimConfig | undefined;
+    return { ...form, description: 'Exploratory GeoSim technology settings; completed abstract conflict clusters after the captured source horizon. This is not the registered scientific study.', x: { path: 'shock_shift', values: '0,10,20' }, ticks: g ? Math.ceil((g.initialization_periods + g.observation_periods) / g.periods_per_tick) : 10500, metric: { ...form.metric, kind: 'final', series: 'completed_wars' } };
   }
   if (model === 'polarity') {
     const p = config as PolarityConfig | undefined;
@@ -299,4 +303,9 @@ export function numericPaths(config: ModelConfig, schema: Param[] = []): string[
   };
   walk(config, '');
   return out;
+}
+
+/** Capture the chosen experiment base before later world edits. */
+export function captureExperimentBase(presetId: string | null, modified: boolean, config: ModelConfig): SweepBase {
+  return presetId !== null && !modified ? {preset:presetId} : {config:structuredClone(config)};
 }

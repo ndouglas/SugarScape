@@ -221,6 +221,8 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'collusion-calvano',
     b: 'collusion-synchronous',
   },
+  { id: 'geosim-technology', label: 'With vs without technological change — GeoSim (Compare)', a: 'geosim-paper', b: 'geosim-no-technology' },
+  { id: 'geosim-context', label: 'With vs without contextual activation — GeoSim (Compare)', a: 'geosim-paper', b: 'geosim-no-context' },
   { id: 'auctions-formats', label: 'First price vs second price — Q-learning Auctions (Compare)', a: 'auctions-first-price', b: 'auctions-second-price' },
   { id: 'auctions-feedback', label: 'Learning from one bid vs every bid — Q-learning Auctions (Compare)', a: 'auctions-first-price', b: 'auctions-feedback' },
 ];

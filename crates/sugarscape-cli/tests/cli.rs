@@ -964,3 +964,40 @@ fn fingerprint_trace_reports_write_errors() {
     assert!(stderr(&out).contains(path(&dir)), "{}", stderr(&out));
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn geosim_cli_reports_source_clock_and_resolves_inactive_readings() {
+    let dir = scratch("geosim");
+    let config = dir.join("config.json");
+    let resolved = dir.join("resolved.json");
+    let trace = dir.join("trace.json");
+    std::fs::write(&config, r#"{"model":"geosim","width":2,"height":2,"initial_states":1,"initialization_periods":2,"observation_periods":13,"periods_per_tick":7,"defender_threshold":"same_threshold","damage_incidence":"acting_party"}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        path(&config),
+        "--ticks",
+        "100",
+        "--config-out",
+        path(&resolved),
+        "--fingerprint-trace",
+        path(&trace),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains("15 completed periods"),
+        "{}",
+        stderr(&out)
+    );
+    let value: serde_json::Value = serde_json::from_str(&read(&resolved)).unwrap();
+    assert_eq!(value["defender_threshold"], "same_threshold");
+    assert_eq!(value["damage_incidence"], "acting_party");
+    assert_eq!(value["attack_projection"], "respective_states");
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&read(&trace)).unwrap();
+    assert_eq!(
+        rows.iter()
+            .map(|r| r["tick"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        vec![0, 1, 2, 3]
+    );
+}
