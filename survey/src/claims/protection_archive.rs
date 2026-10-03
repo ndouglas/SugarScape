@@ -13,7 +13,7 @@ use sugarscape_core::{
     geometry::Pos,
     minds::protection::{
         ledger::{Ledger, Outflow},
-        runner::{EpisodeRecord, FrameRecord},
+        runner::{ActionRecord, EpisodeRecord, FrameRecord},
         state::{Fixture, LabConfig, Policy},
     },
 };
@@ -566,6 +566,7 @@ pub(super) fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
                 .map(|r| r.pos)
                 .or_else(|| f.deaths.iter().find(|d| d.id == a.id).map(|d| d.pos))
                 .unwrap();
+            validate_action_markers(lab, a, after)?;
             if before.pos.x.abs_diff(after.x) + before.pos.y.abs_diff(after.y) > 1 {
                 return fail("speed-one movement violation");
             }
@@ -974,8 +975,42 @@ pub(super) fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
         {
             return fail("food endpoint disagrees with lineage");
         }
-    } else if r.thief_transferred.is_some() {
-        return fail("food endpoint without lineage");
+    } else {
+        validate_unavailable_lineage(r)?;
+    }
+    Ok(())
+}
+/// Stumble marks a hit before trying loot, so discovery need not transfer food.
+/// Raid marks only a positive take or a wasted attempt; the latter may stumble.
+fn validate_action_markers(lab: &LabConfig, a: &ActionRecord, after: Pos) -> Result<(), String> {
+    let arrival = a.id == 2
+        && (a.phase == "ordinary"
+            || (a.phase == "encounter" && a.action == "walk" && a.target == Some(after)));
+    if a.discovery_site
+        .is_some_and(|s| !arrival || lab.discovery <= 0.0 || s != site(after))
+        || (a.discovery_amount > 0.0 && a.discovery_site.is_none())
+        || (a.discovery_site.is_some() && a.raid_amount > 0.0)
+    {
+        return Err("incoherent discovery marker".into());
+    }
+    if a.raid_site.is_some_and(|s| !arrival || s != site(after))
+        || a.raid_wasted != (a.raid_site.is_some() && a.raid_amount == 0.0)
+        || (a.raid_amount > 0.0 && a.raid_site.is_none())
+    {
+        return Err("incoherent raid marker".into());
+    }
+    Ok(())
+}
+fn validate_unavailable_lineage(r: &EpisodeRecord) -> Result<(), String> {
+    if r.thief_transferred.is_some() {
+        return Err("food endpoint without lineage".into());
+    }
+    if !r
+        .ledger_errors
+        .iter()
+        .any(|reason| !reason.trim().is_empty())
+    {
+        return Err("unavailable lineage without a meaningful lineage diagnostic reason".into());
     }
     Ok(())
 }
@@ -1153,6 +1188,144 @@ pub(super) mod tests {
         diagnostic.thief_transferred = None;
         diagnostic.ledger_errors.push("diagnostic failure".into());
         assert!(validate_episode(&diagnostic).is_ok());
+    }
+    fn assert_rejected_before_analysis(record: EpisodeRecord, expected: &str) {
+        let mut index = complete_index();
+        let condition = index
+            .manifest
+            .conditions
+            .iter()
+            .find(|c| c.lab == record.lab)
+            .unwrap();
+        let ordinal = index
+            .runs
+            .iter()
+            .position(|raw| raw.condition == condition.id && raw.seed == record.seed)
+            .unwrap();
+        index.runs.swap(0, ordinal);
+        assert!(validate_episode(&record).unwrap_err().contains(expected));
+        let records = vec![record; index.runs.len()];
+        let error = super::super::protection_report::analyze(&index, &records).unwrap_err();
+        assert!(error.contains(expected), "{error}");
+    }
+    #[test]
+    fn protection_archive_rejects_impossible_action_markers_before_analysis() {
+        let lab = manifest()
+            .conditions
+            .into_iter()
+            .find(|c| {
+                matches!(c.lab.fixture, Fixture::Stumble { .. })
+                    && c.lab.discovery > 0.0
+                    && !c.lab.mirrored
+            })
+            .unwrap()
+            .lab;
+        let r = synthetic(lab, 10001);
+        validate_episode(&r).unwrap();
+        // All mutations are zero-transfer markers: physical balances remain intact.
+        for (frame, actor, remote, zero_find) in [
+            (1, 2, false, false),
+            (9, 2, false, false),
+            (19, 1, false, false),
+            (25, 2, true, false),
+            (25, 2, false, true),
+        ] {
+            let mut bad = r.clone();
+            if zero_find {
+                bad.lab.discovery = 0.0;
+            }
+            let location = site(role(&bad.frames[frame], actor).unwrap().pos);
+            bad.frames[frame]
+                .actions
+                .iter_mut()
+                .find(|a| a.id == actor)
+                .unwrap()
+                .discovery_site = Some(if remote { location + 1 } else { location });
+            assert_rejected_before_analysis(bad, "discovery marker");
+        }
+        let mut bad = r.clone();
+        let action = bad.frames[25]
+            .actions
+            .iter_mut()
+            .find(|a| a.id == 2)
+            .unwrap();
+        action.action = "hold".into();
+        action.target = None;
+        action.discovery_site = Some(30);
+        assert_rejected_before_analysis(bad, "discovery marker");
+        for (frame, actor, location, wasted) in [
+            (1, 2, 30, true),
+            (9, 2, 30, true),
+            (19, 1, 30, true),
+            (25, 2, 31, true),
+            (25, 2, 30, false),
+        ] {
+            let mut bad = r.clone();
+            let action = bad.frames[frame]
+                .actions
+                .iter_mut()
+                .find(|a| a.id == actor)
+                .unwrap();
+            action.raid_site = Some(location);
+            action.raid_wasted = wasted;
+            assert_rejected_before_analysis(bad, "raid marker");
+        }
+        let mut bad = r;
+        bad.frames[25]
+            .actions
+            .iter_mut()
+            .find(|a| a.id == 2)
+            .unwrap()
+            .raid_wasted = true;
+        assert_rejected_before_analysis(bad, "raid marker");
+    }
+    #[test]
+    fn protection_archive_preserves_zero_transfer_operation_markers() {
+        let lab = manifest()
+            .conditions
+            .into_iter()
+            .find(|c| c.lab.discovery > 0.0)
+            .unwrap()
+            .lab;
+        let after = Pos::new(3, 3);
+        let mut action = ActionRecord {
+            id: 2,
+            phase: "ordinary".into(),
+            action: "foraging".into(),
+            discovery_site: Some(site(after)),
+            ..Default::default()
+        };
+        // A successful find with no carrying room still records discovery.
+        validate_action_markers(&lab, &action, after).unwrap();
+        // A wasted raid falls through to stumbling and can record both markers.
+        action.raid_site = Some(site(after));
+        action.raid_wasted = true;
+        validate_action_markers(&lab, &action, after).unwrap();
+        action.discovery_site = None;
+        validate_action_markers(&lab, &action, after).unwrap();
+        // A successful raid returns before discovery, and is never wasted.
+        action.raid_amount = 1.0;
+        assert!(validate_action_markers(&lab, &action, after).is_err());
+        action.raid_wasted = false;
+        validate_action_markers(&lab, &action, after).unwrap();
+        action.discovery_site = Some(site(after));
+        assert!(validate_action_markers(&lab, &action, after).is_err());
+    }
+    #[test]
+    fn protection_archive_requires_nonblank_unavailable_lineage_reason() {
+        let r = synthetic(manifest().conditions[0].lab.clone(), 10001);
+        for reasons in [vec![], vec![String::new()], vec![" \t\n".into()]] {
+            let mut bad = r.clone();
+            bad.cohorts = None;
+            bad.thief_transferred = None;
+            bad.ledger_errors = reasons;
+            assert_rejected_before_analysis(bad, "lineage diagnostic reason");
+        }
+        let mut diagnostic = r;
+        diagnostic.cohorts = None;
+        diagnostic.thief_transferred = None;
+        diagnostic.ledger_errors = vec![" \t".into(), "ledger reconciliation failed".into()];
+        validate_episode(&diagnostic).unwrap();
     }
     pub(crate) fn complete_index() -> Index {
         let mut index = Index {
