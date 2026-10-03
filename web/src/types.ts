@@ -247,7 +247,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -666,7 +666,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1462,7 +1462,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats;
 
 export interface SiteView {
   x: number;
@@ -2202,7 +2202,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -2212,6 +2212,9 @@ export type AnyInspection = Inspection | SchellingInspection | RingInspection | 
  * `payoff`.
  */
 export type ColorMode =
+  | 'territory'
+  | 'resources'
+  | 'coalitions'
   | 'bids'
   | 'late'
   | 'values'
@@ -2337,4 +2340,37 @@ export interface AuctionsInspection {
   greedy: number[]; played: number[]; shares: number[]; fringe_bid: number | null; fringe_share: number | null; payment: number; epsilon: number; stable: number;
   occupancy: number[]; late_occupancy: number[]; whole_count: number; late_count: number; learners: AuctionLearnerView[];
   equilibria: number[][]; outcome: AuctionsOutcome | null; agent: null;
+}
+
+/** Cederman 1994/1997 reconstruction; every control requires reset. */
+export interface PolarityConfig {
+  model: 'polarity'; variant: 'epm' | 'two_level' | 'overextension'; source_profile: 'chapter4' | 'chapter5';
+  width: number; height: number; topology: 'bounded' | 'torus'; predator_share: number; placement: 'exact_count' | 'bernoulli';
+  initial_mean: number; initial_sd: number; harvest_mean: number; harvest_sd: number; resource_distribution: 'normal' | 'bounded_uniform';
+  superiority: number; victory: number; damage_rate: number; asymmetric_damage: 'source' | 'on' | 'off'; allocation: 'equal' | 'pra';
+  action_memory: 'previous_action' | 'war_until_victory'; schlieffen_gate: 'own_current_defections' | 'previous_hostilities' | 'unresolved_war';
+  pra_alliance_support: 'front_commitments' | 'stocks';
+  combat_path: 'stored_episode' | 'redraw_each_period'; tie_break: 'lowest_id' | 'random'; path_collision: 'lowest_id' | 'random';
+  pra_active: 'either_defection' | 'mutual_defection'; victory_timing: 'before_damage' | 'after_damage' | 'after_harvest';
+  update: 'snapshot' | 'sequential'; locking: 'affected_cells' | 'affected_states'; capital_capture: 'collapse_only' | 'capture_and_fragment';
+  province_transfer: 'equal_share' | 'primitive_stock_only'; resource_policy: 'signed' | 'floor_zero' | 'reject_nonpositive';
+  alliances: boolean; trust_initial: number; threat_threshold: number; negative_trust_rate: number; positive_trust_rate: number;
+  threat_observation: 'neighbor_aggression' | 'dyadic_aggression'; obligation_timing: 'same_period' | 'next_period'; pra_attack_rule: 'diagram' | 'literal_prose';
+  tax_rate: number; tax_discount: number; tax_distance: 'manhattan' | 'territorial_path'; stochastic_threshold: number; stochastic_exponent: number;
+  stochastic_resolution: 'single_draw' | 'independent_draws'; horizon: number; stop_at_hegemony: boolean; periods_per_tick: number;
+  event_log: boolean; event_log_limit: number;
+}
+export interface PolarityStats {
+  tick: number; period: number; periods: number; last_tick_periods: number; finish_reason: string | null; invalidity: string | null;
+  sovereign_count: number; largest_territory: number; second_largest_territory: number; predator_capital_share: number;
+  total_stock: number; capital_stock: number; province_stock: number; nonpositive_stocks: number; destruction: number; signed_creation: number;
+  attacks: number; dd_encounters: number; conquests: number; capital_collapses: number; disconnections: number; revolts: number; coalitions: number; open_episodes: number;
+  harvest: number; taxes: number; transfers: number; clipping: number; stale_claims: number; locked_claims: number; double_successes: number; path_collisions: number;
+}
+export interface PolarityInspection {
+  model: 'polarity'; period?: number; periods?: number; horizon?: number; finish_reason?: string | null; invalidity?: string | null;
+  event_log_limit?: number; events_dropped?: number; events?: unknown[];
+  cell: { id: number; capital: number; predator: boolean; stock: number | null }; capital: number; province_stock: number | null; corporate_stock: number | null; members: number[]; neighbors: number[];
+  trust: unknown; threat: number | null; coalition: unknown; foreign_fronts: unknown; domestic_fronts: unknown; last_event: unknown;
+  agent: null;
 }

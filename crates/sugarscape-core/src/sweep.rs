@@ -391,6 +391,9 @@ impl Sweep {
         })?;
         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
             let why = match config.kind() {
+                crate::model::ModelKind::Polarity => {
+                    format!("polarity reaches its economic horizon after {max} display ticks in this config")
+                }
                 crate::model::ModelKind::Tags => {
                     format!("the tags model stops at its last generation, {max} in this config")
                 }
@@ -965,7 +968,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 214] = [
+const BUILTINS: [Builtin; 215] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1822,6 +1825,10 @@ const BUILTINS: [Builtin; 214] = [
         id: "auctions-duration",
         json: include_str!("../../../sweeps/auctions-duration.json"),
     },
+    Builtin {
+        id: "polarity-predators",
+        json: include_str!("../../../sweeps/polarity-predators.json"),
+    },
 ];
 
 /// The built-in sweeps, in display order.
@@ -1839,6 +1846,20 @@ pub fn builtin(id: &str) -> Option<Sweep> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn polarity_playground_sweep_couples_defense_and_victory_ratios() {
+        let sweep =
+            super::builtin("polarity-predators").expect("the polarity experiment is discoverable");
+        let points = sweep.points().unwrap();
+        let config = sweep.config_for(&points[24]).unwrap();
+        let crate::model::ModelConfig::Polarity(c) = config else {
+            panic!("polarity preset required")
+        };
+        assert_eq!((c.superiority, c.victory), (3.0, 3.0));
+        assert_eq!(c.source_profile, crate::polarity::SourceProfile::Chapter4);
+        assert_eq!(sweep.metric.series(), "sovereign_count");
+    }
+
     use super::*;
     use crate::config::Config;
     use crate::world::World;
@@ -2858,7 +2879,8 @@ mod tests {
                 "auctions-market",
                 "auctions-bidders",
                 "auctions-persistent",
-                "auctions-duration"
+                "auctions-duration",
+                "polarity-predators"
             ]
         );
         for b in builtins() {

@@ -1,3 +1,4 @@
+import { polarityChartCaption } from '../polarity';
 import { auctionChartCaption, auctionChartLines } from '../auctions';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
@@ -7,7 +8,7 @@ import { cachingOn, calendarYear, pilferingOn, watcherSplit, watchingOn } from '
 import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
 import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
-import type { AuctionsConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
+import type { AuctionsConfig, PolarityConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
 import {
@@ -663,7 +664,9 @@ export class ChartsPanel {
       const good = p.def.good;
       const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
       p.caption.textContent =
-        p.def.model === 'auctions'
+        p.def.model === 'polarity'
+          ? polarityChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'polarity').map((w) => w.config as PolarityConfig))
+          : p.def.model === 'auctions'
           ? auctionChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'auctions').map((w) => w.config as AuctionsConfig))
           : p.def.pair && goods
           ? `${p.def.title} · ${goods[0].name}/${goods[1].name}`

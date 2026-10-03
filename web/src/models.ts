@@ -8,6 +8,8 @@ import type {
   FirmsConfig,
   FirmsInspection,
   CollusionConfig,
+  PolarityConfig,
+  PolarityInspection,
   AuctionsConfig,
   AuctionsInspection,
   CollusionInspection,
@@ -58,7 +60,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -91,12 +93,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   firms: 'The Emergence of Firms',
   collusion: 'Algorithmic Collusion',
   auctions: 'Q-learning Auctions',
+  polarity: 'Emergent Polarity',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity'
     ? tag
     : 'sugarscape';
 }
@@ -266,6 +269,10 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
  * last generation); Infinity for a model that never finishes.
  */
 export function ticksLeft(c: ModelConfig, tick: number): number {
+  if (modelOf(c) === 'polarity') {
+    const p = c as PolarityConfig;
+    return Math.max(0, Math.ceil(p.horizon / p.periods_per_tick) - tick);
+  }
   if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
   if (modelOf(c) === 'tags' && (c as TagsConfig).end > 0) return Math.max(0, (c as TagsConfig).end - tick);
   if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
@@ -324,7 +331,7 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
   if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
   if (model === 'retirement') return (c as RetirementConfig).stop_at_norm;
-  if (model === 'collusion') return true;
+  if (model === 'collusion' || model === 'polarity') return true;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -666,6 +673,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['effort', 'Effort'],
     ['income', 'Income'],
   ],
+  polarity: [['territory', 'Territory'], ['resources', 'Resources'], ['strategy', 'Latent strategy'], ['coalitions', 'Coalitions']],
   auctions: [['bids', 'Bids · whole run'], ['late', 'Bids · final 20%'], ['values', 'Values']],
   // Each firm's strategy map: price or how often each state was visited.
   collusion: [
@@ -705,5 +713,10 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   firms: [],
   // Each firm's strategy map: price or how often each state was visited.
   collusion: [],
+  polarity: [],
   auctions: [],
 };
+
+export function isPolarityView(v: AnyInspection): v is PolarityInspection {
+  return 'model' in v && v.model === 'polarity';
+}

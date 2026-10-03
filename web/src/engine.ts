@@ -26,7 +26,7 @@ import { calendarYear, hasCaches, hoardSeasonTicks, isSugar, mindsShown, modelOf
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { AgreementConfig, AuctionsConfig, AuctionsStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import type { AgreementConfig, AuctionsConfig, AuctionsStats, PolarityStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
 import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -53,6 +53,11 @@ export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its
 
 /** What the page says when a world has run its course (the engine pauses and fires 'finished'). */
 export function finishedNotice(config: ModelConfig, tick: number, latest?: ModelStats | null): string {
+  if (modelOf(config) === 'polarity') {
+    const p = latest as PolarityStats | null | undefined;
+    if (p?.invalidity) return `Invalid reconstruction at period ${p.periods}: ${p.invalidity} — Reset to run it again`;
+    return `This session finished at period ${p?.periods ?? 'unavailable'} (${p?.finish_reason ?? 'endpoint'}) — Reset to run it again`;
+  }
   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
@@ -400,6 +405,7 @@ export class Engine {
     }
     engine.origin = { config, seed: engine.seed, landscapes };
     engine.adopt(result.snapshot);
+    if (engine.model === 'polarity') engine.origin.config = structuredClone(engine.config);
     engine.replayMoved = false;
     engine.baseConfig = structuredClone(engine.config);
     engine.presetId = engine.matchPreset();
@@ -1140,6 +1146,7 @@ export class Engine {
       this.memoryCells = NO_CELLS;
     }
     const clamped = this.adopt(result.snapshot);
+    if (this.model === 'polarity') this.origin.config = structuredClone(this.config);
     if (!opts.keepSetup) {
       this.baseConfig = structuredClone(this.config);
       this.presetId = opts.presetId ?? this.matchPreset();

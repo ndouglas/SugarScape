@@ -1,4 +1,4 @@
-import type { AuctionsConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
+import type { AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -109,6 +109,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
   if (model === 'firms') {
     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
+  }
+  if (model === 'polarity') {
+    const p = config as PolarityConfig | undefined;
+    return { ...form, description: 'Cederman predator-share settings; terminal sovereign count after the economic horizon or hegemony. Parameters and source profile are retained; ticks batch complete periods.', x: { path: 'predator_share', values: '0,0.05,0.1,0.2,0.4,0.6,0.8,1' }, ticks: p ? Math.ceil(p.horizon / p.periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'sovereign_count' } };
   }
   if (model === 'auctions') {
     return { ...form, set: { auction: 'mixture' }, description: 'Formats from first price (1) to second price (2), using mixture payment. Terminal policy revenue after the fixed horizon; one tick executes periods_per_tick auctions.', x: { path: 'auction_alpha', values: '1:2:0.1' }, ticks: config ? Math.ceil((config as AuctionsConfig).horizon / (config as AuctionsConfig).periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'terminal_revenue' } };

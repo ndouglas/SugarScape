@@ -1,0 +1,13 @@
+{
+  "name": "Emergent Polarity: predator share and defense",
+  "description": "Small playground sample at Cederman 1994's eight predator settings, with superiority and victory ratios coupled at 2 or 3. Three seeds per cell are exploratory, not the source's twenty-seed reconstruction. Chapter 4 damage and the exported named reconstruction choices are retained; terminal sovereign count includes early hegemony. Native registered studies judge source compatibility separately.",
+  "base": { "preset": "polarity-original" },
+  "x": { "label": "Initial predator share", "path": "predator_share", "values": [0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1] },
+  "series": { "label": "Superiority / victory ratio", "values": [
+    { "at": 2, "name": "Offense: 2 / 2", "set": { "superiority": 2, "victory": 2 } },
+    { "at": 3, "name": "Defense: 3 / 3", "set": { "superiority": 3, "victory": 3 } }
+  ] },
+  "seeds": { "from": 1, "count": 3 },
+  "ticks": 1000,
+  "metric": { "kind": "final", "series": "sovereign_count" }
+}

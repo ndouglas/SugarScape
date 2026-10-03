@@ -10,7 +10,7 @@
 **Goal**: CLI/WASM/web controls, views, comparisons and exploratory sweep.
 **Success Criteria**: Resolved configs, complete periods and readable mechanisms agree across hosts.
 **Tests**: CLI, real WASM Engine, parity, web build and browser smoke.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 3: Frozen survey protocol
 **Goal**: Native fixed-count recording and source-aware offline judges.

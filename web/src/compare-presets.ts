@@ -14,6 +14,9 @@ export interface ComparePreset {
 
 export const COMPARE_PRESETS: ComparePreset[] = [
   { id: 'vi-2-vs-vi-3', label: 'Indecomposability — VI-2 vs VI-3 (Compare)', a: 'vi-2-no-trade', b: 'vi-3-trade' },
+  { id: 'polarity-offense-defense', label: 'Offense vs defense — Emergent Polarity (Compare)', a: 'polarity-original', b: 'polarity-defense' },
+  { id: 'polarity-alliance-effect', label: 'No alliances vs behavioral alliances — Emergent Polarity (Compare)', a: 'polarity-original', b: 'polarity-alliances' },
+
   {
     id: 'lhv-published-vs-documented',
     label: 'Replication vs documented — Anasazi (Compare)',

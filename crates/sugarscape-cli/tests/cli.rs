@@ -853,3 +853,17 @@ fn a_civil_run_stops_when_a_group_is_gone() {
         "{err}"
     );
 }
+
+#[test]
+fn polarity_cli_reports_economic_periods_instead_of_only_batched_ticks() {
+    let dir = scratch("polarity");
+    let config = dir.join("polarity.json");
+    std::fs::write(&config, r#"{"model":"polarity","width":2,"height":2,"predator_share":0,"horizon":15,"periods_per_tick":7}"#).unwrap();
+    let out = sugarscape(&["run", "--config", path(&config), "--ticks", "100"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains("15 completed periods"),
+        "{}",
+        stderr(&out)
+    );
+}

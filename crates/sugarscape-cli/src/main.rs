@@ -205,7 +205,19 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
     let mut world = ModelWorld::new(config.clone(), args.seed)?;
     world.model_mut().run(args.ticks);
     let world = world.model();
-    if world.finished() && world.tick() < u64::from(args.ticks) {
+    if world.finished() && config.kind() == ModelKind::Polarity {
+        let latest: serde_json::Value =
+            serde_json::from_str(&world.latest_json()).expect("core snapshot is JSON");
+        let periods = latest["periods"].as_u64().unwrap_or(0);
+        let reason = latest["finish_reason"].as_str().unwrap_or("endpoint");
+        eprintln!(
+            "finished at tick {} ({periods} completed periods, {reason})",
+            world.tick()
+        );
+        if let Some(invalidity) = latest["invalidity"].as_str() {
+            eprintln!("invalid reconstruction: {invalidity}");
+        }
+    } else if world.finished() && world.tick() < u64::from(args.ticks) {
         // The anasazi stops at its end year; civil violence when a group is gone;
         // the tags model at its last generation; Axelrod's culture and bounded
         // confidence once stable, a sugarscape under his rule once its cultures

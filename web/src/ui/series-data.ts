@@ -757,6 +757,13 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
   ],
   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
   hoard: [],
+  polarity: [
+    { title: 'Polarity', lines: [{ key: 'sovereign_count', label: 'Sovereign states (tick end)', color: '--c1' }, { key: 'largest_territory', label: 'Largest territory', color: '--c2' }, { key: 'second_largest_territory', label: 'Second largest', color: '--c3' }] },
+    { title: 'Resources', lines: [{ key: 'total_stock', label: 'Total stock (tick end)', color: '--c1' }, { key: 'capital_stock', label: 'Capital stock', color: '--c2' }, { key: 'province_stock', label: 'Province stock', color: '--c3' }] },
+    { title: 'Combat costs', lines: [{ key: 'destruction', label: 'Positive destruction (tick sum)', color: '--red' }, { key: 'signed_creation', label: 'Signed damage creation (tick sum)', color: '--c4' }] },
+    { title: 'Structural events', lines: [{ key: 'conquests', label: 'Conquests (tick sum)', color: '--c1' }, { key: 'capital_collapses', label: 'Capital collapses', color: '--red' }, { key: 'disconnections', label: 'Disconnected provinces', color: '--c2' }, { key: 'revolts', label: 'Revolts', color: '--c3' }] },
+    { title: 'Economic clock', lines: [{ key: 'periods', label: 'Completed periods', color: '--c1' }, { key: 'last_tick_periods', label: 'Periods in last tick', color: '--c2' }] },
+  ],
   auctions: [
     { title: 'Bids', lines: [
       { key: 'bid_1', label: 'Bidder 1 played (tick mean)', color: '--c1' },
