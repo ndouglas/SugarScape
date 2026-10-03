@@ -335,6 +335,26 @@ controls hold; initialization, ties, hindsight and duration remain descriptive.
 retain failed criteria and every declared arm. Fresh review, CI and deployed
 Inspect/Compare/Experiments checks passed.
 
+## Milestone 36: Emergent Polarity (measured; publication pending)
+
+Cederman's 1994 EPM and chapter 5 provincial variants are the `polarity` kind,
+with six inspectable presets and an exploratory predator-share sweep on the shared
+native/WASM engine. Numerical policy, action memory, scheduling, paths, ties,
+capital capture, transfer and provincial tax defaults are explicit reconstruction
+choices. No original executable was recovered.
+
+All 572 registered arms / 28,520 sessions and 100,000-draw judges are measured;
+28,281 valid and 239 invalid outcomes remain retained. Source mean/category
+judgments: 45 Compatible, 24 Incompatible, 3 Unresolved. Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. Original and precision populations,
+source uncertainty, direct endpoint stocks and signed accounting remain separate.
+Störmer's scatter has 110 configuration means × ten repeats; unknown-seed
+provincial trajectories remain descriptive. Approved diagnostics/export/obsolete-front
+repairs preserve original bytes/verdicts and every affected before/after result.
+[Findings and provenance](superpowers/specs/2026-10-02-emergent-polarity-findings.md) and
+[war-study handoff](studies/2026-09-26-war-and-society.md) document the limits.
+Fresh local Rust/native/Python/release WASM/web/typecheck gates passed; independent
+whole-branch review and final integrated CI/Pages publication remain pending.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -363,6 +383,7 @@ Inspect/Compare/Experiments checks passed.
 - **Axtell's emergence of firms** (and his 2013 parameterization): done (Milestone 33).
 - **Calvano, Calzolari, Denicolò and Pastorello's algorithmic collusion** (and its critics: Asker, Fershtman & Pakes; Lambin; Epivent & Lambin; den Boer, Meylahn & Schinkel; Eschenbaum, Mellgren & Zahn): done (Milestone 34).
 - **Banchio & Skrzypacz’s Q-learning auctions**: done (Milestone 35); baseline and feedback direction hold, four extension/endpoint criteria fail, and patient three-bidder coverage is inconclusive.
+- **Cederman emergent polarity and provincial variants**: measured (Milestone 36; publication pending). 572 arms / 28,520 sessions retained; 45 Compatible, 24 Incompatible, 3 Unresolved; Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. See [findings](superpowers/specs/2026-10-02-emergent-polarity-findings.md). Next: GeoSim war-size protocols.
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.

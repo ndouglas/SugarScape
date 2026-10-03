@@ -1,8 +1,8 @@
 # Emergent polarity: frozen studies
 
-These studies use the normal core engine. They are outside CI. No native study
-has been measured during plan preparation; the manifest freezes 572 arms and
-28,520 sessions before measurement.
+These studies use the normal core engine. They are outside CI. The manifest froze 572 arms and 28,520 sessions before measurement. The complete
+[measured findings](../../docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md)
+retain every registered seed, invalid record and precision population.
 
 From the repository root:
 
@@ -86,3 +86,29 @@ units, counts and clocks. It reports stock frequency as summed nonpositive stock
 with an available observation. Valid and invalid end states are separate;
 unavailable observations are never measured zeros. These are endpoint frequencies,
 not period-exposure rates. Registered analysis.py judges remain byte-identical.
+
+
+## Complete execution and retained amendments
+
+The authoritative findings use `survey/out/polarity-final-sessions.jsonl`: all
+28,200 original full telemetry records whose resolved update is snapshot, plus
+all 320 sequential records from the complete corrected 16-arm × 20-seed rerun.
+Every previously valid sequential record matches; unaffected lines are retained
+byte-for-byte. Complete authority is `survey/out/polarity-sequential-resolved.json`,
+identical to the original authority. Provenance binds both executable heads,
+component data hashes, assembly checks and before/after verdicts. Raw files remain
+ignored; committed findings include reviewable counts and full hashes.
+
+```bash
+python3 survey/polarity/analysis.py --manifest survey/polarity/studies.json --source docs/superpowers/specs/2026-10-02-emergent-polarity-source-figures.json --resolved survey/out/polarity-sequential-resolved.json --sessions survey/out/polarity-final-sessions.jsonl --output survey/out/polarity-final-findings
+python3 survey/polarity/stock_diagnostics.py --manifest survey/polarity/studies.json --resolved survey/out/polarity-sequential-resolved.json --sessions survey/out/polarity-final-sessions.jsonl --output survey/out/polarity-final-stock-diagnostics.json
+```
+
+Both `analysis.py` and `export_report.py` use the tested strict JSON serializer:
+`sort_keys=False`, `allow_nan=False`. Scientific computation functions remain
+byte-identical to the preregistered analysis; only the final CLI export changed.
+The `"null"` map key in episode_end_causes counts null end causes; actual episode
+end_cause values remain JSON null. The original sorted-key export failure and
+full original recomputation are retained. Dated export and sequential amendments
+explain the corrections without treating an implementation panic as a source
+failure or replacing a registered invalid-stock/ratio session.

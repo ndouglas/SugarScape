@@ -32,7 +32,7 @@ empirical test in the family, needs. So the campaign follows the lineage, with t
 model as the originator at medium size. The war-and-society study (`docs/studies/2026-09-26-war-and-society.md`)
 carries the questions about war itself; this campaign need not model war well, only faithfully.
 
-**Priority:** after algorithmic collusion and Q-learning auctions.
+**Priority:** polarity is measured locally; GeoSim war sizes are next after final review/publication.
 
 ## Phases
 
@@ -63,6 +63,21 @@ carries the questions about war itself; this campaign need not model war well, o
   durations and what ended them.
 - **GeoSim0's GPL code** (`papers/geopolitics/cederman-icr-2004-geosim0-repast-source.zip`) is read
   for comparison only, never copied.
+
+**2026-10-03 measured handoff (Milestone 36; publication pending):** all 572 arms /
+28,520 registered sessions and 100,000-draw judges are complete, with 28,281 valid
+and 239 retained invalid outcomes. Source mean/category judgments:
+45 Compatible, 24 Incompatible, 3 Unresolved; Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. The
+[full findings](2026-10-02-emergent-polarity-findings.md) retain source uncertainty, original/precision
+populations, every named reading, signed accounting and direct terminal stock
+frequencies. Störmer's scatter uses 110 configuration means × ten repeats; no
+75% cutoff or unknown-seed overextension fit was supplied. Original partial/full
+raw files and verdicts remain bound through dated diagnostic/export/sequential
+corrections and exact same-seed equivalence receipts. Episodes, active-period
+durations, end causes and censoring pass to the war study as abstract model
+measurements; resources are not casualties. GeoSim's technology, size measure and
+empirical fitting protocol require their own design and source/code reading;
+this result does not establish a war-size law. Chapter 7 remains a separate note.
 
 ### 2. Nationalist mobilization (note; no model kind)
 

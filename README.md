@@ -3742,3 +3742,51 @@ second-price result is therefore a statement about this model and protocol.
 
 See [the design](docs/superpowers/specs/2026-10-02-q-learning-auctions-design.md)
 and [reading notes](docs/superpowers/specs/2026-10-02-q-learning-auctions-reading-notes.md).
+
+
+### Emergent polarity (Cederman 1994; 1997 chapters 4–5)
+
+`polarity` reconstructs sovereign capitals and provinces on a bounded cardinal
+lattice, with predator/status-quo types, signed normal resource stocks and
+harvests, strict superiority/victory thresholds, conquest, collapse and behavioral
+alliances. Inspect shows the government, members, fronts, commitments, paths,
+trust, coalition and retained events. Territory, resources, strategy and coalition
+views work through the shared native/WASM engine, Compare and Experiments.
+
+Six presets expose the reconstruction: `polarity-original`, `polarity-defense`,
+`polarity-alliances`, `polarity-pra`, `polarity-two-level` and
+`polarity-overextension`. The original/defense/alliance presets use chapter 4;
+PRA and the provincial variants use chapter 5's damage convention. Predator share
+.2 is a playground choice; provincial presets use all predators. The predator-share
+sweep is exploratory and does not execute the complete source studies. One economic
+period is one full model iteration; batched ticks retain actual completed periods
+and stop at the horizon or the configured hegemonic endpoint.
+
+The complete frozen native workload retains **28,520 sessions across 572 arms**,
+with the original 640 and separate 6,400 precision sessions, all named alternative
+readings, allocation/support controls and provincial extensions. Registered judges
+use 100,000 draws and seed 2026100202. Source mean/category judgments give
+45 Compatible, 24 Incompatible and 3 Unresolved rows. The positive defense P2
+and alliance P3 aggregate hypotheses fail.
+28,281 sessions are valid; 239 invalid outcomes remain in raw and registered
+denominators. No replacement seeds or fitted defaults were used.
+
+[The complete findings](docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md)
+retain source digitization uncertainty, incompatible/unresolved strata, positive
+hypotheses and negative source counterexamples separately. The uniform nonzero-share
+defense/alliance contrasts in the probability of 2–10 sovereigns reproduce negative
+source directions while the positive P2/P3 stabilization hypotheses fail; mean
+polarity and hegemony are different measures. Compatibility is not
+equivalence. No original EPM executable was recovered. Störmer's attributed
+adaptation uses 110 configuration means over ten repeats, with a committed scatter;
+no exact 75% inertness cutoff or unknown-seed overextension trajectory fit is claimed.
+
+Direct initial/terminal nonpositive-stock frequencies have explicit stock and
+session denominators; period-exposure frequency was not measured. Signed resource
+creation, positive destruction and episode durations/end causes/censoring are
+separate. Abstract resources do not measure casualties. Dated telemetry, strict
+JSON export and sequential stale-front corrections retain original data/verdicts,
+exact hashes, every affected before/after result and full same-seed rerun evidence.
+See the [design](docs/superpowers/specs/2026-10-02-emergent-polarity-design.md),
+[reading notes](docs/superpowers/specs/2026-10-02-emergent-polarity-reading-notes.md)
+and [native protocol](survey/polarity/README.md).

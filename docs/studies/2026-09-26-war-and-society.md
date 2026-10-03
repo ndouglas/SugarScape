@@ -241,8 +241,9 @@ must reduce to it when every switch is off.
   milestone 11's civil violence is half of that model.
 - **War weariness.** Public support falls with the logarithm of casualties (Mueller).
 - **Adaptation.** Measure and countermeasure, and generals fighting the last war.
-- **The size of wars.** Richardson's power law for deadly quarrels; Cederman's model reproduces it
-  (queue item 11).
+- **The size of wars.** Richardson's power-law claim for deadly quarrels and Cederman's
+  GeoSim claim, now the next paper-queue item. The polarity reconstruction below
+  does not establish a war-size fit.
 
 ## The headline questions
 
@@ -261,6 +262,47 @@ The gap this program aims at: combat models usually strip away the economy, fami
 culture, and Sugarscape has all of them. Epstein and Axtell titled Chapter III "The Emergence of
 History" and did little with war. As far as we know, nobody has run the chain end to end on a shared
 economic and demographic base *(check)*.
+
+## Measured polarity handoff (2026-10-03)
+
+Milestone 36's [complete polarity findings](../superpowers/specs/2026-10-02-emergent-polarity-findings.md)
+retain all 28,520 registered sessions across 572 arms: 28,281 valid and 239
+invalid. These reconstruct EPM/provincial territorial conflicts, not GeoSim's
+technology/war-size model or observed deadly quarrels. Source compatibility,
+original/precision populations, invalidity and source uncertainty remain separate.
+
+Across valid outcomes, 3,502,994 episodes include
+65,757 domestic episodes and
+16,099 censored episodes. Mean active-period
+duration is 6.65661; uncensored median is
+1. The
+[descriptive summary](../superpowers/specs/2026-10-02-emergent-polarity-descriptive-summary.json)
+retains family-specific counts, end causes, durations, resource accounting and
+invalid partial-episode counts. Each episode carries start/end clocks, capitals,
+initial sizes, path, positive losses, signed creation, winner and censoring. Its
+duration includes the first conflict period; a cooperative ending timestamp does
+not add an active conflict period. Open episodes at stopping are censored. Attacks,
+DD encounters, conquests and episodes are distinct measures.
+
+The separate original 640-session population records 1.18711×10^9 positive
+destruction and 1.88860×10^9 signed creation units; the 6,400-session precision
+population records 4.38912×10^12 and 3.50614×10^12, respectively. The Störmer
+adaptation has a much larger finite tail (2.22173×10^191 signed creation units),
+so pooling resource magnitudes would conceal protocol/parameter differences.
+Positive resource destruction and signed resource creation are abstract units;
+**resources are not casualties**. EPM stock observations count sovereign capitals,
+provincial observations all primitive cells, with stock/session denominators;
+terminal frequency is distinct from unmeasured period exposure. Invalid end-state
+measurements describe the attempted clock and do not complete an aborted period.
+The original 237 sequential implementation panics and all original verdicts remain
+retained; a full 16×20 same-seed correction supplies final sequential data while
+28,200 unaffected raw records remain byte-identical. No replacement seeds or
+post-measurement judge changes were used.
+
+The next GeoSim study must freeze its own war-size measure, technology shocks,
+termination/censoring and empirical fit before execution. Carry these episode and
+accounting observables forward; do not turn them into casualties, AI intent or
+proof of a real-world power law.
 
 ## Open questions
 
