@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider } from './schema-form';
+import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, schemaControlLabel } from './schema-form';
 import type { AnasaziConfig, DpdConfig, EthnoConfig, ImageConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
 
 const ring = (): RingConfig => ({
@@ -14,6 +14,14 @@ const ring = (): RingConfig => ({
 const param = (p: Partial<Param> & Pick<Param, 'path' | 'kind'>): Param => ({ label: p.path, apply: 'reset', group: 'Setup', ...p });
 
 describe('the schema form', () => {
+  it('names a GeoSim choice and distinguishes its numeric slider from its number field', () => {
+    expect(schemaControlLabel('Defender threshold')).toBe('Defender threshold');
+    expect([schemaControlLabel('Shock shift', 'slider'), schemaControlLabel('Shock shift', 'number')]).toEqual([
+      'Shock shift slider',
+      'Shock shift number',
+    ]);
+  });
+
   it('groups params in the order their groups first appear', () => {
     const params = [param({ path: 'a', kind: 'integer' }), param({ path: 'b', kind: 'bool', group: 'Other' }), param({ path: 'c', kind: 'integer' })];
     expect(groupParams(params).map((s) => [s.group, s.params.map((p) => p.path)])).toEqual([
