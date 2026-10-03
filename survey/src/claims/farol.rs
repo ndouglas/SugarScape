@@ -227,7 +227,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ef-arthur",
             source: Source::Book,
             citation: ARTHUR,
-            text: "'cycles are quickly arbitraged away so there are no persistent cycles' (lag-1 autocorrelation of attendance within ±0.2; k 6, 12, 23)",
+            text: "Operational variant: lag-1 autocorrelation within ±0.2 under the 48-predictor library, decay 0.9 and random reties (k 6, 12, 23). Interpretation revised after results/source review: this proxy measures antipersistence, not persistent cycles",
             check: |_| {
                 let parts = [6, 12, 23]
                     .into_iter()
@@ -237,7 +237,7 @@ pub fn claims() -> Vec<Claim> {
                     })
                     .collect();
                 let payoff = mean(&runs(20, 2_000, |c| c.scoring = Scoring::Payoff), |r| r.lag1);
-                all_of(parts).with(&format!("Rated by payoff instead (CMO), k 12: {payoff:.2}."))
+                all_of(parts).with(&format!("Rated by CMO-inspired advice payoff (different equality convention), k 12: {payoff:.2}."))
             },
         },
         Claim {
@@ -245,7 +245,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ef-arthur",
             source: Source::Book,
             citation: ARTHUR,
-            text: "'of the active predictors … on average 40 percent are forecasting above 60' (35–45 %; k 6, 12, 23)",
+            text: "Operational variant of Arthur's above-60 fraction (35–45 %; k 6, 12, 23). Interpretation revised after results/source review: integer forecasts equal to 60 explain the gap from the stay-home share under default stay-at-equality; this is not an independent ecology failure",
             check: |_| {
                 let parts = [6, 12, 23]
                     .into_iter()
@@ -292,7 +292,7 @@ pub fn claims() -> Vec<Claim> {
             item: "ef-predictors",
             source: Source::Book,
             citation: CMO,
-            text: "The real question is the fluctuations around the comfort level; Arthur's inductive agents fluctuate more than agents going at random (both scorings, k 12)",
+            text: "The real question is the fluctuations around the comfort level; our Arthur-inspired library/scoring/tie variant fluctuates more than agents going at random (both scorings, k 12)",
             check: |_| {
                 let acc = runs(20, 2_000, arthur(12));
                 let pay = runs(20, 2_000, |c| c.scoring = Scoring::Payoff);
@@ -308,7 +308,7 @@ pub fn claims() -> Vec<Claim> {
             item: "cmo-bias",
             source: Source::Book,
             citation: CMO,
-            text: "The binary El Farol: 'in the region āN ≈ L adaptive agents behave less efficiently than random agents … stronger for small values of m' (N 120, L 60, m 2; 10 runs of 5 000 rounds)",
+            text: "CMO-inspired step-win binary variant (CMO Eq. 4 instead uses linear score updates): 'in the region āN ≈ L adaptive agents behave less efficiently than random agents … stronger for small values of m' (N 120, L 60, m 2; 10 runs of 5 000 rounds)",
             check: |_| {
                 let r = runs(10, 5_000, binary(120, 2));
                 let (f, base) = (mean(&r, |r| r.fluct), r[0].random);
@@ -320,7 +320,7 @@ pub fn claims() -> Vec<Claim> {
             item: "cmo-bias",
             source: Source::Book,
             citation: CMO,
-            text: "'a small bias in the strategies, of either sign, is beneficial as it decreases the fluctuations' (m 2: N 90 and 150 against N 120)",
+            text: "CMO-inspired step-win binary variant: 'a small bias in the strategies, of either sign, is beneficial as it decreases the fluctuations' (m 2: N 90 and 150 against N 120)",
             check: |_| {
                 let at = |n| runs(10, 5_000, binary(n, 2));
                 all_of(vec![
@@ -334,7 +334,7 @@ pub fn claims() -> Vec<Claim> {
             item: "cmo-bias",
             source: Source::Book,
             citation: CMO,
-            text: "'there is an intermediate memory length which is optimal for the collective behavior' (N 120, L 60: m 6 against m 2 and m 12)",
+            text: "CMO-inspired step-win binary variant: 'there is an intermediate memory length which is optimal for the collective behavior' (N 120, L 60: m 6 against m 2 and m 12)",
             check: |_| {
                 let at = |m| runs(10, 5_000, binary(120, m));
                 all_of(vec![
@@ -348,7 +348,7 @@ pub fn claims() -> Vec<Claim> {
             item: "cmo-bias",
             source: Source::Book,
             citation: CMO,
-            text: "⟨A⟩ ≈ L 'in a whole interval around Nā = L' for small m, and 'the region where ⟨A⟩ ≈ L shrinks' as m grows (|⟨A⟩ − 60| at N 90 and 150: m 2 against m 6)",
+            text: "CMO-inspired step-win binary variant: ⟨A⟩ ≈ L 'in a whole interval around Nā = L' for small m, and 'the region where ⟨A⟩ ≈ L shrinks' as m grows (|⟨A⟩ − 60| at N 90 and 150: m 2 against m 6)",
             check: |_| {
                 let off = |n, m| mean(&runs(10, 5_000, binary(n, m)), |r| (r.mean - 60.0).abs());
                 let (a, b) = (off(90, 2) + off(150, 2), off(90, 6) + off(150, 6));
@@ -394,7 +394,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mg-inverse",
             source: Source::Book,
             citation: CZ,
-            text: "Fig. 4 (payoff N/x − 2, 'nearest integer values', N 1001, M 4, S 5): attendance has 'two peaks' (most rounds more than 5 % of N from the center)",
+            text: "Operational Fig. 4 central-mass check (rounded N/x − 2, N 1001, M 4, S 5, random reties): most rounds more than 5 % from center. Interpretation revised after results/source review: central mass does not test two-peak shape or establish paper failure",
             check: |_| {
                 let at = |rounding| {
                     runs(5, 5_000, move |c| {
@@ -456,7 +456,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mg-inbred",
             source: Source::Book,
             citation: CZ,
-            text: "Fig. 10: with perfect cloning and no mutation, 'there appears tremendous waste' (more fluctuation in the last tenth than with mutation; N 1001 and 101)",
+            text: "Operational rolling-window evolution comparison: no mutation has greater late fluctuation than mutation (N 1001 and 101). Interpretation revised after results/source review: purity is unmeasured; this does not test Fig. 10's monospecies population, whose waste a separate homogeneous probe confirms",
             check: |_| {
                 let parts = [1001, 101]
                     .into_iter()
@@ -487,7 +487,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mg-memory",
             source: Source::Book,
             citation: SMR,
-            text: "'σ²/N is a function only of 2^m/N': the minimum moves one memory step per doubling of N (N 51, 101, 201; S 2)",
+            text: "Qualitative scaling proxy (source says to a first approximation): the minimum moves one memory step per doubling of N (N 51, 101, 201; S 2)",
             check: |_| {
                 let m: Vec<usize> = [51, 101, 201].into_iter().map(|n| argmin(&curve(n)) + 1).collect();
                 outcome(m[1] == m[0] + 1 && m[2] == m[1] + 1, format!("minimum at M {}, {}, {}", m[0], m[1], m[2]))
@@ -524,7 +524,7 @@ pub fn claims() -> Vec<Claim> {
             item: "mg-memory",
             source: Source::Book,
             citation: SMR,
-            text: "For m < 6 (N 101, s 2) 'no agent ever achieves results statistically greater than 50 %', while 'for m ≥ 6 some agents do win more than 50 % of the time' (the best agent's wins per round at m 3, 6, 8, 10; 10 runs of 10 000 rounds)",
+            text: "Operational preprint comparison: mean of each run's best-agent full-run win rate below 50 % at m 3 and above 50 % at m 6, 8, 10 (N 101, S 2, 10 runs of 10 000 rounds). Interpretation revised after results/source review: averaging selected maxima is not a formal statistical test of the source claim",
             check: |_| {
                 let best = |m| {
                     mean(&runs(10, 10_000, mg(101, 2, m)), |r| {

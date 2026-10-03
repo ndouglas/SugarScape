@@ -1,5 +1,12 @@
 import re
 import unittest
+import tempfile
+import shutil
+import struct
+import subprocess
+import wave
+from pathlib import Path
+from dataclasses import replace
 
 import episode
 import music
@@ -112,3 +119,49 @@ class MusicTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class StingEnvelopeTest(unittest.TestCase):
+    def test_default_ducks_still_use_the_complete_wav_and_do_not_fade_cues(self):
+        tune=replace(TUNES['sugarscape'],ducks={'x':.2})
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'cue.wav'
+            with wave.open(str(path),'wb') as wav:
+                wav.setparams((1,2,100,0,'NONE','not compressed'))
+                wav.writeframes(b'\x00\x00'*600)
+            ducks,fades=music.sting_envelopes(tune,[('x',3.)],[(path,3.)])
+        self.assertEqual(ducks,[(3.,9.,.2)])
+        self.assertEqual(fades,{})
+
+    def test_handoff_fades_only_the_selected_cue_before_delaying_it(self):
+        argv=music.sting_mix_command('t.wav',[('s.wav',3.),('w.wav',9.)],
+                                     'o.wav',fades={0:(4.3,.8)})
+        graph=argv[argv.index('-filter_complex')+1]
+        self.assertIn('[1:a]afade=t=out:st=4.3:d=0.8,adelay=3000|3000[s0]',graph)
+        self.assertIn('[2:a]adelay=9000|9000[s1]',graph)
+
+    def test_handoff_at_cut_start_keeps_its_zero_gain_at_first_note(self):
+        tune=replace(TUNES['sugarscape'],stings={'x':({'accordion':'z8 | D8 |','fiddle':'D8 |'},120)},handoffs=('x',))
+        ducks,fades=music.sting_envelopes(tune,[('x',0.)],[('absent.wav',0.)])
+        self.assertAlmostEqual(music.duck_gain(0.,ducks),0.)
+        self.assertAlmostEqual(music.duck_gain(5.1,ducks),1.)
+        self.assertEqual(fades,{0:(4.3,.8)})
+
+    @unittest.skipUnless(shutil.which('ffmpeg'), 'ffmpeg is required')
+    def test_rendered_handoff_reaches_silence_before_first_cue_note(self):
+        tune=replace(TUNES['sugarscape'],stings={'x':({'accordion':'D8 | z8 |'},120)},handoffs=('x',))
+        with tempfile.TemporaryDirectory() as directory:
+            main,cue,out=[Path(directory)/name for name in ('main.wav','cue.wav','out.wav')]
+            for path,value,seconds in ((main,4000,10),(cue,0,8)):
+                with wave.open(str(path),'wb') as wav:
+                    wav.setparams((2,2,48000,0,'NONE','not compressed'))
+                    wav.writeframes(struct.pack('<hh',value,value)*seconds*48000)
+            ducks,fades=music.sting_envelopes(tune,[('x',2.)],[(cue,2.)])
+            subprocess.run(music.sting_mix_command(main,[(cue,2.)],out,ducks,fades),check=True)
+            with wave.open(str(out)) as wav:
+                data=struct.unpack('<'+'h'*wav.getnframes()*2,wav.readframes(wav.getnframes()))
+            level=lambda t:data[round(t*48000)*2]
+            self.assertLessEqual(abs(level(2.)),5)
+            self.assertLessEqual(abs(level(1.6)-2000),10)
+            self.assertEqual(level(6.2),0)
+            self.assertLessEqual(abs(level(6.7)-2000),10)
+            self.assertEqual(level(7.2),4000)

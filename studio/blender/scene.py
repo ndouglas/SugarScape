@@ -90,11 +90,19 @@ def _agents(beat, d, tracks, timing, corners):
         key = family.get(id_, id_)
         return colors[order.get(key, key) % len(colors)]
 
-    live = mode in ("tribe", "sick", "strategy", "tag", "culture", "start")
+    live = mode in ("tribe", "sick", "strategy", "tag", "culture", "start", "participation", "ants", "farol")
 
     def live_color(id_, frame):
         """The color the tick shown gives a Flump (None: its own)."""
         f = d.frames[min(max(int(round(timing.tick_at(frame))), 0), d.ticks)]
+        if mode == "farol":
+            from farol_visual import filmed_frame
+            return "coral" if filmed_frame(d,timing,frame).groups[id_] else "blue"
+        if mode == "ants":
+            from ants_visual import color, filmed_frame
+            return color(filmed_frame(d,timing,frame).members[id_])
+        if mode == "participation":
+            return "coral" if f.groups[id_] else "blue"
         if mode == "start":
             g = f.groups.get(id_)
             return materials.START_YARN[g] if g is not None else None
@@ -127,7 +135,18 @@ def _agents(beat, d, tracks, timing, corners):
 
     def update(frame):
         for id_, t in tracks.items():
-            p = animate.pose(t, timing, frame, corners, w, h)
+            if d.model == "farol":
+                from farol_visual import pose
+                p = pose(d,id_,timing,frame)
+            else:
+                p = animate.pose(t, timing, frame, corners, w, h)
+            if mode == "participation":
+                from dataclasses import replace
+                from thresholds_visual import join_hop
+                tick = timing.tick_at(frame)
+                lo = int(tick)
+                hi = min(lo + 1, d.ticks)
+                p = replace(p, z=p.z + join_hop(d.frames[lo].groups[id_], d.frames[hi].groups[id_], tick-lo))
             color = (live_color(id_, frame) or base_color(id_)) if live and p.visible else None
             if beat.closeup:
                 rig = RIGS[id_]
@@ -143,7 +162,7 @@ def _agents(beat, d, tracks, timing, corners):
     return update
 
 
-def _title_card():
+def _title_card(beat):
     """A beat with no shot: a felt tabletop and one Flump, blinking at the
     viewer. Nothing is simulated, so it does nothing else."""
     bpy.ops.mesh.primitive_plane_add(size=1)
@@ -153,7 +172,8 @@ def _title_card():
     rig = flump.build_flump("host", "cream")
 
     def update(frame):
-        rig.eyes.scale = (1, 1, animate.blink(7, frame))
+        height = animate.closing_blink(frame, beat.frames) if beat.name == "end" else animate.blink(7, frame)
+        rig.eyes.scale = (1, 1, height)
 
     return update
 
@@ -220,7 +240,7 @@ def build_beat(beat, d, preview, compare=None, measured=None):
             updaters.append(_agents(beat, d, tracks, timing, corners))
         materials.lights_and_world(scene, max(d.width, d.height))
     else:
-        updaters.append(_title_card())
+        updaters.append(_title_card(beat))
         materials.lights_and_world(scene, 12)
     camera_obj, update_camera = add_camera(scene, beat)
     screen = overlays.Screen(camera_obj)

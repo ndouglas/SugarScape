@@ -1,0 +1,8 @@
+{
+  "preset": "gr-city",
+  "seed": 202034,
+  "ticks": 2,
+  "set": {
+    "repeat": false
+  }
+}

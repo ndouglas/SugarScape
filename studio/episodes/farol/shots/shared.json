@@ -1,0 +1,34 @@
+{
+  "config": {
+    "agents": 100,
+    "at_capacity": "stay",
+    "behavior": "inductive",
+    "bias": 0.5,
+    "capacity": 60,
+    "decay": 0.9,
+    "evolution": {
+      "enabled": false,
+      "every": 100,
+      "memory_mutation": 0.0,
+      "strategy_mutation": 0.1
+    },
+    "game": "el_farol",
+    "information": "true",
+    "memory": 3,
+    "mixed_memory": {
+      "enabled": false,
+      "max": 10,
+      "min": 1
+    },
+    "model": "farol",
+    "payoff": "step",
+    "rounding": "nearest",
+    "scoring": "error",
+    "shared": true,
+    "stop_at": 0,
+    "strategies": 12
+  },
+  "every": 1,
+  "seed": 1010,
+  "ticks": 640
+}

@@ -1,0 +1,10 @@
+{
+  "preset": "gr-friends",
+  "seed": 208001,
+  "ticks": 2,
+  "set": {
+    "friends.acquaintance": 0.25,
+    "friends.weight": 2,
+    "repeat": false
+  }
+}

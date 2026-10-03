@@ -11,9 +11,9 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale); and Following the Crowd, `neighbors`, `tipping`, `variations`, `culture`, `opinions`, and `agreement` ("How extremists win").
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale); and Following the Crowd, `neighbors`, `tipping`, `variations`, `culture`, `opinions`, `agreement` ("How extremists win"), `thresholds` ("The riot that needs one person"), `ants` ("Ants at two food piles"), and `farol` ("Nobody goes, it's too crowded").
 
-Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring or norms. A spatial shot's dump records each
+Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms, El Farol or the minority game. A spatial shot's dump records each
 generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
 board. A demographic-PD shot's dump records each cycle's agents, births (with the parent) and deaths,
 and loads as a Sugarscape dump without sugar, so its crowd walks, clones and dies as the Sugarscape's
@@ -34,6 +34,8 @@ standing on its square (`plane.py`). A Schelling shot (his board, `schelling`, o
 q, payoff) and, with `"gifts": true`, each agent's partners; it loads as a `Grid`: a 16 × 16 block,
 each Flump in its friendliness's shade, on its own square under the torus and in index order
 otherwise, with yarn lines to a few followed Flumps' partners (`grid.py`).
+
+A `farol` shot records each agent's actual choice, selected strategy and score before updating, forecasts or memory advice, pre-decision public history, and the resulting attendance. The episode uses 100 agents for the bar and 101 for the ordinary minority game; ensemble histograms summarize 20 bar seeds and 32 minority seeds. Its measured captions and selection protocol are retained in `episodes/farol/measurements.md`. The verified preview is `~/Movies/Flump Studio/sugarscape-027-farol.mp4` (960 × 540, 30 fps, 95 seconds), with one continuous original G-major schottische, *The Empty Chair*, at 103 BPM.
 
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
@@ -139,3 +141,64 @@ clarinet, marimba and cello. Its persistent outer figures spread into a flexible
 phrase as the crowd changes. Caption rules and samples are in
 `episodes/agreement/measurements.md`; source assumptions and reconstruction checks are
 in `docs/superpowers/specs/2026-10-01-agreement-spike.md`.
+
+`thresholds` records each agent's exact threshold, participation, forced-seed flag,
+crowd and actual neighbors, with the model's true step and completed-episode count.
+One grid cell represents one real agent. Coral indicates participation and blue
+indicates waiting; the neighborhood inset uses recorded edges. Outcome panels use
+the measured ensemble, while example traces retain their own seed and actual steps.
+The selected ceiling example shows steps 500–600 with a labeled 85–95% axis.
+
+Its original A-minor tune, *The Missing Rung*, uses flute, vibraphone, pizzicato
+strings and bassoon. Beat-aligned cues pass a rising phrase between voices or
+remove its answer. Each cue hands off from the backing: it fades to silence during
+0.8 seconds before the first cue note, stays silent through the full notated cue
+and 0.3 seconds of release, then returns over 0.8 seconds as the cue fades out.
+Deliberately missing entrances and sparse gaps remain in the score. Measurements and
+fixed rules are in `episodes/thresholds/measurements.md`, and the source audit is
+in `docs/superpowers/specs/2026-10-02-thresholds-spike.md`.
+
+Closing cards use `<title> - After <Names>, <Year>\nndouglas.github.io/SugarScape`
+above a single camera-facing agent. A no-shot beat named `end` with `caption_y=0.45`
+uses the established composition and one late blink.
+
+Individual threshold values appear in the two teaching close-ups; overview shots
+use their distribution ruler and measured panels. Check text visibility through
+every frame of the camera moves, plus the separate caption bounds, with:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python-exit-code 1 -P studio/tests/blender_thresholds_layout.py
+```
+
+This regression uses the recorded dumps, actual font and projected scene bounds
+to check clipping, unrelated panel occlusion and text intersections.
+
+
+`ants` records each agent's actual source, independent status, counts, true model
+clock, and sparse network edges. Optional event recording preserves the model's
+random draws and records the actual recruitment partner or spontaneous switch.
+Two identical food piles represent source choices; movement between them is
+illustrative. Source colors and readouts use the same recorded frame. Yellow
+agents and rings mark the actual independent agents.
+
+The episode shows every agent in each filmed population. Panels distinguish
+short filmed examples from the complete measured ensembles and exact stationary
+predictions. The pairwise comparison holds total meetings fixed; the network
+comparison uses sequential sweeps. Graphs in the independent-agent comparison
+are separately generated. All outcomes, fixed rules, and horizons are retained
+in `episodes/ants/measurements.json` and summarized in `measurements.md`.
+
+Its original *The Turning Chain* is a Breton-inspired D-Dorian dance in 2/4
+for oboe, clarinet, and a quiet accordion drone/pulse. Its instrumental replies
+adapt the overlapping handoff of kan ha diskan: the answer enters before the
+caller finishes, then carries alone. One continuous score carries these exchanges
+at a single fitted tempo, with overlap limited to the caller’s final beat. The
+independent passage retains a small steady D line. The closing
+uses the established title, attribution, URL, and one late blink.
+
+After generating the ants dumps, check all frames, captions, plotted geometry,
+teaching markers, and the actual closing blink with:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python-exit-code 1 -P studio/tests/blender_ants_layout.py
+```

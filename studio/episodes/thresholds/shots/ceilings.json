@@ -1,0 +1,9 @@
+{
+  "preset": "gr-ceilings",
+  "seed": 212037,
+  "ticks": 600,
+  "set": {
+    "max_steps": 100000,
+    "repeat": false
+  }
+}

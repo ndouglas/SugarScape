@@ -1,9 +1,7 @@
 # Following the Crowd: the third Flump series
 
 **Date:** 2026-09-29
-**Status:** in progress. Episode 1 (Neighbors like me, `2026-09-29-schelling-spike.md`) is built on
-milestone 30 (Schelling's own models); episode 2 (The tipping point, `2026-09-30-tipping-spike.md`) on
-milestone 31 (his bounded neighborhood); episode 3 (the variations) needs engine work.
+**Status:** in progress. Episodes 1–9 are built; episode 10, "When to retire," is next.
 **Follows:** the Sugarscape series (`2026-09-26-sugarscape-series-plan.md`) and the Cooperation series
 (`2026-09-27-cooperation-series-plan.md`), both complete, and keeps their rules.
 
@@ -41,9 +39,9 @@ which the user is doing separately.
 | 4 | One culture or many ✅ | Axelrod 1997 | `culture` | Local convergence, global polarization; the docked mobility result reproduces on a broad or tall enough mountain |
 | 5 | Listening to the like-minded ✅ | Hegselmann & Krause 2002 | `opinions` | Fig. 2b's two camps come up in about a third of runs; most keep a middle camp |
 | 6 | How extremists win ✅ | Deffuant et al. 2000, 2002 | `agreement` | A few confident extremists and a moderate crowd |
-| 7 | The riot that needs one person | Granovetter 1978; Watts 2002 | `thresholds` | One threshold decides the riot; cascades on networks |
-| 8 | Ants at two food piles | Kirman 1993; Alfarano & Milaković | `ants` | The ants never rest at 80–20 |
-| 9 | Nobody goes, it's too crowded | Arthur 1994; Challet & Zhang 1997 | `farol` | Coordination without communication |
+| 7 | The riot that needs one person ✅ | Granovetter 1978; Watts 2002 | `thresholds` | One threshold decides the riot; cascades on networks |
+| 8 | Ants at two food piles ✅ | Kirman 1993; Alfarano & Milaković 2007 | `ants` | Asymmetric crowds can flip; 80–20 is not a preferred split in the base chain |
+| 9 | Nobody goes, it's too crowded ✅ | Arthur 1994; Challet & Zhang 1997 | `farol` | Coordination without communication |
 | 10 | When to retire | Axtell & Epstein 1999 | `retirement` | A norm spreads through networks; footnote 5 is false |
 | 11 | Finale | all | — | The ledger |
 

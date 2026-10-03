@@ -1047,7 +1047,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ef-payoff",
-        "Rate predictors by their advice, not their accuracy: the cycle goes",
+        "Rate predictors by their advice: smaller lag-1 correlation",
     ),
     (
         "ef-random",
@@ -1055,7 +1055,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ef-shared",
-        "Everyone holds the same predictors, and nobody is ever right",
+        "Everyone holds the same predictors: larger attendance variance",
     ),
     ("mg-m6", "Two sides, the minority wins: short memories"),
     ("mg-m8", "Two sides, the minority wins: longer memories"),
@@ -1066,7 +1066,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "mg-inverse",
-        "Win more the smaller the minority: the paper's two peaks don't appear",
+        "Win more the smaller the minority: rounded payoff and random ties",
     ),
     (
         "mg-evolution",
@@ -1078,14 +1078,14 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "mg-arms-race",
-        "Memories that can grow: an arms race that levels off",
+        "Memories that can grow: higher final memory",
     ),
     ("mg-crowded", "Too little memory: worse than coin flips"),
     ("mg-critical", "Just enough memory: the best coordination"),
     ("mg-random-like", "Too much memory: no better than chance"),
     (
         "cmo-binary",
-        "El Farol as a yes-or-no game: 60 seats, two rounds of memory",
+        "CMO-inspired step-payoff game: 60 seats, two rounds of memory",
     ),
     (
         "ants-1a",
@@ -1103,15 +1103,15 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ants-crowd",
-        "Ten times the ants, the same habits, and the herding is gone",
+        "Ten times the ants, the same habits, and the herding weakens",
     ),
     (
         "ants-becker",
-        "Following the crowd pays: the colony settles about 80–20, like the real ants",
+        "Following the crowd pays: preferred splits near 18–82",
     ),
     (
         "ants-lock",
-        "Following the crowd pays too well: one source, forever",
+        "Following the crowd pays too well: no switches in a million meetings",
     ),
     (
         "ants-three",
@@ -1151,11 +1151,11 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "gr-normal-sampled",
-        "The same crowd drawn from real people: no sharp tipping point",
+        "Random normal crowds: sampling smooths the transition",
     ),
     (
         "gr-city",
-        "Crowds drawn from a city that should riot: half end with no rioter or one",
+        "Crowds sampled from the uniform city: half end with no rioter or one",
     ),
     (
         "gr-friends",
@@ -1167,7 +1167,7 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "gr-ceilings",
-        "Join a crowd, leave a mob: the riot builds and collapses",
+        "Join a crowd, leave a mob: the riot pulses near the top",
     ),
     (
         "gr-clusters",

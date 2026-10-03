@@ -1,0 +1,25 @@
+{
+  "preset": "ants-2b",
+  "seed": 200001,
+  "ticks": 3,
+  "every": 1,
+  "gifts": true,
+  "set": {
+    "ants": 100,
+    "rule": "kirman",
+    "epsilon": 0.002,
+    "delta": 0.01,
+    "conversion": "kirman",
+    "meetings": 1,
+    "sources": 2,
+    "pull": 0.0,
+    "a": 0.5,
+    "lambda": 1.0,
+    "network": "complete",
+    "degree": 10,
+    "link": 0.1,
+    "independent": 0.0,
+    "start": "random",
+    "stop_at": 0
+  }
+}

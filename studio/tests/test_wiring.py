@@ -12,7 +12,7 @@ import unittest
 import episode
 
 OVERLAYS = pathlib.Path(__file__).resolve().parent.parent / "blender" / "overlays"
-COLOR_MODES = {"family", "tribe", "sick", "strategy", "tag", "culture", "start"}
+COLOR_MODES = {"family", "tribe", "sick", "strategy", "tag", "culture", "start", "participation", "ants", "farol"}
 
 
 def overlay_sources():
@@ -75,7 +75,14 @@ class WiringTest(unittest.TestCase):
     def test_panels_only_show_measured_values(self):
         for name in episodes():
             path = episode.episode_dir(name) / "measurements.json"
-            medians = json.loads(path.read_text())["medians"] if path.exists() else {}
+            measured = json.loads(path.read_text()) if path.exists() else {}
+            medians = measured.get("medians", {})
+            if name == "ants":
+                self.assertTrue({"aggregates", "runs", "exact", "selected", "protocols"} <= measured.keys())
+                for beat in episode.load_episode(name):
+                    if beat.shot:
+                        self.assertIn(beat.shot, measured["selected"])
+
             for b in episode.load_episode(name):
                 # An overlay nothing builds is the test above's failure, not this one's.
                 if not any("measured" in self.reads.get(self.builders.get(o), ()) for o in b.overlays):

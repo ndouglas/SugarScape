@@ -43,14 +43,14 @@ pub fn presets() -> Vec<ModelPreset> {
             "ef-arthur",
             "The bar problem, k = 12",
             ARTHUR,
-            "Arthur's bar problem: 100 people decide each week whether to go to a bar that is fun only if fewer than 60 come. Each holds 12 of 48 simple forecasts of next week's attendance from past weeks (the same as some week ago, a mirror image, an average, a trend) and acts on the one that has lately been most accurate, going if it forecasts fewer than 60. Arthur: attendance 'converges always to 60', 'no persistent cycles', and about 40 % of the forecasts in use are above 60. Measured (20 seeds, rounds 201–2 000): mean attendance 59.1 — but it swings 29 times as widely as coin-flippers' (σ²/N 6.9 against 0.24); a lag-1 autocorrelation of −0.43, a high-low cycle that never goes away; 32 % of forecasts in use above 60. The time panel shows the swings; the histogram, how far they reach.",
+            "Arthur-inspired bar problem (48 predictors, absolute-error decay 0.9, random reties each round): 100 people decide each week whether to go to a bar that is fun only if fewer than 60 come. Each holds 12 of 48 simple forecasts of next week's attendance from past weeks (the same as some week ago, a mirror image, an average, a trend) and acts on the one that has lately been most accurate, going if it forecasts fewer than 60. Arthur: attendance 'converges always to 60', 'no persistent cycles', and about 40 % of the forecasts in use are above 60. Measured (20 seeds, rounds 401–2 000): mean attendance 59.1 — but its attendance variance is 29 times the coin-flippers' (σ²/N 6.9 against 0.24); a lag-1 autocorrelation of −0.43, antipersistence, which alone does not establish persistent cycles; 32 % of forecasts in use above 60; forecasts exactly at 60 explain the gap from the stay-home share. The time panel shows the swings; the histogram, how far they reach.",
             |_| {},
         ),
         preset(
             "ef-payoff",
             "Predictors rated by payoff",
             CMO,
-            "The same bar with predictors rated as Challet, Marsili and Ottino argue they should be: by whether their advice (go or stay) was right, not by how close their number came — 'if A(t) = 59, a prediction of 5 is better than a prediction of 61'. Measured (20 seeds, rounds 201–2 000): mean attendance 59.9; the high-low cycle is gone (lag-1 autocorrelation −0.06); the swings shrink to σ²/N 2.7 — still 11 times the coin-flippers'. Compare it with ef-arthur from the presets menu.",
+            "The same bar with CMO-inspired payoff scoring (our equality convention differs from their Θ(0) = 1): by whether their advice (go or stay) was right, not by how close their number came — 'if A(t) = 59, a prediction of 5 is better than a prediction of 61'. Measured (20 seeds, rounds 401–2 000): mean attendance 59.9; lag-1 autocorrelation is small (−0.06); attendance variance shrinks to σ²/N 2.7 — still 11 times the coin-flippers'. Compare it with ef-arthur from the presets menu.",
             |c| {
                 c.scoring = Scoring::Payoff;
             },
@@ -68,7 +68,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ef-shared",
             "Everyone shares the library",
             ARTHUR,
-            "Arthur: 'The reader might ponder what would happen if all agents shared the same set of predictors.' Here everyone holds all 48, so everyone acts on the same best one: all go or all stay. Measured (20 seeds): mean attendance 49.8, alternating near 0 and near 100 (σ²/N 26), and nobody is ever right. Diversity of predictors is what makes the bar work at all.",
+            "Arthur: 'The reader might ponder what would happen if all agents shared the same set of predictors.' Here everyone holds all 48, so a unique best predictor synchronizes choices; random reties can select different advice. Measured (20 seeds): mean attendance 49.8, alternating near 0 and near 100 (σ²/N 26), and success is very low in these runs. Sharing this library greatly increases attendance variance.",
             |c| {
                 c.shared = true;
             },
@@ -100,7 +100,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "mg-inverse",
             "Fig. 4: payoff N/x − 2",
             CZ,
-            "Winners get N/x − 2 points for x winners, rounded as the paper says ('these many (nearest integer values) points'): a small minority pays well, a near-even one pays nothing. Challet and Zhang (Fig. 4): attendance splits into two peaks. Measured (10 seeds): one random-width peak (σ²/N 0.25): with an even split paying round(2.0) − 2 = 0, strategies almost never score, their points stay tied, and players choose at random. Unrounded (the rounding switch) there is one peak with small side lobes. Two peaks under neither reading.",
+            "Winners get N/x − 2 points for x winners, rounded as the paper says ('these many (nearest integer values) points'): a small minority pays well, a near-even one pays nothing. Challet and Zhang (Fig. 4): attendance splits into two peaks. Measured (10 seeds, random reties each round): a narrow central distribution (σ²/N 0.25): with an even split paying round(2.0) − 2 = 0, strategies almost never score, their points stay tied, and players choose at random. The unrounded experiment has different fluctuations. Central mass alone does not establish histogram shape or a failure of Fig. 4 under its unspecified tie choices.",
             |c| {
                 minority(c, 1001, 5, 4);
                 c.payoff = Payoff::Inverse;
@@ -125,7 +125,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "mg-inbred",
             "Fig. 10: cloning without mutation",
             CZ,
-            "The same selection with perfect copies and no mutation (Fig. 10), where Challet and Zhang see 'tremendous waste' once the population is all clones of one player. Measured (5 seeds): σ²/N falls from 5.9 to 2.3 by 40 000 rounds, much as with mutation (2.1); with 101 players, 0.30 against 0.24. No tremendous waste.",
+            "Our rolling-window selection with perfect copies and no mutation, whereas Fig. 10 illustrates a pure population where Challet and Zhang see 'tremendous waste' once the population is all clones of one player. Measured (5 seeds): σ²/N falls from 5.9 to 2.3 by 40 000 rounds, much as with mutation (2.1); with 101 players, 0.30 against 0.24. Population purity is not measured, so these runs do not test the illustrated monospecies case. A separate homogeneous-population audit probe confirms extreme waste under both tie rules. CZ98 later reports diversity above N/2 even without mutation.",
             |c| {
                 minority(c, 1001, 5, 6);
                 c.evolution = Evolution {
@@ -176,7 +176,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "cmo-binary",
             "The binary El Farol, m = 2",
             CMO,
-            "Challet, Marsili and Ottino's El Farol as a minority game: 120 agents, 60 seats, strategies reading only whether each of the last two weeks was crowded, each entry 'go' with probability 0.5 — so, on average, agents want 60 seats. Measured (10 seeds): mean attendance 60.4, but σ²/N 1.67 against coin-flippers' 0.25 — near āN = L adaptive agents do worse than random, as they say. The cmo-bias sweep shows a small bias, or a longer memory, bringing the swings down.",
+            "A CMO-inspired binary El Farol variant (step-win scoring, rather than their Eq. 4 linear update): 120 agents, 60 seats, strategies reading only whether each of the last two weeks was crowded, each entry 'go' with probability 0.5 — so, on average, agents want 60 seats. Measured (10 seeds): mean attendance 60.4, but σ²/N 1.67 against coin-flippers' 0.25 — qualitative support for poorer coordination near āN = L in this variant. The cmo-bias sweep shows a small bias, or a longer memory, bringing the swings down.",
             |c| {
                 minority(c, 120, 2, 2);
                 c.capacity = Some(60);

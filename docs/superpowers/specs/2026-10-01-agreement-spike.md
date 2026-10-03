@@ -180,8 +180,8 @@ markers, overlays, captions and comparison framing. Then build
 ## Storyboard (fourteen beats, about 100 s)
 
 Captions below are exact proposed video text; `\n` is an intentional line break. Numbers in
-panels are measured separately from illustrative seeds. The final beat is a title and credit
-card, so it carries the closing thought as well as the episode title.
+panels are measured separately from illustrative seeds. The final beat shows the title,
+attribution and URL above one agent facing the camera, with one blink near the end.
 
 | # | Beat | Exact caption | Shot and check |
 |---|---|---|---|
@@ -198,7 +198,7 @@ card, so it carries the closing thought as well as the episode title.
 | 11 | lean | "A small imbalance makes one side more likely to win." | N 1,000, drawn pe 0.1, U 1.6, μ 0.2, δ 0 versus 0.1; 50 seeds each; δ 0.1 wins on the initially larger side must exceed the opposite side and half the δ 0 single count |
 | 12 | printed | "With their alternative's printed rule,\nthe moderates pull the extremists toward the middle." | BC, influencer window, N 1,000, pe 0.05, U 1, δ 0.1; 50 seeds; initial-extremist opinions checked directly |
 | 13 | neighbors | "Hear only neighbors on this lattice,\nand neither extreme takes over the crowd." | AD 30 × 30 Moore, full-range moderates, pe 0.2, U 1.4; 20 seeds at 20,000-period cap, settled/capped runs labeled |
-| 14 | point and credit | "How extremists win\nA confident minority can move an uncertain crowd.\nAfter Deffuant et al., 2002" | title/credit card; a model mechanism, not an empirical law about people |
+| 14 | end | "How extremists win - After Deffuant et al., 2002\nndouglas.github.io/SugarScape" | established closing card above one agent facing the camera, with one late blink |
 
 The exact 2002 example mismatches remain in the scientific spike rather than becoming an
 accusation in a short caption. The printed-rule beat states the observed mechanism at its
@@ -267,7 +267,7 @@ Verification passed: workspace formatting and strict Clippy; workspace tests (1,
 after the final source wording updates. These checks cover the audit corrections; the
 approved episode will receive its own measurements, still review, preview and full checks.
 
-All changes are uncommitted. The user approved the storyboard and tune on 2026-10-02.
+The user approved the storyboard and tune on 2026-10-02.
 
 ### Episode measurement outcome
 
@@ -294,4 +294,3 @@ ends on the proposed open D–A fifth.
 Final checks passed: workspace formatting and strict Clippy; workspace tests
 (1,567 passed, 100 existing ignored); WASM Node tests (72 passed); web WASM build,
 TypeScript and Vitest (847 passed); and studio unittests (348 passed).
-All source corrections and episode changes remain uncommitted.

@@ -1,0 +1,9 @@
+{
+  "preset": "watts-lower",
+  "seed": 214001,
+  "ticks": 1,
+  "set": {
+    "actors": 1000,
+    "repeat": false
+  }
+}

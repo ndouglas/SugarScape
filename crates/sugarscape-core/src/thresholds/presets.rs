@@ -28,7 +28,7 @@ fn preset(
     }
 }
 
-/// Granovetter's Fig. 2: 100 people, normal thresholds around 25 %.
+/// A finite quantile realization of the normal used in Granovetter's Fig. 2.
 fn normal(c: &mut ThresholdsConfig, sd: f64) {
     c.distribution = Distribution::Normal;
     c.mean = 0.25;
@@ -70,21 +70,21 @@ pub fn presets() -> Vec<ModelPreset> {
             "gr-normal-12",
             "Fig. 2: normal, σ = 12",
             GRANOVETTER,
-            "Granovetter's Figure 2: 100 people with normally distributed thresholds, mean 25 %, spread 12 %, thresholds rounded to whole people. Below his critical spread of about 12.2, the equilibrium is a handful of rioters. Measured: 4 rioters (his continuous calculation: 4.0). The Figure 1 panel shows the c.d.f. crossing the 45° line just above the start.",
+            "A finite realization of the normal distribution used in Granovetter's Figure 2: 100 quantile thresholds, mean 25 %, spread 12 %, rounded to whole people. Below his critical spread of about 12.2, the equilibrium is a handful of rioters. Measured: 4 rioters (his continuous calculation: 4.0). The Figure 1 panel shows the c.d.f. crossing the 45° line just above the start.",
             |c| normal(c, 0.12),
         ),
         preset(
             "gr-normal-13",
             "Fig. 2: normal, σ = 13",
             GRANOVETTER,
-            "The same crowd with a spread of 13 %: past the critical point the c.d.f. never crosses the 45° line low, and nearly everyone riots. Measured: 100 (the continuous calculation: 100.0). A difference of one point in the spread of a crowd's dispositions, and a riot instead of a broken window. The tipping point for a crowd of 100 depends on how the normal thresholds become people: 12.23 rounded to the nearest person (Granovetter's 12.2), 11.89 rounded down, 12.55 kept as fractions (the gr-sd sweep).",
+            "The same crowd with a spread of 13 %: past the critical point the c.d.f. never crosses the 45° line low, and nearly everyone riots. Measured: 100 (the continuous calculation: 100.0). A difference of one point in the spread of a crowd's dispositions, and a riot instead of a broken window. The tipping point for a crowd of 100 depends on how the normal thresholds become people: 12.23 rounded to the nearest person, 11.89 rounded down, 12.55 kept as fractions (the gr-sd sweep). His continuous CDF calculation tips near 12.222 and does not prescribe a finite-crowd rounding rule.",
             |c| normal(c, 0.13),
         ),
         preset(
             "gr-normal-sampled",
-            "Fig. 2's crowd, sampled",
+            "Random normal crowds",
             GRANOVETTER,
-            "Figure 2's crowd with σ 12.2, but each crowd drawn at random from the normal distribution, as real crowds would be, and one crowd after another. Granovetter's jump — 'a wholly discontinuous, striking qualitative effect' — is a property of the idealized distribution: drawn crowds riot past half 15 % of the time at σ 12 and 25 % at 12.5, rising smoothly (the survey, 1 000 crowds each). Measured here (10 seeds, 3 000 steps): 21 % of about 6 000 crowds riot past a tenth; the mean crowd ends at 21 %. The histogram of outcomes is split: most crowds end with a few rioters, a fifth with nearly everyone.",
+            "A separate finite-population experiment using Figure 2's normal distribution with σ 12.2: independent thresholds drawn at random, one crowd after another. Granovetter's jump — 'a wholly discontinuous, striking qualitative effect' — is a property of the idealized distribution: drawn crowds riot past half 15 % of the time at σ 12 and 25 % at 12.5, rising smoothly (the survey, 1 000 crowds each). Measured here (10 seeds, 3 000 steps): 21 % of about 6 000 crowds riot past a tenth; the mean crowd ends at 21 %. The histogram of outcomes is split: most crowds end with a few rioters, a fifth with nearly everyone.",
             |c| {
                 normal(c, 0.122);
                 c.crowd = Crowd::Sampled;
@@ -96,7 +96,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "gr-city",
             "Crowds sampled from a city",
             GRANOVETTER,
-            "Granovetter's sampled crowds: a city whose thresholds are uniform from 0 to 99 %, and crowds of 100 drawn from it. The uniform crowd riots to the last person, but a random crowd usually does not: with no instigator (37 %) nobody riots, with an instigator but nobody at 1 % (14 %) one does — 'in over half the cases (.37 + .14 = .51) the equilibrium result is either no rioters or one rioter.' Measured (the survey, 5 000 crowds): 36.9 % + 13.7 % = 50.5 %. And the whole crowd riots in only 2.3 % of them; the mean is 12 rioters. The histogram shows the pile at 0–1 and the long, thin tail.",
+            "Granovetter's sampled crowds: a city whose thresholds are uniform from 0 to 99 %, and crowds of 100 drawn from it. As Granovetter explains, the exact uniform crowd riots to the last person, while sampling changes the result: with no instigator (37 %) nobody riots, with an instigator but nobody at 1 % (14 %) one does — 'in over half the cases (.37 + .14 = .51) the equilibrium result is either no rioters or one rioter.' Measured (the survey, 5 000 crowds): 36.9 % with no rioters and 13.7 % with one, together 50.5 % before rounding. The whole crowd riots in 2.3 % of them; the mean is 12 rioters, illustrating his sampling-instability argument. The histogram shows the pile at 0–1 and the long, thin tail.",
             |c| {
                 c.population = Population::City;
                 c.repeat = true;
@@ -132,9 +132,9 @@ pub fn presets() -> Vec<ModelPreset> {
         ),
         preset(
             "gr-ceilings",
-            "Fig. 3: 10 % leave above 90 %",
+            "Ceilings: 10 % leave above 90 %",
             GRANOVETTER,
-            "Granovetter's Figure 3: a threshold model needs each person's net benefit to cross zero once. Some 'might join a riot when 50% of the others had but leave when the total passed 90% for fear that so large a riot would bring official reprisals.' Here a random 10 % of the uniform crowd leave once more than 90 of the others riot, and everyone decides together each step. The riot climbs past 90, the cautious leave, those near the top follow them out, and it climbs again: it pulses between 83 and 92 and never settles, in 34 of 40 crowds (the survey); in the rest it rests at 91. Which people hold the ceilings decides it. Deciding one at a time instead, it hovers near 90.",
+            "The extension discussed alongside Granovetter's Figure 3: the figure itself has one net-benefit zero crossing, but he considers people with two. Some 'might join a riot when 50% of the others had but leave when the total passed 90% for fear that so large a riot would bring official reprisals.' Here a random 10 % of the uniform crowd leave once more than 90 of the others riot, and everyone decides together each step. The riot climbs past 90, the cautious leave, those near the top follow them out, and it climbs again: it pulses between 83 and 92 and never settles, in 34 of 40 crowds (the survey); in the rest it rests at 91. Which people hold the ceilings decides it. Deciding one at a time instead, it hovers near 90.",
             |c| {
                 c.ceilings = Ceilings {
                     share: 0.1,
@@ -148,7 +148,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "gr-clusters",
             "Ten crowds, 5 % moving each step",
             GRANOVETTER,
-            "Granovetter's clusters: ten crowds of 100 drawn from the uniform city, with each person moving to another crowd with probability 0.05 each step and reconsidering there — so rioters who wander into a calm crowd can stop. He asks 'what level of movement among clusters would have the most incendiary effect'. Measured (the gr-movement sweep, 10 runs, the last 100 of 400 steps): 41 % rioting at this movement, against 12 % with no movement and 29 % with everyone moving every step — a middling movement spreads instigators without dissolving the riots they start. The time panel shows each crowd's share in its own color.",
+            "An illustration of Granovetter's cluster conjecture under our chosen movement rule: ten crowds of 100 drawn from the uniform city, with each person moving to another crowd with probability 0.05 each step and reconsidering there — so rioters who wander into a calm crowd can stop. He asks 'what level of movement among clusters would have the most incendiary effect'. Measured (the gr-movement sweep, 10 runs, the last 100 of 400 steps): 41 % rioting at this movement, against 12 % with no movement and 29 % with everyone moving every step — a middling movement spreads instigators without dissolving the riots they start. The time panel shows each crowd's share in its own color.",
             |c| {
                 c.population = Population::City;
                 c.clusters = Clusters {
@@ -176,14 +176,14 @@ pub fn presets() -> Vec<ModelPreset> {
             "watts-upper",
             "Fig. 3: z = 6.14",
             WATTS,
-            "Watts at z = 6.14, near the window's upper edge: most people have too many neighbors to be tipped by one, so nearly every spark dies — and very rarely one sweeps the whole network. Watts: at this z, at n 1 000, 'a single cascade occurring in 1,000 random trials'. Measured: at n 1 000, 20 % of seeds go global (the survey) — the upper edge moves with the network's size; here, at n 10 000, 2.5 %.",
+            "Watts at z = 6.14, near the window's upper edge: most people have too many neighbors to be tipped by one, so nearly every spark dies — and very rarely one sweeps the whole network. Figure 3 prints n 1 000 and reports one global cascade in 1 000 trials. Assuming Figure 2's threshold 18 %, the fresh-world core audit gives 232/1 000 global at n 1 000 (23.2 %) and 20/1 000 at this preset's n 10 000 (2 %), using independent seeds 100001–101000 for each configuration. The discrepancy remains unresolved: the figure plots positive fractions as small as 0.0001, inconsistent with its printed n, and does not restate its threshold or ensemble construction.",
             |c| watts(c, 6.14),
         ),
         preset(
             "watts-hetero",
             "Fig. 4a: φ normal, σ = 0.1, z = 8",
             WATTS,
-            "Watts's Figure 4a: thresholds normal around 18 % with spread 0.1, at z = 8, where uniform thresholds (18 % each) never cascade. With a spread, some people have low thresholds and many links, and cascades return. Measured: 83 % of cascades global (10 seeds). Watts says varied thresholds widen the window in z both ways; at the sparse end they narrow it (the survey: 10 % against 23 % at z 1.2). Thresholds at or below 0 act only once a neighbor does here; read literally (0 ≥ 0), they would all act at once.",
+            "A sensitivity experiment inspired by Watts's Figure 4a: thresholds normal around 18 % with spread 0.1, at z = 8, where uniform thresholds (18 % each) never cascade. With a spread, some people have low thresholds and many links, and cascades return. The fresh-world core audit at n 2 000 gives 854/1 000 global cascades at z 8 against none for fixed thresholds; this preset uses n 10 000. Figure 4a compares analytic cascade regions, which can widen overall while the sparse boundary moves inward; frequency at z 1.2 is a different statistic (the same n 2 000 audit: 88/1 000 against 257/1 000 at z 1.2). Watts specifies thresholds normalized on [0, 1] without stating how the normal's tails are handled. Here draws below 0 become 0 and act only after an active neighbor; draws above 1 never act. This clipped convention differs from a truncated and normalized normal.",
             |c| {
                 watts(c, 8.0);
                 c.distribution = Distribution::Normal;
@@ -196,7 +196,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "watts-hub",
             "The best-connected seed, z = 1.3",
             WATTS,
-            "Watts's targeting: the spark is the best-connected person instead of a random one, at z = 1.3. 'The most connected nodes are far more likely than average nodes to trigger cascades'. Measured: 96 % of cascades global, against 39 % from random sparks (the watts-targeting sweep). Watts says the advantage vanishes in the dense regime; it does not (88 % against 44 % at z 5.5).",
+            "Watts's targeting: the spark is the best-connected person instead of a random one, at z = 1.3. 'The most connected nodes are far more likely than average nodes to trigger cascades, but not in the second regime.' His body likewise says sharply peaked networks near the upper boundary 'will not display this property'. In the fresh-world core audit (n 2 000, 1 000 independent worlds per configuration), hub/random success is 953/1 000 versus 380/1 000 at z 1.3 and 899/1 000 versus 500/1 000 at z 5.5. This preset uses n 10 000. The relative advantage shrinks but persists at z 5.5, where random cascades are common. A paired audit at n 2 000, z 6.6 gives 97/1 000 hub successes versus 16/1 000 random successes; an independent implementation gives 96 versus 26. Advantage persists at that rare finite-network point, but it is outside the infinite-network window and selected-maximum conditioning differs from fixed-degree conditioning, so the historical claim remains unresolved. His near-boundary formula permits residual advantage, and the conclusion separately credits average-degree nodes' greater frequency among triggers.",
             |c| {
                 watts(c, 1.3);
                 c.trigger = Trigger::Hub;

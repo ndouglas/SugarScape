@@ -54,6 +54,5 @@ reaches one extreme much less often. — N200: 34/50 versus N2000: 1/50; every r
 the moderates pull the extremists toward the middle. — 50/50 with direct initial-extremist final mean absolute opinion <0.5 and y=0.
 - holds: Hear only neighbors on this lattice,
 and neither extreme takes over the crowd. — 0/20 sides recruit 70% beyond ±0.9; 9/20 unsettled at the declared 20000-period cap.
-- holds: How extremists win
-A confident minority can move an uncertain crowd.
-After Deffuant et al., 2002 — model mechanism supported by the measured single-extreme setup; no empirical law about people.
+- holds: How extremists win - After Deffuant et al., 2002
+ndouglas.github.io/SugarScape — model mechanism supported by the measured single-extreme setup; no empirical law about people.

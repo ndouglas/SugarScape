@@ -115,6 +115,30 @@ pub struct StrategyView {
     pub active: bool,
 }
 
+/// A decision made in a real native round, before scores and history update.
+#[derive(Clone, Debug, Serialize)]
+pub struct FarolDecisionAgent {
+    pub id: u64,
+    pub memory: u32,
+    pub went: Option<bool>,
+    pub selected: Option<usize>,
+    pub strategies: Vec<StrategyView>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct FarolDecision {
+    pub tick: u64,
+    pub attendance: u32,
+    pub capacity: u32,
+    pub crowded: Option<bool>,
+    pub winning_attend: Option<bool>,
+    /// Attendance input before this decision, oldest first (last 12).
+    pub attendance_history: Vec<u32>,
+    /// The actual minority lookup input, newest winning bit in bit zero.
+    pub history_bits: Option<u64>,
+    pub agents: Vec<FarolDecisionAgent>,
+}
+
 /// The payoff to each of `x` winners among `n`.
 pub fn payoff(c: &FarolConfig, n: u32, x: u32) -> f64 {
     match c.payoff {
@@ -331,6 +355,103 @@ impl FarolWorld {
 
     /// One round.
     pub fn step(&mut self) {
+        self.step_inner(false);
+    }
+
+    /// Film one actual step without drawing RNG or selecting strategies again.
+    pub fn step_recorded(&mut self) -> FarolDecision {
+        self.step_inner(true).expect("recording requested")
+    }
+
+    fn decision(&self, forecasts: &[u32], history: Option<u64>, played: bool) -> FarolDecision {
+        let agents = self
+            .agents
+            .iter()
+            .enumerate()
+            .map(|(i, a)| {
+                let selected = if played && self.config.behavior != Behavior::Random {
+                    a.active
+                } else {
+                    None
+                };
+                let strategies = match self.config.game {
+                    Game::ElFarol => a
+                        .predictors
+                        .iter()
+                        .enumerate()
+                        .map(|(k, &p)| StrategyView {
+                            label: self.library[p as usize].describe(),
+                            score: self.scores[p as usize],
+                            forecast: Some(forecasts[p as usize]),
+                            attend: None,
+                            active: selected == Some(k),
+                        })
+                        .collect(),
+                    Game::Minority => {
+                        let mu =
+                            (history.unwrap_or(self.outcomes) & ((1u64 << a.memory) - 1)) as usize;
+                        a.tables
+                            .iter()
+                            .zip(&a.points)
+                            .enumerate()
+                            .map(|(k, (t, &score))| StrategyView {
+                                label: format!("strategy {}", k + 1),
+                                score,
+                                forecast: None,
+                                attend: history.map(|_| entry(t, mu)),
+                                active: selected == Some(k),
+                            })
+                            .collect()
+                    }
+                };
+                FarolDecisionAgent {
+                    id: i as u64 + 1,
+                    memory: a.memory,
+                    went: played.then_some(a.went),
+                    selected,
+                    strategies,
+                }
+            })
+            .collect();
+        let attendance = if played {
+            self.agents.iter().filter(|a| a.went).count() as u32
+        } else {
+            0
+        };
+        let crowded = match self.config.game {
+            Game::ElFarol => attendance >= self.config.capacity(),
+            Game::Minority => attendance > self.config.capacity(),
+        };
+        FarolDecision {
+            tick: self.tick + u64::from(played),
+            attendance,
+            capacity: self.config.capacity(),
+            crowded: played.then_some(crowded),
+            winning_attend: played.then_some(!crowded),
+            attendance_history: self
+                .recent
+                .iter()
+                .rev()
+                .take(LOOKBACK)
+                .rev()
+                .copied()
+                .collect(),
+            history_bits: history,
+            agents,
+        }
+    }
+
+    pub fn initial_decision(&self) -> FarolDecision {
+        let forecasts = if self.config.game == Game::ElFarol {
+            self.forecasts()
+        } else {
+            Vec::new()
+        };
+        self.decision(&forecasts, None, false)
+    }
+
+    fn step_inner(&mut self, recording: bool) -> Option<FarolDecision> {
+        let mut decision = None;
         let n = self.config.agents;
         let p_random = self.random_attendance();
         let random = self.config.behavior == Behavior::Random;
@@ -358,6 +479,9 @@ impl FarolWorld {
                     self.agents[i].went = went;
                 }
                 let a = self.agents.iter().filter(|a| a.went).count() as u32;
+                if recording {
+                    decision = Some(self.decision(&forecasts, None, true));
+                }
                 let crowded = a >= cap;
                 let mut right = 0u32;
                 for ag in &mut self.agents {
@@ -378,7 +502,11 @@ impl FarolWorld {
                             *s = d * *s + (1.0 - d) * f64::from(f.abs_diff(a));
                         }
                         Scoring::Payoff => {
-                            if (f >= cap) == crowded {
+                            let predicts_crowding = match self.config.at_capacity {
+                                AtCapacity::Stay => f >= cap,
+                                AtCapacity::Go => f > cap,
+                            };
+                            if predicts_crowding == crowded {
                                 *s += 1.0;
                             }
                         }
@@ -410,6 +538,9 @@ impl FarolWorld {
                     self.agents[i].went = went;
                 }
                 let a = self.agents.iter().filter(|a| a.went).count() as u32;
+                if recording {
+                    decision = Some(self.decision(&[], Some(history), true));
+                }
                 let a_wins = a <= self.config.capacity();
                 let winners = if a_wins { a } else { n - a };
                 let pay = payoff(&self.config, n, winners);
@@ -465,6 +596,7 @@ impl FarolWorld {
             ..FarolSnapshot::default()
         };
         self.record();
+        decision
     }
 
     /// Challet and Zhang's Darwinism: the worst of the last `every` rounds is
@@ -974,6 +1106,39 @@ mod tests {
     }
 
     #[test]
+    fn payoff_scoring_does_not_reward_equal_forecasts_that_advise_go_into_a_crowd() {
+        let mut w = world(|c| {
+            c.agents = 3;
+            c.capacity = Some(2);
+            c.scoring = Scoring::Payoff;
+            c.at_capacity = AtCapacity::Go;
+        });
+        w.recent = VecDeque::from(vec![2; LOOKBACK]);
+        for a in &mut w.agents {
+            a.predictors = vec![0];
+        }
+        w.step();
+        assert_eq!(w.round.attendance, 3);
+        assert_eq!(w.round.crowded, 1);
+        assert_eq!(w.scores[0], 0.0);
+    }
+
+    #[test]
+    fn payoff_scoring_does_not_reward_equal_forecasts_that_advise_stay_when_uncrowded() {
+        let mut w = world(|c| {
+            c.agents = 3;
+            c.capacity = Some(2);
+            c.scoring = Scoring::Payoff;
+        });
+        w.recent = VecDeque::from(vec![2; LOOKBACK]);
+        for a in &mut w.agents {
+            a.predictors = vec![0];
+        }
+        w.step();
+        assert_eq!(w.scores[0], 0.0);
+    }
+
+    #[test]
     fn minority_agents_play_their_best_table_and_score_every_one() {
         let mut w = world(minority(11, 3, 2));
         let before = w.outcomes;
@@ -1295,5 +1460,136 @@ mod tests {
                 "{c:?}"
             );
         }
+    }
+    #[test]
+    fn recorded_decisions_keep_pre_update_scores_history_and_capacity_boundary() {
+        for (at_capacity, expected_go) in [(AtCapacity::Stay, false), (AtCapacity::Go, true)] {
+            let mut w = FarolWorld::new(
+                FarolConfig {
+                    agents: 3,
+                    capacity: Some(1),
+                    strategies: 1,
+                    at_capacity,
+                    ..FarolConfig::default()
+                },
+                9,
+            )
+            .unwrap();
+            w.recent = VecDeque::from(vec![1; LOOKBACK]);
+            for a in &mut w.agents {
+                a.predictors = vec![0];
+            }
+            w.scores[0] = 7.0;
+            let f = w.step_recorded();
+            assert_eq!(f.attendance_history, vec![1; 12]);
+            assert_eq!(f.agents[0].strategies[0].score, 7.0);
+            assert_eq!(f.agents[0].strategies[0].forecast, Some(1));
+            assert_eq!(f.agents[0].went, Some(expected_go));
+            assert_ne!(w.scores[0], 7.0);
+            assert_eq!(w.recent.back(), Some(&f.attendance));
+        }
+        let mut w = FarolWorld::new(
+            FarolConfig {
+                agents: 3,
+                capacity: Some(1),
+                strategies: 1,
+                ..FarolConfig::default()
+            },
+            9,
+        )
+        .unwrap();
+        w.recent = VecDeque::from(vec![1; LOOKBACK]);
+        for a in &mut w.agents {
+            a.predictors = vec![0];
+        }
+        w.agents[0].predictors = vec![0]; // forecast 1: stay
+        w.agents[1].predictors = vec![1]; // two weeks ago 0: go
+        w.recent[LOOKBACK - 2] = 0;
+        let f = w.step_recorded();
+        assert_eq!(f.attendance, 1);
+        assert_eq!(f.crowded, Some(true));
+        assert_eq!(f.winning_attend, Some(false));
+    }
+
+    #[test]
+    fn recorded_minority_uses_actual_input_and_preserves_rng_and_all_series() {
+        for game in [Game::ElFarol, Game::Minority] {
+            for behavior in [Behavior::Inductive, Behavior::Random] {
+                for information in [Information::True, Information::Random] {
+                    let c = FarolConfig {
+                        game,
+                        behavior,
+                        information,
+                        ..FarolConfig::default()
+                    };
+                    let mut native = FarolWorld::new(c.clone(), 42).unwrap();
+                    let mut recorded = FarolWorld::new(c, 42).unwrap();
+                    for _ in 0..40 {
+                        let before = recorded.outcomes;
+                        native.step();
+                        let f = recorded.step_recorded();
+                        assert_eq!(native.fingerprint(), recorded.fingerprint());
+                        assert_eq!(native.series_csv(), recorded.series_csv());
+                        if game == Game::Minority {
+                            let history = f.history_bits.unwrap();
+                            if information == Information::True {
+                                assert_eq!(history, before);
+                            }
+                            assert_eq!(
+                                recorded.outcomes,
+                                (before << 1) | u64::from(f.winning_attend.unwrap())
+                            );
+                            for (a, real) in f.agents.iter().zip(&recorded.agents) {
+                                let mu = (history & ((1u64 << a.memory) - 1)) as usize;
+                                for (v, t) in a.strategies.iter().zip(&real.tables) {
+                                    assert_eq!(v.attend, Some(entry(t, mu)));
+                                }
+                                if behavior == Behavior::Inductive {
+                                    assert_eq!(a.went, a.strategies[a.selected.unwrap()].attend);
+                                }
+                            }
+                        }
+                        if behavior == Behavior::Random {
+                            assert!(f
+                                .agents
+                                .iter()
+                                .all(|a| a.selected.is_none()
+                                    && a.strategies.iter().all(|s| !s.active)));
+                        }
+                    }
+                    // Future RNG remains identical after recording stops.
+                    native.run(10);
+                    recorded.run(10);
+                    assert_eq!(native.fingerprint(), recorded.fingerprint());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn minority_exact_capacity_wins_a_and_keeps_pre_score() {
+        let mut w = FarolWorld::new(
+            FarolConfig {
+                game: Game::Minority,
+                agents: 3,
+                strategies: 1,
+                memory: 1,
+                ..FarolConfig::default()
+            },
+            3,
+        )
+        .unwrap();
+        w.outcomes = 0;
+        for (i, a) in w.agents.iter_mut().enumerate() {
+            a.tables = vec![Arc::new(vec![if i == 0 { 1 } else { 0 }])];
+            a.points = vec![7.0];
+        }
+        let f = w.step_recorded();
+        assert_eq!(f.attendance, 1);
+        assert_eq!(f.crowded, Some(false));
+        assert_eq!(f.winning_attend, Some(true));
+        assert_eq!(f.history_bits, Some(0));
+        assert_eq!(f.agents[0].strategies[0].score, 7.0);
+        assert_eq!(w.agents[0].points[0], 8.0);
     }
 }

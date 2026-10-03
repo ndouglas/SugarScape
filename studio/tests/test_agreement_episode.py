@@ -38,6 +38,13 @@ class AgreementVisualTests(unittest.TestCase):
         beats = episode.load_episode('agreement')
         self.assertEqual(len(beats), 14)
         self.assertIn('agreement-results', next(b for b in beats if b.name == 'readings').overlays)
+    def test_final_credit_floats_above_single_host_without_title_scrim(self):
+        end = episode.load_episode('agreement')[-1]
+        self.assertEqual(end.name, 'end')
+        self.assertIsNone(end.shot)
+        self.assertFalse(end.title)
+        self.assertEqual(end.caption_y, .45)
+        self.assertEqual(end.caption, 'How extremists win - After Deffuant et al., 2002\nndouglas.github.io/SugarScape')
     def test_score_is_six_eighths_every_bar(self):
         tune = episode.load_module('agreement', 'tune').TUNE
         self.assertEqual((tune.meter, tune.beats_per_bar), ('6/8', 3))

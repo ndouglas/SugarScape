@@ -43,7 +43,7 @@ CAPTIONS = [
  'A small imbalance makes one side more likely to win.',
  "With their alternative's printed rule,\nthe moderates pull the extremists toward the middle.",
  'Hear only neighbors on this lattice,\nand neither extreme takes over the crowd.',
- 'How extremists win\nA confident minority can move an uncertain crowd.\nAfter Deffuant et al., 2002',
+ 'How extremists win - After Deffuant et al., 2002\nndouglas.github.io/SugarScape',
 ]
 
 

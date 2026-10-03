@@ -47,6 +47,13 @@ class Frame:
     opinions: dict = field(default_factory=dict)
     uncertainties: dict = field(default_factory=dict)
     period: int | None = None
+    members: dict = field(default_factory=dict)
+    ants_events: list = field(default_factory=list)
+    counts: list = field(default_factory=list)
+    step: int | None = None
+    episodes: int | None = None
+    # Actual Farol decision input/outcome, separate from illustrative placement.
+    farol: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -116,6 +123,7 @@ class Dump:
     # Bounded confidence: each agent's rank by starting opinion (0 the lowest).
     start_rank: dict = field(default_factory=dict)
     roles: dict = field(default_factory=dict)
+    links: list = field(default_factory=list)
 
 
 def _culture_rank(last):
@@ -287,6 +295,10 @@ def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
         raise ValueError(f"frame dump format {raw.get('format')!r}, expected {FORMAT}")
+    if raw.get("model") == "farol":
+        return _farol(raw)
+    if raw.get("model") == "ants":
+        return _ants(raw)
     if raw.get("model") == "dpd":
         return _dpd(raw)
     if raw.get("model") in ("schelling", "line"):
@@ -295,6 +307,8 @@ def parse(text):
         return _culture(raw)
     if raw.get("model") == "agreement":
         return _agreement(raw)
+    if raw.get("model") == "thresholds":
+        return _thresholds(raw)
     if raw.get("model") == "opinions":
         return _opinions(raw)
     if raw.get("model") == "tipping":
@@ -515,6 +529,84 @@ def _opinions(raw):
         placed=list(range(n)), config=raw["config"], frames=frames, stats=raw["stats"], model=raw["model"],
         start_rank=rank,
     )
+
+
+def _farol(raw):
+    """Stable home/bar (B/A) slots by real id; keep decision timing verbatim."""
+    import math
+    n = raw["agents"]
+    block = math.ceil(math.sqrt(n))
+    w, h = 2 * (block + 2), math.ceil(n / block)
+    frames = []
+    for k, original in enumerate(raw["frames"]):
+        members = {a["id"]: a for a in original["agents"]}
+        if len(original["agents"]) != n or set(members) != set(range(1, n + 1)):
+            raise ValueError("farol frame must contain each real agent exactly once")
+        attendance = sum(a["went"] is True for a in members.values())
+        if attendance != original["attendance"]:
+            raise ValueError("farol attendance must match actual choices")
+        groups = {i: int(a["went"] is True) for i, a in members.items()}
+        agents = {i: Agent(i, groups[i] * (block + 2) + (i - 1) % block,
+                           (i - 1) // block, 6.0, 0, 0, 0) for i in members}
+        frames.append(Frame(tick=k, agents=agents, sugar=[0.0] * (w*h), deaths={}, born=[],
+                            pollution=[0.0] * (w*h), births={}, members=members, groups=groups,
+                            period=original["tick"], counts=[n-attendance, attendance],
+                            farol={key: value for key, value in original.items() if key != "agents"}))
+    return Dump(seed=raw["seed"], ticks=len(frames)-1, width=w, height=h,
+                capacity=[0.0] * (w*h), placed=list(frames[0].agents), config=raw["config"],
+                frames=frames, stats=raw["stats"], model="farol")
+
+
+def _ants(raw):
+    """Keep real agents in deterministic source slots; retain true model time."""
+    import math
+    n, sources = raw["agents"], raw["config"]["sources"]
+    block = math.ceil(math.sqrt(n))
+    w, h = sources * (block + 2), math.ceil(n / block)
+    frames = []
+    for k, original in enumerate(raw["frames"]):
+        members = {a["id"]: a for a in original["agents"]}
+        if len(original["agents"]) != n or set(members) != set(range(1,n+1)):
+            raise ValueError("ants frame must contain each real agent exactly once")
+        counts = [0] * sources
+        agents = {}
+        for i, a in sorted(members.items()):
+            source = a["source"] - 1
+            if not 0 <= source < sources:
+                raise ValueError("ants source must be between 1 and sources")
+            slot = counts[source]
+            counts[source] += 1
+            agents[i] = Agent(i, source * (block+2) + slot % block, slot // block, 6.0, 0, 0, 0)
+        if counts != original["counts"]:
+            raise ValueError("ants counts must match actual source membership")
+        frames.append(Frame(tick=k, agents=agents, sugar=[0.0]*(w*h), deaths={}, born=[],
+                            pollution=[0.0]*(w*h), births={}, members=members,
+                            groups={i:a["source"] for i,a in members.items()}, period=original["tick"],
+                            counts=original["counts"], ants_events=original.get("ants_events",[])))
+    return Dump(seed=raw["seed"], ticks=len(frames)-1, width=w, height=h,
+                capacity=[0.0]*(w*h), placed=list(frames[0].agents), config=raw["config"],
+                frames=frames, stats=raw["stats"], model="ants", links=[tuple(e) for e in raw.get("links",[])])
+
+
+def _thresholds(raw):
+    """One fixed grid square per real actor; retain exact states and links."""
+    import math
+    n = raw['agents']
+    w = math.ceil(math.sqrt(n))
+    h = math.ceil(n / w)
+    frames = []
+    for k, original in enumerate(raw['frames']):
+        members = {a['id']: a for a in original['agents']}
+        if set(members) != set(range(1, n + 1)):
+            raise ValueError('thresholds frame must contain each real actor exactly once')
+        frames.append(Frame(tick=k, agents={i: Agent(i, (i-1)%w, (i-1)//w, 6.0, 0, 0, 0)
+                                          for i in members},
+                            sugar=[0.0]*(w*h), deaths={}, born=[], pollution=[0.0]*(w*h), births={},
+                            groups={i:int(a['acting']) for i,a in members.items()}, members=members,
+                            period=original['tick'], step=original['step'], episodes=original['episodes']))
+    return Dump(seed=raw['seed'], ticks=len(frames)-1, width=w, height=h,
+                capacity=[0.0]*(w*h), placed=list(frames[0].agents),
+                config=raw['config'], frames=frames, stats=raw['stats'], model='thresholds')
 
 
 def _agreement(raw):

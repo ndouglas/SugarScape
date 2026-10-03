@@ -190,6 +190,16 @@ class HelpersTest(unittest.TestCase):
         self.assertLess(min(values), 0.2)
         self.assertEqual(values, [animate.blink(7, f) for f in range(600)])
 
+    def test_closing_card_blinks_once_near_end_and_reopens(self):
+        for frames in (150, 210, 450):
+            values = [animate.closing_blink(f, frames) for f in range(1, frames + 1)]
+            blinking = [f for f, height in enumerate(values, 1) if height < 1]
+            self.assertEqual(len(blinking), 5)
+            self.assertEqual(blinking, list(range(blinking[0], blinking[0] + 5)))
+            self.assertGreater(blinking[0], frames * .75)
+            self.assertEqual(min(values), .1)
+            self.assertEqual((values[0], values[-1]), (1, 1))
+
     def test_sight_cells_wrap_nearest_first(self):
         n, e, s, w = animate.sight_cells(0, 0, 2, 5, 5)
         self.assertEqual(n, [(0, 4), (0, 3)])

@@ -1,0 +1,8 @@
+{
+  "preset": "gr-perturbed",
+  "seed": 201001,
+  "ticks": 2,
+  "set": {
+    "repeat": false
+  }
+}

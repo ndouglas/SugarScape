@@ -8,7 +8,8 @@
 //! model's each generation's agents and gifts, image scoring's each
 //! generation's agents and meetings, the norms game's each generation's
 //! agents and events, and social structure's each period's agents and
-//! partners (`run`). Other models are not filmed yet.
+//! partners (`run`). Ants shots retain actual source choices and optional
+//! source-change events. Other models are not filmed yet.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -60,11 +61,12 @@ pub struct Shot {
     #[serde(default)]
     pub scores: bool,
     /// Tags: record each generation's gifts; image scoring: its meetings; the
-    /// norms game: its events.
+    /// norms game: its events; ants: actual source changes (one meeting per
+    /// tick for recorded Kirman teaching shots).
     #[serde(default)]
     pub gifts: bool,
-    /// The norms game: record every `every`th generation only (a million
-    /// generations, filmable); frames keep their true generation.
+    /// Sampled models: record every `every`th update only (a million
+    /// updates, filmable); frames keep their true model clock.
     #[serde(default = "every_generation")]
     pub every: u32,
 }
@@ -886,6 +888,9 @@ pub enum Dump {
     Culture(Box<CultureDump>),
     Opinions(Box<OpinionsDump>),
     Agreement(Box<AgreementDump>),
+    Thresholds(Box<ThresholdsDump>),
+    Ants(Box<AntsDump>),
+    Farol(Box<FarolDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -985,6 +990,11 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
                 return run_tipping(shot).map(|d| Dump::Tipping(Box::new(d)));
             }
             run_schelling(shot).map(|d| Dump::Schelling(Box::new(d)))
+        }
+        ModelConfig::Farol(_) => run_farol(shot).map(|d| Dump::Farol(Box::new(d))),
+        ModelConfig::Ants(_) => run_ants(shot).map(|d| Dump::Ants(Box::new(d))),
+        ModelConfig::Thresholds(_) => {
+            run_thresholds(shot).map(|d| Dump::Thresholds(Box::new(d)))
         }
         ModelConfig::Agreement(_) => {
             run_agreement(shot).map(|d| Dump::Agreement(Box::new(d)))
@@ -1236,6 +1246,271 @@ pub fn run_opinions(shot: &Shot) -> Result<OpinionsDump, Vec<FieldError>> {
         every,
         agents: starts.len(),
         starts,
+        config,
+        frames,
+        stats,
+    })
+}
+
+/// One actor's exact disposition, current state and actual ties.
+#[derive(Clone, Debug, Serialize)]
+pub struct ThresholdsActor {
+    #[serde(flatten)]
+    pub state: crate::thresholds::ActorView,
+    pub threshold_num: u64,
+    pub threshold_den: u64,
+    /// One-based actor ids; null means the actor observes its entire crowd.
+    pub neighbors: Option<Vec<u64>>,
+}
+
+/// One sampled model step, including completed episodes and their final sizes.
+#[derive(Clone, Debug, Serialize)]
+pub struct ThresholdsFrame {
+    pub tick: u64,
+    pub step: u32,
+    pub episodes: u32,
+    pub agents: Vec<ThresholdsActor>,
+    /// Completed episode counts by final participation percentage (0 through 100).
+    pub sizes: Vec<u32>,
+}
+
+/// Recorded real Farol decisions; ticks is the animation frame count.
+#[derive(Clone, Debug, Serialize)]
+pub struct FarolDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub every: u32,
+    pub agents: u32,
+    pub game: crate::farol::Game,
+    pub config: ModelConfig,
+    pub frames: Vec<crate::farol::FarolDecision>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
+pub fn run_farol(shot: &Shot) -> Result<FarolDump, Vec<FieldError>> {
+    for (bad, field) in [
+        (!shot.place.is_empty(), "place"),
+        (shot.empty, "empty"),
+        (shot.cells.is_some(), "cells"),
+        (shot.scores, "scores"),
+        (shot.gifts, "gifts"),
+    ] {
+        if bad {
+            return Err(vec![FieldError::new(field, "is not for farol shots")]);
+        }
+    }
+    if shot.every == 0 || !shot.ticks.is_multiple_of(shot.every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
+    let config = shot.model_config()?;
+    let ModelConfig::Farol(c) = &config else {
+        return Err(vec![FieldError::new("model", "not a farol shot")]);
+    };
+    if c.evolution.enabled {
+        return Err(vec![FieldError::new(
+            "evolution.enabled",
+            "farol shots require evolution disabled to preserve decision identity",
+        )]);
+    }
+    let mut world = crate::farol::FarolWorld::new(c.clone(), shot.seed)?;
+    let mut frames = vec![world.initial_decision()];
+    for _ in 0..shot.ticks / shot.every {
+        let mut frame = frames.last().unwrap().clone();
+        for _ in 0..shot.every {
+            if world.is_finished() {
+                break;
+            }
+            frame = world.step_recorded();
+        }
+        frames.push(frame);
+    }
+    Ok(FarolDump {
+        format: FORMAT,
+        model: "farol",
+        seed: shot.seed,
+        ticks: shot.ticks / shot.every,
+        every: shot.every,
+        agents: c.agents,
+        game: c.game,
+        stats: stats_every(&world, shot.ticks, shot.every),
+        config,
+        frames,
+    })
+}
+
+/// An actual source-choice state, with transitions since the preceding frame.
+#[derive(Clone, Debug, Serialize)]
+pub struct AntsFrame {
+    pub tick: u64,
+    pub agents: Vec<crate::ants::AntView>,
+    pub counts: Vec<u32>,
+    pub ants_events: Vec<crate::ants::AntsEvent>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct AntsDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub every: u32,
+    pub agents: u32,
+    pub config: ModelConfig,
+    /// Actual undirected links, with public IDs; empty on complete graphs.
+    pub links: Vec<(u64, u64)>,
+    pub frames: Vec<AntsFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
+pub fn run_ants(shot: &Shot) -> Result<AntsDump, Vec<FieldError>> {
+    for (bad, field) in [
+        (!shot.place.is_empty(), "place"),
+        (shot.empty, "empty"),
+        (shot.cells.is_some(), "cells"),
+        (shot.scores, "scores"),
+    ] {
+        if bad {
+            return Err(vec![FieldError::new(field, "is not for ants shots")]);
+        }
+    }
+    if shot.every == 0 || !shot.ticks.is_multiple_of(shot.every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
+    let config = shot.model_config()?;
+    let ModelConfig::Ants(c) = &config else {
+        return Err(vec![FieldError::new("model", "not an ants shot")]);
+    };
+    if shot.gifts && c.rule == crate::ants::Rule::Kirman && c.meetings != 1 {
+        return Err(vec![FieldError::new(
+            "meetings",
+            "recorded teaching shots require one meeting per tick",
+        )]);
+    }
+    let mut world = crate::ants::AntsWorld::new(c.clone(), shot.seed)?;
+    world.record_events(shot.gifts);
+    let links = world
+        .graph()
+        .edges()
+        .iter()
+        .map(|&(a, b)| (u64::from(a) + 1, u64::from(b) + 1))
+        .collect();
+    let frame = |w: &crate::ants::AntsWorld, ants_events| AntsFrame {
+        tick: w.tick,
+        agents: w.members(),
+        counts: w.counts().to_vec(),
+        ants_events,
+    };
+    let mut frames = vec![frame(&world, Vec::new())];
+    for _ in 0..shot.ticks / shot.every {
+        let mut events = Vec::new();
+        for _ in 0..shot.every {
+            if world.is_finished() {
+                break;
+            }
+            world.step();
+            events.extend_from_slice(world.events());
+        }
+        frames.push(frame(&world, events));
+    }
+    Ok(AntsDump {
+        format: FORMAT,
+        model: "ants",
+        seed: shot.seed,
+        ticks: shot.ticks / shot.every,
+        every: shot.every,
+        agents: c.ants,
+        links,
+        stats: stats_every(&world, shot.ticks, shot.every),
+        config,
+        frames,
+    })
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct ThresholdsDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    /// Frames after the first (the shot's ticks / every).
+    pub ticks: u32,
+    pub every: u32,
+    pub agents: usize,
+    pub config: ModelConfig,
+    pub frames: Vec<ThresholdsFrame>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
+/// Records threshold worlds without substituting a synthetic animation clock.
+pub fn run_thresholds(shot: &Shot) -> Result<ThresholdsDump, Vec<FieldError>> {
+    for (bad, field) in [
+        (!shot.place.is_empty(), "place"),
+        (shot.empty, "empty"),
+        (shot.gifts, "gifts"),
+        (shot.cells.is_some(), "cells"),
+        (shot.scores, "scores"),
+    ] {
+        if bad {
+            return Err(vec![FieldError::new(field, "is not for thresholds shots")]);
+        }
+    }
+    let every = shot.every;
+    if every == 0 || !shot.ticks.is_multiple_of(every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
+    let config = shot.model_config()?;
+    let ModelConfig::Thresholds(c) = &config else {
+        unreachable!("a thresholds shot")
+    };
+    let mut world = crate::thresholds::ThresholdsWorld::new(c.clone(), shot.seed)?;
+    let frame = |w: &crate::thresholds::ThresholdsWorld| {
+        let latest = w.stats.latest().expect("initial statistics recorded");
+        let agents = (0..w.size())
+            .map(|i| {
+                let th = w.thresholds()[i];
+                ThresholdsActor {
+                    state: w.view(i),
+                    threshold_num: th.num,
+                    threshold_den: th.den,
+                    neighbors: if w.watches().is_empty() {
+                        None
+                    } else {
+                        Some(w.watches()[i].iter().map(|&j| u64::from(j) + 1).collect())
+                    },
+                }
+            })
+            .collect();
+        ThresholdsFrame {
+            tick: w.tick,
+            step: latest.step,
+            episodes: latest.episodes,
+            agents,
+            sizes: w.sizes().to_vec(),
+        }
+    };
+    let mut frames = vec![frame(&world)];
+    for _ in 1..=shot.ticks / every {
+        world.run(every);
+        frames.push(frame(&world));
+    }
+    let stats = stats_every(&world, shot.ticks, every);
+    Ok(ThresholdsDump {
+        format: FORMAT,
+        model: "thresholds",
+        seed: shot.seed,
+        ticks: shot.ticks / every,
+        every,
+        agents: world.size(),
         config,
         frames,
         stats,
@@ -2557,6 +2832,112 @@ mod tests {
     }
 
     #[test]
+    fn thresholds_dump_preserves_agents_graph_and_episode_clock() {
+        for config in [
+            serde_json::json!({"model":"thresholds","actors":20}),
+            serde_json::json!({"model":"thresholds","actors":20,"network":"random","degree":3,"trigger":"random","update":"asynchronous","repeat":true}),
+            serde_json::json!({"model":"thresholds","actors":20,"friends":{"enabled":true,"symmetric":false,"acquaintance":0.3,"weight":2}}),
+        ] {
+            let shot = Shot::from_json(
+                &serde_json::json!({"config":config,"ticks":30,"every":3,"seed":7}).to_string(),
+            )
+            .unwrap();
+            let raw = serde_json::to_value(super::run(&shot).unwrap()).unwrap();
+            assert_eq!(raw["model"], "thresholds");
+            assert_eq!(raw["ticks"], 10);
+            assert_eq!(raw["every"], 3);
+            assert_eq!(
+                raw["config"],
+                serde_json::to_value(shot.model_config().unwrap()).unwrap()
+            );
+            let ModelConfig::Thresholds(c) = shot.model_config().unwrap() else {
+                panic!("thresholds config")
+            };
+            let mut world = crate::thresholds::ThresholdsWorld::new(c, shot.seed).unwrap();
+            let side = crate::thresholds::grid(world.size() as u32).0;
+            let cell = crate::thresholds::grid(world.size() as u32).1;
+            for frame in raw["frames"].as_array().unwrap() {
+                let state = world.stats.latest().unwrap();
+                assert_eq!(frame["tick"], world.tick);
+                assert_eq!(frame["step"], state.step);
+                assert_eq!(frame["episodes"], state.episodes);
+                assert_eq!(frame["sizes"], serde_json::json!(world.sizes().to_vec()));
+                assert_eq!(frame["agents"].as_array().unwrap().len(), world.size());
+                for (i, agent) in frame["agents"].as_array().unwrap().iter().enumerate() {
+                    let view = world
+                        .inspect(
+                            (crate::thresholds::GRID_X + i % side * cell) as u32,
+                            (i / side * cell) as u32,
+                        )
+                        .unwrap()
+                        .member
+                        .unwrap();
+                    let expected = serde_json::to_value(view).unwrap();
+                    for (key, value) in expected.as_object().unwrap() {
+                        assert_eq!(&agent[key], value, "{key} for actor {i}");
+                    }
+                    let th = world.thresholds()[i];
+                    assert_eq!(agent["threshold_num"], th.num);
+                    assert_eq!(agent["threshold_den"], th.den);
+                    let neighbors = if world.watches().is_empty() {
+                        serde_json::Value::Null
+                    } else {
+                        serde_json::json!(world.watches()[i]
+                            .iter()
+                            .map(|&j| u64::from(j) + 1)
+                            .collect::<Vec<_>>())
+                    };
+                    assert_eq!(agent["neighbors"], neighbors);
+                }
+                world.run(3);
+            }
+            for series in raw["stats"].as_object().unwrap().values() {
+                assert_eq!(series.as_array().unwrap().len(), 11);
+            }
+        }
+    }
+
+    #[test]
+    fn thresholds_dump_holds_the_actual_clock_at_stop_at() {
+        let shot = Shot::from_json(
+            r#"{"config":{"model":"thresholds","actors":20,"stop_at":5},"ticks":12,"every":3}"#,
+        )
+        .unwrap();
+        let raw = serde_json::to_value(super::run(&shot).unwrap()).unwrap();
+        let ticks: Vec<_> = raw["frames"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| f["tick"].as_u64().unwrap())
+            .collect();
+        assert_eq!(ticks, vec![0, 3, 5, 5, 5]);
+        assert_eq!(raw["frames"][2], raw["frames"][4]);
+        assert_eq!(
+            raw["stats"]["step"],
+            serde_json::json!([0.0, 3.0, 5.0, 5.0, 5.0])
+        );
+    }
+
+    #[test]
+    fn thresholds_shot_rejects_unsupported_fields_and_bad_stride() {
+        for (field, value) in [
+            ("place", serde_json::json!([{"x":0,"y":0}])),
+            ("empty", serde_json::json!(true)),
+            ("gifts", serde_json::json!(true)),
+            ("cells", serde_json::json!(["C"])),
+            ("scores", serde_json::json!(true)),
+            ("every", serde_json::json!(0)),
+            ("every", serde_json::json!(4)),
+        ] {
+            let mut value_shot =
+                serde_json::json!({"config":{"model":"thresholds","actors":20},"ticks":6});
+            value_shot[field] = value;
+            let shot = Shot::from_json(&value_shot.to_string()).unwrap();
+            assert_eq!(super::run(&shot).unwrap_err()[0].field, field);
+        }
+    }
+
+    #[test]
     fn agreement_dump_preserves_the_world_and_requested_clock() {
         let shot = Shot::from_json(
             r#"{"config":{"model":"agreement","agents":20},"ticks":12,"every":3,"seed":7}"#,
@@ -2791,5 +3172,206 @@ mod tests {
             "at rest, everyone inside is content"
         );
         assert_eq!(d.stats["red_in"][40], 80.0);
+    }
+    #[test]
+    fn ants_shot_retains_actual_members_counts_and_clock() {
+        let shot = Shot::from_json(r#"{"config":{"model":"ants","ants":12,"network":"ring","degree":2,"independent":0.25,"stop_at":5},"seed":9,"ticks":12,"every":3}"#).unwrap();
+        let raw = serde_json::to_value(super::run(&shot).unwrap()).unwrap();
+        let ModelConfig::Ants(c) = shot.model_config().unwrap() else {
+            panic!()
+        };
+        let mut world = crate::ants::AntsWorld::new(c, shot.seed).unwrap();
+        for f in raw["frames"].as_array().unwrap() {
+            let tick = f["tick"].as_u64().unwrap();
+            world.run((tick - world.tick) as u32);
+            assert_eq!(f["counts"], serde_json::json!(world.counts()));
+            assert_eq!(f["agents"], serde_json::json!(world.members()));
+            for (i, a) in f["agents"].as_array().unwrap().iter().enumerate() {
+                assert_eq!(a["id"], i as u64 + 1);
+                assert_eq!(a["source"], u32::from(world.sources()[i]) + 1);
+                assert_eq!(a["degree"], 2);
+                let away = world
+                    .graph()
+                    .of(i)
+                    .iter()
+                    .filter(|&&j| world.sources()[j as usize] != world.sources()[i])
+                    .count();
+                assert_eq!(a["elsewhere"], away);
+            }
+        }
+        assert_eq!(
+            raw["frames"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|f| f["tick"].as_u64().unwrap())
+                .collect::<Vec<_>>(),
+            vec![0, 3, 5, 5, 5]
+        );
+    }
+
+    #[test]
+    fn ants_shot_rejects_unsupported_fields_and_invalid_stride() {
+        for (extra, field) in [
+            (r#", "every":0"#, "every"),
+            (r#", "every":2"#, "every"),
+            (r#", "place":[{"x":0,"y":0}]"#, "place"),
+            (r#", "empty":true"#, "empty"),
+            (r#", "cells":[]"#, "cells"),
+            (r#", "scores":true"#, "scores"),
+        ] {
+            let json = format!(r#"{{"config":{{"model":"ants"}},"ticks":3{extra}}}"#);
+            assert_eq!(
+                super::run(&Shot::from_json(&json).unwrap()).unwrap_err()[0].field,
+                field
+            );
+        }
+    }
+
+    #[test]
+    fn ants_recorded_shots_keep_all_real_events_and_clear_held_frames() {
+        let shot=Shot::from_json(r#"{"config":{"model":"ants","ants":12,"sources":3,"meetings":1,"epsilon":1.0,"stop_at":5},"ticks":12,"every":3,"gifts":true}"#).unwrap();
+        let Dump::Ants(d) = super::run(&shot).unwrap() else {
+            panic!()
+        };
+        assert!(d.links.is_empty());
+        assert!(d.frames[0].ants_events.is_empty());
+        assert_eq!(
+            d.frames[1]
+                .ants_events
+                .iter()
+                .map(|e| e.tick)
+                .collect::<Vec<_>>(),
+            vec![1, 2, 3]
+        );
+        assert_eq!(
+            d.frames[2]
+                .ants_events
+                .iter()
+                .map(|e| e.tick)
+                .collect::<Vec<_>>(),
+            vec![4, 5]
+        );
+        assert!(d.frames[3].ants_events.is_empty());
+        assert!(d.frames[4].ants_events.is_empty());
+        let ModelConfig::Ants(c) = shot.model_config().unwrap() else {
+            panic!()
+        };
+        let mut w = crate::ants::AntsWorld::new(c, shot.seed).unwrap();
+        for f in &d.frames {
+            for e in &f.ants_events {
+                let before = w.sources().to_vec();
+                w.step();
+                let changed: Vec<usize> = before
+                    .iter()
+                    .zip(w.sources())
+                    .enumerate()
+                    .filter(|(_, (a, b))| a != b)
+                    .map(|(i, _)| i)
+                    .collect();
+                assert_eq!(changed, vec![(e.agent - 1) as usize]);
+                assert_eq!(e.kind, "spontaneous");
+                assert_eq!(e.partner, None);
+                assert_eq!(e.update, 1);
+                assert_eq!(e.from_source, u32::from(before[changed[0]]) + 1);
+                assert_eq!(e.to_source, u32::from(w.sources()[changed[0]]) + 1);
+            }
+        }
+    }
+
+    #[test]
+    fn ants_shots_keep_actual_network_edges_and_reject_batched_teaching() {
+        let shot = Shot::from_json(
+            r#"{"config":{"model":"ants","ants":12,"network":"ring","degree":2},"ticks":3}"#,
+        )
+        .unwrap();
+        let Dump::Ants(d) = super::run(&shot).unwrap() else {
+            panic!()
+        };
+        assert_eq!(d.links.len(), 12);
+        assert!(d
+            .links
+            .iter()
+            .all(|&(a, b)| a >= 1 && b >= 1 && a <= 12 && b <= 12));
+        assert!(d.frames.iter().all(|f| f.ants_events.is_empty()));
+        let shot =
+            Shot::from_json(r#"{"config":{"model":"ants"},"ticks":3,"gifts":true}"#).unwrap();
+        assert_eq!(super::run(&shot).unwrap_err()[0].field, "meetings");
+    }
+    #[test]
+    fn farol_shots_record_actual_decisions_and_native_series() {
+        let shot =
+            Shot::from_json(r#"{"config":{"model":"farol"},"seed":1010,"ticks":12,"every":3}"#)
+                .unwrap();
+        let value =
+            serde_json::to_value(super::run(&shot).expect("farol recording must be supported"))
+                .unwrap();
+        assert_eq!(value["model"], "farol");
+        let frames = value["frames"].as_array().unwrap();
+        assert_eq!(
+            frames
+                .iter()
+                .map(|f| f["tick"].as_u64().unwrap())
+                .collect::<Vec<_>>(),
+            vec![0, 3, 6, 9, 12]
+        );
+        assert!(frames[0]["agents"][0]["went"].is_null());
+        assert!(frames[0]["agents"][0]["selected"].is_null());
+        let ModelConfig::Farol(c) = shot.model_config().unwrap() else {
+            panic!()
+        };
+        let mut native = crate::farol::FarolWorld::new(c, shot.seed).unwrap();
+        native.run(12);
+        assert_eq!(
+            value["stats"],
+            serde_json::to_value(stats_every(&native, 12, 3)).unwrap()
+        );
+        for f in &frames[1..] {
+            let members = f["agents"].as_array().unwrap();
+            let count = members.iter().filter(|a| a["went"] == true).count();
+            assert_eq!(count as u64, f["attendance"].as_u64().unwrap());
+            for a in members {
+                let k = a["selected"].as_u64().unwrap() as usize;
+                let forecast = a["strategies"][k]["forecast"].as_u64().unwrap();
+                assert_eq!(a["went"], forecast < 60);
+            }
+        }
+    }
+
+    #[test]
+    fn farol_shots_reject_unsupported_fields() {
+        for (extra, field) in [
+            (r#", "place":[{"x":0,"y":0}]"#, "place"),
+            (r#", "every":0"#, "every"),
+        ] {
+            let shot = Shot::from_json(&format!(
+                r#"{{"config":{{"model":"farol"}},"ticks":3{extra}}}"#
+            ))
+            .unwrap();
+            assert_eq!(super::run(&shot).unwrap_err()[0].field, field);
+        }
+        let shot=Shot::from_json(r#"{"config":{"model":"farol","game":"minority","evolution":{"enabled":true}},"ticks":3}"#).unwrap();
+        assert_eq!(super::run(&shot).unwrap_err()[0].field, "evolution.enabled");
+    }
+
+    #[test]
+    fn farol_minority_initial_frame_has_no_invented_decision() {
+        let shot = Shot::from_json(
+            r#"{"config":{"model":"farol","game":"minority","agents":101},"ticks":2}"#,
+        )
+        .unwrap();
+        let Dump::Farol(d) = super::run(&shot).unwrap() else {
+            panic!()
+        };
+        assert_eq!(d.frames[0].agents.len(), 101);
+        assert!(d.frames[0]
+            .agents
+            .iter()
+            .all(|a| a.went.is_none() && a.selected.is_none()));
+        assert!(d.frames[0].history_bits.is_none());
+        assert!(d.frames[0].agents[0]
+            .strategies
+            .iter()
+            .all(|s| s.attend.is_none()));
     }
 }
