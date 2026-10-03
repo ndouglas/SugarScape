@@ -19,6 +19,7 @@ use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::farol::{FarolConfig, FarolWorld};
 use crate::firms::{FirmsConfig, FirmsWorld};
+use crate::geosim::{GeosimConfig, GeosimWorld};
 use crate::hoard::{HoardConfig, HoardWorld};
 use crate::image::{ImageConfig, ImageWorld};
 use crate::line::{LineConfig, LineWorld};
@@ -78,10 +79,11 @@ pub enum ModelKind {
     Collusion,
     Auctions,
     Polarity,
+    Geosim,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 30] = [
+    pub const ALL: [ModelKind; 31] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -112,6 +114,7 @@ impl ModelKind {
         ModelKind::Collusion,
         ModelKind::Auctions,
         ModelKind::Polarity,
+        ModelKind::Geosim,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -146,6 +149,7 @@ impl ModelKind {
             ModelKind::Collusion => "collusion",
             ModelKind::Auctions => "auctions",
             ModelKind::Polarity => "polarity",
+            ModelKind::Geosim => "geosim",
         }
     }
 
@@ -183,6 +187,7 @@ impl ModelKind {
             ModelKind::Collusion => crate::collusion::schema(),
             ModelKind::Auctions => crate::auctions::schema(),
             ModelKind::Polarity => crate::polarity::schema(),
+            ModelKind::Geosim => crate::geosim::schema(),
         }
     }
 }
@@ -226,6 +231,7 @@ pub enum ModelConfig {
     Collusion(CollusionConfig),
     Auctions(AuctionsConfig),
     Polarity(PolarityConfig),
+    Geosim(GeosimConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -261,6 +267,7 @@ enum Tagged<'a> {
     Collusion(&'a CollusionConfig),
     Auctions(&'a AuctionsConfig),
     Polarity(&'a PolarityConfig),
+    Geosim(&'a GeosimConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -303,6 +310,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Collusion(c) => Tagged::Collusion(c).serialize(s),
             ModelConfig::Auctions(c) => Tagged::Auctions(c).serialize(s),
             ModelConfig::Polarity(c) => Tagged::Polarity(c).serialize(s),
+            ModelConfig::Geosim(c) => Tagged::Geosim(c).serialize(s),
         }
     }
 }
@@ -340,6 +348,7 @@ impl ModelConfig {
             ModelConfig::Collusion(_) => ModelKind::Collusion,
             ModelConfig::Auctions(_) => ModelKind::Auctions,
             ModelConfig::Polarity(_) => ModelKind::Polarity,
+            ModelConfig::Geosim(_) => ModelKind::Geosim,
         }
     }
 
@@ -452,6 +461,7 @@ impl ModelConfig {
             "polarity" => serde_json::from_value(value)
                 .map(ModelConfig::Polarity)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "geosim" => serde_json::from_value(value).map(ModelConfig::Geosim).map_err(|e|FieldError::new("config",e.to_string())),
             "auctions" => serde_json::from_value(value)
                 .map(ModelConfig::Auctions)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -505,6 +515,7 @@ impl ModelConfig {
             ModelConfig::Collusion(c) => c.validate(),
             ModelConfig::Auctions(c) => c.validate(),
             ModelConfig::Polarity(c) => c.validate(),
+            ModelConfig::Geosim(c) => c.validate(),
         }
     }
 
@@ -542,6 +553,7 @@ impl ModelConfig {
             ModelConfig::Collusion(c) => set_path(c, path, value).map(ModelConfig::Collusion),
             ModelConfig::Auctions(c) => set_path(c, path, value).map(ModelConfig::Auctions),
             ModelConfig::Polarity(c) => set_path(c, path, value).map(ModelConfig::Polarity),
+            ModelConfig::Geosim(c) => set_path(c, path, value).map(ModelConfig::Geosim),
         }
     }
 
@@ -551,6 +563,9 @@ impl ModelConfig {
         match self {
             ModelConfig::Polarity(c) => {
                 Some(c.horizon.div_ceil(u64::from(c.periods_per_tick)) as u32)
+            }
+            ModelConfig::Geosim(c) => {
+                Some(c.horizon().div_ceil(u64::from(c.periods_per_tick)) as u32)
             }
             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
             ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
@@ -625,6 +640,7 @@ impl ModelConfig {
             ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Auctions(c) => crate::auctions::series_names(c.bidders),
             ModelConfig::Polarity(_) => crate::polarity::series_names(),
+            ModelConfig::Geosim(_) => crate::geosim::series_names(),
             ModelConfig::Collusion(_) => crate::collusion::SERIES
                 .iter()
                 .map(|s| s.to_string())
@@ -828,6 +844,7 @@ pub enum ModelWorld {
     Collusion(Box<CollusionWorld>),
     Auctions(Box<AuctionsWorld>),
     Polarity(Box<PolarityWorld>),
+    Geosim(Box<GeosimWorld>),
 }
 
 impl ModelWorld {
@@ -889,6 +906,7 @@ impl ModelWorld {
             ModelConfig::Polarity(c) => {
                 ModelWorld::Polarity(Box::new(PolarityWorld::new(c, seed)?))
             }
+            ModelConfig::Geosim(c) => ModelWorld::Geosim(Box::new(GeosimWorld::new(c, seed)?)),
             ModelConfig::Auctions(c) => {
                 ModelWorld::Auctions(Box::new(AuctionsWorld::new(c, seed)?))
             }
@@ -930,6 +948,7 @@ impl ModelWorld {
             ModelWorld::Collusion(_) => ModelKind::Collusion,
             ModelWorld::Auctions(_) => ModelKind::Auctions,
             ModelWorld::Polarity(_) => ModelKind::Polarity,
+            ModelWorld::Geosim(_) => ModelKind::Geosim,
         }
     }
 
@@ -965,6 +984,7 @@ impl ModelWorld {
             ModelWorld::Collusion(w) => w.as_ref(),
             ModelWorld::Auctions(w) => w.as_ref(),
             ModelWorld::Polarity(w) => w.as_ref(),
+            ModelWorld::Geosim(w) => w.as_ref(),
         }
     }
 
@@ -1000,6 +1020,7 @@ impl ModelWorld {
             ModelWorld::Collusion(w) => w.as_mut(),
             ModelWorld::Auctions(w) => w.as_mut(),
             ModelWorld::Polarity(w) => w.as_mut(),
+            ModelWorld::Geosim(w) => w.as_mut(),
         }
     }
 
@@ -1110,6 +1131,7 @@ impl ModelWorld {
             ModelWorld::Firms(w) => copy_without_history!(Firms, w),
             ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
             ModelWorld::Polarity(w) => copy_without_history!(Polarity, w),
+            ModelWorld::Geosim(w) => copy_without_history!(Geosim, w),
             ModelWorld::Auctions(w) => {
                 let stats = std::mem::take(&mut w.stats);
                 let mut copy = (**w).clone();
@@ -1175,6 +1197,7 @@ impl ModelWorld {
             (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
             (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
             (ModelWorld::Polarity(live), ModelWorld::Polarity(kept)) => restore_into!(live, kept),
+            (ModelWorld::Geosim(live), ModelWorld::Geosim(kept)) => restore_into!(live, kept),
             (ModelWorld::Auctions(live), ModelWorld::Auctions(kept)) => {
                 let mut stats = std::mem::take(&mut live.stats);
                 let len = stats.history().partition_point(|s| s.tick <= kept.tick);
@@ -1857,7 +1880,8 @@ mod tests {
                 "firms",
                 "collusion",
                 "auctions",
-                "polarity"
+                "polarity",
+                "geosim"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

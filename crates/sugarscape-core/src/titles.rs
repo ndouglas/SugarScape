@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 419] = [
+pub const TITLES: [(&str, &str); 424] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1569,6 +1569,11 @@ pub const TITLES: [(&str, &str); 419] = [
         "collusion-below-nash",
         "On a grid with no room above Nash, prices settle at the top",
     ),
+    ("geosim-paper", "Technology and contested fronts shape the size of wars"),
+    ("geosim-no-technology", "Fixed logistical limits constrain conflict cascades"),
+    ("geosim-no-context", "States contemplate attacks without neighborhood alerts"),
+    ("geosim-smaller-shocks", "Slower logistical expansion changes conflict clusters"),
+    ("geosim-artifact-2017", "An archived GeoSim2 bundle exposes different source readings"),
     ("polarity-original", "Predators contest a world of independent governments"),
     ("polarity-defense", "A stronger defense changes the struggle for territory"),
     ("polarity-alliances", "Threatened neighbors can form defensive coalitions"),

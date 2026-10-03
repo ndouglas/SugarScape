@@ -60,3 +60,5 @@ pub mod zi;
 
 #[cfg(test)]
 pub(crate) mod testkit;
+
+pub mod geosim;

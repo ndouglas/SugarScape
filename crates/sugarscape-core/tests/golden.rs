@@ -534,6 +534,29 @@ const IMAGE_GOLDEN: &[(&str, u32, u64)] = &[
     ("lh-fig-4c", 20, 0x6371653b544f6387),
 ];
 
+// GeoSim is pinned at ten source periods, before the measured observation window.
+// This fixture does not run any registered study or certify the archived port.
+const GEOSIM_GOLDEN: &[(&str, u64)] = &[
+    ("geosim-paper", 0x04829677e9ba7931),
+    ("geosim-no-technology", 0x1099ce892cb5f5eb),
+    ("geosim-no-context", 0x8691545150a0d824),
+    ("geosim-smaller-shocks", 0x00f499ddfdd23ead),
+    ("geosim-artifact-2017", 0x58d616930e045b69),
+];
+#[test]
+fn geosim_presets_are_reproducible() {
+    for &(id, expected) in GEOSIM_GOLDEN {
+        assert_eq!(image_fingerprint(id, 10), expected, "preset {id} changed");
+    }
+}
+#[test]
+#[ignore]
+fn print_geosim_golden() {
+    for &(id, _) in GEOSIM_GOLDEN {
+        println!("    (\"{id}\", {:#x}),", image_fingerprint(id, 10));
+    }
+}
+
 fn image_fingerprint(id: &str, ticks: u32) -> u64 {
     let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
     let mut world = ModelWorld::new(preset.config, 1).unwrap();
@@ -563,7 +586,11 @@ fn other_models_are_unchanged() {
 fn every_model_preset_has_a_golden_entry() {
     for p in presets::catalog() {
         assert!(
-            GOLDEN.iter().chain(MODEL_GOLDEN).any(|&(id, _)| id == p.id)
+            GOLDEN
+                .iter()
+                .chain(MODEL_GOLDEN)
+                .chain(GEOSIM_GOLDEN)
+                .any(|&(id, _)| id == p.id)
                 || IMAGE_GOLDEN
                     .iter()
                     .chain(BIG_GOLDEN)

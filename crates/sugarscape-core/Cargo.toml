@@ -6,6 +6,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+# Exact common software transcendentals for GeoSim native/WASM reproducibility.
+libm = { version = "=0.2.16", default-features = false, features = ["force-soft-floats"] }
 rand.workspace = true
 rand_pcg.workspace = true
 serde.workspace = true

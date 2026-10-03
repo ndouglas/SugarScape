@@ -558,6 +558,12 @@ pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResul
         .model()
         .series(sweep.metric.series())
         .expect("the metric's series is checked against every config");
+    // Raw GeoSim statistics remain inspectable after an invalid attempted period,
+    // but no portion of that run may enter experiment metric aggregates.
+    if matches!(&world, ModelWorld::Geosim(w) if w.outcome().is_some_and(|outcome| !outcome.valid))
+    {
+        history.fill(f64::NAN);
+    }
     // A world that stopped on its own for good (Axelrod's culture once stable,
     // a Sugarscape whose cultures settled) holds its last state: the ticks it
     // did not run repeat its last values. Any other stopped world reads NaN.
