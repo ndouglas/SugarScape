@@ -11591,7 +11591,7 @@
       },
       "survey/geosim/test_analysis.py": {
         "mode": "100644",
-        "sha256": "65de67cdc195f9a14f82042b4434f8ee0262f25480bf82b0ff58d6e67085970b"
+        "sha256": "3fbeafb5293699786d265f668ed99dfe0be7e6ed962f472563c7adad9a350916"
       },
       "survey/geosim/test_cli.py": {
         "mode": "100644",
@@ -11603,11 +11603,11 @@
       },
       "survey/geosim/test_modern.py": {
         "mode": "100644",
-        "sha256": "c1dfbd452cf3ad1f7a60c44ca406416fed79f84d01462cb32ff783e0370da25c"
+        "sha256": "a1c79007c349dd5c6de90cb452c5b087ae424c5fcb9428ebbe56f7bac8d3d983"
       },
       "survey/geosim/test_numerics.py": {
         "mode": "100644",
-        "sha256": "bf353f6d9e5aa0f840901539224b393608132d1439415f7961af593a38686a52"
+        "sha256": "ea9c04f95fb8a6e6d412d30c4fd3d2ba5c6591b1799ae3e6cc1e5fd925c603dc"
       },
       "survey/geosim/test_provenance.py": {
         "mode": "100644",
@@ -11615,7 +11615,7 @@
       },
       "survey/geosim/test_records.py": {
         "mode": "100644",
-        "sha256": "866df0843859d9296fb65f27513c578e3b3d8f6c2b23c10c4c17d20215d2fe2a"
+        "sha256": "537a314de542d217b80dcc3ab7dc5696d962c934213fadd9cdb67a580504f1b2"
       },
       "survey/geosim/test_run.py": {
         "mode": "100644",
@@ -11623,7 +11623,7 @@
       },
       "survey/geosim/test_source.py": {
         "mode": "100644",
-        "sha256": "ece3296e4cfb82b54fecac6f4613fc62a1edb2fcb20fb19da909ea02e65f2dec"
+        "sha256": "7eb5dfc05ee3000407083bd780abbc1f89cae49438baf8710129327fae611b1e"
       },
       "survey/geosim/test_source_findings.py": {
         "mode": "100644",
@@ -11879,11 +11879,11 @@
       },
       "survey/tests/fixtures/geosim-registered-manifest.json": {
         "mode": "100644",
-        "sha256": "476d6a849f7a660baae626b77530f3dfb537485fa05c5a22c6455750b45790d3"
+        "sha256": "b22fdc8b34f38957af1fae044b97bad3a69faf7057fec80288e9939770fe41f1"
       },
       "survey/tests/geosim_native.rs": {
         "mode": "100644",
-        "sha256": "b8229b0a7ff0fb04a48b1d48ede70ca559d90d23e536b89e69a69e47807fa865"
+        "sha256": "4c448bafcd4edee018d82e93c88a315a2820699fc1504cae05d73ca2f333475c"
       },
       "web/index.html": {
         "mode": "100644",
@@ -13729,7 +13729,7 @@
       },
       "docs/superpowers/specs/2026-10-03-geosim-design.md": {
         "mode": "100644",
-        "sha256": "048a8726bec0367ad486fb7f26e4f4baf414099f342d48e22670d9df0725c539"
+        "sha256": "97d69b8eb92e34342ad10565841a45af5ec9c7e33cb2f7adf671791caa54b0c6"
       },
       "survey/.gitignore": {
         "mode": "100644",
@@ -13749,11 +13749,11 @@
       },
       "survey/geosim/NUMERICAL_METHODS.md": {
         "mode": "100644",
-        "sha256": "6298dd25490433cae4cc46be92ceaa14c3197c4cffe77c04e7d63dbbfbe2d5ce"
+        "sha256": "4d46850335d2f262996a9756aed2dfb021e3acefc8bdbc7d636ca89fdb04ede5"
       },
       "survey/geosim/README.md": {
         "mode": "100644",
-        "sha256": "eb480eaf2e36395ed1bc40aca66d6d0d92b66f3577d19af2ab168cda6ea14875"
+        "sha256": "f267c6e08159db3503138701331a4fdbe771bd4c1dcff4d47acb30d8c078f44b"
       },
       "survey/geosim/analysis.py": {
         "mode": "100644",
@@ -13765,15 +13765,15 @@
       },
       "survey/geosim/methods.py": {
         "mode": "100644",
-        "sha256": "67fa0934d2f7f259d868244a78d3f1e2d53010a29f7b23b808c41515a530e20a"
+        "sha256": "286f9beae3bb8153fd1594b1241e54cc0d65f38c1f657041654e085aaef12b06"
       },
       "survey/geosim/modern.py": {
         "mode": "100644",
-        "sha256": "7b091ba654b8dfc9ca6c86899c22d93a583418fceb456564116f66bf3a2ca232"
+        "sha256": "421449b68d145a0e6450792196c8b5ab8564344226e6a50ac83caef672b4a775"
       },
       "survey/geosim/numerics.py": {
         "mode": "100644",
-        "sha256": "119c48562b1d760392876fcb8abf55d8dca7cbac18edb8b0aabdd7b02ec5bcd0"
+        "sha256": "736b80ec8cf2c49014b18f3de47939d31ce37bd1fdfa21d1b86a59df08ff4304"
       },
       "survey/geosim/provenance.py": {
         "mode": "100644",
@@ -13781,7 +13781,7 @@
       },
       "survey/geosim/records.py": {
         "mode": "100644",
-        "sha256": "00113e57b389361a75e26a9c466c14796bccc9e59376dd5fe85381ff4c1da54c"
+        "sha256": "1f029432e3cf063bbea90a6db2952f65bb1379126e726f16a1ef2b54b35edbf6"
       },
       "survey/geosim/reporting.py": {
         "mode": "100644",
@@ -13797,11 +13797,11 @@
       },
       "survey/geosim/source.py": {
         "mode": "100644",
-        "sha256": "8b5d57b6b42c6dd7ebdc1396207a752976a5cfae9dbaafde30b77b54c572b95e"
+        "sha256": "4b599ad80ee9f933f68eb5cba4ad023c7b8fc1eb768b0dabcf248baac1537078"
       },
       "survey/geosim/test_analysis.py": {
         "mode": "100644",
-        "sha256": "65de67cdc195f9a14f82042b4434f8ee0262f25480bf82b0ff58d6e67085970b"
+        "sha256": "3fbeafb5293699786d265f668ed99dfe0be7e6ed962f472563c7adad9a350916"
       },
       "survey/geosim/test_cli.py": {
         "mode": "100644",
@@ -13813,11 +13813,11 @@
       },
       "survey/geosim/test_modern.py": {
         "mode": "100644",
-        "sha256": "c1dfbd452cf3ad1f7a60c44ca406416fed79f84d01462cb32ff783e0370da25c"
+        "sha256": "a1c79007c349dd5c6de90cb452c5b087ae424c5fcb9428ebbe56f7bac8d3d983"
       },
       "survey/geosim/test_numerics.py": {
         "mode": "100644",
-        "sha256": "bf353f6d9e5aa0f840901539224b393608132d1439415f7961af593a38686a52"
+        "sha256": "ea9c04f95fb8a6e6d412d30c4fd3d2ba5c6591b1799ae3e6cc1e5fd925c603dc"
       },
       "survey/geosim/test_provenance.py": {
         "mode": "100644",
@@ -13825,7 +13825,7 @@
       },
       "survey/geosim/test_records.py": {
         "mode": "100644",
-        "sha256": "866df0843859d9296fb65f27513c578e3b3d8f6c2b23c10c4c17d20215d2fe2a"
+        "sha256": "537a314de542d217b80dcc3ab7dc5696d962c934213fadd9cdb67a580504f1b2"
       },
       "survey/geosim/test_run.py": {
         "mode": "100644",
@@ -13833,7 +13833,7 @@
       },
       "survey/geosim/test_source.py": {
         "mode": "100644",
-        "sha256": "ece3296e4cfb82b54fecac6f4613fc62a1edb2fcb20fb19da909ea02e65f2dec"
+        "sha256": "7eb5dfc05ee3000407083bd780abbc1f89cae49438baf8710129327fae611b1e"
       },
       "survey/geosim/test_source_findings.py": {
         "mode": "100644",
@@ -13893,7 +13893,7 @@
       },
       "survey/src/bin/geosim.rs": {
         "mode": "100644",
-        "sha256": "a1d111403a0e559ac24a70cb609d374002a154a00560cf9e5ae3143d08b66cb7"
+        "sha256": "23b7daad2b66dfa6442ca0913e8c4343db20a904113a166d686131aea636da78"
       },
       "survey/src/bin/polarity.rs": {
         "mode": "100644",
@@ -14089,11 +14089,11 @@
       },
       "survey/tests/fixtures/geosim-registered-manifest.json": {
         "mode": "100644",
-        "sha256": "476d6a849f7a660baae626b77530f3dfb537485fa05c5a22c6455750b45790d3"
+        "sha256": "b22fdc8b34f38957af1fae044b97bad3a69faf7057fec80288e9939770fe41f1"
       },
       "survey/tests/geosim_native.rs": {
         "mode": "100644",
-        "sha256": "b8229b0a7ff0fb04a48b1d48ede70ca559d90d23e536b89e69a69e47807fa865"
+        "sha256": "4c448bafcd4edee018d82e93c88a315a2820699fc1504cae05d73ca2f333475c"
       },
       "web/index.html": {
         "mode": "100644",
@@ -15309,7 +15309,7 @@
         "survey/geosim/test_analysis.py": {
           "after": {
             "mode": "100644",
-            "sha256": "65de67cdc195f9a14f82042b4434f8ee0262f25480bf82b0ff58d6e67085970b"
+            "sha256": "3fbeafb5293699786d265f668ed99dfe0be7e6ed962f472563c7adad9a350916"
           },
           "before": null
         },
@@ -15330,14 +15330,14 @@
         "survey/geosim/test_modern.py": {
           "after": {
             "mode": "100644",
-            "sha256": "c1dfbd452cf3ad1f7a60c44ca406416fed79f84d01462cb32ff783e0370da25c"
+            "sha256": "a1c79007c349dd5c6de90cb452c5b087ae424c5fcb9428ebbe56f7bac8d3d983"
           },
           "before": null
         },
         "survey/geosim/test_numerics.py": {
           "after": {
             "mode": "100644",
-            "sha256": "bf353f6d9e5aa0f840901539224b393608132d1439415f7961af593a38686a52"
+            "sha256": "ea9c04f95fb8a6e6d412d30c4fd3d2ba5c6591b1799ae3e6cc1e5fd925c603dc"
           },
           "before": null
         },
@@ -15351,7 +15351,7 @@
         "survey/geosim/test_records.py": {
           "after": {
             "mode": "100644",
-            "sha256": "866df0843859d9296fb65f27513c578e3b3d8f6c2b23c10c4c17d20215d2fe2a"
+            "sha256": "537a314de542d217b80dcc3ab7dc5696d962c934213fadd9cdb67a580504f1b2"
           },
           "before": null
         },
@@ -15365,7 +15365,7 @@
         "survey/geosim/test_source.py": {
           "after": {
             "mode": "100644",
-            "sha256": "ece3296e4cfb82b54fecac6f4613fc62a1edb2fcb20fb19da909ea02e65f2dec"
+            "sha256": "7eb5dfc05ee3000407083bd780abbc1f89cae49438baf8710129327fae611b1e"
           },
           "before": null
         },
@@ -15386,20 +15386,20 @@
         "survey/tests/fixtures/geosim-registered-manifest.json": {
           "after": {
             "mode": "100644",
-            "sha256": "476d6a849f7a660baae626b77530f3dfb537485fa05c5a22c6455750b45790d3"
+            "sha256": "b22fdc8b34f38957af1fae044b97bad3a69faf7057fec80288e9939770fe41f1"
           },
           "before": null
         },
         "survey/tests/geosim_native.rs": {
           "after": {
             "mode": "100644",
-            "sha256": "b8229b0a7ff0fb04a48b1d48ede70ca559d90d23e536b89e69a69e47807fa865"
+            "sha256": "4c448bafcd4edee018d82e93c88a315a2820699fc1504cae05d73ca2f333475c"
           },
           "before": null
         }
       },
       "name": "03-survey-tests.patch",
-      "sha256": "d75fb981fdbc983b3b9355a11481c12fc97693c242a118433492477751cb4a4d"
+      "sha256": "916b7fb31715f83aaeac2e5dedb3599f6bb1042f5f57257378f704292e96c70e"
     },
     {
       "changes": {
@@ -15413,6 +15413,16 @@
             "sha256": "9fea4a1c04f2d6f8effeb571fe0cce405910a141496aa8e170d3040a81cf76a1"
           }
         },
+        "docs/superpowers/specs/2026-10-03-geosim-design.md": {
+          "after": {
+            "mode": "100644",
+            "sha256": "97d69b8eb92e34342ad10565841a45af5ec9c7e33cb2f7adf671791caa54b0c6"
+          },
+          "before": {
+            "mode": "100644",
+            "sha256": "048a8726bec0367ad486fb7f26e4f4baf414099f342d48e22670d9df0725c539"
+          }
+        },
         "survey/geosim/.python-version": {
           "after": {
             "mode": "100644",
@@ -15423,14 +15433,14 @@
         "survey/geosim/NUMERICAL_METHODS.md": {
           "after": {
             "mode": "100644",
-            "sha256": "6298dd25490433cae4cc46be92ceaa14c3197c4cffe77c04e7d63dbbfbe2d5ce"
+            "sha256": "4d46850335d2f262996a9756aed2dfb021e3acefc8bdbc7d636ca89fdb04ede5"
           },
           "before": null
         },
         "survey/geosim/README.md": {
           "after": {
             "mode": "100644",
-            "sha256": "eb480eaf2e36395ed1bc40aca66d6d0d92b66f3577d19af2ab168cda6ea14875"
+            "sha256": "f267c6e08159db3503138701331a4fdbe771bd4c1dcff4d47acb30d8c078f44b"
           },
           "before": null
         },
@@ -15451,21 +15461,21 @@
         "survey/geosim/methods.py": {
           "after": {
             "mode": "100644",
-            "sha256": "67fa0934d2f7f259d868244a78d3f1e2d53010a29f7b23b808c41515a530e20a"
+            "sha256": "286f9beae3bb8153fd1594b1241e54cc0d65f38c1f657041654e085aaef12b06"
           },
           "before": null
         },
         "survey/geosim/modern.py": {
           "after": {
             "mode": "100644",
-            "sha256": "7b091ba654b8dfc9ca6c86899c22d93a583418fceb456564116f66bf3a2ca232"
+            "sha256": "421449b68d145a0e6450792196c8b5ab8564344226e6a50ac83caef672b4a775"
           },
           "before": null
         },
         "survey/geosim/numerics.py": {
           "after": {
             "mode": "100644",
-            "sha256": "119c48562b1d760392876fcb8abf55d8dca7cbac18edb8b0aabdd7b02ec5bcd0"
+            "sha256": "736b80ec8cf2c49014b18f3de47939d31ce37bd1fdfa21d1b86a59df08ff4304"
           },
           "before": null
         },
@@ -15479,7 +15489,7 @@
         "survey/geosim/records.py": {
           "after": {
             "mode": "100644",
-            "sha256": "00113e57b389361a75e26a9c466c14796bccc9e59376dd5fe85381ff4c1da54c"
+            "sha256": "1f029432e3cf063bbea90a6db2952f65bb1379126e726f16a1ef2b54b35edbf6"
           },
           "before": null
         },
@@ -15507,14 +15517,14 @@
         "survey/geosim/source.py": {
           "after": {
             "mode": "100644",
-            "sha256": "8b5d57b6b42c6dd7ebdc1396207a752976a5cfae9dbaafde30b77b54c572b95e"
+            "sha256": "4b599ad80ee9f933f68eb5cba4ad023c7b8fc1eb768b0dabcf248baac1537078"
           },
           "before": null
         },
         "survey/src/bin/geosim.rs": {
           "after": {
             "mode": "100644",
-            "sha256": "a1d111403a0e559ac24a70cb609d374002a154a00560cf9e5ae3143d08b66cb7"
+            "sha256": "23b7daad2b66dfa6442ca0913e8c4343db20a904113a166d686131aea636da78"
           },
           "before": {
             "mode": "100644",
@@ -15523,7 +15533,7 @@
         }
       },
       "name": "03-survey-implementation.patch",
-      "sha256": "2af986b9892e5a3e51df06abc1948dff7c94c70a6f5d4d51feed1a97d0c07e39"
+      "sha256": "510c7f93c76277fd79d9c23b0b67e8609c86dbae81cd81b69411df4a0e287c39"
     }
   ],
   "product_files": [
@@ -18925,6 +18935,42 @@
       "sha256": "d685ca852f1c6925138e038c274f71a69f2b5639e938262eb643b03c07fcd366"
     }
   },
+  "protocol_amendment": {
+    "changed_product_paths": [
+      "docs/superpowers/specs/2026-10-03-geosim-design.md",
+      "survey/geosim/NUMERICAL_METHODS.md",
+      "survey/geosim/README.md",
+      "survey/geosim/methods.py",
+      "survey/geosim/modern.py",
+      "survey/geosim/numerics.py",
+      "survey/geosim/records.py",
+      "survey/geosim/source.py",
+      "survey/geosim/test_analysis.py",
+      "survey/geosim/test_modern.py",
+      "survey/geosim/test_numerics.py",
+      "survey/geosim/test_records.py",
+      "survey/geosim/test_source.py",
+      "survey/src/bin/geosim.rs",
+      "survey/tests/fixtures/geosim-registered-manifest.json",
+      "survey/tests/geosim_native.rs"
+    ],
+    "correction_commit": "49bcfdc8ef6096ea8c18ad25383f7d0e0569e60c",
+    "date": "2026-10-03",
+    "expected_final_tree": "553d48fc51b9ca11f92acbd2cc6a96c553909047",
+    "fix_base_commit": "2949fa0b44625b35feaf44189addb18daded3028",
+    "premeasurement_only": true,
+    "previous_manifest_sha256": "2973290ae0954c07b14735840faf4b8490cde5be5af077e424b1755d556ba072",
+    "previous_packet_commit": "bd2b7ad42d62c8f7d726bc4f82463b8bbb3b39a9",
+    "stage5_corrected_test_support_paths": [
+      "survey/geosim/test_analysis.py",
+      "survey/geosim/test_modern.py",
+      "survey/geosim/test_numerics.py",
+      "survey/geosim/test_records.py",
+      "survey/geosim/test_source.py",
+      "survey/tests/fixtures/geosim-registered-manifest.json",
+      "survey/tests/geosim_native.rs"
+    ]
+  },
   "scratch_final": "1d5d1cceacc594f0a5c4df4f5cc8c595ec265c60",
   "scratch_host": "27367ba119dcbb44dda3f36c14cabe38df7f8bd0",
   "trees": [
@@ -18933,8 +18979,8 @@
     "f301a54730b443cf597fc8afdc4d0fdb188e0b00",
     "a5632ba6a0a0ad604f91902b99208926641e6c02",
     "89675fe9168da07ca6383442732a7f6011f70628",
-    "63193172ad293822dd5e5201db3dab463ad36199",
-    "8878653c459202ef11cfabc39b853d32608d7693"
+    "c13fbdc81e516b0870e7f42a978d930167d4fede",
+    "553d48fc51b9ca11f92acbd2cc6a96c553909047"
   ],
   "version": 1
 }

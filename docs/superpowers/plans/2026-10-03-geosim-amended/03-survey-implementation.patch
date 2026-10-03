@@ -29,6 +29,24 @@ index 52bf281abecb27c8d20aabefc6fac24880c9ba5f..c7c23e20bff1142338c4814b1c97634f
 +      - run: python -m pip install -r survey/geosim/requirements.txt
 +      - run: cargo test --manifest-path survey/Cargo.toml --bin geosim --test geosim_native
 +      - run: python -m unittest discover -s survey/geosim -p 'test_*.py'
+diff --git a/docs/superpowers/specs/2026-10-03-geosim-design.md b/docs/superpowers/specs/2026-10-03-geosim-design.md
+index 974c6820a5ebda30db85263c5b9ea98f1fa99986..715d99482753e45786bb5459b8e738cdbbf4e24a 100644
+--- a/docs/superpowers/specs/2026-10-03-geosim-design.md
++++ b/docs/superpowers/specs/2026-10-03-geosim-design.md
+@@ -179,3 +179,13 @@ After written-spec approval, use writing-plans. Follow the approved prior workfl
+ Completion means all declared arms/keys and source/modern findings are present, including invalid/Unresolved/Insufficient outcomes; scientific rules and raw evidence are preserved; a fresh final reviewer checks source fidelity/protocol/provenance and hosts; all required checks pass; integration receives exact-head CI/Pages and deployed Inspect/Compare/Experiments smoke. Update papers/roadmap/campaign/war-study handoff with findings and measured limits. Remove only owned worktrees after preserving every unique raw/reference/review artifact. Unavailable author docking or empirical source recovery is a reported limitation, not a fabricated success or an indefinite dependency.
+ 
+ **Premeasurement correction — 2026-10-03.** Task 1 review found that affected-cell locking checked only a claim's sampled path, while later contiguity repair could release a province already locked by an earlier claim. The selected fix computes the claim's complete prospective owner-changing cell set, including cells released by capital collapse or contiguity repair, and rejects the claim before mutation if its agent is locked or any prospective owner change intersects an earlier lock. Shared capital anchors alone do not make distinct province claims conflict, preserving independent province claims. The public `losses` helper delegates to the production `losses_with_incidence` rule with `attacked_party` incidence so that these behaviors remain defined once. No registered history has run; this correction is premeasurement and does not amend any measured result.
++
++## 2026-10-03 premeasurement recorder/numerical correction
++
++Before any registered period or resampling, recorder review found a complete-JSON/missing-newline acceptance gap, missing nested Python evidence checks, inconsistent Pareto cutoff/likelihood evaluation, missing required descriptive checks/counters, and mandatory handling of an advertised optional resolved-output flag. The correction makes Python enforce the native complete-line/nested Outcome contract, uses one centered-log-ratio Pareto fit for cutoff scoring and likelihoods, and defaults the resolved export to the full `--out` path plus `.resolved.json` (also under zero-world validation).
++
++The secondary definitions are explicitly inferred and descriptive, with source equivalence Unresolved. Inclusive OLS uses unique positive thresholds count(S>=s)/N_positive. Rank OLS uses descending positive observations with separate ranks r=1..N and survival r/N; ties keep identical x and separate ranks. Both use log10(s)>=2.5, at least three distinct fitted x and positive variances. Fit-tail count/distinct count/range describe all selected positive observations meeting that cutoff, including maximum and ties, separately from strict OLS fit-point support. Integer100 counterparts transform the same selected raw wars with Java truncation/int32 saturation and report strict/inclusive/rank fits plus tail support. Recorded Java flags and independently recomputed conversion counters remain distinct, with explicit overlapping complete-all/selected, partial-all/selected, all-recorded, censored, backlog and visible strata retained in compact source/modern matrices. Partial diagnostics never enter primary judges.
++
++Pareto ratios use log1p((x−xmin)/xmin) near xmin and log differences for distant values; the selected distribution supplies alpha, KS, log-likelihood and likelihood ratios consistently. Generated tails use xmin*exp(E) for the same exponential draws and fixed job ordering; unrepresentable fits/replicates remain Unresolved without replacements. Exact power-of-two narrow-tail rescaling tests preserve float input ratios and use the existing tolerances. Full definitions and failure rules are in `survey/geosim/NUMERICAL_METHODS.md` and the frozen method descriptors.
++
++No primary CCDF, source cutoff/range/count, arm/seed/population, modern candidate set/grid, minimum50 support, alternative support, RNG job, multiplicity family, draw count or tolerance changes. There remain37 arms/1490 keys/72 jobs. No registered periods or measured findings informed these changes; sources will be frozen only after review.
 diff --git a/survey/geosim/.python-version b/survey/geosim/.python-version
 new file mode 100644
 index 0000000000000000000000000000000000000000..86f8c02eb210e162e13395323abd0d02e8d7d223
@@ -38,10 +56,10 @@ index 0000000000000000000000000000000000000000..86f8c02eb210e162e13395323abd0d02
 +3.13.5
 diff --git a/survey/geosim/NUMERICAL_METHODS.md b/survey/geosim/NUMERICAL_METHODS.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..b85a5bb425a3bcc2c5276f55c699703641aa52dc
+index 0000000000000000000000000000000000000000..3234523be35ad9faca70bfafb16bdab6002a41df
 --- /dev/null
 +++ b/survey/geosim/NUMERICAL_METHODS.md
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,62 @@
 +# Frozen GeoSim offline numerical methods
 +
 +The executable contract is `methods.py::METHOD_CONTRACT`, serialized exactly as `method_contract_json` and SHA256-bound before measurement. Python3.13.5, NumPy2.4.6 and SciPy1.17.1 are pinned by `.python-version`/`requirements.txt`; installed versioned source/docs were inspected during synthetic preparation. These libraries are offline only. NumPy metadata reports `BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0`; SciPy's main license is BSD-3-Clause with its distributed build-dependent OpenBLAS/LAPACK/GCC-runtime notices. Preserve exact installed metadata/license hashes in execution provenance.
@@ -85,12 +103,31 @@ index 0000000000000000000000000000000000000000..b85a5bb425a3bcc2c5276f55c6997036
 +72 fixed NumPy PCG64 jobs derive independent children via `SeedSequence(2026100301,spawn_key=(job_index,))`: eleven joint source predictions, two joint source contrasts,22KS pools and37arm parameter bootstraps. Missing jobs retain indices. Source predictions draw15 joint precision histories; source contrasts independently draw100 rows per treatment/control group. Batch size1024 is fixed; base block precedes control block. Inclusive +1 two-tail p-values and closed source rounding interval maximization feed fixed88/6 Holm families with unavailable entries internally p1; adjusted p<.05 rejects. Linear95% quantiles and arithmetic medians are frozen.
 +
 +Parameter100000 draws resample all registered history rows with joint Pareto alpha/xmin eligibility masks. Max-scaled positive means and arithmetic median midpoints with overflow-safe branch preserve finite large parameters. Any incomplete underlying population or zero-eligible replicate makes primary uncertainty Unresolved; optional conditional nonempty intervals are descriptive with exclusions. Base−shock0/context-off parameter contrasts subtract independent fixed per-arm replicate arrays at the same index, with descriptive95% intervals for alpha/xmin means/medians; no new RNG job, war bootstrap, optimizer refits or invented p-family. Primary invalid histories never enter pools/bootstraps. Raw completions after the successful clock are preserved but excluded from **every** fit, including partial diagnostics.
++
++## 2026-10-03 premeasurement correction — recorder review round 1
++
++No registered GeoSim periods, registered resampling or scientific findings preceded this correction. The primary strict unique positive CCDF, log10 cutoff2.5, full selected positive range, selected count including zero, 88/6 families, 37 arms/1490 keys, 72 child jobs, candidate sets/grid100, minimum tail50, four alternative supports, draws and all numerical tolerances remain unchanged. These corrections fix input integrity, numerical evaluation and omitted descriptive exports; they do not certify source definitions.
++
++The evidence boundary now rejects JSONL without the final newline, exactly as native resume does, and checks every Outcome/nested field and Rust-compatible type plus native clock/identity/collector invariants. Only the native-designated invalid required-float fields accept null; original invalid evidence is preserved. Complete engine outcomes with recorder panic remain partial-only.
++
++Pareto ratios use log1p((x−m)/m) for x/2<=m, and log(x)−log(m) otherwise to avoid an overflowing ratio. Each candidate is fitted once on sorted data. That fitted alpha and the same centered ratios supply its two-sided tied ECDF KS, final log-density, likelihood and comparisons. Nondegenerate candidates with unrepresentable alpha/density make the fit Unresolved instead of selecting a different supported candidate. Generated tails use m*exp(E), E~Exponential(mean1/(alpha−1)), retaining the same draw order/job but avoiding loss from adding tiny E to large log(m). Overflow remains an explicit failed replicate with no replacement. The narrow-tail rescaling oracle uses exact power-of-two scaling of finite normal float inputs, preserving their represented ratios; it uses the already declared absolute alpha/KS tolerance1e−10. Arbitrary decimal rescaling can change represented narrow data and is not asserted to preserve an enormous alpha at that absolute tolerance.
++
++The required secondary source definitions are now named and frozen as **inferred descriptive checks; source equivalence Unresolved**:
++
++- Inclusive unique-threshold OLS uses count(S>=s)/N at unique positive s, where N is the full selected positive observation count.
++- Descending observation-rank OLS uses r/N for each positive observation sorted descending, ranks r=1..N; tied observations retain their separate ranks at identical x, so tie ordering cannot change OLS. Both secondary fits use log10(s)>=2.5, at least three distinct fitted x values, positive x/y variance and the existing OLS roundoff bound.
++- Fit-tail support count/distinct count/log range use every selected positive observation satisfying log10(s)>=2.5, including the maximum and all ties. This is distinct from the primary strict OLS fit-point count/span, which excludes a zero-survival maximum. An empty support has count0 and null range; a singleton has range0.
++- Integer100 checks transform the **same selected raw wars**, guarding overflow before Java-style nonnegative truncation/saturation at2147483647, and export strict, inclusive, rank and fit-tail diagnostics. They neither switch collector membership nor add RNG jobs, hypotheses, verdicts or primary vectors.
++
++Export counters retain recorded java_saturated/java_subunit_zero flags separately from recomputed hypothetical integer100 saturation/subunit-zero/unavailable counts. Production sets the Java flags even for raw exports; unfinalized or unavailable artifacts can differ, so the recorded flags are never silently replaced. Explicit strata are complete_all, complete_selected, partial_all, partial_selected, completed_records, censored, backlog and legacy_visible. These overlap and must not be summed as disjoint populations. Partial strata contain only successful-period eligible completions of invalid/panic histories, and never enter primary inference; completed_records also retains excluded attempted-period artifacts. Both compact source and modern history matrices retain the counters.
++
++Omitting native --resolved-out writes the authoritative resolved export beside --out, appending `.resolved.json` to its full path (for example `sessions.jsonl.resolved.json`), including --validate with zero worlds. The resolved path must differ from the history path. The method declaration and compiled registered template include these descriptors; the unchanged source inventory roster binds these exact code/spec/method bytes at the later controller freeze.
 diff --git a/survey/geosim/README.md b/survey/geosim/README.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..d16e1446f4c9983376c84293afcbe072a6bc283a
+index 0000000000000000000000000000000000000000..2eeacb14f65136f166bc9f949dc1dc02a407892b
 --- /dev/null
 +++ b/survey/geosim/README.md
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,39 @@
 +# GeoSim scientific protocol
 +
 +This offline protocol consumes the real Rust `GeosimConfig`, `GeosimWorld` and `Outcome`. Python never recreates engine defaults. The standalone native recorder is `survey/src/bin/geosim.rs`; the survey crate remains outside the workspace. Source definitions, method contract and actual source inventory must be frozen before registered execution.
@@ -128,6 +165,8 @@ index 0000000000000000000000000000000000000000..d16e1446f4c9983376c84293afcbe072
 +Fixed88 source and6 mechanism families remain full-sized when entries are unavailable. Conditional Compatible is distinct from source equivalence, which stays Unresolved for unverified printed definitions. Modern pooled KS/ratios are iid diagnostics; nested half-mixture calibration remains declared/unvalidated, especially alpha<=3. Parameter treatment comparisons give descriptive independent whole-history intervals. Source extrema have finite bootstrap support, not impossible-model-event interpretation.
 +
 +CoW v4 input/codebook are available; Thailand war170 fatalities−9 remain unknown. Exact Clauset95-war/SupplementS1 reconstruction is Unresolved, and Cederman's older historical population is separate. Runnable later-port GeoSim2 evidence does not establish full archived mechanics or PCG/two-MT seed identity. Reference-only artifacts/large logs stay ignored under `survey/out/geosim-*`; preserve their original bytes/hashes before cleanup.
++
++`--resolved-out` is optional: native appends `.resolved.json` to the complete `--out` path, including during `--validate`. For `--out sessions.jsonl`, the default is `sessions.jsonl.resolved.json`; it contains the authoritative native configs and byte binding. The history file is not created by zero-world validation. See the dated premeasurement correction in `NUMERICAL_METHODS.md` for strict nested evidence validation, stable Pareto evaluation and separately labeled descriptive source definitions/counters.
 diff --git a/survey/geosim/analysis.py b/survey/geosim/analysis.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..529e7514af059492b1b4a2faf54978d24e0e1ee1
@@ -364,21 +403,30 @@ index 0000000000000000000000000000000000000000..5436af0ab85359a7588389cd2d5a3994
 +if __name__=='__main__':main()
 diff --git a/survey/geosim/methods.py b/survey/geosim/methods.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..36b11fa1a36afd7cf02cd03a3d1d18899ca5bc1d
+index 0000000000000000000000000000000000000000..719ae4f2231ab22c138e5d69951e3b1d03e1e3a6
 --- /dev/null
 +++ b/survey/geosim/methods.py
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,83 @@
 +"""Premeasurement numerical and resampling contract; never fitted from outcomes."""
 +from copy import deepcopy
 +import hashlib
 +import json
 +
 +METHOD_CONTRACT = {
-+    'revision':'geosim-offline-v1',
++    'revision':'geosim-offline-v1-premeasurement-correction-2026-10-03',
 +    'runtime':{'python':'3.13.5','numpy':'2.4.6','scipy':'1.17.1'},
 +    'source':{'cutoff_log10':2.5,'ccdf':'strict_unique_positive',
 +              'minimum_fit_points':3,'range':'full_positive_selected_census',
 +              'count':'all_selected_completed_including_zero','ols_roundoff_tolerance':1e-12,
++              'definition_checks':{
++                  'status':'inferred_descriptive_source_equivalence_unresolved',
++                  'inclusive':'unique_positive_thresholds_count(S>=s)/N_positive',
++                  'rank':'descending_positive_observation_rank_r/N_positive; retain_separate_tied_ranks',
++                  'fit':'OLS_log10; cutoff_log10>=2.5; at_least3_distinct_x; positive_x_y_variance',
++                  'fit_tail':'all_positive_selected_observations_log10>=2.5_including_maximum_and_ties; count_distinct_count_log_range',
++                  'integer100':'same_selected_raw_wars; truncating_saturating_int32(raw*100); strict_inclusive_rank_and_fit_tail',
++                  'diagnostic_strata':['complete_all','complete_selected','partial_all','partial_selected','completed_records','censored','backlog','legacy_visible'],
++                  'counters':'emitted_java_flags_separate_from_recomputed_integer100_saturated_subunit_zero_unavailable; overlapping_strata_not_summed'},
 +              'prediction_history_count':15,'precision_history_count':100,
 +              'draws':100000,'family_size':88,'holm_reject_below':.05,
 +              'p':'inclusive_two_sided_plus_one_maximize_closed_source_interval'},
@@ -392,8 +440,11 @@ index 0000000000000000000000000000000000000000..36b11fa1a36afd7cf02cd03a3d1d1889
 +    'interval':{'level':.95,'quantile_method':'linear'},
 +    'pareto':{'minimum_tail':50,'individual_search':'all_observed','pool_search':'grid100',
 +              'grid_indices':'j*(M-1)//99 for j=0..99 when M>100',
++              'log_ratios':'log1p((x-xmin)/xmin)_when_x/2<=xmin_else_log(x)-log(xmin)',
++              'fit_authority':'one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios',
++              'numeric_failure':'nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved',
 +              'ks':'max_left_and_right_ecdf_at_unique_ties','cutoff_ties':'smallest_xmin_exact'},
-+    'ks_test':{'draws':1000,'level':.1,'exceedance':'Dstar>=Dobs',
++    'ks_test':{'tail_generation':'xmin*exp(exponential(1/(alpha-1))); preserve_near_cutoff_resolution','draws':1000,'level':.1,'exceedance':'Dstar>=Dobs',
 +               'p':'(b+1)/(B+1)','interval':'95%_Clopper_Pearson_b_of_B',
 +               'failure':'any_predetermined_failed_replicate_unresolved_no_replacements',
 +               'calibration':'iid_semiparametric_generated_refitted_grid100'},
@@ -441,10 +492,10 @@ index 0000000000000000000000000000000000000000..36b11fa1a36afd7cf02cd03a3d1d1889
 +    return hashlib.sha256(canonical_bytes(METHOD_CONTRACT)).hexdigest()
 diff --git a/survey/geosim/modern.py b/survey/geosim/modern.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..b5be2f74fc07f8fa960fdb2836e3fc8ebed4ddc8
+index 0000000000000000000000000000000000000000..99b9426d0aad113a11bd836cadd785dd427e503d
 --- /dev/null
 +++ b/survey/geosim/modern.py
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,193 @@
 +"""Offline iid diagnostics and separate whole-history parameter uncertainty."""
 +import math
 +import numpy as np
@@ -499,14 +550,14 @@ index 0000000000000000000000000000000000000000..b5be2f74fc07f8fa960fdb2836e3fc8e
 +    try:
 +        with np.errstate(over='raise',invalid='raise',divide='raise'):
 +            selected=numerics.grid_pareto(x,grid=cutoff_search=='grid100')
-+            tail=x[x>=selected['xmin']];pure=numerics.pareto_at(tail,selected['xmin'])
++            pure=selected
 +        if not math.isfinite(pure['alpha']) or pure['alpha']<=1 or not np.all(np.isfinite(pure['logpdf'])):
 +            raise numerics.NumericFailure('nonfinite Pareto fit')
 +    except (numerics.NumericFailure,OverflowError,FloatingPointError,ValueError) as exc:
 +        return {**base,'status':'Unresolved','reason':_numeric_error(exc)}
-+    result={**base,**selected,'status':'Available','loglike':pure['loglike'],'iid_limit':'dependent histories are not iid validation'}
++    result={**base,**{k:v for k,v in selected.items() if k not in ('logpdf','log_ratios')},'status':'Available','loglike':pure['loglike'],'iid_limit':'dependent histories are not iid validation'}
 +    if alternatives:
-+        y=np.log(tail)-math.log(selected['xmin'])
++        y=pure['log_ratios']
 +        for name,fitter in ALTERNATIVES.items():
 +            try:
 +                with np.errstate(over='raise',invalid='raise',divide='raise'):
@@ -534,7 +585,8 @@ index 0000000000000000000000000000000000000000..b5be2f74fc07f8fa960fdb2836e3fc8e
 +    return {**fit,'complete':available['complete'],'raw_sizes':raw,
 +            'partial_diagnostic':fit_sizes(partial,alternatives=alternatives) if partial else None,
 +            'zero_completed_count':sum(w['raw_severity']==0 for w in census['primary_completed']),
-+            'excluded':census['excluded'],'censored_count':census['censored_count'],'backlog_count':census['backlog_count']}
++            'excluded':census['excluded'],'censored_count':census['censored_count'],'backlog_count':census['backlog_count'],
++            'export_diagnostics':census['export_diagnostics']}
 +
 +
 +def fit_pool(histories,expected,alternatives=True):
@@ -556,8 +608,10 @@ index 0000000000000000000000000000000000000000..b5be2f74fc07f8fa960fdb2836e3fc8e
 +        try:
 +            nt=int(rng.binomial(n,prob));nb=n-nt
 +            lower=body[rng.integers(0,len(body),size=nb,dtype=np.int64)] if nb else np.empty(0)
-+            logtail=math.log(fit['xmin'])+rng.exponential(1/(fit['alpha']-1),nt)
-+            with np.errstate(over='raise',invalid='raise'):tail=np.exp(logtail)
++            logratios=rng.exponential(1/(fit['alpha']-1),nt)
++            with np.errstate(over='raise',invalid='raise'):
++                # Preserve near-cutoff resolution instead of adding tiny draws to a large log(xmin).
++                tail=fit['xmin']*np.exp(logratios)
 +            simulated=fit_sizes(np.concatenate((lower,tail)),cutoff_search='grid100',alternatives=False)
 +            if simulated['status']!='Available':raise numerics.NumericFailure(simulated.get('reason',simulated['status']))
 +            Ds.append(simulated['ks']);cutoffs.append(simulated['xmin'])
@@ -637,10 +691,10 @@ index 0000000000000000000000000000000000000000..b5be2f74fc07f8fa960fdb2836e3fc8e
 +            'empty_replicates':0,'resamples':base['resamples']}
 diff --git a/survey/geosim/numerics.py b/survey/geosim/numerics.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..f4c662065dd9cf2887c9251a2ee3ce7128028ea2
+index 0000000000000000000000000000000000000000..6009f11741a296425e32b73c1a2e4a707e4482d1
 --- /dev/null
 +++ b/survey/geosim/numerics.py
-@@ -0,0 +1,200 @@
+@@ -0,0 +1,215 @@
 +"""Independent authored offline density kernels, adopted from verified preparation.
 +
 +Reference-only author R/MATLAB code is not imported or copied. All methods,
@@ -705,12 +759,25 @@ index 0000000000000000000000000000000000000000..f4c662065dd9cf2887c9251a2ee3ce71
 +    j=integ(0); logj=hm+math.log(j)-math.log(scale)
 +    return (logj,integ(1)/j/scale,integ(2)/j/(scale*scale)) if with_moments else logj
 +
++def centered_log_ratios(x,xmin):
++    """Accurate near xmin; avoid overflow for far-separated finite supports."""
++    x=np.asarray(x,dtype=float)
++    if x.ndim!=1 or not math.isfinite(xmin) or xmin<=0 or np.any(~np.isfinite(x)) or np.any(x<xmin):
++        raise NumericFailure('invalid Pareto support')
++    close=x/2<=xmin;y=np.empty_like(x)
++    y[close]=np.log1p((x[close]-xmin)/xmin)
++    y[~close]=np.log(x[~close])-math.log(xmin)
++    return y
++
++
 +def pareto_at(x,xmin):
-+    y=np.log(x)-math.log(xmin); s=float(np.mean(y))
++    x=np.sort(np.asarray(x,dtype=float));y=centered_log_ratios(x,xmin);s=float(np.mean(y))
 +    if len(x)<50 or s<=0 or not math.isfinite(s):raise NumericFailure('insufficient or degenerate Pareto')
 +    alpha=1+1/s
++    if not math.isfinite(alpha) or alpha<=1:raise NumericFailure('unrepresentable Pareto alpha')
 +    lp=math.log(alpha-1)-math.log(xmin)-alpha*y
-+    return {'alpha':alpha,'xmin':float(xmin),'n_tail':len(x),'loglike':float(lp.sum()),'logpdf':lp}
++    if not np.all(np.isfinite(lp)):raise NumericFailure('unrepresentable Pareto density')
++    return {'alpha':alpha,'xmin':float(xmin),'n_tail':len(x),'loglike':float(lp.sum()),'logpdf':lp,'log_ratios':y}
 +
 +def fit_exp(y,logxmin):
 +    excess=np.expm1(y);m=float(np.mean(excess))
@@ -801,21 +868,23 @@ index 0000000000000000000000000000000000000000..f4c662065dd9cf2887c9251a2ee3ce71
 +    return {'status':'converged','alpha':alpha,'k':k,'loglike':float(lp.sum()),'logpdf':lp,'attempts':attempts,'per_observation_gain':gain}
 +
 +def grid_pareto(x,grid=True):
-+    x=np.sort(np.asarray(x,dtype=float));logs=np.log(x)
++    x=np.sort(np.asarray(x,dtype=float))
 +    values,first,counts=np.unique(x,return_index=True,return_counts=True);nt=len(x)-first
 +    eligible=np.flatnonzero(nt>=50)
 +    if grid and len(eligible)>100:
 +        eligible=eligible[np.array([j*(len(eligible)-1)//99 for j in range(100)])]
-+    suffix=np.cumsum(logs[::-1])[::-1];best=None
-+    # Both ECDF sides at each distinct tied support value.
++    best=None
++    # One fitted distribution supplies both ECDF-side KS and final likelihood.
++    # Degenerate supports are skipped; unsupported numerical fits fail closed.
 +    for ci in eligible:
-+        start=int(first[ci]);n=int(nt[ci]);logmin=float(logs[start]);total=float(suffix[start]-n*logmin)
-+        if total<=0 or not math.isfinite(total):continue
-+        a=n/total;tailvals=np.log(values[ci:])-logmin
-+        cdf=-np.expm1(-a*tailvals)
++        start=int(first[ci]);n=int(nt[ci]);xmin=float(values[ci])
++        if x[-1]==xmin:continue
++        pure=pareto_at(x[start:],xmin)
++        tailvals=pure['log_ratios'][first[ci:]-start]
++        cdf=-np.expm1(-(pure['alpha']-1)*tailvals)
 +        right=np.cumsum(counts[ci:])/n;left=right-counts[ci:]/n
 +        D=float(max(np.max(np.abs(cdf-left)),np.max(np.abs(right-cdf))))
-+        item={'xmin':float(values[ci]),'alpha':1+a,'ks':D,'n_tail':n,'candidate_count':len(eligible)}
++        item={**pure,'ks':D,'candidate_count':len(eligible)}
 +        if best is None or D<best['ks']:best=item
 +    if best is None:raise NumericFailure('no nondegenerate eligible cutoff')
 +    return best
@@ -942,10 +1011,10 @@ index 0000000000000000000000000000000000000000..86a6958b023d01a9ae382bb9fae2fc91
 +if __name__=='__main__':main()
 diff --git a/survey/geosim/records.py b/survey/geosim/records.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..74d12bd030485fdfa260a1e78f84ec82f9e90c61
+index 0000000000000000000000000000000000000000..919fd9abcdde34888568743bfa5f88bd41f76afa
 --- /dev/null
 +++ b/survey/geosim/records.py
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,377 @@
 +"""Strict evidence integrity and successful-period censuses; no engine defaults."""
 +import hashlib
 +import json
@@ -998,7 +1067,7 @@ index 0000000000000000000000000000000000000000..74d12bd030485fdfa260a1e78f84ec82
 +    return hashlib.sha256(canonical_bytes(inventory)).hexdigest()
 +
 +
-+def _uint(value):return type(value) is int and value>=0
++def _uint(value):return type(value) is int and 0<=value<=2**64-1
 +
 +def _finite_nonnegative(value):
 +    return type(value) in (int,float) and math.isfinite(value) and value>=0
@@ -1117,7 +1186,22 @@ index 0000000000000000000000000000000000000000..74d12bd030485fdfa260a1e78f84ec82
 +            'source_selected':selected if availability['complete'] else [],
 +            'partial_source_selected':selected if not availability['complete'] else [],
 +            'excluded':excluded,'completed_record_count':len(outcome['completed_wars']),
-+            'censored_count':len(outcome['censored_wars']),'backlog_count':len(outcome['exporter_backlog'])}
++            'censored_count':len(outcome['censored_wars']),'backlog_count':len(outcome['exporter_backlog']),
++            'export_diagnostics':{label:export_diagnostics(wars) for label,wars in {
++                'complete_all':accepted if availability['complete'] else [],
++                'complete_selected':selected if availability['complete'] else [],
++                'partial_all':accepted if not availability['complete'] else [],
++                'partial_selected':selected if not availability['complete'] else [],
++                'completed_records':outcome['completed_wars'],'censored':outcome['censored_wars'],
++                'backlog':outcome['exporter_backlog'],'legacy_visible':outcome['legacy_visible_wars']}.items()}}
++
++def export_diagnostics(wars):
++    known=[w['raw_severity'] for w in wars if _finite_nonnegative(w['raw_severity'])]
++    return {'record_count':len(wars),'emitted_java_saturated':sum(w['java_saturated'] for w in wars),
++            'emitted_java_subunit_zero':sum(w['java_subunit_zero'] for w in wars),
++            'integer100_saturated':sum(raw>2147483647/100 for raw in known),
++            'integer100_subunit_zero':sum(raw>0 and java_int100(raw)==0 for raw in known),
++            'integer100_unavailable':len(wars)-len(known)}
 +
 +BINDING_FIELDS=('manifest_sha256','binary_sha256','source_inventory_sha256','build_receipt_sha256','resolved_configs_sha256')
 +RECORD_FIELDS={'schema_version','model','arm','seed','arm_index','repeat_index','config','attempt','outcome',*BINDING_FIELDS}
@@ -1146,22 +1230,144 @@ index 0000000000000000000000000000000000000000..74d12bd030485fdfa260a1e78f84ec82
 +    return True
 +
 +
++# Mirrors the native validate_outcome field checks and Rust Outcome field types.
++# Nullable required floats are permitted only on invalid outcomes, in exactly the
++# fields normalized by native normalize_invalid_floats; the evidence is not changed.
++STATE_ID={'capital_cell':'uint','sovereignty_generation':'uint'}
++WAR_SCHEMA={**dict.fromkeys(('id','start_period','last_active_period','active_periods','elapsed_periods'),'uint'),
++    'parents':['uint'],'end_period':('optional','uint'),'raw_severity':'partial_nonnegative',
++    'exported_severity':'partial_nonnegative','participants':[{'state':STATE_ID,'last_fighting_period':'uint'}],
++    'end_cause':('optional','str'),'java_saturated':'bool','java_subunit_zero':'bool','fighting_periods':['uint']}
++STATE_SCHEMA={'id':STATE_ID,'capacity':('optional','float'),'threshold':'float','alert':'bool',
++    'campaign':('optional',STATE_ID),'previous_damage':'partial_float','newly_independent':'bool',
++    'extracted_yield':'partial_float','recurrence_residual':'partial_float'}
++LEDGER_SCHEMA={**dict.fromkeys(('attacks','fighting_front_periods','mutual_front_periods','conquests','collapses',
++    'disconnections','stale_claims','locked_claims','double_successes','path_collisions','shocks'),'uint'),
++    **dict.fromkeys(('damage','measured_damage','capacity_increase','capacity_decrease','clipping',
++    'retirement_capacity','reemergence_capacity','recurrence_residual'),'partial_float')}
++FRONT_SCHEMA={'states':('pair',STATE_ID),'previous':('pair','bool'),'actions':('pair','bool'),
++    'old_commitments':('pair','partial_float'),'commitments':('pair','partial_float'),
++    'path':('optional',('pair','uint')),'initiator':('optional','uint'),
++    'last_damage':('pair','partial_float'),'last_victory_probabilities':('pair',('optional','float'))}
++UPDATE_SCHEMA={'state':STATE_ID,'period':'uint','reset':'bool','clipping':'partial_float',
++    **dict.fromkeys(('old_capacity','extracted_yield','applied_damage','target_capacity','new_capacity','residual'),('optional','float'))}
++
++
++def _schema(value,schema,valid,path):
++    if isinstance(schema,dict):
++        if not isinstance(value,dict) or set(value)!=set(schema):
++            raise ValueError(f'{path}: unknown or missing fields')
++        for key,child in schema.items():_schema(value[key],child,valid,f'{path}.{key}')
++        return
++    if isinstance(schema,list):
++        if not isinstance(value,list):raise ValueError(f'{path}: expected array')
++        for i,item in enumerate(value):_schema(item,schema[0],valid,f'{path}[{i}]')
++        return
++    if isinstance(schema,tuple):
++        kind,child=schema
++        if kind=='optional':
++            if value is not None:_schema(value,child,valid,path)
++        else:
++            if not isinstance(value,list) or len(value)!=2:raise ValueError(f'{path}: expected pair')
++            for i,item in enumerate(value):_schema(item,child,valid,f'{path}[{i}]')
++        return
++    if schema.startswith('partial_'):
++        if value is None and not valid:return
++        schema=schema.removeprefix('partial_')
++    good={'uint':lambda:_uint(value) and value<=2**64-1,
++          'bool':lambda:type(value) is bool,'str':lambda:isinstance(value,str),
++          'float':lambda:type(value) in (int,float) and math.isfinite(value),
++          'nonnegative':lambda:_finite_nonnegative(value)}[schema]()
++    if not good:raise ValueError(f'{path}: invalid {schema}')
++
++
++def validate_outcome_schema(out):
++    if not isinstance(out,dict) or set(out)!=OUTCOME_FIELDS:raise ValueError('unknown or missing Outcome fields')
++    valid=out['valid'];c=out['config'];cells=c['width']*c['height']
++    schema={**dict.fromkeys(('seed','periods','attempted_period','counting_start','sovereign_count'),'uint'),
++        'valid':'bool','state_available':'bool','rng_mode':'str','finish_reason':'str','invalid_reason':('optional','str'),
++        **dict.fromkeys(('completed_wars','censored_wars','legacy_visible_wars','exporter_backlog'),[WAR_SCHEMA]),
++        'states':[STATE_SCHEMA],'cells':[{'id':'uint','owner':STATE_ID,'last_threshold':'float','next_generation':'uint'}],
++        'retired_states':[STATE_ID],'merges':[{'period':'uint','survivor':'uint','absorbed':'uint'}],
++        'ledger':LEDGER_SCHEMA,'fronts':[FRONT_SCHEMA],'resource_updates':[UPDATE_SCHEMA]}
++    for key,child in schema.items():_schema(out[key],child,valid,f'Outcome.{key}')
++    if out['rng_mode']!='portable_pcg64_mcg':raise ValueError('invalid Outcome RNG mode')
++    if not valid and not out['invalid_reason']:raise ValueError('invalid Outcome lacks reason')
++    def identities(value):
++        if isinstance(value,dict):
++            if set(value)==set(STATE_ID) and value['capital_cell']>=cells:raise ValueError('generation identity outside grid')
++            for child in value.values():identities(child)
++        elif isinstance(value,list):
++            for child in value:identities(child)
++    identities(out)
++    states=[(state['id']['capital_cell'],state['id']['sovereignty_generation']) for state in out['states']]
++    if len(set(states))!=len(states) or len(states)!=out['sovereign_count']:raise ValueError('duplicate sovereign identities/count mismatch')
++    if sorted(cell['id'] for cell in out['cells'])!=list(range(cells)):raise ValueError('duplicate/missing grid cells')
++    for field in ('merges','resource_updates'):
++        if any(item['period']>out['attempted_period'] for item in out[field]):raise ValueError('event outside attempted clock')
++    fights=out['partial_period_fights']
++    if not isinstance(fights,list):raise ValueError('partial fights must be array')
++    for fight in fights:
++        if not isinstance(fight,list) or len(fight)!=3:raise ValueError('invalid partial fight tuple')
++        _schema(fight[0],STATE_ID,valid,'partial fight state');_schema(fight[1],STATE_ID,valid,'partial fight state')
++        identities(fight);_schema(fight[2],'partial_nonnegative',valid,'partial fight damage')
++    for field in ('completed_wars','censored_wars'):
++        for war in out[field]:
++            start=war['start_period'];last=war['last_active_period']
++            end=out['attempted_period'] if field=='censored_wars' else war['end_period']
++            if end is None or not out['counting_start']<=start<=last<=end<=out['attempted_period']:
++                raise ValueError('war clocks outside attempted history')
++            fights=war['fighting_periods']
++            if fights!=sorted(set(fights)) or any(not start<=p<=end for p in fights):raise ValueError('invalid fighting period order/range')
++            if war['active_periods']!=len(fights) or (fights and fights[-1]!=last) or war['elapsed_periods']!=end-start+1:
++                raise ValueError('war active/elapsed clock mismatch')
++            participants=set()
++            for part in war['participants']:
++                identity=(part['state']['capital_cell'],part['state']['sovereignty_generation'])
++                if identity in participants or not start<=part['last_fighting_period']<=end:raise ValueError('invalid participant identity/clock')
++                participants.add(identity)
++            if field=='completed_wars' and not war['end_cause']:raise ValueError('completed war has no cause')
++            raw=war['raw_severity']
++            if raw is not None:
++                expected=raw if c['severity_export']=='raw_damage' else java_int100(raw)
++                if war['exported_severity']!=expected:raise ValueError('resolved severity export mismatch')
++
++
++def java_int100(raw):
++    return float(min(2147483647,math.trunc(raw*100))) if raw<=2147483647/100 else 2147483647.
++
++
++def _same_json_types(value,expected):
++    if type(value) is not type(expected):return False
++    if isinstance(expected,dict):
++        return set(value)==set(expected) and all(_same_json_types(value[k],v) for k,v in expected.items())
++    if isinstance(expected,list):
++        return len(value)==len(expected) and all(_same_json_types(v,e) for v,e in zip(value,expected))
++    return value==expected
++
++
 +def validate_record(row,arm,binding):
-+    if set(row)!=RECORD_FIELDS or row['schema_version']!=1 or row['model']!='geosim':
++    if set(row)!=RECORD_FIELDS or type(row['schema_version']) is not int or row['schema_version']!=1 or row['model']!='geosim':
 +        raise ValueError('unknown or missing record/model fields')
 +    if any(row[k]!=binding[k] for k in BINDING_FIELDS):raise ValueError('record provenance mismatch')
 +    seed=row['seed'];repeat=row['repeat_index']
-+    if row['arm']!=arm['id'] or row['arm_index']!=arm['index'] or not _uint(seed) or not _uint(repeat) or not 0<=repeat<arm['sessions'] or seed!=arm['first_seed']+repeat:
++    if row['arm']!=arm['id'] or not _uint(row['arm_index']) or row['arm_index']!=arm['index'] or not _uint(seed) or not _uint(repeat) or not 0<=repeat<arm['sessions'] or seed!=arm['first_seed']+repeat:
 +        raise ValueError('record key differs from registered arm')
-+    if row['config']!=arm['config']:raise ValueError('record config differs from authoritative resolved config')
++    if not _same_json_types(row['config'],arm['config']):raise ValueError('record config differs from authoritative resolved config')
 +    attempt=row['attempt']
 +    if set(attempt)!= {'status','construction_errors','panic_context','recorder_error'}:
 +        raise ValueError('unknown or missing attempt fields')
 +    if attempt['status'] not in ('completed','invalid','construction_error','construction_panic','implementation_panic','incomplete'):
 +        raise ValueError('unknown attempt status')
++    _schema(attempt,{'status':'str','construction_errors':[{'field':'str','message':'str'}],
++        'panic_context':('optional','str'),'recorder_error':('optional','str')},True,'attempt')
++    if attempt['status']=='completed' and attempt['panic_context'] is not None:raise ValueError('completed attempt contains panic')
++    if attempt['status']=='construction_error' and not attempt['construction_errors']:raise ValueError('construction_error lacks errors')
++    if row['outcome'] is not None:
++        if not isinstance(row['outcome'],dict) or not _same_json_types(row['outcome'].get('config'),arm['config']):raise ValueError('Outcome config differs from authoritative resolved config')
++        validate_outcome_schema(row['outcome'])
 +    history_availability(row,arm)
 +    if row['outcome'] is not None:
-+        if set(row['outcome'])!=OUTCOME_FIELDS:raise ValueError('unknown or missing Outcome fields')
 +        completed_censuses(row['outcome'],history_availability(row,arm))
 +    return row['arm'],seed
 +
@@ -1174,9 +1380,10 @@ index 0000000000000000000000000000000000000000..74d12bd030485fdfa260a1e78f84ec82
 +    if set(configs)!={a['id'] for a in manifest['arms']}:raise ValueError('resolved arm family mismatch')
 +    arms={a['id']:{**a,'config':configs[a['id']]} for a in manifest['arms']}
 +    result={}
-+    with Path(path).open(encoding='utf-8') as file:
++    with Path(path).open(encoding='utf-8',newline='') as file:
 +        for number,line in enumerate(file,1):
 +            try:
++                if not line.endswith('\n'):raise ValueError('interrupted append: missing final newline')
 +                row=strict_json(line)
 +                if row['arm'] not in arms:raise ValueError('unregistered raw arm')
 +                key=validate_record(row,arms[row['arm']],binding)
@@ -1343,19 +1550,22 @@ index 0000000000000000000000000000000000000000..06ee8b971de4205891b0a39feed16a6c
 +if __name__=='__main__':main()
 diff --git a/survey/geosim/source.py b/survey/geosim/source.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..edccd5b875527973db8affcf479f47f03402810f
+index 0000000000000000000000000000000000000000..12127e8823abc3c3b8a9ab61945c3d238b405873
 --- /dev/null
 +++ b/survey/geosim/source.py
-@@ -0,0 +1,182 @@
+@@ -0,0 +1,208 @@
 +"""Source reconstruction statistics on whole histories and fixed families."""
 +import bisect
 +import math
 +import statistics
 +import numpy as np
 +from .manifest import TARGETS
-+from .records import completed_censuses, history_availability
++from .records import completed_censuses, history_availability, java_int100
 +
 +def source_fit(selected_exports):
++    return _source_fit(selected_exports,'strict_unique_positive')
++
++def _source_fit(selected_exports,convention):
 +    """All selected completed exports, including zero; unavailable != zero."""
 +    if any(not math.isfinite(s) or s < 0 for s in selected_exports):
 +        raise ValueError('completed exported severity must be finite and nonnegative')
@@ -1364,11 +1574,17 @@ index 0000000000000000000000000000000000000000..edccd5b875527973db8affcf479f47f0
 +            'slope':None,'r2':None,'log_range':None,'fit_points':[],'fit_status':'unavailable'}
 +    if not positive:return result
 +    result['log_range']=math.log10(positive[-1])-math.log10(positive[0])
-+    for s in sorted(set(positive)):
-+        count=n-bisect.bisect_right(positive,s); x=math.log10(s)
-+        if count and x>=2.5:result['fit_points'].append([x,math.log10(count/n)])
++    if convention=='descending_observation_rank':
++        for rank,s in enumerate(reversed(positive),1):
++            x=math.log10(s)
++            if x>=2.5:result['fit_points'].append([x,math.log10(rank/n)])
++    else:
++        for s in sorted(set(positive)):
++            count=n-(bisect.bisect_right(positive,s) if convention=='strict_unique_positive' else bisect.bisect_left(positive,s))
++            x=math.log10(s)
++            if count and x>=2.5:result['fit_points'].append([x,math.log10(count/n)])
 +    points=result['fit_points']
-+    if len(points)<3:return result
++    if len({p[0] for p in points})<3:return result
 +    xbar=math.fsum(p[0] for p in points)/len(points);ybar=math.fsum(p[1] for p in points)/len(points)
 +    xx=math.fsum((x-xbar)**2 for x,y in points); yy=math.fsum((y-ybar)**2 for x,y in points)
 +    xy=math.fsum((x-xbar)*(y-ybar) for x,y in points)
@@ -1378,6 +1594,21 @@ index 0000000000000000000000000000000000000000..edccd5b875527973db8affcf479f47f0
 +        raise ValueError('nonfinite or invalid OLS')
 +    result.update(slope=slope,intercept=ybar-slope*xbar,r2=min(1.,max(0.,r2)),fit_status='available')
 +    return result
++
++def source_definition_checks(wars):
++    """Frozen inferred descriptive alternatives; never supply primary vectors."""
++    def checks(sizes,include_strict=False):
++        tail=[s for s in sizes if s>0 and math.log10(s)>=2.5]
++        result={'inclusive_unique':_source_fit(sizes,'inclusive_unique_positive'),
++                'descending_rank':_source_fit(sizes,'descending_observation_rank'),
++                'fit_tail':{'count':len(tail),'positive_distinct_count':len(set(tail)),
++                            'log_range':math.log10(max(tail))-math.log10(min(tail)) if tail else None}}
++        if include_strict:result['strict']=source_fit(sizes)
++        return result
++    return {'status':'inferred_descriptive_source_equivalence_unresolved',
++            'exported':checks([w['exported_severity'] for w in wars]),
++            'integer100':checks([java_int100(w['raw_severity']) for w in wars],True)}
++
 +
 +def eight_summaries(vectors):
 +    if not vectors or any(len(v)!=4 or any(not math.isfinite(x) for x in v) for v in vectors):
@@ -1464,14 +1695,16 @@ index 0000000000000000000000000000000000000000..edccd5b875527973db8affcf479f47f0
 +
 +def history_source(row):
 +    availability=history_availability(row)
-+    if row.get('outcome') is None:return {'availability':availability,'fit':None,'vector':None,'census':None,'partial_diagnostic':None}
++    if row.get('outcome') is None:return {'availability':availability,'fit':None,'vector':None,'census':None,'partial_diagnostic':None,'definition_checks':None,'partial_definition_checks':None}
 +    census=completed_censuses(row['outcome'],availability)
 +    primary=census['source_selected'];partial=census['partial_source_selected']
 +    fit=source_fit([w['exported_severity'] for w in primary]) if availability['complete'] else None
 +    diagnostic=source_fit([w['exported_severity'] for w in partial]) if partial else None
 +    vector=None
 +    if fit and fit['fit_status']=='available':vector=(fit['slope'],fit['r2'],fit['log_range'],fit['war_count'])
-+    return {'availability':availability,'fit':fit,'vector':vector,'census':census,'partial_diagnostic':diagnostic}
++    return {'availability':availability,'fit':fit,'vector':vector,'census':census,'partial_diagnostic':diagnostic,
++            'definition_checks':source_definition_checks(primary) if availability['complete'] else None,
++            'partial_definition_checks':source_definition_checks(partial) if not availability['complete'] else None}
 +
 +
 +def complete_vectors(histories,expected):
@@ -1530,10 +1763,10 @@ index 0000000000000000000000000000000000000000..edccd5b875527973db8affcf479f47f0
 +        f['holm_p']=p;f['verdict']=contrast_verdict(f['estimate'],p)
 +    return findings
 diff --git a/survey/src/bin/geosim.rs b/survey/src/bin/geosim.rs
-index 5103c56b7498137925894fd333473a9c5bb425bd..dcd037fd5c2762a134276e475226d1e2e91e6d09 100644
+index 5103c56b7498137925894fd333473a9c5bb425bd..4b4349d9fbe7cbea507758ceb960c4d5f7aff8e0 100644
 --- a/survey/src/bin/geosim.rs
 +++ b/survey/src/bin/geosim.rs
-@@ -1,3 +1,1407 @@
+@@ -1,3 +1,1419 @@
 +//! Native GeoSim recorder: Rust owns configs; exact bytes bind scientific evidence.
 +use serde_json::Value;
 +use sugarscape_core::geosim::{GeosimConfig, GeosimWorld};
@@ -2884,7 +3117,19 @@ index 5103c56b7498137925894fd333473a9c5bb425bd..dcd037fd5c2762a134276e475226d1e2
 +    }
 +    let out = Path::new(option(&args, "--out")?);
 +    let seen = resume(out, &prepared, &binding)?;
-+    atomic_json(Path::new(option(&args, "--resolved-out")?), &export)?;
++    let resolved_out = args.values.get("--resolved-out").map_or_else(
++        || {
++            let mut name = out.as_os_str().to_owned();
++            name.push(".resolved.json");
++            std::path::PathBuf::from(name)
++        },
++        std::path::PathBuf::from,
++    );
++    require(
++        resolved_out != out,
++        "resolved output must differ from history output",
++    )?;
++    atomic_json(&resolved_out, &export)?;
 +    if args.validate {
 +        println!(
 +            "validated {} arms/{} keys without world construction; provenance={}",

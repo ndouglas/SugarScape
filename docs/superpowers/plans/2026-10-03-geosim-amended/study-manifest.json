@@ -9,7 +9,7 @@
   "analysis_seed": 2026100301,
   "source_table_sha256": "44a7d45d5206081ed179febae5285546924a894e55ebfb25e93222e59a1ed976",
   "method_contract": {
-    "revision": "geosim-offline-v1",
+    "revision": "geosim-offline-v1-premeasurement-correction-2026-10-03",
     "runtime": {
       "python": "3.13.5",
       "numpy": "2.4.6",
@@ -22,6 +22,25 @@
       "range": "full_positive_selected_census",
       "count": "all_selected_completed_including_zero",
       "ols_roundoff_tolerance": 1e-12,
+      "definition_checks": {
+        "status": "inferred_descriptive_source_equivalence_unresolved",
+        "inclusive": "unique_positive_thresholds_count(S>=s)/N_positive",
+        "rank": "descending_positive_observation_rank_r/N_positive; retain_separate_tied_ranks",
+        "fit": "OLS_log10; cutoff_log10>=2.5; at_least3_distinct_x; positive_x_y_variance",
+        "fit_tail": "all_positive_selected_observations_log10>=2.5_including_maximum_and_ties; count_distinct_count_log_range",
+        "integer100": "same_selected_raw_wars; truncating_saturating_int32(raw*100); strict_inclusive_rank_and_fit_tail",
+        "diagnostic_strata": [
+          "complete_all",
+          "complete_selected",
+          "partial_all",
+          "partial_selected",
+          "completed_records",
+          "censored",
+          "backlog",
+          "legacy_visible"
+        ],
+        "counters": "emitted_java_flags_separate_from_recomputed_integer100_saturated_subunit_zero_unavailable; overlapping_strata_not_summed"
+      },
       "prediction_history_count": 15,
       "precision_history_count": 100,
       "draws": 100000,
@@ -62,10 +81,14 @@
       "individual_search": "all_observed",
       "pool_search": "grid100",
       "grid_indices": "j*(M-1)//99 for j=0..99 when M>100",
+      "log_ratios": "log1p((x-xmin)/xmin)_when_x/2<=xmin_else_log(x)-log(xmin)",
+      "fit_authority": "one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios",
+      "numeric_failure": "nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved",
       "ks": "max_left_and_right_ecdf_at_unique_ties",
       "cutoff_ties": "smallest_xmin_exact"
     },
     "ks_test": {
+      "tail_generation": "xmin*exp(exponential(1/(alpha-1))); preserve_near_cutoff_resolution",
       "draws": 1000,
       "level": 0.1,
       "exceedance": "Dstar>=Dobs",
@@ -195,8 +218,8 @@
       "rescaling_alpha_ks_absolute": 1e-10
     }
   },
-  "method_contract_json": "{\"availability\":{\"incomplete_pool\":\"unresolved_reserved_ks_slot\",\"invalid_history\":\"partial_diagnostics_only_no_primary_pool_or_bootstrap\",\"successful_completion\":\"end_period<=Outcome.periods\",\"zero_eligible_parameter_replicate\":\"unresolved_no_replacements\"},\"contrasts\":{\"draws\":100000,\"family_size\":6,\"holm_reject_below\":0.05,\"ids\":[\"base_minus_shock0\",\"base_minus_context_off\"],\"metrics\":[\"slope\",\"r2\",\"log_range\"],\"resampling\":\"independent_whole_history\"},\"cutoff\":{\"boundary\":\"exact_convex_KKT_alpha>2_and_mean_excess>=1/(alpha-2)\",\"bounds\":[[-100.0,100.0],[-32.0,32.0]],\"near_boundary\":\"unresolved\",\"near_boundary_gain_per_observation\":1e-10,\"starts\":\"alpha=[min(99,pareto_alpha),1,0] x k=[1,.1,.01]/mean_excess; clip_logk[-31,31]\"},\"interval\":{\"level\":0.95,\"quantile_method\":\"linear\"},\"ks_test\":{\"calibration\":\"iid_semiparametric_generated_refitted_grid100\",\"draws\":1000,\"exceedance\":\"Dstar>=Dobs\",\"failure\":\"any_predetermined_failed_replicate_unresolved_no_replacements\",\"interval\":\"95%_Clopper_Pearson_b_of_B\",\"level\":0.1,\"p\":\"(b+1)/(B+1)\"},\"lognormal\":{\"bounds\":[[-100.0,100.0],[1e-08,10000.0]],\"coordinates\":\"mean_scaled_natural_a_b\",\"nonexistence\":\"scaled_second_moment>=2\",\"starts\":[[-1.0,0.5],[0.0,0.5],[1.0,0.1],[1.0,0.01]]},\"optimizer\":{\"accept_gradient_inf_below\":1e-06,\"ftol\":1e-13,\"gtol\":1e-08,\"guard_contact\":\"unresolved\",\"maxiter\":1000,\"maxls\":50,\"method\":\"L-BFGS-B\"},\"parameter_bootstrap\":{\"conditional_eligible_interval\":\"descriptive_only\",\"contrast_inference\":\"descriptive_linear95_interval_no_p_family_or_verdict\",\"contrast_method\":\"same_index_independent_arm_replicate_array_differences\",\"contrasts\":[\"precision.base-minus-precision.shock0\",\"precision.base-minus-precision.context_off\"],\"draws\":100000,\"empty_or_incomplete\":\"primary_unresolved\",\"metrics\":[\"alpha_mean\",\"alpha_median\",\"xmin_mean\",\"xmin_median\"],\"positive_mean\":\"max_scaled_mean\",\"positive_median\":\"arithmetic_midpoint_with_overflow_safe_branch\",\"rng\":\"independent_fixed_per_arm_parameter_child\",\"sampling\":\"all_registered_history_rows_with_joint_eligibility_masks\"},\"pareto\":{\"cutoff_ties\":\"smallest_xmin_exact\",\"grid_indices\":\"j*(M-1)//99 for j=0..99 when M>100\",\"individual_search\":\"all_observed\",\"ks\":\"max_left_and_right_ecdf_at_unique_ties\",\"minimum_tail\":50,\"pool_search\":\"grid100\"},\"quadrature\":{\"epsabs\":1e-11,\"epsrel\":1e-10,\"limit\":250,\"max_relative_error\":1e-08,\"normalizer\":\"scaled_positive_dimensionless_integral\"},\"ratios\":{\"calibration_validity\":\"unvalidated\",\"exact_equal_p\":1.0,\"level\":0.1,\"nested\":\"declared_half_chi_square_1\",\"nonnested\":\"CSN_normalized_two_sided\",\"qualification\":\"alpha<=3_lacks_finite_boundary_information; alpha>3_not_validation\",\"variance_divisor\":\"n\",\"variance_floor\":1e-24},\"reference_agreement\":{\"ks_absolute\":1e-12,\"log_density_absolute\":1e-08,\"nll_per_observation_absolute\":1e-09,\"parameters_absolute\":2e-05,\"relative_normalization_error\":1e-09,\"rescaling_alpha_ks_absolute\":1e-10},\"revision\":\"geosim-offline-v1\",\"rng\":{\"batch_size\":1024,\"child\":\"SeedSequence(root,spawn_key=(fixed_job_index,))\",\"contrast_order\":\"base_block_then_control_block\",\"generator\":\"PCG64\",\"jobs\":72,\"ks_order\":\"binomial_tail_count,body_indices,tail_exponential\",\"root\":2026100301},\"runtime\":{\"numpy\":\"2.4.6\",\"python\":\"3.13.5\",\"scipy\":\"1.17.1\"},\"source\":{\"ccdf\":\"strict_unique_positive\",\"count\":\"all_selected_completed_including_zero\",\"cutoff_log10\":2.5,\"draws\":100000,\"family_size\":88,\"holm_reject_below\":0.05,\"minimum_fit_points\":3,\"ols_roundoff_tolerance\":1e-12,\"p\":\"inclusive_two_sided_plus_one_maximize_closed_source_interval\",\"precision_history_count\":100,\"prediction_history_count\":15,\"range\":\"full_positive_selected_census\"},\"stretched\":{\"beta_bounds\":[1e-08,100.0],\"brent_rtol\":1e-10,\"brent_xtol\":1e-10,\"domain\":\"beta>0_including_beta>1\",\"maxiter\":200,\"nonexistence\":\"endpoint_score<=0\"}}",
-  "method_contract_sha256": "23dfcea82e39a0a869aa60df5e6d2b22244e70a837a05ac3b22185e94f7630e7",
+  "method_contract_json": "{\"availability\":{\"incomplete_pool\":\"unresolved_reserved_ks_slot\",\"invalid_history\":\"partial_diagnostics_only_no_primary_pool_or_bootstrap\",\"successful_completion\":\"end_period<=Outcome.periods\",\"zero_eligible_parameter_replicate\":\"unresolved_no_replacements\"},\"contrasts\":{\"draws\":100000,\"family_size\":6,\"holm_reject_below\":0.05,\"ids\":[\"base_minus_shock0\",\"base_minus_context_off\"],\"metrics\":[\"slope\",\"r2\",\"log_range\"],\"resampling\":\"independent_whole_history\"},\"cutoff\":{\"boundary\":\"exact_convex_KKT_alpha>2_and_mean_excess>=1/(alpha-2)\",\"bounds\":[[-100.0,100.0],[-32.0,32.0]],\"near_boundary\":\"unresolved\",\"near_boundary_gain_per_observation\":1e-10,\"starts\":\"alpha=[min(99,pareto_alpha),1,0] x k=[1,.1,.01]/mean_excess; clip_logk[-31,31]\"},\"interval\":{\"level\":0.95,\"quantile_method\":\"linear\"},\"ks_test\":{\"calibration\":\"iid_semiparametric_generated_refitted_grid100\",\"draws\":1000,\"exceedance\":\"Dstar>=Dobs\",\"failure\":\"any_predetermined_failed_replicate_unresolved_no_replacements\",\"interval\":\"95%_Clopper_Pearson_b_of_B\",\"level\":0.1,\"p\":\"(b+1)/(B+1)\",\"tail_generation\":\"xmin*exp(exponential(1/(alpha-1))); preserve_near_cutoff_resolution\"},\"lognormal\":{\"bounds\":[[-100.0,100.0],[1e-08,10000.0]],\"coordinates\":\"mean_scaled_natural_a_b\",\"nonexistence\":\"scaled_second_moment>=2\",\"starts\":[[-1.0,0.5],[0.0,0.5],[1.0,0.1],[1.0,0.01]]},\"optimizer\":{\"accept_gradient_inf_below\":1e-06,\"ftol\":1e-13,\"gtol\":1e-08,\"guard_contact\":\"unresolved\",\"maxiter\":1000,\"maxls\":50,\"method\":\"L-BFGS-B\"},\"parameter_bootstrap\":{\"conditional_eligible_interval\":\"descriptive_only\",\"contrast_inference\":\"descriptive_linear95_interval_no_p_family_or_verdict\",\"contrast_method\":\"same_index_independent_arm_replicate_array_differences\",\"contrasts\":[\"precision.base-minus-precision.shock0\",\"precision.base-minus-precision.context_off\"],\"draws\":100000,\"empty_or_incomplete\":\"primary_unresolved\",\"metrics\":[\"alpha_mean\",\"alpha_median\",\"xmin_mean\",\"xmin_median\"],\"positive_mean\":\"max_scaled_mean\",\"positive_median\":\"arithmetic_midpoint_with_overflow_safe_branch\",\"rng\":\"independent_fixed_per_arm_parameter_child\",\"sampling\":\"all_registered_history_rows_with_joint_eligibility_masks\"},\"pareto\":{\"cutoff_ties\":\"smallest_xmin_exact\",\"fit_authority\":\"one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios\",\"grid_indices\":\"j*(M-1)//99 for j=0..99 when M>100\",\"individual_search\":\"all_observed\",\"ks\":\"max_left_and_right_ecdf_at_unique_ties\",\"log_ratios\":\"log1p((x-xmin)/xmin)_when_x/2<=xmin_else_log(x)-log(xmin)\",\"minimum_tail\":50,\"numeric_failure\":\"nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved\",\"pool_search\":\"grid100\"},\"quadrature\":{\"epsabs\":1e-11,\"epsrel\":1e-10,\"limit\":250,\"max_relative_error\":1e-08,\"normalizer\":\"scaled_positive_dimensionless_integral\"},\"ratios\":{\"calibration_validity\":\"unvalidated\",\"exact_equal_p\":1.0,\"level\":0.1,\"nested\":\"declared_half_chi_square_1\",\"nonnested\":\"CSN_normalized_two_sided\",\"qualification\":\"alpha<=3_lacks_finite_boundary_information; alpha>3_not_validation\",\"variance_divisor\":\"n\",\"variance_floor\":1e-24},\"reference_agreement\":{\"ks_absolute\":1e-12,\"log_density_absolute\":1e-08,\"nll_per_observation_absolute\":1e-09,\"parameters_absolute\":2e-05,\"relative_normalization_error\":1e-09,\"rescaling_alpha_ks_absolute\":1e-10},\"revision\":\"geosim-offline-v1-premeasurement-correction-2026-10-03\",\"rng\":{\"batch_size\":1024,\"child\":\"SeedSequence(root,spawn_key=(fixed_job_index,))\",\"contrast_order\":\"base_block_then_control_block\",\"generator\":\"PCG64\",\"jobs\":72,\"ks_order\":\"binomial_tail_count,body_indices,tail_exponential\",\"root\":2026100301},\"runtime\":{\"numpy\":\"2.4.6\",\"python\":\"3.13.5\",\"scipy\":\"1.17.1\"},\"source\":{\"ccdf\":\"strict_unique_positive\",\"count\":\"all_selected_completed_including_zero\",\"cutoff_log10\":2.5,\"definition_checks\":{\"counters\":\"emitted_java_flags_separate_from_recomputed_integer100_saturated_subunit_zero_unavailable; overlapping_strata_not_summed\",\"diagnostic_strata\":[\"complete_all\",\"complete_selected\",\"partial_all\",\"partial_selected\",\"completed_records\",\"censored\",\"backlog\",\"legacy_visible\"],\"fit\":\"OLS_log10; cutoff_log10>=2.5; at_least3_distinct_x; positive_x_y_variance\",\"fit_tail\":\"all_positive_selected_observations_log10>=2.5_including_maximum_and_ties; count_distinct_count_log_range\",\"inclusive\":\"unique_positive_thresholds_count(S>=s)/N_positive\",\"integer100\":\"same_selected_raw_wars; truncating_saturating_int32(raw*100); strict_inclusive_rank_and_fit_tail\",\"rank\":\"descending_positive_observation_rank_r/N_positive; retain_separate_tied_ranks\",\"status\":\"inferred_descriptive_source_equivalence_unresolved\"},\"draws\":100000,\"family_size\":88,\"holm_reject_below\":0.05,\"minimum_fit_points\":3,\"ols_roundoff_tolerance\":1e-12,\"p\":\"inclusive_two_sided_plus_one_maximize_closed_source_interval\",\"precision_history_count\":100,\"prediction_history_count\":15,\"range\":\"full_positive_selected_census\"},\"stretched\":{\"beta_bounds\":[1e-08,100.0],\"brent_rtol\":1e-10,\"brent_xtol\":1e-10,\"domain\":\"beta>0_including_beta>1\",\"maxiter\":200,\"nonexistence\":\"endpoint_score<=0\"}}",
+  "method_contract_sha256": "9ff510fb666c3bdaf60c842dcd3db8f97e66232e54f40721c179bf4fc433f9dd",
   "source_inventory": [
     {
       "path": "Cargo.lock",
@@ -1625,8 +1648,8 @@
     },
     {
       "path": "docs/superpowers/specs/2026-10-03-geosim-design.md",
-      "bytes": 36972,
-      "sha256": "048a8726bec0367ad486fb7f26e4f4baf414099f342d48e22670d9df0725c539"
+      "bytes": 39564,
+      "sha256": "97d69b8eb92e34342ad10565841a45af5ec9c7e33cb2f7adf671791caa54b0c6"
     },
     {
       "path": "docs/superpowers/specs/2026-10-03-geosim-finite-technology-amendment.md",
@@ -1675,13 +1698,13 @@
     },
     {
       "path": "survey/geosim/NUMERICAL_METHODS.md",
-      "bytes": 9062,
-      "sha256": "6298dd25490433cae4cc46be92ceaa14c3197c4cffe77c04e7d63dbbfbe2d5ce"
+      "bytes": 13517,
+      "sha256": "4d46850335d2f262996a9756aed2dfb021e3acefc8bdbc7d636ca89fdb04ede5"
     },
     {
       "path": "survey/geosim/README.md",
-      "bytes": 5881,
-      "sha256": "eb480eaf2e36395ed1bc40aca66d6d0d92b66f3577d19af2ab168cda6ea14875"
+      "bytes": 6395,
+      "sha256": "f267c6e08159db3503138701331a4fdbe771bd4c1dcff4d47acb30d8c078f44b"
     },
     {
       "path": "survey/geosim/analysis.py",
@@ -1695,18 +1718,18 @@
     },
     {
       "path": "survey/geosim/methods.py",
-      "bytes": 5042,
-      "sha256": "67fa0934d2f7f259d868244a78d3f1e2d53010a29f7b23b808c41515a530e20a"
+      "bytes": 6462,
+      "sha256": "286f9beae3bb8153fd1594b1241e54cc0d65f38c1f657041654e085aaef12b06"
     },
     {
       "path": "survey/geosim/modern.py",
-      "bytes": 12731,
-      "sha256": "7b091ba654b8dfc9ca6c86899c22d93a583418fceb456564116f66bf3a2ca232"
+      "bytes": 12885,
+      "sha256": "421449b68d145a0e6450792196c8b5ab8564344226e6a50ac83caef672b4a775"
     },
     {
       "path": "survey/geosim/numerics.py",
-      "bytes": 11134,
-      "sha256": "119c48562b1d760392876fcb8abf55d8dca7cbac18edb8b0aabdd7b02ec5bcd0"
+      "bytes": 11820,
+      "sha256": "736b80ec8cf2c49014b18f3de47939d31ce37bd1fdfa21d1b86a59df08ff4304"
     },
     {
       "path": "survey/geosim/provenance.py",
@@ -1715,8 +1738,8 @@
     },
     {
       "path": "survey/geosim/records.py",
-      "bytes": 16781,
-      "sha256": "00113e57b389361a75e26a9c466c14796bccc9e59376dd5fe85381ff4c1da54c"
+      "bytes": 26740,
+      "sha256": "1f029432e3cf063bbea90a6db2952f65bb1379126e726f16a1ef2b54b35edbf6"
     },
     {
       "path": "survey/geosim/reference/GeoSimReferenceProbe.java",
@@ -1755,13 +1778,13 @@
     },
     {
       "path": "survey/geosim/source.py",
-      "bytes": 10908,
-      "sha256": "8b5d57b6b42c6dd7ebdc1396207a752976a5cfae9dbaafde30b77b54c572b95e"
+      "bytes": 12548,
+      "sha256": "4b599ad80ee9f933f68eb5cba4ad023c7b8fc1eb768b0dabcf248baac1537078"
     },
     {
       "path": "survey/geosim/test_analysis.py",
-      "bytes": 4373,
-      "sha256": "65de67cdc195f9a14f82042b4434f8ee0262f25480bf82b0ff58d6e67085970b"
+      "bytes": 6049,
+      "sha256": "3fbeafb5293699786d265f668ed99dfe0be7e6ed962f472563c7adad9a350916"
     },
     {
       "path": "survey/geosim/test_cli.py",
@@ -1775,13 +1798,13 @@
     },
     {
       "path": "survey/geosim/test_modern.py",
-      "bytes": 5896,
-      "sha256": "c1dfbd452cf3ad1f7a60c44ca406416fed79f84d01462cb32ff783e0370da25c"
+      "bytes": 7412,
+      "sha256": "a1c79007c349dd5c6de90cb452c5b087ae424c5fcb9428ebbe56f7bac8d3d983"
     },
     {
       "path": "survey/geosim/test_numerics.py",
-      "bytes": 4204,
-      "sha256": "bf353f6d9e5aa0f840901539224b393608132d1439415f7961af593a38686a52"
+      "bytes": 5999,
+      "sha256": "ea9c04f95fb8a6e6d412d30c4fd3d2ba5c6591b1799ae3e6cc1e5fd925c603dc"
     },
     {
       "path": "survey/geosim/test_provenance.py",
@@ -1790,8 +1813,8 @@
     },
     {
       "path": "survey/geosim/test_records.py",
-      "bytes": 14242,
-      "sha256": "866df0843859d9296fb65f27513c578e3b3d8f6c2b23c10c4c17d20215d2fe2a"
+      "bytes": 20225,
+      "sha256": "537a314de542d217b80dcc3ab7dc5696d962c934213fadd9cdb67a580504f1b2"
     },
     {
       "path": "survey/geosim/test_run.py",
@@ -1800,8 +1823,8 @@
     },
     {
       "path": "survey/geosim/test_source.py",
-      "bytes": 3736,
-      "sha256": "ece3296e4cfb82b54fecac6f4613fc62a1edb2fcb20fb19da909ea02e65f2dec"
+      "bytes": 5243,
+      "sha256": "7eb5dfc05ee3000407083bd780abbc1f89cae49438baf8710129327fae611b1e"
     },
     {
       "path": "survey/geosim/test_source_findings.py",
@@ -1810,21 +1833,21 @@
     },
     {
       "path": "survey/src/bin/geosim.rs",
-      "bytes": 65342,
-      "sha256": "a1d111403a0e559ac24a70cb609d374002a154a00560cf9e5ae3143d08b66cb7"
+      "bytes": 65695,
+      "sha256": "23b7daad2b66dfa6442ca0913e8c4343db20a904113a166d686131aea636da78"
     },
     {
       "path": "survey/tests/fixtures/geosim-registered-manifest.json",
-      "bytes": 26161,
-      "sha256": "476d6a849f7a660baae626b77530f3dfb537485fa05c5a22c6455750b45790d3"
+      "bytes": 28641,
+      "sha256": "b22fdc8b34f38957af1fae044b97bad3a69faf7057fec80288e9939770fe41f1"
     },
     {
       "path": "survey/tests/geosim_native.rs",
-      "bytes": 13255,
-      "sha256": "b8229b0a7ff0fb04a48b1d48ede70ca559d90d23e536b89e69a69e47807fa865"
+      "bytes": 14070,
+      "sha256": "4c448bafcd4edee018d82e93c88a315a2820699fc1504cae05d73ca2f333475c"
     }
   ],
-  "source_inventory_sha256": "e84e46c4573c4e5ac217f1f57c45ce8f28174a902f24756bef494a27c252a04a",
+  "source_inventory_sha256": "073e34974a496747eec5b6fd877011ea737bcd102571f0cf4163e1918adfcba1",
   "arms": [
     {
       "id": "original.base",
