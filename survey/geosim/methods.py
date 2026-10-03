@@ -4,7 +4,7 @@ import hashlib
 import json
 
 METHOD_CONTRACT = {
-    'revision':'geosim-offline-v1-premeasurement-correction-2026-10-03',
+    'revision':'geosim-offline-v1-premeasurement-correction-2026-10-03-round2',
     'runtime':{'python':'3.13.5','numpy':'2.4.6','scipy':'1.17.1'},
     'source':{'cutoff_log10':2.5,'ccdf':'strict_unique_positive',
               'minimum_fit_points':3,'range':'full_positive_selected_census',
@@ -35,7 +35,7 @@ METHOD_CONTRACT = {
               'fit_authority':'one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios',
               'numeric_failure':'nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved',
               'ks':'max_left_and_right_ecdf_at_unique_ties','cutoff_ties':'smallest_xmin_exact'},
-    'ks_test':{'tail_generation':'xmin*exp(exponential(1/(alpha-1))); preserve_near_cutoff_resolution','draws':1000,'level':.1,'exceedance':'Dstar>=Dobs',
+    'ks_test':{'tail_generation':'E=exponential(1/(alpha-1)); xmin*exp(E) when E<=log(float64_max), else exp(log(xmin)+E); final_overflow_fails; unchanged_draws_and_order','draws':1000,'level':.1,'exceedance':'Dstar>=Dobs',
                'p':'(b+1)/(B+1)','interval':'95%_Clopper_Pearson_b_of_B',
                'failure':'any_predetermined_failed_replicate_unresolved_no_replacements',
                'calibration':'iid_semiparametric_generated_refitted_grid100'},

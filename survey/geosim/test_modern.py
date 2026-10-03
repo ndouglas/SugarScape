@@ -109,3 +109,33 @@ class NarrowObservedNullTests(unittest.TestCase):
         self.assertEqual([math.ldexp(v,-300) for v in results[0]['refitted_xmins']],results[1]['refitted_xmins'])
         self.assertEqual({k:v for k,v in results[0].items() if k!='refitted_xmins'},
                          {k:v for k,v in results[1].items() if k!='refitted_xmins'})
+
+class RepresentableTailGenerationTests(unittest.TestCase):
+    def test_intermediate_exponential_overflow_does_not_fail_representable_refit(self):
+        import math
+        x=np.exp(np.linspace(-460.,40.,100))
+        fit=modern.fit_sizes(x,cutoff_search='grid100',alternatives=False)
+        self.assertEqual(fit['status'],'Available')
+        reference_rng=np.random.default_rng(3)
+        nt=int(reference_rng.binomial(len(x),fit['n_tail']/len(x)))
+        self.assertEqual(nt,100)  # No body draw is consumed for this fixed regression.
+        e=reference_rng.exponential(1/(fit['alpha']-1),nt)
+        self.assertGreater(float(e.max()),math.log(np.finfo(float).max))
+        reference_tail=np.exp(math.log(fit['xmin'])+e)
+        self.assertTrue(np.all(np.isfinite(reference_tail)))
+        reference=modern.fit_sizes(reference_tail,cutoff_search='grid100',alternatives=False)
+        self.assertEqual(reference['status'],'Available')
+        actual_rng=np.random.default_rng(3)
+        result=modern.ks_refit_test(fit,x,actual_rng,draws=1)
+        self.assertEqual(result['status'],'Available')
+        self.assertEqual(result['failed_replicates'],0)
+        self.assertEqual(result['exceedances'],int(reference['ks']>=fit['ks']))
+        self.assertEqual(actual_rng.bit_generator.state,reference_rng.bit_generator.state)
+
+    def test_tail_transform_preserves_direct_near_cutoff_and_finite_exception(self):
+        import math
+        near=np.array([0.,1e-16,1e-12,.1])
+        np.testing.assert_array_equal(modern._pareto_tail(1e100,near),1e100*np.exp(near))
+        np.testing.assert_array_equal(modern._pareto_tail(1e-200,np.array([1000.])),
+                                      np.exp(math.log(1e-200)+np.array([1000.])))
+        with self.assertRaises(FloatingPointError):modern._pareto_tail(1.,np.array([1000.]))

@@ -101,6 +101,16 @@ def fit_pool(histories,expected,alternatives=True):
             'censored_count':sum(h.get('censored_count',0) for h in histories),'backlog_count':sum(h.get('backlog_count',0) for h in histories)}
 
 
+def _pareto_tail(xmin,logratios):
+    """Keep direct near-cutoff precision; avoid overflow in the exp factor."""
+    tail=np.empty_like(logratios,dtype=float)
+    direct=logratios<=math.log(np.finfo(float).max)
+    with np.errstate(over='raise',invalid='raise'):
+        tail[direct]=xmin*np.exp(logratios[direct])
+        tail[~direct]=np.exp(math.log(xmin)+logratios[~direct])
+    return tail
+
+
 def ks_refit_test(fit,sizes,rng,draws=1000):
     if type(draws) is not int or draws<=0:raise ValueError('positive fixed KS replicate count required')
     if fit['status']!='Available':return {'status':'Unresolved','reason':'pooled_fit_unavailable','replicates_attempted':0}
@@ -111,9 +121,7 @@ def ks_refit_test(fit,sizes,rng,draws=1000):
             nt=int(rng.binomial(n,prob));nb=n-nt
             lower=body[rng.integers(0,len(body),size=nb,dtype=np.int64)] if nb else np.empty(0)
             logratios=rng.exponential(1/(fit['alpha']-1),nt)
-            with np.errstate(over='raise',invalid='raise'):
-                # Preserve near-cutoff resolution instead of adding tiny draws to a large log(xmin).
-                tail=fit['xmin']*np.exp(logratios)
+            tail=_pareto_tail(fit['xmin'],logratios)
             simulated=fit_sizes(np.concatenate((lower,tail)),cutoff_search='grid100',alternatives=False)
             if simulated['status']!='Available':raise numerics.NumericFailure(simulated.get('reason',simulated['status']))
             Ds.append(simulated['ks']);cutoffs.append(simulated['xmin'])
