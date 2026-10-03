@@ -67,7 +67,10 @@ pub(crate) fn act(world: &mut World, owner: AgentId) -> Option<Harvest> {
     let a = world.agent(owner)?;
     let state = a.protection.as_ref()?;
     if state.intent.is_none() {
-        if matches!(lab.policy, Policy::Off) || perceived_exposure(world, owner) {
+        if matches!(lab.policy, Policy::Off)
+            || a.holdings[0] < caching::reserve(world, owner)
+            || perceived_exposure(world, owner)
+        {
             return None;
         }
         let source = state
@@ -708,5 +711,30 @@ mod balance_tests {
                 if older { second } else { first }
             );
         }
+    }
+    #[test]
+    fn protection_below_reserve_does_not_start_but_equality_is_eligible() {
+        let mut w = prepared();
+        let source = source_site(&w);
+        let reserve = caching::reserve(&w, 1);
+        w.agent_mut(1).unwrap().holdings[0] = reserve - 1.0;
+        assert!(act(&mut w, 1).is_none());
+        let state = w.agent(1).unwrap().protection.as_ref().unwrap();
+        assert!(!state.sources[&source].attempted);
+        assert!(state.intent.is_none());
+        let events = w.relocation_events.as_ref().unwrap();
+        assert_eq!((events.starts, events.action_ticks), (0, 0));
+        assert!(events.source_events.is_empty());
+        assert_eq!(w.agent(1).unwrap().holdings[0], reserve - 1.0);
+        assert_eq!(w.agent(1).unwrap().caches[&source], 12.0);
+
+        w.agent_mut(1).unwrap().holdings[0] = reserve;
+        assert!(act(&mut w, 1).is_some());
+        let state = w.agent(1).unwrap().protection.as_ref().unwrap();
+        assert!(state.sources[&source].attempted);
+        assert!(state.intent.is_some());
+        let events = w.relocation_events.as_ref().unwrap();
+        assert_eq!((events.starts, events.action_ticks), (1, 1));
+        assert_eq!(w.agent(1).unwrap().holdings[0], reserve + 12.0);
     }
 }
