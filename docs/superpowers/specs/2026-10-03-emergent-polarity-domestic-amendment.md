@@ -15,3 +15,11 @@ The frozen reading notes' 400-unit narrative reference and the pre-domestic find
 ## Retained evidence and status
 
 The original partial/full telemetry runs, 237 original sequential panics, original verdicts, telemetry/export/sequential amendments, and the reviewed complete 863-row summary remain preserved. The reviewed summaries are also copied under `2026-10-03-emergent-polarity-pre-domestic-*`; original raw/hash-bound ignored files are unchanged. New ignored execution evidence uses only `survey/out/polarity-domestic-*`. Stage 4 remains In Progress pending controller review, integration, CI and Pages.
+
+## Completed same-seed execution
+
+Engine `b1bf1e5ac82bc223aa45b1b9672d9c1f6d4dbb1b` completed all 1,180 provincial sessions, retaining the exact 27,340 nonprovincial raw lines. All 1,160 deterministic two-level complete records match; all 20 overextension Outcomes change. The complete 572-arm/28,520-session report was recomputed with the frozen 18 functions, 100,000 draws and seed 2026100202: all 863 rows, results and verdicts remain identical. Direct stock counts/frequencies, all 110 Störmer coordinates and all source/P2/P3 rows remain identical; overextension episode and accounting descriptives change.
+
+Overextension voluntary revolt actions increase from 65,743 to 92,623, while domestic episodes increase from 65,743 to 81,739. Positive loss in domestic episodes changes from zero to 2,185,593.335182336 abstract units. All 20 sessions complete 4,000 periods. These action, episode, damage and clock observations are separately retained for every original seed in the [exact before/after receipt](2026-10-03-emergent-polarity-domestic-before-after.json). Its DD event totals include domestic and interstate encounters.
+
+The [dated findings](2026-10-03-emergent-polarity-domestic-findings.md), [execution provenance](2026-10-03-emergent-polarity-domestic-execution-provenance.json), [assembly receipt](2026-10-03-emergent-polarity-domestic-assembly-receipt.json) and [preserved pre-domestic findings](2026-10-03-emergent-polarity-pre-domestic-findings.md) bind the amended evidence and historical results. All prior raw, failed-export and panic evidence remains unchanged. Stage 4 remains In Progress pending the controller's scoped review and publication gates.

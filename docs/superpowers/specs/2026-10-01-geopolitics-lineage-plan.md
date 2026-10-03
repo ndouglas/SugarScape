@@ -71,9 +71,12 @@ and 239 retained invalid outcomes. Source mean/category judgments:
 [full findings](2026-10-02-emergent-polarity-findings.md) retain source uncertainty, original/precision
 populations, every named reading, signed accounting and direct terminal stock
 frequencies. Störmer's scatter uses 110 configuration means × ten repeats; no
-75% cutoff or unknown-seed overextension fit was supplied. Original partial/full
-raw files and verdicts remain bound through dated diagnostic/export/sequential
-corrections and exact same-seed equivalence receipts. Episodes, active-period
+75% cutoff was supplied. The source overextension illustration is a 10×10 grid
+(100 primitive units) with unknown seed; no trajectory fit was supplied. Original
+partial/full raw files and verdicts remain bound through dated diagnostic/export/
+sequential/domestic corrections and exact same-seed equivalence receipts.
+All 14 provincial arms / 1,180 original seeds were rerun after the domestic
+decision repair; 27,340 nonprovincial raw lines remain byte-identical. Episodes, active-period
 durations, end causes and censoring pass to the war study as abstract model
 measurements; resources are not casualties. GeoSim's technology, size measure and
 empirical fitting protocol require their own design and source/code reading;

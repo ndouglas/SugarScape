@@ -347,8 +347,9 @@ All 572 registered arms / 28,520 sessions and 100,000-draw judges are measured;
 28,281 valid and 239 invalid outcomes remain retained. Source mean/category
 judgments: 45 Compatible, 24 Incompatible, 3 Unresolved. Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. Original and precision populations,
 source uncertainty, direct endpoint stocks and signed accounting remain separate.
-Störmer's scatter has 110 configuration means × ten repeats; unknown-seed
-provincial trajectories remain descriptive. Approved diagnostics/export/obsolete-front
+Störmer's scatter has 110 configuration means × ten repeats. The source
+overextension illustration uses a 10×10 grid (100 primitive units) with unknown
+seed and remains descriptive. Approved diagnostics/export/obsolete-front/domestic decision
 repairs preserve original bytes/verdicts and every affected before/after result.
 [Findings and provenance](superpowers/specs/2026-10-02-emergent-polarity-findings.md) and
 [war-study handoff](studies/2026-09-26-war-and-society.md) document the limits.

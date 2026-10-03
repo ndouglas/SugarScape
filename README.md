@@ -3779,14 +3779,18 @@ source directions while the positive P2/P3 stabilization hypotheses fail; mean
 polarity and hegemony are different measures. Compatibility is not
 equivalence. No original EPM executable was recovered. Störmer's attributed
 adaptation uses 110 configuration means over ten repeats, with a committed scatter;
-no exact 75% inertness cutoff or unknown-seed overextension trajectory fit is claimed.
+no exact 75% inertness cutoff is claimed. The source overextension illustration
+uses a 10×10 grid (100 primitive units) and an unknown seed; no trajectory fit is claimed.
 
 Direct initial/terminal nonpositive-stock frequencies have explicit stock and
 session denominators; period-exposure frequency was not measured. Signed resource
 creation, positive destruction and episode durations/end causes/censoring are
 separate. Abstract resources do not measure casualties. Dated telemetry, strict
-JSON export and sequential stale-front corrections retain original data/verdicts,
+JSON export, sequential stale-front and domestic decision corrections retain original data/verdicts,
 exact hashes, every affected before/after result and full same-seed rerun evidence.
 See the [design](docs/superpowers/specs/2026-10-02-emergent-polarity-design.md),
 [reading notes](docs/superpowers/specs/2026-10-02-emergent-polarity-reading-notes.md)
 and [native protocol](survey/polarity/README.md).
+The [dated domestic amendment](docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md)
+reruns all 1,180 provincial sessions with the original seeds; all 27,340
+nonprovincial raw lines and the reviewed pre-domestic findings remain preserved.

@@ -90,18 +90,29 @@ not period-exposure rates. Registered analysis.py judges remain byte-identical.
 
 ## Complete execution and retained amendments
 
-The authoritative findings use `survey/out/polarity-final-sessions.jsonl`: all
-28,200 original full telemetry records whose resolved update is snapshot, plus
-all 320 sequential records from the complete corrected 16-arm × 20-seed rerun.
-Every previously valid sequential record matches; unaffected lines are retained
-byte-for-byte. Complete authority is `survey/out/polarity-sequential-resolved.json`,
-identical to the original authority. Provenance binds both executable heads,
-component data hashes, assembly checks and before/after verdicts. Raw files remain
-ignored; committed findings include reviewable counts and full hashes.
+The authoritative current findings use `survey/out/polarity-domestic-sessions.jsonl`:
+all 27,340 nonprovincial records from the reviewed complete pre-domestic dataset,
+plus all 1,180 provincial records from the complete same-seed 14-arm rerun.
+All 1,160 two-level complete records match; all 20 overextension Outcomes change.
+The 27,340 retained raw lines are byte-identical. Complete authority is
+`survey/out/polarity-domestic-resolved.json`, identical to every prior authority.
+The earlier `polarity-final-*`, telemetry, sequential and original partial files
+remain unchanged; they retain every original verdict, all 237 sequential panics
+and the 83 previously valid complete sequential records. Provenance binds both
+engine heads, every component hash, full contract audits and all before/after
+results. New execution evidence uses only `polarity-domestic-*` ignored paths.
+
+The dated [domestic source-fidelity amendment](../../docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md)
+removes episode bookkeeping as a veto on per-period provincial decisions; selected
+action memory remains explicit. Voluntary revolt actions and contiguous episodes
+are distinct counts. Its source clarification identifies the actual illustrative
+overextension grid as 10×10 (100 primitive units), with unknown seed; no trajectory
+fit is registered. Frozen research notes, source manifest and all 18 computation
+functions remain unchanged. Native studies remain outside CI.
 
 ```bash
-python3 survey/polarity/analysis.py --manifest survey/polarity/studies.json --source docs/superpowers/specs/2026-10-02-emergent-polarity-source-figures.json --resolved survey/out/polarity-sequential-resolved.json --sessions survey/out/polarity-final-sessions.jsonl --output survey/out/polarity-final-findings
-python3 survey/polarity/stock_diagnostics.py --manifest survey/polarity/studies.json --resolved survey/out/polarity-sequential-resolved.json --sessions survey/out/polarity-final-sessions.jsonl --output survey/out/polarity-final-stock-diagnostics.json
+python3 survey/polarity/analysis.py --manifest survey/polarity/studies.json --source docs/superpowers/specs/2026-10-02-emergent-polarity-source-figures.json --resolved survey/out/polarity-domestic-resolved.json --sessions survey/out/polarity-domestic-sessions.jsonl --output survey/out/polarity-domestic-findings
+python3 survey/polarity/stock_diagnostics.py --manifest survey/polarity/studies.json --resolved survey/out/polarity-domestic-resolved.json --sessions survey/out/polarity-domestic-sessions.jsonl --output survey/out/polarity-domestic-stock-diagnostics.json
 ```
 
 Both `analysis.py` and `export_report.py` use the tested strict JSON serializer:

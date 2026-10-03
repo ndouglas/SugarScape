@@ -1,4 +1,36 @@
 {
+  "affected_checks": {
+    "actual_native_python_tests": {
+      "failed": 0,
+      "passed": 47,
+      "skipped": 0
+    },
+    "diff_checks": "exit 0",
+    "release_native_build": "exit 0",
+    "release_wasm_web_build": "exit 0",
+    "standalone_survey_clippy": "exit 0",
+    "standalone_survey_fmt": "exit 0",
+    "standalone_survey_tests": {
+      "existing": 139,
+      "failed": 0,
+      "native_polarity": 7,
+      "passed": 146
+    },
+    "web_tests": {
+      "failed": 0,
+      "files": 59,
+      "native_wasm_parity": "six polarity golden fingerprints plus Minds 9 full native traces",
+      "passed": 914
+    },
+    "web_typecheck": "exit 0",
+    "workspace_clippy": "exit 0",
+    "workspace_fmt": "exit 0",
+    "workspace_tests": {
+      "failed": 0,
+      "ignored_existing": 101,
+      "passed": 1888
+    }
+  },
   "all_approved_artifacts_final_sha256": {
     "docs/superpowers/plans/2026-10-02-emergent-polarity/01-core-implementation.patch": "728da049b647621563151201d05d53387e51f9ba0a91742a84e213796966fdb8",
     "docs/superpowers/plans/2026-10-02-emergent-polarity/01-core-tests.patch": "da5e291be381cece61dad6aa86ae43362df0859c43e10237b890b3d9280a1102",
@@ -16,23 +48,6 @@
     "crates/sugarscape-cli/tests/cli.rs: retain polarity completed-period test and all three Minds fingerprint-trace tests",
     "crates/sugarscape-core/src/titles.rs: union catalog, 419 entries"
   ],
-  "domestic_amendment": {
-    "all_original_sequential_panics_retained": 237,
-    "all_previously_valid_sequential_records_identical": 83,
-    "engine_head": "b1bf1e5ac82bc223aa45b1b9672d9c1f6d4dbb1b",
-    "executable_sha256": "ffbb5e97c8848291b9cd07097cb9002cc404651bb5a938a0e83187cf8924c6d7",
-    "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md",
-    "only_changed_native_files_since_review": [
-      "crates/sugarscape-core/src/polarity/alliance.rs",
-      "crates/sugarscape-core/src/polarity/decision.rs",
-      "crates/sugarscape-core/src/polarity/tests.rs",
-      "crates/sugarscape-core/tests/golden.rs"
-    ],
-    "prior_data_and_verdicts_preserved": true,
-    "report_comparison": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-before-after.json",
-    "scope": "All14provincialarms/all1180same registeredseeds;27340nonprovincialrawlinesliteralbyteequivalence; all572lowest-IDties therefore singletonrandomtie correctioncannotaffectregisteredstudy.",
-    "source_manifest_and_judges_unchanged": true
-  },
   "environment_repairs": [
     "Ignored local target symlink points to required shared build directory for unchanged Minds native trace tests",
     "Sequenced actual-native Python checks after release binary exists"
@@ -624,489 +639,8 @@
       "reviewed_receipt_matches": []
     }
   },
-  "final_analysis_status": "Domestic source-fidelity rerun and complete unchanged100000draw report/stock/descriptive dependencies complete; all863rows unchanged, all20overextensionOutcomeschanged; scopedreview/integration/CI/Pages controller-owned.",
+  "final_analysis_status": "Complete authoritative572-arm/28520-session analysis and diagnostics, every frozen-byte/input/component/original-verdict check passed; publication/review controller-owned.",
   "final_documentation_checks": {
-    "all_native_analysis_doc_commands_exit_zero": 22,
-    "all_pre_domestic_published_summaries_hashes_match": true,
-    "checked_utc": "2026-10-03T07:06:30.242203+00:00",
-    "command": "/opt/homebrew/opt/python@3.13/bin/python3.13 survey/out/polarity-domestic-documentation-checks.py",
-    "current_overextension_400_unit_conflation_absent": true,
-    "executable_authority_full_raw_full_report_stock_hashes_match": true,
-    "frozen_engine_survey_source_files_verified": 285,
-    "frozen_notes_design_unchanged_with_linked_dated_correction": true,
-    "git_diff_check_exit_code": 0,
-    "links": [
-      {
-        "file": "README.md",
-        "target": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "README.md",
-        "target": "docs/superpowers/specs/2026-10-02-emergent-polarity-design.md"
-      },
-      {
-        "file": "README.md",
-        "target": "docs/superpowers/specs/2026-10-02-emergent-polarity-reading-notes.md"
-      },
-      {
-        "file": "README.md",
-        "target": "survey/polarity/README.md"
-      },
-      {
-        "file": "README.md",
-        "target": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md"
-      },
-      {
-        "file": "docs/roadmap.md",
-        "target": "superpowers/specs/2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "docs/roadmap.md",
-        "target": "superpowers/specs/2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "docs/papers.md",
-        "target": "superpowers/specs/2026-10-02-emergent-polarity-reading-notes.md"
-      },
-      {
-        "file": "docs/papers.md",
-        "target": "superpowers/specs/2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "docs/studies/2026-09-26-war-and-society.md",
-        "target": "../superpowers/specs/2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "docs/studies/2026-09-26-war-and-society.md",
-        "target": "../superpowers/specs/2026-10-02-emergent-polarity-descriptive-summary.json"
-      },
-      {
-        "file": "docs/studies/2026-09-26-war-and-society.md",
-        "target": "../superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-01-geopolitics-lineage-plan.md",
-        "target": "2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "survey/polarity/README.md",
-        "target": "../../docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "survey/polarity/README.md",
-        "target": "../../docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-02-emergent-polarity-stoermer-scatter.svg"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-03-emergent-polarity-telemetry-amendment.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-03-emergent-polarity-export-amendment.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-03-emergent-polarity-sequential-amendment.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-02-emergent-polarity-pre-sequential-findings.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-02-emergent-polarity-assembly-receipt.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-02-emergent-polarity-sequential-before-after.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-03-emergent-polarity-domestic-amendment.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-03-emergent-polarity-domestic-before-after.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md",
-        "target": "2026-10-03-emergent-polarity-pre-domestic-findings.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-findings.md",
-        "target": "2026-10-02-emergent-polarity-findings.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-findings.md",
-        "target": "2026-10-03-emergent-polarity-domestic-findings.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-findings.md",
-        "target": "2026-10-03-emergent-polarity-domestic-before-after.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-findings.md",
-        "target": "2026-10-03-emergent-polarity-domestic-execution-provenance.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-findings.md",
-        "target": "2026-10-03-emergent-polarity-pre-domestic-findings.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md",
-        "target": "2026-10-03-emergent-polarity-domestic-before-after.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md",
-        "target": "2026-10-03-emergent-polarity-domestic-findings.md"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md",
-        "target": "2026-10-03-emergent-polarity-domestic-execution-provenance.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md",
-        "target": "2026-10-03-emergent-polarity-domestic-assembly-receipt.json"
-      },
-      {
-        "file": "docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md",
-        "target": "2026-10-03-emergent-polarity-pre-domestic-findings.md"
-      }
-    ],
-    "local_polarity_links_valid": 35,
-    "new_full_report_sha256": "b695753a786aca05e0c4c71cde0eaecb7045fb16473779f0e9ff2dddb5958025",
-    "new_raw_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-sessions.jsonl",
-    "new_raw_sha256": "5ec59598477b28c3afa8661b5b3d193141117214b2417878c330f0bd7451a7e8",
-    "new_stock_sha256": "eab4af22ec8f9fdb7e45f1f916f59f15dc6dc9b07738f1c83cdd6803f0eab7ac",
-    "original_computation_functions_verified": 18,
-    "product_code_changed_since_covering_checks": false,
-    "required_gate_types_exit_zero": 12,
-    "retained_valid_covering_command_executions": 15,
-    "stoermer_svg_byte_identical": true,
-    "strict_finite_json_files": 21
-  },
-  "final_execution_provenance": "docs/superpowers/specs/2026-10-02-emergent-polarity-execution-provenance.json",
-  "final_native_findings": {
-    "all863rows_identical_to_pre_domestic": true,
-    "all_source_P2P3_St\u00f6rmer_rows_unchanged": true,
-    "all_stock_arm_pool_counts_frequencies_unchanged": true,
-    "all_valid_episodes": 3583155,
-    "arms": 572,
-    "censored_episodes": 16116,
-    "changed_overextension_outcomes": 20,
-    "domestic_episodes": 81753,
-    "final_findings_sha256": "b695753a786aca05e0c4c71cde0eaecb7045fb16473779f0e9ff2dddb5958025",
-    "final_sessions_sha256": "5ec59598477b28c3afa8661b5b3d193141117214b2417878c330f0bd7451a7e8",
-    "invalid": 239,
-    "invalid_nonfinite_ratio": 4,
-    "invalid_reject_nonpositive": 235,
-    "nonprovincial_raw_lines_identical": 27340,
-    "raw_count": 28520,
-    "row_count": 863,
-    "same_complete_provincial_records": 1160,
-    "stock_diagnostics_sha256": "eab4af22ec8f9fdb7e45f1f916f59f15dc6dc9b07738f1c83cdd6803f0eab7ac",
-    "valid": 28281,
-    "verdict_changes": 0,
-    "verdict_counts": {
-      "Compatible": 45,
-      "Dependence detected": 31,
-      "Fails": 44,
-      "Holds": 378,
-      "Incompatible": 24,
-      "Inconclusive": 271,
-      "Unresolved": 65,
-      "Untestable": 5
-    }
-  },
-  "integrated_main": "1223c47",
-  "integration_head": "b7f453abcc4752db9166a3d8fceae44c7aa560b8",
-  "measurement_authority_exported_before_sessions": true,
-  "original_verifier_exit": 1,
-  "original_verifier_output": "after content mismatch: crates/sugarscape-cli/src/main.rs, crates/sugarscape-cli/tests/cli.rs, crates/sugarscape-core/src/polarity/alliance.rs, crates/sugarscape-core/src/polarity/combat.rs, crates/sugarscape-core/src/polarity/tests.rs, crates/sugarscape-core/src/polarity/world.rs, crates/sugarscape-core/src/presets.rs, crates/sugarscape-core/src/titles.rs, crates/sugarscape-core/tests/golden.rs, survey/polarity/README.md, survey/polarity/analysis.py, survey/polarity/run.py, survey/polarity/test_reporting.py, survey/polarity/test_run.py, survey/src/bin/polarity.rs, web/src/polarity-engine.test.ts, web/src/polarity-inspection.test.ts, web/src/polarity.ts, web/src/types.ts, web/src/ui/charts-panel.ts, web/src/ui/grid-view.ts, web/src/ui/inspect-panel.ts, web/src/ui/series-data.ts\n",
-  "post_correction_checks_summary": {
-    "actual_commands": {
-      "commands": [
-        {
-          "argv": [
-            "cargo",
-            "fmt",
-            "--all",
-            "--check"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "fmt",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-fmt-first.log",
-          "started_utc": "2026-10-03T06:21:23.548796+00:00",
-          "wall_seconds": 12.983209416270256
-        },
-        {
-          "argv": [
-            "cargo",
-            "clippy",
-            "--workspace",
-            "--all-targets",
-            "--",
-            "-D",
-            "warnings"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "clippy",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-clippy-first.log",
-          "started_utc": "2026-10-03T06:21:36.532738+00:00",
-          "wall_seconds": 9.668813833035529
-        },
-        {
-          "argv": [
-            "cargo",
-            "test",
-            "--workspace"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "workspace-tests",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-workspace-tests-first.log",
-          "started_utc": "2026-10-03T06:21:46.202001+00:00",
-          "wall_seconds": 140.97417954169214
-        },
-        {
-          "argv": [
-            "cargo",
-            "fmt",
-            "--manifest-path",
-            "survey/Cargo.toml",
-            "--check"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "survey-fmt",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-survey-fmt.log",
-          "started_utc": "2026-10-03T06:24:07.198066+00:00",
-          "wall_seconds": 0.48296066652983427
-        },
-        {
-          "argv": [
-            "cargo",
-            "clippy",
-            "--manifest-path",
-            "survey/Cargo.toml",
-            "--all-targets",
-            "--",
-            "-D",
-            "warnings"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "survey-clippy",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-survey-clippy.log",
-          "started_utc": "2026-10-03T06:24:07.681529+00:00",
-          "wall_seconds": 4.309660540893674
-        },
-        {
-          "argv": [
-            "cargo",
-            "test",
-            "--manifest-path",
-            "survey/Cargo.toml"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "survey-tests",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-survey-tests.log",
-          "started_utc": "2026-10-03T06:24:11.991701+00:00",
-          "wall_seconds": 61.8134857499972
-        },
-        {
-          "argv": [
-            "cargo",
-            "build",
-            "--release",
-            "-p",
-            "sugarscape-cli"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "cli-release",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-cli-release.log",
-          "started_utc": "2026-10-03T06:25:13.807338+00:00",
-          "wall_seconds": 61.361911540851
-        },
-        {
-          "argv": [
-            "cargo",
-            "build",
-            "--release",
-            "--manifest-path",
-            "survey/Cargo.toml",
-            "--bin",
-            "polarity"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "native-release",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-native-release.log",
-          "started_utc": "2026-10-03T06:26:15.170394+00:00",
-          "wall_seconds": 25.127667707391083
-        },
-        {
-          "argv": [
-            "python3",
-            "-m",
-            "unittest",
-            "discover",
-            "-s",
-            "survey/polarity",
-            "-p",
-            "test_*.py"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "python-tests",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-python-tests.log",
-          "started_utc": "2026-10-03T06:26:40.298802+00:00",
-          "wall_seconds": 0.2966392505913973
-        },
-        {
-          "argv": [
-            "npm",
-            "run",
-            "build"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/web",
-          "exit_code": 0,
-          "label": "web-build",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-web-build.log",
-          "started_utc": "2026-10-03T06:26:40.595827+00:00",
-          "wall_seconds": 31.279386458918452
-        },
-        {
-          "argv": [
-            "cargo",
-            "fmt",
-            "--all",
-            "--check"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "fmt",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-fmt.log",
-          "started_utc": "2026-10-03T06:27:58.555907+00:00",
-          "wall_seconds": 13.115300416946411
-        },
-        {
-          "argv": [
-            "cargo",
-            "clippy",
-            "--workspace",
-            "--all-targets",
-            "--",
-            "-D",
-            "warnings"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "clippy",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-clippy.log",
-          "started_utc": "2026-10-03T06:28:11.672197+00:00",
-          "wall_seconds": 5.902224292047322
-        },
-        {
-          "argv": [
-            "cargo",
-            "test",
-            "--workspace"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity",
-          "exit_code": 0,
-          "label": "workspace-tests",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-workspace-tests.log",
-          "started_utc": "2026-10-03T06:28:17.574938+00:00",
-          "wall_seconds": 115.4567023748532
-        },
-        {
-          "argv": [
-            "npm",
-            "test"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/web",
-          "exit_code": 0,
-          "label": "web-tests",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-web-tests.log",
-          "started_utc": "2026-10-03T06:30:13.033530+00:00",
-          "wall_seconds": 21.87052775081247
-        },
-        {
-          "argv": [
-            "npm",
-            "run",
-            "typecheck"
-          ],
-          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/web",
-          "exit_code": 0,
-          "label": "typecheck",
-          "log": "/Users/nathan/.config/superpowers/worktrees/SugarScape/polarity/survey/out/polarity-domestic-typecheck.log",
-          "started_utc": "2026-10-03T06:30:34.904808+00:00",
-          "wall_seconds": 0.3394141672179103
-        }
-      ],
-      "environment": {
-        "CARGO_TARGET_DIR": "/Users/nathan/Projects/ndouglas/SugarScape/target",
-        "POLARITY_BINARY": "/Users/nathan/Projects/ndouglas/SugarScape/target/release/polarity"
-      },
-      "retained_initial_failed_web_gate": "survey/out/polarity-domestic-checks-first.json"
-    },
-    "all12required_gate_types_exit_zero": true,
-    "native_wasm_parity": "Allsixpolaritygoldens; corrected4\u00d74overextensionseed1through500periods; actualregisteredoverextensionseed446000001through4000periods; retainedsequentialseed128000002through688periods; Minds traces.",
-    "python_actual_native_passed": 60,
-    "python_skipped": 0,
-    "retained_first_failed_web_fixture": "survey/out/polarity-domestic-checks-first.json",
-    "survey_passed": 152,
-    "web_files": 59,
-    "web_passed": 918,
-    "workspace_failed": 0,
-    "workspace_ignored_existing": 101,
-    "workspace_passed": 1898,
-    "workspace_suites": 25
-  },
-  "pre_domestic_affected_checks": {
-    "actual_native_python_tests": {
-      "failed": 0,
-      "passed": 47,
-      "skipped": 0
-    },
-    "diff_checks": "exit 0",
-    "release_native_build": "exit 0",
-    "release_wasm_web_build": "exit 0",
-    "standalone_survey_clippy": "exit 0",
-    "standalone_survey_fmt": "exit 0",
-    "standalone_survey_tests": {
-      "existing": 139,
-      "failed": 0,
-      "native_polarity": 7,
-      "passed": 146
-    },
-    "web_tests": {
-      "failed": 0,
-      "files": 59,
-      "native_wasm_parity": "six polarity golden fingerprints plus Minds 9 full native traces",
-      "passed": 914
-    },
-    "web_typecheck": "exit 0",
-    "workspace_clippy": "exit 0",
-    "workspace_fmt": "exit 0",
-    "workspace_tests": {
-      "failed": 0,
-      "ignored_existing": 101,
-      "passed": 1888
-    }
-  },
-  "pre_domestic_final_analysis_status": "Complete authoritative572-arm/28520-session analysis and diagnostics, every frozen-byte/input/component/original-verdict check passed; publication/review controller-owned.",
-  "pre_domestic_final_documentation_checks": {
     "covering_commands_exit_zero": 12,
     "executable_authority_final_raw_findings_stock_sha256_match": true,
     "fresh_frozen_file_count": 285,
@@ -1115,7 +649,8 @@
     "product_code_changed_since_covering_checks": false,
     "strict_finite_json_files": 11
   },
-  "pre_domestic_final_native_findings": {
+  "final_execution_provenance": "docs/superpowers/specs/2026-10-02-emergent-polarity-execution-provenance.json",
+  "final_native_findings": {
     "all_nonselection_rows_unchanged": 421,
     "all_rows_identical": 494,
     "changed_selection_results": 369,
@@ -1139,7 +674,12 @@
       "Untestable": 5
     }
   },
-  "pre_domestic_post_correction_checks_summary": {
+  "integrated_main": "1223c47",
+  "integration_head": "b7f453abcc4752db9166a3d8fceae44c7aa560b8",
+  "measurement_authority_exported_before_sessions": true,
+  "original_verifier_exit": 1,
+  "original_verifier_output": "after content mismatch: crates/sugarscape-cli/src/main.rs, crates/sugarscape-cli/tests/cli.rs, crates/sugarscape-core/src/polarity/alliance.rs, crates/sugarscape-core/src/polarity/combat.rs, crates/sugarscape-core/src/polarity/tests.rs, crates/sugarscape-core/src/polarity/world.rs, crates/sugarscape-core/src/presets.rs, crates/sugarscape-core/src/titles.rs, crates/sugarscape-core/tests/golden.rs, survey/polarity/README.md, survey/polarity/analysis.py, survey/polarity/run.py, survey/polarity/test_reporting.py, survey/polarity/test_run.py, survey/src/bin/polarity.rs, web/src/polarity-engine.test.ts, web/src/polarity-inspection.test.ts, web/src/polarity.ts, web/src/types.ts, web/src/ui/charts-panel.ts, web/src/ui/grid-view.ts, web/src/ui/inspect-panel.ts, web/src/ui/series-data.ts\n",
+  "post_correction_checks_summary": {
     "broken_links": 0,
     "local_polarity_links_checked": 18,
     "plot_visual_inspection": true,
@@ -1153,8 +693,6 @@
     "workspace_ignored_existing": 101,
     "workspace_passed": 1890
   },
-  "pre_domestic_receipt": "docs/superpowers/specs/2026-10-03-emergent-polarity-pre-domestic-verification-receipt.json",
-  "receipt_version": 2,
   "required_affected_checks": [
     "workspace Rust fmt/clippy/tests including golden fingerprints and CLI",
     "standalone survey fmt/clippy/tests",

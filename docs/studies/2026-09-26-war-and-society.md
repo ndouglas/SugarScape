@@ -271,10 +271,10 @@ invalid. These reconstruct EPM/provincial territorial conflicts, not GeoSim's
 technology/war-size model or observed deadly quarrels. Source compatibility,
 original/precision populations, invalidity and source uncertainty remain separate.
 
-Across valid outcomes, 3,502,994 episodes include
-65,757 domestic episodes and
-16,099 censored episodes. Mean active-period
-duration is 6.65661; uncensored median is
+Across valid outcomes, 3,583,155 episodes include
+81,753 domestic episodes and
+16,116 censored episodes. Mean active-period
+duration is 6.54904; uncensored median is
 1. The
 [descriptive summary](../superpowers/specs/2026-10-02-emergent-polarity-descriptive-summary.json)
 retains family-specific counts, end causes, durations, resource accounting and
@@ -296,8 +296,16 @@ terminal frequency is distinct from unmeasured period exposure. Invalid end-stat
 measurements describe the attempted clock and do not complete an aborted period.
 The original 237 sequential implementation panics and all original verdicts remain
 retained; a full 16×20 same-seed correction supplies final sequential data while
-28,200 unaffected raw records remain byte-identical. No replacement seeds or
-post-measurement judge changes were used.
+28,200 unaffected raw records remain byte-identical in that retained pre-domestic
+dataset. The later [domestic source-fidelity amendment](../superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md)
+reruns all 14 provincial arms / 1,180 original seeds: 1,160 complete deterministic
+records match, while all 20 overextension Outcomes change. All 27,340 nonprovincial
+raw lines remain byte-identical. The actual source overextension illustration uses
+a 10×10 grid (100 primitive units) with unknown seed; it supplies no trajectory
+fit target. Updated overextension observations retain 92,623 voluntary revolt
+actions across 81,739 domestic episodes, with positive domestic combat damage.
+Actions, DD encounters and episodes remain distinct counts. No replacement seeds,
+new resource cap or post-measurement judge changes were used.
 
 The next GeoSim study must freeze its own war-size measure, technology shocks,
 termination/censoring and empirical fit before execution. Carry these episode and
