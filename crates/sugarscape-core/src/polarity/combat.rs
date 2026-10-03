@@ -326,7 +326,8 @@ impl PolarityWorld {
                 .copied()
                 .collect();
             for key in keys {
-                if !visited.insert(key) {
+                // Earlier conquests can remove later keys from this cached actor front list.
+                if !self.fronts.contains_key(&key) || !visited.insert(key) {
                     continue;
                 }
                 self.resolved_fronts.insert(key);

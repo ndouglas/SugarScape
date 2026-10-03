@@ -643,6 +643,53 @@ mod ordered_source_motifs {
 mod sequential_control {
     use super::*;
     #[test]
+    fn conquest_discards_later_cached_front_without_resolving_it() {
+        let mut w = PolarityWorld::new(
+            PolarityConfig {
+                width: 2,
+                height: 2,
+                predator_share: 0.0,
+                update: Update::Sequential,
+                initial_mean: 10.0,
+                initial_sd: 0.0,
+                harvest_mean: 2.0,
+                harvest_sd: 0.0,
+                ..Default::default()
+            },
+            1,
+        )
+        .unwrap();
+        w.cells[1].stock = 100.0;
+        w.fronts.get_mut(&FrontKey::foreign(0, 1)).unwrap().previous = [true, true];
+        w.prepare();
+        let mut ledger = crate::polarity::Ledger::default();
+        w.sequential(vec![0], &mut ledger);
+        assert_eq!(w.cells[0].capital, 1);
+        assert_eq!(
+            (ledger.conquests, ledger.dd_encounters, ledger.harvest),
+            (1, 1, 8.0)
+        );
+        assert!(!w.resolved_fronts.contains(&FrontKey::foreign(0, 2)));
+    }
+    #[test]
+    fn registered_sequential_seed_completes_the_previously_panicking_period() {
+        let mut w = PolarityWorld::new(
+            PolarityConfig {
+                predator_share: 0.05,
+                update: Update::Sequential,
+                periods_per_tick: 100,
+                horizon: 16,
+                ..Default::default()
+            },
+            128_000_002,
+        )
+        .unwrap();
+        w.run(1);
+        let outcome = w.outcome().unwrap();
+        assert!(outcome.valid, "{:?}", outcome.invalid_reason);
+        assert_eq!((outcome.periods, outcome.attempted_period), (16, 16));
+    }
+    #[test]
     fn later_actor_cannot_initiate_against_already_resolved_dyads() {
         let mut w = PolarityWorld::new(
             PolarityConfig {
