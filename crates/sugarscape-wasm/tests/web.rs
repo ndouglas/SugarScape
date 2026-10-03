@@ -468,7 +468,8 @@ fn builtins_and_series_names_are_listed() {
             "auctions-market",
             "auctions-bidders",
             "auctions-persistent",
-            "auctions-duration"
+            "auctions-duration",
+            "polarity-predators"
         ]
     );
     assert!(list[0]["sweep"]["name"]
