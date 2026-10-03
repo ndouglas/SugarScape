@@ -1,0 +1,647 @@
+diff --git a/README.md b/README.md
+index 010437594c054195bd1f5ea4ecae3dfc668b4c3f..39d5d29eb4bae1f419463eeb87da18e527aeda80 100644
+--- a/README.md
++++ b/README.md
+@@ -3794,3 +3794,36 @@ and [native protocol](survey/polarity/README.md).
+ The [dated domestic amendment](docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md)
+ reruns all 1,180 provincial sessions with the original seeds; all 27,340
+ nonprovincial raw lines and the reviewed pre-domestic findings remain preserved.
++
++
++### GeoSim war sizes (Cederman 2003)
++
++`geosim` reconstructs sovereign states, mobile resource commitments, conquest,
++technological shocks and connected war episodes on a bounded cardinal lattice.
++Five presets expose the paper reconstruction, the separately attributed 2017
++artifact readings, no technology, no context and smaller shocks. The artifact
++preset is an uncertified reading bundle; it does not establish identity with the
++archived executable or reproduce the APSR study.
++
++The web offers territory, capacity, technology, alert and war views. Inspect
++retains front decisions, resource accounting, the latest structural event and a
++complete terminal census of completed and censored episodes. Exported episodes
++and completed episodes awaiting export remain separate. Severity measures abstract
++resource damage, not battle deaths. Compare presents each world's source clock;
++Experiments captures the resolved configuration and defaults to its full source
++horizon. These experiments are exploratory, not registered study execution.
++
++One display tick can group several source periods. The paper preset starts with
++500 initialization periods and 10,000 observation periods; the default grouping
++is one period per tick. To inspect a resolved configuration without advancing it:
++
++```sh
++cargo run --release -p sugarscape-cli -- run --preset geosim-paper --ticks 0 --config-out geosim.json
++```
++
++Named controls expose source ambiguities independently, including reciprocal
++versus same defender thresholds and attacked-party versus acting-party damage.
++See the [approved design](docs/superpowers/specs/2026-10-03-geosim-design.md),
++[source readings](docs/superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md)
++and [artifact certification audit](docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md).
++No scientific result is inferred from the host integration checks.
+diff --git a/crates/sugarscape-cli/src/main.rs b/crates/sugarscape-cli/src/main.rs
+index 544c8b70a4aa6314ba3eb86d977518518c2dda6c..6b8c56c4e9518463216dfcb1f627b7d530e0326b 100644
+--- a/crates/sugarscape-cli/src/main.rs
++++ b/crates/sugarscape-cli/src/main.rs
+@@ -231,7 +231,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
+         world.model_mut().run(args.ticks);
+     }
+     let world = world.model();
+-    if world.finished() && config.kind() == ModelKind::Polarity {
++    if world.finished() && matches!(config.kind(), ModelKind::Polarity | ModelKind::Geosim) {
+         let latest: serde_json::Value =
+             serde_json::from_str(&world.latest_json()).expect("core snapshot is JSON");
+         let periods = latest["periods"].as_u64().unwrap_or(0);
+diff --git a/crates/sugarscape-core/src/sweep.rs b/crates/sugarscape-core/src/sweep.rs
+index 03c66a95f4ba68b4d9489361ca3cd99a6371e03e..d5383b3b90b567301d769aa3d1131602c58782fb 100644
+--- a/crates/sugarscape-core/src/sweep.rs
++++ b/crates/sugarscape-core/src/sweep.rs
+@@ -391,6 +391,12 @@ impl Sweep {
+         })?;
+         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
+             let why = match config.kind() {
++                crate::model::ModelKind::Geosim => {
++                    let crate::model::ModelConfig::Geosim(c) = &config else {
++                        unreachable!()
++                    };
++                    format!("GeoSim source horizon of {} periods requires {max} display ticks in this config", c.horizon())
++                }
+                 crate::model::ModelKind::Polarity => {
+                     format!("polarity reaches its economic horizon after {max} display ticks in this config")
+                 }
+diff --git a/web/src/compare-presets.ts b/web/src/compare-presets.ts
+index fb562521c3a17dc8f94faa301147c4337a343d44..3cb61b5d30c8400f88da25a712001cb9b4d5663f 100644
+--- a/web/src/compare-presets.ts
++++ b/web/src/compare-presets.ts
+@@ -221,6 +221,8 @@ export const COMPARE_PRESETS: ComparePreset[] = [
+     a: 'collusion-calvano',
+     b: 'collusion-synchronous',
+   },
++  { id: 'geosim-technology', label: 'With vs without technological change — GeoSim (Compare)', a: 'geosim-paper', b: 'geosim-no-technology' },
++  { id: 'geosim-context', label: 'With vs without contextual activation — GeoSim (Compare)', a: 'geosim-paper', b: 'geosim-no-context' },
+   { id: 'auctions-formats', label: 'First price vs second price — Q-learning Auctions (Compare)', a: 'auctions-first-price', b: 'auctions-second-price' },
+   { id: 'auctions-feedback', label: 'Learning from one bid vs every bid — Q-learning Auctions (Compare)', a: 'auctions-first-price', b: 'auctions-feedback' },
+ ];
+diff --git a/web/src/engine.ts b/web/src/engine.ts
+index 955e850601ae01f440fc946659fe67da4482cf59..a246f43c0a53113fe8129b8b59bbdfc043ff4563 100644
+--- a/web/src/engine.ts
++++ b/web/src/engine.ts
+@@ -26,7 +26,7 @@ import { calendarYear, hasCaches, hoardSeasonTicks, isSugar, mindsShown, modelOf
+ import { MAX_TICKS, SimHost } from './sim-host';
+ import { wasmSimModule } from './sim-module';
+ import { InlineTransport, startWorker, type Transport } from './transport';
+-import type { AgreementConfig, AuctionsConfig, AuctionsStats, PolarityStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
++import type { AgreementConfig, AuctionsConfig, AuctionsStats, GeosimStats, PolarityStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+ import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
+ 
+ export type { Overlay, PlaceOverrides } from './protocol';
+@@ -53,6 +53,11 @@ export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its
+ 
+ /** What the page says when a world has run its course (the engine pauses and fires 'finished'). */
+ export function finishedNotice(config: ModelConfig, tick: number, latest?: ModelStats | null): string {
++  if (modelOf(config) === 'geosim') {
++    const g = latest as GeosimStats | null | undefined;
++    if (g?.invalidity) return `Invalid reconstruction at attempted period ${g.attempted_period} (${g.periods} completed): ${g.invalidity} — Reset to run it again`;
++    return `This session finished at period ${g?.periods ?? 'unavailable'} (${g?.finish_reason ?? 'endpoint'}) — Reset to run it again`;
++  }
+   if (modelOf(config) === 'polarity') {
+     const p = latest as PolarityStats | null | undefined;
+     if (p?.invalidity) return `Invalid reconstruction at period ${p.periods}: ${p.invalidity} — Reset to run it again`;
+@@ -405,7 +410,7 @@ export class Engine {
+     }
+     engine.origin = { config, seed: engine.seed, landscapes };
+     engine.adopt(result.snapshot);
+-    if (engine.model === 'polarity') engine.origin.config = structuredClone(engine.config);
++    if ((engine.model === 'polarity' || engine.model === 'geosim')) engine.origin.config = structuredClone(engine.config);
+     engine.replayMoved = false;
+     engine.baseConfig = structuredClone(engine.config);
+     engine.presetId = engine.matchPreset();
+@@ -1146,7 +1151,7 @@ export class Engine {
+       this.memoryCells = NO_CELLS;
+     }
+     const clamped = this.adopt(result.snapshot);
+-    if (this.model === 'polarity') this.origin.config = structuredClone(this.config);
++    if ((this.model === 'polarity' || this.model === 'geosim')) this.origin.config = structuredClone(this.config);
+     if (!opts.keepSetup) {
+       this.baseConfig = structuredClone(this.config);
+       this.presetId = opts.presetId ?? this.matchPreset();
+diff --git a/web/src/experiments/form.ts b/web/src/experiments/form.ts
+index 71445e8d247e9a787fcfe96762675a9c4ec7cffa..bafd3708eff2fe9fd46160361bfc85113aa2a790 100644
+--- a/web/src/experiments/form.ts
++++ b/web/src/experiments/form.ts
+@@ -1,4 +1,4 @@
+-import type { AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
++import type { GeosimConfig, AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
+ import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
+ import { formatValues, parseValues, type AxisScalar } from './values';
+ 
+@@ -110,6 +110,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
+     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
+     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
+   }
++  if (model === 'geosim') {
++    const g = config as GeosimConfig | undefined;
++    return { ...form, description: 'Exploratory GeoSim technology settings; completed abstract conflict clusters after the captured source horizon. This is not the registered scientific study.', x: { path: 'shock_shift', values: '0,10,20' }, ticks: g ? Math.ceil((g.initialization_periods + g.observation_periods) / g.periods_per_tick) : 10500, metric: { ...form.metric, kind: 'final', series: 'completed_wars' } };
++  }
+   if (model === 'polarity') {
+     const p = config as PolarityConfig | undefined;
+     return { ...form, description: 'Cederman predator-share settings; terminal sovereign count after the economic horizon or hegemony. Parameters and source profile are retained; ticks batch complete periods.', x: { path: 'predator_share', values: '0,0.05,0.1,0.2,0.4,0.6,0.8,1' }, ticks: p ? Math.ceil(p.horizon / p.periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'sovereign_count' } };
+@@ -300,3 +304,8 @@ export function numericPaths(config: ModelConfig, schema: Param[] = []): string[
+   walk(config, '');
+   return out;
+ }
++
++/** Capture the chosen experiment base before later world edits. */
++export function captureExperimentBase(presetId: string | null, modified: boolean, config: ModelConfig): SweepBase {
++  return presetId !== null && !modified ? {preset:presetId} : {config:structuredClone(config)};
++}
+diff --git a/web/src/experiments/view.ts b/web/src/experiments/view.ts
+index ffa4fc4d4ed3cae6c146cdc6b5fbd00a4c8408b7..5aa8ccfd463f13be01ca9b2060c52cdb3eb65855 100644
+--- a/web/src/experiments/view.ts
++++ b/web/src/experiments/view.ts
+@@ -17,7 +17,7 @@ import { SweepChart } from './chart';
+ import { chartData } from './chart-data';
+ import { readOpened, slug, type OpenCore } from './file';
+ import { FixedPanel } from './fixed-panel';
+-import { defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
++import { captureExperimentBase, defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
+ import { FormView } from './form-view';
+ import { baseLabel } from './labels';
+ import { poolSize, WorkerPool, type WorkerLike } from './pool';
+@@ -203,7 +203,7 @@ export class ExperimentsView {
+   /** The current world as a base: its preset when unmodified, otherwise its config (Decision 17). */
+   private currentBase(): SweepBase {
+     const e = this.engine;
+-    return e.presetId !== null && !e.isModified() ? { preset: e.presetId } : { config: structuredClone(e.baseConfig) };
++    return captureExperimentBase(e.presetId, e.isModified(), e.baseConfig);
+   }
+ 
+   private configOf(base: SweepBase): ModelConfig | null {
+diff --git a/web/src/geosim.ts b/web/src/geosim.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ae1cc2838403a9a4db4b631190963034e120a13d
+--- /dev/null
++++ b/web/src/geosim.ts
+@@ -0,0 +1,103 @@
++import type { ColorMode, GeosimConfig, GeosimEvent, GeosimInspection, GeosimStateId } from './types';
++const number = (value: number | null): string => typeof value === 'number' && Number.isFinite(value) ? value.toFixed(3) : 'unavailable';
++const state = (value: GeosimStateId): string => `${value.capital_cell} (generation ${value.sovereignty_generation})`;
++const actions = (value: boolean[]) => value.map(v => v ? 'D' : 'C').join('/');
++const event = (value: GeosimEvent | null): string => value ? `#${value.id} · period ${value.period} · ${value.kind}${value.cells.length ? ` · cells ${value.cells.join(', ')}` : ''}` : 'None';
++/** Local resources and bounded UI events remain distinct from the full terminal war census. */
++export function geosimRows(view: GeosimInspection): [string,string][] {
++  const s = view.state;
++  const rows: [string,string][] = [
++    ['Source clock', `${view.periods} completed periods · attempted ${view.attempted_period} · counting from ${view.counting_start}`],
++    ['Government', `Cell ${view.cell.id} · capital ${s.id.capital_cell} · generation ${s.id.sovereignty_generation}`],
++    ['Territory', `${view.members.length} cells: ${view.members.join(', ')}`],
++    ['Capacity', `${number(s.capacity)} · extracted yield ${number(s.extracted_yield)} · previous damage ${number(s.previous_damage)}`],
++    ['Technology and distance', `Threshold ${number(s.threshold)} · own-capital distance ${number(view.distance)} · projection ${number(view.projection)}`],
++    ['Alert and campaign', `${s.alert ? 'Alert' : 'Inactive'} · target ${s.campaign ? state(s.campaign) : 'None'}`],
++    ['Resource recurrence', view.resource_recurrence ? `Period ${view.resource_recurrence.period} · old ${number(view.resource_recurrence.old_capacity)} · yield ${number(view.resource_recurrence.extracted_yield)} · applied damage ${number(view.resource_recurrence.applied_damage)} · target ${number(view.resource_recurrence.target_capacity)} · new ${number(view.resource_recurrence.new_capacity)} · residual ${number(view.resource_recurrence.residual)} · ${view.resource_recurrence.reset ? 'independence reset' : 'smoothed'}` : 'None'],
++    ['Fronts', view.fronts.length ? view.fronts.map(f => `${f.states.map(state).join(' — ')}: ${actions(f.actions)} · previous ${actions(f.previous)} · commitments ${f.commitments.map(number).join('/')} · prior ${f.old_commitments.map(number).join('/')} · damage ${f.last_damage.map(number).join('/')} · path ${f.path?.join(' → ') ?? 'None'}`).join('; ') : 'None'],
++    ['Active wars', view.wars.length ? view.wars.map(w => `#${w.id} · abstract damage ${number(w.raw_severity)} · ${w.participants.map(p => `${state(p.state)}, last fight ${p.last_fighting_period}`).join('; ')}`).join(' | ') : 'None'],
++    ['Last structural event', event(view.last_structural_event)],
++    ['UI event trace', `${view.events.length} retained · ${view.events_dropped} dropped · bounded trace, not the full war census`],
++  ];
++  if (view.invalidity) rows.push(['Invalid reconstruction', view.invalidity]);
++  else if (view.finish_reason) rows.push(['Completion', view.finish_reason]);
++  if (view.outcome) {
++    const o = view.outcome;
++    rows.push(['Terminal war census', `${o.completed_wars.length} completed · ${o.censored_wars.length} censored · ${o.legacy_visible_wars.length} exported · ${o.exporter_backlog.length} completed awaiting export`]);
++    rows.push(['Terminal damage ledger', `Total ${number(o.ledger?.damage ?? null)} · measured ${number(o.ledger?.measured_damage ?? null)} · recurrence residual ${number(o.ledger?.recurrence_residual ?? null)}`]);
++    rows.push(['Severity units', 'Abstract resource damage; not battle deaths']);
++    const exported = new Set(o.legacy_visible_wars.map(w=>w.id));
++    const queued = new Set(o.exporter_backlog.map(w=>w.id));
++    for (const [label,wars] of [['Completed',o.completed_wars],['Censored',o.censored_wars]] as const) {
++      for (const w of wars) rows.push([`${label} war #${w.id}`, `Periods ${w.start_period}–${w.end_period ?? `open at ${o.finish_reason}`} · raw damage ${number(w.raw_severity)} · exported ${number(w.exported_severity)} · ${w.active_periods} fighting periods · ${w.elapsed_periods} elapsed · end cause ${w.end_cause ?? 'censored'}${w.parents.length ? ` · merged episodes ${w.parents.join(', ')}` : ''} · participants ${w.participants.map(p=>state(p.state)).join(', ')}${exported.has(w.id) ? ' · exported by collector' : ''}${queued.has(w.id) ? ' · awaiting collector export' : ''}${w.java_saturated ? ' · Java integer saturation' : ''}${w.java_subunit_zero ? ' · positive raw damage serialized as zero' : ''}`]);
++    }
++  }
++  return rows;
++}
++export function geosimChartCaption(title: string, configs: GeosimConfig[]): string {
++  return `${title} · ${configs.map((c,i) => `${configs.length > 1 ? `${i === 0 ? 'A' : 'B'}: ` : ''}${c.periods_per_tick} source periods/tick`).join(' · ')}`;
++}
++export function geosimLegend(config: GeosimConfig, mode: ColorMode, periods: number): string {
++  const meanings: Partial<Record<ColorMode,string>> = {territory:'Colors identify sovereign ownership; white center is capital',capacity:'Distance-extracted resource capacity; Inspect marks unavailable values',technology:'Technology threshold controlling extraction and projection',alert:'Alert status; campaign target is shown in Inspect',wars:'Membership in active abstract conflict clusters'};
++  const attribution = config.initial_capacity === 'artifact_random_100_1' ? 'Later-port readings; full artifact identity Unresolved' : 'Cederman2003 paper reconstruction';
++  return `${periods} of ${config.initialization_periods + config.observation_periods} source periods · ${config.periods_per_tick} periods/tick · ${attribution} · ${meanings[mode] ?? meanings.territory} · Severity is abstract resource damage, not deaths`;
++}
++/** Source ambiguities stay visible beside the schema-driven controls. */
++export const GEOSIM_RULES = 'Cederman2003 APSR reconstruction. Mobile commitments are contingent plans on fronts, not an additive budget over passive attacks. Severity is abstract resource damage, not battle deaths. Reciprocal defender threshold is the printed p.148 default; same_threshold is unmeasured. Attacked-party damage follows Table A1/resource accounting; acting_party with own_commitment exposes p.148 cost wording. Other named readings include explicitly attributed reconstruction alternatives, including unmeasured founder ordering, counting boundaries, inheritance, retirement, numerical handling and collector draining. GeoSim2 archived-port readings are not certified identical archived execution or exact APSR source. UI event retention is bounded; terminal Inspect retains completed, censored and queued events separately.';
++
++const FIELD_HELP: Record<string,string> = {
++  width:'Bounded lattice width in primitive cells; 50 in the source baseline.',
++  height:'Bounded lattice height in primitive cells; 50 in the source baseline.',
++  initial_states:'Founder governments grown before competition; 200 on the baseline lattice.',
++  initialization_periods:'Initial competition before measurement and technological change; 500 source periods by default.',
++  observation_periods:'Periods after initialization; source horizon is initialization plus observation (10500 by default).',
++  periods_per_tick:'Whole source periods per display tick; the final tick can contain fewer periods.',
++  resource_adjustment:'Fraction of the next extraction/damage target applied each period; source default .01.',
++  mobile_share:'Share allocated as contingent mobile commitments. Passive-front plans are not an additive budget.',
++  campaign_drop_probability:'Chance of dropping a retained campaign at the selected timing; source default .2.',
++  attack_probability:'Chance of contemplating an unprovoked attack while inactive; contextual activation is separate.',
++  deactivation_probability:'Chance of leaving alert status after neighborhood fighting disappears.',
++  superiority_threshold:'Local projected resource advantage giving attack probability .5.',
++  victory_threshold:'Attacker resource advantage giving victory probability .5; defender reading is separate.',
++  superiority_exponent:'Steepness of the probabilistic attack threshold; source default20.',
++  victory_exponent:'Steepness of the probabilistic victory threshold; source default20.',
++  damage_fraction:'Abstract resource damage fraction, independent of its incidence and amount basis. Not battle deaths.',
++  distance_offset:'Long-distance floor for extraction/projection; source default .1.',
++  distance_threshold:'Initial distance threshold in primitive-cell units; source default2.',
++  distance_exponent:'Steepness of the distance curve; source default3.',
++  shock_probability:'Independent per-state chance of catching up to the current technology frontier.',
++  shock_shift:'Total frontier shift across observation periods. Zero disables technological change.',
++  war_shadow:'Persistence after fighting, measured in source periods; source default20.',
++  context_activation:'Alert states contemplate attacks after own or neighboring fighting; disabling is a source treatment.',
++  event_log:'Retain a bounded UI trace. Full terminal war census and the last structural event remain separately available.',
++  event_log_limit:'Maximum retained UI events; events beyond the limit are counted as dropped. This is not the scientific census size.',
++  topology:'Bounded is the source reading; torus is an unmeasured alternative.',
++  founder_growth:'Ordered round-robin is the attributed formation reading; shuffled ordering is unmeasured.',
++  initial_capacity:'Extracted capacity is the paper reconstruction; random100/1 is a later-port initialization reading.',
++  distance_metric:'Euclidean is the source reading; Manhattan is a registered reading control.',
++  distance_formula:'Decreasing is the implemented/source interpretation; printed-increasing exposes the printed-sign ambiguity.',
++  enemy_total:'Active-front opposing commitments form the source denominator; all fronts is a reading control.',
++  initiation_guard:'Literal precedence follows p.148 pseudocode; global no-action is the later-port guard and a reading control.',
++  campaign_drop_timing:'Each decision is the later-port-supported timing; after battle is an unmeasured reading of Table A1 wording.',
++  path_sampling:'Target first follows APSR p.148; attacker first is attributed to the predecessor and a reading control.',
++  attack_projection:'Respective state curves are the paper reading; initiator curve uses the later-port threshold on both own-government distances.',
++  damage_basis:'Opponent projected resources are the attributed default amount; own commitment exposes literal local-cost wording.',
++  damage_feedback:'Subtract losses follows the paper resource equation; add losses exposes the later-port sign convention.',
++  damage_incidence:'Attacked party is the Table A1/resource/port reading; acting party exposes conflicting p.148 wording and is unmeasured.',
++  severity_damage:'All damaged fronts is the paper aggregation reading; mutual-only exposes the later-port severity branch.',
++  victory_draws:'Independent draws with defender priority are supported by the later port; exclusive resolution is a reading control.',
++  defender_threshold:'Reciprocal follows explicit APSR p.148 defense advantage. Same threshold is an unmeasured reconstruction.',
++  capital_capture:'Capture and fragment is supported by the predecessor/later port; collapse-only exposes the APSR capital wording.',
++  locking:'Affected-cell locking is the source reconstruction; affected-state locking is a reading control.',
++  technology_inheritance:'Reset on reemergence is the paper reconstruction; retain own-cell threshold is the later-port reading, unmeasured separately.',
++  cluster_linkage:'Conflict edges implement the source aggregation; adjacent active states is a reading control.',
++  retired_participants:'Retain shadow is the paper reconstruction; drop immediately is the later-port reading, unmeasured separately.',
++  count_boundary:'After initialization starts measurement at501; at initialization starts at500 as in the later port. Boundary choice is unmeasured separately.',
++  severity_export:'Raw damage is the source reconstruction; Java integer100 applies truncation/saturation and reports zero/saturated events.',
++  completed_export:'All completed preserves the full census; one per period exposes the later-port FIFO backlog. No horizon flush.',
++  numerical_policy:'Reject nonpositive preserves explicit invalidity; floor-zero is a partial port reading. Neutral zero/zero handling is not certified artifact-equivalent.',
++};
++/** Add model-specific guidance without changing core bounds, choices or reset semantics. */
++export function geosimParams(params: import('./types').Param[]): import('./types').Param[] {
++  return params.map(p=>({...p,help:FIELD_HELP[p.path] ?? p.help}));
++}
+diff --git a/web/src/models.ts b/web/src/models.ts
+index 0c70c2b3ef58272b72e247c127b21d9114206c37..7c4bf47000b5a4e172d73af0027089a6ee30f8bd 100644
+--- a/web/src/models.ts
++++ b/web/src/models.ts
+@@ -8,6 +8,8 @@ import type {
+   FirmsConfig,
+   FirmsInspection,
+   CollusionConfig,
++  GeosimConfig,
++  GeosimInspection,
+   PolarityConfig,
+   PolarityInspection,
+   AuctionsConfig,
+@@ -60,7 +62,7 @@ import type {
+   TagsInspection,
+ } from './types';
+ 
+-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity'];
++export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity', 'geosim'];
+ 
+ /** The presets menu's group labels. */
+ export const MODEL_LABELS: Record<ModelKind, string> = {
+@@ -94,12 +96,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
+   collusion: 'Algorithmic Collusion',
+   auctions: 'Q-learning Auctions',
+   polarity: 'Emergent Polarity',
++  geosim: 'GeoSim: The Size of Wars',
+ };
+ 
+ /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
+ export function modelOf(c: ModelConfig): ModelKind {
+   const tag = (c as { model?: unknown }).model;
+-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity'
++  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity' || tag === 'geosim'
+     ? tag
+     : 'sugarscape';
+ }
+@@ -269,6 +272,10 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
+  * last generation); Infinity for a model that never finishes.
+  */
+ export function ticksLeft(c: ModelConfig, tick: number): number {
++  if (modelOf(c) === 'geosim') {
++    const g = c as GeosimConfig;
++    return Math.max(0, Math.ceil((g.initialization_periods + g.observation_periods) / g.periods_per_tick) - tick);
++  }
+   if (modelOf(c) === 'polarity') {
+     const p = c as PolarityConfig;
+     return Math.max(0, Math.ceil(p.horizon / p.periods_per_tick) - tick);
+@@ -673,6 +680,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
+     ['effort', 'Effort'],
+     ['income', 'Income'],
+   ],
++  geosim: [['territory', 'Ownership'], ['capacity', 'Resource capacity'], ['technology', 'Technology'], ['alert', 'Alert and campaign'], ['wars', 'War membership']],
+   polarity: [['territory', 'Territory'], ['resources', 'Resources'], ['strategy', 'Latent strategy'], ['coalitions', 'Coalitions']],
+   auctions: [['bids', 'Bids · whole run'], ['late', 'Bids · final 20%'], ['values', 'Values']],
+   // Each firm's strategy map: price or how often each state was visited.
+@@ -713,6 +721,7 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
+   firms: [],
+   // Each firm's strategy map: price or how often each state was visited.
+   collusion: [],
++  geosim: [],
+   polarity: [],
+   auctions: [],
+ };
+@@ -720,3 +729,7 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
+ export function isPolarityView(v: AnyInspection): v is PolarityInspection {
+   return 'model' in v && v.model === 'polarity';
+ }
++
++export function isGeosimView(v: AnyInspection): v is GeosimInspection {
++  return 'model' in v && v.model === 'geosim';
++}
+diff --git a/web/src/node-shims.d.ts b/web/src/node-shims.d.ts
+index eacc540d9d4405e30520fbf860743df4d37b5cfd..8c2b4c5c6c6b35039af0124c9bf9b8ab7866918e 100644
+--- a/web/src/node-shims.d.ts
++++ b/web/src/node-shims.d.ts
+@@ -2,6 +2,7 @@
+ declare module 'node:fs' {
+   export function readFileSync(path: URL): Uint8Array<ArrayBuffer>;
+   export function readFileSync(path: string, encoding: 'utf8'): string;
++  export function mkdirSync(path: string, options: { recursive: boolean }): string | undefined;
+   export function mkdtempSync(prefix: string): string;
+   export function existsSync(path: string): boolean;
+   export function writeFileSync(path: string, data: string): void;
+diff --git a/web/src/types.ts b/web/src/types.ts
+index e5cf53394594c12d2ba0b2f14e1949ee28512b1c..e324439527fed0870a5ca7aa56740d3fa858e99d 100644
+--- a/web/src/types.ts
++++ b/web/src/types.ts
+@@ -256,7 +256,7 @@ export interface Config {
+ }
+ 
+ /** The models the playground runs (milestones 9–13). */
+-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity';
++export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity' | 'geosim';
+ 
+ /** A fraction range (Schelling's preferences). */
+ export interface FRange { min: number; max: number }
+@@ -675,7 +675,7 @@ export interface AgreementConfig {
+   stop_at: number;
+ }
+ 
+-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig;
++export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig | GeosimConfig;
+ 
+ /**
+  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
+@@ -1473,7 +1473,7 @@ export interface AgreementStats {
+   stable_at: number;
+ }
+ 
+-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats;
++export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats | GeosimStats;
+ 
+ export interface SiteView {
+   x: number;
+@@ -2214,7 +2214,7 @@ export interface AgreementInspection {
+   agent: null;
+ }
+ 
+-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection;
++export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection | GeosimInspection;
+ 
+ /**
+  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
+@@ -2224,6 +2224,10 @@ export type AnyInspection = Inspection | SchellingInspection | RingInspection |
+  * `payoff`.
+  */
+ export type ColorMode =
++  | 'capacity'
++  | 'technology'
++  | 'alert'
++  | 'wars'
+   | 'territory'
+   | 'resources'
+   | 'coalitions'
+@@ -2390,3 +2394,83 @@ export interface PolarityInspection {
+   trust: unknown; threat: number | null; coalition: PolarityCoalition | null; foreign_fronts: unknown; domestic_fronts: unknown; last_event: unknown;
+   agent: null;
+ }
++
++/** Resolved GeoSim readings; alternative values remain serialized even when inactive. */
++export interface GeosimConfig {
++  model: 'geosim'; width: number; height: number; initial_states: number;
++  initialization_periods: number; observation_periods: number; periods_per_tick: number;
++  resource_adjustment: number; mobile_share: number; campaign_drop_probability: number;
++  attack_probability: number; deactivation_probability: number; superiority_threshold: number;
++  victory_threshold: number; superiority_exponent: number; victory_exponent: number;
++  damage_fraction: number; distance_offset: number; distance_threshold: number; distance_exponent: number;
++  shock_probability: number; shock_shift: number; war_shadow: number; context_activation: boolean;
++  event_log: boolean; event_log_limit: number;
++  topology: 'bounded' | 'torus'; founder_growth: 'ordered_round_robin' | 'shuffled_round_robin';
++  initial_capacity: 'extracted_capacity' | 'artifact_random_100_1'; distance_metric: 'euclidean' | 'manhattan';
++  distance_formula: 'decreasing' | 'printed_increasing'; enemy_total: 'active_fronts' | 'all_fronts';
++  initiation_guard: 'literal_precedence' | 'global_no_action'; campaign_drop_timing: 'each_decision' | 'after_battle';
++  path_sampling: 'target_first' | 'attacker_first'; attack_projection: 'respective_states' | 'initiator_curve';
++  damage_basis: 'opponent_projected' | 'own_commitment'; damage_feedback: 'subtract_losses' | 'add_losses';
++  damage_incidence: 'attacked_party' | 'acting_party'; severity_damage: 'all_damaged_fronts' | 'mutual_only';
++  victory_draws: 'independent_defender_priority' | 'exclusive'; defender_threshold: 'reciprocal' | 'same_threshold';
++  capital_capture: 'capture_and_fragment' | 'collapse_only'; locking: 'affected_cells' | 'affected_states';
++  technology_inheritance: 'reset_on_reemergence' | 'retain_cell_threshold';
++  cluster_linkage: 'conflict_edges' | 'adjacent_active_states'; retired_participants: 'retain_shadow' | 'drop_immediately';
++  count_boundary: 'after_initialization' | 'at_initialization'; severity_export: 'raw_damage' | 'java_int100';
++  completed_export: 'all_completed' | 'one_per_period'; numerical_policy: 'reject_nonpositive' | 'floor_zero';
++}
++export interface GeosimStateId { capital_cell: number; sovereignty_generation: number }
++export interface GeosimCell { id: number; owner: GeosimStateId; last_threshold: number | null; next_generation: number }
++export interface GeosimState {
++  id: GeosimStateId; capacity: number | null; threshold: number | null; alert: boolean;
++  campaign: GeosimStateId | null; previous_damage: number | null; newly_independent: boolean;
++  extracted_yield: number | null; recurrence_residual: number | null;
++}
++export interface GeosimFront {
++  states: [GeosimStateId, GeosimStateId]; previous: [boolean,boolean]; actions: [boolean,boolean];
++  old_commitments: [number | null,number | null]; commitments: [number | null,number | null];
++  path: [number,number] | null; initiator: number | null; last_damage: [number | null,number | null];
++  last_victory_probabilities: [number | null,number | null];
++}
++export interface GeosimWar {
++  id: number; parents: number[]; start_period: number; end_period: number | null;
++  last_active_period: number; active_periods: number; elapsed_periods: number;
++  raw_severity: number | null; exported_severity: number | null;
++  participants: {state: GeosimStateId; last_fighting_period: number}[];
++  end_cause: string | null; java_saturated: boolean; java_subunit_zero: boolean; fighting_periods: number[];
++}
++export interface GeosimEvent { id: number; period: number; kind: string; states: GeosimStateId[]; cells: number[] }
++export interface GeosimResourceUpdate {
++  state: GeosimStateId; period: number; old_capacity: number | null; extracted_yield: number | null;
++  applied_damage: number | null; target_capacity: number | null; new_capacity: number | null;
++  clipping: number | null; residual: number | null; reset: boolean;
++}
++export interface GeosimLedger {
++  attacks: number; fighting_front_periods: number; mutual_front_periods: number; conquests: number;
++  collapses: number; disconnections: number; stale_claims: number; locked_claims: number; double_successes: number;
++  path_collisions: number; shocks: number; damage: number | null; measured_damage: number | null;
++  capacity_increase: number | null; capacity_decrease: number | null; clipping: number | null;
++  retirement_capacity: number | null; reemergence_capacity: number | null; recurrence_residual: number | null;
++}
++export interface GeosimOutcome {
++  config: Omit<GeosimConfig, 'model'>; seed: number; rng_mode: string; periods: number; attempted_period: number;
++  counting_start: number; valid: boolean; state_available: boolean; finish_reason: string; invalid_reason: string | null;
++  completed_wars: GeosimWar[]; censored_wars: GeosimWar[]; legacy_visible_wars: GeosimWar[];
++  exporter_backlog: GeosimWar[]; merges: {period: number; survivor: number; absorbed: number}[];
++  retired_states: GeosimStateId[]; sovereign_count: number; states: GeosimState[]; cells: GeosimCell[];
++  ledger: GeosimLedger; fronts: GeosimFront[]; resource_updates: GeosimResourceUpdate[];
++  partial_period_fights: [GeosimStateId, GeosimStateId, number | null][];
++}
++export interface GeosimStats {
++  tick: number; period: number; periods: number; attempted_period: number; last_tick_periods: number;
++  sovereign_count: number; total_capacity: number | null; largest_territory: number; alerted_states: number;
++  mean_threshold: number | null; completed_wars: number; active_wars: number; collector_backlog: number;
++  damage: number | null; conquests: number; shocks: number; finish_reason: string | null; invalidity: string | null;
++}
++export interface GeosimInspection {
++  model: 'geosim'; cell: GeosimCell; state: GeosimState; members: number[]; distance: number | null;
++  projection: number | null; resource_recurrence: GeosimResourceUpdate | null; fronts: GeosimFront[];
++  wars: GeosimWar[]; period: number; periods: number; attempted_period: number; counting_start: number;
++  finish_reason: string | null; invalidity: string | null; outcome: GeosimOutcome | null;
++  last_structural_event: GeosimEvent | null; events: GeosimEvent[]; events_dropped: number; agent: null;
++}
+diff --git a/web/src/ui/charts-panel.ts b/web/src/ui/charts-panel.ts
+index 91b115cb6f4b99eb53d83294ca6bae8410014d7b..db15febfe83da9d8302a25c88ec5fb04f4ce317a 100644
+--- a/web/src/ui/charts-panel.ts
++++ b/web/src/ui/charts-panel.ts
+@@ -1,3 +1,4 @@
++import { geosimChartCaption } from '../geosim';
+ import { polarityChartCaption } from '../polarity';
+ import { auctionChartCaption, auctionChartLines } from '../auctions';
+ import uPlot from 'uplot';
+@@ -8,7 +9,7 @@ import { cachingOn, calendarYear, pilferingOn, watcherSplit, watchingOn } from '
+ import { winterBands } from '../minds';
+ import { hasPatches } from '../patches';
+ import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
+-import type { AuctionsConfig, PolarityConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
++import type { AuctionsConfig, GeosimConfig, PolarityConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
+ import { h } from './dom';
+ import { compactNumber } from './format';
+ import {
+@@ -669,7 +670,9 @@ export class ChartsPanel {
+       const good = p.def.good;
+       const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
+       p.caption.textContent =
+-        p.def.model === 'polarity'
++        p.def.model === 'geosim'
++          ? geosimChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'geosim').map((w) => w.config as GeosimConfig))
++          : p.def.model === 'polarity'
+           ? polarityChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'polarity').map((w) => w.config as PolarityConfig))
+           : p.def.model === 'auctions'
+           ? auctionChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'auctions').map((w) => w.config as AuctionsConfig))
+diff --git a/web/src/ui/grid-view.ts b/web/src/ui/grid-view.ts
+index fd3cb8166007b2570fd656e49ed8335886a7ab9f..896e8d856b4012cd5e129d0872fec08ac1004259 100644
+--- a/web/src/ui/grid-view.ts
++++ b/web/src/ui/grid-view.ts
+@@ -1,9 +1,10 @@
++import { geosimLegend } from '../geosim';
+ import { polarityLegend } from '../polarity';
+ import { auctionLegend } from '../auctions';
+ import type { Engine } from '../engine';
+ import { isSugarView } from '../models';
+ import { NETWORKS, type NetworkOverlay } from '../protocol';
+-import type { AgentView, AuctionsConfig, AuctionsStats, PolarityConfig, PolarityStats, HoardConfig } from '../types';
++import type { AgentView, GeosimConfig, GeosimStats, AuctionsConfig, AuctionsStats, PolarityConfig, PolarityStats, HoardConfig } from '../types';
+ import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
+ import { cacheSize, cacheSummary, compartmentName, isCheaterOnly, isLarder, labStatus } from '../minds';
+ import { h } from './dom';
+@@ -272,7 +273,8 @@ export class GridView {
+     const hoard = this.engine.model === 'hoard';
+     const auction = this.engine.model === 'auctions' ? auctionLegend(this.engine.config as AuctionsConfig, this.engine.colorMode, (this.engine.latest as AuctionsStats | null)?.periods ?? 0) : null;
+     const polarity = this.engine.model === 'polarity' ? polarityLegend(this.engine.config as PolarityConfig, this.engine.colorMode, (this.engine.latest as PolarityStats | null)?.periods ?? 0) : null;
+-    const status = polarity ?? (auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '');
++    const geosim = this.engine.model === 'geosim' ? geosimLegend(this.engine.config as GeosimConfig, this.engine.colorMode, (this.engine.latest as GeosimStats | null)?.periods ?? 0) : null;
++    const status = geosim ?? polarity ?? (auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '');
+     const items = auction ? auction.items : sugar
+       ? [...colorLegend(this.engine.colorMode, this.engine.sugar), ...overlayLegend(marks, this.engine.sugar)]
+       : hoard
+diff --git a/web/src/ui/inspect-panel.ts b/web/src/ui/inspect-panel.ts
+index 4eb3c6a5d0537e0c033315e39deede7b1c337aa2..3ccb32b891db9ca7ffd21f18c7bc7a7f114db74d 100644
+--- a/web/src/ui/inspect-panel.ts
++++ b/web/src/ui/inspect-panel.ts
+@@ -1,3 +1,4 @@
++import { geosimRows } from '../geosim';
+ import { polarityRows } from '../polarity';
+ import { auctionRows } from '../auctions';
+ import { citizenRows, shownCitizen } from '../civil';
+@@ -6,7 +7,7 @@ import type { Engine } from '../engine';
+ import { ethnoRows } from '../ethno';
+ import { imageRows } from '../image-scoring';
+ import { hoardStatusText } from '../hoard';
+-import { hasCaches, isPolarityView, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
++import { hasCaches, isGeosimView, isPolarityView, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+ import { playerRows } from '../spatial';
+ import type {
+   AgentView,
+@@ -823,7 +824,9 @@ export class InspectPanel {
+             : `Agent #${shown.agentId} has left.`;
+       const note = gone ? [h('p', { class: 'error' }, left)] : [];
+       // First: an empty ethnocentrism or demographic PD site is shaped like an empty Schelling site.
+-      const rows = isPolarityView(view)
++      const rows = isGeosimView(view)
++        ? geosimRows(view).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
++        : isPolarityView(view)
+         ? polarityRows(view).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
+         : isHoardView(view)
+         ? this.hoardRows(view)
+diff --git a/web/src/ui/schema-panel.ts b/web/src/ui/schema-panel.ts
+index a009eb51f689b77df82006e64a115e2cc6516654..56f56f342e2702e8f6f87404922b10469818a337 100644
+--- a/web/src/ui/schema-panel.ts
++++ b/web/src/ui/schema-panel.ts
+@@ -1,3 +1,4 @@
++import { GEOSIM_RULES, geosimParams } from '../geosim';
+ import { scheduleLines } from '../civil';
+ import type { Engine } from '../engine';
+ import { errorsFor } from '../paths';
+@@ -63,12 +64,13 @@ export class SchemaPanel {
+     this.syncers = [];
+     this.slots = [];
+     this.errors = [];
+-    const sections = groupParams(this.engine.schemas[model] ?? []).map(({ group, params }) => {
++    const params = this.engine.schemas[model] ?? [];
++    const sections = groupParams(model === 'geosim' ? geosimParams(params) : params).map(({ group, params }) => {
+       const section = h('section', { class: 'group' }, h('h3', {}, group), h('p', { class: 'hint' }, note(params)), ...params.map((p) => this.control(p)));
+       if (params.every((p) => p.show_if)) this.syncers.push(() => (section.hidden = !params.some((p) => paramShown(p, this.engine.config))));
+       return section;
+     });
+-    const extra = model === 'anasazi' ? [valleyCredit()] : [];
++    const extra = model === 'anasazi' ? [valleyCredit()] : model === 'geosim' ? [h('p', { class: 'hint' }, GEOSIM_RULES)] : [];
+     const schedule = model === 'civil' ? [this.schedule()] : [];
+     this.el.replaceChildren(...extra, this.general, ...sections, ...schedule);
+     this.renderErrors();
+diff --git a/web/src/ui/series-data.ts b/web/src/ui/series-data.ts
+index 63152eb4815fe0aeb50968824535391934b9db4c..fefae16b54606f9c6bf266ff39e45acd833a7c4c 100644
+--- a/web/src/ui/series-data.ts
++++ b/web/src/ui/series-data.ts
+@@ -786,6 +786,13 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
+   ],
+   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
+   hoard: [],
++  geosim: [
++    { title: 'Governments and territory', lines: [{key:'sovereign_count',label:'Sovereign governments',color:'--c1'}, {key:'largest_territory',label:'Largest territory (cells)',color:'--c2'}] },
++    { title: 'Resources and technology', lines: [{key:'total_capacity',label:'Total resource capacity',color:'--c1'}, {key:'mean_threshold',label:'Mean technology threshold',color:'--c2'}] },
++    { title: 'War census', lines: [{key:'completed_wars',label:'Completed clusters',color:'--c1'}, {key:'active_wars',label:'Active clusters (censored at termination)',color:'--red'}, {key:'collector_backlog',label:'Completed awaiting export',color:'--c2'}] },
++    { title: 'Abstract conflict damage', lines: [{key:'damage',label:'Cumulative resource damage',color:'--red'}] },
++    { title: 'Source clock', lines: [{key:'periods',label:'Completed source periods',color:'--c1'}, {key:'last_tick_periods',label:'Periods in last display tick',color:'--c2'}] },
++  ],
+   polarity: [
+     { title: 'Polarity', lines: [{ key: 'sovereign_count', label: 'Sovereign states (tick end)', color: '--c1' }, { key: 'largest_territory', label: 'Largest territory', color: '--c2' }, { key: 'second_largest_territory', label: 'Second largest', color: '--c3' }] },
+     { title: 'Resources', lines: [{ key: 'total_stock', label: 'Total stock (tick end)', color: '--c1' }, { key: 'capital_stock', label: 'Capital stock', color: '--c2' }, { key: 'province_stock', label: 'Province stock', color: '--c3' }] },
+diff --git a/web/src/valley.ts b/web/src/valley.ts
+index c90f5278c16d39d531b51b75c936f9e2462135e7..1da5a91d6b009b65efdb7b613d447bdfe637a2c5 100644
+--- a/web/src/valley.ts
++++ b/web/src/valley.ts
+@@ -54,7 +54,7 @@ export interface ReadoutWorld { config: ModelConfig; tick: number; population: n
+  * households (`AD 1142 · 213 households`); in Compare both worlds' counts.
+  */
+ export function readoutText(a: ReadoutWorld, b: ReadoutWorld | null): string {
+-  if (modelOf(a.config) === 'polarity') {
++  if (modelOf(a.config) === 'polarity' || modelOf(a.config) === 'geosim') {
+     const periods = (w: ReadoutWorld) => (w.latest as PolarityStats | null)?.periods ?? 0;
+     return b ? `t = ${a.tick} · A ${periods(a)} periods, ${a.population} · B ${periods(b)} periods, ${b.population} sovereign governments` : `t = ${a.tick} · ${periods(a)} periods · ${a.population} sovereign governments`;
+   }

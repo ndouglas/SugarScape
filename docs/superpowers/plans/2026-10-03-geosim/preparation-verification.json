@@ -1,0 +1,142 @@
+{
+  "classification": "verified_plan_preparation_only",
+  "product_head": "1d5d1cc",
+  "source_only_base": "4ab07d31fedc7e8f3cf35a36252da71218668fce",
+  "source_inventory_count": 325,
+  "source_inventory_sha256": "a2695f217568a08ed370a0ab5a7f0581dc58acce33b615037fde760a13cfdae8",
+  "registered_history_rows": 0,
+  "registered_fits": 0,
+  "frozen_validation": {
+    "classification": "all_registered_configs_validation_no_periods",
+    "manifest_sha256": "c984743ce12f3a2433221a43f6db04e7b43f33e5f022a3e1f581b128f5d82cc2",
+    "source_inventory_sha256": "a2695f217568a08ed370a0ab5a7f0581dc58acce33b615037fde760a13cfdae8",
+    "resolved_sha256": "ab253c1bab7a89b7d564d164818c4b4a633e2ab3578ee8715054dc905d1ec3c3",
+    "build_receipt_sha256": "64464e6c92602fac1e1b98ef1cbd85d35d90bee61a5c7eb8268bdcc4f5a7f294",
+    "binary_sha256": "b481e125cfdd2bcc9cccf3c8281d9066c12057574a6bb1b963ae1be5f9276d2b",
+    "arm_count": 37,
+    "key_count": 1490,
+    "jsonl_created": false,
+    "stdout": "validated 37 arms/1490 keys without world construction; provenance=frozen\n",
+    "stderr": ""
+  },
+  "unregistered_runtime_only": {
+    "classification": "unregistered_runtime_only_no_fit",
+    "seed": 3922052003,
+    "elapsed_seconds": 5.547427290119231,
+    "ru_maxrss": 43417600,
+    "ru_maxrss_platform": "Darwin",
+    "attempt_status": "completed",
+    "periods": 10500,
+    "attempted_period": 10500,
+    "finish_reason": "horizon",
+    "stdout": "",
+    "stderr": ""
+  },
+  "checks": {
+    "workspace_tests": {
+      "passed": 1963,
+      "failed": 0,
+      "ignored": 102
+    },
+    "web_tests": {
+      "passed": 941,
+      "files": 62
+    },
+    "wasm_tests": {
+      "passed": 79
+    },
+    "native_protocol_tests": {
+      "passed": 21,
+      "wall_seconds": 4.230719
+    },
+    "python_protocol_tests": {
+      "passed": 92,
+      "wall_seconds": 2.255
+    },
+    "strict_clippy_fmt_diff": "passed",
+    "browser_smoke": "passed",
+    "native_wasm_source_and_artifact_parity": "120periods_each_passed"
+  },
+  "evidence": [
+    {
+      "path": "survey/out/geosim-preparation-frozen-manifest.json",
+      "bytes": 96684,
+      "sha256": "c984743ce12f3a2433221a43f6db04e7b43f33e5f022a3e1f581b128f5d82cc2"
+    },
+    {
+      "path": "survey/out/geosim-preparation-build-receipt.json",
+      "bytes": 1219,
+      "sha256": "64464e6c92602fac1e1b98ef1cbd85d35d90bee61a5c7eb8268bdcc4f5a7f294"
+    },
+    {
+      "path": "survey/out/geosim-preparation-resolved.json",
+      "bytes": 143778,
+      "sha256": "ab253c1bab7a89b7d564d164818c4b4a633e2ab3578ee8715054dc905d1ec3c3"
+    },
+    {
+      "path": "survey/out/geosim-preparation-validation-receipt.json",
+      "bytes": 700,
+      "sha256": "1175331db1d5544b0a1459c295d095064f30556f9a8eeefeb948791135310d33"
+    },
+    {
+      "path": "survey/out/geosim-preparation-runtime-manifest.json",
+      "bytes": 86535,
+      "sha256": "9e8c9d054aa9a722eb63f6b55b2e5fcbfb8260b687996e22df0b3b3647a9a208"
+    },
+    {
+      "path": "survey/out/geosim-preparation-runtime-build-receipt.json",
+      "bytes": 1219,
+      "sha256": "04e630f0c3aba460987b9ef2443bb1a34c4bd74e571a2e90a686142eaf21f02c"
+    },
+    {
+      "path": "survey/out/geosim-preparation-runtime-resolved.json",
+      "bytes": 4436,
+      "sha256": "bf7e7687cd37bd142e82fd1dfaf30fb8706a158d70c4e6df12e1ecf4165778ac"
+    },
+    {
+      "path": "survey/out/geosim-preparation-runtime-only.jsonl",
+      "bytes": 1198060,
+      "sha256": "20600e8aa43f6c1e96b1d0e2ea5638d49bb8e3ccef67d2dc80186bc4f57ac823"
+    },
+    {
+      "path": "survey/out/geosim-preparation-runtime-receipt.json",
+      "bytes": 324,
+      "sha256": "68609576f60335432770c72263dd59e95990294db7c73de75992c7dc7ddced01"
+    },
+    {
+      "path": "survey/out/geosim-browser-smoke-receipt.json",
+      "bytes": 1027,
+      "sha256": "728e8ed5c54306ad4ba703d8e695a945d1da175dd0c74f8fd5c909f2c5a02123"
+    },
+    {
+      "path": "survey/out/geosim-core-scratch-report.md",
+      "bytes": 10825,
+      "sha256": "4b69304ebf5f057082c921f481b4579f64e87f41d601f8a7183afea9556edfa4"
+    },
+    {
+      "path": "survey/out/geosim-core-portability-report.md",
+      "bytes": 6807,
+      "sha256": "dfbf71e23f38da1815a057a47635aedb9bc0d4c8ca9f50f35c923c3735c6379f"
+    },
+    {
+      "path": "survey/out/geosim-core-validity-report.md",
+      "bytes": 4343,
+      "sha256": "bf3c10271855dd6e424f8bec4313cbef3c72b5b348ff3735a517c357a8e2a583"
+    },
+    {
+      "path": "survey/out/geosim-host-scratch-report.md",
+      "bytes": 16324,
+      "sha256": "530aa276e61754fe310ff710ead91294b6f9ca2fb7f45f912e49ce7017e98982"
+    },
+    {
+      "path": "survey/out/geosim-protocol-native-report.md",
+      "bytes": 9633,
+      "sha256": "60e7d78e3146c103da96481753286a35a7f6392bc1127eb33b60b2b1c775f00f"
+    },
+    {
+      "path": "survey/out/geosim-protocol-scratch-report.md",
+      "bytes": 16832,
+      "sha256": "e221404d541893b3b764055195b65967ffcfb4c20c9a1f1f837f217ace0621ce"
+    }
+  ]
+}
