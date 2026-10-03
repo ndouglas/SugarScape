@@ -1559,6 +1559,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::hoard::presets());
     out.extend(crate::collusion::presets());
     out.extend(crate::auctions::presets());
+    out.extend(crate::polarity::presets());
     out
 }
 

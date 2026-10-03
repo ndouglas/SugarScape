@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 410] = [
+pub const TITLES: [(&str, &str); 416] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1566,6 +1566,13 @@ pub const TITLES: [(&str, &str); 410] = [
         "collusion-below-nash",
         "On a grid with no room above Nash, prices settle at the top",
     ),
+    ("polarity-original", "Predators contest a world of independent governments"),
+    ("polarity-defense", "A stronger defense changes the struggle for territory"),
+    ("polarity-alliances", "Threatened neighbors can form defensive coalitions"),
+    ("polarity-pra", "Governments direct resources toward hostile fronts"),
+    ("polarity-two-level", "Provincial revolts challenge expanding governments"),
+    ("polarity-overextension", "Uncertain victories can limit territorial expansion"),
+
 ];
 
 /// The title of preset `id`, or "" if it has none.

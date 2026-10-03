@@ -124,6 +124,13 @@ const GOLDEN: &[(&str, u64)] = &[
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
 const MODEL_GOLDEN: &[(&str, u64)] = &[
+    // Polarity reconstruction: source-labelled presets, 200 ticks from seed 1.
+    ("polarity-original", 0x489849cf252544a3),
+    ("polarity-defense", 0x6c55f6f41448e503),
+    ("polarity-alliances", 0x93f744fba37cb327),
+    ("polarity-pra", 0xd1b184350e70d728),
+    ("polarity-two-level", 0x999de30e70e8da90),
+    ("polarity-overextension", 0x5a75f9a4214f4e17),
     ("s71-board", 0x8be271afb20afb6f),
     ("s71-center-out", 0x4d984d3877efd40e),
     ("s71-third", 0x1ad27c86391e5a56),

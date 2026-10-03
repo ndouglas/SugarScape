@@ -24,6 +24,7 @@ use crate::image::{ImageConfig, ImageWorld};
 use crate::line::{LineConfig, LineWorld};
 use crate::norms::{NormsConfig, NormsWorld};
 use crate::opinions::{OpinionsConfig, OpinionsWorld};
+use crate::polarity::{PolarityConfig, PolarityWorld};
 use crate::punishment::{PunishmentConfig, PunishmentWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::retirement::{RetirementConfig, RetirementWorld};
@@ -76,10 +77,11 @@ pub enum ModelKind {
     Firms,
     Collusion,
     Auctions,
+    Polarity,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 29] = [
+    pub const ALL: [ModelKind; 30] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -109,6 +111,7 @@ impl ModelKind {
         ModelKind::Firms,
         ModelKind::Collusion,
         ModelKind::Auctions,
+        ModelKind::Polarity,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -142,6 +145,7 @@ impl ModelKind {
             ModelKind::Firms => "firms",
             ModelKind::Collusion => "collusion",
             ModelKind::Auctions => "auctions",
+            ModelKind::Polarity => "polarity",
         }
     }
 
@@ -178,6 +182,7 @@ impl ModelKind {
             ModelKind::Firms => crate::firms::schema(),
             ModelKind::Collusion => crate::collusion::schema(),
             ModelKind::Auctions => crate::auctions::schema(),
+            ModelKind::Polarity => crate::polarity::schema(),
         }
     }
 }
@@ -220,6 +225,7 @@ pub enum ModelConfig {
     Firms(FirmsConfig),
     Collusion(CollusionConfig),
     Auctions(AuctionsConfig),
+    Polarity(PolarityConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -254,6 +260,7 @@ enum Tagged<'a> {
     Firms(&'a FirmsConfig),
     Collusion(&'a CollusionConfig),
     Auctions(&'a AuctionsConfig),
+    Polarity(&'a PolarityConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -295,6 +302,7 @@ impl Serialize for ModelConfig {
             ModelConfig::Firms(c) => Tagged::Firms(c).serialize(s),
             ModelConfig::Collusion(c) => Tagged::Collusion(c).serialize(s),
             ModelConfig::Auctions(c) => Tagged::Auctions(c).serialize(s),
+            ModelConfig::Polarity(c) => Tagged::Polarity(c).serialize(s),
         }
     }
 }
@@ -331,6 +339,7 @@ impl ModelConfig {
             ModelConfig::Firms(_) => ModelKind::Firms,
             ModelConfig::Collusion(_) => ModelKind::Collusion,
             ModelConfig::Auctions(_) => ModelKind::Auctions,
+            ModelConfig::Polarity(_) => ModelKind::Polarity,
         }
     }
 
@@ -440,6 +449,9 @@ impl ModelConfig {
             "firms" => serde_json::from_value(value)
                 .map(ModelConfig::Firms)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "polarity" => serde_json::from_value(value)
+                .map(ModelConfig::Polarity)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "auctions" => serde_json::from_value(value)
                 .map(ModelConfig::Auctions)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -455,7 +467,7 @@ impl ModelConfig {
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms, collusion or auctions)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms, collusion, auctions or polarity)"
                 ),
             )),
         }
@@ -492,6 +504,7 @@ impl ModelConfig {
             ModelConfig::Firms(c) => c.validate(),
             ModelConfig::Collusion(c) => c.validate(),
             ModelConfig::Auctions(c) => c.validate(),
+            ModelConfig::Polarity(c) => c.validate(),
         }
     }
 
@@ -528,6 +541,7 @@ impl ModelConfig {
             ModelConfig::Firms(c) => set_path(c, path, value).map(ModelConfig::Firms),
             ModelConfig::Collusion(c) => set_path(c, path, value).map(ModelConfig::Collusion),
             ModelConfig::Auctions(c) => set_path(c, path, value).map(ModelConfig::Auctions),
+            ModelConfig::Polarity(c) => set_path(c, path, value).map(ModelConfig::Polarity),
         }
     }
 
@@ -535,6 +549,9 @@ impl ModelConfig {
     /// its own (the anasazi at its end year); `None` when it runs forever.
     pub fn max_ticks(&self) -> Option<u32> {
         match self {
+            ModelConfig::Polarity(c) => {
+                Some(c.horizon.div_ceil(u64::from(c.periods_per_tick)) as u32)
+            }
             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
             ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
             ModelConfig::Ethno(c) => (c.end > 0).then_some(c.end),
@@ -607,6 +624,7 @@ impl ModelConfig {
                 .collect(),
             ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
             ModelConfig::Auctions(c) => crate::auctions::series_names(c.bidders),
+            ModelConfig::Polarity(_) => crate::polarity::series_names(),
             ModelConfig::Collusion(_) => crate::collusion::SERIES
                 .iter()
                 .map(|s| s.to_string())
@@ -809,6 +827,7 @@ pub enum ModelWorld {
     Firms(Box<FirmsWorld>),
     Collusion(Box<CollusionWorld>),
     Auctions(Box<AuctionsWorld>),
+    Polarity(Box<PolarityWorld>),
 }
 
 impl ModelWorld {
@@ -867,6 +886,9 @@ impl ModelWorld {
             ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
             ModelConfig::Hoard(c) => ModelWorld::Hoard(Box::new(HoardWorld::new(c, seed)?)),
             ModelConfig::Firms(c) => ModelWorld::Firms(Box::new(FirmsWorld::new(c, seed)?)),
+            ModelConfig::Polarity(c) => {
+                ModelWorld::Polarity(Box::new(PolarityWorld::new(c, seed)?))
+            }
             ModelConfig::Auctions(c) => {
                 ModelWorld::Auctions(Box::new(AuctionsWorld::new(c, seed)?))
             }
@@ -907,6 +929,7 @@ impl ModelWorld {
             ModelWorld::Firms(_) => ModelKind::Firms,
             ModelWorld::Collusion(_) => ModelKind::Collusion,
             ModelWorld::Auctions(_) => ModelKind::Auctions,
+            ModelWorld::Polarity(_) => ModelKind::Polarity,
         }
     }
 
@@ -941,6 +964,7 @@ impl ModelWorld {
             ModelWorld::Firms(w) => w.as_ref(),
             ModelWorld::Collusion(w) => w.as_ref(),
             ModelWorld::Auctions(w) => w.as_ref(),
+            ModelWorld::Polarity(w) => w.as_ref(),
         }
     }
 
@@ -975,6 +999,7 @@ impl ModelWorld {
             ModelWorld::Firms(w) => w.as_mut(),
             ModelWorld::Collusion(w) => w.as_mut(),
             ModelWorld::Auctions(w) => w.as_mut(),
+            ModelWorld::Polarity(w) => w.as_mut(),
         }
     }
 
@@ -1084,6 +1109,7 @@ impl ModelWorld {
             ModelWorld::Hoard(w) => copy_without_history!(Hoard, w),
             ModelWorld::Firms(w) => copy_without_history!(Firms, w),
             ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
+            ModelWorld::Polarity(w) => copy_without_history!(Polarity, w),
             ModelWorld::Auctions(w) => {
                 let stats = std::mem::take(&mut w.stats);
                 let mut copy = (**w).clone();
@@ -1148,6 +1174,7 @@ impl ModelWorld {
             (ModelWorld::Hoard(live), ModelWorld::Hoard(kept)) => restore_into!(live, kept),
             (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
             (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
+            (ModelWorld::Polarity(live), ModelWorld::Polarity(kept)) => restore_into!(live, kept),
             (ModelWorld::Auctions(live), ModelWorld::Auctions(kept)) => {
                 let mut stats = std::mem::take(&mut live.stats);
                 let len = stats.history().partition_point(|s| s.tick <= kept.tick);
@@ -1610,6 +1637,30 @@ mod tests {
     }
 
     #[test]
+    fn polarity_host_runs_partial_final_tick_and_preserves_endpoint() {
+        let config = ModelConfig::from_json(r#"{"model":"polarity","width":2,"height":2,"predator_share":0,"horizon":15,"periods_per_tick":7}"#).unwrap();
+        assert_eq!(config.max_ticks(), Some(3));
+        let mut world = ModelWorld::new(config.clone(), 1).unwrap();
+        world.model_mut().run(3);
+        let latest: serde_json::Value = serde_json::from_str(&world.model().latest_json()).unwrap();
+        assert_eq!(
+            (
+                latest["periods"].as_u64(),
+                latest["last_tick_periods"].as_u64()
+            ),
+            (Some(15), Some(1))
+        );
+        assert_eq!(world.model().latest_value("sovereign_count"), Some(4.0));
+        let fingerprint = world.model().fingerprint();
+        world.model_mut().run(10);
+        assert_eq!(world.model().fingerprint(), fingerprint);
+        assert!(world
+            .model_mut()
+            .set_config(config.with_path("alliances", &json!(true)).unwrap())
+            .is_err());
+    }
+
+    #[test]
     fn auctions_checkpoint_restores_latest_snapshot_across_truncated_history_gap() {
         let config = ModelConfig::Auctions(crate::auctions::AuctionsConfig {
             horizon: 23,
@@ -1805,7 +1856,8 @@ mod tests {
                 "hoard",
                 "firms",
                 "collusion",
-                "auctions"
+                "auctions",
+                "polarity"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

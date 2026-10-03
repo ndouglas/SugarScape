@@ -35,6 +35,7 @@ pub mod model;
 pub mod network;
 pub mod norms;
 pub mod opinions;
+pub mod polarity;
 pub mod portable;
 pub mod presets;
 pub mod punishment;
