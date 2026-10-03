@@ -353,8 +353,9 @@ seed and remains descriptive. Approved diagnostics/export/obsolete-front/domesti
 repairs preserve original bytes/verdicts and every affected before/after result.
 [Findings and provenance](superpowers/specs/2026-10-02-emergent-polarity-findings.md) and
 [war-study handoff](studies/2026-09-26-war-and-society.md) document the limits.
-Fresh local Rust/native/Python/release WASM/web/typecheck gates passed; independent
-whole-branch review and final integrated CI/Pages publication remain pending.
+Fresh local Rust/native/Python/release WASM/web/typecheck gates, independent
+whole-branch review and rereview, integrated CI and deployed Pages smoke checks passed.
+See the [publication receipt](superpowers/specs/2026-10-03-emergent-polarity-publication.md).
 
 ## Experiments and science
 
