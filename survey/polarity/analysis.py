@@ -1,5 +1,6 @@
 """Offline, preregistered EPM analysis. Uses only Python's standard library."""
 from collections import Counter, defaultdict
+from export_report import serialize_report
 from fractions import Fraction
 from pathlib import Path
 import argparse
@@ -540,7 +541,7 @@ def main():
     records=[json.loads(line) for line in args.sessions.read_text().splitlines() if line.strip()]
     result=report(json.loads(manifest_bytes),json.loads(args.source.read_text()),records,manifest_bytes,json.loads(args.resolved.read_text()))
     args.output.parent.mkdir(parents=True,exist_ok=True)
-    Path(str(args.output)+'.json').write_text(json.dumps(result,indent=2,sort_keys=True,allow_nan=False)+'\n')
+    Path(str(args.output)+'.json').write_text(serialize_report(result))
     Path(str(args.output)+'.md').write_text(markdown_report(result))
     print(f"Retained {len(records)} records; wrote {args.output}.json and {args.output}.md")
 
