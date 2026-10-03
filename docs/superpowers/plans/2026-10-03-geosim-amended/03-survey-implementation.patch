@@ -30,10 +30,10 @@ index 52bf281abecb27c8d20aabefc6fac24880c9ba5f..c7c23e20bff1142338c4814b1c97634f
 +      - run: cargo test --manifest-path survey/Cargo.toml --bin geosim --test geosim_native
 +      - run: python -m unittest discover -s survey/geosim -p 'test_*.py'
 diff --git a/docs/superpowers/specs/2026-10-03-geosim-design.md b/docs/superpowers/specs/2026-10-03-geosim-design.md
-index 974c6820a5ebda30db85263c5b9ea98f1fa99986..715d99482753e45786bb5459b8e738cdbbf4e24a 100644
+index 974c6820a5ebda30db85263c5b9ea98f1fa99986..ef91eca1ced7163fa1dd8daf93310ecd00b19158 100644
 --- a/docs/superpowers/specs/2026-10-03-geosim-design.md
 +++ b/docs/superpowers/specs/2026-10-03-geosim-design.md
-@@ -179,3 +179,13 @@ After written-spec approval, use writing-plans. Follow the approved prior workfl
+@@ -179,3 +179,17 @@ After written-spec approval, use writing-plans. Follow the approved prior workfl
  Completion means all declared arms/keys and source/modern findings are present, including invalid/Unresolved/Insufficient outcomes; scientific rules and raw evidence are preserved; a fresh final reviewer checks source fidelity/protocol/provenance and hosts; all required checks pass; integration receives exact-head CI/Pages and deployed Inspect/Compare/Experiments smoke. Update papers/roadmap/campaign/war-study handoff with findings and measured limits. Remove only owned worktrees after preserving every unique raw/reference/review artifact. Unavailable author docking or empirical source recovery is a reported limitation, not a fabricated success or an indefinite dependency.
  
  **Premeasurement correction — 2026-10-03.** Task 1 review found that affected-cell locking checked only a claim's sampled path, while later contiguity repair could release a province already locked by an earlier claim. The selected fix computes the claim's complete prospective owner-changing cell set, including cells released by capital collapse or contiguity repair, and rejects the claim before mutation if its agent is locked or any prospective owner change intersects an earlier lock. Shared capital anchors alone do not make distinct province claims conflict, preserving independent province claims. The public `losses` helper delegates to the production `losses_with_incidence` rule with `attacked_party` incidence so that these behaviors remain defined once. No registered history has run; this correction is premeasurement and does not amend any measured result.
@@ -47,6 +47,10 @@ index 974c6820a5ebda30db85263c5b9ea98f1fa99986..715d99482753e45786bb5459b8e738cd
 +Pareto ratios use log1p((x−xmin)/xmin) near xmin and log differences for distant values; the selected distribution supplies alpha, KS, log-likelihood and likelihood ratios consistently. Generated tails use xmin*exp(E) for the same exponential draws and fixed job ordering; unrepresentable fits/replicates remain Unresolved without replacements. Exact power-of-two narrow-tail rescaling tests preserve float input ratios and use the existing tolerances. Full definitions and failure rules are in `survey/geosim/NUMERICAL_METHODS.md` and the frozen method descriptors.
 +
 +No primary CCDF, source cutoff/range/count, arm/seed/population, modern candidate set/grid, minimum50 support, alternative support, RNG job, multiplicity family, draw count or tolerance changes. There remain37 arms/1490 keys/72 jobs. No registered periods or measured findings informed these changes; sources will be frozen only after review.
++
++### 2026-10-03 premeasurement round 2: representable generated tails
++
++Scoped rereview found that the round1 direct tail expression xmin*exp(E) could overflow exp(E) despite a finite final generated size when xmin<1. Before any registered period or resampling, correct only the evaluation: use the same exponential draws and direct product when E<=log(float64_max), and exp(log(xmin)+E) otherwise. This retains near-cutoff precision and avoids the unnecessary intermediate overflow; genuinely unrepresentable final values remain explicit predetermined failures without replacement. The100-observation/one-replicate synthetic regression and unchanged-RNG/near-cutoff/final-overflow fixtures are recorded in the numerical-method note. There is no change to scientific cutoffs, primary judges, populations, seeds,72 jobs, draws, tolerances, multiplicity or verdicts; refresh the method/source bindings before the later freeze.
 diff --git a/survey/geosim/.python-version b/survey/geosim/.python-version
 new file mode 100644
 index 0000000000000000000000000000000000000000..86f8c02eb210e162e13395323abd0d02e8d7d223
@@ -56,10 +60,10 @@ index 0000000000000000000000000000000000000000..86f8c02eb210e162e13395323abd0d02
 +3.13.5
 diff --git a/survey/geosim/NUMERICAL_METHODS.md b/survey/geosim/NUMERICAL_METHODS.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..3234523be35ad9faca70bfafb16bdab6002a41df
+index 0000000000000000000000000000000000000000..e6a48f96ec50d26618e634eb74548b413123fb26
 --- /dev/null
 +++ b/survey/geosim/NUMERICAL_METHODS.md
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,68 @@
 +# Frozen GeoSim offline numerical methods
 +
 +The executable contract is `methods.py::METHOD_CONTRACT`, serialized exactly as `method_contract_json` and SHA256-bound before measurement. Python3.13.5, NumPy2.4.6 and SciPy1.17.1 are pinned by `.python-version`/`requirements.txt`; installed versioned source/docs were inspected during synthetic preparation. These libraries are offline only. NumPy metadata reports `BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0`; SciPy's main license is BSD-3-Clause with its distributed build-dependent OpenBLAS/LAPACK/GCC-runtime notices. Preserve exact installed metadata/license hashes in execution provenance.
@@ -122,6 +126,12 @@ index 0000000000000000000000000000000000000000..3234523be35ad9faca70bfafb16bdab6
 +Export counters retain recorded java_saturated/java_subunit_zero flags separately from recomputed hypothetical integer100 saturation/subunit-zero/unavailable counts. Production sets the Java flags even for raw exports; unfinalized or unavailable artifacts can differ, so the recorded flags are never silently replaced. Explicit strata are complete_all, complete_selected, partial_all, partial_selected, completed_records, censored, backlog and legacy_visible. These overlap and must not be summed as disjoint populations. Partial strata contain only successful-period eligible completions of invalid/panic histories, and never enter primary inference; completed_records also retains excluded attempted-period artifacts. Both compact source and modern history matrices retain the counters.
 +
 +Omitting native --resolved-out writes the authoritative resolved export beside --out, appending `.resolved.json` to its full path (for example `sessions.jsonl.resolved.json`), including --validate with zero worlds. The resolved path must differ from the history path. The method declaration and compiled registered template include these descriptors; the unchanged source inventory roster binds these exact code/spec/method bytes at the later controller freeze.
++
++## 2026-10-03 premeasurement correction — round 2 finite generated tails
++
++The round1 expression xmin*exp(E) could overflow its intermediate exponential factor when xmin<1 even though the generated size was finite. No registered periods or resampling preceded this correction. Preserve the exact existing exponential draws and order. For E<=log(float64_max), retain xmin*exp(E), including its near-cutoff resolution; for larger E, evaluate exp(log(xmin)+E). This exceptional path avoids the overflowing factor without a new draw or replacement. The branch threshold is the floating-point representability boundary, not a fitted cutoff or new tolerance. An overflowing final value still fails that predetermined replicate explicitly and makes the diagnostic Unresolved under the existing rule.
++
++The regression uses100 synthetic values exp(linspace(−460,40,100)), default_rng(3), and one generated/refitted replicate. Its largest E≈1110.023 has final log-size≈650.023, so the final tail is representable and refits successfully. The fixture verifies unchanged RNG state against the independent draw sequence, preserves the direct expression exactly for near-cutoff values, and requires failure for xmin1/E1000. Existing exact power-of-two narrow-tail generation invariance and genuine final-overflow fixtures remain passing. All arms/keys/jobs, candidate sets, supports, primary judges, families, draws, tolerances and verdict definitions are unchanged.
 diff --git a/survey/geosim/README.md b/survey/geosim/README.md
 new file mode 100644
 index 0000000000000000000000000000000000000000..2eeacb14f65136f166bc9f949dc1dc02a407892b
@@ -403,7 +413,7 @@ index 0000000000000000000000000000000000000000..5436af0ab85359a7588389cd2d5a3994
 +if __name__=='__main__':main()
 diff --git a/survey/geosim/methods.py b/survey/geosim/methods.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..719ae4f2231ab22c138e5d69951e3b1d03e1e3a6
+index 0000000000000000000000000000000000000000..1e059849a2fe4c9ae26cc9cd77a153668291dd4a
 --- /dev/null
 +++ b/survey/geosim/methods.py
 @@ -0,0 +1,83 @@
@@ -413,7 +423,7 @@ index 0000000000000000000000000000000000000000..719ae4f2231ab22c138e5d69951e3b1d
 +import json
 +
 +METHOD_CONTRACT = {
-+    'revision':'geosim-offline-v1-premeasurement-correction-2026-10-03',
++    'revision':'geosim-offline-v1-premeasurement-correction-2026-10-03-round2',
 +    'runtime':{'python':'3.13.5','numpy':'2.4.6','scipy':'1.17.1'},
 +    'source':{'cutoff_log10':2.5,'ccdf':'strict_unique_positive',
 +              'minimum_fit_points':3,'range':'full_positive_selected_census',
@@ -444,7 +454,7 @@ index 0000000000000000000000000000000000000000..719ae4f2231ab22c138e5d69951e3b1d
 +              'fit_authority':'one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios',
 +              'numeric_failure':'nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved',
 +              'ks':'max_left_and_right_ecdf_at_unique_ties','cutoff_ties':'smallest_xmin_exact'},
-+    'ks_test':{'tail_generation':'xmin*exp(exponential(1/(alpha-1))); preserve_near_cutoff_resolution','draws':1000,'level':.1,'exceedance':'Dstar>=Dobs',
++    'ks_test':{'tail_generation':'E=exponential(1/(alpha-1)); xmin*exp(E) when E<=log(float64_max), else exp(log(xmin)+E); final_overflow_fails; unchanged_draws_and_order','draws':1000,'level':.1,'exceedance':'Dstar>=Dobs',
 +               'p':'(b+1)/(B+1)','interval':'95%_Clopper_Pearson_b_of_B',
 +               'failure':'any_predetermined_failed_replicate_unresolved_no_replacements',
 +               'calibration':'iid_semiparametric_generated_refitted_grid100'},
@@ -492,10 +502,10 @@ index 0000000000000000000000000000000000000000..719ae4f2231ab22c138e5d69951e3b1d
 +    return hashlib.sha256(canonical_bytes(METHOD_CONTRACT)).hexdigest()
 diff --git a/survey/geosim/modern.py b/survey/geosim/modern.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..99b9426d0aad113a11bd836cadd785dd427e503d
+index 0000000000000000000000000000000000000000..7936ff548a9481982893b0c73df72b3ed1632c6c
 --- /dev/null
 +++ b/survey/geosim/modern.py
-@@ -0,0 +1,193 @@
+@@ -0,0 +1,201 @@
 +"""Offline iid diagnostics and separate whole-history parameter uncertainty."""
 +import math
 +import numpy as np
@@ -599,6 +609,16 @@ index 0000000000000000000000000000000000000000..99b9426d0aad113a11bd836cadd785dd
 +            'censored_count':sum(h.get('censored_count',0) for h in histories),'backlog_count':sum(h.get('backlog_count',0) for h in histories)}
 +
 +
++def _pareto_tail(xmin,logratios):
++    """Keep direct near-cutoff precision; avoid overflow in the exp factor."""
++    tail=np.empty_like(logratios,dtype=float)
++    direct=logratios<=math.log(np.finfo(float).max)
++    with np.errstate(over='raise',invalid='raise'):
++        tail[direct]=xmin*np.exp(logratios[direct])
++        tail[~direct]=np.exp(math.log(xmin)+logratios[~direct])
++    return tail
++
++
 +def ks_refit_test(fit,sizes,rng,draws=1000):
 +    if type(draws) is not int or draws<=0:raise ValueError('positive fixed KS replicate count required')
 +    if fit['status']!='Available':return {'status':'Unresolved','reason':'pooled_fit_unavailable','replicates_attempted':0}
@@ -609,9 +629,7 @@ index 0000000000000000000000000000000000000000..99b9426d0aad113a11bd836cadd785dd
 +            nt=int(rng.binomial(n,prob));nb=n-nt
 +            lower=body[rng.integers(0,len(body),size=nb,dtype=np.int64)] if nb else np.empty(0)
 +            logratios=rng.exponential(1/(fit['alpha']-1),nt)
-+            with np.errstate(over='raise',invalid='raise'):
-+                # Preserve near-cutoff resolution instead of adding tiny draws to a large log(xmin).
-+                tail=fit['xmin']*np.exp(logratios)
++            tail=_pareto_tail(fit['xmin'],logratios)
 +            simulated=fit_sizes(np.concatenate((lower,tail)),cutoff_search='grid100',alternatives=False)
 +            if simulated['status']!='Available':raise numerics.NumericFailure(simulated.get('reason',simulated['status']))
 +            Ds.append(simulated['ks']);cutoffs.append(simulated['xmin'])
