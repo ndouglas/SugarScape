@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { Engine } from './engine';
+import { polarityRows } from './polarity';
 import { SimHost } from './sim-host';
 import { InlineTransport } from './transport';
 import { wasmSimModule } from './sim-module';
@@ -21,6 +22,19 @@ describe('polarity through the shared WASM host', () => {
     const engine = await Engine.create({ config, seed: 1 }, { presets, transport: new InlineTransport(new SimHost(wasmSimModule(wasm.memory))) });
     await engine.advance(200);
     expect(await engine.fingerprint()).toBe(expected);
+  });
+  it('shows coalition members and their shared threat from real WASM inspection', async () => {
+    const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
+    const presets = JSON.parse(presets_json()) as Preset[];
+    const config = { model: 'polarity', width: 2, height: 2, predator_share: 0, alliances: true, trust_initial: -1000 } as PolarityConfig;
+    const engine = await Engine.create({ config, seed: 1 }, { presets, transport: new InlineTransport(new SimHost(wasmSimModule(wasm.memory))) });
+    await engine.advance(1);
+    await engine.select(0, 0);
+    const view = engine.inspection!.view as PolarityInspection;
+    // On this peaceful square, equal negative trust picks the lowest adjacent ID.
+    // Governments 0 and 3 both name 1 as their prime threat.
+    expect(view.coalition).toEqual({ threat: 1, members: [0, 3] });
+    expect(polarityRows(view)).toContainEqual(['Defensive coalition', 'Members 0, 3 · threat 1']);
   });
   it('exports resolved source choices after a partial config create and reset', async () => {
     const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });

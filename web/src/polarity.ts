@@ -17,7 +17,7 @@ export function polarityRows(view: PolarityInspection): [string, string][] {
     ['Territory', `${view.members.length} cells: ${view.members.join(', ')}`],
     ['Sovereign neighbors', view.neighbors.join(', ') || 'None'],
     ['Trust', trust(view.trust)], ['Prime threat', view.threat === null ? 'None' : String(view.threat)],
-    ['Defensive coalition', Array.isArray(view.coalition) ? view.coalition.join(', ') || 'None' : 'None'], ['Foreign fronts', fronts(view.foreign_fronts)],
+    ['Defensive coalition', view.coalition === null ? 'None' : `Members ${view.coalition.members.join(', ')} · threat ${view.coalition.threat}`], ['Foreign fronts', fronts(view.foreign_fronts)],
     ['Domestic fronts', fronts(view.domestic_fronts)], ['Last structural event', event(view.last_event)],
   ];
   if (view.periods !== undefined) rows.unshift(['Session', `${view.periods} of ${view.horizon ?? 'unavailable'} periods`]);

@@ -2367,10 +2367,14 @@ export interface PolarityStats {
   attacks: number; dd_encounters: number; conquests: number; capital_collapses: number; disconnections: number; revolts: number; coalitions: number; open_episodes: number;
   harvest: number; taxes: number; transfers: number; clipping: number; stale_claims: number; locked_claims: number; double_successes: number; path_collisions: number;
 }
+export interface PolarityCoalition {
+  threat: number;
+  members: number[];
+}
 export interface PolarityInspection {
   model: 'polarity'; period?: number; periods?: number; horizon?: number; finish_reason?: string | null; invalidity?: string | null;
   event_log_limit?: number; events_dropped?: number; events?: unknown[];
   cell: { id: number; capital: number; predator: boolean; stock: number | null }; capital: number; province_stock: number | null; corporate_stock: number | null; members: number[]; neighbors: number[];
-  trust: unknown; threat: number | null; coalition: unknown; foreign_fronts: unknown; domestic_fronts: unknown; last_event: unknown;
+  trust: unknown; threat: number | null; coalition: PolarityCoalition | null; foreign_fronts: unknown; domestic_fronts: unknown; last_event: unknown;
   agent: null;
 }
