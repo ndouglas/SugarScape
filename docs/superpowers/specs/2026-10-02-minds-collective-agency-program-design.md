@@ -233,6 +233,14 @@ traditions; new cohorts, capabilities and environments.
 artifacts, adaptation and distribution of benefits. This is the longest horizon, not a prerequisite
 for the incident-shaped scenario.
 
+**Expanded parallel programme:** [Cultures, construction and underworlds](../../studies/2026-10-03-cultures-construction-and-underworlds.md)
+preserves seven research families covering embodiment, construction, institutions, transmission,
+beliefs, astronomy and language. The user selected collective burrow construction as its first
+branch to refine, motivated by rich and diverse Hornvale underworlds. Literature and environment
+design can proceed in separate sessions alongside Minds; integration follows explicit capability
+dependencies. This is a living research outline, not an approved excavation implementation spec,
+and does not change the P3/P4 or incident-shaped integration sequence.
+
 ## Dependency and sequencing decisions
 
 - **Continue now:** C1 under the existing Minds order.

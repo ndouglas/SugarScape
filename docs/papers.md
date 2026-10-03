@@ -11,6 +11,26 @@ personal copies, never committed or redistributed. File names are
 read online or from another copy; add it when found. Scanned PDFs (no text layer) are marked
 *scan*: read them page by page as images (`pdftoppm -r 110 -png`).
 
+## Architecture and underworld research
+
+The [cultures, construction and underworlds programme](studies/2026-10-03-cultures-construction-and-underworlds.md)
+preserves the long-term campaign outline and selects collective burrow construction for first
+refinement. These books are research/design sources, not reproduced models or evidence that
+speculative cultural combinations are validated.
+
+Local copies collected on 2026-10-03 from the user's supplied library:
+
+| Source | Local file under `papers/` | Inspection status |
+|---|---|---|
+| Christopher Alexander, *Notes on the Synthesis of Form* (1964; supplied copy includes the 1971 paperback preface) | `architecture/alexander-1964-notes-on-the-synthesis-of-form.pdf` | Paperback preface and selected requirements/decomposition sections inspected; not reviewed in full |
+| Christopher Alexander, Sara Ishikawa, Murray Silverstein, with collaborators, *A Pattern Language* (1977) | `architecture/alexander-ishikawa-silverstein-et-al-1977-a-pattern-language.pdf` | Collected; not reviewed in full |
+| Christopher Alexander, *The Timeless Way of Building* (1979) | `architecture/alexander-1979-the-timeless-way-of-building.pdf` | Collected; not reviewed in full |
+
+The copies were verified byte-for-byte with SHA-256 against the originals. Exact source paths,
+destination paths, sizes, page counts and hashes are retained locally in
+`papers/architecture/alexander-local-provenance.json`. The PDFs and local provenance remain
+gitignored under the existing personal-library convention.
+
 ## Reproduced
 
 | Milestone | Model kind | Sources | Headline |
