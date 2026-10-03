@@ -1,6 +1,6 @@
 # Minds P3 Protection Implementation Plan
 
-**Implementation status:** Tasks 1–5 implemented and verified; whole-branch review pending. The root tracker remains open until that review passes. Scientific execution remains pending separate review of the committed executable manifest and opportunity evidence; no campaign has run.
+**Implementation status:** Tasks 1–5 complete; verification and independent task/whole-branch reviews passed. The completed root tracker has been removed. Scientific execution remains pending separate review of the committed executable manifest and opportunity evidence; no campaign has run.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. The user has already selected that method. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -446,8 +446,8 @@ await withNativeTraceDirectory(async scratch => {
 Import the new functions from the existing local WASM package; reuse `withNativeTraceDirectory`, which already removes its scratch files on success or failure. Core construction tests independently pin the generated configuration to the protocol; the two backends then execute the same checked configuration.
 
 - [x] Run final changed-code checks once: `cargo fmt --all -- --check`; `cargo test --workspace`; `cargo clippy --workspace --all-targets -- -D warnings`; `cargo fmt --manifest-path survey/Cargo.toml -- --check`; `cargo test --manifest-path survey/Cargo.toml`; `cargo clippy --manifest-path survey/Cargo.toml --all-targets -- -D warnings`; in `web`, `npm run build` then `npm test`. Use existing installed tools/dependencies. Record counts/logs; never bypass hooks or disable failing tests.
-- [ ] Print the committed `--protection --manifest` and validate the condition count, exact configuration, protocol routes and opportunity checks. This command performs no simulations. Conduct the whole-branch review required by the subagent workflow; fix findings with focused regression tests and repeat only affected checks unless behavior broadly changed.
-- [ ] Mark implementation complete only after passing tests and review. Remove root stage tracker; retain the completed detailed plan. Commit: `test(minds): verify protection persistence and native wasm replay`. Present the manifest/protocol and verification evidence for scientific execution review. No campaign data or scientific conclusion is part of this implementation task.
+- [x] Print the committed `--protection --manifest` and validate the condition count, exact configuration, protocol routes and opportunity checks. This command performs no simulations. Conduct the whole-branch review required by the subagent workflow; fix findings with focused regression tests and repeat only affected checks unless behavior broadly changed.
+- [x] Mark implementation complete only after passing tests and review. Remove root stage tracker; retain the completed detailed plan. Commit: `test(minds): verify protection persistence and native wasm replay`. Present the manifest/protocol and verification evidence for scientific execution review. No campaign data or scientific conclusion is part of this implementation task.
 
 ## Self-review and execution handoff
 

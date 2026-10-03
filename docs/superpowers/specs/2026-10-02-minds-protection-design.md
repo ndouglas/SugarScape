@@ -1,7 +1,7 @@
 # Minds P3: costly re-caching after observation
 
 **Date:** 2026-10-02
-**Status:** written spec approved by the user; implementation and verification are ready for whole-branch review. Scientific execution remains pending review of the committed executable manifest and opportunity evidence; no campaign has run.
+**Status:** written spec approved by the user; implementation complete; verification and independent task/whole-branch reviews passed. Scientific execution remains pending review of the committed executable manifest and opportunity evidence; no campaign has run.
 **Baseline:** main `1223c47`, after the completed Minds 9 campaign.
 **Plan/protocol:** [implementation plan](../plans/2026-10-02-minds-protection.md), [proposed measured protocol](2026-10-02-minds-protection-protocol.md).
 **Related:** [Minds study](../../studies/2026-09-27-minds.md), [collective agency program](2026-10-02-minds-collective-agency-program-design.md), [research notes](../../studies/2026-10-02-minds-protection-reading.md).
