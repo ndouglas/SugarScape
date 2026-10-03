@@ -35,3 +35,6 @@ papers/
 
 # Survey runs by prefix (--only …); the full run's results.json, table.md and triage.md are tracked
 survey/out/results-*.json
+
+# Emergent polarity raw sessions, resolved authority and run logs remain local
+survey/out/polarity-*

@@ -337,7 +337,7 @@ export class RulesPanel {
         slider.addEventListener('change', () => apply(slider.value));
         num.addEventListener('change', () => apply(num.value));
         this.syncers.push(() => {
-          const v = String(getPath(this.engine.sugar, c.path) ?? 0);
+          const v = String(c.current ? c.current(this.engine.sugar) : getPath(this.engine.sugar, c.path) ?? 0);
           slider.value = v;
           num.value = v;
         });

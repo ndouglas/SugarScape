@@ -867,3 +867,100 @@ fn polarity_cli_reports_economic_periods_instead_of_only_batched_ticks() {
         stderr(&out)
     );
 }
+
+#[test]
+fn fingerprint_trace_records_tick_zero_and_each_completed_tick() {
+    let dir = scratch("fingerprint-trace");
+    let trace = dir.join("trace.json");
+    let out = sugarscape(&[
+        "run",
+        "--preset",
+        "spatial-larder-guard",
+        "--ticks",
+        "2",
+        "--fingerprint",
+        "--fingerprint-trace",
+        path(&trace),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&read(&trace)).unwrap();
+    assert_eq!(
+        rows.iter()
+            .map(|r| r["tick"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        vec![0, 1, 2]
+    );
+    for (tick, row) in rows.iter().enumerate() {
+        // The unchanged final-only CLI route is an independent reference.
+        let direct = sugarscape(&[
+            "run",
+            "--preset",
+            "spatial-larder-guard",
+            "--ticks",
+            &tick.to_string(),
+            "--fingerprint",
+        ]);
+        assert!(direct.status.success(), "{}", stderr(&direct));
+        assert_eq!(row["fingerprint"].as_str().unwrap(), stdout(&direct).trim());
+    }
+    assert_eq!(
+        rows[2]["fingerprint"].as_str().unwrap(),
+        stdout(&out).trim()
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn fingerprint_trace_ends_at_a_models_actual_stop_tick() {
+    let dir = scratch("fingerprint-trace-stop");
+    let config = dir.join("config.json");
+    let trace = dir.join("trace.json");
+    std::fs::write(&config, r#"{"model":"bali","stop_at":2}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        path(&config),
+        "--ticks",
+        "1000",
+        "--fingerprint",
+        "--fingerprint-trace",
+        path(&trace),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&read(&trace)).unwrap();
+    assert_eq!(rows.len(), 25);
+    assert_eq!(rows.last().unwrap()["tick"], 24);
+    assert_eq!(stderr(&out), "finished at tick 24 (its last year)\n");
+    let direct = sugarscape(&[
+        "run",
+        "--config",
+        path(&config),
+        "--ticks",
+        "1000",
+        "--fingerprint",
+    ]);
+    assert!(direct.status.success(), "{}", stderr(&direct));
+    assert_eq!(stdout(&out), stdout(&direct));
+    assert_eq!(
+        rows.last().unwrap()["fingerprint"].as_str().unwrap(),
+        stdout(&direct).trim()
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn fingerprint_trace_reports_write_errors() {
+    let dir = scratch("fingerprint-trace-error");
+    let out = sugarscape(&[
+        "run",
+        "--preset",
+        "spatial-scatter",
+        "--ticks",
+        "0",
+        "--fingerprint-trace",
+        path(&dir),
+    ]);
+    assert_eq!(out.status.code(), Some(1));
+    assert!(stderr(&out).contains(path(&dir)), "{}", stderr(&out));
+    std::fs::remove_dir_all(dir).unwrap();
+}

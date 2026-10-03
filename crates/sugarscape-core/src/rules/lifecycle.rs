@@ -11,8 +11,17 @@ use crate::world::{DeathCause, World};
 pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
     let n = world.config.goods.len();
     let fee = world.config.disease.active_fee();
+    let record_metabolism = world.config.spatial_hoarding.enabled;
     let agent = world.agent_mut(id).expect("live agent");
     let burned = agent.effective_metabolisms(n, fee);
+    let metabolic_food = if record_metabolism && n > 0 {
+        (
+            burned[0],
+            burned[0].min(agent.holdings[0].max(0.0) + agent.fed),
+        )
+    } else {
+        (0.0, 0.0)
+    };
     // Minds 6: good 0 comes out of the stomach first (`Agent::fed`).
     let mut from_holdings = burned;
     if agent.fed > 0.0 && n > 0 {
@@ -24,6 +33,10 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
         *have -= burn;
     }
     let pos = agent.pos;
+    if let Some(events) = crate::minds::spatial_hoarding::stores::tick_events(world) {
+        events.metabolism.demand += metabolic_food.0;
+        events.metabolism.consumed += metabolic_food.1;
+    }
     if world.config.pollution.enabled {
         let pollutants = &world.config.pollution.pollutants;
         let m = pollutants.len();
@@ -79,6 +92,26 @@ pub(crate) fn check_death(world: &mut World, id: AgentId) -> bool {
 mod tests {
     use super::*;
     use crate::testkit::*;
+
+    #[test]
+    fn spatial_hoarding_metabolic_consumption_caps_starvation_and_uses_fed_first() {
+        for (holdings, fed, demand, consumed, remaining) in
+            [(2.0, 1.0, 5, 3.0, -2.0), (2.0, 4.0, 5, 5.0, 1.0)]
+        {
+            let mut w = blank_world(5, 5);
+            w.config.spatial_hoarding.enabled = true;
+            let id = spawn(&mut w, 2, 2);
+            let a = w.agent_mut(id).unwrap();
+            a.holdings[0] = holdings;
+            a.fed = fed;
+            a.metabolism[0] = demand;
+            metabolize(&mut w, id, Harvest::of(&[0.0]));
+            let m = w.events.spatial_stores.unwrap().metabolism;
+            assert_eq!((m.demand, m.consumed), (f64::from(demand), consumed));
+            assert_eq!(w.agent(id).unwrap().holdings[0], remaining);
+            assert_eq!(w.agent(id).unwrap().fed, 0.0);
+        }
+    }
 
     #[test]
     fn metabolism_burns_sugar() {

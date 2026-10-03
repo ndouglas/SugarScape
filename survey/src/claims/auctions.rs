@@ -184,6 +184,7 @@ fn economic_state(world: &AuctionsWorld) -> EconomicState {
     }
 }
 
+#[cfg(test)]
 fn same_economic_state(a: &AuctionsWorld, b: &AuctionsWorld) -> bool {
     economic_state(a) == economic_state(b)
 }

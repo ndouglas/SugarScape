@@ -127,7 +127,8 @@ static VI1: Memo<Vec<Vi1>> = Memo::new();
 fn vi1(seeds: &[u64]) -> Arc<Vec<Vi1>> {
     VI1.get(seeds, || {
         each_seed(&preset("vi-1-everything"), seeds, |mut w| {
-            let (mut births, mut trades, mut loans, mut transmissions) = (false, false, false, false);
+            let (mut births, mut trades, mut loans, mut transmissions) =
+                (false, false, false, false);
             let mut shown = [false; 6];
             for _ in 0..1000 {
                 w.step();
@@ -153,9 +154,16 @@ fn vi1(seeds: &[u64]) -> Arc<Vec<Vi1>> {
             let pop = series(&w, "population");
             let frac = series(&w, "infected_fraction");
             Vi1 {
-                infected: frac.iter().zip(&pop).map(|(f, p)| (f * p).round()).collect(),
+                infected: frac
+                    .iter()
+                    .zip(&pop)
+                    .map(|(f, p)| (f * p).round())
+                    .collect(),
                 pop,
-                rules_active: [births, trades, loans, transmissions].iter().filter(|b| **b).count() as f64,
+                rules_active: [births, trades, loans, transmissions]
+                    .iter()
+                    .filter(|b| **b)
+                    .count() as f64,
                 networks_shown: shown.iter().filter(|b| **b).count() as f64,
             }
         })
@@ -180,7 +188,10 @@ fn indecomposability(id: &str, seeds: &[u64]) -> Arc<Vec<(Vec<f64>, f64)>> {
 }
 
 fn pops(id: &str, s: &[u64]) -> Vec<Vec<f64>> {
-    indecomposability(id, s).iter().map(|(p, _)| p.clone()).collect()
+    indecomposability(id, s)
+        .iter()
+        .map(|(p, _)| p.clone())
+        .collect()
 }
 
 /// Minimum population over t = 0..=150 (`measure_indecomposability`'s trough).
@@ -200,7 +211,10 @@ fn peak_factor(id: &str, s: &[u64]) -> Vec<f64> {
 
 /// Mean population over t = 300..=1000 (after the recovery).
 fn plateau(id: &str, s: &[u64]) -> Vec<f64> {
-    pops(id, s).iter().map(|p| window_mean(p, 300, 1000)).collect()
+    pops(id, s)
+        .iter()
+        .map(|p| window_mean(p, 300, 1000))
+        .collect()
 }
 
 // ------------------------------------------------------------- n-3 runs
@@ -344,7 +358,11 @@ fn builtin(id: &'static str) -> &'static SweepResult {
         ("n-goods-carrying-capacity", OnceLock::new()),
         ("bargaining-rules", OnceLock::new()),
     ];
-    let cell = &CELLS.iter().find(|(k, _)| *k == id).expect("a known sweep").1;
+    let cell = &CELLS
+        .iter()
+        .find(|(k, _)| *k == id)
+        .expect("a known sweep")
+        .1;
     cell.get_or_init(|| run_sweep(&sweep::builtin(id).expect("a built-in sweep")))
 }
 
@@ -358,22 +376,33 @@ fn builtin(id: &'static str) -> &'static SweepResult {
 // `config_for` config itself and applies `sweep::measure` with the same
 // timeseries metric.
 fn builtin_blocks(id: &'static str, ticks: u32) -> &'static Vec<Vec<Vec<Vec<f64>>>> {
-    static CELLS: [(&str, OnceLock<Vec<Vec<Vec<Vec<f64>>>>>); 3] = [
+    type SweepBlocks = Vec<Vec<Vec<Vec<f64>>>>;
+    static CELLS: [(&str, OnceLock<SweepBlocks>); 3] = [
         ("fig-ii-5", OnceLock::new()),
         ("fig-iv-6", OnceLock::new()),
         ("n-goods-carrying-capacity", OnceLock::new()),
     ];
-    let cell = &CELLS.iter().find(|(k, _)| *k == id).expect("a known sweep").1;
+    let cell = &CELLS
+        .iter()
+        .find(|(k, _)| *k == id)
+        .expect("a known sweep")
+        .1;
     cell.get_or_init(|| {
         let s = sweep::builtin(id).expect("a built-in sweep");
-        let metric = Metric::Timeseries { series: "population".into(), every: 50 };
+        let metric = Metric::Timeseries {
+            series: "population".into(),
+            every: 50,
+        };
         let seeds: Vec<u64> = (s.seeds.from..s.seeds.from + u64::from(s.seeds.count)).collect();
         let points = s.points().expect("valid points");
         (0..s.series_count())
             .map(|series| {
                 (0..s.x.values.len())
                     .map(|x| {
-                        let p = points.iter().find(|p| p.series == series && p.x == x).unwrap();
+                        let p = points
+                            .iter()
+                            .find(|p| p.series == series && p.x == x)
+                            .unwrap();
                         let c = sugarscape_config(&s, p);
                         each_seed(&c, &seeds, |mut w| {
                             w.run(ticks);
@@ -395,7 +424,11 @@ fn series_of(w: &World) -> Vec<f64> {
 
 /// A scalar cell's per-seed values, in seed order.
 fn cell(r: &SweepResult, series: usize, x: usize) -> Vec<f64> {
-    let mut runs: Vec<_> = r.runs.iter().filter(|p| p.series == series && p.x == x).collect();
+    let mut runs: Vec<_> = r
+        .runs
+        .iter()
+        .filter(|p| p.series == series && p.x == x)
+        .collect();
     runs.sort_by_key(|p| p.point);
     runs.iter()
         .map(|p| match &p.outcome {
@@ -407,7 +440,11 @@ fn cell(r: &SweepResult, series: usize, x: usize) -> Vec<f64> {
 
 /// A timeseries cell's per-seed block values, in seed order.
 fn cell_blocks(r: &SweepResult, series: usize, x: usize) -> Vec<Vec<f64>> {
-    let mut runs: Vec<_> = r.runs.iter().filter(|p| p.series == series && p.x == x).collect();
+    let mut runs: Vec<_> = r
+        .runs
+        .iter()
+        .filter(|p| p.series == series && p.x == x)
+        .collect();
     runs.sort_by_key(|p| p.point);
     runs.iter()
         .map(|p| match &p.outcome {
@@ -447,7 +484,10 @@ fn line_above(r: &SweepResult, a: usize, b: usize, a_name: &str, b_name: &str) -
         (0..xs)
             .map(|x| {
                 let at = r.sweep.x.values[x].at;
-                (format!("x = {at}"), greater(&cell(r, a, x), &cell(r, b, x), a_name, b_name))
+                (
+                    format!("x = {at}"),
+                    greater(&cell(r, a, x), &cell(r, b, x), a_name, b_name),
+                )
             })
             .collect(),
     )
@@ -480,7 +520,14 @@ fn shared_peak(n_index: usize, trade: usize) -> Config {
         .unwrap();
     let mut c = sugarscape_config(&s, &point);
     for g in &mut c.goods {
-        g.map = Map::Peaks { peaks: vec![Peak { x: 10, y: 10, radius: 20.0, height: 4.0 }] };
+        g.map = Map::Peaks {
+            peaks: vec![Peak {
+                x: 10,
+                y: 10,
+                radius: 20.0,
+                height: 4.0,
+            }],
+        };
     }
     c
 }
@@ -490,21 +537,20 @@ fn shared_peak(n_index: usize, trade: usize) -> Config {
 static SHARED: Memo<Vec<Vec<f64>>> = Memo::new();
 
 fn shared_peak_capacity(n_index: usize, s: &[u64]) -> Vec<f64> {
-    SHARED
-        .get(s, || {
-            (0..5)
-                .map(|x| {
-                    (0..2)
-                        .flat_map(|t| {
-                            each_seed(&shared_peak(x, t), s, |mut w| {
-                                w.run(1000);
-                                window_mean(&series(&w, "population"), 900, 1000)
-                            })
+    SHARED.get(s, || {
+        (0..5)
+            .map(|x| {
+                (0..2)
+                    .flat_map(|t| {
+                        each_seed(&shared_peak(x, t), s, |mut w| {
+                            w.run(1000);
+                            window_mean(&series(&w, "population"), 900, 1000)
                         })
-                        .collect()
-                })
-                .collect()
-        })[n_index]
+                    })
+                    .collect()
+            })
+            .collect()
+    })[n_index]
         .clone()
 }
 
@@ -1211,7 +1257,7 @@ pub fn claims() -> Vec<Claim> {
             text: "the 4-good, no-trade cell is still falling at 500: its 50-tick block mean population ending at t = 400 exceeds the one ending at t = 500 (sweep's own seeds 1–10)",
             check: |_| {
                 let b = &builtin_blocks("n-goods-carrying-capacity", 1000)[0][2];
-                greater(&block_at(&b, 400), &block_at(&b, 500), "B(400)", "B(500)").with(SWEEP_SEEDS)
+                greater(&block_at(b, 400), &block_at(b, 500), "B(400)", "B(500)").with(SWEEP_SEEDS)
             },
         },
         Claim {

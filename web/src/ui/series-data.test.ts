@@ -8,6 +8,7 @@ import {
   hoardSeasonTable,
   bandData,
   barsData,
+  SPATIAL_HOARDING_CHARTS,
   chartsBehind,
   distributionsDue,
   distributionWants,
@@ -534,5 +535,16 @@ describe('hoard charts (Minds 7)', () => {
 describe('stumbledData', () => {
   it('turns the pilfered column into what was stumbled on (pilfered − raided), keeping gaps', () => {
     expect(stumbledData([[1, 2, 3], [0, 1, null], [2, 1, 4]])).toEqual([[1, 2, 3], [0, 1, null], [2, 0, null]]);
+  });
+});
+
+describe('spatial episode chart series', () => {
+  it('separates kinds and exposes unused-store gaps', () => {
+    const keys = SPATIAL_HOARDING_CHARTS.flatMap(c => c.lines.map(l => l.key));
+    expect(keys).toContain('scatter_stock_ticks');
+    expect(keys).toContain('larder_stock_ticks');
+    expect(keys).toContain('guard_executed');
+    expect(keys).toContain('delivery_return_turns');
+    expect(lineData({ ticks: Float64Array.of(0,1), columns: [Float64Array.of(NaN,0.25)] })).toEqual([[0,1],[null,0.25]]);
   });
 });

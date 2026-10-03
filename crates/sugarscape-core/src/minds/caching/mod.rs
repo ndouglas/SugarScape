@@ -81,7 +81,10 @@ pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
 /// as `caching.dig_below: reserve` does (Minds 8b, the probe as a setting).
 pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
-    if a.caches.is_empty() {
+    if a.caches.is_empty()
+        && !(world.config.spatial_hoarding.enabled
+            && a.spatial.as_ref().is_some_and(|s| s.larder > 0.0))
+    {
         return false;
     }
     let r = reserve(world, id);
@@ -131,6 +134,13 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     a.cache_since.entry(site).or_insert(now);
     world.events.buried += q;
     world.events.bury_cost += cost;
+    if let Some(e) = super::spatial_hoarding::stores::events(
+        world,
+        super::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.buried += q;
+        e.bury_cost += cost;
+    }
     fates::open(world, id, site, q);
     theft::note(world, id, site, true);
     watching::see(world, id, site, q);
@@ -164,6 +174,13 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     e.dug += take;
     e.digs += 1;
     e.dig_ages_sum += now.saturating_sub(since);
+    if let Some(e) = super::spatial_hoarding::stores::events(
+        world,
+        super::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.dug += take;
+        e.digs += 1;
+    }
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     fates::close_dug(world, id, site, take);
     if emptied {

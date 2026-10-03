@@ -68,6 +68,9 @@ struct RunArgs {
     /// Print the final world's fingerprint as 0x%016x.
     #[arg(long)]
     fingerprint: bool,
+    /// Write tick zero and every completed tick's fingerprint as JSON rows.
+    #[arg(long, value_name = "PATH")]
+    fingerprint_trace: Option<PathBuf>,
 }
 
 #[derive(Debug, Args)]
@@ -203,7 +206,30 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
         (None, None) => unreachable!("clap requires --preset or --config"),
     };
     let mut world = ModelWorld::new(config.clone(), args.seed)?;
-    world.model_mut().run(args.ticks);
+    if let Some(path) = &args.fingerprint_trace {
+        let mut trace = vec![serde_json::json!({
+            "tick": world.model().tick(),
+            "fingerprint": format!("{:#018x}", world.model().fingerprint()),
+        })];
+        for _ in 0..args.ticks {
+            if world.model().finished() {
+                break;
+            }
+            let before = world.model().tick();
+            world.model_mut().run(1);
+            if world.model().tick() == before {
+                break;
+            }
+            trace.push(serde_json::json!({
+                "tick": world.model().tick(),
+                "fingerprint": format!("{:#018x}", world.model().fingerprint()),
+            }));
+        }
+        let json = serde_json::to_string(&trace).expect("fingerprint trace serializes");
+        write(path, &(json + "\n"))?;
+    } else {
+        world.model_mut().run(args.ticks);
+    }
     let world = world.model();
     if world.finished() && config.kind() == ModelKind::Polarity {
         let latest: serde_json::Value =

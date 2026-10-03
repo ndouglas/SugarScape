@@ -22,4 +22,4 @@
 **Goal**: Execute registered studies, report results, review, integrate and publish.
 **Success Criteria**: Complete findings matrix and provenance, fresh review, CI and deployed Pages pass.
 **Tests**: Native ensembles outside CI, final checks and deployment smoke.
-**Status**: Not Started
+**Status**: In Progress

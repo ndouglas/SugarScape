@@ -80,3 +80,7 @@ describe('the hoard legend (Minds 7)', () => {
     expect(hoardLegend(false).find((i) => i.label.startsWith('L and D'))?.mark).toEqual({ kind: 'ramp', from: HOARD_COLORS.LOW, to: HOARD_COLORS.HIGH });
   });
 });
+
+it('labels a guarded spatial home with its paid-action marker', () => {
+  expect(overlayLegend({ ...none, homes: true, guarding: true }, config).map(i => i.label)).toContain('guarding (paid action)');
+});

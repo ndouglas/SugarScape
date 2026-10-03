@@ -1384,6 +1384,45 @@ pub fn all() -> Vec<Preset> {
             },
         ),
         preset(
+            "spatial-scatter",
+            "Spatial scatter",
+            "Minds 9 spatial hoarding",
+            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=0.0 and Defense target D=0.5. A larger D requires more stored food for the same guard probability. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
+            |c| {
+                theft_winter(c, 0.0);
+                c.watching.span = 2;
+                c.spatial_hoarding.enabled = true;
+                c.spatial_hoarding.larder = 0.0;
+                c.spatial_hoarding.guard = false;
+            },
+        ),
+        preset(
+            "spatial-larder",
+            "Spatial larder",
+            "Minds 9 spatial hoarding",
+            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=1.0 and Defense target D=0.5. A larger D requires more stored food for the same guard probability. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
+            |c| {
+                theft_winter(c, 0.0);
+                c.watching.span = 2;
+                c.spatial_hoarding.enabled = true;
+                c.spatial_hoarding.larder = 1.0;
+                c.spatial_hoarding.guard = false;
+            },
+        ),
+        preset(
+            "spatial-larder-guard",
+            "Spatial larder with guard",
+            "Minds 9 spatial hoarding",
+            "A fixed spatial episode in theft-winter's world: scattered stores and carried deliveries to a home larder, with probability L=1.0 and Defense target D=0.5. A larger D requires more stored food for the same guard probability. Pending delivery food remains carried; guarding costs a foraging turn. No between-season breeding runs in this episode.",
+            |c| {
+                theft_winter(c, 0.0);
+                c.watching.span = 2;
+                c.spatial_hoarding.enabled = true;
+                c.spatial_hoarding.larder = 1.0;
+                c.spatial_hoarding.guard = true;
+            },
+        ),
+        preset(
             "watch-arena",
             "Watching arena: four agents, half watchers",
             "Bugnyar & Kotrschal 2002; Heinrich & Pepper 1998; Minds 8",
@@ -1735,9 +1774,55 @@ mod tests {
     }
 
     #[test]
+    fn spatial_presets_extend_theft_winter_with_fixed_episode_traits() {
+        for (id, larder, guard) in [
+            ("spatial-scatter", 0.0, false),
+            ("spatial-larder", 1.0, false),
+            ("spatial-larder-guard", 1.0, true),
+        ] {
+            let c = by_id(id).expect("spatial preset").config;
+            assert_eq!(
+                (c.population, c.caching.capacity, c.goap.horizon),
+                (175, 50, 20)
+            );
+            assert_eq!(
+                (c.seasons.period, c.seasons.winter_divisor, c.caching.share),
+                (100, 32, 0.5)
+            );
+            assert_eq!(
+                (
+                    c.spatial_hoarding.enabled,
+                    c.spatial_hoarding.larder,
+                    c.spatial_hoarding.defense,
+                    c.spatial_hoarding.guard
+                ),
+                (true, larder, 0.5, guard)
+            );
+            assert_eq!(
+                (
+                    c.theft.find,
+                    c.spatial_hoarding.find_larder,
+                    c.watching.span
+                ),
+                (0.25, 0.25, 2)
+            );
+            let mut reduced = c;
+            reduced.spatial_hoarding = Default::default();
+            reduced.watching.span = 7;
+            assert_eq!(reduced, by_id("theft-winter").unwrap().config);
+        }
+    }
+
+    #[test]
     fn every_preset_is_valid_and_runs() {
         let presets = all();
-        assert_eq!(presets.len(), 83);
+        assert_eq!(
+            presets
+                .iter()
+                .filter(|p| !p.config.spatial_hoarding.enabled)
+                .count(),
+            83
+        );
         for p in presets {
             p.config
                 .validate()

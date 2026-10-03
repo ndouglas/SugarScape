@@ -10,7 +10,9 @@ use crate::runner::{after, each_seed, preset, series, window_mean};
 
 /// The infected_fraction series of `id` after `ticks` ticks, per seed.
 fn infected(id: &str, ticks: u32, seeds: &[u64]) -> Vec<Vec<f64>> {
-    after(&preset(id), seeds, ticks, |w| series(w, "infected_fraction"))
+    after(&preset(id), seeds, ticks, |w| {
+        series(w, "infected_fraction")
+    })
 }
 
 /// As `infected`, under the engine's earlier reading of rule E: a flip per

@@ -125,7 +125,7 @@ fn session(c: &CollusionConfig, seed: u64, at: &[u64]) -> Run {
     let (mut pun, mut pun_code, mut resp, mut resp_code, mut count) = (0.0, 0.0, 0.0, 0.0, 0.0);
     let mut a5 = Vec::new();
     let mut rival_path = vec![0.0; 12];
-    for firm in 0..n {
+    for (firm, firm_values) in values.iter().enumerate().take(n) {
         let rival = (firm + 1) % n;
         for k in 0..cy.len() {
             let r = best_response_deviation(g, sp, st, cy, k, firm, BestResponseTo::Path);
@@ -142,8 +142,8 @@ fn session(c: &CollusionConfig, seed: u64, at: &[u64]) -> Run {
             // "deviation" to the price the strategy charges anyway is not one.
             let s0 = cy.states[k];
             let a = &r.path[0];
-            let dev = g.profit(a, firm) + c.delta * values[firm][sp.next(s0, a)];
-            let ic = r.deviation != r.before[firm] && dev < values[firm][s0];
+            let dev = g.profit(a, firm) + c.delta * firm_values[sp.next(s0, a)];
+            let ic = r.deviation != r.before[firm] && dev < firm_values[s0];
             a5.push((
                 r.change(g, rival),
                 f64::from(u8::from(ic)),
