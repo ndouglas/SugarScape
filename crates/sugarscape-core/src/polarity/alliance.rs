@@ -148,8 +148,14 @@ impl PolarityWorld {
             for members in self.coalitions.values() {
                 if members.contains(&b) {
                     for &member in members {
-                        if member != a && self.fronts.contains_key(&FrontKey::foreign(member, a)) {
-                            obligations.insert((member, a));
+                        if member != a {
+                            let key = FrontKey::foreign(member, a);
+                            let unresolved = self.config.obligation_timing
+                                == ObligationTiming::NextPeriod
+                                || !self.resolved_fronts.contains(&key);
+                            if unresolved && self.fronts.contains_key(&key) {
+                                obligations.insert((member, a));
+                            }
                         }
                     }
                 }

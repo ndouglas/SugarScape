@@ -302,6 +302,10 @@ impl PolarityWorld {
         self.dyadic_aggression.clear();
         if self.config.update == Update::Sequential {
             self.sequential(caps, &mut e);
+            if self.outcome.is_some() {
+                self.accumulate(&e);
+                return e;
+            }
         } else {
             for actor in caps {
                 self.decide_actor(actor, &mut e);
@@ -361,6 +365,10 @@ impl PolarityWorld {
                     if self.fronts[&key].actions.iter().any(|x| *x) {
                         let win = self.victory(key, frozen[&key], &mut e);
                         victories.insert(key, win);
+                        if self.outcome.is_some() {
+                            self.accumulate(&e);
+                            return e;
+                        }
                     }
                 }
             }
@@ -383,6 +391,9 @@ impl PolarityWorld {
                     if self.fronts[&key].actions.iter().any(|x| *x) {
                         let win = self.victory(key, values[&key], &mut e);
                         victories.insert(key, win);
+                        if self.outcome.is_some() {
+                            break;
+                        }
                     }
                 }
             }
@@ -405,6 +416,9 @@ impl PolarityWorld {
                     if self.fronts[&key].actions.iter().any(|x| *x) {
                         let win = self.victory(key, values[&key], &mut e);
                         victories.insert(key, win);
+                        if self.outcome.is_some() {
+                            break;
+                        }
                     }
                 }
             }

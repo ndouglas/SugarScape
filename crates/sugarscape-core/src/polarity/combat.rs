@@ -308,8 +308,17 @@ impl PolarityWorld {
                 }
             }
             self.decide_actor(actor, e);
+            if self.outcome.is_some() {
+                return;
+            }
             self.obligations();
+            if self.outcome.is_some() {
+                return;
+            }
             self.paths(e);
+            if self.outcome.is_some() {
+                return;
+            }
             let keys: Vec<FrontKey> = self
                 .fronts
                 .keys()
@@ -349,6 +358,9 @@ impl PolarityWorld {
                 } else {
                     None
                 };
+                if self.outcome.is_some() {
+                    return;
+                }
                 self.cells[key.a].stock -= losses[0];
                 self.cells[key.b].stock -= losses[1];
                 for loss in losses {
@@ -369,6 +381,9 @@ impl PolarityWorld {
                 } else {
                     early
                 };
+                if self.outcome.is_some() {
+                    return;
+                }
                 self.note_aggression();
                 if let Some(side) = winner {
                     let claim = self.claim(key, side);

@@ -804,3 +804,180 @@ mod final_numeric_guards {
             .contains("ledger"));
     }
 }
+
+#[cfg(test)]
+mod review_round1 {
+    use super::*;
+    use rand::Rng;
+
+    fn world(update: Update, seed: u64) -> PolarityWorld {
+        PolarityWorld::new(
+            PolarityConfig {
+                width: 2,
+                height: 2,
+                predator_share: 0.0,
+                update,
+                initial_mean: 50.0,
+                initial_sd: 0.0,
+                harvest_mean: 7.0,
+                harvest_sd: 0.0,
+                horizon: 1,
+                stop_at_hegemony: false,
+                ..Default::default()
+            },
+            seed,
+        )
+        .unwrap()
+    }
+
+    fn next_rng_value(world: &PolarityWorld) -> u64 {
+        let mut rng = world.rng.clone();
+        rng.gen()
+    }
+
+    fn seed_with_actor_order(before: usize, after: &[usize]) -> u64 {
+        (1..10_000)
+            .find(|&seed| {
+                let w = world(Update::Sequential, seed);
+                let mut capitals = territory::capitals(&w.cells);
+                let mut rng = w.rng.clone();
+                super::super::world::shuffle(&mut capitals, &mut rng);
+                let before_position = capitals.iter().position(|&x| x == before).unwrap();
+                after.iter().all(|&actor| {
+                    before_position < capitals.iter().position(|&x| x == actor).unwrap()
+                })
+            })
+            .unwrap()
+    }
+
+    #[test]
+    fn sequential_invalid_decision_aborts_before_harvest_and_extra_random_draws() {
+        let seed = seed_with_actor_order(0, &[1, 2]);
+        let mut w = world(Update::Sequential, seed);
+        w.cells[0].predator = true;
+        w.cells[0].stock = f64::MAX;
+        w.cells[1].stock = 1e-300;
+
+        let mut expected_rng = w.rng.clone();
+        let mut capitals = territory::capitals(&w.cells);
+        super::super::world::shuffle(&mut capitals, &mut expected_rng);
+        let expected_next = expected_rng.gen::<u64>();
+
+        w.run(1);
+
+        let outcome = w.outcome().unwrap();
+        assert!(!outcome.valid);
+        assert_eq!((outcome.periods, outcome.attempted_period), (0, 1));
+        assert_eq!(w.totals.harvest, 0.0);
+        assert_eq!(w.cells[0].stock, f64::MAX);
+        assert_eq!(w.cells[1].stock, 1e-300);
+        assert_eq!(next_rng_value(&w), expected_next);
+    }
+
+    #[test]
+    fn sequential_invalid_before_damage_victory_aborts_before_damage_and_harvest() {
+        let mut w = world(Update::Sequential, 32);
+        w.cells[0].stock = f64::MAX;
+        w.cells[1].stock = 1e-300;
+        let key = FrontKey::foreign(0, 1);
+        let front = w.fronts.get_mut(&key).unwrap();
+        front.previous = [false, true];
+        front.path = Some([0, 1]);
+
+        let mut expected_rng = w.rng.clone();
+        let mut capitals = territory::capitals(&w.cells);
+        super::super::world::shuffle(&mut capitals, &mut expected_rng);
+        let expected_next = expected_rng.gen::<u64>();
+
+        w.run(1);
+
+        let outcome = w.outcome().unwrap();
+        assert!(!outcome.valid);
+        assert_eq!((outcome.periods, outcome.attempted_period), (0, 1));
+        assert_eq!(w.cells[0].stock, f64::MAX);
+        assert_eq!(w.cells[1].stock, 1e-300);
+        assert_eq!(w.totals.harvest, 0.0);
+        assert_eq!(next_rng_value(&w), expected_next);
+    }
+
+    #[test]
+    fn snapshot_invalid_before_damage_victory_aborts_before_damage_and_harvest() {
+        let mut w = world(Update::Snapshot, 33);
+        w.cells[0].stock = f64::MAX;
+        w.cells[1].stock = 1e-300;
+        let key = FrontKey::foreign(0, 1);
+        let front = w.fronts.get_mut(&key).unwrap();
+        front.previous = [false, true];
+        front.path = Some([0, 1]);
+        let expected_next = next_rng_value(&w);
+
+        w.run(1);
+
+        let outcome = w.outcome().unwrap();
+        assert!(!outcome.valid);
+        assert_eq!((outcome.periods, outcome.attempted_period), (0, 1));
+        assert_eq!(w.cells[0].stock, f64::MAX);
+        assert_eq!(w.cells[1].stock, 1e-300);
+        assert_eq!(w.totals.harvest, 0.0);
+        assert_eq!(next_rng_value(&w), expected_next);
+    }
+
+    #[test]
+    fn late_same_period_obligation_does_not_change_an_already_resolved_front() {
+        let config = PolarityConfig {
+            width: 2,
+            height: 2,
+            predator_share: 0.0,
+            update: Update::Sequential,
+            alliances: true,
+            obligation_timing: ObligationTiming::SamePeriod,
+            initial_mean: 50.0,
+            initial_sd: 0.0,
+            harvest_mean: 0.0,
+            harvest_sd: 0.0,
+            horizon: 1,
+            stop_at_hegemony: false,
+            ..Default::default()
+        };
+        let (mut w, seed) = (1..10_000)
+            .find_map(|seed| {
+                let w = PolarityWorld::new(config.clone(), seed).unwrap();
+                let mut capitals = territory::capitals(&w.cells);
+                let mut rng = w.rng.clone();
+                super::super::world::shuffle(&mut capitals, &mut rng);
+                (capitals.iter().position(|&x| x == 2) < capitals.iter().position(|&x| x == 0)
+                    && capitals.iter().position(|&x| x == 0)
+                        < capitals.iter().position(|&x| x == 1))
+                .then_some((w, seed))
+            })
+            .unwrap();
+        w.cells[0].predator = true;
+        w.cells[0].stock = 150.0;
+        w.cells[1].stock = 20.0;
+        w.cells[2].stock = 50.0;
+        w.config.victory = 100.0;
+        w.coalitions = BTreeMap::from([(1, vec![1, 2])]);
+        let resolved = FrontKey::foreign(0, 2);
+        assert!(!w.fronts[&resolved].actions[1]);
+
+        w.run(1);
+
+        let late_attack = FrontKey::foreign(0, 1);
+        let resolved_front = &w.fronts[&resolved];
+        assert_eq!(w.totals.attacks, 1, "seed {seed}");
+        assert_eq!(
+            w.totals.dd_encounters,
+            1,
+            "seed {seed}, fronts {:?}",
+            w.fronts
+                .iter()
+                .map(|(k, f)| (k, f.actions, f.previous, f.initiated))
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(w.fronts[&late_attack].previous, [true, true]);
+        assert_eq!(resolved_front.actions, [false, false]);
+        assert_eq!(resolved_front.previous, [false, false]);
+        assert!(resolved_front.episode.is_none());
+        assert!(w.pending.is_empty());
+    }
+}
