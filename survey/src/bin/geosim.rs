@@ -1419,8 +1419,18 @@ fn run_cli(args: Args) -> Result<(), String> {
         },
         std::path::PathBuf::from,
     );
+    let history_destination = output_destination(out)?;
+    let resolved_destination = output_destination(&resolved_out)?;
+    // Missing paths cannot be canonicalized. These platforms commonly alias ASCII case,
+    // so conservatively reject such spellings even on their case-sensitive volumes.
+    let same_destination = history_destination == resolved_destination
+        || (cfg!(any(target_os = "macos", target_os = "windows"))
+            && history_destination
+                .as_os_str()
+                .as_encoded_bytes()
+                .eq_ignore_ascii_case(resolved_destination.as_os_str().as_encoded_bytes()));
     require(
-        output_destination(&resolved_out)? != output_destination(out)?,
+        !same_destination,
         "resolved output must differ from history output",
     )?;
     let seen = resume(out, &prepared, &binding)?;

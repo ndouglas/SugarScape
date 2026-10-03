@@ -145,6 +145,41 @@ fn missing_output_aliases_reject_without_creating_ancestors() {
     }
 }
 
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[test]
+fn missing_case_aliases_reject_before_creating_or_mixing_outputs() {
+    for validate in [true, false] {
+        for nested in [true, false] {
+            let f = Fixture::new();
+            let m = f.manifest(true);
+            let out = f.path(if nested {
+                "Histories/History.jsonl"
+            } else {
+                "History.jsonl"
+            });
+            let resolved = f.path(if nested {
+                "histories/history.jsonl"
+            } else {
+                "history.jsonl"
+            });
+            let mut command = f.command(&m, &out, &resolved);
+            command.arg("--allow-unfrozen-fixture");
+            if validate {
+                command.arg("--validate");
+            }
+            let result = command.output().unwrap();
+            assert!(
+                !result.status.success(),
+                "case aliases accepted: validate={validate}, nested={nested}"
+            );
+            assert!(!out.exists());
+            assert!(!resolved.exists());
+            assert!(!f.path("Histories").exists());
+            assert!(!f.path("histories").exists());
+        }
+    }
+}
+
 #[test]
 fn missing_distinct_destinations_work_and_unresolvable_ancestors_fail_before_writes() {
     let f = Fixture::new();
