@@ -1,0 +1,173 @@
+# SugarScape milestone — GeoSim and the size of wars — Design
+
+**Date:** 2026-10-03. **Milestone:** 37, subject to integration assignment.
+**Kind:** `geosim`; displayed as **GeoSim: The Size of Wars**.
+**Basis:** new kind, APSR eleven-arm reconstruction, archived-author docking attempt and separate modern tail analysis approved in chat. This written spec awaits review; no implementation is authorized by its existence.
+**Research:** [main reading notes](2026-10-03-geosim-reading-notes.md), [mechanics](2026-10-03-geosim-mechanics-reading-notes.md), [author provenance](2026-10-03-geosim-author-code-reading-notes.md). Printed APSR pages are authoritative unless explicitly identified as a predecessor or artifact reading.
+
+## Intent and evidence boundaries
+
+Make Cederman's technology-driven conquest model inspectable and test whether its reported war-size statistics and mechanism comparisons reproduce. Findings, including failed reproduction and dependence on a reconstruction choice, are the deliverable. A convincing picture or heavy tail is insufficient.
+
+Implement Cederman2003 *APSR*97(1):135–150, its eleven Table1 experiments, named source ambiguities, and an attempt to execute/dock the archived GeoSim2 implementation. Analyze source regression summaries and modern tail evidence separately. The2002 working paper and PNAS boundary model are lineage evidence, not interchangeable parameter defaults. State-size/lognormal experiments, Abramson calibration, terrain, nationalist mobilization, democratic regimes, deliberate secession and alliances are outside this milestone.
+
+Existing `polarity` configs, fingerprints, outcomes and findings remain unchanged. Reuse host/model/schema/RNG/clock/export conventions; do not generalize the geopolitical engine or import EPM stock transfers and action rules. Abstract resource damage is not battle deaths. No real-world causal, forecasting or AI-intent conclusion follows from reproduction.
+
+All third-party archives and fitting code stay reference-only. The recovered GeoSim2 is a later author port, not established as the exact APSR source. GROWLab core is LGPL; model headers are unresolved. Agreement with the port must be named as such. No external messages to authors are part of this authorization.
+
+## Architecture and state
+
+Add `ModelKind::Geosim`, `ModelConfig::Geosim(GeosimConfig)` and `GeosimWorld` under `crates/sugarscape-core/src/geosim/`. One shared engine serves native, WASM, CLI, page and survey. Statistics/rendering/export never consume randomness. Default RNG uses existing `SimRng`; all iteration/reduction order is explicit and portable.
+
+| Unit | Responsibility |
+|---|---|
+| config/presets | Validation, paper defaults, resolved named readings, four mechanism presets |
+| territory | Fixed row-major cell IDs, capitals, government membership, founder growth, neighbors and contiguity |
+| resources | Capacity relaxation, extraction/projection, old directional commitments and damage buffers |
+| decision/combat | Alert/campaign memory, C/D, paths, probabilities and structural claims |
+| wars | Spatiotemporal identity, merge history, participant shadows, severity, completion and censoring |
+| analysis/stats | Complete outcomes, accounting, counters and display snapshots |
+| world/view | Period phases, model adapter, canvas and Inspect |
+| survey/geosim | Frozen manifest, native recorder, offline source/modern judges and reporting |
+
+Primitive cells retain their coordinates and current capital. State identity is `(capital_cell, sovereignty_generation)`; a reemergent cell receives a new generation, so old cluster participants cannot accidentally become a different state. Fronts use canonical ordered state identities and directional actions, commitments, damage and path. State retirement is recorded, never silently renumbered. Derived membership/neighbor maps have deterministic ordering.
+
+Capitals own corporate capacity, technology threshold, alert flag and optional campaign target. Provinces supply yield and distances, not independent EPM stocks. Complete war records are not a bounded UI event log. Export stable IDs, parents on merges, retired identities and all finish reasons.
+
+## Literal numerical defaults and clock
+
+APSR TableA1 p.147 supplies the following defaults. The source identifies some mechanisms incompletely; selected reconstruction readings below resolve them visibly.
+
+| Field | Default | Validation |
+|---|---:|---|
+| width,height | 50,50 | Each2..100; at most10000 cells |
+| initial_states | 200 | 1..cell count |
+| initialization_periods, observation_periods | 500,10000 | Integers0..1000000 and1..1000000000; checked sum |
+| periods_per_tick | 1 | Integer1..10000 |
+| resource_adjustment | .01 | Finite[0,1] |
+| mobile_share | .5 | Finite[0,1] |
+| campaign_drop_probability | .2 | Finite[0,1] |
+| attack_probability, deactivation_probability | .01,.1 | Finite[0,1] |
+| superiority_threshold, victory_threshold | 3,3 | Finite positive |
+| superiority_exponent, victory_exponent | 20,20 | Positive integers1..100 |
+| damage_fraction | .1 | Finite[0,1] |
+| distance_offset, distance_threshold, distance_exponent | .1,2,3 | Offset[0,1], finite positive threshold/exponent |
+| shock_probability, shock_shift | .0001,20 | Finite[0,1], finite nonnegative shift |
+| war_shadow | 20 | Integer0..10000 |
+| context_activation | true | Boolean |
+| event_log,event_log_limit | false,1000 | Limit0..1000000; positive if enabled |
+
+Horizon is the sum of initialization and observation,10500 by default. No early stop for hegemony or quiet periods: this changes the source observation. A source period is a full phase iteration; a display tick executes up to `periods_per_tick` complete periods. The final tick may be partial. Finished/invalid worlds do not advance further. Expose attempted/completed period, display tick, last-tick periods, counting start and finish reason. Grouped runs must equal ungrouped runs in model state and Outcome; display-only history lengths may differ. Existing page limits are display-tick limits, not source-period limits. Exploratory sweep ticks default to `ceil(horizon/periods_per_tick)`.
+
+Zero/negative capacities, denominators, nonfinite ratios or probabilities produce explicit invalid outcomes when the chosen numerical policy cannot evaluate them. Preserve available state and partial ledgers; null unavailable numbers; never emit NaN/Infinity JSON or replace invalid seeds. `numerical_policy=reject_nonpositive` is the default conservative reconstruction where a combat ratio requires positive commitments. An explicit `floor_zero` alternative clamps capacities and treats a zero/zero contest as neutral(.5), positive/zero as certain and zero/positive as impossible; clipping is counted. This policy is not asserted to be in the paper.
+
+## Selected paper reconstruction and named switches
+
+The normal preset is `paper` and always exports every resolved field. `artifact_2017` is an explicitly attributed bundle of later-port readings, not a replacement paper default. A manual field change makes the preset custom. Inactive choices are validated and serialized. Every row below is a named enum/value; UI copy distinguishes source rules from reconstruction.
+
+| Reading | Paper default | Alternative and attribution |
+|---|---|---|
+| topology | bounded cardinal neighbors | torus, reconstruction sensitivity |
+| founder_growth | ordered_round_robin | shuffled_round_robin; source setup order unreported |
+| initial_capacity | extracted_capacity | artifact_random_100_1; later-port initialization |
+| distance_metric | euclidean | manhattan; paper unspecified, port uses Euclidean |
+| distance_formula | decreasing | printed_increasing; APSR p.146 exponent versus Fig2/prose |
+| enemy_total | active_fronts | all_fronts; printed sum versus worked allocation example |
+| initiation_guard | literal_precedence | global_no_action; p.148 pseudocode/prose |
+| campaign_drop_timing | each_decision | after_battle; source parameter description versus port ordering |
+| path_sampling | target_first | attacker_first; APSR versus PNAS lineage |
+| attack_projection | respective_states | initiator_curve; recovered port divergence |
+| damage_basis | opponent_projected | own_commitment; competing readings of p.148 |
+| damage_feedback | subtract_losses | add_losses; recovered negative-buffer subtraction |
+| severity_damage | all_damaged_fronts | mutual_only; recovered port excludes unilateral damage |
+| victory_draws | independent_defender_priority | exclusive; independent claims versus one categorical draw |
+| capital_capture | capture_and_fragment | collapse_only; PNAS clarification versus APSR ambiguity |
+| locking | affected_cells | affected_states; source lock scope unspecified |
+| technology_inheritance | reset_on_reemergence | retain_cell_threshold; not specified in paper |
+| cluster_linkage | conflict_edges | adjacent_active_states; WP measurement sensitivity |
+| retired_participants | retain_shadow | drop_immediately; recovered port removes nonsov actors |
+| count_boundary | after_initialization | at_initialization; source wording/port boundary |
+| severity_export | raw_damage | java_int100; truncated/saturating recovered export |
+| completed_export | all_completed | one_per_period; recovered collector backlog |
+
+Founder setup shuffles all cell IDs, selects `initial_states` founders, and repeatedly lets each founder annex one uniformly sampled eligible neighboring nonfounder primitive cell until none remain. Founder order is the sampled selection order; nonfounders cannot absorb founders. Fail construction if growth makes no progress while unassigned cells remain. Recompute membership and capacity after growth. `extracted_capacity` sets each state to its discounted capital/province yield before source period1; initial actions/commitments are C/zero, alert false and campaign absent. Artifact100/1 initializes primitive resources100 with probability.2, otherwise1, transfers resources during growth, and replaces new sovereign capacity with yield on its first update. Record initialization draws and ordering in docking traces; do not claim identical RNG from seed equality.
+
+Distance zero returns1. For `decreasing`, extraction/projection is `o+(1-o)/(1+(d/h)^k)`; `printed_increasing` uses exponent−k for positive distance. The state threshold remains2 during initialization. Thereafter an independent per-state shock draw replaces its threshold with `2+(period-initialization_periods)*shock_shift/observation_periods`; it is a catch-up to the contemporary frontier, not adding20 on each shock. Captured provinces use their owner’s curve; new capitals reset to2 unless the named inheritance switch retains their last threshold.
+
+The five phases are resource calculation, allocation, decisions, combat and randomized structural claims. Allocations/actions double-buffer old values. Explicitly shuffle actor decisions and claims; geometry/statistical reduction never relies on hash-map iteration. Shocks occur after structural changes for use in the next period. Observation starts on the first period strictly after initialization unless the boundary alternative is selected.
+
+Resource update: `Rnew=(1-a)*Rold+a*(1+discounted_province_yield-positive_previous_damage)`. Damage belongs to the previous encounter buffer and is applied exactly once; `add_losses` changes that final subtraction to addition. New sovereigns initialize from extracted yield. Retirement/resource reset changes are explicit accounting entries, not conservation claims. All-positive losses and capacity increases are measured separately, with per-period recurrence residuals.
+
+States with no sovereign neighbors have no fronts and make no allocations or attack/victory-ratio evaluations. Fixed commitments `(1-mobile_share)*R/neighbors` and mobile commitments follow pp.147–148. With no active opposing commitment, assign the full mobile component as a conditional plan on each front. Otherwise active fronts receive `mobile*opposing/active_total`, passive fronts `mobile*opposing/(active_total+opposing)`. `all_fronts` changes only the denominator set. The commitments are contingent plans, not an additive budget over mutually exclusive passive attacks. Front activity means either side previously D; label that reconstruction.
+
+Grim trigger preserves D when either previous action is D. Own or neighbor prior-period fighting alerts the actor when context is enabled; after a quiet neighborhood it deactivates with the stated probability. With context disabled, retain spontaneous attack probability and campaigns, but disable neighborhood-induced alerts. Existing campaigns drop at each decision invocation under the default. Campaign targets must still be sovereign neighbors; otherwise clear them. Under `literal_precedence`, spontaneous contemplation requires no current D front, but alert/campaign contemplation can bypass this guard. `global_no_action` applies the guard to all contemplation. Do not consume draws on branches that do not contemplate an attack.
+
+Select eligible target uniformly, preserving a valid retained campaign. For target-first paths, uniformly choose a target-owned border cell then an adjacent attacker-owned cell; attacker-first reverses the two selections. Retain the sampled front path while valid; resample only on a new initiation or structural invalidation. If both sides initiate the same new dyad, choose the lower stable state identity’s path; record this collision arbitration as reconstruction.
+
+Evaluate attack ratio with the respective capital curves; `initiator_curve` substitutes the initiator’s curve on both sides. Probability is `1/(1+(ratio/threshold)^(-exponent))`, evaluated stably with finite/range checks. Combat ratio always uses respective curves. Compute both sides’ victory probabilities using their own advantage ratios and the same positive victory threshold, so the defender’s probability decreases with attacker advantage. Default uses independent draws; any defender victory stops combat and cancels attacker conquest, including simultaneous victories. Defender success never annexes attacking territory. The exclusive alternative uses one draw with attacker probability, then defender probability in the remaining interval, leaving any remainder undecided; serialize this attribution, not a supposed exact source rule.
+
+Default damage is fraction×opponent projected commitment applied to a victim of D; mutual D damages both, unilateral D only the cooperating victim. The own-commitment alternative substitutes the damaged party’s own local commitment. Combat damage is recorded before claims. Severity includes all such losses under the paper reconstruction; artifact mutual-only differs explicitly. The recovered port’s exposed `.1` stalemate field is unused: do not add a functioning source stalemate parameter.
+
+Structural claims validate both state generations, sampled path, ownership and adjacency at execution. Stale claims are rejected without mutating state. Capturing a primitive capital absorbs it; capturing a composite capital annexes it and releases remaining provinces; ordinary conquest transfers the target cell. Recompute contiguity and release disconnected cells individually. `collapse_only` releases the capital too. Lock changed cells and involved capitals, or all members of both pre-event states for affected-state mode; no later claim can mutate locked cells. Rebuild relations after changes; never resolve obsolete cached fronts. Preserve resets, retirements, reemergence, victory and rejection causes.
+
+## Wars, severity and complete outcomes
+
+A war is a spatiotemporal cluster, not a dyadic episode. Refresh participant activity when a front fights (either D). Connect fronts through shared state identities under conflict linkage; the adjacency alternative additionally connects geographically adjacent active states. Existing wars touched by a connected conflict merge, carrying accumulated damage once, earliest start, stable smallest surviving war ID, and absorbed-war parent IDs. Never split a previously joined war after geographic separation; its temporal identity persists through shadows.
+
+Default shadows record last fighting period; participants remain active while `current_period-last_fighting_period <= war_shadow`. Thus a participant with shadow20 and last fight1 expires on22. Retired participants retain that identity through the shadow, without becoming their reemergent successor. War ends when no active participant remains. Default counting at501 starts with an empty measured war tracker; prior combat memory still affects dynamics. Starting combat refreshes the new observed tracker, but pre-observation damage is not retrospectively counted. At the observation horizon, close no still-active war artificially: export it as censored with its measured partial damage.
+
+Completed source-fit wars exclude censored/invalid partial wars. Retain completed zero-severity wars and excluded-zero reasons even though log fits cannot use them. Keep raw severity alongside `java_int100`: Java narrowing truncates toward zero, saturates beyond signed32-bit range and maps NaN to0. The engine rejects nonfinite raw damage; it must not use that conversion to hide invalidity. Report saturation and subunit-zero exports explicitly.
+
+`all_completed` emits every completion; artifact `one_per_period` drains one FIFO queued positive-raw-severity war per period, retaining backlog at horizon separately from censored wars. Finished-but-unexported wars are not active censored wars. Both full biological-event census and legacy-visible census are available; never throw backlog away. Cluster count, dyadic fighting periods, damage, conquests and sovereign count are distinct observables.
+
+Outcome contains config, seed, RNG mode, clocks, valid/state_available, finish reason, completed/censored wars, exporter backlog, merge parents, participants/generations, active-period duration, wall-clock duration, end causes, raw/exported severity, counters and resource ledgers. Inactive shadows add wall-clock duration but not active combat periods. Bound only UI traces; optional survey traces can stream rather than make every snapshot retain the entire past. Memory limits may stop a run as an explicit invalid/incomplete outcome; they cannot silently drop scientific war records.
+
+## Author execution and docking
+
+Before registered measurement, attempt a standalone launcher against the archived GeoSim2/framework binaries, bypassing the old GUI when feasible. Inspect startup, two seeded Mersenne-Twister streams, time propagation, list shuffles and collector draining. Record archive/member/dependency hashes, commands, runtime, compatibility patches and failures. No change to model rules to obtain a build. Apply the project’s three-attempt reassessment rule to a blocker; a documented unavailable reference does not block the independently specified reconstruction.
+
+Use port seed5, source horizon10500 and artifact settings for reference runs. Compare initialization, sampled draws, period snapshots, fronts, actions, thresholds, claims, damage, clusters and FIFO outputs; identify the first divergence. Default portable PCG and the port’s two MT streams will not dock merely by matching seeds. An isolated draw-tape/RNG adapter may align them if demonstrated; both native and WASM must share the same production mechanics. State explicitly whether evidence is per-period identical, matched mechanisms under supplied draws, distributional agreement or unavailable. Do not equate a later-port seed5 trace with the paper’s illustrative run.
+
+The artifact preset includes Euclidean/decreasing distance, random100/1 initialization, each-decision campaign drop, initiator-curve attack evaluation, add-loss feedback, mutual-only severity, independent defender-priority wins, nonsov participant removal, integer100 export and one-per-period collection. Resolve any further differences in a dated audit before freezing its runnable configuration; inability to certify the complete bundle makes full artifact docking Unresolved, not a license to tune it. The paper default must not change from measured artifact behavior.
+
+## Registered study and source comparison
+
+The design fixes a bounded workload:11 original arms×15 histories=165; the same11 precision arms×100 additional histories=1100;14 baseline reading controls×15=210; one artifact-reference arm×15=15. **37 arms,1490 complete attempted histories.** Each has the full source horizon; no early stop. Precision populations are our extension and remain separate. Reading controls change one field only; no Cartesian product.
+
+Source arms are base; shock10; shock0; context disabled; shadow10; shadow40; both attack/victory thresholds2.5 plus shock10; mobile.9; distance offset.2; distance exponent5;75×75/450 founders. Everything else uses the resolved paper preset. The fourteen controls are printed-increasing formula; Manhattan distance; attacker-first paths; global-no-action guard; all-front denominator; own-commitment damage; exclusive victory; collapse-only capture; affected-state locks; adjacency linkage; add-loss feedback; initiator-curve attack projection; mutual-only severity; integer100 severity export. Other exposed reconstruction dimensions are documented as unmeasured, not silently described as robust.
+
+Use stable arm order and nonoverlapping seed ranges: arm index0..36 receives `370000001+index*10000+repeat_index`, with repeat indices0..14 or0..99. Analysis root seed2026100301; fixed analysis job order derives independent child seeds. Seed equality is not experimental pairing. Independent whole-history resampling supplies treatment uncertainty.
+
+Create a machine-readable source Table1 containing all printed values from the mechanics notes: slope min/median/max, R² min/median/max, median log range, median number of wars; exact TableA1 settings and row7 footnote; source pages, extraction hashes and nearest-rounding assumption. Rounding intervals are half.01 for slope, half.001 for R², half.1 for range; integer median count is exact. Visually verify tables and digitize Fig6–8 where source resolution permits, retaining pixels/calibration/error bounds. Unknown seed illustrations are descriptive and excluded from quantitative reproduction judges.
+
+Offline source-fit convention: completed sizes `s` selected by the resolved `severity_export`(raw damage by default), sorted unique positive thresholds; strict CCDF `count(S>s)/N` with N all positive completed wars in the selected export census. The paper default uses all completions; the artifact preset uses its actually dequeued legacy-visible records and reports backlog separately. Fit points have log10(s)>=2.5 and positive CCDF; max-size zero-CCDF point is excluded. OLS log10(CCDF) versus log10(s), at least three distinct fitted x values and positive x/y variance; otherwise fit unavailable. Range is log10(max positive completed selected size/min positive completed selected size); source N-wars summary is all completed wars in the selected census including zero. Export inclusive/rank-based fit, fit-tail range/count and integer100 equivalents descriptively as definition checks. These are frozen inferred definitions; absent author evidence that “range,” count denominator or severity scale matches the printed table, source-equivalence for those targets is **Unresolved**, while the conditional reconstruction comparison remains reported. Preserve the distinction even if numbers look close.
+
+Each original arm produces its own15-history eight-summary vector and direct source comparison. Never pool original and precision runs. For the conditional predictive comparison, draw15 whole precision histories with replacement100000 times, keep their joint four-metric vectors, and compute all eight source summaries. Missing/invalid/ineligible histories prevent a complete compatible arm verdict rather than reduce n. Compute inclusive two-sided Monte Carlo tail p-values with +1 correction; maximize p over admissible source rounding intervals. Holm correction across the fixed88 table targets at.05. Conditional Compatible means all targets available and none reject; Incompatible means at least one corrected rejection; otherwise Unresolved. Compatibility is not equivalence. Show predictive intervals, valid/invalid denominators and finite-support limitations of100 reference histories, especially for extrema. Do not describe impossible outside-bootstrap extrema as impossible model events.
+
+Two mechanism contrasts use precision populations: base versus shock0 and base versus context-off. Source-direction predictions are larger means across histories of slope(flatter/more positive), R² and log range in base. Independent whole-history bootstrap100000 draws, two-sided p-values/Holm across six fixed comparisons, 95% intervals. Holds requires a corrected significant source-direction difference; Fails requires a corrected significant opposite direction; otherwise Inconclusive. Missing full arm/fit makes the relevant comparison Unresolved. War count is separately descriptive. Do not define power-law success by an arbitrary R² threshold.
+
+## Modern tails and empirical evidence
+
+For every eligible history, fit a continuous Pareto tail to raw positive completed damage with MLE and data-selected lower cutoff minimizing KS. For individual histories, candidate cutoffs are all observed positive sizes with at least50 tail observations. For pooled diagnostic fits, use a deterministic grid of at most100 eligible observed cutoffs, selecting evenly spaced indices including both endpoints from the sorted unique eligible values; use every value if there are fewer than100. Export `cutoff_search=all_observed` versus `grid100`. This computational approximation and the50-observation sufficiency rule are our explicit choices, not source parameters. Fewer than50 yields Insufficient tail, never zero alpha. Alpha>1; log-likelihood, KS, xmin, n/n_tail, excluded/censored/backlogged counts and optimizer diagnostics are exported. Compare exponential, lognormal, stretched exponential and exponential-cutoff Pareto on the same fitted support with normalized likelihood ratios; account for the nested cutoff model separately. Fit each alternative as a lower-truncated density on x>=xmin. Non-nested ratios use the CSN asymptotic two-sided normalized-ratio p-value at.1, with unresolved zero-variance cases. For the nested exponential cutoff, use the boundary likelihood-ratio calibration(half point mass at0, half chi-square1); exact equal fits return p=1. These p-values are iid diagnostics and receive no treatment inference interpretation. Keep all four alternative outcomes, including disagreement.
+
+Apply the CSN iid semiparametric generated/refitted KS test as an explicitly iid diagnostic to each of the22 original/precision arm pools, using1000 simulations per eligible pooled fit and declared reference approximation choices. Each simulation generates a sample with the observed total size, draws below-cutoff observations from the empirical body and tail observations from the fitted Pareto, and refits cutoff/alpha before comparing KS. These pooled tests are distribution diagnostics, never treatment-replication tests. Individual histories and reading/artifact controls receive MLE/KS/likelihood-ratio estimates without a1000-draw KS job each. The grid100 search is repeated identically in every simulated fit; do not call the approximation exact reproduction of an all-cutoff reference. Use the CSN-style .1 rejection level for this diagnostic, with Monte Carlo error intervals; a result whose interval straddles .1 is Inconclusive. Nonrejection is called “not rejected under iid diagnostic”; it does not validate dependent GeoSim histories. Uncertainty of means/medians of individual-history fitted alpha/xmin and treatment comparisons across worlds resamples whole history records100000 times; do not undertake100000 pooled optimizer refits or substitute resampled wars. Eligibility frequencies remain visible. Pooled war fits are descriptive and have no iid-based treatment standard error. No cluster bootstrap is mislabeled as the critics’ original test and no invented dependent-null test is advertised as available. All optimization failures, insufficient tails and saturation are retained in the findings matrix. Modern fit procedures remain offline. Optimizers must use declared deterministic starting values/bounds, reject unconverged or nonfinite results explicitly, and agree with synthetic/reference fixtures within a fixed numerical tolerance recorded in the premeasurement manifest; changing the tolerance after inspecting scientific results is forbidden. The verified plan supplies concrete library/runtime choices and tolerances from numerical fixtures before measurement.
+
+Recover CoW v4.0 and codebook, preserve downloads/hashes, aggregate participant battle deaths by war ID under the documented missing-code rules, and reconstruct Clauset2018's95 wars1823–2003 before comparing reported xmin7061, alpha1.53 and uncertainty. Recover Supplementary S1 and follow its precise estimator/bootstrap settings for this empirical reproduction lane; use reference-only author fitting code when executable. Cederman’s historical1820–1997 input and Clauset’s1823–2003 population are distinct. If the older input cannot be recovered, keep its source figure/slope as published evidence, label its independent recomputation Unresolved and do not substitute newer data.
+
+No measured output may change the cutoff-selection algorithm or fixed source cutoff, arm, interpretation, seed count or judge. A preregistered data-selected modern xmin is permitted; choosing a favorable support afterward is not. The declarative manifest includes all estimator choices/draws/tolerances before any study periods run. Recovering a source-defined detail may amend this premeasurement specification with citation; after measurement, preserve old files/verdicts and write a dated before/after amendment.
+
+## Recording, hosts and verification
+
+Validate the entire manifest without periods and export authoritative Rust-resolved configs and hashes. One native JSONL record per `(arm,seed)`, flush each, resume exact registered keys, reject duplicates/mixed manifests/changed configs. Bind source extraction, manifest, executable and all relevant source files, toolchain versions and commands. Preserve invalid available state; expose construction errors and caught implementation panic context; do not falsely count an aborted period as completed. Python cannot independently guess defaults. Benchmark a full baseline before freezing execution/scheduling; record runtime only as planning evidence, not a reason to drop arms or periods. Raw datasets/reference traces remain ignored under a dedicated `geosim-*` prefix; source tables, manifests, compact findings and provenance are committed.
+
+Playground presets are source base, no technology, no contextual activation and smaller shocks; artifact preset is an explicitly labeled reference option. Canvas modes show ownership, capacity, technology, alert/campaign and war membership. Inspect exposes capital/generation, territory, distances/threshold, resource recurrence, front commitments/actions, path, current war/shadow and last structural event. Rule legends explain conditional commitments and abstract severity. Compare independently steps two worlds with visible source clocks. Experiments captures the resolved current config and uses shared defaults/limits, finite outcomes and completed-run counts; it is exploratory, not a substitute for native scientific judges.
+
+Verification includes tiny founder growth/contiguity motifs; distance curves; source and port-sign recurrence; conditional allocations; alert/campaign transitions; genuine random versus singleton draw consumption; target-path sampling; independent/simultaneous/defensive victory; invalid/zero inputs; stale/locked claims; retirement generations; technology inheritance; cluster merge damage once/no split/shadow endpoints; unilateral severity; burn-in boundaries; multiple completions and FIFO backlog; Java saturation; horizon censoring; grouped-period equivalence and immutable finish. Native/WASM parity must cross a shock, conquest/collapse and cluster completion; include source and artifact readings. Existing goldens remain untouched.
+
+CI uses seconds-scale motifs, short tiny worlds, host/config/schema/serialization, manifest/source validation and small deterministic estimator fixtures (ties, degeneracy, rounding, support, optimizers, p-value correction and Holm). All1490 histories and full resampling live outside CI. Reuse Rust/Python/web tooling and shared test utilities; introduce dependencies only for a justified estimator/reference execution need, with pinned versions and license evidence.
+
+## Workflow and completion
+
+After written-spec approval, use writing-plans. Follow the approved prior workflow: isolated scratch implementation, verify a plan reconstructs it byte-for-byte, then subagent-driven native execution of the verified plan. Keep a3–5-stage `IMPLEMENTATION_PLAN.md` until complete. Commit working increments; no test bypasses. Author-run attempts and premeasurement audit belong in the verified plan and cannot be replaced by an assertion that the archive looks compatible.
+
+Completion means all declared arms/keys and source/modern findings are present, including invalid/Unresolved/Insufficient outcomes; scientific rules and raw evidence are preserved; a fresh final reviewer checks source fidelity/protocol/provenance and hosts; all required checks pass; integration receives exact-head CI/Pages and deployed Inspect/Compare/Experiments smoke. Update papers/roadmap/campaign/war-study handoff with findings and measured limits. Remove only owned worktrees after preserving every unique raw/reference/review artifact. Unavailable author docking or empirical source recovery is a reported limitation, not a fabricated success or an indefinite dependency.

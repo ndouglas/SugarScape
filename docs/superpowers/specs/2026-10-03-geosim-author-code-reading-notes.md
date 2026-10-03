@@ -88,3 +88,49 @@ Before running anything, inspect a minimal GROWLab simulator entry point, depend
 Agreement with this GROWLab port would establish agreement with the archived author implementation under explicitly matched settings. It would not alone prove reproduction of the exact APSR implementation or the published seed-5 numbers. Figure-level similarity also cannot settle RNG or event-definition equivalence.
 
 The next source verification should seek author SVN historical revisions or the original RePast 1.4 model and seed-5 settings/output through the authors' documented provenance. Compare the port with that version for RNG streams, draw consumption, shuffle/list ordering, tick boundaries, campaign transitions, shock timing, battle damage, cluster merging/termination, burn-in, terminal censoring, and collector draining. Preserve the distinction between author lineage, documented correspondence, observed run agreement, and exact publication-source identity.
+
+## Targeted audit: primary specification versus recovered artifact
+
+This follow-up inspected the APSR appendix on printed pages 146–148 and the nested GeoSim2 source directly. The primary paper defines the source-first scientific scope. Artifact quirks belong in a separately identified docking/reference lane. These are differences between the paper and the recovered GROWLab port; without the original APSR source, they cannot be dated as changes introduced by the port.
+
+All Java references below are inside `models/geosim2-0.9.0.zip`, under `src/ch/ethz/icr/growlab/model/geosim2/`, unless otherwise stated.
+
+### Distance and projection
+
+`Actor.java:252–253` computes Euclidean distance. Annexation caches distance from the new capital in `Geosim2Model.java:614`. `Actor.java:274–279` combined with `Geosim2Model.java:1084–1088` yields `offset + (1-offset)/(1+(distance/threshold)^slope)`, with distance zero returning 1. The exponent is positive in this decreasing distance curve. The printed formula on APSR p.146 displays a negative exponent, inconsistent with the accompanying decreasing-extraction interpretation and the artifact. This discrepancy requires an explicit interpretation, not an unnoticed transcription.
+
+`Actor.powerRatio`, `Actor.java:675–682`, discounts both the initiator's launch resources and the opponent's target resources using the initiator's extraction curve. The paper's local balance on p.148 refers to each state's respective capital-to-battle distance function. `Geosim2Model.battle`, lines 566–568, uses each respective owner's curve. The source-first lane should use respective state curves; the artifact lane can name and reproduce the initiator-curve decision calculation.
+
+### Loss accounting and severity
+
+`Geosim2Model.java:525–543` records negative `dres` for resources lost to the opponent's projected forces. During unilateral attack, only the cooperating victim has nonzero damage; the attacker has zero. During mutual fighting both sides incur damage.
+
+`Actor.updateRes`, `Actor.java:354–377`, sums these negative losses and computes `dRes = harvest - damage`. The resulting resource target adds the magnitude of losses. The paper's p.147 pseudocode subtracts total damage. Source-first behavior should subtract losses; artifact docking must explicitly identify the recovered add-loss feedback rather than silently correcting it.
+
+The artifact adds damage to cluster severity only in the mutual-fighting branch (`Geosim2Model.java:539–544`). Both unilateral and mutual attack fronts nevertheless create or refresh cluster membership (`497–515`). The paper p.148 describes cumulative damage for conflict clusters without disclosing this mutual-only measurement restriction. Keep event participation and measured severity distinct.
+
+### Stalemate and victory
+
+`probStalemate` occurs only in `Geosim2Lab.java:80,173,189`: a field, default 0.1, and exposed parameter list. It is not read anywhere else in the nested GeoSim2 Java source. It has no operative random-stalemate effect in the inspected artifact. Do not infer a functioning probability knob from its label.
+
+`Geosim2Model.java:550–575` tests one victory claim per side using independent Bernoulli calls, except in deterministic or zero-opponent branches. Any defending-side claim clears both claims and ends fighting (`553–584`), giving defender victory priority when both sides claim. The paper p.148 permits simultaneous claims but does not settle shared versus independent random draws.
+
+### Initialization, RNG, and campaign timing
+
+`Geosim2Model.java:153–158` creates two independent Mersenne Twister instances initialized with the same seed. Initial actor-order shuffle uses the main stream (`190`); the rebuilt sovereign list uses the second stream (`840–854`). Seed 5 is the documented representative run (`Geosim2Lab.java:166`). Numerical docking depends on both streams and their consumption order, not merely matching the seed label.
+
+`Actor.java:79–90` calls the normal helper for superiority and distance threshold even at zero SD, then initializes each primitive actor's resources to 100 with probability 0.2 or otherwise 1. `Geosim2Model.normal`, lines 1067–1068, consumes the normal draw before multiplying by SD. All actors start `newlyIndep=true` (`Actor.java:115`).
+
+The first 200 actors from the initially shuffled list become founders (`Geosim2Model.java:211–217`). In fixed founder order, each pass annexes one uniformly chosen adjacent eligible nonfounder atom per founder; passes continue until none changes (`222–250`). Annexation transfers the child's resources at tax rate 1 (`631–634`). The first resource update replaces founder resource totals with distance-extracted harvest because they remain newly independent; subsequent updates smooth with fraction 0.01 (`Actor.java:374–383`). Thus the initial 100/1 values are overwritten in the default founder setup, while their RNG draws still affect later choices.
+
+Campaign dropping is checked whenever a decision invocation begins with a campaign target, before the attack-attempt decision, with no battle-completion guard (`Actor.java:713–718`). A target excluded from the eligible victim list also clears (`761–763`). Table A1 on p.147 describes shifting target after battle; the artifact's every-decision timing must be named separately.
+
+### Cluster lifecycle and FIFO export
+
+`War.java:152–227` repeatedly merges clusters linked by current fighting; it does not split previously joined clusters. A merge adds damage, retains the earliest start, and adds the absorbed cluster's current members (`171–179`). Adding a member refreshes its shadow (`103–110`).
+
+Structural change precedes cluster garbage collection (`Geosim2Model.java:1014–1021`). Annexation clears a conquered actor's war pointer (`611`); `War.trim`, lines 127–148, removes actors that are no longer sovereign and removes expired shadows. An inactive actor with positive shadow decrements it in this trim; removal occurs on a later trim after it reaches zero. Retained historical cluster damage is not split or reassigned because a member loses sovereignty.
+
+`War.addWar`, lines 284–286, queues a completed event if raw severity is positive. `checkWarSize`, lines 309–315, peeks despite its misleading removal comment. `getWarSize`, lines 320–325, pops one FIFO event. `Geosim2Model.java:1023–1024` records once per tick when the queue is nonempty; `Geosim2Lab.java:260–265` retrieves one event. The outer framework member `src/ch/ethz/icr/growlab/collector/PowerLawSeriesCollector.java`, method `record`, evaluates its variable once. Consequently the inspected visual path exports one queued event per tick; backlogs can survive termination. A complete analysis exporter should drain explicitly and record terminal censoring, with the difference disclosed in artifact comparisons.
+
+Severity conversion at `War.java:267–269,338–339` is `(int)(100.0 * res)`. Java floating-point-to-int narrowing truncates toward zero and saturates beyond signed-int limits; positive infinity/overflow becomes 2,147,483,647 and NaN becomes zero. It does not wrap modulo 32 bits. See the [Java Language Specification, narrowing primitive conversion](https://docs.oracle.com/javase/specs/jls/se25/html/jls-5.html#jls-5.1.3). A positive raw severity below 0.01 can enter the queue yet serialize to zero; `Geosim2Lab.java:404–413` excludes nonpositive serialized values from its legacy plotting list.
